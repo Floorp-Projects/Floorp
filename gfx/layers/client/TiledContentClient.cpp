@@ -18,6 +18,7 @@
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
+#include "TextureClientPool.h"
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsSize.h"                     // for nsIntSize
@@ -25,18 +26,23 @@
 #include "nsMathUtils.h"               // for NS_roundf
 #include "gfx2DGlue.h"
 
+// This is the minimum area that we deem reasonable to copy from the front buffer to the
+// back buffer on tile updates. If the valid region is smaller than this, we just
+// redraw it and save on the copy (and requisite surface-locking involved).
+#define MINIMUM_TILE_COPY_AREA ((TILEDLAYERBUFFER_TILE_SIZE * TILEDLAYERBUFFER_TILE_SIZE)/16)
+
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
 #include <sstream>
 using mozilla::layers::Layer;
-static void DrawDebugOverlay(gfxASurface* imgSurf, int x, int y)
+static void DrawDebugOverlay(mozilla::gfx::DrawTarget* dt, int x, int y, int width, int height)
 {
-  gfxContext c(imgSurf);
+  gfxContext c(dt);
 
   // Draw border
   c.NewPath();
   c.SetDeviceColor(gfxRGBA(0.0, 0.0, 0.0, 1.0));
-  c.Rectangle(gfxRect(gfxPoint(0,0),imgSurf->GetSize()));
+  c.Rectangle(gfxRect(0, 0, width, height));
   c.Stroke();
 
   // Build tile description
@@ -79,28 +85,37 @@ namespace layers {
 TiledContentClient::TiledContentClient(ClientTiledThebesLayer* aThebesLayer,
                                        ClientLayerManager* aManager)
   : CompositableClient(aManager->AsShadowForwarder())
-  , mTiledBuffer(aThebesLayer, aManager, &mSharedFrameMetricsHelper)
-  , mLowPrecisionTiledBuffer(aThebesLayer, aManager, &mSharedFrameMetricsHelper)
 {
   MOZ_COUNT_CTOR(TiledContentClient);
 
-  // The preference is int in "thousands", so adjust:
+  mTiledBuffer = ClientTiledLayerBuffer(aThebesLayer, this, aManager,
+                                        &mSharedFrameMetricsHelper);
+  mLowPrecisionTiledBuffer = ClientTiledLayerBuffer(aThebesLayer, this, aManager,
+                                                    &mSharedFrameMetricsHelper);
+
   mLowPrecisionTiledBuffer.SetResolution(gfxPrefs::LowPrecisionResolution()/1000.f);
 }
 
 void
-TiledContentClient::LockCopyAndWrite(TiledBufferType aType)
+TiledContentClient::ClearCachedResources()
 {
-  BasicTiledLayerBuffer* buffer = aType == LOW_PRECISION_TILED_BUFFER
+  mTiledBuffer.DiscardBackBuffers();
+  mLowPrecisionTiledBuffer.DiscardBackBuffers();
+}
+
+void
+TiledContentClient::UseTiledLayerBuffer(TiledBufferType aType)
+{
+  ClientTiledLayerBuffer* buffer = aType == LOW_PRECISION_TILED_BUFFER
     ? &mLowPrecisionTiledBuffer
     : &mTiledBuffer;
 
-  // Take an extra ReadLock on behalf of the TiledContentHost. This extra
-  // reference will be adopted when the descriptor is opened by
-  // BasicTiledLayerTile::OpenDescriptor.
+  // Take a ReadLock on behalf of the TiledContentHost. This
+  // reference will be adopted when the descriptor is opened in
+  // TiledLayerBufferComposite.
   buffer->ReadLock();
 
-  mForwarder->PaintedTiledLayerBuffer(this, buffer->GetSurfaceDescriptorTiles());
+  mForwarder->UseTiledLayerBuffer(this, buffer->GetSurfaceDescriptorTiles());
   buffer->ClearPaintedRegion();
 }
 
@@ -229,10 +244,12 @@ SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetric
   return !aContentMetrics.mDisplayPort.Contains(aCompositorMetrics.CalculateCompositedRectInCssPixels() - aCompositorMetrics.mScrollOffset);
 }
 
-BasicTiledLayerBuffer::BasicTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
+ClientTiledLayerBuffer::ClientTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
+                                             CompositableClient* aCompositableClient,
                                              ClientLayerManager* aManager,
                                              SharedFrameMetricsHelper* aHelper)
   : mThebesLayer(aThebesLayer)
+  , mCompositableClient(aCompositableClient)
   , mManager(aManager)
   , mLastPaintOpaque(false)
   , mSharedFrameMetricsHelper(aHelper)
@@ -240,14 +257,14 @@ BasicTiledLayerBuffer::BasicTiledLayerBuffer(ClientTiledThebesLayer* aThebesLaye
 }
 
 bool
-BasicTiledLayerBuffer::HasFormatChanged() const
+ClientTiledLayerBuffer::HasFormatChanged() const
 {
   return mThebesLayer->CanUseOpaqueSurface() != mLastPaintOpaque;
 }
 
 
 gfxContentType
-BasicTiledLayerBuffer::GetContentType() const
+ClientTiledLayerBuffer::GetContentType() const
 {
   if (mThebesLayer->CanUseOpaqueSurface()) {
     return gfxContentType::COLOR;
@@ -256,54 +273,311 @@ BasicTiledLayerBuffer::GetContentType() const
   }
 }
 
-
-TileDescriptor
-BasicTiledLayerTile::GetTileDescriptor()
+gfxMemorySharedReadLock::gfxMemorySharedReadLock()
+  : mReadCount(1)
 {
-  gfxReusableSurfaceWrapper* surface = GetSurface();
-  switch (surface->GetType()) {
-  case gfxReusableSurfaceWrapper::TYPE_IMAGE :
-    return BasicTileDescriptor(uintptr_t(surface));
+  MOZ_COUNT_CTOR(gfxMemorySharedReadLock);
+}
 
-  case gfxReusableSurfaceWrapper::TYPE_SHARED_IMAGE :
-    return BasicShmTileDescriptor(static_cast<gfxReusableSharedImageSurfaceWrapper*>(surface)->GetShmem());
+gfxMemorySharedReadLock::~gfxMemorySharedReadLock()
+{
+  MOZ_COUNT_DTOR(gfxMemorySharedReadLock);
+}
 
-  default :
-    NS_NOTREACHED("Unhandled gfxReusableSurfaceWrapper type");
-    return PlaceholderTileDescriptor();
+int32_t
+gfxMemorySharedReadLock::ReadLock()
+{
+  NS_ASSERT_OWNINGTHREAD(gfxMemorySharedReadLock);
+
+  return PR_ATOMIC_INCREMENT(&mReadCount);
+}
+
+int32_t
+gfxMemorySharedReadLock::ReadUnlock()
+{
+  int32_t readCount = PR_ATOMIC_DECREMENT(&mReadCount);
+  NS_ASSERTION(readCount >= 0, "ReadUnlock called without ReadLock.");
+
+  return readCount;
+}
+
+int32_t
+gfxMemorySharedReadLock::GetReadCount()
+{
+  NS_ASSERT_OWNINGTHREAD(gfxMemorySharedReadLock);
+  return mReadCount;
+}
+
+gfxShmSharedReadLock::gfxShmSharedReadLock(ISurfaceAllocator* aAllocator)
+  : mAllocator(aAllocator)
+{
+  MOZ_COUNT_CTOR(gfxShmSharedReadLock);
+
+  if (mAllocator) {
+#define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
+    if (mAllocator->AllocUnsafeShmem(MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)),
+                                     mozilla::ipc::SharedMemory::TYPE_BASIC, &mShmem)) {
+      ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+      info->readCount = 1;
+    }
   }
 }
 
-
-/* static */ BasicTiledLayerTile
-BasicTiledLayerTile::OpenDescriptor(ISurfaceAllocator *aAllocator, const TileDescriptor& aDesc)
+gfxShmSharedReadLock::~gfxShmSharedReadLock()
 {
-  switch (aDesc.type()) {
-  case TileDescriptor::TBasicShmTileDescriptor : {
-    nsRefPtr<gfxReusableSurfaceWrapper> surface =
-      gfxReusableSharedImageSurfaceWrapper::Open(
-        aAllocator, aDesc.get_BasicShmTileDescriptor().reusableSurface());
-    return BasicTiledLayerTile(
-      new DeprecatedTextureClientTile(nullptr, TextureInfo(BUFFER_TILED), surface));
+  MOZ_COUNT_DTOR(gfxShmSharedReadLock);
+}
+
+int32_t
+gfxShmSharedReadLock::ReadLock() {
+  NS_ASSERT_OWNINGTHREAD(gfxShmSharedReadLock);
+
+  ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+  return PR_ATOMIC_INCREMENT(&info->readCount);
+}
+
+int32_t
+gfxShmSharedReadLock::ReadUnlock() {
+  ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+  int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
+  NS_ASSERTION(readCount >= 0, "ReadUnlock called without a ReadLock.");
+  if (readCount <= 0) {
+    mAllocator->DeallocShmem(mShmem);
+  }
+  return readCount;
+}
+
+int32_t
+gfxShmSharedReadLock::GetReadCount() {
+  NS_ASSERT_OWNINGTHREAD(gfxShmSharedReadLock);
+
+  ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+  return info->readCount;
+}
+
+// Placeholder
+TileClient::TileClient()
+  : mBackBuffer(nullptr)
+  , mFrontBuffer(nullptr)
+  , mBackLock(nullptr)
+  , mFrontLock(nullptr)
+{
+}
+
+TileClient::TileClient(const TileClient& o)
+{
+  mBackBuffer = o.mBackBuffer;
+  mFrontBuffer = o.mFrontBuffer;
+  mBackLock = o.mBackLock;
+  mFrontLock = o.mFrontLock;
+#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
+  mLastUpdate = o.mLastUpdate;
+#endif
+  mManager = o.mManager;
+  mInvalidFront = o.mInvalidFront;
+  mInvalidBack = o.mInvalidBack;
+}
+
+TileClient&
+TileClient::operator=(const TileClient& o)
+{
+  if (this == &o) return *this;
+  mBackBuffer = o.mBackBuffer;
+  mFrontBuffer = o.mFrontBuffer;
+  mBackLock = o.mBackLock;
+  mFrontLock = o.mFrontLock;
+#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
+  mLastUpdate = o.mLastUpdate;
+#endif
+  mManager = o.mManager;
+  mInvalidFront = o.mInvalidFront;
+  mInvalidBack = o.mInvalidBack;
+  return *this;
+}
+
+
+void
+TileClient::Flip()
+{
+  RefPtr<TextureClient> frontBuffer = mFrontBuffer;
+  mFrontBuffer = mBackBuffer;
+  mBackBuffer = frontBuffer;
+  RefPtr<gfxSharedReadLock> frontLock = mFrontLock;
+  mFrontLock = mBackLock;
+  mBackLock = frontLock;
+  nsIntRegion invalidFront = mInvalidFront;
+  mInvalidFront = mInvalidBack;
+  mInvalidBack = invalidFront;
+}
+
+void
+TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
+                                        bool aCanRerasterizeValidRegion)
+{
+  if (mBackBuffer && mFrontBuffer) {
+    const nsIntRect tileRect = nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
+
+    if (aDirtyRegion.Contains(tileRect)) {
+      // The dirty region means that we no longer need the front buffer, so
+      // discard it.
+      DiscardFrontBuffer();
+    } else {
+      // Region that needs copying.
+      nsIntRegion regionToCopy = mInvalidBack;
+
+      regionToCopy.Sub(regionToCopy, aDirtyRegion);
+
+      if (regionToCopy.IsEmpty() ||
+          (aCanRerasterizeValidRegion &&
+           regionToCopy.Area() < MINIMUM_TILE_COPY_AREA)) {
+        // Just redraw it all.
+        return;
+      }
+
+      if (!mFrontBuffer->Lock(OPEN_READ)) {
+        NS_WARNING("Failed to lock the tile's front buffer");
+        return;
+      }
+      TextureClientAutoUnlock autoFront(mFrontBuffer);
+
+      if (!mBackBuffer->Lock(OPEN_WRITE)) {
+        NS_WARNING("Failed to lock the tile's back buffer");
+        return;
+      }
+      TextureClientAutoUnlock autoBack(mBackBuffer);
+
+      // Copy the bounding rect of regionToCopy. As tiles are quite small, it
+      // is unlikely that we'd save much by copying each individual rect of the
+      // region, but we can reevaluate this if it becomes an issue.
+      const nsIntRect rectToCopy = regionToCopy.GetBounds();
+      gfx::IntRect gfxRectToCopy(rectToCopy.x, rectToCopy.y, rectToCopy.width, rectToCopy.height);
+      gfx::IntPoint gfxRectToCopyTopLeft = gfxRectToCopy.TopLeft();
+      mFrontBuffer->CopyToTextureClient(mBackBuffer, &gfxRectToCopy, &gfxRectToCopyTopLeft);
+
+      mInvalidBack.SetEmpty();
+    }
+  }
+}
+
+void
+TileClient::DiscardFrontBuffer()
+{
+  if (mFrontBuffer) {
+    MOZ_ASSERT(mFrontLock);
+    mManager->GetTexturePool(mFrontBuffer->AsTextureClientDrawTarget()->GetFormat())->ReturnTextureClientDeferred(mFrontBuffer);
+    mFrontLock->ReadUnlock();
+    mFrontBuffer = nullptr;
+    mFrontLock = nullptr;
+  }
+}
+
+void
+TileClient::DiscardBackBuffer()
+{
+  if (mBackBuffer) {
+    MOZ_ASSERT(mBackLock);
+    mManager->GetTexturePool(mBackBuffer->AsTextureClientDrawTarget()->GetFormat())->ReturnTextureClient(mBackBuffer);
+    mBackLock->ReadUnlock();
+    mBackBuffer = nullptr;
+    mBackLock = nullptr;
+  }
+}
+
+TextureClient*
+TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion, TextureClientPool *aPool, bool *aCreatedTextureClient, bool aCanRerasterizeValidRegion)
+{
+  // Try to re-use the front-buffer if possible
+  if (mFrontBuffer &&
+      mFrontBuffer->HasInternalBuffer() &&
+      mFrontLock->GetReadCount() == 1) {
+    // If we had a backbuffer we no longer care about it since we'll
+    // re-use the front buffer.
+    DiscardBackBuffer();
+    Flip();
+    return mBackBuffer;
   }
 
-  case TileDescriptor::TBasicTileDescriptor : {
-    nsRefPtr<gfxReusableSurfaceWrapper> surface =
-      reinterpret_cast<gfxReusableSurfaceWrapper*>(
-        aDesc.get_BasicTileDescriptor().reusableSurface());
-    surface->ReadUnlock();
-    return BasicTiledLayerTile(
-      new DeprecatedTextureClientTile(nullptr, TextureInfo(BUFFER_TILED), surface));
+  if (!mBackBuffer ||
+      mBackLock->GetReadCount() > 1) {
+    if (mBackBuffer) {
+      // Our current back-buffer is still locked by the compositor. This can occur
+      // when the client is producing faster than the compositor can consume. In
+      // this case we just want to drop it and not return it to the pool.
+      aPool->ReportClientLost();
+    }
+    mBackBuffer = aPool->GetTextureClient();
+    // Create a lock for our newly created back-buffer.
+    if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
+      // If our compositor is in the same process, we can save some cycles by not
+      // using shared memory.
+      mBackLock = new gfxMemorySharedReadLock();
+    } else {
+      mBackLock = new gfxShmSharedReadLock(mManager->AsShadowForwarder());
+    }
+    *aCreatedTextureClient = true;
+    mInvalidBack = nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
   }
 
-  default :
-    NS_NOTREACHED("Unknown tile descriptor type!");
-    return nullptr;
+  ValidateBackBufferFromFront(aDirtyRegion, aCanRerasterizeValidRegion);
+
+  return mBackBuffer;
+}
+
+TileDescriptor
+TileClient::GetTileDescriptor()
+{
+  if (IsPlaceholderTile()) {
+    return PlaceholderTileDescriptor();
+  }
+  MOZ_ASSERT(mFrontLock);
+  if (mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY) {
+    // AddRef here and Release when receiving on the host side to make sure the
+    // reference count doesn't go to zero before the host receives the message.
+    // see TiledLayerBufferComposite::TiledLayerBufferComposite
+    mFrontLock->AddRef();
+  }
+  return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
+            mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY
+              ? TileLock(uintptr_t(mFrontLock.get()))
+              : TileLock(static_cast<gfxShmSharedReadLock*>(mFrontLock.get())->GetShmem()));
+}
+
+void
+ClientTiledLayerBuffer::ReadUnlock() {
+  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
+    if (mRetainedTiles[i].IsPlaceholderTile()) continue;
+    mRetainedTiles[i].ReadUnlock();
+  }
+}
+
+void
+ClientTiledLayerBuffer::ReadLock() {
+  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
+    if (mRetainedTiles[i].IsPlaceholderTile()) continue;
+    mRetainedTiles[i].ReadLock();
+  }
+}
+
+void
+ClientTiledLayerBuffer::Release()
+{
+  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
+    if (mRetainedTiles[i].IsPlaceholderTile()) continue;
+    mRetainedTiles[i].Release();
+  }
+}
+
+void
+ClientTiledLayerBuffer::DiscardBackBuffers()
+{
+  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
+    if (mRetainedTiles[i].IsPlaceholderTile()) continue;
+    mRetainedTiles[i].DiscardBackBuffer();
   }
 }
 
 SurfaceDescriptorTiles
-BasicTiledLayerBuffer::GetSurfaceDescriptorTiles()
+ClientTiledLayerBuffer::GetSurfaceDescriptorTiles()
 {
   InfallibleTArray<TileDescriptor> tiles;
 
@@ -321,23 +595,8 @@ BasicTiledLayerBuffer::GetSurfaceDescriptorTiles()
                                 mResolution);
 }
 
-/* static */ BasicTiledLayerBuffer
-BasicTiledLayerBuffer::OpenDescriptor(ISurfaceAllocator *aAllocator,
-                                      const SurfaceDescriptorTiles& aDescriptor,
-                                      SharedFrameMetricsHelper* aHelper)
-{
-  return BasicTiledLayerBuffer(aAllocator,
-                               aDescriptor.validRegion(),
-                               aDescriptor.paintedRegion(),
-                               aDescriptor.tiles(),
-                               aDescriptor.retainedWidth(),
-                               aDescriptor.retainedHeight(),
-                               aDescriptor.resolution(),
-                               aHelper);
-}
-
 void
-BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
+ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                    const nsIntRegion& aPaintRegion,
                                    LayerManager::DrawThebesLayerCallback aCallback,
                                    void* aCallbackData)
@@ -371,27 +630,18 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
 
     const nsIntRect bounds = aPaintRegion.GetBounds();
     {
-      PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
+      PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
       gfxImageFormat format =
         gfxPlatform::GetPlatform()->OptimalFormatForContent(
           GetContentType());
 
-      if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-        mSinglePaintDrawTarget =
-          gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-            gfx::IntSize(ceilf(bounds.width * mResolution),
-                         ceilf(bounds.height * mResolution)),
-            gfx::ImageFormatToSurfaceFormat(format));
+      mSinglePaintDrawTarget =
+        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+          gfx::IntSize(ceilf(bounds.width * mResolution),
+                       ceilf(bounds.height * mResolution)),
+          gfx::ImageFormatToSurfaceFormat(format));
 
-        ctxt = new gfxContext(mSinglePaintDrawTarget);
-      } else {
-        mSinglePaintBuffer = new gfxImageSurface(
-          gfxIntSize(ceilf(bounds.width * mResolution),
-                     ceilf(bounds.height * mResolution)),
-          format,
-          !mThebesLayer->CanUseOpaqueSurface());
-        ctxt = new gfxContext(mSinglePaintBuffer);
-      }
+      ctxt = new gfxContext(mSinglePaintDrawTarget);
 
       mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
     }
@@ -404,7 +654,7 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     }
     start = PR_IntervalNow();
 #endif
-    PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferDraw");
+    PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferDraw");
 
     mCallback(mThebesLayer, ctxt, aPaintRegion, DrawRegionClip::CLIP_NONE, nsIntRegion(), mCallbackData);
   }
@@ -424,7 +674,7 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   start = PR_IntervalNow();
 #endif
 
-  PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesUpdate");
+  PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesUpdate");
   Update(aNewValidRegion, aPaintRegion);
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -437,102 +687,15 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   mLastPaintOpaque = mThebesLayer->CanUseOpaqueSurface();
   mCallback = nullptr;
   mCallbackData = nullptr;
-  mSinglePaintBuffer = nullptr;
   mSinglePaintDrawTarget = nullptr;
 }
 
-BasicTiledLayerTile
-BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
-                                            const nsIntPoint& aTileOrigin,
-                                            const nsIntRect& aDirtyRect)
-{
-  if (aTile.IsPlaceholderTile()) {
-    RefPtr<DeprecatedTextureClient> textureClient =
-      new DeprecatedTextureClientTile(mManager->AsShadowForwarder(), TextureInfo(BUFFER_TILED));
-    aTile.mDeprecatedTextureClient = static_cast<DeprecatedTextureClientTile*>(textureClient.get());
-  }
-  aTile.mDeprecatedTextureClient->EnsureAllocated(gfx::IntSize(GetTileLength(), GetTileLength()), GetContentType());
-  gfxImageSurface* writableSurface = aTile.mDeprecatedTextureClient->LockImageSurface();
-  // Bug 742100, this gfxContext really should live on the stack.
-  nsRefPtr<gfxContext> ctxt;
-
-  RefPtr<gfx::DrawTarget> writableDrawTarget;
-  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-    // TODO: Instead of creating a gfxImageSurface to back the tile we should
-    // create an offscreen DrawTarget. This would need to be shared cross-thread
-    // and support copy on write semantics.
-    gfx::SurfaceFormat format =
-      gfx::ImageFormatToSurfaceFormat(writableSurface->Format());
-
-    writableDrawTarget =
-      gfxPlatform::GetPlatform()->CreateDrawTargetForData(
-        writableSurface->Data(),
-        gfx::IntSize(writableSurface->Width(), writableSurface->Height()),
-        writableSurface->Stride(),
-        format);
-    ctxt = new gfxContext(writableDrawTarget);
-  } else {
-    ctxt = new gfxContext(writableSurface);
-    ctxt->SetOperator(gfxContext::OPERATOR_SOURCE);
-  }
-
-  gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
-                   aDirtyRect.width, aDirtyRect.height);
-
-  if (mSinglePaintBuffer || mSinglePaintDrawTarget) {
-    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-      gfx::Rect drawRect(aDirtyRect.x - aTileOrigin.x,
-                         aDirtyRect.y - aTileOrigin.y,
-                         aDirtyRect.width,
-                         aDirtyRect.height);
-      drawRect.Scale(mResolution);
-
-      RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
-      writableDrawTarget->CopySurface(
-        source,
-        gfx::IntRect(NS_roundf((aDirtyRect.x - mSinglePaintBufferOffset.x) * mResolution),
-                     NS_roundf((aDirtyRect.y - mSinglePaintBufferOffset.y) * mResolution),
-                     drawRect.width,
-                     drawRect.height),
-        gfx::IntPoint(NS_roundf(drawRect.x), NS_roundf(drawRect.y)));
-    } else {
-      gfxRect drawRect(aDirtyRect.x - aTileOrigin.x, aDirtyRect.y - aTileOrigin.y,
-                       aDirtyRect.width, aDirtyRect.height);
-      drawRect.Scale(mResolution, mResolution);
-
-      ctxt->NewPath();
-      ctxt->SetSource(mSinglePaintBuffer.get(),
-                      gfxPoint((mSinglePaintBufferOffset.x - aDirtyRect.x) * mResolution + drawRect.x,
-                               (mSinglePaintBufferOffset.y - aDirtyRect.y) * mResolution + drawRect.y));
-      ctxt->SnappedRectangle(drawRect);
-      ctxt->Fill();
-    }
-  } else {
-    ctxt->NewPath();
-    ctxt->Scale(mResolution, mResolution);
-    ctxt->Translate(gfxPoint(-aTileOrigin.x, -aTileOrigin.y));
-    nsIntPoint a = nsIntPoint(aTileOrigin.x, aTileOrigin.y);
-    mCallback(mThebesLayer, ctxt,
-              nsIntRegion(nsIntRect(a, nsIntSize(GetScaledTileLength(),
-                                                 GetScaledTileLength()))),
-              DrawRegionClip::CLIP_NONE,
-              nsIntRegion(), mCallbackData);
-  }
-
-#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
-  DrawDebugOverlay(writableSurface, aTileOrigin.x * mResolution,
-                   aTileOrigin.y * mResolution);
-#endif
-
-  return aTile;
-}
-
-BasicTiledLayerTile
-BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
+TileClient
+ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                                     const nsIntPoint& aTileOrigin,
                                     const nsIntRegion& aDirtyRegion)
 {
-  PROFILER_LABEL("BasicTiledLayerBuffer", "ValidateTile");
+  PROFILER_LABEL("ClientTiledLayerBuffer", "ValidateTile");
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   if (aDirtyRegion.IsComplex()) {
@@ -540,12 +703,140 @@ BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
   }
 #endif
 
-  nsIntRegionRectIterator it(aDirtyRegion);
-  for (const nsIntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
+  if (aTile.IsPlaceholderTile()) {
+    aTile.SetLayerManager(mManager);
+  }
+
+  // Discard our front and backbuffers if our contents changed. In this case
+  // the calling code will already have taken care of invalidating the entire
+  // layer.
+  if (HasFormatChanged()) {
+    aTile.DiscardBackBuffer();
+    aTile.DiscardFrontBuffer();
+  }
+
+  bool createdTextureClient = false;
+  nsIntRegion offsetDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
+  bool usingSinglePaintBuffer = !!mSinglePaintDrawTarget;
+  RefPtr<TextureClient> backBuffer =
+    aTile.GetBackBuffer(offsetDirtyRegion,
+                        mManager->GetTexturePool(gfxPlatform::GetPlatform()->Optimal2DFormatForContent(GetContentType())),
+                        &createdTextureClient, !usingSinglePaintBuffer);
+
+  if (!backBuffer->Lock(OPEN_READ_WRITE)) {
+    NS_WARNING("Failed to lock tile TextureClient for updating.");
+    aTile.DiscardFrontBuffer();
+    return aTile;
+  }
+
+  // We must not keep a reference to the DrawTarget after it has been unlocked,
+  // make sure these are null'd before unlocking as destruction of the context
+  // may cause the target to be flushed.
+  RefPtr<DrawTarget> drawTarget = backBuffer->AsTextureClientDrawTarget()->GetAsDrawTarget();
+  drawTarget->SetTransform(Matrix());
+
+  RefPtr<gfxContext> ctxt = new gfxContext(drawTarget);
+
+  if (usingSinglePaintBuffer) {
+    // XXX Perhaps we should just copy the bounding rectangle here?
+    RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
+    nsIntRegionRectIterator it(aDirtyRegion);
+    for (const nsIntRect* dirtyRect = it.Next(); dirtyRect != nullptr; dirtyRect = it.Next()) {
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
-    printf_stderr(" break into subrect %i, %i, %i, %i\n", rect->x, rect->y, rect->width, rect->height);
+      printf_stderr(" break into subdirtyRect %i, %i, %i, %i\n",
+                    dirtyRect->x, dirtyRect->y, dirtyRect->width, dirtyRect->height);
 #endif
-    aTile = ValidateTileInternal(aTile, aTileOrigin, *rect);
+      gfx::Rect drawRect(dirtyRect->x - aTileOrigin.x,
+                         dirtyRect->y - aTileOrigin.y,
+                         dirtyRect->width,
+                         dirtyRect->height);
+      drawRect.Scale(mResolution);
+
+      gfx::IntRect copyRect(NS_roundf((dirtyRect->x - mSinglePaintBufferOffset.x) * mResolution),
+                            NS_roundf((dirtyRect->y - mSinglePaintBufferOffset.y) * mResolution),
+                            drawRect.width,
+                            drawRect.height);
+      gfx::IntPoint copyTarget(NS_roundf(drawRect.x), NS_roundf(drawRect.y));
+      drawTarget->CopySurface(source, copyRect, copyTarget);
+
+      // Mark the newly updated area as invalid in the front buffer
+      aTile.mInvalidFront.Or(aTile.mInvalidFront, nsIntRect(copyTarget.x, copyTarget.y, copyRect.width, copyRect.height));
+    }
+
+    // The new buffer is now validated, remove the dirty region from it.
+    aTile.mInvalidBack.Sub(nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE),
+                           offsetDirtyRegion);
+  } else {
+    // Area of the full tile...
+    nsIntRegion tileRegion = nsIntRect(aTileOrigin.x, aTileOrigin.y, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
+
+    // Intersect this area with the portion that's dirty.
+    tileRegion = tileRegion.Intersect(aDirtyRegion);
+
+    // Move invalid areas into layer space.
+    aTile.mInvalidFront.MoveBy(aTileOrigin);
+    aTile.mInvalidBack.MoveBy(aTileOrigin);
+
+    // Add the area that's going to be redrawn to the invalid area of the
+    // front region.
+    aTile.mInvalidFront.Or(aTile.mInvalidFront, tileRegion);
+
+    // Add invalid areas of the backbuffer to the area to redraw.
+    tileRegion.Or(tileRegion, aTile.mInvalidBack);
+
+    // Move invalid areas back into tile space.
+    aTile.mInvalidFront.MoveBy(-aTileOrigin);
+
+    // This will be validated now.
+    aTile.mInvalidBack.SetEmpty();
+
+    nsIntRect bounds = tileRegion.GetBounds();
+    bounds.ScaleRoundOut(mResolution, mResolution);
+    bounds.MoveBy(-aTileOrigin);
+
+    if (GetContentType() != gfxContentType::COLOR) {
+      drawTarget->ClearRect(Rect(bounds.x, bounds.y, bounds.width, bounds.height));
+    }
+
+    ctxt->NewPath();
+    ctxt->Clip(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
+    ctxt->Scale(mResolution, mResolution);
+    ctxt->Translate(gfxPoint(-aTileOrigin.x, -aTileOrigin.y));
+    mCallback(mThebesLayer, ctxt,
+              tileRegion.GetBounds(),
+              DrawRegionClip::CLIP_NONE,
+              nsIntRegion(), mCallbackData);
+
+  }
+
+#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
+  DrawDebugOverlay(drawTarget, aTileOrigin.x * mResolution,
+                   aTileOrigin.y * mResolution, GetTileLength(), GetTileLength());
+#endif
+
+  ctxt = nullptr;
+  drawTarget = nullptr;
+
+  backBuffer->Unlock();
+
+  aTile.Flip();
+
+  if (createdTextureClient) {
+    if (!mCompositableClient->AddTextureClient(backBuffer)) {
+      NS_WARNING("Failed to add tile TextureClient.");
+      aTile.DiscardFrontBuffer();
+      aTile.DiscardBackBuffer();
+      return aTile;
+    }
+  }
+
+  // Note, we don't call UpdatedTexture. The Updated function is called manually
+  // by the TiledContentHost before composition.
+
+  if (backBuffer->HasInternalBuffer()) {
+    // If our new buffer has an internal buffer, we don't want to keep another
+    // TextureClient around unnecessarily, so discard the back-buffer.
+    aTile.DiscardBackBuffer();
   }
 
   return aTile;
@@ -576,7 +867,7 @@ TransformCompositionBounds(const ScreenRect& aCompositionBounds,
 }
 
 bool
-BasicTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvalidRegion,
+ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvalidRegion,
                                                       const nsIntRegion& aOldValidRegion,
                                                       nsIntRegion& aRegionToPaint,
                                                       BasicTiledLayerPaintData* aPaintData,
@@ -735,7 +1026,7 @@ BasicTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
 }
 
 bool
-BasicTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
+ClientTiledLayerBuffer::ProgressiveUpdate(nsIntRegion& aValidRegion,
                                          nsIntRegion& aInvalidRegion,
                                          const nsIntRegion& aOldValidRegion,
                                          BasicTiledLayerPaintData* aPaintData,

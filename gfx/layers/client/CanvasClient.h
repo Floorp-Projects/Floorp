@@ -50,7 +50,7 @@ public:
                                                        TextureFlags aFlags);
 
   CanvasClient(CompositableForwarder* aFwd, TextureFlags aFlags)
-    : CompositableClient(aFwd)
+    : CompositableClient(aFwd, aFlags)
   {
     mTextureInfo.mTextureFlags = aFlags;
   }
@@ -94,10 +94,6 @@ public:
     MOZ_ASSERT((mTextureInfo.mTextureFlags & aTexture->GetFlags()) == mTextureInfo.mTextureFlags);
     return CompositableClient::AddTextureClient(aTexture);
   }
-
-  virtual TemporaryRef<BufferTextureClient>
-  CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
-                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT) MOZ_OVERRIDE;
 
   virtual void OnDetach() MOZ_OVERRIDE
   {

@@ -69,7 +69,7 @@ public:
   // FlatText means the text that is generated from DOM tree. The BR elements
   // are replaced to native linefeeds. Other elements are ignored.
 
-  // Get the offset in FlatText of the range. (also used by nsIMEStateManager)
+  // Get the offset in FlatText of the range. (also used by IMEContentObserver)
   static nsresult GetFlatTextOffsetOfRange(nsIContent* aRootContent,
                                            nsINode* aNode,
                                            int32_t aNodeOffset,

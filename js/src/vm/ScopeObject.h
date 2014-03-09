@@ -269,8 +269,22 @@ class CallObject : public ScopeObject
     const Value &aliasedVar(AliasedFormalIter fi) {
         return getSlot(fi.scopeSlot());
     }
+    inline void setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *name,
+                              const Value &v);
 
-    inline void setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *name, const Value &v);
+    /*
+     * When an aliased var (var accessed by nested closures) is also aliased by
+     * the arguments object, it must of course exist in one canonical location
+     * and that location is always the CallObject. For this to work, the
+     * ArgumentsObject stores special MagicValue in its array for forwarded-to-
+     * CallObject variables. This MagicValue's payload is the slot of the
+     * CallObject to access.
+     */
+    const Value &aliasedVarFromArguments(const Value &argsValue) {
+        return getSlot(argsValue.magicUint32());
+    }
+    inline void setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, jsid id,
+                                           const Value &v);
 
     /* For jit access. */
     static size_t offsetOfCallee() {

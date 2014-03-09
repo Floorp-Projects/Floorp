@@ -45,134 +45,140 @@ class Layer;
 class ThebesBufferData;
 class TiledThebesLayerComposite;
 struct EffectChain;
- 
 
-class TiledTexture {
+
+class TileHost {
 public:
-  // Constructs a placeholder TiledTexture. See the comments above
+  // Constructs a placeholder TileHost. See the comments above
   // TiledLayerBuffer for more information on what this is used for;
   // essentially, this is a sentinel used to represent an invalid or blank
   // tile.
-  TiledTexture()
-    : mDeprecatedTextureHost(nullptr)
+  TileHost()
+    : mSharedLock(nullptr)
+    , mTextureHost(nullptr)
   {}
 
-  // Constructs a TiledTexture from a DeprecatedTextureHost.
-  TiledTexture(DeprecatedTextureHost* aDeprecatedTextureHost)
-    : mDeprecatedTextureHost(aDeprecatedTextureHost)
+  // Constructs a TileHost from a gfxSharedReadLock and TextureHost.
+  TileHost(gfxSharedReadLock* aSharedLock,
+               TextureHost* aTextureHost)
+    : mSharedLock(aSharedLock)
+    , mTextureHost(aTextureHost)
   {}
 
-  TiledTexture(const TiledTexture& o) {
-    mDeprecatedTextureHost = o.mDeprecatedTextureHost;
+  TileHost(const TileHost& o) {
+    mTextureHost = o.mTextureHost;
+    mSharedLock = o.mSharedLock;
   }
-  TiledTexture& operator=(const TiledTexture& o) {
+  TileHost& operator=(const TileHost& o) {
     if (this == &o) {
       return *this;
     }
-    mDeprecatedTextureHost = o.mDeprecatedTextureHost;
+    mTextureHost = o.mTextureHost;
+    mSharedLock = o.mSharedLock;
     return *this;
   }
 
-  void Validate(gfxReusableSurfaceWrapper* aReusableSurface, Compositor* aCompositor, uint16_t aSize);
-
-  bool operator== (const TiledTexture& o) const {
-    if (!mDeprecatedTextureHost || !o.mDeprecatedTextureHost) {
-      return mDeprecatedTextureHost == o.mDeprecatedTextureHost;
-    }
-    return *mDeprecatedTextureHost == *o.mDeprecatedTextureHost;
+  bool operator== (const TileHost& o) const {
+    return mTextureHost == o.mTextureHost;
   }
-  bool operator!= (const TiledTexture& o) const {
-    if (!mDeprecatedTextureHost || !o.mDeprecatedTextureHost) {
-      return mDeprecatedTextureHost != o.mDeprecatedTextureHost;
-    }
-    return *mDeprecatedTextureHost != *o.mDeprecatedTextureHost;
+  bool operator!= (const TileHost& o) const {
+    return mTextureHost != o.mTextureHost;
   }
 
-  RefPtr<DeprecatedTextureHost> mDeprecatedTextureHost;
+  bool IsPlaceholderTile() const { return mTextureHost == nullptr; }
+
+  void ReadUnlock() {
+    // Warn if we have a texture host, but no corresponding lock.
+    NS_WARN_IF_FALSE(mTextureHost == nullptr || mSharedLock != nullptr,
+                     "ReadUnlock with no gfxSharedReadLock");
+    if (mSharedLock) {
+      mSharedLock->ReadUnlock();
+    }
+  }
+
+  RefPtr<gfxSharedReadLock> mSharedLock;
+  RefPtr<TextureHost> mTextureHost;
 };
 
 class TiledLayerBufferComposite
-  : public TiledLayerBuffer<TiledLayerBufferComposite, TiledTexture>
+  : public TiledLayerBuffer<TiledLayerBufferComposite, TileHost>
 {
-  friend class TiledLayerBuffer<TiledLayerBufferComposite, TiledTexture>;
+  friend class TiledLayerBuffer<TiledLayerBufferComposite, TileHost>;
 
 public:
-  typedef TiledLayerBuffer<TiledLayerBufferComposite, TiledTexture>::Iterator Iterator;
-  TiledLayerBufferComposite()
-    : mCompositor(nullptr)
-  {}
+  typedef TiledLayerBuffer<TiledLayerBufferComposite, TileHost>::Iterator Iterator;
 
-  void Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
-              const nsIntRegion& aNewValidRegion,
-              const nsIntRegion& aInvalidateRegion,
-              const CSSToScreenScale& aResolution);
+  TiledLayerBufferComposite();
+  TiledLayerBufferComposite(ISurfaceAllocator* aAllocator,
+                            const SurfaceDescriptorTiles& aDescriptor,
+                            const nsIntRegion& aOldPaintedRegion);
 
-  TiledTexture GetPlaceholderTile() const { return TiledTexture(); }
+  TileHost GetPlaceholderTile() const { return TileHost(); }
 
   // Stores the absolute resolution of the containing frame, calculated
   // by the sum of the resolutions of all parent layers' FrameMetrics.
   const CSSToScreenScale& GetFrameResolution() { return mFrameResolution; }
 
-  void SetCompositor(Compositor* aCompositor)
-  {
-    mCompositor = aCompositor;
-  }
+  void ReadUnlock();
+
+  void ReleaseTextureHosts();
+
+  /**
+   * This will synchronously upload any necessary texture contents, making the
+   * sources immediately available for compositing. For texture hosts that
+   * don't have an internal buffer, this is unlikely to actually do anything.
+   */
+  void Upload();
+
+  void SetCompositor(Compositor* aCompositor);
+
+  bool HasDoubleBufferedTiles() { return mHasDoubleBufferedTiles; }
+
+  bool IsValid() const { return !mUninitialized; }
 
 protected:
-  TiledTexture ValidateTile(TiledTexture aTile,
-                            const nsIntPoint& aTileRect,
-                            const nsIntRegion& dirtyRect);
+  TileHost ValidateTile(TileHost aTile,
+                        const nsIntPoint& aTileRect,
+                        const nsIntRegion& dirtyRect);
 
   // do nothing, the desctructor in the texture host takes care of releasing resources
-  void ReleaseTile(TiledTexture aTile) {}
+  void ReleaseTile(TileHost aTile) {}
 
-  void SwapTiles(TiledTexture& aTileA, TiledTexture& aTileB) {
-    std::swap(aTileA, aTileB);
-  }
+  void SwapTiles(TileHost& aTileA, TileHost& aTileB) { std::swap(aTileA, aTileB); }
 
 private:
-  Compositor* mCompositor;
-  const BasicTiledLayerBuffer* mMainMemoryTiledBuffer;
   CSSToScreenScale mFrameResolution;
+  bool mHasDoubleBufferedTiles;
+  bool mUninitialized;
 };
 
 /**
  * ContentHost for tiled Thebes layers. Since tiled layers are special snow
- * flakes, we don't call UpdateThebes or AddTextureHost, etc. We do call Composite
- * in the usual way though.
- *
- * There is no corresponding content client - on the client side we use a
- * BasicTiledLayerBuffer owned by a BasicTiledThebesLayer. On the host side, we
- * just use a regular ThebesLayerComposite, but with a tiled content host.
+ * flakes, we have a unique update process. All the textures that back the
+ * tiles are added in the usual way, but Updated is called on the host side
+ * in response to a message that describes the transaction for every tile.
+ * Composition happens in the normal way.
  *
  * TiledContentHost has a TiledLayerBufferComposite which keeps hold of the tiles.
  * Each tile has a reference to a texture host. During the layers transaction, we
- * receive a copy of the client-side tile buffer (PaintedTiledLayerBuffer). This is
- * copied into the main memory tile buffer and then deleted. Copying copies tiles,
- * but we only copy references to the underlying texture clients.
+ * receive a list of descriptors for the client-side tile buffer tiles
+ * (UseTiledLayerBuffer). If we receive two transactions before a composition,
+ * we immediately unlock and discard the unused buffer.
  *
- * When the content host is composited, we first upload any pending tiles
- * (Process*UploadQueue), then render (RenderLayerBuffer). The former calls Validate
- * on the tile (via ValidateTile and Update), that calls Update on the texture host,
- * which works as for regular texture hosts. Rendering takes us to RenderTile which
+ * When the content host is composited, we first validate the TiledLayerBuffer
+ * (Upload), which calls Updated on each tile's texture host to make sure the
+ * texture data has been uploaded. For single-buffered tiles, we unlock at this
+ * point, for double-buffered tiles we unlock and discard the last composited
+ * buffer after compositing a new one. Rendering takes us to RenderTile which
  * is similar to Composite for non-tiled ContentHosts.
  */
 class TiledContentHost : public ContentHost,
                          public TiledLayerComposer
 {
 public:
-  TiledContentHost(const TextureInfo& aTextureInfo)
-    : ContentHost(aTextureInfo)
-    , mPendingUpload(false)
-    , mPendingLowPrecisionUpload(false)
-  {
-    MOZ_COUNT_CTOR(TiledContentHost);
-  }
+  TiledContentHost(const TextureInfo& aTextureInfo);
 
-  ~TiledContentHost()
-  {
-    MOZ_COUNT_DTOR(TiledContentHost);
-  }
+  ~TiledContentHost();
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE
   {
@@ -191,14 +197,14 @@ public:
 
   const nsIntRegion& GetValidLowPrecisionRegion() const
   {
-    return mLowPrecisionVideoMemoryTiledBuffer.GetValidRegion();
+    return mLowPrecisionTiledBuffer.GetValidRegion();
   }
 
-  void PaintedTiledLayerBuffer(ISurfaceAllocator* aAllocator,
-                               const SurfaceDescriptorTiles& aTiledDescriptor);
+  void UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
+                           const SurfaceDescriptorTiles& aTiledDescriptor);
 
   // Renders a single given tile.
-  void RenderTile(const TiledTexture& aTile,
+  void RenderTile(const TileHost& aTile,
                   EffectChain& aEffectChain,
                   float aOpacity,
                   const gfx::Matrix4x4& aTransform,
@@ -228,13 +234,6 @@ public:
     MOZ_CRASH("Does nothing");
   }
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE
-  {
-    CompositableHost::SetCompositor(aCompositor);
-    mVideoMemoryTiledBuffer.SetCompositor(aCompositor);
-    mLowPrecisionVideoMemoryTiledBuffer.SetCompositor(aCompositor);
-  }
-
   virtual void Attach(Layer* aLayer,
                       Compositor* aCompositor,
                       AttachFlags aFlags = NO_FLAGS) MOZ_OVERRIDE;
@@ -248,10 +247,6 @@ public:
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 
 private:
-  void ProcessUploadQueue(nsIntRegion* aNewValidRegion,
-                          TiledLayerProperties* aLayerProperties);
-  void ProcessLowPrecisionUploadQueue();
-
   void RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                          const nsIntRegion& aValidRegion,
                          EffectChain& aEffectChain,
@@ -264,12 +259,10 @@ private:
 
   void EnsureTileStore() {}
 
-  nsIntRegion                  mRegionToUpload;
-  nsIntRegion                  mLowPrecisionRegionToUpload;
-  BasicTiledLayerBuffer        mMainMemoryTiledBuffer;
-  BasicTiledLayerBuffer        mLowPrecisionMainMemoryTiledBuffer;
-  TiledLayerBufferComposite    mVideoMemoryTiledBuffer;
-  TiledLayerBufferComposite    mLowPrecisionVideoMemoryTiledBuffer;
+  TiledLayerBufferComposite    mTiledBuffer;
+  TiledLayerBufferComposite    mLowPrecisionTiledBuffer;
+  TiledLayerBufferComposite    mOldTiledBuffer;
+  TiledLayerBufferComposite    mOldLowPrecisionTiledBuffer;
   bool                         mPendingUpload : 1;
   bool                         mPendingLowPrecisionUpload : 1;
 };

@@ -107,6 +107,9 @@ class SyntaxParseHandler
 
     // Expressions
 
+    Node newArrayComprehension(Node body, unsigned blockid, const TokenPos &pos) {
+        return NodeGeneric;
+    }
     Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeGeneric; }
     bool addElision(Node literal, const TokenPos &pos) { return true; }
     bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }
@@ -162,6 +165,14 @@ class SyntaxParseHandler
     void setFunctionBody(Node pn, Node kid) {}
     void setFunctionBox(Node pn, FunctionBox *funbox) {}
     void addFunctionArgument(Node pn, Node argpn) {}
+
+    Node newForStatement(uint32_t begin, Node forHead, Node body, unsigned iflags) {
+        return NodeGeneric;
+    }
+
+    Node newForHead(ParseNodeKind kind, Node decls, Node lhs, Node rhs, const TokenPos &pos) {
+        return NodeGeneric;
+    }
 
     Node newLexicalScope(ObjectBox *blockbox) { return NodeGeneric; }
     void setLexicalScopeBody(Node block, Node body) {}

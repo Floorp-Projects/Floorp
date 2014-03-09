@@ -36,6 +36,8 @@ public:
 
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
 
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
+
 protected:
   RefPtr<MacIOSurface> mSurface;
   bool mIsLocked;

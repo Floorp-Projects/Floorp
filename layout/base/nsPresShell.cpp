@@ -24,6 +24,7 @@
 #include "prlog.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Likely.h"
@@ -73,7 +74,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsFrameManager.h"
 #include "nsEventStateManager.h"
-#include "nsIMEStateManager.h"
 #include "nsXPCOM.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILineIterator.h" // for ScrollContentIntoView
@@ -7254,7 +7254,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
           if (eventTarget) {
             if (aEvent->eventStructType == NS_COMPOSITION_EVENT ||
                 aEvent->eventStructType == NS_TEXT_EVENT) {
-              nsIMEStateManager::DispatchCompositionEvent(eventTarget,
+              IMEStateManager::DispatchCompositionEvent(eventTarget,
                 mPresContext, aEvent, aStatus, eventCBPtr);
             } else {
               nsEventDispatcher::Dispatch(eventTarget, mPresContext,

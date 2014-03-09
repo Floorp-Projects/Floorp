@@ -366,74 +366,104 @@ void nsViewManager::Refresh(nsView *aView, const nsIntRegion& aRegion)
   }
 }
 
-void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
-                                                 bool aFlushDirtyRegion)
+void
+nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
+                                            bool aFlushDirtyRegion)
 {
   NS_ASSERTION(IsRootVM(), "Updates will be missed");
-
-  // Protect against a null-view.
-  nsViewManager* viewManager = aView ? aView->GetViewManager() : nullptr;
-  if (!aView || !viewManager) {
+  if (!aView) {
     return;
   }
 
-  nsIPresShell* presShell = viewManager->mPresShell;
-  if (presShell && presShell->IsNeverPainting()) {
-    return;
-  }
-
-  if (aView->HasWidget()) {
-    aView->ResetWidgetBounds(false, true);
-  }
-
-  // process pending updates in child view.
-  for (nsView* childView = aView->GetFirstChild(); childView;
-       childView = childView->GetNextSibling()) {
-    ProcessPendingUpdatesForView(childView, aFlushDirtyRegion);
-  }
-
-  // Push out updates after we've processed the children; ensures that
-  // damage is applied based on the final widget geometry
-  if (aFlushDirtyRegion) {
-    nsIWidget *widget = aView->GetWidget();
-    if (widget && widget->NeedsPaint()) {
-      // If an ancestor widget was hidden and then shown, we could
-      // have a delayed resize to handle.
-      for (nsViewManager *vm = viewManager; vm;
-           vm = vm->mRootView->GetParent()
-                  ? vm->mRootView->GetParent()->GetViewManager()
-                  : nullptr) {
-        if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-            vm->mRootView->IsEffectivelyVisible() &&
-            vm->mPresShell && vm->mPresShell->IsVisible()) {
-          vm->FlushDelayedResize(true);
-        }
-      }
-      NS_ASSERTION(aView->HasWidget(), "FlushDelayedResize removed our widget!");
-
-      if (presShell) {
-#ifdef MOZ_DUMP_PAINTING
-        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-          printf_stderr("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", presShell, aView, widget);
-        }
-#endif
-        nsAutoScriptBlocker scriptBlocker;
-        SetPainting(true);
-        presShell->Paint(aView, nsRegion(), nsIPresShell::PAINT_LAYERS);
-#ifdef MOZ_DUMP_PAINTING
-        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-          printf_stderr("---- PAINT END ----\n");
-        }
-#endif
-
-        aView->SetForcedRepaint(false);
-        SetPainting(false);
-      }
-      viewManager->FlushDirtyRegionToWidget(aView);
-    } else {
-      viewManager->FlushDirtyRegionToWidget(aView);
+  nsCOMPtr<nsIPresShell> rootShell(mPresShell);
+  nsTArray<nsCOMPtr<nsIWidget> > widgets;
+  aView->GetViewManager()->ProcessPendingUpdatesRecurse(aView, widgets);
+  for (uint32_t i = 0; i < widgets.Length(); ++i) {
+    nsView* view = nsView::GetViewFor(widgets[i]);
+    if (view) {
+      view->ResetWidgetBounds(false, true);
     }
   }
+  if (rootShell->GetViewManager() != this) {
+    return; // 'this' might have been destroyed
+  }
+  if (aFlushDirtyRegion) {
+    nsAutoScriptBlocker scriptBlocker;
+    SetPainting(true);
+    for (uint32_t i = 0; i < widgets.Length(); ++i) {
+      nsIWidget* widget = widgets[i];
+      nsView* view = nsView::GetViewFor(widget);
+      if (view) {
+        view->GetViewManager()->ProcessPendingUpdatesPaint(widget);
+      }
+    }
+    SetPainting(false);
+  }
+}
+
+void
+nsViewManager::ProcessPendingUpdatesRecurse(nsView* aView,
+                                            nsTArray<nsCOMPtr<nsIWidget> >& aWidgets)
+{
+  if (mPresShell && mPresShell->IsNeverPainting()) {
+    return;
+  }
+
+  for (nsView* childView = aView->GetFirstChild(); childView;
+       childView = childView->GetNextSibling()) {
+    childView->GetViewManager()->
+      ProcessPendingUpdatesRecurse(childView, aWidgets);
+  }
+
+  nsIWidget* widget = aView->GetWidget();
+  if (widget) {
+    aWidgets.AppendElement(widget);
+  } else {
+    FlushDirtyRegionToWidget(aView);
+  }
+}
+
+void
+nsViewManager::ProcessPendingUpdatesPaint(nsIWidget* aWidget)
+{
+  if (aWidget->NeedsPaint()) {
+    // If an ancestor widget was hidden and then shown, we could
+    // have a delayed resize to handle.
+    for (nsViewManager *vm = this; vm;
+         vm = vm->mRootView->GetParent()
+           ? vm->mRootView->GetParent()->GetViewManager()
+           : nullptr) {
+      if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+          vm->mRootView->IsEffectivelyVisible() &&
+          vm->mPresShell && vm->mPresShell->IsVisible()) {
+        vm->FlushDelayedResize(true);
+      }
+    }
+    nsView* view = nsView::GetViewFor(aWidget);
+    if (!view) {
+      NS_ERROR("FlushDelayedResize destroyed the nsView?");
+      return;
+    }
+
+    if (mPresShell) {
+#ifdef MOZ_DUMP_PAINTING
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        printf_stderr("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n",
+                      mPresShell, view, aWidget);
+      }
+#endif
+
+      mPresShell->Paint(view, nsRegion(), nsIPresShell::PAINT_LAYERS);
+      view->SetForcedRepaint(false);
+
+#ifdef MOZ_DUMP_PAINTING
+      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+        printf_stderr("---- PAINT END ----\n");
+      }
+#endif
+    }
+  }
+  FlushDirtyRegionToWidget(nsView::GetViewFor(aWidget));
 }
 
 void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)

@@ -39,5 +39,9 @@ else:
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['OS_TARGET'] != 'Android':
     DEFINES['_USE_SSE'] = True
     DEFINES['_USE_SSE2'] = True
+
+# Suppress warnings in third-party code.
+if CONFIG['OS_TARGET'] == 'Darwin':
+    CFLAGS += ['-Wno-sign-compare']
     if CONFIG['GNU_CC']:
         SOURCES['resample.c'].flags += ['-msse2']

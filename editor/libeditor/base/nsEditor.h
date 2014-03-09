@@ -770,7 +770,7 @@ public:
   // Get the focused content, if we're focused.  Returns null otherwise.
   virtual already_AddRefed<nsIContent> GetFocusedContent();
 
-  // Get the focused content for the argument of some nsIMEStateManager's
+  // Get the focused content for the argument of some IMEStateManager's
   // methods.
   virtual already_AddRefed<nsIContent> GetFocusedContentForIME();
 

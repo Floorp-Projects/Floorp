@@ -729,6 +729,11 @@ void
 XPCJSRuntime::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 {
     nsJSContext::EndCycleCollectionCallback(aResults);
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "cycle-collector-end", nullptr);
+    }
 }
 
 void

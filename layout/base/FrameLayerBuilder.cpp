@@ -3757,9 +3757,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(presContext->DeviceContext(), aContext);
 
-  nsIntRegion temp = builder->GetRegionToClear();
-  builder->ResetRegionToClear();
-
   if (shouldDrawRectsSeparately) {
     nsIntRegionRectIterator it(aRegionToDraw);
     while (const nsIntRect* iterRect = it.Next()) {
@@ -3801,10 +3798,6 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   if (!aRegionToInvalidate.IsEmpty()) {
     aLayer->AddInvalidRect(aRegionToInvalidate.GetBounds());
   }
-
-  aLayer->Manager()->AddRegionToClear(builder->GetRegionToClear());
-  builder->ResetRegionToClear();
-  builder->AddRegionToClear(temp);
 }
 
 bool
