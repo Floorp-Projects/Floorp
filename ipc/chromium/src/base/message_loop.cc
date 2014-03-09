@@ -393,8 +393,6 @@ bool MessageLoop::DeletePendingTasks() {
   MOZ_ASSERT(work_queue_.empty());
   bool did_work = !deferred_non_nestable_work_queue_.empty();
   while (!deferred_non_nestable_work_queue_.empty()) {
-    // TODO(darin): Delete all tasks once it is safe to do so.
-    // Until it is totaly safe, just delete them to keep purify happy.
     Task* task = deferred_non_nestable_work_queue_.front().task;
     deferred_non_nestable_work_queue_.pop();
     delete task;
