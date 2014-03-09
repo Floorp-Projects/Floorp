@@ -2,19 +2,34 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File in use complete MAR file staged patch apply failure fallback test */
+/* File in use inside removed dir complete MAR file staged patch apply failure
+   test */
 
 function run_test() {
+  if (!shouldRunServiceTest()) {
+    return;
+  }
+
   gStageUpdate = true;
   setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_COMPLETE_MAR, true, false);
+
+  let fileInUseBin = getApplyDirFile(gTestDirs[4].relPathDir +
+                                     gTestDirs[4].subDirs[0] +
+                                     gTestDirs[4].subDirFiles[0]);
+  // Remove the empty file created for the test so the helper application can
+  // replace it.
+  fileInUseBin.remove(false);
+
+  let helperBin = getTestDirFile(FILE_HELPER_BIN);
+  let fileInUseDir = getApplyDirFile(gTestDirs[4].relPathDir +
+                                     gTestDirs[4].subDirs[0]);
+  helperBin.copyTo(fileInUseDir, gTestDirs[4].subDirFiles[0]);
 
   // Launch an existing file so it is in use during the update.
-  let fileInUseBin = getApplyDirFile(gTestFiles[13].relPathDir +
-                                     gTestFiles[13].fileName);
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
               HELPER_SLEEP_TIMEOUT];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
@@ -22,16 +37,23 @@ function run_test() {
   fileInUseProcess.init(fileInUseBin);
   fileInUseProcess.run(false, args, args.length);
 
+  setupAppFilesAsync();
+}
+
+function setupAppFilesFinished() {
   do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
 }
 
 function doUpdate() {
-  runUpdate(0, STATE_APPLIED, null);
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_APPLIED);
+}
 
+function checkUpdateFinished() {
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(1, STATE_PENDING);
+  gDisableReplaceFallback = true;
+  runUpdate(1, STATE_FAILED_WRITE_ERROR);
 }
 
 function checkUpdateApplied() {
