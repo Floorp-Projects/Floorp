@@ -24,9 +24,22 @@ using namespace mozilla;
 
 StaticRefPtr<nsWindowMemoryReporter> sWindowReporter;
 
+/**
+ * Don't trigger a ghost window check when a DOM window is detached if we've
+ * run it this recently.
+ */
+const int32_t kTimeBetweenChecks = 45; /* seconds */
+
 nsWindowMemoryReporter::nsWindowMemoryReporter()
-  : mCheckForGhostWindowsCallbackPending(false)
+  : mLastCheckForGhostWindows(TimeStamp::NowLoRes()),
+    mCycleCollectorIsRunning(false),
+    mCheckTimerWaitingForCCEnd(false)
 {
+}
+
+nsWindowMemoryReporter::~nsWindowMemoryReporter()
+{
+  KillCheckTimer();
 }
 
 NS_IMPL_ISUPPORTS3(nsWindowMemoryReporter, nsIMemoryReporter, nsIObserver,
@@ -104,6 +117,10 @@ nsWindowMemoryReporter::Init()
     os->AddObserver(sWindowReporter, DOM_WINDOW_DESTROYED_TOPIC,
                     /* weakRef = */ true);
     os->AddObserver(sWindowReporter, "after-minimize-memory-usage",
+                    /* weakRef = */ true);
+    os->AddObserver(sWindowReporter, "cycle-collector-begin",
+                    /* weakRef = */ true);
+    os->AddObserver(sWindowReporter, "cycle-collector-end",
                     /* weakRef = */ true);
   }
 
@@ -608,6 +625,18 @@ nsWindowMemoryReporter::Observe(nsISupports *aSubject, const char *aTopic,
     ObserveDOMWindowDetached(aSubject);
   } else if (!strcmp(aTopic, "after-minimize-memory-usage")) {
     ObserveAfterMinimizeMemoryUsage();
+  } else if (!strcmp(aTopic, "cycle-collector-begin")) {
+    if (mCheckTimer) {
+      mCheckTimerWaitingForCCEnd = true;
+      KillCheckTimer();
+    }
+    mCycleCollectorIsRunning = true;
+  } else if (!strcmp(aTopic, "cycle-collector-end")) {
+    mCycleCollectorIsRunning = false;
+    if (mCheckTimerWaitingForCCEnd) {
+      mCheckTimerWaitingForCCEnd = false;
+      AsyncCheckForGhostWindows();
+    }
   } else {
     MOZ_ASSERT(false);
   }
@@ -626,12 +655,44 @@ nsWindowMemoryReporter::ObserveDOMWindowDetached(nsISupports* aWindow)
 
   mDetachedWindows.Put(weakWindow, TimeStamp());
 
-  if (!mCheckForGhostWindowsCallbackPending) {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this,
-                           &nsWindowMemoryReporter::CheckForGhostWindowsCallback);
-    NS_DispatchToCurrentThread(runnable);
-    mCheckForGhostWindowsCallbackPending = true;
+  AsyncCheckForGhostWindows();
+}
+
+// static
+void
+nsWindowMemoryReporter::CheckTimerFired(nsITimer* aTimer, void* aClosure)
+{
+  if (sWindowReporter) {
+    MOZ_ASSERT(!sWindowReporter->mCycleCollectorIsRunning);
+    sWindowReporter->CheckForGhostWindows();
+  }
+}
+
+void
+nsWindowMemoryReporter::AsyncCheckForGhostWindows()
+{
+  if (mCheckTimer) {
+    return;
+  }
+
+  if (mCycleCollectorIsRunning) {
+    mCheckTimerWaitingForCCEnd = true;
+    return;
+  }
+
+  // If more than kTimeBetweenChecks seconds have elapsed since the last check,
+  // timerDelay is 0.  Otherwise, it is kTimeBetweenChecks, reduced by the time
+  // since the last check.  Reducing the delay by the time since the last check
+  // prevents the timer from being completely starved if it is repeatedly killed
+  // and restarted.
+  int32_t timeSinceLastCheck = (TimeStamp::NowLoRes() - mLastCheckForGhostWindows).ToSeconds();
+  int32_t timerDelay = (kTimeBetweenChecks - std::min(timeSinceLastCheck, kTimeBetweenChecks)) * PR_MSEC_PER_SEC;
+
+  CallCreateInstance<nsITimer>("@mozilla.org/timer;1", getter_AddRefs(mCheckTimer));
+
+  if (mCheckTimer) {
+    mCheckTimer->InitWithFuncCallback(CheckTimerFired, nullptr,
+                                      timerDelay, nsITimer::TYPE_ONE_SHOT);
   }
 }
 
@@ -662,13 +723,6 @@ nsWindowMemoryReporter::ObserveAfterMinimizeMemoryUsage()
 
   mDetachedWindows.Enumerate(BackdateTimeStampsEnumerator,
                              &minTimeStamp);
-}
-
-void
-nsWindowMemoryReporter::CheckForGhostWindowsCallback()
-{
-  mCheckForGhostWindowsCallbackPending = false;
-  CheckForGhostWindows();
 }
 
 struct CheckForGhostWindowsEnumeratorData
@@ -808,6 +862,9 @@ nsWindowMemoryReporter::CheckForGhostWindows(
     return;
   }
 
+  mLastCheckForGhostWindows = TimeStamp::NowLoRes();
+  KillCheckTimer();
+
   nsTHashtable<nsCStringHashKey> nonDetachedWindowDomains;
 
   // Populate nonDetachedWindowDomains.
@@ -820,7 +877,7 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   // if it's not null.
   CheckForGhostWindowsEnumeratorData ghostEnumData =
     { &nonDetachedWindowDomains, aOutGhostIDs, tldService,
-      GetGhostTimeout(), TimeStamp::Now() };
+      GetGhostTimeout(), mLastCheckForGhostWindows };
   mDetachedWindows.Enumerate(CheckForGhostWindowsEnumerator,
                              &ghostEnumData);
 }
@@ -834,6 +891,15 @@ nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()
   nsTHashtable<nsUint64HashKey> ghostWindows;
   sWindowReporter->CheckForGhostWindows(&ghostWindows);
   return ghostWindows.Count();
+}
+
+void
+nsWindowMemoryReporter::KillCheckTimer()
+{
+  if (mCheckTimer) {
+    mCheckTimer->Cancel();
+    mCheckTimer = nullptr;
+  }
 }
 
 #ifdef DEBUG

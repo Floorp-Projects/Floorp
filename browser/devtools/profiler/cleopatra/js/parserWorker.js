@@ -1226,7 +1226,7 @@ var diagnosticList = [
     check: function(frames, symbols, meta) {
 
       return stepContains('PaintGradient', frames, symbols)
-          && stepContains('BasicTiledLayerBuffer::PaintThebesSingleBufferDraw', frames, symbols)
+          && stepContains('ClientTiledLayerBuffer::PaintThebesSingleBufferDraw', frames, symbols)
           ;
     },
   },

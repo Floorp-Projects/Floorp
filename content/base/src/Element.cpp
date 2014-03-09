@@ -1264,7 +1264,17 @@ public:
 
   NS_IMETHOD Run()
   {
-    mManager->RemovedFromDocumentInternal(mElement, mDoc);
+    // It may be the case that the element was removed from the
+    // DOM, causing this runnable to be created, then inserted back
+    // into the document before the this runnable had a chance to
+    // tear down the binding. Only tear down the binding if the element
+    // is still no longer in the DOM. nsXBLService::LoadBinding tears
+    // down the old binding if the element is inserted back into the
+    // DOM and loads a different binding.
+    if (!mElement->IsInDoc()) {
+      mManager->RemovedFromDocumentInternal(mElement, mDoc);
+    }
+
     return NS_OK;
   }
 

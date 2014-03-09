@@ -22,12 +22,9 @@ ArgumentsObject::element(uint32_t i) const
 {
     JS_ASSERT(!isElementDeleted(i));
     const Value &v = data()->args[i];
-    if (v.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
+    if (v.isMagic()) {
         CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
-        for (AliasedFormalIter fi(callobj.callee().nonLazyScript()); ; fi++) {
-            if (fi.frameIndex() == i)
-                return callobj.aliasedVar(fi);
-        }
+        return callobj.aliasedVarFromArguments(v);
     }
     return v;
 }
@@ -37,14 +34,16 @@ ArgumentsObject::setElement(JSContext *cx, uint32_t i, const Value &v)
 {
     JS_ASSERT(!isElementDeleted(i));
     HeapValue &lhs = data()->args[i];
-    if (lhs.isMagic(JS_FORWARD_TO_CALL_OBJECT)) {
+    if (lhs.isMagic()) {
+        uint32_t slot = lhs.magicUint32();
         CallObject &callobj = getFixedSlot(MAYBE_CALL_SLOT).toObject().as<CallObject>();
-        for (AliasedFormalIter fi(callobj.callee().nonLazyScript()); ; fi++) {
-            if (fi.frameIndex() == i) {
-                callobj.setAliasedVar(cx, fi, fi->name(), v);
+        for (Shape::Range<NoGC> r(callobj.lastProperty()); !r.empty(); r.popFront()) {
+            if (r.front().slot() == slot) {
+                callobj.setAliasedVarFromArguments(cx, lhs, r.front().propid(), v);
                 return;
             }
         }
+        MOZ_ASSUME_UNREACHABLE("Bad Arguments::setElement");
     }
     lhs = v;
 }

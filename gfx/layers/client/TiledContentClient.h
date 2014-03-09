@@ -16,9 +16,14 @@
 #include "gfxTypes.h"
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/ipc/Shmem.h"          // for Shmem
+#include "mozilla/ipc/SharedMemory.h"   // for SharedMemory
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
+#include "mozilla/layers/LayersMessages.h" // for TileDescriptor
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TextureClientPool.h"
+#include "ClientLayerManager.h"
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_DTOR
@@ -28,6 +33,8 @@
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "gfxReusableSurfaceWrapper.h"
+#include "pratom.h"                     // For PR_ATOMIC_INCREMENT/DECREMENT
+#include "gfxPrefs.h"
 
 class gfxImageSurface;
 
@@ -35,67 +42,186 @@ namespace mozilla {
 namespace layers {
 
 class BasicTileDescriptor;
+class ClientTiledThebesLayer;
+class ClientLayerManager;
+
+
+// A class to help implement copy-on-write semantics for shared tiles.
+class gfxSharedReadLock : public AtomicRefCounted<gfxSharedReadLock> {
+public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(gfxSharedReadLock)
+  virtual ~gfxSharedReadLock() {}
+
+  virtual int32_t ReadLock() = 0;
+  virtual int32_t ReadUnlock() = 0;
+  virtual int32_t GetReadCount() = 0;
+
+  enum gfxSharedReadLockType {
+    TYPE_MEMORY,
+    TYPE_SHMEM
+  };
+  virtual gfxSharedReadLockType GetType() = 0;
+
+protected:
+  NS_DECL_OWNINGTHREAD
+};
+
+class gfxMemorySharedReadLock : public gfxSharedReadLock {
+public:
+  gfxMemorySharedReadLock();
+
+  ~gfxMemorySharedReadLock();
+
+  virtual int32_t ReadLock() MOZ_OVERRIDE;
+
+  virtual int32_t ReadUnlock() MOZ_OVERRIDE;
+
+  virtual int32_t GetReadCount() MOZ_OVERRIDE;
+
+  virtual gfxSharedReadLockType GetType() MOZ_OVERRIDE { return TYPE_MEMORY; }
+
+private:
+  int32_t mReadCount;
+};
+
+class gfxShmSharedReadLock : public gfxSharedReadLock {
+private:
+  struct ShmReadLockInfo {
+    int32_t readCount;
+  };
+
+public:
+  gfxShmSharedReadLock(ISurfaceAllocator* aAllocator);
+
+  ~gfxShmSharedReadLock();
+
+  virtual int32_t ReadLock() MOZ_OVERRIDE;
+
+  virtual int32_t ReadUnlock() MOZ_OVERRIDE;
+
+  virtual int32_t GetReadCount() MOZ_OVERRIDE;
+
+  virtual gfxSharedReadLockType GetType() MOZ_OVERRIDE { return TYPE_SHMEM; }
+
+  mozilla::ipc::Shmem& GetShmem() { return mShmem; }
+
+  static already_AddRefed<gfxShmSharedReadLock>
+  Open(mozilla::layers::ISurfaceAllocator* aAllocator, const mozilla::ipc::Shmem& aShmem)
+  {
+    nsRefPtr<gfxShmSharedReadLock> readLock = new gfxShmSharedReadLock(aAllocator, aShmem);
+    return readLock.forget();
+  }
+
+private:
+  gfxShmSharedReadLock(ISurfaceAllocator* aAllocator, const mozilla::ipc::Shmem& aShmem)
+    : mAllocator(aAllocator)
+    , mShmem(aShmem)
+  {
+    MOZ_COUNT_CTOR(gfxShmSharedReadLock);
+  }
+
+  ShmReadLockInfo* GetShmReadLockInfoPtr()
+  {
+    return reinterpret_cast<ShmReadLockInfo*>
+      (mShmem.get<char>() + mShmem.Size<char>() - sizeof(ShmReadLockInfo));
+  }
+
+  RefPtr<ISurfaceAllocator> mAllocator;
+  mozilla::ipc::Shmem mShmem;
+};
 
 /**
  * Represent a single tile in tiled buffer. The buffer keeps tiles,
- * each tile keeps a reference to a texture client. The texture client
- * is backed by a gfxReusableSurfaceWrapper that implements a
- * copy-on-write mechanism while locked. The tile should be
- * locked before being sent to the compositor and unlocked
- * as soon as it is uploaded to prevent a copy.
+ * each tile keeps a reference to a texture client and a read-lock. This
+ * read-lock is used to help implement a copy-on-write mechanism. The tile
+ * should be locked before being sent to the compositor. The compositor should
+ * unlock the read-lock as soon as it has finished with the buffer in the
+ * TextureHost to prevent more textures being created than is necessary.
  * Ideal place to store per tile debug information.
  */
-struct BasicTiledLayerTile {
-  RefPtr<DeprecatedTextureClientTile> mDeprecatedTextureClient;
-#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
-  TimeStamp        mLastUpdate;
-#endif
-
+struct TileClient
+{
   // Placeholder
-  BasicTiledLayerTile()
-    : mDeprecatedTextureClient(nullptr)
-  {}
+  TileClient();
 
-  BasicTiledLayerTile(DeprecatedTextureClientTile* aTextureClient)
-    : mDeprecatedTextureClient(aTextureClient)
-  {}
+  TileClient(const TileClient& o);
 
-  BasicTiledLayerTile(const BasicTiledLayerTile& o) {
-    mDeprecatedTextureClient = o.mDeprecatedTextureClient;
-#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
-    mLastUpdate = o.mLastUpdate;
-#endif
-  }
-  BasicTiledLayerTile& operator=(const BasicTiledLayerTile& o) {
-    if (this == &o) return *this;
-    mDeprecatedTextureClient = o.mDeprecatedTextureClient;
-#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
-    mLastUpdate = o.mLastUpdate;
-#endif
-    return *this;
-  }
-  bool operator== (const BasicTiledLayerTile& o) const {
-    return mDeprecatedTextureClient == o.mDeprecatedTextureClient;
-  }
-  bool operator!= (const BasicTiledLayerTile& o) const {
-    return mDeprecatedTextureClient != o.mDeprecatedTextureClient;
+  TileClient& operator=(const TileClient& o);
+
+  bool operator== (const TileClient& o) const
+  {
+    return mFrontBuffer == o.mFrontBuffer;
   }
 
-  bool IsPlaceholderTile() { return mDeprecatedTextureClient == nullptr; }
-
-  void ReadUnlock() {
-    GetSurface()->ReadUnlock();
+  bool operator!= (const TileClient& o) const
+  {
+    return mFrontBuffer != o.mFrontBuffer;
   }
-  void ReadLock() {
-    GetSurface()->ReadLock();
+
+  void SetLayerManager(ClientLayerManager *aManager)
+  {
+    mManager = aManager;
+  }
+
+  bool IsPlaceholderTile()
+  {
+    return mBackBuffer == nullptr && mFrontBuffer == nullptr;
+  }
+
+  void ReadUnlock()
+  {
+    NS_ASSERTION(mFrontLock != nullptr, "ReadUnlock with no gfxSharedReadLock");
+    mFrontLock->ReadUnlock();
+  }
+
+  void ReadLock()
+  {
+    NS_ASSERTION(mFrontLock != nullptr, "ReadLock with no gfxSharedReadLock");
+    mFrontLock->ReadLock();
+  }
+
+  void Release()
+  {
+    DiscardFrontBuffer();
+    DiscardBackBuffer();
   }
 
   TileDescriptor GetTileDescriptor();
-  static BasicTiledLayerTile OpenDescriptor(ISurfaceAllocator *aAllocator, const TileDescriptor& aDesc);
 
-  gfxReusableSurfaceWrapper* GetSurface() {
-    return mDeprecatedTextureClient->GetReusableSurfaceWrapper();
-  }
+  /**
+  * Swaps the front and back buffers.
+  */
+  void Flip();
+
+  /**
+  * Returns an unlocked TextureClient that can be used for writing new
+  * data to the tile. This may flip the front-buffer to the back-buffer if
+  * the front-buffer is still locked by the host, or does not have an
+  * internal buffer (and so will always be locked).
+  */
+  TextureClient* GetBackBuffer(const nsIntRegion& aDirtyRegion,
+                               TextureClientPool *aPool,
+                               bool *aCreatedTextureClient,
+                               bool aCanRerasterizeValidRegion);
+
+  void DiscardFrontBuffer();
+
+  void DiscardBackBuffer();
+
+  RefPtr<TextureClient> mBackBuffer;
+  RefPtr<TextureClient> mFrontBuffer;
+  RefPtr<gfxSharedReadLock> mBackLock;
+  RefPtr<gfxSharedReadLock> mFrontLock;
+  RefPtr<ClientLayerManager> mManager;
+#ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
+  TimeStamp        mLastUpdate;
+#endif
+  nsIntRegion mInvalidFront;
+  nsIntRegion mInvalidBack;
+
+private:
+  void ValidateBackBufferFromFront(const nsIntRegion &aDirtyRegion,
+                                   bool aCanRerasterizeValidRegion);
 };
 
 /**
@@ -165,9 +291,6 @@ struct BasicTiledLayerPaintData {
   bool mPaintFinished : 1;
 };
 
-class ClientTiledThebesLayer;
-class ClientLayerManager;
-
 class SharedFrameMetricsHelper
 {
 public:
@@ -210,72 +333,45 @@ private:
 };
 
 /**
- * Provide an instance of TiledLayerBuffer backed by image surfaces.
- * This buffer provides an implementation to ValidateTile using a
- * thebes callback and can support painting using a single paint buffer
- * which is much faster then painting directly into the tiles.
+ * Provide an instance of TiledLayerBuffer backed by drawable TextureClients.
+ * This buffer provides an implementation of ValidateTile using a
+ * thebes callback and can support painting using a single paint buffer.
+ * Whether a single paint buffer is used is controlled by
+ * gfxPrefs::PerTileDrawing().
  */
-class BasicTiledLayerBuffer
-  : public TiledLayerBuffer<BasicTiledLayerBuffer, BasicTiledLayerTile>
+class ClientTiledLayerBuffer
+  : public TiledLayerBuffer<ClientTiledLayerBuffer, TileClient>
 {
-  friend class TiledLayerBuffer<BasicTiledLayerBuffer, BasicTiledLayerTile>;
+  friend class TiledLayerBuffer<ClientTiledLayerBuffer, TileClient>;
 
 public:
-  BasicTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
-                        ClientLayerManager* aManager,
-                        SharedFrameMetricsHelper* aHelper);
-  BasicTiledLayerBuffer()
+  ClientTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
+                         CompositableClient* aCompositableClient,
+                         ClientLayerManager* aManager,
+                         SharedFrameMetricsHelper* aHelper);
+  ClientTiledLayerBuffer()
     : mThebesLayer(nullptr)
+    , mCompositableClient(nullptr)
     , mManager(nullptr)
     , mLastPaintOpaque(false)
     , mSharedFrameMetricsHelper(nullptr)
   {}
-
-  BasicTiledLayerBuffer(ISurfaceAllocator* aAllocator,
-                        const nsIntRegion& aValidRegion,
-                        const nsIntRegion& aPaintedRegion,
-                        const InfallibleTArray<TileDescriptor>& aTiles,
-                        int aRetainedWidth,
-                        int aRetainedHeight,
-                        float aResolution,
-                        SharedFrameMetricsHelper* aHelper)
-  {
-    mSharedFrameMetricsHelper = aHelper;
-    mValidRegion = aValidRegion;
-    mPaintedRegion = aPaintedRegion;
-    mRetainedWidth = aRetainedWidth;
-    mRetainedHeight = aRetainedHeight;
-    mResolution = aResolution;
-
-    for(size_t i = 0; i < aTiles.Length(); i++) {
-      if (aTiles[i].type() == TileDescriptor::TPlaceholderTileDescriptor) {
-        mRetainedTiles.AppendElement(GetPlaceholderTile());
-      } else {
-        mRetainedTiles.AppendElement(BasicTiledLayerTile::OpenDescriptor(aAllocator, aTiles[i]));
-      }
-    }
-  }
 
   void PaintThebes(const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
                    LayerManager::DrawThebesLayerCallback aCallback,
                    void* aCallbackData);
 
-  void ReadUnlock() {
-    for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-      if (mRetainedTiles[i].IsPlaceholderTile()) continue;
-      mRetainedTiles[i].ReadUnlock();
-    }
-  }
+  void ReadUnlock();
 
-  void ReadLock() {
-    for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-      if (mRetainedTiles[i].IsPlaceholderTile()) continue;
-      mRetainedTiles[i].ReadLock();
-    }
-  }
+  void ReadLock();
+
+  void Release();
+
+  void DiscardBackBuffers();
 
   const CSSToScreenScale& GetFrameResolution() { return mFrameResolution; }
+
   void SetFrameResolution(const CSSToScreenScale& aResolution) { mFrameResolution = aResolution; }
 
   bool HasFormatChanged() const;
@@ -293,47 +389,37 @@ public:
 
   SurfaceDescriptorTiles GetSurfaceDescriptorTiles();
 
-  static BasicTiledLayerBuffer OpenDescriptor(ISurfaceAllocator* aAllocator,
-                                              const SurfaceDescriptorTiles& aDescriptor,
-                                              SharedFrameMetricsHelper* aHelper);
-
 protected:
-  BasicTiledLayerTile ValidateTile(BasicTiledLayerTile aTile,
-                                   const nsIntPoint& aTileRect,
-                                   const nsIntRegion& dirtyRect);
+  TileClient ValidateTile(TileClient aTile,
+                          const nsIntPoint& aTileRect,
+                          const nsIntRegion& dirtyRect);
 
   // If this returns true, we perform the paint operation into a single large
   // buffer and copy it out to the tiles instead of calling PaintThebes() on
   // each tile individually. Somewhat surprisingly, this turns out to be faster
   // on Android.
-  bool UseSinglePaintBuffer() { return true; }
+  bool UseSinglePaintBuffer() { return !gfxPrefs::PerTileDrawing(); }
 
-  void ReleaseTile(BasicTiledLayerTile aTile) { /* No-op. */ }
+  void ReleaseTile(TileClient aTile) { aTile.Release(); }
 
-  void SwapTiles(BasicTiledLayerTile& aTileA, BasicTiledLayerTile& aTileB) {
-    std::swap(aTileA, aTileB);
-  }
+  void SwapTiles(TileClient& aTileA, TileClient& aTileB) { std::swap(aTileA, aTileB); }
 
-  BasicTiledLayerTile GetPlaceholderTile() const { return BasicTiledLayerTile(); }
+  TileClient GetPlaceholderTile() const { return TileClient(); }
 
 private:
   gfxContentType GetContentType() const;
   ClientTiledThebesLayer* mThebesLayer;
+  CompositableClient* mCompositableClient;
   ClientLayerManager* mManager;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
   CSSToScreenScale mFrameResolution;
   bool mLastPaintOpaque;
 
-  // The buffer we use when UseSinglePaintBuffer() above is true.
-  nsRefPtr<gfxImageSurface>     mSinglePaintBuffer;
+  // The DrawTarget we use when UseSinglePaintBuffer() above is true.
   RefPtr<gfx::DrawTarget>       mSinglePaintDrawTarget;
   nsIntPoint                    mSinglePaintBufferOffset;
   SharedFrameMetricsHelper*  mSharedFrameMetricsHelper;
-
-  BasicTiledLayerTile ValidateTileInternal(BasicTiledLayerTile aTile,
-                                           const nsIntPoint& aTileOrigin,
-                                           const nsIntRect& aDirtyRect);
 
   /**
    * Calculates the region to update in a single progressive update transaction.
@@ -374,6 +460,9 @@ public:
   ~TiledContentClient()
   {
     MOZ_COUNT_DTOR(TiledContentClient);
+
+    mTiledBuffer.Release();
+    mLowPrecisionTiledBuffer.Release();
   }
 
   virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
@@ -381,16 +470,18 @@ public:
     return TextureInfo(BUFFER_TILED);
   }
 
+  virtual void ClearCachedResources() MOZ_OVERRIDE;
+
   enum TiledBufferType {
     TILED_BUFFER,
     LOW_PRECISION_TILED_BUFFER
   };
-  void LockCopyAndWrite(TiledBufferType aType);
+  void UseTiledLayerBuffer(TiledBufferType aType);
 
 private:
   SharedFrameMetricsHelper mSharedFrameMetricsHelper;
-  BasicTiledLayerBuffer mTiledBuffer;
-  BasicTiledLayerBuffer mLowPrecisionTiledBuffer;
+  ClientTiledLayerBuffer mTiledBuffer;
+  ClientTiledLayerBuffer mLowPrecisionTiledBuffer;
 };
 
 }

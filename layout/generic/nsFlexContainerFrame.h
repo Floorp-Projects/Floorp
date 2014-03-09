@@ -20,6 +20,7 @@ typedef nsContainerFrame nsFlexContainerFrameSuper;
 template <class T> class nsTArray;
 
 class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
+public:
   NS_DECL_FRAMEARENA_HELPERS
   NS_DECL_QUERYFRAME_TARGET(nsFlexContainerFrame)
   NS_DECL_QUERYFRAME
@@ -28,7 +29,6 @@ class nsFlexContainerFrame : public nsFlexContainerFrameSuper {
   friend nsIFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
                                             nsStyleContext* aContext);
 
-public:
   // Forward-decls of helper classes
   class FlexItem;
   class FlexLine;
@@ -60,8 +60,7 @@ public:
 protected:
   // Protected constructor & destructor
   nsFlexContainerFrame(nsStyleContext* aContext) :
-    nsFlexContainerFrameSuper(aContext),
-    mChildrenHaveBeenReordered(false)
+    nsFlexContainerFrameSuper(aContext)
   {}
   virtual ~nsFlexContainerFrame();
 
