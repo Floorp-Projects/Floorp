@@ -96,8 +96,8 @@ parser_groups = (
                                          "match FILENAME and optionally "
                                          "match TESTNAME, both regexps"),
                                    metavar="FILENAME[:TESTNAME]",
-                                   default=None,
-                                   cmds=['test', 'testex', 'testpkgs',
+                                   default='',
+                                   cmds=['test', 'testex', 'testaddons', 'testpkgs',
                                          'testall'])),
         (("-g", "--use-config",), dict(dest="config",
                                        help="use named config from local.json",
@@ -421,6 +421,9 @@ def test_all_testaddons(env_root, defaults):
     addons.sort()
     fail = False
     for dirname in addons:
+        if (not defaults['filter'].split(":")[0] in dirname):
+            continue
+
         print >>sys.stderr, "Testing %s..." % dirname
         sys.stderr.flush()
         try:
@@ -445,6 +448,9 @@ def test_all_examples(env_root, defaults):
     examples.sort()
     fail = False
     for dirname in examples:
+        if (not defaults['filter'].split(":")[0] in dirname):
+            continue
+
         print >>sys.stderr, "Testing %s..." % dirname
         sys.stderr.flush()
         try:
@@ -819,12 +825,12 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     harness_options['manifest'] = manifest.get_harness_options_manifest(False)
 
     # Gives an hint to tell if sdk modules are bundled or not
-    harness_options['is-sdk-bundled'] = options.bundle_sdk
+    harness_options['is-sdk-bundled'] = options.bundle_sdk or options.no_strip_xpi
 
     if options.force_use_bundled_sdk:
-        if not options.bundle_sdk:
-            print >>sys.stderr, ("--force-use-bundled-sdk and --strip-sdk "
-                                 "can't be used at the same time.")
+        if not harness_options['is-sdk-bundled']:
+            print >>sys.stderr, ("--force-use-bundled-sdk "
+                                 "can't be used if sdk isn't bundled.")
             sys.exit(1)
         if options.overload_modules:
             print >>sys.stderr, ("--force-use-bundled-sdk and --overload-modules "

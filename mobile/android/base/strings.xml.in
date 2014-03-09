@@ -116,6 +116,10 @@
   <string name="pref_home_add_panel">&pref_home_add_panel;</string>
   <string name="home_add_panel_title">&home_add_panel_title;</string>
   <string name="home_add_panel_empty">&home_add_panel_empty;</string>
+  <string name="pref_category_home_content_settings">&pref_category_home_content_settings;</string>
+  <string name="pref_home_updates">&pref_home_updates;</string>
+  <string name="pref_home_updates_enabled">&pref_home_updates_enabled;</string>
+  <string name="pref_home_updates_wifi">&pref_home_updates_wifi;</string>
 
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>

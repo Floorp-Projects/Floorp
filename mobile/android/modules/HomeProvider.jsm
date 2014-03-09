@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
 });
 
 const PREF_STORAGE_LAST_SYNC_TIME_PREFIX = "home.storage.lastSyncTime.";
-const PREF_SYNC_WIFI_ONLY = "home.sync.wifiOnly";
+const PREF_SYNC_UPDATE_MODE = "home.sync.updateMode";
 const PREF_SYNC_CHECK_INTERVAL_SECS = "home.sync.checkIntervalSecs";
 
 XPCOMUtils.defineLazyGetter(this, "gSyncCheckIntervalSecs", function() {
@@ -135,7 +135,7 @@ this.HomeProvider = Object.freeze({
    */
   requestSync: function(datasetId, callback) {
     // Make sure it's a good time to sync.
-    if (Services.prefs.getBoolPref(PREF_SYNC_WIFI_ONLY) && !isUsingWifi()) {
+    if ((Services.prefs.getIntPref(PREF_SYNC_UPDATE_MODE) === 1) && !isUsingWifi()) {
       Cu.reportError("HomeProvider: Failed to sync because device is not on a local network");
       return false;
     }

@@ -874,6 +874,47 @@ exports["test:worker events"] = WorkerTest(
   }
 );
 
+exports["test:onDetach in contentScript on destroy"] = WorkerTest(
+  "data:text/html;charset=utf-8,foo#detach",
+  function(assert, browser, done) {
+    let worker = Worker({
+      window: browser.contentWindow,
+      contentScript: 'new ' + function WorkerScope() {
+        self.port.on('detach', function(reason) {
+          window.location.hash += '!' + reason;
+        })
+      },
+    });
+    browser.contentWindow.addEventListener('hashchange', _ => { 
+      assert.equal(browser.contentWindow.location.hash, '#detach!', 
+                   "location.href is as expected");
+      done();
+    })
+    worker.destroy();
+  }
+);
+
+exports["test:onDetach in contentScript on unload"] = WorkerTest(
+  "data:text/html;charset=utf-8,foo#detach",
+  function(assert, browser, done) {
+    let { loader } = LoaderWithHookedConsole(module);
+    let worker = loader.require("sdk/content/worker").Worker({
+      window: browser.contentWindow,
+      contentScript: 'new ' + function WorkerScope() {
+        self.port.on('detach', function(reason) {
+          window.location.hash += '!' + reason;
+        })
+      },
+    });
+    browser.contentWindow.addEventListener('hashchange', _ => { 
+      assert.equal(browser.contentWindow.location.hash, '#detach!shutdown', 
+                   "location.href is as expected");
+      done();
+    })
+    loader.unload('shutdown');
+  }
+);
+
 exports["test:console method log functions properly"] = WorkerTest(
   DEFAULT_CONTENT_URL,
   function(assert, browser, done) {
