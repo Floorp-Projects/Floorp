@@ -28,7 +28,7 @@ class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
 class ThebesBufferData;
 class DeprecatedTextureClient;
-class BasicTiledLayerBuffer;
+class ClientTiledLayerBuffer;
 class PTextureChild;
 
 /**
@@ -49,7 +49,6 @@ public:
 
   CompositableForwarder()
     : mSerial(++sSerialCounter)
-    , mMultiProcess(false)
   {}
 
   /**
@@ -92,8 +91,12 @@ public:
    */
   virtual void DestroyThebesBuffer(CompositableClient* aCompositable) = 0;
 
-  virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
-                                       const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
+  /**
+   * Tell the CompositableHost on the compositor side what TiledLayerBuffer to
+   * use for the next composition.
+   */
+  virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
+                                   const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
 
   /**
    * Create a TextureChild/Parent pair as as well as the TextureHost on the parent side.
@@ -222,7 +225,7 @@ public:
    * We only don't allow changing the backend type at runtime so this value can
    * be queried once and will not change until Gecko is restarted.
    */
-  LayersBackend GetCompositorBackendType() const
+  virtual LayersBackend GetCompositorBackendType() const MOZ_OVERRIDE
   {
     return mTextureFactoryIdentifier.mParentBackend;
   }
@@ -237,11 +240,6 @@ public:
     return mTextureFactoryIdentifier.mSupportsPartialUploads;
   }
 
-  bool ForwardsToDifferentProcess() const
-  {
-    return mMultiProcess;
-  }
-
   const TextureFactoryIdentifier& GetTextureFactoryIdentifier() const
   {
     return mTextureFactoryIdentifier;
@@ -254,7 +252,6 @@ protected:
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
-  bool mMultiProcess;
 };
 
 } // namespace

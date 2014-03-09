@@ -87,6 +87,8 @@ if CONFIG['OS_TARGET'] == 'Android':
         SOURCES += [
             '%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
         ]
+elif CONFIG['OS_TARGET'] == 'Darwin':
+    CFLAGS += ['-Wno-sign-compare']
 
 if not CONFIG['_MSC_VER']:
     for f in SOURCES:

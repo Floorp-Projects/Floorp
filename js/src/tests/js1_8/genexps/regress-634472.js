@@ -26,7 +26,7 @@ function error(str) {
 const JSMSG_GENEXP_YIELD         = error("(function(){((yield) for (x in []))})").message;
 const JSMSG_TOP_YIELD            = error("yield").message;
 const JSMSG_YIELD_PAREN          = error("(function(){yield, 1})").message;
-const JSMSG_GENERIC              = error("(for)").message;
+const JSMSG_YIELD_FOR            = error("(function(){yield for})").message;
 const JSMSG_BAD_GENERATOR_SYNTAX = error("(1, x for (x in []))").message;
 
 const cases = [
@@ -53,11 +53,11 @@ const cases = [
   { expr: "1, arguments", top: null, fun: null, gen: null, desc: "arguments in list" },
 
   // yield in generator expressions
-  { expr: "(yield for (x in []))",           top: JSMSG_TOP_YIELD, fun: JSMSG_GENERIC,      gen: JSMSG_GENERIC,      desc: "simple yield in genexp" },
+  { expr: "(yield for (x in []))",           top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_FOR,    gen: JSMSG_YIELD_FOR,      desc: "simple yield in genexp" },
   { expr: "(yield 1 for (x in []))",         top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "yield w/ arg in genexp" },
   { expr: "(yield, 1 for (x in []))",        top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_PAREN,  gen: JSMSG_YIELD_PAREN,  desc: "simple yield in list in genexp" },
   { expr: "(yield 1, 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_PAREN,  gen: JSMSG_YIELD_PAREN,  desc: "yield w/ arg in list in genexp" },
-  { expr: "(1, yield for (x in []))",        top: JSMSG_TOP_YIELD, fun: JSMSG_GENERIC,      gen: JSMSG_GENERIC,      desc: "simple yield at end of list in genexp" },
+  { expr: "(1, yield for (x in []))",        top: JSMSG_TOP_YIELD, fun: JSMSG_YIELD_FOR,    gen: JSMSG_YIELD_FOR,      desc: "simple yield at end of list in genexp" },
   { expr: "(1, yield 2 for (x in []))",      top: JSMSG_TOP_YIELD, fun: { simple: JSMSG_GENEXP_YIELD, call: JSMSG_GENEXP_YIELD },
                                                                                             gen: JSMSG_GENEXP_YIELD, desc: "yield w/ arg at end of list in genexp" },
   { expr: "((yield) for (x in []))",         top: JSMSG_TOP_YIELD, fun: JSMSG_GENEXP_YIELD, gen: JSMSG_GENEXP_YIELD, desc: "simple yield, parenthesized in genexp" },

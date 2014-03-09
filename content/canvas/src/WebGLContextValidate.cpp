@@ -1586,7 +1586,9 @@ WebGLContext::InitAndValidateGL()
     }
 
     mActiveTexture = 0;
+    mEmitContextLostErrorOnce = true;
     mWebGLError = LOCAL_GL_NO_ERROR;
+    mUnderlyingGLError = LOCAL_GL_NO_ERROR;
 
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();

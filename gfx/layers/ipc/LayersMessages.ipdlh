@@ -255,8 +255,34 @@ struct OpRaiseToTopChild  { PLayer container; PLayer childLayer; };
 
 struct OpSetDiagnosticTypes { DiagnosticTypes diagnostics; };
 
-// Paint (buffer update)
-struct OpPaintTiledLayerBuffer {
+union TileLock {
+  Shmem;
+  uintptr_t;
+};
+
+struct TexturedTileDescriptor {
+  PTexture texture;
+  TileLock sharedLock;
+};
+
+struct PlaceholderTileDescriptor {
+};
+
+union TileDescriptor {
+  TexturedTileDescriptor;
+  PlaceholderTileDescriptor;
+};
+
+struct SurfaceDescriptorTiles {
+  nsIntRegion validRegion;
+  nsIntRegion paintedRegion;
+  TileDescriptor[] tiles;
+  int         retainedWidth;
+  int         retainedHeight;
+  float       resolution;
+};
+
+struct OpUseTiledLayerBuffer {
   PCompositable compositable;
   SurfaceDescriptorTiles tileLayerDescriptor;
 };
@@ -349,7 +375,7 @@ union CompositableOperation {
   OpPaintTextureRegion;
   OpPaintTextureIncremental;
 
-  OpPaintTiledLayerBuffer;
+  OpUseTiledLayerBuffer;
 
   OpRemoveTexture;
 

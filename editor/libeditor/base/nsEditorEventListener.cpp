@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
+#include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/TextEvents.h"         // for WidgetCompositionEvent
 #include "mozilla/dom/Element.h"        // for Element
@@ -38,7 +39,6 @@
 #include "nsIFocusManager.h"            // for nsIFocusManager
 #include "nsIFormControl.h"             // for nsIFormControl, etc
 #include "nsIHTMLEditor.h"              // for nsIHTMLEditor
-#include "nsIMEStateManager.h"          // for nsIMEStateManager
 #include "nsINativeKeyBindings.h"       // for nsINativeKeyBindings
 #include "nsINode.h"                    // for nsINode, ::NODE_IS_EDITABLE, etc
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
@@ -570,7 +570,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
     nsPresContext* presContext =
       presShell ? presShell->GetPresContext() : nullptr;
     if (presContext && currentDoc) {
-      nsIMEStateManager::OnClickInEditor(presContext,
+      IMEStateManager::OnClickInEditor(presContext,
         currentDoc->HasFlag(NODE_IS_EDITABLE) ? nullptr : focusedContent,
         mouseEvent);
     }
@@ -954,7 +954,7 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_OK);
   nsCOMPtr<nsIContent> focusedContent = mEditor->GetFocusedContentForIME();
-  nsIMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent);
+  IMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent);
 
   return NS_OK;
 }
