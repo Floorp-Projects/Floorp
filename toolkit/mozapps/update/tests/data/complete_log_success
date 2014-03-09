@@ -1,19 +1,13 @@
 UPDATE TYPE complete
-PREPARE REMOVEFILE precomplete
 PREPARE REMOVEFILE a/b/searchplugins/searchpluginstext0
 PREPARE REMOVEFILE a/b/searchplugins/searchpluginspng0.png
 PREPARE REMOVEFILE a/b/removed-files
-PREPARE REMOVEFILE a/b/extensions/extensions1/extensions1png1.png
-PREPARE REMOVEFILE a/b/extensions/extensions0/extensions0text0
 PREPARE REMOVEFILE a/b/exe0.exe
 PREPARE REMOVEFILE a/b/2/20/20text0
 PREPARE REMOVEFILE a/b/2/20/20png0.png
 PREPARE REMOVEFILE a/b/0/0exe0.exe
 PREPARE REMOVEFILE a/b/0/00/00text0
 PREPARE REMOVEDIR a/b/searchplugins/
-PREPARE REMOVEDIR a/b/extensions/extensions1/
-PREPARE REMOVEDIR a/b/extensions/extensions0/
-PREPARE REMOVEDIR a/b/extensions/
 PREPARE REMOVEDIR a/b/defaults/pref/
 PREPARE REMOVEDIR a/b/defaults/
 PREPARE REMOVEDIR a/b/2/20/
@@ -27,13 +21,13 @@ PREPARE ADD a/b/searchplugins/searchpluginstext0
 PREPARE ADD a/b/searchplugins/searchpluginspng1.png
 PREPARE ADD a/b/searchplugins/searchpluginspng0.png
 PREPARE ADD a/b/removed-files
-PREPARE ADD a/b/extensions/extensions1/extensions1text0
-PREPARE ADD a/b/extensions/extensions1/extensions1png1.png
-PREPARE ADD a/b/extensions/extensions1/extensions1png0.png
-PREPARE ADD a/b/extensions/extensions0/extensions0text0
-PREPARE ADD a/b/extensions/extensions0/extensions0png1.png
-PREPARE ADD a/b/extensions/extensions0/extensions0png0.png
 PREPARE ADD a/b/exe0.exe
+PREPARE ADD a/b/distribution/extensions/extensions1/extensions1text0
+PREPARE ADD a/b/distribution/extensions/extensions1/extensions1png1.png
+PREPARE ADD a/b/distribution/extensions/extensions1/extensions1png0.png
+PREPARE ADD a/b/distribution/extensions/extensions0/extensions0text0
+PREPARE ADD a/b/distribution/extensions/extensions0/extensions0png1.png
+PREPARE ADD a/b/distribution/extensions/extensions0/extensions0png0.png
 PREPARE ADD a/b/1/10/10text0
 PREPARE ADD a/b/0/0exe0.exe
 PREPARE ADD a/b/0/00/00text1
@@ -104,21 +98,15 @@ PREPARE REMOVEFILE a/b/4/4text0
 PREPARE REMOVEDIR a/b/4/
 PREPARE REMOVEFILE a/b/3/3text1
 PREPARE REMOVEFILE a/b/3/3text0
-EXECUTE REMOVEFILE precomplete
 EXECUTE REMOVEFILE a/b/searchplugins/searchpluginstext0
 EXECUTE REMOVEFILE a/b/searchplugins/searchpluginspng0.png
 EXECUTE REMOVEFILE a/b/removed-files
-EXECUTE REMOVEFILE a/b/extensions/extensions1/extensions1png1.png
-EXECUTE REMOVEFILE a/b/extensions/extensions0/extensions0text0
 EXECUTE REMOVEFILE a/b/exe0.exe
 EXECUTE REMOVEFILE a/b/2/20/20text0
 EXECUTE REMOVEFILE a/b/2/20/20png0.png
 EXECUTE REMOVEFILE a/b/0/0exe0.exe
 EXECUTE REMOVEFILE a/b/0/00/00text0
 EXECUTE REMOVEDIR a/b/searchplugins/
-EXECUTE REMOVEDIR a/b/extensions/extensions1/
-EXECUTE REMOVEDIR a/b/extensions/extensions0/
-EXECUTE REMOVEDIR a/b/extensions/
 EXECUTE REMOVEDIR a/b/defaults/pref/
 EXECUTE REMOVEDIR a/b/defaults/
 EXECUTE REMOVEDIR a/b/2/20/
@@ -132,13 +120,13 @@ EXECUTE ADD a/b/searchplugins/searchpluginstext0
 EXECUTE ADD a/b/searchplugins/searchpluginspng1.png
 EXECUTE ADD a/b/searchplugins/searchpluginspng0.png
 EXECUTE ADD a/b/removed-files
-EXECUTE ADD a/b/extensions/extensions1/extensions1text0
-EXECUTE ADD a/b/extensions/extensions1/extensions1png1.png
-EXECUTE ADD a/b/extensions/extensions1/extensions1png0.png
-EXECUTE ADD a/b/extensions/extensions0/extensions0text0
-EXECUTE ADD a/b/extensions/extensions0/extensions0png1.png
-EXECUTE ADD a/b/extensions/extensions0/extensions0png0.png
 EXECUTE ADD a/b/exe0.exe
+EXECUTE ADD a/b/distribution/extensions/extensions1/extensions1text0
+EXECUTE ADD a/b/distribution/extensions/extensions1/extensions1png1.png
+EXECUTE ADD a/b/distribution/extensions/extensions1/extensions1png0.png
+EXECUTE ADD a/b/distribution/extensions/extensions0/extensions0text0
+EXECUTE ADD a/b/distribution/extensions/extensions0/extensions0png1.png
+EXECUTE ADD a/b/distribution/extensions/extensions0/extensions0png0.png
 EXECUTE ADD a/b/1/10/10text0
 EXECUTE ADD a/b/0/0exe0.exe
 EXECUTE ADD a/b/0/00/00text1
@@ -211,12 +199,9 @@ EXECUTE REMOVEFILE a/b/4/4text0
 EXECUTE REMOVEDIR a/b/4/
 EXECUTE REMOVEFILE a/b/3/3text1
 EXECUTE REMOVEFILE a/b/3/3text0
-FINISH REMOVEFILE precomplete
 FINISH REMOVEFILE a/b/searchplugins/searchpluginstext0
 FINISH REMOVEFILE a/b/searchplugins/searchpluginspng0.png
 FINISH REMOVEFILE a/b/removed-files
-FINISH REMOVEFILE a/b/extensions/extensions1/extensions1png1.png
-FINISH REMOVEFILE a/b/extensions/extensions0/extensions0text0
 FINISH REMOVEFILE a/b/exe0.exe
 FINISH REMOVEFILE a/b/2/20/20text0
 FINISH REMOVEFILE a/b/2/20/20png0.png
@@ -224,12 +209,6 @@ FINISH REMOVEFILE a/b/0/0exe0.exe
 FINISH REMOVEFILE a/b/0/00/00text0
 FINISH REMOVEDIR a/b/searchplugins/
 removing directory: a/b/searchplugins/, rv: 0
-FINISH REMOVEDIR a/b/extensions/extensions1/
-removing directory: a/b/extensions/extensions1/, rv: 0
-FINISH REMOVEDIR a/b/extensions/extensions0/
-removing directory: a/b/extensions/extensions0/, rv: 0
-FINISH REMOVEDIR a/b/extensions/
-removing directory: a/b/extensions/, rv: 0
 FINISH REMOVEDIR a/b/defaults/pref/
 removing directory: a/b/defaults/pref/, rv: 0
 FINISH REMOVEDIR a/b/defaults/
@@ -249,13 +228,13 @@ FINISH ADD a/b/searchplugins/searchpluginstext0
 FINISH ADD a/b/searchplugins/searchpluginspng1.png
 FINISH ADD a/b/searchplugins/searchpluginspng0.png
 FINISH ADD a/b/removed-files
-FINISH ADD a/b/extensions/extensions1/extensions1text0
-FINISH ADD a/b/extensions/extensions1/extensions1png1.png
-FINISH ADD a/b/extensions/extensions1/extensions1png0.png
-FINISH ADD a/b/extensions/extensions0/extensions0text0
-FINISH ADD a/b/extensions/extensions0/extensions0png1.png
-FINISH ADD a/b/extensions/extensions0/extensions0png0.png
 FINISH ADD a/b/exe0.exe
+FINISH ADD a/b/distribution/extensions/extensions1/extensions1text0
+FINISH ADD a/b/distribution/extensions/extensions1/extensions1png1.png
+FINISH ADD a/b/distribution/extensions/extensions1/extensions1png0.png
+FINISH ADD a/b/distribution/extensions/extensions0/extensions0text0
+FINISH ADD a/b/distribution/extensions/extensions0/extensions0png1.png
+FINISH ADD a/b/distribution/extensions/extensions0/extensions0png0.png
 FINISH ADD a/b/1/10/10text0
 FINISH ADD a/b/0/0exe0.exe
 FINISH ADD a/b/0/00/00text1

@@ -52,7 +52,6 @@ chrome-shared_PATH := $(CHROMETESTROOT)/chrome
 
 _CHROME_DATA := \
   simple.mar \
-  simple_no_pib.mar \
   $(NULL)
 INSTALL_TARGETS     += chrome-data
 chrome-data_TARGET  := libs
