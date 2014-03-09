@@ -133,6 +133,23 @@ enum SurfaceInitMode
 };
 
 /**
+ * A base class for a platform-dependent helper for use by TextureHost.
+ */
+class CompositorBackendSpecificData : public RefCounted<CompositorBackendSpecificData>
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(CompositorBackendSpecificData)
+  CompositorBackendSpecificData()
+  {
+    MOZ_COUNT_CTOR(CompositorBackendSpecificData);
+  }
+  virtual ~CompositorBackendSpecificData()
+  {
+    MOZ_COUNT_DTOR(CompositorBackendSpecificData);
+  }
+};
+
+/**
  * Common interface for compositor backends.
  *
  * Compositor provides a cross-platform interface to a set of operations for
@@ -457,6 +474,10 @@ public:
       }
     }
     return fillRatio;
+  }
+
+  virtual CompositorBackendSpecificData* GetCompositorBackendSpecificData() {
+    return nullptr;
   }
 
 protected:

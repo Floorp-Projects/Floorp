@@ -481,7 +481,7 @@ struct SizeConstraints {
   nsIntSize mMaxSize;
 };
 
-// IMEMessage is shared by nsIMEStateManager and TextComposition.
+// IMEMessage is shared by IMEStateManager and TextComposition.
 // XXX Negative values are used in Android...
 enum IMEMessage MOZ_ENUM_TYPE(int8_t)
 {

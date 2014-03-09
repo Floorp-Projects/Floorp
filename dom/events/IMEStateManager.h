@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIMEStateManager_h__
-#define nsIMEStateManager_h__
+#ifndef mozilla_IMEStateManager_h_
+#define mozilla_IMEStateManager_h_
 
 #include "mozilla/EventForwards.h"
 #include "nsIWidget.h"
@@ -15,26 +15,26 @@ class nsIDOMMouseEvent;
 class nsINode;
 class nsPIDOMWindow;
 class nsPresContext;
-class nsTextStateManager;
 class nsISelection;
 
 namespace mozilla {
+
+class IMEContentObserver;
 class TextCompositionArray;
 class TextComposition;
-} // namespace mozilla
 
-/*
- * IME state manager
+/**
+ * IMEStateManager manages InputContext (e.g., active editor type, IME enabled
+ * state and IME open state) of nsIWidget instances, manages IMEContentObserver
+ * and provides useful API for IME.
  */
 
-class nsIMEStateManager
+class IMEStateManager
 {
-  friend class nsTextStateManager;
-protected:
-  typedef mozilla::widget::IMEMessage IMEMessage;
-  typedef mozilla::widget::IMEState IMEState;
-  typedef mozilla::widget::InputContext InputContext;
-  typedef mozilla::widget::InputContextAction InputContextAction;
+  typedef widget::IMEMessage IMEMessage;
+  typedef widget::IMEState IMEState;
+  typedef widget::InputContext InputContext;
+  typedef widget::InputContextAction InputContextAction;
 
 public:
   static void Shutdown();
@@ -92,14 +92,14 @@ public:
    */
   static void DispatchCompositionEvent(nsINode* aEventTargetNode,
                                        nsPresContext* aPresContext,
-                                       mozilla::WidgetEvent* aEvent,
+                                       WidgetEvent* aEvent,
                                        nsEventStatus* aStatus,
                                        nsDispatchingCallback* aCallBack);
 
   /**
    * Get TextComposition from widget.
    */
-  static already_AddRefed<mozilla::TextComposition>
+  static already_AddRefed<TextComposition>
     GetTextCompositionFor(nsIWidget* aWidget);
 
   /**
@@ -108,8 +108,8 @@ public:
    * @param aEvent      Should be a composition event or a text event which is
    *                    being dispatched.
    */
-  static already_AddRefed<mozilla::TextComposition>
-    GetTextCompositionFor(mozilla::WidgetGUIEvent* aEvent);
+  static already_AddRefed<TextComposition>
+    GetTextCompositionFor(WidgetGUIEvent* aEvent);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what
@@ -117,6 +117,10 @@ public:
    */
   static nsresult NotifyIME(IMEMessage aMessage, nsIWidget* aWidget);
   static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext);
+
+  static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
+                                      nsIContent* aContent);
+  static bool IsTestingIME() { return sIsTestingIME; }
 
 protected:
   static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
@@ -130,12 +134,10 @@ protected:
                                  nsIContent* aContent);
 
   static void EnsureTextCompositionArray();
-  static void CreateTextStateManager();
+  static void CreateIMEContentObserver();
   static void DestroyTextStateManager();
 
   static bool IsEditable(nsINode* node);
-  static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
-                                      nsIContent* aContent);
 
   static bool IsEditableIMEState(nsIWidget* aWidget);
 
@@ -144,13 +146,15 @@ protected:
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsTestingIME;
 
-  static nsTextStateManager* sTextStateObserver;
+  static IMEContentObserver* sActiveIMEContentObserver;
 
   // All active compositions in the process are stored by this array.
   // When you get an item of this array and use it, please be careful.
   // The instances in this array can be destroyed automatically if you do
   // something to cause committing or canceling the composition.
-  static mozilla::TextCompositionArray* sTextCompositions;
+  static TextCompositionArray* sTextCompositions;
 };
 
-#endif // nsIMEStateManager_h__
+} // namespace mozilla
+
+#endif // mozilla_IMEStateManager_h_

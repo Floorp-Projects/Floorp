@@ -9,6 +9,7 @@
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
 #include "nsDataHashtable.h"
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
@@ -139,6 +140,8 @@ public:
 
   static void Init();
 
+  ~nsWindowMemoryReporter();
+
 #ifdef DEBUG
   /**
    * Unlink all known ghost windows, to enable investigating what caused them
@@ -188,13 +191,6 @@ private:
   void ObserveAfterMinimizeMemoryUsage();
 
   /**
-   * When we observe a DOM window being detached, we enqueue an asynchronous
-   * event which calls this method.  This method then calls
-   * CheckForGhostWindows.
-   */
-  void CheckForGhostWindowsCallback();
-
-  /**
    * Iterate over all weak window pointers in mDetachedWindows and update our
    * accounting of which windows meet ghost criterion (2).
    *
@@ -210,6 +206,19 @@ private:
   void CheckForGhostWindows(nsTHashtable<nsUint64HashKey> *aOutGhostIDs = nullptr);
 
   /**
+   * Eventually do a check for ghost windows, if we haven't done one recently
+   * and we aren't already planning to do one soon.
+   */
+  void AsyncCheckForGhostWindows();
+
+  /**
+   * Kill the check timer, if it exists.
+   */
+  void KillCheckTimer();
+
+  static void CheckTimerFired(nsITimer* aTimer, void* aClosure);
+
+  /**
    * Maps a weak reference to a detached window (nsIWeakReference) to the time
    * when we observed that the window met ghost criterion (2) above.
    *
@@ -222,9 +231,16 @@ private:
   nsDataHashtable<nsISupportsHashKey, mozilla::TimeStamp> mDetachedWindows;
 
   /**
-   * True if we have an asynchronous call to CheckForGhostWindows pending.
+   * Track the last time we ran CheckForGhostWindows(), to avoid running it
+   * too often after a DOM window is detached.
    */
-  bool mCheckForGhostWindowsCallbackPending;
+  mozilla::TimeStamp mLastCheckForGhostWindows;
+
+  nsCOMPtr<nsITimer> mCheckTimer;
+
+  bool mCycleCollectorIsRunning;
+
+  bool mCheckTimerWaitingForCCEnd;
 };
 
 #endif // nsWindowMemoryReporter_h__

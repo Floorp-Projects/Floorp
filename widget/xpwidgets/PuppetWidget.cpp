@@ -14,12 +14,12 @@
 #endif
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Hal.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/TextEvents.h"
 #include "PuppetWidget.h"
 #include "nsIWidgetListener.h"
-#include "nsIMEStateManager.h"
 #include "TextComposition.h"
 
 using namespace mozilla::dom;
@@ -493,7 +493,7 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
   NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
 
   nsRefPtr<TextComposition> textComposition =
-    nsIMEStateManager::GetTextCompositionFor(this);
+    IMEStateManager::GetTextCompositionFor(this);
   NS_ENSURE_TRUE(textComposition, NS_ERROR_FAILURE);
 
   nsEventStatus status;
