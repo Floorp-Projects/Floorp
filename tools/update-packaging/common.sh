@@ -77,8 +77,7 @@ make_patch_instruction() {
 
 append_remove_instructions() {
   dir="$1"
-  filev1="$2"
-  filev2="$3"
+  filev2="$2"
   if [ -f "$dir/removed-files" ]; then
     prefix=
     listfile="$dir/removed-files"
@@ -122,7 +121,6 @@ append_remove_instructions() {
             echo "rmrfdir \"$fixedprefix$f\"" >> $filev2
           else
             notice "     remove: $fixedprefix$f"
-            echo "remove \"$fixedprefix$f\"" >> $filev1
             echo "remove \"$fixedprefix$f\"" >> $filev2
           fi
         fi
