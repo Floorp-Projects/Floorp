@@ -4,9 +4,11 @@ libdir="%libdir%"
 includedir="%includedir%/freetype2"
 
 Name: FreeType 2
+URL: http://freetype.org
 Description: A free, high-quality, and portable font engine.
 Version: %ft_version%
 Requires:
+Requires.private: %REQUIRES_PRIVATE%
 Libs: -L${libdir} -lfreetype
-Libs.private: %LIBZ% %LIBBZ2% %LIBPNG% %FT2_EXTRA_LIBS%
+Libs.private: %LIBS_PRIVATE%
 Cflags: -I${includedir}
