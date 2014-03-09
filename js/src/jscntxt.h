@@ -1093,6 +1093,9 @@ class AutoLockForExclusiveAccess
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+void
+CrashAtUnhandlableOOM(const char *reason);
+
 } /* namespace js */
 
 #ifdef _MSC_VER
