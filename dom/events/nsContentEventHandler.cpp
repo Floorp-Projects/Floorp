@@ -24,9 +24,9 @@
 #include "nsISelectionPrivate.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsIMEStateManager.h"
 #include "nsIObjectFrame.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/TextEvents.h"
 #include <algorithm>
 
@@ -1096,9 +1096,9 @@ nsContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
   // Get selection to manipulate
   // XXX why do we need to get them from ISM? This method should work fine
   //     without ISM.
-  nsresult rv = nsIMEStateManager::
-      GetFocusSelectionAndRoot(getter_AddRefs(mSelection),
-                               getter_AddRefs(mRootContent));
+  nsresult rv =
+    IMEStateManager::GetFocusSelectionAndRoot(getter_AddRefs(mSelection),
+                                              getter_AddRefs(mRootContent));
   if (rv != NS_ERROR_NOT_AVAILABLE) {
     NS_ENSURE_SUCCESS(rv, rv);
   } else {

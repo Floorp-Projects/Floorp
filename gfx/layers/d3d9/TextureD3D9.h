@@ -219,6 +219,8 @@ public:
   virtual bool AllocateForSurface(gfx::IntSize aSize,
                                   TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
 
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return true; }
+
 private:
   RefPtr<IDirect3DTexture9> mTexture;
   nsRefPtr<IDirect3DSurface9> mD3D9Surface;
@@ -270,6 +272,8 @@ public:
 
   virtual bool AllocateForSurface(gfx::IntSize aSize,
                                   TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
+
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return true; }
 
 protected:
   nsRefPtr<gfxWindowsSurface> mSurface;
@@ -352,6 +356,8 @@ public:
   {
     return nullptr;
   }
+
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return true; }
 
 protected:
   TextureHostD3D9(TextureFlags aFlags);

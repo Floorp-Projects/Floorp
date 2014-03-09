@@ -816,7 +816,7 @@ JS_PUBLIC_API(JSRuntime *)
 JS_GetParentRuntime(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime();
-    return rt->parentRuntime ? rt->parentRuntime : nullptr;
+    return rt->parentRuntime ? rt->parentRuntime : rt;
 }
 
 JS_PUBLIC_API(JSContext *)

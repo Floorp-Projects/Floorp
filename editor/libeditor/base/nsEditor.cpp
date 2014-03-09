@@ -25,6 +25,7 @@
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozISpellCheckingEngine.h"
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
+#include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/Selection.h"          // for Selection, etc
 #include "mozilla/Services.h"           // for GetObserverService
@@ -75,7 +76,6 @@
 #include "nsIFrame.h"                   // for nsIFrame
 #include "nsIHTMLDocument.h"            // for nsIHTMLDocument
 #include "nsIInlineSpellChecker.h"      // for nsIInlineSpellChecker, etc
-#include "nsIMEStateManager.h"          // for nsIMEStateManager
 #include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc
 #include "nsINode.h"                    // for nsINode, etc
 #include "nsIObserverService.h"         // for nsIObserverService
@@ -315,7 +315,7 @@ nsEditor::PostCreate()
     rv = GetPreferredIMEState(&newState);
     NS_ENSURE_SUCCESS(rv, NS_OK);
     nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
-    nsIMEStateManager::UpdateIMEState(newState, content);
+    IMEStateManager::UpdateIMEState(newState, content);
   }
   return NS_OK;
 }
@@ -496,7 +496,7 @@ nsEditor::SetFlags(uint32_t aFlags)
       // NOTE: When the enabled state isn't going to be modified, this method
       // is going to do nothing.
       nsCOMPtr<nsIContent> content = GetFocusedContentForIME();
-      nsIMEStateManager::UpdateIMEState(newState, content);
+      IMEStateManager::UpdateIMEState(newState, content);
     }
   }
 
@@ -2016,10 +2016,10 @@ nsEditor::EnsureComposition(mozilla::WidgetGUIEvent* aEvent)
     return;
   }
   // The compositionstart event must cause creating new TextComposition
-  // instance at being dispatched by nsIMEStateManager.
-  mComposition = nsIMEStateManager::GetTextCompositionFor(aEvent);
+  // instance at being dispatched by IMEStateManager.
+  mComposition = IMEStateManager::GetTextCompositionFor(aEvent);
   if (!mComposition) {
-    MOZ_CRASH("nsIMEStateManager doesn't return proper composition");
+    MOZ_CRASH("IMEStateManager doesn't return proper composition");
   }
   mComposition->StartHandlingComposition(this);
 }
@@ -2095,10 +2095,10 @@ nsEditor::ForceCompositionEnd()
     // Linux.  Currently, nsGtkIMModule can know the timing of the cursor move,
     // so, the latter meaning should be gone.
     // XXX This may commit a composition in another editor.
-    return nsIMEStateManager::NotifyIME(NOTIFY_IME_OF_CURSOR_POS_CHANGED, pc);
+    return IMEStateManager::NotifyIME(NOTIFY_IME_OF_CURSOR_POS_CHANGED, pc);
   }
 
-  return nsIMEStateManager::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, pc);
+  return IMEStateManager::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, pc);
 }
 
 NS_IMETHODIMP

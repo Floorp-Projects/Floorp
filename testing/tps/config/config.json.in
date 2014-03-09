@@ -1,14 +1,12 @@
-{ 
-  "account": {
-    "serverURL": "",
-    "admin-secret": "",
+{
+  "sync_account": {
     "username": "crossweaveservices@mozilla.com",
     "password": "crossweaveservicescrossweaveservices",
     "passphrase": "r-jwcbc-zgf42-fjn72-p5vpp-iypmi"
   },
-  "resultstore": {
-    "host": "brasstacks.mozilla.com",
-    "path": "/resultserv/post/"
+  "fx_account": {
+    "username": "crossweaveservices@restmail.net",
+    "password": "crossweaveservicescrossweaveservices"
   },
   "email": {
     "username": "crossweave@mozilla.com",
@@ -19,7 +17,7 @@
   "platform": "win32",
   "os": "win7",
   "es": "localhost:9200",
+  "serverURL": null,
   "testdir": "__TESTDIR__",
   "extensiondir": "__EXTENSIONDIR__"
 }
-

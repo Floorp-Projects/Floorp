@@ -28,15 +28,6 @@
 using namespace mozilla;
 using namespace mozilla::a11y;
 
-// converts a screen-global point in the cocoa coordinate system (with origo in the bottom-left corner
-// of the screen), into a top-left screen point, that gecko can use.
-static inline void
-ConvertCocoaToGeckoPoint(NSPoint &aInPoint, nsPoint &aOutPoint)
-{
-  float mainScreenHeight = [(NSView*)[[NSScreen screens] objectAtIndex:0] frame].size.height;
-  aOutPoint.MoveTo ((nscoord)aInPoint.x, (nscoord)(mainScreenHeight - aInPoint.y));
-}
-
 // returns the passed in object if it is not ignored. if it's ignored, will return
 // the first unignored ancestor.
 static inline id
@@ -240,23 +231,24 @@ GetClosestInterestingAccessible(id anObject)
   if (!mGeckoAccessible)
     return nil;
 
-  // Convert from cocoa's coordinate system to gecko's. According to the docs
-  // the point we're given is guaranteed to be bottom-left screen coordinates.
-  nsPoint geckoPoint;
-  ConvertCocoaToGeckoPoint (point, geckoPoint);
+  // Convert the given screen-global point in the cocoa coordinate system (with
+  // origin in the bottom-left corner of the screen) into point in the Gecko
+  // coordinate system (with origin in a top-left screen point).
+  NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
+  NSPoint tmpPoint = NSMakePoint(point.x,
+                                 [mainView frame].size.height - point.y);
+  nsIntPoint geckoPoint = nsCocoaUtils::
+    CocoaPointsToDevPixels(tmpPoint, nsCocoaUtils::GetBackingScaleFactor(mainView));
 
-  nsCOMPtr<nsIAccessible> deepestFoundChild;
-  mGeckoAccessible->GetDeepestChildAtPoint((int32_t)geckoPoint.x,
-                                           (int32_t)geckoPoint.y,
-                                           getter_AddRefs(deepestFoundChild));
-  
-  // if we found something, return its native accessible.
-  if (deepestFoundChild) {
-    mozAccessible *nativeChild = GetNativeFromGeckoAccessible(deepestFoundChild);
+  Accessible* child = mGeckoAccessible->ChildAtPoint(geckoPoint.x, geckoPoint.y,
+                                                     Accessible::eDeepestChild);
+
+  if (child) {
+    mozAccessible* nativeChild = GetNativeFromGeckoAccessible(child);
     if (nativeChild)
       return GetClosestInterestingAccessible(nativeChild);
   }
-  
+
   // if we didn't find anything, return ourself (or the first unignored ancestor).
   return GetClosestInterestingAccessible(self); 
 }
@@ -379,20 +371,17 @@ GetClosestInterestingAccessible(id anObject)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  int32_t x, y, width, height;
-  mGeckoAccessible->GetBounds (&x, &y, &width, &height);
-  NSPoint p = NSMakePoint (x, y);
-  
-  // The coords we get from Gecko are top-left screen coordinates.
-  // Cocoa wants us to return bottom-left screen coordinates.
-  // This involves two steps:
-  // 1. Put the rect in the bottom-left coord space
-  // 2. Subtract the height of the rect's Y-coordinate, to make the
-  //    the rect's origin (0, 0) be in the bottom-left corner.
-  
-  float mainScreenHeight = [[[NSScreen screens] objectAtIndex:0] frame].size.height;
-  p.y = mainScreenHeight - p.y - height;
-  
+  if (!mGeckoAccessible)
+    return nil;
+
+  int32_t x = 0, y = 0, width = 0, height = 0;
+  mGeckoAccessible->GetBounds(&x, &y, &width, &height);
+
+  NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
+  CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
+  NSPoint p = NSMakePoint(static_cast<CGFloat>(x) / scaleFactor,
+                         [mainView frame].size.height - static_cast<CGFloat>(y + height) / scaleFactor);
+
   return [NSValue valueWithPoint:p];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -402,9 +391,15 @@ GetClosestInterestingAccessible(id anObject)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  int32_t x, y, width, height;
-  mGeckoAccessible->GetBounds (&x, &y, &width, &height);  
-  return [NSValue valueWithSize:NSMakeSize (width, height)];
+  if (!mGeckoAccessible)
+    return nil;
+
+  int32_t x = 0, y = 0, width = 0, height = 0;
+  mGeckoAccessible->GetBounds (&x, &y, &width, &height);
+  CGFloat scaleFactor =
+    nsCocoaUtils::GetBackingScaleFactor([[NSScreen screens] objectAtIndex:0]);
+  return [NSValue valueWithSize:NSMakeSize(static_cast<CGFloat>(width) / scaleFactor,
+                                           static_cast<CGFloat>(height) / scaleFactor)];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }

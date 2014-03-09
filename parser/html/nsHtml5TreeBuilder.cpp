@@ -3501,6 +3501,10 @@ nsHtml5TreeBuilder::removeFromListOfActiveFormattingElements(int32_t pos)
 bool 
 nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
 {
+  if (stack[currentPtr]->ns == kNameSpaceID_XHTML && stack[currentPtr]->name == name && findInListOfActiveFormattingElements(stack[currentPtr]) == -1) {
+    pop();
+    return true;
+  }
   for (int32_t i = 0; i < 8; ++i) {
     int32_t formattingEltListPos = listPtr;
     while (formattingEltListPos > -1) {

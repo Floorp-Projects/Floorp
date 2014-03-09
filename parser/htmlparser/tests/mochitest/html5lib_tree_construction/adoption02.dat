@@ -61,3 +61,39 @@
 |             <b>
 |             "first"
 |     "second"
+
+#data
+<code foo="bar"><code><code><code><code></code></code></code></code>text</code>
+#errors
+16: Start tag seen without seeing a doctype first. Expected "<!DOCTYPE html>".
+#document
+| <html>
+|   <head>
+|   <body>
+|     <code>
+|       foo="bar"
+|       <code>
+|         <code>
+|           <code>
+|             <code>
+|       "text"
+
+#data
+<code foo="bar"><code><code><code><div><code></div></code></code></code></code>text</code>
+#errors
+16: Start tag seen without seeing a doctype first. Expected "<!DOCTYPE html>".
+51: End tag "div" seen, but there were open elements.
+45: Unclosed element "code".
+58: No "code" element in scope but a "code" end tag seen.
+#document
+| <html>
+|   <head>
+|   <body>
+|     <code>
+|       foo="bar"
+|       <code>
+|         <code>
+|           <code>
+|             <div>
+|               <code>
+|       "text"

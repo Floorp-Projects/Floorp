@@ -32,7 +32,7 @@ class Shmem;
 
 namespace layers {
 
-class BasicTiledLayerBuffer;
+class ClientTiledLayerBuffer;
 class ImageClient;
 class ImageContainer;
 class ImageBridgeParent;
@@ -280,8 +280,8 @@ public:
 
   virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
 
-  virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
-                                       const SurfaceDescriptorTiles& aTileLayerDescriptor) MOZ_OVERRIDE
+  virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
+                                   const SurfaceDescriptorTiles& aTileLayerDescriptor) MOZ_OVERRIDE
   {
     NS_RUNTIMEABORT("should not be called");
   }

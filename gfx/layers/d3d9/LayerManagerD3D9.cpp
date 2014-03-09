@@ -261,25 +261,6 @@ LayerManagerD3D9::Render()
 
   static_cast<LayerD3D9*>(mRoot->ImplData())->RenderLayer();
 
-  if (!mRegionToClear.IsEmpty()) {
-    D3DRECT* rects = new D3DRECT[mRegionToClear.GetNumRects()];
-    nsIntRegionRectIterator iter(mRegionToClear);
-    const nsIntRect *r;
-    size_t i = 0;
-    while ((r = iter.Next())) {
-      rects[i].x1 = r->x;
-      rects[i].y1 = r->y;
-      rects[i].x2 = r->x + r->width;
-      rects[i].y2 = r->y + r->height;
-      i++;
-    }
-
-    device()->Clear(i, rects, D3DCLEAR_TARGET,
-                    0x00000000, 0, 0);
-
-    delete [] rects;
-  }
-
   device()->EndScene();
 
   if (!mTarget) {

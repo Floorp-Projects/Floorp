@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsIMemoryReporter.h"          // for nsIMemoryReporter
 #include "mozilla/Atomics.h"            // for Atomic
+#include "LayersTypes.h"
 
 /*
  * FIXME [bjacob] *** PURE CRAZYNESS WARNING ***
@@ -78,6 +79,16 @@ class ISurfaceAllocator : public AtomicRefCounted<ISurfaceAllocator>
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(ISurfaceAllocator)
   ISurfaceAllocator() {}
+
+  /**
+   * Returns the type of backend that is used off the main thread.
+   * We only don't allow changing the backend type at runtime so this value can
+   * be queried once and will not change until Gecko is restarted.
+   *
+   * XXX - With e10s this may not be true anymore. we can have accelerated widgets
+   * and non-accelerated widgets (small popups, etc.)
+   */
+  virtual LayersBackend GetCompositorBackendType() const = 0;
 
   /**
    * Allocate shared memory that can be accessed by only one process at a time.

@@ -47,6 +47,7 @@
 #if MOZ_ANDROID_OMTC
 #include "TexturePoolOGL.h"
 #endif
+
 #include "GeckoProfiler.h"
 
 #define BUFFER_OFFSET(i) ((char *)nullptr + (i))
@@ -135,6 +136,72 @@ DrawQuads(GLContext *aGLContext,
 
   aGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
+
+#ifdef MOZ_WIDGET_GONK
+CompositorOGLGonkBackendSpecificData::CompositorOGLGonkBackendSpecificData(CompositorOGL* aCompositor)
+  : mCompositor(aCompositor)
+{
+}
+
+CompositorOGLGonkBackendSpecificData::~CompositorOGLGonkBackendSpecificData()
+{
+  // Delete all textures by calling EndFrame twice
+  gl()->MakeCurrent();
+  EndFrame();
+  EndFrame();
+}
+
+GLContext*
+CompositorOGLGonkBackendSpecificData::gl() const
+{
+  return mCompositor->gl();
+}
+
+GLuint
+CompositorOGLGonkBackendSpecificData::GetTexture()
+{
+  GLuint texture = 0;
+
+  if (!mUnusedTextures.IsEmpty()) {
+    // Try to reuse one from the unused pile first
+    texture = mUnusedTextures[0];
+    mUnusedTextures.RemoveElementAt(0);
+  } else if (gl()->MakeCurrent()) {
+    // There isn't one to reuse, create one.
+    gl()->fGenTextures(1, &texture);
+  }
+
+  if (texture) {
+    mCreatedTextures.AppendElement(texture);
+  }
+
+  return texture;
+}
+
+void
+CompositorOGLGonkBackendSpecificData::EndFrame()
+{
+  gl()->MakeCurrent();
+
+  // Some platforms have issues unlocking Gralloc buffers even when they're
+  // rebound.
+  if (gfxPrefs::OverzealousGrallocUnlocking()) {
+    mUnusedTextures.AppendElements(mCreatedTextures);
+    mCreatedTextures.Clear();
+  }
+
+  // Delete unused textures
+  for (size_t i = 0; i < mUnusedTextures.Length(); i++) {
+    GLuint texture = mUnusedTextures[i];
+    gl()->fDeleteTextures(1, &texture);
+  }
+  mUnusedTextures.Clear();
+
+  // Move all created textures into the unused pile
+  mUnusedTextures.AppendElements(mCreatedTextures);
+  mCreatedTextures.Clear();
+}
+#endif
 
 CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
                              int aSurfaceHeight, bool aUseExternalSurfaceSize)
@@ -1299,6 +1366,12 @@ CompositorOGL::EndFrame()
 
   mCurrentRenderTarget = nullptr;
 
+#ifdef MOZ_WIDGET_GONK
+  if (mCompositorBackendSpecificData) {
+    static_cast<CompositorOGLGonkBackendSpecificData*>(mCompositorBackendSpecificData.get())->EndFrame();
+  }
+#endif
+
   mGLContext->SwapBuffers();
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
@@ -1406,6 +1479,17 @@ CompositorOGL::Resume()
 #endif
   return true;
 }
+
+#ifdef MOZ_WIDGET_GONK
+CompositorBackendSpecificData*
+CompositorOGL::GetCompositorBackendSpecificData()
+{
+  if (!mCompositorBackendSpecificData) {
+    mCompositorBackendSpecificData = new CompositorOGLGonkBackendSpecificData(this);
+  }
+  return mCompositorBackendSpecificData;
+}
+#endif
 
 TemporaryRef<DataTextureSource>
 CompositorOGL::CreateDataTextureSource(TextureFlags aFlags)

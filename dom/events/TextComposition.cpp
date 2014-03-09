@@ -10,9 +10,9 @@
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsIEditor.h"
-#include "nsIMEStateManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
 
@@ -145,7 +145,7 @@ nsresult
 TextComposition::NotifyIME(IMEMessage aMessage)
 {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_AVAILABLE);
-  return nsIMEStateManager::NotifyIME(aMessage, mPresContext);
+  return IMEStateManager::NotifyIME(aMessage, mPresContext);
 }
 
 void
@@ -231,23 +231,23 @@ TextComposition::CompositionEventDispatcher::Run()
       handler.OnQuerySelectedText(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
       compStart.data = selectedText.mReply.mString;
-      nsIMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
-                                                  &compStart, &status, nullptr);
+      IMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
+                                                &compStart, &status, nullptr);
       break;
     }
     case NS_COMPOSITION_UPDATE:
     case NS_COMPOSITION_END: {
       WidgetCompositionEvent compEvent(true, mEventMessage, mWidget);
       compEvent.data = mData;
-      nsIMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
-                                                  &compEvent, &status, nullptr);
+      IMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
+                                                &compEvent, &status, nullptr);
       break;
     }
     case NS_TEXT_TEXT: {
       WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
       textEvent.theText = mData;
-      nsIMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
-                                                  &textEvent, &status, nullptr);
+      IMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
+                                                &textEvent, &status, nullptr);
       break;
     }
     default:

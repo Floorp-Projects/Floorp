@@ -54,6 +54,8 @@ class TextureClientX11
     return mFormat;
   }
 
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
+
  private:
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;

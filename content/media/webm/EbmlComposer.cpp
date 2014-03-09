@@ -56,8 +56,8 @@ void EbmlComposer::GenerateHeader()
     }
     // The Recording length is unknow and ignore write the whole Segment element size
   }
-  MOZ_ASSERT_IF(ebml.offset > DEFAULT_HEADER_SIZE + mCodecPrivateData.Length(),
-                "write more data > EBML_BUFFER_SIZE");
+  MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE + mCodecPrivateData.Length(),
+             "write more data > EBML_BUFFER_SIZE");
   mClusterBuffs.AppendElement();
   mClusterBuffs.LastElement().SetLength(ebml.offset);
   memcpy(mClusterBuffs.LastElement().Elements(), ebml.buf, ebml.offset);
@@ -117,8 +117,8 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
                      0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
                      aFrame->GetFrameData().Length());
   }
-  MOZ_ASSERT_IF(ebml.offset > DEFAULT_HEADER_SIZE + aFrame->GetFrameData().Length(),
-                "write more data > EBML_BUFFER_SIZE");
+  MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE + aFrame->GetFrameData().Length(),
+             "write more data > EBML_BUFFER_SIZE");
   mClusterBuffs.LastElement().SetLength(ebml.offset);
 }
 
