@@ -28,6 +28,7 @@ class SurfaceFactory;
 class SurfaceStream : public GenericAtomicRefCounted
 {
 public:
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream)
     typedef enum {
         MainThread,
         OffMainThread
@@ -145,6 +146,7 @@ protected:
     SharedSurface* mConsumer; // Only present after resize-swap.
 
 public:
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream_SingleBuffer)
     SurfaceStream_SingleBuffer(SurfaceStream* prevStream);
     virtual ~SurfaceStream_SingleBuffer();
 
@@ -169,6 +171,7 @@ protected:
     SharedSurface* mConsumer;
 
 public:
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream_TripleBuffer_Copy)
     SurfaceStream_TripleBuffer_Copy(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer_Copy();
 
@@ -192,6 +195,7 @@ protected:
     SurfaceStream_TripleBuffer(SurfaceStreamType type, SurfaceStream* prevStream);
 
 public:
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream_TripleBuffer)
     SurfaceStream_TripleBuffer(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer();
     virtual bool CopySurfaceToProducer(SharedSurface* src, SurfaceFactory* factory);

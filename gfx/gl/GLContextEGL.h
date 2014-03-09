@@ -29,6 +29,7 @@ class GLContextEGL : public GLContext
                     EGLSurface surface);
 
 public:
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL)
     GLContextEGL(const SurfaceCaps& caps,
                  GLContext* shareContext,
                  bool isOffscreen,
