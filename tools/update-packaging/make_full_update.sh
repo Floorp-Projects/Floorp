@@ -44,7 +44,8 @@ if [ $(echo "$targetdir" | grep -c '\/$') = 1 ]; then
 fi
 workdir="$targetdir.work"
 updatemanifestv2="$workdir/updatev2.manifest"
-targetfiles="updatev2.manifest"
+updatemanifestv3="$workdir/updatev3.manifest"
+targetfiles="updatev2.manifest updatev3.manifest"
 
 mkdir -p "$workdir"
 
@@ -66,21 +67,30 @@ list_files files
 
 popd
 
-# Add the type of update to the beginning of version 2 update manifest.
+# Add the type of update to the beginning of the update manifests.
 > $updatemanifestv2
+> $updatemanifestv3
 notice ""
-notice "Adding type instruction to file 'updatev2.manifest'"
-notice "       type: complete"
+notice "Adding type instruction to update manifests"
+notice "       type complete"
 echo "type \"complete\"" >> $updatemanifestv2
+echo "type \"complete\"" >> $updatemanifestv3
 
 notice ""
-notice "Adding file add instructions to file 'updatev2.manifest'"
+notice "Adding file add instructions to update manifests"
 num_files=${#files[*]}
 
 for ((i=0; $i<$num_files; i=$i+1)); do
   f="${files[$i]}"
 
-  make_add_instruction "$f" >> $updatemanifestv2
+  if check_for_add_if_not_update "$f"; then
+    make_add_if_not_instruction "$f" "$updatemanifestv3"
+    if check_for_add_to_manifestv2 "$f"; then
+      make_add_instruction "$f" "$updatemanifestv2" "" 1
+    fi
+  else
+    make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
+  fi
 
   dir=$(dirname "$f")
   mkdir -p "$workdir/$dir"
@@ -93,9 +103,10 @@ done
 # Append remove instructions for any dead files.
 notice ""
 notice "Adding file and directory remove instructions from file 'removed-files'"
-append_remove_instructions "$targetdir" "$updatemanifestv2"
+append_remove_instructions "$targetdir" "$updatemanifestv2" "$updatemanifestv3"
 
 $BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
+$BZIP2 -z9 "$updatemanifestv3" && mv -f "$updatemanifestv3.bz2" "$updatemanifestv3"
 
 eval "$MAR -C \"$workdir\" -c output.mar $targetfiles"
 mv -f "$workdir/output.mar" "$archive"
@@ -105,3 +116,4 @@ rm -fr "$workdir"
 
 notice ""
 notice "Finished"
+notice ""
