@@ -191,6 +191,17 @@ class FullParseHandler
 
     // Expressions
 
+    ParseNode *newArrayComprehension(ParseNode *body, unsigned blockid, const TokenPos &pos) {
+        JS_ASSERT(pos.begin <= body->pn_pos.begin);
+        JS_ASSERT(body->pn_pos.end <= pos.end);
+        ParseNode *pn = new_<ListNode>(PNK_ARRAYCOMP, pos);
+        if (!pn)
+            return nullptr;
+        pn->pn_blockid = blockid;
+        pn->append(body);
+        return pn;
+    }
+
     ParseNode *newArrayLiteral(uint32_t begin, unsigned blockid) {
         ParseNode *literal = new_<ListNode>(PNK_ARRAY, TokenPos(begin, begin + 1));
         // Later in this stack: remove dependency on this opcode.

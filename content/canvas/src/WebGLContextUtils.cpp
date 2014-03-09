@@ -106,15 +106,12 @@ WebGLContext::GetImageSize(GLsizei height,
 void
 WebGLContext::SynthesizeGLError(GLenum err)
 {
-    // If there is already a pending error, don't overwrite it;
-    // but if there isn't, then we need to check for a gl error
-    // that may have occurred before this one and use that code
-    // instead.
-
-    MakeContextCurrent();
-
-    UpdateWebGLErrorAndClearGLError();
-
+    /* ES2 section 2.5 "GL Errors" states that implementations can have
+     * multiple 'flags', as errors might be caught in different parts of
+     * a distributed implementation.
+     * We're signing up as a distributed implementation here, with
+     * separate flags for WebGL and the underlying GLContext.
+     */
     if (!mWebGLError)
         mWebGLError = err;
 }
@@ -234,14 +231,16 @@ WebGLContext::IsTextureFormatCompressed(GLenum format)
     }
 }
 
-void
-WebGLContext::UpdateWebGLErrorAndClearGLError(GLenum *currentGLError)
+GLenum
+WebGLContext::GetAndFlushUnderlyingGLErrors()
 {
-    // get and clear GL error in ALL cases
+    // Get and clear GL error in ALL cases.
     GLenum error = gl->GetAndClearError();
-    if (currentGLError)
-        *currentGLError = error;
-    // only store in mWebGLError if is hasn't already recorded an error
-    if (!mWebGLError)
-        mWebGLError = error;
+
+    // Only store in mUnderlyingGLError if is hasn't already recorded an
+    // error.
+    if (!mUnderlyingGLError)
+        mUnderlyingGLError = error;
+
+    return error;
 }

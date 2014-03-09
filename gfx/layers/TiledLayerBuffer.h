@@ -182,7 +182,7 @@ private:
   bool IsPlaceholder(Tile aTile) const { return aTile == AsDerived().GetPlaceholderTile(); }
 };
 
-class BasicTiledLayerBuffer;
+class ClientTiledLayerBuffer;
 class SurfaceDescriptorTiles;
 class ISurfaceAllocator;
 
@@ -195,11 +195,11 @@ public:
    * Update the current retained layer with the updated layer data.
    * It is expected that the tiles described by aTiledDescriptor are all in the
    * ReadLock state, so that the locks can be adopted when recreating a
-   * BasicTiledLayerBuffer locally. This lock will be retained until the buffer
+   * ClientTiledLayerBuffer locally. This lock will be retained until the buffer
    * has completed uploading.
    */
-  virtual void PaintedTiledLayerBuffer(ISurfaceAllocator* aAllocator,
-                                       const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
+  virtual void UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
+                                   const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
 
   /**
    * If some part of the buffer is being rendered at a lower precision, this
@@ -292,6 +292,7 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
   // TODO: Add a tile pool to reduce new allocation
   int tileX = 0;
   int tileY = 0;
+  int tilesMissing = 0;
   // Iterate over the new drawing bounds in steps of tiles.
   for (int32_t x = newBound.x; x < newBound.XMost(); tileX++) {
     // Compute tileRect(x,y,width,height) in layer space coordinate
@@ -336,6 +337,10 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
         // valid content because then we know we can safely recycle
         // with taking from a tile that has recyclable content.
         newRetainedTiles.AppendElement(AsDerived().GetPlaceholderTile());
+
+        if (aPaintRegion.Intersects(tileRect)) {
+          tilesMissing++;
+        }
       }
 
       y += height;
@@ -348,6 +353,26 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
   // in the buffer so that we can easily look up a tile.
   mRetainedWidth = tileX;
   mRetainedHeight = tileY;
+
+  // Pass 1.5: Release excess tiles in oldRetainedTiles
+  // Tiles in oldRetainedTiles that aren't in newRetainedTiles will be recycled
+  // before creating new ones, but there could still be excess unnecessary
+  // tiles. As tiles may not have a fixed memory cost (for example, due to
+  // double-buffering), we should release these excess tiles first.
+  int oldTileCount = 0;
+  for (size_t i = 0; i < oldRetainedTiles.Length(); i++) {
+    Tile oldTile = oldRetainedTiles[i];
+    if (IsPlaceholder(oldTile)) {
+      continue;
+    }
+
+    if (oldTileCount >= tilesMissing) {
+      oldRetainedTiles[i] = AsDerived().GetPlaceholderTile();
+      AsDerived().ReleaseTile(oldTile);
+    } else {
+      oldTileCount ++;
+    }
+  }
 
   NS_ABORT_IF_FALSE(aNewValidRegion.Contains(aPaintRegion), "Painting a region outside the visible region");
 #ifdef DEBUG
@@ -415,9 +440,15 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
                         "index out of range");
 
       Tile newTile = newRetainedTiles[index];
+
+      // Try to reuse a tile from the old retained tiles that had no partially
+      // valid content.
       while (IsPlaceholder(newTile) && oldRetainedTiles.Length() > 0) {
         AsDerived().SwapTiles(newTile, oldRetainedTiles[oldRetainedTiles.Length()-1]);
         oldRetainedTiles.RemoveElementAt(oldRetainedTiles.Length()-1);
+        if (!IsPlaceholder(newTile)) {
+          oldTileCount--;
+        }
       }
 
       // We've done our best effort to recycle a tile but it can be null
@@ -438,13 +469,8 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& aNewValidRegion,
     x += width;
   }
 
-  // Throw away any tiles we didn't recycle
-  // TODO: Add a tile pool
-  while (oldRetainedTiles.Length() > 0) {
-    Tile oldTile = oldRetainedTiles[oldRetainedTiles.Length()-1];
-    oldRetainedTiles.RemoveElementAt(oldRetainedTiles.Length()-1);
-    AsDerived().ReleaseTile(oldTile);
-  }
+  // At this point, oldTileCount should be zero
+  NS_ABORT_IF_FALSE(oldTileCount == 0, "Failed to release old tiles");
 
   mRetainedTiles = newRetainedTiles;
   mValidRegion = aNewValidRegion;

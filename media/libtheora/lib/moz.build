@@ -76,3 +76,7 @@ FINAL_LIBRARY = 'gkmedias'
 
 # The encoder is currently not included.
 DEFINES['THEORA_DISABLE_ENCODE'] = True
+
+# Suppress warnings in third-party code.
+if CONFIG['OS_TARGET'] == 'Darwin':
+    CFLAGS += ['-Wno-tautological-compare']

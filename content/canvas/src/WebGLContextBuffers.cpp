@@ -485,10 +485,9 @@ WebGLContext::CheckedBufferData(GLenum target,
 
     bool sizeChanges = uint32_t(size) != boundBuffer->ByteLength();
     if (sizeChanges) {
-        UpdateWebGLErrorAndClearGLError();
+        GetAndFlushUnderlyingGLErrors();
         gl->fBufferData(target, size, data, usage);
-        GLenum error = LOCAL_GL_NO_ERROR;
-        UpdateWebGLErrorAndClearGLError(&error);
+        GLenum error = GetAndFlushUnderlyingGLErrors();
         return error;
     } else {
         gl->fBufferData(target, size, data, usage);

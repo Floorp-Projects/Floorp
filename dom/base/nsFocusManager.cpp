@@ -24,7 +24,6 @@
 #include "nsFrameTraversal.h"
 #include "nsEventDispatcher.h"
 #include "nsEventStateManager.h"
-#include "nsIMEStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"
 #include "nsIBaseWindow.h"
@@ -41,6 +40,7 @@
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -933,8 +933,8 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
 
   nsPresContext* focusedPresContext =
     presShell ? presShell->GetPresContext() : nullptr;
-  nsIMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
-                                   GetFocusMoveActionCause(0));
+  IMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
+                                 GetFocusMoveActionCause(0));
   if (presShell) {
     SetCaretVisible(presShell, false, nullptr);
   }
@@ -1529,8 +1529,8 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
 
   nsPresContext* focusedPresContext =
     mActiveWindow ? presShell->GetPresContext() : nullptr;
-  nsIMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
-                                   GetFocusMoveActionCause(0));
+  IMEStateManager::OnChangeFocus(focusedPresContext, nullptr,
+                                 GetFocusMoveActionCause(0));
 
   // now adjust the actual focus, by clearing the fields in the focus manager
   // and in the window.
@@ -1746,12 +1746,12 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   // document and then the window.
   if (aIsNewDocument) {
     nsIDocument* doc = aWindow->GetExtantDoc();
-    // The focus change should be notified to nsIMEStateManager from here if
+    // The focus change should be notified to IMEStateManager from here if
     // the focused content is a designMode editor since any content won't
     // receive focus event.
     if (doc && doc->HasFlag(NODE_IS_EDITABLE)) {
-      nsIMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
-                                       GetFocusMoveActionCause(aFlags));
+      IMEStateManager::OnChangeFocus(presShell->GetPresContext(), nullptr,
+                                     GetFocusMoveActionCause(aFlags));
     }
     if (doc)
       SendFocusOrBlurEvent(NS_FOCUS_CONTENT, presShell, doc,
@@ -1796,8 +1796,8 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
         }
       }
 
-      nsIMEStateManager::OnChangeFocus(presContext, aContent,
-                                       GetFocusMoveActionCause(aFlags));
+      IMEStateManager::OnChangeFocus(presContext, aContent,
+                                     GetFocusMoveActionCause(aFlags));
 
       // as long as this focus wasn't because a window was raised, update the
       // commands
@@ -1810,8 +1810,8 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
                            aContent, aFlags & FOCUSMETHOD_MASK,
                            aWindowRaised, isRefocus);
     } else {
-      nsIMEStateManager::OnChangeFocus(presContext, nullptr,
-                                       GetFocusMoveActionCause(aFlags));
+      IMEStateManager::OnChangeFocus(presContext, nullptr,
+                                     GetFocusMoveActionCause(aFlags));
       if (!aWindowRaised) {
         aWindow->UpdateCommands(NS_LITERAL_STRING("focus"));
       }
@@ -1834,8 +1834,8 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     }
 
     nsPresContext* presContext = presShell->GetPresContext();
-    nsIMEStateManager::OnChangeFocus(presContext, nullptr,
-                                     GetFocusMoveActionCause(aFlags));
+    IMEStateManager::OnChangeFocus(presContext, nullptr,
+                                   GetFocusMoveActionCause(aFlags));
 
     if (!aWindowRaised)
       aWindow->UpdateCommands(NS_LITERAL_STRING("focus"));

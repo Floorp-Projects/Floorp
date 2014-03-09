@@ -49,7 +49,7 @@ class Shmem;
 
 namespace layers {
 
-class BasicTiledLayerBuffer;
+class ClientTiledLayerBuffer;
 
 typedef nsTArray<SurfaceDescriptor> BufferArray;
 typedef std::vector<Edit> EditVector;
@@ -177,7 +177,6 @@ void
 CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier)
 {
   mTextureFactoryIdentifier = aIdentifier;
-  mMultiProcess = aIdentifier.mParentProcessId != XRE_GetProcessType();
 }
 
 ShadowLayerForwarder::ShadowLayerForwarder()
@@ -327,11 +326,11 @@ ShadowLayerForwarder::CheckSurfaceDescriptor(const SurfaceDescriptor* aDescripto
 #endif
 
 void
-ShadowLayerForwarder::PaintedTiledLayerBuffer(CompositableClient* aCompositable,
-                                              const SurfaceDescriptorTiles& aTileLayerDescriptor)
+ShadowLayerForwarder::UseTiledLayerBuffer(CompositableClient* aCompositable,
+                                          const SurfaceDescriptorTiles& aTileLayerDescriptor)
 {
-  mTxn->AddNoSwapPaint(OpPaintTiledLayerBuffer(nullptr, aCompositable->GetIPDLActor(),
-                                               aTileLayerDescriptor));
+  mTxn->AddNoSwapPaint(OpUseTiledLayerBuffer(nullptr, aCompositable->GetIPDLActor(),
+                                             aTileLayerDescriptor));
 }
 
 void
