@@ -17,4 +17,14 @@
 
     </org.mozilla.gecko.preferences.PanelsPreferenceCategory>
 
+    <PreferenceCategory android:title="@string/pref_category_home_content_settings">
+
+        <ListPreference android:key="home.sync.updateMode"
+                        android:title="@string/pref_home_updates"
+                        android:entries="@array/pref_home_updates_entries"
+                        android:entryValues="@array/pref_home_updates_values"
+                        android:persistent="false" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>
