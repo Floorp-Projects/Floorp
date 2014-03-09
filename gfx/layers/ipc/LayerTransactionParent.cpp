@@ -174,6 +174,12 @@ LayerTransactionParent::Destroy()
   }
 }
 
+LayersBackend
+LayerTransactionParent::GetCompositorBackendType() const
+{
+  return mLayerManager->GetBackendType();
+}
+
 /* virtual */
 bool
 LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,

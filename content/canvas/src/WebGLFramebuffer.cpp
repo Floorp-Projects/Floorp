@@ -60,6 +60,35 @@ WebGLFramebuffer::Attachment::HasAlpha() const
     return FormatHasAlpha(format);
 }
 
+bool
+WebGLFramebuffer::Attachment::IsReadableFloat() const
+{
+    if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel)) {
+        GLenum type = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).Type();
+        switch (type) {
+        case LOCAL_GL_FLOAT:
+        case LOCAL_GL_HALF_FLOAT_OES:
+            return true;
+        }
+        return false;
+    }
+
+    if (Renderbuffer()) {
+        GLenum format = Renderbuffer()->InternalFormat();
+        switch (format) {
+        case LOCAL_GL_RGB16F:
+        case LOCAL_GL_RGBA16F:
+        case LOCAL_GL_RGB32F:
+        case LOCAL_GL_RGBA32F:
+            return true;
+        }
+        return false;
+    }
+
+    MOZ_ASSERT(false, "Should not get here.");
+    return false;
+}
+
 void
 WebGLFramebuffer::Attachment::SetTexImage(WebGLTexture* tex, GLenum target, GLint level)
 {
