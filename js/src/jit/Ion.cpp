@@ -673,23 +673,22 @@ JitCode::finalize(FreeOp *fop)
     // to read the contents of the pool we are releasing references in.
     JS_ASSERT(fop->runtime()->currentThreadOwnsInterruptLock());
 
-#ifdef DEBUG
     // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
     // Don't do this if the Ion code is protected, as the signal handler will
     // deadlock trying to reacquire the interrupt lock.
     if (fop->runtime()->jitRuntime() && !fop->runtime()->jitRuntime()->ionCodeProtected())
-        JS_POISON(code_, JS_FREE_PATTERN, bufferSize_);
-#endif
-
-    // Horrible hack: if we are using perf integration, we don't
-    // want to reuse code addresses, so we just leak the memory instead.
-    if (PerfEnabled())
-        return;
+        memset(code_, JS_FREE_PATTERN, bufferSize_);
+    code_ = nullptr;
 
     // Code buffers are stored inside JSC pools.
     // Pools are refcounted. Releasing the pool may free it.
-    if (pool_)
-        pool_->release();
+    if (pool_) {
+        // Horrible hack: if we are using perf integration, we don't
+        // want to reuse code addresses, so we just leak the memory instead.
+        if (!PerfEnabled())
+            pool_->release();
+        pool_ = nullptr;
+    }
 }
 
 void
