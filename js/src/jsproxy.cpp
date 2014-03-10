@@ -1440,7 +1440,7 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
     bool extensible;
     if (!JSObject::isExtensible(cx, target, &extensible))
         return false;
-    if (extensible && !isFixed) {
+    if (!extensible && !isFixed) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NEW);
         return false;
     }
