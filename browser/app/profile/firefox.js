@@ -253,9 +253,6 @@ pref("browser.uitour.pinnedTabUrl", "https://support.mozilla.org/%LOCALE%/kb/pin
 pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tour/");
 pref("browser.uitour.whitelist.add.260", "www.mozilla.org,support.mozilla.org");
 
-pref("browser.customizemode.tip0.shown", false);
-pref("browser.customizemode.tip0.learnMoreUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/customize");
-
 pref("keyword.enabled", true);
 
 pref("general.useragent.locale", "@AB_CD@");
