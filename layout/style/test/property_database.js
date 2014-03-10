@@ -4939,6 +4939,102 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"'a a'\n'..'\n'a a'",
 		]
 	};
+
+	var gridLineOtherValues = [
+		"foo",
+		"2",
+		"2 foo",
+		"foo 2",
+		"-3",
+		"-3 bar",
+		"bar -3",
+		"span 2",
+		"2 span",
+		"span foo",
+		"foo span",
+		"span 2 foo",
+		"span foo 2",
+		"2 foo span",
+		"foo 2 span",
+	];
+	var gridLineInvalidValues = [
+		"",
+		"4th",
+		"span",
+		"inherit 2",
+		"2 inherit",
+		"20px",
+		"2 3",
+		"2.5",
+		"2.0",
+		"0",
+		"0 foo",
+		"span 0",
+		"2 foo 3",
+		"foo 2 foo",
+		"2 span foo",
+		"foo span 2",
+		"span -3",
+		"span -3 bar",
+		"span 2 span",
+		"span foo span",
+		"span 2 foo span",
+	];
+
+	gCSSProperties["grid-column-start"] = {
+		domProp: "gridColumnStart",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: gridLineOtherValues,
+		invalid_values: gridLineInvalidValues
+	};
+	gCSSProperties["grid-column-end"] = {
+		domProp: "gridColumnEnd",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: gridLineOtherValues,
+		invalid_values: gridLineInvalidValues
+	};
+	gCSSProperties["grid-row-start"] = {
+		domProp: "gridRowStart",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: gridLineOtherValues,
+		invalid_values: gridLineInvalidValues
+	};
+	gCSSProperties["grid-row-end"] = {
+		domProp: "gridRowEnd",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: gridLineOtherValues,
+		invalid_values: gridLineInvalidValues
+	};
+
+	var gridAutoPositionOtherValues = [];
+	gridLineOtherValues.concat([ "auto" ]).forEach(function(val) {
+		gridAutoPositionOtherValues.push(" foo / " + val);
+		gridAutoPositionOtherValues.push(val + "/2");
+	});
+	var gridAutoPositionInvalidValues = [
+		"foo, bar",
+		"foo / bar / baz",
+	];
+	gridLineInvalidValues.forEach(function(val) {
+		gridAutoPositionInvalidValues.push("span 3 / " + val);
+		gridAutoPositionInvalidValues.push(val + " / foo");
+	});
+	gCSSProperties["grid-auto-position"] = {
+		domProp: "gridAutoPosition",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "1 / 1" ],
+		other_values: gridAutoPositionOtherValues,
+		invalid_values: gridAutoPositionInvalidValues
+	};
 }
 
 if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {

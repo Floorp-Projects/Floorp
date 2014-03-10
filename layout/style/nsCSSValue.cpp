@@ -1032,6 +1032,15 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                          aResult);
       break;
 
+    case eCSSProperty_grid_auto_position:
+    case eCSSProperty_grid_column_start:
+    case eCSSProperty_grid_column_end:
+    case eCSSProperty_grid_row_start:
+    case eCSSProperty_grid_row_end:
+      // "span" is the only enumerated-unit value for these properties
+      aResult.AppendLiteral("span");
+      break;
+
     case eCSSProperty_touch_action:
       nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
                                          NS_STYLE_TOUCH_ACTION_PAN_X,
@@ -1312,6 +1321,10 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       nsStyleUtil::ComputeFunctionalAlternates(list, altValues);
       nsStyleUtil::SerializeFunctionalAlternates(altValues, out);
       aResult.Append(out);
+    } else if (eCSSProperty_grid_auto_position == aProperty) {
+      GetPairValue().mXValue.AppendToString(aProperty, aResult, aSerialization);
+      aResult.AppendLiteral(" / ");
+      GetPairValue().mYValue.AppendToString(aProperty, aResult, aSerialization);
     } else {
       GetPairValue().AppendToString(aProperty, aResult, aSerialization);
     }

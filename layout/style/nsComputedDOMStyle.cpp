@@ -2424,6 +2424,84 @@ nsComputedDOMStyle::DoGetGridTemplateRows()
 }
 
 CSSValue*
+nsComputedDOMStyle::GetGridLine(const nsStyleGridLine& aGridLine)
+{
+  if (aGridLine.IsAuto()) {
+    nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+    val->SetIdent(eCSSKeyword_auto);
+    return val;
+  }
+
+  nsDOMCSSValueList* valueList = GetROCSSValueList(false);
+
+  if (aGridLine.mHasSpan) {
+    nsROCSSPrimitiveValue* span = new nsROCSSPrimitiveValue;
+    span->SetIdent(eCSSKeyword_span);
+    valueList->AppendCSSValue(span);
+  }
+
+  if (aGridLine.mInteger != 0) {
+    nsROCSSPrimitiveValue* integer = new nsROCSSPrimitiveValue;
+    integer->SetNumber(aGridLine.mInteger);
+    valueList->AppendCSSValue(integer);
+  }
+
+  if (!aGridLine.mLineName.IsEmpty()) {
+    nsROCSSPrimitiveValue* lineName = new nsROCSSPrimitiveValue;
+    nsString escapedLineName;
+    nsStyleUtil::AppendEscapedCSSIdent(aGridLine.mLineName, escapedLineName);
+    lineName->SetString(escapedLineName);
+    valueList->AppendCSSValue(lineName);
+  }
+
+  NS_ASSERTION(valueList->Length() > 0,
+               "Should have appended at least one value");
+  return valueList;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridAutoPosition()
+{
+  nsDOMCSSValueList* valueList = GetROCSSValueList(false);
+
+  valueList->AppendCSSValue(
+    GetGridLine(StylePosition()->mGridAutoPositionColumn));
+
+  nsROCSSPrimitiveValue* slash = new nsROCSSPrimitiveValue;
+  slash->SetString(NS_LITERAL_STRING("/"));
+  valueList->AppendCSSValue(slash);
+
+  valueList->AppendCSSValue(
+    GetGridLine(StylePosition()->mGridAutoPositionRow));
+
+  return valueList;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridColumnStart()
+{
+  return GetGridLine(StylePosition()->mGridColumnStart);
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridColumnEnd()
+{
+  return GetGridLine(StylePosition()->mGridColumnEnd);
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridRowStart()
+{
+  return GetGridLine(StylePosition()->mGridRowStart);
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridRowEnd()
+{
+  return GetGridLine(StylePosition()->mGridRowEnd);
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetPaddingTop()
 {
   return GetPaddingWidthFor(NS_SIDE_TOP);
