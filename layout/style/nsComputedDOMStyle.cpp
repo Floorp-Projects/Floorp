@@ -2271,6 +2271,28 @@ nsComputedDOMStyle::DoGetBackgroundSize()
   return valueList;
 }
 
+CSSValue*
+nsComputedDOMStyle::DoGetGridTemplateAreas()
+{
+  const nsTArray<nsString>& templates =
+    StylePosition()->mGridTemplateAreas.mTemplates;
+  if (templates.IsEmpty()) {
+    nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+    val->SetIdent(eCSSKeyword_none);
+    return val;
+  }
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(false);
+  for (uint32_t i = 0; i < templates.Length(); i++) {
+    nsAutoString str;
+    nsStyleUtil::AppendEscapedCSSString(templates[i], str);
+    nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+    val->SetString(str);
+    valueList->AppendCSSValue(val);
+  }
+  return valueList;
+}
+
 // aLineNames must not be empty
 CSSValue*
 nsComputedDOMStyle::GetGridLineNames(const nsTArray<nsString>& aLineNames)

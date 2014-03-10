@@ -1234,6 +1234,7 @@ struct nsStylePosition {
   // in nsStyleStruct.cpp
   nsStyleGridTrackList mGridTemplateColumns;
   nsStyleGridTrackList mGridTemplateRows;
+  nsCSSValueGridTemplateAreas mGridTemplateAreas;
 
   bool WidthDependsOnContainer() const
     { return WidthCoordDependsOnContainer(mWidth); }
