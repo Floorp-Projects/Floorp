@@ -179,6 +179,26 @@ FTPChannelParent::RecvResume()
   return true;
 }
 
+bool
+FTPChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
+                                            const uint64_t& offset,
+                                            const uint32_t& count)
+{
+  return false;
+}
+
+bool
+FTPChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
+{
+  return false;
+}
+
+bool
+FTPChannelParent::RecvDivertComplete()
+{
+  return false;
+}
+
 //-----------------------------------------------------------------------------
 // FTPChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------

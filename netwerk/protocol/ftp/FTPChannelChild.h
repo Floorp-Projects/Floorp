@@ -79,6 +79,8 @@ protected:
                            const uint32_t& count) MOZ_OVERRIDE;
   bool RecvOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
   bool RecvFailedAsyncOpen(const nsresult& statusCode) MOZ_OVERRIDE;
+  bool RecvFlushedForDiversion() MOZ_OVERRIDE;
+  bool RecvDivertMessages() MOZ_OVERRIDE;
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
   void DoOnStartRequest(const int64_t& aContentLength,

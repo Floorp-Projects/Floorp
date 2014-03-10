@@ -777,6 +777,18 @@ HttpChannelChild::RecvRedirect3Complete()
   return true;
 }
 
+bool
+HttpChannelChild::RecvFlushedForDiversion()
+{
+  return false;
+}
+
+bool
+HttpChannelChild::RecvDivertMessages()
+{
+  return false;
+}
+
 void
 HttpChannelChild::Redirect3Complete()
 {

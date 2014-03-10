@@ -144,6 +144,14 @@ protected:
   virtual PRtspControllerParent* AllocPRtspControllerParent() MOZ_OVERRIDE;
   virtual bool DeallocPRtspControllerParent(PRtspControllerParent*) MOZ_OVERRIDE;
 
+  virtual PChannelDiverterParent*
+  AllocPChannelDiverterParent(const ChannelDiverterArgs& channel) MOZ_OVERRIDE;
+  virtual bool
+  RecvPChannelDiverterConstructor(PChannelDiverterParent* actor,
+                                  const ChannelDiverterArgs& channel) MOZ_OVERRIDE;
+  virtual bool DeallocPChannelDiverterParent(PChannelDiverterParent* actor)
+                                                                MOZ_OVERRIDE;
+
 private:
   nsCString mCoreAppsBasePath;
   nsCString mWebAppsBasePath;

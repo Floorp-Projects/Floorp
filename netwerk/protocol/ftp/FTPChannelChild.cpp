@@ -430,6 +430,18 @@ FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode)
     Send__delete__(this);
 }
 
+bool
+FTPChannelChild::RecvFlushedForDiversion()
+{
+  return false;
+}
+
+bool
+FTPChannelChild::RecvDivertMessages()
+{
+  return false;
+}
+
 class FTPDeleteSelfEvent : public ChannelEvent
 {
  public:
