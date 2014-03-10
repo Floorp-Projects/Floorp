@@ -66,8 +66,8 @@ class char16ptr_t
     static_assert(sizeof(char16_t) == sizeof(wchar_t), "char16_t and wchar_t sizes differ");
 
   public:
-    char16ptr_t(const char16_t* ptr) : ptr(ptr) {}
-    char16ptr_t(const wchar_t* ptr) : ptr(reinterpret_cast<const char16_t*>(ptr)) {}
+    char16ptr_t(const char16_t* p) : ptr(p) {}
+    char16ptr_t(const wchar_t* p) : ptr(reinterpret_cast<const char16_t*>(p)) {}
 
     /* Without this, nullptr assignment would be ambiguous. */
     constexpr char16ptr_t(decltype(nullptr)) : ptr(nullptr) {}
