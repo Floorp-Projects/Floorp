@@ -24,6 +24,7 @@ function ContentActor(connection, chromeGlobal)
 {
   TabActor.call(this, connection, chromeGlobal);
   this._chromeGlobal = chromeGlobal;
+  this.traits.reconfigure = false;
 }
 
 ContentActor.prototype = Object.create(TabActor.prototype);
