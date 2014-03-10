@@ -52,6 +52,9 @@ BlockSizeFor(GLenum format, GLint* blockWidth, GLint* blockHeight)
         if (blockHeight)
             *blockHeight = 4;
         break;
+
+    case LOCAL_GL_ETC1_RGB8_OES:
+        // 4x4 blocks, but no 4-multiple requirement.
     default:
         break;
     }
@@ -105,6 +108,7 @@ NameFrom(GLenum glenum)
         XX(DEPTH_COMPONENT32);
         XX(DEPTH_STENCIL);
         XX(DEPTH24_STENCIL8);
+        XX(ETC1_RGB8_OES);
         XX(FLOAT);
         XX(HALF_FLOAT);
         XX(LUMINANCE);
@@ -174,6 +178,7 @@ IsAllowedFromSource(GLenum format, WebGLTexImageFunc func)
     case LOCAL_GL_ATC_RGB:
     case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
     case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
+    case LOCAL_GL_ETC1_RGB8_OES:
         return func == WebGLTexImageFunc::CompTexImage;
     }
 
@@ -324,6 +329,11 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
         {
             return LOCAL_GL_RGBA;
         }
+    }
+
+    if (IsExtensionEnabled(WEBGL_compressed_texture_etc1)) {
+        if (internalFormat == LOCAL_GL_ETC1_RGB8_OES)
+            return LOCAL_GL_RGB;
     }
 
     if (IsExtensionEnabled(WEBGL_compressed_texture_pvrtc)) {
@@ -621,6 +631,15 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
         return validFormat;
     }
 
+    // WEBGL_compressed_texture_etc1
+    if (format == LOCAL_GL_ETC1_RGB8_OES) {
+        bool validFormat = IsExtensionEnabled(WEBGL_compressed_texture_etc1);
+        if (!validFormat)
+            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_etc1 enabled",
+                             InfoFrom(func), NameFrom(format));
+        return validFormat;
+    }
+
 
     if (format == LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1 ||
         format == LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1 ||
@@ -862,6 +881,7 @@ WebGLContext::ValidateCompTexImageDataSize(GLint level, GLenum format,
         case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
         case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
         case LOCAL_GL_ATC_RGB:
+        case LOCAL_GL_ETC1_RGB8_OES:
         {
             required_byteLength = ((CheckedUint32(width) + 3) / 4) * ((CheckedUint32(height) + 3) / 4) * 8;
             break;
@@ -1115,6 +1135,7 @@ WebGLContext::GetBitsPerTexel(GLenum format, GLenum type)
     case LOCAL_GL_ATC_RGB:
     case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
     case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
+    case LOCAL_GL_ETC1_RGB8_OES:
         return 4;
 
     case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
@@ -1184,6 +1205,7 @@ WebGLContext::ValidateTexImageFormatAndType(GLenum format, GLenum type, WebGLTex
     case LOCAL_GL_ATC_RGB:
     case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
     case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
+    case LOCAL_GL_ETC1_RGB8_OES:
     case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
     case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
     case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:

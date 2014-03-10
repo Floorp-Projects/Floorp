@@ -136,6 +136,7 @@ static const char *sExtensionNames[] = {
     "GL_KHR_debug",
     "GL_ARB_half_float_pixel",
     "GL_EXT_frag_depth",
+    "GL_OES_compressed_ETC1_RGB8_texture",
     nullptr
 };
 
