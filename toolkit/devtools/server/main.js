@@ -376,7 +376,7 @@ var DebuggerServer = {
     if (!("BrowserTabActor" in this)) {
       this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
     }
-    if (!("ContentAppActor" in this)) {
+    if (!("ContentActor" in this)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
     }
   },
@@ -570,7 +570,7 @@ var DebuggerServer = {
           deferred.resolve(null);
         }
         if (actor) {
-          // The ContentAppActor within the child process doesn't necessary
+          // The ContentActor within the child process doesn't necessary
           // have to time to uninitialize itself when the app is closed/killed.
           // So ensure telling the client that the related actor is detached.
           aConnection.send({ from: actor.actor, type: "tabDetached" });
