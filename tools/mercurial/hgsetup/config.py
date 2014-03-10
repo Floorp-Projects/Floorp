@@ -10,7 +10,7 @@ import os
 
 
 HOST_FINGERPRINTS = {
-    'bitbucket.org': '24:9c:45:8b:9c:aa:ba:55:4e:01:6d:58:ff:e4:28:7d:2a:14:ae:3b',
+    'bitbucket.org': '67:b3:bf:9f:c5:38:0e:4c:dd:4e:8a:da:3d:11:1b:c2:a5:d1:6c:6b',
     'bugzilla.mozilla.org': '47:13:a2:14:0c:46:45:53:12:0d:e5:36:16:a5:60:26:3e:da:3a:60',
     'hg.mozilla.org': 'af:27:b9:34:47:4e:e5:98:01:f6:83:2b:51:c9:aa:d8:df:fb:1a:27',
 }
