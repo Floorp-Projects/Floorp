@@ -85,11 +85,6 @@ private:
   {
     return GetEnumValue(aIndex, mContent);
   }
-  const nsSVGIntegerPair *GetIntegerPairValue(uint32_t aIndex, nsIContent *aDefault);
-  const nsSVGIntegerPair *GetIntegerPairValue(uint32_t aIndex)
-  {
-    return GetIntegerPairValue(aIndex, mContent);
-  }
   const nsSVGLength2 *GetLengthValue(uint32_t aIndex, nsIContent *aDefault);
   const nsSVGLength2 *GetLengthValue(uint32_t aIndex)
   {

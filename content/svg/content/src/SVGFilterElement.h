@@ -54,25 +54,17 @@ public:
   already_AddRefed<SVGAnimatedLength> Height();
   already_AddRefed<SVGAnimatedEnumeration> FilterUnits();
   already_AddRefed<SVGAnimatedEnumeration> PrimitiveUnits();
-  already_AddRefed<SVGAnimatedInteger> FilterResX();
-  already_AddRefed<SVGAnimatedInteger> FilterResY();
-  void SetFilterRes(uint32_t filterResX, uint32_t filterResY);
   already_AddRefed<SVGAnimatedString> Href();
 
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo() MOZ_OVERRIDE;
-  virtual IntegerPairAttributesInfo GetIntegerPairInfo() MOZ_OVERRIDE;
   virtual EnumAttributesInfo GetEnumInfo() MOZ_OVERRIDE;
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
-
-  enum { FILTERRES };
-  nsSVGIntegerPair mIntegerPairAttributes[1];
-  static IntegerPairInfo sIntegerPairInfo[1];
 
   enum { FILTERUNITS, PRIMITIVEUNITS };
   nsSVGEnum mEnumAttributes[2];

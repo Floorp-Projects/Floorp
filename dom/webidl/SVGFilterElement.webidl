@@ -17,10 +17,7 @@ interface SVGFilterElement : SVGElement {
   readonly attribute SVGAnimatedLength y;
   readonly attribute SVGAnimatedLength width;
   readonly attribute SVGAnimatedLength height;
-  readonly attribute SVGAnimatedInteger filterResX;
-  readonly attribute SVGAnimatedInteger filterResY;
 
-  void setFilterRes(unsigned long filterResX, unsigned long filterResY);
   // ImageData apply(ImageData source);
 };
 
