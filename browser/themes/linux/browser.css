@@ -1626,8 +1626,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Tabstrip close button */
-.tabs-closebutton,
-.customization-tipPanel-closeBox > .close-icon {
+.tabs-closebutton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
