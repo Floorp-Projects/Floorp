@@ -376,7 +376,7 @@ js_InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_SharedArrayBuffer, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_SharedArrayBuffer, ctor, proto))
         return nullptr;
     return proto;
 }

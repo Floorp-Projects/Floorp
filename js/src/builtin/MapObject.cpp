@@ -1052,7 +1052,7 @@ InitClass(JSContext *cx, Handle<GlobalObject*> global, const Class *clasp, JSPro
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndBrand(cx, proto, properties, methods) ||
-        !DefineConstructorAndPrototype(cx, global, key, ctor, proto))
+        !GlobalObject::initBuiltinConstructor(cx, global, key, ctor, proto))
     {
         return nullptr;
     }

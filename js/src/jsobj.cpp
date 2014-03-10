@@ -2481,13 +2481,13 @@ ClearClassObject(JSObject *obj, JSProtoKey key)
     obj->as<GlobalObject>().setPrototype(key, UndefinedValue());
 }
 
-JSObject *
-js::DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
-                                  JSObject *protoProto, const Class *clasp,
-                                  Native constructor, unsigned nargs,
-                                  const JSPropertySpec *ps, const JSFunctionSpec *fs,
-                                  const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
-                                  JSObject **ctorp, AllocKind ctorKind)
+static JSObject *
+DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
+                              JSObject *protoProto, const Class *clasp,
+                              Native constructor, unsigned nargs,
+                              const JSPropertySpec *ps, const JSFunctionSpec *fs,
+                              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
+                              JSObject **ctorp, AllocKind ctorKind)
 {
     /*
      * Create a prototype object for this class.
