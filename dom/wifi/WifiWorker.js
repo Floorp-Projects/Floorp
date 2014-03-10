@@ -2304,8 +2304,10 @@ WifiWorker.prototype = {
       // Convert between netId-based and ssid-based indexing.
       for (let net in networks) {
         let network = networks[net];
+        delete networks[net];
+
         if (!network.ssid) {
-          delete networks[net]; // TODO support these?
+          WifiManager.removeNetwork(network.netId, function() {});
           continue;
         }
 
@@ -2313,8 +2315,11 @@ WifiWorker.prototype = {
           this._highestPriority = network.priority;
 
         let networkKey = getNetworkKey(network);
+        // Accept latest config of same network(same SSID and same security).
+        if (networks[networkKey]) {
+          WifiManager.removeNetwork(networks[networkKey].netId, function() {});
+        }
         networks[networkKey] = network;
-        delete networks[net];
       }
 
       this.configuredNetworks = networks;
