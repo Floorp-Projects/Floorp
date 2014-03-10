@@ -3786,10 +3786,15 @@ Tab.prototype = {
           this._linkifier.linkifyNumbers(this.browser.contentWindow.document);
         }
 
-        // Show page actions for helper apps.
+        // Update page actions for helper apps.
         let uri = this.browser.currentURI;
-        if (BrowserApp.selectedTab == this && ExternalApps.shouldCheckUri(uri))
-          ExternalApps.updatePageAction(uri);
+        if (BrowserApp.selectedTab == this) {
+          if (ExternalApps.shouldCheckUri(uri)) {
+            ExternalApps.updatePageAction(uri);
+          } else {
+            ExternalApps.clearPageAction();
+          }
+        }
 
         if (!Reader.isEnabledForParseOnLoad)
           return;
@@ -7935,10 +7940,9 @@ var ExternalApps = {
 
   updatePageAction: function updatePageAction(uri) {
     HelperApps.getAppsForUri(uri, { filterHttp: true }, (apps) => {
+      this.clearPageAction();
       if (apps.length > 0)
         this._setUriForPageAction(uri, apps);
-      else
-        this._removePageAction();
     });
   },
 
@@ -7979,7 +7983,7 @@ var ExternalApps = {
     });
   },
 
-  _removePageAction: function removePageAction() {
+  clearPageAction: function clearPageAction() {
     if(!this._pageActionId)
       return;
 
