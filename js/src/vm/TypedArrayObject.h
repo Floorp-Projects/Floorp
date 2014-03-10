@@ -310,7 +310,7 @@ class DataViewObject : public ArrayBufferViewObject
     static bool setFloat64Impl(JSContext *cx, CallArgs args);
     static bool fun_setFloat64(JSContext *cx, unsigned argc, Value *vp);
 
-    static JSObject *initClass(JSContext *cx);
+    static bool initClass(JSContext *cx);
     static void neuter(JSObject *view);
     static bool getDataPointer(JSContext *cx, Handle<DataViewObject*> obj,
                                CallArgs args, size_t typeSize, uint8_t **data);
