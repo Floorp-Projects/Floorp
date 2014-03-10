@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "UnixSocket.h"
-#include "mozilla/ipc/UnixSocketWatcher.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include <fcntl.h>
@@ -119,7 +118,8 @@ public:
    */
   RefPtr<UnixSocketConsumer> mConsumer;
 
-  void OnAccepted(int aFd) MOZ_OVERRIDE;
+  void OnAccepted(int aFd, const sockaddr_any* aAddr,
+                  socklen_t aAddrLen) MOZ_OVERRIDE;
   void OnConnected() MOZ_OVERRIDE;
   void OnError(const char* aFunction, int aErrno) MOZ_OVERRIDE;
   void OnListening() MOZ_OVERRIDE;
@@ -553,10 +553,17 @@ UnixSocketImpl::SetSocketFlags(int aFd)
 }
 
 void
-UnixSocketImpl::OnAccepted(int aFd)
+UnixSocketImpl::OnAccepted(int aFd,
+                           const sockaddr_any* aAddr,
+                           socklen_t aAddrLen)
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
   MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_LISTENING);
+  MOZ_ASSERT(aAddr);
+  MOZ_ASSERT(aAddrLen <= sizeof(mAddr));
+
+  memcpy (&mAddr, aAddr, aAddrLen);
+  mAddrSize = aAddrLen;
 
   if (!mConnector->SetUp(aFd)) {
     NS_WARNING("Could not set up socket!");

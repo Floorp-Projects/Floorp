@@ -8,37 +8,15 @@
 #define mozilla_ipc_UnixSocket_h
 
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#ifdef MOZ_B2G_BT_BLUEZ
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/sco.h>
-#include <bluetooth/l2cap.h>
-#include <bluetooth/rfcomm.h>
-#endif
 #include <stdlib.h>
-#include "nsString.h"
 #include "nsAutoPtr.h"
-#include "mozilla/RefPtr.h"
+#include "nsString.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ipc/UnixSocketWatcher.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace ipc {
-
-union sockaddr_any {
-  sockaddr_storage storage; // address-family only
-  sockaddr_un un;
-  sockaddr_in in;
-  sockaddr_in6 in6;
-#ifdef MOZ_B2G_BT_BLUEZ
-  sockaddr_sco sco;
-  sockaddr_rc rc;
-  sockaddr_l2 l2;
-#endif
-  // ... others
-};
 
 class UnixSocketRawData
 {
