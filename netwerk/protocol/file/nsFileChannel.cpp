@@ -431,7 +431,7 @@ nsFileChannel::SetUploadStream(nsIInputStream *stream,
                                const nsACString &contentType,
                                int64_t contentLength)
 {
-  NS_ENSURE_TRUE(!IsPending(), NS_ERROR_IN_PROGRESS);
+  NS_ENSURE_TRUE(!Pending(), NS_ERROR_IN_PROGRESS);
 
   if ((mUploadStream = stream)) {
     mUploadLength = contentLength;
