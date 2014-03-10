@@ -478,7 +478,7 @@ AudioDestinationNode::CreateAudioChannelAgent()
   }
 
   mAudioChannelAgent = new AudioChannelAgent();
-  mAudioChannelAgent->InitWithWeakCallback(type, this);
+  mAudioChannelAgent->InitWithWeakCallback(GetOwner(), type, this);
 
   nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
   if (docshell) {
