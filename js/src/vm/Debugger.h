@@ -370,13 +370,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      */
     void fireNewScript(JSContext *cx, HandleScript script);
 
-    /*
-     * Gets a Debugger.Frame object. If maybeIter is non-null, we eagerly copy
-     * its data if we need to make a new Debugger.Frame.
-     */
-    bool getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
-                                const ScriptFrameIter *maybeIter, MutableHandleValue vp);
-
     inline Breakpoint *firstBreakpoint() const;
 
     static inline Debugger *fromOnNewGlobalObjectWatchersLink(JSCList *link);
@@ -490,9 +483,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * Use this if you have already access to a frame pointer without having
      * to incur the cost of walking the stack.
      */
-    bool getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp) {
-        return getScriptFrameWithIter(cx, frame, nullptr, vp);
-    }
+    bool getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp);
 
     /*
      * Store the Debugger.Frame object for iter in *vp. Eagerly copies a
@@ -503,7 +494,11 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * paid.
      */
     bool getScriptFrame(JSContext *cx, const ScriptFrameIter &iter, MutableHandleValue vp) {
-        return getScriptFrameWithIter(cx, iter.abstractFramePtr(), &iter, vp);
+        AbstractFramePtr data = iter.copyDataAsAbstractFramePtr();
+        if (!data || !getScriptFrame(cx, iter.abstractFramePtr(), vp))
+            return false;
+        vp.toObject().setPrivate(data.raw());
+        return true;
     }
 
     /*
