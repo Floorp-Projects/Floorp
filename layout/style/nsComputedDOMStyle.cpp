@@ -2318,8 +2318,10 @@ CSSValue*
 nsComputedDOMStyle::GetGridTrackSize(const nsStyleCoord& aMinValue,
                                      const nsStyleCoord& aMaxValue)
 {
-  // FIXME bug 978212: If we have frame, every <track-size> should
-  // be resolved into 'px' here, based on layout results.
+  // FIXME bug 978212: for grid-template-columns and grid-template-rows
+  // (not grid-auto-columns and grid-auto-rows), if we have frame,
+  // every <track-size> should be resolved into 'px' here,
+  // based on layout results.
   if (aMinValue == aMaxValue) {
     nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
     SetValueToCoord(val, aMinValue, true,
@@ -2379,6 +2381,20 @@ nsComputedDOMStyle::GetGridTrackList(const nsStyleGridTrackList& aTrackList)
   }
 
   return valueList;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridAutoColumns()
+{
+  return GetGridTrackSize(StylePosition()->mGridAutoColumnsMin,
+                          StylePosition()->mGridAutoColumnsMax);
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridAutoRows()
+{
+  return GetGridTrackSize(StylePosition()->mGridAutoRowsMin,
+                          StylePosition()->mGridAutoRowsMax);
 }
 
 CSSValue*
