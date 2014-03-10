@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#customization-tipPanel > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+  margin: 0;
+  min-width: 400px;
+  max-width: 1000px;
+  min-height: 200px;
+  border-radius: 3px;
+  background-image: linear-gradient(90deg, #a0dfff 0%, #ceeeff 100%);
+  border: 0px solid rgba(0,148,221,.5);
+  box-shadow: 0 1px 5px 0 rgba(0,0,0,.5), inset 0 1px 1px 0 #fff;
+}
+
+#customization-tipPanel > .panel-arrowcontainer > .panel-arrowcontent:-moz-locale-dir(rtl) {
+  background-image: linear-gradient(90deg, #ceeeff 0%, #a0dfff 100%);
+}
+
+.customization-tipPanel-infoBox {
+  margin: 20px 25px 25px;
+  width: 25px;
+  background-image: url(chrome://browser/skin/customizableui/info-icon-customizeTip.png);
+  background-repeat: no-repeat;
+}
+
+.customization-tipPanel-content {
+  margin: 25px 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.customization-tipPanel-em {
+  margin: 0;
+  font-weight: bold;
+}
+
+.customization-tipPanel-contentImage {
+  margin-top: 25px;
+  list-style-image: url(chrome://browser/skin/customizableui/customize-illustration.png);
+  min-width: 300px;
+  max-width: 300px;
+  min-height: 190px;
+  max-height: 190px;
+  display: -moz-box;
+}
+
+.customization-tipPanel-contentImage:-moz-locale-dir(rtl) {
+  list-style-image: url(chrome://browser/skin/customizableui/customize-illustration-rtl.png);
+}
+
+.customization-tipPanel-link {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: rgb(25,82,171);
+  margin: 0;
+  cursor: pointer;
+}
+
+.customization-tipPanel-link > .button-box > .button-text {
+  margin: 0 !important;
+}
+
+.customization-tipPanel-closeBox > .close-icon {
+  -moz-appearance: none;
+  border: 0;
+  -moz-margin-end: -25px;
+}
+
+#customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"],
+#customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="right"] {
+  list-style-image: url("chrome://browser/skin/customizableui/panelarrow-customizeTip.png");
+}
