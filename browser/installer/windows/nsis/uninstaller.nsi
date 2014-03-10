@@ -300,6 +300,14 @@ Section "Uninstall"
   ${EndIf}
   ${ResetWin8PromptKeys}
   ${ResetWin8MetroSplash}
+!else
+  ; The metro browser is not enabled by mozconfig.
+  ${If} ${AtLeastWin8}
+    ${RemoveDEHRegistration} ${DELEGATE_EXECUTE_HANDLER_ID} \
+                             $AppUserModelID \
+                             "FirefoxURL" \
+                             "FirefoxHTML"
+  ${EndIf}
 !endif
 
   ${un.RegCleanAppHandler} "FirefoxURL"

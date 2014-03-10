@@ -386,6 +386,14 @@ Section "-Application" APP_IDX
                                     $AppUserModelID \
                                     "FirefoxURL" \
                                     "FirefoxHTML"
+!else
+  ; The metro browser is not enabled by mozconfig.
+  ${If} ${AtLeastWin8}
+    ${RemoveDEHRegistration} ${DELEGATE_EXECUTE_HANDLER_ID} \
+                             $AppUserModelID \
+                             "FirefoxURL" \
+                             "FirefoxHTML"
+  ${EndIf}
 !endif
   ${EndIf}
 

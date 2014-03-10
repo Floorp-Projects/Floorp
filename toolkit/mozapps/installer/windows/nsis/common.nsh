@@ -7693,7 +7693,7 @@
 !macroend
 
 !ifdef MOZ_METRO
-; Removes the CEH registration if it's set to our installation directory.
+; Removes the DEH registration if it's set to our installation directory.
 ; If it's set to some other installation directory, then it should be removed
 ; by that installation.
 !macro RemoveDEHRegistrationIfMatchingCall un
@@ -7817,3 +7817,65 @@
 !define AddMetroBrowserHandlerValues "!insertmacro AddMetroBrowserHandlerValues"
 !endif ;end MOZ_METRO
 
+; Unconditionally removes the delegate execute handler registration used to
+; launch the metro browser and misc. metro related registry values.
+!macro RemoveDEHRegistration DELEGATE_EXECUTE_HANDLER_ID \
+                             APP_USER_MODEL_ID \
+                             PROTOCOL_ACTIVATION_ID \
+                             FILE_ACTIVATION_ID
+  ; Remove the app user model id root registration used by widget for tray redistration.
+  DeleteRegKey HKCU "Software\Classes\${APP_USER_MODEL_ID}"
+  DeleteRegKey HKLM "Software\Classes\${APP_USER_MODEL_ID}"
+
+  ; Remove metro browser splash image data
+  DeleteRegKey HKCU "Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\DefaultBrowser_NOPUBLISHERID\SplashScreen\DefaultBrowser_NOPUBLISHERID!${APP_USER_MODEL_ID}"
+
+  ; Misc. metro keys
+  DeleteRegKey HKCU "Software\Mozilla\Firefox\Metro"
+  DeleteRegValue HKCU "Software\Mozilla\Firefox" "CEHDump"
+  DeleteRegValue HKCU "Software\Mozilla\Firefox" "MetroD3DAvailable"
+  DeleteRegValue HKCU "Software\Mozilla\Firefox" "MetroLastAEH"
+
+  ; Remove Application Accociation Toasts
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.htm"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.html"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xht"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xhtml"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.shtml"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_ftp"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_http"
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_https"
+
+  ; Remove delegate execute handler clsid registration
+  DeleteRegKey HKCU "Software\Classes\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}"
+  DeleteRegKey HKLM "Software\Classes\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}"
+
+  DeleteRegValue HKCU "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKCU "Software\Classes\${FILE_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKLM "Software\Classes\${FILE_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+
+  ; Remove protocol and file delegate execute handler id assoc
+  DeleteRegValue HKCU "Software\Classes\${PROTOCOL_ACTIVATION_ID}" "AppUserModelID"
+  DeleteRegValue HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}" "AppUserModelID"
+  DeleteRegValue HKCU "Software\Classes\${FILE_ACTIVATION_ID}" "AppUserModelID"
+  DeleteRegValue HKLM "Software\Classes\${FILE_ACTIVATION_ID}" "AppUserModelID"
+
+  ; Remove delegate execute application registry keys
+  DeleteRegKey HKCU "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application"
+  DeleteRegKey HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application"
+  DeleteRegKey HKCU "Software\Classes\${FILE_ACTIVATION_ID}\Application"
+  DeleteRegKey HKLM "Software\Classes\${FILE_ACTIVATION_ID}\Application"
+
+  ; Remove misc. shell open info
+  DeleteRegValue HKCU "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open" "CommandId"
+  DeleteRegValue HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open" "CommandId"
+  DeleteRegValue HKCU "Software\Classes\${FILE_ACTIVATION_ID}\shell\open" "CommandId"
+  DeleteRegValue HKLM "Software\Classes\${FILE_ACTIVATION_ID}\shell\open" "CommandId"
+  DeleteRegValue HKCU "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKCU "Software\Classes\${FILE_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKLM "Software\Classes\${FILE_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+!macroend
+!define RemoveDEHRegistration "!insertmacro RemoveDEHRegistration"
+!define un.RemoveDEHRegistration "!insertmacro RemoveDEHRegistration"
