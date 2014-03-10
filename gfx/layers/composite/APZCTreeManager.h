@@ -42,6 +42,22 @@ class AsyncPanZoomController;
 class CompositorParent;
 
 /**
+ * ****************** NOTE ON LOCK ORDERING IN APZ **************************
+ *
+ * There are two kinds of locks used by APZ: APZCTreeManager::mTreeLock
+ * ("the tree lock") and AsyncPanZoomController::mMonitor ("APZC locks").
+ *
+ * To avoid deadlock, we impose a lock ordering between these locks, which is:
+ *
+ *      tree lock -> APZC locks
+ *
+ * The interpretation of the lock ordering is that if lock A precedes lock B
+ * in the ordering sequence, then you must NOT wait on A while holding B.
+ *
+ * **************************************************************************
+ */
+
+/**
  * This class manages the tree of AsyncPanZoomController instances. There is one
  * instance of this class owned by each CompositorParent, and it contains as
  * many AsyncPanZoomController instances as there are scrollable container layers.
@@ -303,7 +319,8 @@ private:
    * This lock does not need to be held while manipulating a single APZC instance in
    * isolation (that is, if its tree pointers are not being accessed or mutated). The
    * lock also needs to be held when accessing the mRootApzc instance variable, as that
-   * is considered part of the APZC tree management state. */
+   * is considered part of the APZC tree management state.
+   * IMPORTANT: See the note about lock ordering at the top of this file. */
   mozilla::Monitor mTreeLock;
   nsRefPtr<AsyncPanZoomController> mRootApzc;
   /* This tracks the APZC that should receive all inputs for the current input event block.

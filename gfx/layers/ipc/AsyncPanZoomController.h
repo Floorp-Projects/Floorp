@@ -650,6 +650,7 @@ protected:
   // Before manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the
   // monitor should be held. When setting |mState|, either the SetState()
   // function can be used, or the monitor can be held and then |mState| updated.
+  // IMPORTANT: See the note about lock ordering at the top of APZCTreeManager.h.
   ReentrantMonitor mMonitor;
 
   // Specifies whether we should use touch-action css property. Initialized from
