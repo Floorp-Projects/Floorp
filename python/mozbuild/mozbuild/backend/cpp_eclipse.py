@@ -32,6 +32,9 @@ class CppEclipseBackend(CommonBackend):
         self._macbundle = self.environment.substs['MOZ_MACBUNDLE_NAME']
         self._appname = self.environment.substs['MOZ_APP_NAME']
         self._bin_suffix = self.environment.substs['BIN_SUFFIX']
+        self._cxx = self.environment.substs['CXX']
+        # Note: We need the C Pre Processor (CPP) flags, not the CXX flags
+        self._cppflags = self.environment.substs['CPPFLAGS']
 
         def detailed(summary):
             return ('\n' + \
@@ -82,7 +85,9 @@ class CppEclipseBackend(CommonBackend):
 
         workspace_language_path = os.path.join(workspace_language_dir, 'language.settings.xml')
         with open(workspace_language_path, 'wb') as fh:
-            fh.write(WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE)
+            workspace_lang_settings = WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE
+            workspace_lang_settings = workspace_lang_settings.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags);
+            fh.write(workspace_lang_settings)
 
         self._write_launch_files(launch_dir)
 
@@ -112,6 +117,7 @@ class CppEclipseBackend(CommonBackend):
         settings = settings.replace('@PREINCLUDE_FILE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/mozilla-config.h'))
         settings = settings.replace('@DEFINE_MOZILLA_INTERNAL_API@', self._define_entry('MOZILLA_INTERNAL_API', '1'))
         settings = settings.replace('@DEFINE_MDCPUCFG@', self._define_entry('MDCPUCFG', self.environment.substs['TARGET_NSPR_MDCPUCFG']))
+        settings = settings.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags);
 
         fh.write(settings)
 
@@ -272,7 +278,7 @@ CPROJECT_TEMPLATE_FOOTER = """                                </configuration>
 WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plugin>
         <extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
-                <provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="true" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="${COMMAND} -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11">
+                <provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="true" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="@COMPILER_FLAGS@ -E -P -v -dD &quot;${INPUTS}&quot;">
                         <language-scope id="org.eclipse.cdt.core.gcc"/>
                         <language-scope id="org.eclipse.cdt.core.g++"/>
                 </provider>
@@ -310,7 +316,7 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
                                         </resource>
                                 </language>
                         </provider>
-                        <provider class="org.eclipse.cdt.internal.build.crossgcc.CrossGCCBuiltinSpecsDetector" console="false" env-hash="-859273372804152468" id="org.eclipse.cdt.build.crossgcc.CrossGCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT Cross GCC Built-in Compiler Settings" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11" prefer-non-shared="true" store-entries-with-project="true">
+                        <provider class="org.eclipse.cdt.internal.build.crossgcc.CrossGCCBuiltinSpecsDetector" console="false" env-hash="-859273372804152468" id="org.eclipse.cdt.build.crossgcc.CrossGCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT Cross GCC Built-in Compiler Settings" parameter="@COMPILER_FLAGS@ -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11" prefer-non-shared="true" store-entries-with-project="true">
                              <language-scope id="org.eclipse.cdt.core.gcc"/>
                              <language-scope id="org.eclipse.cdt.core.g++"/>
                         </provider>
