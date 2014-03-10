@@ -3399,6 +3399,8 @@ JSObject *
 CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
                    JS::CompartmentOptions& aOptions);
 
+// InitGlobalObject enters the compartment of aGlobal, so it doesn't matter what
+// compartment aJSContext is in.
 bool
 InitGlobalObject(JSContext* aJSContext, JS::Handle<JSObject*> aGlobal,
                  uint32_t aFlags);

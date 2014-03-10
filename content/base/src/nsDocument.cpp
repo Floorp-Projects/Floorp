@@ -12143,8 +12143,9 @@ nsIDocument::WrapObject(JSContext *aCx)
   }
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(GetInnerWindow());
-  if (!win) {
-    // No window, nothing else to do here
+  if (!win ||
+      static_cast<nsGlobalWindow*>(win.get())->IsDOMBinding()) {
+    // No window or window on new DOM binding, nothing else to do here.
     return obj;
   }
 
