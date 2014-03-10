@@ -75,6 +75,7 @@ public class GeckoPreferences
     private static boolean sIsCharEncodingEnabled = false;
     private boolean mInitialized = false;
     private int mPrefsRequestId = 0;
+    private PanelsPreferenceCategory mPanelsPreferenceCategory;
 
     // These match keys in resources/xml*/preferences*.xml
     private static final String PREFS_SEARCH_RESTORE_DEFAULTS = NON_PREF_PREFIX + "search.restore_defaults";
@@ -279,9 +280,8 @@ public class GeckoPreferences
           case HomePanelPicker.REQUEST_CODE_ADD_PANEL:
               switch (resultCode) {
                   case Activity.RESULT_OK:
-                      // XXX: Bug 976925 - UI after adding a panel.
-                      setResult(RESULT_CODE_EXIT_SETTINGS);
-                      finish();
+                     // Panel installed, refresh panels list.
+                     mPanelsPreferenceCategory.refresh();
                       break;
                   case Activity.RESULT_CANCELED:
                       // Dialog was cancelled, do nothing.
@@ -348,6 +348,8 @@ public class GeckoPreferences
                         i--;
                         continue;
                     }
+                } else if (pref instanceof PanelsPreferenceCategory) {
+                    mPanelsPreferenceCategory = (PanelsPreferenceCategory) pref;
                 }
                 setupPreferences((PreferenceGroup) pref, prefs);
             } else {
