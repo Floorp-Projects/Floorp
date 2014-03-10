@@ -122,21 +122,35 @@ class CppEclipseBackend(CommonBackend):
         fh.write(settings)
 
     def _write_launch_files(self, launch_dir):
-        main_gecko_launch = os.path.join(launch_dir, 'gecko.launch')
-        with open(main_gecko_launch, 'wb') as fh:
-            bin_dir = os.path.join(self.environment.topobjdir, 'dist')
+        bin_dir = os.path.join(self.environment.topobjdir, 'dist')
 
-            launch = LAUNCH_CONFIG_TEMPLATE
-            # TODO Improve binary detection
-            if self._macbundle:
-                exe_path = os.path.join(bin_dir, self._macbundle, 'Contents/MacOS')
-            else:
-                exe_path = os.path.join(bin_dir, 'bin')
+        # TODO Improve binary detection
+        if self._macbundle:
+            exe_path = os.path.join(bin_dir, self._macbundle, 'Contents/MacOS')
+        else:
+            exe_path = os.path.join(bin_dir, 'bin')
 
-            exe_path = os.path.join(exe_path, self._appname + self._bin_suffix)
-            launch = launch.replace('@LAUNCH_PROGRAM@', exe_path)
-            launch = launch.replace('@LAUNCH_ARGS@', '-P -no-remote')
-            fh.write(launch)
+        exe_path = os.path.join(exe_path, self._appname + self._bin_suffix)
+
+        if self.environment.substs['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+            main_gecko_launch = os.path.join(launch_dir, 'gecko.launch')
+            with open(main_gecko_launch, 'wb') as fh:
+                launch = GECKO_LAUNCH_CONFIG_TEMPLATE
+                launch = launch.replace('@LAUNCH_PROGRAM@', exe_path)
+                launch = launch.replace('@LAUNCH_ARGS@', '-P -no-remote')
+                fh.write(launch)
+
+        if self.environment.substs['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+            b2g_flash = os.path.join(launch_dir, 'b2g-flash.launch')
+            with open(b2g_flash, 'wb') as fh:
+                # We assume that the srcdir is inside the b2g tree.
+                # If that's not the case the user can always adjust the path
+                # from the eclipse IDE.
+                fastxul_path = os.path.join(self.environment.topsrcdir, '..', 'scripts', 'fastxul.sh')
+                launch = B2GFLASH_LAUNCH_CONFIG_TEMPLATE
+                launch = launch.replace('@LAUNCH_PROGRAM@', fastxul_path)
+                launch = launch.replace('@OBJDIR@', self.environment.topobjdir)
+                fh.write(launch)
 
         #TODO Add more launch configs (and delegate calls to mach)
 
@@ -148,7 +162,10 @@ class CppEclipseBackend(CommonBackend):
         fh.write(project)
 
     def _write_cproject(self, fh):
-        fh.write(CPROJECT_TEMPLATE_HEADER.replace('@PROJECT_TOPSRCDIR@', self.environment.topobjdir))
+        cproject_header = CPROJECT_TEMPLATE_HEADER
+        cproject_header = cproject_header.replace('@PROJECT_TOPSRCDIR@', self.environment.topobjdir)
+        cproject_header = cproject_header.replace('@MACH_COMMAND@', os.path.join(self.environment.topsrcdir, 'mach'))
+        fh.write(cproject_header)
 
         for path, defines in self._paths_to_defines.items():
             folderinfo = CPROJECT_TEMPLATE_FOLDER_INFO_HEADER
@@ -181,9 +198,9 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                 </buildCommand>
                 <buildCommand>
                         <name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
-                        <triggers>full,incremental,</triggers>
-                        <arguments>
-                        </arguments>
+                        <triggers></triggers>
+			<arguments>
+			</arguments>
                 </buildCommand>
         </buildSpec>
         <natures>
@@ -224,7 +241,7 @@ CPROJECT_TEMPLATE_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="n
                                         <folderInfo id="0.1674256904." name="/" resourcePath="">
                                                 <toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1276586933" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
                                                         <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.710759961" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder arguments="-C @PROJECT_TOPSRCDIR@ -j8" buildPath="@PROJECT_TOPSRCDIR@" command="gmake" enableCleanBuild="false" incrementalBuildTarget="binaries" id="org.eclipse.cdt.build.core.settings.default.builder.1437267827" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+							<builder arguments="build" buildPath="@PROJECT_TOPSRCDIR@" command="@MACH_COMMAND@" enableCleanBuild="false" incrementalBuildTarget="binaries" id="org.eclipse.cdt.build.core.settings.default.builder.1437267827" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
                                                 </toolChain>
                                         </folderInfo>
 """
@@ -326,7 +343,7 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
 </project>
 """
 
-LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+GECKO_LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.cdt.launch.applicationLaunchType">
 <booleanAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB" value="true"/>
 <listAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB_LIST"/>
@@ -361,6 +378,43 @@ LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
 </launchConfiguration>
 """
+
+B2GFLASH_LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.cdt.launch.applicationLaunchType">
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB" value="true"/>
+<listAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB_LIST"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="lldb"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_ON_FORK" value="false"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.GDB_INIT" value=""/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.NON_STOP" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.REVERSE" value="false"/>
+<listAttribute key="org.eclipse.cdt.dsf.gdb.SOLIB_PATH"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.TRACEPOINT_MODE" value="TP_NORMAL_ONLY"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.internal.ui.launching.LocalApplicationCDebuggerTab.DEFAULTS_SET" value="true"/>
+<intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
+<stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_ID" value="gdb"/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_START_MODE" value="run"/>
+<booleanAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN" value="false"/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="main"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="@LAUNCH_PROGRAM@"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="gecko"/>
+<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.WORKING_DIRECTORY" value="@OBJDIR@"/>
+<booleanAttribute key="org.eclipse.cdt.launch.use_terminal" value="true"/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/gecko"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4"/>
+</listAttribute>
+<booleanAttribute key="org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND" value="false"/>
+<stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
+</launchConfiguration>
+"""
+
 
 EDITOR_SETTINGS = """eclipse.preferences.version=1
 lineNumberRuler=true
