@@ -6,19 +6,20 @@
   function paintListener(event) {
     if (event.target != window)
       return;
+    var eventRect =
+      [ event.boundingClientRect.left,
+        event.boundingClientRect.top,
+        event.boundingClientRect.right,
+        event.boundingClientRect.bottom ];
     if (debug) {
-      dump("got MozAfterPaint: " + event.boundingClientRect.left + "," + event.boundingClientRect.top + "," +
-           event.boundingClientRect.right + "," + event.boundingClientRect.bottom + "\n");
+      dump("got MozAfterPaint: " + eventRect.join(",") + "\n");
     }
-    if (accumulatedRect) {
-      accumulatedRect[0] = Math.min(accumulatedRect[0], event.boundingClientRect.left);
-      accumulatedRect[1] = Math.min(accumulatedRect[1], event.boundingClientRect.top);
-      accumulatedRect[2] = Math.max(accumulatedRect[2], event.boundingClientRect.right);
-      accumulatedRect[3] = Math.max(accumulatedRect[3], event.boundingClientRect.bottom);
-    } else {
-      accumulatedRect = [event.boundingClientRect.left, event.boundingClientRect.top,
-                         event.boundingClientRect.right, event.boundingClientRect.bottom];
-    }
+    accumulatedRect = accumulatedRect
+                    ? [ Math.min(accumulatedRect[0], eventRect[0]),
+                        Math.min(accumulatedRect[1], eventRect[1]),
+                        Math.max(accumulatedRect[2], eventRect[2]),
+                        Math.max(accumulatedRect[3], eventRect[3]) ]
+                    : eventRect;
     onpaint();
   }
   window.addEventListener("MozAfterPaint", paintListener, false);
@@ -35,13 +36,10 @@
       if (debug) {
         dump("done...\n");
       }
-      var result = accumulatedRect;
+      var result = accumulatedRect || [ 0, 0, 0, 0 ];
       accumulatedRect = null;
       onpaint = function() {};
-      if (!result) {
-        result = [0,0,0,0];
-      }
-      callback(result[0], result[1], result[2], result[3]);
+      callback.apply(null, result);
       return;
     }
     if (debug) {
