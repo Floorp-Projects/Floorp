@@ -62,6 +62,10 @@ protected:
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*) MOZ_OVERRIDE;
   virtual PRtspControllerChild* AllocPRtspControllerChild() MOZ_OVERRIDE;
   virtual bool DeallocPRtspControllerChild(PRtspControllerChild*) MOZ_OVERRIDE;
+  virtual PChannelDiverterChild*
+  AllocPChannelDiverterChild(const ChannelDiverterArgs& channel) MOZ_OVERRIDE;
+  virtual bool
+  DeallocPChannelDiverterChild(PChannelDiverterChild* actor) MOZ_OVERRIDE;
 };
 
 /**

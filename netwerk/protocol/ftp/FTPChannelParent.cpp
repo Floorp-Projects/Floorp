@@ -11,6 +11,7 @@
 #include "nsFtpProtocolHandler.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/unused.h"
 #include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
@@ -25,6 +26,10 @@ FTPChannelParent::FTPChannelParent(nsILoadContext* aLoadContext, PBOverrideStatu
   : mIPCClosed(false)
   , mLoadContext(aLoadContext)
   , mPBOverride(aOverrideStatus)
+  , mStatus(NS_OK)
+  , mDivertingFromChild(false)
+  , mDivertedOnStartRequest(false)
+  , mSuspendedForDiversion(false)
 {
   nsIProtocolHandler* handler;
   CallGetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp", &handler);
@@ -179,6 +184,87 @@ FTPChannelParent::RecvResume()
   return true;
 }
 
+bool
+FTPChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
+                                            const uint64_t& offset,
+                                            const uint32_t& count)
+{
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot RecvDivertOnDataAvailable if diverting is not set!");
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return false;
+  }
+
+  // Drop OnDataAvailables if the parent was canceled already.
+  if (NS_FAILED(mStatus)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIInputStream> stringStream;
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stringStream), data.get(),
+                                      count, NS_ASSIGNMENT_DEPEND);
+  if (NS_FAILED(rv)) {
+    if (mChannel) {
+      mChannel->Cancel(rv);
+    }
+    mStatus = rv;
+    return true;
+  }
+
+  rv = OnDataAvailable(mChannel, nullptr, stringStream, offset, count);
+
+  stringStream->Close();
+  if (NS_FAILED(rv)) {
+    if (mChannel) {
+      mChannel->Cancel(rv);
+    }
+    mStatus = rv;
+  }
+  return true;
+}
+
+bool
+FTPChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
+{
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot RecvDivertOnStopRequest if diverting is not set!");
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return false;
+  }
+
+  // Honor the channel's status even if the underlying transaction completed.
+  nsresult status = NS_FAILED(mStatus) ? mStatus : statusCode;
+
+  // Reset fake pending status in case OnStopRequest has already been called.
+  if (mChannel) {
+    mChannel->ForcePending(false);
+  }
+
+  OnStopRequest(mChannel, nullptr, status);
+  return true;
+}
+
+bool
+FTPChannelParent::RecvDivertComplete()
+{
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot RecvDivertComplete if diverting is not set!");
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return false;
+  }
+
+  nsresult rv = ResumeForDiversion();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return false;
+  }
+
+  return true;
+}
+
 //-----------------------------------------------------------------------------
 // FTPChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------
@@ -187,6 +273,12 @@ NS_IMETHODIMP
 FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
 {
   LOG(("FTPChannelParent::OnStartRequest [this=%p]\n", this));
+
+  if (mDivertingFromChild) {
+    MOZ_RELEASE_ASSERT(mDivertToListener,
+                       "Cannot divert if listener is unset!");
+    return mDivertToListener->OnStartRequest(aRequest, aContext);
+  }
 
   nsCOMPtr<nsIChannel> chan = do_QueryInterface(aRequest);
   MOZ_ASSERT(chan);
@@ -235,6 +327,12 @@ FTPChannelParent::OnStopRequest(nsIRequest* aRequest,
   LOG(("FTPChannelParent::OnStopRequest: [this=%p status=%ul]\n",
        this, aStatusCode));
 
+  if (mDivertingFromChild) {
+    MOZ_RELEASE_ASSERT(mDivertToListener,
+                       "Cannot divert if listener is unset!");
+    return mDivertToListener->OnStopRequest(aRequest, aContext, aStatusCode);
+  }
+
   if (mIPCClosed || !SendOnStopRequest(aStatusCode)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -254,7 +352,14 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
                                   uint32_t aCount)
 {
   LOG(("FTPChannelParent::OnDataAvailable [this=%p]\n", this));
-  
+
+  if (mDivertingFromChild) {
+    MOZ_RELEASE_ASSERT(mDivertToListener,
+                       "Cannot divert if listener is unset!");
+    return mDivertToListener->OnDataAvailable(aRequest, aContext, aInputStream,
+                                              aOffset, aCount);
+  }
+
   nsCString data;
   nsresult rv = NS_ReadInputStreamToString(aInputStream, data, aCount);
   if (NS_FAILED(rv))
@@ -294,6 +399,195 @@ FTPChannelParent::GetInterface(const nsIID& uuid, void** result)
   }
 
   return QueryInterface(uuid, result);
+}
+
+//-----------------------------------------------------------------------------
+// FTPChannelParent::ADivertableParentChannel
+//-----------------------------------------------------------------------------
+nsresult
+FTPChannelParent::SuspendForDiversion()
+{
+  MOZ_ASSERT(mChannel);
+  if (NS_WARN_IF(mDivertingFromChild)) {
+    MOZ_ASSERT(!mDivertingFromChild, "Already suspended for diversion!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Try suspending the channel. Allow it to fail, since OnStopRequest may have
+  // been called and thus the channel may not be pending.
+  nsresult rv = mChannel->Suspend();
+  MOZ_ASSERT(NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_AVAILABLE);
+  mSuspendedForDiversion = NS_SUCCEEDED(rv);
+
+  // Once this is set, no more OnStart/OnData/OnStop callbacks should be sent
+  // to the child.
+  mDivertingFromChild = true;
+
+  return NS_OK;
+}
+
+/* private, supporting function for ADivertableParentChannel */
+nsresult
+FTPChannelParent::ResumeForDiversion()
+{
+  MOZ_ASSERT(mChannel);
+  MOZ_ASSERT(mDivertToListener);
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot ResumeForDiversion if not diverting!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mSuspendedForDiversion) {
+    nsresult rv = mChannel->Resume();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      FailDiversion(NS_ERROR_UNEXPECTED, true);
+      return rv;
+    }
+    mSuspendedForDiversion = false;
+  }
+
+  // Delete() will tear down IPDL, but ref from underlying nsFTPChannel will
+  // keep us alive if there's more data to be delivered to listener.
+  if (NS_WARN_IF(NS_FAILED(Delete()))) {
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return NS_ERROR_UNEXPECTED;   
+  }
+  return NS_OK;
+}
+
+void
+FTPChannelParent::DivertTo(nsIStreamListener *aListener)
+{
+  MOZ_ASSERT(aListener);
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot DivertTo new listener if diverting is not set!");
+    return;
+  }
+
+  if (NS_WARN_IF(mIPCClosed || !SendFlushedForDiversion())) {
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  mDivertToListener = aListener;
+
+  // Call OnStartRequest and SendDivertMessages asynchronously to avoid
+  // reentering client context.
+  NS_DispatchToCurrentThread(
+    NS_NewRunnableMethod(this, &FTPChannelParent::StartDiversion));
+  return;
+}
+
+void
+FTPChannelParent::StartDiversion()
+{
+  if (NS_WARN_IF(!mDivertingFromChild)) {
+    MOZ_ASSERT(mDivertingFromChild,
+               "Cannot StartDiversion if diverting is not set!");
+    return;
+  }
+
+  // Fake pending status in case OnStopRequest has already been called.
+  if (mChannel) {
+    mChannel->ForcePending(true);
+  }
+
+  // Call OnStartRequest for the "DivertTo" listener.
+  nsresult rv = OnStartRequest(mChannel, nullptr);
+  if (NS_FAILED(rv)) {
+    if (mChannel) {
+      mChannel->Cancel(rv);
+    }
+    mStatus = rv;
+    return;
+  }
+
+  // After OnStartRequest has been called, tell FTPChannelChild to divert the
+  // OnDataAvailables and OnStopRequest to this FTPChannelParent.
+  if (NS_WARN_IF(mIPCClosed || !SendDivertMessages())) {
+    FailDiversion(NS_ERROR_UNEXPECTED);
+    return;
+  }
+}
+
+class FTPFailDiversionEvent : public nsRunnable
+{
+public:
+  FTPFailDiversionEvent(FTPChannelParent *aChannelParent,
+                        nsresult aErrorCode,
+                        bool aSkipResume)
+    : mChannelParent(aChannelParent)
+    , mErrorCode(aErrorCode)
+    , mSkipResume(aSkipResume)
+  {
+    MOZ_RELEASE_ASSERT(aChannelParent);
+    MOZ_RELEASE_ASSERT(NS_FAILED(aErrorCode));
+  }
+  NS_IMETHOD Run()
+  {
+    mChannelParent->NotifyDiversionFailed(mErrorCode, mSkipResume);
+    return NS_OK;
+  }
+private:
+  nsRefPtr<FTPChannelParent> mChannelParent;
+  nsresult mErrorCode;
+  bool mSkipResume;
+};
+
+void
+FTPChannelParent::FailDiversion(nsresult aErrorCode,
+                                            bool aSkipResume)
+{
+  MOZ_RELEASE_ASSERT(NS_FAILED(aErrorCode));
+  MOZ_RELEASE_ASSERT(mDivertingFromChild);
+  MOZ_RELEASE_ASSERT(mDivertToListener);
+  MOZ_RELEASE_ASSERT(mChannel);
+
+  NS_DispatchToCurrentThread(
+    new FTPFailDiversionEvent(this, aErrorCode, aSkipResume));
+}
+
+void
+FTPChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
+                                        bool aSkipResume)
+{
+  MOZ_RELEASE_ASSERT(NS_FAILED(aErrorCode));
+  MOZ_RELEASE_ASSERT(mDivertingFromChild);
+  MOZ_RELEASE_ASSERT(mDivertToListener);
+  MOZ_RELEASE_ASSERT(mChannel);
+
+  mChannel->Cancel(aErrorCode);
+
+  mChannel->ForcePending(false);
+
+  bool isPending = false;
+  nsresult rv = mChannel->IsPending(&isPending);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+
+  // Resume only we suspended earlier.
+  if (mSuspendedForDiversion) {
+    mChannel->Resume();
+  }
+  // Channel has already sent OnStartRequest to the child, so ensure that we
+  // call it here if it hasn't already been called.
+  if (!mDivertedOnStartRequest) {
+    mChannel->ForcePending(true);
+    mDivertToListener->OnStartRequest(mChannel, nullptr);
+    mChannel->ForcePending(false);
+  }
+  // If the channel is pending, it will call OnStopRequest itself; otherwise, do
+  // it here.
+  if (!isPending) {
+    mDivertToListener->OnStopRequest(mChannel, nullptr, aErrorCode);
+  }
+  mDivertToListener = nullptr;
+  mChannel = nullptr;
+
+  if (!mIPCClosed) {
+    unused << SendDeleteSelf();
+  }
 }
 
 //---------------------
