@@ -1238,32 +1238,6 @@ static const JSStdName builtin_property_names[] = {
     { 0, &SentinelClass }
 };
 
-static const JSStdName object_prototype_names[] = {
-    /* Object.prototype properties (global delegates to Object.prototype). */
-    { EAGER_ATOM(proto), &JSObject::class_ },
-#if JS_HAS_TOSOURCE
-    { EAGER_ATOM(toSource), &JSObject::class_ },
-#endif
-    { EAGER_ATOM(toString), &JSObject::class_ },
-    { EAGER_ATOM(toLocaleString), &JSObject::class_ },
-    { EAGER_ATOM(valueOf), &JSObject::class_ },
-#if JS_HAS_OBJ_WATCHPOINT
-    { EAGER_ATOM(watch), &JSObject::class_ },
-    { EAGER_ATOM(unwatch), &JSObject::class_ },
-#endif
-    { EAGER_ATOM(hasOwnProperty), &JSObject::class_ },
-    { EAGER_ATOM(isPrototypeOf), &JSObject::class_ },
-    { EAGER_ATOM(propertyIsEnumerable), &JSObject::class_ },
-#if JS_OLD_GETTER_SETTER_METHODS
-    { EAGER_ATOM(defineGetter), &JSObject::class_ },
-    { EAGER_ATOM(defineSetter), &JSObject::class_ },
-    { EAGER_ATOM(lookupGetter), &JSObject::class_ },
-    { EAGER_ATOM(lookupSetter), &JSObject::class_ },
-#endif
-
-    { 0, &SentinelClass }
-};
-
 #undef CLASP
 #undef TYPED_ARRAY_CLASP
 #undef EAGER_ATOM
@@ -1279,7 +1253,8 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    JS_ASSERT(obj->is<GlobalObject>());
+
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     *resolved = false;
 
     rt = cx->runtime();
@@ -1305,34 +1280,25 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     if (!stdnm)
         stdnm = LookupStdName(rt, idstr, builtin_property_names);
 
-    /*
-     * Try even less frequently used names delegated from the global
-     * object to Object.prototype, but only if the Object class hasn't
-     * yet been initialized.
-     */
-    if (!stdnm) {
-        RootedObject proto(cx);
-        if (!JSObject::getProto(cx, obj, &proto))
-            return false;
-        if (!proto)
-            stdnm = LookupStdName(rt, idstr, object_prototype_names);
-    }
-
-    if (stdnm) {
-        /*
-         * If this standard class is anonymous, then we don't want to resolve
-         * by name.
-         */
-        if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
-            return true;
-
-        Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    // If this class is anonymous, then it doesn't exist as a global
+    // property, so we won't resolve anything.
+    if (stdnm && !(stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)) {
         JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(stdnm->clasp);
         if (!GlobalObject::ensureConstructor(cx, global, key))
             return false;
 
         *resolved = true;
+        return true;
     }
+
+    // There is no such property to resolve. An ordinary resolve hook would
+    // just return true at this point. But the global object is special in one
+    // more way: its prototype chain is lazily initialized. That is,
+    // global->getProto() might be null right now because we haven't created
+    // Object.prototype yet. Force it now.
+    if (!global->getOrCreateObjectPrototype(cx))
+        return false;
+
     return true;
 }
 
