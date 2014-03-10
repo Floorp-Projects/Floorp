@@ -780,3 +780,44 @@ AudioChannelService::GetInternalType(AudioChannelType aType,
 
   MOZ_CRASH("unexpected audio channel type");
 }
+
+struct RefreshAgentsVolumeData
+{
+  RefreshAgentsVolumeData(nsPIDOMWindow* aWindow)
+    : mWindow(aWindow)
+  {}
+
+  nsPIDOMWindow* mWindow;
+  nsTArray<nsRefPtr<AudioChannelAgent>> mAgents;
+};
+
+PLDHashOperator
+AudioChannelService::RefreshAgentsVolumeEnumerator(AudioChannelAgent* aAgent,
+                                                   AudioChannelAgentData* aUnused,
+                                                   void* aPtr)
+{
+  MOZ_ASSERT(aAgent);
+  RefreshAgentsVolumeData* data = static_cast<RefreshAgentsVolumeData*>(aPtr);
+  MOZ_ASSERT(data);
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aAgent->Window());
+  if (window && !window->IsInnerWindow()) {
+    window = window->GetCurrentInnerWindow();
+  }
+
+  if (window == data->mWindow) {
+    data->mAgents.AppendElement(aAgent);
+  }
+
+  return PL_DHASH_NEXT;
+}
+void
+AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
+{
+  RefreshAgentsVolumeData data(aWindow);
+  mAgents.EnumerateRead(RefreshAgentsVolumeEnumerator, &data);
+
+  for (uint32_t i = 0; i < data.mAgents.Length(); ++i) {
+    data.mAgents[i]->WindowVolumeChanged();
+  }
+}
