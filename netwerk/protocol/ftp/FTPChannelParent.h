@@ -8,6 +8,7 @@
 #ifndef mozilla_net_FTPChannelParent_h
 #define mozilla_net_FTPChannelParent_h
 
+#include "ADivertableParentChannel.h"
 #include "mozilla/net/PFTPChannelParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "nsIParentChannel.h"
@@ -22,6 +23,7 @@ namespace net {
 class FTPChannelParent : public PFTPChannelParent
                        , public nsIParentChannel
                        , public nsIInterfaceRequestor
+                       , public ADivertableParentChannel
 {
 public:
   NS_DECL_ISUPPORTS
@@ -35,7 +37,26 @@ public:
 
   bool Init(const FTPChannelCreationArgs& aOpenArgs);
 
+  // ADivertableParentChannel functions.
+  void DivertTo(nsIStreamListener *aListener) MOZ_OVERRIDE;
+  nsresult SuspendForDiversion() MOZ_OVERRIDE;
+
+  // Calls OnStartRequest for "DivertTo" listener, then notifies child channel
+  // that it should divert OnDataAvailable and OnStopRequest calls to this
+  // parent channel.
+  void StartDiversion();
+
+  // Handles calling OnStart/Stop if there are errors during diversion.
+  // Called asynchronously from FailDiversion.
+  void NotifyDiversionFailed(nsresult aErrorCode, bool aSkipResume = true);
+
 protected:
+  // private, supporting function for ADivertableParentChannel.
+  nsresult ResumeForDiversion();
+
+  // Asynchronously calls NotifyDiversionFailed.
+  void FailDiversion(nsresult aErrorCode, bool aSkipResume = true);
+
   bool DoAsyncOpen(const URIParams& aURI, const uint64_t& aStartPos,
                    const nsCString& aEntityID,
                    const OptionalInputStreamParams& aUploadStream);
@@ -47,6 +68,11 @@ protected:
   virtual bool RecvCancel(const nsresult& status) MOZ_OVERRIDE;
   virtual bool RecvSuspend() MOZ_OVERRIDE;
   virtual bool RecvResume() MOZ_OVERRIDE;
+  virtual bool RecvDivertOnDataAvailable(const nsCString& data,
+                                         const uint64_t& offset,
+                                         const uint32_t& count) MOZ_OVERRIDE;
+  virtual bool RecvDivertOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
+  virtual bool RecvDivertComplete() MOZ_OVERRIDE;
 
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
@@ -57,6 +83,22 @@ protected:
   nsCOMPtr<nsILoadContext> mLoadContext;
 
   PBOverrideStatus mPBOverride;
+
+  // If OnStart/OnData/OnStop have been diverted from the child, forward them to
+  // this listener.
+  nsCOMPtr<nsIStreamListener> mDivertToListener;
+  // Set to the canceled status value if the main channel was canceled.
+  nsresult mStatus;
+  // Once set, no OnStart/OnData/OnStop calls should be accepted; conversely, it
+  // must be set when RecvDivertOnData/~DivertOnStop/~DivertComplete are
+  // received from the child channel.
+  bool mDivertingFromChild;
+  // Set if OnStart|StopRequest was called during a diversion from the child.
+  bool mDivertedOnStartRequest;
+
+  // Set if we successfully suspended the nsHttpChannel for diversion. Unset
+  // when we call ResumeForDiversion.
+  bool mSuspendedForDiversion;
 };
 
 } // namespace net
