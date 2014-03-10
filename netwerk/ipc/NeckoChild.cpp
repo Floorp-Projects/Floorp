@@ -16,7 +16,6 @@
 #include "mozilla/net/WebSocketChannelChild.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
-#include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
@@ -264,19 +263,6 @@ NeckoChild::DeallocPRemoteOpenFileChild(PRemoteOpenFileChild* aChild)
 {
   RemoteOpenFileChild *p = static_cast<RemoteOpenFileChild*>(aChild);
   p->ReleaseIPDLReference();
-  return true;
-}
-
-PChannelDiverterChild*
-NeckoChild::AllocPChannelDiverterChild(const ChannelDiverterArgs& channel)
-{
-  return new ChannelDiverterChild();;
-}
-
-bool
-NeckoChild::DeallocPChannelDiverterChild(PChannelDiverterChild* child)
-{
-  delete static_cast<ChannelDiverterChild*>(child);
   return true;
 }
 
