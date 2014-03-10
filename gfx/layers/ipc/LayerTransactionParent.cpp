@@ -32,6 +32,7 @@
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsDeviceContext.h"            // for AppUnitsPerCSSPixel
 #include "nsISupportsImpl.h"            // for Layer::Release, etc
 #include "nsLayoutUtils.h"              // for nsLayoutUtils
 #include "nsMathUtils.h"                // for NS_round
@@ -578,12 +579,14 @@ LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
   // The following code recovers the untranslated transform
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
+
   Layer* layer = cast(aParent)->AsLayer();
   if (!layer) {
     return false;
   }
   gfx::To3DMatrix(layer->AsLayerComposite()->GetShadowTransform(), *aTransform);
   if (ContainerLayer* c = layer->AsContainerLayer()) {
+    // Undo the scale transform applied by AsyncCompositionManager::SampleValue
     aTransform->ScalePost(1.0f/c->GetInheritedXScale(),
                           1.0f/c->GetInheritedYScale(),
                           1.0f);
@@ -599,13 +602,32 @@ LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
         gfxPoint3D(NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),
                    NS_round(NSAppUnitsToFloatPixels(data.origin().y, scale)),
                    0.0f);
-      transformOrigin = data.transformOrigin();
+      double cssPerDev =
+        double(nsDeviceContext::AppUnitsPerCSSPixel()) / double(scale);
+      transformOrigin = data.transformOrigin() * cssPerDev;
       break;
     }
   }
 
+  // Undo the translation to the origin of the reference frame applied by
+  // AsyncCompositionManager::SampleValue
   aTransform->Translate(-scaledOrigin);
-  *aTransform = nsLayoutUtils::ChangeMatrixBasis(-scaledOrigin - transformOrigin, *aTransform);
+
+  // Undo the rebasing applied by
+  // nsDisplayTransform::GetResultingTransformMatrixInternal
+  *aTransform =
+    nsLayoutUtils::ChangeMatrixBasis(-scaledOrigin - transformOrigin,
+                                     *aTransform);
+
+  // Convert to CSS pixels (this undoes the operations performed by
+  // nsStyleTransformMatrix::ProcessTranslatePart which is called from
+  // nsDisplayTransform::GetResultingTransformMatrix)
+  double devPerCss =
+    double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
+  aTransform->_41 *= devPerCss;
+  aTransform->_42 *= devPerCss;
+  aTransform->_43 *= devPerCss;
+
   return true;
 }
 
