@@ -327,7 +327,7 @@ class IonBuilder : public MIRGenerator
 
     void insertRecompileCheck();
 
-    bool initParameters();
+    void initParameters();
     void rewriteParameter(uint32_t slotIdx, MDefinition *param, int32_t argIndex);
     void rewriteParameters();
     bool initScopeChain(MDefinition *callee = nullptr);

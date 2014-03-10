@@ -16,6 +16,7 @@
 #include "nsAlgorithm.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ChaosMode.h"
 
 #ifdef PL_DHASHMETER
 # define METER(x)       x
@@ -640,10 +641,22 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
     char *entryAddr = table->entryStore;
     uint32_t entrySize = table->entrySize;
     uint32_t capacity = PL_DHASH_TABLE_SIZE(table);
-    char *entryLimit = entryAddr + capacity * entrySize;
+    uint32_t tableSize = capacity * entrySize;
+    char *entryLimit = entryAddr + tableSize;
     uint32_t i = 0;
     bool didRemove = false;
-    while (entryAddr < entryLimit) {
+
+    if (ChaosMode::isActive()) {
+        // Start iterating at a random point in the hashtable. It would be
+        // even more chaotic to iterate in fully random order, but that's a lot
+        // more work.
+        entryAddr += ChaosMode::randomUint32LessThan(capacity) * entrySize;
+        if (entryAddr >= entryLimit) {
+            entryAddr -= tableSize;
+        }
+    }
+
+    for (uint32_t e = 0; e < capacity; ++e) {
         PLDHashEntryHdr *entry = (PLDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
             PLDHashOperator op = etor(table, entry, i++, arg);
@@ -656,6 +669,9 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
                 break;
         }
         entryAddr += entrySize;
+        if (entryAddr >= entryLimit) {
+            entryAddr -= tableSize;
+        }
     }
 
     MOZ_ASSERT(!didRemove || table->recursionLevel == 1);

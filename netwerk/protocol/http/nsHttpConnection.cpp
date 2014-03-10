@@ -30,6 +30,7 @@
 #include "nsISupportsPriority.h"
 #include "nsHttpPipeline.h"
 #include <algorithm>
+#include "mozilla/ChaosMode.h"
 
 #ifdef DEBUG
 // defined by the socket transport service while active
@@ -1430,6 +1431,11 @@ nsHttpConnection::OnWriteSegment(char *buf,
         // or else we'd end up closing the socket prematurely.
         NS_ERROR("bad WriteSegments implementation");
         return NS_ERROR_FAILURE; // stop iterating
+    }
+
+    if (ChaosMode::isActive() && ChaosMode::randomUint32LessThan(2)) {
+        // read 1...count bytes
+        count = ChaosMode::randomUint32LessThan(count) + 1;
     }
 
     nsresult rv = mSocketIn->Read(buf, count, countWritten);

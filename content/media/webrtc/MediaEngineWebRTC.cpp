@@ -108,8 +108,9 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
 
   return;
 #else
-  webrtc::ViEBase* ptrViEBase;
-  webrtc::ViECapture* ptrViECapture;
+  ScopedCustomReleasePtr<webrtc::ViEBase> ptrViEBase;
+  ScopedCustomReleasePtr<webrtc::ViECapture> ptrViECapture;
+
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
 
@@ -232,9 +233,6 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
     }
   }
 
-  ptrViEBase->Release();
-  ptrViECapture->Release();
-
   return;
 #endif
 }
@@ -242,8 +240,8 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
 void
 MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSource> >* aASources)
 {
-  webrtc::VoEBase* ptrVoEBase = nullptr;
-  webrtc::VoEHardware* ptrVoEHw = nullptr;
+  ScopedCustomReleasePtr<webrtc::VoEBase> ptrVoEBase;
+  ScopedCustomReleasePtr<webrtc::VoEHardware> ptrVoEHw;
   // We spawn threads to handle gUM runnables, so we must protect the member vars
   MutexAutoLock lock(mMutex);
 
@@ -336,9 +334,6 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
       aASources->AppendElement(aSource);
     }
   }
-
-  ptrVoEHw->Release();
-  ptrVoEBase->Release();
 }
 
 void
