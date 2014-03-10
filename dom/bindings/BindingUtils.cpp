@@ -867,6 +867,12 @@ ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp)
   return ThrowErrorMessage(cx, MSG_ILLEGAL_CONSTRUCTOR);
 }
 
+bool
+ThrowConstructorWithoutNew(JSContext* cx, const char* name)
+{
+  return ThrowErrorMessage(cx, MSG_CONSTRUCTOR_WITHOUT_NEW, name);
+}
+
 inline const NativePropertyHooks*
 GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
                        DOMObjectType& type)

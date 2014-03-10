@@ -33,6 +33,7 @@ MSG_DEF(MSG_SETTER_THIS_UNWRAPPING_DENIED, 1, "Permission to call '{0}' setter d
 MSG_DEF(MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, 1, "\"this\" object does not implement interface {0}.")
 MSG_DEF(MSG_NOT_IN_UNION, 2, "{0} could not be converted to any of: {1}.")
 MSG_DEF(MSG_ILLEGAL_CONSTRUCTOR, 0, "Illegal constructor.")
+MSG_DEF(MSG_CONSTRUCTOR_WITHOUT_NEW, 1, "Constructor {0} requires 'new'")
 MSG_DEF(MSG_NO_INDEXED_SETTER, 1, "{0} doesn't have an indexed property setter.")
 MSG_DEF(MSG_NO_NAMED_SETTER, 1, "{0} doesn't have a named property setter.")
 MSG_DEF(MSG_ENFORCE_RANGE_NON_FINITE, 1, "Non-finite value is out of range for {0}.")
