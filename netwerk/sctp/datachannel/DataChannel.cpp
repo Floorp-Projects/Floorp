@@ -2352,6 +2352,17 @@ DataChannelConnection::ReadBlob(already_AddRefed<DataChannelConnection> aThis,
                 NS_DISPATCH_NORMAL);
 }
 
+void
+DataChannelConnection::GetStreamIds(std::vector<uint16_t>* aStreamList)
+{
+  ASSERT_WEBRTC(NS_IsMainThread());
+  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
+    if (mStreams[i]) {
+      aStreamList->push_back(mStreams[i]->mStream);
+    }
+  }
+}
+
 int32_t
 DataChannelConnection::SendMsgCommon(uint16_t stream, const nsACString &aMsg,
                                      bool isBinary)
