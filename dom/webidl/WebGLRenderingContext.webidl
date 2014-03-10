@@ -29,7 +29,7 @@ typedef octet          GLubyte;        /* 'octet' should be an unsigned 8 bit ty
 typedef unsigned short GLushort;
 typedef unsigned long  GLuint;
 typedef unrestricted float GLfloat;
-typedef unrestricted float GLclampf;  
+typedef unrestricted float GLclampf;
 
 dictionary WebGLContextAttributes {
     // boolean alpha = true;
@@ -85,7 +85,7 @@ interface WebGLRenderingContext {
     const GLenum DEPTH_BUFFER_BIT               = 0x00000100;
     const GLenum STENCIL_BUFFER_BIT             = 0x00000400;
     const GLenum COLOR_BUFFER_BIT               = 0x00004000;
-    
+
     /* BeginMode */
     const GLenum POINTS                         = 0x0000;
     const GLenum LINES                          = 0x0001;
@@ -94,7 +94,7 @@ interface WebGLRenderingContext {
     const GLenum TRIANGLES                      = 0x0004;
     const GLenum TRIANGLE_STRIP                 = 0x0005;
     const GLenum TRIANGLE_FAN                   = 0x0006;
-    
+
     /* AlphaFunction (not supported in ES20) */
     /*      NEVER */
     /*      LESS */
@@ -104,7 +104,7 @@ interface WebGLRenderingContext {
     /*      NOTEQUAL */
     /*      GEQUAL */
     /*      ALWAYS */
-    
+
     /* BlendingFactorDest */
     const GLenum ZERO                           = 0;
     const GLenum ONE                            = 1;
@@ -114,7 +114,7 @@ interface WebGLRenderingContext {
     const GLenum ONE_MINUS_SRC_ALPHA            = 0x0303;
     const GLenum DST_ALPHA                      = 0x0304;
     const GLenum ONE_MINUS_DST_ALPHA            = 0x0305;
-    
+
     /* BlendingFactorSrc */
     /*      ZERO */
     /*      ONE */
@@ -125,17 +125,17 @@ interface WebGLRenderingContext {
     /*      ONE_MINUS_SRC_ALPHA */
     /*      DST_ALPHA */
     /*      ONE_MINUS_DST_ALPHA */
-    
+
     /* BlendEquationSeparate */
     const GLenum FUNC_ADD                       = 0x8006;
     const GLenum BLEND_EQUATION                 = 0x8009;
     const GLenum BLEND_EQUATION_RGB             = 0x8009;   /* same as BLEND_EQUATION */
     const GLenum BLEND_EQUATION_ALPHA           = 0x883D;
-    
+
     /* BlendSubtract */
     const GLenum FUNC_SUBTRACT                  = 0x800A;
     const GLenum FUNC_REVERSE_SUBTRACT          = 0x800B;
-    
+
     /* Separate Blend Functions */
     const GLenum BLEND_DST_RGB                  = 0x80C8;
     const GLenum BLEND_SRC_RGB                  = 0x80C9;
@@ -146,27 +146,27 @@ interface WebGLRenderingContext {
     const GLenum CONSTANT_ALPHA                 = 0x8003;
     const GLenum ONE_MINUS_CONSTANT_ALPHA       = 0x8004;
     const GLenum BLEND_COLOR                    = 0x8005;
-    
+
     /* Buffer Objects */
     const GLenum ARRAY_BUFFER                   = 0x8892;
     const GLenum ELEMENT_ARRAY_BUFFER           = 0x8893;
     const GLenum ARRAY_BUFFER_BINDING           = 0x8894;
     const GLenum ELEMENT_ARRAY_BUFFER_BINDING   = 0x8895;
-    
+
     const GLenum STREAM_DRAW                    = 0x88E0;
     const GLenum STATIC_DRAW                    = 0x88E4;
     const GLenum DYNAMIC_DRAW                   = 0x88E8;
-    
+
     const GLenum BUFFER_SIZE                    = 0x8764;
     const GLenum BUFFER_USAGE                   = 0x8765;
-    
+
     const GLenum CURRENT_VERTEX_ATTRIB          = 0x8626;
-    
+
     /* CullFaceMode */
     const GLenum FRONT                          = 0x0404;
     const GLenum BACK                           = 0x0405;
     const GLenum FRONT_AND_BACK                 = 0x0408;
-    
+
     /* DepthFunction */
     /*      NEVER */
     /*      LESS */
@@ -176,7 +176,7 @@ interface WebGLRenderingContext {
     /*      NOTEQUAL */
     /*      GEQUAL */
     /*      ALWAYS */
-    
+
     /* EnableCap */
     /* TEXTURE_2D */
     const GLenum CULL_FACE                      = 0x0B44;
@@ -188,18 +188,18 @@ interface WebGLRenderingContext {
     const GLenum POLYGON_OFFSET_FILL            = 0x8037;
     const GLenum SAMPLE_ALPHA_TO_COVERAGE       = 0x809E;
     const GLenum SAMPLE_COVERAGE                = 0x80A0;
-    
+
     /* ErrorCode */
     const GLenum NO_ERROR                       = 0;
     const GLenum INVALID_ENUM                   = 0x0500;
     const GLenum INVALID_VALUE                  = 0x0501;
     const GLenum INVALID_OPERATION              = 0x0502;
     const GLenum OUT_OF_MEMORY                  = 0x0505;
-    
+
     /* FrontFaceDirection */
     const GLenum CW                             = 0x0900;
     const GLenum CCW                            = 0x0901;
-    
+
     /* GetPName */
     const GLenum LINE_WIDTH                     = 0x0B21;
     const GLenum ALIASED_POINT_SIZE_RANGE       = 0x846D;
@@ -249,23 +249,23 @@ interface WebGLRenderingContext {
     const GLenum SAMPLES                        = 0x80A9;
     const GLenum SAMPLE_COVERAGE_VALUE          = 0x80AA;
     const GLenum SAMPLE_COVERAGE_INVERT         = 0x80AB;
-    
+
     /* GetTextureParameter */
     /*      TEXTURE_MAG_FILTER */
     /*      TEXTURE_MIN_FILTER */
     /*      TEXTURE_WRAP_S */
     /*      TEXTURE_WRAP_T */
-    
+
     const GLenum COMPRESSED_TEXTURE_FORMATS     = 0x86A3;
-    
+
     /* HintMode */
     const GLenum DONT_CARE                      = 0x1100;
     const GLenum FASTEST                        = 0x1101;
     const GLenum NICEST                         = 0x1102;
-    
+
     /* HintTarget */
     const GLenum GENERATE_MIPMAP_HINT            = 0x8192;
-    
+
     /* DataType */
     const GLenum BYTE                           = 0x1400;
     const GLenum UNSIGNED_BYTE                  = 0x1401;
@@ -274,7 +274,7 @@ interface WebGLRenderingContext {
     const GLenum INT                            = 0x1404;
     const GLenum UNSIGNED_INT                   = 0x1405;
     const GLenum FLOAT                          = 0x1406;
-    
+
     /* PixelFormat */
     const GLenum DEPTH_COMPONENT                = 0x1902;
     const GLenum ALPHA                          = 0x1906;
@@ -282,13 +282,13 @@ interface WebGLRenderingContext {
     const GLenum RGBA                           = 0x1908;
     const GLenum LUMINANCE                      = 0x1909;
     const GLenum LUMINANCE_ALPHA                = 0x190A;
-    
+
     /* PixelType */
     /*      UNSIGNED_BYTE */
     const GLenum UNSIGNED_SHORT_4_4_4_4         = 0x8033;
     const GLenum UNSIGNED_SHORT_5_5_5_1         = 0x8034;
     const GLenum UNSIGNED_SHORT_5_6_5           = 0x8363;
-    
+
     /* Shaders */
     const GLenum FRAGMENT_SHADER                  = 0x8B30;
     const GLenum VERTEX_SHADER                    = 0x8B31;
@@ -308,7 +308,7 @@ interface WebGLRenderingContext {
     const GLenum ACTIVE_ATTRIBUTES                = 0x8B89;
     const GLenum SHADING_LANGUAGE_VERSION         = 0x8B8C;
     const GLenum CURRENT_PROGRAM                  = 0x8B8D;
-    
+
     /* StencilFunction */
     const GLenum NEVER                          = 0x0200;
     const GLenum LESS                           = 0x0201;
@@ -318,7 +318,7 @@ interface WebGLRenderingContext {
     const GLenum NOTEQUAL                       = 0x0205;
     const GLenum GEQUAL                         = 0x0206;
     const GLenum ALWAYS                         = 0x0207;
-    
+
     /* StencilOp */
     /*      ZERO */
     const GLenum KEEP                           = 0x1E00;
@@ -328,16 +328,16 @@ interface WebGLRenderingContext {
     const GLenum INVERT                         = 0x150A;
     const GLenum INCR_WRAP                      = 0x8507;
     const GLenum DECR_WRAP                      = 0x8508;
-    
+
     /* StringName */
     const GLenum VENDOR                         = 0x1F00;
     const GLenum RENDERER                       = 0x1F01;
     const GLenum VERSION                        = 0x1F02;
-    
+
     /* TextureMagFilter */
     const GLenum NEAREST                        = 0x2600;
     const GLenum LINEAR                         = 0x2601;
-    
+
     /* TextureMinFilter */
     /*      NEAREST */
     /*      LINEAR */
@@ -345,17 +345,17 @@ interface WebGLRenderingContext {
     const GLenum LINEAR_MIPMAP_NEAREST          = 0x2701;
     const GLenum NEAREST_MIPMAP_LINEAR          = 0x2702;
     const GLenum LINEAR_MIPMAP_LINEAR           = 0x2703;
-    
+
     /* TextureParameterName */
     const GLenum TEXTURE_MAG_FILTER             = 0x2800;
     const GLenum TEXTURE_MIN_FILTER             = 0x2801;
     const GLenum TEXTURE_WRAP_S                 = 0x2802;
     const GLenum TEXTURE_WRAP_T                 = 0x2803;
-    
+
     /* TextureTarget */
     const GLenum TEXTURE_2D                     = 0x0DE1;
     const GLenum TEXTURE                        = 0x1702;
-    
+
     const GLenum TEXTURE_CUBE_MAP               = 0x8513;
     const GLenum TEXTURE_BINDING_CUBE_MAP       = 0x8514;
     const GLenum TEXTURE_CUBE_MAP_POSITIVE_X    = 0x8515;
@@ -365,7 +365,7 @@ interface WebGLRenderingContext {
     const GLenum TEXTURE_CUBE_MAP_POSITIVE_Z    = 0x8519;
     const GLenum TEXTURE_CUBE_MAP_NEGATIVE_Z    = 0x851A;
     const GLenum MAX_CUBE_MAP_TEXTURE_SIZE      = 0x851C;
-    
+
     /* TextureUnit */
     const GLenum TEXTURE0                       = 0x84C0;
     const GLenum TEXTURE1                       = 0x84C1;
@@ -400,12 +400,12 @@ interface WebGLRenderingContext {
     const GLenum TEXTURE30                      = 0x84DE;
     const GLenum TEXTURE31                      = 0x84DF;
     const GLenum ACTIVE_TEXTURE                 = 0x84E0;
-    
+
     /* TextureWrapMode */
     const GLenum REPEAT                         = 0x2901;
     const GLenum CLAMP_TO_EDGE                  = 0x812F;
     const GLenum MIRRORED_REPEAT                = 0x8370;
-    
+
     /* Uniform Types */
     const GLenum FLOAT_VEC2                     = 0x8B50;
     const GLenum FLOAT_VEC3                     = 0x8B51;
@@ -422,7 +422,7 @@ interface WebGLRenderingContext {
     const GLenum FLOAT_MAT4                     = 0x8B5C;
     const GLenum SAMPLER_2D                     = 0x8B5E;
     const GLenum SAMPLER_CUBE                   = 0x8B60;
-    
+
     /* Vertex Arrays */
     const GLenum VERTEX_ATTRIB_ARRAY_ENABLED        = 0x8622;
     const GLenum VERTEX_ATTRIB_ARRAY_SIZE           = 0x8623;
@@ -431,10 +431,10 @@ interface WebGLRenderingContext {
     const GLenum VERTEX_ATTRIB_ARRAY_NORMALIZED     = 0x886A;
     const GLenum VERTEX_ATTRIB_ARRAY_POINTER        = 0x8645;
     const GLenum VERTEX_ATTRIB_ARRAY_BUFFER_BINDING = 0x889F;
-    
+
     /* Shader Source */
     const GLenum COMPILE_STATUS                 = 0x8B81;
-    
+
     /* Shader Precision-Specified Types */
     const GLenum LOW_FLOAT                      = 0x8DF0;
     const GLenum MEDIUM_FLOAT                   = 0x8DF1;
@@ -442,11 +442,11 @@ interface WebGLRenderingContext {
     const GLenum LOW_INT                        = 0x8DF3;
     const GLenum MEDIUM_INT                     = 0x8DF4;
     const GLenum HIGH_INT                       = 0x8DF5;
-    
+
     /* Framebuffer Object. */
     const GLenum FRAMEBUFFER                    = 0x8D40;
     const GLenum RENDERBUFFER                   = 0x8D41;
-    
+
     const GLenum RGBA4                          = 0x8056;
     const GLenum RGB5_A1                        = 0x8057;
     const GLenum RGB565                         = 0x8D62;
@@ -454,7 +454,7 @@ interface WebGLRenderingContext {
     const GLenum STENCIL_INDEX                  = 0x1901;
     const GLenum STENCIL_INDEX8                 = 0x8D48;
     const GLenum DEPTH_STENCIL                  = 0x84F9;
-    
+
     const GLenum RENDERBUFFER_WIDTH             = 0x8D42;
     const GLenum RENDERBUFFER_HEIGHT            = 0x8D43;
     const GLenum RENDERBUFFER_INTERNAL_FORMAT   = 0x8D44;
@@ -464,31 +464,31 @@ interface WebGLRenderingContext {
     const GLenum RENDERBUFFER_ALPHA_SIZE        = 0x8D53;
     const GLenum RENDERBUFFER_DEPTH_SIZE        = 0x8D54;
     const GLenum RENDERBUFFER_STENCIL_SIZE      = 0x8D55;
-    
+
     const GLenum FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE           = 0x8CD0;
     const GLenum FRAMEBUFFER_ATTACHMENT_OBJECT_NAME           = 0x8CD1;
     const GLenum FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL         = 0x8CD2;
     const GLenum FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE = 0x8CD3;
-    
+
     const GLenum COLOR_ATTACHMENT0              = 0x8CE0;
     const GLenum DEPTH_ATTACHMENT               = 0x8D00;
     const GLenum STENCIL_ATTACHMENT             = 0x8D20;
     const GLenum DEPTH_STENCIL_ATTACHMENT       = 0x821A;
-    
+
     const GLenum NONE                           = 0;
-    
+
     const GLenum FRAMEBUFFER_COMPLETE                      = 0x8CD5;
     const GLenum FRAMEBUFFER_INCOMPLETE_ATTACHMENT         = 0x8CD6;
     const GLenum FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT = 0x8CD7;
     const GLenum FRAMEBUFFER_INCOMPLETE_DIMENSIONS         = 0x8CD9;
     const GLenum FRAMEBUFFER_UNSUPPORTED                   = 0x8CDD;
-    
+
     const GLenum FRAMEBUFFER_BINDING            = 0x8CA6;
     const GLenum RENDERBUFFER_BINDING           = 0x8CA7;
     const GLenum MAX_RENDERBUFFER_SIZE          = 0x84E8;
-    
+
     const GLenum INVALID_FRAMEBUFFER_OPERATION  = 0x0506;
-    
+
     /* WebGL-specific enums */
     const GLenum UNPACK_FLIP_Y_WEBGL            = 0x9240;
     const GLenum UNPACK_PREMULTIPLY_ALPHA_WEBGL = 0x9241;
@@ -520,7 +520,7 @@ interface WebGLRenderingContext {
     void blendEquation(GLenum mode);
     void blendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
     void blendFunc(GLenum sfactor, GLenum dfactor);
-    void blendFuncSeparate(GLenum srcRGB, GLenum dstRGB, 
+    void blendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
                            GLenum srcAlpha, GLenum dstAlpha);
 
     void bufferData(GLenum target, GLsizeiptr size, GLenum usage);
@@ -545,10 +545,10 @@ interface WebGLRenderingContext {
                                  GLsizei width, GLsizei height, GLenum format,
                                  ArrayBufferView data);
 
-    void copyTexImage2D(GLenum target, GLint level, GLenum internalformat, 
-                        GLint x, GLint y, GLsizei width, GLsizei height, 
+    void copyTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                        GLint x, GLint y, GLsizei width, GLsizei height,
                         GLint border);
-    void copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, 
+    void copyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                            GLint x, GLint y, GLsizei width, GLsizei height);
 
     WebGLBuffer? createBuffer();
@@ -580,10 +580,10 @@ interface WebGLRenderingContext {
     void enableVertexAttribArray(GLuint index);
     void finish();
     void flush();
-    void framebufferRenderbuffer(GLenum target, GLenum attachment, 
-                                 GLenum renderbuffertarget, 
+    void framebufferRenderbuffer(GLenum target, GLenum attachment,
+                                 GLenum renderbuffertarget,
                                  WebGLRenderbuffer? renderbuffer);
-    void framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, 
+    void framebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget,
                               WebGLTexture? texture, GLint level);
     void frontFace(GLenum mode);
 
@@ -605,7 +605,7 @@ interface WebGLRenderingContext {
     [WebGLHandlesContextLoss] GLenum getError();
 
     [Throws]
-    any getFramebufferAttachmentParameter(GLenum target, GLenum attachment, 
+    any getFramebufferAttachmentParameter(GLenum target, GLenum attachment,
                                           GLenum pname);
     any getProgramParameter(WebGLProgram? program, GLenum pname);
     DOMString? getProgramInfoLog(WebGLProgram? program);
@@ -645,10 +645,10 @@ interface WebGLRenderingContext {
     void polygonOffset(GLfloat factor, GLfloat units);
 
     [Throws]
-    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height, 
+    void readPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                     GLenum format, GLenum type, ArrayBufferView? pixels);
 
-    void renderbufferStorage(GLenum target, GLenum internalformat, 
+    void renderbufferStorage(GLenum target, GLenum internalformat,
                              GLsizei width, GLsizei height);
     void sampleCoverage(GLclampf value, GLboolean invert);
     void scissor(GLint x, GLint y, GLsizei width, GLsizei height);
@@ -664,8 +664,8 @@ interface WebGLRenderingContext {
 
 
     [Throws]
-    void texImage2D(GLenum target, GLint level, GLenum internalformat, 
-                    GLsizei width, GLsizei height, GLint border, GLenum format, 
+    void texImage2D(GLenum target, GLint level, GLenum internalformat,
+                    GLsizei width, GLsizei height, GLint border, GLenum format,
                     GLenum type, ArrayBufferView? pixels);
     [Throws]
     void texImage2D(GLenum target, GLint level, GLenum internalformat,
@@ -684,20 +684,20 @@ interface WebGLRenderingContext {
     void texParameteri(GLenum target, GLenum pname, GLint param);
 
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, 
-                       GLsizei width, GLsizei height, 
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                       GLsizei width, GLsizei height,
                        GLenum format, GLenum type, ArrayBufferView? pixels);
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, 
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, ImageData? pixels);
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, 
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLImageElement image); // May throw DOMException
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, 
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLCanvasElement canvas); // May throw DOMException
     [Throws]
-    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, 
+    void texSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
                        GLenum format, GLenum type, HTMLVideoElement video); // May throw DOMException
 
     void uniform1f(WebGLUniformLocation? location, GLfloat x);
@@ -725,17 +725,17 @@ interface WebGLRenderingContext {
     void uniform4iv(WebGLUniformLocation? location, Int32Array v);
     void uniform4iv(WebGLUniformLocation? location, sequence<long> v);
 
-    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, 
+    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose,
                           Float32Array value);
-    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose, 
+    void uniformMatrix2fv(WebGLUniformLocation? location, GLboolean transpose,
                           sequence<GLfloat> value);
-    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, 
+    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose,
                           Float32Array value);
-    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose, 
+    void uniformMatrix3fv(WebGLUniformLocation? location, GLboolean transpose,
                           sequence<GLfloat> value);
-    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, 
+    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose,
                           Float32Array value);
-    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose, 
+    void uniformMatrix4fv(WebGLUniformLocation? location, GLboolean transpose,
                           sequence<GLfloat> value);
 
     void useProgram(WebGLProgram? program);
@@ -753,7 +753,7 @@ interface WebGLRenderingContext {
     void vertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
     void vertexAttrib4fv(GLuint indx, Float32Array values);
     void vertexAttrib4fv(GLuint indx, sequence<GLfloat> values);
-    void vertexAttribPointer(GLuint indx, GLint size, GLenum type, 
+    void vertexAttribPointer(GLuint indx, GLint size, GLenum type,
                              GLboolean normalized, GLsizei stride, GLintptr offset);
 
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
@@ -787,6 +787,12 @@ interface WebGLExtensionCompressedTextureATC
     const GLenum COMPRESSED_RGB_ATC_WEBGL                     = 0x8C92;
     const GLenum COMPRESSED_RGBA_ATC_EXPLICIT_ALPHA_WEBGL     = 0x8C93;
     const GLenum COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL = 0x87EE;
+};
+
+[NoInterfaceObject]
+interface WebGLExtensionCompressedTextureETC1
+{
+    const GLenum COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
 };
 
 [NoInterfaceObject]
