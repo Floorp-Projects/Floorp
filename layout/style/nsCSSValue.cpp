@@ -1398,6 +1398,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
 
     case eCSSUnit_Seconds:      aResult.Append(char16_t('s'));    break;
     case eCSSUnit_Milliseconds: aResult.AppendLiteral("ms");   break;
+
+    case eCSSUnit_FlexFraction: aResult.AppendLiteral("fr");   break;
   }
 }
 
@@ -1554,6 +1556,7 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Kilohertz:
     case eCSSUnit_Seconds:
     case eCSSUnit_Milliseconds:
+    case eCSSUnit_FlexFraction:
       break;
 
     default:
@@ -1594,11 +1597,11 @@ nsCSSValueList::CloneInto(nsCSSValueList* aList) const
     aList->mNext = mNext ? mNext->Clone() : nullptr;
 }
 
-void
-nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
-                               nsCSSValue::Serialization aSerialization) const
+static void
+AppendValueListToString(const nsCSSValueList* val,
+                        nsCSSProperty aProperty, nsAString& aResult,
+                        nsCSSValue::Serialization aSerialization)
 {
-  const nsCSSValueList* val = this;
   for (;;) {
     val->mValue.AppendToString(aProperty, aResult, aSerialization);
     val = val->mNext;
@@ -1609,6 +1612,55 @@ nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                  CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
       aResult.Append(char16_t(','));
     aResult.Append(char16_t(' '));
+  }
+}
+
+static void
+AppendGridTemplateToString(const nsCSSValueList* val,
+                           nsCSSProperty aProperty, nsAString& aResult,
+                           nsCSSValue::Serialization aSerialization)
+{
+  // This is called for the "list" that's the top-level value of the property.
+  for (;;) {
+    bool addSpaceSpearator = true;
+    nsCSSUnit unit = val->mValue.GetUnit();
+
+    if (unit == eCSSUnit_Null) {
+      // Empty or omitted <line-names>. Serializes to nothing.
+      addSpaceSpearator = false;  // Avoid a double space.
+
+    } else if (unit == eCSSUnit_List || unit == eCSSUnit_ListDep) {
+      // Non-empty <line-names>
+      aResult.AppendLiteral("(");
+      AppendValueListToString(val->mValue.GetListValue(), aProperty,
+                              aResult, aSerialization);
+      aResult.AppendLiteral(")");
+
+    } else {
+      // <track-size>
+      val->mValue.AppendToString(aProperty, aResult, aSerialization);
+    }
+
+    val = val->mNext;
+    if (!val) {
+      break;
+    }
+
+    if (addSpaceSpearator) {
+      aResult.Append(char16_t(' '));
+    }
+  }
+}
+
+void
+nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                               nsCSSValue::Serialization aSerialization) const
+{
+  if (aProperty == eCSSProperty_grid_template_columns ||
+      aProperty == eCSSProperty_grid_template_rows) {
+    AppendGridTemplateToString(this, aProperty, aResult, aSerialization);
+  } else {
+    AppendValueListToString(this, aProperty, aResult, aSerialization);
   }
 }
 

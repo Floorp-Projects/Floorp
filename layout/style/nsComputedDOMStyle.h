@@ -189,6 +189,11 @@ private:
 
   mozilla::dom::CSSValue* GetSVGPaintFor(bool aFill);
 
+  mozilla::dom::CSSValue* GetGridLineNames(const nsTArray<nsString>& aLineNames);
+  mozilla::dom::CSSValue* GetGridTrackSize(const nsStyleCoord& aMinSize,
+                                           const nsStyleCoord& aMaxSize);
+  mozilla::dom::CSSValue* GetGridTrackList(const nsStyleGridTrackList& aTrackList);
+
   bool GetLineHeightCoord(nscoord& aCoord);
 
   mozilla::dom::CSSValue* GetCSSShadowArray(nsCSSShadowArray* aArray,
@@ -256,6 +261,10 @@ private:
   mozilla::dom::CSSValue* DoGetFontVariantNumeric();
   mozilla::dom::CSSValue* DoGetFontVariantPosition();
   mozilla::dom::CSSValue* DoGetFontWeight();
+
+  /* Grid properties */
+  mozilla::dom::CSSValue* DoGetGridTemplateColumns();
+  mozilla::dom::CSSValue* DoGetGridTemplateRows();
 
   /* Background properties */
   mozilla::dom::CSSValue* DoGetBackgroundAttachment();
