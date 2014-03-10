@@ -1385,62 +1385,6 @@ js_InitTypedObjectDummy(JSContext *cx, HandleObject obj)
     MOZ_ASSUME_UNREACHABLE("shouldn't be initializing TypedObject via the JSProtoKey initializer mechanism");
 }
 
-/*
- * Each type repr has an associated TI type object (these will
- * eventually be used as the TI type objects for type objects, though
- * they are not now). To create these TI type objects, we need to know
- * the clasp/proto of the type object for a particular kind. This
- * accessor function returns those. In the case of the predefined type
- * objects, like scalars/references/x4s, this is invoked while
- * creating the typed object module, and thus does not require that
- * the typed object module is fully initialized. For array types and
- * struct types, it is invoked when the user creates an instance of
- * those types (and hence requires that the typed object module is
- * already initialized).
- */
-/*static*/ bool
-TypedObjectModuleObject::getSuitableClaspAndProto(JSContext *cx,
-                                                  TypeDescr::Kind kind,
-                                                  const Class **clasp,
-                                                  MutableHandleObject proto)
-{
-    Rooted<GlobalObject *> global(cx, cx->global());
-    JS_ASSERT(global);
-    switch (kind) {
-      case TypeDescr::Scalar:
-        *clasp = &ScalarTypeDescr::class_;
-        proto.set(global->getOrCreateFunctionPrototype(cx));
-        break;
-
-      case TypeDescr::Reference:
-        *clasp = &ReferenceTypeDescr::class_;
-        proto.set(global->getOrCreateFunctionPrototype(cx));
-        break;
-
-      case TypeDescr::X4:
-        *clasp = &X4TypeDescr::class_;
-        proto.set(global->getOrCreateFunctionPrototype(cx));
-        break;
-
-      case TypeDescr::Struct:
-        *clasp = &StructTypeDescr::class_;
-        proto.set(&global->getTypedObjectModule().getSlot(StructTypePrototype).toObject());
-        break;
-
-      case TypeDescr::SizedArray:
-        *clasp = &SizedArrayTypeDescr::class_;
-        proto.set(&global->getTypedObjectModule().getSlot(ArrayTypePrototype).toObject());
-        break;
-
-      case TypeDescr::UnsizedArray:
-        *clasp = &UnsizedArrayTypeDescr::class_;
-        proto.set(&global->getTypedObjectModule().getSlot(ArrayTypePrototype).toObject());
-        break;
-    }
-
-    return !!proto;
-}
-
 /******************************************************************************
  * Typed objects
  */
