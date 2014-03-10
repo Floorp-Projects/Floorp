@@ -145,9 +145,7 @@ MNewStringObject::templateObj() const {
 
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorSpecific(gen, graph, masm)
-#ifdef DEBUG
   , ionScriptLabels_(gen->alloc())
-#endif
   , unassociatedScriptCounts_(nullptr)
 {
 }
@@ -6272,14 +6270,12 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         perfSpewer_.writeProfile(script, code, masm);
 #endif
 
-#ifdef DEBUG
     for (size_t i = 0; i < ionScriptLabels_.length(); i++) {
         ionScriptLabels_[i].fixup(&masm);
         Assembler::patchDataWithValueCheck(CodeLocationLabel(code, ionScriptLabels_[i]),
                                            ImmPtr(ionScript),
                                            ImmPtr((void*)-1));
     }
-#endif
 
     // for generating inline caches during the execution.
     if (runtimeData_.length())
@@ -8264,15 +8260,26 @@ static const VMFunction RecompileFnInfo = FunctionInfo<RecompileFn>(Recompile);
 bool
 CodeGenerator::visitRecompileCheck(LRecompileCheck *ins)
 {
-    Register useCount = ToRegister(ins->scratch());
+    Label done;
+    Register tmp = ToRegister(ins->scratch());
+    OutOfLineCode *ool = oolCallVM(RecompileFnInfo, ins, (ArgList()), StoreRegisterTo(tmp));
 
-    masm.movePtr(ImmPtr(ins->mir()->script()->addressOfUseCount()), useCount);
-    Address ptr(useCount, 0);
-    masm.add32(Imm32(1), ptr);
+    // Check if usecount is high enough.
+    masm.movePtr(ImmPtr(ins->mir()->script()->addressOfUseCount()), tmp);
+    Address ptr(tmp, 0);
+    masm.add32(Imm32(1), tmp);
+    masm.branch32(Assembler::BelowOrEqual, ptr, Imm32(ins->mir()->useCount()), &done);
 
-    OutOfLineCode *ool = oolCallVM(RecompileFnInfo, ins, (ArgList()), StoreRegisterTo(useCount));
-    masm.branch32(Assembler::Above, ptr, Imm32(ins->mir()->useCount()), ool->entry());
+    // Check if not yet recompiling.
+    CodeOffsetLabel label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);
+    if (!ionScriptLabels_.append(label))
+        return false;
+    masm.branch32(Assembler::Equal,
+                  Address(tmp, IonScript::offsetOfRecompiling()),
+                  Imm32(0),
+                  ool->entry());
     masm.bind(ool->rejoin());
+    masm.bind(&done);
 
     return true;
 }
