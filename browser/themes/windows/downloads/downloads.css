@@ -20,9 +20,19 @@
 
 #downloadsHistory {
   background: transparent;
-  color: -moz-nativehyperlinktext;
   cursor: pointer;
 }
+
+%ifdef WINDOWS_AERO
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+%endif
+#downloadsHistory {
+  color: -moz-nativehyperlinktext;
+}
+%ifdef WINDOWS_AERO
+}
+%endif
 
 #downloadsPanel[keyfocus] > #downloadsFooter > #downloadsHistory:focus {
   outline: 1px -moz-dialogtext dotted;
@@ -34,18 +44,47 @@
   margin: 1em;
 }
 
+#downloadsPanel[hasdownloads] > #downloadsFooter {
+  background-color: hsla(210,4%,10%,.04);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
+  transition-duration: 150ms;
+  transition-property: background-color;
+}
+
+#downloadsPanel[hasdownloads] > #downloadsFooter:hover {
+  background-color: hsla(210,4%,10%,.05);
+}
+
+#downloadsPanel[hasdownloads] > #downloadsFooter:hover:active {
+  background-color: hsla(210,4%,10%,.1);
+  box-shadow: 0 2px 0 0 hsla(210,4%,10%,.1) inset;
+}
+
+%ifdef WINDOWS_AERO
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+%endif
 @media (-moz-windows-default-theme) {
   #downloadsPanel[hasdownloads] > #downloadsFooter {
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    transition-duration: 0s;
+  }
+
+  #downloadsPanel[hasdownloads] > #downloadsFooter,
+  #downloadsPanel[hasdownloads] > #downloadsFooter:hover,
+  #downloadsPanel[hasdownloads] > #downloadsFooter:hover:active {
 %ifdef WINDOWS_AERO
     background-color: #f1f5fb;
 %else
     background-color: hsla(216,45%,88%,.98);
 %endif
     box-shadow: 0px 1px 2px rgb(204,214,234) inset;
-    border-bottom-left-radius: 3px;
-    border-bottom-right-radius: 3px;
   }
 }
+%ifdef WINDOWS_AERO
+}
+%endif
 
 /*** Downloads Summary and List items ***/
 
@@ -167,13 +206,39 @@ richlistitem[type="download"]:first-child {
 /*** Highlighted list items ***/
 
 #downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover {
+  background-color: hsla(210,4%,10%,.08);
+  outline: 1px solid hsla(210,4%,10%,.1);
+  outline-offset: -1px;
+  cursor: pointer;
+}
+
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover:active {
+  background-color: hsla(210,4%,10%,.15);
+  outline: 1px solid hsla(210,4%,10%,.15);
+  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
+}
+
+%ifdef WINDOWS_AERO
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+%endif
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover {
   border-radius: 3px;
+  outline: 0;
   border-top: 1px solid hsla(0,0%,100%,.2);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
   background-color: Highlight;
   color: HighlightText;
-  cursor: pointer;
 }
+
+#downloadsPanel:not([keyfocus]) > #downloadsListBox > richlistitem[type="download"][state="1"][exists]:hover:active {
+  background-color: Highlight;
+  outline: 0;
+  box-shadow: none;
+}
+%ifdef WINDOWS_AERO
+}
+%endif
 
 /*** Button icons ***/
 
