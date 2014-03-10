@@ -5118,10 +5118,37 @@ nsIFrame::GetOverflowAreas() const
                          nsRect(nsPoint(0, 0), GetSize()));
 }
 
+nsOverflowAreas
+nsIFrame::GetOverflowAreasRelativeToSelf() const
+{
+  if (IsTransformed()) {
+    nsOverflowAreas* preTransformOverflows = static_cast<nsOverflowAreas*>
+      (Properties().Get(PreTransformOverflowAreasProperty()));
+    if (preTransformOverflows) {
+      return nsOverflowAreas(preTransformOverflows->VisualOverflow(),
+                             preTransformOverflows->ScrollableOverflow());
+    }
+  }
+  return nsOverflowAreas(GetVisualOverflowRect(),
+                         GetScrollableOverflowRect());
+}
+
 nsRect
 nsIFrame::GetScrollableOverflowRectRelativeToParent() const
 {
   return GetScrollableOverflowRect() + mRect.TopLeft();
+}
+
+nsRect
+nsIFrame::GetScrollableOverflowRectRelativeToSelf() const
+{
+  if (IsTransformed()) {
+    nsOverflowAreas* preTransformOverflows = static_cast<nsOverflowAreas*>
+      (Properties().Get(PreTransformOverflowAreasProperty()));
+    if (preTransformOverflows)
+      return preTransformOverflows->ScrollableOverflow();
+  }
+  return GetScrollableOverflowRect();
 }
 
 nsRect
