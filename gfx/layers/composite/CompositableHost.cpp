@@ -160,6 +160,7 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
     result = new ContentHostIncremental(aTextureInfo);
     break;
   case BUFFER_TILED:
+  case BUFFER_SIMPLE_TILED:
     result = new TiledContentHost(aTextureInfo);
     break;
   case COMPOSITABLE_IMAGE:
