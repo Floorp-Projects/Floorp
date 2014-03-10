@@ -506,7 +506,7 @@ InterruptCheck(JSContext *cx)
     cx->runtime()->jitRuntime()->patchIonBackedges(cx->runtime(),
                                                    JitRuntime::BackedgeLoopHeader);
 
-    return !!HandleExecutionInterrupt(cx);
+    return CheckForInterrupt(cx);
 }
 
 HeapSlot *
