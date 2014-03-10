@@ -34,7 +34,6 @@ public:
   FMRadio();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
@@ -82,6 +81,9 @@ public:
   IMPL_EVENT_HANDLER(disabled);
   IMPL_EVENT_HANDLER(antennaavailablechange);
   IMPL_EVENT_HANDLER(frequencychange);
+
+  // nsIAudioChannelAgentCallback
+  NS_IMETHOD CanPlayChanged(int32_t aCanPlay);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);

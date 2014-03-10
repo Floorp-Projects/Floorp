@@ -6,7 +6,6 @@
 #include "AudioChannelCommon.h"
 #include "AudioChannelService.h"
 #include "nsIDOMWindow.h"
-#include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
 
 using namespace mozilla::dom;
@@ -183,30 +182,4 @@ AudioChannelAgent::GetCallback()
     callback = do_QueryReferent(mWeakCallback);
   }
   return callback.forget();
-}
-
-void
-AudioChannelAgent::WindowVolumeChanged()
-{
-  nsCOMPtr<nsIAudioChannelAgentCallback> callback = GetCallback();
-  if (!callback) {
-    return;
-  }
-
-  callback->WindowVolumeChanged();
-}
-
-NS_IMETHODIMP
-AudioChannelAgent::GetWindowVolume(float* aVolume)
-{
-  NS_ENSURE_ARG_POINTER(aVolume);
-
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mWindow);
-  if (!win) {
-    *aVolume = 1.0f;
-    return NS_OK;
-  }
-
-  *aVolume = win->GetAudioGlobalVolume();
-  return NS_OK;
 }

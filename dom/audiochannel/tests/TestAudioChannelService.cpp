@@ -104,11 +104,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP WindowVolumeChanged()
-  {
-    return NS_OK;
-  }
-
   nsresult GetCanPlay(AudioChannelState *_ret)
   {
     int loop = 0;
