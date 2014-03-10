@@ -1,0 +1,14 @@
+component {dce5729a-ba92-4185-8854-e29e71b9e8a2} ResourceStatsManager.js
+contract @mozilla.org/networkStatsData;1 {dce5729a-ba92-4185-8854-e29e71b9e8a2}
+
+component {acb9af6c-8143-4e59-bc18-4bb1736a4004} ResourceStatsManager.js
+contract @mozilla.org/powerStatsData;1 {acb9af6c-8143-4e59-bc18-4bb1736a4004}
+
+component {b7c970f2-3d58-4966-9633-2024feb5132b} ResourceStatsManager.js
+contract @mozilla.org/resourceStats;1 {b7c970f2-3d58-4966-9633-2024feb5132b}
+
+component {e2b66e7a-0ff1-4015-8690-a2a3f6a5b63a} ResourceStatsManager.js
+contract @mozilla.org/resourceStatsAlarm;1 {e2b66e7a-0ff1-4015-8690-a2a3f6a5b63a}
+
+component {101ed1f8-31b3-491c-95ea-04091e6e8027} ResourceStatsManager.js
+contract @mozilla.org/resourceStatsManager;1 {101ed1f8-31b3-491c-95ea-04091e6e8027}
