@@ -1146,7 +1146,7 @@ ForkJoinOperation::warmupExecution(bool stopIfComplete, ExecutionStatus *status)
         // interrupt flag. This is because we won't be running more JS
         // code, and thus no more automatic checking of the interrupt
         // flag.
-        if (!HandleExecutionInterrupt(cx_)) {
+        if (!CheckForInterrupt(cx_)) {
             *status = ExecutionFatal;
             return RedLight;
         }
