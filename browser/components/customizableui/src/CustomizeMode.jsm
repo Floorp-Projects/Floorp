@@ -337,7 +337,6 @@ CustomizeMode.prototype = {
 
     this.document.removeEventListener("keypress", this);
     this.window.PanelUI.menuButton.removeEventListener("mousedown", this);
-    this.window.PanelUI.menuButton.open = false;
 
     this.window.PanelUI.beginBatchUpdate();
 
@@ -426,6 +425,7 @@ CustomizeMode.prototype = {
       CustomizableUI.dispatchToolboxEvent("customizationending", {}, window);
 
       window.PanelUI.setMainView(window.PanelUI.mainView);
+      window.PanelUI.menuButton.open = false;
       window.PanelUI.menuButton.disabled = false;
 
       let customizeButton = document.getElementById("PanelUI-customize");
