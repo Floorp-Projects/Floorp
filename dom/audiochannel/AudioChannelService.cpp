@@ -112,6 +112,18 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                 aWithVideo);
   mAgents.Put(aAgent, data);
   RegisterType(aType, CONTENT_PROCESS_ID_MAIN, aWithVideo);
+
+  // If this is the first agent for this window, we must notify the observers.
+  uint32_t count = CountWindow(aAgent->Window());
+  if (count == 1) {
+    nsCOMPtr<nsIObserverService> observerService =
+      services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(ToSupports(aAgent->Window()),
+                                       "media-playback",
+                                       NS_LITERAL_STRING("active").get());
+    }
+  }
 }
 
 void
@@ -180,6 +192,18 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
     mSpeakerManager[i]->SetAudioChannelActive(active);
   }
 #endif
+
+  // If this is the last agent for this window, we must notify the observers.
+  uint32_t count = CountWindow(aAgent->Window());
+  if (count == 0) {
+    nsCOMPtr<nsIObserverService> observerService =
+      services::GetObserverService();
+    if (observerService) {
+      observerService->NotifyObservers(ToSupports(aAgent->Window()),
+                                       "media-playback",
+                                       NS_LITERAL_STRING("inactive").get());
+    }
+  }
 }
 
 void
@@ -820,4 +844,38 @@ AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
   for (uint32_t i = 0; i < data.mAgents.Length(); ++i) {
     data.mAgents[i]->WindowVolumeChanged();
   }
+}
+
+struct CountWindowData
+{
+  CountWindowData(nsIDOMWindow* aWindow)
+    : mWindow(aWindow)
+    , mCount(0)
+  {}
+
+  nsIDOMWindow* mWindow;
+  uint32_t mCount;
+};
+
+PLDHashOperator
+AudioChannelService::CountWindowEnumerator(AudioChannelAgent* aAgent,
+                                           AudioChannelAgentData* aUnused,
+                                           void* aPtr)
+{
+  CountWindowData* data = static_cast<CountWindowData*>(aPtr);
+  MOZ_ASSERT(aAgent);
+
+  if (aAgent->Window() == data->mWindow) {
+    ++data->mCount;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+uint32_t
+AudioChannelService::CountWindow(nsIDOMWindow* aWindow)
+{
+  CountWindowData data(aWindow);
+  mAgents.EnumerateRead(CountWindowEnumerator, &data);
+  return data.mCount;
 }
