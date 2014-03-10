@@ -33,41 +33,32 @@
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/javascript" src="chrome://browser/content/devtools/scratchpad.js"/>
 
-
-<script type="application/javascript">
-  function goUpdateSourceEditorMenuItems() {
-    goUpdateGlobalEditMenuItems();
-    let commands = ['cmd_undo', 'cmd_redo', 'cmd_delete', 'cmd_findAgain'];
-    commands.forEach(goUpdateCommand);
-  }
-</script>
-
 <commandset id="editMenuCommands"/>
 
 <commandset id="sourceEditorCommands">
-  <command id="cmd_gotoLine" oncommand="goDoCommand('cmd_gotoLine')"/>
+  <command id="cmd_gotoLine" oncommand=";"/>
 </commandset>
 
 <commandset id="sp-commandset">
-  <command id="sp-cmd-newWindow" oncommand="Scratchpad.openScratchpad();"/>
-  <command id="sp-cmd-openFile" oncommand="Scratchpad.openFile();"/>
-  <command id="sp-cmd-clearRecentFiles" oncommand="Scratchpad.clearRecentFiles();"/>
-  <command id="sp-cmd-save" oncommand="Scratchpad.saveFile();"/>
-  <command id="sp-cmd-saveas" oncommand="Scratchpad.saveFileAs();"/>
-  <command id="sp-cmd-revert" oncommand="Scratchpad.promptRevert();" disabled="true"/>
-  <command id="sp-cmd-close" oncommand="Scratchpad.close();"/>
-  <command id="sp-cmd-run" oncommand="Scratchpad.run();"/>
-  <command id="sp-cmd-inspect" oncommand="Scratchpad.inspect();"/>
-  <command id="sp-cmd-display" oncommand="Scratchpad.display();"/>
-  <command id="sp-cmd-pprint" oncommand="Scratchpad.prettyPrint();"/>
-  <command id="sp-cmd-contentContext" oncommand="Scratchpad.setContentContext();"/>
-  <command id="sp-cmd-browserContext" oncommand="Scratchpad.setBrowserContext();" disabled="true"/>
-  <command id="sp-cmd-reloadAndRun" oncommand="Scratchpad.reloadAndRun();"/>
-  <command id="sp-cmd-evalFunction" oncommand="Scratchpad.evalTopLevelFunction();"/>
-  <command id="sp-cmd-errorConsole" oncommand="Scratchpad.openErrorConsole();" disabled="true"/>
-  <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
-  <command id="sp-cmd-documentationLink" oncommand="Scratchpad.openDocumentationPage();"/>
-  <command id="sp-cmd-hideSidebar" oncommand="Scratchpad.sidebar.hide();"/>
+  <command id="sp-cmd-newWindow" oncommand=";"/>
+  <command id="sp-cmd-openFile" oncommand=";"/>
+  <command id="sp-cmd-clearRecentFiles" oncommand=";"/>
+  <command id="sp-cmd-save" oncommand=";"/>
+  <command id="sp-cmd-saveas" oncommand=";"/>
+  <command id="sp-cmd-revert" oncommand=";" disabled="true"/>
+  <command id="sp-cmd-close" oncommand=";"/>
+  <command id="sp-cmd-run" oncommand=";"/>
+  <command id="sp-cmd-inspect" oncommand=";"/>
+  <command id="sp-cmd-display" oncommand=";"/>
+  <command id="sp-cmd-pprint" oncommand=";"/>
+  <command id="sp-cmd-contentContext" oncommand=";"/>
+  <command id="sp-cmd-browserContext" oncommand=";" disabled="true"/>
+  <command id="sp-cmd-reloadAndRun" oncommand=";"/>
+  <command id="sp-cmd-evalFunction" oncommand=";"/>
+  <command id="sp-cmd-errorConsole" oncommand=";" disabled="true"/>
+  <command id="sp-cmd-webConsole" oncommand=";"/>
+  <command id="sp-cmd-documentationLink" oncommand=";"/>
+  <command id="sp-cmd-hideSidebar" oncommand=";"/>
 </commandset>
 
 <keyset id="editMenuKeys"/>
@@ -172,8 +163,7 @@
 
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
-    <menupopup id="sp-menu_editpopup"
-               onpopupshowing="goUpdateSourceEditorMenuItems()">
+    <menupopup id="sp-menu_editpopup">
       <menuitem id="menu_undo"/>
       <menuitem id="menu_redo"/>
       <menuseparator/>
@@ -305,8 +295,7 @@
 
 
 <popupset id="scratchpad-popups">
-  <menupopup id="scratchpad-text-popup"
-             onpopupshowing="goUpdateSourceEditorMenuItems()">
+  <menupopup id="scratchpad-text-popup">
     <menuitem id="cMenu_cut"/>
     <menuitem id="cMenu_copy"/>
     <menuitem id="cMenu_paste"/>

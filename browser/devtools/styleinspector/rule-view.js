@@ -1142,6 +1142,27 @@ CssRuleView.prototype = {
       }
     }
 
+    // Get the nodes containing the property name and property value,
+    // and test for font family
+    let propertyRoot = target.parentNode;
+    let propertyNameNode = propertyRoot.querySelector(".ruleview-propertyname");
+
+    if (!propertyNameNode) {
+      propertyRoot = propertyRoot.parentNode;
+      propertyNameNode = propertyRoot.querySelector(".ruleview-propertyname");
+    }
+
+    let propertyName;
+    if (propertyNameNode) {
+      propertyName = propertyNameNode.textContent;
+    }
+
+    if (propertyName === "font-family" &&
+        target.classList.contains("ruleview-propertyvalue")) {
+      this.previewTooltip.setFontFamilyContent(target.textContent).then(def.resolve);
+      hasTooltip = true;
+    }
+
     if (hasTooltip) {
       this.colorPicker.revert();
       this.colorPicker.hide();

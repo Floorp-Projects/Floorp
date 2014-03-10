@@ -7953,7 +7953,7 @@ var ExternalApps = {
               Strings.browser.GetStringFromName("openInApp.ok"),
               Strings.browser.GetStringFromName("openInApp.cancel")
             ]
-          }, function(result) {
+          }, (result) => {
             if (result.button != 0) {
               return;
             }

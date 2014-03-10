@@ -237,6 +237,7 @@ this.DebuggerClient = function (aTransport)
 
   // Map actor ID to client instance for each actor type.
   this._threadClients = new Map;
+  this._addonClients = new Map;
   this._tabClients = new Map;
   this._tracerClients = new Map;
   this._consoleClients = new Map;
@@ -413,8 +414,10 @@ DebuggerClient.prototype = {
     detachClients(this._consoleClients, () => {
       detachClients(this._threadClients, () => {
         detachClients(this._tabClients, () => {
-          this._transport.close();
-          this._transport = null;
+          detachClients(this._addonClients, () => {
+            this._transport.close();
+            this._transport = null;
+          });
         });
       });
     });
@@ -463,6 +466,31 @@ DebuggerClient.prototype = {
         this._tabClients.set(aTabActor, tabClient);
       }
       aOnResponse(aResponse, tabClient);
+    });
+  },
+
+  /**
+   * Attach to an addon actor.
+   *
+   * @param string aAddonActor
+   *        The actor ID for the addon to attach.
+   * @param function aOnResponse
+   *        Called with the response packet and a AddonClient
+   *        (which will be undefined on error).
+   */
+  attachAddon: function DC_attachAddon(aAddonActor, aOnResponse) {
+    let packet = {
+      to: aAddonActor,
+      type: "attach"
+    };
+    this.request(packet, aResponse => {
+      let addonClient;
+      if (!aResponse.error) {
+        addonClient = new AddonClient(this, aAddonActor);
+        this._addonClients[aAddonActor] = addonClient;
+        this.activeAddon = addonClient;
+      }
+      aOnResponse(aResponse, addonClient);
     });
   },
 
@@ -743,7 +771,12 @@ DebuggerClient.prototype = {
       if (pool.has(actorID)) return pool;
     }
     return null;
-  }
+  },
+
+  /**
+   * Currently attached addon.
+   */
+  activeAddon: null
 }
 
 eventSource(DebuggerClient.prototype);
@@ -1048,6 +1081,36 @@ TabClient.prototype = {
 };
 
 eventSource(TabClient.prototype);
+
+function AddonClient(aClient, aActor) {
+  this._client = aClient;
+  this._actor = aActor;
+  this.request = this._client.request;
+}
+
+AddonClient.prototype = {
+  get actor() { return this._actor; },
+  get _transport() { return this._client._transport; },
+
+  /**
+   * Detach the client from the addon actor.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  detach: DebuggerClient.requester({
+    type: "detach"
+  }, {
+    after: function(aResponse) {
+      if (this._client.activeAddon === this._client._addonClients[this.actor]) {
+        this._client.activeAddon = null
+      }
+      delete this._client._addonClients[this.actor];
+      return aResponse;
+    },
+    telemetry: "ADDONDETACH"
+  })
+};
 
 /**
  * A RootClient object represents a root actor on the server. Each

@@ -224,6 +224,10 @@ public class HomePager extends ViewPager {
         if (mDecor != null) {
             mDecor.onPageSelected(item);
         }
+
+        if (mHomeBanner != null) {
+            mHomeBanner.setActive(item == mDefaultPageIndex);
+        }
     }
 
     @Override
@@ -300,21 +304,29 @@ public class HomePager extends ViewPager {
         // in the pager.
         setAdapter(adapter);
 
-        // Use the default panel as defined in the HomePager's configuration
-        // if the initial panel wasn't explicitly set by the load() caller,
-        // or if the initial panel is not found in the adapter.
-        final int itemPosition = (mInitialPanelId == null) ? -1 : adapter.getItemPosition(mInitialPanelId);
-        if (itemPosition > -1) {
-            setCurrentItem(itemPosition, false);
-            mInitialPanelId = null;
+        if (count == 0) {
+            mDefaultPageIndex = -1;
+
+            // Hide the banner if there are no enabled panels.
+            if (mHomeBanner != null) {
+                mHomeBanner.setActive(false);
+            }
         } else {
             for (int i = 0; i < count; i++) {
-                final PanelConfig panelConfig = enabledPanels.get(i);
-                if (panelConfig.isDefault()) {
+                if (enabledPanels.get(i).isDefault()) {
                     mDefaultPageIndex = i;
-                    setCurrentItem(i, false);
                     break;
                 }
+            }
+
+            // Use the default panel if the initial panel wasn't explicitly set by the
+            // load() caller, or if the initial panel is not found in the adapter.
+            final int itemPosition = (mInitialPanelId == null) ? -1 : adapter.getItemPosition(mInitialPanelId);
+            if (itemPosition > -1) {
+                setCurrentItem(itemPosition, false);
+                mInitialPanelId = null;
+            } else {
+                setCurrentItem(mDefaultPageIndex, false);
             }
         }
     }

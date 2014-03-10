@@ -8,6 +8,13 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+                                  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
 // Custom factory object to ensure that we're a singleton
 const BrowserStartupServiceFactory = {
   _instance: null,
@@ -62,7 +69,35 @@ BrowserStartup.prototype = {
 
     Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
 
-    BookmarkJSONUtils.importFromURL("chrome://browser/locale/bookmarks.json", false);
+    Task.spawn(function() {
+      yield BookmarkJSONUtils.importFromURL("chrome://browser/locale/bookmarks.json", false);
+
+      // Create the new smart bookmark.
+      const MAX_RESULTS = 10;
+      const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
+
+      // Place the Metro folder at the end of the smart bookmarks list.
+      let maxIndex =  Math.max.apply(null,
+        PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO).map(id => {
+          return PlacesUtils.bookmarks.getItemIndex(id);
+        }));
+      let smartBookmarkId =
+        PlacesUtils.bookmarks.insertBookmark(PlacesUtils.bookmarksMenuFolderId,
+                                             NetUtil.newURI("place:folder=" +
+                                                            PlacesUtils.annotations.getItemsWithAnnotation('metro/bookmarksRoot', {})[0] +
+                                                            "&queryType=" +
+                                                            Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+                                                            "&sort=" +
+                                                            Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+                                                            "&maxResults=" + MAX_RESULTS +
+                                                            "&excludeQueries=1"),
+                                             maxIndex + 1,
+                                             PlacesUtils.getString("windows8TouchTitle"));
+      PlacesUtils.annotations.setItemAnnotation(smartBookmarkId,
+                                                SMART_BOOKMARKS_ANNO,
+                                                "Windows8Touch", 0,
+                                                PlacesUtils.annotations.EXPIRE_NEVER);
+    });
   },
 
   _startupActions: function() {
