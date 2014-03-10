@@ -296,7 +296,7 @@ nsHostRecord::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 
     n += mBlacklistedItems.SizeOfExcludingThis(mallocSizeOf);
     for (size_t i = 0; i < mBlacklistedItems.Length(); i++) {
-        n += mBlacklistedItems[i].SizeOfIncludingThisMustBeUnshared(mallocSizeOf);
+        n += mBlacklistedItems[i].SizeOfExcludingThisMustBeUnshared(mallocSizeOf);
     }
     return n;
 }
