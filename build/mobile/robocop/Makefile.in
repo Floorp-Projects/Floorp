@@ -57,7 +57,7 @@ robocop_FILES   := \
   $(NULL)
 robocop-deps := $(notdir $(robocop_FILES))
 
-ROBOCOP_FILES := \
+MOCHITEST_ROBOCOP_FILES := \
   $(wildcard $(TESTPATH)/*.html) \
   $(wildcard $(TESTPATH)/*.jpg) \
   $(wildcard $(TESTPATH)/*.sjs) \
@@ -66,9 +66,6 @@ ROBOCOP_FILES := \
   $(wildcard $(TESTPATH)/*.xml) \
   $(wildcard $(TESTPATH)/*.swf) \
   $(NULL)
-
-ROBOCOP_DEST = $(DEPTH)/_tests/testing/mochitest/tests/robocop/
-INSTALL_TARGETS += ROBOCOP
 
 GARBAGE += \
   AndroidManifest.xml \
