@@ -1023,33 +1023,6 @@ GuessArrayGCKind(size_t numSlots)
 }
 
 inline bool
-DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
-                              JSProtoKey key, HandleObject ctor, HandleObject proto)
-{
-    JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
-    JS_ASSERT(ctor);
-    JS_ASSERT(proto);
-
-    RootedId id(cx, NameToId(ClassName(key, cx)));
-    JS_ASSERT(!global->nativeLookup(cx, id));
-
-    /* Set these first in case AddTypePropertyId looks for this class. */
-    global->setConstructor(key, ObjectValue(*ctor));
-    global->setPrototype(key, ObjectValue(*proto));
-    global->setConstructorPropertySlot(key, ObjectValue(*ctor));
-
-    if (!global->addDataProperty(cx, id, GlobalObject::constructorPropertySlot(key), 0)) {
-        global->setConstructor(key, UndefinedValue());
-        global->setPrototype(key, UndefinedValue());
-        global->setConstructorPropertySlot(key, UndefinedValue());
-        return false;
-    }
-
-    types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
-    return true;
-}
-
-inline bool
 ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
 {
     if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
@@ -1089,15 +1062,6 @@ ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialI
 {
     return false;
 }
-
-JSObject *
-DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
-                              JSObject *protoProto, const Class *clasp,
-                              Native constructor, unsigned nargs,
-                              const JSPropertySpec *ps, const JSFunctionSpec *fs,
-                              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
-                              JSObject **ctorp = nullptr,
-                              gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 
 static MOZ_ALWAYS_INLINE bool
 NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)

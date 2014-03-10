@@ -2185,7 +2185,7 @@ InitTypedArrayClass(JSContext *cx)
     if (!fun)
         return nullptr;
 
-    if (!DefineConstructorAndPrototype(cx, global, ArrayType::key, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, ArrayType::key, ctor, proto))
         return nullptr;
 
     global->setCreateArrayFromBuffer<typename ArrayType::ThisType>(fun);
@@ -2277,8 +2277,11 @@ InitArrayBufferClass(JSContext *cx)
     if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))
         return nullptr;
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_ArrayBuffer, ctor, arrayBufferProto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_ArrayBuffer,
+                                              ctor, arrayBufferProto))
+    {
         return nullptr;
+    }
 
     return arrayBufferProto;
 }
@@ -2409,7 +2412,7 @@ DataViewObject::initClass(JSContext *cx)
     if (!fun)
         return nullptr;
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_DataView, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_DataView, ctor, proto))
         return nullptr;
 
     global->setCreateDataViewForThis(fun);
