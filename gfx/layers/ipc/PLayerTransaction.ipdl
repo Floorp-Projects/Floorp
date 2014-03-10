@@ -17,6 +17,7 @@ include protocol PTexture;
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -28,6 +29,11 @@ using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h
 
 namespace mozilla {
 namespace layers {
+
+union MaybeTransform {
+  gfx3DMatrix;
+  void_t;
+};
 
 sync protocol PLayerTransaction {
   manager PRenderFrame or PCompositor;
@@ -76,7 +82,13 @@ parent:
     returns (EditReply[] reply);
 
   sync GetOpacity(PLayer layer) returns (float opacity);
-  sync GetTransform(PLayer layer) returns (gfx3DMatrix transform);
+
+  // Returns the value of the transform applied to the layer by animation after
+  // factoring out translation components introduced to account for the offset
+  // of the corresponding frame and transform origin and after converting to CSS
+  // pixels. If the layer is not transformed by animation, the return value will
+  // be void_t.
+  sync GetAnimationTransform(PLayer layer) returns (MaybeTransform transform);
 
   // We don't need to send a sync transaction if
   // no transaction operate require a swap.
