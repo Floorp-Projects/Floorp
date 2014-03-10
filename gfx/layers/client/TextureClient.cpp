@@ -282,6 +282,8 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
     result = new TextureClientX11(aFormat, aTextureFlags);
   }
 #ifdef GL_PROVIDER_GLX
+#if 0
+  // Bug 977963: Disabled for black layers
   if (parentBackend == LayersBackend::LAYERS_OPENGL &&
       type == gfxSurfaceType::Xlib &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK) &&
@@ -290,6 +292,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
   {
     result = new TextureClientX11(aFormat, aTextureFlags);
   }
+#endif
 #endif
 #endif
 
