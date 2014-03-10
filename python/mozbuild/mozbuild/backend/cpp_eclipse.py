@@ -216,6 +216,17 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                         <location>@PROJECT_TOPSRCDIR@</location>
                 </link>
         </linkedResources>
+        <filteredResources>
+                <filter>
+                        <id>17111971</id>
+                        <name>tree</name>
+                        <type>30</type>
+                        <matcher>
+                                <id>org.eclipse.ui.ide.multiFilter</id>
+                                <arguments>1.0-name-matches-false-false-obj-*</arguments>
+                        </matcher>
+                </filter>
+        </filteredResources>
 </projectDescription>
 """
 
