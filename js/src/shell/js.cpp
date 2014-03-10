@@ -328,16 +328,10 @@ JSStringToUTF8(JSContext *cx, JSString *str)
     return TwoByteCharsToNewUTF8CharsZ(cx, linear->range()).c_str();
 }
 
-/*
- * State to store as JSContext private.
- *
- * We declare such timestamp as volatile as they are updated in the interrupt
- * callback without taking any locks. Any possible race can only lead to more
- * frequent callback calls. This is safe as the callback does everything based
- * on timing.
- */
+/* State to store as JSContext private. */
 struct JSShellContextData {
-    volatile int64_t startTime;
+    /* Creation timestamp, used by the elapsed() shell builtin. */
+    int64_t startTime;
 };
 
 static JSShellContextData *
