@@ -531,12 +531,11 @@ var DebuggerServer = {
     let mm = aMessageManager;
     mm.loadFrameScript("resource://gre/modules/devtools/server/child.js", false);
 
-    let actor, childTransport, prefix;
+    let actor, childTransport;
+    let prefix = aConnection.allocID("child");
 
     let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
       mm.removeMessageListener("debug:actor", onActorCreated);
-
-      prefix = msg.json.prefix;
 
       // Pipe Debugger message from/to parent/child via the message manager
       childTransport = new ChildDebuggerTransport(mm, prefix);
@@ -586,8 +585,7 @@ var DebuggerServer = {
     Services.obs.addObserver(onMessageManagerDisconnect,
                              "message-manager-disconnect", false);
 
-    let prefixStart = aConnection.prefix + "child";
-    mm.sendAsyncMessage("debug:connect", { prefix: prefixStart });
+    mm.sendAsyncMessage("debug:connect", { prefix: prefix });
 
     return deferred.promise;
   },
