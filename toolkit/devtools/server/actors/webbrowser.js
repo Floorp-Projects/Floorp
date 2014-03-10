@@ -464,18 +464,19 @@ BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(a
  * attaching and detaching. TabActor respects the actor factories
  * registered with DebuggerServer.addTabActor.
  *
+ * This class is subclassed by BrowserTabActor and
+ * ContentActor. Subclasses are expected to implement a getter
+ * the docShell properties.
+ *
  * @param aConnection DebuggerServerConnection
  *        The conection to the client.
- * @param aBrowser browser
- *        The browser instance that contains this tab.
- * @param aTabBrowser tabbrowser
- *        The tabbrowser that can receive nsIWebProgressListener events.
+ * @param aChromeEventHandler
+ *        An object on which listen for DOMWindowCreated and pageshow events.
  */
-function TabActor(aConnection, aBrowser, aTabBrowser)
+function TabActor(aConnection, aChromeEventHandler)
 {
   this.conn = aConnection;
-  this._browser = aBrowser;
-  this._tabbrowser = aTabBrowser;
+  this._chromeEventHandler = aChromeEventHandler;
   this._tabActorPool = null;
   // A map of actor names to actor instances provided by extensions.
   this._extraActors = {};
@@ -487,9 +488,7 @@ function TabActor(aConnection, aBrowser, aTabBrowser)
 // *complete* mess, needs to be rethought asap.
 
 TabActor.prototype = {
-  get browser() { return this._browser; },
-
-  get exited() { return !this.browser; },
+  get exited() { return !this._chromeEventHandler; },
   get attached() { return !!this._attached; },
 
   _tabPool: null,
@@ -504,20 +503,60 @@ TabActor.prototype = {
   actorPrefix: "tab",
 
   /**
+   * An object on which listen for DOMWindowCreated and pageshow events.
+   */
+  get chromeEventHandler() {
+    return this._chromeEventHandler;
+  },
+
+  /**
+   * Getter for the tab's doc shell.
+   */
+  get docShell() {
+    throw "The docShell getter should be implemented by a subclass of TabActor";
+  },
+
+  /**
+   * Getter for the tab content's DOM window.
+   */
+  get window() {
+    return this.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindow);
+  },
+
+  /**
+   * Getter for the nsIWebProgress for watching this window.
+   */
+  get webProgress() {
+    return this.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+  },
+
+  /**
+   * Getter for the nsIWebNavigation for the tab.
+   */
+  get webNavigation() {
+    return this.docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation);
+  },
+
+  /**
+   * Getter for the tab's document.
+   */
+  get contentDocument() {
+    return this.webNavigation.document;
+  },
+
+  /**
    * Getter for the tab title.
    * @return string
    *         Tab title.
    */
   get title() {
-    let title = this.browser.contentTitle;
-    // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
-    // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
-    // as the title.
-    if (!title && this._tabbrowser) {
-      title = this._tabbrowser
-                  ._getTabForContentWindow(this.window).label;
-    }
-    return title;
+    return this.contentDocument.contentTitle;
   },
 
   /**
@@ -526,39 +565,12 @@ TabActor.prototype = {
    *         Tab URL.
    */
   get url() {
-    if (this.browser.currentURI) {
-      return this.browser.currentURI.spec;
+    if (this.webNavigation.currentURI) {
+      return this.webNavigation.currentURI.spec;
     }
     // Abrupt closing of the browser window may leave callbacks without a
     // currentURI.
     return null;
-  },
-
-  /**
-   * Getter for the tab content window, will be used by child actors to target
-   * the right window.
-   * @return nsIDOMWindow
-   *         Tab content window.
-   */
-  get window() {
-    if (this.browser instanceof Ci.nsIDOMWindow) {
-      return this.browser;
-    } else if (this.browser instanceof Ci.nsIDOMElement) {
-      return this.browser.contentWindow;
-    } else {
-      return null;
-    }
-  },
-
-  /**
-   * Getter for the best nsIWebProgress for to watching this window.
-   */
-  get webProgress() {
-    return this.window
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDocShell)
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIWebProgress);
   },
 
   form: function BTA_form() {
@@ -611,8 +623,7 @@ TabActor.prototype = {
                        type: "tabDetached" });
     }
 
-    this._browser = null;
-    this._tabbrowser = null;
+    this._chromeEventHandler = null;
   },
 
   /* Support for DebuggerServer.addTabActor. */
@@ -636,8 +647,8 @@ TabActor.prototype = {
     this._pushContext();
 
     // Watch for globals being created in this tab.
-    this.browser.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
-    this.browser.addEventListener("pageshow", this._onWindowCreated, true);
+    this.chromeEventHandler.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
+    this.chromeEventHandler.addEventListener("pageshow", this._onWindowCreated, true);
     this._progressListener = new DebuggerProgressListener(this);
 
     this._attached = true;
@@ -680,12 +691,10 @@ TabActor.prototype = {
       return false;
     }
 
-    if (this._progressListener) {
-      this._progressListener.destroy();
-    }
+    this._progressListener.destroy();
 
-    this.browser.removeEventListener("DOMWindowCreated", this._onWindowCreated, true);
-    this.browser.removeEventListener("pageshow", this._onWindowCreated, true);
+    this.chromeEventHandler.removeEventListener("DOMWindowCreated", this._onWindowCreated, true);
+    this.chromeEventHandler.removeEventListener("pageshow", this._onWindowCreated, true);
 
     this._popContext();
 
@@ -796,12 +805,8 @@ TabActor.prototype = {
     let enable =  Ci.nsIRequest.LOAD_NORMAL;
     let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
                   Ci.nsIRequest.INHIBIT_CACHING;
-    if (this.window) {
-      let docShell = this.window
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell);
-
-      docShell.defaultLoadFlags = allow ? enable : disable;
+    if (this.docShell) {
+      this.docShell.defaultLoadFlags = allow ? enable : disable;
     }
   },
 
@@ -809,12 +814,8 @@ TabActor.prototype = {
    * Disable or enable JS via docShell.
    */
   _setJavascriptEnabled: function(allow) {
-    if (this.window) {
-      let docShell = this.window
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDocShell);
-
-      docShell.allowJavascript = allow;
+    if (this.docShell) {
+      this.docShell.allowJavascript = allow;
     }
   },
 
@@ -822,34 +823,26 @@ TabActor.prototype = {
    * Return cache allowed status.
    */
   _getCacheEnabled: function() {
-    if (!this.window) {
+    if (!this.docShell) {
       // The tab is already closed.
       return null;
     }
 
     let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
                   Ci.nsIRequest.INHIBIT_CACHING;
-    let docShell = this.window
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
-
-    return docShell.defaultLoadFlags !== disable;
+    return this.docShell.defaultLoadFlags !== disable;
   },
 
   /**
    * Return JS allowed status.
    */
   _getJavascriptEnabled: function() {
-    if (!this.window) {
+    if (!this.docShell) {
       // The tab is already closed.
       return null;
     }
 
-    let docShell = this.window
-                       .QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDocShell);
-
-    return docShell.allowJavascript;
+    return this.docShell.allowJavascript;
   },
 
   /**
@@ -898,7 +891,7 @@ TabActor.prototype = {
     if (!this._attached || (evt.type == "pageshow" && !evt.persisted)) {
       return;
     }
-    if (evt.target === this.browser.contentDocument ) {
+    if (evt.target === this.contentDocument) {
       this.threadActor.clearDebuggees();
       if (this.threadActor.dbg) {
         this.threadActor.dbg.enabled = true;
@@ -954,12 +947,51 @@ TabActor.prototype.requestTypes = {
  */
 function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
 {
-  TabActor.call(this, aConnection, aBrowser, aTabBrowser);
+  TabActor.call(this, aConnection, aBrowser);
+  this._browser = aBrowser;
+  this._tabbrowser = aTabBrowser;
 }
 
 BrowserTabActor.prototype = Object.create(TabActor.prototype);
 
 BrowserTabActor.prototype.constructor = BrowserTabActor;
+
+Object.defineProperty(BrowserTabActor.prototype, "docShell", {
+  get: function() {
+    return this._browser.docShell;
+  },
+  enumerable: true,
+  configurable: false
+});
+
+Object.defineProperty(BrowserTabActor.prototype, "title", {
+  get: function() {
+    let title = this.contentDocument.contentTitle;
+    // If contentTitle is empty (e.g. on a not-yet-restored tab), but there is a
+    // tabbrowser (i.e. desktop Firefox, but not Fennec), we can use the label
+    // as the title.
+    if (!title && this._tabbrowser) {
+      title = this._tabbrowser._getTabForContentWindow(this.window).label;
+    }
+    return title;
+  },
+  enumerable: true,
+  configurable: false
+});
+
+Object.defineProperty(BrowserTabActor.prototype, "browser", {
+  get: function() {
+    return this._browser;
+  },
+  enumerable: true,
+  configurable: false
+});
+
+BrowserTabActor.prototype.exit = function() {
+  TabActor.prototype.exit.call(this);
+  this._browser = null;
+  this._tabbrowser = null;
+};
 
 function BrowserAddonList(aConnection)
 {

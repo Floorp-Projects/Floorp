@@ -7,7 +7,7 @@
 /**
  * Tab actor for documents living in a child process.
  *
- * Depends on BrowserTabActor, defined in webbrowser.js actor.
+ * Depends on TabActor, defined in webbrowser.js.
  */
 
 /**
@@ -17,41 +17,31 @@
  *
  * @param connection DebuggerServerConnection
  *        The conection to the client.
- * @param browser browser
- *        The browser instance that contains this tab.
+ * @param chromeGlobal
+ *        The content script global holding |content| and |docShell| properties for a tab.
  */
-function ContentActor(connection, browser)
+function ContentActor(connection, chromeGlobal)
 {
-  BrowserTabActor.call(this, connection, browser);
+  TabActor.call(this, connection, chromeGlobal);
+  this._chromeGlobal = chromeGlobal;
 }
 
-ContentActor.prototype = Object.create(BrowserTabActor.prototype);
+ContentActor.prototype = Object.create(TabActor.prototype);
 
 ContentActor.prototype.constructor = ContentActor;
 
-Object.defineProperty(ContentActor.prototype, "title", {
+Object.defineProperty(ContentActor.prototype, "docShell", {
   get: function() {
-    return this.browser.title;
+    return this._chromeGlobal.docShell;
   },
   enumerable: true,
   configurable: false
 });
 
-Object.defineProperty(ContentActor.prototype, "url", {
-  get: function() {
-    return this.browser.document.documentURI;
-  },
-  enumerable: true,
-  configurable: false
-});
-
-Object.defineProperty(ContentActor.prototype, "window", {
-  get: function() {
-    return this.browser;
-  },
-  enumerable: true,
-  configurable: false
-});
+ContentActor.prototype.exit = function() {
+  TabActor.prototype.exit.call(this);
+  this._chromeGlobal = null;
+};
 
 // Override grip just to rename this._tabActorPool to this._tabActorPool2
 // in order to prevent it to be cleaned on detach.
