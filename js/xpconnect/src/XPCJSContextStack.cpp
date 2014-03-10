@@ -23,11 +23,6 @@ using mozilla::dom::DestroyProtoAndIfaceCache;
 XPCJSContextStack::~XPCJSContextStack()
 {
     if (mSafeJSContext) {
-        {
-            JSAutoRequest ar(mSafeJSContext);
-            JS_RemoveObjectRoot(mSafeJSContext, &mSafeJSContextGlobal);
-        }
-        mSafeJSContextGlobal = nullptr;
         JS_DestroyContextNoGC(mSafeJSContext);
         mSafeJSContext = nullptr;
     }
@@ -147,13 +142,6 @@ XPCJSContextStack::GetSafeJSContext()
     return mSafeJSContext;
 }
 
-JSObject*
-XPCJSContextStack::GetSafeJSContextGlobal()
-{
-    MOZ_ASSERT(mSafeJSContextGlobal);
-    return mSafeJSContextGlobal;
-}
-
 JSContext*
 XPCJSContextStack::InitSafeJSContext()
 {
@@ -176,30 +164,31 @@ XPCJSContextStack::InitSafeJSContext()
         MOZ_CRASH();
     JSAutoRequest req(mSafeJSContext);
 
+    JS::RootedObject glob(mSafeJSContext);
     JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
 
     JS::CompartmentOptions options;
     options.setZone(JS::SystemZone);
-    mSafeJSContextGlobal = CreateGlobalObject(mSafeJSContext,
-                                              &SafeJSContextGlobalClass,
-                                              principal, options);
-    if (!mSafeJSContextGlobal)
+    glob = xpc::CreateGlobalObject(mSafeJSContext, &SafeJSContextGlobalClass, principal, options);
+    if (!glob)
         MOZ_CRASH();
-    JS_AddNamedObjectRoot(mSafeJSContext, &mSafeJSContextGlobal, "SafeJSContext global");
 
     // Make sure the context is associated with a proper compartment
     // and not the default compartment.
-    js::SetDefaultObjectForContext(mSafeJSContext, mSafeJSContextGlobal);
+    js::SetDefaultObjectForContext(mSafeJSContext, glob);
 
     // Note: make sure to set the private before calling
     // InitClasses
-    nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, mSafeJSContextGlobal);
-    JS_SetPrivate(mSafeJSContextGlobal, sp.forget().get());
+    nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, glob);
+    JS_SetPrivate(glob, sp.forget().get());
 
-    if (NS_FAILED(xpc->InitClasses(mSafeJSContext, mSafeJSContextGlobal)))
+    // After this point either glob is null and the
+    // nsIScriptObjectPrincipal ownership is either handled by the
+    // nsCOMPtr or dealt with, or we'll release in the finalize
+    // hook.
+    if (NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
         MOZ_CRASH();
 
-    JS::RootedObject glob(mSafeJSContext, mSafeJSContextGlobal);
     JS_FireOnNewGlobalObject(mSafeJSContext, glob);
 
     return mSafeJSContext;
