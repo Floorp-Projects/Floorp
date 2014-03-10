@@ -60,9 +60,6 @@ public:
   void ContentReceivedTouch(const ScrollableLayerGuid& aGuid, bool aPreventDefault);
   nsEventStatus ReceiveInputEvent(mozilla::WidgetInputEvent* aEvent,
                                   ScrollableLayerGuid* aOutTargetGuid);
-  nsEventStatus ReceiveInputEvent(mozilla::WidgetInputEvent* aInEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid,
-                                  mozilla::WidgetInputEvent* aOutEvent);
 
 public:
   // todo: make this a member variable as prep for multiple views

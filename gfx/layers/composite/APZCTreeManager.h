@@ -106,7 +106,7 @@ public:
                                   ScrollableLayerGuid* aOutTargetGuid);
 
   /**
-   * WidgetInputEvent handler. Sets |aOutEvent| (which is assumed to be an
+   * WidgetInputEvent handler. Transforms |aEvent| (which is assumed to be an
    * already-existing instance of an WidgetInputEvent which may be an
    * WidgetTouchEvent) to have its coordinates in DOM space. This is so that the
    * event can be passed through the DOM and content can handle them.
@@ -117,20 +117,7 @@ public:
    * NOTE: On unix, mouse events are treated as touch and are forwarded
    * to the appropriate apz as such.
    *
-   * @param aEvent input event object, will not be modified
-   * @param aOutTargetGuid returns the guid of the apzc this event was
-   * delivered to. May be null.
-   * @param aOutEvent event object transformed to DOM coordinate space.
-   */
-  nsEventStatus ReceiveInputEvent(const WidgetInputEvent& aEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid,
-                                  WidgetInputEvent* aOutEvent);
-
-  /**
-   * WidgetInputEvent handler with inline dom transform of the passed in
-   * WidgetInputEvent. Must be called on the main thread.
-   *
-   * @param aEvent input event object
+   * @param aEvent input event object; is modified in-place
    * @param aOutTargetGuid returns the guid of the apzc this event was
    * delivered to. May be null.
    */
@@ -287,9 +274,9 @@ private:
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent);
-  nsEventStatus ProcessTouchEvent(const WidgetTouchEvent& touchEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetTouchEvent* aOutEvent);
-  nsEventStatus ProcessMouseEvent(const WidgetMouseEvent& mouseEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetMouseEvent* aOutEvent);
-  nsEventStatus ProcessEvent(const WidgetInputEvent& inputEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetInputEvent* aOutEvent);
+  nsEventStatus ProcessTouchEvent(WidgetTouchEvent& touchEvent, ScrollableLayerGuid* aOutTargetGuid);
+  nsEventStatus ProcessMouseEvent(WidgetMouseEvent& mouseEvent, ScrollableLayerGuid* aOutTargetGuid);
+  nsEventStatus ProcessEvent(WidgetInputEvent& inputEvent, ScrollableLayerGuid* aOutTargetGuid);
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
 
