@@ -196,7 +196,7 @@ let HighlighterActor = protocol.ActorClass({
    */
   _getPickerListenerTarget: function() {
     let actor = this._tabActor;
-    return actor.isRootActor ? actor.window : actor.browser;
+    return actor.isRootActor ? actor.window : actor.chromeEventHandler;
   },
 
   _startPickerListeners: function() {
