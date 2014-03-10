@@ -635,6 +635,7 @@ protected:
   bool ParseGridLineNames(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
   bool ParseGridTrackSize(nsCSSValue& aValue);
+  bool ParseGridAutoColumnsRows(nsCSSProperty aPropID);
   bool ParseGridTrackList(nsCSSProperty aPropID);
   bool ParseGridTemplateAreasLine(const nsAutoString& aInput,
                                   nsTArray<nsCSSGridNamedArea>& aNamedAreas,
@@ -6968,6 +6969,18 @@ CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue)
 }
 
 bool
+CSSParserImpl::ParseGridAutoColumnsRows(nsCSSProperty aPropID)
+{
+  nsCSSValue value;
+  if (ParseVariant(value, VARIANT_INHERIT, nullptr) ||
+      ParseGridTrackSize(value)) {
+    AppendValue(aPropID, value);
+    return true;
+  }
+  return false;
+}
+
+bool
 CSSParserImpl::ParseGridTrackList(nsCSSProperty aPropID)
 {
   nsCSSValue value;
@@ -8128,6 +8141,9 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseFlexFlow();
   case eCSSProperty_font:
     return ParseFont();
+  case eCSSProperty_grid_auto_columns:
+  case eCSSProperty_grid_auto_rows:
+    return ParseGridAutoColumnsRows(aPropID);
   case eCSSProperty_grid_template_areas:
     return ParseGridTemplateAreas();
   case eCSSProperty_grid_template_columns:

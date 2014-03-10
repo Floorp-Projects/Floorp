@@ -1217,6 +1217,10 @@ struct nsStylePosition {
   nsStyleCoord  mMinHeight;             // [reset] coord, percent, calc
   nsStyleCoord  mMaxHeight;             // [reset] coord, percent, calc, none
   nsStyleCoord  mFlexBasis;             // [reset] coord, percent, enum, calc, auto
+  nsStyleCoord  mGridAutoColumnsMin;    // [reset] coord, percent, enum, calc, flex
+  nsStyleCoord  mGridAutoColumnsMax;    // [reset] coord, percent, enum, calc, flex
+  nsStyleCoord  mGridAutoRowsMin;       // [reset] coord, percent, enum, calc, flex
+  nsStyleCoord  mGridAutoRowsMax;       // [reset] coord, percent, enum, calc, flex
   uint8_t       mBoxSizing;             // [reset] see nsStyleConsts.h
   uint8_t       mAlignContent;          // [reset] see nsStyleConsts.h
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h

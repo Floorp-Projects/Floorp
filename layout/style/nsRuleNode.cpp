@@ -7084,6 +7084,76 @@ SetGridTrackBreadth(const nsCSSValue& aValue,
 }
 
 static void
+SetGridTrackSize(const nsCSSValue& aValue,
+                 nsStyleCoord& aResultMin,
+                 nsStyleCoord& aResultMax,
+                 nsStyleContext* aStyleContext,
+                 nsPresContext* aPresContext,
+                 bool& aCanStoreInRuleTree)
+{
+  if (aValue.GetUnit() == eCSSUnit_Function) {
+    // A minmax() function.
+    nsCSSValue::Array* func = aValue.GetArrayValue();
+    NS_ASSERTION(func->Item(0).GetKeywordValue() == eCSSKeyword_minmax,
+                 "Expected minmax(), got another function name");
+    SetGridTrackBreadth(func->Item(1), aResultMin,
+                        aStyleContext, aPresContext, aCanStoreInRuleTree);
+    SetGridTrackBreadth(func->Item(2), aResultMax,
+                        aStyleContext, aPresContext, aCanStoreInRuleTree);
+  } else if (aValue.GetUnit() == eCSSUnit_Auto) {
+    // 'auto' computes to 'minmax(min-content, max-content)'
+    aResultMin.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT,
+                           eStyleUnit_Enumerated);
+    aResultMax.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
+                           eStyleUnit_Enumerated);
+  } else {
+    // A single <track-breadth>,
+    // specifies identical min and max sizing functions.
+    SetGridTrackBreadth(aValue, aResultMin,
+                        aStyleContext, aPresContext, aCanStoreInRuleTree);
+    aResultMax = aResultMin;
+  }
+}
+
+static void
+SetGridAutoColumnsRows(const nsCSSValue& aValue,
+                       nsStyleCoord& aResultMin,
+                       nsStyleCoord& aResultMax,
+                       const nsStyleCoord& aParentValueMin,
+                       const nsStyleCoord& aParentValueMax,
+                       nsStyleContext* aStyleContext,
+                       nsPresContext* aPresContext,
+                       bool& aCanStoreInRuleTree)
+
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
+    aCanStoreInRuleTree = false;
+    aResultMin = aParentValueMin;
+    aResultMax = aParentValueMax;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+    // The initial value is 'auto',
+    // which computes to 'minmax(min-content, max-content)'.
+    // (Explicitly-specified 'auto' values are handled in SetGridTrackSize.)
+    aResultMin.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT,
+                           eStyleUnit_Enumerated);
+    aResultMax.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
+                           eStyleUnit_Enumerated);
+    break;
+
+  default:
+    SetGridTrackSize(aValue, aResultMin, aResultMax,
+                     aStyleContext, aPresContext, aCanStoreInRuleTree);
+  }
+}
+
+static void
 SetGridTrackList(const nsCSSValue& aValue,
                  nsStyleGridTrackList& aResult,
                  const nsStyleGridTrackList& aParentValue,
@@ -7137,34 +7207,11 @@ SetGridTrackList(const nsCSSValue& aValue,
         break;
       }
 
-      // Compute a <track-size> value
-      nsStyleCoord minSizingFunction;
-      nsStyleCoord maxSizingFunction;
-      if (item->mValue.GetUnit() == eCSSUnit_Function) {
-        // A minmax() function.
-        nsCSSValue::Array* func = item->mValue.GetArrayValue();
-        NS_ASSERTION(func->Item(0).GetKeywordValue() == eCSSKeyword_minmax,
-                     "Expected minmax(), got another function name.");
-        SetGridTrackBreadth(func->Item(1), minSizingFunction,
-                            aStyleContext, aPresContext, aCanStoreInRuleTree);
-        SetGridTrackBreadth(func->Item(2), maxSizingFunction,
-                            aStyleContext, aPresContext, aCanStoreInRuleTree);
-      } else if (item->mValue.GetUnit() == eCSSUnit_Auto) {
-        // 'auto' computes to 'minmax(min-content, max-content)'
-        minSizingFunction.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT,
-                                      eStyleUnit_Enumerated);
-        maxSizingFunction.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
-                                      eStyleUnit_Enumerated);
-      } else {
-        // A single <track-breadth>,
-        // specifies identical min and max sizing functions.
-        SetGridTrackBreadth(item->mValue, minSizingFunction,
-                            aStyleContext, aPresContext, aCanStoreInRuleTree);
-        maxSizingFunction = minSizingFunction;
-      }
+      nsStyleCoord& min = *aResult.mMinTrackSizingFunctions.AppendElement();
+      nsStyleCoord& max = *aResult.mMaxTrackSizingFunctions.AppendElement();
+      SetGridTrackSize(item->mValue, min, max,
+                       aStyleContext, aPresContext, aCanStoreInRuleTree);
 
-      aResult.mMinTrackSizingFunctions.AppendElement(minSizingFunction);
-      aResult.mMaxTrackSizingFunctions.AppendElement(maxSizingFunction);
       item = item->mNext;
       MOZ_ASSERT(item, "Expected a eCSSUnit_List of odd length");
     }
@@ -7379,6 +7426,22 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
               parentPos->mJustifyContent,
               NS_STYLE_JUSTIFY_CONTENT_FLEX_START, 0, 0, 0, 0);
+
+  // grid-auto-columns
+  SetGridAutoColumnsRows(*aRuleData->ValueForGridAutoColumns(),
+                         pos->mGridAutoColumnsMin,
+                         pos->mGridAutoColumnsMax,
+                         parentPos->mGridAutoColumnsMin,
+                         parentPos->mGridAutoColumnsMax,
+                         aContext, mPresContext, canStoreInRuleTree);
+
+  // grid-auto-rows
+  SetGridAutoColumnsRows(*aRuleData->ValueForGridAutoRows(),
+                         pos->mGridAutoRowsMin,
+                         pos->mGridAutoRowsMax,
+                         parentPos->mGridAutoRowsMin,
+                         parentPos->mGridAutoRowsMax,
+                         aContext, mPresContext, canStoreInRuleTree);
 
   // grid-template-columns
   SetGridTrackList(*aRuleData->ValueForGridTemplateColumns(),
