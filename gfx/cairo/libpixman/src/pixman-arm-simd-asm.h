@@ -680,12 +680,15 @@
     ORIG_W      .req    r14 /* width (pixels) */
 
 fname:
+        .fnstart
+	.save   {r4-r11, lr}
         push    {r4-r11, lr}        /* save all registers */
 
         subs    Y, Y, #1
         blo     199f
 
 #ifdef DEBUG_PARAMS
+	.pad    #9*4
         sub     sp, sp, #9*4
 #endif
 
@@ -857,6 +860,7 @@ fname:
 #endif
 199:
         pop     {r4-r11, pc}  /* exit */
+	.fnend
 
  .ltorg
 
