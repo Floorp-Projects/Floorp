@@ -3618,6 +3618,10 @@ nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMNode* aNode,
                                          const nsAString& aProperty,
                                          nsAString& aResult)
 {
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   aResult.Truncate();
   ErrorResult rv;
   nsCOMPtr<Element> element = do_QueryInterface(aNode);
