@@ -371,8 +371,10 @@ T *
 UpdateIfRelocated(JSRuntime *rt, T **thingp)
 {
     JS_ASSERT(thingp);
-    if (*thingp && rt->isHeapMinorCollecting())
-        IsAboutToBeFinalized<T>(thingp);
+#ifdef JSGC_GENERATIONAL
+    if (*thingp && rt->isHeapMinorCollecting() && rt->gcNursery.isInside(*thingp))
+        rt->gcNursery.getForwardedPointer(thingp);
+#endif
     return *thingp;
 }
 
