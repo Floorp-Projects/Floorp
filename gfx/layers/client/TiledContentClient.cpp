@@ -141,8 +141,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
     ContainerLayer* aLayer,
     bool aHasPendingNewThebesContent,
     bool aLowPrecision,
-    ScreenRect& aCompositionBounds,
-    CSSToScreenScale& aZoom)
+    ParentLayerRect& aCompositionBounds,
+    CSSToParentLayerScale& aZoom)
 {
   MOZ_ASSERT(aLayer);
 
@@ -162,8 +162,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
     return false;
   }
 
-  aCompositionBounds = ScreenRect(compositorMetrics.mCompositionBounds);
-  aZoom = compositorMetrics.mZoom;
+  aCompositionBounds = ParentLayerRect(compositorMetrics.mCompositionBounds);
+  aZoom = compositorMetrics.GetZoomToParent();
 
   // Reset the checkerboard risk flag when switching to low precision
   // rendering.
@@ -215,8 +215,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
 
 void
 SharedFrameMetricsHelper::FindFallbackContentFrameMetrics(ContainerLayer* aLayer,
-                                                          ScreenRect& aCompositionBounds,
-                                                          CSSToScreenScale& aZoom) {
+                                                          ParentLayerRect& aCompositionBounds,
+                                                          CSSToParentLayerScale& aZoom) {
   if (!aLayer) {
     return;
   }
@@ -232,16 +232,16 @@ SharedFrameMetricsHelper::FindFallbackContentFrameMetrics(ContainerLayer* aLayer
 
   MOZ_ASSERT(!contentMetrics->mCompositionBounds.IsEmpty());
 
-  aCompositionBounds = ScreenRect(contentMetrics->mCompositionBounds);
-  aZoom = contentMetrics->mZoom;
+  aCompositionBounds = ParentLayerRect(contentMetrics->mCompositionBounds);
+  aZoom = contentMetrics->GetZoomToParent();  // TODO(botond): double-check this
   return;
 }
 
 bool
 SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetrics,
-                                                 const FrameMetrics& aCompositorMetrics)
+                                              const FrameMetrics& aCompositorMetrics)
 {
-  return !aContentMetrics.mDisplayPort.Contains(aCompositorMetrics.CalculateCompositedRectInCssPixels() - aCompositorMetrics.mScrollOffset);
+  return !aContentMetrics.mDisplayPort.Contains(CSSRect(aCompositorMetrics.CalculateCompositedRectInCssPixels()) - aCompositorMetrics.mScrollOffset);
 }
 
 ClientTiledLayerBuffer::ClientTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
@@ -843,8 +843,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 }
 
 static LayoutDeviceRect
-TransformCompositionBounds(const ScreenRect& aCompositionBounds,
-                           const CSSToScreenScale& aZoom,
+TransformCompositionBounds(const ParentLayerRect& aCompositionBounds,
+                           const CSSToParentLayerScale& aZoom,
                            const ScreenPoint& aScrollOffset,
                            const CSSToScreenScale& aResolution,
                            const gfx3DMatrix& aTransformScreenToLayout)
@@ -895,8 +895,8 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
   // Find out the current view transform to determine which tiles to draw
   // first, and see if we should just abort this paint. Aborting is usually
   // caused by there being an incoming, more relevant paint.
-  ScreenRect compositionBounds;
-  CSSToScreenScale zoom;
+  ParentLayerRect compositionBounds;
+  CSSToParentLayerScale zoom;
 #if defined(MOZ_WIDGET_ANDROID)
   bool abortPaint = mManager->ProgressiveUpdateCallback(!staleRegion.Contains(aInvalidRegion),
                                                         compositionBounds, zoom,
@@ -929,7 +929,7 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
   // Transform the screen coordinates into transformed layout device coordinates.
   LayoutDeviceRect transformedCompositionBounds =
     TransformCompositionBounds(compositionBounds, zoom, aPaintData->mScrollOffset,
-                            aPaintData->mResolution, aPaintData->mTransformScreenToLayout);
+                               aPaintData->mResolution, aPaintData->mTransformParentLayerToLayout);
 
   // Paint tiles that have stale content or that intersected with the screen
   // at the time of issuing the draw command in a single transaction first.

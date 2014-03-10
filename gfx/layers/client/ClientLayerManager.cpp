@@ -517,8 +517,8 @@ ClientLayerManager::GetBackendName(nsAString& aName)
 
 bool
 ClientLayerManager::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent,
-                                              ScreenRect& aCompositionBounds,
-                                              CSSToScreenScale& aZoom,
+                                              ParentLayerRect& aCompositionBounds,
+                                              CSSToParentLayerScale& aZoom,
                                               bool aDrawingCritical)
 {
   aZoom.scale = 1.0;

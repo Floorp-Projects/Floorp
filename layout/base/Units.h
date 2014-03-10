@@ -277,6 +277,6 @@ gfx::MarginTyped<dst> operator/(const gfx::MarginTyped<src>& aMargin, const gfx:
                                aMargin.left / aScale.scale);
 }
 
-};
+}
 
 #endif
