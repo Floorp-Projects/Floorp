@@ -3244,8 +3244,8 @@ MaybeResolveConstructor(ExclusiveContext *cxArg, Handle<GlobalObject*> global, J
     RootedId name(cx, NameToId(ClassName(key, cx)));
     AutoResolving resolving(cx, global, name);
     if (resolving.alreadyStarted())
-       return true;
-    return GlobalObject::ensureConstructor(cx, global, key);
+        return true;
+    return GlobalObject::resolveConstructor(cx, global, key);
 }
 
 bool
