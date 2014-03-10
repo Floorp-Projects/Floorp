@@ -29,9 +29,7 @@
     if (subdoc) {
       subdoc.documentElement.getBoundingClientRect();
     }
-    var CI = Components.interfaces;
-    var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
-                .getInterface(CI.nsIDOMWindowUtils);
+    var utils = SpecialPowers.getDOMWindowUtils(window);
     if (!utils.isMozAfterPaintPending) {
       if (debug) {
         dump("done...\n");
