@@ -89,7 +89,11 @@ protected:
                                                    const int32_t& no) MOZ_OVERRIDE;
   virtual bool RecvDocumentChannelCleanup() MOZ_OVERRIDE;
   virtual bool RecvMarkOfflineCacheEntryAsForeign() MOZ_OVERRIDE;
-
+  virtual bool RecvDivertOnDataAvailable(const nsCString& data,
+                                         const uint64_t& offset,
+                                         const uint32_t& count) MOZ_OVERRIDE;
+  virtual bool RecvDivertOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
+  virtual bool RecvDivertComplete() MOZ_OVERRIDE;
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
 protected:
