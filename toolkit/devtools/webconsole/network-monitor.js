@@ -978,6 +978,7 @@ NetworkMonitor.prototype = {
     this.openResponses = {};
     this.owner = null;
     this.window = null;
+    this.topFrame = null;
   },
 }; // NetworkMonitor.prototype
 
@@ -1068,7 +1069,7 @@ NetworkMonitorChild.prototype = {
   destroy: function() {
     this._messageManager.removeMessageListener("debug:netmonitor:newEvent", this._onNewEvent);
     this._messageManager.removeMessageListener("debug:netmonitor:updateEvent", this._onUpdateEvent);
-    this._messageManager.sendAsyncMessage("debug:netmonitor", { action: "stop" });
+    this._messageManager.sendAsyncMessage("debug:netmonitor", { action: "disconnect" });
     this._netEvents.clear();
     this._messageManager = null;
     this.owner = null;
@@ -1177,7 +1178,7 @@ NetworkMonitorManager.prototype = {
 
     // Pipe network monitor data from parent to child via the message manager.
     switch (action) {
-      case "start": {
+      case "start":
         if (!this.netMonitor) {
           this.netMonitor = new NetworkMonitor({
             topFrame: this.frame,
@@ -1186,7 +1187,6 @@ NetworkMonitorManager.prototype = {
           this.netMonitor.init();
         }
         break;
-      }
 
       case "setPreferences": {
         let {preferences} = msg.json;
@@ -1198,13 +1198,16 @@ NetworkMonitorManager.prototype = {
         break;
       }
 
-      case "stop": {
+      case "stop":
         if (this.netMonitor) {
           this.netMonitor.destroy();
           this.netMonitor = null;
         }
         break;
-      }
+
+      case "disconnect":
+        this.destroy();
+        break;
     }
   }),
 
