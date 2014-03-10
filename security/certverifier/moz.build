@@ -23,6 +23,12 @@ LOCAL_INCLUDES += [
     '../insanity/include',
 ]
 
+DIRS += [
+    '../insanity/test/lib',
+]
+
 FAIL_ON_WARNINGS = True
+
+LIBRARY_NAME = 'certverifier'
 
 FINAL_LIBRARY = 'xul'
