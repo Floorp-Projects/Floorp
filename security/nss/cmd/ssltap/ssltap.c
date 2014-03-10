@@ -493,13 +493,13 @@ const char * helloExtensionNameString(int ex_num)
 
 static int isNULLmac(int cs_int)
 {
-    return (cs_int == SSL_NULL_WITH_NULL_NULL); 
+    return (cs_int == TLS_NULL_WITH_NULL_NULL);
 }
 
 static int isNULLcipher(int cs_int)
 {
- return ((cs_int == SSL_RSA_WITH_NULL_MD5) ||
-         (cs_int == SSL_RSA_WITH_NULL_SHA) ||
+ return ((cs_int == TLS_RSA_WITH_NULL_MD5) ||
+         (cs_int == TLS_RSA_WITH_NULL_SHA) ||
          (cs_int == SSL_FORTEZZA_DMS_WITH_NULL_SHA) ||
          (cs_int == TLS_ECDH_ECDSA_WITH_NULL_SHA) ||
          (cs_int == TLS_ECDHE_ECDSA_WITH_NULL_SHA) ||

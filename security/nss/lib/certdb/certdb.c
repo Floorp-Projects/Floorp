@@ -1394,8 +1394,8 @@ cert_TestHostName(char * cn, const char * hn)
 	 * - must not be preceded by an IDNA ACE prefix (xn--)
 	 */
 	if (wildcard && secondcndot && secondcndot[1] && firsthndot 
-	    && firstcndot  - wildcard  == 1 /* no chars between * and . */
-	    && secondcndot - firstcndot > 1 /* not .. */
+	    && firstcndot  - wildcard  == 1 /* wildcard is last char in first component */
+	    && secondcndot - firstcndot > 1 /* second component is non-empty */
 	    && PORT_Strrchr(cn, '*') == wildcard /* only one wildcard in cn */
 	    && !PORT_Strncasecmp(cn, hn, wildcard - cn)
 	    && !PORT_Strcasecmp(firstcndot, firsthndot)
