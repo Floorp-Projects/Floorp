@@ -954,6 +954,7 @@ generate_composite_function \
  */
 .macro pixman_composite_over_n_8_0565_init
     add         DUMMY, sp, #ARGS_STACK_OFFSET
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d11[0]}, [DUMMY]
     vdup.8      d8, d11[0]
@@ -981,6 +982,7 @@ generate_composite_function \
 
 .macro pixman_composite_over_8888_n_0565_init
     add         DUMMY, sp, #(ARGS_STACK_OFFSET + 8)
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d24[0]}, [DUMMY]
     vdup.8      d24, d24[3]
@@ -1447,6 +1449,7 @@ generate_composite_function \
 
 .macro pixman_composite_over_n_8_8888_init
     add         DUMMY, sp, #ARGS_STACK_OFFSET
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d11[0]}, [DUMMY]
     vdup.8      d8, d11[0]
@@ -1518,6 +1521,7 @@ generate_composite_function \
 
 .macro pixman_composite_over_n_8_8_init
     add         DUMMY, sp, #ARGS_STACK_OFFSET
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d8[0]}, [DUMMY]
     vdup.8      d8, d8[3]
@@ -1619,6 +1623,7 @@ generate_composite_function \
 
 .macro pixman_composite_over_n_8888_8888_ca_init
     add         DUMMY, sp, #ARGS_STACK_OFFSET
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d11[0]}, [DUMMY]
     vdup.8      d8, d11[0]
@@ -1788,6 +1793,7 @@ generate_composite_function \
 
 .macro pixman_composite_over_n_8888_0565_ca_init
     add         DUMMY, sp, #ARGS_STACK_OFFSET
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d11[0]}, [DUMMY]
     vdup.8      d8, d11[0]
@@ -1901,6 +1907,7 @@ generate_composite_function \
 
 .macro pixman_composite_add_n_8_8_init
     add         DUMMY, sp, #ARGS_STACK_OFFSET
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d11[0]}, [DUMMY]
     vdup.8      d11, d11[3]
@@ -2207,6 +2214,7 @@ generate_composite_function_single_scanline \
 
 .macro pixman_composite_over_8888_n_8888_init
     add         DUMMY, sp, #48
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d15[0]}, [DUMMY]
     vdup.8      d15, d15[3]
@@ -2579,6 +2587,7 @@ generate_composite_function \
 
 .macro pixman_composite_over_0565_n_0565_init
     add         DUMMY, sp, #(ARGS_STACK_OFFSET + 8)
+    .vsave      {d8-d15}
     vpush       {d8-d15}
     vld1.32     {d15[0]}, [DUMMY]
     vdup.8      d15, d15[3]
@@ -3132,13 +3141,16 @@ pixman_asm_function fname
     TMP4      .req      r9
     STRIDE    .req      r2
 
+    .fnstart
     mov       ip, sp
+    .save     {r4, r5, r6, r7, r8, r9}
     push      {r4, r5, r6, r7, r8, r9}
     mov       PF_OFFS, #prefetch_distance
     ldmia     ip, {WB, X, UX, WIDTH}
     mul       PF_OFFS, PF_OFFS, UX
 
 .if ((flags) & BILINEAR_FLAG_USE_ALL_NEON_REGS) != 0
+    .vsave    {d8-d15}
     vpush     {d8-d15}
 .endif
 
@@ -3232,6 +3244,7 @@ pixman_asm_function fname
 .endif
     pop       {r4, r5, r6, r7, r8, r9}
     bx        lr
+    .fnend
 
     .unreq    OUT
     .unreq    TOP
