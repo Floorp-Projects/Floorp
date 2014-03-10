@@ -1327,3 +1327,44 @@ nsCSSScanner::Next(nsCSSToken& aToken, bool aSkipWS)
   Advance();
   return true;
 }
+
+/* nsCSSGridTemplateAreaScanner methods. */
+
+nsCSSGridTemplateAreaScanner::nsCSSGridTemplateAreaScanner(const nsAString& aBuffer)
+  : mBuffer(aBuffer.BeginReading())
+  , mOffset(0)
+  , mCount(aBuffer.Length())
+{
+}
+
+bool
+nsCSSGridTemplateAreaScanner::Next(nsCSSGridTemplateAreaToken& aTokenResult)
+{
+  int32_t ch;
+  // Skip whitespace
+  do {
+    if (mOffset >= mCount) {
+      return false;
+    }
+    ch = mBuffer[mOffset];
+    mOffset++;
+  } while (IsWhitespace(ch));
+
+  if (IsOpenCharClass(ch, IS_IDCHAR)) {
+    // Named cell token
+    uint32_t start = mOffset - 1;  // offset of |ch|
+    while (mOffset < mCount && IsOpenCharClass(mBuffer[mOffset], IS_IDCHAR)) {
+      mOffset++;
+    }
+    aTokenResult.mName.Assign(&mBuffer[start], mOffset - start);
+    aTokenResult.isTrash = false;
+  } else if (ch == '.') {
+    // Null cell token
+    aTokenResult.mName.Truncate();
+    aTokenResult.isTrash = false;
+  } else {
+    // Trash token
+    aTokenResult.isTrash = true;
+  }
+  return true;
+}
