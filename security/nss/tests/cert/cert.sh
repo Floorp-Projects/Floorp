@@ -940,8 +940,8 @@ cert_ssl()
   fi
 
   echo "$SCRIPTNAME: Creating database for OCSP stapling tests  ==============="
-  echo "cp -rv ${SERVERDIR} ${STAPLINGDIR}"
-  cp -rv ${R_SERVERDIR} ${R_STAPLINGDIR}
+  echo "cp -r ${SERVERDIR} ${STAPLINGDIR}"
+  cp -r ${R_SERVERDIR} ${R_STAPLINGDIR}
   pk12u -o ${R_STAPLINGDIR}/ca.p12 -n TestCA -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_CADIR}
   pk12u -i ${R_STAPLINGDIR}/ca.p12 -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_STAPLINGDIR}
 }

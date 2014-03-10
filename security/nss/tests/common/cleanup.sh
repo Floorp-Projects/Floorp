@@ -14,6 +14,9 @@ if [ -z "${CLEANUP}" -o "${CLEANUP}" = "${SCRIPTNAME}" ]; then
     echo "HOST=${HOST}"
     echo "DOMSUF=${DOMSUF}"
     echo "BUILD_OPT=${BUILD_OPT}"
+    if [ "${OS_ARCH}" = "Linux" ]; then
+        echo "USE_X32=${USE_X32}"
+    fi
     echo "USE_64=${USE_64}"
     echo "NSS_CYCLES=\"${NSS_CYCLES}\""
     echo "NSS_TESTS=\"${NSS_TESTS}\""
