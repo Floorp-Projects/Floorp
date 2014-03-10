@@ -569,27 +569,40 @@ LayerTransactionParent::RecvGetOpacity(PLayerParent* aParent,
 }
 
 bool
-LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
-                                         gfx3DMatrix* aTransform)
+LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
+                                                  MaybeTransform* aTransform)
 {
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
     return false;
+  }
+
+  Layer* layer = cast(aParent)->AsLayer();
+  if (!layer) {
+    return false;
+  }
+
+  // This method is specific to transforms applied by animation.
+  // This is because this method uses the information stored with an animation
+  // such as the origin of the reference frame corresponding to the layer, to
+  // recover the untranslated transform from the shadow transform. For
+  // transforms that are not set by animation we don't have this information
+  // available.
+  if (!layer->AsLayerComposite()->GetShadowTransformSetByAnimation()) {
+    *aTransform = mozilla::void_t();
+    return true;
   }
 
   // The following code recovers the untranslated transform
   // from the shadow transform by undoing the translations in
   // AsyncCompositionManager::SampleValue.
 
-  Layer* layer = cast(aParent)->AsLayer();
-  if (!layer) {
-    return false;
-  }
-  gfx::To3DMatrix(layer->AsLayerComposite()->GetShadowTransform(), *aTransform);
+  gfx3DMatrix transform;
+  gfx::To3DMatrix(layer->AsLayerComposite()->GetShadowTransform(), transform);
   if (ContainerLayer* c = layer->AsContainerLayer()) {
     // Undo the scale transform applied by AsyncCompositionManager::SampleValue
-    aTransform->ScalePost(1.0f/c->GetInheritedXScale(),
-                          1.0f/c->GetInheritedYScale(),
-                          1.0f);
+    transform.ScalePost(1.0f/c->GetInheritedXScale(),
+                        1.0f/c->GetInheritedYScale(),
+                        1.0f);
   }
   float scale = 1;
   gfxPoint3D scaledOrigin;
@@ -611,23 +624,23 @@ LayerTransactionParent::RecvGetTransform(PLayerParent* aParent,
 
   // Undo the translation to the origin of the reference frame applied by
   // AsyncCompositionManager::SampleValue
-  aTransform->Translate(-scaledOrigin);
+  transform.Translate(-scaledOrigin);
 
   // Undo the rebasing applied by
   // nsDisplayTransform::GetResultingTransformMatrixInternal
-  *aTransform =
-    nsLayoutUtils::ChangeMatrixBasis(-scaledOrigin - transformOrigin,
-                                     *aTransform);
+  transform = nsLayoutUtils::ChangeMatrixBasis(-scaledOrigin - transformOrigin,
+                                               transform);
 
   // Convert to CSS pixels (this undoes the operations performed by
   // nsStyleTransformMatrix::ProcessTranslatePart which is called from
   // nsDisplayTransform::GetResultingTransformMatrix)
   double devPerCss =
     double(scale) / double(nsDeviceContext::AppUnitsPerCSSPixel());
-  aTransform->_41 *= devPerCss;
-  aTransform->_42 *= devPerCss;
-  aTransform->_43 *= devPerCss;
+  transform._41 *= devPerCss;
+  transform._42 *= devPerCss;
+  transform._43 *= devPerCss;
 
+  *aTransform = transform;
   return true;
 }
 
