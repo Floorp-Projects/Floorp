@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// See https://developers.google.com/maps/documentation/business/geolocation/
-
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -19,6 +17,9 @@ let gTimeToWaitBeforeSending = 5000; //ms
 
 let gWifiScanningEnabled = true;
 let gWifiResults;
+
+let gCellScanningEnabled = false;
+let gCellResults;
 
 function LOG(aMsg) {
   if (gLoggingEnabled) {
@@ -37,7 +38,6 @@ function WifiGeoCoordsObject(lat, lon, acc, alt, altacc) {
 }
 
 WifiGeoCoordsObject.prototype = {
-
   QueryInterface:  XPCOMUtils.generateQI([Ci.nsIDOMGeoPositionCoords]),
 
   classInfo: XPCOMUtils.generateCI({interfaces: [Ci.nsIDOMGeoPositionCoords],
@@ -52,7 +52,6 @@ function WifiGeoPositionObject(lat, lng, acc) {
 }
 
 WifiGeoPositionObject.prototype = {
-
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDOMGeoPosition]),
 
   // Class Info is required to be able to pass objects back into the DOM.
@@ -72,6 +71,10 @@ function WifiGeoPositionProvider() {
 
   try {
     gWifiScanningEnabled = Services.prefs.getBoolPref("geo.wifi.scan");
+  } catch (e) {}
+
+  try {
+    gCellScanningEnabled = Services.prefs.getBoolPref("geo.cell.scan");
   } catch (e) {}
 
   this.wifiService = null;
@@ -143,15 +146,42 @@ WifiGeoPositionProvider.prototype = {
       return { 'macAddress': ap.mac, 'signalStrength': ap.signal };
     };
 
-    var data;
     if (accessPoints) {
-      data = JSON.stringify({wifiAccessPoints: accessPoints.filter(isPublic).sort(sort).map(encode)})
+      gWifiResults = accessPoints.filter(isPublic).sort(sort).map(encode);
+    } else {
+      gWifiResults = null;
     }
-    gWifiResults = data;
   },
 
   onError: function (code) {
     LOG("wifi error: " + code);
+  },
+
+  updateMobileInfo: function() {
+    LOG("updateMobileInfo called");
+    try {
+      let radio = Cc["@mozilla.org/ril;1"]
+            .getService(Ci.nsIRadioInterfaceLayer)
+            .getRadioInterface(0);
+
+      let iccInfo = radio.rilContext.iccInfo;
+      let cell = radio.rilContext.voice.cell;
+
+      LOG("mcc: " + iccInfo.mcc);
+      LOG("mnc: " + iccInfo.mnc);
+      LOG("cid: " + cell.gsmCellId);
+      LOG("lac: " + cell.gsmLocationAreaCode);
+
+      gCellResults = [{
+        "radio": "gsm",
+        "mobileCountryCode": iccInfo.mcc,
+        "mobileNetworkCode": iccInfo.mnc,
+        "locationAreaCode": cell.gsmLocationAreaCode,
+        "cellId": cell.gsmCellId,
+      }];
+    } catch (e) {
+      gCellResults = null;
+    }
   },
 
   notify: function (timeoutTimer) {
@@ -191,7 +221,19 @@ WifiGeoPositionProvider.prototype = {
       getGeoService().update(newLocation);
     };
 
-    let data = gWifiResults;
+    if (gCellScanningEnabled) {
+      this.updateMobileInfo();
+    }
+
+    let data = {};
+    if (gWifiResults) {
+      data.wifiAccessPoints = gWifiResults;
+    }
+    if (gCellResults) {
+      data.cellTowers = gCellResults;
+    }
+    data = JSON.stringify(data);
+    gWifiResults = gCellResults = null;
     LOG("sending " + data);
     xhr.send(data);
   },
