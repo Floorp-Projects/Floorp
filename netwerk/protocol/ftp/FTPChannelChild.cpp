@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/NeckoChild.h"
-#include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/dom/TabChild.h"
 #include "nsFtpProtocolHandler.h"
@@ -34,9 +33,6 @@ FTPChannelChild::FTPChannelChild(nsIURI* uri)
 , mWasOpened(false)
 , mLastModifiedTime(0)
 , mStartPos(0)
-, mDivertingToParent(false)
-, mFlushedForDiversion(false)
-, mSuspendSent(false)
 {
   LOG(("Creating FTPChannelChild @%x\n", this));
   // grab a reference to the handler to ensure that it doesn't go away.
@@ -71,14 +67,13 @@ FTPChannelChild::ReleaseIPDLReference()
 // FTPChannelChild::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED6(FTPChannelChild,
+NS_IMPL_ISUPPORTS_INHERITED5(FTPChannelChild,
                              nsBaseChannel,
                              nsIFTPChannel,
                              nsIUploadChannel,
                              nsIResumableChannel,
                              nsIProxiedChannel,
-                             nsIChildChannel,
-                             nsIDivertableChannel)
+                             nsIChildChannel)
 
 //-----------------------------------------------------------------------------
 
@@ -247,13 +242,6 @@ FTPChannelChild::RecvOnStartRequest(const int64_t& aContentLength,
                                     const nsCString& aEntityID,
                                     const URIParams& aURI)
 {
-  // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
-  // stage, as they are set in the listener's OnStartRequest.
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
-    "mFlushedForDiversion should be unset before OnStartRequest!");
-  MOZ_RELEASE_ASSERT(!mDivertingToParent,
-    "mDivertingToParent should be unset before OnStartRequest!");
-
   if (mEventQ->ShouldEnqueue()) {
     mEventQ->Enqueue(new FTPStartRequestEvent(this, aContentLength, aContentType,
                                               aLastModified, aEntityID, aURI));
@@ -273,13 +261,6 @@ FTPChannelChild::DoOnStartRequest(const int64_t& aContentLength,
 {
   LOG(("FTPChannelChild::RecvOnStartRequest [this=%p]\n", this));
 
-  // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
-  // stage, as they are set in the listener's OnStartRequest.
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
-    "mFlushedForDiversion should be unset before OnStartRequest!");
-  MOZ_RELEASE_ASSERT(!mDivertingToParent,
-    "mDivertingToParent should be unset before OnStartRequest!");
-
   mContentLength = aContentLength;
   SetContentType(aContentType);
   mLastModifiedTime = aLastModified;
@@ -294,14 +275,6 @@ FTPChannelChild::DoOnStartRequest(const int64_t& aContentLength,
   nsresult rv = mListener->OnStartRequest(this, mListenerContext);
   if (NS_FAILED(rv))
     Cancel(rv);
-
-  if (mDivertingToParent) {
-    mListener = nullptr;
-    mListenerContext = nullptr;
-    if (mLoadGroup) {
-      mLoadGroup->RemoveRequest(this, nullptr, mStatus);
-    }
-  }
 }
 
 class FTPDataAvailableEvent : public ChannelEvent
@@ -323,15 +296,9 @@ FTPChannelChild::RecvOnDataAvailable(const nsCString& data,
                                      const uint64_t& offset,
                                      const uint32_t& count)
 {
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
-                     "Should not be receiving any more callbacks from parent!");
-
   if (mEventQ->ShouldEnqueue()) {
     mEventQ->Enqueue(new FTPDataAvailableEvent(this, data, offset, count));
   } else {
-    MOZ_RELEASE_ASSERT(!mDivertingToParent,
-                       "ShouldEnqueue when diverting to parent!");
-
     DoOnDataAvailable(data, offset, count);
   }
   return true;
@@ -343,14 +310,6 @@ FTPChannelChild::DoOnDataAvailable(const nsCString& data,
                                    const uint32_t& count)
 {
   LOG(("FTPChannelChild::RecvOnDataAvailable [this=%p]\n", this));
-
-  if (mDivertingToParent) {
-    MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
-      "Should not be processing any more callbacks from parent!");
-
-    SendDivertOnDataAvailable(data, offset, count);
-    return;
-  }
 
   if (mCanceled)
     return;
@@ -392,9 +351,6 @@ class FTPStopRequestEvent : public ChannelEvent
 bool
 FTPChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
-  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
-    "Should not be receiving any more callbacks from parent!");
-
   if (mEventQ->ShouldEnqueue()) {
     mEventQ->Enqueue(new FTPStopRequestEvent(this, statusCode));
   } else {
@@ -408,14 +364,6 @@ FTPChannelChild::DoOnStopRequest(const nsresult& statusCode)
 {
   LOG(("FTPChannelChild::RecvOnStopRequest [this=%p status=%u]\n",
            this, statusCode));
-
-  if (mDivertingToParent) {
-    MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
-      "Should not be processing any more callbacks from parent!");
-
-    SendDivertOnStopRequest(statusCode);
-    return;
-  }
 
   if (!mCanceled)
     mStatus = statusCode;
@@ -482,61 +430,16 @@ FTPChannelChild::DoFailedAsyncOpen(const nsresult& statusCode)
     Send__delete__(this);
 }
 
-class FTPFlushedForDiversionEvent : public ChannelEvent
-{
- public:
-  FTPFlushedForDiversionEvent(FTPChannelChild* aChild)
-  : mChild(aChild)
-  {
-    MOZ_RELEASE_ASSERT(aChild);
-  }
-
-  void Run()
-  {
-    mChild->FlushedForDiversion();
-  }
- private:
-  FTPChannelChild* mChild;
-};
-
 bool
 FTPChannelChild::RecvFlushedForDiversion()
 {
-  MOZ_ASSERT(mDivertingToParent);
-
-  if (mEventQ->ShouldEnqueue()) {
-    mEventQ->Enqueue(new FTPFlushedForDiversionEvent(this));
-  } else {
-    MOZ_CRASH();
-  }
-  return true;
-}
-
-void
-FTPChannelChild::FlushedForDiversion()
-{
-  MOZ_RELEASE_ASSERT(mDivertingToParent);
-
-  // Once this is set, it should not be unset before FTPChannelChild is taken
-  // down. After it is set, no OnStart/OnData/OnStop callbacks should be
-  // received from the parent channel, nor dequeued from the ChannelEventQueue.
-  mFlushedForDiversion = true;
-
-  SendDivertComplete();
+  return false;
 }
 
 bool
 FTPChannelChild::RecvDivertMessages()
 {
-  MOZ_RELEASE_ASSERT(mDivertingToParent);
-  MOZ_RELEASE_ASSERT(mSuspendCount > 0);
-
-  // DivertTo() has been called on parent, so we can now start sending queued
-  // IPDL messages back to parent listener.
-  if (NS_WARN_IF(NS_FAILED(Resume()))) {
-    return false;
-  }
-  return true;
+  return false;
 }
 
 class FTPDeleteSelfEvent : public ChannelEvent
@@ -584,13 +487,8 @@ NS_IMETHODIMP
 FTPChannelChild::Suspend()
 {
   NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
-
-  // SendSuspend only once, when suspend goes from 0 to 1.
-  // Don't SendSuspend at all if we're diverting callbacks to the parent;
-  // suspend will be called at the correct time in the parent itself.
-  if (!mSuspendCount++ && !mDivertingToParent) {
+  if (!mSuspendCount++) {
     SendSuspend();
-    mSuspendSent = true;
   }
   mEventQ->Suspend();
 
@@ -602,11 +500,7 @@ FTPChannelChild::Resume()
 {
   NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
 
-  // SendResume only once, when suspend count drops to 0.
-  // Don't SendResume at all if we're diverting callbacks to the parent (unless
-  // suspend was sent earlier); otherwise, resume will be called at the correct
-  // time in the parent itself.
-  if (!--mSuspendCount && (!mDivertingToParent || mSuspendSent)) {
+  if (!--mSuspendCount) {
     SendResume();
   }
   mEventQ->Resume();
@@ -667,39 +561,6 @@ FTPChannelChild::CompleteRedirectSetup(nsIStreamListener *listener,
   // We already have an open IPDL connection to the parent. If on-modify-request
   // listeners or load group observers canceled us, let the parent handle it
   // and send it back to us naturally.
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// FTPChannelChild::nsIDivertableChannel
-//-----------------------------------------------------------------------------
-NS_IMETHODIMP
-FTPChannelChild::DivertToParent(ChannelDiverterChild **aChild)
-{
-  MOZ_RELEASE_ASSERT(aChild);
-  MOZ_RELEASE_ASSERT(gNeckoChild);
-  MOZ_RELEASE_ASSERT(!mDivertingToParent);
-
-  // We must fail DivertToParent() if there's no parent end of the channel (and
-  // won't be!) due to early failure.
-  if (NS_FAILED(mStatus) && !mIPCOpen) {
-    return mStatus;
-  }
-
-  nsresult rv = Suspend();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Once this is set, it should not be unset before the child is taken down.
-  mDivertingToParent = true;
-
-  PChannelDiverterChild* diverter =
-    gNeckoChild->SendPChannelDiverterConstructor(this);
-  MOZ_RELEASE_ASSERT(diverter);
-
-  *aChild = static_cast<ChannelDiverterChild*>(diverter);
-
   return NS_OK;
 }
 
