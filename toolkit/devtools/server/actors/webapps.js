@@ -120,7 +120,7 @@ function WebappsActor(aConnection) {
   promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 
   // Keep reference of already created app actors.
-  // key: app frame message manager, value: ContentTabActor's grip() value
+  // key: app frame message manager, value: ContentActor's grip() value
   this._appActorsMap = new Map();
 
   this.conn = aConnection;

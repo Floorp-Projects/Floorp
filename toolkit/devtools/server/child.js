@@ -28,7 +28,7 @@
 
     let conn = DebuggerServer.connectToParent(msg.data.prefix, mm);
 
-    let actor = new DebuggerServer.ContentAppActor(conn, content);
+    let actor = new DebuggerServer.ContentActor(conn, content);
     let actorPool = new ActorPool(conn);
     actorPool.addActor(actor);
     conn.addActorPool(actorPool);

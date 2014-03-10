@@ -187,7 +187,7 @@ let HighlighterActor = protocol.ActorClass({
    * - On a firefox desktop content page: tabActor is a BrowserTabActor from
    *   which the browser property will give us a target we can use to listen to
    *   events, even in nested iframes.
-   * - On B2G: tabActor is a ContentAppActor which doesn't have a browser but
+   * - On B2G: tabActor is a ContentActor which doesn't have a browser but
    *   since it overrides BrowserTabActor, it does get a browser property
    *   anyway, which points to its window object.
    * - When using the Browser Toolbox (to inspect firefox desktop): tabActor is
