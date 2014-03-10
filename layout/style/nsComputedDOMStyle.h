@@ -263,6 +263,7 @@ private:
   mozilla::dom::CSSValue* DoGetFontWeight();
 
   /* Grid properties */
+  mozilla::dom::CSSValue* DoGetGridAutoFlow();
   mozilla::dom::CSSValue* DoGetGridAutoColumns();
   mozilla::dom::CSSValue* DoGetGridAutoRows();
   mozilla::dom::CSSValue* DoGetGridTemplateAreas();

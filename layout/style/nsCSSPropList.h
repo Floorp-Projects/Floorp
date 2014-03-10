@@ -2009,6 +2009,16 @@ CSS_PROP_UIRESET(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None) // bug 58646
 CSS_PROP_POSITION(
+    grid-auto-flow,
+    grid_auto_flow,
+    GridAutoFlow,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled",
+    0,
+    kGridAutoFlowKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
     grid-auto-columns,
     grid_auto_columns,
     GridAutoColumns,
