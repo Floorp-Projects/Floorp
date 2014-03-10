@@ -8,7 +8,6 @@
 include protocol PBlob;
 include protocol PColorPicker;
 include protocol PContent;
-include protocol PContentDialog;
 include protocol PDocumentRenderer;
 include protocol PContentPermissionRequest;
 include protocol PFilePicker;
@@ -59,7 +58,6 @@ intr protocol PBrowser
     manager PContent;
 
     manages PColorPicker;
-    manages PContentDialog;
     manages PDocumentRenderer;
     manages PContentPermissionRequest;
     manages PFilePicker;
@@ -247,9 +245,6 @@ parent:
      *       provided.
      */
     PContentPermissionRequest(PermissionRequest[] aRequests, Principal aPrincipal);
-
-    PContentDialog(uint32_t aType, nsCString aName, nsCString aFeatures,
-                   int32_t[] aIntParams, nsString[] aStringParams);
 
     PFilePicker(nsString aTitle, int16_t aMode);
 

@@ -38,7 +38,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
-#include "nsIDialogCreator.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPromptFactory.h"
 #include "nsIURI.h"
@@ -1656,80 +1655,6 @@ TabParent::DeallocPColorPickerParent(PColorPickerParent* actor)
   return true;
 }
 
-PContentDialogParent*
-TabParent::AllocPContentDialogParent(const uint32_t& aType,
-                                     const nsCString& aName,
-                                     const nsCString& aFeatures,
-                                     const InfallibleTArray<int>& aIntParams,
-                                     const InfallibleTArray<nsString>& aStringParams)
-{
-  ContentDialogParent* parent = new ContentDialogParent();
-  nsCOMPtr<nsIDialogParamBlock> params =
-    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  TabChild::ArraysToParams(aIntParams, aStringParams, params);
-  mDelayedDialogs.AppendElement(new DelayedDialogData(parent, aType, aName,
-                                                      aFeatures, params));
-  nsRefPtr<nsIRunnable> ev =
-    NS_NewRunnableMethod(this, &TabParent::HandleDelayedDialogs);
-  NS_DispatchToCurrentThread(ev);
-  return parent;
-}
-
-void
-TabParent::HandleDelayedDialogs()
-{
-  nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-  nsCOMPtr<nsIDOMWindow> window;
-  if (mFrameElement) {
-    window = do_QueryInterface(mFrameElement->OwnerDoc()->GetWindow());
-  }
-  nsCOMPtr<nsIDialogCreator> dialogCreator = do_QueryInterface(mBrowserDOMWindow);
-  while (!ShouldDelayDialogs() && mDelayedDialogs.Length()) {
-    uint32_t index = mDelayedDialogs.Length() - 1;
-    DelayedDialogData* data = mDelayedDialogs[index];
-    mDelayedDialogs.RemoveElementAt(index);
-    nsCOMPtr<nsIDialogParamBlock> params;
-    params.swap(data->mParams);
-    PContentDialogParent* dialog = data->mDialog;
-    if (dialogCreator) {
-      nsCOMPtr<nsIDOMElement> frame = do_QueryInterface(mFrameElement);
-      dialogCreator->OpenDialog(data->mType,
-                                data->mName, data->mFeatures,
-                                params, frame);
-    } else if (ww) {
-      nsAutoCString url;
-      if (data->mType) {
-        if (data->mType == nsIDialogCreator::SELECT_DIALOG) {
-          url.Assign("chrome://global/content/selectDialog.xul");
-        } else if (data->mType == nsIDialogCreator::GENERIC_DIALOG) {
-          url.Assign("chrome://global/content/commonDialog.xul");
-        }
-
-        nsCOMPtr<nsISupports> arguments(do_QueryInterface(params));
-        nsCOMPtr<nsIDOMWindow> dialog;
-        ww->OpenWindow(window, url.get(), data->mName.get(),
-                       data->mFeatures.get(), arguments, getter_AddRefs(dialog));
-      } else {
-        NS_WARNING("unknown dialog types aren't automatically supported in E10s yet!");
-      }
-    }
-
-    delete data;
-    if (dialog) {
-      InfallibleTArray<int32_t> intParams;
-      InfallibleTArray<nsString> stringParams;
-      TabChild::ParamsToArrays(params, intParams, stringParams);
-      unused << PContentDialogParent::Send__delete__(dialog,
-                                                     intParams, stringParams);
-    }
-  }
-  if (ShouldDelayDialogs() && mDelayedDialogs.Length()) {
-    nsContentUtils::DispatchTrustedEvent(mFrameElement->OwnerDoc(), mFrameElement,
-                                         NS_LITERAL_STRING("MozDelayedModalDialog"),
-                                         true, true);
-  }
-}
-
 bool
 TabParent::RecvInitRenderFrame(PRenderFrameParent* aFrame,
                                ScrollingBehavior* aScrolling,
@@ -1817,16 +1742,6 @@ TabParent::RecvSetOfflinePermission(const IPC::Principal& aPrincipal)
   nsIPrincipal* principal = aPrincipal;
   nsContentUtils::MaybeAllowOfflineAppByDefault(principal, nullptr);
   return true;
-}
-
-bool
-TabParent::ShouldDelayDialogs()
-{
-  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-  NS_ENSURE_TRUE(frameLoader, true);
-  bool delay = false;
-  frameLoader->GetDelayRemoteDialogs(&delay);
-  return delay;
 }
 
 bool
