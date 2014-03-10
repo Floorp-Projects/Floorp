@@ -2041,6 +2041,16 @@ CSS_PROP_POSITION(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
+    grid-auto-position,
+    grid_auto_position,
+    GridAutoPosition,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
     grid-template-areas,
     grid_template_areas,
     GridTemplateAreas,
@@ -2072,6 +2082,46 @@ CSS_PROP_POSITION(
     "layout.css.grid.enabled",
     0,
     kGridTrackBreadthKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
+    grid-column-start,
+    grid_column_start,
+    GridColumnStart,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
+    grid-column-end,
+    grid_column_end,
+    GridColumnEnd,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
+    grid-row-start,
+    grid_row_start,
+    GridRowStart,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
+    grid-row-end,
+    grid_row_end,
+    GridRowEnd,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled",
+    0,
+    nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
