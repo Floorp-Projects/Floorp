@@ -26,18 +26,14 @@
 
     let mm = msg.target;
 
-    let prefix = msg.data.prefix + docShell.appId;
-
-    let conn = DebuggerServer.connectToParent(prefix, mm);
+    let conn = DebuggerServer.connectToParent(msg.data.prefix, mm);
 
     let actor = new DebuggerServer.ContentAppActor(conn, content);
     let actorPool = new ActorPool(conn);
     actorPool.addActor(actor);
     conn.addActorPool(actorPool);
 
-    sendAsyncMessage("debug:actor", {actor: actor.grip(),
-                                     appId: docShell.appId,
-                                     prefix: prefix});
+    sendAsyncMessage("debug:actor", {actor: actor.grip()});
   });
 
   addMessageListener("debug:connect", onConnect);
