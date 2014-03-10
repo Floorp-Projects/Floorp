@@ -2522,14 +2522,6 @@ chatbox {
   background-clip: padding-box;
 }
 
-#customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"] {
-  margin-right: -2px;
-}
-
-#customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="right"] {
-  margin-left: -2px;
-}
-
 /* End customization mode */
 
 #main-window[privatebrowsingmode=temporary] #private-browsing-indicator {

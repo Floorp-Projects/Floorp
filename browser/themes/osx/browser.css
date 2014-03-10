@@ -4187,28 +4187,6 @@ window > chatbox {
   #customization-titlebar-visibility-button > .button-box > .button-icon {
     width: 24px;
   }
-
-  .customization-tipPanel-closeBox > .close-icon > .toolbarbutton-icon {
-    width: 16px;
-  }
-
-  .customization-tipPanel-infoBox {
-    background-image: url(chrome://browser/skin/customizableui/info-icon-customizeTip@2x.png);
-    background-size: 25px 25px;
-  }
-
-  .customization-tipPanel-contentImage {
-    list-style-image: url(chrome://browser/skin/customizableui/customize-illustration@2x.png);
-  }
-
-  .customization-tipPanel-contentImage:-moz-locale-dir(rtl) {
-    list-style-image: url(chrome://browser/skin/customizableui/customize-illustration-rtl@2x.png);
-  }
-
-  #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"],
-  #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="right"] {
-    list-style-image: url("chrome://browser/skin/customizableui/panelarrow-customizeTip@2x.png");
-  }
 }
 
 /* End customization mode */
