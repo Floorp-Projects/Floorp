@@ -62,16 +62,6 @@ JSObject::deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, boo
 }
 
 /* static */ inline bool
-JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj, js::HandleSpecialId sid,
-                        bool *succeeded)
-{
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-    js::types::MarkTypePropertyNonData(cx, obj, id);
-    js::DeleteSpecialOp op = obj->getOps()->deleteSpecial;
-    return (op ? op : js::baseops::DeleteSpecial)(cx, obj, sid, succeeded);
-}
-
-/* static */ inline bool
 JSObject::watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                 JS::HandleObject callable)
 {
@@ -1055,19 +1045,6 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
         return false;
     RootedObject obj(cx, &v.toObject());
     return ObjectClassIs(obj, classValue, cx);
-}
-
-static MOZ_ALWAYS_INLINE bool
-ValueMightBeSpecial(const Value &propval)
-{
-    return propval.isObject();
-}
-
-static MOZ_ALWAYS_INLINE bool
-ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialId> sidp,
-               JSContext *cx)
-{
-    return false;
 }
 
 static MOZ_ALWAYS_INLINE bool

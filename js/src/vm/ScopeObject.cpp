@@ -458,14 +458,6 @@ with_LookupElement(JSContext *cx, HandleObject obj, uint32_t index,
 }
 
 static bool
-with_LookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                   MutableHandleObject objp, MutableHandleShape propp)
-{
-    RootedId id(cx, SPECIALID_TO_JSID(sid));
-    return with_LookupGeneric(cx, obj, id, objp, propp);
-}
-
-static bool
 with_GetGeneric(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
                 MutableHandleValue vp)
 {
@@ -492,14 +484,6 @@ with_GetElement(JSContext *cx, HandleObject obj, HandleObject receiver, uint32_t
 }
 
 static bool
-with_GetSpecial(JSContext *cx, HandleObject obj, HandleObject receiver, HandleSpecialId sid,
-                MutableHandleValue vp)
-{
-    RootedId id(cx, SPECIALID_TO_JSID(sid));
-    return with_GetGeneric(cx, obj, receiver, id, vp);
-}
-
-static bool
 with_SetGeneric(JSContext *cx, HandleObject obj, HandleId id,
                 MutableHandleValue vp, bool strict)
 {
@@ -521,14 +505,6 @@ with_SetElement(JSContext *cx, HandleObject obj, uint32_t index,
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
     return JSObject::setElement(cx, actual, actual, index, vp, strict);
-}
-
-static bool
-with_SetSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                MutableHandleValue vp, bool strict)
-{
-    RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::setSpecial(cx, actual, actual, sid, vp, strict);
 }
 
 static bool
@@ -559,14 +535,6 @@ with_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index,
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
     return JSObject::deleteElement(cx, actual, index, succeeded);
-}
-
-static bool
-with_DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                   bool *succeeded)
-{
-    RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::deleteSpecial(cx, actual, sid, succeeded);
 }
 
 static JSObject *
@@ -611,24 +579,19 @@ const Class DynamicWithObject::class_ = {
         with_LookupGeneric,
         with_LookupProperty,
         with_LookupElement,
-        with_LookupSpecial,
         nullptr,             /* defineGeneric */
         nullptr,             /* defineProperty */
         nullptr,             /* defineElement */
-        nullptr,             /* defineSpecial */
         with_GetGeneric,
         with_GetProperty,
         with_GetElement,
-        with_GetSpecial,
         with_SetGeneric,
         with_SetProperty,
         with_SetElement,
-        with_SetSpecial,
         with_GetGenericAttributes,
         with_SetGenericAttributes,
         with_DeleteProperty,
         with_DeleteElement,
-        with_DeleteSpecial,
         nullptr, nullptr,    /* watch/unwatch */
         nullptr,             /* slice */
         nullptr,             /* enumerate (native enumeration of target doesn't work) */
