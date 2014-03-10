@@ -3936,6 +3936,9 @@ nsHtml5Tokenizer::end()
     attributeName = nullptr;
   }
   tokenHandler->endTokenization();
+  if (attributes) {
+    attributes->clear(0);
+  }
 }
 
 void 
