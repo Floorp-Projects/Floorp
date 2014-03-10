@@ -4792,6 +4792,31 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 
 if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 	gCSSProperties["display"].other_values.push("grid", "inline-grid");
+	gCSSProperties["grid-auto-flow"] = {
+		domProp: "gridAutoFlow",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [
+			"column",
+			"row",
+			"column dense",
+			"row dense",
+			"dense column",
+			"dense row",
+		],
+		invalid_values: [
+			"",
+			"auto",
+			"10px",
+			"dense",
+			"none row",
+			"none dense",
+			"column row",
+			"dense row dense",
+		]
+	};
+
 	gCSSProperties["grid-auto-columns"] = {
 		domProp: "gridAutoColumns",
 		inherited: false,
