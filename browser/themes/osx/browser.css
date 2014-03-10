@@ -404,18 +404,10 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   animation-timing-function: ease, ease, ease;
 }
 
-#bookmarked-notification-anchor[notification="finish"][in-bookmarks-toolbar=true] > #bookmarked-notification {
-  animation: animation-bookmarkAdded 800ms;
-}
-
 @media (min-resolution: 2dppx) {
   #bookmarked-notification-anchor[notification="finish"] > #bookmarked-notification {
     background-image: url("chrome://browser/skin/places/bookmarks-notification-finish@2x.png");
   }
-}
-
-#bookmarks-menu-button[notification="finish"] {
-  pointer-events: none;
 }
 
 #bookmarks-menu-button[notification="finish"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
