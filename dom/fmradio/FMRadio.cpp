@@ -150,7 +150,6 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
   NS_ENSURE_TRUE_VOID(audioChannelAgent);
 
   audioChannelAgent->InitWithWeakCallback(
-    GetOwner(),
     nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_CONTENT,
     this);
 
