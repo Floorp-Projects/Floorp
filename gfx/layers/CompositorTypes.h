@@ -55,6 +55,8 @@ const TextureFlags TEXTURE_ON_WHITE           = 1 << 13;
 const TextureFlags TEXTURE_ON_BLACK           = 1 << 14;
 // A texture host that supports tiling
 const TextureFlags TEXTURE_TILE               = 1 << 15;
+// A texture should be recycled when no longer in used
+const TextureFlags TEXTURE_RECYCLE            = 1 << 16;
 // Texture contents should be initialized
 // from the previous texture.
 const TextureFlags TEXTURE_COPY_PREVIOUS      = 1 << 24;
@@ -164,7 +166,9 @@ enum CompositableType
   BUFFER_CONTENT_DIRECT,  // thebes layer interface, double buffering
   BUFFER_CONTENT_INC,     // thebes layer interface, only sends incremental
                           // updates to a texture on the compositor side.
+  // somewhere in the middle
   BUFFER_TILED,           // tiled thebes layer
+  BUFFER_SIMPLE_TILED,
   // the new compositable types
   COMPOSITABLE_IMAGE,     // image with single buffering
   COMPOSITABLE_CONTENT_SINGLE,  // thebes layer interface, single buffering
