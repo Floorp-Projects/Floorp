@@ -435,6 +435,26 @@ HttpChannelParent::RecvMarkOfflineCacheEntryAsForeign()
   return true;
 }
 
+bool
+HttpChannelParent::RecvDivertOnDataAvailable(const nsCString& data,
+                                             const uint64_t& offset,
+                                             const uint32_t& count)
+{
+  return false;
+}
+
+bool
+HttpChannelParent::RecvDivertOnStopRequest(const nsresult& statusCode)
+{
+  return false;
+}
+
+bool
+HttpChannelParent::RecvDivertComplete()
+{
+  return false;
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIRequestObserver
 //-----------------------------------------------------------------------------

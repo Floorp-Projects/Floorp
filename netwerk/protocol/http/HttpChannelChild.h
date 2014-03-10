@@ -118,6 +118,8 @@ protected:
   bool RecvRedirect3Complete() MOZ_OVERRIDE;
   bool RecvAssociateApplicationCache(const nsCString& groupID,
                                      const nsCString& clientID) MOZ_OVERRIDE;
+  bool RecvFlushedForDiversion() MOZ_OVERRIDE;
+  bool RecvDivertMessages() MOZ_OVERRIDE;
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
