@@ -345,19 +345,6 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
             break;
         }
 
-        if (ValueMightBeSpecial(rref)) {
-            RootedObject obj(cx, objArg);
-            Rooted<SpecialId> special(cx);
-            res.set(rref);
-            if (ValueIsSpecial(obj, res, &special, cx)) {
-                if (!JSObject::getSpecial(cx, obj, obj, special, res))
-                    return false;
-                objArg = obj;
-                break;
-            }
-            objArg = obj;
-        }
-
         JSAtom *name = ToAtom<NoGC>(cx, rref);
         if (name) {
             if (name->isIndex(&index)) {

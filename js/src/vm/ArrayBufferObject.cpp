@@ -132,24 +132,19 @@ const Class ArrayBufferObject::class_ = {
         ArrayBufferObject::obj_lookupGeneric,
         ArrayBufferObject::obj_lookupProperty,
         ArrayBufferObject::obj_lookupElement,
-        ArrayBufferObject::obj_lookupSpecial,
         ArrayBufferObject::obj_defineGeneric,
         ArrayBufferObject::obj_defineProperty,
         ArrayBufferObject::obj_defineElement,
-        ArrayBufferObject::obj_defineSpecial,
         ArrayBufferObject::obj_getGeneric,
         ArrayBufferObject::obj_getProperty,
         ArrayBufferObject::obj_getElement,
-        ArrayBufferObject::obj_getSpecial,
         ArrayBufferObject::obj_setGeneric,
         ArrayBufferObject::obj_setProperty,
         ArrayBufferObject::obj_setElement,
-        ArrayBufferObject::obj_setSpecial,
         ArrayBufferObject::obj_getGenericAttributes,
         ArrayBufferObject::obj_setGenericAttributes,
         ArrayBufferObject::obj_deleteProperty,
         ArrayBufferObject::obj_deleteElement,
-        ArrayBufferObject::obj_deleteSpecial,
         nullptr, nullptr, /* watch/unwatch */
         nullptr,          /* slice */
         ArrayBufferObject::obj_enumerate,
@@ -1031,14 +1026,6 @@ ArrayBufferObject::obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t i
 }
 
 bool
-ArrayBufferObject::obj_lookupSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                                     MutableHandleObject objp, MutableHandleShape propp)
-{
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return obj_lookupGeneric(cx, obj, id, objp, propp);
-}
-
-bool
 ArrayBufferObject::obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
                                      PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
@@ -1069,14 +1056,6 @@ ArrayBufferObject::obj_defineElement(JSContext *cx, HandleObject obj, uint32_t i
     if (!delegate)
         return false;
     return baseops::DefineElement(cx, delegate, index, v, getter, setter, attrs);
-}
-
-bool
-ArrayBufferObject::obj_defineSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, HandleValue v,
-                                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
-{
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return obj_defineGeneric(cx, obj, id, v, getter, setter, attrs);
 }
 
 bool
@@ -1111,15 +1090,6 @@ ArrayBufferObject::obj_getElement(JSContext *cx, HandleObject obj,
 }
 
 bool
-ArrayBufferObject::obj_getSpecial(JSContext *cx, HandleObject obj,
-                                  HandleObject receiver, HandleSpecialId sid,
-                                  MutableHandleValue vp)
-{
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return obj_getGeneric(cx, obj, receiver, id, vp);
-}
-
-bool
 ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
                                   MutableHandleValue vp, bool strict)
 {
@@ -1147,14 +1117,6 @@ ArrayBufferObject::obj_setElement(JSContext *cx, HandleObject obj,
         return false;
 
     return baseops::SetElementHelper(cx, delegate, obj, index, 0, vp, strict);
-}
-
-bool
-ArrayBufferObject::obj_setSpecial(JSContext *cx, HandleObject obj,
-                                  HandleSpecialId sid, MutableHandleValue vp, bool strict)
-{
-    Rooted<jsid> id(cx, SPECIALID_TO_JSID(sid));
-    return obj_setGeneric(cx, obj, id, vp, strict);
 }
 
 bool
@@ -1195,16 +1157,6 @@ ArrayBufferObject::obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t i
     if (!delegate)
         return false;
     return baseops::DeleteElement(cx, delegate, index, succeeded);
-}
-
-bool
-ArrayBufferObject::obj_deleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid,
-                                     bool *succeeded)
-{
-    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
-    if (!delegate)
-        return false;
-    return baseops::DeleteSpecial(cx, delegate, sid, succeeded);
 }
 
 bool

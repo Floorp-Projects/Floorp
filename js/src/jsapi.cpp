@@ -3437,10 +3437,6 @@ JS_DeletePropertyById2(JSContext *cx, HandleObject obj, HandleId id, bool *resul
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, 0);
 
-    if (JSID_IS_SPECIAL(id)) {
-        Rooted<SpecialId> sid(cx, JSID_TO_SPECIALID(id));
-        return JSObject::deleteSpecial(cx, obj, sid, result);
-    }
     return JSObject::deleteByValue(cx, obj, IdToValue(id), result);
 }
 
