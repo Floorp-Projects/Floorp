@@ -421,6 +421,14 @@
 @BINPATH@/components/WifiWorker.manifest
 #endif // MOZ_WIDGET_GONK
 
+; ResourceStats
+#ifdef MOZ_WIDGET_GONK
+@BINPATH@/components/ResourceStats.js
+@BINPATH@/components/ResourceStats.manifest
+@BINPATH@/components/ResourceStatsManager.js
+@BINPATH@/components/ResourceStatsManager.manifest
+#endif // MOZ_WIDGET_GONK
+
 ; RIL
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
 @BINPATH@/components/MmsService.js
