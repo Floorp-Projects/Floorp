@@ -458,9 +458,8 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent)
 }
 
 nsEventStatus
-APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
-                                   ScrollableLayerGuid* aOutTargetGuid,
-                                   WidgetTouchEvent* aOutEvent)
+APZCTreeManager::ProcessTouchEvent(WidgetTouchEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -501,8 +500,8 @@ APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     gfx3DMatrix transformToGecko;
     GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToGecko);
     gfx3DMatrix outTransform = transformToApzc * transformToGecko;
-    for (size_t i = 0; i < aOutEvent->touches.Length(); i++) {
-      ApplyTransform(&(aOutEvent->touches[i]->mRefPoint), outTransform);
+    for (size_t i = 0; i < aEvent.touches.Length(); i++) {
+      ApplyTransform(&(aEvent.touches[i]->mRefPoint), outTransform);
     }
   }
   // If we have an mApzcForInputBlock and it's the end of the touch sequence
@@ -543,9 +542,8 @@ APZCTreeManager::TransformCoordinateToGecko(const ScreenIntPoint& aPoint,
 
 
 nsEventStatus
-APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
-                                   ScrollableLayerGuid* aOutTargetGuid,
-                                   WidgetMouseEvent* aOutEvent)
+APZCTreeManager::ProcessMouseEvent(WidgetMouseEvent& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -560,14 +558,13 @@ APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
   MultiTouchInput inputForApzc(aEvent);
   ApplyTransform(&(inputForApzc.mTouches[0].mScreenPoint), transformToApzc);
   gfx3DMatrix outTransform = transformToApzc * transformToGecko;
-  ApplyTransform(&aOutEvent->refPoint, outTransform);
+  ApplyTransform(&(aEvent.refPoint), outTransform);
   return apzc->ReceiveInputEvent(inputForApzc);
 }
 
 nsEventStatus
-APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
-                              ScrollableLayerGuid* aOutTargetGuid,
-                              WidgetInputEvent* aOutEvent)
+APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
+                              ScrollableLayerGuid* aOutTargetGuid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -581,32 +578,8 @@ APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
   gfx3DMatrix transformToGecko;
   GetInputTransforms(apzc, transformToApzc, transformToGecko);
   gfx3DMatrix outTransform = transformToApzc * transformToGecko;
-  ApplyTransform(&(aOutEvent->refPoint), outTransform);
+  ApplyTransform(&(aEvent.refPoint), outTransform);
   return nsEventStatus_eIgnore;
-}
-
-nsEventStatus
-APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
-                                   ScrollableLayerGuid* aOutTargetGuid,
-                                   WidgetInputEvent* aOutEvent)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  switch (aEvent.eventStructType) {
-    case NS_TOUCH_EVENT: {
-      const WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      return ProcessTouchEvent(touchEvent, aOutTargetGuid, aOutEvent->AsTouchEvent());
-    }
-    case NS_MOUSE_EVENT: {
-      // For b2g emulation
-      const WidgetMouseEvent& mouseEvent = *aEvent.AsMouseEvent();
-      WidgetMouseEvent* outMouseEvent = aOutEvent->AsMouseEvent();
-      return ProcessMouseEvent(mouseEvent, aOutTargetGuid, outMouseEvent);
-    }
-    default: {
-      return ProcessEvent(aEvent, aOutTargetGuid, aOutEvent);
-    }
-  }
 }
 
 nsEventStatus
@@ -618,10 +591,15 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
-      return ProcessTouchEvent(touchEvent, aOutTargetGuid, &touchEvent);
+      return ProcessTouchEvent(touchEvent, aOutTargetGuid);
+    }
+    case NS_MOUSE_EVENT: {
+      // For b2g emulation
+      WidgetMouseEvent& mouseEvent = *aEvent.AsMouseEvent();
+      return ProcessMouseEvent(mouseEvent, aOutTargetGuid);
     }
     default: {
-      return ProcessEvent(aEvent, aOutTargetGuid, &aEvent);
+      return ProcessEvent(aEvent, aOutTargetGuid);
     }
   }
 }
