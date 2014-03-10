@@ -451,7 +451,6 @@ CodeGeneratorX86Shared::visitOutOfLineBailout(OutOfLineBailout *ool)
     return true;
 }
 
-
 bool
 CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 {
