@@ -112,7 +112,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, builtinclass, uuid(a723673b-a26e-4cc6-ae23-ec70df9d97c9)]
+[scriptable, builtinclass, uuid(a5cefcc8-551b-4901-83f3-7436b09ecaba)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -204,8 +204,6 @@ interface nsIFrameLoader : nsISupports
                                 in long aCharCode,
                                 in long aModifiers,
                                 [optional] in boolean aPreventDefault);
-
-  attribute boolean delayRemoteDialogs;
 
   /** 
    * The default rendering mode is synchronous scrolling.  In this
