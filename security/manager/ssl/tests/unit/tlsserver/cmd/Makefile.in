@@ -10,6 +10,8 @@ LIBS = \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
   $(MOZALLOC_LIB) \
+  ../../../../../../certverifier/$(LIB_PREFIX)certverifier.$(LIB_SUFFIX) \
+  ../../../../../../insanity/test/lib/$(LIB_PREFIX)pkixtestutil.$(LIB_SUFFIX) \
   ../lib/$(LIB_PREFIX)tlsserver.$(LIB_SUFFIX) \
   $(NULL)
 
