@@ -174,10 +174,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   animation: animation-bookmarkAddedToBookmarksBar 800ms;
 }
 
-#bookmarks-menu-button[notification="finish"] {
-  pointer-events: none;
-}
-
 #bookmarks-menu-button[notification="finish"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   animation: animation-bookmarkPulse 300ms;
   animation-delay: 600ms;
