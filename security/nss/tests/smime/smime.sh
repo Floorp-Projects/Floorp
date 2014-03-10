@@ -40,7 +40,7 @@ smime_init()
   fi
   SCRIPTNAME=smime.sh
 
-  if [ -n "$NSS_ENABLE_ECC" ] ; then
+  if [ -z "$NSS_DISABLE_ECC" ] ; then
       html_head "S/MIME Tests with ECC"
   else
       html_head "S/MIME Tests"
@@ -85,7 +85,7 @@ smime_sign()
   html_msg $? 0 "Compare Attached Signed Data and Original (${HASH})" "."
 
 # Test ECDSA signing for all hash algorithms.
-  if [ -n "$NSS_ENABLE_ECC" ] ; then
+  if [ -z "$NSS_DISABLE_ECC" ] ; then
       echo "$SCRIPTNAME: Signing Detached Message ECDSA w/ {$HASH} ------------------"
       echo "cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}"
       ${PROFTOOL} ${BINDIR}/cmsutil -S -T -N Alice-ec ${HASH_CMD} -i alice.txt -d ${P_R_ALICEDIR} -p nss -o alice-ec.d${SIG}

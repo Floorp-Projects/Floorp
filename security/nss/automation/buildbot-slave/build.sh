@@ -288,7 +288,7 @@ prepare()
     mv ${OUTPUTDIR} ${OUTPUTDIR}.last >/dev/null 2>&1
     mkdir -p ${OUTPUTDIR}
 
-    if [ -n "${NSS_ENABLE_ECC}" -a -n "${NSS_ECC_MORE_THAN_SUITE_B}" ]; then
+    if [ -z "${NSS_DISABLE_ECC}" -a -n "${NSS_ECC_MORE_THAN_SUITE_B}" ]; then
         cd ${HGDIR}/nss
         ECF="lib/freebl/ecl/ecl-curve.h"
 	print_log "hg revert -r NSS_3_11_1_RTM ${ECF}"

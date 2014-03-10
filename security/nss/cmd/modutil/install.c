@@ -777,7 +777,7 @@ loser:
 	if(tempname) {
 		PRFileInfo info;
 		if(PR_GetFileInfo(tempname, &info) == PR_SUCCESS) {
-			if((info.type == PR_FILE_DIRECTORY)) {
+			if(info.type == PR_FILE_DIRECTORY) {
 				/* Recursively remove temporary directory */
 				if(rm_dash_r(tempname)) {
 					error(PK11_INSTALL_REMOVE_DIR,

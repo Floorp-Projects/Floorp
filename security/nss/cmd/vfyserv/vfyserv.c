@@ -497,7 +497,7 @@ main(int argc, char **argv)
 	/* All cipher suites except RSA_NULL_MD5 are enabled by 
 	 * Domestic Policy. */
 	NSS_SetDomesticPolicy();
-	SSL_CipherPrefSetDefault(SSL_RSA_WITH_NULL_MD5, PR_TRUE);
+	SSL_CipherPrefSetDefault(TLS_RSA_WITH_NULL_MD5, PR_TRUE);
 
 	/* all the SSL2 and SSL3 cipher suites are enabled by default. */
 	if (cipherString) {

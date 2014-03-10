@@ -19,8 +19,6 @@ ARCH=$(uname -s)
 
 ulimit -c unlimited 2> /dev/null
 
-export NSS_ENABLE_ECC=1
-export NSS_ECC_MORE_THAN_SUITE_B=1
 export NSPR_LOG_MODULES="pkix:1"
 
 #export JAVA_HOME_32=
