@@ -2384,6 +2384,20 @@ nsComputedDOMStyle::GetGridTrackList(const nsStyleGridTrackList& aTrackList)
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetGridAutoFlow()
+{
+  nsAutoString str;
+  nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_grid_auto_flow,
+                                     StylePosition()->mGridAutoFlow,
+                                     NS_STYLE_GRID_AUTO_FLOW_NONE,
+                                     NS_STYLE_GRID_AUTO_FLOW_DENSE,
+                                     str);
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetString(str);
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetGridAutoColumns()
 {
   return GetGridTrackSize(StylePosition()->mGridAutoColumnsMin,

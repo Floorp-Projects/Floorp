@@ -1240,6 +1240,7 @@ nsStylePosition::nsStylePosition(void)
   mGridAutoRowsMax.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
                                eStyleUnit_Enumerated);
 
+  mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_NONE;
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
   mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
@@ -1339,7 +1340,8 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
       mGridAutoColumnsMin != aOther.mGridAutoColumnsMin ||
       mGridAutoColumnsMax != aOther.mGridAutoColumnsMax ||
       mGridAutoRowsMin != aOther.mGridAutoRowsMin ||
-      mGridAutoRowsMax != aOther.mGridAutoRowsMax) {
+      mGridAutoRowsMax != aOther.mGridAutoRowsMax ||
+      mGridAutoFlow != aOther.mGridAutoFlow) {
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 

@@ -1221,6 +1221,7 @@ struct nsStylePosition {
   nsStyleCoord  mGridAutoColumnsMax;    // [reset] coord, percent, enum, calc, flex
   nsStyleCoord  mGridAutoRowsMin;       // [reset] coord, percent, enum, calc, flex
   nsStyleCoord  mGridAutoRowsMax;       // [reset] coord, percent, enum, calc, flex
+  uint8_t       mGridAutoFlow;          // [reset] enumerated. See nsStyleConsts.h
   uint8_t       mBoxSizing;             // [reset] see nsStyleConsts.h
   uint8_t       mAlignContent;          // [reset] see nsStyleConsts.h
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h

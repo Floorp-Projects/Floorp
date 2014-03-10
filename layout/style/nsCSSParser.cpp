@@ -632,6 +632,7 @@ protected:
   bool ParseFlexFlow();
 
   // CSS Grid
+  bool ParseGridAutoFlow();
   bool ParseGridLineNames(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
   bool ParseGridTrackSize(nsCSSValue& aValue);
@@ -6875,6 +6876,63 @@ CSSParserImpl::ParseFlexFlow()
   return true;
 }
 
+bool
+CSSParserImpl::ParseGridAutoFlow()
+{
+  nsCSSValue value;
+  if (ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
+    AppendValue(eCSSProperty_grid_auto_flow, value);
+    return true;
+  }
+
+  bool gotDense = false;
+  bool gotColumn = false;
+  bool gotRow = false;
+  do {
+    if (!GetToken(true)) {
+      return false;
+    }
+    if (mToken.mType != eCSSToken_Ident) {
+      UngetToken();
+      return false;
+    }
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+    if (keyword == eCSSKeyword_dense && !gotDense) {
+      gotDense = true;
+    } else if (keyword == eCSSKeyword_column && !gotColumn && !gotRow) {
+      gotColumn = true;
+    } else if (keyword == eCSSKeyword_row && !gotColumn && !gotRow) {
+      gotRow = true;
+    } else {
+      return false;
+    }
+  } while (!CheckEndProperty());
+
+  if (!(gotColumn || gotRow)) {
+    return false;
+  }
+
+  int32_t bitField;
+  if (gotColumn) {
+    MOZ_ASSERT(!gotRow,
+               "code above should've rejected values with both row and column");
+    bitField = NS_STYLE_GRID_AUTO_FLOW_COLUMN;
+  } else if (gotRow) {
+    bitField = NS_STYLE_GRID_AUTO_FLOW_ROW;
+  } else {
+    // got neither row nor column; invalid.
+    return false;
+  }
+
+  if (gotDense) {
+    bitField |= NS_STYLE_GRID_AUTO_FLOW_DENSE;
+  }
+
+  value.SetIntValue(bitField, eCSSUnit_Enumerated);
+  AppendValue(eCSSProperty_grid_auto_flow, value);
+  return true;
+}
+
 // Parse an optional <line-names> expression.
 // If successful, leaves aValue with eCSSUnit_Null for the empty list,
 // or sets it to a eCSSUnit_List of eCSSUnit_Ident.
@@ -8141,6 +8199,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseFlexFlow();
   case eCSSProperty_font:
     return ParseFont();
+  case eCSSProperty_grid_auto_flow:
+    return ParseGridAutoFlow();
   case eCSSProperty_grid_auto_columns:
   case eCSSProperty_grid_auto_rows:
     return ParseGridAutoColumnsRows(aPropID);

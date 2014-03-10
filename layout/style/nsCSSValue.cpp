@@ -1025,6 +1025,13 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                          aResult);
       break;
 
+    case eCSSProperty_grid_auto_flow:
+      nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
+                                         NS_STYLE_GRID_AUTO_FLOW_NONE,
+                                         NS_STYLE_GRID_AUTO_FLOW_DENSE,
+                                         aResult);
+      break;
+
     case eCSSProperty_touch_action:
       nsStyleUtil::AppendBitmaskCSSValue(aProperty, intValue,
                                          NS_STYLE_TOUCH_ACTION_PAN_X,
