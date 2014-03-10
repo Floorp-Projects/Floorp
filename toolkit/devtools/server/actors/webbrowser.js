@@ -461,7 +461,7 @@ BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(a
 
 /**
  * Creates a tab actor for handling requests to a browser tab, like
- * attaching and detaching. BrowserTabActor respects the actor factories
+ * attaching and detaching. TabActor respects the actor factories
  * registered with DebuggerServer.addTabActor.
  *
  * @param aConnection DebuggerServerConnection
@@ -471,7 +471,7 @@ BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(a
  * @param aTabBrowser tabbrowser
  *        The tabbrowser that can receive nsIWebProgressListener events.
  */
-function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
+function TabActor(aConnection, aBrowser, aTabBrowser)
 {
   this.conn = aConnection;
   this._browser = aBrowser;
@@ -483,10 +483,10 @@ function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
   this._onWindowCreated = this.onWindowCreated.bind(this);
 }
 
-// XXX (bug 710213): BrowserTabActor attach/detach/exit/disconnect is a
+// XXX (bug 710213): TabActor attach/detach/exit/disconnect is a
 // *complete* mess, needs to be rethought asap.
 
-BrowserTabActor.prototype = {
+TabActor.prototype = {
   get browser() { return this._browser; },
 
   get exited() { return !this.browser; },
@@ -734,7 +734,7 @@ BrowserTabActor.prototype = {
     // subsequent navigation event packet.
     Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
       this.window.location.reload();
-    }, "BrowserTabActor.prototype.onReload's delayed body"), 0);
+    }, "TabActor.prototype.onReload's delayed body"), 0);
     return {};
   },
 
@@ -746,7 +746,7 @@ BrowserTabActor.prototype = {
     // subsequent navigation event packet.
     Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
       this.window.location = aRequest.url;
-    }, "BrowserTabActor.prototype.onNavigateTo's delayed body"), 0);
+    }, "TabActor.prototype.onNavigateTo's delayed body"), 0);
     return {};
   },
 
@@ -912,7 +912,7 @@ BrowserTabActor.prototype = {
     if (this.threadActor.attached) {
       this.threadActor.findGlobals();
     }
-  }, "BrowserTabActor.prototype.onWindowCreated"),
+  }, "TabActor.prototype.onWindowCreated"),
 
   /**
    * Tells if the window.console object is native or overwritten by script in
@@ -933,13 +933,33 @@ BrowserTabActor.prototype = {
 /**
  * The request types this actor can handle.
  */
-BrowserTabActor.prototype.requestTypes = {
-  "attach": BrowserTabActor.prototype.onAttach,
-  "detach": BrowserTabActor.prototype.onDetach,
-  "reload": BrowserTabActor.prototype.onReload,
-  "navigateTo": BrowserTabActor.prototype.onNavigateTo,
-  "reconfigure": BrowserTabActor.prototype.onReconfigure
+TabActor.prototype.requestTypes = {
+  "attach": TabActor.prototype.onAttach,
+  "detach": TabActor.prototype.onDetach,
+  "reload": TabActor.prototype.onReload,
+  "navigateTo": TabActor.prototype.onNavigateTo,
+  "reconfigure": TabActor.prototype.onReconfigure
 };
+
+/**
+ * Creates a tab actor for handling requests to a single in-process
+ * <browser> tab. Most of the implementation comes from TabActor.
+ *
+ * @param aConnection DebuggerServerConnection
+ *        The conection to the client.
+ * @param aBrowser browser
+ *        The browser instance that contains this tab.
+ * @param aTabBrowser tabbrowser
+ *        The tabbrowser that can receive nsIWebProgressListener events.
+ */
+function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
+{
+  TabActor.call(this, aConnection, aBrowser, aTabBrowser);
+}
+
+BrowserTabActor.prototype = Object.create(TabActor.prototype);
+
+BrowserTabActor.prototype.constructor = BrowserTabActor;
 
 function BrowserAddonList(aConnection)
 {
@@ -1106,11 +1126,11 @@ BrowserAddonActor.prototype.requestTypes = {
  * navigate away from a paused page, the listener makes sure that the debuggee
  * is resumed before the navigation begins.
  *
- * @param BrowserTabActor aBrowserTabActor
+ * @param TabActor aTabActor
  *        The tab actor associated with this listener.
  */
-function DebuggerProgressListener(aBrowserTabActor) {
-  this._tabActor = aBrowserTabActor;
+function DebuggerProgressListener(aTabActor) {
+  this._tabActor = aTabActor;
   this._tabActor.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
   let EventEmitter = devtools.require("devtools/toolkit/event-emitter");
   EventEmitter.decorate(this);
