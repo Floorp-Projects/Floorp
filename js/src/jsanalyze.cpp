@@ -2206,10 +2206,8 @@ ScriptAnalysis::needsArgsObj(JSContext *cx, SeenVector &seen, const SSAValue &v)
         if (v == seen[i])
             return false;
     }
-    if (!seen.append(v)) {
-        cx->compartment()->types.setPendingNukeTypes(cx);
+    if (!seen.append(v))
         return true;
-    }
 
     SSAUseChain *use = useChain(v);
     while (use) {

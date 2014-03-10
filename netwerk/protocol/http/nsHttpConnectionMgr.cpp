@@ -30,6 +30,7 @@
 #include "nsISocketTransportService.h"
 #include <algorithm>
 #include "Http2Compression.h"
+#include "mozilla/ChaosMode.h"
 
 // defined by the socket transport service while active
 extern PRThread *gSocketThread;
@@ -51,6 +52,16 @@ InsertTransactionSorted(nsTArray<nsHttpTransaction*> &pendingQ, nsHttpTransactio
     for (int32_t i=pendingQ.Length()-1; i>=0; --i) {
         nsHttpTransaction *t = pendingQ[i];
         if (trans->Priority() >= t->Priority()) {
+            if (ChaosMode::isActive()) {
+                int32_t samePriorityCount;
+                for (samePriorityCount = 0; i - samePriorityCount >= 0; ++samePriorityCount) {
+                    if (pendingQ[i - samePriorityCount]->Priority() != trans->Priority()) {
+                        break;
+                    }
+                }
+                // skip over 0...all of the elements with the same priority.
+                i -= ChaosMode::randomUint32LessThan(samePriorityCount + 1);
+            }
             pendingQ.InsertElementAt(i+1, trans);
             return;
         }
