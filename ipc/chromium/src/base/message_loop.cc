@@ -390,34 +390,12 @@ void MessageLoop::ReloadWorkQueue() {
 }
 
 bool MessageLoop::DeletePendingTasks() {
-  bool did_work = !work_queue_.empty();
-  while (!work_queue_.empty()) {
-    PendingTask pending_task = work_queue_.front();
-    work_queue_.pop();
-    if (!pending_task.delayed_run_time.is_null()) {
-      // We want to delete delayed tasks in the same order in which they would
-      // normally be deleted in case of any funny dependencies between delayed
-      // tasks.
-      AddToDelayedWorkQueue(pending_task);
-    } else {
-      // TODO(darin): Delete all tasks once it is safe to do so.
-      // Until it is totally safe, just do it when running purify.
-#ifdef PURIFY
-      delete pending_task.task;
-#endif  // PURIFY
-    }
-  }
-  did_work |= !deferred_non_nestable_work_queue_.empty();
+  MOZ_ASSERT(work_queue_.empty());
+  bool did_work = !deferred_non_nestable_work_queue_.empty();
   while (!deferred_non_nestable_work_queue_.empty()) {
-    // TODO(darin): Delete all tasks once it is safe to do so.
-    // Until it is totaly safe, just delete them to keep purify happy.
-#ifdef PURIFY
     Task* task = deferred_non_nestable_work_queue_.front().task;
-#endif
     deferred_non_nestable_work_queue_.pop();
-#ifdef PURIFY
     delete task;
-#endif
   }
   did_work |= !delayed_work_queue_.empty();
   while (!delayed_work_queue_.empty()) {

@@ -11,6 +11,7 @@
 #include "nsTArray.h"
 
 #include "MediaConduitInterface.h"
+#include "MediaEngineWrapper.h"
 
 // Audio Engine Includes
 #include "webrtc/common_types.h"
@@ -156,7 +157,6 @@ public:
                       mShutDown(false),
                       mVoiceEngine(nullptr),
                       mTransport(nullptr),
-                      mPtrRTP(nullptr),
                       mEngineTransmitting(false),
                       mEngineReceiving(false),
                       mChannel(-1),
@@ -230,14 +230,14 @@ private:
   // conduit to die
   webrtc::VoiceEngine* mVoiceEngine;
   mozilla::RefPtr<TransportInterface> mTransport;
-  webrtc::VoENetwork*  mPtrVoENetwork;
-  webrtc::VoEBase*     mPtrVoEBase;
-  webrtc::VoECodec*    mPtrVoECodec;
-  webrtc::VoEExternalMedia* mPtrVoEXmedia;
-  webrtc::VoEAudioProcessing* mPtrVoEProcessing;
-  webrtc::VoEVideoSync* mPtrVoEVideoSync;
-  webrtc::VoERTP_RTCP* mPtrVoERTP_RTCP;
-  webrtc::VoERTP_RTCP* mPtrRTP;
+  ScopedCustomReleasePtr<webrtc::VoENetwork>   mPtrVoENetwork;
+  ScopedCustomReleasePtr<webrtc::VoEBase>      mPtrVoEBase;
+  ScopedCustomReleasePtr<webrtc::VoECodec>     mPtrVoECodec;
+  ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mPtrVoEXmedia;
+  ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mPtrVoEProcessing;
+  ScopedCustomReleasePtr<webrtc::VoEVideoSync> mPtrVoEVideoSync;
+  ScopedCustomReleasePtr<webrtc::VoERTP_RTCP>  mPtrVoERTP_RTCP;
+  ScopedCustomReleasePtr<webrtc::VoERTP_RTCP>  mPtrRTP;
   //engine states of our interets
   bool mEngineTransmitting; // If true => VoiceEngine Send-subsystem is up
   bool mEngineReceiving;    // If true => VoiceEngine Receive-subsystem is up
