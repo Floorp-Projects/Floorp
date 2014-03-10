@@ -1515,7 +1515,7 @@ typedef enum PKIX_PL_TrustAnchorModeEnum {
          *       explicitly untrustworthy, explicitly configured trust anchors
          *       MAY be ignored/rejected.
          */
-        PKIX_PL_TrustAnchorMode_Exclusive,
+        PKIX_PL_TrustAnchorMode_Exclusive
 } PKIX_PL_TrustAnchorMode;
 
 /*
