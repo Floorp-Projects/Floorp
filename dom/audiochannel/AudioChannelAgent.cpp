@@ -5,12 +5,10 @@
 #include "AudioChannelAgent.h"
 #include "AudioChannelCommon.h"
 #include "AudioChannelService.h"
-#include "nsIDOMWindow.h"
-#include "nsXULAppAPI.h"
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_2(AudioChannelAgent, mWindow, mCallback)
+NS_IMPL_CYCLE_COLLECTION_1(AudioChannelAgent, mCallback)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioChannelAgent)
   NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgent)
@@ -42,46 +40,34 @@ NS_IMETHODIMP AudioChannelAgent::GetAudioChannelType(int32_t *aAudioChannelType)
   return NS_OK;
 }
 
-/* boolean init (in nsIDOMWindow window, in long channelType,
- *               in nsIAudioChannelAgentCallback callback); */
-NS_IMETHODIMP
-AudioChannelAgent::Init(nsIDOMWindow* aWindow, int32_t aChannelType,
-                        nsIAudioChannelAgentCallback *aCallback)
+/* boolean init (in long channelType, in nsIAudioChannelAgentCallback callback); */
+NS_IMETHODIMP AudioChannelAgent::Init(int32_t channelType, nsIAudioChannelAgentCallback *callback)
 {
-  return InitInternal(aWindow, aChannelType, aCallback,
-                      /* useWeakRef = */ false);
+  return InitInternal(channelType, callback, /* useWeakRef = */ false);
 }
 
-/* boolean initWithWeakCallback (in nsIDOMWindow window, in long channelType,
+/* boolean initWithWeakCallback (in long channelType,
  *                               in nsIAudioChannelAgentCallback callback); */
 NS_IMETHODIMP
-AudioChannelAgent::InitWithWeakCallback(nsIDOMWindow* aWindow,
-                                        int32_t aChannelType,
-                                        nsIAudioChannelAgentCallback *aCallback)
+AudioChannelAgent::InitWithWeakCallback(int32_t channelType,
+                                        nsIAudioChannelAgentCallback *callback)
 {
-  return InitInternal(aWindow, aChannelType, aCallback,
-                      /* useWeakRef = */ true);
+  return InitInternal(channelType, callback, /* useWeakRef = */ true);
 }
 
-/* void initWithVideo(in nsIDOMWindow window, in long channelType,
- *                    in nsIAudioChannelAgentCallback callback, in boolean weak); */
 NS_IMETHODIMP
-AudioChannelAgent::InitWithVideo(nsIDOMWindow* aWindow, int32_t aChannelType,
-                                 nsIAudioChannelAgentCallback *aCallback,
+AudioChannelAgent::InitWithVideo(int32_t channelType,
+                                 nsIAudioChannelAgentCallback *callback,
                                  bool aUseWeakRef)
 {
-  return InitInternal(aWindow, aChannelType, aCallback, aUseWeakRef,
-                      /* withVideo = */ true);
+  return InitInternal(channelType, callback, aUseWeakRef, true);
 }
 
 nsresult
-AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
+AudioChannelAgent::InitInternal(int32_t aChannelType,
                                 nsIAudioChannelAgentCallback *aCallback,
                                 bool aUseWeakRef, bool aWithVideo)
 {
-  // We need the window only for IPC.
-  MOZ_ASSERT(aWindow || XRE_GetProcessType() == GeckoProcessType_Default);
-
   // We syncd the enum of channel type between nsIAudioChannelAgent.idl and
   // AudioChannelCommon.h the same.
   static_assert(static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NORMAL) ==
@@ -106,7 +92,6 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
     return NS_ERROR_FAILURE;
   }
 
-  mWindow = aWindow;
   mAudioChannelType = aChannelType;
 
   if (aUseWeakRef) {
