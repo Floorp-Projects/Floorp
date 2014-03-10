@@ -49,7 +49,7 @@ let gFlexShorthandTestcases = [
     "flex-grow":   "EXPECTED computed value for flex-grow property",
     "flex-shrink": "EXPECTED computed value for flex-shrink property",
     "flex-basis":  "EXPECTED computed value for flex-basis property",
-  }, 
+  },
 */
 
   // Initial values of subproperties:
@@ -242,7 +242,7 @@ function runFlexShorthandTest(aFlexShorthandTestcase)
   let elem = document.createElement("div");
 
   elem.style[gFlexPropInfo.domProp] = aFlexShorthandTestcase[gFlexPropName];
-  content.appendChild(elem); 
+  content.appendChild(elem);
 
   gFlexPropInfo.subproperties.forEach(function(aSubPropName) {
     var expectedVal = aSubPropName in aFlexShorthandTestcase ?
