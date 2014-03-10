@@ -69,6 +69,21 @@ public class PanelsPreferenceCategory extends CustomListCategory {
         mLoadTask.execute();
     }
 
+    /**
+     * Reload the Home Panels list from HomeConfig.
+     */
+    public void refresh() {
+        // Clear all the existing home panels, but leave the
+        // first item (Add panels).
+        int prefCount = getPreferenceCount();
+        while (prefCount > 1) {
+            removePreference(getPreference(1));
+            prefCount--;
+        }
+
+        loadHomeConfig();
+    }
+
     private void displayHomeConfig(HomeConfig.State configState) {
         for (PanelConfig panelConfig : configState) {
             // Create and add the pref.

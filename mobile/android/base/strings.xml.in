@@ -116,6 +116,7 @@
   <string name="pref_home_add_panel">&pref_home_add_panel;</string>
   <string name="home_add_panel_title">&home_add_panel_title;</string>
   <string name="home_add_panel_empty">&home_add_panel_empty;</string>
+  <string name="home_add_panel_installed">&home_add_panel_installed;</string>
   <string name="pref_category_home_content_settings">&pref_category_home_content_settings;</string>
   <string name="pref_home_updates">&pref_home_updates;</string>
   <string name="pref_home_updates_enabled">&pref_home_updates_enabled;</string>
