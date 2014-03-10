@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="750">
   <defs>
-    <!-- <integer-optional-integer> (filterRes) -->
     <filter id="filter">
       <!-- <boolean> (preserveAlpha) -->
       <!-- <enum> (edgeMode) -->
       <!-- <number> (divisor) -->
       <!-- <integer> (targetX) -->
+      <!-- <integer-optional-integer> (order) -->
       <!-- <string> (result) -->
       <feConvolveMatrix id="convolve"/>
       <!-- <number-optional-number> (stdDeviation) -->

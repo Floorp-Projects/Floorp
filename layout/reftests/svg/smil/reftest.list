@@ -116,7 +116,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-feTurbulence-numOctaves-01.svg anim-feTurbulence-numOctaves-01-ref.svg
 
 # animate some <integer-optional-integer> attributes:
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == anim-filter-filterRes-01.svg lime.svg # bug 818177
+== anim-feConvolveMatrix-order-01.svg anim-feConvolveMatrix-order-01-ref.svg
 
 # animate some <angle> attributes:
 == anim-marker-orient-01.svg lime.svg

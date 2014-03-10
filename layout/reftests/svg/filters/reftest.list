@@ -51,9 +51,6 @@ fuzzy(1,6400) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 # no tests for feTurbulence
 
 == filter-clipped-rect-01.svg pass.svg
-== filter-filterRes-high-01.svg pass.svg
-== filter-filterRes-high-02.svg pass.svg
-random-if(d2d) == filter-filterRes-low-01.svg pass.svg
 == filter-inner-svg-01.svg pass.svg
 == filter-inner-svg-02.svg pass.svg
 == filter-inner-svg-03.svg pass.svg
@@ -84,8 +81,6 @@ fuzzy(1,10000) == feConvolveMatrix-bias-01.svg feConvolveMatrix-bias-01-ref.svg
 == feDisplacementMap-alpha-01.svg pass.svg
 fuzzy(2,500) == feDisplacementMap-colour-01.svg feDisplacementMap-colour-01-ref.svg
 skip-if(B2G) == feDisplacementMap-scale-01.svg pass.svg
-
-skip-if(B2G) fuzzy-if(cocoaWidget,4,184) == feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
 
 == feDropShadow-01.svg feDropShadow-01-ref.svg
 

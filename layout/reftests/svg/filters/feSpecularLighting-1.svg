@@ -5,10 +5,10 @@
 <svg xmlns='http://www.w3.org/2000/svg'>
   <!--
     A basic test for the <feSpecularLighting> filter primitive.
-    Setting filterRes on the <filter> and kernelUnitLength on the
-    <feSpecularLighting> should allow us to assume pixel perfection.
+    Setting kernelUnitLength on the <feSpecularLighting> should allow us to
+    assume pixel perfection.
     -->
-  <filter id='f' x='0' y='0' width='1' height='1' filterRes='100 100' color-interpolation-filters='sRGB'>
+  <filter id='f' x='0' y='0' width='1' height='1' color-interpolation-filters='sRGB'>
     <feSpecularLighting kernelUnitLength='1' result='a'>
       <feDistantLight azimuth='45'/>
     </feSpecularLighting>
