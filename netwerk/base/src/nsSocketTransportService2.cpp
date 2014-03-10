@@ -21,6 +21,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PublicSSL.h"
+#include "mozilla/ChaosMode.h"
+#include "mozilla/PodOperations.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
 
@@ -227,12 +229,20 @@ nsSocketTransportService::AddToPollList(SocketContext *sock)
         }
     }
     
-    mActiveList[mActiveCount] = *sock;
+    uint32_t newSocketIndex = mActiveCount;
+    if (ChaosMode::isActive()) {
+      newSocketIndex = ChaosMode::randomUint32LessThan(mActiveCount + 1);
+      PodMove(mActiveList + newSocketIndex + 1, mActiveList + newSocketIndex,
+              mActiveCount - newSocketIndex);
+      PodMove(mPollList + newSocketIndex + 2, mPollList + newSocketIndex + 1,
+              mActiveCount - newSocketIndex);
+    }
+    mActiveList[newSocketIndex] = *sock;
     mActiveCount++;
 
-    mPollList[mActiveCount].fd = sock->mFD;
-    mPollList[mActiveCount].in_flags = sock->mHandler->mPollFlags;
-    mPollList[mActiveCount].out_flags = 0;
+    mPollList[newSocketIndex + 1].fd = sock->mFD;
+    mPollList[newSocketIndex + 1].in_flags = sock->mHandler->mPollFlags;
+    mPollList[newSocketIndex + 1].out_flags = 0;
 
     SOCKET_LOG(("  active=%u idle=%u\n", mActiveCount, mIdleCount));
     return NS_OK;

@@ -74,9 +74,6 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     delete mRecvCodecList[i];
   }
   delete mCurSendCodecConfig;
-  if (mPtrVoERTP_RTCP) {
-    mPtrVoERTP_RTCP->Release();
-  }
 
   // The first one of a pair to be deleted shuts down media for both
   if(mPtrVoEXmedia)
@@ -85,12 +82,6 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
       mPtrVoEXmedia->SetExternalRecordingStatus(false);
       mPtrVoEXmedia->SetExternalPlayoutStatus(false);
     }
-    mPtrVoEXmedia->Release();
-  }
-
-  if(mPtrVoEProcessing)
-  {
-    mPtrVoEProcessing->Release();
   }
 
   //Deal with the transport
@@ -99,12 +90,6 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     if (!mShutDown) {
       mPtrVoENetwork->DeRegisterExternalTransport(mChannel);
     }
-    mPtrVoENetwork->Release();
-  }
-
-  if(mPtrVoECodec)
-  {
-    mPtrVoECodec->Release();
   }
 
   if(mPtrVoEBase)
@@ -116,12 +101,6 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
       mPtrVoEBase->DeleteChannel(mChannel);
       mPtrVoEBase->Terminate();
     }
-    mPtrVoEBase->Release();
-  }
-
-  if (mPtrRTP)
-  {
-    mPtrRTP->Release();
   }
 
   if (mOtherDirection)

@@ -617,8 +617,7 @@ IonBuilder::build()
     }
 #endif
 
-    if (!initParameters())
-        return false;
+    initParameters();
 
     // Initialize local variables.
     for (uint32_t i = 0; i < info().nlocals(); i++) {
@@ -910,20 +909,18 @@ IonBuilder::rewriteParameters()
     }
 }
 
-bool
+void
 IonBuilder::initParameters()
 {
     if (!info().funMaybeLazy())
-        return true;
+        return;
 
     // If we are doing OSR on a frame which initially executed in the
     // interpreter and didn't accumulate type information, try to use that OSR
     // frame to determine possible initial types for 'this' and parameters.
 
-    if (thisTypes->empty() && baselineFrame_) {
-        if (!thisTypes->addType(baselineFrame_->thisType, alloc_->lifoAlloc()))
-            return false;
-    }
+    if (thisTypes->empty() && baselineFrame_)
+        thisTypes->addType(baselineFrame_->thisType, alloc_->lifoAlloc());
 
     MParameter *param = MParameter::New(alloc(), MParameter::THIS_SLOT, thisTypes);
     current->add(param);
@@ -934,16 +931,13 @@ IonBuilder::initParameters()
         if (types->empty() && baselineFrame_ &&
             !script_->baselineScript()->modifiesArguments())
         {
-            if (!types->addType(baselineFrame_->argTypes[i], alloc_->lifoAlloc()))
-                return false;
+            types->addType(baselineFrame_->argTypes[i], alloc_->lifoAlloc());
         }
 
         param = MParameter::New(alloc(), i, types);
         current->add(param);
         current->initSlot(info().argSlotUnchecked(i), param);
     }
-
-    return true;
 }
 
 bool
@@ -4971,14 +4965,12 @@ IonBuilder::jsop_call(uint32_t argc, bool constructing)
     types::TemporaryTypeSet *observed = bytecodeTypes(pc);
     if (observed->empty()) {
         if (BytecodeFlowsToBitop(pc)) {
-            if (!observed->addType(types::Type::Int32Type(), alloc_->lifoAlloc()))
-                return false;
+            observed->addType(types::Type::Int32Type(), alloc_->lifoAlloc());
         } else if (*GetNextPc(pc) == JSOP_POS) {
             // Note: this is lame, overspecialized on the code patterns used
             // by asm.js and should be replaced by a more general mechanism.
             // See bug 870847.
-            if (!observed->addType(types::Type::DoubleType(), alloc_->lifoAlloc()))
-                return false;
+            observed->addType(types::Type::DoubleType(), alloc_->lifoAlloc());
         }
     }
 
@@ -7091,8 +7083,7 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         // Indexed call on an element of an array. Populate the observed types
         // with any objects that could be in the array, to avoid extraneous
         // type barriers.
-        if (!AddObjectsForPropertyRead(obj, nullptr, types))
-            return false;
+        AddObjectsForPropertyRead(obj, nullptr, types);
     }
 
     bool barrier = PropertyReadNeedsTypeBarrier(analysisContext, constraints(), obj, nullptr, types);
@@ -9288,8 +9279,7 @@ IonBuilder::jsop_setarg(uint32_t arg)
                 }
                 if (!otherUses) {
                     JS_ASSERT(op->resultTypeSet() == &argTypes[arg]);
-                    if (!argTypes[arg].addType(types::Type::UnknownType(), alloc_->lifoAlloc()))
-                        return false;
+                    argTypes[arg].addType(types::Type::UnknownType(), alloc_->lifoAlloc());
                     if (val->isMul()) {
                         val->setResultType(MIRType_Double);
                         val->toMul()->setSpecialization(MIRType_Double);

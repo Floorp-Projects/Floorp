@@ -71,6 +71,7 @@ private:
 
   bool mShutdown;
   bool mWaiting;
+  bool mNotified;
   bool mSleeping;
 
   nsTArray<nsTimerImpl*> mTimers;

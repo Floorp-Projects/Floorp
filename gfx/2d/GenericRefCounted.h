@@ -37,6 +37,11 @@ class GenericRefCountedBase
     // mechanism, it is welcome to do so by overriding AddRef() and Release().
     void ref() { AddRef(); }
     void deref() { Release(); }
+
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+    virtual const char* typeName() const = 0;
+    virtual size_t typeSize() const = 0;
+#endif
 };
 
 namespace detail {
@@ -55,11 +60,18 @@ class GenericRefCounted : public GenericRefCountedBase
     virtual void AddRef() {
       MOZ_ASSERT(int32_t(refCnt) >= 0);
       ++refCnt;
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+      detail::RefCountLogger::logAddRef(this, refCnt, typeName(), typeSize());
+#endif
     }
 
     virtual void Release() {
       MOZ_ASSERT(int32_t(refCnt) > 0);
-      if (0 == --refCnt) {
+      --refCnt;
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+      detail::RefCountLogger::logRelease(this, refCnt, typeName());
+#endif
+      if (0 == refCnt) {
 #ifdef DEBUG
         refCnt = detail::DEAD;
 #endif

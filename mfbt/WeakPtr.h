@@ -64,10 +64,13 @@
 #ifndef mozilla_WeakPtr_h
 #define mozilla_WeakPtr_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TypeTraits.h"
+
+#include <string.h>
 
 namespace mozilla {
 
@@ -85,6 +88,29 @@ class WeakReference : public ::mozilla::RefCounted<WeakReference<T> >
     T* get() const {
       return ptr;
     }
+
+#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
+#ifdef XP_WIN
+#define snprintf _snprintf
+#endif
+    const char* typeName() const {
+      static char nameBuffer[1024];
+      const char* innerType = ptr->typeName();
+      // We could do fancier length checks at runtime, but innerType is
+      // controlled by us so we can ensure that this never causes a buffer
+      // overflow by this assertion.
+      MOZ_ASSERT(strlen(innerType) + sizeof("WeakReference<>") < ArrayLength(nameBuffer),
+                 "Exceedingly large type name");
+      snprintf(nameBuffer, ArrayLength(nameBuffer), "WeakReference<%s>", innerType);
+      // This is usually not OK, but here we are returning a pointer to a static
+      // buffer which will immediately be used by the caller.
+      return nameBuffer;
+    }
+    size_t typeSize() const {
+      return sizeof(*this);
+    }
+#undef snprintf
+#endif
 
   private:
     friend class WeakPtrBase<T, WeakReference<T> >;

@@ -18,6 +18,7 @@ EXPORTS.mozilla = [
     'Attributes.h',
     'BloomFilter.h',
     'Casting.h',
+    'ChaosMode.h',
     'Char16.h',
     'CheckedInt.h',
     'Compiler.h',

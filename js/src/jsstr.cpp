@@ -3209,7 +3209,7 @@ SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Ma
                         return nullptr;
                 } else {
                     /* Only string entries have been accounted for so far. */
-                    AddTypeProperty(cx, type, nullptr, UndefinedValue());
+                    AddTypePropertyId(cx, type, JSID_VOID, UndefinedValue());
                     if (!splits.append(UndefinedValue()))
                         return nullptr;
                 }
@@ -3344,7 +3344,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
     RootedTypeObject type(cx, GetTypeCallerInitObject(cx, JSProto_Array));
     if (!type)
         return false;
-    AddTypeProperty(cx, type, nullptr, Type::StringType());
+    AddTypePropertyId(cx, type, JSID_VOID, Type::StringType());
 
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32_t limit;
