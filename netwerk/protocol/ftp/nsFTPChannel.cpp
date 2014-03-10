@@ -38,7 +38,7 @@ nsFtpChannel::SetUploadStream(nsIInputStream *stream,
                               const nsACString &contentType,
                               int64_t contentLength)
 {
-    NS_ENSURE_TRUE(!IsPending(), NS_ERROR_IN_PROGRESS);
+    NS_ENSURE_TRUE(!Pending(), NS_ERROR_IN_PROGRESS);
 
     mUploadStream = stream;
 
@@ -61,7 +61,7 @@ nsFtpChannel::GetUploadStream(nsIInputStream **stream)
 NS_IMETHODIMP
 nsFtpChannel::ResumeAt(uint64_t aStartPos, const nsACString& aEntityID)
 {
-    NS_ENSURE_TRUE(!IsPending(), NS_ERROR_IN_PROGRESS);
+    NS_ENSURE_TRUE(!Pending(), NS_ERROR_IN_PROGRESS);
     mEntityID = aEntityID;
     mStartPos = aStartPos;
     mResumeRequested = (mStartPos || !mEntityID.IsEmpty());
@@ -195,4 +195,27 @@ nsFtpChannel::GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult)
         }
     }
     aResult = mFTPEventSink;
+}
+
+void
+nsFtpChannel::ForcePending(bool aForcePending)
+{
+    // Set true here so IsPending will return true.
+    // Required for callback diversion from child back to parent. In such cases
+    // OnStopRequest can be called in the parent before callbacks are diverted
+    // back from the child to the listener in the parent.
+    mForcePending = aForcePending;
+}
+
+NS_IMETHODIMP
+nsFtpChannel::IsPending(bool *result)
+{
+  *result = Pending();
+  return NS_OK;
+}
+
+bool
+nsFtpChannel::Pending() const
+{
+  return nsBaseChannel::Pending() || mForcePending;
 }
