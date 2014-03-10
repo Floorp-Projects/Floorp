@@ -361,7 +361,7 @@ class AsmJSModule
     // AsmJSModule).
     struct StaticLinkData
     {
-        uint32_t operationCallbackExitOffset;
+        uint32_t interruptExitOffset;
         RelativeLinkVector relativeLinks;
         AbsoluteLinkVector absoluteLinks;
 
@@ -415,7 +415,7 @@ class AsmJSModule
     } pod;
 
     uint8_t *                             code_;
-    uint8_t *                             operationCallbackExit_;
+    uint8_t *                             interruptExit_;
 
     StaticLinkData                        staticLinkData_;
     bool                                  dynamicallyLinked_;
@@ -427,9 +427,8 @@ class AsmJSModule
 
     FunctionCountsVector                  functionCounts_;
 
-    // This field is accessed concurrently when triggering the operation
-    // callback and access must be synchronized via the runtime's operation
-    // callback lock.
+    // This field is accessed concurrently when requesting an interrupt.
+    // Access must be synchronized via the runtime's interrupt lock.
     mutable bool                          codeIsProtected_;
 
   public:
@@ -751,8 +750,8 @@ class AsmJSModule
     bool addAbsoluteLink(AbsoluteLink link) {
         return staticLinkData_.absoluteLinks.append(link);
     }
-    void setOperationCallbackOffset(uint32_t offset) {
-        staticLinkData_.operationCallbackExitOffset = offset;
+    void setInterruptOffset(uint32_t offset) {
+        staticLinkData_.interruptExitOffset = offset;
     }
 
     void restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx);
@@ -764,8 +763,8 @@ class AsmJSModule
         return code_;
     }
 
-    uint8_t *operationCallbackExit() const {
-        return operationCallbackExit_;
+    uint8_t *interruptExit() const {
+        return interruptExit_;
     }
 
     void setIsDynamicallyLinked() {
@@ -825,8 +824,8 @@ class AsmJSModule
 
     bool clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const;
 
-    // These methods may only be called while holding the Runtime's operation
-    // callback lock.
+    // These methods may only be called while holding the Runtime's interrupt
+    // lock.
     void protectCode(JSRuntime *rt) const;
     void unprotectCode(JSRuntime *rt) const;
     bool codeIsProtected(JSRuntime *rt) const;

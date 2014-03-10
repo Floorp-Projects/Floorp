@@ -738,7 +738,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
 
     RootedValue v(cx);
     for (uint32_t n = 0; n < length; ++n) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
+        if (!CheckForInterrupt(cx))
             return false;
         if (!JSObject::getElement(cx, obj, obj, n, &v))
             return false;

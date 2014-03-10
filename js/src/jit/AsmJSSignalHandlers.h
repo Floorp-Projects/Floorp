@@ -22,9 +22,9 @@ bool
 EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt);
 
 // Force any currently-executing asm.js code to call
-// js_HandleExecutionInterrupt.
+// js::HandleExecutionInterrupt.
 extern void
-TriggerOperationCallbackForAsmJSCode(JSRuntime *rt);
+RequestInterruptForAsmJSCode(JSRuntime *rt);
 
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
 // of Unix signals. Mach exceptions are not handled on the victim's stack but

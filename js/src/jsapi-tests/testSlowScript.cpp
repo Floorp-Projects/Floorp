@@ -5,7 +5,7 @@
 #include "jsapi-tests/tests.h"
 
 static bool
-OperationCallback(JSContext *cx)
+InterruptCallback(JSContext *cx)
 {
     return false;
 }
@@ -13,44 +13,44 @@ OperationCallback(JSContext *cx)
 static unsigned sRemain;
 
 static bool
-TriggerOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
+RequestInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
     if (!sRemain--)
-        JS_TriggerOperationCallback(JS_GetRuntime(cx));
+        JS_RequestInterruptCallback(JS_GetRuntime(cx));
     *vp = JSVAL_VOID;
     return true;
 }
 
 BEGIN_TEST(testSlowScript)
 {
-    JS_SetOperationCallback(cx, OperationCallback);
-    JS_DefineFunction(cx, global, "triggerOperationCallback", TriggerOperationCallback, 0, 0);
+    JS_SetInterruptCallback(cx, InterruptCallback);
+    JS_DefineFunction(cx, global, "requestInterruptCallback", RequestInterruptCallback, 0, 0);
 
     test("while (true)"
          "  for (i in [0,0,0,0])"
-         "    triggerOperationCallback();");
+         "    requestInterruptCallback();");
 
     test("while (true)"
          "  for (i in [0,0,0,0])"
          "    for (j in [0,0,0,0])"
-         "      triggerOperationCallback();");
+         "      requestInterruptCallback();");
 
     test("while (true)"
          "  for (i in [0,0,0,0])"
          "    for (j in [0,0,0,0])"
          "      for (k in [0,0,0,0])"
-         "        triggerOperationCallback();");
+         "        requestInterruptCallback();");
 
-    test("function f() { while (true) yield triggerOperationCallback() }"
+    test("function f() { while (true) yield requestInterruptCallback() }"
          "for (i in f()) ;");
 
     test("function f() { while (true) yield 1 }"
          "for (i in f())"
-         "  triggerOperationCallback();");
+         "  requestInterruptCallback();");
 
     test("(function() {"
          "  while (true)"
-         "    let (x = 1) { eval('triggerOperationCallback()'); }"
+         "    let (x = 1) { eval('requestInterruptCallback()'); }"
          "})()");
 
     return true;

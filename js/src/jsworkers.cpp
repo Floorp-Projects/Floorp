@@ -798,10 +798,10 @@ WorkerThread::handleIonWorkload()
     ionBuilder = nullptr;
 
     // Ping the main thread so that the compiled code can be incorporated
-    // at the next operation callback. Don't interrupt Ion code for this, as
+    // at the next interrupt callback. Don't interrupt Ion code for this, as
     // this incorporation can be delayed indefinitely without affecting
     // performance as long as the main thread is actually executing Ion code.
-    rt->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadDontStopIon);
+    rt->requestInterrupt(JSRuntime::RequestInterruptAnyThreadDontStopIon);
 
     // Notify the main thread in case it is waiting for the compilation to finish.
     WorkerThreadState().notifyAll(GlobalWorkerThreadState::CONSUMER);
