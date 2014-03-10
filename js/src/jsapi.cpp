@@ -1352,7 +1352,7 @@ JS_GetClassObject(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return js_GetClassObject(cx, key, objp);
+    return GetBuiltinConstructor(cx, key, objp);
 }
 
 JS_PUBLIC_API(bool)
@@ -1360,10 +1360,10 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return js_GetClassPrototype(cx, key, objp);
+    return GetBuiltinPrototype(cx, key, objp);
 }
 
-extern JS_PUBLIC_API(JSProtoKey)
+JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext *cx, HandleId id)
 {
     AssertHeapIsIdle(cx);

@@ -3180,7 +3180,7 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
     if (protoArg)
         JS::PoisonPtr(&protoArg);
 
-    if (!proto && !FindProto(cxArg, &ArrayObject::class_, &proto))
+    if (!proto && !GetBuiltinPrototype(cxArg, JSProto_Array, &proto))
         return nullptr;
 
     RootedTypeObject type(cxArg, cxArg->getNewType(&ArrayObject::class_, proto.get()));
