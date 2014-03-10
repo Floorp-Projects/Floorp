@@ -20,6 +20,7 @@ UDPSocketChildBase::UDPSocketChildBase()
 UDPSocketChildBase::~UDPSocketChildBase()
 {
 }
+
 void
 UDPSocketChildBase::ReleaseIPDLReference()
 {
@@ -198,7 +199,7 @@ UDPSocketChild::RecvCallback(const nsCString &aType,
     const UDPSendResult& returnValue(aData.get_UDPSendResult());
     rv = mSocket->CallListenerSent(aType, returnValue.value());
   } else {
-    MOZ_ASSERT("Invalid callback type!");
+    MOZ_ASSERT(false, "Invalid callback type!");
   }
 
   NS_ENSURE_SUCCESS(rv, true);

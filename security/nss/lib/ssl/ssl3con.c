@@ -118,8 +118,8 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  { TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,     SSL_ALLOWED, PR_TRUE,  PR_FALSE},
  { TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA,   SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA,   SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,       SSL_ALLOWED, PR_TRUE,  PR_FALSE},
- { SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,       SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,       SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,       SSL_ALLOWED, PR_TRUE,  PR_FALSE},
  { TLS_DHE_DSS_WITH_RC4_128_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
 
 #ifndef NSS_DISABLE_ECC
@@ -143,23 +143,23 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  { TLS_RSA_WITH_CAMELLIA_256_CBC_SHA,       SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_RSA_WITH_SEED_CBC_SHA,               SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,      SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { SSL_RSA_WITH_3DES_EDE_CBC_SHA,           SSL_ALLOWED, PR_TRUE,  PR_FALSE},
- { SSL_RSA_WITH_RC4_128_SHA,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
- { SSL_RSA_WITH_RC4_128_MD5,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { TLS_RSA_WITH_3DES_EDE_CBC_SHA,           SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { TLS_RSA_WITH_RC4_128_SHA,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
+ { TLS_RSA_WITH_RC4_128_MD5,                SSL_ALLOWED, PR_TRUE,  PR_FALSE},
 
  /* 56-bit DES "domestic" cipher suites */
- { SSL_DHE_RSA_WITH_DES_CBC_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { SSL_DHE_DSS_WITH_DES_CBC_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_DHE_RSA_WITH_DES_CBC_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_DHE_DSS_WITH_DES_CBC_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { SSL_RSA_FIPS_WITH_DES_CBC_SHA,           SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { SSL_RSA_WITH_DES_CBC_SHA,                SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_RSA_WITH_DES_CBC_SHA,                SSL_ALLOWED, PR_FALSE, PR_FALSE},
 
  /* export ciphersuites with 1024-bit public key exchange keys */
  { TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,      SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,     SSL_ALLOWED, PR_FALSE, PR_FALSE},
 
  /* export ciphersuites with 512-bit public key exchange keys */
- { SSL_RSA_EXPORT_WITH_RC4_40_MD5,          SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,      SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_RSA_EXPORT_WITH_RC4_40_MD5,          SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,      SSL_ALLOWED, PR_FALSE, PR_FALSE},
 
  /* ciphersuites with no encryption */
 #ifndef NSS_DISABLE_ECC
@@ -168,9 +168,9 @@ static ssl3CipherSuiteCfg cipherSuites[ssl_V3_SUITES_IMPLEMENTED] = {
  { TLS_ECDH_RSA_WITH_NULL_SHA,              SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_ECDH_ECDSA_WITH_NULL_SHA,            SSL_ALLOWED, PR_FALSE, PR_FALSE},
 #endif /* NSS_DISABLE_ECC */
- { SSL_RSA_WITH_NULL_SHA,                   SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_RSA_WITH_NULL_SHA,                   SSL_ALLOWED, PR_FALSE, PR_FALSE},
  { TLS_RSA_WITH_NULL_SHA256,                SSL_ALLOWED, PR_FALSE, PR_FALSE},
- { SSL_RSA_WITH_NULL_MD5,                   SSL_ALLOWED, PR_FALSE, PR_FALSE},
+ { TLS_RSA_WITH_NULL_MD5,                   SSL_ALLOWED, PR_FALSE, PR_FALSE},
 };
 
 /* Verify that SSL_ImplementedCiphers and cipherSuites are in consistent order.
@@ -313,49 +313,49 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] =
 {
 /*  cipher_suite                    bulk_cipher_alg mac_alg key_exchange_alg */
 
-    {SSL_NULL_WITH_NULL_NULL,       cipher_null,   mac_null, kea_null},
-    {SSL_RSA_WITH_NULL_MD5,         cipher_null,   mac_md5, kea_rsa},
-    {SSL_RSA_WITH_NULL_SHA,         cipher_null,   mac_sha, kea_rsa},
+    {TLS_NULL_WITH_NULL_NULL,       cipher_null,   mac_null, kea_null},
+    {TLS_RSA_WITH_NULL_MD5,         cipher_null,   mac_md5, kea_rsa},
+    {TLS_RSA_WITH_NULL_SHA,         cipher_null,   mac_sha, kea_rsa},
     {TLS_RSA_WITH_NULL_SHA256,      cipher_null,   hmac_sha256, kea_rsa},
-    {SSL_RSA_EXPORT_WITH_RC4_40_MD5,cipher_rc4_40, mac_md5, kea_rsa_export},
-    {SSL_RSA_WITH_RC4_128_MD5,      cipher_rc4,    mac_md5, kea_rsa},
-    {SSL_RSA_WITH_RC4_128_SHA,      cipher_rc4,    mac_sha, kea_rsa},
-    {SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
+    {TLS_RSA_EXPORT_WITH_RC4_40_MD5,cipher_rc4_40, mac_md5, kea_rsa_export},
+    {TLS_RSA_WITH_RC4_128_MD5,      cipher_rc4,    mac_md5, kea_rsa},
+    {TLS_RSA_WITH_RC4_128_SHA,      cipher_rc4,    mac_sha, kea_rsa},
+    {TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
                                     cipher_rc2_40, mac_md5, kea_rsa_export},
 #if 0 /* not implemented */
-    {SSL_RSA_WITH_IDEA_CBC_SHA,     cipher_idea,   mac_sha, kea_rsa},
-    {SSL_RSA_EXPORT_WITH_DES40_CBC_SHA,
+    {TLS_RSA_WITH_IDEA_CBC_SHA,     cipher_idea,   mac_sha, kea_rsa},
+    {TLS_RSA_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_rsa_export},
 #endif
-    {SSL_RSA_WITH_DES_CBC_SHA,      cipher_des,    mac_sha, kea_rsa},
-    {SSL_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des,   mac_sha, kea_rsa},
-    {SSL_DHE_DSS_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_dss},
-    {SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
+    {TLS_RSA_WITH_DES_CBC_SHA,      cipher_des,    mac_sha, kea_rsa},
+    {TLS_RSA_WITH_3DES_EDE_CBC_SHA, cipher_3des,   mac_sha, kea_rsa},
+    {TLS_DHE_DSS_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_dss},
+    {TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
                                     cipher_3des,   mac_sha, kea_dhe_dss},
     {TLS_DHE_DSS_WITH_RC4_128_SHA,  cipher_rc4,    mac_sha, kea_dhe_dss},
 #if 0 /* not implemented */
-    {SSL_DH_DSS_EXPORT_WITH_DES40_CBC_SHA,
+    {TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_dss_export},
-    {SSL_DH_DSS_DES_CBC_SHA,        cipher_des,    mac_sha, kea_dh_dss},
-    {SSL_DH_DSS_3DES_CBC_SHA,       cipher_3des,   mac_sha, kea_dh_dss},
-    {SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA,
+    {TLS_DH_DSS_DES_CBC_SHA,        cipher_des,    mac_sha, kea_dh_dss},
+    {TLS_DH_DSS_3DES_CBC_SHA,       cipher_3des,   mac_sha, kea_dh_dss},
+    {TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_rsa_export},
-    {SSL_DH_RSA_DES_CBC_SHA,        cipher_des,    mac_sha, kea_dh_rsa},
-    {SSL_DH_RSA_3DES_CBC_SHA,       cipher_3des,   mac_sha, kea_dh_rsa},
-    {SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA,
+    {TLS_DH_RSA_DES_CBC_SHA,        cipher_des,    mac_sha, kea_dh_rsa},
+    {TLS_DH_RSA_3DES_CBC_SHA,       cipher_3des,   mac_sha, kea_dh_rsa},
+    {TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_dss_export},
-    {SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,
+    {TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_rsa_export},
 #endif
-    {SSL_DHE_RSA_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_rsa},
-    {SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
+    {TLS_DHE_RSA_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dhe_rsa},
+    {TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
                                     cipher_3des,   mac_sha, kea_dhe_rsa},
 #if 0
     {SSL_DH_ANON_EXPORT_RC4_40_MD5, cipher_rc4_40, mac_md5, kea_dh_anon_export},
-    {SSL_DH_ANON_EXPORT_WITH_DES40_CBC_SHA,
+    {TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA,
                                     cipher_des40,  mac_sha, kea_dh_anon_export},
-    {SSL_DH_ANON_DES_CBC_SHA,       cipher_des,    mac_sha, kea_dh_anon},
-    {SSL_DH_ANON_3DES_CBC_SHA,      cipher_3des,   mac_sha, kea_dh_anon},
+    {TLS_DH_anon_WITH_DES_CBC_SHA,  cipher_des,    mac_sha, kea_dh_anon},
+    {TLS_DH_anon_WITH_3DES_CBC_SHA, cipher_3des,   mac_sha, kea_dh_anon},
 #endif
 
 
@@ -373,10 +373,10 @@ static const ssl3CipherSuiteDef cipher_suite_defs[] =
 #if 0
     {TLS_DH_DSS_WITH_AES_128_CBC_SHA,  	cipher_aes_128, mac_sha, kea_dh_dss},
     {TLS_DH_RSA_WITH_AES_128_CBC_SHA,  	cipher_aes_128, mac_sha, kea_dh_rsa},
-    {TLS_DH_ANON_WITH_AES_128_CBC_SHA, 	cipher_aes_128, mac_sha, kea_dh_anon},
+    {TLS_DH_anon_WITH_AES_128_CBC_SHA, 	cipher_aes_128, mac_sha, kea_dh_anon},
     {TLS_DH_DSS_WITH_AES_256_CBC_SHA,  	cipher_aes_256, mac_sha, kea_dh_dss},
     {TLS_DH_RSA_WITH_AES_256_CBC_SHA,  	cipher_aes_256, mac_sha, kea_dh_rsa},
-    {TLS_DH_ANON_WITH_AES_256_CBC_SHA, 	cipher_aes_256, mac_sha, kea_dh_anon},
+    {TLS_DH_anon_WITH_AES_256_CBC_SHA, 	cipher_aes_256, mac_sha, kea_dh_anon},
 #endif
 
     {TLS_RSA_WITH_SEED_CBC_SHA,	    cipher_seed,   mac_sha, kea_rsa},
@@ -622,15 +622,15 @@ ssl3_CipherSuiteAllowedForVersionRange(
      * later. This set of cipher suites is similar to, but different from, the
      * set of cipher suites considered exportable by SSL_IsExportCipherSuite.
      */
-    case SSL_RSA_EXPORT_WITH_RC4_40_MD5:
-    case SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
-    /*   SSL_RSA_EXPORT_WITH_DES40_CBC_SHA:      never implemented
-     *   SSL_DH_DSS_EXPORT_WITH_DES40_CBC_SHA:   never implemented
-     *   SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA:   never implemented
-     *   SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA:  never implemented
-     *   SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA:  never implemented
-     *   SSL_DH_ANON_EXPORT_WITH_RC4_40_MD5:     never implemented
-     *   SSL_DH_ANON_EXPORT_WITH_DES40_CBC_SHA:  never implemented
+    case TLS_RSA_EXPORT_WITH_RC4_40_MD5:
+    case TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
+    /*   TLS_RSA_EXPORT_WITH_DES40_CBC_SHA:      never implemented
+     *   TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA:   never implemented
+     *   TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA:   never implemented
+     *   TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA:  never implemented
+     *   TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA:  never implemented
+     *   TLS_DH_anon_EXPORT_WITH_RC4_40_MD5:     never implemented
+     *   TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA:  never implemented
      */
 	return vrange->min <= SSL_LIBRARY_VERSION_TLS_1_0;
     case TLS_DHE_RSA_WITH_AES_256_CBC_SHA256:
@@ -9409,17 +9409,21 @@ ssl3_HandleNewSessionTicket(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	(PRUint32)ssl3_ConsumeHandshakeNumber(ss, 4, &b, &length);
 
     rv = ssl3_ConsumeHandshakeVariable(ss, &ticketData, 2, &b, &length);
-    if (length != 0 || rv != SECSuccess) {
+    if (rv != SECSuccess || length != 0) {
 	(void)SSL3_SendAlert(ss, alert_fatal, decode_error);
 	PORT_SetError(SSL_ERROR_RX_MALFORMED_NEW_SESSION_TICKET);
 	return SECFailure;  /* malformed */
     }
-    rv = SECITEM_CopyItem(NULL, &ss->ssl3.hs.newSessionTicket.ticket,
-			  &ticketData);
-    if (rv != SECSuccess) {
-	return rv;
+    /* If the server sent a zero-length ticket, ignore it and keep the
+     * existing ticket. */
+    if (ticketData.len != 0) {
+	rv = SECITEM_CopyItem(NULL, &ss->ssl3.hs.newSessionTicket.ticket,
+			      &ticketData);
+	if (rv != SECSuccess) {
+	    return rv;
+	}
+	ss->ssl3.hs.receivedNewSessionTicket = PR_TRUE;
     }
-    ss->ssl3.hs.receivedNewSessionTicket = PR_TRUE;
 
     ss->ssl3.hs.ws = wait_change_cipher;
     return SECSuccess;

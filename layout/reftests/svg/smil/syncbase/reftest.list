@@ -4,31 +4,31 @@
 == new-interval-simple-1.svg green-box-ref.svg
 == new-interval-simple-2.svg green-box-ref.svg
 == new-interval-negative-offset-1.svg green-box-ref.svg
-skip-if(B2G) == new-interval-negative-offset-2.svg green-box-ref.svg
-skip-if(B2G) == new-interval-negative-offset-3.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == new-interval-negative-offset-4.svg green-box-ref.svg # bug 773482
+== new-interval-negative-offset-2.svg green-box-ref.svg
+== new-interval-negative-offset-3.svg green-box-ref.svg
+== new-interval-negative-offset-4.svg green-box-ref.svg
 == new-interval-negative-syncbase-1.svg green-box-ref.svg
-skip-if(B2G) == new-interval-restart-1.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == new-interval-restart-2.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == new-interval-restart-3.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == new-interval-early-end-1.svg green-box-ref.svg # bug 773482
+== new-interval-restart-1.svg green-box-ref.svg
+== new-interval-restart-2.svg green-box-ref.svg
+== new-interval-restart-3.svg green-box-ref.svg
+== new-interval-early-end-1.svg green-box-ref.svg
 == new-interval-early-end-2.svg green-box-ref.svg
-skip-if(B2G) == new-interval-early-end-3.svg green-box-ref.svg
+== new-interval-early-end-3.svg green-box-ref.svg
 == new-interval-early-end-4.svg green-box-ref.svg
-skip-if(B2G) == new-interval-early-end-5.svg green-box-ref.svg # bug 773482
+== new-interval-early-end-5.svg green-box-ref.svg
 == new-interval-early-end-6.svg green-box-ref.svg
 == new-interval-early-end-7.svg green-box-ref.svg
 == new-interval-doubly-dependent-1.svg green-box-ref.svg
-skip-if(B2G) == new-interval-doubly-dependent-2.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == new-interval-doubly-dependent-3.svg green-box-ref.svg # bug 773482
+== new-interval-doubly-dependent-2.svg green-box-ref.svg
+== new-interval-doubly-dependent-3.svg green-box-ref.svg
 == new-interval-triply-dependent-1.svg green-box-ref.svg
 == new-interval-triply-dependent-2.svg green-box-ref.svg
 == new-interval-end-negative-1.svg green-box-ref.svg
-skip-if(B2G) == new-interval-end-negative-2.svg green-box-ref.svg # bug 773482
+== new-interval-end-negative-2.svg green-box-ref.svg
 == new-interval-end-dep-1.svg green-box-ref.svg
-skip-if(B2G) == new-interval-chain-1.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == new-interval-chain-2.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == new-interval-sample-order-1.svg green-box-ref.svg
+== new-interval-chain-1.svg green-box-ref.svg
+== new-interval-chain-2.svg green-box-ref.svg
+== new-interval-sample-order-1.svg green-box-ref.svg
 == new-interval-freeze-begin-1.svg green-box-ref.svg
 
 # Changing intervals
@@ -37,12 +37,12 @@ skip-if(B2G) == new-interval-sample-order-1.svg green-box-ref.svg
 == changed-interval-simple-3.svg green-box-ref.svg
 == changed-interval-simple-4.svg green-box-ref.svg
 == changed-interval-simple-5.svg green-box-ref.svg
-skip-if(B2G) == changed-interval-resolved-1.svg green-box-ref.svg
-skip-if(B2G) == changed-interval-resolved-2.svg green-box-ref.svg # bug 773482
+== changed-interval-resolved-1.svg green-box-ref.svg
+== changed-interval-resolved-2.svg green-box-ref.svg
 == changed-interval-sort-1.svg green-box-ref.svg
-skip-if(B2G) == changed-interval-change-spec-1.svg green-box-ref.svg # bug 773482
+== changed-interval-change-spec-1.svg green-box-ref.svg
 == changed-interval-change-spec-2.svg green-box-ref.svg
-skip-if(B2G) == changed-interval-change-spec-3.svg green-box-ref.svg # bug 773482
+== changed-interval-change-spec-3.svg green-box-ref.svg
 == changed-interval-change-spec-4.svg green-box-ref.svg
 
 # Deleted intervals
@@ -56,39 +56,39 @@ skip-if(B2G) == changed-interval-change-spec-3.svg green-box-ref.svg # bug 77348
 == trimmed-interval-1.svg green-box-ref.svg
 
 # Cyclic dependencies
-skip-if(B2G) == cycle-ok-1.svg green-box-ref.svg
-skip-if(B2G) == cycle-ok-2.svg green-box-ref.svg
-skip-if(B2G) == cycle-ok-3.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == cycle-ok-4.svg green-box-ref.svg
-skip-if(B2G) == cycle-ok-5.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == cycle-self-ref-1.svg green-box-ref.svg
-skip-if(B2G) == cycle-self-ref-2.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == cycle-self-ref-3.svg green-box-ref.svg
-skip-if(B2G) == cycle-self-ref-4.svg green-box-ref.svg
-skip-if(B2G) == cycle-self-ref-5.svg green-box-ref.svg
-skip-if(B2G) == cycle-invalid-1.svg green-box-ref.svg
-skip-if(B2G) == cycle-invalid-2.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == cycle-invalid-3.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == cycle-invalid-4.svg green-box-ref.svg
-skip-if(B2G) == cycle-change-1.svg green-box-ref.svg
-skip-if(B2G) == cycle-change-2.svg green-box-ref.svg
-skip-if(B2G) == cycle-delete-1.svg green-box-ref.svg
-skip-if(B2G) == cycle-recursion-1.svg green-box-ref.svg
-skip-if(B2G) == cycle-recursion-2.svg green-box-ref.svg
+== cycle-ok-1.svg green-box-ref.svg
+== cycle-ok-2.svg green-box-ref.svg
+== cycle-ok-3.svg green-box-ref.svg
+== cycle-ok-4.svg green-box-ref.svg
+== cycle-ok-5.svg green-box-ref.svg
+== cycle-self-ref-1.svg green-box-ref.svg
+== cycle-self-ref-2.svg green-box-ref.svg
+== cycle-self-ref-3.svg green-box-ref.svg
+== cycle-self-ref-4.svg green-box-ref.svg
+== cycle-self-ref-5.svg green-box-ref.svg
+== cycle-invalid-1.svg green-box-ref.svg
+== cycle-invalid-2.svg green-box-ref.svg
+== cycle-invalid-3.svg green-box-ref.svg
+== cycle-invalid-4.svg green-box-ref.svg
+== cycle-change-1.svg green-box-ref.svg
+== cycle-change-2.svg green-box-ref.svg
+== cycle-delete-1.svg green-box-ref.svg
+== cycle-recursion-1.svg green-box-ref.svg
+== cycle-recursion-2.svg green-box-ref.svg
 
 # Animation sandwich priority
-skip-if(B2G) == sandwich-priority-1.svg green-box-ref.svg # bug 773482
+== sandwich-priority-1.svg green-box-ref.svg
 == sandwich-priority-2.svg green-box-ref.svg
-skip-if(B2G) == sandwich-priority-3.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == sandwich-priority-4.svg green-box-ref.svg # bug 773482
+== sandwich-priority-3.svg green-box-ref.svg
+== sandwich-priority-4.svg green-box-ref.svg
 == sandwich-priority-5.svg green-box-ref.svg
-skip-if(B2G) == sandwich-priority-6.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == sandwich-priority-7.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == sandwich-priority-8.svg green-box-ref.svg # bug 773482
-skip-if(B2G) == sandwich-priority-9.svg green-box-ref.svg
+== sandwich-priority-6.svg green-box-ref.svg
+== sandwich-priority-7.svg green-box-ref.svg
+== sandwich-priority-8.svg green-box-ref.svg
+== sandwich-priority-9.svg green-box-ref.svg
 == sandwich-priority-10.svg green-box-ref.svg
 == sandwich-priority-11.svg green-box-ref.svg
-skip-if(B2G) == sandwich-priority-12.svg green-box-ref.svg # bug 773482
+== sandwich-priority-12.svg green-box-ref.svg
 
 # Cross-time container dependencies
 == cross-container-1.xhtml green-box-ref.xhtml

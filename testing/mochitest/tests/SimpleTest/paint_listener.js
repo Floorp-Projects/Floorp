@@ -1,50 +1,65 @@
-var accumulatedRect = null;
-var onpaint = function() {};
-var debug = false;
+(function() {
+  var accumulatedRect = null;
+  var onpaint = function() {};
+  var debug = false;
+  const FlushModes = {
+    FLUSH: 0,
+    NOFLUSH: 1
+  };
 
-function paintListener(event) {
-  if (event.target != window)
-    return;
-  if (debug) {
-    dump("got MozAfterPaint: " + event.boundingClientRect.left + "," + event.boundingClientRect.top + "," +
-         event.boundingClientRect.right + "," + event.boundingClientRect.bottom + "\n");
-  }
-  if (accumulatedRect) {
-    accumulatedRect[0] = Math.min(accumulatedRect[0], event.boundingClientRect.left);
-    accumulatedRect[1] = Math.min(accumulatedRect[1], event.boundingClientRect.top);
-    accumulatedRect[2] = Math.max(accumulatedRect[2], event.boundingClientRect.right);
-    accumulatedRect[3] = Math.max(accumulatedRect[3], event.boundingClientRect.bottom);
-  } else {
-    accumulatedRect = [event.boundingClientRect.left, event.boundingClientRect.top,
-                       event.boundingClientRect.right, event.boundingClientRect.bottom];
-  }
-  onpaint();
-}
-window.addEventListener("MozAfterPaint", paintListener, false);
-
-function waitForAllPaintsFlushed(callback, subdoc) {
-  document.documentElement.getBoundingClientRect();
-  if (subdoc) {
-    subdoc.documentElement.getBoundingClientRect();
-  }
-  var CI = Components.interfaces;
-  var utils = window.QueryInterface(CI.nsIInterfaceRequestor)
-              .getInterface(CI.nsIDOMWindowUtils);
-  if (!utils.isMozAfterPaintPending) {
+  function paintListener(event) {
+    if (event.target != window)
+      return;
+    var eventRect =
+      [ event.boundingClientRect.left,
+        event.boundingClientRect.top,
+        event.boundingClientRect.right,
+        event.boundingClientRect.bottom ];
     if (debug) {
-      dump("done...\n");
+      dump("got MozAfterPaint: " + eventRect.join(",") + "\n");
     }
-    var result = accumulatedRect;
-    accumulatedRect = null;
-    onpaint = function() {};
-    if (!result) {
-      result = [0,0,0,0];
+    accumulatedRect = accumulatedRect
+                    ? [ Math.min(accumulatedRect[0], eventRect[0]),
+                        Math.min(accumulatedRect[1], eventRect[1]),
+                        Math.max(accumulatedRect[2], eventRect[2]),
+                        Math.max(accumulatedRect[3], eventRect[3]) ]
+                    : eventRect;
+    onpaint();
+  }
+  window.addEventListener("MozAfterPaint", paintListener, false);
+
+  function waitForPaints(callback, subdoc, flushMode) {
+    // The call to getBoundingClientRect will flush pending layout
+    // notifications. Sometimes, however, this is undesirable since it can mask
+    // bugs where the code under test should be performing the flush.
+    if (flushMode === FlushModes.FLUSH) {
+      document.documentElement.getBoundingClientRect();
+      if (subdoc) {
+        subdoc.documentElement.getBoundingClientRect();
+      }
     }
-    callback(result[0], result[1], result[2], result[3]);
-    return;
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    if (!utils.isMozAfterPaintPending) {
+      if (debug) {
+        dump("done...\n");
+      }
+      var result = accumulatedRect || [ 0, 0, 0, 0 ];
+      accumulatedRect = null;
+      onpaint = function() {};
+      callback.apply(null, result);
+      return;
+    }
+    if (debug) {
+      dump("waiting for paint...\n");
+    }
+    onpaint = function() { waitForPaints(callback, subdoc, flushMode); };
   }
-  if (debug) {
-    dump("waiting for paint...\n");
-  }
-  onpaint = function() { waitForAllPaintsFlushed(callback, subdoc); };
-}
+
+  window.waitForAllPaintsFlushed = function(callback, subdoc) {
+    waitForPaints(callback, subdoc, FlushModes.FLUSH);
+  };
+
+  window.waitForAllPaints = function(callback) {
+    waitForPaints(callback, null, FlushModes.NOFLUSH);
+  };
+})();

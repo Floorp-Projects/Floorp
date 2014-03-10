@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(ce671a4a-92bb-11e3-b2d0-2c27d728e7f9)]
+[scriptable, uuid(c378a808-7474-403a-8e5c-7d9ff052b0c1)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1557,9 +1557,17 @@ interface nsIDOMWindowUtils : nsISupports {
    void runBeforeNextEvent(in nsIRunnable runnable);
 
    /*
-    * Returns the value of a given property.  If the property is animated off the
-    * main thread, this function will fetch the correct value from the compositor.
+    * Returns the value of a given property animated on the compositor thread.
+    * If the property is NOT currently being animated on the compositor thread,
+    * returns an empty string.
     */
-   AString getOMTAOrComputedStyle(in nsIDOMNode aNode,
+   AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty);
+
+   /*
+    * Returns the value of a given property.  If the property is animated off
+    * the main thread, this function will fetch the correct value from the
+    * compositor.
+    */
+   AString getOMTAOrComputedStyle(in nsIDOMElement aElement,
                                   in AString aProperty);
 };
