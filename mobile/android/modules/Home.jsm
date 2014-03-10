@@ -55,9 +55,6 @@ let HomeBanner = {
   // Holds the messages that will rotate through the banner.
   _messages: {},
 
-  // A queue used to keep track of which message to show next.
-  _queue: [],
-
   observe: function(subject, topic, data) {
     switch(topic) {
       case "HomeBanner:Get":
@@ -79,12 +76,11 @@ let HomeBanner = {
   },
 
   _handleGet: function() {
-    // Get the message from the front of the queue, then add it back
-    // to the end of the queue to show it again later.
-    let id = this._queue.shift();
-    this._queue.push(id);
+    // Choose a message at random.
+    let keys = Object.keys(this._messages);
+    let randomId = keys[Math.floor(Math.random() * keys.length)];
+    let message = this._messages[randomId];
 
-    let message = this._messages[id];
     sendMessageToJava({
       type: "HomeBanner:Data",
       id: message.id,
@@ -120,9 +116,6 @@ let HomeBanner = {
     let message = new BannerMessage(options);
     this._messages[message.id] = message;
 
-    // Add the new message to the end of the queue.
-    this._queue.push(message.id);
-
     // If this is the first message we're adding, add
     // observers to listen for requests from the Java UI.
     if (Object.keys(this._messages).length == 1) {
@@ -146,10 +139,6 @@ let HomeBanner = {
    */
   remove: function(id) {
     delete this._messages[id];
-
-    // Remove the message from the queue.
-    let index = this._queue.indexOf(id);
-    this._queue.splice(index, 1);
 
     // If there are no more messages, remove the observers.
     if (Object.keys(this._messages).length == 0) {
