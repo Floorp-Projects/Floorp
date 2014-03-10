@@ -1979,6 +1979,7 @@ PeerConnectionImpl::BuildStatsQuery_m(
   for (size_t p = 0; p < query->pipelines.Length(); ++p) {
 
     size_t level = query->pipelines[p]->level();
+    MOZ_ASSERT(level);
 
     // Don't grab the same stream twice, since that causes duplication
     // of the ICE stats.
@@ -1989,8 +1990,8 @@ PeerConnectionImpl::BuildStatsQuery_m(
     streamsGrabbed.insert(level);
     // TODO(bcampen@mozilla.com): I may need to revisit this for bundle.
     // (Bug 786234)
-    RefPtr<NrIceMediaStream> temp(mMedia->ice_media_stream(level-1));
-    if (temp.get()) {
+    RefPtr<NrIceMediaStream> temp(mMedia->ice_media_stream(level - 1));
+    if (temp) {
       query->streams.AppendElement(temp);
     } else {
        CSFLogError(logTag, "Failed to get NrIceMediaStream for level %zu "
@@ -2002,6 +2003,29 @@ PeerConnectionImpl::BuildStatsQuery_m(
     }
   }
 
+  // If the selector is null, we want to get ICE stats for the DataChannel
+  if (!aSelector && mDataConnection) {
+    std::vector<uint16_t> streamIds;
+    mDataConnection->GetStreamIds(&streamIds);
+
+    for (auto s = streamIds.begin(); s!= streamIds.end(); ++s) {
+      MOZ_ASSERT(*s);
+
+      if (streamsGrabbed.count(*s) || *s == INVALID_STREAM) {
+        continue;
+      }
+
+      streamsGrabbed.insert(*s);
+
+      RefPtr<NrIceMediaStream> temp(mMedia->ice_media_stream(*s - 1));
+
+      // This will be null if DataChannel is not in use
+      RefPtr<TransportFlow> flow(mMedia->GetTransportFlow(*s, false));
+      if (temp && flow) {
+        query->streams.AppendElement(temp);
+      }
+    }
+  }
   return rv;
 }
 
