@@ -36,7 +36,6 @@ public:
         , mStartPos(0)
         , mResumeRequested(false)
         , mLastModifiedTime(0)
-        , mForcePending(false)
     {
         SetURI(uri);
     }
@@ -49,12 +48,6 @@ public:
     {
         mProxyInfo = pi;
     }
-
-    NS_IMETHOD IsPending(bool *result) MOZ_OVERRIDE;
-
-    // This is a short-cut to calling nsIRequest::IsPending().
-    // Overrides Pending in nsBaseChannel.
-    bool Pending() const MOZ_OVERRIDE;
 
     // Were we asked to resume a download?
     bool ResumeRequested() { return mResumeRequested; }
@@ -88,9 +81,6 @@ public:
     // Helper function for getting the nsIFTPEventSink.
     void GetFTPEventSink(nsCOMPtr<nsIFTPEventSink> &aResult);
 
-public: /* Internal Necko use only. */
-    void ForcePending(bool aForcePending);
-
 protected:
     virtual ~nsFtpChannel() {}
     virtual nsresult OpenContentStream(bool async, nsIInputStream **result,
@@ -106,7 +96,6 @@ private:
     nsCString                 mEntityID;
     bool                      mResumeRequested;
     PRTime                    mLastModifiedTime;
-    bool                      mForcePending;
 };
 
 #endif /* nsFTPChannel_h___ */
