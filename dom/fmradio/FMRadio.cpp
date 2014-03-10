@@ -389,6 +389,12 @@ FMRadio::CanPlayChanged(int32_t aCanPlay)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FMRadio::WindowVolumeChanged(float aVolume)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void
 FMRadio::SetCanPlay(bool aCanPlay)
 {
