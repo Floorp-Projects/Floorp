@@ -38,7 +38,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioDestinationNode, AudioNode)
-  NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
@@ -61,6 +60,9 @@ public:
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+  // nsIAudioChannelAgentCallback
+  NS_IMETHOD CanPlayChanged(int32_t aCanPlay);
 
   AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);

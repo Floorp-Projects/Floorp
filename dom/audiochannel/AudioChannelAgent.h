@@ -34,13 +34,6 @@ public:
   AudioChannelAgent();
   virtual void NotifyAudioChannelStateChanged();
 
-  void WindowVolumeChanged();
-
-  nsIDOMWindow* Window() const
-  {
-    return mWindow;
-  }
-
 private:
   virtual ~AudioChannelAgent();
 
