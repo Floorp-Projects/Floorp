@@ -3614,17 +3614,15 @@ nsDOMWindowUtils::RunBeforeNextEvent(nsIRunnable *runnable)
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMNode* aNode,
-                                         const nsAString& aProperty,
-                                         nsAString& aResult)
+nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
+                               const nsAString& aProperty,
+                               nsAString& aResult)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  aResult.Truncate();
-  ErrorResult rv;
-  nsCOMPtr<Element> element = do_QueryInterface(aNode);
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
   if (!element) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -3633,23 +3631,29 @@ nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMNode* aNode,
   nsIFrame* frame = element->GetPrimaryFrame();
   if (frame && nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (aProperty.EqualsLiteral("opacity")) {
-      Layer* layer = FrameLayerBuilder::GetDedicatedLayer(frame, nsDisplayItem::TYPE_OPACITY);
+      Layer* layer =
+        FrameLayerBuilder::GetDedicatedLayer(frame,
+                                             nsDisplayItem::TYPE_OPACITY);
       if (layer) {
         float value;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
         if (forwarder && forwarder->HasShadowManager()) {
-          forwarder->GetShadowManager()->SendGetOpacity(layer->AsShadowableLayer()->GetShadow(), &value);
+          forwarder->GetShadowManager()->SendGetOpacity(
+            layer->AsShadowableLayer()->GetShadow(), &value);
           cssValue = new nsROCSSPrimitiveValue;
           cssValue->SetNumber(value);
         }
       }
     } else if (aProperty.EqualsLiteral("transform")) {
-      Layer* layer = FrameLayerBuilder::GetDedicatedLayer(frame, nsDisplayItem::TYPE_TRANSFORM);
+      Layer* layer =
+        FrameLayerBuilder::GetDedicatedLayer(frame,
+                                             nsDisplayItem::TYPE_TRANSFORM);
       if (layer) {
         gfx3DMatrix matrix;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
         if (forwarder && forwarder->HasShadowManager()) {
-          forwarder->GetShadowManager()->SendGetTransform(layer->AsShadowableLayer()->GetShadow(), &matrix);
+          forwarder->GetShadowManager()->SendGetTransform(
+            layer->AsShadowableLayer()->GetShadow(), &matrix);
           cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);
         }
       }
@@ -3658,16 +3662,41 @@ nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMNode* aNode,
 
   if (cssValue) {
     nsString text;
+    ErrorResult rv;
     cssValue->GetCssText(text, rv);
     aResult.Assign(text);
     return rv.ErrorCode();
+  } else {
+    aResult.Truncate();
   }
 
-  nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(element);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMElement* aElement,
+                                         const nsAString& aProperty,
+                                         nsAString& aResult)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // Try to get OMTA style
+  nsresult rv = GetOMTAStyle(aElement, aProperty, aResult);
+  if (NS_FAILED(rv) || !aResult.IsEmpty()) {
+    return rv;
+  }
+
+  // Otherwise, fall back to computed style
+  nsCOMPtr<Element> element = do_QueryInterface(aElement);
+  if (!element) {
+    return NS_ERROR_INVALID_ARG;
+  }
   nsCOMPtr<nsIDOMCSSStyleDeclaration> style;
-  nsresult res = element->GetCurrentDoc()->GetWindow()->
-    GetComputedStyle(elem, aProperty, getter_AddRefs(style));
-  NS_ENSURE_SUCCESS(res, res);
+  rv = element->GetCurrentDoc()->GetWindow()->
+    GetComputedStyle(aElement, aProperty, getter_AddRefs(style));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return style->GetPropertyValue(aProperty, aResult);
 }
