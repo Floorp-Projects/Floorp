@@ -1050,7 +1050,7 @@ nsTextStore::FlushPendingActions()
                ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
                 "flushing COMPOSITION_UPDATE={ mData=\"%s\", "
                 "mRanges=0x%p, mRanges->Length()=%d }",
-                this, NS_ConvertUTF16toUTF8(action.mData).get(), action.mRanges,
+                this, NS_ConvertUTF16toUTF8(action.mData).get(), action.mRanges.get(),
                 action.mRanges ? action.mRanges->Length() : 0));
 
         if (!action.mRanges) {
