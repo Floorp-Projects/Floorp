@@ -425,13 +425,6 @@ nsIGlobalObject *
 GetJunkScopeGlobal();
 
 /**
- * Returns the dummy global associated with the SafeJSContext. Callers MUST
- * consult with the XPConnect module owner before using this function.
- */
-JSObject *
-GetSafeJSContextGlobal();
-
-/**
  * If |aObj| has a window for a global, returns the associated nsGlobalWindow.
  * Otherwise, returns null.
  */
