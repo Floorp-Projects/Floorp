@@ -1766,9 +1766,10 @@ SafelyCoercesToDouble(MDefinition *op)
 static bool
 ObjectOrSimplePrimitive(MDefinition *op)
 {
-    // Return true if op is either undefined/null/bolean/int32 or an object.
+    // Return true if op is either undefined/null/boolean/int32 or an object.
     return !op->mightBeType(MIRType_String)
         && !op->mightBeType(MIRType_Double)
+        && !op->mightBeType(MIRType_Float32)
         && !op->mightBeType(MIRType_Magic);
 }
 
