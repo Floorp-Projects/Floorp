@@ -539,6 +539,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FONT_LIST                      15
 #define NS_STYLE_FONT_FIELD                     16
 
+// CSS Grid <track-breadth> keywords
+#define NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT 1
+#define NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT 2
+
 // defaults per MathML spec
 #define NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER 0.71f
 #define NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT 8

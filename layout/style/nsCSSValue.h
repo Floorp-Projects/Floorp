@@ -258,7 +258,10 @@ enum nsCSSUnit {
 
   // Time units
   eCSSUnit_Seconds      = 3000,    // (float) Standard time
-  eCSSUnit_Milliseconds = 3001     // (float) 1/1000 second
+  eCSSUnit_Milliseconds = 3001,    // (float) 1/1000 second
+
+  // Flexible fraction (CSS Grid)
+  eCSSUnit_FlexFraction = 4000     // (float) Fraction of free space
 };
 
 struct nsCSSValueGradient;

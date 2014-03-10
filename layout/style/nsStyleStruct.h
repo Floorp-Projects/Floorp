@@ -1152,6 +1152,38 @@ public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
 };
 
+struct nsStyleGridTrackList {
+  // http://dev.w3.org/csswg/css-grid/#track-sizing
+  // This represents either:
+  // * 'none': all three arrays are empty
+  // * A <track-list>: mMinTrackSizingFunctions and mMaxTrackSizingFunctions
+  //   are of identical non-zero size,
+  //   and mLineNameLists is one element longer than that.
+  //   (Delimiting N columns requires N+1 lines:
+  //   one before each track, plus one at the very end.)
+  //
+  //   An omitted <line-names> is still represented in mLineNameLists,
+  //   as an empty sub-array.
+  //
+  //   A <track-size> specified as a single <track-breadth> is represented
+  //   as identical min and max sizing functions.
+  //
+  //   The units for nsStyleCoord are:
+  //   * eStyleUnit_Percent represents a <percentage>
+  //   * eStyleUnit_FlexFraction represents a <flex> flexible fraction
+  //   * eStyleUnit_Coord represents a <length>
+  //   * eStyleUnit_Enumerated represents min-content or max-content
+  nsTArray<nsTArray<nsString>> mLineNameLists;
+  nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
+  nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
+
+  inline bool operator!=(const nsStyleGridTrackList& aOther) const {
+    return mLineNameLists != aOther.mLineNameLists ||
+           mMinTrackSizingFunctions != aOther.mMinTrackSizingFunctions ||
+           mMaxTrackSizingFunctions != aOther.mMaxTrackSizingFunctions;
+  }
+};
+
 struct nsStylePosition {
   nsStylePosition(void);
   nsStylePosition(const nsStylePosition& aOther);
@@ -1196,6 +1228,12 @@ struct nsStylePosition {
   float         mFlexGrow;              // [reset] float
   float         mFlexShrink;            // [reset] float
   nsStyleCoord  mZIndex;                // [reset] integer, auto
+  // NOTE: Fields so far can be memcpy()'ed, while following fields
+  // need to have their copy constructor called when we're being copied.
+  // See nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
+  // in nsStyleStruct.cpp
+  nsStyleGridTrackList mGridTemplateColumns;
+  nsStyleGridTrackList mGridTemplateRows;
 
   bool WidthDependsOnContainer() const
     { return WidthCoordDependsOnContainer(mWidth); }

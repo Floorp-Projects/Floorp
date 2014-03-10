@@ -683,7 +683,8 @@ GetFloatFromBoxPosition(int32_t aEnumValue)
 #define SETCOORD_LAH    (SETCOORD_AUTO | SETCOORD_LENGTH | SETCOORD_INHERIT)
 #define SETCOORD_LPH    (SETCOORD_LP | SETCOORD_INHERIT)
 #define SETCOORD_LPAH   (SETCOORD_LP | SETCOORD_AH)
-#define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
+#define SETCOORD_LPE    (SETCOORD_LP | SETCOORD_ENUMERATED)
+#define SETCOORD_LPEH   (SETCOORD_LPE | SETCOORD_INHERIT)
 #define SETCOORD_LPAEH  (SETCOORD_LPAH | SETCOORD_ENUMERATED)
 #define SETCOORD_LPO    (SETCOORD_LP | SETCOORD_NONE)
 #define SETCOORD_LPOH   (SETCOORD_LPH | SETCOORD_NONE)
@@ -7062,6 +7063,120 @@ nsRuleNode::ComputeListData(void* aStartStruct,
   COMPUTE_END_INHERITED(List, list)
 }
 
+static void
+SetGridTrackBreadth(const nsCSSValue& aValue,
+                    nsStyleCoord& aResult,
+                    nsStyleContext* aStyleContext,
+                    nsPresContext* aPresContext,
+                    bool& aCanStoreInRuleTree)
+{
+  nsCSSUnit unit = aValue.GetUnit();
+  if (unit == eCSSUnit_FlexFraction) {
+    aResult.SetFlexFractionValue(aValue.GetFloatValue());
+  } else {
+    MOZ_ASSERT(unit != eCSSUnit_Inherit && unit != eCSSUnit_Unset,
+               "Unexpected value that would use dummyParentCoord");
+    const nsStyleCoord dummyParentCoord;
+    SetCoord(aValue, aResult, dummyParentCoord,
+             SETCOORD_LPE | SETCOORD_STORE_CALC,
+             aStyleContext, aPresContext, aCanStoreInRuleTree);
+  }
+}
+
+static void
+SetGridTrackList(const nsCSSValue& aValue,
+                 nsStyleGridTrackList& aResult,
+                 const nsStyleGridTrackList& aParentValue,
+                 nsStyleContext* aStyleContext,
+                 nsPresContext* aPresContext,
+                 bool& aCanStoreInRuleTree)
+
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
+    aCanStoreInRuleTree = false;
+    aResult.mLineNameLists = aParentValue.mLineNameLists;
+    aResult.mMinTrackSizingFunctions = aParentValue.mMinTrackSizingFunctions;
+    aResult.mMaxTrackSizingFunctions = aParentValue.mMaxTrackSizingFunctions;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_None:
+    aResult.mLineNameLists.Clear();
+    aResult.mMinTrackSizingFunctions.Clear();
+    aResult.mMaxTrackSizingFunctions.Clear();
+    break;
+
+  default:
+    aResult.mLineNameLists.Clear();
+    aResult.mMinTrackSizingFunctions.Clear();
+    aResult.mMaxTrackSizingFunctions.Clear();
+    // This list is expected to have odd number of items, at least 3
+    // starting with a <line-names> (sub list of identifiers),
+    // and alternating between that and <track-size>.
+    const nsCSSValueList* item = aValue.GetListValue();
+    for (;;) {
+      // Compute a <line-names> value
+      nsTArray<nsString>* nameList = aResult.mLineNameLists.AppendElement();
+      // Null unit means empty list, nothing more to do.
+      if (item->mValue.GetUnit() != eCSSUnit_Null) {
+        const nsCSSValueList* subItem = item->mValue.GetListValue();
+        do {
+          nsString* name = nameList->AppendElement();
+          subItem->mValue.GetStringValue(*name);
+          subItem = subItem->mNext;
+        } while (subItem);
+      }
+      item = item->mNext;
+
+      if (!item) {
+        break;
+      }
+
+      // Compute a <track-size> value
+      nsStyleCoord minSizingFunction;
+      nsStyleCoord maxSizingFunction;
+      if (item->mValue.GetUnit() == eCSSUnit_Function) {
+        // A minmax() function.
+        nsCSSValue::Array* func = item->mValue.GetArrayValue();
+        NS_ASSERTION(func->Item(0).GetKeywordValue() == eCSSKeyword_minmax,
+                     "Expected minmax(), got another function name.");
+        SetGridTrackBreadth(func->Item(1), minSizingFunction,
+                            aStyleContext, aPresContext, aCanStoreInRuleTree);
+        SetGridTrackBreadth(func->Item(2), maxSizingFunction,
+                            aStyleContext, aPresContext, aCanStoreInRuleTree);
+      } else if (item->mValue.GetUnit() == eCSSUnit_Auto) {
+        // 'auto' computes to 'minmax(min-content, max-content)'
+        minSizingFunction.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT,
+                                      eStyleUnit_Enumerated);
+        maxSizingFunction.SetIntValue(NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
+                                      eStyleUnit_Enumerated);
+      } else {
+        // A single <track-breadth>,
+        // specifies identical min and max sizing functions.
+        SetGridTrackBreadth(item->mValue, minSizingFunction,
+                            aStyleContext, aPresContext, aCanStoreInRuleTree);
+        maxSizingFunction = minSizingFunction;
+      }
+
+      aResult.mMinTrackSizingFunctions.AppendElement(minSizingFunction);
+      aResult.mMaxTrackSizingFunctions.AppendElement(maxSizingFunction);
+      item = item->mNext;
+      MOZ_ASSERT(item, "Expected a eCSSUnit_List of odd length");
+    }
+    MOZ_ASSERT(!aResult.mMinTrackSizingFunctions.IsEmpty() &&
+               aResult.mMinTrackSizingFunctions.Length() ==
+               aResult.mMaxTrackSizingFunctions.Length() &&
+               aResult.mMinTrackSizingFunctions.Length() + 1 ==
+               aResult.mLineNameLists.Length(),
+               "Inconstistent array lengths for nsStyleGridTrackList");
+  }
+}
+
 const void*
 nsRuleNode::ComputePositionData(void* aStartStruct,
                                 const nsRuleData* aRuleData,
@@ -7234,6 +7349,16 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
               parentPos->mJustifyContent,
               NS_STYLE_JUSTIFY_CONTENT_FLEX_START, 0, 0, 0, 0);
+
+  // grid-template-columns
+  SetGridTrackList(*aRuleData->ValueForGridTemplateColumns(),
+                   pos->mGridTemplateColumns, parentPos->mGridTemplateColumns,
+                   aContext, mPresContext, canStoreInRuleTree);
+
+  // grid-template-rows
+  SetGridTrackList(*aRuleData->ValueForGridTemplateRows(),
+                   pos->mGridTemplateRows, parentPos->mGridTemplateRows,
+                   aContext, mPresContext, canStoreInRuleTree);
 
   // z-index
   const nsCSSValue* zIndexValue = aRuleData->ValueForZIndex();

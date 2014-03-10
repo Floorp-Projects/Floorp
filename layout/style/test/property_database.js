@@ -4792,6 +4792,64 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 
 if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 	gCSSProperties["display"].other_values.push("grid", "inline-grid");
+	gCSSProperties["grid-template-columns"] = {
+		domProp: "gridTemplateColumns",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [
+			"auto",
+			"40px",
+			"2.5fr",
+			"(normal) 40px () auto ( ) 12%",
+			"(foo) 40px min-content ( bar ) calc(20px + 10%) max-content",
+			"40px min-content calc(20px + 10%) max-content",
+			"m\\69nmax(20px, 4Fr)",
+			"40px MinMax(min-content, calc(20px + 10%)) max-content",
+			"40px 2em",
+			"() 40px (-foo) 2em (bar baz This\ is\ one\ ident)",
+			// TODO bug 978478: "(a) repeat(3, (b) 20px (c) 40px (d)) (e)",
+
+			// See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
+			"(none auto subgrid min-content max-content foo) 40px",
+		],
+		invalid_values: [
+			"",
+			"normal",
+			"40ms",
+			"-40px",
+			"-12%",
+			"-2fr",
+			"(foo)",
+			"(inherit) 40px",
+			"(initial) 40px",
+			"(unset) 40px",
+			"(default) 40px",
+			"(6%) 40px",
+			"(5th) 40px",
+			"(foo() bar) 40px",
+			"(foo)) 40px",
+			"(foo] 40px",
+			"[foo] 40px",
+			"(foo) (bar) 40px",
+			"40px (foo) (bar)",
+			"minmax()",
+			"minmax(20px)",
+			"mİnmax(20px, 100px)",
+			"minmax(20px, 100px, 200px)",
+			"maxmin(100px, 20px)",
+			"minmax(min-content, auto)",
+			"minmax(min-content, minmax(30px, max-content))",
+		]
+	};
+	gCSSProperties["grid-template-rows"] = {
+		domProp: "gridTemplateRows",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: gCSSProperties["grid-template-columns"].initial_values,
+		other_values: gCSSProperties["grid-template-columns"].other_values,
+		invalid_values: gCSSProperties["grid-template-columns"].invalid_values
+	};
 }
 
 if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {
