@@ -17,6 +17,7 @@ include protocol PTCPServerSocket;
 include protocol PUDPSocket;
 include protocol PRemoteOpenFile;
 include protocol PDNSRequest;
+include protocol PChannelDiverter;
 include protocol PBlob; //FIXME: bug #792908
 
 include protocol PRtspController;
@@ -45,6 +46,7 @@ sync protocol PNecko
   manages PDNSRequest;
   manages PRemoteOpenFile;
   manages PRtspController;
+  manages PChannelDiverter;
 
 parent:
   __delete__();
@@ -68,6 +70,7 @@ parent:
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);
   PRtspController();
+  PChannelDiverter(ChannelDiverterArgs channel);
 
 both:
   PTCPSocket();
