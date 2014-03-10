@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=861493
    addLoadEvent(function() {
      ok(Components.utils.isXrayWrapper($("t").contentWindow),
         "Should have xray");
-     var e = new $("t").contentWindow.Event("test", { bubbles: true });
+     var e = new ($("t").contentWindow).Event("test", { bubbles: true });
      is(e.bubbles, true, "Dictionary should have worked");
      SimpleTest.finish();
    })

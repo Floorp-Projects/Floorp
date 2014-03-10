@@ -224,10 +224,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
       window.triggeredTrustedHandler = false;
       var untrustedEvent = new CustomEvent('testtrusted');
       ok(!untrustedEvent.isTrusted, "Created an untrusted event");
+      is(untrustedEvent.type, 'testtrusted', "Constructor should see type");
       bound.dispatchEvent(untrustedEvent);
       ok(!window.triggeredTrustedHandler, "untrusted events should not trigger trusted handler");
       var trustedEvent = new chromeWin.CustomEvent('testtrusted');
       ok(trustedEvent.isTrusted, "Created a trusted event");
+      is(trustedEvent.type, 'testtrusted', "Wrapped constructor should see type");
       SpecialPowers.wrap(bound).dispatchEvent(trustedEvent);
       ok(window.triggeredTrustedHandler, "trusted events should trigger trusted handler");
 
