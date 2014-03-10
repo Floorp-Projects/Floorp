@@ -1275,6 +1275,8 @@ GK_ATOM(fill, "fill")
 GK_ATOM(fill_opacity, "fill-opacity")
 GK_ATOM(fill_rule, "fill-rule")
 GK_ATOM(filter, "filter")
+// Parsing for filterRes may be removed in the future.
+// https://bugzilla.mozilla.org/show_bug.cgi?id=979472
 GK_ATOM(filterRes, "filterRes")
 GK_ATOM(filterUnits, "filterUnits")
 GK_ATOM(flood_color, "flood-color")

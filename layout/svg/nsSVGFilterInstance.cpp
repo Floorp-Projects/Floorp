@@ -52,9 +52,9 @@ nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
 
   // XXX if filterUnits is set (or has defaulted) to objectBoundingBox, we
   // should send a warning to the error console if the author has used lengths
-  // with units. This is a common mistake and can result in filterRes being
-  // *massive* below (because we ignore the units and interpret the number as
-  // a factor of the bbox width/height). We should also send a warning if the
+  // with units. This is a common mistake and can result in the filter region
+  // being *massive* below (because we ignore the units and interpret the number
+  // as a factor of the bbox width/height). We should also send a warning if the
   // user uses a number without units (a future SVG spec should really
   // deprecate that, since it's too confusing for a bare number to be sometimes
   // interpreted as a fraction of the bounding box and sometimes as user-space
@@ -81,56 +81,31 @@ nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
     return;
   }
 
-  // Calculate filterRes (the width and height of the pixel buffer of the
+  // Calculate the width and height of the pixel buffer of the
   // temporary offscreen surface that we would/will create to paint into when
-  // painting the entire filtered element) and, if necessary, adjust
+  // painting the entire filtered element and, if necessary, adjust
   // mFilterRegion out slightly so that it aligns with pixel boundaries of this
   // buffer:
 
-  gfxIntSize filterRes;
-  const nsSVGIntegerPair* filterResAttrs =
-    mFilterFrame->GetIntegerPairValue(SVGFilterElement::FILTERRES);
-  if (filterResAttrs->IsExplicitlySet()) {
-    int32_t filterResX = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eFirst);
-    int32_t filterResY = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eSecond);
-    if (filterResX <= 0 || filterResY <= 0) {
-      // 0 disables rendering, < 0 is error. dispatch error console warning?
-      return;
-    }
-
-    mFilterRegion.Scale(filterResX, filterResY);
-    mFilterRegion.RoundOut();
-    mFilterRegion.Scale(1.0 / filterResX, 1.0 / filterResY);
-    // We don't care if this overflows, because we can handle upscaling/
-    // downscaling to filterRes
-    bool overflow;
-    filterRes =
-      nsSVGUtils::ConvertToSurfaceSize(gfxSize(filterResX, filterResY),
-                                       &overflow);
-    // XXX we could send a warning to the error console if the author specified
-    // filterRes doesn't align well with our outer 'svg' device space.
-  } else {
-    // Match filterRes as closely as possible to the pixel density of the nearest
-    // outer 'svg' device space:
-    gfxMatrix canvasTM =
-      nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_OUTERSVG_TM);
-    if (canvasTM.IsSingular()) {
-      // nothing to draw
-      return;
-    }
-
-    gfxSize scale = canvasTM.ScaleFactors(true);
-    mFilterRegion.Scale(scale.width, scale.height);
-    mFilterRegion.RoundOut();
-    // We don't care if this overflows, because we can handle upscaling/
-    // downscaling to filterRes
-    bool overflow;
-    filterRes = nsSVGUtils::ConvertToSurfaceSize(mFilterRegion.Size(),
-                                                 &overflow);
-    mFilterRegion.Scale(1.0 / scale.width, 1.0 / scale.height);
+  // Match filter space as closely as possible to the pixel density of the
+  // nearest outer 'svg' device space:
+  gfxMatrix canvasTM =
+    nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_OUTERSVG_TM);
+  if (canvasTM.IsSingular()) {
+    // nothing to draw
+    return;
   }
 
-  mFilterSpaceBounds.SetRect(nsIntPoint(0, 0), filterRes);
+  gfxSize scale = canvasTM.ScaleFactors(true);
+  mFilterRegion.Scale(scale.width, scale.height);
+  mFilterRegion.RoundOut();
+
+  // We don't care if this overflows, because we can handle upscaling/
+  // downscaling to filter space.
+  bool overflow;
+  mFilterSpaceBounds.SetRect(nsIntPoint(0, 0),
+    nsSVGUtils::ConvertToSurfaceSize(mFilterRegion.Size(), &overflow));
+  mFilterRegion.Scale(1.0 / scale.width, 1.0 / scale.height);
 
   mInitialized = true;
 }
