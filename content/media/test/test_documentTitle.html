@@ -6,6 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463830
 <head>
   <title>Test for Bug 463830</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="manifest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -13,40 +14,49 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463830
 <p id="display"></p>
 <iframe id="i"></iframe>
 <div id="content" style="display: none">
-  
 </div>
+<audio id="dummy"></audio>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 463830 **/
 
-var gTests = [
-  { file: "320x240.ogv", title: "320x240.ogv" },
-  { file: "bug461281.ogg", title: "bug461281.ogg" },
-];
-
 var gTestNum = 0;
 
 addLoadEvent(runTest);
 
-var title;
+var title = "WRONG";
 var i = document.getElementById("i");
 
 function runTest() {
-  if (gTestNum == gTests.length) {
+  i.addEventListener("load", function() {
+    dump(title + " " + i.contentDocument.title + "\n");
+    is(i.contentDocument.title, title, "Checking doc title for " + title);
+    setTimeout(nextTest, 0);
+  }, false);
+
+  nextTest();
+}
+
+function nextTest() {
+  if (gTestNum == gSmallTests.length) {
     SimpleTest.finish();
     return;
   }
-  if (gTestNum == 0) {
-    i.addEventListener("load", function() {
-          is(i.contentDocument.title, title, "Doc title incorrect");
-          setTimeout(runTest, 0);
-        }, false);
+
+  var test = gSmallTests[gTestNum];
+  gTestNum++;
+
+  if (!dummy.canPlayType(test.type) ||
+      test.type == "audio/x-wav") {
+    // Skip WAVE files since we deliberately don't treat WAVE files as a type
+    // we can handle in an <object> or <iframe> (bug 475110)
+    return nextTest();
   }
 
-  title = gTests[gTestNum].title;
-  i.src = gTests[gTestNum].file;
-  gTestNum++;
+  dump("Setting i.src to " + test.name + "\n");
+  title = test.name;
+  i.src = test.name;
 }
 
 SimpleTest.waitForExplicitFinish();
