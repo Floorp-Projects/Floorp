@@ -272,7 +272,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, bool aNetworkCreated)
   , mInShow(false)
   , mHideCalled(false)
   , mNetworkCreated(aNetworkCreated)
-  , mDelayRemoteDialogs(false)
   , mRemoteBrowserShown(false)
   , mRemoteFrame(false)
   , mClipSubdocument(true)
@@ -2196,26 +2195,6 @@ nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::GetDelayRemoteDialogs(bool* aRetVal)
-{
-  *aRetVal = mDelayRemoteDialogs;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFrameLoader::SetDelayRemoteDialogs(bool aDelay)
-{
-  if (mRemoteBrowser && mDelayRemoteDialogs && !aDelay) {
-    nsRefPtr<nsIRunnable> ev =
-      NS_NewRunnableMethod(mRemoteBrowser,
-                           &mozilla::dom::TabParent::HandleDelayedDialogs);
-    NS_DispatchToCurrentThread(ev);
-  }
-  mDelayRemoteDialogs = aDelay;
-  return NS_OK;
 }
 
 nsresult
