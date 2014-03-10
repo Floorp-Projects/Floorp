@@ -366,7 +366,7 @@ ContainerRender(ContainerT* aContainer,
 #endif
 
     compositor->SetRenderTarget(previousTarget);
-    EffectChain effectChain;
+    EffectChain effectChain(aContainer);
     LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(aContainer->GetMaskLayer(),
                                                             effectChain,
                                                             !aContainer->GetTransform().CanDraw2D());
