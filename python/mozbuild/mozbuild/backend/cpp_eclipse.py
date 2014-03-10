@@ -226,6 +226,24 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                                 <arguments>1.0-name-matches-false-false-obj-*</arguments>
                         </matcher>
                 </filter>
+                <filter>
+                        <id>14081994</id>
+                        <name>tree</name>
+                        <type>22</type>
+                        <matcher>
+                                <id>org.eclipse.ui.ide.multiFilter</id>
+                                <arguments>1.0-name-matches-false-false-*.rej</arguments>
+                        </matcher>
+                </filter>
+                <filter>
+                        <id>25121970</id>
+                        <name>tree</name>
+                        <type>22</type>
+                        <matcher>
+                                <id>org.eclipse.ui.ide.multiFilter</id>
+                                <arguments>1.0-name-matches-false-false-*.orig</arguments>
+                        </matcher>
+                </filter>
         </filteredResources>
 </projectDescription>
 """
