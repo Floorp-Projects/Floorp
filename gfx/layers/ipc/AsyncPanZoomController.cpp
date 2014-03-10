@@ -1543,6 +1543,12 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset;
   }
 
+  // Execute tasks queued up by mAnimation's Sample() (called by
+  // UpdateAnimation()) for execution after mMonitor has been released.
+  if (mAnimation) {
+    mAnimation->ExecuteDeferredTasks();
+  }
+
   // Cancel the mAsyncScrollTimeoutTask because we will fire a
   // mozbrowserasyncscroll event or renew the mAsyncScrollTimeoutTask again.
   if (mAsyncScrollTimeoutTask) {
