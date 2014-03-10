@@ -800,7 +800,11 @@ public:
  */
 struct MaskLayerUserData : public LayerUserData
 {
-  MaskLayerUserData() : mImageKey(nullptr) {}
+  MaskLayerUserData()
+    : mScaleX(-1.0f)
+    , mScaleY(-1.0f)
+    , mAppUnitsPerDevPixel(-1)
+  { }
 
   bool
   operator== (const MaskLayerUserData& aOther) const
@@ -3975,6 +3979,8 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
   // save the details of the clip in user data
   userData->mScaleX = newData.mScaleX;
   userData->mScaleY = newData.mScaleY;
+  userData->mOffset = newData.mOffset;
+  userData->mAppUnitsPerDevPixel = newData.mAppUnitsPerDevPixel;
   userData->mRoundedClipRects.SwapElements(newData.mRoundedClipRects);
   userData->mImageKey = lookupKey;
 
