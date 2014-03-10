@@ -88,9 +88,6 @@ public:
   bool IsPlaceholderTile() const { return mTextureHost == nullptr; }
 
   void ReadUnlock() {
-    // Warn if we have a texture host, but no corresponding lock.
-    NS_WARN_IF_FALSE(mTextureHost == nullptr || mSharedLock != nullptr,
-                     "ReadUnlock with no gfxSharedReadLock");
     if (mSharedLock) {
       mSharedLock->ReadUnlock();
     }
@@ -263,8 +260,8 @@ private:
   TiledLayerBufferComposite    mLowPrecisionTiledBuffer;
   TiledLayerBufferComposite    mOldTiledBuffer;
   TiledLayerBufferComposite    mOldLowPrecisionTiledBuffer;
-  bool                         mPendingUpload : 1;
-  bool                         mPendingLowPrecisionUpload : 1;
+  bool                         mPendingUpload;
+  bool                         mPendingLowPrecisionUpload;
 };
 
 }
