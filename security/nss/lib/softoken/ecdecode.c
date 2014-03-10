@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 
 #include "blapi.h"
 #include "secoid.h"
@@ -603,4 +603,4 @@ EC_DecodeParams(const SECItem *encodedParams, ECParams **ecparams)
     }
 }
 
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */

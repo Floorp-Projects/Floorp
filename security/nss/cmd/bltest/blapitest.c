@@ -21,7 +21,7 @@
 #include "secoid.h"
 #include "nssutil.h"
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 #include "ecl-curve.h"
 SECStatus EC_DecodeParams(const SECItem *encodedParams, 
 	ECParams **ecparams);
@@ -133,7 +133,7 @@ static void Usage()
     PRINTUSAGE(progName, "-S -m mode", "Sign a buffer");
     PRINTUSAGE("",	"", "[-i plaintext] [-o signature] [-k key]");
     PRINTUSAGE("",	"", "[-b bufsize]");
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     PRINTUSAGE("",	"", "[-n curvename]");
 #endif
     PRINTUSAGE("",	"", "[-p repetitions | -5 time_interval] [-4 th_num]");
@@ -141,7 +141,7 @@ static void Usage()
     PRINTUSAGE("",	"-i", "file which contains input buffer");
     PRINTUSAGE("",	"-o", "file for signature");
     PRINTUSAGE("",	"-k", "file which contains key");
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     PRINTUSAGE("",	"-n", "name of curve for EC key generation; one of:");
     PRINTUSAGE("",  "",   "  sect163k1, nistk163, sect163r1, sect163r2,");
     PRINTUSAGE("",  "",   "  nistb163, sect193r1, sect193r2, sect233k1, nistk233,");
@@ -390,7 +390,7 @@ dsakey_from_filedata(SECItem *filedata)
     return key;
 }
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 static ECPrivateKey *
 eckey_from_filedata(SECItem *filedata)
 {
@@ -544,7 +544,7 @@ getECParams(const char *curve)
 
     return ecparams;
 }
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
 static void
 dump_pqg(PQGParams *pqg)
@@ -562,7 +562,7 @@ dump_dsakey(DSAPrivateKey *key)
     SECU_PrintInteger(stdout, &key->privateValue, "PRIVATE VALUE:", 0);
 }
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 static void
 dump_ecp(ECParams *ecp)
 {
@@ -651,7 +651,7 @@ typedef enum {
     bltestRSA,            /* Public Key Ciphers    */
     bltestRSA_OAEP,       /* . (Public Key Enc.)   */
     bltestRSA_PSS,        /* . (Public Key Sig.)   */
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     bltestECDSA,          /* . (Public Key Sig.)   */
 #endif
     bltestDSA,            /* . (Public Key Sig.)   */
@@ -690,7 +690,7 @@ static char *mode_strings[] =
     "rsa",
     "rsa_oaep",
     "rsa_pss",
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     "ecdsa",
 #endif
     /*"pqg",*/
@@ -744,7 +744,7 @@ typedef struct
     PQGParams *pqg;
 } bltestDSAParams;
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 typedef struct
 {
     char      *curveName;
@@ -763,7 +763,7 @@ typedef struct
     union {
         bltestRSAParams rsa;
         bltestDSAParams dsa;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
         bltestECDSAParams ecdsa;
 #endif
     } cipherParams;
@@ -1266,7 +1266,7 @@ dsa_verifyDigest(void *cx, SECItem *output, const SECItem *input)
     return DSA_VerifyDigest((DSAPublicKey *)params->pubKey, output, input);
 }
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 SECStatus
 ecdsa_signDigest(void *cx, SECItem *output, const SECItem *input)
 {
@@ -1720,7 +1720,7 @@ bltest_dsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     return SECSuccess;
 }
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 SECStatus
 bltest_ecdsa_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
 {
@@ -2077,7 +2077,7 @@ finish:
 
 SECStatus
 pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 	      int keysize, int exponent, char *curveName)
 #else
 	      int keysize, int exponent)
@@ -2090,7 +2090,7 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
     RSAPrivateKey **rsaKey = NULL;
     bltestDSAParams *dsap;
     DSAPrivateKey **dsaKey = NULL;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     SECItem *tmpECParamsDER;
     ECParams *tmpECParams = NULL;
     SECItem ecSerialize[3];
@@ -2132,7 +2132,7 @@ pubkeyInitKey(bltestCipherInfo *cipherInfo, PRFileDesc *file,
 	    dsap->keysize = (*dsaKey)->params.prime.len*8;
 	}
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     case bltestECDSA:
 	ecKey = (ECPrivateKey **)&asymk->privKey;
 	if (curveName != NULL) {
@@ -2244,7 +2244,7 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	}
 	return bltest_dsa_init(cipherInfo, encrypt);
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     case bltestECDSA:
 	if (encrypt) {
 		SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
@@ -2494,7 +2494,7 @@ cipherFinish(bltestCipherInfo *cipherInfo)
     case bltestRSA_PSS:  /* will be freed with it. */
     case bltestRSA_OAEP:
     case bltestDSA:
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     case bltestECDSA:
 #endif
     case bltestMD2: /* hash contexts are ephemeral */
@@ -2674,7 +2674,7 @@ print_td:
               fprintf(stdout, "%8d", info->params.asymk.cipherParams.dsa.keysize);
           }
           break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
       case bltestECDSA:
           if (td) {
               fprintf(stdout, "%12s", "ec_curve");
@@ -2906,7 +2906,7 @@ get_params(PLArenaPool *arena, bltestParams *params,
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "ciphertext",j);
 	load_file_data(arena, &params->asymk.sig, filename, bltestBase64Encoded);
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     case bltestECDSA:
 	sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr, "key", j);
 	load_file_data(arena, &params->asymk.key, filename, bltestBase64Encoded);
@@ -3128,7 +3128,7 @@ dump_file(bltestCipherMode mode, char *filename)
 	load_file_data(arena, &keydata, filename, bltestBase64Encoded);
 	key = dsakey_from_filedata(&keydata.buf);
 	dump_dsakey(key);
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     } else if (mode == bltestECDSA) {
 	ECPrivateKey *key;
 	load_file_data(arena, &keydata, filename, bltestBase64Encoded);
@@ -3373,7 +3373,7 @@ enum {
     opt_Key,
     opt_HexWSpc,
     opt_Mode,
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     opt_CurveName,
 #endif
     opt_Output,
@@ -3426,7 +3426,7 @@ static secuCommandFlag bltest_options[] =
     { /* opt_Key	  */ 'k', PR_TRUE,  0, PR_FALSE },
     { /* opt_HexWSpc	  */ 'l', PR_FALSE, 0, PR_FALSE },
     { /* opt_Mode	  */ 'm', PR_TRUE,  0, PR_FALSE },
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     { /* opt_CurveName	  */ 'n', PR_TRUE,  0, PR_FALSE },
 #endif
     { /* opt_Output	  */ 'o', PR_TRUE,  0, PR_FALSE },
@@ -3461,7 +3461,7 @@ int main(int argc, char **argv)
     bltestCipherInfo    *cipherInfoListHead, *cipherInfo;
     bltestIOMode        ioMode;
     int                 bufsize, exponent, curThrdNum;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     char		*curveName = NULL;
 #endif
     int			 i, commandsEntered;
@@ -3695,7 +3695,7 @@ int main(int argc, char **argv)
     else
 	exponent = 65537;
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     if (bltest.options[opt_CurveName].activated)
 	curveName = PORT_Strdup(bltest.options[opt_CurveName].arg);
     else
@@ -3783,7 +3783,7 @@ int main(int argc, char **argv)
                 file = PR_Open("tmp.key", PR_WRONLY|PR_CREATE_FILE, 00660);
             }
             params->key.mode = bltestBase64Encoded;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
             pubkeyInitKey(cipherInfo, file, keysize, exponent, curveName);
 #else
             pubkeyInitKey(cipherInfo, file, keysize, exponent);

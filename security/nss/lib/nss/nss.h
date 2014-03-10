@@ -9,7 +9,7 @@
 #define __nss_h_
 
 /* The private macro _NSS_ECC_STRING is for NSS internal use only. */
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
 #define _NSS_ECC_STRING " Extended ECC"
 #else

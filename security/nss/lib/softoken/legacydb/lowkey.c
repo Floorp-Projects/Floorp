@@ -99,7 +99,7 @@ const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[] = {
     { 0, }
 };
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 
 /* XXX This is just a placeholder for later when we support
  * generic curves and need full-blown support for parsing EC
@@ -216,7 +216,7 @@ LGEC_CopyParams(PLArenaPool *arena, ECParams *dstParams,
 loser:
     return SECFailure;
 }
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 /*
  * See bugzilla bug 125359
  * Since NSS (via PKCS#11) wants to handle big integers as unsigned ints,
@@ -266,7 +266,7 @@ lg_prepare_low_dh_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
     key->u.dh.privateValue.type = siUnsignedInteger;
 }
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 void
 lg_prepare_low_ecparams_for_asn1(ECParams *params)
 {
@@ -283,7 +283,7 @@ lg_prepare_low_ec_priv_key_for_asn1(NSSLOWKEYPrivateKey *key)
     key->u.ec.privateValue.type = siUnsignedInteger;
     key->u.ec.publicValue.type = siUnsignedInteger;
 }
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
 void
 lg_nsslowkey_DestroyPrivateKey(NSSLOWKEYPrivateKey *privk)
@@ -378,7 +378,7 @@ lg_nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
 	    if (rv == SECSuccess) return pubk;
 	}
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
       case NSSLOWKEYECKey:
 	pubk = (NSSLOWKEYPublicKey *)PORT_ArenaZAlloc(arena,
 						    sizeof(NSSLOWKEYPublicKey));
@@ -397,7 +397,7 @@ lg_nsslowkey_ConvertToPublicKey(NSSLOWKEYPrivateKey *privk)
 	    if (rv == SECSuccess) return pubk;
 	}
 	break;
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 	/* No Fortezza in Low Key implementations (Fortezza keys aren't
 	 * stored in our data base */
     default:

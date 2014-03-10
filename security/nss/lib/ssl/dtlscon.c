@@ -30,19 +30,19 @@ static const PRUint16 COMMON_MTU_VALUES[] = {
 
 /* List copied from ssl3con.c:cipherSuites */
 static const ssl3CipherSuite nonDTLSSuites[] = {
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
     TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-#endif  /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
     TLS_DHE_DSS_WITH_RC4_128_SHA,
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     TLS_ECDH_RSA_WITH_RC4_128_SHA,
     TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
-#endif  /* NSS_ENABLE_ECC */
-    SSL_RSA_WITH_RC4_128_MD5,
-    SSL_RSA_WITH_RC4_128_SHA,
+#endif /* NSS_DISABLE_ECC */
+    TLS_RSA_WITH_RC4_128_MD5,
+    TLS_RSA_WITH_RC4_128_SHA,
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,
-    SSL_RSA_EXPORT_WITH_RC4_40_MD5,
+    TLS_RSA_EXPORT_WITH_RC4_40_MD5,
     0 /* End of list marker */
 };
 

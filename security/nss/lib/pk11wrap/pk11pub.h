@@ -772,7 +772,8 @@ PK11_GetPBECryptoMechanism(SECAlgorithmID *algid,
  **********************************************************************/
 PK11DefaultArrayEntry *PK11_GetDefaultArray(int *size);
 SECStatus PK11_UpdateSlotAttribute(PK11SlotInfo *slot,
-				   PK11DefaultArrayEntry *entry, PRBool add);
+				   const PK11DefaultArrayEntry *entry,
+				   PRBool add);
 
 /**********************************************************************
  * Functions to look at PKCS #11 dependent data

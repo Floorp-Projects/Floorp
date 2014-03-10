@@ -35,7 +35,7 @@ RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
                   const unsigned char *sig, unsigned int sigLen,
                   const unsigned char *hash, unsigned int hashLen);
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 /*
 ** pepare an ECParam structure from DEREncoded params
  */
