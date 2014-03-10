@@ -185,6 +185,9 @@ assertEq(asmLink(asmCompile('glob','imp', USE_ASM + "var ffi=imp.ffi; function f
 // Ternaries conditionals
 //
 // Basic ternaries
+var f = asmLink(asmCompile(USE_ASM + "function f() { return 0; if (1) return -1; return -2} return f"));
+assertEq(f(5), 0);
+
 var f = asmLink(asmCompile(USE_ASM + "function f(x) { x=x|0; var a=2;if(x?1:0)a=1;else a=0; return a|0 } return f"));
 assertEq(f(1), 1);
 assertEq(f(0), 0);
