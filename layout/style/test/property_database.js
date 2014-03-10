@@ -4792,6 +4792,49 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 
 if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 	gCSSProperties["display"].other_values.push("grid", "inline-grid");
+	gCSSProperties["grid-auto-columns"] = {
+		domProp: "gridAutoColumns",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [
+			"40px",
+			"2em",
+			"2.5fr",
+			"12%",
+			"min-content",
+			"max-content",
+			"calc(20px + 10%)",
+			"minmax(20px, max-content)",
+			"m\\69nmax(20px, 4Fr)",
+			"MinMax(min-content, calc(20px + 10%))",
+		],
+		invalid_values: [
+			"",
+			"normal",
+			"40ms",
+			"-40px",
+			"-12%",
+			"-2em",
+			"-2.5fr",
+			"minmax()",
+			"minmax(20px)",
+			"mİnmax(20px, 100px)",
+			"minmax(20px, 100px, 200px)",
+			"maxmin(100px, 20px)",
+			"minmax(min-content, auto)",
+			"minmax(min-content, minmax(30px, max-content))",
+		]
+	};
+	gCSSProperties["grid-auto-rows"] = {
+		domProp: "gridAutoRows",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: gCSSProperties["grid-auto-columns"].initial_values,
+		other_values: gCSSProperties["grid-auto-columns"].other_values,
+		invalid_values: gCSSProperties["grid-auto-columns"].invalid_values
+	};
+
 	gCSSProperties["grid-template-columns"] = {
 		domProp: "gridTemplateColumns",
 		inherited: false,
