@@ -322,10 +322,9 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     CancelImageRequests(aNotify);
   }
 
-  // If we plan to call LoadImage, we want to do it first so that the image load
-  // kicks off. But if aNotify is false, we are coming from the parser or some
-  // such place; we'll get bound after all the attributes have been set, so
-  // we'll do the image load from BindToTree. Skip the LoadImage call in that case.
+  // If aNotify is false, we are coming from the parser or some such place;
+  // we'll get bound after all the attributes have been set, so we'll do the
+  // image load from BindToTree. Skip the LoadImage call in that case.
   if (aNotify &&
       aNameSpaceID == kNameSpaceID_None &&
       aName == nsGkAtoms::crossorigin) {
@@ -334,29 +333,6 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     nsAutoString uri;
     GetAttr(kNameSpaceID_None, nsGkAtoms::src, uri);
     LoadImage(uri, true, aNotify);
-  }
-
-  if (aNotify &&
-      aNameSpaceID == kNameSpaceID_None &&
-      aName == nsGkAtoms::src &&
-      aValue) {
-
-    // Prevent setting image.src by exiting early
-    if (nsContentUtils::IsImageSrcSetDisabled()) {
-      return NS_OK;
-    }
-
-    // A hack to get animations to reset. See bug 594771.
-    mNewRequestsWillNeedAnimationReset = true;
-
-    // Force image loading here, so that we'll try to load the image from
-    // network if it's set to be not cacheable...  If we change things so that
-    // the state gets in Element's attr-setting happen around this
-    // LoadImage call, we could start passing false instead of aNotify
-    // here.
-    LoadImage(aValue->GetStringValue(), true, aNotify);
-
-    mNewRequestsWillNeedAnimationReset = false;
   }
 
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName,
@@ -426,15 +402,38 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                           nsIAtom* aPrefix, const nsAString& aValue,
                           bool aNotify)
 {
+  // We need to force our image to reload.  This must be done here, not in
+  // AfterSetAttr or BeforeSetAttr, because we want to do it even if the attr is
+  // being set to its existing value, which is normally optimized away as a
+  // no-op.
+  //
+  // If aNotify is false, we are coming from the parser or some such place;
+  // we'll get bound after all the attributes have been set, so we'll do the
+  // image load from BindToTree. Skip the LoadImage call in that case.
+  if (aNotify &&
+      aNameSpaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::src) {
+
+    // Prevent setting image.src by exiting early
+    if (nsContentUtils::IsImageSrcSetDisabled()) {
+      return NS_OK;
+    }
+
+    // A hack to get animations to reset. See bug 594771.
+    mNewRequestsWillNeedAnimationReset = true;
+
+    // Force image loading here, so that we'll try to load the image from
+    // network if it's set to be not cacheable...  If we change things so that
+    // the state gets in Element's attr-setting happen around this
+    // LoadImage call, we could start passing false instead of aNotify
+    // here.
+    LoadImage(aValue, true, aNotify);
+
+    mNewRequestsWillNeedAnimationReset = false;
+  }
+
   return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
                                        aNotify);
-}
-
-nsresult
-HTMLImageElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                            bool aNotify)
-{
-  return nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
 nsresult
