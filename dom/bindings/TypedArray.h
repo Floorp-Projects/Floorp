@@ -50,6 +50,8 @@ private:
 template<typename T,
          JSObject* UnboxArray(JSObject*, uint32_t*, T**)>
 struct TypedArray_base : public TypedArrayObjectStorage {
+  typedef T element_type;
+
   TypedArray_base(JSObject* obj)
   {
     DoInit(obj);
@@ -194,6 +196,29 @@ typedef TypedArray_base<uint8_t, JS_GetObjectAsArrayBufferView>
 typedef TypedArray<uint8_t, JS_GetArrayBufferData,
                    JS_GetObjectAsArrayBuffer, JS_NewArrayBuffer>
         ArrayBuffer;
+
+// A class for converting an nsTArray to a TypedArray
+// Note: A TypedArrayCreator must not outlive the nsTArray it was created from.
+//       So this is best used to pass from things that understand nsTArray to
+//       things that understand TypedArray, as with Promise::ArgumentToJSValue.
+template<typename TypedArrayType>
+class TypedArrayCreator
+{
+  typedef nsTArray<typename TypedArrayType::element_type> ArrayType;
+
+  public:
+    TypedArrayCreator(const ArrayType& aArray)
+      : mArray(aArray)
+    {}
+
+    JSObject* Create(JSContext* aCx, JS::Handle<JSObject*> aCreator) const
+    {
+      return TypedArrayType::Create(aCx, aCreator, mArray.Length(), mArray.Elements());
+    }
+
+  private:
+    const ArrayType& mArray;
+};
 
 // A class for rooting an existing TypedArray struct
 template<typename ArrayType>
