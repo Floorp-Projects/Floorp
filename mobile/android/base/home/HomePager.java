@@ -191,6 +191,11 @@ public class HomePager extends ViewPager {
         mLoaded = true;
         mInitialPanelId = panelId;
 
+        // Update the home banner message each time the HomePager is loaded.
+        if (mHomeBanner != null) {
+            mHomeBanner.update();
+        }
+
         // Only animate on post-HC devices, when a non-null animator is given
         final boolean shouldAnimate = (animator != null && Build.VERSION.SDK_INT >= 11);
 
