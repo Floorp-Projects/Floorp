@@ -638,9 +638,7 @@ BrowserTabActor.prototype = {
     // Watch for globals being created in this tab.
     this.browser.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
     this.browser.addEventListener("pageshow", this._onWindowCreated, true);
-    if (this._tabbrowser) {
-      this._progressListener = new DebuggerProgressListener(this);
-    }
+    this._progressListener = new DebuggerProgressListener(this);
 
     this._attached = true;
   },
@@ -1113,12 +1111,18 @@ BrowserAddonActor.prototype.requestTypes = {
  */
 function DebuggerProgressListener(aBrowserTabActor) {
   this._tabActor = aBrowserTabActor;
-  this._tabActor._tabbrowser.addProgressListener(this);
+  this._tabActor.webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
   let EventEmitter = devtools.require("devtools/toolkit/event-emitter");
   EventEmitter.decorate(this);
 }
 
 DebuggerProgressListener.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIWebProgressListener,
+    Ci.nsISupportsWeakReference,
+    Ci.nsISupports,
+  ]),
+
   onStateChange:
   DevToolsUtils.makeInfallible(function DPL_onStateChange(aProgress, aRequest, aFlag, aStatus) {
     let isStart = aFlag & Ci.nsIWebProgressListener.STATE_START;
@@ -1176,13 +1180,12 @@ DebuggerProgressListener.prototype = {
    * Destroy the progress listener instance.
    */
   destroy: function DPL_destroy() {
-    if (this._tabActor._tabbrowser.removeProgressListener) {
-      try {
-        this._tabActor._tabbrowser.removeProgressListener(this);
-      } catch (ex) {
-        // This can throw during browser shutdown.
-      }
+    try {
+      this._tabActor.webProgress.removeProgressListener(this);
+    } catch (ex) {
+      // This can throw during browser shutdown.
     }
+
     this._tabActor._progressListener = null;
     this._tabActor = null;
   }
