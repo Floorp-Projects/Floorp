@@ -96,12 +96,22 @@ class CppEclipseBackend(CommonBackend):
         with open(editor_prefs_path, 'wb') as fh:
             fh.write(EDITOR_SETTINGS);
 
+    def _define_entry(self, name, value):
+        define = ET.Element('entry')
+        define.set('kind', 'macro')
+        define.set('name', name)
+        define.set('value', value)
+        return ET.tostring(define)
+
     def _write_language_settings(self, fh):
         settings = LANGUAGE_SETTINGS_TEMPLATE
 
         settings = settings.replace('@GLOBAL_INCLUDE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include'))
+        settings = settings.replace('@NSPR_INCLUDE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/nspr'))
         settings = settings.replace('@IPDL_INCLUDE_PATH@', os.path.join(self.environment.topobjdir, 'ipc/ipdl/_ipdlheaders'))
         settings = settings.replace('@PREINCLUDE_FILE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/mozilla-config.h'))
+        settings = settings.replace('@DEFINE_MOZILLA_INTERNAL_API@', self._define_entry('MOZILLA_INTERNAL_API', '1'))
+        settings = settings.replace('@DEFINE_MDCPUCFG@', self._define_entry('MDCPUCFG', self.environment.substs['TARGET_NSPR_MDCPUCFG']))
 
         fh.write(settings)
 
@@ -280,6 +290,9 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
                                                 <entry kind="includePath" name="@GLOBAL_INCLUDE_PATH@">
                                                         <flag value="LOCAL"/>
                                                 </entry>
+                                                <entry kind="includePath" name="@NSPR_INCLUDE_PATH@">
+                                                        <flag value="LOCAL"/>
+                                                </entry>
                                                 <entry kind="includePath" name="@IPDL_INCLUDE_PATH@">
                                                         <flag value="LOCAL"/>
                                                 </entry>
@@ -292,7 +305,8 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
                                                   the indexer gets the version that is used in most of the true. This means that
                                                   MOZILLA_EXTERNAL_API code will suffer.
                                                 -->
-                                                <entry kind="macro" name="MOZILLA_INTERNAL_API" value="1"/>
+                                                @DEFINE_MOZILLA_INTERNAL_API@
+                                                @DEFINE_MDCPUCFG@
                                         </resource>
                                 </language>
                         </provider>
