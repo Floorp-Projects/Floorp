@@ -217,6 +217,8 @@ BrowserTabList.prototype.getList = function() {
   // the actors. Thus, the sequence yielded is always a snapshot of the
   // actors that were live when we began the iteration.
 
+  let actorPromises = [];
+
   // Iterate over all navigator:browser XUL windows.
   for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
     let selectedBrowser = this._getSelectedBrowser(win);
@@ -232,10 +234,20 @@ BrowserTabList.prototype.getList = function() {
       // Do we have an existing actor for this browser? If not, create one.
       let actor = this._actorByBrowser.get(browser);
       if (actor) {
+        actorPromises.push(promise.resolve(actor));
         foundCount++;
+      } else if (browser.isRemoteBrowser) {
+        actor = new RemoteBrowserTabActor(this._connection, browser);
+        this._actorByBrowser.set(browser, actor);
+        let promise = actor.connect().then((form) => {
+          actor._form = form;
+          return actor;
+        });
+        actorPromises.push(promise);
       } else {
         actor = new BrowserTabActor(this._connection, browser, win.gBrowser);
         this._actorByBrowser.set(browser, actor);
+        actorPromises.push(promise.resolve(actor));
       }
 
       // Set the 'selected' properties on all actors correctly.
@@ -249,7 +261,7 @@ BrowserTabList.prototype.getList = function() {
   this._mustNotify = true;
   this._checkListening();
 
-  return promise.resolve([actor for ([_, actor] of this._actorByBrowser)]);
+  return promise.all(actorPromises);
 };
 
 Object.defineProperty(BrowserTabList.prototype, 'onListChanged', {
@@ -991,6 +1003,35 @@ BrowserTabActor.prototype.exit = function() {
   TabActor.prototype.exit.call(this);
   this._browser = null;
   this._tabbrowser = null;
+};
+
+/**
+ * This actor is a shim that connects to a ContentActor in a remote
+ * browser process. All RDP packets get forwarded using the message
+ * manager.
+ *
+ * @param aConnection The main RDP connection.
+ * @param aBrowser XUL <browser> element to connect to.
+ */
+function RemoteBrowserTabActor(aConnection, aBrowser)
+{
+  this._conn = aConnection;
+  this._browser = aBrowser;
+  this._form = null;
+}
+
+RemoteBrowserTabActor.prototype = {
+  connect: function() {
+    return DebuggerServer.connectToChild(this._conn, this._browser.messageManager);
+  },
+
+  form: function() {
+    return this._form;
+  },
+
+  exit: function() {
+    this._browser = null;
+  },
 };
 
 function BrowserAddonList(aConnection)
