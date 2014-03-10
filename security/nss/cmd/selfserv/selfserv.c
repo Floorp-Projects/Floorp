@@ -107,30 +107,30 @@ const int ssl2CipherSuites[] = {
 const int ssl3CipherSuites[] = {
     -1, /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
     -1, /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA	 * b */
-    SSL_RSA_WITH_RC4_128_MD5,			/* c */
-    SSL_RSA_WITH_3DES_EDE_CBC_SHA,		/* d */
-    SSL_RSA_WITH_DES_CBC_SHA,			/* e */
-    SSL_RSA_EXPORT_WITH_RC4_40_MD5,		/* f */
-    SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,		/* g */
+    TLS_RSA_WITH_RC4_128_MD5,			/* c */
+    TLS_RSA_WITH_3DES_EDE_CBC_SHA,		/* d */
+    TLS_RSA_WITH_DES_CBC_SHA,			/* e */
+    TLS_RSA_EXPORT_WITH_RC4_40_MD5,		/* f */
+    TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,		/* g */
     -1, /* SSL_FORTEZZA_DMS_WITH_NULL_SHA,	 * h */
-    SSL_RSA_WITH_NULL_MD5,			/* i */
+    TLS_RSA_WITH_NULL_MD5,			/* i */
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,		/* j */
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,		/* k */
     TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA,	/* l */
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,	        /* m */
-    SSL_RSA_WITH_RC4_128_SHA,			/* n */
+    TLS_RSA_WITH_RC4_128_SHA,			/* n */
     -1, /* TLS_DHE_DSS_WITH_RC4_128_SHA, 	 * o */
-    -1, /* SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA,	 * p */
-    -1, /* SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA,	 * q */
-    -1, /* SSL_DHE_RSA_WITH_DES_CBC_SHA,	 * r */
-    -1, /* SSL_DHE_DSS_WITH_DES_CBC_SHA,	 * s */
+    -1, /* TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,	 * p */
+    -1, /* TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,	 * q */
+    -1, /* TLS_DHE_RSA_WITH_DES_CBC_SHA,	 * r */
+    -1, /* TLS_DHE_DSS_WITH_DES_CBC_SHA,	 * s */
     -1, /* TLS_DHE_DSS_WITH_AES_128_CBC_SHA,	 * t */
     -1, /* TLS_DHE_RSA_WITH_AES_128_CBC_SHA,	 * u */
     TLS_RSA_WITH_AES_128_CBC_SHA,     	    	/* v */
     -1, /* TLS_DHE_DSS_WITH_AES_256_CBC_SHA,	 * w */
     -1, /* TLS_DHE_RSA_WITH_AES_256_CBC_SHA,	 * x */
     TLS_RSA_WITH_AES_256_CBC_SHA,     	    	/* y */
-    SSL_RSA_WITH_NULL_SHA,			/* z */
+    TLS_RSA_WITH_NULL_SHA,			/* z */
     0
 };
 
@@ -160,11 +160,11 @@ PrintUsageHeader(const char *progName)
 "         [-f password_file] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
 "         [-V [min-version]:[max-version]] [-a sni_name]\n"
 "         [ T <good|revoked|unknown|badsig|corrupted|none|ocsp>] [-A ca]\n"
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 "         [-C SSLCacheEntries] [-e ec_nickname]\n"
 #else
 "         [-C SSLCacheEntries]\n"
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
         ,progName);
 }
 
@@ -1932,9 +1932,9 @@ server_main(
      * would like it to be. Turn this cipher on.
      */
 
-    secStatus = SSL_CipherPrefSetDefault( SSL_RSA_WITH_NULL_MD5, PR_TRUE);
+    secStatus = SSL_CipherPrefSetDefault( TLS_RSA_WITH_NULL_MD5, PR_TRUE);
     if ( secStatus != SECSuccess ) {
-	errExit("SSL_CipherPrefSetDefault:SSL_RSA_WITH_NULL_MD5");
+	errExit("SSL_CipherPrefSetDefault:TLS_RSA_WITH_NULL_MD5");
     }
 
     if (expectedHostNameVal) {
@@ -2133,7 +2133,7 @@ main(int argc, char **argv)
 {
     char *               progName    = NULL;
     char *               nickName    = NULL;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     char *               ecNickName   = NULL;
 #endif
     const char *         fileName    = NULL;
@@ -2246,9 +2246,9 @@ main(int argc, char **argv)
 
 	case 'd': dir = optstate->value; break;
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 	case 'e': ecNickName = PORT_Strdup(optstate->value); break;
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
 	case 'f':
             pwdata.source = PW_FROMFILE;
@@ -2362,7 +2362,7 @@ main(int argc, char **argv)
     }
 
     if ((nickName == NULL)
- #ifdef NSS_ENABLE_ECC
+ #ifndef NSS_DISABLE_ECC
 						&& (ecNickName == NULL)
  #endif
     ) {
@@ -2593,7 +2593,7 @@ main(int argc, char **argv)
 	setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_rsa], kt_rsa,
 			&pwdata);
     }
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     if (ecNickName) {
 	cert[kt_ecdh] = PK11_FindCertFromNickname(ecNickName, &pwdata);
 	if (cert[kt_ecdh] == NULL) {
@@ -2620,7 +2620,7 @@ main(int argc, char **argv)
 	setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_ecdh], kt_ecdh,
 			&pwdata);
     }
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
     if (testbypass)
 	goto cleanup;
@@ -2691,7 +2691,7 @@ cleanup:
     if (certPrefix && certPrefix != emptyString) {                            
         PORT_Free(certPrefix);
     }
- #ifdef NSS_ENABLE_ECC
+ #ifndef NSS_DISABLE_ECC
     if (ecNickName) {
         PORT_Free(ecNickName);
     }

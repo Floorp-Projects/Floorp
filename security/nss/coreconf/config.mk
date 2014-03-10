@@ -146,10 +146,10 @@ endif
 # [16.0] Global environ ment defines
 #######################################################################
 
-ifdef NSS_ENABLE_ECC
-DEFINES += -DNSS_ENABLE_ECC
+ifdef NSS_DISABLE_ECC
+DEFINES += -DNSS_DISABLE_ECC
 endif
-
+ 
 ifdef NSS_ECC_MORE_THAN_SUITE_B
 DEFINES += -DNSS_ECC_MORE_THAN_SUITE_B
 endif
@@ -185,3 +185,6 @@ USE_UTIL_DIRECTLY = 1
 
 # Build with NO_NSPR_10_SUPPORT to avoid using obsolete NSPR features
 DEFINES += -DNO_NSPR_10_SUPPORT
+
+# Hide old, deprecated, TLS cipher suite names when building NSS
+DEFINES += -DSSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES

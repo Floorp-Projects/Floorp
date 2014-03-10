@@ -8,7 +8,7 @@
 #ifndef _SOFTKVER_H_
 #define _SOFTKVER_H_
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
 #define SOFTOKEN_ECC_STRING " Extended ECC"
 #else

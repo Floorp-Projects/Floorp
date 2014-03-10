@@ -696,11 +696,11 @@ NSS_FindCertKEAType(CERTCertificate * cert)
   case SEC_OID_X942_DIFFIE_HELMAN_KEY:
     keaType = kt_dh;
     break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
   case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
     keaType = kt_ecdh;
     break;
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
   default:
     keaType = kt_null;
   }

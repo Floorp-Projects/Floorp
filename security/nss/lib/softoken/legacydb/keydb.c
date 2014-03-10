@@ -1143,12 +1143,12 @@ nsslowkey_KeyForCertExists(NSSLOWKEYDBHandle *handle, NSSLOWCERTCertificate *cer
 	namekey.data = pubkey->u.dh.publicValue.data;
 	namekey.size = pubkey->u.dh.publicValue.len;
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
       case NSSLOWKEYECKey:
 	namekey.data = pubkey->u.ec.publicValue.data;
 	namekey.size = pubkey->u.ec.publicValue.len;
 	break;
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
       default:
 	/* XXX We don't do Fortezza or DH yet. */
 	return PR_FALSE;
@@ -1475,7 +1475,7 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
     SECItem *der_item = NULL;
     SECItem *cipherText = NULL;
     SECItem *dummy = NULL;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     SECItem *fordebug = NULL;
     int savelen;
 #endif
@@ -1555,7 +1555,7 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 	    goto loser;
 	}
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
       case NSSLOWKEYECKey:
 	lg_prepare_low_ec_priv_key_for_asn1(pk);
 	/* Public value is encoded as a bit string so adjust length
@@ -1594,7 +1594,7 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 		  pk->keyType, fordebug);
 
 	break;
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
       default:
 	/* We don't support DH or Fortezza private keys yet */
 	PORT_Assert(PR_FALSE);
@@ -1704,7 +1704,7 @@ seckey_decrypt_private_key(SECItem*epki,
     SECStatus rv = SECFailure;
     PLArenaPool *temparena = NULL, *permarena = NULL;
     SECItem *dest = NULL;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     SECItem *fordebug = NULL;
 #endif
 
@@ -1812,7 +1812,7 @@ seckey_decrypt_private_key(SECItem*epki,
 					lg_nsslowkey_DHPrivateKeyTemplate,
 					&newPrivateKey);
 		break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 	      case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
 		pk->keyType = NSSLOWKEYECKey;
 		lg_prepare_low_ec_priv_key_for_asn1(pk);
@@ -1849,7 +1849,7 @@ seckey_decrypt_private_key(SECItem*epki,
 		}
 
 		break;
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 	      default:
 		rv = SECFailure;
 		break;

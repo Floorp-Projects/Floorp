@@ -14,3 +14,7 @@ IMPORT_LIBRARY =
 PROGRAM        =
 
 EXTRA_LIBS     = $(LIBRARY)
+
+ifeq ($(OS_TARGET),Linux)
+DEFINES += -DHAVE_UNISTD_H
+endif

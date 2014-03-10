@@ -82,7 +82,7 @@ ssl_init()
   USER_NICKNAME=TestUser
   NORM_EXT=""
 
-  if [ -n "$NSS_ENABLE_ECC" ] ; then
+  if [ -z "$NSS_DISABLE_ECC" ] ; then
       ECC_STRING=" - with ECC"
   else
       ECC_STRING=""
@@ -202,7 +202,7 @@ start_selfserv()
       echo "$SCRIPTNAME: $testname ----"
   fi
   sparam=`echo $sparam | sed -e 's;_; ;g'`
-  if [ -n "$NSS_ENABLE_ECC" ] && \
+  if [ -z "$NSS_DISABLE_ECC" ] && \
      [ -z "$NO_ECC_CERTS" -o "$NO_ECC_CERTS" != "1"  ] ; then
       ECC_OPTIONS="-e ${HOSTADDR}-ec"
   else
@@ -258,7 +258,7 @@ ssl_cov()
   html_head "SSL Cipher Coverage $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE $ECC_STRING"
 
   testname=""
-  if [ -n "$NSS_ENABLE_ECC" ] ; then
+  if [ -z "$NSS_DISABLE_ECC" ] ; then
       sparam="$CLONG"
   else
       sparam="$CSHORT"
@@ -292,7 +292,7 @@ ssl_cov()
       
       if [ "$NORM_EXT" = "Extended Test" -a "${SSL2}" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
-      elif [ "$ectype" = "ECC" -a -z "$NSS_ENABLE_ECC" ] ; then
+      elif [ "$ectype" = "ECC" -a -n "$NSS_DISABLE_ECC" ] ; then
           echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] && [ "$SSL2" -eq 0 -o "$EXP" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
@@ -374,7 +374,7 @@ ssl_auth()
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
       elif [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
-      elif [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
+      elif [ "$ectype" = "ECC" -a  -n "$NSS_DISABLE_ECC" ] ; then
           echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "`echo $ectype | cut -b 1`" != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
@@ -557,7 +557,7 @@ ssl_stress()
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
       elif [ "$ectype" = "SNI" -a "$NORM_EXT" = "Extended Test" ] ; then
           echo "$SCRIPTNAME: skipping  $testname for $NORM_EXT"
-      elif [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
+      elif [ "$ectype" = "ECC" -a  -n "$NSS_DISABLE_ECC" ] ; then
           echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "${SERVER_MODE}" = "fips" -o "${CLIENT_MODE}" = "fips" ] && [ "${SSL2}" -eq 0 ] ; then
           echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
@@ -623,7 +623,7 @@ ssl_crl_ssl()
   while read ectype value sparam cparam testname
   do
     [ "$ectype" = "" ] && continue
-    if [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
+    if [ "$ectype" = "ECC" -a  -n "$NSS_DISABLE_ECC" ] ; then
         echo "$SCRIPTNAME: skipping $testname (ECC only)"
     elif [ "$ectype" = "SNI" ]; then
         continue
@@ -816,7 +816,7 @@ ssl_crl_cache()
     while read ectype value sparam cparam testname
       do
       [ "$ectype" = "" ] && continue
-      if [ "$ectype" = "ECC" -a  -z "$NSS_ENABLE_ECC" ] ; then
+      if [ "$ectype" = "ECC" -a  -n "$NSS_DISABLE_ECC" ] ; then
         echo "$SCRIPTNAME: skipping  $testname (ECC only)"
       elif [ "$ectype" = "SNI" ]; then
           continue

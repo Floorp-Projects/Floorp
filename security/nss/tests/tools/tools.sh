@@ -76,7 +76,7 @@ tools_init()
   fi
   SCRIPTNAME=tools.sh
 
-  if [ -n "$NSS_ENABLE_ECC" ] ; then
+  if [ -z "$NSS_DISABLE_ECC" ] ; then
       html_head "Tools Tests with ECC"
   else
       html_head "Tools Tests"
@@ -372,7 +372,7 @@ tools_p12_export_list_import_with_default_ciphers()
   
   export_list_import "DEFAULT" "DEFAULT"
 
-  if [ -n "$NSS_ENABLE_ECC" ] ; then
+  if [ -z "$NSS_DISABLE_ECC" ] ; then
       echo "$SCRIPTNAME: Exporting Alice's email EC cert & key---------------"
       echo "pk12util -o Alice-ec.p12 -n \"Alice-ec\" -d ${P_R_ALICEDIR} -k ${R_PWFILE} \\"
       echo "         -w ${R_PWFILE}"

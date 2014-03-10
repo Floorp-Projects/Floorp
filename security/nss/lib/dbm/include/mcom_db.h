@@ -45,7 +45,11 @@ typedef PRUintn uint;
 #endif
 typedef PRUint8 uint8;
 typedef PRUint16 uint16;
+/* On AIX 5.2, sys/inttypes.h (which is included by sys/types.h)
+ * defines the types int8, int16, int32, and int64. */
+#if !defined(AIX)
 typedef PRInt32 int32;
+#endif
 typedef PRUint32 uint32;
 
 #include <limits.h>

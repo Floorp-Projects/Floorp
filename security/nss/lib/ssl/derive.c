@@ -617,7 +617,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     PRBool	      testrsa_export = PR_FALSE;
     PRBool	      testecdh = PR_FALSE;
     PRBool	      testecdhe = PR_FALSE;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     SECKEYECParams ecParams = { siBuffer, NULL, 0 };
 #endif
 
@@ -634,7 +634,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     rv = SECFailure;
     
     /* determine which KEAs to test */
-    /* 0 (SSL_NULL_WITH_NULL_NULL) is used as a list terminator because
+    /* 0 (TLS_NULL_WITH_NULL_NULL) is used as a list terminator because
      * SSL3 and TLS specs forbid negotiating that cipher suite number.
      */
     for (i=0; i < nsuites && (suite = *ciphersuites++) != 0; i++) {
@@ -647,8 +647,8 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 	    switch (csdef.cipherSuite) {
 	    case TLS_RSA_EXPORT1024_WITH_RC4_56_SHA:
 	    case TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA:
-	    case SSL_RSA_EXPORT_WITH_RC4_40_MD5:
-	    case SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
+	    case TLS_RSA_EXPORT_WITH_RC4_40_MD5:
+	    case TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
 		testrsa_export = PR_TRUE;
 	    }
 	    if (!testrsa_export)
@@ -755,7 +755,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 	if (enc_pms.data != NULL) {
 	    SECITEM_FreeItem(&enc_pms, PR_FALSE);
         }
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 	for (; (privKeytype == ecKey && ( testecdh || testecdhe)) ||
 	       (privKeytype == rsaKey && testecdhe); ) {
 	    CK_MECHANISM_TYPE target;
@@ -859,7 +859,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 	    PORT_Free(ecParams.data);
 	    ecParams.data = NULL;
 	}
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 	if (pms)
 	    PK11_FreeSymKey(pms);
     }
@@ -877,12 +877,12 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     if (enc_pms.data != NULL) {
     	SECITEM_FreeItem(&enc_pms, PR_FALSE);
     }
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     if (ecParams.data != NULL) {
         PORT_Free(ecParams.data);
         ecParams.data = NULL;
     }
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
     if (srvPubkey) {
     	SECKEY_DestroyPublicKey(srvPubkey);

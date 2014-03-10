@@ -13,7 +13,7 @@
 #include "pkcs11.h"     /* Required for PKCS #11. */
 #include "secerr.h"
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 #include "ec.h"         /* Required for ECDSA */
 #endif
 
@@ -1612,7 +1612,7 @@ rsa_loser:
     return( CKR_DEVICE_ERROR );
 }
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 
 static CK_RV
 sftk_fips_ECDSA_Test(const PRUint8 *encodedParams, 
@@ -1795,7 +1795,7 @@ sftk_fips_ECDSA_PowerUpSelfTest() {
     return( CKR_OK );
 }
 
-#endif    /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
 static CK_RV
 sftk_fips_DSA_PowerUpSelfTest( void )
@@ -2080,7 +2080,7 @@ sftk_fipsPowerUpSelfTest( void )
     if( rv != CKR_OK )
         return rv;
     
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     /* ECDSA Power-Up SelfTest(s). */
     rv = sftk_fips_ECDSA_PowerUpSelfTest();
 

@@ -55,10 +55,17 @@ else
 ifeq ($(OS_TEST),x86_64)
 ifeq ($(USE_64),1)
 	CPU_ARCH	= x86_64
+	ARCHFLAG	= -m64
+else
+ifeq ($(USE_X32),1)
+	CPU_ARCH	= x86_64
+	ARCHFLAG	= -mx32
+	64BIT_TAG	= _x32
 else
 	OS_REL_CFLAGS	= -Di386
 	CPU_ARCH	= x86
 	ARCHFLAG	= -m32
+endif
 endif
 else
 ifeq ($(OS_TEST),sparc64)
@@ -123,12 +130,7 @@ ifeq ($(USE_PTHREADS),1)
 OS_PTHREAD = -lpthread 
 endif
 
-# See bug 537829, in particular comment 23.
-# Place -ansi and *_SOURCE before $(DSO_CFLAGS) so DSO_CFLAGS can override
-# -ansi on platforms like Android where the system headers are C99 and do
-# not build with -ansi.
-STANDARDS_CFLAGS	= -D_POSIX_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE
-OS_CFLAGS		= $(STANDARDS_CFLAGS) $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -DLINUX -Dlinux -DHAVE_STRERROR
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -DLINUX -Dlinux -DHAVE_STRERROR
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
 
 ifdef USE_PTHREADS
