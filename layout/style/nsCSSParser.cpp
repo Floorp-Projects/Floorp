@@ -631,6 +631,12 @@ protected:
   // For "flex-flow" shorthand property, defined in CSS Flexbox spec
   bool ParseFlexFlow();
 
+  // CSS Grid
+  bool ParseGridLineNames(nsCSSValue& aValue);
+  bool ParseGridTrackBreadth(nsCSSValue& aValue);
+  bool ParseGridTrackSize(nsCSSValue& aValue);
+  bool ParseGridTrackList(nsCSSProperty aPropID);
+
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
   bool ParseColumns();
@@ -781,6 +787,24 @@ protected:
   bool ParseOneOrLargerVariant(nsCSSValue& aValue,
                                int32_t aVariantMask,
                                const KTableValue aKeywordTable[]);
+
+  // http://dev.w3.org/csswg/css-values/#custom-idents
+  // Parse an identifier that is none of:
+  // * a CSS-wide keyword
+  // * "default"
+  // * a keyword in |aExcludedKeywords|
+  // * a keyword in |aPropertyKTable|
+  //
+  // |aExcludedKeywords| is an array of nsCSSKeyword
+  // that ends with a eCSSKeyword_UNKNOWN marker.
+  //
+  // |aPropertyKTable| can be used if some of the keywords to exclude
+  // also appear in an existing nsCSSProps::KTableValue,
+  // to avoid duplicating them.
+  bool ParseCustomIdent(nsCSSValue& aValue,
+                        const nsAutoString& aIdentValue,
+                        const nsCSSKeyword aExcludedKeywords[] = nullptr,
+                        const nsCSSProps::KTableValue aPropertyKTable[] = nullptr);
   bool ParseCounter(nsCSSValue& aValue);
   bool ParseAttr(nsCSSValue& aValue);
   bool SetValueToURL(nsCSSValue& aValue, const nsString& aURL);
@@ -6159,6 +6183,9 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
         // XXX Should we check IsParsingCompoundProperty, or do all
         // callers handle it?  (Not all callers set it, though, since
         // they want the quirks that are disabled by setting it.)
+
+        // IMPORTANT: If new keywords are added here,
+        // they probably need to be added in ParseCustomIdent as well.
         if (eCSSKeyword_inherit == keyword) {
           aValue.SetInheritValue();
           return true;
@@ -6392,6 +6419,40 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   return false;
 }
 
+bool
+CSSParserImpl::ParseCustomIdent(nsCSSValue& aValue,
+                                const nsAutoString& aIdentValue,
+                                const nsCSSKeyword aExcludedKeywords[],
+                                const nsCSSProps::KTableValue aPropertyKTable[])
+{
+  nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aIdentValue);
+  if (keyword == eCSSKeyword_UNKNOWN) {
+    // Fast path for identifiers that are not known CSS keywords:
+    aValue.SetStringValue(mToken.mIdent, eCSSUnit_Ident);
+    return true;
+  }
+  if (keyword == eCSSKeyword_inherit ||
+      keyword == eCSSKeyword_initial ||
+      keyword == eCSSKeyword_unset ||
+      keyword == eCSSKeyword_default ||
+      (aPropertyKTable &&
+        nsCSSProps::FindIndexOfKeyword(keyword, aPropertyKTable) >= 0)) {
+    return false;
+  }
+  if (aExcludedKeywords) {
+    for (uint32_t i = 0;; i++) {
+      nsCSSKeyword excludedKeyword = aExcludedKeywords[i];
+      if (excludedKeyword == eCSSKeyword_UNKNOWN) {
+        break;
+      }
+      if (excludedKeyword == keyword) {
+        return false;
+      }
+    }
+  }
+  aValue.SetStringValue(mToken.mIdent, eCSSUnit_Ident);
+  return true;
+}
 
 bool
 CSSParserImpl::ParseCounter(nsCSSValue& aValue)
@@ -6805,6 +6866,136 @@ CSSParserImpl::ParseFlexFlow()
   for (size_t i = 0; i < numProps; i++) {
     AppendValue(kFlexFlowSubprops[i], values[i]);
   }
+  return true;
+}
+
+// Parse an optional <line-names> expression.
+// If successful, leaves aValue with eCSSUnit_Null for the empty list,
+// or sets it to a eCSSUnit_List of eCSSUnit_Ident.
+// Not finding an open paren is considered the same as an empty list.
+
+// aPropertyKeywords contains additional keywords for the 'grid' shorthand.
+bool
+CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
+{
+  MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Null,
+             "Unexpected unit, aValue should not be initialized yet");
+  if (!GetToken(true)) {
+    return true;
+  }
+  if (!mToken.IsSymbol('(')) {
+    UngetToken();
+    return true;
+  }
+  if (!GetToken(true) || mToken.IsSymbol(')')) {
+    return true;
+  }
+  // 'return true' so far keeps eCSSUnit_Null, to represent an empty list.
+
+  nsCSSValueList* item = aValue.SetListValue();
+  for (;;) {
+    if (!(eCSSToken_Ident == mToken.mType &&
+          ParseCustomIdent(item->mValue, mToken.mIdent))) {
+      UngetToken();
+      SkipUntil(')');
+      return false;
+    }
+    if (!GetToken(true) || mToken.IsSymbol(')')) {
+      return true;
+    }
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+  }
+}
+
+// Parse a <track-breadth>
+bool
+CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
+{
+  if (ParseNonNegativeVariant(aValue,
+                              VARIANT_LPCALC | VARIANT_KEYWORD,
+                              nsCSSProps::kGridTrackBreadthKTable)) {
+    return true;
+  }
+
+  // Attempt to parse <flex> (a dimension with the "fr" unit)
+  if (!GetToken(true)) {
+    return false;
+  }
+  if (!(eCSSToken_Dimension == mToken.mType &&
+        mToken.mIdent.LowerCaseEqualsLiteral("fr") &&
+        mToken.mNumber >= 0)) {
+    UngetToken();
+    return false;
+  }
+  aValue.SetFloatValue(mToken.mNumber, eCSSUnit_FlexFraction);
+  return true;
+}
+
+// Parse a <track-size>
+bool
+CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue)
+{
+  // Attempt to parse 'auto' or a single <track-breadth>
+  if (ParseGridTrackBreadth(aValue) ||
+      ParseVariant(aValue, VARIANT_AUTO, nullptr)) {
+    return true;
+  }
+
+  // Attempt to parse a minmax() function
+  if (!GetToken(true)) {
+    return false;
+  }
+  if (!(eCSSToken_Function == mToken.mType &&
+        mToken.mIdent.LowerCaseEqualsLiteral("minmax"))) {
+    UngetToken();
+    return false;
+  }
+  nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_minmax, 2);
+  if (ParseGridTrackBreadth(func->Item(1)) &&
+      ExpectSymbol(',', true) &&
+      ParseGridTrackBreadth(func->Item(2)) &&
+      ExpectSymbol(')', true)) {
+    return true;
+  }
+  SkipUntil(')');
+  return false;
+}
+
+bool
+CSSParserImpl::ParseGridTrackList(nsCSSProperty aPropID)
+{
+  nsCSSValue value;
+  if (ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
+    AppendValue(aPropID, value);
+    return true;
+  }
+  // FIXME: add subgrid
+
+  // |value| will be a list of odd length >= 3,
+  // starting with a <line-names> (which is itself a list)
+  // and alternating between that and <track-size>
+  nsCSSValueList* item = value.SetListValue();
+  if (!ParseGridLineNames(item->mValue)) {
+    return false;
+  }
+  do {
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+    // FIXME: add repeat()
+    if (!ParseGridTrackSize(item->mValue)) {
+      return false;
+    }
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+    if (!ParseGridLineNames(item->mValue)) {
+      return false;
+    }
+  } while (!CheckEndProperty());
+  MOZ_ASSERT(value.GetListValue() && value.GetListValue()->mNext &&
+             value.GetListValue()->mNext->mNext,
+             "<track-list> should have a minimum length of 3");
+  AppendValue(aPropID, value);
   return true;
 }
 
@@ -7822,6 +8013,9 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseFlexFlow();
   case eCSSProperty_font:
     return ParseFont();
+  case eCSSProperty_grid_template_columns:
+  case eCSSProperty_grid_template_rows:
+    return ParseGridTrackList(aPropID);
   case eCSSProperty_image_region:
     return ParseRect(eCSSProperty_image_region);
   case eCSSProperty_list_style:
@@ -9799,6 +9993,10 @@ CSSParserImpl::ParseContent()
 bool
 CSSParserImpl::ParseCounterData(nsCSSProperty aPropID)
 {
+  static const nsCSSKeyword kCounterDataKTable[] = {
+    eCSSKeyword_none,
+    eCSSKeyword_UNKNOWN
+  };
   nsCSSValue value;
   if (!ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
     if (!GetToken(true) || mToken.mType != eCSSToken_Ident) {
@@ -9807,17 +10005,9 @@ CSSParserImpl::ParseCounterData(nsCSSProperty aPropID)
 
     nsCSSValuePairList *cur = value.SetPairListValue();
     for (;;) {
-      // check for "none", "default" and the CSS-wide keywords,
-      // which can't be used as counter names
-      nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-      if (keyword == eCSSKeyword_inherit ||
-          keyword == eCSSKeyword_default ||
-          keyword == eCSSKeyword_none ||
-          keyword == eCSSKeyword_unset ||
-          keyword == eCSSKeyword_initial) {
+      if (!ParseCustomIdent(cur->mXValue, mToken.mIdent, kCounterDataKTable)) {
         return false;
       }
-      cur->mXValue.SetStringValue(mToken.mIdent, eCSSUnit_Ident);
       if (!GetToken(true)) {
         break;
       }

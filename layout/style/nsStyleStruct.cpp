@@ -1212,8 +1212,8 @@ bool nsStyleSVGPaint::operator==(const nsStyleSVGPaint& aOther) const
 // --------------------
 // nsStylePosition
 //
-nsStylePosition::nsStylePosition(void) 
-{ 
+nsStylePosition::nsStylePosition(void)
+{
   MOZ_COUNT_CTOR(nsStylePosition);
   // positioning values not inherited
   nsStyleCoord  autoCoord(eStyleUnit_Auto);
@@ -1239,17 +1239,34 @@ nsStylePosition::nsStylePosition(void)
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
   mZIndex.SetAutoValue();
+  // mGridTemplateRows and mGridTemplateColumns get their default constructors
+  // which initializes them to empty arrays,
+  // which represent the property’s initial value 'none'
 }
 
-nsStylePosition::~nsStylePosition(void) 
-{ 
+nsStylePosition::~nsStylePosition(void)
+{
   MOZ_COUNT_DTOR(nsStylePosition);
 }
 
 nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
+  : mGridTemplateColumns(aSource.mGridTemplateColumns)
+  , mGridTemplateRows(aSource.mGridTemplateRows)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
-  memcpy((nsStylePosition*)this, &aSource, sizeof(nsStylePosition));
+  // If you add any memcpy'able member vars,
+  // they should be declared before mGridTemplateColumns.
+  // If you add any non-memcpy'able member vars,
+  // they should be declared after mGridTemplateColumns,
+  // and you should invoke their copy constructor in the init list above
+  // and update this static-assert to include their "sizeof()"
+  static_assert(sizeof(nsStylePosition) ==
+                offsetof(nsStylePosition, mGridTemplateColumns) +
+                sizeof(mGridTemplateColumns) + sizeof(mGridTemplateRows),
+                "Unexpected size or offset in nsStylePosition");
+  memcpy((nsStylePosition*) this,
+         &aSource,
+         offsetof(nsStylePosition, mGridTemplateColumns));
 }
 
 static bool
@@ -1295,6 +1312,13 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
   if (mAlignItems != aOther.mAlignItems ||
       mFlexDirection != aOther.mFlexDirection ||
       mFlexWrap != aOther.mFlexWrap) {
+    return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
+  }
+
+
+  // Properties that apply to grid containers:
+  if (mGridTemplateColumns != aOther.mGridTemplateColumns ||
+      mGridTemplateRows != aOther.mGridTemplateRows) {
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 

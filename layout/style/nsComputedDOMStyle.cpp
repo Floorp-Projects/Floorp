@@ -2271,6 +2271,106 @@ nsComputedDOMStyle::DoGetBackgroundSize()
   return valueList;
 }
 
+// aLineNames must not be empty
+CSSValue*
+nsComputedDOMStyle::GetGridLineNames(const nsTArray<nsString>& aLineNames)
+{
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+  nsAutoString lineNamesString;
+  uint32_t i_end = aLineNames.Length();
+  MOZ_ASSERT(i_end > 0, "GetGridLineNames called with an empty array");
+  lineNamesString.AssignLiteral("(");
+  for (uint32_t i = 0;;) {
+    nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], lineNamesString);
+    if (++i == i_end) {
+      break;
+    }
+    lineNamesString.AppendLiteral(" ");
+  }
+  lineNamesString.AppendLiteral(")");
+  val->SetString(lineNamesString);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::GetGridTrackSize(const nsStyleCoord& aMinValue,
+                                     const nsStyleCoord& aMaxValue)
+{
+  // FIXME bug 978212: If we have frame, every <track-size> should
+  // be resolved into 'px' here, based on layout results.
+  if (aMinValue == aMaxValue) {
+    nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+    SetValueToCoord(val, aMinValue, true,
+                    nullptr, nsCSSProps::kGridTrackBreadthKTable);
+    return val;
+  }
+
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+  nsAutoString argumentStr, minmaxStr;
+  minmaxStr.AppendLiteral("minmax(");
+
+  SetValueToCoord(val, aMinValue, true,
+                  nullptr, nsCSSProps::kGridTrackBreadthKTable);
+  val->GetCssText(argumentStr);
+  minmaxStr.Append(argumentStr);
+
+  minmaxStr.AppendLiteral(", ");
+
+  SetValueToCoord(val, aMaxValue, true,
+                  nullptr, nsCSSProps::kGridTrackBreadthKTable);
+  val->GetCssText(argumentStr);
+  minmaxStr.Append(argumentStr);
+
+  minmaxStr.Append(char16_t(')'));
+  val->SetString(minmaxStr);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::GetGridTrackList(const nsStyleGridTrackList& aTrackList)
+{
+  uint32_t numSizes = aTrackList.mMinTrackSizingFunctions.Length();
+  MOZ_ASSERT(aTrackList.mMaxTrackSizingFunctions.Length() == numSizes,
+             "Different number of min and max track sizing functions");
+  // An empty <track-list> is represented as "none" in syntax.
+  if (numSizes == 0) {
+    nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+    val->SetIdent(eCSSKeyword_none);
+    return val;
+  }
+
+  nsDOMCSSValueList* valueList = GetROCSSValueList(false);
+  // Delimiting N tracks requires N+1 lines:
+  // one before each track, plus one at the very end.
+  MOZ_ASSERT(aTrackList.mLineNameLists.Length() == numSizes + 1,
+             "Unexpected number of line name lists");
+  for (uint32_t i = 0;; i++) {
+    const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
+    if (!lineNames.IsEmpty()) {
+      valueList->AppendCSSValue(GetGridLineNames(aTrackList.mLineNameLists[i]));
+    }
+    if (i == numSizes) {
+      break;
+    }
+    valueList->AppendCSSValue(GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
+                                               aTrackList.mMaxTrackSizingFunctions[i]));
+  }
+
+  return valueList;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridTemplateColumns()
+{
+  return GetGridTrackList(StylePosition()->mGridTemplateColumns);
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetGridTemplateRows()
+{
+  return GetGridTrackList(StylePosition()->mGridTemplateRows);
+}
+
 CSSValue*
 nsComputedDOMStyle::DoGetPaddingTop()
 {
@@ -4401,6 +4501,14 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
     case eStyleUnit_Turn:
       aValue->SetTurn(aCoord.GetAngleValue());
       break;
+
+    case eStyleUnit_FlexFraction: {
+      nsAutoString tmpStr;
+      nsStyleUtil::AppendCSSNumber(aCoord.GetFlexFractionValue(), tmpStr);
+      tmpStr.AppendLiteral("fr");
+      aValue->SetString(tmpStr);
+      break;
+    }
 
     default:
       NS_ERROR("Can't handle this unit");
