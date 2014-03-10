@@ -3241,10 +3241,6 @@ MaybeResolveConstructor(ExclusiveContext *cxArg, Handle<GlobalObject*> global, J
         return false;
 
     JSContext *cx = cxArg->asJSContext();
-    RootedId name(cx, NameToId(ClassName(key, cx)));
-    AutoResolving resolving(cx, global, name);
-    if (resolving.alreadyStarted())
-        return true;
     return GlobalObject::resolveConstructor(cx, global, key);
 }
 
