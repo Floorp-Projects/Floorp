@@ -6,7 +6,7 @@
 
 interface nsIDOMWindow;
 
-[function, scriptable, uuid(86975108-cd78-4796-8fc8-6cd777cd6eba)]
+[scriptable, uuid(194b55d9-39c0-45c6-b8ef-b8049f978ea5)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
@@ -19,6 +19,11 @@ interface nsIAudioChannelAgentCallback : nsISupports
    *        it is faded state then the volume of media should be reduced.
    */
   void canPlayChanged(in long canPlay);
+
+  /**
+   * Notified when the window volume/mute is changed
+   */
+  void windowVolumeChanged();
 };
 
 /**
@@ -35,7 +40,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[scriptable, uuid(86ef883d-9cec-4c04-994f-5de198286e7c)]
+[scriptable, uuid(2b0222a5-8f7b-49d2-9ab8-cd01b744b23e)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -128,5 +133,10 @@ interface nsIAudioChannelAgent : nsISupports
    *    True if the window associated with the agent is visible.
    */
   void setVisibilityState(in boolean visible);
+
+  /**
+   * Retrieve the volume from the window.
+   */
+  readonly attribute float windowVolume;
 };
 
