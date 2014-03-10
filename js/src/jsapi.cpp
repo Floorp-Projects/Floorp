@@ -2160,7 +2160,7 @@ js::RecomputeStackLimit(JSRuntime *rt, StackKind kind)
     // out of ion into the interpeter, which will do a proper recursion check.
 #ifdef JS_ION
     if (kind == StackForUntrustedScript) {
-        JSRuntime::AutoLockForOperationCallback lock(rt);
+        JSRuntime::AutoLockForInterrupt lock(rt);
         if (rt->mainThread.jitStackLimit != uintptr_t(-1)) {
             rt->mainThread.jitStackLimit = rt->mainThread.nativeStackLimit[kind];
 #ifdef JS_ARM_SIMULATOR
@@ -4987,24 +4987,24 @@ JS_New(JSContext *cx, JSObject *ctorArg, unsigned argc, jsval *argv)
     return &args.rval().toObject();
 }
 
-JS_PUBLIC_API(JSOperationCallback)
-JS_SetOperationCallback(JSRuntime *rt, JSOperationCallback callback)
+JS_PUBLIC_API(JSInterruptCallback)
+JS_SetInterruptCallback(JSRuntime *rt, JSInterruptCallback callback)
 {
-    JSOperationCallback old = rt->operationCallback;
-    rt->operationCallback = callback;
+    JSInterruptCallback old = rt->interruptCallback;
+    rt->interruptCallback = callback;
     return old;
 }
 
-JS_PUBLIC_API(JSOperationCallback)
-JS_GetOperationCallback(JSRuntime *rt)
+JS_PUBLIC_API(JSInterruptCallback)
+JS_GetInterruptCallback(JSRuntime *rt)
 {
-    return rt->operationCallback;
+    return rt->interruptCallback;
 }
 
 JS_PUBLIC_API(void)
-JS_TriggerOperationCallback(JSRuntime *rt)
+JS_RequestInterruptCallback(JSRuntime *rt)
 {
-    rt->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThread);
+    rt->requestInterrupt(JSRuntime::RequestInterruptAnyThread);
 }
 
 JS_PUBLIC_API(bool)

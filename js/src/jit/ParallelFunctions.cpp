@@ -181,10 +181,10 @@ jit::CheckOverRecursedPar(ForkJoinContext *cx)
     JS_ASSERT(ForkJoinContext::current() == cx);
     int stackDummy_;
 
-    // When an interrupt is triggered, the main thread stack limit is
+    // When an interrupt is requested, the main thread stack limit is
     // overwritten with a sentinel value that brings us here.
     // Therefore, we must check whether this is really a stack overrun
-    // and, if not, check whether an interrupt is needed.
+    // and, if not, check whether an interrupt was requested.
     //
     // When not on the main thread, we don't overwrite the stack
     // limit, but we do still call into this routine if the interrupt

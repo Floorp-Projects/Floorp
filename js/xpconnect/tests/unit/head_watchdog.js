@@ -53,7 +53,7 @@ function executeSoon(fn) {
 
 function checkWatchdog(expectInterrupt, continuation) {
   var lastWatchdogWakeup = Cu.getWatchdogTimestamp("WatchdogWakeup");
-  setOperationCallback(function() {
+  setInterruptCallback(function() {
     // If the watchdog didn't actually trigger the operation callback, ignore
     // this call. This allows us to test the actual watchdog behavior without
     // interference from other sites where we trigger the operation callback.
@@ -61,7 +61,7 @@ function checkWatchdog(expectInterrupt, continuation) {
       return true;
     }
     do_check_true(expectInterrupt);
-    setOperationCallback(undefined);
+    setInterruptCallback(undefined);
     // Schedule our continuation before we kill this script.
     executeSoon(continuation);
     return false;
@@ -69,7 +69,7 @@ function checkWatchdog(expectInterrupt, continuation) {
   executeSoon(function() {
     busyWait(3000);
     do_check_true(!expectInterrupt);
-    setOperationCallback(undefined);
+    setInterruptCallback(undefined);
     continuation();
   });
 }

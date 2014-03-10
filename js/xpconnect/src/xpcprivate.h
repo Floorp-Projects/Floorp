@@ -549,7 +549,7 @@ public:
     static void ActivityCallback(void *arg, bool active);
     static void CTypesActivityCallback(JSContext *cx,
                                        js::CTypesActivityType type);
-    static bool OperationCallback(JSContext *cx);
+    static bool InterruptCallback(JSContext *cx);
     static void OutOfMemoryCallback(JSContext *cx);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
