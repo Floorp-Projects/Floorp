@@ -479,6 +479,11 @@ pref("dom.mozNetworkStats.enabled", true);
 pref("dom.webapps.firstRunWithSIM", true);
 #endif
 
+// ResourceStats
+#ifdef MOZ_WIDGET_GONK
+pref("dom.resource_stats.enabled", true);
+#endif
+
 #ifdef MOZ_B2G_RIL
 // SingleVariant
 pref("dom.mozApps.single_variant_sourcedir", "/persist/svoperapps");
