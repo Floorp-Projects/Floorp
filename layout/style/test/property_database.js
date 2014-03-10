@@ -4850,6 +4850,27 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 		other_values: gCSSProperties["grid-template-columns"].other_values,
 		invalid_values: gCSSProperties["grid-template-columns"].invalid_values
 	};
+	gCSSProperties["grid-template-areas"] = {
+		domProp: "gridTemplateAreas",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [
+			"''",
+			"'' ''",
+			"'1a-é_ .' \"b .\"",
+			"' Z\t\\aZ' 'Z Z'",
+			" '. . a b'  '..a b' ",
+		],
+		invalid_values: [
+			"'a b' 'a/b'",
+			"'a . a'",
+			"'. a a' 'a a a'",
+			"'a a .' 'a a a'",
+			"'a a' 'a .'",
+			"'a a'\n'..'\n'a a'",
+		]
+	};
 }
 
 if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {

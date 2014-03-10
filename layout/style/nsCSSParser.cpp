@@ -636,6 +636,11 @@ protected:
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
   bool ParseGridTrackSize(nsCSSValue& aValue);
   bool ParseGridTrackList(nsCSSProperty aPropID);
+  bool ParseGridTemplateAreasLine(const nsAutoString& aInput,
+                                  nsTArray<nsCSSGridNamedArea>& aNamedAreas,
+                                  uint32_t aRow,
+                                  uint32_t& aColumns);
+  bool ParseGridTemplateAreas();
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
@@ -5762,7 +5767,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
 
       if (eCSSToken_AtKeyword == tk->mType) {
         SkipAtRule(checkForBraces);
-        return true;  // Not a declaration, but don’t skip until ';'
+        return true;  // Not a declaration, but don't skip until ';'
       }
     }
     // Not a declaration...
@@ -6999,6 +7004,116 @@ CSSParserImpl::ParseGridTrackList(nsCSSProperty aPropID)
   return true;
 }
 
+bool
+CSSParserImpl::ParseGridTemplateAreasLine(const nsAutoString& aInput,
+                                          nsTArray<nsCSSGridNamedArea>& aNamedAreas,
+                                          uint32_t aRow,
+                                          uint32_t& aColumns)
+{
+  nsCSSGridTemplateAreaScanner scanner(aInput);
+  nsCSSGridTemplateAreaToken token;
+  nsCSSGridNamedArea* currentArea = nullptr;
+  uint32_t column;
+  for (column = 1; scanner.Next(token); column++) {
+    if (token.isTrash) {
+      return false;
+    }
+    if (currentArea) {
+      if (token.mName == currentArea->mName) {
+        if (currentArea->mRowStart == aRow) {
+          // Next column in the first row of this named area.
+          currentArea->mColumnEnd++;
+        }
+        continue;
+      }
+      // We're exiting |currentArea|, so currentArea is ending at |column|.
+      // Make sure that this is consistent with currentArea on previous rows:
+      if (currentArea->mColumnEnd != column) {
+        NS_ASSERTION(currentArea->mRowStart != aRow,
+                     "Inconsistent column end for the first row of a named area.");
+        // Not a rectangle
+        return false;
+      }
+      currentArea = nullptr;
+    }
+    if (!token.mName.IsEmpty()) {
+      // Named cell that doesn't have a cell with the same name on its left.
+
+      // Check if this is the continuation of an existing named area:
+      for (uint32_t i = 0, end = aNamedAreas.Length(); i < end; i++) {
+        if (aNamedAreas[i].mName == token.mName) {
+          currentArea = &aNamedAreas[i];
+          if (currentArea->mColumnStart != column || currentArea->mRowEnd != aRow) {
+            // Existing named area, but not forming a rectangle
+            return false;
+          }
+          // Next row of an existing named area
+          currentArea->mRowEnd++;
+          break;
+        }
+      }
+      if (!currentArea) {
+        // New named area
+        currentArea = aNamedAreas.AppendElement();
+        currentArea->mName = token.mName;
+        // For column or row N (starting at 1),
+        // the start line is N, the end line is N + 1
+        currentArea->mColumnStart = column;
+        currentArea->mColumnEnd = column + 1;
+        currentArea->mRowStart = aRow;
+        currentArea->mRowEnd = aRow + 1;
+      }
+    }
+  }
+  if (currentArea && currentArea->mColumnEnd != column) {
+    NS_ASSERTION(currentArea->mRowStart != aRow,
+                 "Inconsistent column end for the first row of a named area.");
+    // Not a rectangle
+    return false;
+  }
+  aColumns = column;
+  return true;
+}
+
+bool
+CSSParserImpl::ParseGridTemplateAreas()
+{
+  nsCSSValue value;
+  if (ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
+    AppendValue(eCSSProperty_grid_template_areas, value);
+    return true;
+  }
+
+  nsCSSValueGridTemplateAreas& result = value.SetGridTemplateAreas();
+  uint32_t row = 1;
+  uint32_t firstRowColumns;
+  do {
+    if (!GetToken(true)) {
+      return false;
+    }
+    if (eCSSToken_String != mToken.mType) {
+      UngetToken();  // In case it's opening a block or function.
+      return false;
+    }
+    uint32_t columns;
+    if (!ParseGridTemplateAreasLine(mToken.mIdent, result.mNamedAreas,
+                                    row, columns)) {
+      return false;
+    }
+    if (row == 1) {
+      firstRowColumns = columns;
+    } else if (columns != firstRowColumns) {
+      return false;
+    }
+    result.mTemplates.AppendElement(mToken.mIdent);
+    row++;
+  } while (!CheckEndProperty());
+
+  AppendValue(eCSSProperty_grid_template_areas, value);
+  return true;
+}
+
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -8013,6 +8128,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseFlexFlow();
   case eCSSProperty_font:
     return ParseFont();
+  case eCSSProperty_grid_template_areas:
+    return ParseGridTemplateAreas();
   case eCSSProperty_grid_template_columns:
   case eCSSProperty_grid_template_rows:
     return ParseGridTrackList(aPropID);

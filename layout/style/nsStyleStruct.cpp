@@ -1239,9 +1239,10 @@ nsStylePosition::nsStylePosition(void)
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
   mZIndex.SetAutoValue();
-  // mGridTemplateRows and mGridTemplateColumns get their default constructors
-  // which initializes them to empty arrays,
-  // which represent the property’s initial value 'none'
+  // mGridTemplateRows, mGridTemplateColumns, and mGridTemplateAreas
+  // get their default constructors
+  // which initialize them to empty arrays,
+  // which represent the properties' initial value 'none'.
 }
 
 nsStylePosition::~nsStylePosition(void)
@@ -1252,6 +1253,7 @@ nsStylePosition::~nsStylePosition(void)
 nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   : mGridTemplateColumns(aSource.mGridTemplateColumns)
   , mGridTemplateRows(aSource.mGridTemplateRows)
+  , mGridTemplateAreas(aSource.mGridTemplateAreas)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
   // If you add any memcpy'able member vars,
@@ -1262,7 +1264,9 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   // and update this static-assert to include their "sizeof()"
   static_assert(sizeof(nsStylePosition) ==
                 offsetof(nsStylePosition, mGridTemplateColumns) +
-                sizeof(mGridTemplateColumns) + sizeof(mGridTemplateRows),
+                sizeof(mGridTemplateColumns) +
+                sizeof(mGridTemplateRows) +
+                sizeof(mGridTemplateAreas),
                 "Unexpected size or offset in nsStylePosition");
   memcpy((nsStylePosition*) this,
          &aSource,
@@ -1318,7 +1322,8 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
 
   // Properties that apply to grid containers:
   if (mGridTemplateColumns != aOther.mGridTemplateColumns ||
-      mGridTemplateRows != aOther.mGridTemplateRows) {
+      mGridTemplateRows != aOther.mGridTemplateRows ||
+      mGridTemplateAreas != aOther.mGridTemplateAreas) {
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 

@@ -7177,6 +7177,36 @@ SetGridTrackList(const nsCSSValue& aValue,
   }
 }
 
+static void
+SetGridTemplateAreas(const nsCSSValue& aValue,
+                     nsCSSValueGridTemplateAreas& aResult,
+                     const nsCSSValueGridTemplateAreas& aParentValue,
+                     bool& aCanStoreInRuleTree)
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
+    aCanStoreInRuleTree = false;
+    aResult.mNamedAreas = aParentValue.mNamedAreas;
+    aResult.mTemplates = aParentValue.mTemplates;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_None:
+    aResult.mNamedAreas.Clear();
+    aResult.mTemplates.Clear();
+    break;
+
+  default:
+    const nsCSSValueGridTemplateAreas& value = aValue.GetGridTemplateAreas();
+    aResult.mNamedAreas = value.mNamedAreas;
+    aResult.mTemplates = value.mTemplates;
+  }
+}
+
 const void*
 nsRuleNode::ComputePositionData(void* aStartStruct,
                                 const nsRuleData* aRuleData,
@@ -7359,6 +7389,11 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
   SetGridTrackList(*aRuleData->ValueForGridTemplateRows(),
                    pos->mGridTemplateRows, parentPos->mGridTemplateRows,
                    aContext, mPresContext, canStoreInRuleTree);
+
+  // grid-tempate-areas
+  SetGridTemplateAreas(*aRuleData->ValueForGridTemplateAreas(),
+                       pos->mGridTemplateAreas, parentPos->mGridTemplateAreas,
+                       canStoreInRuleTree);
 
   // z-index
   const nsCSSValue* zIndexValue = aRuleData->ValueForZIndex();
