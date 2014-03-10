@@ -3939,7 +3939,7 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
         return nullptr;
 
     /*

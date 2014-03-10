@@ -502,7 +502,7 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
     if (!JS_DefineProperties(cx, ctor, regexp_static_props))
         return nullptr;
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_RegExp, ctor, proto))
         return nullptr;
 
     return proto;

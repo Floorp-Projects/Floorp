@@ -1251,7 +1251,7 @@ js_InitNumberClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_Number, ctor, numberProto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Number, ctor, numberProto))
         return nullptr;
 
     return numberProto;
