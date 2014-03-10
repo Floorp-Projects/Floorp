@@ -390,7 +390,7 @@ ContainerRender(ContainerT* aContainer,
 
   if (aContainer->GetFrameMetrics().IsScrollable()) {
     const FrameMetrics& frame = aContainer->GetFrameMetrics();
-    LayerRect layerBounds = ScreenRect(frame.mCompositionBounds) * ScreenToLayerScale(1.0);
+    LayerRect layerBounds = ParentLayerRect(frame.mCompositionBounds) * ParentLayerToLayerScale(1.0);
     gfx::Rect rect(layerBounds.x, layerBounds.y, layerBounds.width, layerBounds.height);
     gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
     aManager->GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTAINER,
