@@ -3649,12 +3649,15 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
         FrameLayerBuilder::GetDedicatedLayer(frame,
                                              nsDisplayItem::TYPE_TRANSFORM);
       if (layer) {
-        gfx3DMatrix matrix;
         ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
         if (forwarder && forwarder->HasShadowManager()) {
-          forwarder->GetShadowManager()->SendGetTransform(
-            layer->AsShadowableLayer()->GetShadow(), &matrix);
-          cssValue = nsComputedDOMStyle::MatrixToCSSValue(matrix);
+          MaybeTransform transform;
+          forwarder->GetShadowManager()->SendGetAnimationTransform(
+            layer->AsShadowableLayer()->GetShadow(), &transform);
+          if (transform.type() == MaybeTransform::Tgfx3DMatrix) {
+            cssValue =
+              nsComputedDOMStyle::MatrixToCSSValue(transform.get_gfx3DMatrix());
+          }
         }
       }
     }
