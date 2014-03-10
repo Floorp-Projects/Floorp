@@ -98,7 +98,7 @@ ImageLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 
   mCompositor->MakeCurrent();
 
-  EffectChain effectChain;
+  EffectChain effectChain(this);
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
 
   gfx::Rect clipRect(aClipRect.x, aClipRect.y, aClipRect.width, aClipRect.height);
