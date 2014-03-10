@@ -91,7 +91,7 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
 static void
 RecenterDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics)
 {
-    CSSRect compositionBounds = aFrameMetrics.CalculateCompositedRectInCssPixels();
+    CSSRect compositionBounds(aFrameMetrics.CalculateCompositedRectInCssPixels());
     aFrameMetrics.mDisplayPort.x = (compositionBounds.width - aFrameMetrics.mDisplayPort.width) / 2;
     aFrameMetrics.mDisplayPort.y = (compositionBounds.height - aFrameMetrics.mDisplayPort.height) / 2;
 }
@@ -156,7 +156,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     // be 1000 pixels long but the frame would still be 100 pixels, and so the maximum
     // scroll range would be 900. Therefore this calculation depends on the zoom applied
     // to the content relative to the container.
-    CSSSize scrollPort = aMetrics.CalculateCompositedRectInCssPixels().Size();
+    CSSSize scrollPort = CSSSize(aMetrics.CalculateCompositedRectInCssPixels().Size());
     aUtils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
 
     // Scroll the window to the desired spot
@@ -189,7 +189,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     // Finally, we multiply by a ScreenToLayerScale of 1.0f because the goal here is to
     // take the async zoom calculated by the APZC and tell gecko about it (turning it into
     // a "sync" zoom) which will update the resolution at which the layer is painted.
-    mozilla::layers::ParentLayerToLayerScale presShellResolution =
+    ParentLayerToLayerScale presShellResolution =
         aMetrics.mZoom
         / aMetrics.mDevPixelsPerCSSPixel
         / aMetrics.GetParentResolution()
