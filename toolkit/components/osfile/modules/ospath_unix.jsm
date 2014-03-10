@@ -79,14 +79,17 @@ exports.dirname = dirname;
  *
  * Under Unix, this will return "/tmp/foo/bar".
  */
-let join = function(path /*...*/) {
+let join = function(...path) {
   // If there is a path that starts with a "/", eliminate everything before
   let paths = [];
-  for each(let i in arguments) {
-    if (i.length != 0 && i[0] == "/") {
-      paths = [i];
+  for (let subpath of path) {
+    if (subpath == null) {
+      throw new TypeError("invalid path component");
+    }
+    if (subpath.length != 0 && subpath[0] == "/") {
+      paths = [subpath];
     } else {
-      paths.push(i);
+      paths.push(subpath);
     }
   }
   return paths.join("/");

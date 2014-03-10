@@ -6,7 +6,8 @@
 %include downloads.css
 %undef WINDOWS_AERO
 
-@media (-moz-windows-default-theme) {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
+       (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
   richlistitem[type="download"] {
     border: 1px solid transparent;
     border-bottom: 1px solid hsl(213,40%,90%);

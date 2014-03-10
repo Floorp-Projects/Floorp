@@ -562,7 +562,11 @@ TabWebProgressListener.prototype = {
    */
   destroy: function TWPL_destroy() {
     if (this.target.tab) {
-      this.target.tab.linkedBrowser.removeProgressListener(this);
+      try {
+        this.target.tab.linkedBrowser.removeProgressListener(this);
+      } catch (ex) {
+        // This can throw when a tab crashes in e10s.
+      }
     }
     this.target._webProgressListener = null;
     this.target._navRequest = null;
