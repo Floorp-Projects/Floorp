@@ -683,6 +683,12 @@ toolbarbutton.panel-multiview-anchor {
   background-repeat: no-repeat;
 }
 
+toolbarbutton.panel-multiview-anchor:-moz-locale-dir(rtl) {
+  background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl.png),
+                    linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.3));
+  background-position: left 5px center;
+}
+
 #PanelUI-footer > #PanelUI-footer-inner.panel-multiview-anchor,
 toolbarbutton.panel-multiview-anchor,
 toolbarbutton.panel-multiview-anchor > .toolbarbutton-menubutton-button {
