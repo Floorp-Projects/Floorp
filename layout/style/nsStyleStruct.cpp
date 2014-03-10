@@ -1252,10 +1252,14 @@ nsStylePosition::nsStylePosition(void)
   mFlexGrow = 0.0f;
   mFlexShrink = 1.0f;
   mZIndex.SetAutoValue();
+  mGridAutoPositionColumn.SetToInteger(1);
+  mGridAutoPositionRow.SetToInteger(1);
   // mGridTemplateRows, mGridTemplateColumns, and mGridTemplateAreas
   // get their default constructors
   // which initialize them to empty arrays,
   // which represent the properties' initial value 'none'.
+
+  // mGrid{Column,Row}{Start,End} get their default constructor, 'auto'
 }
 
 nsStylePosition::~nsStylePosition(void)
@@ -1267,6 +1271,12 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   : mGridTemplateColumns(aSource.mGridTemplateColumns)
   , mGridTemplateRows(aSource.mGridTemplateRows)
   , mGridTemplateAreas(aSource.mGridTemplateAreas)
+  , mGridAutoPositionColumn(aSource.mGridAutoPositionColumn)
+  , mGridAutoPositionRow(aSource.mGridAutoPositionRow)
+  , mGridColumnStart(aSource.mGridColumnStart)
+  , mGridColumnEnd(aSource.mGridColumnEnd)
+  , mGridRowStart(aSource.mGridRowStart)
+  , mGridRowEnd(aSource.mGridRowEnd)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
   // If you add any memcpy'able member vars,
@@ -1279,7 +1289,13 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
                 offsetof(nsStylePosition, mGridTemplateColumns) +
                 sizeof(mGridTemplateColumns) +
                 sizeof(mGridTemplateRows) +
-                sizeof(mGridTemplateAreas),
+                sizeof(mGridTemplateAreas) +
+                sizeof(mGridAutoPositionColumn) +
+                sizeof(mGridAutoPositionRow) +
+                sizeof(mGridColumnStart) +
+                sizeof(mGridColumnEnd) +
+                sizeof(mGridRowStart) +
+                sizeof(mGridRowEnd),
                 "Unexpected size or offset in nsStylePosition");
   memcpy((nsStylePosition*) this,
          &aSource,
@@ -1332,8 +1348,9 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
-
   // Properties that apply to grid containers:
+  // FIXME: only for grid containers
+  // (ie. 'display: grid' or 'display: inline-grid')
   if (mGridTemplateColumns != aOther.mGridTemplateColumns ||
       mGridTemplateRows != aOther.mGridTemplateRows ||
       mGridTemplateAreas != aOther.mGridTemplateAreas ||
@@ -1345,6 +1362,15 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
+  // Properties that apply to grid items:
+  // FIXME: only for grid items
+  // (ie. parent frame is 'display: grid' or 'display: inline-grid')
+  if (mGridColumnStart != aOther.mGridColumnStart ||
+      mGridColumnEnd != aOther.mGridColumnEnd ||
+      mGridRowStart != aOther.mGridRowStart ||
+      mGridRowEnd != aOther.mGridRowEnd) {
+    return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
+  }
 
   // Changing justify-content on a flexbox might affect the positioning of its
   // children, but it won't affect any sizing.

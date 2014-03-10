@@ -1184,6 +1184,62 @@ struct nsStyleGridTrackList {
   }
 };
 
+struct nsStyleGridLine {
+  // http://dev.w3.org/csswg/css-grid/#typedef-grid-line
+  bool mHasSpan;
+  int32_t mInteger;  // 0 means not provided
+  nsString mLineName;  // Empty string means not provided.
+
+  nsStyleGridLine()
+    : mHasSpan(false)
+    , mInteger(0)
+    // mLineName get its default constructor, the empty string
+  {
+  }
+
+  nsStyleGridLine(const nsStyleGridLine& aOther)
+  {
+    (*this) = aOther;
+  }
+
+  void operator=(const nsStyleGridLine& aOther)
+  {
+    mHasSpan = aOther.mHasSpan;
+    mInteger = aOther.mInteger;
+    mLineName = aOther.mLineName;
+  }
+
+  bool operator!=(const nsStyleGridLine& aOther) const
+  {
+    return mHasSpan != aOther.mHasSpan ||
+           mInteger != aOther.mInteger ||
+           mLineName != aOther.mLineName;
+  }
+
+  void SetToInteger(uint32_t value)
+  {
+    mHasSpan = false;
+    mInteger = value;
+    mLineName.Truncate();
+  }
+
+  void SetAuto()
+  {
+    mHasSpan = false;
+    mInteger = 0;
+    mLineName.Truncate();
+  }
+
+  bool IsAuto() const
+  {
+    bool haveInitialValues =  mInteger == 0 && mLineName.IsEmpty();
+    MOZ_ASSERT(!(haveInitialValues && mHasSpan),
+               "should not have 'span' when other components are "
+               "at their initial values");
+    return haveInitialValues;
+  }
+};
+
 struct nsStylePosition {
   nsStylePosition(void);
   nsStylePosition(const nsStylePosition& aOther);
@@ -1240,6 +1296,15 @@ struct nsStylePosition {
   nsStyleGridTrackList mGridTemplateColumns;
   nsStyleGridTrackList mGridTemplateRows;
   nsCSSValueGridTemplateAreas mGridTemplateAreas;
+
+  // We represent the "grid-auto-position" property in two parts:
+  nsStyleGridLine mGridAutoPositionColumn;
+  nsStyleGridLine mGridAutoPositionRow;
+
+  nsStyleGridLine mGridColumnStart;
+  nsStyleGridLine mGridColumnEnd;
+  nsStyleGridLine mGridRowStart;
+  nsStyleGridLine mGridRowEnd;
 
   bool WidthDependsOnContainer() const
     { return WidthCoordDependsOnContainer(mWidth); }

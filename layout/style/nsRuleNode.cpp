@@ -7254,6 +7254,48 @@ SetGridTemplateAreas(const nsCSSValue& aValue,
   }
 }
 
+static void
+SetGridLine(const nsCSSValue& aValue,
+            nsStyleGridLine& aResult,
+            const nsStyleGridLine& aParentValue,
+            bool& aCanStoreInRuleTree)
+
+{
+  switch (aValue.GetUnit()) {
+  case eCSSUnit_Null:
+    break;
+
+  case eCSSUnit_Inherit:
+    aCanStoreInRuleTree = false;
+    aResult = aParentValue;
+    break;
+
+  case eCSSUnit_Initial:
+  case eCSSUnit_Unset:
+  case eCSSUnit_Auto:
+    aResult.SetAuto();
+    break;
+
+  default:
+    aResult.SetAuto();  // Reset any existing value.
+    const nsCSSValueList* item = aValue.GetListValue();
+    do {
+      if (item->mValue.GetUnit() == eCSSUnit_Enumerated) {
+        aResult.mHasSpan = true;
+      } else if (item->mValue.GetUnit() == eCSSUnit_Integer) {
+        aResult.mInteger = item->mValue.GetIntValue();
+      } else if (item->mValue.GetUnit() == eCSSUnit_Ident) {
+        item->mValue.GetStringValue(aResult.mLineName);
+      } else {
+        NS_ASSERTION(false, "Unexpected unit");
+      }
+      item = item->mNext;
+    } while (item);
+    MOZ_ASSERT(!aResult.IsAuto(),
+               "should have set something away from default value");
+  }
+}
+
 const void*
 nsRuleNode::ComputePositionData(void* aStartStruct,
                                 const nsRuleData* aRuleData,
@@ -7477,6 +7519,57 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
   SetGridTemplateAreas(*aRuleData->ValueForGridTemplateAreas(),
                        pos->mGridTemplateAreas, parentPos->mGridTemplateAreas,
                        canStoreInRuleTree);
+
+  // grid-auto-position
+  const nsCSSValue& gridAutoPosition = *aRuleData->ValueForGridAutoPosition();
+  switch (gridAutoPosition.GetUnit()) {
+    case eCSSUnit_Null:
+      break;
+    case eCSSUnit_Inherit:
+      canStoreInRuleTree = false;
+      pos->mGridAutoPositionColumn = parentPos->mGridAutoPositionColumn;
+      pos->mGridAutoPositionRow = parentPos->mGridAutoPositionRow;
+      break;
+    case eCSSUnit_Initial:
+    case eCSSUnit_Unset:
+      // '1 / 1'
+      pos->mGridAutoPositionColumn.SetToInteger(1);
+      pos->mGridAutoPositionRow.SetToInteger(1);
+      break;
+    default:
+      SetGridLine(gridAutoPosition.GetPairValue().mXValue,
+                  pos->mGridAutoPositionColumn,
+                  parentPos->mGridAutoPositionColumn,
+                  canStoreInRuleTree);
+      SetGridLine(gridAutoPosition.GetPairValue().mYValue,
+                  pos->mGridAutoPositionRow,
+                  parentPos->mGridAutoPositionRow,
+                  canStoreInRuleTree);
+  }
+
+  // grid-column-start
+  SetGridLine(*aRuleData->ValueForGridColumnStart(),
+              pos->mGridColumnStart,
+              parentPos->mGridColumnStart,
+              canStoreInRuleTree);
+
+  // grid-column-end
+  SetGridLine(*aRuleData->ValueForGridColumnEnd(),
+              pos->mGridColumnEnd,
+              parentPos->mGridColumnEnd,
+              canStoreInRuleTree);
+
+  // grid-row-start
+  SetGridLine(*aRuleData->ValueForGridRowStart(),
+              pos->mGridRowStart,
+              parentPos->mGridRowStart,
+              canStoreInRuleTree);
+
+  // grid-row-end
+  SetGridLine(*aRuleData->ValueForGridRowEnd(),
+              pos->mGridRowEnd,
+              parentPos->mGridRowEnd,
+              canStoreInRuleTree);
 
   // z-index
   const nsCSSValue* zIndexValue = aRuleData->ValueForZIndex();
