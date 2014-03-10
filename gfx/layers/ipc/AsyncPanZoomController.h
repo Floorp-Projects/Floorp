@@ -866,11 +866,30 @@ public:
                       const TimeDuration& aDelta) = 0;
 
   /**
+   * Execute the tasks in |mDeferredTasks| in order. See |mDeferredTasks|
+   * for more information.
+   */
+  void ExecuteDeferredTasks() {
+    for (uint32_t i = 0; i < mDeferredTasks.length(); ++i) {
+      mDeferredTasks[i]->Run();
+    }
+    mDeferredTasks.clear();
+  }
+
+  /**
    * Specifies how frequently (at most) we want to do repaints during the
    * animation sequence. TimeDuration::Forever() will cause it to only repaint
    * at the end of the animation.
    */
   TimeDuration mRepaintInterval;
+
+protected:
+  /**
+   * Tasks scheduled for execution after the APZC's mMonitor is released.
+   * Derived classes can add tasks here in Sample(), and the APZC can call
+   * ExecuteDeferredTasks() to execute them.
+   */
+  Vector<Task*> mDeferredTasks;
 };
 
 }
