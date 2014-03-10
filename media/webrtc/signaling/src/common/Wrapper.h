@@ -36,9 +36,7 @@
  */
 
 #include <map>
-#include "SharedPtr.h"
 #include "prlock.h"
-#include "base/lock.h"
 #include "mozilla/Assertions.h"
 
 /*
