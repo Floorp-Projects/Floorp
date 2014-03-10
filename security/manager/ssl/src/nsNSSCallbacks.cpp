@@ -1096,12 +1096,12 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA: value = 22; break;
     case TLS_DHE_RSA_WITH_AES_256_CBC_SHA: value = 23; break;
     case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA: value = 24; break;
-    case SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA: value = 25; break;
+    case TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA: value = 25; break;
     case TLS_DHE_DSS_WITH_AES_128_CBC_SHA: value = 26; break;
     case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA: value = 27; break;
     case TLS_DHE_DSS_WITH_AES_256_CBC_SHA: value = 28; break;
     case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA: value = 29; break;
-    case SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA: value = 30; break;
+    case TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA: value = 30; break;
     // ECDH key exchange
     case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA: value = 41; break;
     case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA: value = 42; break;
@@ -1117,10 +1117,10 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_RSA_WITH_AES_256_CBC_SHA: value = 63; break;
     case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA: value = 64; break;
     case SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA: value = 65; break;
-    case SSL_RSA_WITH_3DES_EDE_CBC_SHA: value = 66; break;
+    case TLS_RSA_WITH_3DES_EDE_CBC_SHA: value = 66; break;
     case TLS_RSA_WITH_SEED_CBC_SHA: value = 67; break;
-    case SSL_RSA_WITH_RC4_128_SHA: value = 68; break;
-    case SSL_RSA_WITH_RC4_128_MD5: value = 69; break;
+    case TLS_RSA_WITH_RC4_128_SHA: value = 68; break;
+    case TLS_RSA_WITH_RC4_128_MD5: value = 69; break;
     // unknown
     default:
       value = 0;

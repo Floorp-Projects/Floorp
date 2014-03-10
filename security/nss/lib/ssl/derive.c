@@ -634,7 +634,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     rv = SECFailure;
     
     /* determine which KEAs to test */
-    /* 0 (SSL_NULL_WITH_NULL_NULL) is used as a list terminator because
+    /* 0 (TLS_NULL_WITH_NULL_NULL) is used as a list terminator because
      * SSL3 and TLS specs forbid negotiating that cipher suite number.
      */
     for (i=0; i < nsuites && (suite = *ciphersuites++) != 0; i++) {
@@ -647,8 +647,8 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 	    switch (csdef.cipherSuite) {
 	    case TLS_RSA_EXPORT1024_WITH_RC4_56_SHA:
 	    case TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA:
-	    case SSL_RSA_EXPORT_WITH_RC4_40_MD5:
-	    case SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
+	    case TLS_RSA_EXPORT_WITH_RC4_40_MD5:
+	    case TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5:
 		testrsa_export = PR_TRUE;
 	    }
 	    if (!testrsa_export)

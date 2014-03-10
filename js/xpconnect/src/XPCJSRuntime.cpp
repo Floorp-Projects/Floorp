@@ -587,12 +587,6 @@ GetJunkScopeGlobal()
     return GetNativeForGlobal(junkScope);
 }
 
-JSObject *
-GetSafeJSContextGlobal()
-{
-    return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContextGlobal();
-}
-
 nsGlobalWindow*
 WindowGlobalOrNull(JSObject *aObj)
 {

@@ -809,7 +809,7 @@ static const CipherPref sCipherPrefs[] = {
    TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA, true },
 
  { "security.ssl3.dhe_rsa_des_ede3_sha",
-   SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA, true }, // deprecated (3DES)
+   TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA, true }, // deprecated (3DES)
 
  { "security.ssl3.dhe_dss_aes_128_sha",
    TLS_DHE_DSS_WITH_AES_128_CBC_SHA, true }, // deprecated (DSS)
@@ -830,12 +830,12 @@ static const CipherPref sCipherPrefs[] = {
  { "security.ssl3.rsa_camellia_256_sha",
    TLS_RSA_WITH_CAMELLIA_256_CBC_SHA, true }, // deprecated (RSA key exchange)
  { "security.ssl3.rsa_des_ede3_sha",
-   SSL_RSA_WITH_3DES_EDE_CBC_SHA, true }, // deprecated (RSA key exchange, 3DES)
+   TLS_RSA_WITH_3DES_EDE_CBC_SHA, true }, // deprecated (RSA key exchange, 3DES)
 
  { "security.ssl3.rsa_rc4_128_sha",
-   SSL_RSA_WITH_RC4_128_SHA, true }, // deprecated (RSA key exchange, RC4)
+   TLS_RSA_WITH_RC4_128_SHA, true }, // deprecated (RSA key exchange, RC4)
  { "security.ssl3.rsa_rc4_128_md5",
-   SSL_RSA_WITH_RC4_128_MD5, true }, // deprecated (RSA key exchange, RC4, HMAC-MD5)
+   TLS_RSA_WITH_RC4_128_MD5, true }, // deprecated (RSA key exchange, RC4, HMAC-MD5)
 
  // All the rest are disabled by default
 

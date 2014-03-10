@@ -948,9 +948,10 @@ PK11_LoadSlotList(PK11SlotInfo *slot, PK11PreSlotInfo *psi, int count)
  * returns: SECSuccess if nothing to do or add/delete is successful
  */
 SECStatus
-PK11_UpdateSlotAttribute(PK11SlotInfo *slot, PK11DefaultArrayEntry *entry,
-                        PRBool add)  
-                        /* add: PR_TRUE if want to turn on */
+PK11_UpdateSlotAttribute(PK11SlotInfo *slot,
+                         const PK11DefaultArrayEntry *entry,
+                         PRBool add)
+                         /* add: PR_TRUE if want to turn on */
 {
     SECStatus result = SECSuccess;
     PK11SlotList *slotList = PK11_GetSlotList(entry->mechanism);
