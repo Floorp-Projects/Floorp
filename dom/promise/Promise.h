@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/PromiseBinding.h"
+#include "mozilla/dom/TypedArray.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "js/TypeDecls.h"
@@ -199,6 +200,24 @@ private:
     JS::Rooted<JSObject*> scope(aCx, aScope);
 
     return WrapNewBindingObject(aCx, scope, aArgument, aValue);
+  }
+
+  // Accept typed arrays built from appropriate nsTArray values
+  template<typename T>
+  typename EnableIf<IsBaseOf<AllTypedArraysBase, T>::value, bool>::Type
+  ArgumentToJSValue(const TypedArrayCreator<T>& aArgument,
+                    JSContext* aCx,
+                    JSObject* aScope,
+                    JS::MutableHandle<JS::Value> aValue)
+  {
+    JS::RootedObject scope(aCx, aScope);
+
+    JSObject* abv = aArgument.Create(aCx, scope);
+    if (!abv) {
+      return false;
+    }
+    aValue.setObject(*abv);
+    return true;
   }
 
   // Accept objects that inherit from nsISupports but not nsWrapperCache (e.g.
