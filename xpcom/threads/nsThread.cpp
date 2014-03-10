@@ -26,10 +26,21 @@
 #include "mozilla/HangMonitor.h"
 #include "mozilla/Services.h"
 #include "nsXPCOMPrivate.h"
+#include "mozilla/ChaosMode.h"
+
+#ifdef XP_LINUX
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sched.h>
+#endif
 
 #define HAVE_UALARM _BSD_SOURCE || (_XOPEN_SOURCE >= 500 ||                 \
                       _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) &&           \
                       !(_POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700)
+
+#if defined(XP_LINUX) && !defined(ANDROID) && defined(_GNU_SOURCE)
+#define HAVE_SCHED_SETAFFINITY
+#endif
 
 #ifdef MOZ_CANARY
 # include <unistd.h>
@@ -232,11 +243,50 @@ private:
 
 //-----------------------------------------------------------------------------
 
+static void
+SetupCurrentThreadForChaosMode()
+{
+  if (!ChaosMode::isActive()) {
+    return;
+  }
+
+#ifdef XP_LINUX
+  // PR_SetThreadPriority doesn't really work since priorities >
+  // PR_PRIORITY_NORMAL can't be set by non-root users. Instead we'll just use
+  // setpriority(2) to set random 'nice values'. In regular Linux this is only
+  // a dynamic adjustment so it still doesn't really do what we want, but tools
+  // like 'rr' can be more aggressive about honoring these values.
+  // Some of these calls may fail due to trying to lower the priority
+  // (e.g. something may have already called setpriority() for this thread).
+  // This makes it hard to have non-main threads with higher priority than the
+  // main thread, but that's hard to fix. Tools like rr can choose to honor the
+  // requested values anyway.
+  // Use just 4 priorities so there's a reasonable chance of any two threads
+  // having equal priority.
+  setpriority(PRIO_PROCESS, 0, ChaosMode::randomUint32LessThan(4));
+#else
+  // We should set the affinity here but NSPR doesn't provide a way to expose it.
+  PR_SetThreadPriority(PR_GetCurrentThread(),
+    PRThreadPriority(ChaosMode::randomUint32LessThan(PR_PRIORITY_LAST + 1)));
+#endif
+
+#ifdef HAVE_SCHED_SETAFFINITY
+  // Force half the threads to CPU 0 so they compete for CPU
+  if (ChaosMode::randomUint32LessThan(2)) {
+    cpu_set_t cpus;
+    CPU_ZERO(&cpus);
+    CPU_SET(0, &cpus);
+    sched_setaffinity(0, sizeof(cpus), &cpus);
+  }
+#endif
+}
+
 /*static*/ void
 nsThread::ThreadFunc(void *arg)
 {
   nsThread *self = static_cast<nsThread *>(arg);  // strong reference
   self->mThread = PR_GetCurrentThread();
+  SetupCurrentThreadForChaosMode();
 
   // Inform the ThreadManager
   nsThreadManager::get()->RegisterCurrentThread(self);
@@ -352,6 +402,7 @@ nsresult
 nsThread::InitCurrentThread()
 {
   mThread = PR_GetCurrentThread();
+  SetupCurrentThreadForChaosMode();
 
   nsThreadManager::get()->RegisterCurrentThread(this);
   return NS_OK;
@@ -697,7 +748,10 @@ nsThread::SetPriority(int32_t priority)
   } else {
     pri = PR_PRIORITY_NORMAL;
   }
-  PR_SetThreadPriority(mThread, pri);
+  // If chaos mode is active, retain the randomly chosen priority
+  if (!ChaosMode::isActive()) {
+    PR_SetThreadPriority(mThread, pri);
+  }
 
   return NS_OK;
 }
