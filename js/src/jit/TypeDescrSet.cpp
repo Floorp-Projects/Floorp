@@ -337,7 +337,7 @@ TypeDescrSet::fieldNamed(IonBuilder &builder,
     // Check that all subsequent fields are at the same offset
     // and compute the union of their types.
     for (size_t i = 1; i < length(); i++) {
-        StructTypeDescr &descri = get(0)->as<StructTypeDescr>();
+        StructTypeDescr &descri = get(i)->as<StructTypeDescr>();
 
         size_t indexi;
         if (!descri.fieldIndex(id, &indexi))
