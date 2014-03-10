@@ -279,6 +279,15 @@ public:
   TextureFlags GetFlags() const { return mFlags; }
 
   /**
+   * valid only for TEXTURE_RECYCLE TextureClient.
+   * When called this texture client will grab a strong reference and release
+   * it once the compositor notifies that it is done with the texture.
+   * NOTE: In this stage the texture client can no longer be used by the
+   * client in a transaction.
+   */
+  void WaitForCompositorRecycle();
+
+  /**
    * After being shared with the compositor side, an immutable texture is never
    * modified, it can only be read. It is safe to not Lock/Unlock immutable
    * textures.
