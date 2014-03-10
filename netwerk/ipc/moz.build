@@ -31,7 +31,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES = [
     'NeckoChannelParams.ipdlh',
-    'PChannelDiverter.ipdl',
     'PNecko.ipdl',
     'PRemoteOpenFile.ipdl',
     'PRtspController.ipdl',
