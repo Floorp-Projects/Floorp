@@ -1038,7 +1038,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     MathNameMap                    standardLibraryMathNames_;
     GlobalAccessVector             globalAccesses_;
     Label                          stackOverflowLabel_;
-    Label                          operationCallbackLabel_;
+    Label                          interruptLabel_;
 
     char *                         errorString_;
     uint32_t                       errorOffset_;
@@ -1102,8 +1102,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         // Avoid spurious Label assertions on compilation failure.
         if (!stackOverflowLabel_.bound())
             stackOverflowLabel_.bind(0);
-        if (!operationCallbackLabel_.bound())
-            operationCallbackLabel_.bind(0);
+        if (!interruptLabel_.bound())
+            interruptLabel_.bind(0);
     }
 
     bool init() {
@@ -1218,7 +1218,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     AsmJSParser &parser() const { return parser_; }
     MacroAssembler &masm() { return masm_; }
     Label &stackOverflowLabel() { return stackOverflowLabel_; }
-    Label &operationCallbackLabel() { return operationCallbackLabel_; }
+    Label &interruptLabel() { return interruptLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
 
@@ -1555,7 +1555,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
 #endif
 
-        module_->setOperationCallbackOffset(masm_.actualOffset(operationCallbackLabel_.offset()));
+        module_->setInterruptOffset(masm_.actualOffset(interruptLabel_.offset()));
 
         // CodeLabels produced during codegen
         for (size_t i = 0; i < masm_.numCodeLabels(); i++) {
@@ -6696,17 +6696,17 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
 // The operation-callback exit is called from arbitrarily-interrupted asm.js
 // code. That means we must first save *all* registers and restore *all*
 // registers (except the stack pointer) when we resume. The address to resume to
-// (assuming that js_HandleExecutionInterrupt doesn't indicate that the
+// (assuming that js::HandleExecutionInterrupt doesn't indicate that the
 // execution should be aborted) is stored in AsmJSActivation::resumePC_.
 // Unfortunately, loading this requires a scratch register which we don't have
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
 static bool
-GenerateOperationCallbackExit(ModuleCompiler &m, Label *throwLabel)
+GenerateInterruptExit(ModuleCompiler &m, Label *throwLabel)
 {
     MacroAssembler &masm = m.masm();
     masm.align(CodeAlignment);
-    masm.bind(&m.operationCallbackLabel());
+    masm.bind(&m.interruptLabel());
 
 #ifndef JS_CODEGEN_ARM
     // Be very careful here not to perturb the machine state before saving it
@@ -6858,7 +6858,7 @@ GenerateStubs(ModuleCompiler &m)
             return false;
     }
 
-    if (!GenerateOperationCallbackExit(m, &throwLabel))
+    if (!GenerateInterruptExit(m, &throwLabel))
         return false;
 
     if (!GenerateThrowExit(m, &throwLabel))

@@ -934,8 +934,8 @@ js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
     JS_ASSERT_IF(flags & JSITER_KEYVALUE, flags & JSITER_FOREACH);
 
     /*
-     * Make sure the more/next state machine doesn't get stuck. A value might be
-     * left in iterValue when a trace is left due to an operation time-out after
+     * Make sure the more/next state machine doesn't get stuck. A value might
+     * be left in iterValue when a trace is left due to an interrupt after
      * JSOP_MOREITER but before the value is picked up by FOR*.
      */
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
@@ -1351,7 +1351,7 @@ ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
 {
     JS_ASSERT(index != NOT_ARRAY);
 
-    if (!JS_CHECK_OPERATION_LIMIT(cx_))
+    if (!CheckForInterrupt(cx_))
         return false;
 
     JS_ASSERT(iterator->isNative());

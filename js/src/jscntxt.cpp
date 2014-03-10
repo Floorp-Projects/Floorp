@@ -1001,7 +1001,7 @@ js_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber
 }
 
 bool
-js_InvokeOperationCallback(JSContext *cx)
+js::InvokeInterruptCallback(JSContext *cx)
 {
     JS_ASSERT_REQUEST_DEPTH(cx);
 
@@ -1013,7 +1013,7 @@ js_InvokeOperationCallback(JSContext *cx)
     // which will be serviced at the next opportunity.
     rt->interrupt = false;
 
-    // IonMonkey sets its stack limit to UINTPTR_MAX to trigger operation
+    // IonMonkey sets its stack limit to UINTPTR_MAX to trigger interrupt
     // callbacks.
     rt->resetJitStackLimit();
 
@@ -1024,7 +1024,7 @@ js_InvokeOperationCallback(JSContext *cx)
     rt->interruptPar = false;
 #endif
 
-    // A worker thread may have set the callback after finishing an Ion
+    // A worker thread may have requested an interrupt after finishing an Ion
     // compilation.
     jit::AttachFinishedCompilations(cx);
 #endif
@@ -1032,7 +1032,7 @@ js_InvokeOperationCallback(JSContext *cx)
     // Important: Additional callbacks can occur inside the callback handler
     // if it re-enters the JS engine. The embedding must ensure that the
     // callback is disconnected before attempting such re-entry.
-    JSOperationCallback cb = cx->runtime()->operationCallback;
+    JSInterruptCallback cb = cx->runtime()->interruptCallback;
     if (!cb || cb(cx))
         return true;
 
@@ -1049,10 +1049,10 @@ js_InvokeOperationCallback(JSContext *cx)
 }
 
 bool
-js_HandleExecutionInterrupt(JSContext *cx)
+js::HandleExecutionInterrupt(JSContext *cx)
 {
     if (cx->runtime()->interrupt)
-        return js_InvokeOperationCallback(cx);
+        return InvokeInterruptCallback(cx);
     return true;
 }
 

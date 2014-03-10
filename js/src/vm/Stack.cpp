@@ -1560,7 +1560,7 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module, unsigned ex
 
     prevAsmJS_ = cx_->runtime()->mainThread.asmJSActivationStack_;
 
-    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime());
+    JSRuntime::AutoLockForInterrupt lock(cx_->runtime());
     cx_->runtime()->mainThread.asmJSActivationStack_ = this;
 
     (void) errorRejoinSP_;  // squelch GCC warning
@@ -1573,7 +1573,7 @@ AsmJSActivation::~AsmJSActivation()
 
     JS_ASSERT(cx_->runtime()->mainThread.asmJSActivationStack_ == this);
 
-    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime());
+    JSRuntime::AutoLockForInterrupt lock(cx_->runtime());
     cx_->runtime()->mainThread.asmJSActivationStack_ = prevAsmJS_;
 }
 

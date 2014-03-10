@@ -130,9 +130,9 @@ JSRuntime::createJitRuntime(JSContext *cx)
     AutoLockForExclusiveAccess atomsLock(cx);
 
     // The runtime will only be created on its owning thread, but reads of a
-    // runtime's jitRuntime() can occur when another thread is triggering an
-    // operation callback.
-    AutoLockForOperationCallback lock(this);
+    // runtime's jitRuntime() can occur when another thread is requesting an
+    // interrupt.
+    AutoLockForInterrupt lock(this);
 
     JS_ASSERT(!jitRuntime_);
 

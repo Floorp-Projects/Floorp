@@ -1417,7 +1417,7 @@ Interpret(JSContext *cx, RunState &state)
      */
 #define CHECK_BRANCH()                                                        \
     JS_BEGIN_MACRO                                                            \
-        if (cx->runtime()->interrupt && !js_HandleExecutionInterrupt(cx))     \
+        if (cx->runtime()->interrupt && !HandleExecutionInterrupt(cx))        \
             goto error;                                                       \
     JS_END_MACRO
 
@@ -3723,7 +3723,7 @@ js::GetAndClearException(JSContext *cx, MutableHandleValue res)
     // Check the interrupt flag to allow interrupting deeply nested exception
     // handling.
     if (cx->runtime()->interrupt)
-        return js_HandleExecutionInterrupt(cx);
+        return HandleExecutionInterrupt(cx);
     return true;
 }
 

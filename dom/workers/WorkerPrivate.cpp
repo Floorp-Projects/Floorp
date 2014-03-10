@@ -2242,7 +2242,7 @@ WorkerPrivateParent<Derived>::DispatchControlRunnable(
       JSRuntime* rt = JS_GetRuntime(cx);
       MOZ_ASSERT(rt);
 
-      JS_TriggerOperationCallback(rt);
+      JS_RequestInterruptCallback(rt);
     }
 
     mCondVar.Notify();
@@ -4191,7 +4191,7 @@ WorkerPrivate::ShutdownGCTimers()
 }
 
 bool
-WorkerPrivate::OperationCallback(JSContext* aCx)
+WorkerPrivate::InterruptCallback(JSContext* aCx)
 {
   AssertIsOnWorkerThread();
 
@@ -4310,10 +4310,10 @@ WorkerPrivate::BlockAndCollectRuntimeStats(JS::RuntimeStats* aRtStats)
   JSRuntime* rt = JS_GetRuntime(mJSContext);
 
   // If the worker is not already blocked (e.g. waiting for a worker event or
-  // currently in a ctypes call) then we need to trigger the operation
+  // currently in a ctypes call) then we need to trigger the interrupt
   // callback to trap the worker.
   if (!mBlockedForMemoryReporter) {
-    JS_TriggerOperationCallback(rt);
+    JS_RequestInterruptCallback(rt);
 
     // Wait until the worker actually blocks.
     while (!mBlockedForMemoryReporter) {
