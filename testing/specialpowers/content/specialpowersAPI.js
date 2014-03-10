@@ -126,24 +126,13 @@ function wrapPrivileged(obj) {
       // The arguments may or may not be wrappers. Unwrap them if necessary.
       var unwrappedArgs = Array.prototype.slice.call(arguments).map(unwrapIfWrapped);
 
-      // Constructors are tricky, because we can't easily call apply on them.
-      // As a workaround, we create a wrapper constructor with the same
-      // |prototype| property. ES semantics dictate that the return value from
-      // |new| is the return value of the |new|-ed function i.f.f. the returned
-      // value is an object. We can thus mimic the behavior of |new|-ing the
-      // underlying constructor just be passing along its return value in our
-      // constructor.
-      var FakeConstructor = function() {
-        try {
-          return doApply(obj, this, unwrappedArgs);
-        } catch (e) {
-          // Wrap exceptions and re-throw them.
-          throw wrapIfUnwrapped(e);
-        }
-      };
-      FakeConstructor.prototype = obj.prototype;
-
-      return wrapPrivileged(new FakeConstructor());
+      // We want to invoke "obj" as a constructor, but using unwrappedArgs as
+      // the arguments.  Make sure to wrap and re-throw exceptions!
+      try {
+        return wrapPrivileged(new obj(...unwrappedArgs));
+      } catch (e) {
+        throw wrapIfUnwrapped(e);
+      }
     };
 
     return Proxy.createFunction(handler, callTrap, constructTrap);
