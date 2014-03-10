@@ -71,7 +71,7 @@ this.UITour = {
       widgetName: "PanelUI-fxa-status",
     }],
     ["addons",      {query: "#add-ons-button"}],
-    ["appMenu",     {query: "#PanelUI-button"}],
+    ["appMenu",     {query: "#PanelUI-menu-button"}],
     ["backForward", {
       query: "#back-button",
       widgetName: "urlbar-container",
@@ -703,7 +703,7 @@ this.UITour = {
 
     // Handle the non-customizable buttons at the bottom of the menu which aren't proper widgets.
     return targetElement.id.startsWith("PanelUI-")
-             && targetElement.id != "PanelUI-button";
+             && targetElement.id != "PanelUI-menu-button";
   },
 
   /**
@@ -811,9 +811,9 @@ this.UITour = {
       let minDimension = Math.min(highlightHeight, highlightWidth);
       let maxDimension = Math.max(highlightHeight, highlightWidth);
 
-      // If the dimensions are within 110% of each other (to include the bookmark button),
-      // make the highlight a circle with the largest dimension as the diameter.
-      if (maxDimension / minDimension <= 2.1) {
+      // If the dimensions are within 40% of eachother, make the highlight a circle with the
+      // largest dimension as the diameter.
+      if (maxDimension / minDimension <= 1.4) {
         highlightHeight = highlightWidth = maxDimension;
         highlighter.style.borderRadius = "100%";
       } else {
