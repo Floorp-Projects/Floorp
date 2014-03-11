@@ -892,7 +892,7 @@ toolbaritem[overflowedItem=true],
 }
 
 .subviewbutton[checked="true"] {
-  background: url("chrome://global/skin/menu/menu-check.png") top 7px left 7px / 11px 11px no-repeat transparent;
+  background: url("chrome://global/skin/menu/shared-menu-check.png") top 7px left 7px / 11px 11px no-repeat transparent;
 }
 
 .PanelUI-subView > menu > .menu-iconic-left,
