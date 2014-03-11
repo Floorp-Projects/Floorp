@@ -10250,14 +10250,20 @@ IonBuilder::typeSetToTypeDescrSet(types::TemporaryTypeSet *types,
     TypeDescrSetBuilder set;
     for (uint32_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObject *type = types->getTypeObject(i);
-        if (!type || type->unknownProperties())
+        if (!type)
             return true;
 
-        if (!type->hasTypedObject())
+        if (!IsTypedObjectClass(type->clasp()))
             return true;
 
-        TypeDescr &descr = type->typedObject()->descr();
-        if (!set.insert(&descr))
+        TaggedProto proto = type->proto();
+
+        // typed objects have immutable prototypes, and they are
+        // always instances of TypedProto
+        JS_ASSERT(proto.isObject() && proto.toObject()->is<TypedProto>());
+
+        TypedProto &typedProto = proto.toObject()->as<TypedProto>();
+        if (!set.insert(&typedProto.typeDescr()))
             return false;
     }
 
