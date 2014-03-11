@@ -308,34 +308,34 @@ header {
 
 
 
-/*****************      APPS & BROWSER TABS      *****************/
+/*****************      APPS       *****************/
 
 
 
 
-.apps, .browser-tabs {
+.apps {
   display: flex;
   flex-direction: column;
   overflow: auto;
 }
 
-.app, .browser-tab {
+.app {
   display: flex;
   align-items: center;
   order: 1;
 }
 
-.app-name, .browser-tab-details {
+.app-name {
   flex-grow: 1;
   font-weight: bold;
 }
 
-.app, .browser-tab {
+.app {
   padding: 10px 20px;
   border-bottom: 1px solid #CCC;
 }
 
-.app:hover, .browser-tab:hover {
+.app:hover {
   background-color: #EFEFEF;
 }
 
@@ -343,10 +343,6 @@ header {
   width: 32px;
   height: 32px;
   margin-right: 10px;
-}
-
-.browser-tab-url-subheading {
-  font-size: 10px;
 }
 
 
