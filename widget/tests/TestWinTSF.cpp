@@ -1885,10 +1885,10 @@ TestApp::TestSelection(void)
 
   /* If these fail the cause is probably one or more of:
    * nsTextStore::GetSelection not sending NS_QUERY_SELECTED_TEXT
-   * NS_QUERY_SELECTED_TEXT not handled by nsContentEventHandler
+   * NS_QUERY_SELECTED_TEXT not handled by ContentEventHandler
    * Bug in NS_QUERY_SELECTED_TEXT handler
    * nsTextStore::SetSelection not sending NS_SELECTION_SET
-   * NS_SELECTION_SET not handled by nsContentEventHandler
+   * NS_SELECTION_SET not handled by ContentEventHandler
    * Bug in NS_SELECTION_SET handler
    */
 
@@ -1959,7 +1959,7 @@ TestApp::TestText(void)
 
   /* If these fail the cause is probably one or more of:
    * nsTextStore::GetText not sending NS_QUERY_TEXT_CONTENT
-   * NS_QUERY_TEXT_CONTENT not handled by nsContentEventHandler
+   * NS_QUERY_TEXT_CONTENT not handled by ContentEventHandler
    * Bug in NS_QUERY_TEXT_CONTENT handler
    * nsTextStore::SetText not calling SetSelection or InsertTextAtSelection
    * Bug in SetSelection or InsertTextAtSelection
