@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Iframe for testing multiple host detetion in storage actor
+-->
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<script>
+
+document.cookie = "sc1=foobar;";
+localStorage.setItem("iframe-s-ls1", "foobar");
+sessionStorage.setItem("iframe-s-ss1", "foobar-2");
+console.log("added cookies and stuff from secured iframe");
+
+window.onunload = function() {
+  localStorage.clear();
+  sessionStorage.clear();
+  console.log("removed cookies and stuff from secured iframe");
+}
+</script>
+</body>
+</html>
