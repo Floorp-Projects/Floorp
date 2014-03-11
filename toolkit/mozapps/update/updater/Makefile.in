@@ -28,10 +28,6 @@ OS_CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += $(TK_LIBS)
 endif
 
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-OS_LIBS += -framework Cocoa
-endif
-
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
 OS_LIBS += -lcutils -lsysutils
 # clear out all the --wrap flags and remove dependency on mozglue for Gonk
