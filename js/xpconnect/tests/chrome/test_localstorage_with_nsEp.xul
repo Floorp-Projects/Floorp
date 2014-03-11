@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=980023 
+-->
+<window title="Mozilla Bug 980023 "
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=980023"
+     target="_blank">Mozilla Bug 980023 </a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for localstorage access with expanded principal. **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  function go() {
+    var iwin = document.getElementById('ifr').contentWindow;
+    var sb = new Cu.Sandbox([iwin], {sandboxPrototype: iwin});
+    Cu.evalInSandbox("window.localStorage.test_localstorage_with_nsEp = 3",sb);
+    is(Cu.evalInSandbox("window.localStorage.test_localstorage_with_nsEp",sb), 3);
+    is(iwin.localStorage.test_localstorage_with_nsEp, 3);
+    iwin.localStorage.removeItem("test_localstorage_with_nsEp");
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>
