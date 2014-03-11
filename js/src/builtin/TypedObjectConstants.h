@@ -108,9 +108,8 @@
 #define JS_TYPEDARR_SLOTS                5 // Number of slots for typed arrays
 
 // Specific to typed objects:
-#define JS_TYPEDOBJ_SLOT_TYPE_DESCR      4 // A ScalarTypeDescr::Type constant
 #define JS_TYPEDOBJ_SLOT_DATA            7
-#define JS_TYPEDOBJ_SLOTS                5 // Number of slots for typed objs
+#define JS_TYPEDOBJ_SLOTS                4 // Number of slots for typed objs
 
 // (*) The interpretation of the JS_BUFVIEW_SLOT_LENGTH slot depends on
 // the kind of view:
