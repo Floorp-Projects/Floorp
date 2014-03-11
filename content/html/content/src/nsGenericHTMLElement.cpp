@@ -1076,7 +1076,8 @@ nsGenericHTMLElement::ParseAttribute(int32_t aNamespaceID,
 
     if (aAttribute == nsGkAtoms::itemref ||
         aAttribute == nsGkAtoms::itemprop ||
-        aAttribute == nsGkAtoms::itemtype) {
+        aAttribute == nsGkAtoms::itemtype ||
+        aAttribute == nsGkAtoms::rel) {
       aResult.ParseAtomArray(aValue);
       return true;
     }
