@@ -122,13 +122,13 @@ function MockFxAccounts() {
 
 add_test(function test_non_https_remote_server_uri() {
   Services.prefs.setCharPref(
-    "identity.fxaccounts.remote.uri",
+    "identity.fxaccounts.remote.signup.uri",
     "http://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
   do_check_throws_message(function () {
-    fxAccounts.getAccountsURI();
+    fxAccounts.getAccountsSignUpURI();
   }, "Firefox Accounts server must use HTTPS");
 
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.uri");
+  Services.prefs.clearUserPref("identity.fxaccounts.remote.signup.uri");
 
   run_next_test();
 });
