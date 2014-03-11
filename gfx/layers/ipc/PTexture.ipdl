@@ -25,11 +25,7 @@ sync protocol PTexture {
 child:
     async __delete__();
 
-    async CompositorRecycle();
-
 parent:
-
-    async ClientRecycle();
 
     /**
      * Asynchronously tell the Compositor side to remove the texture.

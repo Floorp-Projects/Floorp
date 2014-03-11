@@ -34,7 +34,6 @@ TiledLayerBufferComposite::TiledLayerBufferComposite()
 TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocator,
                                                      const SurfaceDescriptorTiles& aDescriptor,
                                                      const nsIntRegion& aOldPaintedRegion)
-  : mFrameResolution(1.0)
 {
   mUninitialized = false;
   mHasDoubleBufferedTiles = false;
@@ -62,13 +61,13 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
           sharedLock = gfxShmSharedReadLock::Open(aAllocator, ipcLock.get_Shmem());
         } else {
           sharedLock = reinterpret_cast<gfxMemorySharedReadLock*>(ipcLock.get_uintptr_t());
-          if (sharedLock) {
-            // The corresponding AddRef is in TiledClient::GetTileDescriptor
-            sharedLock->Release();
-          }
+          // The corresponding AddRef is in TiledClient::GetTileDescriptor
+          sharedLock->Release();
         }
-
-        mRetainedTiles.AppendElement(TileHost(sharedLock, texture));
+        MOZ_ASSERT(sharedLock);
+        if (sharedLock) {
+          mRetainedTiles.AppendElement(TileHost(sharedLock, texture));
+        }
         break;
       }
       default:
