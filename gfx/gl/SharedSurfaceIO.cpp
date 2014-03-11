@@ -41,18 +41,52 @@ SharedSurface_IOSurface::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei hei
     // reading from an IOSurface).
     // We workaround this by copying to a temporary texture, and doing the readback
     // from that.
-    ScopedTexture texture(mGL);
-    ScopedBindTexture bindTex(mGL, texture.Texture());
-    mGL->fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                         HasAlpha() ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
-                         x, y,
-                         width, height, 0);
+    MOZ_ASSERT(mGL->IsCurrent());
 
-    ScopedFramebufferForTexture fb(mGL, texture.Texture());
-    ScopedBindFramebuffer bindFB(mGL, fb.FB());
 
+    ScopedTexture destTex(mGL);
+    {
+        ScopedFramebufferForTexture srcFB(mGL, ProdTexture(), ProdTextureTarget());
+
+        ScopedBindFramebuffer bindFB(mGL, srcFB.FB());
+        ScopedBindTexture bindTex(mGL, destTex.Texture());
+        mGL->fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
+                             HasAlpha() ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
+                             x, y,
+                             width, height, 0);
+    }
+
+    ScopedFramebufferForTexture destFB(mGL, destTex.Texture());
+
+    ScopedBindFramebuffer bindFB(mGL, destFB.FB());
     mGL->fReadPixels(0, 0, width, height, format, type, pixels);
     return true;
+}
+
+static void
+BackTextureWithIOSurf(GLContext* gl, GLuint tex, MacIOSurface* ioSurf)
+{
+    MOZ_ASSERT(gl->IsCurrent());
+
+    ScopedBindTexture texture(gl, tex, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                        LOCAL_GL_TEXTURE_MIN_FILTER,
+                        LOCAL_GL_LINEAR);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                        LOCAL_GL_TEXTURE_MAG_FILTER,
+                        LOCAL_GL_LINEAR);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                        LOCAL_GL_TEXTURE_WRAP_S,
+                        LOCAL_GL_CLAMP_TO_EDGE);
+    gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                        LOCAL_GL_TEXTURE_WRAP_T,
+                        LOCAL_GL_CLAMP_TO_EDGE);
+
+    CGLContextObj cgl = GLContextCGL::Cast(gl)->GetCGLContext();
+    MOZ_ASSERT(cgl);
+
+    ioSurf->CGLTexImageIOSurface2D(cgl);
 }
 
 SharedSurface_IOSurface::SharedSurface_IOSurface(MacIOSurface* surface,
@@ -61,37 +95,40 @@ SharedSurface_IOSurface::SharedSurface_IOSurface(MacIOSurface* surface,
                                                  bool hasAlpha)
   : SharedSurface_GL(SharedSurfaceType::IOSurface, AttachmentType::GLTexture, gl, size, hasAlpha)
   , mSurface(surface)
+  , mCurConsGL(nullptr)
+  , mConsTex(0)
 {
-    mGL->MakeCurrent();
-    mGL->fGenTextures(1, &mTexture);
+    gl->MakeCurrent();
+    mProdTex = 0;
+    gl->fGenTextures(1, &mProdTex);
+    BackTextureWithIOSurf(gl, mProdTex, surface);
+}
 
-    ScopedBindTexture texture(mGL, mTexture, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+GLuint
+SharedSurface_IOSurface::ConsTexture(GLContext* consGL)
+{
+    if (!mCurConsGL) {
+        mCurConsGL = consGL;
+    }
+    MOZ_ASSERT(consGL == mCurConsGL);
 
-    mGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                        LOCAL_GL_TEXTURE_MIN_FILTER,
-                        LOCAL_GL_LINEAR);
-    mGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                        LOCAL_GL_TEXTURE_MAG_FILTER,
-                        LOCAL_GL_LINEAR);
-    mGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                        LOCAL_GL_TEXTURE_WRAP_S,
-                        LOCAL_GL_CLAMP_TO_EDGE);
-    mGL->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
-                        LOCAL_GL_TEXTURE_WRAP_T,
-                        LOCAL_GL_CLAMP_TO_EDGE);
+    if (!mConsTex) {
+        consGL->MakeCurrent();
+        mConsTex = 0;
+        consGL->fGenTextures(1, &mConsTex);
+        BackTextureWithIOSurf(consGL, mConsTex, mSurface);
+    }
 
-    CGLContextObj ctx = GLContextCGL::Cast(mGL)->GetCGLContext();
-    MOZ_ASSERT(ctx);
-
-    surface->CGLTexImageIOSurface2D(ctx);
+    return mConsTex;
 }
 
 SharedSurface_IOSurface::~SharedSurface_IOSurface()
 {
-    if (mTexture) {
+    if (mProdTex) {
         DebugOnly<bool> success = mGL->MakeCurrent();
         MOZ_ASSERT(success);
-        mGL->fDeleteTextures(1, &mTexture);
+        mGL->fDeleteTextures(1, &mProdTex);
+        mGL->fDeleteTextures(1, &mConsTex); // This will work if we're shared.
     }
 }
 

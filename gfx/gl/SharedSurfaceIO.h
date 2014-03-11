@@ -31,7 +31,7 @@ public:
                             GLenum format, GLenum type, GLvoid *pixels) MOZ_OVERRIDE;
 
     virtual GLuint ProdTexture() MOZ_OVERRIDE {
-        return mTexture;
+        return mProdTex;
     }
 
     virtual GLenum ProdTextureTarget() const MOZ_OVERRIDE {
@@ -43,14 +43,20 @@ public:
         return static_cast<SharedSurface_IOSurface*>(surf);
     }
 
-    MacIOSurface* GetIOSurface() { return mSurface; }
+    GLuint ConsTexture(GLContext* consGL);
+
+    GLenum ConsTextureTarget() const {
+        return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
+    }
 
 private:
     SharedSurface_IOSurface(MacIOSurface* surface, GLContext* gl, const gfx::IntSize& size, bool hasAlpha);
 
     RefPtr<MacIOSurface> mSurface;
     nsRefPtr<gfxImageSurface> mImageSurface;
-    GLuint mTexture;
+    GLuint mProdTex;
+    const GLContext* mCurConsGL;
+    GLuint mConsTex;
 };
 
 class SurfaceFactory_IOSurface : public SurfaceFactory_GL
