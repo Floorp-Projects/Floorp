@@ -22,5 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 904723 (Array.from) needs a clobber once again because of changes to js.msg
-and self-hosted code (see bug 1019955).
+Bug 973238 part 4 needs clobber due to self-hosted code (bug 1019955).
