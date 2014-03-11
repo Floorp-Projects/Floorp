@@ -6,7 +6,7 @@
 
 #include "MediaOmxDecoder.h"
 #include "MediaOmxReader.h"
-#include "MediaOmxStateMachine.h"
+#include "MediaDecoderStateMachine.h"
 
 namespace mozilla {
 
@@ -22,7 +22,7 @@ MediaDecoder* MediaOmxDecoder::Clone()
 
 MediaDecoderStateMachine* MediaOmxDecoder::CreateStateMachine()
 {
-  return new MediaOmxStateMachine(this, new MediaOmxReader(this));
+  return new MediaDecoderStateMachine(this, new MediaOmxReader(this));
 }
 
 MediaOmxDecoder::~MediaOmxDecoder()
