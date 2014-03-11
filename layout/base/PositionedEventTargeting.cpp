@@ -222,7 +222,6 @@ static nscoord
 AppUnitsFromMM(nsIFrame* aFrame, uint32_t aMM, bool aVertical)
 {
   nsPresContext* pc = aFrame->PresContext();
-  nsIPresShell* presShell = pc->PresShell();
   float result = float(aMM) *
     (pc->DeviceContext()->AppUnitsPerPhysicalInch() / MM_PER_INCH_FLOAT);
   return NSToCoordRound(result);
