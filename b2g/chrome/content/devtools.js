@@ -40,6 +40,7 @@ let developerHUD = {
   _client: null,
   _webappsActor: null,
   _watchers: [],
+  _logging: true,
 
   /**
    * This method registers a metric watcher that will watch one or more metrics
@@ -84,6 +85,10 @@ let developerHUD = {
           this.trackFrame(frame);
         }
       });
+    });
+
+    SettingsListener.observe('hud.logging', enabled => {
+      this._logging = enabled;
     });
   },
 
@@ -137,10 +142,7 @@ let developerHUD = {
         w.untrackTarget(target);
       }
 
-      // Delete the metrics and call display() to clean up the front-end.
-      delete target.metrics;
-      target.display();
-
+      target.destroy();
       this._targets.delete(frame);
     }
   },
@@ -183,7 +185,9 @@ let developerHUD = {
   },
 
   log: function dwp_log(message) {
-    dump(DEVELOPER_HUD_LOG_PREFIX + ': ' + message + '\n');
+    if (this._logging) {
+      dump(DEVELOPER_HUD_LOG_PREFIX + ': ' + message + '\n');
+    }
   }
 
 };
@@ -201,22 +205,70 @@ function Target(frame, actor) {
 }
 
 Target.prototype = {
-  display: function target_display() {
+
+  /**
+   * Register a metric that can later be updated. Does not update the front-end.
+   */
+  register: function target_register(metric) {
+    this.metrics.set(metric, 0);
+  },
+
+  /**
+   * Modify one of a target's metrics, and send out an event to notify relevant
+   * parties (e.g. the developer HUD, automated tests, etc).
+   */
+  update: function target_update(metric, value = 0, message) {
+    let metrics = this.metrics;
+    metrics.set(metric, value);
+
     let data = {
-      metrics: []
+      metrics: [], // FIXME(Bug 982066) Remove this field.
+      manifest: this.frame.appManifestURL,
+      metric: metric,
+      value: value,
+      message: message
     };
 
-    let metrics = this.metrics;
+    // FIXME(Bug 982066) Remove this loop.
     if (metrics && metrics.size > 0) {
       for (let name of metrics.keys()) {
         data.metrics.push({name: name, value: metrics.get(name)});
       }
     }
 
-    shell.sendEvent(this.frame, 'developer-hud-update', Cu.cloneInto(data, this.frame));
+    if (message) {
+      developerHUD.log('[' + data.manifest + '] ' + data.message);
+    }
+    this._send(data);
+  },
 
-    // FIXME(after bug 963239 lands) return event.isDefaultPrevented();
-    return false;
+  /**
+   * Nicer way to call update() when the metric value is a number that needs
+   * to be incremented.
+   */
+  bump: function target_bump(metric, message) {
+    this.update(metric, this.metrics.get(metric) + 1, message);
+  },
+
+  /**
+   * Void a metric value and make sure it isn't displayed on the front-end
+   * anymore.
+   */
+  clear: function target_clear(metric) {
+    this.update(metric, 0);
+  },
+
+  /**
+   * Tear everything down, including the front-end by sending a message without
+   * widgets.
+   */
+  destroy: function target_destroy() {
+    delete this.metrics;
+    this._send({});
+  },
+
+  _send: function target_send(data) {
+    shell.sendEvent(this.frame, 'developer-hud-update', Cu.cloneInto(data, this.frame));
   }
 
 };
@@ -252,8 +304,7 @@ let consoleWatcher = {
 
         // If unwatched, remove any existing widgets for that metric.
         for (let target of this._targets.values()) {
-          target.metrics.set(metric, 0);
-          target.display();
+          target.clear(metric);
         }
       });
     }
@@ -265,9 +316,9 @@ let consoleWatcher = {
   },
 
   trackTarget: function cw_trackTarget(target) {
-    target.metrics.set('reflows', 0);
-    target.metrics.set('warnings', 0);
-    target.metrics.set('errors', 0);
+    target.register('reflows');
+    target.register('warnings');
+    target.register('errors');
 
     this._client.request({
       to: target.actor.consoleActor,
@@ -288,18 +339,9 @@ let consoleWatcher = {
     this._targets.delete(target.actor.consoleActor);
   },
 
-  bump: function cw_bump(target, metric) {
-    if (!this._watching[metric]) {
-      return false;
-    }
-
-    let metrics = target.metrics;
-    metrics.set(metric, metrics.get(metric) + 1);
-    return true;
-  },
-
   consoleListener: function cw_consoleListener(type, packet) {
     let target = this._targets.get(packet.from);
+    let metric;
     let output = '';
 
     switch (packet.type) {
@@ -308,14 +350,10 @@ let consoleWatcher = {
         let pageError = packet.pageError;
 
         if (pageError.warning || pageError.strict) {
-          if (!this.bump(target, 'warnings')) {
-            return;
-          }
-          output = 'warning (';
+          metric = 'warnings';
+          output += 'warning (';
         } else {
-          if (!this.bump(target, 'errors')) {
-            return;
-          }
+          metric = 'errors';
           output += 'error (';
         }
 
@@ -325,20 +363,16 @@ let consoleWatcher = {
         break;
 
       case 'consoleAPICall':
-        switch (packet.message.level) {
+        switch (packet.output.level) {
 
           case 'error':
-            if (!this.bump(target, 'errors')) {
-              return;
-            }
-            output = 'error (console)';
+            metric = 'errors';
+            output += 'error (console)';
             break;
 
           case 'warn':
-            if (!this.bump(target, 'warnings')) {
-              return;
-            }
-            output = 'warning (console)';
+            metric = 'warnings';
+            output += 'warning (console)';
             break;
 
           default:
@@ -347,23 +381,22 @@ let consoleWatcher = {
         break;
 
       case 'reflowActivity':
-        if (!this.bump(target, 'reflows')) {
-          return;
-        }
+        metric = 'reflows';
 
         let {start, end, sourceURL} = packet;
         let duration = Math.round((end - start) * 100) / 100;
-        output = 'reflow: ' + duration + 'ms';
+        output += 'reflow: ' + duration + 'ms';
         if (sourceURL) {
           output += ' ' + this.formatSourceURL(packet);
         }
         break;
     }
 
-    if (!target.display()) {
-      // If the information was not displayed, log it.
-      developerHUD.log(output);
+    if (!this._watching[metric]) {
+      return;
     }
+
+    target.bump(metric, output);
   },
 
   formatSourceURL: function cw_formatSourceURL(packet) {
@@ -405,24 +438,19 @@ let eventLoopLagWatcher = {
         fronts.get(target).start();
       } else {
         fronts.get(target).stop();
-        target.metrics.set('jank', 0);
-        target.display();
+        target.clear('jank');
       }
     }
   },
 
   trackTarget: function(target) {
-    target.metrics.set('jank', 0);
+    target.register('jank');
 
     let front = new EventLoopLagFront(this._client, target.actor);
     this._fronts.set(target, front);
 
     front.on('event-loop-lag', time => {
-      target.metrics.set('jank', time);
-
-      if (!target.display()) {
-        developerHUD.log('jank: ' + time + 'ms');
-      }
+      target.update('jank', time, 'jank: ' + time + 'ms');
     });
 
     if (this._active) {
@@ -478,8 +506,7 @@ let memoryWatcher = {
       } else {
         for (let target of this._fronts.keys()) {
           clearTimeout(this._timers.get(target));
-          target.metrics.set('memory', 0);
-          target.display();
+          target.clear('memory');
         }
       }
     });
@@ -515,8 +542,7 @@ let memoryWatcher = {
       }
       // TODO Also count images size (bug #976007).
 
-      target.metrics.set('memory', total);
-      target.display();
+      target.update('memory', total);
       let duration = parseInt(data.jsMilliseconds) + parseInt(data.nonJSMilliseconds);
       let timer = setTimeout(() => this.measure(target), 100 * duration);
       this._timers.set(target, timer);
@@ -526,8 +552,8 @@ let memoryWatcher = {
   },
 
   trackTarget: function mw_trackTarget(target) {
-    target.metrics.set('uss', 0);
-    target.metrics.set('memory', 0);
+    target.register('uss');
+    target.register('memory');
     this._fronts.set(target, MemoryFront(this._client, target.actor));
     if (this._active) {
       this.measure(target);
