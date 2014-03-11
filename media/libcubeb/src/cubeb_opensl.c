@@ -278,7 +278,7 @@ opensl_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
    * a non-error return value, especially if the audio system is not
    * ready/shutting down (i.e. when we can't get our hand on the AudioFlinger
    * thread). */
-  if (rate == 0) {
+  if (*rate == 0) {
     return CUBEB_ERROR;
   }
 
