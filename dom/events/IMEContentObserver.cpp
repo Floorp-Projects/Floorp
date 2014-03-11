@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ContentEventHandler.h"
 #include "IMEContentObserver.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsAutoPtr.h"
 #include "nsAsyncDOMEvent.h"
-#include "nsContentEventHandler.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
@@ -370,9 +370,9 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   uint32_t offset = 0;
   // get offsets of change and fire notification
   nsresult rv =
-    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContent,
-                                                    aInfo->mChangeStart,
-                                                    &offset);
+    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContent,
+                                                  aInfo->mChangeStart,
+                                                  &offset);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   uint32_t oldEnd = offset + aInfo->mChangeEnd - aInfo->mChangeStart;
@@ -395,16 +395,15 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
 
   uint32_t offset = 0;
   nsresult rv =
-    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContainer,
-                                                    aStartIndex, &offset);
+    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContainer,
+                                                  aStartIndex, &offset);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // get offset at the end of the last added node
   nsIContent* childAtStart = aContainer->GetChildAt(aStartIndex);
   uint32_t addingLength = 0;
-  rv =
-    nsContentEventHandler::GetFlatTextOffsetOfRange(childAtStart, aContainer,
-                                                    aEndIndex, &addingLength);
+  rv = ContentEventHandler::GetFlatTextOffsetOfRange(childAtStart, aContainer,
+                                                     aEndIndex, &addingLength);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (!addingLength) {
@@ -451,10 +450,10 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
 
   uint32_t offset = 0;
   nsresult rv =
-    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent,
-                                                    NODE_FROM(aContainer,
-                                                              aDocument),
-                                                    aIndexInContainer, &offset);
+    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent,
+                                                  NODE_FROM(aContainer,
+                                                            aDocument),
+                                                  aIndexInContainer, &offset);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   // get offset at the end of the deleted node
@@ -464,9 +463,8 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
       std::max(static_cast<int32_t>(aChild->GetChildCount()), 1);
   MOZ_ASSERT(nodeLength >= 0, "The node length is out of range");
   uint32_t textLength = 0;
-  rv =
-    nsContentEventHandler::GetFlatTextOffsetOfRange(aChild, aChild,
-                                                    nodeLength, &textLength);
+  rv = ContentEventHandler::GetFlatTextOffsetOfRange(aChild, aChild,
+                                                     nodeLength, &textLength);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (!textLength) {
@@ -497,7 +495,7 @@ IMEContentObserver::AttributeWillChange(nsIDocument* aDocument,
 {
   nsIContent *content = GetContentBR(aElement);
   mPreAttrChangeLength = content ?
-    nsContentEventHandler::GetNativeTextLength(content) : 0;
+    ContentEventHandler::GetNativeTextLength(content) : 0;
 }
 
 void
@@ -519,14 +517,14 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   }
 
   uint32_t postAttrChangeLength =
-    nsContentEventHandler::GetNativeTextLength(content);
+    ContentEventHandler::GetNativeTextLength(content);
   if (postAttrChangeLength == mPreAttrChangeLength) {
     return;
   }
   uint32_t start;
   nsresult rv =
-    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, content,
-                                                    0, &start);
+    ContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, content,
+                                                  0, &start);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsContentUtils::AddScriptRunner(
