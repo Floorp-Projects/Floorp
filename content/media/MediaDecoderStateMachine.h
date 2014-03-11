@@ -402,6 +402,20 @@ private:
   };
   WakeDecoderRunnable* GetWakeDecoderRunnable();
 
+  // True if our buffers of decoded audio are not full, and we should
+  // decode more.
+  bool NeedToDecodeAudio();
+
+  // Decodes some audio. This should be run on the decode task queue.
+  void DecodeAudio();
+
+  // True if our buffers of decoded video are not full, and we should
+  // decode more.
+  bool NeedToDecodeVideo();
+
+  // Decodes some video. This should be run on the decode task queue.
+  void DecodeVideo();
+
   // Returns true if we've got less than aAudioUsecs microseconds of decoded
   // and playable data. The decoder monitor must be held.
   bool HasLowDecodedData(int64_t aAudioUsecs) const;
@@ -524,6 +538,12 @@ private:
   // Moves the decoder into decoding state. Called on the state machine
   // thread. The decoder monitor must be held.
   void StartDecoding();
+
+  // Moves the decoder into the shutdown state, and dispatches an error
+  // event to the media element. This begins shutting down the decoder.
+  // The decoder monitor must be held. This is only called on the
+  // decode thread.
+  void DecodeError();
 
   void StartWaitForResources();
 
@@ -876,12 +896,6 @@ private:
 
   // True is we are decoding a realtime stream, like a camera stream
   bool mRealTime;
-
-  // Record whether audio and video decoding were throttled during the
-  // previous iteration of DecodeLoop. When we transition from
-  // throttled to not-throttled we need to preroll decoding.
-  bool mDidThrottleAudioDecoding;
-  bool mDidThrottleVideoDecoding;
 
   // Manager for queuing and dispatching MozAudioAvailable events.  The
   // event manager is accessed from the state machine and audio threads,
