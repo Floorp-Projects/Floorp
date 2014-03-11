@@ -1684,7 +1684,7 @@ add_test(function test_update_icc_contact() {
   let contactHelper = context.ICCContactHelper;
   let ril = context.RIL;
 
-  function do_test(aSimType, aContactType, aContact, aPin2, aFileType, aEnhancedPhoneBook) {
+  function do_test(aSimType, aContactType, aContact, aPin2, aFileType, aHaveIapIndex, aEnhancedPhoneBook) {
     ril.appType = aSimType;
     ril._isCdma = (aSimType === CARD_APPTYPE_RUIM);
     ril.iccInfoPrivate.cst = (aEnhancedPhoneBook) ? [0x0, 0x0C, 0x0, 0x0, 0x0]
@@ -1729,7 +1729,14 @@ add_test(function test_update_icc_contact() {
     recordHelper.readIAP = function(fileId, recordNumber, onsuccess, onerror) {
       do_check_eq(fileId, IAP_FILE_ID);
       do_check_eq(recordNumber, ADN_RECORD_ID);
-      onsuccess([EMAIL_RECORD_ID, ANR0_RECORD_ID]);
+      onsuccess((aHaveIapIndex) ? [EMAIL_RECORD_ID, ANR0_RECORD_ID]
+                                : [0xff, 0xff]);
+    };
+
+    recordHelper.updateIAP = function(fileId, recordNumber, iap, onsuccess, onerror) {
+      do_check_eq(fileId, IAP_FILE_ID);
+      do_check_eq(recordNumber, ADN_RECORD_ID);
+      onsuccess();
     };
 
     recordHelper.updateEmail = function(pbr, recordNumber, email, adnRecordId, onsuccess, onerror) {
@@ -1756,16 +1763,28 @@ add_test(function test_update_icc_contact() {
       onsuccess();
     };
 
+    recordHelper.findFreeRecordId = function(fileId, onsuccess, onerror) {
+      let recordId = 0;
+      if (fileId === EMAIL_FILE_ID) {
+        recordId = EMAIL_RECORD_ID;
+      } else if (fileId === ANR0_FILE_ID) {
+        recordId = ANR0_RECORD_ID;
+      }
+      onsuccess(recordId);
+    };
+
+    let isSuccess = false;
     let onsuccess = function onsuccess() {
       do_print("updateICCContact success");
+      isSuccess = true;
     };
 
     let onerror = function onerror(errorMsg) {
       do_print("updateICCContact failed: " + errorMsg);
-      do_check_true(false);
     };
 
     contactHelper.updateICCContact(aSimType, aContactType, aContact, aPin2, onsuccess, onerror);
+    do_check_true(isSuccess);
   }
 
   let contacts = [
@@ -1783,6 +1802,22 @@ add_test(function test_update_icc_contact() {
       recordId: ADN_RECORD_ID,
       alphaId:  "test2",
       number:   "123456",
+    },
+    // a contact with email but no anr.
+    {
+      pbrIndex: 0,
+      recordId: ADN_RECORD_ID,
+      alphaId:  "test3",
+      number:   "123456",
+      email:    "test@mail.com"
+    },
+    // a contact with anr but no email.
+    {
+      pbrIndex: 0,
+      recordId: ADN_RECORD_ID,
+      alphaId:  "test4",
+      number:   "123456",
+      anr:      ["+654321"]
     }];
 
   for (let i = 0; i < contacts.length; i++) {
@@ -1797,7 +1832,8 @@ add_test(function test_update_icc_contact() {
     // USIM
     do_print("Test update USIM adn contacts");
     do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE1_TAG);
-    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG);
+    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true);
+    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, false);
 
     do_print("Test update USIM fdn contacts");
     do_test(CARD_APPTYPE_USIM, "fdn", contact, "1234");
@@ -1811,8 +1847,9 @@ add_test(function test_update_icc_contact() {
 
     // RUIM with enhanced phone book
     do_print("Test update RUIM adn contacts with enhanced phone book");
-    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE1_TAG, true);
-    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true);
+    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE1_TAG, null, true);
+    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true, true);
+    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, false, true);
 
     do_print("Test update RUIM fdn contacts with enhanced phone book");
     do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234", null, true);
