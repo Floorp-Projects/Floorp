@@ -60,7 +60,7 @@
   }
 
   .subviewbutton[checked="true"] {
-    background-image: url("chrome://global/skin/menu/menu-check@2x.png");
+    background-image: url("chrome://global/skin/menu/shared-menu-check@2x.png");
   }
 
 }
