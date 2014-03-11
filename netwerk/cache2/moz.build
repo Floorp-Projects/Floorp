@@ -21,7 +21,6 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'CacheEntriesEnumerator.cpp',
     'CacheHashUtils.cpp',
     'CacheIOThread.cpp',
     'CacheObserver.cpp',
@@ -39,6 +38,8 @@ SOURCES += [
     'CacheFileIOManager.cpp',
     'CacheFileMetadata.cpp',
     'CacheFileOutputStream.cpp',
+    'CacheFileUtils.cpp',
+    'CacheIndex.cpp',
     'CacheLog.cpp',
     'CacheStorage.cpp',
     'CacheStorageService.cpp',

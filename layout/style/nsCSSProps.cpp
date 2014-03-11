@@ -1251,6 +1251,20 @@ const KTableValue nsCSSProps::kFontWeightKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kGridAutoFlowKTable[] = {
+  eCSSKeyword_none, NS_STYLE_GRID_AUTO_FLOW_NONE,
+  eCSSKeyword_column, NS_STYLE_GRID_AUTO_FLOW_COLUMN,
+  eCSSKeyword_row, NS_STYLE_GRID_AUTO_FLOW_ROW,
+  eCSSKeyword_dense, NS_STYLE_GRID_AUTO_FLOW_DENSE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kGridTrackBreadthKTable[] = {
+  eCSSKeyword_min_content, NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT,
+  eCSSKeyword_max_content, NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kImageOrientationKTable[] = {
   eCSSKeyword_flip, NS_STYLE_IMAGE_ORIENTATION_FLIP,
   eCSSKeyword_from_image, NS_STYLE_IMAGE_ORIENTATION_FROM_IMAGE,

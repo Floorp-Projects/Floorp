@@ -34,29 +34,59 @@ public:
     WRITE,
     MANAGEMENT,
     CLOSE,
+    INDEX,
     EVICT,
-    LAST_LEVEL
+    LAST_LEVEL,
+
+    // This is actually executed as the first level, but we want this enum
+    // value merely as an indicator while other values are used as indexes
+    // to the queue array.  Hence put at end and not as the first.
+    XPCOM_LEVEL
   };
 
   nsresult Init();
   nsresult Dispatch(nsIRunnable* aRunnable, uint32_t aLevel);
   bool IsCurrentThread();
+
+  /**
+   * Callable only on this thread, checks if there is an event waiting in
+   * the event queue with a higher execution priority.  If so, the result
+   * is true and the current event handler should break it's work and return
+   * from Run() method immediately.  The event handler will be rerun again
+   * when all more priority events are processed.  Events pending after this
+   * handler (i.e. the one that called YieldAndRerun()) will not execute sooner
+   * then this handler is executed w/o a call to YieldAndRerun().
+   */
+  static bool YieldAndRerun()
+  {
+    return sSelf ? sSelf->YieldInternal() : false;
+  }
+
   nsresult Shutdown();
   already_AddRefed<nsIEventTarget> Target();
+
+  // Memory reporting
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
   static void ThreadFunc(void* aClosure);
   void ThreadFunc();
   void LoopOneLevel(uint32_t aLevel);
   bool EventsPending(uint32_t aLastLevel = LAST_LEVEL);
+  bool YieldInternal();
+
+  static CacheIOThread* sSelf;
 
   mozilla::Monitor mMonitor;
   PRThread* mThread;
   nsCOMPtr<nsIThread> mXPCOMThread;
   uint32_t mLowestLevelWaiting;
+  uint32_t mCurrentlyExecutingLevel;
   nsTArray<nsRefPtr<nsIRunnable> > mEventQueue[LAST_LEVEL];
 
   bool mHasXPCOMEvents;
+  bool mRerunCurrentEvent;
   bool mShutdown;
 };
 

@@ -27,6 +27,7 @@
 #include "nsIAssociatedContentSecurity.h"
 #include "nsIChildChannel.h"
 #include "nsIHttpChannelChild.h"
+#include "nsIDivertableChannel.h"
 #include "mozilla/net/DNS.h"
 
 namespace mozilla {
@@ -42,6 +43,7 @@ class HttpChannelChild : public PHttpChannelChild
                        , public nsIAssociatedContentSecurity
                        , public nsIChildChannel
                        , public nsIHttpChannelChild
+                       , public nsIDivertableChannel
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -53,6 +55,7 @@ public:
   NS_DECL_NSIASSOCIATEDCONTENTSECURITY
   NS_DECL_NSICHILDCHANNEL
   NS_DECL_NSIHTTPCHANNELCHILD
+  NS_DECL_NSIDIVERTABLECHANNEL
 
   HttpChannelChild();
   virtual ~HttpChannelChild();
@@ -90,6 +93,8 @@ public:
 
   bool IsSuspended();
 
+  void FlushedForDiversion();
+
 protected:
   bool RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                           const bool& useResponseHead,
@@ -118,6 +123,8 @@ protected:
   bool RecvRedirect3Complete() MOZ_OVERRIDE;
   bool RecvAssociateApplicationCache(const nsCString& groupID,
                                      const nsCString& clientID) MOZ_OVERRIDE;
+  bool RecvFlushedForDiversion() MOZ_OVERRIDE;
+  bool RecvDivertMessages() MOZ_OVERRIDE;
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
@@ -139,6 +146,15 @@ private:
   bool mIPCOpen;
   bool mKeptAlive;            // IPC kept open, but only for security info
   nsRefPtr<ChannelEventQueue> mEventQ;
+
+  // Once set, OnData and possibly OnStop will be diverted to the parent.
+  bool mDivertingToParent;
+  // Once set, no OnStart/OnData/OnStop callbacks should be received from the
+  // parent channel, nor dequeued from the ChannelEventQueue.
+  bool mFlushedForDiversion;
+  // Set if SendSuspend is called. Determines if SendResume is needed when
+  // diverting callbacks to parent.
+  bool mSuspendSent;
 
   // true after successful AsyncOpen until OnStopRequest completes.
   bool RemoteChannelExists() { return mIPCOpen && !mKeptAlive; }

@@ -117,6 +117,7 @@ ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
   }
   if (rv.IsNotEnoughArgsError()) {
     rv.ReportNotEnoughArgsError(cx, ifaceName, memberName);
+    return false;
   }
   return Throw(cx, rv.ErrorCode());
 }
@@ -1465,6 +1466,9 @@ WantsQueryInterface
 
 bool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
+
+bool
+ThrowConstructorWithoutNew(JSContext* cx, const char* name);
 
 // vp is allowed to be null; in that case no get will be attempted,
 // and *found will simply indicate whether the property exists.

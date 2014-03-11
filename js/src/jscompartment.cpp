@@ -130,9 +130,9 @@ JSRuntime::createJitRuntime(JSContext *cx)
     AutoLockForExclusiveAccess atomsLock(cx);
 
     // The runtime will only be created on its owning thread, but reads of a
-    // runtime's jitRuntime() can occur when another thread is triggering an
-    // operation callback.
-    AutoLockForOperationCallback lock(this);
+    // runtime's jitRuntime() can occur when another thread is requesting an
+    // interrupt.
+    AutoLockForInterrupt lock(this);
 
     JS_ASSERT(!jitRuntime_);
 
@@ -353,13 +353,11 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
         return true;
     AutoDisableProxyCheck adpc(cx->runtime());
 
-    /*
-     * Wrappers should really be parented to the wrapped parent of the wrapped
-     * object, but in that case a wrapped global object would have a nullptr
-     * parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead,
-     * we parent all wrappers to the global object in their home compartment.
-     * This loses us some transparency, and is generally very cheesy.
-     */
+    // Wrappers should really be parented to the wrapped parent of the wrapped
+    // object, but in that case a wrapped global object would have a nullptr
+    // parent without being a proper global object (JSCLASS_IS_GLOBAL). Instead,
+    // we parent all wrappers to the global object in their home compartment.
+    // This loses us some transparency, and is generally very cheesy.
     HandleObject global = cx->global();
     RootedObject objGlobal(cx, &obj->global());
     JS_ASSERT(global);
@@ -373,24 +371,26 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     if (obj->compartment() == this)
         return WrapForSameCompartment(cx, obj, cb);
 
-    /* Unwrap the object, but don't unwrap outer windows. */
+    // Unwrap the object, but don't unwrap outer windows.
     unsigned flags = 0;
     obj.set(UncheckedUnwrap(obj, /* stopAtOuter = */ true, &flags));
 
     if (obj->compartment() == this)
         return WrapForSameCompartment(cx, obj, cb);
 
-    /* Translate StopIteration singleton. */
+    // Translate StopIteration singleton.
     if (obj->is<StopIterationObject>()) {
+        // StopIteration isn't a constructor, but it's stored in GlobalObject
+        // as one, out of laziness. Hence the GetBuiltinConstructor call here.
         RootedObject stopIteration(cx);
-        if (!js_GetClassObject(cx, JSProto_StopIteration, &stopIteration))
+        if (!GetBuiltinConstructor(cx, JSProto_StopIteration, &stopIteration))
             return false;
         obj.set(stopIteration);
         return true;
     }
 
-    /* Invoke the prewrap callback. We're a bit worried about infinite
-     * recursion here, so we do a check - see bug 809295. */
+    // Invoke the prewrap callback. We're a bit worried about infinite
+    // recursion here, so we do a check - see bug 809295.
     JS_CHECK_CHROME_RECURSION(cx, return false);
     if (cb->preWrap) {
         obj.set(cb->preWrap(cx, global, obj, flags));
@@ -408,7 +408,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     }
 #endif
 
-    /* If we already have a wrapper for this value, use it. */
+    // If we already have a wrapper for this value, use it.
     RootedValue key(cx, ObjectValue(*obj));
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
         obj.set(&p->value().get().toObject());
@@ -420,7 +420,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     RootedObject proto(cx, TaggedProto::LazyProto);
     RootedObject existing(cx, existingArg);
     if (existing) {
-        /* Is it possible to reuse |existing|? */
+        // Is it possible to reuse |existing|?
         if (!existing->getTaggedProto().isLazy() ||
             // Note: don't use is<ObjectProxyObject>() here -- it also matches subclasses!
             existing->getClass() != &ProxyObject::uncallableClass_ ||
@@ -435,10 +435,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     if (!obj)
         return false;
 
-    /*
-     * We maintain the invariant that the key in the cross-compartment wrapper
-     * map is always directly wrapped by the value.
-     */
+    // We maintain the invariant that the key in the cross-compartment wrapper
+    // map is always directly wrapped by the value.
     JS_ASSERT(Wrapper::wrappedObject(obj) == &key.get().toObject());
 
     return putWrapper(cx, key, ObjectValue(*obj));

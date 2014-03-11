@@ -492,7 +492,7 @@ function sendDragEvent(aEventType, aTarget, aData) {
  * @return The drag event.
  */
 function createDragEvent(aEventType, aData) {
-  let dataTransfer = new getContentWindow().DataTransfer("dragstart", false);
+  let dataTransfer = new (getContentWindow()).DataTransfer("dragstart", false);
   dataTransfer.mozSetDataAt("text/x-moz-url", aData, 0);
   let event = getContentDocument().createEvent("DragEvents");
   event.initDragEvent(aEventType, true, true, getContentWindow(), 0, 0, 0, 0, 0,

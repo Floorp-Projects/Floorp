@@ -720,7 +720,7 @@ typedef void
 (* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment);
 
 typedef bool
-(* JSOperationCallback)(JSContext *cx);
+(* JSInterruptCallback)(JSContext *cx);
 
 typedef void
 (* JSErrorReporter)(JSContext *cx, const char *message, JSErrorReport *report);
@@ -3832,26 +3832,26 @@ Call(JSContext *cx, JS::HandleValue thisv, JS::HandleObject funObj, const JS::Ha
 } /* namespace JS */
 
 /*
- * These functions allow setting an operation callback that will be called
+ * These functions allow setting an interrupt callback that will be called
  * from the JS thread some time after any thread triggered the callback using
- * JS_TriggerOperationCallback(rt).
+ * JS_RequestInterruptCallback(rt).
  *
  * To schedule the GC and for other activities the engine internally triggers
- * operation callbacks. The embedding should thus not rely on callbacks being
+ * interrupt callbacks. The embedding should thus not rely on callbacks being
  * triggered through the external API only.
  *
  * Important note: Additional callbacks can occur inside the callback handler
  * if it re-enters the JS engine. The embedding must ensure that the callback
  * is disconnected before attempting such re-entry.
  */
-extern JS_PUBLIC_API(JSOperationCallback)
-JS_SetOperationCallback(JSRuntime *rt, JSOperationCallback callback);
+extern JS_PUBLIC_API(JSInterruptCallback)
+JS_SetInterruptCallback(JSRuntime *rt, JSInterruptCallback callback);
 
-extern JS_PUBLIC_API(JSOperationCallback)
-JS_GetOperationCallback(JSRuntime *rt);
+extern JS_PUBLIC_API(JSInterruptCallback)
+JS_GetInterruptCallback(JSRuntime *rt);
 
 extern JS_PUBLIC_API(void)
-JS_TriggerOperationCallback(JSRuntime *rt);
+JS_RequestInterruptCallback(JSRuntime *rt);
 
 extern JS_PUBLIC_API(bool)
 JS_IsRunning(JSContext *cx);
@@ -3876,7 +3876,7 @@ JS_RestoreFrameChain(JSContext *cx);
 #ifdef MOZ_TRACE_JSCALLS
 /*
  * The callback is expected to be quick and noninvasive. It should not
- * trigger interrupts, turn on debugging, or produce uncaught JS
+ * request interrupts, turn on debugging, or produce uncaught JS
  * exceptions. The state of the stack and registers in the context
  * cannot be relied upon, since this callback may be invoked directly
  * from either JIT. The 'entering' field means we are entering a

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table {
+        width: 300px;
+        height: 300px;
+        background-color: blue;
+      }
+      td {
+        margin: 0;
+        padding: 0;
+      }
+      #rel {
+        position: relative;
+        margin: 0;
+        padding: 0;
+      }
+      #abs {
+        position: absolute;
+        margin: 0;
+        padding: 0;
+        top: 25px;
+        left: 25px;
+        width: 50px;
+        height: 50px;
+        background-color: green;
+      }
+    </style>
+  </head>
+  <body>
+    The green square should not touch the blue square.
+    <table>
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr style="height: 100%">
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>
+          <div id="rel">
+            <div id="abs"></div>
+          </div>
+        </td>
+        <td></td>
+      </tr>
+    </table>
+  </body>
+</html>

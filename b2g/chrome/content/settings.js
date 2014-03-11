@@ -665,7 +665,8 @@ let settingsToObserve = {
     prefName: 'dom.browser_frames.useAsyncPanZoom',
     defaultValue: false
   },
-  'layers.enable-tiles': false,
+  'layers.enable-tiles': true,
+  'layers.simple-tiles': false,
   'layers.progressive-paint': false,
   'layers.draw-tile-borders': false,
   'layers.dump': false,

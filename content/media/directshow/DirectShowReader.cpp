@@ -394,21 +394,6 @@ DirectShowReader::Seek(int64_t aTargetUs,
 }
 
 void
-DirectShowReader::OnDecodeThreadStart()
-{
-  MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
-  NS_ENSURE_TRUE_VOID(SUCCEEDED(hr));
-}
-
-void
-DirectShowReader::OnDecodeThreadFinish()
-{
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-  CoUninitialize();
-}
-
-void
 DirectShowReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());

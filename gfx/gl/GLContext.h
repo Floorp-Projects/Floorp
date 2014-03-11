@@ -57,7 +57,6 @@ namespace android {
 
 namespace mozilla {
     namespace gfx {
-        class SharedSurface;
         class SourceSurface;
         class DataSourceSurface;
         struct SurfaceCaps;
@@ -71,6 +70,7 @@ namespace mozilla {
         class GLBlitHelper;
         class GLBlitTextureImageHelper;
         class GLReadTexImageHelper;
+        class SharedSurface_GL;
     }
 
     namespace layers {
@@ -418,6 +418,7 @@ public:
         KHR_debug,
         ARB_half_float_pixel,
         EXT_frag_depth,
+        OES_compressed_ETC1_RGB8_texture,
         Extensions_Max,
         Extensions_End
     };
@@ -2697,13 +2698,12 @@ protected:
     // storage to support DebugMode on an arbitrary thread.
     static unsigned sCurrentGLContextTLS;
 #endif
-
+    
     ScopedDeletePtr<GLBlitHelper> mBlitHelper;
     ScopedDeletePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
     ScopedDeletePtr<GLReadTexImageHelper> mReadTexImageHelper;
 
 public:
-
     GLBlitHelper* BlitHelper();
     GLBlitTextureImageHelper* BlitTextureImageHelper();
     GLReadTexImageHelper* ReadTexImageHelper();
@@ -2824,20 +2824,20 @@ protected:
 
     void DestroyScreenBuffer();
 
-    SharedSurface* mLockedSurface;
+    SharedSurface_GL* mLockedSurface;
 
 public:
-    void LockSurface(SharedSurface* surf) {
+    void LockSurface(SharedSurface_GL* surf) {
         MOZ_ASSERT(!mLockedSurface);
         mLockedSurface = surf;
     }
 
-    void UnlockSurface(SharedSurface* surf) {
+    void UnlockSurface(SharedSurface_GL* surf) {
         MOZ_ASSERT(mLockedSurface == surf);
         mLockedSurface = nullptr;
     }
 
-    SharedSurface* GetLockedSurface() const {
+    SharedSurface_GL* GetLockedSurface() const {
         return mLockedSurface;
     }
 
@@ -2850,7 +2850,7 @@ public:
     }
 
     bool PublishFrame();
-    SharedSurface* RequestFrame();
+    SharedSurface_GL* RequestFrame();
 
     /* Clear to transparent black, with 0 depth and stencil,
      * while preserving current ClearColor etc. values.

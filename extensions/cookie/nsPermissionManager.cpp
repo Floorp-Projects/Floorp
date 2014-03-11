@@ -1109,6 +1109,9 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  // Set the default.
+  *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
+
   // For expanded principals, we want to iterate over the whitelist and see
   // if the permission is granted for any of them.
   nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
@@ -1117,9 +1120,6 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
     nsresult rv = ep->GetWhiteList(&whitelist);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Start with DENY_ACTION. If we get PROMPT_ACTION, keep going to see if
-    // we get ALLOW_ACTION from another principal.
-    *aPermission = nsIPermissionManager::DENY_ACTION;
     for (size_t i = 0; i < whitelist->Length(); ++i) {
       uint32_t perm;
       rv = CommonTestPermission(whitelist->ElementAt(i), aType, &perm, aExactHostMatch,
@@ -1136,9 +1136,6 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
 
     return NS_OK;
   }
-
-  // set the default
-  *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
 
   nsAutoCString host;
   nsresult rv = GetHostForPrincipal(aPrincipal, host);

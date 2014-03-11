@@ -9,4 +9,9 @@ UNIFIED_SOURCES += [
     'TLSServer.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '../../../../../../insanity/include',
+    '../../../../../../insanity/test/lib',
+]
+
 LIBRARY_NAME = 'tlsserver'

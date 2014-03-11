@@ -1539,28 +1539,6 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       return currentKeyEvent->IsDefaultPrevented();
     }
 
-    // If this is the context menu key command, send a context menu key event.
-    // XXX Should we dispatch context menu event at pressing kVK_PC_ContextMenu?
-    NSUInteger modifierFlags =
-      [aNativeEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
-    if (modifierFlags == NSControlKeyMask &&
-        [[aNativeEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
-      WidgetMouseEvent contextMenuEvent(true, NS_CONTEXTMENU, [mView widget],
-                                        WidgetMouseEvent::eReal,
-                                        WidgetMouseEvent::eContextMenuKey);
-      contextMenuEvent.modifiers = 0;
-
-      bool cmEventHandled = DispatchEvent(contextMenuEvent);
-      PR_LOG(gLog, PR_LOG_ALWAYS,
-        ("%p TextInputHandler::HandleKeyDownEvent, "
-         "context menu event dispatched, handled=%s%s",
-         this, TrueOrFalse(cmEventHandled),
-         Destroyed() ? " and widget was destroyed" : ""));
-      [mView maybeInitContextMenuTracking];
-      // Bail, there is nothing else to do here.
-      return (cmEventHandled || currentKeyEvent->IsDefaultPrevented());
-    }
-
     if (currentKeyEvent->IsDefaultPrevented()) {
       PR_LOG(gLog, PR_LOG_ALWAYS,
         ("%p TextInputHandler::HandleKeyDownEvent, "

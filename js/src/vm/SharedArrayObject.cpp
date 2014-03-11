@@ -320,24 +320,19 @@ const Class SharedArrayBufferObject::class_ = {
         ArrayBufferObject::obj_lookupGeneric,
         ArrayBufferObject::obj_lookupProperty,
         ArrayBufferObject::obj_lookupElement,
-        ArrayBufferObject::obj_lookupSpecial,
         ArrayBufferObject::obj_defineGeneric,
         ArrayBufferObject::obj_defineProperty,
         ArrayBufferObject::obj_defineElement,
-        ArrayBufferObject::obj_defineSpecial,
         ArrayBufferObject::obj_getGeneric,
         ArrayBufferObject::obj_getProperty,
         ArrayBufferObject::obj_getElement,
-        ArrayBufferObject::obj_getSpecial,
         ArrayBufferObject::obj_setGeneric,
         ArrayBufferObject::obj_setProperty,
         ArrayBufferObject::obj_setElement,
-        ArrayBufferObject::obj_setSpecial,
         ArrayBufferObject::obj_getGenericAttributes,
         ArrayBufferObject::obj_setGenericAttributes,
         ArrayBufferObject::obj_deleteProperty,
         ArrayBufferObject::obj_deleteElement,
-        ArrayBufferObject::obj_deleteSpecial,
         nullptr, nullptr, /* watch/unwatch */
         nullptr,          /* slice */
         ArrayBufferObject::obj_enumerate,
@@ -376,7 +371,7 @@ js_InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_SharedArrayBuffer, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_SharedArrayBuffer, ctor, proto))
         return nullptr;
     return proto;
 }

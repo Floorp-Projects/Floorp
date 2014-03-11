@@ -156,7 +156,7 @@ nsBaseChannel::ContinueRedirect()
 bool
 nsBaseChannel::HasContentTypeHint() const
 {
-  NS_ASSERTION(!IsPending(), "HasContentTypeHint called too late");
+  NS_ASSERTION(!Pending(), "HasContentTypeHint called too late");
   return !mContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE);
 }
 
@@ -208,7 +208,7 @@ nsBaseChannel::BeginPumpingData()
       return rv;
   }
 
-  // By assigning mPump, we flag this channel as pending (see IsPending).  It's
+  // By assigning mPump, we flag this channel as pending (see Pending).  It's
   // important that the pending flag is set when we call into the stream (the
   // call to AsyncRead results in the stream's AsyncWait method being called)
   // and especially when we call into the loadgroup.  Our caller takes care to
@@ -312,7 +312,7 @@ nsBaseChannel::GetName(nsACString &result)
 NS_IMETHODIMP
 nsBaseChannel::IsPending(bool *result)
 {
-  *result = IsPending();
+  *result = Pending();
   return NS_OK;
 }
 
@@ -725,7 +725,7 @@ nsBaseChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
   if (NS_SUCCEEDED(mStatus))
     mStatus = status;
 
-  // Cause IsPending to return false.
+  // Cause Pending to return false.
   mPump = nullptr;
 
   if (mListener) // null in case of redirect
