@@ -2,7 +2,7 @@
 == size-1.html size-1-ref.html
 skip-if(B2G) fails-if(Android) == size-2.html size-2-ref.html
 HTTP(..) == baseline-1.html baseline-1-ref.html
-HTTP(..) == centering-1.xul centering-1-ref.xul
-== dynamic-height-1.xul dynamic-height-1-ref.xul
+skip-if(B2G&&browserIsRemote) HTTP(..) == centering-1.xul centering-1-ref.xul # bug 974780
+skip-if(B2G&&browserIsRemote) == dynamic-height-1.xul dynamic-height-1-ref.xul # bug 974780
 needs-focus == select.html select-ref.html
 == intrinsic-size.html intrinsic-size-ref.html

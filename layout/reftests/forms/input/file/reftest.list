@@ -1,8 +1,8 @@
 # B2G failures: bug 855352.
-fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == simple.html simple-ref.xul
-fails-if(B2G) fuzzy-if(OSX==10.6,8,64) == rtl.html rtl-ref.xul
-fails-if(B2G) fuzzy-if(OSX==10.6,8,128) == size.html simple-ref.xul
-fails-if(B2G) fuzzy-if(OSX==10.6,8,64) == background.html background-ref.xul
-fails-if(B2G) == style.html style-ref.xul
+fails-if(B2G) fuzzy-if(OSX==10.6,8,128) skip-if(B2G&&browserIsRemote) == simple.html simple-ref.xul # bug 974780
+fails-if(B2G) fuzzy-if(OSX==10.6,8,64) skip-if(B2G&&browserIsRemote) == rtl.html rtl-ref.xul # bug 974780
+fails-if(B2G) fuzzy-if(OSX==10.6,8,128) skip-if(B2G&&browserIsRemote) == size.html simple-ref.xul # bug 974780
+fails-if(B2G) fuzzy-if(OSX==10.6,8,64) skip-if(B2G&&browserIsRemote) == background.html background-ref.xul # bug 974780
+fails-if(B2G)  skip-if(B2G&&browserIsRemote) == style.html style-ref.xul # bug 974780
 != width-clip.html width-clip-ref.html
 fails-if(B2G) == color-inherit.html color-inherit-ref.html
