@@ -1197,6 +1197,11 @@ JS::Rooted<JSObject*> obj(cx, &args.callee());
         # of a constructor without |new|. We don't enforce this for chrome in
         # realease builds to avoid the addon compat fallout of making that
         # change. See bug 916644.
+        #
+        # Figure out the name of our constructor for error reporting purposes.
+        # For unnamed webidl constructors, identifier.name is "constructor" but
+        # the name JS sees is the interface name; for named constructors
+        # identifier.name is the actual name.
         name = self._ctor.identifier.name
         if name != "constructor":
             ctorName = name
