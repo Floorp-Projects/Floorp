@@ -975,6 +975,20 @@ nsIFrame::GetPaddingRect() const
   return GetPaddingRectRelativeToSelf() + GetPosition();
 }
 
+WritingMode
+nsIFrame::GetWritingMode(nsIFrame* aSubFrame) const
+{
+  WritingMode writingMode = GetWritingMode();
+
+  if (!writingMode.IsVertical() &&
+      (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT)) {
+    nsBidiLevel frameLevel = nsBidiPresUtils::GetFrameBaseLevel(aSubFrame);
+    writingMode.SetDirectionFromBidiLevel(frameLevel);
+  }
+
+  return writingMode;
+}
+
 nsRect
 nsIFrame::GetMarginRectRelativeToSelf() const
 {
