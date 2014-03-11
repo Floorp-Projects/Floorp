@@ -16,19 +16,24 @@ loader.lazyImporter(this, "LongStringClient", "resource://gre/modules/devtools/d
  *
  * @param object aDebuggerClient
  *        The DebuggerClient instance we live for.
- * @param string aActor
- *        The WebConsoleActor ID.
+ * @param object aResponse
+ *        The response packet received from the "startListeners" request sent to
+ *        the WebConsoleActor.
  */
-function WebConsoleClient(aDebuggerClient, aActor)
+function WebConsoleClient(aDebuggerClient, aResponse)
 {
-  this._actor = aActor;
+  this._actor = aResponse.from;
   this._client = aDebuggerClient;
   this._longStrings = {};
+  this.traits = aResponse.traits || {};
 }
 exports.WebConsoleClient = WebConsoleClient;
 
 WebConsoleClient.prototype = {
   _longStrings: null,
+  traits: null,
+
+  get actor() { return this._actor; },
 
   /**
    * Retrieve the cached messages from the server.

@@ -462,6 +462,11 @@ this.CrashManager.prototype = Object.freeze({
   _getStore: function () {
     return Task.spawn(function* () {
       if (!this._store) {
+        yield OS.File.makeDir(this._storeDir, {
+          ignoreExisting: true,
+          unixMode: OS.Constants.libc.S_IRWXU,
+        });
+
         let store = new CrashStore(this._storeDir, this._telemetryStoreSizeKey);
         yield store.load();
 

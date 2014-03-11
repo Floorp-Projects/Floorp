@@ -7100,7 +7100,7 @@ var WebappsUI = {
             );
           }
         );
-      }
+      });
     } else {
       DOMApplicationRegistry.denyInstall(aData);
     }
