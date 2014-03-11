@@ -38,7 +38,14 @@ SyncScheduler.prototype = {
   setDefaults: function setDefaults() {
     this._log.trace("Setting SyncScheduler policy values to defaults.");
 
-    this.singleDeviceInterval = Svc.Prefs.get("scheduler.singleDeviceInterval") * 1000;
+    let service = Cc["@mozilla.org/weave/service;1"]
+                    .getService(Ci.nsISupports)
+                    .wrappedJSObject;
+
+    let part = service.fxAccountsEnabled ? "fxa" : "sync11";
+    let prefSDInterval = "scheduler." + part + ".singleDeviceInterval";
+    this.singleDeviceInterval = Svc.Prefs.get(prefSDInterval) * 1000;
+
     this.idleInterval         = Svc.Prefs.get("scheduler.idleInterval")         * 1000;
     this.activeInterval       = Svc.Prefs.get("scheduler.activeInterval")       * 1000;
     this.immediateInterval    = Svc.Prefs.get("scheduler.immediateInterval")    * 1000;
