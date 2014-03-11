@@ -82,10 +82,12 @@ class RtpReceiver {
   // Turn negative acknowledgement (NACK) requests on/off.
   virtual void SetNACKStatus(const NACKMethod method) = 0;
 
-  // Returns the last received timestamp.
-  virtual uint32_t Timestamp() const = 0;
-  // Returns the time in milliseconds when the last timestamp was received.
-  virtual int32_t LastReceivedTimeMs() const = 0;
+  // Gets the last received timestamp. Returns true if a packet has been
+  // received, false otherwise.
+  virtual bool Timestamp(uint32_t* timestamp) const = 0;
+  // Gets the time in milliseconds when the last timestamp was received.
+  // Returns true if a packet has been received, false otherwise.
+  virtual bool LastReceivedTimeMs(int64_t* receive_time_ms) const = 0;
 
   // Returns the remote SSRC of the currently received RTP stream.
   virtual uint32_t SSRC() const = 0;
