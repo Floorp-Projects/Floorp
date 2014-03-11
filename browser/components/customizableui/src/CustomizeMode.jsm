@@ -270,6 +270,11 @@ CustomizeMode.prototype = {
       panelContents.removeAttribute("customize-transitioning");
 
       CustomizableUI.dispatchToolboxEvent("customizationready", {}, window);
+
+      // It's possible that we didn't enter customize mode via the menu panel,
+      // meaning we didn't kick off about:customizing preloading. If that's
+      // the case, let's kick it off for the next time we load this mode.
+      window.gCustomizationTabPreloader.ensurePreloading();
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
       }
