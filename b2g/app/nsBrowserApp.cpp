@@ -205,6 +205,10 @@ int main(int argc, char* argv[])
   gotCounters = GetProcessIoCounters(GetCurrentProcess(), &ioCounters);
 #endif
 
+#ifdef HAS_DLL_BLOCKLIST
+  DllBlocklist_Initialize();
+#endif
+
   // We do this because of data in bug 771745
   XPCOMGlueEnablePreload();
 
@@ -221,10 +225,6 @@ int main(int argc, char* argv[])
     Output("Couldn't load XRE functions.\n");
     return 255;
   }
-
-#ifdef HAS_DLL_BLOCKLIST
-  DllBlocklist_Initialize();
-#endif
 
   if (gotCounters) {
 #if defined(XP_WIN)
