@@ -1385,20 +1385,24 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
   WritingMode frameWM = aFrame->GetWritingMode();
   nsInlineFrame* testFrame = do_QueryFrame(aFrame);
 
+  //XXX temporary until GetSkipSides is logicalized
+  bool isLeftMost = false, isRightMost = false;
   if (testFrame) {
     aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET);
 
-    if (isFirst) {
-      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST);
-    } else {
-      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST);
-    }
+    isLeftMost = ((isFirst && frameWM.IsBidiLTR()) ||
+                 (isLast && !frameWM.IsBidiLTR()));
+    if (isLeftMost)
+      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST);
+    else
+      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST);
 
-    if (isLast) {
-      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST);
-    } else {
-      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST);
-    }
+    isRightMost =  ((isLast && frameWM.IsBidiLTR()) ||
+                    (isFirst && !frameWM.IsBidiLTR()));
+    if (isRightMost)
+      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST);
+    else
+      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST);
   }
   // This method is called from nsBlockFrame::PlaceLine via the call to
   // bidiUtils->ReorderFrames, so this is guaranteed to be after the inlines
