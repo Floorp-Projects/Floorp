@@ -1744,9 +1744,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_INSTANCEOF:
         return jsop_instanceof();
 
-      case JSOP_DEBUGLEAVEBLOCK:
-        return true;
-
       default:
 #ifdef DEBUG
         return abort("Unsupported opcode: %s (line %d)", js_CodeName[op], info().lineno(pc));
