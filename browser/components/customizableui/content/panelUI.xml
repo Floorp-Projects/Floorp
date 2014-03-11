@@ -325,10 +325,7 @@
       </method>
       <method name="_syncContainerWithSubView">
         <body><![CDATA[
-          // Need to nullcheck this._currentSubView because we could be called from a
-          // setTimeout from the overflow handler, which means the view might
-          // have been removed at this point.
-          if (!this.ignoreMutations && this._currentSubView && this.showingSubView) {
+          if (!this.ignoreMutations && this.showingSubView) {
             let newHeight = this._heightOfSubview(this._currentSubView, this._subViews);
             this._viewContainer.style.height = newHeight + "px";
           }
@@ -336,11 +333,7 @@
       </method>
       <method name="_syncContainerWithMainView">
         <body><![CDATA[
-          // Need to nullcheck _mainView because we could be called from a
-          // setTimeout from the overflow handler, which means the view might
-          // have been removed at this point.
-          if (!this.ignoreMutations && this._mainView &&
-              !this.showingSubView && !this._transitioning) {
+          if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
             let height;
             if (this.showingSubViewAsMainView) {
               height = this._heightOfSubview(this._mainView);
