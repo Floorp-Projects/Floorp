@@ -10,7 +10,7 @@
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
 #include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
 #include "base/task.h"                  // for CancelableTask, etc
-#include "mozilla/Preferences.h"        // for Preferences
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsDebug.h"                    // for NS_WARN_IF_FALSE
@@ -85,7 +85,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
 
         mAsyncPanZoomController->PostDelayedTask(
           mLongTapTimeoutTask,
-          Preferences::GetInt("ui.click_hold_context_menus.delay", 500));
+          gfxPrefs::UiClickHoldContextMenusDelay());
       }
     } else if (length == 2) {
       // Another finger has been added; it can't be a tap anymore.
