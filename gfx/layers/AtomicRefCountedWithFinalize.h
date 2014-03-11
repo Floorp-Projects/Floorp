@@ -7,7 +7,6 @@
 #define MOZILLA_ATOMICREFCOUNTEDWITHFINALIZE_H_
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/NullPtr.h"
 
 namespace mozilla {
 
@@ -16,8 +15,7 @@ class AtomicRefCountedWithFinalize
 {
   protected:
     AtomicRefCountedWithFinalize()
-      : mRecycleCallback(nullptr)
-      , mRefCount(0)
+      : mRefCount(0)
     {}
 
     ~AtomicRefCountedWithFinalize() {}
@@ -30,38 +28,17 @@ class AtomicRefCountedWithFinalize
 
     void Release() {
       MOZ_ASSERT(mRefCount > 0);
-      int currCount = --mRefCount;
-      if (0 == currCount) {
-        // Recycle listeners must call ClearRecycleCallback
-        // before releasing their strong reference.
-        MOZ_ASSERT(mRecycleCallback == nullptr);
+      if (0 == --mRefCount) {
 #ifdef DEBUG
         mRefCount = detail::DEAD;
 #endif
         T* derived = static_cast<T*>(this);
         derived->Finalize();
         delete derived;
-      } else if (1 == currCount && mRecycleCallback) {
-        T* derived = static_cast<T*>(this);
-        mRecycleCallback(derived, mClosure);
       }
     }
 
-    typedef void (*RecycleCallback)(T* aObject, void* aClosure);
-    /**
-     * Set a callback responsible for recycling this object
-     * before it is finalized.
-     */
-    void SetRecycleCallback(RecycleCallback aCallback, void* aClosure)
-    {
-      mRecycleCallback = aCallback;
-      mClosure = aClosure;
-    }
-    void ClearRecycleCallback() { SetRecycleCallback(nullptr, nullptr); }
-
 private:
-    RecycleCallback mRecycleCallback;
-    void *mClosure;
     Atomic<int> mRefCount;
 };
 
