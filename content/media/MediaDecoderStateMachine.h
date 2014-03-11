@@ -509,11 +509,6 @@ private:
   // here. Called on the audio thread.
   uint32_t PlayFromAudioQueue(uint64_t aFrameOffset, uint32_t aChannels);
 
-  // Stops the decode thread, and if we have a pending request for a new
-  // decode thread it is canceled. The decoder monitor must be held with exactly
-  // one lock count. Called on the state machine thread.
-  void StopDecodeThread();
-
   // Stops the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
   void StopAudioThread();
@@ -552,15 +547,28 @@ private:
   // The decoder monitor must be held.
   nsresult EnqueueDecodeMetadataTask();
 
-  // Dispatches a task to the decode task queue to run the decode loop.
-  // This is called on the state machine or decode threads.
+  // Ensures a to decode audio has been dispatched to the decode task queue.
+  // If a task to decode has already been dispatched, this does nothing,
+  // otherwise this dispatches a task to do the decode.
+   // This is called on the state machine or decode threads.
+   // The decoder monitor must be held.
+  nsresult EnsureAudioDecodeTaskQueued();
+
+  // Ensures a to decode video has been dispatched to the decode task queue.
+  // If a task to decode has already been dispatched, this does nothing,
+  // otherwise this dispatches a task to do the decode.
   // The decoder monitor must be held.
-  nsresult EnqueueDecodeTask();
+  nsresult EnsureVideoDecodeTaskQueued();
 
   // Dispatches a task to the decode task queue to seek the decoder.
-  // This is called on the state machine or decode threads.
   // The decoder monitor must be held.
   nsresult EnqueueDecodeSeekTask();
+
+  // Queries our state to see whether the decode has finished for all streams.
+  // If so, we move into DECODER_STATE_COMPLETED and schedule the state machine
+  // to run.
+  // The decoder monitor must be held.
+  void CheckIfDecodeComplete();
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
@@ -815,6 +823,14 @@ private:
   // yet decoded to end of stream.
   bool mIsVideoDecoding;
 
+  // True when we have dispatched a task to the decode task queue to run
+  // the audio decode.
+  bool mDispatchedAudioDecodeTask;
+
+  // True when we have dispatched a task to the decode task queue to run
+  // the video decode.
+  bool mDispatchedVideoDecodeTask;
+
   // If the video decode is falling behind the audio, we'll start dropping the
   // inter-frames up until the next keyframe which is at or before the current
   // playback position. skipToNextKeyframe is true if we're currently
@@ -853,10 +869,6 @@ private:
   // True if mDuration has a value obtained from an HTTP header, or from
   // the media index/metadata. Accessed on the state machine thread.
   bool mGotDurationFromMetaData;
-
-  // False while decode thread should be running. Accessed state machine
-  // and decode threads. Syncrhonised by decoder monitor.
-  bool mStopDecodeThread;
 
   // True if we've dispatched an event to the decode task queue to call
   // DecodeThreadRun(). We use this flag to prevent us from dispatching
