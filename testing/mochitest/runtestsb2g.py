@@ -372,6 +372,8 @@ def run_desktop_mochitests(parser, options):
     if options.desktop and not options.profile:
         raise Exception("must specify --profile when specifying --desktop")
 
+    options.browserArgs += ['-marionette']
+
     sys.exit(mochitest.runTests(options, onLaunch=mochitest.startTests))
 
 def main():

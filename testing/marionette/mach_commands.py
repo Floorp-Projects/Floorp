@@ -16,13 +16,6 @@ from mach.decorators import (
     Command,
 )
 
-MARIONETTE_DISABLED = '''
-The %s command requires a Marionette-enabled build.
-
-Add 'ENABLE_MARIONETTE=1' to your mozconfig file and re-build the application.
-Your currently active mozconfig is %s.
-'''.lstrip()
-
 MARIONETTE_DISABLED_B2G = '''
 The %s command requires a Marionette-enabled build.
 
@@ -108,11 +101,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('tests', nargs='*', metavar='TESTS',
         help='Path to test(s) to run.')
     def run_marionette_test(self, tests, address=None, testtype=None):
-        if self.substs.get('ENABLE_MARIONETTE') != '1':
-            print(MARIONETTE_DISABLED % ('marionette-test',
-                                         self.mozconfig['path']))
-            return 1
-
         bin = self.get_binary_path('app')
         return run_marionette(tests, bin=bin, testtype=testtype,
             topsrcdir=self.topsrcdir, address=address)
