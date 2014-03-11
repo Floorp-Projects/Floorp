@@ -1961,10 +1961,14 @@ VariableBubbleView.prototype = {
   /**
    * The mousemove listener for the source editor.
    */
-  _onMouseMove: function({ clientX: x, clientY: y }) {
+  _onMouseMove: function({ clientX: x, clientY: y, buttons: btns }) {
     // Prevent the variable inspection popup from showing when the thread client
-    // is not paused, or while a popup is already visible.
-    if (gThreadClient && gThreadClient.state != "paused" || !this._tooltip.isHidden()) {
+    // is not paused, or while a popup is already visible, or when the user tries
+    // to select text in the editor.
+    if (gThreadClient && gThreadClient.state != "paused"
+        || !this._tooltip.isHidden()
+        || (DebuggerView.editor.somethingSelected()
+         && btns > 0)) {
       clearNamedTimeout("editor-mouse-move");
       return;
     }
