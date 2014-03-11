@@ -85,7 +85,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
 
         mAsyncPanZoomController->PostDelayedTask(
           mLongTapTimeoutTask,
-          gfxPrefs::UiClickHoldContextMenusDelay());
+          Preferences::GetInt("ui.click_hold_context_menus.delay", 500));
       }
     } else if (length == 2) {
       // Another finger has been added; it can't be a tap anymore.
