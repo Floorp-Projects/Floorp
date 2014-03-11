@@ -10,6 +10,7 @@ CPP_UNIT_TESTS += [
     'TestCasting.cpp',
     'TestCeilingFloor.cpp',
     'TestCheckedInt.cpp',
+    'TestCountPopulation.cpp',
     'TestCountZeroes.cpp',
     'TestEndian.cpp',
     'TestEnumSet.cpp',
