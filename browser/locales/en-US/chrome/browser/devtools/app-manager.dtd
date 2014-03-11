@@ -32,6 +32,10 @@
 <!ENTITY device.permissions "Permissions">
 <!ENTITY device.permissionsTooltip "View a table of the permissions accessible to the different types of apps">
 <!ENTITY device.permissionsHelpLink "https://developer.mozilla.org/docs/Web/Apps/App_permissions">
+<!ENTITY device.browserTabs "Browser Tabs">
+<!ENTITY device.browserTabsTooltip "View a list of tabs in the browser of the connected device">
+<!ENTITY device.debugBrowserTab "Debug">
+<!ENTITY device.debugBrowserTabTooltip "Open the Developer Tools connected to this browser tab on the device">
 <!ENTITY device.help "Help">
 
 <!ENTITY connection.connectTooltip "Connect to the device">
