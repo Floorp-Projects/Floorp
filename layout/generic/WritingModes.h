@@ -833,6 +833,12 @@ public:
       *this : LogicalMargin(aToMode, GetPhysicalMargin(aFromMode));
   }
 
+  bool IsEmpty() const
+  {
+    return (mMargin.left == 0 && mMargin.top == 0 &&
+            mMargin.right == 0 && mMargin.bottom == 0);
+  }
+
 private:
   friend class LogicalRect;
 
@@ -1121,6 +1127,17 @@ public:
   {
     CHECK_WRITING_MODE(aWritingMode);
     return aWritingMode.IsVertical() ? mRect.XMost() : mRect.YMost();
+  }
+
+  bool IsEmpty() const
+  {
+    return (mRect.x == 0 && mRect.y == 0 &&
+            mRect.width == 0 && mRect.height == 0);
+  }
+
+  bool IsZeroSize() const
+  {
+    return (mRect.width == 0 && mRect.height == 0);
   }
 
 /* XXX are these correct?
