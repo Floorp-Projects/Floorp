@@ -60,7 +60,7 @@ public:
 
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const MOZ_OVERRIDE;
-  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
+  virtual int GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
 
 //override of nsFrame method
   virtual nsresult GetChildFrameContainingOffset(int32_t inContentOffset,
