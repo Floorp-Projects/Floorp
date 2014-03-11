@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for audio controller in windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<iframe src="about:blank" id="iframe"></iframe>
+<script type="application/javascript">
+
+function runTest() {
+  var utils = SpecialPowers.wrap(window).
+        QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+        getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  ok(utils, "nsIDOMWindowUtils");
+
+  is(utils.audioMuted, false, "By default utils.audioMuted is false");
+  utils.audioMuted = true;
+  is(utils.audioMuted, true, "utils.audioMuted is true");
+  utils.audioMuted = false;
+  is(utils.audioMuted, false, "utils.audioMuted is true");
+
+  is(utils.audioVolume, 1.0, "By default utils.audioVolume is 1.0");
+  utils.audioVolume = 0.4;
+  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  utils.audioMuted = true;
+  is(utils.audioMuted, true, "utils.audioMuted is true");
+  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  utils.audioMuted = false;
+
+  utils.audioVolume = 2.0;
+  is(utils.audioVolume, 2.0, "utils.audioVolume is ok");
+
+  try {
+    utils.audioVolume = -42;
+    ok(false, "This should throw");
+  } catch(e) {
+    ok(true, "This should throw");
+  }
+
+  utils.audioVolume = 0;
+  is(utils.audioVolume, 0.0, "utils.audioVolume is ok");
+  utils.audioVolume = 1.0;
+  is(utils.audioVolume, 1.0, "utils.audioVolume is ok");
+
+  var iframe = document.getElementById("iframe");
+  ok(iframe, "IFrame exists");
+
+  utils = SpecialPowers.wrap(iframe.contentWindow).
+        QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+        getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+  ok(utils, "nsIDOMWindowUtils");
+
+  is(utils.audioMuted, false, "By default utils.audioMuted is false");
+  utils.audioMuted = true;
+  is(utils.audioMuted, true, "utils.audioMuted is true");
+  utils.audioMuted = false;
+  is(utils.audioMuted, false, "utils.audioMuted is true");
+
+  is(utils.audioVolume, 1.0, "By default utils.audioVolume is 1.0");
+  utils.audioVolume = 0.4;
+  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  utils.audioMuted = true;
+  is(utils.audioMuted, true, "utils.audioMuted is true");
+  is(utils.audioVolume.toFixed(2), 0.4, "utils.audioVolume is ok");
+  utils.audioMuted = false;
+
+  utils.audioVolume = 2.0;
+  is(utils.audioVolume, 2.0, "utils.audioVolume is ok");
+
+  try {
+    utils.audioVolume = -42;
+    ok(false, "This should throw");
+  } catch(e) {
+    ok(true, "This should throw");
+  }
+
+  utils.audioVolume = 0;
+  is(utils.audioVolume, 0.0, "utils.audioVolume is ok");
+  utils.audioVolume = 1.0;
+  is(utils.audioVolume, 1.0, "utils.audioVolume is ok");
+
+  SimpleTest.finish();
+}
+
+SpecialPowers.pushPrefEnv({ "set": [["media.useAudioChannelService", true]]}, runTest);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

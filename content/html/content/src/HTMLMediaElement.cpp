@@ -1729,6 +1729,14 @@ void HTMLMediaElement::SetVolumeInternal()
   float effectiveVolume = mMuted ? 0.0f :
     mAudioChannelFaded ? float(mVolume) * FADED_VOLUME_RATIO : float(mVolume);
 
+  if (mAudioChannelAgent) {
+    float volume;
+    nsresult rv = mAudioChannelAgent->GetWindowVolume(&volume);
+    if (NS_SUCCEEDED(rv)) {
+      effectiveVolume *= volume;
+    }
+  }
+
   if (mDecoder) {
     mDecoder->SetVolume(effectiveVolume);
   } else if (mAudioStream) {
@@ -3918,6 +3926,12 @@ NS_IMETHODIMP HTMLMediaElement::CanPlayChanged(int32_t canPlay)
 
   UpdateChannelMuteState(static_cast<AudioChannelState>(canPlay));
   mPaused.SetCanPlay(canPlay != AUDIO_CHANNEL_STATE_MUTED);
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLMediaElement::WindowVolumeChanged()
+{
+  SetVolumeInternal();
   return NS_OK;
 }
 
