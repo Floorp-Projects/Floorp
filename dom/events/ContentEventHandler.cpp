@@ -1010,7 +1010,7 @@ ContentEventHandler::GetFlatTextOffsetOfRange(nsIContent* aRootContent,
 
   nsCOMPtr<nsIContentIterator> iter = NS_NewContentIterator();
 
-  if (aNode->Length() >= aNodeOffset) {
+  if (aNode->Length() >= static_cast<uint32_t>(aNodeOffset)) {
     // Offset is within node's length; set end of range to that offset
     prev->SetEnd(startDOMNode, aNodeOffset);
     iter->Init(prev);
