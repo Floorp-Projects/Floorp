@@ -65,9 +65,6 @@ public:
                 int64_t aEndTime,
                 int64_t aCurrentTime) MOZ_OVERRIDE;
 
-  void OnDecodeThreadStart() MOZ_OVERRIDE;
-  void OnDecodeThreadFinish() MOZ_OVERRIDE;
-
   void NotifyDataArrived(const char* aBuffer,
                          uint32_t aLength,
                          int64_t aOffset) MOZ_OVERRIDE;
