@@ -340,3 +340,32 @@ add_task(function() {
   yield hiddenPromise;
 });
 
+
+// Bug 982027 - moving icon around removes custom context menu.
+add_task(function() {
+  let widgetId = "custom-context-menu-toolbarbutton";
+  let expectedContext = "myfancycontext";
+  let widget = createDummyXULButton(widgetId, "Test ctxt menu");
+  widget.setAttribute("context", expectedContext);
+  CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_NAVBAR);
+  is(widget.getAttribute("context"), expectedContext, "Should have context menu when added to the toolbar.");
+
+  yield startCustomizing();
+  is(widget.getAttribute("context"), "", "Should not have own context menu in the toolbar now that we're customizing.");
+  is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped when in toolbar.");
+
+  let panel = PanelUI.contents;
+  simulateItemDrag(widget, panel);
+  is(widget.getAttribute("context"), "", "Should not have own context menu when in the panel.");
+  is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped now that we're in the panel.");
+
+  simulateItemDrag(widget, document.getElementById("nav-bar").customizationTarget);
+  is(widget.getAttribute("context"), "", "Should not have own context menu when back in toolbar because we're still customizing.");
+  is(widget.getAttribute("wrapped-context"), expectedContext, "Should keep own context menu wrapped now that we're back in the toolbar.");
+
+  yield endCustomizing();
+  is(widget.getAttribute("context"), expectedContext, "Should have context menu again now that we're out of customize mode.");
+  CustomizableUI.removeWidgetFromArea(widgetId);
+  widget.remove();
+  ok(CustomizableUI.inDefaultState, "Should be in default state after removing button.");
+});
