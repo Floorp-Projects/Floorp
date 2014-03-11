@@ -757,7 +757,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/chrome/chrome.manifest
 @BINPATH@/components/B2GComponents.manifest
 @BINPATH@/@DLL_PREFIX@omxplugin@DLL_SUFFIX@
-#ifdef ENABLE_MARIONETTE
+#if defined(ENABLE_MARIONETTE) || !defined(MOZ_WIDGET_GONK)
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/MarionetteComponents.manifest

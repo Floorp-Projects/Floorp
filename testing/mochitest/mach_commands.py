@@ -57,12 +57,6 @@ If you do not have a non-debug gaia profile, you can build one:
 The profile should be generated in a directory called 'profile'.
 '''.lstrip()
 
-MARIONETTE_DISABLED = '''
-The %s command requires a marionette enabled build.
-
-Add 'ENABLE_MARIONETTE=1' to your mozconfig file and re-build the application.
-Your currently active mozconfig is %s.
-'''.lstrip()
 
 class UnexpectedFilter(logging.Filter):
     def filter(self, record):
@@ -153,10 +147,6 @@ class MochitestRunner(MozbuildObject):
 
         options.consoleLevel = 'INFO'
         if conditions.is_b2g_desktop(self):
-            if self.substs.get('ENABLE_MARIONETTE') != '1':
-                print(MARIONETTE_DISABLED % ('mochitest-b2g-desktop',
-                                             self.mozconfig['path']))
-                return 1
 
             options.profile = options.profile or os.environ.get('GAIA_PROFILE')
             if not options.profile:
