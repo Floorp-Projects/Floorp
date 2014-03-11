@@ -13,15 +13,3 @@ include $(topsrcdir)/config/rules.mk
 ifdef MOZ_GSTREAMER
 CXXFLAGS += $(GSTREAMER_CFLAGS)
 endif
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-CXXFLAGS += \
-  -I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
-  -I$(ANDROID_SOURCE)/frameworks/base/include/ \
-  -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
-  -I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
-  -I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
-  -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
-  -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
-  $(NULL)
-endif
