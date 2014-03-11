@@ -47,7 +47,7 @@ function isFirstRunOrUpdate() {
 
 function writeFile(aPath, aData) {
   return Task.spawn(function() {
-    let data = TextEncoder().encode(aData);
+    let data = new TextEncoder().encode(aData);
     yield OS.File.writeAtomic(aPath, data, { tmpPath: aPath + ".tmp" });
   });
 }

@@ -18,6 +18,7 @@
 #endif
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/RemoteOpenFileParent.h"
+#include "mozilla/net/ChannelDiverterParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
@@ -605,6 +606,28 @@ NeckoParent::RecvCancelHTMLDNSPrefetch(const nsString& hostname,
                                  const nsresult& reason)
 {
   nsHTMLDNSPrefetch::CancelPrefetch(hostname, flags, reason);
+  return true;
+}
+
+PChannelDiverterParent*
+NeckoParent::AllocPChannelDiverterParent(const ChannelDiverterArgs& channel)
+{
+  return new ChannelDiverterParent();
+}
+
+bool
+NeckoParent::RecvPChannelDiverterConstructor(PChannelDiverterParent* actor,
+                                             const ChannelDiverterArgs& channel)
+{
+  auto parent = static_cast<ChannelDiverterParent*>(actor);
+  parent->Init(channel);
+  return true;
+}
+
+bool
+NeckoParent::DeallocPChannelDiverterParent(PChannelDiverterParent* parent)
+{
+  delete static_cast<ChannelDiverterParent*>(parent);
   return true;
 }
 

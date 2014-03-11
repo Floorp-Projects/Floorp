@@ -182,7 +182,7 @@ static void ViewReportClicked(GtkButton* button,
                                            nullptr));
 
   GtkWidget* scrolled = gtk_scrolled_window_new(0, 0);
-  gtk_container_add(GTK_CONTAINER(dialog->vbox), scrolled);
+  gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(dialog)), scrolled);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled),
                                  GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
   gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled),
@@ -526,14 +526,14 @@ bool UIShowCrashUI(const string& dumpfile,
   gCloseButton =
     gtk_button_new_with_label(gStrings[ST_QUIT].c_str());
   gtk_box_pack_start(GTK_BOX(buttonBox), gCloseButton, FALSE, FALSE, 0);
-  GTK_WIDGET_SET_FLAGS(gCloseButton, GTK_CAN_DEFAULT);
+  gtk_widget_set_can_default(gCloseButton, TRUE);
   g_signal_connect(gCloseButton, "clicked", G_CALLBACK(CloseClicked), 0);
 
   gRestartButton = 0;
   if (restartArgs.size() > 0) {
     gRestartButton = gtk_button_new_with_label(gStrings[ST_RESTART].c_str());
     gtk_box_pack_start(GTK_BOX(buttonBox), gRestartButton, FALSE, FALSE, 0);
-    GTK_WIDGET_SET_FLAGS(gRestartButton, GTK_CAN_DEFAULT);
+    gtk_widget_set_can_default(gRestartButton, TRUE);
     g_signal_connect(gRestartButton, "clicked", G_CALLBACK(RestartClicked), 0);
   }
 
@@ -553,7 +553,7 @@ bool UIShowCrashUI(const string& dumpfile,
 
   gtk_widget_show_all(gWindow);
   // stick this here to avoid the show_all above...
-  gtk_widget_hide_all(gThrobber);
+  gtk_widget_hide(gThrobber);
 
   gtk_main();
 

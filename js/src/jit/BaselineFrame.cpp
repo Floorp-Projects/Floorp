@@ -77,6 +77,13 @@ BaselineFrame::trace(JSTracer *trc, IonFrameIterator &frameIterator)
     JS_ASSERT(nlivefixed <= nfixed);
     JS_ASSERT(nlivefixed >= script->nfixedvars());
 
+    // NB: It is possible that numValueSlots() could be zero, even if nfixed is
+    // nonzero.  This is the case if the function has an early stack check.
+    if (numValueSlots() == 0)
+        return;
+
+    JS_ASSERT(nfixed <= numValueSlots());
+
     if (nfixed == nlivefixed) {
         // All locals are live.
         MarkLocals(this, trc, 0, numValueSlots());

@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(27efada9-b8ea-4d70-a2e6-f46b9ba905f4)]
+[scriptable, uuid(ef70a299-033c-4adc-b214-6649aed9d828)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1582,4 +1582,17 @@ interface nsIDOMWindowUtils : nsISupports {
     */
    AString getOMTAOrComputedStyle(in nsIDOMElement aElement,
                                   in AString aProperty);
+
+   /**
+    * With this it's possible to mute all the MediaElements in this window.
+    * We have audioMuted and audioVolume to preserve the volume across
+    * mute/umute.
+    */
+   attribute boolean audioMuted;
+
+    /**
+     * range: greater or equal to 0. The real volume level is affected by the
+     * volume of all ancestor windows.
+     */
+    attribute float audioVolume;
 };

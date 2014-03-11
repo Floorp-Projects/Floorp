@@ -99,7 +99,7 @@ static gboolean CloseApp(gpointer data)
 
 static gboolean ReportCompleted(gpointer success)
 {
-  gtk_widget_hide_all(gThrobber);
+  gtk_widget_hide(gThrobber);
   string str = success ? gStrings[ST_REPORTSUBMITSUCCESS]
                        : gStrings[ST_SUBMITFAILED];
   gtk_label_set_text(GTK_LABEL(gProgressLabel), str.c_str());

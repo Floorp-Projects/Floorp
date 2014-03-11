@@ -1238,32 +1238,6 @@ static const JSStdName builtin_property_names[] = {
     { 0, &SentinelClass }
 };
 
-static const JSStdName object_prototype_names[] = {
-    /* Object.prototype properties (global delegates to Object.prototype). */
-    { EAGER_ATOM(proto), &JSObject::class_ },
-#if JS_HAS_TOSOURCE
-    { EAGER_ATOM(toSource), &JSObject::class_ },
-#endif
-    { EAGER_ATOM(toString), &JSObject::class_ },
-    { EAGER_ATOM(toLocaleString), &JSObject::class_ },
-    { EAGER_ATOM(valueOf), &JSObject::class_ },
-#if JS_HAS_OBJ_WATCHPOINT
-    { EAGER_ATOM(watch), &JSObject::class_ },
-    { EAGER_ATOM(unwatch), &JSObject::class_ },
-#endif
-    { EAGER_ATOM(hasOwnProperty), &JSObject::class_ },
-    { EAGER_ATOM(isPrototypeOf), &JSObject::class_ },
-    { EAGER_ATOM(propertyIsEnumerable), &JSObject::class_ },
-#if JS_OLD_GETTER_SETTER_METHODS
-    { EAGER_ATOM(defineGetter), &JSObject::class_ },
-    { EAGER_ATOM(defineSetter), &JSObject::class_ },
-    { EAGER_ATOM(lookupGetter), &JSObject::class_ },
-    { EAGER_ATOM(lookupSetter), &JSObject::class_ },
-#endif
-
-    { 0, &SentinelClass }
-};
-
 #undef CLASP
 #undef TYPED_ARRAY_CLASP
 #undef EAGER_ATOM
@@ -1279,7 +1253,8 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
-    JS_ASSERT(obj->is<GlobalObject>());
+
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     *resolved = false;
 
     rt = cx->runtime();
@@ -1305,34 +1280,25 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     if (!stdnm)
         stdnm = LookupStdName(rt, idstr, builtin_property_names);
 
-    /*
-     * Try even less frequently used names delegated from the global
-     * object to Object.prototype, but only if the Object class hasn't
-     * yet been initialized.
-     */
-    if (!stdnm) {
-        RootedObject proto(cx);
-        if (!JSObject::getProto(cx, obj, &proto))
-            return false;
-        if (!proto)
-            stdnm = LookupStdName(rt, idstr, object_prototype_names);
-    }
-
-    if (stdnm) {
-        /*
-         * If this standard class is anonymous, then we don't want to resolve
-         * by name.
-         */
-        if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
-            return true;
-
-        Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    // If this class is anonymous, then it doesn't exist as a global
+    // property, so we won't resolve anything.
+    if (stdnm && !(stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)) {
         JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(stdnm->clasp);
         if (!GlobalObject::ensureConstructor(cx, global, key))
             return false;
 
         *resolved = true;
+        return true;
     }
+
+    // There is no such property to resolve. An ordinary resolve hook would
+    // just return true at this point. But the global object is special in one
+    // more way: its prototype chain is lazily initialized. That is,
+    // global->getProto() might be null right now because we haven't created
+    // Object.prototype yet. Force it now.
+    if (!global->getOrCreateObjectPrototype(cx))
+        return false;
+
     return true;
 }
 
@@ -1352,7 +1318,7 @@ JS_GetClassObject(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return js_GetClassObject(cx, key, objp);
+    return GetBuiltinConstructor(cx, key, objp);
 }
 
 JS_PUBLIC_API(bool)
@@ -1360,10 +1326,10 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    return js_GetClassPrototype(cx, key, objp);
+    return GetBuiltinPrototype(cx, key, objp);
 }
 
-extern JS_PUBLIC_API(JSProtoKey)
+JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext *cx, HandleId id)
 {
     AssertHeapIsIdle(cx);
@@ -2160,7 +2126,7 @@ js::RecomputeStackLimit(JSRuntime *rt, StackKind kind)
     // out of ion into the interpeter, which will do a proper recursion check.
 #ifdef JS_ION
     if (kind == StackForUntrustedScript) {
-        JSRuntime::AutoLockForOperationCallback lock(rt);
+        JSRuntime::AutoLockForInterrupt lock(rt);
         if (rt->mainThread.jitStackLimit != uintptr_t(-1)) {
             rt->mainThread.jitStackLimit = rt->mainThread.nativeStackLimit[kind];
 #ifdef JS_ARM_SIMULATOR
@@ -3471,10 +3437,6 @@ JS_DeletePropertyById2(JSContext *cx, HandleObject obj, HandleId id, bool *resul
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, 0);
 
-    if (JSID_IS_SPECIAL(id)) {
-        Rooted<SpecialId> sid(cx, JSID_TO_SPECIALID(id));
-        return JSObject::deleteSpecial(cx, obj, sid, result);
-    }
     return JSObject::deleteByValue(cx, obj, IdToValue(id), result);
 }
 
@@ -4987,24 +4949,24 @@ JS_New(JSContext *cx, JSObject *ctorArg, unsigned argc, jsval *argv)
     return &args.rval().toObject();
 }
 
-JS_PUBLIC_API(JSOperationCallback)
-JS_SetOperationCallback(JSRuntime *rt, JSOperationCallback callback)
+JS_PUBLIC_API(JSInterruptCallback)
+JS_SetInterruptCallback(JSRuntime *rt, JSInterruptCallback callback)
 {
-    JSOperationCallback old = rt->operationCallback;
-    rt->operationCallback = callback;
+    JSInterruptCallback old = rt->interruptCallback;
+    rt->interruptCallback = callback;
     return old;
 }
 
-JS_PUBLIC_API(JSOperationCallback)
-JS_GetOperationCallback(JSRuntime *rt)
+JS_PUBLIC_API(JSInterruptCallback)
+JS_GetInterruptCallback(JSRuntime *rt)
 {
-    return rt->operationCallback;
+    return rt->interruptCallback;
 }
 
 JS_PUBLIC_API(void)
-JS_TriggerOperationCallback(JSRuntime *rt)
+JS_RequestInterruptCallback(JSRuntime *rt)
 {
-    rt->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThread);
+    rt->requestInterrupt(JSRuntime::RequestInterruptAnyThread);
 }
 
 JS_PUBLIC_API(bool)

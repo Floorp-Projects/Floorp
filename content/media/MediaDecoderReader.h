@@ -78,16 +78,16 @@ public:
                         int64_t aEndTime,
                         int64_t aCurrentTime) = 0;
 
-  // Called when the decode thread is started, before calling any other
-  // decode, read metadata, or seek functions. Do any thread local setup
-  // in this function.
-  virtual void OnDecodeThreadStart() {}
-
-  // Called when the decode thread is about to finish, after all calls to
-  // any other decode, read metadata, or seek functions. Any backend specific
-  // thread local tear down must be done in this function. Note that another
-  // decode thread could start up and run in future.
-  virtual void OnDecodeThreadFinish() {}
+  // Called to move the reader into idle/active state. When the reader is
+  // created it is assumed to be active (i.e. not idle). When the media
+  // element is paused and we don't need to decode any more data, the state
+  // machine calls SetIdle() to inform the reader that its decoder won't be
+  // needed for a while. When we need to decode data again, the state machine
+  // calls SetActive() to activate the decoder. The reader can use these
+  // notifications to enter/exit a low power state when the decoder isn't
+  // needed, if desired. This is most useful on mobile.
+  virtual void SetIdle() { }
+  virtual void SetActive() { }
 
   // Tell the reader that the data decoded are not for direct playback, so it
   // can accept more files, in particular those which have more channels than

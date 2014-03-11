@@ -92,7 +92,9 @@ function test_property(property)
       return;
     }
 
-    gElement.setAttribute("style", property + ": " + value + " blah");
+    // Include non-identifier characters in the garbage
+    // in case |value| would also be valid with a <custom-ident> added.
+    gElement.setAttribute("style", property + ": " + value + " +blah/");
     if ("subproperties" in info) {
       for (idx in info.subproperties) {
         var subprop = info.subproperties[idx];

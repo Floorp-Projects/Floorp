@@ -104,16 +104,15 @@ public:
 
   /**
    * Notify the APZ code of an input event, and get back the untransformed event.
+   * @param aEvent the input event; this is modified in-place so that the async
+   *        transforms are unapplied. This can be passed to Gecko for hit testing
+   *        and normal event dispatch.
    * @param aOutTargetGuid An out-parameter that will contain the identifier
    *        of the APZC instance that handled the event, if one was found. This
    *        argument may be null.
-   * @param aOutEvent An out-parameter that contains aEvent with the async transforms
-   *        unapplied. This can be passed to Gecko for hit testing and normal event
-   *        dispatch. This argument may not be null.
    */
-  void NotifyInputEvent(const WidgetInputEvent& aEvent,
-                        ScrollableLayerGuid* aOutTargetGuid,
-                        WidgetInputEvent* aOutEvent);
+  void NotifyInputEvent(WidgetInputEvent& aEvent,
+                        ScrollableLayerGuid* aOutTargetGuid);
 
   void ZoomToRect(uint32_t aPresShellId, ViewID aViewId, const CSSRect& aRect);
 

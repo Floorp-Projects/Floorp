@@ -649,22 +649,22 @@ File(JSContext *cx, unsigned argc, Value *vp)
   return true;
 }
 
-static Value sScriptedOperationCallback = UndefinedValue();
+static Value sScriptedInterruptCallback = UndefinedValue();
 
 static bool
-XPCShellOperationCallback(JSContext *cx)
+XPCShellInterruptCallback(JSContext *cx)
 {
-    // If no operation callback was set by script, no-op.
-    if (sScriptedOperationCallback.isUndefined())
+    // If no interrupt callback was set by script, no-op.
+    if (sScriptedInterruptCallback.isUndefined())
         return true;
 
-    JSAutoCompartment ac(cx, &sScriptedOperationCallback.toObject());
+    JSAutoCompartment ac(cx, &sScriptedInterruptCallback.toObject());
     RootedValue rv(cx);
-    RootedValue callback(cx, sScriptedOperationCallback);
+    RootedValue callback(cx, sScriptedInterruptCallback);
     if (!JS_CallFunctionValue(cx, JS::NullPtr(), callback, JS::HandleValueArray::empty(), &rv) ||
         !rv.isBoolean())
     {
-        NS_WARNING("Scripted operation callback failed! Terminating script.");
+        NS_WARNING("Scripted interrupt callback failed! Terminating script.");
         JS_ClearPendingException(cx);
         return false;
     }
@@ -673,7 +673,7 @@ XPCShellOperationCallback(JSContext *cx)
 }
 
 static bool
-SetOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
+SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
     // Sanity-check args.
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -682,9 +682,9 @@ SetOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    // Allow callers to remove the operation callback by passing undefined.
+    // Allow callers to remove the interrupt callback by passing undefined.
     if (args[0].isUndefined()) {
-        sScriptedOperationCallback = UndefinedValue();
+        sScriptedInterruptCallback = UndefinedValue();
         return true;
     }
 
@@ -694,7 +694,7 @@ SetOperationCallback(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    sScriptedOperationCallback = args[0];
+    sScriptedInterruptCallback = args[0];
 
     return true;
 }
@@ -733,7 +733,7 @@ static const JSFunctionSpec glob_functions[] = {
     JS_FS("btoa",            Btoa,           1,0),
     JS_FS("Blob",            Blob,           2,JSFUN_CONSTRUCTOR),
     JS_FS("File",            File,           2,JSFUN_CONSTRUCTOR),
-    JS_FS("setOperationCallback", SetOperationCallback, 1,0),
+    JS_FS("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
     JS_FS_END
 };
@@ -1472,10 +1472,10 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
 
         rtsvc->RegisterContextCallback(ContextCallback);
 
-        // Override the default XPConnect operation callback. We could store the
+        // Override the default XPConnect interrupt callback. We could store the
         // old one and restore it before shutting down, but there's not really a
         // reason to bother.
-        JS_SetOperationCallback(rt, XPCShellOperationCallback);
+        JS_SetInterruptCallback(rt, XPCShellInterruptCallback);
 
         cx = JS_NewContext(rt, 8192);
         if (!cx) {
@@ -1587,9 +1587,9 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             JS_DefineProperty(cx, glob, "__LOCATION__", JSVAL_VOID,
                               GetLocationProperty, nullptr, 0);
 
-            JS_AddValueRoot(cx, &sScriptedOperationCallback);
+            JS_AddValueRoot(cx, &sScriptedInterruptCallback);
             result = ProcessArgs(cx, glob, argv, argc, &dirprovider);
-            JS_RemoveValueRoot(cx, &sScriptedOperationCallback);
+            JS_RemoveValueRoot(cx, &sScriptedInterruptCallback);
 
             JS_DropPrincipals(rt, gJSPrincipals);
             JS_SetAllNonReservedSlotsToUndefined(cx, glob);

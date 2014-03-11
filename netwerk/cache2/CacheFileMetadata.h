@@ -62,25 +62,28 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   CacheFileMetadata(CacheFileHandle *aHandle,
-                    const nsACString &aKey,
-                    bool aKeyIsHash);
+                    const nsACString &aKey);
   CacheFileMetadata(const nsACString &aKey);
+  CacheFileMetadata();
 
   void SetHandle(CacheFileHandle *aHandle);
 
   nsresult GetKey(nsACString &_retval);
-  bool     KeyIsHash();
 
   nsresult ReadMetadata(CacheFileMetadataListener *aListener);
   nsresult WriteMetadata(uint32_t aOffset,
                          CacheFileMetadataListener *aListener);
+  nsresult SyncReadMetadata(nsIFile *aFile);
+
+  bool     IsAnonymous() { return mAnonymous; }
+  bool     IsInBrowser() { return mInBrowser; }
+  uint32_t AppId()       { return mAppId; }
 
   const char * GetElement(const char *aKey);
   nsresult     SetElement(const char *aKey, const char *aValue);
 
-  CacheHashUtils::Hash16_t GetHash(uint32_t aIndex);
-  nsresult                 SetHash(uint32_t aIndex,
-                                   CacheHashUtils::Hash16_t aHash);
+  CacheHash::Hash16_t GetHash(uint32_t aIndex);
+  nsresult            SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash);
 
   nsresult SetExpirationTime(uint32_t aExpirationTime);
   nsresult GetExpirationTime(uint32_t *_retval);
@@ -103,19 +106,24 @@ public:
   NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult);
   NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult);
   NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult);
+  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult);
+
+  // Memory reporting
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
   virtual ~CacheFileMetadata();
 
   void     InitEmptyMetadata();
-  nsresult ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset);
+  nsresult ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset, bool aHaveKey);
   nsresult CheckElements(const char *aBuf, uint32_t aSize);
   void     EnsureBuffer(uint32_t aSize);
+  nsresult ParseKey(const nsACString &aKey);
 
   nsRefPtr<CacheFileHandle>           mHandle;
   nsCString                           mKey;
-  bool                                mKeyIsHash;
-  CacheHashUtils::Hash16_t           *mHashArray;
+  CacheHash::Hash16_t                *mHashArray;
   uint32_t                            mHashArraySize;
   uint32_t                            mHashCount;
   int64_t                             mOffset;
@@ -126,6 +134,9 @@ private:
   CacheFileMetadataHeader             mMetaHdr;
   uint32_t                            mElementsSize;
   bool                                mIsDirty;
+  bool                                mAnonymous;
+  bool                                mInBrowser;
+  uint32_t                            mAppId;
   nsCOMPtr<CacheFileMetadataListener> mListener;
 };
 

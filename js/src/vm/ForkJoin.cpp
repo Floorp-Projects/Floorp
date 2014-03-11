@@ -391,7 +391,7 @@ class ForkJoinShared : public ParallelJob, public Monitor
 
     // Requests that computation abort.
     void setAbortFlagDueToInterrupt(ForkJoinContext &cx);
-    void setAbortFlagAndTriggerOperationCallback(bool fatal);
+    void setAbortFlagAndRequestInterrupt(bool fatal);
 
     // Set the fatal flag for the next abort.
     void setPendingAbortFatal() { fatal_ = true; }
@@ -1146,7 +1146,7 @@ ForkJoinOperation::warmupExecution(bool stopIfComplete, ExecutionStatus *status)
         // interrupt flag. This is because we won't be running more JS
         // code, and thus no more automatic checking of the interrupt
         // flag.
-        if (!js_HandleExecutionInterrupt(cx_)) {
+        if (!CheckForInterrupt(cx_)) {
             *status = ExecutionFatal;
             return RedLight;
         }
@@ -1455,7 +1455,7 @@ ForkJoinShared::executeFromWorker(ThreadPoolWorker *worker, uintptr_t stackLimit
 {
     PerThreadData thisThread(cx_->runtime());
     if (!thisThread.init()) {
-        setAbortFlagAndTriggerOperationCallback(true);
+        setAbortFlagAndRequestInterrupt(true);
         return false;
     }
     TlsPerThreadData.set(&thisThread);
@@ -1517,7 +1517,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
         // and fallback.
         Spew(SpewOps, "Down (Script no longer present)");
         cx.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent);
-        setAbortFlagAndTriggerOperationCallback(false);
+        setAbortFlagAndRequestInterrupt(false);
     } else {
         ParallelIonInvoke<2> fii(cx_->runtime(), fun_, 2);
 
@@ -1527,7 +1527,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
         bool ok = fii.invoke(perThread);
         JS_ASSERT(ok == !cx.bailoutRecord->topScript);
         if (!ok)
-            setAbortFlagAndTriggerOperationCallback(false);
+            setAbortFlagAndRequestInterrupt(false);
     }
 
     Spew(SpewOps, "Down");
@@ -1544,12 +1544,12 @@ ForkJoinShared::setAbortFlagDueToInterrupt(ForkJoinContext &cx)
 
     if (!abort_) {
         cx.bailoutRecord->setCause(ParallelBailoutInterrupt);
-        setAbortFlagAndTriggerOperationCallback(false);
+        setAbortFlagAndRequestInterrupt(false);
     }
 }
 
 void
-ForkJoinShared::setAbortFlagAndTriggerOperationCallback(bool fatal)
+ForkJoinShared::setAbortFlagAndRequestInterrupt(bool fatal)
 {
     AutoLockMonitor lock(*this);
 
@@ -1558,7 +1558,7 @@ ForkJoinShared::setAbortFlagAndTriggerOperationCallback(bool fatal)
 
     // Note: The ForkJoin trigger here avoids the expensive memory protection needed to
     // interrupt Ion code compiled for sequential execution.
-    cx_->runtime()->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadForkJoin);
+    cx_->runtime()->requestInterrupt(JSRuntime::RequestInterruptAnyThreadForkJoin);
 }
 
 void
@@ -1671,7 +1671,7 @@ ForkJoinContext::requestGC(JS::gcreason::Reason reason)
 {
     shared_->requestGC(reason);
     bailoutRecord->setCause(ParallelBailoutRequestedGC);
-    shared_->setAbortFlagAndTriggerOperationCallback(false);
+    shared_->setAbortFlagAndRequestInterrupt(false);
 }
 
 void
@@ -1679,7 +1679,7 @@ ForkJoinContext::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     shared_->requestZoneGC(zone, reason);
     bailoutRecord->setCause(ParallelBailoutRequestedZoneGC);
-    shared_->setAbortFlagAndTriggerOperationCallback(false);
+    shared_->setAbortFlagAndRequestInterrupt(false);
 }
 
 bool
@@ -2125,10 +2125,9 @@ js::ParallelTestsShouldPass(JSContext *cx)
 }
 
 void
-js::TriggerOperationCallbackForForkJoin(JSRuntime *rt,
-                                        JSRuntime::OperationCallbackTrigger trigger)
+js::RequestInterruptForForkJoin(JSRuntime *rt, JSRuntime::InterruptMode mode)
 {
-    if (trigger != JSRuntime::TriggerCallbackAnyThreadDontStopIon)
+    if (mode != JSRuntime::RequestInterruptAnyThreadDontStopIon)
         rt->interruptPar = true;
 }
 

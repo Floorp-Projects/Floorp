@@ -1902,7 +1902,7 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearS
     // fail.  The key is that script can't distinguish these failure modes from
     // one where, in spec terms, we fail immediately after step 8a.  That *in
     // reality* we might have done extra matching work, or created a partial
-    // results array to return, or hit the operation limit, is irrelevant.  The
+    // results array to return, or hit an interrupt, is irrelevant.  The
     // script can't tell we did any of those things but didn't update
     // .lastIndex.  Thus we can optimize steps 8b onward however we want,
     // including eliminating intermediate .lastIndex sets, as long as we don't
@@ -1927,7 +1927,7 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearS
     const jschar *chars = input->chars();
     RegExpShared &re = g.regExp();
     for (size_t searchIndex = 0; searchIndex <= charsLen; ) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
+        if (!CheckForInterrupt(cx))
             return false;
 
         // Steps 8f(i-ii), minus "lastIndex" updates (see above).
@@ -2186,7 +2186,7 @@ DoMatchForReplaceGlobal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString
     size_t charsLen = linearStr->length();
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
     for (size_t count = 0, i = 0; i <= charsLen; ++count) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
+        if (!CheckForInterrupt(cx))
             return false;
 
         RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
@@ -2716,7 +2716,7 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
 
     /* Accumulate StringRanges for unmatched substrings. */
     while (startIndex <= charsLen) {
-        if (!JS_CHECK_OPERATION_LIMIT(cx))
+        if (!CheckForInterrupt(cx))
             return false;
 
         RegExpRunStatus status =
@@ -3939,7 +3939,7 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_String, ctor, proto))
         return nullptr;
 
     /*

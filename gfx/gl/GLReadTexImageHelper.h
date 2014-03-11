@@ -60,11 +60,11 @@ public:
       * NOTE: aShaderProgram is really mozilla::layers::ShaderProgramType. It is
       * passed as int to eliminate including LayerManagerOGLProgram.h here.
       */
-    already_AddRefed<gfxImageSurface> ReadTexImage(GLuint aTextureId,
-                                                   GLenum aTextureTarget,
-                                                   const gfxIntSize& aSize,
-                           /* ShaderProgramType */ int aShaderProgram,
-                                                   bool aYInvert = false);
+    TemporaryRef<gfx::DataSourceSurface> ReadTexImage(GLuint aTextureId,
+                                                      GLenum aTextureTarget,
+                                                      const gfx::IntSize& aSize,
+                              /* ShaderProgramType */ int aShaderProgram,
+                                                      bool aYInvert = false);
 
 
 };

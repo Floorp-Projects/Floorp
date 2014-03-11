@@ -423,7 +423,7 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
     JS_ASSERT(!rt->noGCOrAllocationCheck);
 #endif
 
-    /* For testing out of memory conditions */
+    // For testing out of memory conditions
     JS_OOM_POSSIBLY_FAIL_REPORT(ncx);
 
     if (allowGC) {
@@ -433,10 +433,8 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
 #endif
 
         if (rt->interrupt) {
-            /*
-             * Invoking the operation handler can fail and we can't usefully
-             * handle that here. Just check in case we need to collect instead.
-             */
+            // Invoking the interrupt callback can fail and we can't usefully
+            // handle that here. Just check in case we need to collect instead.
             js::gc::GCIfNeeded(ncx);
         }
 
