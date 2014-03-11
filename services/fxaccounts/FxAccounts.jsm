@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
 let publicProperties = [
   "getAccountsClient",
   "getAccountsSignInURI",
-  "getAccountsURI",
+  "getAccountsSignUpURI",
   "getAssertion",
   "getKeys",
   "getSignedInUser",
@@ -673,8 +673,8 @@ FxAccountsInternal.prototype = {
     },
 
   // Return the URI of the remote UI flows.
-  getAccountsURI: function() {
-    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.uri");
+  getAccountsSignUpURI: function() {
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.signup.uri");
     if (!/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
     }
