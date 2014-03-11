@@ -15,14 +15,14 @@ fuzzy-if(Android,4,34) == image-opacity-02.svg image-opacity-02-ref.svg # Bug 77
 == image-svg-inline-zoom-in-01b.html          ../pass.svg
 == image-svg-inline-zoom-in-01c.html          ../pass.svg
 == image-svg-inline-zoom-in-01d.html          ../pass.svg
-== image-svg-inline-zoom-out-01a.html         ../pass.svg
-== image-svg-inline-zoom-out-01b.html         ../pass.svg
-== image-svg-inline-zoom-out-01c.html         ../pass.svg
-== image-svg-inline-zoom-out-01d.html         ../pass.svg
-== image-svg-inline-sprite-zoom-in-01a.html   image-svg-inline-sprite-zoom-in-01-ref.html
-== image-svg-inline-sprite-zoom-in-01b.html   image-svg-inline-sprite-zoom-in-01-ref.html
-== image-svg-inline-sprite-zoom-out-01a.html  image-svg-inline-sprite-zoom-out-01-ref.html
-== image-svg-inline-sprite-zoom-out-01b.html  image-svg-inline-sprite-zoom-out-01-ref.html
+skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01a.html         ../pass.svg
+skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01b.html         ../pass.svg
+skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01c.html         ../pass.svg
+skip-if(B2G&&browserIsRemote) == image-svg-inline-zoom-out-01d.html         ../pass.svg
+skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-in-01a.html   image-svg-inline-sprite-zoom-in-01-ref.html
+skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-in-01b.html   image-svg-inline-sprite-zoom-in-01-ref.html
+skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-out-01a.html  image-svg-inline-sprite-zoom-out-01-ref.html
+skip-if(B2G&&browserIsRemote) == image-svg-inline-sprite-zoom-out-01b.html  image-svg-inline-sprite-zoom-out-01-ref.html
 == image-translate-01.svg                     image-translate-01-ref.svg
 == image-x-01.svg                             image-x-01-ref.svg
 == image-xy-01.svg                            image-xy-01-ref.svg
