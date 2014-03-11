@@ -14,7 +14,6 @@ import org.mozilla.gecko.widget.FaviconView;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.text.SpannableString;
@@ -66,10 +65,9 @@ public class SearchEnginePreference extends CustomListPreference {
      * Returns the strings to be displayed in the dialog.
      */
     @Override
-    protected String[] getDialogStrings() {
-        Resources res = getContext().getResources();
+    protected String[] createDialogItems() {
         return new String[] { LABEL_SET_AS_DEFAULT,
-                              res.getString(R.string.pref_dialog_remove) };
+                              LABEL_REMOVE };
     }
 
     @Override

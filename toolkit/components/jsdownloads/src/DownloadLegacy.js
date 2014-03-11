@@ -99,7 +99,8 @@ DownloadLegacyTransfer.prototype = {
         // To handle asynchronous cancellation properly, we should hook up the
         // handler only after we have been notified that the main request
         // started.  We will wait until the main request stopped before
-        // notifying that the download has been canceled.
+        // notifying that the download has been canceled.  Since the request has
+        // not completed yet, deferCanceled is guaranteed to be set.
         return download.saver.deferCanceled.promise.then(() => {
           // Only cancel if the object executing the download is still running.
           if (this._cancelable && !this._componentFailed) {
@@ -224,11 +225,8 @@ DownloadLegacyTransfer.prototype = {
         aDownload.tryToKeepPartialData = true;
       }
 
-      // Start the download before allowing it to be controlled.
-      aDownload.start().then(null, function () {
-        // In case the operation failed, ensure we stop downloading data.
-        aDownload.saver.deferCanceled.resolve();
-      });
+      // Start the download before allowing it to be controlled.  Ignore errors.
+      aDownload.start().then(null, () => {});
 
       // Start processing all the other events received through nsITransfer.
       this._deferDownload.resolve(aDownload);

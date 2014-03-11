@@ -189,6 +189,40 @@ let NetworkHelper = {
   },
 
   /**
+   * Gets the web appId that is associated with aRequest.
+   *
+   * @param nsIHttpChannel aRequest
+   * @returns number|null
+   *          The appId for the given request, if available.
+   */
+  getAppIdForRequest: function NH_getAppIdForRequest(aRequest)
+  {
+    try {
+      return this.getRequestLoadContext(aRequest).appId;
+    } catch (ex) {
+      // request loadContent is not always available.
+    }
+    return null;
+  },
+
+  /**
+   * Gets the topFrameElement that is associated with aRequest.
+   *
+   * @param nsIHttpChannel aRequest
+   * @returns nsIDOMElement|null
+   *          The top frame element for the given request, if available.
+   */
+  getTopFrameForRequest: function NH_getTopFrameForRequest(aRequest)
+  {
+    try {
+      return this.getRequestLoadContext(aRequest).topFrameElement;
+    } catch (ex) {
+      // request loadContent is not always available.
+    }
+    return null;
+  },
+
+  /**
    * Gets the nsIDOMWindow that is associated with aRequest.
    *
    * @param nsIHttpChannel aRequest

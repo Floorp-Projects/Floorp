@@ -214,8 +214,6 @@ CustomizeMode.prototype = {
       customizeButton.setAttribute("label", customizeButton.getAttribute("exitLabel"));
       customizeButton.setAttribute("enterTooltiptext", customizeButton.getAttribute("tooltiptext"));
       customizeButton.setAttribute("tooltiptext", customizeButton.getAttribute("exitTooltiptext"));
-      document.getElementById("PanelUI-help").setAttribute("disabled", true);
-      document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
       this._transitioning = true;
 
@@ -245,6 +243,9 @@ CustomizeMode.prototype = {
       this.visiblePalette.addEventListener("dragend", this, true);
 
       window.gNavToolbox.addEventListener("toolbarvisibilitychange", this);
+
+      document.getElementById("PanelUI-help").setAttribute("disabled", true);
+      document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
       this._updateResetButton();
       this._updateUndoResetButton();
@@ -336,7 +337,6 @@ CustomizeMode.prototype = {
 
     this.document.removeEventListener("keypress", this);
     this.window.PanelUI.menuButton.removeEventListener("mousedown", this);
-    this.window.PanelUI.menuButton.open = false;
 
     this.window.PanelUI.beginBatchUpdate();
 
@@ -425,6 +425,7 @@ CustomizeMode.prototype = {
       CustomizableUI.dispatchToolboxEvent("customizationending", {}, window);
 
       window.PanelUI.setMainView(window.PanelUI.mainView);
+      window.PanelUI.menuButton.open = false;
       window.PanelUI.menuButton.disabled = false;
 
       let customizeButton = document.getElementById("PanelUI-customize");

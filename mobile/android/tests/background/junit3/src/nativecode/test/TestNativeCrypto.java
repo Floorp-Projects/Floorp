@@ -5,15 +5,23 @@ package org.mozilla.gecko.background.nativecode.test;
 
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 import junit.framework.TestCase;
 
 import org.mozilla.gecko.background.nativecode.NativeCrypto;
 import org.mozilla.gecko.sync.Utils;
 
-// Test vectors from
-// SHA-256: <https://github.com/ircmaxell/PHP-PasswordLib/blob/master/test/Data/Vectors/pbkdf2-draft-josefsson-sha256.test-vectors>
-//          <https://gitorious.org/scrypt/nettle-scrypt/blobs/37c0d5288e991604fe33dba2f1724986a8dddf56/testsuite/pbkdf2-test.c>
+/*
+ * Tests the Java wrapper over native implementations of crypto code. Test vectors from:
+ *   * PBKDF2SHA256:
+ *     - <https://github.com/ircmaxell/PHP-PasswordLib/blob/master/test/Data/Vectors/pbkdf2-draft-josefsson-sha256.test-vectors>
+ *     - <https://gitorious.org/scrypt/nettle-scrypt/blobs/37c0d5288e991604fe33dba2f1724986a8dddf56/testsuite/pbkdf2-test.c>
+ *   * SHA-1:
+ *     - <http://oauth.googlecode.com/svn/code/c/liboauth/src/sha1.c>
+ */
 public class TestNativeCrypto extends TestCase {
 
   public final void testPBKDF2SHA256A() throws UnsupportedEncodingException, GeneralSecurityException {
@@ -70,6 +78,71 @@ public class TestNativeCrypto extends TestCase {
 
   public final void testTimePBKDF2SHA256() throws UnsupportedEncodingException, GeneralSecurityException {
     checkPBKDF2SHA256("password", "salt", 80000, 32, null);
+  }
+
+  public final void testPBKDF2SHA256InvalidLenArg() throws UnsupportedEncodingException, GeneralSecurityException {
+    final String p = "password";
+    final String s = "salt";
+    final int c = 1;
+    final int dkLen = -1; // Should always be positive.
+
+    try {
+      NativeCrypto.pbkdf2SHA256(p.getBytes("US-ASCII"), s.getBytes("US-ASCII"), c, dkLen);
+      fail("Expected sha256 to throw with negative dkLen argument.");
+    } catch (IllegalArgumentException e) { } // Expected.
+  }
+
+  public final void testSHA1() throws UnsupportedEncodingException {
+    final String[] inputs = new String[] {
+      "abc",
+      "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+      "" // To be filled in below.
+    };
+    final String baseStr = "01234567";
+    final int repetitions = 80;
+    final StringBuilder builder = new StringBuilder(baseStr.length() * repetitions);
+    for (int i = 0; i < 80; ++i) {
+      builder.append(baseStr);
+    }
+    inputs[2] = builder.toString();
+
+    final String[] expecteds = new String[] {
+      "a9993e364706816aba3e25717850c26c9cd0d89d",
+      "84983e441c3bd26ebaae4aa1f95129e5e54670f1",
+      "dea356a2cddd90c7a7ecedc5ebb563934f460452"
+    };
+
+    for (int i = 0; i < inputs.length; ++i) {
+      final byte[] input = inputs[i].getBytes("US-ASCII");
+      final String expected = expecteds[i];
+
+      final byte[] actual = NativeCrypto.sha1(input);
+      assertNotNull("Hashed value is non-null", actual);
+      assertExpectedBytes(expected, actual);
+    }
+  }
+
+  /**
+   * Test to ensure the output of our SHA1 algo is the same as MessageDigest's. This is important
+   * because we intend to replace MessageDigest in FHR with this SHA-1 algo (bug 959652).
+   */
+  public final void testSHA1AgainstMessageDigest() throws UnsupportedEncodingException,
+      NoSuchAlgorithmException {
+    final String[] inputs = {
+      "password",
+      "saranghae",
+      "aoeusnthaoeusnthaoeusnth \0 12345098765432109876_!"
+    };
+
+    final MessageDigest digest = MessageDigest.getInstance("SHA-1");
+    for (final String input : inputs) {
+      final byte[] inputBytes = input.getBytes("US-ASCII");
+
+      final byte[] mdBytes = digest.digest(inputBytes);
+      final byte[] ourBytes = NativeCrypto.sha1(inputBytes);
+      assertTrue("MessageDigest hash is the same as NativeCrypto SHA-1 hash",
+          Arrays.equals(ourBytes, mdBytes));
+    }
   }
 
   private void checkPBKDF2SHA256(String p, String s, int c, int dkLen,

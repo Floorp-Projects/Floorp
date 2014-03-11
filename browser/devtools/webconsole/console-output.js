@@ -9,6 +9,8 @@ const {Cc, Ci, Cu} = require("chrome");
 
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "escapeHTML", "resource:///modules/devtools/VariablesView.jsm");
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyImporter(this, "Task","resource://gre/modules/Task.jsm");
 
 const Heritage = require("sdk/core/heritage");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
@@ -131,7 +133,7 @@ ConsoleOutput.prototype = {
    * @type DOMDocument
    */
   get document() {
-    return this.owner.document;
+    return this.owner ? this.owner.document : null;
   },
 
   /**
@@ -148,6 +150,14 @@ ConsoleOutput.prototype = {
    */
   get webConsoleClient() {
     return this.owner.webConsoleClient;
+  },
+
+  /**
+   * Getter for the current toolbox debuggee target.
+   * @type Target
+   */
+  get toolboxTarget() {
+    return this.owner.owner.target;
   },
 
   /**
@@ -507,6 +517,15 @@ Messages.BaseMessage.prototype = {
   {
     this.output.openLink(event.target.href);
   },
+
+  destroy: function()
+  {
+    // Destroy all widgets that have registered themselves in this.widgets
+    for (let widget of this.widgets) {
+      widget.destroy();
+    }
+    this.widgets.clear();
+  }
 }; // Messages.BaseMessage.prototype
 
 
@@ -2017,6 +2036,7 @@ Widgets.ObjectRenderers.add({
       case Ci.nsIDOMNode.TEXT_NODE:
       case Ci.nsIDOMNode.COMMENT_NODE:
       case Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE:
+      case Ci.nsIDOMNode.ELEMENT_NODE:
         return true;
       default:
         return false;
@@ -2044,6 +2064,9 @@ Widgets.ObjectRenderers.add({
         break;
       case Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE:
         this._renderDocumentFragmentNode();
+        break;
+      case Ci.nsIDOMNode.ELEMENT_NODE:
+        this._renderElementNode();
         break;
       default:
         throw new Error("Unsupported nodeType: " + preview.nodeType);
@@ -2137,6 +2160,168 @@ Widgets.ObjectRenderers.add({
     }
 
     this._text(" ]");
+  },
+
+  _renderElementNode: function()
+  {
+    let doc = this.document;
+    let {attributes, nodeName} = this.objectActor.preview;
+
+    this.element = this.el("span." + "kind-" + this.objectActor.preview.kind + ".elementNode");
+
+    let openTag = this.el("span.cm-tag");
+    openTag.textContent = "<";
+    this.element.appendChild(openTag);
+
+    let tagName = this._anchor(nodeName, {
+      className: "cm-tag",
+      appendTo: openTag
+    });
+
+    if (this.options.concise) {
+      if (attributes.id) {
+        tagName.appendChild(this.el("span.cm-attribute", "#" + attributes.id));
+      }
+      if (attributes.class) {
+        tagName.appendChild(this.el("span.cm-attribute", "." + attributes.class.split(" ").join(".")));
+      }
+    } else {
+      for (let name of Object.keys(attributes)) {
+        let attr = this._renderAttributeNode(" " + name, attributes[name]);
+        this.element.appendChild(attr);
+      }
+    }
+
+    let closeTag = this.el("span.cm-tag");
+    closeTag.textContent = ">";
+    this.element.appendChild(closeTag);
+
+    // Register this widget in the owner message so that it gets destroyed when
+    // the message is destroyed.
+    this.message.widgets.add(this);
+
+    this.linkToInspector();
+  },
+
+  /**
+   * If the DOMNode being rendered can be highlit in the page, this function
+   * will attach mouseover/out event listeners to do so, and the inspector icon
+   * to open the node in the inspector.
+   * @return a promise (always the same) that resolves when the node has been
+   * linked to the inspector, or rejects if it wasn't (either if no toolbox
+   * could be found to access the inspector, or if the node isn't present in the
+   * inspector, i.e. if the node is in a DocumentFragment or not part of the
+   * tree, or not of type Ci.nsIDOMNode.ELEMENT_NODE).
+   */
+  linkToInspector: function()
+  {
+    if (this._linkedToInspector) {
+      return this._linkedToInspector;
+    }
+
+    this._linkedToInspector = Task.spawn(function*() {
+      // Checking the node type
+      if (this.objectActor.preview.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+        throw null;
+      }
+
+      // Checking the presence of a toolbox
+      let target = this.message.output.toolboxTarget;
+      this.toolbox = gDevTools.getToolbox(target);
+      if (!this.toolbox) {
+        throw null;
+      }
+
+      // Checking that the inspector supports the node
+      yield this.toolbox.initInspector();
+      this._nodeFront = yield this.toolbox.walker.getNodeActorFromObjectActor(this.objectActor.actor);
+      if (!this._nodeFront) {
+        throw null;
+      }
+
+      // At this stage, the message may have been cleared already
+      if (!this.document) {
+        throw null;
+      }
+
+      this.highlightDomNode = this.highlightDomNode.bind(this);
+      this.element.addEventListener("mouseover", this.highlightDomNode, false);
+      this.unhighlightDomNode = this.unhighlightDomNode.bind(this);
+      this.element.addEventListener("mouseout", this.unhighlightDomNode, false);
+
+      this._openInspectorNode = this._anchor("", {
+        className: "open-inspector",
+        onClick: this.openNodeInInspector.bind(this)
+      });
+      this._openInspectorNode.title = l10n.getStr("openNodeInInspector");
+    }.bind(this));
+
+    return this._linkedToInspector;
+  },
+
+  /**
+   * Highlight the DOMNode corresponding to the ObjectActor in the page.
+   * @return a promise that resolves when the node has been highlighted, or
+   * rejects if the node cannot be highlighted (detached from the DOM)
+   */
+  highlightDomNode: function()
+  {
+    return Task.spawn(function*() {
+      yield this.linkToInspector();
+      let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
+      if (isAttached) {
+        yield this.toolbox.highlighterUtils.highlightNodeFront(this._nodeFront);
+      } else {
+        throw null;
+      }
+    }.bind(this));
+  },
+
+  /**
+   * Unhighlight a previously highlit node
+   * @see highlightDomNode
+   * @return a promise that resolves when the highlighter has been hidden
+   */
+  unhighlightDomNode: function()
+  {
+    return this.linkToInspector().then(() => {
+      return this.toolbox.highlighterUtils.unhighlight();
+    });
+  },
+
+  /**
+   * Open the DOMNode corresponding to the ObjectActor in the inspector panel
+   * @return a promise that resolves when the inspector has been switched to
+   * and the node has been selected, or rejects if the node cannot be selected
+   * (detached from the DOM). Note that in any case, the inspector panel will
+   * be switched to.
+   */
+  openNodeInInspector: function()
+  {
+    return Task.spawn(function*() {
+      yield this.linkToInspector();
+      yield this.toolbox.selectTool("inspector");
+
+      let isAttached = yield this.toolbox.walker.isInDOMTree(this._nodeFront);
+      if (isAttached) {
+        let onReady = this.toolbox.inspector.once("inspector-updated");
+        yield this.toolbox.selection.setNodeFront(this._nodeFront, "console");
+        yield onReady;
+      } else {
+        throw null;
+      }
+    }.bind(this));
+  },
+
+  destroy: function()
+  {
+    if (this.toolbox && this._nodeFront) {
+      this.element.removeEventListener("mouseover", this.highlightDomNode, false);
+      this.element.removeEventListener("mouseout", this.unhighlightDomNode, false);
+      this._openInspectorNode.removeEventListener("mousedown", this.openNodeInInspector, true);
+      this.toolbox = null;
+      this._nodeFront = null;
+    }
   },
 }); // Widgets.ObjectRenderers.byKind.DOMNode
 
