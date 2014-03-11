@@ -65,8 +65,6 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request, nsISupports *ctx)
     return DivertToParent(divertable, request);
   }
 
-  NS_RUNTIMEABORT("We don't support addon-wrapped download channels yet");
-
   nsresult rv = mHandler->OnStartRequest(request, ctx);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
