@@ -686,7 +686,7 @@ TEST_F(AsyncPanZoomControllerTester, OverScrollPanning) {
   EXPECT_EQ(pointOut, ScreenPoint(0, 90));
 }
 
-TEST(AsyncPanZoomController, ShortPress) {
+TEST_F(AsyncPanZoomControllerTester, ShortPress) {
   nsRefPtr<MockContentControllerDelayed> mcc = new NiceMock<MockContentControllerDelayed>();
   nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
   nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(
@@ -710,7 +710,7 @@ TEST(AsyncPanZoomController, ShortPress) {
   apzc->Destroy();
 }
 
-TEST(AsyncPanZoomController, MediumPress) {
+TEST_F(AsyncPanZoomControllerTester, MediumPress) {
   nsRefPtr<MockContentControllerDelayed> mcc = new NiceMock<MockContentControllerDelayed>();
   nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
   nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(
@@ -791,7 +791,7 @@ DoLongPressTest(bool aShouldUseTouchAction, uint32_t aBehavior) {
   apzc->Destroy();
 }
 
-TEST(AsyncPanZoomController, LongPressPreventDefault) {
+TEST_F(AsyncPanZoomControllerTester, LongPressPreventDefault) {
   // We have to initialize both an integer time and TimeStamp time because
   // TimeStamp doesn't have any ToXXX() functions for converting back to
   // primitives.
@@ -866,11 +866,11 @@ TEST(AsyncPanZoomController, LongPressPreventDefault) {
   apzc->Destroy();
 }
 
-TEST(AsyncPanZoomController, LongPress) {
+TEST_F(AsyncPanZoomControllerTester, LongPress) {
   DoLongPressTest(false, mozilla::layers::AllowedTouchBehavior::NONE);
 }
 
-TEST(AsyncPanZoomController, LongPressPanAndZoom) {
+TEST_F(AsyncPanZoomControllerTester, LongPressPanAndZoom) {
   DoLongPressTest(true, mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN
                       | mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN
                       | mozilla::layers::AllowedTouchBehavior::ZOOM);
