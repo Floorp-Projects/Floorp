@@ -325,6 +325,11 @@
       </method>
       <method name="_syncContainerWithSubView">
         <body><![CDATA[
+          // Check that this panel is still alive:
+          if (!this._panel || !this._panel.parentNode) {
+            return;
+          }
+
           if (!this.ignoreMutations && this.showingSubView) {
             let newHeight = this._heightOfSubview(this._currentSubView, this._subViews);
             this._viewContainer.style.height = newHeight + "px";
@@ -333,6 +338,11 @@
       </method>
       <method name="_syncContainerWithMainView">
         <body><![CDATA[
+          // Check that this panel is still alive:
+          if (!this._panel || !this._panel.parentNode) {
+            return;
+          }
+
           if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
             let height;
             if (this.showingSubViewAsMainView) {
