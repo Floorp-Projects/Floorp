@@ -450,8 +450,11 @@ Debugger::fromChildJSObject(JSObject *obj)
 }
 
 bool
-Debugger::getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp)
+Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
+                                 const ScriptFrameIter *maybeIter, MutableHandleValue vp)
 {
+    MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == frame);
+
     FrameMap::AddPtr p = frames.lookupForAdd(frame);
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
@@ -461,7 +464,17 @@ Debugger::getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleVal
         if (!frameobj)
             return false;
 
-        frameobj->setPrivate(frame.raw());
+        // Eagerly copy ScriptFrameIter data if we've already walked the
+        // stack.
+        if (maybeIter) {
+            AbstractFramePtr data = maybeIter->copyDataAsAbstractFramePtr();
+            if (!data)
+                return false;
+            frameobj->setPrivate(data.raw());
+        } else {
+            frameobj->setPrivate(frame.raw());
+        }
+
         frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
 
         if (!frames.add(p, frame, frameobj)) {
