@@ -357,6 +357,11 @@ public:
   // be held.
   bool IsPlaying();
 
+  // Called when the reader may have acquired the hardware resources required
+  // to begin decoding. The state machine may move into DECODING_METADATA if
+  // appropriate. The decoder monitor must be held while calling this.
+  void NotifyWaitingForResourcesStatusChanged();
+
 protected:
 
   void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
@@ -523,7 +528,7 @@ private:
   void StartWaitForResources();
 
   // Dispatches a task to the decode task queue to begin decoding metadata.
-  // This is called on the state machine or decode threads.
+  // This is threadsafe and can be called on any thread.
   // The decoder monitor must be held.
   nsresult EnqueueDecodeMetadataTask();
 
