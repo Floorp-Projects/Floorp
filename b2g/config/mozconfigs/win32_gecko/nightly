@@ -21,8 +21,6 @@ fi
 
 # B2G Options
 ac_add_options --enable-application=b2g
-ENABLE_MARIONETTE=1
-
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
 
 GAIADIR=$topsrcdir/gaia

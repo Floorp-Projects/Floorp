@@ -8301,6 +8301,17 @@ if test "$NECKO_COOKIES"; then
 fi
 
 dnl
+dnl Always build Marionette if not Android or B2G
+dnl
+if test "$OS_TARGET" != Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
+    AC_DEFINE(ENABLE_MARIONETTE)
+fi
+AC_SUBST(ENABLE_MARIONETTE)
+if test "$ENABLE_MARIONETTE"; then
+    AC_DEFINE(ENABLE_MARIONETTE)
+fi
+
+dnl
 dnl Build jsctypes on the platforms we can, unless it's explicitly disabled.
 dnl
 MOZ_ARG_DISABLE_BOOL(ctypes,
@@ -8441,7 +8452,6 @@ AC_SUBST(KEYTOOL)
 AC_SUBST(MOZ_PROFILELOCKING)
 
 AC_SUBST(ENABLE_TESTS)
-AC_SUBST(ENABLE_MARIONETTE)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
