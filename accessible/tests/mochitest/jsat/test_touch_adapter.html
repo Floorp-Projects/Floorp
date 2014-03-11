@@ -1,0 +1,66 @@
+<html>
+
+<head>
+  <title>AccessFu tests for touch adapters.</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="./jsatcommon.js"></script>
+  <script type="application/javascript" src="./dom_helper.js"></script>
+  <script type="application/javascript">
+
+    Components.utils.import(
+      "resource://gre/modules/accessibility/TouchAdapter.jsm");
+
+    function startComponents() {
+      TouchAdapter.start();
+      AccessFuTest.nextTest();
+    }
+
+    /**
+     * Clean up all state data related to previous events/gestures.
+     */
+    function cleanupTouchAdapter() {
+      TouchAdapter.cleanupTouches();
+      TouchAdapter._touchPoints = {};
+      TouchAdapter._dwellTimeout = 0;
+      TouchAdapter._prevGestures = {};
+      TouchAdapter._lastExploreTime = 0;
+    }
+
+    function stopComponents() {
+      TouchAdapter.stop();
+      AccessFuTest.finish();
+    }
+
+    function doTest() {
+      loadJSON("./gestures.json", function onSuccess(gestures) {
+        AccessFuTest.addFunc(startComponents);
+        AccessFuTest.sequenceCleanup = cleanupTouchAdapter;
+        gestures.forEach(AccessFuTest.addSequence);
+        AccessFuTest.addFunc(stopComponents);
+        AccessFuTest.waitForExplicitFinish();
+        AccessFuTest.runTests();
+      });
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+<body id="root">
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=976082"
+     title="[AccessFu] Provide tests for touch adapter.">
+    Mozilla Bug 976082
+  </a>
+  <div>
+    <button id="button">I am a button</button>
+  </div>
+</body>
+</html>
