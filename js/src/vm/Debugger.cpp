@@ -4150,6 +4150,7 @@ DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     Rooted<Env*> env(cx);
     {
         AutoCompartment ac(cx, iter.abstractFramePtr().scopeChain());
+        iter.updatePcQuadratic();
         env = GetDebugScopeForFrame(cx, iter.abstractFramePtr(), iter.pc());
         if (!env)
             return false;
@@ -4647,6 +4648,7 @@ DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME_ITER(cx, argc, vp, "eval", args, thisobj, _, iter);
     REQUIRE_ARGC("Debugger.Frame.prototype.eval", 1);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+    iter.updatePcQuadratic();
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
                                args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
                                args.get(1), args.rval(), dbg, js::NullPtr(), &iter);
@@ -4658,6 +4660,7 @@ DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME_ITER(cx, argc, vp, "evalWithBindings", args, thisobj, _, iter);
     REQUIRE_ARGC("Debugger.Frame.prototype.evalWithBindings", 2);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+    iter.updatePcQuadratic();
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
                                args[0], EvalHasExtraBindings, args[1], args.get(2),
                                args.rval(), dbg, js::NullPtr(), &iter);
