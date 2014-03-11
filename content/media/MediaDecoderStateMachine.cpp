@@ -206,7 +206,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mBufferingWait = mRealTime ? 0 : BUFFERING_WAIT_S;
   mLowDataThresholdUsecs = mRealTime ? 0 : LOW_DATA_THRESHOLD_USECS;
 
-  mVideoPrerollFrames = mRealTime ? 0 : GetAmpleVideoFrames() / 2;
+  mVideoPrerollFrames = mRealTime ? 0 : mAmpleVideoFrames / 2;
   mAudioPrerollUsecs = mRealTime ? 0 : LOW_AUDIO_USECS * 2;
 
 #ifdef XP_WIN
@@ -578,7 +578,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   AssertCurrentThreadInMonitor();
 
-  if (static_cast<uint32_t>(mReader->VideoQueue().GetSize()) < GetAmpleVideoFrames() * mPlaybackRate) {
+  if (static_cast<uint32_t>(mReader->VideoQueue().GetSize()) < mAmpleVideoFrames * mPlaybackRate) {
     return false;
   }
 
