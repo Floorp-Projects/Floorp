@@ -596,8 +596,8 @@ menuitem.subviewbutton@menuStateHover@,
 
 panelview .toolbarbutton-1@buttonStateActive@,
 toolbarbutton.subviewbutton@buttonStateActive@,
-menu.subviewbutton@menuStateActive@
-menuitem.subviewbutton@menuStateActive@
+menu.subviewbutton@menuStateActive@,
+menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
