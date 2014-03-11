@@ -564,6 +564,22 @@ private:
   // The decoder monitor must be held.
   nsresult EnqueueDecodeSeekTask();
 
+  // Calls the reader's SetIdle(), with aIsIdle as parameter. This is only
+  // called in a task dispatched to the decode task queue, don't call it
+  // directly.
+  void SetReaderIdle();
+  void SetReaderActive();
+
+  // Re-evaluates the state and determines whether we should set the reader
+  // to idle mode. This is threadsafe, and can be called from any thread.
+  // The decoder monitor must be held.
+  void UpdateIdleState();
+
+  // Called before we do anything on the decode task queue to set the reader
+  // as not idle if it was idle. This is called before we decode, seek, or
+  // decode metadata (in case we were dormant or awaiting resources).
+  void EnsureActive();
+
   // Queries our state to see whether the decode has finished for all streams.
   // If so, we move into DECODER_STATE_COMPLETED and schedule the state machine
   // to run.
@@ -830,6 +846,12 @@ private:
   // True when we have dispatched a task to the decode task queue to run
   // the video decode.
   bool mDispatchedVideoDecodeTask;
+
+  // True when the reader is initialized, but has been ordered "idle" by the
+  // state machine. This happens when the MediaQueue's of decoded data are
+  // "full" and playback is paused. The reader may choose to use the idle
+  // notification to enter a low power state.
+  bool mIsReaderIdle;
 
   // If the video decode is falling behind the audio, we'll start dropping the
   // inter-frames up until the next keyframe which is at or before the current

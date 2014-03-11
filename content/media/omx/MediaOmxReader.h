@@ -79,9 +79,9 @@ public:
                                 MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
 
-  virtual void OnDecodeThreadStart() MOZ_OVERRIDE;
+  virtual void SetIdle() MOZ_OVERRIDE;
+  virtual void SetActive() MOZ_OVERRIDE;
 
-  virtual void OnDecodeThreadFinish() MOZ_OVERRIDE;
 };
 
 } // namespace mozilla
