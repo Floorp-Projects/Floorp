@@ -125,7 +125,7 @@ add_test(function test_prefAttributes() {
 
   _("Intervals correspond to default preferences.");
   do_check_eq(scheduler.singleDeviceInterval,
-              Svc.Prefs.get("scheduler.singleDeviceInterval") * 1000);
+              Svc.Prefs.get("scheduler.sync11.singleDeviceInterval") * 1000);
   do_check_eq(scheduler.idleInterval,
               Svc.Prefs.get("scheduler.idleInterval") * 1000);
   do_check_eq(scheduler.activeInterval,
@@ -134,7 +134,7 @@ add_test(function test_prefAttributes() {
               Svc.Prefs.get("scheduler.immediateInterval") * 1000);
 
   _("Custom values for prefs will take effect after a restart.");
-  Svc.Prefs.set("scheduler.singleDeviceInterval", 42);
+  Svc.Prefs.set("scheduler.sync11.singleDeviceInterval", 42);
   Svc.Prefs.set("scheduler.idleInterval", 23);
   Svc.Prefs.set("scheduler.activeInterval", 18);
   Svc.Prefs.set("scheduler.immediateInterval", 31415);
