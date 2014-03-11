@@ -6855,25 +6855,23 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   // the edge of the floats is the content-edge of the block, and place
   // the bullet at a position offset from there by the block's padding,
   // the block's border, and the bullet frame's margin.
-  nscoord x;
-  if (rs.mStyleVisibility->mDirection == NS_STYLE_DIRECTION_LTR) {
-    // The floatAvailSpace.x gives us the content/float edge. Then we
-    // subtract out the left border/padding and the bullet's width and
-    // margin to offset the position.
-    x = floatAvailSpace.x - rs.ComputedPhysicalBorderPadding().left
-        - reflowState.ComputedPhysicalMargin().right - aMetrics.Width();
-  } else {
-    // The XMost() of the available space give us offsets from the left
-    // border edge.  Then we add the right border/padding and the
-    // bullet's margin to offset the position.
-    x = floatAvailSpace.XMost() + rs.ComputedPhysicalBorderPadding().right
-        + reflowState.ComputedPhysicalMargin().left;
-  }
+
+  // IStart from floatAvailSpace gives us the content/float start edge
+  // in the current writing mode. Then we subtract out the start
+  // border/padding and the bullet's width and margin to offset the position.
+  WritingMode wm = rs.GetWritingMode();
+  LogicalRect logicalFAS(wm, floatAvailSpace, floatAvailSpace.XMost());
+  nscoord iStart = logicalFAS.IStart(wm) -
+    rs.ComputedLogicalBorderPadding().IStart(wm)
+    - reflowState.ComputedLogicalMargin().IEnd(wm) - aMetrics.ISize();
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location.
-  nscoord y = aState.mContentArea.y;
-  aBulletFrame->SetRect(nsRect(x, y, aMetrics.Width(), aMetrics.Height()));
+  nscoord bStart = logicalFAS.BStart(wm);
+  aBulletFrame->SetRect(LogicalRect(wm, LogicalPoint(wm, iStart, bStart),
+                                    LogicalSize(wm, aMetrics.ISize(),
+                                                aMetrics.BSize())),
+                        floatAvailSpace.XMost());
   aBulletFrame->DidReflow(aState.mPresContext, &aState.mReflowState,
                           nsDidReflowStatus::FINISHED);
 }
