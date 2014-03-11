@@ -26,8 +26,10 @@ enum { kSyncInterval = 1000};
 
 int UpdateMeasurements(StreamSynchronization::Measurements* stream,
                        const RtpRtcp& rtp_rtcp, const RtpReceiver& receiver) {
-  stream->latest_timestamp = receiver.Timestamp();
-  stream->latest_receive_time_ms = receiver.LastReceivedTimeMs();
+  if (!receiver.Timestamp(&stream->latest_timestamp))
+    return -1;
+  if (!receiver.LastReceivedTimeMs(&stream->latest_receive_time_ms))
+    return -1;
   synchronization::RtcpMeasurement measurement;
   if (0 != rtp_rtcp.RemoteNTP(&measurement.ntp_secs,
                               &measurement.ntp_frac,

@@ -99,7 +99,7 @@ class ViEReceiver : public RtpData {
                                          const RTPHeader& header);
   int InsertRTCPPacket(const int8_t* rtcp_packet, int rtcp_packet_length);
   bool IsPacketInOrder(const RTPHeader& header) const;
-  bool IsPacketRetransmitted(const RTPHeader& header) const;
+  bool IsPacketRetransmitted(const RTPHeader& header, bool in_order) const;
 
   scoped_ptr<CriticalSectionWrapper> receive_cs_;
   const int32_t channel_id_;
