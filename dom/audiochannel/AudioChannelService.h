@@ -188,6 +188,14 @@ protected:
                                 AudioChannelAgentData* aUnused,
                                 void *aPtr);
 
+  static PLDHashOperator
+  CountWindowEnumerator(AudioChannelAgent* aAgent,
+                        AudioChannelAgentData* aUnused,
+                        void *aPtr);
+
+  // This returns the number of agents from this aWindow.
+  uint32_t CountWindow(nsIDOMWindow* aWindow);
+
   nsClassHashtable< nsPtrHashKey<AudioChannelAgent>, AudioChannelAgentData > mAgents;
 #ifdef MOZ_WIDGET_GONK
   nsTArray<SpeakerManagerService*>  mSpeakerManager;
