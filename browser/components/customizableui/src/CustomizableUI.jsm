@@ -1082,15 +1082,16 @@ let CustomizableUIInternal = {
     let node;
     if (aWidget.type == "custom") {
       if (aWidget.onBuild) {
-        node = aWidget.onBuild(aDocument);
+        try {
+          node = aWidget.onBuild(aDocument);
+        } catch (ex) {
+          ERROR("Custom widget with id " + aWidget.id + " threw an error: " + ex.message);
+        }
       }
       if (!node || !(node instanceof aDocument.defaultView.XULElement))
         ERROR("Custom widget with id " + aWidget.id + " does not return a valid node");
     }
     else {
-      if (aWidget.onBeforeCreated) {
-        aWidget.onBeforeCreated(aDocument);
-      }
       node = aDocument.createElementNS(kNSXUL, "toolbarbutton");
 
       node.setAttribute("id", aWidget.id);
@@ -1970,7 +1971,6 @@ let CustomizableUIInternal = {
 
     widget.disabled = aData.disabled === true;
 
-    this.wrapWidgetEventHandler("onBeforeCreated", widget);
     this.wrapWidgetEventHandler("onClick", widget);
     this.wrapWidgetEventHandler("onCreated", widget);
 
@@ -2728,12 +2728,6 @@ this.CustomizableUI = {
    *                  function that will be invoked with the document in which
    *                  to build a widget. Should return the DOM node that has
    *                  been constructed.
-   * - onBeforeCreated(aDoc): Attached to all non-custom widgets; a function
-   *                  that will be invoked before the widget gets a DOM node
-   *                  constructed, passing the document in which that will happen.
-   *                  This is useful especially for 'view' type widgets that need
-   *                  to construct their views on the fly (e.g. from bootstrapped
-   *                  add-ons)
    * - onCreated(aNode): Attached to all widgets; a function that will be invoked
    *                  whenever the widget has a DOM node constructed, passing the
    *                  constructed node as an argument.
