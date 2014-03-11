@@ -22,6 +22,7 @@ class OggWriter : public ContainerWriter
 {
 public:
   OggWriter();
+  ~OggWriter();
 
   nsresult WriteEncodedTrack(const EncodedFrameContainer &aData,
                              uint32_t aFlags = 0) MOZ_OVERRIDE;
