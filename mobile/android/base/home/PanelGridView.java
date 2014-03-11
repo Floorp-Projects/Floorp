@@ -37,7 +37,7 @@ public class PanelGridView extends GridView
         mViewConfig = viewConfig;
         mItemHandler = new PanelViewItemHandler(viewConfig);
 
-        mAdapter = new PanelViewAdapter(context, viewConfig.getItemType());
+        mAdapter = new PanelViewAdapter(context, viewConfig);
         setAdapter(mAdapter);
 
         setOnItemClickListener(new PanelGridItemClickListener());
