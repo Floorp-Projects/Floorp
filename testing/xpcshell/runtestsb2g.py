@@ -153,9 +153,7 @@ class B2GOptions(RemoteXPCShellOptions):
             self.error("You must specify --emulator if you specify --logcat-dir")
         return RemoteXPCShellOptions.verifyRemoteOptions(self, options)
 
-def main():
-    parser = B2GOptions()
-    options, args = parser.parse_args()
+def run_remote_xpcshell(parser, options, args):
     options = parser.verifyRemoteOptions(options)
 
     # Create the Marionette instance
@@ -212,6 +210,11 @@ def main():
         traceback.print_exc()
         sys.exit(1)
 
+def main():
+    parser = B2GOptions()
+    options, args = parser.parse_args()
+
+    run_remote_xpcshell(parser, options, args)
 
 # You usually run this like :
 # python runtestsb2g.py --emulator arm --b2gpath $B2GPATH --manifest $MANIFEST [--xre-path $MOZ_HOST_BIN
