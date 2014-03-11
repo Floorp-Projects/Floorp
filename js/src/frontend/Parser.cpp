@@ -2693,10 +2693,6 @@ Parser<FullParseHandler>::bindLet(BindData<FullParseHandler> *data,
 
     Rooted<StaticBlockObject *> blockObj(cx, data->let.blockObj);
     unsigned index = blockObj->numVariables();
-    if (index >= StaticBlockObject::LOCAL_INDEX_LIMIT) {
-        parser->report(ParseError, false, pn, data->let.overflow);
-        return false;
-    }
 
     /*
      * Assign block-local index to pn->pn_cookie right away, encoding it as an
