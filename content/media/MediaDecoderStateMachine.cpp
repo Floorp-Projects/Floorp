@@ -690,7 +690,8 @@ MediaDecoderStateMachine::CheckIfDecodeComplete()
 {
   AssertCurrentThreadInMonitor();
   if (mState == DECODER_STATE_SHUTDOWN ||
-      mState == DECODER_STATE_SEEKING) {
+      mState == DECODER_STATE_SEEKING ||
+      mState == DECODER_STATE_COMPLETED) {
     // Don't change our state if we've already been shutdown, or we're seeking,
     // since we don't want to abort the shutdown or seek processes.
     return;
