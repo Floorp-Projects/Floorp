@@ -2048,7 +2048,9 @@ scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCoun
         value << ";other";
     }
   }
-  STRINGZ_TO_NPVARIANT(NPN_StrDup(value.str().c_str()), *result);
+
+  char *outval = NPN_StrDup(value.str().c_str());
+  STRINGZ_TO_NPVARIANT(outval, *result);
   return true;
 }
 
@@ -2585,10 +2587,13 @@ getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  if (id->err.str().length() == 0)
-    STRINGZ_TO_NPVARIANT(NPN_StrDup(SUCCESS_STRING), *result);
-  else
-    STRINGZ_TO_NPVARIANT(NPN_StrDup(id->err.str().c_str()), *result);
+  if (id->err.str().length() == 0) {
+    char *outval = NPN_StrDup(SUCCESS_STRING);
+    STRINGZ_TO_NPVARIANT(outval, *result);
+  } else {
+    char *outval = NPN_StrDup(id->err.str().c_str());
+    STRINGZ_TO_NPVARIANT(outval, *result);
+  }
   return true;
 }
 
@@ -2911,7 +2916,9 @@ static bool getJavaCodebase(NPObject* npobj, const NPVariant* args, uint32_t arg
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  STRINGZ_TO_NPVARIANT(NPN_StrDup(id->javaCodebase.c_str()), *result);
+
+  char *outval = NPN_StrDup(id->javaCodebase.c_str());
+  STRINGZ_TO_NPVARIANT(outval, *result);
   return true;
 }
 
@@ -3733,7 +3740,9 @@ bool getLastKeyText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  STRINGZ_TO_NPVARIANT(NPN_StrDup(id->lastKeyText.c_str()), *result);
+
+  char *outval = NPN_StrDup(id->lastKeyText.c_str());
+  STRINGZ_TO_NPVARIANT(outval, *result);
   return true;
 }
 
