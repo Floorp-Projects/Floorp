@@ -487,21 +487,23 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   nsLineLayout* lineLayout = aReflowState.mLineLayout;
   bool inFirstLine = aReflowState.mLineLayout->GetInFirstLine();
   RestyleManager* restyleManager = aPresContext->RestyleManager();
-  WritingMode wm = aReflowState.GetWritingMode();
-  nscoord startEdge = 0;
+  bool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
+  nscoord leftEdge = 0;
   // Don't offset by our start borderpadding if we have a prev continuation or
   // if we're in a part of an {ib} split other than the first one.
   if (!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) {
-    startEdge = aReflowState.ComputedLogicalBorderPadding().IStart(wm);
+    leftEdge = ltr ? aReflowState.ComputedPhysicalBorderPadding().left
+                   : aReflowState.ComputedPhysicalBorderPadding().right;
   }
-  nscoord availableISize = aReflowState.AvailableISize();
-  NS_ASSERTION(availableISize != NS_UNCONSTRAINEDSIZE,
+  nscoord availableWidth = aReflowState.AvailableWidth();
+  NS_ASSERTION(availableWidth != NS_UNCONSTRAINEDSIZE,
                "should no longer use available widths");
-  // Subtract off inline axis border+padding from availableISize
-  availableISize -= startEdge;
-  availableISize -= aReflowState.ComputedLogicalBorderPadding().IEnd(wm);
-  lineLayout->BeginSpan(this, &aReflowState, startEdge,
-                        startEdge + availableISize, &mBaseline);
+  // Subtract off left and right border+padding from availableWidth
+  availableWidth -= leftEdge;
+  availableWidth -= ltr ? aReflowState.ComputedPhysicalBorderPadding().right
+                        : aReflowState.ComputedPhysicalBorderPadding().left;
+  lineLayout->BeginSpan(this, &aReflowState, leftEdge,
+                        leftEdge + availableWidth, &mBaseline);
 
   // First reflow our principal children.
   nsIFrame* frame = mFrames.FirstChild();
@@ -644,7 +646,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // line-height calculations. However, continuations of an inline
   // that are empty we force to empty so that things like collapsed
   // whitespace in an inline element don't affect the line-height.
-  aMetrics.ISize() = lineLayout->EndSpan(this);
+  aMetrics.Width() = lineLayout->EndSpan(this);
 
   // Compute final width.
 
@@ -652,7 +654,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // continuation or if we're in a part of an {ib} split other than the first
   // one.
   if (!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) {
-    aMetrics.ISize() += aReflowState.ComputedLogicalBorderPadding().IStart(wm);
+    aMetrics.Width() += ltr ? aReflowState.ComputedPhysicalBorderPadding().left
+                          : aReflowState.ComputedPhysicalBorderPadding().right;
   }
 
   /*
@@ -665,7 +668,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   if (NS_FRAME_IS_COMPLETE(aStatus) &&
       !LastInFlow()->GetNextContinuation() &&
       !FrameIsNonLastInIBSplit()) {
-    aMetrics.Width() += aReflowState.ComputedLogicalBorderPadding().IEnd(wm);
+    aMetrics.Width() += ltr ? aReflowState.ComputedPhysicalBorderPadding().right
+                          : aReflowState.ComputedPhysicalBorderPadding().left;
   }
 
   nsRefPtr<nsFontMetrics> fm;

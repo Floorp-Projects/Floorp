@@ -21,7 +21,6 @@
 #include "nsBlockReflowState.h"
 #include "plarena.h"
 #include "gfxTypes.h"
-#include "WritingModes.h"
 
 class nsFloatManager;
 struct nsStyleText;
@@ -34,10 +33,10 @@ public:
                const nsLineList::iterator* aLine);
   ~nsLineLayout();
 
-  void Init(nsBlockReflowState* aState, nscoord aMinLineBSize,
+  void Init(nsBlockReflowState* aState, nscoord aMinLineHeight,
             int32_t aLineNumber) {
     mBlockRS = aState;
-    mMinLineBSize = aMinLineBSize;
+    mMinLineHeight = aMinLineHeight;
     mLineNumber = aLineNumber;
   }
 
@@ -45,12 +44,11 @@ public:
     return mLineNumber;
   }
 
-  void BeginLineReflow(nscoord aICoord, nscoord aBCoord,
-                       nscoord aISize, nscoord aBSize,
+  void BeginLineReflow(nscoord aX, nscoord aY,
+                       nscoord aWidth, nscoord aHeight,
                        bool aImpactedByFloats,
                        bool aIsTopOfPage,
-                       mozilla::WritingMode aWritingMode,
-                       nscoord aContainerWidth);
+                       uint8_t aDirection);
 
   void EndLineReflow();
 
@@ -75,7 +73,7 @@ public:
 
   void SplitLineTo(int32_t aNewCount);
 
-  bool IsZeroBSize();
+  bool IsZeroHeight();
 
   // Reflows the frame and returns the reflow status. aPushedFrame is true
   // if the frame is pushed to the next line because it doesn't fit
@@ -90,12 +88,11 @@ public:
     PushFrame(aFrame);
   }
 
-  void BlockDirAlignLine();
+  void VerticalAlignLine();
 
   bool TrimTrailingWhiteSpace();
 
-  void InlineDirAlignFrames(nsRect& aLineBounds, bool aIsLastLine,
-                             int32_t aFrameCount);
+  void HorizontalAlignFrames(nsRect& aLineBounds, bool aIsLastLine);
 
   /**
    * Handle all the relative positioning in the line, compute the
@@ -306,10 +303,10 @@ public:
    * the right edge for RTL blocks and from the left edge for LTR blocks.
    * In other words, the current frame's distance from the line container's
    * start content edge is:
-   * <code>GetCurrentFrameInlineDistanceFromBlock() - lineContainer->GetUsedBorderAndPadding().left</code>
+   * <code>GetCurrentFrameXDistanceFromBlock() - lineContainer->GetUsedBorderAndPadding().left</code>
    * Note the use of <code>.left</code> for both LTR and RTL line containers.
    */
-  nscoord GetCurrentFrameInlineDistanceFromBlock();
+  nscoord GetCurrentFrameXDistanceFromBlock();
 
 protected:
   // This state is constant for a given block frame doing line layout
@@ -329,22 +326,14 @@ protected:
 
   // Per-frame data recorded by the line-layout reflow logic. This
   // state is the state needed to post-process the line after reflow
-  // has completed (block-direction alignment, inline-direction alignment,
+  // has completed (vertical alignment, horizontal alignment,
   // justification and relative positioning).
 
   struct PerSpanData;
   struct PerFrameData;
   friend struct PerSpanData;
   friend struct PerFrameData;
-  struct PerFrameData
-  {
-    PerFrameData(mozilla::WritingMode aWritingMode)
-      : mBounds(aWritingMode)
-      , mMargin(aWritingMode)
-      , mBorderPadding(aWritingMode)
-      , mOffsets(aWritingMode)
-    {}
-
+  struct PerFrameData {
     // link to next/prev frame in same span
     PerFrameData* mNext;
     PerFrameData* mPrev;
@@ -357,23 +346,20 @@ protected:
 
     // From metrics
     nscoord mAscent;
-    // note that mBounds is a logical rect in the *line*'s writing mode.
-    // When setting frame coordinates, we have to convert to the frame's
-    //  writing mode
-    mozilla::LogicalRect mBounds;
+    nsRect mBounds;
     nsOverflowAreas mOverflowAreas;
 
     // From reflow-state
-    mozilla::LogicalMargin mMargin;
-    mozilla::LogicalMargin mBorderPadding;
-    mozilla::LogicalMargin mOffsets;
+    nsMargin mMargin;
+    nsMargin mBorderPadding;
+    nsMargin mOffsets;
 
     // state for text justification
     int32_t mJustificationNumSpaces;
     int32_t mJustificationNumLetters;
     
     // Other state we use
-    uint8_t mBlockDirAlign;
+    uint8_t mVerticalAlign;
 
 // PerFrameData flags
 #define PFD_RELATIVEPOS                 0x00000001
@@ -428,18 +414,19 @@ protected:
 
     const nsHTMLReflowState* mReflowState;
     bool mNoWrap;
-    mozilla::WritingMode mWritingMode;
+    uint8_t mDirection;
+    bool mChangedFrameDirection;
     bool mZeroEffectiveSpanBox;
     bool mContainsFloat;
     bool mHasNonemptyContent;
 
-    nscoord mIStart;
-    nscoord mICoord;
-    nscoord mIEnd;
+    nscoord mLeftEdge;
+    nscoord mX;
+    nscoord mRightEdge;
 
-    nscoord mBStartLeading, mBEndLeading;
-    nscoord mLogicalBSize;
-    nscoord mMinBCoord, mMaxBCoord;
+    nscoord mTopLeading, mBottomLeading;
+    nscoord mLogicalHeight;
+    nscoord mMinY, mMaxY;
     nscoord* mBaseline;
 
     void AppendFrame(PerFrameData* pfd) {
@@ -461,7 +448,7 @@ protected:
   int32_t     mLastOptionalBreakContentOffset;
   int32_t     mForceBreakContentOffset;
 
-  nscoord mMinLineBSize;
+  nscoord mMinLineHeight;
   
   // The amount of text indent that we applied to this line, needed for
   // max-element-size calculation.
@@ -475,20 +462,18 @@ protected:
 
   int32_t mTotalPlacedFrames;
 
-  nscoord mBStartEdge;
-  nscoord mMaxStartBoxBSize;
-  nscoord mMaxEndBoxBSize;
+  nscoord mTopEdge;
+  nscoord mMaxTopBoxHeight;
+  nscoord mMaxBottomBoxHeight;
 
   nscoord mInflationMinFontSize;
 
-  // Final computed line-bSize value after BlockDirAlignFrames for
+  // Final computed line-height value after VerticalAlignFrames for
   // the block has been called.
-  nscoord mFinalLineBSize;
+  nscoord mFinalLineHeight;
   
   // Amount of trimmable whitespace width for the trailing text frame, if any
   nscoord mTrimmableWidth;
-
-  nscoord mContainerWidth;
 
   bool mFirstLetterStyleOK      : 1;
   bool mIsTopOfPage             : 1;
@@ -514,7 +499,7 @@ protected:
   /**
    * Allocate a PerFrameData from the mArena pool. The allocation is infallible.
    */
-  PerFrameData* NewPerFrameData(nsIFrame* aFrame);
+  PerFrameData* NewPerFrameData();
 
   /**
    * Allocate a PerSpanData from the mArena pool. The allocation is infallible.
@@ -533,6 +518,7 @@ protected:
                         nsHTMLReflowState& aReflowState);
 
   bool CanPlaceFrame(PerFrameData* pfd,
+                       uint8_t aFrameDirection,
                        bool aNotSafeToBreak,
                        bool aFrameCanContinueTextRun,
                        bool aCanRollBackBeforeFrame,
@@ -543,15 +529,15 @@ protected:
   void PlaceFrame(PerFrameData* pfd,
                   nsHTMLReflowMetrics& aMetrics);
 
-  void BlockDirAlignFrames(PerSpanData* psd);
+  void VerticalAlignFrames(PerSpanData* psd);
 
-  void PlaceStartEndFrames(PerSpanData* psd,
-                           nscoord aDistanceFromStart,
-                           nscoord aLineBSize);
+  void PlaceTopBottomFrames(PerSpanData* psd,
+                            nscoord aDistanceFromTop,
+                            nscoord aLineHeight);
 
   void RelativePositionFrames(PerSpanData* psd, nsOverflowAreas& aOverflowAreas);
 
-  bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaISize);
+  bool TrimTrailingWhiteSpaceIn(PerSpanData* psd, nscoord* aDeltaWidth);
 
   void ComputeJustificationWeights(PerSpanData* psd, int32_t* numSpaces, int32_t* numLetters);
 
