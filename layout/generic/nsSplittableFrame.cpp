@@ -247,16 +247,16 @@ nsSplittableFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowSt
 }
 
 int
-nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsSplittableFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   if (IS_TRUE_OVERFLOW_CONTAINER(this)) {
-    return LOGICAL_SIDES_B_BOTH;
+    return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
   }
 
   int skip = 0;
 
   if (GetPrevInFlow()) {
-    skip |= LOGICAL_SIDE_B_START;
+    skip |= 1 << NS_SIDE_TOP;
   }
 
   if (aReflowState) {
@@ -270,13 +270,13 @@ nsSplittableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) co
       if (effectiveCH > aReflowState->AvailableHeight()) {
         // Our content height is going to exceed our available height, so we're
         // going to need a next-in-flow.
-        skip |= LOGICAL_SIDE_B_END;
+        skip |= 1 << NS_SIDE_BOTTOM;
       }
     }
   } else {
     nsIFrame* nif = GetNextInFlow();
     if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
-      skip |= LOGICAL_SIDE_B_END;
+      skip |= 1 << NS_SIDE_BOTTOM;
     }
   }
 

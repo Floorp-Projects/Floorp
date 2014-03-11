@@ -84,24 +84,24 @@ public:
   virtual bool DrainSelfOverflowList() MOZ_OVERRIDE;
 
   /**
-   * Return true if the frame is first visual frame or first continuation
+   * Return true if the frame is leftmost frame or continuation.
    */
-  bool IsFirst() const {
-    // If the frame's bidi visual state is set, return is-first state
+  bool IsLeftMost() const {
+    // If the frame's bidi visual state is set, return is-leftmost state
     // else return true if it's the first continuation.
     return (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
-             ? !!(GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST)
+             ? !!(GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST)
              : (!GetPrevInFlow());
   }
 
   /**
-   * Return true if the frame is last visual frame or last continuation.
+   * Return true if the frame is rightmost frame or continuation.
    */
-  bool IsLast() const {
-    // If the frame's bidi visual state is set, return is-last state
+  bool IsRightMost() const {
+    // If the frame's bidi visual state is set, return is-rightmost state
     // else return true if it's the last continuation.
     return (GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
-             ? !!(GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST)
+             ? !!(GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST)
              : (!GetNextInFlow());
   }
 
@@ -126,7 +126,7 @@ protected:
 
   nsInlineFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
 
-  virtual int GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
+  virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
 
   nsresult ReflowFrames(nsPresContext* aPresContext,
                         const nsHTMLReflowState& aReflowState,
