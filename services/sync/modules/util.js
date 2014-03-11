@@ -620,7 +620,8 @@ this.Utils = {
     // The FxA hosts - these almost certainly all have the same hostname, but
     // better safe than sorry...
     for (let prefName of ["identity.fxaccounts.remote.force_auth.uri",
-                          "identity.fxaccounts.remote.uri",
+                          "identity.fxaccounts.remote.signup.uri",
+                          "identity.fxaccounts.remote.signin.uri",
                           "identity.fxaccounts.settings.uri"]) {
       let prefVal;
       try {
