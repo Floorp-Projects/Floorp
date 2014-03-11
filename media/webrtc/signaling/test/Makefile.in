@@ -91,17 +91,6 @@ endif
 
 ifeq ($(OS_TARGET),Darwin)
 LIBS += \
-  -framework AudioToolbox \
-  -framework AudioUnit \
-  -framework Carbon \
-  -framework CoreAudio \
-  -framework OpenGL \
-  -framework QTKit \
-  -framework QuartzCore \
-  -framework Security \
-  -framework SystemConfiguration \
-  -framework IOKit \
-  -F$(MACOS_PRIVATE_FRAMEWORKS_DIR) -framework CoreUI \
   $(TK_LIBS) \
   $(NULL)
 endif
