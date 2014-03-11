@@ -41,7 +41,6 @@ FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem,
 
 FileSystemTaskBase::~FileSystemTaskBase()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
 }
 
 already_AddRefed<FileSystemBase>
