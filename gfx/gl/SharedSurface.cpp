@@ -22,7 +22,7 @@ SharedSurface::Copy(SharedSurface* src, SharedSurface* dest, SurfaceFactory* fac
     SharedSurface_GL* srcGL = (SharedSurface_GL*)src;
     SharedSurface_GL* destGL = (SharedSurface_GL*)dest;
 
-    SharedSurface_GL::Copy(srcGL, destGL, (SurfaceFactory_GL*)factory);
+    SharedSurface_GL::ProdCopy(srcGL, destGL, (SurfaceFactory_GL*)factory);
 }
 
 } /* namespace gfx */

@@ -57,7 +57,6 @@ namespace android {
 
 namespace mozilla {
     namespace gfx {
-        class SharedSurface;
         class SourceSurface;
         class DataSourceSurface;
         struct SurfaceCaps;
@@ -71,6 +70,7 @@ namespace mozilla {
         class GLBlitHelper;
         class GLBlitTextureImageHelper;
         class GLReadTexImageHelper;
+        class SharedSurface_GL;
     }
 
     namespace layers {
@@ -2825,20 +2825,20 @@ protected:
 
     void DestroyScreenBuffer();
 
-    SharedSurface* mLockedSurface;
+    SharedSurface_GL* mLockedSurface;
 
 public:
-    void LockSurface(SharedSurface* surf) {
+    void LockSurface(SharedSurface_GL* surf) {
         MOZ_ASSERT(!mLockedSurface);
         mLockedSurface = surf;
     }
 
-    void UnlockSurface(SharedSurface* surf) {
+    void UnlockSurface(SharedSurface_GL* surf) {
         MOZ_ASSERT(mLockedSurface == surf);
         mLockedSurface = nullptr;
     }
 
-    SharedSurface* GetLockedSurface() const {
+    SharedSurface_GL* GetLockedSurface() const {
         return mLockedSurface;
     }
 
@@ -2851,7 +2851,7 @@ public:
     }
 
     bool PublishFrame();
-    SharedSurface* RequestFrame();
+    SharedSurface_GL* RequestFrame();
 
     /* Clear to transparent black, with 0 depth and stencil,
      * while preserving current ClearColor etc. values.

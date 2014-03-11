@@ -504,8 +504,8 @@ StreamTextureSourceOGL::RetrieveTextureFromStream()
     case SharedSurfaceType::GLTextureShare: {
       SharedSurface_GLTexture* glTexSurf = SharedSurface_GLTexture::Cast(sharedSurf);
       glTexSurf->SetConsumerGL(gl());
-      mTextureHandle = glTexSurf->Texture();
-      mTextureTarget = glTexSurf->TextureTarget();
+      mTextureHandle = glTexSurf->ProdTexture();
+      mTextureTarget = glTexSurf->ProdTextureTarget();
       MOZ_ASSERT(mTextureHandle);
       mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
                                        : SurfaceFormat::R8G8B8X8;
@@ -524,8 +524,8 @@ StreamTextureSourceOGL::RetrieveTextureFromStream()
 #ifdef XP_MACOSX
     case SharedSurfaceType::IOSurface: {
       SharedSurface_IOSurface* glTexSurf = SharedSurface_IOSurface::Cast(sharedSurf);
-      mTextureHandle = glTexSurf->Texture();
-      mTextureTarget = glTexSurf->TextureTarget();
+      mTextureHandle = glTexSurf->ProdTexture();
+      mTextureTarget = glTexSurf->ProdTextureTarget();
       MOZ_ASSERT(mTextureHandle);
       mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
                                        : SurfaceFormat::R8G8B8X8;

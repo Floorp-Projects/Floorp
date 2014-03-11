@@ -23,6 +23,7 @@
 #include "prenv.h"
 #include "prlink.h"
 #include "ScopedGLHelpers.h"
+#include "SharedSurfaceGL.h"
 #include "SurfaceStream.h"
 #include "GfxTexturesReporter.h"
 #include "TextureGarbageBin.h"
@@ -1564,12 +1565,16 @@ GLContext::PublishFrame()
     return true;
 }
 
-SharedSurface*
+SharedSurface_GL*
 GLContext::RequestFrame()
 {
     MOZ_ASSERT(mScreen);
 
-    return mScreen->Stream()->SwapConsumer();
+    SharedSurface* ret = mScreen->Stream()->SwapConsumer();
+    if (!ret)
+        return nullptr;
+
+    return SharedSurface_GL::Cast(ret);
 }
 
 

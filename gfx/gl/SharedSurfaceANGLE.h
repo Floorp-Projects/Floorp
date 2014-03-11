@@ -66,11 +66,11 @@ protected:
 public:
     virtual ~SharedSurface_ANGLEShareHandle();
 
-    virtual void LockProdImpl();
-    virtual void UnlockProdImpl();
+    virtual void LockProdImpl() MOZ_OVERRIDE;
+    virtual void UnlockProdImpl() MOZ_OVERRIDE;
 
-    virtual void Fence();
-    virtual bool WaitSync();
+    virtual void Fence() MOZ_OVERRIDE;
+    virtual bool WaitSync() MOZ_OVERRIDE;
 
     // Implementation-specific functions below:
     ID3D10ShaderResourceView* GetSRV() {
@@ -101,7 +101,7 @@ protected:
                                     ID3D10Device1* d3d,
                                     const SurfaceCaps& caps);
 
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) {
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_ANGLEShareHandle::Create(mProdGL, mConsD3D,
                                                       mContext, mConfig,
