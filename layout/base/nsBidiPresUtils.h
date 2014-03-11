@@ -27,7 +27,6 @@ class nsRenderingContext;
 class nsBlockInFlowLineIterator;
 class nsStyleContext;
 template<class T> class nsTHashtable;
-namespace mozilla { class WritingMode; }
 
 /**
  * A structure representing some continuation state for each frame on the line,
@@ -160,9 +159,7 @@ public:
    * @lina 05/02/2000
    */
   static void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
-                            int32_t              aNumFramesOnLine,
-                            mozilla::WritingMode aLineWM,
-                            nscoord&             aLineWidth);
+                            int32_t              aNumFramesOnLine);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -380,27 +377,24 @@ private:
                              nsBlockInFlowLineIterator* aLineIter,
                              nsIFrame*                  aCurrentFrame,
                              BidiParagraphData*         aBpd);
-
+  
   /*
-   * Position aFrame and its descendants to their visual places. Also if aFrame
-   * is not leaf, resize it to embrace its children.
+   * Position aFrame and it's descendants to their visual places. Also if aFrame
+   * is not leaf, resize it to embrace it's children.
    *
-   * @param aFrame               The frame which itself and its children are
-   *                             going to be repositioned
-   * @param aIsEvenLevel         TRUE means the embedding level of this frame
-   *                             is even (LTR)
-   * @param[in,out] aStart       IN value is the starting position of aFrame
-   *                             (without considering its inline-start margin)
-   *                             OUT value will be the ending position of aFrame
-   *                             (after adding its inline-end margin)
+   * @param aFrame               The frame which itself and its children are going
+   *                             to be repositioned
+   * @param aIsOddLevel          TRUE means the embedding level of this frame is odd
+   * @param[in,out] aLeft        IN value is the starting position of aFrame(without
+   *                             considering its left margin)
+   *                             OUT value will be the ending position of aFrame(after
+   *                             adding its right margin)
    * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
    */
   static void RepositionFrame(nsIFrame*              aFrame,
-                              bool                   aIsEvenLevel,
-                              nscoord&               aStart,
-                              nsContinuationStates*  aContinuationStates,
-                              mozilla::WritingMode   aLineWM,
-                              nscoord&               aLineWidth);
+                              bool                   aIsOddLevel,
+                              nscoord&               aLeft,
+                              nsContinuationStates*  aContinuationStates);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
@@ -428,10 +422,10 @@ private:
    * @param[out] aIsLeftMost     TRUE means aFrame is leftmost frame or continuation
    * @param[out] aIsRightMost    TRUE means aFrame is rightmost frame or continuation
    */
-   static void IsFirstOrLast(nsIFrame*              aFrame,
-                             nsContinuationStates*  aContinuationStates,
-                             bool&                  aIsFirst /* out */,
-                             bool&                  aIsLast /* out */);
+   static void IsLeftOrRightMost(nsIFrame*              aFrame,
+                                 nsContinuationStates*  aContinuationStates,
+                                 bool&                aIsLeftMost /* out */,
+                                 bool&                aIsRightMost /* out */);
 
   /**
    *  Adjust frame positions following their visual order
@@ -441,9 +435,7 @@ private:
    *  @lina 04/11/2000
    */
   static void RepositionInlineFrames(BidiLineData* aBld,
-                                     nsIFrame* aFirstChild,
-                                     mozilla::WritingMode aLineWM,
-                                     nscoord& aLineWidth);
+                                     nsIFrame* aFirstChild);
   
   /**
    * Helper method for Resolve()
