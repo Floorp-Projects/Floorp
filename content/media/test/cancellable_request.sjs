@@ -83,7 +83,7 @@ function handleRequest(request, response)
   }
 
   var samples = [];
-  for (var i = 0; i < 100000; ++i) {
+  for (var i = 0; i < 1000000; ++i) {
     samples.push(0);
   }
   var bytes = buildWave(samples, 44100).join("");
@@ -137,10 +137,10 @@ function handleRequest(request, response)
     return;
   }
 
-  // Write the first 120K of the Wave file. We know the cache size is set to
+  // Write the first 1.2M of the Wave file. We know the cache size is set to
   // 100K so this will fill the cache and and cause a "suspend" event on
   // the loading element.
-  out.write(bytes, 120000);
+  out.write(bytes, 1200000);
 
   response.processAsync();
   // Now wait for the message to cancel this response
