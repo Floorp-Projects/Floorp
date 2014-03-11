@@ -7,7 +7,7 @@
 #include "RtspMediaResource.h"
 #include "RtspOmxDecoder.h"
 #include "RtspOmxReader.h"
-#include "MediaOmxStateMachine.h"
+#include "MediaDecoderStateMachine.h"
 
 namespace mozilla {
 
@@ -18,8 +18,9 @@ MediaDecoder* RtspOmxDecoder::Clone()
 
 MediaDecoderStateMachine* RtspOmxDecoder::CreateStateMachine()
 {
-  return new MediaOmxStateMachine(this, new RtspOmxReader(this),
-                                  mResource->IsRealTime());
+  return new MediaDecoderStateMachine(this,
+                                      new RtspOmxReader(this),
+                                      mResource->IsRealTime());
 }
 
 } // namespace mozilla
