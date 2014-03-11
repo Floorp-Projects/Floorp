@@ -20,7 +20,6 @@ MOZ_WINCONSOLE = 0
 endif
 
 ifeq ($(OS_ARCH),Darwin)
-OS_LIBS += -framework Cocoa
 LIBS += \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
   $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
