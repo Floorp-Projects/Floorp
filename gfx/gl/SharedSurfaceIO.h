@@ -21,26 +21,24 @@ public:
 
     ~SharedSurface_IOSurface();
 
-    virtual void LockProdImpl() { }
-    virtual void UnlockProdImpl() { }
+    virtual void LockProdImpl() MOZ_OVERRIDE { }
+    virtual void UnlockProdImpl() MOZ_OVERRIDE { }
 
-    virtual void Fence();
-    virtual bool WaitSync() { return true; }
+    virtual void Fence() MOZ_OVERRIDE;
+    virtual bool WaitSync() MOZ_OVERRIDE { return true; }
 
     virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, GLvoid *pixels) MOZ_OVERRIDE;
 
-    virtual GLuint Texture() const
-    {
+    virtual GLuint ProdTexture() MOZ_OVERRIDE {
         return mTexture;
     }
 
-    virtual GLenum TextureTarget() const {
+    virtual GLenum ProdTextureTarget() const MOZ_OVERRIDE {
         return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
     }
 
-    static SharedSurface_IOSurface* Cast(SharedSurface *surf)
-    {
+    static SharedSurface_IOSurface* Cast(SharedSurface *surf) {
         MOZ_ASSERT(surf->Type() == SharedSurfaceType::IOSurface);
         return static_cast<SharedSurface_IOSurface*>(surf);
     }

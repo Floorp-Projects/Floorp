@@ -11,6 +11,7 @@
 #include "gfxWindowsPlatform.h"
 #include "SurfaceStream.h"
 #include "SharedSurfaceANGLE.h"
+#include "SharedSurfaceGL.h"
 #include "gfxContext.h"
 #include "GLContext.h"
 #include "gfxPrefs.h"
@@ -78,8 +79,8 @@ CanvasLayerD3D10::Initialize(const Data& aData)
       mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
       device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
       return;
-    } 
-    
+    }
+
     // XXX we should store mDrawTarget and use it directly in UpdateSurface,
     // bypassing Thebes
     mSurface = mDrawTarget->Snapshot();
@@ -118,7 +119,7 @@ CanvasLayerD3D10::UpdateSurface()
   }
 
   if (mGLContext) {
-    SharedSurface* surf = mGLContext->RequestFrame();
+    SharedSurface_GL* surf = mGLContext->RequestFrame();
     if (!surf)
         return;
 
