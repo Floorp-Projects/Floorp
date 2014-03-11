@@ -50,6 +50,7 @@ function doChecks(win)
     ok(event_fired, "paste event fired when preference is disabled")
 
     SpecialPowers.clearUserPref("dom.event.clipboardevents.enabled");
+    win.close();
     SimpleTest.finish();
   }
 
