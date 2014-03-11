@@ -1741,12 +1741,16 @@ namespace mozilla {
 nsresult
 RegisterStrongMemoryReporter(nsIMemoryReporter* aReporter)
 {
+  // Hold a strong reference to the argument to make sure it gets released if
+  // we return early below.
+  nsCOMPtr<nsIMemoryReporter> reporter = aReporter;
+
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
   if (!mgr) {
     return NS_ERROR_FAILURE;
   }
-  return mgr->RegisterStrongReporter(aReporter);
+  return mgr->RegisterStrongReporter(reporter);
 }
 
 nsresult
