@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
 
 XPCOMUtils.defineLazyGetter(this, 'log', function() {
   let log = Log.repository.getLogger("Sync.BrowserIDManager");
-  log.addAppender(new Log.DumpAppender());
   log.level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
   return log;
 });
