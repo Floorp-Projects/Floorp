@@ -11,6 +11,7 @@
 #include "mozilla/dom/Link.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
+#include "nsDOMTokenList.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIURL.h"
 
@@ -111,7 +112,17 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::ping, aPing, aError);
   }
+  
+  void GetRel(nsString& aValue)
+  {
+    GetHTMLAttr(nsGkAtoms::rel, aValue);
+  }
 
+  void SetRel(const nsAString& aRel, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::rel, aRel, aError);
+  } 
+  nsDOMTokenList* RelList();
   // The Link::GetOrigin is OK for us
 
   // The XPCOM GetProtocol is OK for us
@@ -165,6 +176,7 @@ protected:
 
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
+  nsRefPtr<nsDOMTokenList > mRelList;
 };
 
 } // namespace dom
