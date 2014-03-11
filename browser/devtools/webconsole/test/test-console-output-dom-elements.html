@@ -1,0 +1,68 @@
+<!DOCTYPE HTML>
+<html dir="ltr" lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <title>Test the web console output - 05</title>
+  <!--
+  - Any copyright is dedicated to the Public Domain.
+  - http://creativecommons.org/publicdomain/zero/1.0/
+  -->
+</head>
+<body class="body-class" id="body-id">
+  <p some-attribute="some-value">hello world!</p>
+  <iframe src="data:text/html,<p>hello from iframe</p>"></iframe>
+  <script type="text/javascript">
+function testBodyNode() {
+  return document.body;
+}
+
+function testDocumentElement() {
+  return document.documentElement;
+}
+
+function testDocument() {
+  return document;
+}
+
+function testNode() {
+  return document.querySelector("p");
+}
+
+function testNodeList() {
+  return document.querySelectorAll("*");
+}
+
+function testNodeInIframe() {
+  return document.querySelector("iframe").contentWindow.document.querySelector("p");
+}
+
+function testDocumentFragment() {
+  var frag = document.createDocumentFragment();
+
+  var span = document.createElement("span");
+  span.className = 'foo';
+  span.dataset.lolz = 'hehe';
+
+  var div = document.createElement('div')
+  div.id = 'fragdiv';
+
+  frag.appendChild(span);
+  frag.appendChild(div);
+
+  return frag;
+}
+
+function testNodeInDocumentFragment() {
+  var frag = testDocumentFragment();
+  return frag.firstChild;
+}
+
+function testUnattachedNode() {
+  var p = document.createElement("p");
+  p.className = "such-class";
+  p.dataset.data = "such-data";
+  return p;
+}
+  </script>
+</body>
+</html>
