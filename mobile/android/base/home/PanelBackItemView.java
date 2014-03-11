@@ -20,7 +20,7 @@ import com.squareup.picasso.Picasso;
 class PanelBackItemView extends LinearLayout {
     private final TextView title;
 
-    public PanelBackItemView(Context context) {
+    public PanelBackItemView(Context context, String backImageUrl) {
         super(context);
 
         LayoutInflater.from(context).inflate(R.layout.panel_back_item, this);
@@ -30,7 +30,8 @@ class PanelBackItemView extends LinearLayout {
 
         final ImageView image = (ImageView) findViewById(R.id.image);
         Picasso.with(getContext())
-               .load(R.drawable.folder_up)
+               .load(backImageUrl)
+               .placeholder(R.drawable.folder_up)
                .into(image);
     }
 
