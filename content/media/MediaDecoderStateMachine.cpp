@@ -82,7 +82,7 @@ const int64_t AMPLE_AUDIO_USECS = 1000000;
 const uint32_t SILENCE_BYTES_CHUNK = 32 * 1024;
 
 // If we have fewer than LOW_VIDEO_FRAMES decoded frames, and
-// we're not "pumping video", we'll skip the video up to the next keyframe
+// we're not "prerolling video", we'll skip the video up to the next keyframe
 // which is at or after the current playback position.
 static const uint32_t LOW_VIDEO_FRAMES = 1;
 
@@ -170,6 +170,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mPlaybackRate(1.0),
   mPreservesPitch(true),
   mBasePosition(0),
+  mAmpleVideoFrames(2),
+  mLowAudioThresholdUsecs(LOW_AUDIO_USECS),
+  mAmpleAudioThresholdUsecs(AMPLE_AUDIO_USECS),
   mAudioCaptured(false),
   mTransportSeekable(true),
   mMediaSeekable(true),
@@ -193,29 +196,19 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  // only enable realtime mode when "media.realtime_decoder.enabled" is true.
+  // Only enable realtime mode when "media.realtime_decoder.enabled" is true.
   if (Preferences::GetBool("media.realtime_decoder.enabled", false) == false)
     mRealTime = false;
+
+  mAmpleVideoFrames =
+    std::max<uint32_t>(Preferences::GetUint("media.video-queue.default-size", 10), 3);
 
   mBufferingWait = mRealTime ? 0 : BUFFERING_WAIT_S;
   mLowDataThresholdUsecs = mRealTime ? 0 : LOW_DATA_THRESHOLD_USECS;
 
-  // If we've got more than mAmpleVideoFrames decoded video frames waiting in
-  // the video queue, we will not decode any more video frames until some have
-  // been consumed by the play state machine thread.
-#if defined(MOZ_OMX_DECODER) || defined(MOZ_MEDIA_PLUGINS)
-  // On B2G and Android this is decided by a similar value which varies for
-  // each OMX decoder |OMX_PARAM_PORTDEFINITIONTYPE::nBufferCountMin|. This
-  // number must be less than the OMX equivalent or gecko will think it is
-  // chronically starved of video frames. All decoders seen so far have a value
-  // of at least 4.
-  mAmpleVideoFrames = Preferences::GetUint("media.video-queue.default-size", 3);
-#else
-  mAmpleVideoFrames = Preferences::GetUint("media.video-queue.default-size", 10);
-#endif
-  if (mAmpleVideoFrames < 2) {
-    mAmpleVideoFrames = 2;
-  }
+  mVideoPrerollFrames = mRealTime ? 0 : GetAmpleVideoFrames() / 2;
+  mAudioPrerollUsecs = mRealTime ? 0 : LOW_AUDIO_USECS * 2;
+
 #ifdef XP_WIN
   // Ensure high precision timers are enabled on Windows, otherwise the state
   // machine thread isn't woken up at reliable intervals to set the next frame,
@@ -608,57 +601,30 @@ void MediaDecoderStateMachine::DecodeLoop()
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
 
-  // We want to "pump" the decode until we've got a few frames decoded
-  // before we consider whether decode is falling behind.
-  bool audioPump = true;
-  bool videoPump = true;
-
-  // If the video decode is falling behind the audio, we'll start dropping the
-  // inter-frames up until the next keyframe which is at or before the current
-  // playback position. skipToNextKeyframe is true if we're currently
-  // skipping up to the next keyframe.
-  bool skipToNextKeyframe = false;
-
-  // Once we've decoded more than videoPumpThreshold video frames, we'll
-  // no longer be considered to be "pumping video".
-  const unsigned videoPumpThreshold = mRealTime ? 0 : GetAmpleVideoFrames() / 2;
-
-  // After the audio decode fills with more than audioPumpThreshold usecs
-  // of decoded audio, we'll start to check whether the audio or video decode
-  // is falling behind.
-  const unsigned audioPumpThreshold = mRealTime ? 0 : LOW_AUDIO_USECS * 2;
-
-  // Our local low audio threshold. We may increase this if we're slow to
-  // decode video frames, in order to reduce the chance of audio underruns.
-  int64_t lowAudioThreshold = LOW_AUDIO_USECS;
-
-  // Our local ample audio threshold. If we increase lowAudioThreshold, we'll
-  // also increase this too appropriately (we don't want lowAudioThreshold to
-  // be greater than ampleAudioThreshold, else we'd stop decoding!).
-  int64_t ampleAudioThreshold = AMPLE_AUDIO_USECS;
+  mIsAudioPrerolling = true;
+  mIsVideoPrerolling = true;
 
   // Main decode loop.
-  bool videoPlaying = HasVideo();
-  bool audioPlaying = HasAudio();
   while ((mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) &&
          !mStopDecodeThread &&
-         (videoPlaying || audioPlaying))
+         (mIsVideoDecoding || mIsAudioDecoding))
   {
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
     // some frames before enabling the keyframe skip logic on video.
-    if (videoPump &&
+    if (mIsVideoPrerolling &&
         (static_cast<uint32_t>(mReader->VideoQueue().GetSize())
-         >= videoPumpThreshold * mPlaybackRate))
+         >= mVideoPrerollFrames * mPlaybackRate))
     {
-      videoPump = false;
+      mIsVideoPrerolling = false;
     }
 
     // We don't want to consider skipping to the next keyframe if we've
     // only just started up the decode loop, so wait until we've decoded
     // some audio data before enabling the keyframe skip logic on audio.
-    if (audioPump && GetDecodedAudioDuration() >= audioPumpThreshold * mPlaybackRate) {
-      audioPump = false;
+    if (mIsAudioPrerolling &&
+        GetDecodedAudioDuration() >= mAudioPrerollUsecs * mPlaybackRate) {
+      mIsAudioPrerolling = false;
     }
 
     // We'll skip the video decode to the nearest keyframe if we're low on
@@ -668,27 +634,26 @@ void MediaDecoderStateMachine::DecodeLoop()
     // soon anyway and we'll want to be able to display frames immediately
     // after buffering finishes.
     if (mState == DECODER_STATE_DECODING &&
-        !skipToNextKeyframe &&
-        videoPlaying &&
-        ((!audioPump && audioPlaying && !mDidThrottleAudioDecoding &&
-          GetDecodedAudioDuration() < lowAudioThreshold * mPlaybackRate) ||
-         (!videoPump && videoPlaying && !mDidThrottleVideoDecoding &&
+        !mSkipToNextKeyFrame &&
+        mIsVideoDecoding &&
+        ((!mIsAudioPrerolling && mIsAudioDecoding && !mDidThrottleAudioDecoding &&
+          GetDecodedAudioDuration() < mLowAudioThresholdUsecs * mPlaybackRate) ||
+         (!mIsVideoPrerolling && mIsVideoDecoding && !mDidThrottleVideoDecoding &&
           (static_cast<uint32_t>(mReader->VideoQueue().GetSize())
            < LOW_VIDEO_FRAMES * mPlaybackRate))) &&
         !HasLowUndecodedData())
     {
-      skipToNextKeyframe = true;
+      mSkipToNextKeyFrame = true;
       DECODER_LOG(PR_LOG_DEBUG, ("%p Skipping video decode to the next keyframe", mDecoder.get()));
     }
 
     // Video decode.
-    bool throttleVideoDecoding = !videoPlaying || HaveEnoughDecodedVideo();
+    bool throttleVideoDecoding = !mIsVideoDecoding || HaveEnoughDecodedVideo();
     if (mDidThrottleVideoDecoding && !throttleVideoDecoding) {
-      videoPump = true;
+      mIsVideoPrerolling = true;
     }
     mDidThrottleVideoDecoding = throttleVideoDecoding;
-    if (!throttleVideoDecoding)
-    {
+    if (!throttleVideoDecoding) {
       // Time the video decode, so that if it's slow, we can increase our low
       // audio threshold to reduce the chance of an audio underrun while we're
       // waiting for a video decode to complete.
@@ -697,36 +662,38 @@ void MediaDecoderStateMachine::DecodeLoop()
         int64_t currentTime = GetMediaTime();
         ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
         TimeStamp start = TimeStamp::Now();
-        videoPlaying = mReader->DecodeVideoFrame(skipToNextKeyframe, currentTime);
+        mIsVideoDecoding = mReader->DecodeVideoFrame(mSkipToNextKeyFrame, currentTime);
         decodeTime = TimeStamp::Now() - start;
-        if (!videoPlaying) {
+        if (!mIsVideoDecoding) {
           // Playback ended for this stream, close the sample queue.
           mReader->VideoQueue().Finish();
         }
       }
-      if (THRESHOLD_FACTOR * DurationToUsecs(decodeTime) > lowAudioThreshold &&
+      if (THRESHOLD_FACTOR * DurationToUsecs(decodeTime) > mLowAudioThresholdUsecs &&
           !HasLowUndecodedData())
       {
-        lowAudioThreshold =
+        mLowAudioThresholdUsecs =
           std::min(THRESHOLD_FACTOR * DurationToUsecs(decodeTime), AMPLE_AUDIO_USECS);
-        ampleAudioThreshold = std::max(THRESHOLD_FACTOR * lowAudioThreshold,
-                                     ampleAudioThreshold);
+        mAmpleAudioThresholdUsecs = std::max(THRESHOLD_FACTOR * mLowAudioThresholdUsecs,
+                                             mAmpleAudioThresholdUsecs);
         DECODER_LOG(PR_LOG_DEBUG,
-                    ("Slow video decode, set lowAudioThreshold=%lld ampleAudioThreshold=%lld",
-                    lowAudioThreshold, ampleAudioThreshold));
+                    ("Slow video decode, set mLowAudioThresholdUsecs=%lld mAmpleAudioThresholdUsecs=%lld",
+                    mLowAudioThresholdUsecs, mAmpleAudioThresholdUsecs));
       }
     }
 
     // Audio decode.
-    bool throttleAudioDecoding = !audioPlaying || HaveEnoughDecodedAudio(ampleAudioThreshold * mPlaybackRate);
+    bool throttleAudioDecoding =
+      !mIsAudioDecoding ||
+      HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate);
     if (mDidThrottleAudioDecoding && !throttleAudioDecoding) {
-      audioPump = true;
+      mIsAudioPrerolling = true;
     }
     mDidThrottleAudioDecoding = throttleAudioDecoding;
     if (!mDidThrottleAudioDecoding) {
       ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-      audioPlaying = mReader->DecodeAudioData();
-      if (!audioPlaying) {
+      mIsAudioDecoding = mReader->DecodeAudioData();
+      if (!mIsAudioDecoding) {
         // Playback ended for this stream, close the sample queue.
         mReader->AudioQueue().Finish();
       }
@@ -744,7 +711,7 @@ void MediaDecoderStateMachine::DecodeLoop()
 
     if ((mState == DECODER_STATE_DECODING || mState == DECODER_STATE_BUFFERING) &&
         !mStopDecodeThread &&
-        (videoPlaying || audioPlaying) &&
+        (mIsVideoDecoding || mIsAudioDecoding) &&
         throttleAudioDecoding && throttleVideoDecoding)
     {
       // All active bitstreams' decode is well ahead of the playback
@@ -1382,6 +1349,14 @@ void MediaDecoderStateMachine::StartDecoding()
     mDecodeStartTime = TimeStamp::Now();
   }
   mState = DECODER_STATE_DECODING;
+
+  // Reset our "stream finished decoding" flags, so we try to decode all
+  // streams that we have when we start decoding.
+  mIsVideoDecoding = HasVideo();
+  mIsAudioDecoding = HasAudio();
+
+  mSkipToNextKeyFrame = false;
+
   ScheduleStateMachine();
 }
 
