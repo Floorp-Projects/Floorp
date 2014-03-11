@@ -22,6 +22,14 @@ OggWriter::OggWriter() : ContainerWriter()
   }
 }
 
+OggWriter::~OggWriter()
+{
+  if (mInitialized) {
+    ogg_stream_clear(&mOggStreamState);
+  }
+  // mPacket's data was always owned by us, no need to ogg_packet_clear.
+}
+
 nsresult
 OggWriter::Init()
 {
