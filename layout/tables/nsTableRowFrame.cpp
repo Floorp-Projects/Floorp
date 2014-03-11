@@ -603,14 +603,14 @@ nsTableRowFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 int
-nsTableRowFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
+nsTableRowFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {
-    skip |= LOGICAL_SIDE_B_START;
+    skip |= 1 << NS_SIDE_TOP;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= LOGICAL_SIDE_B_END;
+    skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
 }

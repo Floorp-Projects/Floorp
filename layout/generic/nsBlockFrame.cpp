@@ -968,21 +968,19 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
   if (aReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE &&
       aReflowState.ComputedHeight() != NS_AUTOHEIGHT &&
       ShouldApplyOverflowClipping(this, aReflowState.mStyleDisplay)) {
-    LogicalMargin blockDirExtras = aReflowState.ComputedLogicalBorderPadding();
-    WritingMode wm = aReflowState.GetWritingMode();
-    if (GetLogicalSkipSides() & (LOGICAL_SIDE_B_START)) {
-      blockDirExtras.BStart(wm) = 0;
+    nsMargin heightExtras = aReflowState.ComputedPhysicalBorderPadding();
+    if (GetSkipSides() & (1 << NS_SIDE_TOP)) {
+      heightExtras.top = 0;
     } else {
       // Bottom margin never causes us to create continuations, so we
       // don't need to worry about whether it fits in its entirety.
-      blockDirExtras.BStart(wm) +=
-        aReflowState.ComputedLogicalMargin().BStart(wm);
+      heightExtras.top += aReflowState.ComputedPhysicalMargin().top;
     }
 
-    if (effectiveComputedHeight + blockDirExtras.BStartEnd(wm) <=
-        aReflowState.AvailableBSize()) {
+    if (effectiveComputedHeight + heightExtras.TopBottom() <=
+        aReflowState.AvailableHeight()) {
       mutableReflowState.construct(aReflowState);
-      mutableReflowState.ref().AvailableBSize() = NS_UNCONSTRAINEDSIZE;
+      mutableReflowState.ref().AvailableHeight() = NS_UNCONSTRAINEDSIZE;
       reflowState = mutableReflowState.addr();
     }
   }
