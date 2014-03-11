@@ -1207,7 +1207,8 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
   MarkChanged();
 
   if (aSurface->GetType() == SurfaceType::COREGRAPHICS_IMAGE ||
-      aSurface->GetType() == SurfaceType::COREGRAPHICS_CGCONTEXT) {
+      aSurface->GetType() == SurfaceType::COREGRAPHICS_CGCONTEXT ||
+      aSurface->GetType() == SurfaceType::DATA) {
     CGImageRef image = GetRetainedImageFromSourceSurface(aSurface);
 
     /* we have two options here:
