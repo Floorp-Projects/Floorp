@@ -1593,24 +1593,6 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
   tr.ScaleInverse(p2a);
   dr.ScaleInverse(p2a);
 
-  /* See GetWidgetOverflow */
-  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
-      part == CBP_DROPMARKER_VISTA && IsHTMLContent(aFrame))
-  {
-    tr.y -= 1.0;
-    tr.width += 1.0;
-    tr.height += 2.0;
-
-    dr.y -= 1.0;
-    dr.width += 1.0;
-    dr.height += 2.0;
-
-    if (IsFrameRTL(aFrame)) {
-      tr.x -= 1.0;
-      dr.x -= 1.0;
-    }
-  }
-
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
 
   gfxWindowsNativeDrawing nativeDrawing(ctx, dr, GetWidgetNativeDrawingFlags(aWidgetType));
