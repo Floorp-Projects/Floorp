@@ -52,12 +52,6 @@
 #  include "gfxSharedImageSurface.h"
 #endif
 
-#if 0
-#define RECYCLE_LOG(...) printf_stderr(__VA_ARGS__)
-#else
-#define RECYCLE_LOG(...) do { } while (0)
-#endif
-
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
 
@@ -95,20 +89,6 @@ public:
   }
 
   bool Recv__delete__() MOZ_OVERRIDE;
-
-  bool RecvCompositorRecycle()
-  {
-    RECYCLE_LOG("Receive recycle %p (%p)\n", mTextureClient, mWaitForRecycle.get());
-    mWaitForRecycle = nullptr;
-    return true;
-  }
-
-  void WaitForCompositorRecycle()
-  {
-    mWaitForRecycle = mTextureClient;
-    RECYCLE_LOG("Wait for recycle %p\n", mWaitForRecycle.get());
-    SendClientRecycle();
-  }
 
   /**
    * Only used during the deallocation phase iff we need synchronization between
@@ -148,7 +128,6 @@ private:
   }
 
   RefPtr<CompositableForwarder> mForwarder;
-  RefPtr<TextureClient> mWaitForRecycle;
   TextureClientData* mTextureData;
   TextureClient* mTextureClient;
   bool mIPCOpen;
@@ -159,7 +138,6 @@ private:
 void
 TextureChild::DeleteTextureData()
 {
-  mWaitForRecycle = nullptr;
   if (mTextureData) {
     mTextureData->DeallocateSharedData(GetAllocator());
     delete mTextureData;
@@ -180,7 +158,6 @@ TextureChild::ActorDestroy(ActorDestroyReason why)
   if (mTextureClient) {
     mTextureClient->mActor = nullptr;
   }
-  mWaitForRecycle = nullptr;
 }
 
 // static
@@ -204,13 +181,7 @@ TextureClient::DestroyIPDLActor(PTextureChild* actor)
 TextureClient*
 TextureClient::AsTextureClient(PTextureChild* actor)
 {
-  return actor ? static_cast<TextureChild*>(actor)->mTextureClient : nullptr;
-}
-
-void
-TextureClient::WaitForCompositorRecycle()
-{
-  mActor->WaitForCompositorRecycle();
+  return actor? static_cast<TextureChild*>(actor)->mTextureClient : nullptr;
 }
 
 bool

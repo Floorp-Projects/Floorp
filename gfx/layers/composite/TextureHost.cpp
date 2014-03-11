@@ -22,14 +22,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "mozilla/layers/PTextureParent.h"
-#include "mozilla/unused.h"
 #include <limits>
-
-#if 0
-#define RECYCLE_LOG(...) printf_stderr(__VA_ARGS__)
-#else
-#define RECYCLE_LOG(...) do { } while (0)
-#endif
 
 struct nsIntPoint;
 
@@ -50,9 +43,6 @@ public:
   bool Init(const SurfaceDescriptor& aSharedData,
             const TextureFlags& aFlags);
 
-  void CompositorRecycle();
-  virtual bool RecvClientRecycle() MOZ_OVERRIDE;
-
   virtual bool RecvRemoveTexture() MOZ_OVERRIDE;
 
   virtual bool RecvRemoveTextureSync() MOZ_OVERRIDE;
@@ -62,7 +52,6 @@ public:
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   ISurfaceAllocator* mAllocator;
-  RefPtr<TextureHost> mWaitForClientRecycle;
   RefPtr<TextureHost> mTextureHost;
 };
 
@@ -739,37 +728,7 @@ TextureParent::TextureParent(ISurfaceAllocator* aAllocator)
 TextureParent::~TextureParent()
 {
   MOZ_COUNT_DTOR(TextureParent);
-  if (mTextureHost) {
-    mTextureHost->ClearRecycleCallback();
-  }
-}
-
-static void RecycleCallback(TextureHost* textureHost, void* aClosure) {
-  TextureParent* tp = reinterpret_cast<TextureParent*>(aClosure);
-  tp->CompositorRecycle();
-}
-
-void
-TextureParent::CompositorRecycle()
-{
-  mTextureHost->ClearRecycleCallback();
-  mozilla::unused << SendCompositorRecycle();
-
-  // Don't forget to prepare for the next reycle
-  mWaitForClientRecycle = mTextureHost;
-}
-
-bool
-TextureParent::RecvClientRecycle()
-{
-  // This will allow the RecycleCallback to be called once the compositor
-  // releases any external references to TextureHost.
-  mTextureHost->SetRecycleCallback(RecycleCallback, this);
-  if (!mWaitForClientRecycle) {
-    RECYCLE_LOG("Not a recycable tile");
-  }
-  mWaitForClientRecycle = nullptr;
-  return true;
+  mTextureHost = nullptr;
 }
 
 bool
@@ -779,14 +738,7 @@ TextureParent::Init(const SurfaceDescriptor& aSharedData,
   mTextureHost = TextureHost::Create(aSharedData,
                                      mAllocator,
                                      aFlags);
-  if (mTextureHost) {
-    mTextureHost->mActor = this;
-    if (aFlags & TEXTURE_RECYCLE) {
-      mWaitForClientRecycle = mTextureHost;
-      RECYCLE_LOG("Setup recycling for tile %p\n", this);
-    }
-  }
-
+  mTextureHost->mActor = this;
   return !!mTextureHost;
 }
 
@@ -821,10 +773,6 @@ TextureParent::ActorDestroy(ActorDestroyReason why)
     NS_RUNTIMEABORT("FailedConstructor isn't possible in PTexture");
   }
 
-  if (mTextureHost->GetFlags() & TEXTURE_RECYCLE) {
-    RECYCLE_LOG("clear recycling for tile %p\n", this);
-    mTextureHost->ClearRecycleCallback();
-  }
   if (mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
     mTextureHost->ForgetSharedData();
   }
