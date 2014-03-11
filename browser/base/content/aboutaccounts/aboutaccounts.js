@@ -100,7 +100,7 @@ let wrapper = {
     iframe.addEventListener("load", this);
 
     try {
-      iframe.src = url || fxAccounts.getAccountsURI();
+      iframe.src = url || fxAccounts.getAccountsSignUpURI();
     } catch (e) {
       error("Couldn't init Firefox Account wrapper: " + e.message);
     }
@@ -223,7 +223,7 @@ let wrapper = {
   injectData: function (type, content) {
     let authUrl;
     try {
-      authUrl = fxAccounts.getAccountsURI();
+      authUrl = fxAccounts.getAccountsSignUpURI();
     } catch (e) {
       error("Couldn't inject data: " + e.message);
       return;
