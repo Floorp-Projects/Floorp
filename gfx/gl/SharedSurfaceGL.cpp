@@ -407,7 +407,6 @@ SharedSurface_GLTexture::WaitSync()
         return true;
     }
 
-    MOZ_ASSERT(mConsGL, "Did you forget to call a deferred `SetConsumerGL()`?");
     mConsGL->MakeCurrent();
     MOZ_ASSERT(mConsGL->IsExtensionSupported(GLContext::ARB_sync));
 
@@ -420,13 +419,17 @@ SharedSurface_GLTexture::WaitSync()
     return true;
 }
 
-void
-SharedSurface_GLTexture::SetConsumerGL(GLContext* consGL)
+GLuint
+SharedSurface_GLTexture::ConsTexture(GLContext* consGL)
 {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(consGL);
     MOZ_ASSERT(mGL->SharesWith(consGL));
+    MOZ_ASSERT_IF(mConsGL, consGL == mConsGL);
+
     mConsGL = consGL;
+
+    return mTex;
 }
 
 } /* namespace gfx */
