@@ -69,6 +69,20 @@ if CONFIG['OS_TARGET'] == 'Darwin':
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
     ]
+    LDFLAGS += [
+        '-framework AudioToolbox',
+        '-framework AudioUnit',
+        '-framework Carbon',
+        '-framework CoreAudio',
+        '-framework OpenGL',
+        '-framework QTKit',
+        '-framework QuartzCore',
+        '-framework Security',
+        '-framework SystemConfiguration',
+        '-framework IOKit',
+        '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
+        '-framework CoreUI',
+    ]
 
 if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
     LOCAL_INCLUDES += [

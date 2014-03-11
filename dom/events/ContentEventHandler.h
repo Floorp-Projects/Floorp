@@ -3,54 +3,54 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsContentEventHandler_h__
-#define nsContentEventHandler_h__
+#ifndef mozilla_ContentEventHandler_h_
+#define mozilla_ContentEventHandler_h_
 
+#include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
-
 #include "nsISelection.h"
 #include "nsRange.h"
-#include "mozilla/EventForwards.h"
 
-class nsCaret;
 class nsPresContext;
 
 struct nsRect;
 
+namespace mozilla {
+
 /*
  * Query Content Event Handler
- *   nsContentEventHandler is a helper class for nsEventStateManager.
+ *   ContentEventHandler is a helper class for nsEventStateManager.
  *   The platforms request some content informations, e.g., the selected text,
  *   the offset of the selected text and the text for specified range.
  *   This class answers to NS_QUERY_* events from actual contents.
  */
 
-class MOZ_STACK_CLASS nsContentEventHandler {
+class MOZ_STACK_CLASS ContentEventHandler
+{
 public:
-  nsContentEventHandler(nsPresContext *aPresContext);
+  ContentEventHandler(nsPresContext* aPresContext);
 
   // NS_QUERY_SELECTED_TEXT event handler
-  nsresult OnQuerySelectedText(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQuerySelectedText(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_CONTENT event handler
-  nsresult OnQueryTextContent(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQueryTextContent(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CARET_RECT event handler
-  nsresult OnQueryCaretRect(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQueryCaretRect(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_RECT event handler
-  nsresult OnQueryTextRect(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQueryTextRect(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_EDITOR_RECT event handler
-  nsresult OnQueryEditorRect(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQueryEditorRect(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CONTENT_STATE event handler
-  nsresult OnQueryContentState(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQueryContentState(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_SELECTION_AS_TRANSFERABLE event handler
-  nsresult OnQuerySelectionAsTransferable(
-             mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQuerySelectionAsTransferable(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CHARACTER_AT_POINT event handler
-  nsresult OnQueryCharacterAtPoint(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent);
   // NS_QUERY_DOM_WIDGET_HITTEST event handler
-  nsresult OnQueryDOMWidgetHittest(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult OnQueryDOMWidgetHittest(WidgetQueryContentEvent* aEvent);
 
   // NS_SELECTION_* event
-  nsresult OnSelectionEvent(mozilla::WidgetSelectionEvent* aEvent);
+  nsresult OnSelectionEvent(WidgetSelectionEvent* aEvent);
 
 protected:
   nsPresContext* mPresContext;
@@ -59,8 +59,8 @@ protected:
   nsRefPtr<nsRange> mFirstSelectedRange;
   nsCOMPtr<nsIContent> mRootContent;
 
-  nsresult Init(mozilla::WidgetQueryContentEvent* aEvent);
-  nsresult Init(mozilla::WidgetSelectionEvent* aEvent);
+  nsresult Init(WidgetQueryContentEvent* aEvent);
+  nsresult Init(WidgetSelectionEvent* aEvent);
 
   // InitCommon() is called from each Init().
   nsresult InitCommon();
@@ -87,7 +87,7 @@ protected:
   bool IsPlugin(nsIContent* aContent);
   // QueryContentRect() sets the rect of aContent's frame(s) to aEvent.
   nsresult QueryContentRect(nsIContent* aContent,
-                            mozilla::WidgetQueryContentEvent* aEvent);
+                            WidgetQueryContentEvent* aEvent);
   // Make the DOM range from the offset of FlatText and the text length.
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.
@@ -110,4 +110,6 @@ protected:
                                    uint32_t* aXPOffset);
 };
 
-#endif // nsContentEventHandler_h__
+} // namespace mozilla
+
+#endif // mozilla_ContentEventHandler_h_

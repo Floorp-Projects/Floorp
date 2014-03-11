@@ -32,6 +32,9 @@ class CppEclipseBackend(CommonBackend):
         self._macbundle = self.environment.substs['MOZ_MACBUNDLE_NAME']
         self._appname = self.environment.substs['MOZ_APP_NAME']
         self._bin_suffix = self.environment.substs['BIN_SUFFIX']
+        self._cxx = self.environment.substs['CXX']
+        # Note: We need the C Pre Processor (CPP) flags, not the CXX flags
+        self._cppflags = self.environment.substs['CPPFLAGS']
 
         def detailed(summary):
             return ('\n' + \
@@ -82,7 +85,9 @@ class CppEclipseBackend(CommonBackend):
 
         workspace_language_path = os.path.join(workspace_language_dir, 'language.settings.xml')
         with open(workspace_language_path, 'wb') as fh:
-            fh.write(WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE)
+            workspace_lang_settings = WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE
+            workspace_lang_settings = workspace_lang_settings.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags);
+            fh.write(workspace_lang_settings)
 
         self._write_launch_files(launch_dir)
 
@@ -96,31 +101,56 @@ class CppEclipseBackend(CommonBackend):
         with open(editor_prefs_path, 'wb') as fh:
             fh.write(EDITOR_SETTINGS);
 
+    def _define_entry(self, name, value):
+        define = ET.Element('entry')
+        define.set('kind', 'macro')
+        define.set('name', name)
+        define.set('value', value)
+        return ET.tostring(define)
+
     def _write_language_settings(self, fh):
         settings = LANGUAGE_SETTINGS_TEMPLATE
 
         settings = settings.replace('@GLOBAL_INCLUDE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include'))
+        settings = settings.replace('@NSPR_INCLUDE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/nspr'))
         settings = settings.replace('@IPDL_INCLUDE_PATH@', os.path.join(self.environment.topobjdir, 'ipc/ipdl/_ipdlheaders'))
         settings = settings.replace('@PREINCLUDE_FILE_PATH@', os.path.join(self.environment.topobjdir, 'dist/include/mozilla-config.h'))
+        settings = settings.replace('@DEFINE_MOZILLA_INTERNAL_API@', self._define_entry('MOZILLA_INTERNAL_API', '1'))
+        settings = settings.replace('@DEFINE_MDCPUCFG@', self._define_entry('MDCPUCFG', self.environment.substs['TARGET_NSPR_MDCPUCFG']))
+        settings = settings.replace("@COMPILER_FLAGS@", self._cxx + " " + self._cppflags);
 
         fh.write(settings)
 
     def _write_launch_files(self, launch_dir):
-        main_gecko_launch = os.path.join(launch_dir, 'gecko.launch')
-        with open(main_gecko_launch, 'wb') as fh:
-            bin_dir = os.path.join(self.environment.topobjdir, 'dist')
+        bin_dir = os.path.join(self.environment.topobjdir, 'dist')
 
-            launch = LAUNCH_CONFIG_TEMPLATE
-            # TODO Improve binary detection
-            if self._macbundle:
-                exe_path = os.path.join(bin_dir, self._macbundle, 'Contents/MacOS')
-            else:
-                exe_path = os.path.join(bin_dir, 'bin')
+        # TODO Improve binary detection
+        if self._macbundle:
+            exe_path = os.path.join(bin_dir, self._macbundle, 'Contents/MacOS')
+        else:
+            exe_path = os.path.join(bin_dir, 'bin')
 
-            exe_path = os.path.join(exe_path, self._appname + self._bin_suffix)
-            launch = launch.replace('@LAUNCH_PROGRAM@', exe_path)
-            launch = launch.replace('@LAUNCH_ARGS@', '-P -no-remote')
-            fh.write(launch)
+        exe_path = os.path.join(exe_path, self._appname + self._bin_suffix)
+
+        if self.environment.substs['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+            main_gecko_launch = os.path.join(launch_dir, 'gecko.launch')
+            with open(main_gecko_launch, 'wb') as fh:
+                launch = GECKO_LAUNCH_CONFIG_TEMPLATE
+                launch = launch.replace('@LAUNCH_PROGRAM@', exe_path)
+                launch = launch.replace('@LAUNCH_ARGS@', '-P -no-remote')
+                fh.write(launch)
+
+        if self.environment.substs['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+            b2g_flash = os.path.join(launch_dir, 'b2g-flash.launch')
+            with open(b2g_flash, 'wb') as fh:
+                # We assume that the srcdir is inside the b2g tree.
+                # If that's not the case the user can always adjust the path
+                # from the eclipse IDE.
+                fastxul_path = os.path.join(self.environment.topsrcdir, '..', 'scripts', 'fastxul.sh')
+                launch = B2GFLASH_LAUNCH_CONFIG_TEMPLATE
+                launch = launch.replace('@LAUNCH_PROGRAM@', fastxul_path)
+                launch = launch.replace('@OBJDIR@', self.environment.topobjdir)
+                fh.write(launch)
 
         #TODO Add more launch configs (and delegate calls to mach)
 
@@ -132,7 +162,10 @@ class CppEclipseBackend(CommonBackend):
         fh.write(project)
 
     def _write_cproject(self, fh):
-        fh.write(CPROJECT_TEMPLATE_HEADER.replace('@PROJECT_TOPSRCDIR@', self.environment.topobjdir))
+        cproject_header = CPROJECT_TEMPLATE_HEADER
+        cproject_header = cproject_header.replace('@PROJECT_TOPSRCDIR@', self.environment.topobjdir)
+        cproject_header = cproject_header.replace('@MACH_COMMAND@', os.path.join(self.environment.topsrcdir, 'mach'))
+        fh.write(cproject_header)
 
         for path, defines in self._paths_to_defines.items():
             folderinfo = CPROJECT_TEMPLATE_FOLDER_INFO_HEADER
@@ -165,9 +198,9 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                 </buildCommand>
                 <buildCommand>
                         <name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
-                        <triggers>full,incremental,</triggers>
-                        <arguments>
-                        </arguments>
+                        <triggers></triggers>
+			<arguments>
+			</arguments>
                 </buildCommand>
         </buildSpec>
         <natures>
@@ -183,6 +216,35 @@ PROJECT_TEMPLATE = """<?xml version="1.0" encoding="UTF-8"?>
                         <location>@PROJECT_TOPSRCDIR@</location>
                 </link>
         </linkedResources>
+        <filteredResources>
+                <filter>
+                        <id>17111971</id>
+                        <name>tree</name>
+                        <type>30</type>
+                        <matcher>
+                                <id>org.eclipse.ui.ide.multiFilter</id>
+                                <arguments>1.0-name-matches-false-false-obj-*</arguments>
+                        </matcher>
+                </filter>
+                <filter>
+                        <id>14081994</id>
+                        <name>tree</name>
+                        <type>22</type>
+                        <matcher>
+                                <id>org.eclipse.ui.ide.multiFilter</id>
+                                <arguments>1.0-name-matches-false-false-*.rej</arguments>
+                        </matcher>
+                </filter>
+                <filter>
+                        <id>25121970</id>
+                        <name>tree</name>
+                        <type>22</type>
+                        <matcher>
+                                <id>org.eclipse.ui.ide.multiFilter</id>
+                                <arguments>1.0-name-matches-false-false-*.orig</arguments>
+                        </matcher>
+                </filter>
+        </filteredResources>
 </projectDescription>
 """
 
@@ -208,7 +270,7 @@ CPROJECT_TEMPLATE_HEADER = """<?xml version="1.0" encoding="UTF-8" standalone="n
                                         <folderInfo id="0.1674256904." name="/" resourcePath="">
                                                 <toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.debug.1276586933" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.debug">
                                                         <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.targetPlatform.gnu.cross.710759961" isAbstract="false" osList="all" superClass="cdt.managedbuild.targetPlatform.gnu.cross"/>
-							<builder arguments="-C @PROJECT_TOPSRCDIR@ -j8" buildPath="@PROJECT_TOPSRCDIR@" command="gmake" enableCleanBuild="false" incrementalBuildTarget="binaries" id="org.eclipse.cdt.build.core.settings.default.builder.1437267827" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
+							<builder arguments="build" buildPath="@PROJECT_TOPSRCDIR@" command="@MACH_COMMAND@" enableCleanBuild="false" incrementalBuildTarget="binaries" id="org.eclipse.cdt.build.core.settings.default.builder.1437267827" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" superClass="org.eclipse.cdt.build.core.settings.default.builder"/>
                                                 </toolChain>
                                         </folderInfo>
 """
@@ -262,7 +324,7 @@ CPROJECT_TEMPLATE_FOOTER = """                                </configuration>
 WORKSPACE_LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <plugin>
         <extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
-                <provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="true" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="${COMMAND} -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11">
+                <provider class="org.eclipse.cdt.managedbuilder.language.settings.providers.GCCBuiltinSpecsDetector" console="true" id="org.eclipse.cdt.managedbuilder.core.GCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT GCC Built-in Compiler Settings" parameter="@COMPILER_FLAGS@ -E -P -v -dD &quot;${INPUTS}&quot;">
                         <language-scope id="org.eclipse.cdt.core.gcc"/>
                         <language-scope id="org.eclipse.cdt.core.g++"/>
                 </provider>
@@ -280,6 +342,9 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
                                                 <entry kind="includePath" name="@GLOBAL_INCLUDE_PATH@">
                                                         <flag value="LOCAL"/>
                                                 </entry>
+                                                <entry kind="includePath" name="@NSPR_INCLUDE_PATH@">
+                                                        <flag value="LOCAL"/>
+                                                </entry>
                                                 <entry kind="includePath" name="@IPDL_INCLUDE_PATH@">
                                                         <flag value="LOCAL"/>
                                                 </entry>
@@ -292,11 +357,12 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
                                                   the indexer gets the version that is used in most of the true. This means that
                                                   MOZILLA_EXTERNAL_API code will suffer.
                                                 -->
-                                                <entry kind="macro" name="MOZILLA_INTERNAL_API" value="1"/>
+                                                @DEFINE_MOZILLA_INTERNAL_API@
+                                                @DEFINE_MDCPUCFG@
                                         </resource>
                                 </language>
                         </provider>
-                        <provider class="org.eclipse.cdt.internal.build.crossgcc.CrossGCCBuiltinSpecsDetector" console="false" env-hash="-859273372804152468" id="org.eclipse.cdt.build.crossgcc.CrossGCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT Cross GCC Built-in Compiler Settings" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11" prefer-non-shared="true" store-entries-with-project="true">
+                        <provider class="org.eclipse.cdt.internal.build.crossgcc.CrossGCCBuiltinSpecsDetector" console="false" env-hash="-859273372804152468" id="org.eclipse.cdt.build.crossgcc.CrossGCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT Cross GCC Built-in Compiler Settings" parameter="@COMPILER_FLAGS@ -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11" prefer-non-shared="true" store-entries-with-project="true">
                              <language-scope id="org.eclipse.cdt.core.gcc"/>
                              <language-scope id="org.eclipse.cdt.core.g++"/>
                         </provider>
@@ -306,7 +372,7 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
 </project>
 """
 
-LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+GECKO_LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.cdt.launch.applicationLaunchType">
 <booleanAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB" value="true"/>
 <listAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB_LIST"/>
@@ -341,6 +407,43 @@ LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"
 <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
 </launchConfiguration>
 """
+
+B2GFLASH_LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="org.eclipse.cdt.launch.applicationLaunchType">
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB" value="true"/>
+<listAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB_LIST"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="lldb"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_ON_FORK" value="false"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.GDB_INIT" value=""/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.NON_STOP" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.REVERSE" value="false"/>
+<listAttribute key="org.eclipse.cdt.dsf.gdb.SOLIB_PATH"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.TRACEPOINT_MODE" value="TP_NORMAL_ONLY"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.internal.ui.launching.LocalApplicationCDebuggerTab.DEFAULTS_SET" value="true"/>
+<intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
+<stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_ID" value="gdb"/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_START_MODE" value="run"/>
+<booleanAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN" value="false"/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="main"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="@LAUNCH_PROGRAM@"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="gecko"/>
+<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.WORKING_DIRECTORY" value="@OBJDIR@"/>
+<booleanAttribute key="org.eclipse.cdt.launch.use_terminal" value="true"/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/gecko"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4"/>
+</listAttribute>
+<booleanAttribute key="org.eclipse.debug.ui.ATTR_LAUNCH_IN_BACKGROUND" value="false"/>
+<stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
+</launchConfiguration>
+"""
+
 
 EDITOR_SETTINGS = """eclipse.preferences.version=1
 lineNumberRuler=true

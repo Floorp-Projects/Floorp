@@ -65,13 +65,13 @@ protected:
 public:
     virtual ~SharedSurface_Gralloc();
 
-    virtual void Fence();
-    virtual bool WaitSync();
+    virtual void Fence() MOZ_OVERRIDE;
+    virtual bool WaitSync() MOZ_OVERRIDE;
 
-    virtual void LockProdImpl();
-    virtual void UnlockProdImpl();
+    virtual void LockProdImpl() MOZ_OVERRIDE {}
+    virtual void UnlockProdImpl() MOZ_OVERRIDE {}
 
-    virtual GLuint Texture() const {
+    virtual GLuint ProdTexture() MOZ_OVERRIDE {
         return mProdTex;
     }
 
@@ -91,7 +91,7 @@ public:
                            const SurfaceCaps& caps,
                            layers::ISurfaceAllocator* allocator = nullptr);
 
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) {
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
         if (!mAllocator) {
             return nullptr;

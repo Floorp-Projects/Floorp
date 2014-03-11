@@ -47,6 +47,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionColorBufferFloat.cpp',
         'WebGLExtensionColorBufferHalfFloat.cpp',
         'WebGLExtensionCompressedTextureATC.cpp',
+        'WebGLExtensionCompressedTextureETC1.cpp',
         'WebGLExtensionCompressedTexturePVRTC.cpp',
         'WebGLExtensionCompressedTextureS3TC.cpp',
         'WebGLExtensionDebugRendererInfo.cpp',

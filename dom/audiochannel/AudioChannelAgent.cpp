@@ -5,10 +5,13 @@
 #include "AudioChannelAgent.h"
 #include "AudioChannelCommon.h"
 #include "AudioChannelService.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_1(AudioChannelAgent, mCallback)
+NS_IMPL_CYCLE_COLLECTION_2(AudioChannelAgent, mWindow, mCallback)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioChannelAgent)
   NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgent)
@@ -40,34 +43,46 @@ NS_IMETHODIMP AudioChannelAgent::GetAudioChannelType(int32_t *aAudioChannelType)
   return NS_OK;
 }
 
-/* boolean init (in long channelType, in nsIAudioChannelAgentCallback callback); */
-NS_IMETHODIMP AudioChannelAgent::Init(int32_t channelType, nsIAudioChannelAgentCallback *callback)
+/* boolean init (in nsIDOMWindow window, in long channelType,
+ *               in nsIAudioChannelAgentCallback callback); */
+NS_IMETHODIMP
+AudioChannelAgent::Init(nsIDOMWindow* aWindow, int32_t aChannelType,
+                        nsIAudioChannelAgentCallback *aCallback)
 {
-  return InitInternal(channelType, callback, /* useWeakRef = */ false);
+  return InitInternal(aWindow, aChannelType, aCallback,
+                      /* useWeakRef = */ false);
 }
 
-/* boolean initWithWeakCallback (in long channelType,
+/* boolean initWithWeakCallback (in nsIDOMWindow window, in long channelType,
  *                               in nsIAudioChannelAgentCallback callback); */
 NS_IMETHODIMP
-AudioChannelAgent::InitWithWeakCallback(int32_t channelType,
-                                        nsIAudioChannelAgentCallback *callback)
+AudioChannelAgent::InitWithWeakCallback(nsIDOMWindow* aWindow,
+                                        int32_t aChannelType,
+                                        nsIAudioChannelAgentCallback *aCallback)
 {
-  return InitInternal(channelType, callback, /* useWeakRef = */ true);
+  return InitInternal(aWindow, aChannelType, aCallback,
+                      /* useWeakRef = */ true);
 }
 
+/* void initWithVideo(in nsIDOMWindow window, in long channelType,
+ *                    in nsIAudioChannelAgentCallback callback, in boolean weak); */
 NS_IMETHODIMP
-AudioChannelAgent::InitWithVideo(int32_t channelType,
-                                 nsIAudioChannelAgentCallback *callback,
+AudioChannelAgent::InitWithVideo(nsIDOMWindow* aWindow, int32_t aChannelType,
+                                 nsIAudioChannelAgentCallback *aCallback,
                                  bool aUseWeakRef)
 {
-  return InitInternal(channelType, callback, aUseWeakRef, true);
+  return InitInternal(aWindow, aChannelType, aCallback, aUseWeakRef,
+                      /* withVideo = */ true);
 }
 
 nsresult
-AudioChannelAgent::InitInternal(int32_t aChannelType,
+AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
                                 nsIAudioChannelAgentCallback *aCallback,
                                 bool aUseWeakRef, bool aWithVideo)
 {
+  // We need the window only for IPC.
+  MOZ_ASSERT(aWindow || XRE_GetProcessType() == GeckoProcessType_Default);
+
   // We syncd the enum of channel type between nsIAudioChannelAgent.idl and
   // AudioChannelCommon.h the same.
   static_assert(static_cast<AudioChannelType>(AUDIO_AGENT_CHANNEL_NORMAL) ==
@@ -92,6 +107,7 @@ AudioChannelAgent::InitInternal(int32_t aChannelType,
     return NS_ERROR_FAILURE;
   }
 
+  mWindow = aWindow;
   mAudioChannelType = aChannelType;
 
   if (aUseWeakRef) {
@@ -167,4 +183,30 @@ AudioChannelAgent::GetCallback()
     callback = do_QueryReferent(mWeakCallback);
   }
   return callback.forget();
+}
+
+void
+AudioChannelAgent::WindowVolumeChanged()
+{
+  nsCOMPtr<nsIAudioChannelAgentCallback> callback = GetCallback();
+  if (!callback) {
+    return;
+  }
+
+  callback->WindowVolumeChanged();
+}
+
+NS_IMETHODIMP
+AudioChannelAgent::GetWindowVolume(float* aVolume)
+{
+  NS_ENSURE_ARG_POINTER(aVolume);
+
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mWindow);
+  if (!win) {
+    *aVolume = 1.0f;
+    return NS_OK;
+  }
+
+  *aVolume = win->GetAudioGlobalVolume();
+  return NS_OK;
 }

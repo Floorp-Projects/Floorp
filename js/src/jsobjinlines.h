@@ -62,16 +62,6 @@ JSObject::deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, boo
 }
 
 /* static */ inline bool
-JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj, js::HandleSpecialId sid,
-                        bool *succeeded)
-{
-    JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-    js::types::MarkTypePropertyNonData(cx, obj, id);
-    js::DeleteSpecialOp op = obj->getOps()->deleteSpecial;
-    return (op ? op : js::baseops::DeleteSpecial)(cx, obj, sid, succeeded);
-}
-
-/* static */ inline bool
 JSObject::watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                 JS::HandleObject callable)
 {
@@ -871,10 +861,17 @@ GetClassProtoKey(const js::Class *clasp)
 inline bool
 FindProto(ExclusiveContext *cx, const js::Class *clasp, MutableHandleObject proto)
 {
-    if (!js_FindClassPrototype(cx, proto, clasp))
+    if (!FindClassPrototype(cx, proto, clasp))
         return false;
-    if (!proto && !js_GetClassPrototype(cx, JSProto_Object, proto))
-        return false;
+
+    if (!proto) {
+        // We're looking for the prototype of a class that is currently being
+        // resolved; the global object's resolve hook is on the
+        // stack. js::FindClassPrototype detects this goofy case and returns
+        // true with proto null. Fall back on Object.prototype.
+        JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(clasp) == JSProto_Null);
+        return GetBuiltinPrototype(cx, JSProto_Object, proto);
+    }
     return true;
 }
 
@@ -1023,33 +1020,6 @@ GuessArrayGCKind(size_t numSlots)
 }
 
 inline bool
-DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
-                              JSProtoKey key, HandleObject ctor, HandleObject proto)
-{
-    JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
-    JS_ASSERT(ctor);
-    JS_ASSERT(proto);
-
-    RootedId id(cx, NameToId(ClassName(key, cx)));
-    JS_ASSERT(!global->nativeLookup(cx, id));
-
-    /* Set these first in case AddTypePropertyId looks for this class. */
-    global->setConstructor(key, ObjectValue(*ctor));
-    global->setPrototype(key, ObjectValue(*proto));
-    global->setConstructorPropertySlot(key, ObjectValue(*ctor));
-
-    if (!global->addDataProperty(cx, id, GlobalObject::constructorPropertySlot(key), 0)) {
-        global->setConstructor(key, UndefinedValue());
-        global->setPrototype(key, UndefinedValue());
-        global->setConstructorPropertySlot(key, UndefinedValue());
-        return false;
-    }
-
-    types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
-    return true;
-}
-
-inline bool
 ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
 {
     if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
@@ -1076,28 +1046,6 @@ IsObjectWithClass(const Value &v, ESClassValue classValue, JSContext *cx)
     RootedObject obj(cx, &v.toObject());
     return ObjectClassIs(obj, classValue, cx);
 }
-
-static MOZ_ALWAYS_INLINE bool
-ValueMightBeSpecial(const Value &propval)
-{
-    return propval.isObject();
-}
-
-static MOZ_ALWAYS_INLINE bool
-ValueIsSpecial(JSObject *obj, MutableHandleValue propval, MutableHandle<SpecialId> sidp,
-               JSContext *cx)
-{
-    return false;
-}
-
-JSObject *
-DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, HandleAtom atom,
-                              JSObject *protoProto, const Class *clasp,
-                              Native constructor, unsigned nargs,
-                              const JSPropertySpec *ps, const JSFunctionSpec *fs,
-                              const JSPropertySpec *static_ps, const JSFunctionSpec *static_fs,
-                              JSObject **ctorp = nullptr,
-                              gc::AllocKind ctorKind = JSFunction::FinalizeKind);
 
 static MOZ_ALWAYS_INLINE bool
 NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)

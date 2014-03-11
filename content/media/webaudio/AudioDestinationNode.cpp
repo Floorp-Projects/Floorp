@@ -23,6 +23,8 @@
 namespace mozilla {
 namespace dom {
 
+static uint8_t gWebAudioOutputKey;
+
 class OfflineDestinationNodeEngine : public AudioNodeEngine
 {
 public:
@@ -233,6 +235,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
 
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
   mStream->AddMainThreadListener(this);
+  mStream->AddAudioOutput(&gWebAudioOutputKey);
 
   if (!aIsOffline && UseAudioChannelService()) {
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
@@ -380,6 +383,23 @@ AudioDestinationNode::CanPlayChanged(int32_t aCanPlay)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+AudioDestinationNode::WindowVolumeChanged()
+{
+  MOZ_ASSERT(mAudioChannelAgent);
+
+  if (!mStream) {
+    return NS_OK;
+  }
+
+  float volume;
+  nsresult rv = mAudioChannelAgent->GetWindowVolume(&volume);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mStream->SetAudioOutputVolume(&gWebAudioOutputKey, volume);
+  return NS_OK;
+}
+
 AudioChannel
 AudioDestinationNode::MozAudioChannelType() const
 {
@@ -478,7 +498,7 @@ AudioDestinationNode::CreateAudioChannelAgent()
   }
 
   mAudioChannelAgent = new AudioChannelAgent();
-  mAudioChannelAgent->InitWithWeakCallback(type, this);
+  mAudioChannelAgent->InitWithWeakCallback(GetOwner(), type, this);
 
   nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
   if (docshell) {

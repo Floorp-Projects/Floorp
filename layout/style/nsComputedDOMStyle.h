@@ -189,6 +189,12 @@ private:
 
   mozilla::dom::CSSValue* GetSVGPaintFor(bool aFill);
 
+  mozilla::dom::CSSValue* GetGridLineNames(const nsTArray<nsString>& aLineNames);
+  mozilla::dom::CSSValue* GetGridTrackSize(const nsStyleCoord& aMinSize,
+                                           const nsStyleCoord& aMaxSize);
+  mozilla::dom::CSSValue* GetGridTrackList(const nsStyleGridTrackList& aTrackList);
+  mozilla::dom::CSSValue* GetGridLine(const nsStyleGridLine& aGridLine);
+
   bool GetLineHeightCoord(nscoord& aCoord);
 
   mozilla::dom::CSSValue* GetCSSShadowArray(nsCSSShadowArray* aArray,
@@ -256,6 +262,19 @@ private:
   mozilla::dom::CSSValue* DoGetFontVariantNumeric();
   mozilla::dom::CSSValue* DoGetFontVariantPosition();
   mozilla::dom::CSSValue* DoGetFontWeight();
+
+  /* Grid properties */
+  mozilla::dom::CSSValue* DoGetGridAutoFlow();
+  mozilla::dom::CSSValue* DoGetGridAutoColumns();
+  mozilla::dom::CSSValue* DoGetGridAutoRows();
+  mozilla::dom::CSSValue* DoGetGridAutoPosition();
+  mozilla::dom::CSSValue* DoGetGridTemplateAreas();
+  mozilla::dom::CSSValue* DoGetGridTemplateColumns();
+  mozilla::dom::CSSValue* DoGetGridTemplateRows();
+  mozilla::dom::CSSValue* DoGetGridColumnStart();
+  mozilla::dom::CSSValue* DoGetGridColumnEnd();
+  mozilla::dom::CSSValue* DoGetGridRowStart();
+  mozilla::dom::CSSValue* DoGetGridRowEnd();
 
   /* Background properties */
   mozilla::dom::CSSValue* DoGetBackgroundAttachment();

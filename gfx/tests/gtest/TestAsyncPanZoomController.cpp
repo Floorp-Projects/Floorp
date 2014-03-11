@@ -156,7 +156,7 @@ FrameMetrics TestFrameMetrics() {
   FrameMetrics fm;
 
   fm.mDisplayPort = CSSRect(0, 0, 10, 10);
-  fm.mCompositionBounds = ScreenIntRect(0, 0, 10, 10);
+  fm.mCompositionBounds = ParentLayerIntRect(0, 0, 10, 10);
   fm.mCriticalDisplayPort = CSSRect(0, 0, 10, 10);
   fm.mScrollableRect = CSSRect(0, 0, 100, 100);
   fm.mViewport = CSSRect(0, 0, 10, 10);
@@ -347,7 +347,7 @@ TEST(AsyncPanZoomController, Pinch) {
 
   FrameMetrics fm;
   fm.mViewport = CSSRect(0, 0, 980, 480);
-  fm.mCompositionBounds = ScreenIntRect(200, 200, 100, 200);
+  fm.mCompositionBounds = ParentLayerIntRect(200, 200, 100, 200);
   fm.mScrollableRect = CSSRect(0, 0, 980, 1000);
   fm.mScrollOffset = CSSPoint(300, 300);
   fm.mZoom = CSSToScreenScale(2.0);
@@ -390,7 +390,7 @@ TEST(AsyncPanZoomController, PinchWithTouchActionNone) {
 
   FrameMetrics fm;
   fm.mViewport = CSSRect(0, 0, 980, 480);
-  fm.mCompositionBounds = ScreenIntRect(200, 200, 100, 200);
+  fm.mCompositionBounds = ParentLayerIntRect(200, 200, 100, 200);
   fm.mScrollableRect = CSSRect(0, 0, 980, 1000);
   fm.mScrollOffset = CSSPoint(300, 300);
   fm.mZoom = CSSToScreenScale(2.0);
@@ -424,7 +424,7 @@ TEST(AsyncPanZoomController, Overzoom) {
 
   FrameMetrics fm;
   fm.mViewport = CSSRect(0, 0, 100, 100);
-  fm.mCompositionBounds = ScreenIntRect(0, 0, 100, 100);
+  fm.mCompositionBounds = ParentLayerIntRect(0, 0, 100, 100);
   fm.mScrollableRect = CSSRect(0, 0, 125, 150);
   fm.mScrollOffset = CSSPoint(10, 0);
   fm.mZoom = CSSToScreenScale(1.0);
@@ -502,7 +502,7 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   nsRefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, transforms, lm, layers);
 
   FrameMetrics metrics;
-  metrics.mCompositionBounds = ScreenIntRect(0, 0, 24, 24);
+  metrics.mCompositionBounds = ParentLayerIntRect(0, 0, 24, 24);
   metrics.mDisplayPort = CSSRect(-1, -1, 6, 6);
   metrics.mViewport = CSSRect(0, 0, 4, 4);
   metrics.mScrollOffset = CSSPoint(10, 10);
@@ -929,8 +929,8 @@ SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
   FrameMetrics metrics;
   metrics.mScrollId = aScrollId;
   nsIntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
-  metrics.mCompositionBounds = ScreenIntRect(layerBound.x, layerBound.y,
-                                             layerBound.width, layerBound.height);
+  metrics.mCompositionBounds = ParentLayerIntRect(layerBound.x, layerBound.y,
+                                                  layerBound.width, layerBound.height);
   metrics.mScrollableRect = aScrollableRect;
   metrics.mScrollOffset = CSSPoint(0, 0);
   container->SetFrameMetrics(metrics);

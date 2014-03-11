@@ -169,7 +169,7 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    if (!DefineConstructorAndPrototype(cx, global, JSProto_Boolean, ctor, booleanProto))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Boolean, ctor, booleanProto))
         return nullptr;
 
     return booleanProto;

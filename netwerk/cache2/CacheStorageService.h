@@ -6,6 +6,7 @@
 #define CacheStorageService__h__
 
 #include "nsICacheStorageService.h"
+#include "nsIMemoryReporter.h"
 
 #include "nsClassHashtable.h"
 #include "nsString.h"
@@ -43,10 +44,12 @@ protected:
 };
 
 class CacheStorageService : public nsICacheStorageService
+                          , public nsIMemoryReporter
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICACHESTORAGESERVICE
+  NS_DECL_NSIMEMORYREPORTER
 
   CacheStorageService();
 
@@ -57,11 +60,17 @@ public:
   static void WipeCacheDirectory(uint32_t aVersion);
 
   static CacheStorageService* Self() { return sSelf; }
+  static nsISupports* SelfISupports() { return static_cast<nsICacheStorageService*>(Self()); }
   nsresult Dispatch(nsIRunnable* aEvent);
   static bool IsRunning() { return sSelf && !sSelf->mShutdown; }
   static bool IsOnManagementThread();
   already_AddRefed<nsIEventTarget> Thread() const;
   mozilla::Mutex& Lock() { return mLock; }
+
+  // Memory reporting
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
 private:
   virtual ~CacheStorageService();
@@ -103,6 +112,7 @@ private:
 private:
   // Following methods are thread safe to call.
   friend class CacheStorage;
+  friend class CacheFileIOManager;
 
   /**
    * Get, or create when not existing and demanded, an entry for the storage
@@ -136,6 +146,14 @@ private:
   nsresult WalkStorageEntries(CacheStorage const* aStorage,
                               bool aVisitEntries,
                               nsICacheStorageVisitor* aVisitor);
+
+  /**
+   * CacheFileIOManager uses this method to notify CacheStorageService that
+   * an active entry was removed. This method is called even if the entry
+   * removal was originated by CacheStorageService.
+   */
+  nsresult CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
+                           const nsACString & aURL);
 
 private:
   friend class CacheMemoryConsumer;
