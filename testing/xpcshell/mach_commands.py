@@ -11,6 +11,7 @@ import logging
 import os
 import shutil
 import sys
+import urllib2
 
 from StringIO import StringIO
 
@@ -25,6 +26,15 @@ from mach.decorators import (
     CommandProvider,
     Command,
 )
+
+ADB_NOT_FOUND = '''
+The %s command requires the adb binary to be on your path.
+
+If you have a B2G build, this can be found in
+'%s/out/host/<platform>/bin'.
+'''.lstrip()
+
+BUSYBOX_URL = 'http://www.busybox.net/downloads/binaries/latest/busybox-armv7l'
 
 
 if sys.version_info[0] < 3:
@@ -274,9 +284,99 @@ class AndroidXPCShellRunner(MozbuildObject):
 
         return int(not result)
 
+class B2GXPCShellRunner(MozbuildObject):
+    def __init__(self, *args, **kwargs):
+        MozbuildObject.__init__(self, *args, **kwargs)
+
+        # TODO Bug 794506 remove once mach integrates with virtualenv.
+        build_path = os.path.join(self.topobjdir, 'build')
+        if build_path not in sys.path:
+            sys.path.append(build_path)
+
+        build_path = os.path.join(self.topsrcdir, 'build')
+        if build_path not in sys.path:
+            sys.path.append(build_path)
+
+        self.tests_dir = os.path.join(self.topobjdir, '_tests')
+        self.xpcshell_dir = os.path.join(self.tests_dir, 'xpcshell')
+        self.bin_dir = os.path.join(self.distdir, 'bin')
+
+    def _download_busybox(self, b2g_home):
+        system_bin = os.path.join(b2g_home, 'out', 'target', 'product', 'generic', 'system', 'bin')
+        busybox_path = os.path.join(system_bin, 'busybox')
+
+        if os.path.isfile(busybox_path):
+            return busybox_path
+
+        if not os.path.isdir(system_bin):
+            os.makedirs(system_bin)
+
+        try:
+            data = urllib2.urlopen(BUSYBOX_URL)
+        except urllib2.URLError:
+            print('There was a problem downloading busybox. Proceeding without it,' \
+                  'initial setup will be slow.')
+            return
+
+        with open(busybox_path, 'wb') as f:
+            f.write(data.read())
+        return busybox_path
+
+    def run_test(self, test_file, b2g_home=None, busybox=None,
+                 # ignore parameters from other platforms' options
+                 **kwargs):
+        try:
+            import which
+            which.which('adb')
+        except which.WhichError:
+            # TODO Find adb automatically if it isn't on the path
+            print(ADB_NOT_FOUND % ('mochitest-remote', b2g_home))
+            sys.exit(1)
+
+        test_path = None
+        if test_file:
+            test_path = self._wrap_path_argument(test_file).relpath()
+
+        import runtestsb2g
+        parser = runtestsb2g.B2GOptions()
+        options, args = parser.parse_args([])
+
+        options.b2g_path = b2g_home
+        options.busybox = busybox or os.environ.get('BUSYBOX')
+        options.emulator = 'arm'
+        options.localLib = self.bin_dir
+        options.localBin = self.bin_dir
+        options.logcat_dir = self.xpcshell_dir
+        options.manifest = os.path.join(self.xpcshell_dir, 'xpcshell_b2g.ini')
+        options.mozInfo = os.path.join(self.topobjdir, 'mozinfo.json')
+        options.objdir = self.topobjdir
+        options.symbolsPath = os.path.join(self.distdir, 'crashreporter-symbols'),
+        options.testingModulesDir = os.path.join(self.tests_dir, 'modules')
+        options.testsRootDir = self.xpcshell_dir
+        options.testPath = test_path
+        options.use_device_libs = True
+
+        if not options.busybox:
+            options.busybox = self._download_busybox(b2g_home)
+
+        return runtestsb2g.run_remote_xpcshell(parser, options, args)
+
+def is_platform_supported(cls):
+    """Must have a Firefox, Android or B2G build."""
+    return conditions.is_android(cls) or \
+           conditions.is_b2g(cls) or \
+           conditions.is_firefox(cls)
+
 @CommandProvider
 class MachCommands(MachCommandBase):
+    def __init__(self, context):
+        MachCommandBase.__init__(self, context)
+
+        for attr in ('b2g_home', 'device_name'):
+            setattr(self, attr, getattr(context, attr, None))
+
     @Command('xpcshell-test', category='testing',
+        conditions=[is_platform_supported],
         description='Run XPCOM Shell tests.')
     @CommandArgument('test_file', default='all', nargs='?', metavar='TEST',
         help='Test to run. Can be specified as a single JS file, a directory, '
@@ -313,6 +413,8 @@ class MachCommands(MachCommandBase):
         help='(Android) Do not copy files to device')
     @CommandArgument('--local-apk', type=str, default=None,
         help='(Android) Use specified Fennec APK')
+    @CommandArgument('--busybox', type=str, default=None,
+        help='(B2G) Path to busybox binary (speeds up installation of tests).')
     def run_xpcshell_test(self, **params):
         from mozbuild.controller.building import BuildDriver
 
@@ -326,6 +428,9 @@ class MachCommands(MachCommandBase):
 
         if conditions.is_android(self):
             xpcshell = self._spawn(AndroidXPCShellRunner)
+        elif conditions.is_b2g(self):
+            xpcshell = self._spawn(B2GXPCShellRunner)
+            params['b2g_home'] = self.b2g_home
         else:
             xpcshell = self._spawn(XPCShellRunner)
         xpcshell.cwd = self._mach_context.cwd

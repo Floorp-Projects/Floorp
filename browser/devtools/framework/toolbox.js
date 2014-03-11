@@ -253,21 +253,20 @@ Toolbox.prototype = {
         this._addZoomKeys();
         this._loadInitialZoom();
 
-        // Load the toolbox-level actor fronts and utilities now
-        this._target.makeRemote().then(() => {
-          this._telemetry.toolOpened("toolbox");
+        this._telemetry.toolOpened("toolbox");
 
-          this.selectTool(this._defaultToolId).then(panel => {
-            this.emit("ready");
-            deferred.resolve();
-          });
+        this.selectTool(this._defaultToolId).then(panel => {
+          this.emit("ready");
+          deferred.resolve();
         });
       };
 
-      iframe.setAttribute("src", this._URL);
-
-      let domHelper = new DOMHelpers(iframe.contentWindow);
-      domHelper.onceDOMReady(domReady);
+      // Load the toolbox-level actor fronts and utilities now
+      this._target.makeRemote().then(() => {
+        iframe.setAttribute("src", this._URL);
+        let domHelper = new DOMHelpers(iframe.contentWindow);
+        domHelper.onceDOMReady(domReady);
+      });
 
       return deferred.promise;
     });
@@ -465,7 +464,7 @@ Toolbox.prototype = {
   fireCustomKey: function(toolId) {
     let toolDefinition = gDevTools.getToolDefinition(toolId);
 
-    if (toolDefinition.onkey && 
+    if (toolDefinition.onkey &&
         ((this.currentToolId === toolId) ||
           (toolId == "webconsole" && this.splitConsole))) {
       toolDefinition.onkey(this.getCurrentPanel(), this);
@@ -1093,27 +1092,17 @@ Toolbox.prototype = {
    * Returns a promise that resolves when the fronts are initialized
    */
   initInspector: function() {
-    let deferred = promise.defer();
-
-    if (!this._inspector) {
-      this._inspector = InspectorFront(this._target.client, this._target.form);
-      this._inspector.getWalker().then(walker => {
-        this._walker = walker;
+    if (!this._initInspector) {
+      this._initInspector = Task.spawn(function*() {
+        this._inspector = InspectorFront(this._target.client, this._target.form);
+        this._walker = yield this._inspector.getWalker();
         this._selection = new Selection(this._walker);
         if (this.highlighterUtils.isRemoteHighlightable) {
-          this._inspector.getHighlighter().then(highlighter => {
-            this._highlighter = highlighter;
-            deferred.resolve();
-          });
-        } else {
-          deferred.resolve();
+          this._highlighter = yield this._inspector.getHighlighter();
         }
-      });
-    } else {
-      deferred.resolve();
+      }.bind(this));
     }
-
-    return deferred.promise;
+    return this._initInspector;
   },
 
   /**

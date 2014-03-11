@@ -374,16 +374,32 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#request-menu-context-newtab").addEventListener("command", this._onContextNewTabCommand, false);
     $("#request-menu-context-copy-url").addEventListener("command", this._onContextCopyUrlCommand, false);
     $("#request-menu-context-copy-image-as-data-uri").addEventListener("command", this._onContextCopyImageAsDataUriCommand, false);
-    $("#request-menu-context-resend").addEventListener("command", this._onContextResendCommand, false);
-    $("#request-menu-context-perf").addEventListener("command", this._onContextPerfCommand, false);
 
-    $("#requests-menu-perf-notice-button").addEventListener("command", this._onContextPerfCommand, false);
-    $("#requests-menu-network-summary-button").addEventListener("command", this._onContextPerfCommand, false);
-    $("#requests-menu-network-summary-label").addEventListener("click", this._onContextPerfCommand, false);
+    window.once("connected", this._onConnect.bind(this));
+  },
 
-    $("#custom-request-send-button").addEventListener("click", this.sendCustomRequestEvent, false);
-    $("#custom-request-close-button").addEventListener("click", this.closeCustomRequestEvent, false);
-    $("#headers-summary-resend").addEventListener("click", this.cloneSelectedRequestEvent, false);
+  _onConnect: function() {
+    if (NetMonitorController.supportsCustomRequest) {
+      $("#request-menu-context-resend").addEventListener("command", this._onContextResendCommand, false);
+      $("#custom-request-send-button").addEventListener("click", this.sendCustomRequestEvent, false);
+      $("#custom-request-close-button").addEventListener("click", this.closeCustomRequestEvent, false);
+      $("#headers-summary-resend").addEventListener("click", this.cloneSelectedRequestEvent, false);
+    } else {
+      $("#request-menu-context-resend").hidden = true;
+      $("#headers-summary-resend").hidden = true;
+    }
+
+    if (NetMonitorController.supportsPerfStats) {
+      $("#request-menu-context-perf").addEventListener("command", this._onContextPerfCommand, false);
+      $("#requests-menu-perf-notice-button").addEventListener("command", this._onContextPerfCommand, false);
+      $("#requests-menu-network-summary-button").addEventListener("command", this._onContextPerfCommand, false);
+      $("#requests-menu-network-summary-label").addEventListener("click", this._onContextPerfCommand, false);
+    } else {
+      $("#notice-perf-message").hidden = true;
+      $("#request-menu-context-perf").hidden = true;
+      $("#requests-menu-network-summary-button").hidden = true;
+      $("#requests-menu-network-summary-label").hidden = true;
+    }
   },
 
   /**
@@ -546,8 +562,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   sendCustomRequest: function() {
     let selected = this.selectedItem.attachment;
-    let data = Object.create(selected);
 
+    let data = {
+      method: selected.method,
+      url: selected.url,
+      httpVersion: selected.httpVersion,
+    };
     if (selected.requestHeaders) {
       data.headers = selected.requestHeaders.headers;
     }
@@ -1534,7 +1554,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let selectedItem = this.selectedItem;
 
     let resendElement = $("#request-menu-context-resend");
-    resendElement.hidden = !selectedItem || selectedItem.attachment.isCustom;
+    resendElement.hidden = !NetMonitorController.supportsCustomRequest ||
+                           !selectedItem || selectedItem.attachment.isCustom;
 
     let copyUrlElement = $("#request-menu-context-copy-url");
     copyUrlElement.hidden = !selectedItem;

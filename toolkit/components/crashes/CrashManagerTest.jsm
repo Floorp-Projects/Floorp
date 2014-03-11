@@ -134,9 +134,14 @@ this.getManager = function () {
     const dirMode = OS.Constants.libc.S_IRWXU;
     let baseFile = OS.Constants.Path.profileDir;
 
-    function makeDir() {
+    function makeDir(create=true) {
       return Task.spawn(function* () {
         let path = OS.Path.join(baseFile, "dummy-dir-" + DUMMY_DIR_COUNT++);
+
+        if (!create) {
+          return path;
+        }
+
         dump("Creating directory: " + path + "\n");
         yield OS.File.makeDir(path, {unixMode: dirMode});
 
@@ -148,7 +153,10 @@ this.getManager = function () {
     let submittedD = yield makeDir();
     let eventsD1 = yield makeDir();
     let eventsD2 = yield makeDir();
-    let storeD = yield makeDir();
+
+    // Store directory is created at run-time if needed. Ensure those code
+    // paths are triggered.
+    let storeD = yield makeDir(false);
 
     let m = new TestingCrashManager({
       pendingDumpsDir: pendingD,

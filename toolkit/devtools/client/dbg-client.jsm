@@ -449,7 +449,8 @@ DebuggerClient.prototype = {
       let cachedTab = this._tabClients.get(aTabActor);
       let cachedResponse = {
         cacheEnabled: cachedTab.cacheEnabled,
-        javascriptEnabled: cachedTab.javascriptEnabled
+        javascriptEnabled: cachedTab.javascriptEnabled,
+        traits: cachedTab.traits,
       };
       setTimeout(() => aOnResponse(cachedResponse, cachedTab), 0);
       return;
@@ -519,7 +520,7 @@ DebuggerClient.prototype = {
         if (this._consoleClients.has(aConsoleActor)) {
           consoleClient = this._consoleClients.get(aConsoleActor);
         } else {
-          consoleClient = new WebConsoleClient(this, aConsoleActor);
+          consoleClient = new WebConsoleClient(this, aResponse);
           this._consoleClients.set(aConsoleActor, consoleClient);
         }
       }
@@ -984,6 +985,7 @@ function TabClient(aClient, aForm) {
   this.cacheEnabled = aForm.cacheEnabled;
   this.thread = null;
   this.request = this.client.request;
+  this.traits = aForm.traits || {};
 }
 
 TabClient.prototype = {
