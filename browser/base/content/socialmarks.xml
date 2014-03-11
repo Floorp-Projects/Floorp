@@ -12,7 +12,9 @@
       <xul:panel anonid="panel" hidden="true" type="arrow" class="social-panel"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop"/>
+                 xbl:inherits="value=label,accesskey,crop,wrap"/>
+      <xul:label class="toolbarbutton-multiline-text" flex="1"
+                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
     </content>
     <implementation implements="nsIDOMEventListener, nsIObserver">
       <field name="inMenuPanel">false</field>
