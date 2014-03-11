@@ -209,6 +209,10 @@ GetActualReadFormats(GLContext* gl,
 static void SwapRAndBComponents(DataSourceSurface* surf)
 {
   uint8_t *row = surf->GetData();
+  if (!row) {
+      MOZ_ASSERT(false, "SwapRAndBComponents: Failed to get data from DataSourceSurface.");
+      return;
+  }
 
   size_t rowBytes = surf->GetSize().width*4;
   size_t rowHole = surf->Stride() - rowBytes;
