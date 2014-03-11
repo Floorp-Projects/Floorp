@@ -4274,7 +4274,7 @@ Parser<FullParseHandler>::forStatement()
                 return null();
         }
 
-        pn3 = expr();
+        pn3 = (headKind == PNK_FOROF) ? assignExpr() : expr();
         if (!pn3)
             return null();
 
