@@ -499,12 +499,6 @@ private:
   // one lock count. Called on the state machine thread.
   void StopAudioThread();
 
-  // Ensures the decode thread is running if it already exists, or requests
-  // a new decode thread be started if there currently is no decode thread.
-  // The decoder monitor must be held with exactly one lock count. Called on
-  // the state machine thread.
-  nsresult ScheduleDecodeThread();
-
   // Starts the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
   nsresult StartAudioThread();
@@ -528,7 +522,20 @@ private:
 
   void StartWaitForResources();
 
-  void StartDecodeMetadata();
+  // Dispatches a task to the decode task queue to begin decoding metadata.
+  // This is called on the state machine or decode threads.
+  // The decoder monitor must be held.
+  nsresult EnqueueDecodeMetadataTask();
+
+  // Dispatches a task to the decode task queue to run the decode loop.
+  // This is called on the state machine or decode threads.
+  // The decoder monitor must be held.
+  nsresult EnqueueDecodeTask();
+
+  // Dispatches a task to the decode task queue to seek the decoder.
+  // This is called on the state machine or decode threads.
+  // The decoder monitor must be held.
+  nsresult EnqueueDecodeSeekTask();
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
@@ -561,9 +568,7 @@ private:
   // Called on the decode thread.
   void DecodeLoop();
 
-  // Decode thread run function. Determines which of the Decode*() functions
-  // to call.
-  void DecodeThreadRun();
+  void CallDecodeMetadata();
 
   // Copy audio from an AudioData packet to aOutput. This may require
   // inserting silence depending on the timing of the audio packet.
