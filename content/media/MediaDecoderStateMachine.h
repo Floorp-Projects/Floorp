@@ -740,6 +740,58 @@ private:
   // the video queue, we will not decode any more video frames until some have
   // been consumed by the play state machine thread.
   uint32_t mAmpleVideoFrames;
+
+  // Low audio threshold. If we've decoded less than this much audio we
+  // consider our audio decode "behind", and we may skip video decoding
+  // in order to allow our audio decoding to catch up. We favour audio
+  // decoding over video. We increase this threshold if we're slow to
+  // decode video frames, in order to reduce the chance of audio underruns.
+  // Note that we don't ever reset this threshold, it only ever grows as
+  // we detect that the decode can't keep up with rendering.
+  int64_t mLowAudioThresholdUsecs;
+
+  // Our "ample" audio threshold. Once we've this much audio decoded, we
+  // pause decoding. If we increase mLowAudioThresholdUsecs, we'll also
+  // increase this too appropriately (we don't want mLowAudioThresholdUsecs
+  // to be greater than ampleAudioThreshold, else we'd stop decoding!).
+  // Note that we don't ever reset this threshold, it only ever grows as
+  // we detect that the decode can't keep up with rendering.
+  int64_t mAmpleAudioThresholdUsecs;
+
+  // At the start of decoding we want to "preroll" the decode until we've
+  // got a few frames decoded before we consider whether decode is falling
+  // behind. Otherwise our "we're falling behind" logic will trigger
+  // unneccessarily if we start playing as soon as the first sample is
+  // decoded. These two fields store how many video frames and audio
+  // samples we must consume before are considered to be finished prerolling.
+  uint32_t mAudioPrerollUsecs;
+  uint32_t mVideoPrerollFrames;
+
+  // When we start decoding (either for the first time, or after a pause)
+  // we may be low on decoded data. We don't want our "low data" logic to
+  // kick in and decide that we're low on decoded data because the download
+  // can't keep up with the decode, and cause us to pause playback. So we
+  // have a "preroll" stage, where we ignore the results of our "low data"
+  // logic during the first few frames of our decode. This occurs during
+  // playback. The flags below are true when the corresponding stream is
+  // being "prerolled".
+  bool mIsAudioPrerolling;
+  bool mIsVideoPrerolling;
+
+  // True when we have an audio stream that we're decoding, and we have not
+  // yet decoded to end of stream.
+  bool mIsAudioDecoding;
+
+  // True when we have a video stream that we're decoding, and we have not
+  // yet decoded to end of stream.
+  bool mIsVideoDecoding;
+
+  // If the video decode is falling behind the audio, we'll start dropping the
+  // inter-frames up until the next keyframe which is at or before the current
+  // playback position. skipToNextKeyframe is true if we're currently
+  // skipping up to the next keyframe.
+  bool mSkipToNextKeyFrame;
+
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, mStopAudioThread is always true and
   // the audio thread will never start again after it has stopped.
@@ -817,8 +869,8 @@ private:
   bool mRealTime;
 
   // Record whether audio and video decoding were throttled during the
-  // previous iteration of DecodeLooop. When we transition from
-  // throttled to not-throttled we need to pump decoding.
+  // previous iteration of DecodeLoop. When we transition from
+  // throttled to not-throttled we need to preroll decoding.
   bool mDidThrottleAudioDecoding;
   bool mDidThrottleVideoDecoding;
 
