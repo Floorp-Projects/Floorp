@@ -246,6 +246,12 @@ HTMLAudioElement::CanPlayChanged(int32_t canPlay)
 }
 
 NS_IMETHODIMP
+HTMLAudioElement::WindowVolumeChanged()
+{
+  return HTMLMediaElement::WindowVolumeChanged();
+}
+
+NS_IMETHODIMP
 HTMLAudioElement::Notify(nsITimer* aTimer)
 {
 #ifdef MOZ_B2G
