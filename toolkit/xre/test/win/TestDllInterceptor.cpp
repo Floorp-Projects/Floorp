@@ -57,6 +57,25 @@ bool TestHook(const char *dll, const char *func)
   }
 }
 
+bool TestDetour(const char *dll, const char *func)
+{
+  void *orig_func;
+  bool successful = false;
+  {
+    WindowsDllInterceptor TestIntercept;
+    TestIntercept.Init(dll);
+    successful = TestIntercept.AddDetour(func, 0, &orig_func);
+  }
+
+  if (successful) {
+    printf("TEST-PASS | WindowsDllInterceptor | Could detour %s from %s\n", func, dll);
+    return true;
+  } else {
+    printf("TEST-UNEXPECTED-FAIL | WindowsDllInterceptor | Failed to detour %s from %s\n", func, dll);
+    return false;
+  }
+}
+
 int main()
 {
   payload initial = { 0x12345678, 0xfc4e9d31, 0x87654321 };
@@ -139,7 +158,7 @@ int main()
       TestHook("kernel32.dll", "MapViewOfFile") &&
       TestHook("gdi32.dll", "CreateDIBSection") &&
 #endif
-      TestHook("ntdll.dll", "LdrLoadDll")) {
+      TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;
   }
