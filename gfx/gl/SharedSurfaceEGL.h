@@ -57,21 +57,20 @@ protected:
                            EGLImage image);
 
     EGLDisplay Display() const;
-
+    void UpdateProdTexture(const MutexAutoLock& curAutoLock);
 
 public:
     virtual ~SharedSurface_EGLImage();
 
-    virtual void LockProdImpl() {}
-    virtual void UnlockProdImpl() {}
+    virtual void LockProdImpl() MOZ_OVERRIDE {}
+    virtual void UnlockProdImpl() MOZ_OVERRIDE {}
 
 
-    virtual void Fence();
-    virtual bool WaitSync();
+    virtual void Fence() MOZ_OVERRIDE;
+    virtual bool WaitSync() MOZ_OVERRIDE;
 
-
-    virtual GLuint Texture() const {
-        return mProdTex;
+    virtual GLuint ProdTexture() MOZ_OVERRIDE {
+      return mProdTex;
     }
 
     // Implementation-specific functions below:
@@ -100,7 +99,7 @@ protected:
     {}
 
 public:
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) {
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_EGLImage::Create(mGL, mFormats, size, hasAlpha, mContext);
     }
