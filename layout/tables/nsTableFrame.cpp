@@ -1407,16 +1407,16 @@ nsTableFrame::PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
 }
 
 int
-nsTableFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+nsTableFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   int skip = 0;
   // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto
   // account for pagination
   if (nullptr != GetPrevInFlow()) {
-    skip |= 1 << NS_SIDE_TOP;
+    skip |= LOGICAL_SIDE_B_START;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= 1 << NS_SIDE_BOTTOM;
+    skip |= LOGICAL_SIDE_B_END;
   }
   return skip;
 }
