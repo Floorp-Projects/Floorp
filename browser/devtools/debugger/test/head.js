@@ -6,11 +6,11 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-// Disable logging for faster test runs. Set this pref to true if you want to
-// debug a test in your try runs. Both the debugger server and frontend will
+// Disable logging for faster test runs. Set this pref to false if you want to
+// disable logging in your try runs. Both the debugger server and frontend will
 // be affected by this pref.
 let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
-Services.prefs.setBoolPref("devtools.debugger.log", false);
+Services.prefs.setBoolPref("devtools.debugger.log", true);
 
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
