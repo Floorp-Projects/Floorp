@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.home.HomeConfig.ItemType;
+import org.mozilla.gecko.home.HomeConfig.ViewConfig;
 import org.mozilla.gecko.home.PanelLayout.FilterManager;
 
 import org.mozilla.gecko.R;
@@ -21,13 +22,13 @@ class PanelViewAdapter extends CursorAdapter {
     private static final int VIEW_TYPE_BACK = 1;
 
 	private final Context mContext;
-	private final ItemType mItemType;
+    private final ViewConfig mViewConfig;
     private FilterManager mFilterManager;
 
-    public PanelViewAdapter(Context context, ItemType itemType) {
+    public PanelViewAdapter(Context context, ViewConfig viewConfig) {
         super(context, null, 0);
         mContext = context;
-        mItemType = itemType;
+        mViewConfig = viewConfig;
     }
 
     public void setFilterManager(FilterManager manager) {
@@ -65,9 +66,9 @@ class PanelViewAdapter extends CursorAdapter {
 
     private View newView(Context context, int position, ViewGroup parent) {
         if (getItemViewType(position) == VIEW_TYPE_BACK) {
-            return new PanelBackItemView(context);
+            return new PanelBackItemView(context, mViewConfig.getBackImageUrl());
         } else {
-            return PanelItemView.create(context, mItemType);
+            return PanelItemView.create(context, mViewConfig.getItemType());
         }
     }
 
