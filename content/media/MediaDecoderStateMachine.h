@@ -547,12 +547,16 @@ private:
   // The decoder monitor must be held.
   nsresult EnqueueDecodeMetadataTask();
 
+  nsresult DispatchAudioDecodeTaskIfNeeded();
+
   // Ensures a to decode audio has been dispatched to the decode task queue.
   // If a task to decode has already been dispatched, this does nothing,
   // otherwise this dispatches a task to do the decode.
-   // This is called on the state machine or decode threads.
-   // The decoder monitor must be held.
+  // This is called on the state machine or decode threads.
+  // The decoder monitor must be held.
   nsresult EnsureAudioDecodeTaskQueued();
+
+  nsresult DispatchVideoDecodeTaskIfNeeded();
 
   // Ensures a to decode video has been dispatched to the decode task queue.
   // If a task to decode has already been dispatched, this does nothing,
@@ -570,10 +574,11 @@ private:
   void SetReaderIdle();
   void SetReaderActive();
 
-  // Re-evaluates the state and determines whether we should set the reader
+  // Re-evaluates the state and determines whether we need to dispatch
+  // events to run the decode, or if not whether we should set the reader
   // to idle mode. This is threadsafe, and can be called from any thread.
   // The decoder monitor must be held.
-  void UpdateIdleState();
+  void DispatchDecodeTasksIfNeeded();
 
   // Called before we do anything on the decode task queue to set the reader
   // as not idle if it was idle. This is called before we decode, seek, or
