@@ -52,6 +52,10 @@ let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
 let RILQUIRKS_RADIO_OFF_WO_CARD =
   libcutils.property_get("ro.moz.ril.radio_off_wo_card", "false") == "true";
 
+// Ril quirk to enable IPv6 protocol/roaming protocol in APN settings.
+let RILQUIRKS_HAVE_IPV6 =
+  libcutils.property_get("ro.moz.ril.ipv6", "false") == "true";
+
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 const RADIOINTERFACE_CID =
@@ -4525,12 +4529,25 @@ RILNetworkInterface.prototype = {
       }
       authType = RIL.RIL_DATACALL_AUTH_TO_GECKO.indexOf(RIL.GECKO_DATACALL_AUTH_DEFAULT);
     }
+    let pdpType = RIL.GECKO_DATACALL_PDP_TYPE_IP;
+    if (RILQUIRKS_HAVE_IPV6) {
+      pdpType = !radioInterface.rilContext.data.roaming
+              ? this.apnSetting.protocol
+              : this.apnSetting.roaming_protocol;
+      if (RIL.RIL_DATACALL_PDP_TYPES.indexOf(pdpType) < 0) {
+        if (DEBUG) {
+          this.debug("Invalid pdpType '" + pdpType + "', using '" +
+                     RIL.GECKO_DATACALL_PDP_TYPE_DEFAULT + "'");
+        }
+        pdpType = RIL.GECKO_DATACALL_PDP_TYPE_DEFAULT;
+      }
+    }
     radioInterface.setupDataCall(radioTechnology,
                                  this.apnSetting.apn,
                                  this.apnSetting.user,
                                  this.apnSetting.password,
                                  authType,
-                                 "IP");
+                                 pdpType);
     this.connecting = true;
   },
 
