@@ -1483,16 +1483,6 @@ TypedObject::createUnattachedWithClass(JSContext *cx,
     obj->initReservedSlot(JS_BUFVIEW_SLOT_OWNER, NullValue());
     obj->initReservedSlot(JS_BUFVIEW_SLOT_NEXT_VIEW, PrivateValue(nullptr));
 
-    // Tag the type object for this instance with the type
-    // representation, if that has not been done already.
-    if (!type->is<SimpleTypeDescr>()) { // FIXME Bug 929651
-        RootedTypeObject typeObj(cx, obj->getType(cx));
-        if (typeObj) {
-            if (!typeObj->addTypedObjectAddendum(cx, type))
-                return nullptr;
-        }
-    }
-
     return static_cast<TypedObject*>(&*obj);
 }
 
