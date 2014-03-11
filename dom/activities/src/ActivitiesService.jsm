@@ -221,7 +221,7 @@ let Activities = {
         if (aChoice === -1) {
           Activities.callers[aMsg.id].mm.sendAsyncMessage("Activity:FireError", {
             "id": aMsg.id,
-            "error": "USER_ABORT"
+            "error": "ActivityCanceled"
           });
           delete Activities.callers[aMsg.id];
           return;
@@ -357,7 +357,7 @@ let Activities = {
           if (this.callers[id].childMM == mm) {
             this.callers[id].mm.sendAsyncMessage("Activity:FireError", {
               "id": id,
-              "error": "USER_ABORT"
+              "error": "ActivityCanceled"
             });
             delete this.callers[id];
             break;
