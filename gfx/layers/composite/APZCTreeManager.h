@@ -255,9 +255,21 @@ public:
    *   - TM.DispatchScroll() calls A.AttemptScroll() (since A is at index 2 in the chain)
    *   - A.AttemptScroll() scrolls A. If there is overscroll, it calls TM.DispatchScroll() with index = 3.
    *   - TM.DispatchScroll() discards the rest of the scroll as there are no more elements in the chain.
+   *
+   * Note: this should be used for panning only. For handing off overscroll for
+   *       a fling, use HandOffFling().
    */
   void DispatchScroll(AsyncPanZoomController* aAPZC, ScreenPoint aStartPoint, ScreenPoint aEndPoint,
                       uint32_t aOverscrollHandoffChainIndex);
+
+  /**
+   * This is a callback for AsyncPanZoomController to call when it wants to
+   * hand off overscroll from a fling.
+   * @param aApzc the APZC that is handing off the fling
+   * @param aVelocity the current velocity of the fling, in |aApzc|'s screen
+   *                  pixels per millisecond
+   */
+  void HandOffFling(AsyncPanZoomController* aApzc, ScreenPoint aVelocity);
 
   bool FlushRepaintsForOverscrollHandoffChain();
 
@@ -295,6 +307,7 @@ private:
   nsEventStatus ProcessEvent(WidgetInputEvent& inputEvent, ScrollableLayerGuid* aOutTargetGuid);
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
+  void ClearOverscrollHandoffChain();
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has
@@ -320,6 +333,7 @@ private:
    * isolation (that is, if its tree pointers are not being accessed or mutated). The
    * lock also needs to be held when accessing the mRootApzc instance variable, as that
    * is considered part of the APZC tree management state.
+   * Finally, the lock needs to be held when accessing mOverscrollHandoffChain.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
   mozilla::Monitor mTreeLock;
   nsRefPtr<AsyncPanZoomController> mRootApzc;
