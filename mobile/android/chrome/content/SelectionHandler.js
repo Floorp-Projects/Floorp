@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -494,6 +495,20 @@ var SelectionHandler = {
       selector: ClipboardHelper.searchWithContext,
     },
 
+    CALL: {
+      label: Strings.browser.GetStringFromName("contextmenu.call"),
+      id: "call_action",
+      icon: "drawable://phone",
+      action: function() {
+        SelectionHandler.callSelection();
+      },
+      order: 1,
+      selector: {
+        matches: function isPhoneNumber(aElement, aX, aY) {
+          return null != SelectionHandler._getSelectedPhoneNumber();
+        }
+      },
+    },
   },
 
   /*
@@ -744,6 +759,22 @@ var SelectionHandler = {
     this._closeSelection();
   },
 
+  _phoneRegex: /(?:\s|^)[\+]?(\(?\d{1,8}\)?)?([- \.]+\(?\d{1,8}\)?)+( ?(x|ext) ?\d{1,3})?(?:\s|$)/,
+
+  _getSelectedPhoneNumber: function sh_isPhoneNumber() {
+    let selectedText = this._getSelectedText();
+    return (selectedText.length && this._phoneRegex.test(selectedText) ?
+            selectedText : null);
+  },
+
+  callSelection: function sh_callSelection() {
+    let selectedText = this._getSelectedPhoneNumber();
+    if (selectedText) {
+      BrowserApp.loadURI("tel:" + selectedText);
+    }
+    this._closeSelection();
+  },
+
   /*
    * Shuts SelectionHandler down.
    */
@@ -904,6 +935,7 @@ var SelectionHandler = {
       positions: positions,
       rtl: this._isRTL
     });
+    this._updateMenu();
   },
 
   subdocumentScrolled: function sh_subdocumentScrolled(aElement) {
