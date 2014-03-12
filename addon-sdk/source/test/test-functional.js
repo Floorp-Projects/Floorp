@@ -438,25 +438,33 @@ exports["test debounce"] = (assert, done) => {
 };
 
 exports["test throttle"] = (assert, done) => {
-  let called = 0;
-  let attempt = 0;
-  let throttledFn = throttle(() => called++, 100);
-  let fn = () => ++attempt && throttledFn();
+  let counter = 0;
+  let incr = function(){ counter++; };
+  let throttledIncr = throttle(incr, 32);
+  throttledIncr();
+  throttledIncr();
+  throttledIncr();
+  throttledIncr();
 
-  new Array(11).join(0).split("").forEach((_, i) => {
-    setTimeout(fn, 20 * (i+1));
-  });
-
+  assert.equal(counter, 1, 'incr was called immediately');
   setTimeout(() => {
-    assert.equal(called, 1, "function called atleast once during first throttle period");
-    assert.ok(attempt >= 2, "function attempted to be called several times during first period");
-  }, 50);
-
-  setTimeout(() => {
-    assert.equal(called, 3, "function called again during second throttle period");
-    assert.equal(attempt, 10, "function attempted to be called several times during second period");
+    assert.equal(counter, 2, 'incr was throttled');
     done();
-  }, 300);
+  }, 64);
+};
+
+exports["test throttle args"] = (assert, done) => {
+  let value = 0;
+  let update = function(val){ value = val; };
+  let throttledUpdate = throttle(update, 32);
+  throttledUpdate(1);
+  throttledUpdate(2);
+  setTimeout(() => throttledUpdate(3), 64);
+  assert.equal(value, 1, 'updated to latest value');
+  setTimeout(() => {
+    assert.equal(value, 3, 'updated to latest value');
+    done();
+  }, 96);
 };
 
 require('test').run(exports);
