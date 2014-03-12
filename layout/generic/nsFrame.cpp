@@ -6271,6 +6271,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       bool eatingNonRenderableWS = false;
       nsIFrame::FrameSearchResult peekSearchState = CONTINUE;
       bool jumpedLine = false;
+      bool movedOverNonSelectableText = false;
       
       while (peekSearchState != FOUND) {
         bool movingInFrameDirection =
@@ -6281,6 +6282,8 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         else
           peekSearchState = current->PeekOffsetCharacter(movingInFrameDirection, &offset,
                                               aPos->mAmount == eSelectCluster);
+
+        movedOverNonSelectableText |= (peekSearchState == CONTINUE_UNSELECTABLE);
 
         if (peekSearchState != FOUND) {
           result =
@@ -6294,6 +6297,15 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           // to eat non-renderable content on the new line.
           if (jumpedLine)
             eatingNonRenderableWS = true;
+        }
+
+        // Found frame, but because we moved over non selectable text we want the offset
+        // to be at the frame edge.
+        if (peekSearchState == FOUND && movedOverNonSelectableText)
+        {
+          int32_t start, end;
+          current->GetOffsets(start, end);
+          offset = aPos->mDirection == eDirNext ? 0 : end - start;
         }
       }
 

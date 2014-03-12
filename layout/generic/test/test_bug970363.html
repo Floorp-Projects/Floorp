@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=970363
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 970363</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=970363">Mozilla Bug 970363</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<div contenteditable="true" id='editablediv'>
+  <div id='t'>S<span contenteditable="false">readonly</span>E</div>
+</div>
+<pre id="test">
+
+ <script type="application/javascript">
+
+    /** Test for Bug 970363 **/
+
+    SimpleTest.waitForExplicitFinish();
+
+    SimpleTest.waitForFocus(function() {
+      var t = document.getElementById("t");
+      var editablediv = document.getElementById("editablediv");
+      var sel = window.getSelection();
+      editablediv.focus();
+      sel.collapse(t, 0);
+
+      // Move past the 'S' char.
+      synthesizeKey("VK_RIGHT", {});
+      // Move across the span.
+      synthesizeKey("VK_RIGHT", {});
+      // Insert an 'I' to show when IP currently is.
+      synthesizeKey("I", {});
+
+      is(t.textContent, "SreadonlyIE", "the 'I' char should be inserted between 'readonly' and 'E'");
+      SimpleTest.finish();
+    });
+
+  </script>
+
+</pre>
+</body>
+</html>
