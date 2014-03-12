@@ -14,7 +14,6 @@ include protocol PCrashReporter;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
 include protocol PFMRadio;
-include protocol PFileSystemRequest;
 include protocol PHal;
 include protocol PImageBridge;
 include protocol PIndexedDB;
@@ -194,24 +193,6 @@ union FMRadioRequestParams
   FMRadioRequestCancelSeekParams;
 };
 
-struct FileSystemCreateDirectoryParams
-{
-  nsString filesystem;
-  nsString realPath;
-};
-
-struct FileSystemGetFileOrDirectoryParams
-{
-  nsString filesystem;
-  nsString realPath;
-};
-
-union FileSystemParams
-{
-  FileSystemCreateDirectoryParams;
-  FileSystemGetFileOrDirectoryParams;
-};
-
 union PrefValue {
   nsCString;
   int32_t;
@@ -241,7 +222,6 @@ intr protocol PContent
     manages PBrowser;
     manages PCrashReporter;
     manages PDeviceStorageRequest;
-    manages PFileSystemRequest;
     manages PExternalHelperApp;
     manages PFMRadio;
     manages PHal;
@@ -390,8 +370,6 @@ parent:
         returns (bool isOffline);
 
     PDeviceStorageRequest(DeviceStorageParams params);
-
-    PFileSystemRequest(FileSystemParams params);
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
 
