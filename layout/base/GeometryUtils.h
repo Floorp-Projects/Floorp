@@ -22,10 +22,17 @@ namespace mozilla {
 
 namespace dom {
 struct BoxQuadOptions;
+struct ConvertCoordinateOptions;
 class DOMQuad;
-class Element;
-class Text;
+class DOMRectReadOnly;
+class DOMPoint;
+class DOMPointInit;
+class OwningTextOrElementOrDocument;
+class TextOrElementOrDocument;
 }
+
+typedef dom::TextOrElementOrDocument GeometryNode;
+typedef dom::OwningTextOrElementOrDocument OwningGeometryNode;
 
 /**
  * Computes quads for aNode using aOptions, according to GeometryUtils.getBoxQuads.
@@ -35,6 +42,24 @@ void GetBoxQuads(nsINode* aNode,
                  const dom::BoxQuadOptions& aOptions,
                  nsTArray<nsRefPtr<dom::DOMQuad> >& aResult,
                  ErrorResult& aRv);
+
+already_AddRefed<dom::DOMQuad>
+ConvertQuadFromNode(nsINode* aTo, dom::DOMQuad& aQuad,
+                    const GeometryNode& aFrom,
+                    const dom::ConvertCoordinateOptions& aOptions,
+                    ErrorResult& aRv);
+
+already_AddRefed<dom::DOMQuad>
+ConvertRectFromNode(nsINode* aTo, dom::DOMRectReadOnly& aRect,
+                    const GeometryNode& aFrom,
+                    const dom::ConvertCoordinateOptions& aOptions,
+                    ErrorResult& aRv);
+
+already_AddRefed<dom::DOMPoint>
+ConvertPointFromNode(nsINode* aTo, const dom::DOMPointInit& aPoint,
+                     const GeometryNode& aFrom,
+                     const dom::ConvertCoordinateOptions& aOptions,
+                     ErrorResult& aRv);
 
 }
 
