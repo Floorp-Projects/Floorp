@@ -34,7 +34,7 @@ function debug(aMessage) {
   // append a newline character to the end of the message because *dump* spills
   // into the Android native logging system, which strips newlines from messages
   // and breaks messages into lines automatically at display time (i.e. logcat).
-#ifdef MOZ_DEBUG
+#ifdef DEBUG
   dump(aMessage);
 #endif
 }
