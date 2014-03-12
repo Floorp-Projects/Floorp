@@ -45,7 +45,8 @@ let WebProgressListener = {
       isTopLevel: aWebProgress.isTopLevel,
       isLoadingDocument: aWebProgress.isLoadingDocument,
       requestURI: this._requestSpec(aRequest),
-      loadType: aWebProgress.loadType
+      loadType: aWebProgress.loadType,
+      documentContentType: content.document && content.document.contentType
     };
   },
 
@@ -281,8 +282,11 @@ addEventListener("TextZoomChange", function (aEvent) {
 
 RemoteAddonsChild.init(this);
 
-addMessageListener("History:UseGlobalHistory", function (aMessage) {
-  docShell.useGlobalHistory = aMessage.data.enabled;
+addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
+  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+  let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
+                        .loadGroup.QueryInterface(Ci.nsISupportsPriority);
+  loadGroup.adjustPriority(msg.data.adjustment);
 });
 
 let AutoCompletePopup = {
@@ -344,6 +348,8 @@ let AutoCompletePopup = {
   }
 }
 
-addMessageListener("FormAutoComplete:InitPopup", function (aMessage) {
+let [initData] = sendSyncMessage("Browser:Init");
+docShell.useGlobalHistory = initData.useGlobalHistory;
+if (initData.initPopup) {
   setTimeout(function() AutoCompletePopup.init(), 0);
-});
+}

@@ -370,9 +370,9 @@ public abstract class GeckoApp
 
     @Override
     public void showMenu(View menu) {
-        // Hide the menu only if we are showing the MenuPopup.
-        if (!HardwareUtils.hasMenuButton())
-            closeMenu();
+        // Hide the menu before we reshow it to avoid platform specific bugs like
+        // bug 794581 and bug 968182.
+        closeMenu();
 
         mMenuPanel.removeAllViews();
         mMenuPanel.addView(menu);

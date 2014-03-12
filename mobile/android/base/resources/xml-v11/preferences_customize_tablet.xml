@@ -17,12 +17,14 @@
                                                   android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_home"
+                      android:summary="@string/pref_category_home_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
             <extra android:name="resource"
                    android:value="preferences_home" />
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_search"
+                      android:summary="@string/pref_category_search_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_search"/>

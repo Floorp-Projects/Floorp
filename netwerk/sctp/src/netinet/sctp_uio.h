@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 242327 2012-10-29 20:47:32Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_uio.h 255160 2013-09-02 22:48:41Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_UIO_H_
@@ -691,10 +691,6 @@ struct sctp_hmacalgo {
 #define SCTP_AUTH_HMAC_ID_RSVD		0x0000
 #define SCTP_AUTH_HMAC_ID_SHA1		0x0001	/* default, mandatory */
 #define SCTP_AUTH_HMAC_ID_SHA256	0x0003
-#define SCTP_AUTH_HMAC_ID_SHA224	0x0004
-#define SCTP_AUTH_HMAC_ID_SHA384	0x0005
-#define SCTP_AUTH_HMAC_ID_SHA512	0x0006
-
 
 /* SCTP_AUTH_ACTIVE_KEY / SCTP_AUTH_DELETE_KEY */
 struct sctp_authkeyid {
@@ -1174,7 +1170,11 @@ union sctp_sockstore {
 struct xsctp_inpcb {
 	uint32_t last;
 	uint32_t flags;
+#if defined(__FreeBSD__) && __FreeBSD_version < 1000048
 	uint32_t features;
+#else
+	uint64_t features;
+#endif
 	uint32_t total_sends;
 	uint32_t total_recvs;
 	uint32_t total_nospaces;
@@ -1185,7 +1185,11 @@ struct xsctp_inpcb {
 #if defined(__Windows__)
 	uint16_t padding;
 #endif
+#if defined(__FreeBSD__) && __FreeBSD_version < 1000048
 	uint32_t extra_padding[32]; /* future */
+#else
+	uint32_t extra_padding[31]; /* future */
+#endif
 };
 
 struct xsctp_tcb {
@@ -1328,7 +1332,7 @@ sctp_sorecvmsg(struct socket *so,
 #if !(defined(_KERNEL)) && !(defined(__Userspace__))
 
 __BEGIN_DECLS
-#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
+#if defined(__FreeBSD__) && __FreeBSD_version < 902000
 int	sctp_peeloff __P((int, sctp_assoc_t));
 int	sctp_bindx __P((int, struct sockaddr *, int, int));
 int	sctp_connectx __P((int, const struct sockaddr *, int, sctp_assoc_t *));

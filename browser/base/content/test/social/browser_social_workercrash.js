@@ -17,10 +17,8 @@ function test() {
   Services.prefs.setIntPref("dom.ipc.processCount", 1);
 
   runSocialTestWithProvider(gProviders, function (finishcb) {
-    Social.enabled = true;
     runSocialTests(tests, undefined, undefined, function() {
       Services.prefs.clearUserPref("dom.ipc.processCount");
-      Services.prefs.clearUserPref("social.sidebar.open");
       finishcb();
     });
   });
@@ -81,7 +79,7 @@ var tests = {
         mm.sendAsyncMessage("social-test:crash");
       });
     })
-    Services.prefs.setBoolPref("social.sidebar.open", true);
+    SocialSidebar.show();
   },
 }
 

@@ -324,7 +324,6 @@ var tests = {
       Social.installProvider(doc, manifest2, function(addonManifest) {
         SocialService.addBuiltinProvider(addonManifest.origin, function(provider) {
           is(provider.manifest.version, 1, "manifest version is 1");
-          Social.enabled = true;
 
           // watch for the provider-update and test the new version
           SocialService.registerProviderListener(function providerListener(topic, origin, providers) {
@@ -342,16 +341,7 @@ var tests = {
           });
 
           let port = provider.getWorkerPort();
-          port.onmessage = function (e) {
-            let topic = e.data.topic;
-            switch (topic) {
-              case "got-sidebar-message":
-                ok(true, "got the sidebar message from provider 1");
-                port.postMessage({topic: "worker.update", data: true});
-                break;
-            }
-          };
-          port.postMessage({topic: "test-init"});
+          port.postMessage({topic: "worker.update", data: true});
 
         });
       });

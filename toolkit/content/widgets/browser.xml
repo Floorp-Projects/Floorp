@@ -223,6 +223,10 @@
                 onget="return this.contentDocument.documentURIObject;"
                 readonly="true"/>
 
+      <property name="documentContentType"
+                onget="return this.contentDocument ? this.contentDocument.contentType : null;"
+                readonly="true"/>
+
       <property name="preferences"
                 onget="return this.mPrefs.QueryInterface(Components.interfaces.nsIPrefService);"
                 readonly="true"/>
@@ -669,6 +673,15 @@
           ]]>
         </setter>
       </property>
+
+      <method name="adjustPriority">
+        <parameter name="adjustment"/>
+        <body><![CDATA[
+          let loadGroup = this.webNavigation.QueryInterface(Ci.nsIDocumentLoader)
+                              .loadGroup.QueryInterface(Ci.nsISupportsPriority);
+          loadGroup.adjustPriority(adjustment);
+        ]]></body>
+      </method>
 
       <!--
         This field tracks the location bar state. The value that the user typed

@@ -523,17 +523,6 @@ public:
   already_AddRefed<gfxASurface> DeprecatedGetCurrentAsSurface(gfx::IntSize* aSizeResult);
 
   /**
-   * This is similar to GetCurrentAsSurface, however this does not make a copy
-   * of the image data and requires the user to call UnlockCurrentImage when
-   * done with the image data. Once UnlockCurrentImage has been called the
-   * surface returned by this function is no longer valid! This works for any
-   * type of image. Optionally a pointer can be passed to receive the current
-   * image.
-   */
-  already_AddRefed<gfxASurface> DeprecatedLockCurrentAsSurface(gfx::IntSize* aSizeResult,
-                                                               Image** aCurrentImage = nullptr);
-
-  /**
    * Same as GetCurrentAsSurface but for Moz2D
    */
   TemporaryRef<gfx::SourceSurface> GetCurrentAsSourceSurface(gfx::IntSize* aSizeResult);

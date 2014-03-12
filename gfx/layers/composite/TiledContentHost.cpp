@@ -322,7 +322,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
   Rect quad(screenBounds.x, screenBounds.y, screenBounds.width, screenBounds.height);
   quad = mat.TransformBounds(quad);
 
-  if (!quad.Intersects(aClipRect)) {
+  if (!quad.Intersects(mCompositor->ClipRectInLayersCoordinates(aClipRect))) {
     return;
   }
 

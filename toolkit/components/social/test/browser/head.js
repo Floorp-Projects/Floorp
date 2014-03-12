@@ -4,14 +4,6 @@
 
 let SocialService = Components.utils.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
-function ensureSocialEnabled() {
-  let initiallyEnabled = SocialService.enabled;
-  SocialService.enabled = true;
-  registerCleanupFunction(function () {
-    SocialService.enabled = initiallyEnabled;
-  });
-}
-
 // A helper to run a suite of tests.
 // The "test object" should be an object with function names as keys and a
 // function as the value.  The functions will be called with a "cbnext" param

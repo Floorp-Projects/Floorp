@@ -129,6 +129,16 @@ public:
   float GetVelocity();
 
   /**
+   * Sets the raw velocity of this axis at this moment.
+   * Intended to be called only when the axis "takes over" a velocity from
+   * another APZC, in which case there are no touch points available to call
+   * UpdateWithTouchAtDevicePoint. In other circumstances,
+   * UpdateWithTouchAtDevicePoint should be used and the velocity calculated
+   * there.
+   */
+  void SetVelocity(float aVelocity);
+
+  /**
    * Gets the overscroll state of the axis given an additional displacement.
    * That is to say, if the given displacement is applied, this will tell you
    * whether or not it will overscroll, and in what direction.

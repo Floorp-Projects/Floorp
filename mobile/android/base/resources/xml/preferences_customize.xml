@@ -7,7 +7,8 @@
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:enabled="false">
 
-    <PreferenceScreen android:title="@string/pref_category_home" >
+    <PreferenceScreen android:title="@string/pref_category_home"
+                      android:summary="@string/pref_category_home_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
@@ -17,7 +18,9 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_search" >
+    <PreferenceScreen android:title="@string/pref_category_search"
+                      android:summary="@string/pref_category_search_summary" >
+
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >

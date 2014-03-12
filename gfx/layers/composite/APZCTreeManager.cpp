@@ -403,7 +403,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
         // then null it out so we don't keep a dangling reference and leak things.
         if (mTouchCount == 0) {
           mApzcForInputBlock = nullptr;
-          mOverscrollHandoffChain.clear();
+          ClearOverscrollHandoffChain();
         }
       }
       break;
@@ -517,7 +517,7 @@ APZCTreeManager::ProcessTouchEvent(WidgetTouchEvent& aEvent,
     }
     if (mTouchCount == 0) {
       mApzcForInputBlock = nullptr;
-      mOverscrollHandoffChain.clear();
+      ClearOverscrollHandoffChain();
     }
   }
   return ret;
@@ -677,18 +677,58 @@ APZCTreeManager::ClearTree()
   mRootApzc = nullptr;
 }
 
+/**
+ * Transform a displacement from the screen coordinates of a source APZC to
+ * the screen coordinates of a target APZC.
+ * @param aTreeManager the tree manager for the APZC tree containing |aSource|
+ *                     and |aTarget|
+ * @param aSource the source APZC
+ * @param aTarget the target APZC
+ * @param aStartPoint the start point of the displacement
+ * @param aEndPoint the end point of the displacement
+ */
+static void
+TransformDisplacement(APZCTreeManager* aTreeManager,
+                      AsyncPanZoomController* aSource,
+                      AsyncPanZoomController* aTarget,
+                      ScreenPoint& aStartPoint,
+                      ScreenPoint& aEndPoint) {
+  gfx3DMatrix transformToApzc;
+  gfx3DMatrix transformToGecko;  // ignored
+
+  // Convert start and end points to untransformed screen coordinates.
+  aTreeManager->GetInputTransforms(aSource, transformToApzc, transformToGecko);
+  ApplyTransform(&aStartPoint, transformToApzc.Inverse());
+  ApplyTransform(&aEndPoint, transformToApzc.Inverse());
+
+  // Convert start and end points to aTarget's transformed screen coordinates.
+  aTreeManager->GetInputTransforms(aTarget, transformToApzc, transformToGecko);
+  ApplyTransform(&aStartPoint, transformToApzc);
+  ApplyTransform(&aEndPoint, transformToApzc);
+}
+
 void
 APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStartPoint, ScreenPoint aEndPoint,
                                 uint32_t aOverscrollHandoffChainIndex)
 {
-  // If we have reached the end of the overscroll handoff chain, there is
-  // nothing more to scroll, so we ignore the rest of the pan gesture.
-  if (aOverscrollHandoffChainIndex >= mOverscrollHandoffChain.length()) {
-    // Nothing more to scroll - ignore the rest of the pan gesture.
-    return;
+  nsRefPtr<AsyncPanZoomController> next;
+  {
+    // Grab tree lock to protect mOverscrollHandoffChain from concurrent
+    // access from the input and compositor threads.
+    // Release it before calling TransformDisplacement() as that grabs the
+    // lock itself.
+    MonitorAutoLock lock(mTreeLock);
+
+    // If we have reached the end of the overscroll handoff chain, there is
+    // nothing more to scroll, so we ignore the rest of the pan gesture.
+    if (aOverscrollHandoffChainIndex >= mOverscrollHandoffChain.length()) {
+      // Nothing more to scroll - ignore the rest of the pan gesture.
+      return;
+    }
+
+    next = mOverscrollHandoffChain[aOverscrollHandoffChainIndex];
   }
 
-  nsRefPtr<AsyncPanZoomController> next = mOverscrollHandoffChain[aOverscrollHandoffChainIndex];
   if (next == nullptr)
     return;
 
@@ -698,18 +738,7 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStar
   // scroll grabbing to grab the scroll from it), don't bother doing the
   // transformations in that case.
   if (next != aPrev) {
-    gfx3DMatrix transformToApzc;
-    gfx3DMatrix transformToGecko;  // ignored
-
-    // Convert start and end points to untransformed screen coordinates.
-    GetInputTransforms(aPrev, transformToApzc, transformToGecko);
-    ApplyTransform(&aStartPoint, transformToApzc.Inverse());
-    ApplyTransform(&aEndPoint, transformToApzc.Inverse());
-
-    // Convert start and end points to next's transformed screen coordinates.
-    GetInputTransforms(next, transformToApzc, transformToGecko);
-    ApplyTransform(&aStartPoint, transformToApzc);
-    ApplyTransform(&aEndPoint, transformToApzc);
+    TransformDisplacement(this, aPrev, next, aStartPoint, aEndPoint);
   }
 
   // Scroll |next|. If this causes overscroll, it will call DispatchScroll()
@@ -717,9 +746,69 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStar
   next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffChainIndex);
 }
 
+void
+APZCTreeManager::HandOffFling(AsyncPanZoomController* aPrev, ScreenPoint aVelocity)
+{
+  // Build the overscroll handoff chain. This is necessary because it is
+  // otherwise built on touch-start and cleared on touch-end, and a fling
+  // happens after touch-end. Note that, unlike DispatchScroll() which is
+  // called on every touch-move during overscroll panning,
+  // HandleFlingOverscroll() is only called once during a fling handoff,
+  // so it's not worth trying to avoid building the handoff chain here.
+  BuildOverscrollHandoffChain(aPrev);
+
+  nsRefPtr<AsyncPanZoomController> next;  // will be used outside monitor block
+  {
+    // Grab tree lock to protect mOverscrollHandoffChain from concurrent
+    // access from the input and compositor threads.
+    // Release it before calling GetInputTransforms() as that grabs the
+    // lock itself.
+    MonitorAutoLock lock(mTreeLock);
+
+    // Find |aPrev| in the handoff chain.
+    uint32_t i;
+    for (i = 0; i < mOverscrollHandoffChain.length(); ++i) {
+      if (mOverscrollHandoffChain[i] == aPrev) {
+        break;
+      }
+    }
+
+    // Get the next APZC in the handoff chain, if any.
+    if (i + 1 < mOverscrollHandoffChain.length()) {
+      next = mOverscrollHandoffChain[i + 1];
+    }
+
+    // Clear the handoff chain so we don't maintain references to APZCs
+    // unnecessarily.
+    mOverscrollHandoffChain.clear();
+  }
+
+  // Nothing to hand off fling to.
+  if (next == nullptr) {
+    return;
+  }
+
+  // The fling's velocity needs to be transformed from the screen coordinates
+  // of |aPrev| to the screen coordinates of |next|. To transform a velocity
+  // correctly, we need to convert it to a displacement. For now, we do this
+  // by anchoring it to a start point of (0, 0).
+  // TODO: For this to be correct in the presence of 3D transforms, we should
+  // use the end point of the touch that started the fling as the start point
+  // rather than (0, 0).
+  ScreenPoint startPoint;  // (0, 0)
+  ScreenPoint endPoint = startPoint + aVelocity;
+  TransformDisplacement(this, aPrev, next, startPoint, endPoint);
+  ScreenPoint transformedVelocity = endPoint - startPoint;
+
+  // Tell |next| to start a fling with the transformed velocity.
+  next->TakeOverFling(transformedVelocity);
+}
+
+
 bool
 APZCTreeManager::FlushRepaintsForOverscrollHandoffChain()
 {
+  MonitorAutoLock lock(mTreeLock);  // to access mOverscrollHandoffChain
   if (mOverscrollHandoffChain.length() == 0) {
     return false;
   }
@@ -799,6 +888,10 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
   // handoff order can be different, so we build a chain of APZCs in the
   // order in which scroll will be handed off to them.
 
+  // Grab tree lock to protect mOverscrollHandoffChain from concurrent
+  // access between the input and compositor threads.
+  MonitorAutoLock lock(mTreeLock);
+
   mOverscrollHandoffChain.clear();
 
   // Start with the child -> parent chain.
@@ -820,6 +913,13 @@ APZCTreeManager::BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomControll
   // and users of 'scrollgrab' should not rely on this.)
   std::stable_sort(mOverscrollHandoffChain.begin(), mOverscrollHandoffChain.end(),
                    CompareByScrollPriority());
+}
+
+void
+APZCTreeManager::ClearOverscrollHandoffChain()
+{
+  MonitorAutoLock lock(mTreeLock);
+  mOverscrollHandoffChain.clear();
 }
 
 AsyncPanZoomController*

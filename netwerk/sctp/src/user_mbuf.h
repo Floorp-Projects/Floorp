@@ -163,9 +163,9 @@ struct mbstat {
  * externally and attach it to the mbuf in a way similar to that of mbuf
  * clusters.
  */
-#define	MLEN		(MSIZE - sizeof(struct m_hdr))	/* normal data len */
-#define	MHLEN		(MLEN - sizeof(struct pkthdr))	/* data len w/pkthdr */
-#define	MINCLSIZE	(MHLEN + 1)	/* smallest amount to put in cluster */
+#define	MLEN		((int)(MSIZE - sizeof(struct m_hdr)))	/* normal data len */
+#define	MHLEN		((int)(MLEN - sizeof(struct pkthdr)))	/* data len w/pkthdr */
+#define	MINCLSIZE	((int)(MHLEN + 1))	/* smallest amount to put in cluster */
 #define	M_MAXCOMPRESS	(MHLEN / 2)	/* max amount to copy for compression */
 
 
@@ -267,7 +267,6 @@ struct mbuf {
 #define	M_PROTO3	0x0040	/* protocol-specific */
 #define	M_PROTO4	0x0080	/* protocol-specific */
 #define	M_PROTO5	0x0100	/* protocol-specific */
-#define	M_NOTIFICATION	M_PROTO5/* SCTP notification */
 #define	M_SKIP_FIREWALL	0x4000	/* skip firewall processing */
 #define	M_FREELIST	0x8000	/* mbuf is on the free list */
 
