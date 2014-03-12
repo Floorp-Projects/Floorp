@@ -122,8 +122,8 @@ nsSocketTransportService::Dispatch(nsIRunnable *event, uint32_t flags)
     SOCKET_LOG(("STS dispatch [%p]\n", event));
 
     nsCOMPtr<nsIThread> thread = GetThreadSafely();
-    NS_ENSURE_TRUE(thread, NS_ERROR_NOT_INITIALIZED);
-    nsresult rv = thread->Dispatch(event, flags);
+    nsresult rv;
+    rv = thread ? thread->Dispatch(event, flags) : NS_ERROR_NOT_INITIALIZED;
     if (rv == NS_ERROR_UNEXPECTED) {
         // Thread is no longer accepting events. We must have just shut it
         // down on the main thread. Pretend we never saw it.
