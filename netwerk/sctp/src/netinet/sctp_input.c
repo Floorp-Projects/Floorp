@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 246595 2013-02-09 17:26:14Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 262252 2014-02-20 20:14:43Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -412,9 +412,10 @@ sctp_process_init(struct sctp_init_chunk *cp, struct sctp_tcb *stcb)
 		}
 		SCTP_FREE(asoc->strmin, SCTP_M_STRMI);
 	}
-	asoc->streamincnt = ntohs(init->num_outbound_streams);
-	if (asoc->streamincnt > MAX_SCTP_STREAMS) {
-		asoc->streamincnt = MAX_SCTP_STREAMS;
+	if (asoc->max_inbound_streams > ntohs(init->num_outbound_streams)) {
+		asoc->streamincnt = ntohs(init->num_outbound_streams);
+	} else {
+		asoc->streamincnt = asoc->max_inbound_streams;
 	}
 	SCTP_MALLOC(asoc->strmin, struct sctp_stream_in *, asoc->streamincnt *
 		    sizeof(struct sctp_stream_in), SCTP_M_STRMI);
@@ -426,11 +427,6 @@ sctp_process_init(struct sctp_init_chunk *cp, struct sctp_tcb *stcb)
 	for (i = 0; i < asoc->streamincnt; i++) {
 		asoc->strmin[i].stream_no = i;
 		asoc->strmin[i].last_sequence_delivered = 0xffff;
-		/*
-		 * U-stream ranges will be set when the cookie is unpacked.
-		 * Or for the INIT sender they are un set (if pr-sctp not
-		 * supported) when the INIT-ACK arrives.
-		 */
 		TAILQ_INIT(&asoc->strmin[i].inqueue);
 		asoc->strmin[i].delivery_started = 0;
 	}
@@ -468,7 +464,6 @@ sctp_process_init_ack(struct mbuf *m, int iphlen, int offset,
 
 	/* First verify that we have no illegal param's */
 	abort_flag = 0;
-	op_err = NULL;
 
 	op_err = sctp_arethere_unrecognized_parameters(m,
 						       (offset + sizeof(struct sctp_init_chunk)),
@@ -1068,12 +1063,13 @@ sctp_handle_shutdown_ack(struct sctp_shutdown_ack_chunk *cp SCTP_UNUSED,
 		SCTP_SOCKET_UNLOCK(so, 1);
 #endif
 	}
-	/* are the queues empty? */
+#ifdef INVARIANTS
 	if (!TAILQ_EMPTY(&asoc->send_queue) ||
 	    !TAILQ_EMPTY(&asoc->sent_queue) ||
 	    !stcb->asoc.ss_functions.sctp_ss_is_empty(stcb, asoc)) {
-		sctp_report_all_outbound(stcb, 0, 0, SCTP_SO_NOT_LOCKED);
+		panic("Queues are not empty when handling SHUTDOWN-ACK");
 	}
+#endif
 	/* stop the timer */
 	sctp_timer_stop(SCTP_TIMER_TYPE_SHUTDOWN, stcb->sctp_ep, stcb, net, SCTP_FROM_SCTP_INPUT+SCTP_LOC_9);
 	/* send SHUTDOWN-COMPLETE */
@@ -1614,7 +1610,7 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 			return (NULL);
 
 		}
- 		switch SCTP_GET_STATE(asoc) {
+ 		switch (SCTP_GET_STATE(asoc)) {
 			case SCTP_STATE_COOKIE_WAIT:
 			case SCTP_STATE_COOKIE_ECHOED:
 				/*
@@ -1926,20 +1922,24 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 	    cookie->tie_tag_peer_vtag == asoc->peer_vtag_nonce &&
 	    cookie->tie_tag_peer_vtag != 0) {
 		struct sctpasochead *head;
-		if (asoc->peer_supports_nat) {
-		  /* This is a gross gross hack.
-		   * just call the cookie_new code since we
-		   * are allowing a duplicate association. I hope
-		   * this works...
-		   */
-		  return (sctp_process_cookie_new(m, iphlen, offset, src, dst,
-		                                  sh, cookie, cookie_len,
-						  inp, netp, init_src,notification,
-						  auth_skipped, auth_offset, auth_len,
-#if defined(__FreeBSD__)
-						  use_mflowid, mflowid,
+#if defined(__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
+		struct socket *so;
 #endif
-						  vrf_id, port));
+
+		if (asoc->peer_supports_nat) {
+			/* This is a gross gross hack.
+			 * Just call the cookie_new code since we
+			 * are allowing a duplicate association.
+			 * I hope this works...
+			 */
+			return (sctp_process_cookie_new(m, iphlen, offset, src, dst,
+			                                sh, cookie, cookie_len,
+			                                inp, netp, init_src,notification,
+			                                auth_skipped, auth_offset, auth_len,
+#if defined(__FreeBSD__)
+			                                use_mflowid, mflowid,
+#endif
+			                                vrf_id, port));
 		}
 		/*
 		 * case A in Section 5.2.4 Table 2: XXMM (peer restarted)
@@ -1992,6 +1992,10 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 			    asoc->mapping_array_size);
 		}
 		SCTP_TCB_UNLOCK(stcb);
+#if defined(__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
+		so = SCTP_INP_SO(stcb->sctp_ep);
+		SCTP_SOCKET_LOCK(so, 1);
+#endif
 		SCTP_INP_INFO_WLOCK();
 		SCTP_INP_WLOCK(stcb->sctp_ep);
 		SCTP_TCB_LOCK(stcb);
@@ -1999,7 +2003,7 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 		/* send up all the data */
 		SCTP_TCB_SEND_LOCK(stcb);
 
-		sctp_report_all_outbound(stcb, 0, 1, SCTP_SO_NOT_LOCKED);
+		sctp_report_all_outbound(stcb, 0, 1, SCTP_SO_LOCKED);
 		for (i = 0; i < stcb->asoc.streamoutcnt; i++) {
 			stcb->asoc.strmout[i].chunks_on_queues = 0;
 			stcb->asoc.strmout[i].stream_no = i;
@@ -2021,11 +2025,15 @@ sctp_process_cookie_existing(struct mbuf *m, int iphlen, int offset,
 		 */
 		LIST_INSERT_HEAD(head, stcb, sctp_asocs);
 
-		/* process the INIT info (peer's info) */
 		SCTP_TCB_SEND_UNLOCK(stcb);
 		SCTP_INP_WUNLOCK(stcb->sctp_ep);
 		SCTP_INP_INFO_WUNLOCK();
-
+#if defined(__APPLE__) || defined(SCTP_SO_LOCK_TESTING)
+		SCTP_SOCKET_UNLOCK(so, 1);
+#endif
+		asoc->total_flight = 0;
+		asoc->total_flight_count = 0;
+		/* process the INIT info (peer's info) */
 		retval = sctp_process_init(init_cp, stcb);
 		if (retval < 0) {
 			if (how_indx < sizeof(asoc->cookie_how))
@@ -3335,13 +3343,14 @@ sctp_handle_shutdown_complete(struct sctp_shutdown_complete_chunk *cp SCTP_UNUSE
 	/* notify upper layer protocol */
 	if (stcb->sctp_socket) {
 		sctp_ulp_notify(SCTP_NOTIFY_ASSOC_DOWN, stcb, 0, NULL, SCTP_SO_NOT_LOCKED);
-		/* are the queues empty? they should be */
-		if (!TAILQ_EMPTY(&asoc->send_queue) ||
-		    !TAILQ_EMPTY(&asoc->sent_queue) ||
-		    !stcb->asoc.ss_functions.sctp_ss_is_empty(stcb, asoc)) {
-			sctp_report_all_outbound(stcb, 0, 0, SCTP_SO_NOT_LOCKED);
-		}
 	}
+#ifdef INVARIANTS
+	if (!TAILQ_EMPTY(&asoc->send_queue) ||
+	    !TAILQ_EMPTY(&asoc->sent_queue) ||
+	    !stcb->asoc.ss_functions.sctp_ss_is_empty(stcb, asoc)) {
+		panic("Queues are not empty when handling SHUTDOWN-COMPLETE");
+	}
+#endif
 	/* stop the timer */
 	sctp_timer_stop(SCTP_TIMER_TYPE_SHUTDOWNACK, stcb->sctp_ep, stcb, net, SCTP_FROM_SCTP_INPUT+SCTP_LOC_22);
 	SCTP_STAT_INCR_COUNTER32(sctps_shutdown);
@@ -3599,7 +3608,7 @@ process_chunk_drop(struct sctp_tcb *stcb, struct sctp_chunk_desc *desc,
 }
 
 void
-sctp_reset_in_stream(struct sctp_tcb *stcb, uint32_t number_entries, uint16_t * list)
+sctp_reset_in_stream(struct sctp_tcb *stcb, uint32_t number_entries, uint16_t *list)
 {
 	uint32_t i;
 	uint16_t temp;
@@ -3627,24 +3636,23 @@ sctp_reset_in_stream(struct sctp_tcb *stcb, uint32_t number_entries, uint16_t * 
 }
 
 static void
-sctp_reset_out_streams(struct sctp_tcb *stcb, int number_entries, uint16_t * list)
+sctp_reset_out_streams(struct sctp_tcb *stcb, uint32_t number_entries, uint16_t *list)
 {
-	int i;
+	uint32_t i;
+	uint16_t temp;
 
-	if (number_entries == 0) {
-		for (i = 0; i < stcb->asoc.streamoutcnt; i++) {
-			stcb->asoc.strmout[i].next_sequence_send = 0;
-		}
-	} else if (number_entries) {
+	if (number_entries > 0) {
 		for (i = 0; i < number_entries; i++) {
-			uint16_t temp;
-
 			temp = ntohs(list[i]);
 			if (temp >= stcb->asoc.streamoutcnt) {
 				/* no such stream */
 				continue;
 			}
 			stcb->asoc.strmout[temp].next_sequence_send = 0;
+		}
+	} else {
+		for (i = 0; i < stcb->asoc.streamoutcnt; i++) {
+			stcb->asoc.strmout[i].next_sequence_send = 0;
 		}
 	}
 	sctp_ulp_notify(SCTP_NOTIFY_STR_RESET_SEND, stcb, number_entries, (void *)list, SCTP_SO_NOT_LOCKED);
@@ -3732,7 +3740,7 @@ sctp_handle_stream_reset_response(struct sctp_tcb *stcb,
 	struct sctp_association *asoc = &stcb->asoc;
 	struct sctp_tmit_chunk *chk;
 	struct sctp_stream_reset_out_request *srparam;
-	int number_entries;
+	uint32_t number_entries;
 
 	if (asoc->stream_reset_outstanding == 0) {
 		/* duplicate */
@@ -4079,7 +4087,7 @@ sctp_handle_str_reset_add_strm(struct sctp_tcb *stcb, struct sctp_tmit_chunk *ch
 		if (!(asoc->local_strreset_support & SCTP_ENABLE_CHANGE_ASSOC_REQ)) {
 			asoc->last_reset_action[0] = SCTP_STREAM_RESET_RESULT_DENIED;
 		} else if ((num_stream > stcb->asoc.max_inbound_streams) ||
-		    (num_stream > 0xffff)) {
+		           (num_stream > 0xffff)) {
 			/* We must reject it they ask for to many */
   denied:
 			stcb->asoc.last_reset_action[0] = SCTP_STREAM_RESET_RESULT_DENIED;
@@ -4691,8 +4699,10 @@ sctp_process_control(struct mbuf *m, int iphlen, int *offset, int length,
 		if ((ch->chunk_type == SCTP_ABORT_ASSOCIATION) ||
 		    (ch->chunk_type == SCTP_SHUTDOWN_COMPLETE) ||
 		    (ch->chunk_type == SCTP_PACKET_DROPPED)) {
-			if ((vtag_in == asoc->my_vtag) ||
-			    ((ch->chunk_flags & SCTP_HAD_NO_TCB) &&
+			/* Take the T-bit always into account. */
+			if ((((ch->chunk_flags & SCTP_HAD_NO_TCB) == 0) &&
+			     (vtag_in == asoc->my_vtag)) ||
+			    (((ch->chunk_flags & SCTP_HAD_NO_TCB) == SCTP_HAD_NO_TCB) &&
 			     (vtag_in == asoc->peer_vtag))) {
 				/* this is valid */
 			} else {
@@ -5704,6 +5714,7 @@ sctp_validate_no_locks(struct sctp_inpcb *inp)
 {
 #ifndef __APPLE__
 	struct sctp_tcb *lstcb;
+
 	LIST_FOREACH(lstcb, &inp->sctp_asoc_list, sctp_tcblist) {
 		if (mtx_owned(&lstcb->tcb_mtx)) {
 			panic("Own lock on stcb at return from input");
@@ -5853,7 +5864,11 @@ sctp_common_input_processing(struct mbuf **mm, int iphlen, int offset, int lengt
 #ifdef INET
 		case AF_INET:
 			if (ipsec4_in_reject(m, &inp->ip_inp.inp)) {
+#if defined(__FreeBSD__) && (__FreeBSD_version > 1000036)
+				IPSECSTAT_INC(ips_in_polvio);
+#else
 				MODULE_GLOBAL(ipsec4stat).in_polvio++;
+#endif
 				SCTP_STAT_INCR(sctps_hdrops);
 				goto out;
 			}
@@ -5862,7 +5877,11 @@ sctp_common_input_processing(struct mbuf **mm, int iphlen, int offset, int lengt
 #ifdef INET6
 		case AF_INET6:
 			if (ipsec6_in_reject(m, &inp->ip_inp.inp)) {
+#if defined(__FreeBSD__) && (__FreeBSD_version > 1000036)
+				IPSEC6STAT_INC(ips_in_polvio);
+#else
 				MODULE_GLOBAL(ipsec6stat).in_polvio++;
+#endif
 				SCTP_STAT_INCR(sctps_hdrops);
 				goto out;
 			}
@@ -6209,7 +6228,13 @@ sctp_input(i_pak, va_alist)
 	}
 #endif
 #if defined(__FreeBSD__)
-#if __FreeBSD_version >= 800000
+#if __FreeBSD_version > 1000049
+	SCTPDBG(SCTP_DEBUG_CRCOFFLOAD,
+	        "sctp_input(): Packet of length %d received on %s with csum_flags 0x%b.\n",
+	        m->m_pkthdr.len,
+	        if_name(m->m_pkthdr.rcvif),
+	        (int)m->m_pkthdr.csum_flags, CSUM_BITS);
+#elif __FreeBSD_version >= 800000
 	SCTPDBG(SCTP_DEBUG_CRCOFFLOAD,
 	        "sctp_input(): Packet of length %d received on %s with csum_flags 0x%x.\n",
 	        m->m_pkthdr.len,

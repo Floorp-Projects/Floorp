@@ -126,6 +126,8 @@
 
 #define SCTP_INP_INFO_LOCK_INIT() \
 	InitializeCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
+#define SCTP_INP_INFO_LOCK_DESTROY() \
+	DeleteCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_RLOCK() \
 	EnterCriticalSection(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_TRYLOCK()	\
@@ -275,6 +277,8 @@
 
 #define SCTP_INP_INFO_LOCK_INIT() \
 	(void)pthread_mutex_init(&SCTP_BASE_INFO(ipi_ep_mtx), NULL)
+#define SCTP_INP_INFO_LOCK_DESTROY() \
+	(void)pthread_mutex_destroy(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_RLOCK() \
 	(void)pthread_mutex_lock(&SCTP_BASE_INFO(ipi_ep_mtx))
 #define SCTP_INP_INFO_TRYLOCK()	\

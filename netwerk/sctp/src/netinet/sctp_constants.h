@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 243157 2012-11-16 19:39:10Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_constants.h 256556 2013-10-15 20:21:27Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_CONSTANTS_H_
@@ -557,9 +557,6 @@ extern void getwintimeofday(struct timeval *tv);
 /* How long a cookie lives in milli-seconds */
 #define SCTP_DEFAULT_COOKIE_LIFE	60000
 
-/* resource limit of streams */
-#define MAX_SCTP_STREAMS	2048
-
 /* Maximum the mapping array will  grow to (TSN mapping array) */
 #define SCTP_MAPPING_ARRAY	512
 
@@ -702,6 +699,7 @@ extern void getwintimeofday(struct timeval *tv);
 
 /* How many streams I request initally by default */
 #define SCTP_OSTREAM_INITIAL 10
+#define SCTP_ISTREAM_INITIAL 2048
 
 /*
  * How many smallest_mtu's need to increase before a window update sack is
@@ -776,7 +774,6 @@ extern void getwintimeofday(struct timeval *tv);
 /* small chunk store for looking at chunk_list in auth */
 #define SCTP_SMALL_CHUNK_STORE 260
 
-#define SCTP_DEFAULT_MINSEGMENT 512	/* MTU size ... if no mtu disc */
 #define SCTP_HOW_MANY_SECRETS	2	/* how many secrets I keep */
 
 #define SCTP_NUMBER_OF_SECRETS	8	/* or 8 * 4 = 32 octets */
@@ -1049,6 +1046,10 @@ extern void getwintimeofday(struct timeval *tv);
      (((uint8_t *)&(a)->s_addr)[1] == 0) && \
      (((uint8_t *)&(a)->s_addr)[2] == 0) && \
      (((uint8_t *)&(a)->s_addr)[3] == 1))
+
+#define IN4_ISLINKLOCAL_ADDRESS(a) \
+    ((((uint8_t *)&(a)->s_addr)[0] == 169) && \
+     (((uint8_t *)&(a)->s_addr)[1] == 254))
 
 #if defined(__Userspace__)
 #if defined(__Userspace_os_Windows)

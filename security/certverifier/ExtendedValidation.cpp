@@ -772,6 +772,44 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "A1UEAxMbdGhhd3RlIFByaW1hcnkgUm9vdCBDQSAtIEcz",
     "YAGXt0an6rS0mtZLL/eQ+w==",
     nullptr
+  },
+  {
+    // CN = Autoridad de Certificacion Firmaprofesional CIF A62634068, C = ES
+    "1.3.6.1.4.1.13177.10.1.3.10",
+    "Firmaprofesional EV OID",
+    SEC_OID_UNKNOWN,
+    { 0xAE, 0xC5, 0xFB, 0x3F, 0xC8, 0xE1, 0xBF, 0xC4, 0xE5, 0x4F,
+      0x03, 0x07, 0x5A, 0x9A, 0xE8, 0x00, 0xB7, 0xF7, 0xB6, 0xFA },
+    "MFExCzAJBgNVBAYTAkVTMUIwQAYDVQQDDDlBdXRvcmlkYWQgZGUgQ2VydGlmaWNh"
+    "Y2lvbiBGaXJtYXByb2Zlc2lvbmFsIENJRiBBNjI2MzQwNjg=",
+    "U+w77vuySF8=",
+    nullptr
+  },
+  {
+    // CN = TWCA Global Root CA, OU = Root CA, O = TAIWAN-CA, C = TW
+    "1.3.6.1.4.1.40869.1.1.22.3",
+    "TWCA EV OID",
+    SEC_OID_UNKNOWN,
+    { 0x9C, 0xBB, 0x48, 0x53, 0xF6, 0xA4, 0xF6, 0xD3, 0x52, 0xA4,
+      0xE8, 0x32, 0x52, 0x55, 0x60, 0x13, 0xF5, 0xAD, 0xAF, 0x65 },
+    "MFExCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExEDAOBgNVBAsTB1Jv"
+    "b3QgQ0ExHDAaBgNVBAMTE1RXQ0EgR2xvYmFsIFJvb3QgQ0E=",
+    "DL4=",
+    nullptr
+  },
+  {
+    // CN = E-Tugra Certification Authority, OU = E-Tugra Sertifikasyon Merkezi, O = E-Tuğra EBG Bilişim Teknolojileri ve Hizmetleri A.Ş., L = Ankara, C = TR
+    "2.16.792.3.0.4.1.1.4",
+    "ETugra EV OID",
+    SEC_OID_UNKNOWN,
+    { 0x51, 0xC6, 0xE7, 0x08, 0x49, 0x06, 0x6E, 0xF3, 0x92, 0xD4,
+      0x5C, 0xA0, 0x0D, 0x6D, 0xA3, 0x62, 0x8F, 0xC3, 0x52, 0x39 },
+    "MIGyMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMUAwPgYDVQQKDDdFLVR1"
+    "xJ9yYSBFQkcgQmlsacWfaW0gVGVrbm9sb2ppbGVyaSB2ZSBIaXptZXRsZXJpIEEu"
+    "xZ4uMSYwJAYDVQQLDB1FLVR1Z3JhIFNlcnRpZmlrYXN5b24gTWVya2V6aTEoMCYG"
+    "A1UEAwwfRS1UdWdyYSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
+    "amg+nFGby1M=",
+    nullptr
   }
 };
 

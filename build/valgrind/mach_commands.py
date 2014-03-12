@@ -105,7 +105,7 @@ class MachCommands(MachCommandBase):
                 '--smc-check=all-non-file',
                 '--vex-iropt-register-updates=allregs-at-mem-access',
                 '--gen-suppressions=all',
-                '--num-callers=20',
+                '--num-callers=36',
                 '--leak-check=full',
                 '--show-possibly-lost=no',
                 '--track-origins=yes'

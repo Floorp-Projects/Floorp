@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 246674 2013-02-11 13:57:03Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.c 258228 2013-11-16 16:09:09Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -806,13 +806,12 @@ sctp_deliver_reasm_check(struct sctp_tcb *stcb, struct sctp_association *asoc)
 			 * but should we?
 			 */
 			if (stcb->sctp_socket) {
-				pd_point = min(SCTP_SB_LIMIT_RCV(stcb->sctp_socket),
+				pd_point = min(SCTP_SB_LIMIT_RCV(stcb->sctp_socket) >> SCTP_PARTIAL_DELIVERY_SHIFT,
 				               stcb->sctp_ep->partial_delivery_point);
 			} else {
 				pd_point = stcb->sctp_ep->partial_delivery_point;
 			}
 			if (sctp_is_all_msg_on_reasm(asoc, &tsize) || (tsize >= pd_point)) {
-
 				/*
 				 * Yes, we setup to start reception, by
 				 * backing down the TSN just in case we
@@ -1432,7 +1431,6 @@ sctp_does_tsn_belong_to_reasm(struct sctp_association *asoc,
 	return (0);
 }
 
-
 static int
 sctp_process_a_data_chunk(struct sctp_tcb *stcb, struct sctp_association *asoc,
     struct mbuf **m, int offset, struct sctp_data_chunk *ch, int chk_length,
@@ -1742,7 +1740,6 @@ sctp_process_a_data_chunk(struct sctp_tcb *stcb, struct sctp_association *asoc,
 		sctp_alloc_a_readq(stcb, control);
 		sctp_build_readq_entry_mac(control, stcb, asoc->context, net, tsn,
 					   protocol_id,
-					   stcb->asoc.context,
 					   strmno, strmseq,
 					   chunk_flags,
 					   dmbuf);
@@ -1804,7 +1801,6 @@ failed_express_del:
 				asoc->highest_tsn_inside_nr_map = tsn;
 			}
 			SCTP_STAT_INCR(sctps_recvexpressm);
-			control->sinfo_tsn = tsn;
 			asoc->tsn_last_delivered = tsn;
 			asoc->fragment_flags = chunk_flags;
 			asoc->tsn_of_pdapi_last_delivered = tsn;
@@ -1868,7 +1864,6 @@ failed_express_del:
 		sctp_alloc_a_readq(stcb, control);
 		sctp_build_readq_entry_mac(control, stcb, asoc->context, net, tsn,
 		    protocol_id,
-		    stcb->asoc.context,
 		    strmno, strmseq,
 		    chunk_flags,
 		    dmbuf);
@@ -2506,7 +2501,7 @@ sctp_service_queues(struct sctp_tcb *stcb, struct sctp_association *asoc)
 		 * delivery queue and something can be delivered.
 		 */
 		if (stcb->sctp_socket) {
-			pd_point = min(SCTP_SB_LIMIT_RCV(stcb->sctp_socket),
+			pd_point = min(SCTP_SB_LIMIT_RCV(stcb->sctp_socket) >> SCTP_PARTIAL_DELIVERY_SHIFT,
 				       stcb->sctp_ep->partial_delivery_point);
 		} else {
 			pd_point = stcb->sctp_ep->partial_delivery_point;
@@ -3695,6 +3690,7 @@ sctp_fs_audit(struct sctp_association *asoc)
 	struct sctp_tmit_chunk *chk;
 	int inflight = 0, resend = 0, inbetween = 0, acked = 0, above = 0;
 	int entry_flight, entry_cnt, ret;
+
 	entry_flight = asoc->total_flight;
 	entry_cnt = asoc->total_flight_count;
 	ret = 0;
@@ -4743,7 +4739,7 @@ sctp_handle_sack(struct mbuf *m, int offset_seg, int offset_dup,
 			}
 		}
 		TAILQ_REMOVE(&asoc->sent_queue, tp1, sctp_next);
-		if (tp1->pr_sctp_on) {
+		if (PR_SCTP_ENABLED(tp1->flags)) {
 			if (asoc->pr_sctp_cnt != 0)
 				asoc->pr_sctp_cnt--;
 		}

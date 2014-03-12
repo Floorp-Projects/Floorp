@@ -1144,6 +1144,19 @@ MediaStreamGraphImpl::ResumeAllAudioOutputs()
   }
 }
 
+struct AutoProfilerUnregisterThread
+{
+  // The empty ctor is used to silence a pre-4.8.0 GCC unused variable warning.
+  AutoProfilerUnregisterThread()
+  {
+  }
+
+  ~AutoProfilerUnregisterThread()
+  {
+    profiler_unregister_thread();
+  }
+};
+
 void
 MediaStreamGraphImpl::RunThread()
 {
@@ -1156,6 +1169,7 @@ MediaStreamGraphImpl::RunThread()
                "Shouldn't have started a graph with empty message queue!");
 
   uint32_t ticksProcessed = 0;
+  AutoProfilerUnregisterThread autoUnregister;
 
   for (;;) {
     // Update mCurrentTime to the min of the playing audio times, or using the
@@ -1320,8 +1334,6 @@ MediaStreamGraphImpl::RunThread()
       messageQueue.SwapElements(mMessageQueue);
     }
   }
-
-  profiler_unregister_thread();
 }
 
 void

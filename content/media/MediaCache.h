@@ -342,6 +342,9 @@ public:
   // 'Read' for argument and return details.
   nsresult ReadAt(int64_t aOffset, char* aBuffer,
                   uint32_t aCount, uint32_t* aBytes);
+
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
+
 private:
   friend class MediaCache;
 
@@ -384,6 +387,8 @@ private:
 #else
     void Verify() {}
 #endif
+
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   private:
     struct Entry : public nsUint32HashKey {

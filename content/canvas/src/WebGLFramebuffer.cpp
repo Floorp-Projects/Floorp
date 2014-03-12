@@ -96,6 +96,17 @@ WebGLFramebuffer::Attachment::SetTexImage(WebGLTexture* tex, GLenum target, GLin
     mRenderbufferPtr = nullptr;
     mTexImageTarget = target;
     mTexImageLevel = level;
+
+    mNeedsFinalize = true;
+}
+
+void
+WebGLFramebuffer::Attachment::SetRenderbuffer(WebGLRenderbuffer* rb)
+{
+    mTexturePtr = nullptr;
+    mRenderbufferPtr = rb;
+
+    mNeedsFinalize = true;
 }
 
 bool
@@ -315,12 +326,31 @@ WebGLFramebuffer::Attachment::IsComplete() const
 }
 
 void
-WebGLFramebuffer::Attachment::FinalizeAttachment(GLenum attachmentLoc) const
+WebGLFramebuffer::Attachment::FinalizeAttachment(GLContext* gl, GLenum attachmentLoc) const
 {
+    if (!mNeedsFinalize)
+        return;
+
+    mNeedsFinalize = false;
+
+    if (!HasImage()) {
+        if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+            gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
+                                         LOCAL_GL_RENDERBUFFER, 0);
+            gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
+                                         LOCAL_GL_RENDERBUFFER, 0);
+        } else {
+            gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
+                                         LOCAL_GL_RENDERBUFFER, 0);
+        }
+
+        return;
+    }
     MOZ_ASSERT(HasImage());
 
     if (Texture()) {
-        GLContext* gl = Texture()->Context()->gl;
+        MOZ_ASSERT(gl == Texture()->Context()->gl);
+
         if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
             gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
                                       TexImageTarget(), Texture()->GLName(), TexImageLevel());
@@ -832,22 +862,18 @@ FinalizeDrawAndReadBuffers(GLContext* aGL, bool aColorBufferDefined)
 void
 WebGLFramebuffer::FinalizeAttachments() const
 {
+    GLContext* gl = mContext->gl;
+
     size_t count = ColorAttachmentCount();
     for (size_t i = 0; i < count; i++) {
-        if (ColorAttachment(i).IsDefined())
-            ColorAttachment(i).FinalizeAttachment(LOCAL_GL_COLOR_ATTACHMENT0 + i);
+        ColorAttachment(i).FinalizeAttachment(gl, LOCAL_GL_COLOR_ATTACHMENT0 + i);
     }
 
-    if (DepthAttachment().IsDefined())
-        DepthAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_ATTACHMENT);
+    DepthAttachment().FinalizeAttachment(gl, LOCAL_GL_DEPTH_ATTACHMENT);
+    StencilAttachment().FinalizeAttachment(gl, LOCAL_GL_STENCIL_ATTACHMENT);
+    DepthStencilAttachment().FinalizeAttachment(gl, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
 
-    if (StencilAttachment().IsDefined())
-        StencilAttachment().FinalizeAttachment(LOCAL_GL_STENCIL_ATTACHMENT);
-
-    if (DepthStencilAttachment().IsDefined())
-        DepthStencilAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
-
-    FinalizeDrawAndReadBuffers(mContext->gl, ColorAttachment(0).IsDefined());
+    FinalizeDrawAndReadBuffers(gl, ColorAttachment(0).IsDefined());
 }
 
 inline void

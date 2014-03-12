@@ -1450,7 +1450,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   *aBottomEdgeOfChildren = bottomEdgeOfChildren;
 
 #ifdef DEBUG_blocks
-  if (CRAZY_WIDTH(aMetrics.Width()) || CRAZY_HEIGHT(aMetrics.Height())) {
+  if (CRAZY_SIZE(aMetrics.Width()) || CRAZY_SIZE(aMetrics.Height())) {
     ListTag(stdout);
     printf(": WARNING: desired:%d,%d\n", aMetrics.Width(), aMetrics.Height());
   }
@@ -3448,35 +3448,32 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
          this, aFloatAvailableSpace.mHasFloats);
 #endif
 
-  nscoord x = aFloatAvailableSpace.mRect.x;
-  nscoord availWidth = aFloatAvailableSpace.mRect.width;
-  nscoord availHeight;
+  WritingMode wm = GetWritingMode(aLine->mFirstChild);
+  nscoord lineWidth = aFloatAvailableSpace.mRect.width +
+                      aState.BorderPadding().LeftRight();
+  LogicalRect lineRect(wm, aFloatAvailableSpace.mRect, lineWidth);
+
+  nscoord iStart = lineRect.IStart(wm);
+
+  nscoord availISize = lineRect.ISize(wm);
+  nscoord availBSize;
   if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
-    availHeight = NS_UNCONSTRAINEDSIZE;
+    availBSize = NS_UNCONSTRAINEDSIZE;
   }
   else {
     /* XXX get the height right! */
-    availHeight = aFloatAvailableSpace.mRect.height;
+    availBSize = lineRect.BSize(wm);
   }
 
   // Make sure to enable resize optimization before we call BeginLineReflow
   // because it might get disabled there
   aLine->EnableResizeReflowOptimization();
 
-  // For unicode-bidi: plaintext, we need to get the direction of the line from
-  // the resolved paragraph level of the first frame on the line, not the block
-  // frame, because the block frame could be split by hard line breaks into
-  // multiple paragraphs with different base direction
-  uint8_t direction =
-    (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) ?
-      nsBidiPresUtils::GetFrameBaseLevel(aLine->mFirstChild) & 1 :
-      StyleVisibility()->mDirection;
-
-  aLineLayout.BeginLineReflow(x, aState.mY,
-                              availWidth, availHeight,
+  aLineLayout.BeginLineReflow(iStart, aState.mY,
+                              availISize, availBSize,
                               aFloatAvailableSpace.mHasFloats,
                               false, /*XXX isTopOfPage*/
-                              direction);
+                              wm, lineWidth);
 
   aState.SetFlag(BRS_LINE_LAYOUT_EMPTY, false);
 
@@ -4052,7 +4049,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   bool addedBullet = false;
   if (HasOutsideBullet() &&
       ((aLine == mLines.front() &&
-        (!aLineLayout.IsZeroHeight() || (aLine == mLines.back()))) ||
+        (!aLineLayout.IsZeroBSize() || (aLine == mLines.back()))) ||
        (mLines.front() != mLines.back() &&
         0 == mLines.front()->mBounds.height &&
         aLine == mLines.begin().next()))) {
@@ -4064,7 +4061,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     aLineLayout.AddBulletFrame(bullet, metrics);
     addedBullet = true;
   }
-  aLineLayout.VerticalAlignLine();
+  aLineLayout.BlockDirAlignLine();
 
   // We want to compare to the available space that we would have had in
   // the line's height *before* we placed any floats in the line itself.
@@ -4092,9 +4089,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 #ifdef DEBUG
   {
     static nscoord lastHeight = 0;
-    if (CRAZY_HEIGHT(aLine->mBounds.y)) {
+    if (CRAZY_SIZE(aLine->mBounds.y)) {
       lastHeight = aLine->mBounds.y;
-      if (abs(aLine->mBounds.y - lastHeight) > CRAZY_H/10) {
+      if (abs(aLine->mBounds.y - lastHeight) > CRAZY_COORD/10) {
         nsFrame::ListTag(stdout);
         printf(": line=%p y=%d line.bounds.height=%d\n",
                static_cast<void*>(aLine.get()),
@@ -4125,20 +4122,9 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       NS_STYLE_TEXT_ALIGN_JUSTIFY == styleText->mTextAlign) &&
      (aLineLayout.GetLineEndsInBR() ||
       IsLastLine(aState, aLine)));
-  aLineLayout.HorizontalAlignFrames(aLine->mBounds, isLastLine);
-  // XXX: not only bidi: right alignment can be broken after
-  // RelativePositionFrames!!!
-  // XXXldb Is something here considering relatively positioned frames at
-  // other than their original positions?
-#ifdef IBMBIDI
-  // XXXldb Why don't we do this earlier?
-  if (aState.mPresContext->BidiEnabled()) {
-    if (!aState.mPresContext->IsVisualMode() ||
-        StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-      nsBidiPresUtils::ReorderFrames(aLine->mFirstChild, aLine->GetChildCount());
-    } // not visual mode
-  } // bidi enabled
-#endif // IBMBIDI
+
+  aLineLayout.InlineDirAlignFrames(aLine->mBounds, isLastLine,
+                                   aLine->GetChildCount());
 
   // From here on, pfd->mBounds rectangles are incorrect because bidi
   // might have moved frames around!
