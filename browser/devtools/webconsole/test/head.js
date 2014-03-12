@@ -298,7 +298,7 @@ function dumpMessageElement(aMessage)
 
 function finishTest()
 {
-  browser = hudId = hud = filterBox = outputNode = cs = null;
+  browser = hudId = hud = filterBox = outputNode = cs = hudBox = null;
 
   dumpConsoles();
 
