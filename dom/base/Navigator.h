@@ -27,6 +27,7 @@ class nsIDOMNavigatorSystemMessages;
 class nsDOMCameraManager;
 class nsDOMDeviceStorage;
 class nsIDOMBlob;
+class nsIPrincipal;
 
 namespace mozilla {
 namespace dom {
@@ -303,6 +304,8 @@ public:
                                           JSObject* aGlobal);
 
   static bool HasInputMethodSupport(JSContext* /* unused */, JSObject* aGlobal);
+
+  static bool HasDataStoreSupport(nsIPrincipal* aPrincipal);
 
   static bool HasDataStoreSupport(JSContext* cx, JSObject* aGlobal);
 
