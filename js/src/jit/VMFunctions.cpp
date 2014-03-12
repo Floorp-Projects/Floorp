@@ -509,16 +509,26 @@ InterruptCheck(JSContext *cx)
     return CheckForInterrupt(cx);
 }
 
-void *
-MallocWrapper(JSRuntime *rt, size_t nbytes)
+HeapSlot *
+NewSlots(JSRuntime *rt, unsigned nslots)
 {
-    return rt->pod_malloc<uint8_t>(nbytes);
+    JS_STATIC_ASSERT(sizeof(Value) == sizeof(HeapSlot));
+
+    Value *slots = reinterpret_cast<Value *>(rt->malloc_(nslots * sizeof(Value)));
+    if (!slots)
+        return nullptr;
+
+    for (unsigned i = 0; i < nslots; i++)
+        slots[i] = UndefinedValue();
+
+    return reinterpret_cast<HeapSlot *>(slots);
 }
 
 JSObject *
-NewCallObject(JSContext *cx, HandleScript script, HandleShape shape, HandleTypeObject type)
+NewCallObject(JSContext *cx, HandleScript script,
+              HandleShape shape, HandleTypeObject type, HeapSlot *slots)
 {
-    JSObject *obj = CallObject::create(cx, script, shape, type);
+    JSObject *obj = CallObject::create(cx, script, shape, type, slots);
     if (!obj)
         return nullptr;
 

@@ -252,7 +252,8 @@ class JSObject : public js::ObjectImpl
                                    js::gc::AllocKind kind,
                                    js::gc::InitialHeap heap,
                                    js::HandleShape shape,
-                                   js::HandleTypeObject type);
+                                   js::HandleTypeObject type,
+                                   js::HeapSlot *extantSlots = nullptr);
 
     /* Make an array object with the specified initial state. */
     static inline js::ArrayObject *createArray(js::ExclusiveContext *cx,
