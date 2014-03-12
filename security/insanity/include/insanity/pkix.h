@@ -103,11 +103,20 @@ SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena,
                                   const CERTCertificate* cert,
                                   const CERTCertificate* issuerCert);
 
+// The optional parameter thisUpdate will be the thisUpdate value of
+// the encoded response if it is considered trustworthy. Only
+// good, unknown, or revoked responses that verify correctly are considered
+// trustworthy. If the response is not trustworthy, thisUpdate will be 0.
+// Similarly, the optional parameter validThrough will be the time through
+// which the encoded response is considered trustworthy (that is, if a response had a
+// thisUpdate time of validThrough, it would be considered trustworthy).
 SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                                     const CERTCertificate* cert,
                                     CERTCertificate* issuerCert,
                                     PRTime time,
-                                    const SECItem* encodedResponse);
+                                    const SECItem* encodedResponse,
+                 /* optional out */ PRTime* thisUpdate,
+                 /* optional out */ PRTime* validThrough);
 
 } } // namespace insanity::pkix
 

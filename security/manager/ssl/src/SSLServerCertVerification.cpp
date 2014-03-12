@@ -909,51 +909,53 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
 
   // TODO: Remove this after we switch to insanity::pkix as the
   // only option
-  if (stapledOCSPResponse) {
-    CERTCertDBHandle* handle = CERT_GetDefaultCertDB();
-    rv = CERT_CacheOCSPResponseFromSideChannel(handle, cert, PR_Now(),
-                                               stapledOCSPResponse,
-                                               infoObject);
-    if (rv != SECSuccess) {
-      // Due to buggy servers that will staple expired OCSP responses
-      // (see for example http://trac.nginx.org/nginx/ticket/425),
-      // don't terminate the connection if the stapled response is expired.
-      // We will fall back to fetching revocation information.
-      PRErrorCode ocspErrorCode = PR_GetError();
-      if (ocspErrorCode != SEC_ERROR_OCSP_OLD_RESPONSE) {
-        // stapled OCSP response present but invalid for some reason
-        Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 4);
-        return rv;
+  if (certVerifier.mImplementation == CertVerifier::classic) {
+    if (stapledOCSPResponse) {
+      CERTCertDBHandle* handle = CERT_GetDefaultCertDB();
+      rv = CERT_CacheOCSPResponseFromSideChannel(handle, cert, PR_Now(),
+                                                 stapledOCSPResponse,
+                                                 infoObject);
+      if (rv != SECSuccess) {
+        // Due to buggy servers that will staple expired OCSP responses
+        // (see for example http://trac.nginx.org/nginx/ticket/425),
+        // don't terminate the connection if the stapled response is expired.
+        // We will fall back to fetching revocation information.
+        PRErrorCode ocspErrorCode = PR_GetError();
+        if (ocspErrorCode != SEC_ERROR_OCSP_OLD_RESPONSE) {
+          // stapled OCSP response present but invalid for some reason
+          Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 4);
+          return rv;
+        } else {
+          // stapled OCSP response present but expired
+          Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 3);
+        }
       } else {
-        // stapled OCSP response present but expired
-        Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 3);
+        // stapled OCSP response present and good
+        Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 1);
       }
     } else {
-      // stapled OCSP response present and good
-      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 1);
-    }
-  } else {
-    // no stapled OCSP response
-    Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 2);
+      // no stapled OCSP response
+      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 2);
 
-    uint32_t reasonsForNotFetching = 0;
+      uint32_t reasonsForNotFetching = 0;
 
-    char* ocspURI = CERT_GetOCSPAuthorityInfoAccessLocation(cert);
-    if (!ocspURI) {
-      reasonsForNotFetching |= 1; // invalid/missing OCSP URI
-    } else {
-      if (std::strncmp(ocspURI, "http://", 7)) { // approximation
+      char* ocspURI = CERT_GetOCSPAuthorityInfoAccessLocation(cert);
+      if (!ocspURI) {
         reasonsForNotFetching |= 1; // invalid/missing OCSP URI
+      } else {
+        if (std::strncmp(ocspURI, "http://", 7)) { // approximation
+          reasonsForNotFetching |= 1; // invalid/missing OCSP URI
+        }
+        PORT_Free(ocspURI);
       }
-      PORT_Free(ocspURI);
-    }
 
-    if (!certVerifier.mOCSPDownloadEnabled) {
-      reasonsForNotFetching |= 2;
-    }
+      if (!certVerifier.mOCSPDownloadEnabled) {
+        reasonsForNotFetching |= 2;
+      }
 
-    Telemetry::Accumulate(Telemetry::SSL_OCSP_MAY_FETCH,
-                          reasonsForNotFetching);
+      Telemetry::Accumulate(Telemetry::SSL_OCSP_MAY_FETCH,
+                            reasonsForNotFetching);
+    }
   }
 
   // We want to avoid storing any intermediate cert information when browsing
