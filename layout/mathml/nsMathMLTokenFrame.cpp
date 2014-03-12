@@ -84,6 +84,7 @@ nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
 
     if (isSingleCharacter) {
       child->AddStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI);
+      AddStateBits(NS_FRAME_IS_IN_SINGLE_CHAR_MI);
     }
   }
 }
