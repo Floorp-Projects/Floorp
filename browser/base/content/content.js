@@ -290,3 +290,99 @@ ContentLinkHandler.init(this);
 addEventListener("DOMWebNotificationClicked", function(event) {
   sendAsyncMessage("DOMWebNotificationClicked", {});
 }, false);
+
+let PageStyleHandler = {
+  init: function() {
+    addMessageListener("PageStyle:Switch", this);
+    addMessageListener("PageStyle:Disable", this);
+
+    // Send a CPOW to the parent so that it can synchronously request
+    // the list of style sheets.
+    sendSyncMessage("PageStyle:SetSyncHandler", {}, {syncHandler: this});
+  },
+
+  get markupDocumentViewer() {
+    return docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+  },
+
+  // Called synchronously via CPOW from the parent.
+  getStyleSheetInfo: function() {
+    let styleSheets = this._filterStyleSheets(this.getAllStyleSheets());
+    return {
+      styleSheets: styleSheets,
+      authorStyleDisabled: this.markupDocumentViewer.authorStyleDisabled,
+      preferredStyleSheetSet: content.document.preferredStyleSheetSet
+    };
+  },
+
+  // Called synchronously via CPOW from the parent.
+  getAllStyleSheets: function(frameset = content) {
+    let selfSheets = Array.slice(frameset.document.styleSheets);
+    let subSheets = Array.map(frameset.frames, frame => this.getAllStyleSheets(frame));
+    return selfSheets.concat(...subSheets);
+  },
+
+  receiveMessage: function(msg) {
+    switch (msg.name) {
+      case "PageStyle:Switch":
+        this.markupDocumentViewer.authorStyleDisabled = false;
+        this._stylesheetSwitchAll(content, msg.data.title);
+        break;
+
+      case "PageStyle:Disable":
+        this.markupDocumentViewer.authorStyleDisabled = true;
+        break;
+    }
+  },
+
+  _stylesheetSwitchAll: function (frameset, title) {
+    if (!title || this._stylesheetInFrame(frameset, title)) {
+      this._stylesheetSwitchFrame(frameset, title);
+    }
+
+    for (let i = 0; i < frameset.frames.length; i++) {
+      // Recurse into sub-frames.
+      this._stylesheetSwitchAll(frameset.frames[i], title);
+    }
+  },
+
+  _stylesheetSwitchFrame: function (frame, title) {
+    var docStyleSheets = frame.document.styleSheets;
+
+    for (let i = 0; i < docStyleSheets.length; ++i) {
+      let docStyleSheet = docStyleSheets[i];
+      if (docStyleSheet.title) {
+        docStyleSheet.disabled = (docStyleSheet.title != title);
+      } else if (docStyleSheet.disabled) {
+        docStyleSheet.disabled = false;
+      }
+    }
+  },
+
+  _stylesheetInFrame: function (frame, title) {
+    return Array.some(frame.document.styleSheets, (styleSheet) => styleSheet.title == title);
+  },
+
+  _filterStyleSheets: function(styleSheets) {
+    let result = [];
+
+    for (let currentStyleSheet of styleSheets) {
+      if (!currentStyleSheet.title)
+        continue;
+
+      // Skip any stylesheets that don't match the screen media type.
+      if (currentStyleSheet.media.length > 0) {
+        let mediaQueryList = currentStyleSheet.media.mediaText;
+        if (!content.matchMedia(mediaQueryList).matches) {
+          continue;
+        }
+      }
+
+      result.push({title: currentStyleSheet.title,
+                   disabled: currentStyleSheet.disabled});
+    }
+
+    return result;
+  },
+};
+PageStyleHandler.init();
