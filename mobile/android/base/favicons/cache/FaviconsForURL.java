@@ -44,12 +44,16 @@ public class FaviconsForURL {
 
         int index = Collections.binarySearch(mFavicons, c);
 
+        // We've already got an equivalent one. We don't care about this new one. This only occurs in certain obscure
+        // case conditions.
+        if (index >= 0) {
+            return mFavicons.get(index);
+        }
+
         // binarySearch returns -x - 1 where x is the insertion point of the element. Convert
         // this to the actual insertion point..
-        if (index < 0) {
-            index++;
-            index = -index;
-        }
+        index++;
+        index = -index;
         mFavicons.add(index, c);
 
         return c;
