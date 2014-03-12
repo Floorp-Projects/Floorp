@@ -18,12 +18,7 @@ function test() {
     inspector.toolbox.highlighterUtils.startPicker().then(() => {
       EventUtils.synthesizeMouse(content.document.body, 1, 1,
         {type: "mousemove"}, content);
-      inspector.toolbox.once("picker-node-hovered", () => {
-        executeSoon(() => {
-          getHighlighterOutline().setAttribute("disable-transitions", "true");
-          cb();
-        });
-      });
+      inspector.toolbox.once("highlighter-ready", cb);
     });
   }
 
@@ -35,8 +30,7 @@ function test() {
       ok(isHighlighting(), "Inspector is highlighting");
 
       iframe.addEventListener("load", onIframeLoad, false);
-
-      executeSoon(function() {
+      executeSoon(() => {
         iframe.contentWindow.location = "javascript:location.reload()";
       });
     });
@@ -51,6 +45,7 @@ function test() {
     }
 
     iframe.removeEventListener("load", onIframeLoad, false);
+    info("Finished reloading iframe and inspector updated");
 
     ok(isHighlighting(), "Inspector is highlighting after iframe nav");
 

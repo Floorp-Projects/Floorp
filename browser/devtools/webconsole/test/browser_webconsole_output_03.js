@@ -158,6 +158,12 @@ function test() {
     browser.removeEventListener("load", onLoad, true);
     openConsole().then((hud) => {
       return checkOutputForInputs(hud, inputTests);
-    }).then(finishTest);
+    }).then(finishUp);
   }, true);
+}
+
+function finishUp() {
+  inputTests = null;
+
+  finishTest();
 }
