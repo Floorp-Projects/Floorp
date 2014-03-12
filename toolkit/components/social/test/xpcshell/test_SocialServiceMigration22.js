@@ -31,10 +31,7 @@ function run_test() {
   activeVal.data = JSON.stringify(active);
   Services.prefs.setComplexValue("social.activeProviders",
                                  Ci.nsISupportsString, activeVal);
-  Services.prefs.setCharPref("social.provider.current", manifest.origin);
 
-  // Enable the service for this test
-  Services.prefs.setBoolPref("social.enabled", true);
   Cu.import("resource://gre/modules/SocialService.jsm");
 
   let runner = new AsyncRunner();

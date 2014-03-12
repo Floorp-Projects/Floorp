@@ -51,6 +51,7 @@ EXTRA_JS_MODULES += [
     'Task.jsm',
     'TelemetryTimestamps.jsm',
     'Timer.jsm',
+    'ZipUtils.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [

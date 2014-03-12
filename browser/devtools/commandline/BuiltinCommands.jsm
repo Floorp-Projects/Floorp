@@ -957,7 +957,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
       return host == null;
     }
     if (cookie.host.startsWith(".")) {
-      return cookie.host === "." + host;
+      return host.endsWith(cookie.host);
     }
     else {
       return cookie.host == host;

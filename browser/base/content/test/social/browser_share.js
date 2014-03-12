@@ -103,12 +103,13 @@ function hasoptions(testOptions, options) {
 var tests = {
   testSharePage: function(next) {
     let panel = document.getElementById("social-flyout-panel");
-    let port = Social.provider.getWorkerPort();
+    SocialSidebar.show();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     let testTab;
     let testIndex = 0;
     let testData = corpus[testIndex++];
-    
+
     function runOneTest() {
       loadURLInTab(testData.url, function(tab) {
         testTab = tab;

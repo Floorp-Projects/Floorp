@@ -254,6 +254,10 @@ public class HomePager extends ViewPager {
     }
 
     public void onToolbarFocusChange(boolean hasFocus) {
+        if (mHomeBanner == null) {
+            return;
+        }
+
         // We should only make the banner active if the toolbar is not focused and we are on the default page
         final boolean active = !hasFocus && getCurrentItem() == mDefaultPageIndex;
         mHomeBanner.setActive(active);
