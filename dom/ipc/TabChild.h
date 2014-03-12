@@ -508,6 +508,8 @@ private:
     bool mWaitingTouchListeners;
     void FireSingleTapEvent(LayoutDevicePoint aPoint);
 
+    bool mIgnoreKeyPressEvent;
+
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };
 

@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.h 237715 2012-06-28 16:01:08Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_indata.h 252585 2013-07-03 18:48:43Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_INDATA_H_
@@ -49,14 +49,14 @@ sctp_build_readq_entry(struct sctp_tcb *stcb,
     struct mbuf *dm);
 
 
-#define sctp_build_readq_entry_mac(_ctl, in_it, a, net, tsn, ppid, context, stream_no, stream_seq, flags, dm) do { \
+#define sctp_build_readq_entry_mac(_ctl, in_it, context, net, tsn, ppid, stream_no, stream_seq, flags, dm) do { \
 	if (_ctl) { \
 		atomic_add_int(&((net)->ref_count), 1); \
 		(_ctl)->sinfo_stream = stream_no; \
 		(_ctl)->sinfo_ssn = stream_seq; \
 		(_ctl)->sinfo_flags = (flags << 8); \
 		(_ctl)->sinfo_ppid = ppid; \
-		(_ctl)->sinfo_context = a; \
+		(_ctl)->sinfo_context = context; \
 		(_ctl)->sinfo_timetolive = 0; \
 		(_ctl)->sinfo_tsn = tsn; \
 		(_ctl)->sinfo_cumtsn = tsn; \

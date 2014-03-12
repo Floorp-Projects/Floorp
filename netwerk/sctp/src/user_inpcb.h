@@ -35,13 +35,6 @@
 
 #include <user_route.h> /* was <net/route.h> */
 
-#if defined(ANDROID)
-#include <arpa/inet.h>
-#include <netinet/in.h>
-/* missing defines in Android bionic libc/NDK */
-typedef uint16_t                in_port_t;
-#endif
-
 #define	in6pcb		inpcb	/* for KAME src sync over BSD*'s */
 #define	in6p_sp		inp_sp	/* for KAME src sync over BSD*'s */
 struct inpcbpolicy;
@@ -56,7 +49,6 @@ struct inpcbpolicy;
  */
 LIST_HEAD(inpcbhead, inpcb);
 LIST_HEAD(inpcbporthead, inpcbport);
-typedef	u_quad_t	inp_gen_t;
 
 /*
  * PCB with AF_INET6 null bind'ed laddr can receive AF_INET input packet.
@@ -176,7 +168,6 @@ struct inpcb {
 	LIST_ENTRY(inpcb) inp_portlist;
 	struct	inpcbport *inp_phd;	/* head of this list */
 #define inp_zero_size offsetof(struct inpcb, inp_gencnt)
-	inp_gen_t	inp_gencnt;	/* generation count of this instance */
 	struct mtx	inp_mtx;
 
 #define	in6p_faddr	inp_inc.inc6_faddr
@@ -204,26 +195,6 @@ struct inpcb {
  * to roll over in a year.  This seems sufficiently unlikely that we simply
  * don't concern ourselves with that possibility.
  */
-
-/*
- * Interface exported to userland by various protocols which use inpcbs.  Hack
- * alert -- only define if struct xsocket is in scope.
- */
-#ifdef _SYS_SOCKETVAR_H_
-struct	xinpcb {
-	size_t	xi_len;		/* length of this structure */
-	struct	inpcb xi_inp;
-	struct	xsocket xi_socket;
-	u_quad_t	xi_alignment_hack;
-};
-
-struct	xinpgen {
-	size_t	xig_len;	/* length of this structure */
-	u_int	xig_count;	/* number of PCBs at this time */
-	inp_gen_t xig_gen;	/* generation count at this time */
-	so_gen_t xig_sogen;	/* socket generation count at this time */
-};
-#endif /* _SYS_SOCKETVAR_H_ */
 
 struct inpcbport {
 	LIST_ENTRY(inpcbport) phd_hash;
@@ -271,7 +242,6 @@ struct inpcbinfo {
 	 * Generation count--incremented each time a connection is allocated
 	 * or freed.
 	 */
-	u_quad_t		 ipi_gencnt;
 	struct mtx		 ipi_mtx;
 
 	/*
@@ -376,12 +346,7 @@ extern struct callout ipport_tick_callout;
 void	in_pcbpurgeif0(struct inpcbinfo *, struct ifnet *);
 int	in_pcballoc(struct socket *, struct inpcbinfo *);
 int	in_pcbbind(struct inpcb *, struct sockaddr *, struct ucred *);
-int	in_pcbbind_setup(struct inpcb *, struct sockaddr *, in_addr_t *,
-	    u_short *, struct ucred *);
 int	in_pcbconnect(struct inpcb *, struct sockaddr *, struct ucred *);
-int	in_pcbconnect_setup(struct inpcb *, struct sockaddr *, in_addr_t *,
-	    u_short *, in_addr_t *, u_short *, struct inpcb **,
-	    struct ucred *);
 void	in_pcbdetach(struct inpcb *);
 void	in_pcbdisconnect(struct inpcb *);
 void	in_pcbdrop(struct inpcb *);
@@ -399,8 +364,6 @@ void	in_pcbrehash(struct inpcb *);
 void	in_pcbsetsolabel(struct socket *so);
 int	in_getpeeraddr(struct socket *so, struct sockaddr **nam);
 int	in_getsockaddr(struct socket *so, struct sockaddr **nam);
-struct sockaddr *
-	in_sockaddr(in_port_t port, struct in_addr *addr);
 void	in_pcbsosetlabel(struct socket *so);
 void	in_pcbremlists(struct inpcb *inp);
 void	ipport_tick(void *xtp);

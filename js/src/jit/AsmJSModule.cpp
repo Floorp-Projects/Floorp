@@ -210,6 +210,14 @@ RedirectCall(void *fun, ABIFunctionType type)
     return fun;
 }
 
+#ifdef DEBUG
+static void
+AssumeUnreachable()
+{
+    MOZ_CRASH("Reached unreachable code in asm.js");
+}
+#endif
+
 static void *
 AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
 {
@@ -274,6 +282,10 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return RedirectCall(FuncCast(ecmaPow), Args_Double_DoubleDouble);
       case AsmJSImm_ATan2D:
         return RedirectCall(FuncCast(ecmaAtan2), Args_Double_DoubleDouble);
+#ifdef DEBUG
+      case AsmJSImm_AssumeUnreachable:
+        return RedirectCall(FuncCast(AssumeUnreachable), Args_General0);
+#endif
       case AsmJSImm_Invalid:
         break;
     }

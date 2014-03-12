@@ -48,14 +48,11 @@
 #if !defined (__Userspace_os_Windows)
 #include <netinet/udp.h>
 #include <arpa/inet.h>
-/* Statically initializing accept_mtx and accept_cond since there is no call for ACCEPT_LOCK_INIT() */
-userland_mutex_t accept_mtx = PTHREAD_MUTEX_INITIALIZER;
-userland_cond_t accept_cond = PTHREAD_COND_INITIALIZER;
 #else
 #include <user_socketvar.h>
+#endif
 userland_mutex_t accept_mtx;
 userland_cond_t accept_cond;
-#endif
 #ifdef _WIN32
 #include <time.h>
 #include <sys/timeb.h>
@@ -161,7 +158,6 @@ sbwait(struct sockbuf *sb)
 static struct socket *
 soalloc(void)
 {
-#if defined(__Userspace__)
 	struct socket *so;
 
 	/*
@@ -176,9 +172,10 @@ soalloc(void)
 
 	so = (struct socket *)malloc(sizeof(struct socket));
 
-	if (so == NULL)
+	if (so == NULL) {
 		return (NULL);
-	bzero(so, sizeof(struct socket));
+	}
+	memset(so, 0, sizeof(struct socket));
 
 	/* __Userspace__ Initializing the socket locks here */
 	SOCKBUF_LOCK_INIT(&so->so_snd, "so_snd");
@@ -191,96 +188,25 @@ soalloc(void)
 	   What about gencnt and numopensockets?*/
 	TAILQ_INIT(&so->so_aiojobq);
 	return (so);
-#else
-	/* Putting the kernel version for reference. The #else
-	   should be removed once the __Userspace__
-	   version is tested.
-	 */
-	struct socket *so;
-
-	so = uma_zalloc(socket_zone, M_NOWAIT | M_ZERO);
-	if (so == NULL)
-		return (NULL);
-#ifdef MAC
-	if (mac_init_socket(so, M_NOWAIT) != 0) {
-		uma_zfree(socket_zone, so);
-		return (NULL);
-	}
-#endif
-	SOCKBUF_LOCK_INIT(&so->so_snd, "so_snd");
-	SOCKBUF_LOCK_INIT(&so->so_rcv, "so_rcv");
-	sx_init(&so->so_snd.sb_sx, "so_snd_sx");
-	sx_init(&so->so_rcv.sb_sx, "so_rcv_sx");
-	TAILQ_INIT(&so->so_aiojobq);
-	mtx_lock(&so_global_mtx);
-	so->so_gencnt = ++so_gencnt;
-	++numopensockets;
-	mtx_unlock(&so_global_mtx);
-	return (so);
-#endif
 }
 
-#if defined(__Userspace__)
-/*
- * Free the storage associated with a socket at the socket layer.
- */
 static void
 sodealloc(struct socket *so)
 {
 
 	KASSERT(so->so_count == 0, ("sodealloc(): so_count %d", so->so_count));
 	KASSERT(so->so_pcb == NULL, ("sodealloc(): so_pcb != NULL"));
-
-	SOCKBUF_LOCK_DESTROY(&so->so_snd);
-	SOCKBUF_LOCK_DESTROY(&so->so_rcv);
 
 	SOCKBUF_COND_DESTROY(&so->so_snd);
 	SOCKBUF_COND_DESTROY(&so->so_rcv);
 
-        SOCK_COND_DESTROY(so);
+	SOCK_COND_DESTROY(so);
+
+	SOCKBUF_LOCK_DESTROY(&so->so_snd);
+	SOCKBUF_LOCK_DESTROY(&so->so_rcv);
 
 	free(so);
 }
-
-#else /* kernel version for reference. */
-/*
- * Free the storage associated with a socket at the socket layer, tear down
- * locks, labels, etc.  All protocol state is assumed already to have been
- * torn down (and possibly never set up) by the caller.
- */
-static void
-sodealloc(struct socket *so)
-{
-
-	KASSERT(so->so_count == 0, ("sodealloc(): so_count %d", so->so_count));
-	KASSERT(so->so_pcb == NULL, ("sodealloc(): so_pcb != NULL"));
-
-	mtx_lock(&so_global_mtx);
-	so->so_gencnt = ++so_gencnt;
-	--numopensockets;	/* Could be below, but faster here. */
-	mtx_unlock(&so_global_mtx);
-	if (so->so_rcv.sb_hiwat)
-		(void)chgsbsize(so->so_cred->cr_uidinfo,
-		    &so->so_rcv.sb_hiwat, 0, RLIM_INFINITY);
-	if (so->so_snd.sb_hiwat)
-		(void)chgsbsize(so->so_cred->cr_uidinfo,
-		    &so->so_snd.sb_hiwat, 0, RLIM_INFINITY);
-#ifdef INET
-	/* remove acccept filter if one is present. */
-	if (so->so_accf != NULL)
-		do_setopt_accept_filter(so, NULL);
-#endif
-#ifdef MAC
-	mac_destroy_socket(so);
-#endif
-	crfree(so->so_cred);
-	sx_destroy(&so->so_snd.sb_sx);
-	sx_destroy(&so->so_rcv.sb_sx);
-	SOCKBUF_LOCK_DESTROY(&so->so_snd);
-	SOCKBUF_LOCK_DESTROY(&so->so_rcv);
-	uma_zfree(socket_zone, so);
-}
-#endif
 
 /* Taken from  /src/sys/kern/uipc_socket.c
  * and modified for __Userspace__
@@ -351,17 +277,21 @@ soabort(so)
 	struct socket *so;
 {
 	int error;
+#if defined(INET6)
 	struct sctp_inpcb *inp;
-
-	inp = (struct sctp_inpcb *)so->so_pcb;
+#endif
 
 #if defined(INET6)
-	if (inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6)
+	inp = (struct sctp_inpcb *)so->so_pcb;
+	if (inp->sctp_flags & SCTP_PCB_FLAGS_BOUND_V6) {
 		error = sctp6_abort(so);
+	} else {
 #if defined(INET)
-	else
 		error = sctp_abort(so);
+#else
+		error = EAFNOSUPPORT;
 #endif
+	}
 #elif defined(INET)
 	error = sctp_abort(so);
 #else
@@ -792,7 +722,7 @@ userspace_sctp_sendmsg(struct socket *so,
 		return (-1);
 	}
 	if ((tolen > 0) &&
-	    ((to == NULL) || (tolen < sizeof(struct sockaddr)))) {
+	    ((to == NULL) || (tolen < (socklen_t)sizeof(struct sockaddr)))) {
 		errno = EINVAL;
 		return (-1);
 	}
@@ -962,7 +892,7 @@ userspace_sctp_sendmbuf(struct socket *so,
         error = (ENAMETOOLONG);
         goto sendmsg_return;
     }
-    if (tolen < offsetof(struct sockaddr, sa_data)){
+    if (tolen < (socklen_t)offsetof(struct sockaddr, sa_data)){
         error = (EINVAL);
         goto sendmsg_return;
     }
@@ -1044,10 +974,15 @@ userspace_sctp_recvmsg(struct socket *so,
 		    (struct sctp_sndrcvinfo *)sinfo, 1);
 
 	if (error) {
-		if (auio.uio_resid != (int)ulen && (error == ERESTART ||
-		    error == EINTR || error == EWOULDBLOCK))
+		if (auio.uio_resid != (int)ulen &&
+		    (error == EINTR ||
+#if !defined(__Userspace_os_NetBSD)
+		     error == ERESTART ||
+#endif
+		     error == EWOULDBLOCK)) {
 			error = 0;
 		}
+	}
 	if ((fromlenp != NULL) && (fromlen > 0) && (from != NULL)) {
 		switch (from->sa_family) {
 #if defined(INET)
@@ -1133,7 +1068,11 @@ usrsctp_recvv(struct socket *so,
 		    (struct sctp_sndrcvinfo *)&seinfo, 1);
 	if (errno) {
 		if (auio.uio_resid != (int)ulen &&
-		    (errno == ERESTART || errno == EINTR || errno == EWOULDBLOCK)) {
+		    (errno == EINTR ||
+#if !defined(__Userspace_os_NetBSD)
+		     errno == ERESTART ||
+#endif
+		     errno == EWOULDBLOCK)) {
 			errno = 0;
 		}
 	}
@@ -1143,7 +1082,7 @@ usrsctp_recvv(struct socket *so,
 		inp = (struct sctp_inpcb *)so->so_pcb;
 		if (sctp_is_feature_on(inp, SCTP_PCB_FLAGS_RECVNXTINFO) &&
 		    sctp_is_feature_on(inp, SCTP_PCB_FLAGS_RECVRCVINFO) &&
-		    *infolen >= sizeof(struct sctp_recvv_rn) &&
+		    *infolen >= (socklen_t)sizeof(struct sctp_recvv_rn) &&
 		    seinfo.sreinfo_next_flags & SCTP_NEXT_MSG_AVAIL) {
 			rn = (struct sctp_recvv_rn *)info;
 			rn->recvv_rcvinfo.rcv_sid = seinfo.sinfo_stream;
@@ -1171,7 +1110,7 @@ usrsctp_recvv(struct socket *so,
 			*infolen = (socklen_t)sizeof(struct sctp_recvv_rn);
 			*infotype = SCTP_RECVV_RN;
 		} else if (sctp_is_feature_on(inp, SCTP_PCB_FLAGS_RECVRCVINFO) &&
-		           *infolen >= sizeof(struct sctp_rcvinfo)) {
+		           *infolen >= (socklen_t)sizeof(struct sctp_rcvinfo)) {
 			rcv = (struct sctp_rcvinfo *)info;
 			rcv->rcv_sid = seinfo.sinfo_stream;
 			rcv->rcv_ssn = seinfo.sinfo_ssn;
@@ -1429,7 +1368,6 @@ u_long sb_max_adj =
 
 static	u_long sb_efficiency = 8;	/* parameter for sbreserve() */
 
-#if defined (__Userspace__)
 /*
  * Allot mbufs to a sockbuf.  Attempt to scale mbmax so that mbcnt doesn't
  * become limiting if buffering efficiency is near the normal case.
@@ -1439,48 +1377,22 @@ sbreserve_locked(struct sockbuf *sb, u_long cc, struct socket *so)
 {
 	SOCKBUF_LOCK_ASSERT(sb);
 	sb->sb_mbmax = (u_int)min(cc * sb_efficiency, sb_max);
+	sb->sb_hiwat = cc;
 	if (sb->sb_lowat > (int)sb->sb_hiwat)
 		sb->sb_lowat = (int)sb->sb_hiwat;
 	return (1);
 }
-#else /* kernel version for reference */
-/*
- * Allot mbufs to a sockbuf.  Attempt to scale mbmax so that mbcnt doesn't
- * become limiting if buffering efficiency is near the normal case.
- */
-int
-sbreserve_locked(struct sockbuf *sb, u_long cc, struct socket *so,
-    struct thread *td)
+
+static int
+sbreserve(struct sockbuf *sb, u_long cc, struct socket *so)
 {
-	rlim_t sbsize_limit;
+	int error;
 
-	SOCKBUF_LOCK_ASSERT(sb);
-
-	/*
-	 * td will only be NULL when we're in an interrupt (e.g. in
-	 * tcp_input()).
-	 *
-	 * XXXRW: This comment needs updating, as might the code.
-	 */
-	if (cc > sb_max_adj)
-		return (0);
-	if (td != NULL) {
-		PROC_LOCK(td->td_proc);
-		sbsize_limit = lim_cur(td->td_proc, RLIMIT_SBSIZE);
-		PROC_UNLOCK(td->td_proc);
-	} else
-		sbsize_limit = RLIM_INFINITY;
-	if (!chgsbsize(so->so_cred->cr_uidinfo, &sb->sb_hiwat, cc,
-	    sbsize_limit))
-		return (0);
-	sb->sb_mbmax = min(cc * sb_efficiency, sb_max);
-	if (sb->sb_lowat > sb->sb_hiwat)
-		sb->sb_lowat = sb->sb_hiwat;
-	return (1);
+	SOCKBUF_LOCK(sb);
+	error = sbreserve_locked(sb, cc, so);
+	SOCKBUF_UNLOCK(sb);
+	return (error);
 }
-#endif
-
-
 
 #if defined(__Userspace__)
 int
@@ -1841,8 +1753,33 @@ user_accept(struct socket *head,  struct sockaddr **name, socklen_t *namelen, st
 	if (name) {
 #ifdef HAVE_SA_LEN
 		/* check sa_len before it is destroyed */
-		if (*namelen > sa->sa_len)
+		if (*namelen > sa->sa_len) {
 			*namelen = sa->sa_len;
+		}
+#else
+		socklen_t sa_len;
+
+		switch (sa->sa_family) {
+#ifdef INET
+		case AF_INET:
+			sa_len = sizeof(struct sockaddr_in);
+			break;
+#endif
+#ifdef INET6
+		case AF_INET6:
+			sa_len = sizeof(struct sockaddr_in6);
+			break;
+#endif
+		case AF_CONN:
+			sa_len = sizeof(struct sockaddr_conn);
+			break;
+		default:
+			sa_len = 0;
+			break;
+		}
+		if (*namelen > sa_len) {
+			*namelen = sa_len;
+		}
 #endif
 		*name = sa;
 		sa = NULL;
@@ -2083,8 +2020,13 @@ int user_connect(struct socket *so, struct sockaddr *sa)
 		error = pthread_cond_wait(SOCK_COND(so), SOCK_MTX(so));
 #endif
 		if (error) {
-			if (error == EINTR || error == ERESTART)
+#if defined(__Userspace_os_NetBSD)
+			if (error == EINTR) {
+#else
+			if (error == EINTR || error == ERESTART) {
+#endif
 				interrupted = 1;
+			}
 			break;
 		}
 	}
@@ -2095,10 +2037,14 @@ int user_connect(struct socket *so, struct sockaddr *sa)
 	SOCK_UNLOCK(so);
 
 bad:
-	if (!interrupted)
+	if (!interrupted) {
 		so->so_state &= ~SS_ISCONNECTING;
-	if (error == ERESTART)
+	}
+#if !defined(__Userspace_os_NetBSD)
+	if (error == ERESTART) {
 		error = EINTR;
+	}
+#endif
 done1:
 	return (error);
 }
@@ -2199,6 +2145,7 @@ usrsctp_finish(void)
 			SCTP_INP_INFO_RUNLOCK();
 			return (-1);
 		}
+		SCTP_INP_INFO_RUNLOCK();
 	} else {
 		return (-1);
 	}
@@ -2228,6 +2175,38 @@ usrsctp_setsockopt(struct socket *so, int level, int option_name,
 	case SOL_SOCKET:
 	{
 		switch (option_name) {
+		case SO_RCVBUF:
+			if (option_len < (socklen_t)sizeof(int)) {
+				errno = EINVAL;
+				return (-1);
+			} else {
+				int *buf_size;
+
+				buf_size = (int *)option_value;
+				if (*buf_size < 1) {
+					errno = EINVAL;
+					return (-1);
+				}
+				sbreserve(&so->so_rcv, (u_long)*buf_size, so);
+				return (0);
+			}
+			break;
+		case SO_SNDBUF:
+			if (option_len < (socklen_t)sizeof(int)) {
+				errno = EINVAL;
+				return (-1);
+			} else {
+				int *buf_size;
+
+				buf_size = (int *)option_value;
+				if (*buf_size < 1) {
+					errno = EINVAL;
+					return (-1);
+				}
+				sbreserve(&so->so_snd, (u_long)*buf_size, so);
+				return (0);
+			}
+			break;
 		case SO_LINGER:
 			if (option_len < (socklen_t)sizeof(struct linger)) {
 				errno = EINVAL;
@@ -2289,6 +2268,32 @@ usrsctp_getsockopt(struct socket *so, int level, int option_name,
 	switch (level) {
 	case SOL_SOCKET:
 		switch (option_name) {
+		case SO_RCVBUF:
+			if (*option_len < (socklen_t)sizeof(int)) {
+				errno = EINVAL;
+				return (-1);
+			} else {
+				int *buf_size;
+
+				buf_size = (int *)option_value;
+				*buf_size = so->so_rcv.sb_hiwat;;
+				*option_len = (socklen_t)sizeof(int);
+				return (0);
+			}
+			break;
+		case SO_SNDBUF:
+			if (*option_len < (socklen_t)sizeof(int)) {
+				errno = EINVAL;
+				return (-1);
+			} else {
+				int *buf_size;
+
+				buf_size = (int *)option_value;
+				*buf_size = so->so_snd.sb_hiwat;
+				*option_len = (socklen_t)sizeof(int);
+				return (0);
+			}
+			break;
 		case SO_LINGER:
 			if (*option_len < (socklen_t)sizeof(struct linger)) {
 				errno = EINVAL;
@@ -2341,13 +2346,17 @@ usrsctp_bindx(struct socket *so, struct sockaddr *addrs, int addrcnt, int flags)
 {
 	struct sctp_getaddresses *gaddrs;
 	struct sockaddr *sa;
+#ifdef INET
 	struct sockaddr_in *sin;
+#endif
 #ifdef INET6
 	struct sockaddr_in6 *sin6;
 #endif
 	int i;
 	size_t argsz;
+#if defined(INET) || defined(INET6)
 	uint16_t sport = 0;
+#endif
 
 	/* validate the flags */
 	if ((flags != SCTP_BINDX_ADD_ADDR) &&
@@ -2387,7 +2396,7 @@ usrsctp_bindx(struct socket *so, struct sockaddr *addrs, int addrcnt, int flags)
 				}
 			}
 #ifndef HAVE_SA_LEN
-		sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in));
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in));
 #endif
 			break;
 #endif
@@ -2414,26 +2423,18 @@ usrsctp_bindx(struct socket *so, struct sockaddr *addrs, int addrcnt, int flags)
 				}
 			}
 #ifndef HAVE_SA_LEN
-		sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in6));
+			sa = (struct sockaddr *)((caddr_t)sa + sizeof(struct sockaddr_in6));
 #endif
 			break;
 #endif
 		default:
 			/* Invalid address family specified. */
-			errno = EINVAL;
+			errno = EAFNOSUPPORT;
 			return (-1);
 		}
 #ifdef HAVE_SA_LEN
 		sa = (struct sockaddr *)((caddr_t)sa + sa->sa_len);
 #endif
-	}
-	/*
-	 * Now if there was a port mentioned, assure that the first address
-	 * has that port to make sure it fails or succeeds correctly.
-	 */
-	if (sport) {
-		sin = (struct sockaddr_in *)sa;
-		sin->sin_port = sport;
 	}
 	argsz = sizeof(struct sctp_getaddresses) +
 	        sizeof(struct sockaddr_storage);
@@ -2472,6 +2473,27 @@ usrsctp_bindx(struct socket *so, struct sockaddr *addrs, int addrcnt, int flags)
 			break;
 		}
 		memcpy(gaddrs->addr, sa, sa_len);
+		/*
+		 * Now, if there was a port mentioned, assure that the
+		 * first address has that port to make sure it fails or
+		 * succeeds correctly.
+		 */
+		if ((i == 0) && (sport != 0)) {
+			switch (gaddrs->addr->sa_family) {
+#ifdef INET
+			case AF_INET:
+				sin = (struct sockaddr_in *)gaddrs->addr;
+				sin->sin_port = sport;
+				break;
+#endif
+#ifdef INET6
+			case AF_INET6:
+				sin6 = (struct sockaddr_in6 *)gaddrs->addr;
+				sin6->sin6_port = sport;
+				break;
+#endif
+			}
+		}
 		if (usrsctp_setsockopt(so, IPPROTO_SCTP, flags, gaddrs, (socklen_t)argsz) != 0) {
 			free(gaddrs);
 			return (-1);
@@ -2488,6 +2510,7 @@ usrsctp_connectx(struct socket *so,
                  const struct sockaddr *addrs, int addrcnt,
                  sctp_assoc_t *id)
 {
+#if defined(INET) || defined(INET6)
 	char buf[SCTP_STACK_BUF_SIZE];
 	int i, ret, cnt, *aa;
 	char *cpto;
@@ -2564,6 +2587,10 @@ usrsctp_connectx(struct socket *so,
 		*id = *p_id;
 	}
 	return (ret);
+#else
+	errno = EINVAL;
+	return (-1);
+#endif
 }
 
 int
@@ -2780,6 +2807,8 @@ sctp_userspace_ip_output(int *result, struct mbuf *o_pak,
 			ip = mtod(m, struct ip *);
 		}
 		udp = (struct udphdr *)(ip + 1);
+	} else {
+		udp = NULL;
 	}
 
 	if (!use_udp_tunneling) {
@@ -2936,6 +2965,8 @@ void sctp_userspace_ip6_output(int *result, struct mbuf *o_pak,
 			ip6 = mtod(m, struct ip6_hdr *);
 		}
 		udp = (struct udphdr *)(ip6 + 1);
+	} else {
+		udp = NULL;
 	}
 
 	if (!use_udp_tunneling) {
@@ -3160,6 +3191,8 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 	struct sctphdr *sh;
 	struct sctp_chunkhdr *ch;
 
+	SCTP_STAT_INCR(sctps_recvpackets);
+	SCTP_STAT_INCR_COUNTER64(sctps_inpackets);
 	memset(&src, 0, sizeof(struct sockaddr_conn));
 	src.sconn_family = AF_CONN;
 #ifdef HAVE_SCONN_LEN
@@ -3195,6 +3228,9 @@ usrsctp_conninput(void *addr, const void *buffer, size_t length, uint8_t ecn_bit
 #endif
 	                             ecn_bits,
 	                             SCTP_DEFAULT_VRFID, 0);
+	if (m) {
+		sctp_m_freem(m);
+	}
 	return;
 }
 
@@ -3210,7 +3246,9 @@ USRSCTP_SYSCTL_SET_DEF(sctp_auto_asconf)
 USRSCTP_SYSCTL_SET_DEF(sctp_multiple_asconfs)
 USRSCTP_SYSCTL_SET_DEF(sctp_ecn_enable)
 USRSCTP_SYSCTL_SET_DEF(sctp_strict_sacks)
+#if !defined(SCTP_WITH_NO_CSUM)
 USRSCTP_SYSCTL_SET_DEF(sctp_no_csum_on_loopback)
+#endif
 USRSCTP_SYSCTL_SET_DEF(sctp_peer_chunk_oh)
 USRSCTP_SYSCTL_SET_DEF(sctp_max_burst_default)
 USRSCTP_SYSCTL_SET_DEF(sctp_max_chunks_on_queue)
@@ -3286,7 +3324,9 @@ USRSCTP_SYSCTL_GET_DEF(sctp_auto_asconf)
 USRSCTP_SYSCTL_GET_DEF(sctp_multiple_asconfs)
 USRSCTP_SYSCTL_GET_DEF(sctp_ecn_enable)
 USRSCTP_SYSCTL_GET_DEF(sctp_strict_sacks)
+#if !defined(SCTP_WITH_NO_CSUM)
 USRSCTP_SYSCTL_GET_DEF(sctp_no_csum_on_loopback)
+#endif
 USRSCTP_SYSCTL_GET_DEF(sctp_peer_chunk_oh)
 USRSCTP_SYSCTL_GET_DEF(sctp_max_burst_default)
 USRSCTP_SYSCTL_GET_DEF(sctp_max_chunks_on_queue)
@@ -3351,3 +3391,7 @@ USRSCTP_SYSCTL_GET_DEF(sctp_initial_cwnd)
 USRSCTP_SYSCTL_GET_DEF(sctp_debug_on)
 #endif
 
+void usrsctp_get_stat(struct sctpstat *stat)
+{
+	*stat = SCTP_BASE_STATS;
+}

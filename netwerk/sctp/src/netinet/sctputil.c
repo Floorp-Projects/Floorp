@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctputil.c 247412 2013-02-27 19:51:47Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctputil.c 259943 2013-12-27 13:07:00Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -2721,7 +2721,7 @@ sctp_notify_assoc_change(uint16_t state, struct sctp_tcb *stcb,
 	if (sctp_stcb_is_feature_on(stcb->sctp_ep, stcb, SCTP_PCB_FLAGS_RECVASSOCEVNT)) {
 		notif_len = sizeof(struct sctp_assoc_change);
 		if (abort != NULL) {
-			abort_len = htons(abort->ch.chunk_length);
+			abort_len = ntohs(abort->ch.chunk_length);
 		} else {
 			abort_len = 0;
 		}
@@ -2756,7 +2756,7 @@ sctp_notify_assoc_change(uint16_t state, struct sctp_tcb *stcb,
 				if (stcb->asoc.peer_supports_prsctp) {
 					sac->sac_info[i++] = SCTP_ASSOC_SUPPORTS_PR;
 				}
-					if (stcb->asoc.peer_supports_auth) {
+				if (stcb->asoc.peer_supports_auth) {
 					sac->sac_info[i++] = SCTP_ASSOC_SUPPORTS_AUTH;
 				}
 				if (stcb->asoc.peer_supports_asconf) {
@@ -2774,17 +2774,17 @@ sctp_notify_assoc_change(uint16_t state, struct sctp_tcb *stcb,
 		}
 		SCTP_BUF_LEN(m_notify) = sac->sac_length;
 		control = sctp_build_readq_entry(stcb, stcb->asoc.primary_destination,
-						 0, 0, stcb->asoc.context, 0, 0, 0,
-						 m_notify);
+		                                 0, 0, stcb->asoc.context, 0, 0, 0,
+		                                 m_notify);
 		if (control != NULL) {
 			control->length = SCTP_BUF_LEN(m_notify);
 			/* not that we need this */
 			control->tail_mbuf = m_notify;
 			control->spec_flags = M_NOTIFICATION;
 			sctp_add_to_readq(stcb->sctp_ep, stcb,
-					  control,
-					  &stcb->sctp_socket->so_rcv, 1, SCTP_READ_LOCK_NOT_HELD,
-					  so_locked);
+			                  control,
+			                  &stcb->sctp_socket->so_rcv, 1, SCTP_READ_LOCK_NOT_HELD,
+			                  so_locked);
 		} else {
 			sctp_m_freem(m_notify);
 		}
@@ -2807,8 +2807,14 @@ set_error:
 				stcb->sctp_socket->so_error = ECONNRESET;
 			}
 		} else {
-			SCTP_LTRACE_ERR_RET(NULL, stcb, NULL, SCTP_FROM_SCTPUTIL, ECONNABORTED);
-			stcb->sctp_socket->so_error = ECONNABORTED;
+			if ((SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_COOKIE_WAIT) ||
+			    (SCTP_GET_STATE(&stcb->asoc) == SCTP_STATE_COOKIE_ECHOED)) {
+				SCTP_LTRACE_ERR_RET(NULL, stcb, NULL, SCTP_FROM_SCTPUTIL, ETIMEDOUT);
+				stcb->sctp_socket->so_error = ETIMEDOUT;
+			} else {
+				SCTP_LTRACE_ERR_RET(NULL, stcb, NULL, SCTP_FROM_SCTPUTIL, ECONNABORTED);
+				stcb->sctp_socket->so_error = ECONNABORTED;
+			}
 		}
 	}
 	/* Wake ANY sleepers */
@@ -2929,10 +2935,10 @@ sctp_notify_peer_addr_change(struct sctp_tcb *stcb, uint32_t state,
 	/* not that we need this */
 	control->tail_mbuf = m_notify;
 	sctp_add_to_readq(stcb->sctp_ep, stcb,
-			  control,
-			  &stcb->sctp_socket->so_rcv, 1,
-			  SCTP_READ_LOCK_NOT_HELD,
-			  SCTP_SO_NOT_LOCKED);
+	                  control,
+	                  &stcb->sctp_socket->so_rcv, 1,
+	                  SCTP_READ_LOCK_NOT_HELD,
+	                  SCTP_SO_NOT_LOCKED);
 }
 
 
@@ -3611,7 +3617,7 @@ sctp_notify_remote_error(struct sctp_tcb *stcb, uint16_t error, struct sctp_erro
 		return;
 	}
 	if (chunk != NULL) {
-		chunk_len = htons(chunk->ch.chunk_length);
+		chunk_len = ntohs(chunk->ch.chunk_length);
 	} else {
 		chunk_len = 0;
 	}
@@ -3684,8 +3690,8 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		sctp_unlock_assert(SCTP_INP_SO(stcb->sctp_ep));
 	}
 #endif
-	if (stcb && ((stcb->asoc.state & SCTP_STATE_COOKIE_WAIT) ||
-	             (stcb->asoc.state &  SCTP_STATE_COOKIE_ECHOED))) {
+	if ((stcb->asoc.state & SCTP_STATE_COOKIE_WAIT) ||
+	    (stcb->asoc.state &  SCTP_STATE_COOKIE_ECHOED)) {
 		if ((notification == SCTP_NOTIFY_INTERFACE_DOWN) ||
 		    (notification == SCTP_NOTIFY_INTERFACE_UP) ||
 		    (notification == SCTP_NOTIFY_INTERFACE_CONFIRMED)) {
@@ -3704,7 +3710,7 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		}
 		if (stcb->asoc.peer_supports_auth == 0) {
 			sctp_ulp_notify(SCTP_NOTIFY_NO_PEER_AUTH, stcb, 0,
-					NULL, so_locked);
+			                NULL, so_locked);
 		}
 		break;
 	case SCTP_NOTIFY_ASSOC_DOWN:
@@ -3755,7 +3761,7 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		}
 	case SCTP_NOTIFY_SPECIAL_SP_FAIL:
 		sctp_notify_send_failed2(stcb, error,
-					 (struct sctp_stream_queue_pending *)data, so_locked);
+		                         (struct sctp_stream_queue_pending *)data, so_locked);
 		break;
 	case SCTP_NOTIFY_SENT_DG_FAIL:
 		sctp_notify_send_failed(stcb, 1, error,
@@ -3763,7 +3769,7 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		break;
 	case SCTP_NOTIFY_UNSENT_DG_FAIL:
 		sctp_notify_send_failed(stcb, 0, error,
-					(struct sctp_tmit_chunk *)data, so_locked);
+		                        (struct sctp_tmit_chunk *)data, so_locked);
 		break;
 	case SCTP_NOTIFY_PARTIAL_DELVIERY_INDICATION:
 		{
@@ -3774,16 +3780,16 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		break;
 		}
 	case SCTP_NOTIFY_ASSOC_LOC_ABORTED:
-		if ((stcb) && (((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_WAIT) ||
-			       ((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_ECHOED))) {
+		if (((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_WAIT) ||
+		    ((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_ECHOED)) {
 			sctp_notify_assoc_change(SCTP_CANT_STR_ASSOC, stcb, error, data, 0, so_locked);
 		} else {
 			sctp_notify_assoc_change(SCTP_COMM_LOST, stcb, error, data, 0, so_locked);
 		}
 		break;
 	case SCTP_NOTIFY_ASSOC_REM_ABORTED:
-		if ((stcb) && (((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_WAIT) ||
-				((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_ECHOED))) {
+		if (((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_WAIT) ||
+		    ((stcb->asoc.state & SCTP_STATE_MASK) == SCTP_STATE_COOKIE_ECHOED)) {
 			sctp_notify_assoc_change(SCTP_CANT_STR_ASSOC, stcb, error, data, 1, so_locked);
 		} else {
 			sctp_notify_assoc_change(SCTP_COMM_LOST, stcb, error, data, 1, so_locked);
@@ -3793,7 +3799,7 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		sctp_notify_assoc_change(SCTP_RESTART, stcb, error, NULL, 0, so_locked);
 		if (stcb->asoc.peer_supports_auth == 0) {
 			sctp_ulp_notify(SCTP_NOTIFY_NO_PEER_AUTH, stcb, 0,
-					NULL, so_locked);
+			                NULL, so_locked);
 		}
 		break;
 	case SCTP_NOTIFY_STR_RESET_SEND:
@@ -3804,7 +3810,7 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		break;
 	case SCTP_NOTIFY_STR_RESET_FAILED_OUT:
 		sctp_notify_stream_reset(stcb, error, ((uint16_t *) data),
-					 (SCTP_STREAM_RESET_OUTGOING_SSN|SCTP_STREAM_RESET_FAILED));
+		                         (SCTP_STREAM_RESET_OUTGOING_SSN|SCTP_STREAM_RESET_FAILED));
 		break;
 	case SCTP_NOTIFY_STR_RESET_DENIED_OUT:
 		sctp_notify_stream_reset(stcb, error, ((uint16_t *) data),
@@ -3812,7 +3818,7 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		break;
 	case SCTP_NOTIFY_STR_RESET_FAILED_IN:
 		sctp_notify_stream_reset(stcb, error, ((uint16_t *) data),
-					 (SCTP_STREAM_RESET_INCOMING|SCTP_STREAM_RESET_FAILED));
+		                         (SCTP_STREAM_RESET_INCOMING|SCTP_STREAM_RESET_FAILED));
 		break;
 	case SCTP_NOTIFY_STR_RESET_DENIED_IN:
 		sctp_notify_stream_reset(stcb, error, ((uint16_t *) data),
@@ -3824,29 +3830,29 @@ sctp_ulp_notify(uint32_t notification, struct sctp_tcb *stcb,
 		break;
 	case SCTP_NOTIFY_ASCONF_DELETE_IP:
 		sctp_notify_peer_addr_change(stcb, SCTP_ADDR_REMOVED, data,
-		    error);
+		                             error);
 		break;
 	case SCTP_NOTIFY_ASCONF_SET_PRIMARY:
 		sctp_notify_peer_addr_change(stcb, SCTP_ADDR_MADE_PRIM, data,
-		    error);
+		                             error);
 		break;
 	case SCTP_NOTIFY_PEER_SHUTDOWN:
 		sctp_notify_shutdown_event(stcb);
 		break;
 	case SCTP_NOTIFY_AUTH_NEW_KEY:
 		sctp_notify_authentication(stcb, SCTP_AUTH_NEW_KEY, error,
-					   (uint16_t)(uintptr_t)data,
-					   so_locked);
+		                           (uint16_t)(uintptr_t)data,
+		                           so_locked);
 		break;
 	case SCTP_NOTIFY_AUTH_FREE_KEY:
 		sctp_notify_authentication(stcb, SCTP_AUTH_FREE_KEY, error,
-					   (uint16_t)(uintptr_t)data,
-					   so_locked);
+		                           (uint16_t)(uintptr_t)data,
+		                           so_locked);
 		break;
 	case SCTP_NOTIFY_NO_PEER_AUTH:
 		sctp_notify_authentication(stcb, SCTP_AUTH_NO_AUTH, error,
-					   (uint16_t)(uintptr_t)data,
-					   so_locked);
+		                           (uint16_t)(uintptr_t)data,
+		                           so_locked);
 		break;
 	case SCTP_NOTIFY_SENDER_DRY:
 		sctp_notify_sender_dry_event(stcb, so_locked);
@@ -4155,7 +4161,7 @@ sctp_abort_an_association(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 	if (stcb == NULL) {
 		/* Got to have a TCB */
 		if (inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_GONE) {
-			if (LIST_FIRST(&inp->sctp_asoc_list) == NULL) {
+			if (LIST_EMPTY(&inp->sctp_asoc_list)) {
 #if defined(__APPLE__)
 				if (!so_locked) {
 					SCTP_SOCKET_LOCK(so, 1);
@@ -4222,7 +4228,7 @@ sctp_handle_ootb(struct mbuf *m, int iphlen, int offset,
 	SCTP_STAT_INCR_COUNTER32(sctps_outoftheblue);
 	/* Generate a TO address for future reference */
 	if (inp && (inp->sctp_flags & SCTP_PCB_FLAGS_SOCKET_GONE)) {
-		if (LIST_FIRST(&inp->sctp_asoc_list) == NULL) {
+		if (LIST_EMPTY(&inp->sctp_asoc_list)) {
 #if defined(__APPLE__)
 			SCTP_SOCKET_LOCK(SCTP_INP_SO(inp), 1);
 #endif
@@ -4737,7 +4743,7 @@ sctp_add_to_readq(struct sctp_inpcb *inp,
 			char *buffer;
 			struct sctp_rcvinfo rcv;
 			union sctp_sockstore addr;
-			int flags = 0;
+			int flags;
 
 			if ((buffer = malloc(control->length)) == NULL) {
 				return;
@@ -4770,24 +4776,22 @@ sctp_add_to_readq(struct sctp_inpcb *inp,
 				addr.sin6 = control->whoFrom->ro._l_addr.sin6;
 				break;
 #endif
-#if defined(__Userspace__)
 			case AF_CONN:
 				addr.sconn = control->whoFrom->ro._l_addr.sconn;
 				break;
-#endif
 			default:
 				addr.sa = control->whoFrom->ro._l_addr.sa;
 				break;
 			}
+			flags = MSG_EOR;
 			if (control->spec_flags & M_NOTIFICATION) {
 				flags |= MSG_NOTIFICATION;
-			}
-			if (control->spec_flags & M_EOR) {
-				flags |= MSG_EOR;
 			}
 			inp->recv_callback(so, addr, buffer, control->length, rcv, flags, inp->ulp_info);
 			SCTP_TCB_LOCK(stcb);
 			atomic_subtract_int(&stcb->asoc.refcnt, 1);
+			sctp_free_remote_addr(control->whoFrom);
+			control->whoFrom = NULL;
 			sctp_m_freem(control->data);
 			control->data = NULL;
 			control->length = 0;
@@ -4950,24 +4954,32 @@ sctp_append_to_readq(struct sctp_inpcb *inp,
 	 * is populated in the outbound sinfo structure from the true cumack
 	 * if the association exists...
 	 */
+	control->sinfo_tsn = control->sinfo_cumtsn = ctls_cumack;
 #if defined(__Userspace__)
 	if (inp->recv_callback) {
-		if (control->end_added == 1) {
+		uint32_t pd_point, length;
+
+		length = control->length;
+		if (stcb != NULL && stcb->sctp_socket != NULL) {
+			pd_point = min(SCTP_SB_LIMIT_RCV(stcb->sctp_socket) >> SCTP_PARTIAL_DELIVERY_SHIFT,
+			               stcb->sctp_ep->partial_delivery_point);
+		} else {
+			pd_point = inp->partial_delivery_point;
+		}
+		if ((control->end_added == 1) || (length >= pd_point)) {
 			struct socket *so;
 			char *buffer;
 			struct sctp_rcvinfo rcv;
 			union sctp_sockstore addr;
-			int flags = 0;
+			int flags;
 
 			if ((buffer = malloc(control->length)) == NULL) {
 				return (-1);
 			}
-			so = inp->sctp_socket;
+			so = stcb->sctp_socket;
 			for (m = control->data; m; m = SCTP_BUF_NEXT(m)) {
 				sctp_sbfree(control, control->stcb, &so->so_rcv, m);
 			}
-			atomic_add_int(&stcb->asoc.refcnt, 1);
-			SCTP_TCB_UNLOCK(stcb);
 			m_copydata(control->data, 0, control->length, buffer);
 			memset(&rcv, 0, sizeof(struct sctp_rcvinfo));
 			rcv.rcv_sid = control->sinfo_stream;
@@ -4990,35 +5002,42 @@ sctp_append_to_readq(struct sctp_inpcb *inp,
 				addr.sin6 = control->whoFrom->ro._l_addr.sin6;
 				break;
 #endif
-#if defined(__Userspace__)
 			case AF_CONN:
 				addr.sconn = control->whoFrom->ro._l_addr.sconn;
 				break;
-#endif
 			default:
 				addr.sa = control->whoFrom->ro._l_addr.sa;
 				break;
 			}
+			flags = 0;
+			if (control->end_added == 1) {
+				flags |= MSG_EOR;
+			}
 			if (control->spec_flags & M_NOTIFICATION) {
 				flags |= MSG_NOTIFICATION;
 			}
-			if (control->spec_flags & M_EOR) {
-				flags |= MSG_EOR;
-			}
-			inp->recv_callback(so, addr, buffer, control->length, rcv, flags, inp->ulp_info);
-			SCTP_TCB_LOCK(stcb);
-			atomic_subtract_int(&stcb->asoc.refcnt, 1);
 			sctp_m_freem(control->data);
 			control->data = NULL;
+			control->tail_mbuf = NULL;
 			control->length = 0;
-			sctp_free_a_readq(stcb, control);
+			if (control->end_added) {
+				sctp_free_remote_addr(control->whoFrom);
+				control->whoFrom = NULL;
+				sctp_free_a_readq(stcb, control);
+			} else {
+				control->some_taken = 1;
+			}
+			atomic_add_int(&stcb->asoc.refcnt, 1);
+			SCTP_TCB_UNLOCK(stcb);
+			inp->recv_callback(so, addr, buffer, length, rcv, flags, inp->ulp_info);
+			SCTP_TCB_LOCK(stcb);
+			atomic_subtract_int(&stcb->asoc.refcnt, 1);
 		}
 		if (inp)
 			SCTP_INP_READ_UNLOCK(inp);
 		return (0);
 	}
 #endif
-	control->sinfo_tsn = control->sinfo_cumtsn = ctls_cumack;
 	if (inp) {
 		SCTP_INP_READ_UNLOCK(inp);
 	}
@@ -5272,7 +5291,6 @@ sctp_release_pr_sctp_chunk(struct sctp_tcb *stcb, struct sctp_tmit_chunk *tp1,
 				chk->rec.data.TSN_seq = stcb->asoc.sending_seq++;
 #endif
 				stcb->asoc.pr_sctp_cnt++;
-				chk->pr_sctp_on = 1;
 				TAILQ_INSERT_TAIL(&stcb->asoc.sent_queue, chk, sctp_next);
 				stcb->asoc.sent_queue_cnt++;
 				stcb->asoc.pr_sctp_cnt++;
@@ -5431,10 +5449,10 @@ sctp_get_ifa_hash_val(struct sockaddr *addr)
 	case AF_CONN:
 	{
 		struct sockaddr_conn *sconn;
-		uint64_t temp;
+		uintptr_t temp;
 
 		sconn = (struct sockaddr_conn *)addr;
-		temp = (uint64_t)sconn->sconn_addr;
+		temp = (uintptr_t)sconn->sconn_addr;
 		return ((uint32_t)(temp ^ (temp >> 16)));
 	}
 #endif
@@ -5704,7 +5722,7 @@ sctp_sorecvmsg(struct socket *so,
 	if (rwnd_req < SCTP_MIN_RWND)
 		rwnd_req = SCTP_MIN_RWND;
 	in_eeor_mode = sctp_is_feature_on(inp, SCTP_PCB_FLAGS_EXPLICIT_EOR);
-	if (SCTP_BASE_SYSCTL(sctp_logging_level) &SCTP_RECV_RWND_LOGGING_ENABLE) {
+	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_RECV_RWND_LOGGING_ENABLE) {
 #if defined(__APPLE__)
 #if defined(APPLE_LEOPARD)
 		sctp_misc_ints(SCTP_SORECV_ENTER,
@@ -6459,8 +6477,8 @@ sctp_sorecvmsg(struct socket *so,
 #else
 		if ((uio->uio_resid == 0) ||
 #endif
-		    ((in_eeor_mode) && (copied_so_far >= max(so->so_rcv.sb_lowat, 1)))
-			) {
+		    ((in_eeor_mode) &&
+		     (copied_so_far >= (uint32_t)max(so->so_rcv.sb_lowat, 1)))) {
 			goto release;
 		}
 		/*
@@ -6980,7 +6998,7 @@ sctp_hashinit_flags(int elements, struct malloc_type *type,
 		hashtbl = malloc((u_long)hashsize * sizeof(*hashtbl));
 	else {
 #ifdef INVARIANTS
-		SCTP_PRINTF("flag incorrect in hashinit_flags");
+		SCTP_PRINTF("flag incorrect in hashinit_flags.\n");
 #endif
 		return (NULL);
 	}
@@ -7004,7 +7022,7 @@ sctp_hashdestroy(void *vhashtbl, struct malloc_type *type, u_long hashmask)
 	hashtbl = vhashtbl;
 	for (hp = hashtbl; hp <= &hashtbl[hashmask]; hp++)
 		if (!LIST_EMPTY(hp)) {
-			SCTP_PRINTF("hashdestroy: hash not empty");
+			SCTP_PRINTF("hashdestroy: hash not empty.\n");
 			return;
 		}
 	FREE(hashtbl, type);
@@ -7466,8 +7484,13 @@ sctp_bindx_delete_address(struct sctp_inpcb *inp,
 int
 sctp_local_addr_count(struct sctp_tcb *stcb)
 {
-	int loopback_scope, ipv4_local_scope, local_scope, site_scope;
-	int ipv4_addr_legal, ipv6_addr_legal;
+	int loopback_scope;
+#if defined(INET)
+	int ipv4_local_scope, ipv4_addr_legal;
+#endif
+#if defined (INET6)
+	int local_scope, site_scope, ipv6_addr_legal;
+#endif
 #if defined(__Userspace__)
 	int conn_addr_legal;
 #endif
@@ -7478,11 +7501,15 @@ sctp_local_addr_count(struct sctp_tcb *stcb)
 
 	/* Turn on all the appropriate scopes */
 	loopback_scope = stcb->asoc.scope.loopback_scope;
+#if defined(INET)
 	ipv4_local_scope = stcb->asoc.scope.ipv4_local_scope;
+	ipv4_addr_legal = stcb->asoc.scope.ipv4_addr_legal;
+#endif
+#if defined(INET6)
 	local_scope = stcb->asoc.scope.local_scope;
 	site_scope = stcb->asoc.scope.site_scope;
-	ipv4_addr_legal = stcb->asoc.scope.ipv4_addr_legal;
 	ipv6_addr_legal = stcb->asoc.scope.ipv6_addr_legal;
+#endif
 #if defined(__Userspace__)
 	conn_addr_legal = stcb->asoc.scope.conn_addr_legal;
 #endif
