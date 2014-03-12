@@ -71,14 +71,11 @@ let observer = {
     ok(true, "the view source window was opened in response to clicking " +
        "the location node");
 
-    // executeSoon() is necessary to avoid crashing Firefox. See bug 611543.
-    executeSoon(function() {
-      aSubject.close();
-      ok(containsValueInvoked, "custom containsValue() was invoked");
-      Sources.containsValue = containsValue;
-      Sources = containsValue = null;
-      finishTest();
-    });
+    aSubject.close();
+    ok(containsValueInvoked, "custom containsValue() was invoked");
+    Sources.containsValue = containsValue;
+    Sources = containsValue = null;
+    finishTest();
   }
 };
 

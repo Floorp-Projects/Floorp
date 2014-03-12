@@ -25,18 +25,19 @@ function inspectorRuleViewOpened()
 
   gDevTools.once("toolbox-destroyed", inspectorClosed);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.getToolbox(target).destroy();
+  gDevTools.closeToolbox(target);
 }
 
 function inspectorClosed()
 {
   openInspector(function(panel) {
     inspector = panel;
+
     if (inspector.sidebar.getCurrentTabID()) {
-      // Default sidebar already selected.
+      info("Default sidebar already selected.")
       testNewDefaultTab();
     } else {
-      // Default sidebar still to be selected.
+      info("Default sidebar still to be selected, adding select listener.");
       inspector.sidebar.once("select", testNewDefaultTab);
     }
   });
