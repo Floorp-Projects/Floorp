@@ -78,6 +78,7 @@ function test() {
     waitForFocus(startTest, content);
   }, true);
 
-  content.location = "data:text/html,<p>bug 699308 - test iframe navigation" +
-    "<iframe src='data:text/html,hello world'></iframe>";
+  content.location = "data:text/html;charset=utf-8," +
+                     "<p>bug 699308 - test iframe navigation</p>" +
+                     "<iframe src='data:text/html;charset=utf-8,hello world'></iframe>";
 }

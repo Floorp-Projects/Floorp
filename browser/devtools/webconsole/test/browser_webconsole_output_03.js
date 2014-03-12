@@ -153,7 +153,6 @@ let inputTests = [
 ];
 
 function test() {
-
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);

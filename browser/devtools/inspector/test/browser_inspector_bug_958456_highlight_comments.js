@@ -77,7 +77,6 @@ function prepareHighlighter() {
   let deferred = promise.defer();
   inspector.selection.setNode(doc.querySelector("p"), null);
   inspector.once("inspector-updated", () => {
-    getHighlighterOutline().setAttribute("disable-transitions", "true");
     deferred.resolve();
   });
   return deferred.promise;
