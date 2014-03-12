@@ -399,7 +399,7 @@ int sctp_detach(struct socket *so);
 #endif
 int sctp_disconnect(struct socket *so);
 #if defined(__FreeBSD__) || defined(__APPLE__) || defined(__Windows__)
-#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
+#if defined(__FreeBSD__) && __FreeBSD_version < 902000
 void sctp_ctlinput __P((int, struct sockaddr *, void *));
 int sctp_ctloutput __P((struct socket *, struct sockopt *));
 #ifdef INET
@@ -427,7 +427,7 @@ void sctp_input(struct mbuf *,...);
 void *sctp_ctlinput(int, struct sockaddr *, void *);
 int sctp_ctloutput(int, struct socket *, int, int, struct mbuf **);
 #endif
-#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
+#if defined(__FreeBSD__) && __FreeBSD_version < 902000
 void sctp_drain __P((void));
 #else
 void sctp_drain(void);
@@ -436,18 +436,18 @@ void sctp_drain(void);
 void sctp_init(uint16_t,
                int (*)(void *addr, void *buffer, size_t length, uint8_t tos, uint8_t set_df),
                void (*)(const char *, ...));
-#else
-#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
+#elif defined(__FreeBSD__) && __FreeBSD_version < 902000
 void sctp_init __P((void));
+#elif defined(__APPLE__) && (!defined(APPLE_LEOPARD) && !defined(APPLE_SNOWLEOPARD) &&!defined(APPLE_LION) && !defined(APPLE_MOUNTAINLION))
+void sctp_init(struct protosw *pp, struct domain *dp);
 #else
 void sctp_init(void);
-#endif
 #endif
 void sctp_finish(void);
 #if defined(__FreeBSD__) || defined(__Windows__) || defined(__Userspace__)
 int sctp_flush(struct socket *, int);
 #endif
-#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
+#if defined(__FreeBSD__) && __FreeBSD_version < 902000
 int sctp_shutdown __P((struct socket *));
 void sctp_notify __P((struct sctp_inpcb *, struct ip *ip, struct sctphdr *,
 		struct sockaddr *, struct sctp_tcb *,
