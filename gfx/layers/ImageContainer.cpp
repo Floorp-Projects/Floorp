@@ -672,7 +672,8 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
   MOZ_ASSERT(surface);
 
   textureClient = aClient->CreateTextureClientForDrawing(surface->GetFormat(),
-                                                         TEXTURE_FLAGS_DEFAULT);
+                                                         TEXTURE_FLAGS_DEFAULT,
+                                                         surface->GetSize());
   MOZ_ASSERT(textureClient->AsTextureClientDrawTarget());
   if (!textureClient->AsTextureClientDrawTarget()->AllocateForSurface(surface->GetSize()) ||
       !textureClient->Lock(OPEN_WRITE_ONLY)) {

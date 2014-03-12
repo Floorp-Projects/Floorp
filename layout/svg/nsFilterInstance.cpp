@@ -215,6 +215,12 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
     mFilterRegion = svgFilterInstance.GetFilterRegion();
     mFilterSpaceBounds = svgFilterInstance.GetFilterSpaceBounds();
 
+    // If this overflows, we can at least paint the maximum surface size.
+    bool overflow;
+    gfxIntSize surfaceSize =
+      nsSVGUtils::ConvertToSurfaceSize(mFilterSpaceBounds.Size(), &overflow);
+    mFilterSpaceBounds.SizeTo(surfaceSize);
+
     return svgFilterInstance.BuildPrimitives(mPrimitiveDescriptions, mInputImages);
   }
 

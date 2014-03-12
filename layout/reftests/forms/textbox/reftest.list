@@ -1,10 +1,10 @@
 # access-key tests are no use on OS X because access keys are not indicated visually
-skip-if(cocoaWidget) != accesskey-1.xul accesskey-1-notref.xul
-skip-if(cocoaWidget) == accesskey-2.xul accesskey-2-ref.xul
+skip-if(cocoaWidget||(B2G&&browserIsRemote)) != accesskey-1.xul accesskey-1-notref.xul # bug 974780
+skip-if(cocoaWidget||(B2G&&browserIsRemote)) == accesskey-2.xul accesskey-2-ref.xul # bug 974780
 # accesskey-3 fails because of defects in XUL bidi support
-skip-if(cocoaWidget) fails-if(!cocoaWidget) == accesskey-3.xul accesskey-3-ref.xul
-skip-if(cocoaWidget) != accesskey-3.xul accesskey-3-notref.xul
-skip-if(cocoaWidget) == accesskey-4.xul accesskey-4-ref.xul
-skip-if(cocoaWidget) != accesskey-4.xul accesskey-4-notref.xul
-== align-baseline-1.xul align-baseline-1-ref.xul # test for bug 494901
-skip-if(B2G) fails-if(Android) == setsize.xul setsize-ref.xul
+fails-if(!cocoaWidget) skip-if(cocoaWidget||(B2G&&browserIsRemote)) == accesskey-3.xul accesskey-3-ref.xul # bug 974780
+skip-if(cocoaWidget||(B2G&&browserIsRemote)) != accesskey-3.xul accesskey-3-notref.xul # bug 974780
+skip-if(cocoaWidget||(B2G&&browserIsRemote)) == accesskey-4.xul accesskey-4-ref.xul # bug 974780
+skip-if(cocoaWidget||(B2G&&browserIsRemote)) != accesskey-4.xul accesskey-4-notref.xul # bug 974780
+skip-if(B2G&&browserIsRemote) == align-baseline-1.xul align-baseline-1-ref.xul # test for bug 494901
+fails-if(Android) skip-if(B2G) == setsize.xul setsize-ref.xul # bug 974780
