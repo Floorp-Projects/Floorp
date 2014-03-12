@@ -268,6 +268,9 @@ Thread::GetCurrentId()
   return GetCurrentThreadId();
 }
 
+void OS::Startup() {
+}
+
 void OS::Sleep(int milliseconds) {
   ::Sleep(milliseconds);
 }
