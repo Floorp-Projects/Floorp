@@ -1800,3 +1800,25 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNSSCertificateDB::ClearOCSPCache()
+{
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
+  if (certVerifier->mImplementation == CertVerifier::insanity) {
+    certVerifier->ClearOCSPCache();
+  } else {
+    SECStatus srv = CERT_ClearOCSPCache();
+    if (srv != SECSuccess) {
+      return MapSECStatus(srv);
+    }
+  }
+
+  return NS_OK;
+}
