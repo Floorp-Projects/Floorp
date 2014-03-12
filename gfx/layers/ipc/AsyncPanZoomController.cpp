@@ -1684,7 +1684,8 @@ gfx3DMatrix AsyncPanZoomController::GetNontransientAsyncTransform() {
 
 gfx3DMatrix AsyncPanZoomController::GetTransformToLastDispatchedPaint() {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  CSSPoint scrollChange = mLastContentPaintMetrics.mScrollOffset - mLastDispatchedPaintMetrics.mScrollOffset;
+  LayerPoint scrollChange = (mLastContentPaintMetrics.mScrollOffset - mLastDispatchedPaintMetrics.mScrollOffset)
+                          * mLastContentPaintMetrics.LayersPixelsPerCSSPixel();
   float zoomChange = mLastContentPaintMetrics.mZoom.scale / mLastDispatchedPaintMetrics.mZoom.scale;
   return gfx3DMatrix::Translation(scrollChange.x, scrollChange.y, 0) *
          gfx3DMatrix::ScalingMatrix(zoomChange, zoomChange, 1);
