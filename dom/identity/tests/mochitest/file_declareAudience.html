@@ -1,0 +1,51 @@
+<!--
+  * This Source Code Form is subject to the terms of the Mozilla Public
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ -->
+<!DOCTYPE html>
+<html>
+  <!--
+  Certified and packaged apps should be able to declare assertion audience.
+  https://bugzilla.mozilla.org/show_bug.cgi?id=947374
+  -->
+<head>
+  <meta charset="utf-8">
+  <title>Test app for bug 947374</title>
+</head>
+
+<body>
+    <div id='test'>
+<script type="application/javascript;version=1.8">
+
+  function postResults(message) {
+    window.realParent.postMessage(JSON.stringify(message), "*");
+  }
+
+  function onready() {
+    navigator.mozId.request();
+  }
+
+  function onlogin(backedAssertion) {
+    postResults({success: true, backedAssertion: backedAssertion});
+  }
+
+  function onerror(error) {
+    postResults({success: false, error: error});
+  }
+
+  onmessage = function(event) {
+    navigator.mozId.watch({
+      wantIssuer: "firefox-accounts",
+      audience: event.data.audience,
+      onready: onready,
+      onlogin: onlogin,
+      onerror: onerror,
+      onlogout: function() {},
+    });
+  };
+
+</script>
+</div>
+</body>
+</html>

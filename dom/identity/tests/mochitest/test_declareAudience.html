@@ -1,0 +1,270 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=947374
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Certified apps can changed the default audience of an assertion -- Bug 947374</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=947374">Mozilla Bug 947374</a>
+<p id="display"></p>
+<div id="content">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+
+Components.utils.import("resource://gre/modules/Promise.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/identity/jwcrypto.jsm");
+Components.utils.import("resource://gre/modules/identity/FirefoxAccounts.jsm");
+
+// quick check to make sure we can test apps:
+is("appStatus" in document.nodePrincipal, true,
+   "appStatus should be present in nsIPrincipal, if not the rest of this test will fail");
+
+// Mock the Firefox Accounts manager to generate a keypair and provide a fake
+// cert for the caller on each getAssertion request.
+function MockFXAManager() {}
+
+MockFXAManager.prototype = {
+  getAssertion: function(audience) {
+    let deferred = Promise.defer();
+    jwcrypto.generateKeyPair("DS160", (err, kp) => {
+      if (err) {
+        return deferred.reject(err);
+      }
+      jwcrypto.generateAssertion("fake-cert", kp, audience, (err, assertion) => {
+        if (err) {
+          return deferred.reject(err);
+        }
+        return deferred.resolve(assertion);
+      });
+    });
+    return deferred.promise;
+  }
+};
+
+let originalManager = FirefoxAccounts.fxAccountsManager;
+FirefoxAccounts.fxAccountsManager = new MockFXAManager();
+
+// The manifests for these apps are all declared in
+// /testing/profiles/webapps_mochitest.json.  They are injected into the profile
+// by /testing/mochitest/runtests.py with the appropriate appStatus.  So we don't
+// have to manually install any apps.
+//
+// For each app, we will use the file_declareAudience.html content to populate an
+// iframe.  The iframe will request() a firefox accounts assertion.  It will then
+// postMessage the results of this experiment back down to us, and we will
+// compare it with the expected results.
+let apps = [
+  {
+    title: "an installed app, which should neither be able to use FxA, nor change audience",
+    manifest: "https://example.com/manifest.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_INSTALLED,
+    origin: "https://example.com",
+    wantAudience: "https://i-cant-have-this.com",
+    uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_declareAudience.html",
+    expected: {
+      success: false,
+      underprivileged: true,
+    },
+  },
+  {
+    title: "an app's assertion audience should be its origin by default",
+    manifest: "https://example.com/manifest_priv.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_PRIVILEGED,
+    origin: "https://example.com",
+    uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_declareAudience.html",
+    expected: {
+      success: true,
+      underprivileged: false,
+    },
+  },
+  {
+    title: "a privileged app, which may not have an audience other than its origin",
+    manifest: "https://example.com/manifest_priv.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_PRIVILEGED,
+    origin: "https://example.com",
+    wantAudience: "https://i-like-pie.com",
+    uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_declareAudience.html",
+    expected: {
+      success: false,
+      underprivileged: false,
+    },
+  },
+  {
+    title: "a privileged app, which may declare an audience the same as its origin",
+    manifest: "https://example.com/manifest_priv.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_PRIVILEGED,
+    origin: "https://example.com",
+    wantAudience: "https://example.com",
+    uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_declareAudience.html",
+    expected: {
+      success: true,
+    },
+  },
+  {
+    title: "a certified app, which may do whatever it damn well pleases",
+    manifest: "https://example.com/manifest_cert.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_CERTIFIED,
+    origin: "https://example.com",
+    wantAudience: "https://whatever-i-want.com",
+    uri: "https://example.com/chrome/dom/identity/tests/mochitest/file_declareAudience.html",
+    expected: {
+      success: true,
+    },
+  },
+];
+
+let appIndex = 0;
+let expectedErrors = 0;
+let receivedErrors = [];
+let testRunner = runTest();
+
+// Successful tests will send exactly one message.  But for error tests, we may
+// have more than one message from the onerror handler in the client.  So we keep
+// track of received errors; once they reach the expected count, we are done.
+function receiveMessage(event) {
+  let result = JSON.parse(event.data);
+  let app = apps[appIndex];
+  let expected = app.expected;
+
+  is(result.success, expected.success,
+     "Assertion request " + (expected.success ? "succeeds" : "fails"));
+
+  if (expected.success) {
+    // Confirm that the assertion audience and origin are as expected
+    let components = extractAssertionComponents(result.backedAssertion);
+    is(components.payload.aud, app.wantAudience || app.origin,
+       "Got desired assertion audience");
+
+  } else {
+    receivedErrors.push(result.error);
+  }
+
+  if (receivedErrors.length === expectedErrors) {
+
+    if (expected.underprivileged) {
+      ok(receivedErrors.indexOf("ERROR_NOT_AUTHORIZED_FOR_FIREFOX_ACCOUNTS") > -1,
+         "Expect a complaint that this app cannot use FxA.");
+    }
+    if (!expected.success) {
+      ok(receivedErrors.indexOf("ERROR_INVALID_ASSERTION_AUDIENCE") > -1,
+         "Expect an error getting an assertion");
+    }
+
+    appIndex += 1;
+
+    if (appIndex === apps.length) {
+      window.removeEventListener("message", receiveMessage);
+
+      FirefoxAccounts.fxAccountsManager = originalManager;
+
+      SimpleTest.finish();
+      return;
+    }
+
+    testRunner.next();
+  }
+}
+
+window.addEventListener("message", receiveMessage, false, true);
+
+function runTest() {
+  for (let app of apps) {
+    dump("** Testing " + app.title + "\n");
+
+    // Set up state for message handler
+    expectedErrors = 0;
+    receivedErrors = [];
+    if (!app.expected.success) {
+      expectedErrors += 1;
+    }
+    if (app.expected.underprivileged) {
+      expectedErrors += 1;
+    }
+
+    let iframe = document.createElement("iframe");
+
+    iframe.setAttribute("mozapp", app.manifest);
+    iframe.setAttribute("mozbrowser", "true");
+    iframe.src = app.uri;
+
+    document.getElementById("content").appendChild(iframe);
+
+    iframe.addEventListener("load", function onLoad() {
+      iframe.removeEventListener("load", onLoad);
+
+      let principal = iframe.contentDocument.nodePrincipal;
+      is(principal.appStatus, app.appStatus,
+         "Iframe's document.nodePrincipal has expected appStatus");
+
+      // Because the <iframe mozapp> can't parent its way back to us, we
+      // provide this handle to our window so it can postMessage to us.
+      iframe.contentWindow.wrappedJSObject.realParent = window;
+
+      // Test what we want to test, viz. whether or not the app can request
+      // an assertion with an audience the same as or different from its
+      // origin.  The client will post back its success or failure in procuring
+      // an identity assertion from Firefox Accounts.
+      iframe.contentWindow.postMessage({audience: app.wantAudience}, "*");
+    }, false);
+
+    yield undefined;
+  }
+}
+
+function extractAssertionComponents(backedAssertion) {
+  let [_, signedObject] = backedAssertion.split("~");
+  let parts = signedObject.split(".");
+
+  let headerSegment = parts[0];
+  let payloadSegment = parts[1];
+  let cryptoSegment = parts[2];
+
+  let header = JSON.parse(base64UrlDecode(headerSegment));
+  let payload = JSON.parse(base64UrlDecode(payloadSegment));
+
+  return {header: header,
+          payload: payload,
+          headerSegment: headerSegment,
+          payloadSegment: payloadSegment,
+          cryptoSegment: cryptoSegment};
+};
+
+function base64UrlDecode(s) {
+  s = s.replace(/-/g, "+");
+  s = s.replace(/_/g, "/");
+  // Don't need to worry about reintroducing padding ('=='), since
+  // jwcrypto provides that.
+  return atob(s);
+}
+
+SpecialPowers.pushPrefEnv({"set":
+  [
+    ["dom.mozBrowserFramesEnabled", true],
+    ["dom.identity.enabled", true],
+    ["identity.fxaccounts.enabled", true],
+    ["toolkit.identity.debug", true],
+    ["dom.identity.syntheticEventsOk", true],
+
+    ["security.apps.privileged.CSP.default", ""],
+    ["security.apps.certified.CSP.default", ""],
+  ]},
+  function() {
+    testRunner.next();
+  }
+);
+
+
+</script>
+</pre>
+</body>
+</html>
