@@ -239,12 +239,18 @@ toolbar[customizing] > .overflow-button {
 %endif
 
 /* Rules to help integrate SDK widgets */
+toolbaritem[sdkstylewidget="true"] > toolbarbutton,
+toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > iframe,
 toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-text {
+  display: none;
+}
+
+toolbarpaletteitem:-moz-any([place="palette"], [place="panel"]) > toolbaritem[sdkstylewidget="true"] > toolbarbutton {
   display: -moz-box;
 }
 
-toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > iframe {
-  display: none;
+toolbarpaletteitem > toolbaritem[sdkstylewidget="true"][cui-areatype="toolbar"] > .toolbarbutton-text {
+  display: -moz-box;
 }
 
 toolbarpaletteitem[removable="false"] {
