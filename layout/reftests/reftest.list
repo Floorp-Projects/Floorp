@@ -163,7 +163,7 @@ include font-face/reftest.list
 skip-if(B2G) include font-features/reftest.list
 
 # mobile font size inflation
-include font-inflation/reftest.list
+skip-if(B2G&&browserIsRemote) include font-inflation/reftest.list
 
 # font matching
 skip-if(B2G) include font-matching/reftest.list

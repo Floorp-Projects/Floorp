@@ -15,6 +15,6 @@ skip-if(B2G) == bug591981-1.html bug591981-ref.html
 == bug591981-2.html bug591981-ref.html
 == bug592366-1.html bug592366-ref.html
 skip-if(B2G) == bug592366-2.html bug592366-ref.html
-== bug592366-1.xhtml bug592366-ref.xhtml
+skip-if(B2G&&browserIsRemote) == bug592366-1.xhtml bug592366-ref.xhtml
 skip-if(B2G) == bug592366-2.xhtml bug592366-ref.xhtml
 == bug798068.xhtml bug798068-ref.xhtml
