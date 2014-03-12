@@ -213,6 +213,8 @@ CustomizeMode.prototype = {
       customizeButton.setAttribute("label", customizeButton.getAttribute("exitLabel"));
       customizeButton.setAttribute("enterTooltiptext", customizeButton.getAttribute("tooltiptext"));
       customizeButton.setAttribute("tooltiptext", customizeButton.getAttribute("exitTooltiptext"));
+      document.getElementById("PanelUI-help").setAttribute("disabled", true);
+      document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
       this._transitioning = true;
 
@@ -242,9 +244,6 @@ CustomizeMode.prototype = {
       this.visiblePalette.addEventListener("dragend", this, true);
 
       window.gNavToolbox.addEventListener("toolbarvisibilitychange", this);
-
-      document.getElementById("PanelUI-help").setAttribute("disabled", true);
-      document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
       this._updateResetButton();
       this._updateUndoResetButton();

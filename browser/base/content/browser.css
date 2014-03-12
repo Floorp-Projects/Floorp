@@ -363,11 +363,6 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   display: none;
 }
 
-#wrapper-urlbar-container > #urlbar-container > #urlbar-wrapper > #urlbar {
-  -moz-user-input: disabled;
-  cursor: grab;
-}
-
 #PopupAutoComplete {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#browser-autocomplete-result-popup");
 }
@@ -418,7 +413,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   -moz-margin-end: 0.25em !important;
 }
 
-#wrapper-search-container > #search-container > #searchbar > .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input {
+#main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .autocomplete-textbox-container > .textbox-input-box {
   visibility: hidden;
 }
 
