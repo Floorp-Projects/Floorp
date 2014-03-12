@@ -2195,29 +2195,23 @@ PlacesCreateLivemarkTransaction.prototype = {
       , parentId: this.item.parentId
       , index: this.item.index
       , siteURI: this.item.siteURI
-      },
-      (function(aStatus, aLivemark) {
-        if (Components.isSuccessCode(aStatus)) {
-          this.item.id = aLivemark.id;
-          if (this.item.annotations && this.item.annotations.length > 0) {
-            PlacesUtils.setAnnotationsForItem(this.item.id,
-                                              this.item.annotations);
-          }
+      }).then(aLivemark => {
+        this.item.id = aLivemark.id;
+        if (this.item.annotations && this.item.annotations.length > 0) {
+          PlacesUtils.setAnnotationsForItem(this.item.id,
+                                            this.item.annotations);
         }
-      }).bind(this)
-    );
+      }, Cu.reportError);
   },
 
   undoTransaction: function CLTXN_undoTransaction()
   {
     // The getLivemark callback is expected to receive a failure status but it
     // is used just to serialize, so doesn't matter.
-    PlacesUtils.livemarks.getLivemark(
-      { id: this.item.id },
-      (function (aStatus, aLivemark) {
+    PlacesUtils.livemarks.getLivemark({ id: this.item.id })
+      .then(null, () => {
         PlacesUtils.bookmarks.removeItem(this.item.id);
-      }).bind(this)
-    );
+      });
   }
 };
 
@@ -2255,17 +2249,12 @@ PlacesRemoveLivemarkTransaction.prototype = {
 
   doTransaction: function RLTXN_doTransaction()
   {
-    PlacesUtils.livemarks.getLivemark(
-      { id: this.item.id },
-      (function (aStatus, aLivemark) {
-        if (Components.isSuccessCode(aStatus)) {
-          this.item.feedURI = aLivemark.feedURI;
-          this.item.siteURI = aLivemark.siteURI;
-
-          PlacesUtils.bookmarks.removeItem(this.item.id);
-        }
-      }).bind(this)
-    );
+    PlacesUtils.livemarks.getLivemark({ id: this.item.id })
+      .then(aLivemark => {
+        this.item.feedURI = aLivemark.feedURI;
+        this.item.siteURI = aLivemark.siteURI;
+        PlacesUtils.bookmarks.removeItem(this.item.id);
+      }, Cu.reportError);
   },
 
   undoTransaction: function RLTXN_undoTransaction()
@@ -2274,26 +2263,21 @@ PlacesRemoveLivemarkTransaction.prototype = {
     // feedURI and siteURI of the livemark.
     // The getLivemark callback is expected to receive a failure status but it
     // is used just to serialize, so doesn't matter.
-    PlacesUtils.livemarks.getLivemark(
-      { id: this.item.id },
-      (function () {
-        let addLivemarkCallback = (function(aStatus, aLivemark) {
-          if (Components.isSuccessCode(aStatus)) {
-            let itemId = aLivemark.id;
-            PlacesUtils.bookmarks.setItemDateAdded(itemId, this.item.dateAdded);
-            PlacesUtils.setAnnotationsForItem(itemId, this.item.annotations);
-          }
-        }).bind(this);
+    PlacesUtils.livemarks.getLivemark({ id: this.item.id })
+      .then(null, () => {
         PlacesUtils.livemarks.addLivemark({ parentId: this.item.parentId
                                           , title: this.item.title
                                           , siteURI: this.item.siteURI
                                           , feedURI: this.item.feedURI
                                           , index: this.item.index
                                           , lastModified: this.item.lastModified
-                                          },
-                                          addLivemarkCallback);
-      }).bind(this)
-    );
+                                          }).then(
+          aLivemark => {
+            let itemId = aLivemark.id;
+            PlacesUtils.bookmarks.setItemDateAdded(itemId, this.item.dateAdded);
+            PlacesUtils.setAnnotationsForItem(itemId, this.item.annotations);
+          }, Cu.reportError);
+      });
   }
 };
 

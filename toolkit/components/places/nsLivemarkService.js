@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+                                  "resource://gre/modules/Deprecated.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Services
@@ -212,6 +214,12 @@ LivemarkService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
 
+    if (aLivemarkCallback) {
+      Deprecated.warning("Passing a callback to Livermarks methods is deprecated. " +
+                         "Please use the returned promise instead.",
+                         "https://developer.mozilla.org/docs/Mozilla/JavaScript_code_modules/Promise.jsm");
+    }
+
     // The addition is done synchronously due to the fact importExport service
     // and JSON backups require that.  The notification is async though.
     // Once bookmarks are async, this may be properly fixed.
@@ -258,8 +266,9 @@ LivemarkService.prototype = {
               aLivemarkCallback.onCompletion(addLivemarkEx.result, livemark);
             }
             catch(ex2) { }
+          } else {
+            deferred.reject(addLivemarkEx);
           }
-          deferred.reject(addLivemarkEx);
         }
         else {
           if (aLivemarkCallback) {
@@ -267,13 +276,14 @@ LivemarkService.prototype = {
               aLivemarkCallback.onCompletion(Cr.NS_OK, livemark);
             }
             catch(ex2) { }
+          } else {
+            deferred.resolve(livemark);
           }
-          deferred.resolve(livemark);
         }
       });
     }
 
-    return deferred.promise;
+    return aLivemarkCallback ? null : deferred.promise;
   },
 
   removeLivemark: function LS_removeLivemark(aLivemarkInfo, aLivemarkCallback)
@@ -288,6 +298,12 @@ LivemarkService.prototype = {
         ("id" in aLivemarkInfo && aLivemarkInfo.id < 1) ||
         !id) {
       throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    if (aLivemarkCallback) {
+      Deprecated.warning("Passing a callback to Livermarks methods is deprecated. " +
+                         "Please use the returned promise instead.",
+                         "https://developer.mozilla.org/docs/Mozilla/JavaScript_code_modules/Promise.jsm");
     }
 
     // Convert the guid to an id.
@@ -314,8 +330,9 @@ LivemarkService.prototype = {
               aLivemarkCallback.onCompletion(removeLivemarkEx.result, null);
             }
             catch(ex2) { }
+          } else {
+            deferred.reject(removeLivemarkEx);
           }
-          deferred.reject(removeLivemarkEx);
         }
         else {
           if (aLivemarkCallback) {
@@ -323,13 +340,14 @@ LivemarkService.prototype = {
               aLivemarkCallback.onCompletion(Cr.NS_OK, null);
             }
             catch(ex2) { }
+          } else {
+            deferred.resolve();
           }
-          deferred.resolve();
         }
       });
     }
 
-    return deferred.promise;
+    return aLivemarkCallback ? null : deferred.promise;
   },
 
   _reloaded: [],
@@ -380,6 +398,12 @@ LivemarkService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
 
+    if (aLivemarkCallback) {
+      Deprecated.warning("Passing a callback to Livermarks methods is deprecated. " +
+                         "Please use the returned promise instead.",
+                         "https://developer.mozilla.org/docs/Mozilla/JavaScript_code_modules/Promise.jsm");
+    }
+
     let deferred = Promise.defer();
     this._onCacheReady( () => {
       // Convert the guid to an id.
@@ -391,20 +415,22 @@ LivemarkService.prototype = {
           try {
             aLivemarkCallback.onCompletion(Cr.NS_OK, this._livemarks[id]);
           } catch (ex) {}
+        } else {
+          deferred.resolve(this._livemarks[id]);
         }
-        deferred.resolve(this._livemarks[id]);
       }
       else {
         if (aLivemarkCallback) {
           try {
             aLivemarkCallback.onCompletion(Cr.NS_ERROR_INVALID_ARG, null);
           } catch (ex) { }
+        } else {
+          deferred.reject(Components.Exception("", Cr.NS_ERROR_INVALID_ARG));
         }
-        deferred.reject(Components.Exception("", Cr.NS_ERROR_INVALID_ARG));
       }
     });
 
-    return deferred.promise;
+    return aLivemarkCallback ? null : deferred.promise;
   },
 
   //////////////////////////////////////////////////////////////////////////////

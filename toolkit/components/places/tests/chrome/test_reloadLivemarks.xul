@@ -57,15 +57,18 @@ function addLivemarks(aCallback) {
   info("Adding livemarks");
   let count = gLivemarks.length;
   gLivemarks.forEach(function(aLivemarkData) {
-    PlacesUtils.livemarks.addLivemark(aLivemarkData,
-      function (aStatus, aLivemark) {
-        ok(Components.isSuccessCode(aStatus), "Add livemark should succeed");
+    PlacesUtils.livemarks.addLivemark(aLivemarkData)
+      .then(function (aLivemark) {
+        ok(aLivemark.feedURI.equals(aLivemarkData.feedURI), "Livemark added");
         aLivemarkData.id = aLivemark.id;
         if (--count == 0) {
           aCallback();
         }
-      }
-    );
+      },
+      function () {
+        is(true, false, "Should not fail adding a livemark.");
+        aCallback();
+      });
   });
 }
 
@@ -73,9 +76,9 @@ function reloadLivemarks(aForceUpdate, aCallback) {
   info("Reloading livemarks with forceUpdate: " + aForceUpdate);
   let count = gLivemarks.length;
   gLivemarks.forEach(function(aLivemarkData) {
-    PlacesUtils.livemarks.getLivemark(aLivemarkData,
-      function (aStatus, aLivemark) {
-        ok(Components.isSuccessCode(aStatus), "Get livemark should succeed");
+    PlacesUtils.livemarks.getLivemark(aLivemarkData)
+      .then(aLivemark => {
+        ok(aLivemark.feedURI.equals(aLivemarkData.feedURI), "Livemark found");
         aLivemarkData._observer = new resultObserver(aLivemark, function() {
           if (++count == gLivemarks.length) {
             aCallback();
@@ -84,6 +87,10 @@ function reloadLivemarks(aForceUpdate, aCallback) {
         if (--count == 0) {
           PlacesUtils.livemarks.reloadLivemarks(aForceUpdate);
         }
+      },
+      function() {
+        is(true, false, "Should not fail getting a livemark.");
+        aCallback();
       }
     );
   });
@@ -93,12 +100,15 @@ function removeLivemarks(aCallback) {
   info("Removing livemarks");
   let count = gLivemarks.length;
   gLivemarks.forEach(function(aLivemarkData) {
-    PlacesUtils.livemarks.removeLivemark(aLivemarkData,
-      function (aStatus, aLivemark) {
-        ok(Components.isSuccessCode(aStatus), "Remove livemark should succeed");
+    PlacesUtils.livemarks.removeLivemark(aLivemarkData).then(
+      function (aLivemark) {
         if (--count == 0) {
           aCallback();
         }
+      },
+      function() {
+        is(true, false, "Should not fail adding a livemark.");
+        aCallback();
       }
     );
   });
