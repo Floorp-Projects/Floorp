@@ -80,18 +80,12 @@ let BrowserHelper = {
     windowEntry.lastSelectedBrowser = aBrowser;
   },
 
-  // Auxiliary methods
-  getLoadgroup: function NP_BH_getLoadgroup(aBrowser) {
-    return aBrowser.webNavigation.QueryInterface(Ci.nsIDocumentLoader)
-                   .loadGroup.QueryInterface(Ci.nsISupportsPriority);
-  },
-
   increasePriority: function NP_BH_increasePriority(aBrowser) {
-    this.getLoadgroup(aBrowser).adjustPriority(PRIORITY_DELTA);
+    aBrowser.adjustPriority(PRIORITY_DELTA);
   },
 
   decreasePriority: function NP_BH_decreasePriority(aBrowser) {
-    this.getLoadgroup(aBrowser).adjustPriority(PRIORITY_DELTA * -1);
+    aBrowser.adjustPriority(PRIORITY_DELTA * -1);
   }
 };
 

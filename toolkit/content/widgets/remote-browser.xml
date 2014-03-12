@@ -31,6 +31,14 @@
         ]]></getter>
       </property>
 
+      <method name="adjustPriority">
+        <parameter name="adjustment"/>
+        <body><![CDATA[
+          this.messageManager.sendAsyncMessage("NetworkPrioritizer:AdjustPriority",
+                                               {adjustment: adjustment});
+        ]]></body>
+      </method>
+
       <field name="_remoteWebNavigation">null</field>
 
       <property name="webNavigation"
