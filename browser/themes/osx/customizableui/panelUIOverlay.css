@@ -124,3 +124,8 @@ menu.subviewbutton > .menu-right > image {
 .cui-widget-panelview menuseparator {
   padding: 0 !important;
 }
+
+toolbarpaletteitem:-moz-any([place="palette"], [place="panel"]) > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-1 > .toolbarbutton-icon {
+  width: 32px;
+  height: 32px;
+}

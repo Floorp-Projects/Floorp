@@ -1038,6 +1038,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   /* Menu panel and palette styles */
 
+  toolbaritem[sdkstylewidget="true"] > toolbarbutton,
   :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
     list-style-image: url(chrome://browser/skin/menuPanel@2x.png);
@@ -1167,6 +1168,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   #sidebar-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #sidebar-button {
     -moz-image-region: rect(0px, 1728px, 64px, 1664px);
+  }
+
+  toolbaritem[sdkstylewidget="true"] > toolbarbutton {
+    -moz-image-region: rect(0, 1664px, 64px, 1600px);
   }
 
   /* Footer and wide panel control icons */
