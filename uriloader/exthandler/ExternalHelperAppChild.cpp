@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ExternalHelperAppChild.h"
+#include "mozilla/net/ChannelDiverterChild.h"
+#include "nsIDivertableChannel.h"
 #include "nsIInputStream.h"
+#include "nsIFTPChannel.h"
 #include "nsIRequest.h"
 #include "nsIResumableChannel.h"
 #include "nsNetUtil.h"
@@ -57,30 +60,56 @@ ExternalHelperAppChild::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP
 ExternalHelperAppChild::OnStartRequest(nsIRequest *request, nsISupports *ctx)
 {
+  nsCOMPtr<nsIDivertableChannel> divertable = do_QueryInterface(request);
+  if (divertable) {
+    return DivertToParent(divertable, request);
+  }
+
   nsresult rv = mHandler->OnStartRequest(request, ctx);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
   nsCString entityID;
   nsCOMPtr<nsIResumableChannel> resumable(do_QueryInterface(request));
-  if (resumable)
+  if (resumable) {
     resumable->GetEntityID(entityID);
+  }
   SendOnStartRequest(entityID);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 ExternalHelperAppChild::OnStopRequest(nsIRequest *request,
                                       nsISupports *ctx,
                                       nsresult status)
 {
-  nsresult rv = mHandler->OnStopRequest(request, ctx, status);
-  SendOnStopRequest(status);
+  // mHandler can be null if we diverted the request to the parent
+  if (mHandler) {
+    nsresult rv = mHandler->OnStopRequest(request, ctx, status);
+    SendOnStopRequest(status);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
+  }
 
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
   return NS_OK;
 }
 
+nsresult
+ExternalHelperAppChild::DivertToParent(nsIDivertableChannel *divertable, nsIRequest *request)
+{
+  mozilla::net::ChannelDiverterChild *diverter = nullptr;
+  nsresult rv = divertable->DivertToParent(&diverter);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(diverter);
+  if (SendDivertToParentUsing(diverter)) {
+    mHandler->DidDivertRequest(request);
+    mHandler = nullptr;
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 bool
 ExternalHelperAppChild::RecvCancel(const nsresult& aStatus)
