@@ -699,11 +699,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     }
 
     @Override
-    public void addReadingListItem(ContentResolver cr, String title, String uri) {
-        final ContentValues values = new ContentValues();
+    public void addReadingListItem(ContentResolver cr, ContentValues values) {
+        // Check that required fields are present.
+        for (String field: ReadingListItems.REQUIRED_FIELDS) {
+            if (!values.containsKey(field)) {
+                throw new IllegalArgumentException("Missing required field for reading list item: " + field);
+            }
+        }
+
+        // Clear delete flag if necessary
         values.put(ReadingListItems.IS_DELETED, 0);
-        values.put(ReadingListItems.URL, uri);
-        values.put(ReadingListItems.TITLE, title);
 
         // Restore deleted record if possible
         final Uri insertUri = mReadingListUriWithProfile
@@ -714,7 +719,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         final int updated = cr.update(insertUri,
                                       values,
                                       ReadingListItems.URL + " = ? ",
-                                      new String[] { uri });
+                                      new String[] { values.getAsString(ReadingListItems.URL) });
 
         debug("Updated " + updated + " rows to new modified time.");
     }
