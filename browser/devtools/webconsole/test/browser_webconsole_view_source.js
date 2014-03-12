@@ -28,7 +28,7 @@ function testViewSource(hud) {
   EventUtils.sendMouseEvent({ type: "click" }, button, content);
 
   openDebugger().then(({panelWin: { DebuggerView }}) => {
-    info("debugger openeed");
+    info("debugger opened");
     Sources = DebuggerView.Sources;
     openConsole(null, (hud) => {
       info("console opened again");
