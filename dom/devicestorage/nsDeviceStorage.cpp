@@ -590,6 +590,116 @@ DeviceStorageFile::Init()
   MOZ_ASSERT(typeChecker);
 }
 
+// The OverrideRootDir is needed to facilitate testing of the
+// device.storage.overrideRootDir preference. The preference is normally
+// only read once during initialization, but since the test environment has
+// no convenient way to restart, we use a pref watcher instead.
+class OverrideRootDir MOZ_FINAL : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  static OverrideRootDir* GetSingleton();
+  ~OverrideRootDir();
+  void Init();
+private:
+  static mozilla::StaticRefPtr<OverrideRootDir> sSingleton;
+};
+
+NS_IMPL_ISUPPORTS1(OverrideRootDir, nsIObserver)
+
+mozilla::StaticRefPtr<OverrideRootDir>
+  OverrideRootDir::sSingleton;
+
+OverrideRootDir*
+OverrideRootDir::GetSingleton()
+{
+  if (sSingleton) {
+    return sSingleton;
+  }
+  // Preference changes are automatically forwarded from parent to child
+  // in ContentParent::Observe, so we'll see the change in both the parent
+  // and the child process.
+
+  sSingleton = new OverrideRootDir();
+  Preferences::AddStrongObserver(sSingleton, "device.storage.overrideRootDir");
+  ClearOnShutdown(&sSingleton);
+
+  return sSingleton;
+}
+
+OverrideRootDir::~OverrideRootDir()
+{
+  Preferences::RemoveObserver(this, "device.storage.overrideRootDir");
+}
+
+NS_IMETHODIMP
+OverrideRootDir::Observe(nsISupports *aSubject,
+                              const char *aTopic,
+                              const char16_t *aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sSingleton) {
+    sSingleton->Init();
+  }
+  return NS_OK;
+}
+
+void
+OverrideRootDir::Init()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!sDirs) {
+    return;
+  }
+
+  if (mozilla::Preferences::GetBool("device.storage.testing", false)) {
+    nsCOMPtr<nsIProperties> dirService
+      = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+    MOZ_ASSERT(dirService);
+    dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile),
+                    getter_AddRefs(sDirs->overrideRootDir));
+    if (sDirs->overrideRootDir) {
+      sDirs->overrideRootDir->AppendRelativeNativePath(
+        NS_LITERAL_CSTRING("device-storage-testing"));
+    }
+  } else {
+    // For users running on desktop, it's convenient to be able to override
+    // all of the directories to point to a single tree, much like what happens
+    // on a real device.
+    const nsAdoptingString& overrideRootDir =
+      mozilla::Preferences::GetString("device.storage.overrideRootDir");
+    if (overrideRootDir && overrideRootDir.Length() > 0) {
+      NS_NewLocalFile(overrideRootDir, false,
+                      getter_AddRefs(sDirs->overrideRootDir));
+    } else {
+      sDirs->overrideRootDir = nullptr;
+    }
+  }
+
+  if (sDirs->overrideRootDir) {
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+      // Only the parent process can create directories. In testing, because
+      // the preference is updated after startup, its entirely possible that
+      // the preference updated notification will be received by a child
+      // prior to the parent.
+      nsresult rv
+        = sDirs->overrideRootDir->Create(nsIFile::DIRECTORY_TYPE, 0777);
+      nsString path;
+      sDirs->overrideRootDir->GetPath(path);
+      if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS) {
+        nsPrintfCString msg("DeviceStorage: Unable to create directory '%s'",
+                            NS_LossyConvertUTF16toASCII(path).get());
+        NS_WARNING(msg.get());
+      }
+    }
+    sDirs->overrideRootDir->Normalize();
+  }
+}
+
 // Directories which don't depend on a volume should be calculated once
 // here. Directories which depend on the root directory of a volume
 // should be calculated in DeviceStorageFile::GetRootDirectoryForType.
@@ -677,37 +787,7 @@ InitDirs()
 #endif
   }
 
-  if (mozilla::Preferences::GetBool("device.storage.testing", false)) {
-    dirService->Get(NS_OS_TEMP_DIR, NS_GET_IID(nsIFile),
-                    getter_AddRefs(sDirs->overrideRootDir));
-    if (sDirs->overrideRootDir) {
-      sDirs->overrideRootDir->AppendRelativeNativePath(
-        NS_LITERAL_CSTRING("device-storage-testing"));
-    }
-  } else {
-    // For users running on desktop, it's convenient to be able to override
-    // all of the directories to point to a single tree, much like what happens
-    // on a real device.
-    const nsAdoptingString& overrideRootDir =
-      mozilla::Preferences::GetString("device.storage.overrideRootDir");
-    if (overrideRootDir) {
-      NS_NewLocalFile(overrideRootDir, false,
-                      getter_AddRefs(sDirs->overrideRootDir));
-    }
-  }
-
-  if (sDirs->overrideRootDir) {
-    nsresult rv
-      = sDirs->overrideRootDir->Create(nsIFile::DIRECTORY_TYPE, 0777);
-    if (NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS) {
-      nsString path;
-      sDirs->overrideRootDir->GetPath(path);
-      nsPrintfCString msg("DeviceStorage: Unable to create directory '%s'",
-                          NS_LossyConvertUTF16toASCII(path).get());
-      NS_WARNING(msg.get());
-    }
-    sDirs->overrideRootDir->Normalize();
-  }
+  OverrideRootDir::GetSingleton()->Init();
 }
 
 void
