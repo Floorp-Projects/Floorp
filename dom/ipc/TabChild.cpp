@@ -1555,15 +1555,15 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
 }
 
 bool
-TabChild::RecvHandleDoubleTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
+TabChild::RecvHandleDoubleTap(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
     if (!mGlobal || !mTabChildGlobal) {
         return true;
     }
 
     nsCString data;
-    data += nsPrintfCString("{ \"x\" : %d", aPoint.x);
-    data += nsPrintfCString(", \"y\" : %d", aPoint.y);
+    data += nsPrintfCString("{ \"x\" : %f", aPoint.x);
+    data += nsPrintfCString(", \"y\" : %f", aPoint.y);
     data += nsPrintfCString(" }");
 
     DispatchMessageManagerMessage(NS_LITERAL_STRING("Gesture:DoubleTap"), data);
@@ -1572,13 +1572,13 @@ TabChild::RecvHandleDoubleTap(const CSSIntPoint& aPoint, const ScrollableLayerGu
 }
 
 bool
-TabChild::RecvHandleSingleTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
+TabChild::RecvHandleSingleTap(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
   if (!mGlobal || !mTabChildGlobal) {
     return true;
   }
 
-  LayoutDevicePoint currentPoint = CSSPoint(aPoint) * mWidget->GetDefaultScale();;
+  LayoutDevicePoint currentPoint = aPoint * mWidget->GetDefaultScale();;
 
   MessageLoop::current()->PostDelayedTask(
     FROM_HERE,
@@ -1597,7 +1597,7 @@ TabChild::FireSingleTapEvent(LayoutDevicePoint aPoint)
 }
 
 bool
-TabChild::RecvHandleLongTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
+TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
   if (!mGlobal || !mTabChildGlobal) {
     return true;
@@ -1613,7 +1613,7 @@ TabChild::RecvHandleLongTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid
 }
 
 bool
-TabChild::RecvHandleLongTapUp(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
+TabChild::RecvHandleLongTapUp(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
   if (mContextMenuHandled) {
     mContextMenuHandled = false;

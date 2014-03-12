@@ -218,13 +218,13 @@ public:
     virtual bool RecvUpdateFrame(const mozilla::layers::FrameMetrics& aFrameMetrics) MOZ_OVERRIDE;
     virtual bool RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
                                              const uint32_t& aScrollGeneration) MOZ_OVERRIDE;
-    virtual bool RecvHandleDoubleTap(const CSSIntPoint& aPoint,
+    virtual bool RecvHandleDoubleTap(const CSSPoint& aPoint,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    virtual bool RecvHandleSingleTap(const CSSIntPoint& aPoint,
+    virtual bool RecvHandleSingleTap(const CSSPoint& aPoint,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    virtual bool RecvHandleLongTap(const CSSIntPoint& aPoint,
+    virtual bool RecvHandleLongTap(const CSSPoint& aPoint,
                                    const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
-    virtual bool RecvHandleLongTapUp(const CSSIntPoint& aPoint,
+    virtual bool RecvHandleLongTapUp(const CSSPoint& aPoint,
                                      const mozilla::layers::ScrollableLayerGuid& aGuid) MOZ_OVERRIDE;
     virtual bool RecvNotifyTransformBegin(const ViewID& aViewId) MOZ_OVERRIDE;
     virtual bool RecvNotifyTransformEnd(const ViewID& aViewId) MOZ_OVERRIDE;
