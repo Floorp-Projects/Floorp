@@ -29,7 +29,6 @@
 #include "jit/ExecutionModeInlines.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonBuilder.h"
-#include "jit/IonLinker.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
 #include "jit/JitCommon.h"
@@ -267,16 +266,6 @@ JitRuntime::initialize(JSContext *cx)
     IonSpew(IonSpew_Codegen, "# Emitting Pre Barrier for Shape");
     shapePreBarrier_ = generatePreBarrier(cx, MIRType_Shape);
     if (!shapePreBarrier_)
-        return false;
-
-    IonSpew(IonSpew_Codegen, "# Emitting malloc stub");
-    mallocStub_ = generateMallocStub(cx);
-    if (!mallocStub_)
-        return false;
-
-    IonSpew(IonSpew_Codegen, "# Emitting free stub");
-    freeStub_ = generateFreeStub(cx);
-    if (!freeStub_)
         return false;
 
     IonSpew(IonSpew_Codegen, "# Emitting VM function wrappers");
