@@ -105,24 +105,24 @@ function testColorPickerAppearsOnColorSwatchClick() {
 }
 
 function testColorPickerHidesWhenImageTooltipAppears() {
-  Task.spawn(function*() {
-    let swatch = swatches[0];
-    let bgImageSpan = getRuleViewProperty("background-image").valueSpan;
-    let uriSpan = bgImageSpan.querySelector(".theme-link");
-    let tooltip = ruleView.colorPicker.tooltip;
+  let swatch = swatches[0];
+  let bgImageSpan = getRuleViewProperty("background-image").valueSpan;
+  let uriSpan = bgImageSpan.querySelector(".theme-link");
 
-    info("Showing the color picker tooltip by clicking on the color swatch");
-    let onShown = tooltip.once("shown");
-    swatch.click();
-    yield onShown;
-
-    info("Now showing the image preview tooltip to hide the color picker");
-    let onHidden = tooltip.once("hidden");
-    yield assertTooltipShownOn(ruleView.previewTooltip, uriSpan);
-    yield onHidden;
-
+  ruleView.colorPicker.tooltip.once("shown", () => {
+    info("The color picker is shown, now display an image tooltip to hide it");
+    ruleView.previewTooltip._showOnHover(uriSpan);
+  });
+  ruleView.colorPicker.tooltip.once("hidden", () => {
     ok(true, "The color picker closed when the image preview tooltip appeared");
-  }).then(testPressingEscapeRevertsChanges);
+
+    executeSoon(() => {
+      ruleView.previewTooltip.hide();
+      testPressingEscapeRevertsChanges();
+    });
+  });
+
+  swatch.click();
 }
 
 function testPressingEscapeRevertsChanges() {
