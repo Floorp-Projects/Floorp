@@ -10,9 +10,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
@@ -30,7 +28,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -52,7 +49,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
  * Fragment that displays frecency search results in a ListView.
@@ -267,17 +263,21 @@ public class TopSitesPanel extends HomeFragment {
             return;
         }
 
-        // HomeFragment will handle the default case.
-        if (menuInfo instanceof HomeContextMenuInfo) {
-            super.onCreateContextMenu(menu, view, menuInfo);
-        }
-
         if (!(menuInfo instanceof TopSitesGridContextMenuInfo)) {
+            // Long pressed item was not a Top Sites GridView item. Superclass
+            // can handle this.
+            super.onCreateContextMenu(menu, view, menuInfo);
             return;
         }
 
+        // Long pressed item was a Top Sites GridView item, handle it.
         MenuInflater inflater = new MenuInflater(view.getContext());
-        inflater.inflate(R.menu.top_sites_contextmenu, menu);
+        inflater.inflate(R.menu.home_contextmenu, menu);
+
+        // Hide ununsed menu items.
+        menu.findItem(R.id.home_open_in_reader).setVisible(false);
+        menu.findItem(R.id.home_edit_bookmark).setVisible(false);
+        menu.findItem(R.id.home_remove).setVisible(false);
 
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
         menu.setHeaderTitle(info.getDisplayTitle());
@@ -289,8 +289,8 @@ public class TopSitesPanel extends HomeFragment {
                 menu.findItem(R.id.top_sites_unpin).setVisible(false);
             }
         } else {
-            menu.findItem(R.id.top_sites_open_new_tab).setVisible(false);
-            menu.findItem(R.id.top_sites_open_private_tab).setVisible(false);
+            menu.findItem(R.id.home_open_new_tab).setVisible(false);
+            menu.findItem(R.id.home_open_private_tab).setVisible(false);
             menu.findItem(R.id.top_sites_pin).setVisible(false);
             menu.findItem(R.id.top_sites_unpin).setVisible(false);
         }
@@ -298,9 +298,13 @@ public class TopSitesPanel extends HomeFragment {
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
+        if (super.onContextItemSelected(item)) {
+            // HomeFragment was able to handle to selected item.
+            return true;
+        }
+
         ContextMenuInfo menuInfo = item.getMenuInfo();
 
-        // HomeFragment will handle the default case.
         if (menuInfo == null || !(menuInfo instanceof TopSitesGridContextMenuInfo)) {
             return false;
         }
@@ -309,21 +313,6 @@ public class TopSitesPanel extends HomeFragment {
         final Activity activity = getActivity();
 
         final int itemId = item.getItemId();
-        if (itemId == R.id.top_sites_open_new_tab || itemId == R.id.top_sites_open_private_tab) {
-            if (info.url == null) {
-                Log.e(LOGTAG, "Can't open in new tab because URL is null");
-                return false;
-            }
-
-            int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_BACKGROUND;
-            if (item.getItemId() == R.id.top_sites_open_private_tab)
-                flags |= Tabs.LOADURL_PRIVATE;
-
-            // Decode "user-entered" URLs before loading them.
-            Tabs.getInstance().loadUrl(decodeUserEnteredUrl(info.url), flags);
-            Toast.makeText(activity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
-            return true;
-        }
 
         if (itemId == R.id.top_sites_pin) {
             final String url = info.url;
@@ -361,28 +350,6 @@ public class TopSitesPanel extends HomeFragment {
             return true;
         }
 
-        if (itemId == R.id.home_share) {
-            if (info.url == null) {
-                Log.w(LOGTAG, "Share not enabled for context menu because URL is null.");
-                return false;
-            } else {
-                GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
-                                              Intent.ACTION_SEND, info.getDisplayTitle());
-                return true;
-            }
-        }
-
-        if (itemId == R.id.home_add_to_launcher) {
-            if (info.url == null) {
-                Log.w(LOGTAG, "Not enabling 'Add to home page' because URL is null.");
-                return false;
-            }
-
-            // Fetch an icon big enough for use as a home screen icon.
-            Favicons.getPreferredSizeFaviconForPage(info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
-            return true;
-        }
-
         return false;
     }
 
@@ -401,14 +368,6 @@ public class TopSitesPanel extends HomeFragment {
 
     static String encodeUserEnteredUrl(String url) {
         return Uri.fromParts("user-entered", url, null).toString();
-    }
-
-    static String decodeUserEnteredUrl(String url) {
-        Uri uri = Uri.parse(url);
-        if ("user-entered".equals(uri.getScheme())) {
-            return uri.getSchemeSpecificPart();
-        }
-        return url;
     }
 
     /**
