@@ -568,7 +568,7 @@ public class BrowserSearch extends HomeFragment
         mSuggestionsOptInPrompt = ((ViewStub) mView.findViewById(R.id.suggestions_opt_in_prompt)).inflate();
 
         TextView promptText = (TextView) mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_title);
-        promptText.setText(getResources().getString(R.string.suggestions_prompt, mSearchEngines.get(0).name));
+        promptText.setText(getResources().getString(R.string.suggestions_prompt));
 
         final View yesButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_yes);
         final View noButton = mSuggestionsOptInPrompt.findViewById(R.id.suggestions_prompt_no);
