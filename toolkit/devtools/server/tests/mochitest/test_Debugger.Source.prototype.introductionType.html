@@ -10,6 +10,7 @@ JavaScrip appearing in an inline event handler attribute.
   <meta charset="utf-8">
   <title>Debugger.Source.prototype.introductionType should identify event handlers</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 <body>
@@ -19,14 +20,17 @@ JavaScrip appearing in an inline event handler attribute.
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
+var log = ''
+var dbg;
+var iframeDO, doc;
+var Tootles, TootlesDO;
+
 window.onload = function () {
   SimpleTest.waitForExplicitFinish();
+  runNextTest();
+};
 
-  var log = ''
-  var dbg;
-  var iframeDO, doc;
-  var Tootles, TootlesDO;
-
+addTest(function setup() {
   // Create an iframe to debug.
   var iframe = document.createElement("iframe");
   iframe.src = "data:text/html,<div id='Tootles' onclick='debugger;'>Auddie</div>";
@@ -38,47 +42,67 @@ window.onload = function () {
     // Now that the iframe's window has been created, we can add
     // it as a debuggee.
     dbg = new Debugger;
-    dbg.onDebuggerStatement = TootlesClickDebugger;
     iframeDO = dbg.addDebuggee(iframe.contentWindow);
     doc = iframe.contentWindow.document;
-
     Tootles = doc.getElementById('Tootles');
     TootlesDO = iframeDO.makeDebuggeeValue(Tootles);
 
-    // Send a click event to Tootles.
-    Tootles.dispatchEvent(new Event('click'));
+    runNextTest();
   }
+});
+
+
+// Check the introduction type of in-markup event handler code.
+// Send a click event to Tootles, whose handler has a 'debugger' statement,
+// and check that script's introduction type.
+addTest(function ClickOnTootles() {
+  dbg.onDebuggerStatement = TootlesClickDebugger;
+  Tootles.dispatchEvent(new Event('click'));
 
   function TootlesClickDebugger(frame) {
     log += 'TC';
+
+    // some sanity checks
     ok(frame.script.source.element === TootlesDO,
        "top frame source belongs to element 'Tootles'");
     ok(frame.script.source.elementAttributeName === 'onclick',
        "top frame source belongs to 'onclick' attribute");
+
     // And, the actual point of this test:
     ok(frame.script.source.introductionType === 'eventHandler',
        "top frame source's introductionType is 'eventHandler'");
 
-    // Dynamically assign some text as a handler, and invoke that handler.
-    dbg.onDebuggerStatement = TootlesDragDebugger;
-    Tootles.setAttribute('ondrag', 'debugger;');
-    Tootles.dispatchEvent(new Event('drag'));
+    runNextTest();
   }
+});
+
+
+// Check the introduction type of dynamically added event handler code.
+// Add a drag event handler to Tootles as a string, and then send
+// Tootles a drag event.
+addTest(function DragTootles() {
+  dbg.onDebuggerStatement = TootlesDragDebugger;
+  Tootles.setAttribute('ondrag', 'debugger;');
+  Tootles.dispatchEvent(new Event('drag'));
 
   function TootlesDragDebugger(frame) {
     log += 'TD';
+
+    // sanity checks
     ok(frame.script.source.element === TootlesDO,
        "top frame source belongs to element 'Tootles'");
     ok(frame.script.source.elementAttributeName === 'ondrag',
        "top frame source belongs to 'ondrag' attribute");
+
     // And, the actual point of this test:
     ok(frame.script.source.introductionType === 'eventHandler',
        "top frame source's introductionType is 'eventHandler'");
 
-    ok(log === 'lTCTD', "All tests ran.");
-    SimpleTest.finish();
+    runNextTest();
   }
-}
+});
+
+
 </script>
 </pre>
 </body>
