@@ -61,6 +61,7 @@ class RefLayerComposite;
 class SurfaceDescriptor;
 class ThebesLayerComposite;
 class TiledLayerComposer;
+class TextRenderer;
 struct FPSState;
 
 class LayerManagerComposite : public LayerManager
@@ -227,6 +228,8 @@ public:
 
   void NotifyShadowTreeTransaction();
 
+  TextRenderer* GetTextRenderer() { return mTextRenderer; }
+
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
@@ -273,6 +276,8 @@ private:
   bool mInTransaction;
   bool mIsCompositorReady;
   bool mDebugOverlayWantsNextFrame;
+
+  RefPtr<TextRenderer> mTextRenderer;
 };
 
 /**
