@@ -5,6 +5,7 @@
 package org.mozilla.gecko.background.healthreport;
 
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -13,7 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.nativecode.NativeCrypto;
 
 public abstract class EnvironmentV1 {
   private static final String LOG_TAG = "GeckoEnvironment";
@@ -70,15 +70,24 @@ public abstract class EnvironmentV1 {
   }
 
   public static class HashAppender extends EnvironmentAppender {
-    private final StringBuilder builder;
+    final MessageDigest hasher;
 
     public HashAppender() throws NoSuchAlgorithmException {
-      builder = new StringBuilder();
+      // Note to the security-minded reader: we deliberately use SHA-1 here, not
+      // a stronger hash. These identifiers don't strictly need a cryptographic
+      // hash function, because there is negligible value in attacking the hash.
+      // We use SHA-1 because it's *shorter* -- the exact same reason that Git
+      // chose SHA-1.
+      hasher = MessageDigest.getInstance("SHA-1");
     }
 
     @Override
     public void append(String s) {
-      builder.append((s == null) ? "null" : s);
+      try {
+        hasher.update(((s == null) ? "null" : s).getBytes("UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        // This can never occur. Thanks, Java.
+      }
     }
 
     @Override
@@ -90,21 +99,7 @@ public abstract class EnvironmentV1 {
     public String toString() {
       // We *could* use ASCII85… but the savings would be negated by the
       // inclusion of JSON-unsafe characters like double-quote.
-      final byte[] inputBytes;
-      try {
-        inputBytes = builder.toString().getBytes("UTF-8");
-      } catch (UnsupportedEncodingException e) {
-        Logger.warn(LOG_TAG, "Invalid charset String passed to getBytes", e);
-        return null;
-      }
-
-      // Note to the security-minded reader: we deliberately use SHA-1 here, not
-      // a stronger hash. These identifiers don't strictly need a cryptographic
-      // hash function, because there is negligible value in attacking the hash.
-      // We use SHA-1 because it's *shorter* -- the exact same reason that Git
-      // chose SHA-1.
-      final byte[] hash = NativeCrypto.sha1(inputBytes);
-      return new Base64(-1, null, false).encodeAsString(hash);
+      return new Base64(-1, null, false).encodeAsString(hasher.digest());
     }
   }
 
