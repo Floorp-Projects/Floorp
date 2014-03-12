@@ -77,7 +77,7 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
     // this FrameMetrics may be incorrect (and is about to be reset by mZoom).
     displayPort =
       ExpandDisplayPortToTileBoundaries(displayPort + aActualScrollOffset,
-                                        aFrameMetrics.mZoom *
+                                        aFrameMetrics.GetZoom() *
                                         ScreenToLayerScale(1.0))
       - aActualScrollOffset;
   }
@@ -190,7 +190,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     // take the async zoom calculated by the APZC and tell gecko about it (turning it into
     // a "sync" zoom) which will update the resolution at which the layer is painted.
     ParentLayerToLayerScale presShellResolution =
-        aMetrics.mZoom
+        aMetrics.GetZoom()
         / aMetrics.mDevPixelsPerCSSPixel
         / aMetrics.GetParentResolution()
         * ScreenToLayerScale(1.0f);
