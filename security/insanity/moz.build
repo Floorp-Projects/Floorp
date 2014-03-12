@@ -5,25 +5,23 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'CertVerifier.cpp',
-    'NSSCertDBTrustDomain.cpp',
+    'lib/pkixbuild.cpp',
+    'lib/pkixcheck.cpp',
+    'lib/pkixder.cpp',
+    'lib/pkixkey.cpp',
+    'lib/pkixocsp.cpp',
 ]
 
-if not CONFIG['NSS_NO_EV_CERTS']:
-    UNIFIED_SOURCES += [
-        'ExtendedValidation.cpp',
-    ]
-
 LOCAL_INCLUDES += [
-    '../insanity/include',
+    'include',
 ]
 
 DIRS += [
-    '../insanity',
+    'test/lib',
 ]
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'certverifier'
+LIBRARY_NAME = 'insanitypkix'
 
 FINAL_LIBRARY = 'xul'
