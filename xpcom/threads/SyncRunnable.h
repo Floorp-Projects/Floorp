@@ -33,6 +33,7 @@ public:
   SyncRunnable(nsIRunnable* r)
     : mRunnable(r)
     , mMonitor("SyncRunnable")
+    , mDone(false)
   { }
 
   void DispatchToThread(nsIEventTarget* thread,
@@ -50,10 +51,12 @@ public:
       }
     }
 
-    mozilla::MonitorAutoLock lock(mMonitor);
     rv = thread->Dispatch(this, NS_DISPATCH_NORMAL);
     if (NS_SUCCEEDED(rv)) {
-      lock.Wait();
+      mozilla::MonitorAutoLock lock(mMonitor);
+      while (!mDone) {
+        lock.Wait();
+      }
     }
   }
 
@@ -69,13 +72,20 @@ protected:
   NS_IMETHODIMP Run()
   {
     mRunnable->Run();
-    mozilla::MonitorAutoLock(mMonitor).Notify();
+
+    mozilla::MonitorAutoLock lock(mMonitor);
+    MOZ_ASSERT(!mDone);
+
+    mDone = true;
+    mMonitor.Notify();
+
     return NS_OK;
   }
 
 private:
   nsCOMPtr<nsIRunnable> mRunnable;
   mozilla::Monitor mMonitor;
+  bool mDone;
 };
 
 } // namespace mozilla
