@@ -213,10 +213,10 @@ public:
 
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
-  /**
-   * Returns the maximum texture size supported by the compositor.
-   */
-  virtual int32_t GetMaxTextureSize() const { return mTextureFactoryIdentifier.mMaxTextureSize; }
+  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE
+  {
+    return mTextureFactoryIdentifier.mMaxTextureSize;
+  }
 
   bool IsOnCompositorSide() const MOZ_OVERRIDE { return false; }
 

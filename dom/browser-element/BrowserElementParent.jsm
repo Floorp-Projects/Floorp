@@ -715,17 +715,24 @@ BrowserElementParent.prototype = {
 
     // Deactivate the old input method if needed.
     if (activeInputFrame && isActive) {
-      let reqOld = XPCNativeWrapper.unwrap(activeInputFrame)
-                                   .setInputMethodActive(false);
-      reqOld.onsuccess = function() {
+      if (Cu.isDeadWrapper(activeInputFrame)) {
+        // If the activeInputFrame is already a dead object,
+        // we should simply set it to null directly.
         activeInputFrame = null;
         this._sendSetInputMethodActiveDOMRequest(req, isActive);
-      }.bind(this);
-      reqOld.onerror = function() {
-        Services.DOMRequest.fireErrorAsync(req,
-          'Failed to deactivate the old input method: ' +
-          reqOld.error + '.');
-      };
+      } else {
+        let reqOld = XPCNativeWrapper.unwrap(activeInputFrame)
+                                     .setInputMethodActive(false);
+        reqOld.onsuccess = function() {
+          activeInputFrame = null;
+          this._sendSetInputMethodActiveDOMRequest(req, isActive);
+        }.bind(this);
+        reqOld.onerror = function() {
+          Services.DOMRequest.fireErrorAsync(req,
+            'Failed to deactivate the old input method: ' +
+            reqOld.error + '.');
+        };
+      }
     } else {
       this._sendSetInputMethodActiveDOMRequest(req, isActive);
     }

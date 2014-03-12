@@ -1256,7 +1256,7 @@ pref("network.dnsCacheEntries", 400);
 pref("network.dnsCacheExpiration", 60);
 
 // The grace period allows the DNS cache to use expired entries, while kicking off
-// a revalidation in the background. In seconds, but rounded to minutes in gecko.
+// a revalidation in the background.
 pref("network.dnsCacheExpirationGracePeriod", 60);
 
 // This preference can be used to turn off DNS prefetch.
