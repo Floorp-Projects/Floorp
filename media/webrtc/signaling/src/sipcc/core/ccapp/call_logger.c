@@ -188,9 +188,10 @@ void handlePlacedCall (session_data_t *data)
             (data->cld_number[0] != 0 && strncmp(data->call_log.remotePartyNumber[0],
                         data->cld_number, strlen(data->cld_number)) == 0 )) {
        if ( partyInfoPassedTheNameFilter(data->cld_name) &&
-            partyInfoPassedTheNumberFilter(data->cld_number) )
+            partyInfoPassedTheNumberFilter(data->cld_number) ) {
            data->call_log.remotePartyNumber[0] = strlib_update(data->call_log.remotePartyNumber[0], data->cld_number);
            data->call_log.remotePartyName[0] = strlib_update(data->call_log.remotePartyName[0], data->cld_name);
+       }
     }
 
     // Start the duration count once the call reaches connected state.
