@@ -20,6 +20,8 @@ function test() {
     cb();
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
+    SocialSidebar.show();
+    ok(SocialSidebar.provider, "sidebar provider exists");
     runSocialTests(tests, undefined, postSubTest, function() {
       finishcb();
     });
@@ -30,7 +32,7 @@ var tests = {
   testTearoffChat: function(next) {
     let chats = document.getElementById("pinnedchats");
     let chatTitle;
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -133,7 +135,7 @@ var tests = {
   testCloseOnLogout: function(next) {
     let chats = document.getElementById("pinnedchats");
     const chatUrl = "https://example.com/browser/browser/base/content/test/social/social_chat.html";
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.postMessage({topic: "test-init"});
     port.onmessage = function (e) {
@@ -204,7 +206,7 @@ var tests = {
     let chats = document.getElementById("pinnedchats");
     const chatUrl = "https://example.com/browser/browser/base/content/test/social/social_chat.html";
     let chatBoxCount = 0, reattachCount = 0;
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.postMessage({topic: "test-init"});
     port.onmessage = function (e) {

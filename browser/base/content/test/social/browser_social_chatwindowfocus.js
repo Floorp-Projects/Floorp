@@ -40,7 +40,7 @@ function openChatViaWorkerMessage(port, data, callback) {
                       // so the child has been added, but we don't know if it
                       // has been intialized - re-request it and the callback
                       // means it's done.  Minimized, same as the worker.
-                      SocialChatBar.openChat(Social.provider,
+                      SocialChatBar.openChat(SocialSidebar.provider,
                                              data,
                                              function() {
                                                 callback();
@@ -55,7 +55,7 @@ let isSidebarLoaded = false;
 
 function startTestAndWaitForSidebar(callback) {
   let doneCallback;
-  let port = Social.provider.getWorkerPort();
+  let port = SocialSidebar.provider.getWorkerPort();
   function maybeCallback() {
     if (!doneCallback)
       callback(port);
@@ -114,6 +114,7 @@ function test() {
     }
     // and run the tests.
     runSocialTestWithProvider(manifest, function (finishcb) {
+      SocialSidebar.show();
       runSocialTests(tests, preSubTest, postSubTest, function () {
         finishcb();
       });

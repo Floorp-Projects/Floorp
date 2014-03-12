@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 965872 - Storage inspector actor with cookies, local storage and session storage.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Storage inspector test for listing hosts and storages</title>
+</head>
+<body>
+<iframe src="http://sectest1.example.org/browser/toolkit/devtools/server/tests/browser/storage-unsecured-iframe.html"></iframe>
+<script>
+
+var partialHostname = location.hostname.match(/^[^.]+(\..*)$/)[1];
+var cookieExpiresTime1 = 2000000000000;
+var cookieExpiresTime2 = 2000000001000;
+// Setting up some cookies to eat.
+document.cookie = "c1=foobar; expires=" +
+  new Date(cookieExpiresTime1).toGMTString() + "; path=/browser";
+document.cookie = "cs2=sessionCookie; path=/; domain=" + partialHostname;
+document.cookie = "c3=foobar-2; expires=" +
+  new Date(cookieExpiresTime2).toGMTString() + "; path=/";
+// ... and some local storage items ..
+localStorage.setItem("ls1", "foobar");
+localStorage.setItem("ls2", "foobar-2");
+// ... and finally some session storage items too
+sessionStorage.setItem("ss1", "foobar-3");
+console.log("added cookies and stuff from main page");
+
+window.onunload = function() {
+  document.cookie = "c1=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  document.cookie = "c3=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  localStorage.clear();
+  sessionStorage.clear();
+  console.log("removed cookies and stuff from main page");
+}
+</script>
+</body>
+</html>

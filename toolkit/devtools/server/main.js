@@ -391,6 +391,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/webgl");
     this.registerModule("devtools/server/actors/stylesheets");
     this.registerModule("devtools/server/actors/styleeditor");
+    this.registerModule("devtools/server/actors/storage");
     this.registerModule("devtools/server/actors/gcli");
     this.registerModule("devtools/server/actors/tracer");
     this.registerModule("devtools/server/actors/memory");
