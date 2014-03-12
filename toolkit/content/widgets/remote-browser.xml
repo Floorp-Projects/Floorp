@@ -68,6 +68,8 @@
 
       <field name="_documentURI">null</field>
 
+      <field name="_documentContentType">null</field>
+
       <!--
         Used by session restore to ensure that currentURI is set so
         that switch-to-tab works before the tab is fully
@@ -83,6 +85,10 @@
 
       <property name="documentURI"
                 onget="return this._documentURI;"
+                readonly="true"/>
+
+      <property name="documentContentType"
+                onget="return this._documentContentType;"
                 readonly="true"/>
 
       <field name="_contentTitle">""</field>
