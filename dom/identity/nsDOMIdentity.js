@@ -670,7 +670,7 @@ nsDOMIdentity.prototype = {
   },
 
   uninit: function DOMIdentity_uninit() {
-    this._log("nsDOMIdentity uninit()");
+    this._log("nsDOMIdentity uninit() " + this._id);
     this._identityInternal._mm.sendAsyncMessage(
       "Identity:RP:Unwatch",
       { id: this._id }

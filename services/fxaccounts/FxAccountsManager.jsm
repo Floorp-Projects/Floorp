@@ -356,8 +356,18 @@ this.FxAccountsManager = {
     );
   },
 
+  /*
+   * Try to get an assertion for the given audience.
+   *
+   * aOptions can include:
+   *
+   *   refreshAuthentication  - (bool) Force re-auth.
+   *
+   *   silent                 - (bool) Prevent any UI interaction.
+   *                            I.e., try to get an automatic assertion.
+   *
+   */
   getAssertion: function(aAudience, aOptions) {
-    log.debug("getAssertion " + aAudience + JSON.stringify(aOptions));
     if (!aAudience) {
       return this._error(ERROR_INVALID_AUDIENCE);
     }
@@ -390,6 +400,9 @@ this.FxAccountsManager = {
               // will return the assertion. Otherwise, we will return an error.
               return this._signOut().then(
                 () => {
+                  if (aOptions.silent) {
+                    return Promise.resolve(null);
+                  }
                   return this._uiRequest(UI_REQUEST_REFRESH_AUTH,
                                          aAudience, user.accountId);
                 }
@@ -401,6 +414,11 @@ this.FxAccountsManager = {
         }
 
         log.debug("No signed in user");
+
+        if (aOptions.silent) {
+          return Promise.resolve(null);
+        }
+
         // If there is no currently signed in user, we trigger the signIn UI
         // flow.
         return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience);
