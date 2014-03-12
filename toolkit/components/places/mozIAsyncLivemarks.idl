@@ -27,6 +27,9 @@ interface mozIAsyncLivemarks : nsISupports
    * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the supplied information is insufficient
    *         for the creation.
+   * @deprecated passing a callback is deprecated. Moreover, for backwards
+   *             compatibility reasons, when a callback is provided this method
+   *             won't return a promise.
    */
   jsval addLivemark(in jsval aLivemarkInfo,
                     [optional] in mozILivemarkCallback aCallback);
@@ -43,6 +46,9 @@ interface mozIAsyncLivemarks : nsISupports
    *
    * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid.
+   * @deprecated passing a callback is deprecated. Moreover, for backwards
+   *             compatibility reasons, when a callback is provided this method
+   *             won't return a promise.
    */
   jsval removeLivemark(in jsval aLivemarkInfo,
                        [optional] in mozILivemarkCallback aCallback);
@@ -60,6 +66,9 @@ interface mozIAsyncLivemarks : nsISupports
    * @return {Promise}
    * @throws NS_ERROR_INVALID_ARG if the id/guid is invalid or an invalid
    *         callback is provided.
+   * @deprecated passing a callback is deprecated. Moreover, for backwards
+   *             compatibility reasons, when a callback is provided this method
+   *             won't return a promise.
    */
   jsval getLivemark(in jsval aLivemarkInfo,
                     [optional] in mozILivemarkCallback aCallback);
