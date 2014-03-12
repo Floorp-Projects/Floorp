@@ -9,26 +9,5 @@
     "toolkit/devtools/apps": ""
   },
 "excludetests": {
-    "dom/imptests/html/webgl": "",
-    "dom/imptests/editing/selecttest/test_addRange.html": "oom?, bug 775227",
-    "content/base/test/test_copyimage.html": "Bug 931116, b2g desktop specific, initial triage",
-    "dom/imptests/html/dom/ranges/test_Range-deleteContents.html": "",
-    "content/base/test/test_copypaste.xul": "bug 904183",
-    "dom/imptests/html/dom/ranges/test_Range-extractContents.html": "",
-    "content/xul": "tests that use xul",
-    "layout/xul": "",
-    "dom/imptests/html/dom/ranges/test_Range-mutations.html": "Test timed out.",
-    "dom/permission/tests/test_wifi-manage.html": "Bug 931116, b2g desktop specific, initial triage",
-    "content/media/webaudio": "bug 916135",
-    "dom/imptests/editing/conformancetest/test_runtest.html": "takes too long",
-    "content/base/test/test_messagemanager_assertpermission.html": "specialpowers.wrap issue, NS_ERROR_XPC_GS_RETURNED_FAILURE",
-    "dom/imptests/html/dom/ranges/test_Range-set.html": "",
-    "dom/imptests/html/dom/ranges/test_Range-cloneContents.html": "",
-    "dom/imptests/html/dom/ranges/test_Range-compareBoundaryPoints.html": "times out, bug 862196",
-    "dom/imptests/html/dom/ranges/test_Range-insertNode.html": "oom?, bug 775227",
-    "dom/plugins": "tests that use plugins",
-    "dom/browser-element/": "",
-    "content/base/test/test_child_process_shutdown_message.html": "specialpowers.wrap issue, NS_ERROR_XPC_GS_RETURNED_FAILURE",
-    "dom/imptests/html/dom/ranges/test_Range-surroundContents.html": ""
   }
 }
