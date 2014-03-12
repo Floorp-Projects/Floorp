@@ -13,6 +13,7 @@ import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
@@ -98,7 +99,7 @@ public class BrowserDB {
         @RobocopTarget
         public void updateBookmark(ContentResolver cr, int id, String uri, String title, String keyword);
 
-        public void addReadingListItem(ContentResolver cr, String title, String uri);
+        public void addReadingListItem(ContentResolver cr, ContentValues values);
 
         public void removeReadingListItemWithURL(ContentResolver cr, String uri);
 
@@ -271,8 +272,8 @@ public class BrowserDB {
         sDb.updateBookmark(cr, id, uri, title, keyword);
     }
 
-    public static void addReadingListItem(ContentResolver cr, String title, String uri) {
-        sDb.addReadingListItem(cr, title, uri);
+    public static void addReadingListItem(ContentResolver cr, ContentValues values) {
+        sDb.addReadingListItem(cr, values);
     }
 
     public static void removeReadingListItemWithURL(ContentResolver cr, String uri) {
