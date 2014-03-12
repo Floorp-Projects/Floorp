@@ -178,7 +178,7 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
 
   // Always abort updates if the resolution has changed. There's no use
   // in drawing at the incorrect resolution.
-  if (!FuzzyEquals(compositorMetrics.mZoom.scale, contentMetrics.mZoom.scale)) {
+  if (!FuzzyEquals(compositorMetrics.GetZoom().scale, contentMetrics.GetZoom().scale)) {
     return true;
   }
 

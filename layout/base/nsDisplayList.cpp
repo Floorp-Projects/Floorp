@@ -728,8 +728,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   // Initially, AsyncPanZoomController should render the content to the screen
   // at the painted resolution.
   const LayerToScreenScale layerToScreenScale(1.0f);
-  metrics.mZoom = metrics.mCumulativeResolution * metrics.mDevPixelsPerCSSPixel
-                * layerToScreenScale;
+  metrics.SetZoom(metrics.mCumulativeResolution * metrics.mDevPixelsPerCSSPixel
+                  * layerToScreenScale);
 
   if (presShell) {
     nsIDocument* document = nullptr;

@@ -75,7 +75,6 @@ public:
     , mScrollableRect(0, 0, 0, 0)
     , mResolution(1)
     , mCumulativeResolution(1)
-    , mZoom(1)
     , mTransformScale(1)
     , mDevPixelsPerCSSPixel(1)
     , mPresShellId(-1)
@@ -83,6 +82,7 @@ public:
     , mIsRoot(false)
     , mHasScrollgrab(false)
     , mScrollOffset(0, 0)
+    , mZoom(1)
     , mUpdateScrollOffset(false)
     , mScrollGeneration(0)
   {}
@@ -199,6 +199,11 @@ public:
     mScrollOffset += aPoint;
   }
 
+  void ZoomBy(float aFactor)
+  {
+    mZoom.scale *= aFactor;
+  }
+
   // ---------------------------------------------------------------------------
   // The following metrics are all in widget space/device pixels.
   //
@@ -293,12 +298,6 @@ public:
   // This information is provided by Gecko at layout/paint time.
   LayoutDeviceToLayerScale mCumulativeResolution;
 
-  // The "user zoom". Content is painted by gecko at mResolution * mDevPixelsPerCSSPixel,
-  // but will be drawn to the screen at mZoom. In the steady state, the
-  // two will be the same, but during an async zoom action the two may
-  // diverge. This information is initialized in Gecko but updated in the APZC.
-  CSSToScreenScale mZoom;
-
   // The conversion factor between local screen pixels (the coordinate
   // system in which APZCs receive input events) and our parent layer's
   // layer pixels (the coordinate system of mCompositionBounds).
@@ -336,6 +335,16 @@ public:
   const CSSPoint& GetScrollOffset() const
   {
     return mScrollOffset;
+  }
+
+  void SetZoom(const CSSToScreenScale& aZoom)
+  {
+    mZoom = aZoom;
+  }
+
+  CSSToScreenScale GetZoom() const
+  {
+    return mZoom;
   }
 
   void SetScrollOffsetUpdated(uint32_t aScrollGeneration)
@@ -384,6 +393,12 @@ private:
   // This is valid for any layer, but is always relative to this frame and
   // not any parents, regardless of parent transforms.
   CSSPoint mScrollOffset;
+
+  // The "user zoom". Content is painted by gecko at mResolution * mDevPixelsPerCSSPixel,
+  // but will be drawn to the screen at mZoom. In the steady state, the
+  // two will be the same, but during an async zoom action the two may
+  // diverge. This information is initialized in Gecko but updated in the APZC.
+  CSSToScreenScale mZoom;
 
   // Whether mScrollOffset was updated by something other than the APZ code, and
   // if the APZC receiving this metrics should update its local copy.
