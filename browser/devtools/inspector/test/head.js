@@ -28,7 +28,7 @@ let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
 SimpleTest.registerCleanupFunction(() => {
-  console.error("Here we are\n")
+  console.error("Here we are\n");
   let {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
   console.error("DebuggerServer open connections: " + Object.getOwnPropertyNames(DebuggerServer._connections).length);
 
