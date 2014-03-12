@@ -109,14 +109,11 @@ BrowserToolboxProcess.prototype = {
 
       // The profile exists but the corresponding folder may have been deleted.
       var enumerator = Services.dirsvc.get("ProfD", Ci.nsIFile).parent.directoryEntries;
-      dumpn("enumerator: "+enumerator);
       while (enumerator.hasMoreElements()) {
         let profileDir = enumerator.getNext().QueryInterface(Ci.nsIFile);
-        dumpn("profileDir: "+profileDir.leafName);
         if (profileDir.leafName.contains(profileName)) {
           // Requested profile was found and the folder exists.
           this._dbgProfile = profileObject;
-          dumpn("found profile: "+profileObject);
           return;
         }
       }
