@@ -32,7 +32,7 @@ function* checkPopupContextMenu() {
   yield contextMenuHiddenPromise;
   let popupHiddenPromise = onPopupEvent(BMB_menuPopup, "hidden");
   // Can't use synthesizeMouseAtCenter because the dropdown panel is in the way
-  EventUtils.synthesizeMouse(dropmarker, 2, 2, {});
+  EventUtils.synthesizeKey("VK_ESCAPE", {});
   info("Waiting for bookmarks menu to be hidden.");
   yield popupHiddenPromise;
 }
