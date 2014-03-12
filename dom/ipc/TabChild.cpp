@@ -661,7 +661,7 @@ TabChild::HandlePossibleViewportChange()
 
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.
-  ProcessUpdateFrame(metrics);
+  mLastRootMetrics = ProcessUpdateFrame(metrics);
 
   if (viewportInfo.IsZoomAllowed() && scrollIdentifiersValid) {
     // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
@@ -1477,7 +1477,8 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
   if (aFrameMetrics.mIsRoot) {
     nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
     if (APZCCallbackHelper::HasValidPresShellId(utils, aFrameMetrics)) {
-      return ProcessUpdateFrame(aFrameMetrics);
+      mLastRootMetrics = ProcessUpdateFrame(aFrameMetrics);
+      return true;
     }
   } else {
     // aFrameMetrics.mIsRoot is false, so we are trying to update a subframe.
@@ -1494,7 +1495,8 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
   // We've recieved a message that is out of date and we want to ignore.
   // However we can't reply without painting so we reply by painting the
   // exact same thing as we did before.
-  return ProcessUpdateFrame(mLastRootMetrics);
+  mLastRootMetrics = ProcessUpdateFrame(mLastRootMetrics);
+  return true;
 }
 
 bool
@@ -1505,11 +1507,11 @@ TabChild::RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
   return true;
 }
 
-bool
+FrameMetrics
 TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
   {
     if (!mGlobal || !mTabChildGlobal) {
-        return true;
+        return aFrameMetrics;
     }
 
     nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
@@ -1549,10 +1551,7 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     data.AppendLiteral(" }");
 
     DispatchMessageManagerMessage(NS_LITERAL_STRING("Viewport:Change"), data);
-
-    mLastRootMetrics = newMetrics;
-
-    return true;
+    return newMetrics;
 }
 
 bool
