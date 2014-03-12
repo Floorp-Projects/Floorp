@@ -1,0 +1,215 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=934368
+-->
+<head>
+  <title>Test Directory#remove and #removeDeep of the FileSystem API for device storage</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=934368">Mozilla Bug 934368</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+devicestorage_setup();
+
+let gStorage = null;
+let gTestCount = 0;
+let gFileMap = {};
+let gRemoveDeep = true;
+
+let gTestCases = [
+  // Remove a non-existent file should return false.
+  {
+    dir: "/",
+    path: "non-existent.png",
+    ret: false,
+    shouldPass: true
+  },
+
+  // Remove parent directory should fail.
+  {
+    dir: "sub1/sub2",
+    target: "sub1",
+    ret: true,
+    shouldPass: false
+  },
+
+  // Remove root directory should fail.
+  {
+    dir: "/",
+    target: "/",
+    ret: true,
+    shouldPass: false
+  },
+
+  // Remove non-descendant file should fail.
+  {
+    dir: "sub1",
+    target: "sub/b.png",
+    ret: true,
+    shouldPass: false
+  },
+
+  // Remove descendant file should return true.
+  {
+    dir: "sub1",
+    target: "sub1/sub2/a.png",
+    ret: true,
+    shouldPass: true
+  },
+
+  // Remove empty directory should return true.
+  {
+    dir: "sub1",
+    path: "sub2",
+    ret: true,
+    shouldPass: true
+  },
+
+
+  // Remove non-empty directory should return true for "removeDeep" and fail
+  // for "remove".
+  {
+    dir: "/",
+    path: "sub",
+    ret: true,
+    get shouldPass() { return gRemoveDeep; }
+  }
+];
+
+function createTestFiles(storage, callback) {
+  function createTestFile(path) {
+    return new Promise(function(resolve, reject) {
+      function addNamed() {
+        var req = storage.addNamed(createRandomBlob("image/png"), path);
+
+        req.onsuccess = function() {
+          ok(true, path + " was created.");
+          resolve();
+        };
+
+        req.onerror = function(e) {
+          ok(false, "Failed to create " + path + ': ' + e.target.error.name);
+          reject();
+        };
+      }
+
+      // Bug 980136. Check if the file exists before we create.
+      var req = storage.get(path);
+
+      req.onsuccess = function() {
+        ok(true, path + " exists. Do not need to create.");
+        resolve();
+      };
+
+      req.onerror = function(e) {
+        ok(true, path + " does not exists: " + e.target.error.name);
+        addNamed();
+      };
+    });
+  }
+
+  let arr = [];
+
+  ["sub1/sub2/a.png", "sub/b.png"].forEach(function(path) {
+    arr.push(createTestFile(path));
+  });
+
+  Promise.all(arr).then(function() {
+    callback();
+  }, function() {
+    ok(false, "Failed to created test files.");
+    devicestorage_cleanup();
+  });
+}
+
+function runTest() {
+  gTestCount = 0;
+  createTestFiles(gStorage, function() {
+    function cbError(e) {
+      ok(false, "Should not arrive at cbError! Error: " + e.name);
+      devicestorage_cleanup();
+    }
+
+    function cbSuccess(r) {
+      ok(r, "Should get the file - " + this);
+      gFileMap[this] = r;
+    }
+
+    // Get directory and file objects.
+    gStorage.getRoot().then(function(root) {
+      ok(root, "Should get root directory.");
+      gFileMap["/"] = root;
+
+      let arr = [];
+
+      ["sub1", "sub1/sub2", "sub1/sub2/a.png", "sub/b.png"].forEach(function(path) {
+        arr.push(root.get(path).then(cbSuccess.bind(path), cbError));
+      });
+
+      Promise.all(arr).then(function() {
+        testNextRemove();
+      }, function() {
+        ok(false, "Failed to get test files.");
+        devicestorage_cleanup();
+      });
+    }, cbError);
+  });
+}
+
+function testNextRemove() {
+  if (gTestCount < gTestCases.length) {
+    let data = gTestCases[gTestCount++];
+    let dir = gFileMap[data.dir];
+    let path = data.path || gFileMap[data.target];
+    let targetPath = data.path || data.target;
+    let promise = gRemoveDeep ? dir.removeDeep(path) : dir.remove(path);
+    promise.then(function(result) {
+      ok(data.shouldPass, "Success callback was called to remove " +
+        targetPath + " from " + data.dir);
+      is(result, data.ret, "Return value should match to remove " +
+        targetPath + " from " + data.dir);
+      SimpleTest.executeSoon(testNextRemove);
+    }, function(err) {
+      ok(!data.shouldPass, "Error callback was called to remove " +
+        targetPath + " from " + data.dir + '. Error: ' + err.name);
+      SimpleTest.executeSoon(testNextRemove);
+    });
+    return;
+  }
+
+  if (gRemoveDeep) {
+    // Test "remove" after "removeDeep".
+    gRemoveDeep = false;
+    runTest();
+    return;
+  }
+
+  devicestorage_cleanup();
+}
+
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
+
+let gStorage = navigator.getDeviceStorage("pictures");
+ok(gStorage, "Should have gotten a storage.");
+
+// Test "removeDeep" first.
+gRemoveDeep = true;
+runTest();
+
+</script>
+</pre>
+</body>
+</html>
+
