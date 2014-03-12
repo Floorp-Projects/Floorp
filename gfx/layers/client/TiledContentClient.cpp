@@ -310,15 +310,17 @@ gfxMemorySharedReadLock::GetReadCount()
 
 gfxShmSharedReadLock::gfxShmSharedReadLock(ISurfaceAllocator* aAllocator)
   : mAllocator(aAllocator)
+  , mAllocSuccess(false)
 {
   MOZ_COUNT_CTOR(gfxShmSharedReadLock);
-
+  MOZ_ASSERT(mAllocator);
   if (mAllocator) {
 #define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
     if (mAllocator->AllocUnsafeShmem(MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)),
                                      mozilla::ipc::SharedMemory::TYPE_BASIC, &mShmem)) {
       ShmReadLockInfo* info = GetShmReadLockInfoPtr();
       info->readCount = 1;
+      mAllocSuccess = true;
     }
   }
 }
@@ -331,13 +333,18 @@ gfxShmSharedReadLock::~gfxShmSharedReadLock()
 int32_t
 gfxShmSharedReadLock::ReadLock() {
   NS_ASSERT_OWNINGTHREAD(gfxShmSharedReadLock);
-
+  if (!mAllocSuccess) {
+    return 0;
+  }
   ShmReadLockInfo* info = GetShmReadLockInfoPtr();
   return PR_ATOMIC_INCREMENT(&info->readCount);
 }
 
 int32_t
 gfxShmSharedReadLock::ReadUnlock() {
+  if (!mAllocSuccess) {
+    return 0;
+  }
   ShmReadLockInfo* info = GetShmReadLockInfoPtr();
   int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
   NS_ASSERTION(readCount >= 0, "ReadUnlock called without a ReadLock.");
@@ -350,7 +357,9 @@ gfxShmSharedReadLock::ReadUnlock() {
 int32_t
 gfxShmSharedReadLock::GetReadCount() {
   NS_ASSERT_OWNINGTHREAD(gfxShmSharedReadLock);
-
+  if (!mAllocSuccess) {
+    return 0;
+  }
   ShmReadLockInfo* info = GetShmReadLockInfoPtr();
   return info->readCount;
 }
@@ -514,6 +523,9 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion, TextureClientPool *aP
     } else {
       mBackLock = new gfxShmSharedReadLock(mManager->AsShadowForwarder());
     }
+
+    MOZ_ASSERT(mBackLock->IsValid());
+
     *aCreatedTextureClient = true;
     mInvalidBack = nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
   }
