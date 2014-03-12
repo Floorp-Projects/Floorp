@@ -18,7 +18,7 @@ function test() {
     waitForFocus(setupTest, content);
   }, true);
 
-  content.location = "data:text/html,<h1>foo</h1><h2>bar</h2>";
+  content.location = "data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>";
 
   function setupTest() {
     openInspector((aInspector, aToolbox) => {
@@ -29,8 +29,7 @@ function test() {
     });
   }
 
-  function runTests(aInspector) {
-    getHighlighterOutline().setAttribute("disable-transitions", "true");
+  function runTests() {
     Task.spawn(function() {
       yield hoverH1InMarkupView();
       yield assertH1Highlighted();

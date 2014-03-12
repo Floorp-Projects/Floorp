@@ -50,7 +50,6 @@ function test()
       inspector = aInspector;
       // Make sure the highlighter is shown so we can disable transitions
       inspector.toolbox.highlighter.showBoxModel(getNodeFront(doc.body)).then(() => {
-        getHighlighterOutline().setAttribute("disable-transitions", "true");
         runTests();
       });
     });

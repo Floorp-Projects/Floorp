@@ -51,7 +51,6 @@ function createDocument() {
     inspector = aInspector;
     inspector.selection.setNode(div, null);
     inspector.once("inspector-updated", () => {
-      getHighlighterOutline().setAttribute("disable-transitions", "true");
       inspector.toolbox.highlighterUtils.startPicker().then(testMouseOverH1Highlights);
     });
   });
@@ -127,5 +126,5 @@ function test() {
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html,basic tests for inspector";
+  content.location = "data:text/html;charset=utf-8,browser_inspector_highlighter.js";
 }
