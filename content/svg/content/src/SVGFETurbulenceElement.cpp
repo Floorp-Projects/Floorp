@@ -140,8 +140,7 @@ SVGFETurbulenceElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   // units wide and 1 / fY user space units high. We do not scale the frequency
   // depending on the filter primitive region.
   gfxRect firstPeriodInUserSpace(0, 0, 1 / fX, 1 / fY);
-  gfxMatrix m = aInstance->GetUserSpaceToFilterSpaceTransform();
-  gfxRect firstPeriodInFilterSpace = m.TransformBounds(firstPeriodInUserSpace);
+  gfxRect firstPeriodInFilterSpace = aInstance->UserSpaceToFilterSpace(firstPeriodInUserSpace);
   Size frequencyInFilterSpace(1 / firstPeriodInFilterSpace.width,
                               1 / firstPeriodInFilterSpace.height);
   gfxPoint offset = firstPeriodInFilterSpace.TopLeft();

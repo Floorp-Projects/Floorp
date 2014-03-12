@@ -1,18 +1,18 @@
 
 # XBL tests
-== xbl-basic-01.svg                             pass.svg
-== xbl-basic-02.svg                             pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-basic-01.svg                             pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-basic-02.svg                             pass.svg
 skip-if(B2G) == xbl-basic-03.svg                             pass.svg # bug 773482
 skip-if(B2G) == xbl-grad-ref--grad-in-binding-01.svg         pass.svg
-== xbl-grad-ref--grad-in-binding-02.svg         pass.svg
-== xbl-grad-ref--grad-in-bound-01.svg           pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-grad-ref--grad-in-binding-02.svg         pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-grad-ref--grad-in-bound-01.svg           pass.svg
 fails == xbl-grad-ref--grad-in-bound-02.svg     pass-black.svg
 fails == xbl-grad-ref--grad-in-resources-01.svg pass.svg
 fails == xbl-grad-ref--grad-in-resources-02.svg pass.svg
-== xbl-grad-ref--grad-in-binding-03.svg         pass.svg
-== xbl-grad-ref--grad-in-bound-03.svg           pass.svg
-== xbl-grad-ref--grad-in-binding-04.svg         pass.svg
-== xbl-grad-ref--grad-in-bound-04.svg           pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-grad-ref--grad-in-binding-03.svg         pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-grad-ref--grad-in-bound-03.svg           pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-grad-ref--grad-in-binding-04.svg         pass.svg
+skip-if(B2G&&browserIsRemote) == xbl-grad-ref--grad-in-bound-04.svg           pass.svg
 
 # Tests for zooming with the full page zoom UI
 skip-if(B2G) random-if(d2d) == feImage-zoom-01a.svg          feImage-zoom-01-ref.svg # bug 773482

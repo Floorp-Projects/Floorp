@@ -93,7 +93,8 @@ public:
   // always be non-null.
   TemporaryRef<TextureClient>
   CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
-                                TextureFlags aTextureFlags);
+                                TextureFlags aTextureFlags,
+                                const gfx::IntSize& aSizeHint);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)

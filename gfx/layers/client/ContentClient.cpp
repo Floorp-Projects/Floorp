@@ -169,14 +169,16 @@ ContentClientRemoteBuffer::CreateAndAllocateTextureClient(RefPtr<TextureClient>&
                                                           TextureFlags aFlags)
 {
   aClient = CreateTextureClientForDrawing(mSurfaceFormat,
-                                          mTextureInfo.mTextureFlags | aFlags);
+                                          mTextureInfo.mTextureFlags | aFlags,
+                                          mSize);
   if (!aClient) {
     return false;
   }
 
   if (!aClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
     aClient = CreateTextureClientForDrawing(mSurfaceFormat,
-                mTextureInfo.mTextureFlags | TEXTURE_ALLOC_FALLBACK | aFlags);
+                mTextureInfo.mTextureFlags | TEXTURE_ALLOC_FALLBACK | aFlags,
+                mSize);
     if (!aClient) {
       return false;
     }
