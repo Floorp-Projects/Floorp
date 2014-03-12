@@ -33,7 +33,7 @@ static void PNGAPI row_callback(png_structp png_ptr, png_bytep new_row, png_uint
 
   uint32_t* dst = (uint32_t*)(map.mData + map.mStride * row_num);
 
-  for (int x = 0; x < sTextureWidth; x++) {
+  for (uint32_t x = 0; x < sTextureWidth; x++) {
     // We blend to a transparent white background, this will make text readable
     // even if it's on a dark background. Without hurting our ability to
     // interact with the content behind the text.
@@ -68,7 +68,7 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
   uint32_t maxWidth = 0;
   uint32_t lineWidth = 0;
   // Calculate the size of the surface needed to draw all the glyphs.
-  for (int i = 0; i < aText.length(); i++) {
+  for (uint32_t i = 0; i < aText.length(); i++) {
     // Insert a line break if we go past the TargetPixelWidth.
     // XXX - this has the downside of overrunning the intended width, causing
     // things at the edge of a window to be cut off.
@@ -78,7 +78,7 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
       continue;
     }
 
-    lineWidth += sGlyphWidths[aText[i]];
+    lineWidth += sGlyphWidths[uint32_t(aText[i])];
     maxWidth = std::max(lineWidth, maxWidth);
   }
 
@@ -97,7 +97,7 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
   uint32_t currentYPos = 0;
 
   // Copy our glyphs onto the surface.
-  for (int i = 0; i < aText.length(); i++) {
+  for (uint32_t i = 0; i < aText.length(); i++) {
     if (aText[i] == '\n' || (aText[i] == ' ' && currentXPos > aTargetPixelWidth)) {
       currentYPos += sCellHeight;
       currentXPos = 0;
@@ -111,10 +111,10 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
     for (int y = 0; y < 16; y++) {
       memcpy(map.mData + (y + currentYPos) * map.mStride + currentXPos * BytesPerPixel(sTextureFormat),
              mMap.mData + glyphYOffset + y * mMap.mStride + glyphXOffset,
-             sGlyphWidths[aText[i]] * BytesPerPixel(sTextureFormat));
+             sGlyphWidths[uint32_t(aText[i])] * BytesPerPixel(sTextureFormat));
     }
 
-    currentXPos += sGlyphWidths[aText[i]];
+    currentXPos += sGlyphWidths[uint32_t(aText[i])];
   }
 
   textSurf->Unmap();

@@ -138,7 +138,7 @@ static void DrawLayerInfo(const nsIntRect& aClipRect,
 
   nsIntRegion visibleRegion = aLayer->GetVisibleRegion();
 
-  uint32_t maxWidth = visibleRegion.GetBounds().width < 500 ? visibleRegion.GetBounds().width : 500;
+  uint32_t maxWidth = std::min<uint32_t>(visibleRegion.GetBounds().width, 500);
 
   nsIntPoint topLeft = visibleRegion.GetBounds().TopLeft();
   aManager->GetTextRenderer()->RenderText(layerInfo.get(), gfx::IntPoint(topLeft.x, topLeft.y),
