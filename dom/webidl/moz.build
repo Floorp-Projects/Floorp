@@ -115,6 +115,7 @@ WEBIDL_FILES = [
     'Function.webidl',
     'GainNode.webidl',
     'Geolocation.webidl',
+    'GeometryUtils.webidl',
     'GetUserMediaRequest.webidl',
     'History.webidl',
     'HTMLAnchorElement.webidl',
