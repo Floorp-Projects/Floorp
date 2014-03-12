@@ -674,6 +674,15 @@
         </setter>
       </property>
 
+      <method name="adjustPriority">
+        <parameter name="adjustment"/>
+        <body><![CDATA[
+          let loadGroup = this.webNavigation.QueryInterface(Ci.nsIDocumentLoader)
+                              .loadGroup.QueryInterface(Ci.nsISupportsPriority);
+          loadGroup.adjustPriority(adjustment);
+        ]]></body>
+      </method>
+
       <!--
         This field tracks the location bar state. The value that the user typed
         in to the location bar may not be changed while this field is zero.
