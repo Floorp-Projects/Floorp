@@ -31,6 +31,7 @@ function createDocument() {
       div2 = iframe2.contentDocument.createElement('div');
       div2.textContent = 'nested div';
       iframe2.contentDocument.body.appendChild(div2);
+
       // Open the inspector, start the picker mode, and start the tests
       openInspector(aInspector => {
         inspector = aInspector;
