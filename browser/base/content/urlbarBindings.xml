@@ -2055,21 +2055,10 @@
       </field>
       <property name="_viewsLeftMap">
         <getter><![CDATA[
-          let viewsLeftMap = {};
           try {
-            viewsLeftMap = JSON.parse(Services.prefs.getCharPref("browser.syncPromoViewsLeftMap"));
-          } catch (ex) {
-            // If the old preference exists, migrate it to the new one.
-            try {
-              let oldPref = Services.prefs.getIntPref("browser.syncPromoViewsLeft");
-              Services.prefs.clearUserPref("browser.syncPromoViewsLeft");
-              viewsLeftMap.bookmarks = oldPref;
-              viewsLeftMap.passwords = oldPref;
-              Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
-                                         JSON.stringify(viewsLeftMap));
-            } catch (ex2) {}
-          }
-          return viewsLeftMap;
+            return JSON.parse(Services.prefs.getCharPref("browser.syncPromoViewsLeftMap"));
+          } catch (ex) {}
+          return {};
         ]]></getter>
       </property>
       <property name="_viewsLeft">
