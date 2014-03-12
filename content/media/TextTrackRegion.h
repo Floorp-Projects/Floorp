@@ -13,6 +13,7 @@
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/TextTrack.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,6 +28,12 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TextTrackRegion)
+
+  static bool RegionsEnabled(JSContext* cx, JSObject* obj)
+  {
+    return Preferences::GetBool("media.webvtt.enabled") &&
+           Preferences::GetBool("media.webvtt.regions.enabled");
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
