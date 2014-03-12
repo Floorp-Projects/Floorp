@@ -17,6 +17,8 @@
 #include "nsPIDOMWindow.h"
 #include "js/TypeDecls.h"
 
+#include "mozilla/dom/workers/bindings/WorkerFeature.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -25,6 +27,23 @@ class PromiseCallback;
 class PromiseInit;
 class PromiseNativeHandler;
 
+class Promise;
+class PromiseReportRejectFeature : public workers::WorkerFeature
+{
+  // The Promise that owns this feature.
+  Promise* mPromise;
+
+public:
+  PromiseReportRejectFeature(Promise* aPromise)
+    : mPromise(aPromise)
+  {
+    MOZ_ASSERT(mPromise);
+  }
+
+  virtual bool
+  Notify(JSContext* aCx, workers::Status aStatus) MOZ_OVERRIDE;
+};
+
 class Promise MOZ_FINAL : public nsISupports,
                           public nsWrapperCache
 {
@@ -32,6 +51,7 @@ class Promise MOZ_FINAL : public nsISupports,
   friend class PromiseResolverMixin;
   friend class PromiseResolverTask;
   friend class PromiseTask;
+  friend class PromiseReportRejectFeature;
   friend class RejectPromiseCallback;
   friend class ResolvePromiseCallback;
   friend class WorkerPromiseResolverTask;
@@ -137,7 +157,14 @@ private:
 
   // If we have been rejected and our mResult is a JS exception,
   // report it to the error console.
+  // Use MaybeReportRejectedOnce() for actual calls.
   void MaybeReportRejected();
+
+  void MaybeReportRejectedOnce() {
+    MaybeReportRejected();
+    RemoveFeature();
+    mResult = JS::UndefinedValue();
+  }
 
   void MaybeResolveInternal(JSContext* aCx,
                             JS::Handle<JS::Value> aValue,
@@ -175,6 +202,8 @@ private:
 
   void HandleException(JSContext* aCx);
 
+  void RemoveFeature();
+
   nsRefPtr<nsPIDOMWindow> mWindow;
 
   nsTArray<nsRefPtr<PromiseCallback> > mResolveCallbacks;
@@ -186,6 +215,12 @@ private:
   bool mHadRejectCallback;
 
   bool mResolvePending;
+
+  // If a rejected promise on a worker has no reject callbacks attached, it
+  // needs to know when the worker is shutting down, to report the error on the
+  // console before the worker's context is deleted. This feature is used for
+  // that purpose.
+  nsAutoPtr<PromiseReportRejectFeature> mFeature;
 };
 
 } // namespace dom

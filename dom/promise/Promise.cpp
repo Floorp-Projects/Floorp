@@ -189,11 +189,10 @@ public:
 NS_IMPL_CYCLE_COLLECTION_CLASS(Promise)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Promise)
-  tmp->MaybeReportRejected();
+  tmp->MaybeReportRejectedOnce();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResolveCallbacks);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRejectCallbacks);
-  tmp->mResult = JS::UndefinedValue();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -232,8 +231,7 @@ Promise::Promise(nsPIDOMWindow* aWindow)
 
 Promise::~Promise()
 {
-  MaybeReportRejected();
-  mResult = JS::UndefinedValue();
+  MaybeReportRejectedOnce();
   mozilla::DropJSObjects(this);
   MOZ_COUNT_DTOR(Promise);
 }
@@ -819,6 +817,9 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
   if (aRejectCallback) {
     mHadRejectCallback = true;
     mRejectCallbacks.AppendElement(aRejectCallback);
+
+    // Now that there is a callback, we don't need to report anymore.
+    RemoveFeature();
   }
 
   // If promise's state is resolved, queue a task to process our resolve
@@ -1059,7 +1060,45 @@ Promise::RunResolveTask(JS::Handle<JS::Value> aValue,
 
   SetResult(aValue);
   SetState(aState);
+
+  // If the Promise was rejected, and there is no reject handler already setup,
+  // watch for thread shutdown.
+  if (aState == PromiseState::Rejected &&
+      !mHadRejectCallback &&
+      !NS_IsMainThread()) {
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(worker);
+    worker->AssertIsOnWorkerThread();
+
+    mFeature = new PromiseReportRejectFeature(this);
+    if (NS_WARN_IF(!worker->AddFeature(worker->GetJSContext(), mFeature))) {
+      // Worker is shutting down, report rejection immediately since it is
+      // unlikely that reject callbacks will be added after this point.
+      MaybeReportRejected();
+    }
+  }
+
   RunTask();
+}
+
+void
+Promise::RemoveFeature()
+{
+  if (mFeature) {
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(worker);
+    worker->RemoveFeature(worker->GetJSContext(), mFeature);
+    mFeature = nullptr;
+  }
+}
+
+bool
+PromiseReportRejectFeature::Notify(JSContext* aCx, workers::Status aStatus)
+{
+  MOZ_ASSERT(aStatus > workers::Running);
+  mPromise->MaybeReportRejectedOnce();
+  // After this point, `this` has been deleted by RemoveFeature!
+  return true;
 }
 
 } // namespace dom
