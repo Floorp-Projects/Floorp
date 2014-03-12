@@ -149,9 +149,7 @@ void GrallocTextureSourceOGL::Lock()
 
   MOZ_ASSERT(IsValid());
 
-  CompositorOGLGonkBackendSpecificData* backendData =
-    static_cast<CompositorOGLGonkBackendSpecificData*>(mCompositor->GetCompositorBackendSpecificData());
-  mTexture = backendData->GetTexture();
+  mTexture = mCompositor->GetTemporaryTexture(LOCAL_GL_TEXTURE0);
 
   GLuint textureTarget = GetTextureTarget();
 
