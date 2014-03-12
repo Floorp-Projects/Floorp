@@ -160,13 +160,17 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
 /* ----- BOOKMARK BUTTONS ----- */
 
 toolbarbutton.bookmark-item:not(.subviewbutton):not(#bookmarks-menu-button),
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
+#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
   font-weight: bold;
   color: #222;
   border: 0;
   border-radius: 10000px;
   padding: 1px 8px;
   margin: 0 0 1px;
+}
+
+#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
+  -moz-box-orient: horizontal;
 }
 
 .bookmark-item > .toolbarbutton-menu-dropmarker {
@@ -237,7 +241,7 @@ toolbarbutton.bookmark-item > menupopup {
 
 .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
 .bookmark-item > .toolbarbutton-icon[type="menu"],
-#personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon[label]:not([label=""]) {
+#personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder > .toolbarbutton-icon[label]:not([label=""]) {
   -moz-margin-end: 5px;
 }
 
