@@ -112,7 +112,7 @@ public class EventListener implements GeckoEventListener, GeckoEventResponder {
 
                 // preInstallWebapp will return a File object pointing to the profile directory of the webapp
                 mCurrentResponse = preInstallWebapp(name, manifestURL, origin).toString();
-            } else if (event.equals("WebApps:GetApkVersions")) {
+            } else if (event.equals("Webapps:GetApkVersions")) {
                 mCurrentResponse = getApkVersions(GeckoAppShell.getGeckoInterface().getActivity(),
                                                   message.getJSONArray("packageNames")).toString();
             }
