@@ -51,6 +51,7 @@
 #include <android/log.h>
 #endif
 #include "GeckoProfiler.h"
+#include "TextRenderer.h"               // for TextRenderer
 
 class gfxASurface;
 class gfxContext;
@@ -104,6 +105,7 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 , mIsCompositorReady(false)
 , mDebugOverlayWantsNextFrame(false)
 {
+  mTextRenderer = new TextRenderer(aCompositor);
   MOZ_ASSERT(aCompositor);
 }
 

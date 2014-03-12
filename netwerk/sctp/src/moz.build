@@ -15,7 +15,6 @@ SOURCES += [
     'netinet/sctp_callout.c',
     'netinet/sctp_cc_functions.c',
     'netinet/sctp_crc32.c',
-    'netinet/sctp_hashdriver.c',
     'netinet/sctp_indata.c',
     'netinet/sctp_input.c',
     'netinet/sctp_output.c',
@@ -54,7 +53,7 @@ LOCAL_INCLUDES += [
     '/xpcom/ds',
 ]
 
-for var in ('SCTP_SIMPLE_ALLOCATOR', 'USE_SCTP_SHA1',
+for var in ('SCTP_SIMPLE_ALLOCATOR',
             'SCTP_PROCESS_LEVEL_LOCKS', '__Userspace__', 'INET',
             'CALLBACK_API', 'SCTP_DEBUG'):
     DEFINES[var] = 1

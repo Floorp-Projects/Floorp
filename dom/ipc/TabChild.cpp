@@ -287,6 +287,7 @@ TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t 
   , mUpdateHitRegion(false)
   , mContextMenuHandled(false)
   , mWaitingTouchListeners(false)
+  , mIgnoreKeyPressEvent(false)
 {
   if (!sActiveDurationMsSet) {
     Preferences::AddIntVarCache(&sActiveDurationMs,
@@ -1910,8 +1911,19 @@ TabChild::RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent,
 bool
 TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event)
 {
+  // If content code called preventDefault() on a keydown event, then we don't
+  // want to process any following keypress events.
+  if (event.message == NS_KEY_PRESS && mIgnoreKeyPressEvent) {
+    return true;
+  }
+
   WidgetKeyboardEvent localEvent(event);
-  DispatchWidgetEvent(localEvent);
+  nsEventStatus status = DispatchWidgetEvent(localEvent);
+
+  if (event.message == NS_KEY_DOWN) {
+    mIgnoreKeyPressEvent = status == nsEventStatus_eConsumeNoDefault;
+  }
+
   return true;
 }
 
