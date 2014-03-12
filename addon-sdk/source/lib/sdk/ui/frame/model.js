@@ -32,17 +32,17 @@ const mailbox = new OutputPort({ id: "frame-mailbox" });
 const input = Frames;
 
 
-const makeID = url =>
+const urlToId = url =>
   ("frame-" + addonID + "-" + url).
     split("/").join("-").
     split(".").join("-").
     replace(/[^A-Za-z0-9_\-]/g, "");
 
 const validate = contract({
-  name: {
+  id: {
     is: ["string", "undefined"],
     ok: x => /^[a-z][a-z0-9-_]+$/i.test(x),
-    msg: "The `option.name` must be a valid alphanumeric string (hyphens and " +
+    msg: "The `option.id` must be a valid alphanumeric string (hyphens and " +
          "underscores are allowed) starting with letter."
   },
   url: {
@@ -88,7 +88,7 @@ const Frame = Class({
   implements: [Disposable, Source],
   initialize: function(params={}) {
     const options = validate(params);
-    const id = makeID(options.name || options.url);
+    const id = options.id || urlToId(options.url);
 
     if (frames.has(id))
       throw Error("Frame with this id already exists: " + id);
