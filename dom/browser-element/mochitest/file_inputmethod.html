@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <html>
 <body>
 <script>
@@ -8,14 +9,18 @@
     im.oninputcontextchange = function() {
       var ctx = im.inputcontext;
       if (ctx) {
+        dump('inputcontext is received for input method ' + location.hash + '\n');
         intervalId = setInterval(function() {
+          dump('sending text in input method ' + location.hash + '\n');
           ctx.replaceSurroundingText(location.hash);
         }, 500);
       } else {
+        dump('inputcontext is removed for input method ' + location.hash + '\n');
         clearInterval(intervalId);
       }
     };
   }
 </script>
+<p>This frame representing the input method frame.</p>
 </body>
 </html>
