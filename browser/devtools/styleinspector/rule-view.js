@@ -1122,7 +1122,7 @@ CssRuleView.prototype = {
     // Test for css transform
     if (property && property.name === "transform") {
       this.previewTooltip.setCssTransformContent(property.value, this.pageStyle,
-        this._viewedElement).then(def.resolve, def.reject);
+        this._viewedElement).then(def.resolve);
       hasTooltip = true;
     }
 
@@ -1164,10 +1164,8 @@ CssRuleView.prototype = {
     }
 
     if (hasTooltip) {
-      if (this.colorPicker.tooltip.isShown()) {
-        this.colorPicker.revert();
-        this.colorPicker.hide();
-      }
+      this.colorPicker.revert();
+      this.colorPicker.hide();
     } else {
       def.reject();
     }
