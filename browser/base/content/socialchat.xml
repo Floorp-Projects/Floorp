@@ -34,7 +34,9 @@
         this.content.__defineGetter__("popupnotificationanchor",
                                       () => document.getAnonymousElementByAttribute(this, "anonid", "notification-icon"));
         Social.setErrorListener(this.content, function(aBrowser) {
-          aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
+          aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
+                                 encodeURIComponent(aBrowser.getAttribute("origin")),
+                                 null, null, null, null);
         });
         if (!this.chatbar) {
           document.getAnonymousElementByAttribute(this, "anonid", "minimize").hidden = true;
@@ -151,7 +153,9 @@
           this.content.swapDocShells(aTarget.content);
           Social.setErrorListener(this.content, function(aBrowser) {}); // 'this' will be destroyed soon.
           Social.setErrorListener(aTarget.content, function(aBrowser) {
-            aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
+            aBrowser.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
+                                 encodeURIComponent(aBrowser.getAttribute("origin")),
+                                 null, null, null, null);
           });
         ]]></body>
       </method>
