@@ -40,6 +40,7 @@ class PCompositorParent;
 class ViewTransform;
 class APZCTreeManager;
 class AsyncPanZoomAnimation;
+class FlingAnimation;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -300,6 +301,12 @@ public:
    */
   void AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
                      uint32_t aOverscrollHandoffChainIndex = 0);
+
+  /**
+   * Take over a fling with the given velocity from another APZC. Used for
+   * during overscroll handoff for a fling.
+   */
+  void TakeOverFling(ScreenPoint aVelocity);
 
   /**
    * Returns allowed touch behavior for the given point on the scrollable layer.
@@ -650,6 +657,7 @@ protected:
   // Before manipulating |mFrameMetrics| or |mLastContentPaintMetrics|, the
   // monitor should be held. When setting |mState|, either the SetState()
   // function can be used, or the monitor can be held and then |mState| updated.
+  // IMPORTANT: See the note about lock ordering at the top of APZCTreeManager.h.
   ReentrantMonitor mMonitor;
 
   // Specifies whether we should use touch-action css property. Initialized from
@@ -747,6 +755,7 @@ private:
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
   friend class Axis;
+  friend class FlingAnimation;
 
   /* The functions and members in this section are used to build a tree
    * structure out of APZC instances. This tree can only be walked or
@@ -865,11 +874,30 @@ public:
                       const TimeDuration& aDelta) = 0;
 
   /**
+   * Execute the tasks in |mDeferredTasks| in order. See |mDeferredTasks|
+   * for more information.
+   */
+  void ExecuteDeferredTasks() {
+    for (uint32_t i = 0; i < mDeferredTasks.length(); ++i) {
+      mDeferredTasks[i]->Run();
+    }
+    mDeferredTasks.clear();
+  }
+
+  /**
    * Specifies how frequently (at most) we want to do repaints during the
    * animation sequence. TimeDuration::Forever() will cause it to only repaint
    * at the end of the animation.
    */
   TimeDuration mRepaintInterval;
+
+protected:
+  /**
+   * Tasks scheduled for execution after the APZC's mMonitor is released.
+   * Derived classes can add tasks here in Sample(), and the APZC can call
+   * ExecuteDeferredTasks() to execute them.
+   */
+  Vector<Task*> mDeferredTasks;
 };
 
 }

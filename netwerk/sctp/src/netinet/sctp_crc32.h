@@ -42,7 +42,9 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_crc32.h 235828 2012-05-23 11:26:28Z tu
 #if !defined(SCTP_WITH_NO_CSUM)
 uint32_t sctp_calculate_cksum(struct mbuf *, uint32_t);
 #endif
+#if defined(__FreeBSD__)
 void sctp_delayed_cksum(struct mbuf *, uint32_t offset);
+#endif
 #endif				/* _KERNEL */
 #if defined(__Userspace__)
 #if !defined(SCTP_WITH_NO_CSUM)

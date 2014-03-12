@@ -85,6 +85,13 @@ function initApp() {
     blocklistFile.remove(false);
   var source = do_get_file("blocklist.xml");
   source.copyTo(gProfD, "blocklist.xml");
+
+
+  let internalManager = Cc["@mozilla.org/addons/integration;1"].
+                     getService(Ci.nsIObserver).
+                     QueryInterface(Ci.nsITimerCallback);
+
+  internalManager.observe(null, "addons-startup", null);
 }
 
 function setManifestPref(manifest) {
@@ -102,45 +109,56 @@ function do_wait_observer(topic, cb) {
   Services.obs.addObserver(observer, topic, false);
 }
 
+function do_add_providers(cb) {
+  // run only after social is already initialized
+  SocialService.addProvider(manifests[0], function() {
+    do_wait_observer("social:providers-changed", function() {
+      do_check_eq(Social.providers.length, 2, "2 providers installed");
+      do_execute_soon(cb);
+    });
+    SocialService.addProvider(manifests[1]);
+  });
+}
+
 function do_initialize_social(enabledOnStartup, cb) {
   initApp();
 
-  manifests.forEach(function (manifest) {
-    setManifestPref(manifest);
-  });
-  // Set both providers active and flag the first one as "current"
-  let activeVal = Cc["@mozilla.org/supports-string;1"].
-             createInstance(Ci.nsISupportsString);
-  let active = {};
-  for (let m of manifests)
-    active[m.origin] = 1;
-  activeVal.data = JSON.stringify(active);
-  Services.prefs.setComplexValue("social.activeProviders",
-                                 Ci.nsISupportsString, activeVal);
-  Services.prefs.setCharPref("social.provider.current", manifests[0].origin);
-  Services.prefs.setBoolPref("social.enabled", enabledOnStartup);
-
-  do_register_cleanup(function() {
+  if (enabledOnStartup) {
+    // set prefs before initializing social
     manifests.forEach(function (manifest) {
-      Services.prefs.clearUserPref("social.manifest." + manifest.origin);
+      setManifestPref(manifest);
     });
-    Services.prefs.clearUserPref("social.enabled");
-    Services.prefs.clearUserPref("social.provider.current");
-    Services.prefs.clearUserPref("social.activeProviders");
-  });
+    // Set both providers active and flag the first one as "current"
+    let activeVal = Cc["@mozilla.org/supports-string;1"].
+               createInstance(Ci.nsISupportsString);
+    let active = {};
+    for (let m of manifests)
+      active[m.origin] = 1;
+    activeVal.data = JSON.stringify(active);
+    Services.prefs.setComplexValue("social.activeProviders",
+                                   Ci.nsISupportsString, activeVal);
 
-  // expecting 2 providers installed
-  do_wait_observer("social:providers-changed", function() {
-    do_check_eq(Social.providers.length, 2, "2 providers installed");
-    cb();
-  });
+    do_register_cleanup(function() {
+      manifests.forEach(function (manifest) {
+        Services.prefs.clearUserPref("social.manifest." + manifest.origin);
+      });
+      Services.prefs.clearUserPref("social.activeProviders");
+    });
+
+    // expecting 2 providers installed
+    do_wait_observer("social:providers-changed", function() {
+      do_check_eq(Social.providers.length, 2, "2 providers installed");
+      do_execute_soon(cb);
+    });
+  }
 
   // import and initialize everything
   SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
-  do_check_eq(SocialService.enabled, enabledOnStartup, "service is doing its thing");
-  do_check_true(SocialService.hasEnabledProviders, "Service has enabled providers");
+  do_check_eq(enabledOnStartup, SocialService.hasEnabledProviders, "Service has enabled providers");
   Social = Cu.import("resource:///modules/Social.jsm", {}).Social;
   do_check_false(Social.initialized, "Social is not initialized");
   Social.init();
   do_check_true(Social.initialized, "Social is initialized");
+  if (!enabledOnStartup)
+    do_execute_soon(cb);
 }

@@ -42,6 +42,22 @@ class AsyncPanZoomController;
 class CompositorParent;
 
 /**
+ * ****************** NOTE ON LOCK ORDERING IN APZ **************************
+ *
+ * There are two kinds of locks used by APZ: APZCTreeManager::mTreeLock
+ * ("the tree lock") and AsyncPanZoomController::mMonitor ("APZC locks").
+ *
+ * To avoid deadlock, we impose a lock ordering between these locks, which is:
+ *
+ *      tree lock -> APZC locks
+ *
+ * The interpretation of the lock ordering is that if lock A precedes lock B
+ * in the ordering sequence, then you must NOT wait on A while holding B.
+ *
+ * **************************************************************************
+ */
+
+/**
  * This class manages the tree of AsyncPanZoomController instances. There is one
  * instance of this class owned by each CompositorParent, and it contains as
  * many AsyncPanZoomController instances as there are scrollable container layers.
@@ -239,9 +255,21 @@ public:
    *   - TM.DispatchScroll() calls A.AttemptScroll() (since A is at index 2 in the chain)
    *   - A.AttemptScroll() scrolls A. If there is overscroll, it calls TM.DispatchScroll() with index = 3.
    *   - TM.DispatchScroll() discards the rest of the scroll as there are no more elements in the chain.
+   *
+   * Note: this should be used for panning only. For handing off overscroll for
+   *       a fling, use HandOffFling().
    */
   void DispatchScroll(AsyncPanZoomController* aAPZC, ScreenPoint aStartPoint, ScreenPoint aEndPoint,
                       uint32_t aOverscrollHandoffChainIndex);
+
+  /**
+   * This is a callback for AsyncPanZoomController to call when it wants to
+   * hand off overscroll from a fling.
+   * @param aApzc the APZC that is handing off the fling
+   * @param aVelocity the current velocity of the fling, in |aApzc|'s screen
+   *                  pixels per millisecond
+   */
+  void HandOffFling(AsyncPanZoomController* aApzc, ScreenPoint aVelocity);
 
   bool FlushRepaintsForOverscrollHandoffChain();
 
@@ -279,6 +307,7 @@ private:
   nsEventStatus ProcessEvent(WidgetInputEvent& inputEvent, ScrollableLayerGuid* aOutTargetGuid);
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
                                         const ZoomConstraints& aConstraints);
+  void ClearOverscrollHandoffChain();
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has
@@ -303,7 +332,9 @@ private:
    * This lock does not need to be held while manipulating a single APZC instance in
    * isolation (that is, if its tree pointers are not being accessed or mutated). The
    * lock also needs to be held when accessing the mRootApzc instance variable, as that
-   * is considered part of the APZC tree management state. */
+   * is considered part of the APZC tree management state.
+   * Finally, the lock needs to be held when accessing mOverscrollHandoffChain.
+   * IMPORTANT: See the note about lock ordering at the top of this file. */
   mozilla::Monitor mTreeLock;
   nsRefPtr<AsyncPanZoomController> mRootApzc;
   /* This tracks the APZC that should receive all inputs for the current input event block.

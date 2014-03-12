@@ -37,17 +37,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
-#if defined(ANDROID)
-/* Android bionic libc is missing some defines in sys/types.h. Pick them
- * up elsewhere */
-#include <linux/coda.h>
-#endif
 
 /* #include <sys/selinfo.h> */ /*__Userspace__ alternative?*/	/* for struct selinfo */
 /* #include <sys/_lock.h>  was 0 byte file */
 /* #include <sys/_mutex.h> was 0 byte file */
 /* #include <sys/_sx.h> */ /*__Userspace__ alternative?*/
-#if !defined(__Userspace_os_Windows) && !defined(__Userspace_os_FreeBSD)
+#if !defined(__Userspace_os_DragonFly) && !defined(__Userspace_os_FreeBSD) && !defined(__Userspace_os_NetBSD) && !defined(__Userspace_os_Windows) 
 #include <sys/uio.h>
 #endif
 #define SOCK_MAXADDRLEN 255
@@ -59,16 +54,16 @@
 #define SS_CANTRCVMORE 0x020
 #define SS_CANTSENDMORE 0x010
 
-#if defined (__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined(__Userspace_os_Darwin) || defined (__Userspace_os_Windows)
+#if defined(__Userspace_os_Darwin) || defined(__Userspace_os_DragonFly) || defined(__Userspace_os_FreeBSD) || defined(__Userspace_os_OpenBSD) || defined (__Userspace_os_Windows)
 #define UIO_MAXIOV 1024
 #define ERESTART (-1)
 #endif
 
-#if !defined(__Userspace_os_Darwin) && !defined(__Userspace_os_OpenBSD)
+#if !defined(__Userspace_os_Darwin) && !defined(__Userspace_os_NetBSD) && !defined(__Userspace_os_OpenBSD)
 enum	uio_rw { UIO_READ, UIO_WRITE };
 #endif
 
-#if !defined(__Userspace_os_OpenBSD)
+#if !defined(__Userspace_os_NetBSD) && !defined(__Userspace_os_OpenBSD)
 /* Segment flag values. */
 enum uio_seg {
 	UIO_USERSPACE,		/* from user data space */
@@ -107,7 +102,6 @@ struct uio {
  */
 #if defined (__Userspace_os_Windows)
 #define AF_ROUTE  17
-typedef __int32 u_quad_t;
 typedef __int32 pid_t;
 typedef unsigned __int32 uid_t;
 enum sigType {
@@ -116,7 +110,6 @@ enum sigType {
 	MAX_EVENTS = 2
 };
 #endif
-typedef	u_quad_t so_gen_t;
 
 /*-
  * Locking key to struct socket:
@@ -220,7 +213,7 @@ struct socket {
 	struct	label *so_label;	/* (b) MAC label for socket */
 	struct	label *so_peerlabel;	/* (b) cached MAC label for peer */
 	/* NB: generation count must not be first. */
-	so_gen_t so_gencnt;		/* (h) generation count */
+	uint32_t so_gencnt;		/* (h) generation count */
 	void	*so_emuldata;		/* (b) private data for emulators */
  	struct so_accf {
 		struct	accept_filter *so_accept_filter;
@@ -255,6 +248,7 @@ extern userland_cond_t accept_cond;
 #define	ACCEPT_UNLOCK_ASSERT()
 #else
 extern userland_mutex_t accept_mtx;
+extern userland_cond_t accept_cond;
 #define	ACCEPT_LOCK_ASSERT()		KASSERT(pthread_mutex_trylock(&accept_mtx) == EBUSY, ("%s: accept_mtx not locked", __func__))
 #define	ACCEPT_LOCK()			(void)pthread_mutex_lock(&accept_mtx)
 #define	ACCEPT_UNLOCK()			(void)pthread_mutex_unlock(&accept_mtx)
@@ -743,7 +737,7 @@ void	socantsendmore(struct socket *so);
 
 /* can we read something from so? */
 #define	soreadable(so) \
-    ((so)->so_rcv.sb_cc >= (so)->so_rcv.sb_lowat || \
+    ((int)((so)->so_rcv.sb_cc) >= (so)->so_rcv.sb_lowat || \
 	((so)->so_rcv.sb_state & SBS_CANTRCVMORE) || \
 	!TAILQ_EMPTY(&(so)->so_comp) || (so)->so_error)
 

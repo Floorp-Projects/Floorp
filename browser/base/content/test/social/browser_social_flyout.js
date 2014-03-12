@@ -13,6 +13,7 @@ function test() {
     iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
+    SocialSidebar.show();
     runSocialTests(tests, undefined, undefined, finishcb);
   });
 }
@@ -24,7 +25,7 @@ var tests = {
       panel.removeEventListener("popupshowing", onShowing);
       is(panel.firstChild.contentDocument.readyState, "complete", "panel is loaded prior to showing");
     });
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -53,7 +54,7 @@ var tests = {
 
   testResizeFlyout: function(next) {
     let panel = document.getElementById("social-flyout-panel");
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -101,10 +102,10 @@ var tests = {
     // note clearUserPref doesn't do what we expect, as the test harness itself
     // changes the pref value - so clearUserPref resets it to false rather than
     // the true setup by the test harness.
-    let oldAllowScriptsToClose = Services.prefs.getBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF);    
+    let oldAllowScriptsToClose = Services.prefs.getBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF);
     Services.prefs.setBoolPref(ALLOW_SCRIPTS_TO_CLOSE_PREF, false);
     let panel = document.getElementById("social-flyout-panel");
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
@@ -142,7 +143,7 @@ var tests = {
     }
 
     let panel = document.getElementById("social-flyout-panel");
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     port.onmessage = function (e) {
       let topic = e.data.topic;
