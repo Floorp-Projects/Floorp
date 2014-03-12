@@ -67,6 +67,7 @@ if CONFIG['MOZ_PLACES']:
         'ColorConversion.js',
         'PlacesBackups.jsm',
         'PlacesDBUtils.jsm',
+        'PlacesTransactions.jsm',
     ]
 
     EXTRA_PP_JS_MODULES += [
