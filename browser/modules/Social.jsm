@@ -34,26 +34,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "unescapeService",
                                    "@mozilla.org/feed-unescapehtml;1",
                                    "nsIScriptableUnescapeHTML");
 
-// Add a pref observer for the enabled state
-function prefObserver(subject, topic, data) {
-  let enable = Services.prefs.getBoolPref("social.enabled");
-  if (enable && !Social.provider) {
-    // this will result in setting Social.provider
-    SocialService.getOrderedProviderList(function(providers) {
-      Social.enabled = true;
-      Social._updateProviderCache(providers);
-    });
-  } else if (!enable && Social.provider) {
-    Social.provider = null;
-  }
-}
-
-Services.prefs.addObserver("social.enabled", prefObserver, false);
-Services.obs.addObserver(function xpcomShutdown() {
-  Services.obs.removeObserver(xpcomShutdown, "xpcom-shutdown");
-  Services.prefs.removeObserver("social.enabled", prefObserver);
-}, "xpcom-shutdown", false);
-
 function promiseSetAnnotation(aURI, providerList) {
   let deferred = Promise.defer();
 
@@ -100,62 +80,13 @@ this.Social = {
   providers: [],
   _disabledForSafeMode: false,
 
-  get _currentProviderPref() {
-    try {
-      return Services.prefs.getComplexValue("social.provider.current",
-                                            Ci.nsISupportsString).data;
-    } catch (ex) {}
-    return null;
-  },
-  set _currentProviderPref(val) {
-    let string = Cc["@mozilla.org/supports-string;1"].
-                 createInstance(Ci.nsISupportsString);
-    string.data = val;
-    Services.prefs.setComplexValue("social.provider.current",
-                                   Ci.nsISupportsString, string);
-  },
-
-  _provider: null,
-  get provider() {
-    return this._provider;
-  },
-  set provider(val) {
-    this._setProvider(val);
-  },
-
-  // Sets the current provider and notifies observers of the change.
-  _setProvider: function (provider) {
-    if (this._provider == provider)
-      return;
-
-    this._provider = provider;
-
-    if (this._provider) {
-      this._provider.enabled = true;
-      this._currentProviderPref = this._provider.origin;
-    }
-    let enabled = !!provider;
-    if (enabled != SocialService.enabled) {
-      SocialService.enabled = enabled;
-      this._updateWorkerState(enabled);
-    }
-
-    let origin = this._provider && this._provider.origin;
-    Services.obs.notifyObservers(null, "social:provider-set", origin);
-  },
-
-  get defaultProvider() {
-    if (this.providers.length == 0)
-      return null;
-    let provider = this._getProviderFromOrigin(this._currentProviderPref);
-    return provider || this.providers[0];
-  },
-
   init: function Social_init() {
     this._disabledForSafeMode = Services.appinfo.inSafeMode && this.enabled;
+    let deferred = Promise.defer();
 
     if (this.initialized) {
-      return;
+      deferred.resolve(true);
+      return deferred.promise;
     }
     this.initialized = true;
     // if SocialService.hasEnabledProviders, retreive the providers so the
@@ -165,7 +96,10 @@ this.Social = {
       SocialService.getOrderedProviderList(function (providers) {
         Social._updateProviderCache(providers);
         Social._updateWorkerState(SocialService.enabled);
+        deferred.resolve(false);
       });
+    } else {
+      deferred.resolve(false);
     }
 
     // Register an observer for changes to the provider list
@@ -179,7 +113,7 @@ this.Social = {
       }
       if (topic == "provider-enabled") {
         Social._updateProviderCache(providers);
-        Social._updateWorkerState(Social.enabled);
+        Social._updateWorkerState(true);
         Services.obs.notifyObservers(null, "social:" + topic, origin);
         return;
       }
@@ -187,6 +121,7 @@ this.Social = {
         // a provider was removed from the list of providers, that does not
         // affect worker state for other providers
         Social._updateProviderCache(providers);
+        Social._updateWorkerState(providers.length > 0);
         Services.obs.notifyObservers(null, "social:" + topic, origin);
         return;
       }
@@ -198,6 +133,7 @@ this.Social = {
         provider.reload();
       }
     });
+    return deferred.promise;
   },
 
   _updateWorkerState: function(enable) {
@@ -208,52 +144,15 @@ this.Social = {
   _updateProviderCache: function (providers) {
     this.providers = providers;
     Services.obs.notifyObservers(null, "social:providers-changed", null);
-
-    // If social is currently disabled there's nothing else to do other than
-    // to notify about the lack of a provider.
-    if (!SocialService.enabled) {
-      Services.obs.notifyObservers(null, "social:provider-set", null);
-      return;
-    }
-    // Otherwise set the provider.
-    this._setProvider(this.defaultProvider);
-  },
-
-  set enabled(val) {
-    // Setting .enabled is just a shortcut for setting the provider to either
-    // the default provider or null...
-
-    this._updateWorkerState(val);
-
-    if (val) {
-      if (!this.provider)
-        this.provider = this.defaultProvider;
-    } else {
-      this.provider = null;
-    }
   },
 
   get enabled() {
-    return this.provider != null;
-  },
-
-  toggle: function Social_toggle() {
-    this.enabled = this._disabledForSafeMode ? false : !this.enabled;
-    this._disabledForSafeMode = false;
-  },
-
-  toggleSidebar: function SocialSidebar_toggle() {
-    let prefValue = Services.prefs.getBoolPref("social.sidebar.open");
-    Services.prefs.setBoolPref("social.sidebar.open", !prefValue);
+    return !this._disabledForSafeMode && this.providers.length > 0;
   },
 
   toggleNotifications: function SocialNotifications_toggle() {
     let prefValue = Services.prefs.getBoolPref("social.toast-notifications.enabled");
     Services.prefs.setBoolPref("social.toast-notifications.enabled", !prefValue);
-  },
-
-  setProviderByOrigin: function (origin) {
-    this.provider = this._getProviderFromOrigin(origin);
   },
 
   _getProviderFromOrigin: function (origin) {
@@ -281,27 +180,7 @@ this.Social = {
   activateFromOrigin: function (origin, callback) {
     // For now only "builtin" providers can be activated.  It's OK if the
     // provider has already been activated - we still get called back with it.
-    SocialService.addBuiltinProvider(origin, function(provider) {
-      if (provider) {
-        // No need to activate again if we're already active
-        if (provider == this.provider)
-          return;
-        this.provider = provider;
-      }
-      if (callback)
-        callback(provider);
-    }.bind(this));
-  },
-
-  deactivateFromOrigin: function (origin, oldOrigin) {
-    // if we have the old provider, always set that before trying removal
-    let provider = this._getProviderFromOrigin(origin);
-    let oldProvider = this._getProviderFromOrigin(oldOrigin);
-    if (!oldProvider && this.providers.length)
-      oldProvider = this.providers[0];
-    this.provider = oldProvider;
-    if (provider)
-      SocialService.removeProvider(origin);
+    SocialService.addBuiltinProvider(origin, callback);
   },
 
   // Page Marking functionality
@@ -484,7 +363,8 @@ SocialErrorListener.prototype = {
     // so avoid doing that more than once
     if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-      Social.provider.errorState = "content-error";
+      let provider = Social._getProviderFromOrigin(this.iframe.getAttribute("origin"));
+      provider.errorState = "content-error";
       this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
                               .chromeEventHandler);
     }
@@ -493,8 +373,9 @@ SocialErrorListener.prototype = {
   onLocationChange: function SPL_onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
       aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-      if (!Social.provider.errorState)
-        Social.provider.errorState = "content-error";
+      let provider = Social._getProviderFromOrigin(this.iframe.getAttribute("origin"));
+      if (!provider.errorState)
+        provider.errorState = "content-error";
       schedule(function() {
         this.setErrorMessage(aWebProgress.QueryInterface(Ci.nsIDocShell)
                               .chromeEventHandler);

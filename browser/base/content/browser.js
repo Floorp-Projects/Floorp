@@ -1034,7 +1034,6 @@ var gBrowserInit = {
     OfflineApps.init();
     IndexedDBPromptHelper.init();
     gFormSubmitObserver.init();
-    SocialUI.init();
     gRemoteTabsUI.init();
     gPageStyleMenu.init();
 
@@ -1193,9 +1192,15 @@ var gBrowserInit = {
     }
 
     SessionStore.promiseInitialized.then(() => {
+      // Bail out if the window has been closed in the meantime.
+      if (window.closed) {
+        return;
+      }
+
       // Enable the Restore Last Session command if needed
       RestoreLastSessionObserver.init();
 
+      SocialUI.init();
       TabView.init();
 
       setTimeout(function () { BrowserChromeTest.markAsReady(); }, 0);
@@ -1293,6 +1298,7 @@ var gBrowserInit = {
       gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
       ctrlTab.uninit();
       TabView.uninit();
+      SocialUI.uninit();
       gBrowserThumbnails.uninit();
       FullZoom.destroy();
 
@@ -1317,7 +1323,6 @@ var gBrowserInit = {
       BrowserOffline.uninit();
       OfflineApps.uninit();
       IndexedDBPromptHelper.uninit();
-      SocialUI.uninit();
       LightweightThemeListener.uninit();
       PanelUI.uninit();
     }
