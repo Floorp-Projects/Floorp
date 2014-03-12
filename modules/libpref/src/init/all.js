@@ -4164,7 +4164,6 @@ pref("memory.dump_reports_on_oom", false);
 // Number of stack frames to capture in createObjectURL for about:memory.
 pref("memory.blob_report.stack_frames", 0);
 
-pref("social.enabled", false);
 // comma separated list of domain origins (e.g. https://domain.com) for
 // providers that can install from their own website without user warnings.
 // entries are

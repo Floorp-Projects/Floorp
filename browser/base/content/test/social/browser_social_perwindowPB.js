@@ -55,7 +55,7 @@ function test() {
 
 var tests = {
   testPrivateBrowsing: function(next) {
-    let port = Social.provider.getWorkerPort();
+    let port = SocialSidebar.provider.getWorkerPort();
     ok(port, "provider has a port");
     postAndReceive(port, "test-init", "test-init-done", function() {
       // social features should all be enabled in the existing window.
