@@ -131,6 +131,12 @@ bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc) {
   return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
 }
 
+bool WebrtcVideoConduit::GetAVStats(int32_t* jitterBufferDelayMs,
+                                    int32_t* playoutBufferDelayMs,
+                                    int32_t* avSyncOffsetMs) {
+  return false;
+}
+
 bool WebrtcVideoConduit::GetRTPStats(unsigned int* jitterMs,
                                      unsigned int* cumulativeLost) {
   unsigned int ntpHigh, ntpLow;

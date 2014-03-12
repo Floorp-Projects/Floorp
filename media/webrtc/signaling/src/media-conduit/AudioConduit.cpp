@@ -127,6 +127,15 @@ bool WebrtcAudioConduit::GetRemoteSSRC(unsigned int* ssrc) {
   return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
 }
 
+bool WebrtcAudioConduit::GetAVStats(int32_t* jitterBufferDelayMs,
+                                    int32_t* playoutBufferDelayMs,
+                                    int32_t* avSyncOffsetMs) {
+  return !mPtrVoEVideoSync->GetDelayEstimate(mChannel,
+                                             jitterBufferDelayMs,
+                                             playoutBufferDelayMs,
+                                             avSyncOffsetMs);
+}
+
 bool WebrtcAudioConduit::GetRTPStats(unsigned int* jitterMs,
                                      unsigned int* cumulativeLost) {
   unsigned int maxJitterMs = 0;
@@ -693,10 +702,9 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     int jitter_buffer_delay_ms = 0;
     int playout_buffer_delay_ms = 0;
     int avsync_offset_ms = 0;
-    mPtrVoEVideoSync->GetDelayEstimate(mChannel,
-                                       &jitter_buffer_delay_ms,
-                                       &playout_buffer_delay_ms,
-                                       &avsync_offset_ms); // ignore errors
+    GetAVStats(&jitter_buffer_delay_ms,
+               &playout_buffer_delay_ms,
+               &avsync_offset_ms); // ignore errors
     CSFLogError(logTag,
                 "A/V sync: sync delta: %dms, audio jitter delay %dms, playout delay %dms",
                 avsync_offset_ms, jitter_buffer_delay_ms, playout_buffer_delay_ms);
