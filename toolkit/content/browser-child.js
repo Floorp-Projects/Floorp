@@ -286,6 +286,13 @@ addMessageListener("History:UseGlobalHistory", function (aMessage) {
   docShell.useGlobalHistory = aMessage.data.enabled;
 });
 
+addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
+  let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+  let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
+                        .loadGroup.QueryInterface(Ci.nsISupportsPriority);
+  loadGroup.adjustPriority(msg.data.adjustment);
+});
+
 let AutoCompletePopup = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
 
