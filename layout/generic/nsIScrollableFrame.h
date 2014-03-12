@@ -291,6 +291,11 @@ public:
    * counter.
    */
   virtual void ResetOriginIfScrollAtGeneration(uint32_t aGeneration) = 0;
+  /**
+   * Determine whether it is desirable to be able to asynchronously scroll this
+   * scroll frame.
+   */
+  virtual bool WantAsyncScroll() const = 0;
 };
 
 #endif
