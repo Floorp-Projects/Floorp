@@ -125,7 +125,7 @@ function test() {
         break;
     }
 
-    inspector.markup._waitForChildren().then(() => executeSoon(function BIMNT_newNode() {
+    inspector.markup._waitForChildren().then(() => executeSoon(() => {
       let node = inspector.selection.node;
 
       if (className == "*comment*") {
