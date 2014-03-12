@@ -55,7 +55,4 @@ interface DeviceStorage : EventTarget {
   // Determines if this storage area is the one which will be used by default
   // for storing new files.
   readonly attribute boolean default;
-
-  [NewObject]
-  Promise getRoot();
 };
