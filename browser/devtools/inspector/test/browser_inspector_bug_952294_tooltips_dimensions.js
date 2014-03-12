@@ -75,14 +75,12 @@ function selectDiv() {
 }
 
 function testTransformDimension() {
-  return Task.spawn(function*() {
-    let tooltip = ruleView.previewTooltip;
-    let panel = tooltip.panel;
+  let deferred = promise.defer();
+  info("Testing css transform tooltip dimensions");
 
-    info("Testing css transform tooltip dimensions");
-    let {valueSpan} = getRuleViewProperty("transform");
-
-    yield assertTooltipShownOn(tooltip, valueSpan);
+  let {valueSpan} = getRuleViewProperty("transform");
+  showTooltipOn(ruleView.previewTooltip, valueSpan, () => {
+    let panel = ruleView.previewTooltip.panel;
 
     // Let's not test for a specific size, but instead let's make sure it's at
     // least as big as the preview canvas
@@ -94,23 +92,22 @@ function testTransformDimension() {
     ok(panelRect.width >= w, "The panel is wide enough to show the canvas");
     ok(panelRect.height >= h, "The panel is high enough to show the canvas");
 
-    let onHidden = tooltip.once("hidden");
-    tooltip.hide();
-    yield onHidden;
+    ruleView.previewTooltip.hide();
+    deferred.resolve();
   });
+
+  return deferred.promise;
 }
 
 function testImageDimension() {
-  return Task.spawn(function*() {
-    info("Testing background-image tooltip dimensions");
+  let deferred = promise.defer();
+  info("Testing background-image tooltip dimensions");
 
-    let tooltip = ruleView.previewTooltip;
-    let panel = tooltip.panel;
+  let {valueSpan} = getRuleViewProperty("background");
+  let uriSpan = valueSpan.querySelector(".theme-link");
 
-    let {valueSpan} = getRuleViewProperty("background");
-    let uriSpan = valueSpan.querySelector(".theme-link");
-
-    yield assertTooltipShownOn(tooltip, uriSpan);
+  showTooltipOn(ruleView.previewTooltip, uriSpan, () => {
+    let panel = ruleView.previewTooltip.panel;
 
     // Let's not test for a specific size, but instead let's make sure it's at
     // least as big as the image
@@ -122,24 +119,22 @@ function testImageDimension() {
     ok(panelRect.height >= imageRect.height,
       "The panel is high enough to show the image");
 
-    let onHidden = tooltip.once("hidden");
-    tooltip.hide();
-    yield onHidden;
+    ruleView.previewTooltip.hide();
+    deferred.resolve();
   });
+
+  return deferred.promise;
 }
 
 function testPickerDimension() {
-  return Task.spawn(function*() {
-    info("Testing color-picker tooltip dimensions");
+  let deferred = promise.defer();
+  info("Testing color-picker tooltip dimensions");
 
-    let {valueSpan} = getRuleViewProperty("background");
-    let swatch = valueSpan.querySelector(".ruleview-colorswatch");
-    let cPicker = ruleView.colorPicker;
+  let {valueSpan} = getRuleViewProperty("background");
+  let swatch = valueSpan.querySelector(".ruleview-colorswatch");
+  let cPicker = ruleView.colorPicker;
 
-    let onShown = cPicker.tooltip.once("shown");
-    swatch.click();
-    yield onShown;
-
+  cPicker.tooltip.once("shown", () => {
     // The colorpicker spectrum's iframe has a fixed width height, so let's
     // make sure the tooltip is at least as big as that
     let w = cPicker.tooltip.panel.querySelector("iframe").width;
@@ -149,43 +144,21 @@ function testPickerDimension() {
     ok(panelRect.width >= w, "The panel is wide enough to show the picker");
     ok(panelRect.height >= h, "The panel is high enough to show the picker");
 
-    let onHidden = cPicker.tooltip.once("hidden");
     cPicker.hide();
-    yield onHidden;
+    deferred.resolve();
   });
+  swatch.click();
+
+  return deferred.promise;
 }
 
-/**
- * @return a promise that resolves when the tooltip is shown
- */
-function assertTooltipShownOn(tooltip, element) {
-  return Task.spawn(function*() {
-    let isTarget = yield isHoverTooltipTarget(tooltip, element);
-    ok(isTarget, "The element is a tooltip target and content has been inserted");
-
-    info("Showing the tooltip now that content has been inserted by isValidHoverTarget");
-    let onShown = tooltip.once("shown");
-    tooltip.show();
-    yield onShown;
-  });
-}
-
-/**
- * Given a tooltip object instance (see Tooltip.js), checks if it is set to
- * toggle and hover and if so, checks if the given target is a valid hover target.
- * This won't actually show the tooltip (the less we interact with XUL panels
- * during test runs, the better).
- * @return a promise that resolves when the answer is known. Also, this will
- * delete to a function in the rule-view which will insert content into the
- * tooltip
- */
-function isHoverTooltipTarget(tooltip, target) {
-  if (!tooltip._basedNode || !tooltip.panel) {
-    return promise.reject(new Error("The tooltip passed isn't set to toggle on hover or is not a tooltip"));
-  }
-  // The tooltip delegates to a user defined cb that inserts content in the tooltip
-  // when calling isValidHoverTarget
-  return tooltip.isValidHoverTarget(target);
+function showTooltipOn(tooltip, element, cb) {
+  // If there is indeed a show-on-hover on element, the xul panel will be shown
+  tooltip.panel.addEventListener("popupshown", function shown() {
+    tooltip.panel.removeEventListener("popupshown", shown, true);
+    cb();
+  }, true);
+  tooltip._showOnHover(element);
 }
 
 function getRuleViewProperty(name) {

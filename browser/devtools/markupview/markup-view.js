@@ -110,7 +110,7 @@ MarkupView.prototype = {
   _initTooltips: function() {
     this.tooltip = new Tooltip(this._inspector.panelDoc);
     this.tooltip.startTogglingOnHover(this._elt,
-      this._isImagePreviewTarget.bind(this));
+      this._buildTooltipContent.bind(this));
   },
 
   _initHighlighter: function() {
@@ -232,15 +232,7 @@ MarkupView.prototype = {
     updateChildren(documentElement);
   },
 
-  /**
-   * Executed when the mouse hovers over a target in the markup-view and is used
-   * to decide whether this target should be used to display an image preview
-   * tooltip.
-   * Delegates the actual decision to the corresponding MarkupContainer instance
-   * if one is found.
-   * @return the promise returned by MarkupContainer._isImagePreviewTarget
-   */
-  _isImagePreviewTarget: function(target) {
+  _buildTooltipContent: function(target) {
     // From the target passed here, let's find the parent MarkupContainer
     // and ask it if the tooltip should be shown
     let parent = target, container;
@@ -255,7 +247,7 @@ MarkupView.prototype = {
     if (container) {
       // With the newly found container, delegate the tooltip content creation
       // and decision to show or not the tooltip
-      return container._isImagePreviewTarget(target, this.tooltip);
+      return container._buildTooltipContent(target, this.tooltip);
     }
   },
 
@@ -1273,13 +1265,6 @@ MarkupContainer.prototype = {
     }
   },
 
-  /**
-   * If the node is an image or canvas (@see isPreviewable), then get the
-   * image data uri from the server so that it can then later be previewed in
-   * a tooltip if needed.
-   * Stores a promise in this.tooltipData.data that resolves when the data has
-   * been retrieved
-   */
   _prepareImagePreview: function() {
     if (this.isPreviewable()) {
       // Get the image data for later so that when the user actually hovers over
@@ -1306,27 +1291,6 @@ MarkupContainer.prototype = {
     }
   },
 
-  /**
-   * Executed by MarkupView._isImagePreviewTarget which is itself called when the
-   * mouse hovers over a target in the markup-view.
-   * Checks if the target is indeed something we want to have an image tooltip
-   * preview over and, if so, inserts content into the tooltip.
-   * @return a promise that resolves when the content has been inserted or
-   * rejects if no preview is required. This promise is then used by Tooltip.js
-   * to decide if/when to show the tooltip
-   */
-  _isImagePreviewTarget: function(target, tooltip) {
-    if (!this.tooltipData || this.tooltipData.target !== target) {
-      return promise.reject();
-    }
-
-    return this.tooltipData.data.then(({data, size}) => {
-      tooltip.setImageContent(data, size);
-    }, () => {
-      tooltip.setBrokenImageContent();
-    });
-  },
-
   copyImageDataUri: function() {
     // We need to send again a request to gettooltipData even if one was sent for
     // the tooltip, because we want the full-size image
@@ -1335,6 +1299,17 @@ MarkupContainer.prototype = {
         clipboardHelper.copyString(str, this.markup.doc);
       });
     });
+  },
+
+  _buildTooltipContent: function(target, tooltip) {
+    if (this.tooltipData && target === this.tooltipData.target) {
+      this.tooltipData.data.then(({data, size}) => {
+        tooltip.setImageContent(data, size);
+      }, () => {
+        tooltip.setBrokenImageContent();
+      });
+      return true;
+    }
   },
 
   /**
