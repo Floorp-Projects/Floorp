@@ -217,8 +217,12 @@ toolbarbutton[sdk-button="true"][cui-areatype="menu-panel"] > .toolbarbutton-ico
   -moz-box-orient: vertical;
   width: calc(@menuPanelButtonWidth@ - 2px);
   height: calc(49px + 2.2em);
-  margin-top: 3px; /* Hack needed to get type=menu-button to properly align vertically. */
   border: 0;
+}
+
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-text,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
+  margin-top: 2px; /* Hack needed to get the label of type=menu-button aligned with other buttons */
 }
 
 .panel-customization-placeholder-child {
