@@ -17,6 +17,7 @@
     </PreferenceScreen>
 
      <PreferenceScreen android:title="@string/pref_category_search"
+                       android:summary="@string/pref_category_search_summary"
                        android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
          <extra android:name="resource"
                 android:value="preferences_search"/>
