@@ -289,7 +289,7 @@ permissions.forEach(function (perm) {
                     self.loglines = [['Error getting log: %s' % inst]]
                 try:
                     self.marionette.delete_session()
-                except (socket.error, MarionetteException):
+                except (socket.error, MarionetteException, IOError):
                     # Gecko has crashed?
                     self.marionette.session = None
                     try:
