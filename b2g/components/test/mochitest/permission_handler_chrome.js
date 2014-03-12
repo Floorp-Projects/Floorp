@@ -37,7 +37,7 @@ if (loadShell()) {
       return;
     }
 
-    sendAsyncMessage("permission-request", evt.detail.permissions);
+    sendAsyncMessage("permission-request", evt.detail);
   };
 
   content.addEventListener("mozChromeEvent", eventHandler);
@@ -45,6 +45,12 @@ if (loadShell()) {
   // need to remove ChromeEvent listener after test finished.
   addMessageListener("teardown", function() {
     content.removeEventListener("mozChromeEvent", eventHandler);
+  });
+
+  addMessageListener("permission-response", function(detail) {
+    let event = content.document.createEvent('CustomEvent');
+    event.initCustomEvent('mozContentEvent', true, true, detail);
+    content.dispatchEvent(event);
   });
 }
 
