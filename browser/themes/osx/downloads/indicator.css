@@ -5,8 +5,8 @@
 /*** Status and progress indicator ***/
 
 #downloads-indicator-anchor {
-  min-width: 20px;
-  min-height: 20px;
+  min-width: 18px;
+  min-height: 18px;
 }
 
 #downloads-animation-container {
