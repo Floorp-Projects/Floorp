@@ -30,7 +30,6 @@ EXTRA_JS_MODULES += [
     'PopupNotifications.jsm',
     'Preferences.jsm',
     'PrivateBrowsingUtils.jsm',
-    'Promise-backend.js',
     'Promise.jsm',
     'PropertyListUtils.jsm',
     'RemoteAddonsChild.jsm',
