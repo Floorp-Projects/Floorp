@@ -47,6 +47,8 @@ const PanelUI = {
 
     this.menuButton.addEventListener("mousedown", this);
     this.menuButton.addEventListener("keypress", this);
+    this._overlayScrollListenerBoundFn = this._overlayScrollListener.bind(this);
+    window.matchMedia("(-moz-overlay-scrollbars)").addListener(this._overlayScrollListenerBoundFn);
     this._initialized = true;
   },
 
@@ -77,6 +79,8 @@ const PanelUI = {
     this.helpView.removeEventListener("ViewShowing", this._onHelpViewShow);
     this.menuButton.removeEventListener("mousedown", this);
     this.menuButton.removeEventListener("keypress", this);
+    window.matchMedia("(-moz-overlay-scrollbars)").removeListener(this._overlayScrollListenerBoundFn);
+    this._overlayScrollListenerBoundFn = null;
   },
 
   /**
@@ -442,6 +446,12 @@ const PanelUI = {
     let quitButton = document.getElementById("PanelUI-quit");
     quitButton.setAttribute("tooltiptext", tooltipString);
 #endif
+  },
+
+  _overlayScrollListenerBoundFn: null,
+  _overlayScrollListener: function(aMQL) {
+    ScrollbarSampler.resetSystemScrollbarWidth();
+    this._scrollWidth = null;
   },
 };
 
