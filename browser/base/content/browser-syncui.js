@@ -88,6 +88,20 @@ let gSyncUI = {
   _wasDelayed: false,
 
   _needsSetup: function SUI__needsSetup() {
+    // We want to treat "account needs verification" as "needs setup". So
+    // "reach in" to Weave.Status._authManager to check whether we the signed-in
+    // user is verified.
+    // Referencing Weave.Status spins a nested event loop to initialize the
+    // authManager, so this should always return a value directly.
+    // This only applies to fxAccounts-based Sync.
+    if (Weave.Status._authManager._signedInUser) {
+      // If we have a signed in user already, and that user is not verified,
+      // revert to the "needs setup" state.
+      if (!Weave.Status._authManager._signedInUser.verified) {
+        return true;
+      }
+    }
+
     let firstSync = "";
     try {
       firstSync = Services.prefs.getCharPref("services.sync.firstSync");
