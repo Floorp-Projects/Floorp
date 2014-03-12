@@ -89,6 +89,7 @@
 <!ENTITY pref_remember_signons "Remember passwords">
 
 <!ENTITY pref_category_home "Home">
+<!ENTITY pref_category_home_summary "Customize your homepage">
 <!ENTITY pref_category_home_panels "Panels">
 <!ENTITY pref_home_add_panel "Add panel">
 <!ENTITY home_add_panel_title "Add new panel">
