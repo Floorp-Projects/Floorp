@@ -223,6 +223,10 @@
                 onget="return this.contentDocument.documentURIObject;"
                 readonly="true"/>
 
+      <property name="documentContentType"
+                onget="return this.contentDocument ? this.contentDocument.contentType : null;"
+                readonly="true"/>
+
       <property name="preferences"
                 onget="return this.mPrefs.QueryInterface(Components.interfaces.nsIPrefService);"
                 readonly="true"/>

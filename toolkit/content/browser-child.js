@@ -45,7 +45,8 @@ let WebProgressListener = {
       isTopLevel: aWebProgress.isTopLevel,
       isLoadingDocument: aWebProgress.isLoadingDocument,
       requestURI: this._requestSpec(aRequest),
-      loadType: aWebProgress.loadType
+      loadType: aWebProgress.loadType,
+      documentContentType: content.document && content.document.contentType
     };
   },
 
