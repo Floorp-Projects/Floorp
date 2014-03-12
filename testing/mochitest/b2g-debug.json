@@ -9,29 +9,5 @@
     "toolkit/devtools/apps": ""
   },
 "excludetests": {
-    "dom/imptests/html/webgl": "",
-    "dom/imptests/editing/selecttest/test_addRange.html": "oom?, bug 775227",
-    "dom/imptests/html/html/": "debug-only failure",
-    "dom/imptests/html/dom/": "debug-only failure",
-    "content/media/webaudio": "bug 916135",
-    "dom/imptests/html/dom/ranges/test_Range-deleteContents.html": "",
-    "dom/imptests/editing/selecttest/test_selectAllChildren.html": "debug-only failure",
-    "content/base/test/test_copypaste.xul": "bug 904183",
-    "dom/imptests/html/dom/ranges/test_Range-extractContents.html": "",
-    "content/xul": "tests that use xul",
-    "layout/xul": "",
-    "dom/imptests/html/dom/ranges/test_Range-mutations.html": "Test timed out.",
-    "dom/apps": "bug 972927, nearly perma-fail",
-    "dom/datastore": "bug 974270, frequent failures",
-    "dom/imptests/editing/conformancetest/test_runtest.html": "takes too long",
-    "content/base/test/test_messagemanager_assertpermission.html": "specialpowers.wrap issue, NS_ERROR_XPC_GS_RETURNED_FAILURE",
-    "dom/imptests/html/dom/ranges/test_Range-set.html": "",
-    "dom/imptests/editing/selecttest/test_extend.html": "debug-only failure; time out",
-    "dom/imptests/html/dom/ranges/test_Range-cloneContents.html": "",
-    "dom/imptests/html/dom/ranges/test_Range-compareBoundaryPoints.html": "times out, bug 862196",
-    "dom/imptests/html/dom/ranges/test_Range-insertNode.html": "oom?, bug 775227",
-    "dom/browser-element/": "",
-    "content/base/test/test_child_process_shutdown_message.html": "specialpowers.wrap issue, NS_ERROR_XPC_GS_RETURNED_FAILURE",
-    "dom/imptests/html/dom/ranges/test_Range-surroundContents.html": ""
   }
 }
