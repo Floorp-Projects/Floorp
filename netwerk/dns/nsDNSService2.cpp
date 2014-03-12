@@ -457,8 +457,8 @@ nsDNSService::Init()
 
     // prefs
     uint32_t maxCacheEntries  = 400;
-    uint32_t maxCacheLifetime = 2; // minutes
-    uint32_t lifetimeGracePeriod = 1;
+    uint32_t maxCacheLifetime = 120; // seconds
+    uint32_t lifetimeGracePeriod = 60; // seconds
     bool     disableIPv6      = false;
     bool     disablePrefetch  = false;
     int      proxyType        = nsIProtocolProxyService::PROXYCONFIG_DIRECT;
@@ -473,9 +473,9 @@ nsDNSService::Init()
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheEntries, &val)))
             maxCacheEntries = (uint32_t) val;
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheExpiration, &val)))
-            maxCacheLifetime = val / 60; // convert from seconds to minutes
+            maxCacheLifetime = val;
         if (NS_SUCCEEDED(prefs->GetIntPref(kPrefDnsCacheGrace, &val)))
-            lifetimeGracePeriod = val / 60; // convert from seconds to minutes
+            lifetimeGracePeriod = val;
 
         // ASSUMPTION: pref branch does not modify out params on failure
         prefs->GetBoolPref(kPrefDisableIPv6, &disableIPv6);

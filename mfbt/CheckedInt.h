@@ -597,7 +597,7 @@ class CheckedInt
     bool mIsValid;
 
     template<typename U>
-    CheckedInt(U value, bool isValid) : mValue(value), mIsValid(isValid)
+    CheckedInt(U aValue, bool aIsValid) : mValue(aValue), mIsValid(aIsValid)
     {
       static_assert(detail::IsSupported<T>::value &&
                     detail::IsSupported<U>::value,
@@ -619,9 +619,9 @@ class CheckedInt
      * argument is valid.
      */
     template<typename U>
-    CheckedInt(U value)
-      : mValue(T(value)),
-        mIsValid(detail::IsInRange<T>(value))
+    CheckedInt(U aValue)
+      : mValue(T(aValue)),
+        mIsValid(detail::IsInRange<T>(aValue))
     {
       static_assert(detail::IsSupported<T>::value &&
                     detail::IsSupported<U>::value,
