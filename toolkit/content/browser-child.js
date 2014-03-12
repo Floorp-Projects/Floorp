@@ -282,10 +282,6 @@ addEventListener("TextZoomChange", function (aEvent) {
 
 RemoteAddonsChild.init(this);
 
-addMessageListener("History:UseGlobalHistory", function (aMessage) {
-  docShell.useGlobalHistory = aMessage.data.enabled;
-});
-
 addMessageListener("NetworkPrioritizer:AdjustPriority", (msg) => {
   let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
   let loadGroup = webNav.QueryInterface(Ci.nsIDocumentLoader)
@@ -352,6 +348,8 @@ let AutoCompletePopup = {
   }
 }
 
-addMessageListener("FormAutoComplete:InitPopup", function (aMessage) {
+let [initData] = sendSyncMessage("Browser:Init");
+docShell.useGlobalHistory = initData.useGlobalHistory;
+if (initData.initPopup) {
   setTimeout(function() AutoCompletePopup.init(), 0);
-});
+}
