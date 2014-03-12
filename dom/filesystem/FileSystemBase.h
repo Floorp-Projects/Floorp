@@ -10,10 +10,13 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 
+class nsIDOMFile;
 class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
+
+class Directory;
 
 class FileSystemBase
 {
@@ -60,6 +63,17 @@ public:
 
   virtual bool
   IsSafeFile(nsIFile* aFile) const;
+
+  virtual bool
+  IsSafeDirectory(Directory* aDir) const;
+
+  /*
+   * Get the real path (absolute DOM path) of the DOM file in the file system.
+   * If succeeded, returns true. Otherwise, returns false and set aRealPath to
+   * empty string.
+   */
+  virtual bool
+  GetRealPath(nsIDOMFile* aFile, nsAString& aRealPath) const = 0;
 
   /*
    * Get the permission name required to access this file system.

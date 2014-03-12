@@ -9,12 +9,14 @@
 #include "CreateDirectoryTask.h"
 #include "FileSystemPermissionRequest.h"
 #include "GetFileOrDirectoryTask.h"
+#include "RemoveTask.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsString.h"
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
+#include "mozilla/dom/UnionTypes.h"
 
 // Resolve the name collision of Microsoft's API name with macros defined in
 // Windows header files. Undefine the macro of CreateDirectory to avoid
@@ -114,6 +116,65 @@ Directory::Get(const nsAString& aPath)
   task->SetError(error);
   FileSystemPermissionRequest::RequestForTask(task);
   return task->GetPromise();
+}
+
+already_AddRefed<Promise>
+Directory::Remove(const StringOrFileOrDirectory& aPath)
+{
+  return RemoveInternal(aPath, false);
+}
+
+already_AddRefed<Promise>
+Directory::RemoveDeep(const StringOrFileOrDirectory& aPath)
+{
+  return RemoveInternal(aPath, true);
+}
+
+already_AddRefed<Promise>
+Directory::RemoveInternal(const StringOrFileOrDirectory& aPath, bool aRecursive)
+{
+  nsresult error = NS_OK;
+  nsString realPath;
+  nsCOMPtr<nsIDOMFile> file;
+
+  // Check and get the target path.
+
+  if (aPath.IsFile()) {
+    file = aPath.GetAsFile();
+    goto parameters_check_done;
+  }
+
+  if (aPath.IsString()) {
+    if (!DOMPathToRealPath(aPath.GetAsString(), realPath)) {
+      error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
+    }
+    goto parameters_check_done;
+  }
+
+  if (!mFileSystem->IsSafeDirectory(&aPath.GetAsDirectory())) {
+    error = NS_ERROR_DOM_SECURITY_ERR;
+    goto parameters_check_done;
+  }
+
+  realPath = aPath.GetAsDirectory().mPath;
+  // The target must be a descendant of this directory.
+  if (!FileSystemUtils::IsDescendantPath(mPath, realPath)) {
+    error = NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR;
+  }
+
+parameters_check_done:
+
+  nsRefPtr<RemoveTask> task = new RemoveTask(mFileSystem, mPath, file, realPath,
+    aRecursive);
+  task->SetError(error);
+  FileSystemPermissionRequest::RequestForTask(task);
+  return task->GetPromise();
+}
+
+FileSystemBase*
+Directory::GetFileSystem() const
+{
+  return mFileSystem.get();
 }
 
 bool
