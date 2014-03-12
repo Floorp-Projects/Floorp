@@ -14,9 +14,7 @@ function ensureProvider(workerFunction, cb) {
                + encodeURI("let run=" + workerFunction.toSource()) + ";run();"
   };
 
-  ensureSocialEnabled();
   SocialService.addProvider(manifest, function (p) {
-    p.enabled = true;
     cb(p);
   });
 }

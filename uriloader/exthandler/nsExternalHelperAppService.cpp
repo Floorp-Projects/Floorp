@@ -1202,10 +1202,10 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
+   NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)
    NS_INTERFACE_MAP_ENTRY(nsICancelable)
    NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-   NS_INTERFACE_MAP_ENTRY(nsIBackgroundFileSaverObserver)   
+   NS_INTERFACE_MAP_ENTRY(nsIBackgroundFileSaverObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
@@ -1269,6 +1269,15 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 nsExternalAppHandler::~nsExternalAppHandler()
 {
   MOZ_ASSERT(!mSaver, "Saver should hold a reference to us until deleted");
+}
+
+void
+nsExternalAppHandler::DidDivertRequest(nsIRequest *request)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Content, "in child process");
+  // Remove our request from the child loadGroup
+  RetargetLoadNotifications(request);
+  MaybeCloseWindow();
 }
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener2 * aWebProgressListener)

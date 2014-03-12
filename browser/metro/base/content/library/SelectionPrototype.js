@@ -242,7 +242,7 @@ SelectionPrototype.prototype = {
   },
 
   /*
-   * _handleSelectionPoint(aMarker, aPoint, aEndOfSelection) 
+   * _handleSelectionPoint(aSelectionInfo, aEndOfSelection)
    *
    * After a monocle moves to a new point in the document, determines
    * what the target is and acts on its selection accordingly. If the
@@ -252,11 +252,12 @@ SelectionPrototype.prototype = {
    * of the target and the underlying target is editable, uses the selection
    * controller to advance selection and visibility within the control.
    */
-  _handleSelectionPoint: function _handleSelectionPoint(aMarker, aClientPoint,
+  _handleSelectionPoint: function _handleSelectionPoint(aSelectionInfo,
                                                         aEndOfSelection) {
     let selection = this._getSelection();
 
-    let clientPoint = { xPos: aClientPoint.xPos, yPos: aClientPoint.yPos };
+    let markerToChange = aSelectionInfo.change == "start" ?
+        aSelectionInfo.start : aSelectionInfo.end;
 
     if (selection.rangeCount == 0) {
       this._onFail("selection.rangeCount == 0");
@@ -270,15 +271,76 @@ SelectionPrototype.prototype = {
 
     // Adjust our y position up such that we are sending coordinates on
     // the text line vs. below it where the monocle is positioned.
-    let halfLineHeight = this._queryHalfLineHeight(aMarker, selection);
-    clientPoint.yPos -= halfLineHeight;
+    let halfLineHeight = this._queryHalfLineHeight(aSelectionInfo.start,
+        selection);
+    aSelectionInfo.start.yPos -= halfLineHeight;
+    aSelectionInfo.end.yPos -= halfLineHeight;
+
+    let isSwapNeeded = false;
+    if (this._isSelectionSwapNeeded(aSelectionInfo.start, aSelectionInfo.end,
+        halfLineHeight)) {
+      [aSelectionInfo.start, aSelectionInfo.end] =
+          [aSelectionInfo.end, aSelectionInfo.start];
+
+      isSwapNeeded = true;
+      this.sendAsync("Content:SelectionSwap");
+    }
 
     // Modify selection based on monocle movement
     if (this._targetIsEditable && !Util.isEditableContent(this._targetElement)) {
-      this._adjustEditableSelection(aMarker, clientPoint, aEndOfSelection);
+      if (isSwapNeeded) {
+        this._adjustEditableSelection("start", aSelectionInfo.start,
+            aEndOfSelection);
+        this._adjustEditableSelection("end", aSelectionInfo.end,
+            aEndOfSelection);
+      } else {
+        this._adjustEditableSelection(aSelectionInfo.change, markerToChange,
+            aEndOfSelection);
+      }
     } else {
-      this._adjustSelectionAtPoint(aMarker, clientPoint, aEndOfSelection);
+      if (isSwapNeeded) {
+        this._adjustSelectionAtPoint("start", aSelectionInfo.start,
+            aEndOfSelection, true);
+        this._adjustSelectionAtPoint("end", aSelectionInfo.end,
+            aEndOfSelection, true);
+      } else {
+        this._adjustSelectionAtPoint(aSelectionInfo.change, markerToChange,
+            aEndOfSelection);
+      }
     }
+  },
+
+  /**
+   * Checks whether we need to swap start and end markers depending the target
+   * element and monocle position.
+   * @param aStart Start monocle coordinates.
+   * @param aEnd End monocle coordinates
+   * @param aYThreshold Y-coordinate threshold used to eliminate slight
+   * differences in monocle vertical positions.
+   */
+  _isSelectionSwapNeeded: function(aStart, aEnd, aYThreshold) {
+    let isSwapNeededByX = aStart.xPos > aEnd.xPos;
+    let isSwapNeededByY = aStart.yPos - aEnd.yPos > aYThreshold;
+    let onTheSameLine = Math.abs(aStart.yPos - aEnd.yPos) <= aYThreshold;
+
+    if (this._targetIsEditable &&
+        !Util.isEditableContent(this._targetElement)) {
+
+      // If one of the markers is restricted to edit bounds, then we shouldn't
+      // swap it until we know its real position
+      if (aStart.restrictedToBounds && aEnd.restrictedToBounds) {
+        return false;
+      }
+
+      // For multi line we should respect Y-coordinate
+      if (Util.isMultilineInput(this._targetElement)) {
+        return isSwapNeededByY || (isSwapNeededByX && onTheSameLine);
+      }
+
+      return isSwapNeededByX;
+    }
+
+    return isSwapNeededByY || (isSwapNeededByX && onTheSameLine);
   },
 
   /*
@@ -375,9 +437,12 @@ SelectionPrototype.prototype = {
    * @param aEndOfSelection indicates if this is the end of a selection
    * move, in which case we may want to snap to the end of a word or
    * sentence.
+   * @param suppressSelectionUIUpdate Indicates that we don't want to update
+   * static monocle automatically as it's going to be be updated explicitly like
+   * in case with monocle swapping.
    */
-  _adjustSelectionAtPoint: function _adjustSelectionAtPoint(aMarker, aClientPoint,
-                                                            aEndOfSelection) {
+  _adjustSelectionAtPoint: function _adjustSelectionAtPoint(aMarker,
+      aClientPoint, aEndOfSelection, suppressSelectionUIUpdate) {
     // Make a copy of the existing range, we may need to reset it.
     this._backupRangeList();
 
@@ -397,10 +462,31 @@ SelectionPrototype.prototype = {
         Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
 
       // Select a character at the point.
-      selectResult = 
-        this._domWinUtils.selectAtPoint(framePoint.xPos,
-                                        framePoint.yPos,
-                                        type);
+      selectResult = this._domWinUtils.selectAtPoint(framePoint.xPos,
+          framePoint.yPos, type);
+
+      // selectAtPoint selects char back and forward and apparently can select
+      // content that is beyond selection boundaries that we had before it was
+      // shrunk that forces selection to always move forward or backward
+      // preventing monocle swapping.
+      if (selectResult && shrunk && this._rangeBackup) {
+        let selection = this._getSelection();
+
+        let currentSelection = this._extractUIRects(
+            selection.getRangeAt(selection.rangeCount - 1)).selection;
+        let previousSelection = this._extractUIRects(
+            this._rangeBackup[0]).selection;
+
+        if (aMarker == "start" &&
+            currentSelection.right > previousSelection.right) {
+          selectResult = false;
+        }
+
+        if (aMarker == "end"  &&
+            currentSelection.left < previousSelection.left) {
+          selectResult = false;
+        }
+      }
     } catch (ex) {
     }
 
@@ -418,7 +504,9 @@ SelectionPrototype.prototype = {
     // Update the other monocle's position. We do this because the dragging
     // monocle may reset the static monocle to a new position if the dragging
     // monocle drags ahead or behind the other.
-    this._updateSelectionUI("update", aMarker == "end", aMarker == "start");
+    this._updateSelectionUI("update",
+      aMarker == "end" && !suppressSelectionUIUpdate,
+      aMarker == "start" && !suppressSelectionUIUpdate);
   },
 
   /*
@@ -437,6 +525,10 @@ SelectionPrototype.prototype = {
   _restoreRangeList: function _restoreRangeList() {
     if (this._rangeBackup == null)
       return;
+
+    // Remove every previously created selection range
+    this._getSelection().removeAllRanges();
+
     for (let idx = 0; idx < this._rangeBackup.length; idx++) {
       this._getSelection().addRange(this._rangeBackup[idx]);
     }
@@ -818,6 +910,35 @@ SelectionPrototype.prototype = {
     return seldata;
   },
 
+  /**
+   * Updates point's coordinate with max\min available in accordance with the
+   * bounding rectangle. Returns true if point coordinates were actually updated,
+   * and false - otherwise.
+   * @param aPoint Target point which coordinates will be analyzed.
+   * @param aRectangle Target rectangle to bound to.
+   */
+  _restrictPointToRectangle: function(aPoint, aRectangle) {
+    let restrictionWasRequired = false;
+
+    if (aPoint.xPos < aRectangle.left) {
+      aPoint.xPos = aRectangle.left;
+      restrictionWasRequired = true;
+    } else if (aPoint.xPos > aRectangle.right) {
+      aPoint.xPos = aRectangle.right;
+      restrictionWasRequired = true;
+    }
+
+    if (aPoint.yPos < aRectangle.top) {
+      aPoint.yPos = aRectangle.top;
+      restrictionWasRequired = true;
+    } else if (aPoint.yPos > aRectangle.bottom) {
+      aPoint.yPos = aRectangle.bottom;
+      restrictionWasRequired = true;
+    }
+
+    return restrictionWasRequired;
+  },
+
   /*
    * Selection bounds will fall outside the bound of a control if the control
    * can scroll. Clip UI cache data to the bounds of the target so monocles
@@ -827,32 +948,12 @@ SelectionPrototype.prototype = {
     if (!this._targetIsEditable)
       return;
 
-    let bounds = this._getTargetBrowserRect();
-    if (this._cache.start.xPos < bounds.left)
-      this._cache.start.xPos = bounds.left;
-    if (this._cache.end.xPos < bounds.left)
-      this._cache.end.xPos = bounds.left;
-    if (this._cache.caret.xPos < bounds.left)
-      this._cache.caret.xPos = bounds.left;
-    if (this._cache.start.xPos > bounds.right)
-      this._cache.start.xPos = bounds.right;
-    if (this._cache.end.xPos > bounds.right)
-      this._cache.end.xPos = bounds.right;
-    if (this._cache.caret.xPos > bounds.right)
-      this._cache.caret.xPos = bounds.right;
-
-    if (this._cache.start.yPos < bounds.top)
-      this._cache.start.yPos = bounds.top;
-    if (this._cache.end.yPos < bounds.top)
-      this._cache.end.yPos = bounds.top;
-    if (this._cache.caret.yPos < bounds.top)
-      this._cache.caret.yPos = bounds.top;
-    if (this._cache.start.yPos > bounds.bottom)
-      this._cache.start.yPos = bounds.bottom;
-    if (this._cache.end.yPos > bounds.bottom)
-      this._cache.end.yPos = bounds.bottom;
-    if (this._cache.caret.yPos > bounds.bottom)
-      this._cache.caret.yPos = bounds.bottom;
+    let targetRectangle = this._getTargetBrowserRect();
+    this._cache.start.restrictedToBounds = this._restrictPointToRectangle(
+        this._cache.start, targetRectangle);
+    this._cache.end.restrictedToBounds = this._restrictPointToRectangle(
+        this._cache.end, targetRectangle);
+    this._restrictPointToRectangle(this._cache.caret, targetRectangle);
   },
 
   _restrictCoordinateToEditBounds: function _restrictCoordinateToEditBounds(aX, aY) {

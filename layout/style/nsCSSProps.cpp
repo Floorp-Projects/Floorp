@@ -395,13 +395,13 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   }
   MOZ_ASSERT(eCSSAliasCount != 0,
              "'res' must be an alias at this point so we better have some!");
-  // We intentionally don't support eEnabledInUASheets or eEnabledInChromeOrCertifiedApp
-  // for aliases yet because it's unlikely there will be a need for it.
-  if (IsEnabled(res) || aEnabled == eIgnoreEnabledState) {
+  // We intentionally don't support eEnabledInUASheets for aliases yet
+  // because it's unlikely there will be a need for it.
+  if (IsEnabled(res) || aEnabled == eAny) {
     res = gAliases[res - eCSSProperty_COUNT];
     NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
                       "aliases must not point to other aliases");
-    if (IsEnabled(res) || aEnabled == eIgnoreEnabledState) {
+    if (IsEnabled(res) || aEnabled == eAny) {
       return res;
     }
   }
@@ -431,11 +431,11 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
              "'res' must be an alias at this point so we better have some!");
   // We intentionally don't support eEnabledInUASheets for aliases yet
   // because it's unlikely there will be a need for it.
-  if (IsEnabled(res) || aEnabled == eIgnoreEnabledState) {
+  if (IsEnabled(res) || aEnabled == eAny) {
     res = gAliases[res - eCSSProperty_COUNT];
     NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
                       "aliases must not point to other aliases");
-    if (IsEnabled(res) || aEnabled == eIgnoreEnabledState) {
+    if (IsEnabled(res) || aEnabled == eAny) {
       return res;
     }
   }

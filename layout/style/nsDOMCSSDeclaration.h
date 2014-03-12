@@ -15,8 +15,6 @@
 
 class nsIPrincipal;
 class nsIDocument;
-struct JSContext;
-class JSObject;
 
 namespace mozilla {
 namespace css {
@@ -153,13 +151,5 @@ protected:
     SetIsDOMBinding();
   }
 };
-
-bool IsCSSPropertyExposedToJS(nsCSSProperty aProperty, JSContext* cx, JSObject* obj);
-
-template <nsCSSProperty Property>
-MOZ_ALWAYS_INLINE bool IsCSSPropertyExposedToJS(JSContext* cx, JSObject* obj)
-{
-  return IsCSSPropertyExposedToJS(Property, cx, obj);
-}
 
 #endif // nsDOMCSSDeclaration_h___

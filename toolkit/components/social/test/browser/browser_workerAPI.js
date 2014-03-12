@@ -16,9 +16,9 @@ function test() {
     workerURL: "http://example.com/browser/toolkit/components/social/test/browser/worker_social.js"
   };
 
-  ensureSocialEnabled();
-
   SocialService.addProvider(manifest, function (p) {
+    // toolkit does not enable providers by default, that is handled in the
+    // browser, we need to enable it in our tests.
     p.enabled = true;
     provider = p;
     runTests(tests, undefined, undefined, function () {

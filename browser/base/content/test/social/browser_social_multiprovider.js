@@ -4,8 +4,10 @@
 
 function test() {
   waitForExplicitFinish();
-
   runSocialTestWithProvider(gProviders, function (finishcb) {
+    SocialSidebar.provider = Social.providers[0];
+    SocialSidebar.show();
+    is(Social.providers[0].origin, SocialSidebar.provider.origin, "selected provider in sidebar");
     runSocialTests(tests, undefined, undefined, finishcb);
   });
 }
@@ -13,16 +15,16 @@ function test() {
 let gProviders = [
   {
     name: "provider 1",
-    origin: "https://example.com",
-    sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html?provider1",
-    workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
+    origin: "https://test1.example.com",
+    sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html?provider1",
+    workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
     iconURL: "chrome://branding/content/icon48.png"
   },
   {
     name: "provider 2",
-    origin: "https://test1.example.com",
-    sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar.html?provider2",
-    workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
+    origin: "https://test2.example.com",
+    sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html?provider2",
+    workerURL: "https://test2.example.com/browser/browser/base/content/test/social/social_worker.js",
     iconURL: "chrome://branding/content/icon48.png"
   }
 ];
@@ -30,6 +32,7 @@ let gProviders = [
 var tests = {
   testProviderSwitch: function(next) {
     let menu = document.getElementById("social-statusarea-popup");
+    let button = document.getElementById("social-sidebar-button");
     function checkProviderMenu(selectedProvider) {
       let menuProviders = menu.querySelectorAll(".social-provider-menuitem");
       is(menuProviders.length, gProviders.length, "correct number of providers listed in the menu");
@@ -41,33 +44,35 @@ var tests = {
 
     // the menu is not populated until onpopupshowing, so wait for popupshown
     function theTest() {
-      checkProviderMenu(gProviders[0]);
+      menu.removeEventListener("popupshown", theTest, true);
+      menu.hidePopup(); // doesn't need visibility
+      // first provider should already be visible in the sidebar
+      is(Social.providers[0].origin, SocialSidebar.provider.origin, "selected provider in sidebar");
+      checkProviderMenu(Social.providers[0]);
 
-      // Now wait for the initial provider profile to be set
-      waitForProviderLoad(function() {
-        menu.removeEventListener("popupshown", theTest, true);
-        checkUIStateMatchesProvider(gProviders[0]);
+      // Now activate "provider 2"
+      onSidebarLoad(function() {
+        checkUIStateMatchesProvider(Social.providers[1]);
 
-        // Now activate "provider 2"
-        observeProviderSet(function () {
-          waitForProviderLoad(function() {
-            checkUIStateMatchesProvider(gProviders[1]);
-            // disable social, click on the provider menuitem to switch providers
-            Social.enabled = false;
-            let el = menu.getElementsByAttribute("origin", gProviders[0].origin);
-            is(el.length, 1, "selected provider menu item exists");
-            el[0].click();
-            waitForProviderLoad(function() {
-              checkUIStateMatchesProvider(gProviders[0]);
-              next();
-            });
-          });
+        onSidebarLoad(function() {
+          checkUIStateMatchesProvider(Social.providers[0]);
+          next();
         });
-        Social.activateFromOrigin("https://test1.example.com");
+
+        // show the menu again so the menu is updated with the correct commands
+        function doClick() {
+          // click on the provider menuitem to switch providers
+          let el = menu.getElementsByAttribute("origin", Social.providers[0].origin);
+          is(el.length, 1, "selected provider menu item exists");
+          EventUtils.synthesizeMouseAtCenter(el[0], {});
+        }
+        menu.addEventListener("popupshown", doClick, true);
+        EventUtils.synthesizeMouseAtCenter(button, {});
+
       });
+      SocialSidebar.provider = Social.providers[1];
     };
     menu.addEventListener("popupshown", theTest, true);
-    let button = document.getElementById("social-sidebar-button");
     EventUtils.synthesizeMouseAtCenter(button, {});
   }
 }
@@ -77,20 +82,12 @@ function checkUIStateMatchesProvider(provider) {
   is(document.getElementById("social-sidebar-browser").getAttribute("src"), provider.sidebarURL, "side bar URL is set");
 }
 
-function observeProviderSet(cb) {
-  Services.obs.addObserver(function providerSet(subject, topic, data) {
-    Services.obs.removeObserver(providerSet, "social:provider-set");
-    info("social:provider-set observer was notified");
-    // executeSoon to let the browser UI observers run first
-    executeSoon(cb);
-  }, "social:provider-set", false);
-}
-
-function waitForProviderLoad(cb) {
-  waitForCondition(function() {
-    let sbrowser = document.getElementById("social-sidebar-browser");
-    return Social.provider.profile &&
-           Social.provider.profile.displayName &&
-           sbrowser.docShellIsActive;
-  }, cb, "waitForProviderLoad: provider profile was not set");
+function onSidebarLoad(callback) {
+  let sbrowser = document.getElementById("social-sidebar-browser");
+  sbrowser.addEventListener("load", function load() {
+    sbrowser.removeEventListener("load", load, true);
+    // give the load a chance to finish before pulling the rug (ie. calling
+    // next)
+    executeSoon(callback);
+  }, true);
 }
