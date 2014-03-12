@@ -497,7 +497,7 @@ toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[bu
   background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
 }
 
-toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open]),
+toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open],[checked]),
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover]:active > .toolbarbutton-menubutton-button,
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover:active > .toolbarbutton-menubutton-dropmarker,
 toolbar .toolbarbutton-1[type="menu-button"][open] > .toolbarbutton-menubutton-dropmarker,
@@ -508,6 +508,11 @@ toolbar .toolbarbutton-1[type="menu-button"][open] > .toolbarbutton-menubutton-d
               0 1px 0 hsla(0,0%,0%,.05) inset,
               0 1px 1px hsla(0,0%,0%,.2) inset;
   transition-duration: 10ms;
+}
+
+toolbar .toolbarbutton-1[checked]:not(:active):hover {
+  background-color: hsla(0,0%,0%,.09);
+  transition: background-color 250ms;
 }
 
 .toolbarbutton-1[type="menu-button"] {
