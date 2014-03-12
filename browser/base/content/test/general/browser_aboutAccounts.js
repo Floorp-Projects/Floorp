@@ -34,7 +34,7 @@ let gTests = [
   },
   run: function* ()
   {
-    setPref("identity.fxaccounts.remote.uri",
+    setPref("identity.fxaccounts.remote.signup.uri",
             "https://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
     yield promiseNewTabLoadEvent("about:accounts");
 
@@ -115,7 +115,7 @@ let gTests = [
   run: function* ()
   {
     const expected_url = "https://example.com/?is_sign_up";
-    setPref("identity.fxaccounts.remote.uri", expected_url);
+    setPref("identity.fxaccounts.remote.signup.uri", expected_url);
     let [tab, url] = yield promiseNewTabWithIframeLoadEvent("about:accounts?action=signup");
     is(url, expected_url, "action=signup got the expected URL");
     // we expect the remote iframe to be shown.
@@ -133,7 +133,7 @@ let gTests = [
   run: function* ()
   {
     const expected_url = "https://example.com/?is_sign_up";
-    setPref("identity.fxaccounts.remote.uri", expected_url);
+    setPref("identity.fxaccounts.remote.signup.uri", expected_url);
     yield setSignedInUser();
     let tab = yield promiseNewTabLoadEvent("about:accounts?action=signup");
     yield fxAccounts.getSignedInUser();
@@ -179,7 +179,7 @@ let gTests = [
     gBrowser.removeCurrentTab();
   },
   run: function* () {
-    setPref("identity.fxaccounts.remote.uri", "https://example.com/");
+    setPref("identity.fxaccounts.remote.signup.uri", "https://example.com/");
     yield setSignedInUser();
     let tab = yield promiseNewTabLoadEvent("about:accounts");
     // sign the user out - the tab should have action=signin

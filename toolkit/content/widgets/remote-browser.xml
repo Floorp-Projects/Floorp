@@ -31,6 +31,14 @@
         ]]></getter>
       </property>
 
+      <method name="adjustPriority">
+        <parameter name="adjustment"/>
+        <body><![CDATA[
+          this.messageManager.sendAsyncMessage("NetworkPrioritizer:AdjustPriority",
+                                               {adjustment: adjustment});
+        ]]></body>
+      </method>
+
       <field name="_remoteWebNavigation">null</field>
 
       <property name="webNavigation"
@@ -68,6 +76,8 @@
 
       <field name="_documentURI">null</field>
 
+      <field name="_documentContentType">null</field>
+
       <!--
         Used by session restore to ensure that currentURI is set so
         that switch-to-tab works before the tab is fully
@@ -83,6 +93,10 @@
 
       <property name="documentURI"
                 onget="return this._documentURI;"
+                readonly="true"/>
+
+      <property name="documentContentType"
+                onget="return this._documentContentType;"
                 readonly="true"/>
 
       <field name="_contentTitle">""</field>
@@ -167,10 +181,16 @@
 
       <constructor>
         <![CDATA[
+          /*
+           * Don't try to send messages from this function. The message manager for
+           * the <browser> element may not be initialized yet.
+           */
+
           let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
           let RemoteWebNavigation = Cu.import(jsm, {}).RemoteWebNavigation;
           this._remoteWebNavigation = new RemoteWebNavigation(this);
 
+          this.messageManager.addMessageListener("Browser:Init", this);
           this.messageManager.addMessageListener("DOMTitleChanged", this);
           this.messageManager.addMessageListener("ImageDocumentLoaded", this);
           this.messageManager.addMessageListener("SetSyncHandler", this);
@@ -193,14 +213,6 @@
           jsm = "resource://gre/modules/RemoteAddonsParent.jsm";
           let RemoteAddonsParent = Components.utils.import(jsm, {}).RemoteAddonsParent;
           RemoteAddonsParent.init();
-
-          if (!this.hasAttribute("disableglobalhistory")) {
-            this.messageManager.sendAsyncMessage("History:UseGlobalHistory", {enabled:true});
-          }
-
-          if (this.autoCompletePopup) {
-            this.messageManager.sendAsyncMessage("FormAutoComplete:InitPopup");
-          }
         ]]>
       </constructor>
 
@@ -209,6 +221,12 @@
         <body><![CDATA[
           let data = aMessage.data;
           switch (aMessage.name) {
+            case "Browser:Init":
+              let result = {};
+              result.useGlobalHistory = !this.hasAttribute("disableglobalhistory");
+              result.initPopup = this.autoCompletePopup;
+              return result;
+              break;
             case "DOMTitleChanged":
               this._contentTitle = data.title;
               break;

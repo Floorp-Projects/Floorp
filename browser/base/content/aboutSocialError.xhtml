@@ -79,10 +79,7 @@
       let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
       let productName = brandBundle.GetStringFromName("brandShortName");
-      let provider = Social && Social.provider;
-      if (config.origin) {
-        provider = Social && Social._getProviderFromOrigin(config.origin);
-      }
+      let provider = Social._getProviderFromOrigin(config.origin);
       let providerName = provider && provider.name;
 
       // Sets up the error message
@@ -100,7 +97,7 @@
     }
 
     function closeSidebarButton() {
-      Social.toggleSidebar();
+      SocialSidebar.toggleSidebar();
     }
 
     function tryAgainButton() {
@@ -114,7 +111,8 @@
     function reloadProvider() {
       // Just incase the current provider *isn't* in a frameworker-error
       // state, reload the current one.
-      Social.provider.reload();
+      let provider = Social._getProviderFromOrigin(config.origin);
+      provider.reload();
       // If the problem is a frameworker-error, it may be that the child
       // process crashed - and if that happened, then *all* providers in that
       // process will have crashed.  However, only the current provider is

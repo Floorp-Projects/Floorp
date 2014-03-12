@@ -631,6 +631,7 @@
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
+             overflowpanel="widget-overflow"
              context="toolbar-context-menu">
 
       <hbox id="nav-bar-customization-target" flex="1">
@@ -1079,7 +1080,6 @@
                         command="Social:ToggleNotifications"
                         label="&social.toggleNotifications.label;"
                         accesskey="&social.toggleNotifications.accesskey;"/>
-              <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
               <menuseparator/>
               <menuseparator class="social-provider-menu" hidden="true"/>
               <menuitem class="social-addons-menuitem" command="Social:Addons"

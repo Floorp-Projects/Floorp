@@ -42,7 +42,7 @@ function openPanel(url, panelCallback, loadCallback) {
 
 function openChat(url, panelCallback, loadCallback) {
   // open a chat window
-  SocialChatBar.openChat(Social.provider, url, panelCallback);
+  SocialChatBar.openChat(SocialSidebar.provider, url, panelCallback);
   SocialChatBar.chatbar.firstChild.addEventListener("DOMContentLoaded", function panelLoad() {
     SocialChatBar.chatbar.firstChild.removeEventListener("DOMContentLoaded", panelLoad, true);
     loadCallback();
@@ -79,11 +79,6 @@ let manifest = { // normal provider
 
 function test() {
   waitForExplicitFinish();
-  // we don't want the sidebar to auto-load in these tests..
-  Services.prefs.setBoolPref("social.sidebar.open", false);
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("social.sidebar.open");
-  });
 
   runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, goOnline, finishcb);
@@ -113,10 +108,10 @@ var tests = {
     });
     // we want the worker to be fully loaded before going offline, otherwise
     // it might fail due to going offline.
-    ensureWorkerLoaded(Social.provider, function() {
+    ensureWorkerLoaded(SocialSidebar.provider, function() {
       // go offline then attempt to load the sidebar - it should fail.
       goOffline();
-      Services.prefs.setBoolPref("social.sidebar.open", true);
+      SocialSidebar.show();
   });
   },
 

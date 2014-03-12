@@ -185,6 +185,10 @@ RootActor.prototype = {
         // tooltips for instance
         urlToImageDataResolver: true,
         networkMonitor: true,
+        // Wether the storage inspector actor to inspect cookies, etc.
+        storageInspector: true,
+        // Wether storage inspector is read only
+        storageInspectorReadOnly: true,
       }
     };
   },

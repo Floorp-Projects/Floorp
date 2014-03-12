@@ -55,14 +55,14 @@ int sctp6_input(struct mbuf **, int *);
 int sctp6_input_with_port(struct mbuf **, int *, uint16_t);
 #elif defined(__Panda__)
 int sctp6_input (pakhandle_type *);
-#elif defined(__FreeBSD__) && __FreeBSD_version < 1000000
+#elif defined(__FreeBSD__) && __FreeBSD_version < 902000
 int sctp6_input __P((struct mbuf **, int *, int));
 int sctp6_input_with_port __P((struct mbuf **, int *, uint16_t));
 #else
 int sctp6_input(struct mbuf **, int *, int);
 int sctp6_input_with_port(struct mbuf **, int *, uint16_t);
 #endif
-#if defined(__FreeBSD__) && __FreeBSD_version < 1000000
+#if defined(__FreeBSD__) && __FreeBSD_version < 902000
 int sctp6_output
 __P((struct sctp_inpcb *, struct mbuf *, struct sockaddr *,
      struct mbuf *, struct proc *));

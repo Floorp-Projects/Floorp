@@ -152,8 +152,10 @@ RemoteWebProgressManager.prototype = {
     webProgress._DOMWindow = objects.DOMWindow;
     webProgress._loadType = json.loadType;
 
-    if (json.isTopLevel)
+    if (json.isTopLevel) {
       this._browser._contentWindow = objects.contentWindow;
+      this._browser._documentContentType = json.documentContentType;
+    }
 
     switch (aMessage.name) {
     case "Content:StateChange":
