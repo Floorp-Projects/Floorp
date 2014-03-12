@@ -731,10 +731,10 @@ BookmarksStore.prototype = {
                          feedURI: Utils.makeURI(record.feedUri),
                          siteURI: siteURI,
                          guid: record.id};
-      PlacesUtils.livemarks.addLivemark(livemarkObj,
-        function (aStatus, aLivemark) {
-          spinningCb(null, [aStatus, aLivemark]);
-        });
+      PlacesUtils.livemarks.addLivemark(livemarkObj).then(
+        aLivemark => { spinningCb(null, [Components.results.NS_OK, aLivemark]) },
+        () => { spinningCb(null, [Components.results.NS_ERROR_UNEXPECTED, aLivemark]) }
+      );
 
       let [status, livemark] = spinningCb.wait();
       if (!Components.isSuccessCode(status)) {

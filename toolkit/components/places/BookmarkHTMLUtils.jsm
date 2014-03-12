@@ -669,7 +669,7 @@ BookmarkImporter.prototype = {
           "index": PlacesUtils.bookmarks.DEFAULT_INDEX,
           "feedURI": frame.previousFeed,
           "siteURI": frame.previousLink,
-        });
+        }).then(null, Cu.reportError);
       } else if (frame.previousLink) {
         // This is a common bookmark.
         PlacesUtils.bookmarks.setItemTitle(frame.previousId,

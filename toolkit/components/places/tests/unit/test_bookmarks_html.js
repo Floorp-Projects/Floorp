@@ -363,13 +363,9 @@ function checkItem(aExpected, aNode)
           do_check_eq((yield PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
           break;
         case "feedUrl":
-          yield PlacesUtils.livemarks.getLivemark(
-            { id: id },
-            (aStatus, aLivemark) => {
-              do_check_true(Components.isSuccessCode(aStatus));
-              do_check_eq(aLivemark.siteURI.spec, aExpected.url);
-              do_check_eq(aLivemark.feedURI.spec, aExpected.feedUrl);
-            });
+          let livemark = yield PlacesUtils.livemarks.getLivemark({ id: id });
+          do_check_eq(livemark.siteURI.spec, aExpected.url);
+          do_check_eq(livemark.feedURI.spec, aExpected.feedUrl);
           break;
         case "children":
           let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
