@@ -30,8 +30,13 @@ public:
         return Context();
     }
 
+    void MarkLost();
+
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLExtensionBase)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLExtensionBase)
+
+protected:
+    bool mIsLost;
 };
 
 #define DECL_WEBGL_EXTENSION_GOOP                                           \
