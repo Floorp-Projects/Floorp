@@ -31,6 +31,38 @@ class SVGFilterElement;
  * In BuildPrimitives, this class iterates through the referenced <filter>
  * element's primitive elements, creating a FilterPrimitiveDescription for
  * each one.
+ *
+ * This class uses several different coordinate spaces, defined as follows:
+ *
+ * "user space"
+ *   The filtered SVG element's user space or the filtered HTML element's
+ *   CSS pixel space. The origin for an HTML element is the top left corner of
+ *   its border box.
+ *
+ * "intermediate space"
+ *   User space scaled to device pixels. Shares the same origin as user space.
+ *   This space is the same across chained SVG and CSS filters. To compute the
+ *   overall filter space for a chain, we first need to build each filter's
+ *   FilterPrimitiveDescriptions in some common space. That space is
+ *   intermediate space.
+ *
+ * "filter space"
+ *   Intermediate space translated to the origin of this SVG filter's
+ *   filter region. This space may be different for each filter in a chain.
+ *
+ * To understand the spaces better, let's take an example filter that defines a
+ * filter region:
+ *   <filter id="f" x="-15" y="-15" width="130" height="130">...</filter>
+ *
+ * And apply the filter to a div element:
+ *   <div style="filter: url(#f); ...">...</div>
+ *
+ * And let's say there are 2 device pixels for every 1 CSS pixel.
+ *
+ * Then:
+ *   "user space" = the CSS pixel space of the <div>
+ *   "intermediate space" = "user space" * 2
+ *   "filter space" = "intermediate space" + 15
  */
 class nsSVGFilterInstance
 {
@@ -70,7 +102,7 @@ public:
    * coincide with pixel boundaries of the offscreen surface into which the
    * filtered output would/will be painted.
    */
-  gfxRect GetFilterRegion() const { return mFilterRegion; }
+  gfxRect GetFilterRegion() const { return mUserSpaceBounds; }
 
   /**
    * Returns the size of the user specified "filter region", in filter space.
@@ -95,10 +127,9 @@ public:
   Point3D ConvertLocation(const Point3D& aPoint) const;
 
   /**
-   * Returns the transform from the filtered element's user space to filter
-   * space. This will be a simple translation and/or scale.
+   * Transform a rect between user space and filter space.
    */
-  gfxMatrix GetUserSpaceToFilterSpaceTransform() const;
+  gfxRect UserSpaceToFilterSpace(const gfxRect& aUserSpaceRect) const;
 
 private:
   /**
@@ -127,7 +158,11 @@ private:
    */
   float GetPrimitiveNumber(uint8_t aCtxType, float aValue) const;
 
-  gfxRect UserSpaceToFilterSpace(const gfxRect& aUserSpace) const;
+  /**
+   * Transform a rect between user space and intermediate space.
+   */
+  gfxRect UserSpaceToIntermediateSpace(const gfxRect& aUserSpaceRect) const;
+  gfxRect IntermediateSpaceToUserSpace(const gfxRect& aIntermediateSpaceRect) const;
 
   /**
    * Returns the transform from frame space to the coordinate space that
@@ -147,6 +182,17 @@ private:
                             const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
                             const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
                             nsTArray<int32_t>& aSourceIndices);
+
+  /**
+   * Compute the scale factors between user space and intermediate space.
+   */
+  nsresult ComputeUserSpaceToIntermediateSpaceScale();
+
+  /**
+   * Compute the filter region in user space, intermediate space, and filter
+   * space.
+   */
+  nsresult ComputeBounds();
 
   /**
    * The SVG reference filter originally from the style system.
@@ -174,10 +220,17 @@ private:
   gfxRect                 mTargetBBox;
 
   /**
-   * The "filter region", in the filtered element's user space.
+   * The "filter region" in various spaces.
    */
-  gfxRect                 mFilterRegion;
+  gfxRect                 mUserSpaceBounds;
+  nsIntRect               mIntermediateSpaceBounds;
   nsIntRect               mFilterSpaceBounds;
+
+  /**
+   * The scale factors between user space and intermediate space.
+   */
+  gfxSize                 mUserSpaceToIntermediateSpaceScale;
+  gfxSize                 mIntermediateSpaceToUserSpaceScale;
 
   /**
    * The 'primitiveUnits' attribute value (objectBoundingBox or userSpaceOnUse).
