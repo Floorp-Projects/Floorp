@@ -41,7 +41,6 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     'AppProcessChecker.cpp',
     'ColorPickerParent.cpp',
-    'ContentChild.cpp',
     'ContentParent.cpp',
     'ContentProcess.cpp',
     'CrashReporterParent.cpp',
@@ -57,10 +56,12 @@ UNIFIED_SOURCES += [
 ]
 
 # Blob.cpp cannot be compiled in unified mode because it triggers a fatal gcc warning.
+# ContentChild.cpp cannot be compiled in unified mode because it forces NSPR logging.
 # CrashReporterChild.cpp cannot be compiled in unified mode because of name clashes
 # in OS X headers.
 SOURCES += [
     'Blob.cpp',
+    'ContentChild.cpp',
     'CrashReporterChild.cpp',
 ]
 

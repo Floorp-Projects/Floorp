@@ -56,7 +56,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'ExternalHelperAppChild.cpp',
     'ExternalHelperAppParent.cpp',
     'nsLocalHandlerApp.cpp',
     'nsMIMEInfoImpl.cpp',
@@ -64,6 +63,7 @@ UNIFIED_SOURCES += [
 
 # These files can't be built in unified mode because they force NSPR logging.
 SOURCES += [
+    'ExternalHelperAppChild.cpp',
     'nsExternalHelperAppService.cpp',
     'nsExternalProtocolHandler.cpp',
 ]

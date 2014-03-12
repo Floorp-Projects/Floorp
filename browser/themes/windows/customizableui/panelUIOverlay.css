@@ -59,6 +59,16 @@ toolbarbutton.social-provider-menuitem > .toolbarbutton-icon {
   visibility: hidden;
 }
 
+menu.subviewbutton > .menu-right {
+  -moz-appearance: none;
+  list-style-image: url(chrome://browser/skin/places/bookmarks-menu-arrow.png);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+menu[disabled="true"].subviewbutton > .menu-right {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
 %ifdef WINDOWS_AERO
 /* Win8 and beyond. */
 @media not all and (-moz-os-version: windows-vista) {

@@ -51,18 +51,22 @@ XPCOMUtils.defineLazyGetter(this, "CreateSocialMarkWidget", function() {
 });
 
 SocialUI = {
+  _initialized: false,
+
   // Called on delayed startup to initialize the UI
   init: function SocialUI_init() {
+    if (this._initialized) {
+      return;
+    }
+
     Services.obs.addObserver(this, "social:ambient-notification-changed", false);
     Services.obs.addObserver(this, "social:profile-changed", false);
     Services.obs.addObserver(this, "social:frameworker-error", false);
-    Services.obs.addObserver(this, "social:provider-set", false);
     Services.obs.addObserver(this, "social:providers-changed", false);
     Services.obs.addObserver(this, "social:provider-reload", false);
     Services.obs.addObserver(this, "social:provider-enabled", false);
     Services.obs.addObserver(this, "social:provider-disabled", false);
 
-    Services.prefs.addObserver("social.sidebar.open", this, false);
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
@@ -73,37 +77,37 @@ SocialUI = {
     document.getElementById("viewSidebarMenu").addEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
     document.getElementById("social-statusarea-popup").addEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
 
-    if (!Social.initialized) {
-      Social.init();
-    } else if (Social.providers.length > 0) {
-      // Social was initialized during startup in a previous window. If we have
-      // providers enabled initialize the UI for this window.
-      this.observe(null, "social:providers-changed", null);
-      this.observe(null, "social:provider-set", Social.provider ? Social.provider.origin : null);
-    }
+    Social.init().then((update) => {
+      if (update)
+        this._providersChanged();
+      // handle SessionStore for the sidebar state
+      SocialSidebar.restoreWindowState();
+    });
+
+    this._initialized = true;
   },
 
   // Called on window unload
   uninit: function SocialUI_uninit() {
+    if (!this._initialized) {
+      return;
+    }
+
     Services.obs.removeObserver(this, "social:ambient-notification-changed");
     Services.obs.removeObserver(this, "social:profile-changed");
     Services.obs.removeObserver(this, "social:frameworker-error");
-    Services.obs.removeObserver(this, "social:provider-set");
     Services.obs.removeObserver(this, "social:providers-changed");
     Services.obs.removeObserver(this, "social:provider-reload");
     Services.obs.removeObserver(this, "social:provider-enabled");
     Services.obs.removeObserver(this, "social:provider-disabled");
 
-    Services.prefs.removeObserver("social.sidebar.open", this);
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
 
     document.getElementById("PanelUI-popup").removeEventListener("popupshown", SocialMarks.updatePanelButtons, true);
     document.getElementById("viewSidebarMenu").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
     document.getElementById("social-statusarea-popup").removeEventListener("popupshowing", SocialSidebar.populateSidebarMenu, true);
-  },
 
-  _matchesCurrentProvider: function (origin) {
-    return Social.provider && Social.provider.origin == origin;
+    this._initialized = false;
   },
 
   observe: function SocialUI_observe(subject, topic, data) {
@@ -118,38 +122,24 @@ SocialUI = {
         case "social:provider-disabled":
           SocialMarks.removeProvider(data);
           SocialStatus.removeProvider(data);
+          SocialSidebar.disableProvider(data);
           break;
         case "social:provider-reload":
           SocialStatus.reloadProvider(data);
           // if the reloaded provider is our current provider, fall through
-          // to social:provider-set so the ui will be reset
-          if (!Social.provider || Social.provider.origin != data)
+          // to social:providers-changed so the ui will be reset
+          if (!SocialSidebar.provider || SocialSidebar.provider.origin != data)
             return;
-          // be sure to unload the sidebar as it will not reload if the origin
-          // has not changed, it will be loaded in provider-set below. Other
-          // panels will be unloaded or handle reload.
+          // currently only the sidebar and flyout have a selected provider.
+          // sidebar provider has changed (possibly to null), ensure the content
+          // is unloaded and the frames are reset, they will be loaded in
+          // providers-changed below if necessary.
           SocialSidebar.unloadSidebar();
-          // fall through to social:provider-set
-        case "social:provider-set":
-          // Social.provider has changed (possibly to null), update any state
-          // which depends on it.
-          this._updateActiveUI();
-
           SocialFlyout.unload();
-          SocialChatBar.update();
-          SocialShare.update();
-          SocialSidebar.update();
-          SocialStatus.populateToolbarPalette();
-          SocialMarks.populateToolbarPalette();
-          break;
+          // fall through to providers-changed to ensure the reloaded provider
+          // is correctly reflected in any UI and the multi-provider menu
         case "social:providers-changed":
-          // the list of providers changed - this may impact the "active" UI.
-          this._updateActiveUI();
-          // and the multi-provider menu
-          SocialSidebar.clearProviderMenus();
-          SocialShare.populateProviderMenu();
-          SocialStatus.populateToolbarPalette();
-          SocialMarks.populateToolbarPalette();
+          this._providersChanged();
           break;
 
         // Provider-specific notifications
@@ -163,15 +153,13 @@ SocialUI = {
           SocialStatus.updateButton(data);
           break;
         case "social:frameworker-error":
-          if (this.enabled && Social.provider.origin == data) {
+          if (this.enabled && SocialSidebar.provider && SocialSidebar.provider.origin == data) {
             SocialSidebar.setSidebarErrorMessage();
           }
           break;
 
         case "nsPref:changed":
-          if (data == "social.sidebar.open") {
-            SocialSidebar.update();
-          } else if (data == "social.toast-notifications.enabled") {
+          if (data == "social.toast-notifications.enabled") {
             SocialSidebar.updateToggleNotifications();
           }
           break;
@@ -182,36 +170,13 @@ SocialUI = {
     }
   },
 
-  _updateActiveUI: function SocialUI_updateActiveUI() {
-    // The "active" UI isn't dependent on there being a provider, just on
-    // social being "active" (but also chromeless/PB)
-    let enabled = Social.providers.length > 0 && !this._chromeless &&
-                  !PrivateBrowsingUtils.isWindowPrivate(window);
-
-    let toggleCommand = document.getElementById("Social:Toggle");
-    toggleCommand.setAttribute("hidden", enabled ? "false" : "true");
-
-    if (enabled) {
-      // enabled == true means we at least have a defaultProvider
-      let provider = Social.provider || Social.defaultProvider;
-      // We only need to update the command itself - all our menu items use it.
-      let label;
-      if (Social.providers.length == 1) {
-        label = gNavigatorBundle.getFormattedString(Social.provider
-                                                    ? "social.turnOff.label"
-                                                    : "social.turnOn.label",
-                                                    [provider.name]);
-      } else {
-        label = gNavigatorBundle.getString(Social.provider
-                                           ? "social.turnOffAll.label"
-                                           : "social.turnOnAll.label");
-      }
-      let accesskey = gNavigatorBundle.getString(Social.provider
-                                                 ? "social.turnOff.accesskey"
-                                                 : "social.turnOn.accesskey");
-      toggleCommand.setAttribute("label", label);
-      toggleCommand.setAttribute("accesskey", accesskey);
-    }
+  _providersChanged: function() {
+    SocialSidebar.clearProviderMenus();
+    SocialSidebar.update();
+    SocialChatBar.update();
+    SocialShare.populateProviderMenu();
+    SocialStatus.populateToolbarPalette();
+    SocialMarks.populateToolbarPalette();
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -263,7 +228,11 @@ SocialUI = {
       }
     }
     Social.installProvider(targetDoc, data, function(manifest) {
-      Social.activateFromOrigin(manifest.origin);
+      Social.activateFromOrigin(manifest.origin, function(provider) {
+        if (provider.sidebarURL) {
+          SocialSidebar.show(provider.origin);
+        }
+      });
     });
   },
 
@@ -311,7 +280,7 @@ SocialUI = {
     // Returns whether social is enabled *for this window*.
     if (this._chromeless || PrivateBrowsingUtils.isWindowPrivate(window))
       return false;
-    return !!Social.provider;
+    return Social.providers.length > 0;
   },
 
   // called on tab/urlbar/location changes and after customization. Update
@@ -338,6 +307,7 @@ SocialChatBar = {
     return !!this.chatbar.firstElementChild;
   },
   openChat: function(aProvider, aURL, aCallback, aMode) {
+    this.update();
     if (!this.isAvailable)
       return false;
     this.chatbar.openChat(aProvider, aURL, aCallback, aMode);
@@ -390,13 +360,15 @@ SocialFlyout = {
     iframe.setAttribute("class", "social-panel-frame");
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("tooltip", "aHTMLTooltip");
-    iframe.setAttribute("origin", Social.provider.origin);
+    iframe.setAttribute("origin", SocialSidebar.provider.origin);
     panel.appendChild(iframe);
   },
 
   setFlyoutErrorMessage: function SF_setFlyoutErrorMessage() {
     this.iframe.removeAttribute("src");
-    this.iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo", null, null, null, null);
+    this.iframe.webNavigation.loadURI("about:socialerror?mode=compactInfo&origin=" +
+                                 encodeURIComponent(this.iframe.getAttribute("origin")),
+                                 null, null, null, null);
     sizeSocialPanelToContent(this.panel, this.iframe);
   },
 
@@ -442,7 +414,7 @@ SocialFlyout = {
   },
 
   load: function(aURL, cb) {
-    if (!Social.provider)
+    if (!SocialSidebar.provider)
       return;
 
     this.panel.hidden = false;
@@ -537,8 +509,10 @@ SocialShare = {
     if (lastProviderOrigin) {
       provider = Social._getProviderFromOrigin(lastProviderOrigin);
     }
+    // if they have a provider selected in the sidebar use that for the initial
+    // default in share
     if (!provider)
-      provider = Social.provider || Social.defaultProvider;
+      provider = SocialSidebar.provider;
     // if our provider has no shareURL, select the first one that does
     if (provider && !provider.shareURL) {
       let providers = [p for (p of Social.providers) if (p.shareURL)];
@@ -722,14 +696,63 @@ SocialShare = {
 SocialSidebar = {
   // Whether the sidebar can be shown for this window.
   get canShow() {
-    if (PrivateBrowsingUtils.isWindowPrivate(window))
+    if (!SocialUI.enabled || document.mozFullScreen)
       return false;
-    return [p for (p of Social.providers) if (p.enabled && p.sidebarURL)].length > 0;
+    return Social.providers.some(p => p.sidebarURL);
   },
 
   // Whether the user has toggled the sidebar on (for windows where it can appear)
   get opened() {
-    return Services.prefs.getBoolPref("social.sidebar.open") && !document.mozFullScreen;
+    let broadcaster = document.getElementById("socialSidebarBroadcaster");
+    return !broadcaster.hidden;
+  },
+
+  restoreWindowState: function() {
+    this._initialized = true;
+    if (!this.canShow)
+      return;
+
+    if (Services.prefs.prefHasUserValue("social.provider.current")) {
+      // "upgrade" when the first window opens if we have old prefs.  We get the
+      // values from prefs this one time, window state will be saved when this
+      // window is closed.
+      let origin = Services.prefs.getCharPref("social.provider.current");
+      Services.prefs.clearUserPref("social.provider.current");
+      // social.sidebar.open default was true, but we only opened if there was
+      // a current provider
+      let opened = origin && true;
+      if (Services.prefs.prefHasUserValue("social.sidebar.open")) {
+        opened = origin && Services.prefs.getBoolPref("social.sidebar.open");
+        Services.prefs.clearUserPref("social.sidebar.open");
+      }
+      let data = {
+        "hidden": !opened,
+        "origin": origin
+      };
+      SessionStore.setWindowValue(window, "socialSidebar", JSON.stringify(data));
+    }
+
+    let data = SessionStore.getWindowValue(window, "socialSidebar");
+    // if this window doesn't have it's own state, use the state from the opener
+    if (!data && window.opener && !window.opener.closed) {
+      data = SessionStore.getWindowValue(window.opener, "socialSidebar");
+    }
+    if (data) {
+      data = JSON.parse(data);
+      document.getElementById("social-sidebar-browser").setAttribute("origin", data.origin);
+      if (!data.hidden)
+        this.show(data.origin);
+    }
+  },
+
+  saveWindowState: function() {
+    let broadcaster = document.getElementById("socialSidebarBroadcaster");
+    let sidebarOrigin = document.getElementById("social-sidebar-browser").getAttribute("origin");
+    let data = {
+      "hidden": broadcaster.hidden,
+      "origin": sidebarOrigin
+    };
+    SessionStore.setWindowValue(window, "socialSidebar", JSON.stringify(data));
   },
 
   setSidebarVisibilityState: function(aEnabled) {
@@ -751,6 +774,10 @@ SocialSidebar = {
   },
 
   update: function SocialSidebar_update() {
+    // ensure we never update before restoreWindowState
+    if (!this._initialized)
+      return;
+    this.ensureProvider();
     this.updateToggleNotifications();
     this._updateHeader();
     clearTimeout(this._unloadTimeoutId);
@@ -782,21 +809,21 @@ SocialSidebar = {
         );
       }
     } else {
-      sbrowser.setAttribute("origin", Social.provider.origin);
-      if (Social.provider.errorState == "frameworker-error") {
+      sbrowser.setAttribute("origin", this.provider.origin);
+      if (this.provider.errorState == "frameworker-error") {
         SocialSidebar.setSidebarErrorMessage();
         return;
       }
 
       // Make sure the right sidebar URL is loaded
-      if (sbrowser.getAttribute("src") != Social.provider.sidebarURL) {
+      if (sbrowser.getAttribute("src") != this.provider.sidebarURL) {
         // we check readyState right after setting src, we need a new content
         // viewer to ensure we are checking against the correct document.
         sbrowser.docShell.createAboutBlankContentViewer(null);
         Social.setErrorListener(sbrowser, this.setSidebarErrorMessage.bind(this));
         // setting isAppTab causes clicks on untargeted links to open new tabs
         sbrowser.docShell.isAppTab = true;
-        sbrowser.setAttribute("src", Social.provider.sidebarURL);
+        sbrowser.setAttribute("src", this.provider.sidebarURL);
         PopupNotifications.locationChange(sbrowser);
       }
 
@@ -838,23 +865,55 @@ SocialSidebar = {
   setSidebarErrorMessage: function() {
     let sbrowser = document.getElementById("social-sidebar-browser");
     // a frameworker error "trumps" a sidebar error.
-    if (Social.provider.errorState == "frameworker-error") {
-      sbrowser.setAttribute("src", "about:socialerror?mode=workerFailure");
+    let origin = sbrowser.getAttribute("origin");
+    if (origin) {
+      origin = "&origin=" + encodeURIComponent(origin);
+    }
+    if (this.provider.errorState == "frameworker-error") {
+      sbrowser.setAttribute("src", "about:socialerror?mode=workerFailure" + origin);
     } else {
-      let url = encodeURIComponent(Social.provider.sidebarURL);
-      sbrowser.loadURI("about:socialerror?mode=tryAgain&url=" + url, null, null);
+      let url = encodeURIComponent(this.provider.sidebarURL);
+      sbrowser.loadURI("about:socialerror?mode=tryAgain&url=" + url + origin, null, null);
     }
   },
 
-  // provider will move to a sidebar specific member in bug 894806
-  get provider() {
-    return Social.provider;
+  _provider: null,
+  ensureProvider: function() {
+    if (this._provider)
+      return;
+    // origin for sidebar is persisted, so get the previously selected sidebar
+    // first, otherwise fallback to the first provider in the list
+    let sbrowser = document.getElementById("social-sidebar-browser");
+    let origin = sbrowser.getAttribute("origin");
+    let providers = [p for (p of Social.providers) if (p.sidebarURL)];
+    let provider;
+    if (origin)
+      provider = Social._getProviderFromOrigin(origin);
+    if (!provider && providers.length > 0)
+      provider = providers[0];
+    if (provider)
+      this.provider = provider;
   },
 
-  setProvider: function(origin) {
-    Social.setProviderByOrigin(origin);
-    this._updateHeader();
-    this._updateCheckedMenuItems(origin);
+  get provider() {
+    return this._provider;
+  },
+
+  set provider(provider) {
+    if (!provider || provider.sidebarURL) {
+      this._provider = provider;
+      this._updateHeader();
+      this._updateCheckedMenuItems(provider && provider.origin);
+      this.update();
+    }
+  },
+
+  disableProvider: function(origin) {
+    if (this._provider && this._provider.origin == origin) {
+      this._provider = null;
+      // force a selection of the next provider if there is one
+      this.ensureProvider();
+    }
   },
 
   _updateHeader: function() {
@@ -884,13 +943,30 @@ SocialSidebar = {
 
   show: function(origin) {
     // always show the sidebar, and set the provider
-    this.setProvider(origin);
-    Services.prefs.setBoolPref("social.sidebar.open", true);
+    let broadcaster = document.getElementById("socialSidebarBroadcaster");
+    broadcaster.hidden = false;
+    if (origin)
+      this.provider = Social._getProviderFromOrigin(origin);
+    else
+      SocialSidebar.update();
+    this.saveWindowState();
   },
 
   hide: function() {
-    Services.prefs.setBoolPref("social.sidebar.open", false);
+    let broadcaster = document.getElementById("socialSidebarBroadcaster");
+    broadcaster.hidden = true;
     this._updateCheckedMenuItems();
+    this.clearProviderMenus();
+    SocialSidebar.update();
+    this.saveWindowState();
+  },
+
+  toggleSidebar: function SocialSidebar_toggle() {
+    let broadcaster = document.getElementById("socialSidebarBroadcaster");
+    if (broadcaster.hidden)
+      this.show();
+    else
+      this.hide();
   },
 
   populateSidebarMenu: function(event) {
@@ -1261,9 +1337,11 @@ SocialStatus = {
 
     let src = aNotificationFrame.getAttribute("src");
     aNotificationFrame.removeAttribute("src");
+    let origin = aNotificationFrame.getAttribute("origin");
     aNotificationFrame.webNavigation.loadURI("about:socialerror?mode=tryAgainOnly&url=" +
-                                             encodeURIComponent(src),
-                                             null, null, null, null);
+                                            encodeURIComponent(src) + "&origin=" +
+                                            encodeURIComponent(origin),
+                                            null, null, null, null);
     let panel = aNotificationFrame.parentNode;
     sizeSocialPanelToContent(panel, aNotificationFrame);
   },
