@@ -278,14 +278,7 @@ InitArrayBufferViewDataPointer(ArrayBufferViewObject *obj, ArrayBufferObject *bu
      * private data rather than a slot to avoid alignment restrictions
      * on private Values.
      */
-
-    if (buffer->isNeutered()) {
-        JS_ASSERT(byteOffset == 0);
-        obj->initPrivate(nullptr);
-    } else {
-        obj->initPrivate(buffer->dataPointer() + byteOffset);
-    }
-
+    obj->initPrivate(buffer->dataPointer() + byteOffset);
     PostBarrierTypedArrayObject(obj);
 }
 
