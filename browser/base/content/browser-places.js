@@ -925,7 +925,6 @@ let PlacesToolbarHelper = {
       } else {
         placeholder.removeAttribute("wrap");
       }
-      placeholder.classList.toggle("toolbarbutton-1", shouldWrapNow);
       this._shouldWrap = shouldWrapNow;
     }
   },
