@@ -28,7 +28,9 @@ pref("app.update.checkInstallTime.days", 2);
 
 // Search codes belong only in builds with official branding
 pref("browser.search.param.yahoo-fr", "");
-pref("browser.search.param.yahoo-fr-metro", "");
 pref("browser.search.param.yahoo-fr-cjkt", ""); // now unused
 pref("browser.search.param.yahoo-fr-ja", "");
 pref("browser.search.param.yahoo-f-CN", "");
+#ifdef MOZ_METRO
+pref("browser.search.param.yahoo-fr-metro", "");
+#endif
