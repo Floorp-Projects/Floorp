@@ -36,12 +36,31 @@ __FBSDID("$FreeBSD$");
 #endif
 
 
-#ifndef __SCTP_SLA1_h__
-#define __SCTP_SLA1_h__
+#ifndef __NETINET_SCTP_SHA1_H__
+#define __NETINET_SCTP_SHA1_H__
 
 #include <sys/types.h>
+#if defined(SCTP_USE_NSS_SHA1)
+#if defined(__Userspace_os_Darwin)
+/* The NSS sources require __APPLE__ to be defined.
+ * XXX: Remove this ugly hack once the platform defines have been cleaned up.
+ */
+#define __APPLE__
+#endif
+#include <pk11pub.h>
+#if defined(__Userspace_os_Darwin)
+#undef __APPLE__
+#endif
+#elif defined(SCTP_USE_OPENSSL_SHA1)
+#include <openssl/sha.h>
+#endif
 
-struct sha1_context {
+struct sctp_sha1_context {
+#if defined(SCTP_USE_NSS_SHA1)
+	struct PK11Context *pk11_ctx;
+#elif defined(SCTP_USE_OPENSSL_SHA1)
+	SHA_CTX sha_ctx;
+#else
 	unsigned int A;
 	unsigned int B;
 	unsigned int C;
@@ -59,28 +78,8 @@ struct sha1_context {
 	/* collected so far */
 	int how_many_in_block;
 	unsigned int running_total;
+#endif
 };
-typedef struct sha1_context SHA1_CTX;
-
-#define F1(B,C,D) (((B & C) | ((~B) & D)))	/* 0  <= t <= 19 */
-#define F2(B,C,D) (B ^ C ^ D)	/* 20 <= t <= 39 */
-#define F3(B,C,D) ((B & C) | (B & D) | (C & D))	/* 40 <= t <= 59 */
-#define F4(B,C,D) (B ^ C ^ D)	/* 600 <= t <= 79 */
-
-/* circular shift */
-#define CSHIFT(A,B) ((B << A) | (B >> (32-A)))
-
-#define K1 0x5a827999		/* 0  <= t <= 19 */
-#define K2 0x6ed9eba1		/* 20 <= t <= 39 */
-#define K3 0x8f1bbcdc		/* 40 <= t <= 59 */
-#define K4 0xca62c1d6		/* 60 <= t <= 79 */
-
-#define H0INIT 0x67452301
-#define H1INIT 0xefcdab89
-#define H2INIT 0x98badcfe
-#define H3INIT 0x10325476
-#define H4INIT 0xc3d2e1f0
-
 
 #if (defined(__APPLE__) && defined(KERNEL))
 #ifndef _KERNEL
@@ -90,9 +89,9 @@ typedef struct sha1_context SHA1_CTX;
 
 #if defined(_KERNEL) || defined(__Userspace__)
 
-void SHA1_Init(struct sha1_context *);
-void SHA1_Update(struct sha1_context *, const unsigned char *, int);
-void SHA1_Final(unsigned char *, struct sha1_context *);
+void sctp_sha1_init(struct sctp_sha1_context *);
+void sctp_sha1_update(struct sctp_sha1_context *, const unsigned char *, unsigned int);
+void sctp_sha1_final(unsigned char *, struct sctp_sha1_context *);
 
-#endif				/* _KERNEL */
+#endif
 #endif

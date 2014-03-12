@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 246687 2013-02-11 21:02:49Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 258765 2013-11-30 12:51:19Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -68,14 +68,6 @@ __FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.c 246687 2013-02-11 21:02:49Z tuex
 #include <sys/unistd.h>
 #endif
 #if defined(__Userspace__)
-#if !defined(__Userspace_os_Windows)
-#if defined(ANDROID)
-#include <unistd.h>
-#include <ifaddrs-android-ext.h>
-#else
-#include <sys/unistd.h>
-#endif
-#endif
 #include <user_socketvar.h>
 #endif
 
@@ -90,7 +82,9 @@ struct sctp_base_info system_base_info;
 #endif
 
 #if defined(__Userspace__)
+#if defined(INET) || defined(INET6)
 struct ifaddrs *g_interfaces;
+#endif
 #endif
 /* FIX: we don't handle multiple link local scopes */
 /* "scopeless" replacement IN6_ARE_ADDR_EQUAL */
@@ -926,8 +920,13 @@ sctp_del_addr_from_vrf(uint32_t vrf_id, struct sockaddr *addr,
 static int
 sctp_does_stcb_own_this_addr(struct sctp_tcb *stcb, struct sockaddr *to)
 {
-	int loopback_scope, ipv4_local_scope, local_scope, site_scope;
-	int ipv4_addr_legal, ipv6_addr_legal;
+	int loopback_scope;
+#if defined(INET)
+	int ipv4_local_scope, ipv4_addr_legal;
+#endif
+#if defined(INET6)
+	int local_scope, site_scope, ipv6_addr_legal;
+#endif
 #if defined(__Userspace__)
 	int conn_addr_legal;
 #endif
@@ -936,11 +935,15 @@ sctp_does_stcb_own_this_addr(struct sctp_tcb *stcb, struct sockaddr *to)
 	struct sctp_ifa *sctp_ifa;
 
 	loopback_scope = stcb->asoc.scope.loopback_scope;
+#if defined(INET)
 	ipv4_local_scope = stcb->asoc.scope.ipv4_local_scope;
+	ipv4_addr_legal = stcb->asoc.scope.ipv4_addr_legal;
+#endif
+#if defined(INET6)
 	local_scope = stcb->asoc.scope.local_scope;
 	site_scope = stcb->asoc.scope.site_scope;
-	ipv4_addr_legal = stcb->asoc.scope.ipv4_addr_legal;
 	ipv6_addr_legal = stcb->asoc.scope.ipv6_addr_legal;
+#endif
 #if defined(__Userspace__)
 	conn_addr_legal = stcb->asoc.scope.conn_addr_legal;
 #endif
@@ -968,7 +971,9 @@ sctp_does_stcb_own_this_addr(struct sctp_tcb *stcb, struct sockaddr *to)
 					 */
 					continue;
 				}
-				
+				if (sctp_ifa->address.sa.sa_family != to->sa_family) {
+					continue;
+				}
 				switch (sctp_ifa->address.sa.sa_family) {
 #ifdef INET
 				case AF_INET:
@@ -2318,8 +2323,11 @@ sctp_findassociation_special_addr(struct mbuf *m, int offset,
     struct sockaddr *dst)
 {
 	struct sctp_paramhdr *phdr, parm_buf;
+#if defined(INET) || defined(INET6)
 	struct sctp_tcb *stcb;
-	uint32_t ptype, plen;
+	uint16_t ptype;
+#endif
+	uint16_t plen;
 #ifdef INET
 	struct sockaddr_in sin4;
 #endif
@@ -2344,13 +2352,14 @@ sctp_findassociation_special_addr(struct mbuf *m, int offset,
 	sin6.sin6_port = sh->src_port;
 #endif
 
-	stcb = NULL;
 	offset += sizeof(struct sctp_init_chunk);
 
 	phdr = sctp_get_next_param(m, offset, &parm_buf, sizeof(parm_buf));
 	while (phdr != NULL) {
 		/* now we must see if we want the parameter */
+#if defined(INET) || defined(INET6)
 		ptype = ntohs(phdr->param_type);
+#endif
 		plen = ntohs(phdr->param_length);
 		if (plen == 0) {
 			break;
@@ -2534,7 +2543,7 @@ sctp_findassociation_addr(struct mbuf *m, int offset,
 	if (sh->v_tag) {
 		/* we only go down this path if vtag is non-zero */
 		stcb = sctp_findassoc_by_vtag(src, dst, ntohl(sh->v_tag),
-		                                inp_p, netp, sh->src_port, sh->dest_port, 0, vrf_id, 0);
+		                              inp_p, netp, sh->src_port, sh->dest_port, 0, vrf_id, 0);
 		if (stcb) {
 			return (stcb);
 		}
@@ -2550,11 +2559,11 @@ sctp_findassociation_addr(struct mbuf *m, int offset,
 	}
 	if (inp_p) {
 		stcb = sctp_findassociation_addr_sa(src, dst, inp_p, netp,
-		    find_tcp_pool, vrf_id);
+		                                    find_tcp_pool, vrf_id);
 		inp = *inp_p;
 	} else {
 		stcb = sctp_findassociation_addr_sa(src, dst, &inp, netp,
-		    find_tcp_pool, vrf_id);
+		                                    find_tcp_pool, vrf_id);
 	}
 	SCTPDBG(SCTP_DEBUG_PCB1, "stcb:%p inp:%p\n", (void *)stcb, (void *)inp);
 	if (stcb == NULL && inp) {
@@ -2740,8 +2749,13 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 	inp->ip_inp.inp.inp_socket = so;
 #ifdef INET6
 #if !defined(__Userspace__) && !defined(__Windows__)
-	if (MODULE_GLOBAL(ip6_auto_flowlabel)) {
-		inp->ip_inp.inp.inp_flags |= IN6P_AUTOFLOWLABEL;
+	if (INP_SOCKAF(so) == AF_INET6) {
+		if (MODULE_GLOBAL(ip6_auto_flowlabel)) {
+			inp->ip_inp.inp.inp_flags |= IN6P_AUTOFLOWLABEL;
+		}
+		if (MODULE_GLOBAL(ip6_v6only)) {
+			inp->ip_inp.inp.inp_flags |= IN6P_IPV6_V6ONLY;
+		}
 	}
 #endif
 #endif
@@ -2863,7 +2877,7 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 
 #if defined(__APPLE__)
 #if defined(APPLE_LEOPARD) || defined(APPLE_SNOWLEOPARD)
-	inp->ip_inp.inp.inpcb_mtx = lck_mtx_alloc_init(SCTP_BASE_INFO(mtx_grp), SCTP_BASE_INFO(mtx_attr));
+	inp->ip_inp.inp.inpcb_mtx = lck_mtx_alloc_init(SCTP_BASE_INFO(sctbinfo).mtx_grp, SCTP_BASE_INFO(sctbinfo).mtx_attr);
 	if (inp->ip_inp.inp.inpcb_mtx == NULL) {
 		SCTP_PRINTF("in_pcballoc: can't alloc mutex! so=%p\n", (void *)so);
 #ifdef SCTP_MVRF
@@ -2872,12 +2886,14 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 		SCTP_HASH_FREE(inp->sctp_tcbhash, inp->sctp_hashmark);
 		so->so_pcb = NULL;
 		SCTP_ZONE_FREE(SCTP_BASE_INFO(ipi_zone_ep), inp);
-		SCTP_UNLOCK_EXC(SCTP_BASE_INFO(ipi_ep_mtx));
+		SCTP_UNLOCK_EXC(SCTP_BASE_INFO(sctbinfo).ipi_lock);
 		SCTP_LTRACE_ERR_RET(inp, NULL, NULL, SCTP_FROM_SCTP_PCB, ENOMEM);
 		return (ENOMEM);
 	}
+#elif defined(APPLE_LION) || defined(APPLE_MOUNTAINLION)
+	lck_mtx_init(&inp->ip_inp.inp.inpcb_mtx, SCTP_BASE_INFO(sctbinfo).mtx_grp, SCTP_BASE_INFO(sctbinfo).mtx_attr);
 #else
-	lck_mtx_init(&inp->ip_inp.inp.inpcb_mtx, SCTP_BASE_INFO(mtx_grp), SCTP_BASE_INFO(mtx_attr));
+	lck_mtx_init(&inp->ip_inp.inp.inpcb_mtx, SCTP_BASE_INFO(sctbinfo).ipi_lock_grp, SCTP_BASE_INFO(sctbinfo).ipi_lock_attr);
 #endif
 #endif
 	SCTP_INP_INFO_WLOCK();
@@ -2893,7 +2909,12 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 	/* add it to the info area */
 	LIST_INSERT_HEAD(&SCTP_BASE_INFO(listhead), inp, sctp_list);
 #if defined(__APPLE__)
-	LIST_INSERT_HEAD(&SCTP_BASE_INFO(inplisthead), &inp->ip_inp.inp, inp_list);
+	inp->ip_inp.inp.inp_pcbinfo = &SCTP_BASE_INFO(sctbinfo);
+#if defined(APPLE_LEOPARD) || defined(APPLE_SNOWLEOPARD) || defined(APPLE_LION) || defined(APPLE_MOUNTAINLION)
+	LIST_INSERT_HEAD(SCTP_BASE_INFO(sctbinfo).listhead, &inp->ip_inp.inp, inp_list);
+#else
+	LIST_INSERT_HEAD(SCTP_BASE_INFO(sctbinfo).ipi_listhead, &inp->ip_inp.inp, inp_list);
+#endif
 #endif
 	SCTP_INP_INFO_WUNLOCK();
 
@@ -2927,9 +2948,6 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 	m->initial_rto = SCTP_BASE_SYSCTL(sctp_rto_initial_default);
 	m->initial_init_rto_max = SCTP_BASE_SYSCTL(sctp_init_rto_max_default);
 	m->sctp_sack_freq = SCTP_BASE_SYSCTL(sctp_sack_freq_default);
-
-	m->max_open_streams_intome = MAX_SCTP_STREAMS;
-
 	m->max_init_times = SCTP_BASE_SYSCTL(sctp_init_rtx_max_default);
 	m->max_send_times = SCTP_BASE_SYSCTL(sctp_assoc_rtx_max_default);
 	m->def_net_failure = SCTP_BASE_SYSCTL(sctp_path_rtx_max_default);
@@ -2941,6 +2959,7 @@ sctp_inpcb_alloc(struct socket *so, uint32_t vrf_id)
 
 	m->sctp_default_cc_module = SCTP_BASE_SYSCTL(sctp_default_cc_module);
 	m->sctp_default_ss_module = SCTP_BASE_SYSCTL(sctp_default_ss_module);
+	m->max_open_streams_intome = SCTP_BASE_SYSCTL(sctp_nr_incoming_streams_default);
 	/* number of streams to pre-open on a association */
 	m->pre_open_stream_count = SCTP_BASE_SYSCTL(sctp_nr_outgoing_streams_default);
 
@@ -3139,7 +3158,9 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 	/* bind a ep to a socket address */
 	struct sctppcbhead *head;
 	struct sctp_inpcb *inp, *inp_tmp;
+#if defined(INET) || (defined(INET6) && defined(__APPLE__)) || defined(__FreeBSD__) || defined(__APPLE__)
 	struct inpcb *ip_inp;
+#endif
 	int port_reuse_active = 0;
 	int bindall;
 #ifdef SCTP_MVRF
@@ -3153,7 +3174,9 @@ sctp_inpcb_bind(struct socket *so, struct sockaddr *addr,
 	error = 0;
 	bindall = 1;
 	inp = (struct sctp_inpcb *)so->so_pcb;
+#if defined(INET) || (defined(INET6) && defined(__APPLE__)) || defined(__FreeBSD__) || defined(__APPLE__)
 	ip_inp = (struct inpcb *)so->so_pcb;
+#endif
 #ifdef SCTP_DEBUG
 	if (addr) {
 		SCTPDBG(SCTP_DEBUG_PCB1, "Bind called port: %d\n",
@@ -4382,7 +4405,7 @@ sctp_add_remote_addr(struct sctp_tcb *stcb, struct sockaddr *newaddr,
 #endif
 		if (set_scope) {
 #ifdef SCTP_DONT_DO_PRIVADDR_SCOPE
-			stcb->ipv4_local_scope = 1;
+			stcb->asoc.scope.ipv4_local_scope = 1;
 #else
 			if (IN4_ISPRIVATE_ADDRESS(&sin->sin_addr)) {
 				stcb->asoc.scope.ipv4_local_scope = 1;
@@ -4588,6 +4611,7 @@ sctp_add_remote_addr(struct sctp_tcb *stcb, struct sockaddr *newaddr,
 #endif
 	SCTP_RTALLOC((sctp_route_t *)&net->ro, stcb->asoc.vrf_id);
 
+#if !defined(__Userspace__)
 	if (SCTP_ROUTE_HAS_VALID_IFN(&net->ro)) {
 		/* Get source address */
 		net->ro._s_addr = sctp_source_address_selection(stcb->sctp_ep,
@@ -4617,6 +4641,7 @@ sctp_add_remote_addr(struct sctp_tcb *stcb, struct sockaddr *newaddr,
 			}
 	        }
 	}
+#endif
 	if (net->mtu == 0) {
 		switch (newaddr->sa_family) {
 #ifdef INET
@@ -5056,6 +5081,7 @@ sctp_aloc_assoc(struct sctp_inpcb *inp, struct sockaddr *firstaddr,
 			asoc->nr_mapping_array = NULL;
 		}
 		SCTP_DECR_ASOC_COUNT();
+		SCTP_TCB_UNLOCK(stcb);
 		SCTP_TCB_LOCK_DESTROY(stcb);
 		SCTP_TCB_SEND_LOCK_DESTROY(stcb);
 		LIST_REMOVE(stcb, sctp_tcbasocidhash);
@@ -5191,23 +5217,21 @@ sctp_delete_from_timewait(uint32_t tag, uint16_t lport, uint16_t rport)
 	int i;
 
 	chain = &SCTP_BASE_INFO(vtag_timewait)[(tag % SCTP_STACK_VTAG_HASH_SIZE)];
-	if (!LIST_EMPTY(chain)) {
-		LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
-			for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
-			  if ((twait_block->vtag_block[i].v_tag == tag) &&
-			      (twait_block->vtag_block[i].lport == lport) &&
-			      (twait_block->vtag_block[i].rport == rport)) {
-					twait_block->vtag_block[i].tv_sec_at_expire = 0;
-					twait_block->vtag_block[i].v_tag = 0;
-					twait_block->vtag_block[i].lport = 0;
-					twait_block->vtag_block[i].rport = 0;
-					found = 1;
-					break;
-				}
-			}
-			if (found)
+	LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
+		for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
+		  if ((twait_block->vtag_block[i].v_tag == tag) &&
+		      (twait_block->vtag_block[i].lport == lport) &&
+		      (twait_block->vtag_block[i].rport == rport)) {
+				twait_block->vtag_block[i].tv_sec_at_expire = 0;
+				twait_block->vtag_block[i].v_tag = 0;
+				twait_block->vtag_block[i].lport = 0;
+				twait_block->vtag_block[i].rport = 0;
+				found = 1;
 				break;
+			}
 		}
+		if (found)
+			break;
 	}
 }
 
@@ -5221,19 +5245,17 @@ sctp_is_in_timewait(uint32_t tag, uint16_t lport, uint16_t rport)
 
 	SCTP_INP_INFO_WLOCK();
 	chain = &SCTP_BASE_INFO(vtag_timewait)[(tag % SCTP_STACK_VTAG_HASH_SIZE)];
-	if (!LIST_EMPTY(chain)) {
-		LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
-			for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
-			        if ((twait_block->vtag_block[i].v_tag == tag)  &&
-				    (twait_block->vtag_block[i].lport == lport)  &&
-				    (twait_block->vtag_block[i].rport == rport)) {
-					found = 1;
-					break;
-				}
-			}
-			if (found)
+	LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
+		for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
+			if ((twait_block->vtag_block[i].v_tag == tag)  &&
+			    (twait_block->vtag_block[i].lport == lport)  &&
+			    (twait_block->vtag_block[i].rport == rport)) {
+				found = 1;
 				break;
+			}
 		}
+		if (found)
+			break;
 	}
 	SCTP_INP_INFO_WUNLOCK();
 	return (found);
@@ -5255,42 +5277,40 @@ sctp_add_vtag_to_timewait(uint32_t tag, uint32_t time, uint16_t lport, uint16_t 
 	(void)SCTP_GETTIME_TIMEVAL(&now);
 	chain = &SCTP_BASE_INFO(vtag_timewait)[(tag % SCTP_STACK_VTAG_HASH_SIZE)];
 	set = 0;
-	if (!LIST_EMPTY(chain)) {
+	LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
 		/* Block(s) present, lets find space, and expire on the fly */
-		LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
-			for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
-				if ((twait_block->vtag_block[i].v_tag == 0) &&
-				    !set) {
-					twait_block->vtag_block[i].tv_sec_at_expire =
-						now.tv_sec + time;
+		for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
+			if ((twait_block->vtag_block[i].v_tag == 0) &&
+			    !set) {
+				twait_block->vtag_block[i].tv_sec_at_expire =
+					now.tv_sec + time;
+				twait_block->vtag_block[i].v_tag = tag;
+				twait_block->vtag_block[i].lport = lport;
+				twait_block->vtag_block[i].rport = rport;
+				set = 1;
+			} else if ((twait_block->vtag_block[i].v_tag) &&
+				    ((long)twait_block->vtag_block[i].tv_sec_at_expire < now.tv_sec)) {
+				/* Audit expires this guy */
+				twait_block->vtag_block[i].tv_sec_at_expire = 0;
+				twait_block->vtag_block[i].v_tag = 0;
+				twait_block->vtag_block[i].lport = 0;
+				twait_block->vtag_block[i].rport = 0;
+				if (set == 0) {
+					/* Reuse it for my new tag */
+					twait_block->vtag_block[i].tv_sec_at_expire = now.tv_sec + time;
 					twait_block->vtag_block[i].v_tag = tag;
 					twait_block->vtag_block[i].lport = lport;
 					twait_block->vtag_block[i].rport = rport;
 					set = 1;
-				} else if ((twait_block->vtag_block[i].v_tag) &&
-					    ((long)twait_block->vtag_block[i].tv_sec_at_expire < now.tv_sec)) {
-					/* Audit expires this guy */
-					twait_block->vtag_block[i].tv_sec_at_expire = 0;
-					twait_block->vtag_block[i].v_tag = 0;
-					twait_block->vtag_block[i].lport = 0;
-					twait_block->vtag_block[i].rport = 0;
-					if (set == 0) {
-						/* Reuse it for my new tag */
-						twait_block->vtag_block[i].tv_sec_at_expire = now.tv_sec + time;
-						twait_block->vtag_block[i].v_tag = tag;
-						twait_block->vtag_block[i].lport = lport;
-						twait_block->vtag_block[i].rport = rport;
-						set = 1;
-					}
 				}
 			}
-			if (set) {
-				/*
-				 * We only do up to the block where we can
-				 * place our tag for audits
-				 */
-				break;
-			}
+		}
+		if (set) {
+			/*
+			 * We only do up to the block where we can
+			 * place our tag for audits
+			 */
+			break;
 		}
 	}
 	/* Need to add a new block to chain */
@@ -5876,6 +5896,7 @@ sctp_free_assoc(struct sctp_inpcb *inp, struct sctp_tcb *stcb, int from_inpcbfre
 	/* Insert new items here :> */
 
 	/* Get rid of LOCK */
+	SCTP_TCB_UNLOCK(stcb);
 	SCTP_TCB_LOCK_DESTROY(stcb);
 	SCTP_TCB_SEND_LOCK_DESTROY(stcb);
 	if (from_inpcbfree == SCTP_NORMAL_PROC) {
@@ -6601,6 +6622,25 @@ sctp_pcb_init()
 	LIST_INIT(&SCTP_BASE_INFO(listhead));
 #if defined(__APPLE__)
 	LIST_INIT(&SCTP_BASE_INFO(inplisthead));
+#if defined(APPLE_LEOPARD) || defined(APPLE_SNOWLEOPARD) || defined(APPLE_LION) || defined(APPLE_MOUNTAINLION)
+	SCTP_BASE_INFO(sctbinfo).listhead = &SCTP_BASE_INFO(inplisthead);
+	SCTP_BASE_INFO(sctbinfo).mtx_grp_attr = lck_grp_attr_alloc_init();
+	lck_grp_attr_setdefault(SCTP_BASE_INFO(sctbinfo).mtx_grp_attr);
+	SCTP_BASE_INFO(sctbinfo).mtx_grp = lck_grp_alloc_init("sctppcb", SCTP_BASE_INFO(sctbinfo).mtx_grp_attr);
+	SCTP_BASE_INFO(sctbinfo).mtx_attr = lck_attr_alloc_init();
+	lck_attr_setdefault(SCTP_BASE_INFO(sctbinfo).mtx_attr);
+#else
+	SCTP_BASE_INFO(sctbinfo).ipi_listhead = &SCTP_BASE_INFO(inplisthead);
+	SCTP_BASE_INFO(sctbinfo).ipi_lock_grp_attr = lck_grp_attr_alloc_init();
+	lck_grp_attr_setdefault(SCTP_BASE_INFO(sctbinfo).ipi_lock_grp_attr);
+	SCTP_BASE_INFO(sctbinfo).ipi_lock_grp = lck_grp_alloc_init("sctppcb", SCTP_BASE_INFO(sctbinfo).ipi_lock_grp_attr);
+	SCTP_BASE_INFO(sctbinfo).ipi_lock_attr = lck_attr_alloc_init();
+	lck_attr_setdefault(SCTP_BASE_INFO(sctbinfo).ipi_lock_attr);
+#endif
+#if !defined(APPLE_LEOPARD) && !defined(APPLE_SNOWLEOPARD) && !defined(APPLE_LION) && !defined(APPLE_MOUNTAINLION)
+	SCTP_BASE_INFO(sctbinfo).ipi_gc = sctp_gc;
+	in_pcbinfo_attach(&SCTP_BASE_INFO(sctbinfo));
+#endif
 #endif
 
 
@@ -6674,17 +6714,6 @@ sctp_pcb_init()
 
 
 	/* Master Lock INIT for info structure */
-#if defined(__APPLE__)
-	/* allocate the lock group attribute for SCTP PCB mutexes */
-	SCTP_BASE_INFO(mtx_grp_attr) = lck_grp_attr_alloc_init();
-	lck_grp_attr_setdefault(SCTP_BASE_INFO(mtx_grp_attr));
-	/* allocate the lock group for SCTP PCB mutexes */
-	SCTP_BASE_INFO(mtx_grp) = lck_grp_alloc_init("sctppcb",
-						     SCTP_BASE_INFO(mtx_grp_attr));
-	/* allocate the lock attribute for SCTP PCB mutexes */
-	SCTP_BASE_INFO(mtx_attr) = lck_attr_alloc_init();
-	lck_attr_setdefault(SCTP_BASE_INFO(mtx_attr));
-#endif				/* __APPLE__ */
 	SCTP_INP_INFO_LOCK_INIT();
 	SCTP_STATLOG_INIT_LOCK();
 
@@ -6722,7 +6751,6 @@ sctp_pcb_init()
 	for (i = 0; i < SCTP_STACK_VTAG_HASH_SIZE; i++) {
 		LIST_INIT(&SCTP_BASE_INFO(vtag_timewait)[i]);
 	}
-
 #if defined(SCTP_PROCESS_LEVEL_LOCKS)
 #if defined(__Userspace_os_Windows)
 	InitializeConditionVariable(&sctp_it_ctl.iterator_wakeup);
@@ -6777,37 +6805,9 @@ sctp_pcb_finish(void)
 	struct sctp_tagblock *twait_block, *prev_twait_block;
 	struct sctp_laddr *wi, *nwi;
 	int i;
-
-#if defined(__FreeBSD__)
-	/* Free BSD the it thread never exits
-	 * but we do clean up. The only way
-	 * freebsd reaches here if we have VRF's
-	 * but we still add the ifdef to make it
-	 * compile on old versions.
-	 */
-	{
-		struct sctp_iterator *it, *nit;
-
-		SCTP_IPI_ITERATOR_WQ_LOCK();
-		TAILQ_FOREACH_SAFE(it, &sctp_it_ctl.iteratorhead, sctp_nxt_itr, nit) {
-			if (it->vn != curvnet) {
-				continue;
-			}
-			TAILQ_REMOVE(&sctp_it_ctl.iteratorhead, it, sctp_nxt_itr);
-			if (it->function_atend != NULL) {
-				(*it->function_atend) (it->pointer, it->val);
-			}
-			SCTP_FREE(it,SCTP_M_ITER);
-		}
-		SCTP_IPI_ITERATOR_WQ_UNLOCK();
-		SCTP_ITERATOR_LOCK();
-		if ((sctp_it_ctl.cur_it) &&
-		    (sctp_it_ctl.cur_it->vn == curvnet)) {
-			sctp_it_ctl.iterator_flags |= SCTP_ITERATOR_STOP_CUR_IT;
-		}
-		SCTP_ITERATOR_UNLOCK();
-	}
-#else
+	struct sctp_iterator *it, *nit;
+	
+#if !defined(__FreeBSD__)
 	/* Notify the iterator to exit. */
 	SCTP_IPI_ITERATOR_WQ_LOCK();
 	sctp_it_ctl.iterator_flags |= SCTP_ITERATOR_MUST_EXIT;
@@ -6815,6 +6815,9 @@ sctp_pcb_finish(void)
 	SCTP_IPI_ITERATOR_WQ_UNLOCK();
 #endif
 #if defined(__APPLE__)
+#if !defined(APPLE_LEOPARD) && !defined(APPLE_SNOWLEOPARD) && !defined(APPLE_LION) && !defined(APPLE_MOUNTAINLION)
+	in_pcbinfo_detach(&SCTP_BASE_INFO(sctbinfo));
+#endif
 	SCTP_IPI_ITERATOR_WQ_LOCK();
 	do {
 		msleep(&sctp_it_ctl.iterator_flags,
@@ -6823,8 +6826,6 @@ sctp_pcb_finish(void)
 	} while ((sctp_it_ctl.iterator_flags & SCTP_ITERATOR_EXITED) == 0);
 	thread_deallocate(sctp_it_ctl.thread_proc);
 	SCTP_IPI_ITERATOR_WQ_UNLOCK();
-	SCTP_IPI_ITERATOR_WQ_DESTROY();
-	SCTP_ITERATOR_LOCK_DESTROY();
 #endif
 #if defined(__Windows__)
 	if (sctp_it_ctl.iterator_thread_obj != NULL) {
@@ -6839,7 +6840,56 @@ sctp_pcb_finish(void)
 		ObDereferenceObject(sctp_it_ctl.iterator_thread_obj);
 	}
 #endif
-
+#if defined(__Userspace__)
+	if (sctp_it_ctl.thread_proc) {
+#if defined(__Userspace_os_Windows)
+		WaitForSingleObject(sctp_it_ctl.thread_proc, INFINITE);
+		CloseHandle(sctp_it_ctl.thread_proc);
+		sctp_it_ctl.thread_proc = NULL;
+#else
+		pthread_join(sctp_it_ctl.thread_proc, NULL);
+		sctp_it_ctl.thread_proc = 0;
+#endif
+	}
+#endif
+#if defined(SCTP_PROCESS_LEVEL_LOCKS)
+#if defined(__Userspace_os_Windows)
+	DeleteConditionVariable(&sctp_it_ctl.iterator_wakeup);
+#else
+	pthread_cond_destroy(&sctp_it_ctl.iterator_wakeup);
+#endif
+#endif
+	/* In FreeBSD the iterator thread never exits
+	 * but we do clean up.
+	 * The only way FreeBSD reaches here is if we have VRF's
+	 * but we still add the ifdef to make it compile on old versions.
+	 */
+	SCTP_IPI_ITERATOR_WQ_LOCK();
+	TAILQ_FOREACH_SAFE(it, &sctp_it_ctl.iteratorhead, sctp_nxt_itr, nit) {
+#if defined(__FreeBSD__) && __FreeBSD_version >= 801000
+		if (it->vn != curvnet) {
+			continue;
+		}
+#endif
+		TAILQ_REMOVE(&sctp_it_ctl.iteratorhead, it, sctp_nxt_itr);
+		if (it->function_atend != NULL) {
+			(*it->function_atend) (it->pointer, it->val);
+		}
+		SCTP_FREE(it,SCTP_M_ITER);
+	}
+	SCTP_IPI_ITERATOR_WQ_UNLOCK();
+#if defined(__FreeBSD__) && __FreeBSD_version >= 801000
+	SCTP_ITERATOR_LOCK();
+	if ((sctp_it_ctl.cur_it) &&
+	    (sctp_it_ctl.cur_it->vn == curvnet)) {
+		sctp_it_ctl.iterator_flags |= SCTP_ITERATOR_STOP_CUR_IT;
+	}
+	SCTP_ITERATOR_UNLOCK();
+#endif
+#if !defined(__FreeBSD__)
+	SCTP_IPI_ITERATOR_WQ_DESTROY();
+ 	SCTP_ITERATOR_LOCK_DESTROY();
+#endif
 	SCTP_OS_TIMER_STOP(&SCTP_BASE_INFO(addr_wq_timer.timer));
 	SCTP_WQ_ADDR_LOCK();
 	LIST_FOREACH_SAFE(wi, &SCTP_BASE_INFO(addr_wq), sctp_nxt_addr, nwi) {
@@ -6877,7 +6927,9 @@ sctp_pcb_finish(void)
 	SCTP_HASH_FREE(SCTP_BASE_INFO(vrf_ifn_hash), SCTP_BASE_INFO(vrf_ifn_hashmark));
 #if defined(__Userspace__) && !defined(__Userspace_os_Windows)
 	/* free memory allocated by getifaddrs call */
+#if defined(INET) || defined(INET6)
 	freeifaddrs(g_interfaces);
+#endif
 #endif
 
 	/* free the TIMEWAIT list elements malloc'd in the function
@@ -6909,16 +6961,20 @@ sctp_pcb_finish(void)
 	SCTP_IPI_COUNT_DESTROY();
 #endif
 	SCTP_STATLOG_DESTROY();
-#if !defined(__Userspace__)
 	SCTP_INP_INFO_LOCK_DESTROY();
-#endif
 
 	SCTP_WQ_ADDR_DESTROY();
 
 #if defined(__APPLE__)
-	lck_grp_attr_free(SCTP_BASE_INFO(mtx_grp_attr));
-	lck_grp_free(SCTP_BASE_INFO(mtx_grp));
-	lck_attr_free(SCTP_BASE_INFO(mtx_attr));
+#if defined(APPLE_LEOPARD) || defined(APPLE_SNOWLEOPARD) || defined(APPLE_LION) || defined(APPLE_MOUNTAINLION)
+	lck_grp_attr_free(SCTP_BASE_INFO(sctbinfo).mtx_grp_attr);
+	lck_grp_free(SCTP_BASE_INFO(sctbinfo).mtx_grp);
+	lck_attr_free(SCTP_BASE_INFO(sctbinfo).mtx_attr);
+#else
+	lck_grp_attr_free(SCTP_BASE_INFO(sctbinfo).ipi_lock_grp_attr);
+	lck_grp_free(SCTP_BASE_INFO(sctbinfo).ipi_lock_grp);
+	lck_attr_free(SCTP_BASE_INFO(sctbinfo).ipi_lock_attr);
+#endif
 #endif
 #if defined(__Userspace__)
 	SCTP_TIMERQ_LOCK_DESTROY();
@@ -7656,30 +7712,28 @@ skip_vtag_check:
 
 	chain = &SCTP_BASE_INFO(vtag_timewait)[(tag % SCTP_STACK_VTAG_HASH_SIZE)];
 	/* Now what about timed wait ? */
-	if (!LIST_EMPTY(chain)) {
+	LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
 		/*
 		 * Block(s) are present, lets see if we have this tag in the
 		 * list
 		 */
-		LIST_FOREACH(twait_block, chain, sctp_nxt_tagblock) {
-			for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
-				if (twait_block->vtag_block[i].v_tag == 0) {
-					/* not used */
-					continue;
-				} else if ((long)twait_block->vtag_block[i].tv_sec_at_expire  <
-					   now->tv_sec) {
-					/* Audit expires this guy */
-					twait_block->vtag_block[i].tv_sec_at_expire = 0;
-					twait_block->vtag_block[i].v_tag = 0;
-					twait_block->vtag_block[i].lport = 0;
-					twait_block->vtag_block[i].rport = 0;
-				} else if ((twait_block->vtag_block[i].v_tag == tag) &&
-					   (twait_block->vtag_block[i].lport == lport) &&
-					   (twait_block->vtag_block[i].rport == rport)) {
-					/* Bad tag, sorry :< */
-					SCTP_INP_INFO_RUNLOCK();
-					return (0);
-				}
+		for (i = 0; i < SCTP_NUMBER_IN_VTAG_BLOCK; i++) {
+			if (twait_block->vtag_block[i].v_tag == 0) {
+				/* not used */
+				continue;
+			} else if ((long)twait_block->vtag_block[i].tv_sec_at_expire  <
+				   now->tv_sec) {
+				/* Audit expires this guy */
+				twait_block->vtag_block[i].tv_sec_at_expire = 0;
+				twait_block->vtag_block[i].v_tag = 0;
+				twait_block->vtag_block[i].lport = 0;
+				twait_block->vtag_block[i].rport = 0;
+			} else if ((twait_block->vtag_block[i].v_tag == tag) &&
+				   (twait_block->vtag_block[i].lport == lport) &&
+				   (twait_block->vtag_block[i].rport == rport)) {
+				/* Bad tag, sorry :< */
+				SCTP_INP_INFO_RUNLOCK();
+				return (0);
 			}
 		}
 	}

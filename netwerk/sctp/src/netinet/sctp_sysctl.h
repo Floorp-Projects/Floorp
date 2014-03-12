@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 237565 2012-06-25 17:15:09Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_sysctl.h 252779 2013-07-05 10:08:49Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_SYSCTL_H_
@@ -79,6 +79,7 @@ struct sctp_sysctl {
 	uint32_t sctp_path_rtx_max_default;
 	uint32_t sctp_path_pf_threshold;
 	uint32_t sctp_add_more_threshold;
+	uint32_t sctp_nr_incoming_streams_default;
 	uint32_t sctp_nr_outgoing_streams_default;
 	uint32_t sctp_cmt_on_off;
 	uint32_t sctp_cmt_use_dac;
@@ -338,6 +339,12 @@ struct sctp_sysctl {
 #define SCTPCTL_ADD_MORE_ON_OUTPUT_MIN	0
 #define SCTPCTL_ADD_MORE_ON_OUTPUT_MAX	0xFFFFFFFF
 #define SCTPCTL_ADD_MORE_ON_OUTPUT_DEFAULT SCTP_DEFAULT_ADD_MORE
+
+/* incoming_streams: Default number of incoming streams */
+#define SCTPCTL_INCOMING_STREAMS_DESC	"Default number of incoming streams"
+#define SCTPCTL_INCOMING_STREAMS_MIN	1
+#define SCTPCTL_INCOMING_STREAMS_MAX	65535
+#define SCTPCTL_INCOMING_STREAMS_DEFAULT SCTP_ISTREAM_INITIAL
 
 /* outgoing_streams: Default number of outgoing streams */
 #define SCTPCTL_OUTGOING_STREAMS_DESC	"Default number of outgoing streams"

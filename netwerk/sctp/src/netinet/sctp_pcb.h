@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 246687 2013-02-11 21:02:49Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_pcb.h 254248 2013-08-12 13:52:15Z tuexen $");
 #endif
 
 #ifndef _NETINET_SCTP_PCB_H_
@@ -189,6 +189,7 @@ struct sctp_epinfo {
 
 #if defined(__APPLE__)
 	struct inpcbhead inplisthead;
+	struct inpcbinfo sctbinfo;
 #endif
 	/* ep zone info */
 	sctp_zone_t ipi_zone_ep;
@@ -223,20 +224,12 @@ struct sctp_epinfo {
 	userland_mutex_t wq_addr_mtx;
 #elif defined(__APPLE__)
 #ifdef _KERN_LOCKS_H_
-	lck_grp_attr_t *mtx_grp_attr;
-	lck_grp_t *mtx_grp;
-	lck_attr_t *mtx_attr;
-	lck_rw_t *ipi_ep_mtx;
 	lck_mtx_t *ipi_addr_mtx;
 	lck_mtx_t *ipi_count_mtx;
 	lck_mtx_t *ipi_pktlog_mtx;
 	lck_mtx_t *logging_mtx;
 	lck_mtx_t *wq_addr_mtx;
 #else
-	void *mtx_grp_attr;
-	void *mtx_grp;
-	void *mtx_attr;
-	void *ipi_ep_mtx;
 	void *ipi_count_mtx;
 	void *logging_mtx;
 #endif /* _KERN_LOCKS_H_ */
@@ -469,8 +462,8 @@ struct sctp_inpcb {
 
 	/* back pointer to our socket */
 	struct socket *sctp_socket;
+	uint64_t sctp_features;	/* Feature flags */
 	uint32_t sctp_flags;	/* INP state flag set */
-	uint32_t sctp_features;	/* Feature flags */
 	uint32_t sctp_mobility_features; /* Mobility  Feature flags */
 	struct sctp_pcb sctp_ep;/* SCTP ep data */
 	/* head of the hash of all associations */
