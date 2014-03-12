@@ -736,7 +736,6 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
             if os.path.exists(resultfile):
                 result = open(resultfile).read()
                 if result:
-                    sys.stderr.write("resultfile contained " + "'" + result + "'\n")
                     if result in ['OK', 'FAIL']:
                         done = True
                     else:
@@ -755,9 +754,7 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
     else:
         runner.wait(10)
     finally:
-        sys.stderr.write("Done.\n")
         outf.close()
-        sys.stderr.write("Clean the profile.\n")
         if profile:
             profile.cleanup()
 

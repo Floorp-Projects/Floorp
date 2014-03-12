@@ -13,7 +13,6 @@ module.metadata = {
 };
 
 const { Ci } = require("chrome");
-const { validateOptions: valid } = require('./deprecated/api-utils');
 const { setTimeout } = require('./timers');
 const { isPrivateBrowsingSupported } = require('./self');
 const { isWindowPBSupported } = require('./private-browsing/utils');
@@ -31,11 +30,14 @@ const { events } = require("./panel/events");
 const systemEvents = require("./system/events");
 const { filter, pipe, stripListeners } = require("./event/utils");
 const { getNodeView, getActiveView } = require("./view/core");
-const { isNil, isObject } = require("./lang/type");
+const { isNil, isObject, isNumber } = require("./lang/type");
 const { getAttachEventType } = require("./content/utils");
+const { number, boolean, object } = require('./deprecated/api-utils');
 
-let number = { is: ['number', 'undefined', 'null'] };
-let boolean = { is: ['boolean', 'undefined', 'null'] };
+let isRect = ({top, right, bottom, left}) => [top, right, bottom, left].
+  some(value => isNumber(value) && !isNaN(value));
+
+let isSDKObj = obj => obj instanceof Class;
 
 let rectContract = contract({
   top: number,
@@ -44,16 +46,20 @@ let rectContract = contract({
   left: number
 });
 
-let rect = {
-  is: ['object', 'undefined', 'null'],
-  map: function(v) isNil(v) || !isObject(v) ? v : rectContract(v)
+let position = {
+  is: object,
+  map: v => (isNil(v) || isSDKObj(v) || !isObject(v)) ? v : rectContract(v),
+  ok: v => isNil(v) || isSDKObj(v) || (isObject(v) && isRect(v)),
+  msg: 'The option "position" must be a SDK object registered as anchor; ' +
+        'or an object with one or more of the following keys set to numeric ' +
+        'values: top, right, bottom, left.'
 }
 
 let displayContract = contract({
   width: number,
   height: number,
   focus: boolean,
-  position: rect
+  position: position
 });
 
 let panelContract = contract(merge({}, displayContract.rules, loaderContract.rules));
@@ -176,7 +182,7 @@ const Panel = Class({
   get isShowing() !isDisposed(this) && domPanel.isOpen(viewFor(this)),
 
   /* Public API: Panel.show */
-  show: function show(options, anchor) {
+  show: function show(options={}, anchor) {
     if (options instanceof Ci.nsIDOMElement) {
       [anchor, options] = [options, null];
     }
@@ -191,7 +197,7 @@ const Panel = Class({
 
     let model = modelFor(this);
     let view = viewFor(this);
-    let anchorView = getNodeView(anchor);
+    let anchorView = getNodeView(anchor || options.position);
 
     options = merge({
       position: model.position,
@@ -239,24 +245,25 @@ exports.Panel = Panel;
 getActiveView.define(Panel, viewFor);
 
 // Filter panel events to only panels that are create by this module.
-let panelEvents = filter(events, function({target}) panelFor(target));
+let panelEvents = filter(events, ({target}) => panelFor(target));
 
 // Panel events emitted after panel has being shown.
-let shows = filter(panelEvents, function({type}) type === "popupshown");
+let shows = filter(panelEvents, ({type}) => type === "popupshown");
 
 // Panel events emitted after panel became hidden.
-let hides = filter(panelEvents, function({type}) type === "popuphidden");
+let hides = filter(panelEvents, ({type}) => type === "popuphidden");
 
 // Panel events emitted after content inside panel is ready. For different
 // panels ready may mean different state based on `contentScriptWhen` attribute.
 // Weather given event represents readyness is detected by `getAttachEventType`
 // helper function.
-let ready = filter(panelEvents, function({type, target})
+let ready = filter(panelEvents, ({type, target}) =>
   getAttachEventType(modelFor(panelFor(target))) === type);
 
 // Forward panel show / hide events to panel's own event listeners.
-on(shows, "data", function({target}) emit(panelFor(target), "show"));
-on(hides, "data", function({target}) emit(panelFor(target), "hide"));
+on(shows, "data", ({target}) => emit(panelFor(target), "show"));
+
+on(hides, "data", ({target}) => emit(panelFor(target), "hide"));
 
 on(ready, "data", function({target}) {
   let worker = workerFor(panelFor(target));
