@@ -9,3 +9,7 @@
 <svg:clipPath id="tab-curve-clip-path-end" clipPathUnits="objectBoundingBox">
   <svg:path d="m 0,0.0625 -0.05,0 0,0.938 1,0 0,-0.028 C 0.67917542,0.95840561 0.56569036,0.81970962 0.51599998,0.5625 0.48279998,0.3905 0.465,0.0659 0,0.0625 z"/>
 </svg:clipPath>
+
+<svg:clipPath id="tab-hover-clip-path" clipPathUnits="objectBoundingBox">
+  <svg:path d="M 0,0.2 0,1 1,1, 1,0.2 z"/>
+</svg:clipPath>
