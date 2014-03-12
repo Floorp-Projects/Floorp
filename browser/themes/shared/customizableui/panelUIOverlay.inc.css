@@ -329,6 +329,14 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-box-flex: 1;
 }
 
+#personal-bookmarks[overflowedItem=true] > #bookmarks-toolbar-placeholder {
+  -moz-box-flex: 1;
+}
+
+#personal-bookmarks[cui-areatype="toolbar"][overflowedItem=true] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
+  -moz-margin-end: 2px;
+}
+
 #edit-controls@inAnyPanel@ > #copy-button,
 #zoom-controls@inAnyPanel@ > #zoom-reset-button {
   border-left: none;
@@ -840,7 +848,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 }
 
 toolbaritem[overflowedItem=true],
-toolbarbutton[overflowedItem=true] {
+.widget-overflow-list .toolbarbutton-1 {
   width: 100%;
   max-width: @menuPanelWidth@;
   min-height: 36px;
@@ -848,14 +856,14 @@ toolbarbutton[overflowedItem=true] {
   background-position: 0 center;
 }
 
-#widget-overflow-list > toolbarbutton,
-#widget-overflow-list > toolbarbutton > toolbarbutton {
+.widget-overflow-list .toolbarbutton-1,
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-box-align: center;
   -moz-box-orient: horizontal;
 }
 
-#widget-overflow-list > toolbarbutton > .toolbarbutton-text,
-#widget-overflow-list > #bookmarks-menu-button > toolbarbutton > .toolbarbutton-text {
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text,
+.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-text {
   text-align: start;
   -moz-padding-start: .5em;
 }
