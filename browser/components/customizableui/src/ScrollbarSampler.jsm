@@ -31,6 +31,10 @@ this.ScrollbarSampler = {
     return deferred.promise;
   },
 
+  resetSystemScrollbarWidth: function() {
+    gSystemScrollbarWidth = null;
+  },
+
   _sampleSystemScrollbarWidth: function() {
     let deferred = Promise.defer();
     let hwin = Services.appShell.hiddenDOMWindow;
