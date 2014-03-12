@@ -615,8 +615,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled=true]):hover:active > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker:not([disabled=true]) > .dropmarker-icon,
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):hover:active > .toolbarbutton-icon,
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1[open="true"] > .toolbarbutton-icon {
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon {
   background-color: rgba(154,154,154,.5);
   background-image: linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
   border: 1px solid rgb(154,154,154);
@@ -625,13 +624,14 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   transition-duration: 10ms;
 }
 
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
+  background-color: rgba(90%,90%,90%,.4);
+  transition: background-color 150ms;
+}
+
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:hover:active,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:hover:active {
   padding: 3px;
-}
-
-:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1[checked="true"] {
-  padding: 5px !important;
 }
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before {
