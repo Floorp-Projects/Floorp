@@ -303,6 +303,7 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
     case SEC_ERROR_UNTRUSTED_ISSUER:                   return  4;
     case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:         return  5;
     case SEC_ERROR_UNTRUSTED_CERT:                     return  6;
+    case SEC_ERROR_INADEQUATE_KEY_USAGE:               return  7;
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:  return  8;
     case SSL_ERROR_BAD_CERT_DOMAIN:                    return  9;
     case SEC_ERROR_EXPIRED_CERTIFICATE:                return 10;
@@ -566,6 +567,7 @@ PRErrorCodeToOverrideType(PRErrorCode errorCode)
     case SEC_ERROR_UNTRUSTED_ISSUER:
     case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
     case SEC_ERROR_UNTRUSTED_CERT:
+    case SEC_ERROR_INADEQUATE_KEY_USAGE:
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
       // We group all these errors as "cert not trusted"
       return nsICertOverrideService::ERROR_UNTRUSTED;
