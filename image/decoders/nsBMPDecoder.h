@@ -45,7 +45,7 @@ public:
     // for 32BPP bitmaps.  Only use after the bitmap has been processed.
     bool HasAlphaData() const;
 
-    virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
+    virtual void WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
     virtual void FinishInternal();
 
 private:
