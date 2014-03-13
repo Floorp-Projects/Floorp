@@ -16,6 +16,11 @@ function test() {
   let viewDoc;
   let inspector;
 
+  gDevTools.testing = true;
+  SimpleTest.registerCleanupFunction(() => {
+    gDevTools.testing = false;
+  });
+
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);
