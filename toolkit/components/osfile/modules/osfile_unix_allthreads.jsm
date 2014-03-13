@@ -139,15 +139,6 @@ Object.defineProperty(OSError.prototype, "becauseAccessDenied", {
     return this.unixErrno == Const.EACCES;
   }
 });
-/**
- * |true| if the error was raised because some invalid argument was passed,
- * |false| otherwise.
- */
-Object.defineProperty(OSError.prototype, "becauseInvalidArgument", {
-  get: function becauseInvalidArgument() {
-    return this.unixErrno == Const.EINVAL;
-  }
-});
 
 /**
  * Serialize an instance of OSError to something that can be
@@ -338,10 +329,6 @@ OSError.exists = function exists(operation, path) {
 
 OSError.noSuchFile = function noSuchFile(operation, path) {
   return new OSError(operation, Const.ENOENT, path);
-};
-
-OSError.invalidArgument = function invalidArgument(operation) {
-  return new OSError(operation, Const.EINVAL);
 };
 
 let EXPORTED_SYMBOLS = [
