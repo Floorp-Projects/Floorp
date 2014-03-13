@@ -1,0 +1,69 @@
+From: Jeff Gilbert <jgilbert@mozilla.com>
+Bug 982973 - Tell ANGLE about d3dcompiler_47.dll. - r=vlad
+
+diff --git a/gfx/angle/src/libGLESv2/renderer/Renderer.cpp b/gfx/angle/src/libGLESv2/renderer/Renderer.cpp
+--- a/gfx/angle/src/libGLESv2/renderer/Renderer.cpp
++++ b/gfx/angle/src/libGLESv2/renderer/Renderer.cpp
+@@ -17,16 +17,17 @@
+ 
+ #if !defined(ANGLE_ENABLE_D3D11)
+ // Enables use of the Direct3D 11 API for a default display, when available
+ #define ANGLE_ENABLE_D3D11 0
+ #endif
+ 
+ #define ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES \
+     {                                            \
++        TEXT("d3dcompiler_47.dll"),              \
+         TEXT("d3dcompiler_46.dll"),              \
+         TEXT("d3dcompiler_43.dll")               \
+     }
+ 
+ 
+ namespace rx
+ {
+ 
+@@ -173,23 +174,23 @@ ShaderBlob *Renderer::compileToBinary(gl
+ 
+ extern "C"
+ {
+ 
+ rx::Renderer *glCreateRenderer(egl::Display *display, HDC hDc, EGLNativeDisplayType displayId)
+ {
+     rx::Renderer *renderer = NULL;
+     EGLint status = EGL_BAD_ALLOC;
+-    
++
+     if (ANGLE_ENABLE_D3D11 ||
+         displayId == EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE ||
+         displayId == EGL_D3D11_ONLY_DISPLAY_ANGLE)
+     {
+         renderer = new rx::Renderer11(display, hDc);
+-    
++
+         if (renderer)
+         {
+             status = renderer->initialize();
+         }
+ 
+         if (status == EGL_SUCCESS)
+         {
+             return renderer;
+@@ -200,17 +201,17 @@ rx::Renderer *glCreateRenderer(egl::Disp
+         }
+ 
+         // Failed to create a D3D11 renderer, try creating a D3D9 renderer
+         delete renderer;
+     }
+ 
+     bool softwareDevice = (displayId == EGL_SOFTWARE_DISPLAY_ANGLE);
+     renderer = new rx::Renderer9(display, hDc, softwareDevice);
+-    
++
+     if (renderer)
+     {
+         status = renderer->initialize();
+     }
+ 
+     if (status == EGL_SUCCESS)
+     {
+         return renderer;

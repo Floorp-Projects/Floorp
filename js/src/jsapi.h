@@ -3161,6 +3161,26 @@ JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void **conte
 extern JS_PUBLIC_API(bool)
 JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data);
 
+/*
+ * Create memory mapped array buffer contents.
+ * For cloning, the fd will not be closed after mapping, and the caller must
+ * take care of closing fd after calling this function.
+ * A new duplicated fd used by the mapping is returned in new_fd.
+ */
+extern JS_PUBLIC_API(bool)
+JS_CreateMappedArrayBufferContents(int fd, int *new_fd, size_t offset,
+                                   size_t length, void **contents);
+
+/*
+ * Release the allocated resource of mapped array buffer contents before the
+ * object is created.
+ * If a new object has been created by JS_NewArrayBufferWithContents() with
+ * this content, then JS_NeuterArrayBuffer() should be used instead to release
+ * the resource used by the object.
+ */
+extern JS_PUBLIC_API(void)
+JS_ReleaseMappedArrayBufferContents(int fd, void *contents, size_t length);
+
 extern JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj);
 

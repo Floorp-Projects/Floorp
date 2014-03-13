@@ -1535,6 +1535,17 @@ CloseAllProtoSockets(NuwaProtoFdInfo *aInfoList, int aInfoSize) {
   }
 }
 
+static void
+AfterForkHook()
+{
+  void (*AfterNuwaFork)();
+
+  // This is defined in dom/ipc/ContentChild.cpp
+  AfterNuwaFork = (void (*)())
+    dlsym(RTLD_DEFAULT, "AfterNuwaFork");
+  AfterNuwaFork();
+}
+
 /**
  * Fork a new process that is ready for running IPC.
  *
@@ -1565,6 +1576,7 @@ ForkIPCProcess() {
       printf("\n\nNUWA CHILDCHILDCHILDCHILD\n  debug me @ %d\n\n", getpid());
       sleep(30);
     }
+    AfterForkHook();
     ReplaceSignalFds();
     ReplaceIPC(sProtoFdInfos, sProtoFdInfosSize);
     RecreateEpollFds();
