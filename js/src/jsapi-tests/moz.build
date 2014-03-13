@@ -45,6 +45,7 @@ UNIFIED_SOURCES += [
     'testJSEvaluateScript.cpp',
     'testLookup.cpp',
     'testLooselyEqual.cpp',
+    'testMappedArrayBuffer.cpp',
     'testNewObject.cpp',
     'testNullRoot.cpp',
     'testObjectEmulatingUndefined.cpp',

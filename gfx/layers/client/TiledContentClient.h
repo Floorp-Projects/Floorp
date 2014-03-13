@@ -108,19 +108,19 @@ public:
 
   virtual gfxSharedReadLockType GetType() MOZ_OVERRIDE { return TYPE_SHMEM; }
 
-  mozilla::ipc::Shmem& GetShmem() { return mShmem; }
+  mozilla::layers::ShmemSection& GetShmemSection() { return mShmemSection; }
 
   static already_AddRefed<gfxShmSharedReadLock>
-  Open(mozilla::layers::ISurfaceAllocator* aAllocator, const mozilla::ipc::Shmem& aShmem)
+  Open(mozilla::layers::ISurfaceAllocator* aAllocator, const mozilla::layers::ShmemSection& aShmemSection)
   {
-    nsRefPtr<gfxShmSharedReadLock> readLock = new gfxShmSharedReadLock(aAllocator, aShmem);
+    nsRefPtr<gfxShmSharedReadLock> readLock = new gfxShmSharedReadLock(aAllocator, aShmemSection);
     return readLock.forget();
   }
 
 private:
-  gfxShmSharedReadLock(ISurfaceAllocator* aAllocator, const mozilla::ipc::Shmem& aShmem)
+  gfxShmSharedReadLock(ISurfaceAllocator* aAllocator, const mozilla::layers::ShmemSection& aShmemSection)
     : mAllocator(aAllocator)
-    , mShmem(aShmem)
+    , mShmemSection(aShmemSection)
     , mAllocSuccess(true)
   {
     MOZ_COUNT_CTOR(gfxShmSharedReadLock);
@@ -129,11 +129,11 @@ private:
   ShmReadLockInfo* GetShmReadLockInfoPtr()
   {
     return reinterpret_cast<ShmReadLockInfo*>
-      (mShmem.get<char>() + mShmem.Size<char>() - sizeof(ShmReadLockInfo));
+      (mShmemSection.shmem().get<char>() + mShmemSection.offset());
   }
 
   RefPtr<ISurfaceAllocator> mAllocator;
-  mozilla::ipc::Shmem mShmem;
+  mozilla::layers::ShmemSection mShmemSection;
   bool mAllocSuccess;
 };
 

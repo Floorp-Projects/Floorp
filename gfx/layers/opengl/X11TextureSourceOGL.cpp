@@ -39,7 +39,7 @@ X11TextureSourceOGL::DeallocateDeviceData()
 }
 
 void
-X11TextureSourceOGL::BindTexture(GLenum aTextureUnit)
+X11TextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 {
   gl()->fActiveTexture(aTextureUnit);
 
@@ -54,7 +54,7 @@ X11TextureSourceOGL::BindTexture(GLenum aTextureUnit)
     gl::sGLXLibrary.UpdateTexImage(mSurface->XDisplay(), mSurface->GetGLXPixmap());
   }
 
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  ApplyFilterToBoundTexture(gl(), aFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 }
 
 IntSize

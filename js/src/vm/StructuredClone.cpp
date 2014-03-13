@@ -66,6 +66,7 @@ enum StructuredDataType {
     SCTAG_ARRAY_OBJECT,
     SCTAG_OBJECT_OBJECT,
     SCTAG_ARRAY_BUFFER_OBJECT,
+    SCTAG_MAPPED_ARRAY_BUFFER_OBJECT,
     SCTAG_BOOLEAN_OBJECT,
     SCTAG_STRING_OBJECT,
     SCTAG_NUMBER_OBJECT,
@@ -212,6 +213,7 @@ struct JSStructuredCloneReader {
     JSString *readString(uint32_t nchars);
     bool readTypedArray(uint32_t arrayType, uint32_t nelems, js::Value *vp, bool v1Read = false);
     bool readArrayBuffer(uint32_t nbytes, js::Value *vp);
+    bool readMappedArrayBuffer(Value *vp, uint32_t fd, uint32_t offset, uint32_t length);
     bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, js::Value *vp);
     bool readId(jsid *idp);
     bool startRead(js::Value *vp);
@@ -831,6 +833,12 @@ bool
 JSStructuredCloneWriter::writeArrayBuffer(HandleObject obj)
 {
     ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
+
+    if (buffer.isMappedArrayBuffer()) {
+        return out.writePair(SCTAG_MAPPED_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
+               out.writePair(buffer.getMappingFD(), buffer.getMappingOffset());
+    }
+
     return out.writePair(SCTAG_ARRAY_BUFFER_OBJECT, buffer.byteLength()) &&
            out.writeBytes(buffer.dataPointer(), buffer.byteLength());
 }
@@ -1228,6 +1236,26 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, Value *vp)
     return in.readArray(buffer.dataPointer(), nbytes);
 }
 
+bool
+JSStructuredCloneReader::readMappedArrayBuffer(Value *vp, uint32_t fd,
+                                               uint32_t offset, uint32_t length)
+{
+    void *ptr;
+    int new_fd;
+    if(!JS_CreateMappedArrayBufferContents(fd, &new_fd, offset, length, &ptr)) {
+        JS_ReportError(context(), "Failed to create mapped array buffer contents");
+        return false;
+    }
+    JSObject *obj = JS_NewArrayBufferWithContents(context(), ptr);
+    if (!obj) {
+        JS_ReleaseMappedArrayBufferContents(new_fd, ptr, length);
+        return false;
+    }
+    vp->setObject(*obj);
+
+    return true;
+}
+
 static size_t
 bytesPerTypedArrayElement(uint32_t arrayType)
 {
@@ -1409,6 +1437,14 @@ JSStructuredCloneReader::startRead(Value *vp)
 
       case SCTAG_ARRAY_BUFFER_OBJECT:
         if (!readArrayBuffer(data, vp))
+            return false;
+        break;
+
+      case SCTAG_MAPPED_ARRAY_BUFFER_OBJECT:
+        uint32_t fd, offset;
+        if (!in.readPair(&fd, &offset))
+            return false;
+        if (!readMappedArrayBuffer(vp, fd, offset, data))
             return false;
         break;
 

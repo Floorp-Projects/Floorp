@@ -59,7 +59,7 @@ input {
   color: -moz-FieldText;
   font: -moz-field;
   text-rendering: optimizeLegibility;
-  line-height: normal !important;
+  line-height: normal;
   text-align: start;
   text-transform: none;
   word-spacing: normal;

@@ -2129,7 +2129,8 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
 
   for (size_t p = 0; p < query->pipelines.Length(); ++p) {
     const MediaPipeline& mp = *query->pipelines[p];
-    nsString idstr = (mp.Conduit()->type() == MediaSessionConduit::AUDIO) ?
+    bool isAudio = (mp.Conduit()->type() == MediaSessionConduit::AUDIO);
+    nsString idstr = isAudio ?
         NS_LITERAL_STRING("audio_") : NS_LITERAL_STRING("video_");
     idstr.AppendInt(mp.trackid());
 
@@ -2238,6 +2239,18 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         s.mIsRemote = false;
         s.mPacketsReceived.Construct(mp.rtp_packets_received());
         s.mBytesReceived.Construct(mp.rtp_bytes_received());
+
+        if (query->internalStats && isAudio) {
+          int32_t jitterBufferDelay;
+          int32_t playoutBufferDelay;
+          int32_t avSyncDelta;
+          if (mp.Conduit()->GetAVStats(&jitterBufferDelay,
+                                       &playoutBufferDelay,
+                                       &avSyncDelta)) {
+            s.mMozJitterBufferDelay.Construct(jitterBufferDelay);
+            s.mMozAvSyncDelay.Construct(avSyncDelta);
+          }
+        }
         query->report.mInboundRTPStreamStats.Value().AppendElement(s);
         break;
       }

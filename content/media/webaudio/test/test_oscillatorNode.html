@@ -49,6 +49,13 @@ addLoadEvent(function() {
   osc.setPeriodicWave(context.createPeriodicWave(real, imag));
   is(osc.type, "custom", "Failed to set custom waveform");
 
+  expectNoException(function() {
+    osc.start();
+  });
+  expectNoException(function() {
+    osc.stop();
+  });
+
   SimpleTest.finish();
 });
 
