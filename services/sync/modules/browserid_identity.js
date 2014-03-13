@@ -162,6 +162,19 @@ this.BrowserIDManager.prototype = {
     return Promise.resolve();
   },
 
+  offerSyncOptions: function () {
+    // If the user chose to "Customize sync options" when signing
+    // up with Firefox Accounts, ask them to choose what to sync.
+    const url = "chrome://browser/content/sync/customize.xul";
+    const features = "centerscreen,chrome,modal,dialog,resizable=no";
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+
+    let data = {accepted: false};
+    win.openDialog(url, "_blank", features, data);
+
+    return data;
+  },
+
   initializeWithCurrentIdentity: function(isInitialSync=false) {
     // While this function returns a promise that resolves once we've started
     // the auth process, that process is complete when
@@ -193,15 +206,7 @@ this.BrowserIDManager.prototype = {
         this._updateSignedInUser(accountData);
         this._log.info("Starting fetch for key bundle.");
         if (this.needsCustomization) {
-          // If the user chose to "Customize sync options" when signing
-          // up with Firefox Accounts, ask them to choose what to sync.
-          const url = "chrome://browser/content/sync/customize.xul";
-          const features = "centerscreen,chrome,modal,dialog,resizable=no";
-          let win = Services.wm.getMostRecentWindow("navigator:browser");
-
-          let data = {accepted: false};
-          win.openDialog(url, "_blank", features, data);
-
+          let data = this.offerSyncOptions();
           if (data.accepted) {
             Services.prefs.clearUserPref(PREF_SYNC_SHOW_CUSTOMIZATION);
           } else {
