@@ -72,8 +72,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       elem.focus();
       try {
         elem.setRangeText("abc");
+        expectedNumOfSelectCalls += 1;
       } catch (ex) {
-          opThrows = true;
+        opThrows = true;
       }
       is(opThrows, false, msg + " should not throw NotSupportedError");
 
@@ -99,7 +100,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.selectionEnd, 4, msg + test);
       elem.setRangeText("mnk");
       is(elem.value, "0mnk6789ABCDEF", msg + test);
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement), expand";
       elem.value = "0123456789ABCDEF";
@@ -110,7 +111,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.selectionEnd, 4, msg + test);
       elem.setRangeText("mnk");
       is(elem.value, "0mnk23456789ABCDEF", msg + test);
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement) pure insertion at start";
       elem.value = "0123456789ABCDEF";
@@ -121,7 +122,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.selectionEnd, 0, msg + test);
       elem.setRangeText("mnk");
       is(elem.value, "mnkxyz0123456789ABCDEF", msg + test);
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement) pure insertion in the middle";
       elem.value = "0123456789ABCDEF";
@@ -132,7 +133,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.selectionEnd, 4, msg + test);
       elem.setRangeText("mnk");
       is(elem.value, "0123mnkxyz456789ABCDEF", msg + test);
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 3;
 
       test = " setRange(replacement) pure insertion at the end";
       elem.value = "0123456789ABCDEF";
@@ -143,7 +144,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.selectionEnd, 16, msg + test);
       elem.setRangeText("mnk");
       is(elem.value, "0123456789ABCDEFmnkxyz", msg + test);
-      expectedNumOfSelectCalls += 2;
+      expectedNumOfSelectCalls += 3;
 
       //test SetRange(replacement, start, end, mode) with start > end
       try {
@@ -152,7 +153,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
         opThrows = (ex.name == "IndexSizeError" && ex.code == DOMException.INDEX_SIZE_ERR);
       }
       is(opThrows, true, msg + " should throw IndexSizeError");
-      expectedNumOfSelectCalls += 1;
 
       //test SelectionMode 'select'
       elem.value = "0123456789ABCDEF";
@@ -205,7 +205,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0Z23456789", msg + ".value == \"0Z23456789\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"preserve\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"preserve\"");
-      expectedNumOfSelectCalls += 1;
+      expectedNumOfSelectCalls += 2;
 
       //subcase: selection{Start|End} < end
       elem.value = "0123456789";
@@ -214,7 +214,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "01QRST9", msg + ".value == \"01QRST9\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"preserve\"");
       is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"preserve\"");
-      expectedNumOfSelectCalls += 1;
+      expectedNumOfSelectCalls += 2;
 
       //subcase: selectionStart > end, selectionEnd < end
       elem.value = "0123456789";
@@ -223,7 +223,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0QRST56789", msg + ".value == \"0QRST56789\"");
       is(elem.selectionStart, 1, msg + ".selectionStart == 1, with \"default\"");
       is(elem.selectionEnd, 5, msg + ".selectionEnd == 5, with \"default\"");
-      expectedNumOfSelectCalls += 1;
+      expectedNumOfSelectCalls += 2;
 
       //subcase: selectionStart < end, selectionEnd > end
       elem.value = "0123456789";
@@ -232,7 +232,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "01QRST6789", msg + ".value == \"01QRST6789\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"default\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"default\"");
-      expectedNumOfSelectCalls += 1;
+      expectedNumOfSelectCalls += 2;
     }
   }
 

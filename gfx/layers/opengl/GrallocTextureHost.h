@@ -30,7 +30,7 @@ public:
 
   virtual bool IsValid() const MOZ_OVERRIDE;
 
-  virtual void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
+  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE;
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 

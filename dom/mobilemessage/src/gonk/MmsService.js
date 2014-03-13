@@ -39,7 +39,7 @@ const kSmsReadSuccessObserverTopic       = "sms-read-success";
 const kSmsReadErrorObserverTopic         = "sms-read-error";
 
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
-const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
+const kNetworkConnStateChangedTopic      = "network-connection-state-changed";
 const kMobileMessageDeletedObserverTopic = "mobile-message-deleted";
 
 const kPrefRilRadioDisabled              = "ril.radio.disabled";
@@ -233,7 +233,7 @@ MmsConnection.prototype = {
   },
 
   init: function() {
-    Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic,
+    Services.obs.addObserver(this, kNetworkConnStateChangedTopic,
                              false);
     Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
     this.settings.forEach(function(name) {
@@ -406,7 +406,7 @@ MmsConnection.prototype = {
 
   shutdown: function() {
     Services.obs.removeObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
+    Services.obs.removeObserver(this, kNetworkConnStateChangedTopic);
 
     this.connectTimer.cancel();
     this.flushPendingCallbacks(_HTTP_STATUS_RADIO_DISABLED);
@@ -418,7 +418,7 @@ MmsConnection.prototype = {
 
   observe: function(subject, topic, data) {
     switch (topic) {
-      case kNetworkInterfaceStateChangedTopic: {
+      case kNetworkConnStateChangedTopic: {
         // The network for MMS connection must be nsIRilNetworkInterface.
         if (!(subject instanceof Ci.nsIRilNetworkInterface)) {
           return;

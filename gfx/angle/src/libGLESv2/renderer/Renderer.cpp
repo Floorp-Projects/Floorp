@@ -22,6 +22,7 @@
 
 #define ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES \
     {                                            \
+        TEXT("d3dcompiler_47.dll"),              \
         TEXT("d3dcompiler_46.dll"),              \
         TEXT("d3dcompiler_43.dll")               \
     }
@@ -178,13 +179,13 @@ rx::Renderer *glCreateRenderer(egl::Display *display, HDC hDc, EGLNativeDisplayT
 {
     rx::Renderer *renderer = NULL;
     EGLint status = EGL_BAD_ALLOC;
-    
+
     if (ANGLE_ENABLE_D3D11 ||
         displayId == EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE ||
         displayId == EGL_D3D11_ONLY_DISPLAY_ANGLE)
     {
         renderer = new rx::Renderer11(display, hDc);
-    
+
         if (renderer)
         {
             status = renderer->initialize();
@@ -205,7 +206,7 @@ rx::Renderer *glCreateRenderer(egl::Display *display, HDC hDc, EGLNativeDisplayT
 
     bool softwareDevice = (displayId == EGL_SOFTWARE_DISPLAY_ANGLE);
     renderer = new rx::Renderer9(display, hDc, softwareDevice);
-    
+
     if (renderer)
     {
         status = renderer->initialize();

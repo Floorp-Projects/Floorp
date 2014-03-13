@@ -80,7 +80,7 @@ public class FennecNativeActions implements Actions {
             blockForEvent(MAX_WAIT_MS, true);
         }
 
-        private void blockForEvent(long millis, boolean failOnTimeout) {
+        public void blockForEvent(long millis, boolean failOnTimeout) {
             if (!mIsRegistered) {
                 throw new IllegalStateException("listener not registered");
             }
@@ -229,7 +229,7 @@ public class FennecNativeActions implements Actions {
             this.notifyAll();
         }
 
-        private synchronized void blockForEvent(long millis, boolean failOnTimeout) {
+        public synchronized void blockForEvent(long millis, boolean failOnTimeout) {
             if (!mListening) {
                 throw new IllegalStateException("draw listener not registered");
             }

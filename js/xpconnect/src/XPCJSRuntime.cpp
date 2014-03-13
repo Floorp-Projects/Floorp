@@ -2139,6 +2139,12 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
             "the GC heap.");
     }
 
+    if (cStats.objectsExtra.nonHeapElementsMapped > 0) {
+        REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/non-heap/elements/mapped"),
+            KIND_NONHEAP, cStats.objectsExtra.nonHeapElementsMapped,
+            "Memory-mapped array buffer elements.");
+    }
+
     REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/non-heap/code/asm.js"),
         KIND_NONHEAP, cStats.objectsExtra.nonHeapCodeAsmJS,
         "AOT-compiled asm.js code.");

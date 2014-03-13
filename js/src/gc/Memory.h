@@ -41,6 +41,19 @@ MarkPagesInUse(JSRuntime *rt, void *p, size_t size);
 size_t
 GetPageFaultCount();
 
+// Allocate mapped memory for object from file descriptor, offset and length
+// of the file.
+// The new_fd is duplicated from original fd, for the purpose of cloned object.
+// The offset must be aligned according to alignment requirement.
+// An additional page might be allocated depending on offset and header size given.
+void *
+AllocateMappedObject(int fd, int *new_fd, size_t offset, size_t length,
+                     size_t alignment, size_t header);
+
+// Deallocate mapped memory of the object.
+void
+DeallocateMappedObject(int fd, void *p, size_t length);
+
 } // namespace gc
 } // namespace js
 

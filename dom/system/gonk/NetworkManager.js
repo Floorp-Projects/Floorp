@@ -40,6 +40,7 @@ const TOPIC_ACTIVE_CHANGED           = "network-active-changed";
 const TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
+const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const PREF_MANAGE_OFFLINE_STATUS     = "network.gonk.manage-offline-status";
 
 const POSSIBLE_USB_INTERFACE_NAME = "rndis0,usb0";
@@ -276,6 +277,11 @@ NetworkManager.prototype = {
 #endif
             break;
         }
+#ifdef MOZ_B2G_RIL
+        // Notify outer modules like MmsService to start the transaction after
+        // the configuration of the network interface is done.
+        Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED, null);
+#endif
         break;
 #ifdef MOZ_B2G_RIL
       case TOPIC_INTERFACE_REGISTERED:

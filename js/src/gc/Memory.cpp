@@ -107,6 +107,21 @@ gc::GetPageFaultCount()
     return pmc.PageFaultCount;
 }
 
+void *
+gc::AllocateMappedObject(int fd, int *new_fd, size_t offset, size_t length,
+                         size_t alignment, size_t header)
+{
+    // TODO: to be implemented.
+    return nullptr;
+}
+
+// Deallocate mapped memory for object.
+void
+gc::DeallocateMappedObject(int fd, void *p, size_t length)
+{
+    // TODO: to be implemented.
+}
+
 #elif defined(SOLARIS)
 
 #include <sys/mman.h>
@@ -165,10 +180,28 @@ gc::GetPageFaultCount()
     return 0;
 }
 
+void *
+gc::AllocateMappedObject(int fd, int *new_fd, size_t offset, size_t length,
+                         size_t alignment, size_t header)
+{
+    // TODO: to be implemented.
+    return nullptr;
+}
+
+// Deallocate mapped memory for object.
+void
+gc::DeallocateMappedObject(int fd, void *p, size_t length)
+{
+    // TODO: to be implemented.
+}
+
 #elif defined(XP_UNIX)
 
+#include <algorithm>
 #include <sys/mman.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 void
@@ -283,6 +316,90 @@ gc::GetPageFaultCount()
     if (err)
         return 0;
     return usage.ru_majflt;
+}
+
+void *
+gc::AllocateMappedObject(int fd, int *new_fd, size_t offset, size_t length,
+                         size_t alignment, size_t header)
+{
+#define NEED_PAGE_ALIGNED 0
+    size_t pa_start; // Page aligned starting
+    size_t pa_end; // Page aligned ending
+    size_t pa_size; // Total page aligned size
+    size_t page_size = sysconf(_SC_PAGESIZE); // Page size
+    bool page_for_header = false; // Do we need an additional page for header?
+    struct stat st;
+    uint8_t *buf;
+
+    // Make sure file exists and do sanity check for offset and size.
+    if (fstat(fd, &st) < 0 || offset >= (size_t) st.st_size ||
+        length == 0 || length > (size_t) st.st_size - offset)
+        return nullptr;
+
+    // Check for minimal alignment requirement.
+#if NEED_PAGE_ALIGNED
+    alignment = std::max(alignment, page_size);
+#endif
+    if (offset & (alignment - 1))
+        return nullptr;
+
+    // Page aligned starting of the offset.
+    pa_start = offset & ~(page_size - 1);
+    // Calculate page aligned ending by adding one page to the page aligned
+    // starting of data end position(offset + length - 1).
+    pa_end = ((offset + length - 1) & ~(page_size - 1)) + page_size;
+    pa_size = pa_end - pa_start;
+
+    // Do we need one more page for header?
+    if (offset - pa_start < header) {
+        page_for_header = true;
+        pa_size += page_size;
+    }
+
+    // Ask for a continuous memory location.
+    buf = (uint8_t *) MapMemory(pa_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    if (buf == MAP_FAILED)
+        return nullptr;
+
+    // Duplicate a new fd for mapping, so each cloned object uses a different fd.
+    *new_fd = dup(fd);
+
+    // If there's an additional page for header, don't map that page to file.
+    if (page_for_header) {
+        buf = (uint8_t *) mmap(buf + page_size, pa_size - page_size,
+                               PROT_READ | PROT_WRITE,
+                               MAP_PRIVATE | MAP_FIXED, *new_fd, pa_start);
+    } else {
+        buf = (uint8_t *) mmap(buf, pa_size, PROT_READ | PROT_WRITE,
+                               MAP_PRIVATE | MAP_FIXED, *new_fd, pa_start);
+    }
+    if (buf == MAP_FAILED) {
+        close(*new_fd);
+        return nullptr;
+    }
+
+    // Reset the data before target file, which we don't need to see.
+    memset(buf, 0, offset - pa_start);
+
+    // Reset the data after target file, which we don't need to see.
+    memset(buf + (offset - pa_start) + length, 0, pa_end - (offset + length));
+
+    return buf + (offset - pa_start) - header;
+}
+
+void
+gc::DeallocateMappedObject(int fd, void *p, size_t length)
+{
+    void *pa_start; // Page aligned starting
+    size_t page_size = sysconf(_SC_PAGESIZE); // Page size
+    size_t total_size; // Total allocated size
+
+    // The fd is not needed anymore.
+    close(fd);
+
+    pa_start = (void *)(uintptr_t(p) & ~(page_size - 1));
+    total_size = ((uintptr_t(p) + length) & ~(page_size - 1)) + page_size - uintptr_t(pa_start);
+    munmap(pa_start, total_size);
 }
 
 #else
