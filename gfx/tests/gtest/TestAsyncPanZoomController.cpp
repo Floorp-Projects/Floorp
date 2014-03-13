@@ -54,10 +54,10 @@ class MockContentController : public GeckoContentController {
 public:
   MOCK_METHOD1(RequestContentRepaint, void(const FrameMetrics&));
   MOCK_METHOD2(AcknowledgeScrollUpdate, void(const FrameMetrics::ViewID&, const uint32_t& aScrollGeneration));
-  MOCK_METHOD3(HandleDoubleTap, void(const CSSIntPoint&, int32_t, const ScrollableLayerGuid&));
-  MOCK_METHOD3(HandleSingleTap, void(const CSSIntPoint&, int32_t, const ScrollableLayerGuid&));
-  MOCK_METHOD3(HandleLongTap, void(const CSSIntPoint&, int32_t, const ScrollableLayerGuid&));
-  MOCK_METHOD3(HandleLongTapUp, void(const CSSIntPoint&, int32_t, const ScrollableLayerGuid&));
+  MOCK_METHOD3(HandleDoubleTap, void(const CSSPoint&, int32_t, const ScrollableLayerGuid&));
+  MOCK_METHOD3(HandleSingleTap, void(const CSSPoint&, int32_t, const ScrollableLayerGuid&));
+  MOCK_METHOD3(HandleLongTap, void(const CSSPoint&, int32_t, const ScrollableLayerGuid&));
+  MOCK_METHOD3(HandleLongTapUp, void(const CSSPoint&, int32_t, const ScrollableLayerGuid&));
   MOCK_METHOD3(SendAsyncScrollDOMEvent, void(bool aIsRoot, const CSSRect &aContentRect, const CSSSize &aScrollableSize));
   MOCK_METHOD2(PostDelayedTask, void(Task* aTask, int aDelayMs));
 };
@@ -686,7 +686,7 @@ TEST_F(AsyncPanZoomControllerTester, OverScrollPanning) {
   EXPECT_EQ(pointOut, ScreenPoint(0, 90));
 }
 
-TEST(AsyncPanZoomController, ShortPress) {
+TEST_F(AsyncPanZoomControllerTester, ShortPress) {
   nsRefPtr<MockContentControllerDelayed> mcc = new NiceMock<MockContentControllerDelayed>();
   nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
   nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(
@@ -704,13 +704,13 @@ TEST(AsyncPanZoomController, ShortPress) {
   // touchdown is fully processed. The ordering here is important.
   mcc->CheckHasDelayedTask();
 
-  EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
   mcc->RunDelayedTask();
 
   apzc->Destroy();
 }
 
-TEST(AsyncPanZoomController, MediumPress) {
+TEST_F(AsyncPanZoomControllerTester, MediumPress) {
   nsRefPtr<MockContentControllerDelayed> mcc = new NiceMock<MockContentControllerDelayed>();
   nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
   nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(
@@ -728,7 +728,7 @@ TEST(AsyncPanZoomController, MediumPress) {
   // touchdown is fully processed. The ordering here is important.
   mcc->CheckHasDelayedTask();
 
-  EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
   mcc->RunDelayedTask();
 
   apzc->Destroy();
@@ -761,11 +761,11 @@ DoLongPressTest(bool aShouldUseTouchAction, uint32_t aBehavior) {
     InSequence s;
 
     EXPECT_CALL(check, Call("preHandleLongTap"));
-    EXPECT_CALL(*mcc, HandleLongTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleLongTap(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
     EXPECT_CALL(check, Call("postHandleLongTap"));
 
     EXPECT_CALL(check, Call("preHandleLongTapUp"));
-    EXPECT_CALL(*mcc, HandleLongTapUp(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(10, 10), 0, apzc->GetGuid())).Times(1);
     EXPECT_CALL(check, Call("postHandleLongTapUp"));
   }
 
@@ -791,7 +791,7 @@ DoLongPressTest(bool aShouldUseTouchAction, uint32_t aBehavior) {
   apzc->Destroy();
 }
 
-TEST(AsyncPanZoomController, LongPressPreventDefault) {
+TEST_F(AsyncPanZoomControllerTester, LongPressPreventDefault) {
   // We have to initialize both an integer time and TimeStamp time because
   // TimeStamp doesn't have any ToXXX() functions for converting back to
   // primitives.
@@ -824,7 +824,7 @@ TEST(AsyncPanZoomController, LongPressPreventDefault) {
     InSequence s;
 
     EXPECT_CALL(check, Call("preHandleLongTap"));
-    EXPECT_CALL(*mcc, HandleLongTap(CSSIntPoint(touchX, touchStartY), 0, apzc->GetGuid())).Times(1);
+    EXPECT_CALL(*mcc, HandleLongTap(CSSPoint(touchX, touchStartY), 0, apzc->GetGuid())).Times(1);
     EXPECT_CALL(check, Call("postHandleLongTap"));
   }
 
@@ -866,11 +866,11 @@ TEST(AsyncPanZoomController, LongPressPreventDefault) {
   apzc->Destroy();
 }
 
-TEST(AsyncPanZoomController, LongPress) {
+TEST_F(AsyncPanZoomControllerTester, LongPress) {
   DoLongPressTest(false, mozilla::layers::AllowedTouchBehavior::NONE);
 }
 
-TEST(AsyncPanZoomController, LongPressPanAndZoom) {
+TEST_F(AsyncPanZoomControllerTester, LongPressPanAndZoom) {
   DoLongPressTest(true, mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN
                       | mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN
                       | mozilla::layers::AllowedTouchBehavior::ZOOM);

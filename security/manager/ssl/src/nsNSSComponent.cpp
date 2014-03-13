@@ -997,6 +997,18 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
 #endif
       odc, osc, ogc);
 
+  // insanity::pkix has its own OCSP cache, so disable the NSS cache
+  // if appropriate.
+  if (certVerifierImplementation == CertVerifier::insanity) {
+    // Using -1 disables the cache. The other arguments are the default
+    // values and aren't exposed by the API.
+    CERT_OCSPCacheSettings(-1, 1*60*60L, 24*60*60L);
+  } else {
+    // Using 1000 enables the cache with the default size of 1000. Again,
+    // these values are not exposed by the API.
+    CERT_OCSPCacheSettings(1000, 1*60*60L, 24*60*60L);
+  }
+
   CERT_ClearOCSPCache();
 }
 
