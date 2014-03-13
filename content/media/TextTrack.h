@@ -96,6 +96,13 @@ public:
   TextTrackCueList* GetActiveCues();
   void GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
 
+  // Constants for numeric readyState property values.
+  enum {
+    READY_STATE_NONE = 0U,
+    READY_STATE_LOADING = 1U,
+    READY_STATE_LOADED = 2U,
+    READY_STATE_ERROR = 3U
+  };
   uint16_t ReadyState() const;
   void SetReadyState(uint16_t aState);
 
