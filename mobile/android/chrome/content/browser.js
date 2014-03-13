@@ -4194,7 +4194,7 @@ Tab.prototype = {
       // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
       // then we disable double-tap-to-zoom behaviour.
       var oldAllowDoubleTapZoom = metadata.allowDoubleTapZoom;
-      var newAllowDoubleTapZoom = (viewportW > screenW / window.devicePixelRatio);
+      var newAllowDoubleTapZoom = (!metadata.isSpecified) || (viewportW > screenW / window.devicePixelRatio);
       if (oldAllowDoubleTapZoom !== newAllowDoubleTapZoom) {
         metadata.allowDoubleTapZoom = newAllowDoubleTapZoom;
         this.sendViewportMetadata();
@@ -6026,6 +6026,19 @@ ViewportMetadata.prototype = {
   allowDoubleTapZoom: null,
   isSpecified: null,
   isRTL: null,
+
+  toString: function() {
+    return "width=" + this.width
+         + "; height=" + this.height
+         + "; defaultZoom=" + this.defaultZoom
+         + "; minZoom=" + this.minZoom
+         + "; maxZoom=" + this.maxZoom
+         + "; autoSize=" + this.autoSize
+         + "; allowZoom=" + this.allowZoom
+         + "; allowDoubleTapZoom=" + this.allowDoubleTapZoom
+         + "; isSpecified=" + this.isSpecified
+         + "; isRTL=" + this.isRTL;
+  }
 };
 
 
