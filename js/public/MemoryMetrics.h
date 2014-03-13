@@ -123,6 +123,7 @@ struct ObjectsExtraSizes
     macro(Objects, NotLiveGCThing, mallocHeapElementsNonAsmJS) \
     macro(Objects, NotLiveGCThing, mallocHeapElementsAsmJS) \
     macro(Objects, NotLiveGCThing, nonHeapElementsAsmJS) \
+    macro(Objects, NotLiveGCThing, nonHeapElementsMapped) \
     macro(Objects, NotLiveGCThing, nonHeapCodeAsmJS) \
     macro(Objects, NotLiveGCThing, mallocHeapAsmJSModuleData) \
     macro(Objects, NotLiveGCThing, mallocHeapArgumentsData) \
