@@ -5,6 +5,7 @@
 "use strict";
 
 const {Cc, Ci} = require("chrome");
+const Services = require("Services");
 const promise = require("sdk/core/promise");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
@@ -13,7 +14,6 @@ const object = require("sdk/util/object");
 const { Class } = require("sdk/core/heritage");
 const { StyleSheetActor } = require("devtools/server/actors/stylesheets");
 
-loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
 
