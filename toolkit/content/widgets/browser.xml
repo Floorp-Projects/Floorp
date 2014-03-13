@@ -17,7 +17,7 @@
     <content clickthrough="never">
       <children/>
     </content>
-    <implementation type="application/javascript" implements="nsIObserver, nsIDOMEventListener, nsIFrameRequestCallback">
+    <implementation type="application/javascript" implements="nsIObserver, nsIDOMEventListener, nsIFrameRequestCallback, nsIMessageListener">
       <property name="autoscrollEnabled">
         <getter>
           <![CDATA[
@@ -600,14 +600,6 @@
             if (!tabBrowser || !("fastFind" in tabBrowser) ||
                 tabBrowser.selectedBrowser == this)
               this.fastFind.setDocShell(this.docShell);
-
-            if (this._scrollable) {
-              var doc =
-                this._scrollable.ownerDocument || this._scrollable.document;
-              if (doc == aEvent.target) {
-                this._autoScrollPopup.hidePopup();
-              }
-            }
          ]]>
         </body>
       </method>
@@ -793,6 +785,12 @@
           this.addEventListener("pageshow", this.onPageShow, true);
           this.addEventListener("pagehide", this.onPageHide, true);
           this.addEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
+
+          if (this.messageManager) {
+            this.messageManager.addMessageListener("Autoscroll:Start", this);
+            this.messageManager.addMessageListener("Autoscroll:Cancel", this);
+            this.messageManager.loadFrameScript("chrome://global/content/browser-content.js", true);
+          }
         ]]>
       </constructor>
 
@@ -843,6 +841,34 @@
         </body>
       </method>
 
+      <!--
+        We call this _receiveMessage (and alias receiveMessage to it) so that
+        bindings that inherit from this one can delegate to it.
+      -->
+      <method name="_receiveMessage">
+        <parameter name="aMessage"/>
+        <body><![CDATA[
+          let data = aMessage.data;
+          switch (aMessage.name) {
+            case "Autoscroll:Start": {
+              let pos = this.mapScreenCoordinatesFromContent(data.screenX, data.screenY);
+              this.startScroll(data.scrolldir, pos.x, pos.y);
+              break;
+            }
+            case "Autoscroll:Cancel":
+              this._autoScrollPopup.hidePopup();
+              break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="receiveMessage">
+        <parameter name="aMessage"/>
+        <body><![CDATA[
+          return this._receiveMessage(aMessage);
+        ]]></body>
+      </method>
+
       <method name="observe">
         <parameter name="aSubject"/>
         <parameter name="aTopic"/>
@@ -871,20 +897,17 @@
       </method>
 
       <field name="_AUTOSCROLL_SNAP">10</field>
-      <field name="_scrollable">null</field>
+      <field name="_scrolling">false</field>
       <field name="_startX">null</field>
       <field name="_startY">null</field>
-      <field name="_screenX">null</field>
-      <field name="_screenY">null</field>
-      <field name="_lastFrame">null</field>
       <field name="_autoScrollPopup">null</field>
       <field name="_autoScrollNeedsCleanup">false</field>
 
       <method name="stopScroll">
         <body>
           <![CDATA[
-            if (this._scrollable) {
-              this._scrollable = null;
+            if (this._scrolling) {
+              this._scrolling = false;
               window.removeEventListener("mousemove", this, true);
               window.removeEventListener("mousedown", this, true);
               window.removeEventListener("mouseup", this, true);
@@ -892,6 +915,7 @@
               window.removeEventListener("keydown", this, true);
               window.removeEventListener("keypress", this, true);
               window.removeEventListener("keyup", this, true);
+              this.messageManager.sendAsyncMessage("Autoscroll:Stop");
             }
          ]]>
        </body>
@@ -909,9 +933,10 @@
       </method>
 
       <method name="startScroll">
-        <parameter name="event"/>
-        <body>
-          <![CDATA[
+        <parameter name="scrolldir"/>
+        <parameter name="screenX"/>
+        <parameter name="screenY"/>
+        <body><![CDATA[
             if (!this._autoScrollPopup) {
               if (this.hasAttribute("autoscrollpopup")) {
                 // our creator provided a popup to share
@@ -935,74 +960,15 @@
               this._autoScrollPopup.setAttribute("translucent", /Win|Mac/.test(navigator.platform));
             }
 
-            // this is a list of overflow property values that allow scrolling
-            const scrollingAllowed = ['scroll', 'auto'];
-
-            // go upward in the DOM and find any parent element that has a overflow
-            // area and can therefore be scrolled
-            for (this._scrollable = event.originalTarget; this._scrollable;
-                 this._scrollable = this._scrollable.parentNode) {
-              // do not use overflow based autoscroll for <html> and <body>
-              // Elements or non-html elements such as svg or Document nodes
-              // also make sure to skip select elements that are not multiline
-              if (!(this._scrollable instanceof HTMLElement) ||
-                  ((this._scrollable instanceof HTMLSelectElement) && !this._scrollable.multiple)) {
-                continue;
-              }
-
-              var overflowx = this._scrollable.ownerDocument.defaultView
-                                  .getComputedStyle(this._scrollable, '')
-                                  .getPropertyValue('overflow-x');
-              var overflowy = this._scrollable.ownerDocument.defaultView
-                                  .getComputedStyle(this._scrollable, '')
-                                  .getPropertyValue('overflow-y');
-              // we already discarded non-multiline selects so allow vertical
-              // scroll for multiline ones directly without checking for a
-              // overflow property
-              var scrollVert = this._scrollable.scrollTopMax &&
-                               (this._scrollable instanceof HTMLSelectElement ||
-                                scrollingAllowed.indexOf(overflowy) >= 0);
-
-              // do not allow horizontal scrolling for select elements, it leads
-              // to visual artifacts and is not the expected behavior anyway
-              if (!(this._scrollable instanceof HTMLSelectElement) &&
-                  this._scrollable.scrollLeftMax &&
-                  scrollingAllowed.indexOf(overflowx) >= 0) {
-                this._autoScrollPopup.setAttribute("scrolldir", scrollVert ? "NSEW" : "EW");
-                break;
-              }
-              else if (scrollVert) {
-                this._autoScrollPopup.setAttribute("scrolldir", "NS");
-                break;
-              }
-            }
-
-            if (!this._scrollable) {
-              this._scrollable = event.originalTarget.ownerDocument.defaultView;
-              if (this._scrollable.scrollMaxX > 0) {
-                this._autoScrollPopup.setAttribute("scrolldir", this._scrollable.scrollMaxY > 0 ? "NSEW" : "EW");
-              }
-              else if (this._scrollable.scrollMaxY > 0) {
-                this._autoScrollPopup.setAttribute("scrolldir", "NS");
-              }
-              else {
-                this._scrollable = null; // abort scrolling
-                return;
-              }
-            }
-
+            this._autoScrollPopup.setAttribute("scrolldir", scrolldir);
             this._autoScrollPopup.showPopup(document.documentElement,
-                                            event.screenX,
-                                            event.screenY,
+                                            screenX,
+                                            screenY,
                                             "popup", null, null);
             this._ignoreMouseEvents = true;
-            this._startX = event.screenX;
-            this._startY = event.screenY;
-            this._screenX = event.screenX;
-            this._screenY = event.screenY;
-            this._scrollErrorX = 0;
-            this._scrollErrorY = 0;
-            this._lastFrame = window.mozAnimationStartTime;
+            this._scrolling = true;
+            this._startX = screenX;
+            this._startY = screenY;
 
             window.addEventListener("mousemove", this, true);
             window.addEventListener("mousedown", this, true);
@@ -1011,144 +977,18 @@
             window.addEventListener("keydown", this, true);
             window.addEventListener("keypress", this, true);
             window.addEventListener("keyup", this, true);
-
-            window.mozRequestAnimationFrame(this);
-         ]]>
-       </body>
-     </method>
-
-     <method name="_roundToZero">
-       <parameter name="num"/>
-       <body>
-         <![CDATA[
-            if (num > 0)
-              return Math.floor(num);
-            return Math.ceil(num);
-         ]]>
-       </body>
-     </method>
-
-     <method name="_accelerate">
-       <parameter name="curr"/>
-       <parameter name="start"/>
-       <body>
-         <![CDATA[
-            const speed = 12;
-            var val = (curr - start) / speed;
-
-            if (val > 1)
-              return val * Math.sqrt(val) - 1;
-            if (val < -1)
-              return val * Math.sqrt(-val) + 1;
-            return 0;
-         ]]>
-       </body>
-     </method>
-
-     <method name="autoScrollLoop">
-       <parameter name="timestamp"/>
-       <body>
-         <![CDATA[
-           if (!this._scrollable) {
-             // Scrolling has been canceled
-             return;
-           }
-
-           // avoid long jumps when the browser hangs for more than
-           // |maxTimeDelta| ms
-           const maxTimeDelta = 100;
-           var timeDelta = Math.min(maxTimeDelta, timestamp - this._lastFrame);
-           // we used to scroll |_accelerate()| pixels every 20ms (50fps)
-           var timeCompensation = timeDelta / 20;
-           this._lastFrame = timestamp;
-
-           var actualScrollX = 0;
-           var actualScrollY = 0;
-           // don't bother scrolling vertically when the scrolldir is only horizontal
-           // and the other way around
-           var scrolldir = this._autoScrollPopup.getAttribute("scrolldir");
-           if (scrolldir != 'EW') {
-             var y = this._accelerate(this._screenY, this._startY) * timeCompensation;
-             var desiredScrollY = this._scrollErrorY + y;
-             actualScrollY = this._roundToZero(desiredScrollY);
-             this._scrollErrorY = (desiredScrollY - actualScrollY);
-           }
-           if (scrolldir != 'NS') {
-             var x = this._accelerate(this._screenX, this._startX) * timeCompensation;
-             var desiredScrollX = this._scrollErrorX + x;
-             actualScrollX = this._roundToZero(desiredScrollX);
-             this._scrollErrorX = (desiredScrollX - actualScrollX);
-           }
-
-           if (this._scrollable instanceof Window)
-             this._scrollable.scrollBy(actualScrollX, actualScrollY);
-           else { // an element with overflow
-             this._scrollable.scrollLeft += actualScrollX;
-             this._scrollable.scrollTop += actualScrollY;
-           }
-           window.mozRequestAnimationFrame(this);
-         ]]>
-       </body>
-     </method>
-     <method name="isAutoscrollBlocker">
-       <parameter name="node"/>
-       <body>
-         <![CDATA[
-           var mmPaste = false;
-           var mmScrollbarPosition = false;
-
-           try {
-             mmPaste = this.mPrefs.getBoolPref("middlemouse.paste");
-           }
-           catch (ex) {
-           }
-
-           try {
-             mmScrollbarPosition = this.mPrefs.getBoolPref("middlemouse.scrollbarPosition");
-           }
-           catch (ex) {
-           }
-
-           while (node) {
-             if ((node instanceof HTMLAnchorElement || node instanceof HTMLAreaElement) && node.hasAttribute("href"))
-               return true;
-
-             if (mmPaste && (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement))
-               return true;
-
-             if (node instanceof XULElement && mmScrollbarPosition
-                 && (node.localName == "scrollbar" || node.localName == "scrollcorner"))
-               return true;
-
-             node = node.parentNode;
-           }
-           return false;
-         ]]>
-       </body>
-     </method>
-
-      <!-- nsIFrameRequestCallback implementation -->
-      <method name="sample">
-        <parameter name="timeStamp"/>
-        <body>
-          <![CDATA[
-            this.autoScrollLoop(timeStamp);
-          ]]>
-        </body>
+        ]]></body>
       </method>
 
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          if (this._scrollable) {
+          if (this._scrolling) {
             switch(aEvent.type) {
               case "mousemove": {
-                this._screenX = aEvent.screenX;
-                this._screenY = aEvent.screenY;
-
-                var x = this._screenX - this._startX;
-                var y = this._screenY - this._startY;
+                var x = aEvent.screenX - this._startX;
+                var y = aEvent.screenY - this._startY;
 
                 if ((x > this._AUTOSCROLL_SNAP || x < -this._AUTOSCROLL_SNAP) ||
                     (y > this._AUTOSCROLL_SNAP || y < -this._AUTOSCROLL_SNAP))
@@ -1312,17 +1152,6 @@
           try {
             this.mPrefs.setBoolPref("accessibility.browsewithcaret",!browseWithCaretOn);
           } catch (ex) {
-          }
-        ]]>
-      </handler>
-      <handler event="mousedown" phase="capturing">
-        <![CDATA[
-          if (!this._scrollable && event.button == 1) {
-            if (!this.autoscrollEnabled ||
-                this.isAutoscrollBlocker(event.originalTarget))
-              return;
-
-            this.startScroll(event);
           }
         ]]>
       </handler>
