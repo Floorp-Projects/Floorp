@@ -315,6 +315,7 @@ gfxShmSharedReadLock::gfxShmSharedReadLock(ISurfaceAllocator* aAllocator)
   MOZ_COUNT_CTOR(gfxShmSharedReadLock);
   MOZ_ASSERT(mAllocator);
   if (mAllocator) {
+#define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
     if (mAllocator->AllocShmemSection(MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)), &mShmemSection)) {
       ShmReadLockInfo* info = GetShmReadLockInfoPtr();
       info->readCount = 1;
