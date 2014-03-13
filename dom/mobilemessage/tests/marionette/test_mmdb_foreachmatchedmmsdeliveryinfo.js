@@ -52,8 +52,6 @@ function testNotFound(aMmdb) {
   doTest(aMmdb, PHONE_0, function(aElement) {
     ok(false, "Should never have a match");
   }, 0);
-
-  return aMmdb;
 }
 
 function testDirectMatch(aMmdb) {
@@ -67,8 +65,6 @@ function testDirectMatch(aMmdb) {
       is(aElement.receiver, needle, "element.receiver");
     }, count);
   }
-
-  return aMmdb;
 }
 
 function testPhoneMatch(aMmdb) {
@@ -87,15 +83,13 @@ function testPhoneMatch(aMmdb) {
       doTest(aMmdb, item, verifyFunc.bind(null, group), group.length);
     }
   }
-
-  return aMmdb;
 }
 
 startTestBase(function testCaseMain() {
   let mmdb = newMobileMessageDB();
   return initMobileMessageDB(mmdb, DBNAME, 0)
-    .then(testNotFound)
-    .then(testDirectMatch)
-    .then(testPhoneMatch)
-    .then(closeMobileMessageDB);
+    .then(() => testNotFound(mmdb))
+    .then(() => testDirectMatch(mmdb))
+    .then(() => testPhoneMatch(mmdb))
+    .then(() => closeMobileMessageDB(mmdb));
 });
