@@ -1,0 +1,24 @@
+<html class="reftest-wait">
+    <head>
+        <style>
+          div {
+            transition: opacity 0.1s;
+          }
+        </style>
+        <script>
+            function showItem() {
+                var el = document.getElementById("two");
+                getComputedStyle(el).opacity; // flush styles
+                el.style.opacity = 0.99;
+                document.addEventListener("transitionend", function() {
+                  document.documentElement.removeAttribute("class");
+                }, false);
+            }
+            window.addEventListener("MozReftestInvalidate", showItem, false);
+        </script>
+    </head>
+    <body>
+        <div id="one" style="width:50px; height:50px; background-color:blue; position:absolute"></div>
+        <div id="two" style="width:500px; height:500px; background-color:red; opacity:0.5"></div>
+    </body>
+</html>
