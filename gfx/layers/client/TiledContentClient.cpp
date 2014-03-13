@@ -178,7 +178,7 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
 
   // Always abort updates if the resolution has changed. There's no use
   // in drawing at the incorrect resolution.
-  if (!FuzzyEquals(compositorMetrics.mZoom.scale, contentMetrics.mZoom.scale)) {
+  if (!FuzzyEquals(compositorMetrics.GetZoom().scale, contentMetrics.GetZoom().scale)) {
     return true;
   }
 
@@ -186,8 +186,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   // display-port. If we abort updating when we shouldn't, we can end up
   // with blank regions on the screen and we open up the risk of entering
   // an endless updating cycle.
-  if (fabsf(contentMetrics.mScrollOffset.x - compositorMetrics.mScrollOffset.x) <= 2 &&
-      fabsf(contentMetrics.mScrollOffset.y - compositorMetrics.mScrollOffset.y) <= 2 &&
+  if (fabsf(contentMetrics.GetScrollOffset().x - compositorMetrics.GetScrollOffset().x) <= 2 &&
+      fabsf(contentMetrics.GetScrollOffset().y - compositorMetrics.GetScrollOffset().y) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.x - compositorMetrics.mDisplayPort.x) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.y - compositorMetrics.mDisplayPort.y) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.width - compositorMetrics.mDisplayPort.width) <= 2 &&
@@ -241,7 +241,7 @@ bool
 SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetrics,
                                               const FrameMetrics& aCompositorMetrics)
 {
-  return !aContentMetrics.mDisplayPort.Contains(CSSRect(aCompositorMetrics.CalculateCompositedRectInCssPixels()) - aCompositorMetrics.mScrollOffset);
+  return !aContentMetrics.mDisplayPort.Contains(CSSRect(aCompositorMetrics.CalculateCompositedRectInCssPixels()) - aCompositorMetrics.GetScrollOffset());
 }
 
 ClientTiledLayerBuffer::ClientTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
@@ -316,8 +316,7 @@ gfxShmSharedReadLock::gfxShmSharedReadLock(ISurfaceAllocator* aAllocator)
   MOZ_ASSERT(mAllocator);
   if (mAllocator) {
 #define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
-    if (mAllocator->AllocUnsafeShmem(MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)),
-                                     mozilla::ipc::SharedMemory::TYPE_BASIC, &mShmem)) {
+    if (mAllocator->AllocShmemSection(MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)), &mShmemSection)) {
       ShmReadLockInfo* info = GetShmReadLockInfoPtr();
       info->readCount = 1;
       mAllocSuccess = true;
@@ -349,7 +348,7 @@ gfxShmSharedReadLock::ReadUnlock() {
   int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
   NS_ASSERTION(readCount >= 0, "ReadUnlock called without a ReadLock.");
   if (readCount <= 0) {
-    mAllocator->DeallocShmem(mShmem);
+    mAllocator->FreeShmemSection(mShmemSection);
   }
   return readCount;
 }
@@ -548,10 +547,15 @@ TileClient::GetTileDescriptor()
     // see TiledLayerBufferComposite::TiledLayerBufferComposite
     mFrontLock->AddRef();
   }
-  return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
-            mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY
-              ? TileLock(uintptr_t(mFrontLock.get()))
-              : TileLock(static_cast<gfxShmSharedReadLock*>(mFrontLock.get())->GetShmem()));
+
+  if (mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY) {
+    return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
+                                  TileLock(uintptr_t(mFrontLock.get())));
+  } else {
+    gfxShmSharedReadLock *lock = static_cast<gfxShmSharedReadLock*>(mFrontLock.get());
+    return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
+                                  TileLock(lock->GetShmemSection()));
+  }
 }
 
 void

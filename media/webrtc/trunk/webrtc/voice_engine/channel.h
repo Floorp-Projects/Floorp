@@ -204,10 +204,12 @@ public:
 
     // VoEVideoSync
     bool GetDelayEstimate(int* jitter_buffer_delay_ms,
-                          int* playout_buffer_delay_ms) const;
+                          int* playout_buffer_delay_ms,
+                          int* avsync_offset_ms) const;
     int least_required_delay_ms() const { return least_required_delay_ms_; }
     int SetInitialPlayoutDelay(int delay_ms);
     int SetMinimumPlayoutDelay(int delayMs);
+    void SetCurrentSyncOffset(int offsetMs) { _current_sync_offset = offsetMs; }
     int GetPlayoutTimestamp(unsigned int& timestamp);
     void UpdatePlayoutTimestamp(bool rtcp);
     int SetInitTimestamp(unsigned int timestamp);
@@ -560,6 +562,7 @@ private:
     int least_required_delay_ms_;
     uint32_t _previousTimestamp;
     uint16_t _recPacketDelayMs;
+    int _current_sync_offset;
     // VoEAudioProcessing
     bool _RxVadDetection;
     bool _rxApmIsEnabled;

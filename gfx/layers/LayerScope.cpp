@@ -705,7 +705,7 @@ SendTextureSource(GLContext* aGLContext,
                                                              aSource->GetFormat());
     int shaderConfig = config.mFeatures;
 
-    aSource->BindTexture(LOCAL_GL_TEXTURE0);
+    aSource->BindTexture(LOCAL_GL_TEXTURE0, gfx::Filter::LINEAR);
 
     GLuint textureId = 0;
     // This is horrid hack. It assumes that aGLContext matches the context

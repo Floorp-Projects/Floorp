@@ -302,17 +302,6 @@ void SetCurrentProcessPrivileges(ChildPrivileges privs) {
     gid += getpid();
     uid += getpid();
   }
-  if (privs == PRIVILEGES_CAMERA) {
-#if ANDROID_VERSION < 17
-    gid_t groups[] = { AID_SDCARD_RW };
-#else
-    gid_t groups[] = { AID_SDCARD_R, AID_SDCARD_RW, AID_MEDIA_RW };
-#endif
-    if (setgroups(sizeof(groups) / sizeof(groups[0]), groups) != 0) {
-      DLOG(ERROR) << "FAILED TO setgroups() CHILD PROCESS";
-      _exit(127);
-    }
-  }
 #endif
   if (setgid(gid) != 0) {
     DLOG(ERROR) << "FAILED TO setgid() CHILD PROCESS";

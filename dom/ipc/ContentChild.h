@@ -86,7 +86,7 @@ public:
     AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 
-    virtual bool RecvSetProcessPrivileges(const ChildPrivileges& aPrivs) MOZ_OVERRIDE;
+    virtual bool RecvSetProcessSandbox() MOZ_OVERRIDE;
 
     PBackgroundChild*
     AllocPBackgroundChild(Transport* aTransport, ProcessId aOtherProcess)

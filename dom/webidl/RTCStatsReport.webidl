@@ -38,6 +38,8 @@ dictionary RTCInboundRTPStreamStats : RTCRTPStreamStats {
   unsigned long long bytesReceived;
   double jitter;
   unsigned long packetsLost;
+  long mozAvSyncDelay;
+  long mozJitterBufferDelay;
 };
 
 dictionary RTCOutboundRTPStreamStats : RTCRTPStreamStats {
