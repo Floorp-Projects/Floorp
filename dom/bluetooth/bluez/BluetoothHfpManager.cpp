@@ -216,7 +216,7 @@ BluetoothHfpManager::Notify(const hal::BatteryInformation& aBatteryInfo)
   int level = ceil(aBatteryInfo.level() * 5.0);
   if (level != sCINDItems[CINDType::BATTCHG].value) {
     sCINDItems[CINDType::BATTCHG].value = level;
-    SendCommand("+CIEV:", CINDType::BATTCHG);
+    SendCommand("+CIEV: ", CINDType::BATTCHG);
   }
 }
 
