@@ -27,6 +27,11 @@ let console = tempScope.console;
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 SimpleTest.registerCleanupFunction(() => {
   console.error("Here we are\n");
   let {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});

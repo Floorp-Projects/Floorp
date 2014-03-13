@@ -32,6 +32,8 @@ this.DevTools = function DevTools() {
   this.destroy = this.destroy.bind(this);
   this._teardown = this._teardown.bind(this);
 
+  this._testing = false;
+
   EventEmitter.decorate(this);
 
   Services.obs.addObserver(this._teardown, "devtools-unloaded", false);
@@ -39,6 +41,29 @@ this.DevTools = function DevTools() {
 }
 
 DevTools.prototype = {
+  /**
+   * When the testing flag is set we take appropriate action to prevent race
+   * conditions in our testing environment. This means setting
+   * dom.send_after_paint_to_content to false to prevent infinite MozAfterPaint
+   * loops and not autohiding the highlighter.
+   */
+  get testing() {
+    return this._testing;
+  },
+
+  set testing(state) {
+    this._testing = state;
+
+    if (state) {
+      // dom.send_after_paint_to_content is set to true (non-default) in
+      // testing/profiles/prefs_general.js so lets set it to the same as it is
+      // in a default browser profile for the duration of the test.
+      Services.prefs.setBoolPref("dom.send_after_paint_to_content", false);
+    } else {
+      Services.prefs.setBoolPref("dom.send_after_paint_to_content", true);
+    }
+  },
+
   /**
    * Register a new developer tool.
    *
