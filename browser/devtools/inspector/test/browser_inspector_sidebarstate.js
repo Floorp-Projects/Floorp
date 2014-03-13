@@ -25,19 +25,18 @@ function inspectorRuleViewOpened()
 
   gDevTools.once("toolbox-destroyed", inspectorClosed);
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.closeToolbox(target);
+  gDevTools.getToolbox(target).destroy();
 }
 
 function inspectorClosed()
 {
   openInspector(function(panel) {
     inspector = panel;
-
     if (inspector.sidebar.getCurrentTabID()) {
-      info("Default sidebar already selected.")
+      // Default sidebar already selected.
       testNewDefaultTab();
     } else {
-      info("Default sidebar still to be selected, adding select listener.");
+      // Default sidebar still to be selected.
       inspector.sidebar.once("select", testNewDefaultTab);
     }
   });
@@ -68,5 +67,5 @@ function test()
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html;charset=utf-8,browser_inspector_sidebarstate.js";
+  content.location = "data:text/html,basic tests for inspector";
 }

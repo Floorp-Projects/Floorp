@@ -40,11 +40,6 @@ const GROUP_INDENT_DEFAULT = 6;
 const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 let WCU_l10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 
-gDevTools.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
-});
-
 function log(aMsg)
 {
   dump("*** WebConsoleTest: " + aMsg + "\n");
@@ -303,7 +298,7 @@ function dumpMessageElement(aMessage)
 
 function finishTest()
 {
-  browser = hudId = hud = filterBox = outputNode = cs = hudBox = null;
+  browser = hudId = hud = filterBox = outputNode = cs = null;
 
   dumpConsoles();
 
