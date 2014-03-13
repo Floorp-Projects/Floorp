@@ -9,9 +9,6 @@
 
 [Constructor, Pref="media.webvtt.enabled"]
 interface VTTRegion {
-  readonly attribute TextTrack? track;
-           attribute DOMString id;
-
            [SetterThrows]
            attribute double width;
 

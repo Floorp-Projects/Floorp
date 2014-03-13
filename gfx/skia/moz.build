@@ -656,7 +656,7 @@ SOURCES += [
     'trunk/src/ports/SkDiscardableMemory_none.cpp',
     'trunk/src/ports/SkGlobalInitialization_default.cpp',
     'trunk/src/ports/SkImageDecoder_empty.cpp',
-    'trunk/src/ports/SkMemory_malloc.cpp',
+    'trunk/src/ports/SkMemory_mozalloc.cpp',
     'trunk/src/ports/SkOSFile_stdio.cpp',
     'trunk/src/sfnt/SkOTTable_name.cpp',
     'trunk/src/sfnt/SkOTUtils.cpp',

@@ -147,7 +147,7 @@ var commandsPeerConnection = [
         myTest.next();
       };
       function onIceConnectedFailed () {
-        ok(false, "pc_local: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState());
+        ok(false, "pc_local: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState);
         myTest.next();
       };
 
@@ -157,7 +157,7 @@ var commandsPeerConnection = [
       } else if (myPc.isIceConnectionPending()) {
         myPc.waitForIceConnected(onIceConnectedSuccess, onIceConnectedFailed);
       } else {
-        ok(false, "pc_local: ICE is already in bad state: " + myPc.iceConnectionState());
+        ok(false, "pc_local: ICE is already in bad state: " + myPc.iceConnectionState);
         myTest.next();
       }
     }
@@ -173,7 +173,7 @@ var commandsPeerConnection = [
         myTest.next();
       };
       function onIceConnectedFailed () {
-        ok(false, "pc_remote: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState());
+        ok(false, "pc_remote: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState);
         myTest.next();
       };
 
@@ -183,7 +183,7 @@ var commandsPeerConnection = [
       } else if (myPc.isIceConnectionPending()) {
         myPc.waitForIceConnected(onIceConnectedSuccess, onIceConnectedFailed);
       } else {
-        ok(false, "pc_remote: ICE is already in bad state: " + myPc.iceConnectionState());
+        ok(false, "pc_remote: ICE is already in bad state: " + myPc.iceConnectionState);
         myTest.next();
       }
     }

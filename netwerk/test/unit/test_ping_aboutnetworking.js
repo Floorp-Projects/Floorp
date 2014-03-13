@@ -22,6 +22,26 @@ function connectionFailed(status) {
   return true;
 }
 
+function test_sockets() {
+  do_test_pending();
+  gDashboard.requestSockets(function(data) {
+    let index = -1;
+    for (let i = 0; i < data.sockets.length; i++) {
+      if (data.sockets[i].host == "127.0.0.1") {
+        index = i;
+        break;
+      }
+    }
+    do_check_neq(index, -1);
+    do_check_eq(data.sockets[index].port, serverSocket.port);
+    do_check_eq(data.sockets[index].tcp, 1);
+
+    serverSocket.close();
+
+    do_test_finished();
+  });
+}
+
 function run_test() {
   let serverSocket = Components.classes["@mozilla.org/network/server-socket;1"]
     .createInstance(Ci.nsIServerSocket);
@@ -44,24 +64,8 @@ function run_test() {
         do_check_eq(found, true);
 
         do_test_finished();
-      });
 
-      do_test_pending();
-      gDashboard.requestSockets(function(data) {
-        let index = -1;
-        for (let i = 0; i < data.sockets.length; i++) {
-          if (data.sockets[i].host == "127.0.0.1") {
-            index = i;
-            break;
-          }
-        }
-        do_check_neq(index, -1);
-        do_check_eq(data.sockets[index].port, serverSocket.port);
-        do_check_eq(data.sockets[index].tcp, 1);
-
-        serverSocket.close();
-
-        do_test_finished();
+        test_sockets();
       });
 
       do_test_finished();

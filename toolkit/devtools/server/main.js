@@ -10,6 +10,7 @@
  * debugging global.
  */
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+let Services = require("Services");
 
 // Until all Debugger server code is converted to SDK modules,
 // imports Components.* alias from chrome module.
@@ -23,6 +24,7 @@ this.CC = CC;
 this.Cu = Cu;
 this.Cr = Cr;
 this.DevToolsUtils = DevToolsUtils;
+this.Services = Services;
 
 // Overload `Components` to prevent SDK loader exception on Components
 // object usage
@@ -34,7 +36,6 @@ const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 Cu.import("resource://gre/modules/reflect.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 

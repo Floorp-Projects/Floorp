@@ -944,19 +944,87 @@ nsIFrame::GetUsedPadding() const
   return padding;
 }
 
+int
+nsIFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+{
+  // Convert the logical skip sides to physical sides using the frame's
+  // writing mode
+  WritingMode writingMode = GetWritingMode();
+  int logicalSkip = GetLogicalSkipSides(aReflowState);
+  int skip = 0;
+
+  if (logicalSkip & LOGICAL_SIDE_B_START) {
+    if (writingMode.IsVertical()) {
+      skip |= 1 << (writingMode.IsVerticalLR() ? NS_SIDE_LEFT : NS_SIDE_RIGHT);
+    } else {
+      skip |= 1 << NS_SIDE_TOP;
+    }
+  }
+
+  if (logicalSkip & LOGICAL_SIDE_B_END) {
+    if (writingMode.IsVertical()) {
+      skip |= 1 << (writingMode.IsVerticalLR() ? NS_SIDE_RIGHT : NS_SIDE_LEFT);
+    } else {
+      skip |= 1 << NS_SIDE_BOTTOM;
+    }
+  }
+
+  if (logicalSkip & LOGICAL_SIDE_I_START) {
+    if (writingMode.IsVertical()) {
+      skip |= 1 << NS_SIDE_TOP;
+    } else {
+      skip |= 1 << (writingMode.IsBidiLTR() ? NS_SIDE_LEFT : NS_SIDE_RIGHT);
+    }
+  }
+
+  if (logicalSkip & LOGICAL_SIDE_I_END) {
+    if (writingMode.IsVertical()) {
+      skip |= 1 << NS_SIDE_BOTTOM;
+    } else {
+      skip |= 1 << (writingMode.IsBidiLTR() ? NS_SIDE_RIGHT : NS_SIDE_LEFT);
+    }
+  }
+
+  return skip;
+}
+
+
 void
 nsIFrame::ApplySkipSides(nsMargin& aMargin,
                          const nsHTMLReflowState* aReflowState) const
 {
   int skipSides = GetSkipSides(aReflowState);
-  if (skipSides & (1 << NS_SIDE_TOP))
+  if (skipSides & (1 << NS_SIDE_TOP)) {
     aMargin.top = 0;
-  if (skipSides & (1 << NS_SIDE_RIGHT))
+  }
+  if (skipSides & (1 << NS_SIDE_RIGHT)) {
     aMargin.right = 0;
-  if (skipSides & (1 << NS_SIDE_BOTTOM))
+  }
+  if (skipSides & (1 << NS_SIDE_BOTTOM)) {
     aMargin.bottom = 0;
-  if (skipSides & (1 << NS_SIDE_LEFT))
+  }
+  if (skipSides & (1 << NS_SIDE_LEFT)) {
     aMargin.left = 0;
+  }
+}
+
+void
+nsIFrame::ApplyLogicalSkipSides(LogicalMargin& aMargin,
+                                const nsHTMLReflowState* aReflowState) const
+{
+  int skipSides = GetLogicalSkipSides(aReflowState);
+  if (skipSides & (LOGICAL_SIDE_B_START)) {
+    aMargin.BStart(GetWritingMode()) = 0;
+  }
+  if (skipSides & (LOGICAL_SIDE_I_END)) {
+    aMargin.IEnd(GetWritingMode()) = 0;
+  }
+  if (skipSides & (LOGICAL_SIDE_B_END)) {
+    aMargin.BEnd(GetWritingMode()) = 0;
+  }
+  if (skipSides & (LOGICAL_SIDE_I_START)) {
+    aMargin.IStart(GetWritingMode()) = 0;
+  }
 }
 
 nsRect
