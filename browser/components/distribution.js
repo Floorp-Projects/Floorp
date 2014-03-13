@@ -167,7 +167,7 @@ DistributionCustomizer.prototype = {
                                           , index: index
                                           , feedURI: this._makeURI(items[iid]["feedLink"])
                                           , siteURI: this._makeURI(items[iid]["siteLink"])
-                                          });
+                                          }).then(null, Cu.reportError);
         break;
 
       case "bookmark":

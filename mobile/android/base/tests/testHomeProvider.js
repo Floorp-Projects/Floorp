@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 const TEST_DATASET_ID = "test-dataset-id";
 const TEST_URL = "http://test.com";
+const TEST_TITLE = "Test";
 
 const PREF_SYNC_CHECK_INTERVAL_SECS = "home.sync.checkIntervalSecs";
 const TEST_INTERVAL_SECS = 1;
@@ -47,7 +48,7 @@ add_test(function test_periodic_sync() {
 add_task(function test_save_and_delete() {
   // Use the HomeProvider API to save some data.
   let storage = HomeProvider.getStorage(TEST_DATASET_ID);
-  yield storage.save([{ url: TEST_URL }]);
+  yield storage.save([{ title: TEST_TITLE, url: TEST_URL }]);
 
   // Peek in the DB to make sure we have the right data.
   let db = yield Sqlite.openConnection({ path: DB_PATH });
@@ -65,6 +66,63 @@ add_task(function test_save_and_delete() {
   yield storage.deleteAll();
 
   // Make sure the data was deleted.
+  let result = yield db.execute("SELECT * FROM items");
+  do_check_eq(result.length, 0);
+
+  db.close();
+});
+
+add_task(function test_row_validation() {
+  // Use the HomeProvider API to save some data.
+  let storage = HomeProvider.getStorage(TEST_DATASET_ID);
+
+  let invalidRows = [
+    { url: "url" },
+    { title: "title" },
+    { description: "description" },
+    { image_url: "image_url" }
+  ];
+
+  // None of these save calls should save anything
+  for (let row of invalidRows) {
+    try {
+      yield storage.save([row]);
+    } catch (e if e instanceof HomeProvider.ValidationError) {
+      // Just catch and ignore validation errors
+    }
+  }
+
+  // Peek in the DB to make sure we have the right data.
+  let db = yield Sqlite.openConnection({ path: DB_PATH });
+
+  // Make sure no data has been saved.
+  let result = yield db.execute("SELECT * FROM items");
+  do_check_eq(result.length, 0);
+
+  db.close();
+});
+
+add_task(function test_save_transaction() {
+  // Use the HomeProvider API to save some data.
+  let storage = HomeProvider.getStorage(TEST_DATASET_ID);
+
+  // One valid, one invalid
+  let rows = [
+    { title: TEST_TITLE, url: TEST_URL },
+    { image_url: "image_url" }
+  ];
+
+  // Try to save all the rows at once
+  try {
+    yield storage.save(rows);
+  } catch (e if e instanceof HomeProvider.ValidationError) {
+    // Just catch and ignore validation errors
+  }
+
+  // Peek in the DB to make sure we have the right data.
+  let db = yield Sqlite.openConnection({ path: DB_PATH });
+
+  // Make sure no data has been saved.
   let result = yield db.execute("SELECT * FROM items");
   do_check_eq(result.length, 0);
 
