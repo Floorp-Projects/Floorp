@@ -18,18 +18,315 @@
 #include "nsURLHelper.h"
 
 using mozilla::AutoSafeJSContext;
+using mozilla::dom::Sequence;
+
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS5(Dashboard, nsIDashboard, nsIDashboardEventNotifier,
-                              nsITransportEventSink, nsITimerCallback,
-                              nsIDNSListener)
-using mozilla::dom::Sequence;
-
-struct ConnStatus
+class SocketData
+    : public nsISupports
 {
-    nsString creationSts;
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    SocketData()
+    {
+        mTotalSent = 0;
+        mTotalRecv = 0;
+        mThread = nullptr;
+    }
+
+    virtual ~SocketData()
+    {
+    }
+
+    uint64_t mTotalSent;
+    uint64_t mTotalRecv;
+    nsTArray<SocketInfo> mData;
+    nsCOMPtr<NetDashboardCallback> mCallback;
+    nsIThread *mThread;
 };
+
+NS_IMPL_ISUPPORTS0(SocketData)
+
+
+class HttpData
+    : public nsISupports
+{
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    HttpData()
+    {
+        mThread = nullptr;
+    }
+
+    virtual ~HttpData()
+    {
+    }
+
+    nsTArray<HttpRetParams> mData;
+    nsCOMPtr<NetDashboardCallback> mCallback;
+    nsIThread *mThread;
+};
+
+NS_IMPL_ISUPPORTS0(HttpData)
+
+
+class WebSocketRequest
+    : public nsISupports
+{
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    WebSocketRequest()
+    {
+        mThread = nullptr;
+    }
+
+    virtual ~WebSocketRequest()
+    {
+    }
+
+    nsCOMPtr<NetDashboardCallback> mCallback;
+    nsIThread *mThread;
+};
+
+NS_IMPL_ISUPPORTS0(WebSocketRequest)
+
+
+class DnsData
+    : public nsISupports
+{
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    DnsData()
+    {
+        mThread = nullptr;
+    }
+
+    virtual ~DnsData()
+    {
+    }
+
+    nsTArray<DNSCacheEntries> mData;
+    nsCOMPtr<NetDashboardCallback> mCallback;
+    nsIThread *mThread;
+};
+
+NS_IMPL_ISUPPORTS0(DnsData)
+
+
+class ConnectionData
+    : public nsITransportEventSink
+    , public nsITimerCallback
+{
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSITRANSPORTEVENTSINK
+    NS_DECL_NSITIMERCALLBACK
+
+    void StartTimer(uint32_t aTimeout);
+    void StopTimer();
+
+    ConnectionData(Dashboard *target)
+    {
+        mThread = nullptr;
+        mDashboard = target;
+    }
+
+    virtual ~ConnectionData()
+    {
+        if (mTimer) {
+            mTimer->Cancel();
+        }
+    }
+
+    nsCOMPtr<nsISocketTransport> mSocket;
+    nsCOMPtr<nsIInputStream> mStreamIn;
+    nsCOMPtr<nsITimer> mTimer;
+    nsCOMPtr<NetDashboardCallback> mCallback;
+    nsIThread *mThread;
+    Dashboard *mDashboard;
+
+    nsCString mHost;
+    uint32_t mPort;
+    const char *mProtocol;
+    uint32_t mTimeout;
+
+    nsString mStatus;
+};
+
+NS_IMPL_ISUPPORTS2(ConnectionData, nsITransportEventSink, nsITimerCallback)
+
+NS_IMETHODIMP
+ConnectionData::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
+                                  uint64_t aProgress, uint64_t aProgressMax)
+{
+    if (aStatus == NS_NET_STATUS_CONNECTED_TO) {
+        StopTimer();
+    }
+
+    CopyASCIItoUTF16(Dashboard::GetErrorString(aStatus), mStatus);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<ConnectionData> >
+        (mDashboard, &Dashboard::GetConnectionStatus, this);
+    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+ConnectionData::Notify(nsITimer *aTimer)
+{
+    MOZ_ASSERT(aTimer == mTimer);
+
+    if (mSocket) {
+        mSocket->Close(NS_ERROR_ABORT);
+        mSocket = nullptr;
+        mStreamIn = nullptr;
+    }
+
+    mTimer = nullptr;
+
+    mStatus.Assign(NS_LITERAL_STRING("NS_ERROR_NET_TIMEOUT"));
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<ConnectionData> >
+        (mDashboard, &Dashboard::GetConnectionStatus, this);
+    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+
+    return NS_OK;
+}
+
+void
+ConnectionData::StartTimer(uint32_t aTimeout)
+{
+    if (!mTimer) {
+        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    }
+
+    mTimer->InitWithCallback(this, aTimeout * 1000,
+        nsITimer::TYPE_ONE_SHOT);
+}
+
+void
+ConnectionData::StopTimer()
+{
+    if (mTimer) {
+        mTimer->Cancel();
+        mTimer = nullptr;
+    }
+}
+
+
+class LookupHelper;
+
+class LookupArgument
+    : public nsISupports
+{
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+
+    LookupArgument(nsIDNSRecord *aRecord, LookupHelper *aHelper)
+    {
+        mRecord = aRecord;
+        mHelper = aHelper;
+    }
+
+    virtual ~LookupArgument()
+    {
+    }
+
+    nsCOMPtr<nsIDNSRecord> mRecord;
+    nsRefPtr<LookupHelper> mHelper;
+};
+
+NS_IMPL_ISUPPORTS0(LookupArgument)
+
+
+class LookupHelper
+    : public nsIDNSListener
+{
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIDNSLISTENER
+
+    LookupHelper() {
+    }
+
+    virtual ~LookupHelper()
+    {
+        if (mCancel) {
+            mCancel->Cancel(NS_ERROR_ABORT);
+        }
+    }
+
+    nsresult ConstructAnswer(LookupArgument *aArgument);
+public:
+    nsCOMPtr<nsICancelable> mCancel;
+    nsCOMPtr<NetDashboardCallback> mCallback;
+    nsIThread *mThread;
+    nsresult mStatus;
+};
+
+NS_IMPL_ISUPPORTS1(LookupHelper, nsIDNSListener)
+
+NS_IMETHODIMP
+LookupHelper::OnLookupComplete(nsICancelable *aRequest,
+                               nsIDNSRecord *aRecord, nsresult aStatus)
+{
+    MOZ_ASSERT(aRequest == mCancel);
+    mCancel = nullptr;
+    mStatus = aStatus;
+
+    nsRefPtr<LookupArgument> arg = new LookupArgument(aRecord, this);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<LookupArgument> >(
+        this, &LookupHelper::ConstructAnswer, arg);
+    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+
+    return NS_OK;
+}
+
+nsresult
+LookupHelper::ConstructAnswer(LookupArgument *aArgument)
+{
+
+    nsIDNSRecord *aRecord = aArgument->mRecord;
+    AutoSafeJSContext cx;
+
+    mozilla::dom::DNSLookupDict dict;
+    dict.mAddress.Construct();
+
+    Sequence<nsString> &addresses = dict.mAddress.Value();
+
+    if (NS_SUCCEEDED(mStatus)) {
+        dict.mAnswer = true;
+        bool hasMore;
+        aRecord->HasMore(&hasMore);
+        while (hasMore) {
+           nsCString nextAddress;
+           aRecord->GetNextAddrAsString(nextAddress);
+           CopyASCIItoUTF16(nextAddress, *addresses.AppendElement());
+           aRecord->HasMore(&hasMore);
+        }
+    } else {
+        dict.mAnswer = false;
+        CopyASCIItoUTF16(Dashboard::GetErrorString(mStatus), dict.mError);
+    }
+
+    JS::RootedValue val(cx);
+    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    this->mCallback->OnDashboardDataAvailable(val);
+
+    return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS2(Dashboard, nsIDashboard, nsIDashboardEventNotifier)
 
 Dashboard::Dashboard()
 {
@@ -38,39 +335,41 @@ Dashboard::Dashboard()
 
 Dashboard::~Dashboard()
 {
-    if (mDnsup.cancel)
-        mDnsup.cancel->Cancel(NS_ERROR_ABORT);
 }
 
 NS_IMETHODIMP
-Dashboard::RequestSockets(NetDashboardCallback* cb)
+Dashboard::RequestSockets(NetDashboardCallback *aCallback)
 {
-    if (mSock.cb)
-        return NS_ERROR_FAILURE;
-    mSock.cb = cb;
-    mSock.data.Clear();
-    mSock.thread = NS_GetCurrentThread();
-
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &Dashboard::GetSocketsDispatch);
+    nsRefPtr<SocketData> socketData = new SocketData();
+    socketData->mCallback = aCallback;
+    socketData->mThread = NS_GetCurrentThread();
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<SocketData> >
+        (this, &Dashboard::GetSocketsDispatch, socketData);
     gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
-void
-Dashboard::GetSocketsDispatch()
+nsresult
+Dashboard::GetSocketsDispatch(SocketData *aSocketData)
 {
+    nsRefPtr<SocketData> socketData = aSocketData;
     if (gSocketTransportService) {
-        gSocketTransportService->GetSocketConnections(&mSock.data);
-        mSock.totalSent = gSocketTransportService->GetSentBytes();
-        mSock.totalRecv = gSocketTransportService->GetReceivedBytes();
+        gSocketTransportService->GetSocketConnections(&socketData->mData);
+        socketData->mTotalSent = gSocketTransportService->GetSentBytes();
+        socketData->mTotalRecv = gSocketTransportService->GetReceivedBytes();
     }
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &Dashboard::GetSockets);
-    mSock.thread->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<SocketData> >
+        (this, &Dashboard::GetSockets, socketData);
+    socketData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    return NS_OK;
 }
 
 nsresult
-Dashboard::GetSockets()
+Dashboard::GetSockets(SocketData *aSocketData)
 {
+    nsRefPtr<SocketData> socketData = aSocketData;
     AutoSafeJSContext cx;
 
     mozilla::dom::SocketsDict dict;
@@ -80,66 +379,65 @@ Dashboard::GetSockets()
 
     Sequence<mozilla::dom::SocketElement> &sockets = dict.mSockets.Value();
 
-    uint32_t length = mSock.data.Length();
+    uint32_t length = socketData->mData.Length();
     if (!sockets.SetCapacity(length)) {
-            mSock.cb = nullptr;
-            mSock.data.Clear();
             JS_ReportOutOfMemory(cx);
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    for (uint32_t i = 0; i < mSock.data.Length(); i++) {
-        mozilla::dom::SocketElement &socket = *sockets.AppendElement();
-        CopyASCIItoUTF16(mSock.data[i].host, socket.mHost);
-        socket.mPort = mSock.data[i].port;
-        socket.mActive = mSock.data[i].active;
-        socket.mTcp = mSock.data[i].tcp;
-        socket.mSent = (double) mSock.data[i].sent;
-        socket.mReceived = (double) mSock.data[i].received;
-        dict.mSent += mSock.data[i].sent;
-        dict.mReceived += mSock.data[i].received;
+    for (uint32_t i = 0; i < socketData->mData.Length(); i++) {
+        mozilla::dom::SocketElement &mSocket = *sockets.AppendElement();
+        CopyASCIItoUTF16(socketData->mData[i].host, mSocket.mHost);
+        mSocket.mPort = socketData->mData[i].port;
+        mSocket.mActive = socketData->mData[i].active;
+        mSocket.mTcp = socketData->mData[i].tcp;
+        mSocket.mSent = (double) socketData->mData[i].sent;
+        mSocket.mReceived = (double) socketData->mData[i].received;
+        dict.mSent += socketData->mData[i].sent;
+        dict.mReceived += socketData->mData[i].received;
     }
 
-    dict.mSent += mSock.totalSent;
-    dict.mReceived += mSock.totalRecv;
+    dict.mSent += socketData->mTotalSent;
+    dict.mReceived += socketData->mTotalRecv;
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
-        mSock.cb = nullptr;
-        mSock.data.Clear();
+    if (!dict.ToObject(cx, JS::NullPtr(), &val))
         return NS_ERROR_FAILURE;
-    }
-    mSock.cb->OnDashboardDataAvailable(val);
-    mSock.cb = nullptr;
+    socketData->mCallback->OnDashboardDataAvailable(val);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-Dashboard::RequestHttpConnections(NetDashboardCallback* cb)
+Dashboard::RequestHttpConnections(NetDashboardCallback *aCallback)
 {
-    if (mHttp.cb)
-        return NS_ERROR_FAILURE;
-    mHttp.cb = cb;
-    mHttp.data.Clear();
-    mHttp.thread = NS_GetCurrentThread();
+    nsRefPtr<HttpData> httpData = new HttpData();
+    httpData->mCallback = aCallback;
+    httpData->mThread = NS_GetCurrentThread();
 
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &Dashboard::GetHttpDispatch);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<HttpData> >
+        (this, &Dashboard::GetHttpDispatch, httpData);
     gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
-void
-Dashboard::GetHttpDispatch()
+nsresult
+Dashboard::GetHttpDispatch(HttpData *aHttpData)
 {
-    HttpInfo::GetHttpConnectionData(&mHttp.data);
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &Dashboard::GetHttpConnections);
-    mHttp.thread->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsRefPtr<HttpData> httpData = aHttpData;
+    HttpInfo::GetHttpConnectionData(&httpData->mData);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<HttpData> >
+        (this, &Dashboard::GetHttpConnections, httpData);
+    httpData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    return NS_OK;
 }
 
 
 nsresult
-Dashboard::GetHttpConnections()
+Dashboard::GetHttpConnections(HttpData *aHttpData)
 {
+    nsRefPtr<HttpData> httpData = aHttpData;
     AutoSafeJSContext cx;
 
     mozilla::dom::HttpConnDict dict;
@@ -150,21 +448,21 @@ Dashboard::GetHttpConnections()
     using mozilla::dom::HttpConnInfo;
     Sequence<HttpConnectionElement> &connections = dict.mConnections.Value();
 
-    uint32_t length = mHttp.data.Length();
+    uint32_t length = httpData->mData.Length();
     if (!connections.SetCapacity(length)) {
-            mHttp.cb = nullptr;
-            mHttp.data.Clear();
+            httpData->mCallback = nullptr;
+            httpData->mData.Clear();
             JS_ReportOutOfMemory(cx);
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    for (uint32_t i = 0; i < mHttp.data.Length(); i++) {
+    for (uint32_t i = 0; i < httpData->mData.Length(); i++) {
         HttpConnectionElement &connection = *connections.AppendElement();
 
-        CopyASCIItoUTF16(mHttp.data[i].host, connection.mHost);
-        connection.mPort = mHttp.data[i].port;
-        connection.mSpdy = mHttp.data[i].spdy;
-        connection.mSsl = mHttp.data[i].ssl;
+        CopyASCIItoUTF16(httpData->mData[i].host, connection.mHost);
+        connection.mPort = httpData->mData[i].port;
+        connection.mSpdy = httpData->mData[i].spdy;
+        connection.mSsl = httpData->mData[i].ssl;
 
         connection.mActive.Construct();
         connection.mIdle.Construct();
@@ -174,50 +472,48 @@ Dashboard::GetHttpConnections()
         Sequence<HttpConnInfo> &idle = connection.mIdle.Value();
         Sequence<HalfOpenInfoDict> &halfOpens = connection.mHalfOpens.Value();
 
-        if (!active.SetCapacity(mHttp.data[i].active.Length()) ||
-            !idle.SetCapacity(mHttp.data[i].idle.Length()) ||
-            !halfOpens.SetCapacity(mHttp.data[i].halfOpens.Length())) {
-                mHttp.cb = nullptr;
-                mHttp.data.Clear();
+        if (!active.SetCapacity(httpData->mData[i].active.Length()) ||
+            !idle.SetCapacity(httpData->mData[i].idle.Length()) ||
+            !halfOpens.SetCapacity(httpData->mData[i].halfOpens.Length())) {
+                httpData->mCallback = nullptr;
+                httpData->mData.Clear();
                 JS_ReportOutOfMemory(cx);
                 return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        for (uint32_t j = 0; j < mHttp.data[i].active.Length(); j++) {
+        for (uint32_t j = 0; j < httpData->mData[i].active.Length(); j++) {
             HttpConnInfo &info = *active.AppendElement();
-            info.mRtt = mHttp.data[i].active[j].rtt;
-            info.mTtl = mHttp.data[i].active[j].ttl;
-            info.mProtocolVersion = mHttp.data[i].active[j].protocolVersion;
+            info.mRtt = httpData->mData[i].active[j].rtt;
+            info.mTtl = httpData->mData[i].active[j].ttl;
+            info.mProtocolVersion =
+                httpData->mData[i].active[j].protocolVersion;
         }
 
-        for (uint32_t j = 0; j < mHttp.data[i].idle.Length(); j++) {
+        for (uint32_t j = 0; j < httpData->mData[i].idle.Length(); j++) {
             HttpConnInfo &info = *idle.AppendElement();
-            info.mRtt = mHttp.data[i].idle[j].rtt;
-            info.mTtl = mHttp.data[i].idle[j].ttl;
-            info.mProtocolVersion = mHttp.data[i].idle[j].protocolVersion;
+            info.mRtt = httpData->mData[i].idle[j].rtt;
+            info.mTtl = httpData->mData[i].idle[j].ttl;
+            info.mProtocolVersion = httpData->mData[i].idle[j].protocolVersion;
         }
 
-        for (uint32_t j = 0; j < mHttp.data[i].halfOpens.Length(); j++) {
+        for (uint32_t j = 0; j < httpData->mData[i].halfOpens.Length(); j++) {
             HalfOpenInfoDict &info = *halfOpens.AppendElement();
-            info.mSpeculative = mHttp.data[i].halfOpens[j].speculative;
+            info.mSpeculative = httpData->mData[i].halfOpens[j].speculative;
         }
     }
 
     JS::RootedValue val(cx);
     if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
-        mHttp.cb = nullptr;
-        mHttp.data.Clear();
         return NS_ERROR_FAILURE;
     }
-    mHttp.cb->OnDashboardDataAvailable(val);
-    mHttp.cb = nullptr;
+
+    httpData->mCallback->OnDashboardDataAvailable(val);
 
     return NS_OK;
 }
 
-
 NS_IMETHODIMP
-Dashboard::GetEnableLogging(bool* value)
+Dashboard::GetEnableLogging(bool *value)
 {
     *value = mEnableLogging;
     return NS_OK;
@@ -235,11 +531,13 @@ Dashboard::AddHost(const nsACString& aHost, uint32_t aSerial, bool aEncrypted)
 {
     if (mEnableLogging) {
         mozilla::MutexAutoLock lock(mWs.lock);
-        LogData data(nsCString(aHost), aSerial, aEncrypted);
-        if (mWs.data.Contains(data))
+        LogData mData(nsCString(aHost), aSerial, aEncrypted);
+        if (mWs.data.Contains(mData)) {
             return NS_OK;
-        if (!mWs.data.AppendElement(data))
+        }
+        if (!mWs.data.AppendElement(mData)) {
             return NS_ERROR_OUT_OF_MEMORY;
+        }
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
@@ -290,32 +588,33 @@ Dashboard::NewMsgReceived(const nsACString& aHost, uint32_t aSerial, uint32_t aL
 }
 
 NS_IMETHODIMP
-Dashboard::RequestWebsocketConnections(NetDashboardCallback* cb)
+Dashboard::RequestWebsocketConnections(NetDashboardCallback *aCallback)
 {
-    if (mWs.cb)
-        return NS_ERROR_FAILURE;
-    mWs.cb = cb;
-    mWs.thread = NS_GetCurrentThread();
+    nsRefPtr<WebSocketRequest> wsRequest = new WebSocketRequest();
+    wsRequest->mCallback = aCallback;
+    wsRequest->mThread = NS_GetCurrentThread();
 
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &Dashboard::GetWebSocketConnections);
-    mWs.thread->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<WebSocketRequest> >
+        (this, &Dashboard::GetWebSocketConnections, wsRequest);
+    wsRequest->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
 nsresult
-Dashboard::GetWebSocketConnections()
+Dashboard::GetWebSocketConnections(WebSocketRequest *aWsRequest)
 {
+    nsRefPtr<WebSocketRequest> wsRequest = aWsRequest;
     AutoSafeJSContext cx;
 
     mozilla::dom::WebSocketDict dict;
     dict.mWebsockets.Construct();
-    Sequence<mozilla::dom::WebSocketElement> &websockets = dict.mWebsockets.Value();
+    Sequence<mozilla::dom::WebSocketElement> &websockets =
+        dict.mWebsockets.Value();
 
     mozilla::MutexAutoLock lock(mWs.lock);
     uint32_t length = mWs.data.Length();
     if (!websockets.SetCapacity(length)) {
-        mWs.cb = nullptr;
-        mWs.data.Clear();
         JS_ReportOutOfMemory(cx);
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -332,48 +631,53 @@ Dashboard::GetWebSocketConnections()
 
     JS::RootedValue val(cx);
     if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
-        mWs.cb = nullptr;
-        mWs.data.Clear();
         return NS_ERROR_FAILURE;
     }
-    mWs.cb->OnDashboardDataAvailable(val);
-    mWs.cb = nullptr;
+    wsRequest->mCallback->OnDashboardDataAvailable(val);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-Dashboard::RequestDNSInfo(NetDashboardCallback* cb)
+Dashboard::RequestDNSInfo(NetDashboardCallback *aCallback)
 {
-    if (mDns.cb)
-        return NS_ERROR_FAILURE;
-    mDns.cb = cb;
-    nsresult rv;
-    mDns.data.Clear();
-    mDns.thread = NS_GetCurrentThread();
+    nsRefPtr<DnsData> dnsData = new DnsData();
+    dnsData->mCallback = aCallback;
 
-    if (!mDns.serv) {
-        mDns.serv = do_GetService("@mozilla.org/network/dns-service;1", &rv);
-        if (NS_FAILED(rv))
+    nsresult rv;
+    dnsData->mData.Clear();
+    dnsData->mThread = NS_GetCurrentThread();
+
+    if (!mDnsService) {
+        mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
+        if (NS_FAILED(rv)) {
             return rv;
+        }
     }
 
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &Dashboard::GetDnsInfoDispatch);
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<DnsData> >
+        (this, &Dashboard::GetDnsInfoDispatch, dnsData);
     gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
     return NS_OK;
 }
 
-void
-Dashboard::GetDnsInfoDispatch()
+nsresult
+Dashboard::GetDnsInfoDispatch(DnsData *aDnsData)
 {
-    if (mDns.serv)
-        mDns.serv->GetDNSCacheEntries(&mDns.data);
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &Dashboard::GetDNSCacheEntries);
-    mDns.thread->Dispatch(event, NS_DISPATCH_NORMAL);
+    nsRefPtr<DnsData> dnsData = aDnsData;
+    if (mDnsService) {
+        mDnsService->GetDNSCacheEntries(&dnsData->mData);
+    }
+    nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethodWithArg<nsRefPtr<DnsData> >
+        (this, &Dashboard::GetDNSCacheEntries, dnsData);
+    dnsData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    return NS_OK;
 }
 
 nsresult
-Dashboard::GetDNSCacheEntries()
+Dashboard::GetDNSCacheEntries(DnsData *dnsData)
 {
     AutoSafeJSContext cx;
 
@@ -381,111 +685,66 @@ Dashboard::GetDNSCacheEntries()
     dict.mEntries.Construct();
     Sequence<mozilla::dom::DnsCacheEntry> &entries = dict.mEntries.Value();
 
-    uint32_t length = mDns.data.Length();
+    uint32_t length = dnsData->mData.Length();
     if (!entries.SetCapacity(length)) {
-        mDns.cb = nullptr;
-        mDns.data.Clear();
         JS_ReportOutOfMemory(cx);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    for (uint32_t i = 0; i < mDns.data.Length(); i++) {
+    for (uint32_t i = 0; i < dnsData->mData.Length(); i++) {
         mozilla::dom::DnsCacheEntry &entry = *entries.AppendElement();
         entry.mHostaddr.Construct();
 
         Sequence<nsString> &addrs = entry.mHostaddr.Value();
-        if (!addrs.SetCapacity(mDns.data[i].hostaddr.Length())) {
-            mDns.cb = nullptr;
-            mDns.data.Clear();
+        if (!addrs.SetCapacity(dnsData->mData[i].hostaddr.Length())) {
             JS_ReportOutOfMemory(cx);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        CopyASCIItoUTF16(mDns.data[i].hostname, entry.mHostname);
-        entry.mExpiration = mDns.data[i].expiration;
+        CopyASCIItoUTF16(dnsData->mData[i].hostname, entry.mHostname);
+        entry.mExpiration = dnsData->mData[i].expiration;
 
-        for (uint32_t j = 0; j < mDns.data[i].hostaddr.Length(); j++) {
-            CopyASCIItoUTF16(mDns.data[i].hostaddr[j], *addrs.AppendElement());
+        for (uint32_t j = 0; j < dnsData->mData[i].hostaddr.Length(); j++) {
+            CopyASCIItoUTF16(dnsData->mData[i].hostaddr[j],
+                *addrs.AppendElement());
         }
 
-        if (mDns.data[i].family == PR_AF_INET6)
+        if (dnsData->mData[i].family == PR_AF_INET6) {
             CopyASCIItoUTF16("ipv6", entry.mFamily);
-        else
+        } else {
             CopyASCIItoUTF16("ipv4", entry.mFamily);
+        }
     }
 
     JS::RootedValue val(cx);
     if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
-        mDns.cb = nullptr;
-        mDns.data.Clear();
         return NS_ERROR_FAILURE;
     }
-    mDns.cb->OnDashboardDataAvailable(val);
-    mDns.cb = nullptr;
+    dnsData->mCallback->OnDashboardDataAvailable(val);
 
     return NS_OK;
 }
 
 NS_IMETHODIMP
-Dashboard::RequestDNSLookup(const nsACString &aHost, NetDashboardCallback *cb)
+Dashboard::RequestDNSLookup(const nsACString &aHost,
+                            NetDashboardCallback *mCallback)
 {
-    if (mDnsup.cb)
-        return NS_ERROR_FAILURE;
     nsresult rv;
 
-    if (!mDnsup.serv) {
-        mDnsup.serv = do_GetService("@mozilla.org/network/dns-service;1", &rv);
-        if (NS_FAILED(rv))
+    if (!mDnsService) {
+        mDnsService = do_GetService("@mozilla.org/network/dns-service;1", &rv);
+        if (NS_FAILED(rv)) {
             return rv;
-    }
-
-    mDnsup.cb = cb;
-    rv = mDnsup.serv->AsyncResolve(aHost, 0, this, NS_GetCurrentThread(), getter_AddRefs(mDnsup.cancel));
-    if (NS_FAILED(rv)) {
-        mDnsup.cb = nullptr;
-        return rv;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-Dashboard::OnLookupComplete(nsICancelable *aRequest, nsIDNSRecord *aRecord, nsresult aStatus)
-{
-    MOZ_ASSERT(aRequest == mDnsup.cancel);
-    mDnsup.cancel = nullptr;
-
-    AutoSafeJSContext cx;
-
-    mozilla::dom::DNSLookupDict dict;
-    dict.mAddress.Construct();
-
-    Sequence<nsString> &addresses = dict.mAddress.Value();
-
-    if (NS_SUCCEEDED(aStatus)) {
-        dict.mAnswer = true;
-        bool hasMore;
-        aRecord->HasMore(&hasMore);
-        while(hasMore) {
-           nsCString nextAddress;
-           aRecord->GetNextAddrAsString(nextAddress);
-           CopyASCIItoUTF16(nextAddress, *addresses.AppendElement());
-           aRecord->HasMore(&hasMore);
         }
-    } else {
-        dict.mAnswer = false;
-        CopyASCIItoUTF16(GetErrorString(aStatus), dict.mError);
     }
 
-    JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
-        mDnsup.cb = nullptr;
-        return NS_ERROR_FAILURE;
-    }
-    mDnsup.cb->OnDashboardDataAvailable(val);
-    mDnsup.cb = nullptr;
-
-    return NS_OK;
+    nsRefPtr<LookupHelper> helper = new LookupHelper();
+    helper->mCallback = mCallback;
+    helper->mThread = NS_GetCurrentThread();
+    rv = mDnsService->AsyncResolve(aHost, 0, helper.get(),
+                                   NS_GetCurrentThread(),
+                                   getter_AddRefs(helper->mCancel));
+    return rv;
 }
 
 void
@@ -525,19 +784,25 @@ HttpConnInfo::SetHTTP2ProtocolVersion(uint8_t pv)
 NS_IMETHODIMP
 Dashboard::RequestConnection(const nsACString& aHost, uint32_t aPort,
                              const char *aProtocol, uint32_t aTimeout,
-                             NetDashboardCallback* cb)
+                             NetDashboardCallback *aCallback)
 {
     nsresult rv;
-    mConn.cb = cb;
-    mConn.thread = NS_GetCurrentThread();
+    nsRefPtr<ConnectionData> connectionData = new ConnectionData(this);
+    connectionData->mHost = aHost;
+    connectionData->mPort = aPort;
+    connectionData->mProtocol = aProtocol;
+    connectionData->mTimeout = aTimeout;
 
-    rv = TestNewConnection(aHost, aPort, aProtocol, aTimeout);
+    connectionData->mCallback = aCallback;
+    connectionData->mThread = NS_GetCurrentThread();
+
+    rv = TestNewConnection(connectionData);
     if (NS_FAILED(rv)) {
-        ConnStatus status;
-        CopyASCIItoUTF16(GetErrorString(rv), status.creationSts);
+        CopyASCIItoUTF16(GetErrorString(rv), connectionData->mStatus);
         nsCOMPtr<nsIRunnable> event =
-            NS_NewRunnableMethodWithArg<ConnStatus>(this, &Dashboard::GetConnectionStatus, status);
-        mConn.thread->Dispatch(event, NS_DISPATCH_NORMAL);
+            NS_NewRunnableMethodWithArg<nsRefPtr<ConnectionData> >
+            (this, &Dashboard::GetConnectionStatus, connectionData);
+        connectionData->mThread->Dispatch(event, NS_DISPATCH_NORMAL);
         return rv;
     }
 
@@ -545,105 +810,66 @@ Dashboard::RequestConnection(const nsACString& aHost, uint32_t aPort,
 }
 
 nsresult
-Dashboard::GetConnectionStatus(ConnStatus aStatus)
+Dashboard::GetConnectionStatus(ConnectionData *aConnectionData)
 {
+    nsRefPtr<ConnectionData> connectionData = aConnectionData;
     AutoSafeJSContext cx;
 
     mozilla::dom::ConnStatusDict dict;
-    dict.mStatus = aStatus.creationSts;
+    dict.mStatus = connectionData->mStatus;
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
-        mConn.cb = nullptr;
+    if (!dict.ToObject(cx, JS::NullPtr(), &val))
         return NS_ERROR_FAILURE;
-    }
-    mConn.cb->OnDashboardDataAvailable(val);
+
+    connectionData->mCallback->OnDashboardDataAvailable(val);
 
     return NS_OK;
 }
 
 nsresult
-Dashboard::TestNewConnection(const nsACString& aHost, uint32_t aPort,
-                             const char *aProtocol, uint32_t aTimeout)
+Dashboard::TestNewConnection(ConnectionData *aConnectionData)
 {
+    nsRefPtr<ConnectionData> connectionData = aConnectionData;
+
     nsresult rv;
-    if (!aHost.Length() || !net_IsValidHostName(aHost))
+    if (!connectionData->mHost.Length() ||
+        !net_IsValidHostName(connectionData->mHost)) {
         return NS_ERROR_UNKNOWN_HOST;
+    }
 
-    if (aProtocol && NS_LITERAL_STRING("ssl").EqualsASCII(aProtocol))
-        rv = gSocketTransportService->CreateTransport(&aProtocol, 1, aHost,
-                                                      aPort, nullptr,
-                                                      getter_AddRefs(mConn.socket));
-    else
-        rv = gSocketTransportService->CreateTransport(nullptr, 0, aHost,
-                                                      aPort, nullptr,
-                                                      getter_AddRefs(mConn.socket));
-    if (NS_FAILED(rv))
+    if (connectionData->mProtocol &&
+        NS_LITERAL_STRING("ssl").EqualsASCII(connectionData->mProtocol)) {
+        rv = gSocketTransportService->CreateTransport(
+            &connectionData->mProtocol, 1, connectionData->mHost,
+            connectionData->mPort, nullptr,
+            getter_AddRefs(connectionData->mSocket));
+    } else {
+        rv = gSocketTransportService->CreateTransport(
+            nullptr, 0, connectionData->mHost,
+            connectionData->mPort, nullptr,
+            getter_AddRefs(connectionData->mSocket));
+    }
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
-    rv = mConn.socket->SetEventSink(this, NS_GetCurrentThread());
-    if (NS_FAILED(rv))
+    rv = connectionData->mSocket->SetEventSink(connectionData,
+        NS_GetCurrentThread());
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
-    rv = mConn.socket->OpenInputStream(nsITransport::OPEN_BLOCKING, 0, 0,
-                                       getter_AddRefs(mConn.streamIn));
-    if (NS_FAILED(rv))
+    rv = connectionData->mSocket->OpenInputStream(
+        nsITransport::OPEN_BLOCKING, 0, 0,
+        getter_AddRefs(connectionData->mStreamIn));
+    if (NS_FAILED(rv)) {
         return rv;
+    }
 
-    StartTimer(aTimeout);
+    connectionData->StartTimer(connectionData->mTimeout);
 
     return rv;
-}
-
-NS_IMETHODIMP
-Dashboard::OnTransportStatus(nsITransport *aTransport, nsresult aStatus,
-                             uint64_t aProgress, uint64_t aProgressMax)
-{
-    if (aStatus == NS_NET_STATUS_CONNECTED_TO)
-        StopTimer();
-
-    ConnStatus status;
-    CopyASCIItoUTF16(GetErrorString(aStatus), status.creationSts);
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethodWithArg<ConnStatus>(this, &Dashboard::GetConnectionStatus, status);
-    mConn.thread->Dispatch(event, NS_DISPATCH_NORMAL);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-Dashboard::Notify(nsITimer *timer)
-{
-    if (mConn.socket) {
-        mConn.socket->Close(NS_ERROR_ABORT);
-        mConn.socket = nullptr;
-        mConn.streamIn = nullptr;
-    }
-
-    mConn.timer = nullptr;
-
-    ConnStatus status;
-    status.creationSts.Assign(NS_LITERAL_STRING("NS_ERROR_NET_TIMEOUT"));
-    nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethodWithArg<ConnStatus>(this, &Dashboard::GetConnectionStatus, status);
-    mConn.thread->Dispatch(event, NS_DISPATCH_NORMAL);
-
-    return NS_OK;
-}
-
-void
-Dashboard::StartTimer(uint32_t aTimeout)
-{
-    if (!mConn.timer)
-        mConn.timer = do_CreateInstance("@mozilla.org/timer;1");
-    mConn.timer->InitWithCallback(this, aTimeout * 1000, nsITimer::TYPE_ONE_SHOT);
-}
-
-void
-Dashboard::StopTimer()
-{
-    if (mConn.timer) {
-        mConn.timer->Cancel();
-        mConn.timer = nullptr;
-    }
 }
 
 typedef struct
@@ -675,13 +901,15 @@ Dashboard::GetErrorString(nsresult rv)
 {
     int length = sizeof(socketTransportStatuses) / sizeof(ErrorEntry);
     for (int i = 0;i < length;i++)
-        if (socketTransportStatuses[i].key == rv)
+        if (socketTransportStatuses[i].key == rv) {
             return socketTransportStatuses[i].error;
+        }
 
     length = sizeof(errors) / sizeof(ErrorEntry);
     for (int i = 0;i < length;i++)
-        if (errors[i].key == rv)
+        if (errors[i].key == rv) {
             return errors[i].error;
+        }
 
     return nullptr;
 }

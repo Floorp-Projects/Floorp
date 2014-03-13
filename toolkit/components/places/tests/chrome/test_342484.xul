@@ -36,10 +36,8 @@ function runTest() {
     , index: PlacesUtils.bookmarks.DEFAULT_INDEX
     , feedURI: NetUtil.newURI(FEEDSPEC)
     , siteURI: NetUtil.newURI("http:/mochi.test/")
-    },
-    function (aStatus, aLivemark) {
-      ok(Components.isSuccessCode(aStatus), "Get livemark");
-
+    })
+    .then(function (aLivemark) {
       waitForLivemarkLoad(aLivemark, function (aLivemark) {
         let nodes = aLivemark.getNodesForContainer({});
 
@@ -52,6 +50,8 @@ function runTest() {
         PlacesUtils.bookmarks.removeItem(aLivemark.id);
         SimpleTest.finish();
       });
+    }, function () {
+      is(true, false, "Should not fail adding a livemark");
     }
   );
 }

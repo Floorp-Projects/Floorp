@@ -162,7 +162,7 @@ function task_populateDB(aArray)
                                               , index: qdata.index
                                               , feedURI: uri(qdata.feedURI)
                                               , siteURI: uri(qdata.uri)
-                                              });
+                                              }).then(null, do_throw);
           }
 
           if (qdata.isBookmark) {

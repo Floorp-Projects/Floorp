@@ -13,14 +13,11 @@ function run_test()
     {
       if (aAnnotationName == PlacesUtils.LMANNO_FEEDURI) {
         PlacesUtils.annotations.removeObserver(this);
-        PlacesUtils.livemarks.getLivemark(
-          { id: aItemId },
-          function (aStatus, aLivemark) {
-            do_check_true(Components.isSuccessCode(aStatus));
+        PlacesUtils.livemarks.getLivemark({ id: aItemId })
+          .then(aLivemark => {
             PlacesUtils.bookmarks.removeItem(aItemId);
             do_test_finished();
-          }
-        );
+          }, do_throw);
       }
     },
   
@@ -39,5 +36,5 @@ function run_test()
     , siteURI: uri("http://example.com/")
     , feedURI: uri("http://example.com/rdf")
     }
-  );
+  ).then(null, do_throw);
 }

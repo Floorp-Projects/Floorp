@@ -370,7 +370,7 @@
   <string name="updater_apply_select">&updater_apply_select2;</string>
 
   <!-- Search suggestions opt-in -->
-  <string name="suggestions_prompt">&suggestions_prompt2;</string>
+  <string name="suggestions_prompt">&suggestions_prompt3;</string>
 
   <string name="suggestion_for_engine">&suggestion_for_engine;</string>
 

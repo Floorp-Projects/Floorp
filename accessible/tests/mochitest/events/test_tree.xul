@@ -97,6 +97,26 @@
       }
     }
 
+    /**
+     * Check name changed a11y event for a row.
+     */
+    function rowNameChangeChecker(aMsg, aRow)
+    {
+      this.type = EVENT_NAME_CHANGE;
+
+      function targetGetter()
+      {
+        var acc = getAccessible(gTree);
+        return acc.getChildAt(aRow + 1);
+      }
+      Object.defineProperty(this, "target", { get: targetGetter });
+
+      this.getID = function getID()
+      {
+        return aMsg + "name changed";
+      }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Invokers
 
@@ -221,9 +241,10 @@
 
       this.eventSeq =
       [
-        new nameChangeChecker("invalidateColumn: ", 1, 0),
-        new nameChangeChecker("invalidateColumn: ", 1, 1),
-        new treeInvalidatedChecker("invalidateColumn", 1, 1, null, null)
+        new nameChangeChecker("invalidateRow: ", 1, 0),
+        new nameChangeChecker("invalidateRow: ", 1, 1),
+        new rowNameChangeChecker("invalidateRow: ", 1),
+        new treeInvalidatedChecker("invalidateRow", 1, 1, null, null)
       ];
 
       this.getID = function invalidateRow_getID()
@@ -277,11 +298,16 @@
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=308564"
          title="No accessibility events when data in a tree row changes.">
         Mozilla Bug 308564
-      </a>
+      </a><br/>
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=739524"
          title="replace TreeViewChanged DOM event on direct call from XUL tree.">
         Mozilla Bug 739524
+      </a><br/>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=743568"
+         title="Thunderbird message list tree emitting incorrect focus signals after message deleted.">
+        Mozilla Bug 743568
       </a>
       <p id="display"></p>
       <div id="content" style="display: none">
