@@ -2,9 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
-MARIONETTE_HEAD_JS = 'head.js';
+MARIONETTE_HEAD_JS = 'mmdb_head.js';
 
-let gMmdb;
+const DBNAME = "test_mmdb_full_storage:" + newUUID();
 
 let gIsDiskFull = true;
 
@@ -18,16 +18,16 @@ let gMessageToSave = {
   iccId: "1029384756"
 };
 
-function testSaveSendingMessage() {
+function testSaveSendingMessage(aMmdb) {
   log("testSaveSendingMessage()");
 
   let deferred = Promise.defer();
 
-  gMmdb.saveSendingMessage(gMessageToSave,
+  aMmdb.saveSendingMessage(gMessageToSave,
                           { notify : function(aRv, aDomMessage) {
     if (aRv === Cr.NS_ERROR_FILE_NO_DEVICE_SPACE) {
       ok(true, "Forbidden due to storage full.");
-      deferred.resolve(Promise.resolve());
+      deferred.resolve(aMmdb);
     } else {
       ok(false, "Unexpected result: " + aRv);
       deferred.reject(aRv);
@@ -37,16 +37,16 @@ function testSaveSendingMessage() {
   return deferred.promise;
 }
 
-function testSaveReceivingMessage() {
+function testSaveReceivingMessage(aMmdb) {
   log("testSaveReceivingMessage()");
 
   let deferred = Promise.defer();
 
-  gMmdb.saveReceivedMessage(gMessageToSave,
+  aMmdb.saveReceivedMessage(gMessageToSave,
                             { notify : function(aRv, aDomMessage) {
     if (aRv === Cr.NS_ERROR_FILE_NO_DEVICE_SPACE) {
       ok(true, "Forbidden due to storage full.");
-      deferred.resolve(Promise.resolve());
+      deferred.resolve(aMmdb);
     } else {
       ok(false, "Unexpected result: " + aRv);
       deferred.reject(aRv);
@@ -56,16 +56,16 @@ function testSaveReceivingMessage() {
   return deferred.promise;
 }
 
-function testGetMessage() {
+function testGetMessage(aMmdb) {
   log("testGetMessage()");
 
   let deferred = Promise.defer();
 
-  gMmdb.getMessage(1,
+  aMmdb.getMessage(1,
                    { notifyGetMessageFailed : function(aRv) {
     if (aRv === Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR) {
       ok(true, "Getting message successfully!");
-      deferred.resolve(Promise.resolve());
+      deferred.resolve(aMmdb);
     } else {
       ok(false, "Unexpected result: " + aRv);
       deferred.reject(aRv);
@@ -77,13 +77,13 @@ function testGetMessage() {
 
 startTestBase(function testCaseMain() {
 
-  gMmdb = newMobileMessageDB();
-  gMmdb.isDiskFull = function() {
+  let mmdb = newMobileMessageDB();
+  mmdb.isDiskFull = function() {
     return gIsDiskFull;
   };
-  return initMobileMessageDB(gMmdb, "test_gMmdb_full_storage", 0)
+  return initMobileMessageDB(mmdb, DBNAME, 0)
          .then(testSaveSendingMessage)
          .then(testSaveReceivingMessage)
          .then(testGetMessage)
-         .then(closeMobileMessageDB.bind(null, gMmdb));
+         .then(closeMobileMessageDB);
 });
