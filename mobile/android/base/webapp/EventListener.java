@@ -115,7 +115,7 @@ public class EventListener implements GeckoEventListener {
             } else if (event.equals("Webapps:GetApkVersions")) {
                 JSONObject obj = new JSONObject();
                 obj.put("versions", getApkVersions(GeckoAppShell.getGeckoInterface().getActivity(),
-                                                   message.getJSONArray("packageNames")).toString());
+                                                   message.getJSONArray("packageNames")));
                 EventDispatcher.sendResponse(message, obj);
             }
         } catch (Exception e) {
