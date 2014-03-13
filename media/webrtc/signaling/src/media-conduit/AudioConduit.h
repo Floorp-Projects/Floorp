@@ -163,10 +163,12 @@ public:
                       mCurSendCodecConfig(nullptr),
                       mCaptureDelay(150),
                       mEchoOn(true),
-                      mEchoCancel(webrtc::kEcAec)
+                      mEchoCancel(webrtc::kEcAec),
 #ifdef MOZILLA_INTERNAL_API
-                      , mLastTimestamp(0)
+                      mLastTimestamp(0),
 #endif // MOZILLA_INTERNAL_API
+                      mSamples(0),
+                      mLastSyncLog(0)
   {
   }
 
@@ -264,6 +266,9 @@ private:
 #ifdef MOZILLA_INTERNAL_API
   uint32_t mLastTimestamp;
 #endif // MOZILLA_INTERNAL_API
+
+  uint32_t mSamples;
+  uint32_t mLastSyncLog;
 };
 
 } // end namespace

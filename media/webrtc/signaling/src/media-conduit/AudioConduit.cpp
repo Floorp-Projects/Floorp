@@ -687,6 +687,22 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     return kMediaConduitUnknownError;
   }
 
+  // Not #ifdef DEBUG or on a log module so we can use it for about:webrtc/etc
+  mSamples += lengthSamples;
+  if (mSamples >= mLastSyncLog + samplingFreqHz) {
+    int jitter_buffer_delay_ms = 0;
+    int playout_buffer_delay_ms = 0;
+    int avsync_offset_ms = 0;
+    mPtrVoEVideoSync->GetDelayEstimate(mChannel,
+                                       &jitter_buffer_delay_ms,
+                                       &playout_buffer_delay_ms,
+                                       &avsync_offset_ms); // ignore errors
+    CSFLogError(logTag,
+                "A/V sync: sync delta: %dms, audio jitter delay %dms, playout delay %dms",
+                avsync_offset_ms, jitter_buffer_delay_ms, playout_buffer_delay_ms);
+    mLastSyncLog = mSamples;
+  }
+
 #ifdef MOZILLA_INTERNAL_API
   if (PR_LOG_TEST(GetLatencyLog(), PR_LOG_DEBUG)) {
     if (mProcessing.Length() > 0) {
