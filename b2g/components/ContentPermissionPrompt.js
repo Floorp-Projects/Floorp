@@ -334,7 +334,7 @@ ContentPermissionPrompt.prototype = {
         if (remember) {
           Services.perms.addFromPrincipal(request.principal, type.access,
                                           Ci.nsIPermissionManager.DENY_ACTION);
-        } else if (PERMISSION_NO_SESSION.indexOf(aPerm) < 0) {
+        } else if (PERMISSION_NO_SESSION.indexOf(type.access) < 0) {
           Services.perms.addFromPrincipal(request.principal, type.access,
                                           Ci.nsIPermissionManager.DENY_ACTION,
                                           Ci.nsIPermissionManager.EXPIRE_SESSION,
