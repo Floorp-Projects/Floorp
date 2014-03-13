@@ -14,21 +14,21 @@ import java.util.Collections;
 public class FaviconsForURL {
     private static final String LOGTAG = "FaviconForURL";
 
-    private volatile int mDominantColor = -1;
+    private volatile int dominantColor = -1;
 
-    final long mDownloadTimestamp;
-    final ArrayList<FaviconCacheElement> mFavicons;
+    final long downloadTimestamp;
+    final ArrayList<FaviconCacheElement> favicons;
 
-    public final boolean mHasFailed;
+    public final boolean hasFailed;
 
     public FaviconsForURL(int size) {
         this(size, false);
     }
 
-    public FaviconsForURL(int size, boolean hasFailed) {
-        mHasFailed = hasFailed;
-        mDownloadTimestamp = System.currentTimeMillis();
-        mFavicons = new ArrayList<FaviconCacheElement>(size);
+    public FaviconsForURL(int size, boolean failed) {
+        hasFailed = failed;
+        downloadTimestamp = System.currentTimeMillis();
+        favicons = new ArrayList<FaviconCacheElement>(size);
     }
 
     public FaviconCacheElement addSecondary(Bitmap favicon, int imageSize) {
@@ -42,15 +42,19 @@ public class FaviconsForURL {
     private FaviconCacheElement addInternal(Bitmap favicon, boolean isPrimary, int imageSize) {
         FaviconCacheElement c = new FaviconCacheElement(favicon, isPrimary, imageSize, this);
 
-        int index = Collections.binarySearch(mFavicons, c);
+        int index = Collections.binarySearch(favicons, c);
+
+        // We've already got an equivalent one. We don't care about this new one. This only occurs in certain obscure
+        // case conditions.
+        if (index >= 0) {
+            return favicons.get(index);
+        }
 
         // binarySearch returns -x - 1 where x is the insertion point of the element. Convert
         // this to the actual insertion point..
-        if (index < 0) {
-            index++;
-            index = -index;
-        }
-        mFavicons.add(index, c);
+        index++;
+        index = -index;
+        favicons.add(index, c);
 
         return c;
     }
@@ -66,7 +70,7 @@ public class FaviconsForURL {
         // Create a dummy object to hold the target value for comparable.
         FaviconCacheElement dummy = new FaviconCacheElement(null, false, targetSize, null);
 
-        int index = Collections.binarySearch(mFavicons, dummy);
+        int index = Collections.binarySearch(favicons, dummy);
 
         // The search routine returns the index of an element equal to dummy, if present.
         // Otherwise, it returns -x - 1, where x is the index in the ArrayList where dummy would be
@@ -78,11 +82,11 @@ public class FaviconsForURL {
 
         // index is now 'x', as described above.
 
-        // The routine will return mFavicons.size() as the index iff dummy is larger than all elements
+        // The routine will return favicons.size() as the index iff dummy is larger than all elements
         // present (So the "index at which it should be inserted" is the index after the end.
         // In this case, we set the sentinel value -1 to indicate that we just requested something
         // larger than all primaries.
-        if (index == mFavicons.size()) {
+        if (index == favicons.size()) {
             index = -1;
         }
 
@@ -97,19 +101,19 @@ public class FaviconsForURL {
      * primary at all (The input index may be a secondary which is larger than the actual available
      * primary.)
      *
-     * @param fromIndex The index into mFavicons from which to start the search.
+     * @param fromIndex The index into favicons from which to start the search.
      * @return The FaviconCacheElement of the next valid primary from the given index. If none exists,
      *         then returns the previous valid primary. If none exists, returns null (Insanity.).
      */
     public FaviconCacheElement getNextPrimary(final int fromIndex) {
-        final int numIcons = mFavicons.size();
+        final int numIcons = favicons.size();
 
         int searchIndex = fromIndex;
         while (searchIndex < numIcons) {
-            FaviconCacheElement element = mFavicons.get(searchIndex);
+            FaviconCacheElement element = favicons.get(searchIndex);
 
-            if (element.mIsPrimary) {
-                if (element.mInvalidated) {
+            if (element.isPrimary) {
+                if (element.invalidated) {
                     // We return null here, despite the possible existence of other primaries,
                     // because we know the most suitable primary for this request exists, but is
                     // no longer in the cache. By returning null, we cause the caller to load the
@@ -124,10 +128,10 @@ public class FaviconsForURL {
         // No larger primary available. Let's look for smaller ones...
         searchIndex = fromIndex - 1;
         while (searchIndex >= 0) {
-            FaviconCacheElement element = mFavicons.get(searchIndex);
+            FaviconCacheElement element = favicons.get(searchIndex);
 
-            if (element.mIsPrimary) {
-                if (element.mInvalidated) {
+            if (element.isPrimary) {
+                if (element.invalidated) {
                     return null;
                 }
                 return element;
@@ -144,17 +148,17 @@ public class FaviconsForURL {
      * Ensure the dominant colour field is populated for this favicon.
      */
     public int ensureDominantColor() {
-        if (mDominantColor == -1) {
+        if (dominantColor == -1) {
             // Find a payload, any payload, that is not invalidated.
-            for (FaviconCacheElement element : mFavicons) {
-                if (!element.mInvalidated) {
-                    mDominantColor = BitmapUtils.getDominantColor(element.mFaviconPayload);
-                    return mDominantColor;
+            for (FaviconCacheElement element : favicons) {
+                if (!element.invalidated) {
+                    dominantColor = BitmapUtils.getDominantColor(element.faviconPayload);
+                    return dominantColor;
                 }
             }
-            mDominantColor = 0xFFFFFF;
+            dominantColor = 0xFFFFFF;
         }
 
-        return mDominantColor;
+        return dominantColor;
     }
 }

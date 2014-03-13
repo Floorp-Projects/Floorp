@@ -251,24 +251,20 @@ var BookmarkPropertiesPanel = {
 
         case "folder":
           this._itemType = BOOKMARK_FOLDER;
-          PlacesUtils.livemarks.getLivemark(
-            { id: this._itemId },
-            (function (aStatus, aLivemark) {
-              if (Components.isSuccessCode(aStatus)) {
-                this._itemType = LIVEMARK_CONTAINER;
-                this._feedURI = aLivemark.feedURI;
-                this._siteURI = aLivemark.siteURI;
-                this._fillEditProperties();
+          PlacesUtils.livemarks.getLivemark({ id: this._itemId })
+            .then(aLivemark => {
+              this._itemType = LIVEMARK_CONTAINER;
+              this._feedURI = aLivemark.feedURI;
+              this._siteURI = aLivemark.siteURI;
+              this._fillEditProperties();
 
-                let acceptButton = document.documentElement.getButton("accept");
-                acceptButton.disabled = !this._inputIsValid();
+              let acceptButton = document.documentElement.getButton("accept");
+              acceptButton.disabled = !this._inputIsValid();
 
-                let newHeight = window.outerHeight +
-                                this._element("descriptionField").boxObject.height;
-                window.resizeTo(window.outerWidth, newHeight);
-              }
-            }).bind(this)
-          );
+              let newHeight = window.outerHeight +
+                              this._element("descriptionField").boxObject.height;
+              window.resizeTo(window.outerWidth, newHeight);
+            }, () => undefined);
 
           break;
       }

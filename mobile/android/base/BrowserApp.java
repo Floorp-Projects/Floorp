@@ -42,7 +42,6 @@ import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
-import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
@@ -1447,7 +1446,7 @@ abstract public class BrowserApp extends GeckoApp
             // If we failed to load a favicon, we use the default favicon instead.
             Tabs.getInstance()
                 .updateFaviconForURL(pageUrl,
-                                     (favicon == null) ? Favicons.sDefaultFavicon : favicon);
+                                     (favicon == null) ? Favicons.defaultFavicon : favicon);
         }
     };
 
@@ -1694,16 +1693,22 @@ abstract public class BrowserApp extends GeckoApp
             mHomePager = (HomePager) homePagerStub.inflate();
 
             final HomeBanner homeBanner = (HomeBanner) findViewById(R.id.home_banner);
-            mHomePager.setBanner(homeBanner);
 
-            // Remove the banner from the view hierarchy if it is dismissed.
-            homeBanner.setOnDismissListener(new HomeBanner.OnDismissListener() {
-                @Override
-                public void onDismiss() {
-                    mHomePager.setBanner(null);
-                    mHomePagerContainer.removeView(homeBanner);
-                }
-            });
+            // Never show the home banner in guest mode.
+            if (GeckoProfile.get(this).inGuestMode()) {
+                mHomePagerContainer.removeView(homeBanner);
+            } else {
+                mHomePager.setBanner(homeBanner);
+
+                // Remove the banner from the view hierarchy if it is dismissed.
+                homeBanner.setOnDismissListener(new HomeBanner.OnDismissListener() {
+                    @Override
+                    public void onDismiss() {
+                        mHomePager.setBanner(null);
+                        mHomePagerContainer.removeView(homeBanner);
+                    }
+                });
+            }
         }
 
         mHomePagerContainer.setVisibility(View.VISIBLE);
