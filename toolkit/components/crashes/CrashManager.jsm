@@ -595,7 +595,7 @@ CrashStore.prototype = Object.freeze({
 
       try {
         let decoder = new TextDecoder();
-        let data = yield OS.File.read(this._storePath, null, {compression: "lz4"});
+        let data = yield OS.File.read(this._storePath, {compression: "lz4"});
         data = JSON.parse(decoder.decode(data));
 
         if (data.corruptDate) {
