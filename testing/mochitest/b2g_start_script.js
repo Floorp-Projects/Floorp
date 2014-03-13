@@ -8,6 +8,7 @@ let onDevice = __marionetteParams[2]
 let wifiSettings = __marionetteParams[3]
 let prefs = Components.classes["@mozilla.org/preferences-service;1"].
                             getService(Components.interfaces.nsIPrefBranch)
+let settings = window.navigator.mozSettings;
 
 if (wifiSettings)
   wifiSettings = JSON.parse(wifiSettings);
@@ -88,24 +89,43 @@ if (outOfProcess) {
 if (onDevice) {
   let manager = navigator.mozWifiManager;
   let con = manager.connection;
-  if(wifiSettings) {
-    if (manager.enabled) {
-      manager.associate(wifiSettings);
-    } else {
-      manager.onenabled = function () {
+  manager.setPowerSavingMode(false);
+
+  manager.onenabled = function () {
+    if(wifiSettings) {
+      var req = manager.getKnownNetworks();
+      req.onsuccess = function () {
+        var networks = req.result;
+        for (var i = 0; i < networks.length; ++i){
+          var network = networks[i];
+          if(network.ssid == wifiSettings.ssid) {
+            manager.forget(network);
+          }
+        }
         manager.associate(wifiSettings);
       };
     }
-  }
-  else if (con.status == 'connected') {
-    container.src = mochitestUrl;
-  }
+  };
 
   manager.onstatuschange = function (event) {
+    prefs.setIntPref("network.proxy.type", 2);
     if (event.status == 'connected') {
-      prefs.setIntPref("network.proxy.type", 2);
       container.src = mochitestUrl;
     }
+  };
+
+  if(wifiSettings) {
+    var req = settings.createLock().set({
+       'wifi.enabled': false,
+       'wifi.suspended': false
+     });
+
+    req.onsuccess = function () {
+      dump("----------------------enabling wifi------------------\n");
+      var req1 = settings.createLock().set({
+          'wifi.enabled': true,
+          'wifi.suspended': false});
+    };
   }
 } else {
   container.src = mochitestUrl;

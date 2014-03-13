@@ -9,8 +9,8 @@
 #include <stdint.h>
 
 #include "ExtendedValidation.h"
-#include "insanity/pkix.h"
 #include "certdb.h"
+#include "insanity/pkix.h"
 #include "nss.h"
 #include "ocsp.h"
 #include "pk11pub.h"
@@ -30,9 +30,9 @@ namespace mozilla { namespace psm {
 
 const char BUILTIN_ROOTS_MODULE_DEFAULT_NAME[] = "Builtin Roots Module";
 
-namespace {
+void PORT_Free_string(char* str) { PORT_Free(str); }
 
-inline void PORT_Free_string(char* str) { PORT_Free(str); }
+namespace {
 
 typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 
@@ -40,9 +40,11 @@ typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            OCSPFetching ocspFetching,
+                                           OCSPCache& ocspCache,
                                            void* pinArg)
   : mCertDBTrustType(certDBTrustType)
   , mOCSPFetching(ocspFetching)
+  , mOCSPCache(ocspCache)
   , mPinArg(pinArg)
 {
 }
@@ -161,17 +163,62 @@ NSSCertDBTrustDomain::CheckRevocation(
   // are known to serve expired responses due to bugs.
   if (stapledOCSPResponse) {
     PR_ASSERT(endEntityOrCA == MustBeEndEntity);
-    SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
-                                             stapledOCSPResponse);
+    SECStatus rv = VerifyAndMaybeCacheEncodedOCSPResponse(cert, issuerCert,
+                                                          time,
+                                                          stapledOCSPResponse);
     if (rv == SECSuccess) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: stapled OCSP response: good"));
       return rv;
     }
     if (PR_GetError() != SEC_ERROR_OCSP_OLD_RESPONSE) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: stapled OCSP response: failure"));
       return rv;
     }
+  } else {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: no stapled OCSP response"));
   }
 
-  // TODO(bug 915932): Need to change this when we add the OCSP cache.
+  PRErrorCode cachedResponseErrorCode = 0;
+  PRTime cachedResponseValidThrough = 0;
+  bool cachedResponsePresent = mOCSPCache.Get(cert, issuerCert,
+                                              cachedResponseErrorCode,
+                                              cachedResponseValidThrough);
+  if (cachedResponsePresent) {
+    if (cachedResponseErrorCode == 0 && cachedResponseValidThrough >= time) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: cached OCSP response: good"));
+      return SECSuccess;
+    }
+    // If we have a cached revoked response, use it.
+    if (cachedResponseErrorCode == SEC_ERROR_REVOKED_CERTIFICATE) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: cached OCSP response: revoked"));
+      PR_SetError(SEC_ERROR_REVOKED_CERTIFICATE, 0);
+      return SECFailure;
+    }
+    // The cached response may indicate an unknown certificate or it may be
+    // expired. Don't return with either of these statuses yet - we may be
+    // able to fetch a more recent one.
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: cached OCSP response: error %ld valid "
+           "until %lld", cachedResponseErrorCode, cachedResponseValidThrough));
+    // When a good cached response has expired, it is more convenient
+    // to convert that to an error code and just deal with
+    // cachedResponseErrorCode from here on out.
+    if (cachedResponseErrorCode == 0 && cachedResponseValidThrough < time) {
+      cachedResponseErrorCode = SEC_ERROR_OCSP_OLD_RESPONSE;
+    }
+  } else {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: no cached OCSP response"));
+  }
+  // At this point, if and only if cachedErrorResponseCode is 0, there was no
+  // cached response.
+  PR_ASSERT((!cachedResponsePresent && cachedResponseErrorCode == 0) ||
+            (cachedResponsePresent && cachedResponseErrorCode != 0));
 
   // TODO: We still need to handle the fallback for expired responses. But,
   // if/when we disable OCSP fetching by default, it would be ambiguous whether
@@ -181,11 +228,26 @@ NSSCertDBTrustDomain::CheckRevocation(
   if ((mOCSPFetching == NeverFetchOCSP) ||
       (endEntityOrCA == MustBeCA && (mOCSPFetching == FetchOCSPForDVHardFail ||
                                      mOCSPFetching == FetchOCSPForDVSoftFail))) {
+    // We're not going to be doing any fetching, so if there was a cached
+    // "unknown" response, say so.
+    if (cachedResponseErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT) {
+      PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
+      return SECFailure;
+    }
+    // If we're doing hard-fail, we want to know if we have a cached response
+    // that has expired.
+    if (mOCSPFetching == FetchOCSPForDVHardFail &&
+        cachedResponseErrorCode == SEC_ERROR_OCSP_OLD_RESPONSE) {
+      PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+      return SECFailure;
+    }
+
     return SECSuccess;
   }
 
   if (mOCSPFetching == LocalOnlyOCSPForEV) {
-    PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
+    PR_SetError(cachedResponseErrorCode != 0 ? cachedResponseErrorCode
+                                             : SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
     return SECFailure;
   }
 
@@ -193,12 +255,14 @@ NSSCertDBTrustDomain::CheckRevocation(
     url(CERT_GetOCSPAuthorityInfoAccessLocation(cert));
 
   if (!url) {
-    if (stapledOCSPResponse) {
-      PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+    if (mOCSPFetching == FetchOCSPForEV ||
+        cachedResponseErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT) {
+      PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
       return SECFailure;
     }
-    if (mOCSPFetching == FetchOCSPForEV) {
-      PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
+    if (stapledOCSPResponse ||
+        cachedResponseErrorCode == SEC_ERROR_OCSP_OLD_RESPONSE) {
+      PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
       return SECFailure;
     }
 
@@ -229,6 +293,13 @@ NSSCertDBTrustDomain::CheckRevocation(
               "CERT_PostOCSPRequest failure"));
       return SECFailure;
     }
+    if (cachedResponseErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: returning SECFailure from cached "
+              "response after CERT_PostOCSPRequest failure"));
+      PR_SetError(cachedResponseErrorCode, 0);
+      return SECFailure;
+    }
 
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("NSSCertDBTrustDomain: returning SECSuccess after "
@@ -236,8 +307,8 @@ NSSCertDBTrustDomain::CheckRevocation(
     return SECSuccess; // Soft fail -> success :(
   }
 
-  SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
-                                           response);
+  SECStatus rv = VerifyAndMaybeCacheEncodedOCSPResponse(cert, issuerCert, time,
+                                                        response);
   if (rv == SECSuccess || mOCSPFetching != FetchOCSPForDVSoftFail) {
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
       ("NSSCertDBTrustDomain: returning after VerifyEncodedOCSPResponse"));
@@ -254,6 +325,31 @@ NSSCertDBTrustDomain::CheckRevocation(
          ("NSSCertDBTrustDomain: end of CheckRevocation"));
 
   return SECSuccess;
+}
+
+SECStatus
+NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
+  const CERTCertificate* cert, CERTCertificate* issuerCert, PRTime time,
+  const SECItem* encodedResponse)
+{
+  PRTime thisUpdate = 0;
+  PRTime validThrough = 0;
+  SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
+                                           encodedResponse, &thisUpdate,
+                                           &validThrough);
+  PRErrorCode error = (rv == SECSuccess ? 0 : PR_GetError());
+  if (rv == SECSuccess || error == SEC_ERROR_REVOKED_CERTIFICATE ||
+      error == SEC_ERROR_OCSP_UNKNOWN_CERT) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: caching OCSP response"));
+    if (mOCSPCache.Put(cert, issuerCert, error, thisUpdate, validThrough)
+          != SECSuccess) {
+      return SECFailure;
+    }
+    // The call to Put may have un-set the error. Re-set it.
+    PR_SetError(error, 0);
+  }
+  return rv;
 }
 
 namespace {

@@ -169,8 +169,9 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
 #if defined(MOZ_X11) || defined(OS_MACOSX)
     nsPluginInfo info = nsPluginInfo();
-    if (NS_FAILED(pluginFile.GetPluginInfo(info, &mLibrary)))
+    if (NS_FAILED(pluginFile.GetPluginInfo(info, &mLibrary))) {
         return false;
+    }
 
 #if defined(MOZ_X11)
     NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
@@ -180,6 +181,8 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 #else // defined(OS_MACOSX)
     mozilla::plugins::PluginUtilsOSX::SetProcessName(info.fName);
 #endif
+
+    pluginFile.FreePluginInfo(info);
 
     if (!mLibrary)
 #endif

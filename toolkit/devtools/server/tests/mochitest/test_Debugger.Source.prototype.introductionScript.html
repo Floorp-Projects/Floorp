@@ -81,7 +81,7 @@ window.onload = function () {
     // information. (In the future, we certainly could point at the call
     // that inserted the script element into the document; if that happens,
     // we can update this test.)
-    ok(frame2.script.source.introductionType === undefined,
+    ok(frame2.script.source.introductionType === 'scriptElement',
        "older frame has no introduction type");
     ok(frame2.script.source.introductionScript === undefined,
        "older frame has no introduction script");

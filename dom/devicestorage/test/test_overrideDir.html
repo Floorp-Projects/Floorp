@@ -1,0 +1,163 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=717103
+-->
+<head>
+  <title>Test for the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=717103">Mozilla Bug 717103</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+var gFileName = "devicestorage/" + randomFilename(12) + "/hi.png";
+var gData = "My name is Doug Turner.  My IRC nick is DougT.  I like Maple cookies."
+var gDataBlob = new Blob([gData], {type: 'image/png'});
+var gFileReader = new FileReader();
+
+function getAfterDeleteSuccess(e) {
+  ok(false, "file was deleted not successfully");
+  devicestorage_cleanup();
+}
+
+function getAfterDeleteError(e) {
+  ok(true, "file was deleted successfully");
+  devicestorage_cleanup();
+}
+
+function deleteSuccess(e) {
+
+  ok(e.target.result == gFileName, "File name should match");
+  dump(e.target.result + "\n")
+
+  // File was deleted using the sdcard stoage area. It should be gone
+  // from the pictures as well.
+  var storage = navigator.getDeviceStorage("pictures");
+  request = storage.get(e.target.result);
+  request.onsuccess = getAfterDeleteSuccess;
+  request.onerror = getAfterDeleteError;
+}
+
+function deleteError(e) {
+  ok(false, "deleteError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+function getSuccess(e) {
+  // We wrote the file out using pictures type. Since we've over-ridden the
+  // root directory, we should be able to read it back using the sdcard
+  // storage area.
+  var storage = navigator.getDeviceStorage("sdcard");
+  ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+  ok(e.target.result.name == gFileName, "File name should match");
+  ok(e.target.result.size > 0, "File size be greater than zero");
+  ok(e.target.result.type, "File should have a mime type");
+  ok(e.target.result.lastModifiedDate, "File should have a last modified date");
+
+  var name = e.target.result.name;
+
+  gFileReader.readAsArrayBuffer(gDataBlob);
+  gFileReader.onload = function(e) {
+    readerCallback(e);
+
+    request = storage.delete(name)
+    request.onsuccess = deleteSuccess;
+    request.onerror = deleteError;
+  }
+}
+
+function readerCallback(e) {
+
+  ab = e.target.result;
+
+  is(ab.byteLength, gData.length, "wrong arraybuffer byteLength");
+  var u8v = new Uint8Array(ab);
+  is(String.fromCharCode.apply(String, u8v), gData, "wrong values");
+}
+
+function getError(e) {
+  ok(false, "getError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+function addSuccess(e) {
+
+  var filename = e.target.result;
+  if (filename[0] == "/") {
+    // We got /storageName/prefix/filename
+    // Remove the storageName (this shows up on FirefoxOS)
+    filename = filename.substring(1); // Remove leading slash
+    var slashIndex = filename.indexOf("/");
+    if (slashIndex >= 0) {
+      filename = filename.substring(slashIndex + 1); // Remove storageName
+    }
+  }
+  ok(filename == gFileName, "File name should match");
+
+  // Update gFileName to be the fully qualified name so that
+  // further checks will pass.
+  gFileName = e.target.result;
+
+  var storage = navigator.getDeviceStorage("pictures");
+  request = storage.get(gFileName);
+  request.onsuccess = getSuccess;
+  request.onerror = getError;
+
+  ok(true, "addSuccess was called");
+}
+
+function addError(e) {
+  ok(false, "addError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+function startTest() {
+  ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+  var storage = navigator.getDeviceStorage("pictures");
+  ok(storage, "Should have gotten a storage");
+
+  request = storage.addNamed(gDataBlob, gFileName);
+  ok(request, "Should have a non-null request");
+
+  request.onsuccess = addSuccess;
+  request.onerror = addError;
+}
+
+try {
+  const Cc = SpecialPowers.Cc;
+  const Ci = SpecialPowers.Ci;
+  var directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+  var f = directoryService.get("TmpD", Ci.nsIFile);
+  f.appendRelativePath("device-storage-sdcard");
+  try {
+    // The remove will fail if the directory doesn't exist, which is fine.
+    f.remove(true);
+  } catch (e) {}
+  SpecialPowers.pushPrefEnv({'set': [["device.storage.overrideRootDir", f.path],
+                                     ["device.storage.testing", false]]},
+    function() {
+      startTest();
+    });
+} catch(e) {}
+
+</script>
+</pre>
+</body>
+</html>
+

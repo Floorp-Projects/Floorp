@@ -4,19 +4,24 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LIBRARY_NAME = 'ssltest'
-
-LIBXUL_LIBRARY = True
-
-SOURCES += [
-    'OCSPCacheTest.cpp',
-    'TLSIntoleranceTest.cpp',
+UNIFIED_SOURCES += [
+    'lib/pkixbuild.cpp',
+    'lib/pkixcheck.cpp',
+    'lib/pkixder.cpp',
+    'lib/pkixkey.cpp',
+    'lib/pkixocsp.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    '../../../../certverifier',
-    '../../../../insanity/include',
-    '/security/manager/ssl/src',
+    'include',
 ]
 
-include('/ipc/chromium/chromium-config.mozbuild')
+DIRS += [
+    'test/lib',
+]
+
+FAIL_ON_WARNINGS = True
+
+LIBRARY_NAME = 'insanitypkix'
+
+FINAL_LIBRARY = 'xul'
