@@ -1,12 +1,5 @@
 {
 "runtests": {
-    "b2g": "",
-    "caps": "",
-    "content": "",
-    "docshell": "",
-    "dom": "",
-    "layout": "",
-    "toolkit/devtools/apps": ""
   },
 "excludetests": {
   }

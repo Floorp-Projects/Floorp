@@ -51,7 +51,7 @@
  */
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
-
+const Services = require("Services");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
@@ -103,7 +103,6 @@ const PSEUDO_SELECTORS = [
 let HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
 HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important; outline-offset: -2px!important } ";
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 
 loader.lazyGetter(this, "DOMParser", function() {
