@@ -317,7 +317,7 @@ uint16_t
 HTMLTrackElement::ReadyState() const
 {
   if (!mTrack) {
-    return TextTrack::READY_STATE_NONE;
+    return TextTrackReadyState::NotLoaded;
   }
 
   return mTrack->ReadyState();

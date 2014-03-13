@@ -28,6 +28,14 @@ enum TextTrackSource {
   MediaResourceSpecific
 };
 
+// Constants for numeric readyState property values.
+enum TextTrackReadyState {
+  NotLoaded = 0U,
+  Loading = 1U,
+  Loaded = 2U,
+  FailedToLoad = 3U
+};
+
 class TextTrack MOZ_FINAL : public nsDOMEventTargetHelper
 {
 public:
@@ -96,15 +104,8 @@ public:
   TextTrackCueList* GetActiveCues();
   void GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
 
-  // Constants for numeric readyState property values.
-  enum {
-    READY_STATE_NONE = 0U,
-    READY_STATE_LOADING = 1U,
-    READY_STATE_LOADED = 2U,
-    READY_STATE_ERROR = 3U
-  };
-  uint16_t ReadyState() const;
-  void SetReadyState(uint16_t aState);
+  TextTrackReadyState ReadyState() const;
+  void SetReadyState(TextTrackReadyState aState);
 
   void AddCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
@@ -141,7 +142,7 @@ private:
   nsRefPtr<HTMLTrackElement> mTrackElement;
 
   uint32_t mCuePos;
-  uint16_t mReadyState;
+  TextTrackReadyState mReadyState;
   bool mDirty;
 
   // An enum that represents where the track was sourced from.

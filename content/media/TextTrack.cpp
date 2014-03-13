@@ -74,7 +74,7 @@ TextTrack::SetDefaultSettings()
   mActiveCueList = new TextTrackCueList(mParent);
   mCuePos = 0;
   mDirty = false;
-  mReadyState = TextTrack::READY_STATE_NONE;
+  mReadyState = TextTrackReadyState::NotLoaded;
 }
 
 JSObject*
@@ -179,14 +179,14 @@ TextTrack::GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
   }
 }
 
-uint16_t
+TextTrackReadyState
 TextTrack::ReadyState() const
 {
   return mReadyState;
 }
 
 void
-TextTrack::SetReadyState(uint16_t aState)
+TextTrack::SetReadyState(TextTrackReadyState aState)
 {
   mReadyState = aState;
 
@@ -195,8 +195,8 @@ TextTrack::SetReadyState(uint16_t aState)
   }
 
   HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
-  if (mediaElement && (mReadyState == TextTrack::READY_STATE_LOADED ||
-      mReadyState == TextTrack::READY_STATE_ERROR)) {
+  if (mediaElement && (mReadyState == TextTrackReadyState::Loaded||
+      mReadyState == TextTrackReadyState::FailedToLoad)) {
     mediaElement->RemoveTextTrack(this, true);
   }
 }
