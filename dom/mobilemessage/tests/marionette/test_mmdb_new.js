@@ -15,8 +15,6 @@ function check(aMmdb) {
   } else {
     is(aMmdb.dbVersion, dbVersion, "dbVersion");
   }
-
-  return aMmdb;
 }
 
 startTestBase(function testCaseMain() {
@@ -24,14 +22,15 @@ startTestBase(function testCaseMain() {
 
   let mmdb = newMobileMessageDB();
   return initMobileMessageDB(mmdb, DBNAME, dbVersion)
-    .then(check)
-    .then(closeMobileMessageDB)
-    .then(check)
-    .then(function(aMmdb) {
+    .then(() => check(mmdb))
+    .then(() => closeMobileMessageDB(mmdb))
+    .then(() => check(mmdb))
+
+    .then(function() {
       log("Test re-init and close.");
-      return initMobileMessageDB(aMmdb, DBNAME, dbVersion);
+      return initMobileMessageDB(mmdb, DBNAME, dbVersion);
     })
-    .then(check)
-    .then(closeMobileMessageDB)
-    .then(check);
+    .then(() => check(mmdb))
+    .then(() => closeMobileMessageDB(mmdb))
+    .then(() => check(mmdb));
 });
