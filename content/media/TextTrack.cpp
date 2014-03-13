@@ -37,14 +37,14 @@ TextTrack::TextTrack(nsISupports* aParent,
                      TextTrackReadyState aReadyState,
                      TextTrackSource aTextTrackSource)
   : mParent(aParent)
+  , mKind(aKind)
+  , mLabel(aLabel)
+  , mLanguage(aLanguage)
+  , mMode(aMode)
+  , mReadyState(aReadyState)
   , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
-  mKind = aKind;
-  mLabel = aLabel;
-  mLanguage = aLanguage;
-  mMode = aMode;
-  mReadyState = aReadyState;
   SetIsDOMBinding();
 }
 
@@ -58,27 +58,24 @@ TextTrack::TextTrack(nsISupports* aParent,
                      TextTrackSource aTextTrackSource)
   : mParent(aParent)
   , mTextTrackList(aTextTrackList)
+  , mKind(aKind)
+  , mLabel(aLabel)
+  , mLanguage(aLanguage)
+  , mMode(aMode)
+  , mReadyState(aReadyState)
   , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
-  mKind = aKind;
-  mLabel = aLabel;
-  mLanguage = aLanguage;
-  mMode = aMode;
-  mReadyState = aReadyState;
   SetIsDOMBinding();
 }
 
 void
 TextTrack::SetDefaultSettings()
 {
-  mKind = TextTrackKind::Subtitles;
-  mMode = TextTrackMode::Hidden;
   mCueList = new TextTrackCueList(mParent);
   mActiveCueList = new TextTrackCueList(mParent);
   mCuePos = 0;
   mDirty = false;
-  mReadyState = TextTrackReadyState::NotLoaded;
 }
 
 JSObject*
