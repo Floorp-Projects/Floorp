@@ -47,7 +47,6 @@ public:
   static const int DEFAULT_VIDEO_WIDTH = 640;
   static const int DEFAULT_VIDEO_HEIGHT = 480;
   static const int DEFAULT_AUDIO_TIMER_MS = 10;
-  static const bool DEFAULT_LOAD_ADAPT = false;
 
   /* Populate an array of video sources in the nsTArray. Also include devices
    * that are currently unavailable. */
@@ -133,7 +132,6 @@ struct MediaEnginePrefs {
   int32_t mHeight;
   int32_t mFPS;
   int32_t mMinFPS;
-  bool mLoadAdapt;
 };
 
 class MediaEngineVideoSource : public MediaEngineSource

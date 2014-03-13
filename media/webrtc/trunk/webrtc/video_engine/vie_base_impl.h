@@ -33,6 +33,7 @@ class ViEBaseImpl
   virtual int SetVoiceEngine(VoiceEngine* voice_engine);
   virtual int RegisterCpuOveruseObserver(int channel,
                                          CpuOveruseObserver* observer);
+  virtual void SetLoadManager(CPULoadStateCallbackInvoker* aLoadManager);
   virtual int CreateChannel(int& video_channel);  // NOLINT
   virtual int CreateChannel(int& video_channel,  // NOLINT
                             int original_channel);
