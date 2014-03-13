@@ -331,7 +331,6 @@ SharedTextureSourceOGL::BindTexture(GLenum aTextureUnit)
     NS_ERROR("Failed to bind shared texture handle");
     return;
   }
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
 void
@@ -1076,7 +1075,6 @@ void GrallocDeprecatedTextureHostOGL::BindTexture(GLenum aTextureUnit)
 
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(mTextureTarget, tex);
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
 bool
