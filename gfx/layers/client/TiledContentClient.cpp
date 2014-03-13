@@ -315,9 +315,7 @@ gfxShmSharedReadLock::gfxShmSharedReadLock(ISurfaceAllocator* aAllocator)
   MOZ_COUNT_CTOR(gfxShmSharedReadLock);
   MOZ_ASSERT(mAllocator);
   if (mAllocator) {
-#define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
-    if (mAllocator->AllocUnsafeShmem(MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)),
-                                     mozilla::ipc::SharedMemory::TYPE_BASIC, &mShmem)) {
+    if (mAllocator->AllocShmemSection(MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)), &mShmemSection)) {
       ShmReadLockInfo* info = GetShmReadLockInfoPtr();
       info->readCount = 1;
       mAllocSuccess = true;
@@ -349,7 +347,7 @@ gfxShmSharedReadLock::ReadUnlock() {
   int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
   NS_ASSERTION(readCount >= 0, "ReadUnlock called without a ReadLock.");
   if (readCount <= 0) {
-    mAllocator->DeallocShmem(mShmem);
+    mAllocator->FreeShmemSection(mShmemSection);
   }
   return readCount;
 }
@@ -548,10 +546,15 @@ TileClient::GetTileDescriptor()
     // see TiledLayerBufferComposite::TiledLayerBufferComposite
     mFrontLock->AddRef();
   }
-  return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
-            mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY
-              ? TileLock(uintptr_t(mFrontLock.get()))
-              : TileLock(static_cast<gfxShmSharedReadLock*>(mFrontLock.get())->GetShmem()));
+
+  if (mFrontLock->GetType() == gfxSharedReadLock::TYPE_MEMORY) {
+    return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
+                                  TileLock(uintptr_t(mFrontLock.get())));
+  } else {
+    gfxShmSharedReadLock *lock = static_cast<gfxShmSharedReadLock*>(mFrontLock.get());
+    return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
+                                  TileLock(lock->GetShmemSection()));
+  }
 }
 
 void
