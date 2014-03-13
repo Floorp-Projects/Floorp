@@ -84,6 +84,10 @@ const { properties, propertyNames } = getCSSKeywords();
 function CSSCompleter(options = {}) {
   this.walker = options.walker;
   this.maxEntries = options.maxEntries || 15;
+
+  // Array containing the [line, ch, scopeStack] for the locations where the
+  // CSS state is "null"
+  this.nullStates = [];
 }
 
 CSSCompleter.prototype = {
@@ -150,6 +154,29 @@ CSSCompleter.prototype = {
   resolveState: function(source, {line, ch}) {
     // Function to return the last element of an array
     let peek = arr => arr[arr.length - 1];
+    // _state can be one of CSS_STATES;
+    let _state = CSS_STATES.null;
+    let selector = "";
+    let selectorState = SELECTOR_STATES.null;
+    let propertyName = null;
+    let scopeStack = [];
+
+    // Fetch the closest null state line, ch from cached null state locations
+    let matchedStateIndex = this.findNearestNullState(line);
+    if (matchedStateIndex > -1) {
+      let state = this.nullStates[matchedStateIndex];
+      line -= state[0];
+      if (line == 0)
+        ch -= state[1];
+      source = source.split("\n").slice(state[0]);
+      source[0] = source[0].slice(state[1]);
+      source = source.join("\n");
+      scopeStack = [...state[2]];
+      this.nullStates.length = matchedStateIndex + 1;
+    }
+    else {
+      this.nullStates = [];
+    }
     let tokens = cssTokenizer(source, {loc:true});
     let tokIndex = tokens.length - 1;
     if (tokens[tokIndex].loc.end.line < line ||
@@ -163,16 +190,10 @@ CSSCompleter.prototype = {
     // Since last token is EOF, the cursor token is last - 1
     tokIndex--;
 
-    // _state can be one of CSS_STATES;
-    let _state = CSS_STATES.null;
     let cursor = 0;
     // This will maintain a stack of paired elements like { & }, @m & }, : & ; etc
-    let scopeStack = [];
     let token = null;
-    let propertyName = null;
-    let selector = "";
     let selectorBeforeNot = "";
-    let selectorState = SELECTOR_STATES.null;
     while (cursor <= tokIndex && (token = tokens[cursor++])) {
       switch (_state) {
         case CSS_STATES.property:
@@ -601,6 +622,20 @@ CSSCompleter.prototype = {
           }
           break;
       }
+      if (_state == CSS_STATES.null) {
+        if (this.nullStates.length == 0) {
+          this.nullStates.push([token.loc.end.line, token.loc.end.column,
+                                [...scopeStack]]);
+          continue;
+        }
+        let tokenLine = token.loc.end.line;
+        let tokenCh = token.loc.end.column;
+        if (tokenLine == 0)
+          continue;
+        if (matchedStateIndex > -1)
+          tokenLine += this.nullStates[matchedStateIndex][0];
+        this.nullStates.push([tokenLine, tokenCh, [...scopeStack]]);
+      }
     }
     this.state = _state;
     if (!token)
@@ -768,6 +803,60 @@ CSSCompleter.prototype = {
     }
     return Promise.resolve(finalList);
   },
+
+  /**
+   * A biased binary search in a sorted array where the middle element is
+   * calculated based on the values at the lower and the upper index in each
+   * iteration.
+   *
+   * This method returns the index of the closest null state from the passed
+   * `line` argument. Once we have the closest null state, we can start applying
+   * the state machine logic from that location instead of the absolute starting
+   * of the CSS source. This speeds up the tokenizing and the state machine a
+   * lot while using autocompletion at high line numbers in a CSS source.
+   */
+  findNearestNullState: function(line) {
+    let arr = this.nullStates;
+    let high = arr.length - 1;
+    let low = 0;
+    let target = 0;
+
+    if (high < 0)
+      return -1;
+    if (arr[high][0] <= line)
+      return high;
+    if (arr[low][0] > line)
+      return -1;
+
+    while (high > low) {
+      if (arr[low][0] <= line && arr[low [0]+ 1] > line)
+        return low;
+      if (arr[high][0] > line && arr[high - 1][0] <= line)
+        return high - 1;
+
+      target = (((line - arr[low][0]) / (arr[high][0] - arr[low][0])) *
+                (high - low)) | 0;
+
+      if (arr[target][0] <= line && arr[target + 1][0] > line) {
+        return target;
+      } else if (line > arr[target][0]) {
+        low = target + 1;
+        high--;
+      } else {
+        high = target - 1;
+        low++;
+      }
+    }
+
+    return -1;
+  },
+
+  /**
+   * Invalidates the state cache for and above the line.
+   */
+  invalidateCache: function(line) {
+    this.nullStates.length = this.findNearestNullState(line) + 1;
+  }
 }
 
 /**
