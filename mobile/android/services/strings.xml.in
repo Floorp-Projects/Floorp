@@ -111,10 +111,9 @@
 <string name="fxaccount_link_pn">https://accounts.firefox.com/legal/privacy</string>
 <string name="fxaccount_link_forgot_password">https://accounts.firefox.com/reset_password</string>
 
-<string name="fxaccount_checkbox_contentDescription">&fxaccount_checkbox_contentDescription2;</string>
-<string name="fxaccount_icon_contentDescription">&fxaccount_icon_contentDescription2;</string>
-<string name="fxaccount_intro_contentDescription">&fxaccount_intro_contentDescription2;</string>
-<string name="fxaccount_mail_contentDescription">&fxaccount_mail_contentDescription2;</string>
+<!-- Per Bug 974627, decorative images should not have non-empty
+     contentDescription text, and it should not be translated. -->
+<string name="fxaccount_empty_contentDescription"></string>
 
 <string name="fxaccount_email_hint">&fxaccount_email_hint;</string>
 <string name="fxaccount_password_hint">&fxaccount_password_hint;</string>

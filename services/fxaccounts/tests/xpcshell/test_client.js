@@ -222,8 +222,24 @@ add_task(function test_signUp() {
 });
 
 add_task(function test_signIn() {
-  let sessionMessage = JSON.stringify({sessionToken: FAKE_SESSION_TOKEN});
-  let errorMessage = JSON.stringify({code: 400, errno: 102, error: "doesn't exist"});
+  let sessionMessage_noKey = JSON.stringify({
+    sessionToken: FAKE_SESSION_TOKEN
+  });
+  let sessionMessage_withKey = JSON.stringify({
+    sessionToken: FAKE_SESSION_TOKEN,
+    keyFetchToken: "keyFetchToken"
+  });
+  let errorMessage_notExistent = JSON.stringify({
+    code: 400,
+    errno: 102,
+    error: "doesn't exist"
+  });
+  let errorMessage_wrongCap = JSON.stringify({
+    code: 400,
+    errno: 120,
+    error: "Incorrect email case",
+    email: "you@example.com"
+  });
 
   let server = httpd_setup({
     "/account/login": function(request, response) {
@@ -231,28 +247,68 @@ add_task(function test_signIn() {
       let jsonBody = JSON.parse(body);
 
       if (jsonBody.email == "mé@example.com") {
+        do_check_eq("", request._queryString);
         do_check_eq(jsonBody.authPW, "08b9d111196b8408e8ed92439da49206c8ecfbf343df0ae1ecefcd1e0174a8b6");
         response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(sessionMessage, sessionMessage.length);
+        response.bodyOutputStream.write(sessionMessage_noKey,
+                                        sessionMessage_noKey.length);
         return;
       }
-
-      // Error trying to sign in to nonexistent account
-      response.setStatusLine(request.httpVersion, 400, "Bad request");
-      response.bodyOutputStream.write(errorMessage, errorMessage.length);
-      return;
+      else if (jsonBody.email == "you@example.com") {
+        do_check_eq("keys=true", request._queryString);
+        do_check_eq(jsonBody.authPW, "93d20ec50304d496d0707ec20d7e8c89459b6396ec5dd5b9e92809c5e42856c7");
+        response.setStatusLine(request.httpVersion, 200, "OK");
+        response.bodyOutputStream.write(sessionMessage_withKey,
+                                        sessionMessage_withKey.length);
+        return;
+      }
+      else if (jsonBody.email == "You@example.com") {
+        // Error trying to sign in with a wrong capitalization
+        response.setStatusLine(request.httpVersion, 400, "Bad request");
+        response.bodyOutputStream.write(errorMessage_wrongCap,
+                                        errorMessage_wrongCap.length);
+        return;
+      }
+      else {
+        // Error trying to sign in to nonexistent account
+        response.setStatusLine(request.httpVersion, 400, "Bad request");
+        response.bodyOutputStream.write(errorMessage_notExistent,
+                                        errorMessage_notExistent.length);
+        return;
+      }
     },
   });
 
+  // Login without retrieving optional keys
   let client = new FxAccountsClient(server.baseURI);
   let result = yield client.signIn('mé@example.com', 'bigsecret');
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
+  do_check_eq(undefined, result.keyFetchToken);
+
+  // Login with retrieving optional keys
+  let result = yield client.signIn('you@example.com', 'bigsecret', true);
+  do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
+  do_check_eq("keyFetchToken", result.keyFetchToken);
+
+  // Retry due to wrong email capitalization
+  let result = yield client.signIn('You@example.com', 'bigsecret', true);
+  do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
+  do_check_eq("keyFetchToken", result.keyFetchToken);
+
+  // Don't retry due to wrong email capitalization
+  try {
+    let result = yield client.signIn('You@example.com', 'bigsecret', true, false);
+    do_throw("Expected to catch an exception");
+  } catch (expectedError) {
+    do_check_eq(120, expectedError.errno);
+    do_check_eq("you@example.com", expectedError.email);
+  }
 
   // Trigger error path
   try {
     result = yield client.signIn("yøü@bad.example.org", "nofear");
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(102, expectedError.errno);
   }
 

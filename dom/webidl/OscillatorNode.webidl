@@ -30,9 +30,9 @@ interface OscillatorNode : AudioNode {
     readonly attribute AudioParam detune; // in Cents
 
     [Throws]
-    void start(double when);
+    void start(optional double when = 0);
     [Throws]
-    void stop(double when);
+    void stop(optional double when = 0);
     void setPeriodicWave(PeriodicWave periodicWave);
 
     attribute EventHandler onended;

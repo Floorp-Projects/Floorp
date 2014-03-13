@@ -59,6 +59,7 @@
         this.timeout = this._prefs.getIntPref("delay");
         this._formattingEnabled = this._prefs.getBoolPref("formatting.enabled");
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
+        this._ignoreNextSelect = false;
 
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("mousedown", this, false);
@@ -678,6 +679,15 @@
             this.setAttribute("actiontype", action.type);
         ]]></body>
       </method>
+
+      <method name="selectTextRange">
+        <parameter name="aStartIndex"/>
+        <parameter name="aEndIndex"/>
+        <body><![CDATA[
+          this._ignoreNextSelect = true;
+          this.inputField.setSelectionRange(aStartIndex, aEndIndex);
+        ]]></body>
+      </method>
     </implementation>
 
     <handlers>
@@ -739,6 +749,15 @@
       <handler event="dragover" phase="capturing" action="this.onDragOver(event, this);"/>
       <handler event="drop" phase="capturing" action="this.onDrop(event, this);"/>
       <handler event="select"><![CDATA[
+        if (this._ignoreNextSelect) {
+          // If this select event is coming from autocomplete's selectTextRange,
+          // then we don't need to adjust what's on the selection keyboard here,
+          // but make sure to reset the flag since this should be a one-time
+          // suppression.
+          this._ignoreNextSelect = false;
+          return;
+        }
+
         if (!Cc["@mozilla.org/widget/clipboard;1"]
                .getService(Ci.nsIClipboard)
                .supportsSelectionClipboard())
@@ -2055,21 +2074,10 @@
       </field>
       <property name="_viewsLeftMap">
         <getter><![CDATA[
-          let viewsLeftMap = {};
           try {
-            viewsLeftMap = JSON.parse(Services.prefs.getCharPref("browser.syncPromoViewsLeftMap"));
-          } catch (ex) {
-            // If the old preference exists, migrate it to the new one.
-            try {
-              let oldPref = Services.prefs.getIntPref("browser.syncPromoViewsLeft");
-              Services.prefs.clearUserPref("browser.syncPromoViewsLeft");
-              viewsLeftMap.bookmarks = oldPref;
-              viewsLeftMap.passwords = oldPref;
-              Services.prefs.setCharPref("browser.syncPromoViewsLeftMap",
-                                         JSON.stringify(viewsLeftMap));
-            } catch (ex2) {}
-          }
-          return viewsLeftMap;
+            return JSON.parse(Services.prefs.getCharPref("browser.syncPromoViewsLeftMap"));
+          } catch (ex) {}
+          return {};
         ]]></getter>
       </property>
       <property name="_viewsLeft">

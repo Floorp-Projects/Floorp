@@ -826,7 +826,8 @@
                          placespopup="true"
                          context="placesContext"
                          onpopupshowing="if (!this.parentNode._placesView)
-                                           new PlacesMenu(event, 'place:folder=TOOLBAR');">
+                                           new PlacesMenu(event, 'place:folder=TOOLBAR',
+                                                          PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);">
                 <menuitem id="BMB_viewBookmarksToolbar"
                           placesanonid="view-toolbar"
                           toolbarId="PersonalToolbar"
@@ -845,7 +846,8 @@
                          placespopup="true"
                          context="placesContext"
                          onpopupshowing="if (!this.parentNode._placesView)
-                                           new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS');"/>
+                                           new PlacesMenu(event, 'place:folder=UNFILED_BOOKMARKS',
+                                                          PlacesUIUtils.getViewForNode(this.parentNode.parentNode).options);"/>
             </menu>
             <menuseparator/>
             <!-- Bookmarks menu items will go here -->

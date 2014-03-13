@@ -469,15 +469,17 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],#back-button,#forward-button)),
 #restore-button {
-  padding: 2px 6px;
+  padding: 0 4px;
 }
 
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
-toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open])):hover > .toolbarbutton-menubutton-button,
-toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open])):hover > .toolbarbutton-menubutton-dropmarker,
+toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1[type="menu-button"]:not([disabled]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-dropmarker,
 toolbar .toolbaritem-combined-buttons:hover > .toolbarbutton-combined,
 #restore-button:not([disabled]):hover {
   border-color: hsla(0,0%,0%,.2);
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.5),
+              0 1px 0 hsla(0,0%,100%,.5) inset;
 }
 
 toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
@@ -485,11 +487,9 @@ toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[b
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover > .toolbarbutton-menubutton-dropmarker,
 #restore-button:not([disabled]):hover {
   background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
-  box-shadow: 0 1px 0 hsla(0,0%,100%,.5),
-              0 1px 0 hsla(0,0%,100%,.5) inset;
 }
 
-toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open]),
+toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open],[checked]),
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover]:active > .toolbarbutton-menubutton-button,
 toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover:active > .toolbarbutton-menubutton-dropmarker,
 toolbar .toolbarbutton-1[type="menu-button"][open] > .toolbarbutton-menubutton-dropmarker,
@@ -500,6 +500,11 @@ toolbar .toolbarbutton-1[type="menu-button"][open] > .toolbarbutton-menubutton-d
               0 1px 0 hsla(0,0%,0%,.05) inset,
               0 1px 1px hsla(0,0%,0%,.2) inset;
   transition-duration: 10ms;
+}
+
+toolbar .toolbarbutton-1[checked]:not(:active):hover {
+  background-color: hsla(0,0%,0%,.09);
+  transition: background-color 250ms;
 }
 
 .toolbarbutton-1[type="menu-button"] {
@@ -536,7 +541,7 @@ toolbar .toolbarbutton-1:not(:-moz-any([open],:hover)) > .toolbarbutton-menubutt
   top: calc(50% - 9px);
   width: 1px;
   height: 18px;
-  -moz-margin-end: -1px;
+  -moz-margin-start: -1px;
   background-image: linear-gradient(hsla(0,0%,0%,.15) 0, hsla(0,0%,0%,.15) 18px);
   background-clip: padding-box;
   background-position: center;
@@ -555,7 +560,12 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 
 toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  margin: 2px 6px;
+  margin: 0 4px;
+}
+
+#nav-bar .toolbarbutton-1:not(#back-button):not(#forward-button) {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 #nav-bar #PanelUI-button {
@@ -565,15 +575,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 #nav-bar #PanelUI-menu-button {
   margin-top: 0;
   margin-bottom: 0;
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-top: 1px;
+  padding-bottom: 1px;
   -moz-margin-start: 9px;
   -moz-margin-end: 7px;
-}
-
-#nav-bar > .toolbarbutton-1 {
-  margin-top: 4px;
-  margin-bottom: 4px;
 }
 
 @media not all and (min-resolution: 2dppx) {
@@ -1038,6 +1043,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   /* Menu panel and palette styles */
 
+  toolbaritem[sdkstylewidget="true"] > toolbarbutton,
   :-moz-any(@primaryToolbarButtons@)[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > :-moz-any(@primaryToolbarButtons@) {
     list-style-image: url(chrome://browser/skin/menuPanel@2x.png);
@@ -1169,6 +1175,10 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(0px, 1728px, 64px, 1664px);
   }
 
+  toolbaritem[sdkstylewidget="true"] > toolbarbutton {
+    -moz-image-region: rect(0, 1664px, 64px, 1600px);
+  }
+
   /* Footer and wide panel control icons */
   #edit-controls@inAnyPanel@ > toolbarbutton,
   #zoom-controls@inAnyPanel@ > toolbarbutton,
@@ -1226,8 +1236,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 }
 
 /* Help 16px icons fit: */
-.toolbarbutton-1[cui-areatype="toolbar"]:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
-.toolbarbutton-1[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+.toolbarbutton-1[cui-areatype="toolbar"]:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon {
   margin: 2px;
 }
 
@@ -1589,7 +1598,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
-  padding-top: 6px;
+  padding-top: 4px;
   margin: 2px;
 }
 
