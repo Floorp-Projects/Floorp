@@ -68,7 +68,7 @@ function setEmulatorAPN() {
 function waitNetworkConnected(networkType) {
   log("wait network " + networkType + " connected");
 
-  let interfaceStateChangeTopic = "network-interface-state-changed";
+  let interfaceStateChangeTopic = "network-connection-state-changed";
   let obs = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
   let deferred = Promise.defer();
 
@@ -90,7 +90,7 @@ function waitNetworkConnected(networkType) {
 function waitNetworkDisconnected(networkType) {
   log("wait network " + networkType + " disconnected");
 
-  let interfaceStateChangeTopic = "network-interface-state-changed";
+  let interfaceStateChangeTopic = "network-connection-state-changed";
   let obs = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
   let deferred = Promise.defer();
 
