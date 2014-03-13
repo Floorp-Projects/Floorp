@@ -155,7 +155,6 @@ let test = maketest("Main", function main(test) {
     yield test_debug();
     yield test_info_features_detect();
     yield test_read_write();
-    yield test_read_write_all();
     yield test_position();
     yield test_iter();
     yield test_exists();
@@ -303,92 +302,6 @@ let test_read_write = maketest("read_write", function read_write(test) {
   });
 });
 
-/**
- * Test OS.File.writeAtomic
- */
-let test_read_write_all = maketest("read_write_all", function read_write_all(test) {
-  return Task.spawn(function() {
-    let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
-      "osfile async test read writeAtomic.tmp");
-    let tmpPath = pathDest + ".tmp";
-
-    let test_with_options = function(options, suffix) {
-      return Task.spawn(function() {
-        let optionsBackup = JSON.parse(JSON.stringify(options));
-
-        // Check that read + writeAtomic performs a correct copy
-        let currentDir = yield OS.File.getCurrentDirectory();
-        let pathSource = OS.Path.join(currentDir, EXISTING_FILE);
-        let contents = yield OS.File.read(pathSource);
-        test.ok(contents, "Obtained contents");
-        let bytesWritten = yield OS.File.writeAtomic(pathDest, contents, options);
-        test.is(contents.byteLength, bytesWritten, "Wrote the correct number of bytes (" + suffix + ")");
-
-        // Check that options are not altered
-        test.is(Object.keys(options).length, Object.keys(optionsBackup).length,
-          "The number of options was not changed");
-        for (let k in options) {
-          test.is(options[k], optionsBackup[k], "Option was not changed (" + suffix + ")");
-        }
-        yield reference_compare_files(pathSource, pathDest, test);
-
-        // Check that temporary file was removed or doesn't exist
-        test.info("Compare complete");
-        test.ok(!(new FileUtils.File(tmpPath).exists()), "No temporary file at the end of the run (" + suffix + ")");
-
-        // Check that writeAtomic fails if noOverwrite is true and the destination
-        // file already exists!
-        let view = new Uint8Array(contents.buffer, 10, 200);
-        try {
-          let opt = JSON.parse(JSON.stringify(options));
-          opt.noOverwrite = true;
-          yield OS.File.writeAtomic(pathDest, view, opt);
-          test.fail("With noOverwrite, writeAtomic should have refused to overwrite file (" + suffix + ")");
-        } catch (err) {
-          test.info("With noOverwrite, writeAtomic correctly failed (" + suffix + ")");
-          test.ok(err instanceof OS.File.Error, "writeAtomic correctly failed with a file error (" + suffix + ")");
-          test.ok(err.becauseExists, "writeAtomic file error confirmed that the file already exists (" + suffix + ")");
-        }
-        yield reference_compare_files(pathSource, pathDest, test);
-        test.ok(!(new FileUtils.File(tmpPath).exists()), "Temporary file was removed");
-
-        // Now write a subset
-        let START = 10;
-        let LENGTH = 100;
-        view = new Uint8Array(contents.buffer, START, LENGTH);
-        bytesWritten = yield OS.File.writeAtomic(pathDest, view, options);
-        test.is(bytesWritten, LENGTH, "Partial write wrote the correct number of bytes (" + suffix + ")");
-        let array2 = yield OS.File.read(pathDest);
-        let view1 = new Uint8Array(contents.buffer, START, LENGTH);
-        test.is(view1.length, array2.length, "Re-read partial write with the correct number of bytes (" + suffix + ")");
-        let decoder = new TextDecoder();
-        test.is(decoder.decode(view1), decoder.decode(array2), "Comparing re-read of partial write (" + suffix + ")");
-
-        // Write strings, default encoding
-        let ARBITRARY_STRING = "aeiouyâêîôûçß•";
-        yield OS.File.writeAtomic(pathDest, ARBITRARY_STRING, options);
-        let array = yield OS.File.read(pathDest);
-        let IN_STRING = decoder.decode(array);
-        test.is(ARBITRARY_STRING, IN_STRING, "String write + read with default encoding works (" + suffix + ")");
-
-        let opt16 = JSON.parse(JSON.stringify(options));
-        opt16.encoding = "utf-16";
-        yield OS.File.writeAtomic(pathDest, ARBITRARY_STRING, opt16);
-        array = yield OS.File.read(pathDest);
-        IN_STRING = (new TextDecoder("utf-16")).decode(array);
-        test.is(ARBITRARY_STRING, IN_STRING, "String write + read with utf-16 encoding works (" + suffix + ")");
-
-        // Cleanup.
-        OS.File.remove(pathDest);
-      });
-    };
-
-    yield test_with_options({tmpPath: tmpPath}, "Renaming, not flushing");
-    yield test_with_options({tmpPath: tmpPath, flush: true}, "Renaming, flushing");
-    yield test_with_options({}, "Not renaming, not flushing");
-    yield test_with_options({flush: true}, "Not renaming, flushing");
-  });
-});
 
 /**
  * Test file.{getPosition, setPosition}
