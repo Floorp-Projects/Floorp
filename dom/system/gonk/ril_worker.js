@@ -6136,13 +6136,8 @@ RilObject.prototype[REQUEST_GET_PREFERRED_NETWORK_TYPE] = function REQUEST_GET_P
     return;
   }
 
-  let Buf = this.context.Buf;
-  let networkType = RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(GECKO_PREFERRED_NETWORK_TYPE_DEFAULT);
-  let responseLen = Buf.readInt32(); // Number of INT32 responsed.
-  if (responseLen) {
-    this.preferredNetworkType = networkType = Buf.readInt32();
-  }
-  options.networkType = networkType;
+  let results = this.context.Buf.readInt32List();
+  options.networkType = this.preferredNetworkType = results[0];
   options.success = true;
 
   this.sendChromeMessage(options);
@@ -14462,6 +14457,10 @@ ICCContactHelperObject.prototype = {
              (Array.isArray(contact.anr) && contact.anr[0]))) {
           // Case 1.
           this.addContactFieldType2(pbr, contact, field, onsuccess, onerror);
+        } else {
+          if (onsuccess) {
+            onsuccess();
+          }
         }
         return;
       }
