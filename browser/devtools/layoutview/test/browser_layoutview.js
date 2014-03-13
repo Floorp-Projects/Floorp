@@ -7,6 +7,11 @@ let TargetFactory = devtools.TargetFactory;
 function test() {
   waitForExplicitFinish();
 
+  gDevTools.testing = true;
+  SimpleTest.registerCleanupFunction(() => {
+    gDevTools.testing = false;
+  });
+
   Services.prefs.setBoolPref("devtools.inspector.sidebarOpen", true);
 
   let doc;

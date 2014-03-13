@@ -23,6 +23,11 @@ let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 function cleanup()
 {
   gPanelWindow = null;

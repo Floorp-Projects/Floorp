@@ -588,7 +588,7 @@ BoxModelHighlighter.prototype = {
       this.layoutHelpers.getAdjustedQuadsPolyfill(this.currentNode, "margin");
 
     if (!this.rect) {
-      return;
+      return null;
     }
 
     if (this.rect.bounds.width > 0 && this.rect.bounds.height > 0) {
