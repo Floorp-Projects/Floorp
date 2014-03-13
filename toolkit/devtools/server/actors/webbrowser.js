@@ -624,6 +624,7 @@ TabActor.prototype = {
   disconnect: function BTA_disconnect() {
     this._detach();
     this._extraActors = null;
+    this._chromeEventHandler = null;
   },
 
   /**
@@ -1003,6 +1004,12 @@ Object.defineProperty(BrowserTabActor.prototype, "browser", {
   enumerable: true,
   configurable: false
 });
+
+BrowserTabActor.prototype.disconnect = function() {
+  TabActor.prototype.disconnect.call(this);
+  this._browser = null;
+  this._tabbrowser = null;
+};
 
 BrowserTabActor.prototype.exit = function() {
   TabActor.prototype.exit.call(this);
