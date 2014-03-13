@@ -592,7 +592,7 @@ struct PRFilePrivate {
 
 // copied from nsprpub/pr/src/{io/prfile.c | md/windows/w95io.c} : 
 // PR_Open and _PR_MD_OPEN
-static nsresult
+nsresult
 OpenFile(const nsAFlatString &name, int osflags, int mode,
          PRFileDesc **fd)
 {
