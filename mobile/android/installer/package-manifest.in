@@ -382,6 +382,7 @@
 @BINPATH@/components/nsINIProcessor.js
 @BINPATH@/components/nsPrompter.manifest
 @BINPATH@/components/nsPrompter.js
+@BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/TelemetryStartup.js
 @BINPATH@/components/TelemetryStartup.manifest
 @BINPATH@/components/Webapps.js

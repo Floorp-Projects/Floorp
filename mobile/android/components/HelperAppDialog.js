@@ -43,12 +43,10 @@ HelperAppLauncherDialog.prototype = {
    * Returns true otherwise.
    */
   _canDownload: function (url, alreadyResolved=false) {
-    Services.console.logStringMessage("_canDownload: " + url);
     // The common case.
     if (url.schemeIs("http") ||
         url.schemeIs("https") ||
         url.schemeIs("ftp")) {
-      Services.console.logStringMessage("_canDownload: true\n");
       return true;
     }
 
@@ -57,7 +55,6 @@ HelperAppLauncherDialog.prototype = {
         url.schemeIs("jar") ||
         url.schemeIs("resource") ||
         url.schemeIs("wyciwyg")) {
-      Services.console.logStringMessage("_canDownload: false\n");
       return false;
     }
 
@@ -66,7 +63,6 @@ HelperAppLauncherDialog.prototype = {
       let ioSvc = Cc["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
       let innerURI = ioSvc.newChannelFromURI(url).URI;
       if (!url.equals(innerURI)) {
-        Services.console.logStringMessage("_canDownload: recursing.\n");
         return this._canDownload(innerURI, true);
       }
     }
@@ -81,17 +77,14 @@ HelperAppLauncherDialog.prototype = {
 
       let appRoot = FileUtils.getFile("XREExeF", []);
       if (appRoot.contains(file, true)) {
-        Services.console.logStringMessage("_canDownload: appRoot.\n");
         return false;
       }
 
       let profileRoot = FileUtils.getFile("ProfD", []);
       if (profileRoot.contains(file, true)) {
-        Services.console.logStringMessage("_canDownload: prof dir.\n");
         return false;
       }
 
-      Services.console.logStringMessage("_canDownload: safe.\n");
       return true;
     }
 

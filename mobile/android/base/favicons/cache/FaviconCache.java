@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * When a favicon at a particular URL is decoded, it will yield one or more bitmaps.
  * While in memory, these bitmaps are stored in a list, sorted in ascending order of size, in a
  * FaviconsForURL object.
- * The collection of FaviconsForURL objects currently in the cache is stored in mBackingMap, keyed
+ * The collection of FaviconsForURL objects currently in the cache is stored in backingMap, keyed
  * by favicon URL.
  *
  * A second map exists for permanent cache entries -- ones that are never expired. These entries
@@ -59,7 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * as well as the bitmap, a pointer to the encapsulating FaviconsForURL object (Used by the LRU
  * culler), the size of the encapsulated image, a flag indicating if this is a primary favicon, and
  * a flag indicating if the entry is invalid.
- * All FaviconCacheElement objects are tracked in the mOrdering LinkedList. This is used to record
+ * All FaviconCacheElement objects are tracked in the ordering LinkedList. This is used to record
  * LRU information about FaviconCacheElements. In particular, the most recently used FaviconCacheElement
  * will be at the start of the list, the least recently used at the end of the list.
  *
@@ -98,7 +98,7 @@ public class FaviconCache {
     private static final int NUM_FAVICON_SIZES = 4;
 
     // Dimensions of the largest favicon to store in the cache. Everything is downscaled to this.
-    public final int mMaxCachedWidth;
+    public final int maxCachedWidth;
 
     // Retry failed favicons after 20 minutes.
     public static final long FAILURE_RETRY_MILLISECONDS = 1000 * 60 * 20;
@@ -107,16 +107,16 @@ public class FaviconCache {
     // Since favicons may be container formats holding multiple icons, the underlying type holds a
     // sorted list of bitmap payloads in ascending order of size. The underlying type may be queried
     // for the least larger payload currently present.
-    private final ConcurrentHashMap<String, FaviconsForURL> mBackingMap = new ConcurrentHashMap<String, FaviconsForURL>();
+    private final ConcurrentHashMap<String, FaviconsForURL> backingMap = new ConcurrentHashMap<String, FaviconsForURL>();
 
     // And the same, but never evicted.
-    private final ConcurrentHashMap<String, FaviconsForURL> mPermanentBackingMap = new ConcurrentHashMap<String, FaviconsForURL>();
+    private final ConcurrentHashMap<String, FaviconsForURL> permanentBackingMap = new ConcurrentHashMap<String, FaviconsForURL>();
 
     // A linked list used to implement a queue, defining the LRU properties of the cache. Elements
     // contained within the various FaviconsForURL objects are held here, the least recently used
     // of which at the end of the list. When space needs to be reclaimed, the appropriate bitmap is
     // culled.
-    private final LinkedList<FaviconCacheElement> mOrdering = new LinkedList<FaviconCacheElement>();
+    private final LinkedList<FaviconCacheElement> ordering = new LinkedList<FaviconCacheElement>();
 
     // The above structures, if used correctly, enable this cache to exhibit LRU semantics across all
     // favicon payloads in the system, as well as enabling the dynamic selection from the cache of
@@ -124,51 +124,39 @@ public class FaviconCache {
     // are provided by the underlying file format).
 
     // Current size, in bytes, of the bitmap data present in the LRU cache.
-    private final AtomicInteger mCurrentSize = new AtomicInteger(0);
+    private final AtomicInteger currentSize = new AtomicInteger(0);
 
     // The maximum quantity, in bytes, of bitmap data which may be stored in the cache.
-    private final int mMaxSizeBytes;
+    private final int maxSizeBytes;
 
     // Tracks the number of ongoing read operations. Enables the first one in to lock writers out and
     // the last one out to let them in.
-    private final AtomicInteger mOngoingReads = new AtomicInteger(0);
+    private final AtomicInteger ongoingReads = new AtomicInteger(0);
 
     // Used to ensure transaction fairness - each txn acquires and releases this as the first operation.
     // The effect is an orderly, inexpensive ordering enforced on txns to prevent writer starvation.
-    private final Semaphore mTurnSemaphore = new Semaphore(1);
+    private final Semaphore turnSemaphore = new Semaphore(1);
 
     // A deviation from the usual MRSW solution - this semaphore is used to guard modification to the
     // ordering map. This allows for read transactions to update the most-recently-used value without
     // needing to take out the write lock.
-    private final Semaphore mReorderingSemaphore = new Semaphore(1);
+    private final Semaphore reorderingSemaphore = new Semaphore(1);
 
     // The semaphore one must acquire in order to perform a write.
-    private final Semaphore mWriteLock = new Semaphore(1);
+    private final Semaphore writeLock = new Semaphore(1);
 
     /**
      * Called by txns performing only reads as they start. Prevents writer starvation with a turn
      * semaphore and locks writers out if this is the first concurrent reader txn starting up.
      */
     private void startRead() {
-        mTurnSemaphore.acquireUninterruptibly();
-        mTurnSemaphore.release();
+        turnSemaphore.acquireUninterruptibly();
+        turnSemaphore.release();
 
-        if (mOngoingReads.incrementAndGet() == 1) {
+        if (ongoingReads.incrementAndGet() == 1) {
             // First one in. Wait for writers to finish and lock them out.
-            mWriteLock.acquireUninterruptibly();
+            writeLock.acquireUninterruptibly();
         }
-    }
-
-    /**
-     * An alternative to startWrite to be used when in a read transaction and wanting to upgrade it
-     * to a write transaction. Such a transaction should be terminated with finishWrite.
-     */
-    private void upgradeReadToWrite() {
-        mTurnSemaphore.acquireUninterruptibly();
-        if (mOngoingReads.decrementAndGet() == 0) {
-            mWriteLock.release();
-        }
-        mWriteLock.acquireUninterruptibly();
     }
 
     /**
@@ -176,8 +164,8 @@ public class FaviconCache {
      * concluding read transaction then then writers are subsequently allowed in.
      */
     private void finishRead() {
-        if (mOngoingReads.decrementAndGet() == 0) {
-            mWriteLock.release();
+        if (ongoingReads.decrementAndGet() == 0) {
+            writeLock.release();
         }
     }
 
@@ -186,21 +174,21 @@ public class FaviconCache {
      * Upon return, no other txns will be executing concurrently.
      */
     private void startWrite() {
-        mTurnSemaphore.acquireUninterruptibly();
-        mWriteLock.acquireUninterruptibly();
+        turnSemaphore.acquireUninterruptibly();
+        writeLock.acquireUninterruptibly();
     }
 
     /**
      * Called by a concluding write transaction - unlocks the structure.
      */
     private void finishWrite() {
-        mTurnSemaphore.release();
-        mWriteLock.release();
+        turnSemaphore.release();
+        writeLock.release();
     }
 
     public FaviconCache(int maxSize, int maxWidthToCache) {
-        mMaxSizeBytes = maxSize;
-        mMaxCachedWidth = maxWidthToCache;
+        maxSizeBytes = maxSize;
+        maxCachedWidth = maxWidthToCache;
     }
 
     /**
@@ -217,57 +205,42 @@ public class FaviconCache {
 
         startRead();
 
-        boolean isExpired = false;
-        boolean isAborting = false;
-
         try {
             // If we don't have it in the cache, it certainly isn't a known failure.
             // Non-evictable favicons are never failed, so we don't need to
-            // check mPermanentBackingMap.
-            if (!mBackingMap.containsKey(faviconURL)) {
+            // check permanentBackingMap.
+            if (!backingMap.containsKey(faviconURL)) {
                 return false;
             }
 
-            FaviconsForURL container = mBackingMap.get(faviconURL);
+            FaviconsForURL container = backingMap.get(faviconURL);
 
             // If the has failed flag is not set, it's certainly not a known failure.
-            if (!container.mHasFailed) {
+            if (!container.hasFailed) {
                 return false;
             }
 
-            final long failureTimestamp = container.mDownloadTimestamp;
+            final long failureTimestamp = container.downloadTimestamp;
 
             // Calculate elapsed time since the failing download.
             final long failureDiff = System.currentTimeMillis() - failureTimestamp;
 
-            // If long enough has passed, mark it as no longer a failure.
-            if (failureDiff > FAILURE_RETRY_MILLISECONDS) {
-                isExpired = true;
-            } else {
+            // If the expiry is still in effect, return. Otherwise, continue and unmark the failure.
+            if (failureDiff < FAILURE_RETRY_MILLISECONDS) {
                 return true;
             }
         } catch (Exception unhandled) {
-            // Handle any exception thrown and return the locks to a sensible state.
-            finishRead();
-
-            // Flag to prevent finally from doubly-unlocking.
-            isAborting = true;
             Log.e(LOGTAG, "FaviconCache exception!", unhandled);
             return true;
         }  finally {
-            if (!isAborting) {
-                if (isExpired) {
-                    // No longer expired.
-                    upgradeReadToWrite();
-                } else {
-                    finishRead();
-                }
-            }
+            finishRead();
         }
 
+        startWrite();
+
+        // If the entry is no longer failed, remove the record of it from the cache.
         try {
-            recordRemoved(mBackingMap.get(faviconURL));
-            mBackingMap.remove(faviconURL);
+            recordRemoved(backingMap.remove(faviconURL));
             return false;
         } finally {
             finishWrite();
@@ -282,14 +255,12 @@ public class FaviconCache {
     public void putFailed(String faviconURL) {
         startWrite();
 
-        if (mBackingMap.containsKey(faviconURL)) {
-            recordRemoved(mBackingMap.get(faviconURL));
+        try {
+            FaviconsForURL container = new FaviconsForURL(0, true);
+            recordRemoved(backingMap.put(faviconURL, container));
+        } finally {
+            finishWrite();
         }
-
-        FaviconsForURL container = new FaviconsForURL(0, true);
-        mBackingMap.put(faviconURL, container);
-
-        finishWrite();
     }
 
     /**
@@ -309,9 +280,7 @@ public class FaviconCache {
             return null;
         }
 
-        boolean doingWrites = false;
         boolean shouldComputeColour = false;
-        boolean isAborting = false;
         boolean wasPermanent = false;
         FaviconsForURL container;
         final Bitmap newBitmap;
@@ -319,9 +288,9 @@ public class FaviconCache {
         startRead();
 
         try {
-            container = mPermanentBackingMap.get(faviconURL);
+            container = permanentBackingMap.get(faviconURL);
             if (container == null) {
-                container = mBackingMap.get(faviconURL);
+                container = backingMap.get(faviconURL);
                 if (container == null) {
                     // We don't have it!
                     return null;
@@ -338,22 +307,22 @@ public class FaviconCache {
             // cacheElementIndex now holds either the index of the next least largest bitmap from
             // targetSize, or -1 if targetSize > all bitmaps.
             if (cacheElementIndex != -1) {
-                // If cacheElementIndex is not the sentinel value, then it is a valid index into mFavicons.
-                cacheElement = container.mFavicons.get(cacheElementIndex);
+                // If cacheElementIndex is not the sentinel value, then it is a valid index into favicons.
+                cacheElement = container.favicons.get(cacheElementIndex);
 
-                if (cacheElement.mInvalidated) {
+                if (cacheElement.invalidated) {
                     return null;
                 }
 
                 // If we found exactly what we wanted - we're done.
-                if (cacheElement.mImageSize == targetSize) {
-                    setMostRecentlyUsed(cacheElement);
-                    return cacheElement.mFaviconPayload;
+                if (cacheElement.imageSize == targetSize) {
+                    setMostRecentlyUsedWithinRead(cacheElement);
+                    return cacheElement.faviconPayload;
                 }
             } else {
                 // We requested an image larger than all primaries. Set the element to start the search
                 // from to the element beyond the end of the array, so the search runs backwards.
-                cacheElementIndex = container.mFavicons.size();
+                cacheElementIndex = container.favicons.size();
             }
 
             // We did not find exactly what we wanted, but now have set cacheElementIndex to the index
@@ -370,17 +339,12 @@ public class FaviconCache {
 
             if (targetSize == -1) {
                 // We got the biggest primary, so that's what we'll return.
-                return cacheElement.mFaviconPayload;
+                return cacheElement.faviconPayload;
             }
 
-            // Having got this far, we'll be needing to write the new secondary to the cache, which
-            // involves us falling through to the next try block. This flag lets us do this (Other
-            // paths prior to this end in returns.)
-            doingWrites = true;
-
             // Scaling logic...
-            Bitmap largestElementBitmap = cacheElement.mFaviconPayload;
-            int largestSize = cacheElement.mImageSize;
+            Bitmap largestElementBitmap = cacheElement.faviconPayload;
+            int largestSize = cacheElement.imageSize;
 
             if (largestSize >= targetSize) {
                 // The largest we have is larger than the target - downsize to target.
@@ -401,24 +365,16 @@ public class FaviconCache {
                 }
             }
         } catch (Exception unhandled) {
-            isAborting = true;
-
             // Handle any exception thrown and return the locks to a sensible state.
-            finishRead();
 
             // Flag to prevent finally from doubly-unlocking.
             Log.e(LOGTAG, "FaviconCache exception!", unhandled);
             return null;
         } finally {
-            if (!isAborting) {
-                if (doingWrites) {
-                    upgradeReadToWrite();
-                } else {
-                    finishRead();
-                }
-            }
+            finishRead();
         }
 
+        startWrite();
         try {
             if (shouldComputeColour) {
                 // And since we failed, we'll need the dominant colour.
@@ -432,8 +388,9 @@ public class FaviconCache {
             FaviconCacheElement newElement = container.addSecondary(newBitmap, targetSize);
 
             if (!wasPermanent) {
-                setMostRecentlyUsed(newElement);
-                mCurrentSize.addAndGet(newElement.sizeOf());
+                if (setMostRecentlyUsedWithinWrite(newElement)) {
+                    currentSize.addAndGet(newElement.sizeOf());
+                }
             }
         } finally {
             finishWrite();
@@ -452,18 +409,17 @@ public class FaviconCache {
         startRead();
 
         try {
-            FaviconsForURL element = mPermanentBackingMap.get(key);
+            FaviconsForURL element = permanentBackingMap.get(key);
             if (element == null) {
-                element = mBackingMap.get(key);
+                element = backingMap.get(key);
             }
 
             if (element == null) {
                 Log.w(LOGTAG, "Cannot compute dominant color of non-cached favicon. Cache fullness " +
-                              mCurrentSize.get() + '/' + mMaxSizeBytes);
+                              currentSize.get() + '/' + maxSizeBytes);
                 finishRead();
                 return 0xFFFFFF;
             }
-
 
             return element.ensureDominantColor();
         } finally {
@@ -472,8 +428,8 @@ public class FaviconCache {
     }
 
     /**
-     * Remove all payloads stored in the given container from the LRU cache. Must be called while
-     * holding the write lock.
+     * Remove all payloads stored in the given container from the LRU cache.
+     * Must be called while holding the write lock.
      *
      * @param wasRemoved The container to purge from the cache.
      */
@@ -485,40 +441,59 @@ public class FaviconCache {
 
         int sizeRemoved = 0;
 
-        for (FaviconCacheElement e : wasRemoved.mFavicons) {
+        for (FaviconCacheElement e : wasRemoved.favicons) {
             sizeRemoved += e.sizeOf();
-            mOrdering.remove(e);
+            ordering.remove(e);
         }
 
-        mCurrentSize.addAndGet(-sizeRemoved);
+        currentSize.addAndGet(-sizeRemoved);
     }
 
     private Bitmap produceCacheableBitmap(Bitmap favicon) {
         // Never cache the default Favicon, or the null Favicon.
-        if (favicon == Favicons.sDefaultFavicon || favicon == null) {
+        if (favicon == Favicons.defaultFavicon || favicon == null) {
             return null;
         }
 
         // Some sites serve up insanely huge Favicons (Seen 512x512 ones...)
         // While we want to cache nice big icons, we apply a limit based on screen density for the
         // sake of space.
-        if (favicon.getWidth() > mMaxCachedWidth) {
-            return Bitmap.createScaledBitmap(favicon, mMaxCachedWidth, mMaxCachedWidth, true);
+        if (favicon.getWidth() > maxCachedWidth) {
+            return Bitmap.createScaledBitmap(favicon, maxCachedWidth, maxCachedWidth, true);
         }
+
         return favicon;
     }
 
     /**
-     * Set an existing element as the most recently used element. May be called from either type of
-     * transaction.
+     * Set an existing element as the most recently used element. Intended for use from read transactions. While
+     * write transactions may safely use this method, it will perform slightly worse than its unsafe counterpart below.
      *
      * @param element The element that is to become the most recently used one.
+     * @return true if this element already existed in the list, false otherwise. (Useful for preventing multiple-insertion.)
      */
-    private void setMostRecentlyUsed(FaviconCacheElement element) {
-        mReorderingSemaphore.acquireUninterruptibly();
-        mOrdering.remove(element);
-        mOrdering.offer(element);
-        mReorderingSemaphore.release();
+    private boolean setMostRecentlyUsedWithinRead(FaviconCacheElement element) {
+        reorderingSemaphore.acquireUninterruptibly();
+        try {
+            boolean contained = ordering.remove(element);
+            ordering.offer(element);
+            return contained;
+        } finally {
+            reorderingSemaphore.release();
+        }
+    }
+
+    /**
+     * Functionally equivalent to setMostRecentlyUsedWithinRead, but operates without taking the reordering semaphore.
+     * Only safe for use when called from a write transaction, or there is a risk of concurrent modification.
+     *
+     * @param element The element that is to become the most recently used one.
+     * @return true if this element already existed in the list, false otherwise. (Useful for preventing multiple-insertion.)
+     */
+    private boolean setMostRecentlyUsedWithinWrite(FaviconCacheElement element) {
+        boolean contained = ordering.remove(element);
+        ordering.offer(element);
+        return contained;
     }
 
     /**
@@ -546,13 +521,13 @@ public class FaviconCache {
         startWrite();
         try {
             // Set the new element as the most recently used one.
-            setMostRecentlyUsed(newElement);
+            setMostRecentlyUsedWithinWrite(newElement);
 
-            mCurrentSize.addAndGet(newElement.sizeOf());
+            currentSize.addAndGet(newElement.sizeOf());
 
             // Update the value in the LruCache...
             FaviconsForURL wasRemoved;
-            wasRemoved = mBackingMap.put(faviconURL, toInsert);
+            wasRemoved = backingMap.put(faviconURL, toInsert);
 
             recordRemoved(wasRemoved);
         } finally {
@@ -584,42 +559,23 @@ public class FaviconCache {
             sizeGained += newElement.sizeOf();
         }
 
-        startRead();
-
-        boolean abortingRead = false;
-
-        // Not using setMostRecentlyUsed, because the elements are known to be new. This can be done
-        // without taking the write lock, via the magic of the reordering semaphore.
-        mReorderingSemaphore.acquireUninterruptibly();
-        try {
-            if (!permanently) {
-                for (FaviconCacheElement newElement : toInsert.mFavicons) {
-                    mOrdering.offer(newElement);
-                }
-            }
-        } catch (Exception e) {
-            abortingRead = true;
-            mReorderingSemaphore.release();
-            finishRead();
-
-            Log.e(LOGTAG, "Favicon cache exception!", e);
-            return;
-        } finally {
-            if (!abortingRead) {
-                mReorderingSemaphore.release();
-                upgradeReadToWrite();
-            }
-        }
-
+        startWrite();
         try {
             if (permanently) {
-                mPermanentBackingMap.put(faviconURL, toInsert);
-            } else {
-                mCurrentSize.addAndGet(sizeGained);
-
-                // Update the value in the LruCache...
-                recordRemoved(mBackingMap.put(faviconURL, toInsert));
+                permanentBackingMap.put(faviconURL, toInsert);
+                return;
             }
+
+            for (FaviconCacheElement newElement : toInsert.favicons) {
+                setMostRecentlyUsedWithinWrite(newElement);
+            }
+
+            // In the event this insertion is being made to a key that already held a value, the subsequent recordRemoved
+            // call will subtract the size of the old value, preventing double-counting.
+            currentSize.addAndGet(sizeGained);
+
+            // Update the value in the LruCache...
+            recordRemoved(backingMap.put(faviconURL, toInsert));
         } finally {
             finishWrite();
         }
@@ -632,24 +588,24 @@ public class FaviconCache {
      * Otherwise, do nothing.
      */
     private void cullIfRequired() {
-        Log.d(LOGTAG, "Favicon cache fullness: " + mCurrentSize.get() + '/' + mMaxSizeBytes);
+        Log.d(LOGTAG, "Favicon cache fullness: " + currentSize.get() + '/' + maxSizeBytes);
 
-        if (mCurrentSize.get() <= mMaxSizeBytes) {
+        if (currentSize.get() <= maxSizeBytes) {
             return;
         }
 
         startWrite();
         try {
-            while (mCurrentSize.get() > mMaxSizeBytes) {
+            while (currentSize.get() > maxSizeBytes) {
                 // Cull the least recently used element.
 
                 FaviconCacheElement victim;
-                victim = mOrdering.poll();
+                victim = ordering.poll();
 
-                mCurrentSize.addAndGet(-victim.sizeOf());
+                currentSize.addAndGet(-victim.sizeOf());
                 victim.onEvictedFromCache();
 
-                Log.d(LOGTAG, "After cull: " + mCurrentSize.get() + '/' + mMaxSizeBytes);
+                Log.d(LOGTAG, "After cull: " + currentSize.get() + '/' + maxSizeBytes);
             }
         } finally {
             finishWrite();
@@ -664,9 +620,9 @@ public class FaviconCache {
 
         // Note that we neither clear, nor track the size of, the permanent map.
         try {
-            mCurrentSize.set(0);
-            mBackingMap.clear();
-            mOrdering.clear();
+            currentSize.set(0);
+            backingMap.clear();
+            ordering.clear();
 
         } finally {
             finishWrite();

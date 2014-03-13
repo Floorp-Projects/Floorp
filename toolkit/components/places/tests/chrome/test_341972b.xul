@@ -35,9 +35,8 @@ function runTest() {
     , parentId: PlacesUtils.toolbarFolderId
     , index: PlacesUtils.bookmarks.DEFAULT_INDEX
     , feedURI: NetUtil.newURI(FEEDSPEC)
-    },
-    function (aStatus, aLivemark) {
-      ok(Components.isSuccessCode(aStatus), "Get livemark");
+    })
+    .then(function (aLivemark) {
       is(aLivemark.siteURI, null, "Has null livemark site URI");
 
       waitForLivemarkLoad(aLivemark, function (aLivemark) {
@@ -47,6 +46,8 @@ function runTest() {
         PlacesUtils.bookmarks.removeItem(aLivemark.id);
         SimpleTest.finish();
       });
+    }, function () {
+      is(true, false, "Should not fail adding a livemark");
     }
   );
 }

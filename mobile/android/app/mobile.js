@@ -827,17 +827,15 @@ pref("browser.snippets.syncPromo.enabled", true);
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
 // The URL of the APK factory from which we obtain APKs for webapps.
-// This currently points to the development server.
-pref("browser.webapps.apkFactoryUrl", "http://dapk.net/application.apk");
+pref("browser.webapps.apkFactoryUrl", "https://controller.apk.firefox.com/application.apk");
 
 // How frequently to check for webapp updates, in seconds (86400 is daily).
 pref("browser.webapps.updateInterval", 86400);
 
 // The URL of the service that checks for updates.
-// This currently points to the development server.
 // To test updates, set this to http://apk-update-checker.paas.allizom.org,
 // which is a test server that always reports all apps as having updates.
-pref("browser.webapps.updateCheckUrl", "http://dapk.net/app_updates");
+pref("browser.webapps.updateCheckUrl", "https://controller.apk.firefox.com/app_updates");
 
 #endif
 
@@ -848,3 +846,7 @@ pref("home.sync.updateMode", 0);
 
 // How frequently to check if we should sync home provider data.
 pref("home.sync.checkIntervalSecs", 3600);
+
+#ifdef NIGHTLY_BUILD
+pref("devtools.debugger.remote-enabled", true);
+#endif

@@ -55,10 +55,8 @@ function runTest()
       , index: PlacesUtils.bookmarks.DEFAULT_INDEX
       , feedURI: aLivemarkData.feedURI
       , siteURI: aLivemarkData.siteURI
-      },
-      function (aStatus, aLivemark) {
-        ok(Components.isSuccessCode(aStatus), "Get livemark");
-
+      })
+      .then(function (aLivemark) {
         is (aLivemark.feedURI.spec, aLivemarkData.feedURI.spec,
             "Get correct feedURI");
         if (aLivemarkData.siteURI) {
@@ -84,8 +82,10 @@ function runTest()
             SimpleTest.finish();
           }          
         });
+      }, function () {
+        is(true, false, "Should not fail adding a livemark");
       }
-    )
+    );
   }
 
   LIVEMARKS.forEach(testLivemark);

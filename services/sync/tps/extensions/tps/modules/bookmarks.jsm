@@ -784,10 +784,10 @@ Livemark.prototype = {
     // Until this can handle asynchronous creation, we need to spin.
     let spinningCb = Async.makeSpinningCallback();
 
-    PlacesUtils.livemarks.addLivemark(livemarkObj,
-      function (aStatus, aLivemark) {
-        spinningCb(null, [aStatus, aLivemark]);
-      });
+    PlacesUtils.livemarks.addLivemark(livemarkObj).then(
+      aLivemark => { spinningCb(null, [Components.results.NS_OK, aLivemark]) },
+      () => { spinningCb(null, [Components.results.NS_ERROR_UNEXPECTED, aLivemark]) }
+    );
 
     let [status, livemark] = spinningCb.wait();
     if (!Components.isSuccessCode(status)) {
