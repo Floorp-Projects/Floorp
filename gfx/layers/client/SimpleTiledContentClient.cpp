@@ -341,7 +341,7 @@ SimpleClientTiledThebesLayer::BeginPaint()
   Layer* primaryScrollable = ClientManager()->GetPrimaryScrollableLayer();
   if (primaryScrollable) {
     const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-    mPaintData.mScrollOffset = metrics.mScrollOffset * metrics.mZoom;
+    mPaintData.mScrollOffset = metrics.GetScrollOffset() * metrics.mZoom;
     mPaintData.mCompositionBounds =
       ApplyParentLayerToLayoutTransform(mPaintData.mTransformParentLayerToLayout,
                                         ParentLayerRect(metrics.mCompositionBounds));

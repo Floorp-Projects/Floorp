@@ -186,8 +186,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   // display-port. If we abort updating when we shouldn't, we can end up
   // with blank regions on the screen and we open up the risk of entering
   // an endless updating cycle.
-  if (fabsf(contentMetrics.mScrollOffset.x - compositorMetrics.mScrollOffset.x) <= 2 &&
-      fabsf(contentMetrics.mScrollOffset.y - compositorMetrics.mScrollOffset.y) <= 2 &&
+  if (fabsf(contentMetrics.GetScrollOffset().x - compositorMetrics.GetScrollOffset().x) <= 2 &&
+      fabsf(contentMetrics.GetScrollOffset().y - compositorMetrics.GetScrollOffset().y) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.x - compositorMetrics.mDisplayPort.x) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.y - compositorMetrics.mDisplayPort.y) <= 2 &&
       fabsf(contentMetrics.mDisplayPort.width - compositorMetrics.mDisplayPort.width) <= 2 &&
@@ -241,7 +241,7 @@ bool
 SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetrics,
                                               const FrameMetrics& aCompositorMetrics)
 {
-  return !aContentMetrics.mDisplayPort.Contains(CSSRect(aCompositorMetrics.CalculateCompositedRectInCssPixels()) - aCompositorMetrics.mScrollOffset);
+  return !aContentMetrics.mDisplayPort.Contains(CSSRect(aCompositorMetrics.CalculateCompositedRectInCssPixels()) - aCompositorMetrics.GetScrollOffset());
 }
 
 ClientTiledLayerBuffer::ClientTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
