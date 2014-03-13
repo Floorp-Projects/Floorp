@@ -96,15 +96,19 @@ else
   endif
 endif
 
+# We touch the target file before invoking Proguard so that Proguard's
+# outputs are fresher than the target, preventing a subsequent
+# invocation from thinking Proguard's outputs are stale.  This is safe
+# because Make removes the target file if any recipe command fails.
 .proguard.deps: $(ALL_JARS)
 	$(REPORT_BUILD)
+	@$(TOUCH) $@
 	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
 		@$(topsrcdir)/mobile/android/config/proguard.cfg \
 		-optimizationpasses $(PROGUARD_PASSES) \
 		-injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) \
 		-outjars jars-proguarded \
 		-libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
-	@$(TOUCH) $@
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
@@ -177,32 +181,12 @@ include $(topsrcdir)/config/rules.mk
 not_android_res_files := \
   *.mkdir.done* \
   *.DS_Store* \
+  *\#* \
   $(NULL)
 
 # This uses the fact that Android resource directories list all
 # resource files one subdirectory below the parent resource directory.
 android_res_files := $(filter-out $(not_android_res_files),$(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(ANDROID_RES_DIRS))))))
-
-# For GeckoView, we want a zip of an Android res/ directory that
-# merges the contents of all the ANDROID_RES_DIRS.  The inner res/
-# directory must have the Android resource two-layer hierarchy.
-
-# The following helper zips files in a directory into a zip file while
-# maintaining the directory structure rooted below the directory.
-# (adding or creating said file as appropriate).  For example, if the
-# dir contains dir/subdir/file, calling with directory dir would
-# create a zip containing subdir/file.  Note: the trailing newline is
-# necessary.
-
-# $(1): zip file to add to (or create).
-# $(2): directory to zip contents of.
-define zip_directory_with_relative_paths
-cd $(2) && zip -q $(1) -r * -x $(not_android_res_files)
-
-endef
-
-geckoview_resources.zip: $(android_res_files) $(GLOBAL_DEPS)
-	$(foreach dir,$(ANDROID_RES_DIRS),$(call zip_directory_with_relative_paths,$(CURDIR)/$@,$(dir)))
 
 $(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATED_RESFILES))))
 
@@ -226,37 +210,73 @@ all_resources = \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
 
-# All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
-# produced by aapt; this saves aapt invocations.
+# For GeckoView, we want a zip of an Android res/ directory that
+# merges the contents of all the ANDROID_RES_DIRS.  The inner res/
+# directory must have the Android resource two-layer hierarchy.
 
-$(gecko_package_dir)/R.java: .aapt.deps
-gecko.ap_: .aapt.deps
-R.txt: .aapt.deps
+# The following helper zips files in a directory into a zip file while
+# maintaining the directory structure rooted below the directory.
+# (adding or creating said file as appropriate).  For example, if the
+# dir contains dir/subdir/file, calling with directory dir would
+# create a zip containing subdir/file.  Note: the trailing newline is
+# necessary.
+
+# $(1): zip file to add to (or create).
+# $(2): directory to zip contents of.
+define zip_directory_with_relative_paths
+cd $(2) && zip -q $(1) -r * -x $(not_android_res_files)
+
+endef
+
+geckoview_resources.zip: $(all_resources) $(GLOBAL_DEPS)
+	$(foreach dir,$(ANDROID_RES_DIRS),$(call zip_directory_with_relative_paths,$(CURDIR)/$@,$(dir)))
+
+# All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
+# produced by aapt; this saves aapt invocations.  The trailing
+# semi-colon defines an empty recipe; defining no recipe at all causes
+# Make to treat the target differently, in a way that defeats our
+# dependencies.
+
+$(gecko_package_dir)/R.java: .aapt.deps ;
+gecko.ap_: .aapt.deps ;
+R.txt: .aapt.deps ;
 
 # [Comment 2/3] This tom-foolery provides a target that forces a
 # rebuild of gecko.ap_.  This is used during packaging to ensure that
 # resources are fresh.  The alternative would be complicated; see
 # [Comment 1/3].
 
-gecko-nodeps/R.java: .aapt.nodeps
-gecko-nodeps.ap_: .aapt.nodeps
-gecko-nodeps/R.txt: .aapt.nodeps
+gecko-nodeps/R.java: .aapt.nodeps ;
+gecko-nodeps.ap_: .aapt.nodeps ;
+gecko-nodeps/R.txt: .aapt.nodeps ;
+
+# This ignores the default set of resources ignored by aapt, plus
+# files starting with '#'.  (Emacs produces temp files named #temp#.)
+# This doesn't actually set the environment variable; it's used as a
+# parameter in the aapt invocation below.
+
+ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~:\#*
 
 # 1: target file.
 # 2: dependencies.
 # 3: name of ap_ file to write.
 # 4: directory to write R.java into.
 # 5: directory to write R.txt into.
+# We touch the target file before invoking aapt so that aapt's outputs
+# are fresher than the target, preventing a subsequent invocation from
+# thinking aapt's outputs are stale.  This is safe because Make
+# removes the target file if any recipe command fails.
 define aapt_command
 $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
+	@$$(TOUCH) $$@
 	$$(AAPT) package -f -M AndroidManifest.xml -I $$(ANDROID_SDK)/android.jar \
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
 		--custom-package org.mozilla.gecko --non-constant-id \
 		-F $(3) \
 		-J $(4) \
-		--output-text-symbols $(5)
-	@$$(TOUCH) $$@
+		--output-text-symbols $(5) \
+		--ignore-assets "$$(ANDROID_AAPT_IGNORE)"
 endef
 
 # [Comment 3/3] The first of these rules is used during regular

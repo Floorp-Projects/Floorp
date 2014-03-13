@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="45dp"
-            android:contentDescription="@string/fxaccount_checkbox_contentDescription"
+            android:contentDescription="@string/fxaccount_empty_contentDescription"
             android:src="@drawable/fxaccount_checkbox" >
         </ImageView>
 
@@ -40,7 +40,7 @@
 
         <ImageView
             style="@style/FxAccountIcon"
-            android:contentDescription="@string/fxaccount_icon_contentDescription" />
+            android:contentDescription="@string/fxaccount_empty_contentDescription" />
     </LinearLayout>
 
 </ScrollView>

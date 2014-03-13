@@ -26,6 +26,7 @@ const { merge } = require('../../util/object');
 const { Disposable } = require('../../core/disposable');
 const { on, off, emit, setListeners } = require('../../event/core');
 const { EventTarget } = require('../../event/target');
+const { getNodeView } = require('../../view/core');
 
 const view = require('./view');
 const { buttonContract, stateContract } = require('./contract');
@@ -88,6 +89,10 @@ const ActionButton = Class({
 exports.ActionButton = ActionButton;
 
 identify.define(ActionButton, ({id}) => toWidgetId(id));
+
+getNodeView.define(ActionButton, button =>
+  view.nodeFor(toWidgetId(button.id))
+);
 
 let actionButtonStateEvents = events.filter(stateEvents,
   e => e.target instanceof ActionButton);

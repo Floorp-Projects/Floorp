@@ -2,35 +2,35 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
-MARIONETTE_HEAD_JS = 'head.js';
+MARIONETTE_HEAD_JS = 'mmdb_head.js';
+
+const DBNAME = "test_mmdb_new:" + newUUID();
+let dbVersion = 0;
+
+function check(aMmdb) {
+  is(aMmdb.dbName, DBNAME, "dbName");
+  if (!dbVersion) {
+    ok(aMmdb.dbVersion, "dbVersion");
+    dbVersion = aMmdb.dbVersion;
+  } else {
+    is(aMmdb.dbVersion, dbVersion, "dbVersion");
+  }
+}
 
 startTestBase(function testCaseMain() {
   log("Test init MobileMessageDB");
 
-  // TODO: bug 943233 - passing jsm exported objects to |Promise.resolve| gets
-  // empty object in return.
   let mmdb = newMobileMessageDB();
-  let dbName = "test_mmdb_new";
-  let dbVersion = 0;
-  let check = function() {
-    is(mmdb.dbName, dbName, "dbName");
-    if (!dbVersion) {
-      ok(mmdb.dbVersion, "dbVersion");
-      dbVersion = mmdb.dbVersion;
-    } else {
-      is(mmdb.dbVersion, dbVersion, "dbVersion");
-    }
-  };
+  return initMobileMessageDB(mmdb, DBNAME, dbVersion)
+    .then(() => check(mmdb))
+    .then(() => closeMobileMessageDB(mmdb))
+    .then(() => check(mmdb))
 
-  return initMobileMessageDB(mmdb, dbName, dbVersion)
-    .then(check)
-    .then(closeMobileMessageDB.bind(null, mmdb))
-    .then(check)
     .then(function() {
       log("Test re-init and close.");
-      return initMobileMessageDB(mmdb, dbName, dbVersion);
+      return initMobileMessageDB(mmdb, DBNAME, dbVersion);
     })
-    .then(check)
-    .then(closeMobileMessageDB.bind(null, mmdb))
-    .then(check);
+    .then(() => check(mmdb))
+    .then(() => closeMobileMessageDB(mmdb))
+    .then(() => check(mmdb));
 });

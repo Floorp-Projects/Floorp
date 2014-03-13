@@ -2,11 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
-MARIONETTE_HEAD_JS = 'head.js';
+MARIONETTE_HEAD_JS = 'mmdb_head.js';
 
-// TODO: bug 943233 - passing jsm exported objects to |Promise.resolve| gets
-// empty object in return.
-let mmdb;
+const DBNAME = "test_mmdb_foreachmatchedmmsdeliveryinfo:" + newUUID();
 
 const PHONE_0 = "+15555215500";
 const PHONE_1 = "+15555215501";
@@ -51,23 +49,13 @@ function doTest(aMmdb, aNeedle, aVerifyFunc, aCount) {
 function testNotFound(aMmdb) {
   log("Testing unavailable");
 
-  // TODO: bug 943233 - passing jsm exported objects to |Promise.resolve| gets
-  // empty object in return.
-  aMmdb = mmdb;
-
   doTest(aMmdb, PHONE_0, function(aElement) {
     ok(false, "Should never have a match");
   }, 0);
-
-  return aMmdb;
 }
 
 function testDirectMatch(aMmdb) {
   log("Testing direct matching");
-
-  // TODO: bug 943233 - passing jsm exported objects to |Promise.resolve| gets
-  // empty object in return.
-  aMmdb = mmdb;
 
   for (let needle of [PHONE_1, EMAIL_1]) {
     let count = deliveryInfo.reduce(function(aCount, aElement) {
@@ -77,8 +65,6 @@ function testDirectMatch(aMmdb) {
       is(aElement.receiver, needle, "element.receiver");
     }, count);
   }
-
-  return aMmdb;
 }
 
 function testPhoneMatch(aMmdb) {
@@ -87,9 +73,6 @@ function testPhoneMatch(aMmdb) {
   let verifyFunc = function(aValid, aElement) {
     ok(aValid.indexOf(aElement.receiver) >= 0, "element.receiver");
   };
-  // TODO: bug 943233 - passing jsm exported objects to |Promise.resolve| gets
-  // empty object in return.
-  aMmdb = mmdb;
 
   let matchingGroups = [
     [PHONE_2, PHONE_2_NET],
@@ -100,15 +83,13 @@ function testPhoneMatch(aMmdb) {
       doTest(aMmdb, item, verifyFunc.bind(null, group), group.length);
     }
   }
-
-  return aMmdb;
 }
 
 startTestBase(function testCaseMain() {
-  mmdb = newMobileMessageDB();
-  return initMobileMessageDB(mmdb, "test_mmdb_foreachmatchedmmsdeliveryinfo", 0)
-    .then(testNotFound)
-    .then(testDirectMatch)
-    .then(testPhoneMatch)
-    .then(closeMobileMessageDB.bind(null, mmdb));
+  let mmdb = newMobileMessageDB();
+  return initMobileMessageDB(mmdb, DBNAME, 0)
+    .then(() => testNotFound(mmdb))
+    .then(() => testDirectMatch(mmdb))
+    .then(() => testPhoneMatch(mmdb))
+    .then(() => closeMobileMessageDB(mmdb));
 });

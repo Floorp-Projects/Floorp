@@ -24,7 +24,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="40dp"
             android:background="@android:color/transparent"
-            android:contentDescription="@string/fxaccount_mail_contentDescription"
+            android:contentDescription="@string/fxaccount_empty_contentDescription"
             android:src="@drawable/fxaccount_mail" >
         </ImageView>
 
@@ -49,7 +49,7 @@
 
         <ImageView
             style="@style/FxAccountIcon"
-            android:contentDescription="@string/fxaccount_icon_contentDescription" />
+            android:contentDescription="@string/fxaccount_empty_contentDescription" />
     </LinearLayout>
 
 </ScrollView>

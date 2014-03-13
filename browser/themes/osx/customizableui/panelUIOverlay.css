@@ -96,22 +96,22 @@
   display: none;
 }
 
-#BMB_bookmarksPopup > menu,
-#BMB_bookmarksPopup > menuitem:not(.panel-subview-footer) {
+menu.subviewbutton,
+menuitem.subviewbutton:not(.panel-subview-footer) {
   padding-top: 5px;
   padding-bottom: 5px;
 }
 
 /* Override OSX-specific toolkit styles for the bookmarks panel */
-#BMB_bookmarksPopup > menu > .menu-right {
+menu.subviewbutton > .menu-right {
   -moz-margin-end: 0;
 }
-#BMB_bookmarksPopup > menu > .menu-right > image {
+menu.subviewbutton > .menu-right > image {
   -moz-image-region: rect(0, 9px, 10px, 0);
 }
 
 @media (min-resolution: 2dppx) {
-  #BMB_bookmarksPopup > menu > .menu-right > image {
+  menu.subviewbutton > .menu-right > image {
     -moz-image-region: rect(0, 18px, 20px, 0);
   }
 }
@@ -123,4 +123,9 @@
 .PanelUI-subView menuseparator,
 .cui-widget-panelview menuseparator {
   padding: 0 !important;
+}
+
+toolbarpaletteitem:-moz-any([place="palette"], [place="panel"]) > toolbaritem[sdkstylewidget="true"] > .toolbarbutton-1 > .toolbarbutton-icon {
+  width: 32px;
+  height: 32px;
 }
