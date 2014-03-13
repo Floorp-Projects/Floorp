@@ -430,7 +430,6 @@ WEBIDL_FILES = [
     'VideoStreamTrack.webidl',
     'VTTCue.webidl',
     'VTTRegion.webidl',
-    'VTTRegionList.webidl',
     'WaveShaperNode.webidl',
     'WebComponents.webidl',
     'WebSocket.webidl',

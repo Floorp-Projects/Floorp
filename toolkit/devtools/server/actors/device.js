@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cc, Ci, Cu, CC} = require("chrome");
+const Services = require("Services");
 const protocol = require("devtools/server/protocol");
 const {method, RetVal} = protocol;
 const promise = require("sdk/core/promise");
 const {LongStringActor} = require("devtools/server/actors/string");
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PermissionsTable.jsm")
 Cu.import('resource://gre/modules/devtools/dbg-server.jsm');
 

@@ -138,11 +138,11 @@ function init() {
 
   requestAllNetworkingData();
 
-   let autoRefresh = document.getElementById("autorefcheck");
-   if (autoRefresh.checked)
-     setAutoRefreshInterval(autoRefresh);
+  let autoRefresh = document.getElementById("autorefcheck");
+  if (autoRefresh.checked)
+    setAutoRefreshInterval(autoRefresh);
 
-   autoRefresh.addEventListener("click", function() {
+  autoRefresh.addEventListener("click", function() {
     let refrButton = document.getElementById("refreshButton");
     if (this.checked) {
       setAutoRefreshInterval(this);

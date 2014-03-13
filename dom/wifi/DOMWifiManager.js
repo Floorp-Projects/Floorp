@@ -135,84 +135,75 @@ DOMWifiManager.prototype = {
       return;
 
     let request;
+    if (msg.rid) {
+      request = this.takeRequest(msg.rid);
+      if (!request) {
+        return;
+      }
+    }
+
     switch (aMessage.name) {
       case "WifiManager:getNetworks:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:getNetworks:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, "Unable to scan for networks");
         break;
 
       case "WifiManager:getKnownNetworks:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:getKnownNetworks:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, "Unable to get known networks");
         break;
 
       case "WifiManager:associate:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, true);
         break;
 
       case "WifiManager:associate:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, "Unable to add the network");
         break;
 
       case "WifiManager:forget:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, true);
         break;
 
       case "WifiManager:forget:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
       case "WifiManager:wps:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:wps:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
       case "WifiManager:setPowerSavingMode:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:setPowerSavingMode:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
       case "WifiManager:setHttpProxy:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:setHttpProxy:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, msg.data);
         break;
 
       case "WifiManager:setStaticIpMode:Return:OK":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireSuccess(request, exposeReadOnly(msg.data));
         break;
 
       case "WifiManager:setStaticIpMode:Return:NO":
-        request = this.takeRequest(msg.rid);
         Services.DOMRequest.fireError(request, msg.data);
         break;
 

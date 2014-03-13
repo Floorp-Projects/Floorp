@@ -9,12 +9,11 @@
  */
 
 const {Ci, Cu} = require("chrome");
+const Services = require("Services");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/server/protocol");
 const {method, Arg, RetVal} = protocol;
 const events = require("sdk/event/core");
-
-Cu.import("resource://gre/modules/Services.jsm");
 
 exports.register = function(handle) {
   handle.addGlobalActor(EventLoopLagActor, "eventLoopLagActor");
