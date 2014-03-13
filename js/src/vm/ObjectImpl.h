@@ -171,10 +171,11 @@ class ObjectElements
         ASMJS_ARRAY_BUFFER          = 0x2,
         NEUTERED_BUFFER             = 0x4,
         SHARED_ARRAY_BUFFER         = 0x8,
+        MAPPED_ARRAY_BUFFER         = 0x10,
 
         // Present only if these elements correspond to an array with
         // non-writable length; never present for non-arrays.
-        NONWRITABLE_ARRAY_LENGTH    = 0x10
+        NONWRITABLE_ARRAY_LENGTH    = 0x20,
     };
 
   private:
@@ -248,6 +249,12 @@ class ObjectElements
     }
     void setIsSharedArrayBuffer() {
         flags |= SHARED_ARRAY_BUFFER;
+    }
+    bool isMappedArrayBuffer() const {
+        return flags & MAPPED_ARRAY_BUFFER;
+    }
+    void setIsMappedArrayBuffer() {
+        flags |= MAPPED_ARRAY_BUFFER;
     }
     bool hasNonwritableArrayLength() const {
         return flags & NONWRITABLE_ARRAY_LENGTH;
