@@ -23,6 +23,8 @@ const events = require("../system/events");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 function calculateRegion({ position, width, height, defaultWidth, defaultHeight }, rect) {
+  position = position || {};
+
   let x, y;
 
   let hasTop = !isNil(position.top);
@@ -127,13 +129,31 @@ function display(panel, options, anchor) {
     ({x, y, width, height}) = calculateRegion(options, viewportRect);
   }
   else {
+    // The XUL Panel has an arrow, so the margin needs to be reset
+    // to the default value.
+    panel.style.margin = "";
+    let { CustomizableUI, window } = anchor.ownerDocument.defaultView;
+
+    // In Australis, widgets may be positioned in an overflow panel or the
+    // menu panel.
+    // In such cases clicking this widget will hide the overflow/menu panel,
+    // and the widget's panel will show instead.
+    if (CustomizableUI) {
+      let node = anchor;
+      ({anchor}) = CustomizableUI.getWidget(anchor.id).forWindow(window);
+
+      // if `node` is not the `anchor` itself, it means the widget is
+      // positioned in a panel, therefore we have to hide it before show
+      // the widget's panel in the same anchor
+      if (node !== anchor)
+        CustomizableUI.hidePanelForNode(anchor);
+    }
+
     width = width || defaultWidth;
     height = height || defaultHeight;
 
     // Open the popup by the anchor.
     let rect = anchor.getBoundingClientRect();
-
-    let window = anchor.ownerDocument.defaultView;
 
     let zoom = getScreenPixelsPerCSSPixel(window);
     let screenX = rect.left + window.mozInnerScreenX * zoom;

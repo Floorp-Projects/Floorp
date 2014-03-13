@@ -36,7 +36,7 @@
 
         <ImageView
             style="@style/FxAccountIcon"
-            android:contentDescription="@string/fxaccount_icon_contentDescription" />
+            android:contentDescription="@string/fxaccount_empty_contentDescription" />
     </LinearLayout>
 
 </ScrollView>

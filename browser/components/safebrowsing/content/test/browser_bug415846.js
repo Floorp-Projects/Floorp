@@ -38,7 +38,7 @@ function testNormal_PopupListener() {
   // Now launch the phishing test.  Can't use onload here because error pages don't
   // fire normal load events.
   window.addEventListener("DOMContentLoaded", testPhishing, true);
-  content.location = "http://www.mozilla.org/firefox/its-a-trap.html";
+  content.location = "http://www.itisatrap.org/firefox/its-a-trap.html";
 }
 
 function testPhishing() {
