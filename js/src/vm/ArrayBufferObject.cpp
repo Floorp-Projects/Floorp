@@ -30,6 +30,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "gc/Memory.h"
 #include "jit/AsmJS.h"
 #include "jit/AsmJSModule.h"
 #include "vm/GlobalObject.h"
@@ -478,7 +479,10 @@ ArrayBufferObject::neuter(JSContext *cx)
     JS_ASSERT(!isSharedArrayBuffer());
 
     JS_ASSERT(cx);
-    if (hasDynamicElements() && !isAsmJSArrayBuffer()) {
+    if (isMappedArrayBuffer()) {
+        releaseMappedArrayBuffer(nullptr, this);
+        setFixedElements();
+    } else if (hasDynamicElements() && !isAsmJSArrayBuffer()) {
         ObjectElements *oldHeader = getElementsHeader();
         changeContents(cx, ObjectElements::fromElements(fixedElements()));
 
@@ -628,6 +632,33 @@ ArrayBufferObject::neuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buff
 #else
     return true;
 #endif
+}
+
+void *
+ArrayBufferObject::createMappedArrayBuffer(int fd, int *new_fd, size_t offset, size_t length)
+{
+    void *ptr = AllocateMappedObject(fd, new_fd, offset, length, 8,
+                                     sizeof(MappingInfoHeader) + sizeof(ObjectElements));
+    if (!ptr)
+        return nullptr;
+
+    ptr = reinterpret_cast<void *>(uintptr_t(ptr) + sizeof(MappingInfoHeader));
+    ObjectElements *header = reinterpret_cast<ObjectElements *>(ptr);
+    initMappedElementsHeader(header, *new_fd, offset, length);
+
+    return ptr;
+}
+
+void
+ArrayBufferObject::releaseMappedArrayBuffer(FreeOp *fop, JSObject *obj)
+{
+    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
+    if(!buffer.isMappedArrayBuffer() || buffer.isNeutered())
+        return;
+
+    ObjectElements *header = buffer.getElementsHeader();
+    if (header)
+        DeallocateMappedObject(buffer.getMappingFD(), header, header->initializedLength);
 }
 
 void
@@ -1357,6 +1388,21 @@ JS_StealArrayBufferContents(JSContext *cx, HandleObject objArg, void **contents,
         return false;
 
     return true;
+}
+
+JS_PUBLIC_API(bool)
+JS_CreateMappedArrayBufferContents(int fd, int *new_fd, size_t offset,
+                                   size_t length, void **contents)
+{
+    *contents = ArrayBufferObject::createMappedArrayBuffer(fd, new_fd, offset, length);
+
+    return *contents;
+}
+
+JS_PUBLIC_API(void)
+JS_ReleaseMappedArrayBufferContents(int fd, void *contents, size_t length)
+{
+    DeallocateMappedObject(fd, contents, length);
 }
 
 JS_FRIEND_API(void *)
