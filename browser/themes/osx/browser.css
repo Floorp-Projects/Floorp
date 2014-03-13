@@ -1056,11 +1056,11 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   #bookmarks-menu-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
-    -moz-image-region: rect(0px, 320px, 64px, 256px);
+    -moz-image-region: rect(0px, 384px, 64px, 320px);
   }
 
   #bookmarks-menu-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-    -moz-image-region: rect(64px, 320px, 128px, 256px);
+    -moz-image-region: rect(64px, 384px, 128px, 320px);
   }
 
   #history-panelmenu[cui-areatype="menu-panel"],
@@ -1936,7 +1936,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/star-icons.png");
-  -moz-image-region: rect(0, 32px, 16px, 16px);
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .ac-result-type-keyword,
@@ -2248,6 +2248,13 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 
 #editBookmarkPanelStarIcon[unstarred] {
   list-style-image: url("chrome://browser/skin/places/unstarred48.png");
+}
+
+@media (min-resolution: 2dppx) {
+  #editBookmarkPanelStarIcon {
+    list-style-image: url("chrome://browser/skin/places/starred48@2x.png");
+    -moz-image-region: rect(0px 96px 96px 0px);
+  }
 }
 
 #editBookmarkPanelTitle {
