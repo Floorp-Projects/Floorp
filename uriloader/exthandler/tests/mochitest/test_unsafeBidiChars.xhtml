@@ -48,22 +48,16 @@ function make_test(param, expected) {
 SimpleTest.waitForExplicitFinish();
 
 function load() {
-  info("Started the load handler");
   var iframe = document.getElementById("test");
   var gCallback = null;
   function run_test(test, cb) {
     var url = "unsafeBidiFileName.sjs?name=" + encodeURIComponent(test.param);
-    info("Loading test " + gCounter + " (" + test.param + ") from " + url);
-    iframe.onload = function() {
-      ok(false, "Received an unexpected load event from the iframe");
-    };
     gCallback = cb;
     iframe.src = url;
   }
 
   var gCounter = -1;
   function run_next_test() {
-    info("run_next_test called, gCounter = " + gCounter);
     if (++gCounter == gTests.length)
       finish_test();
     else
@@ -84,7 +78,6 @@ function load() {
     REASON_SERVERREQUEST: 1,
     REASON_TYPESNIFFED: 2,
     show: function(aLauncher, aWindowContext, aReason) {
-      info("show() called");
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var test = gTests[gCounter];
       is(aLauncher.suggestedFileName, test.expected,
@@ -92,11 +85,9 @@ function load() {
       gCallback();
     },
     promptForSaveToFile: function(aLauncher, aWindowContext, aDefaultFileName, aSuggestedFileExtension, aForcePrompt) {
-      info("promptForSaveToFile called");
       return null;
     },
     QueryInterface: function(aIID) {
-      info("QueryInterface called");
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       if (aIID.equals(SpecialPowers.Ci.nsISupports) ||
           aIID.equals(SpecialPowers.Ci.nsIHelperAppLauncherDialog))
@@ -107,7 +98,6 @@ function load() {
 
   var factory = {
     createInstance: function(aOuter, aIID) {
-      info("createInstance called");
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       if (aOuter != null)
         throw SpecialPowers.Cr.NS_ERROR_NO_AGGREGATION;
@@ -115,7 +105,6 @@ function load() {
     }
   };
 
-  info("RegisterFactory...\n");
   SpecialPowers.wrap(SpecialPowers.Components).manager
             .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
             .registerFactory(FAKE_CID, "",
@@ -123,7 +112,6 @@ function load() {
                              factory);
 
   function finish_test() {
-    info("UnregisterFactory...\n");
     SpecialPowers.wrap(SpecialPowers.Components).manager
               .QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar)
               .registerFactory(HELPERAPP_DIALOG_CID, "",
