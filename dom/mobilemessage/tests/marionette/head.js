@@ -345,65 +345,6 @@ function sendRawSmsToEmulator(aPdu) {
 }
 
 /**
- * Name space for MobileMessageDB.jsm.  Only initialized after first call to
- * newMobileMessageDB.
- */
-let MMDB;
-
-// Create a new MobileMessageDB instance.
-function newMobileMessageDB() {
-  if (!MMDB) {
-    MMDB = Cu.import("resource://gre/modules/MobileMessageDB.jsm", {});
-    is(typeof MMDB.MobileMessageDB, "function", "MMDB.MobileMessageDB");
-  }
-
-  let mmdb = new MMDB.MobileMessageDB();
-  ok(mmdb, "MobileMessageDB instance");
-  return mmdb;
-}
-
-/**
- * Initialize a MobileMessageDB.  Resolve if initialized with success, reject
- * otherwise.
- *
- * Fulfill params: a MobileMessageDB instance.
- * Reject params: a MobileMessageDB instance.
- *
- * @param aMmdb
- *        A MobileMessageDB instance.
- * @param aDbName
- *        A string name for that database.
- * @param aDbVersion
- *        The version that MobileMessageDB should upgrade to. 0 for the lastest
- *        version.
- *
- * @return A deferred promise.
- */
-function initMobileMessageDB(aMmdb, aDbName, aDbVersion) {
-  let deferred = Promise.defer();
-
-  aMmdb.init(aDbName, aDbVersion, function(aError) {
-    if (aError) {
-      deferred.reject(aMmdb);
-    } else {
-      deferred.resolve(aMmdb);
-    }
-  });
-
-  return deferred.promise;
-}
-
-/**
- * Close a MobileMessageDB.
- *
- * @return The passed MobileMessageDB instance.
- */
-function closeMobileMessageDB(aMmdb) {
-  aMmdb.close();
-  return aMmdb;
-}
-
-/**
  * Create a new array of id attribute of input messages.
  *
  * @param aMessages an array of {Sms,Mms}Message instances.
@@ -416,24 +357,6 @@ function messagesToIds(aMessages) {
     ids.push(message.id);
   }
   return ids;
-}
-
-// A reference to a nsIUUIDGenerator service.
-let uuidGenerator;
-
-/**
- * Generate a new UUID.
- *
- * @return A UUID string.
- */
-function newUUID() {
-  if (!uuidGenerator) {
-    uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
-                    .getService(Ci.nsIUUIDGenerator);
-    ok(uuidGenerator, "uuidGenerator");
-  }
-
-  return uuidGenerator.generateUUID().toString();
 }
 
 /**

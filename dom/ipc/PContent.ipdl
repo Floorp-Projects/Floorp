@@ -267,11 +267,11 @@ both:
 
 child:
     /**
-     * Update OS process privileges to |privs|.  Can usually only be
-     * performed zero or one times.  The child will abnormally exit if
-     * the privilege update fails.
+     * Enable system-level sandboxing features, if available.  Can
+     * usually only be performed zero or one times.  The child may
+     * abnormally exit if this fails; the details are OS-specific.
      */
-    async SetProcessPrivileges(ChildPrivileges privs);
+    async SetProcessSandbox();
 
     PMemoryReportRequest(uint32_t generation, bool minimizeMemoryUsage, nsString DMDDumpIdent);
 
