@@ -209,6 +209,9 @@ this.BrowserIDManager.prototype = {
           let data = this.offerSyncOptions();
           if (data.accepted) {
             Services.prefs.clearUserPref(PREF_SYNC_SHOW_CUSTOMIZATION);
+
+            // Mark any non-selected engines as declined.
+            Weave.Service.engineManager.declineDisabled();
           } else {
             // Log out if the user canceled the dialog.
             return this._fxaService.signOut();
