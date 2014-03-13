@@ -77,6 +77,17 @@ protected:
   RefPtr<CompositorOGL> mCompositor;
 };
 
+inline void ApplyFilterToBoundTexture(gl::GLContext* aGL,
+                                      gfx::Filter aFilter,
+                                      GLuint aTarget = LOCAL_GL_TEXTURE_2D)
+{
+  GLenum filter =
+    (aFilter == gfx::Filter::POINT ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR);
+
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, filter);
+  aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, filter);
+}
+
 /*
  * TextureHost implementations for the OpenGL backend.
  *
@@ -99,9 +110,13 @@ protected:
 class TextureSourceOGL
 {
 public:
+  TextureSourceOGL()
+    : mHasCachedFilter(false)
+  {}
+
   virtual bool IsValid() const = 0;
 
-  virtual void BindTexture(GLenum aTextureUnit) = 0;
+  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) = 0;
 
   virtual gfx::IntSize GetSize() const = 0;
 
@@ -114,6 +129,23 @@ public:
   virtual gfx::Matrix4x4 GetTextureTransform() { return gfx::Matrix4x4(); }
 
   virtual TextureImageDeprecatedTextureHostOGL* AsTextureImageDeprecatedTextureHost() { return nullptr; }
+
+  void SetFilter(gl::GLContext* aGL, gfx::Filter aFilter)
+  {
+    if (mHasCachedFilter &&
+        mCachedFilter == aFilter) {
+      return;
+    }
+    mHasCachedFilter = true;
+    mCachedFilter = aFilter;
+    ApplyFilterToBoundTexture(aGL, aFilter, GetTextureTarget());
+  }
+
+  void ClearCachedFilter() { mHasCachedFilter = false; }
+
+private:
+  gfx::Filter mCachedFilter;
+  bool mHasCachedFilter;
 };
 
 /**
@@ -176,7 +208,7 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
 
-  virtual void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
+  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE;
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
@@ -249,7 +281,7 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() { return this; }
 
-  virtual void BindTexture(GLenum activetex) MOZ_OVERRIDE;
+  virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) MOZ_OVERRIDE;
 
   virtual bool IsValid() const MOZ_OVERRIDE;
 
@@ -362,7 +394,7 @@ public:
 
   virtual TextureSourceOGL* AsSourceOGL() { return this; }
 
-  virtual void BindTexture(GLenum activetex) MOZ_OVERRIDE;
+  virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) MOZ_OVERRIDE;
 
   virtual bool IsValid() const MOZ_OVERRIDE { return !!gl(); }
 
@@ -495,7 +527,7 @@ public:
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 
   // textureSource
-  void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE
+  void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE
   {
     mTexture->BindTexture(aTextureUnit);
   }
@@ -585,7 +617,7 @@ public:
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
   virtual bool IsValid() const MOZ_OVERRIDE { return true; }
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
-  virtual void BindTexture(GLenum aTextureUnit);
+  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter);
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
   {
     return mSize;
@@ -667,7 +699,7 @@ public:
 
   virtual const char* Name() { return "GrallocDeprecatedTextureHostOGL"; }
 
-  void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
+  void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE;
 
   virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE
   {

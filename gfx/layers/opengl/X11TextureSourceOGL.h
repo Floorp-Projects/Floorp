@@ -26,7 +26,7 @@ public:
   virtual X11TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
 
   virtual bool IsValid() const MOZ_OVERRIDE { return !!gl(); } ;
-  virtual void BindTexture(GLenum aTextureUnit) MOZ_OVERRIDE;
+  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE;
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
   virtual GLenum GetTextureTarget() const MOZ_OVERRIDE {
     return LOCAL_GL_TEXTURE_2D;

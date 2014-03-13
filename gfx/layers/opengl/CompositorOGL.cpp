@@ -70,7 +70,7 @@ BindMaskForProgram(ShaderProgramOGL* aProgram, TextureSourceOGL* aSourceMask,
                    GLenum aTexUnit, const gfx::Matrix4x4& aTransform)
 {
   MOZ_ASSERT(LOCAL_GL_TEXTURE0 <= aTexUnit && aTexUnit <= LOCAL_GL_TEXTURE31);
-  aSourceMask->BindTexture(aTexUnit);
+  aSourceMask->BindTexture(aTexUnit, gfx::Filter::LINEAR);
   aProgram->SetMaskTextureUnit(aTexUnit - LOCAL_GL_TEXTURE0);
   aProgram->SetMaskLayerTransform(aTransform);
 }
@@ -880,20 +880,6 @@ CompositorOGL::DrawLines(const std::vector<gfx::Point>& aLines, const gfx::Rect&
   }
 }
 
-/**
- * Applies aFilter to the texture currently bound to aTarget.
- */
-void ApplyFilterToBoundTexture(GLContext* aGL,
-                               GraphicsFilter aFilter,
-                               GLuint aTarget = LOCAL_GL_TEXTURE_2D)
-{
-  GLenum filter =
-    (aFilter == GraphicsFilter::FILTER_NEAREST ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR);
-
-    aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, filter);
-    aGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, filter);
-}
-
 void
 CompositorOGL::DrawQuadInternal(const Rect& aRect,
                                 const Rect& aClipRect,
@@ -1012,26 +998,23 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
                                        LOCAL_GL_ONE, LOCAL_GL_ONE);
       }
 
-      source->AsSourceOGL()->BindTexture(LOCAL_GL_TEXTURE0);
-
-      GraphicsFilter filter = ThebesFilter(texturedEffect->mFilter);
+      gfx::Filter filter = texturedEffect->mFilter;
       gfx3DMatrix textureTransform;
       gfx::To3DMatrix(source->AsSourceOGL()->GetTextureTransform(), textureTransform);
 
 #ifdef MOZ_WIDGET_ANDROID
       gfxMatrix textureTransform2D;
-      if (filter != GraphicsFilter::FILTER_NEAREST &&
+      if (filter != gfx::Filter::POINT &&
           aTransform.Is2DIntegerTranslation() &&
           textureTransform.Is2D(&textureTransform2D) &&
           textureTransform2D.HasOnlyIntegerTranslation()) {
         // On Android we encounter small resampling errors in what should be
         // pixel-aligned compositing operations. This works around them. This
         // code should not be needed!
-        filter = GraphicsFilter::FILTER_NEAREST;
+        filter = gfx::Filter::POINT;
       }
 #endif
-      ApplyFilterToBoundTexture(mGLContext, filter,
-                                source->AsSourceOGL()->GetTextureTarget());
+      source->AsSourceOGL()->BindTexture(LOCAL_GL_TEXTURE0, filter);
 
       program->SetTextureUnit(0);
 
@@ -1062,14 +1045,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         return;
       }
 
-      GraphicsFilter filter = ThebesFilter(effectYCbCr->mFilter);
-
-      sourceY->BindTexture(LOCAL_GL_TEXTURE0);
-      ApplyFilterToBoundTexture(mGLContext, filter);
-      sourceCb->BindTexture(LOCAL_GL_TEXTURE1);
-      ApplyFilterToBoundTexture(mGLContext, filter);
-      sourceCr->BindTexture(LOCAL_GL_TEXTURE2);
-      ApplyFilterToBoundTexture(mGLContext, filter);
+      sourceY->BindTexture(LOCAL_GL_TEXTURE0, effectYCbCr->mFilter);
+      sourceCb->BindTexture(LOCAL_GL_TEXTURE1, effectYCbCr->mFilter);
+      sourceCr->BindTexture(LOCAL_GL_TEXTURE2, effectYCbCr->mFilter);
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
 
@@ -1094,7 +1072,7 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       program->SetTextureUnit(0);
 
       if (maskType != MaskNone) {
-        sourceMask->BindTexture(LOCAL_GL_TEXTURE1);
+        sourceMask->BindTexture(LOCAL_GL_TEXTURE1, gfx::Filter::LINEAR);
         program->SetMaskTextureUnit(1);
         program->SetMaskLayerTransform(maskQuadTransform);
       }
@@ -1123,8 +1101,8 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         return;
       }
 
-      sourceOnBlack->BindTexture(LOCAL_GL_TEXTURE0);
-      sourceOnWhite->BindTexture(LOCAL_GL_TEXTURE1);
+      sourceOnBlack->BindTexture(LOCAL_GL_TEXTURE0, effectComponentAlpha->mFilter);
+      sourceOnWhite->BindTexture(LOCAL_GL_TEXTURE1, effectComponentAlpha->mFilter);
 
       program->SetBlackTextureUnit(0);
       program->SetWhiteTextureUnit(1);
