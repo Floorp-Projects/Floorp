@@ -84,6 +84,7 @@ function promisePopupNotificationShown(aName, aAction) {
     PopupNotifications.panel.removeEventListener("popupshown", popupNotifShown);
 
     ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
+    ok(PopupNotifications.isPanelOpen, "notification panel open");
     ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
 
     deferred.resolve();
@@ -751,6 +752,9 @@ function test() {
       Services.obs.addObserver(observer, topic, false);
     });
     Services.prefs.setBoolPref(PREF_PERMISSION_FAKE, true);
+
+    is(PopupNotifications._currentNotifications.length, 0,
+       "should start the test without any prior popup notification");
 
     Task.spawn(function () {
       for (let test of gTests) {
