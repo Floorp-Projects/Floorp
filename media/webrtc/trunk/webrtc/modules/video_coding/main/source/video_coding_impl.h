@@ -92,6 +92,8 @@ class VideoSender {
   int SetSenderFEC(bool enable);
   int SetSenderKeyFramePeriod(int periodMs);
 
+  void SetCPULoadState(CPULoadState state);
+
   int StartDebugRecording(const char* file_name_utf8);
   int StopDebugRecording();
 
