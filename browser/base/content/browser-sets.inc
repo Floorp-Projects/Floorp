@@ -169,7 +169,7 @@
     <broadcaster id="tabviewGroupsNumber" groups="1"/>
 #ifdef MOZ_SERVICES_SYNC
     <broadcaster id="sync-setup-state"/>
-    <broadcaster id="sync-syncnow-state"/>
+    <broadcaster id="sync-syncnow-state" hidden="true"/>
 #endif
     <broadcaster id="workOfflineMenuitemState"/>
     <broadcaster id="socialSidebarBroadcaster" hidden="true"/>
