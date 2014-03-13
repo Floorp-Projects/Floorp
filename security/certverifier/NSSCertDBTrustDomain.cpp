@@ -11,6 +11,7 @@
 #include "ExtendedValidation.h"
 #include "certdb.h"
 #include "insanity/pkix.h"
+#include "mozilla/Telemetry.h"
 #include "nss.h"
 #include "ocsp.h"
 #include "pk11pub.h"
@@ -167,16 +168,27 @@ NSSCertDBTrustDomain::CheckRevocation(
                                                           time,
                                                           stapledOCSPResponse);
     if (rv == SECSuccess) {
+      // stapled OCSP response present and good
+      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 1);
       PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("NSSCertDBTrustDomain: stapled OCSP response: good"));
       return rv;
     }
     if (PR_GetError() != SEC_ERROR_OCSP_OLD_RESPONSE) {
+      // stapled OCSP response present but invalid for some reason
+      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 4);
       PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
              ("NSSCertDBTrustDomain: stapled OCSP response: failure"));
       return rv;
+    } else {
+      // stapled OCSP response present but expired
+      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 3);
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: expired stapled OCSP response"));
     }
   } else {
+    // no stapled OCSP response
+    Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 2);
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("NSSCertDBTrustDomain: no stapled OCSP response"));
   }

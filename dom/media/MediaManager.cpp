@@ -1127,7 +1127,6 @@ MediaManager::MediaManager()
   mPrefs.mHeight = MediaEngine::DEFAULT_VIDEO_HEIGHT;
   mPrefs.mFPS    = MediaEngine::DEFAULT_VIDEO_FPS;
   mPrefs.mMinFPS = MediaEngine::DEFAULT_VIDEO_MIN_FPS;
-  mPrefs.mLoadAdapt = MediaEngine::DEFAULT_LOAD_ADAPT;
 
   nsresult rv;
   nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
@@ -1172,7 +1171,6 @@ MediaManager::Get() {
       prefs->AddObserver("media.navigator.video.default_height", sSingleton, false);
       prefs->AddObserver("media.navigator.video.default_fps", sSingleton, false);
       prefs->AddObserver("media.navigator.video.default_minfps", sSingleton, false);
-      prefs->AddObserver("media.navigator.load_adapt", sSingleton, false);
     }
   }
   return sSingleton;
@@ -1689,7 +1687,6 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.navigator.video.default_height", aData, &mPrefs.mHeight);
   GetPref(aBranch, "media.navigator.video.default_fps", aData, &mPrefs.mFPS);
   GetPref(aBranch, "media.navigator.video.default_minfps", aData, &mPrefs.mMinFPS);
-  GetPrefBool(aBranch, "media.navigator.load_adapt", aData, &mPrefs.mLoadAdapt);
 }
 
 nsresult
@@ -1718,7 +1715,6 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       prefs->RemoveObserver("media.navigator.video.default_height", this);
       prefs->RemoveObserver("media.navigator.video.default_fps", this);
       prefs->RemoveObserver("media.navigator.video.default_minfps", this);
-      prefs->RemoveObserver("media.navigator.load_adapt", this);
     }
 
     // Close off any remaining active windows.

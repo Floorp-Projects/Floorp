@@ -601,6 +601,25 @@ struct OverUseDetectorOptions {
   double initial_threshold;
 };
 
+enum CPULoadState {
+  kLoadRelaxed,
+  kLoadNormal,
+  kLoadStressed
+};
+
+class CPULoadStateObserver {
+public:
+  virtual void onLoadStateChanged(CPULoadState aNewState) = 0;
+  virtual ~CPULoadStateObserver() {};
+};
+
+class CPULoadStateCallbackInvoker {
+public:
+    virtual void AddObserver(CPULoadStateObserver* aObserver) = 0;
+    virtual void RemoveObserver(CPULoadStateObserver* aObserver) = 0;
+    virtual ~CPULoadStateCallbackInvoker() {};
+};
+
 }  // namespace webrtc
 
 #endif  // WEBRTC_COMMON_TYPES_H_

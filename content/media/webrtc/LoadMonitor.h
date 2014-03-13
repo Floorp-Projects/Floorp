@@ -15,8 +15,15 @@
 #include "nsIThread.h"
 #include "nsIObserver.h"
 
+namespace mozilla {
 class LoadInfoUpdateRunner;
 class LoadInfoCollectRunner;
+
+class LoadNotificationCallback
+{
+public:
+    virtual void LoadChanged(float aSystemLoad, float aProcessLoad) = 0;
+};
 
 class LoadMonitor MOZ_FINAL : public nsIObserver
 {
@@ -24,10 +31,11 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    LoadMonitor();
+    LoadMonitor(int aLoadUpdateInterval);
     ~LoadMonitor();
 
     nsresult Init(nsRefPtr<LoadMonitor> &self);
+    void SetLoadChangeCallback(LoadNotificationCallback* aCallback);
     void Shutdown();
     float GetSystemLoad();
     float GetProcessLoad();
@@ -38,13 +46,19 @@ private:
 
     void SetProcessLoad(float load);
     void SetSystemLoad(float load);
+    void FireCallbacks();
 
+    int                  mLoadUpdateInterval;
     mozilla::Mutex       mLock;
     mozilla::CondVar     mCondVar;
     bool                 mShutdownPending;
     nsCOMPtr<nsIThread>  mLoadInfoThread;
+    uint64_t             mTicksPerInterval;
     float                mSystemLoad;
     float                mProcessLoad;
+    LoadNotificationCallback* mLoadNotificationCallback;
 };
+
+} //namespace
 
 #endif /* _LOADMONITOR_H_ */

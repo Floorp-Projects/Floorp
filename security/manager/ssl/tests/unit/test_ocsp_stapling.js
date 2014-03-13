@@ -126,11 +126,11 @@ function check_ocsp_stapling_telemetry() {
                     .getService(Ci.nsITelemetry)
                     .getHistogramById("SSL_OCSP_STAPLING")
                     .snapshot();
-  do_check_eq(histogram.counts[0], 0); // histogram bucket 0 is unused
-  do_check_eq(histogram.counts[1], 1); // 1 connection with a good response
-  do_check_eq(histogram.counts[2], 14); // 14 connections with no stapled resp.
-  do_check_eq(histogram.counts[3], 0); // 0 connections with an expired response
-  do_check_eq(histogram.counts[4], 11); // 11 connections with bad responses
+  do_check_eq(histogram.counts[0], 2 * 0); // histogram bucket 0 is unused
+  do_check_eq(histogram.counts[1], 2 * 1); // 1 connection with a good response
+  do_check_eq(histogram.counts[2], 2 * 14); // 14 connections with no stapled resp.
+  do_check_eq(histogram.counts[3], 2 * 0); // 0 connections with an expired response
+  do_check_eq(histogram.counts[4], 2 * 11); // 11 connections with bad responses
   run_next_test();
 }
 

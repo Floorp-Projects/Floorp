@@ -11,8 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommandUtils",
                                   "resource:///modules/devtools/DeveloperToolbar.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-                                  "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "Requisition", function() {
   return require("gcli/cli").Requisition;

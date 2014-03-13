@@ -27,6 +27,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
 #include "StreamBuffer.h"
+#include "LoadManagerFactory.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/TimeStamp.h"
@@ -241,6 +242,10 @@ public:
   const nsRefPtr<PeerConnectionMedia>& media() const {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
     return mMedia;
+  }
+
+  mozilla::LoadManager* load_manager()  {
+    return mLoadManager;
   }
 
   // Handle system to allow weak references to be passed through C code
@@ -621,6 +626,9 @@ private:
 
   // The target to run stuff on
   nsCOMPtr<nsIEventTarget> mSTSThread;
+
+  // CPU Load adaptation stuff
+  mozilla::LoadManager* mLoadManager;
 
 #ifdef MOZILLA_INTERNAL_API
   // DataConnection that's used to get all the DataChannels
