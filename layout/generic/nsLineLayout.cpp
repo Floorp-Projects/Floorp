@@ -1721,7 +1721,7 @@ nsLineLayout::BlockDirAlignFrames(PerSpanData* psd)
     float inflation =
       GetInflationForBlockDirAlignment(spanFrame, mInflationMinFontSize);
     nscoord logicalBSize = nsHTMLReflowState::
-      CalcLineHeight(spanFrame->StyleContext(),
+      CalcLineHeight(spanFrame->GetContent(), spanFrame->StyleContext(),
                      mBlockReflowState->ComputedHeight(),
                      inflation);
     nscoord contentBSize = spanFramePFD->mBounds.BSize(lineWM) -
@@ -1981,7 +1981,7 @@ nsLineLayout::BlockDirAlignFrames(PerSpanData* psd)
         // of the elements line block size value.
         float inflation =
           GetInflationForBlockDirAlignment(frame, mInflationMinFontSize);
-        pctBasis = nsHTMLReflowState::CalcLineHeight(
+        pctBasis = nsHTMLReflowState::CalcLineHeight(frame->GetContent(),
           frame->StyleContext(), mBlockReflowState->ComputedBSize(),
           inflation);
       }
