@@ -1,17 +1,15 @@
 WEBVTT
-Region: id=testOne lines=2 width=30%
-Region: id=testTwo lines=4 width=20%
 
 1
-00:00.500 --> 00:00.700 region:testOne
+00:00.500 --> 00:00.700
 This
 
 2
-00:01.200 --> 00:02.400 region:testTwo
+00:01.200 --> 00:02.400
 Is
 
 2.5
-00:02.000 --> 00:03.500 region:testOne
+00:02.000 --> 00:03.500
 (Over here?!)
 
 3
