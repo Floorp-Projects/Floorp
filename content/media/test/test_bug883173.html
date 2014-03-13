@@ -36,6 +36,8 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
           return;
         }
         is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+        // Set mode to hidden so that the active cue lists are being updated.
+        trackElement.track.mode = "hidden";
 
         var expected = [[1, 2], [1, 3], [2, 3], [2, 4], [3, 4]];
         var cueList = trackElement.track.cues;
