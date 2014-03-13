@@ -29,14 +29,6 @@ NS_IMPL_RELEASE_INHERITED(TextTrack, nsDOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrack)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-TextTrack::TextTrack(nsISupports* aParent, TextTrackSource aTextTrackSource)
-  : mParent(aParent)
-  , mTextTrackSource(aTextTrackSource)
-{
-  SetDefaultSettings();
-  SetIsDOMBinding();
-}
-
 TextTrack::TextTrack(nsISupports* aParent,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
