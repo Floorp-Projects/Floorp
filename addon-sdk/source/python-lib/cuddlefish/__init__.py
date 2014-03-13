@@ -543,11 +543,9 @@ def initializer(env_root, args, out=sys.stdout, err=sys.stderr):
     if existing:
         print >>err, 'This command must be run in an empty directory.'
         return {"result":1}
-    for d in ['lib','data','test','doc']:
+    for d in ['lib','data','test']:
         os.mkdir(os.path.join(path,d))
         print >>out, '*', d, 'directory created'
-    open(os.path.join(path,'README.md'),'w').write('')
-    print >>out, '* README.md written'
     jid = create_jid()
     print >>out, '* generated jID automatically:', jid
     open(os.path.join(path,'package.json'),'w').write(PACKAGE_JSON % {'name':addon.lower(),
@@ -558,8 +556,6 @@ def initializer(env_root, args, out=sys.stdout, err=sys.stderr):
     print >>out, '* test/test-main.js written'
     open(os.path.join(path,'lib','main.js'),'w').write('')
     print >>out, '* lib/main.js written'
-    open(os.path.join(path,'doc','main.md'),'w').write('')
-    print >>out, '* doc/main.md written'
     if len(args) == 1:
         print >>out, '\nYour sample add-on is now ready.'
         print >>out, 'Do "cfx test" to test it and "cfx run" to try it.  Have fun!'
