@@ -28,7 +28,7 @@ function testViewSource(hud) {
   EventUtils.sendMouseEvent({ type: "click" }, button, content);
 
   openDebugger().then(({panelWin: { DebuggerView }}) => {
-    info("debugger opened");
+    info("debugger openeed");
     Sources = DebuggerView.Sources;
     openConsole(null, (hud) => {
       info("console opened again");
@@ -71,11 +71,14 @@ let observer = {
     ok(true, "the view source window was opened in response to clicking " +
        "the location node");
 
-    aSubject.close();
-    ok(containsValueInvoked, "custom containsValue() was invoked");
-    Sources.containsValue = containsValue;
-    Sources = containsValue = null;
-    finishTest();
+    // executeSoon() is necessary to avoid crashing Firefox. See bug 611543.
+    executeSoon(function() {
+      aSubject.close();
+      ok(containsValueInvoked, "custom containsValue() was invoked");
+      Sources.containsValue = containsValue;
+      Sources = containsValue = null;
+      finishTest();
+    });
   }
 };
 

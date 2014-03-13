@@ -13,24 +13,24 @@ function test() {
 
     openInspector(aInspector => {
       inspector = aInspector;
-      inspector.once("inspector-updated", () => {
-        inspector.toolbox.highlighter.showBoxModel(getNodeFront(div)).then(runTest);
-      });
+      inspector.toolbox.highlighter.showBoxModel(getNodeFront(div)).then(runTest);
     });
   }
 
   function runTest() {
-    let rect = getSimpleBorderRect();
-    is(rect.width, 100, "outline has the right width");
+    let outline = getHighlighterOutline();
+    is(outline.style.width, "100px", "outline has the right width");
 
     div.style.width = "200px";
-    inspector.toolbox.once("highlighter-ready", testRectWidth);
-  }
-
-  function testRectWidth() {
-    let rect = getSimpleBorderRect();
-    is(rect.width, 200, "outline updated");
-    finishUp();
+    function pollTest() {
+      if (outline.style.width == "100px") {
+        setTimeout(pollTest, 10);
+        return;
+      }
+      is(outline.style.width, "200px", "outline updated");
+      finishUp();
+    }
+    setTimeout(pollTest, 10);
   }
 
   function finishUp() {
@@ -49,5 +49,5 @@ function test() {
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html;charset=utf-8,browser_inspector_invalidate.js";
+  content.location = "data:text/html,basic tests for inspector";
 }

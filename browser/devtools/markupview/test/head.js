@@ -12,11 +12,6 @@ let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared
 
 //Services.prefs.setBoolPref("devtools.dump.emit", true);
 
-gDevTools.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
-});
-
 // Clear preferences that may be set during the course of tests.
 function clearUserPrefs() {
   Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
@@ -125,7 +120,7 @@ function hoverContainer(nodeOrSelector, inspector) {
   info("Hovering over the markup-container for node " + nodeOrSelector);
   let highlit = inspector.toolbox.once("node-highlight");
   let container = getContainerForRawNode(inspector.markup, getNode(nodeOrSelector));
-  EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousemove"},
+  EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
     inspector.markup.doc.defaultView);
   return highlit;
 }
@@ -153,9 +148,8 @@ function clickContainer(nodeOrSelector, inspector) {
  * @return {Boolean}
  */
 function isHighlighterVisible() {
-  let highlighter = gBrowser.selectedBrowser.parentNode
-                            .querySelector(".highlighter-container .box-model-root");
-  return highlighter && !highlighter.hasAttribute("hidden");
+  let outline = gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container .highlighter-outline");
+  return outline && !outline.hasAttribute("hidden");
 }
 
 /**
@@ -170,7 +164,7 @@ function mouseLeaveMarkupView(inspector) {
   // Find another element to mouseover over in order to leave the markup-view
   let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
 
-  EventUtils.synthesizeMouseAtCenter(btn, {type: "mousemove"},
+  EventUtils.synthesizeMouse(btn, 2, 2, {type: "mousemove"},
     inspector.toolbox.doc.defaultView);
   executeSoon(def.resolve);
 

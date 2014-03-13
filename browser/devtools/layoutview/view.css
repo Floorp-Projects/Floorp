@@ -54,23 +54,23 @@ body {
   }
 }
 
-#content,
-#borders {
-  border-width: 1px;
+
+#margins {
+  padding: 28px;
 }
 
 #content {
-  height: 25px;
+  height: 20px;
+  border-width: 1px;
 }
 
-#margins,
 #padding {
-  border-style: solid;
   border-width: 25px;
 }
 
 #borders {
-  padding: 25px;
+  border-width: 2px;
+  box-shadow: 0 0 16px black;
 }
 
 #main > p {
@@ -89,44 +89,55 @@ body {
   cursor: default;
 }
 
-.top,
-.bottom {
+.border.top {
+  left: 0; top: 23px;
+  width: 98px;
+}
+
+.border.bottom {
+  right: 0; bottom: 22px;
+  width: 98px;
+  top: auto;
+}
+
+.border.left {
+  top: 42px; left: 0;
+  width: 56px;
+}
+
+.border.right{
+  bottom: 42px; right: 0;
+  width: 56px;
+  top: auto;
+}
+
+.top, .bottom {
   width: calc(100% - 2px);
   text-align: center;
 }
 
-.padding.top {
-  top: 55px;
-}
-
-.padding.bottom {
-  bottom: 57px;
-}
-
-.border.top {
-  top: 30px;
-}
-
-.border.bottom {
-  bottom: 31px;
-}
-
 .margin.top {
-  top: 5px;
+  top: 8px;
 }
 
 .margin.bottom {
   bottom: 6px;
 }
 
+.padding.top {
+  top: 35px;
+}
+
+.padding.bottom {
+  bottom: 35px;
+}
+
 .size,
 .margin.left,
 .margin.right,
-.border.left,
-.border.right,
 .padding.left,
 .padding.right {
-  top: 22px;
+  top: 0;
   line-height: 132px;
 }
 
@@ -135,28 +146,13 @@ body {
 }
 
 .margin.right,
-.margin.left,
-.border.left,
-.border.right,
+.margin.left {
+  width: 28px;
+}
+
 .padding.right,
 .padding.left {
   width: 25px;
-}
-
-.padding.left {
-  left: 52px;
-}
-
-.padding.right {
-  right: 51px;
-}
-
-.border.left {
-  left: 26px;
-}
-
-.border.right {
-  right: 26px;
 }
 
 .margin.right {
@@ -165,6 +161,14 @@ body {
 
 .margin.left {
   left: 0;
+}
+
+.padding.left {
+  left: 30px;
+}
+
+.padding.right {
+  right: 30px;
 }
 
 .tooltip {

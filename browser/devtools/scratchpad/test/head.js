@@ -10,11 +10,6 @@ const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 let gScratchpadWindow; // Reference to the Scratchpad chrome window object
 
-gDevTools.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
-});
-
 /**
  * Open a Scratchpad window.
  *
