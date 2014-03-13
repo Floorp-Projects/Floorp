@@ -125,6 +125,20 @@ class ViEPacedSenderCallback : public PacedSender::Callback {
   ViEEncoder* owner_;
 };
 
+class ViECPULoadStateObserver : public CPULoadStateObserver {
+ public:
+  explicit ViECPULoadStateObserver(ViEEncoder* owner)
+      : owner_(owner) {
+  }
+  virtual ~ViECPULoadStateObserver() {};
+    // Implements CPULoadStateObserver.
+    virtual void onLoadStateChanged(CPULoadState state) {
+    owner_->onLoadStateChanged(state);
+  }
+ private:
+  ViEEncoder* owner_;
+};
+
 ViEEncoder::ViEEncoder(int32_t engine_id,
                        int32_t channel_id,
                        uint32_t number_of_cores,
@@ -142,6 +156,7 @@ ViEEncoder::ViEEncoder(int32_t engine_id,
     callback_cs_(CriticalSectionWrapper::CreateCriticalSection()),
     data_cs_(CriticalSectionWrapper::CreateCriticalSection()),
     bitrate_controller_(bitrate_controller),
+    load_manager_(NULL),
     send_padding_(false),
     target_delay_ms_(0),
     network_is_transmitting_(true),
@@ -171,6 +186,7 @@ ViEEncoder::ViEEncoder(int32_t engine_id,
   default_rtp_rtcp_.reset(RtpRtcp::CreateRtpRtcp(configuration));
   bitrate_observer_.reset(new ViEBitrateObserver(this));
   pacing_callback_.reset(new ViEPacedSenderCallback(this));
+  loadstate_observer_.reset(new ViECPULoadStateObserver(this));
   paced_sender_.reset(
       new PacedSender(pacing_callback_.get(), kInitialPace, kPaceMultiplier));
 }
@@ -255,12 +271,20 @@ bool ViEEncoder::Init() {
   return true;
 }
 
+void ViEEncoder::SetLoadManager(CPULoadStateCallbackInvoker* load_manager) {
+  load_manager_ = load_manager;
+  load_manager_->AddObserver(loadstate_observer_.get());
+}
+
 ViEEncoder::~ViEEncoder() {
   WEBRTC_TRACE(webrtc::kTraceMemory, webrtc::kTraceVideo,
                ViEId(engine_id_, channel_id_),
                "ViEEncoder Destructor 0x%p, engine_id: %d", this, engine_id_);
   if (bitrate_controller_) {
     bitrate_controller_->RemoveBitrateObserver(bitrate_observer_.get());
+  }
+  if (load_manager_) {
+    load_manager_->RemoveObserver(loadstate_observer_.get());
   }
   module_process_thread_.DeRegisterModule(&vcm_);
   module_process_thread_.DeRegisterModule(&vpm_);
@@ -1069,6 +1093,13 @@ void ViEEncoder::OnNetworkChanged(const uint32_t bitrate_bps,
                                max_padding_bitrate_kbps,
                                pad_up_to_bitrate_kbps);
   default_rtp_rtcp_->SetTargetSendBitrate(stream_bitrates);
+}
+
+void ViEEncoder::onLoadStateChanged(CPULoadState load_state) {
+    WEBRTC_TRACE(webrtc::kTraceInfo, webrtc::kTraceVideo,
+                 ViEId(engine_id_, channel_id_),
+                 "%s: load state changed to %d",
+                 __FUNCTION__, (int)load_state);
 }
 
 PacedSender* ViEEncoder::GetPacedSender() {

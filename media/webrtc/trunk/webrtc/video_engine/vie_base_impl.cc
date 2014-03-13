@@ -87,6 +87,10 @@ int ViEBaseImpl::SetVoiceEngine(VoiceEngine* voice_engine) {
   return 0;
 }
 
+void ViEBaseImpl::SetLoadManager(CPULoadStateCallbackInvoker* aLoadManager) {
+  shared_data_.set_load_manager(aLoadManager);
+}
+
 int ViEBaseImpl::RegisterCpuOveruseObserver(int video_channel,
                                             CpuOveruseObserver* observer) {
   ViEChannelManagerScoped cs(*(shared_data_.channel_manager()));

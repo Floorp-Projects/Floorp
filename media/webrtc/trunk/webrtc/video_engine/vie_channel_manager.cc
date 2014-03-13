@@ -37,7 +37,9 @@ ViEChannelManager::ViEChannelManager(
       voice_sync_interface_(NULL),
       voice_engine_(NULL),
       module_process_thread_(NULL),
-      config_(config) {
+      config_(config),
+      load_manager_(NULL)
+{
   WEBRTC_TRACE(kTraceMemory, kTraceVideo, ViEId(engine_id),
                "ViEChannelManager::ViEChannelManager(engine_id: %d)",
                engine_id);
@@ -77,6 +79,15 @@ void ViEChannelManager::SetModuleProcessThread(
     ProcessThread* module_process_thread) {
   assert(!module_process_thread_);
   module_process_thread_ = module_process_thread;
+}
+
+void ViEChannelManager::SetLoadManager(
+    CPULoadStateCallbackInvoker* load_manager) {
+  load_manager_ = load_manager;
+  for (EncoderMap::const_iterator comp_it = vie_encoder_map_.begin();
+       comp_it != vie_encoder_map_.end(); ++comp_it) {
+    comp_it->second->SetLoadManager(load_manager);
+  }
 }
 
 int ViEChannelManager::CreateChannel(int* channel_id) {
