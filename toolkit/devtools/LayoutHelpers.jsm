@@ -24,77 +24,73 @@ this.LayoutHelpers = LayoutHelpers = function(aTopLevelWindow) {
 LayoutHelpers.prototype = {
 
   /**
-   * Compute the position and the dimensions for the visible portion
-   * of a node, relativalely to the root window.
+   * Get box quads adjusted for iframes and zoom level.
    *
-   * @param nsIDOMNode aNode
-   *        a DOM element to be highlighted
+   * @param {DOMNode} node
+   *        The node for which we are to get the box model region quads
+   * @param  {String} region
+   *         The box model region to return:
+   *         "content", "padding", "border" or "margin"
    */
-  getDirtyRect: function LH_getDirectyRect(aNode) {
-    let frameWin = aNode.ownerDocument.defaultView;
-    let clientRect = aNode.getBoundingClientRect();
-
-    // Go up in the tree of frames to determine the correct rectangle.
-    // clientRect is read-only, we need to be able to change properties.
-    rect = {top: clientRect.top,
-            left: clientRect.left,
-            width: clientRect.width,
-            height: clientRect.height};
-
-    // We iterate through all the parent windows.
-    while (true) {
-
-      // Does the selection overflow on the right of its window?
-      let diffx = frameWin.innerWidth - (rect.left + rect.width);
-      if (diffx < 0) {
-        rect.width += diffx;
-      }
-
-      // Does the selection overflow on the bottom of its window?
-      let diffy = frameWin.innerHeight - (rect.top + rect.height);
-      if (diffy < 0) {
-        rect.height += diffy;
-      }
-
-      // Does the selection overflow on the left of its window?
-      if (rect.left < 0) {
-        rect.width += rect.left;
-        rect.left = 0;
-      }
-
-      // Does the selection overflow on the top of its window?
-      if (rect.top < 0) {
-        rect.height += rect.top;
-        rect.top = 0;
-      }
-
-      // Selection has been clipped to fit in its own window.
-
-      // Are we in the top-level window?
-      if (this.isTopLevelWindow(frameWin)) {
-        break;
-      }
-
-      let frameElement = this.getFrameElement(frameWin);
-      if (!frameElement) {
-        break;
-      }
-
-      // We are in an iframe.
-      // We take into account the parent iframe position and its
-      // offset (borders and padding).
-      let frameRect = frameElement.getBoundingClientRect();
-
-      let [offsetTop, offsetLeft] =
-        this.getIframeContentOffset(frameElement);
-
-      rect.top += frameRect.top + offsetTop;
-      rect.left += frameRect.left + offsetLeft;
-
-      frameWin = this.getParentWindow(frameWin);
+  getAdjustedQuads: function(node, region) {
+    if (!node) {
+      return;
     }
 
-    return rect;
+    let [quads] = node.getBoxQuads({
+      box: region
+    });
+
+    if (!quads) {
+      return;
+    }
+
+    let [xOffset, yOffset] = this._getNodeOffsets(node);
+    let scale = this.calculateScale(node);
+
+    return {
+      p1: {
+        w: quads.p1.w * scale,
+        x: quads.p1.x * scale + xOffset,
+        y: quads.p1.y * scale + yOffset,
+        z: quads.p1.z * scale
+      },
+      p2: {
+        w: quads.p2.w * scale,
+        x: quads.p2.x * scale + xOffset,
+        y: quads.p2.y * scale + yOffset,
+        z: quads.p2.z * scale
+      },
+      p3: {
+        w: quads.p3.w * scale,
+        x: quads.p3.x * scale + xOffset,
+        y: quads.p3.y * scale + yOffset,
+        z: quads.p3.z * scale
+      },
+      p4: {
+        w: quads.p4.w * scale,
+        x: quads.p4.x * scale + xOffset,
+        y: quads.p4.y * scale + yOffset,
+        z: quads.p4.z * scale
+      },
+      bounds: {
+        bottom: quads.bounds.bottom * scale + yOffset,
+        height: quads.bounds.height * scale,
+        left: quads.bounds.left * scale + xOffset,
+        right: quads.bounds.right * scale + xOffset,
+        top: quads.bounds.top * scale + yOffset,
+        width: quads.bounds.width * scale,
+        x: quads.bounds.x * scale + xOffset,
+        y: quads.bounds.y * scale + yOffset
+      }
+    };
+  },
+
+  calculateScale: function(node) {
+    let win = node.ownerDocument.defaultView;
+    let winUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
+    return winUtils.fullZoom;
   },
 
   /**
@@ -112,7 +108,7 @@ LayoutHelpers.prototype = {
 
     // Go up in the tree of frames to determine the correct rectangle.
     // clientRect is read-only, we need to be able to change properties.
-    rect = {top: clientRect.top + aContentWindow.pageYOffset,
+    let rect = {top: clientRect.top + aContentWindow.pageYOffset,
             left: clientRect.left + aContentWindow.pageXOffset,
             width: clientRect.width,
             height: clientRect.height};
@@ -179,26 +175,6 @@ LayoutHelpers.prototype = {
   },
 
   /**
-   * Apply the page zoom factor.
-   */
-  getZoomedRect: function LH_getZoomedRect(aWin, aRect) {
-    // get page zoom factor, if any
-    let zoom =
-      aWin.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .fullZoom;
-
-    // adjust rect for zoom scaling
-    let aRectScaled = {};
-    for (let prop in aRect) {
-      aRectScaled[prop] = aRect[prop] * zoom;
-    }
-
-    return aRectScaled;
-  },
-
-
-  /**
    * Find an element from the given coordinates. This method descends through
    * frames to find the element the user clicked inside frames.
    *
@@ -243,8 +219,7 @@ LayoutHelpers.prototype = {
    * appear on the top of the viewport. It is true by default, and that is
    * usually what you want.
    */
-  scrollIntoViewIfNeeded:
-  function LH_scrollIntoViewIfNeeded(elem, centered) {
+  scrollIntoViewIfNeeded: function(elem, centered) {
     // We want to default to centering the element in the page,
     // so as to keep the context of the element.
     centered = centered === undefined? true: !!centered;
@@ -397,4 +372,138 @@ LayoutHelpers.prototype = {
 
     return winUtils.containerElement;
   },
+
+  /**
+   * Get the x and y offsets for a node taking iframes into account.
+   *
+   * @param {DOMNode} node
+   *        The node for which we are to get the offset
+   */
+  _getNodeOffsets: function(node) {
+    let xOffset = 0;
+    let yOffset = 0;
+    let frameWin = node.ownerDocument.defaultView;
+    let scale = this.calculateScale(node);
+
+    while (true) {
+      // Are we in the top-level window?
+      if (this.isTopLevelWindow(frameWin)) {
+        break;
+      }
+
+      let frameElement = this.getFrameElement(frameWin);
+      if (!frameElement) {
+        break;
+      }
+
+      // We are in an iframe.
+      // We take into account the parent iframe position and its
+      // offset (borders and padding).
+      let frameRect = frameElement.getBoundingClientRect();
+
+      let [offsetTop, offsetLeft] =
+        this.getIframeContentOffset(frameElement);
+
+      xOffset += frameRect.left + offsetLeft;
+      yOffset += frameRect.top + offsetTop;
+
+      frameWin = this.getParentWindow(frameWin);
+    }
+
+    return [xOffset * scale, yOffset * scale];
+  },
+
+
+
+  /********************************************************************
+   * GetBoxQuads POLYFILL START TODO: Remove this when bug 917755 is fixed.
+   ********************************************************************/
+  _getBoxQuadsFromRect: function(rect, node) {
+    let scale = this.calculateScale(node);
+    let [xOffset, yOffset] = this._getNodeOffsets(node);
+
+    let out = {
+      p1: {
+        x: rect.left * scale + xOffset,
+        y: rect.top * scale + yOffset
+      },
+      p2: {
+        x: (rect.left + rect.width) * scale + xOffset,
+        y: rect.top * scale + yOffset
+      },
+      p3: {
+        x: (rect.left + rect.width) * scale + xOffset,
+        y: (rect.top + rect.height) * scale + yOffset
+      },
+      p4: {
+        x: rect.left * scale + xOffset,
+        y: (rect.top + rect.height) * scale + yOffset
+      }
+    };
+
+    out.bounds = {
+      bottom: out.p4.y,
+      height: out.p4.y - out.p1.y,
+      left: out.p1.x,
+      right: out.p2.x,
+      top: out.p1.y,
+      width: out.p2.x - out.p1.x,
+      x: out.p1.x,
+      y: out.p1.y
+    };
+
+    return out;
+  },
+
+  _parseNb: function(distance) {
+    let nb = parseFloat(distance, 10);
+    return isNaN(nb) ? 0 : nb;
+  },
+
+  getAdjustedQuadsPolyfill: function(node, region) {
+    // Get the border-box rect
+    // Note that this is relative to the node's viewport, so before we can use
+    // it, will need to go back up the frames like getRect
+    let borderRect = node.getBoundingClientRect();
+
+    // If the boxType is border, no need to go any further, we're done
+    if (region === "border") {
+      return this._getBoxQuadsFromRect(borderRect, node);
+    }
+
+    // Else, need to get margin/padding/border distances
+    let style = node.ownerDocument.defaultView.getComputedStyle(node);
+    let camel = s => s.substring(0, 1).toUpperCase() + s.substring(1);
+    let distances = {border:{}, padding:{}, margin: {}};
+
+    for (let side of ["top", "right", "bottom", "left"]) {
+      distances.border[side] = this._parseNb(style["border" + camel(side) + "Width"]);
+      distances.padding[side] = this._parseNb(style["padding" + camel(side)]);
+      distances.margin[side] = this._parseNb(style["margin" + camel(side)]);
+    }
+
+    // From the border-box rect, calculate the content-box, padding-box and
+    // margin-box rects
+    function offsetRect(rect, offsetType, dir=1) {
+      return {
+        top: rect.top + (dir * distances[offsetType].top),
+        left: rect.left + (dir * distances[offsetType].left),
+        width: rect.width - (dir * (distances[offsetType].left + distances[offsetType].right)),
+        height: rect.height - (dir * (distances[offsetType].top + distances[offsetType].bottom))
+      };
+    }
+
+    if (region === "margin") {
+      return this._getBoxQuadsFromRect(offsetRect(borderRect, "margin", -1), node);
+    } else if (region === "padding") {
+      return this._getBoxQuadsFromRect(offsetRect(borderRect, "border"), node);
+    } else if (region === "content") {
+      let paddingRect = offsetRect(borderRect, "border");
+      return this._getBoxQuadsFromRect(offsetRect(paddingRect, "padding"), node);
+    }
+  },
+
+  /********************************************************************
+   * GetBoxQuads POLYFILL END
+   ********************************************************************/
 };
