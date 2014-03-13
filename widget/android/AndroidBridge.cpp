@@ -1894,38 +1894,38 @@ AndroidBridge::AcknowledgeScrollUpdate(const mozilla::layers::FrameMetrics::View
 }
 
 void
-AndroidBridge::HandleDoubleTap(const CSSIntPoint& aPoint,
+AndroidBridge::HandleDoubleTap(const CSSPoint& aPoint,
                                int32_t aModifiers,
                                const mozilla::layers::ScrollableLayerGuid& aGuid)
 {
-    nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
+    nsCString data = nsPrintfCString("{ \"x\": %f, \"y\": %f }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
             NS_LITERAL_CSTRING("Gesture:DoubleTap"), data));
 }
 
 void
-AndroidBridge::HandleSingleTap(const CSSIntPoint& aPoint,
+AndroidBridge::HandleSingleTap(const CSSPoint& aPoint,
                                int32_t aModifiers,
                                const mozilla::layers::ScrollableLayerGuid& aGuid)
 {
     // TODO Send the modifier data to Gecko for use in mouse events.
-    nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
+    nsCString data = nsPrintfCString("{ \"x\": %f, \"y\": %f }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
             NS_LITERAL_CSTRING("Gesture:SingleTap"), data));
 }
 
 void
-AndroidBridge::HandleLongTap(const CSSIntPoint& aPoint,
+AndroidBridge::HandleLongTap(const CSSPoint& aPoint,
                              int32_t aModifiers,
                              const mozilla::layers::ScrollableLayerGuid& aGuid)
 {
-    nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", aPoint.x, aPoint.y);
+    nsCString data = nsPrintfCString("{ \"x\": %f, \"y\": %f }", aPoint.x, aPoint.y);
     nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
             NS_LITERAL_CSTRING("Gesture:LongPress"), data));
 }
 
 void
-AndroidBridge::HandleLongTapUp(const CSSIntPoint& aPoint,
+AndroidBridge::HandleLongTapUp(const CSSPoint& aPoint,
                                int32_t aModifiers,
                                const mozilla::layers::ScrollableLayerGuid& aGuid)
 {

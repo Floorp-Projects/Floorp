@@ -23,6 +23,7 @@ namespace widget {
 class APZCCallbackHelper
 {
     typedef mozilla::layers::FrameMetrics FrameMetrics;
+    typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
     /* Checks to see if the pres shell that the given FrameMetrics object refers
@@ -67,6 +68,33 @@ public:
        that it accepts future scroll offset updates from APZ. */
     static void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
                                         const uint32_t& aScrollGeneration);
+
+    /* Save an "input transform" property on the content element corresponding to
+       the scrollable content. This is needed because in some cases when the APZ code
+       sends a paint request via the GeckoContentController interface, we don't always
+       apply the scroll offset that was requested. Since the APZ code doesn't know
+       that we didn't apply it, it will transform inputs assuming that we had applied
+       it, and so we need to apply a fixup to the input to account for the fact that
+       we didn't.
+       The |aApzcMetrics| argument are the metrics that the APZ sent us, and the
+       |aActualMetrics| argument are the metrics representing the gecko state after we
+       applied some or all of the APZ metrics. */
+    static void UpdateCallbackTransform(const FrameMetrics& aApzcMetrics,
+                                        const FrameMetrics& aActualMetrics);
+
+    /* Apply an "input transform" to the given |aInput| and return the transformed value.
+       The input transform applied is the one for the content element corresponding to
+       |aGuid|; this is populated in a previous call to UpdateCallbackTransform. See that
+       method's documentations for details. */
+    static CSSPoint ApplyCallbackTransform(const CSSPoint& aInput,
+                                           const ScrollableLayerGuid& aGuid);
+
+    /* Same as above, but operates on nsIntPoint that are assumed to be in LayoutDevice
+       pixel space. Requires an additonal |aScale| parameter to convert between CSS and
+       LayoutDevice space. */
+    static nsIntPoint ApplyCallbackTransform(const nsIntPoint& aPoint,
+                                             const ScrollableLayerGuid& aGuid,
+                                             const CSSToLayoutDeviceScale& aScale);
 };
 
 }

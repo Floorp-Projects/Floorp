@@ -21,7 +21,7 @@ interface nsIX509CertList;
 
 typedef uint32_t AppTrustedRoot;
 
-[scriptable, function, uuid(e12aec59-7153-4e84-9376-2e851311b7a3)]
+[scriptable, function, uuid(0927baea-622d-4e41-a76d-255af426e7fb)]
 interface nsIOpenSignedAppFileCallback : nsISupports
 {
   void openSignedAppFileFinished(in nsresult rv,
@@ -358,4 +358,7 @@ interface nsIX509CertDB : nsISupports {
                   out nsIX509CertList verifiedChain,
                   out bool aHasEVPolicy);
 
+  // Clears the OCSP cache for the current certificate verification
+  // implementation.
+  void clearOCSPCache();
 };
