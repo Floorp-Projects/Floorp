@@ -13,6 +13,62 @@ Cu.import("resource://gre/modules/osfile.jsm")
 Cu.import("resource://gre/modules/Log.jsm");
 
 this.CommonUtils = {
+  /*
+   * Set manipulation methods. These should be lifted into toolkit, or added to
+   * `Set` itself.
+   */
+
+  /**
+   * Return elements of `a` or `b`.
+   */
+  union: function (a, b) {
+    let out = new Set(a);
+    for (let x of b) {
+      out.add(x);
+    }
+    return out;
+  },
+
+  /**
+   * Return elements of `a` that are not present in `b`.
+   */
+  difference: function (a, b) {
+    let out = new Set(a);
+    for (let x of b) {
+      out.delete(x);
+    }
+    return out;
+  },
+
+  /**
+   * Return elements of `a` that are also in `b`.
+   */
+  intersection: function (a, b) {
+    let out = new Set();
+    for (let x of a) {
+      if (b.has(x)) {
+        out.add(x);
+      }
+    }
+    return out;
+  },
+
+  /**
+   * Return true if `a` and `b` are the same size, and
+   * every element of `a` is in `b`.
+   */
+  setEqual: function (a, b) {
+    if (a.size != b.size) {
+      return false;
+    }
+    for (let x of a) {
+      if (!b.has(x)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
   exceptionStr: function exceptionStr(e) {
     if (!e) {
       return "" + e;
