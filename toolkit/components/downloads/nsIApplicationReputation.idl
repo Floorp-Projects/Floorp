@@ -52,6 +52,11 @@ interface nsIApplicationReputationQuery : nsISupports {
   readonly attribute nsIURI sourceURI;
 
   /*
+   * The reference, if any.
+   */
+  readonly attribute nsIURI referrerURI;
+
+  /*
    * The target filename for the downloaded file, as inferred from the source
    * URI or provided by the Content-Disposition attachment file name. If this
    * is not set by the caller, it will be passed as an empty string but the
