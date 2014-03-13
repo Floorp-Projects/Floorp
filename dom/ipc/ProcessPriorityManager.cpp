@@ -945,6 +945,10 @@ ParticularProcessPriorityManager::ComputePriority()
 ProcessCPUPriority
 ParticularProcessPriorityManager::ComputeCPUPriority()
 {
+  if (mPriority == PROCESS_PRIORITY_PREALLOC) {
+    return PROCESS_CPU_PRIORITY_LOW;
+  }
+
   if (mPriority >= PROCESS_PRIORITY_FOREGROUND_HIGH) {
     return PROCESS_CPU_PRIORITY_NORMAL;
   }
