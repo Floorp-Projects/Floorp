@@ -1137,8 +1137,10 @@ Toolbox.prototype = {
           this._selection.destroy();
         }
 
-        this.walker.off("highlighter-ready", this._highlighterReady);
-        this.walker.off("highlighter-hide", this._highlighterHidden);
+        if (this.walker) {
+          this.walker.off("highlighter-ready", this._highlighterReady);
+          this.walker.off("highlighter-hide", this._highlighterHidden);
+        }
 
         this._inspector = null;
         this._highlighter = null;
@@ -1430,11 +1432,16 @@ ToolboxHighlighterUtils.prototype = {
    * Hide the highlighter.
    * @return a promise that resolves when the highlighter is hidden
    */
-  unhighlight: function() {
+  unhighlight: function(forceHide=false) {
     if (this.isRemoteHighlightable) {
       // If the remote highlighter exists on the target, use it
       return this.toolbox.initInspector().then(() => {
-        return this.toolbox.highlighter.hideBoxModel();
+        let autohide = forceHide || !gDevTools.testing;
+
+        if (autohide) {
+          return this.toolbox.highlighter.hideBoxModel();
+        }
+        return promise.resolve();
       });
     } else {
       // If not, no need to unhighlight as the older highlight method uses a

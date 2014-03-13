@@ -12,6 +12,11 @@ let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared
 
 //Services.prefs.setBoolPref("devtools.dump.emit", true);
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 // Clear preferences that may be set during the course of tests.
 function clearUserPrefs() {
   Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
