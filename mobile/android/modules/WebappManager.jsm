@@ -286,7 +286,7 @@ this.WebappManager = {
       // Map APK names to APK versions.
       let apkNameToVersion = JSON.parse(sendMessageToJava({
         type: "Webapps:GetApkVersions",
-        packageNames: installedApps.map(app => app.packageName).filter(packageName => !!packageName)
+        packageNames: installedApps.map(app => app.apkPackageName).filter(apkPackageName => !!apkPackageName)
       }));
 
       // Map manifest URLs to APK versions, which is what the service needs
@@ -297,7 +297,7 @@ this.WebappManager = {
       let manifestUrlToApkVersion = {};
       let manifestUrlToApp = {};
       for (let app of installedApps) {
-        manifestUrlToApkVersion[app.manifestURL] = apkNameToVersion[app.packageName] || 0;
+        manifestUrlToApkVersion[app.manifestURL] = apkNameToVersion[app.apkPackageName] || 0;
         manifestUrlToApp[app.manifestURL] = app;
       }
 
