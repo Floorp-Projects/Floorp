@@ -119,27 +119,6 @@ function test() {
     }, true);
   }
 
-  function synthesizeClickOnSelectedTreeCell(aTree) {
-    let tbo = aTree.treeBoxObject;
-    is(tbo.view.selection.count, 1,
-       "The test node should be successfully selected");
-    // Get selection rowID.
-    let min = {}, max = {};
-    tbo.view.selection.getRangeAt(0, min, max);
-    let rowID = min.value;
-    tbo.ensureRowIsVisible(rowID);
-
-    // Calculate the click coordinates.
-    let x = {}, y = {}, width = {}, height = {};
-    tbo.getCoordsForCellItem(rowID, aTree.columns[0], "text",
-                             x, y, width, height);
-    x = x.value + width.value / 2;
-    y = y.value + height.value / 2;
-    // Simulate the click.
-    EventUtils.synthesizeMouse(aTree.body, x, y, {},
-                               aTree.ownerDocument.defaultView);
-  }
-
   function changeSidebarDirection(aDirection) {
     sidebar.contentDocument.documentElement.style.direction = aDirection;
   }
