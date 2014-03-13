@@ -17,6 +17,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/observers.js");
 
 const Prefs = new Preferences("services.common.tokenserverclient.");
 
@@ -328,6 +329,9 @@ TokenServerClient.prototype = {
       return;
     }
 
+    // Any response status can have an X-Backoff header.
+    this._maybeNotifyBackoff(response, "x-backoff");
+
     // The service shouldn't have any 3xx, so we don't need to handle those.
     if (response.status != 200) {
       // We /should/ have a Cornice error report in the JSON. We log that to
@@ -379,6 +383,10 @@ TokenServerClient.prototype = {
         error.cause = "unknown-service";
       }
 
+      // A Retry-After header should theoretically only appear on a 503, but
+      // we'll look for it on any error response.
+      this._maybeNotifyBackoff(response, "retry-after");
+
       cb(error, null);
       return;
     }
@@ -403,6 +411,23 @@ TokenServerClient.prototype = {
       uid:      result.uid,
       duration: result.duration,
     });
+  },
+
+  // Given an optional header value, notify that a backoff has been requested.
+  _maybeNotifyBackoff: function (response, headerName) {
+    let headerVal = response.headers[headerName];
+    if (!headerVal) {
+      return;
+    }
+    let backoffInterval;
+    try {
+      backoffInterval = parseInt(headerVal, 10);
+    } catch (ex) {
+      this._log.error("TokenServer response had invalid backoff value in '" +
+                      headerName + "' header: " + headerVal);
+      return;
+    }
+    Observers.notify("tokenserver:backoff:interval", backoffInterval);
   },
 
   // override points for testing.
