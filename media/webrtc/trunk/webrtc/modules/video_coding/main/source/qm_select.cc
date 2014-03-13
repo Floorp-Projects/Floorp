@@ -426,6 +426,11 @@ void VCMQmResolution::ComputeEncoderState() {
 }
 
 bool VCMQmResolution::GoingUpResolution() {
+  // We do not go up if we're already near max CPU load
+  if (loadstate_ == kLoadStressed) {
+    return false;
+  }
+
   // For going up, we check for undoing the previous down-sampling action.
 
   float fac_width = kFactorWidthSpatial[down_action_history_[0].spatial];
@@ -506,8 +511,9 @@ bool VCMQmResolution::GoingDownResolution() {
   // Resolution reduction if:
   // (1) target rate is below transition rate, or
   // (2) encoder is in stressed state and target rate below a max threshold.
-  if ((avg_target_rate_ < estimated_transition_rate_down ) ||
-      (encoder_state_ == kStressedEncoding && avg_target_rate_ < max_rate)) {
+  if (loadstate_ == kLoadStressed
+      || (avg_target_rate_ < estimated_transition_rate_down)
+      || (encoder_state_ == kStressedEncoding && avg_target_rate_ < max_rate)) {
     // Get the down-sampling action: based on content class, and how low
     // average target rate is relative to transition rate.
     uint8_t spatial_fact =
@@ -554,6 +560,22 @@ bool VCMQmResolution::GoingDownResolution() {
     // Only allow for one action (spatial or temporal) at a given time.
     assert(action_.temporal == kNoChangeTemporal ||
            action_.spatial == kNoChangeSpatial);
+
+    // CPU stressed but we did not get an action yet, likely because our
+    // bitrate is too high relative to the target.
+    if (loadstate_ == kLoadStressed
+        && action_.temporal == kNoChangeTemporal
+        && action_.spatial == kNoChangeSpatial) {
+      // If FPS is high, allow dropping it to 20 fps.
+      if (avg_incoming_framerate_ >= 40) {
+        action_.temporal = kOneHalfTemporal;
+      } else if (avg_incoming_framerate_ >= 24) {
+        action_.temporal = kTwoThirdsTemporal;
+      } else {
+        // Drop resolution in all other cases.
+        action_.spatial = kOneHalfSpatialUniform;
+      }
+    }
 
     // Adjust cases not captured in tables, mainly based on frame rate, and
     // also check for odd frame sizes.
@@ -903,6 +925,10 @@ void VCMQmResolution::SelectSpatialDirectionMode(float transition_rate) {
   }
 }
 
+void VCMQmResolution::SetCPULoadState(CPULoadState state) {
+  loadstate_ = state;
+}
+
 // ROBUSTNESS CLASS
 
 VCMQmRobustness::VCMQmRobustness() {
@@ -956,4 +982,5 @@ bool VCMQmRobustness::SetUepProtection(uint8_t code_rate_delta,
   // Default.
   return false;
 }
+
 }  // namespace

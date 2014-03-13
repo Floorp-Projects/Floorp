@@ -1100,6 +1100,7 @@ void ViEEncoder::onLoadStateChanged(CPULoadState load_state) {
                  ViEId(engine_id_, channel_id_),
                  "%s: load state changed to %d",
                  __FUNCTION__, (int)load_state);
+    vcm_.SetCPULoadState(load_state);
 }
 
 PacedSender* ViEEncoder::GetPacedSender() {

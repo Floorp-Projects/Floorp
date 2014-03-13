@@ -388,6 +388,9 @@ int32_t MediaOptimization::SelectQuality() {
   // Update QM will long-term averaged content metrics.
   qm_resolution_->UpdateContent(content_->LongTermAvgData());
 
+  // Update QM with current CPU load
+  qm_resolution_->SetCPULoadState(loadstate_);
+
   // Select quality mode.
   VCMResolutionScale* qm = NULL;
   int32_t ret = qm_resolution_->SelectResolution(&qm);
@@ -582,6 +585,10 @@ void MediaOptimization::ProcessIncomingFrameRate(int64_t now) {
       incoming_frame_rate_ = nr_of_frames * 1000.0f / static_cast<float>(diff);
     }
   }
+}
+
+void MediaOptimization::SetCPULoadState(CPULoadState state) {
+    loadstate_ = state;
 }
 
 }  // namespace media_optimization
