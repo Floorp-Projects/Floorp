@@ -58,6 +58,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 15000;
     public static final int MAX_WAIT_MS = 4500;
     public static final int LONG_PRESS_TIME = 6000;
+    private static final int GECKO_READY_WAIT_MS = 180000;
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
@@ -77,7 +78,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         try {
             Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:Ready");
             if (!GeckoThread.checkLaunchState(LaunchState.GeckoRunning)) {
-                geckoReadyExpector.blockForEvent();
+                geckoReadyExpector.blockForEvent(GECKO_READY_WAIT_MS, true);
             }
             geckoReadyExpector.unregisterListener();
         } catch (Exception e) {

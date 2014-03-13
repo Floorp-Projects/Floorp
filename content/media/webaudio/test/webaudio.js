@@ -12,6 +12,16 @@ function expectException(func, exceptionCode) {
   ok(threw, "The exception was thrown");
 }
 
+function expectNoException(func) {
+  var threw = false;
+  try {
+    func();
+  } catch (ex) {
+    threw = true;
+  }
+  ok(!threw, "An exception was not thrown");
+}
+
 function expectTypeError(func) {
   var threw = false;
   try {

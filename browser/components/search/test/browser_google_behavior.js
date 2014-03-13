@@ -36,21 +36,6 @@ default:
 const GOOGLE_CLIENT = google_client;
 const MOZ_DISTRIBUTION_ID = runtime.distributionID;
 
-function getLocale() {
-  const localePref = "general.useragent.locale";
-  return getLocalizedPref(localePref, Services.prefs.getCharPref(localePref));
-}
-
-function getLocalizedPref(aPrefName, aDefault) {
-  try {
-    return Services.prefs.getComplexValue(aPrefName, Ci.nsIPrefLocalizedString).data;
-  } catch (ex) {
-    return aDefault;
-  }
-
-  return aDefault;
-}
-
 function test() {
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Google is installed");

@@ -68,7 +68,7 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
   // Correct the display-port by the difference between the requested scroll
   // offset and the resulting scroll offset after setting the requested value.
   CSSRect& displayPort = aFrameMetrics.mDisplayPort;
-  displayPort += aFrameMetrics.mScrollOffset - aActualScrollOffset;
+  displayPort += aFrameMetrics.GetScrollOffset() - aActualScrollOffset;
 
   // Expand the display port to the next tile boundaries, if tiled thebes layers
   // are enabled.
@@ -77,7 +77,7 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
     // this FrameMetrics may be incorrect (and is about to be reset by mZoom).
     displayPort =
       ExpandDisplayPortToTileBoundaries(displayPort + aActualScrollOffset,
-                                        aFrameMetrics.mZoom *
+                                        aFrameMetrics.GetZoom() *
                                         ScreenToLayerScale(1.0))
       - aActualScrollOffset;
   }
@@ -162,7 +162,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     // Scroll the window to the desired spot
     nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.mScrollId);
     bool scrollUpdated = false;
-    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.mScrollOffset, scrollUpdated);
+    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.GetScrollOffset(), scrollUpdated);
 
     if (!scrollUpdated) {
       // For whatever reason we couldn't update the scroll offset on the scroll frame,
@@ -179,7 +179,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     // enabled), and clamp it to the scrollable rect.
     MaybeAlignAndClampDisplayPort(aMetrics, actualScrollOffset);
 
-    aMetrics.mScrollOffset = actualScrollOffset;
+    aMetrics.SetScrollOffset(actualScrollOffset);
 
     // The mZoom variable on the frame metrics stores the CSS-to-screen scale for this
     // frame. This scale includes all of the (cumulative) resolutions set on the presShells
@@ -190,7 +190,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     // take the async zoom calculated by the APZC and tell gecko about it (turning it into
     // a "sync" zoom) which will update the resolution at which the layer is painted.
     ParentLayerToLayerScale presShellResolution =
-        aMetrics.mZoom
+        aMetrics.GetZoom()
         / aMetrics.mDevPixelsPerCSSPixel
         / aMetrics.GetParentResolution()
         * ScreenToLayerScale(1.0f);
@@ -232,7 +232,7 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
 
     nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.mScrollId);
     bool scrollUpdated = false;
-    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.mScrollOffset, scrollUpdated);
+    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.GetScrollOffset(), scrollUpdated);
 
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
     if (element) {
@@ -247,7 +247,7 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
                                         element, 0);
     }
 
-    aMetrics.mScrollOffset = actualScrollOffset;
+    aMetrics.SetScrollOffset(actualScrollOffset);
 }
 
 already_AddRefed<nsIDOMWindowUtils>
@@ -338,7 +338,7 @@ APZCCallbackHelper::UpdateCallbackTransform(const FrameMetrics& aApzcMetrics, co
     if (!content) {
         return;
     }
-    CSSPoint scrollDelta = aApzcMetrics.mScrollOffset - aActualMetrics.mScrollOffset;
+    CSSPoint scrollDelta = aApzcMetrics.GetScrollOffset() - aActualMetrics.GetScrollOffset();
     content->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta), DestroyCSSPoint);
 }
 

@@ -15,6 +15,7 @@ public interface Actions {
     public interface EventExpecter {
         /** Blocks until the event has been received. Subsequent calls will return immediately. */
         public void blockForEvent();
+        public void blockForEvent(long millis, boolean failOnTimeout);
 
         /** Blocks until the event has been received and returns data associated with the event. */
         public String blockForEventData();

@@ -6,3 +6,5 @@ skip-if(B2G&&browserIsRemote) HTTP(..) == centering-1.xul centering-1-ref.xul # 
 skip-if(B2G&&browserIsRemote) == dynamic-height-1.xul dynamic-height-1-ref.xul # bug 974780
 needs-focus == select.html select-ref.html
 == intrinsic-size.html intrinsic-size-ref.html
+== line-height-0.5.html line-height-1.0.html
+!= line-height-1.5.html line-height-1.0.html
