@@ -1545,8 +1545,6 @@ MarkupContainer.prototype = {
 
     // Remove event listeners
     this.elt.removeEventListener("dblclick", this._onToggle, false);
-    this.elt.removeEventListener("mouseover", this._onMouseOver, false);
-    this.elt.removeEventListener("mouseout", this._onMouseOut, false);
     this.elt.removeEventListener("mousedown", this._onMouseDown, false);
     this.expander.removeEventListener("click", this._onToggle, false);
 
