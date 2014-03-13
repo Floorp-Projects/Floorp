@@ -383,8 +383,8 @@ inDOMUtils::SelectorMatchesElement(nsIDOMElement* aElement,
 NS_IMETHODIMP
 inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
 {
-  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName,
-                                                  nsCSSProps::eAny);
+  nsCSSProperty prop =
+    nsCSSProps::LookupProperty(aPropertyName, nsCSSProps::eIgnoreEnabledState);
   if (prop == eCSSProperty_UNKNOWN) {
     *_retval = false;
     return NS_OK;
@@ -565,7 +565,7 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
                                     char16_t*** aValues)
 {
   nsCSSProperty propertyID = nsCSSProps::LookupProperty(aProperty,
-                                                        nsCSSProps::eEnabled);
+                                                        nsCSSProps::eEnabledForAllContent);
   if (propertyID == eCSSProperty_UNKNOWN) {
     return NS_ERROR_FAILURE;
   }
