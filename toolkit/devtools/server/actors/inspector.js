@@ -849,6 +849,12 @@ var WalkerActor = protocol.ActorClass({
     "picker-node-hovered" : {
       type: "pickerNodeHovered",
       node: Arg(0, "disconnectedNode")
+    },
+    "highlighter-ready" : {
+      type: "highlighter-ready"
+    },
+    "highlighter-hide" : {
+      type: "highlighter-hide"
     }
   },
 
@@ -2546,17 +2552,17 @@ var InspectorActor = protocol.ActorClass({
     }
   }),
 
-  getHighlighter: method(function () {
+  getHighlighter: method(function (autohide) {
     if (this._highlighterPromise) {
       return this._highlighterPromise;
     }
 
     this._highlighterPromise = this.getWalker().then(walker => {
-      return HighlighterActor(this);
+      return HighlighterActor(this, autohide);
     });
     return this._highlighterPromise;
   }, {
-    request: {},
+    request: { autohide: Arg(0, "boolean") },
     response: {
       highligter: RetVal("highlighter")
     }
