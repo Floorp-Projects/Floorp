@@ -47,6 +47,7 @@ public:
             const nsAString& aLabel,
             const nsAString& aLanguage,
             TextTrackMode aMode,
+            TextTrackReadyState aReadyState,
             TextTrackSource aTextTrackSource);
   TextTrack(nsISupports* aParent,
             TextTrackList* aTextTrackList,
@@ -54,6 +55,7 @@ public:
             const nsAString& aLabel,
             const nsAString& aLanguage,
             TextTrackMode aMode,
+            TextTrackReadyState aReadyState,
             TextTrackSource aTextTrackSource);
 
   void SetDefaultSettings();
