@@ -404,6 +404,14 @@ var LoginManagerContent = {
             return;
         }
 
+        // Somewhat gross hack - we don't want to show the "remember password"
+        // notification on about:accounts for Firefox.
+        let topWin = win.top;
+        if (/^about:accounts($|\?)/i.test(topWin.document.documentURI)) {
+            log("(form submission ignored -- about:accounts)");
+            return;
+        }
+
         var formSubmitURL = LoginUtils._getActionOrigin(form)
         if (!Services.logins.getLoginSavingEnabled(hostname)) {
             log("(form submission ignored -- saving is disabled for:", hostname, ")");
