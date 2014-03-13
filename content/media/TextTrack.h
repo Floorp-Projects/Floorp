@@ -40,12 +40,14 @@ public:
             TextTrackKind aKind,
             const nsAString& aLabel,
             const nsAString& aLanguage,
+            TextTrackMode aMode,
             TextTrackSource aTextTrackSource);
   TextTrack(nsISupports* aParent,
             TextTrackList* aTextTrackList,
             TextTrackKind aKind,
             const nsAString& aLabel,
             const nsAString& aLanguage,
+            TextTrackMode aMode,
             TextTrackSource aTextTrackSource);
 
   void SetDefaultSettings();
