@@ -13,11 +13,11 @@ toolbarpaletteitem[place="palette"] > #home-button {
 
 #bookmarks-menu-button[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #bookmarks-menu-button {
-  -moz-image-region: rect(0px, 160px, 32px, 128px);
+  -moz-image-region: rect(0px, 192px, 32px, 160px);
 }
 
 #bookmarks-menu-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
-  -moz-image-region: rect(32px, 160px, 64px, 128px);
+  -moz-image-region: rect(32px, 192px, 64px, 160px);
 }
 
 #history-panelmenu[cui-areatype="menu-panel"],
