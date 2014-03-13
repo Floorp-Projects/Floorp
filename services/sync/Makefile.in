@@ -51,6 +51,7 @@ sync_engine_modules := \
 
 sync_stage_modules := \
   cluster.js \
+  declined.js \
   enginesync.js \
   $(NULL)
 
