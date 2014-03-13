@@ -556,6 +556,7 @@ IdentityManager.prototype = {
   },
 
   offerSyncOptions: function () {
-    // TODO
+    // Do nothing for Sync 1.1.
+    return {accepted: true};
   },
 };
