@@ -25,6 +25,7 @@ ViESharedData::ViESharedData(const Config& config)
       input_manager_(new ViEInputManager(0, config)),
       render_manager_(new ViERenderManager(0)),
       module_process_thread_(ProcessThread::CreateProcessThread()),
+      load_manager_(NULL),
       last_error_(0) {
   Trace::CreateTrace();
   channel_manager_->SetModuleProcessThread(module_process_thread_);
@@ -55,6 +56,11 @@ int ViESharedData::LastErrorInternal() const {
 
 int ViESharedData::NumberOfCores() const {
   return number_cores_;
+}
+
+void ViESharedData::set_load_manager(CPULoadStateCallbackInvoker* load_manager) {
+  load_manager_ = load_manager;
+  channel_manager_->SetLoadManager(load_manager);
 }
 
 }  // namespace webrtc

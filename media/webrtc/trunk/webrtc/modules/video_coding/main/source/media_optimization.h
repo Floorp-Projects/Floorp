@@ -96,6 +96,9 @@ class MediaOptimization {
                                 uint32_t timestamp,
                                 FrameType encoded_frame_type);
 
+  // Informs Media Optimization of CPU Load state
+  void SetCPULoadState(CPULoadState state);
+
   // Registers a protection callback to be used to inform the user about the
   // protection methods used.
   int32_t RegisterProtectionCallback(
@@ -181,6 +184,7 @@ class MediaOptimization {
   int64_t last_qm_update_time_;
   int64_t last_change_time_;  // Content/user triggered.
   int num_layers_;
+  CPULoadState loadstate_;
 };  // End of MediaOptimization class declaration.
 
 }  // namespace media_optimization

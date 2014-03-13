@@ -160,6 +160,7 @@ def generate_separated_sources(platform_sources):
     'SkWGL',
     'SkImages',
     'SkDiscardableMemory_ashmem'
+    'SkMemory_malloc'
   ]
 
   def isblacklisted(value):
@@ -175,6 +176,7 @@ def generate_separated_sources(platform_sources):
       'trunk/src/gpu/gl/GrGLCreateNativeInterface_none.cpp',
       'trunk/src/ports/SkDiscardableMemory_none.cpp',
       'trunk/src/ports/SkImageDecoder_empty.cpp',
+      'trunk/src/ports/SkMemory_mozalloc.cpp',
       # 'trunk/src/images/SkImages.cpp',
       # 'trunk/src/images/SkImageRef.cpp',
       # 'trunk/src/images/SkImageRef_GlobalPool.cpp',

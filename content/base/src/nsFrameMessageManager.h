@@ -27,13 +27,13 @@
 #include "mozilla/Attributes.h"
 #include "js/RootingAPI.h"
 #include "nsTObserverArray.h"
+#include "mozilla/dom/StructuredCloneUtils.h"
 
 namespace mozilla {
 namespace dom {
 
 class ContentParent;
 class ContentChild;
-struct StructuredCloneData;
 class ClonedMessageData;
 class MessageManagerReporter;
 
@@ -310,6 +310,46 @@ private:
   nsresult AssertProcessInternal(ProcessCheckerType aType,
                                  const nsAString& aCapability,
                                  bool* aValid);
+};
+
+/* A helper class for taking care of many details for async message sending
+   within a single process.  Intended to be used like so:
+
+   class MyAsyncMessage : public nsSameProcessAsyncMessageBase, public nsRunnable
+   {
+     // Initialize nsSameProcessAsyncMessageBase...
+
+     NS_IMETHOD Run() {
+       ReceiveMessage(..., ...);
+       return NS_OK;
+     }
+   };
+ */
+class nsSameProcessAsyncMessageBase
+{
+  typedef mozilla::dom::StructuredCloneClosure StructuredCloneClosure;
+
+public:
+  typedef mozilla::dom::StructuredCloneData StructuredCloneData;
+
+  nsSameProcessAsyncMessageBase(JSContext* aCx,
+                                const nsAString& aMessage,
+                                const StructuredCloneData& aData,
+                                JS::Handle<JSObject*> aCpows,
+                                nsIPrincipal* aPrincipal);
+  ~nsSameProcessAsyncMessageBase();
+
+  void ReceiveMessage(nsISupports* aTarget, nsFrameMessageManager* aManager);
+
+private:
+  nsSameProcessAsyncMessageBase(const nsSameProcessAsyncMessageBase&);
+
+  JSRuntime* mRuntime;
+  nsString mMessage;
+  JSAutoStructuredCloneBuffer mData;
+  StructuredCloneClosure mClosure;
+  JSObject* mCpows;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 class nsScriptCacheCleaner;
