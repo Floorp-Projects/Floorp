@@ -41,7 +41,7 @@ public:
   nsIconDecoder(RasterImage &aImage);
   virtual ~nsIconDecoder();
 
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount);
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
 
   uint8_t mWidth;
   uint8_t mHeight;
