@@ -40,12 +40,12 @@ function check_telemetry() {
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
   do_check_eq(histogram.counts[ 0], 0);
-  do_check_eq(histogram.counts[ 2], 6 + 1); // SEC_ERROR_UNKNOWN_ISSUER
-  do_check_eq(histogram.counts[ 3], 0 + 1); // SEC_ERROR_CA_CERT_INVALID
+  do_check_eq(histogram.counts[ 2], 7 + 1); // SEC_ERROR_UNKNOWN_ISSUER
+  do_check_eq(histogram.counts[ 3], 0 + 2); // SEC_ERROR_CA_CERT_INVALID
   do_check_eq(histogram.counts[ 4], 0 + 4); // SEC_ERROR_UNTRUSTED_ISSUER
   do_check_eq(histogram.counts[ 5], 0 + 1); // SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE
   do_check_eq(histogram.counts[ 6], 0 + 1); // SEC_ERROR_UNTRUSTED_CERT
-  do_check_eq(histogram.counts[ 7], 0);     // SEC_ERROR_INADEQUATE_KEY_USAGE
+  do_check_eq(histogram.counts[ 7], 0 + 1); // SEC_ERROR_INADEQUATE_KEY_USAGE
   do_check_eq(histogram.counts[ 8], 2 + 2); // SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED
   do_check_eq(histogram.counts[ 9], 4 + 4); // SSL_ERROR_BAD_CERT_DOMAIN
   do_check_eq(histogram.counts[10], 5 + 5); // SEC_ERROR_EXPIRED_CERTIFICATE
@@ -114,17 +114,39 @@ function add_simple_tests(useInsanity) {
                          Ci.nsICertOverrideService.ERROR_MISMATCH,
                          getXPCOMStatusFromNSS(SSL_ERROR_BAD_CERT_DOMAIN));
 
-  // Inadequate key usage is no longer overridable.
-  add_connection_test("inadequatekeyusage.example.com",
-                      getXPCOMStatusFromNSS(SEC_ERROR_INADEQUATE_KEY_USAGE),
-                      null,
-                      function (securityInfo) {
-                        // bug 754369 - no SSLStatus probably means this is
-                        // a non-overridable error, which is what we're testing
-                        // (although it would be best to test this directly).
-                        securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
-                        do_check_eq(securityInfo.SSLStatus, null);
-                      });
+  // A Microsoft IIS utility generates self-signed certificates with
+  // properties similar to the one this "host" will present (see
+  // tlsserver/generate_certs.sh).
+  // One of the errors classic verification collects is that this
+  // certificate has an inadequate key usage to sign a certificate
+  // (i.e. itself). As a result, to be able to override this,
+  // SEC_ERROR_INADEQUATE_KEY_USAGE must be overridable (although,
+  // confusingly, this isn't the main error reported).
+  // insanity::pkix just says this certificate's issuer is unknown.
+  add_cert_override_test("selfsigned-inadequateEKU.example.com",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         getXPCOMStatusFromNSS(
+                            useInsanity ? SEC_ERROR_UNKNOWN_ISSUER
+                                        : SEC_ERROR_CA_CERT_INVALID));
+
+  // SEC_ERROR_INADEQUATE_KEY_USAGE is overridable in general for
+  // classic verification, but not for insanity::pkix verification.
+  if (useInsanity) {
+    add_connection_test("inadequatekeyusage.example.com",
+                        getXPCOMStatusFromNSS(SEC_ERROR_INADEQUATE_KEY_USAGE),
+                        null,
+                        function (securityInfo) {
+                          // bug 754369 - no SSLStatus probably means this is
+                          // a non-overridable error, which is what we're testing
+                          // (although it would be best to test this directly).
+                          securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
+                          do_check_eq(securityInfo.SSLStatus, null);
+                        });
+  } else {
+    add_cert_override_test("inadequatekeyusage.example.com",
+                           Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                           getXPCOMStatusFromNSS(SEC_ERROR_INADEQUATE_KEY_USAGE));
+  }
 }
 
 function add_combo_tests(useInsanity) {
