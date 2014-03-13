@@ -40,6 +40,7 @@ function setup_osfile_crash_noerror() {
 
   Services.prefs.setBoolPref("toolkit.osfile.debug.failshutdown", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
+  Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
   OS.File.getCurrentDirectory();
   Services.obs.notifyObservers(null, "profile-before-change", null);
@@ -68,6 +69,7 @@ function setup_osfile_crash_exn() {
 
   Services.prefs.setBoolPref("toolkit.osfile.debug.failshutdown", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
+  Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
   OS.File.read("I do not exist");
   Services.obs.notifyObservers(null, "profile-before-change", null);
@@ -80,7 +82,6 @@ function after_osfile_crash_exn(mdump, extra) {
   let state = info.conditions[0].state;
   do_print("Keys: " + Object.keys(state).join(", "));
   do_check_eq(info.phase, "profile-before-change");
-  do_check_true(state.launched);
   do_check_false(state.shutdown);
   do_check_true(state.worker);
   do_check_true(!!state.latestSent);
