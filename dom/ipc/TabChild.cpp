@@ -330,7 +330,7 @@ TabChild::InitializeRootMetrics()
   // This is the root layer, so the cumulative resolution is the same
   // as the resolution.
   mLastRootMetrics.mResolution = mLastRootMetrics.mCumulativeResolution / LayoutDeviceToParentLayerScale(1);
-  mLastRootMetrics.mScrollOffset = CSSPoint(0, 0);
+  mLastRootMetrics.SetScrollOffset(CSSPoint(0, 0));
 }
 
 bool
@@ -1526,8 +1526,8 @@ TabChild::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     // for other functions it performs, such as double tap handling.
     // Note, %f must not be used because it is locale specific!
     nsCString data;
-    data.AppendPrintf("{ \"x\" : %d", NS_lround(newMetrics.mScrollOffset.x));
-    data.AppendPrintf(", \"y\" : %d", NS_lround(newMetrics.mScrollOffset.y));
+    data.AppendPrintf("{ \"x\" : %d", NS_lround(newMetrics.GetScrollOffset().x));
+    data.AppendPrintf(", \"y\" : %d", NS_lround(newMetrics.GetScrollOffset().y));
     data.AppendLiteral(", \"viewport\" : ");
         data.AppendLiteral("{ \"width\" : ");
         data.AppendFloat(newMetrics.mViewport.width);
