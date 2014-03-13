@@ -516,14 +516,6 @@ this.CrashManager.prototype = Object.freeze({
       return store.crashes;
     }.bind(this));
   },
-
-  getCrashCountsByDay: function () {
-    return Task.spawn(function* () {
-      let store = yield this._getStore();
-
-      return store._countsByDay;
-    }.bind(this));
-  },
 });
 
 let gCrashManager;
