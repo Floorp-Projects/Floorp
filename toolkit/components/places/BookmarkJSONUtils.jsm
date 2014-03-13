@@ -386,15 +386,13 @@ BookmarkImporter.prototype = {
               index: aIndex,
               lastModified: aData.lastModified,
               siteURI: siteURI
-            }, function(aStatus, aLivemark) {
-              if (Components.isSuccessCode(aStatus)) {
-                let id = aLivemark.id;
-                if (aData.dateAdded)
-                  PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
-                if (aData.annos && aData.annos.length)
-                  PlacesUtils.setAnnotationsForItem(id, aData.annos);
-              }
-            });
+            }).then(function (aLivemark) {
+              let id = aLivemark.id;
+              if (aData.dateAdded)
+                PlacesUtils.bookmarks.setItemDateAdded(id, aData.dateAdded);
+              if (aData.annos && aData.annos.length)
+                PlacesUtils.setAnnotationsForItem(id, aData.annos);
+            }, Cu.reportError);
           }
         } else {
           id = PlacesUtils.bookmarks.createFolder(

@@ -1523,7 +1523,31 @@ this.PlacesUtils = {
         }
       });
     return deferred.promise;
-  }
+  },
+
+  /**
+   * Get the unique id for an item (a bookmark, a folder or a separator) given
+   * its item id.
+   *
+   * @param aItemId
+   *        an item id
+   * @return {Promise}
+   * @resolves to the GUID.
+   * @rejects if aItemId is invalid.
+   */
+  promiseItemGUID: function (aItemId) GUIDHelper.getItemGUID(aItemId),
+
+  /**
+   * Get the item id for an item (a bookmark, a folder or a separator) given
+   * its unique id.
+   *
+   * @param aGUID
+   *        an item GUID
+   * @retrun {Promise}
+   * @resolves to the GUID.
+   * @rejects if there's no item for the given GUID.
+   */
+  promiseItemId: function (aGUID) GUIDHelper.getItemId(aGUID)
 };
 
 /**
@@ -1639,6 +1663,138 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
 XPCOMUtils.defineLazyServiceGetter(this, "focusManager",
                                    "@mozilla.org/focus-manager;1",
                                    "nsIFocusManager");
+
+// Sometime soon, likely as part of the transition to mozIAsyncBookmarks,
+// itemIds will be deprecated in favour of GUIDs, which play much better
+// with multiple undo/redo operations.  Because these GUIDs are already stored,
+// and because we don't want to revise the transactions API once more when this
+// happens, transactions are set to work with GUIDs exclusively, in the sense
+// that they may never expose itemIds, nor do they accept them as input.
+// More importantly, transactions which add or remove items guarantee to
+// restore the guids on undo/redo, so that the following transactions that may
+// done or undo can assume the items they're interested in are stil accessible
+// through the same GUID.
+// The current bookmarks API, however, doesn't expose the necessary means for
+// working with GUIDs.  So, until it does, this helper object accesses the
+// Places database directly in order to switch between GUIDs and itemIds, and
+// "restore" GUIDs on items re-created items.
+const REASON_FINISHED = Ci.mozIStorageStatementCallback.REASON_FINISHED;
+let GUIDHelper = {
+  // Cache for guid<->itemId paris.
+  GUIDsForIds: new Map(),
+  idsForGUIDs: new Map(),
+
+  getItemId: function (aGUID) {
+    if (this.idsForGUIDs.has(aGUID))
+      return Promise.resolve(this.idsForGUIDs.get(aGUID));
+
+    let deferred = Promise.defer();
+    let itemId = -1;
+
+    this._getIDStatement.params.guid = aGUID;
+    this._getIDStatement.executeAsync({
+      handleResult: function (aResultSet) {
+        let row = aResultSet.getNextRow();
+        if (row)
+          itemId = row.getResultByIndex(0);
+      },
+      handleCompletion: function (aReason) {
+        if (aReason == REASON_FINISHED && itemId != -1) {
+          deferred.resolve(itemId);
+
+          this.ensureObservingRemovedItems();
+          this.idsForGUIDs.set(aGUID, itemId);
+        }
+        else if (itemId != -1) {
+          deferred.reject("no item found for the given guid");
+        }
+        else {
+          deferred.reject("SQLite Error: " + aReason);
+        }
+      }
+    });
+
+    return deferred.promise;
+  },
+
+  getItemGUID: function (aItemId) {
+    if (this.GUIDsForIds.has(aItemId))
+      return Promise.resolve(this.GUIDsForIds.has(aItemId));
+
+    let deferred = Promise.defer();
+    let guid = "";
+
+    this._getGUIDStatement.params.id = aItemId;
+    this._getGUIDStatement.executeAsync({
+      handleResult: function (aResultSet) {
+        let row = aResultSet.getNextRow();
+        if (row) {
+          guid = row.getResultByIndex(1);
+        }
+      },
+      handleCompletion: function (aReason) {
+        if (aReason == REASON_FINISHED && guid) {
+          deferred.resolve(guid);
+
+          this.ensureObservingRemovedItems();
+          this.GUIDsForIds.set(aItemId, guid);
+        }
+        else if (!guid) {
+          deferred.reject("no item found for the given itemId");
+        }
+        else {
+          deferred.reject("SQLite Error: " + aReason);
+        }
+      }
+    });
+
+    return deferred.promise;
+  },
+
+  ensureObservingRemovedItems: function () {
+    if (!("observer" in this)) {
+      /**
+       * This observers serves two purposes:
+       * (1) Invalidate cached id<->guid paris on when items are removed.
+       * (2) Cache GUIDs given us free of charge by onItemAdded/onItemRemoved.
+      *      So, for exmaple, when the NewBookmark needs the new GUID, we already
+      *      have it cached.
+      */
+      this.observer = {
+        onItemAdded: (aItemId, aParentId, aIndex, aItemType, aURI, aTitle,
+                      aDateAdded, aGUID, aParentGUID) => {
+          this.GUIDsForIds.set(aItemId, aGUID);
+          this.GUIDsForIds.set(aParentId, aParentGUID);
+        },
+        onItemRemoved:
+        (aItemId, aParentId, aIndex, aItemTyep, aURI, aGUID, aParentGUID) => {
+          this.GUIDsForIds.delete(aItemId);
+          this.idsForGUIDs.delete(aGUID);
+          this.GUIDsForIds.set(aParentId, aParentGUID);
+        },
+
+        QueryInterface: XPCOMUtils.generateQI(Ci.nsINavBookmarkObserver),
+        __noSuchMethod__: () => {}, // Catch all all onItem* methods.
+      };
+      PlacesUtils.bookmarks.addObserver(this.observer, false);
+      PlacesUtils.registerShutdownFunction(() => {
+        PlacesUtils.bookmarks.removeObserver(this.observer);
+      });
+    }
+  }
+};
+XPCOMUtils.defineLazyGetter(GUIDHelper, "_getIDStatement", () => {
+  let s = PlacesUtils.history.DBConnection.createAsyncStatement(
+    "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid");
+  PlacesUtils.registerShutdownFunction( () => s.finalize() );
+  return s;
+});
+XPCOMUtils.defineLazyGetter(GUIDHelper, "_getGUIDStatement", () => {
+  let s = PlacesUtils.history.DBConnection.createAsyncStatement(
+    "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id");
+  PlacesUtils.registerShutdownFunction( () => s.finalize() );
+  return s;
+});
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Transactions handlers.
@@ -2039,29 +2195,23 @@ PlacesCreateLivemarkTransaction.prototype = {
       , parentId: this.item.parentId
       , index: this.item.index
       , siteURI: this.item.siteURI
-      },
-      (function(aStatus, aLivemark) {
-        if (Components.isSuccessCode(aStatus)) {
-          this.item.id = aLivemark.id;
-          if (this.item.annotations && this.item.annotations.length > 0) {
-            PlacesUtils.setAnnotationsForItem(this.item.id,
-                                              this.item.annotations);
-          }
+      }).then(aLivemark => {
+        this.item.id = aLivemark.id;
+        if (this.item.annotations && this.item.annotations.length > 0) {
+          PlacesUtils.setAnnotationsForItem(this.item.id,
+                                            this.item.annotations);
         }
-      }).bind(this)
-    );
+      }, Cu.reportError);
   },
 
   undoTransaction: function CLTXN_undoTransaction()
   {
     // The getLivemark callback is expected to receive a failure status but it
     // is used just to serialize, so doesn't matter.
-    PlacesUtils.livemarks.getLivemark(
-      { id: this.item.id },
-      (function (aStatus, aLivemark) {
+    PlacesUtils.livemarks.getLivemark({ id: this.item.id })
+      .then(null, () => {
         PlacesUtils.bookmarks.removeItem(this.item.id);
-      }).bind(this)
-    );
+      });
   }
 };
 
@@ -2099,17 +2249,12 @@ PlacesRemoveLivemarkTransaction.prototype = {
 
   doTransaction: function RLTXN_doTransaction()
   {
-    PlacesUtils.livemarks.getLivemark(
-      { id: this.item.id },
-      (function (aStatus, aLivemark) {
-        if (Components.isSuccessCode(aStatus)) {
-          this.item.feedURI = aLivemark.feedURI;
-          this.item.siteURI = aLivemark.siteURI;
-
-          PlacesUtils.bookmarks.removeItem(this.item.id);
-        }
-      }).bind(this)
-    );
+    PlacesUtils.livemarks.getLivemark({ id: this.item.id })
+      .then(aLivemark => {
+        this.item.feedURI = aLivemark.feedURI;
+        this.item.siteURI = aLivemark.siteURI;
+        PlacesUtils.bookmarks.removeItem(this.item.id);
+      }, Cu.reportError);
   },
 
   undoTransaction: function RLTXN_undoTransaction()
@@ -2118,26 +2263,21 @@ PlacesRemoveLivemarkTransaction.prototype = {
     // feedURI and siteURI of the livemark.
     // The getLivemark callback is expected to receive a failure status but it
     // is used just to serialize, so doesn't matter.
-    PlacesUtils.livemarks.getLivemark(
-      { id: this.item.id },
-      (function () {
-        let addLivemarkCallback = (function(aStatus, aLivemark) {
-          if (Components.isSuccessCode(aStatus)) {
-            let itemId = aLivemark.id;
-            PlacesUtils.bookmarks.setItemDateAdded(itemId, this.item.dateAdded);
-            PlacesUtils.setAnnotationsForItem(itemId, this.item.annotations);
-          }
-        }).bind(this);
+    PlacesUtils.livemarks.getLivemark({ id: this.item.id })
+      .then(null, () => {
         PlacesUtils.livemarks.addLivemark({ parentId: this.item.parentId
                                           , title: this.item.title
                                           , siteURI: this.item.siteURI
                                           , feedURI: this.item.feedURI
                                           , index: this.item.index
                                           , lastModified: this.item.lastModified
-                                          },
-                                          addLivemarkCallback);
-      }).bind(this)
-    );
+                                          }).then(
+          aLivemark => {
+            let itemId = aLivemark.id;
+            PlacesUtils.bookmarks.setItemDateAdded(itemId, this.item.dateAdded);
+            PlacesUtils.setAnnotationsForItem(itemId, this.item.annotations);
+          }, Cu.reportError);
+      });
   }
 };
 
