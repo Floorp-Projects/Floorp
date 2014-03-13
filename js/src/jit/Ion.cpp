@@ -506,8 +506,9 @@ jit::FinishOffThreadBuilder(IonBuilder *builder)
 {
     ExecutionMode executionMode = builder->info().executionMode();
 
-    // Clear the recompiling flag if it would have failed.
-    if (builder->script()->hasIonScript())
+    // Clear the recompiling flag of the old ionScript, since we continue to
+    // use the old ionScript if recompiling fails.
+    if (executionMode == SequentialExecution && builder->script()->hasIonScript())
         builder->script()->ionScript()->clearRecompiling();
 
     // Clean up if compilation did not succeed.

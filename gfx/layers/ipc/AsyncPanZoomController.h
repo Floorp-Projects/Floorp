@@ -601,12 +601,12 @@ private:
   void SetState(PanZoomState aState);
 
   /**
-   * Convert ScreenPoint relative to this APZC to CSSIntPoint relative
+   * Convert ScreenPoint relative to this APZC to CSSPoint relative
    * to the parent document. This excludes the transient compositor transform.
-   * NOTE: This must be converted to CSSIntPoint relative to the child
+   * NOTE: This must be converted to CSSPoint relative to the child
    * document before sending over IPC.
    */
-  bool ConvertToGecko(const ScreenPoint& aPoint, CSSIntPoint* aOut);
+  bool ConvertToGecko(const ScreenPoint& aPoint, CSSPoint* aOut);
 
   /**
    * Internal helpers for checking general state of this apzc.

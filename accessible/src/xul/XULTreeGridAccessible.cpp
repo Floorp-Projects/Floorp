@@ -409,6 +409,14 @@ XULTreeGridRowAccessible::RowInvalidated(int32_t aStartColIdx,
       }
     }
   }
+
+  nsAutoString name;
+  Name(name);
+
+  if (name != mCachedName) {
+    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, this);
+    mCachedName = name;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
