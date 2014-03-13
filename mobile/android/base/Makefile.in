@@ -177,6 +177,7 @@ include $(topsrcdir)/config/rules.mk
 not_android_res_files := \
   *.mkdir.done* \
   *.DS_Store* \
+  *\#* \
   $(NULL)
 
 # This uses the fact that Android resource directories list all
@@ -242,6 +243,13 @@ gecko-nodeps/R.java: .aapt.nodeps
 gecko-nodeps.ap_: .aapt.nodeps
 gecko-nodeps/R.txt: .aapt.nodeps
 
+# This ignores the default set of resources ignored by aapt, plus
+# files starting with '#'.  (Emacs produces temp files named #temp#.)
+# This doesn't actually set the environment variable; it's used as a
+# parameter in the aapt invocation below.
+
+ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~:\#*
+
 # 1: target file.
 # 2: dependencies.
 # 3: name of ap_ file to write.
@@ -255,7 +263,8 @@ $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 		--custom-package org.mozilla.gecko --non-constant-id \
 		-F $(3) \
 		-J $(4) \
-		--output-text-symbols $(5)
+		--output-text-symbols $(5) \
+		--ignore-assets "$$(ANDROID_AAPT_IGNORE)"
 	@$$(TOUCH) $$@
 endef
 
