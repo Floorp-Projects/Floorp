@@ -84,7 +84,7 @@ MacIOSurfaceTextureSourceOGL::GetFormat() const
 }
 
 void
-MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit)
+MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 {
   if (!gl()) {
     NS_WARNING("Trying to bind a texture without a GLContext");
@@ -95,7 +95,7 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit)
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
   mSurface->CGLTexImageIOSurface2D(gl::GLContextCGL::Cast(gl())->GetCGLContext());
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  ApplyFilterToBoundTexture(gl(), aFilter, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 }
 
 void
