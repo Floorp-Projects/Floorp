@@ -2485,6 +2485,16 @@ nsHTMLReflowState::CalcLineHeight(nsIContent* aContent,
 
   NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
 
+  if (aContent && aContent->IsHTML(nsGkAtoms::input)) {
+    // For Web-compatibility, input elements cannot have a line-height
+    // smaller than one.
+    nscoord lineHeightOne =
+      aFontSizeInflation * aStyleContext->StyleFont()->mFont.size;
+    if (lineHeight < lineHeightOne) {
+      lineHeight = lineHeightOne;
+    }
+  }
+
   return lineHeight;
 }
 
