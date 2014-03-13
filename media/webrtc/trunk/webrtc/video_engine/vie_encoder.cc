@@ -200,8 +200,8 @@ bool ViEEncoder::Init() {
   }
   vpm_.EnableTemporalDecimation(true);
 
-  // Enable/disable content analysis: off by default for now.
-  vpm_.EnableContentAnalysis(false);
+  // Enable content analysis if load management enabled
+  vpm_.EnableContentAnalysis(load_manager_ != NULL);
 
   if (module_process_thread_.RegisterModule(&vcm_) != 0 ||
       module_process_thread_.RegisterModule(default_rtp_rtcp_.get()) != 0 ||
@@ -273,7 +273,10 @@ bool ViEEncoder::Init() {
 
 void ViEEncoder::SetLoadManager(CPULoadStateCallbackInvoker* load_manager) {
   load_manager_ = load_manager;
-  load_manager_->AddObserver(loadstate_observer_.get());
+  if (load_manager_) {
+      load_manager_->AddObserver(loadstate_observer_.get());
+  }
+  vpm_.EnableContentAnalysis(load_manager != NULL);
 }
 
 ViEEncoder::~ViEEncoder() {
