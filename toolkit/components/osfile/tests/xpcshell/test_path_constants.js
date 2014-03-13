@@ -4,10 +4,6 @@
 
 "use strict";
 
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/osfile.jsm", this);
-Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/ctypes.jsm", this);
 Cu.import("resource://testing-common/AppData.jsm", this);
 
