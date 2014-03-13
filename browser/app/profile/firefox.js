@@ -1095,9 +1095,6 @@ pref("services.sync.prefs.sync.spellchecker.dictionary", true);
 pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 #endif
 
-// Used for devtools debugging
-pref("devtools.dump.emit", false);
-
 // Disable the error console
 pref("devtools.errorconsole.enabled", false);
 
