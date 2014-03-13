@@ -553,5 +553,9 @@ IdentityManager.prototype = {
   createClusterManager: function(service) {
     Cu.import("resource://services-sync/stages/cluster.js");
     return new ClusterManager(service);
-  }
+  },
+
+  offerSyncOptions: function () {
+    // TODO
+  },
 };
