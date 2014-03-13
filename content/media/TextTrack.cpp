@@ -34,6 +34,7 @@ TextTrack::TextTrack(nsISupports* aParent,
                      const nsAString& aLabel,
                      const nsAString& aLanguage,
                      TextTrackMode aMode,
+                     TextTrackReadyState aReadyState,
                      TextTrackSource aTextTrackSource)
   : mParent(aParent)
   , mTextTrackSource(aTextTrackSource)
@@ -43,6 +44,7 @@ TextTrack::TextTrack(nsISupports* aParent,
   mLabel = aLabel;
   mLanguage = aLanguage;
   mMode = aMode;
+  mReadyState = aReadyState;
   SetIsDOMBinding();
 }
 
@@ -52,6 +54,7 @@ TextTrack::TextTrack(nsISupports* aParent,
                      const nsAString& aLabel,
                      const nsAString& aLanguage,
                      TextTrackMode aMode,
+                     TextTrackReadyState aReadyState,
                      TextTrackSource aTextTrackSource)
   : mParent(aParent)
   , mTextTrackList(aTextTrackList)
@@ -62,6 +65,7 @@ TextTrack::TextTrack(nsISupports* aParent,
   mLabel = aLabel;
   mLanguage = aLanguage;
   mMode = aMode;
+  mReadyState = aReadyState;
   SetIsDOMBinding();
 }
 
