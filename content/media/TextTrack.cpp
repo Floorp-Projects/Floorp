@@ -74,7 +74,7 @@ TextTrack::SetDefaultSettings()
   mActiveCueList = new TextTrackCueList(mParent);
   mCuePos = 0;
   mDirty = false;
-  mReadyState = HTMLTrackElement::READY_STATE_NONE;
+  mReadyState = TextTrack::READY_STATE_NONE;
 }
 
 JSObject*
@@ -195,8 +195,8 @@ TextTrack::SetReadyState(uint16_t aState)
   }
 
   HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
-  if (mediaElement && (mReadyState == HTMLTrackElement::READY_STATE_LOADED ||
-      mReadyState == HTMLTrackElement::READY_STATE_ERROR)) {
+  if (mediaElement && (mReadyState == TextTrack::READY_STATE_LOADED ||
+      mReadyState == TextTrack::READY_STATE_ERROR)) {
     mediaElement->RemoveTextTrack(this, true);
   }
 }
