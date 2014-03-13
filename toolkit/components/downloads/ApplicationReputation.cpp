@@ -113,8 +113,6 @@ private:
   // An array of strings created from certificate information used to whitelist
   // the downloaded file.
   nsTArray<nsCString> mAllowlistSpecs;
-  // The source URI of the download, the referrer and possibly any redirects.
-  nsTArray<nsCString> mAnylistSpecs;
 
   // When we started this query
   TimeStamp mStartTime;
@@ -201,7 +199,7 @@ public:
   // Look up the given URI in the safebrowsing DBs, optionally on both the allow
   // list and the blocklist. If there is a match, call
   // PendingLookup::OnComplete. Otherwise, call PendingLookup::LookupNext.
-  nsresult LookupSpec(const nsACString& aSpec, bool aAllowlistOnly);
+  nsresult LookupSpec(const nsACString& aSpec, bool aAllowListOnly);
 private:
   // The download appeared on the allowlist, blocklist, or no list (and thus
   // could trigger a remote query.
@@ -212,7 +210,7 @@ private:
   };
 
   nsCString mSpec;
-  bool mAllowlistOnly;
+  bool mAllowListOnly;
   nsRefPtr<PendingLookup> mPendingLookup;
   nsresult LookupSpecInternal(const nsACString& aSpec);
 };
@@ -221,7 +219,7 @@ NS_IMPL_ISUPPORTS1(PendingDBLookup,
                    nsIUrlClassifierCallback)
 
 PendingDBLookup::PendingDBLookup(PendingLookup* aPendingLookup) :
-  mAllowlistOnly(false),
+  mAllowListOnly(false),
   mPendingLookup(aPendingLookup)
 {
   LOG(("Created pending DB lookup [this = %p]", this));
@@ -235,11 +233,11 @@ PendingDBLookup::~PendingDBLookup()
 
 nsresult
 PendingDBLookup::LookupSpec(const nsACString& aSpec,
-                            bool aAllowlistOnly)
+                            bool aAllowListOnly)
 {
   LOG(("Checking principal %s", aSpec.Data()));
   mSpec = aSpec;
-  mAllowlistOnly = aAllowlistOnly;
+  mAllowListOnly = aAllowListOnly;
   nsresult rv = LookupSpecInternal(aSpec);
   if (NS_FAILED(rv)) {
     LOG(("Error in LookupSpecInternal"));
@@ -282,21 +280,21 @@ PendingDBLookup::HandleEvent(const nsACString& tables)
   // HandleEvent is guaranteed to call either:
   // 1) PendingLookup::OnComplete if the URL can be classified locally, or
   // 2) PendingLookup::LookupNext if the URL can be cannot classified locally.
-  // Blocklisting trumps allowlisting.
-  nsAutoCString blockList;
-  Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blockList);
-  if (!mAllowlistOnly && FindInReadable(tables, blockList)) {
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, BLOCK_LIST);
-    LOG(("Found principal %s on blocklist [this = %p]", mSpec.get(), this));
-    return mPendingLookup->OnComplete(true, NS_OK);
-  }
-
+  // Allow listing trumps block listing.
   nsAutoCString allowList;
   Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allowList);
   if (FindInReadable(tables, allowList)) {
     Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, ALLOW_LIST);
     LOG(("Found principal %s on allowlist [this = %p]", mSpec.get(), this));
     return mPendingLookup->OnComplete(false, NS_OK);
+  }
+
+  nsAutoCString blockList;
+  Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blockList);
+  if (!mAllowListOnly && FindInReadable(tables, blockList)) {
+    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, BLOCK_LIST);
+    LOG(("Found principal %s on blocklist [this = %p]", mSpec.get(), this));
+    return mPendingLookup->OnComplete(true, NS_OK);
   }
 
   LOG(("Didn't find principal %s on any list [this = %p]", mSpec.get(), this));
@@ -326,26 +324,18 @@ PendingLookup::LookupNext()
 {
   // We must call LookupNext or SendRemoteQuery upon return.
   // Look up all of the URLs that could whitelist this download.
-  // Blacklist first.
-  int index = mAnylistSpecs.Length() - 1;
-  nsCString spec;
-  bool allowlistOnly = false;
+  int index = mAllowlistSpecs.Length() - 1;
   if (index >= 0) {
-    // Check the source URI and referrer.
-    spec = mAnylistSpecs[index];
-    mAnylistSpecs.RemoveElementAt(index);
-  } else {
-    // Check the allowlists next.
-    index = mAllowlistSpecs.Length() - 1;
-    if (index >= 0) {
-      allowlistOnly = true;
-      spec = mAllowlistSpecs[index];
-      mAllowlistSpecs.RemoveElementAt(index);
-    }
-  }
-  if (index >= 0) {
+    nsCString spec = mAllowlistSpecs[index];
+    mAllowlistSpecs.RemoveElementAt(index);
     nsRefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
-    return lookup->LookupSpec(spec, allowlistOnly);
+    bool allowListOnly = true;
+    if (index == 0) {
+      // The last URI is the target URI, which may be used for blacklisting as
+      // well as whitelisting.
+      allowListOnly = false;
+    }
+    return lookup->LookupSpec(spec, allowListOnly);
   }
   // There are no more URIs to check against local list, so send the remote
   // query if we can.
@@ -516,16 +506,7 @@ PendingLookup::DoLookupInternal()
   nsCString spec;
   rv = uri->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  mAnylistSpecs.AppendElement(spec);
-
-  nsCOMPtr<nsIURI> referrer = nullptr;
-  rv = mQuery->GetReferrerURI(getter_AddRefs(referrer));
-  if (referrer) {
-    nsCString spec;
-    rv = referrer->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mAnylistSpecs.AppendElement(spec);
-  }
+  mAllowlistSpecs.AppendElement(spec);
 
   // Extract the signature and parse certificates so we can use it to check
   // whitelists.
