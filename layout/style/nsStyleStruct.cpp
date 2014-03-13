@@ -2303,7 +2303,7 @@ void nsTransition::SetInitialValues()
 void nsTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
 {
   NS_ASSERTION(nsCSSProps::LookupProperty(aUnknownProperty,
-                                          nsCSSProps::eEnabled) ==
+                                          nsCSSProps::eEnabledForAllContent) ==
                  eCSSProperty_UNKNOWN,
                "should be unknown property");
   mProperty = eCSSProperty_UNKNOWN;
