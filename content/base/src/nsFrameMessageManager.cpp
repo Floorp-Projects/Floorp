@@ -1599,7 +1599,8 @@ nsFrameMessageManager* nsFrameMessageManager::sParentProcessManager = nullptr;
 nsFrameMessageManager* nsFrameMessageManager::sSameProcessParentManager = nullptr;
 nsTArray<nsCOMPtr<nsIRunnable> >* nsFrameMessageManager::sPendingSameProcessAsyncMessages = nullptr;
 
-class nsAsyncMessageToSameProcessChild : public nsRunnable
+class nsAsyncMessageToSameProcessChild : public nsSameProcessAsyncMessageBase,
+                                         public nsRunnable
 {
 public:
   nsAsyncMessageToSameProcessChild(JSContext* aCx,
@@ -1607,49 +1608,16 @@ public:
                                    const StructuredCloneData& aData,
                                    JS::Handle<JSObject *> aCpows,
                                    nsIPrincipal* aPrincipal)
-    : mRuntime(js::GetRuntime(aCx)),
-      mMessage(aMessage),
-      mCpows(aCpows),
-      mPrincipal(aPrincipal)
+    : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal)
   {
-    if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
-      NS_RUNTIMEABORT("OOM");
-    }
-    if (mCpows && !js_AddObjectRoot(mRuntime, &mCpows)) {
-      NS_RUNTIMEABORT("OOM");
-    }
-    mClosure = aData.mClosure;
-  }
-
-  ~nsAsyncMessageToSameProcessChild()
-  {
-    if (mCpows) {
-      JS_RemoveObjectRootRT(mRuntime, &mCpows);
-    }
   }
 
   NS_IMETHOD Run()
   {
-    if (nsFrameMessageManager::sChildProcessManager) {
-      StructuredCloneData data;
-      data.mData = mData.data();
-      data.mDataLength = mData.nbytes();
-      data.mClosure = mClosure;
-
-      SameProcessCpowHolder cpows(mRuntime, JS::Handle<JSObject *>::fromMarkedLocation(&mCpows));
-
-      nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sChildProcessManager;
-      ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), mMessage,
-                          false, &data, &cpows, mPrincipal, nullptr);
-    }
+    nsFrameMessageManager* ppm = nsFrameMessageManager::sChildProcessManager;
+    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
     return NS_OK;
   }
-  JSRuntime* mRuntime;
-  nsString mMessage;
-  JSAutoStructuredCloneBuffer mData;
-  StructuredCloneClosure mClosure;
-  JSObject* mCpows;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 
@@ -1777,7 +1745,8 @@ public:
 };
 
 
-class nsAsyncMessageToSameProcessParent : public nsRunnable
+class nsAsyncMessageToSameProcessParent : public nsSameProcessAsyncMessageBase,
+                                          public nsRunnable
 {
 public:
   nsAsyncMessageToSameProcessParent(JSContext* aCx,
@@ -1785,25 +1754,8 @@ public:
                                     const StructuredCloneData& aData,
                                     JS::Handle<JSObject *> aCpows,
                                     nsIPrincipal* aPrincipal)
-    : mRuntime(js::GetRuntime(aCx)),
-      mMessage(aMessage),
-      mCpows(aCpows),
-      mPrincipal(aPrincipal)
+    : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal)
   {
-    if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
-      NS_RUNTIMEABORT("OOM");
-    }
-    if (mCpows && !js_AddObjectRoot(mRuntime, &mCpows)) {
-      NS_RUNTIMEABORT("OOM");
-    }
-    mClosure = aData.mClosure;
-  }
-
-  ~nsAsyncMessageToSameProcessParent()
-  {
-    if (mCpows) {
-      JS_RemoveObjectRootRT(mRuntime, &mCpows);
-    }
   }
 
   NS_IMETHOD Run()
@@ -1811,27 +1763,10 @@ public:
     if (nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
       nsFrameMessageManager::sPendingSameProcessAsyncMessages->RemoveElement(this);
     }
-    if (nsFrameMessageManager::sSameProcessParentManager) {
-      StructuredCloneData data;
-      data.mData = mData.data();
-      data.mDataLength = mData.nbytes();
-      data.mClosure = mClosure;
-
-      SameProcessCpowHolder cpows(mRuntime, JS::Handle<JSObject *>::fromMarkedLocation(&mCpows));
-
-      nsRefPtr<nsFrameMessageManager> ppm =
-        nsFrameMessageManager::sSameProcessParentManager;
-      ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
-                          mMessage, false, &data, &cpows, mPrincipal, nullptr);
-     }
-     return NS_OK;
+    nsFrameMessageManager* ppm = nsFrameMessageManager::sSameProcessParentManager;
+    ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm), ppm);
+    return NS_OK;
   }
-  JSRuntime* mRuntime;
-  nsString mMessage;
-  JSAutoStructuredCloneBuffer mData;
-  StructuredCloneClosure mClosure;
-  JSObject* mCpows;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
 /**
@@ -1978,4 +1913,48 @@ nsFrameMessageManager::MarkForCC()
     mRefCnt.RemovePurple();
   }
   return true;
+}
+
+nsSameProcessAsyncMessageBase::nsSameProcessAsyncMessageBase(JSContext* aCx,
+                                                             const nsAString& aMessage,
+                                                             const StructuredCloneData& aData,
+                                                             JS::Handle<JSObject*> aCpows,
+                                                             nsIPrincipal* aPrincipal)
+  : mRuntime(js::GetRuntime(aCx)),
+    mMessage(aMessage),
+    mCpows(aCpows),
+    mPrincipal(aPrincipal)
+{
+  if (aData.mDataLength && !mData.copy(aData.mData, aData.mDataLength)) {
+    NS_RUNTIMEABORT("OOM");
+  }
+  if (mCpows && !js_AddObjectRoot(mRuntime, &mCpows)) {
+    NS_RUNTIMEABORT("OOM");
+  }
+  mClosure = aData.mClosure;
+}
+
+nsSameProcessAsyncMessageBase::~nsSameProcessAsyncMessageBase()
+{
+  if (mCpows) {
+    JS_RemoveObjectRootRT(mRuntime, &mCpows);
+  }
+}
+
+void
+nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
+                                              nsFrameMessageManager* aManager)
+{
+  if (aManager) {
+    StructuredCloneData data;
+    data.mData = mData.data();
+    data.mDataLength = mData.nbytes();
+    data.mClosure = mClosure;
+
+    SameProcessCpowHolder cpows(mRuntime, JS::Handle<JSObject*>::fromMarkedLocation(&mCpows));
+
+    nsRefPtr<nsFrameMessageManager> mm = aManager;
+    mm->ReceiveMessage(aTarget, mMessage, false, &data, &cpows,
+                       mPrincipal, nullptr);
+  }
 }

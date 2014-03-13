@@ -1780,14 +1780,14 @@ nsImageFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
 #endif
 
 int
-nsImageFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+nsImageFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {
-    skip |= 1 << NS_SIDE_TOP;
+    skip |= LOGICAL_SIDE_B_START;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= 1 << NS_SIDE_BOTTOM;
+    skip |= LOGICAL_SIDE_B_END;
   }
   return skip;
 }

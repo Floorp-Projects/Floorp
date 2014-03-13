@@ -10,7 +10,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(TextTrackRegion, mParent, mTrack)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(TextTrackRegion, mParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TextTrackRegion)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TextTrackRegion)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextTrackRegion)
@@ -46,7 +46,6 @@ TextTrackRegion::TextTrackRegion(nsISupports* aGlobal)
   , mViewportAnchorX(0)
   , mViewportAnchorY(100)
 {
-  mTrack = new TextTrack(aGlobal);
   SetIsDOMBinding();
 }
 

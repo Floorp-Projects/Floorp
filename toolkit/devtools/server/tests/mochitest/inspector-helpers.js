@@ -1,6 +1,11 @@
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/devtools/Loader.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+
+const Services = devtools.require("Services");
+const {_documentWalker} = devtools.require("devtools/server/actors/inspector");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -8,11 +13,6 @@ SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-
-const {_documentWalker} = devtools.require("devtools/server/actors/inspector");
 
 if (!DebuggerServer.initialized) {
   DebuggerServer.init(() => true);

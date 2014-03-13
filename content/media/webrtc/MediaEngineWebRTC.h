@@ -26,7 +26,6 @@
 #include "AudioSegment.h"
 #include "StreamBuffer.h"
 #include "MediaStreamGraph.h"
-#include "LoadMonitor.h"
 
 #include "MediaEngineWrapper.h"
 
@@ -371,8 +370,6 @@ private:
   // Maps UUID to MediaEngineSource (one set for audio, one for video).
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCVideoSource > mVideoSources;
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCAudioSource > mAudioSources;
-
-  nsRefPtr<LoadMonitor> mLoadMonitor;
 };
 
 }

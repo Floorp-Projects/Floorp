@@ -39,7 +39,6 @@ class CpuOveruseObserver {
   virtual ~CpuOveruseObserver() {}
 };
 
-
 class WEBRTC_DLLEXPORT VideoEngine {
  public:
   // Creates a VideoEngine object, which can then be used to acquire sub‐APIs.
@@ -115,6 +114,10 @@ class WEBRTC_DLLEXPORT ViEBase {
   // NOTE: This is still very experimental functionality.
   virtual int RegisterCpuOveruseObserver(int channel,
                                          CpuOveruseObserver* observer) = 0;
+
+  // Changing the current state of the host CPU. Encoding engines
+  // can adapt their behavior if needed. (Optional)
+  virtual void SetLoadManager(CPULoadStateCallbackInvoker* load_manager) = 0;
 
   // Specifies the VoiceEngine and VideoEngine channel pair to use for
   // audio/video synchronization.

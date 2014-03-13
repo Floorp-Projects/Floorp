@@ -866,32 +866,32 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 //////////////////////////////////////////////////////////////////////
 
 int
-nsInlineFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
+nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 {
   int skip = 0;
-  if (!IsLeftMost()) {
+  if (!IsFirst()) {
     nsInlineFrame* prev = (nsInlineFrame*) GetPrevContinuation();
     if ((GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET) ||
         (prev && (prev->mRect.height || prev->mRect.width))) {
-      // Prev continuation is not empty therefore we don't render our left
+      // Prev continuation is not empty therefore we don't render our start
       // border edge.
-      skip |= 1 << NS_SIDE_LEFT;
+      skip |= LOGICAL_SIDE_I_START;
     }
     else {
-      // If the prev continuation is empty, then go ahead and let our left
+      // If the prev continuation is empty, then go ahead and let our start
       // edge border render.
     }
   }
-  if (!IsRightMost()) {
+  if (!IsLast()) {
     nsInlineFrame* next = (nsInlineFrame*) GetNextContinuation();
     if ((GetStateBits() & NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET) ||
         (next && (next->mRect.height || next->mRect.width))) {
-      // Next continuation is not empty therefore we don't render our right
+      // Next continuation is not empty therefore we don't render our end
       // border edge.
-      skip |= 1 << NS_SIDE_RIGHT;
+      skip |= LOGICAL_SIDE_I_END;
     }
     else {
-      // If the next continuation is empty, then go ahead and let our right
+      // If the next continuation is empty, then go ahead and let our end
       // edge border render.
     }
   }
@@ -902,18 +902,15 @@ nsInlineFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
     // a split should skip the "start" side.  But figuring out which part of
     // the split we are involves getting our first continuation, which might be
     // expensive.  So don't bother if we already have the relevant bits set.
-    bool ltr = (NS_STYLE_DIRECTION_LTR == StyleVisibility()->mDirection);
-    int startBit = (1 << (ltr ? NS_SIDE_LEFT : NS_SIDE_RIGHT));
-    int endBit = (1 << (ltr ? NS_SIDE_RIGHT : NS_SIDE_LEFT));
-    if (((startBit | endBit) & skip) != (startBit | endBit)) {
+    if (skip != LOGICAL_SIDES_I_BOTH) {
       // We're missing one of the skip bits, so check whether we need to set it.
       // Only get the first continuation once, as an optimization.
       nsIFrame* firstContinuation = FirstContinuation();
       if (firstContinuation->FrameIsNonLastInIBSplit()) {
-        skip |= endBit;
+        skip |= LOGICAL_SIDE_I_END;
       }
       if (firstContinuation->FrameIsNonFirstInIBSplit()) {
-        skip |= startBit;
+        skip |= LOGICAL_SIDE_I_START;
       }
     }
   }
