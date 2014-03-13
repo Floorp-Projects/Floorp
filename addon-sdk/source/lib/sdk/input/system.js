@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci, Cr } = require("chrome");
+const { Cc, Ci, Cr, Cu } = require("chrome");
 const { Input, start, stop, end, receive, outputs } = require("../event/utils");
 const { once, off } = require("../event/core");
 const { id: addonID } = require("../self");
@@ -14,6 +14,7 @@ const { addObserver, removeObserver } = Cc['@mozilla.org/observer-service;1'].
 
 const addonUnloadTopic = "sdk:loader:destroy";
 
+const isXrayWrapper = Cu.isXrayWrapper;
 // In the past SDK used to double-wrap notifications dispatched, which
 // made them awkward to use outside of SDK. At present they no longer
 // do that, although we still supported for legacy reasons.
@@ -48,22 +49,28 @@ InputPort.prototype.constructor = InputPort;
 // When port is started (which is when it's subgraph get's
 // first subscriber) actual observer is registered.
 InputPort.start = input => {
-  addObserver(input, input.topic, false);
+  input.addListener(input);
   // Also register add-on unload observer to end this signal
   // when that happens.
   addObserver(input, addonUnloadTopic, false);
 };
 InputPort.prototype[start] = InputPort.start;
 
+InputPort.addListener = input => addObserver(input, input.topic, false);
+InputPort.prototype.addListener = InputPort.addListener;
+
 // When port is stopped (which is when it's subgraph has no
 // no subcribers left) an actual observer unregistered.
 // Note that port stopped once it ends as well (which is when
 // add-on is unloaded).
 InputPort.stop = input => {
-  removeObserver(input, input.topic);
+  input.removeListener(input);
   removeObserver(input, addonUnloadTopic);
 };
 InputPort.prototype[stop] = InputPort.stop;
+
+InputPort.removeListener = input => removeObserver(input, input.topic);
+InputPort.prototype.removeListener = InputPort.removeListener;
 
 // `InputPort` also implements `nsIObserver` interface and
 // `nsISupportsWeakReference` interfaces as it's going to be used as such.
@@ -80,9 +87,11 @@ InputPort.prototype.QueryInterface = function(iid) {
 InputPort.prototype.observe = function(subject, topic, data) {
   // Unwrap message from the subject. SDK used to have it's own version of
   // wrappedJSObjects which take precedence, if subject has `wrappedJSObject`
-  // use it as message. Otherwise use subject as is.
+  // and it's not an XrayWrapper use it as message. Otherwise use subject as
+  // is.
   const message = subject === null ? null :
         isLegacyWrapper(subject) ? unwrapLegacy(subject) :
+        isXrayWrapper(subject) ? subject :
         subject.wrappedJSObject ? subject.wrappedJSObject :
         subject;
 

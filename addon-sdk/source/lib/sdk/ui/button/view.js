@@ -108,6 +108,11 @@ function getImage(icon, isInToolbar, pixelRatio) {
   return image;
 }
 
+function nodeFor(id, window=getMostRecentBrowserWindow()) {
+  return customizedWindows.has(window) ? null : getNode(id, window);
+};
+exports.nodeFor = nodeFor;
+
 function create(options) {
   let { id, label, icon, type } = options;
 
@@ -183,7 +188,7 @@ function setIcon(id, window, icon) {
 exports.setIcon = setIcon;
 
 function setLabel(id, window, label) {
-  let node = customizedWindows.has(window) ? null : getNode(id, window);
+  let node = nodeFor(id, window);
 
   if (node) {
     node.setAttribute('label', label);
@@ -193,7 +198,7 @@ function setLabel(id, window, label) {
 exports.setLabel = setLabel;
 
 function setDisabled(id, window, disabled) {
-  let node = customizedWindows.has(window) ? null : getNode(id, window);
+  let node = nodeFor(id, window);
 
   if (node)
     node.disabled = disabled;
@@ -201,7 +206,7 @@ function setDisabled(id, window, disabled) {
 exports.setDisabled = setDisabled;
 
 function setChecked(id, window, checked) {
-  let node = customizedWindows.has(window) ? null : getNode(id, window);
+  let node = nodeFor(id, window);
 
   if (node)
     node.checked = checked;
@@ -209,8 +214,7 @@ function setChecked(id, window, checked) {
 exports.setChecked = setChecked;
 
 function click(id) {
-  let window = getMostRecentBrowserWindow();
-  let node = customizedWindows.has(window) ? null : getNode(id, window);
+  let node = nodeFor(id);
 
   if (node)
     node.click();

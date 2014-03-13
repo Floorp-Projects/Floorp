@@ -12,11 +12,12 @@ module.metadata = {
 const { Toolbar } = require("sdk/ui/toolbar");
 const { Loader } = require("sdk/test/loader");
 const { identify } = require("sdk/ui/id");
-const { getMostRecentBrowserWindow, open } = require("sdk/window/utils");
+const { getMostRecentBrowserWindow, open, getOuterId } = require("sdk/window/utils");
 const { ready, close } = require("sdk/window/helpers");
 const { defer } = require("sdk/core/promise");
-const { send } = require("sdk/event/utils");
+const { send, stop, Reactor } = require("sdk/event/utils");
 const { object } = require("sdk/util/sequence");
+const { CustomizationInput } = require("sdk/input/customizable-ui");
 const { OutputPort } = require("sdk/output/system");
 const output = new OutputPort({ id: "toolbar-change" });
 
@@ -355,6 +356,122 @@ exports["test title change"] = function*(assert) {
   t1.destroy();
   yield wait(t1, "detach");
   yield close(w2);
+};
+
+exports["test toolbar is not customizable"] = function*(assert, done) {
+  const { window, document, gCustomizeMode } = getMostRecentBrowserWindow();
+  const outerId = getOuterId(window);
+  const input = new CustomizationInput();
+  const customized = defer();
+  const customizedEnd = defer();
+
+  new Reactor({ onStep: value => {
+    if (value[outerId] === true)
+      customized.resolve();
+    if (value[outerId] === null)
+      customizedEnd.resolve();
+  }}).run(input);
+
+  const toolbar = new Toolbar({ title: "foo" });
+
+  yield wait(toolbar, "attach");
+
+  let view = document.getElementById(toolbar.id);
+  let label = view.querySelector("label");
+  let inner = view.querySelector("toolbar");
+
+  assert.equal(view.getAttribute("customizable"), "false",
+    "The outer toolbar is not customizable.");
+
+  assert.ok(label.collapsed,
+    "The label is not displayed.")
+
+  assert.equal(inner.getAttribute("customizable"), "true",
+    "The inner toolbar is customizable.");
+
+  assert.equal(window.getComputedStyle(inner).visibility, "visible",
+    "The inner toolbar is visible.");
+
+  // Enter in customization mode
+  gCustomizeMode.toggle();
+
+  yield customized.promise;
+
+  assert.equal(view.getAttribute("customizable"), "false",
+    "The outer toolbar is not customizable.");
+
+  assert.equal(label.collapsed, false,
+    "The label is displayed.")
+
+  assert.equal(inner.getAttribute("customizable"), "true",
+    "The inner toolbar is customizable.");
+
+  assert.equal(window.getComputedStyle(inner).visibility, "hidden",
+    "The inner toolbar is hidden.");
+
+  // Exit from customization mode
+  gCustomizeMode.toggle();
+
+  yield customizedEnd.promise;
+
+  assert.equal(view.getAttribute("customizable"), "false",
+    "The outer toolbar is not customizable.");
+
+  assert.ok(label.collapsed,
+    "The label is not displayed.")
+
+  assert.equal(inner.getAttribute("customizable"), "true",
+    "The inner toolbar is customizable.");
+
+  assert.equal(window.getComputedStyle(inner).visibility, "visible",
+    "The inner toolbar is visible.");
+
+  toolbar.destroy();
+};
+
+exports["test button are attached to toolbar"] = function*(assert) {
+  const { document } = getMostRecentBrowserWindow();
+  const { ActionButton, ToggleButton } = require("sdk/ui");
+  const { identify } = require("sdk/ui/id");
+
+  let action = ActionButton({
+    id: "btn-1",
+    label: "action",
+    icon: "./placeholder.png"
+  });
+
+  let toggle = ToggleButton({
+    id: "btn-2",
+    label: "toggle",
+    icon: "./placeholder.png"
+  });
+
+  const toolbar = new Toolbar({
+    title: "foo",
+    items: [action, toggle]
+  });
+
+  yield wait(toolbar, "attach");
+
+  let actionNode = document.getElementById(identify(action));
+  let toggleNode = document.getElementById(identify(toggle));
+
+  assert.notEqual(actionNode, null,
+    "action button exists in the document");
+
+  assert.notEqual(actionNode, null,
+    "action button exists in the document");
+
+  assert.notEqual(toggleNode, null,
+    "toggle button exists in the document");
+
+  assert.equal(actionNode.nextElementSibling, toggleNode,
+    "action button is placed before toggle button");
+
+  assert.equal(actionNode.parentNode.parentNode.id, toolbar.id,
+    "buttons are placed in the correct toolbar");
+
+  toolbar.destroy();
 };
 
 require("sdk/test").run(exports);
