@@ -31,7 +31,6 @@ static uint64_t sResolutionSigDigs;
 
 static const uint64_t kNsPerMs   =    1000000;
 static const uint64_t kUsPerSec  =    1000000;
-static const uint64_t kNsPerSec  = 1000000000;
 static const double kNsPerMsd    =    1000000.0;
 static const double kNsPerSecd   = 1000000000.0;
 
