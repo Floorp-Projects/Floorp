@@ -9,28 +9,28 @@ package org.mozilla.gecko.favicons.decoders;
  */
 public class IconDirectoryEntry implements Comparable<IconDirectoryEntry> {
 
-    public static int sMaxBPP;
+    public static int maxBPP;
 
-    int mWidth;
-    int mHeight;
-    int mPaletteSize;
-    int mBitsPerPixel;
-    int mPayloadSize;
-    int mPayloadOffset;
-    boolean mPayloadIsPNG;
+    int width;
+    int height;
+    int paletteSize;
+    int bitsPerPixel;
+    int payloadSize;
+    int payloadOffset;
+    boolean payloadIsPNG;
 
     // Tracks the index in the Icon Directory of this entry. Useful only for pruning.
-    int mIndex;
-    boolean mIsErroneous;
+    int index;
+    boolean isErroneous;
 
     public IconDirectoryEntry(int width, int height, int paletteSize, int bitsPerPixel, int payloadSize, int payloadOffset, boolean payloadIsPNG) {
-        mWidth = width;
-        mHeight = height;
-        mPaletteSize = paletteSize;
-        mBitsPerPixel = bitsPerPixel;
-        mPayloadSize = payloadSize;
-        mPayloadOffset = payloadOffset;
-        mPayloadIsPNG = payloadIsPNG;
+        this.width = width;
+        this.height = height;
+        this.paletteSize = paletteSize;
+        this.bitsPerPixel = bitsPerPixel;
+        this.payloadSize = payloadSize;
+        this.payloadOffset = payloadOffset;
+        this.payloadIsPNG = payloadIsPNG;
     }
 
     /**
@@ -40,7 +40,7 @@ public class IconDirectoryEntry implements Comparable<IconDirectoryEntry> {
      */
     public static IconDirectoryEntry getErroneousEntry() {
         IconDirectoryEntry ret = new IconDirectoryEntry(-1, -1, -1, -1, -1, -1, false);
-        ret.mIsErroneous = true;
+        ret.isErroneous = true;
 
         return ret;
     }
@@ -118,63 +118,63 @@ public class IconDirectoryEntry implements Comparable<IconDirectoryEntry> {
      * Get the number of bytes from the start of the ICO file to the beginning of this entry.
      */
     public int getOffset() {
-        return ICODecoder.ICO_HEADER_LENGTH_BYTES + (mIndex * ICODecoder.ICO_ICONDIRENTRY_LENGTH_BYTES);
+        return ICODecoder.ICO_HEADER_LENGTH_BYTES + (index * ICODecoder.ICO_ICONDIRENTRY_LENGTH_BYTES);
     }
 
     @Override
     public int compareTo(IconDirectoryEntry another) {
-        if (mWidth > another.mWidth) {
+        if (width > another.width) {
             return 1;
         }
 
-        if (mWidth < another.mWidth) {
+        if (width < another.width) {
             return -1;
         }
 
         // Where both images exceed the max BPP, take the smaller of the two BPP values.
-        if (mBitsPerPixel >= sMaxBPP && another.mBitsPerPixel >= sMaxBPP) {
-            if (mBitsPerPixel < another.mBitsPerPixel) {
+        if (bitsPerPixel >= maxBPP && another.bitsPerPixel >= maxBPP) {
+            if (bitsPerPixel < another.bitsPerPixel) {
                 return 1;
             }
 
-            if (mBitsPerPixel > another.mBitsPerPixel) {
+            if (bitsPerPixel > another.bitsPerPixel) {
                 return -1;
             }
         }
 
         // Otherwise, take the larger of the BPP values.
-        if (mBitsPerPixel > another.mBitsPerPixel) {
+        if (bitsPerPixel > another.bitsPerPixel) {
             return 1;
         }
 
-        if (mBitsPerPixel < another.mBitsPerPixel) {
+        if (bitsPerPixel < another.bitsPerPixel) {
             return -1;
         }
 
         // Prefer large palettes.
-        if (mPaletteSize > another.mPaletteSize) {
+        if (paletteSize > another.paletteSize) {
             return 1;
         }
 
-        if (mPaletteSize < another.mPaletteSize) {
+        if (paletteSize < another.paletteSize) {
             return -1;
         }
 
         // Prefer smaller payloads.
-        if (mPayloadSize < another.mPayloadSize) {
+        if (payloadSize < another.payloadSize) {
             return 1;
         }
 
-        if (mPayloadSize > another.mPayloadSize) {
+        if (payloadSize > another.payloadSize) {
             return -1;
         }
 
         // If all else fails, prefer PNGs over BMPs. They tend to be smaller.
-        if (mPayloadIsPNG && !another.mPayloadIsPNG) {
+        if (payloadIsPNG && !another.payloadIsPNG) {
             return 1;
         }
 
-        if (!mPayloadIsPNG && another.mPayloadIsPNG) {
+        if (!payloadIsPNG && another.payloadIsPNG) {
             return -1;
         }
 
@@ -182,20 +182,20 @@ public class IconDirectoryEntry implements Comparable<IconDirectoryEntry> {
     }
 
     public static void setMaxBPP(int maxBPP) {
-        sMaxBPP = maxBPP;
+        IconDirectoryEntry.maxBPP = maxBPP;
     }
 
     @Override
     public String toString() {
         return "IconDirectoryEntry{" +
-                "\nmWidth=" + mWidth +
-                ", \nmHeight=" + mHeight +
-                ", \nmPaletteSize=" + mPaletteSize +
-                ", \nmBitsPerPixel=" + mBitsPerPixel +
-                ", \nmPayloadSize=" + mPayloadSize +
-                ", \nmPayloadOffset=" + mPayloadOffset +
-                ", \nmPayloadIsPNG=" + mPayloadIsPNG +
-                ", \nmIndex=" + mIndex +
+                "\nwidth=" + width +
+                ", \nheight=" + height +
+                ", \npaletteSize=" + paletteSize +
+                ", \nbitsPerPixel=" + bitsPerPixel +
+                ", \npayloadSize=" + payloadSize +
+                ", \npayloadOffset=" + payloadOffset +
+                ", \npayloadIsPNG=" + payloadIsPNG +
+                ", \nindex=" + index +
                 '}';
     }
 }
