@@ -4,10 +4,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-CXXFLAGS += -I$(ANDROID_SOURCE)/hardware/libhardware/include
-endif
-
 DEFINES := $(filter-out -DUNICODE,$(DEFINES))
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
