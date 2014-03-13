@@ -32,7 +32,8 @@ const CM_STYLES   = [
   "chrome://browser/skin/devtools/common.css",
   "chrome://browser/content/devtools/codemirror/codemirror.css",
   "chrome://browser/content/devtools/codemirror/dialog.css",
-  "chrome://browser/content/devtools/codemirror/mozilla.css"
+  "chrome://browser/content/devtools/codemirror/mozilla.css",
+  "chrome://browser/content/devtools/codemirror/foldgutter.css"
 ];
 
 const CM_SCRIPTS  = [

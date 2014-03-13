@@ -153,17 +153,12 @@ let inputTests = [
 ];
 
 function test() {
+
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
     openConsole().then((hud) => {
       return checkOutputForInputs(hud, inputTests);
-    }).then(finishUp);
+    }).then(finishTest);
   }, true);
-}
-
-function finishUp() {
-  inputTests = null;
-
-  finishTest();
 }

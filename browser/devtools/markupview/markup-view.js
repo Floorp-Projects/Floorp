@@ -165,7 +165,7 @@ MarkupView.prototype = {
   },
 
   _onMouseLeave: function() {
-    this._hideBoxModel(true);
+    this._hideBoxModel();
     if (this._hoveredNode) {
       this._containers.get(this._hoveredNode).hovered = false;
     }
@@ -176,8 +176,8 @@ MarkupView.prototype = {
     this._inspector.toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
   },
 
-  _hideBoxModel: function(forceHide) {
-    this._inspector.toolbox.highlighterUtils.unhighlight(forceHide);
+  _hideBoxModel: function() {
+    this._inspector.toolbox.highlighterUtils.unhighlight();
   },
 
   _briefBoxModelTimer: null,
@@ -1545,6 +1545,8 @@ MarkupContainer.prototype = {
 
     // Remove event listeners
     this.elt.removeEventListener("dblclick", this._onToggle, false);
+    this.elt.removeEventListener("mouseover", this._onMouseOver, false);
+    this.elt.removeEventListener("mouseout", this._onMouseOut, false);
     this.elt.removeEventListener("mousedown", this._onMouseDown, false);
     this.expander.removeEventListener("click", this._onToggle, false);
 

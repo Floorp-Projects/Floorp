@@ -91,7 +91,7 @@ function test()
   }
 
   function finishUp() {
-    doc = nodes = inspector = null;
+    doc = nodes = null;
     gBrowser.removeCurrentTab();
     finish();
   }

@@ -9,6 +9,11 @@ const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleinspe
 //Services.prefs.setBoolPref("devtools.dump.emit", true);
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 
+SimpleTest.registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.debugger.log");
+  Services.prefs.clearUserPref("devtools.dump.emit");
+});
+
 let tempScope = {};
 
 Cu.import("resource:///modules/devtools/gDevTools.jsm", tempScope);
@@ -24,16 +29,6 @@ let {CssRuleView, _ElementStyle} = devtools.require("devtools/styleinspector/rul
 let {CssLogic, CssSelector} = devtools.require("devtools/styleinspector/css-logic");
 
 let promise = devtools.require("sdk/core/promise");
-
-gDevTools.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  gDevTools.testing = false;
-});
-
-SimpleTest.registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.debugger.log");
-  Services.prefs.clearUserPref("devtools.dump.emit");
-});
 
 let {
   editableField,
