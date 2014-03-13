@@ -32,7 +32,7 @@ let tests = [
 
       // Move the highlight outside which should close the app menu.
       gContentAPI.showHighlight("appMenu");
-      waitForPopupAtAnchor(highlight.parentElement, document.getElementById("PanelUI-menu-button"), () => {
+      waitForPopupAtAnchor(highlight.parentElement, document.getElementById("PanelUI-button"), () => {
         isnot(PanelUI.panel.state, "open",
               "Panel should have closed after the highlight moved elsewhere.");
         is(tooltip.state, "open", "The info panel should have remained open");
@@ -143,7 +143,7 @@ let tests = [
 
       // Move the info panel outside which should close the app menu.
       gContentAPI.showInfo("appMenu", "Cool menu button", "It's three lines");
-      waitForPopupAtAnchor(tooltip, document.getElementById("PanelUI-menu-button"), () => {
+      waitForPopupAtAnchor(tooltip, document.getElementById("PanelUI-button"), () => {
         isnot(PanelUI.panel.state, "open",
               "Menu should have closed after the highlight moved elsewhere.");
         is(highlight.parentElement.state, "open", "The highlight should have remained visible");
