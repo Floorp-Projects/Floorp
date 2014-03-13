@@ -362,9 +362,6 @@ const EXCEPTION_NAMES = {
    },
    read: function read(path, bytes, options) {
      let data = File.read(Type.path.fromMsg(path), bytes, options);
-     if (typeof data == "string") {
-       return data;
-     }
      return new Meta({
          buffer: data.buffer,
          byteOffset: data.byteOffset,
