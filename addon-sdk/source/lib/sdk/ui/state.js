@@ -19,7 +19,7 @@ const { events: browserEvents } = require('../browser/events');
 const { events: tabEvents } = require('../tab/events');
 const { events: stateEvents } = require('./state/events');
 
-const { windows, isInteractive, getMostRecentBrowserWindow } = require('../window/utils');
+const { windows, isInteractive, getFocusedBrowser } = require('../window/utils');
 const { getActiveTab, getOwnerWindow } = require('../tabs/utils');
 
 const { ignoreWindow } = require('../private-browsing/utils');
@@ -47,7 +47,7 @@ const isActiveTab = thing => isTab(thing) && thing === getActiveTab(getOwnerWind
 const isEnumerable = window => !ignoreWindow(window);
 const browsers = _ =>
   windows('navigator:browser', { includePrivate: true }).filter(isInteractive);
-const getMostRecentTab = _ => getActiveTab(getMostRecentBrowserWindow());
+const getMostRecentTab = _ => getActiveTab(getFocusedBrowser());
 
 function getStateFor(component, target) {
   if (!isRegistered(component))
@@ -172,7 +172,7 @@ exports.properties = properties;
 function state(contract) {
   return {
     state: function state(target, state) {
-      let nativeTarget = target === 'window' ? getMostRecentBrowserWindow()
+      let nativeTarget = target === 'window' ? getFocusedBrowser()
                           : target === 'tab' ? getMostRecentTab()
                           : viewFor(target);
 
