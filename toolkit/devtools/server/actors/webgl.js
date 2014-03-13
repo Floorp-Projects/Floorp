@@ -4,9 +4,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
-
-Cu.import("resource://gre/modules/Services.jsm");
-
+const Services = require("Services");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 
