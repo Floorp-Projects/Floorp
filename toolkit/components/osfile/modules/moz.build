@@ -10,6 +10,7 @@ EXTRA_JS_MODULES += [
     '_PromiseWorker.jsm',
     'osfile_async_front.jsm',
     'osfile_async_worker.js',
+    'osfile_native.jsm',
     'osfile_shared_allthreads.jsm',
     'osfile_shared_front.jsm',
     'osfile_unix_allthreads.jsm',
