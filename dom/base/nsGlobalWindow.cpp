@@ -12267,14 +12267,12 @@ nsGlobalWindow::GetScrollFrame()
 
 nsresult
 nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
-                                 bool *aFreeSecurityPass,
                                  JSContext **aCXused)
 {
   nsIScriptContext *scx = GetContextInternal();
   JSContext *cx = nullptr;
 
   *aBuiltURI = nullptr;
-  *aFreeSecurityPass = false;
   if (aCXused)
     *aCXused = nullptr;
 
@@ -12315,15 +12313,12 @@ nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
 
   if (!sourceWindow) {
     sourceWindow = this;
-    *aFreeSecurityPass = true;
   }
 
-  if (sourceWindow) {
-    nsCOMPtr<nsIDocument> doc = sourceWindow->GetDoc();
-    if (doc) {
-      baseURI = doc->GetDocBaseURI();
-      charset = doc->GetDocumentCharacterSet();
-    }
+  nsCOMPtr<nsIDocument> doc = sourceWindow->GetDoc();
+  if (doc) {
+    baseURI = doc->GetDocBaseURI();
+    charset = doc->GetDocumentCharacterSet();
   }
 
   if (aCXused)
@@ -12335,17 +12330,22 @@ nsresult
 nsGlobalWindow::SecurityCheckURL(const char *aURL)
 {
   JSContext       *cxUsed;
-  bool             freePass;
   nsCOMPtr<nsIURI> uri;
 
-  if (NS_FAILED(BuildURIfromBase(aURL, getter_AddRefs(uri), &freePass, &cxUsed)))
+  if (NS_FAILED(BuildURIfromBase(aURL, getter_AddRefs(uri), &cxUsed))) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (!cxUsed) {
+    return NS_OK;
+  }
 
   AutoPushJSContext cx(cxUsed);
 
-  if (!freePass && NS_FAILED(nsContentUtils::GetSecurityManager()->
-        CheckLoadURIFromScript(cx, uri)))
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->
+        CheckLoadURIFromScript(cx, uri))) {
     return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
