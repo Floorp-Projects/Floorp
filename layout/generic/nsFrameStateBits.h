@@ -507,15 +507,15 @@ FRAME_STATE_BIT(Image, 21, IMAGE_GOTINITIALREFLOW)
 
 FRAME_STATE_GROUP(Inline, nsInlineFrame)
 
-/**  In Bidi left (or right) margin/padding/border should be applied to left
- *  (or right) most frame (or a continuation frame).
- *  This state value shows if this frame is left (or right) most continuation
+/**  In Bidi inline start (or end) margin/padding/border should be applied to
+ *  first (or last) frame (or a continuation frame).
+ *  This state value shows if this frame is first (or last) continuation
  *  or not.
  */
 
 FRAME_STATE_BIT(Inline, 21, NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET)
-FRAME_STATE_BIT(Inline, 22, NS_INLINE_FRAME_BIDI_VISUAL_IS_LEFT_MOST)
-FRAME_STATE_BIT(Inline, 23, NS_INLINE_FRAME_BIDI_VISUAL_IS_RIGHT_MOST)
+FRAME_STATE_BIT(Inline, 22, NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST)
+FRAME_STATE_BIT(Inline, 23, NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST)
 
 
 // == Frame state bits that apply to placeholder frames =======================
