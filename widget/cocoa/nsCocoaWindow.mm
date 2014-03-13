@@ -35,6 +35,7 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
+#include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -112,6 +113,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mUsesNativeFullScreen(false)
 , mIsAnimationSuppressed(false)
 , mInReportMoveEvent(false)
+, mInResize(false)
 , mNumModalDescendents(0)
 {
 
@@ -1333,9 +1335,12 @@ nsresult nsCocoaWindow::DoResize(double aX, double aY,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if (!mWindow) {
+  if (!mWindow || mInResize) {
     return NS_OK;
   }
+
+  AutoRestore<bool> reentrantResizeGuard(mInResize);
+  mInResize = true;
 
   // ConstrainSize operates in device pixels, so we need to convert using
   // the backing scale factor here
