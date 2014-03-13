@@ -2468,12 +2468,13 @@ nsHTMLReflowState::CalcLineHeight() const
     nsLayoutUtils::IsNonWrapperBlock(frame) ? ComputedHeight() :
     (mCBReflowState ? mCBReflowState->ComputedHeight() : NS_AUTOHEIGHT);
 
-  return CalcLineHeight(frame->StyleContext(), blockHeight,
+  return CalcLineHeight(frame->GetContent(), frame->StyleContext(), blockHeight,
                         nsLayoutUtils::FontSizeInflationFor(frame));
 }
 
 /* static */ nscoord
-nsHTMLReflowState::CalcLineHeight(nsStyleContext* aStyleContext,
+nsHTMLReflowState::CalcLineHeight(nsIContent* aContent,
+                                  nsStyleContext* aStyleContext,
                                   nscoord aBlockHeight,
                                   float aFontSizeInflation)
 {
