@@ -182,6 +182,21 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       trackElement.track.mode = "showing";
       video.currentTime = 0;
 
+      var regionInfo = [
+        { lines: 2, width: 30 },
+        { lines: 4, width: 20 },
+        { lines: 2, width: 30 }
+      ];
+
+      for (var i = 0; i < regionInfo.length; i++) {
+        var cue = cueList[i];
+        isnot(cue.region, null, "Cue at " + i + " should have a region.");
+        for (var key in regionInfo[i]) {
+          is(cue.region[key], regionInfo[i][key], "Region should have a " + key +
+                                                  " property with a value of " + regionInfo[i][key])
+        }
+      }
+
       // Test TextTrack::ActiveCues.
       var cueInfo = [
         { startTime: 0.51, endTime: 0.71, ids: ["Cue 01"] },

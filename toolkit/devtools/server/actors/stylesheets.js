@@ -4,10 +4,10 @@
 
 "use strict";
 
-let { components, Cc, Ci, Cu } = require('chrome');
+let { components, Cc, Ci, Cu } = require("chrome");
+let Services = require("Services");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");

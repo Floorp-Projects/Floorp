@@ -7,7 +7,6 @@
 "use strict";
 
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
-XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 /**
