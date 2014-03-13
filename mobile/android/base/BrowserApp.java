@@ -1269,15 +1269,6 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private String mCurrentResponse;
-
-    @Override
-    public String getResponse(JSONObject origMessage) {
-        String res = mCurrentResponse;
-        mCurrentResponse = "";
-        return res;
-    }
-
     @Override
     public void addTab() {
         // Always load about:home when opening a new tab.

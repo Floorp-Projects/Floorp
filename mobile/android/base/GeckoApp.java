@@ -186,7 +186,7 @@ public abstract class GeckoApp
     protected GeckoProfile mProfile;
     public static int mOrientation;
     protected boolean mIsRestoringActivity;
-    private String mCurrentResponse = "";
+    protected String mCurrentResponse = "";
 
     private ContactService mContactService;
     private PromptService mPromptService;
