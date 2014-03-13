@@ -2142,6 +2142,15 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Notification icon box */
+#notification-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 10px;
+}
+
+#notification-popup .popup-notification-closebutton {
+  -moz-margin-end: -14px;
+  margin-top: -10px;
+}
+
 #notification-popup-box {
   position: relative;
   background-color: #fff;
