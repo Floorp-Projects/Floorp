@@ -6,7 +6,6 @@
 Components.utils.import("resource://gre/modules/osfile.jsm");
 
 function run_test() {
-  do_test_pending();
   run_next_test();
 }
 
@@ -68,8 +67,4 @@ add_task(function test_error_attributes () {
     do_check_true(err instanceof OS.File.Error);
     do_check_true(err.becauseNoSuchFile);
   }
-});
-
-add_task(function() {
-  do_test_finished();
 });
