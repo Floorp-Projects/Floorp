@@ -41,7 +41,8 @@ using std::placeholders::_1;
 
 #else
 
-class Placeholder1 { } _1;
+class Placeholder1 { };
+extern Placeholder1 _1;
 
 template <typename V>       V&  ref(V& v)       { return v; }
 template <typename V> const V& cref(const V& v) { return v; }
