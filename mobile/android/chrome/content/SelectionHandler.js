@@ -276,6 +276,42 @@ var SelectionHandler = {
       return false;
     }
 
+    if (this._isPhoneNumber(selection.toString())) {
+      let anchorNode = selection.anchorNode;
+      let anchorOffset = selection.anchorOffset;
+      let focusNode = null;
+      let focusOffset = null;
+      while (this._isPhoneNumber(selection.toString().trim())) {
+        focusNode = selection.focusNode;
+        focusOffset = selection.focusOffset;
+        selection.modify("extend", "forward", "word");
+        // if we hit the end of the text on the page, we can't advance the selection
+        if (focusNode == selection.focusNode && focusOffset == selection.focusOffset) {
+          break;
+        }
+      }
+
+      // reverse selection
+      selection.collapse(focusNode, focusOffset);
+      selection.extend(anchorNode, anchorOffset);
+
+      anchorNode = focusNode;
+      anchorOffset = focusOffset
+
+      while (this._isPhoneNumber(selection.toString().trim())) {
+        focusNode = selection.focusNode;
+        focusOffset = selection.focusOffset;
+        selection.modify("extend", "backward", "word");
+        // if we hit the end of the text on the page, we can't advance the selection
+        if (focusNode == selection.focusNode && focusOffset == selection.focusOffset) {
+          break;
+        }
+      }
+
+      selection.collapse(focusNode, focusOffset);
+      selection.extend(anchorNode, anchorOffset);
+    }
+
     // Add a listener to end the selection if it's removed programatically
     selection.QueryInterface(Ci.nsISelectionPrivate).addSelectionListener(this);
     this._activeType = this.TYPE_SELECTION;
@@ -759,12 +795,14 @@ var SelectionHandler = {
     this._closeSelection();
   },
 
-  _phoneRegex: /(?:\s|^)[\+]?(\(?\d{1,8}\)?)?([- \.]+\(?\d{1,8}\)?)+( ?(x|ext) ?\d{1,3})?(?:\s|$)/,
+  _phoneRegex: /^\+?[0-9\s,-.\(\)*#pw]{1,30}$/,
 
-  _getSelectedPhoneNumber: function sh_isPhoneNumber() {
-    let selectedText = this._getSelectedText();
-    return (selectedText.length && this._phoneRegex.test(selectedText) ?
-            selectedText : null);
+  _getSelectedPhoneNumber: function sh_getSelectedPhoneNumber() {
+    return this._isPhoneNumber(this._getSelectedText().trim());
+  },
+
+  _isPhoneNumber: function sh_isPhoneNumber(selectedText) {
+    return (this._phoneRegex.test(selectedText) ? selectedText : null);
   },
 
   callSelection: function sh_callSelection() {
