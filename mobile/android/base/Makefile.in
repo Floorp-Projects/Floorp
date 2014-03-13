@@ -188,27 +188,6 @@ not_android_res_files := \
 # resource files one subdirectory below the parent resource directory.
 android_res_files := $(filter-out $(not_android_res_files),$(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(ANDROID_RES_DIRS))))))
 
-# For GeckoView, we want a zip of an Android res/ directory that
-# merges the contents of all the ANDROID_RES_DIRS.  The inner res/
-# directory must have the Android resource two-layer hierarchy.
-
-# The following helper zips files in a directory into a zip file while
-# maintaining the directory structure rooted below the directory.
-# (adding or creating said file as appropriate).  For example, if the
-# dir contains dir/subdir/file, calling with directory dir would
-# create a zip containing subdir/file.  Note: the trailing newline is
-# necessary.
-
-# $(1): zip file to add to (or create).
-# $(2): directory to zip contents of.
-define zip_directory_with_relative_paths
-cd $(2) && zip -q $(1) -r * -x $(not_android_res_files)
-
-endef
-
-geckoview_resources.zip: $(android_res_files) $(GLOBAL_DEPS)
-	$(foreach dir,$(ANDROID_RES_DIRS),$(call zip_directory_with_relative_paths,$(CURDIR)/$@,$(dir)))
-
 $(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATED_RESFILES))))
 
 # [Comment 1/3] We don't have correct dependencies for strings.xml at
@@ -230,6 +209,27 @@ all_resources = \
   $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
+
+# For GeckoView, we want a zip of an Android res/ directory that
+# merges the contents of all the ANDROID_RES_DIRS.  The inner res/
+# directory must have the Android resource two-layer hierarchy.
+
+# The following helper zips files in a directory into a zip file while
+# maintaining the directory structure rooted below the directory.
+# (adding or creating said file as appropriate).  For example, if the
+# dir contains dir/subdir/file, calling with directory dir would
+# create a zip containing subdir/file.  Note: the trailing newline is
+# necessary.
+
+# $(1): zip file to add to (or create).
+# $(2): directory to zip contents of.
+define zip_directory_with_relative_paths
+cd $(2) && zip -q $(1) -r * -x $(not_android_res_files)
+
+endef
+
+geckoview_resources.zip: $(all_resources) $(GLOBAL_DEPS)
+	$(foreach dir,$(ANDROID_RES_DIRS),$(call zip_directory_with_relative_paths,$(CURDIR)/$@,$(dir)))
 
 # All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
 # produced by aapt; this saves aapt invocations.  The trailing
