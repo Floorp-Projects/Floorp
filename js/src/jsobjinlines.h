@@ -577,8 +577,6 @@ JSObject::finish(js::FreeOp *fop)
         js::ObjectElements *elements = getElementsHeader();
         if (MOZ_UNLIKELY(elements->isAsmJSArrayBuffer()))
             js::ArrayBufferObject::releaseAsmJSArrayBuffer(fop, this);
-        else if (MOZ_UNLIKELY(elements->isMappedArrayBuffer()))
-            js::ArrayBufferObject::releaseMappedArrayBuffer(fop, this);
         else
             fop->free_(elements);
     }
