@@ -912,8 +912,14 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                                 typeDesc = p.getDescriptor(f.inner.identifier.name)
                             except NoSuchDescriptorError:
                                 continue
-                            declarations.add((typeDesc.nativeType, False))
-                            implheaders.add(typeDesc.headerFile)
+                            if typeDesc.interface.isCallback():
+                                # Callback interfaces always use strong refs, so
+                                # we need to include the right header to be able
+                                # to Release() in our inlined code.
+                                headers.add(typeDesc.headerFile)
+                            else:
+                                declarations.add((typeDesc.nativeType, False))
+                                implheaders.add(typeDesc.headerFile)
                 elif f.isDictionary():
                     # For a dictionary, we need to see its declaration in
                     # UnionTypes.h so we have its sizeof and know how big to
@@ -926,6 +932,11 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                     # Need to see the actual definition of the enum,
                     # unfortunately.
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif f.isCallback():
+                    # Callbacks always use strong refs, so we need to include
+                    # the right header to be able to Release() in our inlined
+                    # code.
+                    headers.add(CGHeaders.getDeclarationFilename(f))
 
     map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 

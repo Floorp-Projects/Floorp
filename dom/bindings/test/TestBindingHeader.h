@@ -524,6 +524,7 @@ public:
   void PassUnion12(const EventInitOrLong& arg);
   void PassUnion13(JSContext*, const ObjectOrLongOrNull& arg);
   void PassUnion14(JSContext*, const ObjectOrLongOrNull& arg);
+  void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
 #endif
   void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&);
   void PassOptionalUnion(JSContext*, const Optional<ObjectOrLong>&);
