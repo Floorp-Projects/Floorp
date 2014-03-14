@@ -90,11 +90,11 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
 
     public void toggleSelected(int position) {
         PromptListItem item = getItem(position);
-        item.selected = !item.selected;
+        item.setSelected(!item.getSelected());
     }
 
     private void maybeUpdateIcon(PromptListItem item, TextView t) {
-        if (item.icon == null && !item.inGroup && !item.isParent) {
+        if (item.getIcon() == null && !item.inGroup && !item.isParent) {
             t.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
             return;
         }
@@ -103,10 +103,10 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         Resources res = getContext().getResources();
         // Set the padding between the icon and the text.
         t.setCompoundDrawablePadding(mIconTextPadding);
-        if (item.icon != null) {
+        if (item.getIcon() != null) {
             // We want the icon to be of a specific size. Some do not
             // follow this rule so we have to resize them.
-            Bitmap bitmap = ((BitmapDrawable) item.icon).getBitmap();
+            Bitmap bitmap = ((BitmapDrawable) item.getIcon()).getBitmap();
             d = new BitmapDrawable(res, Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
         } else if (item.inGroup) {
             // We don't currently support "indenting" items with icons
@@ -130,12 +130,12 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
             // Apparently just using ct.setChecked(true) doesn't work, so this
             // is stolen from the android source code as a way to set the checked
             // state of these items
-            list.setItemChecked(position, item.selected);
+            list.setItemChecked(position, item.getSelected());
         }
     }
 
     boolean isSelected(int position){
-        return getItem(position).selected;
+        return getItem(position).getSelected();
     }
 
     ArrayList<Integer> getSelected() {
