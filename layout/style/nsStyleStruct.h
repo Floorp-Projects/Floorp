@@ -1901,6 +1901,7 @@ struct nsStyleDisplay {
                         nsChangeHint_UpdateOpacityLayer |
                         nsChangeHint_UpdateTransformLayer |
                         nsChangeHint_UpdateOverflow |
+                        nsChangeHint_UpdatePostTransformOverflow |
                         nsChangeHint_AddOrRemoveTransform);
   }
   static nsChangeHint MaxDifferenceNeverInherited() {
