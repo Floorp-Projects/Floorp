@@ -2115,18 +2115,6 @@ BluetoothDBusService::StopInternal()
   return rv;
 }
 
-bool
-BluetoothDBusService::IsEnabledInternal()
-{
-  MOZ_ASSERT(!NS_IsMainThread()); // BT thread
-
-#ifdef MOZ_WIDGET_GONK
-  return sBluedroid.IsEnabled();
-#else
-  return mEnabled;
-#endif
-}
-
 class DefaultAdapterPathReplyHandler : public DBusReplyHandler
 {
 public:
