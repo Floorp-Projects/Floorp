@@ -13,6 +13,8 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+// Initialize DOMApplicationRegistry by importing Webapps.jsm.
+Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import('resource://gre/modules/Payment.jsm');
@@ -20,6 +22,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
+// Initialize window-independent handling of webapps- notifications.
+Cu.import("resource://webapprt/modules/WebappsHandler.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
 Cu.import("resource://webapprt/modules/WebRTCHandler.jsm");
 
@@ -89,19 +93,6 @@ this.startup = function(window) {
       });
     }
 
-    let appUpdated = false;
-    let updatePending = yield WebappRT.isUpdatePending();
-    if (updatePending) {
-      appUpdated = yield WebappRT.applyUpdate();
-    }
-
-    yield WebappRT.loadConfig();
-
-    // Initialize DOMApplicationRegistry by importing Webapps.jsm.
-    Cu.import("resource://gre/modules/Webapps.jsm");
-    // Initialize window-independent handling of webapps- notifications.
-    Cu.import("resource://webapprt/modules/WebappManager.jsm");
-
     // Wait for webapps registry loading.
     yield DOMApplicationRegistry.registryStarted;
 
@@ -109,7 +100,8 @@ this.startup = function(window) {
     if (manifestURL) {
       // On firstrun, set permissions to their default values.
       // When the webapp runtime is updated, update the permissions.
-      if (isFirstRunOrUpdate(Services.prefs) || appUpdated) {
+      // TODO: Update the permissions when the application is updated.
+      if (isFirstRunOrUpdate(Services.prefs)) {
         PermissionsInstaller.installPermissions(WebappRT.config.app, true);
         yield createBrandingFiles();
       }
@@ -143,7 +135,5 @@ this.startup = function(window) {
           documentElement.mozRequestFullScreen();
       }, true);
     }
-
-    WebappRT.startUpdateService();
   }).then(null, Cu.reportError.bind(Cu));
 }

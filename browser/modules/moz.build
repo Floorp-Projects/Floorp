@@ -20,7 +20,7 @@ EXTRA_JS_MODULES += [
     'SitePermissions.jsm',
     'Social.jsm',
     'TabCrashReporter.jsm',
-    'WebappManager.jsm',
+    'webappsUI.jsm',
     'webrtcUI.jsm',
 ]
 
