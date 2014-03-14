@@ -1406,6 +1406,7 @@ TypedObject::createUnattachedWithClass(JSContext *cx,
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH, Int32Value(0));
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_OWNER, NullValue());
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_NEXT_VIEW, PrivateValue(nullptr));
+    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_NEXT_BUFFER, PrivateValue(UNSET_BUFFER_LINK));
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(length));
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_TYPE_DESCR, ObjectValue(*type));
 
@@ -1507,7 +1508,7 @@ TypedObject::createZeroed(JSContext *cx,
       {
         size_t totalSize = descr->as<SizedTypeDescr>().size();
         Rooted<ArrayBufferObject*> buffer(cx);
-        buffer = ArrayBufferObject::create(cx, totalSize);
+        buffer = ArrayBufferObject::create(cx, totalSize, false);
         if (!buffer)
             return nullptr;
         typeRepr->asSized()->initInstance(cx->runtime(), buffer->dataPointer(), 1);
@@ -1528,7 +1529,7 @@ TypedObject::createZeroed(JSContext *cx,
         }
 
         Rooted<ArrayBufferObject*> buffer(cx);
-        buffer = ArrayBufferObject::create(cx, totalSize);
+        buffer = ArrayBufferObject::create(cx, totalSize, false);
         if (!buffer)
             return nullptr;
 
@@ -1722,10 +1723,11 @@ TypedObject::obj_defineElement(JSContext *cx, HandleObject obj, uint32_t index, 
                                PropertyOp getter, StrictPropertyOp setter, unsigned attrs)
 {
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
-    Rooted<jsid> id(cx);
-    if (!IndexToId(cx, index, &id))
+
+    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
+    if (!delegate)
         return false;
-    return obj_defineGeneric(cx, obj, id, v, getter, setter, attrs);
+    return baseops::DefineElement(cx, delegate, index, v, getter, setter, attrs);
 }
 
 bool
