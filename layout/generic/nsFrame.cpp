@@ -7182,18 +7182,28 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                "Don't call - overflow rects not maintained on these SVG frames");
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
-  // Store the passed in overflow area if we are a preserve-3d frame,
-  // and it's not just the frame bounds.
-  if ((Preserves3D() || HasPerspective()) && (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
-                        !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds))) {
-    nsOverflowAreas* initial =
-      static_cast<nsOverflowAreas*>(Properties().Get(nsIFrame::InitialOverflowProperty()));
-    if (!initial) {
-      Properties().Set(nsIFrame::InitialOverflowProperty(),
-                       new nsOverflowAreas(aOverflowAreas));
-    } else if (initial != &aOverflowAreas) {
-      *initial = aOverflowAreas;
+  // Store the passed in overflow area if we are a preserve-3d frame or we have
+  // a transform, and it's not just the frame bounds.
+  if (Preserves3D() || HasPerspective() || IsTransformed()) {
+    if (!aOverflowAreas.VisualOverflow().IsEqualEdges(bounds) ||
+        !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds)) {
+
+      nsOverflowAreas* initial =
+        static_cast<nsOverflowAreas*>(Properties().Get(nsIFrame::InitialOverflowProperty()));
+      if (!initial) {
+        Properties().Set(nsIFrame::InitialOverflowProperty(),
+                         new nsOverflowAreas(aOverflowAreas));
+      } else if (initial != &aOverflowAreas) {
+        *initial = aOverflowAreas;
+      }
     }
+#ifdef DEBUG
+    Properties().Set(nsIFrame::DebugInitialOverflowPropertyApplied(), nullptr);
+#endif
+  } else {
+#ifdef DEBUG
+  Properties().Delete(nsIFrame::DebugInitialOverflowPropertyApplied());
+#endif
   }
 
   // This is now called FinishAndStoreOverflow() instead of 

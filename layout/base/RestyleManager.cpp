@@ -687,7 +687,8 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         // FinishAndStoreOverflow on it:
         hint = NS_SubtractHint(hint,
                  NS_CombineHint(nsChangeHint_UpdateOverflow,
-                                nsChangeHint_ChildrenOnlyTransform));
+                   NS_CombineHint(nsChangeHint_ChildrenOnlyTransform,
+                                  nsChangeHint_UpdatePostTransformOverflow)));
       }
 
       if (hint & nsChangeHint_UpdateEffects) {
@@ -715,7 +716,10 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       NS_ASSERTION(!(hint & nsChangeHint_ChildrenOnlyTransform) ||
                    (hint & nsChangeHint_UpdateOverflow),
                    "nsChangeHint_UpdateOverflow should be passed too");
-      if ((hint & nsChangeHint_UpdateOverflow) && !didReflowThisFrame) {
+      if (!didReflowThisFrame &&
+          (hint & (nsChangeHint_UpdateOverflow |
+                   nsChangeHint_UpdatePostTransformOverflow))) {
+        OverflowChangedTracker::ChangeKind changeKind;
         if (hint & nsChangeHint_ChildrenOnlyTransform) {
           // The overflow areas of the child frames need to be updated:
           nsIFrame* hintFrame = GetFrameForChildrenOnlyTransformHint(frame);
@@ -733,7 +737,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
             // updating overflows since that will happen when it's reflowed.
             if (!(childFrame->GetStateBits() &
                   (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
-              mOverflowChangedTracker.AddFrame(childFrame);
+              mOverflowChangedTracker.AddFrame(childFrame, OverflowChangedTracker::CHILDREN_CHANGED);
             }
             NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(childFrame),
                          "SVG frames should not have continuations "
@@ -746,9 +750,17 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         // overflows since that will happen when it's reflowed.
         if (!(frame->GetStateBits() &
               (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
+          // If we have both nsChangeHint_UpdateOverflow and
+          // nsChangeHint_UpdatePostTransformOverflow, CHILDREN_CHANGED
+          // is selected as it is stronger.
+          if (hint & nsChangeHint_UpdateOverflow) {
+            changeKind = OverflowChangedTracker::CHILDREN_CHANGED;
+          } else {
+            changeKind = OverflowChangedTracker::TRANSFORM_CHANGED;
+          }
           for (nsIFrame *cont = frame; cont; cont =
                  nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-            mOverflowChangedTracker.AddFrame(cont);
+            mOverflowChangedTracker.AddFrame(cont, changeKind);
           }
         }
       }
