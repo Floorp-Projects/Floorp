@@ -121,7 +121,7 @@
 <!ENTITY fxaccount_back_to_browsing 'Back to browsing'>
 
 <!-- Localization note: the following two strings are interpolated
-     into fxaccount_create_account_policy_text; see note for that
+     into fxaccount_create_account_policy_text2; see note for that
      string as well.  Compare fxaccount_status_{linktos,linkprivacy}:
      these strings are separated to accommodate languages that decline
      the two uses differently. -->
@@ -140,7 +140,7 @@
 <!ENTITY fxaccount_create_account_password_length_restriction 'Must be at least 8 characters'>
 <!ENTITY fxaccount_create_account_year_of_birth 'Year of birth'>
 <!-- Localization note: &formatS1; is fxaccount_policy_linktos, &formatS2; is fxaccount_policy_linkprivacy, both hyperlinked. -->
-<!ENTITY fxaccount_create_account_policy_text 'By proceeding, I agree to the &formatS1; and &formatS2; of Firefox online services.'>
+<!ENTITY fxaccount_create_account_policy_text2 'By proceeding, I agree to the &formatS1; and &formatS2; of Firefox cloud services.'>
 <!ENTITY fxaccount_create_account_button 'Next'>
 <!ENTITY fxaccount_create_account_choose_what_to_sync 'Choose what to sync'>
 <!ENTITY fxaccount_create_account_sign_in_instead 'Already have an account? Sign in'>
