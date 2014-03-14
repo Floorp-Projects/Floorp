@@ -397,6 +397,11 @@ CompositorParent::RecvLeaveTestMode()
 void
 CompositorParent::ActorDestroy(ActorDestroyReason why)
 {
+  CancelCurrentCompositeTask();
+  if (mForceCompositionTask) {
+    mForceCompositionTask->Cancel();
+    mForceCompositionTask = nullptr;
+  }
   mPaused = true;
   RemoveCompositor(mCompositorID);
 
@@ -632,7 +637,10 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget)
   }
 #endif
 
-  mCurrentCompositeTask = nullptr;
+  if (mCurrentCompositeTask) {
+    mCurrentCompositeTask->Cancel();
+    mCurrentCompositeTask = nullptr;
+  }
 
   mLastCompose = TimeStamp::Now();
 
