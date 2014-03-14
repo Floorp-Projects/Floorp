@@ -425,7 +425,7 @@ add_test(function() {
   });
 });
 
-// Tests that compatibility overrides are retreived and affect addon
+// Tests that compatibility overrides are retrieved and affect addon
 // compatibility.
 add_test(function() {
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, false);

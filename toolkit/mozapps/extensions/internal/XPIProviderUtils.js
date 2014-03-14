@@ -1311,8 +1311,6 @@ this.XPIDatabase = {
    *
    * @param  aAddon
    *         The DBAddonInternal to make visible
-   * @param  callback
-   *         A callback to pass the DBAddonInternal to
    */
   makeAddonVisible: function XPIDB_makeAddonVisible(aAddon) {
     logger.debug("Make addon " + aAddon._key + " visible");
