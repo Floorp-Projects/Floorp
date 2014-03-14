@@ -91,7 +91,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">center_horizontal</item>
-        <item name="android:src">@drawable/fxaccount_icon</item>
+        <item name="android:src">@drawable/icon</item>
     </style>
 
     <style name="FxAccountErrorItem">
