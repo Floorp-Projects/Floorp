@@ -1656,7 +1656,8 @@ abstract public class BrowserApp extends GeckoApp
 
             // Don't show the banner in guest mode.
             if (!getProfile().inGuestMode()) {
-                final HomeBanner homeBanner = (HomeBanner) findViewById(R.id.home_banner);
+                final ViewStub homeBannerStub = (ViewStub) findViewById(R.id.home_banner_stub);
+                final HomeBanner homeBanner = (HomeBanner) homeBannerStub.inflate();
                 mHomePager.setBanner(homeBanner);
 
                 // Remove the banner from the view hierarchy if it is dismissed.
