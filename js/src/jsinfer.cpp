@@ -4281,9 +4281,17 @@ TypeScript::destroy()
 }
 
 void
-Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool)
+Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                             size_t *typePool,
+                             size_t *baselineStubsOptimized)
 {
     *typePool += types.typeLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
+#ifdef JS_ION
+    if (jitZone()) {
+        *baselineStubsOptimized +=
+            jitZone()->optimizedStubSpace()->sizeOfExcludingThis(mallocSizeOf);
+    }
+#endif
 }
 
 void
