@@ -3276,7 +3276,10 @@ while (true) {
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
             assert len(objectMemberTypes) == 1
-            object = CGGeneric("%s.SetToObject(cx, argObj);\n"
+            # Very important to NOT construct a temporary Rooted here, since the
+            # SetToObject call can call a Rooted constructor and we need to keep
+            # stack discipline for Rooted.
+            object = CGGeneric("%s.SetToObject(cx, &${val}.toObject());\n"
                                "done = true;" % unionArgumentObj)
             names.append(objectMemberTypes[0].name)
         else:
@@ -3303,7 +3306,7 @@ while (true) {
             else:
                 templateBody = CGList([templateBody, object], "\n")
 
-            if any([arrayObject, dateObject, callbackObject, object]):
+            if dateObject:
                 templateBody.prepend(CGGeneric("JS::Rooted<JSObject*> argObj(cx, &${val}.toObject());"))
             templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
         else:
