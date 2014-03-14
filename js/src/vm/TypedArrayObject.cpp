@@ -917,8 +917,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (ar->is<TypedArrayObject>())
             return copyFromTypedArray(cx, thisTypedArray, ar, offset);
 
-        JSRuntime *runtime = cx->runtime();
 #ifdef DEBUG
+        JSRuntime *runtime = cx->runtime();
         uint64_t gcNumber = runtime->gcNumber;
 #endif
 
