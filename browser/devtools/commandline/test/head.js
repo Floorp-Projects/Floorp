@@ -10,6 +10,11 @@ let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "/helpers.js", this);
 Services.scriptloader.loadSubScript(testDir + "/mockCommands.js", this);
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 function whenDelayedStartupFinished(aWindow, aCallback) {
   Services.obs.addObserver(function observer(aSubject, aTopic) {
     if (aWindow == aSubject) {

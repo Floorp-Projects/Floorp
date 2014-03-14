@@ -15,7 +15,7 @@ function test() {
     waitForFocus(startTests, content);
   }, true);
 
-  content.location = "data:text/html,<p>It's going to be legen....</p>";
+  content.location = "data:text/html;charset=utf-8,<p>It's going to be legen....</p>";
 }
 
 function startTests(aInspector, aToolbox) {

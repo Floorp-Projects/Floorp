@@ -699,7 +699,7 @@ HTMLBreadcrumbs.prototype = {
       this.selectionGuardEnd(err);
     });
   }
-}
+};
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
