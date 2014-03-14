@@ -134,7 +134,8 @@
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
   text-align: center;
-  margin: 2px 0 0;
+  /* Need to override toolkit theming which sets margin: 0 !important; */
+  margin: 2px 0 0 !important;
 }
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
