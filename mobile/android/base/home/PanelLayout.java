@@ -84,25 +84,68 @@ abstract class PanelLayout extends FrameLayout {
      * filter for queries on the database.
      */
     public static class DatasetRequest implements Parcelable {
-        private final String datasetId;
-        private final String filter;
+        public enum Type implements Parcelable {
+            DATASET_LOAD,
+            FILTER_PUSH,
+            FILTER_POP;
 
-        private DatasetRequest(Parcel in) {
-            this.datasetId = in.readString();
-            this.filter = in.readString();
+            @Override
+            public int describeContents() {
+                return 0;
+            }
+
+            @Override
+            public void writeToParcel(Parcel dest, int flags) {
+                dest.writeInt(ordinal());
+            }
+
+            public static final Creator<Type> CREATOR = new Creator<Type>() {
+                @Override
+                public Type createFromParcel(final Parcel source) {
+                    return Type.values()[source.readInt()];
+                }
+
+                @Override
+                public Type[] newArray(final int size) {
+                    return new Type[size];
+                }
+            };
         }
 
-        public DatasetRequest(String datasetId, String filter) {
-            this.datasetId = datasetId;
-            this.filter = filter;
+        private final Type mType;
+        private final String mDatasetId;
+        private final FilterDetail mFilterDetail;
+
+        private DatasetRequest(Parcel in) {
+            this.mType = (Type) in.readParcelable(getClass().getClassLoader());
+            this.mDatasetId = in.readString();
+            this.mFilterDetail = (FilterDetail) in.readParcelable(getClass().getClassLoader());
+        }
+
+        public DatasetRequest(String datasetId, FilterDetail filterDetail) {
+            this(Type.DATASET_LOAD, datasetId, filterDetail);
+        }
+
+        public DatasetRequest(Type type, String datasetId, FilterDetail filterDetail) {
+            this.mType = type;
+            this.mDatasetId = datasetId;
+            this.mFilterDetail = filterDetail;
+        }
+
+        public Type getType() {
+            return mType;
         }
 
         public String getDatasetId() {
-            return datasetId;
+            return mDatasetId;
         }
 
         public String getFilter() {
-            return filter;
+            return (mFilterDetail != null ? mFilterDetail.filter : null);
+        }
+
+        public FilterDetail getFilterDetail() {
+            return mFilterDetail;
         }
 
         @Override
@@ -112,12 +155,13 @@ abstract class PanelLayout extends FrameLayout {
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(datasetId);
-            dest.writeString(filter);
+            dest.writeParcelable(mType, 0);
+            dest.writeString(mDatasetId);
+            dest.writeParcelable(mFilterDetail, 0);
         }
 
         public String toString() {
-            return "{dataset: " + datasetId + ", filter: " + filter + "}";
+            return "{type: " + mType + " dataset: " + mDatasetId + ", filter: " + mFilterDetail + "}";
         }
 
         public static final Creator<DatasetRequest> CREATOR = new Creator<DatasetRequest>() {
@@ -176,7 +220,7 @@ abstract class PanelLayout extends FrameLayout {
      */
     public final void deliverDataset(DatasetRequest request, Cursor cursor) {
         Log.d(LOGTAG, "Delivering request: " + request);
-        updateViewsWithDataset(request.getDatasetId(), cursor);
+        updateViewsFromRequest(request, cursor);
     }
 
     /**
@@ -184,8 +228,8 @@ abstract class PanelLayout extends FrameLayout {
      * existing panel views.
      */
     public final void releaseDataset(String datasetId) {
-        Log.d(LOGTAG, "Resetting dataset: " + datasetId);
-        updateViewsWithDataset(datasetId, null);
+        Log.d(LOGTAG, "Releasing dataset: " + datasetId);
+        releaseViewsWithDataset(datasetId);
     }
 
     /**
@@ -261,14 +305,35 @@ abstract class PanelLayout extends FrameLayout {
         }
     }
 
-    private void updateViewsWithDataset(String datasetId, Cursor cursor) {
+    private void updateViewsFromRequest(DatasetRequest request, Cursor cursor) {
         for (Map.Entry<View, ViewState> entry : mViewStateMap.entrySet()) {
             final ViewState detail = entry.getValue();
 
             // Update any views associated with the given dataset ID
-            if (TextUtils.equals(detail.getDatasetId(), datasetId)) {
+            if (TextUtils.equals(detail.getDatasetId(), request.getDatasetId())) {
+                switch (request.getType()) {
+                    case FILTER_PUSH:
+                        detail.pushFilter(request.getFilterDetail());
+                        break;
+                    case FILTER_POP:
+                        detail.popFilter();
+                        break;
+                }
+
                 final View view = entry.getKey();
                 maybeSetDataset(view, cursor);
+            }
+        }
+    }
+
+    private void releaseViewsWithDataset(String datasetId) {
+        for (Map.Entry<View, ViewState> entry : mViewStateMap.entrySet()) {
+            final ViewState detail = entry.getValue();
+
+            // Release the cursor on views associated with the given dataset ID
+            if (TextUtils.equals(detail.getDatasetId(), datasetId)) {
+                final View view = entry.getKey();
+                maybeSetDataset(view, null);
             }
         }
     }
@@ -363,25 +428,49 @@ abstract class PanelLayout extends FrameLayout {
         }
     }
 
-    static class FilterDetail {
+    static class FilterDetail implements Parcelable {
         final String filter;
         final String title;
+
+        private FilterDetail(Parcel in) {
+            this.filter = in.readString();
+            this.title = in.readString();
+        }
 
         public FilterDetail(String filter, String title) {
             this.filter = filter;
             this.title = title;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(filter);
+            dest.writeString(title);
+        }
+
+        public static final Creator<FilterDetail> CREATOR = new Creator<FilterDetail>() {
+            public FilterDetail createFromParcel(Parcel in) {
+                return new FilterDetail(in);
+            }
+
+            public FilterDetail[] newArray(int size) {
+                return new FilterDetail[size];
+            }
+        };
     }
 
     /**
      * Pushes filter to {@code ViewState}'s stack and makes request for new filter value.
      */
     private void pushFilterOnView(ViewState viewState, FilterDetail filterDetail) {
-        viewState.pushFilter(filterDetail);
-
-        final String filter = filterDetail.filter;
         final String datasetId = viewState.getDatasetId();
-        mDatasetHandler.requestDataset(new DatasetRequest(datasetId, filter));
+        mDatasetHandler.requestDataset(
+            new DatasetRequest(DatasetRequest.Type.FILTER_PUSH, datasetId, filterDetail));
     }
 
     /**
@@ -390,12 +479,11 @@ abstract class PanelLayout extends FrameLayout {
      * @return whether the filter has changed
      */
     private boolean popFilterOnView(ViewState viewState) {
-        if (viewState.popFilter()) {
-            final FilterDetail current = viewState.getCurrentFilter();
-
-            final String filter = (current == null ? null : current.filter);
+        if (viewState.canPopFilter()) {
+            final FilterDetail filterDetail = viewState.getPreviousFilter();
             final String datasetId = viewState.getDatasetId();
-            mDatasetHandler.requestDataset(new DatasetRequest(datasetId, filter));
+            mDatasetHandler.requestDataset(
+                new DatasetRequest(DatasetRequest.Type.FILTER_POP, datasetId, filterDetail));
             return true;
         } else {
             return false;
