@@ -12,11 +12,12 @@ module.metadata = {
 const { Toolbar } = require("sdk/ui/toolbar");
 const { Loader } = require("sdk/test/loader");
 const { identify } = require("sdk/ui/id");
-const { getMostRecentBrowserWindow, open } = require("sdk/window/utils");
+const { getMostRecentBrowserWindow, open, getOuterId } = require("sdk/window/utils");
 const { ready, close } = require("sdk/window/helpers");
 const { defer } = require("sdk/core/promise");
-const { send } = require("sdk/event/utils");
+const { send, stop, Reactor } = require("sdk/event/utils");
 const { object } = require("sdk/util/sequence");
+const { CustomizationInput } = require("sdk/input/customizable-ui");
 const { OutputPort } = require("sdk/output/system");
 const output = new OutputPort({ id: "toolbar-change" });
 
@@ -355,6 +356,77 @@ exports["test title change"] = function*(assert) {
   t1.destroy();
   yield wait(t1, "detach");
   yield close(w2);
+};
+
+exports["test toolbar is not customizable"] = function*(assert, done) {
+  const { window, document, gCustomizeMode } = getMostRecentBrowserWindow();
+  const outerId = getOuterId(window);
+  const input = new CustomizationInput();
+  const customized = defer();
+  const customizedEnd = defer();
+
+  new Reactor({ onStep: value => {
+    if (value[outerId] === true)
+      customized.resolve();
+    if (value[outerId] === null)
+      customizedEnd.resolve();
+  }}).run(input);
+
+  const toolbar = new Toolbar({ title: "foo" });
+
+  yield wait(toolbar, "attach");
+
+  let view = document.getElementById(toolbar.id);
+  let label = view.querySelector("label");
+  let inner = view.querySelector("toolbar");
+
+  assert.equal(view.getAttribute("customizable"), "false",
+    "The outer toolbar is not customizable.");
+
+  assert.ok(label.collapsed,
+    "The label is not displayed.")
+
+  assert.equal(inner.getAttribute("customizable"), "true",
+    "The inner toolbar is customizable.");
+
+  assert.equal(window.getComputedStyle(inner).visibility, "visible",
+    "The inner toolbar is visible.");
+
+  // Enter in customization mode
+  gCustomizeMode.toggle();
+
+  yield customized.promise;
+
+  assert.equal(view.getAttribute("customizable"), "false",
+    "The outer toolbar is not customizable.");
+
+  assert.equal(label.collapsed, false,
+    "The label is displayed.")
+
+  assert.equal(inner.getAttribute("customizable"), "true",
+    "The inner toolbar is customizable.");
+
+  assert.equal(window.getComputedStyle(inner).visibility, "hidden",
+    "The inner toolbar is hidden.");
+
+  // Exit from customization mode
+  gCustomizeMode.toggle();
+
+  yield customizedEnd.promise;
+
+  assert.equal(view.getAttribute("customizable"), "false",
+    "The outer toolbar is not customizable.");
+
+  assert.ok(label.collapsed,
+    "The label is not displayed.")
+
+  assert.equal(inner.getAttribute("customizable"), "true",
+    "The inner toolbar is customizable.");
+
+  assert.equal(window.getComputedStyle(inner).visibility, "visible",
+    "The inner toolbar is visible.");
+  
+  toolbar.destroy();
 };
 
 require("sdk/test").run(exports);
