@@ -143,7 +143,7 @@ def print_class_declaration(eventname, iface, fd, conf):
                 allattributes.append(member)
     allattributes.extend(attributes);
 
-    fd.write("\nclass %s : public %s, public %s\n" % (classname, basename, iface.name))
+    fd.write("\nclass %s MOZ_FINAL : public %s, public %s\n" % (classname, basename, iface.name))
     fd.write("{\n")
     fd.write("public:\n")
     fd.write("  %s(mozilla::dom::EventTarget* aOwner, " % classname)
@@ -490,7 +490,9 @@ def write_cpp(eventname, iface, fd, conf):
     fd.write("mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext = nullptr, mozilla::WidgetEvent* aEvent = nullptr)\n")
     fd.write("{\n")
     fd.write("  mozilla::dom::%s* it = new mozilla::dom::%s(aOwner, aPresContext, aEvent);\n" % (classname, classname))
-    fd.write("  return CallQueryInterface(it, aInstance);\n")
+    fd.write("  NS_ADDREF(it);\n")
+    fd.write("  *aInstance = static_cast<mozilla::dom::Event*>(it);\n")
+    fd.write("  return NS_OK;\n");
     fd.write("}\n\n")
 
 def toWebIDLType(attribute, inType=False, onlyInterface=False):
