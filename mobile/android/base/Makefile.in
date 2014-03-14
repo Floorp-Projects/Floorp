@@ -182,6 +182,8 @@ not_android_res_files := \
   *.mkdir.done* \
   *.DS_Store* \
   *\#* \
+  *.rej \
+  *.orig \
   $(NULL)
 
 # This uses the fact that Android resource directories list all
@@ -253,9 +255,10 @@ gecko-nodeps/R.txt: .aapt.nodeps ;
 # This ignores the default set of resources ignored by aapt, plus
 # files starting with '#'.  (Emacs produces temp files named #temp#.)
 # This doesn't actually set the environment variable; it's used as a
-# parameter in the aapt invocation below.
+# parameter in the aapt invocation below.  Consider updating
+# not_android_res_files as well.
 
-ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~:\#*
+ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~:\#*:*.rej:*.orig
 
 # 1: target file.
 # 2: dependencies.
