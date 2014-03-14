@@ -415,6 +415,7 @@ interface TestExampleInterface {
   void passNullableUnionWithDefaultValue12(optional (unrestricted float or DOMString)? arg = null);
 
   void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
+  void passSequenceOfUnions2(sequence<(object or long)> arg);
   void passVariadicUnion((CanvasPattern or CanvasGradient)... arg);
 
   void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);

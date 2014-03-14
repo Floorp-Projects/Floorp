@@ -7201,7 +7201,9 @@ class CGUnionStruct(CGThing):
             disallowCopyConstruction = True
 
         friend="  friend class %sArgument;\n" % str(self.type) if not self.ownsMembers else ""
+        bases = [ClassBase("AllOwningUnionBase")] if self.ownsMembers else []
         return CGClass(selfName,
+                       bases=bases,
                        members=members,
                        constructors=constructors,
                        methods=methods,
