@@ -1586,6 +1586,12 @@ MacroAssemblerMIPSCompat::addPtr(const Address &src, Register dest)
 }
 
 void
+MacroAssemblerMIPSCompat::subPtr(Register src, Register dest)
+{
+    ma_subu(dest, dest, src);
+}
+
+void
 MacroAssemblerMIPSCompat::not32(Register reg)
 {
     ma_not(reg, reg);
