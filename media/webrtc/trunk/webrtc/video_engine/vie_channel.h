@@ -177,22 +177,14 @@ class ViEChannel
                                     int32_t* rttMs);
 
   // Returns statistics reported by the remote client in an RTCP packet.
-  int32_t GetSendRtcpStatistics(uint32_t* ntp_high,
-                                uint32_t* ntp_low,
-                                uint32_t* bytes_sent,
-                                uint32_t* packets_sent,
-                                uint16_t* fraction_lost,
+  int32_t GetSendRtcpStatistics(uint16_t* fraction_lost,
                                 uint32_t* cumulative_lost,
                                 uint32_t* extended_max,
                                 uint32_t* jitter_samples,
                                 int32_t* rtt_ms);
 
-  // Returns RTCP sender report + locally created stats of received RTP stream
-  int32_t GetReceivedRtcpStatistics(uint32_t* ntp_high,
-                                    uint32_t* ntp_low,
-                                    uint32_t* bytes_sent,
-                                    uint32_t* packets_sent,
-                                    uint16_t* fraction_lost,
+  // Returns our localy created statistics of the received RTP stream.
+  int32_t GetReceivedRtcpStatistics(uint16_t* fraction_lost,
                                     uint32_t* cumulative_lost,
                                     uint32_t* extended_max,
                                     uint32_t* jitter_samples,
