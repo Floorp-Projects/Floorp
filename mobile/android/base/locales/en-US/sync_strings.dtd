@@ -105,7 +105,7 @@
 <!ENTITY sync.text.tab.sent.label 'Your tab was sent!'>
 <!ENTITY sync.text.tab.not.sent.label 'There was a problem sending your tab.'>
 
-<!-- Firefox account strings. -->
+<!-- Firefox Account strings. -->
 
 <!-- Localization note: these are shown in all screens that query the
      user for an email address and password. Hide and show are button
@@ -130,8 +130,8 @@
 
 <!-- Localization note: the Firefox below should not change with the
      particular version of Firefox installed (Release, Beta, Aurora,
-     etc).  The account remains a "Firefox" account. -->
-<!ENTITY fxaccount_create_account_header 'Create a Firefox account'>
+     etc).  The account remains a "Firefox Account". -->
+<!ENTITY fxaccount_create_account_header2 'Create a Firefox Account'>
 <!ENTITY fxaccount_create_account_password_length_restriction 'Must be at least 8 characters'>
 <!ENTITY fxaccount_create_account_year_of_birth 'Year of birth'>
 <!-- Localization note: &formatS1; is fxaccount_policy_linktos, &formatS2; is fxaccount_policy_linkprivacy, both hyperlinked. -->
@@ -147,7 +147,7 @@
 <!ENTITY fxaccount_account_create_not_allowed_learn_more 'Learn more'>
 
 <!ENTITY fxaccount_confirm_account_header 'Confirm your account'>
-<!-- Localization note: &formatS; is the Firefox account's email address. -->
+<!-- Localization note: &formatS; is the Firefox Account's email address. -->
 <!ENTITY fxaccount_confirm_account_verification_link 'A verification link has been sent to &formatS;'>
 <!ENTITY fxaccount_confirm_account_resend_email 'Resend email'>
 <!ENTITY fxaccount_confirm_account_verification_link_sent2 'Verification email sent'>
@@ -166,7 +166,7 @@
 <!ENTITY fxaccount_update_credentials_button_label 'Sign in'>
 <!ENTITY fxaccount_update_credentials_unknown_error 'Could not sign in'>
 
-<!ENTITY fxaccount_status_header 'Firefox account'>
+<!ENTITY fxaccount_status_header2 'Firefox Account'>
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
 <!ENTITY fxaccount_status_sync '&syncBrand.shortName.label;'>
 <!ENTITY fxaccount_status_sync_enabled '&syncBrand.shortName.label;: enabled'>
@@ -180,14 +180,14 @@
 <!ENTITY fxaccount_status_legal 'Legal' >
 
 <!-- Localization note: this is the name shown by the Android system
-     itself for a Firefox account. Don't localize this. -->
+     itself for a Firefox Account. Don't localize this. -->
 <!ENTITY fxaccount_account_type_label 'Firefox'>
 
 <!-- Localization note: these are shown by the Android system itself,
      when the user navigates to the Android > Accounts > [Firefox
-     Account] Screen. The link takes the user to the Firefox account
+     Account] Screen. The link takes the user to the Firefox Account
      status activity, which lets them manage their Firefox
-     account. -->
+     Account. -->
 <!ENTITY fxaccount_options_title '&syncBrand.shortName.label; Options'>
 <!ENTITY fxaccount_options_configure_title 'Configure &syncBrand.shortName.label;'>
 
@@ -208,5 +208,5 @@
 
 <!ENTITY fxaccount_sync_sign_in_error_notification_title2 '&syncBrand.shortName.label; is not connected'>
 <!-- Note to translators: the format string below will be replaced
-     with the Firefox account's email address. -->
+     with the Firefox Account's email address. -->
 <!ENTITY fxaccount_sync_sign_in_error_notification_text2 'Tap to sign in as &formatS;'>
