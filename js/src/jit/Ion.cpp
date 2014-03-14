@@ -455,9 +455,8 @@ jit::RequestInterruptForIonCode(JSRuntime *rt, JSRuntime::InterruptMode mode)
     }
 }
 
-JitCompartment::JitCompartment(JitRuntime *rt)
-  : rt(rt),
-    stubCodes_(nullptr),
+JitCompartment::JitCompartment()
+  : stubCodes_(nullptr),
     baselineCallReturnAddr_(nullptr),
     baselineGetPropReturnAddr_(nullptr),
     baselineSetPropReturnAddr_(nullptr),
@@ -562,7 +561,7 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
     FinishAllOffThreadCompilations(compartment);
 
     // Free temporary OSR buffer.
-    rt->freeOsrTempData();
+    trc->runtime->jitRuntime()->freeOsrTempData();
 }
 
 void
