@@ -1,3 +1,7 @@
+New files added to MFBT should follow standard Mozilla style, and existing
+files are in the process of being converted. Nonetheless, some files still use
+the old style, which is described below.
+
 = mfbt style rules =
 
 == Line length ==
