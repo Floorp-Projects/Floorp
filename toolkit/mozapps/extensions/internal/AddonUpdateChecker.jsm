@@ -45,7 +45,7 @@ var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
            getService(Ci.nsIRDFService);
 
 Cu.import("resource://gre/modules/Log.jsm");
-const LOGGER_ID = "addons.updates";
+const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker
 // (Requires AddonManager.jsm)
