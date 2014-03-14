@@ -9,12 +9,9 @@
 
 var EXPORTED_SYMBOLS = ["Logger"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-var Logger =
-{
+var Logger = {
   _foStream: null,
   _converter: null,
   _potentialError: null,
@@ -25,8 +22,8 @@ var Logger =
       return;
     }
 
-    let prefs = CC["@mozilla.org/preferences-service;1"]
-                .getService(CI.nsIPrefBranch);
+    let prefs = Cc["@mozilla.org/preferences-service;1"]
+                .getService(Ci.nsIPrefBranch);
     if (path) {
       prefs.setCharPref("tps.logfile", path);
     }
@@ -34,26 +31,26 @@ var Logger =
       path = prefs.getCharPref("tps.logfile");
     }
 
-    this._file = CC["@mozilla.org/file/local;1"]
-                 .createInstance(CI.nsILocalFile);
+    this._file = Cc["@mozilla.org/file/local;1"]
+                 .createInstance(Ci.nsILocalFile);
     this._file.initWithPath(path);
     var exists = this._file.exists();
 
     // Make a file output stream and converter to handle it.
-    this._foStream = CC["@mozilla.org/network/file-output-stream;1"]
-                     .createInstance(CI.nsIFileOutputStream);
+    this._foStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                     .createInstance(Ci.nsIFileOutputStream);
     // If the file already exists, append it, otherwise create it.
     var fileflags = exists ? 0x02 | 0x08 | 0x10 : 0x02 | 0x08 | 0x20;
 
     this._foStream.init(this._file, fileflags, 0666, 0);
-    this._converter = CC["@mozilla.org/intl/converter-output-stream;1"]
-                      .createInstance(CI.nsIConverterOutputStream);
+    this._converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                      .createInstance(Ci.nsIConverterOutputStream);
     this._converter.init(this._foStream, "UTF-8", 0, 0);
   },
 
   write: function (data) {
     if (this._converter == null) {
-      CU.reportError(
+      Cu.reportError(
           "TPS Logger.write called with _converter == null!");
       return;
     }

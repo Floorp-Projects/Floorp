@@ -2,7 +2,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from firefoxrunner import TPSFirefoxRunner
-from testrunner import TPSTestRunner
-from mozhttpd import MozHttpd
-
+from . firefoxrunner import TPSFirefoxRunner
+from . testrunner import TPSTestRunner

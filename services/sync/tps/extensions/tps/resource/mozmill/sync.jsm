@@ -2,26 +2,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 var EXPORTED_SYMBOLS = ["TPS", "SYNC_WIPE_SERVER", "SYNC_RESET_CLIENT",
                         "SYNC_WIPE_CLIENT"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-CU.import("resource://gre/modules/XPCOMUtils.jsm");
-CU.import("resource://gre/modules/Services.jsm");
-CU.import("resource://services-sync/util.js");
-CU.import("resource://tps/logger.jsm");
-var utils = {}; CU.import('resource://mozmill/modules/utils.js', utils);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-sync/util.js");
+Cu.import("resource://tps/logger.jsm");
+
+var utils = {}; Cu.import('resource://mozmill/modules/utils.js', utils);
 
 const SYNC_RESET_CLIENT = "reset-client";
 const SYNC_WIPE_CLIENT  = "wipe-client";
 const SYNC_WIPE_REMOTE  = "wipe-remote";
 const SYNC_WIPE_SERVER  = "wipe-server";
 
-var prefs = CC["@mozilla.org/preferences-service;1"]
+var prefs = Cc["@mozilla.org/preferences-service;1"]
             .getService(CI.nsIPrefBranch);
 
 var syncFinishedCallback = function() {
@@ -33,8 +31,8 @@ var TPS = {
   _waitingForSync: false,
   _syncErrors: 0,
 
-  QueryInterface: XPCOMUtils.generateQI([CI.nsIObserver,
-                                         CI.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
   observe: function TPS__observe(subject, topic, data) {
     Logger.logInfo('Mozmill observed: ' + topic);
@@ -63,13 +61,14 @@ var TPS = {
 
   SetupSyncAccount: function TPS__SetupSyncAccount() {
     try {
-      let serverURL = prefs.getCharPref('tps.account.serverURL');
+      let serverURL = prefs.getCharPref('tps.serverURL');
       if (serverURL) {
         Weave.Service.serverURL = serverURL;
       }
     }
     catch(e) {}
 
+    // Needs to be updated if this Mozmill sanity test is needed for Firefox Accounts
     Weave.Service.identity.account       = prefs.getCharPref('tps.account.username');
     Weave.Service.Identity.basicPassword = prefs.getCharPref('tps.account.password');
     Weave.Service.identity.syncKey       = prefs.getCharPref('tps.account.passphrase');

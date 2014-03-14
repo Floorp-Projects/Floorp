@@ -22,8 +22,8 @@ const nsIWindowWatcher               = Components.interfaces.nsIWindowWatcher;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function TPSCmdLineHandler() {}
-TPSCmdLineHandler.prototype =
-{
+
+TPSCmdLineHandler.prototype = {
   classDescription: "TPSCmdLineHandler",
   classID         : TPS_CMDLINE_CLSID,
   contractID      : TPS_CMDLINE_CONTRACTID,
@@ -49,7 +49,7 @@ TPSCmdLineHandler.prototype =
         return;
     let phase = cmdLine.handleFlagWithParam("tpsphase", false);
     if (phase == null)
-        throw("must specify --tpsphase with --tps");
+        throw Error("must specify --tpsphase with --tps");
     let logfile = cmdLine.handleFlagWithParam("tpslogfile", false);
     if (logfile == null)
         logfile = "";
@@ -79,10 +79,8 @@ TPSCmdLineHandler.prototype =
 };
 
 
-var TPSCmdLineFactory =
-{
-  createInstance : function(outer, iid)
-  {
+var TPSCmdLineFactory = {
+  createInstance : function(outer, iid) {
     if (outer != null) {
       throw Components.results.NS_ERROR_NO_AGGREGATION;
     }
@@ -92,10 +90,8 @@ var TPSCmdLineFactory =
 };
 
 
-var TPSCmdLineModule =
-{
-  registerSelf : function(compMgr, fileSpec, location, type)
-  {
+var TPSCmdLineModule = {
+  registerSelf : function(compMgr, fileSpec, location, type) {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.registerFactoryLocation(TPS_CMDLINE_CLSID,
@@ -114,8 +110,7 @@ var TPSCmdLineModule =
                             TPS_CMDLINE_CONTRACTID, true, true);
   },
 
-  unregisterSelf : function(compMgr, fileSpec, location)
-  {
+  unregisterSelf : function(compMgr, fileSpec, location) {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(TPS_CMDLINE_CLSID, fileSpec);
@@ -126,8 +121,7 @@ var TPSCmdLineModule =
                                "m-tps", true);
   },
 
-  getClassObject : function(compMgr, cid, iid)
-  {
+  getClassObject : function(compMgr, cid, iid) {
     if (cid.equals(TPS_CMDLINE_CLSID)) {
       return TPSCmdLineFactory;
     }
@@ -139,8 +133,7 @@ var TPSCmdLineModule =
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
-  canUnload : function(compMgr)
-  {
+  canUnload : function(compMgr) {
     return true;
   }
 };

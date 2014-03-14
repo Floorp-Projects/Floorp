@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = [
   "FxAccountsHelper",
 ];
 
-const { utils: Cu } = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://services-common/async.js");
