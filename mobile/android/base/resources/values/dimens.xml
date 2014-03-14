@@ -46,10 +46,12 @@
 
     <dimen name="flow_layout_spacing">6dp</dimen>
     <dimen name="menu_item_icon">21dp</dimen>
+    <dimen name="menu_item_textsize">16sp</dimen>
     <dimen name="menu_item_state_icon">18dp</dimen>
     <dimen name="menu_item_row_height">44dp</dimen>
     <dimen name="menu_item_row_width">240dp</dimen>
     <dimen name="menu_item_more_offset">5dp</dimen>
+    <dimen name="menu_item_textsize">16sp</dimen>
     <dimen name="menu_popup_arrow_offset">8dp</dimen>
     <dimen name="menu_popup_arrow_margin">5dip</dimen>
     <dimen name="menu_popup_arrow_width">40dip</dimen>
@@ -57,7 +59,7 @@
     <dimen name="menu_popup_width">256dp</dimen>
     <dimen name="nav_button_border_width">0.75dp</dimen>
     <dimen name="prompt_service_group_padding_size">32dp</dimen>
-    <dimen name="prompt_service_icon_size">72dp</dimen>
+    <dimen name="prompt_service_icon_size">36dp</dimen>
     <dimen name="prompt_service_icon_text_padding">10dp</dimen>
     <dimen name="prompt_service_inputs_padding">16dp</dimen>
     <dimen name="prompt_service_left_right_text_with_icon_padding">10dp</dimen>
