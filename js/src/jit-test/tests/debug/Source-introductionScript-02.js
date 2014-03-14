@@ -29,3 +29,16 @@ dbg.onDebuggerStatement = outerHandler;
 g.evaluate('debugger; "debugger;".replace(/.*/, eval);',
            { lineNumber: 1234 });
 assertEq(log, 'oi');
+
+
+// If the call takes place in another global, however, we don't record the
+// introduction script.
+log = '';
+dbg.onDebuggerStatement = function (frame) {
+  log += 'd';
+  assertEq(frame.script.source.introductionScript, undefined);
+  assertEq(frame.script.source.introductionOffset, undefined);
+};
+["debugger;"].map(g.eval);
+"debugger;".replace(/.*/, g.eval);
+assertEq(log, 'dd');
