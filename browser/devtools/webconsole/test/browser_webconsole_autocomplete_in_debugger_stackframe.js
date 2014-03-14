@@ -214,7 +214,7 @@ function testCompletion(hud) {
   is(newItems.length, 0, "no items for foo2Obj[0]");
 
   testDriver = null;
-  executeSoon(finishTest);
+  executeSoon(finishUp);
   yield undefined;
 }
 
@@ -236,4 +236,9 @@ function onFramesAdded()
 {
   info("onFramesAdded, openConsole() now");
   executeSoon(() => openConsole(null, testNext));
+}
+
+function finishUp() {
+  testDriver = gStackframes = null;
+  finishTest();
 }

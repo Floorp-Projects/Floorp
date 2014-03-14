@@ -50,7 +50,6 @@ function test()
       inspector = aInspector;
       // Make sure the highlighter is shown so we can disable transitions
       inspector.toolbox.highlighter.showBoxModel(getNodeFront(doc.body)).then(() => {
-        getHighlighterOutline().setAttribute("disable-transitions", "true");
         runTests();
       });
     });
@@ -65,12 +64,17 @@ function test()
 
   function isTheIframeHighlighted()
   {
-    let outlineRect = getHighlighterOutlineRect();
-    let iframeRect = iframeNode.getBoundingClientRect();
-    for (let dim of ["width", "height", "top", "left"]) {
-      is(Math.floor(outlineRect[dim]), Math.floor(iframeRect[dim]),
-         "Outline dimension is correct " + outlineRect[dim]);
-    }
+    let {p1, p2, p3, p4} = getBoxModelStatus().border.points;
+    let {top, right, bottom, left} = iframeNode.getBoundingClientRect();
+
+    is(top, p1.y, "iframeRect.top === boxModelStatus.p1.y");
+    is(top, p2.y, "iframeRect.top === boxModelStatus.p2.y");
+    is(right, p2.x, "iframeRect.right === boxModelStatus.p2.x");
+    is(right, p3.x, "iframeRect.right === boxModelStatus.p3.x");
+    is(bottom, p3.y, "iframeRect.bottom === boxModelStatus.p3.y");
+    is(bottom, p4.y, "iframeRect.bottom === boxModelStatus.p4.y");
+    is(left, p1.x, "iframeRect.left === boxModelStatus.p1.x");
+    is(left, p4.x, "iframeRect.left === boxModelStatus.p4.x");
 
     iframeNode.style.marginBottom = doc.defaultView.innerHeight + "px";
     doc.defaultView.scrollBy(0, 40);
@@ -82,9 +86,8 @@ function test()
   {
     is(getHighlitNode(), iframeBodyNode, "highlighter shows the right node");
 
-    // 184 == 200 + 11(border) + 13(padding) - 40(scroll)
-    let outlineRect = getHighlighterOutlineRect();
-    is(outlineRect.height, 184, "highlighter height");
+    let outlineRect = getSimpleBorderRect();
+    is(outlineRect.height, 200, "highlighter height");
 
     inspector.toolbox.highlighterUtils.stopPicker().then(() => {
       let target = TargetFactory.forTab(gBrowser.selectedTab);

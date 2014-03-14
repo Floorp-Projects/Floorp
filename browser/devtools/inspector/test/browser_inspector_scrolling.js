@@ -33,34 +33,34 @@ function inspectNode(aInspector)
 {
   inspector = aInspector;
 
-  inspector.once("inspector-updated", performScrollingTest);
-  executeSoon(function() {
-    inspector.selection.setNode(div, "");
-  });
+  let highlighter = inspector.toolbox.highlighter;
+  highlighter.showBoxModel(getNodeFront(div)).then(performScrollingTest);
 }
 
 function performScrollingTest()
 {
-  executeSoon(function() {
-    // FIXME: this will fail on retina displays. EventUtils will only scroll
-    // 25px down instead of 50.
-    EventUtils.synthesizeWheel(div, 10, 10,
-      { deltaY: 50.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL },
-      iframe.contentWindow);
-  });
-
   gBrowser.selectedBrowser.addEventListener("scroll", function() {
     gBrowser.selectedBrowser.removeEventListener("scroll", arguments.callee,
       false);
+    let isRetina = devicePixelRatio === 2;
+    is(iframe.contentDocument.body.scrollTop,
+      isRetina ? 25 : 50, "inspected iframe scrolled");
 
-    is(iframe.contentDocument.body.scrollTop, 50, "inspected iframe scrolled");
-
-    inspector = div = iframe = doc = null;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.closeToolbox(target);
-    gBrowser.removeCurrentTab();
-    finish();
+    finishUp();
   }, false);
+
+  EventUtils.synthesizeWheel(div, 10, 10,
+    { deltaY: 50.0, deltaMode: WheelEvent.DOM_DELTA_PIXEL },
+    iframe.contentWindow);
+}
+
+function finishUp()
+{
+  inspector = div = iframe = doc = null;
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  gDevTools.closeToolbox(target);
+  gBrowser.removeCurrentTab();
+  finish();
 }
 
 function test()

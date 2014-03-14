@@ -348,3 +348,12 @@ if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
 GENERATED_FILES = [
     'PremultiplyTables.h',
 ]
+
+CXXFLAGS += [
+    '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+        'frameworks/base/include/media/stagefright',
+        'frameworks/base/include/media/stagefright/openmax',
+        'frameworks/av/include/media/stagefright',
+        'frameworks/native/include/media/openmax',
+    ]
+]

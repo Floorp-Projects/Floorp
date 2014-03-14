@@ -19,6 +19,11 @@ const HOSTED_APP_MANIFEST = TEST_BASE + "hosted_app.manifest";
 
 const PACKAGED_APP_DIR_PATH = getTestFilePath(".");
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 function addTab(url, targetWindow = window) {
   info("Adding tab: " + url);
 

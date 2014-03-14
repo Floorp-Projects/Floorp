@@ -6,25 +6,15 @@
   pointer-events: none;
 }
 
-.highlighter-outline-container {
-  overflow: hidden;
-  position: relative;
-}
-
-.highlighter-outline {
-  position: absolute;
-}
-
-.highlighter-outline[hidden] {
-  opacity: 0;
-  pointer-events: none;
-  display: -moz-box;
-}
-
-.highlighter-outline:not([disable-transitions]) {
-  transition-property: opacity, top, left, width, height;
-  transition-duration: 0.1s;
-  transition-timing-function: linear;
+/*
+ * Box model highlighter
+ */
+svg|svg.box-model-root[hidden],
+svg|line.box-model-guide-top[hidden],
+svg|line.box-model-guide-right[hidden],
+svg|line.box-model-guide-left[hidden],
+svg|line.box-model-guide-bottom[hidden] {
+  display: none;
 }
 
 /*
@@ -43,13 +33,6 @@
   opacity: 0;
   pointer-events: none;
   display: -moz-box;
-}
-
-.highlighter-nodeinfobar-positioner:not([disable-transitions]),
-.highlighter-nodeinfobar-positioner[disable-transitions][force-transitions] {
-  transition-property: transform, opacity, top, left;
-  transition-duration: 0.1s;
-  transition-timing-function: linear;
 }
 
 .highlighter-nodeinfobar-text {

@@ -9,8 +9,3 @@ CFLAGS += \
         $(MOZ_ALSA_CFLAGS) \
         $(MOZ_PULSEAUDIO_CFLAGS) \
         $(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/frameworks/wilhelm/include \
-                  -I$(ANDROID_SOURCE)/system/media/wilhelm/include
-endif

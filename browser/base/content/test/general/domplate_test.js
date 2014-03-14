@@ -46,6 +46,6 @@ function test()
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html,basic domplate tests";
+  content.location = "data:text/html;charset=utf-8,domplate_test.js";
 }
 
