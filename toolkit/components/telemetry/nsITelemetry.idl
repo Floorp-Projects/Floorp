@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(6c31f68d-4a54-4dca-b6c8-ddb264d5a154)]
+[scriptable, uuid(4e4bfc35-dac6-4b28-ade4-7e45760051d5)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -249,4 +249,11 @@ interface nsITelemetry : nsISupports
    */
   [implicit_jscontext]
   readonly attribute jsval fileIOReports;
+
+  /**
+   * Return the number of seconds since process start using monotonic
+   * timestamps (unaffected by system clock changes).
+   * @throws NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have the data.
+   */
+  double msSinceProcessStart();
 };
