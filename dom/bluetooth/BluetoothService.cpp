@@ -447,59 +447,80 @@ BluetoothService::DistributeSignal(const BluetoothSignal& aSignal)
 }
 
 nsresult
-BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
+BluetoothService::StartBluetooth(bool aIsStartup)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sInShutdown) {
-    if (aStart) {
-      // Don't try to start if we're already shutting down.
-      MOZ_ASSERT(false, "Start called while in shutdown!");
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  if (!aStart) {
-    BluetoothProfileManagerBase* profile;
-    profile = BluetoothHfpManager::Get();
-    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-    if (profile->IsConnected()) {
-      profile->Disconnect(nullptr);
-    } else {
-      profile->Reset();
-    }
-
-    profile = BluetoothOppManager::Get();
-    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-    if (profile->IsConnected()) {
-      profile->Disconnect(nullptr);
-    }
-
-    profile = BluetoothA2dpManager::Get();
-    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-    if (profile->IsConnected()) {
-      profile->Disconnect(nullptr);
-    } else {
-      profile->Reset();
-    }
-
-    profile = BluetoothHidManager::Get();
-    NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
-    if (profile->IsConnected()) {
-      profile->Disconnect(nullptr);
-    } else {
-      profile->Reset();
-    }
-
+    // Don't try to start if we're already shutting down.
+    MOZ_ASSERT(false, "Start called while in shutdown!");
+    return NS_ERROR_FAILURE;
   }
 
   mAdapterAddedReceived = false;
 
-  nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart, aIsStartup);
+  nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(true, aIsStartup);
   nsresult rv = NS_DispatchToMainThread(runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+nsresult
+BluetoothService::StopBluetooth(bool aIsStartup)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothProfileManagerBase* profile;
+  profile = BluetoothHfpManager::Get();
+  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+  if (profile->IsConnected()) {
+    profile->Disconnect(nullptr);
+  } else {
+    profile->Reset();
+  }
+
+  profile = BluetoothOppManager::Get();
+  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+  if (profile->IsConnected()) {
+    profile->Disconnect(nullptr);
+  }
+
+  profile = BluetoothA2dpManager::Get();
+  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+  if (profile->IsConnected()) {
+    profile->Disconnect(nullptr);
+  } else {
+    profile->Reset();
+  }
+
+  profile = BluetoothHidManager::Get();
+  NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
+  if (profile->IsConnected()) {
+    profile->Disconnect(nullptr);
+  } else {
+    profile->Reset();
+  }
+
+  mAdapterAddedReceived = false;
+
+  nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(false, aIsStartup);
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
+{
+  nsresult rv;
+  if (aStart) {
+    rv = StartBluetooth(aIsStartup);
+  } else {
+    rv = StopBluetooth(aIsStartup);
+  }
+  return rv;
 }
 
 void
@@ -714,7 +735,7 @@ BluetoothService::HandleShutdown()
     }
   }
 
-  if (IsEnabled() && NS_FAILED(StartStopBluetooth(false, false))) {
+  if (IsEnabled() && NS_FAILED(StopBluetooth(false))) {
     MOZ_ASSERT(false, "Failed to deliver stop message!");
   }
 
