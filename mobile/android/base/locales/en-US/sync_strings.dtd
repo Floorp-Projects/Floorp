@@ -120,6 +120,11 @@
      Firefox. -->
 <!ENTITY fxaccount_back_to_browsing 'Back to browsing'>
 
+<!-- Localization note: the following two strings are interpolated
+     into fxaccount_create_account_policy_text; see note for that
+     string as well.  Compare fxaccount_status_{linktos,linkprivacy}:
+     these strings are separated to accommodate languages that decline
+     the two uses differently. -->
 <!ENTITY fxaccount_policy_linktos 'Terms of Service'>
 <!ENTITY fxaccount_policy_linkprivacy 'Privacy Notice'>
 
@@ -178,6 +183,12 @@
 <!ENTITY fxaccount_status_passwords 'Passwords'>
 <!ENTITY fxaccount_status_tabs 'Open tabs'>
 <!ENTITY fxaccount_status_legal 'Legal' >
+<!-- Localization note: when tapped, the following two strings link to
+     external web pages.  Compare fxaccount_policy_{linktos,linkprivacy}:
+     these strings are separated to accommodate languages that decline
+     the two uses differently. -->
+<!ENTITY fxaccount_status_linktos 'Terms of Service'>
+<!ENTITY fxaccount_status_linkprivacy 'Privacy Notice'>
 
 <!-- Localization note: this is the name shown by the Android system
      itself for a Firefox Account. Don't localize this. -->
