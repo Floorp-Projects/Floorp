@@ -1300,9 +1300,14 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/bookmark.png");
-  -moz-image-region: rect(0px 48px 16px 32px);
+  -moz-image-region: rect(0px 32px 16px 16px);
   width: 16px;
   height: 16px;
+}
+
+richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-bookmark,
+.autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .ac-result-type-keyword,
@@ -1580,7 +1585,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 }
 
 #bookmarks-menu-button.bookmark-item[starred] {
-  -moz-image-region: rect(0px 48px 16px 32px);
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 #bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
