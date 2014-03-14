@@ -148,12 +148,15 @@ random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1
 fuzzy(1,65536) fuzzy-if(B2G,256,83) fuzzy-if(Android||B2G,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=1.0  wrapper.html?half-colors.png
 
 # Test premult:
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
+# random-if(B2G) from bug 983650
+fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
 fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
+# random-if(B2G) from bug 983650
+fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 
 # Test over-bright premult:
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
+# random-if(B2G) from bug 983650
+fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 
 
 # Check for hanging framebuffer bindings:
