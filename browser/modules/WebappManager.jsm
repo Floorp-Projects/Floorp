@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["webappsUI"];
+this.EXPORTED_SYMBOLS = ["WebappManager"];
 
 let Ci = Components.interfaces;
 let Cc = Components.classes;
@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
-Cu.import("resource://gre/modules/WebappsInstaller.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -21,11 +21,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
-this.webappsUI = {
+this.WebappManager = {
   // List of promises for in-progress installations
   installations: {},
 
-  init: function webappsUI_init() {
+  init: function() {
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
@@ -34,7 +34,7 @@ this.webappsUI = {
     cpmm.addMessageListener("Webapps:UpdateState", this);
   },
 
-  uninit: function webappsUI_uninit() {
+  uninit: function() {
     Services.obs.removeObserver(this, "webapps-ask-install");
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-uninstall");
@@ -71,7 +71,7 @@ this.webappsUI = {
     }
   },
 
-  observe: function webappsUI_observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     let data = JSON.parse(aData);
     data.mm = aSubject;
 
@@ -108,6 +108,8 @@ this.webappsUI = {
 
     let bundle = chromeWin.gNavigatorBundle;
 
+    let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
+
     let notification;
 
     let mainAction = {
@@ -128,7 +130,7 @@ this.webappsUI = {
 
         let manifestURL = aData.app.manifestURL;
 
-        let cleanup = (ex) => {
+        let cleanup = () => {
           popupProgressContent.removeChild(progressMeter);
           delete this.installations[manifestURL];
           if (Object.getOwnPropertyNames(this.installations).length == 0) {
@@ -142,38 +144,36 @@ this.webappsUI = {
           cleanup();
         });
 
-        let app = WebappsInstaller.init(aData);
-
-        if (app) {
-          let localDir = null;
-          if (app.appProfile) {
-            localDir = app.appProfile.localDir;
-          }
-
-          DOMApplicationRegistry.confirmInstall(aData, localDir,
-            (aManifest, aZipPath) => {
-              Task.spawn(function() {
-                try {
-                  yield WebappsInstaller.install(aData, aManifest, aZipPath);
-                  yield this.installations[manifestURL].promise;
-                  installationSuccessNotification(aData, app, bundle);
-                } catch (ex) {
-                  Cu.reportError("Error installing webapp: " + ex);
-                  // TODO: Notify user that the installation has failed
-                } finally {
-                  cleanup();
-                }
-              }.bind(this));
-            });
-        } else {
+        let nativeApp = new NativeApp(aData.app, jsonManifest,
+                                      aData.app.categories);
+        let localDir;
+        try {
+          localDir = nativeApp.createProfile();
+        } catch (ex) {
+          Cu.reportError("Error installing webapp: " + ex);
           DOMApplicationRegistry.denyInstall(aData);
           cleanup();
+          return;
         }
+
+        DOMApplicationRegistry.confirmInstall(aData, localDir,
+          (aManifest, aZipPath) => Task.spawn((function*() {
+            try {
+              yield nativeApp.install(aManifest, aZipPath);
+              yield this.installations[manifestURL].promise;
+              notifyInstallSuccess(aData.app, nativeApp, bundle);
+            } catch (ex) {
+              Cu.reportError("Error installing webapp: " + ex);
+              // TODO: Notify user that the installation has failed
+            } finally {
+              cleanup();
+            }
+          }).bind(this))
+        );
       }
     };
 
     let requestingURI = chromeWin.makeURI(aData.from);
-    let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
     let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
 
     let host;
@@ -195,11 +195,11 @@ this.webappsUI = {
   }
 }
 
-function installationSuccessNotification(aData, app, aBundle) {
+function notifyInstallSuccess(aApp, aNativeApp, aBundle) {
   let launcher = {
     observe: function(aSubject, aTopic) {
       if (aTopic == "alertclickcallback") {
-        WebappOSUtils.launch(aData.app);
+        WebappOSUtils.launch(aApp);
       }
     }
   };
@@ -208,9 +208,9 @@ function installationSuccessNotification(aData, app, aBundle) {
     let notifier = Cc["@mozilla.org/alerts-service;1"].
                    getService(Ci.nsIAlertsService);
 
-    notifier.showAlertNotification(app.iconURI.spec,
+    notifier.showAlertNotification(aNativeApp.iconURI.spec,
                                    aBundle.getString("webapps.install.success"),
-                                   app.appNameAsFilename,
+                                   aNativeApp.appNameAsFilename,
                                    true, null, launcher);
   } catch (ex) {}
 }
