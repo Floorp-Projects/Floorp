@@ -487,6 +487,12 @@ FxAccountsInternal.prototype = {
       if (!currentState.whenKeysReadyDeferred) {
         currentState.whenKeysReadyDeferred = Promise.defer();
         this.fetchAndUnwrapKeys(data.keyFetchToken).then(data => {
+          if (!data.kA || !data.kB) {
+            currentState.whenKeysReadyDeferred.reject(
+              new Error("user data missing kA or kB")
+            );
+            return;
+          }
           currentState.whenKeysReadyDeferred.resolve(data);
         });
       }
