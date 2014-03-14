@@ -3673,6 +3673,24 @@ LazyScript::initRuntimeFields(uint64_t packedFields)
     p_.treatAsRunOnce = p.treatAsRunOnce;
 }
 
+bool
+LazyScript::hasUncompiledEnclosingScript() const
+{
+    // It can happen that we created lazy scripts while compiling an enclosing
+    // script, but we errored out while compiling that script. When we iterate
+    // over lazy script in a compartment, we might see lazy scripts that never
+    // escaped to script and should be ignored.
+    //
+    // If the enclosing scope is a function with a null script or has a script
+    // without code, it was not successfully compiled.
+
+    if (!enclosingScope() || !enclosingScope()->is<JSFunction>())
+        return false;
+
+    JSFunction &fun = enclosingScope()->as<JSFunction>();
+    return fun.isInterpreted() && (!fun.mutableScript() || !fun.nonLazyScript()->code());
+}
+
 uint32_t
 LazyScript::staticLevel(JSContext *cx) const
 {
