@@ -23,18 +23,20 @@ class SplayTree;
 template<typename T>
 class SplayTreeNode
 {
-  public:
-    template<class A, class B>
-    friend class SplayTree;
+public:
+  template<class A, class B>
+  friend class SplayTree;
 
-    SplayTreeNode()
-      : left(nullptr), right(nullptr), parent(nullptr)
-    {}
+  SplayTreeNode()
+    : mLeft(nullptr)
+    , mRight(nullptr)
+    , mParent(nullptr)
+  {}
 
-  private:
-    T* left;
-    T* right;
-    T* parent;
+private:
+  T* mLeft;
+  T* mRight;
+  T* mParent;
 };
 
 
@@ -51,231 +53,242 @@ class SplayTreeNode
 template<typename T, class Comparator>
 class SplayTree
 {
-    T* root;
+  T* mRoot;
 
-  public:
-    SplayTree()
-      : root(nullptr)
-    {}
+public:
+  SplayTree()
+    : mRoot(nullptr)
+  {}
 
-    bool empty() const {
-      return !root;
+  bool empty() const
+  {
+    return !mRoot;
+  }
+
+  T* find(const T& aValue)
+  {
+    if (empty()) {
+      return nullptr;
     }
 
-    T* find(const T& v)
-    {
-      if (empty())
-        return nullptr;
+    T* last = lookup(aValue);
+    splay(last);
+    checkCoherency(mRoot, nullptr);
+    return Comparator::compare(aValue, *last) == 0 ? last : nullptr;
+  }
 
-      T* last = lookup(v);
-      splay(last);
-      checkCoherency(root, nullptr);
-      return Comparator::compare(v, *last) == 0 ? last : nullptr;
-    }
+  bool insert(T* aValue)
+  {
+    MOZ_ASSERT(!find(*aValue), "Duplicate elements are not allowed.");
 
-    bool insert(T* v)
-    {
-      MOZ_ASSERT(!find(*v), "Duplicate elements are not allowed.");
-
-      if (!root) {
-        root = v;
-        return true;
-      }
-      T* last = lookup(*v);
-      int cmp = Comparator::compare(*v, *last);
-
-      T** parentPointer = (cmp < 0) ? &last->left : &last->right;
-      MOZ_ASSERT(!*parentPointer);
-      *parentPointer = v;
-      v->parent = last;
-
-      splay(v);
-      checkCoherency(root, nullptr);
+    if (!mRoot) {
+      mRoot = aValue;
       return true;
     }
+    T* last = lookup(*aValue);
+    int cmp = Comparator::compare(*aValue, *last);
 
-    T* remove(const T& v)
-    {
-      T* last = lookup(v);
-      MOZ_ASSERT(last, "This tree must contain the element being removed.");
-      MOZ_ASSERT(Comparator::compare(v, *last) == 0);
+    T** parentPointer = (cmp < 0) ? &last->mLeft : &last->mRight;
+    MOZ_ASSERT(!*parentPointer);
+    *parentPointer = aValue;
+    aValue->mParent = last;
 
-      // Splay the tree so that the item to remove is the root.
-      splay(last);
-      MOZ_ASSERT(last == root);
+    splay(aValue);
+    checkCoherency(mRoot, nullptr);
+    return true;
+  }
 
-      // Find another node which can be swapped in for the root: either the
-      // rightmost child of the root's left, or the leftmost child of the
-      // root's right.
-      T* swap;
-      T* swapChild;
-      if (root->left) {
-        swap = root->left;
-        while (swap->right)
-          swap = swap->right;
-        swapChild = swap->left;
-      } else if (root->right) {
-        swap = root->right;
-        while (swap->left)
-          swap = swap->left;
-        swapChild = swap->right;
+  T* remove(const T& aValue)
+  {
+    T* last = lookup(aValue);
+    MOZ_ASSERT(last, "This tree must contain the element being removed.");
+    MOZ_ASSERT(Comparator::compare(aValue, *last) == 0);
+
+    // Splay the tree so that the item to remove is the root.
+    splay(last);
+    MOZ_ASSERT(last == mRoot);
+
+    // Find another node which can be swapped in for the root: either the
+    // rightmost child of the root's left, or the leftmost child of the
+    // root's right.
+    T* swap;
+    T* swapChild;
+    if (mRoot->mLeft) {
+      swap = mRoot->mLeft;
+      while (swap->mRight) {
+        swap = swap->mRight;
+      }
+      swapChild = swap->mLeft;
+    } else if (mRoot->mRight) {
+      swap = mRoot->mRight;
+      while (swap->mLeft) {
+        swap = swap->mLeft;
+      }
+      swapChild = swap->mRight;
+    } else {
+      T* result = mRoot;
+      mRoot = nullptr;
+      return result;
+    }
+
+    // The selected node has at most one child, in swapChild. Detach it
+    // from the subtree by replacing it with that child.
+    if (swap == swap->mParent->mLeft) {
+      swap->mParent->mLeft = swapChild;
+    } else {
+      swap->mParent->mRight = swapChild;
+    }
+    if (swapChild) {
+      swapChild->mParent = swap->mParent;
+    }
+
+    // Make the selected node the new root.
+    mRoot = swap;
+    mRoot->mParent = nullptr;
+    mRoot->mLeft = last->mLeft;
+    mRoot->mRight = last->mRight;
+    if (mRoot->mLeft) {
+      mRoot->mLeft->mParent = mRoot;
+    }
+    if (mRoot->mRight) {
+      mRoot->mRight->mParent = mRoot;
+    }
+
+    checkCoherency(mRoot, nullptr);
+    return last;
+  }
+
+  T* removeMin()
+  {
+    MOZ_ASSERT(mRoot, "No min to remove!");
+
+    T* min = mRoot;
+    while (min->mLeft) {
+      min = min->mLeft;
+    }
+    return remove(*min);
+  }
+
+private:
+  /**
+   * Returns the node in this comparing equal to |aValue|, or a node just
+   * greater or just less than |aValue| if there is no such node.
+   */
+  T* lookup(const T& aValue)
+  {
+    MOZ_ASSERT(!empty());
+
+    T* node = mRoot;
+    T* parent;
+    do {
+      parent = node;
+      int c = Comparator::compare(aValue, *node);
+      if (c == 0) {
+        return node;
+      } else if (c < 0) {
+        node = node->mLeft;
       } else {
-        T* result = root;
-        root = nullptr;
-        return result;
+        node = node->mRight;
       }
+    } while (node);
+    return parent;
+  }
 
-      // The selected node has at most one child, in swapChild. Detach it
-      // from the subtree by replacing it with that child.
-      if (swap == swap->parent->left)
-        swap->parent->left = swapChild;
-      else
-        swap->parent->right = swapChild;
-      if (swapChild)
-        swapChild->parent = swap->parent;
+  /**
+   * Rotate the tree until |node| is at the root of the tree. Performing
+   * the rotations in this fashion preserves the amortized balancing of
+   * the tree.
+   */
+  void splay(T* aNode)
+  {
+    MOZ_ASSERT(aNode);
 
-      // Make the selected node the new root.
-      root = swap;
-      root->parent = nullptr;
-      root->left = last->left;
-      root->right = last->right;
-      if (root->left) {
-        root->left->parent = root;
+    while (aNode != mRoot) {
+      T* parent = aNode->mParent;
+      if (parent == mRoot) {
+        // Zig rotation.
+        rotate(aNode);
+        MOZ_ASSERT(aNode == mRoot);
+        return;
       }
-      if (root->right) {
-        root->right->parent = root;
-      }
-
-      checkCoherency(root, nullptr);
-      return last;
-    }
-
-    T* removeMin()
-    {
-      MOZ_ASSERT(root, "No min to remove!");
-
-      T* min = root;
-      while (min->left)
-        min = min->left;
-      return remove(*min);
-    }
-
-  private:
-    /**
-     * Returns the node in this comparing equal to |v|, or a node just greater or
-     * just less than |v| if there is no such node.
-     */
-    T* lookup(const T& v)
-    {
-      MOZ_ASSERT(!empty());
-
-      T* node = root;
-      T* parent;
-      do {
-        parent = node;
-        int c = Comparator::compare(v, *node);
-        if (c == 0)
-          return node;
-        else if (c < 0)
-          node = node->left;
-        else
-          node = node->right;
-      } while (node);
-      return parent;
-    }
-
-    /**
-     * Rotate the tree until |node| is at the root of the tree. Performing
-     * the rotations in this fashion preserves the amortized balancing of
-     * the tree.
-     */
-    void splay(T* node)
-    {
-      MOZ_ASSERT(node);
-
-      while (node != root) {
-        T* parent = node->parent;
-        if (parent == root) {
-          // Zig rotation.
-          rotate(node);
-          MOZ_ASSERT(node == root);
-          return;
-        }
-        T* grandparent = parent->parent;
-        if ((parent->left == node) == (grandparent->left == parent)) {
-          // Zig-zig rotation.
-          rotate(parent);
-          rotate(node);
-        } else {
-          // Zig-zag rotation.
-          rotate(node);
-          rotate(node);
-        }
-      }
-    }
-
-    void rotate(T* node)
-    {
-      // Rearrange nodes so that node becomes the parent of its current
-      // parent, while preserving the sortedness of the tree.
-      T* parent = node->parent;
-      if (parent->left == node) {
-        //     x          y
-        //   y  c  ==>  a  x
-        //  a b           b c
-        parent->left = node->right;
-        if (node->right)
-          node->right->parent = parent;
-        node->right = parent;
+      T* grandparent = parent->mParent;
+      if ((parent->mLeft == aNode) == (grandparent->mLeft == parent)) {
+        // Zig-zig rotation.
+        rotate(parent);
+        rotate(aNode);
       } else {
-        MOZ_ASSERT(parent->right == node);
-        //   x             y
-        //  a  y   ==>   x  c
-        //    b c       a b
-        parent->right = node->left;
-        if (node->left)
-          node->left->parent = parent;
-        node->left = parent;
-      }
-      node->parent = parent->parent;
-      parent->parent = node;
-      if (T* grandparent = node->parent) {
-        if (grandparent->left == parent)
-          grandparent->left = node;
-        else
-          grandparent->right = node;
-      } else {
-        root = node;
+        // Zig-zag rotation.
+        rotate(aNode);
+        rotate(aNode);
       }
     }
+  }
 
-    T* checkCoherency(T* node, T* minimum)
-    {
+  void rotate(T* aNode)
+  {
+    // Rearrange nodes so that aNode becomes the parent of its current
+    // parent, while preserving the sortedness of the tree.
+    T* parent = aNode->mParent;
+    if (parent->mLeft == aNode) {
+      //     x          y
+      //   y  c  ==>  a  x
+      //  a b           b c
+      parent->mLeft = aNode->mRight;
+      if (aNode->mRight) {
+        aNode->mRight->mParent = parent;
+      }
+      aNode->mRight = parent;
+    } else {
+      MOZ_ASSERT(parent->mRight == aNode);
+      //   x             y
+      //  a  y   ==>   x  c
+      //    b c       a b
+      parent->mRight = aNode->mLeft;
+      if (aNode->mLeft) {
+        aNode->mLeft->mParent = parent;
+      }
+      aNode->mLeft = parent;
+    }
+    aNode->mParent = parent->mParent;
+    parent->mParent = aNode;
+    if (T* grandparent = aNode->mParent) {
+      if (grandparent->mLeft == parent) {
+        grandparent->mLeft = aNode;
+      } else {
+        grandparent->mRight = aNode;
+      }
+    } else {
+      mRoot = aNode;
+    }
+  }
+
+  T* checkCoherency(T* aNode, T* aMinimum)
+  {
 #ifdef DEBUG
-      MOZ_ASSERT_IF(root, !root->parent);
-      if (!node) {
-        MOZ_ASSERT(!root);
-        return nullptr;
-      }
-      MOZ_ASSERT_IF(!node->parent, node == root);
-      MOZ_ASSERT_IF(minimum, Comparator::compare(*minimum, *node) < 0);
-      if (node->left) {
-        MOZ_ASSERT(node->left->parent == node);
-        T* leftMaximum = checkCoherency(node->left, minimum);
-        MOZ_ASSERT(Comparator::compare(*leftMaximum, *node) < 0);
-      }
-      if (node->right) {
-        MOZ_ASSERT(node->right->parent == node);
-        return checkCoherency(node->right, node);
-      }
-      return node;
-#else
+    MOZ_ASSERT_IF(mRoot, !mRoot->mParent);
+    if (!aNode) {
+      MOZ_ASSERT(!mRoot);
       return nullptr;
-#endif
     }
+    MOZ_ASSERT_IF(!aNode->mParent, aNode == mRoot);
+    MOZ_ASSERT_IF(aMinimum, Comparator::compare(*aMinimum, *aNode) < 0);
+    if (aNode->mLeft) {
+      MOZ_ASSERT(aNode->mLeft->mParent == aNode);
+      T* leftMaximum = checkCoherency(aNode->mLeft, aMinimum);
+      MOZ_ASSERT(Comparator::compare(*leftMaximum, *aNode) < 0);
+    }
+    if (aNode->mRight) {
+      MOZ_ASSERT(aNode->mRight->mParent == aNode);
+      return checkCoherency(aNode->mRight, aNode);
+    }
+    return aNode;
+#else
+    return nullptr;
+#endif
+  }
 
-    SplayTree(const SplayTree&) MOZ_DELETE;
-    void operator=(const SplayTree&) MOZ_DELETE;
+  SplayTree(const SplayTree&) MOZ_DELETE;
+  void operator=(const SplayTree&) MOZ_DELETE;
 };
 
 }  /* namespace mozilla */
