@@ -4976,6 +4976,20 @@
     "kind": "boolean",
     "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
   },
+  "WEBRTC_AVSYNC_WHEN_AUDIO_LAGS_VIDEO_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 1000,
+    "description": "The delay (in milliseconds) when audio is behind video. Zero delay is counted. Measured every second of a call."
+  },
+  "WEBRTC_AVSYNC_WHEN_VIDEO_LAGS_AUDIO_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 1000,
+    "description": "The delay (in milliseconds) when video is behind audio. Zero delay is not counted. Measured every second of a call."
+  },
   "WEBRTC_CALL_DURATION": {
     "expires_in_version": "never",
     "kind": "exponential",
