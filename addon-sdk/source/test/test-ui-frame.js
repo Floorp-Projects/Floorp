@@ -46,9 +46,9 @@ exports["test frame API"] = function*(assert) {
                 /The `options.url`/,
                 "options.url must be local url");
 
-  assert.throws(() => new Frame({url: url, id: "4you" }),
-                /The `option.id` must be a valid/,
-                "can only take valid ID's");
+  assert.throws(() => new Frame({url: url, name: "4you" }),
+                /The `option.name` must be a valid/,
+                "can only take valid names");
 
   const f1 = new Frame({ url: url });
 
@@ -64,8 +64,8 @@ exports["test frame API"] = function*(assert) {
                 "can't have two identical frames");
 
 
-  const f2 = new Frame({ id: "frame-2", url: url });
-  assert.pass("can create frame with same url but diff id");
+  const f2 = new Frame({ name: "frame-2", url: url });
+  assert.pass("can create frame with same url but diff name");
   const p2 = wait(f2, "register");
 
   yield p1;
@@ -145,7 +145,7 @@ exports["test host to content messaging"] = function*(assert) {
         event.source.postMessage("pong!", event.origin);
     });
   } + "</script>";
-  const f1 = new Frame({ id: "mailbox", url: url });
+  const f1 = new Frame({ name: "mailbox", url: url });
   const t1 = new Toolbar({ title: "mailbox", items: [f1] });
 
   const e1 = yield wait(f1, "ready");
@@ -169,7 +169,7 @@ exports["test content to host messaging"] = function*(assert) {
     window.parent.postMessage("ping!", "*");
   } + "</script>";
 
-  const f1 = new Frame({ id: "inbox", url: url });
+  const f1 = new Frame({ name: "inbox", url: url });
   const t1 = new Toolbar({ title: "inbox", items: [f1] });
 
   const e1 = yield wait(f1, "message");
@@ -197,7 +197,7 @@ exports["test direct messaging"] = function*(assert) {
   } + "</script>";
 
   const w1 = getMostRecentBrowserWindow();
-  const f1 = new Frame({ url: url, id: "mail-cluster" });
+  const f1 = new Frame({ url: url, name: "mail-cluster" });
   const t1 = new Toolbar({ title: "claster", items: [f1] });
 
   yield wait(f1, "ready");
