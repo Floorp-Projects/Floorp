@@ -29,7 +29,6 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include "cpuacct.h"
 
 int cpuacct_add(uid_t uid)
