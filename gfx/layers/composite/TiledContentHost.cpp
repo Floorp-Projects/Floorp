@@ -34,7 +34,6 @@ TiledLayerBufferComposite::TiledLayerBufferComposite()
 TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocator,
                                                      const SurfaceDescriptorTiles& aDescriptor,
                                                      const nsIntRegion& aOldPaintedRegion)
-  : mFrameResolution(1.0)
 {
   mUninitialized = false;
   mHasDoubleBufferedTiles = false;
@@ -43,6 +42,7 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
   mRetainedWidth = aDescriptor.retainedWidth();
   mRetainedHeight = aDescriptor.retainedHeight();
   mResolution = aDescriptor.resolution();
+  mFrameResolution = CSSToScreenScale(aDescriptor.frameResolution());
 
   // Combine any valid content that wasn't already uploaded
   nsIntRegion oldPaintedRegion(aOldPaintedRegion);
