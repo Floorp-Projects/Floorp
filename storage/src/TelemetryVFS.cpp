@@ -107,10 +107,7 @@ public:
       Telemetry::AccumulateTimeDelta(static_cast<Telemetry::ID>(id + mainThread),
                                      start, end);
     }
-    // We don't report SQLite I/O on Windows because we have a comprehensive
-    // mechanism for intercepting I/O on that platform that captures a superset
-    // of the data captured here.
-#if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(XP_WIN)
+#ifdef MOZ_ENABLE_PROFILER_SPS
     if (IOInterposer::IsObservedOperation(op)) {
       const char* main_ref  = "sqlite-mainthread";
       const char* other_ref = "sqlite-otherthread";
@@ -121,7 +118,7 @@ public:
       // Report observation
       IOInterposer::Report(ob);
     }
-#endif /* defined(MOZ_ENABLE_PROFILER_SPS) && !defined(XP_WIN) */
+#endif /* MOZ_ENABLE_PROFILER_SPS */
   }
 
 private:

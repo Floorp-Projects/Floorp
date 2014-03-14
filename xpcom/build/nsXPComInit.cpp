@@ -110,6 +110,8 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 
 #include "nsChromeRegistry.h"
 #include "nsChromeProtocolHandler.h"
+#include "mozilla/IOInterposer.h"
+#include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/LateWriteChecks.h"
 
 #include "mozilla/scache/StartupCache.h"
@@ -967,6 +969,11 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     PROFILER_MARKER("Shutdown xpcom");
     // If we are doing any shutdown checks, poison writes.
     if (gShutdownChecks != SCM_NOTHING) {
+        // Calling InitIOInterposer or InitPoisonIOInterposer twice doesn't
+        // cause any problems, they'll safely abort the initialization on their
+        // own initiative.
+        mozilla::IOInterposer::Init();
+        mozilla::InitPoisonIOInterposer();
 #ifdef XP_MACOSX
         mozilla::OnlyReportDirtyWrites();
 #endif /* XP_MACOSX */
