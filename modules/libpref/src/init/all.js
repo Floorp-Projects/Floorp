@@ -56,7 +56,7 @@ pref("browser.cache.disk.max_entry_size",    51200);  // 50 MB
 pref("browser.cache.memory.enable",         true);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
 //pref("browser.cache.memory.capacity",     -1);
-// Max-size (in KB) for entries in memory cache. Set to -1 for no limit.  
+// Max-size (in KB) for entries in memory cache. Set to -1 for no limit.
 // (Note: entries bigger than than 90% of the mem-cache are never cached)
 pref("browser.cache.memory.max_entry_size",  5120);
 pref("browser.cache.disk_cache_ssl",        true);
@@ -128,8 +128,8 @@ pref("browser.display.use_system_colors",   false);
 pref("browser.display.foreground_color",    "#000000");
 pref("browser.display.background_color",    "#FFFFFF");
 pref("browser.display.force_inline_alttext", false); // true = force ALT text for missing images to be layed out inline
-// 0 = no external leading, 
-// 1 = use external leading only when font provides, 
+// 0 = no external leading,
+// 1 = use external leading only when font provides,
 // 2 = add extra leading both internal leading and external leading are zero
 pref("browser.display.normal_lineheight_calc_control", 2);
 pref("browser.display.show_image_placeholders", true); // true = show image placeholders while image is loaded and when image is broken
@@ -259,9 +259,9 @@ pref("media.peerconnection.use_document_iceservers", true);
 // Do not enable identity before fixing domain comparison: see Bug 958741
 // Do not enable identity before fixing origin spoofing: see Bug 968335
 pref("media.peerconnection.identity.enabled", false);
-pref("media.peerconnection.identity.timeout", 5000);
+pref("media.peerconnection.identity.timeout", 10000);
 // These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
-// kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
+// kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each
 // setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
 pref("media.peerconnection.turn.disable", false);
 pref("media.peerconnection.aec_enabled", true);
@@ -350,7 +350,7 @@ pref("gfx.hidpi.enabled", 2);
 pref("gfx.layerscope.enabled", false);
 pref("gfx.layerscope.port", 23456);
 
-// 0 = Off, 1 = Full, 2 = Tagged Images Only. 
+// 0 = Off, 1 = Full, 2 = Tagged Images Only.
 // See eCMSMode in gfx/thebes/gfxPlatform.h
 pref("gfx.color_management.mode", 2);
 pref("gfx.color_management.display_profile", "");
@@ -594,7 +594,7 @@ pref("nglayout.enable_drag_images", true);
 pref("nglayout.debug.paint_flashing", false);
 pref("nglayout.debug.paint_flashing_chrome", false);
 
-// enable/disable widget update area flashing --- only supported with 
+// enable/disable widget update area flashing --- only supported with
 // BasicLayers (other layer managers always update the entire widget area)
 pref("nglayout.debug.widget_update_flashing", false);
 
@@ -666,7 +666,7 @@ pref("print.print_unwriteable_margin_left",   -1);
 pref("print.print_unwriteable_margin_right",  -1);
 pref("print.print_unwriteable_margin_bottom", -1);
 
-// Enables you to specify the gap from the edge of the paper's 
+// Enables you to specify the gap from the edge of the paper's
 // unwriteable area to the margin.
 // This is used by both Printing and Print Preview
 // Units are in 1/100ths of an inch.
@@ -675,7 +675,7 @@ pref("print.print_edge_left", 0);
 pref("print.print_edge_right", 0);
 pref("print.print_edge_bottom", 0);
 
-// Pref used by the spellchecker extension to control the 
+// Pref used by the spellchecker extension to control the
 // maximum number of misspelled words that will be underlined
 // in a document.
 pref("extensions.spellcheck.inline.max-misspellings", 500);
@@ -809,7 +809,7 @@ pref("image.animation_mode",                "normal");
 pref("security.fileuri.strict_origin_policy", true);
 
 // If there is ever a security firedrill that requires
-// us to block certian ports global, this is the pref 
+// us to block certian ports global, this is the pref
 // to use.  Is is a comma delimited list of port numbers
 // for example:
 //   pref("network.security.ports.banned", "1,2,3,4,5");
@@ -876,7 +876,7 @@ pref("network.warnOnAboutNetworking", true);
 // pref("network.protocol-handler.expose.imap", true);
 
 // <http>
-pref("network.http.version", "1.1");	  // default
+pref("network.http.version", "1.1");      // default
 // pref("network.http.version", "1.0");   // uncomment this out in case of problems
 // pref("network.http.version", "0.9");   // it'll work too if you're crazy
 // keep-alive option is effectively obsolete. Nevertheless it'll work with
@@ -906,7 +906,7 @@ pref("network.http.response.timeout", 300);
 // Limit the absolute number of http connections.
 // Note: the socket transport service will clamp the number below 256 if the OS
 // cannot allocate that many FDs, and it also always tries to reserve up to 250
-// file descriptors for things other than sockets.   
+// file descriptors for things other than sockets.
 pref("network.http.max-connections", 256);
 
 // If NOT connecting via a proxy, then
@@ -930,13 +930,13 @@ pref("network.http.accept.default", "text/html,application/xhtml+xml,application
 
 // Prefs allowing granular control of referers
 // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
-pref("network.http.sendRefererHeader",      2); 
-// false=real referer, true=spoof referer (use target URI as referer)                                              
-pref("network.http.referer.spoofSource", false); 
+pref("network.http.sendRefererHeader",      2);
+// false=real referer, true=spoof referer (use target URI as referer)
+pref("network.http.referer.spoofSource", false);
 // 0=full URI, 1=scheme+host+port+path, 2=scheme+host+port
-pref("network.http.referer.trimmingPolicy", 0); 
+pref("network.http.referer.trimmingPolicy", 0);
 // 0=always send, 1=send iff base domains match, 2=send iff hosts match
-pref("network.http.referer.XOriginPolicy", 0); 
+pref("network.http.referer.XOriginPolicy", 0);
 
 // Controls whether we send HTTPS referres to other HTTPS sites.
 // By default this is enabled for compatibility (see bug 141641)
@@ -1062,7 +1062,7 @@ pref("network.ftp.control.qos", 0);
 // <ws>: WebSocket
 pref("network.websocket.enabled", true);
 
-// 2147483647 == PR_INT32_MAX == ~2 GB  
+// 2147483647 == PR_INT32_MAX == ~2 GB
 pref("network.websocket.max-message-size", 2147483647);
 
 // Should we automatically follow http 3xx redirects during handshake
@@ -1100,7 +1100,7 @@ pref("network.websocket.max-connections", 200);
 pref("network.websocket.allowInsecureFromHTTPS", false);
 
 // by default we delay websocket reconnects to same host/port if previous
-// connection failed, per RFC 6455 section 7.2.3 
+// connection failed, per RFC 6455 section 7.2.3
 pref("network.websocket.delay-failed-reconnects", true);
 
 // </ws>
@@ -1187,7 +1187,7 @@ pref("network.IDN.whitelist.yt", true);
 
 // IDN ccTLDs
 // ae, UAE, .<Emarat>
-pref("network.IDN.whitelist.xn--mgbaam7a8h", true); 
+pref("network.IDN.whitelist.xn--mgbaam7a8h", true);
 // cn, China, .<China> with variants
 pref("network.IDN.whitelist.xn--fiqz9s", true); // Traditional
 pref("network.IDN.whitelist.xn--fiqs8s", true); // Simplified
@@ -1210,7 +1210,7 @@ pref("network.IDN.whitelist.xn--90a3ac", true);
 // ru, Russian Federation, .<RF>
 pref("network.IDN.whitelist.xn--p1ai", true);
 // sa, Saudi Arabia, .<al-Saudiah> with variants
-pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
+pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true);
 pref("network.IDN.whitelist.xn--mgberp4a5d4a87g", true);
 pref("network.IDN.whitelist.xn--mgbqly7c0a67fbc", true);
 pref("network.IDN.whitelist.xn--mgbqly7cvafr", true);
@@ -1248,9 +1248,9 @@ pref("network.IDN.whitelist.xn--jxalpdlp", true);
 pref("network.IDN.whitelist.xn--kgbechtv", true);
 pref("network.IDN.whitelist.xn--zckzah", true);
 
-// If a domain includes any of the following characters, it may be a spoof 
-// attempt and so we always display the domain name as punycode. This would 
-// override the settings "network.IDN_show_punycode" and 
+// If a domain includes any of the following characters, it may be a spoof
+// attempt and so we always display the domain name as punycode. This would
+// override the settings "network.IDN_show_punycode" and
 // "network.IDN.whitelist.*".
 pref("network.IDN.blacklist_chars", "\u0020\u00A0\u00BC\u00BD\u00BE\u01C3\u02D0\u0337\u0338\u0589\u05C3\u05F4\u0609\u060A\u066A\u06D4\u0701\u0702\u0703\u0704\u115F\u1160\u1735\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u2024\u2027\u2028\u2029\u202F\u2039\u203A\u2041\u2044\u2052\u205F\u2153\u2154\u2155\u2156\u2157\u2158\u2159\u215A\u215B\u215C\u215D\u215E\u215F\u2215\u2236\u23AE\u2571\u29F6\u29F8\u2AFB\u2AFD\u2FF0\u2FF1\u2FF2\u2FF3\u2FF4\u2FF5\u2FF6\u2FF7\u2FF8\u2FF9\u2FFA\u2FFB\u3000\u3002\u3014\u3015\u3033\u3164\u321D\u321E\u33AE\u33AF\u33C6\u33DF\uA789\uFE14\uFE15\uFE3F\uFE5D\uFE5E\uFEFF\uFF0E\uFF0F\uFF61\uFFA0\uFFF9\uFFFA\uFFFB\uFFFC\uFFFD");
 
@@ -1343,7 +1343,7 @@ pref("network.negotiate-auth.using-native-gsslib", true);
 
 #ifdef XP_WIN
 
-// Default to using the SSPI intead of GSSAPI on windows 
+// Default to using the SSPI intead of GSSAPI on windows
 pref("network.auth.use-sspi", true);
 
 #endif
@@ -1354,7 +1354,7 @@ pref("network.auth.use-sspi", true);
 // with native NTLM. (See bug 520607 for details.) Using generic NTLM authentication
 // can expose the user to reflection attack vulnerabilities. Do not change this
 // unless you know what you're doing!
-// This pref should be removed 6 months after the release of firefox 3.6. 
+// This pref should be removed 6 months after the release of firefox 3.6.
 pref("network.auth.force-generic-ntlm", false);
 
 // The following prefs are used to enable automatic use of the operating
@@ -1703,7 +1703,7 @@ pref("profile.manage_only_at_launch", false);
 pref("prefs.converted-to-utf8",false);
 
 // --------------------------------------------------
-// IBMBIDI 
+// IBMBIDI
 // --------------------------------------------------
 //
 // ------------------
@@ -1761,7 +1761,7 @@ pref("layout.word_select.stop_at_punctuation", true);
 // 0 = use platform default
 // 1 = caret moves and blinks as when there is no selection; word
 //     delete deselects the selection and then deletes word
-// 2 = caret moves to selection edge and is not visible during selection; 
+// 2 = caret moves to selection edge and is not visible during selection;
 //     word delete deletes the selection (Mac and Linux default)
 // 3 = caret moves and blinks as when there is no selection; word delete
 //     deletes the selection
@@ -1796,7 +1796,7 @@ pref("layout.css.masking.enabled", false);
 pref("layout.css.masking.enabled", true);
 #endif
 
-// Is support for mix-blend-mode enabled? 
+// Is support for mix-blend-mode enabled?
 pref("layout.css.mix-blend-mode.enabled", false);
 
 // Is support for the the @supports rule enabled?
@@ -1997,7 +1997,7 @@ pref("dom.ipc.plugins.parentTimeoutSecs", 0);
 // we consider it failed.
 pref("dom.ipc.plugins.processLaunchTimeoutSecs", 45);
 #ifdef XP_WIN
-// How long a plugin is allowed to process a synchronous IPC message 
+// How long a plugin is allowed to process a synchronous IPC message
 // before we display the plugin hang UI
 pref("dom.ipc.plugins.hangUITimeoutSecs", 11);
 // Minimum time that the plugin hang UI will be displayed
@@ -2287,7 +2287,7 @@ pref("font.name-list.monospace.zh-CN", "MS Song, SimSun, SimSun-ExtB");
 
 // Per Taiwanese users' demand. They don't want to use TC fonts for
 // rendering Latin letters. (bug 88579)
-pref("font.name.serif.zh-TW", "Times New Roman"); 
+pref("font.name.serif.zh-TW", "Times New Roman");
 pref("font.name.sans-serif.zh-TW", "Arial");
 pref("font.name.monospace.zh-TW", "MingLiU");
 pref("font.name-list.serif.zh-TW", "PMingLiu, MingLiU, MingLiU-ExtB");
@@ -2326,8 +2326,8 @@ pref("font.name-list.monospace.x-armn", "Arial AMU, Arial Unicode MS, Code2000")
 pref("font.name.serif.x-beng", "Vrinda");
 pref("font.name.sans-serif.x-beng", "Vrinda");
 pref("font.name.monospace.x-beng", "Mitra Mono");
-pref("font.name-list.serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba, Code2000, Arial Unicode MS"); 
-pref("font.name-list.sans-serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba, Code2000, Arial Unicode MS"); 
+pref("font.name-list.serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba, Code2000, Arial Unicode MS");
+pref("font.name-list.sans-serif.x-beng", "Vrinda, Akaash, Likhan, Ekushey Punarbhaba, Code2000, Arial Unicode MS");
 pref("font.name-list.monospace.x-beng", "Likhan, Mukti Narrow, Code2000, Arial Unicode MS");
 
 pref("font.name.serif.x-cans", "Aboriginal Serif");
@@ -2537,7 +2537,7 @@ pref("font.size.fixed.zh-HK", 16);
 // We have special support for Monotype Symbol on Windows.
 pref("font.mathfont-family", "MathJax_Main, STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Asana Math, Symbol, DejaVu Sans, Cambria Math");
 
-// cleartype settings - false implies default system settings 
+// cleartype settings - false implies default system settings
 
 // use cleartype rendering for downloadable fonts (win xp only)
 pref("gfx.font_rendering.cleartype.use_for_downloadable_fonts", true);
@@ -2552,7 +2552,7 @@ pref("gfx.font_rendering.cleartype.always_use_for_content", false);
 //   HKLM/Software/Microsoft/Avalon.Graphics/<display> (gamma, pixel structure)
 // and selection of the ClearType/antialiasing mode.
 //
-// A value of -1 implies use the default value, otherwise value ranges 
+// A value of -1 implies use the default value, otherwise value ranges
 // follow registry settings:
 //   gamma [1000, 2200]  default: based on screen, typically 2200 (== 2.2)
 //   enhanced contrast [0, 1000] default: 50
@@ -2569,7 +2569,7 @@ pref("gfx.font_rendering.cleartype.always_use_for_content", false);
 // See:
 //   http://msdn.microsoft.com/en-us/library/aa970267.aspx
 //   http://msdn.microsoft.com/en-us/library/dd368190%28v=VS.85%29.aspx
-// Note: DirectWrite uses the "Enhanced Contrast Level" value rather than the 
+// Note: DirectWrite uses the "Enhanced Contrast Level" value rather than the
 // "Text Contrast Level" value
 
 pref("gfx.font_rendering.cleartype_params.gamma", -1);
@@ -2675,7 +2675,7 @@ pref("browser.drag_out_of_frame_style", 1);
 pref("ui.key.saveLink.shift", false); // true = shift, false = meta
 
 // default fonts (in UTF8 and using canonical names)
-// to determine canonical font names, use a debug build and 
+// to determine canonical font names, use a debug build and
 // enable NSPR logging for module fontInfoLog:5
 // canonical names immediately follow '(fontinit) family:' in the log
 
@@ -2714,10 +2714,10 @@ pref("font.name-list.fantasy.he", "Times New Roman");
 
 pref("font.name.serif.ja", "Hiragino Mincho ProN");
 pref("font.name.sans-serif.ja", "Hiragino Kaku Gothic ProN");
-pref("font.name.monospace.ja", "Osaka-Mono"); 
+pref("font.name.monospace.ja", "Osaka-Mono");
 pref("font.name-list.serif.ja", "Hiragino Mincho ProN,Hiragino Mincho Pro");
 pref("font.name-list.sans-serif.ja", "Hiragino Kaku Gothic ProN,Hiragino Kaku Gothic Pro");
-pref("font.name-list.monospace.ja", "Osaka-Mono"); 
+pref("font.name-list.monospace.ja", "Osaka-Mono");
 
 pref("font.name.serif.ko", "AppleMyungjo");
 pref("font.name.sans-serif.ko", "Apple SD Gothic Neo");
@@ -2750,7 +2750,7 @@ pref("font.name.monospace.x-armn", "Mshtakan");
 pref("font.name-list.serif.x-armn", "Mshtakan");
 pref("font.name-list.sans-serif.x-armn", "Mshtakan");
 pref("font.name-list.monospace.x-armn", "Mshtakan");
- 
+
 pref("font.name.serif.x-baltic", "Times");
 pref("font.name.sans-serif.x-baltic", "Helvetica");
 pref("font.name.monospace.x-baltic", "Courier");
@@ -2821,42 +2821,42 @@ pref("font.name-list.monospace.x-ethi", "Kefa,Abyssinica SIL");
 pref("font.name.serif.x-geor", "TITUS Cyberbit Basic");
 pref("font.name.sans-serif.x-geor", "Zuzumbo");
 pref("font.name.monospace.x-geor", "Zuzumbo");
-pref("font.name-list.serif.x-geor", "TITUS Cyberbit Basic"); 
+pref("font.name-list.serif.x-geor", "TITUS Cyberbit Basic");
 pref("font.name-list.sans-serif.x-geor", "Zuzumbo");
 pref("font.name-list.monospace.x-geor", "Zuzumbo");
 
 pref("font.name.serif.x-gujr", "Gujarati MT");
 pref("font.name.sans-serif.x-gujr", "Gujarati Sangam MN");
 pref("font.name.monospace.x-gujr", "Gujarati Sangam MN");
-pref("font.name-list.serif.x-gujr", "Gujarati MT"); 
+pref("font.name-list.serif.x-gujr", "Gujarati MT");
 pref("font.name-list.sans-serif.x-gujr", "Gujarati Sangam MN,Gujarati MT");
 pref("font.name-list.monospace.x-gujr", "Gujarati Sangam MN,Gujarati MT");
 
 pref("font.name.serif.x-guru", "Gurmukhi MT");
 pref("font.name.sans-serif.x-guru", "Gurmukhi MT");
 pref("font.name.monospace.x-guru", "Gurmukhi MT");
-pref("font.name-list.serif.x-guru", "Gurmukhi MT"); 
+pref("font.name-list.serif.x-guru", "Gurmukhi MT");
 pref("font.name-list.sans-serif.x-guru", "Gurmukhi MT");
 pref("font.name-list.monospace.x-guru", "Gurmukhi MT");
 
 pref("font.name.serif.x-khmr", "Khmer MN");
 pref("font.name.sans-serif.x-khmr", "Khmer Sangam MN");
 pref("font.name.monospace.x-khmr", "Khmer Sangam MN");
-pref("font.name-list.serif.x-khmr", "Khmer MN"); 
+pref("font.name-list.serif.x-khmr", "Khmer MN");
 pref("font.name-list.sans-serif.x-khmr", "Khmer Sangam MN");
 pref("font.name-list.monospace.x-khmr", "Khmer Sangam MN");
 
 pref("font.name.serif.x-mlym", "Malayalam MN");
 pref("font.name.sans-serif.x-mlym", "Malayalam Sangam MN");
 pref("font.name.monospace.x-mlym", "Malayalam Sangam MN");
-pref("font.name-list.serif.x-mlym", "Malayalam MN"); 
+pref("font.name-list.serif.x-mlym", "Malayalam MN");
 pref("font.name-list.sans-serif.x-mlym", "Malayalam Sangam MN");
 pref("font.name-list.monospace.x-mlym", "Malayalam Sangam MN");
 
 pref("font.name.serif.x-orya", "Oriya MN");
 pref("font.name.sans-serif.x-orya", "Oriya Sangam MN");
 pref("font.name.monospace.x-orya", "Oriya Sangam MN");
-pref("font.name-list.serif.x-orya", "Oriya MN"); 
+pref("font.name-list.serif.x-orya", "Oriya MN");
 pref("font.name-list.sans-serif.x-orya", "Oriya Sangam MN");
 pref("font.name-list.monospace.x-orya", "Oriya Sangam MN");
 
@@ -2927,9 +2927,9 @@ pref("font.name-list.serif.zh-CN", "Times,STSong,Heiti SC");
 pref("font.name-list.sans-serif.zh-CN", "Helvetica,STHeiti,Heiti SC");
 pref("font.name-list.monospace.zh-CN", "Courier,STHeiti,Heiti SC");
 
-pref("font.name.serif.zh-TW", "Times"); 
-pref("font.name.sans-serif.zh-TW", "Helvetica");  
-pref("font.name.monospace.zh-TW", "Courier");  
+pref("font.name.serif.zh-TW", "Times");
+pref("font.name.sans-serif.zh-TW", "Helvetica");
+pref("font.name.monospace.zh-TW", "Courier");
 pref("font.name-list.serif.zh-TW", "Times,LiSong Pro,Heiti TC");
 pref("font.name-list.sans-serif.zh-TW", "Helvetica,Heiti TC,LiHei Pro");
 pref("font.name-list.monospace.zh-TW", "Courier,Heiti TC,LiHei Pro");
@@ -3105,7 +3105,7 @@ pref("ui.key.menuAccessKey", 0);
 pref("ui.key.accelKey", 224);
 // (pinkerton, joki, saari) IE5 for mac uses Control for access keys. The HTML4 spec
 // suggests to use command on mac, but this really sucks (imagine someone having a "q"
-// as an access key and not letting you quit the app!). As a result, we've made a 
+// as an access key and not letting you quit the app!). As a result, we've made a
 // command decision 1 day before tree lockdown to change it to the control key.
 pref("ui.key.generalAccessKey", -1);
 
@@ -3597,7 +3597,7 @@ pref("font.name.serif.zh-CN", "serif");
 pref("font.name.sans-serif.zh-CN", "sans-serif");
 pref("font.name.monospace.zh-CN", "monospace");
 
-// ming_uni.ttf (HKSCS-2001) 
+// ming_uni.ttf (HKSCS-2001)
 // http://www.info.gov.hk/digital21/eng/hkscs/download/uime.exe
 pref("font.name.serif.zh-HK", "serif");
 pref("font.name.sans-serif.zh-HK", "sans-serif");
@@ -4095,11 +4095,11 @@ pref("device.storage.enabled", false);
 
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
-// Time in milliseconds between the time a network buffer is seen and the 
-// timer firing when the timer hasn't fired previously in this parse in the 
+// Time in milliseconds between the time a network buffer is seen and the
+// timer firing when the timer hasn't fired previously in this parse in the
 // off-the-main-thread HTML5 parser.
 pref("html5.flushtimer.initialdelay", 120);
-// Time in milliseconds between the time a network buffer is seen and the 
+// Time in milliseconds between the time a network buffer is seen and the
 // timer firing when the timer has already fired previously in this parse.
 pref("html5.flushtimer.subsequentdelay", 120);
 

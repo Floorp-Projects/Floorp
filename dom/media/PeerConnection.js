@@ -313,6 +313,8 @@ RTCPeerConnection.prototype = {
     this.makeGetterSetterEH("oniceconnectionstatechange");
     this.makeGetterSetterEH("onidentityresult");
     this.makeGetterSetterEH("onpeeridentity");
+    this.makeGetterSetterEH("onidpassertionerror");
+    this.makeGetterSetterEH("onidpvalidationerror");
 
     this._pc = new this._win.PeerConnectionImpl();
 
@@ -350,8 +352,10 @@ RTCPeerConnection.prototype = {
     let prefName = "media.peerconnection.identity.timeout";
     let idpTimeout = Services.prefs.getIntPref(prefName);
     let warningFunc = this.reportWarning.bind(this);
-    this._localIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc);
-    this._remoteIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc);
+    this._localIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc,
+                                           this.dispatchEvent.bind(this));
+    this._remoteIdp = new PeerConnectionIdp(this._win, idpTimeout, warningFunc,
+                                            this.dispatchEvent.bind(this));
   },
 
   /**
@@ -700,34 +704,17 @@ RTCPeerConnection.prototype = {
     this.dispatchEvent(ev);
   },
 
-  // we're going off spec with the error callback here.
-  getIdentityAssertion: function(errorCallback) {
+  getIdentityAssertion: function() {
     this._checkClosed();
-    if (typeof errorCallback !== "function") {
-      if (errorCallback) {
-        let message ="getIdentityAssertion argument must be a function";
-        throw new this._win.DOMError("", message);
-      }
-      errorCallback = function() {
-        this.reportWarning("getIdentityAssertion: no error callback set");
-      }.bind(this);
-    }
 
     function gotAssertion(assertion) {
       if (assertion) {
         this._gotIdentityAssertion(assertion);
-      } else {
-        errorCallback("IdP did not produce an assertion");
       }
     }
 
-    try {
-      this._localIdp.getIdentityAssertion(this._impl.fingerprint,
-          gotAssertion.bind(this));
-    }
-    catch (e) {
-      errorCallback("Could not get identity assertion: " + e.message);
-    }
+    this._localIdp.getIdentityAssertion(this._impl.fingerprint,
+                                        gotAssertion.bind(this));
   },
 
   updateIce: function(config, constraints) {
