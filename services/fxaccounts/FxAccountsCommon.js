@@ -33,7 +33,14 @@ this.DATA_FORMAT_VERSION = 1;
 this.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
 
 // Token life times.
-this.ASSERTION_LIFETIME = 1000 * 60 * 5;    // 5 minutes
+// Having this parameter be short has limited security value and can cause
+// spurious authentication values if the client's clock is skewed and
+// we fail to adjust. See Bug 983256.
+this.ASSERTION_LIFETIME = 1000 * 3600 * 24 * 365 * 25; // 25 years
+// This is a time period we want to guarantee that the assertion will be
+// valid after we generate it (e.g., the signed cert won't expire in this
+// period).
+this.ASSERTION_USE_PERIOD = 1000 * 60 * 5; // 5 minutes
 this.CERT_LIFETIME      = 1000 * 3600 * 6;  // 6 hours
 this.KEY_LIFETIME       = 1000 * 3600 * 12; // 12 hours
 
