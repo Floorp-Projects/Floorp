@@ -1025,6 +1025,7 @@ CacheEntry_setBytecode(JSContext *cx, HandleObject cache, uint8_t *buffer, uint3
     if (!arrayBuffer || !ArrayBufferObject::ensureNonInline(cx, arrayBuffer))
         return false;
 
+    memcpy(arrayBuffer->dataPointer(), buffer, length);
     SetReservedSlot(cache, CacheEntry_BYTECODE, OBJECT_TO_JSVAL(arrayBuffer));
     return true;
 }
@@ -1283,8 +1284,6 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         if (!CacheEntry_setBytecode(cx, cacheEntry, saveBuffer, saveLength))
             return false;
-
-        saveBuffer.forget();
     }
 
     return JS_WrapValue(cx, args.rval());
@@ -6219,11 +6218,6 @@ main(int argc, char **argv, char **envp)
 #ifdef JS_THREADSAFE
     for (size_t i = 0; i < workerThreads.length(); i++)
         PR_JoinThread(workerThreads[i]);
-#endif
-
-#ifdef JSGC_GENERATIONAL
-    if (!noggc.empty())
-        noggc.destroy();
 #endif
 
     JS_DestroyRuntime(rt);

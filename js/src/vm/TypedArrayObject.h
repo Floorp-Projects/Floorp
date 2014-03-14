@@ -337,7 +337,7 @@ ClampIntForUint8Array(int32_t x)
     return x;
 }
 
-bool ToDoubleForTypedArray(JSContext *cx, JS::HandleValue vp, double *d);
+extern js::ArrayBufferObject * const UNSET_BUFFER_LINK;
 
 } // namespace js
 
