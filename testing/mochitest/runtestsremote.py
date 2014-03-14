@@ -82,11 +82,6 @@ class RemoteOptions(MochitestOptions):
                     help = "ssl port of the remote web server")
         defaults["sslPort"] = automation.DEFAULT_SSL_PORT
 
-        self.add_option("--pidfile", action = "store",
-                    type = "string", dest = "pidFile",
-                    help = "name of the pidfile to generate")
-        defaults["pidFile"] = ""
-
         self.add_option("--robocop-ini", action = "store",
                     type = "string", dest = "robocopIni",
                     help = "name of the .ini file containing the list of tests to run")
@@ -223,7 +218,7 @@ class RemoteOptions(MochitestOptions):
         options.sslPort = tempSSL
         options.httpPort = tempPort
 
-        return options 
+        return options
 
 class MochiRemote(Mochitest):
 
@@ -236,13 +231,13 @@ class MochiRemote(Mochitest):
         self._automation = automation
         Mochitest.__init__(self)
         self._dm = devmgr
-        self.runSSLTunnel = False
         self.environment = self._automation.environment
         self.remoteProfile = options.remoteTestRoot + "/profile"
         self._automation.setRemoteProfile(self.remoteProfile)
         self.remoteLog = options.remoteLogFile
         self.localLog = options.logFile
         self._automation.deleteANRs()
+        self.certdbNew = True
 
     def cleanup(self, manifest, options):
         if self._dm.fileExists(self.remoteLog):
@@ -252,13 +247,7 @@ class MochiRemote(Mochitest):
             log.warn("Unable to retrieve log file (%s) from remote device",
                 self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
-
-        if (options.pidFile != ""):
-            try:
-                os.remove(options.pidFile)
-                os.remove(options.pidFile + ".xpcshell.pid")
-            except:
-                log.warn("cleaning up pidfile '%s' was unsuccessful from the test harness", options.pidFile)
+        Mochitest.cleanup(self, manifest, options)
 
     def findPath(self, paths, filename = None):
         for path in paths:
@@ -269,11 +258,7 @@ class MochiRemote(Mochitest):
                 return path
         return None
 
-    def startWebServer(self, options):
-        """ Create the webserver on the host and start it up """
-        remoteXrePath = options.xrePath
-        remoteProfilePath = options.profilePath
-        remoteUtilityPath = options.utilityPath
+    def makeLocalAutomation(self):
         localAutomation = Automation()
         localAutomation.IS_WIN32 = False
         localAutomation.IS_LINUX = False
@@ -281,15 +266,33 @@ class MochiRemote(Mochitest):
         localAutomation.UNIXISH = False
         hostos = sys.platform
         if (hostos == 'mac' or  hostos == 'darwin'):
-          localAutomation.IS_MAC = True
+            localAutomation.IS_MAC = True
         elif (hostos == 'linux' or hostos == 'linux2'):
-          localAutomation.IS_LINUX = True
-          localAutomation.UNIXISH = True
+            localAutomation.IS_LINUX = True
+            localAutomation.UNIXISH = True
         elif (hostos == 'win32' or hostos == 'win64'):
-          localAutomation.BIN_SUFFIX = ".exe"
-          localAutomation.IS_WIN32 = True
+            localAutomation.BIN_SUFFIX = ".exe"
+            localAutomation.IS_WIN32 = True
+        return localAutomation
 
-        paths = [options.xrePath, localAutomation.DIST_BIN, self._automation._product, os.path.join('..', self._automation._product)]
+    # This seems kludgy, but this class uses paths from the remote host in the
+    # options, except when calling up to the base class, which doesn't
+    # understand the distinction.  This switches out the remote values for local
+    # ones that the base class understands.  This is necessary for the web
+    # server, SSL tunnel and profile building functions.
+    def switchToLocalPaths(self, options):
+        """ Set local paths in the options, return a function that will restore remote values """
+        remoteXrePath = options.xrePath
+        remoteProfilePath = options.profilePath
+        remoteUtilityPath = options.utilityPath
+
+        localAutomation = self.makeLocalAutomation()
+        paths = [
+            options.xrePath,
+            localAutomation.DIST_BIN,
+            self._automation._product,
+            os.path.join('..', self._automation._product)
+        ]
         options.xrePath = self.findPath(paths)
         if options.xrePath == None:
             log.error("unable to find xulrunner path for %s, please specify with --xre-path", os.name)
@@ -298,20 +301,16 @@ class MochiRemote(Mochitest):
         xpcshell = "xpcshell"
         if (os.name == "nt"):
             xpcshell += ".exe"
-      
+
         if options.utilityPath:
             paths = [options.utilityPath, options.xrePath]
         else:
             paths = [options.xrePath]
         options.utilityPath = self.findPath(paths, xpcshell)
+
         if options.utilityPath == None:
             log.error("unable to find utility path for %s, please specify with --utility-path", os.name)
             sys.exit(1)
-        # httpd-path is specified by standard makefile targets and may be specified
-        # on the command line to select a particular version of httpd.js. If not
-        # specified, try to select the one from hostutils.zip, as required in bug 882932.
-        if not options.httpdPath:
-            options.httpdPath = os.path.join(options.utilityPath, "components")
 
         xpcshell_path = os.path.join(options.utilityPath, xpcshell)
         if localAutomation.elf_arm(xpcshell_path):
@@ -320,27 +319,26 @@ class MochiRemote(Mochitest):
                       'to a desktop version.' % xpcshell_path)
             sys.exit(1)
 
-        options.profilePath = tempfile.mkdtemp()
-        self.server = MochitestServer(options)
-        self.server.start()
-
-        if (options.pidFile != ""):
-            f = open(options.pidFile + ".xpcshell.pid", 'w')
-            f.write("%s" % self.server._process.pid)
-            f.close()
-        self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
-
-        options.xrePath = remoteXrePath
-        options.utilityPath = remoteUtilityPath
-        options.profilePath = remoteProfilePath
-         
-    def stopWebServer(self, options):
-        if hasattr(self, 'server'):
-            self.server.stop()
-        
-    def buildProfile(self, options):
         if self.localProfile:
             options.profilePath = self.localProfile
+        else:
+            options.profilePath = tempfile.mkdtemp()
+
+        def fixup():
+            options.xrePath = remoteXrePath
+            options.utilityPath = remoteUtilityPath
+            options.profilePath = remoteProfilePath
+
+        return fixup
+
+    def startServers(self, options, debuggerInfo):
+        """ Create the servers on the host and start them up """
+        restoreRemotePaths = self.switchToLocalPaths(options)
+        Mochitest.startServers(self, options, debuggerInfo)
+        restoreRemotePaths()
+
+    def buildProfile(self, options):
+        restoreRemotePaths = self.switchToLocalPaths(options)
         manifest = Mochitest.buildProfile(self, options)
         self.localProfile = options.profilePath
         self._dm.removeDir(self.remoteProfile)
@@ -359,9 +357,10 @@ class MochiRemote(Mochitest):
             log.error("Automation Error: Unable to copy profile to device.")
             raise
 
+        restoreRemotePaths()
         options.profilePath = self.remoteProfile
         return manifest
-    
+
     def buildURLOptions(self, options, env):
         self.localLog = options.logFile
         options.logFile = self.remoteLog
@@ -403,7 +402,7 @@ class MochiRemote(Mochitest):
 
         return manifest
 
-    def getLogFilePath(self, logFile):             
+    def getLogFilePath(self, logFile):
         return logFile
 
     # In the future we could use LogParser: http://hg.mozilla.org/automation/logparser/
@@ -444,7 +443,7 @@ class MochiRemote(Mochitest):
         failed = 0
         todo = 0
         incr = 1
-        logFile = [] 
+        logFile = []
         logFile.append("0 INFO SimpleTest START")
         for line in self.logLines:
             if line.startswith("INFO TEST-PASS"):
@@ -548,6 +547,10 @@ class MochiRemote(Mochitest):
         if 'profileDir' not in kwargs and 'profile' in kwargs:
             kwargs['profileDir'] = kwargs.pop('profile').profile
 
+        # We're handling ssltunnel, so we should lie to automation.py to avoid
+        # it trying to set up ssltunnel as well
+        kwargs['runSSLTunnel'] = False
+
         return self._automation.runApp(*args, **kwargs)
 
 def main():
@@ -580,7 +583,7 @@ def main():
     options = parser.verifyOptions(options, mochitest)
     if (options == None):
         sys.exit(1)
-    
+
     logParent = os.path.dirname(options.remoteLogFile)
     dm.mkDir(logParent);
     auto.setRemoteLog(options.remoteLogFile)
@@ -668,7 +671,7 @@ def main():
 
             # If the test is for checking the import from bookmarks then make sure there is data to import
             if test['name'] == "testImportFromAndroid":
-                
+
                 # Get the OS so we can run the insert in the apropriate database and following the correct table schema
                 osInfo = dm.getInfo("os")
                 devOS = " ".join(osInfo['os'])
@@ -706,8 +709,7 @@ def main():
             except:
                 log.error("Automation Error: Exception caught while running tests")
                 traceback.print_exc()
-                mochitest.stopWebServer(options)
-                mochitest.stopWebSocketServer(options)
+                mochitest.stopServers()
                 try:
                     mochitest.cleanup(None, options)
                 except devicemanager.DMError:
@@ -742,8 +744,7 @@ def main():
         except:
             log.error("Automation Error: Exception caught while running tests")
             traceback.print_exc()
-            mochitest.stopWebServer(options)
-            mochitest.stopWebSocketServer(options)
+            mochitest.stopServers()
             try:
                 mochitest.cleanup(None, options)
             except devicemanager.DMError:
