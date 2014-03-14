@@ -44,7 +44,7 @@ function triggerSave(aWindow, aCallback) {
 
   function contextMenuOpened(aWindow, event) {
     info("contextMenuOpened");
-    event.currentTarget.removeEventListener("popupshown", contextMenuOpened, false);
+    aWindow.document.removeEventListener("popupshown", contextMenuOpened);
 
     // Create the folder the link will be saved into.
     var destDir = createTemporarySaveDirectory();
@@ -82,7 +82,7 @@ function triggerSave(aWindow, aCallback) {
 
   function onTransferComplete(aWindow, downloadSuccess, destDir) {
     ok(downloadSuccess, "Link should have been downloaded successfully");
-    aWindow.gBrowser.removeCurrentTab();
+    aWindow.close();
 
     executeSoon(function() aCallback());
   }
@@ -92,7 +92,6 @@ function test() {
   info("Start the test");
   waitForExplicitFinish();
 
-  var windowsToClose = [];
   var gNumSet = 0;
   function testOnWindow(options, callback) {
     info("testOnWindow(" + options + ")");
@@ -119,9 +118,6 @@ function test() {
     info("Running the cleanup code");
     mockTransferRegisterer.unregister();
     MockFilePicker.cleanup();
-    windowsToClose.forEach(function(win) {
-      win.close();
-    });
     Services.obs.removeObserver(observer, "http-on-modify-request");
     Services.obs.removeObserver(observer, "http-on-examine-response");
     info("Finished running the cleanup code");
