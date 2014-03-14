@@ -191,6 +191,14 @@ TextTrack::ReadyState() const
 }
 
 void
+TextTrack::SetReadyState(uint32_t aReadyState)
+{
+  if (aReadyState <= TextTrackReadyState::FailedToLoad) {
+    SetReadyState(static_cast<TextTrackReadyState>(aReadyState));
+  }
+}
+
+void
 TextTrack::SetReadyState(TextTrackReadyState aState)
 {
   mReadyState = aState;
