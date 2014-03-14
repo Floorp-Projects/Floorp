@@ -207,10 +207,6 @@ private:
   virtual nsresult
   StopInternal() MOZ_OVERRIDE;
 
-  // This method should never be called.
-  virtual bool
-  IsEnabledInternal() MOZ_OVERRIDE;
-
   bool
   IsSignalRegistered(const nsAString& aNodeName) {
     return !!mBluetoothSignalObserverTable.Get(aNodeName);
