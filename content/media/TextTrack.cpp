@@ -16,20 +16,22 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_4(TextTrack,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_5(TextTrack,
                                      nsDOMEventTargetHelper,
                                      mParent,
                                      mCueList,
                                      mActiveCueList,
-                                     mTextTrackList)
+                                     mTextTrackList,
+                                     mTrackElement)
 
 NS_IMPL_ADDREF_INHERITED(TextTrack, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrack, nsDOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrack)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-TextTrack::TextTrack(nsISupports* aParent)
+TextTrack::TextTrack(nsISupports* aParent, TextTrackSource aTextTrackSource)
   : mParent(aParent)
+  , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
   SetIsDOMBinding();
@@ -38,8 +40,10 @@ TextTrack::TextTrack(nsISupports* aParent)
 TextTrack::TextTrack(nsISupports* aParent,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
-                     const nsAString& aLanguage)
+                     const nsAString& aLanguage,
+                     TextTrackSource aTextTrackSource)
   : mParent(aParent)
+  , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
   mKind = aKind;
@@ -52,9 +56,11 @@ TextTrack::TextTrack(nsISupports* aParent,
                      TextTrackList* aTextTrackList,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
-                     const nsAString& aLanguage)
+                     const nsAString& aLanguage,
+                     TextTrackSource aTextTrackSource)
   : mParent(aParent)
   , mTextTrackList(aTextTrackList)
+  , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
   mKind = aKind;
@@ -209,6 +215,16 @@ void
 TextTrack::SetTextTrackList(TextTrackList* aTextTrackList)
 {
   mTextTrackList = aTextTrackList;
+}
+
+HTMLTrackElement*
+TextTrack::GetTrackElement() {
+  return mTrackElement;
+}
+
+void
+TextTrack::SetTrackElement(HTMLTrackElement* aTrackElement) {
+  mTrackElement = aTrackElement;
 }
 
 } // namespace dom

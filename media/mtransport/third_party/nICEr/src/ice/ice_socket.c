@@ -81,7 +81,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
 #ifdef USE_TURN
   re_process:
 #endif /* USE_TURN */
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Read %d bytes from %s",sock->ctx->label,len,addr.as_string);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Read %d bytes %sfrom %s",sock->ctx->label,len,(processed_indication ? "relayed " : ""),addr.as_string);
 
     /* First question: is this STUN or not? */
     is_stun=nr_is_stun_message(buf,len);

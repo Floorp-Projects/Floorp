@@ -147,12 +147,13 @@ nsBaseURLParser::ParseURL(const char *spec, int32_t specLen,
         // spec = <path-no-slashes-or-colon>
         //
         SET_RESULT(scheme, 0, -1);
-        if (authorityLen || pathLen)
+        if (authorityLen || pathLen) {
             ParseAfterScheme(spec, specLen,
                              authorityPos, authorityLen,
                              pathPos, pathLen);
             OFFSET_RESULT(authority, offset);
             OFFSET_RESULT(path, offset);
+        }
     }
     return NS_OK;
 }

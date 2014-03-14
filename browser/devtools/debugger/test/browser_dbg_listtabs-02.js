@@ -45,7 +45,7 @@ function test() {
     .then(testWindowClosed)
     .then(removeTabB)
     .then(checkSingleTab)
-    .then(finish);
+    .then(finishUp);
 }
 
 function checkSingleTab() {
@@ -207,4 +207,9 @@ function removeTabB() {
 
   removeTab(gTabB);
   return deferred.promise;
+}
+
+function finishUp() {
+  gTabList = gFirstActor = gActorA = gTabA = gTabB = gTabC = gNewWindow = null;
+  finish();
 }

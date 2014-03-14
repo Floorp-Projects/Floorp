@@ -135,7 +135,7 @@ RuleViewTool.prototype = {
     delete this.doc;
     delete this.inspector;
   }
-}
+};
 
 function ComputedViewTool(aInspector, aWindow, aIFrame)
 {

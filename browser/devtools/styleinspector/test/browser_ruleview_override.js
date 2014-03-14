@@ -178,5 +178,5 @@ function test()
     waitForFocus(() => openRuleView(simpleOverride), content);
   }, true);
 
-  content.location = "data:text/html,basic style inspector tests";
+  content.location = "data:text/html;charset=utf-8,browser_ruleview_override.js";
 }

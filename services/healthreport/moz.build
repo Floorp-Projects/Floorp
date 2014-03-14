@@ -8,6 +8,6 @@ SPHINX_TREES['healthreport'] = 'docs'
 
 TEST_DIRS += ['tests']
 
-EXTRA_COMPONENTS += [
+EXTRA_PP_COMPONENTS += [
     'HealthReportComponents.manifest',
 ]

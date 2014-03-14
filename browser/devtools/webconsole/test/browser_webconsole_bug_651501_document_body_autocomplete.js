@@ -84,5 +84,10 @@ function onVariablesViewReady(aEvent, aView)
 {
   findVariableViewProperties(aView, [
     { name: "body", value: "<body>" },
-  ], { webconsole: gHUD }).then(finishTest);
+  ], { webconsole: gHUD }).then(finishUp);
+}
+
+function finishUp() {
+  gHUD = null;
+  finishTest();
 }

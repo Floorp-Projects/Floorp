@@ -14,6 +14,7 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.PasswordStretcher;
+import org.mozilla.gecko.background.fxa.QuickPasswordStretcher;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountSetupTask.ProgressDisplay;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
@@ -26,7 +27,6 @@ import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 import android.accounts.AccountManager;
 import android.content.Intent;
 import android.text.Editable;
-import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.text.method.SingleLineTransformationMethod;
@@ -302,5 +302,14 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
       startActivity(successIntent);
       finish();
     }
+  }
+
+  /**
+   * Factory function that produces a new PasswordStretcher instance.
+   *
+   * @return PasswordStretcher instance.
+   */
+  protected PasswordStretcher makePasswordStretcher(String password) {
+    return new QuickPasswordStretcher(password);
   }
 }

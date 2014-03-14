@@ -64,17 +64,21 @@ TextTrackList::IndexedGetter(uint32_t aIndex, bool& aFound)
 already_AddRefed<TextTrack>
 TextTrackList::AddTextTrack(TextTrackKind aKind,
                             const nsAString& aLabel,
-                            const nsAString& aLanguage)
+                            const nsAString& aLanguage,
+                            TextTrackSource aTextTrackSource,
+                            const CompareTextTracks& aCompareTT)
 {
-  nsRefPtr<TextTrack> track = new TextTrack(mGlobal, this, aKind, aLabel, aLanguage);
-  AddTextTrack(track);
+  nsRefPtr<TextTrack> track = new TextTrack(mGlobal, this, aKind, aLabel, aLanguage,
+                                            aTextTrackSource);
+  AddTextTrack(track, aCompareTT);
   return track.forget();
 }
 
 void
-TextTrackList::AddTextTrack(TextTrack* aTextTrack)
+TextTrackList::AddTextTrack(TextTrack* aTextTrack,
+                            const CompareTextTracks& aCompareTT)
 {
-  if (mTextTracks.AppendElement(aTextTrack)) {
+  if (mTextTracks.InsertElementSorted(aTextTrack, aCompareTT)) {
     aTextTrack->SetTextTrackList(this);
     CreateAndDispatchTrackEventRunner(aTextTrack, NS_LITERAL_STRING("addtrack"));
   }

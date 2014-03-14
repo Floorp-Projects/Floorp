@@ -41,4 +41,14 @@ FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
 
+# These includes are from Android JB, for use of MediaCodec.
+LOCAL_INCLUDES += ['/ipc/chromium/src']
+CXXFLAGS += [
+    '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+        'frameworks/native/opengl/include',
+        'frameworks/native/include',
+        'frameworks/av/include/media',
+    ]
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')

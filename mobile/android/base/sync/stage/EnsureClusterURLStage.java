@@ -15,6 +15,7 @@ import java.security.GeneralSecurityException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.NodeAuthenticationException;
 import org.mozilla.gecko.sync.NullClusterURLException;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.ThreadPool;
 import org.mozilla.gecko.sync.delegates.NodeAssignmentCallback;
 import org.mozilla.gecko.sync.net.BaseResource;
@@ -76,6 +77,10 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
 
     BaseResource resource = new BaseResource(nodeWeaveURL);
     resource.delegate = new BaseResourceDelegate(resource) {
+      @Override
+      public String getUserAgent() {
+        return SyncConstants.USER_AGENT;
+      }
 
       /**
        * Handle the response for GET https://server/pathname/version/username/node/weave.
@@ -179,6 +184,7 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
     resource.get();
   }
 
+  @Override
   public void execute() throws NoSuchStageException {
     final URI oldClusterURL = session.config.getClusterURL();
     final boolean wantNodeAssignment = callback.wantNodeAssignment();
