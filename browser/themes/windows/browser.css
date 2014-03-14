@@ -2387,6 +2387,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 /* Sync Panel */
 
 .sync-panel-icon {
+  height:32px;
   width: 32px;
   background: url("chrome://browser/content/abouthome/sync.png") top left no-repeat;
 }
@@ -2402,7 +2403,9 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 #sync-error-panel-title,
 #sync-start-panel-title {
+  font-size: 120%;
   font-weight: bold;
+  margin-bottom: 5px;
 }
 
 #sync-start-panel-subtitle,

@@ -404,14 +404,9 @@
         <image class="sync-panel-icon"/>
         <vbox class="sync-panel-inner">
           <description id="sync-start-panel-title"
-                       value="&syncStartPanel.heading;"/>
-          <description id="sync-start-panel-subtitle">
-#ifdef XP_UNIX
-            &syncStartPanel.subTitleUnix;
-#else
-            &syncStartPanel.subTitle;
-#endif
-          </description>
+                       value="&syncStartPanel2.heading;"/>
+          <description id="sync-start-panel-subtitle"
+                       value="&syncStartPanel2.subTitle;"/>
         </vbox>
       </hbox>
     </panel>
