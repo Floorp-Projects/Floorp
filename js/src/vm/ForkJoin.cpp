@@ -161,6 +161,21 @@ intrinsic_SetForkJoinTargetRegionPar(ForkJoinContext *cx, unsigned argc, Value *
 JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_SetForkJoinTargetRegionInfo,
                            intrinsic_SetForkJoinTargetRegionPar);
 
+bool
+js::intrinsic_ClearThreadLocalArenas(JSContext *cx, unsigned argc, Value *vp)
+{
+    return true;
+}
+
+static bool
+intrinsic_ClearThreadLocalArenasPar(ForkJoinContext *cx, unsigned argc, Value *vp)
+{
+    return true;
+}
+
+JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_ClearThreadLocalArenasInfo,
+                           intrinsic_ClearThreadLocalArenasPar);
+
 #endif // !JS_THREADSAFE || !JS_ION
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2171,5 +2186,21 @@ intrinsic_SetForkJoinTargetRegionPar(ForkJoinContext *cx, unsigned argc, Value *
 
 JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_SetForkJoinTargetRegionInfo,
                            intrinsic_SetForkJoinTargetRegionPar);
+
+bool
+js::intrinsic_ClearThreadLocalArenas(JSContext *cx, unsigned argc, Value *vp)
+{
+    return true;
+}
+
+static bool
+intrinsic_ClearThreadLocalArenasPar(ForkJoinContext *cx, unsigned argc, Value *vp)
+{
+    cx->allocator()->arenas.wipeDuringParallelExecution(cx->runtime());
+    return true;
+}
+
+JS_JITINFO_NATIVE_PARALLEL(js::intrinsic_ClearThreadLocalArenasInfo,
+                           intrinsic_ClearThreadLocalArenasPar);
 
 #endif // JS_THREADSAFE && JS_ION
