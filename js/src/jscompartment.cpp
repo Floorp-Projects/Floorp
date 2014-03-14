@@ -720,23 +720,20 @@ CreateLazyScriptsForCompartment(JSContext *cx)
     AutoObjectVector lazyFunctions(cx);
 
     // Find all live lazy scripts in the compartment, and via them all root
-    // lazy functions in the compartment: those which have not been compiled
-    // and which have a source object, indicating that they have a parent.
+    // lazy functions in the compartment: those which have not been compiled,
+    // which have a source object, indicating that they have a parent, and
+    // which do not have an uncompiled enclosing script. The last condition is
+    // so that we don't compile lazy scripts whose enclosing scripts failed to
+    // compile, indicating that the lazy script did not escape the script.
     for (gc::CellIter i(cx->zone(), gc::FINALIZE_LAZY_SCRIPT); !i.done(); i.next()) {
         LazyScript *lazy = i.get<LazyScript>();
         JSFunction *fun = lazy->functionNonDelazifying();
         if (fun->compartment() == cx->compartment() &&
-            lazy->sourceObject() && !lazy->maybeScript())
+            lazy->sourceObject() && !lazy->maybeScript() &&
+            !lazy->hasUncompiledEnclosingScript())
         {
             MOZ_ASSERT(fun->isInterpretedLazy());
             MOZ_ASSERT(lazy == fun->lazyScriptOrNull());
-
-            // Only compile lazy scripts that in fact escaped to script. We
-            // are iterating GC things here, so we might see lazy scripts
-            // whose enclosing scripts were not successfully compiled.
-            if (lazy->hasUncompiledEnclosingScript())
-                continue;
-
             if (!lazyFunctions.append(fun))
                 return false;
         }
