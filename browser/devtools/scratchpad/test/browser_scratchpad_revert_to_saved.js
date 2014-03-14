@@ -90,8 +90,7 @@ function testAfterSecondRevert() {
   ok(menu.hasAttribute("disabled"),
      "Revert menu entry is disabled after reverting to changed saved state.");
   gFile.remove(false);
-  gFile = null;
-  gScratchpad = null;
+  gFile = gScratchpad = menu = null;
   finish();
 }
 

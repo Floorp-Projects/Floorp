@@ -1,3 +1,5 @@
+.. _crashes_crashmanager:
+
 =============
 Crash Manager
 =============

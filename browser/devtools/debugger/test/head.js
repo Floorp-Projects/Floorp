@@ -27,6 +27,11 @@ let Toolbox = devtools.Toolbox;
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/";
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 // All tests are asynchronous.
 waitForExplicitFinish();
 

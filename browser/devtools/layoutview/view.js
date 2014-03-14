@@ -239,11 +239,40 @@ LayoutView.prototype = {
 
     this._lastRequest = lastRequest;
     return this._lastRequest;
-  }
-}
+  },
+
+  showBoxModel: function(options={}) {
+    let toolbox = this.inspector.toolbox;
+    let nodeFront = this.inspector.selection.nodeFront;
+
+    toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
+  },
+
+  hideBoxModel: function() {
+    let toolbox = this.inspector.toolbox;
+
+    toolbox.highlighterUtils.unhighlight();
+  },
+};
 
 let elts;
 let tooltip;
+
+let onmouseover = function(e) {
+  let region = e.target.getAttribute("data-box");
+
+  tooltip.textContent = e.target.getAttribute("tooltip");
+  this.layoutview.showBoxModel({region: region});
+
+  return false;
+}.bind(window);
+
+let onmouseout = function(e) {
+  tooltip.textContent = "";
+  this.layoutview.hideBoxModel();
+
+  return false;
+}.bind(window);
 
 window.setPanel = function(panel) {
   this.layoutview = new LayoutView(panel, window);
@@ -276,11 +305,3 @@ window.onunload = function() {
     }
   }
 };
-
-function onmouseover(e) {
-  tooltip.textContent = e.target.getAttribute("tooltip");
-}
-
-function onmouseout(e) {
-  tooltip.textContent = "";
-}

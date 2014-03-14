@@ -23,6 +23,11 @@ let DebuggerServer = temp.DebuggerServer;
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 registerCleanupFunction(function () {
   helpers = null;
   Services.prefs.clearUserPref(PROFILER_ENABLED);

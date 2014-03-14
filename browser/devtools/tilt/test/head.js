@@ -56,6 +56,10 @@ const NODE_REMOVED = Tilt.NOTIFICATIONS.NODE_REMOVED;
 
 const TILT_ENABLED = Services.prefs.getBoolPref("devtools.tilt.enabled");
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
 
 function isTiltEnabled() {
   info("Apparently, Tilt is" + (TILT_ENABLED ? "" : " not") + " enabled.");
