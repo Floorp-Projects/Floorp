@@ -277,24 +277,6 @@ js::Nursery::notifyInitialSlots(Cell *cell, HeapSlot *slots)
     }
 }
 
-void
-js::Nursery::notifyNewElements(gc::Cell *cell, ObjectElements *elements)
-{
-    JS_ASSERT(!isInside(elements));
-    notifyInitialSlots(cell, reinterpret_cast<HeapSlot *>(elements));
-}
-
-void
-js::Nursery::notifyRemovedElements(gc::Cell *cell, ObjectElements *oldElements)
-{
-    JS_ASSERT(cell);
-    JS_ASSERT(oldElements);
-    JS_ASSERT(!isInside(oldElements));
-
-    if (isInside(cell))
-        hugeSlots.remove(reinterpret_cast<HeapSlot *>(oldElements));
-}
-
 namespace js {
 namespace gc {
 
@@ -619,25 +601,6 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         return 0;
     }
 
-    /* ArrayBuffer stores byte-length, not Value count. */
-    if (src->is<ArrayBufferObject>()) {
-        size_t nbytes;
-        if (src->hasDynamicElements()) {
-            nbytes = sizeof(ObjectElements) + srcHeader->initializedLength;
-            dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
-            if (!dstHeader)
-                CrashAtUnhandlableOOM("Failed to allocate array buffer elements while tenuring.");
-        } else {
-            dst->setFixedElements();
-            nbytes = GetGCKindSlots(dst->tenuredGetAllocKind()) * sizeof(HeapSlot);
-            dstHeader = dst->getElementsHeader();
-        }
-        js_memcpy(dstHeader, srcHeader, nbytes);
-        setElementsForwardingPointer(srcHeader, dstHeader, nbytes / sizeof(HeapSlot));
-        dst->elements = dstHeader->elements();
-        return src->hasDynamicElements() ? nbytes : 0;
-    }
-
     size_t nslots = ObjectElements::VALUES_PER_HEADER + srcHeader->capacity;
 
     /* Unlike other objects, Arrays can have fixed elements. */
@@ -783,7 +746,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     // Update the array buffer object's view lists.
     TIME_START(sweepArrayBufferViewList);
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
-        if (c->gcLiveArrayBuffers)
+        if (!c->gcLiveArrayBuffers.empty())
             ArrayBufferObject::sweep(c);
     }
     TIME_END(sweepArrayBufferViewList);

@@ -104,12 +104,6 @@ class Nursery
     /* Add a slots to our tracking list if it is out-of-line. */
     void notifyInitialSlots(gc::Cell *cell, HeapSlot *slots);
 
-    /* Add elements to our tracking list if it is out-of-line. */
-    void notifyNewElements(gc::Cell *cell, ObjectElements *elements);
-
-    /* Remove elements to our tracking list if it is out-of-line. */
-    void notifyRemovedElements(gc::Cell *cell, ObjectElements *oldElements);
-
     typedef Vector<types::TypeObject *, 0, SystemAllocPolicy> TypeObjectList;
 
     /*
