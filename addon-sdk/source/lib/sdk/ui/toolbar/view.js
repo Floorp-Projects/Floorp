@@ -16,11 +16,13 @@ const { subscribe, send, Reactor, foldp, lift, merges } = require("../../event/u
 const { InputPort } = require("../../input/system");
 const { OutputPort } = require("../../output/system");
 const { Interactive } = require("../../input/browser");
+const { CustomizationInput } = require("../../input/customizable-ui");
 const { pairs, map, isEmpty, object,
         each, keys, values } = require("../../util/sequence");
 const { curry, flip } = require("../../lang/functional");
 const { patch, diff } = require("diffpatcher/index");
 const prefs = require("../../preferences/service");
+const { getByOuterId } = require("../../window/utils");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_ROOT = "extensions.sdk-toolbar-collapsed.";
@@ -38,8 +40,9 @@ const syncoutput = new OutputPort({ id: "toolbar-change", sync: true });
 // date.
 const Toolbars = foldp(patch, {}, merges([new InputPort({ id: "toolbar-changed" }),
                                           new InputPort({ id: "toolbar-change" })]));
-const State = lift((toolbars, windows) => ({windows: windows, toolbars: toolbars}),
-                   Toolbars, Interactive);
+const State = lift((toolbars, windows, customizable) =>
+  ({windows: windows, toolbars: toolbars, customizable: customizable}),
+  Toolbars, Interactive, new CustomizationInput());
 
 // Shared event handler that makes `event.target.parent` collapsed.
 // Used as toolbar's close buttons click handler.
@@ -88,12 +91,17 @@ const addView = curry((options, {document}) => {
   view.setAttribute("collapsed", options.collapsed);
   view.setAttribute("toolbarname", options.title);
   view.setAttribute("pack", "end");
-  view.setAttribute("defaultset", options.items.join(","));
-  view.setAttribute("customizable", true);
-  view.setAttribute("style", "max-height: 40px;");
+  view.setAttribute("customizable", "false");
+  view.setAttribute("style", "padding: 2px 0; max-height: 40px;");
   view.setAttribute("mode", "icons");
   view.setAttribute("iconsize", "small");
   view.setAttribute("context", "toolbar-context-menu");
+  view.setAttribute("class", "toolbar-primary chromeclass-toolbar");
+
+  let label = document.createElementNS(XUL_NS, "label");
+  label.setAttribute("value", options.title);
+  label.setAttribute("collapsed", "true");
+  view.appendChild(label);
 
   let closeButton = document.createElementNS(XUL_NS, "toolbarbutton");
   closeButton.setAttribute("id", "close-" + options.id);
@@ -102,6 +110,24 @@ const addView = curry((options, {document}) => {
   closeButton.addEventListener("command", collapseToolbar);
 
   view.appendChild(closeButton);
+
+  // In order to have a close button not costumizable, aligned on the right,
+  // leaving the customizable capabilities of Australis, we need to create
+  // a toolbar inside a toolbar.
+  // This is should be a temporary hack, we should have a proper XBL for toolbar
+  // instead. See:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=982005
+  let toolbar = document.createElementNS(XUL_NS, "toolbar");
+  toolbar.setAttribute("id", "inner-" + options.id);
+  toolbar.setAttribute("defaultset", options.items.join(","));
+  toolbar.setAttribute("customizable", "true");
+  toolbar.setAttribute("style", "-moz-appearance: none; overflow: hidden");
+  toolbar.setAttribute("mode", "icons");
+  toolbar.setAttribute("iconsize", "small");
+  toolbar.setAttribute("context", "toolbar-context-menu");
+  toolbar.setAttribute("flex", "1");
+
+  view.insertBefore(toolbar, closeButton);
 
   const observer = new document.defaultView.MutationObserver(attributesChanged);
   observer.observe(view, { attributes: true,
@@ -117,23 +143,34 @@ const removeView = curry((id, {document}) => {
   if (view) view.remove();
 });
 
-const updateView = curry((id, {title, collapsed}, {document}) => {
+const updateView = curry((id, {title, collapsed, isCustomizing}, {document}) => {
   const view = document.getElementById(id);
-  if (view && title)
+
+  if (!view)
+    return;
+
+  if (title)
     view.setAttribute("toolbarname", title);
-  if (view && collapsed !== void(0))
+
+  if (collapsed !== void(0))
     view.setAttribute("collapsed", Boolean(collapsed));
+
+  if (isCustomizing !== void(0)) {
+    view.querySelector("label").collapsed = !isCustomizing;
+    view.querySelector("toolbar").style.visibility = isCustomizing
+                                                ? "hidden" : "visible";
+  }
 });
 
-
+const viewUpdate = curry(flip(updateView));
 
 // Utility function used to register toolbar into CustomizableUI.
 const registerToolbar = state => {
   // If it's first additon register toolbar as customizableUI component.
-  CustomizableUI.registerArea(state.id, {
+  CustomizableUI.registerArea("inner-" + state.id, {
     type: CustomizableUI.TYPE_TOOLBAR,
     legacy: true,
-    defaultPlacements: [...state.items, "close-" + state.id]
+    defaultPlacements: [...state.items]
   });
 };
 // Utility function used to unregister toolbar from the CustomizableUI.
@@ -148,7 +185,7 @@ const reactor = new Reactor({
       // we unregister toolbar and remove it from each window
       // it was added to.
       if (update === null) {
-        unregisterToolbar(id);
+        unregisterToolbar("inner-" + id);
         each(removeView(id), values(past.windows));
 
         send(output, object([id, null]));
@@ -190,10 +227,16 @@ const reactor = new Reactor({
       if (window)
         each(viewAdd(window), values(past.toolbars));
     }, values(delta.windows));
+
+    each(([id, isCustomizing]) => {
+      each(viewUpdate(getByOuterId(id), {isCustomizing: !!isCustomizing}),
+        keys(present.toolbars));
+
+    }, pairs(delta.customizable))
   },
   onEnd: state => {
     each(id => {
-      unregisterToolbar(id);
+      unregisterToolbar("inner-" + id);
       each(removeView(id), values(state.windows));
     }, keys(state.toolbars));
   }
