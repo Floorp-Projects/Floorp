@@ -770,14 +770,6 @@ BluetoothServiceBluedroid::StopInternal()
   return ret;
 }
 
-bool
-BluetoothServiceBluedroid::IsEnabledInternal()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  return sIsBtEnabled;
-}
-
 nsresult
 BluetoothServiceBluedroid::GetDefaultAdapterPathInternal(
   BluetoothReplyRunnable* aRunnable)

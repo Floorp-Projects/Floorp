@@ -53,8 +53,6 @@ public:
 
   virtual nsresult StopInternal() MOZ_OVERRIDE;
 
-  virtual bool IsEnabledInternal() MOZ_OVERRIDE;
-
   virtual nsresult GetDefaultAdapterPathInternal(
                                              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
