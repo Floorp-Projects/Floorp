@@ -28,7 +28,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsIEditorObserver.h"
-#include "nsINativeKeyBindings.h"
+#include "nsIWidget.h"
 #include "nsIDocumentEncoder.h"
 #include "nsISelectionPrivate.h"
 #include "nsPIDOMWindow.h"
@@ -48,9 +48,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kTextEditorCID, NS_TEXTEDITOR_CID);
-
-static nsINativeKeyBindings *sNativeInputBindings = nullptr;
-static nsINativeKeyBindings *sNativeTextAreaBindings = nullptr;
 
 class MOZ_STACK_CLASS ValueSetter
 {
@@ -679,8 +676,6 @@ protected:
 
   nsresult  UpdateTextInputCommands(const nsAString& commandsToUpdate);
 
-  NS_HIDDEN_(nsINativeKeyBindings*) GetKeyBindings();
-
 protected:
 
   nsIFrame* mFrame;
@@ -864,12 +859,19 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (!bindings) {
-    return NS_OK;
+  nsIWidget::NativeKeyBindingsType nativeKeyBindingsType =
+    mTxtCtrlElement->IsTextArea() ?
+      nsIWidget::NativeKeyBindingsForMultiLineEditor :
+      nsIWidget::NativeKeyBindingsForSingleLineEditor;
+  nsIWidget* widget = keyEvent->widget;
+  // If the event is created by chrome script, the widget is nullptr.
+  if (!widget) {
+    widget = mFrame->GetNearestWidget();
+    NS_ENSURE_TRUE(widget, NS_OK);
   }
-
-  if (bindings->KeyPress(*keyEvent, DoCommandCallback, mFrame)) {
+                                         
+  if (widget->ExecuteNativeKeyBinding(nativeKeyBindingsType,
+                                      *keyEvent, DoCommandCallback, mFrame)) {
     aEvent->PreventDefault();
   }
   return NS_OK;
@@ -938,37 +940,6 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
   return domWindow->UpdateCommands(commandsToUpdate);
-}
-
-nsINativeKeyBindings*
-nsTextInputListener::GetKeyBindings()
-{
-  if (mTxtCtrlElement->IsTextArea()) {
-    static bool sNoTextAreaBindings = false;
-
-    if (!sNativeTextAreaBindings && !sNoTextAreaBindings) {
-      CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "textarea",
-                     &sNativeTextAreaBindings);
-
-      if (!sNativeTextAreaBindings) {
-        sNoTextAreaBindings = true;
-      }
-    }
-
-    return sNativeTextAreaBindings;
-  }
-
-  static bool sNoInputBindings = false;
-  if (!sNativeInputBindings && !sNoInputBindings) {
-    CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "input",
-                   &sNativeInputBindings);
-
-    if (!sNativeInputBindings) {
-      sNoInputBindings = true;
-    }
-  }
-
-  return sNativeInputBindings;
 }
 
 // END nsTextInputListener
@@ -1973,13 +1944,6 @@ nsTextEditorState::InitializeKeyboardEventListeners()
   }
 
   mSelCon->SetScrollableFrame(do_QueryFrame(mBoundFrame->GetFirstPrincipalChild()));
-}
-
-/* static */ void
-nsTextEditorState::ShutDown()
-{
-  NS_IF_RELEASE(sNativeTextAreaBindings);
-  NS_IF_RELEASE(sNativeInputBindings);
 }
 
 void
