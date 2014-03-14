@@ -210,10 +210,11 @@ public:
                   int32_t* avSyncOffsetMs);
   bool GetRTPStats(unsigned int* jitterMs, unsigned int* cumulativeLost);
   bool GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
-                             unsigned int* jitterMs,
-                             unsigned int* packetsReceived,
+                             uint32_t* jitterMs,
+                             uint32_t* packetsReceived,
                              uint64_t* bytesReceived,
-                             unsigned int* cumulativeLost);
+                             uint32_t* cumulativeLost,
+                             int32_t* rttMs);
   bool GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                            unsigned int* packetsSent,
                            uint64_t* bytesSent);
