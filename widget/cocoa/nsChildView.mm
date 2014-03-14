@@ -50,6 +50,7 @@
 #ifdef __LP64__
 #include "ComplexTextInputPanel.h"
 #endif
+#include "NativeKeyBindings.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -1960,6 +1961,17 @@ nsChildView::GetInputContext()
     mInputContext.mNativeIMEContext = this;
   }
   return mInputContext;
+}
+
+NS_IMETHODIMP_(bool)
+nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
+                                     const WidgetKeyboardEvent& aEvent,
+                                     DoCommandCallback aCallback,
+                                     void* aCallbackData)
+{
+  nsRefPtr<NativeKeyBindings> keyBindings =
+    NativeKeyBindings::GetInstance(aType);
+  return keyBindings->KeyPress(aEvent, aCallback, aCallbackData);
 }
 
 nsIMEUpdatePreference

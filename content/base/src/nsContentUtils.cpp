@@ -1516,8 +1516,6 @@ nsContentUtils::Shutdown()
   sModifierSeparator = nullptr;
 
   NS_IF_RELEASE(sSameOriginChecker);
-
-  nsTextEditorState::ShutDown();
 }
 
 /**

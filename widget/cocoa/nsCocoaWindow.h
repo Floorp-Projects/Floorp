@@ -344,6 +344,11 @@ public:
       }
       return mInputContext;
     }
+    NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+                        NativeKeyBindingsType aType,
+                        const mozilla::WidgetKeyboardEvent& aEvent,
+                        DoCommandCallback aCallback,
+                        void* aCallbackData) MOZ_OVERRIDE;
 
     void SetPopupWindowLevel();
 
