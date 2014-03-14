@@ -175,60 +175,6 @@ BluetoothService::ToggleBtAck::Run()
   return NS_OK;
 }
 
-class BluetoothService::ToggleBtTask : public nsRunnable
-{
-public:
-  ToggleBtTask(bool aEnabled, bool aIsStartup)
-    : mEnabled(aEnabled)
-    , mIsStartup(aIsStartup)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-  }
-
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    /**
-     * mEnabled: expected status of bluetooth
-     * sBluetoothService->IsEnabled(): real status of bluetooth
-     *
-     * When two values are the same, we don't switch on/off bluetooth
-     * but we still do ToggleBtAck task. One special case happens at startup
-     * stage. At startup, the initialization of BluetoothService still has to
-     * be done even if mEnabled is equal to the status of Bluetooth firmware.
-     *
-     * Please see bug 892392 for more information.
-     */
-    if (!mIsStartup && mEnabled == sBluetoothService->IsEnabled()) {
-      BT_WARNING("Bluetooth has already been enabled/disabled before.");
-      nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(mEnabled);
-      if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-        BT_WARNING("Failed to dispatch to main thread!");
-      }
-    } else {
-      // Switch on/off bluetooth
-      if (mEnabled) {
-        if (NS_FAILED(sBluetoothService->StartInternal())) {
-          BT_WARNING("Bluetooth service failed to start!");
-          mEnabled = !mEnabled;
-        }
-      } else {
-        if (NS_FAILED(sBluetoothService->StopInternal())) {
-          BT_WARNING("Bluetooth service failed to stop!");
-          mEnabled = !mEnabled;
-        }
-      }
-    }
-
-    return NS_OK;
-  }
-
-private:
-  bool mEnabled;
-  bool mIsStartup;
-};
-
 class BluetoothService::StartupTask : public nsISettingsServiceCallback
 {
 public:
@@ -459,9 +405,25 @@ BluetoothService::StartBluetooth(bool aIsStartup)
 
   mAdapterAddedReceived = false;
 
-  nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(true, aIsStartup);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  NS_ENSURE_SUCCESS(rv, rv);
+  /* When IsEnabled() is true, we don't switch on Bluetooth but we still
+   * send ToggleBtAck task. One special case happens at startup stage. At
+   * startup, the initialization of BluetoothService still has to be done
+   * even if Bluetooth is already enabled.
+   *
+   * Please see bug 892392 for more information.
+   */
+  if (aIsStartup || !sBluetoothService->IsEnabled()) {
+    // Switch Bluetooth on
+    if (NS_FAILED(sBluetoothService->StartInternal())) {
+      BT_WARNING("Bluetooth service failed to start!");
+    }
+  } else {
+    BT_WARNING("Bluetooth has already been enabled before.");
+    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
+  }
 
   return NS_OK;
 }
@@ -504,9 +466,25 @@ BluetoothService::StopBluetooth(bool aIsStartup)
 
   mAdapterAddedReceived = false;
 
-  nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(false, aIsStartup);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  NS_ENSURE_SUCCESS(rv, rv);
+  /* When IsEnabled() is false, we don't switch off Bluetooth but we still
+   * send ToggleBtAck task. One special case happens at startup stage. At
+   * startup, the initialization of BluetoothService still has to be done
+   * even if Bluetooth is disabled.
+   *
+   * Please see bug 892392 for more information.
+   */
+  if (aIsStartup || sBluetoothService->IsEnabled()) {
+    // Switch Bluetooth off
+    if (NS_FAILED(sBluetoothService->StopInternal())) {
+      BT_WARNING("Bluetooth service failed to stop!");
+    }
+  } else {
+    BT_WARNING("Bluetooth has already been enabled/disabled before.");
+    nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
+  }
 
   return NS_OK;
 }
