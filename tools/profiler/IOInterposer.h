@@ -136,14 +136,6 @@ public:
   virtual ~IOInterposeObserver()
   {
   }
-
-protected:
-  /**
-   * We don't use NS_IsMainThread() because we need to be able to determine the
-   * main thread outside of XPCOM Initialization. IOInterposer observers should
-   * call this function instead.
-   */
-  static bool IsMainThread();
 };
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
@@ -246,19 +238,10 @@ public:
    * didn't register for them all.
    * I.e. IOInterposer::Unregister(IOInterposeObserver::OpAll, aObserver)
    *
-   * Remark: Init() must be called before observers are unregistered.
+   * Remark: Init() must be called before observers are unregistered
    */
   static void Unregister(IOInterposeObserver::Operation aOp,
                          IOInterposeObserver* aObserver);
-
-  /**
-   * Registers the current thread with the IOInterposer.
-   *
-   * @param aIsMainThread true if IOInterposer should treat the current thread
-   *                      as the main thread.
-   */
-  static void
-  RegisterCurrentThread(bool aIsMainThread = false);
 };
 
 #else /* MOZ_ENABLE_PROFILER_SPS */
@@ -277,22 +260,9 @@ public:
   static inline bool IsObservedOperation(IOInterposeObserver::Operation aOp) {
     return false;
   }
-  static inline void RegisterCurrentThread(bool)                          {}
 };
 
 #endif /* MOZ_ENABLE_PROFILER_SPS */
-
-class IOInterposerInit
-{
-public:
-  IOInterposerInit()
-  {
-    IOInterposer::Init();
-  }
-
-  // No destructor needed at the moment -- this stuff stays active for the
-  // life of the process. This may change in the future.
-};
 
 } // namespace mozilla
 
