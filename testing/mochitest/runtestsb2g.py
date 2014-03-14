@@ -40,7 +40,7 @@ class B2GMochitest(MochitestUtilsMixin):
         super(B2GMochitest, self).__init__()
         self.marionette = marionette
         self.out_of_process = out_of_process
-        self.locations = locations
+        self.locations_file = locations
         self.preferences = []
         self.webapps = None
         self.test_script = os.path.join(here, 'b2g_start_script.js')
@@ -92,7 +92,7 @@ class B2GMochitest(MochitestUtilsMixin):
         kwargs = {
             'addons': self.getExtensionsToInstall(options),
             'apps': self.webapps,
-            'locations': self.locations,
+            'locations': self.locations_file,
             'preferences': prefs,
             'proxy': {"remote": options.webServer}
         }
@@ -114,8 +114,7 @@ class B2GMochitest(MochitestUtilsMixin):
         self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
         manifest = self.build_profile(options)
 
-        self.startWebServer(options)
-        self.startWebSocketServer(options, None)
+        self.startServers(options, None)
         self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
         self.test_script_args.append(not options.emulator)
         self.test_script_args.append(options.wifi)
@@ -155,8 +154,7 @@ class B2GMochitest(MochitestUtilsMixin):
             self.runner.check_for_crashes()
             status = 1
 
-        self.stopWebServer(options)
-        self.stopWebSocketServer(options)
+        self.stopServers()
 
         log.info("runtestsb2g.py | Running tests: end.")
 
@@ -199,26 +197,20 @@ class B2GDeviceMochitest(B2GMochitest):
             self.runner.cleanup()
             self.runner = None
 
-    def startWebServer(self, options):
-        """ Create the webserver on the host and start it up """
-        d = vars(options).copy()
-        d['xrePath'] = self.local_binary_dir
-        d['utilityPath'] = self.local_binary_dir
-        d['profilePath'] = tempfile.mkdtemp()
-        if d.get('httpdPath') is None:
-            d['httpdPath'] = os.path.abspath(os.path.join(self.local_binary_dir, 'components'))
-        self.server = MochitestServer(d)
-        self.server.start()
+    def startServers(self, options, debuggerInfo):
+        """ Create the servers on the host and start them up """
+        savedXre = options.xrePath
+        savedUtility = options.utilityPath
+        savedProfie = options.profilePath
+        options.xrePath = self.local_binary_dir
+        options.utilityPath = self.local_binary_dir
+        options.profilePath = tempfile.mkdtemp()
 
-        if (options.pidFile != ""):
-            f = open(options.pidFile + ".xpcshell.pid", 'w')
-            f.write("%s" % self.server._process.pid)
-            f.close()
-        self.server.ensureReady(90)
+        MochitestUtilsMixin.startServers(self, options, debuggerInfo)
 
-    def stopWebServer(self, options):
-        if hasattr(self, 'server'):
-            self.server.stop()
+        options.xrePath = savedXre
+        options.utilityPath = savedUtility
+        options.profilePath = savedProfie
 
     def buildURLOptions(self, options, env):
         self.local_log = options.logFile
@@ -238,6 +230,7 @@ class B2GDesktopMochitest(B2GMochitest, Mochitest):
     def __init__(self, marionette, profile_data_dir):
         B2GMochitest.__init__(self, marionette, out_of_process=False, profile_data_dir=profile_data_dir)
         Mochitest.__init__(self)
+        self.certdbNew = True
 
     def runMarionetteScript(self, marionette, test_script, test_script_args):
         assert(marionette.wait_for_port())
@@ -340,8 +333,7 @@ def run_remote_mochitests(parser, options):
     except:
         print "Automation Error: Exception caught while running tests"
         traceback.print_exc()
-        mochitest.stopWebServer(options)
-        mochitest.stopWebSocketServer(options)
+        mochitest.stopServers()
         try:
             mochitest.cleanup(None, options)
         except:
