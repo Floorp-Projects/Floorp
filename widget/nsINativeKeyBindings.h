@@ -27,7 +27,7 @@ NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "editor"
 class nsINativeKeyBindings : public nsISupports
 {
  public:
-  typedef void (*DoCommandCallback)(const char *, void*);
+  typedef void (*DoCommandCallback)(mozilla::Command, void*);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INATIVEKEYBINDINGS_IID)
 
