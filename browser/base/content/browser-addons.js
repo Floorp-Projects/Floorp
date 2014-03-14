@@ -405,16 +405,30 @@ let LightweightThemeListener = {
   updateStyleSheet: function(headerImage) {
     if (!this.styleSheet)
       return;
-    for (let i = 0; i < this.styleSheet.cssRules.length; i++) {
-      let rule = this.styleSheet.cssRules[i];
-      if (!rule.style.backgroundImage)
-        continue;
+    this.substituteRules(this.styleSheet.cssRules, headerImage);
+  },
 
-      if (!this._modifiedStyles[i])
-        this._modifiedStyles[i] = { backgroundImage: rule.style.backgroundImage };
+  substituteRules: function(ruleList, headerImage, existingStyleRulesModified = 0) {
+    let styleRulesModified = 0;
+    for (let i = 0; i < ruleList.length; i++) {
+      let rule = ruleList[i];
+      if (rule instanceof Ci.nsIDOMCSSGroupingRule) {
+        // Add the number of modified sub-rules to the modified count
+        styleRulesModified += this.substituteRules(rule.cssRules, headerImage, existingStyleRulesModified + styleRulesModified);
+      } else if (rule instanceof Ci.nsIDOMCSSStyleRule) {
+        if (!rule.style.backgroundImage)
+          continue;
+        let modifiedIndex = existingStyleRulesModified + styleRulesModified;
+        if (!this._modifiedStyles[modifiedIndex])
+          this._modifiedStyles[modifiedIndex] = { backgroundImage: rule.style.backgroundImage };
 
-      rule.style.backgroundImage = this._modifiedStyles[i].backgroundImage + ", " + headerImage;
+        rule.style.backgroundImage = this._modifiedStyles[modifiedIndex].backgroundImage + ", " + headerImage;
+        styleRulesModified++;
+      } else {
+        Cu.reportError("Unsupported rule encountered");
+      }
     }
+    return styleRulesModified;
   },
 
   // nsIObserver
