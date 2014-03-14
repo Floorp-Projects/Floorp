@@ -59,3 +59,11 @@ if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    CFLAGS += [
+        '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+            'frameworks/wilhelm/include',
+            'system/media/wilhelm/include',
+        ]
+    ]

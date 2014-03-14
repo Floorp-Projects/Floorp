@@ -6505,19 +6505,19 @@ nsTextFrame::GetChildFrameContainingOffset(int32_t   aContentOffset,
   return NS_OK;
 }
 
-bool
+nsIFrame::FrameSearchResult
 nsTextFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
 {
   NS_ASSERTION(aOffset && *aOffset <= GetContentLength(), "aOffset out of range");
 
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun)
-    return false;
+    return CONTINUE_EMPTY;
 
   TrimmedOffsets trimmed = GetTrimmedOffsets(mContent->GetText(), true);
   // Check whether there are nonskipped characters in the trimmmed range
-  return iter.ConvertOriginalToSkipped(trimmed.GetEnd()) >
-         iter.ConvertOriginalToSkipped(trimmed.mStart);
+  return (iter.ConvertOriginalToSkipped(trimmed.GetEnd()) >
+         iter.ConvertOriginalToSkipped(trimmed.mStart)) ? FOUND : CONTINUE;
 }
 
 /**
@@ -6575,7 +6575,7 @@ IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
   return true;
 }
 
-bool
+nsIFrame::FrameSearchResult
 nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                  bool aRespectClusters)
 {
@@ -6586,11 +6586,11 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
   uint8_t selectStyle;  
   IsSelectable(&selectable, &selectStyle);
   if (selectStyle == NS_STYLE_USER_SELECT_ALL)
-    return false;
+    return CONTINUE_UNSELECTABLE;
 
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun)
-    return false;
+    return CONTINUE_EMPTY;
 
   TrimmedOffsets trimmed = GetTrimmedOffsets(mContent->GetText(), false);
 
@@ -6604,7 +6604,7 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
       iter.SetOriginalOffset(i);
       if (IsAcceptableCaretPosition(iter, aRespectClusters, mTextRun, this)) {
         *aOffset = i - mContentOffset;
-        return true;
+        return FOUND;
       }
     }
     *aOffset = 0;
@@ -6621,14 +6621,14 @@ nsTextFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
         if (i == trimmed.GetEnd() ||
             IsAcceptableCaretPosition(iter, aRespectClusters, mTextRun, this)) {
           *aOffset = i - mContentOffset;
-          return true;
+          return FOUND;
         }
       }
     }
     *aOffset = contentLength;
   }
   
-  return false;
+  return CONTINUE;
 }
 
 bool
@@ -6746,7 +6746,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
   }
 }
 
-bool
+nsIFrame::FrameSearchResult
 nsTextFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                             int32_t* aOffset, PeekWordState* aState)
 {
@@ -6757,13 +6757,13 @@ nsTextFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKey
   uint8_t selectStyle;
   IsSelectable(&selectable, &selectStyle);
   if (selectStyle == NS_STYLE_USER_SELECT_ALL)
-    return false;
+    return CONTINUE_UNSELECTABLE;
 
   int32_t offset = GetContentOffset() + (*aOffset < 0 ? contentLength : *aOffset);
   ClusterIterator cIter(this, offset, aForward ? 1 : -1, aState->mContext);
 
   if (!cIter.NextCluster())
-    return false;
+    return CONTINUE_EMPTY;
 
   do {
     bool isPunctuation = cIter.IsPunctuation();
@@ -6794,14 +6794,14 @@ nsTextFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKey
       }
       if (canBreak) {
         *aOffset = cIter.GetBeforeOffset() - mContentOffset;
-        return true;
+        return FOUND;
       }
     }
     aState->Update(isPunctuation, isWhitespace);
   } while (cIter.NextCluster());
 
   *aOffset = cIter.GetAfterOffset() - mContentOffset;
-  return false;
+  return CONTINUE;
 }
 
  // TODO this needs to be deCOMtaminated with the interface fixed in
@@ -6819,7 +6819,7 @@ nsTextFrame::CheckVisibility(nsPresContext* aContext, int32_t aStartIndex,
   for (nsTextFrame* f = this; f;
        f = static_cast<nsTextFrame*>(GetNextContinuation())) {
     int32_t dummyOffset = 0;
-    if (f->PeekOffsetNoAmount(true, &dummyOffset)) {
+    if (f->PeekOffsetNoAmount(true, &dummyOffset) == FOUND) {
       *aRetval = true;
       return NS_OK;
     }

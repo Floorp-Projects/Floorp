@@ -988,15 +988,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
     // Note: this function clobbers the source register.
     void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest) {
-        // src is [0, 2^32-1]
-        subl(Imm32(0x80000000), src);
-
-        // Do it the GCC way
-        convertInt32ToFloat32(src, dest);
-
-        // dest is now a double with the int range.
-        // correct the double value by adding 0x80000000.
-        addConstantFloat32(2147483648.f, dest);
+        convertUInt32ToDouble(src, dest);
+        convertDoubleToFloat32(dest, dest);
     }
 
     void inc64(AbsoluteAddress dest) {

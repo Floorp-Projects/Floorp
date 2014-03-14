@@ -6269,20 +6269,23 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
     case eSelectCluster:
     {
       bool eatingNonRenderableWS = false;
-      bool done = false;
+      nsIFrame::FrameSearchResult peekSearchState = CONTINUE;
       bool jumpedLine = false;
+      bool movedOverNonSelectableText = false;
       
-      while (!done) {
+      while (peekSearchState != FOUND) {
         bool movingInFrameDirection =
           IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
 
         if (eatingNonRenderableWS)
-          done = current->PeekOffsetNoAmount(movingInFrameDirection, &offset); 
+          peekSearchState = current->PeekOffsetNoAmount(movingInFrameDirection, &offset); 
         else
-          done = current->PeekOffsetCharacter(movingInFrameDirection, &offset,
+          peekSearchState = current->PeekOffsetCharacter(movingInFrameDirection, &offset,
                                               aPos->mAmount == eSelectCluster);
 
-        if (!done) {
+        movedOverNonSelectableText |= (peekSearchState == CONTINUE_UNSELECTABLE);
+
+        if (peekSearchState != FOUND) {
           result =
             current->GetFrameFromDirection(aPos->mDirection, aPos->mVisual,
                                            aPos->mJumpLines, aPos->mScrollViewStop,
@@ -6294,6 +6297,15 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           // to eat non-renderable content on the new line.
           if (jumpedLine)
             eatingNonRenderableWS = true;
+        }
+
+        // Found frame, but because we moved over non selectable text we want the offset
+        // to be at the frame edge.
+        if (peekSearchState == FOUND && movedOverNonSelectableText)
+        {
+          int32_t start, end;
+          current->GetOffsets(start, end);
+          offset = aPos->mDirection == eDirNext ? 0 : end - start;
         }
       }
 
@@ -6362,7 +6374,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
         
         done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace,
-                                       aPos->mIsKeyboardSelect, &offset, &state);
+                                       aPos->mIsKeyboardSelect, &offset, &state) == FOUND;
         
         if (!done) {
           nsIFrame* nextFrame;
@@ -6577,15 +6589,15 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
   return NS_OK;
 }
 
-bool
+nsIFrame::FrameSearchResult
 nsFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Sure, we can stop right here.
-  return true;
+  return FOUND;
 }
 
-bool
+nsIFrame::FrameSearchResult
 nsFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                              bool aRespectClusters)
 {
@@ -6598,12 +6610,12 @@ nsFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
     // We're before the frame and moving forward, or after it and moving backwards:
     // skip to the other side and we're done.
     *aOffset = 1 - startOffset;
-    return true;
+    return FOUND;
   }
-  return false;
+  return CONTINUE;
 }
 
-bool
+nsIFrame::FrameSearchResult
 nsFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                         int32_t* aOffset, PeekWordState* aState)
 {
@@ -6620,11 +6632,11 @@ nsFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboar
       if (aState->mLastCharWasPunctuation) {
         // We're not punctuation, so this is a punctuation boundary.
         if (BreakWordBetweenPunctuation(aState, aForward, false, false, aIsKeyboardSelect))
-          return true;
+          return FOUND;
       } else {
         // This is not a punctuation boundary.
         if (aWordSelectEatSpace && aState->mSawBeforeType)
-          return true;
+          return FOUND;
       }
     }
     // Otherwise skip to the other side and note that we encountered non-whitespace.
@@ -6635,7 +6647,7 @@ nsFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboar
     if (!aWordSelectEatSpace)
       aState->SetSawBeforeType();
   }
-  return false;
+  return CONTINUE;
 }
 
 bool
