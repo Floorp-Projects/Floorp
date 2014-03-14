@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["WebappManager"];
+this.EXPORTED_SYMBOLS = ["WebappsHandler"];
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
@@ -14,11 +14,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
-Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappsInstaller.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
-Cu.import("resource://webapprt/modules/WebappRT.jsm");
 
-this.WebappManager = {
+this.WebappsHandler = {
   observe: function(subject, topic, data) {
     data = JSON.parse(data);
     data.mm = subject;
@@ -36,13 +35,6 @@ this.WebappManager = {
         WebappOSUtils.uninstall(data);
         break;
     }
-  },
-
-  update: function(aApp, aManifest, aZipPath) {
-    let nativeApp = new NativeApp(aApp, aManifest,
-                                  WebappRT.config.app.categories,
-                                  WebappRT.config.registryDir);
-    nativeApp.prepareUpdate(aManifest, aZipPath);
   },
 
   doInstall: function(data, window) {
@@ -67,22 +59,22 @@ this.WebappManager = {
 
     // Perform the install if the user allows it
     if (choice == 0) {
-      let nativeApp = new NativeApp(data.app, jsonManifest,
-                                    WebappRT.config.app.categories,
-                                    WebappRT.config.registryDir);
-      let localDir;
-      try {
-        localDir = nativeApp.createProfile();
-      } catch (ex) {
-        DOMApplicationRegistry.denyInstall(aData);
-        return;
-      }
+      let shell = WebappsInstaller.init(data);
 
-      DOMApplicationRegistry.confirmInstall(data, localDir,
-        function (aManifest, aZipPath) {
-          nativeApp.install(aManifest, aZipPath);
+      if (shell) {
+        let localDir = null;
+        if (shell.appProfile) {
+          localDir = shell.appProfile.localDir;
         }
-      );
+
+        DOMApplicationRegistry.confirmInstall(data, localDir,
+          function (aManifest) {
+            WebappsInstaller.install(data, aManifest);
+          }
+        );
+      } else {
+        DOMApplicationRegistry.denyInstall(data);
+      }
     } else {
       DOMApplicationRegistry.denyInstall(data);
     }
@@ -92,9 +84,6 @@ this.WebappManager = {
                                          Ci.nsISupportsWeakReference])
 };
 
-Services.obs.addObserver(WebappManager, "webapps-ask-install", false);
-Services.obs.addObserver(WebappManager, "webapps-launch", false);
-Services.obs.addObserver(WebappManager, "webapps-uninstall", false);
-Services.obs.addObserver(WebappManager, "webapps-update", false);
-
-DOMApplicationRegistry.registerUpdateHandler(WebappManager.update);
+Services.obs.addObserver(WebappsHandler, "webapps-ask-install", false);
+Services.obs.addObserver(WebappsHandler, "webapps-launch", false);
+Services.obs.addObserver(WebappsHandler, "webapps-uninstall", false);
