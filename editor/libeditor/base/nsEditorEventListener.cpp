@@ -530,9 +530,6 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
   if (GetEditorKeyBindings() && ShouldHandleNativeKeyBindings(aKeyEvent)) {
     // Now, ask the native key bindings to handle the event.
-    // XXX Note that we're not passing the keydown/keyup events to the native
-    // key bindings, which should be OK since those events are only handled on
-    // Windows for now, where we don't have native key bindings.
     WidgetKeyboardEvent* keyEvent =
       aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
     MOZ_ASSERT(keyEvent,

@@ -242,13 +242,6 @@ nsNativeKeyBindings::~nsNativeKeyBindings()
 NS_IMPL_ISUPPORTS1(nsNativeKeyBindings, nsINativeKeyBindings)
 
 bool
-nsNativeKeyBindings::KeyDown(const WidgetKeyboardEvent& aEvent,
-                             DoCommandCallback aCallback, void *aCallbackData)
-{
-  return false;
-}
-
-bool
 nsNativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
                               DoCommandCallback aCallback, void *aCallbackData)
 {
@@ -327,11 +320,4 @@ nsNativeKeyBindings::KeyPressInternal(const WidgetKeyboardEvent& aEvent,
   gCurrentCallbackData = nullptr;
 
   return gHandled;
-}
-
-bool
-nsNativeKeyBindings::KeyUp(const WidgetKeyboardEvent& aEvent,
-                           DoCommandCallback aCallback, void *aCallbackData)
-{
-  return false;
 }
