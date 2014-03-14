@@ -5980,8 +5980,7 @@ nsWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                   DoCommandCallback aCallback,
                                   void* aCallbackData)
 {
-    nsRefPtr<NativeKeyBindings> keyBindings =
-        NativeKeyBindings::GetInstance(aType);
+    NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
     return keyBindings->Execute(aEvent, aCallback, aCallbackData);
 }
 

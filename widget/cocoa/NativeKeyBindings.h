@@ -23,11 +23,8 @@ class NativeKeyBindings MOZ_FINAL
   typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
   typedef nsIWidget::DoCommandCallback DoCommandCallback;
 
-  NS_INLINE_DECL_REFCOUNTING(NativeKeyBindings)
-
 public:
-  static already_AddRefed<NativeKeyBindings>
-    GetInstance(NativeKeyBindingsType aType);
+  static NativeKeyBindings* GetInstance(NativeKeyBindingsType aType);
   static void Shutdown();
 
   void Init(NativeKeyBindingsType aType);
