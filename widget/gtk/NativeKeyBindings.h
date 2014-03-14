@@ -6,17 +6,13 @@
 #ifndef mozilla_widget_NativeKeyBindings_h_
 #define mozilla_widget_NativeKeyBindings_h_
 
-#import <Cocoa/Cocoa.h>
+#include <gtk/gtk.h>
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "nsDataHashtable.h"
 #include "nsIWidget.h"
 
 namespace mozilla {
 namespace widget {
-
-typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, CommandInt>
-  SelectorCommandHashtable;
 
 class NativeKeyBindings MOZ_FINAL
 {
@@ -37,13 +33,18 @@ public:
                void* aCallbackData);
 
 private:
-  NativeKeyBindings();
+  ~NativeKeyBindings();
 
-  SelectorCommandHashtable mSelectorToCommand;
+  bool ExecuteInternal(const WidgetKeyboardEvent& aEvent,
+                       DoCommandCallback aCallback,
+                       void* aCallbackData,
+                       guint aKeyval);
+
+  GtkWidget* mNativeTarget;
 
   static NativeKeyBindings* sInstanceForSingleLineEditor;
   static NativeKeyBindings* sInstanceForMultiLineEditor;
-}; // NativeKeyBindings
+};
 
 } // namespace widget
 } // namespace mozilla

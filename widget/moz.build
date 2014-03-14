@@ -95,7 +95,6 @@ XPIDL_MODULE = 'widget'
 EXPORTS += [
     'InputData.h',
     'nsIDeviceContextSpec.h',
-    'nsINativeKeyBindings.h',
     'nsIPluginWidget.h',
     'nsIRollupListener.h',
     'nsIWidget.h',
