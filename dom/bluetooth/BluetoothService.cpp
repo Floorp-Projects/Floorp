@@ -26,7 +26,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/ipc/UnixSocket.h"
-#include "mozilla/LazyIdleThread.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsIObserverService.h"
@@ -71,7 +70,6 @@
 
 #define PROP_BLUETOOTH_ENABLED      "bluetooth.isEnabled"
 
-#define DEFAULT_THREAD_TIMEOUT_MS 3000
 #define DEFAULT_SHUTDOWN_TIMER_MS 5000
 
 bool gBluetoothDebugFlag = false;
@@ -133,9 +131,7 @@ GetAllBluetoothActors(InfallibleTArray<BluetoothParent*>& aActors)
 
 BluetoothService::ToggleBtAck::ToggleBtAck(bool aEnabled)
   : mEnabled(aEnabled)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-}
+{ }
 
 NS_METHOD
 BluetoothService::ToggleBtAck::Run()
@@ -191,7 +187,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(NS_IsMainThread());
 
     /**
      * mEnabled: expected status of bluetooth
@@ -204,7 +200,7 @@ public:
      *
      * Please see bug 892392 for more information.
      */
-    if (!mIsStartup && mEnabled == sBluetoothService->IsEnabledInternal()) {
+    if (!mIsStartup && mEnabled == sBluetoothService->IsEnabled()) {
       BT_WARNING("Bluetooth has already been enabled/disabled before.");
       nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(mEnabled);
       if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
@@ -461,12 +457,6 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
       MOZ_ASSERT(false, "Start called while in shutdown!");
       return NS_ERROR_FAILURE;
     }
-
-    if (!mBluetoothThread) {
-      // Don't create a new thread after we've begun shutdown since bluetooth
-      // can't be running.
-      return NS_OK;
-    }
   }
 
   if (!aStart) {
@@ -503,16 +493,10 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
 
   }
 
-  if (!mBluetoothThread) {
-    mBluetoothThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                          NS_LITERAL_CSTRING("Bluetooth"),
-                                          LazyIdleThread::ManualShutdown);
-  }
-
   mAdapterAddedReceived = false;
 
   nsCOMPtr<nsIRunnable> runnable = new ToggleBtTask(aStart, aIsStartup);
-  nsresult rv = mBluetoothThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  nsresult rv = NS_DispatchToMainThread(runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -14,7 +14,6 @@
 #include "nsClassHashtable.h"
 #include "nsIDOMFile.h"
 #include "nsIObserver.h"
-#include "nsIThread.h"
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
 
@@ -403,14 +402,6 @@ protected:
   bool mEnabled;
 
 private:
-  /**
-   * Due to the fact that the startup and shutdown of the Bluetooth system
-   * can take an indefinite amount of time, a command thread is created
-   * that can run blocking calls. The thread is not intended for regular
-   * Bluetooth operations though.
-   */
-  nsCOMPtr<nsIThread> mBluetoothThread;
-
   bool mAdapterAddedReceived;
 };
 
