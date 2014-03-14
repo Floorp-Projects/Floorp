@@ -26,3 +26,11 @@
                     lwtHeader;*/
   background-position: 0 0, 0 0, right top;
 }
+
+@media (min-resolution: 2dppx) {
+  #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
+    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
+                      @fgTabTextureLWT@;/*,
+                      lwtHeader;*/
+  }
+}
