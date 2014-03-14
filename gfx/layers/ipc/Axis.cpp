@@ -8,6 +8,7 @@
 #include <math.h>                       // for fabsf, pow, powf
 #include <algorithm>                    // for max
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
+#include "mozilla/layers/APZCTreeManager.h" // for APZCTreeManager
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "mozilla/Attributes.h"         // for MOZ_FINAL
 #include "mozilla/Preferences.h"        // for Preferences
@@ -65,9 +66,9 @@ namespace layers {
  */
 
 /**
- * "apz.max_velocity_pixels_per_ms"
+ * "apz.max_velocity_pixels_per_inch"
  *
- * Maximum velocity in pixels per millisecond.  Velocity will be capped at this
+ * Maximum velocity in inches per millisecond.  Velocity will be capped at this
  * value if a faster fling occurs.  Negative values indicate unlimited velocity.
  *
  * The default value is -1.0f, set in gfxPrefs.h
@@ -84,7 +85,7 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
   float newVelocity = mAxisLocked ? 0 : (mPos - aPos) / aTimeDelta.ToMilliseconds();
   if (gfxPrefs::APZMaxVelocity() > 0.0f) {
-    newVelocity = std::min(newVelocity, gfxPrefs::APZMaxVelocity());
+    newVelocity = std::min(newVelocity, gfxPrefs::APZMaxVelocity() * APZCTreeManager::GetDPI());
   }
 
   mVelocity = newVelocity;

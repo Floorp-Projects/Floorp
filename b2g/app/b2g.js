@@ -870,9 +870,9 @@ pref("osfile.reset_worker_delay", 5000);
 pref("apz.asyncscroll.throttle", 40);
 pref("apz.pan_repaint_interval", 16);
 
-// Maximum fling velocity in px/ms.  Slower devices may need to reduce this
+// Maximum fling velocity in inches/ms.  Slower devices may need to reduce this
 // to avoid checkerboarding.  Note, float value must be set as a string.
-pref("apz.max_velocity_pixels_per_ms", "6.0");
+pref("apz.max_velocity_pixels_per_inch", "0.0375");
 
 // Tweak default displayport values to reduce the risk of running out of
 // memory when zooming in
