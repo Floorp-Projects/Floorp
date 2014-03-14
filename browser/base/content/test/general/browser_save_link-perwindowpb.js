@@ -29,7 +29,7 @@ function triggerSave(aWindow, aCallback) {
     info("found our page!");
     testBrowser.removeEventListener("pageshow", pageShown, false);
 
-    executeSoon(function () {
+    waitForFocus(function () {
       info("register to handle popupshown");
       aWindow.document.addEventListener("popupshown", function(e) contextMenuOpened(aWindow, e), false);
 
@@ -39,7 +39,7 @@ function triggerSave(aWindow, aCallback) {
                                          { type: "contextmenu", button: 2 },
                                          testBrowser.contentWindow);
       info("right clicked!");
-    });
+    }, testBrowser.contentWindow);
   }, false);
 
   function contextMenuOpened(aWindow, event) {
