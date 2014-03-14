@@ -11,9 +11,6 @@
 <script>
 
 var testFunc = ok;
-if (DriverInfo.getOS() == DriverInfo.OS.B2G) {
-  testFunc = todo;
-}
 
 function testContextRetrieval(canvasId, creationId, shouldSucceed) {
   var canvas = document.getElementById(canvasId);

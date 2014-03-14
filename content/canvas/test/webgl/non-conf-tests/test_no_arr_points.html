@@ -118,7 +118,8 @@ void main(void) {
     var elemTestFunc = todo; // We fail on most implementations.
     var checkGLTestFunc = todo;
     if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANGLE ||
-        DriverInfo.getOS() == DriverInfo.OS.ANDROID)
+        DriverInfo.getOS() == DriverInfo.OS.ANDROID ||
+        DriverInfo.getOS() == DriverInfo.OS.B2G)
     {
       // ANGLE and Android slaves seem to work fine.
       elemTestFunc = ok;
