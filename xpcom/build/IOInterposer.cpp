@@ -9,6 +9,12 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/ThreadLocal.h"
+#if !defined(XP_WIN)
+#include "NSPRInterposer.h"
+#endif // !defined(XP_WIN)
+#include "nsXULAppAPI.h"
+#include "PoisonIOInterposer.h"
 
 using namespace mozilla;
 
@@ -70,6 +76,7 @@ public:
 
 // List of observers registered
 static StaticAutoPtr<ObserverLists> sObserverLists;
+static ThreadLocal<bool> sIsMainThread;
 
 /** Find if a vector contains a specific element */
 template<class T>
@@ -135,6 +142,30 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
   }
   sObserverLists = new ObserverLists();
   sObservedOperations = IOInterposeObserver::OpNone;
+  if (sIsMainThread.init()) {
+#if defined(XP_WIN)
+    bool isMainThread = XRE_GetWindowsEnvironment() !=
+                          WindowsEnvironmentType_Metro;
+#else
+    bool isMainThread = true;
+#endif
+    sIsMainThread.set(isMainThread);
+  }
+  // Now we initialize the various interposers depending on platform
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  InitPoisonIOInterposer();
+#endif
+  // We don't hook NSPR on Windows because PoisonIOInterposer captures a
+  // superset of the former's events.
+#if !defined(XP_WIN)
+  InitNSPRIOInterposing();
+#endif
+}
+
+/* static */ bool
+IOInterposeObserver::IsMainThread()
+{
+  return sIsMainThread.initialized() && sIsMainThread.get();
 }
 
 /* static */ void IOInterposer::Clear()
@@ -226,8 +257,6 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
 /* static */ void IOInterposer::Register(IOInterposeObserver::Operation aOp,
                                          IOInterposeObserver* aObserver)
 {
-  // IOInterposer::Init most be called before this method
-  MOZ_ASSERT(sObserverLists);
   // We should never register nullptr as observer
   MOZ_ASSERT(aObserver);
   if (!sObserverLists || !aObserver) {
@@ -272,8 +301,6 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
 /* static */ void IOInterposer::Unregister(IOInterposeObserver::Operation aOp,
                                            IOInterposeObserver* aObserver)
 {
-  // IOInterposer::Init most be called before this method.
-  MOZ_ASSERT(sObserverLists);
   if (!sObserverLists) {
     return;
   }
@@ -324,3 +351,18 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
     }
   }
 }
+
+/* static */ void
+IOInterposer::RegisterCurrentThread(bool aIsMainThread)
+{
+  // Right now this is a no-op unless we're running on Metro.
+  // More cross-platform stuff will be added in the near future, stay tuned!
+#if defined(XP_WIN)
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro ||
+      !sIsMainThread.initialized()) {
+    return;
+  }
+  sIsMainThread.set(aIsMainThread);
+#endif
+}
+
