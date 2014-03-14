@@ -141,15 +141,11 @@ bool WebrtcVideoConduit::GetAVStats(int32_t* jitterBufferDelayMs,
 
 bool WebrtcVideoConduit::GetRTPStats(unsigned int* jitterMs,
                                      unsigned int* cumulativeLost) {
-  unsigned int ntpHigh, ntpLow;
-  unsigned int packetsSent, bytesSent;
   unsigned short fractionLost;
   unsigned extendedMax;
   int rttMs;
   // GetReceivedRTCPStatistics is a poorly named GetRTPStatistics variant
-  return !mPtrRTP->GetReceivedRTCPStatistics(mChannel, ntpHigh, ntpLow,
-                                             packetsSent, bytesSent,
-                                             fractionLost,
+  return !mPtrRTP->GetReceivedRTCPStatistics(mChannel, fractionLost,
                                              *cumulativeLost,
                                              extendedMax,
                                              *jitterMs,
