@@ -16,11 +16,6 @@
 #include "mozilla/EventForwards.h"
 #include <gtk/gtk.h>
 
-enum NativeKeyBindingsType {
-  eKeyBindings_Input,
-  eKeyBindings_TextArea
-};
-
 #define NS_NATIVEKEYBINDINGSINPUT_CID \
 {0x5c337258, 0xa580, 0x472e, {0x86, 0x15, 0xf2, 0x77, 0xdd, 0xc5, 0xbb, 0x06}}
 
@@ -32,7 +27,14 @@ enum NativeKeyBindingsType {
 
 class nsNativeKeyBindings MOZ_FINAL : public nsINativeKeyBindings
 {
+  typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
+  typedef nsIWidget::DoCommandCallback DoCommandCallback;
+
 public:
+  static already_AddRefed<nsNativeKeyBindings>
+    GetInstance(NativeKeyBindingsType aType);
+  static void Shutdown();
+
   NS_HIDDEN_(void) Init(NativeKeyBindingsType aType);
 
   NS_DECL_ISUPPORTS
@@ -51,6 +53,9 @@ private:
                         guint aKeyval);
 
   GtkWidget *mNativeTarget;
+
+  static nsNativeKeyBindings* sInstanceForSingleLineEditor;
+  static nsNativeKeyBindings* sInstanceForMultiLineEditor;
 };
 
 #endif

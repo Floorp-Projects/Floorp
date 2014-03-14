@@ -7,6 +7,7 @@
 #define NativeKeyBindings_h_
 
 #include "nsINativeKeyBindings.h"
+#include "nsIWidget.h"
 
 #import <Cocoa/Cocoa.h>
 #include "mozilla/Attributes.h"
@@ -31,19 +32,19 @@
 namespace mozilla {
 namespace widget {
 
-enum NativeKeyBindingsType
-{
-  eNativeKeyBindingsType_Input,
-  eNativeKeyBindingsType_TextArea,
-  eNativeKeyBindingsType_Editor
-};
-
 typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, CommandInt>
   SelectorCommandHashtable;
 
 class NativeKeyBindings MOZ_FINAL : public nsINativeKeyBindings
 {
+  typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
+  typedef nsIWidget::DoCommandCallback DoCommandCallback;
+
 public:
+  static already_AddRefed<NativeKeyBindings>
+    GetInstance(NativeKeyBindingsType aType);
+  static void Shutdown();
+
   NativeKeyBindings();
 
   NS_DECL_ISUPPORTS
@@ -57,6 +58,9 @@ public:
 
 private:
   SelectorCommandHashtable mSelectorToCommand;
+
+  static NativeKeyBindings* sInstanceForSingleLineEditor;
+  static NativeKeyBindings* sInstanceForMultiLineEditor;
 }; // NativeKeyBindings
 
 } // namespace widget

@@ -17,6 +17,43 @@ using namespace mozilla::widget;
 PRLogModuleInfo* gNativeKeyBindingsLog = nullptr;
 #endif
 
+NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
+NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
+
+// static
+already_AddRefed<NativeKeyBindings>
+NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
+{
+  switch (aType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      if (!sInstanceForSingleLineEditor) {
+        NS_ADDREF(sInstanceForSingleLineEditor = new NativeKeyBindings());
+        sInstanceForSingleLineEditor->Init(aType);
+      }
+      NS_ADDREF(sInstanceForSingleLineEditor);
+      return sInstanceForSingleLineEditor;
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      if (!sInstanceForMultiLineEditor) {
+        NS_ADDREF(sInstanceForMultiLineEditor = new NativeKeyBindings());
+        sInstanceForMultiLineEditor->Init(aType);
+      }
+      NS_ADDREF(sInstanceForMultiLineEditor);
+      return sInstanceForMultiLineEditor;
+    default:
+      MOZ_CRASH("Not implemented");
+      return nullptr;
+  }
+}
+
+// static
+void
+NativeKeyBindings::Shutdown()
+{
+  NS_IF_RELEASE(sInstanceForSingleLineEditor);
+  NS_IF_RELEASE(sInstanceForMultiLineEditor);
+}
+
 NativeKeyBindings::NativeKeyBindings()
 {
 }
@@ -83,7 +120,7 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   // SEL_TO_COMMAND(lowercaseWord:, );
   SEL_TO_COMMAND(moveBackward:, CommandCharPrevious);
   SEL_TO_COMMAND(moveBackwardAndModifySelection:, CommandSelectCharPrevious);
-  if (aType == eNativeKeyBindingsType_Input) {
+  if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor) {
     SEL_TO_COMMAND(moveDown:, CommandEndLine);
   } else {
     SEL_TO_COMMAND(moveDown:, CommandLineNext);
@@ -118,7 +155,7 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
     CommandSelectBeginLine);
   SEL_TO_COMMAND(moveToRightEndOfLine:, CommandEndLine);
   SEL_TO_COMMAND(moveToRightEndOfLineAndModifySelection:, CommandSelectEndLine);
-  if (aType == eNativeKeyBindingsType_Input) {
+  if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor) {
     SEL_TO_COMMAND(moveUp:, CommandBeginLine);
   } else {
     SEL_TO_COMMAND(moveUp:, CommandLinePrevious);
@@ -148,7 +185,7 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   SEL_TO_COMMAND(scrollToEndOfDocument:, CommandScrollBottom);
   SEL_TO_COMMAND(selectAll:, CommandSelectAll);
   // selectLine: is complex, see KeyDown
-  if (aType == eNativeKeyBindingsType_Input) {
+  if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor) {
     SEL_TO_COMMAND(selectParagraph:, CommandSelectAll);
   }
   // SEL_TO_COMMAND(selectToMark:, );

@@ -7,6 +7,7 @@
 #define nsINativeKeyBindings_h_
 
 #include "nsISupports.h"
+#include "nsIWidget.h"
 #include "mozilla/EventForwards.h"
 
 #define NS_INATIVEKEYBINDINGS_IID \
@@ -28,12 +29,10 @@ NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "editor"
 class nsINativeKeyBindings : public nsISupports
 {
  public:
-  typedef void (*DoCommandCallback)(mozilla::Command, void*);
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INATIVEKEYBINDINGS_IID)
 
   virtual NS_HIDDEN_(bool) KeyPress(const mozilla::WidgetKeyboardEvent& aEvent,
-                                    DoCommandCallback aCallback,
+                                    nsIWidget::DoCommandCallback aCallback,
                                     void *aCallbackData) = 0;
 };
 

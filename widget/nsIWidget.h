@@ -100,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xb979c607, 0xf0aa, 0x4fee, \
-  { 0xb2, 0x7b, 0xd4, 0x46, 0xa2, 0xe, 0x8b, 0x27 } }
+{ 0x5d94f2d, 0x5456, 0x4436, \
+  { 0xa7, 0x2f, 0x25, 0x6f, 0x47, 0xb0, 0xb5, 0x94 } }
 
 /*
  * Window shadow styles
@@ -1831,6 +1831,22 @@ public:
      * Get current input context.
      */
     NS_IMETHOD_(InputContext) GetInputContext() = 0;
+
+    /*
+     * Execute native key bindings for aType.
+     */
+    typedef void (*DoCommandCallback)(mozilla::Command, void*);
+    enum NativeKeyBindingsType
+    {
+      NativeKeyBindingsForSingleLineEditor,
+      NativeKeyBindingsForMultiLineEditor,
+      NativeKeyBindingsForRichTextEditor
+    };
+    NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+                        NativeKeyBindingsType aType,
+                        const mozilla::WidgetKeyboardEvent& aEvent,
+                        DoCommandCallback aCallback,
+                        void* aCallbackData) = 0;
 
     /**
      * Set layers acceleration to 'True' or 'False'

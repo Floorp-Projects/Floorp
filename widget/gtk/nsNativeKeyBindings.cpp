@@ -24,7 +24,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-static nsINativeKeyBindings::DoCommandCallback gCurrentCallback;
+static nsIWidget::DoCommandCallback gCurrentCallback;
 static void *gCurrentCallbackData;
 static bool gHandled;
 
@@ -198,14 +198,54 @@ select_all_cb(GtkWidget *w, gboolean select, gpointer user_data)
   gHandled = true;
 }
 
+nsNativeKeyBindings*
+  nsNativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
+nsNativeKeyBindings*
+  nsNativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
+
+// static
+already_AddRefed<nsNativeKeyBindings>
+nsNativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
+{
+  switch (aType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      if (!sInstanceForSingleLineEditor) {
+        NS_ADDREF(sInstanceForSingleLineEditor = new nsNativeKeyBindings());
+        sInstanceForSingleLineEditor->Init(aType);
+      }
+      NS_ADDREF(sInstanceForSingleLineEditor);
+      return sInstanceForSingleLineEditor;
+
+    default:
+      // fallback to multiline editor case in release build
+      MOZ_ASSERT(false, "aType is invalid or not yet implemented");
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      if (!sInstanceForMultiLineEditor) {
+        NS_ADDREF(sInstanceForMultiLineEditor = new nsNativeKeyBindings());
+        sInstanceForMultiLineEditor->Init(aType);
+      }
+      NS_ADDREF(sInstanceForMultiLineEditor);
+      return sInstanceForMultiLineEditor;
+  }
+}
+
+// static
+void
+nsNativeKeyBindings::Shutdown()
+{
+  NS_IF_RELEASE(sInstanceForSingleLineEditor);
+  NS_IF_RELEASE(sInstanceForMultiLineEditor);
+}
+
 void
 nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
 {
   switch (aType) {
-  case eKeyBindings_Input:
+  case nsIWidget::NativeKeyBindingsForSingleLineEditor:
     mNativeTarget = gtk_entry_new();
     break;
-  case eKeyBindings_TextArea:
+  default:
     mNativeTarget = gtk_text_view_new();
     if (gtk_major_version > 2 ||
         (gtk_major_version == 2 && (gtk_minor_version > 2 ||

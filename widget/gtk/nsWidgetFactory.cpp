@@ -168,47 +168,21 @@ nsColorPickerConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 static nsresult
-nsNativeKeyBindingsConstructor(nsISupports *aOuter, REFNSIID aIID,
-                               void **aResult,
-                               NativeKeyBindingsType aKeyBindingsType)
-{
-    nsresult rv;
-
-    nsNativeKeyBindings *inst;
-
-    *aResult = nullptr;
-    if (nullptr != aOuter) {
-        rv = NS_ERROR_NO_AGGREGATION;
-        return rv;
-    }
-
-    inst = new nsNativeKeyBindings();
-    if (nullptr == inst) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        return rv;
-    }
-    NS_ADDREF(inst);
-    inst->Init(aKeyBindingsType);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-
-    return rv;
-}
-
-static nsresult
 nsNativeKeyBindingsInputConstructor(nsISupports *aOuter, REFNSIID aIID,
                                     void **aResult)
 {
-    return nsNativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                          eKeyBindings_Input);
+    *aResult = nsNativeKeyBindings::GetInstance(
+                   nsIWidget::NativeKeyBindingsForSingleLineEditor).get();
+    return NS_OK;
 }
 
 static nsresult
 nsNativeKeyBindingsTextAreaConstructor(nsISupports *aOuter, REFNSIID aIID,
                                        void **aResult)
 {
-    return nsNativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                          eKeyBindings_TextArea);
+    *aResult = nsNativeKeyBindings::GetInstance(
+                   nsIWidget::NativeKeyBindingsForMultiLineEditor).get();
+    return NS_OK;
 }
 
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
@@ -325,6 +299,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetGtk2ModuleDtor()
 {
+  nsNativeKeyBindings::Shutdown();
   nsLookAndFeel::Shutdown();
   nsFilePicker::Shutdown();
   nsSound::Shutdown();

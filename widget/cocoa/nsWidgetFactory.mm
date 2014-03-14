@@ -90,49 +90,30 @@ namespace mozilla {
 namespace widget {
 
 static nsresult
-NativeKeyBindingsConstructor(nsISupports* aOuter, REFNSIID aIID,
-                             void** aResult, NativeKeyBindingsType aType)
-{
-  NativeKeyBindings* inst;
-
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  inst = new NativeKeyBindings();
-  NS_ADDREF(inst);
-  nsresult rv = inst->Init(aType);
-  if (NS_SUCCEEDED(rv)) {
-    rv = inst->QueryInterface(aIID, aResult);
-  }
-  NS_RELEASE(inst);
-
-  return rv;
-}
-
-static nsresult
 NativeKeyBindingsInputConstructor(nsISupports* aOuter, REFNSIID aIID,
                                   void** aResult)
 {
-  return NativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                      eNativeKeyBindingsType_Input);
+  *aResult = NativeKeyBindings::GetInstance(
+               nsIWidget::NativeKeyBindingsForSingleLineEditor).get();
+  return NS_OK;
 }
 
 static nsresult
 NativeKeyBindingsTextAreaConstructor(nsISupports* aOuter, REFNSIID aIID,
                                      void** aResult)
 {
-  return NativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                      eNativeKeyBindingsType_TextArea);
+  *aResult = NativeKeyBindings::GetInstance(
+               nsIWidget::NativeKeyBindingsForMultiLineEditor).get();
+  return NS_OK;
 }
 
 static nsresult
 NativeKeyBindingsEditorConstructor(nsISupports* aOuter, REFNSIID aIID,
                                    void** aResult)
 {
-  return NativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                      eNativeKeyBindingsType_Editor);
+  *aResult = NativeKeyBindings::GetInstance(
+               nsIWidget::NativeKeyBindingsForRichTextEditor).get();
+  return NS_OK;
 }
 
 } // namespace widget
@@ -258,6 +239,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetCocoaModuleDtor()
 {
+  mozilla::widget::NativeKeyBindings::Shutdown();
   nsLookAndFeel::Shutdown();
   nsToolkit::Shutdown();
   nsAppShellShutdown();
