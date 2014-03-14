@@ -197,16 +197,15 @@ NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
 NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
 
 // static
-already_AddRefed<NativeKeyBindings>
+NativeKeyBindings*
 NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
 {
   switch (aType) {
     case nsIWidget::NativeKeyBindingsForSingleLineEditor:
       if (!sInstanceForSingleLineEditor) {
-        NS_ADDREF(sInstanceForSingleLineEditor = new NativeKeyBindings());
+        sInstanceForSingleLineEditor = new NativeKeyBindings();
         sInstanceForSingleLineEditor->Init(aType);
       }
-      NS_ADDREF(sInstanceForSingleLineEditor);
       return sInstanceForSingleLineEditor;
 
     default:
@@ -215,10 +214,9 @@ NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
     case nsIWidget::NativeKeyBindingsForMultiLineEditor:
     case nsIWidget::NativeKeyBindingsForRichTextEditor:
       if (!sInstanceForMultiLineEditor) {
-        NS_ADDREF(sInstanceForMultiLineEditor = new NativeKeyBindings());
+        sInstanceForMultiLineEditor = new NativeKeyBindings();
         sInstanceForMultiLineEditor->Init(aType);
       }
-      NS_ADDREF(sInstanceForMultiLineEditor);
       return sInstanceForMultiLineEditor;
   }
 }
@@ -227,8 +225,10 @@ NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
 void
 NativeKeyBindings::Shutdown()
 {
-  NS_IF_RELEASE(sInstanceForSingleLineEditor);
-  NS_IF_RELEASE(sInstanceForMultiLineEditor);
+  delete sInstanceForSingleLineEditor;
+  sInstanceForSingleLineEditor = nullptr;
+  delete sInstanceForMultiLineEditor;
+  sInstanceForMultiLineEditor = nullptr;
 }
 
 void
