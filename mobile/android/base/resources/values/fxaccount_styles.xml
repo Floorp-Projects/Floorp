@@ -10,7 +10,7 @@
     <style name="FxAccountTheme" parent="@style/Gecko" />
 
     <style name="FxAccountTheme.FxAccountStatusActivity" parent="@style/FxAccountTheme">
-         <item name="android:windowNoTitle">false</item>
+        <item name="android:windowNoTitle">false</item>
     </style>
 
     <style name="FxAccountMiddle">
@@ -107,9 +107,9 @@
     </style>
 
     <style name="FxAccountProgress">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">fill_parent</item>
-        <item name="android:background">@drawable/fxaccount_button_background</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerInParent">true</item>
         <item name="android:visibility">invisible</item>
     </style>
 
@@ -117,6 +117,7 @@
         <item name="android:orientation">vertical</item>
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/fxaccount_button_background</item>
     </style>
 
     <style name="FxAccountCheckBox">
