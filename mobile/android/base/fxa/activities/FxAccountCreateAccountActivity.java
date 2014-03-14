@@ -196,7 +196,7 @@ public class FxAccountCreateAccountActivity extends FxAccountAbstractSetupActivi
         final AlertDialog dialog = new AlertDialog.Builder(FxAccountCreateAccountActivity.this)
         .setTitle(R.string.fxaccount_create_account_year_of_birth)
         .setItems(yearItems, listener)
-        .setIcon(R.drawable.fxaccount_icon)
+        .setIcon(R.drawable.icon)
         .create();
 
         dialog.show();
