@@ -9,14 +9,12 @@
 
 var EXPORTED_SYMBOLS = ["HistoryEntry", "DumpHistory"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-CU.import("resource://gre/modules/Services.jsm");
-CU.import("resource://gre/modules/PlacesUtils.jsm");
-CU.import("resource://tps/logger.jsm");
-CU.import("resource://services-common/async.js");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://tps/logger.jsm");
+Cu.import("resource://services-common/async.js");
 
 var DumpHistory = function TPS_History__DumpHistory() {
   let writer = {
@@ -55,7 +53,7 @@ var HistoryEntry = {
    * Returns the DBConnection object for the history service.
    */
   get _db() {
-    return PlacesUtils.history.QueryInterface(CI.nsPIPlacesDatabase).DBConnection;
+    return PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
   },
 
   /**

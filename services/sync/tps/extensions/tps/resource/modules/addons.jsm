@@ -8,19 +8,18 @@ let EXPORTED_SYMBOLS = ["Addon", "STATE_ENABLED", "STATE_DISABLED"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/AddonRepository.jsm");
+Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://tps/logger.jsm");
 
-const ADDONSGETURL = 'http://127.0.0.1:4567/';
+const ADDONSGETURL = "http://127.0.0.1:4567/";
 const STATE_ENABLED = 1;
 const STATE_DISABLED = 2;
 
-function GetFileAsText(file)
-{
+function GetFileAsText(file) {
   let channel = Services.io.newChannel(file, null, null);
   let inputStream = channel.open();
   if (channel instanceof Ci.nsIHttpChannel &&

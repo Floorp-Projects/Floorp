@@ -7,14 +7,14 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>tps@mozilla.org</em:id>
-    <em:version>0.2</em:version>
+    <em:version>0.5</em:version>
 
     <em:targetApplication>
       <!-- Firefox -->
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>3.5.0</em:minVersion>
-        <em:maxVersion>12.0.*</em:maxVersion>
+        <em:minVersion>24.0.*</em:minVersion>
+        <em:maxVersion>31.0.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -22,6 +22,7 @@
     <em:name>TPS</em:name>
     <em:description>Sync test extension</em:description>
     <em:creator>Jonathan Griffin</em:creator>
-    <em:homepageURL>http://www.mozilla.org/</em:homepageURL>
+    <em:contributor>Henrik Skupin</em:contributor>
+    <em:homepageURL>https://developer.mozilla.org/en-US/docs/TPS</em:homepageURL>
   </Description>
 </RDF>

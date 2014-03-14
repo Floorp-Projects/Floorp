@@ -2,14 +2,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys
 from setuptools import setup, find_packages
+import sys
 
-version = '0.4'
+version = '0.5'
 
-deps = ['mozinfo >= 0.3.3', 'mozprofile >= 0.4',
-        'mozprocess >= 0.4', 'mozrunner >= 5.8', 'mozinstall >= 1.4',
-        'httplib2 >= 0.7.3']
+deps = ['httplib2 >= 0.7.3',
+        'mozfile >= 1.1',
+        'mozhttpd >= 0.7',
+        'mozinfo >= 0.7',
+        'mozinstall >= 1.9',
+        'mozprocess >= 0.18',
+        'mozprofile >= 0.21',
+        'mozrunner >= 5.35',
+       ]
 
 # we only support python 2.6+ right now
 assert sys.version_info[0] == 2
@@ -22,10 +28,10 @@ setup(name='tps',
 """,
       classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='',
-      author='Jonathan Griffin',
-      author_email='jgriffin@mozilla.com',
-      url='http://hg.mozilla.org/services/services-central',
-      license='MPL',
+      author='Mozilla Automation and Tools team',
+      author_email='tools@lists.mozilla.org',
+      url='https://developer.mozilla.org/en-US/docs/TPS',
+      license='MPL 2.0',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
       include_package_data=True,
       zip_safe=False,
