@@ -88,22 +88,16 @@ let gSyncUI = {
   _wasDelayed: false,
 
   _needsSetup: function SUI__needsSetup() {
-    // We want to treat "account needs verification" as "needs setup". We don't
-    // know what the user's verified state is until Sync is initialized, though,
-    // and we need to get an answer here synchronously (can't wait for
-    // getSignedInUser). So "reach in" to Weave.Service.identity to get the
-    // answer here, and we'll just have to deal with this not having an answer
-    // before Sync is initialized.
-
-    // Referencing Weave.Service will implicitly initialize sync, and we don't
-    // want to force that - so first check if it is ready.
-    let service = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Components.interfaces.nsISupports)
-                  .wrappedJSObject;
-    if (service.ready && Weave.Service.identity._signedInUser) {
+    // We want to treat "account needs verification" as "needs setup". So
+    // "reach in" to Weave.Status._authManager to check whether we the signed-in
+    // user is verified.
+    // Referencing Weave.Status spins a nested event loop to initialize the
+    // authManager, so this should always return a value directly.
+    // This only applies to fxAccounts-based Sync.
+    if (Weave.Status._authManager._signedInUser) {
       // If we have a signed in user already, and that user is not verified,
       // revert to the "needs setup" state.
-      if (!Weave.Service.identity._signedInUser.verified) {
+      if (!Weave.Status._authManager._signedInUser.verified) {
         return true;
       }
     }
@@ -118,15 +112,6 @@ let gSyncUI = {
   },
 
   _loginFailed: function () {
-    // Referencing Weave.Status will import a bunch of modules, and we don't
-    // want to force that - so first check if it is ready.
-    let service = Cc["@mozilla.org/weave/service;1"]
-                  .getService(Components.interfaces.nsISupports)
-                  .wrappedJSObject;
-    if (!service.ready) {
-      return false;
-    }
-
     return Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED;
   },
 

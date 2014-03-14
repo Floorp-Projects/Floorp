@@ -722,7 +722,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
     border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
     box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
                 0 0 1px hsla(210,54%,20%,.2) inset,
-                /* allows windows-keyhole-forward-clip-path to be used for non-hover as well as hover: */
+                /* allows keyhole-forward-clip-path to be used for non-hover as well as hover: */
                 0 1px 0 hsla(210,54%,20%,0),
                 0 0 2px hsla(210,54%,20%,0);
     text-shadow: none;
@@ -776,7 +776,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #forward-button > .toolbarbutton-icon {
   background-clip: padding-box !important;
   /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
-  clip-path: url(chrome://browser/content/browser.xul#windows-keyhole-forward-clip-path) !important;
+  clip-path: url(chrome://browser/content/browser.xul#keyhole-forward-clip-path) !important;
   margin-left: -7px !important;
   border-left-style: none !important;
   border-radius: 0 !important;
@@ -1079,7 +1079,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper {
-  clip-path: url("chrome://browser/content/browser.xul#windows-urlbar-back-button-clip-path");
+  clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path");
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar {
@@ -1300,9 +1300,14 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 .ac-result-type-bookmark,
 .autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
   list-style-image: url("chrome://browser/skin/places/bookmark.png");
-  -moz-image-region: rect(0px 48px 16px 32px);
+  -moz-image-region: rect(0px 32px 16px 16px);
   width: 16px;
   height: 16px;
+}
+
+richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-bookmark,
+.autocomplete-treebody::-moz-tree-image(selected, current, bookmark, treecolAutoCompleteImage) {
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .ac-result-type-keyword,
@@ -1580,7 +1585,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 }
 
 #bookmarks-menu-button.bookmark-item[starred] {
-  -moz-image-region: rect(0px 48px 16px 32px);
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
 
 #bookmarks-menu-button.bookmark-item > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
@@ -2136,6 +2141,15 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Notification icon box */
+#notification-popup > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 10px;
+}
+
+#notification-popup .popup-notification-closebutton {
+  -moz-margin-end: -14px;
+  margin-top: -10px;
+}
+
 #notification-popup-box {
   position: relative;
   background-color: #fff;
