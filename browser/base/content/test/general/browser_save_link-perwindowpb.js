@@ -4,10 +4,6 @@
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-let tempScope = {};
-Cu.import("resource://gre/modules/NetUtil.jsm", tempScope);
-let NetUtil = tempScope.NetUtil;
-
 // Trigger a save of a link in public mode, then trigger an identical save
 // in private mode and ensure that the second request is differentiated from
 // the first by checking that cookies set by the first response are not sent
@@ -31,7 +27,7 @@ function triggerSave(aWindow, aCallback) {
 
     waitForFocus(function () {
       info("register to handle popupshown");
-      aWindow.document.addEventListener("popupshown", function(e) contextMenuOpened(aWindow, e), false);
+      aWindow.document.addEventListener("popupshown", contextMenuOpened, false);
 
       var link = testBrowser.contentDocument.getElementById("fff");
       info("link: " + link);
@@ -42,7 +38,7 @@ function triggerSave(aWindow, aCallback) {
     }, testBrowser.contentWindow);
   }, false);
 
-  function contextMenuOpened(aWindow, event) {
+  function contextMenuOpened(event) {
     info("contextMenuOpened");
     aWindow.document.removeEventListener("popupshown", contextMenuOpened);
 
@@ -67,7 +63,7 @@ function triggerSave(aWindow, aCallback) {
       destDir.remove(true);
       ok(!destDir.exists(), "Destination dir should be removed");
       ok(!destFile.exists(), "Destination file should be removed");
-      mockTransferCallback = function(){};
+      mockTransferCallback = null;
       info("done mockTransferCallback");
     }
 
