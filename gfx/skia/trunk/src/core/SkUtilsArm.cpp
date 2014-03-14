@@ -20,12 +20,10 @@
 // cpu-features helper library to detect NEON at runtime. See
 // http://crbug.com/164154 to see why this is needed in Chromium
 // for Android.
-#if !defined(USE_ANDROID_NDK_CPU_FEATURES)
-#  if defined(SK_BUILD_FOR_ANDROID)
-#    define USE_ANDROID_NDK_CPU_FEATURES 1
-#  else
-#    define USE_ANDROID_NDK_CPU_FEATURES 0
-#  endif
+#if defined(SK_BUILD_FOR_ANDROID)
+#  define USE_ANDROID_NDK_CPU_FEATURES 1
+#else
+#  define USE_ANDROID_NDK_CPU_FEATURES 0
 #endif
 
 #if USE_ANDROID_NDK_CPU_FEATURES
