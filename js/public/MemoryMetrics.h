@@ -406,6 +406,7 @@ struct ZoneStats
     macro(Other,   IsLiveGCThing,  typeObjectsGCHeap) \
     macro(Other,   NotLiveGCThing, typeObjectsMallocHeap) \
     macro(Other,   NotLiveGCThing, typePool) \
+    macro(Other,   NotLiveGCThing, baselineStubsOptimized) \
 
     ZoneStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -501,7 +502,6 @@ struct CompartmentStats
     macro(Other,   NotLiveGCThing, scriptsMallocHeapData) \
     macro(Other,   NotLiveGCThing, baselineData) \
     macro(Other,   NotLiveGCThing, baselineStubsFallback) \
-    macro(Other,   NotLiveGCThing, baselineStubsOptimized) \
     macro(Other,   NotLiveGCThing, ionData) \
     macro(Other,   NotLiveGCThing, typeInferenceTypeScripts) \
     macro(Other,   NotLiveGCThing, typeInferenceAllocationSiteTables) \
