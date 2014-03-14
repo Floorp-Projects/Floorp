@@ -182,12 +182,12 @@ public:
     virtual int GetRemoteRTCP_CNAME(int channel, char cName[256]) = 0;
 
     // Gets RTCP data from incoming RTCP Sender Reports.
-    virtual int GetRemoteRTCPData(
-        int channel, unsigned int& NTPHigh, unsigned int& NTPLow,
-        unsigned int& timestamp, unsigned int& playoutTimestamp,
-        unsigned int& sendPacketCount, unsigned int& sendOctetCount,
-        unsigned int* jitter = NULL, unsigned short* fractionLost = NULL,
-        unsigned int* cumulativeLost = NULL) = 0;
+    virtual int GetRemoteRTCPReceiverInfo(
+        int channel, uint32_t& NTPHigh, uint32_t& NTPLow,
+        uint32_t& receivedPacketCount, uint64_t& receivedOctetCount,
+        uint32_t& jitter, uint16_t& fractionLost,
+        uint32_t& cumulativeLost,
+        int32_t& rttMs) = 0;
 
     // Gets RTP statistics for a specific |channel|.
     virtual int GetRTPStatistics(
