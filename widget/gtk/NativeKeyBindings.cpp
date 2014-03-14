@@ -7,7 +7,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TextEvents.h"
 
-#include "nsNativeKeyBindings.h"
+#include "NativeKeyBindings.h"
 #include "nsString.h"
 #include "nsMemory.h"
 #include "nsGtkKeyUtils.h"
@@ -16,13 +16,8 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdk.h>
 
-// X.h defines KeyPress
-#ifdef KeyPress
-#undef KeyPress
-#endif
-
-using namespace mozilla;
-using namespace mozilla::widget;
+namespace mozilla {
+namespace widget {
 
 static nsIWidget::DoCommandCallback gCurrentCallback;
 static void *gCurrentCallbackData;
@@ -198,19 +193,17 @@ select_all_cb(GtkWidget *w, gboolean select, gpointer user_data)
   gHandled = true;
 }
 
-nsNativeKeyBindings*
-  nsNativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
-nsNativeKeyBindings*
-  nsNativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
+NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
+NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
 
 // static
-already_AddRefed<nsNativeKeyBindings>
-nsNativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
+already_AddRefed<NativeKeyBindings>
+NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
 {
   switch (aType) {
     case nsIWidget::NativeKeyBindingsForSingleLineEditor:
       if (!sInstanceForSingleLineEditor) {
-        NS_ADDREF(sInstanceForSingleLineEditor = new nsNativeKeyBindings());
+        NS_ADDREF(sInstanceForSingleLineEditor = new NativeKeyBindings());
         sInstanceForSingleLineEditor->Init(aType);
       }
       NS_ADDREF(sInstanceForSingleLineEditor);
@@ -222,7 +215,7 @@ nsNativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
     case nsIWidget::NativeKeyBindingsForMultiLineEditor:
     case nsIWidget::NativeKeyBindingsForRichTextEditor:
       if (!sInstanceForMultiLineEditor) {
-        NS_ADDREF(sInstanceForMultiLineEditor = new nsNativeKeyBindings());
+        NS_ADDREF(sInstanceForMultiLineEditor = new NativeKeyBindings());
         sInstanceForMultiLineEditor->Init(aType);
       }
       NS_ADDREF(sInstanceForMultiLineEditor);
@@ -232,14 +225,14 @@ nsNativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
 
 // static
 void
-nsNativeKeyBindings::Shutdown()
+NativeKeyBindings::Shutdown()
 {
   NS_IF_RELEASE(sInstanceForSingleLineEditor);
   NS_IF_RELEASE(sInstanceForMultiLineEditor);
 }
 
 void
-nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
+NativeKeyBindings::Init(NativeKeyBindingsType  aType)
 {
   switch (aType) {
   case nsIWidget::NativeKeyBindingsForSingleLineEditor:
@@ -273,17 +266,16 @@ nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
                    G_CALLBACK(paste_clipboard_cb), this);
 }
 
-nsNativeKeyBindings::~nsNativeKeyBindings()
+NativeKeyBindings::~NativeKeyBindings()
 {
   gtk_widget_destroy(mNativeTarget);
   g_object_unref(mNativeTarget);
 }
 
-NS_IMPL_ISUPPORTS1(nsNativeKeyBindings, nsINativeKeyBindings)
-
 bool
-nsNativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
-                              DoCommandCallback aCallback, void *aCallbackData)
+NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
+                           DoCommandCallback aCallback,
+                           void* aCallbackData)
 {
   // If the native key event is set, it must be synthesized for tests.
   // We just ignore such events because this behavior depends on system
@@ -302,7 +294,7 @@ nsNativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
       static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->keyval;
   }
 
-  if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
+  if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {
     return true;
   }
 
@@ -312,7 +304,7 @@ nsNativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
       aEvent.alternativeCharCodes[i].mUnshiftedCharCode;
     if (ch && ch != aEvent.charCode) {
       keyval = gdk_unicode_to_keyval(ch);
-      if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
+      if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {
         return true;
       }
     }
@@ -336,10 +328,10 @@ Code, which should be used after fixing GNOME bug 162726:
 }
 
 bool
-nsNativeKeyBindings::KeyPressInternal(const WidgetKeyboardEvent& aEvent,
-                                      DoCommandCallback aCallback,
-                                      void *aCallbackData,
-                                      guint aKeyval)
+NativeKeyBindings::ExecuteInternal(const WidgetKeyboardEvent& aEvent,
+                                   DoCommandCallback aCallback,
+                                   void* aCallbackData,
+                                   guint aKeyval)
 {
   guint modifiers =
     static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->state;
@@ -361,3 +353,6 @@ nsNativeKeyBindings::KeyPressInternal(const WidgetKeyboardEvent& aEvent,
 
   return gHandled;
 }
+
+} // namespace widget
+} // namespace mozilla
