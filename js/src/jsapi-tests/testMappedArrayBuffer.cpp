@@ -64,11 +64,11 @@ BEGIN_TEST(testMappedArrayBuffer_bug945152)
 JSObject *CreateNewObject(const int offset, const int length)
 {
     int fd = open(test_filename, O_RDONLY);
+    void *ptr;
     int new_fd;
-    void *ptr = JS_CreateMappedArrayBufferContents(fd, &new_fd, offset, length);
-    if (!ptr)
+    if (!JS_CreateMappedArrayBufferContents(fd, &new_fd, offset, length, &ptr))
         return nullptr;
-    JSObject *obj = JS_NewArrayBufferWithContents(cx, length, ptr, /* mapped = */ true);
+    JSObject *obj = JS_NewArrayBufferWithContents(cx, ptr);
     close(fd);
 
     return obj;
@@ -109,9 +109,9 @@ bool TestCreateObject(const int offset, const int length)
 bool TestReleaseContents()
 {
     int fd = open(test_filename, O_RDONLY);
+    void *ptr;
     int new_fd;
-    void *ptr = JS_CreateMappedArrayBufferContents(fd, &new_fd, 0, 12);
-    if (!ptr)
+    if (!JS_CreateMappedArrayBufferContents(fd, &new_fd, 0, 12, &ptr))
         return false;
     CHECK(fd_is_valid(new_fd));
     JS_ReleaseMappedArrayBufferContents(new_fd, ptr, 12);

@@ -3119,39 +3119,47 @@ JS_PUBLIC_API(void)
 JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg);
 
 /*
- * Create a new array buffer with the given contents. The new array buffer
- * takes ownership: after calling this function, do not free |contents| or use
- * |contents| from another thread. |mapped| indicates whether the contents were
- * created using JS_CreateMappedArrayBufferContents.
+ * Create a new array buffer with the given contents, which must have been
+ * returned by JS_AllocateArrayBufferContents or JS_StealArrayBufferContents.
+ * The new array buffer takes ownership. After calling this function, do not
+ * free |contents| or use |contents| from another thread.
  */
 extern JS_PUBLIC_API(JSObject *)
-JS_NewArrayBufferWithContents(JSContext *cx, size_t nbytes, void *contents, bool mapped = false);
+JS_NewArrayBufferWithContents(JSContext *cx, void *contents);
 
 /*
  * Steal the contents of the given array buffer. The array buffer has its
  * length set to 0 and its contents array cleared. The caller takes ownership
- * of the return value and must free it or transfer ownership via
+ * of |*contents| and must free it or transfer ownership via
  * JS_NewArrayBufferWithContents when done using it.
+ * To free |*contents|, call free().
+ * A pointer to the buffer's data is returned in |*data|. This pointer can
+ * be used until |*contents| is freed or has its ownership transferred.
  */
-extern JS_PUBLIC_API(void *)
-JS_StealArrayBufferContents(JSContext *cx, JS::HandleObject obj);
+extern JS_PUBLIC_API(bool)
+JS_StealArrayBufferContents(JSContext *cx, JS::HandleObject obj, void **contents, uint8_t **data);
 
 /*
  * Allocate memory that may be eventually passed to
  * JS_NewArrayBufferWithContents. |maybecx| is optional; if a non-nullptr cx is
  * given, it will be used for memory accounting and OOM reporting. |nbytes| is
- * the number of payload bytes required.
+ * the number of payload bytes required. The pointer to pass to
+ * JS_NewArrayBufferWithContents is returned in |contents|. The pointer to the
+ * |nbytes| of usable memory is returned in |data|. (*|contents| will contain a
+ * header before |data|.) The only legal operations on *|contents| are to pass
+ * it to either JS_NewArrayBufferWithContents or
+ * JS_ReallocateArrayBufferContents, or free it with js_free or JS_free.
  */
-extern JS_PUBLIC_API(void *)
-JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes);
+extern JS_PUBLIC_API(bool)
+JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void **contents, uint8_t **data);
 
 /*
  * Reallocate memory allocated by JS_AllocateArrayBufferContents, growing or
- * shrinking it as appropriate. If oldContents is null then this behaves like
- * JS_AllocateArrayBufferContents.
+ * shrinking it as appropriate.  The new data pointer will be returned in data.
+ * If *contents is nullptr, behaves like JS_AllocateArrayBufferContents.
  */
-extern JS_PUBLIC_API(void *)
-JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void *oldContents, uint32_t oldNbytes);
+extern JS_PUBLIC_API(bool)
+JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data);
 
 /*
  * Create memory mapped array buffer contents.
@@ -3159,8 +3167,9 @@ JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void *oldConten
  * take care of closing fd after calling this function.
  * A new duplicated fd used by the mapping is returned in new_fd.
  */
-extern JS_PUBLIC_API(void *)
-JS_CreateMappedArrayBufferContents(int fd, int *new_fd, size_t offset, size_t length);
+extern JS_PUBLIC_API(bool)
+JS_CreateMappedArrayBufferContents(int fd, int *new_fd, size_t offset,
+                                   size_t length, void **contents);
 
 /*
  * Release the allocated resource of mapped array buffer contents before the
