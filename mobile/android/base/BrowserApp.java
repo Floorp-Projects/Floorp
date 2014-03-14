@@ -1654,17 +1654,20 @@ abstract public class BrowserApp extends GeckoApp
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
             mHomePager = (HomePager) homePagerStub.inflate();
 
-            final HomeBanner homeBanner = (HomeBanner) findViewById(R.id.home_banner);
-            mHomePager.setBanner(homeBanner);
+            // Don't show the banner in guest mode.
+            if (!getProfile().inGuestMode()) {
+                final HomeBanner homeBanner = (HomeBanner) findViewById(R.id.home_banner);
+                mHomePager.setBanner(homeBanner);
 
-            // Remove the banner from the view hierarchy if it is dismissed.
-            homeBanner.setOnDismissListener(new HomeBanner.OnDismissListener() {
-                @Override
-                public void onDismiss() {
-                    mHomePager.setBanner(null);
-                    mHomePagerContainer.removeView(homeBanner);
-                }
-            });
+                // Remove the banner from the view hierarchy if it is dismissed.
+                homeBanner.setOnDismissListener(new HomeBanner.OnDismissListener() {
+                    @Override
+                    public void onDismiss() {
+                        mHomePager.setBanner(null);
+                        mHomePagerContainer.removeView(homeBanner);
+                    }
+                });
+            }
         }
 
         mHomePagerContainer.setVisibility(View.VISIBLE);
