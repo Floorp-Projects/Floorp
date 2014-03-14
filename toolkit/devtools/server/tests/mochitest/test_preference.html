@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 943251 - Allow accessing about:config from app-manager
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test Preference Actor</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+function runTests() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {getPreferenceFront} = devtools.require("devtools/server/actors/preference");
+
+  DebuggerServer.init(function () { return true; });
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(function onConnect() {
+    client.listTabs(function onListTabs(aResponse) {
+      var p = getPreferenceFront(client, aResponse);
+
+      var prefs = {};
+
+      var localPref = {
+        accessible: true,
+        boolPref: true,
+        intPref: 0x1234,
+        charPref: "Hello World",
+      };
+
+
+      function checkValues() {
+        is(prefs.accessible, localPref.accessible, "preference is accessible");
+        is(prefs.boolPref, localPref.boolPref, "read/write bool pref");
+        is(prefs.intPref, localPref.intPref, "read/write int pref");
+        is(prefs.charPref, localPref.charPref, "read/write string pref");
+
+        for (var key in prefs.allPrefs) {
+          var expectedValue;
+          switch(Services.prefs.getPrefType(key)) {
+            case Ci.nsIPrefBranch.PREF_STRING:
+              expectedValue = Services.prefs.getCharPref(key);
+              break;
+            case Ci.nsIPrefBranch.PREF_INT:
+              expectedValue = Services.prefs.getIntPref(key);
+              break;
+            case Ci.nsIPrefBranch.PREF_BOOL:
+              expectedValue = Services.prefs.getBoolPref(key);
+              break;
+            default:
+              ok(false, "unexpected pref type (" + key + ")");
+              break;
+          }
+
+          is(prefs.allPrefs[key].value, expectedValue, "valid preference value (" + key + ")");
+          is(prefs.allPrefs[key].hasUserValue, Services.prefs.prefHasUserValue(key), "valid hasUserValue (" + key + ")");
+        }
+
+        ["test.bool", "test.int", "test.string"].forEach(function(key) {
+          is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID, "pref (" + key + ") is clear");
+        });
+
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish()
+        });
+      }
+
+
+      p.arePrefsAccessible().then((value) => prefs["accessible"] = value)
+      .then(() => p.getAllPrefs()).then((json) => prefs["allPrefs"]  = json)
+      .then(() => p.setBoolPref("test.bool", localPref.boolPref))
+      .then(() => p.setIntPref("test.int", localPref.intPref))
+      .then(() => p.setCharPref("test.string", localPref.charPref))
+      .then(() => p.getBoolPref("test.bool")).then((value) => prefs["boolPref"] = value)
+      .then(() => p.getIntPref("test.int")).then((value) => prefs["intPref"] = value)
+      .then(() => p.getCharPref("test.string")).then((value) => prefs["charPref"] = value)
+      .then(() => p.clearUserPref("test.bool"))
+      .then(() => p.clearUserPref("test.int"))
+      .then(() => p.clearUserPref("test.string"))
+      .then(checkValues);
+
+    });
+  });
+
+}
+
+window.onload = function () {
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["devtools.debugger.forbid-certified-apps", false],
+    ]
+  }, runTests);
+}
+</script>
+</pre>
+</body>
+</html>
