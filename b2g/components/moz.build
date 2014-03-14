@@ -13,7 +13,6 @@ EXTRA_COMPONENTS += [
     'ContentHandler.js',
     'ContentPermissionPrompt.js',
     'FilePicker.js',
-    'FxAccountsUIGlue.js',
     'HelperAppDialog.js',
     'MailtoProtocolHandler.js',
     'PaymentGlue.js',
@@ -37,8 +36,15 @@ if CONFIG['MOZ_UPDATER']:
 
 EXTRA_JS_MODULES += [
     'ErrorPage.jsm',
-    'FxAccountsMgmtService.jsm',
     'SignInToWebsite.jsm',
     'TelURIParser.jsm',
     'WebappsUpdater.jsm',
 ]
+
+if CONFIG['MOZ_SERVICES_FXACCOUNTS']:
+    EXTRA_COMPONENTS += [
+        'FxAccountsUIGlue.js'
+    ]
+    EXTRA_JS_MODULES += [
+        'FxAccountsMgmtService.jsm'
+    ]
