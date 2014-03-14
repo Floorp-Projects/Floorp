@@ -3681,7 +3681,11 @@ OverflowableToolbar.prototype = {
     if (!this._enabled)
       return;
 
-    this._moveItemsBackToTheirOrigin();
+    if (this._target.scrollLeftMax > 0) {
+      this.onOverflow();
+    } else {
+      this._moveItemsBackToTheirOrigin();
+    }
   },
 
   _disable: function() {
