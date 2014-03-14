@@ -66,7 +66,7 @@ namespace layers {
  */
 
 /**
- * "apz.max_velocity_pixels_per_inch"
+ * "apz.max_velocity_inches_per_ms"
  *
  * Maximum velocity in inches per millisecond.  Velocity will be capped at this
  * value if a faster fling occurs.  Negative values indicate unlimited velocity.
