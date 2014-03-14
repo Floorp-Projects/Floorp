@@ -676,17 +676,8 @@
               aEvent.defaultPrevented)
             return false;
 
-          let elt = document.commandDispatcher.focusedElement;
-          let win = document.commandDispatcher.focusedWindow;
-
-          // Temporary fix for e10s.
-          const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          if (elt instanceof XULElement &&
-              elt.localName == "browser" &&
-              elt.namespaceURI == XUL_NS &&
-              elt.getAttribute("remote")) {
-            [elt, win] = elt.syncHandler.getFocusedElementAndWindow();
-          }
+          let {BrowserUtils} = Components.utils.import("resource://gre/modules/BrowserUtils.jsm", {});
+          let [elt, win] = BrowserUtils.getFocusSync(document);
 
           if (elt) {
             if (elt instanceof HTMLInputElement && elt.mozIsTextField(false))
