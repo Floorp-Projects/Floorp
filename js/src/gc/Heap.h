@@ -37,6 +37,7 @@ class FreeOp;
 namespace gc {
 
 struct Arena;
+struct ArenaList;
 struct ArenaHeader;
 struct Chunk;
 
@@ -579,6 +580,8 @@ struct Arena
         return address() + ArenaSize;
     }
 
+    void setAsFullyUnused(AllocKind thingKind);
+
     template <typename T>
     bool finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize);
 };
@@ -801,6 +804,7 @@ struct Chunk
     ArenaHeader *allocateArena(JS::Zone *zone, AllocKind kind);
 
     void releaseArena(ArenaHeader *aheader);
+    void recycleArena(ArenaHeader *aheader, ArenaList &dest, AllocKind thingKind);
 
     static Chunk *allocate(JSRuntime *rt);
 

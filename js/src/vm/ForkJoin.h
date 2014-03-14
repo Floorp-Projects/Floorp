@@ -473,6 +473,9 @@ void RequestInterruptForForkJoin(JSRuntime *rt, JSRuntime::InterruptMode mode);
 bool intrinsic_SetForkJoinTargetRegion(JSContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo intrinsic_SetForkJoinTargetRegionInfo;
 
+bool intrinsic_ClearThreadLocalArenas(JSContext *cx, unsigned argc, Value *vp);
+extern const JSJitInfo intrinsic_ClearThreadLocalArenasInfo;
+
 ///////////////////////////////////////////////////////////////////////////
 // Debug Spew
 
