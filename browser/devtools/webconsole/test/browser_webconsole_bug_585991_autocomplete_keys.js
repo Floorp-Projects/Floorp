@@ -332,5 +332,10 @@ function popupHideAfterCompletionInText()
   is(inputNode.selectionStart, inputNode.selectionEnd, "cursor location (confirmed)");
   ok(!completeNode.value, "completeNode is empty");
 
+  finishUp();
+}
+
+function finishUp() {
+  HUD = popup = jsterm = inputNode = completeNode = null;
   finishTest();
 }

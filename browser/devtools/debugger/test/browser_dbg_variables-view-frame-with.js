@@ -207,4 +207,5 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gPanel = null;
   gDebugger = null;
+  gVariables = null;
 });
