@@ -38,10 +38,15 @@ function PeerConnectionIdp(window, timeout, warningFunc) {
 })();
 
 PeerConnectionIdp.prototype = {
-  setIdentityProvider: function(
-      provider, protocol, username) {
+  setIdentityProvider: function(provider, protocol, username) {
     this.provider = provider;
     this.username = username;
+    if (this._idpchannel) {
+      if (this._idpchannel.isSame(provider, protocol)) {
+        return;
+      }
+      this._idpchannel.close();
+    }
     this._idpchannel = new IdpProxy(provider, protocol);
   },
 
@@ -129,9 +134,7 @@ PeerConnectionIdp.prototype = {
       callback(null);
       return;
     }
-    if (!this._idpchannel) {
-      this.setIdentityProvider(identity.idp.domain, identity.idp.protocol);
-    }
+    this.setIdentityProvider(identity.idp.domain, identity.idp.protocol);
 
     this._verifyIdentity(identity.assertion, fingerprint, callback);
   },
@@ -230,8 +233,7 @@ PeerConnectionIdp.prototype = {
    * parameter. If no IdP is configured the original SDP (without a=identity
    * line) is passed to the callback.
    */
-  appendIdentityToSDP: function(
-      sdp, fingerprint, callback) {
+  appendIdentityToSDP: function(sdp, fingerprint, callback) {
     if (!this._idpchannel) {
       callback(sdp);
       return;
