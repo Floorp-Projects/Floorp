@@ -18,6 +18,21 @@ var gConnectionsDialog = {
     var httpProxyURLPref = document.getElementById("network.proxy.http");
     var httpProxyPortPref = document.getElementById("network.proxy.http_port");
     var shareProxiesPref = document.getElementById("network.proxy.share_proxy_settings");
+
+    // If the port is 0 and the proxy server is specified, focus on the port and cancel submission.
+    for (let prefName of ["http","ssl","ftp","socks"]) {
+      let proxyPortPref = document.getElementById("network.proxy." + prefName + "_port");
+      let proxyPref = document.getElementById("network.proxy." + prefName);
+      // Only worry about ports which are currently active. If the share option is on, then ignore
+      // all ports except the HTTP port
+      if (proxyPref.value != "" && proxyPortPref.value == 0 &&
+            (prefName == "http" || !shareProxiesPref.value)) {
+        document.getElementById("networkProxy" + prefName.toUpperCase() + "_Port").focus();
+        return false;
+      }
+    }
+
+    // In the case of a shared proxy preference, backup the current values and update with the HTTP value
     if (shareProxiesPref.value) {
       var proxyPrefs = ["ssl", "ftp", "socks"];
       for (var i = 0; i < proxyPrefs.length; ++i) {
