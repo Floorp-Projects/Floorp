@@ -7,7 +7,7 @@ import re
 class TPSTestPhase(object):
 
     lineRe = re.compile(
-        r"^(.*?)test phase (?P<matchphase>\d+): (?P<matchstatus>.*)$")
+        r'^(.*?)test phase (?P<matchphase>\d+): (?P<matchstatus>.*)$')
 
     def __init__(self, phase, profile, testname, testpath, logfile, env,
                  firefoxRunner, logfn, ignore_unused_engines=False):
@@ -42,7 +42,7 @@ class TPSTestPhase(object):
         if self.ignore_unused_engines:
             args.append('--ignore-unused-engines')
 
-        self.log("\nlaunching Firefox for phase %s with args %s\n" %
+        self.log('\nLaunching Firefox for phase %s with args %s\n' %
                  (self.phase, str(args)))
         self.firefoxRunner.run(env=self.env,
                                args=args,
@@ -55,7 +55,7 @@ class TPSTestPhase(object):
 
             # skip to the part of the log file that deals with the test we're running
             if not found_test:
-                if line.find("Running test %s" % self.testname) > -1:
+                if line.find('Running test %s' % self.testname) > -1:
                     found_test = True
                 else:
                     continue
@@ -63,13 +63,13 @@ class TPSTestPhase(object):
             # look for the status of the current phase
             match = self.lineRe.match(line)
             if match:
-                if match.group("matchphase") == self.phasenum:
-                    self._status = match.group("matchstatus")
+                if match.group('matchphase') == self.phasenum:
+                    self._status = match.group('matchstatus')
                     break
 
             # set the status to FAIL if there is TPS error
-            if line.find("CROSSWEAVE ERROR: ") > -1 and not self._status:
-                self._status = "FAIL"
-                self.errline = line[line.find("CROSSWEAVE ERROR: ") + len("CROSSWEAVE ERROR: "):]
+            if line.find('CROSSWEAVE ERROR: ') > -1 and not self._status:
+                self._status = 'FAIL'
+                self.errline = line[line.find('CROSSWEAVE ERROR: ') + len('CROSSWEAVE ERROR: '):]
 
         f.close()

@@ -9,14 +9,12 @@
 
 var EXPORTED_SYMBOLS = ["FormData"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-CU.import("resource://tps/logger.jsm");
+Cu.import("resource://tps/logger.jsm");
 
-let formService = CC["@mozilla.org/satchel/form-history;1"]
-                  .getService(CI.nsIFormHistory2);
+let formService = Cc["@mozilla.org/satchel/form-history;1"]
+                  .getService(Ci.nsIFormHistory2);
 
 /**
  * FormDB

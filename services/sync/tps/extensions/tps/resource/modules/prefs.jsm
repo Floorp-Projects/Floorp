@@ -9,15 +9,14 @@
 
 var EXPORTED_SYMBOLS = ["Preference"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
 const WEAVE_PREF_PREFIX = "services.sync.prefs.sync.";
 
-let prefs = CC["@mozilla.org/preferences-service;1"]
-           .getService(CI.nsIPrefBranch);
+let prefs = Cc["@mozilla.org/preferences-service;1"]
+            .getService(Ci.nsIPrefBranch);
 
-CU.import("resource://tps/logger.jsm");
+Cu.import("resource://tps/logger.jsm");
 
 /**
  * Preference class constructor
@@ -60,17 +59,17 @@ Preference.prototype = {
     // than the value type specified in the test.
     let prefType = prefs.getPrefType(this.name);
     switch (prefType) {
-      case CI.nsIPrefBranch.PREF_INT:
+      case Ci.nsIPrefBranch.PREF_INT:
         Logger.AssertEqual(typeof(this.value), "number",
           "Wrong type used for preference value");
         prefs.setIntPref(this.name, this.value);
         break;
-      case CI.nsIPrefBranch.PREF_STRING:
+      case Ci.nsIPrefBranch.PREF_STRING:
         Logger.AssertEqual(typeof(this.value), "string",
           "Wrong type used for preference value");
         prefs.setCharPref(this.name, this.value);
         break;
-      case CI.nsIPrefBranch.PREF_BOOL:
+      case Ci.nsIPrefBranch.PREF_BOOL:
         Logger.AssertEqual(typeof(this.value), "boolean",
           "Wrong type used for preference value");
         prefs.setBoolPref(this.name, this.value);
@@ -93,13 +92,13 @@ Preference.prototype = {
     try {
       let prefType = prefs.getPrefType(this.name);
       switch(prefType) {
-        case CI.nsIPrefBranch.PREF_INT:
+        case Ci.nsIPrefBranch.PREF_INT:
           value = prefs.getIntPref(this.name);
           break;
-        case CI.nsIPrefBranch.PREF_STRING:
+        case Ci.nsIPrefBranch.PREF_STRING:
           value = prefs.getCharPref(this.name);
           break;
-        case CI.nsIPrefBranch.PREF_BOOL:
+        case Ci.nsIPrefBranch.PREF_BOOL:
           value = prefs.getBoolPref(this.name);
           break;
       }

@@ -9,16 +9,14 @@
 
 var EXPORTED_SYMBOLS = ["Password", "DumpPasswords"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-CU.import("resource://gre/modules/Services.jsm");
-CU.import("resource://tps/logger.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://tps/logger.jsm");
 
 let nsLoginInfo = new Components.Constructor(
                       "@mozilla.org/login-manager/loginInfo;1",
-                      CI.nsILoginInfo,
+                      Ci.nsILoginInfo,
                       "init");
 
 var DumpPasswords = function TPS__Passwords__DumpPasswords() {
@@ -87,7 +85,7 @@ Password.prototype = {
                                 this.props.usernameField,
                                 this.props.passwordField);
     Services.logins.addLogin(login);
-    login.QueryInterface(CI.nsILoginMetaInfo);
+    login.QueryInterface(Ci.nsILoginMetaInfo);
     return login.guid;
   },
 
@@ -109,7 +107,7 @@ Password.prototype = {
           logins[i].password == this.props.password &&
           logins[i].usernameField == this.props.usernameField &&
           logins[i].passwordField == this.props.passwordField) {
-        logins[i].QueryInterface(CI.nsILoginMetaInfo);
+        logins[i].QueryInterface(Ci.nsILoginMetaInfo);
         return logins[i].guid;
       }
     }

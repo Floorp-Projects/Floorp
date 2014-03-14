@@ -11,30 +11,24 @@ var EXPORTED_SYMBOLS = ["goQuitApplication"];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-function canQuitApplication()
-{
-  try
-  {
+function canQuitApplication() {
+  try {
     var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
-      .createInstance(Components.interfaces.nsISupportsPRBool);
+                     .createInstance(Components.interfaces.nsISupportsPRBool);
     Services.obs.notifyObservers(cancelQuit, "quit-application-requested", null);
 
     // Something aborted the quit process.
-    if (cancelQuit.data)
-    {
+    if (cancelQuit.data) {
       return false;
     }
   }
-  catch (ex)
-  {
-  }
+  catch (ex) {}
+
   return true;
 }
 
-function goQuitApplication()
-{
-  if (!canQuitApplication())
-  {
+function goQuitApplication() {
+  if (!canQuitApplication()) {
     return false;
   }
 
@@ -43,29 +37,24 @@ function goQuitApplication()
   var   appService;
   var   forceQuit;
 
-  if (kAppStartup in Components.classes)
-  {
-    appService = Components.classes[kAppStartup].
-      getService(Components.interfaces.nsIAppStartup);
+  if (kAppStartup in Components.classes) {
+    appService = Components.classes[kAppStartup]
+                 .getService(Components.interfaces.nsIAppStartup);
     forceQuit  = Components.interfaces.nsIAppStartup.eForceQuit;
   }
-  else if (kAppShell in Components.classes)
-  {
+  else if (kAppShell in Components.classes) {
     appService = Components.classes[kAppShell].
       getService(Components.interfaces.nsIAppShellService);
     forceQuit = Components.interfaces.nsIAppShellService.eForceQuit;
   }
-  else
-  {
+  else {
     throw 'goQuitApplication: no AppStartup/appShell';
   }
 
-  try
-  {
+  try {
     appService.quit(forceQuit);
   }
-  catch(ex)
-  {
+  catch(ex) {
     throw('goQuitApplication: ' + ex);
   }
 

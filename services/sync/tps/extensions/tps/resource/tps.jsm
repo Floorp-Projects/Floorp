@@ -9,32 +9,37 @@
 
 let EXPORTED_SYMBOLS = ["TPS"];
 
-const {classes: CC, interfaces: CI, utils: CU} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-CU.import("resource://gre/modules/XPCOMUtils.jsm");
-CU.import("resource://gre/modules/Services.jsm");
-CU.import("resource://services-common/async.js");
-CU.import("resource://services-sync/constants.js");
-CU.import("resource://services-sync/main.js");
-CU.import("resource://services-sync/util.js");
-CU.import("resource://tps/addons.jsm");
-CU.import("resource://tps/bookmarks.jsm");
-CU.import("resource://tps/logger.jsm");
-CU.import("resource://tps/passwords.jsm");
-CU.import("resource://tps/history.jsm");
-CU.import("resource://tps/forms.jsm");
-CU.import("resource://tps/fxaccounts.jsm");
-CU.import("resource://tps/prefs.jsm");
-CU.import("resource://tps/tabs.jsm");
-CU.import("resource://tps/windows.jsm");
+// Global modules
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://services-common/async.js");
+Cu.import("resource://services-sync/constants.js");
+Cu.import("resource://services-sync/main.js");
+Cu.import("resource://services-sync/util.js");
 
-var hh = CC["@mozilla.org/network/protocol;1?name=http"]
-         .getService(CI.nsIHttpProtocolHandler);
-var prefs = CC["@mozilla.org/preferences-service;1"]
-            .getService(CI.nsIPrefBranch);
+// TPS modules
+Cu.import("resource://tps/fxaccounts.jsm");
+Cu.import("resource://tps/logger.jsm");
+
+// Module wrappers for tests
+Cu.import("resource://tps/modules/addons.jsm");
+Cu.import("resource://tps/modules/bookmarks.jsm");
+Cu.import("resource://tps/modules/forms.jsm");
+Cu.import("resource://tps/modules/history.jsm");
+Cu.import("resource://tps/modules/passwords.jsm");
+Cu.import("resource://tps/modules/prefs.jsm");
+Cu.import("resource://tps/modules/tabs.jsm");
+Cu.import("resource://tps/modules/windows.jsm");
+
+var hh = Cc["@mozilla.org/network/protocol;1?name=http"]
+         .getService(Ci.nsIHttpProtocolHandler);
+var prefs = Cc["@mozilla.org/preferences-service;1"]
+            .getService(Ci.nsIPrefBranch);
 
 var mozmillInit = {};
-CU.import('resource://mozmill/modules/init.js', mozmillInit);
+Cu.import('resource://mozmill/modules/init.js', mozmillInit);
 
 const ACTION_ADD              = "add";
 const ACTION_VERIFY           = "verify";
@@ -60,13 +65,14 @@ const SYNC_START_OVER   = "start-over";
 
 const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "fxaccounts:onlogout",
+                         "private-browsing",
+                         "sessionstore-windows-restored",
                          "weave:engine:start-tracking",
                          "weave:engine:stop-tracking",
                          "weave:service:setup-complete",
                          "weave:service:sync:finish",
                          "weave:service:sync:error",
-                         "sessionstore-windows-restored",
-                         "private-browsing"];
+                        ];
 
 let TPS = {
   _waitingForSync: false,
@@ -85,18 +91,30 @@ let TPS = {
   _loggedIn: false,
   _enabledEngines: null,
 
+  /**
+   * Check if the Firefox Accounts feature is enabled
+   */
+  get fxaccounts_enabled() {
+    try {
+      return Services.prefs.getBoolPref("services.sync.fxaccounts.enabled");
+    } catch (e) {
+      return false;
+    }
+  },
+
   DumpError: function (msg) {
     this._errors++;
     Logger.logError("[phase" + this._currentPhase + "] " + msg);
     this.quit();
   },
 
-  QueryInterface: XPCOMUtils.generateQI([CI.nsIObserver,
-                                         CI.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
 
   observe: function TPS__observe(subject, topic, data) {
     try {
       Logger.logInfo("----------event observed: " + topic);
+
       switch(topic) {
         case "private-browsing":
           Logger.logInfo("private browsing " + data);
@@ -154,7 +172,7 @@ let TPS = {
           break;
       }
     }
-    catch(e) {
+    catch (e) {
       this.DumpError("Exception caught: " + Utils.exceptionStr(e));
       return;
     }
@@ -174,7 +192,7 @@ let TPS = {
     }
   },
 
-  quit: function () {
+  quit: function TPS__quit() {
     OBSERVER_TOPICS.forEach(function(topic) {
       Services.obs.removeObserver(this, topic);
     }, this);
@@ -396,12 +414,15 @@ let TPS = {
           Logger.clearPotentialError();
           let placesItem;
           bookmark['location'] = folder;
+
           if (last_item_pos != -1)
             bookmark['last_item_pos'] = last_item_pos;
           let item_id = -1;
+
           if (action != ACTION_MODIFY && action != ACTION_DELETE)
             Logger.logInfo("executing action " + action.toUpperCase() +
                            " on bookmark " + JSON.stringify(bookmark));
+
           if ("uri" in bookmark)
             placesItem = new Bookmark(bookmark);
           else if ("folder" in bookmark)
@@ -410,6 +431,7 @@ let TPS = {
             placesItem = new Livemark(bookmark);
           else if ("separator" in bookmark)
             placesItem = new Separator(bookmark);
+
           if (action == ACTION_ADD) {
             item_id = placesItem.Create();
           }
@@ -448,7 +470,7 @@ let TPS = {
       Logger.logPass("executing action " + action.toUpperCase() +
         " on bookmarks");
     }
-    catch(e) {
+    catch (e) {
       DumpBookmarks();
       throw(e);
     }
@@ -495,7 +517,7 @@ let TPS = {
 
       let phase = this._phaselist["phase" + this._currentPhase];
       let action = phase[this._currentAction];
-      Logger.logInfo("starting action: " + JSON.stringify(action));
+      Logger.logInfo("starting action: " + action[0].name);
       action[0].apply(this, action.slice(1));
 
       // if we're in an async operation, don't continue on to the next action
@@ -627,15 +649,22 @@ let TPS = {
         this_phase.push([this.WipeServer]);
       }
 
-      // Store account details as prefs so they're accessible to the mozmill
+      // Store account details as prefs so they're accessible to the Mozmill
       // framework.
-      prefs.setCharPref('tps.account.username', this.config.fx_account.username);
-      prefs.setCharPref('tps.account.password', this.config.fx_account.password);
-      // old sync
-      // prefs.setCharPref('tps.account.passphrase', this.config.fx_account.passphrase);
-      if (this.config["serverURL"]) {
-        prefs.setCharPref('tps.account.serverURL', this.config.serverURL);
+      if (this.fxaccounts_enabled) {
+        prefs.setCharPref('tps.account.username', this.config.fx_account.username);
+        prefs.setCharPref('tps.account.password', this.config.fx_account.password);
       }
+      else {
+        prefs.setCharPref('tps.account.username', this.config.sync_account.username);
+        prefs.setCharPref('tps.account.password', this.config.sync_account.password);
+        prefs.setCharPref('tps.account.passphrase', this.config.sync_account.passphrase);
+      }
+
+      if (this.config["serverURL"]) {
+        prefs.setCharPref('tps.serverURL', this.config.serverURL);
+      }
+
       // start processing the test actions
       this._currentAction = 0;
     }
@@ -682,8 +711,8 @@ let TPS = {
   },
 
   RunMozmillTest: function TPS__RunMozmillTest(testfile) {
-    var mozmillfile = CC["@mozilla.org/file/local;1"]
-                      .createInstance(CI.nsILocalFile);
+    var mozmillfile = Cc["@mozilla.org/file/local;1"]
+                      .createInstance(Ci.nsILocalFile);
     if (hh.oscpu.toLowerCase().indexOf('windows') > -1) {
       let re = /\/(\w)\/(.*)/;
       this.config.testdir = this.config.testdir.replace(re, "$1://$2").replace(/\//g, "\\");
@@ -693,7 +722,7 @@ let TPS = {
     Logger.logInfo("Running mozmill test " + mozmillfile.path);
 
     var frame = {};
-    CU.import('resource://mozmill/modules/frame.js', frame);
+    Cu.import('resource://mozmill/modules/frame.js', frame);
     frame.events.addListener('setTest', this.MozmillSetTestListener.bind(this));
     frame.events.addListener('endTest', this.MozmillEndTestListener.bind(this));
     this.StartAsyncOperation();
@@ -706,16 +735,16 @@ let TPS = {
    * When the event is observed, the function will wait an extra tick before
    * returning.
    *
-   * @param name
+   * @param aEventName
    *        String event to wait for.
    */
-  waitForEvent:function waitForEvent(name) {
-    Logger.logInfo("Waiting for " + name + "...");
+  waitForEvent: function waitForEvent(aEventName) {
+    Logger.logInfo("Waiting for " + aEventName + "...");
     let cb = Async.makeSpinningCallback();
-    Svc.Obs.add(name, cb);
+    Svc.Obs.add(aEventName, cb);
     cb.wait();
-    Svc.Obs.remove(name, cb);
-    Logger.logInfo(name + " observed!");
+    Svc.Obs.remove(aEventName, cb);
+    Logger.logInfo(aEventName + " observed!");
 
     let cb = Async.makeSpinningCallback();
     Utils.nextTick(cb);
@@ -786,43 +815,59 @@ let TPS = {
     this.waitForTracking();
   },
 
+  /**
+   * Login on the server
+   */
   Login: function Login(force) {
     if (this._loggedIn && !force) {
       return;
     }
 
-    // old sync: have to add handling for this.config.sync_account
-    let account = this.config.fx_account;
-
+    let account = this.fxaccounts_enabled ? this.config.fx_account
+                                          : this.config.sync_account;
     if (!account) {
       this.DumperError("No account information found! Did you use a valid " +
                        "config file?");
       return;
     }
 
+    // If there has been specified a custom server, set it now
     if (this.config["serverURL"]) {
       Weave.Service.serverURL = this.config.serverURL;
     }
 
-    Logger.logInfo("Setting client credentials.");
-    if (account["username"] && account["password"]) { // && account["passphrase"]) {
-      FxAccountsHelper.signIn(account["username"], account["password"]);
-      this.waitForSetupComplete();
+    Logger.logInfo("Setting client credentials and login.");
 
-      // Old sync code - has to be reactivated later for fallback
-      //Weave.Service.identity.account = account["username"];
-      //Weave.Service.identity.basicPassword = account["password"];
-      //Weave.Service.identity.syncKey = account["passphrase"];
-    } else {
-      this.DumpError("Must specify username/password in the config file");
-      return;
+    if (this.fxaccounts_enabled) {
+      if (account["username"] && account["password"]) {
+        Logger.logInfo("Login via Firefox Accounts.");
+        FxAccountsHelper.signIn(account["username"], account["password"]);
+      }
+      else {
+        this.DumpError("Must specify username/password in the config file");
+        return;
+      }
+    }
+    else {
+      if (account["username"] && account["password"] && account["passphrase"]) {
+        Logger.logInfo("Login via the old Sync authentication.");
+        Weave.Service.identity.account = account["username"];
+        Weave.Service.identity.basicPassword = account["password"];
+        Weave.Service.identity.syncKey = account["passphrase"];
+
+        // Fake the login
+        Weave.Service.login();
+        this._loggedIn = true;
+        Weave.Svc.Obs.notify("weave:service:setup-complete");
+      }
+      else {
+        this.DumpError("Must specify username/password/passphrase in the config file");
+        return;
+      }
     }
 
-    //Weave.Service.login();
-    //this._loggedIn = true;
-    //Weave.Svc.Obs.notify("weave:service:setup-complete");
+    this.waitForSetupComplete();
     Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status OK");
-
     this.waitForTracking();
   },
 
