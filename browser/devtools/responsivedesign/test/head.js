@@ -10,6 +10,11 @@ let TargetFactory = devtools.TargetFactory;
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 function openInspector(callback)
 {
   let target = TargetFactory.forTab(gBrowser.selectedTab);

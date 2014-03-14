@@ -30,11 +30,7 @@
 
             <ProgressBar
                 android:id="@+id/progress"
-                style="@style/FxAccountProgress"
-                android:layout_alignBottom="@id/button"
-                android:layout_alignLeft="@id/button"
-                android:layout_alignRight="@id/button"
-                android:layout_alignTop="@id/button" />
+                style="@style/FxAccountProgress" />
 
             <Button
                 android:id="@+id/button"
@@ -69,6 +65,8 @@
             android:id="@+id/policy"
             style="@style/FxAccountLinkifiedItem"
             android:layout_marginTop="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:text="@string/fxaccount_create_account_policy_text"
             android:textColorLink="@color/fxaccount_linkified_textColorLinkSubdued" />
 

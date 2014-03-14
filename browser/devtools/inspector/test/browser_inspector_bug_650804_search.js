@@ -52,7 +52,8 @@ function test()
     waitForFocus(setupTest, content);
   }, true);
 
-  content.location = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_bug_650804_search.html";
+  content.location = "http://mochi.test:8888/browser/browser/devtools/" +
+                     "inspector/test/browser_inspector_bug_650804_search.html";
 
   function $(id) {
     if (id == null) return null;
