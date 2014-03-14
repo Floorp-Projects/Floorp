@@ -72,9 +72,11 @@ component {637b0f77-2429-49a0-915f-abf5d0db8b9a} WebappsUpdateTimer.js
 contract @mozilla.org/b2g/webapps-update-timer;1 {637b0f77-2429-49a0-915f-abf5d0db8b9a}
 category update-timer WebappsUpdateTimer @mozilla.org/b2g/webapps-update-timer;1,getService,background-update-timer,webapps.update.interval,86400
 
+#ifdef MOZ_SERVICES_FXACCOUNTS
 # FxAccountsUIGlue.js
 component {51875c14-91d7-4b8c-b65d-3549e101228c} FxAccountsUIGlue.js
 contract @mozilla.org/fxaccounts/fxaccounts-ui-glue;1 {51875c14-91d7-4b8c-b65d-3549e101228c}
+#endif
 
 # HelperAppDialog.js
 component {710322af-e6ae-4b0c-b2c9-1474a87b077e} HelperAppDialog.js
