@@ -32,7 +32,7 @@ static bool gHandled;
 static void
 copy_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback("cmd_copy", gCurrentCallbackData);
+  gCurrentCallback(CommandCopy, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "copy_clipboard");
   gHandled = true;
 }
@@ -40,7 +40,7 @@ copy_clipboard_cb(GtkWidget *w, gpointer user_data)
 static void
 cut_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback("cmd_cut", gCurrentCallbackData);
+  gCurrentCallback(CommandCut, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "cut_clipboard");
   gHandled = true;
 }
@@ -50,19 +50,19 @@ cut_clipboard_cb(GtkWidget *w, gpointer user_data)
 // We don't have this distinction, so we always use editor's notion of
 // lines, which are newline-terminated.
 
-static const char *const sDeleteCommands[][2] = {
+static const Command sDeleteCommands[][2] = {
   // backward, forward
-  { "cmd_deleteCharBackward", "cmd_deleteCharForward" },    // CHARS
-  { "cmd_deleteWordBackward", "cmd_deleteWordForward" },    // WORD_ENDS
-  { "cmd_deleteWordBackward", "cmd_deleteWordForward" },    // WORDS
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // LINES
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // LINE_ENDS
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // PARAGRAPH_ENDS
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // PARAGRAPHS
+  { CommandDeleteCharBackward, CommandDeleteCharForward },    // CHARS
+  { CommandDeleteWordBackward, CommandDeleteWordForward },    // WORD_ENDS
+  { CommandDeleteWordBackward, CommandDeleteWordForward },    // WORDS
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // LINES
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // LINE_ENDS
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // PARAGRAPH_ENDS
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // PARAGRAPHS
   // This deletes from the end of the previous word to the beginning of the
   // next word, but only if the caret is not in a word.
   // XXX need to implement in editor
-  { nullptr, nullptr } // WHITESPACE
+  { CommandDoNothing, CommandDoNothing } // WHITESPACE
 };
 
 static void
@@ -82,11 +82,11 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
     // This works like word_ends, except we first move the caret to the
     // beginning/end of the current word.
     if (forward) {
-      gCurrentCallback("cmd_wordNext", gCurrentCallbackData);
-      gCurrentCallback("cmd_wordPrevious", gCurrentCallbackData);
+      gCurrentCallback(CommandWordNext, gCurrentCallbackData);
+      gCurrentCallback(CommandWordPrevious, gCurrentCallbackData);
     } else {
-      gCurrentCallback("cmd_wordPrevious", gCurrentCallbackData);
-      gCurrentCallback("cmd_wordNext", gCurrentCallbackData);
+      gCurrentCallback(CommandWordPrevious, gCurrentCallbackData);
+      gCurrentCallback(CommandWordNext, gCurrentCallbackData);
     }
   } else if (del_type == GTK_DELETE_DISPLAY_LINES ||
              del_type == GTK_DELETE_PARAGRAPHS) {
@@ -94,66 +94,67 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
     // This works like display_line_ends, except we first move the caret to the
     // beginning/end of the current line.
     if (forward) {
-      gCurrentCallback("cmd_beginLine", gCurrentCallbackData);
+      gCurrentCallback(CommandBeginLine, gCurrentCallbackData);
     } else {
-      gCurrentCallback("cmd_endLine", gCurrentCallbackData);
+      gCurrentCallback(CommandEndLine, gCurrentCallbackData);
     }
   }
 
-  const char *cmd = sDeleteCommands[del_type][forward];
-  if (!cmd)
+  Command command = sDeleteCommands[del_type][forward];
+  if (!command) {
     return; // unsupported command
+  }
 
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCallback(cmd, gCurrentCallbackData);
+    gCurrentCallback(command, gCurrentCallbackData);
   }
 }
 
-static const char *const sMoveCommands[][2][2] = {
+static const Command sMoveCommands[][2][2] = {
   // non-extend { backward, forward }, extend { backward, forward }
   // GTK differentiates between logical position, which is prev/next,
   // and visual position, which is always left/right.
   // We should fix this to work the same way for RTL text input.
   { // LOGICAL_POSITIONS
-    { "cmd_charPrevious", "cmd_charNext" },
-    { "cmd_selectCharPrevious", "cmd_selectCharNext" }
+    { CommandCharPrevious, CommandCharNext },
+    { CommandSelectCharPrevious, CommandSelectCharNext }
   },
   { // VISUAL_POSITIONS
-    { "cmd_charPrevious", "cmd_charNext" },
-    { "cmd_selectCharPrevious", "cmd_selectCharNext" }
+    { CommandCharPrevious, CommandCharNext },
+    { CommandSelectCharPrevious, CommandSelectCharNext }
   },
   { // WORDS
-    { "cmd_wordPrevious", "cmd_wordNext" },
-    { "cmd_selectWordPrevious", "cmd_selectWordNext" }
+    { CommandWordPrevious, CommandWordNext },
+    { CommandSelectWordPrevious, CommandSelectWordNext }
   },
   { // DISPLAY_LINES
-    { "cmd_linePrevious", "cmd_lineNext" },
-    { "cmd_selectLinePrevious", "cmd_selectLineNext" }
+    { CommandLinePrevious, CommandLineNext },
+    { CommandSelectLinePrevious, CommandSelectLineNext }
   },
   { // DISPLAY_LINE_ENDS
-    { "cmd_beginLine", "cmd_endLine" },
-    { "cmd_selectBeginLine", "cmd_selectEndLine" }
+    { CommandBeginLine, CommandEndLine },
+    { CommandSelectBeginLine, CommandSelectEndLine }
   },
   { // PARAGRAPHS
-    { "cmd_linePrevious", "cmd_lineNext" },
-    { "cmd_selectLinePrevious", "cmd_selectLineNext" }
+    { CommandLinePrevious, CommandLineNext },
+    { CommandSelectLinePrevious, CommandSelectLineNext }
   },
   { // PARAGRAPH_ENDS
-    { "cmd_beginLine", "cmd_endLine" },
-    { "cmd_selectBeginLine", "cmd_selectEndLine" }
+    { CommandBeginLine, CommandEndLine },
+    { CommandSelectBeginLine, CommandSelectEndLine }
   },
   { // PAGES
-    { "cmd_movePageUp", "cmd_movePageDown" },
-    { "cmd_selectPageUp", "cmd_selectPageDown" }
+    { CommandMovePageUp, CommandMovePageDown },
+    { CommandSelectPageUp, CommandSelectPageDown }
   },
   { // BUFFER_ENDS
-    { "cmd_moveTop", "cmd_moveBottom" },
-    { "cmd_selectTop", "cmd_selectBottom" }
+    { CommandMoveTop, CommandMoveBottom },
+    { CommandSelectTop, CommandSelectBottom }
   },
   { // HORIZONTAL_PAGES (unsupported)
-    { nullptr, nullptr },
-    { nullptr, nullptr }
+    { CommandDoNothing, CommandDoNothing },
+    { CommandDoNothing, CommandDoNothing }
   }
 };
 
@@ -169,21 +170,21 @@ move_cursor_cb(GtkWidget *w, GtkMovementStep step, gint count,
     return;
   }
 
-  const char *cmd = sMoveCommands[step][extend_selection][forward];
-  if (!cmd)
+  Command command = sMoveCommands[step][extend_selection][forward];
+  if (!command) {
     return; // unsupported command
+  }
 
-  
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCallback(cmd, gCurrentCallbackData);
+    gCurrentCallback(command, gCurrentCallbackData);
   }
 }
 
 static void
 paste_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback("cmd_paste", gCurrentCallbackData);
+  gCurrentCallback(CommandPaste, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "paste_clipboard");
   gHandled = true;
 }
@@ -192,7 +193,7 @@ paste_clipboard_cb(GtkWidget *w, gpointer user_data)
 static void
 select_all_cb(GtkWidget *w, gboolean select, gpointer user_data)
 {
-  gCurrentCallback("cmd_selectAll", gCurrentCallbackData);
+  gCurrentCallback(CommandSelectAll, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "select_all");
   gHandled = true;
 }

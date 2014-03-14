@@ -798,7 +798,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
 // END nsIDOMSelectionListener
 
 static void
-DoCommandCallback(const char *aCommand, void *aData)
+DoCommandCallback(Command aCommand, void* aData)
 {
   nsTextControlFrame *frame = static_cast<nsTextControlFrame*>(aData);
   nsIContent *content = frame->GetContent();
@@ -821,17 +821,19 @@ DoCommandCallback(const char *aCommand, void *aData)
     return;
   }
 
+  const char* commandStr = WidgetKeyboardEvent::GetCommandStr(aCommand);
+
   nsCOMPtr<nsIController> controller;
-  controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
+  controllers->GetControllerForCommand(commandStr, getter_AddRefs(controller));
   if (!controller) {
     return;
   }
 
   bool commandEnabled;
-  nsresult rv = controller->IsCommandEnabled(aCommand, &commandEnabled);
+  nsresult rv = controller->IsCommandEnabled(commandStr, &commandEnabled);
   NS_ENSURE_SUCCESS_VOID(rv);
   if (commandEnabled) {
-    controller->DoCommand(aCommand);
+    controller->DoCommand(commandStr);
   }
 }
 

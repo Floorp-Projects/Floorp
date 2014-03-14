@@ -106,6 +106,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'BasicEvents.h',
+    'CommandList.h',
     'ContentEvents.h',
     'EventClassList.h',
     'EventForwards.h',
