@@ -27,12 +27,6 @@ function test() {
     shouldFail = false;
   }
 
-  if (DriverInfo.getOS() == DriverInfo.OS.B2G) {
-    // We don't run these mochitests on hardware with WebGL-capable hardware yet.
-    shouldSucceed = false;
-    shouldFail = true;
-  }
-
   var gl = WebGLUtil.getWebGL('c');
   if (shouldSucceed) {
     ok(gl, 'Expected WebGL creation to succeed.');
