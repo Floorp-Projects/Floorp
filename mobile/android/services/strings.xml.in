@@ -134,7 +134,7 @@
 <string name="fxaccount_create_account_password_length_restriction">&fxaccount_create_account_password_length_restriction;</string>
 <string name="fxaccount_create_account_year_of_birth">&fxaccount_create_account_year_of_birth;</string>
 
-<string name="fxaccount_create_account_policy_text">&fxaccount_create_account_policy_text;</string>
+<string name="fxaccount_create_account_policy_text">&fxaccount_create_account_policy_text2;</string>
 <string name="fxaccount_create_account_button">&fxaccount_create_account_button;</string>
 <string name="fxaccount_create_account_choose_what_to_sync">&fxaccount_create_account_choose_what_to_sync;</string>
 <string name="fxaccount_create_account_sign_in_instead">&fxaccount_create_account_sign_in_instead;</string>
