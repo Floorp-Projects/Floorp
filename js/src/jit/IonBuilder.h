@@ -459,6 +459,7 @@ class IonBuilder : public MIRGenerator
                                      MDefinition *offset,
                                      ScalarTypeDescr::Type type,
                                      bool canBeNeutered,
+                                     bool racy,
                                      MDefinition *value);
     bool checkTypedObjectIndexInBounds(size_t elemSize,
                                        MDefinition *obj,
@@ -565,6 +566,9 @@ class IonBuilder : public MIRGenerator
     bool jsop_setelem_typed(ScalarTypeDescr::Type arrayType,
                             SetElemSafety safety,
                             MDefinition *object, MDefinition *index, MDefinition *value);
+    bool jsop_setelem_typed_object(ScalarTypeDescr::Type arrayType,
+                                   SetElemSafety safety, bool racy,
+                                   MDefinition *object, MDefinition *index, MDefinition *value);
     bool jsop_length();
     bool jsop_length_fastPath();
     bool jsop_arguments();
@@ -667,6 +671,8 @@ class IonBuilder : public MIRGenerator
     bool inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base);
     bool inlineUnsafeSetTypedArrayElement(CallInfo &callInfo, uint32_t base,
                                           ScalarTypeDescr::Type arrayType);
+    bool inlineUnsafeSetTypedObjectArrayElement(CallInfo &callInfo, uint32_t base,
+                                                ScalarTypeDescr::Type arrayType);
     InliningStatus inlineNewDenseArray(CallInfo &callInfo);
     InliningStatus inlineNewDenseArrayForSequentialExecution(CallInfo &callInfo);
     InliningStatus inlineNewDenseArrayForParallelExecution(CallInfo &callInfo);
@@ -680,6 +686,8 @@ class IonBuilder : public MIRGenerator
 
     // TypedObject intrinsics.
     InliningStatus inlineObjectIsTypeDescr(CallInfo &callInfo);
+    bool elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefinition* id,
+                                                     ScalarTypeDescr::Type *arrayType);
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);

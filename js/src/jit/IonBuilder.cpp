@@ -7490,7 +7490,7 @@ IonBuilder::setElemTryScalarElemOfTypedObject(bool *emitted,
     }
 
     // Store the element
-    if (!storeScalarTypedObjectValue(obj, indexAsByteOffset, elemType, canBeNeutered, value))
+    if (!storeScalarTypedObjectValue(obj, indexAsByteOffset, elemType, canBeNeutered, false, value))
         return false;
 
     current->push(value);
@@ -7834,6 +7834,28 @@ IonBuilder::jsop_setelem_typed(ScalarTypeDescr::Type arrayType,
         current->push(value);
 
     return resumeAfter(ins);
+}
+
+bool
+IonBuilder::jsop_setelem_typed_object(ScalarTypeDescr::Type arrayType,
+                                      SetElemSafety safety,
+                                      bool racy,
+                                      MDefinition *object, MDefinition *index, MDefinition *value)
+{
+    JS_ASSERT(safety == SetElem_Unsafe); // Can be fixed, but there's been no reason to as of yet
+
+    MInstruction *int_index = MToInt32::New(alloc(), index);
+    current->add(int_index);
+
+    size_t elemSize = ScalarTypeDescr::alignment(arrayType);
+    MMul *byteOffset = MMul::New(alloc(), int_index, constantInt(elemSize),
+                                        MIRType_Int32, MMul::Integer);
+    current->add(byteOffset);
+
+    if (!storeScalarTypedObjectValue(object, byteOffset, arrayType, false, racy, value))
+        return false;
+
+    return true;
 }
 
 bool
@@ -9013,7 +9035,7 @@ IonBuilder::setPropTryScalarPropOfTypedObject(bool *emitted,
 
     // OK! Perform the optimization.
 
-    if (!storeScalarTypedObjectValue(obj, constantInt(fieldOffset), fieldType, true, value))
+    if (!storeScalarTypedObjectValue(obj, constantInt(fieldOffset), fieldType, true, false, value))
         return false;
 
     current->push(value);
@@ -10029,15 +10051,16 @@ IonBuilder::typeObjectForFieldFromStructType(MDefinition *typeObj,
 
 bool
 IonBuilder::storeScalarTypedObjectValue(MDefinition *typedObj,
-                                        MDefinition *offset,
+                                        MDefinition *byteOffset,
                                         ScalarTypeDescr::Type type,
                                         bool canBeNeutered,
+                                        bool racy,
                                         MDefinition *value)
 {
     // Find location within the owner object.
     MDefinition *elements, *scaledOffset;
     size_t alignment = ScalarTypeDescr::alignment(type);
-    loadTypedObjectElements(typedObj, offset, alignment, canBeNeutered,
+    loadTypedObjectElements(typedObj, byteOffset, alignment, canBeNeutered,
                             &elements, &scaledOffset);
 
     // Clamp value to [0, 255] when type is Uint8Clamped
@@ -10050,6 +10073,8 @@ IonBuilder::storeScalarTypedObjectValue(MDefinition *typedObj,
     MStoreTypedArrayElement *store =
         MStoreTypedArrayElement::New(alloc(), elements, scaledOffset, toWrite,
                                      type);
+    if (racy)
+        store->setRacy();
     current->add(store);
 
     return true;

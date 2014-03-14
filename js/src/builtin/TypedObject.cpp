@@ -733,6 +733,15 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
     return true;
 }
 
+bool
+js::IsTypedObjectArray(JSObject &obj)
+{
+    if (!obj.is<TypedObject>())
+        return false;
+    TypeDescr& d = obj.as<TypedObject>().typeDescr();
+    return d.is<SizedArrayTypeDescr>() || d.is<UnsizedArrayTypeDescr>();
+}
+
 /*********************************
  * StructType class
  */
