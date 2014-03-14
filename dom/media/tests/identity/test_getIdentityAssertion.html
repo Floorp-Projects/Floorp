@@ -30,10 +30,11 @@ function theTest() {
   [
     "GET_IDENTITY_ASSERTION_FAILS_WITHOUT_PROVIDER",
     function(test) {
-      test.pcLocal._pc.getIdentityAssertion(function(err) {
-        ok(err, "getIdentityAssertion must fail without provider");
+      test.pcLocal._pc.onidpassertionerror = function(e) {
+        ok(e, "getIdentityAssertion must fail without provider");
         test.next();
-      });
+      };
+      test.pcLocal._pc.getIdentityAssertion();
     },
   ],
   [
@@ -52,6 +53,10 @@ function theTest() {
           test.next();
         }
       };
+      test.pcLocal._pc.onidpassertionerror = function(e) {
+        ok(false, "error event fired");
+        test.next();
+      };
       test.pcLocal._pc.getIdentityAssertion();
       test.pcLocal._pc.getIdentityAssertion();
     }
@@ -64,10 +69,11 @@ function theTest() {
         ok(false, "Should not get an identity result");
         test.next();
       };
-      test.pcLocal._pc.getIdentityAssertion(function(err) {
-        ok(err, "Got error callback from getIdentityAssertion");
+      test.pcLocal._pc.onidpassertionerror = function(err) {
+        ok(err, "Got error event from getIdentityAssertion");
         test.next();
-      });
+      };
+      test.pcLocal._pc.getIdentityAssertion();
     }
   ],
   [
@@ -78,10 +84,11 @@ function theTest() {
         ok(false, "Should not get an identity result");
         test.next();
       };
-      test.pcLocal._pc.getIdentityAssertion(function(err) {
-        ok(err, "Got error callback from getIdentityAssertion");
+      test.pcLocal._pc.onidpassertionerror = function(e) {
+        ok(e, "Got error callback from getIdentityAssertion");
         test.next();
-      });
+      };
+      test.pcLocal._pc.getIdentityAssertion();
     }
   ],
   [
@@ -92,10 +99,11 @@ function theTest() {
         checkIdentity(e.assertion, 'user@example.com');
         test.next();
       };
-      test.pcLocal._pc.getIdentityAssertion(function(err) {
+      test.pcLocal._pc.onidpassertionerror = function(e) {
         ok(false, "Got error callback from getIdentityAssertion");
         test.next();
-      });
+      };
+      test.pcLocal._pc.getIdentityAssertion();
     }
   ]
   ]);

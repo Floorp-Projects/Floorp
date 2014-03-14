@@ -3,6 +3,8 @@
 
   function IDPJS() {
     this.domain = window.location.host;
+    var p = window.location.pathname;
+    this.protocol = p.substring(p.lastIndexOf('/') + 1) + window.location.hash;
     this.username = "someone@" + this.domain;
     // so rather than create a million different IdP configurations and litter
     // the world with files all containing near-identical code, let's use the
@@ -70,7 +72,7 @@
         message : {
           idp : {
             domain : this.domain,
-            protocol : "idp.html"
+            protocol : this.protocol
           },
           assertion : JSON.stringify({
             username : this.username,
@@ -82,12 +84,16 @@
 
     case "VERIFY":
       var payload = JSON.parse(message.message);
+      var contents = payload.contents;
+      if (this.instructions.some(is("bad"))) {
+        contents = {};
+      }
       this.sendResponse({
         type : "SUCCESS",
         id : message.id,
         message : {
           identity : payload.username,
-          contents : payload.contents
+          contents : contents
         }
       });
       break;
