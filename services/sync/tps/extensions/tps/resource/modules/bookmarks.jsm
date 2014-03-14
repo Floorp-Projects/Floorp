@@ -10,16 +10,15 @@
 var EXPORTED_SYMBOLS = ["PlacesItem", "Bookmark", "Separator", "Livemark",
                         "BookmarkFolder", "DumpBookmarks"];
 
-const CC = Components.classes;
-const CI = Components.interfaces;
-const CU = Components.utils;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-CU.import("resource://tps/logger.jsm");
-CU.import("resource://gre/modules/Services.jsm");
-CU.import("resource://gre/modules/PlacesUtils.jsm");
-CU.import("resource://gre/modules/BookmarkJSONUtils.jsm");
-CU.import("resource://gre/modules/Task.jsm");
-CU.import("resource://services-common/async.js");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://services-common/async.js");
+
+Cu.import("resource://tps/logger.jsm");
 
 var DumpBookmarks = function TPS_Bookmarks__DumpBookmarks() {
   let writer = {
@@ -223,7 +222,7 @@ PlacesItem.prototype = {
     for (let i = 1; i < folder_parts.length; i++) {
       let subfolder_id = this.GetPlacesNodeId(
         folder_id,
-        CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+        Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
         folder_parts[i]);
       if (subfolder_id == -1) {
         return -1;
@@ -253,7 +252,7 @@ PlacesItem.prototype = {
     for (let i = 1; i < folder_parts.length; i++) {
       let subfolder_id = this.GetPlacesNodeId(
         folder_id,
-        CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+        Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
         folder_parts[i]);
       if (subfolder_id == -1) {
         folder_id = PlacesUtils.bookmarks.createFolder(folder_id,
@@ -703,7 +702,7 @@ BookmarkFolder.prototype = {
     }
     this.props.item_id = this.GetPlacesNodeId(
                               this.props.folder_id,
-                              CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+                              Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
                               this.props.folder);
     if (!this.CheckDescription(this.props.description))
       return -1;
@@ -814,7 +813,7 @@ Livemark.prototype = {
     }
     this.props.item_id = this.GetPlacesNodeId(
                               this.props.folder_id,
-                              CI.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
+                              Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
                               this.props.livemark);
     if (!PlacesUtils.annotations
                     .itemHasAnnotation(this.props.item_id, PlacesUtils.LMANNO_FEEDURI)) {
