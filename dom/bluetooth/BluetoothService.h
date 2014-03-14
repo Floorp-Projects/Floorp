@@ -333,6 +333,12 @@ protected:
   Cleanup();
 
   nsresult
+  StartBluetooth(bool aIsStartup);
+
+  nsresult
+  StopBluetooth(bool aIsStartup);
+
+  nsresult
   StartStopBluetooth(bool aStart, bool aIsStartup);
 
   /**
