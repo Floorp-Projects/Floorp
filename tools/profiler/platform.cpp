@@ -478,8 +478,8 @@ void mozilla_sampler_init(void* stackTop)
   // from MOZ_PROFILER_STACK_SCAN.
   read_profiler_env_vars();
 
-  // Allow the profiler to be started using signals
-  OS::RegisterStartHandler();
+  // platform specific initialization
+  OS::Startup();
 
   // Initialize I/O interposing
   mozilla::IOInterposer::Init();
