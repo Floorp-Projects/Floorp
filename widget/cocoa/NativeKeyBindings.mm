@@ -10,8 +10,8 @@
 #include "prlog.h"
 #include "mozilla/TextEvents.h"
 
-using namespace mozilla;
-using namespace mozilla::widget;
+namespace mozilla {
+namespace widget {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gNativeKeyBindingsLog = nullptr;
@@ -62,7 +62,7 @@ NativeKeyBindings::NativeKeyBindings()
   mSelectorToCommand.Put( \
     reinterpret_cast<struct objc_selector *>(@selector(aSel)), aCommand)
 
-NS_IMETHODIMP
+void
 NativeKeyBindings::Init(NativeKeyBindingsType aType)
 {
 #ifdef PR_LOGGING
@@ -198,17 +198,14 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   // SEL_TO_COMMAND(transposeWords:, );
   // SEL_TO_COMMAND(uppercaseWord:, );
   // SEL_TO_COMMAND(yank:, );
-
-  return NS_OK;
 }
 
 #undef SEL_TO_COMMAND
 
-NS_IMPL_ISUPPORTS1(NativeKeyBindings, nsINativeKeyBindings)
-
-NS_IMETHODIMP_(bool)
-NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
-                            DoCommandCallback aCallback, void* aCallbackData)
+bool
+NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
+                           DoCommandCallback aCallback,
+                           void* aCallbackData)
 {
   PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::KeyPress", this));
@@ -296,3 +293,6 @@ NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
 
   return true;
 }
+
+} // namespace widget
+} // namespace mozilla

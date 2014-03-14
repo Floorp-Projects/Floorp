@@ -1971,7 +1971,7 @@ nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
 {
   nsRefPtr<NativeKeyBindings> keyBindings =
     NativeKeyBindings::GetInstance(aType);
-  return keyBindings->KeyPress(aEvent, aCallback, aCallbackData);
+  return keyBindings->Execute(aEvent, aCallback, aCallbackData);
 }
 
 nsIMEUpdatePreference
