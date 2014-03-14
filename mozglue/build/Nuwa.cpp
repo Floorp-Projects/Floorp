@@ -664,6 +664,8 @@ SaveTLSInfo(thread_info_t *tinfo) {
  */
 static void
 RestoreTLSInfo(thread_info_t *tinfo) {
+  int rv;
+
   for (TLSInfoList::const_iterator it = tinfo->tlsInfo.begin();
        it != tinfo->tlsInfo.end();
        it++) {
