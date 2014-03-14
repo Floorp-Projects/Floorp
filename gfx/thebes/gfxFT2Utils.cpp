@@ -53,27 +53,29 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
     if (MOZ_UNLIKELY(!mFace)) {
         // No face.  This unfortunate situation might happen if the font
         // file is (re)moved at the wrong time.
-        aMetrics->emHeight = mGfxFont->GetStyle()->size;
-        aMetrics->emAscent = 0.8 * aMetrics->emHeight;
-        aMetrics->emDescent = 0.2 * aMetrics->emHeight;
-        aMetrics->maxAscent = aMetrics->emAscent;
-        aMetrics->maxDescent = aMetrics->maxDescent;
-        aMetrics->maxHeight = aMetrics->emHeight;
+        const gfxFloat emHeight = mGfxFont->GetStyle()->size;
+        aMetrics->emHeight = emHeight;
+        aMetrics->maxAscent = aMetrics->emAscent = 0.8 * emHeight;
+        aMetrics->maxDescent = aMetrics->emDescent = 0.2 * emHeight;
+        aMetrics->maxHeight = emHeight;
         aMetrics->internalLeading = 0.0;
-        aMetrics->externalLeading = 0.2 * aMetrics->emHeight;
-        aSpaceGlyph = 0;
-        aMetrics->spaceWidth = 0.5 * aMetrics->emHeight;
-        aMetrics->maxAdvance = aMetrics->spaceWidth;
-        aMetrics->aveCharWidth = aMetrics->spaceWidth;
-        aMetrics->zeroOrAveCharWidth = aMetrics->spaceWidth;
-        aMetrics->xHeight = 0.5 * aMetrics->emHeight;
-        aMetrics->underlineSize = aMetrics->emHeight / 14.0;
-        aMetrics->underlineOffset = -aMetrics->underlineSize;
-        aMetrics->strikeoutOffset = 0.25 * aMetrics->emHeight;
-        aMetrics->strikeoutSize = aMetrics->underlineSize;
-        aMetrics->superscriptOffset = aMetrics->xHeight;
-        aMetrics->subscriptOffset = aMetrics->xHeight;
+        aMetrics->externalLeading = 0.2 * emHeight;
+        const gfxFloat spaceWidth = 0.5 * emHeight;
+        aMetrics->spaceWidth = spaceWidth;
+        aMetrics->maxAdvance = spaceWidth;
+        aMetrics->aveCharWidth = spaceWidth;
+        aMetrics->zeroOrAveCharWidth = spaceWidth;
+        const gfxFloat xHeight = 0.5 * emHeight;
+        aMetrics->xHeight = xHeight;
+        aMetrics->superscriptOffset = xHeight;
+        aMetrics->subscriptOffset = xHeight;
+        const gfxFloat underlineSize = emHeight / 14.0;
+        aMetrics->underlineSize = underlineSize;
+        aMetrics->underlineOffset = -underlineSize;
+        aMetrics->strikeoutOffset = 0.25 * emHeight;
+        aMetrics->strikeoutSize = underlineSize;
 
+        *aSpaceGlyph = 0;
         return;
     }
 
