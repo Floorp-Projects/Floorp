@@ -38,7 +38,7 @@ enum NativeKeyBindingsType
   eNativeKeyBindingsType_Editor
 };
 
-typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, const char *>
+typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, CommandInt>
   SelectorCommandHashtable;
 
 class NativeKeyBindings MOZ_FINAL : public nsINativeKeyBindings

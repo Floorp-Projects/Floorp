@@ -307,4 +307,19 @@ WidgetKeyboardEvent::GetDOMKeyName(KeyNameIndex aKeyNameIndex,
 #undef KEY_STR_NUM_INTERNAL
 }
 
+/* static */ const char*
+WidgetKeyboardEvent::GetCommandStr(Command aCommand)
+{
+#define NS_DEFINE_COMMAND(aName, aCommandStr) , #aCommandStr
+  static const char* kCommands[] = {
+    "" // CommandDoNothing
+#include "mozilla/CommandList.h"
+  };
+#undef NS_DEFINE_COMMAND
+
+  MOZ_RELEASE_ASSERT(static_cast<size_t>(aCommand) < ArrayLength(kCommands),
+                     "Illegal command enumeration value");
+  return kCommands[aCommand];
+}
+
 } // namespace mozilla
