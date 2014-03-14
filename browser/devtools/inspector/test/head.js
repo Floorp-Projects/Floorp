@@ -27,12 +27,18 @@ let console = tempScope.console;
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
 
+gDevTools.testing = true;
 SimpleTest.registerCleanupFunction(() => {
-  console.error("Here we are\n")
+  gDevTools.testing = false;
+});
+
+SimpleTest.registerCleanupFunction(() => {
+  console.error("Here we are\n");
   let {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
   console.error("DebuggerServer open connections: " + Object.getOwnPropertyNames(DebuggerServer._connections).length);
 
   Services.prefs.clearUserPref("devtools.dump.emit");
+  Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
 });
 
 function openInspector(callback)
@@ -60,61 +66,116 @@ function getHighlighter()
   return gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container");
 }
 
-function getHighlighterOutline()
-{
-  let h = getHighlighter();
-  if (h) {
-    return h.querySelector(".highlighter-outline");
-  }
+function getSimpleBorderRect() {
+  let {p1, p2, p3, p4} = getBoxModelStatus().border.points;
+
+  return {
+    top: p1.y,
+    left: p1.x,
+    width: p2.x - p1.x,
+    height: p4.y - p1.y
+  };
 }
 
-function getHighlighterOutlineRect() {
-  let helper = new LayoutHelpers(window.content);
-  let outline = getHighlighterOutline();
+function getBoxModelRoot() {
+  let highlighter = getHighlighter();
+  return highlighter.querySelector(".box-model-root");
+}
 
-  if (outline) {
-    let browserOffsetRect = helper.getDirtyRect(gBrowser.selectedBrowser);
-    let outlineRect = helper.getDirtyRect(outline);
-    outlineRect.top -= browserOffsetRect.top;
-    outlineRect.left -= browserOffsetRect.left;
+function getBoxModelStatus() {
+  let root = getBoxModelRoot();
+  let inspector = getActiveInspector();
 
-    return outlineRect;
-  }
+  return {
+    visible: !root.hasAttribute("hidden"),
+    currentNode: inspector.walker.currentNode,
+    margin: {
+      points: getPointsForRegion("margin"),
+      visible: isRegionHidden("margin")
+    },
+    border: {
+      points: getPointsForRegion("border"),
+      visible: isRegionHidden("border")
+    },
+    padding: {
+      points: getPointsForRegion("padding"),
+      visible: isRegionHidden("padding")
+    },
+    content: {
+      points: getPointsForRegion("content"),
+      visible: isRegionHidden("content")
+    },
+    guides: {
+      top: getGuideStatus("top"),
+      right: getGuideStatus("right"),
+      bottom: getGuideStatus("bottom"),
+      left: getGuideStatus("left")
+    }
+  };
+}
+
+function getGuideStatus(location) {
+  let root = getBoxModelRoot();
+  let guide = root.querySelector(".box-model-guide-" + location);
+
+  return {
+    visible: !guide.hasAttribute("hidden"),
+    x1: guide.getAttribute("x1"),
+    y1: guide.getAttribute("y1"),
+    x2: guide.getAttribute("x2"),
+    y2: guide.getAttribute("y2")
+  };
+}
+
+function getPointsForRegion(region) {
+  let root = getBoxModelRoot();
+  let box = root.querySelector(".box-model-" + region);
+  let points = box.getAttribute("points").split(/[, ]/);
+
+  // We multiply each value by 1 to cast it into a number
+  return {
+    p1: {
+      x: parseFloat(points[0]),
+      y: parseFloat(points[1])
+    },
+    p2: {
+      x: parseFloat(points[2]),
+      y: parseFloat(points[3])
+    },
+    p3: {
+      x: parseFloat(points[4]),
+      y: parseFloat(points[5])
+    },
+    p4: {
+      x: parseFloat(points[6]),
+      y: parseFloat(points[7])
+    }
+  };
+}
+
+function isRegionHidden(region) {
+  let root = getBoxModelRoot();
+  let box = root.querySelector(".box-model-" + region);
+
+  return !box.hasAttribute("hidden");
 }
 
 function isHighlighting()
 {
-  let outline = getHighlighterOutline();
-  return outline && !outline.hasAttribute("hidden");
+  let root = getBoxModelRoot();
+  return !root.hasAttribute("hidden");
 }
 
 function getHighlitNode()
 {
   if (isHighlighting()) {
     let helper = new LayoutHelpers(window.content);
-    let outlineRect = getHighlighterOutlineRect();
+    let points = getBoxModelStatus().content.points;
+    let x = (points.p1.x + points.p2.x + points.p3.x + points.p4.x) / 4;
+    let y = (points.p1.y + points.p2.y + points.p3.y + points.p4.y) / 4;
 
-    let a = {
-      x: outlineRect.left,
-      y: outlineRect.top
-    };
-
-    let b = {
-      x: a.x + outlineRect.width,
-      y: a.y + outlineRect.height
-    };
-
-    let {x, y} = getMidPoint(a, b);
     return helper.getElementFromPoint(window.content.document, x, y);
   }
-}
-
-function getMidPoint(aPointA, aPointB)
-{
-  let pointC = {};
-  pointC.x = (aPointB.x - aPointA.x) / 2 + aPointA.x;
-  pointC.y = (aPointB.y - aPointA.y) / 2 + aPointA.y;
-  return pointC;
 }
 
 function computedView()

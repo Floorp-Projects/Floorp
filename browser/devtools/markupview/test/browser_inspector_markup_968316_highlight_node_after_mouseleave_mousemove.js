@@ -15,7 +15,7 @@ function test() {
     waitForFocus(startTests, content);
   }, true);
 
-  content.location = "data:text/html,<p>Select me!</p>";
+  content.location = "data:text/html;charset=utf-8,<p>Select me!</p>";
 }
 
 function startTests(aInspector, aToolbox) {

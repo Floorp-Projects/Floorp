@@ -20,6 +20,7 @@ import javax.crypto.Mac;
 import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientMalformedResponseException;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.crypto.HKDF;
@@ -203,6 +204,11 @@ public class FxAccountClient10 {
         return new HawkAuthHeaderProvider(Utils.byte2Hex(tokenId), reqHMACKey, payload, skewHandler.getSkewInSeconds());
       }
       return super.getAuthHeaderProvider();
+    }
+
+    @Override
+    public String getUserAgent() {
+      return FxAccountConstants.USER_AGENT;
     }
 
     @Override

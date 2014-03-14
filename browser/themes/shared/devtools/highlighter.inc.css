@@ -4,12 +4,40 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-/* Highlighter */
+/* Box model highlighter */
+svg|g.box-model-container {
+  opacity: 0.4;
+}
 
-.highlighter-outline {
-  box-shadow: 0 0 0 1px black;
-  outline: 1px dashed white;
-  outline-offset: -1px;
+svg|polygon.box-model-content {
+  fill: #80d4ff;
+}
+
+svg|polygon.box-model-padding {
+  fill: #66cc52;
+}
+
+svg|polygon.box-model-border {
+  fill: #ffe431;
+}
+
+svg|polygon.box-model-margin {
+  fill: #d89b28;
+}
+
+svg|polygon.box-model-content,
+svg|polygon.box-model-padding,
+svg|polygon.box-model-border,
+svg|polygon.box-model-margin {
+  stroke: none;
+}
+
+svg|line.box-model-guide-top,
+svg|line.box-model-guide-right,
+svg|line.box-model-guide-bottom,
+svg|line.box-model-guide-left {
+  stroke: #08C;
+  stroke-dasharray: 5 3;
 }
 
 /* Highlighter - Node Infobar */
