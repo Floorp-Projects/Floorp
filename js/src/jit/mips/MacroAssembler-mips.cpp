@@ -408,7 +408,7 @@ MacroAssemblerMIPS::ma_or(Register rd, Imm32 imm)
 void
 MacroAssemblerMIPS::ma_or(Register rd, Register rs, Imm32 imm)
 {
-    if (Imm16::isInSignedRange(imm.value)) {
+    if (Imm16::isInUnsignedRange(imm.value)) {
         as_ori(rd, rs, imm.value);
     } else {
         ma_li(ScratchRegister, imm);
@@ -438,7 +438,7 @@ MacroAssemblerMIPS::ma_xor(Register rd, Imm32 imm)
 void
 MacroAssemblerMIPS::ma_xor(Register rd, Register rs, Imm32 imm)
 {
-    if (Imm16::isInSignedRange(imm.value)) {
+    if (Imm16::isInUnsignedRange(imm.value)) {
         as_xori(rd, rs, imm.value);
     } else {
         ma_li(ScratchRegister, imm);
