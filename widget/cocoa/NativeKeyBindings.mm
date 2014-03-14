@@ -170,13 +170,6 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
 NS_IMPL_ISUPPORTS1(NativeKeyBindings, nsINativeKeyBindings)
 
 NS_IMETHODIMP_(bool)
-NativeKeyBindings::KeyDown(const WidgetKeyboardEvent& aEvent,
-                           DoCommandCallback aCallback, void* aCallbackData)
-{
-  return false;
-}
-
-NS_IMETHODIMP_(bool)
 NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
                             DoCommandCallback aCallback, void* aCallbackData)
 {
@@ -265,11 +258,4 @@ NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
     ("%p NativeKeyBindings::KeyPress, handled=true", this));
 
   return true;
-}
-
-NS_IMETHODIMP_(bool)
-NativeKeyBindings::KeyUp(const WidgetKeyboardEvent& aEvent,
-                         DoCommandCallback aCallback, void* aCallbackData)
-{
-  return false;
 }

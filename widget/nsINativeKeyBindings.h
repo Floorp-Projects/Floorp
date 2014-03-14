@@ -10,7 +10,8 @@
 #include "mozilla/EventForwards.h"
 
 #define NS_INATIVEKEYBINDINGS_IID \
-{0xc2baecc3, 0x1758, 0x4211, {0x96, 0xbe, 0xee, 0x1b, 0x1b, 0x7c, 0xd7, 0x6d}}
+{ 0x98290677, 0xfdac, 0x414a, \
+  { 0x81, 0x5c, 0x20, 0xe2, 0xd4, 0xcd, 0x8c, 0x47 } }
 
 #define NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX \
   "@mozilla.org/widget/native-key-bindings;1?type="
@@ -31,17 +32,9 @@ class nsINativeKeyBindings : public nsISupports
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INATIVEKEYBINDINGS_IID)
 
-  virtual NS_HIDDEN_(bool) KeyDown(const mozilla::WidgetKeyboardEvent& aEvent,
-                                   DoCommandCallback aCallback,
-                                   void *aCallbackData) = 0;
-
   virtual NS_HIDDEN_(bool) KeyPress(const mozilla::WidgetKeyboardEvent& aEvent,
                                     DoCommandCallback aCallback,
                                     void *aCallbackData) = 0;
-
-  virtual NS_HIDDEN_(bool) KeyUp(const mozilla::WidgetKeyboardEvent& aEvent,
-                                 DoCommandCallback aCallback,
-                                 void *aCallbackData) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINativeKeyBindings, NS_INATIVEKEYBINDINGS_IID)
