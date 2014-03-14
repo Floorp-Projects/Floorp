@@ -132,6 +132,7 @@ gbjar.sources += [
     'db/TransactionalProvider.java',
     'Distribution.java',
     'DoorHangerPopup.java',
+    'DynamicToolbar.java',
     'EditBookmarkDialog.java',
     'EventDispatcher.java',
     'favicons/cache/FaviconCache.java',
