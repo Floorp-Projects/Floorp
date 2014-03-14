@@ -418,6 +418,52 @@ add_task(function test_getHAWKErrors() {
   Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
 });
 
+add_task(function test_getKeysError() {
+  _("BrowserIDManager correctly handles getKeys failures.");
+
+  let browseridManager = new BrowserIDManager();
+  let identityConfig = makeIdentityConfig();
+  // our mock identity config already has kA and kB - remove them or we never
+  // try and fetch them.
+  delete identityConfig.fxaccount.user.kA;
+  delete identityConfig.fxaccount.user.kB;
+
+  configureFxAccountIdentity(browseridManager, identityConfig);
+
+  // Mock a fxAccounts object that returns no keys
+  let fxa = new FxAccounts({
+    fetchAndUnwrapKeys: function () {
+      return Promise.resolve({});
+    },
+    fxAccountsClient: new MockFxAccountsClient()
+  });
+
+  // Add a mock to the currentAccountState object.
+  fxa.internal.currentAccountState.getCertificate = function(data, keyPair, mustBeValidUntil) {
+    this.cert = {
+      validUntil: fxa.internal.now() + CERT_LIFETIME,
+      cert: "certificate",
+    };
+    return Promise.resolve(this.cert.cert);
+  };
+
+  // Ensure the new FxAccounts mock has a signed-in user.
+  fxa.internal.currentAccountState.signedInUser = browseridManager._fxaService.internal.currentAccountState.signedInUser;
+
+  browseridManager._fxaService = fxa;
+
+  yield browseridManager.initializeWithCurrentIdentity();
+
+  let ex;
+  try {
+    yield browseridManager.whenReadyToAuthenticate.promise;
+  } catch (e) {
+    ex = e;
+  }
+
+  Assert.ok(ex.message.indexOf("missing kA or kB") >= 0);
+});
+
 // End of tests
 // Utility functions follow
 
