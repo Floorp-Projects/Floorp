@@ -9,7 +9,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
 
 this.EXPORTED_SYMBOLS = ["WebappOSUtils"];
 
@@ -203,16 +202,6 @@ this.WebappOSUtils = {
 #endif
     // Anything unsupported, like Metro
     throw new Error("Unsupported apps platform");
-  },
-
-  getPackagePath: function(aApp) {
-    let packagePath = this.getInstallPath(aApp);
-
-#ifdef XP_MACOSX
-    packagePath = OS.Path.join(packagePath, "Contents", "Resources");
-#endif
-
-    return packagePath;
   },
 
   launch: function(aApp) {
