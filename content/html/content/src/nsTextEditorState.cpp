@@ -860,27 +860,18 @@ nsTextInputListener::HandleEvent(nsIDOMEvent* aEvent)
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsINativeKeyBindings *bindings = GetKeyBindings();
-  if (bindings) {
-    bool handled = false;
-    switch (keyEvent->message) {
-      case NS_KEY_DOWN:
-        handled = bindings->KeyDown(*keyEvent, DoCommandCallback, mFrame);
-        break;
-      case NS_KEY_UP:
-        handled = bindings->KeyUp(*keyEvent, DoCommandCallback, mFrame);
-        break;
-      case NS_KEY_PRESS:
-        handled = bindings->KeyPress(*keyEvent, DoCommandCallback, mFrame);
-        break;
-      default:
-        MOZ_CRASH("Unknown key message");
-    }
-    if (handled) {
-      aEvent->PreventDefault();
-    }
+  if (keyEvent->message != NS_KEY_PRESS) {
+    return NS_OK;
   }
 
+  nsINativeKeyBindings *bindings = GetKeyBindings();
+  if (!bindings) {
+    return NS_OK;
+  }
+
+  if (bindings->KeyPress(*keyEvent, DoCommandCallback, mFrame)) {
+    aEvent->PreventDefault();
+  }
   return NS_OK;
 }
 
