@@ -10,7 +10,7 @@
     <style name="FxAccountTheme" parent="@style/Gecko" />
 
     <style name="FxAccountTheme.FxAccountStatusActivity" parent="@style/FxAccountTheme">
-         <item name="android:windowNoTitle">false</item>
+        <item name="android:windowNoTitle">false</item>
     </style>
 
     <style name="FxAccountMiddle">
@@ -64,7 +64,10 @@
 
     <style name="FxAccountEditItem" parent="@android:style/Widget.EditText">
         <item name="android:textSize">20sp</item>
-        <item name="android:padding">@dimen/fxaccount_input_padding</item>
+        <item name="android:paddingLeft">@dimen/fxaccount_input_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/fxaccount_input_padding_horizontal</item>
+        <item name="android:paddingTop">@dimen/fxaccount_input_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/fxaccount_input_padding_vertical</item>
         <item name="android:background">@drawable/fxaccount_textfield_background</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
@@ -88,7 +91,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_gravity">center_horizontal</item>
-        <item name="android:src">@drawable/fxaccount_icon</item>
+        <item name="android:src">@drawable/icon</item>
     </style>
 
     <style name="FxAccountErrorItem">
@@ -107,9 +110,9 @@
     </style>
 
     <style name="FxAccountProgress">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">fill_parent</item>
-        <item name="android:background">@drawable/fxaccount_button_background</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_centerInParent">true</item>
         <item name="android:visibility">invisible</item>
     </style>
 
@@ -117,6 +120,7 @@
         <item name="android:orientation">vertical</item>
         <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/fxaccount_button_background</item>
     </style>
 
     <style name="FxAccountCheckBox">

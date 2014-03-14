@@ -1,7 +1,9 @@
 # Register Firefox Health Report providers.
 category healthreport-js-provider-default AddonsProvider resource://gre/modules/HealthReport.jsm
 category healthreport-js-provider-default AppInfoProvider resource://gre/modules/HealthReport.jsm
+#ifdef MOZ_CRASHREPORTER
 category healthreport-js-provider-default CrashesProvider resource://gre/modules/HealthReport.jsm
+#endif
 category healthreport-js-provider-default HealthReportProvider resource://gre/modules/HealthReport.jsm
 category healthreport-js-provider-default PlacesProvider resource://gre/modules/HealthReport.jsm
 category healthreport-js-provider-default ProfileMetadataProvider resource://gre/modules/HealthReport.jsm
