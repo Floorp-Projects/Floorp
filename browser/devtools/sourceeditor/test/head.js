@@ -8,6 +8,11 @@ const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {})
 const { require } = devtools;
 const Editor  = require("devtools/sourceeditor/editor");
 
+gDevTools.testing = true;
+SimpleTest.registerCleanupFunction(() => {
+  gDevTools.testing = false;
+});
+
 function setup(cb) {
   const opt = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
   const url = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +

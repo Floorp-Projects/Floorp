@@ -925,8 +925,6 @@
               }
             }
 
-            this._autoScrollPopup.addEventListener("popuphidden", this, true);
-
             // we need these attributes so themers don't need to create per-platform packages
             if (screen.colorDepth > 8) { // need high color for transparency
               // Exclude second-rate platforms
@@ -991,6 +989,7 @@
               }
             }
 
+            this._autoScrollPopup.addEventListener("popuphidden", this, true);
             this._autoScrollPopup.showPopup(document.documentElement,
                                             event.screenX,
                                             event.screenY,

@@ -1825,6 +1825,7 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
         return column_;
     }
 
+    bool hasUncompiledEnclosingScript() const;
     uint32_t staticLevel(JSContext *cx) const;
 
     void markChildren(JSTracer *trc);

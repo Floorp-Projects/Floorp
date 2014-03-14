@@ -140,10 +140,10 @@ public:
   void SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
                         SelectionType aType);
 
-  virtual bool PeekOffsetNoAmount(bool aForward, int32_t* aOffset) MOZ_OVERRIDE;
-  virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
+  virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) MOZ_OVERRIDE;
+  virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) MOZ_OVERRIDE;
-  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
+  virtual FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                                 int32_t* aOffset, PeekWordState* aState) MOZ_OVERRIDE;
 
   virtual nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval) MOZ_OVERRIDE;

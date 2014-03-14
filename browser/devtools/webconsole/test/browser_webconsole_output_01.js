@@ -89,5 +89,10 @@ function test() {
     let {tab} = yield loadTab(TEST_URI);
     let hud = yield openConsole(tab);
     return checkOutputForInputs(hud, inputTests);
-  }).then(finishTest);
+  }).then(finishUp);
+}
+
+function finishUp() {
+  inputTests = null;
+  finishTest();
 }

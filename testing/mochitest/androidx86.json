@@ -46,7 +46,7 @@
   "content/media/test/test_bug465498.html": "",
   "content/media/test/test_play_events_2.html": "x86 only bug 914439",
   "content/media/test/test_media_sniffer.html": "x86 only bug 914439",
-  "content/media/test/test_seek_out_of_range.html": "x86 only bug 914439"
+  "content/media/test/test_seek_out_of_range.html": "x86 only bug 914439",
   "content/media/test/test_load_same_resource.html": "x86 only bug 914439",
   "content/media/test/test_bug493187.html": "x86 only bug 914439",
   "content/media/test/test_autoplay_contentEditable.html": "x86 only",

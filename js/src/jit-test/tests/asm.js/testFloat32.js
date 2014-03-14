@@ -86,6 +86,9 @@ assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = 
 
 UINT32_MAX = Math.pow(2, 32)-1;
 assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = x|0; return toF(x >>> 0); } return f"), this)(-1), Math.fround(UINT32_MAX));
+var tof = asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "function f(x) { x = x|0; return toF(x>>>0) } return f"), this);
+for (x of [0, 1, 10, 64, 1025, 65000, Math.pow(2,30), Math.pow(2,31), Math.pow(2,32)-2, Math.pow(2,32)-1])
+    assertEq(tof(x), Math.fround(x));
 
 // Global variables imports
 assertAsmTypeFail('glob', USE_ASM + "var x = toF(); function f() {} return f");

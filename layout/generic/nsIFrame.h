@@ -439,6 +439,19 @@ public:
    * removal and destruction.
    */
   void Destroy() { DestroyFrom(this); }
+ 
+  /** Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return values.
+    */
+  enum FrameSearchResult {
+    // Peek found a appropriate offset within frame.
+    FOUND = 0x00,
+    // try next frame for offset.
+    CONTINUE = 0x1,
+    // offset not found because the frame was empty of text.
+    CONTINUE_EMPTY = 0x2 | CONTINUE,
+    // offset not found because the frame didn't contain any text that could be selected.
+    CONTINUE_UNSELECTABLE = 0x4 | CONTINUE,
+  };
 
 protected:
   /**
@@ -3040,11 +3053,12 @@ protected:
    * @param  aForward [in] Are we moving forward (or backward) in content order.
    * @param  aOffset [in/out] At what offset into the frame to start looking.
    *         on output - what offset was reached (whether or not we found a place to stop).
-   * @return true: An appropriate offset was found within this frame,
+   * @return STOP: An appropriate offset was found within this frame,
    *         and is given by aOffset.
-   *         false: Not found within this frame, need to try the next frame.
+   *         CONTINUE: Not found within this frame, need to try the next frame.
+   *         see enum FrameSearchResult for more details.
    */
-  virtual bool PeekOffsetNoAmount(bool aForward, int32_t* aOffset) = 0;
+  virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) = 0;
   
   /**
    * Search the frame for the next character
@@ -3054,11 +3068,12 @@ protected:
    * @param  aRespectClusters [in] Whether to restrict result to valid cursor locations
    *         (between grapheme clusters) - default TRUE maintains "normal" behavior,
    *         FALSE is used for selection by "code unit" (instead of "character")
-   * @return true: An appropriate offset was found within this frame,
+   * @return STOP: An appropriate offset was found within this frame,
    *         and is given by aOffset.
-   *         false: Not found within this frame, need to try the next frame.
+   *         CONTINUE: Not found within this frame, need to try the next frame.
+   *         see enum FrameSearchResult for more details.
    */
-  virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
+  virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) = 0;
   
   /**
@@ -3112,7 +3127,7 @@ protected:
       mAtStart = false;
     }
   };
-  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
+  virtual FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                                 int32_t* aOffset, PeekWordState* aState) = 0;
 
   /**

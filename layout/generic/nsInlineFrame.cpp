@@ -155,7 +155,7 @@ nsInlineFrame::IsEmpty()
   return true;
 }
 
-bool
+nsIFrame::FrameSearchResult
 nsInlineFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                    bool aRespectClusters)
 {
@@ -169,7 +169,7 @@ nsInlineFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
     // skip to the other side, but keep going.
     *aOffset = 1 - startOffset;
   }
-  return false;
+  return CONTINUE;
 }
 
 void

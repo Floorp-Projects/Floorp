@@ -299,6 +299,18 @@ nsresult RtspOmxReader::Seek(int64_t aTime, int64_t aStartTime,
   return MediaOmxReader::Seek(aTime, aStartTime, aEndTime, aCurrentTime);
 }
 
+nsresult
+RtspOmxReader::ReadMetadata(MediaInfo* aInfo,
+                            MetadataTags** aTags)
+{
+  nsresult rv = MediaOmxReader::ReadMetadata(aInfo, aTags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SetActive();
+
+  return NS_OK;
+}
+
 void RtspOmxReader::SetIdle() {
   // Need to pause RTSP streaming OMXCodec decoding.
   if (mRtspResource) {
@@ -319,7 +331,7 @@ void RtspOmxReader::SetActive() {
     nsIStreamingProtocolController* controller =
         mRtspResource->GetMediaStreamController();
     if (controller) {
-      controller->Play();  
+      controller->Play();
     }
   }
 
