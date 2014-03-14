@@ -68,10 +68,6 @@
 
       <field name="contentWindowId">null</field>
 
-      <property name="messageManager"
-                onget="return this._frameLoader.messageManager;"
-                readonly="true"/>
-
       <field name="_contentTitle">null</field>
 
       <field name="_ios">
