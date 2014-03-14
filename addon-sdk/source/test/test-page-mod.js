@@ -9,8 +9,12 @@ const { Loader } = require('sdk/test/loader');
 const tabs = require("sdk/tabs");
 const { setTimeout } = require("sdk/timers");
 const { Cc, Ci, Cu } = require("chrome");
-const { open, getFrames, getMostRecentBrowserWindow } = require('sdk/window/utils');
-const windowUtils = require('sdk/deprecated/window-utils');
+const {
+  open,
+  getFrames,
+  getMostRecentBrowserWindow,
+  getInnerId
+} = require('sdk/window/utils');
 const { getTabContentWindow, getActiveTab, setTabURL, openTab, closeTab } = require('sdk/tabs/utils');
 const xulApp = require("sdk/system/xul-app");
 const { isPrivateBrowsingSupported } = require('sdk/self');
@@ -23,6 +27,8 @@ const { URL } = require("sdk/url");
 
 const { waitUntil } = require("sdk/test/utils");
 const data = require("./fixtures");
+
+const { gDevToolsExtensions } = Cu.import("resource://gre/modules/devtools/DevToolsExtensions.jsm", {});
 
 const testPageURI = data.url("test.html");
 
@@ -1060,7 +1066,7 @@ exports.testPageModCssAutomaticDestroy = function(assert, done) {
     url: "data:text/html;charset=utf-8,<div style='width:200px'>css test</div>",
 
     onReady: function onReady(tab) {
-      let browserWindow = windowUtils.activeBrowserWindow;
+      let browserWindow = getMostRecentBrowserWindow();
       let win = getTabContentWindow(getActiveTab(browserWindow));
 
       let div = win.document.querySelector("div");
@@ -1391,18 +1397,30 @@ exports.testDebugMetadata = function(assert, done) {
       include: "about:",
       contentScriptWhen: "start",
       contentScript: "null;",
-    }],
-    function(win, done) {
+    }], function(win, done) {
       assert.ok(globalDebuggees.some(function(global) {
         try {
           let metadata = Cu.getSandboxMetadata(global.unsafeDereference());
-          return metadata && metadata.addonID && metadata.SDKContentScript;
+          return metadata && metadata.addonID && metadata.SDKContentScript &&
+                 metadata['inner-window-id'] == getInnerId(win);
         } catch(e) {
           // Some of the globals might not be Sandbox instances and thus
           // will cause getSandboxMetadata to fail.
           return false;
         }
       }), "one of the globals is a content script");
+      done();
+    }
+  );
+};
+
+exports.testDevToolsExtensionsGetContentGlobals = function(assert, done) {
+  let mods = testPageMod(assert, done, "about:", [{
+      include: "about:",
+      contentScriptWhen: "start",
+      contentScript: "null;",
+    }], function(win, done) {
+      assert.equal(gDevToolsExtensions.getContentGlobals({ 'inner-window-id': getInnerId(win) }).length, 1);
       done();
     }
   );

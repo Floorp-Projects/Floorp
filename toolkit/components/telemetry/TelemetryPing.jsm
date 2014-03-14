@@ -291,13 +291,13 @@ let Impl = {
       }
     }
 
-    ret.startupInterrupted = new Number(Services.startup.interrupted);
+    ret.startupInterrupted = Number(Services.startup.interrupted);
 
     // Update debuggerAttached flag
     let debugService = Cc["@mozilla.org/xpcom/debug;1"].getService(Ci.nsIDebug2);
     let isDebuggerAttached = debugService.isDebuggerAttached;
     gWasDebuggerAttached = gWasDebuggerAttached || isDebuggerAttached;
-    ret.debuggerAttached = new Number(gWasDebuggerAttached);
+    ret.debuggerAttached = Number(gWasDebuggerAttached);
 
     ret.js = Cu.getJSEngineTelemetryValue();
 
