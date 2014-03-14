@@ -361,6 +361,7 @@ var DebuggerServer = {
 
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     this.registerModule("devtools/server/actors/device");
+    this.registerModule("devtools/server/actors/preference");
   },
 
   /**
