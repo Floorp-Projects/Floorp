@@ -164,12 +164,11 @@ JSCompartment::ensureJitCompartmentExists(JSContext *cx)
     if (jitCompartment_)
         return true;
 
-    JitRuntime *jitRuntime = cx->runtime()->getJitRuntime(cx);
-    if (!jitRuntime)
+    if (!cx->runtime()->getJitRuntime(cx))
         return false;
 
     /* Set the compartment early, so linking works. */
-    jitCompartment_ = cx->new_<JitCompartment>(jitRuntime);
+    jitCompartment_ = cx->new_<JitCompartment>();
 
     if (!jitCompartment_)
         return false;
