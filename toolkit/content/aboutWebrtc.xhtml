@@ -157,7 +157,10 @@ function dumpRtpStat(stat, label) {
     if (stat.bytesReceived !== undefined) {
       statsString += " (" + round00(stat.bytesReceived/1024) + " Kb)";
     }
-    statsString += " Jitter: " + stat.jitter + " Lost: " + stat.packetsLost;
+    statsString += " Lost: " + stat.packetsLost + " Jitter: " + stat.jitter;
+    if (stat.mozRtt !== undefined) {
+      statsString += " RTT: " + stat.mozRtt + " ms";
+    }
   } else if (stat.packetsSent !== undefined) {
     statsString += " Sent: " + stat.packetsSent + " packets";
     if (stat.bytesSent !== undefined) {
