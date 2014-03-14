@@ -1957,6 +1957,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 /* Sync Panel */
 
 .sync-panel-icon {
+  height:32px;
   width: 32px;
   background: url("chrome://browser/content/abouthome/sync.png") top left no-repeat;
 }
@@ -1972,7 +1973,9 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 #sync-error-panel-title,
 #sync-start-panel-title {
+  font-size: 120%;
   font-weight: bold;
+  margin-bottom: 5px;
 }
 
 #sync-start-panel-subtitle,
