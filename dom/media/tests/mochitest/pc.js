@@ -1642,6 +1642,9 @@ PeerConnectionWrapper.prototype = {
                   ok(rem.bytesReceived >= rem.packetsReceived * 8, "Rtcp bytesReceived");
                   ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
                   ok(rem.jitter !== undefined, "Rtcp jitter");
+                  ok(rem.mozRtt !== undefined, "Rtcp rtt");
+                  ok(rem.mozRtt >= 0, "Rtcp rtt " + rem.mozRtt + " >= 0");
+                  ok(rem.mozRtt < 60000, "Rtcp rtt " + rem.mozRtt + " < 1 min");
                 } else {
                   ok(rem.type == "outboundrtp", "Rtcp is outbound");
                   ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
