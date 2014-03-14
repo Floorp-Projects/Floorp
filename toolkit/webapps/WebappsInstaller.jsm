@@ -345,7 +345,7 @@ WinNativeApp.prototype = {
       try {
         yield this._createDirectoryStructure();
         yield this._copyPrebuiltFiles();
-        this._createConfigFiles();
+        yield this._createConfigFiles();
 
         if (aZipPath) {
           yield OS.File.move(aZipPath, OS.Path.join(this.tmpInstallDir,
@@ -479,8 +479,8 @@ WinNativeApp.prototype = {
    */
   _createConfigFiles: function() {
     // ${InstallDir}/webapp.json
-    writeToFile(OS.Path.join(this.tmpInstallDir, this.configJson),
-                JSON.stringify(this.webappJson));
+    yield writeToFile(OS.Path.join(this.tmpInstallDir, this.configJson),
+                      JSON.stringify(this.webappJson));
 
     let factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"]
                     .getService(Ci.nsIINIParserFactory);
@@ -515,9 +515,9 @@ WinNativeApp.prototype = {
       uninstallContent += "\r\nFile: \\application.zip";
     }
 
-    writeToFile(OS.Path.join(this.tmpInstallDir, this.uninstallDir,
-                             "uninstall.log"),
-                uninstallContent);
+    yield writeToFile(OS.Path.join(this.tmpInstallDir, this.uninstallDir,
+                                   "uninstall.log"),
+                      uninstallContent);
   },
 
   /**
@@ -675,7 +675,7 @@ MacNativeApp.prototype = {
       try {
         yield this._createDirectoryStructure();
         this._copyPrebuiltFiles();
-        this._createConfigFiles();
+        yield this._createConfigFiles();
 
         if (aZipPath) {
           yield OS.File.move(aZipPath, OS.Path.join(this.tmpInstallDir,
@@ -761,8 +761,8 @@ MacNativeApp.prototype = {
 
   _createConfigFiles: function() {
     // ${ProfileDir}/webapp.json
-    writeToFile(OS.Path.join(this.appProfileDir, "webapp.json"),
-                JSON.stringify(this.webappJson));
+    yield writeToFile(OS.Path.join(this.appProfileDir, "webapp.json"),
+                      JSON.stringify(this.webappJson));
 
     // ${InstallDir}/Contents/MacOS/webapp.ini
     let applicationINI = getFile(this.tmpInstallDir, this.macOSDir, "webapp.ini");
@@ -808,8 +808,8 @@ MacNativeApp.prototype = {
   </dict>\n\
 </plist>';
 
-    writeToFile(OS.Path.join(this.tmpInstallDir, this.contentsDir, "Info.plist"),
-                infoPListContent);
+    yield writeToFile(OS.Path.join(this.tmpInstallDir, this.contentsDir, "Info.plist"),
+                      infoPListContent);
   },
 
   /**
@@ -879,7 +879,7 @@ LinuxNativeApp.prototype = {
       try {
         this._createDirectoryStructure();
         this._copyPrebuiltFiles();
-        this._createConfigFiles();
+        yield this._createConfigFiles();
 
         if (aZipPath) {
           yield OS.File.move(aZipPath, OS.Path.join(this.tmpInstallDir,
@@ -995,8 +995,8 @@ LinuxNativeApp.prototype = {
 
   _createConfigFiles: function() {
     // ${InstallDir}/webapp.json
-    writeToFile(OS.Path.join(this.tmpInstallDir, this.configJson),
-                JSON.stringify(this.webappJson));
+    yield writeToFile(OS.Path.join(this.tmpInstallDir, this.configJson),
+                      JSON.stringify(this.webappJson));
 
     let webappsBundle = Services.strings.createBundle("chrome://global/locale/webapps.properties");
 
@@ -1090,9 +1090,15 @@ LinuxNativeApp.prototype = {
 function writeToFile(aPath, aData) {
   return Task.spawn(function() {
     let data = new TextEncoder().encode(aData);
-    let file = yield OS.File.open(aPath, { truncate: true }, { unixMode: PERMS_FILE });
-    yield file.write(data);
-    yield file.close();
+
+    let file;
+    try {
+      file = yield OS.File.open(aPath, { truncate: true, write: true },
+                                { unixMode: PERMS_FILE });
+      yield file.write(data);
+    } finally {
+      yield file.close();
+    }
   });
 }
 

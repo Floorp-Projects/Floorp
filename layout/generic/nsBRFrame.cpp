@@ -28,10 +28,10 @@ public:
 
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint) MOZ_OVERRIDE;
 
-  virtual bool PeekOffsetNoAmount(bool aForward, int32_t* aOffset) MOZ_OVERRIDE;
-  virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
+  virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) MOZ_OVERRIDE;
+  virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) MOZ_OVERRIDE;
-  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
+  virtual FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
                               bool aIsKeyboardSelect, int32_t* aOffset,
                               PeekWordState* aState) MOZ_OVERRIDE;
 
@@ -211,7 +211,7 @@ nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoin
   return offsets;
 }
 
-bool
+nsIFrame::FrameSearchResult
 BRFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
@@ -219,28 +219,28 @@ BRFrame::PeekOffsetNoAmount(bool aForward, int32_t* aOffset)
   // If we hit the end of a BR going backwards, go to its beginning and stay there.
   if (!aForward && startOffset != 0) {
     *aOffset = 0;
-    return true;
+    return FOUND;
   }
   // Otherwise, stop if we hit the beginning, continue (forward) if we hit the end.
-  return (startOffset == 0);
+  return (startOffset == 0) ? FOUND : CONTINUE;
 }
 
-bool
+nsIFrame::FrameSearchResult
 BRFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                              bool aRespectClusters)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
-  return false;
+  return CONTINUE;
 }
 
-bool
+nsIFrame::FrameSearchResult
 BRFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                         int32_t* aOffset, PeekWordState* aState)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   // Keep going. The actual line jumping will stop us.
-  return false;
+  return CONTINUE;
 }
 
 #ifdef ACCESSIBILITY
