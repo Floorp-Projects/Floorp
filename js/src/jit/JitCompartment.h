@@ -245,6 +245,10 @@ class JitRuntime
             flusher_ = fl;
     }
 
+    JSC::ExecutableAllocator *execAlloc() const {
+        return execAlloc_;
+    }
+
     JSC::ExecutableAllocator *getIonAlloc(JSContext *cx) {
         JS_ASSERT(cx->runtime()->currentThreadOwnsInterruptLock());
         return ionAlloc_ ? ionAlloc_ : createIonAlloc(cx);
@@ -336,9 +340,6 @@ class JitCompartment
 {
     friend class JitActivation;
 
-    // Ion state for the compartment's runtime.
-    JitRuntime *rt;
-
     // Map ICStub keys to ICStub shared code objects.
     typedef WeakValueCache<uint32_t, ReadBarriered<JitCode> > ICStubCodeMap;
     ICStubCodeMap *stubCodes_;
@@ -406,7 +407,7 @@ class JitCompartment
     JSC::ExecutableAllocator *createIonAlloc();
 
   public:
-    JitCompartment(JitRuntime *rt);
+    JitCompartment();
     ~JitCompartment();
 
     bool initialize(JSContext *cx);
@@ -416,10 +417,6 @@ class JitCompartment
 
     void mark(JSTracer *trc, JSCompartment *compartment);
     void sweep(FreeOp *fop);
-
-    JSC::ExecutableAllocator *execAlloc() {
-        return rt->execAlloc_;
-    }
 
     JitCode *stringConcatStub(ExecutionMode mode) const {
         switch (mode) {

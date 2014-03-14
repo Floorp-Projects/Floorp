@@ -78,7 +78,7 @@ class Linker
 
     template <AllowGC allowGC>
     JitCode *newCode(JSContext *cx, JSC::CodeKind kind) {
-        return newCode<allowGC>(cx, cx->compartment()->jitCompartment()->execAlloc(), kind);
+        return newCode<allowGC>(cx, cx->runtime()->jitRuntime()->execAlloc(), kind);
     }
 
     JitCode *newCodeForIonScript(JSContext *cx) {
