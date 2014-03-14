@@ -2701,14 +2701,6 @@ jit::FinishInvalidation(FreeOp *fop, JSScript *script)
 }
 
 void
-jit::FinishDiscardJitCode(FreeOp *fop, JSCompartment *comp)
-{
-    // Free optimized baseline stubs.
-    if (comp->jitCompartment())
-        comp->jitCompartment()->optimizedStubSpace()->free();
-}
-
-void
 jit::MarkValueFromIon(JSRuntime *rt, Value *vp)
 {
     gc::MarkValueUnbarriered(&rt->gcMarker, vp, "write barrier");
@@ -2915,15 +2907,6 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
             script->resetUseCount();
         } else if (script->hasBaselineScript()) {
             script->baselineScript()->resetActive();
-        }
-    }
-
-    if (comp_) {
-        FinishDiscardJitCode(fop, comp_);
-    } else {
-        for (CompartmentsInZoneIter comp(zone_); !comp.done(); comp.next()) {
-            if (comp->principals)
-                FinishDiscardJitCode(fop, comp);
         }
     }
 }

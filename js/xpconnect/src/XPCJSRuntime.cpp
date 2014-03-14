@@ -1839,6 +1839,10 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         zStats.typePool,
         "Type sets and related data.");
 
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("baseline/optimized-stubs"),
+        zStats.baselineStubsOptimized,
+        "The Baseline JIT's optimized IC stubs (excluding code).");
+
     size_t stringsNotableAboutMemoryGCHeap = 0;
     size_t stringsNotableAboutMemoryMallocHeap = 0;
 
@@ -2067,13 +2071,9 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
         cStats.baselineData,
         "The Baseline JIT's compilation data (BaselineScripts).");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/fallback"),
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/fallback-stubs"),
         cStats.baselineStubsFallback,
         "The Baseline JIT's fallback IC stubs (excluding code).");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/optimized"),
-        cStats.baselineStubsOptimized,
-        "The Baseline JIT's optimized IC stubs (excluding code).");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
         cStats.ionData,
