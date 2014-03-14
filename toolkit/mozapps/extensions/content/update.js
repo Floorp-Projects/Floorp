@@ -19,10 +19,8 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
-
-var gInteruptable = true;
-var gPendingClose = false;
-
+Components.utils.import("resource://gre/modules/Log.jsm");
+let logger = Log.repository.getLogger("addons.update-dialog");
 
 var gUpdateWizard = {
   // When synchronizing app compatibility info this contains all installed
@@ -38,6 +36,10 @@ var gUpdateWizard = {
   shouldAutoCheck: false,
   xpinstallEnabled: true,
   xpinstallLocked: false,
+  // cached AddonInstall entries for add-ons we might want to update,
+  // keyed by add-on ID
+  addonInstalls: new Map(),
+  shuttingDown: false,
 
   init: function gUpdateWizard_init()
   {
@@ -110,17 +112,26 @@ var gUpdateWizard = {
 
   onWizardCancel: function gUpdateWizard_onWizardCancel()
   {
-    if (!gInteruptable) {
-      gPendingClose = true;
-      this._setUpButton("back", null, true);
-      this._setUpButton("next", null, true);
-      this._setUpButton("cancel", null, true);
-      return false;
+    gUpdateWizard.shuttingDown = true;
+    // Allow add-ons to continue downloading and installing
+    // in the background, though some may require a later restart
+    // Pages that are waiting for user input go into the background
+    // on cancel
+    if (gMismatchPage.waiting) {
+      logger.info("Dialog closed in mismatch page");
+      if (gUpdateWizard.addonInstalls.size > 0) {
+        gInstallingPage.startInstalls([i for ([, i] of gUpdateWizard.addonInstalls)]);
+      }
+      return true;
     }
 
-    if (gInstallingPage.installing) {
-      gInstallingPage.cancelInstalls();
-      return false;
+    // Pages that do asynchronous things will just keep running and check
+    // gUpdateWizard.shuttingDown to trigger background behaviour
+    if (!gInstallingPage.installing) {
+      logger.info("Dialog closed while waiting for updated compatibility information");
+    }
+    else {
+      logger.info("Dialog closed while downloading and installing updates");
     }
     return true;
   }
@@ -143,6 +154,7 @@ var gOfflinePage = {
 var gVersionInfoPage = {
   _completeCount: 0,
   _totalCount: 0,
+  _versionInfoDone: false,
   onPageShow: function gVersionInfoPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true,
@@ -156,28 +168,29 @@ var gVersionInfoPage = {
 
     // Retrieve all add-ons in order to sync their app compatibility information
     AddonManager.getAllAddons(function gVersionInfoPage_getAllAddons(aAddons) {
-      gUpdateWizard.addons = aAddons.filter(function gVersionInfoPage_filterAddons(a) {
-        return a.type != "plugin" && a.id != hotfixID;
-      });
+      if (gUpdateWizard.shuttingDown) {
+        logger.debug("getAllAddons completed after dialog closed");
+      }
+
+      gUpdateWizard.addons = [a for (a of aAddons)
+                               if (a.type != "plugin" && a.id != hotfixID)];
 
       gVersionInfoPage._totalCount = gUpdateWizard.addons.length;
 
       // Ensure compatibility overrides are up to date before checking for
       // individual addon updates.
-      let ids = [addon.id for each (addon in gUpdateWizard.addons)];
+      let ids = [addon.id for (addon of gUpdateWizard.addons)];
 
-      gInteruptable = false;
-      AddonRepository.repopulateCache(ids, function gVersionInfoPage_repolulateCache() {
-        AddonManagerPrivate.updateAddonRepositoryData(function gVersionInfoPage_updateAddonRepoData() {
-          gInteruptable = true;
-          if (gPendingClose) {
-            window.close();
-            return;
-          }
+      AddonRepository.repopulateCache(ids, function gVersionInfoPage_repopulateCache() {
 
-          for (let addon of gUpdateWizard.addons)
-            addon.findUpdates(gVersionInfoPage, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
-        });
+        if (gUpdateWizard.shuttingDown) {
+          logger.debug("repopulateCache completed after dialog closed");
+        }
+
+        for (let addon of gUpdateWizard.addons) {
+          logger.debug("VersionInfo Finding updates for " + addon.id);
+          addon.findUpdates(gVersionInfoPage, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+        }
       }, METADATA_TIMEOUT);
     });
   },
@@ -185,15 +198,39 @@ var gVersionInfoPage = {
   onAllUpdatesFinished: function gVersionInfoPage_onAllUpdatesFinished() {
     // Filter out any add-ons that were disabled before the application was
     // upgraded or are already compatible
-    gUpdateWizard.addons = gUpdateWizard.addons.filter(function onAllUpdatesFinished_filterAddons(a) {
-      return a.appDisabled && gUpdateWizard.inactiveAddonIDs.indexOf(a.id) < 0;
-    });
+    logger.debug("VersionInfo updates finished: inactive " +
+         gUpdateWizard.inactiveAddonIDs.toSource() + " found " +
+         [addon.id + ":" + addon.appDisabled for (addon of gUpdateWizard.addons)].toSource());
+    let filteredAddons = [];
+    for (let a of gUpdateWizard.addons) {
+      if (a.appDisabled && gUpdateWizard.inactiveAddonIDs.indexOf(a.id) < 0) {
+        logger.debug("Continuing with add-on " + a.id);
+        filteredAddons.push(a);
+      }
+      else if (gUpdateWizard.addonInstalls.has(a.id)) {
+        gUpdateWizard.addonInstalls.get(a.id).cancel();
+        gUpdateWizard.addonInstalls.delete(a.id);
+      }
+    }
+    gUpdateWizard.addons = filteredAddons;
 
-    if (gUpdateWizard.addons.length > 0) {
-      // There are still incompatible addons, inform the user.
+    if (gUpdateWizard.shuttingDown) {
+      // jump directly to updating auto-update add-ons in the background
+      if (gUpdateWizard.addonInstalls.size > 0) {
+        gInstallingPage.startInstalls([i for ([, i] of gUpdateWizard.addonInstalls)]);
+      }
+      return;
+    }
+
+    if (filteredAddons.length > 0) {
+      if (!gUpdateWizard.xpinstallEnabled && gUpdateWizard.xpinstallLocked) {
+        document.documentElement.currentPage = document.getElementById("adminDisabled");
+        return;
+      }
       document.documentElement.currentPage = document.getElementById("mismatch");
     }
     else {
+      logger.info("VersionInfo: No updates require further action");
       // VersionInfo compatibility updates resolved all compatibility problems,
       // close this window and continue starting the application...
       //XXX Bug 314754 - We need to use setTimeout to close the window due to
@@ -205,34 +242,54 @@ var gVersionInfoPage = {
   /////////////////////////////////////////////////////////////////////////////
   // UpdateListener
   onUpdateFinished: function gVersionInfoPage_onUpdateFinished(aAddon, status) {
-    // If the add-on is now active then it won't have been disabled by startup
-    if (aAddon.active)
-      AddonManagerPrivate.removeStartupChange("disabled", aAddon.id);
-
-    if (status != AddonManager.UPDATE_STATUS_NO_ERROR)
-      gUpdateWizard.errorItems.push(aAddon);
-
     ++this._completeCount;
 
-    // Update the status text and progress bar
-    var updateStrings = document.getElementById("updateStrings");
-    var statusElt = document.getElementById("versioninfo.status");
-    var statusString = updateStrings.getFormattedString("statusPrefix", [aAddon.name]);
-    statusElt.setAttribute("value", statusString);
+    if (status != AddonManager.UPDATE_STATUS_NO_ERROR) {
+      logger.debug("VersionInfo update " + this._completeCount + " of " + this._totalCount +
+           " failed for " + aAddon.id + ": " + status);
+      gUpdateWizard.errorItems.push(aAddon);
+    }
+    else {
+      logger.debug("VersionInfo update " + this._completeCount + " of " + this._totalCount +
+           " finished for " + aAddon.id);
+    }
 
-    // Update the status text and progress bar
-    var progress = document.getElementById("versioninfo.progress");
-    progress.mode = "normal";
-    progress.value = Math.ceil((this._completeCount / this._totalCount) * 100);
+    // If we're not in the background, just make a list of add-ons that have
+    // updates available
+    if (!gUpdateWizard.shuttingDown) {
+      // If we're still in the update check window and the add-on is now active
+      // then it won't have been disabled by startup
+      if (aAddon.active)
+        AddonManagerPrivate.removeStartupChange("disabled", aAddon.id);
+
+      // Update the status text and progress bar
+      var updateStrings = document.getElementById("updateStrings");
+      var statusElt = document.getElementById("versioninfo.status");
+      var statusString = updateStrings.getFormattedString("statusPrefix", [aAddon.name]);
+      statusElt.setAttribute("value", statusString);
+
+      // Update the status text and progress bar
+      var progress = document.getElementById("versioninfo.progress");
+      progress.mode = "normal";
+      progress.value = Math.ceil((this._completeCount / this._totalCount) * 100);
+    }
 
     if (this._completeCount == this._totalCount)
       this.onAllUpdatesFinished();
   },
+
+  onUpdateAvailable: function gVersionInfoPage_onUpdateAvailable(aAddon, aInstall) {
+    logger.debug("VersionInfo got an install for " + aAddon.id + ": " + aAddon.version);
+    gUpdateWizard.addonInstalls.set(aAddon.id, aInstall);
+  },
 };
 
 var gMismatchPage = {
+  waiting: false,
+
   onPageShow: function gMismatchPage_onPageShow()
   {
+    gMismatchPage.waiting = true;
     gUpdateWizard.setButtonLabels(null, true,
                                   "mismatchCheckNow", false,
                                   "mismatchDontCheck", false);
@@ -252,11 +309,7 @@ var gUpdatePage = {
   _completeCount: 0,
   onPageShow: function gUpdatePage_onPageShow()
   {
-    if (!gUpdateWizard.xpinstallEnabled && gUpdateWizard.xpinstallLocked) {
-      document.documentElement.currentPage = document.getElementById("adminDisabled");
-      return;
-    }
-
+    gMismatchPage.waiting = false;
     gUpdateWizard.setButtonLabels(null, true,
                                   "nextButtonText", true,
                                   "cancelButtonText", false);
@@ -265,11 +318,18 @@ var gUpdatePage = {
     gUpdateWizard.errorItems = [];
 
     this._totalCount = gUpdateWizard.addons.length;
-    for (let addon of gUpdateWizard.addons)
+    for (let addon of gUpdateWizard.addons) {
+      logger.debug("UpdatePage requesting update for " + addon.id);
+      // Redundant call to find updates again here when we already got them
+      // in the VersionInfo page: https://bugzilla.mozilla.org/show_bug.cgi?id=960597
       addon.findUpdates(this, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
+    }
   },
 
   onAllUpdatesFinished: function gUpdatePage_onAllUpdatesFinished() {
+    if (gUpdateWizard.shuttingDown)
+      return;
+
     var nextPage = document.getElementById("noupdates");
     if (gUpdateWizard.addonsToUpdate.length > 0)
       nextPage = document.getElementById("found");
@@ -279,6 +339,7 @@ var gUpdatePage = {
   /////////////////////////////////////////////////////////////////////////////
   // UpdateListener
   onUpdateAvailable: function gUpdatePage_onUpdateAvailable(aAddon, aInstall) {
+    logger.debug("UpdatePage got an update for " + aAddon.id + ": " + aAddon.version);
     gUpdateWizard.addonsToUpdate.push(aInstall);
   },
 
@@ -288,14 +349,16 @@ var gUpdatePage = {
 
     ++this._completeCount;
 
-    // Update the status text and progress bar
-    var updateStrings = document.getElementById("updateStrings");
-    var statusElt = document.getElementById("checking.status");
-    var statusString = updateStrings.getFormattedString("statusPrefix", [aAddon.name]);
-    statusElt.setAttribute("value", statusString);
+    if (!gUpdateWizard.shuttingDown) {
+      // Update the status text and progress bar
+      var updateStrings = document.getElementById("updateStrings");
+      var statusElt = document.getElementById("checking.status");
+      var statusString = updateStrings.getFormattedString("statusPrefix", [aAddon.name]);
+      statusElt.setAttribute("value", statusString);
 
-    var progress = document.getElementById("checking.progress");
-    progress.value = Math.ceil((this._completeCount / this._totalCount) * 100);
+      var progress = document.getElementById("checking.progress");
+      progress.value = Math.ceil((this._completeCount / this._totalCount) * 100);
+    }
 
     if (this._completeCount == this._totalCount)
       this.onAllUpdatesFinished()
@@ -371,24 +434,41 @@ var gInstallingPage = {
   _currentInstall   : -1,
   _installing       : false,
 
+  // Initialize fields we need for installing and tracking progress,
+  // and start iterating through the installations
+  startInstalls: function gInstallingPage_startInstalls(aInstallList) {
+    if (!gUpdateWizard.xpinstallEnabled) {
+      return;
+    }
+
+    logger.debug("Start installs for "
+                 + [i.existingAddon.id for (i of aInstallList)].toSource());
+    this._errors = [];
+    this._installs = aInstallList;
+    this._installing = true;
+    this.startNextInstall();
+  },
+
   onPageShow: function gInstallingPage_onPageShow()
   {
     gUpdateWizard.setButtonLabels(null, true,
                                   "nextButtonText", true,
                                   null, true);
-    this._errors = [];
 
     var foundUpdates = document.getElementById("found.updates");
     var updates = foundUpdates.getElementsByTagName("listitem");
+    let toInstall = [];
     for (let update of updates) {
-      if (!update.checked)
+      if (!update.checked) {
+        logger.info("User chose to cancel update of " + update.label);
+        update.install.cancel();
         continue;
-      this._installs.push(update.install);
+      }
+      toInstall.push(update.install);
     }
-
     this._strings = document.getElementById("updateStrings");
-    this._installing = true;
-    this.startNextInstall();
+
+    this.startInstalls(toInstall);
   },
 
   startNextInstall: function gInstallingPage_startNextInstall() {
@@ -399,25 +479,35 @@ var gInstallingPage = {
     this._currentInstall++;
 
     if (this._installs.length == this._currentInstall) {
+      Services.obs.notifyObservers(null, "TEST:all-updates-done", null);
       this._installing = false;
+      if (gUpdateWizard.shuttingDown) {
+        return;
+      }
       var nextPage = this._errors.length > 0 ? "installerrors" : "finished";
       document.getElementById("installing").setAttribute("next", nextPage);
       document.documentElement.advance();
       return;
     }
 
-    this._installs[this._currentInstall].addListener(this);
-    this._installs[this._currentInstall].install();
-  },
+    let install = this._installs[this._currentInstall];
 
-  cancelInstalls: function gInstallingPage_cancelInstalls() {
-    this._installs[this._currentInstall].removeListener(this);
-    this._installs[this._currentInstall].cancel();
+    if (gUpdateWizard.shuttingDown && !AddonManager.shouldAutoUpdate(install.existingAddon)) {
+      logger.debug("Don't update " + install.existingAddon.id + " in background");
+      install.cancel();
+      this.startNextInstall();
+      return;
+    }
+    install.addListener(this);
+    install.install();
   },
 
   /////////////////////////////////////////////////////////////////////////////
   // InstallListener
   onDownloadStarted: function gInstallingPage_onDownloadStarted(aInstall) {
+    if (gUpdateWizard.shuttingDown) {
+      return;
+    }
     var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("downloadingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
@@ -425,6 +515,9 @@ var gInstallingPage = {
   },
 
   onDownloadProgress: function gInstallingPage_onDownloadProgress(aInstall) {
+    if (gUpdateWizard.shuttingDown) {
+      return;
+    }
     var downloadProgress = document.getElementById("downloadProgress");
     downloadProgress.value = Math.ceil(100 * aInstall.progress / aInstall.maxProgress);
   },
@@ -439,6 +532,9 @@ var gInstallingPage = {
   },
 
   onInstallStarted: function gInstallingPage_onInstallStarted(aInstall) {
+    if (gUpdateWizard.shuttingDown) {
+      return;
+    }
     var strings = document.getElementById("updateStrings");
     var label = strings.getFormattedString("installingPrefix", [aInstall.name]);
     var actionItem = document.getElementById("actionItem");
@@ -446,9 +542,11 @@ var gInstallingPage = {
   },
 
   onInstallEnded: function gInstallingPage_onInstallEnded(aInstall, aAddon) {
-    // Remember that this add-on was updated during startup
-    AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
-                                         aAddon.id);
+    if (!gUpdateWizard.shuttingDown) {
+      // Remember that this add-on was updated during startup
+      AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_CHANGED,
+                                           aAddon.id);
+    }
 
     this.startNextInstall();
   },

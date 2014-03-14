@@ -3725,6 +3725,7 @@ var XPIProvider = {
     let self = this;
     XPIDatabase.getVisibleAddons(null, function UARD_getVisibleAddonsCallback(aAddons) {
       let pending = aAddons.length;
+      logger.debug("updateAddonRepositoryData found " + pending + " visible add-ons");
       if (pending == 0) {
         aCallback();
         return;
@@ -3735,18 +3736,19 @@ var XPIProvider = {
           aCallback();
       }
 
-      aAddons.forEach(function UARD_forEachCallback(aAddon) {
-        AddonRepository.getCachedAddonByID(aAddon.id,
+      for (let addon of aAddons) {
+        AddonRepository.getCachedAddonByID(addon.id,
                                            function UARD_getCachedAddonCallback(aRepoAddon) {
           if (aRepoAddon) {
-            aAddon._repositoryAddon = aRepoAddon;
-            aAddon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
-            self.updateAddonDisabledState(aAddon);
+            logger.debug("updateAddonRepositoryData got info for " + addon.id);
+            addon._repositoryAddon = aRepoAddon;
+            addon.compatibilityOverrides = aRepoAddon.compatibilityOverrides;
+            self.updateAddonDisabledState(addon);
           }
 
           notifyComplete();
         });
-      });
+      };
     });
   },
 
@@ -4795,9 +4797,10 @@ AddonInstall.prototype = {
    *         be closed before this method returns.
    * @param  aCallback
    *         A function to call when all of the add-on manifests have been
-   *         loaded.
+   *         loaded. Because this loadMultipackageManifests is an internal API
+   *         we don't exception-wrap this callback
    */
-  loadMultipackageManifests: function AI_loadMultipackageManifests(aZipReader,
+  _loadMultipackageManifests: function AI_loadMultipackageManifests(aZipReader,
                                                                    aCallback) {
     let files = [];
     let entries = aZipReader.findEntries("(*.[Xx][Pp][Ii]|*.[Jj][Aa][Rr])");
@@ -4842,7 +4845,7 @@ AddonInstall.prototype = {
 
     if (!addon) {
       // No valid add-on was found
-      makeSafe(aCallback)();
+      aCallback();
       return;
     }
 
@@ -4891,7 +4894,7 @@ AddonInstall.prototype = {
       }, this);
     }
     else {
-      makeSafe(aCallback)();
+      aCallback();
     }
   },
 
@@ -4971,7 +4974,7 @@ AddonInstall.prototype = {
     }
 
     if (this.addon.type == "multipackage") {
-      this.loadMultipackageManifests(zipreader, function loadManifest_loadMultipackageManifests() {
+      this._loadMultipackageManifests(zipreader, function loadManifest_loadMultipackageManifests() {
         addRepositoryData(self.addon);
       });
       return;
@@ -5251,7 +5254,7 @@ AddonInstall.prototype = {
    *         The error code to pass to the listeners
    */
   downloadFailed: function AI_downloadFailed(aReason, aError) {
-    logger.warn("Download failed", aError);
+    logger.warn("Download of " + this.sourceURI.spec + " failed", aError);
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
     this.error = aReason;
     XPIProvider.removeActiveInstall(this);
@@ -5327,18 +5330,20 @@ AddonInstall.prototype = {
 
     // Find and cancel any pending installs for the same add-on in the same
     // install location
-    XPIProvider.installs.forEach(function(aInstall) {
+    for (let aInstall of XPIProvider.installs) {
       if (aInstall.state == AddonManager.STATE_INSTALLED &&
           aInstall.installLocation == this.installLocation &&
-          aInstall.addon.id == this.addon.id)
+          aInstall.addon.id == this.addon.id) {
+        logger.debug("Cancelling previous pending install of " + aInstall.addon.id);
         aInstall.cancel();
-    }, this);
+      }
+    }
 
     let isUpgrade = this.existingAddon &&
                     this.existingAddon._installLocation == this.installLocation;
     let requiresRestart = XPIProvider.installRequiresRestart(this.addon);
 
-    logger.debug("Starting install of " + this.sourceURI.spec);
+    logger.debug("Starting install of " + this.addon.id + " from " + this.sourceURI.spec);
     AddonManagerPrivate.callAddonListeners("onInstalling",
                                            createWrapper(this.addon),
                                            requiresRestart);
@@ -5394,7 +5399,7 @@ AddonInstall.prototype = {
           stream.close();
         }
 
-        logger.debug("Staged install of " + this.sourceURI.spec + " ready; waiting for restart.");
+        logger.debug("Staged install of " + this.addon.id + " from " + this.sourceURI.spec + " ready; waiting for restart.");
         this.state = AddonManager.STATE_INSTALLED;
         if (isUpgrade) {
           delete this.existingAddon.pendingUpgrade;
@@ -5856,8 +5861,10 @@ UpdateChecker.prototype = {
         // If the existing install has not yet started downloading then send an
         // available update notification. If it is already downloading then
         // don't send any available update notification
-        if (currentInstall.state == AddonManager.STATE_AVAILABLE)
+        if (currentInstall.state == AddonManager.STATE_AVAILABLE) {
+          logger.debug("Found an existing AddonInstall for " + this.addon.id);
           sendUpdateAvailableMessages(this, currentInstall);
+        }
         else
           sendUpdateAvailableMessages(this, null);
         return;
