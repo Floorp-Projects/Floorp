@@ -26,6 +26,13 @@ public interface ResourceDelegate {
   AuthHeaderProvider getAuthHeaderProvider();
   void addHeaders(HttpRequestBase request, DefaultHttpClient client);
 
+  /**
+   * The value of the User-Agent header to include with the request.
+   *
+   * @return User-Agent header value; null means do not set User-Agent header.
+   */
+  public String getUserAgent();
+
   // Response handling.
 
   /**
