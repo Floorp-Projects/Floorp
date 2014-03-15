@@ -536,9 +536,12 @@ nsPicoService::Init()
   MonitorAutoLock autoLock(mVoicesMonitor);
 
   while (hasMoreElements && NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIFile> voiceFile;
-    rv = dirIterator->GetNext(getter_AddRefs(voiceFile));
+    nsCOMPtr<nsISupports> supports;
+    rv = dirIterator->GetNext(getter_AddRefs(supports));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsIFile> voiceFile = do_QueryInterface(supports);
+    MOZ_ASSERT(voiceFile);
 
     nsAutoCString leafName;
     voiceFile->GetNativeLeafName(leafName);

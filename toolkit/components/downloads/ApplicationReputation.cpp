@@ -583,8 +583,11 @@ PendingLookup::ParseCertificates(
   NS_ENSURE_SUCCESS(rv, rv);
 
   while (hasMoreChains) {
-    nsCOMPtr<nsIX509CertList> certList = nullptr;
-    rv = chains->GetNext(getter_AddRefs(certList));
+    nsCOMPtr<nsISupports> supports;
+    rv = chains->GetNext(getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIX509CertList> certList = do_QueryInterface(supports, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     safe_browsing::ClientDownloadRequest_CertificateChain* certChain =
@@ -597,8 +600,11 @@ PendingLookup::ParseCertificates(
     bool hasMoreCerts = false;
     rv = chainElt->HasMoreElements(&hasMoreCerts);
     while (hasMoreCerts) {
-      nsCOMPtr<nsIX509Cert> cert = nullptr;
-      rv = chainElt->GetNext(getter_AddRefs(cert));
+      nsCOMPtr<nsISupports> supports;
+      rv = chainElt->GetNext(getter_AddRefs(supports));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(supports, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
       uint8_t* data = nullptr;

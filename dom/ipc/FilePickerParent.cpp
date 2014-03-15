@@ -139,10 +139,12 @@ FilePickerParent::Done(int16_t aResult)
     nsCOMPtr<nsISimpleEnumerator> iter;
     NS_ENSURE_SUCCESS_VOID(mFilePicker->GetFiles(getter_AddRefs(iter)));
 
+    nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsIFile> file;
     bool loop = true;
     while (NS_SUCCEEDED(iter->HasMoreElements(&loop)) && loop) {
-      iter->GetNext(getter_AddRefs(file));
+      iter->GetNext(getter_AddRefs(supports));
+      file = do_QueryInterface(supports);
       nsCOMPtr<nsIDOMFile> domfile = new nsDOMFileFile(file);
       domfiles.AppendElement(domfile);
     }
