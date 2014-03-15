@@ -802,7 +802,7 @@ SpeechRecognition::SplitSamplesBuffer(const int16_t* aSamplesBuffer,
     memcpy(chunk->Data(), aSamplesBuffer + chunkStart,
            mAudioSamplesPerChunk * sizeof(int16_t));
 
-    aResult.AppendElement(chunk);
+    aResult.AppendElement(chunk.forget());
     chunkStart += mAudioSamplesPerChunk;
   }
 
@@ -851,8 +851,7 @@ SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
     samplesIndex += FillSamplesBuffer(samples, aDuration);
 
     if (mBufferedSamples == mAudioSamplesPerChunk) {
-      chunksToSend.AppendElement(mAudioSamplesBuffer);
-      mAudioSamplesBuffer = nullptr;
+      chunksToSend.AppendElement(mAudioSamplesBuffer.forget());
       mBufferedSamples = 0;
     }
   }
