@@ -6520,6 +6520,7 @@ fi
 
 
 
+
 MAKEFILES="
     Makefile
     config/Makefile
@@ -6780,6 +6781,7 @@ s%@MOZ_DEBUG_SYMBOLS@%$MOZ_DEBUG_SYMBOLS%g
 s%@USE_CPLUS@%$USE_CPLUS%g
 s%@USE_IPV6@%$USE_IPV6%g
 s%@USE_N32@%$USE_N32%g
+s%@USE_X32@%$USE_X32%g
 s%@USE_64@%$USE_64%g
 s%@OBJECT_MODE@%$OBJECT_MODE%g
 s%@ENABLE_STRIP@%$ENABLE_STRIP%g
