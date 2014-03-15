@@ -326,6 +326,7 @@ class ICEntry
     _(Call_Native)              \
     _(Call_ScriptedApplyArray)  \
     _(Call_ScriptedApplyArguments) \
+    _(Call_ScriptedFunCall)     \
                                 \
     _(GetElem_Fallback)         \
     _(GetElem_NativeSlot)       \
@@ -738,6 +739,7 @@ class ICStub
           case Call_Native:
           case Call_ScriptedApplyArray:
           case Call_ScriptedApplyArguments:
+          case Call_ScriptedFunCall:
           case UseCount_Fallback:
           case GetElem_NativeSlot:
           case GetElem_NativePrototypeSlot:
@@ -5578,6 +5580,57 @@ class ICCall_ScriptedApplyArguments : public ICMonitoredStub
         ICStub *getStub(ICStubSpace *space) {
             return ICCall_ScriptedApplyArguments::New(space, getStubCode(), firstMonitorStub_,
                                                       pcOffset_);
+        }
+    };
+};
+
+// Handles calls of the form |fun.call(...)| where fun is a scripted function.
+class ICCall_ScriptedFunCall : public ICMonitoredStub
+{
+    friend class ICStubSpace;
+
+  protected:
+    uint32_t pcOffset_;
+
+    ICCall_ScriptedFunCall(JitCode *stubCode, ICStub *firstMonitorStub, uint32_t pcOffset)
+      : ICMonitoredStub(ICStub::Call_ScriptedFunCall, stubCode, firstMonitorStub),
+        pcOffset_(pcOffset)
+    {}
+
+  public:
+    static inline ICCall_ScriptedFunCall *New(ICStubSpace *space, JitCode *code,
+                                              ICStub *firstMonitorStub, uint32_t pcOffset)
+    {
+        if (!code)
+            return nullptr;
+        return space->allocate<ICCall_ScriptedFunCall>(code, firstMonitorStub, pcOffset);
+    }
+
+    static size_t offsetOfPCOffset() {
+        return offsetof(ICCall_ScriptedFunCall, pcOffset_);
+    }
+
+    // Compiler for this stub kind.
+    class Compiler : public ICCallStubCompiler {
+      protected:
+        ICStub *firstMonitorStub_;
+        uint32_t pcOffset_;
+        bool generateStubCode(MacroAssembler &masm);
+
+        virtual int32_t getKey() const {
+            return static_cast<int32_t>(kind);
+        }
+
+      public:
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, uint32_t pcOffset)
+          : ICCallStubCompiler(cx, ICStub::Call_ScriptedFunCall),
+            firstMonitorStub_(firstMonitorStub),
+            pcOffset_(pcOffset)
+        { }
+
+        ICStub *getStub(ICStubSpace *space) {
+            return ICCall_ScriptedFunCall::New(space, getStubCode(), firstMonitorStub_,
+                                               pcOffset_);
         }
     };
 };
