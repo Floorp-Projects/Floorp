@@ -316,10 +316,12 @@ nsXULTemplateQueryProcessorXML::GenerateResults(nsISupports* aDatasource,
     if (!xmlquery)
         return NS_ERROR_INVALID_ARG;
 
+    nsCOMPtr<nsISupports> supports;
     nsCOMPtr<nsIDOMNode> context;
     if (aRef)
       aRef->GetBindingObjectFor(xmlquery->GetMemberVariable(),
-                                getter_AddRefs(context));
+                                getter_AddRefs(supports));
+    context = do_QueryInterface(supports);
     if (!context)
         context = mRoot;
 
