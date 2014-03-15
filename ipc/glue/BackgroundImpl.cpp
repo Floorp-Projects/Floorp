@@ -9,6 +9,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/ProtocolTypes.h"
@@ -677,7 +678,7 @@ private:
   {
     if (mTransport) {
       CRASH_IN_CHILD_PROCESS("Leaking transport!");
-      mTransport.forget();
+      unused << mTransport.forget();
     }
   }
 
@@ -1533,7 +1534,7 @@ ChildImpl::CreateCallbackRunnable::~CreateCallbackRunnable()
 {
   if (mActor) {
     CRASH_IN_CHILD_PROCESS("Leaking actor!");
-    mActor.forget();
+    unused << mActor.forget();
   }
 }
 
@@ -1676,7 +1677,7 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
   }
 
   // Now that Open() has succeeded transfer the ownership of the actors to IPDL.
-  parentActor.forget();
+  unused << parentActor.forget();
 
   auto threadLocalInfo =
     static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
