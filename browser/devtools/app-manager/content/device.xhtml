@@ -44,6 +44,7 @@
                 <button class="help">&device.help;</button>
               </a>
             </div>
+            <div onclick="UI.setTab('browser-tabs')" class="tab sidebar-item browser-tabs" title="&device.browserTabsTooltip;">&device.browserTabs;</div>
           </div>
         </div>
       </aside>
@@ -68,6 +69,9 @@
               <div class="deny-label" title="&device.denyTooltip;">&device.deny;</div>
             </div>
           </div>
+          <div class="tabpanel browser-tabs">
+            <section template-loop='{"arrayPath":"device.tabs","childSelector":"#browser-tab-template"}'></section>
+          </div>
         </div>
       </section>
     </section>
@@ -83,12 +87,24 @@
   </div>
   </template>
 
+  <template id="browser-tab-template">
+  <div class="browser-tab">
+    <div class="browser-tab-details">
+      <p template='{"type":"textContent","path":"title"}'></p>
+      <p class="browser-tab-url-subheading" template='{"type":"textContent","path":"url"}'></p>
+    </div>
+    <div class="browser-tab-buttons">
+      <button class="button-debug" template='{"type":"attribute","path":"actor","name":"data-actor"}' onclick="UI.openToolboxForTab(this)" style="display: inline-block;" title="&device.debugBrowserTabTooltip;">&device.debugBrowserTab;</button>
+    </div>
+  </div>
+  </template>
+
   <template id="app-template">
   <div class="app" template='{"type":"attribute","path":"running","name":"running"}'>
     <img class="app-icon" template='{"type":"attribute","path":"iconURL","name":"src"}'></img>
     <span class="app-name" template='{"type":"textContent","path":"name"}'></span>
     <div class="app-buttons">
-      <button class="button-debug" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.openToolbox(this.dataset.manifest)" title="&device.debugAppTooltip;">&device.debugApp;</button>
+      <button class="button-debug" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.openToolboxForApp(this.dataset.manifest)" title="&device.debugAppTooltip;">&device.debugApp;</button>
       <button class="button-start" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.startApp(this.dataset.manifest)" title="&device.startAppTooltip;">&device.startApp;</button>
       <button class="button-stop" template='{"type":"attribute","path":"manifestURL","name":"data-manifest"}' onclick="UI.stopApp(this.dataset.manifest)" title="&device.stopAppTooltip;">&device.stopApp;</button>
     </div>

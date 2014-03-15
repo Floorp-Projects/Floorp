@@ -31,6 +31,7 @@ module.exports = DeviceStore = function(connection) {
   this._connection = connection;
   this._connection.once(Connection.Events.DESTROYED, this.destroy);
   this._connection.on(Connection.Events.STATUS_CHANGED, this._onStatusChanged);
+  this._onTabListChanged = this._onTabListChanged.bind(this);
   this._onStatusChanged();
   return this;
 }
@@ -51,6 +52,7 @@ DeviceStore.prototype = {
   _resetStore: function() {
     this.object.description = {};
     this.object.permissions = [];
+    this.object.tabs = [];
   },
 
   _onStatusChanged: function() {
@@ -61,9 +63,23 @@ DeviceStore.prototype = {
     }
   },
 
+  _onTabListChanged: function() {
+    this._listTabs();
+  },
+
   _listTabs: function() {
     this._connection.client.listTabs((resp) => {
+      if (resp.error) {
+        this._connection.disconnect();
+        return;
+      }
       this._deviceFront = getDeviceFront(this._connection.client, resp);
+      // Save remote browser's tabs
+      this.object.tabs = resp.tabs;
+      // Add listener to update remote browser's tabs list in app-manager
+      // when it changes
+      this._connection.client.addListener(
+        'tabListChanged', this._onTabListChanged);
       this._feedStore();
     });
   },
@@ -96,5 +112,5 @@ DeviceStore.prototype = {
       }
       this.object.permissions = permissionsArray;
     });
-  },
+  }
 }
