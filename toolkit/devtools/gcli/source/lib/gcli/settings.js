@@ -16,23 +16,32 @@
 
 'use strict';
 
+var imports = {};
+
+var Cc = require('chrome').Cc;
+var Ci = require('chrome').Ci;
+var Cu = require('chrome').Cu;
+
+var XPCOMUtils = Cu.import('resource://gre/modules/XPCOMUtils.jsm', {}).XPCOMUtils;
+var Services = Cu.import('resource://gre/modules/Services.jsm', {}).Services;
+
+XPCOMUtils.defineLazyGetter(imports, 'prefBranch', function() {
+  var prefService = Cc['@mozilla.org/preferences-service;1']
+          .getService(Ci.nsIPrefService);
+  return prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
+});
+
+XPCOMUtils.defineLazyGetter(imports, 'supportsString', function() {
+  return Cc['@mozilla.org/supports-string;1']
+          .createInstance(Ci.nsISupportsString);
+});
+
 var util = require('./util/util');
 
-
 /**
- * Where we store the settings that we've created
+ * All local settings have this prefix when used in Firefox
  */
-var settings = {};
-
-/**
- * Where the values for the settings are stored while in use.
- */
-var settingValues = {};
-
-/**
- * Where the values for the settings are persisted for next use.
- */
-var settingStorage;
+var DEVTOOLS_PREFIX = 'devtools.gcli.';
 
 /**
  * The type library that we use in creating types for settings
@@ -40,54 +49,216 @@ var settingStorage;
 var types;
 
 /**
- * Allow a system to setup a different set of defaults from what GCLI provides
+ * A class to wrap up the properties of a preference.
+ * @see toolkit/components/viewconfig/content/config.js
  */
-exports.setDefaults = function(newValues) {
-  Object.keys(newValues).forEach(function(name) {
-    if (settingValues[name] === undefined) {
-      settingValues[name] = newValues[name];
+function Setting(prefSpec) {
+  if (typeof prefSpec === 'string') {
+    // We're coming from getAll() i.e. a full listing of prefs
+    this.name = prefSpec;
+    this.description = '';
+  }
+  else {
+    // A specific addition by GCLI
+    this.name = DEVTOOLS_PREFIX + prefSpec.name;
+
+    if (prefSpec.ignoreTypeDifference !== true && prefSpec.type) {
+      if (this.type.name !== prefSpec.type) {
+        throw new Error('Locally declared type (' + prefSpec.type + ') != ' +
+            'Mozilla declared type (' + this.type.name + ') for ' + this.name);
+      }
     }
+
+    this.description = prefSpec.description;
+  }
+
+  this.onChange = util.createEvent('Setting.onChange');
+}
+
+/**
+ * What type is this property: boolean/integer/string?
+ */
+Object.defineProperty(Setting.prototype, 'type', {
+  get: function() {
+    switch (imports.prefBranch.getPrefType(this.name)) {
+      case imports.prefBranch.PREF_BOOL:
+        return types.createType('boolean');
+
+      case imports.prefBranch.PREF_INT:
+        return types.createType('number');
+
+      case imports.prefBranch.PREF_STRING:
+        return types.createType('string');
+
+      default:
+        throw new Error('Unknown type for ' + this.name);
+    }
+  },
+  enumerable: true
+});
+
+/**
+ * What type is this property: boolean/integer/string?
+ */
+Object.defineProperty(Setting.prototype, 'value', {
+  get: function() {
+    switch (imports.prefBranch.getPrefType(this.name)) {
+      case imports.prefBranch.PREF_BOOL:
+        return imports.prefBranch.getBoolPref(this.name);
+
+      case imports.prefBranch.PREF_INT:
+        return imports.prefBranch.getIntPref(this.name);
+
+      case imports.prefBranch.PREF_STRING:
+        var value = imports.prefBranch.getComplexValue(this.name,
+                Ci.nsISupportsString).data;
+        // In case of a localized string
+        if (/^chrome:\/\/.+\/locale\/.+\.properties/.test(value)) {
+          value = imports.prefBranch.getComplexValue(this.name,
+                  Ci.nsIPrefLocalizedString).data;
+        }
+        return value;
+
+      default:
+        throw new Error('Invalid value for ' + this.name);
+    }
+  },
+
+  set: function(value) {
+    if (imports.prefBranch.prefIsLocked(this.name)) {
+      throw new Error('Locked preference ' + this.name);
+    }
+
+    switch (imports.prefBranch.getPrefType(this.name)) {
+      case imports.prefBranch.PREF_BOOL:
+        imports.prefBranch.setBoolPref(this.name, value);
+        break;
+
+      case imports.prefBranch.PREF_INT:
+        imports.prefBranch.setIntPref(this.name, value);
+        break;
+
+      case imports.prefBranch.PREF_STRING:
+        imports.supportsString.data = value;
+        imports.prefBranch.setComplexValue(this.name,
+                Ci.nsISupportsString,
+                imports.supportsString);
+        break;
+
+      default:
+        throw new Error('Invalid value for ' + this.name);
+    }
+
+    Services.prefs.savePrefFile(null);
+  },
+
+  enumerable: true
+});
+
+/**
+ * Reset this setting to it's initial default value
+ */
+Setting.prototype.setDefault = function() {
+  imports.prefBranch.clearUserPref(this.name);
+  Services.prefs.savePrefFile(null);
+};
+
+
+/**
+ * Collection of preferences for sorted access
+ */
+var settingsAll = [];
+
+/**
+ * Collection of preferences for fast indexed access
+ */
+var settingsMap = new Map();
+
+/**
+ * Flag so we know if we've read the system preferences
+ */
+var hasReadSystem = false;
+
+/**
+ * Clear out all preferences and return to initial state
+ */
+function reset() {
+  settingsMap = new Map();
+  settingsAll = [];
+  hasReadSystem = false;
+}
+
+/**
+ * Reset everything on startup and shutdown because we're doing lazy loading
+ */
+exports.startup = function(t) {
+  reset();
+  types = t;
+  if (types == null) {
+    throw new Error('no types');
+  }
+};
+
+exports.shutdown = function() {
+  reset();
+};
+
+/**
+ * Load system prefs if they've not been loaded already
+ * @return true
+ */
+function readSystem() {
+  if (hasReadSystem) {
+    return;
+  }
+
+  imports.prefBranch.getChildList('').forEach(function(name) {
+    var setting = new Setting(name);
+    settingsAll.push(setting);
+    settingsMap.set(name, setting);
+  });
+
+  settingsAll.sort(function(s1, s2) {
+    return s1.name.localeCompare(s2.name);
+  });
+
+  hasReadSystem = true;
+}
+
+/**
+ * Get an array containing all known Settings filtered to match the given
+ * filter (string) at any point in the name of the setting
+ */
+exports.getAll = function(filter) {
+  readSystem();
+
+  if (filter == null) {
+    return settingsAll;
+  }
+
+  return settingsAll.filter(function(setting) {
+    return setting.name.indexOf(filter) !== -1;
   });
 };
 
 /**
- * Initialize the settingValues store from localStorage
- */
-exports.startup = function(t) {
-  types = t;
-  settingStorage = new LocalSettingStorage();
-  settingStorage.load(settingValues);
-};
-
-exports.shutdown = function() {
-};
-
-/**
- * 'static' function to get an array containing all known Settings
- */
-exports.getAll = function(filter) {
-  var all = [];
-  Object.keys(settings).forEach(function(name) {
-    if (filter == null || name.indexOf(filter) !== -1) {
-      all.push(settings[name]);
-    }
-  }.bind(this));
-  all.sort(function(s1, s2) {
-    return s1.name.localeCompare(s2.name);
-  }.bind(this));
-  return all;
-};
-
-/**
- * Add a new setting
- * @return The new Setting object
+ * Add a new setting.
  */
 exports.addSetting = function(prefSpec) {
-  var type = types.createType(prefSpec.type);
-  var setting = new Setting(prefSpec.name, type, prefSpec.description,
-                            prefSpec.defaultValue);
-  settings[setting.name] = setting;
+  var setting = new Setting(prefSpec);
+
+  if (settingsMap.has(setting.name)) {
+    // Once exists already, we're going to need to replace it in the array
+    for (var i = 0; i < settingsAll.length; i++) {
+      if (settingsAll[i].name === setting.name) {
+        settingsAll[i] = setting;
+      }
+    }
+  }
+
+  settingsMap.set(setting.name, setting);
   exports.onChange({ added: setting.name });
+
   return setting;
 };
 
@@ -101,16 +272,28 @@ exports.addSetting = function(prefSpec) {
  * @return The found Setting object, or undefined if the setting was not found
  */
 exports.getSetting = function(name) {
-  return settings[name];
-};
+  // We might be able to give the answer without needing to read all system
+  // settings if this is an internal setting
+  var found = settingsMap.get(name);
+  if (!found) {
+    found = settingsMap.get(DEVTOOLS_PREFIX + name);
+  }
 
-/**
- * Remove a setting
- */
-exports.removeSetting = function(nameOrSpec) {
-  var name = typeof nameOrSpec === 'string' ? nameOrSpec : nameOrSpec.name;
-  delete settings[name];
-  exports.onChange({ removed: name });
+  if (found) {
+    return found;
+  }
+
+  if (hasReadSystem) {
+    return undefined;
+  }
+  else {
+    readSystem();
+    found = settingsMap.get(name);
+    if (!found) {
+      found = settingsMap.get(DEVTOOLS_PREFIX + name);
+    }
+    return found;
+  }
 };
 
 /**
@@ -119,70 +302,6 @@ exports.removeSetting = function(nameOrSpec) {
 exports.onChange = util.createEvent('Settings.onChange');
 
 /**
- * Implement the load() and save() functions to write a JSON string blob to
- * localStorage
+ * Remove a setting. A no-op in this case
  */
-function LocalSettingStorage() {
-}
-
-LocalSettingStorage.prototype.load = function(values) {
-  if (typeof localStorage === 'undefined') {
-    return;
-  }
-
-  var gcliSettings = localStorage.getItem('gcli-settings');
-  if (gcliSettings != null) {
-    var parsed = JSON.parse(gcliSettings);
-    Object.keys(parsed).forEach(function(name) {
-      values[name] = parsed[name];
-    });
-  }
-};
-
-LocalSettingStorage.prototype.save = function(values) {
-  if (typeof localStorage !== 'undefined') {
-    var json = JSON.stringify(values);
-    localStorage.setItem('gcli-settings', json);
-  }
-};
-
-exports.LocalSettingStorage = LocalSettingStorage;
-
-
-/**
- * A class to wrap up the properties of a Setting.
- * @see toolkit/components/viewconfig/content/config.js
- */
-function Setting(name, type, description, defaultValue) {
-  this.name = name;
-  this.type = type;
-  this.description = description;
-  this._defaultValue = defaultValue;
-
-  this.onChange = util.createEvent('Setting.onChange');
-  this.setDefault();
-}
-
-/**
- * Reset this setting to it's initial default value
- */
-Setting.prototype.setDefault = function() {
-  this.value = this._defaultValue;
-};
-
-/**
- * All settings 'value's are saved in the settingValues object
- */
-Object.defineProperty(Setting.prototype, 'value', {
-  get: function() {
-    return settingValues[this.name];
-  },
-
-  set: function(value) {
-    settingValues[this.name] = value;
-    settingStorage.save(settingValues);
-    this.onChange({ setting: this, value: value });
-  },
-
-  enumerable: true
-});
+exports.removeSetting = function() { };
