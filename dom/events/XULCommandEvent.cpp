@@ -95,7 +95,8 @@ NS_IMETHODIMP
 XULCommandEvent::GetSourceEvent(nsIDOMEvent** aSourceEvent)
 {
   NS_ENSURE_ARG_POINTER(aSourceEvent);
-  *aSourceEvent = GetSourceEvent().get();
+  nsCOMPtr<nsIDOMEvent> event = GetSourceEvent();
+  event.forget(aSourceEvent);
   return NS_OK;
 }
 

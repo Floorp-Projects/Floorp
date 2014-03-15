@@ -1120,7 +1120,7 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, true);
 
   nsRefPtr<css::StyleRule> oldRule = mRule;
-  mRule = oldRule->DeclarationChanged(aDecl, true).get();
+  mRule = oldRule->DeclarationChanged(aDecl, true).take();
   if (!mRule)
     return NS_ERROR_OUT_OF_MEMORY;
   nsrefcnt cnt = mRule->Release();

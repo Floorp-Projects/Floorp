@@ -1887,7 +1887,7 @@ nsImageFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGrou
   if (!doc)
     return;
 
-  *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
+  *aLoadGroup = doc->GetDocumentLoadGroup().take();
 }
 
 nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)

@@ -864,7 +864,7 @@ NS_IMETHODIMP
 nsCertTree::GetCert(uint32_t aIndex, nsIX509Cert **_cert)
 {
   NS_ENSURE_ARG(_cert);
-  *_cert = GetCertAtIndex(aIndex).get();
+  *_cert = GetCertAtIndex(aIndex).take();
   return NS_OK;
 }
 

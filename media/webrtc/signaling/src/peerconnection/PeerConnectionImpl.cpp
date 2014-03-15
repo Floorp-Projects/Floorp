@@ -943,7 +943,7 @@ PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aR
     }
   }
 
-  *aRetval = stream.forget().get();
+  stream.forget(aRetval);
   return NS_OK;
 }
 
@@ -1167,14 +1167,21 @@ void
 PeerConnectionImpl::NotifyDataChannel(already_AddRefed<DataChannel> aChannel)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(aChannel.get());
 
-  CSFLogDebug(logTag, "%s: channel: %p", __FUNCTION__, aChannel.get());
+  // XXXkhuey this is completely fucked up.  We can't use nsRefPtr<DataChannel>
+  // here because DataChannel's AddRef/Release are non-virtual and not visible
+  // if !MOZILLA_INTERNAL_API, but this function leaks the DataChannel if
+  // !MOZILLA_INTERNAL_API because it never transfers the ref to
+  // NS_NewDOMDataChannel.
+  DataChannel* channel = aChannel.take();
+  MOZ_ASSERT(channel);
+
+  CSFLogDebug(logTag, "%s: channel: %p", __FUNCTION__, channel);
 
 #ifdef MOZILLA_INTERNAL_API
   nsCOMPtr<nsIDOMDataChannel> domchannel;
-  nsresult rv = NS_NewDOMDataChannel(aChannel, mWindow,
-                                     getter_AddRefs(domchannel));
+  nsresult rv = NS_NewDOMDataChannel(already_AddRefed<DataChannel>(channel),
+                                     mWindow, getter_AddRefs(domchannel));
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
@@ -1642,7 +1649,7 @@ PeerConnectionImpl::ShutdownMedia()
 
   // Forget the reference so that we can transfer it to
   // SelfDestruct().
-  mMedia.forget().get()->SelfDestruct();
+  mMedia.forget().take()->SelfDestruct();
 }
 
 #ifdef MOZILLA_INTERNAL_API

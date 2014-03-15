@@ -335,7 +335,7 @@ inline Dest bit_cast(const Source& source) {
 // that has been marked WARN_UNUSED_RESULT, wrap it with this. Example:
 //
 //   scoped_ptr<MyType> my_var = ...;
-//   if (TakeOwnership(my_var.get()) == SUCCESS)
+//   if (take(my_var.get()) == SUCCESS)
 //     ignore_result(my_var.release());
 //
 template<typename T>

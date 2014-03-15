@@ -1803,7 +1803,7 @@ nsBulletFrame::GetLoadGroup(nsPresContext *aPresContext, nsILoadGroup **aLoadGro
   if (!doc)
     return;
 
-  *aLoadGroup = doc->GetDocumentLoadGroup().get();  // already_AddRefed
+  *aLoadGroup = doc->GetDocumentLoadGroup().take();
 }
 
 union VoidPtrOrFloat {

@@ -99,7 +99,7 @@ nsSVGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 NS_IMETHODIMP
 nsSVGElement::GetClassName(nsISupports** aClassName)
 {
-  *aClassName = ClassName().get();
+  *aClassName = ClassName().take();
   return NS_OK;
 }
 

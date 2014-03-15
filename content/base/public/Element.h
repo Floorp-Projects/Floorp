@@ -1377,7 +1377,7 @@ NS_IMETHOD SetAttributeNode(nsIDOMAttr* newAttr,                              \
   }                                                                           \
   mozilla::ErrorResult rv;                                                    \
   mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(newAttr);       \
-  *_retval = Element::SetAttributeNode(*attr, rv).get();                      \
+  *_retval = Element::SetAttributeNode(*attr, rv).take();                     \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
@@ -1388,7 +1388,7 @@ NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* oldAttr,                           \
   }                                                                           \
   mozilla::ErrorResult rv;                                                    \
   mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(oldAttr);       \
-  *_retval = Element::RemoveAttributeNode(*attr, rv).get();                   \
+  *_retval = Element::RemoveAttributeNode(*attr, rv).take();                  \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD GetAttributeNodeNS(const nsAString& namespaceURI,                  \
@@ -1404,7 +1404,7 @@ NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* newAttr,                            \
 {                                                                             \
   mozilla::ErrorResult rv;                                                    \
   mozilla::dom::Attr* attr = static_cast<mozilla::dom::Attr*>(newAttr);       \
-  *_retval = Element::SetAttributeNodeNS(*attr, rv).get();                    \
+  *_retval = Element::SetAttributeNodeNS(*attr, rv).take();                   \
   return rv.ErrorCode();                                                      \
 }                                                                             \
 NS_IMETHOD GetElementsByTagName(const nsAString& name,                        \
@@ -1480,12 +1480,12 @@ NS_IMETHOD MozRemove() MOZ_FINAL                                              \
 }                                                                             \
 NS_IMETHOD GetClientRects(nsIDOMClientRectList** _retval) MOZ_FINAL           \
 {                                                                             \
-  *_retval = Element::GetClientRects().get();                                 \
+  *_retval = Element::GetClientRects().take();                                \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetBoundingClientRect(nsIDOMClientRect** _retval) MOZ_FINAL        \
 {                                                                             \
-  *_retval = Element::GetBoundingClientRect().get();                          \
+  *_retval = Element::GetBoundingClientRect().take();                         \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetScrollTop(int32_t* aScrollTop) MOZ_FINAL                        \

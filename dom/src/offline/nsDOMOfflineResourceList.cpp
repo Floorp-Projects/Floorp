@@ -225,7 +225,8 @@ NS_IMETHODIMP
 nsDOMOfflineResourceList::GetMozItems(nsISupports** aItems)
 {
   ErrorResult rv;
-  *aItems = GetMozItems(rv).get();
+  nsCOMPtr<nsISupports> items = GetMozItems(rv);
+  items.forget(aItems);
   return rv.ErrorCode();
 }
 

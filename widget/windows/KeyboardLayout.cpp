@@ -1810,8 +1810,8 @@ KeyboardLayout::GetInstance()
     sInstance = new KeyboardLayout();
     nsCOMPtr<nsIIdleServiceInternal> idleService =
       do_GetService("@mozilla.org/widget/idleservice;1");
-    // The refcount will be decreased at shutting down.
-    sIdleService = idleService.forget().get();
+    // The refcount will be decreased at shut down.
+    sIdleService = idleService.forget().take();
   }
   return sInstance;
 }

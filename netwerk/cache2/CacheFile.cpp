@@ -368,7 +368,7 @@ CacheFile::OnChunkWritten(nsresult aResult, CacheFileChunk *aChunk)
 
   aChunk->mRemovingChunk = true;
   ReleaseOutsideLock(static_cast<CacheFileChunkListener *>(
-                       aChunk->mFile.forget().get()));
+                       aChunk->mFile.forget().take()));
   mCachedChunks.Put(aChunk->Index(), aChunk);
   mChunks.Remove(aChunk->Index());
   WriteMetadataIfNeededLocked();
@@ -1029,7 +1029,7 @@ CacheFile::GetChunkLocked(uint32_t aIndex, bool aWriter,
     if (NS_FAILED(rv)) {
       chunk->mRemovingChunk = true;
       ReleaseOutsideLock(static_cast<CacheFileChunkListener *>(
-                           chunk->mFile.forget().get()));
+                           chunk->mFile.forget().take()));
       mChunks.Remove(aIndex);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -1200,7 +1200,7 @@ CacheFile::RemoveChunk(CacheFileChunk *aChunk)
 
     chunk->mRemovingChunk = true;
     ReleaseOutsideLock(static_cast<CacheFileChunkListener *>(
-                         chunk->mFile.forget().get()));
+                         chunk->mFile.forget().take()));
     mCachedChunks.Put(chunk->Index(), chunk);
     mChunks.Remove(chunk->Index());
     if (!mMemoryOnly)
@@ -1545,7 +1545,7 @@ CacheFile::PadChunkWithZeroes(uint32_t aChunkIdx)
   chunk->UpdateDataSize(chunk->DataSize(), kChunkSize - chunk->DataSize(),
                         false);
 
-  ReleaseOutsideLock(chunk.forget().get());
+  ReleaseOutsideLock(chunk.forget().take());
 
   return NS_OK;
 }

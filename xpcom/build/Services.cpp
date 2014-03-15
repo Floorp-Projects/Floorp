@@ -29,14 +29,14 @@ using namespace mozilla::services;
  * eg. gIOService and GetIOService()
  */
 #define MOZ_SERVICE(NAME, TYPE, CONTRACT_ID)                            \
-  static TYPE* g##NAME = nullptr;                                        \
+  static TYPE* g##NAME = nullptr;                                       \
                                                                         \
   already_AddRefed<TYPE>                                                \
   mozilla::services::Get##NAME()                                        \
   {                                                                     \
     if (!g##NAME) {                                                     \
       nsCOMPtr<TYPE> os = do_GetService(CONTRACT_ID);                   \
-      g##NAME = os.forget().get();                                      \
+      g##NAME = os.forget().take();                            \
     }                                                                   \
     nsRefPtr<TYPE> ret = g##NAME;                                       \
     return ret.forget();                                                \

@@ -2269,7 +2269,7 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aOutputStream = NS_BufferOutputStream(fileOutputStream,
-                                           BUFFERED_OUTPUT_SIZE).get();
+                                           BUFFERED_OUTPUT_SIZE).take();
 
     if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
     {

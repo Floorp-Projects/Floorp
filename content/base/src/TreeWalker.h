@@ -98,7 +98,7 @@ private:
         if (rv.Failed()) {
             return rv.ErrorCode();
         }
-        *aRetval = node ? node.forget().get()->AsDOMNode() : nullptr;
+        *aRetval = node ? node.forget().take()->AsDOMNode() : nullptr;
         return NS_OK;
     }
 };

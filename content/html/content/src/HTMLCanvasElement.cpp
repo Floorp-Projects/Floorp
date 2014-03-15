@@ -673,7 +673,8 @@ HTMLCanvasElement::GetContext(const nsAString& aContextId,
                               nsISupports** aContext)
 {
   ErrorResult rv;
-  *aContext = GetContext(nullptr, aContextId, JS::NullHandleValue, rv).get();
+  *aContext =
+    GetContext(nullptr, aContextId, JS::NullHandleValue, rv).take();
   return rv.ErrorCode();
 }
 

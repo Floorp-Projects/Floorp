@@ -13,9 +13,10 @@ using namespace mozilla::dom;
 nsresult
 NS_NewMathMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
-  aNodeInfo.get()->SetIDAttributeAtom(nsGkAtoms::id);
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  ni->SetIDAttributeAtom(nsGkAtoms::id);
 
-  nsMathMLElement* it = new nsMathMLElement(aNodeInfo);
+  nsMathMLElement* it = new nsMathMLElement(ni.forget());
 
   NS_ADDREF(*aResult = it);
   return NS_OK;

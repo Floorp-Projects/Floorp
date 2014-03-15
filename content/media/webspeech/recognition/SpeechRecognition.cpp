@@ -824,12 +824,12 @@ SpeechRecognition::CreateAudioSegment(nsTArray<already_AddRefed<SharedBuffer> >&
 {
   AudioSegment* segment = new AudioSegment();
   for (uint32_t i = 0; i < aChunks.Length(); ++i) {
-    const int16_t* chunkData =
-      static_cast<const int16_t*>(aChunks[i].get()->Data());
+    nsRefPtr<SharedBuffer> buffer = aChunks[i];
+    const int16_t* chunkData = static_cast<const int16_t*>(buffer->Data());
 
     nsAutoTArray<const int16_t*, 1> channels;
     channels.AppendElement(chunkData);
-    segment->AppendFrames(aChunks[i], channels, mAudioSamplesPerChunk);
+    segment->AppendFrames(buffer.forget(), channels, mAudioSamplesPerChunk);
   }
 
   return segment;

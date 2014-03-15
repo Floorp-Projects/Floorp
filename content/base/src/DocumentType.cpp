@@ -28,7 +28,7 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   NS_ENSURE_ARG_POINTER(aDocType);
   mozilla::ErrorResult rv;
   *aDocType = NS_NewDOMDocumentType(aNodeInfoManager, aName, aPublicId,
-                                    aSystemId, aInternalSubset, rv).get();
+                                    aSystemId, aInternalSubset, rv).take();
   return rv.ErrorCode();
 }
 

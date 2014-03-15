@@ -349,7 +349,7 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
 
   if (NS_SUCCEEDED(rv)) {
     ToLowerCase(langGroup); // use lowercase for all language atoms
-    *aResult = NS_NewAtom(langGroup).get();
+    *aResult = NS_NewAtom(langGroup).take();
   }
 
   return rv;
