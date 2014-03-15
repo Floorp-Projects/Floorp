@@ -346,29 +346,28 @@ static bool test_move_array() {
       return false;
   }
 
-  // XXX should be 4.
-  if (Moveable::Count() != 8)
+  if (Moveable::Count() != 4)
     return false;
 
   const nsTArray<Moveable>& constRefMoveableArray = moveableArray;
 
-  if (Moveable::Count() != 8)
+  if (Moveable::Count() != 4)
     return false;
 
   nsTArray<Moveable> copyMoveableArray(constRefMoveableArray);
 
-  if (Moveable::Count() != 12)
+  if (Moveable::Count() != 8)
     return false;
 
   nsTArray<Moveable>&& moveRefMoveableArray = Move(moveableArray);
   moveRefMoveableArray.Length(); // Make compilers happy.
 
-  if (Moveable::Count() != 12)
+  if (Moveable::Count() != 8)
     return false;
 
   nsTArray<Moveable> movedMoveableArray(Move(moveableArray));
 
-  if (Moveable::Count() != 12)
+  if (Moveable::Count() != 8)
     return false;
 
   // Test ctor
@@ -387,7 +386,7 @@ static bool test_move_array() {
   nsAutoTArray<Moveable, 4> autoMoveableArray2(Move(differentAllocatorMoveableArray2));
   differentAllocatorMoveableArray2 = Move(autoMoveableArray2);
 
-  if (Moveable::Count() != 12)
+  if (Moveable::Count() != 8)
     return false;
 
   return true;
