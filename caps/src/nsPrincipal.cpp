@@ -493,17 +493,22 @@ nsPrincipal::GetBaseDomain(nsACString& aBaseDomain)
 NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)
 {
+  nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIURI> codebase;
-  nsresult rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(codebase));
+  nsresult rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  codebase = do_QueryInterface(supports);
+
   nsCOMPtr<nsIURI> domain;
-  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(domain));
+  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  domain = do_QueryInterface(supports);
 
   uint32_t appId;
   rv = aStream->Read32(&appId);
@@ -513,9 +518,11 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   rv = aStream->ReadBoolean(&inMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(csp));
+  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // This may be null.
+  nsCOMPtr<nsIContentSecurityPolicy> csp = do_QueryInterface(supports, &rv);
 
   rv = Init(codebase, appId, inMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
