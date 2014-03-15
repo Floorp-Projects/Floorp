@@ -2545,7 +2545,7 @@ nsresult
 nsINode::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn)
 {
   ErrorResult rv;
-  *aReturn = nsINode::QuerySelectorAll(aSelector, rv).get();
+  *aReturn = nsINode::QuerySelectorAll(aSelector, rv).take();
   return rv.ErrorCode();
 }
 

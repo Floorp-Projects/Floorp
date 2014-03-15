@@ -3638,7 +3638,7 @@ Selection::GetRangesForInterval(nsIDOMNode* aBeginNode, int32_t aBeginOffset,
   NS_ENSURE_TRUE(*aResults, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < *aResultCount; i++) {
-    (*aResults)[i] = results[i].forget().get(); // Already AddRefed
+    (*aResults)[i] = results[i].forget().take();
   }
   return NS_OK;
 }

@@ -375,7 +375,7 @@ void
 nsAttrValue::SetTo(const nsAString& aValue)
 {
   ResetIfSet();
-  nsStringBuffer* buf = GetStringBuffer(aValue).get();
+  nsStringBuffer* buf = GetStringBuffer(aValue).take();
   if (buf) {
     SetPtrValueAndType(buf, eStringBase);
   }
@@ -1232,7 +1232,7 @@ nsAttrValue::ParseAtom(const nsAString& aValue)
 
   nsCOMPtr<nsIAtom> atom = NS_NewAtom(aValue);
   if (atom) {
-    SetPtrValueAndType(atom.forget().get(), eAtomBase);
+    SetPtrValueAndType(atom.forget().take(), eAtomBase);
   }
 }
 
@@ -1528,7 +1528,7 @@ nsAttrValue::ParsePositiveIntValue(const nsAString& aString)
 void
 nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString)
 {
-  nsStringBuffer* buf = GetStringBuffer(aString).get();
+  nsStringBuffer* buf = GetStringBuffer(aString).take();
   if (!buf) {
     return;
   }
@@ -1716,10 +1716,10 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
       nsCOMPtr<nsIAtom> atom = NS_NewAtom(*aValue);
       if (atom) {
         cont->mStringBits =
-          reinterpret_cast<uintptr_t>(atom.forget().get()) | eAtomBase;
+          reinterpret_cast<uintptr_t>(atom.forget().take()) | eAtomBase;
       }
     } else {
-      nsStringBuffer* buf = GetStringBuffer(*aValue).get();
+      nsStringBuffer* buf = GetStringBuffer(*aValue).take();
       if (buf) {
         cont->mStringBits = reinterpret_cast<uintptr_t>(buf) | eStringBase;
       }

@@ -503,7 +503,7 @@ nsHttpConnectionMgr::UpdateRequestTokenBucket(EventTokenBucket *aBucket)
     // Call From main thread when a new EventTokenBucket has been made in order
     // to post the new value to the socket thread.
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgUpdateRequestTokenBucket,
-                            0, bucket.get());
+                            0, bucket);
     if (NS_SUCCEEDED(rv))
         bucket.forget();
     return rv;
@@ -3105,7 +3105,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
             nsRefPtr<nsHttpConnection> copy(conn);
             // forget() to effectively addref because onmsg*() will drop a ref
             gHttpHandler->ConnMgr()->OnMsgReclaimConnection(
-                0, conn.forget().get());
+                0, conn.forget().take());
         }
     }
 
