@@ -198,6 +198,7 @@ public class SyncConfiguration {
    * fresh meta/global record for upload.
    */
   public Set<String> enabledEngineNames;
+  public Set<String> declinedEngineNames = new HashSet<String>();
 
   /**
    * Names of stages to sync <it>this sync</it>, or <code>null</code> to sync
@@ -248,6 +249,7 @@ public class SyncConfiguration {
   public static final String PREF_SYNC_ID = "syncID";
 
   public static final String PREF_ENABLED_ENGINE_NAMES = "enabledEngineNames";
+  public static final String PREF_DECLINED_ENGINE_NAMES = "declinedEngineNames";
   public static final String PREF_USER_SELECTED_ENGINES_TO_SYNC = "userSelectedEngines";
   public static final String PREF_USER_SELECTED_ENGINES_TO_SYNC_TIMESTAMP = "userSelectedEnginesTimestamp";
 
@@ -311,25 +313,45 @@ public class SyncConfiguration {
   }
 
   /**
-   * Gets the engine names that are enabled in meta/global.
+   * Gets the engine names that are enabled, declined, or other (depending on pref) in meta/global.
    *
    * @param prefs
    *          SharedPreferences that the engines are associated with.
+   * @param pref
+   *          The preference name to use. E.g, PREF_ENABLED_ENGINE_NAMES.
    * @return Set<String> of the enabled engine names if they have been stored,
    *         or null otherwise.
    */
-  public static Set<String> getEnabledEngineNames(SharedPreferences prefs) {
-    String json = prefs.getString(PREF_ENABLED_ENGINE_NAMES, null);
+  protected static Set<String> getEngineNamesFromPref(SharedPreferences prefs, String pref) {
+    final String json = prefs.getString(pref, null);
     if (json == null) {
       return null;
     }
     try {
-      ExtendedJSONObject o = ExtendedJSONObject.parseJSONObject(json);
+      final ExtendedJSONObject o = ExtendedJSONObject.parseJSONObject(json);
       return new HashSet<String>(o.keySet());
     } catch (Exception e) {
-      // enabledEngineNames can be null.
       return null;
     }
+  }
+
+  /**
+   * Returns the set of engine names that the user has enabled. If none
+   * have been stored in prefs, <code>null</code> is returned.
+   */
+  public static Set<String> getEnabledEngineNames(SharedPreferences prefs) {
+      return getEngineNamesFromPref(prefs, PREF_ENABLED_ENGINE_NAMES);
+  }
+
+  /**
+   * Returns the set of engine names that the user has declined.
+   */
+  public static Set<String> getDeclinedEngineNames(SharedPreferences prefs) {
+    final Set<String> names = getEngineNamesFromPref(prefs, PREF_DECLINED_ENGINE_NAMES);
+    if (names == null) {
+        return new HashSet<String>();
+    }
+    return names;
   }
 
   /**
@@ -371,6 +393,9 @@ public class SyncConfiguration {
   /**
    * Store a Map of engines and their sync states to prefs.
    *
+   * Any engine that's disabled in the input is also recorded
+   * as a declined engine, overwriting the stored values.
+   *
    * @param prefs
    *          SharedPreferences that the engines are associated with.
    * @param selectedEngines
@@ -378,20 +403,33 @@ public class SyncConfiguration {
    */
   public static void storeSelectedEnginesToPrefs(SharedPreferences prefs, Map<String, Boolean> selectedEngines) {
     ExtendedJSONObject jObj = new ExtendedJSONObject();
+    HashSet<String> declined = new HashSet<String>();
     for (Entry<String, Boolean> e : selectedEngines.entrySet()) {
-      jObj.put(e.getKey(), e.getValue());
+      final Boolean enabled = e.getValue();
+      final String engine = e.getKey();
+      jObj.put(engine, enabled);
+      if (!enabled) {
+        declined.add(engine);
+      }
     }
+
+    // Our history checkbox drives form history, too.
+    // We don't need to do this for enablement: that's done at retrieval time.
+    if (selectedEngines.containsKey("history") && !selectedEngines.get("history").booleanValue()) {
+        declined.add("forms");
+    }
+
     String json = jObj.toJSONString();
     long currentTime = System.currentTimeMillis();
     Editor edit = prefs.edit();
     edit.putString(PREF_USER_SELECTED_ENGINES_TO_SYNC, json);
+    edit.putString(PREF_DECLINED_ENGINE_NAMES, setToJSONObjectString(declined));
     edit.putLong(PREF_USER_SELECTED_ENGINES_TO_SYNC_TIMESTAMP, currentTime);
     Logger.error(LOG_TAG, "Storing user-selected engines at [" + currentTime + "].");
     edit.commit();
   }
 
   public void loadFromPrefs(SharedPreferences prefs) {
-
     if (prefs.contains(PREF_CLUSTER_URL)) {
       String u = prefs.getString(PREF_CLUSTER_URL, null);
       try {
@@ -406,6 +444,7 @@ public class SyncConfiguration {
       Logger.trace(LOG_TAG, "Set syncID from bundle: " + syncID);
     }
     enabledEngineNames = getEnabledEngineNames(prefs);
+    declinedEngineNames = getDeclinedEngineNames(prefs);
     userSelectedEngines = getUserSelectedEngines(prefs);
     userSelectedEnginesTimestamp = prefs.getLong(PREF_USER_SELECTED_ENGINES_TO_SYNC_TIMESTAMP, 0);
     // We don't set crypto/keys here because we need the syncKeyBundle to decrypt the JSON
@@ -415,6 +454,14 @@ public class SyncConfiguration {
 
   public void persistToPrefs() {
     this.persistToPrefs(this.getPrefs());
+  }
+
+  private static String setToJSONObjectString(Set<String> set) {
+    ExtendedJSONObject o = new ExtendedJSONObject();
+    for (String name : set) {
+      o.put(name, 0);
+    }
+    return o.toJSONString();
   }
 
   public void persistToPrefs(SharedPreferences prefs) {
@@ -430,11 +477,12 @@ public class SyncConfiguration {
     if (enabledEngineNames == null) {
       edit.remove(PREF_ENABLED_ENGINE_NAMES);
     } else {
-      ExtendedJSONObject o = new ExtendedJSONObject();
-      for (String engineName : enabledEngineNames) {
-        o.put(engineName, 0);
-      }
-      edit.putString(PREF_ENABLED_ENGINE_NAMES, o.toJSONString());
+      edit.putString(PREF_ENABLED_ENGINE_NAMES, setToJSONObjectString(enabledEngineNames));
+    }
+    if (declinedEngineNames.isEmpty()) {
+      edit.remove(PREF_DECLINED_ENGINE_NAMES);
+    } else {
+      edit.putString(PREF_DECLINED_ENGINE_NAMES, setToJSONObjectString(declinedEngineNames));
     }
     if (userSelectedEngines == null) {
       edit.remove(PREF_USER_SELECTED_ENGINES_TO_SYNC);
