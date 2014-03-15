@@ -188,14 +188,6 @@ class ArrayBufferObject : public JSObject
     }
 
     /*
-     * Return the contents of an ArrayBuffer without modifying the ArrayBuffer
-     * itself. Set *callerOwns to true if the caller has the only pointer to
-     * the returned contents (which is the case for inline or asm.js buffers),
-     * and false if the ArrayBuffer still owns the pointer.
-     */
-    ObjectElements *getTransferableContents(JSContext *maybecx, bool *callerOwns);
-
-    /*
      * Neuter all views of an ArrayBuffer.
      */
     static bool neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer);
