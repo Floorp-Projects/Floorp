@@ -2006,10 +2006,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       // Update aState.mPrevChild as if we had reflowed all of the frames in
       // this line.
-      if (line->IsDirty())
+      if (line->IsDirty()) {
         NS_ASSERTION(line->mFirstChild->GetPrevSibling() ==
                      line.prev()->LastChild(), "unexpected line frames");
         aState.mPrevChild = line->mFirstChild->GetPrevSibling();
+      }
     }
 
     // Now repair the line and update |aState.mY| by calling
