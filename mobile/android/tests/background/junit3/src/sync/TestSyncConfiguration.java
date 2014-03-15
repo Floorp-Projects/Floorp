@@ -25,6 +25,33 @@ public class TestSyncConfiguration extends AndroidSyncTestCase implements PrefsS
     return this.getApplicationContext().getSharedPreferences(name, mode);
   }
 
+  /**
+   * Ensure that declined engines persist through prefs.
+   */
+  public void testDeclinedEngineNames() {
+    SyncConfiguration config = null;
+    SharedPreferences prefs = getPrefs(TEST_PREFS_NAME, 0);
+
+    config = newSyncConfiguration();
+    config.declinedEngineNames = new HashSet<String>();
+    config.declinedEngineNames.add("test1");
+    config.declinedEngineNames.add("test2");
+    config.persistToPrefs();
+    assertTrue(prefs.contains(SyncConfiguration.PREF_DECLINED_ENGINE_NAMES));
+    config = newSyncConfiguration();
+    Set<String> expected = new HashSet<String>();
+    for (String name : new String[] { "test1", "test2" }) {
+      expected.add(name);
+    }
+    assertEquals(expected, config.declinedEngineNames);
+
+    config.declinedEngineNames = null;
+    config.persistToPrefs();
+    assertFalse(prefs.contains(SyncConfiguration.PREF_DECLINED_ENGINE_NAMES));
+    config = newSyncConfiguration();
+    assertNull(config.declinedEngineNames);
+  }
+
   public void testEnabledEngineNames() {
     SyncConfiguration config = null;
     SharedPreferences prefs = getPrefs(TEST_PREFS_NAME, 0);
