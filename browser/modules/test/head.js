@@ -128,6 +128,9 @@ function UITourTest() {
       is_element_hidden(tooltip, "Tooltip should be closed/hidden after UITour tab is closed");
 
       ok(!PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been cleaned up");
+      ok(!PanelUI.panel.hasAttribute("panelopen"), "The panel shouldn't have @panelopen");
+      isnot(PanelUI.panel.state, "open", "The panel shouldn't be open");
+      is(document.getElementById("PanelUI-menu-button").hasAttribute("open"), false, "Menu button should know that the menu is closed");
 
       is(UITour.pinnedTabs.get(window), null, "Any pinned tab should be closed after UITour tab is closed");
 
