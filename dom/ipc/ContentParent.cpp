@@ -35,6 +35,7 @@
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
 #include "mozilla/dom/PFMRadioParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
+#include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
@@ -2224,6 +2225,24 @@ bool
 ContentParent::DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent* doomed)
 {
   DeviceStorageRequestParent *parent = static_cast<DeviceStorageRequestParent*>(doomed);
+  NS_RELEASE(parent);
+  return true;
+}
+
+PFileSystemRequestParent*
+ContentParent::AllocPFileSystemRequestParent(const FileSystemParams& aParams)
+{
+  nsRefPtr<FileSystemRequestParent> result = new FileSystemRequestParent();
+  if (!result->Dispatch(this, aParams)) {
+    return nullptr;
+  }
+  return result.forget().get();
+}
+
+bool
+ContentParent::DeallocPFileSystemRequestParent(PFileSystemRequestParent* doomed)
+{
+  FileSystemRequestParent* parent = static_cast<FileSystemRequestParent*>(doomed);
   NS_RELEASE(parent);
   return true;
 }
