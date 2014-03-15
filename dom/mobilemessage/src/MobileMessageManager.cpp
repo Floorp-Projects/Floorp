@@ -195,7 +195,7 @@ MobileMessageManager::Send(JS::Handle<JS::Value> aNumber,
   rv = smsService->GetSmsDefaultServiceId(&serviceId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aArgc == 3) {
+  if (aArgc == 1) {
     JS::Rooted<JS::Value> param(aCx, aSendParams);
     RootedDictionary<SmsSendParameters> sendParams(aCx);
     if (!sendParams.Init(aCx, param)) {
@@ -265,7 +265,7 @@ MobileMessageManager::SendMMS(JS::Handle<JS::Value> aParams,
   nsresult rv = mmsService->GetMmsDefaultServiceId(&serviceId);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aArgc == 2) {
+  if (aArgc == 1) {
     JS::Rooted<JS::Value> param(aCx, aSendParams);
     RootedDictionary<MmsSendParameters> sendParams(aCx);
     if (!sendParams.Init(aCx, param)) {
