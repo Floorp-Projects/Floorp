@@ -10437,8 +10437,7 @@ FullscreenRoots::Add(nsIDocument* aRoot)
     if (!sInstance) {
       sInstance = new FullscreenRoots();
     }
-    nsWeakPtr weakRoot = do_GetWeakReference(aRoot);
-    sInstance->mRoots.AppendElement(weakRoot);
+    sInstance->mRoots.AppendElement(do_GetWeakReference(aRoot));
   }
 }
 
@@ -11011,8 +11010,7 @@ nsDocument::FullScreenStackPush(Element* aElement)
     EventStateManager::SetFullScreenState(top, false);
   }
   EventStateManager::SetFullScreenState(aElement, true);
-  nsWeakPtr weakElement = do_GetWeakReference(aElement);
-  mFullScreenStack.AppendElement(weakElement);
+  mFullScreenStack.AppendElement(do_GetWeakReference(aElement));
   NS_ASSERTION(GetFullScreenElement() == aElement, "Should match");
   return true;
 }
