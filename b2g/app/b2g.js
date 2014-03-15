@@ -860,6 +860,15 @@ pref("media.webspeech.synth.enabled", true);
 pref("dom.mozDownloads.enabled", true);
 pref("dom.downloads.max_retention_days", 7);
 
+// External Helper Application Handling
+//
+// All external helper application handling can require the docshell to be
+// active before allowing the external helper app service to handle content.
+//
+// To prevent SD card DoS attacks via downloads we disable background handling.
+//
+pref("security.exthelperapp.disable_background_handling", true);
+
 // Inactivity time in milliseconds after which we shut down the OS.File worker.
 pref("osfile.reset_worker_delay", 5000);
 

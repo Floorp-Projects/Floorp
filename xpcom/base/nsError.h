@@ -69,6 +69,7 @@
 #define NS_ERROR_MODULE_DOM_INDEXEDDB 33
 #define NS_ERROR_MODULE_DOM_FILEHANDLE 34
 #define NS_ERROR_MODULE_SIGNED_JAR 35
+#define NS_ERROR_MODULE_DOM_FILESYSTEM 36
 
 /* NS_ERROR_MODULE_GENERAL should be used by modules that do not
  * care if return code values overlap. Callers of methods that
