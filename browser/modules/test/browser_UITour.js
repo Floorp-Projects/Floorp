@@ -251,4 +251,10 @@ let tests = [
 
     gContentAPI.showInfo("urlbar", "urlbar title", "urlbar text");
   },
+
+  // Make sure this test is last in the file so the appMenu gets left open and done will confirm it got tore down.
+  function cleanupMenus(done) {
+    gContentAPI.showMenu("appMenu");
+    done();
+  },
 ];
