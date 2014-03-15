@@ -369,6 +369,7 @@ AESKeyWrap_Decrypt(AESKeyWrapContext *cx, unsigned char *output,
 	    if (pOutputLen)
 		*pOutputLen = outLen;
 	} else {
+	    s = SECFailure;
 	    PORT_SetError(SEC_ERROR_BAD_DATA);
 	    if (pOutputLen) 
 		*pOutputLen = 0;
