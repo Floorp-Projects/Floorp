@@ -164,9 +164,6 @@ class ThreadPool : public Monitor
   private:
     friend class ThreadPoolWorker;
 
-    // Initialized at startup only.
-    JSRuntime *const runtime_;
-
     // Initialized lazily.
     js::Vector<ThreadPoolWorker *, 8, SystemAllocPolicy> workers_;
 
@@ -178,6 +175,9 @@ class ThreadPool : public Monitor
     ParallelJob *job_;
 
 #ifdef DEBUG
+    // Initialized at startup only.
+    JSRuntime *const runtime_;
+
     // Number of stolen slices in the last parallel job.
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stolenSlices_;
 #endif
