@@ -247,6 +247,152 @@ static bool test_object_array() {
   return true;
 }
 
+class Countable {
+  static uint32_t sCount;
+
+  public:
+    Countable() 
+    {
+      sCount++;
+    }
+
+    Countable(const Countable& aOther)
+    {
+      sCount++;
+    }
+
+    static uint32_t Count() { return sCount; }
+};
+
+class Moveable {
+  static uint32_t sCount;
+
+  public:
+    Moveable()
+    {
+      sCount++;
+    }
+
+    Moveable(const Moveable& aOther)
+    {
+      sCount++;
+    }
+
+    Moveable(Moveable&& aOther)
+    {
+      // Do not increment sCount
+    }
+
+    static uint32_t Count() { return sCount; }
+};
+
+/* static */ uint32_t Countable::sCount = 0;
+/* static */ uint32_t Moveable::sCount = 0;
+
+static bool test_move_array() {
+  nsTArray<Countable> countableArray;
+  uint32_t i;
+  for (i = 0; i < 4; ++i) {
+    if (!countableArray.AppendElement(Countable()))
+      return false;
+  }
+
+  if (Countable::Count() != 8)
+    return false;
+
+  const nsTArray<Countable>& constRefCountableArray = countableArray;
+
+  if (Countable::Count() != 8)
+    return false;
+
+  nsTArray<Countable> copyCountableArray(constRefCountableArray);
+
+  if (Countable::Count() != 12)
+    return false;
+
+  nsTArray<Countable>&& moveRefCountableArray = Move(countableArray);
+  moveRefCountableArray.Length(); // Make compilers happy.
+
+  if (Countable::Count() != 12)
+    return false;
+
+  nsTArray<Countable> movedCountableArray(Move(countableArray));
+
+  if (Countable::Count() != 12)
+    return false;
+
+  // Test ctor
+  FallibleTArray<Countable> differentAllocatorCountableArray(Move(copyCountableArray));
+  // operator=
+  copyCountableArray = Move(differentAllocatorCountableArray);
+  differentAllocatorCountableArray = Move(copyCountableArray);
+  // And the other ctor
+  nsTArray<Countable> copyCountableArray2(Move(differentAllocatorCountableArray));
+  // with auto
+  nsAutoTArray<Countable, 3> autoCountableArray(Move(copyCountableArray2));
+  // operator=
+  copyCountableArray2 = Move(autoCountableArray);
+  // Mix with FallibleTArray
+  FallibleTArray<Countable> differentAllocatorCountableArray2(Move(copyCountableArray2));
+  nsAutoTArray<Countable, 4> autoCountableArray2(Move(differentAllocatorCountableArray2));
+  differentAllocatorCountableArray2 = Move(autoCountableArray2);
+
+  if (Countable::Count() != 12)
+    return false;
+
+  nsTArray<Moveable> moveableArray;
+  for (i = 0; i < 4; ++i) {
+    if (!moveableArray.AppendElement(Moveable()))
+      return false;
+  }
+
+  // XXX should be 4.
+  if (Moveable::Count() != 8)
+    return false;
+
+  const nsTArray<Moveable>& constRefMoveableArray = moveableArray;
+
+  if (Moveable::Count() != 8)
+    return false;
+
+  nsTArray<Moveable> copyMoveableArray(constRefMoveableArray);
+
+  if (Moveable::Count() != 12)
+    return false;
+
+  nsTArray<Moveable>&& moveRefMoveableArray = Move(moveableArray);
+  moveRefMoveableArray.Length(); // Make compilers happy.
+
+  if (Moveable::Count() != 12)
+    return false;
+
+  nsTArray<Moveable> movedMoveableArray(Move(moveableArray));
+
+  if (Moveable::Count() != 12)
+    return false;
+
+  // Test ctor
+  FallibleTArray<Moveable> differentAllocatorMoveableArray(Move(copyMoveableArray));
+  // operator=
+  copyMoveableArray = Move(differentAllocatorMoveableArray);
+  differentAllocatorMoveableArray = Move(copyMoveableArray);
+  // And the other ctor
+  nsTArray<Moveable> copyMoveableArray2(Move(differentAllocatorMoveableArray));
+  // with auto
+  nsAutoTArray<Moveable, 3> autoMoveableArray(Move(copyMoveableArray2));
+  // operator=
+  copyMoveableArray2 = Move(autoMoveableArray);
+  // Mix with FallibleTArray
+  FallibleTArray<Moveable> differentAllocatorMoveableArray2(Move(copyMoveableArray2));
+  nsAutoTArray<Moveable, 4> autoMoveableArray2(Move(differentAllocatorMoveableArray2));
+  differentAllocatorMoveableArray2 = Move(autoMoveableArray2);
+
+  if (Moveable::Count() != 12)
+    return false;
+
+  return true;
+}
+
 // nsTArray<nsAutoPtr<T>> is not supported
 #if 0
 static bool test_autoptr_array() {
@@ -1026,6 +1172,7 @@ static const struct Test {
   DECL_TEST(test_char_array),
   DECL_TEST(test_uint32_array),
   DECL_TEST(test_object_array),
+  DECL_TEST(test_move_array),
   DECL_TEST(test_string_array),
   DECL_TEST(test_comptr_array),
   DECL_TEST(test_refptr_array),
