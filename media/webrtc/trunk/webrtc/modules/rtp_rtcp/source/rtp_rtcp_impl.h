@@ -173,6 +173,12 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   virtual void SetRtt(uint32_t rtt) OVERRIDE;
 
+  virtual int32_t GetReportBlockInfo(const uint32_t remote_ssrc,
+                                     uint32_t* ntp_high,
+                                     uint32_t* ntp_low,
+                                     uint32_t* packets_received,
+                                     uint64_t* octets_received) const OVERRIDE;
+
   // Force a send of an RTCP packet.
   // Normal SR and RR are triggered via the process function.
   virtual int32_t SendRTCP(uint32_t rtcp_packet_type = kRtcpReport) OVERRIDE;
@@ -331,7 +337,10 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
                            uint32_t* fec_rate,
                            uint32_t* nackRate) const OVERRIDE;
 
-  virtual uint32_t SendTimeOfSendReport(const uint32_t send_report);
+  virtual bool GetSendReportMetadata(const uint32_t send_report,
+                                     uint32_t *time_of_send,
+                                     uint32_t *packet_count,
+                                     uint64_t *octet_count);
 
   // Good state of RTP receiver inform sender.
   virtual int32_t SendRTCPReferencePictureSelection(

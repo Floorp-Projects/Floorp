@@ -55,6 +55,15 @@ class ViERTP_RTCPImpl
                            char rtcp_cname[KMaxRTCPCNameLength]) const;
   virtual int GetRemoteRTCPCName(const int video_channel,
                                  char rtcp_cname[KMaxRTCPCNameLength]) const;
+  virtual int GetRemoteRTCPReceiverInfo(const int video_channel,
+                                        uint32_t& NTPHigh,
+                                        uint32_t& NTPLow,
+                                        uint32_t& receivedPacketCount,
+                                        uint64_t& receivedOctetCount,
+                                        uint32_t* jitter,
+                                        uint16_t* fractionLost,
+                                        uint32_t* cumulativeLost,
+                                        int32_t* rttMs) const;
   virtual int SendApplicationDefinedRTCPPacket(
       const int video_channel,
       const unsigned char sub_type,
@@ -90,20 +99,12 @@ class ViERTP_RTCPImpl
                                                int id);
   virtual int SetTransmissionSmoothingStatus(int video_channel, bool enable);
   virtual int GetReceivedRTCPStatistics(const int video_channel,
-                                        unsigned int& ntpHigh,
-                                        unsigned int& ntpLow,
-                                        unsigned int& bytes_sent,
-                                        unsigned int& packets_sent,
                                         uint16_t& fraction_lost,
                                         unsigned int& cumulative_lost,
                                         unsigned int& extended_max,
                                         unsigned int& jitter,
                                         int& rtt_ms) const;
   virtual int GetSentRTCPStatistics(const int video_channel,
-                                    unsigned int& ntpHigh,
-                                    unsigned int& ntpLow,
-                                    unsigned int& bytes_sent,
-                                    unsigned int& packets_sent,
                                     uint16_t& fraction_lost,
                                     unsigned int& cumulative_lost,
                                     unsigned int& extended_max,
@@ -113,6 +114,8 @@ class ViERTP_RTCPImpl
                                unsigned int& packets_sent,
                                unsigned int& bytes_received,
                                unsigned int& packets_received) const;
+  virtual int GetRemoteRTCPSenderInfo(const int video_channel,
+                                      SenderInfo* sender_info) const;
   virtual int GetBandwidthUsage(const int video_channel,
                                 unsigned int& total_bitrate_sent,
                                 unsigned int& video_bitrate_sent,

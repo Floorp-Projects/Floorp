@@ -89,6 +89,21 @@ for (let pref of gRestorePrefs) {
 // Turn logging on for all tests
 Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 
+// Helper to register test failures and close windows if any are left open
+function checkOpenWindows(aWindowID) {
+  let windows = Services.wm.getEnumerator(aWindowID);
+  let found = false;
+  while (windows.hasMoreElements()) {
+    let win = windows.getNext().QueryInterface(Ci.nsIDOMWindow);
+    if (!win.closed) {
+      found = true;
+      win.close();
+    }
+  }
+  if (found)
+    ok(false, "Found unexpected " + aWindowID + " window still open");
+}
+
 registerCleanupFunction(function() {
   // Restore prefs
   for (let pref of gRestorePrefs) {
@@ -103,24 +118,9 @@ registerCleanupFunction(function() {
   }
 
   // Throw an error if the add-ons manager window is open anywhere
-  var windows = Services.wm.getEnumerator("Addons:Manager");
-  if (windows.hasMoreElements())
-    ok(false, "Found unexpected add-ons manager window still open");
-  while (windows.hasMoreElements())
-    windows.getNext().QueryInterface(Ci.nsIDOMWindow).close();
-
-  windows = Services.wm.getEnumerator("Addons:Compatibility");
-  if (windows.hasMoreElements())
-    ok(false, "Found unexpected add-ons compatibility window still open");
-  while (windows.hasMoreElements())
-    windows.getNext().QueryInterface(Ci.nsIDOMWindow).close();
-
-  windows = Services.wm.getEnumerator("Addons:Install");
-  if (windows.hasMoreElements())
-    ok(false, "Found unexpected add-ons installation window still open");
-  while (windows.hasMoreElements())
-    windows.getNext().QueryInterface(Ci.nsIDOMWindow).close();
-
+  checkOpenWindows("Addons:Manager");
+  checkOpenWindows("Addons:Compatibility");
+  checkOpenWindows("Addons:Install");
 
   // We can for now know that getAllInstalls actually calls its callback before
   // it returns so this will complete before the next test start.

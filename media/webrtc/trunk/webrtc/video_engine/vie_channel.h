@@ -48,6 +48,8 @@ class VideoDecoder;
 class VideoRenderCallback;
 class VoEVideoSync;
 
+struct SenderInfo;
+
 class ViEChannel
     : public VCMFrameTypeCallback,
       public VCMReceiveCallback,
@@ -155,6 +157,7 @@ class ViEChannel
 
   // Gets the CName of the incoming stream.
   int32_t GetRemoteRTCPCName(char rtcp_cname[]);
+
   int32_t RegisterRtpObserver(ViERTPObserver* observer);
   int32_t RegisterRtcpObserver(ViERTCPObserver* observer);
   int32_t SendApplicationDefinedRTCPPacket(
@@ -163,23 +166,25 @@ class ViEChannel
       const uint8_t* data,
       uint16_t data_length_in_bytes);
 
+  // Gets info (including timestamp) from last rr + remote packetcount
+  // (derived from rr report + cached sender-side info).
+  int32_t GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh, uint32_t& NTPLow,
+                                    uint32_t& receivedPacketCount,
+                                    uint64_t& receivedOctetCount,
+                                    uint32_t* jitterSamples,
+                                    uint16_t* fractionLost,
+                                    uint32_t* cumulativeLost,
+                                    int32_t* rttMs);
+
   // Returns statistics reported by the remote client in an RTCP packet.
-  int32_t GetSendRtcpStatistics(uint32_t* ntp_high,
-                                uint32_t* ntp_low,
-                                uint32_t* bytes_sent,
-                                uint32_t* packets_sent,
-                                uint16_t* fraction_lost,
+  int32_t GetSendRtcpStatistics(uint16_t* fraction_lost,
                                 uint32_t* cumulative_lost,
                                 uint32_t* extended_max,
                                 uint32_t* jitter_samples,
                                 int32_t* rtt_ms);
 
-  // Returns RTCP sender report + locally created stats of received RTP stream
-  int32_t GetReceivedRtcpStatistics(uint32_t* ntp_high,
-                                    uint32_t* ntp_low,
-                                    uint32_t* bytes_sent,
-                                    uint32_t* packets_sent,
-                                    uint16_t* fraction_lost,
+  // Returns our localy created statistics of the received RTP stream.
+  int32_t GetReceivedRtcpStatistics(uint16_t* fraction_lost,
                                     uint32_t* cumulative_lost,
                                     uint32_t* extended_max,
                                     uint32_t* jitter_samples,
@@ -190,6 +195,9 @@ class ViEChannel
                            uint32_t* packets_sent,
                            uint32_t* bytes_received,
                            uint32_t* packets_received) const;
+
+  int32_t GetRemoteRTCPSenderInfo(SenderInfo* sender_info) const;
+
   void GetBandwidthUsage(uint32_t* total_bitrate_sent,
                          uint32_t* video_bitrate_sent,
                          uint32_t* fec_bitrate_sent,

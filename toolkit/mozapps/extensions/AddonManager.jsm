@@ -1074,34 +1074,30 @@ var AddonManagerInternal = {
         // are up to date before checking for addon updates.
         AddonRepository.backgroundUpdateCheck(
                      ids, function BUC_backgroundUpdateCheckCallback() {
-          AddonManagerInternal.updateAddonRepositoryData(
-                                    function BUC_updateAddonCallback() {
+          pendingUpdates += aAddons.length;
+          aAddons.forEach(function BUC_forEachCallback(aAddon) {
+            if (aAddon.id == hotfixID) {
+              notifyComplete();
+              return;
+            }
 
-            pendingUpdates += aAddons.length;
-            aAddons.forEach(function BUC_forEachCallback(aAddon) {
-              if (aAddon.id == hotfixID) {
-                notifyComplete();
-                return;
-              }
+            // Check all add-ons for updates so that any compatibility updates will
+            // be applied
+            aAddon.findUpdates({
+              onUpdateAvailable: function BUC_onUpdateAvailable(aAddon, aInstall) {
+                // Start installing updates when the add-on can be updated and
+                // background updates should be applied.
+                if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
+                    AddonManager.shouldAutoUpdate(aAddon)) {
+                  aInstall.install();
+                }
+              },
 
-              // Check all add-ons for updates so that any compatibility updates will
-              // be applied
-              aAddon.findUpdates({
-                onUpdateAvailable: function BUC_onUpdateAvailable(aAddon, aInstall) {
-                  // Start installing updates when the add-on can be updated and
-                  // background updates should be applied.
-                  if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE &&
-                      AddonManager.shouldAutoUpdate(aAddon)) {
-                    aInstall.install();
-                  }
-                },
-
-                onUpdateFinished: notifyComplete
-              }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-            });
-
-            notifyComplete();
+              onUpdateFinished: notifyComplete
+            }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
           });
+
+          notifyComplete();
         });
       });
     }
@@ -1425,6 +1421,8 @@ var AddonManagerInternal = {
       },
       noMoreObjects: function updateAddonRepositoryData_noMoreObjects(aCaller) {
         safeCall(aCallback);
+        // only tests should care about this
+        Services.obs.notifyObservers(null, "TEST:addon-repository-data-updated", null);
       }
     });
   },

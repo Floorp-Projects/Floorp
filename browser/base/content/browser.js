@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
@@ -4840,13 +4842,11 @@ function getBrowserSelection(aCharLen) {
   // selections of more than 150 characters aren't useful
   const kMaxSelectionLen = 150;
   const charLen = Math.min(aCharLen || kMaxSelectionLen, kMaxSelectionLen);
-  let commandDispatcher = document.commandDispatcher;
 
-  var focusedWindow = commandDispatcher.focusedWindow;
+  let [element, focusedWindow] = BrowserUtils.getFocusSync(document);
   var selection = focusedWindow.getSelection().toString();
   // try getting a selected text in text input.
   if (!selection) {
-    let element = commandDispatcher.focusedElement;
     var isOnTextInput = function isOnTextInput(elem) {
       // we avoid to return a value if a selection is in password field.
       // ref. bug 565717

@@ -5299,6 +5299,9 @@ js::ReleaseAllJITCode(FreeOp *fop)
 # endif
 
     for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
+        if (!zone->jitZone())
+            continue;
+
 # ifdef DEBUG
         /* Assert no baseline scripts are marked as active. */
         for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
@@ -5322,6 +5325,8 @@ js::ReleaseAllJITCode(FreeOp *fop)
              */
             jit::FinishDiscardBaselineScript(fop, script);
         }
+
+        zone->jitZone()->optimizedStubSpace()->free();
     }
 #endif
 }

@@ -102,6 +102,25 @@ public class MenuItemActionView extends LinearLayout
         mMenuItem.setShowIcon(show);
     }
 
+    public void setIcon(Drawable icon) {
+        mMenuItem.setIcon(icon);
+        mMenuButton.setIcon(icon);
+    }
+
+    public void setIcon(int icon) {
+        mMenuItem.setIcon(icon);
+        mMenuButton.setIcon(icon);
+    }
+
+    public void setTitle(CharSequence title) {
+        mMenuItem.setTitle(title);
+        mMenuButton.setContentDescription(title);
+    }
+
+    public void setSubMenuIndicator(boolean hasSubMenu) {
+        mMenuItem.setSubMenuIndicator(hasSubMenu);
+    }
+
     public void addActionButton(Drawable drawable) {
         // If this is the first icon, retain the text.
         // If not, make the menu item an icon.

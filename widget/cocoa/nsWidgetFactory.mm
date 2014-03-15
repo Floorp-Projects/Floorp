@@ -28,6 +28,7 @@
 
 #include "nsSound.h"
 #include "nsIdleServiceX.h"
+#include "NativeKeyBindings.h"
 #include "OSXNotificationCenter.h"
 
 #include "nsScreenManagerCocoa.h"
@@ -40,6 +41,7 @@
 #include "mozilla/Module.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCocoaWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildView)
@@ -85,59 +87,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
 }
 }
 
-#include "NativeKeyBindings.h"
-namespace mozilla {
-namespace widget {
-
-static nsresult
-NativeKeyBindingsConstructor(nsISupports* aOuter, REFNSIID aIID,
-                             void** aResult, NativeKeyBindingsType aType)
-{
-  NativeKeyBindings* inst;
-
-  *aResult = NULL;
-  if (NULL != aOuter) {
-    return NS_ERROR_NO_AGGREGATION;
-  }
-
-  inst = new NativeKeyBindings();
-  NS_ADDREF(inst);
-  nsresult rv = inst->Init(aType);
-  if (NS_SUCCEEDED(rv)) {
-    rv = inst->QueryInterface(aIID, aResult);
-  }
-  NS_RELEASE(inst);
-
-  return rv;
-}
-
-static nsresult
-NativeKeyBindingsInputConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                  void** aResult)
-{
-  return NativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                      eNativeKeyBindingsType_Input);
-}
-
-static nsresult
-NativeKeyBindingsTextAreaConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                     void** aResult)
-{
-  return NativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                      eNativeKeyBindingsType_TextArea);
-}
-
-static nsresult
-NativeKeyBindingsEditorConstructor(nsISupports* aOuter, REFNSIID aIID,
-                                   void** aResult)
-{
-  return NativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                      eNativeKeyBindingsType_Editor);
-}
-
-} // namespace widget
-} // namespace mozilla
-
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
 NS_DEFINE_NAMED_CID(NS_POPUP_CID);
 NS_DEFINE_NAMED_CID(NS_CHILD_CID);
@@ -164,10 +113,6 @@ NS_DEFINE_NAMED_CID(NS_MACDOCKSUPPORT_CID);
 NS_DEFINE_NAMED_CID(NS_MACWEBAPPUTILS_CID);
 NS_DEFINE_NAMED_CID(NS_STANDALONENATIVEMENU_CID);
 NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
-NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGS_INPUT_CID);
-NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGS_TEXTAREA_CID);
-NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGS_EDITOR_CID);
-
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_WINDOW_CID, false, NULL, nsCocoaWindowConstructor },
@@ -204,12 +149,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_MACWEBAPPUTILS_CID, false, NULL, nsMacWebAppUtilsConstructor },
   { &kNS_STANDALONENATIVEMENU_CID, false, NULL, nsStandaloneNativeMenuConstructor },
   { &kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor },
-  { &kNS_NATIVEKEYBINDINGS_INPUT_CID, false, NULL,
-    mozilla::widget::NativeKeyBindingsInputConstructor },
-  { &kNS_NATIVEKEYBINDINGS_TEXTAREA_CID, false, NULL,
-    mozilla::widget::NativeKeyBindingsTextAreaConstructor },
-  { &kNS_NATIVEKEYBINDINGS_EDITOR_CID, false, NULL,
-    mozilla::widget::NativeKeyBindingsEditorConstructor },
   { NULL }
 };
 
@@ -248,16 +187,13 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/widget/mac-web-app-utils;1", &kNS_MACWEBAPPUTILS_CID },
   { "@mozilla.org/widget/standalonenativemenu;1", &kNS_STANDALONENATIVEMENU_CID },
   { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
-  { NS_NATIVEKEYBINDINGSINPUT_CONTRACTID, &kNS_NATIVEKEYBINDINGS_INPUT_CID },
-  { NS_NATIVEKEYBINDINGSTEXTAREA_CONTRACTID,
-    &kNS_NATIVEKEYBINDINGS_TEXTAREA_CID },
-  { NS_NATIVEKEYBINDINGSEDITOR_CONTRACTID, &kNS_NATIVEKEYBINDINGS_EDITOR_CID },
   { NULL }
 };
 
 static void
 nsWidgetCocoaModuleDtor()
 {
+  NativeKeyBindings::Shutdown();
   nsLookAndFeel::Shutdown();
   nsToolkit::Shutdown();
   nsAppShellShutdown();
