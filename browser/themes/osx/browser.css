@@ -4363,16 +4363,18 @@ window > chatbox {
 
 %include ../shared/UITour.inc.css
 
-#UITourTooltipIcon {
-  -moz-margin-start: 0;
-}
-
 #UITourTooltipDescription {
-  font-size: 1.1rem;
-  line-height: 1.9rem;
+  font-size: 1.18rem;
+  line-height: 2rem;
 }
 
 #UITourTooltipClose {
-  -moz-margin-end: -15px;
-  margin-top: -12px;
+  -moz-margin-end: -10px;
+  margin-top: -14px;
+}
+
+@media (min-resolution: 2dppx) {
+  #UITourTooltipClose > .toolbarbutton-icon {
+    width: 16px;
+  }
 }
