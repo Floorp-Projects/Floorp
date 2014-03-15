@@ -392,7 +392,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             ret.put("button", -1);
         } catch(Exception ex) { }
         addInputValues(ret);
-        finishDialog(ret);
+        notifyClosing(ret);
     }
 
     /* Called any time we're closing the dialog to cleanup and notify listeners that the dialog
@@ -406,16 +406,13 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         addListResult(ret, which);
         addInputValues(ret);
 
-        finishDialog(ret);
+        notifyClosing(ret);
     }
 
     /* Called any time we're closing the dialog to cleanup and notify listeners that the dialog
      * is closing.
      */
-    public void finishDialog(JSONObject aReturn) {
-        mInputs = null;
-        mButtons = null;
-        mDialog = null;
+    private void notifyClosing(JSONObject aReturn) {
         try {
             aReturn.put("guid", mGuid);
         } catch(JSONException ex) { }
@@ -426,7 +423,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         if (mCallback != null) {
             mCallback.onPromptFinished(aReturn.toString());
         }
-        mGuid = null;
     }
 
     /* Handles parsing the initial JSON sent to show dialogs
