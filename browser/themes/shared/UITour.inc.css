@@ -23,11 +23,23 @@
   min-width: 32px;
 }
 
+#UITourTooltipBody {
+  -moz-margin-end: 14px;
+}
+
+#UITourTooltipBody > vbox {
+  padding-top: 4px;
+}
+
+#UITourTooltipIconContainer {
+  -moz-margin-start: -16px;
+}
+
 #UITourTooltipIcon {
   width: 48px;
   height: 48px;
-  -moz-margin-start: 8px;
-  -moz-margin-end: 18px;
+  -moz-margin-start: 28px;
+  -moz-margin-end: 28px;
 }
 
 #UITourTooltipTitle,
@@ -36,11 +48,11 @@
 }
 
 #UITourTooltipTitle {
-  font-size: 1.3rem;
+  font-size: 1.45rem;
   font-weight: bold;
   -moz-margin-start: 0;
   -moz-margin-end: 0;
-  margin: 10px 0 19px 0;
+  margin: 0 0 9px 0;
 }
 
 #UITourTooltipDescription {
@@ -48,6 +60,7 @@
   -moz-margin-end: 0;
   font-size: 1.15rem;
   line-height: 1.8rem;
+  margin-bottom: 0; /* Override global.css */
 }
 
 #UITourTooltipClose {
@@ -56,25 +69,27 @@
   background-color: transparent;
   min-width: 0;
   -moz-margin-start: 4px;
-  -moz-margin-end: -10px;
-  margin-top: -8px;
+  margin-top: -2px;
+}
+
+#UITourTooltipClose > .toolbarbutton-text {
+  display: none;
 }
 
 #UITourTooltipButtons {
-  margin: 1.5em 0 .9em 0;
+  -moz-box-pack: end;
+  background-color: hsla(210,4%,10%,.07);
+  border-top: 1px solid hsla(210,4%,10%,.14);
+  margin: 24px -16px -16px;
+  padding: 2em 15px;
 }
 
 #UITourTooltipButtons > button {
-  margin-left: 6px;
-  margin-right: 6px;
+  margin: 0 15px;
 }
 
 #UITourTooltipButtons > button:first-child {
   -moz-margin-start: 0;
-}
-
-#UITourTooltipButtons > button:last-child {
-  -moz-margin-end: 24px;
 }
 
 #UITourTooltipButtons > button[image] > .button-box > .button-icon {
@@ -89,11 +104,12 @@
 
 #UITourTooltipButtons > button:not(.button-link) {
   -moz-appearance: none;
-  padding: 2px 10px;
-  background-color: hsla(210,4%,10%,.08);
-  border-radius: 2px;
+  background-color: rgb(251,251,251);
+  border-radius: 3px;
   border: 1px solid;
-  border-color: hsla(210,4%,10%,.1);
+  border-color: rgb(192,192,192);
+  color: rgb(71,71,71);
+  padding: 4px 30px;
   transition-property: background-color, border-color;
   transition-duration: 150ms;
 }
@@ -116,4 +132,16 @@
 
 #UITourTooltipButtons > button.button-link:hover {
   color: black;
+}
+
+/* The primary button gets the same color as the customize button. */
+#UITourTooltipButtons > button.button-primary {
+  background-color: rgb(116,191,67);
+  color: white;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+#UITourTooltipButtons > button.button-primary:not(:active):hover {
+  background-color: rgb(105,173,61);
 }
