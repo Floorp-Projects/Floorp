@@ -139,7 +139,8 @@
   ALLOW_SYSCALL(epoll_ctl), \
   ALLOW_SYSCALL(sched_yield), \
   ALLOW_SYSCALL(sched_getscheduler), \
-  ALLOW_SYSCALL(sched_setscheduler),
+  ALLOW_SYSCALL(sched_setscheduler), \
+  ALLOW_SYSCALL(sigaltstack),
 
 #else
 #define SECCOMP_WHITELIST_B2G_HIGH
