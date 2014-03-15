@@ -671,6 +671,7 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
               kind == ICStub::Call_Native                               ||
               kind == ICStub::Call_ScriptedApplyArray                   ||
               kind == ICStub::Call_ScriptedApplyArguments               ||
+              kind == ICStub::Call_ScriptedFunCall                      ||
               kind == ICStub::GetProp_CallScripted                      ||
               kind == ICStub::GetProp_CallNative                        ||
               kind == ICStub::GetProp_CallDOMProxyNative                ||
@@ -7808,6 +7809,39 @@ TryAttachFunApplyStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script,
 }
 
 static bool
+TryAttachFunCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsbytecode *pc,
+                     HandleValue thisv, bool *attached)
+{
+    // Try to attach a stub for Function.prototype.call with scripted |this|.
+
+    *attached = false;
+    if (!thisv.isObject() || !thisv.toObject().is<JSFunction>())
+        return true;
+    RootedFunction target(cx, &thisv.toObject().as<JSFunction>());
+
+    // Attach a stub if the script can be Baseline-compiled. We do this also
+    // if the script is not yet compiled to avoid attaching a CallNative stub
+    // that handles everything, even after the callee becomes hot.
+    if (target->hasScript() && target->nonLazyScript()->canBaselineCompile() &&
+        !stub->hasStub(ICStub::Call_ScriptedFunCall))
+    {
+        IonSpew(IonSpew_BaselineIC, "  Generating Call_ScriptedFunCall stub");
+
+        ICCall_ScriptedFunCall::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
+                                                  script->pcToOffset(pc));
+        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
+        if (!newStub)
+            return false;
+
+        *attached = true;
+        stub->addNewStub(newStub);
+        return true;
+    }
+
+    return true;
+}
+
+static bool
 GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
                            Native native, const CallArgs &args, MutableHandleObject res)
 {
@@ -7989,6 +8023,14 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
             // Don't try to attach a "regular" optimized call stubs for FUNAPPLY ops,
             // since MagicArguments may escape through them.
             return true;
+        }
+
+        if (op == JSOP_FUNCALL && fun->native() == js_fun_call) {
+            bool attached;
+            if (!TryAttachFunCallStub(cx, stub, script, pc, thisv, &attached))
+                return false;
+            if (attached)
+                return true;
         }
 
         if (stub->nativeStubCount() >= ICCall_Fallback::MAX_NATIVE_STUBS) {
@@ -8962,6 +9004,144 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     }
     // Do call
     masm.callIon(target);
+    leaveStubFrame(masm, true);
+
+    // Enter type monitor IC to type-check result.
+    EmitEnterTypeMonitorIC(masm);
+
+    masm.bind(&failure);
+    EmitStubGuardFailure(masm);
+    return true;
+}
+
+bool
+ICCall_ScriptedFunCall::Compiler::generateStubCode(MacroAssembler &masm)
+{
+    Label failure;
+    GeneralRegisterSet regs(availableGeneralRegs(0));
+    bool canUseTailCallReg = regs.has(BaselineTailCallReg);
+
+    Register argcReg = R0.scratchReg();
+    JS_ASSERT(argcReg != ArgumentsRectifierReg);
+
+    regs.take(argcReg);
+    regs.take(ArgumentsRectifierReg);
+    regs.takeUnchecked(BaselineTailCallReg);
+
+    // Load the callee in R1.
+    // Stack Layout: [ ..., CalleeVal, ThisVal, Arg0Val, ..., ArgNVal, +ICStackValueOffset+ ]
+    BaseIndex calleeSlot(BaselineStackReg, argcReg, TimesEight, ICStackValueOffset + sizeof(Value));
+    masm.loadValue(calleeSlot, R1);
+    regs.take(R1);
+
+    // Ensure callee is js_fun_call.
+    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
+
+    Register callee = masm.extractObject(R1, ExtractTemp0);
+    masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &JSFunction::class_,
+                            &failure);
+    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
+    masm.branchPtr(Assembler::NotEqual, callee, ImmPtr(js_fun_call), &failure);
+
+    // Ensure |this| is a scripted function with JIT code.
+    BaseIndex thisSlot(BaselineStackReg, argcReg, TimesEight, ICStackValueOffset);
+    masm.loadValue(thisSlot, R1);
+
+    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
+    callee = masm.extractObject(R1, ExtractTemp0);
+
+    masm.branchTestObjClass(Assembler::NotEqual, callee, regs.getAny(), &JSFunction::class_,
+                            &failure);
+    masm.branchIfFunctionHasNoScript(callee, &failure);
+    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), callee);
+
+    // Load the start of the target JitCode.
+    Register code = regs.takeAny();
+    masm.loadBaselineOrIonRaw(callee, code, SequentialExecution, &failure);
+
+    // We no longer need R1.
+    regs.add(R1);
+
+    // Push a stub frame so that we can perform a non-tail call.
+    enterStubFrame(masm, regs.getAny());
+    if (canUseTailCallReg)
+        regs.add(BaselineTailCallReg);
+
+    // Values are on the stack left-to-right. Calling convention wants them
+    // right-to-left so duplicate them on the stack in reverse order.
+    pushCallArguments(masm, regs, argcReg);
+
+    // Discard callee (function.call).
+    masm.addPtr(Imm32(sizeof(Value)), StackPointer);
+
+    // Pop scripted callee (the original |this|).
+    ValueOperand val = regs.takeAnyValue();
+    masm.popValue(val);
+
+    // Decrement argc if argc > 0. If argc == 0, push |undefined| as |this|.
+    Label zeroArgs, done;
+    masm.branchTest32(Assembler::Zero, argcReg, argcReg, &zeroArgs);
+    masm.sub32(Imm32(1), argcReg);
+    masm.jump(&done);
+
+    masm.bind(&zeroArgs);
+    masm.pushValue(UndefinedValue());
+    masm.bind(&done);
+
+    // Unbox scripted callee.
+    callee = masm.extractObject(val, ExtractTemp0);
+
+    Register scratch = regs.takeAny();
+    EmitCreateStubFrameDescriptor(masm, scratch);
+
+    // Note that we use Push, not push, so that callIon will align the stack
+    // properly on ARM.
+    masm.Push(argcReg);
+    masm.Push(callee);
+    masm.Push(scratch);
+
+    // Handle arguments underflow.
+    Label noUnderflow;
+    masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), callee);
+    masm.branch32(Assembler::AboveOrEqual, argcReg, callee, &noUnderflow);
+    {
+        // Call the arguments rectifier.
+        JS_ASSERT(ArgumentsRectifierReg != code);
+        JS_ASSERT(ArgumentsRectifierReg != argcReg);
+
+        JitCode *argumentsRectifier =
+            cx->runtime()->jitRuntime()->getArgumentsRectifier(SequentialExecution);
+
+        masm.movePtr(ImmGCPtr(argumentsRectifier), code);
+        masm.loadPtr(Address(code, JitCode::offsetOfCode()), code);
+        masm.mov(argcReg, ArgumentsRectifierReg);
+    }
+
+    masm.bind(&noUnderflow);
+
+    // If needed, update SPS Profiler frame entry.
+    {
+        Label skipProfilerUpdate;
+
+        // Need to avoid using ArgumentsRectifierReg and code register.
+        GeneralRegisterSet availRegs = availableGeneralRegs(0);
+        availRegs.take(ArgumentsRectifierReg);
+        availRegs.take(code);
+        Register scratch = availRegs.takeAny();
+        Register pcIdx = availRegs.takeAny();
+
+        // Check if profiling is enabled.
+        guardProfilingEnabled(masm, scratch, &skipProfilerUpdate);
+
+        // Update profiling entry before leaving function.
+        masm.load32(Address(BaselineStubReg, ICCall_ScriptedFunCall::offsetOfPCOffset()), pcIdx);
+        masm.spsUpdatePCIdx(&cx->runtime()->spsProfiler, pcIdx, scratch);
+
+        masm.bind(&skipProfilerUpdate);
+    }
+
+    masm.callIon(code);
+
     leaveStubFrame(masm, true);
 
     // Enter type monitor IC to type-check result.
