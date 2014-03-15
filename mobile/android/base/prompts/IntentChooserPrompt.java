@@ -61,7 +61,7 @@ public class IntentChooserPrompt {
 
         // If there's only one item in the intent list, just return it
         if (mItems.size() == 1) {
-            handler.onIntentSelected(mItems.get(0).intent, 0);
+            handler.onIntentSelected(mItems.get(0).getIntent(), 0);
             return;
         }
 
@@ -82,7 +82,7 @@ public class IntentChooserPrompt {
                 if (itemId == -1) {
                     handler.onCancelled();
                 } else {
-                    handler.onIntentSelected(mItems.get(itemId).intent, itemId);
+                    handler.onIntentSelected(mItems.get(itemId).getIntent(), itemId);
                 }
             }
         });
@@ -128,12 +128,14 @@ public class IntentChooserPrompt {
 
     private PromptListItem getItemForResolveInfo(ResolveInfo info, PackageManager pm, Intent intent) {
         PromptListItem item = new PromptListItem(info.loadLabel(pm).toString());
-        item.icon = info.loadIcon(pm);
-        item.intent = new Intent(intent);
+        item.setIcon(info.loadIcon(pm));
 
+        Intent i = new Intent(intent);
         // These intents should be implicit.
-        item.intent.setComponent(new ComponentName(info.activityInfo.applicationInfo.packageName,
-                                                   info.activityInfo.name));
+        i.setComponent(new ComponentName(info.activityInfo.applicationInfo.packageName,
+                                         info.activityInfo.name));
+        item.setIntent(new Intent(i));
+
         return item;
     }
 

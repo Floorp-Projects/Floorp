@@ -349,6 +349,8 @@ AboutReader.prototype = {
           result: result,
           title: this._article.title,
           url: this._article.url,
+          length: this._article.length,
+          excerpt: this._article.excerpt
         });
       }.bind(this));
     } else {

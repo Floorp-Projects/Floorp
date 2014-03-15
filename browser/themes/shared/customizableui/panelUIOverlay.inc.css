@@ -19,6 +19,44 @@
 
 %include ../browser.inc
 
+#PanelUI-popup #PanelUI-contents:empty {
+    height: 128px;
+}
+
+#PanelUI-popup #PanelUI-contents:empty::before {
+  content: "";
+  background-image: url(chrome://browser/skin/customizableui/whimsy-bw.png);
+  display: block;
+  width: 64px;
+  height: 64px;
+  position: absolute;
+  animation: moveX 3.05s linear 0s infinite alternate,
+             moveY 3.4s linear 0s infinite alternate;
+}
+
+#PanelUI-popup #PanelUI-contents:empty:hover::before {
+  background-image: url(chrome://browser/skin/customizableui/whimsy.png);
+}
+
+@media (min-resolution: 2dppx) {
+  #PanelUI-popup #PanelUI-contents:empty::before {
+    background-image: url(chrome://browser/skin/customizableui/whimsy-bw@2x.png);
+    background-size: 64px 64px;
+  }
+  #PanelUI-popup #PanelUI-contents:empty:hover::before {
+    background-image: url(chrome://browser/skin/customizableui/whimsy@2x.png);
+  }
+}
+
+@keyframes moveX {
+  /* These values are adjusted for the padding on the panel. */
+  from { margin-left: -15px; } to { margin-left: calc(100% - 49px); }
+}
+@keyframes moveY {
+  /* These values are adjusted for the padding and height of the panel. */
+  from { margin-top: -6px; } to { margin-top: 58px; }
+}
+
 #PanelUI-button {
   background-image: linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, hsla(0,0%,100%,0)),
                     linear-gradient(to bottom, hsla(210,54%,20%,0), hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, hsla(210,54%,20%,0)),

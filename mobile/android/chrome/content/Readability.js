@@ -719,6 +719,77 @@ Readability.prototype = {
   },
 
   /**
+   * Attempts to get the excerpt from these
+   * sources in the following order:
+   * - meta description tag
+   * - open-graph description
+   * - twitter cards description
+   * - article's first paragraph
+   * If no excerpt is found, an empty string will be
+   * returned.
+   *
+   * @param Element - root element of the processed version page
+   * @return String - excerpt of the article
+  **/
+  _getExcerpt: function(articleContent) {
+    let values = {};
+    let metaElements = this._doc.getElementsByTagName("meta");
+
+    // Match "description", or Twitter's "twitter:description" (Cards)
+    // in name attribute.
+    let namePattern = /^\s*((twitter)\s*:\s*)?description\s*$/gi;
+
+    // Match Facebook's og:description (Open Graph) in property attribute.
+    let propertyPattern = /^\s*og\s*:\s*description\s*$/gi;
+
+    // Find description tags.
+    for (let i = 0; i < metaElements.length; i++) {
+      let element = metaElements[i];
+      let elementName = element.getAttribute("name");
+      let elementProperty = element.getAttribute("property");
+
+      let name;
+      if (namePattern.test(elementName)) {
+        name = elementName;
+      } else if (propertyPattern.test(elementProperty)) {
+        name = elementProperty;
+      }
+
+      if (name) {
+        let content = element.getAttribute("content");
+        if (content) {
+          // Convert to lowercase and remove any whitespace
+          // so we can match below.
+          name = name.toLowerCase().replace(/\s/g, '');
+          values[name] = content.trim();
+        }
+      }
+    }
+
+    if ("description" in values) {
+      return values["description"];
+    }
+
+    if ("og:description" in values) {
+      // Use facebook open graph description.
+      return values["og:description"];
+    }
+
+    if ("twitter:description" in values) {
+      // Use twitter cards description.
+      return values["twitter:description"];
+    }
+
+    // No description meta tags, use the article's first paragraph.
+    let paragraphs = articleContent.getElementsByTagName("p");
+    if (paragraphs.length > 0) {
+      return paragraphs[0].textContent;
+    }
+
+    return "";
+  },
+
+  /**
    * Removes script tags from the document.
    *
    * @param Element
@@ -1434,9 +1505,13 @@ Readability.prototype = {
     //   }).bind(this), 500);
     // }
 
+    let excerpt = this._getExcerpt(articleContent);
+
     return { title: articleTitle,
              byline: this._articleByline,
              dir: this._articleDir,
-             content: articleContent.innerHTML };
+             content: articleContent.innerHTML,
+             length: articleContent.textContent.length,
+             excerpt: excerpt };
   }
 };

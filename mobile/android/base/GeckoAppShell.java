@@ -1197,10 +1197,10 @@ public class GeckoAppShell
      * @return an <code>Intent</code>, or <code>null</code> if none could be
      *         produced.
      */
-    static Intent getShareIntent(final Context context,
-                                 final String targetURI,
-                                 final String mimeType,
-                                 final String title) {
+    public static Intent getShareIntent(final Context context,
+                                        final String targetURI,
+                                        final String mimeType,
+                                        final String title) {
         Intent shareIntent = getIntentForActionString(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_TEXT, targetURI);
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, title);

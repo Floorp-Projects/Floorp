@@ -107,6 +107,7 @@
         <item name="android:textAppearance">@style/TextAppearance</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
+        <item name="android:textSize">@dimen/menu_item_textsize</item>
     </style>
 
     <style name="Widget.TwoLinePageRow" />
@@ -258,7 +259,7 @@
         <item name="android:textColorHighlight">@color/text_color_highlight</item>
         <item name="android:textColorHint">?android:attr/textColorHint</item>
         <item name="android:textColorLink">?android:attr/textColorLink</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">@dimen/menu_item_textsize</item>
         <item name="android:textStyle">normal</item>
     </style>
 
