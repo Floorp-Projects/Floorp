@@ -674,7 +674,7 @@ pref("ui.scrolling.axis_lock_mode", "standard");
 pref("ui.scrolling.negate_wheel_scrollY", true);
 // Determine the dead zone for gamepad joysticks. Higher values result in larger dead zones; use a negative value to
 // auto-detect based on reported hardware values
-pref("ui.scrolling.gamepad_dead_zone", 10);
+pref("ui.scrolling.gamepad_dead_zone", 115);
 
 
 // Enable accessibility mode if platform accessibility is enabled.
