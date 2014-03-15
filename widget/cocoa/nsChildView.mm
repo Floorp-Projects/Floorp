@@ -215,7 +215,7 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 #pragma mark -
 
-/* Convenience routines to go from a gecko rect to cocoa NSRects and back
+/* Convenience routine to go from a Gecko rect to Cocoa NSRect.
  *
  * Gecko rects (nsRect) contain an origin (x,y) in a coordinate
  * system with (0,0) in the top-left of the screen. Cocoa rects
@@ -225,17 +225,8 @@ uint32_t nsChildView::sLastInputEventCount = 0;
  * If a Cocoa rect is from a flipped view, there is no need to
  * convert coordinate systems.
  */
-
+#ifndef __LP64__
 static inline void
-NSRectToGeckoRect(const NSRect & inCocoaRect, nsIntRect & outGeckoRect)
-{
-  outGeckoRect.x = NSToIntRound(inCocoaRect.origin.x);
-  outGeckoRect.y = NSToIntRound(inCocoaRect.origin.y);
-  outGeckoRect.width = NSToIntRound(inCocoaRect.origin.x + inCocoaRect.size.width) - outGeckoRect.x;
-  outGeckoRect.height = NSToIntRound(inCocoaRect.origin.y + inCocoaRect.size.height) - outGeckoRect.y;
-}
-
-static inline void 
 ConvertGeckoRectToMacRect(const nsIntRect& aRect, Rect& outMacRect)
 {
   outMacRect.left = aRect.x;
@@ -243,6 +234,7 @@ ConvertGeckoRectToMacRect(const nsIntRect& aRect, Rect& outMacRect)
   outMacRect.right = aRect.x + aRect.width;
   outMacRect.bottom = aRect.y + aRect.height;
 }
+#endif
 
 // Flips a screen coordinate from a point in the cocoa coordinate system (bottom-left rect) to a point
 // that is a "flipped" cocoa coordinate system (starts in the top-left).
