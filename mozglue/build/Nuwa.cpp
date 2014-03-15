@@ -142,8 +142,11 @@ TLSInfoList;
  * methods or do large allocations on the stack to avoid stack overflow.
  */
 #ifndef NUWA_STACK_SIZE
-#define PAGE_SIZE 4096
-#define PAGE_ALIGN_MASK 0xfffff000
+#ifndef PAGE_SIZE
+#warning "Hard-coding page size to 4096 byte
+#define PAGE_SIZE 4096ul
+#endif
+#define PAGE_ALIGN_MASK (~(PAGE_SIZE-1))
 #define NUWA_STACK_SIZE (1024 * 128)
 #endif
 
@@ -659,8 +662,6 @@ SaveTLSInfo(thread_info_t *tinfo) {
  */
 static void
 RestoreTLSInfo(thread_info_t *tinfo) {
-  int rv;
-
   for (TLSInfoList::const_iterator it = tinfo->tlsInfo.begin();
        it != tinfo->tlsInfo.end();
        it++) {

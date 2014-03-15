@@ -28,6 +28,7 @@ toolkit.jar:
    content/global/plugins.html
    content/global/plugins.css
    content/global/browser-child.js            (browser-child.js)
+   content/global/browser-content.js          (browser-content.js)
 *+  content/global/buildconfig.html            (buildconfig.html)
 +  content/global/charsetOverlay.js           (charsetOverlay.js)
 +  content/global/charsetOverlay.xul          (charsetOverlay.xul)

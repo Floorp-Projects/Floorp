@@ -110,7 +110,6 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 
 #include "nsChromeRegistry.h"
 #include "nsChromeProtocolHandler.h"
-#include "mozilla/IOInterposer.h"
 #include "mozilla/PoisonIOInterposer.h"
 #include "mozilla/LateWriteChecks.h"
 
@@ -130,6 +129,9 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #endif
 
 #include "ogg/ogg.h"
+#ifdef MOZ_VPX
+#include "vpx_mem/vpx_mem.h"
+#endif
 
 #include "GeckoProfiler.h"
 
@@ -469,6 +471,80 @@ NS_IMPL_ISUPPORTS1(OggReporter, nsIMemoryReporter)
 
 /* static */ Atomic<size_t> OggReporter::sAmount;
 
+#ifdef MOZ_VPX
+class VPXReporter MOZ_FINAL : public nsIMemoryReporter
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    VPXReporter()
+    {
+#ifdef DEBUG
+        // There must be only one instance of this class, due to |sAmount|
+        // being static.
+        static bool hasRun = false;
+        MOZ_ASSERT(!hasRun);
+        hasRun = true;
+#endif
+        sAmount = 0;
+    }
+
+    static void* Alloc(size_t size)
+    {
+        void* p = malloc(size);
+        sAmount += MallocSizeOfOnAlloc(p);
+        return p;
+    }
+
+    static void* Realloc(void* p, size_t size)
+    {
+        sAmount -= MallocSizeOfOnFree(p);
+        void *pnew = realloc(p, size);
+        if (pnew) {
+            sAmount += MallocSizeOfOnAlloc(pnew);
+        } else {
+            // realloc failed;  undo the decrement from above
+            sAmount += MallocSizeOfOnAlloc(p);
+        }
+        return pnew;
+    }
+
+    static void* Calloc(size_t nmemb, size_t size)
+    {
+        void* p = calloc(nmemb, size);
+        sAmount += MallocSizeOfOnAlloc(p);
+        return p;
+    }
+
+    static void Free(void* p)
+    {
+        sAmount -= MallocSizeOfOnFree(p);
+        free(p);
+    }
+
+private:
+    // |sAmount| can be (implicitly) accessed by multiple threads, so it
+    // must be thread-safe.
+    static Atomic<size_t> sAmount;
+
+    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+    MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
+    MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
+
+    NS_IMETHODIMP
+    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+    {
+        return MOZ_COLLECT_REPORT(
+            "explicit/media/libvpx", KIND_HEAP, UNITS_BYTES, sAmount,
+            "Memory allocated through libvpx for WebM media files.");
+    }
+};
+
+NS_IMPL_ISUPPORTS1(VPXReporter, nsIMemoryReporter)
+
+/* static */ Atomic<size_t> VPXReporter::sAmount;
+#endif /* MOZ_VPX */
+
 EXPORT_XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager* *result,
               nsIFile* binDirectory,
@@ -628,6 +704,17 @@ NS_InitXPCOM2(nsIServiceManager* *result,
                           OggReporter::Realloc,
                           OggReporter::Free);
 
+#ifdef MOZ_VPX
+    // And for VPX.
+    vpx_mem_set_functions(VPXReporter::Alloc,
+                          VPXReporter::Calloc,
+                          VPXReporter::Realloc,
+                          VPXReporter::Free,
+                          memcpy,
+                          memset,
+                          memmove);
+#endif
+
     // Initialize the JS engine.
     if (!JS_Init()) {
         NS_RUNTIMEABORT("JS_Init failed");
@@ -675,10 +762,12 @@ NS_InitXPCOM2(nsIServiceManager* *result,
         mozilla::SystemMemoryReporter::Init();
     }
 
-    // The memory reporter manager is up and running -- register a reporter for
-    // ICU's and libogg's memory usage.
+    // The memory reporter manager is up and running -- register our reporters.
     RegisterStrongMemoryReporter(new ICUReporter());
     RegisterStrongMemoryReporter(new OggReporter());
+#ifdef MOZ_VPX
+    RegisterStrongMemoryReporter(new VPXReporter());
+#endif
 
     mozilla::Telemetry::Init();
 
@@ -879,11 +968,6 @@ ShutdownXPCOM(nsIServiceManager* servMgr)
     PROFILER_MARKER("Shutdown xpcom");
     // If we are doing any shutdown checks, poison writes.
     if (gShutdownChecks != SCM_NOTHING) {
-        // Calling InitIOInterposer or InitPoisonIOInterposer twice doesn't
-        // cause any problems, they'll safely abort the initialization on their
-        // own initiative.
-        mozilla::IOInterposer::Init();
-        mozilla::InitPoisonIOInterposer();
 #ifdef XP_MACOSX
         mozilla::OnlyReportDirtyWrites();
 #endif /* XP_MACOSX */

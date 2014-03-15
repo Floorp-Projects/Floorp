@@ -186,6 +186,10 @@ class JitRuntime
     JitCode *valuePreBarrier_;
     JitCode *shapePreBarrier_;
 
+    // Thunk to call malloc/free.
+    JitCode *mallocStub_;
+    JitCode *freeStub_;
+
     // Thunk used by the debugger for breakpoint and step mode.
     JitCode *debugTrapHandler_;
 
@@ -221,6 +225,8 @@ class JitRuntime
     JitCode *generateBailoutHandler(JSContext *cx);
     JitCode *generateInvalidator(JSContext *cx);
     JitCode *generatePreBarrier(JSContext *cx, MIRType type);
+    JitCode *generateMallocStub(JSContext *cx);
+    JitCode *generateFreeStub(JSContext *cx);
     JitCode *generateDebugTrapHandler(JSContext *cx);
     JitCode *generateForkJoinGetSliceStub(JSContext *cx);
     JitCode *generateVMWrapper(JSContext *cx, const VMFunction &f);
@@ -243,6 +249,10 @@ class JitRuntime
     void setFlusher(AutoFlushCache *fl) {
         if (!flusher_ || !fl)
             flusher_ = fl;
+    }
+
+    JSC::ExecutableAllocator *execAlloc() const {
+        return execAlloc_;
     }
 
     JSC::ExecutableAllocator *getIonAlloc(JSContext *cx) {
@@ -326,18 +336,34 @@ class JitRuntime
         return shapePreBarrier_;
     }
 
+    JitCode *mallocStub() const {
+        return mallocStub_;
+    }
+
+    JitCode *freeStub() const {
+        return freeStub_;
+    }
+
     bool ensureForkJoinGetSliceStubExists(JSContext *cx);
     JitCode *forkJoinGetSliceStub() const {
         return forkJoinGetSliceStub_;
     }
 };
 
+class JitZone
+{
+    // Allocated space for optimized baseline stubs.
+    OptimizedICStubSpace optimizedStubSpace_;
+
+  public:
+    OptimizedICStubSpace *optimizedStubSpace() {
+        return &optimizedStubSpace_;
+    }
+};
+
 class JitCompartment
 {
     friend class JitActivation;
-
-    // Ion state for the compartment's runtime.
-    JitRuntime *rt;
 
     // Map ICStub keys to ICStub shared code objects.
     typedef WeakValueCache<uint32_t, ReadBarriered<JitCode> > ICStubCodeMap;
@@ -348,9 +374,6 @@ class JitCompartment
     void *baselineCallReturnAddr_;
     void *baselineGetPropReturnAddr_;
     void *baselineSetPropReturnAddr_;
-
-    // Allocated space for optimized baseline stubs.
-    OptimizedICStubSpace optimizedStubSpace_;
 
     // Stub to concatenate two strings inline. Note that it can't be
     // stored in JitRuntime because masm.newGCString bakes in zone-specific
@@ -406,7 +429,7 @@ class JitCompartment
     JSC::ExecutableAllocator *createIonAlloc();
 
   public:
-    JitCompartment(JitRuntime *rt);
+    JitCompartment();
     ~JitCompartment();
 
     bool initialize(JSContext *cx);
@@ -417,10 +440,6 @@ class JitCompartment
     void mark(JSTracer *trc, JSCompartment *compartment);
     void sweep(FreeOp *fop);
 
-    JSC::ExecutableAllocator *execAlloc() {
-        return rt->execAlloc_;
-    }
-
     JitCode *stringConcatStub(ExecutionMode mode) const {
         switch (mode) {
           case SequentialExecution: return stringConcatStub_;
@@ -428,16 +447,11 @@ class JitCompartment
           default:                  MOZ_ASSUME_UNREACHABLE("No such execution mode");
         }
     }
-
-    OptimizedICStubSpace *optimizedStubSpace() {
-        return &optimizedStubSpace_;
-    }
 };
 
 // Called from JSCompartment::discardJitCode().
 void InvalidateAll(FreeOp *fop, JS::Zone *zone);
 void FinishInvalidation(FreeOp *fop, JSScript *script);
-void FinishDiscardJitCode(FreeOp *fop, JSCompartment *comp);
 
 // On windows systems, really large frames need to be incrementally touched.
 // The following constant defines the minimum increment of the touch.

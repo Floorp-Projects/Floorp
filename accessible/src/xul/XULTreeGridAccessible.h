@@ -106,7 +106,6 @@ protected:
 
   // XULTreeItemAccessibleBase
   mutable AccessibleHashtable mAccessibleCache;
-  nsString mCachedName;
 };
 
 
@@ -180,8 +179,9 @@ public:
   /**
    * Fire name or state change event if the accessible text or value has been
    * changed.
+   * @return true if name has changed
    */
-  void CellInvalidated();
+  bool CellInvalidated();
 
 protected:
   // Accessible

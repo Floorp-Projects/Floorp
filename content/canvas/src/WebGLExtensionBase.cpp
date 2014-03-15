@@ -10,12 +10,19 @@ using namespace mozilla;
 
 WebGLExtensionBase::WebGLExtensionBase(WebGLContext* context)
     : WebGLContextBoundObject(context)
+    , mIsLost(false)
 {
     SetIsDOMBinding();
 }
 
 WebGLExtensionBase::~WebGLExtensionBase()
 {
+}
+
+void
+WebGLExtensionBase::MarkLost()
+{
+    mIsLost = true;
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLExtensionBase)

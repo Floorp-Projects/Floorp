@@ -264,14 +264,13 @@ public:
     int SetRTCP_CNAME(const char cName[256]);
     int GetRTCP_CNAME(char cName[256]);
     int GetRemoteRTCP_CNAME(char cName[256]);
-    int GetRemoteRTCPData(unsigned int& NTPHigh, unsigned int& NTPLow,
-                          unsigned int& timestamp,
-                          unsigned int& playoutTimestamp,
-                          unsigned int& sendPacketCount,
-                          unsigned int& sendOctetCount,
-                          unsigned int* jitter,
-                          unsigned short* fractionLost,
-                          unsigned int* cumulativeLost);
+    int GetRemoteRTCPReceiverInfo(uint32_t& NTPHigh, uint32_t& NTPLow,
+                                  uint32_t& receivedPacketCount,
+                                  uint64_t& receivedOctetCount,
+                                  uint32_t& jitter,
+                                  uint16_t& fractionLost,
+                                  uint32_t& cumulativeLost,
+                                  int32_t& rttMs);
     int SendApplicationDefinedRTCPPacket(unsigned char subType,
                                          unsigned int name, const char* data,
                                          unsigned short dataLengthInBytes);

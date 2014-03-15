@@ -1510,7 +1510,7 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
           if (outGrainTypeIsComplex)
             SetTypedObjectValue(outGrainType, outArray, outOffset, r);
           else
-            outArray[i] = r;
+          UnsafePutElements(outArray, i, r);
         }
         inOffset += inGrainTypeSize;
         outOffset += outGrainTypeSize;

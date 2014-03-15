@@ -912,8 +912,14 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                                 typeDesc = p.getDescriptor(f.inner.identifier.name)
                             except NoSuchDescriptorError:
                                 continue
-                            declarations.add((typeDesc.nativeType, False))
-                            implheaders.add(typeDesc.headerFile)
+                            if typeDesc.interface.isCallback():
+                                # Callback interfaces always use strong refs, so
+                                # we need to include the right header to be able
+                                # to Release() in our inlined code.
+                                headers.add(typeDesc.headerFile)
+                            else:
+                                declarations.add((typeDesc.nativeType, False))
+                                implheaders.add(typeDesc.headerFile)
                 elif f.isDictionary():
                     # For a dictionary, we need to see its declaration in
                     # UnionTypes.h so we have its sizeof and know how big to
@@ -926,6 +932,11 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                     # Need to see the actual definition of the enum,
                     # unfortunately.
                     headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                elif f.isCallback():
+                    # Callbacks always use strong refs, so we need to include
+                    # the right header to be able to Release() in our inlined
+                    # code.
+                    headers.add(CGHeaders.getDeclarationFilename(f))
 
     map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
@@ -3276,7 +3287,10 @@ while (true) {
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
             assert len(objectMemberTypes) == 1
-            object = CGGeneric("%s.SetToObject(cx, argObj);\n"
+            # Very important to NOT construct a temporary Rooted here, since the
+            # SetToObject call can call a Rooted constructor and we need to keep
+            # stack discipline for Rooted.
+            object = CGGeneric("%s.SetToObject(cx, &${val}.toObject());\n"
                                "done = true;" % unionArgumentObj)
             names.append(objectMemberTypes[0].name)
         else:
@@ -3303,7 +3317,7 @@ while (true) {
             else:
                 templateBody = CGList([templateBody, object], "\n")
 
-            if any([arrayObject, dateObject, callbackObject, object]):
+            if dateObject:
                 templateBody.prepend(CGGeneric("JS::Rooted<JSObject*> argObj(cx, &${val}.toObject());"))
             templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
         else:
@@ -7187,7 +7201,9 @@ class CGUnionStruct(CGThing):
             disallowCopyConstruction = True
 
         friend="  friend class %sArgument;\n" % str(self.type) if not self.ownsMembers else ""
+        bases = [ClassBase("AllOwningUnionBase")] if self.ownsMembers else []
         return CGClass(selfName,
+                       bases=bases,
                        members=members,
                        constructors=constructors,
                        methods=methods,
