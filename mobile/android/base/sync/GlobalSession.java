@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.crypto.CryptoException;
@@ -374,6 +375,7 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
   }
 
   public void updateMetaGlobalInPlace() {
+    config.metaGlobal.declined = this.declinedEngineNames();
     ExtendedJSONObject engines = config.metaGlobal.getEngines();
     for (Entry<String, EngineSettings> pair : enginesToUpdate.entrySet()) {
       if (pair.getValue() == null) {
@@ -651,6 +653,38 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
             Utils.toCommaSeparatedString(config.enabledEngineNames) + "' from meta/global.");
       }
     }
+
+    // Persist declined.
+    // Our declined engines at any point are:
+    // Whatever they were remotely, plus whatever they were locally, less any
+    // engines that were just enabled locally or remotely.
+    // If remote just 'won', our recently enabled list just got cleared.
+    final HashSet<String> allDeclined = new HashSet<String>();
+
+    final Set<String> newRemoteDeclined = global.getDeclinedEngineNames();
+    final Set<String> oldLocalDeclined = config.declinedEngineNames;
+
+    allDeclined.addAll(newRemoteDeclined);
+    allDeclined.addAll(oldLocalDeclined);
+
+    if (config.userSelectedEngines != null) {
+      for (Entry<String, Boolean> selection : config.userSelectedEngines.entrySet()) {
+        if (selection.getValue()) {
+          allDeclined.remove(selection.getKey());
+        }
+      }
+    }
+
+    config.declinedEngineNames = allDeclined;
+    if (config.declinedEngineNames.isEmpty()) {
+      Logger.debug(LOG_TAG, "meta/global reported no declined engine names, and we have none declined locally.");
+    } else {
+      if (Logger.shouldLogVerbose(LOG_TAG)) {
+        Logger.trace(LOG_TAG, "Persisting declined engine names '" +
+            Utils.toCommaSeparatedString(config.declinedEngineNames) + "' from meta/global.");
+      }
+    }
+
     config.persistToPrefs();
     advance();
   }
@@ -902,6 +936,27 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
   }
 
   /**
+   * Engines to explicitly mark as declined in a fresh meta/global record.
+   * <p>
+   * Returns an empty array if the user hasn't elected to customize data types,
+   * or an array of engines that the user un-checked during customization.
+   * <p>
+   * Engines that Android Sync doesn't recognize are <b>not</b> included in
+   * the returned array.
+   *
+   * @return a new JSONArray of engine names.
+   */
+  @SuppressWarnings("unchecked")
+  protected JSONArray declinedEngineNames() {
+    final JSONArray declined = new JSONArray();
+    for (String engine : config.declinedEngineNames) {
+      declined.add(engine);
+    };
+
+    return declined;
+  }
+
+  /**
    * Engines to include in a fresh meta/global record.
    * <p>
    * Returns either the persisted engine names (perhaps we have been node
@@ -982,6 +1037,10 @@ public class GlobalSession implements PrefsSource, HttpResponseObserver {
     metaGlobal.setSyncID(newSyncID);
     metaGlobal.setStorageVersion(STORAGE_VERSION);
     metaGlobal.setEngines(engines);
+
+    // We assume that the config's declined engines have been updated
+    // according to the user's selections.
+    metaGlobal.setDeclinedEngineNames(this.declinedEngineNames());
 
     return metaGlobal;
   }
