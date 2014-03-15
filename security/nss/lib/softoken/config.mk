@@ -61,7 +61,3 @@ endif
 ifeq ($(OS_TARGET),AIX)
 OS_LIBS += -lpthread
 endif
-
-ifeq ($(OS_TARGET),SunOS)
-OS_LIBS += -lbsm 
-endif

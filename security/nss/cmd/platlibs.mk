@@ -146,10 +146,6 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
-ifeq ($(OS_TARGET), SunOS)
-OS_LIBS += -lbsm
-endif
-
 else # USE_STATIC_LIBS
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
