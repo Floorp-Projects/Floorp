@@ -4,7 +4,8 @@
 
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {require} = devtools;
@@ -17,6 +18,7 @@ const {getTargetForApp, launchApp, closeApp}
 const DeviceStore = require("devtools/app-manager/device-store");
 const WebappsStore = require("devtools/app-manager/webapps-store");
 const promise = require("sdk/core/promise");
+const DEFAULT_APP_ICON = "chrome://browser/skin/devtools/app-manager/default-app-icon.png";
 
 window.addEventListener("message", function(event) {
   try {
@@ -141,7 +143,7 @@ let UI = {
     if (panel) panel.classList.add("selected");
   },
 
-  openToolbox: function(manifest) {
+  openToolboxForApp: function(manifest) {
     if (!this.connected) {
       return;
     }
@@ -153,6 +155,31 @@ let UI = {
 
       top.UI.openAndShowToolboxForTarget(target, app.name, app.iconURL);
     }, console.error);
+  },
+
+  _getTargetForTab: function (form) {
+      let options = {
+        form: form,
+        client: this.connection.client,
+        chrome: false
+      };
+      let deferred = promise.defer();
+      return devtools.TargetFactory.forRemoteTab(options);
+  },
+
+  openToolboxForTab: function (aNode) {
+    let index = Array.prototype.indexOf.apply(
+      aNode.parentNode.parentNode.parentNode.children,
+      [aNode.parentNode.parentNode]);
+    this.connection.client.listTabs(
+      response => {
+        let tab = response.tabs[index];
+        this._getTargetForTab(tab).then(target => {
+          top.UI.openAndShowToolboxForTarget(
+            target, tab.title, DEFAULT_APP_ICON);
+        }, console.error);
+      }
+    );
   },
 
   startApp: function(manifest) {
