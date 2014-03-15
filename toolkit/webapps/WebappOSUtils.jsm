@@ -208,8 +208,11 @@ this.WebappOSUtils = {
   getPackagePath: function(aApp) {
     let packagePath = this.getInstallPath(aApp);
 
+    // Only for Firefox on Mac OS X
+#ifndef MOZ_B2G
 #ifdef XP_MACOSX
     packagePath = OS.Path.join(packagePath, "Contents", "Resources");
+#endif
 #endif
 
     return packagePath;
