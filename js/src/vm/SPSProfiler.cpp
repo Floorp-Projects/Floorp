@@ -292,7 +292,7 @@ SPSProfiler::allocProfileString(JSScript *script, JSFunction *maybeFun)
         return nullptr;
 
     // Construct the descriptive string.
-    size_t ret;
+    DebugOnly<size_t> ret;
     if (hasAtom)
         ret = JS_snprintf(cstr, len + 1, "%hs (%s:%llu)", atom, filename, lineno);
     else
