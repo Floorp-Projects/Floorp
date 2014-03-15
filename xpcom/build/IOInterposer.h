@@ -196,6 +196,12 @@ public:
   static void Clear();
 
   /**
+   * This function immediately disables IOInterposer functionality in a fast,
+   * thread-safe manner. Primarily for use by the crash reporter.
+   */
+  static void Disable();
+
+  /**
    * Report IO to registered observers.
    * Notice that the reported operation must be either OpRead, OpWrite or
    * OpFSync. You are not allowed to report an observation with OpWriteFSync or
@@ -220,16 +226,9 @@ public:
   /**
    * Return whether or not an operation is observed. Reporters should not
    * report operations that are not being observed by anybody. This mechanism
-   * allows us to not report IO when no observers are registered.
+   * allows us to avoid reporting I/O when no observers are registered.
    */
-  static inline bool IsObservedOperation(IOInterposeObserver::Operation aOp) {
-    // The quick reader may observe that no locks are being employed here,
-    // hence, the result of the operations is truly undefined. However, most
-    // computers will usually return either true or false, which is good enough.
-    // If we occasionally report more or less IO than is being observed than
-    // that is not a problem.
-    return (sObservedOperations & aOp);
-  }
+  static bool IsObservedOperation(IOInterposeObserver::Operation aOp);
 
   /**
    * Register IOInterposeObserver, the observer object will receive all
@@ -269,6 +268,7 @@ class IOInterposer MOZ_FINAL
 public:
   static inline void Init()                                               {}
   static inline void Clear()                                              {}
+  static inline void Disable()                                            {}
   static inline void Report(IOInterposeObserver::Observation& aOb)        {}
   static inline void Register(IOInterposeObserver::Operation aOp,
                               IOInterposeObserver* aObserver)             {}
