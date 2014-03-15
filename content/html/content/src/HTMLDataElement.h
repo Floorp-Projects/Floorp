@@ -17,7 +17,7 @@ namespace dom {
 class HTMLDataElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLDataElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLDataElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLDataElement();
 
   // HTMLDataElement WebIDL

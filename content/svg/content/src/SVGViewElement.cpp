@@ -40,7 +40,7 @@ nsSVGElement::EnumInfo SVGViewElement::sEnumInfo[1] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGViewElement::SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGViewElement::SVGViewElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGViewElementBase(aNodeInfo)
 {
 }

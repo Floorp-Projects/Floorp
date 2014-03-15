@@ -630,7 +630,7 @@ protected:
   nsRefPtr<ChildImpl> mActor;
 
 public:
-  CreateCallbackRunnable(already_AddRefed<ChildImpl> aActor)
+  CreateCallbackRunnable(already_AddRefed<ChildImpl>&& aActor)
   : mActor(aActor)
   {
     // May be created on any thread!
@@ -661,10 +661,10 @@ class ChildImpl::OpenChildProcessActorRunnable MOZ_FINAL :
   ProcessHandle mProcessHandle;
 
 public:
-  OpenChildProcessActorRunnable(already_AddRefed<ChildImpl> aActor,
+  OpenChildProcessActorRunnable(already_AddRefed<ChildImpl>&& aActor,
                                 Transport* aTransport,
                                 ProcessHandle aProcessHandle)
-  : CreateCallbackRunnable(aActor), mTransport(aTransport),
+  : CreateCallbackRunnable(Move(aActor)), mTransport(aTransport),
     mProcessHandle(aProcessHandle)
   {
     AssertIsOnMainThread();
@@ -692,10 +692,10 @@ class ChildImpl::OpenMainProcessActorRunnable MOZ_FINAL :
   MessageLoop* mParentMessageLoop;
 
 public:
-  OpenMainProcessActorRunnable(already_AddRefed<ChildImpl> aChildActor,
+  OpenMainProcessActorRunnable(already_AddRefed<ChildImpl>&& aChildActor,
                                already_AddRefed<ParentImpl> aParentActor,
                                MessageLoop* aParentMessageLoop)
-  : CreateCallbackRunnable(aChildActor), mParentActor(aParentActor),
+  : CreateCallbackRunnable(Move(aChildActor)), mParentActor(aParentActor),
     mParentMessageLoop(aParentMessageLoop)
   {
     AssertIsOnMainThread();

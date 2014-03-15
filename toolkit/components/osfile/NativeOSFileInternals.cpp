@@ -412,9 +412,9 @@ public:
    * alread_AddRefed to ensure that we do not manipulate main-thread
    * only refcounters off the main thread.
    */
-  ErrorEvent(already_AddRefed<nsINativeOSFileSuccessCallback> aOnSuccess,
-             already_AddRefed<nsINativeOSFileErrorCallback> aOnError,
-             already_AddRefed<AbstractResult> aDiscardedResult,
+  ErrorEvent(already_AddRefed<nsINativeOSFileSuccessCallback>&& aOnSuccess,
+             already_AddRefed<nsINativeOSFileErrorCallback>&& aOnError,
+             already_AddRefed<AbstractResult>& aDiscardedResult,
              const nsACString& aOperation,
              int32_t aOSError)
     : mOnSuccess(aOnSuccess)
@@ -466,9 +466,9 @@ public:
    * we do not manipulate xpconnect refcounters off the main thread
    * (which is illegal).
    */
-  SuccessEvent(already_AddRefed<nsINativeOSFileSuccessCallback> aOnSuccess,
-               already_AddRefed<nsINativeOSFileErrorCallback> aOnError,
-               already_AddRefed<nsINativeOSFileResult> aResult)
+  SuccessEvent(already_AddRefed<nsINativeOSFileSuccessCallback>&& aOnSuccess,
+               already_AddRefed<nsINativeOSFileErrorCallback>&& aOnError,
+               already_AddRefed<nsINativeOSFileResult>& aResult)
     : mOnSuccess(aOnSuccess)
     , mOnError(aOnError)
     , mResult(aResult)
@@ -506,8 +506,8 @@ public:
  */
 class AbstractDoEvent: public nsRunnable {
 public:
-  AbstractDoEvent(already_AddRefed<nsINativeOSFileSuccessCallback> aOnSuccess,
-                  already_AddRefed<nsINativeOSFileErrorCallback> aOnError)
+  AbstractDoEvent(already_AddRefed<nsINativeOSFileSuccessCallback>& aOnSuccess,
+                  already_AddRefed<nsINativeOSFileErrorCallback>& aOnError)
     : mOnSuccess(aOnSuccess)
     , mOnError(aOnError)
 #if defined(DEBUG)
@@ -521,7 +521,7 @@ public:
    * Fail, asynchronously.
    */
   void Fail(const nsACString& aOperation,
-            already_AddRefed<AbstractResult> aDiscardedResult,
+            already_AddRefed<AbstractResult>&& aDiscardedResult,
             int32_t aOSError = 0) {
     Resolve();
     nsRefPtr<ErrorEvent> event = new ErrorEvent(mOnSuccess.forget(),
@@ -542,7 +542,7 @@ public:
   /**
    * Succeed, asynchronously.
    */
-  void Succeed(already_AddRefed<nsINativeOSFileResult> aResult) {
+  void Succeed(already_AddRefed<nsINativeOSFileResult>&& aResult) {
     Resolve();
     nsRefPtr<SuccessEvent> event = new SuccessEvent(mOnSuccess.forget(),
                                                     mOnError.forget(),
@@ -592,8 +592,8 @@ public:
    */
   AbstractReadEvent(const nsAString& aPath,
                     const uint64_t aBytes,
-                    already_AddRefed<nsINativeOSFileSuccessCallback> aOnSuccess,
-                    already_AddRefed<nsINativeOSFileErrorCallback>  aOnError)
+                    already_AddRefed<nsINativeOSFileSuccessCallback>& aOnSuccess,
+                    already_AddRefed<nsINativeOSFileErrorCallback>& aOnError)
     : AbstractDoEvent(aOnSuccess, aOnError)
     , mPath(aPath)
     , mBytes(aBytes)
@@ -741,8 +741,8 @@ class DoReadToTypedArrayEvent MOZ_FINAL : public AbstractReadEvent {
 public:
   DoReadToTypedArrayEvent(const nsAString& aPath,
                           const uint32_t aBytes,
-                          already_AddRefed<nsINativeOSFileSuccessCallback> aOnSuccess,
-                          already_AddRefed<nsINativeOSFileErrorCallback>  aOnError)
+                          already_AddRefed<nsINativeOSFileSuccessCallback>&& aOnSuccess,
+                          already_AddRefed<nsINativeOSFileErrorCallback>&& aOnError)
     : AbstractReadEvent(aPath, aBytes,
                         aOnSuccess, aOnError)
     , mResult(new TypedArrayResult(TimeStamp::Now()))
@@ -779,8 +779,8 @@ public:
   DoReadToStringEvent(const nsAString& aPath,
                       const nsACString& aEncoding,
                       const uint32_t aBytes,
-                      already_AddRefed<nsINativeOSFileSuccessCallback> aOnSuccess,
-                      already_AddRefed<nsINativeOSFileErrorCallback>  aOnError)
+                      already_AddRefed<nsINativeOSFileSuccessCallback>&& aOnSuccess,
+                      already_AddRefed<nsINativeOSFileErrorCallback>&& aOnError)
     : AbstractReadEvent(aPath, aBytes, aOnSuccess, aOnError)
     , mEncoding(aEncoding)
     , mResult(new StringResult(TimeStamp::Now()))

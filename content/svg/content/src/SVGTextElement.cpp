@@ -20,7 +20,7 @@ SVGTextElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGTextElement::SVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGTextElement::SVGTextElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGTextElementBase(aNodeInfo)
 {
 }

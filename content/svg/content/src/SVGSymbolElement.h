@@ -12,7 +12,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 nsresult NS_NewSVGSymbolElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo> aNodeInfo);
+                                already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -24,8 +24,8 @@ class SVGSymbolElement MOZ_FINAL : public SVGSymbolElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGSymbolElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGSymbolElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 

@@ -18,7 +18,7 @@ class HTMLPreElement MOZ_FINAL : public nsGenericHTMLElement,
                                  public nsIDOMHTMLPreElement
 {
 public:
-  HTMLPreElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLPreElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

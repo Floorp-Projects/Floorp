@@ -21,7 +21,7 @@ class HTMLMapElement MOZ_FINAL : public nsGenericHTMLElement,
                                  public nsIDOMHTMLMapElement
 {
 public:
-  HTMLMapElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLMapElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED

@@ -10,7 +10,7 @@
 #include "nsSVGEnum.h"
 
 nsresult NS_NewSVGFEBlendElement(nsIContent **aResult,
-                                 already_AddRefed<nsINodeInfo> aNodeInfo);
+                                 already_AddRefed<nsINodeInfo>&& aNodeInfo);
 namespace mozilla {
 namespace dom {
 
@@ -19,9 +19,9 @@ typedef nsSVGFE SVGFEBlendElementBase;
 class SVGFEBlendElement : public SVGFEBlendElementBase
 {
   friend nsresult (::NS_NewSVGFEBlendElement(nsIContent **aResult,
-                                             already_AddRefed<nsINodeInfo> aNodeInfo));
+                                             already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFEBlendElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEBlendElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEBlendElementBase(aNodeInfo)
   {
   }

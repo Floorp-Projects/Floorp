@@ -24,7 +24,7 @@ class HTMLAudioElement MOZ_FINAL : public HTMLMediaElement,
                                    public nsIDOMHTMLAudioElement
 {
 public:
-  HTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLAudioElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLAudioElement();
 
   // nsISupports

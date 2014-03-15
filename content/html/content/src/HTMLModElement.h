@@ -16,7 +16,7 @@ namespace dom {
 class HTMLModElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLModElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLModElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLModElement();
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

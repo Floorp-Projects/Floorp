@@ -36,7 +36,7 @@ NS_IMPL_ISUPPORTS_INHERITED4(HTMLAudioElement, HTMLMediaElement,
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 
 
-HTMLAudioElement::HTMLAudioElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLAudioElement::HTMLAudioElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : HTMLMediaElement(aNodeInfo),
     mTimerActivated(false)
 {
@@ -59,12 +59,12 @@ HTMLAudioElement::Audio(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsCOMPtr<nsINodeInfo> nodeInfo =
+  already_AddRefed<nsINodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::audio, nullptr,
                                         kNameSpaceID_XHTML,
                                         nsIDOMNode::ELEMENT_NODE);
 
-  nsRefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo.forget());
+  nsRefPtr<HTMLAudioElement> audio = new HTMLAudioElement(nodeInfo);
   audio->SetHTMLAttr(nsGkAtoms::preload, NS_LITERAL_STRING("auto"), aRv);
   if (aRv.Failed()) {
     return nullptr;

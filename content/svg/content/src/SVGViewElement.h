@@ -21,7 +21,7 @@ typedef nsSVGElement SVGViewElementBase;
 class nsSVGOuterSVGFrame;
 
 nsresult NS_NewSVGViewElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 class SVGFragmentIdentifier;
@@ -35,9 +35,9 @@ protected:
   friend class mozilla::SVGFragmentIdentifier;
   friend class SVGSVGElement;
   friend class ::nsSVGOuterSVGFrame;
-  SVGViewElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGViewElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGViewElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
+                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 

@@ -9,7 +9,7 @@
 #include "nsSVGFilters.h"
 
 nsresult NS_NewSVGFETileElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo> aNodeInfo);
+                                already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +19,9 @@ typedef nsSVGFE SVGFETileElementBase;
 class SVGFETileElement : public SVGFETileElementBase
 {
   friend nsresult (::NS_NewSVGFETileElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo> aNodeInfo));
+                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFETileElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFETileElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFETileElementBase(aNodeInfo)
   {
   }

@@ -166,7 +166,8 @@ class UndoManager;
 class FragmentOrElement : public nsIContent
 {
 public:
-  FragmentOrElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  FragmentOrElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  FragmentOrElement(already_AddRefed<nsINodeInfo>&& aNodeInfo);
   virtual ~FragmentOrElement();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

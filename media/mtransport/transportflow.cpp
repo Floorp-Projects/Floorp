@@ -16,6 +16,8 @@ namespace mozilla {
 
 MOZ_MTLOG_MODULE("mtransport")
 
+NS_IMPL_ISUPPORTS0(TransportFlow)
+
 // There are some hacks here to allow destruction off of
 // the main thread.
 TransportFlow::~TransportFlow() {

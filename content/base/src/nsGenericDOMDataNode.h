@@ -70,7 +70,8 @@ public:
 
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
-  nsGenericDOMDataNode(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsGenericDOMDataNode(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  nsGenericDOMDataNode(already_AddRefed<nsINodeInfo>&& aNodeInfo);
   virtual ~nsGenericDOMDataNode();
 
   virtual void GetNodeValueInternal(nsAString& aNodeValue) MOZ_OVERRIDE;
