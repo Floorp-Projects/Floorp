@@ -7,7 +7,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TextEvents.h"
 
-#include "nsNativeKeyBindings.h"
+#include "NativeKeyBindings.h"
 #include "nsString.h"
 #include "nsMemory.h"
 #include "nsGtkKeyUtils.h"
@@ -16,15 +16,10 @@
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdk.h>
 
-// X.h defines KeyPress
-#ifdef KeyPress
-#undef KeyPress
-#endif
+namespace mozilla {
+namespace widget {
 
-using namespace mozilla;
-using namespace mozilla::widget;
-
-static nsINativeKeyBindings::DoCommandCallback gCurrentCallback;
+static nsIWidget::DoCommandCallback gCurrentCallback;
 static void *gCurrentCallbackData;
 static bool gHandled;
 
@@ -32,7 +27,7 @@ static bool gHandled;
 static void
 copy_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback("cmd_copy", gCurrentCallbackData);
+  gCurrentCallback(CommandCopy, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "copy_clipboard");
   gHandled = true;
 }
@@ -40,7 +35,7 @@ copy_clipboard_cb(GtkWidget *w, gpointer user_data)
 static void
 cut_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback("cmd_cut", gCurrentCallbackData);
+  gCurrentCallback(CommandCut, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "cut_clipboard");
   gHandled = true;
 }
@@ -50,19 +45,19 @@ cut_clipboard_cb(GtkWidget *w, gpointer user_data)
 // We don't have this distinction, so we always use editor's notion of
 // lines, which are newline-terminated.
 
-static const char *const sDeleteCommands[][2] = {
+static const Command sDeleteCommands[][2] = {
   // backward, forward
-  { "cmd_deleteCharBackward", "cmd_deleteCharForward" },    // CHARS
-  { "cmd_deleteWordBackward", "cmd_deleteWordForward" },    // WORD_ENDS
-  { "cmd_deleteWordBackward", "cmd_deleteWordForward" },    // WORDS
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // LINES
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // LINE_ENDS
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // PARAGRAPH_ENDS
-  { "cmd_deleteToBeginningOfLine", "cmd_deleteToEndOfLine" }, // PARAGRAPHS
+  { CommandDeleteCharBackward, CommandDeleteCharForward },    // CHARS
+  { CommandDeleteWordBackward, CommandDeleteWordForward },    // WORD_ENDS
+  { CommandDeleteWordBackward, CommandDeleteWordForward },    // WORDS
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // LINES
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // LINE_ENDS
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // PARAGRAPH_ENDS
+  { CommandDeleteToBeginningOfLine, CommandDeleteToEndOfLine }, // PARAGRAPHS
   // This deletes from the end of the previous word to the beginning of the
   // next word, but only if the caret is not in a word.
   // XXX need to implement in editor
-  { nullptr, nullptr } // WHITESPACE
+  { CommandDoNothing, CommandDoNothing } // WHITESPACE
 };
 
 static void
@@ -82,11 +77,11 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
     // This works like word_ends, except we first move the caret to the
     // beginning/end of the current word.
     if (forward) {
-      gCurrentCallback("cmd_wordNext", gCurrentCallbackData);
-      gCurrentCallback("cmd_wordPrevious", gCurrentCallbackData);
+      gCurrentCallback(CommandWordNext, gCurrentCallbackData);
+      gCurrentCallback(CommandWordPrevious, gCurrentCallbackData);
     } else {
-      gCurrentCallback("cmd_wordPrevious", gCurrentCallbackData);
-      gCurrentCallback("cmd_wordNext", gCurrentCallbackData);
+      gCurrentCallback(CommandWordPrevious, gCurrentCallbackData);
+      gCurrentCallback(CommandWordNext, gCurrentCallbackData);
     }
   } else if (del_type == GTK_DELETE_DISPLAY_LINES ||
              del_type == GTK_DELETE_PARAGRAPHS) {
@@ -94,66 +89,67 @@ delete_from_cursor_cb(GtkWidget *w, GtkDeleteType del_type,
     // This works like display_line_ends, except we first move the caret to the
     // beginning/end of the current line.
     if (forward) {
-      gCurrentCallback("cmd_beginLine", gCurrentCallbackData);
+      gCurrentCallback(CommandBeginLine, gCurrentCallbackData);
     } else {
-      gCurrentCallback("cmd_endLine", gCurrentCallbackData);
+      gCurrentCallback(CommandEndLine, gCurrentCallbackData);
     }
   }
 
-  const char *cmd = sDeleteCommands[del_type][forward];
-  if (!cmd)
+  Command command = sDeleteCommands[del_type][forward];
+  if (!command) {
     return; // unsupported command
+  }
 
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCallback(cmd, gCurrentCallbackData);
+    gCurrentCallback(command, gCurrentCallbackData);
   }
 }
 
-static const char *const sMoveCommands[][2][2] = {
+static const Command sMoveCommands[][2][2] = {
   // non-extend { backward, forward }, extend { backward, forward }
   // GTK differentiates between logical position, which is prev/next,
   // and visual position, which is always left/right.
   // We should fix this to work the same way for RTL text input.
   { // LOGICAL_POSITIONS
-    { "cmd_charPrevious", "cmd_charNext" },
-    { "cmd_selectCharPrevious", "cmd_selectCharNext" }
+    { CommandCharPrevious, CommandCharNext },
+    { CommandSelectCharPrevious, CommandSelectCharNext }
   },
   { // VISUAL_POSITIONS
-    { "cmd_charPrevious", "cmd_charNext" },
-    { "cmd_selectCharPrevious", "cmd_selectCharNext" }
+    { CommandCharPrevious, CommandCharNext },
+    { CommandSelectCharPrevious, CommandSelectCharNext }
   },
   { // WORDS
-    { "cmd_wordPrevious", "cmd_wordNext" },
-    { "cmd_selectWordPrevious", "cmd_selectWordNext" }
+    { CommandWordPrevious, CommandWordNext },
+    { CommandSelectWordPrevious, CommandSelectWordNext }
   },
   { // DISPLAY_LINES
-    { "cmd_linePrevious", "cmd_lineNext" },
-    { "cmd_selectLinePrevious", "cmd_selectLineNext" }
+    { CommandLinePrevious, CommandLineNext },
+    { CommandSelectLinePrevious, CommandSelectLineNext }
   },
   { // DISPLAY_LINE_ENDS
-    { "cmd_beginLine", "cmd_endLine" },
-    { "cmd_selectBeginLine", "cmd_selectEndLine" }
+    { CommandBeginLine, CommandEndLine },
+    { CommandSelectBeginLine, CommandSelectEndLine }
   },
   { // PARAGRAPHS
-    { "cmd_linePrevious", "cmd_lineNext" },
-    { "cmd_selectLinePrevious", "cmd_selectLineNext" }
+    { CommandLinePrevious, CommandLineNext },
+    { CommandSelectLinePrevious, CommandSelectLineNext }
   },
   { // PARAGRAPH_ENDS
-    { "cmd_beginLine", "cmd_endLine" },
-    { "cmd_selectBeginLine", "cmd_selectEndLine" }
+    { CommandBeginLine, CommandEndLine },
+    { CommandSelectBeginLine, CommandSelectEndLine }
   },
   { // PAGES
-    { "cmd_movePageUp", "cmd_movePageDown" },
-    { "cmd_selectPageUp", "cmd_selectPageDown" }
+    { CommandMovePageUp, CommandMovePageDown },
+    { CommandSelectPageUp, CommandSelectPageDown }
   },
   { // BUFFER_ENDS
-    { "cmd_moveTop", "cmd_moveBottom" },
-    { "cmd_selectTop", "cmd_selectBottom" }
+    { CommandMoveTop, CommandMoveBottom },
+    { CommandSelectTop, CommandSelectBottom }
   },
   { // HORIZONTAL_PAGES (unsupported)
-    { nullptr, nullptr },
-    { nullptr, nullptr }
+    { CommandDoNothing, CommandDoNothing },
+    { CommandDoNothing, CommandDoNothing }
   }
 };
 
@@ -169,21 +165,21 @@ move_cursor_cb(GtkWidget *w, GtkMovementStep step, gint count,
     return;
   }
 
-  const char *cmd = sMoveCommands[step][extend_selection][forward];
-  if (!cmd)
+  Command command = sMoveCommands[step][extend_selection][forward];
+  if (!command) {
     return; // unsupported command
+  }
 
-  
   unsigned int absCount = Abs(count);
   for (unsigned int i = 0; i < absCount; ++i) {
-    gCurrentCallback(cmd, gCurrentCallbackData);
+    gCurrentCallback(command, gCurrentCallbackData);
   }
 }
 
 static void
 paste_clipboard_cb(GtkWidget *w, gpointer user_data)
 {
-  gCurrentCallback("cmd_paste", gCurrentCallbackData);
+  gCurrentCallback(CommandPaste, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "paste_clipboard");
   gHandled = true;
 }
@@ -192,19 +188,57 @@ paste_clipboard_cb(GtkWidget *w, gpointer user_data)
 static void
 select_all_cb(GtkWidget *w, gboolean select, gpointer user_data)
 {
-  gCurrentCallback("cmd_selectAll", gCurrentCallbackData);
+  gCurrentCallback(CommandSelectAll, gCurrentCallbackData);
   g_signal_stop_emission_by_name(w, "select_all");
   gHandled = true;
 }
 
-void
-nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
+NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
+NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
+
+// static
+NativeKeyBindings*
+NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
 {
   switch (aType) {
-  case eKeyBindings_Input:
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      if (!sInstanceForSingleLineEditor) {
+        sInstanceForSingleLineEditor = new NativeKeyBindings();
+        sInstanceForSingleLineEditor->Init(aType);
+      }
+      return sInstanceForSingleLineEditor;
+
+    default:
+      // fallback to multiline editor case in release build
+      MOZ_ASSERT(false, "aType is invalid or not yet implemented");
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      if (!sInstanceForMultiLineEditor) {
+        sInstanceForMultiLineEditor = new NativeKeyBindings();
+        sInstanceForMultiLineEditor->Init(aType);
+      }
+      return sInstanceForMultiLineEditor;
+  }
+}
+
+// static
+void
+NativeKeyBindings::Shutdown()
+{
+  delete sInstanceForSingleLineEditor;
+  sInstanceForSingleLineEditor = nullptr;
+  delete sInstanceForMultiLineEditor;
+  sInstanceForMultiLineEditor = nullptr;
+}
+
+void
+NativeKeyBindings::Init(NativeKeyBindingsType  aType)
+{
+  switch (aType) {
+  case nsIWidget::NativeKeyBindingsForSingleLineEditor:
     mNativeTarget = gtk_entry_new();
     break;
-  case eKeyBindings_TextArea:
+  default:
     mNativeTarget = gtk_text_view_new();
     if (gtk_major_version > 2 ||
         (gtk_major_version == 2 && (gtk_minor_version > 2 ||
@@ -232,24 +266,16 @@ nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
                    G_CALLBACK(paste_clipboard_cb), this);
 }
 
-nsNativeKeyBindings::~nsNativeKeyBindings()
+NativeKeyBindings::~NativeKeyBindings()
 {
   gtk_widget_destroy(mNativeTarget);
   g_object_unref(mNativeTarget);
 }
 
-NS_IMPL_ISUPPORTS1(nsNativeKeyBindings, nsINativeKeyBindings)
-
 bool
-nsNativeKeyBindings::KeyDown(const WidgetKeyboardEvent& aEvent,
-                             DoCommandCallback aCallback, void *aCallbackData)
-{
-  return false;
-}
-
-bool
-nsNativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
-                              DoCommandCallback aCallback, void *aCallbackData)
+NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
+                           DoCommandCallback aCallback,
+                           void* aCallbackData)
 {
   // If the native key event is set, it must be synthesized for tests.
   // We just ignore such events because this behavior depends on system
@@ -268,7 +294,7 @@ nsNativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
       static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->keyval;
   }
 
-  if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
+  if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {
     return true;
   }
 
@@ -278,7 +304,7 @@ nsNativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
       aEvent.alternativeCharCodes[i].mUnshiftedCharCode;
     if (ch && ch != aEvent.charCode) {
       keyval = gdk_unicode_to_keyval(ch);
-      if (KeyPressInternal(aEvent, aCallback, aCallbackData, keyval)) {
+      if (ExecuteInternal(aEvent, aCallback, aCallbackData, keyval)) {
         return true;
       }
     }
@@ -302,10 +328,10 @@ Code, which should be used after fixing GNOME bug 162726:
 }
 
 bool
-nsNativeKeyBindings::KeyPressInternal(const WidgetKeyboardEvent& aEvent,
-                                      DoCommandCallback aCallback,
-                                      void *aCallbackData,
-                                      guint aKeyval)
+NativeKeyBindings::ExecuteInternal(const WidgetKeyboardEvent& aEvent,
+                                   DoCommandCallback aCallback,
+                                   void* aCallbackData,
+                                   guint aKeyval)
 {
   guint modifiers =
     static_cast<GdkEventKey*>(aEvent.mNativeKeyEvent)->state;
@@ -328,9 +354,5 @@ nsNativeKeyBindings::KeyPressInternal(const WidgetKeyboardEvent& aEvent,
   return gHandled;
 }
 
-bool
-nsNativeKeyBindings::KeyUp(const WidgetKeyboardEvent& aEvent,
-                           DoCommandCallback aCallback, void *aCallbackData)
-{
-  return false;
-}
+} // namespace widget
+} // namespace mozilla

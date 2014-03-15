@@ -34,7 +34,13 @@ is("appStatus" in document.nodePrincipal, true,
 function MockFXAManager() {}
 
 MockFXAManager.prototype = {
-  getAssertion: function(audience) {
+  getAssertion: function(audience, options) {
+    // Always reject a request for a silent assertion, simulating the
+    // scenario in which there is no signed-in user to begin with.
+    if (options.silent) {
+      return Promise.resolve(null);
+    }
+
     let deferred = Promise.defer();
     jwcrypto.generateKeyPair("DS160", (err, kp) => {
       if (err) {
@@ -137,7 +143,7 @@ function receiveMessage(event) {
   let expected = app.expected;
 
   is(result.success, expected.success,
-     "Assertion request " + (expected.success ? "succeeds" : "fails"));
+     "Assertion request succeeds");
 
   if (expected.success) {
     // Confirm that the assertion audience and origin are as expected
@@ -180,7 +186,6 @@ window.addEventListener("message", receiveMessage, false, true);
 function runTest() {
   for (let app of apps) {
     dump("** Testing " + app.title + "\n");
-
     // Set up state for message handler
     expectedErrors = 0;
     receivedErrors = [];
