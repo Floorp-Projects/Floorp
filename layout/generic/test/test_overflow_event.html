@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for overflow events</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  window.addEventListener("load", function(event) {
+      if (event.target == document) {
+          test_bug981637();
+      }
+  }, false);
+
+  /** Test for Bug 981637:  correct overflow event firing in updateOverflow **/
+
+  var overflow_fired = false;
+  function overflow_listener(event) {
+    overflow_fired = true;
+  }
+
+  function test_bug981637() {
+    var outerDiv = document.getElementById("bug981637");
+    var innerDiv = outerDiv.firstChild;
+    innerDiv.offsetWidth; // flush layout
+    is(overflow_fired, false, "correct setup");
+    outerDiv.addEventListener("overflow", overflow_listener, false);
+    innerDiv.style.transform = "scale(1.2)";
+    innerDiv.offsetWidth; // flush layout
+    // run finish step after the overflow event fires (off the event loop)
+    setTimeout(test_bug981637_step2, 0);
+  }
+
+  function test_bug981637_step2() {
+    is(overflow_fired, true, "overflow event should have fired after updating transform");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=981637">Mozilla Bug 981637</a>
+<div id="bug981637" style="overflow: hidden; width: 100px; height: 100px;"><div style="transform: scale(0.8); width: 100px; height: 100px"></div></div>
+<pre id="test">
+</pre>
+</body>
+</html>
