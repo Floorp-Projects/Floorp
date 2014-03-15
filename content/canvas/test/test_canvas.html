@@ -21577,6 +21577,24 @@ function test_linedash() {
 }
 </script>
 
+<p>Canvas test: test_opaque</p>
+<canvas id="c688" width="150" height="50"></canvas>
+<script type="text/javascript">
+
+function test_opaque() {
+  var c = document.getElementById("c688");
+  var ctx = c.getContext("2d", {alpha: false});
+  ctx.fillStyle = "green";
+  ctx.fillRect(0,0,10,10);
+  ctx.fillStyle = "rgba(255,0,0,.5)";
+  ctx.fillRect(10,0,10,10);
+
+  isPixel(ctx, 20, 20, 0, 0, 0, 255, 0);
+  isPixel(ctx, 5, 5, 0, 128, 0, 255, 0);
+  isPixel(ctx, 15, 5, 128, 0, 0, 255, 0);
+}
+</script>
+
 <script>
 
 function asyncTestsDone() {
@@ -24872,6 +24890,12 @@ function runTests() {
  } catch(e) {
   throw e;
   ok(false, "unexpected exception thrown in: test_linedash");
+ }
+try {
+  test_opaque();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_opaque");
  }
  try {
   // run this test last since it replaces the getContext method

@@ -408,6 +408,7 @@ public:
   { EnsureTarget(); return mTarget->Snapshot(); }
 
   NS_IMETHOD SetIsOpaque(bool isOpaque) MOZ_OVERRIDE;
+  bool GetIsOpaque() MOZ_OVERRIDE { return mOpaque; }
   NS_IMETHOD Reset() MOZ_OVERRIDE;
   already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                                CanvasLayer *aOldLayer,
