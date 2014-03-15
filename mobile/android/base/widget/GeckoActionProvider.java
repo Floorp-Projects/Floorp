@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GeckoActionProvider extends ActionProvider {
     private static int MAX_HISTORY_SIZE = 2;
@@ -43,6 +44,20 @@ public class GeckoActionProvider extends ActionProvider {
     private OnTargetSelectedListener mOnTargetListener;
 
     private final Callbacks mCallbacks = new Callbacks();
+
+    private static HashMap<String, GeckoActionProvider> mProviders = new HashMap<String, GeckoActionProvider>();
+
+    // Gets the action provider for a particular mimetype
+    public static GeckoActionProvider getForType(String type, Context context) {
+        if (!mProviders.keySet().contains(type)) {
+            GeckoActionProvider provider = new GeckoActionProvider(context);
+
+            String subType = type.substring(0, type.indexOf("/"));
+            provider.setHistoryFileName("history-" + subType + ".xml");
+            mProviders.put(type, provider);
+        }
+        return mProviders.get(type);
+    }
 
     public GeckoActionProvider(Context context) {
         super(context);
@@ -141,6 +156,10 @@ public class GeckoActionProvider extends ActionProvider {
         return infos;
     }
 
+    public void chooseActivity(int position) {
+        mCallbacks.chooseActivity(position);
+    }
+
     /**
      * Listener for handling default activity / menu item clicks.
      */
@@ -168,7 +187,6 @@ public class GeckoActionProvider extends ActionProvider {
         @Override
         public void onClick(View view) {
             Integer index = (Integer) view.getTag();
-            ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
             chooseActivity(index);
         }
     }
