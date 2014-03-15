@@ -101,6 +101,10 @@ RTCPPacketInformation::AddReportInfo(
 RTCPReportBlockInformation::RTCPReportBlockInformation():
     remoteReceiveBlock(),
     remoteMaxJitter(0),
+    remotePacketsReceived(0),
+    remoteOctetsReceived(0),
+    lastReceivedRRNTPsecs(0),
+    lastReceivedRRNTPfrac(0),
     RTT(0),
     minRTT(0),
     maxRTT(0),

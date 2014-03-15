@@ -414,14 +414,15 @@ js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
         uint32_t elemi = base+2;
 
         JS_ASSERT(args[arri].isObject());
-        JS_ASSERT(args[arri].toObject().isNative());
+        JS_ASSERT(args[arri].toObject().isNative() || IsTypedObjectArray(args[arri].toObject()));
         JS_ASSERT(args[idxi].isInt32());
 
         RootedObject arrobj(cx, &args[arri].toObject());
         uint32_t idx = args[idxi].toInt32();
 
-        if (arrobj->is<TypedArrayObject>()) {
-            JS_ASSERT(idx < arrobj->as<TypedArrayObject>().length());
+        if (arrobj->is<TypedArrayObject>() || arrobj->is<TypedObject>()) {
+            JS_ASSERT(!arrobj->is<TypedArrayObject>() || idx < arrobj->as<TypedArrayObject>().length());
+            JS_ASSERT(!arrobj->is<TypedObject>() || idx < arrobj->as<TypedObject>().length());
             RootedValue tmp(cx, args[elemi]);
             // XXX: Always non-strict.
             if (!JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false))

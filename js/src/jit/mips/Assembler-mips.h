@@ -55,6 +55,7 @@ static MOZ_CONSTEXPR_VAR Register fp = { Registers::fp };
 static MOZ_CONSTEXPR_VAR Register ra = { Registers::ra };
 
 static MOZ_CONSTEXPR_VAR Register ScratchRegister = at;
+static MOZ_CONSTEXPR_VAR Register SecondScratchReg = t8;
 
 // Use arg reg from EnterJIT function as OsrFrameReg.
 static MOZ_CONSTEXPR_VAR Register OsrFrameReg = a3;
