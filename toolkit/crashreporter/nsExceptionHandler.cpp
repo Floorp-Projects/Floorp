@@ -81,8 +81,8 @@ using mozilla::InjectCrashRunnable;
 #include <map>
 #include <vector>
 
+#include "mozilla/IOInterposer.h"
 #include "mozilla/mozalloc_oom.h"
-#include "mozilla/LateWriteChecks.h"
 #include "mozilla/WindowsDllBlocklist.h"
 
 #if defined(XP_MACOSX)
@@ -913,7 +913,7 @@ static bool ShouldReport()
 
 namespace {
   bool Filter(void* context) {
-    mozilla::StopLateWriteChecks();
+    mozilla::IOInterposer::Disable();
     return true;
   }
 }
@@ -2471,7 +2471,7 @@ OOPInitialized()
 
 #ifdef XP_MACOSX
 static bool ChildFilter(void *context) {
-  mozilla::StopLateWriteChecks();
+  mozilla::IOInterposer::Disable();
   return true;
 }
 #endif
