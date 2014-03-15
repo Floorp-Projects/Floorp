@@ -198,7 +198,7 @@ NS_IMETHODIMP NodeIterator::GetFilter(nsIDOMNodeFilter **aFilter)
 {
     NS_ENSURE_ARG_POINTER(aFilter);
 
-    *aFilter = mFilter.ToXPCOMCallback().get();
+    *aFilter = mFilter.ToXPCOMCallback().take();
 
     return NS_OK;
 }

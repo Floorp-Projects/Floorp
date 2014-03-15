@@ -227,7 +227,7 @@ BasicImageLayer::GetAsSurface(gfxASurface** aSurface,
 
   gfx::IntSize dontCare;
   nsRefPtr<gfxASurface> surface = mContainer->DeprecatedGetCurrentAsSurface(&dontCare);
-  *aSurface = surface.forget().get();
+  surface.forget(aSurface);
   return true;
 }
 

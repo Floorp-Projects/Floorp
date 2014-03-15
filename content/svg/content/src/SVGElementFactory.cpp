@@ -117,9 +117,10 @@ NS_NewSVGElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
 {
   NS_ASSERTION(sTagAtomTable, "no lookup table, needs SVGElementFactory::Init");
 
-  nsIAtom* name = aNodeInfo.get()->NameAtom();
+  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsIAtom* name = ni->NameAtom();
 
-  NS_ASSERTION(aNodeInfo.get()->NamespaceEquals(kNameSpaceID_SVG), 
+  NS_ASSERTION(ni->NamespaceEquals(kNameSpaceID_SVG),
                "Trying to create SVG elements that aren't in the SVG namespace");
 
   void* tag = PL_HashTableLookupConst(sTagAtomTable, name);
@@ -133,11 +134,11 @@ NS_NewSVGElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
     contentCreatorCallback cb = sContentCreatorCallbacks[index];
 
     nsCOMPtr<nsIContent> content;
-    nsresult rv = cb(getter_AddRefs(content), aNodeInfo, aFromParser);
-    *aResult = content.forget().get()->AsElement();
+    nsresult rv = cb(getter_AddRefs(content), ni.forget(), aFromParser);
+    *aResult = content.forget().take()->AsElement();
     return rv;
   }
 
   // if we don't know what to create, just create a standard svg element:
-  return NS_NewSVGElement(aResult, aNodeInfo);
+  return NS_NewSVGElement(aResult, ni.forget());
 }

@@ -634,7 +634,7 @@ public:
   {
     // May be created on any thread!
 
-    MOZ_ASSERT(aActor.get());
+    MOZ_ASSERT(mActor);
   }
 
   CreateCallbackRunnable()
@@ -698,7 +698,7 @@ public:
     mParentMessageLoop(aParentMessageLoop)
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aParentActor.get());
+    MOZ_ASSERT(mParentActor);
     MOZ_ASSERT(aParentMessageLoop);
   }
 
@@ -1719,7 +1719,9 @@ ChildImpl::ParentCreateCallback::Success(
 {
   AssertIsInMainProcess();
   AssertIsOnMainThread();
-  MOZ_ASSERT(aParentActor.get());
+
+  nsRefPtr<ParentImpl> parentActor = aParentActor;
+  MOZ_ASSERT(parentActor);
   MOZ_ASSERT(aParentMessageLoop);
   MOZ_ASSERT(mEventTarget);
 
@@ -1729,7 +1731,7 @@ ChildImpl::ParentCreateCallback::Success(
   mEventTarget.swap(target);
 
   nsCOMPtr<nsIRunnable> openRunnable =
-    new OpenMainProcessActorRunnable(childActor.forget(), aParentActor,
+    new OpenMainProcessActorRunnable(childActor.forget(), parentActor.forget(),
                                      aParentMessageLoop);
   if (NS_FAILED(target->Dispatch(openRunnable, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Failed to dispatch open runnable!");

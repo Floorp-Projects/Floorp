@@ -387,14 +387,15 @@ public:
 
   void AppendMutationRecord(already_AddRefed<nsDOMMutationRecord> aRecord)
   {
-    MOZ_ASSERT(aRecord.get());
+    nsRefPtr<nsDOMMutationRecord> record = aRecord;
+    MOZ_ASSERT(record);
     if (!mLastPendingMutation) {
       MOZ_ASSERT(!mFirstPendingMutation);
-      mFirstPendingMutation = aRecord;
+      mFirstPendingMutation = record.forget();
       mLastPendingMutation = mFirstPendingMutation;
     } else {
       MOZ_ASSERT(mFirstPendingMutation);
-      mLastPendingMutation->mNext = aRecord;
+      mLastPendingMutation->mNext = record.forget();
       mLastPendingMutation = mLastPendingMutation->mNext;
     }
     ++mPendingMutationCount;

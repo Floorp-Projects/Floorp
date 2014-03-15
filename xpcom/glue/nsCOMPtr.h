@@ -156,7 +156,7 @@ struct already_AddRefed
       // nothing else to do here
     }
 
-    T* get() const { return mRawPtr; }
+    T* take() const { return mRawPtr; }
 
     /**
      * This helper is useful in cases like

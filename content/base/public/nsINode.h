@@ -1882,7 +1882,7 @@ ToCanonicalSupports(nsINode* aPointer)
     if (rv.Failed()) { \
       return rv.ErrorCode(); \
     } \
-    *aResult = clone.forget().get()->AsDOMNode(); \
+    *aResult = clone.forget().take()->AsDOMNode(); \
     return NS_OK; \
   } \
   NS_IMETHOD Normalize() __VA_ARGS__ \

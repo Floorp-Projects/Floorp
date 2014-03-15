@@ -399,7 +399,7 @@ public:
       // Note that we leave the trailing "/" on the path.
       domFile->SetPath(Substring(path, 0, uint32_t(length)));
     }
-    *aResult = static_cast<nsIDOMFile*>(domFile.forget().get());
+    *aResult = domFile.forget().downcast<nsIDOMFile>().take();
     LookupAndCacheNext();
     return NS_OK;
   }

@@ -1182,7 +1182,7 @@ mozInlineSpellChecker::MakeSpellCheckRange(
     rv = range->SetEndAfter(aEndNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aRange = static_cast<nsRange*>(range.forget().get());
+  *aRange = static_cast<nsRange*>(range.forget().take());
   return NS_OK;
 }
 

@@ -3942,7 +3942,7 @@ NS_IMETHODIMP
 nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
 {
   ErrorResult rv;
-  *aContent = GetContentInternal(rv).get();
+  *aContent = GetContentInternal(rv).take();
 
   return rv.ErrorCode();
 }

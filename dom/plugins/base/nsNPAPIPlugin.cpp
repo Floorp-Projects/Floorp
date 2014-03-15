@@ -457,7 +457,7 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
   }
 #endif
 
-  *aResult = plugin.forget().get();
+  plugin.forget(aResult);
   return NS_OK;
 }
 

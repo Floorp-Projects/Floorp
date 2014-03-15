@@ -263,12 +263,12 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
   int32_t tag = parserService->HTMLCaseSensitiveAtomTagToId(name);
   if (tag == eHTMLTag_userdefined &&
       nsContentUtils::IsCustomElementName(name)) {
+    nsIDocument* doc = nodeInfo->GetDocument();
+
     NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
     if (!*aResult) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    nsIDocument* doc = aNodeInfo.get()->GetDocument();
 
     // Element may be unresolved at this point.
     doc->RegisterUnresolvedElement(*aResult);
@@ -282,7 +282,7 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
   }
 
   *aResult = CreateHTMLElement(tag,
-                               nodeInfo.forget(), aFromParser).get();
+                               nodeInfo.forget(), aFromParser).take();
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

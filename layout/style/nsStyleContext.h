@@ -171,13 +171,14 @@ public:
   void SetStyleIfVisited(already_AddRefed<nsStyleContext> aStyleIfVisited)
   {
     NS_ABORT_IF_FALSE(!IsStyleIfVisited(), "this context is not visited data");
-    NS_ABORT_IF_FALSE(aStyleIfVisited.get()->IsStyleIfVisited(),
-                      "other context is visited data");
-    NS_ABORT_IF_FALSE(!aStyleIfVisited.get()->GetStyleIfVisited(),
-                      "other context does not have visited data");
     NS_ASSERTION(!mStyleIfVisited, "should only be set once");
+
     mStyleIfVisited = aStyleIfVisited;
 
+    NS_ABORT_IF_FALSE(mStyleIfVisited->IsStyleIfVisited(),
+                      "other context is visited data");
+    NS_ABORT_IF_FALSE(!mStyleIfVisited->GetStyleIfVisited(),
+                      "other context does not have visited data");
     NS_ASSERTION(GetStyleIfVisited()->GetPseudo() == GetPseudo(),
                  "pseudo tag mismatch");
     if (GetParent() && GetParent()->GetStyleIfVisited()) {
