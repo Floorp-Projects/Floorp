@@ -16,8 +16,6 @@ enum CanvasWindingRule { "nonzero", "evenodd" };
 dictionary ContextAttributes2D {
   // whether or not we're planning to do a lot of readback operations
   boolean willReadFrequently = false;
-  // signal if the canvas contains an alpha channel
-  boolean alpha = true;
 };
 
 dictionary HitRegionOptions {
