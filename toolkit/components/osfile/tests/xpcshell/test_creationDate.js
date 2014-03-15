@@ -1,13 +1,5 @@
 "use strict";
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-
 function run_test() {
   do_test_pending();
   run_next_test();
