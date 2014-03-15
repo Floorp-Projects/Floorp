@@ -7821,7 +7821,7 @@ TryAttachFunCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, 
 
     // Attach a stub if the script can be Baseline-compiled. We do this also
     // if the script is not yet compiled to avoid attaching a CallNative stub
-    // that handles everthing, even when the callee becomes hot.
+    // that handles everything, even after the callee becomes hot.
     if (target->hasScript() && target->nonLazyScript()->canBaselineCompile() &&
         !stub->hasStub(ICStub::Call_ScriptedFunCall))
     {
