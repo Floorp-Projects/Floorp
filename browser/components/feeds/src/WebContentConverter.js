@@ -874,12 +874,6 @@ WebContentConverterRegistrar.prototype = {
   },
 
   classID: WCCR_CLASSID,
-  classInfo: XPCOMUtils.generateCI({classID: WCCR_CLASSID,
-                                    contractID: WCCR_CONTRACTID,
-                                    interfaces: [Ci.nsIWebContentConverterService,
-                                                 Ci.nsIWebContentHandlerRegistrar,
-                                                 Ci.nsIObserver, Ci.nsIFactory],
-                                    flags: Ci.nsIClassInfo.DOM_OBJECT}),
 
   /**
    * See nsISupports
