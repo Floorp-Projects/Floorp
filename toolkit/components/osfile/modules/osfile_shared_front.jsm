@@ -331,14 +331,35 @@ AbstractFile.read = function read(path, bytes, options = {}) {
     options = bytes;
     bytes = options.bytes || null;
   }
+  if ("encoding" in options && typeof options.encoding != "string") {
+    throw new TypeError("Invalid type for option encoding");
+  }
+  if ("compression" in options && typeof options.compression != "string") {
+    throw new TypeError("Invalid type for option compression: " + options.compression);
+  }
+  if ("bytes" in options && typeof options.bytes != "number") {
+    throw new TypeError("Invalid type for option bytes");
+  }
   let file = exports.OS.File.open(path);
   try {
     let buffer = file.read(bytes, options);
-    if ("compression" in options && options.compression == "lz4") {
-      return Lz4.decompressFileContent(buffer, options);
-    } else {
+    if ("compression" in options) {
+      if (options.compression == "lz4") {
+        buffer = Lz4.decompressFileContent(buffer, options);
+      } else {
+        throw OS.File.Error.invalidArgument("Compression");
+      }
+    }
+    if (!("encoding" in options)) {
       return buffer;
     }
+    let decoder;
+    try {
+      decoder = new TextDecoder(options.encoding);
+    } catch (ex if ex instanceof TypeError) {
+      throw OS.File.Error.invalidArgument("Decode");
+    }
+    return decoder.decode(buffer);
   } finally {
     file.close();
   }

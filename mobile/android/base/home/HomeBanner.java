@@ -70,7 +70,7 @@ public class HomeBanner extends LinearLayout
     public HomeBanner(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        LayoutInflater.from(context).inflate(R.layout.home_banner, this);
+        LayoutInflater.from(context).inflate(R.layout.home_banner_content, this);
 
         mTextView = (TextView) findViewById(R.id.text);
         mIconView = (ImageView) findViewById(R.id.icon);

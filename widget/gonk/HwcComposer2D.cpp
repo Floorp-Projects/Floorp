@@ -545,11 +545,9 @@ HwcComposer2D::TryHwComposition()
                     // Overlay Composition, set layer composition flag
                     // on mapped LayerComposite to skip GPU composition
                     mHwcLayerMap[k]->SetLayerComposited(true);
-                    if (k && (mList->hwLayers[k].hints & HWC_HINT_CLEAR_FB) &&
+                    if ((mList->hwLayers[k].hints & HWC_HINT_CLEAR_FB) &&
                         (mList->hwLayers[k].blending == HWC_BLENDING_NONE)) {
                         // Clear visible rect on FB with transparent pixels.
-                        // Never clear the 1st layer since we're guaranteed
-                        // that FB is already cleared.
                         hwc_rect_t r = mList->hwLayers[k].displayFrame;
                         mHwcLayerMap[k]->SetClearRect(nsIntRect(r.left, r.top,
                                                                 r.right - r.left,
