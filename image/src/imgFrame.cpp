@@ -346,8 +346,33 @@ nsresult imgFrame::Optimize()
   }
 #endif
 
+#ifdef ANDROID
+  gfxImageFormat optFormat =
+    gfxPlatform::GetPlatform()->
+      OptimalFormatForContent(gfxASurface::ContentFromFormat(mFormat));
+
+  if (optFormat == gfxImageFormat::RGB16_565) {
+    RefPtr<VolatileBuffer> buf =
+      LockedImageSurface::AllocateBuffer(mSize, optFormat);
+    if (!buf)
+      return NS_OK;
+
+    nsRefPtr<gfxImageSurface> surf =
+      LockedImageSurface::CreateSurface(buf, mSize, optFormat);
+
+    gfxContext ctx(surf);
+    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx.SetSource(mImageSurface);
+    ctx.Paint();
+
+    mImageSurface = surf;
+    mVBuf = buf;
+    mFormat = optFormat;
+  }
+#else
   if (mOptSurface == nullptr)
     mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface, mFormat);
+#endif
 
   if (mOptSurface) {
     mVBuf = nullptr;
@@ -394,12 +419,13 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
                             gfxRect&           aFill,
                             gfxRect&           aSubimage,
                             gfxRect&           aSourceRect,
-                            gfxRect&           aImageRect)
+                            gfxRect&           aImageRect,
+                            gfxASurface*       aSurface)
 {
   IntSize size(int32_t(aImageRect.Width()), int32_t(aImageRect.Height()));
   if (!aDoPadding && !aDoPartialDecode) {
     NS_ASSERTION(!mSinglePixel, "This should already have been handled");
-    return SurfaceWithFormat(new gfxSurfaceDrawable(ThebesSurface(), ThebesIntSize(size)), mFormat);
+    return SurfaceWithFormat(new gfxSurfaceDrawable(aSurface, ThebesIntSize(size)), mFormat);
   }
 
   gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.width, mDecoded.height);
@@ -420,7 +446,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
     if (mSinglePixel) {
       tmpCtx.SetDeviceColor(mSinglePixelColor);
     } else {
-      tmpCtx.SetSource(ThebesSurface(), gfxPoint(aPadding.left, aPadding.top));
+      tmpCtx.SetSource(aSurface, gfxPoint(aPadding.left, aPadding.top));
     }
     tmpCtx.Rectangle(available);
     tmpCtx.Fill();
@@ -442,12 +468,11 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
   aImageRect = gfxRect(0, 0, mSize.width, mSize.height);
 
   gfxIntSize availableSize(mDecoded.width, mDecoded.height);
-  return SurfaceWithFormat(new gfxSurfaceDrawable(ThebesSurface(),
-                                                  availableSize),
+  return SurfaceWithFormat(new gfxSurfaceDrawable(aSurface, availableSize),
                            mFormat);
 }
 
-void imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
+bool imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
                     const gfxMatrix &aUserSpaceToImageSpace, const gfxRect& aFill,
                     const nsIntMargin &aPadding, const nsIntRect &aSubimage,
                     uint32_t aImageFlags)
@@ -462,7 +487,7 @@ void imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
 
   if (mSinglePixel && !doPadding && !doPartialDecode) {
     DoSingleColorFastPath(aContext, mSinglePixelColor, aFill);
-    return;
+    return true;
   }
 
   gfxMatrix userSpaceToImageSpace = aUserSpaceToImageSpace;
@@ -475,12 +500,19 @@ void imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
   NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
                "We must be allowed to sample *some* source pixels!");
 
+  nsRefPtr<gfxASurface> surf;
+  if (!mSinglePixel) {
+    surf = ThebesSurface();
+    if (!surf)
+      return false;
+  }
+
   bool doTile = !imageRect.Contains(sourceRect) &&
                 !(aImageFlags & imgIContainer::FLAG_CLAMP);
   SurfaceWithFormat surfaceResult =
     SurfaceForDrawing(doPadding, doPartialDecode, doTile, aPadding,
                       userSpaceToImageSpace, fill, subimage, sourceRect,
-                      imageRect);
+                      imageRect, surf);
 
   if (surfaceResult.IsValid()) {
     gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mDrawable,
@@ -488,6 +520,7 @@ void imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
                                subimage, sourceRect, imageRect, fill,
                                surfaceResult.mFormat, aFilter, aImageFlags);
   }
+  return true;
 }
 
 // This can be called from any thread, but not simultaneously.
@@ -632,25 +665,37 @@ nsresult imgFrame::LockImageData()
       mImageSurface = LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
       if (!mImageSurface || mImageSurface->CairoStatus())
         return NS_ERROR_OUT_OF_MEMORY;
-    } else if (mOptSurface || mSinglePixel) {
+    }
+    if (mOptSurface || mSinglePixel || mFormat == gfxImageFormat::RGB16_565) {
+      gfxImageFormat format = mFormat;
+      if (mFormat == gfxImageFormat::RGB16_565)
+        format = gfxImageFormat::ARGB32;
+
       // Recover the pixels
-      mVBuf = LockedImageSurface::AllocateBuffer(mSize, mFormat);
-      if (!mVBuf) {
+      RefPtr<VolatileBuffer> buf =
+        LockedImageSurface::AllocateBuffer(mSize, format);
+      if (!buf) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      mImageSurface = LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
-      if (!mImageSurface || mImageSurface->CairoStatus())
+      RefPtr<gfxImageSurface> surf =
+        LockedImageSurface::CreateSurface(buf, mSize, mFormat);
+      if (!surf || surf->CairoStatus())
         return NS_ERROR_OUT_OF_MEMORY;
 
-      gfxContext context(mImageSurface);
+      gfxContext context(surf);
       context.SetOperator(gfxContext::OPERATOR_SOURCE);
       if (mSinglePixel)
         context.SetDeviceColor(mSinglePixelColor);
+      else if (mFormat == gfxImageFormat::RGB16_565)
+        context.SetSource(mImageSurface);
       else
         context.SetSource(mOptSurface);
       context.Paint();
 
+      mFormat = format;
+      mVBuf = buf;
+      mImageSurface = surf;
       mOptSurface = nullptr;
 #ifdef USE_WIN_SURFACE
       mWinSurface = nullptr;
