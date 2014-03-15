@@ -79,4 +79,4 @@ fails-if(OSX) == border-image-repeating-radial-gradient-repeat-repeat-2.html bor
 fuzzy(1,1054) fails-if(OSX) == border-image-repeating-radial-gradient-repeat-round-2.html border-image-repeating-radial-gradient-repeat-round-2-ref.html
 
 # border-image-source (-moz-)element
-fuzzy(125,5807) == border-image-element.html border-image-element-ref.html
+fuzzy(125,5808) == border-image-element.html border-image-element-ref.html
