@@ -18,7 +18,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Output)
 namespace mozilla {
 namespace dom {
 
-HTMLOutputElement::HTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLOutputElement::HTMLOutputElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo)
   , mValueModeFlag(eModeDefault)
 {

@@ -62,7 +62,8 @@ XBLChildrenElement::ParseAttribute(int32_t aNamespaceID,
     nsCharSeparatedTokenizer tok(aValue, '|',
                                  nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
     while (tok.hasMoreTokens()) {
-      mIncludes.AppendElement(do_GetAtom(tok.nextToken()));
+      nsCOMPtr<nsIAtom> atom = do_GetAtom(tok.nextToken());
+      mIncludes.AppendElement(atom);
     }
   }
 

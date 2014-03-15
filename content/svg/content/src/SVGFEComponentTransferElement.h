@@ -11,7 +11,7 @@
 typedef nsSVGFE SVGFEComponentTransferElementBase;
 
 nsresult NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
-                                             already_AddRefed<nsINodeInfo> aNodeInfo);
+                                             already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +19,9 @@ namespace dom {
 class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase
 {
   friend nsresult (::NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
-                                                         already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                         already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFEComponentTransferElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEComponentTransferElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEComponentTransferElementBase(aNodeInfo)
   {
   }

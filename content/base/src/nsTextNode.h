@@ -31,7 +31,7 @@ private:
   }
 
 public:
-  nsTextNode(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsTextNode(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : mozilla::dom::Text(aNodeInfo)
   {
     Init();

@@ -222,7 +222,7 @@ private:
 
   void DeliverQueuedData(uint16_t stream);
 
-  already_AddRefed<DataChannel> OpenFinish(already_AddRefed<DataChannel> channel) NS_WARN_UNUSED_RESULT;
+  already_AddRefed<DataChannel> OpenFinish(already_AddRefed<DataChannel>&& aChannel);
 
   void StartDefer();
   bool SendDeferredMessages();

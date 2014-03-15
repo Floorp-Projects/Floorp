@@ -23,8 +23,8 @@ public:
   using Element::GetText;
   using Element::SetText;
 
-  HTMLScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                      FromParser aFromParser);
+  HTMLScriptElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+                    FromParser aFromParser);
   virtual ~HTMLScriptElement();
 
   // nsISupports

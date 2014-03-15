@@ -20,7 +20,7 @@ namespace dom {
 class HTMLMeterElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLMeterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLMeterElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLMeterElement();
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;

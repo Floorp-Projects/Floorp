@@ -293,7 +293,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-NS_NewXULElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
+NS_NewXULElement(Element** aResult, already_AddRefed<nsINodeInfo>&& aNodeInfo)
 {
     nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
 
@@ -310,7 +310,8 @@ NS_NewXULElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 }
 
 void
-NS_TrustedNewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
+NS_TrustedNewXULElement(nsIContent** aResult,
+                        already_AddRefed<nsINodeInfo>&& aNodeInfo)
 {
     nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
     NS_PRECONDITION(ni, "need nodeinfo for non-proto Create");

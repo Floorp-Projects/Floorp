@@ -40,7 +40,7 @@ protected:
   typedef mozilla::gfx::PathBuilder PathBuilder;
 
 public:
-  nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  nsSVGPathGeometryElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName);
 

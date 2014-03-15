@@ -15,7 +15,7 @@
 class nsIDocument;
 
 nsresult NS_NewSVGScriptElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo> aNodeInfo,
+                                already_AddRefed<nsINodeInfo>&& aNodeInfo,
                                 mozilla::dom::FromParser aFromParser);
 
 namespace mozilla {
@@ -28,9 +28,9 @@ class SVGScriptElement MOZ_FINAL : public SVGScriptElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGScriptElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo> aNodeInfo,
+                                            already_AddRefed<nsINodeInfo>&& aNodeInfo,
                                             mozilla::dom::FromParser aFromParser));
-  SVGScriptElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  SVGScriptElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                    FromParser aFromParser);
 
   virtual JSObject* WrapNode(JSContext *aCx,

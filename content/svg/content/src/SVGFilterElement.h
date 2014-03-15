@@ -18,7 +18,7 @@ class nsSVGFilterFrame;
 class nsSVGFilterInstance;
 
 nsresult NS_NewSVGFilterElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo> aNodeInfo);
+                                already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -31,8 +31,8 @@ class SVGFilterElement : public SVGFilterElementBase
 
 protected:
   friend nsresult (::NS_NewSVGFilterElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGFilterElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGFilterElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 

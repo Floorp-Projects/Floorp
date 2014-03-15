@@ -27,7 +27,7 @@ class SVGAnimationElement : public SVGAnimationElementBase,
                             public SVGTests
 {
 protected:
-  SVGAnimationElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGAnimationElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   nsresult Init();
 
 public:

@@ -46,7 +46,7 @@ class HTMLFrameSetElement MOZ_FINAL : public nsGenericHTMLElement,
                                       public nsIDOMHTMLFrameSetElement
 {
 public:
-  HTMLFrameSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLFrameSetElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo),
       mNumRows(0),
       mNumCols(0),

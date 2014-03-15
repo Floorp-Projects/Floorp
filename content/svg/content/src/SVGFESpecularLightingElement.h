@@ -9,7 +9,7 @@
 #include "nsSVGFilters.h"
 
 nsresult NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo> aNodeInfo);
+                                            already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,9 +21,9 @@ typedef nsSVGFELightingElement SVGFESpecularLightingElementBase;
 class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase
 {
   friend nsresult (::NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
-                                                        already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                        already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFESpecularLightingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFESpecularLightingElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFESpecularLightingElementBase(aNodeInfo)
   {
   }

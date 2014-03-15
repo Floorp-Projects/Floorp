@@ -674,9 +674,9 @@ void TiledTextureImage::Resize(const gfx::IntSize& aSize)
             nsRefPtr<TextureImage> teximg =
                 TileGenFunc(mGL, size, mContentType, mFlags, mImageFormat);
             if (replace)
-                mImages.ReplaceElementAt(i, teximg.forget());
+                mImages.ReplaceElementAt(i, teximg);
             else
-                mImages.InsertElementAt(i, teximg.forget());
+                mImages.InsertElementAt(i, teximg);
             i++;
         }
 

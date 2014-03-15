@@ -470,7 +470,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   mDecoder.AsyncDecodeMedia(contentType.get(),
                             aBuffer.Data(), aBuffer.Length(), *job);
   // Transfer the ownership to mDecodeJobs
-  mDecodeJobs.AppendElement(job.forget());
+  mDecodeJobs.AppendElement(job);
 }
 
 void

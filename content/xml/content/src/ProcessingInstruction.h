@@ -18,7 +18,7 @@ class ProcessingInstruction : public nsGenericDOMDataNode,
                               public nsIDOMProcessingInstruction
 {
 public:
-  ProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
+  ProcessingInstruction(already_AddRefed<nsINodeInfo>&& aNodeInfo,
                         const nsAString& aData);
   virtual ~ProcessingInstruction();
 

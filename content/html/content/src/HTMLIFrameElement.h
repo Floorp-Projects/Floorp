@@ -18,7 +18,7 @@ class HTMLIFrameElement MOZ_FINAL : public nsGenericHTMLFrameElement
                                   , public nsIDOMHTMLIFrameElement
 {
 public:
-  HTMLIFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  HTMLIFrameElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                     FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLIFrameElement();
 

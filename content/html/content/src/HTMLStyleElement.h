@@ -23,7 +23,7 @@ class HTMLStyleElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsStubMutationObserver
 {
 public:
-  HTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLStyleElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLStyleElement();
 
   // nsISupports

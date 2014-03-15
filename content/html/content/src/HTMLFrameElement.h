@@ -22,7 +22,7 @@ class HTMLFrameElement MOZ_FINAL : public nsGenericHTMLFrameElement,
 public:
   using nsGenericHTMLFrameElement::SwapFrameLoaders;
 
-  HTMLFrameElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  HTMLFrameElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                    FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLFrameElement();
 

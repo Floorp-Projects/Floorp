@@ -10,7 +10,7 @@
 #include "nsSVGElement.h"
 
 nsresult NS_NewSVGDescElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 typedef nsSVGElement SVGDescElementBase;
 
@@ -21,8 +21,8 @@ class SVGDescElement MOZ_FINAL : public SVGDescElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGDescElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGDescElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGDescElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

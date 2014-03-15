@@ -11,7 +11,7 @@
 #include "SVGAnimatedNumberList.h"
 
 nsresult NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+                                       already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,9 +21,9 @@ typedef nsSVGFE SVGFEColorMatrixElementBase;
 class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase
 {
   friend nsresult (::NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
-                                                   already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                   already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFEColorMatrixElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEColorMatrixElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEColorMatrixElementBase(aNodeInfo)
   {
   }

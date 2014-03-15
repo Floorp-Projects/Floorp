@@ -39,7 +39,7 @@ nsSVGElement::LengthInfo SVGRectElement::sLengthInfo[6] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGRectElement::SVGRectElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGRectElement::SVGRectElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGRectElementBase(aNodeInfo)
 {
 }

@@ -113,7 +113,7 @@ HTMLCanvasPrintState::NotifyDone()
 
 // ---------------------------------------------------------------------------
 
-HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mWriteOnly(false)
 {

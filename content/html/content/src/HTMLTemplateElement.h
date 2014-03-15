@@ -17,7 +17,7 @@ namespace dom {
 class HTMLTemplateElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLTemplateElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLTemplateElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLTemplateElement();
 
   // nsISupports

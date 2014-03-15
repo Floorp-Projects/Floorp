@@ -44,7 +44,7 @@ NS_IMPL_ISUPPORTS_INHERITED6(SVGFEImageElement, SVGFEImageElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGFEImageElement::SVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGFEImageElement::SVGFEImageElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGFEImageElementBase(aNodeInfo)
 {
   // We start out broken
