@@ -405,21 +405,28 @@ ArrayBufferObject::changeContents(JSContext *maybecx, ObjectElements *newHeader)
 }
 
 void
-ArrayBufferObject::neuter(JSContext *cx)
+ArrayBufferObject::neuter(ObjectElements *newHeader, JSContext *cx)
 {
-    JS_ASSERT(cx);
-    if (hasDynamicElements() && !isAsmJSArrayBuffer()) {
+    MOZ_ASSERT(cx);
+
+    if (hasStealableContents()) {
+        MOZ_ASSERT(newHeader);
+
         ObjectElements *oldHeader = getElementsHeader();
-        changeContents(cx, ObjectElements::fromElements(fixedElements()));
+        MOZ_ASSERT(newHeader != oldHeader);
+
+        changeContents(cx, newHeader);
 
         FreeOp fop(cx->runtime(), false);
         fop.free_(oldHeader);
+    } else {
+        elements = newHeader->elements();
     }
 
     uint32_t byteLen = 0;
-    updateElementsHeader(getElementsHeader(), byteLen);
+    updateElementsHeader(newHeader, byteLen);
 
-    getElementsHeader()->setIsNeuteredBuffer();
+    newHeader->setIsNeuteredBuffer();
 }
 
 bool
@@ -672,24 +679,28 @@ ArrayBufferObject::createDataViewForThis(JSContext *cx, unsigned argc, Value *vp
 ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
                                  uint8_t **data)
 {
-    // If the ArrayBuffer's elements are dynamically allocated and nothing else
-    // prevents us from stealing them, transfer ownership directly.  Otherwise,
-    // the elements are small and allocated inside the ArrayBuffer object's GC
-    // header so we must make a copy.
-    ObjectElements *transferableHeader;
-    bool stolen;
-    if (buffer->hasDynamicElements() && !buffer->isAsmJSArrayBuffer()) {
-        stolen = true;
-        transferableHeader = buffer->getElementsHeader();
-    } else {
-        stolen = false;
+    uint32_t byteLen = buffer->byteLength();
 
-        uint32_t byteLen = buffer->byteLength();
+    // If the ArrayBuffer's elements are transferrable, transfer ownership
+    // directly.  Otherwise we have to copy the data into new elements.
+    ObjectElements *transferableHeader;
+    ObjectElements *newHeader;
+    bool stolen = buffer->hasStealableContents();
+    if (stolen) {
+        transferableHeader = buffer->getElementsHeader();
+
+        newHeader = AllocateArrayBufferContents(cx, byteLen, nullptr);
+        if (!newHeader)
+            return false;
+    } else {
         transferableHeader = AllocateArrayBufferContents(cx, byteLen, buffer->dataPointer());
         if (!transferableHeader)
             return false;
 
         initElementsHeader(transferableHeader, byteLen);
+
+        // Keep using the current elements.
+        newHeader = buffer->getElementsHeader();
     }
 
     JS_ASSERT(!IsInsideNursery(cx->runtime(), transferableHeader));
@@ -701,13 +712,13 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
     if (!ArrayBufferObject::neuterViews(cx, buffer))
         return false;
 
-    // If the elements were taken from the neutered buffer, revert it back to
-    // using inline storage so it doesn't attempt to free the stolen elements
-    // when finalized.
+    // If the elements were transferrable, revert the buffer back to using
+    // inline storage so it doesn't attempt to free the stolen elements when
+    // finalized.
     if (stolen)
         buffer->changeContents(cx, ObjectElements::fromElements(buffer->fixedElements()));
 
-    buffer->neuter(cx);
+    buffer->neuter(newHeader, cx);
     return true;
 }
 
@@ -4061,9 +4072,33 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
     }
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
-    if (!ArrayBufferObject::neuterViews(cx, buffer))
+
+    ObjectElements *newHeader;
+    if (buffer->hasStealableContents()) {
+        // If we're "disposing" with the buffer contents, allocate zeroed
+        // memory of equal size and swap that in as contents.  This ensures
+        // that stale indexes that assume the original length, won't index out
+        // of bounds.  This is a temporary hack: when we're confident we've
+        // eradicated all stale accesses, we'll stop doing this.
+        newHeader = AllocateArrayBufferContents(cx, buffer->byteLength(), nullptr);
+        if (!newHeader)
+            return false;
+    } else {
+        // This case neuters out the existing elements in-place, so use the
+        // old header as new.
+        newHeader = buffer->getElementsHeader();
+    }
+
+    // Mark all views of the ArrayBuffer as neutered.
+    if (!ArrayBufferObject::neuterViews(cx, buffer)) {
+        if (buffer->hasStealableContents()) {
+            FreeOp fop(cx->runtime(), false);
+            fop.free_(newHeader);
+        }
         return false;
-    buffer->neuter(cx);
+    }
+
+    buffer->neuter(newHeader, cx);
     return true;
 }
 
