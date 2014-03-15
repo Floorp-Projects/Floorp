@@ -15,5 +15,5 @@ fuzzy-if(B2G,125,80) == percent-width-child-2.html  percent-width-child-2-ref.ht
 
 != line-height-button-0.5.html line-height-button-1.0.html
 != line-height-button-1.5.html line-height-button-1.0.html
-== line-height-input-0.5.html line-height-input-1.0.html
+!= line-height-input-0.5.html line-height-input-1.0.html
 != line-height-input-1.5.html line-height-input-1.0.html

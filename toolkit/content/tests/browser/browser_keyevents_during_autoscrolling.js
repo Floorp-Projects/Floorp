@@ -90,6 +90,12 @@ function test()
     EventUtils.synthesizeMouse(root, 10, 10, { button: 1 },
                                gBrowser.contentWindow);
 
+    // Before continuing the test, we need to ensure that the IPC
+    // message that starts autoscrolling has had time to arrive.
+    executeSoon(continueTest);
+  }
+
+  function continueTest() {
     // Most key events should be eaten by the browser.
     expectedKeyEvents = kNoKeyEvents;
     sendChar("A");

@@ -25,21 +25,37 @@ WebGLExtensionVertexArray::~WebGLExtensionVertexArray()
 
 already_AddRefed<WebGLVertexArray> WebGLExtensionVertexArray::CreateVertexArrayOES()
 {
+    if (mIsLost) {
+        mContext->ErrorInvalidOperation("createVertexArrayOES: Extension is lost. Returning NULL.");
+        return nullptr;
+    }
+
     return mContext->CreateVertexArray();
 }
 
 void WebGLExtensionVertexArray::DeleteVertexArrayOES(WebGLVertexArray* array)
 {
+    if (mIsLost)
+        return mContext->ErrorInvalidOperation("deleteVertexArrayOES: Extension is lost.");
+
     mContext->DeleteVertexArray(array);
 }
 
 bool WebGLExtensionVertexArray::IsVertexArrayOES(WebGLVertexArray* array)
 {
+    if (mIsLost) {
+        mContext->ErrorInvalidOperation("isVertexArrayOES: Extension is lost. Returning false.");
+        return false;
+    }
+
     return mContext->IsVertexArray(array);
 }
 
 void WebGLExtensionVertexArray::BindVertexArrayOES(WebGLVertexArray* array)
 {
+    if (mIsLost)
+        return mContext->ErrorInvalidOperation("bindVertexArrayOES: Extension is lost.");
+
     mContext->BindVertexArray(array);
 }
 

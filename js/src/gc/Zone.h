@@ -18,6 +18,10 @@
 
 namespace js {
 
+namespace jit {
+class JitZone;
+}
+
 /*
  * Encapsulates the data needed to perform allocation.  Typically there is
  * precisely one of these per zone (|cx->zone().allocator|).  However, in
@@ -280,7 +284,9 @@ struct Zone : public JS::shadow::Zone,
 
     void discardJitCode(js::FreeOp *fop);
 
-    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t *typePool,
+                                size_t *baselineStubsOptimized);
 
     void setGCLastBytes(size_t lastBytes, js::JSGCInvocationKind gckind);
     void reduceGCTriggerBytes(size_t amount);
@@ -316,6 +322,19 @@ struct Zone : public JS::shadow::Zone,
 
   private:
     void sweepBreakpoints(js::FreeOp *fop);
+
+#ifdef JS_ION
+    js::jit::JitZone *jitZone_;
+    js::jit::JitZone *createJitZone(JSContext *cx);
+
+  public:
+    js::jit::JitZone *getJitZone(JSContext *cx) {
+        return jitZone_ ? jitZone_ : createJitZone(cx);
+    }
+    js::jit::JitZone *jitZone() {
+        return jitZone_;
+    }
+#endif
 };
 
 } /* namespace JS */

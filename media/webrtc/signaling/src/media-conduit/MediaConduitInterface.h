@@ -149,10 +149,11 @@ public:
   virtual bool GetRTPStats(unsigned int* jitterMs,
                            unsigned int* cumulativeLost) = 0;
   virtual bool GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
-                                     unsigned int* jitterMs,
-                                     unsigned int* packetsReceived,
+                                     uint32_t* jitterMs,
+                                     uint32_t* packetsReceived,
                                      uint64_t* bytesReceived,
-                                     unsigned int* cumulativeLost) = 0;
+                                     uint32_t* cumulativeLost,
+                                     int32_t* rttMs) = 0;
   virtual bool GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                                    unsigned int* packetsSent,
                                    uint64_t* bytesSent) = 0;

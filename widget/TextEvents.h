@@ -143,6 +143,8 @@ public:
   static void GetDOMKeyName(mozilla::KeyNameIndex aKeyNameIndex,
                             nsAString& aKeyName);
 
+  static const char* GetCommandStr(Command aCommand);
+
   void AssignKeyEventData(const WidgetKeyboardEvent& aEvent, bool aCopyTargets)
   {
     AssignInputEventData(aEvent, aCopyTargets);

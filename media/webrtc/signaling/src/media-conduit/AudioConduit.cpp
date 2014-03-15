@@ -153,26 +153,22 @@ NTPtoDOMHighResTimeStamp(uint32_t ntpHigh, uint32_t ntpLow) {
 }
 
 bool WebrtcAudioConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
-                                               unsigned int* jitterMs,
-                                               unsigned int* packetsReceived,
+                                               uint32_t* jitterMs,
+                                               uint32_t* packetsReceived,
                                                uint64_t* bytesReceived,
-                                               unsigned int *cumulativeLost) {
-  unsigned int ntpHigh, ntpLow;
-  unsigned int rtpTimestamp, playoutTimestamp;
-  unsigned int packetsSent;
-  unsigned int bytesSent32;
-  unsigned short fractionLost;
-  bool result = !mPtrRTP->GetRemoteRTCPData(mChannel, ntpHigh, ntpLow,
-                                            rtpTimestamp, playoutTimestamp,
-                                            packetsSent, bytesSent32,
-                                            jitterMs,
-                                            &fractionLost, cumulativeLost);
+                                               uint32_t* cumulativeLost,
+                                               int32_t* rttMs) {
+  uint32_t ntpHigh, ntpLow;
+  uint16_t fractionLost;
+  bool result = !mPtrRTP->GetRemoteRTCPReceiverInfo(mChannel, ntpHigh, ntpLow,
+                                                    *packetsReceived,
+                                                    *bytesReceived,
+                                                    *jitterMs,
+                                                    fractionLost,
+                                                    *cumulativeLost,
+                                                    *rttMs);
   if (result) {
     *timestamp = NTPtoDOMHighResTimeStamp(ntpHigh, ntpLow);
-    *packetsReceived = (packetsSent >= *cumulativeLost) ?
-                       (packetsSent - *cumulativeLost) : 0;
-    *bytesReceived = (packetsSent ?
-                      (bytesSent32 / packetsSent) : 0) * (*packetsReceived);
   }
   return result;
 }
@@ -180,18 +176,13 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
 bool WebrtcAudioConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                                              unsigned int* packetsSent,
                                              uint64_t* bytesSent) {
-  unsigned int ntpHigh, ntpLow;
-  unsigned int rtpTimestamp, playoutTimestamp;
-  unsigned int bytesSent32;
-  unsigned int jitterMs;
-  unsigned short fractionLost;
-  bool result = !mPtrRTP->GetRemoteRTCPData(mChannel, ntpHigh, ntpLow,
-                                            rtpTimestamp, playoutTimestamp,
-                                            *packetsSent, bytesSent32,
-                                            &jitterMs, &fractionLost);
+  struct webrtc::SenderInfo senderInfo;
+  bool result = !mPtrRTP->GetRemoteRTCPSenderInfo(mChannel, &senderInfo);
   if (result) {
-    *timestamp = NTPtoDOMHighResTimeStamp(ntpHigh, ntpLow);
-    *bytesSent = bytesSent32;
+    *timestamp = NTPtoDOMHighResTimeStamp(senderInfo.NTP_timestamp_high,
+                                          senderInfo.NTP_timestamp_low);
+    *packetsSent = senderInfo.sender_packet_count;
+    *bytesSent = senderInfo.sender_octet_count;
   }
   return result;
 }
