@@ -343,7 +343,7 @@ class nsDOMMutationObserver : public nsISupports,
                               public nsWrapperCache
 {
 public:
-  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow> aOwner,
+  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow>&& aOwner,
                         mozilla::dom::MutationCallback& aCb)
   : mOwner(aOwner), mLastPendingMutation(nullptr), mPendingMutationCount(0),
     mCallback(&aCb), mWaitingForRun(false), mId(++sCount)

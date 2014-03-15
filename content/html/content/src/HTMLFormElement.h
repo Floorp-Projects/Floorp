@@ -40,7 +40,7 @@ class HTMLFormElement MOZ_FINAL : public nsGenericHTMLElement,
   friend class HTMLFormControlsCollection;
 
 public:
-  HTMLFormElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLFormElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLFormElement();
 
   nsresult Init();

@@ -15,7 +15,11 @@ namespace dom {
 class Text : public nsGenericDOMDataNode
 {
 public:
-  Text(already_AddRefed<nsINodeInfo> aNodeInfo)
+  Text(already_AddRefed<nsINodeInfo>& aNodeInfo)
+    : nsGenericDOMDataNode(aNodeInfo)
+  {}
+
+  Text(already_AddRefed<nsINodeInfo>&& aNodeInfo)
     : nsGenericDOMDataNode(aNodeInfo)
   {}
 

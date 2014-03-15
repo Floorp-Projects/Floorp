@@ -32,7 +32,7 @@ nsSVGElement::LengthInfo SVGLineElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGLineElement::SVGLineElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGLineElement::SVGLineElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGLineElementBase(aNodeInfo)
 {
 }

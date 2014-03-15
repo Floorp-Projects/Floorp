@@ -801,7 +801,7 @@ SpeechRecognition::FillSamplesBuffer(const int16_t* aSamples,
 uint32_t
 SpeechRecognition::SplitSamplesBuffer(const int16_t* aSamplesBuffer,
                                       uint32_t aSampleCount,
-                                      nsTArray<already_AddRefed<SharedBuffer> >& aResult)
+                                      nsTArray<nsRefPtr<SharedBuffer>>& aResult)
 {
   uint32_t chunkStart = 0;
 
@@ -812,7 +812,7 @@ SpeechRecognition::SplitSamplesBuffer(const int16_t* aSamplesBuffer,
     memcpy(chunk->Data(), aSamplesBuffer + chunkStart,
            mAudioSamplesPerChunk * sizeof(int16_t));
 
-    aResult.AppendElement(chunk.forget());
+    aResult.AppendElement(chunk);
     chunkStart += mAudioSamplesPerChunk;
   }
 
@@ -820,7 +820,7 @@ SpeechRecognition::SplitSamplesBuffer(const int16_t* aSamplesBuffer,
 }
 
 AudioSegment*
-SpeechRecognition::CreateAudioSegment(nsTArray<already_AddRefed<SharedBuffer> >& aChunks)
+SpeechRecognition::CreateAudioSegment(nsTArray<nsRefPtr<SharedBuffer>>& aChunks)
 {
   AudioSegment* segment = new AudioSegment();
   for (uint32_t i = 0; i < aChunks.Length(); ++i) {
@@ -854,14 +854,15 @@ SpeechRecognition::FeedAudioData(already_AddRefed<SharedBuffer> aSamples,
 
   uint32_t samplesIndex = 0;
   const int16_t* samples = static_cast<int16_t*>(refSamples->Data());
-  nsAutoTArray<already_AddRefed<SharedBuffer>, 5> chunksToSend;
+  nsAutoTArray<nsRefPtr<SharedBuffer>, 5> chunksToSend;
 
   // fill up our buffer and make a chunk out of it, if possible
   if (mBufferedSamples > 0) {
     samplesIndex += FillSamplesBuffer(samples, aDuration);
 
     if (mBufferedSamples == mAudioSamplesPerChunk) {
-      chunksToSend.AppendElement(mAudioSamplesBuffer.forget());
+      chunksToSend.AppendElement(mAudioSamplesBuffer);
+      mAudioSamplesBuffer = nullptr;
       mBufferedSamples = 0;
     }
   }

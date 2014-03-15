@@ -100,7 +100,7 @@ SafeOptionListMutation::~SafeOptionListMutation()
 // construction, destruction
 
 
-HTMLSelectElement::HTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+HTMLSelectElement::HTMLSelectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo),
     mOptions(new HTMLOptionsCollection(MOZ_THIS_IN_INITIALIZER_LIST())),

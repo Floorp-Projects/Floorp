@@ -19,7 +19,7 @@ class HTMLSourceElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsIDOMHTMLSourceElement
 {
 public:
-  HTMLSourceElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLSourceElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLSourceElement();
 
   // nsISupports

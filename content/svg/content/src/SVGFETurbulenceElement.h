@@ -13,7 +13,7 @@
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFETurbulenceElement(nsIContent **aResult,
-                                      already_AddRefed<nsINodeInfo> aNodeInfo);
+                                      already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -23,9 +23,9 @@ typedef nsSVGFE SVGFETurbulenceElementBase;
 class SVGFETurbulenceElement : public SVGFETurbulenceElementBase
 {
   friend nsresult (::NS_NewSVGFETurbulenceElement(nsIContent **aResult,
-                                                  already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                  already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFETurbulenceElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFETurbulenceElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFETurbulenceElementBase(aNodeInfo)
   {
   }

@@ -18,7 +18,7 @@ class SVGGraphicsElement : public SVGGraphicsElementBase,
                            public SVGTests
 {
 protected:
-  SVGGraphicsElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGGraphicsElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
 public:
   // interfaces:

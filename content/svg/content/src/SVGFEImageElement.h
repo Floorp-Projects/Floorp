@@ -12,7 +12,7 @@
 class SVGFEImageFrame;
 
 nsresult NS_NewSVGFEImageElement(nsIContent **aResult,
-                                 already_AddRefed<nsINodeInfo> aNodeInfo);
+                                 already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -26,8 +26,8 @@ class SVGFEImageElement : public SVGFEImageElementBase,
 
 protected:
   friend nsresult (::NS_NewSVGFEImageElement(nsIContent **aResult,
-                                             already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGFEImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                             already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGFEImageElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~SVGFEImageElement();
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

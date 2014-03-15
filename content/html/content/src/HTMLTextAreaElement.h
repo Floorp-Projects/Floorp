@@ -41,7 +41,7 @@ class HTMLTextAreaElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  HTMLTextAreaElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                       FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports

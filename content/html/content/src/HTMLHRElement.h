@@ -20,7 +20,7 @@ class HTMLHRElement MOZ_FINAL : public nsGenericHTMLElement,
                                 public nsIDOMHTMLHRElement
 {
 public:
-  HTMLHRElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLHRElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLHRElement();
 
   // nsISupports

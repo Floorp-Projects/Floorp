@@ -9,7 +9,7 @@
 #include "mozilla/dom/SVGTextPositioningElement.h"
 
 nsresult NS_NewSVGTextElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -19,12 +19,12 @@ typedef SVGTextPositioningElement SVGTextElementBase;
 class SVGTextElement MOZ_FINAL : public SVGTextElementBase
 {
 protected:
-  SVGTextElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGTextElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
   friend nsresult (::NS_NewSVGTextElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
+                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
 public:
   // nsIContent interface

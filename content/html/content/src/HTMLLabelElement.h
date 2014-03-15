@@ -20,7 +20,7 @@ class HTMLLabelElement MOZ_FINAL : public nsGenericHTMLFormElement,
                                    public nsIDOMHTMLLabelElement
 {
 public:
-  HTMLLabelElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLLabelElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLFormElement(aNodeInfo),
       mHandlingEvent(false)
   {

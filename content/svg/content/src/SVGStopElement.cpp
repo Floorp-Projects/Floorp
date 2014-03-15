@@ -23,7 +23,7 @@ nsSVGElement::NumberInfo SVGStopElement::sNumberInfo =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGStopElement::SVGStopElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGStopElement::SVGStopElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGStopElementBase(aNodeInfo)
 {
 }

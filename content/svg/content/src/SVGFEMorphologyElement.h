@@ -12,7 +12,7 @@
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFEMorphologyElement(nsIContent **aResult,
-                                      already_AddRefed<nsINodeInfo> aNodeInfo);
+                                      already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -22,9 +22,9 @@ typedef nsSVGFE SVGFEMorphologyElementBase;
 class SVGFEMorphologyElement : public SVGFEMorphologyElementBase
 {
   friend nsresult (::NS_NewSVGFEMorphologyElement(nsIContent **aResult,
-                                                  already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                  already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFEMorphologyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEMorphologyElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEMorphologyElementBase(aNodeInfo)
   {
   }

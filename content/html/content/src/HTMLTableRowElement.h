@@ -19,7 +19,7 @@ class HTMLTableSectionElement;
 class HTMLTableRowElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLTableRowElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     SetHasWeirdParserInsertionMode();

@@ -352,7 +352,7 @@ DataTransfer::Types()
 NS_IMETHODIMP
 DataTransfer::GetTypes(nsISupports** aTypes)
 {
-  nsCOMPtr<nsISupports> types = Types();
+  nsRefPtr<DOMStringList> types = Types();
   types.forget(aTypes);
 
   return NS_OK;
@@ -553,7 +553,7 @@ NS_IMETHODIMP
 DataTransfer::MozTypesAt(uint32_t aIndex, nsISupports** aTypes)
 {
   ErrorResult rv;
-  nsCOMPtr<nsISupports> types = MozTypesAt(aIndex, rv);
+  nsRefPtr<DOMStringList> types = MozTypesAt(aIndex, rv);
   types.forget(aTypes);
   return rv.ErrorCode();
 }

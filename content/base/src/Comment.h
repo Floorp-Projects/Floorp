@@ -24,7 +24,7 @@ private:
   }
 
 public:
-  Comment(already_AddRefed<nsINodeInfo> aNodeInfo)
+  Comment(already_AddRefed<nsINodeInfo>&& aNodeInfo)
     : nsGenericDOMDataNode(aNodeInfo)
   {
     Init();

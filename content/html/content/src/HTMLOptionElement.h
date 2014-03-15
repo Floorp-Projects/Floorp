@@ -22,7 +22,7 @@ class HTMLOptionElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsIDOMHTMLOptionElement
 {
 public:
-  HTMLOptionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLOptionElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLOptionElement();
 
   static already_AddRefed<HTMLOptionElement>

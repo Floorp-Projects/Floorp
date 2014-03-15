@@ -18,7 +18,7 @@
 #include "mozilla/Attributes.h"
 
 nsresult NS_NewSVGSVGElement(nsIContent **aResult,
-                             already_AddRefed<nsINodeInfo> aNodeInfo,
+                             already_AddRefed<nsINodeInfo>&& aNodeInfo,
                              mozilla::dom::FromParser aFromParser);
 
 class nsIDOMSVGNumber;
@@ -89,13 +89,13 @@ class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase
   friend class mozilla::SVGFragmentIdentifier;
   friend class mozilla::AutoSVGRenderingState;
 
-  SVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  SVGSVGElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                 FromParser aFromParser);
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   friend nsresult (::NS_NewSVGSVGElement(nsIContent **aResult,
-                                         already_AddRefed<nsINodeInfo> aNodeInfo,
+                                         already_AddRefed<nsINodeInfo>&& aNodeInfo,
                                          mozilla::dom::FromParser aFromParser));
 
 public:

@@ -20,7 +20,7 @@ SVGPolylineElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGPolylineElement::SVGPolylineElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGPolylineElement::SVGPolylineElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGPolylineElementBase(aNodeInfo)
 {
 }

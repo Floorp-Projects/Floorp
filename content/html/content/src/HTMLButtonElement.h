@@ -21,7 +21,7 @@ class HTMLButtonElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  HTMLButtonElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                       FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLButtonElement();
 

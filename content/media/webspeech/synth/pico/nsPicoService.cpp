@@ -236,7 +236,7 @@ public:
   bool IsCurrentTask() { return mService->mCurrentTask == mTask; }
 
 private:
-  void DispatchSynthDataRunnable(already_AddRefed<SharedBuffer> aBuffer,
+  void DispatchSynthDataRunnable(already_AddRefed<SharedBuffer>&& aBuffer,
                                  size_t aBufferSize);
 
   nsCString mText;
@@ -304,7 +304,7 @@ PicoCallbackRunnable::Run()
     } else {
       // If we already fed all the text to the engine, send a zero length buffer
       // and quit.
-      DispatchSynthDataRunnable(nullptr, 0);
+      DispatchSynthDataRunnable(already_AddRefed<SharedBuffer>(nullptr), 0);
       break;
     }
 
@@ -339,12 +339,12 @@ PicoCallbackRunnable::Run()
 
 void
 PicoCallbackRunnable::DispatchSynthDataRunnable(
-  already_AddRefed<SharedBuffer> aBuffer, size_t aBufferSize)
+  already_AddRefed<SharedBuffer>&& aBuffer, size_t aBufferSize)
 {
   class PicoSynthDataRunnable MOZ_FINAL : public nsRunnable
   {
   public:
-    PicoSynthDataRunnable(already_AddRefed<SharedBuffer> aBuffer,
+    PicoSynthDataRunnable(already_AddRefed<SharedBuffer>& aBuffer,
                           size_t aBufferSize, bool aFirstData,
                           PicoCallbackRunnable* aCallback)
       : mBuffer(aBuffer)

@@ -1426,11 +1426,13 @@ struct nsIDocument::FrameRequest
   int32_t mHandle;
 };
 
+static already_AddRefed<nsINodeInfo> nullNodeInfo(nullptr);
+
 // ==================================================================
 // =
 // ==================================================================
 nsIDocument::nsIDocument()
-  : nsINode(nullptr),
+  : nsINode(nullNodeInfo),
     mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
     mNodeInfoManager(nullptr),
     mCompatMode(eCompatibility_FullStandards),
@@ -10271,7 +10273,8 @@ FullscreenRoots::Add(nsIDocument* aRoot)
     if (!sInstance) {
       sInstance = new FullscreenRoots();
     }
-    sInstance->mRoots.AppendElement(do_GetWeakReference(aRoot));
+    nsWeakPtr weakRoot = do_GetWeakReference(aRoot);
+    sInstance->mRoots.AppendElement(weakRoot);
   }
 }
 
@@ -10838,7 +10841,8 @@ nsDocument::FullScreenStackPush(Element* aElement)
     nsEventStateManager::SetFullScreenState(top, false);
   }
   nsEventStateManager::SetFullScreenState(aElement, true);
-  mFullScreenStack.AppendElement(do_GetWeakReference(aElement));
+  nsWeakPtr weakElement = do_GetWeakReference(aElement);
+  mFullScreenStack.AppendElement(weakElement);
   NS_ASSERTION(GetFullScreenElement() == aElement, "Should match");
   return true;
 }

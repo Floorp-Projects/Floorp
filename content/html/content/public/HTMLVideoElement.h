@@ -21,7 +21,7 @@ class HTMLVideoElement MOZ_FINAL : public HTMLMediaElement,
                                    public nsIDOMHTMLVideoElement
 {
 public:
-  HTMLVideoElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLVideoElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLVideoElement();
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLVideoElement, video)

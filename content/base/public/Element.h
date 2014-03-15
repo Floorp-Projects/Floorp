@@ -119,7 +119,7 @@ class Element : public FragmentOrElement
 {
 public:
 #ifdef MOZILLA_INTERNAL_API
-  Element(already_AddRefed<nsINodeInfo> aNodeInfo) :
+  Element(already_AddRefed<nsINodeInfo>& aNodeInfo) :
     FragmentOrElement(aNodeInfo),
     mState(NS_EVENT_STATE_MOZ_READONLY)
   {
@@ -1210,9 +1210,10 @@ inline bool nsINode::HasAttributes() const
 nsresult                                                                    \
 _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
-  *aResult = nullptr;                                                        \
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;                                     \
-  _elementName *it = new _elementName(ni.forget());                         \
+  *aResult = nullptr;                                                       \
+  already_AddRefed<nsINodeInfo> ni =                                        \
+    nsCOMPtr<nsINodeInfo>(aNodeInfo).forget();                              \
+  _elementName *it = new _elementName(ni);                                  \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \
@@ -1230,9 +1231,10 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 nsresult                                                                    \
 _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 {                                                                           \
-  *aResult = nullptr;                                                        \
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;                                     \
-  _elementName *it = new _elementName(ni.forget());                         \
+  *aResult = nullptr;                                                       \
+  already_AddRefed<nsINodeInfo> ni =                                        \
+    nsCOMPtr<nsINodeInfo>(aNodeInfo).forget();                              \
+  _elementName *it = new _elementName(ni);                                  \
   if (!it) {                                                                \
     return NS_ERROR_OUT_OF_MEMORY;                                          \
   }                                                                         \

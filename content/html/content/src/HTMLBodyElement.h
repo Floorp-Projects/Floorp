@@ -40,7 +40,7 @@ public:
   using Element::GetText;
   using Element::SetText;
 
-  HTMLBodyElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLBodyElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

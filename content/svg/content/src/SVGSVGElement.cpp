@@ -156,8 +156,8 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(SVGSVGElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGSVGElement::SVGSVGElement(already_AddRefed<nsINodeInfo> aNodeInfo,
-                                 FromParser aFromParser)
+SVGSVGElement::SVGSVGElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+                             FromParser aFromParser)
   : SVGSVGElementBase(aNodeInfo),
     mViewportWidth(0),
     mViewportHeight(0),
@@ -183,8 +183,8 @@ nsresult
 SVGSVGElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nullptr;
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  SVGSVGElement *it = new SVGSVGElement(ni.forget(), NOT_FROM_PARSER);
+  already_AddRefed<nsINodeInfo> ni = nsCOMPtr<nsINodeInfo>(aNodeInfo).forget();
+  SVGSVGElement *it = new SVGSVGElement(ni, NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;
   nsresult rv1 = it->Init();

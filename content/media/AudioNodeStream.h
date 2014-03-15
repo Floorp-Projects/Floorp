@@ -78,7 +78,7 @@ public:
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue);
   void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue);
   void SetThreeDPointParameter(uint32_t aIndex, const dom::ThreeDPoint& aValue);
-  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer);
+  void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& aBuffer);
   // This consumes the contents of aData.  aData will be emptied after this returns.
   void SetRawArrayData(nsTArray<float>& aData);
   void SetChannelMixingParameters(uint32_t aNumberOfChannels,

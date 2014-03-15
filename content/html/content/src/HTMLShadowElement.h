@@ -15,7 +15,7 @@ class HTMLShadowElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsStubMutationObserver
 {
 public:
-  HTMLShadowElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLShadowElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLShadowElement();
 
   // nsISupports

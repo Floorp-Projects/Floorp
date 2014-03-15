@@ -35,6 +35,7 @@
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
+#include "nsProxyRelease.h"
 #include "nsThread.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
@@ -220,8 +221,7 @@ DataChannelConnection::~DataChannelConnection()
     ASSERT_WEBRTC(NS_IsMainThread());
     if (mTransportFlow) {
       ASSERT_WEBRTC(mSTS);
-      RUN_ON_THREAD(mSTS, WrapRunnableNM(ReleaseTransportFlow, mTransportFlow.forget()),
-                    NS_DISPATCH_NORMAL);
+      NS_ProxyRelease(mSTS, mTransportFlow);
     }
 
     if (mInternalIOThread) {
@@ -1982,7 +1982,7 @@ DataChannelConnection::Open(const nsACString& label, const nsACString& protocol,
 
 // Separate routine so we can also call it to finish up from pending opens
 already_AddRefed<DataChannel>
-DataChannelConnection::OpenFinish(already_AddRefed<DataChannel> aChannel)
+DataChannelConnection::OpenFinish(already_AddRefed<DataChannel>&& aChannel)
 {
   nsRefPtr<DataChannel> channel(aChannel); // takes the reference passed in
   // Normally 1 reference if called from ::Open(), or 2 if called from

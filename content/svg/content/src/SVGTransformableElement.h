@@ -23,7 +23,7 @@ class SVGIRect;
 class SVGTransformableElement : public nsSVGElement
 {
 public:
-  SVGTransformableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGTransformableElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsSVGElement(aNodeInfo) {}
   virtual ~SVGTransformableElement() {}
 

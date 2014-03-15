@@ -9,7 +9,7 @@
 #include "nsSVGFilters.h"
 
 nsresult NS_NewSVGFEMergeNodeElement(nsIContent** aResult,
-                                     already_AddRefed<nsINodeInfo> aNodeInfo);
+                                     already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +19,9 @@ typedef SVGFEUnstyledElement SVGFEMergeNodeElementBase;
 class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase
 {
   friend nsresult (::NS_NewSVGFEMergeNodeElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                 already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFEMergeNodeElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEMergeNodeElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEMergeNodeElementBase(aNodeInfo)
   {
   }

@@ -159,7 +159,7 @@ class MediaRecorder::Session: public nsIObserver
   class DestroyRunnable : public nsRunnable
   {
   public:
-    DestroyRunnable(const already_AddRefed<Session> &aSession)
+    DestroyRunnable(already_AddRefed<Session>&& aSession)
       : mSession(aSession) {}
 
     NS_IMETHODIMP Run()
@@ -539,6 +539,25 @@ MediaRecorder::Resume(ErrorResult& aResult)
   }
 }
 
+class CreateAndDispatchBlobEventRunnable : public nsRunnable {
+  nsCOMPtr<nsIDOMBlob> mBlob;
+  nsRefPtr<MediaRecorder> mRecorder;
+public:
+  CreateAndDispatchBlobEventRunnable(already_AddRefed<nsIDOMBlob>&& aBlob,
+                                     MediaRecorder* aRecorder)
+    : mBlob(aBlob), mRecorder(aRecorder)
+  { }
+
+  NS_IMETHOD
+  Run();
+};
+
+NS_IMETHODIMP
+CreateAndDispatchBlobEventRunnable::Run()
+{
+  return mRecorder->CreateAndDispatchBlobEvent(mBlob.forget());
+}
+
 void
 MediaRecorder::RequestData(ErrorResult& aResult)
 {
@@ -548,8 +567,7 @@ MediaRecorder::RequestData(ErrorResult& aResult)
   }
 
   NS_DispatchToMainThread(
-    NS_NewRunnableMethodWithArg<const already_AddRefed<nsIDOMBlob> >(this,
-      &MediaRecorder::CreateAndDispatchBlobEvent, mSession->GetEncodedData()),
+    new CreateAndDispatchBlobEventRunnable(mSession->GetEncodedData(), this),
     NS_DISPATCH_NORMAL);
 }
 
@@ -580,7 +598,7 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
 }
 
 nsresult
-MediaRecorder::CreateAndDispatchBlobEvent(const already_AddRefed<nsIDOMBlob> &aBlob)
+MediaRecorder::CreateAndDispatchBlobEvent(already_AddRefed<nsIDOMBlob>&& aBlob)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "Not running on main thread");
 

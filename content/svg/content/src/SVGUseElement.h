@@ -20,10 +20,10 @@ class nsSVGUseFrame;
 
 nsresult
 NS_NewSVGSVGElement(nsIContent **aResult,
-                    already_AddRefed<nsINodeInfo> aNodeInfo,
+                    already_AddRefed<nsINodeInfo>&& aNodeInfo,
                     mozilla::dom::FromParser aFromParser);
 nsresult NS_NewSVGUseElement(nsIContent **aResult,
-                             already_AddRefed<nsINodeInfo> aNodeInfo);
+                             already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -36,8 +36,8 @@ class SVGUseElement MOZ_FINAL : public SVGUseElementBase,
   friend class ::nsSVGUseFrame;
 protected:
   friend nsresult (::NS_NewSVGUseElement(nsIContent **aResult,
-                                         already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGUseElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                         already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGUseElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~SVGUseElement();
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
