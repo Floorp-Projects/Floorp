@@ -7,6 +7,7 @@
 PARALLEL_DIRS += [
     'common',
     'crypto',
+    'fxaccounts',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
@@ -20,9 +21,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
 
 if CONFIG['MOZ_SERVICES_METRICS']:
     PARALLEL_DIRS += ['metrics']
-
-if CONFIG['MOZ_SERVICES_FXACCOUNTS']:
-    PARALLEL_DIRS += ['fxaccounts']
 
 if CONFIG['MOZ_SERVICES_SYNC']:
     PARALLEL_DIRS += ['sync']
