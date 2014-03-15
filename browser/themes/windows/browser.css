@@ -2145,6 +2145,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin-top: -10px;
 }
 
+#notification-popup .panel-promo-box {
+  margin: 10px -10px -10px;
+}
+
 #notification-popup-box {
   position: relative;
   background-color: #fff;
