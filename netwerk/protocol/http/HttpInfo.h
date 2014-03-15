@@ -5,7 +5,7 @@
 #ifndef nsHttpInfo__
 #define nsHttpInfo__
 
-template<class T> class nsTArray;
+#include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
 namespace net {
