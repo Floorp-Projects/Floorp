@@ -903,6 +903,10 @@ HTMLCanvasElement::GetContextAtIndex(int32_t index)
 bool
 HTMLCanvasElement::GetIsOpaque()
 {
+  if (mCurrentContext) {
+    return mCurrentContext->GetIsOpaque();
+  }
+
   return HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque);
 }
 
