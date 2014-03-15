@@ -10,12 +10,49 @@
 #include "prlog.h"
 #include "mozilla/TextEvents.h"
 
-using namespace mozilla;
-using namespace mozilla::widget;
+namespace mozilla {
+namespace widget {
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gNativeKeyBindingsLog = nullptr;
 #endif
+
+NativeKeyBindings* NativeKeyBindings::sInstanceForSingleLineEditor = nullptr;
+NativeKeyBindings* NativeKeyBindings::sInstanceForMultiLineEditor = nullptr;
+
+// static
+NativeKeyBindings*
+NativeKeyBindings::GetInstance(NativeKeyBindingsType aType)
+{
+  switch (aType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      if (!sInstanceForSingleLineEditor) {
+        sInstanceForSingleLineEditor = new NativeKeyBindings();
+        sInstanceForSingleLineEditor->Init(aType);
+      }
+      return sInstanceForSingleLineEditor;
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      if (!sInstanceForMultiLineEditor) {
+        sInstanceForMultiLineEditor = new NativeKeyBindings();
+        sInstanceForMultiLineEditor->Init(aType);
+      }
+      return sInstanceForMultiLineEditor;
+    default:
+      MOZ_CRASH("Not implemented");
+      return nullptr;
+  }
+}
+
+// static
+void
+NativeKeyBindings::Shutdown()
+{
+  delete sInstanceForSingleLineEditor;
+  sInstanceForSingleLineEditor = nullptr;
+  delete sInstanceForMultiLineEditor;
+  sInstanceForMultiLineEditor = nullptr;
+}
 
 NativeKeyBindings::NativeKeyBindings()
 {
@@ -25,7 +62,7 @@ NativeKeyBindings::NativeKeyBindings()
   mSelectorToCommand.Put( \
     reinterpret_cast<struct objc_selector *>(@selector(aSel)), aCommand)
 
-NS_IMETHODIMP
+void
 NativeKeyBindings::Init(NativeKeyBindingsType aType)
 {
 #ifdef PR_LOGGING
@@ -51,24 +88,24 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   // SEL_TO_COMMAND(centerSelectionInVisibleArea:, );
   // SEL_TO_COMMAND(changeCaseOfLetter:, );
   // SEL_TO_COMMAND(complete:, );
-  SEL_TO_COMMAND(copy:, "cmd_copy");
+  SEL_TO_COMMAND(copy:, CommandCopy);
   // SEL_TO_COMMAND(copyFont:, );
   // SEL_TO_COMMAND(copyRuler:, );
-  SEL_TO_COMMAND(cut:, "cmd_cut");
-  SEL_TO_COMMAND(delete:, "cmd_delete");
-  SEL_TO_COMMAND(deleteBackward:, "cmd_deleteCharBackward");
+  SEL_TO_COMMAND(cut:, CommandCut);
+  SEL_TO_COMMAND(delete:, CommandDelete);
+  SEL_TO_COMMAND(deleteBackward:, CommandDeleteCharBackward);
   // SEL_TO_COMMAND(deleteBackwardByDecomposingPreviousCharacter:, );
-  SEL_TO_COMMAND(deleteForward:, "cmd_deleteCharForward");
+  SEL_TO_COMMAND(deleteForward:, CommandDeleteCharForward);
 
   // TODO: deleteTo* selectors are also supposed to add text to a kill buffer
-  SEL_TO_COMMAND(deleteToBeginningOfLine:, "cmd_deleteToBeginningOfLine");
-  SEL_TO_COMMAND(deleteToBeginningOfParagraph:, "cmd_deleteToBeginningOfLine");
-  SEL_TO_COMMAND(deleteToEndOfLine:, "cmd_deleteToEndOfLine");
-  SEL_TO_COMMAND(deleteToEndOfParagraph:, "cmd_deleteToEndOfLine");
+  SEL_TO_COMMAND(deleteToBeginningOfLine:, CommandDeleteToBeginningOfLine);
+  SEL_TO_COMMAND(deleteToBeginningOfParagraph:, CommandDeleteToBeginningOfLine);
+  SEL_TO_COMMAND(deleteToEndOfLine:, CommandDeleteToEndOfLine);
+  SEL_TO_COMMAND(deleteToEndOfParagraph:, CommandDeleteToEndOfLine);
   // SEL_TO_COMMAND(deleteToMark:, );
 
-  SEL_TO_COMMAND(deleteWordBackward:, "cmd_deleteWordBackward");
-  SEL_TO_COMMAND(deleteWordForward:, "cmd_deleteWordForward");
+  SEL_TO_COMMAND(deleteWordBackward:, CommandDeleteWordBackward);
+  SEL_TO_COMMAND(deleteWordForward:, CommandDeleteWordForward);
   // SEL_TO_COMMAND(indent:, );
   // SEL_TO_COMMAND(insertBacktab:, );
   // SEL_TO_COMMAND(insertContainerBreak:, );
@@ -81,72 +118,75 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   // SEL_TO_COMMAND(insertDoubleQuoteIgnoringSubstitution:, );
   // SEL_TO_COMMAND(insertSingleQuoteIgnoringSubstitution:, );
   // SEL_TO_COMMAND(lowercaseWord:, );
-  SEL_TO_COMMAND(moveBackward:, "cmd_charPrevious");
-  SEL_TO_COMMAND(moveBackwardAndModifySelection:, "cmd_selectCharPrevious");
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(moveDown:, "cmd_endLine");
+  SEL_TO_COMMAND(moveBackward:, CommandCharPrevious);
+  SEL_TO_COMMAND(moveBackwardAndModifySelection:, CommandSelectCharPrevious);
+  if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor) {
+    SEL_TO_COMMAND(moveDown:, CommandEndLine);
   } else {
-    SEL_TO_COMMAND(moveDown:, "cmd_lineNext");
+    SEL_TO_COMMAND(moveDown:, CommandLineNext);
   }
-  SEL_TO_COMMAND(moveDownAndModifySelection:, "cmd_selectLineNext");
-  SEL_TO_COMMAND(moveForward:, "cmd_charNext");
-  SEL_TO_COMMAND(moveForwardAndModifySelection:, "cmd_selectCharNext");
-  SEL_TO_COMMAND(moveLeft:, "cmd_charPrevious");
-  SEL_TO_COMMAND(moveLeftAndModifySelection:, "cmd_selectCharPrevious");
+  SEL_TO_COMMAND(moveDownAndModifySelection:, CommandSelectLineNext);
+  SEL_TO_COMMAND(moveForward:, CommandCharNext);
+  SEL_TO_COMMAND(moveForwardAndModifySelection:, CommandSelectCharNext);
+  SEL_TO_COMMAND(moveLeft:, CommandCharPrevious);
+  SEL_TO_COMMAND(moveLeftAndModifySelection:, CommandSelectCharPrevious);
   SEL_TO_COMMAND(moveParagraphBackwardAndModifySelection:,
-    "cmd_selectBeginLine");
-  SEL_TO_COMMAND(moveParagraphForwardAndModifySelection:, "cmd_selectEndLine");
-  SEL_TO_COMMAND(moveRight:, "cmd_charNext");
-  SEL_TO_COMMAND(moveRightAndModifySelection:, "cmd_selectCharNext");
-  SEL_TO_COMMAND(moveToBeginningOfDocument:, "cmd_moveTop");
-  SEL_TO_COMMAND(moveToBeginningOfDocumentAndModifySelection:, "cmd_selectTop");
-  SEL_TO_COMMAND(moveToBeginningOfLine:, "cmd_beginLine");
+    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveParagraphForwardAndModifySelection:, CommandSelectEndLine);
+  SEL_TO_COMMAND(moveRight:, CommandCharNext);
+  SEL_TO_COMMAND(moveRightAndModifySelection:, CommandSelectCharNext);
+  SEL_TO_COMMAND(moveToBeginningOfDocument:, CommandMoveTop);
+  SEL_TO_COMMAND(moveToBeginningOfDocumentAndModifySelection:,
+    CommandSelectTop);
+  SEL_TO_COMMAND(moveToBeginningOfLine:, CommandBeginLine);
   SEL_TO_COMMAND(moveToBeginningOfLineAndModifySelection:,
-    "cmd_selectBeginLine");
-  SEL_TO_COMMAND(moveToBeginningOfParagraph:, "cmd_beginLine");
+    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveToBeginningOfParagraph:, CommandBeginLine);
   SEL_TO_COMMAND(moveToBeginningOfParagraphAndModifySelection:,
-    "cmd_selectBeginLine");
-  SEL_TO_COMMAND(moveToEndOfDocument:, "cmd_moveBottom");
-  SEL_TO_COMMAND(moveToEndOfDocumentAndModifySelection:, "cmd_selectBottom");
-  SEL_TO_COMMAND(moveToEndOfLine:, "cmd_endLine");
-  SEL_TO_COMMAND(moveToEndOfLineAndModifySelection:, "cmd_selectEndLine");
-  SEL_TO_COMMAND(moveToEndOfParagraph:, "cmd_endLine");
-  SEL_TO_COMMAND(moveToEndOfParagraphAndModifySelection:, "cmd_selectEndLine");
-  SEL_TO_COMMAND(moveToLeftEndOfLine:, "cmd_beginLine");
-  SEL_TO_COMMAND(moveToLeftEndOfLineAndModifySelection:, "cmd_selectBeginLine");
-  SEL_TO_COMMAND(moveToRightEndOfLine:, "cmd_endLine");
-  SEL_TO_COMMAND(moveToRightEndOfLineAndModifySelection:, "cmd_selectEndLine");
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(moveUp:, "cmd_beginLine");
+    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveToEndOfDocument:, CommandMoveBottom);
+  SEL_TO_COMMAND(moveToEndOfDocumentAndModifySelection:, CommandSelectBottom);
+  SEL_TO_COMMAND(moveToEndOfLine:, CommandEndLine);
+  SEL_TO_COMMAND(moveToEndOfLineAndModifySelection:, CommandSelectEndLine);
+  SEL_TO_COMMAND(moveToEndOfParagraph:, CommandEndLine);
+  SEL_TO_COMMAND(moveToEndOfParagraphAndModifySelection:, CommandSelectEndLine);
+  SEL_TO_COMMAND(moveToLeftEndOfLine:, CommandBeginLine);
+  SEL_TO_COMMAND(moveToLeftEndOfLineAndModifySelection:,
+    CommandSelectBeginLine);
+  SEL_TO_COMMAND(moveToRightEndOfLine:, CommandEndLine);
+  SEL_TO_COMMAND(moveToRightEndOfLineAndModifySelection:, CommandSelectEndLine);
+  if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor) {
+    SEL_TO_COMMAND(moveUp:, CommandBeginLine);
   } else {
-    SEL_TO_COMMAND(moveUp:, "cmd_linePrevious");
+    SEL_TO_COMMAND(moveUp:, CommandLinePrevious);
   }
-  SEL_TO_COMMAND(moveUpAndModifySelection:, "cmd_selectLinePrevious");
-  SEL_TO_COMMAND(moveWordBackward:, "cmd_wordPrevious");
-  SEL_TO_COMMAND(moveWordBackwardAndModifySelection:, "cmd_selectWordPrevious");
-  SEL_TO_COMMAND(moveWordForward:, "cmd_wordNext");
-  SEL_TO_COMMAND(moveWordForwardAndModifySelection:, "cmd_selectWordNext");
-  SEL_TO_COMMAND(moveWordLeft:, "cmd_wordPrevious");
-  SEL_TO_COMMAND(moveWordLeftAndModifySelection:, "cmd_selectWordPrevious");
-  SEL_TO_COMMAND(moveWordRight:, "cmd_wordNext");
-  SEL_TO_COMMAND(moveWordRightAndModifySelection:, "cmd_selectWordNext");
-  SEL_TO_COMMAND(pageDown:, "cmd_movePageDown");
-  SEL_TO_COMMAND(pageDownAndModifySelection:, "cmd_selectPageDown");
-  SEL_TO_COMMAND(pageUp:, "cmd_movePageUp");
-  SEL_TO_COMMAND(pageUpAndModifySelection:, "cmd_selectPageUp");
-  SEL_TO_COMMAND(paste:, "cmd_paste");
+  SEL_TO_COMMAND(moveUpAndModifySelection:, CommandSelectLinePrevious);
+  SEL_TO_COMMAND(moveWordBackward:, CommandWordPrevious);
+  SEL_TO_COMMAND(moveWordBackwardAndModifySelection:,
+    CommandSelectWordPrevious);
+  SEL_TO_COMMAND(moveWordForward:, CommandWordNext);
+  SEL_TO_COMMAND(moveWordForwardAndModifySelection:, CommandSelectWordNext);
+  SEL_TO_COMMAND(moveWordLeft:, CommandWordPrevious);
+  SEL_TO_COMMAND(moveWordLeftAndModifySelection:, CommandSelectWordPrevious);
+  SEL_TO_COMMAND(moveWordRight:, CommandWordNext);
+  SEL_TO_COMMAND(moveWordRightAndModifySelection:, CommandSelectWordNext);
+  SEL_TO_COMMAND(pageDown:, CommandMovePageDown);
+  SEL_TO_COMMAND(pageDownAndModifySelection:, CommandSelectPageDown);
+  SEL_TO_COMMAND(pageUp:, CommandMovePageUp);
+  SEL_TO_COMMAND(pageUpAndModifySelection:, CommandSelectPageUp);
+  SEL_TO_COMMAND(paste:, CommandPaste);
   // SEL_TO_COMMAND(pasteFont:, );
   // SEL_TO_COMMAND(pasteRuler:, );
-  SEL_TO_COMMAND(scrollLineDown:, "cmd_scrollLineDown");
-  SEL_TO_COMMAND(scrollLineUp:, "cmd_scrollLineUp");
-  SEL_TO_COMMAND(scrollPageDown:, "cmd_scrollPageDown");
-  SEL_TO_COMMAND(scrollPageUp:, "cmd_scrollPageUp");
-  SEL_TO_COMMAND(scrollToBeginningOfDocument:, "cmd_scrollTop");
-  SEL_TO_COMMAND(scrollToEndOfDocument:, "cmd_scrollBottom");
-  SEL_TO_COMMAND(selectAll:, "cmd_selectAll");
+  SEL_TO_COMMAND(scrollLineDown:, CommandScrollLineDown);
+  SEL_TO_COMMAND(scrollLineUp:, CommandScrollLineUp);
+  SEL_TO_COMMAND(scrollPageDown:, CommandScrollPageDown);
+  SEL_TO_COMMAND(scrollPageUp:, CommandScrollPageUp);
+  SEL_TO_COMMAND(scrollToBeginningOfDocument:, CommandScrollTop);
+  SEL_TO_COMMAND(scrollToEndOfDocument:, CommandScrollBottom);
+  SEL_TO_COMMAND(selectAll:, CommandSelectAll);
   // selectLine: is complex, see KeyDown
-  if (aType == eNativeKeyBindingsType_Input) {
-    SEL_TO_COMMAND(selectParagraph:, "cmd_selectAll");
+  if (aType == nsIWidget::NativeKeyBindingsForSingleLineEditor) {
+    SEL_TO_COMMAND(selectParagraph:, CommandSelectAll);
   }
   // SEL_TO_COMMAND(selectToMark:, );
   // selectWord: is complex, see KeyDown
@@ -158,24 +198,14 @@ NativeKeyBindings::Init(NativeKeyBindingsType aType)
   // SEL_TO_COMMAND(transposeWords:, );
   // SEL_TO_COMMAND(uppercaseWord:, );
   // SEL_TO_COMMAND(yank:, );
-
-  return NS_OK;
 }
 
 #undef SEL_TO_COMMAND
 
-NS_IMPL_ISUPPORTS1(NativeKeyBindings, nsINativeKeyBindings)
-
-NS_IMETHODIMP_(bool)
-NativeKeyBindings::KeyDown(const WidgetKeyboardEvent& aEvent,
-                           DoCommandCallback aCallback, void* aCallbackData)
-{
-  return false;
-}
-
-NS_IMETHODIMP_(bool)
-NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
-                            DoCommandCallback aCallback, void* aCallbackData)
+bool
+NativeKeyBindings::Execute(const WidgetKeyboardEvent& aEvent,
+                           DoCommandCallback aCallback,
+                           void* aCallbackData)
 {
   PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
     ("%p NativeKeyBindings::KeyPress", this));
@@ -202,7 +232,7 @@ NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
     ("%p NativeKeyBindings::KeyPress, bindingCommands=%u",
      this, bindingCommands.Length()));
 
-  nsAutoTArray<const char*, 4> geckoCommands;
+  nsAutoTArray<Command, 4> geckoCommands;
 
   for (uint32_t i = 0; i < bindingCommands.Length(); i++) {
     SEL selector = bindingCommands[i].selector;
@@ -220,23 +250,23 @@ NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
 #endif
 
     // Try to find a simple mapping in the hashtable
-    const char* commandStr = mSelectorToCommand.Get(
-      reinterpret_cast<struct objc_selector*>(selector));
+    Command geckoCommand = static_cast<Command>(mSelectorToCommand.Get(
+      reinterpret_cast<struct objc_selector*>(selector)));
 
-    if (commandStr) {
-      geckoCommands.AppendElement(commandStr);
+    if (geckoCommand) {
+      geckoCommands.AppendElement(geckoCommand);
     } else if (selector == @selector(selectLine:)) {
       // This is functional, but Cocoa's version is direction-less in that
       // selection direction is not determined until some future directed action
       // is taken. See bug 282097, comment 79 for more details.
-      geckoCommands.AppendElement("cmd_beginLine");
-      geckoCommands.AppendElement("cmd_selectEndLine");
+      geckoCommands.AppendElement(CommandBeginLine);
+      geckoCommands.AppendElement(CommandSelectEndLine);
     } else if (selector == @selector(selectWord:)) {
       // This is functional, but Cocoa's version is direction-less in that
       // selection direction is not determined until some future directed action
       // is taken. See bug 282097, comment 79 for more details.
-      geckoCommands.AppendElement("cmd_wordPrevious");
-      geckoCommands.AppendElement("cmd_selectWordNext");
+      geckoCommands.AppendElement(CommandWordPrevious);
+      geckoCommands.AppendElement(CommandSelectWordNext);
     }
   }
 
@@ -248,7 +278,7 @@ NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
   }
 
   for (uint32_t i = 0; i < geckoCommands.Length(); i++) {
-    const char* geckoCommand = geckoCommands[i];
+    Command geckoCommand = geckoCommands[i];
 
     PR_LOG(gNativeKeyBindingsLog, PR_LOG_ALWAYS,
       ("%p NativeKeyBindings::KeyPress, command=%s",
@@ -264,9 +294,5 @@ NativeKeyBindings::KeyPress(const WidgetKeyboardEvent& aEvent,
   return true;
 }
 
-NS_IMETHODIMP_(bool)
-NativeKeyBindings::KeyUp(const WidgetKeyboardEvent& aEvent,
-                         DoCommandCallback aCallback, void* aCallbackData)
-{
-  return false;
-}
+} // namespace widget
+} // namespace mozilla

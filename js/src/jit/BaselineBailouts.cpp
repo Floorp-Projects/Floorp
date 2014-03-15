@@ -532,7 +532,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // If SPS Profiler is enabled, mark the frame as having pushed an SPS entry.
     // This may be wrong for the last frame of ArgumentCheck bailout, but
     // that will be fixed later.
-    if (cx->runtime()->spsProfiler.enabled() && ionScript->hasSPSInstrumentation()) {
+    if (ionScript->hasSPSInstrumentation()) {
         IonSpew(IonSpew_BaselineBailouts, "      Setting SPS flag on frame!");
         flags |= BaselineFrame::HAS_PUSHED_SPS_FRAME;
     }

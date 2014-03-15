@@ -44,12 +44,17 @@ interface nsIApplicationReputationService : nsISupports {
  * downloaded file. nsIApplicationReputationService.Start() may only be called
  * once with a single query.
  */
-[scriptable, uuid(5a054991-e489-4a1c-a0aa-ea7c69b20e3d)]
+[scriptable, uuid(2c781cbe-ab0c-4c53-b06e-f0cb56f8a30b)]
 interface nsIApplicationReputationQuery : nsISupports {
   /*
    * The nsIURI from which the file was downloaded. This may not be null.
    */
   readonly attribute nsIURI sourceURI;
+
+  /*
+   * The reference, if any.
+   */
+  readonly attribute nsIURI referrerURI;
 
   /*
    * The target filename for the downloaded file, as inferred from the source

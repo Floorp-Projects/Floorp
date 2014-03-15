@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ModuleUtils.h"
+#include "NativeKeyBindings.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShell.h"
 #include "nsAppShellSingleton.h"
@@ -23,7 +24,6 @@
 #include "nsFilePicker.h"
 #include "nsSound.h"
 #include "nsBidiKeyboard.h"
-#include "nsNativeKeyBindings.h"
 #include "nsScreenManagerGtk.h"
 #include "nsGTKToolkit.h"
 
@@ -52,6 +52,7 @@
 #include <gtk/gtk.h>
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 /* from nsFilePicker.js */
 #define XULFILEPICKER_CID \
@@ -167,50 +168,6 @@ nsColorPickerConstructor(nsISupports *aOuter, REFNSIID aIID,
     return picker->QueryInterface(aIID, aResult);
 }
 
-static nsresult
-nsNativeKeyBindingsConstructor(nsISupports *aOuter, REFNSIID aIID,
-                               void **aResult,
-                               NativeKeyBindingsType aKeyBindingsType)
-{
-    nsresult rv;
-
-    nsNativeKeyBindings *inst;
-
-    *aResult = nullptr;
-    if (nullptr != aOuter) {
-        rv = NS_ERROR_NO_AGGREGATION;
-        return rv;
-    }
-
-    inst = new nsNativeKeyBindings();
-    if (nullptr == inst) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        return rv;
-    }
-    NS_ADDREF(inst);
-    inst->Init(aKeyBindingsType);
-    rv = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
-
-    return rv;
-}
-
-static nsresult
-nsNativeKeyBindingsInputConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                    void **aResult)
-{
-    return nsNativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                          eKeyBindings_Input);
-}
-
-static nsresult
-nsNativeKeyBindingsTextAreaConstructor(nsISupports *aOuter, REFNSIID aIID,
-                                       void **aResult)
-{
-    return nsNativeKeyBindingsConstructor(aOuter, aIID, aResult,
-                                          eKeyBindings_TextArea);
-}
-
 NS_DEFINE_NAMED_CID(NS_WINDOW_CID);
 NS_DEFINE_NAMED_CID(NS_CHILD_CID);
 NS_DEFINE_NAMED_CID(NS_APPSHELL_CID);
@@ -225,9 +182,6 @@ NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
 NS_DEFINE_NAMED_CID(NS_BIDIKEYBOARD_CID);
-NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGSINPUT_CID);
-NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGSTEXTAREA_CID);
-NS_DEFINE_NAMED_CID(NS_NATIVEKEYBINDINGSEDITOR_CID);
 NS_DEFINE_NAMED_CID(NS_SCREENMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_THEMERENDERER_CID);
 #ifdef NS_PRINTING
@@ -259,9 +213,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 #endif
     { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },
     { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
-    { &kNS_NATIVEKEYBINDINGSINPUT_CID, false, nullptr, nsNativeKeyBindingsInputConstructor },
-    { &kNS_NATIVEKEYBINDINGSTEXTAREA_CID, false, nullptr, nsNativeKeyBindingsTextAreaConstructor },
-    { &kNS_NATIVEKEYBINDINGSEDITOR_CID, false, nullptr, nsNativeKeyBindingsTextAreaConstructor },
     { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerGtkConstructor },
     { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
 #ifdef NS_PRINTING
@@ -298,9 +249,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 #endif
     { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
     { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
-    { NS_NATIVEKEYBINDINGSINPUT_CONTRACTID, &kNS_NATIVEKEYBINDINGSINPUT_CID },
-    { NS_NATIVEKEYBINDINGSTEXTAREA_CONTRACTID, &kNS_NATIVEKEYBINDINGSTEXTAREA_CID },
-    { NS_NATIVEKEYBINDINGSEDITOR_CONTRACTID, &kNS_NATIVEKEYBINDINGSEDITOR_CID },
     { "@mozilla.org/gfx/screenmanager;1", &kNS_SCREENMANAGER_CID },
     { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
 #ifdef NS_PRINTING
@@ -325,6 +273,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 static void
 nsWidgetGtk2ModuleDtor()
 {
+  NativeKeyBindings::Shutdown();
   nsLookAndFeel::Shutdown();
   nsFilePicker::Shutdown();
   nsSound::Shutdown();

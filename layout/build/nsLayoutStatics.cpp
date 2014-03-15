@@ -352,7 +352,6 @@ nsLayoutStatics::Shutdown()
   nsGlobalWindow::ShutDown();
   nsDOMClassInfo::ShutDown();
   nsListControlFrame::Shutdown();
-  nsEditorEventListener::ShutDown();
   nsXBLService::Shutdown();
   nsAutoCopyListener::Shutdown();
   FrameLayerBuilder::Shutdown();

@@ -1594,8 +1594,8 @@ PeerConnectionWrapper.prototype = {
         var res = stats[key];
         // validate stats
         ok(res.id == key, "Coherent stats id");
-        var nowish = Date.now() + 10000;        // TODO: severe drift observed
-        var minimum = this.whenCreated - 10000; // on Windows XP (Bug 979649)
+        var nowish = Date.now() + 1000;        // TODO: clock drift observed
+        var minimum = this.whenCreated - 1000; // on Windows XP (Bug 979649)
         ok(res.timestamp >= minimum,
            "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
                res.timestamp + " >= " + minimum + " (" +
@@ -1631,12 +1631,10 @@ PeerConnectionWrapper.prototype = {
                 if(res.type == "outboundrtp") {
                   ok(rem.type == "inboundrtp", "Rtcp is inbound");
                   ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
-                  // TODO: Re-enable once Bug 980497 is fixed
-                  // ok(rem.packetsReceived <= res.packetsSent, "No more than sent");
+                  ok(rem.packetsReceived <= res.packetsSent, "No more than sent");
                   ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
                   ok(rem.bytesReceived >= rem.packetsReceived * 8, "Rtcp bytesReceived");
-                  // TODO: Re-enable once Bug 980497 is fixed
-                  // ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
+                  ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
                   ok(rem.jitter !== undefined, "Rtcp jitter");
                 } else {
                   ok(rem.type == "outboundrtp", "Rtcp is outbound");

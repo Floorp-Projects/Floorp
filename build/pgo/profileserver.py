@@ -17,6 +17,7 @@ import shutil
 import tempfile
 from datetime import datetime
 from mozbuild.base import MozbuildObject
+from buildconfig import substs
 
 PORT = 8888
 
@@ -54,6 +55,14 @@ if __name__ == '__main__':
     env = os.environ.copy()
     env["MOZ_CRASHREPORTER_NO_REPORT"] = "1"
     env["XPCOM_DEBUG_BREAK"] = "warn"
+
+    # For VC12, make sure we can find the right bitness of pgort120.dll
+    if "VS120COMNTOOLS" in env and not substs["HAVE_64BIT_OS"]:
+      vc12dir = os.path.abspath(os.path.join(env["VS120COMNTOOLS"],
+                                             "../../VC/bin"))
+      if os.path.exists(vc12dir):
+        env["PATH"] = vc12dir + ";" + env["PATH"]
+
     jarlog = os.getenv("JARLOG_FILE")
     if jarlog:
       env["MOZ_JAR_LOG_FILE"] = os.path.abspath(jarlog)

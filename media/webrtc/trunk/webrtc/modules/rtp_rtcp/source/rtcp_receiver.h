@@ -82,6 +82,12 @@ public:
 
     int32_t ResetRTT(const uint32_t remoteSSRC);
 
+    int32_t GetReportBlockInfo(uint32_t remoteSSRC,
+                               uint32_t* NTPHigh,
+                               uint32_t* NTPLow,
+                               uint32_t* PacketsReceived,
+                               uint64_t* OctetsReceived) const;
+
     int32_t SenderInfoReceived(RTCPSenderInfo* senderInfo) const;
 
     // get statistics

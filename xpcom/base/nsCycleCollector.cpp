@@ -1574,6 +1574,14 @@ public:
         // We don't support after-processing for weak map entries.
         return NS_OK;
     }
+    NS_IMETHOD NoteIncrementalRoot(uint64_t aAddress)
+    {
+        if (!mDisableLog) {
+            fprintf(mStream, "IncrementalRoot %p\n", (void*)aAddress);
+        }
+        // We don't support after-processing for incremental roots.
+        return NS_OK;
+    }
     NS_IMETHOD BeginResults()
     {
         if (!mDisableLog) {
@@ -2707,8 +2715,9 @@ nsCycleCollector::ScanWeakMaps()
 class PurpleScanBlackVisitor
 {
 public:
-    PurpleScanBlackVisitor(GCGraph &aGraph, uint32_t &aCount, bool &aFailed)
-        : mGraph(aGraph), mCount(aCount), mFailed(aFailed)
+    PurpleScanBlackVisitor(GCGraph &aGraph, nsICycleCollectorListener *aListener,
+                           uint32_t &aCount, bool &aFailed)
+        : mGraph(aGraph), mListener(aListener), mCount(aCount), mFailed(aFailed)
     {
     }
 
@@ -2729,6 +2738,9 @@ public:
             return;
         }
         MOZ_ASSERT(pi->mParticipant, "No dead objects should be in the purple buffer.");
+        if (MOZ_UNLIKELY(mListener)) {
+            mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
+        }
         if (pi->mColor == black) {
             return;
         }
@@ -2737,6 +2749,7 @@ public:
 
 private:
     GCGraph &mGraph;
+    nsICycleCollectorListener *mListener;
     uint32_t &mCount;
     bool &mFailed;
 };
@@ -2759,7 +2772,7 @@ nsCycleCollector::ScanIncrementalRoots()
     // buffer here, so these objects will be suspected and freed in the next CC
     // if they are garbage.
     bool failed = false;
-    PurpleScanBlackVisitor purpleScanBlackVisitor(mGraph, mWhiteNodeCount, failed);
+    PurpleScanBlackVisitor purpleScanBlackVisitor(mGraph, mListener, mWhiteNodeCount, failed);
     mPurpleBuf.VisitEntries(purpleScanBlackVisitor);
     timeLog.Checkpoint("ScanIncrementalRoots::fix purple");
 
@@ -2776,10 +2789,20 @@ nsCycleCollector::ScanIncrementalRoots()
         while (!etor.IsDone()) {
             PtrInfo *pi = etor.GetNext();
 
-            if (pi->mRefCount != 0 || pi->mColor == black) {
+            // If the refcount is non-zero, pi can't have been a gray JS object.
+            if (pi->mRefCount != 0) {
                 continue;
             }
 
+            // As an optimization, if an object has already been determined to be live,
+            // don't consider it further.  We can't do this if there is a listener,
+            // because the listener wants to know the complete set of incremental roots.
+            if (pi->mColor == black && MOZ_LIKELY(!mListener)) {
+                continue;
+            }
+
+            // If the object is still marked gray by the GC, nothing could have gotten
+            // hold of it, so it isn't an incremental root.
             if (pi->mParticipant == jsParticipant) {
                 if (xpc_GCThingIsGrayCCThing(pi->mPointer)) {
                     continue;
@@ -2791,6 +2814,15 @@ nsCycleCollector::ScanIncrementalRoots()
                 }
             } else {
                 MOZ_ASSERT(false, "Non-JS thing with 0 refcount? Treating as live.");
+            }
+
+            // At this point, pi must be an incremental root.
+
+            // If there's a listener, tell it about this root. We don't bother with the
+            // optimization of skipping the Walk() if pi is black: it will just return
+            // without doing anything and there's no need to make this case faster.
+            if (MOZ_UNLIKELY(mListener)) {
+                mListener->NoteIncrementalRoot((uint64_t)pi->mPointer);
             }
 
             GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(pi);

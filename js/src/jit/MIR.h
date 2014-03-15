@@ -1321,6 +1321,8 @@ class MTest
     }
     void infer();
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
+    void filtersUndefinedOrNull(bool trueBranch, MDefinition **subject, bool *filtersUndefined,
+                                bool *filtersNull);
 
     void markOperandCantEmulateUndefined() {
         operandMightEmulateUndefined_ = false;
@@ -2278,6 +2280,8 @@ class MCompare
     bool tryFold(bool *result);
     bool evaluateConstantOperands(bool *result);
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
+    void filtersUndefinedOrNull(bool trueBranch, MDefinition **subject, bool *filtersUndefined,
+                                bool *filtersNull);
 
     void infer(BaselineInspector *inspector, jsbytecode *pc);
     CompareType compareType() const {
@@ -8806,6 +8810,37 @@ class MGuardThreadExclusive
     }
 };
 
+class MFilterTypeSet
+  : public MUnaryInstruction
+{
+    MFilterTypeSet(MDefinition *def, types::TemporaryTypeSet *types)
+      : MUnaryInstruction(def)
+    {
+        JS_ASSERT(!types->unknown());
+
+        MIRType type = MIRTypeFromValueType(types->getKnownTypeTag());
+        setResultType(type);
+        setResultTypeSet(types);
+    }
+
+  public:
+    INSTRUCTION_HEADER(FilterTypeSet)
+
+    static MFilterTypeSet *New(TempAllocator &alloc, MDefinition *def, types::TemporaryTypeSet *types) {
+        return new(alloc) MFilterTypeSet(def, types);
+    }
+
+    bool congruentTo(MDefinition *def) const {
+        return false;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    virtual bool neverHoist() const {
+        return resultTypeSet()->empty();
+    }
+};
+
 // Given a value, guard that the value is in a particular TypeSet, then returns
 // that value.
 class MTypeBarrier
@@ -8932,33 +8967,6 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>
 #endif
 };
 
-class MNewSlots : public MNullaryInstruction
-{
-    unsigned nslots_;
-
-    MNewSlots(unsigned nslots)
-      : nslots_(nslots)
-    {
-        setResultType(MIRType_Slots);
-    }
-
-  public:
-    INSTRUCTION_HEADER(NewSlots)
-
-    static MNewSlots *New(TempAllocator &alloc, unsigned nslots) {
-        return new(alloc) MNewSlots(nslots);
-    }
-    unsigned nslots() const {
-        return nslots_;
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-    bool possiblyCalls() const {
-        return true;
-    }
-};
-
 class MNewDeclEnvObject : public MNullaryInstruction
 {
     CompilerRootObject templateObj_;
@@ -8985,13 +8993,13 @@ class MNewDeclEnvObject : public MNullaryInstruction
     }
 };
 
-class MNewCallObject : public MUnaryInstruction
+class MNewCallObject : public MNullaryInstruction
 {
     CompilerRootObject templateObj_;
     bool needsSingletonType_;
 
-    MNewCallObject(JSObject *templateObj, bool needsSingletonType, MDefinition *slots)
-      : MUnaryInstruction(slots),
+    MNewCallObject(JSObject *templateObj, bool needsSingletonType)
+      : MNullaryInstruction(),
         templateObj_(templateObj),
         needsSingletonType_(needsSingletonType)
     {
@@ -9001,15 +9009,11 @@ class MNewCallObject : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(NewCallObject)
 
-    static MNewCallObject *New(TempAllocator &alloc, JSObject *templateObj, bool needsSingletonType,
-                               MDefinition *slots)
+    static MNewCallObject *New(TempAllocator &alloc, JSObject *templateObj, bool needsSingletonType)
     {
-        return new(alloc) MNewCallObject(templateObj, needsSingletonType, slots);
+        return new(alloc) MNewCallObject(templateObj, needsSingletonType);
     }
 
-    MDefinition *slots() {
-        return getOperand(0);
-    }
     JSObject *templateObject() {
         return templateObj_;
     }
@@ -9021,12 +9025,12 @@ class MNewCallObject : public MUnaryInstruction
     }
 };
 
-class MNewCallObjectPar : public MBinaryInstruction
+class MNewCallObjectPar : public MUnaryInstruction
 {
     CompilerRootObject templateObj_;
 
-    MNewCallObjectPar(MDefinition *cx, JSObject *templateObj, MDefinition *slots)
-        : MBinaryInstruction(cx, slots),
+    MNewCallObjectPar(MDefinition *cx, JSObject *templateObj)
+        : MUnaryInstruction(cx),
           templateObj_(templateObj)
     {
         setResultType(MIRType_Object);
@@ -9036,15 +9040,11 @@ class MNewCallObjectPar : public MBinaryInstruction
     INSTRUCTION_HEADER(NewCallObjectPar);
 
     static MNewCallObjectPar *New(TempAllocator &alloc, MDefinition *cx, MNewCallObject *callObj) {
-        return new(alloc) MNewCallObjectPar(cx, callObj->templateObject(), callObj->slots());
+        return new(alloc) MNewCallObjectPar(cx, callObj->templateObject());
     }
 
     MDefinition *forkJoinContext() const {
         return getOperand(0);
-    }
-
-    MDefinition *slots() const {
-        return getOperand(1);
     }
 
     JSObject *templateObj() const {
