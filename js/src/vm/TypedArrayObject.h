@@ -143,6 +143,24 @@ class ArrayBufferObject : public JSObject
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);
     static void restoreArrayBufferLists(ArrayBufferVector &vector);
 
+    bool hasStealableContents() const {
+        // Inline elements strictly adhere to the corresponding buffer.
+        if (!hasDynamicElements())
+            return false;
+
+        // asm.js buffer contents are transferred by copying, just like inline
+        // elements.
+        if (isAsmJSArrayBuffer())
+            return false;
+
+        // Neutered contents aren't transferrable because we want a neutered
+        // array's contents to be backed by zeroed memory equal in length to
+        // the original buffer contents.  Transferring these contents would
+        // allocate new ones based on the current byteLength, which is 0 for a
+        // neutered array -- not the original byteLength.
+        return !isNeutered();
+    }
+
     static bool stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
                               uint8_t **data);
 
@@ -188,14 +206,6 @@ class ArrayBufferObject : public JSObject
     }
 
     /*
-     * Return the contents of an ArrayBuffer without modifying the ArrayBuffer
-     * itself. Set *callerOwns to true if the caller has the only pointer to
-     * the returned contents (which is the case for inline or asm.js buffers),
-     * and false if the ArrayBuffer still owns the pointer.
-     */
-    ObjectElements *getTransferableContents(JSContext *maybecx, bool *callerOwns);
-
-    /*
      * Neuter all views of an ArrayBuffer.
      */
     static bool neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer);
@@ -204,11 +214,17 @@ class ArrayBufferObject : public JSObject
         return (uint8_t *) elements;
     }
 
-    /*
-     * Discard the ArrayBuffer contents. For asm.js buffers, at least, should
+     /*
+     * Discard the ArrayBuffer contents, and use |newHeader| for the buffer's
+     * new contents.  (These new contents are zeroed, of identical size in
+     * memory as the current contents, but appear to be neutered and of zero
+     * length.  This is purely precautionary against stale indexes that were
+     * in-bounds with respect to the initial length but would not be after
+     * neutering.  This precaution will be removed once we're sure such stale
+     * indexing no longer happens.)  For asm.js buffers, at least, should
      * be called after neuterViews().
      */
-    void neuter(JSContext *maybecx);
+    void neuter(ObjectElements *newHeader, JSContext *cx);
 
     /*
      * Check if the arrayBuffer contains any data. This will return false for
