@@ -912,6 +912,9 @@ this.UITour = {
         if (button.style == "link")
           el.setAttribute("class", "button-link");
 
+        if (button.style == "primary")
+          el.setAttribute("class", "button-primary");
+
         let callbackID = button.callbackID;
         el.addEventListener("command", event => {
           tooltip.hidePopup();

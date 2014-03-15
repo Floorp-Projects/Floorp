@@ -2235,14 +2235,11 @@ chatbox {
 }
 
 #UITourTooltipClose {
-  -moz-appearance: toolbarbutton;
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-}
-
-#UITourTooltipClose > .toolbarbutton-icon {
-  margin: -4px;
+  -moz-margin-end: -4px;
+  height: 16px;
+  width: 16px;
 }
 
 #UITourTooltipButtons {
-  margin-bottom: 0;
+  margin-bottom: -10px;
 }

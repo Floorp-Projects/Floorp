@@ -2757,3 +2757,7 @@ chatbox {
 }
 
 %include ../shared/UITour.inc.css
+
+#UITourTooltipButtons {
+  margin: 24px -4px -4px;
+}
