@@ -8,6 +8,7 @@
 #include "nsCoord.h"
 #include "nsCSSProperty.h"
 #include "nsString.h"
+#include "nsTArrayForwardDeclare.h"
 
 class nsCSSValue;
 class nsStringComparator;
@@ -18,7 +19,6 @@ class nsIURI;
 struct gfxFontFeature;
 struct gfxAlternateValue;
 class nsCSSValueList;
-template <class E> class nsTArray;
 
 // Style utility functions
 class nsStyleUtil {

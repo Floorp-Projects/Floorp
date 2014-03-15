@@ -8,6 +8,7 @@
 
 #include <stdio.h> /* for FILE* */
 #include "nsDebug.h"
+#include "nsTArrayForwardDeclare.h"
 
 #if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
 // DEBUG_FRAME_DUMP enables nsIFrame::List and related methods.
@@ -18,7 +19,6 @@
 class nsIFrame;
 class nsIPresShell;
 class nsPresContext;
-template <class T> class nsTArray;
 
 namespace mozilla {
 namespace layout {
