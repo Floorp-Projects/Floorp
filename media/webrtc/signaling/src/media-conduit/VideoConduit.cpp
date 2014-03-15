@@ -141,15 +141,11 @@ bool WebrtcVideoConduit::GetAVStats(int32_t* jitterBufferDelayMs,
 
 bool WebrtcVideoConduit::GetRTPStats(unsigned int* jitterMs,
                                      unsigned int* cumulativeLost) {
-  unsigned int ntpHigh, ntpLow;
-  unsigned int packetsSent, bytesSent;
   unsigned short fractionLost;
   unsigned extendedMax;
   int rttMs;
   // GetReceivedRTCPStatistics is a poorly named GetRTPStatistics variant
-  return !mPtrRTP->GetReceivedRTCPStatistics(mChannel, ntpHigh, ntpLow,
-                                             packetsSent, bytesSent,
-                                             fractionLost,
+  return !mPtrRTP->GetReceivedRTCPStatistics(mChannel, fractionLost,
                                              *cumulativeLost,
                                              extendedMax,
                                              *jitterMs,
@@ -157,29 +153,22 @@ bool WebrtcVideoConduit::GetRTPStats(unsigned int* jitterMs,
 }
 
 bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
-                                               unsigned int* jitterMs,
-                                               unsigned int* packetsReceived,
+                                               uint32_t* jitterMs,
+                                               uint32_t* packetsReceived,
                                                uint64_t* bytesReceived,
-                                               unsigned int* cumulativeLost) {
-  unsigned int ntpHigh, ntpLow;
-  unsigned int packetsSent;
-  unsigned int bytesSent32;
-  unsigned short fractionLost;
-  unsigned extendedMax;
-  int rttMs;
-  bool result = !mPtrRTP->GetSentRTCPStatistics(mChannel, ntpHigh, ntpLow,
-                                                bytesSent32, packetsSent,
-                                                fractionLost,
-                                                *cumulativeLost,
-                                                extendedMax,
-                                                *jitterMs,
-                                                rttMs);
+                                               uint32_t* cumulativeLost,
+                                               int32_t* rttMs) {
+  uint32_t ntpHigh, ntpLow;
+  uint16_t fractionLost;
+  bool result = !mPtrRTP->GetRemoteRTCPReceiverInfo(mChannel, ntpHigh, ntpLow,
+                                                    *packetsReceived,
+                                                    *bytesReceived,
+                                                    jitterMs,
+                                                    &fractionLost,
+                                                    cumulativeLost,
+                                                    rttMs);
   if (result) {
     *timestamp = NTPtoDOMHighResTimeStamp(ntpHigh, ntpLow);
-    *packetsReceived = (packetsSent >= *cumulativeLost) ?
-                       (packetsSent - *cumulativeLost) : 0;
-    *bytesReceived = (packetsSent ?
-                      (bytesSent32 / packetsSent) : 0) * (*packetsReceived);
   }
   return result;
 }
@@ -187,22 +176,13 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
 bool WebrtcVideoConduit::GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                                              unsigned int* packetsSent,
                                              uint64_t* bytesSent) {
-  unsigned int ntpHigh, ntpLow;
-  unsigned int bytesSent32;
-  unsigned int jitterMs;
-  unsigned short fractionLost;
-  unsigned int cumulativeLost;
-  unsigned extendedMax;
-  int rttMs;
-  bool result = !mPtrRTP->GetReceivedRTCPStatistics(mChannel, ntpHigh, ntpLow,
-                                                    bytesSent32, *packetsSent,
-                                                    fractionLost,
-                                                    cumulativeLost,
-                                                    jitterMs, extendedMax,
-                                                    rttMs);
+  struct webrtc::SenderInfo senderInfo;
+  bool result = !mPtrRTP->GetRemoteRTCPSenderInfo(mChannel, &senderInfo);
   if (result) {
-    *timestamp = NTPtoDOMHighResTimeStamp(ntpHigh, ntpLow);
-    *bytesSent = bytesSent32;
+    *timestamp = NTPtoDOMHighResTimeStamp(senderInfo.NTP_timestamp_high,
+                                          senderInfo.NTP_timestamp_low);
+    *packetsSent = senderInfo.sender_packet_count;
+    *bytesSent = senderInfo.sender_octet_count;
   }
   return result;
 }

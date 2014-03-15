@@ -396,6 +396,9 @@ public class BrowserContract {
         public static final String DEFAULT_SORT_ORDER = _ID + " DESC";
         public static final String[] DEFAULT_PROJECTION = new String[] { _ID, URL, TITLE, EXCERPT, LENGTH };
 
+        // Minimum fields required to create a reading list item.
+        public static final String[] REQUIRED_FIELDS = { Bookmarks.URL, Bookmarks.TITLE };
+
         public static final String TABLE_NAME = "reading_list";
     }
 

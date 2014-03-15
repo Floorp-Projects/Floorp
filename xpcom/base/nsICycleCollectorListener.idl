@@ -26,8 +26,9 @@ interface nsICycleCollectorHandler : nsISupports
  * the CC graph while it's being built. The order of calls will be a
  * call to begin(); then for every node in the graph a call to either
  * noteRefCountedObject() or noteGCedObject(), followed by calls to
- * noteEdge() for every edge starting at that node; then a call to
- * beginResults(); then a mixture of describeRoot() for ref counted
+ * noteEdge() for every edge starting at that node. Then, there may
+ * be calls to noteIncrementalRoot(). After that, beginResults() will
+ * be called, followed by a mixture of describeRoot() for ref counted
  * nodes the CC has identified as roots and describeGarbage() for
  * nodes the CC has identified as garbage.  Ref counted nodes that are
  * not identified as either roots or garbage are neither, and have a
@@ -35,7 +36,7 @@ interface nsICycleCollectorHandler : nsISupports
  * a call to end().  If begin() returns an error none of the other
  * functions will be called.
  */
-[scriptable, builtinclass, uuid(786215b7-1e4b-433b-b617-96b176273601)]
+[scriptable, builtinclass, uuid(2d04dd00-abc4-11e3-a5e2-0800200c9a66)]
 interface nsICycleCollectorListener : nsISupports
 {
     nsICycleCollectorListener allTraces();
@@ -70,6 +71,11 @@ interface nsICycleCollectorListener : nsISupports
                           in unsigned long long aKey,
                           in unsigned long long aKeyDelegate,
                           in unsigned long long aValue);
+    // An "incremental root" is an object that may have had a new
+    // reference to it created during an incremental collection,
+    // and must therefore be treated as live for safety.
+    void noteIncrementalRoot(in unsigned long long aAddress);
+
     void beginResults();
     void describeRoot(in unsigned long long aAddress,
 		      in unsigned long aKnownEdges);

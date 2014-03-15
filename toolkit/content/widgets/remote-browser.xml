@@ -10,7 +10,7 @@
 
   <binding id="remote-browser" extends="chrome://global/content/bindings/browser.xml#browser">
 
-    <implementation type="application/javascript" implements="nsIObserver, nsIDOMEventListener, nsIMessageListener, nsIMessageListener">
+    <implementation type="application/javascript" implements="nsIObserver, nsIDOMEventListener, nsIMessageListener">
 
       <field name="_securityUI">null</field>
 
@@ -265,7 +265,13 @@
               Cu.import("resource://gre/modules/SelectParentHelper.jsm");
               let dropdown = document.getElementById(this.getAttribute("selectpopup"));
               SelectParentHelper.hide(dropdown);
+              break;
             }
+
+            default:
+              // Delegate to browser.xml.
+              return this._receiveMessage(aMessage);
+              break;
           }
         ]]></body>
       </method>

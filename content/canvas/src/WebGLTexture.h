@@ -7,6 +7,7 @@
 #define WEBGLTEXTURE_H_
 
 #include "WebGLObjectModel.h"
+#include "WebGLFramebufferAttachable.h"
 
 #include "nsWrapperCache.h"
 
@@ -37,6 +38,7 @@ class WebGLTexture MOZ_FINAL
     , public WebGLRefCountedObject<WebGLTexture>
     , public LinkedListElement<WebGLTexture>
     , public WebGLContextBoundObject
+    , public WebGLFramebufferAttachable
 {
 public:
     WebGLTexture(WebGLContext *context);

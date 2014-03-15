@@ -41,7 +41,11 @@
       onready: onready,
       onlogin: onlogin,
       onerror: onerror,
-      onlogout: function() {},
+
+      // onlogout will actually be called every time watch() is invoked,
+      // because fxa will find no signed-in user and so trigger logout.
+      // For this test, though, we don't care and just ignore logout.
+      onlogout: function () {},
     });
   };
 

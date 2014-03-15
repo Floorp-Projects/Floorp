@@ -386,7 +386,7 @@ void TelemetryIOInterposeObserver::AddPath(const nsAString& aPath,
 void TelemetryIOInterposeObserver::Observe(Observation& aOb)
 {
   // We only report main-thread I/O
-  if (!NS_IsMainThread()) {
+  if (!IsMainThread()) {
     return;
   }
 
@@ -2558,6 +2558,18 @@ TelemetryImpl::GetFileIOReports(JSContext *cx, JS::MutableHandleValue ret)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TelemetryImpl::MsSinceProcessStart(double* aResult)
+{
+  bool error;
+  *aResult = (TimeStamp::NowLoRes() -
+              TimeStamp::ProcessCreation(error)).ToMilliseconds();
+  if (error) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return NS_OK;
+}
+
 size_t
 TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
@@ -2956,10 +2968,6 @@ InitIOReporting(nsIFile* aXreDir)
     return;
   }
 
-  // Initialize IO interposing
-  IOInterposer::Init();
-  InitPoisonIOInterposer();
- 
   sTelemetryIOObserver = new TelemetryIOInterposeObserver(aXreDir);
   IOInterposer::Register(IOInterposeObserver::OpAll, sTelemetryIOObserver);
 }

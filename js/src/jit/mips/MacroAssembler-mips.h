@@ -65,16 +65,7 @@ static_assert(1 << defaultShift == sizeof(jsval), "The defaultShift is wrong");
 
 class MacroAssemblerMIPS : public Assembler
 {
-  protected:
-    Register secondScratchReg_;
-
   public:
-    MacroAssemblerMIPS() : secondScratchReg_(t8)
-    { }
-
-    Register  secondScratch() {
-        return secondScratchReg_;
-    }
 
     void convertBoolToInt32(Register source, Register dest);
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest);
@@ -576,8 +567,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_b(ScratchRegister, rhs, label, cond);
     }
     void branch32(Condition cond, const Address &lhs, Imm32 rhs, Label *label) {
-        ma_lw(secondScratchReg_, lhs);
-        ma_b(secondScratchReg_, rhs, label, cond);
+        ma_lw(SecondScratchReg, lhs);
+        ma_b(SecondScratchReg, rhs, label, cond);
     }
     void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
@@ -658,8 +649,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         branchTest32(cond, lhs, ScratchRegister, label);
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
-        ma_lw(secondScratchReg_, address);
-        branchTest32(cond, secondScratchReg_, imm, label);
+        ma_lw(SecondScratchReg, address);
+        branchTest32(cond, SecondScratchReg, imm, label);
     }
     void branchTestPtr(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
@@ -712,22 +703,22 @@ public:
 
     template <typename T>
     CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel *label) {
-        loadPtr(addr, secondScratchReg_);
+        loadPtr(addr, SecondScratchReg);
         movePtr(ptr, ScratchRegister);
         Label skipJump;
-        ma_b(secondScratchReg_, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
+        ma_b(SecondScratchReg, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
         CodeOffsetJump off = jumpWithPatch(label);
         bind(&skipJump);
         return off;
     }
     void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
-        ma_lw(secondScratchReg_, addr);
+        ma_lw(SecondScratchReg, addr);
         ma_li(ScratchRegister, ptr);
-        ma_b(secondScratchReg_, ScratchRegister, label, cond);
+        ma_b(SecondScratchReg, ScratchRegister, label, cond);
     }
     void branchPtr(Condition cond, Address addr, ImmWord ptr, Label *label) {
-        ma_lw(secondScratchReg_, addr);
-        ma_b(secondScratchReg_, Imm32(ptr.value), label, cond);
+        ma_lw(SecondScratchReg, addr);
+        ma_b(SecondScratchReg, Imm32(ptr.value), label, cond);
     }
     void branchPtr(Condition cond, Address addr, ImmPtr ptr, Label *label) {
         branchPtr(cond, addr, ImmWord(uintptr_t(ptr.value)), label);
@@ -742,8 +733,8 @@ public:
         ma_b(ScratchRegister, ptr, label, cond);
     }
     void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
-        loadPtr(lhs, secondScratchReg_); // ma_b might use scratch
-        ma_b(secondScratchReg_, rhs, label, cond);
+        loadPtr(lhs, SecondScratchReg); // ma_b might use scratch
+        ma_b(SecondScratchReg, rhs, label, cond);
     }
     void branch32(Condition cond, const AbsoluteAddress &lhs, const Register &rhs, Label *label) {
         loadPtr(lhs, ScratchRegister);
@@ -917,6 +908,7 @@ public:
     void andPtr(Imm32 imm, Register dest);
     void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
+    void subPtr(Register src, Register dest);
     void addPtr(const Address &src, Register dest);
     void not32(Register reg);
 

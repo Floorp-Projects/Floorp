@@ -188,9 +188,6 @@ public:
    */
   bool GetMaxLength(int32_t* aMaxLength);
 
-  /* called to free up native keybinding services */
-  static NS_HIDDEN_(void) ShutDown();
-
   void ClearValueCache() { mCachedValue.Truncate(); }
 
   void HideSelectionIfBlurred();

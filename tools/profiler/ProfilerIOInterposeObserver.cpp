@@ -10,6 +10,10 @@ using namespace mozilla;
 
 void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
 {
+  if (!IsMainThread()) {
+    return;
+  }
+
   const char* str = nullptr;
 
   switch (aObservation.ObservedOperation()) {

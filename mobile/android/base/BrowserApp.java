@@ -20,6 +20,7 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.LoadFaviconTask;
@@ -59,6 +60,7 @@ import org.mozilla.gecko.widget.GeckoActionProvider;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -385,7 +387,7 @@ abstract public class BrowserApp extends GeckoApp
         });
     }
 
-    void handleReaderAdded(int result, final String title, final String url) {
+    private void handleReaderAdded(int result, final ContentValues values) {
         if (result != READER_ADD_SUCCESS) {
             if (result == READER_ADD_FAILED) {
                 showToast(R.string.reading_list_failed, Toast.LENGTH_SHORT);
@@ -399,13 +401,22 @@ abstract public class BrowserApp extends GeckoApp
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                BrowserDB.addReadingListItem(getContentResolver(), title, url);
+                BrowserDB.addReadingListItem(getContentResolver(), values);
                 showToast(R.string.reading_list_added, Toast.LENGTH_SHORT);
 
                 final int count = BrowserDB.getReadingListCount(getContentResolver());
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(count)));
             }
         });
+    }
+
+    private ContentValues messageToReadingListContentValues(JSONObject message) {
+        final ContentValues values = new ContentValues();
+        values.put(ReadingListItems.URL, message.optString("url"));
+        values.put(ReadingListItems.TITLE, message.optString("title"));
+        values.put(ReadingListItems.LENGTH, message.optInt("length"));
+        values.put(ReadingListItems.EXCERPT, message.optString("excerpt"));
+        return values;
     }
 
     void handleReaderRemoved(final String url) {
@@ -1127,9 +1138,7 @@ abstract public class BrowserApp extends GeckoApp
                 handleReaderListStatusRequest(message.getString("url"));
             } else if (event.equals("Reader:Added")) {
                 final int result = message.getInt("result");
-                final String title = message.getString("title");
-                final String url = message.getString("url");
-                handleReaderAdded(result, title, url);
+                handleReaderAdded(result, messageToReadingListContentValues(message));
             } else if (event.equals("Reader:Removed")) {
                 final String url = message.getString("url");
                 handleReaderRemoved(url);
@@ -1645,17 +1654,21 @@ abstract public class BrowserApp extends GeckoApp
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
             mHomePager = (HomePager) homePagerStub.inflate();
 
-            final HomeBanner homeBanner = (HomeBanner) findViewById(R.id.home_banner);
-            mHomePager.setBanner(homeBanner);
+            // Don't show the banner in guest mode.
+            if (!getProfile().inGuestMode()) {
+                final ViewStub homeBannerStub = (ViewStub) findViewById(R.id.home_banner_stub);
+                final HomeBanner homeBanner = (HomeBanner) homeBannerStub.inflate();
+                mHomePager.setBanner(homeBanner);
 
-            // Remove the banner from the view hierarchy if it is dismissed.
-            homeBanner.setOnDismissListener(new HomeBanner.OnDismissListener() {
-                @Override
-                public void onDismiss() {
-                    mHomePager.setBanner(null);
-                    mHomePagerContainer.removeView(homeBanner);
-                }
-            });
+                // Remove the banner from the view hierarchy if it is dismissed.
+                homeBanner.setOnDismissListener(new HomeBanner.OnDismissListener() {
+                    @Override
+                    public void onDismiss() {
+                        mHomePager.setBanner(null);
+                        mHomePagerContainer.removeView(homeBanner);
+                    }
+                });
+            }
         }
 
         mHomePagerContainer.setVisibility(View.VISIBLE);

@@ -245,6 +245,7 @@ WEBIDL_FILES = [
     'MozWakeLock.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
+    'NativeOSFileInternals.webidl',
     'NetDashboard.webidl',
     'NetworkOptions.webidl',
     'Node.webidl',
