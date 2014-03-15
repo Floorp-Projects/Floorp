@@ -18,13 +18,6 @@ namespace js {
 
 class ArrayBufferViewObject;
 
-// Header for mapped array buffer
-struct MappingInfoHeader
-{
-    uint32_t fd;
-    uint32_t offset;
-};
-
 // The inheritance hierarchy for the various classes relating to typed arrays
 // is as follows.
 //
@@ -139,6 +132,24 @@ class ArrayBufferObject : public JSObject
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);
     static void restoreArrayBufferLists(ArrayBufferVector &vector);
 
+    bool hasStealableContents() const {
+        // Inline elements strictly adhere to the corresponding buffer.
+        if (!hasDynamicElements())
+            return false;
+
+        // asm.js buffer contents are transferred by copying, just like inline
+        // elements.
+        if (isAsmJSArrayBuffer())
+            return false;
+
+        // Neutered contents aren't transferrable because we want a neutered
+        // array's contents to be backed by zeroed memory equal in length to
+        // the original buffer contents.  Transferring these contents would
+        // allocate new ones based on the current byteLength, which is 0 for a
+        // neutered array -- not the original byteLength.
+        return !isNeutered();
+    }
+
     static bool stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
                               uint8_t **data);
 
@@ -155,33 +166,6 @@ class ArrayBufferObject : public JSObject
     static void initElementsHeader(js::ObjectElements *header, uint32_t bytes) {
         header->flags = 0;
         updateElementsHeader(header, bytes);
-    }
-
-    static void initMappedElementsHeader(js::ObjectElements *header, uint32_t fd,
-                                         uint32_t offset, uint32_t bytes) {
-        initElementsHeader(header, bytes);
-        header->setIsMappedArrayBuffer();
-        MappingInfoHeader *mh = getMappingInfoHeader(header);
-        mh->fd = fd;
-        mh->offset = offset;
-    }
-
-    static MappingInfoHeader *getMappingInfoHeader(js::ObjectElements *header) {
-        MOZ_ASSERT(header->isMappedArrayBuffer());
-        return reinterpret_cast<MappingInfoHeader *>(uintptr_t(header) -
-                                                     sizeof(MappingInfoHeader));
-    }
-
-    uint32_t getMappingFD() {
-        MOZ_ASSERT(getElementsHeader()->isMappedArrayBuffer());
-        MappingInfoHeader *mh = getMappingInfoHeader(getElementsHeader());
-        return mh->fd;
-    }
-
-    uint32_t getMappingOffset() const {
-        MOZ_ASSERT(getElementsHeader()->isMappedArrayBuffer());
-        MappingInfoHeader *mh = getMappingInfoHeader(getElementsHeader());
-        return mh->offset;
     }
 
     static uint32_t headerInitializedLength(const js::ObjectElements *header) {
@@ -210,10 +194,16 @@ class ArrayBufferObject : public JSObject
     uint8_t * dataPointer() const;
 
     /*
-     * Discard the ArrayBuffer contents. For asm.js buffers, at least, should
+     * Discard the ArrayBuffer contents, and use |newHeader| for the buffer's
+     * new contents.  (These new contents are zeroed, of identical size in
+     * memory as the current contents, but appear to be neutered and of zero
+     * length.  This is purely precautionary against stale indexes that were
+     * in-bounds with respect to the initial length but would not be after
+     * neutering.  This precaution will be removed once we're sure such stale
+     * indexing no longer happens.)  For asm.js buffers, at least, should
      * be called after neuterViews().
      */
-    void neuter(JSContext *cx);
+    void neuter(ObjectElements *newHeader, JSContext *cx);
 
     /*
      * Check if the arrayBuffer contains any data. This will return false for
@@ -236,15 +226,6 @@ class ArrayBufferObject : public JSObject
     static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
     static bool neuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer);
     static void releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj);
-
-    bool isMappedArrayBuffer() const {
-        return getElementsHeader()->isMappedArrayBuffer();
-    }
-    void setIsMappedArrayBuffer() {
-        getElementsHeader()->setIsMappedArrayBuffer();
-    }
-    static void *createMappedArrayBuffer(int fd, int *new_fd, size_t offset, size_t length);
-    static void releaseMappedArrayBuffer(FreeOp *fop, JSObject *obj);
 };
 
 /*

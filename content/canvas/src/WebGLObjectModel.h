@@ -305,7 +305,7 @@ public:
     }
 
     bool HasSameDimensionsAs(const WebGLRectangleObject& other) const {
-        return Width() == other.Width() && Height() == other.Height(); 
+        return Width() == other.Width() && Height() == other.Height();
     }
 
 protected:
