@@ -262,7 +262,9 @@ class jsdService : public jsdIDebuggerService
                    mNestedLoopLevel(0), mCx(0), mRuntime(0), mErrorHook(0),
                    mBreakpointHook(0), mDebugHook(0), mDebuggerHook(0),
                    mInterruptHook(0), mScriptHook(0), mThrowHook(0),
-                   mTopLevelHook(0), mFunctionHook(0)
+                   mTopLevelHook(0), mFunctionHook(0),
+                   mWarnedAboutDeprecation(false),
+                   mDeprecationAcknowledged(false)
     {
     }
 
@@ -292,6 +294,14 @@ class jsdService : public jsdIDebuggerService
     nsCOMPtr<jsdICallHook>      mTopLevelHook;
     nsCOMPtr<jsdICallHook>      mFunctionHook;
     nsCOMPtr<jsdIActivationCallback> mActivationCallback;
+
+    // True if we have ever printed a warning about JSD being deprecated.
+    // We only ever print the warning once.
+    bool mWarnedAboutDeprecation;
+
+    // True if the next call to asyncOn should not produce a warning,
+    // because the consumer called jsdIDebuggerService::acknowledgeDeprecation.
+    bool mDeprecationAcknowledged;
 };
 
 #endif /* JSDSERVICE_H___ */
