@@ -7,6 +7,7 @@
 
 #include "IOInterposer.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
@@ -23,8 +24,9 @@ namespace {
 /** Lists of Observers */
 struct ObserverLists {
   ObserverLists()
+    : mObserverListsLock(PR_NewLock())
+    , mIsEnabled(true)
   {
-    mObserverListsLock = PR_NewLock();
     // We don't do MOZ_COUNT_CTOR(ObserverLists) as we will need to leak the
     // IO interposer when doing late-write checks, which uses IO interposing
     // to check for writes while static destructors are invoked.
@@ -37,6 +39,9 @@ struct ObserverLists {
   // either, as it base calls into sDeadlockDetector which may be nullptr
   // during shutdown.
   PRLock* mObserverListsLock;
+
+  // Used for quickly disabling everything by IOInterposer::Disable()
+  mozilla::Atomic<bool>              mIsEnabled;
 
   ~ObserverLists()
   {
@@ -185,6 +190,15 @@ IOInterposeObserver::IsMainThread()
   }
 }
 
+/* static */ void
+IOInterposer::Disable()
+{
+  if (!sObserverLists) {
+    return;
+  }
+  sObserverLists->mIsEnabled = false;
+}
+
 /* static */ void IOInterposer::Report(
   IOInterposeObserver::Observation& aObservation)
 {
@@ -252,6 +266,13 @@ IOInterposeObserver::IsMainThread()
   for (uint32_t i = 0; i < nObservers; ++i) {
     (*observers)[i]->Observe(aObservation);
   }
+}
+
+/* static */ bool
+IOInterposer::IsObservedOperation(IOInterposeObserver::Operation aOp)
+{
+  return sObserverLists && sObserverLists->mIsEnabled &&
+         !!(sObservedOperations & aOp);
 }
 
 /* static */ void IOInterposer::Register(IOInterposeObserver::Operation aOp,
