@@ -21,23 +21,24 @@
 #define JS_DESCR_SLOT_TYPE_REPR          0  // Associated Type Representation
 #define JS_DESCR_SLOT_ALIGNMENT          1  // Alignment in bytes
 #define JS_DESCR_SLOT_SIZE               2  // Size in bytes, if sized, else 0
+#define JS_DESCR_SLOT_PROTO              3  // Prototype for instances, if any
 
 // Slots on scalars, references, and x4s
-#define JS_DESCR_SLOT_TYPE               3  // Type code
+#define JS_DESCR_SLOT_TYPE               4  // Type code
 
 // Slots on all array descriptors
-#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    3
+#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    4
 
 // Slots on sized array descriptors
-#define JS_DESCR_SLOT_SIZED_ARRAY_LENGTH 4
+#define JS_DESCR_SLOT_SIZED_ARRAY_LENGTH 5
 
 // Slots on struct type objects
-#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 3
-#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 4
-#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 5
+#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 4
+#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 5
+#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 6
 
 // Maximum number of slots for any descriptor
-#define JS_DESCR_SLOTS                   6
+#define JS_DESCR_SLOTS                   7
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for type representation objects
