@@ -5,6 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/unused.h"
 
 #include "nsSVGElement.h"
 
@@ -49,6 +50,7 @@
 #include "nsAttrValueOrString.h"
 #include "nsSMILAnimationController.h"
 #include "mozilla/dom/SVGElementBinding.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1363,7 +1365,7 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
                   SMIL_MAPPED_ATTR_STYLERULE_ATOM,
                   animContentStyleRule.get(),
                   ReleaseStyleRule);
-    animContentStyleRule.forget();
+    unused << animContentStyleRule.forget();
     NS_ABORT_IF_FALSE(rv == NS_OK,
                       "SetProperty failed (or overwrote something)");
   }

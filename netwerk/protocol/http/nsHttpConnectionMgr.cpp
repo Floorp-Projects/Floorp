@@ -31,6 +31,7 @@
 #include <algorithm>
 #include "Http2Compression.h"
 #include "mozilla/ChaosMode.h"
+#include "mozilla/unused.h"
 
 // defined by the socket transport service while active
 extern PRThread *gSocketThread;
@@ -333,7 +334,7 @@ nsHttpConnectionMgr::DoShiftReloadConnectionCleanup(nsHttpConnectionInfo *aCI)
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup,
                             0, connInfo);
     if (NS_SUCCEEDED(rv))
-        connInfo.forget();
+        unused << connInfo.forget();
     return rv;
 }
 
@@ -408,7 +409,7 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
     nsresult rv =
         PostEvent(&nsHttpConnectionMgr::OnMsgSpeculativeConnect, 0, args);
     if (NS_SUCCEEDED(rv))
-        args.forget();
+        unused << args.forget();
     return rv;
 }
 
@@ -505,7 +506,7 @@ nsHttpConnectionMgr::UpdateRequestTokenBucket(EventTokenBucket *aBucket)
     nsresult rv = PostEvent(&nsHttpConnectionMgr::OnMsgUpdateRequestTokenBucket,
                             0, bucket);
     if (NS_SUCCEEDED(rv))
-        bucket.forget();
+        unused << bucket.forget();
     return rv;
 }
 
