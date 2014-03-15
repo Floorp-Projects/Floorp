@@ -910,6 +910,19 @@ void ModuleRtpRtcpImpl:: SetRtt(uint32_t rtt) {
   rtcp_receiver_.SetRTT(static_cast<uint16_t>(rtt));
 }
 
+int32_t
+ModuleRtpRtcpImpl::GetReportBlockInfo(const uint32_t remote_ssrc,
+                                      uint32_t* ntp_high,
+                                      uint32_t* ntp_low,
+                                      uint32_t* packets_received,
+                                      uint64_t* octets_received) const {
+  WEBRTC_TRACE(kTraceModuleCall, kTraceRtpRtcp, id_, "RemotePacketsReceived()");
+
+  return rtcp_receiver_.GetReportBlockInfo(remote_ssrc,
+                                           ntp_high, ntp_low,
+                                           packets_received, octets_received);
+}
+
 // Reset RTP data counters for the sending side.
 int32_t ModuleRtpRtcpImpl::ResetSendDataCountersRTP() {
   WEBRTC_TRACE(kTraceModuleCall, kTraceRtpRtcp, id_,
@@ -1538,9 +1551,14 @@ int32_t ModuleRtpRtcpImpl::SendRTCPReferencePictureSelection(
       feedback_state, kRtcpRpsi, 0, 0, false, picture_id);
 }
 
-uint32_t ModuleRtpRtcpImpl::SendTimeOfSendReport(
-    const uint32_t send_report) {
-  return rtcp_sender_.SendTimeOfSendReport(send_report);
+bool ModuleRtpRtcpImpl::GetSendReportMetadata(const uint32_t send_report,
+                                              uint32_t *time_of_send,
+                                              uint32_t *packet_count,
+                                              uint64_t *octet_count) {
+  return rtcp_sender_.GetSendReportMetadata(send_report,
+                                            time_of_send,
+                                            packet_count,
+                                            octet_count);
 }
 
 void ModuleRtpRtcpImpl::OnReceivedNACK(

@@ -47,6 +47,12 @@ protected:
 struct AllTypedArraysBase {
 };
 
+// Struct that serves as a base class for all owning unions.
+// Particularly useful so we can use IsBaseOf to detect owning union
+// template arguments.
+struct AllOwningUnionBase {
+};
+
 
 struct EnumEntry {
   const char* value;

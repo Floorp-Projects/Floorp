@@ -14,7 +14,6 @@
 #include "nsClassHashtable.h"
 #include "nsIDOMFile.h"
 #include "nsIObserver.h"
-#include "nsIThread.h"
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
 
@@ -334,6 +333,12 @@ protected:
   Cleanup();
 
   nsresult
+  StartBluetooth(bool aIsStartup);
+
+  nsresult
+  StopBluetooth(bool aIsStartup);
+
+  nsresult
   StartStopBluetooth(bool aStart, bool aIsStartup);
 
   /**
@@ -353,15 +358,6 @@ protected:
    */
   virtual nsresult
   StopInternal() = 0;
-
-  /**
-   * Platform specific startup functions go here. Usually deals with member
-   * variables, so not static. Guaranteed to be called outside of main thread.
-   *
-   * @return true if Bluetooth is enabled, false otherwise
-   */
-  virtual bool
-  IsEnabledInternal() = 0;
 
   /**
    * Called when XPCOM first creates this service.
@@ -403,14 +399,6 @@ protected:
   bool mEnabled;
 
 private:
-  /**
-   * Due to the fact that the startup and shutdown of the Bluetooth system
-   * can take an indefinite amount of time, a command thread is created
-   * that can run blocking calls. The thread is not intended for regular
-   * Bluetooth operations though.
-   */
-  nsCOMPtr<nsIThread> mBluetoothThread;
-
   bool mAdapterAddedReceived;
 };
 

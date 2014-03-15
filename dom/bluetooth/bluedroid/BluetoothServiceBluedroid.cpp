@@ -666,7 +666,7 @@ EnsureBluetoothHalLoad()
 static nsresult
 StartStopGonkBluetooth(bool aShouldEnable)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(sBtInterface, NS_ERROR_FAILURE);
 
   if (sIsBtEnabled == aShouldEnable) {
@@ -737,7 +737,7 @@ BluetoothServiceBluedroid::~BluetoothServiceBluedroid()
 nsresult
 BluetoothServiceBluedroid::StartInternal()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsresult ret = StartStopGonkBluetooth(true);
   if (NS_FAILED(ret)) {
@@ -755,7 +755,7 @@ BluetoothServiceBluedroid::StartInternal()
 nsresult
 BluetoothServiceBluedroid::StopInternal()
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsresult ret = StartStopGonkBluetooth(false);
   if (NS_FAILED(ret)) {
@@ -768,14 +768,6 @@ BluetoothServiceBluedroid::StopInternal()
   }
 
   return ret;
-}
-
-bool
-BluetoothServiceBluedroid::IsEnabledInternal()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  return sIsBtEnabled;
 }
 
 nsresult

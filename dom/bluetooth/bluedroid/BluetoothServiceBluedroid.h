@@ -24,7 +24,6 @@ public:
 
   virtual nsresult StartInternal();
   virtual nsresult StopInternal();
-  virtual bool IsEnabledInternal();
 
   virtual nsresult GetDefaultAdapterPathInternal(
                                              BluetoothReplyRunnable* aRunnable);
