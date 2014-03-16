@@ -10,7 +10,7 @@
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGAltGlyphElement(nsIContent **aResult,
-                                  already_AddRefed<nsINodeInfo> aNodeInfo);
+                                  already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,8 +21,8 @@ class SVGAltGlyphElement MOZ_FINAL : public SVGAltGlyphElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGAltGlyphElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                              already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGAltGlyphElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 

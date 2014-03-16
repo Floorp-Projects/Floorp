@@ -20,7 +20,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Style)
 namespace mozilla {
 namespace dom {
 
-HTMLStyleElement::HTMLStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLStyleElement::HTMLStyleElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   AddMutationObserver(this);

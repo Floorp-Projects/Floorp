@@ -76,6 +76,13 @@ namespace mozilla {
 
 static GonkDisplayICS* sGonkDisplay = nullptr;
 
+static int
+FramebufferNativeWindowCancelBufferNoop(ANativeWindow* aWindow,
+    android_native_buffer_t* aBuffer)
+{
+    return 0;
+}
+
 GonkDisplayICS::GonkDisplayICS()
     : mModule(nullptr)
     , mHwc(nullptr)
@@ -103,6 +110,13 @@ GonkDisplayICS::GonkDisplayICS()
     }
 
     mFBSurface = new FramebufferNativeWindow();
+
+    // ICS FramebufferNativeWindow doesn't set the |cancelBuffer|
+    // function pointer.
+    // It will crash when deleting the EGL window surface.
+    if (!mFBSurface->cancelBuffer) {
+        mFBSurface->cancelBuffer = FramebufferNativeWindowCancelBufferNoop;
+    }
 
     int err = hw_get_module(HWC_HARDWARE_MODULE_ID, &mModule);
     LOGW_IF(err, "%s module not found", HWC_HARDWARE_MODULE_ID);

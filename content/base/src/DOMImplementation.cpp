@@ -88,7 +88,8 @@ DOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
                                       nsIDOMDocumentType** aReturn)
 {
   ErrorResult rv;
-  *aReturn = CreateDocumentType(aQualifiedName, aPublicId, aSystemId, rv).get();
+  *aReturn =
+    CreateDocumentType(aQualifiedName, aPublicId, aSystemId, rv).take();
   return rv.ErrorCode();
 }
 

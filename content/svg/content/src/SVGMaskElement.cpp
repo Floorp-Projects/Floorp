@@ -46,7 +46,7 @@ nsSVGElement::EnumInfo SVGMaskElement::sEnumInfo[2] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGMaskElement::SVGMaskElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGMaskElement::SVGMaskElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGMaskElementBase(aNodeInfo)
 {
 }

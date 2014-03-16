@@ -11,7 +11,7 @@
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo> aNodeInfo);
+                                        already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,9 +21,9 @@ typedef nsSVGFE SVGFEGaussianBlurElementBase;
 class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase
 {
   friend nsresult (::NS_NewSVGFEGaussianBlurElement(nsIContent **aResult,
-                                                    already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                    already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFEGaussianBlurElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEGaussianBlurElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEGaussianBlurElementBase(aNodeInfo)
   {
   }

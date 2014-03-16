@@ -179,7 +179,7 @@ public:
     MOZ_ASSERT(mMediaStream);
   }
 
-  SourceStreamInfo(already_AddRefed<DOMMediaStream> aMediaStream,
+  SourceStreamInfo(already_AddRefed<DOMMediaStream>& aMediaStream,
                   PeerConnectionMedia *aParent)
       : mMediaStream(aMediaStream),
         mParent(aParent) {

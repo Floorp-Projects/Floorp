@@ -27,7 +27,7 @@ NS_IMPL_ISUPPORTS_INHERITED4(SVGSymbolElement, SVGSymbolElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGSymbolElement::SVGSymbolElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGSymbolElement::SVGSymbolElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGSymbolElementBase(aNodeInfo)
 {
 }

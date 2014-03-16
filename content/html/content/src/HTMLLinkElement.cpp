@@ -31,7 +31,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Link)
 namespace mozilla {
 namespace dom {
 
-HTMLLinkElement::HTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLLinkElement::HTMLLinkElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
   , Link(MOZ_THIS_IN_INITIALIZER_LIST())
 {

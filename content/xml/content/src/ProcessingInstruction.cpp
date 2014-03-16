@@ -44,9 +44,9 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
 namespace mozilla {
 namespace dom {
 
-ProcessingInstruction::ProcessingInstruction(already_AddRefed<nsINodeInfo> aNodeInfo,
+ProcessingInstruction::ProcessingInstruction(already_AddRefed<nsINodeInfo>&& aNodeInfo,
                                              const nsAString& aData)
-  : nsGenericDOMDataNode(aNodeInfo)
+  : nsGenericDOMDataNode(Move(aNodeInfo))
 {
   NS_ABORT_IF_FALSE(mNodeInfo->NodeType() ==
                       nsIDOMNode::PROCESSING_INSTRUCTION_NODE,

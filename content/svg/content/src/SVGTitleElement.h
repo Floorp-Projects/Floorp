@@ -13,7 +13,7 @@
 typedef nsSVGElement SVGTitleElementBase;
 
 nsresult NS_NewSVGTitleElement(nsIContent **aResult,
-                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
 namespace mozilla {
 namespace dom {
 
@@ -22,8 +22,8 @@ class SVGTitleElement MOZ_FINAL : public SVGTitleElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGTitleElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGTitleElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

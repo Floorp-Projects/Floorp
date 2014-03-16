@@ -10,7 +10,7 @@
 #include "nsSVGLength2.h"
 
 nsresult NS_NewSVGRectElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 typedef nsSVGPathGeometryElement SVGRectElementBase;
 
@@ -20,11 +20,11 @@ namespace dom {
 class SVGRectElement MOZ_FINAL : public SVGRectElementBase
 {
 protected:
-  SVGRectElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGRectElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGRectElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
+                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
 public:
   // nsSVGSVGElement methods:

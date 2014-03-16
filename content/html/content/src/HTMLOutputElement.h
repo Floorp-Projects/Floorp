@@ -21,7 +21,7 @@ class HTMLOutputElement MOZ_FINAL : public nsGenericHTMLFormElement,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLOutputElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLOutputElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLOutputElement();
 
   // nsISupports

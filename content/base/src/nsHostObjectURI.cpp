@@ -62,7 +62,12 @@ nsHostObjectURI::Read(nsIObjectInputStream* aStream)
   nsresult rv = nsSimpleURI::Read(aStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_ReadOptionalObject(aStream, true, getter_AddRefs(mPrincipal));
+  nsCOMPtr<nsISupports> supports;
+  rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mPrincipal = do_QueryInterface(supports, &rv);
+  return rv;
 }
 
 NS_IMETHODIMP

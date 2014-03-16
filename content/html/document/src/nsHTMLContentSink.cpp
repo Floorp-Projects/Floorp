@@ -87,11 +87,11 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 
 typedef nsGenericHTMLElement*
-  (*contentCreatorCallback)(already_AddRefed<nsINodeInfo>,
+  (*contentCreatorCallback)(already_AddRefed<nsINodeInfo>&&,
                             FromParser aFromParser);
 
 nsGenericHTMLElement*
-NS_NewHTMLNOTUSEDElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLNOTUSEDElement(already_AddRefed<nsINodeInfo>&& aNodeInfo,
                          FromParser aFromParser)
 {
   NS_NOTREACHED("The element ctor should never be called");
@@ -242,7 +242,7 @@ public:
 };
 
 nsresult
-NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo>&& aNodeInfo,
                   FromParser aFromParser)
 {
   *aResult = nullptr;
@@ -263,12 +263,12 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
   int32_t tag = parserService->HTMLCaseSensitiveAtomTagToId(name);
   if (tag == eHTMLTag_userdefined &&
       nsContentUtils::IsCustomElementName(name)) {
+    nsIDocument* doc = nodeInfo->GetDocument();
+
     NS_IF_ADDREF(*aResult = NS_NewHTMLElement(nodeInfo.forget(), aFromParser));
     if (!*aResult) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
-    nsIDocument* doc = aNodeInfo.get()->GetDocument();
 
     // Element may be unresolved at this point.
     doc->RegisterUnresolvedElement(*aResult);
@@ -282,12 +282,13 @@ NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
   }
 
   *aResult = CreateHTMLElement(tag,
-                               nodeInfo.forget(), aFromParser).get();
+                               nodeInfo.forget(), aFromParser).take();
   return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 already_AddRefed<nsGenericHTMLElement>
-CreateHTMLElement(uint32_t aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
+CreateHTMLElement(uint32_t aNodeType,
+                  already_AddRefed<nsINodeInfo>&& aNodeInfo,
                   FromParser aFromParser)
 {
   NS_ASSERTION(aNodeType <= NS_HTML_TAG_MAX ||
@@ -299,7 +300,7 @@ CreateHTMLElement(uint32_t aNodeType, already_AddRefed<nsINodeInfo> aNodeInfo,
   NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
                "Don't know how to construct tag element!");
 
-  nsRefPtr<nsGenericHTMLElement> result = cb(aNodeInfo, aFromParser);
+  nsRefPtr<nsGenericHTMLElement> result = cb(Move(aNodeInfo), aFromParser);
 
   return result.forget();
 }

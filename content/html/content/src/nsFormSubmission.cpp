@@ -561,7 +561,7 @@ nsFSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
   uint64_t unused;
   mimeStream->SetData(GetSubmissionBody(&unused));
 
-  *aPostDataStream = mimeStream.forget().get();
+  mimeStream.forget(aPostDataStream);
 
   return NS_OK;
 }

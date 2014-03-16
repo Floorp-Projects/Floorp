@@ -21,7 +21,7 @@ class HTMLImageElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsIDOMHTMLImageElement
 {
 public:
-  explicit HTMLImageElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  explicit HTMLImageElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLImageElement();
 
   static already_AddRefed<HTMLImageElement>

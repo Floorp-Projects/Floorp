@@ -211,7 +211,7 @@ NS_IMETHODIMP nsTreeBoxObject::GetColumns(nsITreeColumns** aColumns)
   *aColumns = nullptr;
   nsTreeBodyFrame* body = GetTreeBody();
   if (body) 
-    *aColumns = body->Columns().get();
+    *aColumns = body->Columns().take();
   return NS_OK;
 }
 

@@ -30,7 +30,7 @@
 #include "nsWrapperCacheInlines.h"
 
 nsIAttribute::nsIAttribute(nsDOMAttributeMap* aAttrMap,
-                           already_AddRefed<nsINodeInfo> aNodeInfo,
+                           already_AddRefed<nsINodeInfo>& aNodeInfo,
                            bool aNsAware)
 : nsINode(aNodeInfo), mAttrMap(aAttrMap), mNsAware(aNsAware)
 {
@@ -47,7 +47,7 @@ namespace dom {
 bool Attr::sInitialized;
 
 Attr::Attr(nsDOMAttributeMap *aAttrMap,
-           already_AddRefed<nsINodeInfo> aNodeInfo,
+           already_AddRefed<nsINodeInfo>&& aNodeInfo,
            const nsAString  &aValue, bool aNsAware)
   : nsIAttribute(aAttrMap, aNodeInfo, aNsAware), mValue(aValue)
 {

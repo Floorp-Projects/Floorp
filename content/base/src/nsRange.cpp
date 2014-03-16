@@ -2177,7 +2177,7 @@ NS_IMETHODIMP
 nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 {
   ErrorResult rv;
-  *aReturn = CloneContents(rv).get();
+  *aReturn = CloneContents(rv).take();
   return rv.ErrorCode();
 }
 
@@ -2400,7 +2400,7 @@ nsRange::CloneRange() const
 NS_IMETHODIMP
 nsRange::CloneRange(nsIDOMRange** aReturn)
 {
-  *aReturn = CloneRange().get();
+  *aReturn = CloneRange().take();
   return NS_OK;
 }
 
@@ -2877,7 +2877,7 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
 NS_IMETHODIMP
 nsRange::GetBoundingClientRect(nsIDOMClientRect** aResult)
 {
-  *aResult = GetBoundingClientRect().get();
+  *aResult = GetBoundingClientRect().take();
   return NS_OK;
 }
 
@@ -2902,7 +2902,7 @@ nsRange::GetBoundingClientRect()
 NS_IMETHODIMP
 nsRange::GetClientRects(nsIDOMClientRectList** aResult)
 {
-  *aResult = GetClientRects().get();
+  *aResult = GetClientRects().take();
   return NS_OK;
 }
 

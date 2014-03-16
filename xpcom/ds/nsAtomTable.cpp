@@ -10,6 +10,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/unused.h"
 
 #include "nsAtomTable.h"
 #include "nsStaticAtom.h"
@@ -344,7 +345,7 @@ AtomImpl::AtomImpl(const nsAString& aString, uint32_t aHash)
   NS_ASSERTION(Equals(aString), "correct data");
 
   // Take ownership of buffer
-  buf.forget();
+  mozilla::unused << buf.forget();
 }
 
 AtomImpl::AtomImpl(nsStringBuffer* aStringBuffer, uint32_t aLength,

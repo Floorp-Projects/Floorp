@@ -40,7 +40,8 @@ public:
 
 protected:
 #ifdef MOZILLA_INTERNAL_API
-  nsIAttribute(nsDOMAttributeMap *aAttrMap, already_AddRefed<nsINodeInfo> aNodeInfo,
+  nsIAttribute(nsDOMAttributeMap *aAttrMap,
+               already_AddRefed<nsINodeInfo>& aNodeInfo,
                bool aNsAware);
 #endif //MOZILLA_INTERNAL_API
   virtual ~nsIAttribute();

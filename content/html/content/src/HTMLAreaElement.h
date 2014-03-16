@@ -25,7 +25,7 @@ class HTMLAreaElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public Link
 {
 public:
-  HTMLAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLAreaElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLAreaElement();
 
   // nsISupports

@@ -483,7 +483,7 @@ CacheFileInputStream::ReleaseChunk()
     mWaitingForUpdate = false;
   }
 
-  mFile->ReleaseOutsideLock(mChunk.forget().get());
+  mFile->ReleaseOutsideLock(mChunk.forget().take());
 }
 
 void

@@ -20,7 +20,7 @@ SVGAnimateMotionElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGAnimateMotionElement::SVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGAnimateMotionElement::SVGAnimateMotionElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGAnimationElement(aNodeInfo)
 {
 }

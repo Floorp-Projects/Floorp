@@ -17,7 +17,7 @@ class HTMLMetaElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public nsIDOMHTMLMetaElement
 {
 public:
-  HTMLMetaElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLMetaElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLMetaElement();
 
   // nsISupports

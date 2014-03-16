@@ -12,7 +12,7 @@
 #include "nsStubMutationObserver.h"
 
 nsresult NS_NewSVGStyleElement(nsIContent **aResult,
-                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 typedef nsSVGElement SVGStyleElementBase;
 
@@ -25,8 +25,8 @@ class SVGStyleElement MOZ_FINAL : public SVGStyleElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGStyleElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGStyleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGStyleElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

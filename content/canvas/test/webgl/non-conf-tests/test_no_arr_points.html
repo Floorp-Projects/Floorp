@@ -124,7 +124,8 @@ void main(void) {
       elemTestFunc = ok;
       checkGLTestFunc = ok;
     }
-    if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANDROID_X86_EMULATOR)
+    if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANDROID_X86_EMULATOR ||
+        DriverInfo.getOS() == DriverInfo.OS.B2G)
     {
       // ...but the Android 4.2 x86 emulator environment is different
       elemTestFunc = todo;

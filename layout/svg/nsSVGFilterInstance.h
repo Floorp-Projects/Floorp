@@ -59,10 +59,27 @@ class SVGFilterElement;
  *
  * And let's say there are 2 device pixels for every 1 CSS pixel.
  *
- * Then:
- *   "user space" = the CSS pixel space of the <div>
- *   "intermediate space" = "user space" * 2
- *   "filter space" = "intermediate space" + 15
+ * Finally, let's define an arbitrary point in user space:
+ *   "user space point" = (10, 10)
+ *
+ * The point will be inset 10 CSS pixels from both the top and left edges of the
+ * div element's border box.
+ *
+ * Now, let's transform the point from user space to intermediate space:
+ *   "intermediate space point" = "user space point" * "device pixels per CSS pixel"
+ *   "intermediate space point" = (10, 10) * 2
+ *   "intermediate space point" = (20, 20)
+ *
+ * Next, let's transform the point from user space to filter space:
+ *   "filter space point" = ("user space point" - "filter region position in user space") * "device pixels per CSS pixel"
+ *   "filter space point" = ((10, 10) - (-15, -15)) * 2
+ *   "filter space point" = (50, 50)
+ *
+ * Similarly, we can convert the point from intermediate space to filter space:
+ *   "filter space point" = "intermediate space point" - "filter region position in intermediate space"
+ *   "filter space point" = "intermediate space point" - ("filter region position in user space" * "device pixels per CSS pixel")
+ *   "filter space point" = (20, 20) - ((-15, -15) * 2)
+ *   "filter space point" = (50, 50)
  */
 class nsSVGFilterInstance
 {

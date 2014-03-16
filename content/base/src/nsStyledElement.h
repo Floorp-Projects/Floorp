@@ -30,7 +30,7 @@ class nsStyledElementNotElementCSSInlineStyle : public nsStyledElementBase
 
 protected:
 
-  inline nsStyledElementNotElementCSSInlineStyle(already_AddRefed<nsINodeInfo> aNodeInfo)
+  inline nsStyledElementNotElementCSSInlineStyle(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsStyledElementBase(aNodeInfo)
   {}
 
@@ -82,7 +82,7 @@ protected:
 
 class nsStyledElement : public nsStyledElementNotElementCSSInlineStyle {
 protected:
-  inline nsStyledElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  inline nsStyledElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsStyledElementNotElementCSSInlineStyle(aNodeInfo)
   {}
 };

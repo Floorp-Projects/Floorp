@@ -450,7 +450,7 @@ nsXPCWrappedJS::Unlink()
     if (mOuter) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         if (rt->GCIsRunning()) {
-            nsContentUtils::DeferredFinalize(mOuter.forget().get());
+            nsContentUtils::DeferredFinalize(mOuter.forget().take());
         } else {
             mOuter = nullptr;
         }

@@ -156,7 +156,7 @@ protected:
 
 
 HTMLMenuItemElement::HTMLMenuItemElement(
-  already_AddRefed<nsINodeInfo> aNodeInfo, FromParser aFromParser)
+  already_AddRefed<nsINodeInfo>& aNodeInfo, FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mType(kMenuItemDefaultType->value),
     mParserCreating(false),
@@ -180,9 +180,9 @@ nsresult
 HTMLMenuItemElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nullptr;
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  already_AddRefed<nsINodeInfo> ni = nsCOMPtr<nsINodeInfo>(aNodeInfo).forget();
   nsRefPtr<HTMLMenuItemElement> it =
-    new HTMLMenuItemElement(ni.forget(), NOT_FROM_PARSER);
+    new HTMLMenuItemElement(ni, NOT_FROM_PARSER);
   nsresult rv = const_cast<HTMLMenuItemElement*>(this)->CopyInnerTo(it);
   if (NS_SUCCEEDED(rv)) {
     switch (mType) {

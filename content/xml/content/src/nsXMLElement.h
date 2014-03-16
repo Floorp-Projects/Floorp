@@ -15,7 +15,7 @@ class nsXMLElement : public mozilla::dom::Element,
                      public nsIDOMElement
 {
 public:
-  nsXMLElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  nsXMLElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : mozilla::dom::Element(aNodeInfo)
   {
   }

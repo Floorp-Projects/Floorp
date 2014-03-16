@@ -313,7 +313,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
             MOZ_ASSERT(NS_FAILED(rv), "returning NS_OK on failure");
             return rv;
         }
-        *resultWrapper = wrapper.forget().get();
+        wrapper.forget(resultWrapper);
         return NS_OK;
     }
 
@@ -413,7 +413,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
                 MOZ_ASSERT(NS_FAILED(rv), "returning NS_OK on failure");
                 return rv;
             }
-            *resultWrapper = wrapper.forget().get();
+            wrapper.forget(resultWrapper);
             return NS_OK;
         }
     } else {
@@ -533,7 +533,7 @@ FinishCreate(XPCWrappedNativeScope* Scope,
     }
 
     DEBUG_CheckClassInfoClaims(wrapper);
-    *resultWrapper = wrapper.forget().get();
+    wrapper.forget(resultWrapper);
     return NS_OK;
 }
 
@@ -586,7 +586,7 @@ XPCWrappedNative::GetUsedOnly(nsISupports* Object,
 }
 
 // This ctor is used if this object will have a proto.
-XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
+XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeProto* aProto)
     : mMaybeProto(aProto),
       mSet(aProto->GetSet()),
@@ -594,7 +594,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    mIdentity = aIdentity.get();
+    mIdentity = aIdentity.take();
     mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
 
     MOZ_ASSERT(mMaybeProto, "bad ctor param");
@@ -602,7 +602,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
 }
 
 // This ctor is used if this object will NOT have a proto.
-XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
+XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeScope* aScope,
                                    XPCNativeSet* aSet)
 
@@ -612,7 +612,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    mIdentity = aIdentity.get();
+    mIdentity = aIdentity.take();
     mFlatJSObject.setFlags(FLAT_JS_OBJECT_VALID);
 
     MOZ_ASSERT(aScope, "bad ctor param");

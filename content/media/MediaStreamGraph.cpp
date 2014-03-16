@@ -5,6 +5,7 @@
 
 #include "MediaStreamGraphImpl.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/unused.h"
 
 #include "AudioSegment.h"
 #include "VideoSegment.h"
@@ -24,6 +25,7 @@
 #include <algorithm>
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -2387,7 +2389,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, uint32_t aFlags,
       mPort->Init();
       // The graph holds its reference implicitly
       mPort->GraphImpl()->SetStreamOrderDirty();
-      mPort.forget();
+      unused << mPort.forget();
     }
     virtual void RunDuringShutdown()
     {
