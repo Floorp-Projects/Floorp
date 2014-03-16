@@ -18,6 +18,7 @@
   [[12, 20], ['none', 'number-input']],
   [[12, 22], ['none']],
   [[17, 22], ['hsl', 'hsla']],
+  [[21,  9], ["-moz-calc", "auto", "calc", "inherit", "initial","unset"]],
   [[22,  5], ['color', 'color-interpolation', 'color-interpolation-filters']],
   [[25, 26], ['.devtools-toolbarbutton > tab',
               '.devtools-toolbarbutton > .toolbarbutton-menubutton-button',

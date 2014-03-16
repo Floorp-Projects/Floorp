@@ -37,7 +37,7 @@ let TEST_CASES = [
   ['a', getSuggestionNumberFor("ba"), 0],
   ['VK_DOWN', getSuggestionNumberFor("ba"), 0, 1],
   ['VK_TAB', getSuggestionNumberFor("ba"), 1, 1],
-  [':', -1],
+  [':', getSuggestionNumberFor("background", ""), 0],
   ['b', getSuggestionNumberFor("background", "b"), 0],
   ['l', getSuggestionNumberFor("background", "bl"), 0],
   ['VK_TAB', getSuggestionNumberFor("background", "bl"), 0, 1],
@@ -223,7 +223,7 @@ function getCSSKeywords() {
  * Returns the number of properties starting with `property` otherwise.
  */
 function getSuggestionNumberFor(property, value) {
-  if (!value) {
+  if (value == null) {
     return CSSProperties.filter(prop => prop.startsWith(property))
                         .slice(0, MAX_SUGGESTIONS).length;
   }
