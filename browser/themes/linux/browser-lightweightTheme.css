@@ -17,6 +17,7 @@
   background-color: transparent;
   background-image: @fgTabTextureLWT@;/*, lwtHeader;*/
   background-position: 0 0, right top;
+  background-repeat: repeat-x, no-repeat;
 }
 
 #tabbrowser-tabs:not([movingtab]) > .tabbrowser-tab > .tab-stack > .tab-background > .tab-background-middle[selected=true]:-moz-lwtheme {
@@ -26,4 +27,5 @@
                     @fgTabTextureLWT@;/*,
                     lwtHeader;*/
   background-position: 0 0, 0 0, right top;
+  background-repeat: repeat-x, repeat-x, no-repeat;
 }
