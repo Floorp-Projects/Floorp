@@ -14,6 +14,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  */
 
 waitForExplicitFinish();
+requestLongerTimeout(2);
 
 let TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
 let TEST_DATA = [{
