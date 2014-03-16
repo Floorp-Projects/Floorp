@@ -67,13 +67,13 @@ Bug 901520 - [app manager] data store for device
         });
 
         connection.once("disconnected", function() {
-          compare(store.object, {description:{},permissions:[]}, "empty store after disconnect")
+          compare(store.object, {description:{},permissions:[],tabs:[]}, "empty store after disconnect")
           connection.destroy();
           DebuggerServer.destroy();
           SimpleTest.finish();
         });
 
-        compare(store.object, {description:{},permissions:[]}, "empty store before disconnect")
+        compare(store.object, {description:{},permissions:[],tabs:[]}, "empty store before disconnect")
 
         connection.connect();
 

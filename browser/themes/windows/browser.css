@@ -328,13 +328,13 @@
 
 /* ::::: bookmark buttons ::::: */
 
-toolbarbutton.bookmark-item,
+toolbarbutton.bookmark-item:not(.subviewbutton),
 #personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
   margin: 0;
   padding: 2px 3px;
 }
 
-toolbarbutton.bookmark-item:hover:active:not([disabled="true"]),
+toolbarbutton.bookmark-item:not([disabled="true"]):not(.subviewbutton):hover:active,
 toolbarbutton.bookmark-item[open="true"] {
   padding-top: 3px;
   padding-bottom: 1px;
@@ -420,7 +420,7 @@ menuitem.bookmark-item {
   max-width: 32em;
 }
 
-.bookmark-item > .menu-iconic-left {
+.bookmark-item:not(.subviewbutton) > .menu-iconic-left {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -2194,6 +2194,10 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   margin-top: -10px;
 }
 
+#notification-popup .panel-promo-box {
+  margin: 10px -10px -10px;
+}
+
 #notification-popup-box {
   position: relative;
   background-color: #fff;
@@ -2757,3 +2761,7 @@ chatbox {
 }
 
 %include ../shared/UITour.inc.css
+
+#UITourTooltipButtons {
+  margin: 24px -4px -4px;
+}
