@@ -1,3 +1,5 @@
+if (!getBuildConfiguration().parallelJS)
+  quit(0);
 
 function testReduce() {
   function sum(a, b) {
