@@ -1807,11 +1807,6 @@ Assembler::placeConstantPoolBarrier(int offset)
     // this is still an active path, however, we do not hit it in the test
     // suite at all.
     MOZ_ASSUME_UNREACHABLE("ARMAssembler holdover");
-#if 0
-    offset = (offset - sizeof(ARMWord)) >> 2;
-    ASSERT((offset <= BOFFSET_MAX && offset >= BOFFSET_MIN));
-    return AL | B | (offset & BRANCH_MASK);
-#endif
 }
 
 // Control flow stuff:
