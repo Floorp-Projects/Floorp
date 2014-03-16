@@ -4,8 +4,27 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
+.panel-subviews {
+  background-color: -moz-dialog;
+}
+
 #BMB_bookmarksPopup > menuitem[type="checkbox"] {
   -moz-appearance: none !important; /* important, to override toolkit rule */
+}
+
+#BMB_bookmarksPopup menupopup[placespopup=true] {
+  margin-top: -6px;
+  padding-top: 2px;
+}
+
+/* Add some space at the top because there are no headers: */
+#BMB_bookmarksPopup menupopup[placespopup=true] > hbox > .popup-internal-box > .arrowscrollbox-scrollbox > .scrollbox-innerbox  {
+  padding-top: 4px;
+}
+
+.subviewbutton > .toolbarbutton-text {
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
@@ -55,6 +74,18 @@ menu.subviewbutton > .menu-right {
 
 menu[disabled="true"].subviewbutton > .menu-right {
   -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.subviewbutton > .toolbarbutton-icon {
+  -moz-margin-end: 5px !important;
+}
+
+.subviewbutton > .menu-right,
+.subviewbutton > .menu-iconic-left {
+  padding-top: 1px;
+  /* These need !important to override menu.css */
+  margin-top: 1px !important;
+  margin-bottom: 2px !important;
 }
 
 .PanelUI-subView toolbarseparator,

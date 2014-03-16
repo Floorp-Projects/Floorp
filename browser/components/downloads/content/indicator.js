@@ -334,15 +334,17 @@ const DownloadsIndicatorView = {
 
     let anchor = DownloadsButton._placeholder;
     let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    let widgetInWindow = widgetGroup.forWindow(window);
-    if (widgetInWindow.overflowed || widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+    let widget = widgetGroup.forWindow(window);
+    if (widget.overflowed || widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
       if (anchor && this._isAncestorPanelOpen(anchor)) {
-        // If the containing panel is open, don't do anything:
+        // If the containing panel is open, don't do anything, because the
+        // notification would appear under the open panel. See
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=984023
         return;
       }
 
       // Otherwise, try to use the anchor of the panel:
-      anchor = widgetInWindow.anchor;
+      anchor = widget.anchor;
     }
     if (!anchor || !isElementVisible(anchor.parentNode)) {
       // Our container isn't visible, so can't show the animation:

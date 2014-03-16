@@ -1022,6 +1022,14 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
                                         Ci.nsIPrefLocalizedString).data;
 });
 
+XPCOMUtils.defineLazyGetter(PlacesUIUtils, "useAsyncTransactions", function() {
+  try {
+    return Services.prefs.getBoolPref("browser.places.useAsyncTransactions");
+  }
+  catch(ex) { }
+  return false;
+});
+
 XPCOMUtils.defineLazyServiceGetter(this, "URIFixup",
                                    "@mozilla.org/docshell/urifixup;1",
                                    "nsIURIFixup");
