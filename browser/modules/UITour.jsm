@@ -811,9 +811,9 @@ this.UITour = {
       let minDimension = Math.min(highlightHeight, highlightWidth);
       let maxDimension = Math.max(highlightHeight, highlightWidth);
 
-      // If the dimensions are within 110% of each other (to include the bookmarks button),
+      // If the dimensions are within 200% of each other (to include the bookmarks button),
       // make the highlight a circle with the largest dimension as the diameter.
-      if (maxDimension / minDimension <= 2.1) {
+      if (maxDimension / minDimension <= 3.0) {
         highlightHeight = highlightWidth = maxDimension;
         highlighter.style.borderRadius = "100%";
       } else {
