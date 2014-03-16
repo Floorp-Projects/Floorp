@@ -116,18 +116,43 @@ function run_test() {
   run_next_test();
 }
 
-function ensureUndoState(aEntries = [], aUndoPosition = 0) {
-  do_check_eq(PT.length, aEntries.length);
-  do_check_eq(PT.undoPosition, aUndoPosition);
+function sanityCheckTransactionHistory() {
+  do_check_true(PT.undoPosition <= PT.length);
 
-  for (let i = 0; i < aEntries.length; i++) {
-    let testEntry = aEntries[i];
-    let undoEntry = PT.item(i);
-    do_check_eq(testEntry.length, undoEntry.length);
-    for (let j = 0; j < testEntry.length; j++) {
-      do_check_eq(testEntry[j], undoEntry[j]);
-    }
+  let check_entry_throws = f => {
+    try {
+      f();
+      do_throw("PT.entry should throw for invalid input");
+    } catch(ex) {}
+  };
+  check_entry_throws( () => PT.entry(-1) );
+  check_entry_throws( () => PT.entry({}) );
+  check_entry_throws( () => PT.entry(PT.length) );
+
+  if (PT.undoPosition < PT.length)
+    do_check_eq(PT.topUndoEntry, PT.entry(PT.undoPosition));
+  else
+    do_check_null(PT.topUndoEntry);
+  if (PT.undoPosition > 0)
+    do_check_eq(PT.topRedoEntry, PT.entry(PT.undoPosition - 1));
+  else
+    do_check_null(PT.topRedoEntry);
+}
+
+function ensureUndoState(aExpectedEntries = [], aExpectedUndoPosition = 0) {
+  // ensureUndoState is called in various places during this test, so it's
+  // a good places to sanity-check the transaction-history APIs in all
+  // cases.
+  sanityCheckTransactionHistory();
+
+  do_check_eq(PT.length, aExpectedEntries.length);
+  do_check_eq(PT.undoPosition, aExpectedUndoPosition);
+
+  function checkEqualEntries(aExpectedEntry, aActualEntry) {
+    do_check_eq(aExpectedEntry.length, aActualEntry.length);
+    aExpectedEntry.forEach( (t, i) => do_check_eq(t, aActualEntry[i]) );
   }
+  aExpectedEntries.forEach( (e, i) => checkEqualEntries(e, PT.entry(i)) );
 }
 
 function ensureItemsAdded(...items) {
