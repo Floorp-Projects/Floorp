@@ -97,6 +97,7 @@ public:
   // dst alpha is always 1.0.  If this is never called, the context
   // defaults to false (not opaque).
   NS_IMETHOD SetIsOpaque(bool isOpaque) = 0;
+  virtual bool GetIsOpaque() = 0;
 
   // Invalidate this context and release any held resources, in preperation
   // for possibly reinitializing with SetDimensions/InitializeWithSurface.

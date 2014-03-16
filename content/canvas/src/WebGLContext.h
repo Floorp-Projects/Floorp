@@ -178,6 +178,7 @@ public:
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() MOZ_OVERRIDE;
 
     NS_IMETHOD SetIsOpaque(bool b) MOZ_OVERRIDE { return NS_OK; };
+    bool GetIsOpaque() MOZ_OVERRIDE { return false; }
     NS_IMETHOD SetContextOptions(JSContext* aCx,
                                  JS::Handle<JS::Value> aOptions) MOZ_OVERRIDE;
 
