@@ -634,7 +634,28 @@ BrowserIDClusterManager.prototype = {
     let cb = Async.makeSpinningCallback();
     promiseClusterURL().then(function (clusterURL) {
       cb(null, clusterURL);
-    }).then(null, cb);
+    }).then(
+      null, err => {
+      // service.js's verifyLogin() method will attempt to fetch a cluster
+      // URL when it sees a 401.  If it gets null, it treats it as a "real"
+      // auth error and sets Status.login to LOGIN_FAILED_LOGIN_REJECTED, which
+      // in turn causes a notification bar to appear informing the user they
+      // need to re-authenticate.
+      // On the other hand, if fetching the cluster URL fails with an exception,
+      // verifyLogin() assumes it is a transient error, and thus doesn't show
+      // the notification bar under the assumption the issue will resolve
+      // itself.
+      // Thus:
+      // * On a real 401, we must return null.
+      // * On any other problem we must let an exception bubble up.
+      if (err instanceof AuthenticationError) {
+        // callback with no error and a null result - cb.wait() returns null.
+        cb(null, null);
+      } else {
+        // callback with an error - cb.wait() completes by raising an exception.
+        cb(err);
+      }
+    });
     return cb.wait();
   },
 
