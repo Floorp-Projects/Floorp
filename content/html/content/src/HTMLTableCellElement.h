@@ -20,7 +20,7 @@ class HTMLTableCellElement MOZ_FINAL : public nsGenericHTMLElement,
                                        public nsIDOMHTMLTableCellElement
 {
 public:
-  HTMLTableCellElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLTableCellElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     SetHasWeirdParserInsertionMode();

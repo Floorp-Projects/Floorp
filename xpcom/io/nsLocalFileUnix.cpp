@@ -673,9 +673,11 @@ nsLocalFile::CopyDirectoryTo(nsIFile *newParent)
 
     bool hasMore = false;
     while (dirIterator->HasMoreElements(&hasMore), hasMore) {
+        nsCOMPtr<nsISupports> supports;
         nsCOMPtr<nsIFile> entry;
-        rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(entry));
-        if (NS_FAILED(rv)) 
+        rv = dirIterator->GetNext(getter_AddRefs(supports));
+        entry = do_QueryInterface(supports);
+        if (NS_FAILED(rv) || !entry)
             continue;
         if (NS_FAILED(rv = entry->IsSymlink(&isSymlink)))
             return rv;

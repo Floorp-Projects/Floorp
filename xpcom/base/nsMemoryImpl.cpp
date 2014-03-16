@@ -156,11 +156,13 @@ nsMemoryImpl::RunFlushers(const char16_t* aReason)
 
           while (NS_SUCCEEDED(e->HasMoreElements(&loop)) && loop)
           {
-              e->GetNext(getter_AddRefs(observer));
+              nsCOMPtr<nsISupports> supports;
+              e->GetNext(getter_AddRefs(supports));
 
-              if (!observer)
+              if (!supports)
                   continue;
 
+              observer = do_QueryInterface(supports);
               observer->Observe(observer, "memory-pressure", aReason);
           }
         }

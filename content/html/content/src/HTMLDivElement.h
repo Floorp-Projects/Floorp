@@ -16,7 +16,7 @@ class HTMLDivElement MOZ_FINAL : public nsGenericHTMLElement,
                                  public nsIDOMHTMLDivElement
 {
 public:
-  HTMLDivElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLDivElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

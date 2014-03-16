@@ -98,23 +98,23 @@
 inline already_AddRefed<nsIIOService>
 do_GetIOService(nsresult* error = 0)
 {
-    already_AddRefed<nsIIOService> ret = mozilla::services::GetIOService();
+    nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
     if (error)
-        *error = ret.get() ? NS_OK : NS_ERROR_FAILURE;
-    return ret;
+        *error = io ? NS_OK : NS_ERROR_FAILURE;
+    return io.forget();
 }
 
 inline already_AddRefed<nsINetUtil>
 do_GetNetUtil(nsresult *error = 0) 
 {
     nsCOMPtr<nsIIOService> io = mozilla::services::GetIOService();
-    already_AddRefed<nsINetUtil> ret = nullptr;
+    nsCOMPtr<nsINetUtil> util;
     if (io)
-        CallQueryInterface(io, &ret.mRawPtr);
+        util = do_QueryInterface(io);
 
     if (error)
-        *error = ret.get() ? NS_OK : NS_ERROR_FAILURE;
-    return ret;
+        *error = !!util ? NS_OK : NS_ERROR_FAILURE;
+    return util.forget();
 }
 #else
 // Helper, to simplify getting the I/O service.

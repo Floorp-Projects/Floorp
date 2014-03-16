@@ -326,7 +326,7 @@ nsPACMan::PostQuery(PendingPACQuery *query)
 
   // add a reference to the query while it is in the pending list
   nsRefPtr<PendingPACQuery> addref(query);
-  mPendingQ.insertBack(addref.forget().get());
+  mPendingQ.insertBack(addref.forget().take());
   ProcessPendingQ();
   return NS_OK;
 }

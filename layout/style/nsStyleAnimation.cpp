@@ -3679,7 +3679,7 @@ nsStyleAnimation::Value::SetUnparsedStringValue(const nsString& aString)
 {
   FreeValue();
   mUnit = eUnit_UnparsedString;
-  mValue.mString = nsCSSValue::BufferFromString(aString).get();
+  mValue.mString = nsCSSValue::BufferFromString(aString).take();
 }
 
 void

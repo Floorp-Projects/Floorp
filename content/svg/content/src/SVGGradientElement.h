@@ -23,10 +23,10 @@ class nsSVGRadialGradientFrame;
 
 nsresult
 NS_NewSVGLinearGradientElement(nsIContent** aResult,
-                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
 nsresult
 NS_NewSVGRadialGradientElement(nsIContent** aResult,
-                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -42,7 +42,7 @@ class SVGGradientElement : public SVGGradientElementBase
   friend class ::nsSVGGradientFrame;
 
 protected:
-  SVGGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE = 0;
 
@@ -90,10 +90,10 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase
   friend class ::nsSVGLinearGradientFrame;
   friend nsresult
     (::NS_NewSVGLinearGradientElement(nsIContent** aResult,
-                                      already_AddRefed<nsINodeInfo> aNodeInfo));
+                                      already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
 protected:
-  SVGLinearGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGLinearGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
@@ -124,10 +124,10 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase
   friend class ::nsSVGRadialGradientFrame;
   friend nsresult
     (::NS_NewSVGRadialGradientElement(nsIContent** aResult,
-                                      already_AddRefed<nsINodeInfo> aNodeInfo));
+                                      already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
 protected:
-  SVGRadialGradientElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGRadialGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 

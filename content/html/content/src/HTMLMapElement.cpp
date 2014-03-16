@@ -15,7 +15,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Map)
 namespace mozilla {
 namespace dom {
 
-HTMLMapElement::HTMLMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLMapElement::HTMLMapElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

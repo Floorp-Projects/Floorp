@@ -257,7 +257,7 @@ NS_IMETHODIMP
 MouseEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 {
   NS_ENSURE_ARG_POINTER(aRelatedTarget);
-  *aRelatedTarget = GetRelatedTarget().get();
+  *aRelatedTarget = GetRelatedTarget().take();
   return NS_OK;
 }
 

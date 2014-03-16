@@ -155,11 +155,8 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // Doing so means a negative delta and thus messes up handling of the graph
   if (delta > 0) {
     // nullptr images are allowed
-    if (image) {
-      segment.AppendFrame(image.forget(), delta, IntSize(mWidth, mHeight));
-    } else {
-      segment.AppendFrame(nullptr, delta, IntSize(0, 0));
-    }
+    IntSize size(image ? mWidth : 0, image ? mHeight : 0);
+    segment.AppendFrame(image.forget(), delta, size);
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
     if (aSource->AppendToTrack(aID, &(segment))) {

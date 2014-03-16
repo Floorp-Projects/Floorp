@@ -24,7 +24,7 @@ public:
   using Element::GetText;
   using Element::SetText;
 
-  HTMLTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLTitleElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLTitleElement();
 
   // nsISupports

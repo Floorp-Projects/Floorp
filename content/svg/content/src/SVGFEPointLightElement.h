@@ -10,7 +10,7 @@
 #include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFEPointLightElement(nsIContent **aResult,
-                                      already_AddRefed<nsINodeInfo> aNodeInfo);
+                                      already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -20,9 +20,9 @@ typedef SVGFELightElement SVGFEPointLightElementBase;
 class SVGFEPointLightElement : public SVGFEPointLightElementBase
 {
   friend nsresult (::NS_NewSVGFEPointLightElement(nsIContent **aResult,
-                                                  already_AddRefed<nsINodeInfo> aNodeInfo));
+                                                  already_AddRefed<nsINodeInfo>&& aNodeInfo));
 protected:
-  SVGFEPointLightElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  SVGFEPointLightElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEPointLightElementBase(aNodeInfo)
   {
   }

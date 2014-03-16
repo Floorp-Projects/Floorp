@@ -607,7 +607,7 @@ nsDOMMutationObserver::HandleMutation()
     for (uint32_t i = 0; i < mPendingMutationCount; ++i) {
       nsRefPtr<nsDOMMutationRecord> next;
       current->mNext.swap(next);
-      *mutations.AppendElement() = current.forget();
+      *mutations.AppendElement() = current;
       current.swap(next);
     }
   }

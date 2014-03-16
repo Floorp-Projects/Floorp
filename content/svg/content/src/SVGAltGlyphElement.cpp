@@ -26,7 +26,7 @@ nsSVGElement::StringInfo SVGAltGlyphElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGAltGlyphElement::SVGAltGlyphElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGAltGlyphElement::SVGAltGlyphElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGAltGlyphElementBase(aNodeInfo)
 {
 }

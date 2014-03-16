@@ -17,7 +17,7 @@ class HTMLHeadingElement MOZ_FINAL : public nsGenericHTMLElement,
 				     public nsIDOMHTMLHeadingElement
 {
 public:
-  HTMLHeadingElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLHeadingElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }

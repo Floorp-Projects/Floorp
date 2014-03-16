@@ -20,7 +20,7 @@ SVGSetElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGSetElement::SVGSetElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGSetElement::SVGSetElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGAnimationElement(aNodeInfo)
 {
 }

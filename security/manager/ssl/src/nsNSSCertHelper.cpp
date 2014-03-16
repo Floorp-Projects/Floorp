@@ -2124,7 +2124,7 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
   GetWindowTitle(getter_Copies(title));
   
   sequence->SetDisplayName(NS_ConvertUTF8toUTF16(title));
-  *aRetVal = sequence.forget().get();
+  sequence.forget(aRetVal);
 
   // This sequence will be contain the tbsCertificate, signatureAlgorithm,
   // and signatureValue.

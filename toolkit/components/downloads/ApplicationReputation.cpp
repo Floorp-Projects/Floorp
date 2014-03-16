@@ -255,12 +255,12 @@ PendingDBLookup::LookupSpecInternal(const nsACString& aSpec)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIURI> uri = nullptr;
+  nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
   rv = ios->NewURI(aSpec, nullptr, nullptr, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIPrincipal> principal = nullptr;
+  nsCOMPtr<nsIPrincipal> principal;
   nsCOMPtr<nsIScriptSecurityManager> secMan =
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -462,7 +462,7 @@ PendingLookup::GenerateWhitelistStringsForChain(
   nsCOMPtr<nsIX509CertDB> certDB = do_GetService(NS_X509CERTDB_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIX509Cert> signer = nullptr;
+  nsCOMPtr<nsIX509Cert> signer;
   rv = certDB->ConstructX509(
     const_cast<char *>(aChain.element(0).certificate().data()),
     aChain.element(0).certificate().size(), getter_AddRefs(signer));
@@ -470,7 +470,7 @@ PendingLookup::GenerateWhitelistStringsForChain(
 
   for (int i = 1; i < aChain.element_size(); ++i) {
     // Get the issuer.
-    nsCOMPtr<nsIX509Cert> issuer = nullptr;
+    nsCOMPtr<nsIX509Cert> issuer;
     rv = certDB->ConstructX509(
       const_cast<char *>(aChain.element(i).certificate().data()),
       aChain.element(i).certificate().size(), getter_AddRefs(issuer));
@@ -509,7 +509,7 @@ nsresult
 PendingLookup::DoLookupInternal()
 {
   // We want to check the target URI against the local lists.
-  nsCOMPtr<nsIURI> uri = nullptr;
+  nsCOMPtr<nsIURI> uri;
   nsresult rv = mQuery->GetSourceURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -529,7 +529,7 @@ PendingLookup::DoLookupInternal()
 
   // Extract the signature and parse certificates so we can use it to check
   // whitelists.
-  nsCOMPtr<nsIArray> sigArray = nullptr;
+  nsCOMPtr<nsIArray> sigArray;
   rv = mQuery->GetSignatureInfo(getter_AddRefs(sigArray));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -574,7 +574,7 @@ PendingLookup::ParseCertificates(
   // Binaries may be signed by multiple chains of certificates. If there are no
   // chains, the binary is unsigned (or we were unable to extract signature
   // information on a non-Windows platform)
-  nsCOMPtr<nsISimpleEnumerator> chains = nullptr;
+  nsCOMPtr<nsISimpleEnumerator> chains;
   nsresult rv = aSigArray->Enumerate(getter_AddRefs(chains));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -583,13 +583,16 @@ PendingLookup::ParseCertificates(
   NS_ENSURE_SUCCESS(rv, rv);
 
   while (hasMoreChains) {
-    nsCOMPtr<nsIX509CertList> certList = nullptr;
-    rv = chains->GetNext(getter_AddRefs(certList));
+    nsCOMPtr<nsISupports> supports;
+    rv = chains->GetNext(getter_AddRefs(supports));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIX509CertList> certList = do_QueryInterface(supports, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     safe_browsing::ClientDownloadRequest_CertificateChain* certChain =
       aSignatureInfo->add_certificate_chain();
-    nsCOMPtr<nsISimpleEnumerator> chainElt = nullptr;
+    nsCOMPtr<nsISimpleEnumerator> chainElt;
     rv = certList->GetEnumerator(getter_AddRefs(chainElt));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -597,8 +600,11 @@ PendingLookup::ParseCertificates(
     bool hasMoreCerts = false;
     rv = chainElt->HasMoreElements(&hasMoreCerts);
     while (hasMoreCerts) {
-      nsCOMPtr<nsIX509Cert> cert = nullptr;
-      rv = chainElt->GetNext(getter_AddRefs(cert));
+      nsCOMPtr<nsISupports> supports;
+      rv = chainElt->GetNext(getter_AddRefs(supports));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(supports, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
       uint8_t* data = nullptr;
@@ -641,7 +647,7 @@ PendingLookup::SendRemoteQueryInternal()
   // We did not find a local result, so fire off the query to the application
   // reputation service.
   safe_browsing::ClientDownloadRequest req;
-  nsCOMPtr<nsIURI> uri = nullptr;
+  nsCOMPtr<nsIURI> uri;
   nsresult rv;
   rv = mQuery->GetSourceURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -696,7 +702,7 @@ PendingLookup::SendRemoteQueryInternal()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set up the channel to transmit the request to the service.
-  nsCOMPtr<nsIChannel> channel = nullptr;
+  nsCOMPtr<nsIChannel> channel;
   nsCString serviceUrl;
   NS_ENSURE_SUCCESS(Preferences::GetCString(PREF_SB_APP_REP_URL, &serviceUrl),
                     NS_ERROR_NOT_AVAILABLE);
@@ -889,7 +895,7 @@ nsresult ApplicationReputationService::QueryReputationInternal(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIURI> uri = nullptr;
+  nsCOMPtr<nsIURI> uri;
   rv = aQuery->GetSourceURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
   // Bail if the URI hasn't been set.

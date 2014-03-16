@@ -223,7 +223,7 @@ nsSVGFilterInstance::ConvertLocation(const Point3D& aPoint) const
 gfxRect
 nsSVGFilterInstance::UserSpaceToFilterSpace(const gfxRect& aUserSpaceRect) const
 {
-  return IntermediateSpaceToUserSpace(aUserSpaceRect - mUserSpaceBounds.TopLeft());
+  return UserSpaceToIntermediateSpace(aUserSpaceRect - mUserSpaceBounds.TopLeft());
 }
 
 gfxRect

@@ -9,7 +9,7 @@
 #include "mozilla/dom/SVGTextPositioningElement.h"
 
 nsresult NS_NewSVGTSpanElement(nsIContent **aResult,
-                               already_AddRefed<nsINodeInfo> aNodeInfo);
+                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -20,8 +20,8 @@ class SVGTSpanElement MOZ_FINAL : public SVGTSpanElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGTSpanElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGTSpanElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGTSpanElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 

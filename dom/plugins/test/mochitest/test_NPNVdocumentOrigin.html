@@ -31,12 +31,14 @@
 
       // Create a plugin in a new window with about:blank
       var newWindow = window.open("about:blank");
-      newWindow.document.writeln('<embed id="plugin2" type="application/x-test" width="200" height="200"></embed>');
-      var p2 = newWindow.document.getElementById("plugin2");
-      is(p2.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin of plugin in new about:blank window.");
-      newWindow.close();
+      newWindow.onload = function() {
+        newWindow.document.writeln('<embed id="plugin2" type="application/x-test" width="200" height="200"></embed>');
+        var p2 = newWindow.document.getElementById("plugin2");
+        is(p2.getNPNVdocumentOrigin(), realOrigin, "Checking for expected origin of plugin in new about:blank window.");
+        newWindow.close();
 
-      SimpleTest.finish();
+        SimpleTest.finish();
+      };
     }
   </script>
 

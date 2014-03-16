@@ -10,7 +10,7 @@
 #include "nsSVGFilters.h"
 
 nsresult NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo> aNodeInfo);
+                                           already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,8 +21,8 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                                       already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGFEDisplacementMapElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+                                                       already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGFEDisplacementMapElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : SVGFEDisplacementMapElementBase(aNodeInfo)
   {
   }

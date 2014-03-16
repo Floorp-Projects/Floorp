@@ -94,9 +94,10 @@ RtspControllerChild::RecvOnMediaDataAvailable(
 
 void
 RtspControllerChild::AddMetaData(
-                       already_AddRefed<nsIStreamingProtocolMetaData> meta)
+                       already_AddRefed<nsIStreamingProtocolMetaData>&& meta)
 {
-  mMetaArray.AppendElement(meta);
+  nsCOMPtr<nsIStreamingProtocolMetaData> data = meta;
+  mMetaArray.AppendElement(data);
 }
 
 int
@@ -120,7 +121,7 @@ RtspControllerChild::RecvOnConnected(
     // Set the default value.
     mTotalTracks = kRtspTotalTracks;
   }
-  AddMetaData(meta.forget());
+  AddMetaData(meta.forget().downcast<nsIStreamingProtocolMetaData>());
 
   // Notify the listener when meta data of tracks are available.
   if ((static_cast<uint32_t>(index) + 1) == mTotalTracks) {

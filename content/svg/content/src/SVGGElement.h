@@ -9,7 +9,7 @@
 #include "mozilla/dom/SVGGraphicsElement.h"
 
 nsresult NS_NewSVGGElement(nsIContent **aResult,
-                           already_AddRefed<nsINodeInfo> aNodeInfo);
+                           already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -17,11 +17,11 @@ namespace dom {
 class SVGGElement MOZ_FINAL : public SVGGraphicsElement
 {
 protected:
-  SVGGElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGGElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGGElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo> aNodeInfo));
+                                       already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
 public:
   // nsIContent

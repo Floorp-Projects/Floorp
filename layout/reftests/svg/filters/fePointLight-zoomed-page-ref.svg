@@ -1,0 +1,15 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+        <filter id="illuminate-center">
+            <feDiffuseLighting in="SourceGraphic" result="light" lighting-color="white">
+                <fePointLight x="100" y="100" z="100"/>
+            </feDiffuseLighting>
+            <feComposite in="SourceGraphic" in2="light" operator="arithmetic" k1="1" k2="0" k3="0" k4="0"/>
+        </filter>
+    </defs>
+    <rect width="200" height="200" fill="green" filter="url(#illuminate-center)"/>
+</svg>

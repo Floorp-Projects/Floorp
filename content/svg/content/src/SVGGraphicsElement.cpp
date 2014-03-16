@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_END_INHERITING(SVGGraphicsElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGGraphicsElement::SVGGraphicsElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGGraphicsElement::SVGGraphicsElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGGraphicsElementBase(aNodeInfo)
 {
 }

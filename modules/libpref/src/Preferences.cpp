@@ -1049,7 +1049,9 @@ pref_LoadPrefsInDir(nsIFile* aDir, char const *const *aSpecialFiles, uint32_t aS
   while (hasMoreElements && NS_SUCCEEDED(rv)) {
     nsAutoCString leafName;
 
-    rv = dirIterator->GetNext(getter_AddRefs(prefFile));
+    nsCOMPtr<nsISupports> supports;
+    rv = dirIterator->GetNext(getter_AddRefs(supports));
+    prefFile = do_QueryInterface(supports);
     if (NS_FAILED(rv)) {
       break;
     }

@@ -682,7 +682,7 @@ ShadowLayerForwarder::GetDescriptorSurfaceContentType(
 
   nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
   content = surface->GetContentType();
-  *aSurface = surface.forget().get();
+  surface.forget(aSurface);
   return content;
 }
 
@@ -722,7 +722,7 @@ ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
   NS_ASSERTION(format != gfxImageFormat::Unknown,
                "ImageSurface RGB format should be known");
 
-  *aSurface = surface.forget().get();
+  surface.forget(aSurface);
   return format;
 }
 

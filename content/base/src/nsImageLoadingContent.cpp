@@ -425,7 +425,7 @@ nsImageLoadingContent::GetRequest(int32_t aRequestType,
   NS_ENSURE_ARG_POINTER(aRequest);
 
   ErrorResult result;
-  *aRequest = GetRequest(aRequestType, result).get();
+  *aRequest = GetRequest(aRequestType, result).take();
 
   return result.ErrorCode();
 }
@@ -539,7 +539,7 @@ nsImageLoadingContent::GetCurrentURI(nsIURI** aURI)
   NS_ENSURE_ARG_POINTER(aURI);
 
   ErrorResult result;
-  *aURI = GetCurrentURI(result).get();
+  *aURI = GetCurrentURI(result).take();
   return result.ErrorCode();
 }
 
@@ -594,7 +594,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   NS_ENSURE_ARG_POINTER(aListener);
 
   ErrorResult result;
-  *aListener = LoadImageWithChannel(aChannel, result).get();
+  *aListener = LoadImageWithChannel(aChannel, result).take();
   return result.ErrorCode();
 }
 

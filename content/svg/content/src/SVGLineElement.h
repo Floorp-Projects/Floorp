@@ -10,7 +10,7 @@
 #include "nsSVGLength2.h"
 
 nsresult NS_NewSVGLineElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -20,11 +20,11 @@ typedef nsSVGPathGeometryElement SVGLineElementBase;
 class SVGLineElement MOZ_FINAL : public SVGLineElementBase
 {
 protected:
-  SVGLineElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGLineElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGLineElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
+                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
 public:
   // nsIContent interface

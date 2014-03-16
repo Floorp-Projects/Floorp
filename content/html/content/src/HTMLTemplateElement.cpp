@@ -14,7 +14,7 @@
 using namespace mozilla::dom;
 
 nsGenericHTMLElement*
-NS_NewHTMLTemplateElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLTemplateElement(already_AddRefed<nsINodeInfo>&& aNodeInfo,
                           FromParser aFromParser)
 {
   HTMLTemplateElement* it = new HTMLTemplateElement(aNodeInfo);
@@ -30,7 +30,7 @@ NS_NewHTMLTemplateElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 namespace mozilla {
 namespace dom {
 
-HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   SetHasWeirdParserInsertionMode();

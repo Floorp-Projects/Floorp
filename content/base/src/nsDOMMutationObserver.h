@@ -343,7 +343,7 @@ class nsDOMMutationObserver : public nsISupports,
                               public nsWrapperCache
 {
 public:
-  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow> aOwner,
+  nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow>&& aOwner,
                         mozilla::dom::MutationCallback& aCb)
   : mOwner(aOwner), mLastPendingMutation(nullptr), mPendingMutationCount(0),
     mCallback(&aCb), mWaitingForRun(false), mId(++sCount)
@@ -387,14 +387,15 @@ public:
 
   void AppendMutationRecord(already_AddRefed<nsDOMMutationRecord> aRecord)
   {
-    MOZ_ASSERT(aRecord.get());
+    nsRefPtr<nsDOMMutationRecord> record = aRecord;
+    MOZ_ASSERT(record);
     if (!mLastPendingMutation) {
       MOZ_ASSERT(!mFirstPendingMutation);
-      mFirstPendingMutation = aRecord;
+      mFirstPendingMutation = record.forget();
       mLastPendingMutation = mFirstPendingMutation;
     } else {
       MOZ_ASSERT(mFirstPendingMutation);
-      mLastPendingMutation->mNext = aRecord;
+      mLastPendingMutation->mNext = record.forget();
       mLastPendingMutation = mLastPendingMutation->mNext;
     }
     ++mPendingMutationCount;
