@@ -1462,7 +1462,11 @@ IonBuilder::inlineForkJoinGetSlice(CallInfo &callInfo)
     // self-hosted function which must be used in a particular fashion.
     MOZ_ASSERT(callInfo.argc() == 1 && !callInfo.constructing());
     MOZ_ASSERT(callInfo.getArg(0)->type() == MIRType_Int32);
-    MOZ_ASSERT(getInlineReturnType() == MIRType_Int32);
+
+    // Test this, as we might have not executed the native despite knowing the
+    // target here.
+    if (getInlineReturnType() != MIRType_Int32)
+        return InliningStatus_NotInlined;
 
     callInfo.setImplicitlyUsedUnchecked();
 
