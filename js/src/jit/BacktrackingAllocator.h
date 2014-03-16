@@ -236,12 +236,12 @@ class BacktrackingAllocator
     size_t computePriority(const VirtualRegisterGroup *group);
     size_t computeSpillWeight(const VirtualRegisterGroup *group);
 
-    bool chooseIntervalSplit(LiveInterval *interval);
+    bool chooseIntervalSplit(LiveInterval *interval, LiveInterval *conflict);
 
     bool splitAt(LiveInterval *interval,
                  const SplitPositionVector &splitPositions);
     bool trySplitAcrossHotcode(LiveInterval *interval, bool *success);
-    bool trySplitAfterLastRegisterUse(LiveInterval *interval, bool *success);
+    bool trySplitAfterLastRegisterUse(LiveInterval *interval, LiveInterval *conflict, bool *success);
     bool splitAtAllRegisterUses(LiveInterval *interval);
     bool splitAcrossCalls(LiveInterval *interval);
 };
