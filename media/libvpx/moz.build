@@ -87,8 +87,6 @@ if CONFIG['OS_TARGET'] == 'Android':
         SOURCES += [
             '%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
         ]
-elif CONFIG['OS_TARGET'] == 'Darwin':
-    CFLAGS += ['-Wno-sign-compare']
 
 if not CONFIG['_MSC_VER']:
     for f in SOURCES:
@@ -99,3 +97,7 @@ if not CONFIG['_MSC_VER']:
                 SOURCES[f].flags += ['-mssse3']
             if 'avx2' in f:
                 SOURCES[f].flags += ['-mavx2']
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wno-sign-compare']

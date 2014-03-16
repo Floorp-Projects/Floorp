@@ -41,3 +41,7 @@ if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['OS_TARGET'] != 'Android':
     DEFINES['_USE_SSE2'] = True
     if CONFIG['GNU_CC']:
         SOURCES['resample.c'].flags += ['-msse2']
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wno-sign-compare']
