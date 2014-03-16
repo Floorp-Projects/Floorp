@@ -37,3 +37,6 @@ LOCAL_INCLUDES += [
     '/editor/libeditor/base',
 ]
 
+# Suppress warnings in third-party code.
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wno-unused-private-field']
