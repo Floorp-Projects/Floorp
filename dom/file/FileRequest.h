@@ -12,6 +12,8 @@
 
 #include "DOMRequest.h"
 
+class nsIDOMLockedFile;
+
 BEGIN_FILE_NAMESPACE
 
 class FileHelper;
