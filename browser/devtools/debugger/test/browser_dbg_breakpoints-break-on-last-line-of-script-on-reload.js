@@ -23,15 +23,20 @@ function test() {
     Task.spawn(function* () {
       try {
 
-        yield ensureSourceIs(gPanel, CODE_URL, true);
+        // Refresh and hit the debugger statement before the location we want to
+        // set our breakpoints. We have to pause before the breakpoint locations
+        // so that GC doesn't get a chance to kick in and collect the IIFE's
+        // script, which would causes us to receive a 'noScript' error from the
+        // server when we try to set the breakpoints.
+        const [paused, ] = yield promise.all([
+          waitForThreadEvents(gPanel, "paused"),
+          reloadActiveTab(gPanel, gEvents.SOURCE_SHOWN),
+        ]);
 
-        // Pause and set our breakpoints.
-        yield doInterrupt();
+        is(paused.why.type, "debuggerStatement");
+
+        // Set our breakpoints.
         const [bp1, bp2, bp3] = yield promise.all([
-          setBreakpoint({
-            url: CODE_URL,
-            line: 2
-          }),
           setBreakpoint({
             url: CODE_URL,
             line: 3
@@ -39,23 +44,31 @@ function test() {
           setBreakpoint({
             url: CODE_URL,
             line: 4
+          }),
+          setBreakpoint({
+            url: CODE_URL,
+            line: 5
           })
         ]);
 
-        // Should hit the first breakpoint on reload.
+        // Refresh and hit the debugger statement again.
         yield promise.all([
           reloadActiveTab(gPanel, gEvents.SOURCE_SHOWN),
-          waitForCaretUpdated(gPanel, 2)
+          waitForCaretAndScopes(gPanel, 1)
         ]);
 
-        // And should hit the other breakpoints as we resume.
+        // And we should hit the breakpoints as we resume.
         yield promise.all([
           doResume(),
-          waitForCaretUpdated(gPanel, 3)
+          waitForCaretAndScopes(gPanel, 3)
         ]);
         yield promise.all([
           doResume(),
-          waitForCaretUpdated(gPanel, 4)
+          waitForCaretAndScopes(gPanel, 4)
+        ]);
+        yield promise.all([
+          doResume(),
+          waitForCaretAndScopes(gPanel, 5)
         ]);
 
         // Clean up the breakpoints.
