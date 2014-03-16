@@ -19,7 +19,6 @@ class nsIInputStream;
 
 BEGIN_FILE_NAMESPACE
 
-class DOMFileRequest;
 class FileHandle;
 class FileRequest;
 class MetadataHelper;
@@ -98,7 +97,7 @@ private:
   void
   OnRequestFinished();
 
-  inline already_AddRefed<DOMFileRequest>
+  already_AddRefed<FileRequest>
   GenerateFileRequest();
 
   nsresult
