@@ -6,6 +6,10 @@ import com.jayway.android.robotium.solo.Solo;
 import org.mozilla.gecko.*;
 import org.mozilla.gecko.GeckoThread.LaunchState;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.app.Instrumentation;
 import android.content.ContentResolver;
@@ -59,9 +63,11 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public static final int MAX_WAIT_MS = 4500;
     public static final int LONG_PRESS_TIME = 6000;
     private static final int GECKO_READY_WAIT_MS = 180000;
+    public static final int MAX_WAIT_BLOCK_FOR_EVENT_DATA_MS = 90000;
 
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
+    private int mPreferenceRequestID = 0;
     protected Solo mSolo;
     protected Driver mDriver;
     protected Assert mAsserter;
@@ -896,5 +902,64 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                              "");
             }
         }
+    }
+
+    /**
+     * Set the preference and wait for it to change before proceeding with the test.
+     */
+    public void setPreferenceAndWaitForChange(final JSONObject jsonPref) {
+        mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
+
+        // Get the preference name from the json and store it in an array. This array 
+        // will be used later while fetching the preference data.
+        String[] prefNames = new String[1];
+        try {
+            prefNames[0] = jsonPref.getString("name");
+        } catch (JSONException e) {
+            mAsserter.ok(false, "Exception in setPreferenceAndWaitForChange", getStackTraceString(e));
+        }
+
+        // Wait for confirmation of the pref change before proceeding with the test.
+        final int ourRequestID = mPreferenceRequestID--;
+        final Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
+        mActions.sendPreferencesGetEvent(ourRequestID, prefNames);
+
+        // Wait until we get the correct "Preferences:Data" event
+        waitForCondition(new Condition() {
+            final long endTime = SystemClock.elapsedRealtime() + MAX_WAIT_BLOCK_FOR_EVENT_DATA_MS;
+
+            @Override
+            public boolean isSatisfied() {
+                try {
+                    long timeout = endTime - SystemClock.elapsedRealtime();
+                    if (timeout < 0) {
+                        timeout = 0;
+                    }
+
+                    JSONObject data = new JSONObject(eventExpecter.blockForEventDataWithTimeout(timeout));
+                    int requestID = data.getInt("requestId");
+                    if (requestID != ourRequestID) {
+                        return false;
+                    }
+
+                    JSONArray preferences = data.getJSONArray("preferences");
+                    mAsserter.is(preferences.length(), 1, "Expecting preference array to have one element");
+                    JSONObject prefs = (JSONObject) preferences.get(0);
+                    mAsserter.is(prefs.getString("name"), jsonPref.getString("name"),
+                            "Expecting returned preference name to be the same as the set name");
+                    mAsserter.is(prefs.getString("type"), jsonPref.getString("type"),
+                            "Expecting returned preference type to be the same as the set type");
+                    mAsserter.is(prefs.get("value"), jsonPref.get("value"),
+                            "Expecting returned preference value to be the same as the set value");
+                    return true;
+                } catch(JSONException e) {
+                    mAsserter.ok(false, "Exception in setPreferenceAndWaitForChange", getStackTraceString(e));
+                    // Please the java compiler
+                    return false;
+                }
+            }
+        }, MAX_WAIT_BLOCK_FOR_EVENT_DATA_MS);
+
+        eventExpecter.unregisterListener();
     }
 }

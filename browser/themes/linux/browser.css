@@ -81,13 +81,13 @@
 }
 
 /* Places toolbar */
-toolbarbutton.bookmark-item,
+toolbarbutton.bookmark-item:not(.subviewbutton),
 #personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
   margin: 0;
   padding: 2px 3px;
 }
 
-toolbarbutton.bookmark-item:hover:active,
+toolbarbutton.bookmark-item:not(.subviewbutton):hover:active,
 toolbarbutton.bookmark-item[open="true"] {
   padding-top: 3px;
   padding-bottom: 1px;
@@ -188,7 +188,7 @@ menuitem.bookmark-item {
   max-width: 32em;
 }
 
-.bookmark-item > .menu-iconic-left {
+.bookmark-item:not(.subviewbutton) > .menu-iconic-left {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -2235,14 +2235,11 @@ chatbox {
 }
 
 #UITourTooltipClose {
-  -moz-appearance: toolbarbutton;
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-}
-
-#UITourTooltipClose > .toolbarbutton-icon {
-  margin: -4px;
+  -moz-margin-end: -4px;
+  height: 16px;
+  width: 16px;
 }
 
 #UITourTooltipButtons {
-  margin-bottom: 0;
+  margin-bottom: -10px;
 }
