@@ -164,7 +164,8 @@ FileHandle::GetFile(ErrorResult& aError)
     return nullptr;
   }
 
-  nsRefPtr<FileRequest> request = FileRequest::Create(GetOwner(), lockedFile);
+  nsRefPtr<FileRequest> request =
+    FileRequest::Create(GetOwner(), lockedFile, /* aWrapAsDOMRequest */ true);
 
   nsRefPtr<MetadataParameters> params = new MetadataParameters(true, false);
 
