@@ -347,9 +347,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           // skew adjustment that the HawkAuthHeaderProvider uses to adjust its
           // timestamps. Eventually we might want this to adapt within the scope of a
           // global session.
-          final SkewHandler tokenServerSkewHandler = SkewHandler.getSkewHandlerForHostname(storageHostname);
-          final long tokenServerSkew = tokenServerSkewHandler.getSkewInSeconds();
-          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, tokenServerSkew);
+          final SkewHandler storageServerSkewHandler = SkewHandler.getSkewHandlerForHostname(storageHostname);
+          final long storageServerSkew = storageServerSkewHandler.getSkewInSeconds();
+          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, storageServerSkew);
 
           final Context context = getContext();
           final SyncConfiguration syncConfig = new SyncConfiguration(token.uid, authHeaderProvider, sharedPrefs, syncKeyBundle);
@@ -503,11 +503,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             }
 
             final Married married = (Married) state;
-            SkewHandler skewHandler = SkewHandler.getSkewHandlerFromEndpointString(tokenServerEndpoint);
-            final long now = System.currentTimeMillis();
-            final long issuedAtMillis = now + skewHandler.getSkewInMillis();
-            final long assertionDurationMillis = this.getAssertionDurationInMilliseconds();
-            final String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER, issuedAtMillis, assertionDurationMillis);
+            final String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER);
 
             /*
              * At this point we're in the correct state to sync, and we're ready to fetch

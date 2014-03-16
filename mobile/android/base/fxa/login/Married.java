@@ -56,8 +56,11 @@ public class Married extends TokensAndKeysState {
     delegate.handleTransition(new LogMessage("staying married"), this);
   }
 
-  public String generateAssertion(String audience, String issuer, long issuedAt, long durationInMilliseconds) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException {
-    String assertion = JSONWebTokenUtils.createAssertion(keyPair.getPrivate(), certificate, audience, issuer, issuedAt, durationInMilliseconds);
+  public String generateAssertion(String audience, String issuer) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException {
+    // We generate assertions with no iat and an exp after 2050 to avoid
+    // invalid-timestamp errors from the token server.
+    final long expiresAt = JSONWebTokenUtils.DEFAULT_FUTURE_EXPIRES_AT_IN_MILLISECONDS;
+    String assertion = JSONWebTokenUtils.createAssertion(keyPair.getPrivate(), certificate, audience, issuer, null, expiresAt);
     if (!FxAccountConstants.LOG_PERSONAL_INFORMATION) {
       return assertion;
     }
