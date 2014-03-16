@@ -98,14 +98,14 @@ function test() {
       }
       aWindow.gBrowser.removeEventListener("pageshow", pageShown);
 
-      executeSoon(function () {
+      waitForFocus(function () {
         aWindow.document.addEventListener("popupshown",
                                           function(e) contextMenuOpened(aWindow, e), false);
         var img = aWindow.gBrowser.selectedBrowser.contentDocument.getElementById("img");
         EventUtils.synthesizeMouseAtCenter(img,
                                            { type: "contextmenu", button: 2 },
                                            aWindow.gBrowser.contentWindow);
-      });
+      }, aWindow.gBrowser.selectedBrowser.contentWindow);
     });
   }
 
