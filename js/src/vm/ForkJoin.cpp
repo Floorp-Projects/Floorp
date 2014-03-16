@@ -529,9 +529,8 @@ js::ForkJoin(JSContext *cx, CallArgs &args)
         JS_ReportError(cx, "ForkJoin: mode=%s status=%s bailouts=%d",
                        ForkJoinModeString(mode), statusString, op.bailouts);
         return false;
-    } else {
-        return true;
     }
+    return true;
 }
 
 static const char *
