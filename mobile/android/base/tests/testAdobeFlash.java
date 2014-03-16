@@ -31,23 +31,7 @@ public class testAdobeFlash extends PixelTest {
             jsonPref.put("name", "plugin.enable");
             jsonPref.put("type", "string");
             jsonPref.put("value", "1");
-            mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
-
-            // Wait for confirmation of the pref change before proceeding with the test.
-            final String[] prefNames = { "plugin.default.state" };
-            final int ourRequestId = 0x7358;
-            Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("Preferences:Data");
-            mActions.sendPreferencesGetEvent(ourRequestId, prefNames);
-
-            JSONObject data = null;
-            int requestId = -1;
-
-            // Wait until we get the correct "Preferences:Data" event
-            while (requestId != ourRequestId) {
-                data = new JSONObject(eventExpecter.blockForEventData());
-                requestId = data.getInt("requestId");
-            }
-            eventExpecter.unregisterListener();
+            setPreferenceAndWaitForChange(jsonPref);
         } catch (Exception ex) {
             mAsserter.ok(false, "exception in testAdobeFlash", ex.toString());
         }
