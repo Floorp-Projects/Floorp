@@ -3422,7 +3422,7 @@ CreateJSDGlobal(JSContext *aCx, const JSClass *aClasp)
     // that implements nsIGlobalObject.
     nsCOMPtr<nsIScriptObjectPrincipal> sbp =
         new SandboxPrivate(nullPrin, global);
-    JS_SetPrivate(global, sbp.forget().get());
+    JS_SetPrivate(global, sbp.forget().take());
 
     JS_FireOnNewGlobalObject(aCx, global);
 

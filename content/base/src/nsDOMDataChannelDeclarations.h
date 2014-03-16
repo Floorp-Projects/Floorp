@@ -20,7 +20,7 @@ namespace mozilla {
 class nsPIDOMWindow;
 
 nsresult
-NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel> dataChannel,
+NS_NewDOMDataChannel(already_AddRefed<mozilla::DataChannel>&& dataChannel,
                      nsPIDOMWindow* aWindow,
                      nsIDOMDataChannel** domDataChannel);
 

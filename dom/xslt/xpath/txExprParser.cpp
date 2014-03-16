@@ -893,12 +893,12 @@ txExprParser::resolveQName(const nsAString& aQName,
     aNamespace = kNameSpaceID_None;
     int32_t idx = aQName.FindChar(':');
     if (idx > 0) {
-        *aPrefix = NS_NewAtom(StringHead(aQName, (uint32_t)idx)).get();
+        *aPrefix = NS_NewAtom(StringHead(aQName, (uint32_t)idx)).take();
         if (!*aPrefix) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
         *aLocalName = NS_NewAtom(Substring(aQName, (uint32_t)idx + 1,
-                                           aQName.Length() - (idx + 1))).get();
+                                           aQName.Length() - (idx + 1))).take();
         if (!*aLocalName) {
             NS_RELEASE(*aPrefix);
             return NS_ERROR_OUT_OF_MEMORY;
@@ -910,10 +910,10 @@ txExprParser::resolveQName(const nsAString& aQName,
     if (aIsNameTest && aContext->caseInsensitiveNameTests()) {
         nsAutoString lcname;
         nsContentUtils::ASCIIToLower(aQName, lcname);
-        *aLocalName = NS_NewAtom(lcname).get();
+        *aLocalName = NS_NewAtom(lcname).take();
     }
     else {
-        *aLocalName = NS_NewAtom(aQName).get();
+        *aLocalName = NS_NewAtom(aQName).take();
     }
     if (!*aLocalName) {
         return NS_ERROR_OUT_OF_MEMORY;

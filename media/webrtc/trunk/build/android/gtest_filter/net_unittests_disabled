@@ -83,12 +83,12 @@ URLFetcherCancelTest.CancelWhileDelayedStartTaskPending
 URLFetcherMultipleAttemptTest.SameData
 URLFetcherFileTest.SmallGet
 URLFetcherFileTest.LargeGet
-URLFetcherFileTest.CanTakeOwnershipOfFile
+URLFetcherFileTest.CantakeOfFile
 URLFetcherFileTest.OverwriteExistingFile
 URLFetcherFileTest.TryToOverwriteDirectory
 URLFetcherFileTest.SmallGetToTempFile
 URLFetcherFileTest.LargeGetToTempFile
-URLFetcherFileTest.CanTakeOwnershipOfTempFile
+URLFetcherFileTest.CantakeOfTempFile
 URLFetcherEmptyPostTest.Basic
 # TODO(jrg): Fails on bots.  Works locally.  Figure out why.  2/6/12
 HttpCache.TypicalGET_ConditionalRequest

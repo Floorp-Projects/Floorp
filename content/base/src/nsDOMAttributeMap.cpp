@@ -242,7 +242,7 @@ nsDOMAttributeMap::SetNamedItem(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
   NS_ENSURE_ARG(attribute);
 
   ErrorResult rv;
-  *aReturn = SetNamedItem(*attribute, rv).get();
+  *aReturn = SetNamedItem(*attribute, rv).take();
   return rv.ErrorCode();
 }
 
@@ -253,7 +253,7 @@ nsDOMAttributeMap::SetNamedItemNS(nsIDOMAttr* aAttr, nsIDOMAttr** aReturn)
   NS_ENSURE_ARG(attribute);
 
   ErrorResult rv;
-  *aReturn = SetNamedItemNS(*attribute, rv).get();
+  *aReturn = SetNamedItemNS(*attribute, rv).take();
   return rv.ErrorCode();
 }
 
@@ -356,7 +356,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsAString& aName,
   NS_ENSURE_ARG_POINTER(aReturn);
 
   ErrorResult rv;
-  *aReturn = RemoveNamedItem(aName, rv).get();
+  *aReturn = RemoveNamedItem(aName, rv).take();
   return rv.ErrorCode();
 }
 
@@ -497,7 +497,7 @@ nsDOMAttributeMap::RemoveNamedItemNS(const nsAString& aNamespaceURI,
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   ErrorResult rv;
-  *aReturn = RemoveNamedItemNS(aNamespaceURI, aLocalName, rv).get();
+  *aReturn = RemoveNamedItemNS(aNamespaceURI, aLocalName, rv).take();
   return rv.ErrorCode();
 }
 

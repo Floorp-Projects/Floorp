@@ -14,7 +14,7 @@
 #include "DOMSVGPathSeg.h"
 
 nsresult NS_NewSVGPathElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 class gfxContext;
 
@@ -34,10 +34,10 @@ friend class nsSVGPathFrame;
 
 protected:
   friend nsresult (::NS_NewSVGPathElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
+                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
-  SVGPathElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGPathElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
 public:
   // nsIContent interface

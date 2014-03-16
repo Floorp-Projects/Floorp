@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS_INHERITED4(SVGTitleElement, SVGTitleElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGTitleElement::SVGTitleElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGTitleElement::SVGTitleElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGTitleElementBase(aNodeInfo)
 {
   AddMutationObserver(this);

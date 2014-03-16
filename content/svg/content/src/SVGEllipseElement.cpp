@@ -33,7 +33,7 @@ nsSVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGEllipseElement::SVGEllipseElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGEllipseElement::SVGEllipseElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGEllipseElementBase(aNodeInfo)
 {
 }

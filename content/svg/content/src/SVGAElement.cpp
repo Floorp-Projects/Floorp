@@ -60,7 +60,7 @@ NS_IMPL_RELEASE_INHERITED(SVGAElement, SVGAElementBase)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGAElement::SVGAElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGAElement::SVGAElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGAElementBase(aNodeInfo)
   , Link(MOZ_THIS_IN_INITIALIZER_LIST())
 {

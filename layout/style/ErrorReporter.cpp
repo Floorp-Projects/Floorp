@@ -101,9 +101,9 @@ InitGlobals()
     return false;
   }
 
-  sConsoleService = cs.forget().get();
-  sScriptErrorFactory = sf.forget().get();
-  sStringBundle = sb.forget().get();
+  cs.forget(&sConsoleService);
+  sf.forget(&sScriptErrorFactory);
+  sb.forget(&sStringBundle);
 
   return true;
 }

@@ -1340,7 +1340,7 @@ RDFContentSinkImpl::SplitExpatName(const char16_t *aExpatName,
     }
 
     const nsDependentSubstring& nameSpaceURI = Substring(aExpatName, uriEnd);
-    *aLocalName = NS_NewAtom(Substring(nameStart, pos)).get();
+    *aLocalName = NS_NewAtom(Substring(nameStart, pos)).take();
     return nameSpaceURI;
 }
 

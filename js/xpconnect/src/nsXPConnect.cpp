@@ -1423,18 +1423,22 @@ ReadScriptOrFunction(nsIObjectInputStream *stream, JSContext *cx,
     nsJSPrincipals* principal = nullptr;
     nsCOMPtr<nsIPrincipal> readPrincipal;
     if (flags & HAS_PRINCIPALS_FLAG) {
-        rv = stream->ReadObject(true, getter_AddRefs(readPrincipal));
+        nsCOMPtr<nsISupports> supports;
+        rv = stream->ReadObject(true, getter_AddRefs(supports));
         if (NS_FAILED(rv))
             return rv;
+        readPrincipal = do_QueryInterface(supports);
         principal = nsJSPrincipals::get(readPrincipal);
     }
 
     nsJSPrincipals* originPrincipal = nullptr;
     nsCOMPtr<nsIPrincipal> readOriginPrincipal;
     if (flags & HAS_ORIGIN_PRINCIPALS_FLAG) {
-        rv = stream->ReadObject(true, getter_AddRefs(readOriginPrincipal));
+        nsCOMPtr<nsISupports> supports;
+        rv = stream->ReadObject(true, getter_AddRefs(supports));
         if (NS_FAILED(rv))
             return rv;
+        readOriginPrincipal = do_QueryInterface(supports);
         originPrincipal = nsJSPrincipals::get(readOriginPrincipal);
     }
 

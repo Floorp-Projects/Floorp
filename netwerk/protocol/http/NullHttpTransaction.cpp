@@ -52,8 +52,7 @@ void
 NullHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **outCB)
 {
   nsCOMPtr<nsIInterfaceRequestor> copyCB(mCallbacks);
-  *outCB = copyCB;
-  copyCB.forget();
+  *outCB = copyCB.forget().take();
 }
 
 void

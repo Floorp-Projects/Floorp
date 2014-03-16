@@ -20,7 +20,7 @@ SVGMetadataElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGMetadataElement::SVGMetadataElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGMetadataElement::SVGMetadataElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGMetadataElementBase(aNodeInfo)
 {
 }

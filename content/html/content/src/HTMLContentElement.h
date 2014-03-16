@@ -19,7 +19,7 @@ class DistributedContentList;
 class HTMLContentElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLContentElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLContentElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLContentElement();
 
   // nsISupports

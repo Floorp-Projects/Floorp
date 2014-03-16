@@ -130,7 +130,7 @@ public:
 
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  HTMLSelectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                     FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLSelectElement();
 

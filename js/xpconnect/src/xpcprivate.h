@@ -1645,7 +1645,7 @@ public:
     void
     SetCallback(nsIXPCScriptable* s) {mCallback = s;}
     void
-    SetCallback(already_AddRefed<nsIXPCScriptable> s) {mCallback = s;}
+    SetCallback(already_AddRefed<nsIXPCScriptable>&& s) {mCallback = s;}
 
     void
     SetScriptableShared(XPCNativeScriptableShared* shared) {mShared = shared;}
@@ -1689,7 +1689,7 @@ public:
         : mCallback(si.GetCallback()), mFlags(si.GetFlags()),
           mInterfacesBitmap(si.GetInterfacesBitmap()) {}
 
-    XPCNativeScriptableCreateInfo(already_AddRefed<nsIXPCScriptable> callback,
+    XPCNativeScriptableCreateInfo(already_AddRefed<nsIXPCScriptable>&& callback,
                                   XPCNativeScriptableFlags flags,
                                   uint32_t interfacesBitmap)
         : mCallback(callback), mFlags(flags),
@@ -1709,7 +1709,7 @@ public:
     GetInterfacesBitmap() const     {return mInterfacesBitmap;}
 
     void
-    SetCallback(already_AddRefed<nsIXPCScriptable> callback)
+    SetCallback(already_AddRefed<nsIXPCScriptable>&& callback)
         {mCallback = callback;}
 
     void
@@ -2160,11 +2160,11 @@ protected:
     XPCWrappedNative(); // not implemented
 
     // This ctor is used if this object will have a proto.
-    XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
+    XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                      XPCWrappedNativeProto* aProto);
 
     // This ctor is used if this object will NOT have a proto.
-    XPCWrappedNative(already_AddRefed<nsISupports> aIdentity,
+    XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                      XPCWrappedNativeScope* aScope,
                      XPCNativeSet* aSet);
 

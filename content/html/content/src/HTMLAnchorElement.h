@@ -24,7 +24,7 @@ public:
   using Element::GetText;
   using Element::SetText;
 
-  HTMLAnchorElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+  HTMLAnchorElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
     , Link(MOZ_THIS_IN_INITIALIZER_LIST())
   {

@@ -11,7 +11,7 @@
 #include "SVGMotionSMILAnimationFunction.h"
 
 nsresult NS_NewSVGAnimateMotionElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo> aNodeInfo);
+                                       already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -19,12 +19,12 @@ namespace dom {
 class SVGAnimateMotionElement MOZ_FINAL : public SVGAnimationElement
 {
 protected:
-  SVGAnimateMotionElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  SVGAnimateMotionElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
 
   SVGMotionSMILAnimationFunction mAnimationFunction;
   friend nsresult
     (::NS_NewSVGAnimateMotionElement(nsIContent **aResult,
-                                     already_AddRefed<nsINodeInfo> aNodeInfo));
+                                     already_AddRefed<nsINodeInfo>&& aNodeInfo));
 
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

@@ -18,7 +18,7 @@ class HTMLBRElement MOZ_FINAL : public nsGenericHTMLElement,
                                 public nsIDOMHTMLBRElement
 {
 public:
-  HTMLBRElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLBRElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLBRElement();
 
   // nsISupports

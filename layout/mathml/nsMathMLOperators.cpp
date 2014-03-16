@@ -238,8 +238,10 @@ InitOperators(void)
       nsAutoCString name;
       nsAutoString attributes;
       while ((NS_SUCCEEDED(iterator->HasMoreElements(&more))) && more) {
+        nsCOMPtr<nsISupports> supports;
         nsCOMPtr<nsIPropertyElement> element;
-        if (NS_SUCCEEDED(iterator->GetNext(getter_AddRefs(element)))) {
+        if (NS_SUCCEEDED(iterator->GetNext(getter_AddRefs(supports)))) {
+          element = do_QueryInterface(supports);
           if (NS_SUCCEEDED(element->GetKey(name)) &&
               NS_SUCCEEDED(element->GetValue(attributes))) {
             // expected key: operator.\uNNNN.{infix,postfix,prefix}

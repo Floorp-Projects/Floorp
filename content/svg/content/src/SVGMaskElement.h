@@ -13,7 +13,7 @@
 class nsSVGMaskFrame;
 
 nsresult NS_NewSVGMaskElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo> aNodeInfo);
+                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -28,8 +28,8 @@ class SVGMaskElement MOZ_FINAL : public SVGMaskElementBase
 
 protected:
   friend nsresult (::NS_NewSVGMaskElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGMaskElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGMaskElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx,
                              JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 

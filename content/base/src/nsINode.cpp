@@ -2192,7 +2192,7 @@ nsINode::GetBoundMutationObservers(nsTArray<nsRefPtr<nsDOMMutationObserver> >& a
       nsCOMPtr<nsDOMMutationObserver> mo = do_QueryInterface(objects->ObjectAt(i));
       if (mo) {
         MOZ_ASSERT(!aResult.Contains(mo));
-        aResult.AppendElement(mo.forget());
+        aResult.AppendElement(mo);
       }
     }
   }
@@ -2545,7 +2545,7 @@ nsresult
 nsINode::QuerySelectorAll(const nsAString& aSelector, nsIDOMNodeList **aReturn)
 {
   ErrorResult rv;
-  *aReturn = nsINode::QuerySelectorAll(aSelector, rv).get();
+  *aReturn = nsINode::QuerySelectorAll(aSelector, rv).take();
   return rv.ErrorCode();
 }
 

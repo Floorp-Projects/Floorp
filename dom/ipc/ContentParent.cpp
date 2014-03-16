@@ -660,7 +660,8 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
             tp->SetOwnerElement(aFrameElement);
 
             PBrowserParent* browser = cp->SendPBrowserConstructor(
-                tp.forget().get(), // DeallocPBrowserParent() releases this ref.
+                // DeallocPBrowserParent() releases this ref.
+                tp.forget().take(),
                 aContext.AsIPCTabContext(),
                 chromeFlags);
             return static_cast<TabParent*>(browser);
@@ -724,7 +725,8 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     nsRefPtr<TabParent> tp = new TabParent(p, aContext, chromeFlags);
     tp->SetOwnerElement(aFrameElement);
     PBrowserParent* browser = p->SendPBrowserConstructor(
-        nsRefPtr<TabParent>(tp).forget().get(), // DeallocPBrowserParent() releases this ref.
+        // DeallocPBrowserParent() releases this ref.
+        nsRefPtr<TabParent>(tp).forget().take(),
         aContext.AsIPCTabContext(),
         chromeFlags);
 
@@ -2218,7 +2220,7 @@ ContentParent::AllocPDeviceStorageRequestParent(const DeviceStorageParams& aPara
       return nullptr;
   }
   result->Dispatch();
-  return result.forget().get();
+  return result.forget().take();
 }
 
 bool
@@ -2236,7 +2238,7 @@ ContentParent::AllocPFileSystemRequestParent(const FileSystemParams& aParams)
   if (!result->Dispatch(this, aParams)) {
     return nullptr;
   }
-  return result.forget().get();
+  return result.forget().take();
 }
 
 bool

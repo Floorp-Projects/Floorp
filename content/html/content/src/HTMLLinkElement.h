@@ -21,7 +21,7 @@ class HTMLLinkElement MOZ_FINAL : public nsGenericHTMLElement,
                                   public Link
 {
 public:
-  HTMLLinkElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLLinkElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLLinkElement();
 
   // nsISupports

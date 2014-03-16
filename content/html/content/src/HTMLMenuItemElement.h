@@ -21,7 +21,7 @@ class HTMLMenuItemElement MOZ_FINAL : public nsGenericHTMLElement,
 public:
   using mozilla::dom::Element::GetText;
 
-  HTMLMenuItemElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  HTMLMenuItemElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                       mozilla::dom::FromParser aFromParser);
   virtual ~HTMLMenuItemElement();
 

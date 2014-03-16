@@ -5,9 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_PP_JS_MODULES += [
+    'NativeApp.jsm',
     'WebappOSUtils.jsm',
-    'WebappsInstaller.jsm',
 ]
+
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
 if CONFIG['MOZ_BUILD_APP'] == 'mobile/android':
     DEFINES['MOZ_FENNEC'] = True

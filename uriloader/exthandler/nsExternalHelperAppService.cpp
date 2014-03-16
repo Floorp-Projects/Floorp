@@ -2515,7 +2515,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const nsACStri
 
   // (1) Ask the OS for a mime info
   bool found;
-  *_retval = GetMIMEInfoFromOS(typeToUse, aFileExt, &found).get();
+  *_retval = GetMIMEInfoFromOS(typeToUse, aFileExt, &found).take();
   LOG(("OS gave back 0x%p - found: %i\n", *_retval, found));
   // If we got no mimeinfo, something went wrong. Probably lack of memory.
   if (!*_retval)

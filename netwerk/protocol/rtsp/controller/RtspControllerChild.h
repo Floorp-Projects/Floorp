@@ -45,7 +45,7 @@ class RtspControllerChild : public nsIStreamingProtocolController
   bool RecvAsyncOpenFailed(const nsresult& reason);
   void AddIPDLReference();
   void ReleaseIPDLReference();
-  void AddMetaData(already_AddRefed<nsIStreamingProtocolMetaData> meta);
+  void AddMetaData(already_AddRefed<nsIStreamingProtocolMetaData>&& meta);
   int  GetMetaDataLength();
 
  private:

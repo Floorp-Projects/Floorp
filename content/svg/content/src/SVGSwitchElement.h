@@ -11,7 +11,7 @@
 class nsSVGSwitchFrame;
 
 nsresult NS_NewSVGSwitchElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo> aNodeInfo);
+                                already_AddRefed<nsINodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -23,8 +23,8 @@ class SVGSwitchElement MOZ_FINAL : public SVGSwitchElementBase
   friend class nsSVGSwitchFrame;
 protected:
   friend nsresult (::NS_NewSVGSwitchElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo> aNodeInfo));
-  SVGSwitchElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
+  SVGSwitchElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 

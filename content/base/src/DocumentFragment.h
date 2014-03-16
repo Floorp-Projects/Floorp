@@ -51,7 +51,7 @@ public:
   // interface nsIDOMDocumentFragment
   NS_DECL_NSIDOMDOCUMENTFRAGMENT
 
-  DocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
+  DocumentFragment(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : FragmentOrElement(aNodeInfo), mHost(nullptr)
   {
     Init();

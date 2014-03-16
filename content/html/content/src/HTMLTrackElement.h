@@ -26,7 +26,7 @@ class WebVTTListener;
 class HTMLTrackElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLTrackElement(already_AddRefed<nsINodeInfo> aNodeInfo);
+  HTMLTrackElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLTrackElement();
 
   // nsISupports

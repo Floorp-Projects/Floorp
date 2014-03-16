@@ -7,12 +7,12 @@
 #define nsIHTMLCollection_h___
 
 #include "nsIDOMHTMLCollection.h"
+#include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 
 class nsINode;
 class nsString;
-template<class> class nsTArray;
 
 namespace mozilla {
 class ErrorResult;

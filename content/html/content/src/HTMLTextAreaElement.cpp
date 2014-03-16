@@ -48,7 +48,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(TextArea)
 namespace mozilla {
 namespace dom {
 
-HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+HTMLTextAreaElement::HTMLTextAreaElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                                          FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo),
     mValueChanged(false),

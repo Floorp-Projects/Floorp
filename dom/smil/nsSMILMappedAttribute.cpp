@@ -105,7 +105,7 @@ nsSMILMappedAttribute::SetAnimValue(const nsSMILValue& aValue)
 
   // Set the string as this mapped attribute's animated value.
   nsStringBuffer* valStrBuf =
-    nsCSSValue::BufferFromString(nsString(valStr)).get();
+    nsCSSValue::BufferFromString(nsString(valStr)).take();
   nsresult rv = mElement->SetProperty(SMIL_MAPPED_ATTR_ANIMVAL,
                                       attrName, valStrBuf,
                                       ReleaseStringBufferPropertyValue);

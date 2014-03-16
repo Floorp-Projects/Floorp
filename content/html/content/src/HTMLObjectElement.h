@@ -22,7 +22,7 @@ class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
                                   , public nsIConstraintValidation
 {
 public:
-  HTMLObjectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
+  HTMLObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                     FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLObjectElement();
 

@@ -896,7 +896,7 @@ nsLocation::GetSourceBaseURL(JSContext* cx, nsIURI** sourceURL)
   NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
   nsIDocument* doc = window->GetDoc();
   NS_ENSURE_TRUE(doc, NS_OK);
-  *sourceURL = doc->GetBaseURI().get();
+  *sourceURL = doc->GetBaseURI().take();
   return NS_OK;
 }
 

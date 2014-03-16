@@ -704,7 +704,7 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
     i++;
   }
   *aValue = value * sign;
-  *aUnit = NS_NewAtom(StringTail(aString, j-i)).get();
+  *aUnit = NS_NewAtom(StringTail(aString, j-i)).take();
 }
 
 void

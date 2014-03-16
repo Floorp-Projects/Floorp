@@ -22,7 +22,7 @@ class VideoFrame {
 public:
   typedef mozilla::layers::Image Image;
 
-  VideoFrame(already_AddRefed<Image> aImage, const gfxIntSize& aIntrinsicSize);
+  VideoFrame(already_AddRefed<Image>& aImage, const gfxIntSize& aIntrinsicSize);
   VideoFrame();
   ~VideoFrame();
 
@@ -89,7 +89,7 @@ public:
   VideoSegment();
   ~VideoSegment();
 
-  void AppendFrame(already_AddRefed<Image> aImage, TrackTicks aDuration,
+  void AppendFrame(already_AddRefed<Image>&& aImage, TrackTicks aDuration,
                    const IntSize& aIntrinsicSize);
   const VideoFrame* GetFrameAt(TrackTicks aOffset, TrackTicks* aStart = nullptr)
   {

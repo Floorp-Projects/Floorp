@@ -63,7 +63,7 @@ function test() {
     gBrowser.removeTab(tab);
 
     // The installation may have created a XUL alert window
-    // (see webappsUI.installationSuccessNotification).
+    // (see notifyInstallSuccess in WebappManager.jsm).
     // It need to be closed before the test finishes.
     var browsers = windowMediator.getEnumerator('alert:alert');
       while (browsers.hasMoreElements()) {

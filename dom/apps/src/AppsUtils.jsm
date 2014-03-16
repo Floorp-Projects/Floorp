@@ -208,7 +208,7 @@ this.AppsUtils = {
     isCoreApp = app.basePath == this.getCoreAppsBasePath();
 #endif
     debug(app.basePath + " isCoreApp: " + isCoreApp);
-    return { "path":  WebappOSUtils.getInstallPath(app),
+    return { "path": WebappOSUtils.getPackagePath(app),
              "isCoreApp": isCoreApp };
   },
 

@@ -22,7 +22,7 @@ SVGPolygonElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGPolygonElement::SVGPolygonElement(already_AddRefed<nsINodeInfo> aNodeInfo)
+SVGPolygonElement::SVGPolygonElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
   : SVGPolygonElementBase(aNodeInfo)
 {
 }
