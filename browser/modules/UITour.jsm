@@ -553,8 +553,8 @@ this.UITour = {
     if (!aWindowClosing) {
       this.hideHighlight(aWindow);
       this.hideInfo(aWindow);
-      aWindow.PanelUI.panel.removeAttribute("noautohide");
-      this.recreatePopup(aWindow.PanelUI.panel);
+      // Ensure the menu panel is hidden before calling recreatePopup so popup events occur.
+      this.hideMenu(aWindow, "appMenu");
     }
 
     this.endUrlbarCapture(aWindow);
@@ -911,6 +911,9 @@ this.UITour = {
 
         if (button.style == "link")
           el.setAttribute("class", "button-link");
+
+        if (button.style == "primary")
+          el.setAttribute("class", "button-primary");
 
         let callbackID = button.callbackID;
         el.addEventListener("command", event => {

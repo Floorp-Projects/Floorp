@@ -176,8 +176,18 @@ PromiseWorker.prototype = {
     let id = ++this._id;
     let message = {fun: fun, args: array, id: id};
     this._log("Posting message", message);
+    try {
+      this._worker.postMessage(message);
+    } catch (ex if typeof ex == "number") {
+      this._log("Could not post message", message, "due to xpcom error", ex);
+      // handle raw xpcom errors (see eg bug 961317)
+      return Promise.reject(new Components.Exception("Error in postMessage", ex));
+    } catch (ex) {
+      this._log("Could not post message", message, "due to error", ex);
+      return Promise.reject(ex);
+    }
+
     this._queue.push({deferred:deferred, closure: closure, id: id});
-    this._worker.postMessage(message);
     this._log("Message posted");
     return deferred.promise;
   }
