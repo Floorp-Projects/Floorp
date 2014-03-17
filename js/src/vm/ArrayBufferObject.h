@@ -53,6 +53,13 @@ class ArrayBufferObject : public JSObject
     static bool fun_slice_impl(JSContext *cx, CallArgs args);
 
   public:
+    static const uint8_t DATA_SLOT = 0;
+    static const uint8_t BYTE_LENGTH_SLOT = 1;
+    static const uint8_t VIEW_LIST_SLOT = 2;
+    static const uint8_t FLAGS_SLOT = 3;
+
+    static const uint8_t RESERVED_SLOTS = 4;
+
     static const Class class_;
 
     static const Class protoClass;
@@ -67,7 +74,7 @@ class ArrayBufferObject : public JSObject
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
-    static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes, bool clear = true,
+    static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes, void *contents = nullptr,
                                      NewObjectKind newKind = GenericObject);
 
     static JSObject *createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
@@ -84,57 +91,17 @@ class ArrayBufferObject : public JSObject
 
     static void obj_trace(JSTracer *trc, JSObject *obj);
 
-    static bool obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                                  MutableHandleObject objp, MutableHandleShape propp);
-    static bool obj_lookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                                   MutableHandleObject objp, MutableHandleShape propp);
-    static bool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
-                                  MutableHandleObject objp, MutableHandleShape propp);
-
-    static bool obj_defineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                  PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-    static bool obj_defineProperty(JSContext *cx, HandleObject obj,
-                                   HandlePropertyName name, HandleValue v,
-                                   PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-    static bool obj_defineElement(JSContext *cx, HandleObject obj, uint32_t index, HandleValue v,
-                                  PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-
-    static bool obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiver,
-                               HandleId id, MutableHandleValue vp);
-    static bool obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                HandlePropertyName name, MutableHandleValue vp);
-    static bool obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
-                               uint32_t index, MutableHandleValue vp);
-
-    static bool obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
-                               MutableHandleValue vp, bool strict);
-    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                                MutableHandleValue vp, bool strict);
-    static bool obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
-                               MutableHandleValue vp, bool strict);
-
-    static bool obj_getGenericAttributes(JSContext *cx, HandleObject obj,
-                                         HandleId id, unsigned *attrsp);
-    static bool obj_setGenericAttributes(JSContext *cx, HandleObject obj,
-                                         HandleId id, unsigned *attrsp);
-
-    static bool obj_deleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                                   bool *succeeded);
-    static bool obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
-                                  bool *succeeded);
-
-    static bool obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-                              MutableHandleValue statep, MutableHandleId idp);
-
     static void sweep(JSCompartment *rt);
 
     static void resetArrayBufferList(JSCompartment *rt);
     static bool saveArrayBufferList(JSCompartment *c, ArrayBufferVector &vector);
     static void restoreArrayBufferLists(ArrayBufferVector &vector);
 
+    static void *stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer);
+
     bool hasStealableContents() const {
         // Inline elements strictly adhere to the corresponding buffer.
-        if (!hasDynamicElements())
+        if (!ownsData())
             return false;
 
         // asm.js buffer contents are transferred by copying, just like inline
@@ -150,31 +117,12 @@ class ArrayBufferObject : public JSObject
         return !isNeutered();
     }
 
-    static bool stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
-                              uint8_t **data);
-
-    static void updateElementsHeader(js::ObjectElements *header, uint32_t bytes) {
-        header->initializedLength = bytes;
-
-        // NB: one or both of these fields is clobbered by GetViewList to store
-        // the 'views' link. Set them to 0 to effectively initialize 'views'
-        // to nullptr.
-        header->length = 0;
-        header->capacity = 0;
-    }
-
-    static void initElementsHeader(js::ObjectElements *header, uint32_t bytes) {
-        header->flags = 0;
-        updateElementsHeader(header, bytes);
-    }
-
-    static uint32_t headerInitializedLength(const js::ObjectElements *header) {
-        return header->initializedLength;
-    }
+    static void addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
+                                       JS::ObjectsExtraSizes *sizes);
 
     void addView(ArrayBufferViewObject *view);
 
-    void changeContents(JSContext *cx, ObjectElements *newHeader);
+    void changeContents(JSContext *cx, void *newData);
 
     /*
      * Ensure data is not stored inline in the object. Used when handing back a
@@ -182,28 +130,15 @@ class ArrayBufferObject : public JSObject
      */
     static bool ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buffer);
 
-    uint32_t byteLength() const {
-        return getElementsHeader()->initializedLength;
-    }
+    bool canNeuter(JSContext *cx);
 
-    /*
-     * Neuter all views of an ArrayBuffer.
-     */
-    static bool neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer);
+    /* Neuter this buffer and all its views. */
+    static void neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer, void *newData);
 
-    uint8_t * dataPointer() const;
+    uint8_t *dataPointer() const;
+    size_t byteLength() const;
 
-    /*
-     * Discard the ArrayBuffer contents, and use |newHeader| for the buffer's
-     * new contents.  (These new contents are zeroed, of identical size in
-     * memory as the current contents, but appear to be neutered and of zero
-     * length.  This is purely precautionary against stale indexes that were
-     * in-bounds with respect to the initial length but would not be after
-     * neutering.  This precaution will be removed once we're sure such stale
-     * indexing no longer happens.)  For asm.js buffers, at least, should
-     * be called after neuterViews().
-     */
-    void neuter(ObjectElements *newHeader, JSContext *cx);
+    void releaseData(FreeOp *fop);
 
     /*
      * Check if the arrayBuffer contains any data. This will return false for
@@ -213,19 +148,68 @@ class ArrayBufferObject : public JSObject
         return getClass() == &class_;
     }
 
-    bool isSharedArrayBuffer() const {
-        return getElementsHeader()->isSharedArrayBuffer();
+    bool isAsmJSArrayBuffer() const { return flags() & ASMJS_BUFFER; }
+    bool isSharedArrayBuffer() const { return flags() & SHARED_BUFFER; }
+    bool isNeutered() const { return flags() & NEUTERED_BUFFER; }
+
+    static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
+    static bool canNeuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer);
+
+    static void finalize(FreeOp *fop, JSObject *obj);
+
+  protected:
+    enum OwnsState {
+        DoesntOwnData = 0,
+        OwnsData = 1,
+    };
+
+    void setDataPointer(void *data, OwnsState ownsState);
+    void setByteLength(size_t length);
+
+    ArrayBufferViewObject *viewList() const;
+    void setViewList(ArrayBufferViewObject *viewsHead);
+    void setViewListNoBarrier(ArrayBufferViewObject *viewsHead);
+
+    enum ArrayBufferFlags {
+        // In the gcLiveArrayBuffers list.
+        IN_LIVE_LIST       =  0x1,
+
+        // The dataPointer() is owned by this buffer and should be released
+        // when no longer in use. Releasing the pointer may be done by either
+        // freeing or unmapping it, and how to do this is determined by the
+        // buffer's other flags.
+        OWNS_DATA          =  0x2,
+
+        ASMJS_BUFFER       =  0x4,
+        SHARED_BUFFER      =  0x8,
+        NEUTERED_BUFFER    = 0x10
+    };
+
+    uint32_t flags() const;
+    void setFlags(uint32_t flags);
+
+    bool inLiveList() const { return flags() & IN_LIVE_LIST; }
+    void setInLiveList(bool value) {
+        setFlags(value ? (flags() | IN_LIVE_LIST) : (flags() & ~IN_LIVE_LIST));
     }
 
-    bool isAsmJSArrayBuffer() const {
-        return getElementsHeader()->isAsmJSArrayBuffer();
+    bool ownsData() const { return flags() & OWNS_DATA; }
+    void setOwnsData(OwnsState owns) {
+        setFlags(owns ? (flags() | OWNS_DATA) : (flags() & ~OWNS_DATA));
     }
-    bool isNeutered() const {
-        return getElementsHeader()->isNeuteredBuffer();
+
+    void setIsAsmJSArrayBuffer() { setFlags(flags() | ASMJS_BUFFER); }
+    void setIsSharedArrayBuffer() { setFlags(flags() | SHARED_BUFFER); }
+    void setIsNeutered() { setFlags(flags() | NEUTERED_BUFFER); }
+
+    void initialize(size_t byteLength, void *data, OwnsState ownsState) {
+        setByteLength(byteLength);
+        setFlags(0);
+        setViewListNoBarrier(nullptr);
+        setDataPointer(data, ownsState);
     }
-    static bool prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer);
-    static bool neuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer);
-    static void releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj);
+
+    void releaseAsmJSArray(FreeOp *fop);
 };
 
 /*
@@ -249,23 +233,10 @@ class ArrayBufferViewObject : public JSObject
     /* ArrayBufferObjects point to a linked list of views, chained through this slot */
     static const size_t NEXT_VIEW_SLOT   = JS_TYPEDOBJ_SLOT_NEXT_VIEW;
 
-    /*
-     * When ArrayBufferObjects are traced during GC, they construct a linked
-     * list of ArrayBufferObjects with more than one view, chained through this
-     * slot of the first view of each ArrayBufferObject.
-     */
-    static const size_t NEXT_BUFFER_SLOT = JS_TYPEDOBJ_SLOT_NEXT_BUFFER;
-
   public:
     JSObject *bufferObject() const {
         return &getFixedSlot(BUFFER_SLOT).toObject();
     }
-
-    ArrayBufferObject *bufferLink() {
-        return static_cast<ArrayBufferObject*>(getFixedSlot(NEXT_BUFFER_SLOT).toPrivate());
-    }
-
-    inline void setBufferLink(ArrayBufferObject *buffer);
 
     ArrayBufferViewObject *nextView() const {
         return static_cast<ArrayBufferViewObject*>(getFixedSlot(NEXT_VIEW_SLOT).toPrivate());
@@ -273,11 +244,13 @@ class ArrayBufferViewObject : public JSObject
 
     inline void setNextView(ArrayBufferViewObject *view);
 
-    void prependToViews(ArrayBufferViewObject *viewsHead);
-
     void neuter(JSContext *cx);
 
     static void trace(JSTracer *trc, JSObject *obj);
+
+    uint8_t *dataPointer() {
+        return static_cast<uint8_t *>(getPrivate());
+    }
 };
 
 bool
@@ -322,13 +295,6 @@ bool IsArrayBuffer(HandleObject obj);
 bool IsArrayBuffer(JSObject *obj);
 ArrayBufferObject &AsArrayBuffer(HandleObject obj);
 ArrayBufferObject &AsArrayBuffer(JSObject *obj);
-
-inline void
-ArrayBufferViewObject::setBufferLink(ArrayBufferObject *buffer)
-{
-    setFixedSlot(NEXT_BUFFER_SLOT, PrivateValue(buffer));
-    PostBarrierTypedArrayObject(this);
-}
 
 inline void
 ArrayBufferViewObject::setNextView(ArrayBufferViewObject *view)
