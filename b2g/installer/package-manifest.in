@@ -783,15 +783,17 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/TelProtocolHandler.js
 @BINPATH@/components/B2GAboutRedirector.js
 @BINPATH@/components/FilePicker.js
-@BINPATH@/components/FxAccountsUIGlue.js
 @BINPATH@/components/HelperAppDialog.js
 @BINPATH@/components/DownloadsUI.js
+
+#ifdef MOZ_SERVICES_FXACCOUNTS
+@BINPATH@/components/FxAccountsUIGlue.js
+@BINPATH@/components/services_fxaccounts.xpt
+#endif
 
 @BINPATH@/components/DataStore.manifest
 @BINPATH@/components/DataStoreService.js
 @BINPATH@/components/dom_datastore.xpt
-
-@BINPATH@/components/services_fxaccounts.xpt
 
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechsynth.xpt
