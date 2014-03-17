@@ -29,7 +29,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
+                                  "resource://gre/modules/Promise.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadLegacyTransfer
@@ -89,9 +89,25 @@ DownloadLegacyTransfer.prototype = {
 
     if ((aStateFlags & Ci.nsIWebProgressListener.STATE_START) &&
         (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {
+
+      // If the request's response has been blocked by Windows Parental Controls
+      // with an HTTP 450 error code, we must cancel the request synchronously.
+      let blockedByParentalControls = aRequest instanceof Ci.nsIHttpChannel &&
+                                      aRequest.responseStatus == 450;
+      if (blockedByParentalControls) {
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+      }
+
       // The main request has just started.  Wait for the associated Download
       // object to be available before notifying.
       this._deferDownload.promise.then(download => {
+        // If the request was blocked, now that we have the download object we
+        // should set a flag that can be retrieved later when handling the
+        // cancellation so that the proper error can be thrown.
+        if (blockedByParentalControls) {
+          download._blockedByParentalControls = true;
+        }
+
         download.saver.onTransferStarted(
                          aRequest,
                          this._cancelable instanceof Ci.nsIHelperAppLauncher);
