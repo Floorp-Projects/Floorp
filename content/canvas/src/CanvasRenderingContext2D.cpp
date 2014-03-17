@@ -988,6 +988,10 @@ CanvasRenderingContext2D::SetIsOpaque(bool isOpaque)
     ClearTarget();
   }
 
+  if (mOpaque) {
+    EnsureTarget();
+  }
+
   return NS_OK;
 }
 
@@ -1060,6 +1064,10 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value
   if (Preferences::GetBool("gfx.canvas.willReadFrequently.enable", false)) {
     // Use software when there is going to be a lot of readback
     mForceSoftware = attributes.mWillReadFrequently;
+  }
+
+  if (!attributes.mAlpha) {
+    SetIsOpaque(true);
   }
 
   return NS_OK;
@@ -3807,6 +3815,30 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   // inherited from Thebes canvas and is no longer true
   uint8_t* dst = data + dstWriteRect.y * (aWidth * 4) + dstWriteRect.x * 4;
 
+  if (mOpaque) {
+    for (int32_t j = 0; j < dstWriteRect.height; ++j) {
+      for (int32_t i = 0; i < dstWriteRect.width; ++i) {
+        // XXX Is there some useful swizzle MMX we can use here?
+#if MOZ_LITTLE_ENDIAN
+        uint8_t b = *src++;
+        uint8_t g = *src++;
+        uint8_t r = *src++;
+        src++;
+#else
+        src++;
+        uint8_t r = *src++;
+        uint8_t g = *src++;
+        uint8_t b = *src++;
+#endif
+        *dst++ = r;
+        *dst++ = g;
+        *dst++ = b;
+        *dst++ = 255;
+      }
+      src += srcStride - (dstWriteRect.width * 4);
+      dst += (aWidth * 4) - (dstWriteRect.width * 4);
+    }
+  } else
   for (int32_t j = 0; j < dstWriteRect.height; ++j) {
     for (int32_t i = 0; i < dstWriteRect.width; ++i) {
       // XXX Is there some useful swizzle MMX we can use here?

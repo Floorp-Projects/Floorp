@@ -362,7 +362,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         uint32_t bufferByteLength = buffer->byteLength();
         uint32_t arrayByteLength = obj->byteLength();
         uint32_t arrayByteOffset = obj->byteOffset();
-        JS_ASSERT(buffer->dataPointer() <= obj->viewData());
+        JS_ASSERT_IF(!buffer->isNeutered(), buffer->dataPointer() <= obj->viewData());
         JS_ASSERT(bufferByteLength - arrayByteOffset >= arrayByteLength);
         JS_ASSERT(arrayByteOffset <= bufferByteLength);
 
