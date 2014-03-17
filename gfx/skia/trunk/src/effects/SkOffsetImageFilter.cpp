@@ -15,7 +15,7 @@
 #include "SkPaint.h"
 
 bool SkOffsetImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source,
-                                        const SkMatrix& matrix,
+                                        const Context& ctx,
                                         SkBitmap* result,
                                         SkIPoint* offset) const {
     SkImageFilter* input = getInput(0);
@@ -26,26 +26,23 @@ bool SkOffsetImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source,
 #else
     if (!cropRectIsSet()) {
 #endif
-        if (input && !input->filterImage(proxy, source, matrix, &src, &srcOffset)) {
+        if (input && !input->filterImage(proxy, source, ctx, &src, &srcOffset)) {
             return false;
         }
 
         SkVector vec;
-        matrix.mapVectors(&vec, &fOffset, 1);
+        ctx.ctm().mapVectors(&vec, &fOffset, 1);
 
         offset->fX = srcOffset.fX + SkScalarRoundToInt(vec.fX);
         offset->fY = srcOffset.fY + SkScalarRoundToInt(vec.fY);
         *result = src;
     } else {
-        if (input && !input->filterImage(proxy, source, matrix, &src, &srcOffset)) {
+        if (input && !input->filterImage(proxy, source, ctx, &src, &srcOffset)) {
             return false;
         }
 
         SkIRect bounds;
-        src.getBounds(&bounds);
-        bounds.offset(srcOffset);
-
-        if (!applyCropRect(&bounds, matrix)) {
+        if (!this->applyCropRect(ctx, src, srcOffset, &bounds)) {
             return false;
         }
 
@@ -58,7 +55,9 @@ bool SkOffsetImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source,
         paint.setXfermodeMode(SkXfermode::kSrc_Mode);
         canvas.translate(SkIntToScalar(srcOffset.fX - bounds.fLeft),
                          SkIntToScalar(srcOffset.fY - bounds.fTop));
-        canvas.drawBitmap(src, fOffset.x(), fOffset.y(), &paint);
+        SkVector vec;
+        ctx.ctm().mapVectors(&vec, &fOffset, 1);
+        canvas.drawBitmap(src, vec.x(), vec.y(), &paint);
         *result = device->accessBitmap(false);
         offset->fX = bounds.fLeft;
         offset->fY = bounds.fTop;
@@ -82,9 +81,10 @@ bool SkOffsetImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm
     SkVector vec;
     ctm.mapVectors(&vec, &fOffset, 1);
 
-    *dst = src;
-    dst->offset(-SkScalarCeilToInt(vec.fX), -SkScalarCeilToInt(vec.fY));
-    dst->join(src);
+    SkIRect bounds = src;
+    bounds.offset(-SkScalarCeilToInt(vec.fX), -SkScalarCeilToInt(vec.fY));
+    bounds.join(src);
+    *dst = bounds;
     return true;
 }
 

@@ -1379,6 +1379,11 @@ void SkScalerContext_Mac::generateFontMetrics(SkPaint::FontMetrics* mx,
     theMetrics.fXMin         = CGToScalar( CGRectGetMinX_inline(theBounds));
     theMetrics.fXMax         = CGToScalar( CGRectGetMaxX_inline(theBounds));
     theMetrics.fXHeight      = CGToScalar( CTFontGetXHeight(fCTFont));
+    theMetrics.fUnderlineThickness = CGToScalar( CTFontGetUnderlineThickness(fCTFont));
+    theMetrics.fUnderlinePosition = -CGToScalar( CTFontGetUnderlinePosition(fCTFont));
+
+    theMetrics.fFlags |= SkPaint::FontMetrics::kUnderlineThinknessIsValid_Flag;
+    theMetrics.fFlags |= SkPaint::FontMetrics::kUnderlinePositionIsValid_Flag;
 
     if (mx != NULL) {
         *mx = theMetrics;
@@ -2312,24 +2317,3 @@ SkFontMgr* SkFontMgr::Factory() {
     return SkNEW(SkFontMgr_Mac);
 }
 #endif
-
-SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
-                                       const char famillyName[],
-                                       SkTypeface::Style style)
-{
-    SkDEBUGFAIL("SkFontHost::FindTypeface unimplemented");
-    return NULL;
-}
-
-SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream*)
-{
-    SkDEBUGFAIL("SkFontHost::CreateTypeface unimplemented");
-    return NULL;
-}
-
-SkTypeface* SkFontHost::CreateTypefaceFromFile(char const*)
-{
-    SkDEBUGFAIL("SkFontHost::CreateTypefaceFromFile unimplemented");
-    return NULL;
-}
-

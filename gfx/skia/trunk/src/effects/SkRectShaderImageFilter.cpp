@@ -52,12 +52,11 @@ SkRectShaderImageFilter::~SkRectShaderImageFilter() {
 
 bool SkRectShaderImageFilter::onFilterImage(Proxy* proxy,
                                             const SkBitmap& source,
-                                            const SkMatrix& ctm,
+                                            const Context& ctx,
                                             SkBitmap* result,
                                             SkIPoint* offset) const {
     SkIRect bounds;
-    source.getBounds(&bounds);
-    if (!this->applyCropRect(&bounds, ctm)) {
+    if (!this->applyCropRect(ctx, source, SkIPoint::Make(0, 0), &bounds)) {
         return false;
     }
 
@@ -69,8 +68,8 @@ bool SkRectShaderImageFilter::onFilterImage(Proxy* proxy,
     SkCanvas canvas(device.get());
     SkPaint paint;
     paint.setShader(fShader);
-    SkMatrix matrix;
-    matrix.setTranslate(-SkIntToScalar(bounds.fLeft), -SkIntToScalar(bounds.fTop));
+    SkMatrix matrix(ctx.ctm());
+    matrix.postTranslate(SkIntToScalar(-bounds.left()), SkIntToScalar(-bounds.top()));
     fShader->setLocalMatrix(matrix);
     SkRect rect = SkRect::MakeWH(SkIntToScalar(bounds.width()), SkIntToScalar(bounds.height()));
     canvas.drawRect(rect, paint);

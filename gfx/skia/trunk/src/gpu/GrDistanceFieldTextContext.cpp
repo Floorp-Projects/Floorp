@@ -8,6 +8,7 @@
 #include "GrDistanceFieldTextContext.h"
 #include "GrAtlas.h"
 #include "GrDrawTarget.h"
+#include "GrDrawTargetCaps.h"
 #include "GrFontScaler.h"
 #include "SkGlyphCache.h"
 #include "GrIndexBuffer.h"
@@ -27,6 +28,12 @@ static const int kBaseDFFontSize = 32;
 SK_CONF_DECLARE(bool, c_DumpFontCache, "gpu.dumpFontCache", false,
                 "Dump the contents of the font cache before every purge.");
 
+#if SK_FORCE_DISTANCEFIELD_FONTS
+static const bool kForceDistanceFieldFonts = true;
+#else
+static const bool kForceDistanceFieldFonts = false;
+#endif
+
 GrDistanceFieldTextContext::GrDistanceFieldTextContext(GrContext* context,
                                                        const SkDeviceProperties& properties)
                                                     : GrTextContext(context, properties) {
@@ -44,8 +51,10 @@ GrDistanceFieldTextContext::~GrDistanceFieldTextContext() {
 }
 
 bool GrDistanceFieldTextContext::canDraw(const SkPaint& paint) {
-    return !paint.getRasterizer() && !paint.getMaskFilter() &&
+    return (kForceDistanceFieldFonts || paint.isDistanceFieldTextTEMP()) &&
+           !paint.getRasterizer() && !paint.getMaskFilter() &&
            paint.getStyle() == SkPaint::kFill_Style &&
+           fContext->getTextTarget()->caps()->shaderDerivativeSupport() &&
            !SkDraw::ShouldDrawTextAsPaths(paint, fContext->getMatrix());
 }
 
@@ -72,8 +81,9 @@ void GrDistanceFieldTextContext::flushGlyphs() {
         GrTextureParams params(SkShader::kRepeat_TileMode, GrTextureParams::kBilerp_FilterMode);
 
         // This effect could be stored with one of the cache objects (atlas?)
+        SkISize size = fStrike->getAtlasSize();
         drawState->addCoverageEffect(
-                                GrDistanceFieldTextureEffect::Create(fCurrTexture, params),
+                                GrDistanceFieldTextureEffect::Create(fCurrTexture, params, size),
                                 kGlyphCoordsAttributeIndex)->unref();
 
         if (!GrPixelConfigIsAlphaOnly(fCurrTexture->config())) {
@@ -158,13 +168,13 @@ void GrDistanceFieldTextContext::drawPackedGlyph(GrGlyph::PackedID packed,
     }
 */
     if (NULL == glyph->fPlot) {
-        if (fStrike->getGlyphAtlas(glyph, scaler)) {
+        if (fStrike->addGlyphToAtlas(glyph, scaler)) {
             goto HAS_ATLAS;
         }
 
         // try to clear out an unused plot before we flush
-        fContext->getFontCache()->freePlotExceptFor(fStrike);
-        if (fStrike->getGlyphAtlas(glyph, scaler)) {
+        if (fContext->getFontCache()->freeUnusedPlot(fStrike) &&
+            fStrike->addGlyphToAtlas(glyph, scaler)) {
             goto HAS_ATLAS;
         }
 
@@ -178,10 +188,9 @@ void GrDistanceFieldTextContext::drawPackedGlyph(GrGlyph::PackedID packed,
         this->flushGlyphs();
         fContext->flush();
 
-        // try to purge
-        fContext->getFontCache()->purgeExceptFor(fStrike);
-        // need to use new flush count here
-        if (fStrike->getGlyphAtlas(glyph, scaler)) {
+        // we should have an unused plot now
+        if (fContext->getFontCache()->freeUnusedPlot(fStrike) &&
+            fStrike->addGlyphToAtlas(glyph, scaler)) {
             goto HAS_ATLAS;
         }
 
@@ -269,16 +278,17 @@ HAS_ATLAS:
     GrFixed tw = SkIntToFixed(glyph->fBounds.width());
     GrFixed th = SkIntToFixed(glyph->fBounds.height());
 
+    static const size_t kVertexSize = 2 * sizeof(SkPoint);
     fVertices[2*fCurrVertex].setRectFan(sx,
                                         sy,
                                         sx + width,
                                         sy + height,
-                                        2 * sizeof(SkPoint));
+                                        kVertexSize);
     fVertices[2*fCurrVertex+1].setRectFan(SkFixedToFloat(texture->normalizeFixedX(tx)),
                                           SkFixedToFloat(texture->normalizeFixedY(ty)),
                                           SkFixedToFloat(texture->normalizeFixedX(tx + tw)),
                                           SkFixedToFloat(texture->normalizeFixedY(ty + th)),
-                                          2 * sizeof(SkPoint));
+                                          kVertexSize);
     fCurrVertex += 4;
 }
 
@@ -298,7 +308,7 @@ inline void GrDistanceFieldTextContext::init(const GrPaint& paint, const SkPaint
     fSkPaint.setTextSize(SkIntToScalar(kBaseDFFontSize));
     fSkPaint.setLCDRenderText(false);
     fSkPaint.setAutohinted(false);
-    fSkPaint.setSubpixelText(false);
+    fSkPaint.setSubpixelText(true);
 }
 
 inline void GrDistanceFieldTextContext::finish() {

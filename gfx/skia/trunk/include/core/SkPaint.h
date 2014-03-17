@@ -118,6 +118,8 @@ public:
         kAutoHinting_Flag     = 0x800,  //!< mask to force Freetype's autohinter
         kVerticalText_Flag    = 0x1000,
         kGenA8FromLCD_Flag    = 0x2000, // hack for GDI -- do not use if you can help it
+        kDistanceFieldTextTEMP_Flag = 0x4000, //!< TEMPORARY mask to enable distance fields
+                                              // currently overrides LCD and subpixel rendering
         // when adding extra flags, note that the fFlags member is specified
         // with a bit-width and you'll have to expand it.
 
@@ -283,6 +285,19 @@ public:
                             flags, false to clear it.
     */
     void setDevKernText(bool devKernText);
+
+    /** Helper for getFlags(), returns true if kDistanceFieldTextTEMP_Flag bit is set
+     @return true if the distanceFieldText bit is set in the paint's flags.
+     */
+    bool isDistanceFieldTextTEMP() const {
+        return SkToBool(this->getFlags() & kDistanceFieldTextTEMP_Flag);
+    }
+
+    /** Helper for setFlags(), setting or clearing the kDistanceFieldTextTEMP_Flag bit
+     @param distanceFieldText true to set the kDistanceFieldTextTEMP_Flag bit in the paint's
+     flags, false to clear it.
+     */
+    void setDistanceFieldTextTEMP(bool distanceFieldText);
 
     enum FilterLevel {
         kNone_FilterLevel,
@@ -731,17 +746,60 @@ public:
     void setTextEncoding(TextEncoding encoding);
 
     struct FontMetrics {
+        /** Flags which indicate the confidence level of various metrics.
+            A set flag indicates that the metric may be trusted.
+        */
+        enum FontMetricsFlags {
+            kUnderlineThinknessIsValid_Flag = 1 << 0,
+            kUnderlinePositionIsValid_Flag = 1 << 1,
+        };
+
+        uint32_t    fFlags;       //!< Bit field to identify which values are unknown
         SkScalar    fTop;       //!< The greatest distance above the baseline for any glyph (will be <= 0)
         SkScalar    fAscent;    //!< The recommended distance above the baseline (will be <= 0)
         SkScalar    fDescent;   //!< The recommended distance below the baseline (will be >= 0)
         SkScalar    fBottom;    //!< The greatest distance below the baseline for any glyph (will be >= 0)
         SkScalar    fLeading;   //!< The recommended distance to add between lines of text (will be >= 0)
-        SkScalar    fAvgCharWidth;  //!< the average charactor width (>= 0)
-        SkScalar    fMaxCharWidth;  //!< the max charactor width (>= 0)
+        SkScalar    fAvgCharWidth;  //!< the average character width (>= 0)
+        SkScalar    fMaxCharWidth;  //!< the max character width (>= 0)
         SkScalar    fXMin;      //!< The minimum bounding box x value for all glyphs
         SkScalar    fXMax;      //!< The maximum bounding box x value for all glyphs
         SkScalar    fXHeight;   //!< The height of an 'x' in px, or 0 if no 'x' in face
         SkScalar    fCapHeight;  //!< The cap height (> 0), or 0 if cannot be determined.
+        SkScalar    fUnderlineThickness; //!< underline thickness, or 0 if cannot be determined
+
+        /**  Underline Position - position of the top of the Underline stroke
+                relative to the baseline, this can have following values
+                - Negative - means underline should be drawn above baseline.
+                - Positive - means below baseline.
+                - Zero     - mean underline should be drawn on baseline.
+         */
+        SkScalar    fUnderlinePosition; //!< underline position, or 0 if cannot be determined
+
+        /**  If the fontmetrics has a valid underlinethickness, return true, and set the
+                thickness param to that value. If it doesn't return false and ignore the
+                thickness param.
+        */
+        bool hasUnderlineThickness(SkScalar* thickness) const {
+            if (SkToBool(fFlags & kUnderlineThinknessIsValid_Flag)) {
+                *thickness = fUnderlineThickness;
+                return true;
+            }
+            return false;
+        }
+
+        /**  If the fontmetrics has a valid underlineposition, return true, and set the
+                thickness param to that value. If it doesn't return false and ignore the
+                thickness param.
+        */
+        bool hasUnderlinePosition(SkScalar* position) const {
+            if (SkToBool(fFlags & kUnderlinePositionIsValid_Flag)) {
+                *position = fUnderlinePosition;
+                return true;
+            }
+            return false;
+        }
+
     };
 
     /** Return the recommend spacing between lines (which will be
@@ -880,10 +938,6 @@ public:
                         const SkPoint pos[], SkPath* path) const;
 
 #ifdef SK_BUILD_FOR_ANDROID
-    const SkGlyph& getUnicharMetrics(SkUnichar, const SkMatrix*);
-    const SkGlyph& getGlyphMetrics(uint16_t, const SkMatrix*);
-    const void* findImage(const SkGlyph&, const SkMatrix*);
-
     uint32_t getGenerationID() const;
     void setGenerationID(uint32_t generationID);
 
@@ -978,7 +1032,12 @@ public:
         return SetTextMatrix(matrix, fTextSize, fTextScaleX, fTextSkewX);
     }
 
-    SkDEVCODE(void toString(SkString*) const;)
+    SK_TO_STRING_NONVIRT()
+
+    struct FlatteningTraits {
+        static void Flatten(SkWriteBuffer& buffer, const SkPaint& paint);
+        static void Unflatten(SkReadBuffer& buffer, SkPaint* paint);
+    };
 
 private:
     SkTypeface*     fTypeface;
@@ -999,16 +1058,25 @@ private:
     SkColor         fColor;
     SkScalar        fWidth;
     SkScalar        fMiterLimit;
-    // all of these bitfields should add up to 32
-    unsigned        fFlags : 16;
-    unsigned        fTextAlign : 2;
-    unsigned        fCapType : 2;
-    unsigned        fJoinType : 2;
-    unsigned        fStyle : 2;
-    unsigned        fTextEncoding : 2;  // 3 values
-    unsigned        fHinting : 2;
-    //unsigned      fFreeBits : 4;
 
+    union {
+        struct {
+            // all of these bitfields should add up to 32
+            unsigned        fFlags : 16;
+            unsigned        fTextAlign : 2;
+            unsigned        fCapType : 2;
+            unsigned        fJoinType : 2;
+            unsigned        fStyle : 2;
+            unsigned        fTextEncoding : 2;  // 3 values
+            unsigned        fHinting : 2;
+            //unsigned      fFreeBits : 4;
+        };
+        uint32_t fBitfields;
+    };
+    uint32_t getBitfields() const { return fBitfields; }
+    void setBitfields(uint32_t bitfields);
+
+    uint32_t fDirtyBits;
 
     SkDrawCacheProc    getDrawCacheProc() const;
     SkMeasureCacheProc getMeasureCacheProc(TextBufferDirection dir,

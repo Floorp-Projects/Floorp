@@ -32,8 +32,6 @@ class SK_API SkXfermode : public SkFlattenable {
 public:
     SK_DECLARE_INST_COUNT(SkXfermode)
 
-    SkXfermode() {}
-
     virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count,
                         const SkAlpha aa[]) const;
     virtual void xfer16(uint16_t dst[], const SkPMColor src[], int count,
@@ -213,7 +211,7 @@ public:
                                    Coeff* dst,
                                    GrTexture* background = NULL);
 
-    SkDEVCODE(virtual void toString(SkString* str) const = 0;)
+    SK_TO_STRING_PUREVIRT()
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
     SK_DEFINE_FLATTENABLE_TYPE(SkXfermode)
 
@@ -229,6 +227,11 @@ protected:
         be implemented if your subclass has overridden xfer32/xfer16/xferA8
     */
     virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const;
+
+#ifdef SK_SUPPORT_LEGACY_PUBLICEFFECTCONSTRUCTORS
+public:
+#endif
+    SkXfermode() {}
 
 private:
     enum {
@@ -250,7 +253,9 @@ private:
 */
 class SkProcXfermode : public SkXfermode {
 public:
-    SkProcXfermode(SkXfermodeProc proc) : fProc(proc) {}
+    static SkProcXfermode* Create(SkXfermodeProc proc) {
+        return SkNEW_ARGS(SkProcXfermode, (proc));
+    }
 
     // overrides from SkXfermode
     virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count,
@@ -260,7 +265,7 @@ public:
     virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count,
                         const SkAlpha aa[]) const SK_OVERRIDE;
 
-    SK_DEVELOPER_TO_STRING()
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkProcXfermode)
 
 protected:
@@ -275,6 +280,11 @@ protected:
     SkXfermodeProc getProc() const {
         return fProc;
     }
+
+#ifdef SK_SUPPORT_LEGACY_PUBLICEFFECTCONSTRUCTORS
+public:
+#endif
+    SkProcXfermode(SkXfermodeProc proc) : fProc(proc) {}
 
 private:
     SkXfermodeProc  fProc;

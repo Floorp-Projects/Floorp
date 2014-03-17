@@ -6,6 +6,11 @@
  */
 
 #include "SkLua.h"
+
+#if SK_SUPPORT_GPU
+#include "GrReducedClip.h"
+#endif
+
 #include "SkCanvas.h"
 #include "SkData.h"
 #include "SkDocument.h"
@@ -234,6 +239,73 @@ void SkLua::pushCanvas(SkCanvas* canvas, const char key[]) {
     CHECK_SETFIELD(key);
 }
 
+static const char* element_type(SkClipStack::Element::Type type) {
+    switch (type) {
+        case SkClipStack::Element::kEmpty_Type:
+            return "empty";
+        case SkClipStack::Element::kRect_Type:
+            return "rect";
+        case SkClipStack::Element::kRRect_Type:
+            return "rrect";
+        case SkClipStack::Element::kPath_Type:
+            return "path";
+    }
+    return "unknown";
+}
+
+static const char* region_op(SkRegion::Op op) {
+    switch (op) {
+        case SkRegion::kDifference_Op:
+            return "difference";
+        case SkRegion::kIntersect_Op:
+            return "intersect";
+        case SkRegion::kUnion_Op:
+            return "union";
+        case SkRegion::kXOR_Op:
+            return "xor";
+        case SkRegion::kReverseDifference_Op:
+            return "reverse-difference";
+        case SkRegion::kReplace_Op:
+            return "replace";
+    }
+    return "unknown";
+}
+
+void SkLua::pushClipStack(const SkClipStack& stack, const char* key) {
+    lua_newtable(fL);
+    SkClipStack::B2TIter iter(stack);
+    const SkClipStack::Element* element;
+    int i = 0;
+    while (NULL != (element = iter.next())) {
+        this->pushClipStackElement(*element);
+        lua_rawseti(fL, -2, ++i);
+    }
+    CHECK_SETFIELD(key);
+}
+
+void SkLua::pushClipStackElement(const SkClipStack::Element& element, const char* key) {
+    lua_newtable(fL);
+    SkClipStack::Element::Type type = element.getType();
+    this->pushString(element_type(type), "type");
+    switch (type) {
+        case SkClipStack::Element::kEmpty_Type:
+            break;
+        case SkClipStack::Element::kRect_Type:
+            this->pushRect(element.getRect(), "rect");
+            break;
+        case SkClipStack::Element::kRRect_Type:
+            this->pushRRect(element.getRRect(), "rrect");
+            break;
+        case SkClipStack::Element::kPath_Type:
+            this->pushPath(element.getPath(), "path");
+            break;
+    }
+    this->pushString(region_op(element.getOp()), "op");
+    this->pushBool(element.isAA(), "aa");
+    CHECK_SETFIELD(key);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -377,6 +449,50 @@ static int lcanvas_getTotalMatrix(lua_State* L) {
     return 1;
 }
 
+static int lcanvas_getClipStack(lua_State* L) {
+    SkLua(L).pushClipStack(*get_ref<SkCanvas>(L, 1)->getClipStack());
+    return 1;
+}
+
+int SkLua::lcanvas_getReducedClipStack(lua_State* L) {
+#if SK_SUPPORT_GPU
+    const SkCanvas* canvas = get_ref<SkCanvas>(L, 1);
+    SkISize layerSize = canvas->getTopLayerSize();
+    SkIPoint layerOrigin = canvas->getTopLayerOrigin();
+    SkIRect queryBounds = SkIRect::MakeXYWH(layerOrigin.fX, layerOrigin.fY,
+                                            layerSize.fWidth, layerSize.fHeight);
+
+    GrReducedClip::ElementList elements;
+    GrReducedClip::InitialState initialState;
+    int32_t genID;
+    SkIRect resultBounds;
+
+    const SkClipStack& stack = *canvas->getClipStack();
+
+    GrReducedClip::ReduceClipStack(stack,
+                                   queryBounds,
+                                   &elements,
+                                   &genID,
+                                   &initialState,
+                                   &resultBounds,
+                                   NULL);
+
+    GrReducedClip::ElementList::Iter iter(elements);
+    int i = 0;
+    lua_newtable(L);
+    while(NULL != iter.get()) {
+        SkLua(L).pushClipStackElement(*iter.get());
+        iter.next();
+        lua_rawseti(L, -2, ++i);
+    }
+    // Currently this only returns the element list to lua, not the initial state or result bounds.
+    // It could return these as additional items on the lua stack.
+    return 1;
+#else
+    return 0;
+#endif
+}
+
 static int lcanvas_save(lua_State* L) {
     lua_pushinteger(L, get_ref<SkCanvas>(L, 1)->save());
     return 1;
@@ -412,7 +528,7 @@ static int lcanvas_gc(lua_State* L) {
     return 0;
 }
 
-static const struct luaL_Reg gSkCanvas_Methods[] = {
+const struct luaL_Reg gSkCanvas_Methods[] = {
     { "drawColor", lcanvas_drawColor },
     { "drawRect", lcanvas_drawRect },
     { "drawOval", lcanvas_drawOval },
@@ -422,6 +538,10 @@ static const struct luaL_Reg gSkCanvas_Methods[] = {
     { "drawText", lcanvas_drawText },
     { "getSaveCount", lcanvas_getSaveCount },
     { "getTotalMatrix", lcanvas_getTotalMatrix },
+    { "getClipStack", lcanvas_getClipStack },
+#if SK_SUPPORT_GPU
+    { "getReducedClipStack", SkLua::lcanvas_getReducedClipStack },
+#endif
     { "save", lcanvas_save },
     { "restore", lcanvas_restore },
     { "scale", lcanvas_scale },
@@ -908,6 +1028,73 @@ static int lpath_getBounds(lua_State* L) {
     return 1;
 }
 
+static const char* fill_type_to_str(SkPath::FillType fill) {
+    switch (fill) {
+        case SkPath::kEvenOdd_FillType:
+            return "even-odd";
+        case SkPath::kWinding_FillType:
+            return "winding";
+        case SkPath::kInverseEvenOdd_FillType:
+            return "inverse-even-odd";
+        case SkPath::kInverseWinding_FillType:
+            return "inverse-winding";
+    }
+    return "unknown";
+}
+
+static int lpath_getFillType(lua_State* L) {
+    SkPath::FillType fill = get_obj<SkPath>(L, 1)->getFillType();
+    SkLua(L).pushString(fill_type_to_str(fill));
+    return 1;
+}
+
+static SkString segment_masks_to_str(uint32_t segmentMasks) {
+    SkString result;
+    bool first = true;
+    if (SkPath::kLine_SegmentMask & segmentMasks) {
+        result.append("line");
+        first = false;
+        SkDEBUGCODE(segmentMasks &= ~SkPath::kLine_SegmentMask;)
+    }
+    if (SkPath::kQuad_SegmentMask & segmentMasks) {
+        if (!first) {
+            result.append(" ");
+        }
+        result.append("quad");
+        first = false;
+        SkDEBUGCODE(segmentMasks &= ~SkPath::kQuad_SegmentMask;)
+    }
+    if (SkPath::kConic_SegmentMask & segmentMasks) {
+        if (!first) {
+            result.append(" ");
+        }
+        result.append("conic");
+        first = false;
+        SkDEBUGCODE(segmentMasks &= ~SkPath::kConic_SegmentMask;)
+    }
+    if (SkPath::kCubic_SegmentMask & segmentMasks) {
+        if (!first) {
+            result.append(" ");
+        }
+        result.append("cubic");
+        SkDEBUGCODE(segmentMasks &= ~SkPath::kCubic_SegmentMask;)
+    }
+    SkASSERT(0 == segmentMasks);
+    return result;
+}
+
+static int lpath_getSegementTypes(lua_State* L) {
+    uint32_t segMasks = get_obj<SkPath>(L, 1)->getSegmentMasks();
+    SkLua(L).pushString(segment_masks_to_str(segMasks));
+    return 1;
+}
+
+static int lpath_isConvex(lua_State* L) {
+    bool isConvex = SkPath::kConvex_Convexity == get_obj<SkPath>(L, 1)->getConvexity();
+    SkLua(L).pushBool(isConvex);
+    return 1;
+}
+
 static int lpath_isEmpty(lua_State* L) {
     lua_pushboolean(L, get_obj<SkPath>(L, 1)->isEmpty());
     return 1;
@@ -950,6 +1137,11 @@ static int lpath_isNestedRects(lua_State* L) {
     return ret_count;
 }
 
+static int lpath_countPoints(lua_State* L) {
+    lua_pushinteger(L, get_obj<SkPath>(L, 1)->countPoints());
+    return 1;
+}
+
 static int lpath_reset(lua_State* L) {
     get_obj<SkPath>(L, 1)->reset();
     return 0;
@@ -990,9 +1182,13 @@ static int lpath_gc(lua_State* L) {
 
 static const struct luaL_Reg gSkPath_Methods[] = {
     { "getBounds", lpath_getBounds },
+    { "getFillType", lpath_getFillType },
+    { "getSegmentTypes", lpath_getSegementTypes },
+    { "isConvex", lpath_isConvex },
     { "isEmpty", lpath_isEmpty },
     { "isRect", lpath_isRect },
     { "isNestedRects", lpath_isNestedRects },
+    { "countPoints", lpath_countPoints },
     { "reset", lpath_reset },
     { "moveTo", lpath_moveTo },
     { "lineTo", lpath_lineTo },
