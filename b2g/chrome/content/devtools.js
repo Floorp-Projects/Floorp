@@ -44,9 +44,10 @@ let developerHUD = {
 
   /**
    * This method registers a metric watcher that will watch one or more metrics
-   * of apps that are being tracked. A watcher must implement the trackApp(app)
-   * and untrackApp(app) methods, add entries to the app.metrics map, keep them
-   * up-to-date, and call app.display() when values were changed.
+   * on app frames that are being tracked. A watcher must implement the
+   * `trackTarget(target)` and `untrackTarget(target)` methods, register
+   * observed metrics with `target.register(metric)`, and keep them up-to-date
+   * with `target.update(metric, value, message)` when necessary.
    */
   registerWatcher: function dwp_registerWatcher(watcher) {
     this._watchers.unshift(watcher);
@@ -87,7 +88,7 @@ let developerHUD = {
       });
     });
 
-    SettingsListener.observe('hud.logging', enabled => {
+    SettingsListener.observe('hud.logging', this._logging, enabled => {
       this._logging = enabled;
     });
   },
@@ -194,9 +195,9 @@ let developerHUD = {
 
 
 /**
- * An App object represents all there is to know about a Firefox OS app that is
- * being tracked, e.g. its manifest information, current values of watched
- * metrics, and how to update these values on the front-end.
+ * A Target object represents all there is to know about a Firefox OS app frame
+ * that is being tracked, e.g. a pointer to the frame, current values of watched
+ * metrics, and how to notify the front-end when metrics have changed.
  */
 function Target(frame, actor) {
   this.frame = frame;
@@ -276,17 +277,27 @@ Target.prototype = {
 
 /**
  * The Console Watcher tracks the following metrics in apps: reflows, warnings,
- * and errors.
+ * and errors, with security errors reported separately.
  */
 let consoleWatcher = {
 
+  _client: null,
   _targets: new Map(),
   _watching: {
     reflows: false,
     warnings: false,
-    errors: false
+    errors: false,
+    security: false
   },
-  _client: null,
+  _security: [
+    'Mixed Content Blocker',
+    'Mixed Content Message',
+    'CSP',
+    'Invalid HSTS Headers',
+    'Insecure Password Field',
+    'SSL',
+    'CORS'
+  ],
 
   init: function cw_init(client) {
     this._client = client;
@@ -296,7 +307,7 @@ let consoleWatcher = {
 
     for (let key in watching) {
       let metric = key;
-      SettingsListener.observe('hud.' + metric, false, watch => {
+      SettingsListener.observe('hud.' + metric, watching[metric], watch => {
         // Watch or unwatch the metric.
         if (watching[metric] = watch) {
           return;
@@ -319,6 +330,7 @@ let consoleWatcher = {
     target.register('reflows');
     target.register('warnings');
     target.register('errors');
+    target.register('security');
 
     this._client.request({
       to: target.actor.consoleActor,
@@ -357,13 +369,17 @@ let consoleWatcher = {
           output += 'error (';
         }
 
+        if (this._security.indexOf(pageError.category) > -1) {
+          metric = 'security';
+        }
+
         let {errorMessage, sourceName, category, lineNumber, columnNumber} = pageError;
         output += category + '): "' + (errorMessage.initial || errorMessage) +
           '" in ' + sourceName + ':' + lineNumber + ':' + columnNumber;
         break;
 
       case 'consoleAPICall':
-        switch (packet.output.level) {
+        switch (packet.message.level) {
 
           case 'error':
             metric = 'errors';
