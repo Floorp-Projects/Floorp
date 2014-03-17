@@ -579,11 +579,11 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
 
   // listen to these events
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
-                                  dom::TrustedEventsAtSystemGroupBubble());
+                                  TrustedEventsAtSystemGroupBubble());
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
-                                  dom::TrustedEventsAtSystemGroupBubble());
+                                  TrustedEventsAtSystemGroupBubble());
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
-                                  dom::TrustedEventsAtSystemGroupBubble());
+                                  TrustedEventsAtSystemGroupBubble());
 
   if (contentNode)
     return contentNode->SetProperty(nsGkAtoms::listener,
@@ -624,11 +624,11 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
     return NS_ERROR_FAILURE;
 
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
-                                     dom::TrustedEventsAtSystemGroupBubble());
+                                     TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
-                                     dom::TrustedEventsAtSystemGroupBubble());
+                                     TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
-                                     dom::TrustedEventsAtSystemGroupBubble());
+                                     TrustedEventsAtSystemGroupBubble());
 
   contentNode->DeleteProperty(nsGkAtoms::listener);
 

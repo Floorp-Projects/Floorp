@@ -331,7 +331,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
   EventTarget* target = window->GetChromeEventHandler();
   nsEventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                              dom::TrustedEventsAtCapture());
+                              TrustedEventsAtCapture());
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate))
@@ -340,7 +340,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
 
   if (aAddDOMContentLoadedListener) {
     elm->AddEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
-                                dom::TrustedEventsAtCapture());
+                                TrustedEventsAtCapture());
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocCreate))
       logging::Text("added 'DOMContentLoaded' listener");
@@ -361,10 +361,10 @@ DocManager::RemoveListeners(nsIDocument* aDocument)
 
   nsEventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                                 dom::TrustedEventsAtCapture());
+                                 TrustedEventsAtCapture());
 
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
-                                 dom::TrustedEventsAtCapture());
+                                 TrustedEventsAtCapture());
 }
 
 DocAccessible*
