@@ -14,6 +14,7 @@
 #include "SkPoint.h"
 #include "SkRefCnt.h"
 
+struct SkMask;
 struct SkIRect;
 struct SkRect;
 class SkPaint;
@@ -21,7 +22,6 @@ class SkPixelRef;
 class SkPixelRefFactory;
 class SkRegion;
 class SkString;
-
 class GrTexture;
 
 /** \class SkBitmap
@@ -309,6 +309,22 @@ public:
                        void* context);
 
     /**
+     *  Call installPixels with no ReleaseProc specified. This means that the
+     *  caller must ensure that the specified pixels are valid for the lifetime
+     *  of the created bitmap (and its pixelRef).
+     */
+    bool installPixels(const SkImageInfo& info, void* pixels, size_t rowBytes) {
+        return this->installPixels(info, pixels, rowBytes, NULL, NULL);
+    }
+
+    /**
+     *  Calls installPixels() with the value in the SkMask. The caller must
+     *  ensure that the specified mask pixels are valid for the lifetime
+     *  of the created bitmap (and its pixelRef).
+     */
+    bool installMaskPixels(const SkMask&);
+
+    /**
      *  DEPRECATED: call info().
      */
     bool asImageInfo(SkImageInfo* info) const {
@@ -455,7 +471,7 @@ public:
     */
     bool readyToDraw() const {
         return this->getPixels() != NULL &&
-               (this->config() != kIndex8_Config || NULL != fColorTable);
+               (this->colorType() != kIndex_8_SkColorType || NULL != fColorTable);
     }
 
     /** Returns the pixelRef's texture, or NULL
@@ -599,33 +615,37 @@ public:
     */
     bool extractSubset(SkBitmap* dst, const SkIRect& subset) const;
 
-    /** Makes a deep copy of this bitmap, respecting the requested config,
+    /** Makes a deep copy of this bitmap, respecting the requested colorType,
      *  and allocating the dst pixels on the cpu.
      *  Returns false if either there is an error (i.e. the src does not have
      *  pixels) or the request cannot be satisfied (e.g. the src has per-pixel
      *  alpha, and the requested config does not support alpha).
      *  @param dst The bitmap to be sized and allocated
-     *  @param c The desired config for dst
+     *  @param ct The desired colorType for dst
      *  @param allocator Allocator used to allocate the pixelref for the dst
      *                   bitmap. If this is null, the standard HeapAllocator
      *                   will be used.
-     *  @return true if the copy could be made.
+     *  @return true if the copy was made.
      */
-    bool copyTo(SkBitmap* dst, Config c, Allocator* allocator = NULL) const;
+    bool copyTo(SkBitmap* dst, SkColorType ct, Allocator* = NULL) const;
 
-    /** Makes a deep copy of this bitmap, respecting the requested config, and
-     *  with custom allocation logic that will keep the copied pixels
+    bool copyTo(SkBitmap* dst, Allocator* allocator = NULL) const {
+        return this->copyTo(dst, this->colorType(), allocator);
+    }
+
+    /**
+     *  Returns true if this bitmap's pixels can be converted into the requested
+     *  colorType, such that copyTo() could succeed.
+     */
+    bool canCopyTo(SkColorType colorType) const;
+
+    /** Makes a deep copy of this bitmap, keeping the copied pixels
      *  in the same domain as the source: If the src pixels are allocated for
      *  the cpu, then so will the dst. If the src pixels are allocated on the
      *  gpu (typically as a texture), the it will do the same for the dst.
      *  If the request cannot be fulfilled, returns false and dst is unmodified.
      */
-    bool deepCopyTo(SkBitmap* dst, Config c) const;
-
-    /** Returns true if this bitmap can be deep copied into the requested config
-        by calling copyTo().
-     */
-    bool canCopyTo(Config newConfig) const;
+    bool deepCopyTo(SkBitmap* dst) const;
 
     SK_ATTR_DEPRECATED("use setFilterLevel on SkPaint")
     void buildMipMap(bool forceRebuild = false);
@@ -727,7 +747,7 @@ public:
         int       fHeight;
     };
 
-    SkDEVCODE(void toString(SkString* str) const;)
+    SK_TO_STRING_NONVIRT()
 
 private:
     struct MipMap;
@@ -870,31 +890,38 @@ private:
 
 inline uint32_t* SkBitmap::getAddr32(int x, int y) const {
     SkASSERT(fPixels);
-    SkASSERT(this->config() == kARGB_8888_Config);
+    SkASSERT(4 == this->bytesPerPixel());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());
     return (uint32_t*)((char*)fPixels + y * fRowBytes + (x << 2));
 }
 
 inline uint16_t* SkBitmap::getAddr16(int x, int y) const {
     SkASSERT(fPixels);
-    SkASSERT(this->config() == kRGB_565_Config || this->config() == kARGB_4444_Config);
+    SkASSERT(2 == this->bytesPerPixel());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());
     return (uint16_t*)((char*)fPixels + y * fRowBytes + (x << 1));
 }
 
 inline uint8_t* SkBitmap::getAddr8(int x, int y) const {
     SkASSERT(fPixels);
-    SkASSERT(this->config() == kA8_Config || this->config() == kIndex8_Config);
+    SkASSERT(1 == this->bytesPerPixel());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());
     return (uint8_t*)fPixels + y * fRowBytes + x;
 }
 
 inline SkPMColor SkBitmap::getIndex8Color(int x, int y) const {
     SkASSERT(fPixels);
-    SkASSERT(this->config() == kIndex8_Config);
+    SkASSERT(kIndex_8_SkColorType == this->colorType());
     SkASSERT((unsigned)x < (unsigned)this->width() && (unsigned)y < (unsigned)this->height());
     SkASSERT(fColorTable);
     return (*fColorTable)[*((const uint8_t*)fPixels + y * fRowBytes + x)];
 }
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Helpers until we can fully deprecate SkBitmap::Config
+//
+extern SkBitmap::Config SkColorTypeToBitmapConfig(SkColorType);
+extern SkColorType SkBitmapConfigToColorType(SkBitmap::Config);
 
 #endif

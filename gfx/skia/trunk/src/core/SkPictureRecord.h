@@ -19,8 +19,9 @@
 #include "SkTemplates.h"
 #include "SkWriter32.h"
 
-class SkPictureStateTree;
 class SkBBoxHierarchy;
+class SkOffsetTable;
+class SkPictureStateTree;
 
 // These macros help with packing and unpacking a single byte value and
 // a 3 byte value into/out of a uint32_t
@@ -33,24 +34,9 @@ class SkBBoxHierarchy;
 
 class SkPictureRecord : public SkCanvas {
 public:
-    SkPictureRecord(uint32_t recordFlags, SkBaseDevice*);
+    SkPictureRecord(const SkISize& dimensions, uint32_t recordFlags);
     virtual ~SkPictureRecord();
 
-    virtual SkBaseDevice* setDevice(SkBaseDevice* device) SK_OVERRIDE;
-
-    virtual int save(SaveFlags) SK_OVERRIDE;
-    virtual int saveLayer(const SkRect* bounds, const SkPaint*, SaveFlags) SK_OVERRIDE;
-    virtual void restore() SK_OVERRIDE;
-    virtual bool translate(SkScalar dx, SkScalar dy) SK_OVERRIDE;
-    virtual bool scale(SkScalar sx, SkScalar sy) SK_OVERRIDE;
-    virtual bool rotate(SkScalar degrees) SK_OVERRIDE;
-    virtual bool skew(SkScalar sx, SkScalar sy) SK_OVERRIDE;
-    virtual bool concat(const SkMatrix& matrix) SK_OVERRIDE;
-    virtual void setMatrix(const SkMatrix& matrix) SK_OVERRIDE;
-    virtual bool clipRect(const SkRect&, SkRegion::Op, bool) SK_OVERRIDE;
-    virtual bool clipRRect(const SkRRect&, SkRegion::Op, bool) SK_OVERRIDE;
-    virtual bool clipPath(const SkPath&, SkRegion::Op, bool) SK_OVERRIDE;
-    virtual bool clipRegion(const SkRegion& region, SkRegion::Op op) SK_OVERRIDE;
     virtual void clear(SkColor) SK_OVERRIDE;
     virtual void drawPaint(const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPoints(PointMode, size_t count, const SkPoint pts[],
@@ -109,6 +95,10 @@ public:
     void beginRecording();
     void endRecording();
 
+    void internalOnly_EnableOpts(bool optsEnabled) {
+        fOptsEnabled = optsEnabled;
+    }
+
 private:
     void handleOptimization(int opt);
     int recordRestoreOffsetPlaceholder(SkRegion::Op);
@@ -121,6 +111,8 @@ private:
         kNoSavedLayerIndex = -1
     };
 #endif
+
+    SkTDArray<uint32_t> fCullOffsetStack;
 
     /*
      * Write the 'drawType' operation and chunk size to the skp. 'size'
@@ -164,7 +156,9 @@ private:
         fWriter.writeScalar(scalar);
     }
 
-    void addBitmap(const SkBitmap& bitmap);
+    // The command at 'offset' in the skp uses the specified bitmap
+    void trackBitmapUse(int bitmapID, size_t offset);
+    int addBitmap(const SkBitmap& bitmap);
     void addMatrix(const SkMatrix& matrix);
     const SkFlatData* addPaint(const SkPaint& paint) { return this->addPaintPtr(&paint); }
     const SkFlatData* addPaintPtr(const SkPaint* paint);
@@ -221,6 +215,29 @@ public:
 
 protected:
     virtual SkSurface* onNewSurface(const SkImageInfo&) SK_OVERRIDE;
+    const void* onPeekPixels(SkImageInfo*, size_t*) SK_OVERRIDE {
+        return NULL;
+    }
+
+    virtual void willSave(SaveFlags) SK_OVERRIDE;
+    virtual SaveLayerStrategy willSaveLayer(const SkRect*, const SkPaint*, SaveFlags) SK_OVERRIDE;
+    virtual void willRestore() SK_OVERRIDE;
+
+    virtual void didTranslate(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didScale(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didRotate(SkScalar) SK_OVERRIDE;
+    virtual void didSkew(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didConcat(const SkMatrix&) SK_OVERRIDE;
+    virtual void didSetMatrix(const SkMatrix&) SK_OVERRIDE;
+
+    virtual void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) SK_OVERRIDE;
+    virtual void onPushCull(const SkRect&) SK_OVERRIDE;
+    virtual void onPopCull() SK_OVERRIDE;
+
+    virtual void onClipRect(const SkRect&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipRRect(const SkRRect&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipPath(const SkPath&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipRegion(const SkRegion&, SkRegion::Op) SK_OVERRIDE;
 
     // Return fontmetrics.fTop,fBottom in topbot[0,1], after they have been
     // tweaked by paint.computeFastBounds().
@@ -280,7 +297,10 @@ private:
     SkTDArray<SkPicture*> fPictureRefs;
 
     uint32_t fRecordFlags;
-    int fInitialSaveCount;
+    bool     fOptsEnabled;
+    int      fInitialSaveCount;
+
+    SkAutoTUnref<SkOffsetTable> fBitmapUseOffsets;
 
     friend class SkPicturePlayback;
     friend class SkPictureTester; // for unit testing

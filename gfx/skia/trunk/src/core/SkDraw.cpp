@@ -21,9 +21,9 @@
 #include "SkRRect.h"
 #include "SkScan.h"
 #include "SkShader.h"
+#include "SkSmallAllocator.h"
 #include "SkString.h"
 #include "SkStroke.h"
-#include "SkTemplatesPriv.h"
 #include "SkTLazy.h"
 #include "SkUtils.h"
 
@@ -32,9 +32,9 @@
 #include "SkDrawProcs.h"
 #include "SkMatrixUtils.h"
 
+
 //#define TRACE_BITMAP_DRAWS
 
-#define kBlitterStorageLongCount    (sizeof(SkBitmapProcShader) >> 2)
 
 /** Helper for allocating small blitters on the stack.
  */
@@ -45,16 +45,8 @@ public:
     }
     SkAutoBlitterChoose(const SkBitmap& device, const SkMatrix& matrix,
                         const SkPaint& paint, bool drawCoverage = false) {
-        fBlitter = SkBlitter::Choose(device, matrix, paint,
-                                     fStorage, sizeof(fStorage), drawCoverage);
-    }
-
-    ~SkAutoBlitterChoose() {
-        if ((void*)fBlitter == (void*)fStorage) {
-            fBlitter->~SkBlitter();
-        } else {
-            SkDELETE(fBlitter);
-        }
+        fBlitter = SkBlitter::Choose(device, matrix, paint, &fAllocator,
+                                     drawCoverage);
     }
 
     SkBlitter*  operator->() { return fBlitter; }
@@ -63,13 +55,13 @@ public:
     void choose(const SkBitmap& device, const SkMatrix& matrix,
                 const SkPaint& paint) {
         SkASSERT(!fBlitter);
-        fBlitter = SkBlitter::Choose(device, matrix, paint,
-                                     fStorage, sizeof(fStorage));
+        fBlitter = SkBlitter::Choose(device, matrix, paint, &fAllocator);
     }
 
 private:
-    SkBlitter*  fBlitter;
-    uint32_t    fStorage[kBlitterStorageLongCount];
+    // Owned by fAllocator, which will handle the delete.
+    SkBlitter*          fBlitter;
+    SkTBlitterAllocator fAllocator;
 };
 #define SkAutoBlitterChoose(...) SK_REQUIRE_LOCAL_VAR(SkAutoBlitterChoose)
 
@@ -82,34 +74,29 @@ class SkAutoBitmapShaderInstall : SkNoncopyable {
 public:
     SkAutoBitmapShaderInstall(const SkBitmap& src, const SkPaint& paint)
             : fPaint(paint) /* makes a copy of the paint */ {
-        fPaint.setShader(SkShader::CreateBitmapShader(src,
-                           SkShader::kClamp_TileMode, SkShader::kClamp_TileMode,
-                           fStorage, sizeof(fStorage)));
+        fPaint.setShader(CreateBitmapShader(src, SkShader::kClamp_TileMode,
+                                            SkShader::kClamp_TileMode,
+                                            &fAllocator));
         // we deliberately left the shader with an owner-count of 2
         SkASSERT(2 == fPaint.getShader()->getRefCnt());
     }
 
     ~SkAutoBitmapShaderInstall() {
-        SkShader* shader = fPaint.getShader();
-        // since we manually destroy shader, we insist that owners == 2
-        SkASSERT(2 == shader->getRefCnt());
+        // since fAllocator will destroy shader, we insist that owners == 2
+        SkASSERT(2 == fPaint.getShader()->getRefCnt());
 
         fPaint.setShader(NULL); // unref the shader by 1
 
-        // now destroy to take care of the 2nd owner-count
-        if ((void*)shader == (void*)fStorage) {
-            shader->~SkShader();
-        } else {
-            SkDELETE(shader);
-        }
     }
 
     // return the new paint that has the shader applied
     const SkPaint& paintWithShader() const { return fPaint; }
 
 private:
-    SkPaint     fPaint; // copy of caller's paint (which we then modify)
-    uint32_t    fStorage[kBlitterStorageLongCount];
+    // copy of caller's paint (which we then modify)
+    SkPaint             fPaint;
+    // Stores the shader.
+    SkTBlitterAllocator fAllocator;
 };
 #define SkAutoBitmapShaderInstall(...) SK_REQUIRE_LOCAL_VAR(SkAutoBitmapShaderInstall)
 
@@ -200,20 +187,20 @@ static BitmapXferProc ChooseBitmapXferProc(const SkBitmap& bitmap,
                 should I worry about dithering for the lower depths?
             */
             SkPMColor pmc = SkPreMultiplyColor(color);
-            switch (bitmap.config()) {
-                case SkBitmap::kARGB_8888_Config:
+            switch (bitmap.colorType()) {
+                case kPMColor_SkColorType:
                     if (data) {
                         *data = pmc;
                     }
 //                    SkDebugf("--- D32_Src_BitmapXferProc\n");
                     return D32_Src_BitmapXferProc;
-                case SkBitmap::kRGB_565_Config:
+                case kRGB_565_SkColorType:
                     if (data) {
                         *data = SkPixel32ToPixel16(pmc);
                     }
 //                    SkDebugf("--- D16_Src_BitmapXferProc\n");
                     return D16_Src_BitmapXferProc;
-                case SkBitmap::kA8_Config:
+                case kAlpha_8_SkColorType:
                     if (data) {
                         *data = SkGetPackedA32(pmc);
                     }
@@ -233,14 +220,14 @@ static BitmapXferProc ChooseBitmapXferProc(const SkBitmap& bitmap,
 static void CallBitmapXferProc(const SkBitmap& bitmap, const SkIRect& rect,
                                BitmapXferProc proc, uint32_t procData) {
     int shiftPerPixel;
-    switch (bitmap.config()) {
-        case SkBitmap::kARGB_8888_Config:
+    switch (bitmap.colorType()) {
+        case kPMColor_SkColorType:
             shiftPerPixel = 2;
             break;
-        case SkBitmap::kRGB_565_Config:
+        case kRGB_565_SkColorType:
             shiftPerPixel = 1;
             break;
-        case SkBitmap::kA8_Config:
+        case kAlpha_8_SkColorType:
             shiftPerPixel = 0;
             break;
         default:
@@ -526,9 +513,9 @@ PtProcRec::Proc PtProcRec::chooseProc(SkBlitter** blitterPtr) {
             if (SkCanvas::kPoints_PointMode == fMode && fClip->isRect()) {
                 uint32_t value;
                 const SkBitmap* bm = blitter->justAnOpaqueColor(&value);
-                if (bm && SkBitmap::kRGB_565_Config == bm->config()) {
+                if (bm && kRGB_565_SkColorType == bm->colorType()) {
                     proc = bw_pt_rect_16_hair_proc;
-                } else if (bm && SkBitmap::kARGB_8888_Config == bm->config()) {
+                } else if (bm && kPMColor_SkColorType == bm->colorType()) {
                     proc = bw_pt_rect_32_hair_proc;
                 } else {
                     proc = bw_pt_rect_hair_proc;
@@ -1176,7 +1163,7 @@ static bool just_translate(const SkMatrix& matrix, const SkBitmap& bitmap) {
 
 void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap,
                               const SkPaint& paint) const {
-    SkASSERT(bitmap.config() == SkBitmap::kA8_Config);
+    SkASSERT(bitmap.colorType() == kAlpha_8_SkColorType);
 
     if (just_translate(*fMatrix, bitmap)) {
         int ix = SkScalarRoundToInt(fMatrix->getTranslateX());
@@ -1284,7 +1271,7 @@ void SkDraw::drawBitmap(const SkBitmap& bitmap, const SkMatrix& prematrix,
     // nothing to draw
     if (fRC->isEmpty() ||
             bitmap.width() == 0 || bitmap.height() == 0 ||
-            bitmap.config() == SkBitmap::kNo_Config) {
+            bitmap.colorType() == kUnknown_SkColorType) {
         return;
     }
 
@@ -1310,7 +1297,7 @@ void SkDraw::drawBitmap(const SkBitmap& bitmap, const SkMatrix& prematrix,
         }
     }
 
-    if (bitmap.config() != SkBitmap::kA8_Config &&
+    if (bitmap.colorType() != kAlpha_8_SkColorType &&
             just_translate(matrix, bitmap)) {
         //
         // It is safe to call lock pixels now, since we know the matrix is
@@ -1323,12 +1310,11 @@ void SkDraw::drawBitmap(const SkBitmap& bitmap, const SkMatrix& prematrix,
         int ix = SkScalarRoundToInt(matrix.getTranslateX());
         int iy = SkScalarRoundToInt(matrix.getTranslateY());
         if (clipHandlesSprite(*fRC, ix, iy, bitmap)) {
-            uint32_t    storage[kBlitterStorageLongCount];
-            SkBlitter*  blitter = SkBlitter::ChooseSprite(*fBitmap, paint, bitmap,
-                                                ix, iy, storage, sizeof(storage));
+            SkTBlitterAllocator allocator;
+            // blitter will be owned by the allocator.
+            SkBlitter* blitter = SkBlitter::ChooseSprite(*fBitmap, paint, bitmap,
+                                                         ix, iy, &allocator);
             if (blitter) {
-                SkAutoTPlacementDelete<SkBlitter>   ad(blitter, storage);
-
                 SkIRect    ir;
                 ir.set(ix, iy, ix + bitmap.width(), iy + bitmap.height());
 
@@ -1343,7 +1329,7 @@ void SkDraw::drawBitmap(const SkBitmap& bitmap, const SkMatrix& prematrix,
     SkDraw draw(*this);
     draw.fMatrix = &matrix;
 
-    if (bitmap.config() == SkBitmap::kA8_Config) {
+    if (bitmap.colorType() == kAlpha_8_SkColorType) {
         draw.drawBitmapAsMask(bitmap, paint);
     } else {
         SkAutoBitmapShaderInstall install(bitmap, paint);
@@ -1363,7 +1349,7 @@ void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y,
     // nothing to draw
     if (fRC->isEmpty() ||
             bitmap.width() == 0 || bitmap.height() == 0 ||
-            bitmap.config() == SkBitmap::kNo_Config) {
+            bitmap.colorType() == kUnknown_SkColorType) {
         return;
     }
 
@@ -1378,13 +1364,12 @@ void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y,
     paint.setStyle(SkPaint::kFill_Style);
 
     if (NULL == paint.getColorFilter() && clipHandlesSprite(*fRC, x, y, bitmap)) {
-        uint32_t    storage[kBlitterStorageLongCount];
-        SkBlitter*  blitter = SkBlitter::ChooseSprite(*fBitmap, paint, bitmap,
-                                                x, y, storage, sizeof(storage));
+        SkTBlitterAllocator allocator;
+        // blitter will be owned by the allocator.
+        SkBlitter* blitter = SkBlitter::ChooseSprite(*fBitmap, paint, bitmap,
+                                                     x, y, &allocator);
 
         if (blitter) {
-            SkAutoTPlacementDelete<SkBlitter> ad(blitter, storage);
-
             if (fBounder && !fBounder->doIRect(bounds)) {
                 return;
             }
@@ -2378,7 +2363,7 @@ public:
 
     virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) SK_OVERRIDE;
 
-    SK_DEVELOPER_TO_STRING()
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkTriColorShader)
 
 protected:
@@ -2451,7 +2436,7 @@ void SkTriColorShader::shadeSpan(int x, int y, SkPMColor dstC[], int count) {
     }
 }
 
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
 void SkTriColorShader::toString(SkString* str) const {
     str->append("SkTriColorShader: (");
 

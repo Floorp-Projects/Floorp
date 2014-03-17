@@ -19,37 +19,29 @@
 class SkBBoxHierarchyRecord : public SkBBoxRecord, public SkBBoxHierarchyClient {
 public:
     /** This will take a ref of h */
-    SkBBoxHierarchyRecord(uint32_t recordFlags, SkBBoxHierarchy* h,
-                          SkBaseDevice*);
+    SkBBoxHierarchyRecord(const SkISize& size, uint32_t recordFlags, SkBBoxHierarchy* h);
 
     virtual void handleBBox(const SkRect& bounds) SK_OVERRIDE;
 
-    virtual int save(SaveFlags flags = kMatrixClip_SaveFlag) SK_OVERRIDE;
-    virtual int saveLayer(const SkRect* bounds, const SkPaint* paint,
-                          SaveFlags flags = kARGB_ClipLayer_SaveFlag) SK_OVERRIDE;
-    virtual void restore() SK_OVERRIDE;
-
-    virtual bool translate(SkScalar dx, SkScalar dy) SK_OVERRIDE;
-    virtual bool scale(SkScalar sx, SkScalar sy) SK_OVERRIDE;
-    virtual bool rotate(SkScalar degrees) SK_OVERRIDE;
-    virtual bool skew(SkScalar sx, SkScalar sy) SK_OVERRIDE;
-    virtual bool concat(const SkMatrix& matrix) SK_OVERRIDE;
-    virtual void setMatrix(const SkMatrix& matrix) SK_OVERRIDE;
-
-    virtual bool clipRect(const SkRect& rect,
-                          SkRegion::Op op = SkRegion::kIntersect_Op,
-                          bool doAntiAlias = false) SK_OVERRIDE;
-    virtual bool clipRegion(const SkRegion& region,
-                            SkRegion::Op op = SkRegion::kIntersect_Op) SK_OVERRIDE;
-    virtual bool clipPath(const SkPath& path,
-                          SkRegion::Op op = SkRegion::kIntersect_Op,
-                          bool doAntiAlias = false) SK_OVERRIDE;
-    virtual bool clipRRect(const SkRRect& rrect,
-                           SkRegion::Op op = SkRegion::kIntersect_Op,
-                           bool doAntiAlias = false) SK_OVERRIDE;
-
     // Implementation of the SkBBoxHierarchyClient interface
     virtual bool shouldRewind(void* data) SK_OVERRIDE;
+
+protected:
+    virtual void willSave(SaveFlags) SK_OVERRIDE;
+    virtual SaveLayerStrategy willSaveLayer(const SkRect*, const SkPaint*, SaveFlags) SK_OVERRIDE;
+    virtual void willRestore() SK_OVERRIDE;
+
+    virtual void didTranslate(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didScale(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didRotate(SkScalar) SK_OVERRIDE;
+    virtual void didSkew(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didConcat(const SkMatrix&) SK_OVERRIDE;
+    virtual void didSetMatrix(const SkMatrix&) SK_OVERRIDE;
+
+    virtual void onClipRect(const SkRect&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipRRect(const SkRRect&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipPath(const SkPath&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipRegion(const SkRegion&, SkRegion::Op) SK_OVERRIDE;
 
 private:
     typedef SkBBoxRecord INHERITED;

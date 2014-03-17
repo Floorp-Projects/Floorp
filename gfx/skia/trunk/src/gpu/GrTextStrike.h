@@ -37,7 +37,9 @@ public:
     GrMaskFormat getMaskFormat() const { return fMaskFormat; }
 
     inline GrGlyph* getGlyph(GrGlyph::PackedID, GrFontScaler*);
-    bool getGlyphAtlas(GrGlyph*, GrFontScaler*);
+    bool addGlyphToAtlas(GrGlyph*, GrFontScaler*);
+
+    SkISize getAtlasSize() const { return fAtlas.getSize(); }
 
     // testing
     int countGlyphs() const { return fCache.getArray().count(); }
@@ -45,11 +47,11 @@ public:
         return fCache.getArray()[index];
     }
 
-    // returns true if a plot was removed
-    bool removeUnusedPlots();
+    // remove any references to this plot
+    void removePlot(const GrPlot* plot);
 
 public:
-    // for LRU
+    // for easy removal from list
     GrTextStrike*   fPrev;
     GrTextStrike*   fNext;
 
@@ -62,9 +64,7 @@ private:
     GrFontCache*    fFontCache;
     GrAtlasMgr*     fAtlasMgr;
     GrMaskFormat    fMaskFormat;
-#if SK_DISTANCEFIELD_FONTS
     bool            fUseDistanceField;
-#endif
 
     GrAtlas         fAtlas;
 
@@ -78,18 +78,12 @@ public:
     GrFontCache(GrGpu*);
     ~GrFontCache();
 
-#if SK_DISTANCEFIELD_FONTS
     inline GrTextStrike* getStrike(GrFontScaler*, bool useDistanceField);
-#else
-    inline GrTextStrike* getStrike(GrFontScaler*);
-#endif
 
     void freeAll();
 
-    void purgeExceptFor(GrTextStrike*);
-
-    // remove an unused plot and its strike (if necessary)
-    void freePlotExceptFor(GrTextStrike*);
+    // make an unused plot available
+    bool freeUnusedPlot(GrTextStrike* preserveStrike);
 
     // testing
     int countStrikes() const { return fCache.getArray().count(); }

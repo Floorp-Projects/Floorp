@@ -89,8 +89,15 @@ SkResizeFilter::SkResizeFilter(SkBitmapScaler::ResizeMethod method,
 
     this->computeFilters(srcFullWidth, destSubset.fLeft, destSubset.width(),
                          scaleX, &fXFilter, convolveProcs);
-    this->computeFilters(srcFullHeight, destSubset.fTop, destSubset.height(),
-                         scaleY, &fYFilter, convolveProcs);
+    if (srcFullWidth == srcFullHeight &&
+        destSubset.fLeft == destSubset.fTop &&
+        destSubset.width() == destSubset.height()&&
+        scaleX == scaleY) {
+        fYFilter = fXFilter;
+    } else {
+        this->computeFilters(srcFullHeight, destSubset.fTop, destSubset.height(),
+                          scaleY, &fYFilter, convolveProcs);
+    }
 }
 
 // TODO(egouriou): Take advantage of periods in the convolution.
@@ -228,7 +235,11 @@ static SkBitmapScaler::ResizeMethod ResizeMethodToAlgorithmMethod(
         case SkBitmapScaler::RESIZE_BETTER:
             return SkBitmapScaler::RESIZE_HAMMING;
         default:
+#ifdef SK_HIGH_QUALITY_IS_LANCZOS
+            return SkBitmapScaler::RESIZE_LANCZOS3;
+#else
             return SkBitmapScaler::RESIZE_MITCHELL;
+#endif
     }
 }
 
@@ -271,7 +282,7 @@ bool SkBitmapScaler::Resize(SkBitmap* resultPtr,
 
     SkAutoLockPixels locker(source);
     if (!source.readyToDraw() ||
-        source.config() != SkBitmap::kARGB_8888_Config) {
+        source.colorType() != kPMColor_SkColorType) {
         return false;
     }
 
@@ -286,9 +297,9 @@ bool SkBitmapScaler::Resize(SkBitmap* resultPtr,
 
     // Convolve into the result.
     SkBitmap result;
-    result.setConfig(SkBitmap::kARGB_8888_Config,
-                     destSubset.width(), destSubset.height(), 0,
-                     source.alphaType());
+    result.setConfig(SkImageInfo::MakeN32(destSubset.width(),
+                                          destSubset.height(),
+                                          source.alphaType()));
     result.allocPixels(allocator, NULL);
     if (!result.readyToDraw()) {
         return false;

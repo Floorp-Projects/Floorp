@@ -70,8 +70,6 @@ public:
                        const SkMatrix& initialTransform);
     SK_API virtual ~SkPDFDevice();
 
-    virtual uint32_t getDeviceCapabilities() SK_OVERRIDE;
-
     virtual void clear(SkColor color) SK_OVERRIDE;
 
     /** These are called inside the per-device-layer loop for each draw call.
@@ -257,10 +255,7 @@ private:
                 const SkRegion& existingClipRegion);
 
     // override from SkBaseDevice
-    virtual SkBaseDevice* onCreateCompatibleDevice(SkBitmap::Config config,
-                                                   int width, int height,
-                                                   bool isOpaque,
-                                                   Usage usage) SK_OVERRIDE;
+    virtual SkBaseDevice* onCreateDevice(const SkImageInfo&, Usage) SK_OVERRIDE;
 
     void init();
     void cleanUp(bool clearFontUsage);
