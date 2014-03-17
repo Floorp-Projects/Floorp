@@ -178,5 +178,16 @@ WebVTTListener::OnRegion(JS::Handle<JS::Value> aRegion, JSContext* aCx)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebVTTListener::OnParsingError(int32_t errorCode, JSContext* cx)
+{
+  // We only care about files that have a bad WebVTT file signature right now
+  // as that means the file failed to load.
+  if (errorCode == ErrorCodes::BadSignature) {
+    mElement->SetReadyState(TextTrackReadyState::FailedToLoad);
+  }
+  return NS_OK;
+}
+
 } // namespace dom
 } // namespace mozilla
