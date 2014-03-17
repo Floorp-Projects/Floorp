@@ -362,7 +362,8 @@ Resolver.prototype = {
       return obj;
     }
     let chunks = path.toString().split(".");
-    for (let word of chunks) {
+    for (let i = 0; i < chunks.length; i++) {
+      let word = chunks[i];
       if ((typeof obj) == "object" &&
           (word in obj)) {
         obj = obj[word];
