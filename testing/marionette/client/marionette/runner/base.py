@@ -654,7 +654,7 @@ class BaseMarionetteTestRunner(object):
                 connection.connect((host,int(port)))
                 connection.close()
             except Exception, e:
-                raise Exception("Could not connect to given marionette host:port: %s" % e)
+                raise Exception("Connection attempt to %s:%s failed with error: %s" %(host,port,e))
             if self.emulator:
                 self.marionette = Marionette.getMarionetteOrExit(
                                              host=host, port=int(port),
