@@ -265,13 +265,18 @@ nsMIMEInfoBase::GetLocalFileFromURI(nsIURI *aURI, nsIFile **aFile)
   nsresult rv;
 
   nsCOMPtr<nsIFileURL> fileUrl = do_QueryInterface(aURI, &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsIFile> file;
   rv = fileUrl->GetFile(getter_AddRefs(file));
-  if (NS_FAILED(rv)) return rv;    
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  return CallQueryInterface(file, aFile);
+  file.forget(aFile);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

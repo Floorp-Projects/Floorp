@@ -3202,12 +3202,17 @@ nsDownload::GetTargetFile(nsIFile **aTargetFile)
   nsresult rv;
 
   nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsIFile> file;
   rv = fileURL->GetFile(getter_AddRefs(file));
-  if (NS_SUCCEEDED(rv))
-    rv = CallQueryInterface(file, aTargetFile);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  file.forget(aTargetFile);
   return rv;
 }
 

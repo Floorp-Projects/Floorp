@@ -1370,9 +1370,12 @@ nsLocalFile::GetParent(nsIFile **aParent)
     // make buffer whole again
     *slashp = c;
 
-    if (NS_SUCCEEDED(rv) && localFile)
-        rv = CallQueryInterface(localFile, aParent);
-    return rv;
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    localFile.forget(aParent);
+    return NS_OK;
 }
 
 /*
