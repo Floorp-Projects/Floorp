@@ -696,7 +696,7 @@ _OldCacheLoad::Check()
     NS_WARNING("cache check failed");
   }
 
-  if (result == nsICacheEntryOpenCallback::ENTRY_NOT_WANTED) {
+  if (NS_FAILED(rv) || result == nsICacheEntryOpenCallback::ENTRY_NOT_WANTED) {
     mCacheEntry->Close();
     mCacheEntry = nullptr;
     mStatus = NS_ERROR_CACHE_KEY_NOT_FOUND;
