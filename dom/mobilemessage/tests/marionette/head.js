@@ -46,6 +46,31 @@ function ensureMobileMessage() {
 }
 
 /**
+ * Wait for one named MobileMessageManager event.
+ *
+ * Resolve if that named event occurs.  Never reject.
+ *
+ * Fulfill params: the DOMEvent passed.
+ *
+ * @param aEventName
+ *        A string event name.
+ *
+ * @return A deferred promise.
+ */
+function waitForManagerEvent(aEventName) {
+  let deferred = Promise.defer();
+
+  manager.addEventListener(aEventName, function onevent(aEvent) {
+    manager.removeEventListener(aEventName, onevent);
+
+    ok(true, "MobileMessageManager event '" + aEventName + "' got.");
+    deferred.resolve(aEvent);
+  });
+
+  return deferred.promise;
+}
+
+/**
  * Send a SMS message to a single receiver.  Resolve if it succeeds, reject
  * otherwise.
  *
@@ -330,6 +355,9 @@ function sendTextSmsToEmulator(aFrom, aText) {
 
 /**
  * Send raw SMS TPDU to emulator.
+ *
+ * @param: aPdu
+ *         A hex string representing the whole SMS T-PDU.
  *
  * Fulfill params:
  *   result -- an array of emulator response lines.

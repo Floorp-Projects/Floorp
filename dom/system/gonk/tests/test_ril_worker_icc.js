@@ -2979,7 +2979,7 @@ add_test(function test_read_new_sms_on_sim() {
     do_check_eq("sms-received", postedMessage.rilMessageType);
     do_check_eq("+0123456789", postedMessage.SMSC);
     do_check_eq("+9876543210", postedMessage.sender);
-    do_check_eq("How are you?", postedMessage.fullBody);
+    do_check_eq("How are you?", postedMessage.body);
   }
 
   do_test();
