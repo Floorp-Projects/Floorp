@@ -286,13 +286,6 @@ CopyableCanvasLayer::PaintWithOpacity(gfx::DrawTarget* aTarget,
 
   DrawOptions options = DrawOptions(aOpacity, CompositionOp::OP_SOURCE);
 
-  // If content opaque, then save off current operator and set to source.
-  // This ensures that alpha is not applied even if the source surface
-  // has an alpha channel
-  if (GetContentFlags() & CONTENT_OPAQUE) {
-    options.mCompositionOp = CompositionOp::OP_SOURCE;
-  }
-
   if (aOperator != CompositionOp::OP_OVER) {
     options.mCompositionOp = aOperator;
   }
