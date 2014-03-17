@@ -11,10 +11,7 @@
 #define nsFlexContainerFrame_h___
 
 #include "nsContainerFrame.h"
-
-namespace mozilla {
-template <class T> class LinkedList;
-}
+#include "nsTArrayForwardDeclare.h"
 
 nsIFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
                                    nsStyleContext* aContext);
@@ -106,12 +103,10 @@ protected:
   void SanityCheckAnonymousFlexItems() const;
 #endif // DEBUG
 
-  // Returns a new FlexItem for the given child frame, allocated on the heap.
-  // Caller is responsible for managing the FlexItem's lifetime.
-  FlexItem* GenerateFlexItemForChild(nsPresContext* aPresContext,
-                                     nsIFrame* aChildFrame,
-                                     const nsHTMLReflowState& aParentReflowState,
-                                     const FlexboxAxisTracker& aAxisTracker);
+  FlexItem GenerateFlexItemForChild(nsPresContext* aPresContext,
+                                    nsIFrame* aChildFrame,
+                                    const nsHTMLReflowState& aParentReflowState,
+                                    const FlexboxAxisTracker& aAxisTracker);
 
   // Returns nsresult because we might have to reflow aFlexItem.Frame() (to
   // get its vertical intrinsic size in a vertical flexbox), and if that
@@ -121,17 +116,13 @@ protected:
                                            const nsHTMLReflowState& aParentReflowState,
                                            const FlexboxAxisTracker& aAxisTracker);
 
-  // Creates FlexItems for all of our child frames, arranged in a list of
-  // FlexLines.  These are returned by reference in |aLines|. Our actual
-  // return value has to be |nsresult|, in case we have to reflow a child
-  // to establish its flex base size and that reflow fails.
   nsresult GenerateFlexLines(nsPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nscoord aContentBoxMainSize,
                              nscoord aAvailableHeightForContent,
                              const nsTArray<StrutInfo>& aStruts,
                              const FlexboxAxisTracker& aAxisTracker,
-                             mozilla::LinkedList<FlexLine>& aLines);
+                             nsTArray<FlexLine>& aLines);
 
   nscoord GetMainSizeFromReflowState(const nsHTMLReflowState& aReflowState,
                                      const FlexboxAxisTracker& aAxisTracker);
