@@ -59,6 +59,7 @@ sync_testing_modules := \
   fakeservices.js \
   rotaryengine.js \
   utils.js \
+  fxa_utils.js \
   $(NULL)
 
 PREF_JS_EXPORTS := $(srcdir)/services-sync.js
