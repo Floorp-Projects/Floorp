@@ -206,7 +206,7 @@ EventListenerManager::GetTargetAsInnerWindow() const
 
 void
 EventListenerManager::AddEventListenerInternal(
-                        const EventListenerHolder& aListener,
+                        const EventListenerHolder& aListenerHolder,
                         uint32_t aType,
                         nsIAtom* aTypeAtom,
                         const nsAString& aTypeString,
@@ -218,7 +218,7 @@ EventListenerManager::AddEventListenerInternal(
              (!NS_IsMainThread() && aType && !aTypeString.IsEmpty()) || // non-main-thread
              aAllEvents, "Missing type"); // all-events listener
 
-  if (!aListener || mClearingListeners) {
+  if (!aListenerHolder || mClearingListeners) {
     return;
   }
 
@@ -230,12 +230,12 @@ EventListenerManager::AddEventListenerInternal(
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; i++) {
     listener = &mListeners.ElementAt(i);
-    // mListener == aListener is the last one, since it can be a bit slow.
+    // mListener == aListenerHolder is the last one, since it can be a bit slow.
     if (listener->mListenerIsHandler == aHandler &&
         listener->mFlags == aFlags &&
         EVENT_TYPE_EQUALS(listener, aType, aTypeAtom, aTypeString,
                           aAllEvents) &&
-        listener->mListener == aListener) {
+        listener->mListener == aListenerHolder) {
       return;
     }
   }
@@ -245,7 +245,7 @@ EventListenerManager::AddEventListenerInternal(
 
   listener = aAllEvents ? mListeners.InsertElementAt(0) :
                           mListeners.AppendElement();
-  listener->mListener = aListener;
+  listener->mListener = aListenerHolder;
   MOZ_ASSERT(aType < PR_UINT16_MAX);
   listener->mEventType = aType;
   listener->mTypeString = aTypeString;
@@ -258,11 +258,11 @@ EventListenerManager::AddEventListenerInternal(
   // Detect the type of event listener.
   nsCOMPtr<nsIXPConnectWrappedJS> wjs;
   if (aFlags.mListenerIsJSListener) {
-    MOZ_ASSERT(!aListener.HasWebIDLCallback());
+    MOZ_ASSERT(!aListenerHolder.HasWebIDLCallback());
     listener->mListenerType = Listener::eJSEventListener;
-  } else if (aListener.HasWebIDLCallback()) {
+  } else if (aListenerHolder.HasWebIDLCallback()) {
     listener->mListenerType = Listener::eWebIDLListener;
-  } else if ((wjs = do_QueryInterface(aListener.GetXPCOMCallback()))) {
+  } else if ((wjs = do_QueryInterface(aListenerHolder.GetXPCOMCallback()))) {
     listener->mListenerType = Listener::eWrappedJSListener;
   } else {
     listener->mListenerType = Listener::eNativeListener;
@@ -463,14 +463,14 @@ EventListenerManager::DisableDevice(uint32_t aType)
 
 void
 EventListenerManager::RemoveEventListenerInternal(
-                        const EventListenerHolder& aListener,
+                        const EventListenerHolder& aListenerHolder,
                         uint32_t aType,
                         nsIAtom* aUserType,
                         const nsAString& aTypeString,
                         const EventListenerFlags& aFlags,
                         bool aAllEvents)
 {
-  if (!aListener || !aType || mClearingListeners) {
+  if (!aListenerHolder || !aType || mClearingListeners) {
     return;
   }
 
@@ -490,7 +490,7 @@ EventListenerManager::RemoveEventListenerInternal(
     if (EVENT_TYPE_EQUALS(listener, aType, aUserType, aTypeString,
                           aAllEvents)) {
       ++typeCount;
-      if (listener->mListener == aListener &&
+      if (listener->mListener == aListenerHolder &&
           listener->mFlags.EqualsIgnoringTrustness(aFlags)) {
         nsRefPtr<EventListenerManager> kungFuDeathGrip(this);
         mListeners.RemoveElementAt(i);
@@ -553,26 +553,26 @@ EventListenerManager::ListenerCanHandle(Listener* aListener,
 
 void
 EventListenerManager::AddEventListenerByType(
-                        const EventListenerHolder& aListener,
+                        const EventListenerHolder& aListenerHolder,
                         const nsAString& aType,
                         const EventListenerFlags& aFlags)
 {
   nsCOMPtr<nsIAtom> atom =
     mIsMainThreadELM ? do_GetAtom(NS_LITERAL_STRING("on") + aType) : nullptr;
   uint32_t type = nsContentUtils::GetEventId(atom);
-  AddEventListenerInternal(aListener, type, atom, aType, aFlags);
+  AddEventListenerInternal(aListenerHolder, type, atom, aType, aFlags);
 }
 
 void
 EventListenerManager::RemoveEventListenerByType(
-                        const EventListenerHolder& aListener,
+                        const EventListenerHolder& aListenerHolder,
                         const nsAString& aType,
                         const EventListenerFlags& aFlags)
 {
   nsCOMPtr<nsIAtom> atom =
     mIsMainThreadELM ? do_GetAtom(NS_LITERAL_STRING("on") + aType) : nullptr;
   uint32_t type = nsContentUtils::GetEventId(atom);
-  RemoveEventListenerInternal(aListener, type, atom, aType, aFlags);
+  RemoveEventListenerInternal(aListenerHolder, type, atom, aType, aFlags);
 }
 
 EventListenerManager::Listener*
@@ -616,22 +616,22 @@ EventListenerManager::SetEventHandlerInternal(
     EventListenerFlags flags;
     flags.mListenerIsJSListener = true;
 
-    nsCOMPtr<nsIJSEventListener> scriptListener;
+    nsCOMPtr<nsIJSEventListener> jsListener;
     NS_NewJSEventListener(aScopeObject, mTarget, aName,
-                          aHandler, getter_AddRefs(scriptListener));
-    EventListenerHolder holder(scriptListener);
-    AddEventListenerInternal(holder, eventType, aName, aTypeString, flags,
-                             true);
+                          aHandler, getter_AddRefs(jsListener));
+    EventListenerHolder listenerHolder(jsListener);
+    AddEventListenerInternal(listenerHolder, eventType, aName, aTypeString,
+                             flags, true);
 
     listener = FindEventHandler(eventType, aName, aTypeString);
   } else {
-    nsIJSEventListener* scriptListener = listener->GetJSListener();
-    MOZ_ASSERT(scriptListener,
+    nsIJSEventListener* jsListener = listener->GetJSListener();
+    MOZ_ASSERT(jsListener,
                "How can we have an event handler with no nsIJSEventListener?");
 
-    bool same = scriptListener->GetHandler() == aHandler;
+    bool same = jsListener->GetHandler() == aHandler;
     // Possibly the same listener, but update still the context and scope.
-    scriptListener->SetHandler(aHandler, aScopeObject);
+    jsListener->SetHandler(aHandler, aScopeObject);
     if (mTarget && !same && aName) {
       mTarget->EventListenerRemoved(aName);
       mTarget->EventListenerAdded(aName);
@@ -1059,29 +1059,31 @@ EventListenerManager::Disconnect()
 }
 
 void
-EventListenerManager::AddEventListener(const nsAString& aType,
-                                       const EventListenerHolder& aListener,
-                                       bool aUseCapture,
-                                       bool aWantsUntrusted)
+EventListenerManager::AddEventListener(
+                        const nsAString& aType,
+                        const EventListenerHolder& aListenerHolder,
+                        bool aUseCapture,
+                        bool aWantsUntrusted)
 {
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
-  return AddEventListenerByType(aListener, aType, flags);
+  return AddEventListenerByType(aListenerHolder, aType, flags);
 }
 
 void
-EventListenerManager::RemoveEventListener(const nsAString& aType,
-                                          const EventListenerHolder& aListener,
-                                          bool aUseCapture)
+EventListenerManager::RemoveEventListener(
+                        const nsAString& aType,
+                        const EventListenerHolder& aListenerHolder,
+                        bool aUseCapture)
 {
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
-  RemoveEventListenerByType(aListener, aType, flags);
+  RemoveEventListenerByType(aListenerHolder, aType, flags);
 }
 
 void
-EventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
+EventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aDOMListener,
                                               bool aUseCapture,
                                               bool aWantsUntrusted,
                                               bool aSystemEventGroup)
@@ -1090,22 +1092,23 @@ EventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   flags.mInSystemGroup = aSystemEventGroup;
-  EventListenerHolder holder(aListener);
-  AddEventListenerInternal(holder, NS_EVENT_ALL, nullptr, EmptyString(),
+  EventListenerHolder listenerHolder(aDOMListener);
+  AddEventListenerInternal(listenerHolder, NS_EVENT_ALL, nullptr, EmptyString(),
                            flags, false, true);
 }
 
 void
-EventListenerManager::RemoveListenerForAllEvents(nsIDOMEventListener* aListener,
-                                                 bool aUseCapture,
-                                                 bool aSystemEventGroup)
+EventListenerManager::RemoveListenerForAllEvents(
+                        nsIDOMEventListener* aDOMListener,
+                        bool aUseCapture,
+                        bool aSystemEventGroup)
 {
   EventListenerFlags flags;
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
-  EventListenerHolder holder(aListener);
-  RemoveEventListenerInternal(holder, NS_EVENT_ALL, nullptr, EmptyString(),
-                              flags, true);
+  EventListenerHolder listenerHolder(aDOMListener);
+  RemoveEventListenerInternal(listenerHolder, NS_EVENT_ALL, nullptr,
+                              EmptyString(), flags, true);
 }
 
 bool
@@ -1333,12 +1336,12 @@ EventListenerManager::MarkForCC()
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     const Listener& listener = mListeners.ElementAt(i);
-    nsIJSEventListener* jsl = listener.GetJSListener();
-    if (jsl) {
-      if (jsl->GetHandler().HasEventHandler()) {
-        JS::ExposeObjectToActiveJS(jsl->GetHandler().Ptr()->Callable());
+    nsIJSEventListener* jsListener = listener.GetJSListener();
+    if (jsListener) {
+      if (jsListener->GetHandler().HasEventHandler()) {
+        JS::ExposeObjectToActiveJS(jsListener->GetHandler().Ptr()->Callable());
       }
-      if (JSObject* scope = jsl->GetEventScope()) {
+      if (JSObject* scope = jsListener->GetEventScope()) {
         JS::ExposeObjectToActiveJS(scope);
       }
     } else if (listener.mListenerType == Listener::eWrappedJSListener) {
