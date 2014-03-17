@@ -515,8 +515,7 @@ nsWebBrowserPersist::StartUpload(nsIInputStream *aInputStream,
 
     // add this to the upload list
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(destChannel);
-    nsISupportsKey key(keyPtr);
-    mUploadList.Put(&key, new UploadData(aDestinationURI));
+    mUploadList.Put(keyPtr, new UploadData(aDestinationURI));
 
     return NS_OK;
 }
@@ -635,8 +634,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
     //       new channel as the hash key.
     if (!data)
     {
-        nsISupportsKey key(keyPtr);
-        UploadData *upData = (UploadData *) mUploadList.Get(&key);
+        UploadData *upData = mUploadList.Get(keyPtr);
         if (!upData)
         {
             // Redirect? Try and fixup the output table
@@ -706,12 +704,10 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     else
     {
         // if we didn't find the data in mOutputMap, try mUploadList
-        nsISupportsKey key(keyPtr);
-        UploadData *upData = (UploadData *) mUploadList.Get(&key);
+        UploadData *upData = mUploadList.Get(keyPtr);
         if (upData)
         {
-            delete upData;
-            mUploadList.Remove(&key);
+            mUploadList.Remove(keyPtr);
         }
     }
 
@@ -926,8 +922,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     }
     else
     {
-        nsISupportsKey key(keyPtr);
-        UploadData *upData = (UploadData *) mUploadList.Get(&key);
+        UploadData *upData = mUploadList.Get(keyPtr);
         if (upData)
         {
             upData->mSelfProgress = int64_t(aProgress);
@@ -1772,8 +1767,8 @@ void nsWebBrowserPersist::Cleanup()
     mURIMap.Reset();
     mOutputMap.EnumerateRead(EnumCleanupOutputMap, this);
     mOutputMap.Clear();
-    mUploadList.Enumerate(EnumCleanupUploadList, this);
-    mUploadList.Reset();
+    mUploadList.EnumerateRead(EnumCleanupUploadList, this);
+    mUploadList.Clear();
     uint32_t i;
     for (i = 0; i < mDocList.Length(); i++)
     {
@@ -2317,22 +2312,6 @@ nsWebBrowserPersist::EndDownload(nsresult aResult)
     Cleanup();
 }
 
-/* Hack class to get access to nsISupportsKey's protected mKey member */
-class nsMyISupportsKey : public nsISupportsKey
-{
-public:
-    nsMyISupportsKey(nsISupports *key) : nsISupportsKey(key)
-    {
-    }
-
-    nsresult GetISupports(nsISupports **ret)
-    {
-        *ret = mKey;
-        NS_IF_ADDREF(mKey);
-        return NS_OK;
-    }
-};
-
 struct MOZ_STACK_CLASS FixRedirectData
 {
     nsCOMPtr<nsIChannel> mNewChannel;
@@ -2411,7 +2390,7 @@ nsWebBrowserPersist::CalcTotalProgress()
     if (mUploadList.Count() > 0)
     {
         // Total up the progress of each upload
-        mUploadList.Enumerate(EnumCalcUploadProgress, this);
+        mUploadList.EnumerateRead(EnumCalcUploadProgress, this);
     }
 
     // XXX this code seems pretty bogus and pointless
@@ -2438,17 +2417,16 @@ nsWebBrowserPersist::EnumCalcProgress(nsISupports *aKey, OutputData *aData, void
     return PL_DHASH_NEXT;
 }
 
-bool
-nsWebBrowserPersist::EnumCalcUploadProgress(nsHashKey *aKey, void *aData, void* closure)
+PLDHashOperator
+nsWebBrowserPersist::EnumCalcUploadProgress(nsISupports *aKey, UploadData *aData, void* aClosure)
 {
-    if (aData && closure)
+    if (aData && aClosure)
     {
-        nsWebBrowserPersist *pthis = (nsWebBrowserPersist *) closure;
-        UploadData *data = (UploadData *) aData;
-        pthis->mTotalCurrentProgress += data->mSelfProgress;
-        pthis->mTotalMaxProgress += data->mSelfProgressMax;
+        nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist *>(aClosure);
+        pthis->mTotalCurrentProgress += aData->mSelfProgress;
+        pthis->mTotalMaxProgress += aData->mSelfProgressMax;
     }
-    return true;
+    return PL_DHASH_NEXT;
 }
 
 bool
@@ -2536,19 +2514,15 @@ nsWebBrowserPersist::EnumCleanupURIMap(nsHashKey *aKey, void *aData, void* closu
 }
 
 
-bool
-nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* closure)
+PLDHashOperator
+nsWebBrowserPersist::EnumCleanupUploadList(nsISupports *aKey, UploadData *aData, void* aClosure)
 {
-    nsCOMPtr<nsISupports> keyPtr;
-    ((nsMyISupportsKey *) aKey)->GetISupports(getter_AddRefs(keyPtr));
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(keyPtr);
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aKey);
     if (channel)
     {
         channel->Cancel(NS_BINDING_ABORTED);
     }
-    UploadData *data = (UploadData *) aData;
-    delete data; // Delete data associated with key
-    return true;
+    return PL_DHASH_NEXT;
 }
 
 nsresult nsWebBrowserPersist::FixupXMLStyleSheetLink(nsIDOMProcessingInstruction *aPI, const nsAString &aHref)
