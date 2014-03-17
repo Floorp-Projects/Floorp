@@ -63,7 +63,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
+                                  "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -411,27 +411,48 @@ this.Download.prototype = {
         }
       }
 
+      // In case the download was restarted while cancellation was in progress,
+      // but the previous attempt actually succeeded before cancellation could
+      // be processed, it is possible that the download has already finished.
+      if (this.succeeded) {
+        return;
+      }
+
       try {
         // Disallow download if parental controls service restricts it.
         if (yield DownloadIntegration.shouldBlockForParentalControls(this)) {
           throw new DownloadError({ becauseBlockedByParentalControls: true });
         }
 
+        // We should check if we have been canceled in the meantime, after all
+        // the previous asynchronous operations have been executed and just
+        // before we call the "execute" method of the saver.
+        if (this._promiseCanceled) {
+          // The exception will become a cancellation in the "catch" block.
+          throw undefined;
+        }
+
         // Execute the actual download through the saver object.
+        this._saverExecuting = true;
         yield this.saver.execute(DS_setProgressBytes.bind(this),
                                  DS_setProperties.bind(this));
+
         // Check for application reputation, which requires the entire file to
-        // be downloaded.
-        if (yield DownloadIntegration.shouldBlockForReputationCheck(this)) {
-          // Delete the target file that BackgroundFileSaver already moved
-          // into place.
+        // be downloaded.  After that, check for the last time if the download
+        // has been canceled.  Both cases require the target file to be deleted,
+        // thus we process both in the same block of code.
+        if ((yield DownloadIntegration.shouldBlockForReputationCheck(this)) ||
+            this._promiseCanceled) {
           try {
             yield OS.File.remove(this.target.path);
           } catch (ex) {
             Cu.reportError(ex);
           }
+          // If this is actually a cancellation, this exception will be changed
+          // in the catch block below.
           throw new DownloadError({ becauseBlockedByReputationCheck: true });
         }
+
         // Update the status properties for a successful download.
         this.progress = 100;
         this.succeeded = true;
@@ -461,6 +482,7 @@ this.Download.prototype = {
         throw ex;
       } finally {
         // Any cancellation request has now been processed.
+        this._saverExecuting = false;
         this._promiseCanceled = null;
 
         // Update the status properties, unless a new attempt already started.
@@ -547,6 +569,12 @@ this.Download.prototype = {
   _promiseCanceled: null,
 
   /**
+   * True between the call to the "execute" method of the saver and the
+   * completion of the current download attempt.
+   */
+  _saverExecuting: false,
+
+  /**
    * Cancels the download.
    *
    * The cancellation request is asynchronous.  Until the cancellation process
@@ -589,8 +617,12 @@ this.Download.prototype = {
       this.canceled = true;
       this._notifyChange();
 
-      // Execute the actual cancellation through the saver object.
-      this.saver.cancel();
+      // Execute the actual cancellation through the saver object, in case it
+      // has already started.  Otherwise, the cancellation will be handled just
+      // before the saver is started.
+      if (this._saverExecuting) {
+        this.saver.cancel();
+      }
     }
 
     return this._promiseCanceled;
@@ -1364,31 +1396,6 @@ this.DownloadSaver.prototype = {
   },
 
   /**
-   * Return true if the request's response has been blocked by Windows parental
-   * controls with an HTTP 450 error code.
-   *
-   * @param aRequest
-   *        nsIRequest object
-   * @return True if the response is blocked.
-   */
-  isResponseParentalBlocked: function(aRequest)
-  {
-    // If the HTTP status is 450, then Windows Parental Controls have
-    // blocked this download.
-    if (aRequest instanceof Ci.nsIHttpChannel &&
-        aRequest.responseStatus == 450) {
-      // Cancel the request, but set a flag on the download that can be
-      // retrieved later when handling the cancellation so that the proper
-      // blocked by parental controls error can be thrown.
-      this.download._blockedByParentalControls = true;
-      aRequest.cancel(Cr.NS_BINDING_ABORTED);
-      return true;
-    }
-
-    return false;
-  },
-
-  /**
    * Returns a static representation of the current object state.
    *
    * @return A JavaScript object that can be serialized to JSON.
@@ -1612,7 +1619,14 @@ this.DownloadCopySaver.prototype = {
             onStartRequest: function (aRequest, aContext) {
               backgroundFileSaver.onStartRequest(aRequest, aContext);
 
-              if (this.isResponseParentalBlocked(aRequest)) {
+              // Check if the request's response has been blocked by Windows
+              // Parental Controls with an HTTP 450 error code.
+              if (aRequest instanceof Ci.nsIHttpChannel &&
+                  aRequest.responseStatus == 450) {
+                // Set a flag that can be retrieved later when handling the
+                // cancellation so that the proper error can be thrown.
+                this.download._blockedByParentalControls = true;
+                aRequest.cancel(Cr.NS_BINDING_ABORTED);
                 return;
               }
 
@@ -1706,6 +1720,13 @@ this.DownloadCopySaver.prototype = {
                                                   aCount);
             }.bind(copySaver),
           }, null);
+
+          // We should check if we have been canceled in the meantime, after
+          // all the previous asynchronous operations have been executed and
+          // just before we set the _backgroundFileSaver property.
+          if (this._canceled) {
+            throw new DownloadError({ message: "Saver canceled." });
+          }
 
           // If the operation succeeded, store the object to allow cancellation.
           this._backgroundFileSaver = backgroundFileSaver;
@@ -1928,10 +1949,6 @@ this.DownloadLegacySaver.prototype = {
         this.entityID = aRequest.entityID;
       } catch (ex if ex instanceof Components.Exception &&
                      ex.result == Cr.NS_ERROR_NOT_RESUMABLE) { }
-    }
-
-    if (this.isResponseParentalBlocked(aRequest)) {
-      return;
     }
 
     // For legacy downloads, we must update the referrer at this time.

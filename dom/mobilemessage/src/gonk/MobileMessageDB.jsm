@@ -23,11 +23,12 @@ const DEBUG = false;
 const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
-const DB_VERSION = 21;
+const DB_VERSION = 22;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
 const MOST_RECENT_STORE_NAME = "most-recent";
+const SMS_SEGMENT_STORE_NAME = "sms-segment";
 
 const DELIVERY_SENDING = "sending";
 const DELIVERY_SENT = "sent";
@@ -240,6 +241,10 @@ MobileMessageDB.prototype = {
             self.upgradeSchema20(event.target.transaction, next);
             break;
           case 21:
+            if (DEBUG) debug("Upgrade to version 22. Add sms-segment store.");
+            self.upgradeSchema21(db, event.target.transaction, next);
+            break;
+          case 22:
             // This will need to be moved for each new version
             if (DEBUG) debug("Upgrade finished.");
             break;
@@ -1344,6 +1349,65 @@ MobileMessageDB.prototype = {
     };
   },
 
+  /**
+   * Add smsSegmentStore to store uncomplete SMS segments.
+   */
+  upgradeSchema21: function(db, transaction, next) {
+    /**
+     * This smsSegmentStore is used to store uncomplete SMS segments.
+     * Each entry looks like this:
+     *
+     * {
+     *   [Common fields in SMS segment]
+     *   messageType: <Number>,
+     *   teleservice: <Number>,
+     *   SMSC: <String>,
+     *   sentTimestamp: <Number>,
+     *   timestamp: <Number>,
+     *   sender: <String>,
+     *   pid: <Number>,
+     *   encoding: <Number>,
+     *   messageClass: <String>,
+     *   iccId: <String>,
+     *
+     *   [Concatenation Info]
+     *   segmentRef: <Number>,
+     *   segmentSeq: <Number>,
+     *   segmentMaxSeq: <Number>,
+     *
+     *   [Application Port Info]
+     *   originatorPort: <Number>,
+     *   destinationPort: <Number>,
+     *
+     *   [MWI status]
+     *   mwiPresent: <Boolean>,
+     *   mwiDiscard: <Boolean>,
+     *   mwiMsgCount: <Number>,
+     *   mwiActive: <Boolean>,
+     *
+     *   [CDMA Cellbroadcast related fields]
+     *   serviceCategory: <Number>,
+     *   language: <String>,
+     *
+     *   [Message Body]
+     *   data: <Uint8Array>, (available if it's 8bit encoding)
+     *   body: <String>, (normal text body)
+     *
+     *   [Handy fields created by DB for concatenation]
+     *   id: <Number>, keypath of this objectStore.
+     *   hash: <String>, Use to identify the segments to the same SMS.
+     *   receivedSegments: <Number>,
+     *   segments: []
+     * }
+     *
+     */
+    let smsSegmentStore = db.createObjectStore(SMS_SEGMENT_STORE_NAME,
+                                               { keyPath: "id",
+                                                 autoIncrement: true });
+    smsSegmentStore.createIndex("hash", "hash", { unique: true });
+    next();
+  },
+
   matchParsedPhoneNumbers: function(addr1, parsedAddr1, addr2, parsedAddr2) {
     if ((parsedAddr1.internationalNumber &&
          parsedAddr1.internationalNumber === parsedAddr2.internationalNumber) ||
@@ -2426,6 +2490,128 @@ MobileMessageDB.prototype = {
       default:
         return Ci.nsIMobileMessageCallback.INTERNAL_ERROR;
     }
+  },
+
+  saveSmsSegment: function(aSmsSegment, aCallback) {
+    let completeMessage = null;
+    this.newTxn(READ_WRITE, function(error, txn, segmentStore) {
+      if (error) {
+        if (DEBUG) debug(error);
+        aCallback.notify(error, null);
+        return;
+      }
+
+      txn.oncomplete = function oncomplete(event) {
+        if (DEBUG) debug("Transaction " + txn + " completed.");
+        if (completeMessage) {
+          // Rebuild full body
+          if (completeMessage.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+            // Uint8Array doesn't have `concat`, so
+            // we have to merge all segements by hand.
+            let fullDataLen = 0;
+            for (let i = 1; i <= completeMessage.segmentMaxSeq; i++) {
+              fullDataLen += completeMessage.segments[i].length;
+            }
+
+            completeMessage.fullData = new Uint8Array(fullDataLen);
+            for (let d = 0, i = 1; i <= completeMessage.segmentMaxSeq; i++) {
+              let data = completeMessage.segments[i];
+              for (let j = 0; j < data.length; j++) {
+                completeMessage.fullData[d++] = data[j];
+              }
+            }
+          } else {
+            completeMessage.fullBody = completeMessage.segments.join("");
+          }
+
+          // Remove handy fields after completing the concatenation.
+          delete completeMessage.id;
+          delete completeMessage.hash;
+          delete completeMessage.receivedSegments;
+          delete completeMessage.segments;
+        }
+        aCallback.notify(Cr.NS_OK, completeMessage);
+      };
+
+      txn.onabort = function onerror(event) {
+        if (DEBUG) debug("Caught error on transaction", event.target.errorCode);
+        aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
+      };
+
+      aSmsSegment.hash = aSmsSegment.sender + ":" +
+                         aSmsSegment.segmentRef + ":" +
+                         aSmsSegment.segmentMaxSeq + ":" +
+                         aSmsSegment.iccId;
+      let seq = aSmsSegment.segmentSeq;
+      if (DEBUG) {
+        debug("Saving SMS Segment: " + aSmsSegment.hash + ", seq: " + seq);
+      }
+      let getRequest = segmentStore.index("hash").get(aSmsSegment.hash);
+      getRequest.onsuccess = function(event) {
+        let segmentRecord = event.target.result;
+        if (!segmentRecord) {
+          if (DEBUG) {
+            debug("Not found! Create a new record to store the segments.");
+          }
+          aSmsSegment.receivedSegments = 1;
+          aSmsSegment.segments = [];
+          if (aSmsSegment.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+            aSmsSegment.segments[seq] = aSmsSegment.data;
+          } else {
+            aSmsSegment.segments[seq] = aSmsSegment.body;
+          }
+
+          segmentStore.add(aSmsSegment);
+
+          return;
+        }
+
+        if (DEBUG) {
+          debug("Append SMS Segment into existed message object: " + segmentRecord.id);
+        }
+
+        if (segmentRecord.segments[seq]) {
+          if (DEBUG) debug("Got duplicated segment no. " + seq);
+          return;
+        }
+
+        segmentRecord.timestamp = aSmsSegment.timestamp;
+
+        if (segmentRecord.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+          segmentRecord.segments[seq] = aSmsSegment.data;
+        } else {
+          segmentRecord.segments[seq] = aSmsSegment.body;
+        }
+        segmentRecord.receivedSegments++;
+
+        // The port information is only available in 1st segment for CDMA WAP Push.
+        // If the segments of a WAP Push are not received in sequence
+        // (e.g., SMS with seq == 1 is not the 1st segment received by the device),
+        // we have to retrieve the port information from 1st segment and
+        // save it into the segmentRecord.
+        if (aSmsSegment.teleservice === RIL.PDU_CDMA_MSG_TELESERIVCIE_ID_WAP
+            && seq === 1) {
+          if (aSmsSegment.originatorPort) {
+            segmentRecord.originatorPort = aSmsSegment.originatorPort;
+          }
+
+          if (aSmsSegment.destinationPort) {
+            segmentRecord.destinationPort = aSmsSegment.destinationPort;
+          }
+        }
+
+        if (segmentRecord.receivedSegments < segmentRecord.segmentMaxSeq) {
+          if (DEBUG) debug("Message is incomplete.");
+          segmentStore.put(segmentRecord);
+          return;
+        }
+
+        completeMessage = segmentRecord;
+
+        // Delete Record in DB
+        segmentStore.delete(segmentRecord.id);
+      };
+    }, [SMS_SEGMENT_STORE_NAME]);
   },
 
   /**
