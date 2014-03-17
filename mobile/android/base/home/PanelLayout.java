@@ -84,8 +84,8 @@ abstract class PanelLayout extends FrameLayout {
      * filter for queries on the database.
      */
     public static class DatasetRequest implements Parcelable {
-        public final String datasetId;
-        public final String filter;
+        private final String datasetId;
+        private final String filter;
 
         private DatasetRequest(Parcel in) {
             this.datasetId = in.readString();
@@ -95,6 +95,14 @@ abstract class PanelLayout extends FrameLayout {
         public DatasetRequest(String datasetId, String filter) {
             this.datasetId = datasetId;
             this.filter = filter;
+        }
+
+        public String getDatasetId() {
+            return datasetId;
+        }
+
+        public String getFilter() {
+            return filter;
         }
 
         @Override
@@ -168,7 +176,7 @@ abstract class PanelLayout extends FrameLayout {
      */
     public final void deliverDataset(DatasetRequest request, Cursor cursor) {
         Log.d(LOGTAG, "Delivering request: " + request);
-        updateViewsWithDataset(request.datasetId, cursor);
+        updateViewsWithDataset(request.getDatasetId(), cursor);
     }
 
     /**
