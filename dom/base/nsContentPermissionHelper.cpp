@@ -42,7 +42,7 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<Element> mElement;
-  nsRefPtr<nsContentPermissionRequestProxy> mProxy;
+  nsCOMPtr<nsContentPermissionRequestProxy> mProxy;
   nsTArray<PermissionRequest> mRequests;
 
  private:

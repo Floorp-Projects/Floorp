@@ -124,7 +124,7 @@ protected:
   private:
     nsSMILTimeValueSpec* mSpec;
   };
-  nsRefPtr<EventListener> mEventListener;
+  nsCOMPtr<EventListener> mEventListener;
 };
 
 #endif // NS_SMILTIMEVALUESPEC_H_

@@ -460,7 +460,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
                   aBuffer.Data(), aBuffer.Length(),
                   contentType);
 
-  nsRefPtr<DecodeErrorCallback> failureCallback;
+  nsCOMPtr<DecodeErrorCallback> failureCallback;
   if (aFailureCallback.WasPassed()) {
     failureCallback = &aFailureCallback.Value();
   }

@@ -4,7 +4,6 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "nsAuth.h"
-#include "nsAutoPtr.h"
 
 //-----------------------------------------------------------------------------
 
@@ -113,7 +112,7 @@ nsSambaNTLMAuthConstructor(nsISupports *outer, REFNSIID iid, void **result)
   if (outer)
     return NS_ERROR_NO_AGGREGATION;
 
-  nsRefPtr<nsAuthSambaNTLM> auth = new nsAuthSambaNTLM();
+  nsCOMPtr<nsAuthSambaNTLM> auth = new nsAuthSambaNTLM();
   if (!auth)
     return NS_ERROR_OUT_OF_MEMORY;
 

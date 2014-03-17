@@ -138,7 +138,7 @@ Foo::QueryInterface( const nsIID& aIID, void** aResult )
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
-		if ( aIID.Equals(NS_GET_IID(Foo)) )
+		if ( aIID.Equals(GetIID()) )
 			rawPtr = this;
 		else
 			{
@@ -228,7 +228,7 @@ Bar::QueryInterface( const nsID& aIID, void** aResult )
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
-		if ( aIID.Equals(NS_GET_IID(Bar)) )
+		if ( aIID.Equals(GetIID()) )
 			rawPtr = this;
 		else if ( aIID.Equals(NS_GET_IID(Foo)) )
 			rawPtr = static_cast<Foo*>(this);

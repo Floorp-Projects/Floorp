@@ -314,7 +314,7 @@ public:
 private:
     nsTArray<nsRefPtr<LayerScopeWebSocketHandler> > mHandlers;
     nsCOMPtr<nsIThread> mDebugSenderThread;
-    nsRefPtr<DebugDataSender> mCurrentSender;
+    nsCOMPtr<DebugDataSender> mCurrentSender;
     nsCOMPtr<nsIServerSocket> mServerSocket;
 };
 
