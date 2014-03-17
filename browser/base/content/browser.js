@@ -1037,6 +1037,7 @@ var gBrowserInit = {
     // apply full zoom settings to tabs restored by the session restore service.
     FullZoom.init();
     PanelUI.init();
+    TabstripFogConstrainer.init();
     LightweightThemeListener.init();
     WebrtcIndicator.init();
 
@@ -1317,6 +1318,7 @@ var gBrowserInit = {
       SocialUI.uninit();
       LightweightThemeListener.uninit();
       PanelUI.uninit();
+      TabstripFogConstrainer.uninit();
     }
 
     // Final window teardown, do this last.
@@ -4671,6 +4673,36 @@ function onTitlebarMaxClick() {
     window.maximize();
 }
 #endif
+
+let TabstripFogConstrainer = {
+  _toolbar: null,
+  init: function() {
+#ifdef XP_WIN
+    this._toolbar = document.getElementById("TabsToolbar");
+    this._toolbar.addEventListener("tabdragstart", this);
+    this._toolbar.addEventListener("tabdragstop", this);
+#endif
+  },
+
+  handleEvent: function(e) {
+    switch (e.type) {
+      case "tabdragstart":
+        this._toolbar.setAttribute("draggingtab", "true");
+        break;
+      case "tabdragstop":
+        this._toolbar.removeAttribute("draggingtab");
+        break;
+    }
+  },
+
+  uninit: function() {
+#ifdef XP_WIN
+    this._toolbar.removeEventListener("tabdragstart", this);
+    this._toolbar.removeEventListener("tabdragstop", this);
+    this._toolbar = null;
+#endif
+  }
+};
 
 function displaySecurityInfo()
 {
