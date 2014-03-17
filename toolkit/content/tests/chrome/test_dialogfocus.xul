@@ -24,6 +24,7 @@
 <![CDATA[
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestCompleteLog();
 
 var expected = [ "one", "_extra2", "tab", "one", "tabbutton2", "tabbutton", "two", "textbox-yes", "one" ];
 // non-Mac will always focus the default button if any of the dialog buttons
@@ -39,13 +40,16 @@ function startTest()
   var testButton = document.getElementById("test");
   synthesizeKey("VK_TAB", { });
   fullKeyboardAccess = (document.activeElement == testButton);
+  info("We " + (fullKeyboardAccess ? "have" : "don't have") + " full keyboard access");
   runTest();
 }
 
 function runTest()
 {
   step++;
+  info("runTest(), step = " + step + ", expected = " + expected[step - 1]);
   if (step > expected.length || (!fullKeyboardAccess && step == 2)) {
+    info("finishing");
     SimpleTest.finish();
     return;
   }
@@ -55,11 +59,14 @@ function runTest()
 
   function checkDialogFocus(event)
   {
+    info("checkDialogFocus()");
     // if full keyboard access is not on, just skip the tests
     var match = false;
     if (fullKeyboardAccess) {
-      if (!(event.target instanceof Element))
+      if (!(event.target instanceof Element)) {
+        info("target not an Element");
         return;
+      }
 
       if (expectedFocus == "textbox-yes")
         match = (win.document.activeElement == win.document.getElementById(expectedFocus).inputField);
@@ -67,11 +74,13 @@ function runTest()
         match = (win.document.activeElement.dlgType == expectedFocus.substring(1));
       else
         match = (win.document.activeElement.id == expectedFocus);
+      info("match = " + match);
       if (!match)
         return;
     }
     else {
       match = (win.document.activeElement == win.document.documentElement);
+      info("match = " + match);
     }
 
     win.removeEventListener("focus", checkDialogFocus, true);
