@@ -46,7 +46,7 @@ class nsWebBrowserPersist : public nsIInterfaceRequestor,
 // Public members
 public:
     nsWebBrowserPersist();
-    
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSICANCELABLE
@@ -56,7 +56,7 @@ public:
     NS_DECL_NSIPROGRESSEVENTSINK
 
 // Protected members
-protected:    
+protected:
     virtual ~nsWebBrowserPersist();
     nsresult CloneNodeWithFixedUpAttributes(
         nsIDOMNode *aNodeIn, bool *aSerializeCloneKids, nsIDOMNode **aNodeOut);
@@ -217,13 +217,13 @@ class nsEncoderNodeFixup : public nsIDocumentEncoderNodeFixup
 {
 public:
     nsEncoderNodeFixup();
-    
+
     NS_DECL_ISUPPORTS
     NS_IMETHOD FixupNode(nsIDOMNode *aNode, bool *aSerializeCloneKids, nsIDOMNode **aOutNode);
-    
+
     nsWebBrowserPersist *mWebBrowserPersist;
 
-protected:    
+protected:
     virtual ~nsEncoderNodeFixup();
 };
 
