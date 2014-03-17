@@ -688,8 +688,7 @@ nsresult nsGeolocationService::Init()
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-  if (Preferences::GetBool("geo.provider.use_corelocation", true) &&
-      CoreLocationLocationProvider::IsCoreLocationAvailable()) {
+  if (Preferences::GetBool("geo.provider.use_corelocation", false)) {
     mProvider = new CoreLocationLocationProvider();
   }
 #endif
