@@ -17,6 +17,7 @@
 
 #include "mozilla/dom/FragmentOrElement.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
@@ -99,7 +100,6 @@
 #include "ChildIterator.h"
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsRuleProcessorData.h"
-#include "nsAsyncDOMEvent.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/UndoManager.h"
@@ -1123,7 +1123,7 @@ FragmentOrElement::FireNodeInserted(nsIDocument* aDoc,
       mutation.mRelatedNode = do_QueryInterface(aParent);
 
       mozAutoSubtreeModified subtree(aDoc, aParent);
-      (new nsAsyncDOMEvent(childContent, mutation))->RunDOMEventWhenSafe();
+      (new AsyncEventDispatcher(childContent, mutation))->RunDOMEventWhenSafe();
     }
   }
 }

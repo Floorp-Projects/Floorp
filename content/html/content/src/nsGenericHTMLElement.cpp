@@ -83,7 +83,6 @@
 #include "mozilla/dom/Element.h"
 #include "HTMLFieldSetElement.h"
 #include "HTMLMenuElement.h"
-#include "nsAsyncDOMEvent.h"
 #include "nsDOMMutationObserver.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FromParser.h"

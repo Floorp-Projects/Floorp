@@ -6,10 +6,10 @@
 
 #include "ContentEventHandler.h"
 #include "IMEContentObserver.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsAutoPtr.h"
-#include "nsAsyncDOMEvent.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
@@ -95,8 +95,8 @@ IMEContentObserver::Init(nsIWidget* aWidget,
 
   if (IMEStateManager::IsTestingIME()) {
     nsIDocument* doc = aPresContext->Document();
-    (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusIn"),
-                         false, false))->RunDOMEventWhenSafe();
+    (new AsyncEventDispatcher(doc, NS_LITERAL_STRING("MozIMEFocusIn"),
+                              false, false))->RunDOMEventWhenSafe();
   }
 
   aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
@@ -149,8 +149,8 @@ IMEContentObserver::Destroy()
   if (mRootContent) {
     if (IMEStateManager::IsTestingIME() && mEditableNode) {
       nsIDocument* doc = mEditableNode->OwnerDoc();
-      (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
-                           false, false))->RunDOMEventWhenSafe();
+      (new AsyncEventDispatcher(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
+                                false, false))->RunDOMEventWhenSafe();
     }
     mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
   }
