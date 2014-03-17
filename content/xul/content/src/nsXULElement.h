@@ -12,7 +12,7 @@
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
 
-// XXX because nsEventListenerManager has broken includes
+#include "js/Tracer.h"
 #include "mozilla/Attributes.h"
 #include "nsIDOMEvent.h"
 #include "nsIServiceManager.h"
@@ -22,7 +22,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsEventListenerManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIURI.h"
@@ -45,10 +44,12 @@ class nsXULPrototypeDocument;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
+class nsIOffThreadScriptReceiver;
 class nsXULPrototypeNode;
 typedef nsTArray<nsRefPtr<nsXULPrototypeNode> > nsPrototypeArray;
 
 namespace mozilla {
+class EventListenerManager;
 namespace css {
 class StyleRule;
 }
@@ -661,8 +662,9 @@ protected:
                                   const nsAString& aValue,
                                   nsAttrValue& aResult) MOZ_OVERRIDE;
 
-    virtual nsEventListenerManager*
-      GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer) MOZ_OVERRIDE;
+    virtual mozilla::EventListenerManager*
+      GetEventListenerManagerForAttr(nsIAtom* aAttrName,
+                                     bool* aDefer) MOZ_OVERRIDE;
   
     /**
      * Add a listener for the specified attribute, if appropriate.

@@ -1056,14 +1056,14 @@ void
 HTMLFormElement::PostPasswordEvent()
 {
   // Don't fire another add event if we have a pending add event.
-  if (mFormPasswordEvent.get()) {
+  if (mFormPasswordEventDispatcher.get()) {
     return;
   }
 
-  nsRefPtr<FormPasswordEvent> event =
-    new FormPasswordEvent(this, NS_LITERAL_STRING("DOMFormHasPassword"));
-  mFormPasswordEvent = event;
-  event->PostDOMEvent();
+  mFormPasswordEventDispatcher =
+    new FormPasswordEventDispatcher(this,
+                                    NS_LITERAL_STRING("DOMFormHasPassword"));
+  mFormPasswordEventDispatcher->PostDOMEvent();
 }
 
 // This function return true if the element, once appended, is the last one in
