@@ -4,16 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebGLContext.h"
-#include "WebGLBuffer.h"
-#include "WebGLVertexAttribData.h"
-#include "WebGLVertexArray.h"
-#include "WebGLTexture.h"
-#include "WebGLRenderbuffer.h"
-#include "WebGLFramebuffer.h"
-#include "WebGLUniformInfo.h"
-#include "WebGLShader.h"
-#include "WebGLProgram.h"
+
 #include "GLContext.h"
+#include "mozilla/CheckedInt.h"
+#include "WebGLBuffer.h"
+#include "WebGLFramebuffer.h"
+#include "WebGLProgram.h"
+#include "WebGLRenderbuffer.h"
+#include "WebGLShader.h"
+#include "WebGLTexture.h"
+#include "WebGLUniformInfo.h"
+#include "WebGLVertexArray.h"
+#include "WebGLVertexAttribData.h"
 
 using namespace mozilla;
 using namespace dom;
@@ -554,7 +556,9 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsiz
 }
 
 bool
-WebGLContext::DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOffset, GLsizei primcount, const char* info)
+WebGLContext::DrawElements_check(GLsizei count, GLenum type,
+                                 WebGLintptr byteOffset, GLsizei primcount,
+                                 const char* info, GLuint* out_upperBound)
 {
     if (count < 0 || byteOffset < 0) {
         ErrorInvalidValue("%s: negative count or offset", info);
@@ -620,7 +624,9 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOff
         return false;
     }
 
-    if (!mBoundVertexArray->mBoundElementArrayBuffer->ByteLength()) {
+    WebGLBuffer& elemArrayBuffer = *mBoundVertexArray->mBoundElementArrayBuffer;
+
+    if (!elemArrayBuffer.ByteLength()) {
         ErrorInvalidOperation("%s: bound element array buffer doesn't have any data", info);
         return false;
     }
@@ -632,7 +638,7 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOff
         return false;
     }
 
-    if (uint32_t(checked_neededByteCount.value()) > mBoundVertexArray->mBoundElementArrayBuffer->ByteLength()) {
+    if (uint32_t(checked_neededByteCount.value()) > elemArrayBuffer.ByteLength()) {
         ErrorInvalidOperation("%s: bound element array buffer is too small for given count and offset", info);
         return false;
     }
@@ -641,7 +647,7 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOff
         return false;
 
     if (!mMaxFetchedVertices ||
-        !mBoundVertexArray->mBoundElementArrayBuffer->Validate(type, mMaxFetchedVertices - 1, first, count))
+        !elemArrayBuffer.Validate(type, mMaxFetchedVertices - 1, first, count, out_upperBound))
     {
         ErrorInvalidOperation(
                               "%s: bound vertex attribute buffers do not have sufficient "
@@ -673,7 +679,7 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOff
 
 void
 WebGLContext::DrawElements(GLenum mode, GLsizei count, GLenum type,
-                               WebGLintptr byteOffset)
+                           WebGLintptr byteOffset)
 {
     if (IsContextLost())
         return;
@@ -681,18 +687,28 @@ WebGLContext::DrawElements(GLenum mode, GLsizei count, GLenum type,
     if (!ValidateDrawModeEnum(mode, "drawElements: mode"))
         return;
 
-    if (!DrawElements_check(count, type, byteOffset, 1, "drawElements"))
+    GLuint upperBound = UINT_MAX;
+    if (!DrawElements_check(count, type, byteOffset, 1, "drawElements",
+                            &upperBound))
+    {
         return;
+    }
 
     SetupContextLossTimer();
-    gl->fDrawElements(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset));
+
+    if (gl->IsSupported(gl::GLFeature::draw_range_elements)) {
+        gl->fDrawRangeElements(mode, 0, upperBound,
+                               count, type, reinterpret_cast<GLvoid*>(byteOffset));
+    } else {
+        gl->fDrawElements(mode, count, type, reinterpret_cast<GLvoid*>(byteOffset));
+    }
 
     Draw_cleanup();
 }
 
 void
 WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
-                                        WebGLintptr byteOffset, GLsizei primcount)
+                                    WebGLintptr byteOffset, GLsizei primcount)
 {
     if (IsContextLost())
         return;
