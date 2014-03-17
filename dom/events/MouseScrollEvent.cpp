@@ -94,5 +94,7 @@ NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                           WidgetMouseScrollEvent* aEvent)
 {
   MouseScrollEvent* it = new MouseScrollEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }
