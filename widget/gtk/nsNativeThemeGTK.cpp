@@ -752,8 +752,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        uint8_t aWidgetType,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect,
-                                       nsIntRegion* aRegionToClear)
+                                       const nsRect& aDirtyRect)
 {
   GtkWidgetState state;
   GtkThemeWidgetType gtkWidgetType;

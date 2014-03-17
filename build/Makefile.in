@@ -44,8 +44,12 @@ endif
 # by GDB when we debug executables there.
 # NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
 GDBINIT_FILES := $(topsrcdir)/.gdbinit
+GDBINIT_OBJDIR_FILES = $(topsrcdir)/.gdbinit
 GDBINIT_DEST = $(FINAL_TARGET)
-INSTALL_TARGETS += GDBINIT
+
+# needs to be absolute to be distinct from $(topsrcdir)/.gdbinit
+GDBINIT_OBJDIR_DEST = $(abspath $(DEPTH))
+INSTALL_TARGETS += GDBINIT GDBINIT_OBJDIR
 
 # Put a .lldbinit in the bin directory and the objdir, to be picked up
 # automatically by LLDB when we debug executables using either of those two

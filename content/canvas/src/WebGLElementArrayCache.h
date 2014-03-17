@@ -33,7 +33,8 @@ public:
   bool BufferData(const void* ptr, size_t byteSize);
   void BufferSubData(size_t pos, const void* ptr, size_t updateByteSize);
 
-  bool Validate(GLenum type, uint32_t maxAllowed, size_t first, size_t count);
+  bool Validate(GLenum type, uint32_t maxAllowed, size_t first, size_t count,
+                uint32_t* out_upperBound = nullptr);
 
   template<typename T>
   T Element(size_t i) const { return Elements<T>()[i]; }
@@ -53,7 +54,8 @@ public:
 private:
 
   template<typename T>
-  bool Validate(uint32_t maxAllowed, size_t first, size_t count);
+  bool Validate(uint32_t maxAllowed, size_t first, size_t count,
+                uint32_t* out_upperBound);
 
   size_t ByteSize() const {
     return mByteSize;

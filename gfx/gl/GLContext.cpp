@@ -138,6 +138,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_half_float_pixel",
     "GL_EXT_frag_depth",
     "GL_OES_compressed_ETC1_RGB8_texture",
+    "GL_EXT_draw_range_elements",
     nullptr
 };
 
@@ -1070,6 +1071,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mSymbols.fGetObjectLabel       = nullptr;
                 mSymbols.fObjectPtrLabel       = nullptr;
                 mSymbols.fGetObjectPtrLabel    = nullptr;
+            }
+        }
+
+        if (IsSupported(GLFeature::draw_range_elements)) {
+            SymLoadStruct imageSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fDrawRangeElements, { "DrawRangeElementsEXT", "DrawRangeElements", nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(&imageSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports draw_range_elements without supplying its functions.");
+
+                MarkUnsupported(GLFeature::draw_range_elements);
+                mSymbols.fDrawRangeElements = nullptr;
             }
         }
 

@@ -42,6 +42,7 @@
 #include <stdarg.h>
 #include "jsfriendapi.h"
 #include "jsopcode.h"
+#include "jsutil.h"
 
 #include "jit/IonSpewer.h"
 #include "js/RootingAPI.h"
@@ -63,6 +64,7 @@ namespace JSC {
             : m_buffer(m_inlineBuffer)
             , m_capacity(inlineCapacity)
             , m_size(0)
+            , m_allocSize(0)
             , m_oom(false)
         {
         }
@@ -143,6 +145,11 @@ namespace JSC {
             return m_size;
         }
 
+        size_t allocSize() const
+        {
+            return m_allocSize;
+        }
+
         bool oom() const
         {
             return m_oom;
@@ -159,7 +166,9 @@ namespace JSC {
                 return 0;
             }
 
-            void* result = allocator->alloc(m_size, poolp, kind);
+            m_allocSize = js::AlignBytes(m_size, sizeof(void *));
+
+            void* result = allocator->alloc(m_allocSize, poolp, kind);
             if (!result) {
                 *poolp = NULL;
                 return 0;
@@ -255,6 +264,7 @@ namespace JSC {
         char* m_buffer;
         size_t m_capacity;
         size_t m_size;
+        size_t m_allocSize;
         bool m_oom;
     };
 
