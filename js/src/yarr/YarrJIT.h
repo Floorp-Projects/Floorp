@@ -82,16 +82,16 @@ public:
     bool isFallBack() { return m_needFallBack; }
 
 #ifdef YARR_8BIT_CHAR_SUPPORT
-    bool has8BitCode() const { return m_ref8.size(); }
+    bool has8BitCode() const { return m_ref8.allocSize(); }
     void set8BitCode(MacroAssemblerCodeRef ref) { m_ref8 = ref; }
-    bool has8BitCodeMatchOnly() const { return m_matchOnly8.size(); }
+    bool has8BitCodeMatchOnly() const { return m_matchOnly8.allocSize(); }
     void set8BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly) { m_matchOnly8 = matchOnly; }
 #endif
 
-    bool has16BitCode() const { return m_ref16.size(); }
+    bool has16BitCode() const { return m_ref16.allocSize(); }
     void set16BitCode(MacroAssemblerCodeRef ref) { m_ref16 = ref; }
 
-    bool has16BitCodeMatchOnly() const { return m_matchOnly16.size(); }
+    bool has16BitCodeMatchOnly() const { return m_matchOnly16.allocSize(); }
     void set16BitCodeMatchOnly(MacroAssemblerCodeRef matchOnly) { m_matchOnly16 = matchOnly; }
 
 #if YARR_8BIT_CHAR_SUPPORT

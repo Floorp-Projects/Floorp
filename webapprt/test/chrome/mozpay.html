@@ -37,7 +37,7 @@
       document.getElementById("msg").textContent = "Success.";
     };
     request.onerror = function onerror() {
-      document.getElementById("msg").textContent = "Failure.";
+      document.getElementById("msg").textContent = request.error.name;
     };
     </script>
     <p id="msg">Webapp waiting to be paid...</p>

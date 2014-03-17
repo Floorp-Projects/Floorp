@@ -1536,8 +1536,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        uint8_t aWidgetType,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect,
-                                       nsIntRegion* aRegionToClear)
+                                       const nsRect& aDirtyRect)
 {
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme)
@@ -1567,6 +1566,10 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
       case NS_THEME_WIN_GLASS:
       case NS_THEME_WIN_BORDERLESS_GLASS:
         // Nothing to draw, this is the glass background.
+        return NS_OK;
+      case NS_THEME_WINDOW_BUTTON_BOX:
+      case NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED:
+        // We handle these through nsIWidget::UpdateThemeGeometries
         return NS_OK;
       break;
     }
@@ -1898,20 +1901,6 @@ RENDER_AGAIN:
         gripSize.cy + thumbMgns.cyTopHeight + thumbMgns.cyBottomHeight <= widgetRect.bottom - widgetRect.top)
     {
       DrawThemeBackground(theme, hdc, gripPart, state, &widgetRect, &clipRect);
-    }
-  }
-  else if ((aWidgetType == NS_THEME_WINDOW_BUTTON_BOX ||
-            aWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED) &&
-            nsUXThemeData::CheckForCompositor())
-  {
-    // The caption buttons are drawn by the DWM, we just need to clear the area where they
-    // are because we might have drawn something above them (like a background-image).
-    NS_ASSERTION(aRegionToClear, "Must have a clear region to set!");
-    if (aRegionToClear) {
-      // Create a rounded rectangle to follow the buttons' look.
-      *aRegionToClear = nsIntRect(dr.X(), dr.Y(), dr.Width(), dr.Height() - 2.0);
-      aRegionToClear->Or(*aRegionToClear, nsIntRect(dr.X() + 1.0, dr.YMost() - 2.0, dr.Width() - 1.0, 1.0));
-      aRegionToClear->Or(*aRegionToClear, nsIntRect(dr.X() + 2.0, dr.YMost() - 1.0, dr.Width() - 3.0, 1.0));
     }
   }
 

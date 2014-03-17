@@ -38,6 +38,11 @@ size_t ExecutableAllocator::largeAllocSize = 0;
 
 ExecutablePool::~ExecutablePool()
 {
+    MOZ_ASSERT(m_ionCodeBytes == 0);
+    MOZ_ASSERT(m_baselineCodeBytes == 0);
+    MOZ_ASSERT(m_regexpCodeBytes == 0);
+    MOZ_ASSERT(m_otherCodeBytes == 0);
+
     m_allocator->releasePoolPages(this);
 }
 

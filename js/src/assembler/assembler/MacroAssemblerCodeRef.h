@@ -182,14 +182,14 @@ class MacroAssemblerCodeRef {
 public:
     MacroAssemblerCodeRef()
         : m_executablePool(NULL),
-          m_size(0)
+          m_allocSize(0)
     {
     }
 
-    MacroAssemblerCodeRef(void* code, ExecutablePool* executablePool, size_t size)
+    MacroAssemblerCodeRef(void* code, ExecutablePool* executablePool, size_t allocSize)
         : m_code(code)
         , m_executablePool(executablePool)
-        , m_size(size)
+        , m_allocSize(allocSize)
     {
     }
 
@@ -201,22 +201,23 @@ public:
 
 #if defined DEBUG && (defined WTF_CPU_X86 || defined WTF_CPU_X86_64) 
         void *addr = m_code.executableAddress();
-        memset(addr, 0xcc, m_size);
+        memset(addr, 0xcc, m_allocSize);
 #endif
-        m_executablePool->release();
+        // MacroAssemblerCodeRef is only used by Yarr.
+        m_executablePool->release(m_allocSize, REGEXP_CODE);
         m_executablePool = NULL;
     }
 
     MacroAssemblerCodePtr code() const {
         return m_code;
     }
-    size_t size() const {
-        return m_size;
+    size_t allocSize() const {
+        return m_allocSize;
     }
 
     MacroAssemblerCodePtr m_code;
     ExecutablePool* m_executablePool;
-    size_t m_size;
+    size_t m_allocSize;
 };
 
 } // namespace JSC
