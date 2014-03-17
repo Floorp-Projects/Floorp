@@ -145,15 +145,6 @@ inline EventListenerFlags AllEventsAtSystemGroupCapture()
 } // namespace dom
 } // namespace mozilla
 
-typedef enum
-{
-    eNativeListener = 0,
-    eJSEventListener,
-    eWrappedJSListener,
-    eWebIDLListener,
-    eListenerTypeCount
-} nsListenerType;
-
 /*
  * Event listener manager
  */
@@ -167,7 +158,17 @@ public:
     nsCOMPtr<nsIAtom> mTypeAtom; // for the main thread
     nsString mTypeString; // for non-main-threads
     uint16_t mEventType;
+
+    enum ListenerType MOZ_ENUM_TYPE(uint8_t)
+    {
+      eNativeListener = 0,
+      eJSEventListener,
+      eWrappedJSListener,
+      eWebIDLListener,
+      eListenerTypeCount
+    };
     uint8_t mListenerType;
+
     bool mListenerIsHandler : 1;
     bool mHandlerIsString : 1;
     bool mAllEvents : 1;

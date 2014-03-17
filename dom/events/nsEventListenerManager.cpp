@@ -259,13 +259,13 @@ nsEventListenerManager::AddEventListenerInternal(
   nsCOMPtr<nsIXPConnectWrappedJS> wjs;
   if (aFlags.mListenerIsJSListener) {
     MOZ_ASSERT(!aListener.HasWebIDLCallback());
-    listener->mListenerType = eJSEventListener;
+    listener->mListenerType = Listener::eJSEventListener;
   } else if (aListener.HasWebIDLCallback()) {
-    listener->mListenerType = eWebIDLListener;
+    listener->mListenerType = Listener::eWebIDLListener;
   } else if ((wjs = do_QueryInterface(aListener.GetXPCOMCallback()))) {
-    listener->mListenerType = eWrappedJSListener;
+    listener->mListenerType = Listener::eWrappedJSListener;
   } else {
-    listener->mListenerType = eNativeListener;
+    listener->mListenerType = Listener::eNativeListener;
   }
 
 
@@ -951,7 +951,7 @@ nsEventListenerManager::HandleEventSubType(Listener* aListener,
 
   // If this is a script handler and we haven't yet
   // compiled the event handler itself
-  if ((aListener->mListenerType == eJSEventListener) &&
+  if ((aListener->mListenerType == Listener::eJSEventListener) &&
       aListener->mHandlerIsString) {
     result = CompileEventHandlerInternal(aListener, nullptr, nullptr);
     aListener = nullptr;
@@ -1187,7 +1187,7 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     const Listener& listener = mListeners.ElementAt(i);
     // If this is a script handler and we haven't yet
     // compiled the event handler itself go ahead and compile it
-    if (listener.mListenerType == eJSEventListener &&
+    if (listener.mListenerType == Listener::eJSEventListener &&
         listener.mHandlerIsString) {
       CompileEventHandlerInternal(const_cast<Listener*>(&listener), nullptr,
                                   nullptr);
@@ -1340,9 +1340,9 @@ nsEventListenerManager::MarkForCC()
       if (JSObject* scope = jsl->GetEventScope()) {
         JS::ExposeObjectToActiveJS(scope);
       }
-    } else if (listener.mListenerType == eWrappedJSListener) {
+    } else if (listener.mListenerType == Listener::eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
-    } else if (listener.mListenerType == eWebIDLListener) {
+    } else if (listener.mListenerType == Listener::eWebIDLListener) {
       // Callback() unmarks gray
       listener.mListener.GetWebIDLCallback()->Callback();
     }
