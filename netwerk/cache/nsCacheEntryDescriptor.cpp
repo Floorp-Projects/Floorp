@@ -64,7 +64,7 @@ public:
     }
 
 private:
-    nsRefPtr<nsCacheEntryDescriptor> mDescriptor;
+    nsCOMPtr<nsCacheEntryDescriptor> mDescriptor;
     nsICacheListener                *mListener;
     nsCOMPtr<nsIThread>              mThread;
 };

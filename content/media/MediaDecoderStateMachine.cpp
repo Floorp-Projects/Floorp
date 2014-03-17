@@ -2060,7 +2060,7 @@ public:
   }
 private:
   nsRefPtr<MediaDecoder> mDecoder;
-  nsRefPtr<MediaDecoderStateMachine> mStateMachine;
+  nsCOMPtr<MediaDecoderStateMachine> mStateMachine;
 };
 
 // Runnable which dispatches an event to the main thread to dispose of the
@@ -2079,7 +2079,7 @@ public:
   }
 private:
   nsRefPtr<MediaDecoder> mDecoder;
-  nsRefPtr<MediaDecoderStateMachine> mStateMachine;
+  nsCOMPtr<MediaDecoderStateMachine> mStateMachine;
 };
 
 nsresult MediaDecoderStateMachine::RunStateMachine()

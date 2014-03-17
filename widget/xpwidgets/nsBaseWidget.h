@@ -406,7 +406,7 @@ protected:
   nsRefPtr<LayerManager> mBasicLayerManager;
   nsRefPtr<CompositorChild> mCompositorChild;
   nsRefPtr<CompositorParent> mCompositorParent;
-  nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
+  nsCOMPtr<WidgetShutdownObserver> mShutdownObserver;
   nscolor           mBackground;
   nscolor           mForeground;
   nsCursor          mCursor;

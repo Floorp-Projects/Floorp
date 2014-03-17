@@ -44,7 +44,7 @@ class nsXULTemplateQueryProcessorRDF MOZ_FINAL : public nsIXULTemplateQueryProce
                                                  public nsIRDFObserver
 {
 public:
-    typedef nsTArray<nsRefPtr<nsXULTemplateResultRDF> > ResultArray;
+    typedef nsTArray<nsCOMPtr<nsXULTemplateResultRDF> > ResultArray;
 
     nsXULTemplateQueryProcessorRDF();
 

@@ -202,7 +202,7 @@ nsXMLContentSink::MaybePrettyPrint()
     mCSSLoader->SetEnabled(true);
   }
   
-  nsRefPtr<nsXMLPrettyPrinter> printer;
+  nsCOMPtr<nsXMLPrettyPrinter> printer;
   nsresult rv = NS_NewXMLPrettyPrinter(getter_AddRefs(printer));
   NS_ENSURE_SUCCESS(rv, rv);
 

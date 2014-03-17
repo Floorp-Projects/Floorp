@@ -281,7 +281,7 @@ IFoo::QueryInterface( const nsIID& aIID, void** aResult )
     nsISupports* rawPtr = 0;
     nsresult status = NS_OK;
 
-    if ( aIID.Equals(NS_GET_IID(IFoo)) )
+    if ( aIID.Equals(GetIID()) )
       rawPtr = this;
     else
       {
