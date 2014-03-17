@@ -627,8 +627,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
     NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
-    nsISupportsKey key(keyPtr);
-    OutputData *data = (OutputData *) mOutputMap.Get(&key);
+    OutputData *data = mOutputMap.Get(keyPtr);
 
     // NOTE: This code uses the channel as a hash key so it will not
     //       recognize redirected channels because the key is not the same.
@@ -636,6 +635,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
     //       new channel as the hash key.
     if (!data)
     {
+        nsISupportsKey key(keyPtr);
         UploadData *upData = (UploadData *) mUploadList.Get(&key);
         if (!upData)
         {
@@ -645,7 +645,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
 
             // Should be able to find the data after fixup unless redirects
             // are disabled.
-            data = (OutputData *) mOutputMap.Get(&key);
+            data = mOutputMap.Get(keyPtr);
             if (!data)
             {
                 return NS_ERROR_FAILURE;
@@ -679,8 +679,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
             && isEqual)
         {
             // remove from output map
-            delete data;
-            mOutputMap.Remove(&key);
+            mOutputMap.Remove(keyPtr);
 
             // cancel; we don't need to know any more
             // stop request will get called
@@ -695,20 +694,19 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     nsIRequest* request, nsISupports *ctxt, nsresult status)
 {
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
-    nsISupportsKey key(keyPtr);
-    OutputData *data = (OutputData *) mOutputMap.Get(&key);
+    OutputData *data = mOutputMap.Get(keyPtr);
     if (data)
     {
         if (NS_SUCCEEDED(mPersistResult) && NS_FAILED(status))
             SendErrorStatusChange(true, status, request, data->mFile);
 
-        // This will close automatically close the output stream
-        delete data;
-        mOutputMap.Remove(&key);
+        // This will automatically close the output stream
+        mOutputMap.Remove(keyPtr);
     }
     else
     {
         // if we didn't find the data in mOutputMap, try mUploadList
+        nsISupportsKey key(keyPtr);
         UploadData *upData = (UploadData *) mUploadList.Get(&key);
         if (upData)
         {
@@ -784,8 +782,7 @@ nsWebBrowserPersist::OnDataAvailable(
         NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
 
         nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
-        nsISupportsKey key(keyPtr);
-        OutputData *data = (OutputData *) mOutputMap.Get(&key);
+        OutputData *data = mOutputMap.Get(keyPtr);
         if (!data) {
             // might be uploadData; consume necko's buffer and bail...
             uint32_t n;
@@ -921,8 +918,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
 
     // Store the progress of this request
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(request);
-    nsISupportsKey key(keyPtr);
-    OutputData *data = (OutputData *) mOutputMap.Get(&key);
+    OutputData *data = mOutputMap.Get(keyPtr);
     if (data)
     {
         data->mSelfProgress = int64_t(aProgress);
@@ -930,6 +926,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     }
     else
     {
+        nsISupportsKey key(keyPtr);
         UploadData *upData = (UploadData *) mUploadList.Get(&key);
         if (upData)
         {
@@ -1358,8 +1355,7 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
 
     // Add the output transport to the output map with the channel as the key
     nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aChannel);
-    nsISupportsKey key(keyPtr);
-    mOutputMap.Put(&key, new OutputData(aFile, mURI, aCalcFileExt));
+    mOutputMap.Put(keyPtr, new OutputData(aFile, mURI, aCalcFileExt));
 
     return NS_OK;
 }
@@ -1774,8 +1770,8 @@ void nsWebBrowserPersist::Cleanup()
 {
     mURIMap.Enumerate(EnumCleanupURIMap, this);
     mURIMap.Reset();
-    mOutputMap.Enumerate(EnumCleanupOutputMap, this);
-    mOutputMap.Reset();
+    mOutputMap.EnumerateRead(EnumCleanupOutputMap, this);
+    mOutputMap.Clear();
     mUploadList.Enumerate(EnumCleanupUploadList, this);
     mUploadList.Reset();
     uint32_t i;
@@ -2341,7 +2337,7 @@ struct MOZ_STACK_CLASS FixRedirectData
 {
     nsCOMPtr<nsIChannel> mNewChannel;
     nsCOMPtr<nsIURI> mOriginalURI;
-    nsISupportsKey *mMatchingKey;
+    nsCOMPtr<nsISupports> mMatchingKey;
 };
 
 nsresult
@@ -2354,41 +2350,36 @@ nsWebBrowserPersist::FixRedirectedChannelEntry(nsIChannel *aNewChannel)
     // a URI matching the one specified.
 
     FixRedirectData data;
-    data.mMatchingKey = nullptr;
     data.mNewChannel = aNewChannel;
     data.mNewChannel->GetOriginalURI(getter_AddRefs(data.mOriginalURI));
-    mOutputMap.Enumerate(EnumFixRedirect, (void *) &data);
+    mOutputMap.EnumerateRead(EnumFixRedirect, &data);
 
     // If a match is found, remove the data entry with the old channel key
     // and re-add it with the new channel key.
 
     if (data.mMatchingKey)
     {
-        OutputData *outputData = (OutputData *) mOutputMap.Get(data.mMatchingKey);
+        nsAutoPtr<OutputData> outputData;
+        mOutputMap.RemoveAndForget(data.mMatchingKey, outputData);
         NS_ENSURE_TRUE(outputData, NS_ERROR_FAILURE);
-        mOutputMap.Remove(data.mMatchingKey);
 
         // Store data again with new channel unless told to ignore redirects
         if (!(mPersistFlags & PERSIST_FLAGS_IGNORE_REDIRECTED_DATA))
         {
             nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aNewChannel);
-            nsISupportsKey key(keyPtr);
-            mOutputMap.Put(&key, outputData);
+            mOutputMap.Put(keyPtr, outputData.forget());
         }
     }
 
     return NS_OK;
 }
 
-bool
-nsWebBrowserPersist::EnumFixRedirect(nsHashKey *aKey, void *aData, void* closure)
+PLDHashOperator
+nsWebBrowserPersist::EnumFixRedirect(nsISupports *aKey, OutputData *aData, void* aClosure)
 {
-    FixRedirectData *data = (FixRedirectData *) closure;
+    FixRedirectData *data = static_cast<FixRedirectData *>(aClosure);
 
-    nsCOMPtr<nsISupports> keyPtr;
-    ((nsMyISupportsKey *) aKey)->GetISupports(getter_AddRefs(keyPtr));
-
-    nsCOMPtr<nsIChannel> thisChannel = do_QueryInterface(keyPtr);
+    nsCOMPtr<nsIChannel> thisChannel = do_QueryInterface(aKey);
     nsCOMPtr<nsIURI> thisURI;
 
     thisChannel->GetOriginalURI(getter_AddRefs(thisURI));
@@ -2398,11 +2389,11 @@ nsWebBrowserPersist::EnumFixRedirect(nsHashKey *aKey, void *aData, void* closure
     thisURI->Equals(data->mOriginalURI, &matchingURI);
     if (matchingURI)
     {
-        data->mMatchingKey = (nsISupportsKey *) aKey;
-        return false; // Stop enumerating
+        data->mMatchingKey = aKey;
+        return PL_DHASH_STOP;
     }
 
-    return true;
+    return PL_DHASH_NEXT;
 }
 
 void
@@ -2414,7 +2405,7 @@ nsWebBrowserPersist::CalcTotalProgress()
     if (mOutputMap.Count() > 0)
     {
         // Total up the progress of each output stream
-        mOutputMap.Enumerate(EnumCalcProgress, this);
+        mOutputMap.EnumerateRead(EnumCalcProgress, this);
     }
 
     if (mUploadList.Count() > 0)
@@ -2432,20 +2423,19 @@ nsWebBrowserPersist::CalcTotalProgress()
     }
 }
 
-bool
-nsWebBrowserPersist::EnumCalcProgress(nsHashKey *aKey, void *aData, void* closure)
+PLDHashOperator
+nsWebBrowserPersist::EnumCalcProgress(nsISupports *aKey, OutputData *aData, void* aClosure)
 {
-    nsWebBrowserPersist *pthis = (nsWebBrowserPersist *) closure;
-    OutputData *data = (OutputData *) aData;
+    nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist *>(aClosure);
 
     // only count toward total progress if destination file is local
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(data->mFile);
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aData->mFile);
     if (fileURL)
     {
-        pthis->mTotalCurrentProgress += data->mSelfProgress;
-        pthis->mTotalMaxProgress += data->mSelfProgressMax;
+        pthis->mTotalCurrentProgress += aData->mSelfProgress;
+        pthis->mTotalMaxProgress += aData->mSelfProgressMax;
     }
-    return true;
+    return PL_DHASH_NEXT;
 }
 
 bool
@@ -2525,19 +2515,15 @@ nsWebBrowserPersist::EnumPersistURIs(nsHashKey *aKey, void *aData, void* closure
     return true;
 }
 
-bool
-nsWebBrowserPersist::EnumCleanupOutputMap(nsHashKey *aKey, void *aData, void* closure)
+PLDHashOperator
+nsWebBrowserPersist::EnumCleanupOutputMap(nsISupports *aKey, OutputData *aData, void* aClosure)
 {
-    nsCOMPtr<nsISupports> keyPtr;
-    ((nsMyISupportsKey *) aKey)->GetISupports(getter_AddRefs(keyPtr));
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(keyPtr);
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aKey);
     if (channel)
     {
         channel->Cancel(NS_BINDING_ABORTED);
     }
-    OutputData *data = (OutputData *) aData;
-    delete data;
-    return true;
+    return PL_DHASH_NEXT;
 }
 
 
