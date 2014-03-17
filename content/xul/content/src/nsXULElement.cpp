@@ -1686,11 +1686,11 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     if (isContext) {
       manager->AddEventListenerByType(listener,
                                       NS_LITERAL_STRING("contextmenu"),
-                                      dom::TrustedEventsAtSystemGroupBubble());
+                                      TrustedEventsAtSystemGroupBubble());
     } else {
       manager->AddEventListenerByType(listener,
                                       NS_LITERAL_STRING("mousedown"),
-                                      dom::TrustedEventsAtSystemGroupBubble());
+                                      TrustedEventsAtSystemGroupBubble());
     }
     return NS_OK;
 }

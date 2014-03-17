@@ -1529,13 +1529,13 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
     if (manager) {
       manager->RemoveEventListenerByType(mTextListener,
         NS_LITERAL_STRING("keydown"),
-        dom::TrustedEventsAtSystemGroupBubble());
+        TrustedEventsAtSystemGroupBubble());
       manager->RemoveEventListenerByType(mTextListener,
         NS_LITERAL_STRING("keypress"),
-        dom::TrustedEventsAtSystemGroupBubble());
+        TrustedEventsAtSystemGroupBubble());
       manager->RemoveEventListenerByType(mTextListener,
         NS_LITERAL_STRING("keyup"),
-        dom::TrustedEventsAtSystemGroupBubble());
+        TrustedEventsAtSystemGroupBubble());
     }
 
     NS_RELEASE(mTextListener);
@@ -1934,13 +1934,13 @@ nsTextEditorState::InitializeKeyboardEventListeners()
   if (manager) {
     manager->AddEventListenerByType(mTextListener,
                                     NS_LITERAL_STRING("keydown"),
-                                    dom::TrustedEventsAtSystemGroupBubble());
+                                    TrustedEventsAtSystemGroupBubble());
     manager->AddEventListenerByType(mTextListener,
                                     NS_LITERAL_STRING("keypress"),
-                                    dom::TrustedEventsAtSystemGroupBubble());
+                                    TrustedEventsAtSystemGroupBubble());
     manager->AddEventListenerByType(mTextListener,
                                     NS_LITERAL_STRING("keyup"),
-                                    dom::TrustedEventsAtSystemGroupBubble());
+                                    TrustedEventsAtSystemGroupBubble());
   }
 
   mSelCon->SetScrollableFrame(do_QueryFrame(mBoundFrame->GetFirstPrincipalChild()));

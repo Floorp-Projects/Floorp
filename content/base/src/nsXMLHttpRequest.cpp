@@ -2161,7 +2161,7 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
       eventTarget->GetOrCreateListenerManager();
     manager->AddEventListenerByType(new nsXHRParseEndListener(this),
                                     NS_LITERAL_STRING("DOMContentLoaded"),
-                                    dom::TrustedEventsAtSystemGroupBubble());
+                                    TrustedEventsAtSystemGroupBubble());
     return NS_OK;
   }
   // We might have been sent non-XML data. If that was the case,

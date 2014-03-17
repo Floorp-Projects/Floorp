@@ -300,7 +300,7 @@ aClass::RemoveSystemEventListener(const nsAString& aType, \
   if (!listenerManager) { \
     return NS_OK; \
   } \
-  mozilla::dom::EventListenerFlags flags; \
+  mozilla::EventListenerFlags flags; \
   flags.mInSystemGroup = true; \
   flags.mCapture = aUseCapture; \
   listenerManager->RemoveEventListenerByType(aListener, aType, flags); \

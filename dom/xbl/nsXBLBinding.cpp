@@ -551,7 +551,7 @@ nsXBLBinding::InstallEventHandlers()
         nsXBLEventHandler* handler = curr->GetEventHandler();
         if (handler) {
           // Figure out if we're using capturing or not.
-          dom::EventListenerFlags flags;
+          EventListenerFlags flags;
           flags.mCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
 
           // If this is a command, add it in the system event group
@@ -588,7 +588,7 @@ nsXBLBinding::InstallEventHandlers()
         // add it to the standard event group.
 
         // Figure out if we're using capturing or not.
-        dom::EventListenerFlags flags;
+        EventListenerFlags flags;
         flags.mCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
 
         if ((handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND |
@@ -702,7 +702,7 @@ nsXBLBinding::UnhookEventHandlers()
         continue;
 
       // Figure out if we're using capturing or not.
-      dom::EventListenerFlags flags;
+      EventListenerFlags flags;
       flags.mCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
 
       // If this is a command, remove it from the system event group,
@@ -729,7 +729,7 @@ nsXBLBinding::UnhookEventHandlers()
       handler->GetEventName(type);
 
       // Figure out if we're using capturing or not.
-      dom::EventListenerFlags flags;
+      EventListenerFlags flags;
       flags.mCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
 
       // If this is a command, remove it from the system event group, otherwise 
