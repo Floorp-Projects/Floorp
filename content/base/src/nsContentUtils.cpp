@@ -41,6 +41,7 @@
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
@@ -74,7 +75,6 @@
 #include "nsDOMMutationObserver.h"
 #include "nsError.h"
 #include "nsEventDispatcher.h"
-#include "nsEventListenerManager.h"
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
@@ -269,7 +269,7 @@ public:
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData)
   {
-    // We don't measure the |nsEventListenerManager| objects pointed to by the
+    // We don't measure the |EventListenerManager| objects pointed to by the
     // entries because those references are non-owning.
     int64_t amount = sEventListenerManagersHash.ops
                    ? PL_DHashTableSizeOfExcludingThis(
@@ -302,7 +302,7 @@ protected:          // declared protected to silence clang warnings
   const void *mKey; // must be first, to look like PLDHashEntryStub
 
 public:
-  nsRefPtr<nsEventListenerManager> mListenerManager;
+  nsRefPtr<EventListenerManager> mListenerManager;
 };
 
 static bool
@@ -3561,7 +3561,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
 
   // global object will be null for documents that don't have windows.
   nsPIDOMWindow* window = doc->GetInnerWindow();
-  // This relies on nsEventListenerManager::AddEventListener, which sets
+  // This relies on EventListenerManager::AddEventListener, which sets
   // all mutation bits when there is a listener for DOMSubtreeModified event.
   if (window && !window->HasMutationListeners(aType)) {
     return false;
@@ -3578,7 +3578,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   if (aNode->IsInDoc()) {
     nsCOMPtr<EventTarget> piTarget(do_QueryInterface(window));
     if (piTarget) {
-      nsEventListenerManager* manager = piTarget->GetExistingListenerManager();
+      EventListenerManager* manager = piTarget->GetExistingListenerManager();
       if (manager && manager->HasMutationListeners()) {
         return true;
       }
@@ -3589,7 +3589,7 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   // might not be in our chain.  If we don't have a window, we might have a
   // mutation listener.  Check quickly to see.
   while (aNode) {
-    nsEventListenerManager* manager = aNode->GetExistingListenerManager();
+    EventListenerManager* manager = aNode->GetExistingListenerManager();
     if (manager && manager->HasMutationListeners()) {
       return true;
     }
@@ -3616,7 +3616,7 @@ nsContentUtils::HasMutationListeners(nsIDocument* aDocument,
   nsPIDOMWindow* window = aDocument ?
     aDocument->GetInnerWindow() : nullptr;
 
-  // This relies on nsEventListenerManager::AddEventListener, which sets
+  // This relies on EventListenerManager::AddEventListener, which sets
   // all mutation bits when there is a listener for DOMSubtreeModified event.
   return !window || window->HasMutationListeners(aType);
 }
@@ -3710,7 +3710,7 @@ nsContentUtils::TraverseListenerManager(nsINode *aNode,
   }
 }
 
-nsEventListenerManager*
+EventListenerManager*
 nsContentUtils::GetListenerManagerForNode(nsINode *aNode)
 {
   if (!sEventListenerManagersHash.ops) {
@@ -3730,7 +3730,7 @@ nsContentUtils::GetListenerManagerForNode(nsINode *aNode)
   }
 
   if (!entry->mListenerManager) {
-    entry->mListenerManager = new nsEventListenerManager(aNode);
+    entry->mListenerManager = new EventListenerManager(aNode);
 
     aNode->SetFlags(NODE_HAS_LISTENERMANAGER);
   }
@@ -3738,7 +3738,7 @@ nsContentUtils::GetListenerManagerForNode(nsINode *aNode)
   return entry->mListenerManager;
 }
 
-nsEventListenerManager*
+EventListenerManager*
 nsContentUtils::GetExistingListenerManagerForNode(const nsINode *aNode)
 {
   if (!aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
@@ -3773,7 +3773,7 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
                  (PL_DHashTableOperate(&sEventListenerManagersHash, aNode,
                                           PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      nsRefPtr<nsEventListenerManager> listenerManager;
+      nsRefPtr<EventListenerManager> listenerManager;
       listenerManager.swap(entry->mListenerManager);
       // Remove the entry and *then* do operations that could cause further
       // modification of sEventListenerManagersHash.  See bug 334177.

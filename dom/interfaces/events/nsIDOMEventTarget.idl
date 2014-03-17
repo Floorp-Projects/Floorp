@@ -13,6 +13,7 @@
 using mozilla::dom::Nullable;
 
 namespace mozilla {
+class EventListenerManager;
 namespace dom {
 class EventTarget;
 } // namespace dom
@@ -21,7 +22,6 @@ class EventTarget;
 class nsPresContext;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
-class nsEventListenerManager;
 %}
 
 /**
@@ -38,7 +38,7 @@ class nsEventListenerManager;
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsEventStatusPtr(nsEventStatus);
 [ptr] native JSContextPtr(JSContext);
-[ptr] native nsEventListenerManagerPtr(nsEventListenerManager);
+[ptr] native EventListenerManagerPtr(mozilla::EventListenerManager);
 [ptr] native EventTargetPtr(mozilla::dom::EventTarget);
 
 interface nsIScriptContext;
@@ -296,11 +296,12 @@ aClass::RemoveSystemEventListener(const nsAString& aType, \
                                   nsIDOMEventListener *aListener, \
                                   bool aUseCapture) \
 { \
-  nsEventListenerManager* listenerManager = GetExistingListenerManager(); \
+  mozilla::EventListenerManager* listenerManager = \
+    GetExistingListenerManager(); \
   if (!listenerManager) { \
     return NS_OK; \
   } \
-  mozilla::dom::EventListenerFlags flags; \
+  mozilla::EventListenerFlags flags; \
   flags.mInSystemGroup = true; \
   flags.mCapture = aUseCapture; \
   listenerManager->RemoveEventListenerByType(aListener, aType, flags); \

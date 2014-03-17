@@ -15,12 +15,12 @@
 #include "Logging.h"
 #endif
 
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
 #include "nsIDOMDocument.h"
-#include "nsEventListenerManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebNavigation.h"
@@ -329,9 +329,9 @@ DocManager::AddListeners(nsIDocument* aDocument,
 {
   nsPIDOMWindow* window = aDocument->GetWindow();
   EventTarget* target = window->GetChromeEventHandler();
-  nsEventListenerManager* elm = target->GetOrCreateListenerManager();
+  EventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                              dom::TrustedEventsAtCapture());
+                              TrustedEventsAtCapture());
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocCreate))
@@ -340,7 +340,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
 
   if (aAddDOMContentLoadedListener) {
     elm->AddEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
-                                dom::TrustedEventsAtCapture());
+                                TrustedEventsAtCapture());
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eDocCreate))
       logging::Text("added 'DOMContentLoaded' listener");
@@ -359,12 +359,12 @@ DocManager::RemoveListeners(nsIDocument* aDocument)
   if (!target)
     return;
 
-  nsEventListenerManager* elm = target->GetOrCreateListenerManager();
+  EventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
-                                 dom::TrustedEventsAtCapture());
+                                 TrustedEventsAtCapture());
 
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("DOMContentLoaded"),
-                                 dom::TrustedEventsAtCapture());
+                                 TrustedEventsAtCapture());
 }
 
 DocAccessible*

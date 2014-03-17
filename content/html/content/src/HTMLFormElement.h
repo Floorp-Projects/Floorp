@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_HTMLFormElement_h
 #define mozilla_dom_HTMLFormElement_h
 
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
@@ -20,7 +21,6 @@
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsDataHashtable.h"
-#include "nsAsyncDOMEvent.h"
 #include "jsfriendapi.h" // For js::ExpandoAndGeneration
 
 class nsIMutableArray;
@@ -409,24 +409,24 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   void PostPasswordEvent();
-  void EventHandled() { mFormPasswordEvent = nullptr; }
+  void EventHandled() { mFormPasswordEventDispatcher = nullptr; }
 
-  class FormPasswordEvent : public nsAsyncDOMEvent
+  class FormPasswordEventDispatcher MOZ_FINAL : public AsyncEventDispatcher
   {
   public:
-    FormPasswordEvent(HTMLFormElement* aEventNode,
-                      const nsAString& aEventType)
-      : nsAsyncDOMEvent(aEventNode, aEventType, true, true)
+    FormPasswordEventDispatcher(HTMLFormElement* aEventNode,
+                                const nsAString& aEventType)
+      : AsyncEventDispatcher(aEventNode, aEventType, true, true)
     {}
 
     NS_IMETHOD Run() MOZ_OVERRIDE
     {
       static_cast<HTMLFormElement*>(mEventNode.get())->EventHandled();
-      return nsAsyncDOMEvent::Run();
+      return AsyncEventDispatcher::Run();
     }
   };
 
-  nsRefPtr<FormPasswordEvent> mFormPasswordEvent;
+  nsRefPtr<FormPasswordEventDispatcher> mFormPasswordEventDispatcher;
 
   class RemoveElementRunnable;
   friend class RemoveElementRunnable;

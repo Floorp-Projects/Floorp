@@ -27,6 +27,7 @@ class DeviceStorageFile;
 class nsIInputStream;
 
 namespace mozilla {
+class EventListenerManager;
 namespace dom {
 class DeviceStorageEnumerationParameters;
 class DOMCursor;
@@ -170,10 +171,10 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTTARGET
 
-  virtual nsEventListenerManager*
-  GetExistingListenerManager() const MOZ_OVERRIDE;
-  virtual nsEventListenerManager*
-  GetOrCreateListenerManager() MOZ_OVERRIDE;
+  virtual mozilla::EventListenerManager*
+    GetExistingListenerManager() const MOZ_OVERRIDE;
+  virtual mozilla::EventListenerManager*
+    GetOrCreateListenerManager() MOZ_OVERRIDE;
 
   virtual void
   AddEventListener(const nsAString& aType,

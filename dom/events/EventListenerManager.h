@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsEventListenerManager_h__
-#define nsEventListenerManager_h__
+#ifndef mozilla_EventListenerManager_h_
+#define mozilla_EventListenerManager_h_
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/EventListenerBinding.h"
@@ -16,31 +16,32 @@
 #include "nsIJSEventListener.h"
 #include "nsTObserverArray.h"
 
-class nsIDOMEvent;
-struct EventTypeData;
+class ELMCreationDetector;
 class nsEventTargetChainItem;
-class nsPIDOMWindow;
+class nsIDOMEvent;
 class nsIEventListenerInfo;
 class nsIScriptContext;
+class nsPIDOMWindow;
 
-struct nsListenerStruct;
-class nsEventListenerManager;
+struct EventTypeData;
 
 template<class T> class nsCOMArray;
 
 namespace mozilla {
-namespace dom {
 
+class EventListenerManager;
+
+namespace dom {
 class EventTarget;
 class Element;
+} // namespace dom
 
-typedef CallbackObjectHolder<EventListener, nsIDOMEventListener>
-  EventListenerHolder;
+typedef dom::CallbackObjectHolder<dom::EventListener,
+                                  nsIDOMEventListener> EventListenerHolder;
 
 struct EventListenerFlags
 {
-  friend struct ::nsListenerStruct;
-  friend class  ::nsEventListenerManager;
+  friend class EventListenerManager;
 private:
   // If mListenerIsJSListener is true, the listener is implemented by JS.
   // Otherwise, it's implemented by native code or JS but it's wrapped.
@@ -144,105 +145,105 @@ inline EventListenerFlags AllEventsAtSystemGroupCapture()
   return flags;
 }
 
-} // namespace dom
-} // namespace mozilla
-
-typedef enum
-{
-    eNativeListener = 0,
-    eJSEventListener,
-    eWrappedJSListener,
-    eWebIDLListener,
-    eListenerTypeCount
-} nsListenerType;
-
-struct nsListenerStruct
-{
-  mozilla::dom::EventListenerHolder mListener;
-  nsCOMPtr<nsIAtom>             mTypeAtom;   // for the main thread
-  nsString                      mTypeString; // for non-main-threads
-  uint16_t                      mEventType;
-  uint8_t                       mListenerType;
-  bool                          mListenerIsHandler : 1;
-  bool                          mHandlerIsString : 1;
-  bool                          mAllEvents : 1;
-
-  mozilla::dom::EventListenerFlags mFlags;
-
-  nsIJSEventListener* GetJSListener() const {
-    return (mListenerType == eJSEventListener) ?
-      static_cast<nsIJSEventListener *>(mListener.GetXPCOMCallback()) : nullptr;
-  }
-
-  nsListenerStruct()
-  {
-    MOZ_ASSERT(sizeof(mListenerType) == 1);
-    MOZ_ASSERT(eListenerTypeCount < 255);
-  }
-
-  ~nsListenerStruct()
-  {
-    if ((mListenerType == eJSEventListener) && mListener) {
-      static_cast<nsIJSEventListener*>(mListener.GetXPCOMCallback())->Disconnect();
-    }
-  }
-
-  MOZ_ALWAYS_INLINE bool IsListening(const mozilla::WidgetEvent* aEvent) const
-  {
-    if (mFlags.mInSystemGroup != aEvent->mFlags.mInSystemGroup) {
-      return false;
-    }
-    // FIXME Should check !mFlags.mCapture when the event is in target
-    //       phase because capture phase event listeners should not be fired.
-    //       But it breaks at least <xul:dialog>'s buttons. Bug 235441.
-    return ((mFlags.mCapture && aEvent->mFlags.mInCapturePhase) ||
-            (!mFlags.mCapture && aEvent->mFlags.mInBubblingPhase));
-  }
-};
-
 /*
  * Event listener manager
  */
 
-class nsEventListenerManager
+class EventListenerManager MOZ_FINAL
 {
-
 public:
-  nsEventListenerManager(mozilla::dom::EventTarget* aTarget);
-  virtual ~nsEventListenerManager();
+  struct Listener
+  {
+    EventListenerHolder mListener;
+    nsCOMPtr<nsIAtom> mTypeAtom; // for the main thread
+    nsString mTypeString; // for non-main-threads
+    uint16_t mEventType;
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsEventListenerManager)
+    enum ListenerType MOZ_ENUM_TYPE(uint8_t)
+    {
+      eNativeListener = 0,
+      eJSEventListener,
+      eWrappedJSListener,
+      eWebIDLListener,
+      eListenerTypeCount
+    };
+    uint8_t mListenerType;
 
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsEventListenerManager)
+    bool mListenerIsHandler : 1;
+    bool mHandlerIsString : 1;
+    bool mAllEvents : 1;
+
+    EventListenerFlags mFlags;
+
+    nsIJSEventListener* GetJSListener() const
+    {
+      return (mListenerType == eJSEventListener) ?
+        static_cast<nsIJSEventListener *>(mListener.GetXPCOMCallback()) :
+        nullptr;
+    }
+
+    Listener()
+    {
+      MOZ_ASSERT(sizeof(mListenerType) == 1);
+      MOZ_ASSERT(eListenerTypeCount < 255);
+    }
+
+    ~Listener()
+    {
+      if ((mListenerType == eJSEventListener) && mListener) {
+        static_cast<nsIJSEventListener*>(
+          mListener.GetXPCOMCallback())->Disconnect();
+      }
+    }
+
+    MOZ_ALWAYS_INLINE bool IsListening(const WidgetEvent* aEvent) const
+    {
+      if (mFlags.mInSystemGroup != aEvent->mFlags.mInSystemGroup) {
+        return false;
+      }
+      // FIXME Should check !mFlags.mCapture when the event is in target
+      //       phase because capture phase event listeners should not be fired.
+      //       But it breaks at least <xul:dialog>'s buttons. Bug 235441.
+      return ((mFlags.mCapture && aEvent->mFlags.mInCapturePhase) ||
+              (!mFlags.mCapture && aEvent->mFlags.mInBubblingPhase));
+    }
+  };
+
+  EventListenerManager(dom::EventTarget* aTarget);
+  virtual ~EventListenerManager();
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(EventListenerManager)
+
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(EventListenerManager)
 
   void AddEventListener(const nsAString& aType,
                         nsIDOMEventListener* aListener,
                         bool aUseCapture,
                         bool aWantsUntrusted)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    EventListenerHolder holder(aListener);
     AddEventListener(aType, holder, aUseCapture, aWantsUntrusted);
   }
   void AddEventListener(const nsAString& aType,
-                        mozilla::dom::EventListener* aListener,
+                        dom::EventListener* aListener,
                         bool aUseCapture,
                         bool aWantsUntrusted)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    EventListenerHolder holder(aListener);
     AddEventListener(aType, holder, aUseCapture, aWantsUntrusted);
   }
   void RemoveEventListener(const nsAString& aType,
                            nsIDOMEventListener* aListener,
                            bool aUseCapture)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    EventListenerHolder holder(aListener);
     RemoveEventListener(aType, holder, aUseCapture);
   }
   void RemoveEventListener(const nsAString& aType,
-                           mozilla::dom::EventListener* aListener,
+                           dom::EventListener* aListener,
                            bool aUseCapture)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    EventListenerHolder holder(aListener);
     RemoveEventListener(aType, holder, aUseCapture);
   }
 
@@ -260,24 +261,24 @@ public:
   */
   void AddEventListenerByType(nsIDOMEventListener *aListener,
                               const nsAString& type,
-                              const mozilla::dom::EventListenerFlags& aFlags)
+                              const EventListenerFlags& aFlags)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    EventListenerHolder holder(aListener);
     AddEventListenerByType(holder, type, aFlags);
   }
-  void AddEventListenerByType(const mozilla::dom::EventListenerHolder& aListener,
+  void AddEventListenerByType(const EventListenerHolder& aListener,
                               const nsAString& type,
-                              const mozilla::dom::EventListenerFlags& aFlags);
+                              const EventListenerFlags& aFlags);
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                  const nsAString& type,
-                                 const mozilla::dom::EventListenerFlags& aFlags)
+                                 const EventListenerFlags& aFlags)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    EventListenerHolder holder(aListener);
     RemoveEventListenerByType(holder, type, aFlags);
   }
-  void RemoveEventListenerByType(const mozilla::dom::EventListenerHolder& aListener,
+  void RemoveEventListenerByType(const EventListenerHolder& aListener,
                                  const nsAString& type,
-                                 const mozilla::dom::EventListenerFlags& aFlags);
+                                 const EventListenerFlags& aFlags);
 
   /**
    * Sets the current "inline" event listener for aName to be a
@@ -294,16 +295,16 @@ public:
                            uint32_t aLanguage,
                            bool aDeferCompilation,
                            bool aPermitUntrustedEvents,
-                           mozilla::dom::Element* aElement);
+                           dom::Element* aElement);
   /**
    * Remove the current "inline" event listener for aName.
    */
   void RemoveEventHandler(nsIAtom *aName, const nsAString& aTypeString);
 
   void HandleEvent(nsPresContext* aPresContext,
-                   mozilla::WidgetEvent* aEvent, 
+                   WidgetEvent* aEvent, 
                    nsIDOMEvent** aDOMEvent,
-                   mozilla::dom::EventTarget* aCurrentTarget,
+                   dom::EventTarget* aCurrentTarget,
                    nsEventStatus* aEventStatus)
   {
     if (mListeners.IsEmpty() || aEvent->mFlags.mPropagationStopped) {
@@ -401,7 +402,7 @@ public:
   bool MayHaveMouseEnterLeaveEventListener() { return mMayHaveMouseEnterLeaveEventListener; }
   bool MayHavePointerEnterLeaveEventListener() { return mMayHavePointerEnterLeaveEventListener; }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   uint32_t ListenerCount() const
   {
@@ -410,47 +411,48 @@ public:
 
   void MarkForCC();
 
-  mozilla::dom::EventTarget* GetTarget() { return mTarget; }
+  dom::EventTarget* GetTarget() { return mTarget; }
+
 protected:
   void HandleEventInternal(nsPresContext* aPresContext,
-                           mozilla::WidgetEvent* aEvent,
+                           WidgetEvent* aEvent,
                            nsIDOMEvent** aDOMEvent,
-                           mozilla::dom::EventTarget* aCurrentTarget,
+                           dom::EventTarget* aCurrentTarget,
                            nsEventStatus* aEventStatus);
 
-  nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
+  nsresult HandleEventSubType(Listener* aListener,
                               nsIDOMEvent* aDOMEvent,
-                              mozilla::dom::EventTarget* aCurrentTarget);
+                              dom::EventTarget* aCurrentTarget);
 
   /**
-   * Compile the "inline" event listener for aListenerStruct.  The
+   * Compile the "inline" event listener for aListener.  The
    * body of the listener can be provided in aBody; if this is null we
    * will look for it on mTarget.  If aBody is provided, aElement should be
    * as well; otherwise it will also be inferred from mTarget.
    */
-  nsresult CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
+  nsresult CompileEventHandlerInternal(Listener* aListener,
                                        const nsAString* aBody,
-                                       mozilla::dom::Element* aElement);
+                                       dom::Element* aElement);
 
   /**
-   * Find the nsListenerStruct for the "inline" event listener for aTypeAtom.
+   * Find the Listener for the "inline" event listener for aTypeAtom.
    */
-  nsListenerStruct* FindEventHandler(uint32_t aEventType, nsIAtom* aTypeAtom,
-                                     const nsAString& aTypeString);
+  Listener* FindEventHandler(uint32_t aEventType,
+                             nsIAtom* aTypeAtom,
+                             const nsAString& aTypeString);
 
   /**
    * Set the "inline" event listener for aName to aHandler.  aHandler may be
    * have no actual handler set to indicate that we should lazily get and
    * compile the string for this listener, but in that case aContext and
    * aScopeGlobal must be non-null.  Otherwise, aContext and aScopeGlobal are
-   * allowed to be null.  The nsListenerStruct that results, if any, is returned
-   * in aListenerStruct.
+   * allowed to be null.
    */
-  nsListenerStruct* SetEventHandlerInternal(JS::Handle<JSObject*> aScopeGlobal,
-                                            nsIAtom* aName,
-                                            const nsAString& aTypeString,
-                                            const nsEventHandler& aHandler,
-                                            bool aPermitUntrustedEvents);
+  Listener* SetEventHandlerInternal(JS::Handle<JSObject*> aScopeGlobal,
+                                    nsIAtom* aName,
+                                    const nsAString& aTypeString,
+                                    const nsEventHandler& aHandler,
+                                    bool aPermitUntrustedEvents);
 
   bool IsDeviceType(uint32_t aType);
   void EnableDevice(uint32_t aType);
@@ -463,9 +465,9 @@ public:
    */
   void SetEventHandler(nsIAtom* aEventName,
                        const nsAString& aTypeString,
-                       mozilla::dom::EventHandlerNonNull* aHandler);
-  void SetEventHandler(mozilla::dom::OnErrorEventHandlerNonNull* aHandler);
-  void SetEventHandler(mozilla::dom::OnBeforeUnloadEventHandlerNonNull* aHandler);
+                       dom::EventHandlerNonNull* aHandler);
+  void SetEventHandler(dom::OnErrorEventHandlerNonNull* aHandler);
+  void SetEventHandler(dom::OnBeforeUnloadEventHandlerNonNull* aHandler);
 
   /**
    * Get the value of the "inline" event listener for aEventName.
@@ -476,14 +478,15 @@ public:
    * OnErrorEventHandlerNonNull for some event targets and EventHandlerNonNull
    * for others.
    */
-  mozilla::dom::EventHandlerNonNull* GetEventHandler(nsIAtom *aEventName,
-                                                     const nsAString& aTypeString)
+  dom::EventHandlerNonNull* GetEventHandler(nsIAtom* aEventName,
+                                            const nsAString& aTypeString)
   {
     const nsEventHandler* handler =
       GetEventHandlerInternal(aEventName, aTypeString);
     return handler ? handler->EventHandler() : nullptr;
   }
-  mozilla::dom::OnErrorEventHandlerNonNull* GetOnErrorEventHandler()
+
+  dom::OnErrorEventHandlerNonNull* GetOnErrorEventHandler()
   {
     const nsEventHandler* handler;
     if (mIsMainThreadELM) {
@@ -493,7 +496,8 @@ public:
     }
     return handler ? handler->OnErrorEventHandler() : nullptr;
   }
-  mozilla::dom::OnBeforeUnloadEventHandlerNonNull* GetOnBeforeUnloadEventHandler()
+
+  dom::OnBeforeUnloadEventHandlerNonNull* GetOnBeforeUnloadEventHandler()
   {
     const nsEventHandler* handler =
       GetEventHandlerInternal(nsGkAtoms::onbeforeunload, EmptyString());
@@ -509,35 +513,33 @@ protected:
                                                 const nsAString& aTypeString);
 
   void AddEventListener(const nsAString& aType,
-                        const mozilla::dom::EventListenerHolder& aListener,
+                        const EventListenerHolder& aListener,
                         bool aUseCapture,
                         bool aWantsUntrusted);
   void RemoveEventListener(const nsAString& aType,
-                           const mozilla::dom::EventListenerHolder& aListener,
+                           const EventListenerHolder& aListener,
                            bool aUseCapture);
 
-  void AddEventListenerInternal(
-         const mozilla::dom::EventListenerHolder& aListener,
-         uint32_t aType,
-         nsIAtom* aTypeAtom,
-         const nsAString& aTypeString,
-         const mozilla::dom::EventListenerFlags& aFlags,
-         bool aHandler = false,
-         bool aAllEvents = false);
-  void RemoveEventListenerInternal(
-         const mozilla::dom::EventListenerHolder& aListener,
-         uint32_t aType,
-         nsIAtom* aUserType,
-         const nsAString& aTypeString,
-         const mozilla::dom::EventListenerFlags& aFlags,
-         bool aAllEvents = false);
+  void AddEventListenerInternal(const EventListenerHolder& aListener,
+                                uint32_t aType,
+                                nsIAtom* aTypeAtom,
+                                const nsAString& aTypeString,
+                                const EventListenerFlags& aFlags,
+                                bool aHandler = false,
+                                bool aAllEvents = false);
+  void RemoveEventListenerInternal(const EventListenerHolder& aListener,
+                                   uint32_t aType,
+                                   nsIAtom* aUserType,
+                                   const nsAString& aTypeString,
+                                   const EventListenerFlags& aFlags,
+                                   bool aAllEvents = false);
   void RemoveAllListeners();
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
   const EventTypeData* GetTypeDataForEventName(nsIAtom* aName);
   nsPIDOMWindow* GetInnerWindowForTarget();
   already_AddRefed<nsPIDOMWindow> GetTargetAsInnerWindow() const;
 
-  bool ListenerCanHandle(nsListenerStruct* aLs, mozilla::WidgetEvent* aEvent);
+  bool ListenerCanHandle(Listener* aListener, WidgetEvent* aEvent);
 
   already_AddRefed<nsIScriptGlobalObject>
   GetScriptGlobalAndDocument(nsIDocument** aDoc);
@@ -554,13 +556,15 @@ protected:
   uint32_t mIsMainThreadELM : 1;
   uint32_t mNoListenerForEvent : 22;
 
-  nsAutoTObserverArray<nsListenerStruct, 2> mListeners;
-  mozilla::dom::EventTarget*                mTarget;  //WEAK
-  nsCOMPtr<nsIAtom>                         mNoListenerForEventAtom;
+  nsAutoTObserverArray<Listener, 2> mListeners;
+  dom::EventTarget* mTarget;  // WEAK
+  nsCOMPtr<nsIAtom> mNoListenerForEventAtom;
 
-  friend class ELMCreationDetector;
-  static uint32_t                           sMainThreadCreatedCount;
+  friend class ::ELMCreationDetector;
+  static uint32_t sMainThreadCreatedCount;
 };
+
+} // namespace mozilla
 
 /**
  * NS_AddSystemEventListener() is a helper function for implementing
@@ -573,10 +577,10 @@ NS_AddSystemEventListener(mozilla::dom::EventTarget* aTarget,
                           bool aUseCapture,
                           bool aWantsUntrusted)
 {
-  nsEventListenerManager* listenerManager =
+  mozilla::EventListenerManager* listenerManager =
     aTarget->GetOrCreateListenerManager();
   NS_ENSURE_STATE(listenerManager);
-  mozilla::dom::EventListenerFlags flags;
+  mozilla::EventListenerFlags flags;
   flags.mInSystemGroup = true;
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
@@ -584,4 +588,4 @@ NS_AddSystemEventListener(mozilla::dom::EventTarget* aTarget,
   return NS_OK;
 }
 
-#endif // nsEventListenerManager_h__
+#endif // mozilla_EventListenerManager_h_

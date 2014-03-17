@@ -17,6 +17,8 @@
 
 #include "mozilla/dom/FragmentOrElement.h"
 
+#include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
@@ -25,7 +27,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMNodeList.h"
 #include "nsIContentIterator.h"
-#include "nsEventListenerManager.h"
 #include "nsFocusManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
@@ -99,7 +100,6 @@
 #include "ChildIterator.h"
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsRuleProcessorData.h"
-#include "nsAsyncDOMEvent.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/NodeListBinding.h"
 #include "mozilla/dom/UndoManager.h"
@@ -1123,7 +1123,7 @@ FragmentOrElement::FireNodeInserted(nsIDocument* aDoc,
       mutation.mRelatedNode = do_QueryInterface(aParent);
 
       mozAutoSubtreeModified subtree(aDoc, aParent);
-      (new nsAsyncDOMEvent(childContent, mutation))->RunDOMEventWhenSafe();
+      (new AsyncEventDispatcher(childContent, mutation))->RunDOMEventWhenSafe();
     }
   }
 }
@@ -1324,7 +1324,7 @@ FragmentOrElement::MarkNodeChildren(nsINode* aNode)
     JS::ExposeObjectToActiveJS(o);
   }
 
-  nsEventListenerManager* elm = aNode->GetExistingListenerManager();
+  EventListenerManager* elm = aNode->GetExistingListenerManager();
   if (elm) {
     elm->MarkForCC();
   }

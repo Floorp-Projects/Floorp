@@ -3983,7 +3983,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
       nsToolkit::gMouseTrailer->Enable();
 
     // Release the widget with NS_IF_RELEASE() just in case
-    // the context menu key code in nsEventListenerManager::HandleEvent()
+    // the context menu key code in EventListenerManager::HandleEvent()
     // released it already.
     return result;
   }
