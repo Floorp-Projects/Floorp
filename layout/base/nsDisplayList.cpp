@@ -772,7 +772,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
           metrics.mCompositionBounds = ParentLayerIntRect::FromUnknownRect(mozilla::gfx::IntRect(
               bounds.x, bounds.y, bounds.width, bounds.height));
         } else {
-          metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(view->GetBounds(), auPerDevPixel)
+          nsRect viewBounds = view->GetBounds() + rootFrame->GetOffsetToCrossDoc(aReferenceFrame);
+          metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(viewBounds, auPerDevPixel)
                                      * metrics.GetParentResolution());
         }
       }
