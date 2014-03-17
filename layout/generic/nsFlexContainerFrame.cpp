@@ -18,7 +18,6 @@
 #include "nsStyleContext.h"
 #include "prlog.h"
 #include <algorithm>
-#include "mozilla/LinkedList.h"
 
 using namespace mozilla::css;
 using namespace mozilla::layout;
@@ -278,13 +277,10 @@ private:
   AxisOrientationType mCrossAxis;
 };
 
-/**
- * Represents a flex item.
- * Includes the various pieces of input that the Flexbox Layout Algorithm uses
- * to resolve a flexible width.
- */
-class nsFlexContainerFrame::FlexItem : public LinkedListElement<FlexItem>
-{
+// Represents a flex item.
+// Includes the various pieces of input that the Flexbox Layout Algorithm uses
+// to resolve a flexible width.
+class nsFlexContainerFrame::FlexItem {
 public:
   // Normal constructor:
   FlexItem(nsIFrame* aChildFrame,
@@ -566,16 +562,12 @@ protected:
                       // in our constructor).
 };
 
-/**
- * Represents a single flex line in a flex container.
- * Manages a linked list of the FlexItems that are in the line.
- */
-class nsFlexContainerFrame::FlexLine : public LinkedListElement<FlexLine>
-{
+// Represents a single flex line in a flex container.
+// Manages an array of the FlexItems that are in the line.
+class nsFlexContainerFrame::FlexLine {
 public:
   FlexLine()
-  : mNumItems(0),
-    mTotalInnerHypotheticalMainSize(0),
+  : mTotalInnerHypotheticalMainSize(0),
     mTotalOuterHypotheticalMainSize(0),
     mLineCrossSize(0),
     mBaselineOffsetFromCrossStart(nscoord_MIN)
@@ -587,46 +579,10 @@ public:
     return mTotalOuterHypotheticalMainSize;
   }
 
-  // Accessors for our FlexItems & information about them:
-  FlexItem* GetFirstItem()
-  {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
-    return mItems.getFirst();
-  }
-
-  const FlexItem* GetFirstItem() const
-  {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
-    return mItems.getFirst();
-  }
-
-  bool IsEmpty() const
-  {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
-    return mItems.isEmpty();
-  }
-
-  uint32_t NumItems() const
-  {
-    MOZ_ASSERT(mItems.isEmpty() == (mNumItems == 0),
-               "mNumItems bookkeeping is off");
-    return mNumItems;
-  }
-
-  // Adds the given FlexItem to our list of items, and adds its hypothetical
-  // outer & inner main sizes to our totals. Use this method instead of
-  // directly modifying the item list, so that our bookkeeping remains correct.
-  // XXXdholbert Bug 983427 will extend this to let the caller choose whether
-  // the new FlexItem goes at the front or the back of the list.
-  void AddItem(FlexItem* aItem,
-               nscoord aItemInnerHypotheticalMainSize,
-               nscoord aItemOuterHypotheticalMainSize)
-  {
-    mItems.insertBack(aItem);
-    mNumItems++;
+  // Adds a new FlexItem's hypothetical main sizes to our totals.
+  // (Should only be called when a FlexItem is being appended to this line.)
+  void AddToMainSizeTotals(nscoord aItemInnerHypotheticalMainSize,
+                           nscoord aItemOuterHypotheticalMainSize) {
     mTotalInnerHypotheticalMainSize += aItemInnerHypotheticalMainSize;
     mTotalOuterHypotheticalMainSize += aItemOuterHypotheticalMainSize;
   }
@@ -663,21 +619,12 @@ public:
   void PositionItemsInCrossAxis(nscoord aLineStartPosition,
                                 const FlexboxAxisTracker& aAxisTracker);
 
-  friend class AutoFlexLineListClearer; // (needs access to mItems)
- 
+  nsTArray<FlexItem> mItems; // Array of the flex items in this flex line.
+
 private:
   // Helper for ResolveFlexibleLengths():
   void FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
                                        bool aIsFinalIteration);
-
-  LinkedList<FlexItem> mItems; // Linked list of this line's flex items.
-
-  uint32_t mNumItems; // Number of FlexItems in this line (in |mItems|).
-                      // (Shouldn't change after GenerateFlexLines finishes
-                      // with this line -- at least, not until we add support
-                      // for splitting lines across continuations. Then we can
-                      // update this count carefully.)
-
   nscoord mTotalInnerHypotheticalMainSize;
   nscoord mTotalOuterHypotheticalMainSize;
   nscoord mLineCrossSize;
@@ -698,23 +645,23 @@ struct nsFlexContainerFrame::StrutInfo {
 };
 
 static void
-BuildStrutInfoFromCollapsedItems(const FlexLine* aFirstLine,
+BuildStrutInfoFromCollapsedItems(nsTArray<FlexLine>& aLines,
                                  nsTArray<StrutInfo>& aStruts)
 {
-  MOZ_ASSERT(aFirstLine, "null first line pointer");
   MOZ_ASSERT(aStruts.IsEmpty(),
              "We should only build up StrutInfo once per reflow, so "
              "aStruts should be empty when this is called");
 
   uint32_t itemIdxInContainer = 0;
-  for (const FlexLine* line = aFirstLine; line; line = line->getNext()) {
-    for (const FlexItem* item = line->GetFirstItem(); item;
-         item = item->getNext()) {
+  for (uint32_t lineIdx = 0; lineIdx < aLines.Length(); lineIdx++) {
+    FlexLine& line = aLines[lineIdx];
+    for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
+      FlexItem& item = line.mItems[i];
       if (NS_STYLE_VISIBILITY_COLLAPSE ==
-          item->Frame()->StyleVisibility()->mVisible) {
+          item.Frame()->StyleVisibility()->mVisible) {
         // Note the cross size of the line as the item's strut size.
         aStruts.AppendElement(StrutInfo(itemIdxInContainer,
-                                        line->GetLineCrossSize()));
+                                        line.GetLineCrossSize()));
       }
       itemIdxInContainer++;
     }
@@ -881,7 +828,7 @@ nsFlexContainerFrame::IsHorizontal()
   return IsAxisHorizontal(axisTracker.GetMainAxis());
 }
 
-FlexItem*
+FlexItem
 nsFlexContainerFrame::GenerateFlexItemForChild(
   nsPresContext* aPresContext,
   nsIFrame*      aChildFrame,
@@ -973,19 +920,19 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   }
 
   // Construct the flex item!
-  FlexItem* item = new FlexItem(aChildFrame,
-                                flexGrow, flexShrink, flexBaseSize,
-                                mainMinSize, mainMaxSize,
-                                crossMinSize, crossMaxSize,
-                                childRS.ComputedPhysicalMargin(),
-                                childRS.ComputedPhysicalBorderPadding(),
-                                aAxisTracker);
+  FlexItem item(aChildFrame,
+                flexGrow, flexShrink, flexBaseSize,
+                mainMinSize, mainMaxSize,
+                crossMinSize, crossMaxSize,
+                childRS.ComputedPhysicalMargin(),
+                childRS.ComputedPhysicalBorderPadding(),
+                aAxisTracker);
 
   // If we're inflexible, we can just freeze to our hypothetical main-size
   // up-front. Similarly, if we're a fixed-size widget, we only have one
   // valid size, so we freeze to keep ourselves from flexing.
   if (isFixedSizeWidget || (flexGrow == 0.0f && flexShrink == 0.0f)) {
-    item->Freeze();
+    item.Freeze();
   }
 
   return item;
@@ -1313,7 +1260,7 @@ protected:
 class MOZ_STACK_CLASS MainAxisPositionTracker : public PositionTracker {
 public:
   MainAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker,
-                          const FlexLine* aLine,
+                          const nsTArray<FlexItem>& aItems,
                           uint8_t aJustifyContent,
                           nscoord aContentBoxMainSize);
 
@@ -1344,7 +1291,7 @@ private:
 // content-box.
 class MOZ_STACK_CLASS CrossAxisPositionTracker : public PositionTracker {
 public:
-  CrossAxisPositionTracker(FlexLine* aFirstLine,
+  CrossAxisPositionTracker(nsTArray<FlexLine>& aLines,
                            uint8_t aAlignContent,
                            nscoord aContentBoxCrossSize,
                            bool aIsCrossSizeDefinite,
@@ -1550,32 +1497,33 @@ FlexLine::FreezeOrRestoreEachFlexibleSize(const nscoord aTotalViolation,
     freezeType = eFreezeMaxViolations;
   }
 
-  for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-    MOZ_ASSERT(!item->HadMinViolation() || !item->HadMaxViolation(),
+  for (uint32_t i = 0; i < mItems.Length(); i++) {
+    FlexItem& item = mItems[i];
+    MOZ_ASSERT(!item.HadMinViolation() || !item.HadMaxViolation(),
                "Can have either min or max violation, but not both");
 
-    if (!item->IsFrozen()) {
+    if (!item.IsFrozen()) {
       if (eFreezeEverything == freezeType ||
-          (eFreezeMinViolations == freezeType && item->HadMinViolation()) ||
-          (eFreezeMaxViolations == freezeType && item->HadMaxViolation())) {
+          (eFreezeMinViolations == freezeType && item.HadMinViolation()) ||
+          (eFreezeMaxViolations == freezeType && item.HadMaxViolation())) {
 
-        MOZ_ASSERT(item->GetMainSize() >= item->GetMainMinSize(),
+        MOZ_ASSERT(item.GetMainSize() >= item.GetMainMinSize(),
                    "Freezing item at a size below its minimum");
-        MOZ_ASSERT(item->GetMainSize() <= item->GetMainMaxSize(),
+        MOZ_ASSERT(item.GetMainSize() <= item.GetMainMaxSize(),
                    "Freezing item at a size above its maximum");
 
-        item->Freeze();
+        item.Freeze();
       } else if (MOZ_UNLIKELY(aIsFinalIteration)) {
         // XXXdholbert If & when bug 765861 is fixed, we should upgrade this
         // assertion to be fatal except in documents with enormous lengths.
         NS_ERROR("Final iteration still has unfrozen items, this shouldn't"
                  " happen unless there was nscoord under/overflow.");
-        item->Freeze();
+        item.Freeze();
       } // else, we'll reset this item's main size to its flex base size on the
         // next iteration of this algorithm.
 
       // Clear this item's violation(s), now that we've dealt with them
-      item->ClearViolationFlags();
+      item.ClearViolationFlags();
     }
   }
 }
@@ -1590,7 +1538,7 @@ void
 FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 {
   PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG, ("ResolveFlexibleLengths\n"));
-  if (IsEmpty()) {
+  if (mItems.IsEmpty()) {
     return;
   }
 
@@ -1608,23 +1556,24 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     (mTotalOuterHypotheticalMainSize < aFlexContainerMainSize);
 
   // NOTE: I claim that this chunk of the algorithm (the looping part) needs to
-  // run the loop at MOST mNumItems times.  This claim should hold up
+  // run the loop at MOST aItems.Length() times.  This claim should hold up
   // because we'll freeze at least one item on each loop iteration, and once
   // we've run out of items to freeze, there's nothing left to do.  However,
   // in most cases, we'll break out of this loop long before we hit that many
   // iterations.
   for (uint32_t iterationCounter = 0;
-       iterationCounter < mNumItems; iterationCounter++) {
+       iterationCounter < mItems.Length(); iterationCounter++) {
     // Set every not-yet-frozen item's used main size to its
     // flex base size, and subtract all the used main sizes from our
     // total amount of space to determine the 'available free space'
     // (positive or negative) to be distributed among our flexible items.
     nscoord availableFreeSpace = spaceAvailableForFlexItemsContentBoxes;
-    for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-      if (!item->IsFrozen()) {
-        item->SetMainSize(item->GetFlexBaseSize());
+    for (uint32_t i = 0; i < mItems.Length(); i++) {
+      FlexItem& item = mItems[i];
+      if (!item.IsFrozen()) {
+        item.SetMainSize(item.GetFlexBaseSize());
       }
-      availableFreeSpace -= item->GetMainSize();
+      availableFreeSpace -= item.GetMainSize();
     }
 
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
@@ -1652,17 +1601,18 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
       float runningFlexWeightSum = 0.0f;
       float largestFlexWeight = 0.0f;
       uint32_t numItemsWithLargestFlexWeight = 0;
-      for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-        float curFlexWeight = item->GetFlexWeightToUse(isUsingFlexGrow);
+      for (uint32_t i = 0; i < mItems.Length(); i++) {
+        FlexItem& item = mItems[i];
+        float curFlexWeight = item.GetFlexWeightToUse(isUsingFlexGrow);
         MOZ_ASSERT(curFlexWeight >= 0.0f, "weights are non-negative");
 
         runningFlexWeightSum += curFlexWeight;
         if (NS_finite(runningFlexWeightSum)) {
           if (curFlexWeight == 0.0f) {
-            item->SetShareOfFlexWeightSoFar(0.0f);
+            item.SetShareOfFlexWeightSoFar(0.0f);
           } else {
-            item->SetShareOfFlexWeightSoFar(curFlexWeight /
-                                            runningFlexWeightSum);
+            item.SetShareOfFlexWeightSoFar(curFlexWeight /
+                                           runningFlexWeightSum);
           }
         } // else, the sum of weights overflows to infinity, in which
           // case we don't bother with "SetShareOfFlexWeightSoFar" since
@@ -1681,19 +1631,16 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
       if (runningFlexWeightSum != 0.0f) { // no distribution if no flexibility
         PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
                (" Distributing available space:"));
-        // NOTE: It's important that we traverse our items in *reverse* order
-        // here, for correct width distribution according to the items'
-        // "ShareOfFlexWeightSoFar" progressively-calculated values.
-        for (FlexItem* item = mItems.getLast(); item;
-             item = item->getPrevious()) {
+        for (uint32_t i = mItems.Length() - 1; i < mItems.Length(); --i) {
+          FlexItem& item = mItems[i];
 
-          if (!item->IsFrozen()) {
+          if (!item.IsFrozen()) {
             // To avoid rounding issues, we compute the change in size for this
             // item, and then subtract it from the remaining available space.
             nscoord sizeDelta = 0;
             if (NS_finite(runningFlexWeightSum)) {
               float myShareOfRemainingSpace =
-                item->GetShareOfFlexWeightSoFar();
+                item.GetShareOfFlexWeightSoFar();
 
               MOZ_ASSERT(myShareOfRemainingSpace >= 0.0f &&
                          myShareOfRemainingSpace <= 1.0f,
@@ -1707,7 +1654,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
                 sizeDelta = NSToCoordRound(availableFreeSpace *
                                            myShareOfRemainingSpace);
               }
-            } else if (item->GetFlexWeightToUse(isUsingFlexGrow) ==
+            } else if (item.GetFlexWeightToUse(isUsingFlexGrow) ==
                        largestFlexWeight) {
               // Total flexibility is infinite, so we're just distributing
               // the available space equally among the items that are tied for
@@ -1720,10 +1667,10 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 
             availableFreeSpace -= sizeDelta;
 
-            item->SetMainSize(item->GetMainSize() + sizeDelta);
+            item.SetMainSize(item.GetMainSize() + sizeDelta);
             PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
-                   ("  child %p receives %d, for a total of %d\n",
-                    item, sizeDelta, item->GetMainSize()));
+                   ("  child %d receives %d, for a total of %d\n",
+                    i, sizeDelta, item.GetMainSize()));
           }
         }
       }
@@ -1734,24 +1681,25 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Checking for violations:"));
 
-    for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-      if (!item->IsFrozen()) {
-        if (item->GetMainSize() < item->GetMainMinSize()) {
+    for (uint32_t i = 0; i < mItems.Length(); i++) {
+      FlexItem& item = mItems[i];
+      if (!item.IsFrozen()) {
+        if (item.GetMainSize() < item.GetMainMinSize()) {
           // min violation
-          totalViolation += item->GetMainMinSize() - item->GetMainSize();
-          item->SetMainSize(item->GetMainMinSize());
-          item->SetHadMinViolation();
-        } else if (item->GetMainSize() > item->GetMainMaxSize()) {
+          totalViolation += item.GetMainMinSize() - item.GetMainSize();
+          item.SetMainSize(item.GetMainMinSize());
+          item.SetHadMinViolation();
+        } else if (item.GetMainSize() > item.GetMainMaxSize()) {
           // max violation
-          totalViolation += item->GetMainMaxSize() - item->GetMainSize();
-          item->SetMainSize(item->GetMainMaxSize());
-          item->SetHadMaxViolation();
+          totalViolation += item.GetMainMaxSize() - item.GetMainSize();
+          item.SetMainSize(item.GetMainMaxSize());
+          item.SetHadMaxViolation();
         }
       }
     }
 
     FreezeOrRestoreEachFlexibleSize(totalViolation,
-                                    iterationCounter + 1 == mNumItems);
+                                    iterationCounter + 1 == mItems.Length());
 
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" Total violation: %d\n", totalViolation));
@@ -1763,8 +1711,8 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 
   // Post-condition: all lengths should've been frozen.
 #ifdef DEBUG
-  for (const FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-    MOZ_ASSERT(item->IsFrozen(),
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    MOZ_ASSERT(mItems[i].IsFrozen(),
                "All flexible lengths should've been resolved");
   }
 #endif // DEBUG
@@ -1772,7 +1720,7 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
 
 MainAxisPositionTracker::
   MainAxisPositionTracker(const FlexboxAxisTracker& aAxisTracker,
-                          const FlexLine* aLine,
+                          const nsTArray<FlexItem>& aItems,
                           uint8_t aJustifyContent,
                           nscoord aContentBoxMainSize)
   : PositionTracker(aAxisTracker.GetMainAxis()),
@@ -1784,13 +1732,13 @@ MainAxisPositionTracker::
   // mPackingSpaceRemaining is initialized to the container's main size.  Now
   // we'll subtract out the main sizes of our flex items, so that it ends up
   // with the *actual* amount of packing space.
-  for (const FlexItem* item = aLine->GetFirstItem(); item;
-       item = item->getNext()) {
+  for (uint32_t i = 0; i < aItems.Length(); i++) {
+    const FlexItem& item = aItems[i];
     nscoord itemMarginBoxMainSize =
-      item->GetMainSize() +
-      item->GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
+      item.GetMainSize() +
+      item.GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
     mPackingSpaceRemaining -= itemMarginBoxMainSize;
-    mNumAutoMarginsInMainAxis += item->GetNumAutoMarginsInAxis(mAxis);
+    mNumAutoMarginsInMainAxis += item.GetNumAutoMarginsInAxis(mAxis);
   }
 
   if (mPackingSpaceRemaining <= 0) {
@@ -1813,7 +1761,7 @@ MainAxisPositionTracker::
   // packing spaces, and advance past any leading packing-space.
   if (mNumAutoMarginsInMainAxis == 0 &&
       mPackingSpaceRemaining != 0 &&
-      !aLine->IsEmpty()) {
+      !aItems.IsEmpty()) {
     switch (mJustifyContent) {
       case NS_STYLE_JUSTIFY_CONTENT_FLEX_START:
         // All packing space should go at the end --> nothing to do here.
@@ -1831,7 +1779,7 @@ MainAxisPositionTracker::
                    "negative packing space should make us use 'flex-start' "
                    "instead of 'space-between'");
         // 1 packing space between each flex item, no packing space at ends.
-        mNumPackingSpacesRemaining = aLine->NumItems() - 1;
+        mNumPackingSpacesRemaining = aItems.Length() - 1;
         break;
       case NS_STYLE_JUSTIFY_CONTENT_SPACE_AROUND:
         MOZ_ASSERT(mPackingSpaceRemaining >= 0,
@@ -1840,7 +1788,7 @@ MainAxisPositionTracker::
         // 1 packing space between each flex item, plus half a packing space
         // at beginning & end.  So our number of full packing-spaces is equal
         // to the number of flex items.
-        mNumPackingSpacesRemaining = aLine->NumItems();
+        mNumPackingSpacesRemaining = aItems.Length();
         if (mNumPackingSpacesRemaining > 0) {
           // The edges (start/end) share one full packing space
           nscoord totalEdgePackingSpace =
@@ -1914,7 +1862,7 @@ MainAxisPositionTracker::TraversePackingSpace()
 }
 
 CrossAxisPositionTracker::
-  CrossAxisPositionTracker(FlexLine* aFirstLine,
+  CrossAxisPositionTracker(nsTArray<FlexLine>& aLines,
                            uint8_t aAlignContent,
                            nscoord aContentBoxCrossSize,
                            bool aIsCrossSizeDefinite,
@@ -1924,9 +1872,9 @@ CrossAxisPositionTracker::
     mNumPackingSpacesRemaining(0),
     mAlignContent(aAlignContent)
 {
-  MOZ_ASSERT(aFirstLine, "null first line pointer");
+  MOZ_ASSERT(!aLines.IsEmpty(), "We should have at least 1 line");
 
-  if (aIsCrossSizeDefinite && !aFirstLine->getNext()) {
+  if (aIsCrossSizeDefinite && aLines.Length() == 1) {
     // "If the flex container has only a single line (even if it's a
     // multi-line flex container) and has a definite cross size, the cross
     // size of the flex line is the flex container's inner cross size."
@@ -1935,7 +1883,7 @@ CrossAxisPositionTracker::
     // means we don't need to be concerned with "align-conent" at all and we
     // can return early. This is handy, because this is the usual case (for
     // single-line flexbox).
-    aFirstLine->SetLineCrossSize(aContentBoxCrossSize);
+    aLines[0].SetLineCrossSize(aContentBoxCrossSize);
     return;
   }
 
@@ -1945,13 +1893,11 @@ CrossAxisPositionTracker::
   // cross sizes instead of main sizes.)
 
   // Figure out how much packing space we have (container's cross size minus
-  // all the lines' cross sizes).  Also, share this loop to count how many
-  // lines we have. (We need that count in some cases below.)
+  // all the lines' cross sizes)
   mPackingSpaceRemaining = aContentBoxCrossSize;
-  uint32_t numLines = 0;
-  for (FlexLine* line = aFirstLine; line; line = line->getNext()) {
-    mPackingSpaceRemaining -= line->GetLineCrossSize();
-    numLines++;
+  for (uint32_t i = 0; i < aLines.Length(); i++) {
+    const FlexLine& line = aLines[i];
+    mPackingSpaceRemaining -= line.GetLineCrossSize();
   }
 
   // If packing space is negative, 'space-between' and 'stretch' behave like
@@ -1987,7 +1933,7 @@ CrossAxisPositionTracker::
                    "negative packing space should make us use 'flex-start' "
                    "instead of 'space-between'");
         // 1 packing space between each flex line, no packing space at ends.
-        mNumPackingSpacesRemaining = numLines - 1;
+        mNumPackingSpacesRemaining = aLines.Length() - 1;
         break;
       case NS_STYLE_ALIGN_CONTENT_SPACE_AROUND: {
         MOZ_ASSERT(mPackingSpaceRemaining >= 0,
@@ -1996,7 +1942,7 @@ CrossAxisPositionTracker::
         // 1 packing space between each flex line, plus half a packing space
         // at beginning & end.  So our number of full packing-spaces is equal
         // to the number of flex lines.
-        mNumPackingSpacesRemaining = numLines;
+        mNumPackingSpacesRemaining = aLines.Length();
         // The edges (start/end) share one full packing space
         nscoord totalEdgePackingSpace =
           mPackingSpaceRemaining / mNumPackingSpacesRemaining;
@@ -2009,28 +1955,24 @@ CrossAxisPositionTracker::
         mNumPackingSpacesRemaining--;
         break;
       }
-      case NS_STYLE_ALIGN_CONTENT_STRETCH: {
+      case NS_STYLE_ALIGN_CONTENT_STRETCH:
         // Split space equally between the lines:
         MOZ_ASSERT(mPackingSpaceRemaining > 0,
                    "negative packing space should make us use 'flex-start' "
                    "instead of 'stretch' (and we shouldn't bother with this "
                    "code if we have 0 packing space)");
 
-        uint32_t numLinesLeft = numLines;
-        for (FlexLine* line = aFirstLine; line; line = line->getNext()) {
+        for (uint32_t i = 0; i < aLines.Length(); i++) {
+          FlexLine& line = aLines[i];
           // Our share is the amount of space remaining, divided by the number
           // of lines remainig.
-          MOZ_ASSERT(numLinesLeft > 0, "miscalculated num lines");
-          nscoord shareOfExtraSpace = mPackingSpaceRemaining / numLinesLeft;
-          nscoord newSize = line->GetLineCrossSize() + shareOfExtraSpace;
-          line->SetLineCrossSize(newSize);
-
+          nscoord shareOfExtraSpace =
+            mPackingSpaceRemaining / (aLines.Length() - i);
+          nscoord newSize = line.GetLineCrossSize() + shareOfExtraSpace;
+          line.SetLineCrossSize(newSize);
           mPackingSpaceRemaining -= shareOfExtraSpace;
-          numLinesLeft--;
         }
-        MOZ_ASSERT(numLinesLeft == 0, "miscalculated num lines");
         break;
-      }
       default:
         MOZ_CRASH("Unexpected align-content value");
     }
@@ -2072,12 +2014,13 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
   nscoord crossStartToFurthestBaseline = nscoord_MIN;
   nscoord crossEndToFurthestBaseline = nscoord_MIN;
   nscoord largestOuterCrossSize = 0;
-  for (const FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
-    nscoord curOuterCrossSize = item->GetCrossSize() +
-      item->GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    const FlexItem& item = mItems[i];
+    nscoord curOuterCrossSize = item.GetCrossSize() +
+      item.GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
 
-    if (item->GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE &&
-        item->GetNumAutoMarginsInAxis(aAxisTracker.GetCrossAxis()) == 0) {
+    if (item.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE &&
+        item.GetNumAutoMarginsInAxis(aAxisTracker.GetCrossAxis()) == 0) {
       // FIXME: Once we support "writing-mode", we'll have to do baseline
       // alignment in vertical flex containers here (w/ horizontal cross-axes).
 
@@ -2108,7 +2051,7 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
       //   crossEndToBaseline.
 
       nscoord crossStartToBaseline =
-        item->GetBaselineOffsetFromOuterCrossStart(aAxisTracker.GetCrossAxis());
+        item.GetBaselineOffsetFromOuterCrossStart(aAxisTracker.GetCrossAxis());
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
@@ -2325,18 +2268,6 @@ FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame
              "main & cross axes should be in different dimensions");
 }
 
-// Allocates a new FlexLine, adds it at the back of the given LinkedList,
-// and returs a pointer to it.
-// XXXdholbert Bug 983427 will extend this to let the caller choose whether
-// the new FlexLine goes at the front or the back of the list.
-static FlexLine*
-AddNewFlexLineToList(LinkedList<FlexLine>& aLines)
-{
-  FlexLine* newLine = new FlexLine();
-  aLines.insertBack(newLine);
-  return newLine;
-}
-
 nsresult
 nsFlexContainerFrame::GenerateFlexLines(
   nsPresContext* aPresContext,
@@ -2345,21 +2276,25 @@ nsFlexContainerFrame::GenerateFlexLines(
   nscoord aAvailableHeightForContent,
   const nsTArray<StrutInfo>& aStruts,
   const FlexboxAxisTracker& aAxisTracker,
-  LinkedList<FlexLine>& aLines)
+  nsTArray<FlexLine>& aLines)
 {
-  MOZ_ASSERT(aLines.isEmpty(), "Expecting outparam to start out empty");
+  MOZ_ASSERT(aLines.IsEmpty(), "Expecting outparam to start out empty");
 
   const bool isSingleLine =
     NS_STYLE_FLEX_WRAP_NOWRAP == aReflowState.mStylePosition->mFlexWrap;
 
   // We have at least one FlexLine. Even an empty flex container has a single
   // (empty) flex line.
-  FlexLine* curLine = AddNewFlexLineToList(aLines);
+  FlexLine* curLine = aLines.AppendElement();
 
   nscoord wrapThreshold;
   if (isSingleLine) {
     // Not wrapping. Set threshold to sentinel value that tells us not to wrap.
     wrapThreshold = NS_UNCONSTRAINEDSIZE;
+
+    // Optimization: We know all items will end up in the first line, so we can
+    // pre-allocate space for them.
+    curLine->mItems.SetCapacity(mFrames.GetLength());
   } else {
     // Wrapping! Set wrap threshold to flex container's content-box main-size.
     wrapThreshold = aContentBoxMainSize;
@@ -2396,21 +2331,23 @@ nsFlexContainerFrame::GenerateFlexLines(
     nsIFrame* childFrame = e.get();
 
     // Honor "page-break-before", if we're multi-line and this line isn't empty:
-    if (!isSingleLine && !curLine->IsEmpty() &&
+    if (!isSingleLine && !curLine->mItems.IsEmpty() &&
         childFrame->StyleDisplay()->mBreakBefore) {
-      curLine = AddNewFlexLineToList(aLines);
+      curLine = aLines.AppendElement();
     }
 
-    nsAutoPtr<FlexItem> item;
+    FlexItem* item;
     if (nextStrutIdx < aStruts.Length() &&
         aStruts[nextStrutIdx].mItemIdx == itemIdxInContainer) {
 
       // Use the simplified "strut" FlexItem constructor:
-      item = new FlexItem(childFrame, aStruts[nextStrutIdx].mStrutCrossSize);
+      item = curLine->mItems.AppendElement(
+               FlexItem(childFrame, aStruts[nextStrutIdx].mStrutCrossSize));
       nextStrutIdx++;
     } else {
-      item = GenerateFlexItemForChild(aPresContext, childFrame,
-                                      aReflowState, aAxisTracker);
+      item = curLine->mItems.AppendElement(
+               GenerateFlexItemForChild(aPresContext, childFrame,
+                                        aReflowState, aAxisTracker));
 
       nsresult rv = ResolveFlexItemMaxContentSizing(aPresContext, *item,
                                                     aReflowState, aAxisTracker);
@@ -2425,22 +2362,34 @@ nsFlexContainerFrame::GenerateFlexLines(
     // (i.e. check if its outer hypothetical main size pushes our line over
     // the threshold)
     if (wrapThreshold != NS_UNCONSTRAINEDSIZE &&
-        !curLine->IsEmpty() && // No need to wrap at start of a line.
+        curLine->mItems.Length() > 1 && // Don't wrap if it'll leave line empty
         wrapThreshold < (curLine->GetTotalOuterHypotheticalMainSize() +
                          itemOuterHypotheticalMainSize)) {
-      curLine = AddNewFlexLineToList(aLines);
+      // Need to wrap to a new line! Create a new line, create a copy of the
+      // newest FlexItem there, and clear that FlexItem out of the prev. line.
+      curLine = aLines.AppendElement();
+      // NOTE: if that^ AppendElement had to realloc, then |item| may now
+      // point to bogus memory. Null out our pointer and use a freshly-obtained
+      // reference ('itemToCopy'), to be on the safe side.
+      item = nullptr;
+
+      FlexLine& prevLine = aLines[aLines.Length() - 2];
+      uint32_t itemIdxInPrevLine = prevLine.mItems.Length() - 1;
+      FlexItem& itemToCopy = prevLine.mItems[itemIdxInPrevLine];
+
+      // Copy item into cur line:
+      curLine->mItems.AppendElement(itemToCopy);
+      // ...and remove the old copy in prev line:
+      prevLine.mItems.RemoveElementAt(itemIdxInPrevLine);
     }
 
-    // Add item to current flex line (and update the line's bookkeeping about
-    // how large its items collectively are).
-    curLine->AddItem(item.forget(),
-                     itemInnerHypotheticalMainSize,
-                     itemOuterHypotheticalMainSize);
+    curLine->AddToMainSizeTotals(itemInnerHypotheticalMainSize,
+                                 itemOuterHypotheticalMainSize);
 
     // Honor "page-break-after", if we're multi-line and have more children:
     if (!isSingleLine && childFrame->GetNextSibling() &&
         childFrame->StyleDisplay()->mBreakAfter) {
-      curLine = AddNewFlexLineToList(aLines);
+      curLine = aLines.AppendElement();
     }
     itemIdxInContainer++;
   }
@@ -2468,12 +2417,13 @@ nsFlexContainerFrame::GetMainSizeFromReflowState(
 // Returns the largest outer hypothetical main-size of any line in |aLines|.
 // (i.e. the hypothetical main-size of the largest line)
 static nscoord
-GetLargestLineMainSize(const FlexLine* aFirstLine)
+GetLargestLineMainSize(const nsTArray<FlexLine>& aLines)
 {
   nscoord largestLineOuterSize = 0;
-  for (const FlexLine* line = aFirstLine; line; line = line->getNext()) {
-    largestLineOuterSize = std::max(largestLineOuterSize,
-                                    line->GetTotalOuterHypotheticalMainSize());
+  for (uint32_t lineIdx = 0; lineIdx < aLines.Length(); lineIdx++) {
+    largestLineOuterSize =
+      std::max(largestLineOuterSize,
+               aLines[lineIdx].GetTotalOuterHypotheticalMainSize());
   }
   return largestLineOuterSize;
 }
@@ -2485,11 +2435,9 @@ ClampFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
                            const FlexboxAxisTracker& aAxisTracker,
                            nscoord aUnclampedMainSize,
                            nscoord aAvailableHeightForContent,
-                           const FlexLine* aFirstLine,
+                           const nsTArray<FlexLine>& aLines,
                            nsReflowStatus& aStatus)
 {
-  MOZ_ASSERT(aFirstLine, "null first line pointer");
-
   if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
     // Horizontal case is easy -- our main size should already be resolved
     // before we get a call to Reflow. We don't have to worry about doing
@@ -2516,7 +2464,7 @@ ClampFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
     // continuation or splitting children, so "amount of height required by
     // our children" is just the main-size (height) of our longest flex line.
     NS_FRAME_SET_INCOMPLETE(aStatus);
-    nscoord largestLineOuterSize = GetLargestLineMainSize(aFirstLine);
+    nscoord largestLineOuterSize = GetLargestLineMainSize(aLines);
 
     if (largestLineOuterSize <= aAvailableHeightForContent) {
       return aAvailableHeightForContent;
@@ -2528,7 +2476,7 @@ ClampFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
   // Resolve auto-height to the largest FlexLine-length, clamped to our
   // computed min/max main-size properties (min-height & max-height).
   // XXXdholbert Handle constrained-aAvailableHeightForContent case here.
-  nscoord largestLineOuterSize = GetLargestLineMainSize(aFirstLine);
+  nscoord largestLineOuterSize = GetLargestLineMainSize(aLines);
   return NS_CSS_MINMAX(largestLineOuterSize,
                        aReflowState.ComputedMinHeight(),
                        aReflowState.ComputedMaxHeight());
@@ -2592,26 +2540,28 @@ FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
                                   nscoord aContentBoxMainSize,
                                   const FlexboxAxisTracker& aAxisTracker)
 {
-  MainAxisPositionTracker mainAxisPosnTracker(aAxisTracker, this,
+  MainAxisPositionTracker mainAxisPosnTracker(aAxisTracker, mItems,
                                               aJustifyContent,
                                               aContentBoxMainSize);
-  for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    FlexItem& item = mItems[i];
+
     nscoord itemMainBorderBoxSize =
-      item->GetMainSize() +
-      item->GetBorderPaddingSizeInAxis(mainAxisPosnTracker.GetAxis());
+      item.GetMainSize() +
+      item.GetBorderPaddingSizeInAxis(mainAxisPosnTracker.GetAxis());
 
     // Resolve any main-axis 'auto' margins on aChild to an actual value.
-    mainAxisPosnTracker.ResolveAutoMarginsInMainAxis(*item);
+    mainAxisPosnTracker.ResolveAutoMarginsInMainAxis(item);
 
     // Advance our position tracker to child's upper-left content-box corner,
     // and use that as its position in the main axis.
-    mainAxisPosnTracker.EnterMargin(item->GetMargin());
+    mainAxisPosnTracker.EnterMargin(item.GetMargin());
     mainAxisPosnTracker.EnterChildFrame(itemMainBorderBoxSize);
 
-    item->SetMainPosition(mainAxisPosnTracker.GetPosition());
+    item.SetMainPosition(mainAxisPosnTracker.GetPosition());
 
     mainAxisPosnTracker.ExitChildFrame(itemMainBorderBoxSize);
-    mainAxisPosnTracker.ExitMargin(item->GetMargin());
+    mainAxisPosnTracker.ExitMargin(item.GetMargin());
     mainAxisPosnTracker.TraversePackingSpace();
   }
 }
@@ -2728,22 +2678,23 @@ FlexLine::PositionItemsInCrossAxis(nscoord aLineStartPosition,
 {
   SingleLineCrossAxisPositionTracker lineCrossAxisPosnTracker(aAxisTracker);
 
-  for (FlexItem* item = mItems.getFirst(); item; item = item->getNext()) {
+  for (uint32_t i = 0; i < mItems.Length(); ++i) {
+    FlexItem& item = mItems[i];
     // First, stretch the item's cross size (if appropriate), and resolve any
     // auto margins in this axis.
-    item->ResolveStretchedCrossSize(mLineCrossSize, aAxisTracker);
-    lineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(*this, *item);
+    item.ResolveStretchedCrossSize(mLineCrossSize, aAxisTracker);
+    lineCrossAxisPosnTracker.ResolveAutoMarginsInCrossAxis(*this, item);
 
     // Compute the cross-axis position of this item
     nscoord itemCrossBorderBoxSize =
-      item->GetCrossSize() +
-      item->GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
-    lineCrossAxisPosnTracker.EnterAlignPackingSpace(*this, *item);
-    lineCrossAxisPosnTracker.EnterMargin(item->GetMargin());
+      item.GetCrossSize() +
+      item.GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
+    lineCrossAxisPosnTracker.EnterAlignPackingSpace(*this, item);
+    lineCrossAxisPosnTracker.EnterMargin(item.GetMargin());
     lineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
 
-    item->SetCrossPosition(aLineStartPosition +
-                           lineCrossAxisPosnTracker.GetPosition());
+    item.SetCrossPosition(aLineStartPosition +
+                          lineCrossAxisPosnTracker.GetPosition());
 
     // Back out to cross-axis edge of the line.
     lineCrossAxisPosnTracker.ResetPosition();
@@ -2833,33 +2784,6 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   return rv;
 }
 
-// RAII class to clean up a list of FlexLines.
-// Specifically, this removes each line from the list, deletes all the
-// FlexItems in its list, and deletes the FlexLine.
-class AutoFlexLineListClearer MOZ_STACK_CLASS {
-public:
-  AutoFlexLineListClearer(LinkedList<FlexLine>& aLines
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-  : mLines(aLines)
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-  }
-
-  ~AutoFlexLineListClearer()
-  {
-    while (FlexLine* line = mLines.popFirst()) {
-      while (FlexItem* item = line->mItems.popFirst()) {
-        delete item;
-      }
-      delete line;
-    }
-  }
-
-private:
-  LinkedList<FlexLine>& mLines;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 nsresult
 nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
@@ -2872,9 +2796,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 {
   aStatus = NS_FRAME_COMPLETE;
 
-  LinkedList<FlexLine> lines;
-  AutoFlexLineListClearer cleanupLines(lines);
-
+  // Generate an array of our flex items (already sorted), in a FlexLine.
+  nsAutoTArray<FlexLine, 1> lines;
   nsresult rv = GenerateFlexLines(aPresContext, aReflowState,
                                   aContentBoxMainSize,
                                   aAvailableHeightForContent,
@@ -2884,40 +2807,43 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   aContentBoxMainSize =
     ClampFlexContainerMainSize(aReflowState, aAxisTracker,
                                aContentBoxMainSize, aAvailableHeightForContent,
-                               lines.getFirst(), aStatus);
+                               lines, aStatus);
 
-  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
-    line->ResolveFlexibleLengths(aContentBoxMainSize);
+  for (uint32_t i = 0; i < lines.Length(); i++) {
+    lines[i].ResolveFlexibleLengths(aContentBoxMainSize);
   }
 
   // Cross Size Determination - Flexbox spec section 9.4
   // ===================================================
   // Calculate the hypothetical cross size of each item:
   nscoord sumLineCrossSizes = 0;
-  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
-    for (FlexItem* item = line->GetFirstItem(); item; item = item->getNext()) {
+  for (uint32_t lineIdx = 0; lineIdx < lines.Length(); ++lineIdx) {
+    FlexLine& line = lines[lineIdx];
+    for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
+      FlexItem& item = line.mItems[i];
+
       // (If the item's already been stretched, or it's a strut, then it
       // already knows its cross size.  Don't bother trying to recalculate it.)
-      if (!item->IsStretched() && !item->IsStrut()) {
+      if (!item.IsStretched() && !item.IsStrut()) {
         nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                           item->Frame(),
+                                           item.Frame(),
                                            nsSize(aReflowState.ComputedWidth(),
                                                   NS_UNCONSTRAINEDSIZE));
         // Override computed main-size
         if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
-          childReflowState.SetComputedWidth(item->GetMainSize());
+          childReflowState.SetComputedWidth(item.GetMainSize());
         } else {
-          childReflowState.SetComputedHeight(item->GetMainSize());
+          childReflowState.SetComputedHeight(item.GetMainSize());
         }
 
         nsresult rv = SizeItemInCrossAxis(aPresContext, aAxisTracker,
-                                          childReflowState, *item);
+                                          childReflowState, item);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
     // Now that we've finished with this line's items, size the line itself:
-    line->ComputeCrossSizeAndBaseline(aAxisTracker);
-    sumLineCrossSizes += line->GetLineCrossSize();
+    line.ComputeCrossSizeAndBaseline(aAxisTracker);
+    sumLineCrossSizes += line.GetLineCrossSize();
   }
 
   bool isCrossSizeDefinite;
@@ -2928,8 +2854,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // Set up state for cross-axis alignment, at a high level (outside the
   // scope of a particular flex line)
   CrossAxisPositionTracker
-    crossAxisPosnTracker(lines.getFirst(),
-                         aReflowState.mStylePosition->mAlignContent,
+    crossAxisPosnTracker(lines, aReflowState.mStylePosition->mAlignContent,
                          contentBoxCrossSize, isCrossSizeDefinite,
                          aAxisTracker);
 
@@ -2938,7 +2863,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // constructor), we can create struts for any flex items with
   // "visibility: collapse" (and restart flex layout).
   if (aStruts.IsEmpty()) { // (Don't make struts if we already did)
-    BuildStrutInfoFromCollapsedItems(lines.getFirst(), aStruts);
+    BuildStrutInfoFromCollapsedItems(lines, aStruts);
     if (!aStruts.IsEmpty()) {
       // Restart flex layout, using our struts.
       return NS_OK;
@@ -2948,8 +2873,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // Set the flex container's baseline, from the baseline-alignment position
   // of the first line's baseline-aligned items.
   nscoord flexContainerAscent;
-  nscoord firstLineBaselineOffset =
-    lines.getFirst()->GetBaselineOffsetFromCrossStart();
+  nscoord firstLineBaselineOffset = lines[0].GetBaselineOffsetFromCrossStart();
   if (firstLineBaselineOffset == nscoord_MIN) {
     // No baseline-aligned flex items in first line --> just use a sentinel
     // value for now, and we'll update it during final reflow.
@@ -2970,19 +2894,20 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
                                 aAxisTracker.GetCrossAxis());
   }
 
-  for (FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
+  for (uint32_t lineIdx = 0; lineIdx < lines.Length(); ++lineIdx) {
+    FlexLine& line = lines[lineIdx];
 
     // Main-Axis Alignment - Flexbox spec section 9.5
     // ==============================================
-    line->PositionItemsInMainAxis(aReflowState.mStylePosition->mJustifyContent,
-                                  aContentBoxMainSize,
-                                  aAxisTracker);
+    line.PositionItemsInMainAxis(aReflowState.mStylePosition->mJustifyContent,
+                                 aContentBoxMainSize,
+                                 aAxisTracker);
 
     // Cross-Axis Alignment - Flexbox spec section 9.6
     // ===============================================
-    line->PositionItemsInCrossAxis(crossAxisPosnTracker.GetPosition(),
-                                   aAxisTracker);
-    crossAxisPosnTracker.TraverseLine(*line);
+    line.PositionItemsInCrossAxis(crossAxisPosnTracker.GetPosition(),
+                                  aAxisTracker);
+    crossAxisPosnTracker.TraverseLine(line);
     crossAxisPosnTracker.TraversePackingSpace();
   }
 
@@ -2996,12 +2921,14 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
   // we know its final size and position.
-  for (const FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
-    for (const FlexItem* item = line->GetFirstItem(); item;
-         item = item->getNext()) {
+  for (uint32_t lineIdx = 0; lineIdx < lines.Length(); ++lineIdx) {
+    FlexLine& line = lines[lineIdx];
+    for (uint32_t i = 0; i < line.mItems.Length(); ++i) {
+      FlexItem& item = line.mItems[i];
+
       nsPoint physicalPosn = aAxisTracker.PhysicalPointFromLogicalPoint(
-                               item->GetMainPosition(),
-                               item->GetCrossPosition(),
+                               item.GetMainPosition(),
+                               item.GetCrossPosition(),
                                aContentBoxMainSize,
                                contentBoxCrossSize);
       // Adjust physicalPosn to be relative to the container's border-box
@@ -3009,7 +2936,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       physicalPosn += containerContentBoxOrigin;
 
       nsHTMLReflowState childReflowState(aPresContext, aReflowState,
-                                         item->Frame(),
+                                         item.Frame(),
                                          nsSize(aReflowState.ComputedWidth(),
                                                 NS_UNCONSTRAINEDSIZE));
 
@@ -3020,24 +2947,24 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
       // Override computed main-size
       if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
-        childReflowState.SetComputedWidth(item->GetMainSize());
+        childReflowState.SetComputedWidth(item.GetMainSize());
         didOverrideComputedWidth = true;
       } else {
-        childReflowState.SetComputedHeight(item->GetMainSize());
+        childReflowState.SetComputedHeight(item.GetMainSize());
         didOverrideComputedHeight = true;
       }
 
       // Override reflow state's computed cross-size, for stretched items.
-      if (item->IsStretched()) {
-        MOZ_ASSERT(item->GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
+      if (item.IsStretched()) {
+        MOZ_ASSERT(item.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
                    "stretched item w/o 'align-self: stretch'?");
         if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
-          childReflowState.SetComputedWidth(item->GetCrossSize());
+          childReflowState.SetComputedWidth(item.GetCrossSize());
           didOverrideComputedWidth = true;
         } else {
           // If this item's height is stretched, it's a relative height.
-          item->Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
-          childReflowState.SetComputedHeight(item->GetCrossSize());
+          item.Frame()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
+          childReflowState.SetComputedHeight(item.GetCrossSize());
           didOverrideComputedHeight = true;
         }
       }
@@ -3049,7 +2976,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // If we're overriding the computed width or height, *and* we had an
       // earlier "measuring" reflow, then this upcoming reflow needs to be
       // treated as a resize.
-      if (item->HadMeasuringReflow()) {
+      if (item.HadMeasuringReflow()) {
         if (didOverrideComputedWidth) {
           // (This is somewhat redundant, since the reflow state already
           // sets mHResize whenever our computed width has changed since the
@@ -3067,7 +2994,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
       nsHTMLReflowMetrics childDesiredSize(childReflowState);
       nsReflowStatus childReflowStatus;
-      nsresult rv = ReflowChild(item->Frame(), aPresContext,
+      nsresult rv = ReflowChild(item.Frame(), aPresContext,
                                 childDesiredSize, childReflowState,
                                 physicalPosn.x, physicalPosn.y,
                                 0, childReflowStatus);
@@ -3083,7 +3010,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
       childReflowState.ApplyRelativePositioning(&physicalPosn);
 
-      rv = FinishReflowChild(item->Frame(), aPresContext,
+      rv = FinishReflowChild(item.Frame(), aPresContext,
                              childDesiredSize, &childReflowState,
                              physicalPosn.x, physicalPosn.y, 0);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -3091,14 +3018,13 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       // If this is our first child and we haven't established a baseline for
       // the container yet (i.e. if we don't have 'align-self: baseline' on any
       // children), then use this child's baseline as the container's baseline.
-      if (item->Frame() == mFrames.FirstChild() &&
-          flexContainerAscent == nscoord_MIN) {
-        ResolveReflowedChildAscent(item->Frame(), childDesiredSize);
+      if (lineIdx == 0 && i == 0 && flexContainerAscent == nscoord_MIN) {
+        ResolveReflowedChildAscent(item.Frame(), childDesiredSize);
 
         // (We use GetNormalPosition() instead of physicalPosn because we don't
         // want relative positioning on the child to affect the baseline that we
         // read from it).
-        flexContainerAscent = item->Frame()->GetNormalPosition().y +
+        flexContainerAscent = item.Frame()->GetNormalPosition().y +
           childDesiredSize.TopAscent();
       }
     }
@@ -3119,7 +3045,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     // children (or if our children are huge enough that they have nscoord_MIN
     // as their baseline... in which case, we'll use the wrong baseline, but no
     // big deal)
-    NS_WARN_IF_FALSE(lines.getFirst()->IsEmpty(),
+    NS_WARN_IF_FALSE(lines[0].mItems.IsEmpty(),
                      "Have flex items but didn't get an ascent - that's odd "
                      "(or there are just gigantic sizes involved)");
     // Per spec, just use the bottom of content-box.
