@@ -309,6 +309,7 @@ mozJSComponentLoader::mozJSComponentLoader()
       mModules(32),
       mImports(32),
       mInProgressImports(32),
+      mThisObjects(32),
       mInitialized(false),
       mReuseLoaderGlobal(false)
 {
@@ -341,36 +342,6 @@ NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
                    xpcIJSModuleLoader,
                    nsIObserver)
 
-static void
-TraceComponentLoader(JSTracer* trc, void* data)
-{
-    auto loader = mozJSComponentLoader::Get();
-    if (loader) {
-        MOZ_ASSERT(data == loader);
-        loader->Trace(trc);
-    }
-}
-
-void
-mozJSComponentLoader::Trace(JSTracer *trc)
-{
-    if (!mInitialized || !mThisObjects.initialized()) {
-        return;
-    }
-
-    if (!mReuseLoaderGlobal) {
-        MOZ_ASSERT(mThisObjects.empty());
-        return;
-    }
-
-    for (ThisObjectsMap::Range r = mThisObjects.all(); !r.empty(); r.popFront()) {
-        JS_CallScriptTracer(trc, const_cast<JSScript**>(&r.front().key()),
-                            "mozJSComponentLoader::mThisObjects key");
-        JS_CallHeapObjectTracer(trc, &r.front().value(),
-                                "mozJSComponentLoader::mThisObjects value");
-    }
-}
-
 nsresult
 mozJSComponentLoader::ReallyInit()
 {
@@ -394,12 +365,6 @@ mozJSComponentLoader::ReallyInit()
     if (NS_FAILED(rv) ||
         NS_FAILED(rv = mRuntimeService->GetRuntime(&mRuntime)))
         return rv;
-
-    if (!mThisObjects.init(32))
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (!JS_AddExtraGCRootsTracer(mRuntime, TraceComponentLoader, this))
-        return NS_ERROR_OUT_OF_MEMORY;
 
     // Create our compilation context.
     mContext = JS_NewContext(mRuntime, 256);
@@ -450,7 +415,7 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
     if (mModules.Get(spec, &mod))
     return mod;
 
-    nsAutoPtr<ModuleEntry> entry(new ModuleEntry(mContext));
+    nsAutoPtr<ModuleEntry> entry(new ModuleEntry);
 
     JSAutoRequest ar(mContext);
     RootedValue dummy(mContext);
@@ -559,10 +524,7 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
         JSScript* script =
             js::GetOutermostEnclosingFunctionOfScriptedCaller(aCx);
         if (script) {
-            ThisObjectsMap::Ptr p = mThisObjects.lookup(script);
-            if (p.found()) {
-                targetObject = p->value();
-            }
+            targetObject = mThisObjects.Get(script);
         }
     }
 
@@ -600,13 +562,11 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 void
 mozJSComponentLoader::NoteSubScript(HandleScript aScript, HandleObject aThisObject)
 {
-    if (!mInitialized && NS_FAILED(ReallyInit())) {
-        MOZ_CRASH();
-    }
+  if (!mInitialized && NS_FAILED(ReallyInit())) {
+      MOZ_CRASH();
+  }
 
-    if (mReuseLoaderGlobal && !mThisObjects.put(aScript, aThisObject)) {
-        MOZ_CRASH();
-    }
+  mThisObjects.Put(aScript, aThisObject);
 }
 
 /* static */ size_t
@@ -635,7 +595,7 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
     amount += mModules.SizeOfExcludingThis(DataEntrySizeOfExcludingThis, aMallocSizeOf);
     amount += mImports.SizeOfExcludingThis(ClassEntrySizeOfExcludingThis, aMallocSizeOf);
     amount += mInProgressImports.SizeOfExcludingThis(DataEntrySizeOfExcludingThis, aMallocSizeOf);
-    amount += mThisObjects.sizeOfExcludingThis(aMallocSizeOf);
+    amount += mThisObjects.SizeOfExcludingThis(nullptr, aMallocSizeOf);
 
     return amount;
 }
@@ -780,8 +740,8 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
 nsresult
 mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
                                         nsIURI *aURI,
-                                        JS::MutableHandle<JSObject*> aObject,
-                                        JS::MutableHandle<JSScript*> aTableScript,
+                                        JSObject **aObject,
+                                        JSScript **aTableScript,
                                         char **aLocation,
                                         bool aPropagateExceptions,
                                         MutableHandleValue aException)
@@ -1028,7 +988,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
 
     // Assign aObject here so that it's available to recursive imports.
     // See bug 384168.
-    aObject.set(obj);
+    *aObject = obj;
 
     RootedScript tableScript(cx, script);
     if (!tableScript) {
@@ -1036,14 +996,12 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
         MOZ_ASSERT(tableScript);
     }
 
-    aTableScript.set(tableScript);
+    *aTableScript = tableScript;
 
     // tableScript stays in the table until shutdown. To avoid it being
     // collected and another script getting the same address, we root
     // tableScript lower down in this function.
-    if (mReuseLoaderGlobal && !mThisObjects.put(tableScript, JS::Heap<JSObject*>(obj))) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    mThisObjects.Put(tableScript, obj);
     bool ok = false;
 
     {
@@ -1063,21 +1021,23 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             JS_GetPendingException(cx, aException);
             JS_ClearPendingException(cx);
         }
-        aObject.set(nullptr);
-        aTableScript.set(nullptr);
-        mThisObjects.remove(tableScript);
+        *aObject = nullptr;
+        *aTableScript = nullptr;
+        mThisObjects.Remove(tableScript);
         return NS_ERROR_FAILURE;
     }
 
     /* Freed when we remove from the table. */
     *aLocation = ToNewCString(nativePath);
     if (!*aLocation) {
-        aObject.set(nullptr);
-        aTableScript.set(nullptr);
-        mThisObjects.remove(tableScript);
+        *aObject = nullptr;
+        *aTableScript = nullptr;
+        mThisObjects.Remove(tableScript);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    JS_AddNamedObjectRoot(cx, aObject, *aLocation);
+    JS_AddNamedScriptRoot(cx, aTableScript, *aLocation);
     return NS_OK;
 }
 
@@ -1110,7 +1070,7 @@ mozJSComponentLoader::UnloadModules()
 
     mInProgressImports.Clear();
     mImports.Clear();
-    mThisObjects.clear();
+    mThisObjects.Clear();
 
     mModules.Enumerate(ClearModules, nullptr);
 
@@ -1259,7 +1219,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
     ModuleEntry* mod;
     nsAutoPtr<ModuleEntry> newEntry;
     if (!mImports.Get(key, &mod) && !mInProgressImports.Get(key, &mod)) {
-        newEntry = new ModuleEntry(callercx);
+        newEntry = new ModuleEntry;
         if (!newEntry)
             return NS_ERROR_OUT_OF_MEMORY;
         mInProgressImports.Put(key, newEntry);
