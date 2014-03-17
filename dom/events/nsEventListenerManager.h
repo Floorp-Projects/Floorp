@@ -28,13 +28,14 @@ class nsEventListenerManager;
 template<class T> class nsCOMArray;
 
 namespace mozilla {
-namespace dom {
 
+namespace dom {
 class EventTarget;
 class Element;
+} // namespace dom
 
-typedef CallbackObjectHolder<EventListener, nsIDOMEventListener>
-  EventListenerHolder;
+typedef dom::CallbackObjectHolder<dom::EventListener,
+                                  nsIDOMEventListener> EventListenerHolder;
 
 struct EventListenerFlags
 {
@@ -142,7 +143,6 @@ inline EventListenerFlags AllEventsAtSystemGroupCapture()
   return flags;
 }
 
-} // namespace dom
 } // namespace mozilla
 
 /*
@@ -154,7 +154,7 @@ class nsEventListenerManager
 public:
   struct Listener
   {
-    mozilla::dom::EventListenerHolder mListener;
+    mozilla::EventListenerHolder mListener;
     nsCOMPtr<nsIAtom> mTypeAtom; // for the main thread
     nsString mTypeString; // for non-main-threads
     uint16_t mEventType;
@@ -173,7 +173,7 @@ public:
     bool mHandlerIsString : 1;
     bool mAllEvents : 1;
 
-    mozilla::dom::EventListenerFlags mFlags;
+    mozilla::EventListenerFlags mFlags;
 
     nsIJSEventListener* GetJSListener() const
     {
@@ -221,7 +221,7 @@ public:
                         bool aUseCapture,
                         bool aWantsUntrusted)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    mozilla::EventListenerHolder holder(aListener);
     AddEventListener(aType, holder, aUseCapture, aWantsUntrusted);
   }
   void AddEventListener(const nsAString& aType,
@@ -229,21 +229,21 @@ public:
                         bool aUseCapture,
                         bool aWantsUntrusted)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    mozilla::EventListenerHolder holder(aListener);
     AddEventListener(aType, holder, aUseCapture, aWantsUntrusted);
   }
   void RemoveEventListener(const nsAString& aType,
                            nsIDOMEventListener* aListener,
                            bool aUseCapture)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    mozilla::EventListenerHolder holder(aListener);
     RemoveEventListener(aType, holder, aUseCapture);
   }
   void RemoveEventListener(const nsAString& aType,
                            mozilla::dom::EventListener* aListener,
                            bool aUseCapture)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    mozilla::EventListenerHolder holder(aListener);
     RemoveEventListener(aType, holder, aUseCapture);
   }
 
@@ -261,24 +261,24 @@ public:
   */
   void AddEventListenerByType(nsIDOMEventListener *aListener,
                               const nsAString& type,
-                              const mozilla::dom::EventListenerFlags& aFlags)
+                              const mozilla::EventListenerFlags& aFlags)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    mozilla::EventListenerHolder holder(aListener);
     AddEventListenerByType(holder, type, aFlags);
   }
-  void AddEventListenerByType(const mozilla::dom::EventListenerHolder& aListener,
+  void AddEventListenerByType(const mozilla::EventListenerHolder& aListener,
                               const nsAString& type,
-                              const mozilla::dom::EventListenerFlags& aFlags);
+                              const mozilla::EventListenerFlags& aFlags);
   void RemoveEventListenerByType(nsIDOMEventListener *aListener,
                                  const nsAString& type,
-                                 const mozilla::dom::EventListenerFlags& aFlags)
+                                 const mozilla::EventListenerFlags& aFlags)
   {
-    mozilla::dom::EventListenerHolder holder(aListener);
+    mozilla::EventListenerHolder holder(aListener);
     RemoveEventListenerByType(holder, type, aFlags);
   }
-  void RemoveEventListenerByType(const mozilla::dom::EventListenerHolder& aListener,
+  void RemoveEventListenerByType(const mozilla::EventListenerHolder& aListener,
                                  const nsAString& type,
-                                 const mozilla::dom::EventListenerFlags& aFlags);
+                                 const mozilla::EventListenerFlags& aFlags);
 
   /**
    * Sets the current "inline" event listener for aName to be a
@@ -510,27 +510,27 @@ protected:
                                                 const nsAString& aTypeString);
 
   void AddEventListener(const nsAString& aType,
-                        const mozilla::dom::EventListenerHolder& aListener,
+                        const mozilla::EventListenerHolder& aListener,
                         bool aUseCapture,
                         bool aWantsUntrusted);
   void RemoveEventListener(const nsAString& aType,
-                           const mozilla::dom::EventListenerHolder& aListener,
+                           const mozilla::EventListenerHolder& aListener,
                            bool aUseCapture);
 
   void AddEventListenerInternal(
-         const mozilla::dom::EventListenerHolder& aListener,
+         const mozilla::EventListenerHolder& aListener,
          uint32_t aType,
          nsIAtom* aTypeAtom,
          const nsAString& aTypeString,
-         const mozilla::dom::EventListenerFlags& aFlags,
+         const mozilla::EventListenerFlags& aFlags,
          bool aHandler = false,
          bool aAllEvents = false);
   void RemoveEventListenerInternal(
-         const mozilla::dom::EventListenerHolder& aListener,
+         const mozilla::EventListenerHolder& aListener,
          uint32_t aType,
          nsIAtom* aUserType,
          const nsAString& aTypeString,
-         const mozilla::dom::EventListenerFlags& aFlags,
+         const mozilla::EventListenerFlags& aFlags,
          bool aAllEvents = false);
   void RemoveAllListeners();
   const EventTypeData* GetTypeDataForIID(const nsIID& aIID);
@@ -577,7 +577,7 @@ NS_AddSystemEventListener(mozilla::dom::EventTarget* aTarget,
   nsEventListenerManager* listenerManager =
     aTarget->GetOrCreateListenerManager();
   NS_ENSURE_STATE(listenerManager);
-  mozilla::dom::EventListenerFlags flags;
+  mozilla::EventListenerFlags flags;
   flags.mInSystemGroup = true;
   flags.mCapture = aUseCapture;
   flags.mAllowUntrustedEvents = aWantsUntrusted;
