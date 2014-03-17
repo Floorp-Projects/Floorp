@@ -22,7 +22,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
 #include "nsIContentIterator.h"
-#include "nsEventListenerManager.h"
 #include "nsFocusManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
@@ -49,7 +48,9 @@
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -99,7 +100,6 @@
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
-#include "nsAsyncDOMEvent.h"
 #include "nsTextNode.h"
 
 #ifdef MOZ_XUL
@@ -1660,8 +1660,8 @@ Element::SetEventHandler(nsIAtom* aEventName,
 
   NS_PRECONDITION(aEventName, "Must have event name!");
   bool defer = true;
-  nsEventListenerManager* manager = GetEventListenerManagerForAttr(aEventName,
-                                                                   &defer);
+  EventListenerManager* manager =
+    GetEventListenerManagerForAttr(aEventName, &defer);
   if (!manager) {
     return NS_OK;
   }
@@ -1946,7 +1946,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
     mutation.mAttrChange = aModType;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
+    (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
@@ -1971,7 +1971,7 @@ Element::SetMappedAttribute(nsIDocument* aDocument,
   return false;
 }
 
-nsEventListenerManager*
+EventListenerManager*
 Element::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
                                         bool* aDefer)
 {
@@ -2131,7 +2131,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
     mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
     mozAutoSubtreeModified subtree(OwnerDoc(), this);
-    (new nsAsyncDOMEvent(this, mutation))->RunDOMEventWhenSafe();
+    (new AsyncEventDispatcher(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
@@ -2618,12 +2618,12 @@ Element::MozRequestFullScreen()
                                     NS_LITERAL_CSTRING("DOM"), OwnerDoc(),
                                     nsContentUtils::eDOM_PROPERTIES,
                                     error);
-    nsRefPtr<nsAsyncDOMEvent> e =
-      new nsAsyncDOMEvent(OwnerDoc(),
-                          NS_LITERAL_STRING("mozfullscreenerror"),
-                          true,
-                          false);
-    e->PostDOMEvent();
+    nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+      new AsyncEventDispatcher(OwnerDoc(),
+                               NS_LITERAL_STRING("mozfullscreenerror"),
+                               true,
+                               false);
+    asyncDispatcher->PostDOMEvent();
     return;
   }
 

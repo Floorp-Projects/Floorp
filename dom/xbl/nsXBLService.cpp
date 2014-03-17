@@ -45,13 +45,13 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
 #include "nsXBLSerialize.h"
-#include "nsEventListenerManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
 #endif
 #include "nsIDOMEventListener.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
@@ -562,7 +562,7 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
       piTarget = doc; // We're a XUL keyset. Attach to our document.
   }
 
-  nsEventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
 
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
@@ -579,11 +579,11 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
 
   // listen to these events
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
-                                  dom::TrustedEventsAtSystemGroupBubble());
+                                  TrustedEventsAtSystemGroupBubble());
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
-                                  dom::TrustedEventsAtSystemGroupBubble());
+                                  TrustedEventsAtSystemGroupBubble());
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
-                                  dom::TrustedEventsAtSystemGroupBubble());
+                                  TrustedEventsAtSystemGroupBubble());
 
   if (contentNode)
     return contentNode->SetProperty(nsGkAtoms::listener,
@@ -613,7 +613,7 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
   if (doc)
     piTarget = do_QueryInterface(doc);
 
-  nsEventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
 
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
@@ -624,11 +624,11 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
     return NS_ERROR_FAILURE;
 
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
-                                     dom::TrustedEventsAtSystemGroupBubble());
+                                     TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
-                                     dom::TrustedEventsAtSystemGroupBubble());
+                                     TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
-                                     dom::TrustedEventsAtSystemGroupBubble());
+                                     TrustedEventsAtSystemGroupBubble());
 
   contentNode->DeleteProperty(nsGkAtoms::listener);
 

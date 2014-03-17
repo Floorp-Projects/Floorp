@@ -9,12 +9,12 @@
 
 class nsPIDOMWindow;
 class nsIDOMEventListener;
-class nsEventListenerManager;
 class nsIDOMEvent;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventListenerManager.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
@@ -29,10 +29,10 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMEVENTTARGET
 
-  virtual nsEventListenerManager*
-  GetExistingListenerManager() const MOZ_OVERRIDE;
-  virtual nsEventListenerManager*
-  GetOrCreateListenerManager() MOZ_OVERRIDE;
+  virtual mozilla::EventListenerManager*
+    GetExistingListenerManager() const MOZ_OVERRIDE;
+  virtual mozilla::EventListenerManager*
+    GetOrCreateListenerManager() MOZ_OVERRIDE;
 
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
@@ -65,9 +65,8 @@ public:
 protected:
   // Members
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  nsRefPtr<nsEventListenerManager> mListenerManager; // [Strong]. We own the manager, which owns event listeners attached
-                                                      // to us.
-
+  // We own the manager, which owns event listeners attached to us.
+  nsRefPtr<mozilla::EventListenerManager> mListenerManager; // [Strong]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
   nsCOMPtr<mozilla::dom::EventTarget> mParent;

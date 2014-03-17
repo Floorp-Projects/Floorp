@@ -37,6 +37,7 @@
 #include "nsIXULBuilderListener.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
+#include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsISimpleEnumerator.h"

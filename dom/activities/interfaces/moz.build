@@ -7,10 +7,8 @@
 XPIDL_SOURCES += [
     'nsIActivityProxy.idl',
     'nsIActivityUIGlue.idl',
-    'nsIDOMActivityHandlerDescription.idl',
     'nsIDOMActivityOptions.idl',
     'nsIDOMActivityRequestHandler.idl',
-    'nsIDOMNavigatorActivities.idl',
 ]
 
 XPIDL_MODULE = 'dom_activities'

@@ -20,7 +20,6 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsCSSRendering.h"
-#include "nsEventListenerManager.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsISliderListener.h"
