@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/EventTarget.h"
-#include "nsEventListenerManager.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -16,7 +16,7 @@ EventTarget::RemoveEventListener(const nsAString& aType,
                                  bool aUseCapture,
                                  ErrorResult& aRv)
 {
-  nsEventListenerManager* elm = GetExistingListenerManager();
+  EventListenerManager* elm = GetExistingListenerManager();
   if (elm) {
     elm->RemoveEventListener(aType, aListener, aUseCapture);
   }
@@ -25,7 +25,7 @@ EventTarget::RemoveEventListener(const nsAString& aType,
 EventHandlerNonNull*
 EventTarget::GetEventHandler(nsIAtom* aType, const nsAString& aTypeString)
 {
-  nsEventListenerManager* elm = GetExistingListenerManager();
+  EventListenerManager* elm = GetExistingListenerManager();
   return elm ? elm->GetEventHandler(aType, aTypeString) : nullptr;
 }
 

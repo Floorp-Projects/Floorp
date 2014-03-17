@@ -7,6 +7,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"

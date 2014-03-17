@@ -17,6 +17,7 @@
 #include "nsContentList.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMNode.h"
 #include "nsISelectControlFrame.h"
 #include "nsContentUtils.h"

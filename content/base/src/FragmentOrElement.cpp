@@ -17,6 +17,7 @@
 
 #include "mozilla/dom/FragmentOrElement.h"
 
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
@@ -25,7 +26,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMNodeList.h"
 #include "nsIContentIterator.h"
-#include "nsEventListenerManager.h"
 #include "nsFocusManager.h"
 #include "nsILinkHandler.h"
 #include "nsIScriptGlobalObject.h"
@@ -1324,7 +1324,7 @@ FragmentOrElement::MarkNodeChildren(nsINode* aNode)
     JS::ExposeObjectToActiveJS(o);
   }
 
-  nsEventListenerManager* elm = aNode->GetExistingListenerManager();
+  EventListenerManager* elm = aNode->GetExistingListenerManager();
   if (elm) {
     elm->MarkForCC();
   }
