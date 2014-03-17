@@ -44,6 +44,9 @@ class Linker
         if (bytesNeeded >= MAX_BUFFER_SIZE)
             return fail(cx);
 
+        // ExecutableAllocator requires bytesNeeded to be word-size aligned.
+        bytesNeeded = AlignBytes(bytesNeeded, sizeof(void *));
+
         uint8_t *result = (uint8_t *)execAlloc->alloc(bytesNeeded, &pool, kind);
         if (!result)
             return fail(cx);
@@ -54,8 +57,8 @@ class Linker
         // Bump the code up to a nice alignment.
         codeStart = (uint8_t *)AlignBytes((uintptr_t)codeStart, CodeAlignment);
         uint32_t headerSize = codeStart - result;
-        JitCode *code = JitCode::New<allowGC>(cx, codeStart,
-                                              bytesNeeded - headerSize, pool);
+        JitCode *code = JitCode::New<allowGC>(cx, codeStart, bytesNeeded - headerSize,
+                                              headerSize, pool, kind);
         if (!code)
             return nullptr;
         if (masm.oom())

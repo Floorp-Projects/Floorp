@@ -66,36 +66,17 @@ public:
     LinkBuffer(MacroAssembler* masm, ExecutableAllocator* executableAllocator,
                ExecutablePool** poolp, bool* ok, CodeKind codeKind)
     {
+        // LinkBuffer is only used by Yarr. MacroAssemblerCodeRef::release relies on this.
+        MOZ_ASSERT(codeKind == REGEXP_CODE);
         m_codeKind = codeKind;
         m_code = executableAllocAndCopy(*masm, executableAllocator, poolp);
         m_executablePool = *poolp;
         m_size = masm->m_assembler.size();  // must come after call to executableAllocAndCopy()!
+        m_allocSize = masm->m_assembler.allocSize();
 #ifndef NDEBUG
         m_completed = false;
 #endif
         *ok = !!m_code;
-    }
-
-    LinkBuffer(CodeKind kind)
-        : m_executablePool(NULL)
-        , m_code(NULL)
-        , m_size(0)
-        , m_codeKind(kind)
-#ifndef NDEBUG
-        , m_completed(false)
-#endif
-    {
-    }
-
-    LinkBuffer(uint8_t* ncode, size_t size, CodeKind kind)
-        : m_executablePool(NULL)
-        , m_code(ncode)
-        , m_size(size)
-        , m_codeKind(kind)
-#ifndef NDEBUG
-        , m_completed(false)
-#endif
-    {
     }
 
     ~LinkBuffer()
@@ -183,7 +164,8 @@ public:
     {
         performFinalization();
 
-        return CodeRef(m_code, m_executablePool, m_size);
+        MOZ_ASSERT(m_allocSize >= m_size);
+        return CodeRef(m_code, m_executablePool, m_allocSize);
     }
     CodeLocationLabel finalizeCodeAddendum()
     {
@@ -225,6 +207,7 @@ protected:
     ExecutablePool* m_executablePool;
     void* m_code;
     size_t m_size;
+    size_t m_allocSize;
     CodeKind m_codeKind;
 #ifndef NDEBUG
     bool m_completed;

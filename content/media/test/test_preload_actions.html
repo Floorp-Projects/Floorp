@@ -74,7 +74,7 @@ var tests = [
       // is(v.networkState, v.NETWORK_IDLE, "(1) NetworkState must be NETWORK_IDLE");
       maybeFinish(v, 1);
     },
-    
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -86,6 +86,8 @@ var tests = [
       v.src = test.name;
       document.body.appendChild(v); // Causes implicit load, which will be halted due to preload:none.
     },
+
+    name: "test1",
   },
   {
     // 2. Add preload:metadata video with src to document. Should halt with NETWORK_IDLE, HAVE_CURRENT_DATA
@@ -100,7 +102,7 @@ var tests = [
       // is(v.networkState, v.NETWORK_IDLE, "(2) NetworkState must be NETWORK_IDLE");
       maybeFinish(v, 2);
     },
-    
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -113,6 +115,8 @@ var tests = [
       document.body.appendChild(v); // Causes implicit load, which will be halted after
                                      // metadata due to preload:metadata.
     },
+
+    name: "test2",
   },
   {
     // 3. Add preload:auto to document. Should receive canplaythrough eventually.
@@ -123,7 +127,7 @@ var tests = [
       is(v._gotLoadedMetaData, true, "(3) Must get loadedmetadata.");
       maybeFinish(v, 3);
     },
-    
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -135,6 +139,8 @@ var tests = [
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
     },
+
+    name: "test3",
   },
   {
     // 4. Add preload:none video to document. Call play(), should load then play through.
@@ -152,13 +158,13 @@ var tests = [
       // is(v.networkState, v.NETWORK_IDLE, "(4) NetworkState must be NETWORK_IDLE");
       v.play(); // Should load and play through.
     },
-    
+
     ended:
     function(e) {
       ok(true, "(4) Got playback ended");
       maybeFinish(e.target, 4);
     },
-      
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -172,6 +178,8 @@ var tests = [
       v.src = test.name;
       document.body.appendChild(v);
     },
+
+    name: "test4",
   },
   {
     // 5. preload:none video without resource, add to document, will implicitly start a
@@ -186,7 +194,7 @@ var tests = [
       // is(v.networkState, v.NETWORK_IDLE, "(5) NetworkState must be NETWORK_IDLE");
       maybeFinish(v, 5);
     },
-      
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -198,6 +206,8 @@ var tests = [
       document.body.appendChild(v); // Causes implicit load, which will be halted due to no resource.
       v.src = test.name; // Load should start, and halt at preload:none.
     },
+
+    name: "test5",
   },
   {
     // 6. preload:none video without resource, add to document, will implicitly start a
@@ -212,7 +222,7 @@ var tests = [
       // is(v.networkState, v.NETWORK_IDLE, "(6) NetworkState must be NETWORK_IDLE");
       maybeFinish(v, 6);
     },
-      
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -227,6 +237,8 @@ var tests = [
       s.type = test.type;
       v.appendChild(s); // Load should start, and halt at preload:none.
     },
+
+    name: "test6",
   },
   {
     // 7. create a preload:none document with multiple sources, the first of which is invalid.
@@ -252,7 +264,7 @@ var tests = [
       is(v._gotErrorEvent, true, "(7) Should get error event from first source load failure");      
       maybeFinish(v, 7);
     },
-      
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -274,6 +286,8 @@ var tests = [
       v.appendChild(s2);
       document.body.appendChild(v); // Causes implicit load, which will be halt at preload:none on the second resource.
     },
+
+    name: "test7",
   },
   {
     // 8. Change preload value from none to metadata should cause metadata to be loaded.
@@ -286,7 +300,7 @@ var tests = [
       // is(v.networkState, v.NETWORK_IDLE, "(8) NetworkState must be NETWORK_IDLE when load is halted");
       maybeFinish(v, 8);
     },
-    
+
     setup:
     function(v) {
       v._gotLoadedMetaData = false;
@@ -297,6 +311,8 @@ var tests = [
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
     },
+
+    name: "test8",
   },
   /*{
     // 9. Change preload value from metadata to auto should cause entire media to be loaded.
@@ -309,7 +325,7 @@ var tests = [
       is(v._gotLoadedMetaData, true, "(9) Must get loadedmetadata.");
       maybeFinish(v, 9);
     },
-    
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -331,7 +347,7 @@ var tests = [
       is(v._gotLoadedMetaData, true, "(10) Must get loadedmetadata.");
       maybeFinish(v, 10);
     },
-    
+
     setup:
     function(v) {
       v._gotLoadedMetaData = false;
@@ -342,6 +358,8 @@ var tests = [
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
     },
+
+    name: "test10",
   },
   {
     // 11. Change preload value from none to metadata should cause metadata to load.
@@ -365,10 +383,14 @@ var tests = [
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
     },
+
+    name: "test11",
   },
-  {
+  /*{
     // 12. Change preload value from auto to metadata after load started,
     // should still do full load, should not halt after metadata only.
+    // disable this test since the spec is no longer found in the document
+    // http://dev.w3.org/html5/spec-preview/media-elements.html
     canplaythrough:
     function(e) {
       var v = e.target;
@@ -389,7 +411,9 @@ var tests = [
       document.body.appendChild(v);
       v.preload = "metadata";
     },
-  },
+
+    name: "test12",
+  },*/
   {
     // 13. Change preload value from auto to none after specifying a src
     // should load according to preload none, no buffering should have taken place
@@ -416,7 +440,9 @@ var tests = [
       v.addEventListener("suspend", this.suspend, false);
       document.body.appendChild(v); // Causes implicit load, should load according to preload none
       var s = document.createElement("source");
-    }
+    },
+
+    name: "test13",
   },
   {
     // 14. Add preload:metadata video with src to document. Play(), should play through.
@@ -430,7 +456,7 @@ var tests = [
       // is(v.networkState, v.NETWORK_IDLE, "(14) NetworkState must be NETWORK_IDLE");
       v.play();
     },
-    
+
     ended:
     function(e) {
       ok(true, "(14) Got playback ended");
@@ -451,6 +477,8 @@ var tests = [
       document.body.appendChild(v); // Causes implicit load, which will be halted after
                                      // metadata due to preload:metadata.
     },
+
+    name: "test14",
   },
   {
     // 15. Autoplay should override preload:none.
@@ -460,7 +488,7 @@ var tests = [
       var v = e.target;
       maybeFinish(v, 15);
     },
-    
+
     setup:
     function(v) {
       v._gotLoadStart = false;
@@ -473,6 +501,8 @@ var tests = [
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
     },
+
+    name: "test15",
   },
   {
     // 16. Autoplay should override preload:metadata.
@@ -482,7 +512,7 @@ var tests = [
       var v = e.target;
       maybeFinish(v, 16);
     },
-    
+
     setup:
     function(v) {
       v.preload = "metadata";
@@ -491,6 +521,8 @@ var tests = [
       v.src = test.name; // Causes implicit load.
       document.body.appendChild(v);
     },
+
+    name: "test16",
   },
   {
     // 17. On a preload:none video, adding autoplay should disable preload none, i.e. don't break autoplay!
@@ -500,7 +532,7 @@ var tests = [
       var v = e.target;
       maybeFinish(v, 17);
     },
-    
+
     setup:
     function(v) {
       v.addEventListener("ended", this.ended, false);
@@ -508,7 +540,9 @@ var tests = [
       document.body.appendChild(v); // Causes implicit load, which will be halted due to preload:none.
       v.autoplay = true;
       v.src = test.name;
-    },    
+    },
+
+    name: "test17",
   },
   {
     // 18. On a preload='none' video, call play() before load algorithms's sync
@@ -519,7 +553,7 @@ var tests = [
       var v = e.target;
       maybeFinish(v, 18);
     },
-    
+
     setup:
     function(v) {
       v.addEventListener("ended", this.ended, false);
@@ -527,7 +561,9 @@ var tests = [
       v.src = test.name; // Schedules async section to continue load algorithm.
       document.body.appendChild(v);
       v.play(); // Should cause preload:none to be overridden.
-    },  
+    },
+
+    name: "test18",
   },
   {
     // 19. Set preload='auto' on first video source then switching preload='none' and swapping the video source to another.
@@ -555,7 +591,9 @@ var tests = [
       // add a listener for when the video has loaded, so we know preload auto has worked
       v.addEventListener( "loadedmetadata", this.loadedmetadata, false);
       document.body.appendChild(v);
-    }
+    },
+
+    name: "test19",
   }
 ];
 
@@ -563,6 +601,7 @@ var iterationCount = 0;
 function startTest(test, token) {
   if (test == tests[0]) {
     ++iterationCount;
+    info("iterationCount=" + iterationCount);
   }
   if (iterationCount == 2) {
     // Do this series of tests on logically different resources

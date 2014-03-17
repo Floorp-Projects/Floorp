@@ -196,6 +196,8 @@ public:
   mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
   virtual void            EndRemoteDrawing() MOZ_OVERRIDE;
 
+  virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) MOZ_OVERRIDE;
+
   /**
    * Event helpers
    */
