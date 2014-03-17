@@ -127,6 +127,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsIAppStartup.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsThemeConstants.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -3554,6 +3555,28 @@ nsWindow::EndRemoteDrawing()
     FreeNativeData(mCompositeDC, NS_NATIVE_GRAPHIC);
   }
   mCompositeDC = nullptr;
+}
+
+void
+nsWindow::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries)
+{
+  nsIntRegion clearRegion;
+  for (size_t i = 0; i < aThemeGeometries.Length(); i++) {
+    if ((aThemeGeometries[i].mWidgetType == NS_THEME_WINDOW_BUTTON_BOX ||
+         aThemeGeometries[i].mWidgetType == NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED) &&
+        nsUXThemeData::CheckForCompositor())
+    {
+      nsIntRect bounds = aThemeGeometries[i].mRect;
+      clearRegion = nsIntRect(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height() - 2.0);
+      clearRegion.Or(clearRegion, nsIntRect(bounds.X() + 1.0, bounds.YMost() - 2.0, bounds.Width() - 1.0, 1.0));
+      clearRegion.Or(clearRegion, nsIntRect(bounds.X() + 2.0, bounds.YMost() - 1.0, bounds.Width() - 3.0, 1.0));
+    }
+  }
+
+  nsRefPtr<LayerManager> layerManager = GetLayerManager();
+  if (layerManager) {
+    layerManager->SetRegionToClear(clearRegion);
+  }
 }
 
 /**************************************************************
