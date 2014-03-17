@@ -163,7 +163,7 @@ class nsCaret : public nsISelectionListener
                                              nsIFrame** aReturnFrame,
                                              int32_t* aReturnOffset);
 
-    NS_IMETHOD CheckCaretDrawingState();
+    void CheckCaretDrawingState();
 
 protected:
 
