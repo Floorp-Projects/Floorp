@@ -6,7 +6,6 @@
 
 #include "nsEventDispatcher.h"
 #include "nsPresContext.h"
-#include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include <new>
@@ -19,6 +18,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/TouchEvent.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
@@ -36,14 +36,14 @@ public:
     // We can do this optimization only in the main thread.
     mNonMainThread(!NS_IsMainThread()),
     mInitialCount(mNonMainThread ?
-                    0 : nsEventListenerManager::sMainThreadCreatedCount)
+                    0 : EventListenerManager::sMainThreadCreatedCount)
   {
   }
 
   bool MayHaveNewListenerManager()
   {
     return mNonMainThread ||
-           mInitialCount != nsEventListenerManager::sMainThreadCreatedCount;
+           mInitialCount != EventListenerManager::sMainThreadCreatedCount;
   }
 
   bool IsMainThread()
@@ -168,7 +168,7 @@ public:
 
   /**
    * If the current item in the event target chain has an event listener
-   * manager, this method calls nsEventListenerManager::HandleEvent().
+   * manager, this method calls EventListenerManager::HandleEvent().
    */
   void HandleEvent(nsEventChainPostVisitor& aVisitor,
                    ELMCreationDetector& aCd)
@@ -209,7 +209,7 @@ public:
   // Event retargeting must happen whenever mNewTarget is non-null.
   nsCOMPtr<EventTarget>             mNewTarget;
   // Cache mTarget's event listener manager.
-  nsRefPtr<nsEventListenerManager>  mManager;
+  nsRefPtr<EventListenerManager>    mManager;
 };
 
 nsEventTargetChainItem::nsEventTargetChainItem(EventTarget* aTarget)

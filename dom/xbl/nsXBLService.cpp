@@ -45,13 +45,13 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptError.h"
 #include "nsXBLSerialize.h"
-#include "nsEventListenerManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
 #endif
 #include "nsIDOMEventListener.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
@@ -562,7 +562,7 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
       piTarget = doc; // We're a XUL keyset. Attach to our document.
   }
 
-  nsEventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
 
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;
@@ -613,7 +613,7 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
   if (doc)
     piTarget = do_QueryInterface(doc);
 
-  nsEventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
 
   if (!piTarget || !manager)
     return NS_ERROR_FAILURE;

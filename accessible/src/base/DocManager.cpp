@@ -15,12 +15,12 @@
 #include "Logging.h"
 #endif
 
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
 #include "nsIDOMDocument.h"
-#include "nsEventListenerManager.h"
 #include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebNavigation.h"
@@ -329,7 +329,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
 {
   nsPIDOMWindow* window = aDocument->GetWindow();
   EventTarget* target = window->GetChromeEventHandler();
-  nsEventListenerManager* elm = target->GetOrCreateListenerManager();
+  EventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                               TrustedEventsAtCapture());
 
@@ -359,7 +359,7 @@ DocManager::RemoveListeners(nsIDocument* aDocument)
   if (!target)
     return;
 
-  nsEventListenerManager* elm = target->GetOrCreateListenerManager();
+  EventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                                  TrustedEventsAtCapture());
 

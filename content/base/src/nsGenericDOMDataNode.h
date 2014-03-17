@@ -16,7 +16,6 @@
 
 #include "nsTextFragment.h"
 #include "nsError.h"
-#include "nsEventListenerManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsCycleCollectionParticipant.h"
 

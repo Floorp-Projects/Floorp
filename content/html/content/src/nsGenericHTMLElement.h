@@ -40,6 +40,7 @@ class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
 
 namespace mozilla {
+class EventListenerManager;
 namespace dom {
 class HTMLFormElement;
 class HTMLPropertiesCollection;
@@ -987,8 +988,9 @@ protected:
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
 
-  virtual nsEventListenerManager*
-    GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer) MOZ_OVERRIDE;
+  virtual mozilla::EventListenerManager*
+    GetEventListenerManagerForAttr(nsIAtom* aAttrName,
+                                   bool* aDefer) MOZ_OVERRIDE;
 
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const MOZ_OVERRIDE;
 

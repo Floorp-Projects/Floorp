@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ProcessingInstruction.h"
+#include "nsIURI.h"
 #include "nsStyleLinkElement.h"
 
 namespace mozilla {

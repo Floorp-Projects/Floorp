@@ -8,12 +8,12 @@
 #include "jsdIDebuggerService.h"
 #endif
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMArray.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfoID.h"
 #include "nsEventDispatcher.h"
-#include "nsEventListenerManager.h"
 #include "nsIJSEventListener.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
@@ -175,7 +175,7 @@ EventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aEventTarget);
   NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
 
-  nsEventListenerManager* elm = eventTarget->GetExistingListenerManager();
+  EventListenerManager* elm = eventTarget->GetExistingListenerManager();
   if (elm) {
     elm->GetListenerInfo(&listenerInfos);
   }
@@ -236,7 +236,7 @@ EventListenerService::HasListenersFor(nsIDOMEventTarget* aEventTarget,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aEventTarget);
   NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
 
-  nsEventListenerManager* elm = eventTarget->GetExistingListenerManager();
+  EventListenerManager* elm = eventTarget->GetExistingListenerManager();
   *aRetVal = elm && elm->HasListenersFor(aType);
   return NS_OK;
 }
@@ -253,7 +253,7 @@ EventListenerService::AddSystemEventListener(nsIDOMEventTarget *aTarget,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
   NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
 
-  nsEventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
+  EventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
   NS_ENSURE_STATE(manager);
 
   EventListenerFlags flags =
@@ -275,7 +275,7 @@ EventListenerService::RemoveSystemEventListener(nsIDOMEventTarget *aTarget,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
   NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
 
-  nsEventListenerManager* manager = eventTarget->GetExistingListenerManager();
+  EventListenerManager* manager = eventTarget->GetExistingListenerManager();
   if (manager) {
     EventListenerFlags flags =
       aUseCapture ? TrustedEventsAtSystemGroupCapture() :
@@ -298,7 +298,7 @@ EventListenerService::AddListenerForAllEvents(nsIDOMEventTarget* aTarget,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
   NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
 
-  nsEventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
+  EventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
   NS_ENSURE_STATE(manager);
   manager->AddListenerForAllEvents(aListener, aUseCapture, aWantsUntrusted,
                                aSystemEventGroup);
@@ -316,7 +316,7 @@ EventListenerService::RemoveListenerForAllEvents(nsIDOMEventTarget* aTarget,
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
   NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
 
-  nsEventListenerManager* manager = eventTarget->GetExistingListenerManager();
+  EventListenerManager* manager = eventTarget->GetExistingListenerManager();
   if (manager) {
     manager->RemoveListenerForAllEvents(aListener, aUseCapture, aSystemEventGroup);
   }

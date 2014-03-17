@@ -35,7 +35,7 @@
 #include "nsCRT.h"
 
 // Event listeners
-#include "nsEventListenerManager.h"
+#include "mozilla/EventListenerManager.h"
 #include "nsIDOMEventListener.h"
 #include "nsAttrName.h"
 
@@ -531,7 +531,7 @@ nsXBLBinding::InstallEventHandlers()
     nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
     if (handlerChain) {
-      nsEventListenerManager* manager = mBoundElement->GetOrCreateListenerManager();
+      EventListenerManager* manager = mBoundElement->GetOrCreateListenerManager();
       if (!manager)
         return;
 
@@ -680,8 +680,7 @@ nsXBLBinding::UnhookEventHandlers()
   nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
   if (handlerChain) {
-    nsEventListenerManager* manager =
-      mBoundElement->GetExistingListenerManager();
+    EventListenerManager* manager = mBoundElement->GetExistingListenerManager();
     if (!manager) {
       return;
     }

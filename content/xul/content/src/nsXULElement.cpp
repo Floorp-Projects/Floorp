@@ -33,7 +33,7 @@
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
-#include "nsEventListenerManager.h"
+#include "mozilla/EventListenerManager.h"
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsHTMLStyleSheet.h"
@@ -483,7 +483,7 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     return list.forget();
 }
 
-nsEventListenerManager*
+EventListenerManager*
 nsXULElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer)
 {
     // XXXbz sXBL/XBL2 issue: should we instead use GetCurrentDoc()
@@ -1680,7 +1680,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
       new nsXULPopupListener(this, isContext);
 
     // Add the popup as a listener on this element.
-    nsEventListenerManager* manager = GetOrCreateListenerManager();
+    EventListenerManager* manager = GetOrCreateListenerManager();
     SetFlags(listenerFlag);
 
     if (isContext) {

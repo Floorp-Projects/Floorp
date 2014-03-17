@@ -77,8 +77,8 @@
 #include "gfxASurface.h"
 #include "nsRegion.h"
 #include "nsIFrameInlines.h"
-#include "nsEventListenerManager.h"
 
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -1871,7 +1871,7 @@ CheckForTouchEventHandler(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
   if (!content) {
     return;
   }
-  nsEventListenerManager* elm = nsContentUtils::GetExistingListenerManagerForNode(content);
+  EventListenerManager* elm = nsContentUtils::GetExistingListenerManagerForNode(content);
   if (!elm) {
     return;
   }
