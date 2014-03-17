@@ -145,7 +145,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsEventListenerManager, Release)
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsListenerStruct& aField,
+                            nsEventListenerManager::Listener& aField,
                             const char* aName,
                             unsigned aFlags)
 {
@@ -226,15 +226,16 @@ nsEventListenerManager::AddEventListenerInternal(
   // know that there's an EventListenerHolder on the stack holding a strong ref
   // to the listener.
 
-  nsListenerStruct* ls;
+  Listener* listener;
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; i++) {
-    ls = &mListeners.ElementAt(i);
+    listener = &mListeners.ElementAt(i);
     // mListener == aListener is the last one, since it can be a bit slow.
-    if (ls->mListenerIsHandler == aHandler &&
-        ls->mFlags == aFlags &&
-        EVENT_TYPE_EQUALS(ls, aType, aTypeAtom, aTypeString, aAllEvents) &&
-        ls->mListener == aListener) {
+    if (listener->mListenerIsHandler == aHandler &&
+        listener->mFlags == aFlags &&
+        EVENT_TYPE_EQUALS(listener, aType, aTypeAtom, aTypeString,
+                          aAllEvents) &&
+        listener->mListener == aListener) {
       return;
     }
   }
@@ -242,28 +243,29 @@ nsEventListenerManager::AddEventListenerInternal(
   mNoListenerForEvent = NS_EVENT_NULL;
   mNoListenerForEventAtom = nullptr;
 
-  ls = aAllEvents ? mListeners.InsertElementAt(0) : mListeners.AppendElement();
-  ls->mListener = aListener;
+  listener = aAllEvents ? mListeners.InsertElementAt(0) :
+                          mListeners.AppendElement();
+  listener->mListener = aListener;
   MOZ_ASSERT(aType < PR_UINT16_MAX);
-  ls->mEventType = aType;
-  ls->mTypeString = aTypeString;
-  ls->mTypeAtom = aTypeAtom;
-  ls->mFlags = aFlags;
-  ls->mListenerIsHandler = aHandler;
-  ls->mHandlerIsString = false;
-  ls->mAllEvents = aAllEvents;
+  listener->mEventType = aType;
+  listener->mTypeString = aTypeString;
+  listener->mTypeAtom = aTypeAtom;
+  listener->mFlags = aFlags;
+  listener->mListenerIsHandler = aHandler;
+  listener->mHandlerIsString = false;
+  listener->mAllEvents = aAllEvents;
 
   // Detect the type of event listener.
   nsCOMPtr<nsIXPConnectWrappedJS> wjs;
   if (aFlags.mListenerIsJSListener) {
     MOZ_ASSERT(!aListener.HasWebIDLCallback());
-    ls->mListenerType = eJSEventListener;
+    listener->mListenerType = eJSEventListener;
   } else if (aListener.HasWebIDLCallback()) {
-    ls->mListenerType = eWebIDLListener;
+    listener->mListenerType = eWebIDLListener;
   } else if ((wjs = do_QueryInterface(aListener.GetXPCOMCallback()))) {
-    ls->mListenerType = eWrappedJSListener;
+    listener->mListenerType = eWrappedJSListener;
   } else {
-    ls->mListenerType = eNativeListener;
+    listener->mListenerType = eNativeListener;
   }
 
 
@@ -472,7 +474,7 @@ nsEventListenerManager::RemoveEventListenerInternal(
     return;
   }
 
-  nsListenerStruct* ls;
+  Listener* listener;
 
   uint32_t count = mListeners.Length();
   uint32_t typeCount = 0;
@@ -484,11 +486,12 @@ nsEventListenerManager::RemoveEventListenerInternal(
 #endif // MOZ_B2G
 
   for (uint32_t i = 0; i < count; ++i) {
-    ls = &mListeners.ElementAt(i);
-    if (EVENT_TYPE_EQUALS(ls, aType, aUserType, aTypeString, aAllEvents)) {
+    listener = &mListeners.ElementAt(i);
+    if (EVENT_TYPE_EQUALS(listener, aType, aUserType, aTypeString,
+                          aAllEvents)) {
       ++typeCount;
-      if (ls->mListener == aListener &&
-          ls->mFlags.EqualsIgnoringTrustness(aFlags)) {
+      if (listener->mListener == aListener &&
+          listener->mFlags.EqualsIgnoringTrustness(aFlags)) {
         nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
         mListeners.RemoveElementAt(i);
         --count;
@@ -528,23 +531,24 @@ nsEventListenerManager::RemoveEventListenerInternal(
 }
 
 bool
-nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
+nsEventListenerManager::ListenerCanHandle(Listener* aListener,
                                           WidgetEvent* aEvent)
 {
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
   // true even when aEvent->message == NS_USER_DEFINED_EVENT and
-  // aLs=>mEventType != NS_USER_DEFINED_EVENT as long as the atoms are the same
-  if (aLs->mAllEvents) {
+  // aListener=>mEventType != NS_USER_DEFINED_EVENT as long as the atoms are
+  // the same
+  if (aListener->mAllEvents) {
     return true;
   }
   if (aEvent->message == NS_USER_DEFINED_EVENT) {
     if (mIsMainThreadELM) {
-      return aLs->mTypeAtom == aEvent->userType;
+      return aListener->mTypeAtom == aEvent->userType;
     }
-    return aLs->mTypeString.Equals(aEvent->typeString);
+    return aListener->mTypeString.Equals(aEvent->typeString);
   }
   MOZ_ASSERT(mIsMainThreadELM);
-  return aLs->mEventType == aEvent->message;
+  return aListener->mEventType == aEvent->message;
 }
 
 void
@@ -570,26 +574,27 @@ nsEventListenerManager::RemoveEventListenerByType(
   RemoveEventListenerInternal(aListener, type, atom, aType, aFlags);
 }
 
-nsListenerStruct*
+nsEventListenerManager::Listener*
 nsEventListenerManager::FindEventHandler(uint32_t aEventType,
                                          nsIAtom* aTypeAtom,
                                          const nsAString& aTypeString)
 {
   // Run through the listeners for this type and see if a script
   // listener is registered
-  nsListenerStruct *ls;
+  Listener* listener;
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    ls = &mListeners.ElementAt(i);
-    if (ls->mListenerIsHandler &&
-        EVENT_TYPE_EQUALS(ls, aEventType, aTypeAtom, aTypeString, false)) {
-      return ls;
+    listener = &mListeners.ElementAt(i);
+    if (listener->mListenerIsHandler &&
+        EVENT_TYPE_EQUALS(listener, aEventType, aTypeAtom, aTypeString,
+                          false)) {
+      return listener;
     }
   }
   return nullptr;
 }
 
-nsListenerStruct*
+nsEventListenerManager::Listener*
 nsEventListenerManager::SetEventHandlerInternal(JS::Handle<JSObject*> aScopeObject,
                                                 nsIAtom* aName,
                                                 const nsAString& aTypeString,
@@ -601,9 +606,9 @@ nsEventListenerManager::SetEventHandlerInternal(JS::Handle<JSObject*> aScopeObje
   MOZ_ASSERT(aName || !aTypeString.IsEmpty());
 
   uint32_t eventType = nsContentUtils::GetEventId(aName);
-  nsListenerStruct* ls = FindEventHandler(eventType, aName, aTypeString);
+  Listener* listener = FindEventHandler(eventType, aName, aTypeString);
 
-  if (!ls) {
+  if (!listener) {
     // If we didn't find a script listener or no listeners existed
     // create and add a new one.
     EventListenerFlags flags;
@@ -616,9 +621,9 @@ nsEventListenerManager::SetEventHandlerInternal(JS::Handle<JSObject*> aScopeObje
     AddEventListenerInternal(holder, eventType, aName, aTypeString, flags,
                              true);
 
-    ls = FindEventHandler(eventType, aName, aTypeString);
+    listener = FindEventHandler(eventType, aName, aTypeString);
   } else {
-    nsIJSEventListener* scriptListener = ls->GetJSListener();
+    nsIJSEventListener* scriptListener = listener->GetJSListener();
     MOZ_ASSERT(scriptListener,
                "How can we have an event handler with no nsIJSEventListener?");
 
@@ -632,12 +637,12 @@ nsEventListenerManager::SetEventHandlerInternal(JS::Handle<JSObject*> aScopeObje
   }
 
   // Set flag to indicate possible need for compilation later
-  ls->mHandlerIsString = !aHandler.HasEventHandler();
+  listener->mHandlerIsString = !aHandler.HasEventHandler();
   if (aPermitUntrustedEvents) {
-    ls->mFlags.mAllowUntrustedEvents = true;
+    listener->mFlags.mAllowUntrustedEvents = true;
   }
 
-  return ls;
+  return listener;
 }
 
 nsresult
@@ -746,13 +751,13 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
   JS::Rooted<JSObject*> scope(context->GetNativeContext(),
                               global->GetGlobalJSObject());
 
-  nsListenerStruct* ls = SetEventHandlerInternal(scope, aName,
-                                                 EmptyString(),
-                                                 nsEventHandler(),
-                                                 aPermitUntrustedEvents);
+  Listener* listener = SetEventHandlerInternal(scope, aName,
+                                               EmptyString(),
+                                               nsEventHandler(),
+                                               aPermitUntrustedEvents);
 
   if (!aDeferCompilation) {
-    return CompileEventHandlerInternal(ls, &aBody, aElement);
+    return CompileEventHandlerInternal(listener, &aBody, aElement);
   }
 
   return NS_OK;
@@ -767,10 +772,10 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName,
   }
 
   uint32_t eventType = nsContentUtils::GetEventId(aName);
-  nsListenerStruct* ls = FindEventHandler(eventType, aName, aTypeString);
+  Listener* listener = FindEventHandler(eventType, aName, aTypeString);
 
-  if (ls) {
-    mListeners.RemoveElementAt(uint32_t(ls - &mListeners.ElementAt(0)));
+  if (listener) {
+    mListeners.RemoveElementAt(uint32_t(listener - &mListeners.ElementAt(0)));
     mNoListenerForEvent = NS_EVENT_NULL;
     mNoListenerForEventAtom = nullptr;
     if (mTarget && aName) {
@@ -780,19 +785,20 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName,
 }
 
 nsresult
-nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
-                                                    const nsAString* aBody,
-                                                    Element* aElement)
+nsEventListenerManager::CompileEventHandlerInternal(
+                          Listener* aListener,
+                          const nsAString* aBody,
+                          Element* aElement)
 {
-  NS_PRECONDITION(aListenerStruct->GetJSListener(),
+  NS_PRECONDITION(aListener->GetJSListener(),
                   "Why do we not have a JS listener?");
-  NS_PRECONDITION(aListenerStruct->mHandlerIsString,
+  NS_PRECONDITION(aListener->mHandlerIsString,
                   "Why are we compiling a non-string JS listener?");
 
   nsresult result = NS_OK;
 
-  nsIJSEventListener *listener = aListenerStruct->GetJSListener();
-  NS_ASSERTION(!listener->GetHandler().HasEventHandler(),
+  nsIJSEventListener* jsListener = aListener->GetJSListener();
+  NS_ASSERTION(!jsListener->GetHandler().HasEventHandler(),
                "What is there to compile?");
 
   nsCOMPtr<nsIDocument> doc;
@@ -807,16 +813,16 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
   AutoPushJSContext cx(context->GetNativeContext());
   JS::Rooted<JSObject*> handler(cx);
 
-  JS::Rooted<JSObject*> scope(cx, listener->GetEventScope());
+  JS::Rooted<JSObject*> scope(cx, jsListener->GetEventScope());
 
-  nsCOMPtr<nsIAtom> typeAtom = aListenerStruct->mTypeAtom;
+  nsCOMPtr<nsIAtom> typeAtom = aListener->mTypeAtom;
   nsIAtom* attrName = typeAtom;
 
-  if (aListenerStruct->mHandlerIsString) {
+  if (aListener->mHandlerIsString) {
     // OK, we didn't find an existing compiled event handler.  Flag us
     // as not a string so we don't keep trying to compile strings
     // which can't be compiled
-    aListenerStruct->mHandlerIsString = false;
+    aListener->mHandlerIsString = false;
 
     // mTarget may not be an Element if it's a window and we're
     // getting an inline event listener forwarded from <html:body> or
@@ -830,28 +836,29 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     nsAutoString handlerBody;
     const nsAString* body = aBody;
     if (!aBody) {
-      if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGLoad)
+      if (aListener->mTypeAtom == nsGkAtoms::onSVGLoad) {
         attrName = nsGkAtoms::onload;
-      else if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGUnload)
+      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGUnload) {
         attrName = nsGkAtoms::onunload;
-      else if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGResize)
+      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGResize) {
         attrName = nsGkAtoms::onresize;
-      else if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGScroll)
+      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGScroll) {
         attrName = nsGkAtoms::onscroll;
-      else if (aListenerStruct->mTypeAtom == nsGkAtoms::onSVGZoom)
+      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGZoom) {
         attrName = nsGkAtoms::onzoom;
-      else if (aListenerStruct->mTypeAtom == nsGkAtoms::onbeginEvent)
+      } else if (aListener->mTypeAtom == nsGkAtoms::onbeginEvent) {
         attrName = nsGkAtoms::onbegin;
-      else if (aListenerStruct->mTypeAtom == nsGkAtoms::onrepeatEvent)
+      } else if (aListener->mTypeAtom == nsGkAtoms::onrepeatEvent) {
         attrName = nsGkAtoms::onrepeat;
-      else if (aListenerStruct->mTypeAtom == nsGkAtoms::onendEvent)
+      } else if (aListener->mTypeAtom == nsGkAtoms::onendEvent) {
         attrName = nsGkAtoms::onend;
+      }
 
       element->GetAttr(kNameSpaceID_None, attrName, handlerBody);
       body = &handlerBody;
       aElement = element;
     }
-    aListenerStruct = nullptr;
+    aListener = nullptr;
 
     uint32_t lineNo = 0;
     nsAutoCString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
@@ -902,7 +909,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     handler = handlerFun;
     NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
   } else {
-    aListenerStruct = nullptr;
+    aListener = nullptr;
   }
 
   if (handler) {
@@ -915,19 +922,19 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     // there's no need to use an override, since the JS engine will always give
     // us the right answer.
     if (!boundHandler) {
-      listener->ForgetHandler();
-    } else if (listener->EventName() == nsGkAtoms::onerror && win) {
+      jsListener->ForgetHandler();
+    } else if (jsListener->EventName() == nsGkAtoms::onerror && win) {
       nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
         new OnErrorEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
-      listener->SetHandler(handlerCallback);
-    } else if (listener->EventName() == nsGkAtoms::onbeforeunload && win) {
+      jsListener->SetHandler(handlerCallback);
+    } else if (jsListener->EventName() == nsGkAtoms::onbeforeunload && win) {
       nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
         new OnBeforeUnloadEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
-      listener->SetHandler(handlerCallback);
+      jsListener->SetHandler(handlerCallback);
     } else {
       nsRefPtr<EventHandlerNonNull> handlerCallback =
         new EventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
-      listener->SetHandler(handlerCallback);
+      jsListener->SetHandler(handlerCallback);
     }
   }
 
@@ -935,19 +942,19 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
 }
 
 nsresult
-nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
+nsEventListenerManager::HandleEventSubType(Listener* aListener,
                                            nsIDOMEvent* aDOMEvent,
                                            EventTarget* aCurrentTarget)
 {
   nsresult result = NS_OK;
-  EventListenerHolder listener(aListenerStruct->mListener);  // strong ref
+  EventListenerHolder listenerHolder(aListener->mListener);  // strong ref
 
   // If this is a script handler and we haven't yet
   // compiled the event handler itself
-  if ((aListenerStruct->mListenerType == eJSEventListener) &&
-      aListenerStruct->mHandlerIsString) {
-    result = CompileEventHandlerInternal(aListenerStruct, nullptr, nullptr);
-    aListenerStruct = nullptr;
+  if ((aListener->mListenerType == eJSEventListener) &&
+      aListener->mHandlerIsString) {
+    result = CompileEventHandlerInternal(aListener, nullptr, nullptr);
+    aListener = nullptr;
   }
 
   if (NS_SUCCEEDED(result)) {
@@ -955,13 +962,13 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
       nsContentUtils::EnterMicroTask();
     }
     // nsIDOMEvent::currentTarget is set in nsEventDispatcher.
-    if (listener.HasWebIDLCallback()) {
+    if (listenerHolder.HasWebIDLCallback()) {
       ErrorResult rv;
-      listener.GetWebIDLCallback()->
+      listenerHolder.GetWebIDLCallback()->
         HandleEvent(aCurrentTarget, *(aDOMEvent->InternalDOMEvent()), rv);
       result = rv.ErrorCode();
     } else {
-      result = listener.GetXPCOMCallback()->HandleEvent(aDOMEvent);
+      result = listenerHolder.GetXPCOMCallback()->HandleEvent(aDOMEvent);
     }
     if (mIsMainThreadELM) {
       nsContentUtils::LeaveMicroTask();
@@ -988,7 +995,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     aEvent->mFlags.mDefaultPrevented = true;
   }
 
-  nsAutoTObserverArray<nsListenerStruct, 2>::EndLimitedIterator iter(mListeners);
+  nsAutoTObserverArray<Listener, 2>::EndLimitedIterator iter(mListeners);
   Maybe<nsAutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
     popupStatePusher.construct(Event::GetEventPopupControlState(aEvent));
@@ -999,13 +1006,14 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
     if (aEvent->mFlags.mImmediatePropagationStopped) {
       break;
     }
-    nsListenerStruct* ls = &iter.GetNext();
+    Listener* listener = &iter.GetNext();
     // Check that the phase is same in event and event listener.
     // Handle only trusted events, except when listener permits untrusted events.
-    if (ListenerCanHandle(ls, aEvent)) {
+    if (ListenerCanHandle(listener, aEvent)) {
       hasListener = true;
-      if (ls->IsListening(aEvent) &&
-          (aEvent->mFlags.mIsTrusted || ls->mFlags.mAllowUntrustedEvents)) {
+      if (listener->IsListening(aEvent) &&
+          (aEvent->mFlags.mIsTrusted ||
+           listener->mFlags.mAllowUntrustedEvents)) {
         if (!*aDOMEvent) {
           // This is tiny bit slow, but happens only once per event.
           nsCOMPtr<mozilla::dom::EventTarget> et =
@@ -1021,7 +1029,8 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             }
           }
 
-          if (NS_FAILED(HandleEventSubType(ls, *aDOMEvent, aCurrentTarget))) {
+          if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent,
+                                           aCurrentTarget))) {
             aEvent->mFlags.mExceptionHasBeenRisen = true;
           }
         }
@@ -1104,9 +1113,9 @@ nsEventListenerManager::HasMutationListeners()
   if (mMayHaveMutationListeners) {
     uint32_t count = mListeners.Length();
     for (uint32_t i = 0; i < count; ++i) {
-      nsListenerStruct* ls = &mListeners.ElementAt(i);
-      if (ls->mEventType >= NS_MUTATION_START &&
-          ls->mEventType <= NS_MUTATION_END) {
+      Listener* listener = &mListeners.ElementAt(i);
+      if (listener->mEventType >= NS_MUTATION_START &&
+          listener->mEventType <= NS_MUTATION_END) {
         return true;
       }
     }
@@ -1122,13 +1131,13 @@ nsEventListenerManager::MutationListenerBits()
   if (mMayHaveMutationListeners) {
     uint32_t count = mListeners.Length();
     for (uint32_t i = 0; i < count; ++i) {
-      nsListenerStruct* ls = &mListeners.ElementAt(i);
-      if (ls->mEventType >= NS_MUTATION_START &&
-          ls->mEventType <= NS_MUTATION_END) {
-        if (ls->mEventType == NS_MUTATION_SUBTREEMODIFIED) {
+      Listener* listener = &mListeners.ElementAt(i);
+      if (listener->mEventType >= NS_MUTATION_START &&
+          listener->mEventType <= NS_MUTATION_END) {
+        if (listener->mEventType == NS_MUTATION_SUBTREEMODIFIED) {
           return kAllMutationBits;
         }
-        bits |= MutationBitForEventType(ls->mEventType);
+        bits |= MutationBitForEventType(listener->mEventType);
       }
     }
   }
@@ -1153,8 +1162,8 @@ nsEventListenerManager::HasListenersFor(nsIAtom* aEventNameWithOn)
                "Event name does not start with 'on'");
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsListenerStruct* ls = &mListeners.ElementAt(i);
-    if (ls->mTypeAtom == aEventNameWithOn) {
+    Listener* listener = &mListeners.ElementAt(i);
+    if (listener->mTypeAtom == aEventNameWithOn) {
       return true;
     }
   }
@@ -1175,26 +1184,27 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
   aList->Clear();
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    const nsListenerStruct& ls = mListeners.ElementAt(i);
+    const Listener& listener = mListeners.ElementAt(i);
     // If this is a script handler and we haven't yet
     // compiled the event handler itself go ahead and compile it
-    if ((ls.mListenerType == eJSEventListener) && ls.mHandlerIsString) {
-      CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls), nullptr,
+    if (listener.mListenerType == eJSEventListener &&
+        listener.mHandlerIsString) {
+      CompileEventHandlerInternal(const_cast<Listener*>(&listener), nullptr,
                                   nullptr);
     }
     nsAutoString eventType;
-    if (ls.mAllEvents) {
+    if (listener.mAllEvents) {
       eventType.SetIsVoid(true);
     } else {
-      eventType.Assign(Substring(nsDependentAtomString(ls.mTypeAtom), 2));
+      eventType.Assign(Substring(nsDependentAtomString(listener.mTypeAtom), 2));
     }
     // EventListenerInfo is defined in XPCOM, so we have to go ahead
     // and convert to an XPCOM callback here...
     nsRefPtr<EventListenerInfo> info =
-      new EventListenerInfo(eventType, ls.mListener.ToXPCOMCallback(),
-                            ls.mFlags.mCapture,
-                            ls.mFlags.mAllowUntrustedEvents,
-                            ls.mFlags.mInSystemGroup);
+      new EventListenerInfo(eventType, listener.mListener.ToXPCOMCallback(),
+                            listener.mFlags.mCapture,
+                            listener.mFlags.mAllowUntrustedEvents,
+                            listener.mFlags.mInSystemGroup);
     aList->AppendObject(info);
   }
   return NS_OK;
@@ -1205,9 +1215,9 @@ nsEventListenerManager::HasUnloadListeners()
 {
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsListenerStruct* ls = &mListeners.ElementAt(i);
-    if (ls->mEventType == NS_PAGE_UNLOAD ||
-        ls->mEventType == NS_BEFORE_PAGE_UNLOAD) {
+    Listener* listener = &mListeners.ElementAt(i);
+    if (listener->mEventType == NS_PAGE_UNLOAD ||
+        listener->mEventType == NS_BEFORE_PAGE_UNLOAD) {
       return true;
     }
   }
@@ -1280,19 +1290,19 @@ nsEventListenerManager::GetEventHandlerInternal(nsIAtom *aEventName,
                                                 const nsAString& aTypeString)
 {
   uint32_t eventType = nsContentUtils::GetEventId(aEventName);
-  nsListenerStruct* ls = FindEventHandler(eventType, aEventName, aTypeString);
+  Listener* listener = FindEventHandler(eventType, aEventName, aTypeString);
 
-  if (!ls) {
+  if (!listener) {
     return nullptr;
   }
 
-  nsIJSEventListener *listener = ls->GetJSListener();
-    
-  if (ls->mHandlerIsString) {
-    CompileEventHandlerInternal(ls, nullptr, nullptr);
+  nsIJSEventListener* jsListener = listener->GetJSListener();
+
+  if (listener->mHandlerIsString) {
+    CompileEventHandlerInternal(listener, nullptr, nullptr);
   }
 
-  const nsEventHandler& handler = listener->GetHandler();
+  const nsEventHandler& handler = jsListener->GetHandler();
   if (handler.HasEventHandler()) {
     return &handler;
   }
@@ -1321,8 +1331,8 @@ nsEventListenerManager::MarkForCC()
 {
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    const nsListenerStruct& ls = mListeners.ElementAt(i);
-    nsIJSEventListener* jsl = ls.GetJSListener();
+    const Listener& listener = mListeners.ElementAt(i);
+    nsIJSEventListener* jsl = listener.GetJSListener();
     if (jsl) {
       if (jsl->GetHandler().HasEventHandler()) {
         JS::ExposeObjectToActiveJS(jsl->GetHandler().Ptr()->Callable());
@@ -1330,11 +1340,11 @@ nsEventListenerManager::MarkForCC()
       if (JSObject* scope = jsl->GetEventScope()) {
         JS::ExposeObjectToActiveJS(scope);
       }
-    } else if (ls.mListenerType == eWrappedJSListener) {
-      xpc_TryUnmarkWrappedGrayObject(ls.mListener.GetXPCOMCallback());
-    } else if (ls.mListenerType == eWebIDLListener) {
+    } else if (listener.mListenerType == eWrappedJSListener) {
+      xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
+    } else if (listener.mListenerType == eWebIDLListener) {
       // Callback() unmarks gray
-      ls.mListener.GetWebIDLCallback()->Callback();
+      listener.mListener.GetWebIDLCallback()->Callback();
     }
   }
   if (mRefCnt.IsPurple()) {
