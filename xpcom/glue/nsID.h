@@ -123,8 +123,7 @@ typedef nsID nsIID;
   struct COMTypeInfo                                                    \
   {                                                                     \
     static const nsIID kIID NS_HIDDEN;                                  \
-  };                                                                    \
-  static const nsIID& GetIID() {return COMTypeInfo<int>::kIID;}
+  };
 
 #define NS_DEFINE_STATIC_IID_ACCESSOR(the_interface, the_iid)           \
   template <class Dummy>                                                \
