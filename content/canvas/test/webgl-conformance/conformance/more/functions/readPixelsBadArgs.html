@@ -31,6 +31,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 <link rel="stylesheet" type="text/css" href="../unit.css" />
 <script type="application/x-javascript" src="../unit.js"></script>
 <script type="application/x-javascript" src="../util.js"></script>
+<script src="../../../resources/cors-util.js"></script>
 <script type="application/x-javascript">
 
 Tests.startUnit = function () {
@@ -115,5 +116,10 @@ Tests.endUnit = function(gl) {
 </head><body>
 <canvas id="gl" width="16" height="16"></canvas>
 <canvas id="c" width="128" height="128"></canvas>
-<img id="i" src="http://example.com/tests/content/canvas/test/webgl/resources/opengl_logo.jpg">
+<img id="i">
+<script>
+var imagePath = 'resources/opengl_logo.jpg';
+var relPathToBase = '../../../';
+setExampleDotComImage('i', imagePath, relPathToBase);
+</script>
 </body></html>
