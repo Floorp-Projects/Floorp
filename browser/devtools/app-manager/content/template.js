@@ -334,14 +334,14 @@ Template.prototype = {
     let loops = parent.querySelectorAll(":not(template) [template-loop]");
     let fors = parent.querySelectorAll(":not(template) [template-for]");
     let nodes = parent.querySelectorAll(":not(template) [template]");
-    for (let e of loops) {
-      this._processLoop(e, resolver);
+    for (let i = 0; i < loops.length; i++) {
+      this._processLoop(loops[i], resolver);
     }
-    for (let e of fors) {
-      this._processFor(e, resolver);
+    for (let i = 0; i < fors.length; i++) {
+      this._processFor(fors[i], resolver);
     }
-    for (let e of nodes) {
-      this._processNode(e, resolver);
+    for (let i = 0; i < nodes.length; i++) {
+      this._processNode(nodes[i], resolver);
     }
     if (parent.hasAttribute("template")) {
       this._processNode(parent, resolver);
