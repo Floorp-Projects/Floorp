@@ -2887,8 +2887,8 @@ WorkerMain(void *arg)
         options.setFileAndLine("<string>", 1)
                .setCompileAndGo(true);
 
-        JSScript *script = JS::Compile(cx, global, options,
-                                       input->chars, input->length);
+        RootedScript script(cx, JS::Compile(cx, global, options,
+                                            input->chars, input->length));
         if (!script)
             break;
         RootedValue result(cx);

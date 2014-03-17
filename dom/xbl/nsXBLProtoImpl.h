@@ -50,7 +50,7 @@ public:
 
   bool LookupMember(JSContext* aCx, nsString& aName, JS::Handle<jsid> aNameAsId,
                     JS::MutableHandle<JSPropertyDescriptor> aDesc,
-                    JSObject* aClassObject);
+                    JS::Handle<JSObject*> aClassObject);
 
   void SetMemberList(nsXBLProtoImplMember* aMemberList)
   {
