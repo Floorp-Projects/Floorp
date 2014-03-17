@@ -62,7 +62,6 @@ namespace mozilla {
 // or it can be reset explicitly at any point by calling reset().
 class ArrayBufferBuilder
 {
-  void* mRawContents;
   uint8_t* mDataPtr;
   uint32_t mCapacity;
   uint32_t mLength;
