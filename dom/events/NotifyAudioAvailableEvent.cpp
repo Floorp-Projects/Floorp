@@ -178,5 +178,7 @@ NS_NewDOMAudioAvailableEvent(nsIDOMEvent** aInstancePtrResult,
   NotifyAudioAvailableEvent* it =
     new NotifyAudioAvailableEvent(aOwner, aPresContext, aEvent, aEventType,
                                   aFrameBuffer, aFrameBufferLength, aTime);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }
