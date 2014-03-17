@@ -155,7 +155,7 @@ static GrTexture* sk_gr_create_bitmap_texture(GrContext* ctx,
                 return result;
             }
         } else {
-            origBitmap.copyTo(&tmpBitmap, SkBitmap::kARGB_8888_Config);
+            origBitmap.copyTo(&tmpBitmap, kPMColor_SkColorType);
             // now bitmap points to our temp, which has been promoted to 32bits
             bitmap = &tmpBitmap;
             desc.fConfig = SkBitmapConfig2GrPixelConfig(bitmap->config());
@@ -258,6 +258,29 @@ GrPixelConfig SkBitmapConfig2GrPixelConfig(SkBitmap::Config config) {
             // kNo_Config, kA1_Config missing
             return kUnknown_GrPixelConfig;
     }
+}
+
+// alphatype is ignore for now, but if GrPixelConfig is expanded to encompass
+// alpha info, that will be considered.
+GrPixelConfig SkImageInfo2GrPixelConfig(SkColorType ct, SkAlphaType) {
+    switch (ct) {
+        case kUnknown_SkColorType:
+            return kUnknown_GrPixelConfig;
+        case kAlpha_8_SkColorType:
+            return kAlpha_8_GrPixelConfig;
+        case kRGB_565_SkColorType:
+            return kRGB_565_GrPixelConfig;
+        case kARGB_4444_SkColorType:
+            return kRGBA_4444_GrPixelConfig;
+        case kRGBA_8888_SkColorType:
+            return kRGBA_8888_GrPixelConfig;
+        case kBGRA_8888_SkColorType:
+            return kBGRA_8888_GrPixelConfig;
+        case kIndex_8_SkColorType:
+            return kIndex_8_GrPixelConfig;
+    }
+    SkASSERT(0);    // shouldn't get here
+    return kUnknown_GrPixelConfig;
 }
 
 bool GrPixelConfig2ColorType(GrPixelConfig config, SkColorType* ctOut) {

@@ -54,11 +54,10 @@ public:
 
     GatherPixelRefDevice(int width, int height, PixelRefSet* prset) {
         fSize.set(width, height);
-        fEmptyBitmap.setConfig(SkBitmap::kNo_Config, width, height);
+        fEmptyBitmap.setConfig(SkImageInfo::MakeUnknown(width, height));
         fPRSet = prset;
     }
 
-    virtual uint32_t getDeviceCapabilities() SK_OVERRIDE { return 0; }
     virtual int width() const SK_OVERRIDE { return fSize.width(); }
     virtual int height() const SK_OVERRIDE { return fSize.height(); }
     virtual bool isOpaque() const SK_OVERRIDE { return false; }
@@ -77,7 +76,7 @@ public:
     virtual void unlockPixels() SK_OVERRIDE { nothing_to_do(); }
     virtual bool allowImageFilter(const SkImageFilter*) SK_OVERRIDE { return false; }
     virtual bool canHandleImageFilter(const SkImageFilter*) SK_OVERRIDE { return false; }
-    virtual bool filterImage(const SkImageFilter*, const SkBitmap&, const SkMatrix&,
+    virtual bool filterImage(const SkImageFilter*, const SkBitmap&, const SkImageFilter::Context&,
                              SkBitmap* result, SkIPoint* offset) SK_OVERRIDE {
         return false;
     }
@@ -85,10 +84,13 @@ public:
     virtual void clear(SkColor color) SK_OVERRIDE {
         nothing_to_do();
     }
+
+#ifdef SK_SUPPORT_LEGACY_WRITEPIXELSCONFIG
     virtual void writePixels(const SkBitmap& bitmap, int x, int y,
                              SkCanvas::Config8888 config8888) SK_OVERRIDE {
         not_supported();
     }
+#endif
 
     virtual void drawPaint(const SkDraw&, const SkPaint& paint) SK_OVERRIDE {
         this->addBitmapFromPaint(paint);
@@ -172,13 +174,10 @@ protected:
     virtual void replaceBitmapBackendForRasterSurface(const SkBitmap&) SK_OVERRIDE {
         not_supported();
     }
-    virtual SkBaseDevice* onCreateCompatibleDevice(SkBitmap::Config config,
-                                                   int width, int height,
-                                                   bool isOpaque,
-                                                   Usage usage) SK_OVERRIDE {
+    virtual SkBaseDevice* onCreateDevice(const SkImageInfo& info, Usage usage) SK_OVERRIDE {
         // we expect to only get called via savelayer, in which case it is fine.
         SkASSERT(kSaveLayer_Usage == usage);
-        return SkNEW_ARGS(GatherPixelRefDevice, (width, height, fPRSet));
+        return SkNEW_ARGS(GatherPixelRefDevice, (info.width(), info.height(), fPRSet));
     }
     virtual void flush() SK_OVERRIDE {}
 

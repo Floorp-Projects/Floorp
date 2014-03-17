@@ -8,6 +8,7 @@
 #ifndef SkLua_DEFINED
 #define SkLua_DEFINED
 
+#include "SkClipStack.h"
 #include "SkColor.h"
 #include "SkScalar.h"
 #include "SkString.h"
@@ -53,6 +54,11 @@ public:
     void pushPaint(const SkPaint&, const char tableKey[] = NULL);
     void pushPath(const SkPath&, const char tableKey[] = NULL);
     void pushCanvas(SkCanvas*, const char tableKey[] = NULL);
+    void pushClipStack(const SkClipStack&, const char tableKey[] = NULL);
+    void pushClipStackElement(const SkClipStack::Element& element, const char tableKey[] = NULL);
+
+    // This SkCanvas lua methods is declared here to benefit from SkLua's friendship with SkCanvas.
+    static int lcanvas_getReducedClipStack(lua_State* L);
 
 private:
     lua_State*  fL;

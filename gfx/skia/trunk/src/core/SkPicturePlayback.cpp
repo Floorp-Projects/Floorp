@@ -5,15 +5,16 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkPicturePlayback.h"
-#include "SkPictureRecord.h"
-#include "SkTypeface.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
 #include <new>
 #include "SkBBoxHierarchy.h"
+#include "SkOffsetTable.h"
+#include "SkPicturePlayback.h"
+#include "SkPictureRecord.h"
 #include "SkPictureStateTree.h"
+#include "SkReadBuffer.h"
+#include "SkTypeface.h"
 #include "SkTSort.h"
+#include "SkWriteBuffer.h"
 
 template <typename T> int SafeCount(const T* obj) {
     return obj ? obj->count() : 0;
@@ -69,10 +70,12 @@ SkPicturePlayback::SkPicturePlayback(const SkPictureRecord& record, bool deepCop
     record.validate(record.writeStream().bytesWritten(), 0);
     const SkWriter32& writer = record.writeStream();
     init();
+    SkASSERT(!fOpData);
     if (writer.bytesWritten() == 0) {
         fOpData = SkData::NewEmpty();
         return;
     }
+    fOpData = writer.snapshotAsData();
 
     fBoundingHierarchy = record.fBoundingHierarchy;
     fStateTree = record.fStateTree;
@@ -84,14 +87,6 @@ SkPicturePlayback::SkPicturePlayback(const SkPictureRecord& record, bool deepCop
         fBoundingHierarchy->flushDeferredInserts();
     }
 
-    {
-        size_t size = writer.bytesWritten();
-        void* buffer = sk_malloc_throw(size);
-        writer.flatten(buffer);
-        SkASSERT(!fOpData);
-        fOpData = SkData::NewFromMalloc(buffer, size);
-    }
-
     // copy over the refcnt dictionary to our reader
     record.fFlattenableHeap.setupPlaybacks();
 
@@ -100,6 +95,8 @@ SkPicturePlayback::SkPicturePlayback(const SkPictureRecord& record, bool deepCop
 
     fBitmapHeap.reset(SkSafeRef(record.fBitmapHeap));
     fPathHeap.reset(SkSafeRef(record.fPathHeap));
+
+    fBitmapUseOffsets.reset(SkSafeRef(record.fBitmapUseOffsets.get()));
 
     // ensure that the paths bounds are pre-computed
     if (fPathHeap.get()) {
@@ -209,7 +206,7 @@ SkPicturePlayback::SkPicturePlayback(const SkPicturePlayback& src, SkPictCopyInf
             for (int i = 0; i < paintCount; i++) {
                 if (needs_deep_copy(src.fPaints->at(i))) {
                     deepCopyInfo->paintData[i] =
-                        SkFlatData::Create<SkPaintTraits>(&deepCopyInfo->controller,
+                        SkFlatData::Create<SkPaint::FlatteningTraits>(&deepCopyInfo->controller,
                                                           src.fPaints->at(i), 0);
 
                 } else {
@@ -230,8 +227,8 @@ SkPicturePlayback::SkPicturePlayback(const SkPicturePlayback& src, SkPictCopyInf
         SkTypefacePlayback* tfPlayback = deepCopyInfo->controller.getTypefacePlayback();
         for (int i = 0; i < paintCount; i++) {
             if (deepCopyInfo->paintData[i]) {
-                deepCopyInfo->paintData[i]->unflatten<SkPaintTraits>(&fPaints->writableAt(i),
-                                                                     bmHeap, tfPlayback);
+                deepCopyInfo->paintData[i]->unflatten<SkPaint::FlatteningTraits>(
+                    &fPaints->writableAt(i), bmHeap, tfPlayback);
             } else {
                 // needs_deep_copy was false, so just need to assign
                 fPaints->writableAt(i) = src.fPaints->at(i);
@@ -267,7 +264,7 @@ void SkPicturePlayback::init() {
 }
 
 SkPicturePlayback::~SkPicturePlayback() {
-    fOpData->unref();
+    SkSafeUnref(fOpData);
 
     SkSafeUnref(fBitmaps);
     SkSafeUnref(fPaints);
@@ -305,43 +302,48 @@ bool SkPicturePlayback::containsBitmaps() const {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#define PICT_READER_TAG     SkSetFourByteTag('r', 'e', 'a', 'd')
-#define PICT_FACTORY_TAG    SkSetFourByteTag('f', 'a', 'c', 't')
-#define PICT_TYPEFACE_TAG   SkSetFourByteTag('t', 'p', 'f', 'c')
-#define PICT_PICTURE_TAG    SkSetFourByteTag('p', 'c', 't', 'r')
-
-// This tag specifies the size of the ReadBuffer, needed for the following tags
-#define PICT_BUFFER_SIZE_TAG     SkSetFourByteTag('a', 'r', 'a', 'y')
-// these are all inside the ARRAYS tag
-#define PICT_BITMAP_BUFFER_TAG  SkSetFourByteTag('b', 't', 'm', 'p')
-#define PICT_PAINT_BUFFER_TAG   SkSetFourByteTag('p', 'n', 't', ' ')
-#define PICT_PATH_BUFFER_TAG    SkSetFourByteTag('p', 't', 'h', ' ')
-
-// Always write this guy last (with no length field afterwards)
-#define PICT_EOF_TAG     SkSetFourByteTag('e', 'o', 'f', ' ')
-
 #include "SkStream.h"
 
-static void writeTagSize(SkWriteBuffer& buffer, uint32_t tag,
-                         uint32_t size) {
+static void write_tag_size(SkWriteBuffer& buffer, uint32_t tag, uint32_t size) {
     buffer.writeUInt(tag);
     buffer.writeUInt(size);
 }
 
-static void writeTagSize(SkWStream* stream, uint32_t tag,
-                         uint32_t size) {
+static void write_tag_size(SkWStream* stream, uint32_t tag,  uint32_t size) {
     stream->write32(tag);
     stream->write32(size);
 }
 
-static void writeFactories(SkWStream* stream, const SkFactorySet& rec) {
-    int count = rec.count();
+static size_t compute_chunk_size(SkFlattenable::Factory* array, int count) {
+    size_t size = 4;  // for 'count'
 
-    writeTagSize(stream, PICT_FACTORY_TAG, count);
+    for (int i = 0; i < count; i++) {
+        const char* name = SkFlattenable::FactoryToName(array[i]);
+        if (NULL == name || 0 == *name) {
+            size += SkWStream::SizeOfPackedUInt(0);
+        } else {
+            size_t len = strlen(name);
+            size += SkWStream::SizeOfPackedUInt(len);
+            size += len;
+        }
+    }
+
+    return size;
+}
+
+static void write_factories(SkWStream* stream, const SkFactorySet& rec) {
+    int count = rec.count();
 
     SkAutoSTMalloc<16, SkFlattenable::Factory> storage(count);
     SkFlattenable::Factory* array = (SkFlattenable::Factory*)storage.get();
     rec.copyToArray(array);
+
+    size_t size = compute_chunk_size(array, count);
+
+    // TODO: write_tag_size should really take a size_t
+    write_tag_size(stream, SK_PICT_FACTORY_TAG, (uint32_t) size);
+    SkDEBUGCODE(size_t start = stream->bytesWritten());
+    stream->write32(count);
 
     for (int i = 0; i < count; i++) {
         const char* name = SkFlattenable::FactoryToName(array[i]);
@@ -354,12 +356,14 @@ static void writeFactories(SkWStream* stream, const SkFactorySet& rec) {
             stream->write(name, len);
         }
     }
+
+    SkASSERT(size == (stream->bytesWritten() - start));
 }
 
-static void writeTypefaces(SkWStream* stream, const SkRefCntSet& rec) {
+static void write_typefaces(SkWStream* stream, const SkRefCntSet& rec) {
     int count = rec.count();
 
-    writeTagSize(stream, PICT_TYPEFACE_TAG, count);
+    write_tag_size(stream, SK_PICT_TYPEFACE_TAG, count);
 
     SkAutoSTMalloc<16, SkTypeface*> storage(count);
     SkTypeface** array = (SkTypeface**)storage.get();
@@ -374,32 +378,32 @@ void SkPicturePlayback::flattenToBuffer(SkWriteBuffer& buffer) const {
     int i, n;
 
     if ((n = SafeCount(fBitmaps)) > 0) {
-        writeTagSize(buffer, PICT_BITMAP_BUFFER_TAG, n);
+        write_tag_size(buffer, SK_PICT_BITMAP_BUFFER_TAG, n);
         for (i = 0; i < n; i++) {
             buffer.writeBitmap((*fBitmaps)[i]);
         }
     }
 
     if ((n = SafeCount(fPaints)) > 0) {
-        writeTagSize(buffer, PICT_PAINT_BUFFER_TAG, n);
+        write_tag_size(buffer, SK_PICT_PAINT_BUFFER_TAG, n);
         for (i = 0; i < n; i++) {
             buffer.writePaint((*fPaints)[i]);
         }
     }
 
     if ((n = SafeCount(fPathHeap.get())) > 0) {
-        writeTagSize(buffer, PICT_PATH_BUFFER_TAG, n);
+        write_tag_size(buffer, SK_PICT_PATH_BUFFER_TAG, n);
         fPathHeap->flatten(buffer);
     }
 }
 
 void SkPicturePlayback::serialize(SkWStream* stream,
                                   SkPicture::EncodeBitmap encoder) const {
-    writeTagSize(stream, PICT_READER_TAG, fOpData->size());
+    write_tag_size(stream, SK_PICT_READER_TAG, fOpData->size());
     stream->write(fOpData->bytes(), fOpData->size());
 
     if (fPictureCount > 0) {
-        writeTagSize(stream, PICT_PICTURE_TAG, fPictureCount);
+        write_tag_size(stream, SK_PICT_PICTURE_TAG, fPictureCount);
         for (int i = 0; i < fPictureCount; i++) {
             fPictureRefs[i]->serialize(stream, encoder);
         }
@@ -418,25 +422,25 @@ void SkPicturePlayback::serialize(SkWStream* stream,
 
         this->flattenToBuffer(buffer);
 
-        // We have to write these to sets into the stream *before* we write
+        // We have to write these two sets into the stream *before* we write
         // the buffer, since parsing that buffer will require that we already
         // have these sets available to use.
-        writeFactories(stream, factSet);
-        writeTypefaces(stream, typefaceSet);
+        write_factories(stream, factSet);
+        write_typefaces(stream, typefaceSet);
 
-        writeTagSize(stream, PICT_BUFFER_SIZE_TAG, buffer.bytesWritten());
+        write_tag_size(stream, SK_PICT_BUFFER_SIZE_TAG, buffer.bytesWritten());
         buffer.writeToStream(stream);
     }
 
-    stream->write32(PICT_EOF_TAG);
+    stream->write32(SK_PICT_EOF_TAG);
 }
 
 void SkPicturePlayback::flatten(SkWriteBuffer& buffer) const {
-    writeTagSize(buffer, PICT_READER_TAG, fOpData->size());
+    write_tag_size(buffer, SK_PICT_READER_TAG, fOpData->size());
     buffer.writeByteArray(fOpData->bytes(), fOpData->size());
 
     if (fPictureCount > 0) {
-        writeTagSize(buffer, PICT_PICTURE_TAG, fPictureCount);
+        write_tag_size(buffer, SK_PICT_PICTURE_TAG, fPictureCount);
         for (int i = 0; i < fPictureCount; i++) {
             fPictureRefs[i]->flatten(buffer);
         }
@@ -444,7 +448,7 @@ void SkPicturePlayback::flatten(SkWriteBuffer& buffer) const {
 
     // Write this picture playback's data into a writebuffer
     this->flattenToBuffer(buffer);
-    buffer.write32(PICT_EOF_TAG);
+    buffer.write32(SK_PICT_EOF_TAG);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -486,7 +490,7 @@ bool SkPicturePlayback::parseStreamTag(SkStream* stream, const SkPictInfo& info,
     SkDEBUGCODE(bool haveBuffer = false;)
 
     switch (tag) {
-        case PICT_READER_TAG: {
+        case SK_PICT_READER_TAG: {
             SkAutoMalloc storage(size);
             if (stream->read(storage.get(), size) != size) {
                 return false;
@@ -494,8 +498,19 @@ bool SkPicturePlayback::parseStreamTag(SkStream* stream, const SkPictInfo& info,
             SkASSERT(NULL == fOpData);
             fOpData = SkData::NewFromMalloc(storage.detach(), size);
         } break;
-        case PICT_FACTORY_TAG: {
+        case SK_PICT_FACTORY_TAG: {
             SkASSERT(!haveBuffer);
+        // Remove this code when v21 and below are no longer supported. At the
+        // same time add a new 'count' variable and use it rather then reusing 'size'.
+#ifndef DISABLE_V21_COMPATIBILITY_CODE
+            if (info.fVersion >= 22) {
+                // in v22 this tag's size represents the size of the chunk in bytes
+                // and the number of factory strings is written out separately
+#endif
+                size = stream->readU32();
+#ifndef DISABLE_V21_COMPATIBILITY_CODE
+            }
+#endif
             fFactoryPlayback = SkNEW_ARGS(SkFactoryPlayback, (size));
             for (size_t i = 0; i < size; i++) {
                 SkString str;
@@ -507,7 +522,7 @@ bool SkPicturePlayback::parseStreamTag(SkStream* stream, const SkPictInfo& info,
                 fFactoryPlayback->base()[i] = SkFlattenable::NameToFactory(str.c_str());
             }
         } break;
-        case PICT_TYPEFACE_TAG: {
+        case SK_PICT_TYPEFACE_TAG: {
             SkASSERT(!haveBuffer);
             fTFPlayback.setCount(size);
             for (size_t i = 0; i < size; i++) {
@@ -520,7 +535,7 @@ bool SkPicturePlayback::parseStreamTag(SkStream* stream, const SkPictInfo& info,
                 fTFPlayback.set(i, tf);
             }
         } break;
-        case PICT_PICTURE_TAG: {
+        case SK_PICT_PICTURE_TAG: {
             fPictureCount = size;
             fPictureRefs = SkNEW_ARRAY(SkPicture*, fPictureCount);
             bool success = true;
@@ -543,7 +558,7 @@ bool SkPicturePlayback::parseStreamTag(SkStream* stream, const SkPictInfo& info,
                 return false;
             }
         } break;
-        case PICT_BUFFER_SIZE_TAG: {
+        case SK_PICT_BUFFER_SIZE_TAG: {
             SkAutoMalloc storage(size);
             if (stream->read(storage.get(), size) != size) {
                 return false;
@@ -572,7 +587,7 @@ bool SkPicturePlayback::parseStreamTag(SkStream* stream, const SkPictInfo& info,
 bool SkPicturePlayback::parseBufferTag(SkReadBuffer& buffer,
                                        uint32_t tag, size_t size) {
     switch (tag) {
-        case PICT_BITMAP_BUFFER_TAG: {
+        case SK_PICT_BITMAP_BUFFER_TAG: {
             fBitmaps = SkTRefArray<SkBitmap>::Create(size);
             for (size_t i = 0; i < size; ++i) {
                 SkBitmap* bm = &fBitmaps->writableAt(i);
@@ -580,17 +595,52 @@ bool SkPicturePlayback::parseBufferTag(SkReadBuffer& buffer,
                 bm->setImmutable();
             }
         } break;
-        case PICT_PAINT_BUFFER_TAG: {
+        case SK_PICT_PAINT_BUFFER_TAG: {
             fPaints = SkTRefArray<SkPaint>::Create(size);
             for (size_t i = 0; i < size; ++i) {
                 buffer.readPaint(&fPaints->writableAt(i));
             }
         } break;
-        case PICT_PATH_BUFFER_TAG:
+        case SK_PICT_PATH_BUFFER_TAG:
             if (size > 0) {
                 fPathHeap.reset(SkNEW_ARGS(SkPathHeap, (buffer)));
             }
             break;
+        case SK_PICT_READER_TAG: {
+            SkAutoMalloc storage(size);
+            if (!buffer.readByteArray(storage.get(), size) ||
+                !buffer.validate(NULL == fOpData)) {
+                return false;
+            }
+            SkASSERT(NULL == fOpData);
+            fOpData = SkData::NewFromMalloc(storage.detach(), size);
+        } break;
+        case SK_PICT_PICTURE_TAG: {
+            if (!buffer.validate((0 == fPictureCount) && (NULL == fPictureRefs))) {
+                return false;
+            }
+            fPictureCount = size;
+            fPictureRefs = SkNEW_ARRAY(SkPicture*, fPictureCount);
+            bool success = true;
+            int i = 0;
+            for ( ; i < fPictureCount; i++) {
+                fPictureRefs[i] = SkPicture::CreateFromBuffer(buffer);
+                if (NULL == fPictureRefs[i]) {
+                    success = false;
+                    break;
+                }
+            }
+            if (!success) {
+                // Delete all of the pictures that were already created (up to but excluding i):
+                for (int j = 0; j < i; j++) {
+                    fPictureRefs[j]->unref();
+                }
+                // Delete the array
+                SkDELETE_ARRAY(fPictureRefs);
+                fPictureCount = 0;
+                return false;
+            }
+        } break;
         default:
             // The tag was invalid.
             return false;
@@ -622,7 +672,7 @@ bool SkPicturePlayback::parseStream(SkStream* stream, const SkPictInfo& info,
                                     SkPicture::InstallPixelRefProc proc) {
     for (;;) {
         uint32_t tag = stream->readU32();
-        if (PICT_EOF_TAG == tag) {
+        if (SK_PICT_EOF_TAG == tag) {
             break;
         }
 
@@ -637,7 +687,7 @@ bool SkPicturePlayback::parseStream(SkStream* stream, const SkPictInfo& info,
 bool SkPicturePlayback::parseBuffer(SkReadBuffer& buffer) {
     for (;;) {
         uint32_t tag = buffer.readUInt();
-        if (PICT_EOF_TAG == tag) {
+        if (SK_PICT_EOF_TAG == tag) {
             break;
         }
 
@@ -701,13 +751,58 @@ static DrawType read_op_and_size(SkReader32* reader, uint32_t* size) {
     return (DrawType) op;
 }
 
+// The activeOps parameter is actually "const SkTDArray<SkPictureStateTree::Draw*>&".
+// It represents the operations about to be drawn, as generated by some spatial
+// subdivision helper class. It should already be in 'fOffset' sorted order.
+void SkPicturePlayback::preLoadBitmaps(const SkTDArray<void*>& activeOps) {
+    if (0 == activeOps.count() || NULL == fBitmapUseOffsets) {
+        return;
+    }
+
+    SkTDArray<int> active;
+
+    SkAutoTDeleteArray<bool> needToCheck(new bool[fBitmapUseOffsets->numIDs()]);
+    for (int i = 0; i < fBitmapUseOffsets->numIDs(); ++i) {
+        needToCheck.get()[i] = true;
+    }
+
+    uint32_t max = ((SkPictureStateTree::Draw*)activeOps[activeOps.count()-1])->fOffset;
+
+    for (int i = 0; i < activeOps.count(); ++i) {
+        SkPictureStateTree::Draw* draw = (SkPictureStateTree::Draw*) activeOps[i];
+
+        for (int j = 0; j < fBitmapUseOffsets->numIDs(); ++j) {
+            if (!needToCheck.get()[j]) {
+                continue;
+            }
+
+            if (!fBitmapUseOffsets->overlap(j, draw->fOffset, max)) {
+                needToCheck.get()[j] = false;
+                continue;
+            }
+
+            if (!fBitmapUseOffsets->includes(j, draw->fOffset)) {
+                continue;
+            }
+
+            *active.append() = j;
+            needToCheck.get()[j] = false;
+        }
+    }
+
+    for (int i = 0; i < active.count(); ++i) {
+        SkDebugf("preload texture %d\n", active[i]);
+    }
+}
+
 void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) {
 #ifdef ENABLE_TIME_DRAW
     SkAutoTime  at("SkPicture::draw", 50);
 #endif
 
 #ifdef SPEW_CLIP_SKIPPING
-    SkipClipRec skipRect, skipRRect, skipRegion, skipPath;
+    SkipClipRec skipRect, skipRRect, skipRegion, skipPath, skipCull;
+    int opCount = 0;
 #endif
 
 #ifdef SK_BUILD_FOR_ANDROID
@@ -720,26 +815,26 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
 
     SkReader32 reader(fOpData->bytes(), fOpData->size());
     TextContainer text;
-    SkTDArray<void*> results;
+    SkTDArray<void*> activeOps;
 
     if (NULL != fStateTree && NULL != fBoundingHierarchy) {
         SkRect clipBounds;
         if (canvas.getClipBounds(&clipBounds)) {
             SkIRect query;
             clipBounds.roundOut(&query);
-            fBoundingHierarchy->search(query, &results);
-            if (results.count() == 0) {
+            fBoundingHierarchy->search(query, &activeOps);
+            if (activeOps.count() == 0) {
                 return;
             }
             SkTQSort<SkPictureStateTree::Draw>(
-                reinterpret_cast<SkPictureStateTree::Draw**>(results.begin()),
-                reinterpret_cast<SkPictureStateTree::Draw**>(results.end()-1));
+                reinterpret_cast<SkPictureStateTree::Draw**>(activeOps.begin()),
+                reinterpret_cast<SkPictureStateTree::Draw**>(activeOps.end()-1));
         }
     }
 
     SkPictureStateTree::Iterator it = (NULL == fStateTree) ?
         SkPictureStateTree::Iterator() :
-        fStateTree->getIterator(results, &canvas);
+        fStateTree->getIterator(activeOps, &canvas);
 
     if (it.isValid()) {
         uint32_t skipTo = it.draw();
@@ -748,6 +843,8 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
         }
         reader.setOffset(skipTo);
     }
+
+    this->preLoadBitmaps(activeOps);
 
     // Record this, so we can concat w/ it if we encounter a setMatrix()
     SkMatrix initialMatrix = canvas.getTotalMatrix();
@@ -770,6 +867,10 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
         if (fAbortCurrentPlayback) {
             return;
         }
+#endif
+
+#ifdef SPEW_CLIP_SKIPPING
+        opCount++;
 #endif
 
         size_t curOffset = reader.offset();
@@ -814,7 +915,8 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 size_t offsetToRestore = reader.readInt();
                 SkASSERT(!offsetToRestore || \
                     offsetToRestore >= reader.offset());
-                if (!canvas.clipPath(path, regionOp, doAA) && offsetToRestore) {
+                canvas.clipPath(path, regionOp, doAA);
+                if (canvas.isClipEmpty() && offsetToRestore) {
 #ifdef SPEW_CLIP_SKIPPING
                     skipPath.recordSkip(offsetToRestore - reader.offset());
 #endif
@@ -829,7 +931,8 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 size_t offsetToRestore = reader.readInt();
                 SkASSERT(!offsetToRestore || \
                     offsetToRestore >= reader.offset());
-                if (!canvas.clipRegion(region, regionOp) && offsetToRestore) {
+                canvas.clipRegion(region, regionOp);
+                if (canvas.isClipEmpty() && offsetToRestore) {
 #ifdef SPEW_CLIP_SKIPPING
                     skipRegion.recordSkip(offsetToRestore - reader.offset());
 #endif
@@ -844,7 +947,8 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 size_t offsetToRestore = reader.readInt();
                 SkASSERT(!offsetToRestore || \
                          offsetToRestore >= reader.offset());
-                if (!canvas.clipRect(rect, regionOp, doAA) && offsetToRestore) {
+                canvas.clipRect(rect, regionOp, doAA);
+                if (canvas.isClipEmpty() && offsetToRestore) {
 #ifdef SPEW_CLIP_SKIPPING
                     skipRect.recordSkip(offsetToRestore - reader.offset());
 #endif
@@ -860,13 +964,29 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 size_t offsetToRestore = reader.readInt();
                 SkASSERT(!offsetToRestore || \
                          offsetToRestore >= reader.offset());
-                if (!canvas.clipRRect(rrect, regionOp, doAA) && offsetToRestore) {
+                canvas.clipRRect(rrect, regionOp, doAA);
+                if (canvas.isClipEmpty() && offsetToRestore) {
 #ifdef SPEW_CLIP_SKIPPING
                     skipRRect.recordSkip(offsetToRestore - reader.offset());
 #endif
                     reader.setOffset(offsetToRestore);
                 }
             } break;
+            case PUSH_CULL: {
+                const SkRect& cullRect = reader.skipT<SkRect>();
+                size_t offsetToRestore = reader.readInt();
+                if (offsetToRestore && canvas.quickReject(cullRect)) {
+#ifdef SPEW_CLIP_SKIPPING
+                    skipCull.recordSkip(offsetToRestore - reader.offset());
+#endif
+                    reader.setOffset(offsetToRestore);
+                } else {
+                    canvas.pushCull(cullRect);
+                }
+            } break;
+            case POP_CULL:
+                canvas.popCull();
+                break;
             case CONCAT: {
                 SkMatrix matrix;
                 this->getMatrix(reader, &matrix);
@@ -874,14 +994,14 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 break;
             }
             case DRAW_BITMAP: {
-                const SkPaint* paint = getPaint(reader);
-                const SkBitmap& bitmap = getBitmap(reader);
+                const SkPaint* paint = this->getPaint(reader);
+                const SkBitmap& bitmap = this->getBitmap(reader);
                 const SkPoint& loc = reader.skipT<SkPoint>();
                 canvas.drawBitmap(bitmap, loc.fX, loc.fY, paint);
             } break;
             case DRAW_BITMAP_RECT_TO_RECT: {
-                const SkPaint* paint = getPaint(reader);
-                const SkBitmap& bitmap = getBitmap(reader);
+                const SkPaint* paint = this->getPaint(reader);
+                const SkBitmap& bitmap = this->getBitmap(reader);
                 const SkRect* src = this->getRectPtr(reader);   // may be null
                 const SkRect& dst = reader.skipT<SkRect>();     // required
                 SkCanvas::DrawBitmapRectFlags flags;
@@ -889,15 +1009,15 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 canvas.drawBitmapRectToRect(bitmap, src, dst, paint, flags);
             } break;
             case DRAW_BITMAP_MATRIX: {
-                const SkPaint* paint = getPaint(reader);
-                const SkBitmap& bitmap = getBitmap(reader);
+                const SkPaint* paint = this->getPaint(reader);
+                const SkBitmap& bitmap = this->getBitmap(reader);
                 SkMatrix matrix;
                 this->getMatrix(reader, &matrix);
                 canvas.drawBitmapMatrix(bitmap, matrix, paint);
             } break;
             case DRAW_BITMAP_NINE: {
-                const SkPaint* paint = getPaint(reader);
-                const SkBitmap& bitmap = getBitmap(reader);
+                const SkPaint* paint = this->getPaint(reader);
+                const SkBitmap& bitmap = this->getBitmap(reader);
                 const SkIRect& src = reader.skipT<SkIRect>();
                 const SkRect& dst = reader.skipT<SkRect>();
                 canvas.drawBitmapNine(bitmap, src, dst, paint);
@@ -909,6 +1029,13 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 size_t length = reader.readInt();
                 canvas.drawData(reader.skip(length), length);
                 // skip handles padding the read out to a multiple of 4
+            } break;
+            case DRAW_DRRECT: {
+                const SkPaint& paint = *this->getPaint(reader);
+                SkRRect outer, inner;
+                reader.readRRect(&outer);
+                reader.readRRect(&inner);
+                canvas.drawDRRect(outer, inner, paint);
             } break;
             case BEGIN_COMMENT_GROUP: {
                 const char* desc = reader.readString();
@@ -923,35 +1050,35 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 canvas.endCommentGroup();
             } break;
             case DRAW_OVAL: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 canvas.drawOval(reader.skipT<SkRect>(), paint);
             } break;
             case DRAW_PAINT:
-                canvas.drawPaint(*getPaint(reader));
+                canvas.drawPaint(*this->getPaint(reader));
                 break;
             case DRAW_PATH: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 canvas.drawPath(getPath(reader), paint);
             } break;
             case DRAW_PICTURE:
-                canvas.drawPicture(getPicture(reader));
+                canvas.drawPicture(this->getPicture(reader));
                 break;
             case DRAW_POINTS: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 SkCanvas::PointMode mode = (SkCanvas::PointMode)reader.readInt();
                 size_t count = reader.readInt();
                 const SkPoint* pts = (const SkPoint*)reader.skip(sizeof(SkPoint) * count);
                 canvas.drawPoints(mode, count, pts, paint);
             } break;
             case DRAW_POS_TEXT: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 getText(reader, &text);
                 size_t points = reader.readInt();
                 const SkPoint* pos = (const SkPoint*)reader.skip(points * sizeof(SkPoint));
                 canvas.drawPosText(text.text(), text.length(), pos, paint);
             } break;
             case DRAW_POS_TEXT_TOP_BOTTOM: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 getText(reader, &text);
                 size_t points = reader.readInt();
                 const SkPoint* pos = (const SkPoint*)reader.skip(points * sizeof(SkPoint));
@@ -962,7 +1089,7 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 }
             } break;
             case DRAW_POS_TEXT_H: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 getText(reader, &text);
                 size_t xCount = reader.readInt();
                 const SkScalar constY = reader.readScalar();
@@ -971,7 +1098,7 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                                     paint);
             } break;
             case DRAW_POS_TEXT_H_TOP_BOTTOM: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 getText(reader, &text);
                 size_t xCount = reader.readInt();
                 const SkScalar* xpos = (const SkScalar*)reader.skip((3 + xCount) * sizeof(SkScalar));
@@ -984,32 +1111,32 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 }
             } break;
             case DRAW_RECT: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 canvas.drawRect(reader.skipT<SkRect>(), paint);
             } break;
             case DRAW_RRECT: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 SkRRect rrect;
                 reader.readRRect(&rrect);
                 canvas.drawRRect(rrect, paint);
             } break;
             case DRAW_SPRITE: {
-                const SkPaint* paint = getPaint(reader);
-                const SkBitmap& bitmap = getBitmap(reader);
+                const SkPaint* paint = this->getPaint(reader);
+                const SkBitmap& bitmap = this->getBitmap(reader);
                 int left = reader.readInt();
                 int top = reader.readInt();
                 canvas.drawSprite(bitmap, left, top, paint);
             } break;
             case DRAW_TEXT: {
-                const SkPaint& paint = *getPaint(reader);
-                getText(reader, &text);
+                const SkPaint& paint = *this->getPaint(reader);
+                this->getText(reader, &text);
                 SkScalar x = reader.readScalar();
                 SkScalar y = reader.readScalar();
                 canvas.drawText(text.text(), text.length(), x, y, paint);
             } break;
             case DRAW_TEXT_TOP_BOTTOM: {
-                const SkPaint& paint = *getPaint(reader);
-                getText(reader, &text);
+                const SkPaint& paint = *this->getPaint(reader);
+                this->getText(reader, &text);
                 const SkScalar* ptr = (const SkScalar*)reader.skip(4 * sizeof(SkScalar));
                 // ptr[0] == x
                 // ptr[1] == y
@@ -1021,16 +1148,16 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 }
             } break;
             case DRAW_TEXT_ON_PATH: {
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 getText(reader, &text);
-                const SkPath& path = getPath(reader);
+                const SkPath& path = this->getPath(reader);
                 SkMatrix matrix;
                 this->getMatrix(reader, &matrix);
                 canvas.drawTextOnPath(text.text(), text.length(), path, &matrix, paint);
             } break;
             case DRAW_VERTICES: {
                 SkAutoTUnref<SkXfermode> xfer;
-                const SkPaint& paint = *getPaint(reader);
+                const SkPaint& paint = *this->getPaint(reader);
                 DrawVertexFlags flags = (DrawVertexFlags)reader.readInt();
                 SkCanvas::VertexMode vmode = (SkCanvas::VertexMode)reader.readInt();
                 int vCount = reader.readInt();
@@ -1073,8 +1200,8 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
                 canvas.save((SkCanvas::SaveFlags) reader.readInt());
                 break;
             case SAVE_LAYER: {
-                const SkRect* boundsPtr = getRectPtr(reader);
-                const SkPaint* paint = getPaint(reader);
+                const SkRect* boundsPtr = this->getRectPtr(reader);
+                const SkPaint* paint = this->getPaint(reader);
                 canvas.saveLayer(boundsPtr, paint, (SkCanvas::SaveFlags) reader.readInt());
                 } break;
             case SCALE: {
@@ -1117,10 +1244,12 @@ void SkPicturePlayback::draw(SkCanvas& canvas, SkDrawPictureCallback* callback) 
 
 #ifdef SPEW_CLIP_SKIPPING
     {
-        size_t size =  skipRect.fSize + skipRRect.fSize + skipPath.fSize + skipRegion.fSize;
-        SkDebugf("--- Clip skips %d%% rect:%d rrect:%d path:%d rgn:%d\n",
+        size_t size =  skipRect.fSize + skipRRect.fSize + skipPath.fSize + skipRegion.fSize +
+                skipCull.fSize;
+        SkDebugf("--- Clip skips %d%% rect:%d rrect:%d path:%d rgn:%d cull:%d\n",
              size * 100 / reader.offset(), skipRect.fCount, skipRRect.fCount,
-                 skipPath.fCount, skipRegion.fCount);
+                 skipPath.fCount, skipRegion.fCount, skipCull.fCount);
+        SkDebugf("--- Total ops: %d\n", opCount);
     }
 #endif
 //    this->dumpSize();

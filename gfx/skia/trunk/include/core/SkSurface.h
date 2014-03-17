@@ -52,10 +52,7 @@ public:
      *  pixels in SkPMColor format.
      */
     static SkSurface* NewRasterPMColor(int width, int height) {
-        SkImageInfo info = {
-            width, height, kPMColor_SkColorType, kPremul_SkAlphaType
-        };
-        return NewRaster(info);
+        return NewRaster(SkImageInfo::MakeN32Premul(width, height));
     }
 
     /**
@@ -150,6 +147,18 @@ public:
      *  to the canvas.
      */
     void draw(SkCanvas*, SkScalar x, SkScalar y, const SkPaint*);
+
+    /**
+     *  If the surface has direct access to its pixels (i.e. they are in local
+     *  RAM) return the const-address of those pixels, and if not null, return
+     *  the ImageInfo and rowBytes. The returned address is only valid while
+     *  the surface object is in scope, and no API call is made on the surface
+     *  or its canvas.
+     *
+     *  On failure, returns NULL and the info and rowBytes parameters are
+     *  ignored.
+     */
+    const void* peekPixels(SkImageInfo* info, size_t* rowBytes);
 
 protected:
     SkSurface(int width, int height);

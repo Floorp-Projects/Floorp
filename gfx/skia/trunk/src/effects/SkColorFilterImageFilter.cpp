@@ -69,7 +69,7 @@ SkColorFilterImageFilter* SkColorFilterImageFilter::Create(SkColorFilter* cf,
         if (inputColorFilter->asColorMatrix(inputMatrix) && !matrix_needs_clamping(inputMatrix)) {
             SkScalar combinedMatrix[20];
             mult_color_matrix(inputMatrix, colorMatrix, combinedMatrix);
-            SkAutoTUnref<SkColorFilter> newCF(SkNEW_ARGS(SkColorMatrixFilter, (combinedMatrix)));
+            SkAutoTUnref<SkColorFilter> newCF(SkColorMatrixFilter::Create(combinedMatrix));
             return SkNEW_ARGS(SkColorFilterImageFilter, (newCF, input->getInput(0), cropRect));
         }
     }
@@ -99,19 +99,17 @@ SkColorFilterImageFilter::~SkColorFilterImageFilter() {
 }
 
 bool SkColorFilterImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source,
-                                             const SkMatrix& matrix,
+                                             const Context& ctx,
                                              SkBitmap* result,
                                              SkIPoint* offset) const {
     SkBitmap src = source;
     SkIPoint srcOffset = SkIPoint::Make(0, 0);
-    if (getInput(0) && !getInput(0)->filterImage(proxy, source, matrix, &src, &srcOffset)) {
+    if (getInput(0) && !getInput(0)->filterImage(proxy, source, ctx, &src, &srcOffset)) {
         return false;
     }
 
     SkIRect bounds;
-    src.getBounds(&bounds);
-    bounds.offset(srcOffset);
-    if (!this->applyCropRect(&bounds, matrix)) {
+    if (!this->applyCropRect(ctx, src, srcOffset, &bounds)) {
         return false;
     }
 

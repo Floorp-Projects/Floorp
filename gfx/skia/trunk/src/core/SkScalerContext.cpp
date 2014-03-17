@@ -102,7 +102,7 @@ SkScalerContext::SkScalerContext(SkTypeface* typeface, const SkDescriptor* desc)
 {
 #ifdef DUMP_REC
     desc->assertChecksum();
-    SkDebugf("SkScalarContext checksum %x count %d length %d\n",
+    SkDebugf("SkScalerContext checksum %x count %d length %d\n",
              desc->getChecksum(), desc->getCount(), desc->getLength());
     SkDebugf(" textsize %g prescale %g preskew %g post [%g %g %g %g]\n",
         rec->fTextSize, rec->fPreScaleX, rec->fPreSkewX, rec->fPost2x2[0][0],
@@ -428,7 +428,7 @@ static void pack4xHToLCD16(const SkBitmap& src, const SkMask& dst,
                            const SkMaskGamma::PreBlend& maskPreBlend) {
 #define SAMPLES_PER_PIXEL 4
 #define LCD_PER_PIXEL 3
-    SkASSERT(SkBitmap::kA8_Config == src.config());
+    SkASSERT(kAlpha_8_SkColorType == src.colorType());
     SkASSERT(SkMask::kLCD16_Format == dst.fFormat);
 
     const int sample_width = src.width();
@@ -502,7 +502,7 @@ static void pack4xHToLCD16(const SkBitmap& src, const SkMask& dst,
 template<bool APPLY_PREBLEND>
 static void pack4xHToLCD32(const SkBitmap& src, const SkMask& dst,
                            const SkMaskGamma::PreBlend& maskPreBlend) {
-    SkASSERT(SkBitmap::kA8_Config == src.config());
+    SkASSERT(kAlpha_8_SkColorType == src.colorType());
     SkASSERT(SkMask::kLCD32_Format == dst.fFormat);
 
     const int width = dst.fBounds.width();

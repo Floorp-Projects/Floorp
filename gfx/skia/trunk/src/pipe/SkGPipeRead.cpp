@@ -396,6 +396,16 @@ static void drawRRect_rp(SkCanvas* canvas, SkReader32* reader, uint32_t op32,
     }
 }
 
+static void drawDRRect_rp(SkCanvas* canvas, SkReader32* reader, uint32_t op32,
+                          SkGPipeState* state) {
+    SkRRect outer, inner;
+    reader->readRRect(&outer);
+    reader->readRRect(&inner);
+    if (state->shouldDraw()) {
+        canvas->drawDRRect(outer, inner, state->paint());
+    }
+}
+
 static void drawPath_rp(SkCanvas* canvas, SkReader32* reader, uint32_t op32,
                         SkGPipeState* state) {
     SkPath path;
@@ -697,7 +707,7 @@ static void annotation_rp(SkCanvas*, SkReader32* reader, uint32_t op32,
     const size_t size = DrawOp_unpackData(op32);
     if (size > 0) {
         SkReadBuffer buffer(reader->skip(size), size);
-        p->setAnnotation(SkNEW_ARGS(SkAnnotation, (buffer)))->unref();
+        p->setAnnotation(SkAnnotation::Create(buffer))->unref();
         SkASSERT(buffer.offset() == size);
     } else {
         p->setAnnotation(NULL);
@@ -763,6 +773,7 @@ static const ReadProc gReadTable[] = {
     drawBitmapRect_rp,
     drawClear_rp,
     drawData_rp,
+    drawDRRect_rp,
     drawOval_rp,
     drawPaint_rp,
     drawPath_rp,

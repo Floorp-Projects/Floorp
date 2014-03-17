@@ -26,15 +26,9 @@ class SkMatrix;
 //      use growToInclude to fit skp round rects & generate stats (RRs vs. real paths)
 //      check on # of rectorus's the RRs could handle
 //   rendering work
-//      add entry points (clipRRect, drawRRect) - plumb down to SkBaseDevice
-//      update SkPath.addRRect() to take an SkRRect - only use quads
-//          -- alternatively add addRRectToPath here
+//      update SkPath.addRRect() to only use quads
 //      add GM and bench
-//   clipping opt
-//      update SkClipStack to perform logic with RRs
 //   further out
-//      add RR rendering shader to Ganesh (akin to cicle drawing code)
-//          - only for simple RRs
 //      detect and triangulate RRectorii rather than falling back to SW in Ganesh
 //
 
@@ -102,7 +96,23 @@ public:
     inline bool isRect() const { return kRect_Type == this->getType(); }
     inline bool isOval() const { return kOval_Type == this->getType(); }
     inline bool isSimple() const { return kSimple_Type == this->getType(); }
+    inline bool isSimpleCircular() const {
+        return this->isSimple() && fRadii[0].fX == fRadii[0].fY;
+    }
     inline bool isComplex() const { return kComplex_Type == this->getType(); }
+
+    bool allCornersCircular() const;
+
+    /**
+     * Are both x-radii the same on the two left corners, and similar for the top, right, and
+     * bottom. When this is the case the four ellipse centers form a rectangle.
+     */
+    bool isNinePatch() const {
+        return fRadii[kUpperLeft_Corner].fX == fRadii[kLowerLeft_Corner].fX &&
+               fRadii[kUpperRight_Corner].fX == fRadii[kLowerRight_Corner].fX &&
+               fRadii[kUpperLeft_Corner].fY == fRadii[kUpperRight_Corner].fY &&
+               fRadii[kLowerLeft_Corner].fY == fRadii[kLowerRight_Corner].fY;
+    }
 
     SkScalar width() const { return fRect.width(); }
     SkScalar height() const { return fRect.height(); }
@@ -226,6 +236,13 @@ public:
     }
     void outset(SkScalar dx, SkScalar dy) {
         this->inset(-dx, -dy, this);
+    }
+
+    /**
+     * Translate the rrect by (dx, dy).
+     */
+    void offset(SkScalar dx, SkScalar dy) {
+        fRect.offset(dx, dy);
     }
 
     /**

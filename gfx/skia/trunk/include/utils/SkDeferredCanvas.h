@@ -11,7 +11,7 @@
 #include "SkCanvas.h"
 #include "SkPixelRef.h"
 
-class DeferredDevice;
+class SkDeferredDevice;
 class SkImage;
 class SkSurface;
 
@@ -138,25 +138,7 @@ public:
     void silentFlush();
 
     // Overrides of the SkCanvas interface
-    virtual int save(SaveFlags flags) SK_OVERRIDE;
-    virtual int saveLayer(const SkRect* bounds, const SkPaint* paint,
-                          SaveFlags flags) SK_OVERRIDE;
-    virtual void restore() SK_OVERRIDE;
     virtual bool isDrawingToLayer() const SK_OVERRIDE;
-    virtual bool translate(SkScalar dx, SkScalar dy) SK_OVERRIDE;
-    virtual bool scale(SkScalar sx, SkScalar sy) SK_OVERRIDE;
-    virtual bool rotate(SkScalar degrees) SK_OVERRIDE;
-    virtual bool skew(SkScalar sx, SkScalar sy) SK_OVERRIDE;
-    virtual bool concat(const SkMatrix& matrix) SK_OVERRIDE;
-    virtual void setMatrix(const SkMatrix& matrix) SK_OVERRIDE;
-    virtual bool clipRect(const SkRect& rect, SkRegion::Op op,
-                          bool doAntiAlias) SK_OVERRIDE;
-    virtual bool clipRRect(const SkRRect& rect, SkRegion::Op op,
-                           bool doAntiAlias) SK_OVERRIDE;
-    virtual bool clipPath(const SkPath& path, SkRegion::Op op,
-                          bool doAntiAlias) SK_OVERRIDE;
-    virtual bool clipRegion(const SkRegion& deviceRgn,
-                            SkRegion::Op op) SK_OVERRIDE;
     virtual void clear(SkColor) SK_OVERRIDE;
     virtual void drawPaint(const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPoints(PointMode mode, size_t count, const SkPoint pts[],
@@ -200,6 +182,26 @@ public:
     virtual SkBounder* setBounder(SkBounder* bounder) SK_OVERRIDE;
     virtual SkDrawFilter* setDrawFilter(SkDrawFilter* filter) SK_OVERRIDE;
 
+protected:
+    virtual void willSave(SaveFlags) SK_OVERRIDE;
+    virtual SaveLayerStrategy willSaveLayer(const SkRect*, const SkPaint*, SaveFlags) SK_OVERRIDE;
+    virtual void willRestore() SK_OVERRIDE;
+
+    virtual void didTranslate(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didScale(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didRotate(SkScalar) SK_OVERRIDE;
+    virtual void didSkew(SkScalar, SkScalar) SK_OVERRIDE;
+    virtual void didConcat(const SkMatrix&) SK_OVERRIDE;
+    virtual void didSetMatrix(const SkMatrix&) SK_OVERRIDE;
+
+    virtual void onDrawDRRect(const SkRRect&, const SkRRect&,
+                              const SkPaint&) SK_OVERRIDE;
+
+    virtual void onClipRect(const SkRect&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipRRect(const SkRRect&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipPath(const SkPath&, SkRegion::Op, ClipEdgeStyle) SK_OVERRIDE;
+    virtual void onClipRegion(const SkRegion&, SkRegion::Op) SK_OVERRIDE;
+
 public:
     class NotificationClient {
     public:
@@ -235,10 +237,10 @@ public:
 
 protected:
     virtual SkCanvas* canvasForDrawIter();
-    DeferredDevice* getDeferredDevice() const;
+    SkDeferredDevice* getDeferredDevice() const;
 
 private:
-    SkDeferredCanvas(DeferredDevice*);
+    SkDeferredCanvas(SkDeferredDevice*);
 
     void recordedDrawCommand();
     SkCanvas* drawingCanvas() const;
