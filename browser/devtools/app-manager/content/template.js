@@ -142,13 +142,15 @@ Template.prototype = {
   },
 
   _unregisterNodes: function(nodes) {
-    for (let [registeredPath, set] of this._nodeListeners) {
-      for (let e of nodes) {
+    for (let e of nodes) {
+      for (let registeredPath of e.registeredPaths) {
+        let set = this._nodeListeners.get(registeredPath);
         set.delete(e);
+        if (set.size === 0) {
+          this._nodeListeners.delete(registeredPath);
+        }
       }
-      if (set.size == 0) {
-        this._nodeListeners.delete(registeredPath);
-      }
+      e.registeredPaths = null;
     }
   },
 
@@ -240,6 +242,8 @@ Template.prototype = {
           this._registerNode(path, e);
         }
       }
+      // Store all the paths on the node, to speed up unregistering later
+      e.registeredPaths = paths;
     } catch(exception) {
       console.error("Invalid template: " + e.outerHTML + " (" + exception + ")");
     }
