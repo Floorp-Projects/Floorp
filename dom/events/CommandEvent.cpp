@@ -70,5 +70,7 @@ NS_NewDOMCommandEvent(nsIDOMEvent** aInstancePtrResult,
                       WidgetCommandEvent* aEvent)
 {
   CommandEvent* it = new CommandEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }

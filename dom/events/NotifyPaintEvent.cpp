@@ -171,5 +171,7 @@ NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aInstancePtrResult,
 {
   NotifyPaintEvent* it = new NotifyPaintEvent(aOwner, aPresContext, aEvent,
                                               aEventType, aInvalidateRequests);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }
