@@ -21,7 +21,8 @@ function test() {
     let ruleview = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
     let inlineStyles = ruleview._elementStyle.rules[0];
 
-    for each (let prop in inlineStyles.textProps) {
+    for (let key in inlineStyles.textProps) {
+      let prop = inlineStyles.textProps[key];
       if (prop.name == aName) {
         return prop;
       }
@@ -32,7 +33,8 @@ function test() {
   function runInspectorTests(aInspector)
   {
     inspector = aInspector;
-    inspector.sidebar.once("computedview-ready", () => {
+
+    waitForView("computedview", () => {
       info("Computed View ready");
       inspector.sidebar.select("computedview");
 

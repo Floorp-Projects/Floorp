@@ -49,7 +49,7 @@ function test() {
 
     instance.setSize(500, 500);
 
-    openRuleView(onInspectorUIOpen);
+    openView("ruleview", onInspectorUIOpen);
   }
 
   function onInspectorUIOpen(aInspector, aRuleView) {
