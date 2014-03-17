@@ -7,7 +7,7 @@
 /**
  * Listener for a JS WebVTT parser (vtt.js).
  */
-[scriptable, uuid(2953cf08-403e-4419-8d20-ce286aac026b)]
+[scriptable, uuid(8a2d7780-2045-4a29-99f4-df15cae5fc49)]
 interface nsIWebVTTListener : nsISupports
 {
   /**
@@ -26,4 +26,12 @@ interface nsIWebVTTListener : nsISupports
    */
   [implicit_jscontext]
   void onRegion(in jsval region);
+
+  /**
+   * Is called when the WebVTT parser encounters a parsing error.
+   *
+   * @param error The error code of the ParserError the occured.
+   */
+  [implicit_jscontext]
+  void onParsingError(in long errorCode);
 };
