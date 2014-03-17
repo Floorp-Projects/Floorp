@@ -12,6 +12,8 @@
 
 #include "DOMRequest.h"
 
+class nsIDOMLockedFile;
+
 BEGIN_FILE_NAMESPACE
 
 class FileHelper;
@@ -24,7 +26,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileRequest, DOMRequest)
 
   static already_AddRefed<FileRequest>
-  Create(nsPIDOMWindow* aOwner, LockedFile* aLockedFile);
+  Create(nsPIDOMWindow* aOwner, LockedFile* aLockedFile,
+         bool aWrapAsDOMRequest);
 
   // nsIDOMEventTarget
   virtual nsresult
@@ -39,6 +42,16 @@ public:
   nsresult
   NotifyHelperCompleted(FileHelper* aFileHelper);
 
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL
+  nsIDOMLockedFile*
+  GetLockedFile() const;
+
+  IMPL_EVENT_HANDLER(progress)
+
 protected:
   FileRequest(nsPIDOMWindow* aWindow);
   ~FileRequest();
@@ -47,6 +60,8 @@ protected:
   FireProgressEvent(uint64_t aLoaded, uint64_t aTotal);
 
   nsRefPtr<LockedFile> mLockedFile;
+
+  bool mWrapAsDOMRequest;
 };
 
 END_FILE_NAMESPACE
