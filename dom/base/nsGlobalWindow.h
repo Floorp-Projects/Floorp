@@ -84,7 +84,6 @@ class nsIDOMCrypto;
 class nsIDOMOfflineResourceList;
 class nsIScrollableFrame;
 class nsIControllers;
-class nsIJSID;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
 class nsIWebBrowserChrome;
@@ -979,9 +978,6 @@ public:
   void BeginWindowMove(mozilla::dom::Event& aMouseDownEvent,
                        mozilla::dom::Element* aPanel,
                        mozilla::ErrorResult& aError);
-
-  JS::Value GetInterface(JSContext* aCx, nsIJSID* aIID,
-                         mozilla::ErrorResult& aError);
 
 protected:
   // Array of idle observers that are notified of idle events.
