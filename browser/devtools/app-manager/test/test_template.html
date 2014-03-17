@@ -22,17 +22,17 @@
     <span template='{"type":"textContent","path":"title"}'>ttt</span>
     <span title="ttt" template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:foo_l10n/bar_l10n</span>
-    <div template-for='{"path":"mop","childSelector":"#template-for"}'><span template='{"type":"textContent","path":"name","rootPath":"mop."}'>meh</span></div>
+    <div template-for='{"path":"mop","childSelector":"#template-for"}'><span template='{"type":"textContent","path":"name","rootPath":"mop"}'>meh</span></div>
     <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0"}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1"}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1"}'>b</span>
       </div>
     </div>
   </div>
@@ -42,17 +42,17 @@
     <span template='{"type":"textContent","path":"title"}'>xxx</span>
     <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:foo2_l10n/bar_l10n</span>
-    <div template-for='{"path":"mop","childSelector":"#template-for"}'><span template='{"type":"textContent","path":"name","rootPath":"mop."}'>meh2</span></div>
+    <div template-for='{"path":"mop","childSelector":"#template-for"}'><span template='{"type":"textContent","path":"name","rootPath":"mop"}'>meh2</span></div>
     <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0"}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1"}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1"}'>b</span>
       </div>
     </div>
   </div>
@@ -64,14 +64,14 @@
     <div template-for='{"path":"","childSelector":"#template-for"}'></div>
     <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0"}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1"}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1"}'>b</span>
       </div>
     </div>
   </div>
@@ -83,29 +83,29 @@
     <div template-for='{"path":"","childSelector":"#template-for"}'></div>
     <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0"}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1"}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.2."}'>xx2</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.2."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.2."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.2"}'>xx2</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.2"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.2"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.3."}'>xx3</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.3."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.3."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.3"}'>xx3</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.3"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.3"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.4."}'>xx4</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.4."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.4."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.4"}'>xx4</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.4"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.4"}'>b</span>
       </div>
     </div>
   </div>
@@ -117,24 +117,24 @@
     <div template-for='{"path":"","childSelector":"#template-for"}'></div>
     <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0"}'>xx0</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.0"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1."}'>xx1</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.1"}'>xx1</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.1"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.1"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.2."}'>xx2</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.2."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.2."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.2"}'>xx2</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.2"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.2"}'>b</span>
       </div>
       <div>
-        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.3."}'>xx3</span>
-        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.3."}'>a</span>
-        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.3."}'>b</span>
+        <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.3"}'>xx3</span>
+        <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.3"}'>a</span>
+        <span template='{"type":"textContent","path":"b","rootPath":"foo1.bar1.3"}'>b</span>
       </div>
     </div>
   </div>
