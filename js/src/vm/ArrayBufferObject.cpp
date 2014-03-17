@@ -303,6 +303,7 @@ static ObjectElements *
 AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = nullptr)
 {
     uint32_t size = nbytes + sizeof(ObjectElements);
+    JS_ASSERT(size > nbytes); // be wary of rollover
     ObjectElements *newheader;
 
     // if oldptr is given, then we need to do a realloc

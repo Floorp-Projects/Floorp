@@ -24,6 +24,8 @@ const Ci = SpecialPowers.Ci;
 const Cc = SpecialPowers.Cc;
 const Cr = SpecialPowers.Cr;
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 var testpath = "/tests/toolkit/components/passwordmgr/test/";
 var prefix = "http://test2.example.com" + testpath;
 var subtests = [
@@ -191,24 +193,35 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
 var contentPage = "http://mochi.test:8888/tests/toolkit/components/passwordmgr/test/privbrowsing_perwindowpb_iframe.html";
 var testWindows = [];
 
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
-    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-      if (win.content.location.href != contentPage) {
-        win.gBrowser.loadURI(contentPage);
-        return;
-      }
-      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+    whenDelayedStartupFinished(win, function() {
+      win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+        if (win.content.location.href != contentPage) {
+          win.gBrowser.loadURI(contentPage);
+          return;
+        }
+        win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-      win.content.addEventListener('load', function innerLoad2() {
-        win.content.removeEventListener('load', innerLoad2, false);
-        testWindows.push(win);
-        SimpleTest.executeSoon(function() { aCallback(win); });
-      }, false, true);
-    }, true);
-    SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
+        win.content.addEventListener('load', function innerLoad2() {
+          win.content.removeEventListener('load', innerLoad2, false);
+          testWindows.push(win);
+          SimpleTest.executeSoon(function() { aCallback(win); });
+        }, false, true);
+      }, true);
+      SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
+    });
   }, true);
 }
 

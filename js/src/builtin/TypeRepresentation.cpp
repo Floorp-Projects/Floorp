@@ -309,9 +309,9 @@ StructTypeRepresentation::init(JSContext *cx,
 
     // We compute alignment into the field `align_` directly in the
     // loop below, but not `size_` because we have to very careful
-    // about overflow. For now, we always use a uint32_t for
+    // about overflow. For now, we always use a int32_t for
     // consistency across build environments.
-    uint32_t totalSize = 0;
+    int32_t totalSize = 0;
 
     // These will be adjusted in the loop below:
     alignment_ = 1;
@@ -324,7 +324,7 @@ StructTypeRepresentation::init(JSContext *cx,
         if (fieldTypeRepr->opaque())
             opaque_ = true;
 
-        uint32_t alignedSize = alignTo(totalSize, fieldTypeRepr->alignment());
+        int32_t alignedSize = alignTo(totalSize, fieldTypeRepr->alignment());
         if (alignedSize < totalSize) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_TYPEDOBJECT_TOO_BIG);
@@ -335,7 +335,7 @@ StructTypeRepresentation::init(JSContext *cx,
                                       fieldTypeRepr, alignedSize);
         alignment_ = js::Max(alignment_, fieldTypeRepr->alignment());
 
-        uint32_t incrementedSize = alignedSize + fieldTypeRepr->size();
+        int32_t incrementedSize = alignedSize + fieldTypeRepr->size();
         if (incrementedSize < alignedSize) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_TYPEDOBJECT_TOO_BIG);
@@ -345,7 +345,7 @@ StructTypeRepresentation::init(JSContext *cx,
         totalSize = incrementedSize;
     }
 
-    uint32_t alignedSize = alignTo(totalSize, alignment_);
+    int32_t alignedSize = alignTo(totalSize, alignment_);
     if (alignedSize < totalSize) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_TYPEDOBJECT_TOO_BIG);
