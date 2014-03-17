@@ -440,6 +440,7 @@ public:
     };
 
     size_t size() const { return m_formatter.size(); }
+    size_t allocSize() const { return m_formatter.allocSize(); }
     unsigned char *buffer() const { return m_formatter.buffer(); }
     bool oom() const { return m_formatter.oom(); }
 
@@ -3867,6 +3868,7 @@ private:
         // Administrative methods:
 
         size_t size() const { return m_buffer.size(); }
+        size_t allocSize() const { return m_buffer.allocSize(); }
         unsigned char *buffer() const { return m_buffer.buffer(); }
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
