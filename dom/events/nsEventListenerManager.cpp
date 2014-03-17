@@ -33,7 +33,7 @@
 #include "nsJSUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsCOMArray.h"
-#include "nsEventListenerService.h"
+#include "EventListenerService.h"
 #include "nsIContentSecurityPolicy.h"
 #include "xpcpublic.h"
 #include "nsSandboxFlags.h"
@@ -1190,11 +1190,11 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     }
     // EventListenerInfo is defined in XPCOM, so we have to go ahead
     // and convert to an XPCOM callback here...
-    nsRefPtr<nsEventListenerInfo> info =
-      new nsEventListenerInfo(eventType, ls.mListener.ToXPCOMCallback(),
-                              ls.mFlags.mCapture,
-                              ls.mFlags.mAllowUntrustedEvents,
-                              ls.mFlags.mInSystemGroup);
+    nsRefPtr<EventListenerInfo> info =
+      new EventListenerInfo(eventType, ls.mListener.ToXPCOMCallback(),
+                            ls.mFlags.mCapture,
+                            ls.mFlags.mAllowUntrustedEvents,
+                            ls.mFlags.mInSystemGroup);
     aList->AppendObject(info);
   }
   return NS_OK;
