@@ -13,7 +13,7 @@
         "{workdir}/sources.xml"
     ],
     "upload_platform": "emulator-ics",
-    "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
+    "gecko_l10n_root": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
     "gaia": {
         "l10n": {
             "vcs": "hgtool",
@@ -21,6 +21,6 @@
         }
     },
     "b2g_manifest": "emulator.xml",
-    "b2g_manifest_branch": "master",
+    "b2g_manifest_branch": "v1.4",
     "b2g_manifest_intree": true
 }
