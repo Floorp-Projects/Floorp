@@ -79,10 +79,10 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   bool updated = false;
   {
     // Restrict drawTarget to a scope so that terminates before Unlock.
-    RefPtr<DrawTarget> drawTarget =
-      mBuffer->AsTextureClientDrawTarget()->GetAsDrawTarget();
-    if (drawTarget) {
-      aLayer->UpdateTarget(drawTarget);
+    nsRefPtr<gfxASurface> surface =
+      mBuffer->AsTextureClientSurface()->GetAsSurface();
+    if (surface) {
+      aLayer->DeprecatedUpdateSurface(surface);
       updated = true;
     }
   }
