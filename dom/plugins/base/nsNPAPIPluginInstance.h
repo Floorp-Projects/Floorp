@@ -326,7 +326,7 @@ protected:
 
   friend class PluginEventRunnable;
 
-  nsTArray<nsRefPtr<PluginEventRunnable>> mPostedEvents;
+  nsTArray<nsCOMPtr<PluginEventRunnable>> mPostedEvents;
   void PopPostedEvent(PluginEventRunnable* r);
   void OnSurfaceTextureFrameAvailable();
 

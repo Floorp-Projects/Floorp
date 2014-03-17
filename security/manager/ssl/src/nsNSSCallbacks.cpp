@@ -59,7 +59,7 @@ public:
 
   nsNSSHttpRequestSession *mRequestSession;
   
-  nsRefPtr<nsHTTPListener> mListener;
+  nsCOMPtr<nsHTTPListener> mListener;
   bool mResponsibleForDoneSignal;
   TimeStamp mStartTime;
 };
@@ -167,7 +167,7 @@ nsHTTPDownloadEvent::Run()
 }
 
 struct nsCancelHTTPDownloadEvent : nsRunnable {
-  nsRefPtr<nsHTTPListener> mListener;
+  nsCOMPtr<nsHTTPListener> mListener;
 
   NS_IMETHOD Run() {
     mListener->FreeLoadGroup(true);

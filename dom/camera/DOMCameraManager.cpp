@@ -119,7 +119,7 @@ nsDOMCameraManager::GetCamera(const nsAString& aCamera,
     cameraId = 1;
   }
 
-  nsRefPtr<CameraErrorCallback> errorCallback = nullptr;
+  nsCOMPtr<CameraErrorCallback> errorCallback = nullptr;
   if (aOnError.WasPassed()) {
     errorCallback = &aOnError.Value();
   }

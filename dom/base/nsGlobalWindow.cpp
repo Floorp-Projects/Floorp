@@ -5033,7 +5033,7 @@ nsGlobalWindow::GetDevicePixelRatio(ErrorResult& aError)
     return 1.0;
   }
 
-  nsRefPtr<nsPresContext> presContext;
+  nsCOMPtr<nsPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (!presContext) {
     return 1.0;
