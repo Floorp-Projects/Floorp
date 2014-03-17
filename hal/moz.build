@@ -151,6 +151,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenPower.cpp',
         'fallback/FallbackSwitch.cpp',
+        'fallback/FallbackThreadPriority.cpp',
         'fallback/FallbackTime.cpp',
         'fallback/FallbackWakeLocks.cpp',
     ]
