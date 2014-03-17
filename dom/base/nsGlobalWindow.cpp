@@ -10384,12 +10384,6 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   return *aSink ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 
-JS::Value
-nsGlobalWindow::GetInterface(JSContext* aCx, nsIJSID* aIID, ErrorResult& aError)
-{
-  return dom::GetInterface(aCx, this, aIID, aError);
-}
-
 void
 nsGlobalWindow::FireOfflineStatusEvent()
 {
