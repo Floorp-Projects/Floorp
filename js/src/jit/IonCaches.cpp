@@ -6,7 +6,6 @@
 
 #include "jit/IonCaches.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/TemplateLib.h"
 
 #include "jsproxy.h"
@@ -31,7 +30,6 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::DebugOnly;
 using mozilla::tl::FloorLog2;
 
 void

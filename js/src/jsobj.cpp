@@ -66,9 +66,6 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-using js::frontend::IsIdentifier;
-using mozilla::ArrayLength;
-using mozilla::DebugOnly;
 using mozilla::Maybe;
 using mozilla::RoundUpPow2;
 
