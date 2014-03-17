@@ -11,11 +11,11 @@ let conference;
  * list results.
  *
  * Usage:
- *   let outInfo = OutCallStrPool('911');
+ *   let outInfo = outCallStrPool('911');
  *   outInfo.ringing == "outbound to 911        : ringing"
  *   outInfo.active  == "outbound to 911        : active"
  */
-function CallStrPool(prefix, number) {
+function callStrPool(prefix, number) {
   let padding = "           : ";
   let numberInfo = prefix + number + padding.substr(number.length);
 
@@ -28,12 +28,12 @@ function CallStrPool(prefix, number) {
   return info;
 }
 
-function OutCallStrPool(number) {
-  return CallStrPool("outbound to  ", number);
+function outCallStrPool(number) {
+  return callStrPool("outbound to  ", number);
 }
 
-function InCallStrPool(number) {
-  return CallStrPool("inbound from ", number);
+function inCallStrPool(number) {
+  return callStrPool("inbound from ", number);
 }
 
 function checkInitialState() {
@@ -553,6 +553,38 @@ function hangUpCallInConference(callToHangUp, autoRemovedCalls, remainedCalls,
   return deferred.promise;
 }
 
+function handleConferenceRemoveError(callToRemove) {
+  log('Handle conference remove error.');
+
+  let deferred = Promise.defer();
+
+  conference.onerror = function(evt) {
+    log('Receiving a conference error event.');
+    is(evt.name, 'removeError', 'conference removeError');
+
+    deferred.resolve();
+  }
+  conference.remove(callToRemove);
+
+  return deferred.promise;
+}
+
+function handleConferenceAddError(callToAdd) {
+  log('Handle conference add error.');
+
+  let deferred = Promise.defer();
+
+  conference.onerror = function(evt) {
+    log('Receiving a conference error event.');
+    is(evt.name, 'addError', 'conference addError');
+
+    deferred.resolve();
+  }
+  conference.add(callToAdd);
+
+  return deferred.promise;
+}
+
 /**
  * Setup a conference with an outgoing call and an incoming call.
  *
@@ -563,8 +595,8 @@ function setupConferenceTwoCalls(outNumber, inNumber) {
 
   let outCall;
   let inCall;
-  let outInfo = OutCallStrPool(outNumber);
-  let inInfo = InCallStrPool(inNumber);
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
 
   return Promise.resolve()
     .then(checkInitialState)
@@ -601,9 +633,9 @@ function setupConferenceThreeCalls(outNumber, inNumber, inNumber2) {
   let outCall;
   let inCall;
   let inCall2;
-  let outInfo = OutCallStrPool(outNumber);
-  let inInfo = InCallStrPool(inNumber);
-  let inInfo2 = InCallStrPool(inNumber2);
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
+  let inInfo2 = inCallStrPool(inNumber2);
 
   return Promise.resolve()
     .then(() => setupConferenceTwoCalls(outNumber, inNumber))
@@ -631,6 +663,77 @@ function setupConferenceThreeCalls(outNumber, inNumber, inNumber2) {
     });
 }
 
+/**
+ * Setup a conference with an outgoing call and four incoming calls.
+ *
+ * @return Promise<[outCall, inCall, inCall2, inCall3, inCall4]>
+ */
+function setupConferenceFiveCalls(outNumber, inNumber, inNumber2, inNumber3,
+                                  inNumber4) {
+  log('Create conference with five calls.');
+
+  let outCall;
+  let inCall;
+  let inCall2;
+  let inCall3;
+  let inCall4;
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
+  let inInfo2 = inCallStrPool(inNumber2);
+  let inInfo3 = inCallStrPool(inNumber3);
+  let inInfo4 = inCallStrPool(inNumber4);
+
+  return Promise.resolve()
+    .then(() => setupConferenceThreeCalls(outNumber, inNumber, inNumber2))
+    .then(calls => {
+      [outCall, inCall, inCall2] = calls;
+    })
+    .then(() => remoteDial(inNumber3))
+    .then(call => {inCall3 = call;})
+    .then(() => checkAll(conference, [inCall3], 'connected',
+                         [outCall, inCall, inCall2],
+                         [outInfo.active, inInfo.active, inInfo2.active,
+                          inInfo3.incoming]))
+    .then(() => answer(inCall3, function() {
+      checkState(inCall3, [inCall3], 'held', [outCall, inCall, inCall2]);
+    }))
+    .then(() => checkAll(inCall3, [inCall3], 'held',
+                         [outCall, inCall, inCall2],
+                         [outInfo.held, inInfo.held, inInfo2.held,
+                          inInfo3.active]))
+    .then(() => addCallsToConference([inCall3], function() {
+      checkState(conference, [], 'connected', [outCall, inCall, inCall2, inCall3]);
+    }))
+    .then(() => checkAll(conference, [], 'connected',
+                         [outCall, inCall, inCall2, inCall3],
+                         [outInfo.active, inInfo.active, inInfo2.active,
+                          inInfo3.active]))
+    .then(() => remoteDial(inNumber4))
+    .then(call => {inCall4 = call;})
+    .then(() => checkAll(conference, [inCall4], 'connected',
+                         [outCall, inCall, inCall2, inCall3],
+                         [outInfo.active, inInfo.active, inInfo2.active,
+                          inInfo3.active, inInfo4.incoming]))
+    .then(() => answer(inCall4, function() {
+      checkState(inCall4, [inCall4], 'held', [outCall, inCall, inCall2, inCall3]);
+    }))
+    .then(() => checkAll(inCall4, [inCall4], 'held',
+                         [outCall, inCall, inCall2, inCall3],
+                         [outInfo.held, inInfo.held, inInfo2.held,
+                          inInfo3.held, inInfo4.active]))
+    .then(() => addCallsToConference([inCall4], function() {
+      checkState(conference, [], 'connected', [outCall, inCall, inCall2,
+                                               inCall3, inCall4]);
+    }))
+    .then(() => checkAll(conference, [], 'connected',
+                         [outCall, inCall, inCall2, inCall3, inCall4],
+                         [outInfo.active, inInfo.active, inInfo2.active,
+                          inInfo3.active, inInfo4.active]))
+    .then(() => {
+      return [outCall, inCall, inCall2, inCall3, inCall4];
+    });
+}
+
 function testConferenceTwoCalls() {
   log('= testConferenceTwoCalls =');
 
@@ -654,8 +757,8 @@ function testConferenceHoldAndResume() {
   let inCall;
   let outNumber = "5555550101";
   let inNumber  = "5555550201";
-  let outInfo = OutCallStrPool(outNumber);
-  let inInfo = InCallStrPool(inNumber);
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
 
   return Promise.resolve()
     .then(() => setupConferenceTwoCalls(outNumber, inNumber))
@@ -684,9 +787,9 @@ function testConferenceThreeAndRemoveOne() {
   let outNumber = "5555550101";
   let inNumber  = "5555550201";
   let inNumber2 = "5555550202";
-  let outInfo = OutCallStrPool(outNumber);
-  let inInfo = InCallStrPool(inNumber);
-  let inInfo2 = InCallStrPool(inNumber2);
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
+  let inInfo2 = inCallStrPool(inNumber2);
 
   return Promise.resolve()
     .then(() => setupConferenceThreeCalls(outNumber, inNumber, inNumber2))
@@ -711,8 +814,8 @@ function testConferenceThreeAndHangupOne() {
   let outNumber = "5555550101";
   let inNumber  = "5555550201";
   let inNumber2 = "5555550202";
-  let inInfo = InCallStrPool(inNumber);
-  let inInfo2 = InCallStrPool(inNumber2);
+  let inInfo = inCallStrPool(inNumber);
+  let inInfo2 = inCallStrPool(inNumber2);
 
   return Promise.resolve()
     .then(() => setupConferenceThreeCalls(outNumber, inNumber, inNumber2))
@@ -732,8 +835,8 @@ function testConferenceTwoAndRemoveOne() {
   let inCall;
   let outNumber = "5555550101";
   let inNumber  = "5555550201";
-  let outInfo = OutCallStrPool(outNumber);
-  let inInfo = InCallStrPool(inNumber);
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
 
   return Promise.resolve()
     .then(() => setupConferenceTwoCalls(outNumber, inNumber))
@@ -755,7 +858,7 @@ function testConferenceTwoAndHangupOne() {
   let inCall;
   let outNumber = "5555550101";
   let inNumber  = "5555550201";
-  let inInfo = InCallStrPool(inNumber);
+  let inInfo = inCallStrPool(inNumber);
 
   return Promise.resolve()
     .then(() => setupConferenceTwoCalls(outNumber, inNumber))
@@ -769,6 +872,81 @@ function testConferenceTwoAndHangupOne() {
     .then(() => remoteHangUpCalls([inCall]));
 }
 
+function testConferenceRemoveError() {
+  log('= testConferenceRemoveError =');
+
+  let outCall;
+  let inCall;
+  let inCall2;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+  let inNumber2 = "5555550202";
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
+  let inInfo2 = inCallStrPool(inNumber2);
+
+  return Promise.resolve()
+    .then(() => setupConferenceTwoCalls(outNumber, inNumber))
+    .then(calls => {
+      [outCall, inCall] = calls;
+    })
+    .then(() => remoteDial(inNumber2))
+    .then(call => {inCall2 = call;})
+    .then(() => checkAll(conference, [inCall2], 'connected', [outCall, inCall],
+                         [outInfo.active, inInfo.active, inInfo2.incoming]))
+    .then(() => answer(inCall2, function() {
+      checkState(inCall2, [inCall2], 'held', [outCall, inCall]);
+    }))
+    .then(() => checkAll(inCall2, [inCall2], 'held', [outCall, inCall],
+                         [outInfo.held, inInfo.held, inInfo2.active]))
+    .then(() => resumeConference([outCall, inCall], function() {
+      checkState(conference, [inCall2], 'connected', [outCall, inCall]);
+    }))
+    // Not allowed to remove a call when there are one connected and one held
+    // calls.
+    .then(() => handleConferenceRemoveError(outCall))
+    .then(() => remoteHangUpCalls([outCall, inCall, inCall2]));
+}
+
+function testConferenceAddError() {
+  log('= testConferenceAddError =');
+
+  let outCall, inCall, inCall2, inCall3, inCall4, inCall5;
+  let outNumber = "5555550101";
+  let inNumber  = "5555550201";
+  let inNumber2 = "5555550202";
+  let inNumber3 = "5555550203";
+  let inNumber4 = "5555550204";
+  let inNumber5 = "5555550205";
+  let outInfo = outCallStrPool(outNumber);
+  let inInfo = inCallStrPool(inNumber);
+  let inInfo2 = inCallStrPool(inNumber2);
+  let inInfo3 = inCallStrPool(inNumber3);
+  let inInfo4 = inCallStrPool(inNumber4);
+  let inInfo5 = inCallStrPool(inNumber5);
+
+  return Promise.resolve()
+    .then(() => setupConferenceFiveCalls(outNumber, inNumber, inNumber2,
+                                         inNumber3, inNumber4))
+    .then(calls => {
+      [outCall, inCall, inCall2, inCall3, inCall4] = calls;
+    })
+    .then(() => remoteDial(inNumber5))
+    .then(call => {inCall5 = call;})
+    .then(() => answer(inCall5, function() {
+      checkState(inCall5, [inCall5], 'held',
+                 [outCall, inCall, inCall2, inCall3, inCall4]);
+    }))
+    .then(() => checkAll(inCall5, [inCall5], 'held',
+                         [outCall, inCall, inCall2, inCall3, inCall4],
+                         [outInfo.held, inInfo.held, inInfo2.held,
+                          inInfo3.held, inInfo4.held, inInfo5.active]))
+    // Maximum number of conference participants is 5.
+    .then(() => handleConferenceAddError(inCall5))
+    .then(() => remoteHangUpCalls([outCall, inCall, inCall2, inCall3, inCall4,
+                                   inCall5]));
+}
+
 // Start the test
 startTest(function() {
   conference = telephony.conferenceGroup;
@@ -780,6 +958,8 @@ startTest(function() {
     .then(testConferenceThreeAndHangupOne)
     .then(testConferenceTwoAndRemoveOne)
     .then(testConferenceTwoAndHangupOne)
+    .then(testConferenceRemoveError)
+    .then(testConferenceAddError)
     .then(null, error => {
       ok(false, 'promise rejects during test.');
     })
