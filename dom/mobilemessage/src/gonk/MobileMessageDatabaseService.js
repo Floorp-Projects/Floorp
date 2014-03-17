@@ -99,6 +99,10 @@ MobileMessageDatabaseService.prototype = {
     return this.mmdb.translateCrErrorToMessageCallbackError(aCrError);
   },
 
+  saveSmsSegment: function(aSmsSegment, aCallback) {
+    this.mmdb.saveSmsSegment(aSmsSegment, aCallback);
+  },
+
   /**
    * nsIMobileMessageDatabaseService API
    */

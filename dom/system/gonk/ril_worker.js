@@ -213,7 +213,6 @@ function RilObject(aContext) {
   this.currentCalls = {};
   this.currentConference = {state: null, participants: {}};
   this.currentDataCalls = {};
-  this._receivedSmsSegmentsMap = {};
   this._pendingSentSmsMap = {};
   this.pendingNetworkType = {};
   this._receivedSmsCbPagesMap = {};
@@ -242,13 +241,6 @@ RilObject.prototype = {
    * Existing data calls.
    */
   currentDataCalls: null,
-
-  /**
-   * Hash map for received multipart sms fragments. Messages are hashed with
-   * its sender address and concatenation reference number. Three additional
-   * attributes `segmentMaxSeq`, `receivedSegments`, `segments` are inserted.
-   */
-  _receivedSmsSegmentsMap: null,
 
   /**
    * Outgoing messages waiting for SMS-STATUS-REPORT.
@@ -378,7 +370,7 @@ RilObject.prototype = {
       this.deactivateDataCall(datacall);
     }
 
-    // Don't clean up this._receivedSmsSegmentsMap or this._pendingSentSmsMap
+    // Don't clean up this._pendingSentSmsMap
     // because on rild restart: we may continue with the pending segments.
 
     /**
@@ -1812,6 +1804,15 @@ RilObject.prototype = {
     Buf.writeInt32(success ? 0 : 1);
     Buf.writeInt32(cause);
     Buf.sendParcel();
+  },
+
+  /**
+   * Update received MWI into EF_MWIS.
+   */
+  updateMwis: function(options) {
+    if (this.context.ICCUtilsHelper.isICCServiceAvailable("MWIS")) {
+      this.context.SimRecordHelper.updateMWIS(options.mwi);
+    }
   },
 
   setCellBroadcastDisabled: function(options) {
@@ -4396,55 +4397,19 @@ RilObject.prototype = {
   },
 
   /**
-   * Helper for processing multipart SMS.
+   * Helper to delegate the received sms segment to RadioInterface to process.
    *
    * @param message
    *        Received sms message.
    *
-   * @return A failure cause defined in 3GPP 23.040 clause 9.2.3.22.
+   * @return MOZ_FCS_WAIT_FOR_EXPLICIT_ACK
    */
   _processSmsMultipart: function(message) {
-    if (message.header && message.header.segmentMaxSeq &&
-        (message.header.segmentMaxSeq > 1)) {
-      message = this._processReceivedSmsSegment(message);
-    } else {
-      if (message.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
-        message.fullData = message.data;
-        delete message.data;
-      } else {
-        message.fullBody = message.body;
-        delete message.body;
-      }
-    }
+    message.rilMessageType = "sms-received";
 
-    if (message) {
-      message.result = PDU_FCS_OK;
-      if (message.messageClass == GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]) {
-        // `MS shall ensure that the message has been to the SMS data field in
-        // the (U)SIM before sending an ACK to the SC.`  ~ 3GPP 23.038 clause 4
-        message.result = PDU_FCS_RESERVED;
-      }
+    this.sendChromeMessage(message);
 
-      if (message.messageType == PDU_CDMA_MSG_TYPE_BROADCAST) {
-        message.rilMessageType = "broadcastsms-received";
-      } else {
-        message.rilMessageType = "sms-received";
-      }
-
-      this.sendChromeMessage(message);
-
-      // Update MWI Status into ICC if present.
-      if (message.mwi &&
-          this.context.ICCUtilsHelper.isICCServiceAvailable("MWIS")) {
-        this.context.SimRecordHelper.updateMWIS(message.mwi);
-      }
-
-      // We will acknowledge receipt of the SMS after we try to store it
-      // in the database.
-      return MOZ_FCS_WAIT_FOR_EXPLICIT_ACK;
-    }
-
-    return PDU_FCS_OK;
+    return MOZ_FCS_WAIT_FOR_EXPLICIT_ACK;
   },
 
   /**
@@ -4601,95 +4566,6 @@ RilObject.prototype = {
     message.data = message.data.subarray(index);
 
     return this._processSmsMultipart(message);
-  },
-
-  /**
-   * Helper for processing received multipart SMS.
-   *
-   * @return null for handled segments, and an object containing full message
-   *         body/data once all segments are received.
-   */
-  _processReceivedSmsSegment: function(original) {
-    let hash = original.sender + ":" + original.header.segmentRef;
-    let seq = original.header.segmentSeq;
-
-    let options = this._receivedSmsSegmentsMap[hash];
-    if (!options) {
-      options = original;
-      this._receivedSmsSegmentsMap[hash] = options;
-
-      options.segmentMaxSeq = original.header.segmentMaxSeq;
-      options.receivedSegments = 0;
-      options.segments = [];
-    } else if (options.segments[seq]) {
-      // Duplicated segment?
-      if (DEBUG) {
-        this.context.debug("Got duplicated segment no." + seq +
-                           " of a multipart SMS: " + JSON.stringify(original));
-      }
-      return null;
-    }
-
-    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
-      options.segments[seq] = original.data;
-      delete original.data;
-    } else {
-      options.segments[seq] = original.body;
-      delete original.body;
-    }
-    options.receivedSegments++;
-
-    // The port information is only available in 1st segment for CDMA WAP Push.
-    // If the segments of a WAP Push are not received in sequence
-    // (e.g., SMS with seq == 1 is not the 1st segment received by the device),
-    // we have to retrieve the port information from 1st segment and
-    // save it into the cached options.header.
-    if (original.teleservice === PDU_CDMA_MSG_TELESERIVCIE_ID_WAP && seq === 1) {
-      if (!options.header.originatorPort && original.header.originatorPort) {
-        options.header.originatorPort = original.header.originatorPort;
-      }
-
-      if (!options.header.destinationPort && original.header.destinationPort) {
-        options.header.destinationPort = original.header.destinationPort;
-      }
-    }
-
-    if (options.receivedSegments < options.segmentMaxSeq) {
-      if (DEBUG) {
-        this.context.debug("Got segment no." + seq + " of a multipart SMS: " +
-                           JSON.stringify(options));
-      }
-      return null;
-    }
-
-    // Remove from map
-    delete this._receivedSmsSegmentsMap[hash];
-
-    // Rebuild full body
-    if (options.encoding == PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
-      // Uint8Array doesn't have `concat`, so we have to merge all segements
-      // by hand.
-      let fullDataLen = 0;
-      for (let i = 1; i <= options.segmentMaxSeq; i++) {
-        fullDataLen += options.segments[i].length;
-      }
-
-      options.fullData = new Uint8Array(fullDataLen);
-      for (let d= 0, i = 1; i <= options.segmentMaxSeq; i++) {
-        let data = options.segments[i];
-        for (let j = 0; j < data.length; j++) {
-          options.fullData[d++] = data[j];
-        }
-      }
-    } else {
-      options.fullBody = options.segments.join("");
-    }
-
-    if (DEBUG) {
-      this.context.debug("Got full multipart SMS: " + JSON.stringify(options));
-    }
-
-    return options;
   },
 
   /**
@@ -7618,24 +7494,24 @@ GsmPDUHelperObject.prototype = {
       // D:DELIVER, DR:DELIVER-REPORT, S:SUBMIT, SR:SUBMIT-REPORT,
       // ST:STATUS-REPORT, C:COMMAND
       // M:Mandatory, O:Optional, X:Unavailable
-      //                  D  DR S  SR ST C
-      SMSC:      null, // M  M  M  M  M  M
-      mti:       null, // M  M  M  M  M  M
-      udhi:      null, // M  M  O  M  M  M
-      sender:    null, // M  X  X  X  X  X
-      recipient: null, // X  X  M  X  M  M
-      pid:       null, // M  O  M  O  O  M
-      epid:      null, // M  O  M  O  O  M
-      dcs:       null, // M  O  M  O  O  X
-      mwi:       null, // O  O  O  O  O  O
-      replace:  false, // O  O  O  O  O  O
-      header:    null, // M  M  O  M  M  M
-      body:      null, // M  O  M  O  O  O
-      data:      null, // M  O  M  O  O  O
-      timestamp: null, // M  X  X  X  X  X
-      status:    null, // X  X  X  X  M  X
-      scts:      null, // X  X  X  M  M  X
-      dt:        null, // X  X  X  X  M  X
+      //                          D  DR S  SR ST C
+      SMSC:              null, // M  M  M  M  M  M
+      mti:               null, // M  M  M  M  M  M
+      udhi:              null, // M  M  O  M  M  M
+      sender:            null, // M  X  X  X  X  X
+      recipient:         null, // X  X  M  X  M  M
+      pid:               null, // M  O  M  O  O  M
+      epid:              null, // M  O  M  O  O  M
+      dcs:               null, // M  O  M  O  O  X
+      mwi:               null, // O  O  O  O  O  O
+      replace:          false, // O  O  O  O  O  O
+      header:            null, // M  M  O  M  M  M
+      body:              null, // M  O  M  O  O  O
+      data:              null, // M  O  M  O  O  O
+      sentTimestamp:     null, // M  X  X  X  X  X
+      status:            null, // X  X  X  X  M  X
+      scts:              null, // X  X  X  M  M  X
+      dt:                null, // X  X  X  X  M  X
     };
 
     // SMSC info
@@ -8904,7 +8780,7 @@ CdmaPDUHelperObject.prototype = {
       header:           message.header,
       body:             message.body,
       data:             message.data,
-      timestamp:        message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
+      sentTimestamp:    message[PDU_CDMA_MSG_USERDATA_TIMESTAMP],
       language:         message[PDU_CDMA_LANGUAGE_INDICATOR],
       status:           null,
       scts:             null,

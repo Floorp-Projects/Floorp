@@ -28,12 +28,20 @@ function checkComplete() {
 
   SimpleTest.finish();
 }
- 
+
+function removeNode(v) {
+  v.removeEventListener("error", loadError, false);
+  v.removeEventListener("loadedmetadata", loadedMetadata, false);
+  v.remove();
+  v.src = "";
+}
+
 function loadError(evt) {
   // If no referer is sent then the sjs returns an error
   ok(false, "check referer is sent with media request");
   evt.target._complete = true;
   checkComplete();
+  removeNode(evt.target);
 }
 
 function loadedMetadata(evt) {
@@ -41,6 +49,7 @@ function loadedMetadata(evt) {
   ok(true, "check referer is sent with media request");
   evt.target._complete = true;
   checkComplete();
+  removeNode(evt.target);
 }
 
 // Create all media objects.
@@ -56,6 +65,8 @@ for (var i=0; i<gSmallTests.length; ++i) {
   if (!v.canPlayType(test.type)) {
     continue;
   }
+  // ensure metadata is loaded for default preload is none on b2g 
+  v.preload = "metadata";
   v._complete = false;
   v.addEventListener("error", loadError, false);
   v.addEventListener("loadedmetadata", loadedMetadata, false);
