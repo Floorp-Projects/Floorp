@@ -265,6 +265,11 @@
     z-index: -1;
   }
 
+  /* Work around bug 940455: */
+  #TabsToolbar[draggingtab]:not(:-moz-lwtheme)::after {
+    -moz-margin-end: 140px;
+  }
+
   /* Need to constrain the glass fog to avoid overlapping layers, see bug 886281. */
   #navigator-toolbox:not(:-moz-lwtheme) {
     overflow: -moz-hidden-unscrollable;
