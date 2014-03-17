@@ -1905,6 +1905,8 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   this.portAddressedSmsApps = {};
   this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
 
+  this._receivedSmsSegmentsMap = {};
+
   this._sntp = new Sntp(this.setClockBySntp.bind(this),
                         Services.prefs.getIntPref("network.sntp.maxRetryCount"),
                         Services.prefs.getIntPref("network.sntp.refreshPeriod"),
@@ -2207,13 +2209,8 @@ RadioInterface.prototype = {
                                        this.clientId, message);
         break;
       case "sms-received":
-        let ackOk = this.handleSmsReceived(message);
-        // Note: ACK has been done by modem for NEW_SMS_ON_SIM
-        if (ackOk && message.simStatus === undefined) {
-          this.workerMessenger.send("ackSMS", { result: RIL.PDU_FCS_OK });
-        }
-        return;
-      case "broadcastsms-received":
+        this.handleSmsMultipart(message);
+        break;
       case "cellbroadcast-received":
         message.timestamp = Date.now();
         gMessageManager.sendCellBroadcastMessage("RIL:CellBroadcastReceived",
@@ -2719,9 +2716,9 @@ RadioInterface.prototype = {
     let options = {
       bearer: WAP.WDP_BEARER_GSM_SMS_GSM_MSISDN,
       sourceAddress: message.sender,
-      sourcePort: message.header.originatorPort,
+      sourcePort: message.originatorPort,
       destinationAddress: this.rilContext.iccInfo.msisdn,
-      destinationPort: message.header.destinationPort,
+      destinationPort: message.destinationPort,
       serviceId: this.clientId
     };
     WAP.WapPushManager.receiveWdpPDU(message.fullData, message.fullData.length,
@@ -2767,23 +2764,7 @@ RadioInterface.prototype = {
   _smsHandledWakeLock: null,
   _smsHandledWakeLockTimer: null,
 
-  _releaseSmsHandledWakeLock: function() {
-    if (DEBUG) this.debug("Releasing the CPU wake lock for handling SMS.");
-    if (this._smsHandledWakeLockTimer) {
-      this._smsHandledWakeLockTimer.cancel();
-    }
-    if (this._smsHandledWakeLock) {
-      this._smsHandledWakeLock.unlock();
-      this._smsHandledWakeLock = null;
-    }
-  },
-
-  portAddressedSmsApps: null,
-  handleSmsReceived: function(message) {
-    if (DEBUG) this.debug("handleSmsReceived: " + JSON.stringify(message));
-
-    // We need to acquire a CPU wake lock to avoid the system falling into
-    // the sleep mode when the RIL handles the received SMS.
+  _acquireSmsHandledWakeLock: function() {
     if (!this._smsHandledWakeLock) {
       if (DEBUG) this.debug("Acquiring a CPU wake lock for handling SMS.");
       this._smsHandledWakeLock = gPowerManagerService.newWakeLock("cpu");
@@ -2798,17 +2779,251 @@ RadioInterface.prototype = {
         .initWithCallback(this._releaseSmsHandledWakeLock.bind(this),
                           SMS_HANDLED_WAKELOCK_TIMEOUT,
                           Ci.nsITimer.TYPE_ONE_SHOT);
+  },
 
-    // FIXME: Bug 737202 - Typed arrays become normal arrays when sent to/from workers
-    if (message.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
-      message.fullData = new Uint8Array(message.fullData);
+  _releaseSmsHandledWakeLock: function() {
+    if (DEBUG) this.debug("Releasing the CPU wake lock for handling SMS.");
+    if (this._smsHandledWakeLockTimer) {
+      this._smsHandledWakeLockTimer.cancel();
+    }
+    if (this._smsHandledWakeLock) {
+      this._smsHandledWakeLock.unlock();
+      this._smsHandledWakeLock = null;
+    }
+  },
+
+  /**
+   * Hash map for received multipart sms fragments. Messages are hashed with
+   * its sender address and concatenation reference number. Three additional
+   * attributes `segmentMaxSeq`, `receivedSegments`, `segments` are inserted.
+   */
+  _receivedSmsSegmentsMap: null,
+
+  /**
+   * Helper for processing received multipart SMS.
+   *
+   * @return null for handled segments, and an object containing full message
+   *         body/data once all segments are received.
+   */
+  _processReceivedSmsSegment: function(aSegment) {
+
+    // Directly replace full message body for single SMS.
+    if (!(aSegment.segmentMaxSeq && (aSegment.segmentMaxSeq > 1))) {
+      if (aSegment.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+        aSegment.fullData = aSegment.data;
+      } else {
+        aSegment.fullBody = aSegment.body;
+      }
+      return aSegment;
+    }
+
+    // Handle Concatenation for Class 0 SMS
+    let hash = aSegment.sender + ":" +
+               aSegment.segmentRef + ":" +
+               aSegment.segmentMaxSeq;
+    let seq = aSegment.segmentSeq;
+
+    let options = this._receivedSmsSegmentsMap[hash];
+    if (!options) {
+      options = aSegment;
+      this._receivedSmsSegmentsMap[hash] = options;
+
+      options.receivedSegments = 0;
+      options.segments = [];
+    } else if (options.segments[seq]) {
+      // Duplicated segment?
+      if (DEBUG) {
+        this.debug("Got duplicated segment no." + seq +
+                           " of a multipart SMS: " + JSON.stringify(aSegment));
+      }
+      return null;
+    }
+
+    if (options.receivedSegments > 0) {
+      // Update received timestamp.
+      options.timestamp = aSegment.timestamp;
+    }
+
+    if (options.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      options.segments[seq] = aSegment.data;
+    } else {
+      options.segments[seq] = aSegment.body;
+    }
+    options.receivedSegments++;
+
+    // The port information is only available in 1st segment for CDMA WAP Push.
+    // If the segments of a WAP Push are not received in sequence
+    // (e.g., SMS with seq == 1 is not the 1st segment received by the device),
+    // we have to retrieve the port information from 1st segment and
+    // save it into the cached options.
+    if (aSegment.teleservice === RIL.PDU_CDMA_MSG_TELESERIVCIE_ID_WAP
+        && seq === 1) {
+      if (!options.originatorPort && aSegment.originatorPort) {
+        options.originatorPort = aSegment.originatorPort;
+      }
+
+      if (!options.destinationPort && aSegment.destinationPort) {
+        options.destinationPort = aSegment.destinationPort;
+      }
+    }
+
+    if (options.receivedSegments < options.segmentMaxSeq) {
+      if (DEBUG) {
+        this.debug("Got segment no." + seq + " of a multipart SMS: " +
+                           JSON.stringify(options));
+      }
+      return null;
+    }
+
+    // Remove from map
+    delete this._receivedSmsSegmentsMap[hash];
+
+    // Rebuild full body
+    if (options.encoding == RIL.PDU_DCS_MSG_CODING_8BITS_ALPHABET) {
+      // Uint8Array doesn't have `concat`, so we have to merge all segements
+      // by hand.
+      let fullDataLen = 0;
+      for (let i = 1; i <= options.segmentMaxSeq; i++) {
+        fullDataLen += options.segments[i].length;
+      }
+
+      options.fullData = new Uint8Array(fullDataLen);
+      for (let d= 0, i = 1; i <= options.segmentMaxSeq; i++) {
+        let data = options.segments[i];
+        for (let j = 0; j < data.length; j++) {
+          options.fullData[d++] = data[j];
+        }
+      }
+    } else {
+      options.fullBody = options.segments.join("");
+    }
+
+    // Remove handy fields after completing the concatenation.
+    delete options.receivedSegments;
+    delete options.segments;
+
+    if (DEBUG) {
+      this.debug("Got full multipart SMS: " + JSON.stringify(options));
+    }
+
+    return options;
+  },
+
+  /**
+   * Helper to create Savable SmsSegment.
+   */
+  _createSavableSmsSegment: function(aMessage) {
+    // We precisely define what data fields to be stored into
+    // DB here for better data migration.
+    let segment = {};
+    segment.messageType = aMessage.messageType;
+    segment.teleservice = aMessage.teleservice;
+    segment.SMSC = aMessage.SMSC;
+    segment.sentTimestamp = aMessage.sentTimestamp;
+    segment.timestamp = Date.now();
+    segment.sender = aMessage.sender;
+    segment.pid = aMessage.pid;
+    segment.encoding = aMessage.encoding;
+    segment.messageClass = aMessage.messageClass;
+    segment.iccId = this.getIccId();
+    if (aMessage.header) {
+      segment.segmentRef = aMessage.header.segmentRef;
+      segment.segmentSeq = aMessage.header.segmentSeq;
+      segment.segmentMaxSeq = aMessage.header.segmentMaxSeq;
+      segment.originatorPort = aMessage.header.originatorPort;
+      segment.destinationPort = aMessage.header.destinationPort;
+    }
+    segment.mwiPresent = (aMessage.mwi)? true: false;
+    segment.mwiDiscard = (segment.mwiPresent)? aMessage.mwi.discard: false;
+    segment.mwiMsgCount = (segment.mwiPresent)? aMessage.mwi.msgCount: 0;
+    segment.mwiActive = (segment.mwiPresent)? aMessage.mwi.active: false;
+    segment.serviceCategory = aMessage.serviceCategory;
+    segment.language = aMessage.language;
+    segment.data = aMessage.data;
+    segment.body = aMessage.body;
+
+    return segment;
+  },
+
+  /**
+   * Helper to purge complete message.
+   *
+   * We remove unnessary fields defined in _createSavableSmsSegment() after
+   * completing the concatenation.
+   */
+  _purgeCompleteSmsMessage: function(aMessage) {
+    // Purge concatenation info
+    delete aMessage.segmentRef;
+    delete aMessage.segmentSeq;
+    delete aMessage.segmentMaxSeq;
+
+    // Purge partial message body
+    delete aMessage.data;
+    delete aMessage.body;
+  },
+
+  /**
+   * handle concatenation of received SMS.
+   */
+  handleSmsMultipart: function(aMessage) {
+    if (DEBUG) this.debug("handleSmsMultipart: " + JSON.stringify(aMessage));
+
+    this._acquireSmsHandledWakeLock();
+
+    let segment = this._createSavableSmsSegment(aMessage);
+
+    let isMultipart = (segment.segmentMaxSeq && (segment.segmentMaxSeq > 1));
+    let messageClass = segment.messageClass;
+
+    let handleReceivedAndAck = function(aRvOfIncompleteMsg, aCompleteMessage) {
+      if (aCompleteMessage) {
+        this._purgeCompleteSmsMessage(aCompleteMessage);
+        if (this.handleSmsReceived(aCompleteMessage)) {
+          this.sendAckSms(Cr.NS_OK, aCompleteMessage);
+        }
+        // else Ack will be sent after further process in handleSmsReceived.
+      } else {
+        this.sendAckSms(aRvOfIncompleteMsg, segment);
+      }
+    }.bind(this);
+
+    // No need to access SmsSegmentStore for Class 0 SMS and Single SMS.
+    if (!isMultipart ||
+        (messageClass == RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_0])) {
+      // `When a mobile terminated message is class 0 and the MS has the
+      // capability of displaying short messages, the MS shall display the
+      // message immediately and send an acknowledgement to the SC when the
+      // message has successfully reached the MS irrespective of whether
+      // there is memory available in the (U)SIM or ME. The message shall
+      // not be automatically stored in the (U)SIM or ME.`
+      // ~ 3GPP 23.038 clause 4
+
+      handleReceivedAndAck(Cr.NS_OK,  // ACK OK For Incomplete Class 0
+                           this._processReceivedSmsSegment(segment));
+    } else {
+      gMobileMessageDatabaseService
+        .saveSmsSegment(segment, function notifyResult(aRv, aCompleteMessage) {
+        handleReceivedAndAck(aRv,  // Ack according to the result after saving
+                             aCompleteMessage);
+      });
+    }
+  },
+
+  portAddressedSmsApps: null,
+  handleSmsReceived: function(message) {
+    if (DEBUG) this.debug("handleSmsReceived: " + JSON.stringify(message));
+
+    if (message.messageType == RIL.PDU_CDMA_MSG_TYPE_BROADCAST) {
+      gMessageManager.sendCellBroadcastMessage("RIL:CellBroadcastReceived",
+                                               this.clientId, message);
+      return true;
     }
 
     // Dispatch to registered handler if application port addressing is
     // available. Note that the destination port can possibly be zero when
     // representing a UDP/TCP port.
-    if (message.header && message.header.destinationPort != null) {
-      let handler = this.portAddressedSmsApps[message.header.destinationPort];
+    if (message.destinationPort != null) {
+      let handler = this.portAddressedSmsApps[message.destinationPort];
       if (handler) {
         handler(message);
       }
@@ -2824,8 +3039,6 @@ RadioInterface.prototype = {
     message.sender = message.sender || null;
     message.receiver = this.getPhoneNumber();
     message.body = message.fullBody = message.fullBody || null;
-    message.timestamp = Date.now();
-    message.iccId = this.getIccId();
 
     if (gSmsService.isSilentNumber(message.sender)) {
       message.id = -1;
@@ -2855,8 +3068,14 @@ RadioInterface.prototype = {
       return true;
     }
 
-    let mwi = message.mwi;
-    if (mwi) {
+    if (message.mwiPresent) {
+      let mwi = {
+        discard: message.mwiDiscard,
+        msgCount: message.mwiMsgCount,
+        active: message.mwiActive
+      };
+      this.workerMessenger.send("updateMwis", { mwi: mwi });
+
       mwi.returnNumber = message.sender;
       mwi.returnMessage = message.fullBody;
       gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
@@ -2864,7 +3083,7 @@ RadioInterface.prototype = {
 
       // Dicarded MWI comes without text body.
       // Hence, we discard it here after notifying the MWI status.
-      if (mwi.discard) {
+      if (message.mwiDiscard) {
         return true;
       }
     }
@@ -2872,14 +3091,7 @@ RadioInterface.prototype = {
     let notifyReceived = function notifyReceived(rv, domMessage) {
       let success = Components.isSuccessCode(rv);
 
-      // Acknowledge the reception of the SMS.
-      // Note: Ack has been done by modem for NEW_SMS_ON_SIM
-      if (message.simStatus === undefined) {
-        this.workerMessenger.send("ackSMS", {
-          result: (success ? RIL.PDU_FCS_OK
-                           : RIL.PDU_FCS_MEMORY_CAPACITY_EXCEEDED)
-        });
-      }
+      this.sendAckSms(rv, message);
 
       if (!success) {
         // At this point we could send a message to content to notify the user
@@ -2924,6 +3136,26 @@ RadioInterface.prototype = {
 
     // SMS ACK will be sent in notifyReceived. Return false here.
     return false;
+  },
+
+  /**
+   * Handle ACK response of received SMS.
+   */
+  sendAckSms: function(aRv, aMessage) {
+    if (aMessage.messageClass === RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_2]) {
+      return;
+    }
+
+    let result = RIL.PDU_FCS_OK;
+    if (!Components.isSuccessCode(aRv)) {
+      if (DEBUG) this.debug("Failed to handle received sms: " + aRv);
+      result = (aRv === Cr.NS_ERROR_FILE_NO_DEVICE_SPACE)
+                ? RIL.PDU_FCS_MEMORY_CAPACITY_EXCEEDED
+                : RIL.PDU_FCS_UNSPECIFIED;
+    }
+
+    this.workerMessenger.send("ackSMS", { result: result });
+
   },
 
   /**
