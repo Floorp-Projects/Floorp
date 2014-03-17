@@ -3786,6 +3786,8 @@
           if (this.getAttribute("movingtab") != "true") {
             this.setAttribute("movingtab", "true");
             this.selectedItem = draggedTab;
+            let tabdragevent = new CustomEvent("tabdragstart", {bubbles: true, detail: draggedTab});
+            this.dispatchEvent(tabdragevent);
           }
 
           if (!("animLastScreenX" in draggedTab._dragData))
@@ -3887,6 +3889,8 @@
             tab.style.transform = "";
 
           this.removeAttribute("movingtab");
+          let tabdragevent = new CustomEvent("tabdragstop", {bubbles: true});
+          this.dispatchEvent(tabdragevent);
 
           this._handleTabSelect();
         ]]></body>
