@@ -19,6 +19,9 @@ function test()
   let nodes;
   let cursor;
   let inspector;
+  let target;
+  let panel;
+  let container;
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
@@ -43,6 +46,9 @@ function test()
   function runTests(aInspector)
   {
     inspector = aInspector;
+    target = TargetFactory.forTab(gBrowser.selectedTab);
+    panel = gDevTools.getToolbox(target).getPanel("inspector");
+    container = panel.panelDoc.getElementById("inspector-breadcrumbs");
     cursor = 0;
     inspector.on("breadcrumbs-updated", nodeSelected);
     executeSoon(function() {
@@ -69,9 +75,6 @@ function test()
 
   function performTest()
   {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    let panel = gDevTools.getToolbox(target).getPanel("inspector");
-    let container = panel.panelDoc.getElementById("inspector-breadcrumbs");
     let buttonsLabelIds = nodes[cursor].result.split(" ");
 
     // html > body > …

@@ -8,7 +8,7 @@ const {Cu} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-var promise = require("sdk/core/promise");
+var {Promise: promise} = require("resource://gre/modules/Promise.jsm");
 var EventEmitter = require("devtools/toolkit/event-emitter");
 var Telemetry = require("devtools/shared/telemetry");
 

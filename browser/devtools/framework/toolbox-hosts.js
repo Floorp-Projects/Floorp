@@ -5,10 +5,8 @@
 "use strict";
 
 const {Cu} = require("chrome");
-
-let promise = require("sdk/core/promise");
-let EventEmitter = require("devtools/toolkit/event-emitter");
-
+const EventEmitter = require("devtools/toolkit/event-emitter");
+const {Promise: promise} = require("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 
@@ -217,6 +215,7 @@ WindowHost.prototype = {
 
     let frameLoad = function(event) {
       win.removeEventListener("load", frameLoad, true);
+      win.focus();
       this.frame = win.document.getElementById("toolbox-iframe");
       this.emit("ready", this.frame);
 
@@ -225,8 +224,6 @@ WindowHost.prototype = {
 
     win.addEventListener("load", frameLoad, true);
     win.addEventListener("unload", this._boundUnload);
-
-    win.focus();
 
     this._window = win;
 
