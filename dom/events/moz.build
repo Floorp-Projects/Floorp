@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'content_events'
 
 EXPORTS += [
-    'nsAsyncDOMEvent.h',
     'nsDOMEventTargetHelper.h',
     'nsDOMKeyNameList.h',
     'nsEventDispatcher.h',
@@ -26,6 +25,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'AsyncEventDispatcher.h',
     'EventListenerManager.h',
     'IMEStateManager.h',
     'InternalMutationEvent.h',
@@ -67,6 +67,7 @@ if CONFIG['MOZ_WEBSPEECH']:
 
 UNIFIED_SOURCES += [
     'AnimationEvent.cpp',
+    'AsyncEventDispatcher.cpp',
     'BeforeUnloadEvent.cpp',
     'ClipboardEvent.cpp',
     'CommandEvent.cpp',
@@ -90,7 +91,6 @@ UNIFIED_SOURCES += [
     'MutationEvent.cpp',
     'NotifyAudioAvailableEvent.cpp',
     'NotifyPaintEvent.cpp',
-    'nsAsyncDOMEvent.cpp',
     'nsDOMEventTargetHelper.cpp',
     'nsEventDispatcher.cpp',
     'nsJSEventListener.cpp',
