@@ -25,7 +25,6 @@
 #include "nsNodeUtils.h"
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
-#include "nsAsyncDOMEvent.h"
 #include "nsWrapperCacheInlines.h"
 
 nsIAttribute::nsIAttribute(nsDOMAttributeMap* aAttrMap,

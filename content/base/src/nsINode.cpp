@@ -13,6 +13,7 @@
 #include "AccessCheck.h"
 #include "jsapi.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
@@ -22,7 +23,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ShadowRoot.h"
-#include "nsAsyncDOMEvent.h"
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
@@ -1442,7 +1442,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, uint32_t aIndex,
       mutation.mRelatedNode = do_QueryInterface(this);
 
       mozAutoSubtreeModified subtree(OwnerDoc(), this);
-      (new nsAsyncDOMEvent(aKid, mutation))->RunDOMEventWhenSafe();
+      (new AsyncEventDispatcher(aKid, mutation))->RunDOMEventWhenSafe();
     }
   }
 
