@@ -7,6 +7,7 @@
 #ifndef _NSNSSCALLBACKS_H_
 #define _NSNSSCALLBACKS_H_
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "pk11func.h"
 #include "nspr.h"
@@ -120,7 +121,7 @@ public:
   
   PRIntervalTime mTimeoutInterval;
   
-  nsCOMPtr<nsHTTPListener> mListener;
+  nsRefPtr<nsHTTPListener> mListener;
   
 protected:
   nsNSSHttpRequestSession();
