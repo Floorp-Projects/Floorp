@@ -7,8 +7,6 @@
 #ifndef vm_StringBuffer_h
 #define vm_StringBuffer_h
 
-#include "mozilla/DebugOnly.h"
-
 #include "jscntxt.h"
 
 #include "js/Vector.h"

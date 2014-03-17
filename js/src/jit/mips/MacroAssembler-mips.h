@@ -7,8 +7,6 @@
 #ifndef jit_mips_MacroAssembler_mips_h
 #define jit_mips_MacroAssembler_mips_h
 
-#include "mozilla/DebugOnly.h"
-
 #include "jsopcode.h"
 
 #include "jit/IonCaches.h"
@@ -16,11 +14,8 @@
 #include "jit/mips/Assembler-mips.h"
 #include "jit/MoveResolver.h"
 
-using mozilla::DebugOnly;
-
 namespace js {
 namespace jit {
-
 
 enum LoadStoreSize
 {
