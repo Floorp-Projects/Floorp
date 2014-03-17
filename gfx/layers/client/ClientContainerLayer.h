@@ -76,11 +76,12 @@ public:
         continue;
       }
 
-      if (!child->GetInvalidRegion().IsEmpty()) {
+      ToClientLayer(child)->RenderLayer();
+
+      if (!ClientManager()->GetRepeatTransaction() &&
+          !child->GetInvalidRegion().IsEmpty()) {
         child->Mutated();
       }
-
-      ToClientLayer(child)->RenderLayer();
     }
   }
 

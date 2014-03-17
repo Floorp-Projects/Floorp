@@ -30,8 +30,8 @@ class nsIWidget;
 // IID for the nsITheme interface
 // {b0f3efe9-0bd4-4f6b-8daa-0ec7f6006822}
  #define NS_ITHEME_IID     \
-{ 0x2e49c679, 0x2130, 0x432c, \
-  { 0x92, 0xcb, 0xd4, 0x8e, 0x9a, 0xe2, 0x34, 0x75 } }
+{ 0x4440b5c7, 0xd8bd, 0x4d9c, \
+  { 0x9c, 0x3e, 0xa5, 0xe6, 0x26, 0x81, 0x10, 0xa0 } }
 // {D930E29B-6909-44e5-AB4B-AF10D6923705}
 #define NS_THEMERENDERER_CID \
 { 0x9020805b, 0x14a3, 0x4125, \
@@ -63,8 +63,7 @@ public:
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect,
-                                  nsIntRegion* aRegionToClear = nullptr) = 0;
+                                  const nsRect& aDirtyRect) = 0;
 
   /**
    * Get the computed CSS border for the widget, in pixels.
