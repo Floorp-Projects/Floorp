@@ -107,6 +107,13 @@ const MOBILE_DUN_CONNECT_TIMEOUT       = 30000;
 const MOBILE_DUN_RETRY_INTERVAL        = 5000;
 const MOBILE_DUN_MAX_RETRIES           = 5;
 
+// Connection Type for Network Information API
+const CONNECTION_TYPE_CULLULAR  = 0;
+const CONNECTION_TYPE_BLUETOOTH = 1;
+const CONNECTION_TYPE_ETHERNET  = 2;
+const CONNECTION_TYPE_WIFI      = 3;
+const CONNECTION_TYPE_OTHER     = 4;
+const CONNECTION_TYPE_NONE      = 5;
 
 const DEBUG = false;
 
@@ -280,7 +287,8 @@ NetworkManager.prototype = {
 #ifdef MOZ_B2G_RIL
         // Notify outer modules like MmsService to start the transaction after
         // the configuration of the network interface is done.
-        Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED, null);
+        Services.obs.notifyObservers(network, TOPIC_CONNECTION_STATE_CHANGED,
+                                     this.convertConnectionType(network));
 #endif
         break;
 #ifdef MOZ_B2G_RIL
@@ -651,6 +659,27 @@ NetworkManager.prototype = {
     return retval;
   },
 #endif
+
+  convertConnectionType: function(network) {
+    // If there is internal interface change (e.g., MOBILE_MMS, MOBILE_SUPL),
+    // the function will return null so that it won't trigger type change event
+    // in NetworkInformation API.
+    if (network.type != Ci.nsINetworkInterface.NETWORK_TYPE_WIFI &&
+        network.type != Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
+      return null;
+    }
+
+    if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED) {
+      return CONNECTION_TYPE_NONE;
+    }
+
+    switch (network.type) {
+      case Ci.nsINetworkInterface.NETWORK_TYPE_WIFI:
+        return CONNECTION_TYPE_WIFI;
+      case Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE:
+        return CONNECTION_TYPE_CULLULAR;
+    }
+  },
 
   // nsISettingsServiceCallback
 
