@@ -4069,9 +4069,12 @@ CodeGenerator::visitNeuterCheck(LNeuterCheck *lir)
 {
     Register obj = ToRegister(lir->object());
     Register temp = ToRegister(lir->temp());
-    masm.loadPtr(Address(obj, TypedObject::dataOffset()), temp);
-    masm.testPtr(temp, temp);
-    if (!bailoutIf(Assembler::Zero, lir->snapshot()))
+
+    masm.extractObject(Address(obj, TypedObject::ownerOffset()), temp);
+    masm.unboxInt32(Address(temp, ArrayBufferObject::flagsOffset()), temp);
+    masm.and32(Imm32(ArrayBufferObject::neuteredFlag()), temp);
+
+    if (!bailoutIf(Assembler::NonZero, lir->snapshot()))
         return false;
     return true;
 }

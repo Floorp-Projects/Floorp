@@ -332,7 +332,7 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer, void
     // buffer's data.
 
     for (ArrayBufferViewObject *view = buffer->viewList(); view; view = view->nextView()) {
-        view->neuter(cx);
+        view->neuter(newData);
 
         // Notify compiled jit code that the base pointer has moved.
         MarkObjectStateChange(cx, view);
@@ -372,12 +372,9 @@ ArrayBufferObject::changeContents(JSContext *cx, void *newData)
     // Update all views.
     ArrayBufferViewObject *viewListHead = viewList();
     for (ArrayBufferViewObject *view = viewListHead; view; view = view->nextView()) {
-        // Watch out for NULL data pointers in views. This either
-        // means that the view is not fully initialized (in which case
-        // it'll be initialized later with the correct pointer) or
-        // that the view has been neutered. In that case, the buffer
-        // is "en route" to being neutered but the isNeuteredBuffer()
-        // flag may not yet be set.
+        // Watch out for NULL data pointers in views. This means that the view
+        // is not fully initialized (in which case it'll be initialized later
+        // with the correct pointer).
         uint8_t *viewDataPointer = view->dataPointer();
         if (viewDataPointer) {
             JS_ASSERT(newData);
@@ -889,17 +886,13 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
     HeapSlot &bufSlot = obj->getReservedSlotRef(BUFFER_SLOT);
     MarkSlot(trc, &bufSlot, "typedarray.buffer");
 
-    /* Update obj's data slot if the array buffer moved. Note that during
-     * initialization, bufSlot may still be JSVAL_VOID. */
+    // Update obj's data pointer if the array buffer moved. Note that during
+    // initialization, bufSlot may still contain |undefined|.
     if (bufSlot.isObject()) {
         ArrayBufferObject &buf = AsArrayBuffer(&bufSlot.toObject());
-        if (buf.isNeutered()) {
-            // When a view is neutered, it is set to NULL
-            JS_ASSERT(obj->getPrivate() == nullptr);
-        } else {
-            int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
-            obj->initPrivate(buf.dataPointer() + offset);
-        }
+        int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
+        MOZ_ASSERT(buf.dataPointer() != nullptr);
+        obj->initPrivate(buf.dataPointer() + offset);
     }
 
     /* Update NEXT_VIEW_SLOT, if the view moved. */
@@ -907,14 +900,15 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
 }
 
 void
-ArrayBufferViewObject::neuter(JSContext *cx)
+ArrayBufferViewObject::neuter(void *newData)
 {
+    MOZ_ASSERT(newData != nullptr);
     if (is<DataViewObject>())
-        as<DataViewObject>().neuter();
+        as<DataViewObject>().neuter(newData);
     else if (is<TypedArrayObject>())
-        as<TypedArrayObject>().neuter(cx);
+        as<TypedArrayObject>().neuter(newData);
     else
-        as<TypedObject>().neuter(cx);
+        as<TypedObject>().neuter(newData);
 }
 
 /* JS Friend API */

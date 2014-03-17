@@ -3689,8 +3689,7 @@ class LTypedObjectElements : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Check whether a typed object has a NULL data pointer
-// (i.e., has been neutered).
+// Check whether a typed object has a neutered owner buffer.
 class LNeuterCheck : public LInstructionHelper<0, 1, 1>
 {
   public:
