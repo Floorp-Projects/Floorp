@@ -212,12 +212,4 @@ typedef nsAutoString nsVoidableString;
 #include <stdio.h>
 #include "plhash.h"
 
-/**
- * Deprecated: don't use |Recycle|, just call |nsMemory::Free| directly
- *
- * Return the given buffer to the heap manager. Calls allocator::Free()
- */
-inline void Recycle( char* aBuffer) { nsMemory::Free(aBuffer); }
-inline void Recycle( char16_t* aBuffer) { nsMemory::Free(aBuffer); }
-
 #endif // !defined(nsString_h___)
