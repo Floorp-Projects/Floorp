@@ -6,7 +6,7 @@
 
 DIRS += [
     'webgl-conformance',
-    'webgl-mochi',
+    'webgl-mochitest',
 ]
 
 MOCHITEST_MANIFESTS += [
