@@ -171,7 +171,7 @@ private:
 
   // When mPendingSpellCheck is non-null, this is the callback passed when
   // it was initialized.
-  nsCOMPtr<InitEditorSpellCheckCallback> mPendingInitEditorSpellCheckCallback;
+  nsRefPtr<InitEditorSpellCheckCallback> mPendingInitEditorSpellCheckCallback;
 
   // Set when we have spellchecked after the last edit operation. See the
   // commment at the top of the .cpp file for more info.

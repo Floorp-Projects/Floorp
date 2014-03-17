@@ -109,7 +109,7 @@ class TransportLayerPrsock : public TransportLayer {
   }
 
   PRFileDesc *fd_;
-  nsCOMPtr<SocketHandler> handler_;
+  nsRefPtr<SocketHandler> handler_;
   nsCOMPtr<nsISocketTransportService> stservice_;
 
 };
