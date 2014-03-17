@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["WebVTTParser"];
+this.EXPORTED_SYMBOLS = ["WebVTT"];
 
 /**
- * Code below is vtt.js the JS WebVTTParser.
- * Current source code can be found at http://github.com/andreasgal/vtt.js
+ * Code below is vtt.js the JS WebVTT implementation.
+ * Current source code can be found at http://github.com/mozilla/vtt.js
  *
- * Code taken from commit ae06fb75793d3a8171a8c34666c2a3c32b5fde89
+ * Code taken from commit 2edc263af6003d539eb2ce442d6102e5d8b75fb5
  */
 /**
  * Copyright 2013 vtt.js Contributors
@@ -29,12 +29,40 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
 
 (function(global) {
 
-  function ParsingError(message) {
+  _objCreate = Object.create || (function() {
+    function F() {}
+    return function(o) {
+      if (arguments.length !== 1) {
+        throw new Error('Object.create shim only accepts one parameter.');
+      }
+      F.prototype = o;
+      return new F();
+    };
+  })();
+
+  // Creates a new ParserError object from an errorData object. The errorData
+  // object should have default code and message properties. The default message
+  // property can be overriden by passing in a message parameter.
+  // See ParsingError.Errors below for acceptable errors.
+  function ParsingError(errorData, message) {
     this.name = "ParsingError";
-    this.message = message || "";
+    this.code = errorData.code;
+    this.message = message || errorData.message;
   }
-  ParsingError.prototype = Object.create(Error.prototype);
+  ParsingError.prototype = _objCreate(Error.prototype);
   ParsingError.prototype.constructor = ParsingError;
+
+  // ParsingError metadata for acceptable ParsingErrors.
+  ParsingError.Errors = {
+    BadSignature: {
+      code: 0,
+      message: "Malformed WebVTT signature."
+    },
+    BadTimeStamp: {
+      code: 1,
+      message: "Malformed time stamp."
+    }
+  };
 
   // Try to parse input as a time stamp.
   function parseTimeStamp(input) {
@@ -64,7 +92,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
   // A settings object holds key/value pairs and will ignore anything but the first
   // assignment to a specific key.
   function Settings() {
-    this.values = Object.create(null);
+    this.values = _objCreate(null);
   }
 
   Settings.prototype = {
@@ -142,7 +170,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     function consumeTimeStamp() {
       var ts = parseTimeStamp(input);
       if (ts === null) {
-        throw new ParsingError("Malformed time stamp.");
+        throw new ParsingError(ParsingError.Errors.BadTimeStamp);
       }
       // Remove time stamp from input.
       input = input.replace(/^[^\sa-zA-Z-]+/, "");
@@ -226,7 +254,8 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     cue.startTime = consumeTimeStamp();   // (1) collect cue start time
     skipWhitespace();
     if (input.substr(0, 3) !== "-->") {     // (3) next characters must match "-->"
-      throw new ParsingError("Malformed time stamp (time stamps must be separated by '-->').");
+      throw new ParsingError(ParsingError.Errors.BadTimeStamp,
+                             "Malformed time stamp (time stamps must be separated by '-->').");
     }
     input = input.substr(3);
     skipWhitespace();
@@ -237,7 +266,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     consumeCueSettings(input, cue);
   }
 
-  const ESCAPE = {
+  var ESCAPE = {
     "&amp;": "&",
     "&lt;": "<",
     "&gt;": ">",
@@ -246,7 +275,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     "&nbsp;": "\u00a0"
   };
 
-  const TAG_NAME = {
+  var TAG_NAME = {
     c: "span",
     i: "i",
     b: "b",
@@ -257,12 +286,12 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     lang: "span"
   };
 
-  const TAG_ANNOTATION = {
+  var TAG_ANNOTATION = {
     v: "title",
     lang: "lang"
   };
 
-  const NEEDS_PARENT = {
+  var NEEDS_PARENT = {
     rt: "ruby"
   };
 
@@ -600,7 +629,8 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
 
   function determineBidi(cueDiv) {
     var nodeStack = [],
-        text = "";
+        text = "",
+        charCode;
 
     if (!cueDiv || !cueDiv.childNodes) {
       return "ltr";
@@ -617,16 +647,17 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
         return null;
       }
 
-      var node = nodeStack.pop();
-      if (node.textContent) {
+      var node = nodeStack.pop(),
+          text = node.textContent || node.innerText;
+      if (text) {
         // TODO: This should match all unicode type B characters (paragraph
         // separator characters). See issue #115.
-        var m = node.textContent.match(/^.*(\n|\r)/);
+        var m = text.match(/^.*(\n|\r)/);
         if (m) {
           nodeStack.length = 0;
           return m[0];
         }
-        return node.textContent;
+        return text;
       }
       if (node.tagName === "ruby") {
         return nextTextNode(nodeStack);
@@ -640,8 +671,11 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     pushNodes(nodeStack, cueDiv);
     while ((text = nextTextNode(nodeStack))) {
       for (var i = 0; i < text.length; i++) {
-        if (strongRTLChars.indexOf(text.charCodeAt(i)) !== -1) {
-          return "rtl";
+        charCode = text.charCodeAt(i);
+        for (var j = 0; j < strongRTLChars.length; j++) {
+          if (strongRTLChars[j] === charCode) {
+            return "rtl";
+          }
         }
       }
     }
@@ -675,9 +709,11 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
   // div on 'this'.
   StyleBox.prototype.applyStyles = function(styles, div) {
     div = div || this.div;
-    Object.keys(styles).forEach(function(style) {
-      div.style[style] = styles[style];
-    });
+    for (var prop in styles) {
+      if (styles.hasOwnProperty(prop)) {
+        div.style[prop] = styles[prop];
+      }
+    }
   };
 
   StyleBox.prototype.formatStyle = function(val, unit) {
@@ -767,7 +803,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
       });
     };
   }
-  CueStyleBox.prototype = Object.create(StyleBox.prototype);
+  CueStyleBox.prototype = _objCreate(StyleBox.prototype);
   CueStyleBox.prototype.constructor = CueStyleBox;
 
   // Represents the co-ordinates of an Element in a way that we can easily
@@ -1028,16 +1064,12 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     styleBox.move(bestPosition.toCSSCompatValues(containerBox));
   }
 
-  function WebVTTParser(window, decoder) {
-    this.window = window;
-    this.state = "INITIAL";
-    this.buffer = "";
-    this.decoder = decoder || new TextDecoder("utf8");
-    this.regionList = [];
+  function WebVTT() {
+    // Nothing
   }
 
   // Helper to allow strings to be decoded instead of the default binary utf8 data.
-  WebVTTParser.StringDecoder = function() {
+  WebVTT.StringDecoder = function() {
     return {
       decode: function(data) {
         if (!data) {
@@ -1046,26 +1078,26 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
         if (typeof data !== "string") {
           throw new Error("Error - expected string data.");
         }
-        return decodeURIComponent(escape(data));
+        return decodeURIComponent(encodeURIComponent(data));
       }
     };
   };
 
-  WebVTTParser.convertCueToDOMTree = function(window, cuetext) {
+  WebVTT.convertCueToDOMTree = function(window, cuetext) {
     if (!window || !cuetext) {
       return null;
     }
     return parseContent(window, cuetext);
   };
 
-  const FONT_SIZE_PERCENT = 0.05;
-  const FONT_STYLE = "sans-serif";
-  const CUE_BACKGROUND_PADDING = "1.5%";
+  var FONT_SIZE_PERCENT = 0.05;
+  var FONT_STYLE = "sans-serif";
+  var CUE_BACKGROUND_PADDING = "1.5%";
 
   // Runs the processing model over the cues and regions passed to it.
   // @param overlay A block level element (usually a div) that the computed cues
   //                and regions will be placed into.
-  WebVTTParser.processCues = function(window, cues, overlay) {
+  WebVTT.processCues = function(window, cues, overlay) {
     if (!window || !cues || !overlay) {
       return null;
     }
@@ -1127,7 +1159,24 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     });
   };
 
-  WebVTTParser.prototype = {
+  WebVTT.Parser = function(window, decoder) {
+    this.window = window;
+    this.state = "INITIAL";
+    this.buffer = "";
+    this.decoder = decoder || new TextDecoder("utf8");
+    this.regionList = [];
+  };
+
+  WebVTT.Parser.prototype = {
+    // If the error is a ParsingError then report it to the consumer if
+    // possible. If it's not a ParsingError then throw it like normal.
+    reportOrThrowError: function(e) {
+      if (e instanceof ParsingError) {
+        this.onparsingerror && this.onparsingerror(e);
+      } else {
+        throw e;
+      }
+    },
     parse: function (data) {
       var self = this;
 
@@ -1242,7 +1291,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
 
           var m = line.match(/^WEBVTT([ \t].*)?$/);
           if (!m || !m[0]) {
-            throw new ParsingError("Malformed WebVTT signature.");
+            throw new ParsingError(ParsingError.Errors.BadSignature);
           }
 
           self.state = "HEADER";
@@ -1296,10 +1345,7 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
             try {
               parseCue(line, self.cue, self.regionList);
             } catch (e) {
-              // If it's not a parsing error then throw it to the consumer.
-              if (!(e instanceof ParsingError)) {
-                throw e;
-              }
+              self.reportOrThrowError(e);
               // In case of an error ignore rest of the cue.
               self.cue = null;
               self.state = "BADCUE";
@@ -1330,11 +1376,9 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
           }
         }
       } catch (e) {
-        // If it's not a parsing error then throw it to the consumer.
-        if (!(e instanceof ParsingError)) {
-          throw e;
-        }
-        // If we are currently parsing a cue, report what we have, and then the error.
+        self.reportOrThrowError(e);
+
+        // If we are currently parsing a cue, report what we have.
         if (self.state === "CUETEXT" && self.cue && self.oncue) {
           self.oncue(self.cue);
         }
@@ -1347,18 +1391,28 @@ this.EXPORTED_SYMBOLS = ["WebVTTParser"];
     },
     flush: function () {
       var self = this;
-      // Finish decoding the stream.
-      self.buffer += self.decoder.decode();
-      // Synthesize the end of the current cue or region.
-      if (self.cue || self.state === "HEADER") {
-        self.buffer += "\n\n";
-        self.parse();
+      try {
+        // Finish decoding the stream.
+        self.buffer += self.decoder.decode();
+        // Synthesize the end of the current cue or region.
+        if (self.cue || self.state === "HEADER") {
+          self.buffer += "\n\n";
+          self.parse();
+        }
+        // If we've flushed, parsed, and we're still on the INITIAL state then
+        // that means we don't have enough of the stream to parse the first
+        // line.
+        if (self.state === "INITIAL") {
+          throw new ParsingError(ParsingError.Errors.BadSignature);
+        }
+      } catch(e) {
+        self.reportOrThrowError(e);
       }
       self.onflush && self.onflush();
       return this;
     }
   };
 
-  global.WebVTTParser = WebVTTParser;
+  global.WebVTT = WebVTT;
 
 }(this));
