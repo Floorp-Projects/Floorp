@@ -23,7 +23,9 @@
 #include "nsIFile.h"
 #include "nsIWebProgressListener2.h"
 
+#include "nsClassHashtable.h"
 #include "nsHashtable.h"
+#include "nsHashKeys.h"
 #include "nsTArray.h"
 
 #include "nsCWebBrowserPersist.h"
@@ -31,9 +33,10 @@
 class nsEncoderNodeFixup;
 class nsIStorageStream;
 
-struct URIData;
 struct CleanupData;
 struct DocData;
+struct OutputData;
+struct URIData;
 
 class nsWebBrowserPersist : public nsIInterfaceRequestor,
                             public nsIWebBrowserPersist,
@@ -158,16 +161,16 @@ private:
         nsHashKey *aKey, void *aData, void* closure);
     static bool EnumCleanupURIMap(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCleanupOutputMap(
-        nsHashKey *aKey, void *aData, void* closure);
+    static PLDHashOperator EnumCleanupOutputMap(
+        nsISupports *aKey, OutputData *aData, void* aClosure);
     static bool EnumCleanupUploadList(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCalcProgress(
-        nsHashKey *aKey, void *aData, void* closure);
+    static PLDHashOperator EnumCalcProgress(
+        nsISupports *aKey, OutputData *aData, void* aClosure);
     static bool EnumCalcUploadProgress(
         nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumFixRedirect(
-        nsHashKey *aKey, void *aData, void* closure);
+    static PLDHashOperator EnumFixRedirect(
+        nsISupports *aKey, OutputData *aData, void* aClosure);
     static bool EnumCountURIsToPersist(
         nsHashKey *aKey, void *aData, void* closure);
 
@@ -189,7 +192,7 @@ private:
      */
     nsCOMPtr<nsIWebProgressListener2> mProgressListener2;
     nsCOMPtr<nsIProgressEventSink> mEventSink;
-    nsHashtable               mOutputMap;
+    nsClassHashtable<nsISupportsHashKey, OutputData> mOutputMap;
     nsHashtable               mUploadList;
     nsHashtable               mURIMap;
     nsTArray<DocData*>        mDocList;
