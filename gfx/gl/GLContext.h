@@ -87,6 +87,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     depth_texture,
     draw_buffers,
     draw_instanced,
+    draw_range_elements,
     element_index_uint,
     ES2_compatibility,
     ES3_compatibility,
@@ -419,6 +420,7 @@ public:
         ARB_half_float_pixel,
         EXT_frag_depth,
         OES_compressed_ETC1_RGB8_texture,
+        EXT_draw_range_elements,
         Extensions_Max,
         Extensions_End
     };
@@ -2228,6 +2230,17 @@ public:
         AfterGLDrawCall();
     }
 
+// -----------------------------------------------------------------------------
+// Feature draw_range_elements
+public:
+    void fDrawRangeElements(GLenum mode, GLuint start, GLuint end,
+                            GLsizei count, GLenum type, const GLvoid* indices)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDrawRangeElements);
+        mSymbols.fDrawRangeElements(mode, start, end, count, type, indices);
+        AFTER_GL_CALL;
+    }
 
 // -----------------------------------------------------------------------------
 // Package XXX_framebuffer_blit
@@ -2698,7 +2711,7 @@ protected:
     // storage to support DebugMode on an arbitrary thread.
     static unsigned sCurrentGLContextTLS;
 #endif
-    
+
     ScopedDeletePtr<GLBlitHelper> mBlitHelper;
     ScopedDeletePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
     ScopedDeletePtr<GLReadTexImageHelper> mReadTexImageHelper;
