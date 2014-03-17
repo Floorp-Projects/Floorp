@@ -194,10 +194,10 @@ ClientLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
   GetRoot()->ComputeEffectiveTransforms(Matrix4x4());
 
-  if (!GetRoot()->GetInvalidRegion().IsEmpty()) {
+  root->RenderLayer();
+  if (!mRepeatTransaction && !GetRoot()->GetInvalidRegion().IsEmpty()) {
     GetRoot()->Mutated();
   }
-  root->RenderLayer();
   
   mThebesLayerCallback = nullptr;
   mThebesLayerCallbackData = nullptr;

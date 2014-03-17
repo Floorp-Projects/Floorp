@@ -493,6 +493,10 @@ struct GLContextSymbols
     PFNGLOBJECTPTRLABEL fObjectPtrLabel;
     typedef void (GLAPIENTRY * PFNGLGETOBJECTPTRLABEL) (const GLvoid* ptr, GLsizei bufSize, GLsizei* length, GLchar* label);
     PFNGLGETOBJECTPTRLABEL fGetObjectPtrLabel;
+
+    // draw_range_elements
+    typedef void (GLAPIENTRY * PFNGLDRAWRANGEELEMENTS) (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid* indices);
+    PFNGLDRAWRANGEELEMENTS fDrawRangeElements;
 };
 
 }

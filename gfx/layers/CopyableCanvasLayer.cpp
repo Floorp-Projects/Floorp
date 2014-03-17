@@ -286,19 +286,15 @@ CopyableCanvasLayer::PaintWithOpacity(gfx::DrawTarget* aTarget,
 
   DrawOptions options = DrawOptions(aOpacity, CompositionOp::OP_SOURCE);
 
-  // If content opaque, then save off current operator and set to source.
-  // This ensures that alpha is not applied even if the source surface
-  // has an alpha channel
-  if (GetContentFlags() & CONTENT_OPAQUE) {
-    options.mCompositionOp = CompositionOp::OP_SOURCE;
-  }
-
   if (aOperator != CompositionOp::OP_OVER) {
     options.mCompositionOp = aOperator;
   }
 
+  // XXX: This needs rewriting for acceptable performance using CoreGraphics.
+  // Therefore - this ::PaintWithOpacity is currently not used
   Rect rect = Rect(0, 0, mBounds.width, mBounds.height);
   aTarget->FillRect(rect, pat, options);
+
   if (aMaskSurface) {
     aTarget->MaskSurface(pat, aMaskSurface, Point(0, 0), options);
   }
