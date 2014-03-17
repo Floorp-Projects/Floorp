@@ -36,6 +36,7 @@ class nsIStorageStream;
 struct CleanupData;
 struct DocData;
 struct OutputData;
+struct UploadData;
 struct URIData;
 
 class nsWebBrowserPersist : public nsIInterfaceRequestor,
@@ -165,10 +166,12 @@ private:
         nsISupports *aKey, OutputData *aData, void* aClosure);
     static bool EnumCleanupUploadList(
         nsHashKey *aKey, void *aData, void* closure);
+    static PLDHashOperator EnumCleanupUploadList(
+        nsISupports *aKey, UploadData *aData, void* aClosure);
     static PLDHashOperator EnumCalcProgress(
         nsISupports *aKey, OutputData *aData, void* aClosure);
-    static bool EnumCalcUploadProgress(
-        nsHashKey *aKey, void *aData, void* closure);
+    static PLDHashOperator EnumCalcUploadProgress(
+        nsISupports *aKey, UploadData *aData, void* aClosure);
     static PLDHashOperator EnumFixRedirect(
         nsISupports *aKey, OutputData *aData, void* aClosure);
     static bool EnumCountURIsToPersist(
@@ -193,7 +196,7 @@ private:
     nsCOMPtr<nsIWebProgressListener2> mProgressListener2;
     nsCOMPtr<nsIProgressEventSink> mEventSink;
     nsClassHashtable<nsISupportsHashKey, OutputData> mOutputMap;
-    nsHashtable               mUploadList;
+    nsClassHashtable<nsISupportsHashKey, UploadData> mUploadList;
     nsHashtable               mURIMap;
     nsTArray<DocData*>        mDocList;
     nsTArray<CleanupData*>    mCleanupList;
