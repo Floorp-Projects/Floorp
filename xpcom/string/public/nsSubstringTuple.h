@@ -7,9 +7,7 @@
 #ifndef nsSubstringTuple_h___
 #define nsSubstringTuple_h___
 
-#ifndef nsSubstring_h___
 #include "nsSubstring.h"
-#endif
 
   // declare nsSubstringTuple
 #include "string-template-def-unichar.h"

@@ -7,13 +7,8 @@
 #ifndef nsDependentString_h___
 #define nsDependentString_h___
 
-#ifndef nsString_h___
 #include "nsString.h"
-#endif
-
-#ifndef nsDebug_h___
 #include "nsDebug.h"
-#endif
 
   // declare nsDependentString
 #include "string-template-def-unichar.h"

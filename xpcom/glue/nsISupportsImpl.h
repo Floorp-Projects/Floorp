@@ -8,17 +8,9 @@
 #ifndef nsISupportsImpl_h__
 #define nsISupportsImpl_h__
 
-#ifndef nscore_h___
 #include "nscore.h"
-#endif
-
-#ifndef nsISupportsBase_h__
 #include "nsISupportsBase.h"
-#endif
-
-#ifndef nsISupportsUtils_h__
 #include "nsISupportsUtils.h"
-#endif
 
 
 #if !defined(XPCOM_GLUE_AVOID_NSPR)

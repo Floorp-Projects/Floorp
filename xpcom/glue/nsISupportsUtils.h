@@ -6,25 +6,11 @@
 #ifndef nsISupportsUtils_h__
 #define nsISupportsUtils_h__
 
-#ifndef nscore_h___
 #include "nscore.h"
-#endif
-
-#ifndef nsISupportsBase_h__
 #include "nsISupportsBase.h"
-#endif
-
-#ifndef nsError_h__
 #include "nsError.h"
-#endif
-
-#ifndef nsDebug_h___
 #include "nsDebug.h"
-#endif
-
-#ifndef nsISupportsImpl_h__
 #include "nsISupportsImpl.h"
-#endif
 
 /**
  * Macro for adding a reference to an interface.

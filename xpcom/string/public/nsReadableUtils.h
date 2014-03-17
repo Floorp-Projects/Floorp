@@ -12,9 +12,7 @@
    * According to our conventions, they should be |NS_xxx|.
    */
 
-#ifndef nsAString_h___
 #include "nsAString.h"
-#endif
 
 #include "nsTArrayForwardDeclare.h"
 

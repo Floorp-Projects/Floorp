@@ -6,16 +6,10 @@
 #ifndef nsCharTraits_h___
 #define nsCharTraits_h___
 
-#include <ctype.h>
-  // for |EOF|, |WEOF|
+#include <ctype.h> // for |EOF|, |WEOF|
+#include <string.h> // for |memcpy|, et al
 
-#include <string.h>
-  // for |memcpy|, et al
-
-#ifndef nscore_h___
-#include "nscore.h"
-  // for |char16_t|
-#endif
+#include "nscore.h" // for |char16_t|
 
 // This file may be used (through nsUTF8Utils.h) from non-XPCOM code, in
 // particular the standalone software updater. In that case stub out
@@ -26,10 +20,7 @@
 #define NS_ASSERTION(cond, msg)
 #define NS_ERROR(msg)
 #else
-#ifndef nsDebug_h__
-#include "nsDebug.h"
-  // for NS_ASSERTION
-#endif
+#include "nsDebug.h"  // for NS_ASSERTION
 #endif
 
 /*
