@@ -9,17 +9,9 @@
 
 #include "mozilla/Attributes.h"
 
-#ifndef nsSubstring_h___
 #include "nsSubstring.h"
-#endif
-
-#ifndef nsDependentSubstring_h___
 #include "nsDependentSubstring.h"
-#endif
-
-#ifndef nsReadableUtils_h___
 #include "nsReadableUtils.h"
-#endif
 
 #include <new>
 
@@ -210,17 +202,9 @@ wwc(char16_t *str)
 // the following are included/declared for backwards compatibility
 typedef nsAutoString nsVoidableString;
 
-#ifndef nsDependentString_h___
 #include "nsDependentString.h"
-#endif
-
-#ifndef nsLiteralString_h___
 #include "nsLiteralString.h"
-#endif
-
-#ifndef nsPromiseFlatString_h___
 #include "nsPromiseFlatString.h"
-#endif
 
 // need to include these for backwards compatibility
 #include "nsMemory.h"
