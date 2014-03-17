@@ -534,7 +534,6 @@ class BaseMarionetteTestRunner(object):
         self.logger = logger
         self.noWindow = noWindow
         self.httpd = None
-        self.baseurl = None
         self.marionette = None
         self.logcat_dir = logcat_dir
         self.xml_output = xml_output
@@ -620,17 +619,18 @@ class BaseMarionetteTestRunner(object):
         self.todo = 0
         self.failures = []
 
-    def start_httpd(self):
-        host = moznetwork.get_ip()
+    def start_httpd(self, need_external_ip):
+        host = "127.0.0.1"
+        if need_external_ip:
+            host = moznetwork.get_ip()
         self.httpd = MozHttpd(host=host,
                               port=0,
                               docroot=os.path.join(os.path.dirname(os.path.dirname(__file__)), 'www'))
         self.httpd.start()
-        self.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
-        self.logger.info('running webserver on %s' % self.baseurl)
+        self.marionette.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
+        self.logger.info('running webserver on %s' % self.marionette.baseurl)
 
     def start_marionette(self):
-        assert(self.baseurl is not None)
         if self.bin:
             if self.address:
                 host, port = self.address.split(':')
@@ -643,7 +643,6 @@ class BaseMarionetteTestRunner(object):
                                          app_args=self.app_args,
                                          bin=self.bin,
                                          profile=self.profile,
-                                         baseurl=self.baseurl,
                                          timeout=self.timeout,
                                          device_serial=self.device_serial)
         elif self.address:
@@ -660,7 +659,6 @@ class BaseMarionetteTestRunner(object):
                                              host=host, port=int(port),
                                              connectToRunningEmulator=True,
                                              homedir=self.homedir,
-                                             baseurl=self.baseurl,
                                              logcat_dir=self.logcat_dir,
                                              gecko_path=self.gecko_path,
                                              symbols_path=self.symbols_path,
@@ -669,7 +667,6 @@ class BaseMarionetteTestRunner(object):
             else:
                 self.marionette = Marionette(host=host,
                                              port=int(port),
-                                             baseurl=self.baseurl,
                                              timeout=self.timeout,
                                              device_serial=self.device_serial)
         elif self.emulator:
@@ -679,7 +676,6 @@ class BaseMarionetteTestRunner(object):
                                          emulatorImg=self.emulatorImg,
                                          emulator_res=self.emulator_res,
                                          homedir=self.homedir,
-                                         baseurl=self.baseurl,
                                          noWindow=self.noWindow,
                                          logcat_dir=self.logcat_dir,
                                          gecko_path=self.gecko_path,
@@ -738,10 +734,7 @@ class BaseMarionetteTestRunner(object):
         self.reset_test_stats()
         starttime = datetime.utcnow()
 
-        if not self.httpd:
-            print "starting httpd"
-            self.start_httpd()
-
+        need_external_ip = True
         if not self.marionette:
             self.start_marionette()
             if self.emulator:
@@ -749,6 +742,14 @@ class BaseMarionetteTestRunner(object):
             # Retrieve capabilities for later use
             if not self._capabilities:
                 self.capabilities
+            # if we're working against a desktop version, we usually don't need
+            # an external ip
+            if self._capabilities['device'] == "desktop":
+                need_external_ip = False
+
+        if not self.httpd:
+            print "starting httpd"
+            self.start_httpd(need_external_ip)
 
         for test in tests:
             self.add_test(test)
