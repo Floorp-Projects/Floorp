@@ -39,7 +39,7 @@ function createDocument() {
     inspector = aInspector;
     markupView = inspector.markup;
 
-    inspector.sidebar.once("ruleview-ready", function() {
+    waitForView("ruleview", () => {
       ruleView = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
       inspector.sidebar.select("ruleview");
       startTests();
