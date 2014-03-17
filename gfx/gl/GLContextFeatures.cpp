@@ -86,7 +86,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "draw_range_elements",
-        200, // OpenGL version
+        120, // OpenGL version
         300, // OpenGL ES version
         {
             GLContext::EXT_draw_range_elements,
