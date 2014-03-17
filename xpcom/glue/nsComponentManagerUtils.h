@@ -6,13 +6,8 @@
 #ifndef nsComponentManagerUtils_h__
 #define nsComponentManagerUtils_h__
 
-#ifndef nscore_h__
 #include "nscore.h"
-#endif
-
-#ifndef nsCOMPtr_h__
 #include "nsCOMPtr.h"
-#endif
 
 #include "nsIFactory.h"
 
