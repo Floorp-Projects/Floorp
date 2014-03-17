@@ -33,7 +33,6 @@
 #include "nsIDOMDataContainerEvent.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDocument.h"
-#include "nsEventListenerManager.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
 #include "nsPIDOMWindow.h"

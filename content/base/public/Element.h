@@ -45,7 +45,6 @@ class nsIURI;
 class nsINodeInfo;
 class nsIControllers;
 class nsEventChainVisitor;
-class nsEventListenerManager;
 class nsIScrollableFrame;
 class nsAttrValueOrString;
 class ContentUnbinder;
@@ -103,6 +102,8 @@ enum {
 ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
 
 namespace mozilla {
+class EventListenerManager;
+
 namespace dom {
 
 class Link;
@@ -1060,10 +1061,10 @@ protected:
   }
 
   /**
-   * Hook to allow subclasses to produce a different nsEventListenerManager if
+   * Hook to allow subclasses to produce a different EventListenerManager if
    * needed for attachment of attribute-defined handlers
    */
-  virtual nsEventListenerManager*
+  virtual EventListenerManager*
     GetEventListenerManagerForAttr(nsIAtom* aAttrName, bool* aDefer);
 
   /**

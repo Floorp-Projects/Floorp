@@ -16,7 +16,6 @@
 #include "nsIBoxObject.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDocShell.h"
-#include "nsEventListenerManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableFrame.h"
@@ -24,6 +23,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "mozilla/dom/TouchEvent.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "nsView.h"
@@ -45,7 +45,7 @@ bool
 nsCoreUtils::HasClickListener(nsIContent *aContent)
 {
   NS_ENSURE_TRUE(aContent, false);
-  nsEventListenerManager* listenerManager =
+  EventListenerManager* listenerManager =
     aContent->GetExistingListenerManager();
 
   return listenerManager &&

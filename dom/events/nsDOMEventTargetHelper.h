@@ -11,10 +11,10 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsEventListenerManager.h"
 #include "nsIScriptContext.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/EventTarget.h"
 
 class JSCompartment;
@@ -59,10 +59,10 @@ public:
 
   NS_DECL_NSIDOMEVENTTARGET
 
-  virtual nsEventListenerManager*
-  GetExistingListenerManager() const MOZ_OVERRIDE;
-  virtual nsEventListenerManager*
-  GetOrCreateListenerManager() MOZ_OVERRIDE;
+  virtual mozilla::EventListenerManager*
+    GetExistingListenerManager() const MOZ_OVERRIDE;
+  virtual mozilla::EventListenerManager*
+    GetOrCreateListenerManager() MOZ_OVERRIDE;
 
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
@@ -151,7 +151,7 @@ public:
 protected:
   nsresult WantsUntrusted(bool* aRetVal);
 
-  nsRefPtr<nsEventListenerManager> mListenerManager;
+  nsRefPtr<mozilla::EventListenerManager> mListenerManager;
   // Dispatch a trusted, non-cancellable and non-bubbling event to |this|.
   nsresult DispatchTrustedEvent(const nsAString& aEventName);
   // Make |event| trusted and dispatch |aEvent| to |this|.
@@ -250,10 +250,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
   virtual nsresult DispatchDOMEvent(mozilla::WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent, nsPresContext* aPresContext, nsEventStatus* aEventStatus) { \
     return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); \
   } \
-  virtual nsEventListenerManager * GetOrCreateListenerManager() { \
+  virtual mozilla::EventListenerManager* GetOrCreateListenerManager() { \
     return _to GetOrCreateListenerManager(); \
   } \
-  virtual nsEventListenerManager * GetExistingListenerManager() const { \
+  virtual mozilla::EventListenerManager* GetExistingListenerManager() const { \
     return _to GetExistingListenerManager(); \
   } \
   virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv) { \
@@ -267,11 +267,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
   using _class::AddEventListener;                   \
   using _class::RemoveEventListener;                \
   NS_FORWARD_NSIDOMEVENTTARGET(_class::)            \
-  virtual nsEventListenerManager*                   \
+  virtual mozilla::EventListenerManager*            \
   GetOrCreateListenerManager() {                    \
     return _class::GetOrCreateListenerManager();    \
   }                                                 \
-  virtual nsEventListenerManager*                   \
+  virtual mozilla::EventListenerManager*            \
   GetExistingListenerManager() const {              \
     return _class::GetExistingListenerManager();    \
   }

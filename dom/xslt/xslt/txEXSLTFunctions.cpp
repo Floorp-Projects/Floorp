@@ -24,6 +24,7 @@
 #include "txMozillaXMLOutput.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "prtime.h" 
 
 using namespace mozilla;
 using namespace mozilla::dom;

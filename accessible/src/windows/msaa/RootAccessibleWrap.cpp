@@ -9,8 +9,6 @@
 #include "nsCoreUtils.h"
 #include "nsWinUtils.h"
 
-#include "nsEventListenerManager.h"
-
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////

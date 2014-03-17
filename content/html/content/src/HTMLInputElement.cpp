@@ -65,7 +65,6 @@
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
-#include "nsEventListenerManager.h"
 
 #include "nsRuleData.h"
 #include <algorithm>
