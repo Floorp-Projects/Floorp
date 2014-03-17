@@ -1034,12 +1034,14 @@ nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
 
 bool
 nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
-                                        nsRegion* aVisibleRegion) {
+                                        nsRegion* aVisibleRegion,
+                                        nsIFrame* aDisplayPortFrame) {
   PROFILER_LABEL("nsDisplayList", "ComputeVisibilityForRoot");
   nsRegion r;
   r.And(*aVisibleRegion, GetBounds(aBuilder));
   return ComputeVisibilityForSublist(aBuilder, aVisibleRegion,
-                                     r.GetBounds(), r.GetBounds());
+                                     r.GetBounds(), r.GetBounds(),
+                                     aDisplayPortFrame);
 }
 
 static nsRegion
@@ -1103,7 +1105,8 @@ bool
 nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                                            nsRegion* aVisibleRegion,
                                            const nsRect& aListVisibleBounds,
-                                           const nsRect& aAllowVisibleRegionExpansion) {
+                                           const nsRect& aAllowVisibleRegionExpansion,
+                                           nsIFrame* aDisplayPortFrame) {
 #ifdef DEBUG
   nsRegion r;
   r.And(*aVisibleRegion, GetBounds(aBuilder));
@@ -1118,6 +1121,11 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
   FlattenTo(&elements);
 
   bool forceTransparentSurface = false;
+
+  nsIFrame* displayPortRoot = nullptr;
+  if (aDisplayPortFrame) {
+    displayPortRoot = aDisplayPortFrame->PresContext()->PresShell()->GetRootFrame();
+  }
 
   for (int32_t i = elements.Length() - 1; i >= 0; --i) {
     nsDisplayItem* item = elements[i];
@@ -1161,9 +1169,34 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
     if (item->ComputeVisibility(aBuilder, aVisibleRegion,
                                 aAllowVisibleRegionExpansion.Intersect(bounds))) {
       anyVisible = true;
-      nsRegion opaque = TreatAsOpaque(item, aBuilder);
-      // Subtract opaque item from the visible region
-      aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
+
+      // If we're in a displayport, we need to make sure that fixed position
+      // items do not subtract from the visible region, as async scrolling
+      // may expose these occluded areas.
+      // Recurse up this frame to make sure it isn't fixed position, and if it
+      // is and they're in the same document, don't let it occlude this list.
+      bool occlude = true;
+      if (aDisplayPortFrame) {
+        for (nsIFrame* frame = item->Frame(); frame && frame != displayPortRoot;
+             frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
+          // Check if this is a fixed position frame on the root frame of the
+          // document.
+          if (frame->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
+              frame->GetParent() && !frame->GetParent()->GetParent()) {
+            if (frame->PresContext() == aDisplayPortFrame->PresContext()) {
+              occlude = false;
+            }
+            break;
+          }
+        }
+      }
+
+      if (occlude) {
+        nsRegion opaque = TreatAsOpaque(item, aBuilder);
+        // Subtract opaque item from the visible region
+        aBuilder->SubtractFromVisibleRegion(aVisibleRegion, opaque);
+      }
+
       if (aBuilder->NeedToForceTransparentSurfaceForItem(item) ||
           (list && list->NeedsTransparentSurface())) {
         forceTransparentSurface = true;
@@ -3593,7 +3626,8 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     childVisibleRegion.GetBounds().Intersect(mList.GetBounds(aBuilder));
   nsRect allowExpansion = boundedRect.Intersect(aAllowVisibleRegionExpansion);
   bool visible = mList.ComputeVisibilityForSublist(
-    aBuilder, &childVisibleRegion, boundedRect, allowExpansion);
+    aBuilder, &childVisibleRegion, boundedRect, allowExpansion,
+    usingDisplayPort ? mFrame : nullptr);
   // We don't allow this computation to influence aVisibleRegion, on the
   // assumption that the layer can be asynchronously scrolled so we'll
   // definitely need all the content under it.
@@ -3876,7 +3910,8 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     childVisibleRegion.GetBounds().Intersect(mList.GetBounds(aBuilder));
   nsRect allowExpansion = boundedRect.Intersect(aAllowVisibleRegionExpansion);
   bool visible = mList.ComputeVisibilityForSublist(
-    aBuilder, &childVisibleRegion, boundedRect, allowExpansion);
+    aBuilder, &childVisibleRegion, boundedRect, allowExpansion,
+    usingDisplayPort ? mScrollFrame : nullptr);
   // We don't allow this computation to influence aVisibleRegion, on the
   // assumption that the layer can be asynchronously scrolled so we'll
   // definitely need all the content under it.
