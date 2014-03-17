@@ -7,8 +7,9 @@
 "use strict";
 
 // Used to detect minification for automatic pretty printing
-const SAMPLE_SIZE = 30; // no of lines
-const INDENT_COUNT_THRESHOLD = 20; // percentage
+const SAMPLE_SIZE = 50; // no of lines
+const INDENT_COUNT_THRESHOLD = 5; // percentage
+const CHARACTER_LIMIT = 250; // line character limit
 
 /**
  * Functions handling the sources UI.
@@ -1500,6 +1501,7 @@ let SourceUtils = {
     let lineStartIndex = 0;
     let lines = 0;
     let indentCount = 0;
+    let overCharLimit = false;
 
     // Strip comments.
     aText = aText.replace(/\/\*[\S\s]*?\*\/|\/\/(.+|\n)/g, "");
@@ -1512,9 +1514,15 @@ let SourceUtils = {
       if (/^\s+/.test(aText.slice(lineStartIndex, lineEndIndex))) {
         indentCount++;
       }
+      // For files with no indents but are not minified.
+      if ((lineEndIndex - lineStartIndex) > CHARACTER_LIMIT) {
+        overCharLimit = true;
+        break;
+      }
       lineStartIndex = lineEndIndex + 1;
     }
-    isMinified = ((indentCount / lines ) * 100) < INDENT_COUNT_THRESHOLD;
+    isMinified = ((indentCount / lines ) * 100) < INDENT_COUNT_THRESHOLD ||
+                 overCharLimit;
 
     this._minifiedCache.set(sourceClient, isMinified);
     return isMinified;
