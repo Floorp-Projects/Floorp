@@ -137,7 +137,7 @@ IFoo::QueryInterface( const nsIID& aIID, void** aResult )
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
-		if ( aIID.Equals(GetIID()) )
+		if ( aIID.Equals(NS_GET_IID(IFoo)) )
 			rawPtr = this;
 		else
 			{
@@ -227,7 +227,7 @@ IBar::QueryInterface( const nsID& aIID, void** aResult )
 		nsISupports* rawPtr = 0;
 		nsresult status = NS_OK;
 
-		if ( aIID.Equals(GetIID()) )
+		if ( aIID.Equals(NS_GET_IID(IBar)) )
 			rawPtr = this;
 		else if ( aIID.Equals(NS_GET_IID(IFoo)) )
 			rawPtr = static_cast<IFoo*>(this);
