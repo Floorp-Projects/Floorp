@@ -15,7 +15,6 @@ SOURCES += [
 EXTRA_COMPONENTS += [
     'Activities.manifest',
     'ActivityMessageConfigurator.js',
-    'ActivityOptions.js',
     'ActivityProxy.js',
     'ActivityRequestHandler.js',
     'ActivityWrapper.js',
