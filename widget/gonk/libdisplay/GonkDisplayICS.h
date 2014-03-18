@@ -50,6 +50,11 @@ public:
 
     virtual void SetFBReleaseFd(int fd);
 
+    virtual int GetPrevFBAcquireFd()
+    {
+        return -1;
+    }
+
 private:
     hw_module_t const*        mModule;
     hwc_composer_device_t*    mHwc;
