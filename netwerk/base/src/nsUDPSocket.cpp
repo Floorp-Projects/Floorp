@@ -352,7 +352,7 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
     return;
   }
 
-  nsCOMPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, mFD, prClientAddr);
+  nsRefPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, mFD, prClientAddr);
   rv = NS_AsyncCopy(pipeIn, os, mSts,
                     NS_ASYNCCOPY_VIA_READSEGMENTS, 1400);
 

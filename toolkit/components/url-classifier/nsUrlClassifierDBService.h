@@ -81,7 +81,7 @@ private:
   nsresult CheckClean(const nsACString &lookupKey,
                       bool *clean);
 
-  nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorker;
+  nsRefPtr<nsUrlClassifierDBServiceWorker> mWorker;
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> mWorkerProxy;
 
   nsInterfaceHashtable<nsCStringHashKey, nsIUrlClassifierHashCompleter> mCompleters;

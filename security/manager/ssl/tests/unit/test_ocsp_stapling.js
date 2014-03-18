@@ -95,11 +95,8 @@ function add_tests_in_mode(useInsanity, certDB, otherTestCA) {
                 true);
   add_ocsp_test("ocsp-stapling-unknown.example.com",
                 getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT), true);
-  // TODO(bug 977870): this should not result in SEC_ERROR_BAD_DER
   add_ocsp_test("ocsp-stapling-good-other.example.com",
-                getXPCOMStatusFromNSS(
-                  useInsanity ? SEC_ERROR_BAD_DER
-                              : SEC_ERROR_OCSP_UNKNOWN_CERT), true);
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT), true);
   // If the server doesn't staple an OCSP response, we continue as normal
   // (this means that even though stapling is enabled, we expect an OCSP
   // request).
