@@ -2997,6 +2997,18 @@
                 tab.setAttribute("titlechanged", "true");
               break;
             }
+            case "DOMWindowClose": {
+              if (this.tabs.length == 1) {
+                window.close();
+                return;
+              }
+
+              let tab = this._getTabForBrowser(browser);
+              if (tab) {
+                this.removeTab(tab);
+              }
+              break;
+            }
             case "contextmenu": {
               gContextMenuContentData = { event: aMessage.objects.event,
                                           browser: browser };
@@ -3063,6 +3075,7 @@
             .useRemoteTabs;
           if (remote) {
             messageManager.addMessageListener("DOMTitleChanged", this);
+            messageManager.addMessageListener("DOMWindowClose", this);
             messageManager.addMessageListener("contextmenu", this);
           }
           messageManager.addMessageListener("DOMWebNotificationClicked", this);
