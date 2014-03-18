@@ -778,10 +778,11 @@ function X4ToSource() {
   if (!IsObject(this) || !ObjectIsTypedObject(this))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "X4", "toSource", typeof this);
 
-  if (DESCR_KIND(this) != JS_TYPEREPR_X4_KIND)
+  var descr = TYPEDOBJ_TYPE_DESCR(this);
+
+  if (DESCR_KIND(descr) != JS_TYPEREPR_X4_KIND)
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "X4", "toSource", typeof this);
 
-  var descr = TYPEDOBJ_TYPE_DESCR(this);
   var type = DESCR_TYPE(descr);
   return X4ProtoString(type)+"("+this.x+", "+this.y+", "+this.z+", "+this.w+")";
 }
