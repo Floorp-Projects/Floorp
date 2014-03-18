@@ -15,6 +15,11 @@ Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 const EXPERIMENT1_ID       = "test-experiment-1@tests.mozilla.org";
 const EXPERIMENT1_XPI_SHA1 = "sha1:08c4d3ef1d0fc74faa455e85106ef0bc8cf8ca90";
 const EXPERIMENT1_XPI_NAME = "experiment-1.xpi";
+const EXPERIMENT1_NAME     = "Test experiment 1";
+
+const EXPERIMENT1A_XPI_SHA1 = "sha1:2b8d14e3e06a54d5ce628fe3598cbb364cff9e6b";
+const EXPERIMENT1A_XPI_NAME = "experiment-1a.xpi";
+const EXPERIMENT1A_NAME     = "Test experiment 1.1";
 
 const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org"
 const EXPERIMENT2_XPI_SHA1 = "sha1:81877991ec70360fb48db84c34a9b2da7aa41d6a";
@@ -32,6 +37,11 @@ function getReporter(name, uri, inspected) {
 
     throw new Task.Result(reporter);
   });
+}
+
+function removeCacheFile() {
+  let path = OS.Path.join(OS.Constants.Path.profileDir, "experiments.json");
+  return OS.File.remove(path);
 }
 
 function disableCertificateChecks() {

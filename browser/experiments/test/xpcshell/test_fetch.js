@@ -8,7 +8,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource:///modules/experiments/Experiments.jsm");
 
-const FILE_CACHE               = "experiments.json";
 const PREF_EXPERIMENTS_ENABLED = "experiments.enabled";
 const PREF_LOGGING_LEVEL       = "experiments.logging.level";
 const PREF_LOGGING_DUMP        = "experiments.logging.dump";
@@ -19,11 +18,6 @@ let gProfileDir = null;
 let gHttpServer = null;
 let gHttpRoot   = null;
 let gPolicy     = new Experiments.Policy();
-
-function removeCacheFile() {
-  let path = OS.Path.join(OS.Constants.Path.profileDir, FILE_CACHE);
-  return OS.File.remove(path);
-}
 
 function run_test() {
   createAppInfo();
@@ -83,4 +77,8 @@ add_task(function* test_fetchInvalid() {
   Assert.equal(ex._experiments.size, 0, "There should still be no cached experiments.");
 
   yield ex.uninit();
+});
+
+add_task(function* shutdown() {
+  yield removeCacheFile();
 });
