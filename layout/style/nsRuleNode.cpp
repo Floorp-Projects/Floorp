@@ -7244,21 +7244,17 @@ SetGridTemplateAreas(const nsCSSValue& aValue,
 
   case eCSSUnit_Inherit:
     aCanStoreInRuleTree = false;
-    aResult.mNamedAreas = aParentValue.mNamedAreas;
-    aResult.mTemplates = aParentValue.mTemplates;
+    aResult = aParentValue;
     break;
 
   case eCSSUnit_Initial:
   case eCSSUnit_Unset:
   case eCSSUnit_None:
-    aResult.mNamedAreas.Clear();
-    aResult.mTemplates.Clear();
+    aResult.Reset();
     break;
 
   default:
-    const nsCSSValueGridTemplateAreas& value = aValue.GetGridTemplateAreas();
-    aResult.mNamedAreas = value.mNamedAreas;
-    aResult.mTemplates = value.mTemplates;
+    aResult = aValue.GetGridTemplateAreas();
   }
 }
 
