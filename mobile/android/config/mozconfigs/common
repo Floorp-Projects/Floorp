@@ -20,9 +20,6 @@ ANDROID_SDK_VERSION="16"
 # Build Fennec
 ac_add_options --enable-application=mobile/android
 
-# Android
-ac_add_options --target=arm-linux-androideabi
-
 if test `uname -m` = 'x86_64'; then
   ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
   ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux/platforms/android-$ANDROID_SDK_VERSION"
