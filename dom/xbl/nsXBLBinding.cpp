@@ -75,7 +75,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));
   nsContentUtils::DeferredFinalize(docInfo);
-  
+
   nsXBLJSClass* c = nsXBLJSClass::fromJSClass(::JS_GetClass(obj));
   c->Drop();
 }
@@ -265,7 +265,7 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
       // XXXbz This really shouldn't be a void method!
       child->UnbindFromTree();
       return;
-    }        
+    }
 
     child->SetFlags(NODE_IS_ANONYMOUS_ROOT);
 
@@ -360,7 +360,7 @@ nsXBLBinding::GenerateAnonymousContent()
 
     return;
   }
-     
+
   // Find out if we're really building kids or if we're just
   // using the attribute-setting shorthand hack.
   uint32_t contentCount = content->GetChildCount();
@@ -478,7 +478,7 @@ nsXBLBinding::FindInsertionPointFor(nsIContent* aChild)
   if (mContent) {
     return FindInsertionPointForInternal(aChild);
   }
-  
+
   return mNextBinding ? mNextBinding->FindInsertionPointFor(aChild)
                       : nullptr;
 }
@@ -492,7 +492,7 @@ nsXBLBinding::FindInsertionPointForInternal(nsIContent* aChild)
       return point;
     }
   }
-  
+
   return mDefaultInsertionPoint;
 }
 
@@ -584,7 +584,7 @@ nsXBLBinding::InstallEventHandlers()
         nsAutoString type;
         handler->GetEventName(type);
 
-        // If this is a command, add it in the system event group, otherwise 
+        // If this is a command, add it in the system event group, otherwise
         // add it to the standard event group.
 
         // Figure out if we're using capturing or not.
@@ -684,7 +684,7 @@ nsXBLBinding::UnhookEventHandlers()
     if (!manager) {
       return;
     }
-                                      
+
     bool isChromeBinding = mPrototypeBinding->IsChrome();
     nsXBLPrototypeHandler* curr;
     for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
@@ -692,7 +692,7 @@ nsXBLBinding::UnhookEventHandlers()
       if (!handler) {
         continue;
       }
-      
+
       nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
       if (!eventAtom ||
           eventAtom == nsGkAtoms::keyup ||
@@ -731,7 +731,7 @@ nsXBLBinding::UnhookEventHandlers()
       EventListenerFlags flags;
       flags.mCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
 
-      // If this is a command, remove it from the system event group, otherwise 
+      // If this is a command, remove it from the system event group, otherwise
       // remove it from the standard event group.
 
       if ((handler->GetType() & (NS_HANDLER_TYPE_XBL_COMMAND | NS_HANDLER_TYPE_SYSTEM)) &&
@@ -905,7 +905,7 @@ nsXBLBinding::InheritsStyle() const
   // XXX What about bindings with <content> but no kids, e.g., my treecell-text binding?
   if (mContent)
     return mPrototypeBinding->InheritsStyle();
-  
+
   if (mNextBinding)
     return mNextBinding->InheritsStyle();
 
@@ -1034,7 +1034,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
     // Make a new object prototyped by parent_proto and parented by global.
     proto = ::JS_InitClass(cx,                  // context
                            global,              // global object
-                           parent_proto,        // parent proto 
+                           parent_proto,        // parent proto
                            c,                   // JSClass
                            nullptr,              // JSNative ctor
                            0,                   // ctor args
