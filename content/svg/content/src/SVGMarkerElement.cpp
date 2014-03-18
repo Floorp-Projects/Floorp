@@ -301,19 +301,19 @@ SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
                                      float aX, float aY, float aAutoAngle,
                                      bool aIsStart)
 {
-  gfxFloat scale = mEnumAttributes[MARKERUNITS].GetAnimValue() ==
-                     SVG_MARKERUNITS_STROKEWIDTH ? aStrokeWidth : 1.0;
+  float scale = mEnumAttributes[MARKERUNITS].GetAnimValue() ==
+                     SVG_MARKERUNITS_STROKEWIDTH ? aStrokeWidth : 1.0f;
 
-  gfxFloat angle;
+  float angle;
   switch (mOrientType.GetAnimValueInternal()) {
     case SVG_MARKER_ORIENT_AUTO:
       angle = aAutoAngle;
       break;
     case SVG_MARKER_ORIENT_AUTO_START_REVERSE:
-      angle = aAutoAngle + (aIsStart ? M_PI : 0.0);
+      angle = aAutoAngle + (aIsStart ? M_PI : 0.0f);
       break;
     default: // SVG_MARKER_ORIENT_ANGLE
-      angle = mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0;
+      angle = mAngleAttributes[ORIENT].GetAnimValue() * M_PI / 180.0f;
       break;
   }
 
