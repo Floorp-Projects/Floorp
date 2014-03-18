@@ -56,7 +56,7 @@ TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
 void
 TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
                                nsEventStatus* aStatus,
-                               nsDispatchingCallback* aCallBack)
+                               EventDispatchingCallback* aCallBack)
 {
   if (aEvent->message == NS_COMPOSITION_UPDATE) {
     mLastData = aEvent->AsCompositionEvent()->data;
