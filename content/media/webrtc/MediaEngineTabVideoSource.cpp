@@ -23,9 +23,17 @@ using namespace mozilla::gfx;
 NS_IMPL_ISUPPORTS1(MediaEngineTabVideoSource, MediaEngineVideoSource)
 
 MediaEngineTabVideoSource::MediaEngineTabVideoSource()
-  : mName(NS_LITERAL_STRING("share tab")), mUuid(NS_LITERAL_STRING("uuid")),
+: mName(NS_LITERAL_STRING("&getUserMedia.videoDevice.tabShare;")),
+  mUuid(NS_LITERAL_STRING("uuid")),
+  mData(0),
   mMonitor("MediaEngineTabVideoSource")
 {
+}
+
+MediaEngineTabVideoSource::~MediaEngineTabVideoSource()
+{
+  if (mData)
+      free(mData);
 }
 
 nsresult
@@ -39,6 +47,7 @@ MediaEngineTabVideoSource::StartRunnable::Run()
     mVideoSource->mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     mVideoSource->mTimer->InitWithCallback(mVideoSource, mVideoSource->mTimePerFrame, nsITimer:: TYPE_REPEATING_SLACK);
   }
+  mVideoSource->mTabSource->NotifyStreamStart(mVideoSource->mWindow);
   return NS_OK;
 }
 
@@ -54,6 +63,7 @@ MediaEngineTabVideoSource::StopRunnable::Run()
     mVideoSource->mTimer->Cancel();
     mVideoSource->mTimer = nullptr;
   }
+  mVideoSource->mTabSource->NotifyStreamStop(mVideoSource->mWindow);
   return NS_OK;
 }
 
@@ -83,10 +93,11 @@ MediaEngineTabVideoSource::InitRunnable::Run()
   branch->GetIntPref("media.tabstreaming.time_per_frame", &mVideoSource->mTimePerFrame);
   mVideoSource->mData = (unsigned char*)malloc(mVideoSource->mBufW * mVideoSource->mBufH * 4);
 
-  nsCOMPtr<nsITabSource> tabSource = do_GetService(NS_TABSOURCESERVICE_CONTRACTID, &rv);
+  mVideoSource->mTabSource = do_GetService(NS_TABSOURCESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIDOMWindow> win;
-  rv = tabSource->GetTabToStream(getter_AddRefs(win));
+  rv = mVideoSource->mTabSource->GetTabToStream(getter_AddRefs(win));
   NS_ENSURE_SUCCESS(rv, rv);
   if (!win)
     return NS_OK;
