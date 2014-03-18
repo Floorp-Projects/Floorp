@@ -65,6 +65,10 @@ CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
 
   if (aDeprecatedTextureHostFlags & TEXTURE_HOST_TILED) {
     result = new TiledDeprecatedTextureHostOGL();
+#ifdef MOZ_WIDGET_GONK
+  } else if (aDescriptorType == SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+    result = new GrallocDeprecatedTextureHostOGL();
+#endif
   } else {
     result = new TextureImageDeprecatedTextureHostOGL();
   }
@@ -922,6 +926,286 @@ TiledDeprecatedTextureHostOGL::Lock()
   return true;
 }
 
+#ifdef MOZ_WIDGET_GONK
+static gfx::SurfaceFormat
+Deprecated_SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
+                                   bool swapRB = false)
+{
+  switch (aFormat) {
+  case android::PIXEL_FORMAT_BGRA_8888:
+    return swapRB ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::B8G8R8A8;
+  case android::PIXEL_FORMAT_RGBA_8888:
+    return swapRB ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::R8G8B8A8;
+  case android::PIXEL_FORMAT_RGBX_8888:
+    return swapRB ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::R8G8B8X8;
+  case android::PIXEL_FORMAT_RGB_565:
+    return SurfaceFormat::R5G6B5;
+  case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+  case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+  case HAL_PIXEL_FORMAT_YCbCr_422_I:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
+  case HAL_PIXEL_FORMAT_YV12:
+    return SurfaceFormat::B8G8R8A8; // yup, use SurfaceFormat::B8G8R8A8 even though it's a YUV texture. This is an external texture.
+  default:
+    if (aFormat >= 0x100 && aFormat <= 0x1FF) {
+      // Reserved range for HAL specific formats.
+      return SurfaceFormat::B8G8R8A8;
+    } else {
+      // This is not super-unreachable, there's a bunch of hypothetical pixel
+      // formats we don't deal with.
+      // We only want to abort in debug builds here, since if we crash here
+      // we'll take down the compositor process and thus the phone. This seems
+      // like undesirable behaviour. We'd rather have a subtle artifact.
+      MOZ_ASSERT(false, "Unknown Android pixel format.");
+      return SurfaceFormat::UNKNOWN;
+    }
+  }
+}
+
+static GLenum
+Deprecated_TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
+{
+  switch (aFormat) {
+  case HAL_PIXEL_FORMAT_YCbCr_422_SP:
+  case HAL_PIXEL_FORMAT_YCrCb_420_SP:
+  case HAL_PIXEL_FORMAT_YCbCr_422_I:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED:
+  case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
+  case HAL_PIXEL_FORMAT_YV12:
+    return LOCAL_GL_TEXTURE_EXTERNAL;
+  case android::PIXEL_FORMAT_RGBA_8888:
+  case android::PIXEL_FORMAT_RGBX_8888:
+  case android::PIXEL_FORMAT_RGB_565:
+    return LOCAL_GL_TEXTURE_2D;
+  default:
+    if (aFormat >= 0x100 && aFormat <= 0x1FF) {
+      // Reserved range for HAL specific formats.
+      return LOCAL_GL_TEXTURE_EXTERNAL;
+    } else {
+      // This is not super-unreachable, there's a bunch of hypothetical pixel
+      // formats we don't deal with.
+      // We only want to abort in debug builds here, since if we crash here
+      // we'll take down the compositor process and thus the phone. This seems
+      // like undesirable behaviour. We'd rather have a subtle artifact.
+      MOZ_ASSERT(false, "Unknown Android pixel format.");
+      return LOCAL_GL_TEXTURE_EXTERNAL;
+    }
+  }
+}
+
+GrallocDeprecatedTextureHostOGL::GrallocDeprecatedTextureHostOGL()
+: mCompositor(nullptr)
+, mTextureTarget(0)
+, mEGLImage(0)
+, mIsRBSwapped(false)
+{
+}
+
+void GrallocDeprecatedTextureHostOGL::SetCompositor(Compositor* aCompositor)
+{
+  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
+  if (mCompositor && !glCompositor) {
+    DeleteTextures();
+  }
+  mCompositor = glCompositor;
+}
+
+gfx::SurfaceFormat
+GrallocDeprecatedTextureHostOGL::GetFormat() const
+{
+  switch (mTextureTarget) {
+  case LOCAL_GL_TEXTURE_EXTERNAL: return gfx::SurfaceFormat::R8G8B8A8;
+  case LOCAL_GL_TEXTURE_2D: return mFormat;
+  default: return gfx::SurfaceFormat::UNKNOWN;
+  }
+}
+
+void
+GrallocDeprecatedTextureHostOGL::DeleteTextures()
+{
+  if (mEGLImage) {
+    if (gl()->MakeCurrent()) {
+      EGLImageDestroy(gl(), mEGLImage);
+    }
+    mEGLImage = EGL_NO_IMAGE;
+  }
+}
+
+// only used for hacky fix in gecko 23 for bug 862324
+static void
+AddDeprecatedTextureHostToGrallocBufferActor(DeprecatedTextureHost* aDeprecatedTextureHost, const SurfaceDescriptor* aSurfaceDescriptor)
+{
+  if (aSurfaceDescriptor && IsSurfaceDescriptorValid(*aSurfaceDescriptor)) {
+    GrallocBufferActor* actor = static_cast<GrallocBufferActor*>(aSurfaceDescriptor->get_SurfaceDescriptorGralloc().bufferParent());
+    actor->AddDeprecatedTextureHost(aDeprecatedTextureHost);
+  }
+}
+
+static void
+RemoveDeprecatedTextureHostFromGrallocBufferActor(DeprecatedTextureHost* aDeprecatedTextureHost, const SurfaceDescriptor* aSurfaceDescriptor)
+{
+  if (aSurfaceDescriptor && IsSurfaceDescriptorValid(*aSurfaceDescriptor)) {
+    GrallocBufferActor* actor = static_cast<GrallocBufferActor*>(aSurfaceDescriptor->get_SurfaceDescriptorGralloc().bufferParent());
+    actor->RemoveDeprecatedTextureHost(aDeprecatedTextureHost);
+  }
+}
+
+void
+GrallocDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
+                                 nsIntRegion* aRegion,
+                                 nsIntPoint* aOffset)
+{
+  SwapTexturesImpl(aImage, aRegion);
+}
+
+void
+GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage,
+                                        nsIntRegion*)
+{
+  MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceDescriptorGralloc);
+
+  const SurfaceDescriptorGralloc& desc = aImage.get_SurfaceDescriptorGralloc();
+  mGraphicBuffer = GrallocBufferActor::GetFrom(desc);
+  mIsRBSwapped = desc.isRBSwapped();
+  mFormat = Deprecated_SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat(),
+                                               mIsRBSwapped);
+
+  mTextureTarget = Deprecated_TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
+  GLuint tex = GetGLTexture();
+  // delete old EGLImage
+  DeleteTextures();
+
+  if (!gl()->MakeCurrent()) {
+    return;
+  }
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(mTextureTarget, tex);
+  // create new EGLImage
+  // create EGLImage during buffer swap could reduce the graphic driver's task
+  // during rendering.
+  mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
+  gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
+
+}
+
+gl::GLContext*
+GrallocDeprecatedTextureHostOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+void GrallocDeprecatedTextureHostOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+{
+  PROFILER_LABEL("Gralloc", "BindTexture");
+  /*
+   * The job of this function is to ensure that the texture is tied to the
+   * android::GraphicBuffer, so that texturing will source the GraphicBuffer.
+   *
+   * To this effect we create an EGLImage wrapping this GraphicBuffer,
+   * using CreateEGLImageForNativeBuffer, and then we tie this EGLImage to our
+   * texture using fEGLImageTargetTexture2D.
+   *
+   * We try to avoid re-creating the EGLImage everytime, by keeping it around
+   * as the mEGLImage member of this class.
+   */
+  MOZ_ASSERT(gl());
+  if (!gl()->MakeCurrent()) {
+    return;
+  }
+
+  GLuint tex = GetGLTexture();
+
+  gl()->fActiveTexture(aTextureUnit);
+  gl()->fBindTexture(mTextureTarget, tex);
+  ApplyFilterToBoundTexture(gl(), aFilter, mTextureTarget);
+}
+
+bool
+GrallocDeprecatedTextureHostOGL::IsValid() const
+{
+  return !!gl() && !!mGraphicBuffer.get();
+}
+
+GrallocDeprecatedTextureHostOGL::~GrallocDeprecatedTextureHostOGL()
+{
+  DeleteTextures();
+
+  // only done for hacky fix in gecko 23 for bug 862324.
+  // make sure that if the GrallocBufferActor survives us, it doesn't keep a dangling
+  // pointer to us.
+  RemoveDeprecatedTextureHostFromGrallocBufferActor(this, mBuffer);
+}
+
+bool
+GrallocDeprecatedTextureHostOGL::Lock()
+{
+  // Lock/Unlock is done internally when binding the gralloc buffer to a gl texture
+  return IsValid();
+}
+
+void
+GrallocDeprecatedTextureHostOGL::Unlock()
+{
+  // Lock/Unlock is done internally when binding the gralloc buffer to a gl texture
+}
+
+void
+GrallocDeprecatedTextureHostOGL::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
+{
+  MOZ_ASSERT(!mBuffer, "Will leak the old mBuffer");
+
+  if (aBuffer != mBuffer) {
+    // only done for hacky fix in gecko 23 for bug 862324.
+    // Doing this in SwapTextures is not enough, as the crash could occur right after SetBuffer.
+    RemoveDeprecatedTextureHostFromGrallocBufferActor(this, mBuffer);
+    AddDeprecatedTextureHostToGrallocBufferActor(this, aBuffer);
+  }
+
+  mBuffer = aBuffer;
+  mDeAllocator = aAllocator;
+}
+
+LayerRenderState
+GrallocDeprecatedTextureHostOGL::GetRenderState()
+{
+  if (mGraphicBuffer.get()) {
+
+    uint32_t flags = mFlags & TEXTURE_NEEDS_Y_FLIP ? LAYER_RENDER_STATE_Y_FLIPPED : 0;
+
+    /*
+     * The 32 bit format of gralloc buffer is created as RGBA8888 or RGBX888 by default.
+     * For software rendering (non-GL rendering), the content is drawn with BGRA
+     * or BGRX. Therefore, we need to pass the RBSwapped flag for HW composer to swap format.
+     *
+     * For GL rendering content, the content format is RGBA or RGBX which is the same as
+     * the pixel format of gralloc buffer and no need for the RBSwapped flag.
+     */
+
+    if (mIsRBSwapped) {
+      flags |= LAYER_RENDER_STATE_FORMAT_RB_SWAP;
+    }
+
+    nsIntSize bufferSize(mGraphicBuffer->getWidth(), mGraphicBuffer->getHeight());
+
+    return LayerRenderState(mGraphicBuffer.get(),
+                            bufferSize,
+                            flags,
+                            nullptr);
+  }
+
+  return LayerRenderState();
+}
+
+GLuint
+GrallocDeprecatedTextureHostOGL::GetGLTexture()
+{
+  mCompositableBackendData->SetCompositor(mCompositor);
+  return static_cast<CompositableDataGonkOGL*>(mCompositableBackendData.get())->GetTexture();
+}
+
+#endif // MOZ_WIDGET_GONK
+
 TemporaryRef<gfx::DataSourceSurface>
 TextureImageDeprecatedTextureHostOGL::GetAsSurface() {
   RefPtr<gfx::DataSourceSurface> surf =
@@ -938,6 +1222,27 @@ TiledDeprecatedTextureHostOGL::GetAsSurface() {
               : nullptr;
   return surf.forget();
 }
+
+#ifdef MOZ_WIDGET_GONK
+TemporaryRef<gfx::DataSourceSurface>
+GrallocDeprecatedTextureHostOGL::GetAsSurface() {
+  if (!gl()->MakeCurrent()) {
+    return nullptr;
+  }
+  GLuint tex = GetGLTexture();
+  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+  gl()->fBindTexture(mTextureTarget, tex);
+  if (!mEGLImage) {
+    mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
+  }
+  gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
+
+  RefPtr<gfx::DataSourceSurface> surf =
+    IsValid() ? ReadBackSurface(gl(), tex, false, GetFormat())
+              : nullptr;
+  return surf.forget();
+}
+#endif // MOZ_WIDGET_GONK
 
 } // namespace
 } // namespace

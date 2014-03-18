@@ -85,6 +85,11 @@ public:
   // see bug 865908 about fixing this.
   void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
+  // used only for hacky fix in gecko 23 for bug 862324
+  // see bug 865908 about fixing this.
+  void AddDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost);
+  void RemoveDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost);
+
   void AddTextureHost(TextureHost* aTextureHost);
   void RemoveTextureHost();
 
