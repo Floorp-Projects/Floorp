@@ -2317,7 +2317,7 @@ Element::Describe(nsAString& aOutDescription) const
 }
 
 bool
-Element::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
+Element::CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
                                               nsIURI** aURI) const
 {
   if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault ||
