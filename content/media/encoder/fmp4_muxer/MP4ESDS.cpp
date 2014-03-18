@@ -106,8 +106,6 @@ ES_Descriptor::Generate(uint32_t* aBoxSize)
   nsresult rv;
   //   14496-1 '8.3.4 DecoderConfigDescriptor'
   //   14496-1 '10.2.3 SL Packet Header Configuration'
-  Box::MetaHelper meta;
-  meta.Init(mControl);
   FragmentBuffer* frag = mControl->GetFragment(Audio_Track);
   rv = frag->GetCSD(DecodeSpecificInfo);
   NS_ENSURE_SUCCESS(rv, rv);

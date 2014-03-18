@@ -206,17 +206,13 @@ ISOMediaWriter::SetMetadata(TrackMetadataBase* aMetadata)
 {
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_AAC ) {
     mControl->SetMetadata(aMetadata);
-    mAudioFragmentBuffer = new FragmentBuffer(Audio_Track,
-                                              FRAG_DURATION,
-                                              aMetadata);
+    mAudioFragmentBuffer = new FragmentBuffer(Audio_Track, FRAG_DURATION);
     mControl->SetFragment(mAudioFragmentBuffer);
     return NS_OK;
   }
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_AVC) {
     mControl->SetMetadata(aMetadata);
-    mVideoFragmentBuffer = new FragmentBuffer(Video_Track,
-                                              FRAG_DURATION,
-                                              aMetadata);
+    mVideoFragmentBuffer = new FragmentBuffer(Video_Track, FRAG_DURATION);
     mControl->SetFragment(mVideoFragmentBuffer);
     return NS_OK;
   }

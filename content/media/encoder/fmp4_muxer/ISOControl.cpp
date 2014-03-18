@@ -15,8 +15,7 @@ namespace mozilla {
 // January 1, 1970.
 #define iso_time_offset 2082844800
 
-FragmentBuffer::FragmentBuffer(uint32_t aTrackType, uint32_t aFragDuration,
-                               TrackMetadataBase* aMetadata)
+FragmentBuffer::FragmentBuffer(uint32_t aTrackType, uint32_t aFragDuration)
   : mTrackType(aTrackType)
   , mFragDuration(aFragDuration)
   , mMediaStartTime(0)
@@ -25,13 +24,6 @@ FragmentBuffer::FragmentBuffer(uint32_t aTrackType, uint32_t aFragDuration,
   , mEOS(false)
 {
   mFragArray.AppendElement();
-  if (mTrackType == Audio_Track) {
-    nsRefPtr<AACTrackMetadata> audMeta = static_cast<AACTrackMetadata*>(aMetadata);
-    MOZ_ASSERT(audMeta);
-  } else {
-    nsRefPtr<AVCTrackMetadata> vidMeta = static_cast<AVCTrackMetadata*>(aMetadata);
-    MOZ_ASSERT(vidMeta);
-  }
   MOZ_COUNT_CTOR(FragmentBuffer);
 }
 
@@ -157,21 +149,16 @@ ISOControl::GetNextTrackID()
 }
 
 uint32_t
-ISOControl::GetTrackID(uint32_t aTrackType)
+ISOControl::GetTrackID(TrackMetadataBase::MetadataKind aKind)
 {
-  TrackMetadataBase::MetadataKind kind;
-  if (aTrackType == Audio_Track) {
-    kind = TrackMetadataBase::METADATA_AAC;
-  } else {
-    kind = TrackMetadataBase::METADATA_AVC;
-  }
-
   for (uint32_t i = 0; i < mMetaArray.Length(); i++) {
-    if (mMetaArray[i]->GetKind() == kind) {
+    if (mMetaArray[i]->GetKind() == aKind) {
       return (i + 1);
     }
   }
 
+  // Track ID shouldn't be 0. It must be something wrong here.
+  MOZ_ASSERT(0);
   return 0;
 }
 
@@ -187,11 +174,11 @@ ISOControl::SetMetadata(TrackMetadataBase* aTrackMeta)
 }
 
 nsresult
-ISOControl::GetAudioMetadata(nsRefPtr<AACTrackMetadata>& aAudMeta)
+ISOControl::GetAudioMetadata(nsRefPtr<AudioTrackMetadata>& aAudMeta)
 {
   for (uint32_t i = 0; i < mMetaArray.Length() ; i++) {
     if (mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AAC) {
-      aAudMeta = static_cast<AACTrackMetadata*>(mMetaArray[i].get());
+      aAudMeta = static_cast<AudioTrackMetadata*>(mMetaArray[i].get());
       return NS_OK;
     }
   }
@@ -199,22 +186,21 @@ ISOControl::GetAudioMetadata(nsRefPtr<AACTrackMetadata>& aAudMeta)
 }
 
 nsresult
-ISOControl::GetVideoMetadata(nsRefPtr<AVCTrackMetadata>& aVidMeta)
+ISOControl::GetVideoMetadata(nsRefPtr<VideoTrackMetadata>& aVidMeta)
 {
   for (uint32_t i = 0; i < mMetaArray.Length() ; i++) {
     if (mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AVC) {
-      aVidMeta = static_cast<AVCTrackMetadata*>(mMetaArray[i].get());
+      aVidMeta = static_cast<VideoTrackMetadata*>(mMetaArray[i].get());
       return NS_OK;
     }
   }
-
   return NS_ERROR_FAILURE;
 }
 
 bool
 ISOControl::HasAudioTrack()
 {
-  nsRefPtr<AACTrackMetadata> audMeta;
+  nsRefPtr<AudioTrackMetadata> audMeta;
   GetAudioMetadata(audMeta);
   return audMeta;
 }
@@ -222,7 +208,7 @@ ISOControl::HasAudioTrack()
 bool
 ISOControl::HasVideoTrack()
 {
-  nsRefPtr<AVCTrackMetadata> vidMeta;
+  nsRefPtr<VideoTrackMetadata> vidMeta;
   GetVideoMetadata(vidMeta);
   return vidMeta;
 }
