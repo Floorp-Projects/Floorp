@@ -105,12 +105,12 @@ TypedArrayObject::isArrayIndex(jsid id, uint32_t *ip)
 }
 
 void
-TypedArrayObject::neuter(void *newData)
+TypedArrayObject::neuter(JSContext *cx)
 {
     setSlot(LENGTH_SLOT, Int32Value(0));
     setSlot(BYTELENGTH_SLOT, Int32Value(0));
     setSlot(BYTEOFFSET_SLOT, Int32Value(0));
-    setPrivate(newData);
+    setPrivate(nullptr);
 }
 
 ArrayBufferObject *
@@ -2430,11 +2430,11 @@ DataViewObject::initClass(JSContext *cx)
 }
 
 void
-DataViewObject::neuter(void *newData)
+DataViewObject::neuter()
 {
     setSlot(BYTELENGTH_SLOT, Int32Value(0));
     setSlot(BYTEOFFSET_SLOT, Int32Value(0));
-    setPrivate(newData);
+    setPrivate(nullptr);
 }
 
 JSObject *

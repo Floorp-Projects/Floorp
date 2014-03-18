@@ -81,7 +81,7 @@ class TypedArrayObject : public ArrayBufferViewObject
     Value getElement(uint32_t index);
     bool setElement(ThreadSafeContext *cx, uint32_t index, const Value &value);
 
-    void neuter(void *newData);
+    void neuter(JSContext *cx);
 
     static uint32_t slotWidth(int atype) {
         switch (atype) {
@@ -321,7 +321,7 @@ class DataViewObject : public ArrayBufferViewObject
     static bool write(JSContext *cx, Handle<DataViewObject*> obj,
                       CallArgs &args, const char *method);
 
-    void neuter(void *newData);
+    void neuter();
 
   private:
     static const JSFunctionSpec jsfuncs[];
