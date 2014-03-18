@@ -63,13 +63,6 @@ Zone::~Zone()
 #endif
 }
 
-bool
-Zone::init(JSContext *cx)
-{
-    types.init(cx);
-    return true;
-}
-
 void
 Zone::setNeedsBarrier(bool needs, ShouldUpdateIon updateIon)
 {

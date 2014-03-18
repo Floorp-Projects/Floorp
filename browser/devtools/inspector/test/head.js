@@ -202,6 +202,15 @@ function getComputedView() {
   return inspector.sidebar.getWindowForTab("computedview").computedview.view;
 }
 
+function waitForView(aName, aCallback) {
+  let inspector = getActiveInspector();
+  if (inspector.sidebar.getTab(aName)) {
+    aCallback();
+  } else {
+    inspector.sidebar.once(aName + "-ready", aCallback);
+  }
+}
+
 function synthesizeKeyFromKeyTag(aKeyId) {
   let key = document.getElementById(aKeyId);
   isnot(key, null, "Successfully retrieved the <key> node");

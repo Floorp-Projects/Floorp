@@ -946,7 +946,7 @@ toolbaritem[overflowedItem=true],
   -moz-box-orient: horizontal;
 }
 
-.widget-overflow-list .toolbarbutton-1 > .toolbarbutton-text,
+.widget-overflow-list .toolbarbutton-1:not(.toolbarbutton-combined) > .toolbarbutton-text,
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-text {
   text-align: start;
   -moz-padding-start: .5em;

@@ -305,6 +305,7 @@
   <string name="home_reading_list_hint">&home_reading_list_hint2;</string>
   <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>
   <string name="home_default_empty">&home_default_empty;</string>
+  <string name="home_move_up_to_filter">&home_move_up_to_filter;</string>
   <string name="pin_site_dialog_hint">&pin_site_dialog_hint;</string>
 
   <string name="filepicker_title">&filepicker_title;</string>
@@ -396,5 +397,8 @@
 
   <string name="actionbar_menu">&actionbar_menu;</string>
   <string name="actionbar_done">&actionbar_done;</string>
+
+  <!-- Miscellaneous -->
+  <string name="ellipsis">&ellipsis;</string>
 
 </resources>

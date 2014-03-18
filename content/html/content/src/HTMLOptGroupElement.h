@@ -11,6 +11,7 @@
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla {
+class EventChainPreVisitor;
 namespace dom {
 
 class HTMLOptGroupElement MOZ_FINAL : public nsGenericHTMLElement,
@@ -34,7 +35,7 @@ public:
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
 
   // nsIContent
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
  

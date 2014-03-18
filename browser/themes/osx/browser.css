@@ -506,7 +506,7 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover {
   transition: background-color 250ms;
 }
 
-.toolbarbutton-1[type="menu-button"] {
+.toolbarbutton-1[type="menu-button"]:not([overflowedItem=true]) {
   padding: 0;
 }
 

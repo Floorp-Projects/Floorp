@@ -373,9 +373,6 @@ JSObject::setDenseOrTypedArrayElementWithType(js::ExclusiveContext *cx, uint32_t
 /* static */ inline bool
 JSObject::setSingletonType(js::ExclusiveContext *cx, js::HandleObject obj)
 {
-    if (!cx->typeInferenceEnabled())
-        return true;
-
     JS_ASSERT_IF(cx->isJSContext(),
                  !IsInsideNursery(cx->asJSContext()->runtime(), obj.get()));
 

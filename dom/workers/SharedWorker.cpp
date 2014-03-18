@@ -7,10 +7,10 @@
 
 #include "nsPIDOMWindow.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIDOMEvent.h"
 
@@ -20,6 +20,7 @@
 
 using mozilla::dom::Optional;
 using mozilla::dom::Sequence;
+using namespace mozilla;
 
 USING_WORKERS_NAMESPACE
 
@@ -198,7 +199,7 @@ SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 nsresult
-SharedWorker::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+SharedWorker::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnMainThread();
 

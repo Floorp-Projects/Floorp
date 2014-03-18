@@ -46,3 +46,10 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = 'toolkitcomps'
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += [
+        '-Wno-null-conversion',
+        '-Wno-sign-compare',
+    ]

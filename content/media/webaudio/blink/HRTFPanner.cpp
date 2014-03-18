@@ -112,11 +112,13 @@ int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azi
 
 void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus)
 {
+#ifdef DEBUG
     unsigned numInputChannels =
         inputBus->IsNull() ? 0 : inputBus->mChannelData.Length();
 
     MOZ_ASSERT(numInputChannels <= 2);
     MOZ_ASSERT(inputBus->mDuration == WEBAUDIO_BLOCK_SIZE);
+#endif
 
     bool isOutputGood = outputBus && outputBus->mChannelData.Length() == 2 && outputBus->mDuration == WEBAUDIO_BLOCK_SIZE;
     MOZ_ASSERT(isOutputGood);

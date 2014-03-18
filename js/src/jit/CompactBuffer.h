@@ -87,6 +87,12 @@ class CompactBufferReader
         JS_ASSERT(buffer_ <= end_);
         return buffer_ < end_;
     }
+
+    void seek(const uint8_t *start, uint32_t offset) {
+        buffer_ = start + offset;
+        MOZ_ASSERT(start < end_);
+        MOZ_ASSERT(buffer_ < end_);
+    }
 };
 
 class CompactBufferWriter
