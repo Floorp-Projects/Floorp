@@ -114,6 +114,9 @@ this.SystemMessagePermissionsTable = {
     "settings": ["read", "write"]
   },
   "wifip2p-pairing-request": { },
+  "first-run-with-sim": {
+    "settings": ["read", "write"]
+  }
 };
 
 this.SystemMessagePermissionsChecker = {

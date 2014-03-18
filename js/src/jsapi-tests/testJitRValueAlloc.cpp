@@ -21,6 +21,9 @@ Read(const RValueAllocation &slot)
     CompactBufferWriter writer;
     slot.write(writer);
 
+    // Call hash to run its assertions.
+    slot.hash();
+
     CompactBufferReader reader(writer);
     return RValueAllocation::read(reader);
 }
@@ -210,18 +213,6 @@ BEGIN_TEST(testJitRValueAlloc_UndefinedAndNull)
     return true;
 }
 END_TEST(testJitRValueAlloc_UndefinedAndNull)
-
-BEGIN_TEST(testJitRValueAlloc_Int32)
-{
-    RValueAllocation s;
-    int32_t i, last = 0, tmp;
-    for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
-        s = RValueAllocation::Int32(i);
-        CHECK(s == Read(s));
-    }
-    return true;
-}
-END_TEST(testJitRValueAlloc_Int32)
 
 BEGIN_TEST(testJitRValueAlloc_ConstantPool)
 {

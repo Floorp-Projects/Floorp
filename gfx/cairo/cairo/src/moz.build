@@ -202,3 +202,18 @@ for var in ('MOZ_TREE_CAIRO', 'MOZ_TREE_PIXMAN'):
 if CONFIG['MOZ_TREE_FREETYPE']:
     DEFINES['HAVE_FT_LIBRARY_SETLCDFILTER'] = True
     DEFINES['FT_LCD_FILTER_H'] = '%s/modules/freetype2/include/freetype/ftlcdfil.h' % TOPSRCDIR
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += [
+        '-Wno-enum-compare',
+        '-Wno-int-to-pointer-cast',
+        '-Wno-sign-compare',
+        '-Wno-type-limits',
+    ]
+    if CONFIG['CLANG_CXX']:
+        CFLAGS += [
+            '-Wno-incompatible-pointer-types',
+            '-Wno-tautological-compare',
+            '-Wno-tautological-constant-out-of-range-compare',
+        ]

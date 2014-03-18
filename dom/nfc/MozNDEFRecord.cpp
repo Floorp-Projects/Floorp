@@ -67,8 +67,10 @@ MozNDEFRecord::DropData()
 /* static */
 already_AddRefed<MozNDEFRecord>
 MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
-                           uint8_t aTnf, const Uint8Array& aType,
-                           const Uint8Array& aId, const Uint8Array& aPayload,
+                           uint8_t aTnf,
+                           const Optional<Uint8Array>& aType,
+                           const Optional<Uint8Array>& aId,
+                           const Optional<Uint8Array>& aPayload,
                            ErrorResult& aRv)
 {
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
@@ -88,15 +90,25 @@ MozNDEFRecord::Constructor(const GlobalObject& aGlobal,
 }
 
 MozNDEFRecord::MozNDEFRecord(JSContext* aCx, nsPIDOMWindow* aWindow,
-                             uint8_t aTnf, const Uint8Array& aType,
-                             const Uint8Array& aId, const Uint8Array& aPayload)
+                             uint8_t aTnf,
+                             const Optional<Uint8Array>& aType,
+                             const Optional<Uint8Array>& aId,
+                             const Optional<Uint8Array>& aPayload)
   : mTnf(aTnf)
 {
   mWindow = aWindow; // For GetParentObject()
 
-  mType = Uint8Array::Create(aCx, this, aType.Length(), aType.Data());
-  mId = Uint8Array::Create(aCx, this, aId.Length(), aId.Data());
-  mPayload = Uint8Array::Create(aCx, this, aPayload.Length(), aPayload.Data());
+  if (aType.WasPassed()) {
+    mType = Uint8Array::Create(aCx, this, aType.Value().Length(), aType.Value().Data());
+  }
+
+  if (aId.WasPassed()) {
+    mId = Uint8Array::Create(aCx, this, aId.Value().Length(), aId.Value().Data());
+  }
+
+  if (aPayload.WasPassed()) {
+    mPayload = Uint8Array::Create(aCx, this, aPayload.Value().Length(), aPayload.Value().Data());
+  }
 
   SetIsDOMBinding();
   HoldData();

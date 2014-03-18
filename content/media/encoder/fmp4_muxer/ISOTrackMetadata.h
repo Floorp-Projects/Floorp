@@ -10,40 +10,87 @@
 
 namespace mozilla {
 
-class AACTrackMetadata : public TrackMetadataBase {
+class AACTrackMetadata : public AudioTrackMetadata {
 public:
-  uint32_t SampleRate;     // From 14496-3 table 1.16, it could be 7350 ~ 96000.
-  uint32_t FrameDuration;  // Audio frame duration based on SampleRate.
-  uint32_t FrameSize;      // Audio frame size, 0 is variant size.
-  uint32_t Channels;       // Channel number, it should be 1 or 2.
+  // AudioTrackMetadata members
+  uint32_t GetAudioFrameDuration() MOZ_OVERRIDE { return mFrameDuration; }
+  uint32_t GetAudioFrameSize() MOZ_OVERRIDE { return mFrameSize; }
+  uint32_t GetAudioSampleRate() MOZ_OVERRIDE { return mSampleRate; }
+  uint32_t GetAudioChannels() MOZ_OVERRIDE { return mChannels; }
 
+  // TrackMetadataBase member
+  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AAC; }
+
+  // AACTrackMetadata members
   AACTrackMetadata()
-    : SampleRate(0)
-    , FrameDuration(0)
-    , FrameSize(0)
-    , Channels(0) {
+    : mSampleRate(0)
+    , mFrameDuration(0)
+    , mFrameSize(0)
+    , mChannels(0) {
     MOZ_COUNT_CTOR(AACTrackMetadata);
   }
   ~AACTrackMetadata() { MOZ_COUNT_DTOR(AACTrackMetadata); }
-  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AAC; }
+
+  uint32_t mSampleRate;     // From 14496-3 table 1.16, it could be 7350 ~ 96000.
+  uint32_t mFrameDuration;  // Audio frame duration based on SampleRate.
+  uint32_t mFrameSize;      // Audio frame size, 0 is variant size.
+  uint32_t mChannels;       // Channel number, it should be 1 or 2.
 };
 
-class AVCTrackMetadata : public TrackMetadataBase {
-public:
-  uint32_t Height;
-  uint32_t Width;
-  uint32_t VideoFrequency;  // for AVC, it should be 90k Hz.
-  uint32_t FrameRate;       // frames per second
+// AVC clock rate is 90k Hz.
+#define AVC_CLOCK_RATE 90000
 
+class AVCTrackMetadata : public VideoTrackMetadata {
+public:
+  // VideoTrackMetadata members
+  uint32_t GetVideoHeight() MOZ_OVERRIDE { return mHeight; }
+  uint32_t GetVideoWidth() MOZ_OVERRIDE {return mWidth; }
+  uint32_t GetVideoClockRate() MOZ_OVERRIDE { return AVC_CLOCK_RATE; }
+  uint32_t GetVideoFrameRate() MOZ_OVERRIDE { return mFrameRate; }
+
+  // TrackMetadataBase member
+  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AVC; }
+
+  // AVCTrackMetadata
   AVCTrackMetadata()
-    : Height(0)
-    , Width(0)
-    , VideoFrequency(0)
-    , FrameRate(0) {
+    : mHeight(0)
+    , mWidth(0)
+    , mFrameRate(0) {
     MOZ_COUNT_CTOR(AVCTrackMetadata);
   }
   ~AVCTrackMetadata() { MOZ_COUNT_DTOR(AVCTrackMetadata); }
-  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AVC; }
+
+  uint32_t mHeight;
+  uint32_t mWidth;
+  uint32_t mFrameRate;       // frames per second
+};
+
+
+// AMR sample rate is 8000 samples/s.
+#define AMR_SAMPLE_RATE 8000
+
+// Channel number is always 1.
+#define AMR_CHANNELS    1
+
+// AMR speech codec, 3GPP TS 26.071. Encoder and continer support AMR-NB only
+// currently.
+class AMRTrackMetadata : public AudioTrackMetadata {
+public:
+  // AudioTrackMetadata members
+  //
+  // The number of sample sets generates by encoder is variant. So the
+  // frame duration and frame size are both 0.
+  uint32_t GetAudioFrameDuration() MOZ_OVERRIDE { return 0; }
+  uint32_t GetAudioFrameSize() MOZ_OVERRIDE { return 0; }
+  uint32_t GetAudioSampleRate() MOZ_OVERRIDE { return AMR_SAMPLE_RATE; }
+  uint32_t GetAudioChannels() MOZ_OVERRIDE { return AMR_CHANNELS; }
+
+  // TrackMetadataBase member
+  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AMR; }
+
+  // AMRTrackMetadata members
+  AMRTrackMetadata() { MOZ_COUNT_CTOR(AMRTrackMetadata); }
+  ~AMRTrackMetadata() { MOZ_COUNT_DTOR(AMRTrackMetadata); }
 };
 
 }
