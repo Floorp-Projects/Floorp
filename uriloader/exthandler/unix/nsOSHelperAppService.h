@@ -37,12 +37,12 @@ public:
   nsresult OSProtocolHandlerExists(const char * aProtocolScheme, bool * aHandlerExists);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
-  // GetFileTokenForPath must be implemented by each platform. 
-  // platformAppPath --> a platform specific path to an application that we got out of the 
+  // GetFileTokenForPath must be implemented by each platform.
+  // platformAppPath --> a platform specific path to an application that we got out of the
   //                     rdf data source. This can be a mac file spec, a unix path or a windows path depending on the platform
   // aFile --> an nsIFile representation of that platform application path.
   virtual nsresult GetFileTokenForPath(const char16_t * platformAppPath, nsIFile ** aFile);
-  
+
 protected:
   already_AddRefed<nsMIMEInfoBase> GetFromType(const nsCString& aMimeType);
   already_AddRefed<nsMIMEInfoBase> GetFromExtension(const nsCString& aFileExt);
@@ -112,7 +112,7 @@ private:
                                               nsAString& aHandler,
                                               nsAString& aDescription,
                                               nsAString& aMozillaFlags);
-  
+
   static nsresult DoLookUpHandlerAndDescription(const nsAString& aMajorType,
                                                 const nsAString& aMinorType,
                                                 nsHashtable& aTypeOptions,
@@ -120,7 +120,7 @@ private:
                                                 nsAString& aDescription,
                                                 nsAString& aMozillaFlags,
                                                 bool aUserData);
-  
+
   static nsresult GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
                                                           const nsAString& aMajorType,
                                                           const nsAString& aMinorType,
