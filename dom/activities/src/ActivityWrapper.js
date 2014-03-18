@@ -41,7 +41,7 @@ ActivityWrapper.prototype = {
                     .createInstance(Ci.nsIDOMMozActivityRequestHandler);
     handler.wrappedJSObject._id = aMessage.id;
 
-    // options is an nsIDOMActivityOptions object.
+    // options is an ActivityOptions dictionary.
     var options = handler.wrappedJSObject._options;
     options.wrappedJSObject._name = aMessage.payload.name;
     options.wrappedJSObject._data = Cu.cloneInto(aMessage.payload.data, aWindow);

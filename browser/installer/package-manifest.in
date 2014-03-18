@@ -544,7 +544,6 @@
 @BINPATH@/components/SystemMessageManager.manifest
 
 @BINPATH@/components/Activities.manifest
-@BINPATH@/components/ActivityOptions.js
 @BINPATH@/components/ActivityProxy.js
 @BINPATH@/components/ActivityRequestHandler.js
 @BINPATH@/components/ActivityWrapper.js
