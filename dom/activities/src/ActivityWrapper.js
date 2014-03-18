@@ -41,10 +41,11 @@ ActivityWrapper.prototype = {
                     .createInstance(Ci.nsIDOMMozActivityRequestHandler);
     handler.wrappedJSObject._id = aMessage.id;
 
-    // options is an nsIDOMActivityOptions object.
-    var options = handler.wrappedJSObject._options;
-    options.wrappedJSObject._name = aMessage.payload.name;
-    options.wrappedJSObject._data = Cu.cloneInto(aMessage.payload.data, aWindow);
+    // options is an ActivityOptions dictionary.
+   handler.wrappedJSObject._options = Cu.cloneInto({
+     name: aMessage.payload.name,
+     data: Cu.cloneInto(aMessage.payload.data, aWindow),
+   }, aWindow);
 
     // When the activity window is closed, fire an error to notify the activity
     // caller of the situation.

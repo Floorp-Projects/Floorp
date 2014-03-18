@@ -4,7 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMMozActivityOptions;
 interface nsIDOMWindow;
 
 /**
@@ -14,7 +13,7 @@ interface nsIDOMWindow;
 interface nsIActivityProxy : nsISupports
 {
     void startActivity(in nsISupports /* MozActivity */ activity,
-                       in nsIDOMMozActivityOptions options,
+                       in jsval options,
                        in nsIDOMWindow window);
     void cleanup();
 };

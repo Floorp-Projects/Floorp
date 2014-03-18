@@ -9,6 +9,3 @@ contract @mozilla.org/dom/system-messages/configurator/activity;1 {d2296daa-c406
 
 component {9326952a-dbe3-4d81-a51f-d9c160d96d6b} ActivityRequestHandler.js
 contract @mozilla.org/dom/activities/request-handler;1 {9326952a-dbe3-4d81-a51f-d9c160d96d6b}
-
-component {ee983dbb-d5ea-4c5b-be98-10a13cac9f9d} ActivityOptions.js
-contract @mozilla.org/dom/activities/options;1 {ee983dbb-d5ea-4c5b-be98-10a13cac9f9d}
