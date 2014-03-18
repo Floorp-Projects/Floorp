@@ -511,7 +511,7 @@ HTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-HTMLFormElement::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLFormElement::WillHandleEvent(EventChainPostVisitor& aVisitor)
 {
   // If this is the bubble stage and there is a nested form below us which
   // received a submit event we do *not* want to handle the submit event
@@ -526,7 +526,7 @@ HTMLFormElement::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-HTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLFormElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   if (aVisitor.mEvent->originalTarget == static_cast<nsIContent*>(this)) {
     uint32_t msg = aVisitor.mEvent->message;

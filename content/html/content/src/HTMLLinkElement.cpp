@@ -309,7 +309,7 @@ HTMLLinkElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-HTMLLinkElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLLinkElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
 }

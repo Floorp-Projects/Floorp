@@ -4282,13 +4282,13 @@ nsDOMDeviceStorage::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsDOMDeviceStorage::WillHandleEvent(nsEventChainPostVisitor & aVisitor)
+nsDOMDeviceStorage::WillHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return nsDOMEventTargetHelper::WillHandleEvent(aVisitor);
 }
 
 nsresult
-nsDOMDeviceStorage::PostHandleEvent(nsEventChainPostVisitor & aVisitor)
+nsDOMDeviceStorage::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return nsDOMEventTargetHelper::PostHandleEvent(aVisitor);
 }

@@ -102,6 +102,7 @@ enum {
 ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
 
 namespace mozilla {
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventChainVisitor;
 class EventListenerManager;
@@ -1118,7 +1119,7 @@ protected:
   /**
    * Handle default actions for link event if the event isn't consumed yet.
    */
-  nsresult PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor);
+  nsresult PostHandleEventForLinks(EventChainPostVisitor& aVisitor);
 
   /**
    * Get the target of this link element. Consumers should established that

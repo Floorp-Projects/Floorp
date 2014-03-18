@@ -251,7 +251,7 @@ HTMLAnchorElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-HTMLAnchorElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLAnchorElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
 }

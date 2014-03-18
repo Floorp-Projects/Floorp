@@ -305,7 +305,7 @@ nsDOMEventTargetHelper::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsDOMEventTargetHelper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+nsDOMEventTargetHelper::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return NS_OK;
 }
