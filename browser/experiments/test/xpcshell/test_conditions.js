@@ -74,6 +74,23 @@ add_task(function* test_setup() {
   let experiments = new Experiments.Experiments();
 });
 
+// This function exists solely to be .toSource()d
+const sanityFilter = function filter(c) {
+  if (c.telemetryPayload === undefined) {
+    throw Error("No .telemetryPayload");
+  }
+  if (c.telemetryPayload.simpleMeasurements === undefined) {
+    throw Error("No .simpleMeasurements");
+  }
+  if (c.healthReportPayload === undefined) {
+    throw Error("No .healthReportPayload");
+  }
+  if (c.healthReportPayload.geckoAppInfo == undefined) {
+    throw Error("No .geckoAppInfo");
+  }
+  return true;
+}
+
 add_task(function* test_simpleFields() {
   let testData = [
     // "expected applicable?", failure reason or null, manifest data
@@ -83,8 +100,12 @@ add_task(function* test_simpleFields() {
     [true,  null, {buildIDs: ["not-a-build-id", gAppInfo.platformBuildID]}],
     [true,  null, {jsfilter: "function filter(c) { return true; }"}],
     [false, null, {jsfilter: "function filter(c) { return false; }"}],
+    [true,  null, {jsfilter: "function filter(c) { return 123; }"}], // truthy
+    [false, null, {jsfilter: "function filter(c) { return ''; }"}], // falsy
+    [false, null, {jsfilter: "function filter(c) { var a = []; }"}], // undefined
     [false, "jsfilter:rejected some error", {jsfilter: "function filter(c) { throw new Error('some error'); }"}],
     [false, "jsfilter:evalFailure", {jsfilter: "123, this won't work"}],
+    [true,  {jsfilter: "var filter = " + sanityFilter.toSource()}],
   ];
 
   for (let i=0; i<testData.length; ++i) {
