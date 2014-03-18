@@ -372,23 +372,23 @@ GetViewListRef(ArrayBufferObject *obj)
 }
 
 /* static */ bool
-ArrayBufferObject::neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer)
+ArrayBufferObject::neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer, void *newData)
 {
-    ArrayBufferViewObject *view;
-    size_t numViews = 0;
-    for (view = GetViewList(buffer); view; view = view->nextView()) {
-        numViews++;
-        view->neuter(cx);
-
-        // Notify compiled jit code that the base pointer has moved.
-        MarkObjectStateChange(cx, view);
-    }
-
     // neuterAsmJSArrayBuffer adjusts state specific to the ArrayBuffer data
     // itself, but it only affects the behavior of views
     if (buffer->isAsmJSArrayBuffer()) {
         if (!ArrayBufferObject::neuterAsmJSArrayBuffer(cx, *buffer))
             return false;
+    }
+
+    ArrayBufferViewObject *view;
+    size_t numViews = 0;
+    for (view = GetViewList(buffer); view; view = view->nextView()) {
+        numViews++;
+        view->neuter(newData);
+
+        // Notify compiled jit code that the base pointer has moved.
+        MarkObjectStateChange(cx, view);
     }
 
     // Remove buffer from the list of buffers with > 1 view.
@@ -434,12 +434,9 @@ ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
     // Update all views.
     uintptr_t newDataPointer = uintptr_t(newHeader->elements());
     for (ArrayBufferViewObject *view = viewListHead; view; view = view->nextView()) {
-        // Watch out for NULL data pointers in views. This either
-        // means that the view is not fully initialized (in which case
-        // it'll be initialized later with the correct pointer) or
-        // that the view has been neutered. In that case, the buffer
-        // is "en route" to being neutered but the isNeuteredBuffer()
-        // flag may not yet be set.
+        // Watch out for NULL data pointers in views. This means that the view
+        // is not fully initialized (in which case it'll be initialized later
+        // with the correct pointer).
         uint8_t *viewDataPointer = static_cast<uint8_t*>(view->getPrivate());
         if (viewDataPointer) {
             viewDataPointer += newDataPointer - oldDataPointer;
@@ -794,7 +791,7 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
 
     // Neuter the views, which may also mprotect(PROT_NONE) the buffer. So do
     // it after copying out the data.
-    if (!ArrayBufferObject::neuterViews(cx, buffer))
+    if (!ArrayBufferObject::neuterViews(cx, buffer, newHeader->elements()))
         return false;
 
     // If the elements were transferrable, revert the buffer back to using
@@ -1193,17 +1190,13 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
     HeapSlot &bufSlot = obj->getReservedSlotRef(BUFFER_SLOT);
     MarkSlot(trc, &bufSlot, "typedarray.buffer");
 
-    /* Update obj's data slot if the array buffer moved. Note that during
-     * initialization, bufSlot may still be JSVAL_VOID. */
+    // Update obj's data slot if the array buffer moved. Note that during
+    // initialization, bufSlot may still contain |undefined|.
     if (bufSlot.isObject()) {
         ArrayBufferObject &buf = AsArrayBuffer(&bufSlot.toObject());
-        if (buf.getElementsHeader()->isNeuteredBuffer()) {
-            // When a view is neutered, it is set to NULL
-            JS_ASSERT(obj->getPrivate() == nullptr);
-        } else {
-            int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
-            obj->initPrivate(buf.dataPointer() + offset);
-        }
+        int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
+        MOZ_ASSERT(buf.dataPointer() != nullptr);
+        obj->initPrivate(buf.dataPointer() + offset);
     }
 
     /* Update NEXT_VIEW_SLOT, if the view moved. */
@@ -1222,14 +1215,15 @@ ArrayBufferViewObject::prependToViews(ArrayBufferViewObject *viewsHead)
 }
 
 void
-ArrayBufferViewObject::neuter(JSContext *cx)
+ArrayBufferViewObject::neuter(void *newData)
 {
+    MOZ_ASSERT(newData != nullptr);
     if (is<DataViewObject>())
-        as<DataViewObject>().neuter();
+        as<DataViewObject>().neuter(newData);
     else if (is<TypedArrayObject>())
-        as<TypedArrayObject>().neuter(cx);
+        as<TypedArrayObject>().neuter(newData);
     else
-        as<TypedObject>().neuter(cx);
+        as<TypedObject>().neuter(newData);
 }
 
 /* JS Friend API */
@@ -1298,7 +1292,7 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
     }
 
     // Mark all views of the ArrayBuffer as neutered.
-    if (!ArrayBufferObject::neuterViews(cx, buffer)) {
+    if (!ArrayBufferObject::neuterViews(cx, buffer, newHeader->elements())) {
         if (buffer->hasStealableContents()) {
             FreeOp fop(cx->runtime(), false);
             fop.free_(newHeader);
