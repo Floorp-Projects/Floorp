@@ -639,12 +639,14 @@
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&backCmd.label;"
                          command="Browser:BackOrBackDuplicate"
+                         cui-areatype="toolbar"
                          onclick="checkForMiddleClick(this, event);"
                          tooltip="back-button-tooltip"
                          context="backForwardMenu"/>
           <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&forwardCmd.label;"
                          command="Browser:ForwardOrForwardDuplicate"
+                         cui-areatype="toolbar"
                          onclick="checkForMiddleClick(this, event);"
                          tooltip="forward-button-tooltip"
                          context="backForwardMenu"/>
@@ -893,14 +895,17 @@
 
       <toolbarbutton id="nav-bar-overflow-button"
                      class="toolbarbutton-1 chromeclass-toolbar-additional overflow-button"
+                     cui-areatype="toolbar"
                      skipintoolbarset="true"
                      tooltiptext="&navbarOverflow.label;"/>
 
       <toolbaritem id="PanelUI-button"
                    class="chromeclass-toolbar-additional"
+                   cui-areatype="toolbar"
                    removable="false">
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
+                       cui-areatype="toolbar"
                        label="&brandShortName;"
                        tooltiptext="&appmenu.tooltip;"/>
       </toolbaritem>
