@@ -453,9 +453,9 @@ function SetTypedObjectValue(descr, typedObj, offset, fromValue) {
   new TypedObjectPointer(descr, typedObj, offset).set(fromValue);
 }
 
-// Assigns `fromValue` to the memory pointed at by `this`, adapting it
-// to `typeRepr` as needed. This is the most general entry point and
-// works for any type.
+// Writes `fromValue` into the memory pointed at by `this`, adapting
+// it to `typeRepr` as needed. This is the most general entry point
+// and works for any type.
 TypedObjectPointer.prototype.set = function(fromValue) {
   assert(TypedObjectIsAttached(this.typedObj), "set() called with unattached typedObj");
 
@@ -464,7 +464,7 @@ TypedObjectPointer.prototype.set = function(fromValue) {
   // memcpy.
   if (IsObject(fromValue) && ObjectIsTypedObject(fromValue)) {
     var typeRepr = DESCR_TYPE_REPR(this.descr);
-    if (!typeRepr.variable && TYPEDOBJ_TYPE_REPR(fromValue) === typeRepr) {
+    if (!this.descr.variable && TYPEDOBJ_TYPE_REPR(fromValue) === typeRepr) {
       if (!TypedObjectIsAttached(fromValue))
         ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
