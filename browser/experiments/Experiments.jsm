@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
@@ -221,6 +222,8 @@ Experiments.Experiments = function (policy=new Experiments.Policy()) {
   // Timer for re-evaluating experiment status.
   this._timer = null;
 
+  this._shutdown = false;
+
   this.init();
 };
 
@@ -240,6 +243,9 @@ Experiments.Experiments.prototype = {
     gPrefsTelemetry.observe(PREF_TELEMETRY_ENABLED, this._telemetryStatusChanged, this);
     gPrefsTelemetry.observe(PREF_TELEMETRY_PRERELEASE, this._telemetryStatusChanged, this);
 
+    AsyncShutdown.profileBeforeChange.addBlocker("Experiments.jsm shutdown",
+      this.uninit.bind(this));
+
     AddonManager.addAddonListener(this);
 
     this._experiments = new Map();
@@ -251,21 +257,35 @@ Experiments.Experiments.prototype = {
    *         The promise is fulfilled when all pending tasks are finished.
    */
   uninit: function () {
-    AddonManager.removeAddonListener(this);
+    if (!this._shutdown) {
+      AddonManager.removeAddonListener(this);
 
-    gPrefs.ignore(PREF_LOGGING, configureLogging);
-    gPrefs.ignore(PREF_MANIFEST_URI, this.updateManifest, this);
-    gPrefs.ignore(PREF_ENABLED, this._toggleExperimentsEnabled, this);
+      gPrefs.ignore(PREF_LOGGING, configureLogging);
+      gPrefs.ignore(PREF_MANIFEST_URI, this.updateManifest, this);
+      gPrefs.ignore(PREF_ENABLED, this._toggleExperimentsEnabled, this);
 
-    gPrefsTelemetry.ignore(PREF_TELEMETRY_ENABLED, this._telemetryStatusChanged, this);
-    gPrefsTelemetry.ignore(PREF_TELEMETRY_PRERELEASE, this._telemetryStatusChanged, this);
+      gPrefsTelemetry.ignore(PREF_TELEMETRY_ENABLED, this._telemetryStatusChanged, this);
+      gPrefsTelemetry.ignore(PREF_TELEMETRY_PRERELEASE, this._telemetryStatusChanged, this);
 
-    if (this._timer) {
-      this._timer.clear();
+      if (this._timer) {
+        this._timer.clear();
+      }
     }
 
-    let tasks = this._pendingTasks;
-    return this._pendingTasksDone();
+    this._shutdown = true;
+    if (this._pendingTasks.saveToCache) {
+      return this._pendingTasks.saveToCache;
+    }
+    return Promise.resolve();
+  },
+
+  /**
+   * Throws an exception if we've already shut down.
+   */
+  _checkForShutdown: function() {
+    if (this._shutdown) {
+      throw Error("uninit() already called");
+    }
   },
 
   /**
@@ -369,6 +389,10 @@ Experiments.Experiments.prototype = {
       return Promise.reject(new Error("experiments are disabled"));
     }
 
+    if (this._shutdown) {
+      return Promise.reject(Error("uninit() alrady called"));
+    }
+
     if (this._pendingTasks.updateManifest) {
       return this._pendingTasks.updateManifest;
     }
@@ -376,6 +400,8 @@ Experiments.Experiments.prototype = {
     let uri = Services.urlFormatter.formatURLPref(PREF_BRANCH + PREF_MANIFEST_URI);
 
     this._pendingTasks.updateManifest = Task.spawn(function () {
+      this._checkForShutdown();
+
       // Don't interfere while we're saving or loading the cache.
       try {
         yield this._pendingTasksDone([this._pendingTasks.updateManifest]);
@@ -386,6 +412,8 @@ Experiments.Experiments.prototype = {
       try {
         let responseText = yield this._httpGetRequest(uri);
         gLogger.trace("Experiments::updateManifest::updateTask() - responseText=\"" + responseText + "\"");
+
+        this._checkForShutdown();
 
         let data = JSON.parse(responseText);
         this._updateExperiments(data);
@@ -407,6 +435,8 @@ Experiments.Experiments.prototype = {
   notify: function (timer) {
     gLogger.trace("Experiments::notify()");
 
+    this._checkForShutdown();
+
     if (this._pendingTasks.evaluateExperiments) {
       return;
     }
@@ -421,6 +451,7 @@ Experiments.Experiments.prototype = {
   },
 
   onDisabled: function (addon) {
+    this._checkForShutdown();
     let experiment = this._experiments.get(addon.id);
     if (!experiment) {
       return;
@@ -430,6 +461,7 @@ Experiments.Experiments.prototype = {
   },
 
   onUninstalled: function (addon) {
+    this._checkForShutdown();
     let experiment = this._experiments.get(addon.id);
     if (!experiment) {
       return;
@@ -672,6 +704,10 @@ Experiments.Experiments.prototype = {
   _disableExperiments: function () {
     gLogger.trace("Experiments::disableExperiments()");
 
+    if (this._shutdown) {
+      return Promise.reject(Error("uninit() alrady called"));
+    }
+
     let active = this._getActiveExperiment();
     let promise = Promise.resolve();
     if (active) {
@@ -693,6 +729,8 @@ Experiments.Experiments.prototype = {
    */
   disableExperiment: function (experimentId, userDisabled=true) {
     gLogger.trace("Experiments::disableExperiment() - " + experimentId);
+
+    this._checkForShutdown();
 
     let experiment = this._experiments.get(experimentId);
     if (!experiment) {
@@ -730,7 +768,10 @@ Experiments.Experiments.prototype = {
   _evaluateExperiments: function () {
     gLogger.trace("Experiments::evaluateExperiments()");
 
+    this._checkForShutdown();
+
     return Task.spawn(function Experiments_evaluateExperiments_evaluateTask() {
+      this._checkForShutdown();
       let activeExperiment = this._getActiveExperiment();
       let activeChanged = false;
 
@@ -792,6 +833,7 @@ Experiments.Experiments.prototype = {
    * Schedule the soonest re-check of experiment applicability that is needed.
    */
   _scheduleExperimentEvaluation: function () {
+    this._checkForShutdown();
     if (!gExperimentsEnabled || this._experiments.length == 0) {
       return;
     }
