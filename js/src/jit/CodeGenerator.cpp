@@ -6073,7 +6073,8 @@ CodeGenerator::generateAsmJS()
     // is nothing else to do after this point since the LifoAlloc memory
     // holding the MIR graph is about to be popped and reused. In particular,
     // every step in CodeGenerator::link must be a nop, as asserted here:
-    JS_ASSERT(snapshots_.size() == 0);
+    JS_ASSERT(snapshots_.listSize() == 0);
+    JS_ASSERT(snapshots_.RVATableSize() == 0);
     JS_ASSERT(bailouts_.empty());
     JS_ASSERT(graph.numConstants() == 0);
     JS_ASSERT(safepointIndices_.empty());
@@ -6089,6 +6090,9 @@ CodeGenerator::generate()
     IonSpew(IonSpew_Codegen, "# Emitting code for script %s:%d",
             gen->info().script()->filename(),
             gen->info().script()->lineno());
+
+    if (!snapshots_.init())
+        return false;
 
     if (!safepoints_.init(gen->alloc(), graph.totalSlotCount()))
         return false;
@@ -6192,7 +6196,8 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     IonScript *ionScript =
       IonScript::New(cx, recompileInfo,
-                     graph.totalSlotCount(), scriptFrameSize, snapshots_.size(),
+                     graph.totalSlotCount(), scriptFrameSize,
+                     snapshots_.listSize(), snapshots_.RVATableSize(),
                      bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
@@ -6301,7 +6306,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         ionScript->copyBailoutTable(&bailouts_[0]);
     if (osiIndices_.length())
         ionScript->copyOsiIndices(&osiIndices_[0], masm);
-    if (snapshots_.size())
+    if (snapshots_.listSize())
         ionScript->copySnapshots(&snapshots_);
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());

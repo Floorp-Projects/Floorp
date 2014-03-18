@@ -314,6 +314,25 @@ RValueAllocation::write(CompactBufferWriter &writer) const
     }
 }
 
+HashNumber
+RValueAllocation::hash() const {
+    CompactBufferWriter writer;
+    write(writer);
+
+    // We should never oom because the compact buffer writer has 32 inlined
+    // bytes, and in the worse case scenario, only encode 11 bytes (= header
+    // + signed + signed).
+    MOZ_ASSERT(!writer.oom());
+    MOZ_ASSERT(writer.length() <= 11);
+
+    HashNumber res = 0;
+    for (size_t i = 0; i < writer.length(); i++) {
+        res = ((res << 8) | (res >> (sizeof(res) - 1)));
+        res ^= writer.buffer()[i];
+    }
+    return res;
+}
+
 void
 Location::dump(FILE *fp) const
 {
@@ -411,13 +430,16 @@ RValueAllocation::dump(FILE *fp) const
     }
 }
 
-SnapshotReader::SnapshotReader(const uint8_t *buffer, const uint8_t *end)
-  : reader_(buffer, end),
+SnapshotReader::SnapshotReader(const uint8_t *snapshots, uint32_t offset,
+                               uint32_t RVATableSize, uint32_t listSize)
+  : reader_(snapshots + offset, snapshots + listSize),
+    allocReader_(snapshots + listSize, snapshots + listSize + RVATableSize),
+    allocTable_(snapshots + listSize),
     allocCount_(0),
     frameCount_(0),
     allocRead_(0)
 {
-    if (!buffer)
+    if (!snapshots)
         return;
     IonSpew(IonSpew_Snapshots, "Creating snapshot reader");
     readSnapshotHeader();
@@ -481,13 +503,40 @@ SnapshotReader::spewBailingFrom() const
 }
 #endif
 
+// Pad serialized RValueAllocations by a multiple of X bytes in the allocation
+// buffer.  By padding serialized value allocations, we are building an
+// indexable table of elements of X bytes, and thus we can safely divide any
+// offset within the buffer by X to obtain an index.
+//
+// By padding, we are loosing space within the allocation buffer, but we
+// multiple by X the number of indexes that we can store on one byte in each
+// snapshots.
+//
+// Some value allocations are taking more than X bytes to be encoded, in which
+// case we will pad to a multiple of X, and we are wasting indexes. The choice
+// of X should be balanced between the wasted padding of serialized value
+// allocation, and the saving made in snapshot indexes.
+static const size_t ALLOCATION_TABLE_ALIGNMENT = 2; /* bytes */
+
 RValueAllocation
 SnapshotReader::readAllocation()
 {
     JS_ASSERT(allocRead_ < allocCount_);
     IonSpew(IonSpew_Snapshots, "Reading slot %u", allocRead_);
     allocRead_++;
-    return RValueAllocation::read(reader_);
+
+    uint32_t offset = reader_.readUnsigned() * ALLOCATION_TABLE_ALIGNMENT;
+    allocReader_.seek(allocTable_, offset);
+    return RValueAllocation::read(allocReader_);
+}
+
+bool
+SnapshotWriter::init()
+{
+    // Based on the measurements made in Bug 962555 comment 20, this should be
+    // enough to prevent the reallocation of the hash table for at least half of
+    // the compilations.
+    return allocMap_.init(32);
 }
 
 SnapshotOffset
@@ -549,19 +598,38 @@ SnapshotWriter::trackFrame(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId
 }
 #endif
 
-void
+bool
 SnapshotWriter::add(const RValueAllocation &alloc)
 {
+    MOZ_ASSERT(allocMap_.initialized());
+
+    uint32_t offset;
+    RValueAllocMap::AddPtr p = allocMap_.lookupForAdd(alloc);
+    if (!p) {
+        // Write 0x7f in all padding bytes.
+        while (allocWriter_.length() % ALLOCATION_TABLE_ALIGNMENT)
+            allocWriter_.writeByte(0x7f);
+
+        offset = allocWriter_.length();
+        JS_ASSERT(offset % ALLOCATION_TABLE_ALIGNMENT == 0);
+        alloc.write(allocWriter_);
+        if (!allocMap_.add(p, alloc, offset))
+            return false;
+    } else {
+        offset = p->value();
+    }
+
     if (IonSpewEnabled(IonSpew_Snapshots)) {
         IonSpewHeader(IonSpew_Snapshots);
-        fprintf(IonSpewFile, "    slot %u: ", allocWritten_);
+        fprintf(IonSpewFile, "    slot %u (%d): ", allocWritten_, offset);
         alloc.dump(IonSpewFile);
         fprintf(IonSpewFile, "\n");
     }
 
     allocWritten_++;
     JS_ASSERT(allocWritten_ <= nallocs_);
-    alloc.write(writer_);
+    writer_.writeUnsigned(offset / ALLOCATION_TABLE_ALIGNMENT);
+    return true;
 }
 
 void
