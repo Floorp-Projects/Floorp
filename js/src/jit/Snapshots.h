@@ -7,11 +7,14 @@
 #ifndef jit_Snapshot_h
 #define jit_Snapshot_h
 
+#include "jsalloc.h"
 #include "jsbytecode.h"
 
 #include "jit/CompactBuffer.h"
 #include "jit/IonTypes.h"
 #include "jit/Registers.h"
+
+#include "js/HashTable.h"
 
 namespace js {
 namespace jit {
@@ -352,6 +355,20 @@ class RValueAllocation
             return true;
         }
     }
+
+    HashNumber hash() const;
+
+    struct Hasher
+    {
+        typedef RValueAllocation Key;
+        typedef Key Lookup;
+        static HashNumber hash(const Lookup &v) {
+            return v.hash();
+        }
+        static bool match(const Key &k, const Lookup &l) {
+            return k == l;
+        }
+    };
 };
 
 // Collects snapshots in a contiguous buffer, which is copied into IonScript
@@ -359,6 +376,13 @@ class RValueAllocation
 class SnapshotWriter
 {
     CompactBufferWriter writer_;
+    CompactBufferWriter allocWriter_;
+
+    // Map RValueAllocations to an offset in the allocWriter_ buffer.  This is
+    // useful as value allocations are repeated frequently.
+    typedef RValueAllocation RVA;
+    typedef HashMap<RVA, uint32_t, RVA::Hasher, SystemAllocPolicy> RValueAllocMap;
+    RValueAllocMap allocMap_;
 
     // These are only used to assert sanity.
     uint32_t nallocs_;
@@ -368,6 +392,8 @@ class SnapshotWriter
     SnapshotOffset lastStart_;
 
   public:
+    bool init();
+
     SnapshotOffset startSnapshot(uint32_t frameCount, BailoutKind kind, bool resumeAfter);
     void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
 #ifdef TRACK_SNAPSHOTS
@@ -376,7 +402,7 @@ class SnapshotWriter
 #endif
     void endFrame();
 
-    void add(const RValueAllocation &slot);
+    bool add(const RValueAllocation &slot);
 
     void endSnapshot();
 
@@ -384,11 +410,18 @@ class SnapshotWriter
         return writer_.oom() || writer_.length() >= MAX_BUFFER_SIZE;
     }
 
-    size_t size() const {
+    size_t listSize() const {
         return writer_.length();
     }
-    const uint8_t *buffer() const {
+    const uint8_t *listBuffer() const {
         return writer_.buffer();
+    }
+
+    size_t RVATableSize() const {
+        return allocWriter_.length();
+    }
+    const uint8_t *RVATableBuffer() const {
+        return allocWriter_.buffer();
     }
 };
 
@@ -399,6 +432,8 @@ class SnapshotWriter
 class SnapshotReader
 {
     CompactBufferReader reader_;
+    CompactBufferReader allocReader_;
+    const uint8_t* allocTable_;
 
     uint32_t pcOffset_;           // Offset from script->code.
     uint32_t allocCount_;         // Number of slots.
@@ -425,7 +460,8 @@ class SnapshotReader
     void readFrameHeader();
 
   public:
-    SnapshotReader(const uint8_t *buffer, const uint8_t *end);
+    SnapshotReader(const uint8_t *snapshots, uint32_t offset,
+                   uint32_t RVATableSize, uint32_t listSize);
 
     uint32_t pcOffset() const {
         return pcOffset_;

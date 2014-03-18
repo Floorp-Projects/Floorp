@@ -21,6 +21,9 @@ Read(const RValueAllocation &slot)
     CompactBufferWriter writer;
     slot.write(writer);
 
+    // Call hash to run its assertions.
+    slot.hash();
+
     CompactBufferReader reader(writer);
     return RValueAllocation::read(reader);
 }
