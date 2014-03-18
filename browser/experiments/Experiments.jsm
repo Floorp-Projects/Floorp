@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryPing",
+                                  "resource://gre/modules/TelemetryPing.jsm");
 
 
 const FILE_CACHE                = "experiments.json";
@@ -182,7 +184,7 @@ Experiments.Policy.prototype = {
   },
 
   telemetryPayload: function () {
-    return Promise.resolve({});
+    return TelemetryPing.getPayload();
   },
 };
 
@@ -1115,15 +1117,22 @@ Experiments.ExperimentEntry.prototype = {
         throw "jsfilter:evalFailure";
       }
 
-      let result;
-      sandbox.context = context;
+      // You can't insert arbitrarily complex objects into a sandbox, so
+      // we serialize everything through JSON.
+      sandbox._hr = JSON.stringify(yield this._policy.healthReportPayload());
+      Object.defineProperty(sandbox, "_t",
+        { get: () => JSON.stringify(this._policy.telemetryPayload()) });
+
+      let result = false;
       try {
-        result = !!Cu.evalInSandbox("filter(context)", sandbox);
-        gLogger.trace("!!evalInSandbox() = " + result);
-      } catch (e) {
-        gLogger.debug("ExperimentEntry::runFilterFunction() - eval call to filter has failed: " + e.message);
+        result = !!Cu.evalInSandbox("filter({healthReportPayload: JSON.parse(_hr), telemetryPayload: JSON.parse(_t)})", sandbox);
+      }
+      catch (e) {
+        gLogger.debug("ExperimentEntry::runFilterFunction() - filter function failed: "
+                      + e.message + ", " + e.stack);
         throw "jsfilter:rejected " + e.message;
-      } finally {
+      }
+      finally {
         Cu.nukeSandbox(sandbox);
       }
 
