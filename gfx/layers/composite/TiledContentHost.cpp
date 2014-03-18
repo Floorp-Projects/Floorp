@@ -318,8 +318,9 @@ TiledContentHost::RenderTile(const TileHost& aTile,
   }
 
   nsIntRect screenBounds = aScreenRegion.GetBounds();
+  Matrix mat = aTransform.As2D();
   Rect quad(screenBounds.x, screenBounds.y, screenBounds.width, screenBounds.height);
-  quad = aTransform.TransformBounds(quad);
+  quad = mat.TransformBounds(quad);
 
   if (!quad.Intersects(mCompositor->ClipRectInLayersCoordinates(aClipRect))) {
     return;

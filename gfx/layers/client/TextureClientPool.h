@@ -24,7 +24,6 @@ public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(TextureClientPool)
   TextureClientPool(gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
                     ISurfaceAllocator *aAllocator);
-  ~TextureClientPool();
 
   /**
    * Gets an allocated TextureClient of size and format that are determined
@@ -78,8 +77,6 @@ public:
    * clients.
    */
   void Clear();
-
-  gfx::SurfaceFormat GetFormat() { return mFormat; }
 
 private:
   // The time in milliseconds before the pool will be shrunk to the minimum
