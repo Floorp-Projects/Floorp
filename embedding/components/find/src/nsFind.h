@@ -8,6 +8,7 @@
 
 #include "nsIFind.h"
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMNode.h"
@@ -69,7 +70,7 @@ protected:
   // The iterator we use to move through the document:
   nsresult InitIterator(nsIDOMNode* aStartNode, int32_t aStartOffset,
                         nsIDOMNode* aEndNode, int32_t aEndOffset);
-  nsCOMPtr<nsFindContentIterator> mIterator;
+  nsRefPtr<nsFindContentIterator> mIterator;
 };
 
 #endif // nsFind_h__

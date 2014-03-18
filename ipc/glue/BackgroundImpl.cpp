@@ -1521,7 +1521,7 @@ ChildImpl::GetOrCreateForCurrentThread(
     return true;
   }
 
-  nsCOMPtr<CreateActorRunnable> runnable = new CreateActorRunnable();
+  nsRefPtr<CreateActorRunnable> runnable = new CreateActorRunnable();
   if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
     CRASH_IN_CHILD_PROCESS("Failed to dispatch to main thread!");
     return false;
