@@ -157,9 +157,7 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
     sIsMainThread.set(isMainThread);
   }
   // Now we initialize the various interposers depending on platform
-#if defined(XP_WIN) || defined(XP_MACOSX)
   InitPoisonIOInterposer();
-#endif
   // We don't hook NSPR on Windows because PoisonIOInterposer captures a
   // superset of the former's events.
 #if !defined(XP_WIN)
