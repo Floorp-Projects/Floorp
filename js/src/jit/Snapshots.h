@@ -21,51 +21,6 @@ namespace jit {
 
 class RValueAllocation;
 
-class Location
-{
-    friend class RValueAllocation;
-
-    // An offset that is illegal for a local variable's stack allocation.
-    static const int32_t InvalidStackOffset = -1;
-
-    Register::Code reg_;
-    int32_t stackOffset_;
-
-    static Location From(const Register &reg) {
-        Location loc;
-        loc.reg_ = reg.code();
-        loc.stackOffset_ = InvalidStackOffset;
-        return loc;
-    }
-    static Location From(int32_t stackOffset) {
-        JS_ASSERT(stackOffset != InvalidStackOffset);
-        Location loc;
-        loc.reg_ = Register::Code(0);      // Quell compiler warnings.
-        loc.stackOffset_ = stackOffset;
-        return loc;
-    }
-
-  public:
-    Register reg() const {
-        JS_ASSERT(!isStackOffset());
-        return Register::FromCode(reg_);
-    }
-    int32_t stackOffset() const {
-        JS_ASSERT(isStackOffset());
-        return stackOffset_;
-    }
-    bool isStackOffset() const {
-        return stackOffset_ != InvalidStackOffset;
-    }
-
-    void dump(FILE *fp) const;
-
-  public:
-    bool operator==(const Location &l) const {
-        return reg_ == l.reg_ && stackOffset_ == l.stackOffset_;
-    }
-};
-
 // A Recover Value Allocation mirror what is known at compiled time as being the
 // MIRType and the LAllocation.  This is read out of the snapshot to recover the
 // value which would be there if this frame was an interpreter frame instead of
@@ -73,104 +28,126 @@ class Location
 //
 // It is used with the SnapshotIterator to recover a Value from the stack,
 // spilled registers or the list of constant of the compiled script.
+//
+// Unit tests are located in jsapi-tests/testJitRValueAlloc.cpp.
 class RValueAllocation
 {
   public:
+
+    // See RValueAllocation encoding in Snapshots.cpp
     enum Mode
     {
-        CONSTANT,           // An index into the constant pool.
-        DOUBLE_REG,         // Type is double, payload is in a register.
-        FLOAT32_REG,        // Type is float32, payload is in a register.
-        FLOAT32_STACK,      // Type is float32, payload is on the stack.
-        TYPED_REG,          // Type is constant, payload is in a register.
-        TYPED_STACK,        // Type is constant, payload is on the stack.
+        CONSTANT            = 0x00,
+        CST_UNDEFINED       = 0x01,
+        CST_NULL            = 0x02,
+        DOUBLE_REG          = 0x03,
+        FLOAT32_REG         = 0x04,
+        FLOAT32_STACK       = 0x05,
 #if defined(JS_NUNBOX32)
-        UNTYPED_REG_REG,    // Type is not known, type & payload are is in
-                            // registers.
-        UNTYPED_REG_STACK,  // Type is not known, type is in a register and the
-                            // payload is on the stack.
-        UNTYPED_STACK_REG,  // Type is not known, type is on the stack and the
-                            // payload is in a register.
-        UNTYPED_STACK_STACK, // Type is not known, type & payload are on the
-                            // stack.
+        UNTYPED_REG_REG     = 0x06,
+        UNTYPED_REG_STACK   = 0x07,
+        UNTYPED_STACK_REG   = 0x08,
+        UNTYPED_STACK_STACK = 0x09,
 #elif defined(JS_PUNBOX64)
-        UNTYPED_REG,        // Type is not known, value is in a register.
-        UNTYPED_STACK,      // Type is not known, value is on the stack.
+        UNTYPED_REG         = 0x06,
+        UNTYPED_STACK       = 0x07,
 #endif
-        JS_UNDEFINED,       // UndefinedValue()
-        JS_NULL,            // NullValue()
-        JS_INT32,           // Int32Value(n)
-        INVALID,
+        // The JSValueType is packed in the Mode.
+        TYPED_REG_MIN       = 0x10,
+        TYPED_REG_MAX       = 0x17,
+        TYPED_REG = TYPED_REG_MIN,
 
-        // Assert that the mode is UNTYPED by checking the range.
-#if defined(JS_NUNBOX32)
-        UNTYPED_MIN = UNTYPED_REG_REG,
-        UNTYPED_MAX = UNTYPED_STACK_STACK
-#elif defined(JS_PUNBOX64)
-        UNTYPED_MIN = UNTYPED_REG,
-        UNTYPED_MAX = UNTYPED_STACK
-#endif
+        // The JSValueType is packed in the Mode.
+        TYPED_STACK_MIN     = 0x18,
+        TYPED_STACK_MAX     = 0x1f,
+        TYPED_STACK = TYPED_STACK_MIN,
+
+        INVALID = 0x100,
+    };
+
+    // See Payload encoding in Snapshots.cpp
+    enum PayloadType {
+        PAYLOAD_NONE,
+        PAYLOAD_INDEX,
+        PAYLOAD_STACK_OFFSET,
+        PAYLOAD_GPR,
+        PAYLOAD_FPU,
+        PAYLOAD_PACKED_TAG
+    };
+
+    struct Layout {
+        PayloadType type1;
+        PayloadType type2;
+        const char *name;
     };
 
   private:
     Mode mode_;
 
-    union {
-        // DOUBLE_REG or FLOAT32_REG
-        FloatRegister::Code fpu_;
-
-        // TYPED_REG or TYPED_STACK or FLOAT32_STACK
-        struct {
-            JSValueType type;
-            Location payload;
-        } known_type_;
-
-        // UNTYPED
-#if defined(JS_NUNBOX32)
-        struct {
-            Location type;
-            Location payload;
-        } unknown_type_;
-#elif defined(JS_PUNBOX64)
-        struct {
-            Location value;
-        } unknown_type_;
-#endif
-
-        // CONSTANT's index or JS_INT32
-        int32_t value_;
+    // Additional information to recover the content of the allocation.
+    union Payload {
+        uint32_t index;
+        int32_t stackOffset;
+        Register gpr;
+        FloatRegister fpu;
+        JSValueType type;
     };
 
-    RValueAllocation(Mode mode, JSValueType type, const Location &loc)
-      : mode_(mode)
-    {
-        JS_ASSERT(mode == TYPED_REG || mode == TYPED_STACK);
-        known_type_.type = type;
-        known_type_.payload = loc;
+    Payload arg1_;
+    Payload arg2_;
+
+    static Payload payloadOfIndex(uint32_t index) {
+        Payload p;
+        p.index = index;
+        return p;
     }
-    RValueAllocation(Mode mode, const FloatRegister &reg)
-      : mode_(mode)
-    {
-        JS_ASSERT(mode == FLOAT32_REG || mode == DOUBLE_REG);
-        fpu_ = reg.code();
+    static Payload payloadOfStackOffset(int32_t offset) {
+        Payload p;
+        p.stackOffset = offset;
+        return p;
     }
-    RValueAllocation(Mode mode, const Location &loc)
-      : mode_(mode)
-    {
-        JS_ASSERT(mode == FLOAT32_STACK);
-        known_type_.payload = loc;
+    static Payload payloadOfRegister(Register reg) {
+        Payload p;
+        p.gpr = reg;
+        return p;
     }
-    RValueAllocation(Mode mode, int32_t index)
-      : mode_(mode)
-    {
-        JS_ASSERT(mode == CONSTANT || mode == JS_INT32);
-        value_ = index;
+    static Payload payloadOfFloatRegister(FloatRegister reg) {
+        Payload p;
+        p.fpu = reg;
+        return p;
     }
+    static Payload payloadOfValueType(JSValueType type) {
+        Payload p;
+        p.type = type;
+        return p;
+    }
+
+    static const Layout &layoutFromMode(Mode mode);
+
+    static void readPayload(CompactBufferReader &reader, PayloadType t,
+                            uint8_t *mode, Payload *p);
+    static void writePayload(CompactBufferWriter &writer, PayloadType t,
+                             Payload p);
+    static void writePadding(CompactBufferWriter &writer);
+    static void dumpPayload(FILE *fp, PayloadType t, Payload p);
+    static bool equalPayloads(PayloadType t, Payload lhs, Payload rhs);
+
+    RValueAllocation(Mode mode, Payload a1, Payload a2)
+      : mode_(mode),
+        arg1_(a1),
+        arg2_(a2)
+    {
+    }
+
+    RValueAllocation(Mode mode, Payload a1)
+      : mode_(mode),
+        arg1_(a1)
+    {
+    }
+
     RValueAllocation(Mode mode)
       : mode_(mode)
     {
-        JS_ASSERT(mode == JS_UNDEFINED || mode == JS_NULL ||
-                  (UNTYPED_MIN <= mode && mode <= UNTYPED_MAX));
     }
 
   public:
@@ -180,15 +157,15 @@ class RValueAllocation
 
     // DOUBLE_REG
     static RValueAllocation Double(const FloatRegister &reg) {
-        return RValueAllocation(DOUBLE_REG, reg);
+        return RValueAllocation(DOUBLE_REG, payloadOfFloatRegister(reg));
     }
 
     // FLOAT32_REG or FLOAT32_STACK
     static RValueAllocation Float32(const FloatRegister &reg) {
-        return RValueAllocation(FLOAT32_REG, reg);
+        return RValueAllocation(FLOAT32_REG, payloadOfFloatRegister(reg));
     }
-    static RValueAllocation Float32(int32_t stackIndex) {
-        return RValueAllocation(FLOAT32_STACK, Location::From(stackIndex));
+    static RValueAllocation Float32(int32_t offset) {
+        return RValueAllocation(FLOAT32_STACK, payloadOfStackOffset(offset));
     }
 
     // TYPED_REG or TYPED_STACK
@@ -197,75 +174,64 @@ class RValueAllocation
                   type != JSVAL_TYPE_MAGIC &&
                   type != JSVAL_TYPE_NULL &&
                   type != JSVAL_TYPE_UNDEFINED);
-        return RValueAllocation(TYPED_REG, type, Location::From(reg));
+        return RValueAllocation(TYPED_REG, payloadOfValueType(type),
+                                payloadOfRegister(reg));
     }
-    static RValueAllocation Typed(JSValueType type, int32_t stackIndex) {
+    static RValueAllocation Typed(JSValueType type, int32_t offset) {
         JS_ASSERT(type != JSVAL_TYPE_MAGIC &&
                   type != JSVAL_TYPE_NULL &&
                   type != JSVAL_TYPE_UNDEFINED);
-        return RValueAllocation(TYPED_STACK, type, Location::From(stackIndex));
+        return RValueAllocation(TYPED_STACK, payloadOfValueType(type),
+                                payloadOfStackOffset(offset));
     }
 
     // UNTYPED
 #if defined(JS_NUNBOX32)
     static RValueAllocation Untyped(const Register &type, const Register &payload) {
-        RValueAllocation slot(UNTYPED_REG_REG);
-        slot.unknown_type_.type = Location::From(type);
-        slot.unknown_type_.payload = Location::From(payload);
-        return slot;
+        return RValueAllocation(UNTYPED_REG_REG,
+                                payloadOfRegister(type),
+                                payloadOfRegister(payload));
     }
 
-    static RValueAllocation Untyped(const Register &type, int32_t payloadStackIndex) {
-        RValueAllocation slot(UNTYPED_REG_STACK);
-        slot.unknown_type_.type = Location::From(type);
-        slot.unknown_type_.payload = Location::From(payloadStackIndex);
-        return slot;
+    static RValueAllocation Untyped(const Register &type, int32_t payloadStackOffset) {
+        return RValueAllocation(UNTYPED_REG_STACK,
+                                payloadOfRegister(type),
+                                payloadOfStackOffset(payloadStackOffset));
     }
 
-    static RValueAllocation Untyped(int32_t typeStackIndex, const Register &payload) {
-        RValueAllocation slot(UNTYPED_STACK_REG);
-        slot.unknown_type_.type = Location::From(typeStackIndex);
-        slot.unknown_type_.payload = Location::From(payload);
-        return slot;
+    static RValueAllocation Untyped(int32_t typeStackOffset, const Register &payload) {
+        return RValueAllocation(UNTYPED_STACK_REG,
+                                payloadOfStackOffset(typeStackOffset),
+                                payloadOfRegister(payload));
     }
 
-    static RValueAllocation Untyped(int32_t typeStackIndex, int32_t payloadStackIndex) {
-        RValueAllocation slot(UNTYPED_STACK_STACK);
-        slot.unknown_type_.type = Location::From(typeStackIndex);
-        slot.unknown_type_.payload = Location::From(payloadStackIndex);
-        return slot;
+    static RValueAllocation Untyped(int32_t typeStackOffset, int32_t payloadStackOffset) {
+        return RValueAllocation(UNTYPED_STACK_STACK,
+                                payloadOfStackOffset(typeStackOffset),
+                                payloadOfStackOffset(payloadStackOffset));
     }
 
 #elif defined(JS_PUNBOX64)
-    static RValueAllocation Untyped(const Register &value) {
-        RValueAllocation slot(UNTYPED_REG);
-        slot.unknown_type_.value = Location::From(value);
-        return slot;
+    static RValueAllocation Untyped(const Register &reg) {
+        return RValueAllocation(UNTYPED_REG, payloadOfRegister(reg));
     }
 
     static RValueAllocation Untyped(int32_t stackOffset) {
-        RValueAllocation slot(UNTYPED_STACK);
-        slot.unknown_type_.value = Location::From(stackOffset);
-        return slot;
+        return RValueAllocation(UNTYPED_STACK, payloadOfStackOffset(stackOffset));
     }
 #endif
 
     // common constants.
     static RValueAllocation Undefined() {
-        return RValueAllocation(JS_UNDEFINED);
+        return RValueAllocation(CST_UNDEFINED);
     }
     static RValueAllocation Null() {
-        return RValueAllocation(JS_NULL);
-    }
-
-    // JS_INT32
-    static RValueAllocation Int32(int32_t value) {
-        return RValueAllocation(JS_INT32, value);
+        return RValueAllocation(CST_NULL);
     }
 
     // CONSTANT's index
     static RValueAllocation ConstantPool(uint32_t index) {
-        return RValueAllocation(CONSTANT, int32_t(index));
+        return RValueAllocation(CONSTANT, payloadOfIndex(index));
     }
 
     void writeHeader(CompactBufferWriter &writer, JSValueType type, uint32_t regCode) const;
@@ -277,83 +243,48 @@ class RValueAllocation
     Mode mode() const {
         return mode_;
     }
-    uint32_t constantIndex() const {
-        JS_ASSERT(mode() == CONSTANT);
-        return value_;
-    }
-    int32_t int32Value() const {
-        JS_ASSERT(mode() == JS_INT32);
-        return value_;
-    }
-    JSValueType knownType() const {
-        JS_ASSERT(mode() == TYPED_REG || mode() == TYPED_STACK);
-        return known_type_.type;
-    }
-    Register reg() const {
-        JS_ASSERT(mode() == TYPED_REG && knownType() != JSVAL_TYPE_DOUBLE);
-        return known_type_.payload.reg();
-    }
-    FloatRegister floatReg() const {
-        JS_ASSERT(mode() == DOUBLE_REG || mode() == FLOAT32_REG);
-        return FloatRegister::FromCode(fpu_);
+
+    uint32_t index() const {
+        JS_ASSERT(layoutFromMode(mode()).type1 == PAYLOAD_INDEX);
+        return arg1_.index;
     }
     int32_t stackOffset() const {
-        JS_ASSERT(mode() == TYPED_STACK || mode() == FLOAT32_STACK);
-        return known_type_.payload.stackOffset();
+        JS_ASSERT(layoutFromMode(mode()).type1 == PAYLOAD_STACK_OFFSET);
+        return arg1_.stackOffset;
     }
-#if defined(JS_NUNBOX32)
-    Location payload() const {
-        JS_ASSERT((UNTYPED_MIN <= mode() && mode() <= UNTYPED_MAX));
-        return unknown_type_.payload;
+    Register reg() const {
+        JS_ASSERT(layoutFromMode(mode()).type1 == PAYLOAD_GPR);
+        return arg1_.gpr;
     }
-    Location type() const {
-        JS_ASSERT((UNTYPED_MIN <= mode() && mode() <= UNTYPED_MAX));
-        return unknown_type_.type;
+    FloatRegister fpuReg() const {
+        JS_ASSERT(layoutFromMode(mode()).type1 == PAYLOAD_FPU);
+        return arg1_.fpu;
     }
-#elif defined(JS_PUNBOX64)
-    Location value() const {
-        JS_ASSERT((UNTYPED_MIN <= mode() && mode() <= UNTYPED_MAX));
-        return unknown_type_.value;
+    JSValueType knownType() const {
+        JS_ASSERT(layoutFromMode(mode()).type1 == PAYLOAD_PACKED_TAG);
+        return arg1_.type;
     }
-#endif
+
+    int32_t stackOffset2() const {
+        JS_ASSERT(layoutFromMode(mode()).type2 == PAYLOAD_STACK_OFFSET);
+        return arg2_.stackOffset;
+    }
+    Register reg2() const {
+        JS_ASSERT(layoutFromMode(mode()).type2 == PAYLOAD_GPR);
+        return arg2_.gpr;
+    }
 
   public:
-    const char *modeToString() const;
     void dump(FILE *fp) const;
-    void dump() const;
 
   public:
-    bool operator==(const RValueAllocation &s) const {
-        if (mode_ != s.mode_)
+    bool operator==(const RValueAllocation &rhs) const {
+        if (mode_ != rhs.mode_)
             return false;
 
-        switch (mode_) {
-          case DOUBLE_REG:
-          case FLOAT32_REG:
-            return fpu_ == s.fpu_;
-          case TYPED_REG:
-          case TYPED_STACK:
-          case FLOAT32_STACK:
-            return known_type_.type == s.known_type_.type &&
-                known_type_.payload == s.known_type_.payload;
-#if defined(JS_NUNBOX32)
-          case UNTYPED_REG_REG:
-          case UNTYPED_REG_STACK:
-          case UNTYPED_STACK_REG:
-          case UNTYPED_STACK_STACK:
-            return unknown_type_.type == s.unknown_type_.type &&
-                unknown_type_.payload == s.unknown_type_.payload;
-#else
-          case UNTYPED_REG:
-          case UNTYPED_STACK:
-            return unknown_type_.value == s.unknown_type_.value;
-#endif
-          case CONSTANT:
-          case JS_INT32:
-            return value_ == s.value_;
-          default:
-            return true;
-        }
+        const Layout &layout = layoutFromMode(mode());
+        return equalPayloads(layout.type1, arg1_, rhs.arg1_) &&
+            equalPayloads(layout.type2, arg2_, rhs.arg2_);
     }
 
     HashNumber hash() const;
