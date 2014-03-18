@@ -4,6 +4,7 @@
 
 #include "Activity.h"
 
+#include "mozilla/dom/MozActivityBinding.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsIConsoleService.h"
@@ -32,9 +33,9 @@ Activity::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 
 nsresult
 Activity::Initialize(nsPIDOMWindow* aWindow,
-                     JSContext* aCx,
-                     const ActivityOptions& aOptions)
+                     nsIDOMMozActivityOptions* aOptions)
 {
+  MOZ_ASSERT(aOptions);
   MOZ_ASSERT(aWindow);
 
   nsCOMPtr<nsIDocument> document = aWindow->GetExtantDoc();
@@ -66,12 +67,7 @@ Activity::Initialize(nsPIDOMWindow* aWindow,
   mProxy = do_CreateInstance("@mozilla.org/dom/activities/proxy;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  JS::Rooted<JS::Value> optionsValue(aCx);
-  if (!aOptions.ToObject(aCx, JS::NullPtr(), &optionsValue)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mProxy->StartActivity(static_cast<nsIDOMDOMRequest*>(this), optionsValue, aWindow);
+  mProxy->StartActivity(static_cast<nsIDOMDOMRequest*>(this), aOptions, aWindow);
   return NS_OK;
 }
 
