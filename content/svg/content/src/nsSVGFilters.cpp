@@ -23,13 +23,10 @@
 #include "nsSVGUtils.h"
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
-#include "gfxContext.h"
-#include "gfxMatrix.h"
 #include "imgIContainer.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGString.h"
-#include "gfxUtils.h"
 #include "SVGContentUtils.h"
 #include <algorithm>
 #include "mozilla/dom/SVGAnimatedLength.h"

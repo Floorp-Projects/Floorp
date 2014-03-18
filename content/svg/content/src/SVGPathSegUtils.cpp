@@ -8,6 +8,7 @@
 #include "SVGPathSegUtils.h"
 
 #include "gfx2DGlue.h"
+#include "gfxPoint.h"
 #include "nsSVGPathDataParser.h"
 #include "nsTextFormatter.h"
 
