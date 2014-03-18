@@ -425,6 +425,13 @@ nsIGlobalObject *
 GetJunkScopeGlobal();
 
 /**
+ * If |aObj| is a window, returns the associated nsGlobalWindow.
+ * Otherwise, returns null.
+ */
+nsGlobalWindow*
+WindowOrNull(JSObject *aObj);
+
+/**
  * If |aObj| has a window for a global, returns the associated nsGlobalWindow.
  * Otherwise, returns null.
  */

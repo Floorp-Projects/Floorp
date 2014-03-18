@@ -112,7 +112,7 @@ private:
 
   // The MediaResourceServer that owns the MediaResource instances
   // served. This is used to lookup the MediaResource from the URL.
-  nsCOMPtr<MediaResourceServer> mServer;
+  nsRefPtr<MediaResourceServer> mServer;
 
   // Write 'aBufferLength' bytes from 'aBuffer' to 'mOutput'. This
   // method ensures all the data is written by checking the number
@@ -342,7 +342,7 @@ class ResourceSocketListener : public nsIServerSocketListener
 public:
   // The MediaResourceServer used to look up the MediaResource
   // on requests.
-  nsCOMPtr<MediaResourceServer> mServer;
+  nsRefPtr<MediaResourceServer> mServer;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -416,7 +416,7 @@ MediaResourceServer::Run()
 already_AddRefed<MediaResourceServer>
 MediaResourceServer::Start()
 {
-  nsCOMPtr<MediaResourceServer> server = new MediaResourceServer();
+  nsRefPtr<MediaResourceServer> server = new MediaResourceServer();
   NS_DispatchToMainThread(server, NS_DISPATCH_SYNC);
   return server.forget();
 }
