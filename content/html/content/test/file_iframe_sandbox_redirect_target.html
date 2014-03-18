@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    onmessage = function(event) {
+      parent.postMessage(event.data + " redirect target", "*");
+    }
+  </script>
+</head>
+<body>I have been redirected</body>
