@@ -16,7 +16,7 @@ namespace mozilla {
 class MediaPluginReader;
 
 class MediaPluginHost {
-  nsCOMPtr<MediaResourceServer> mResourceServer;
+  nsRefPtr<MediaResourceServer> mResourceServer;
   nsTArray<MPAPI::Manifest *> mPlugins;
 
   MPAPI::Manifest *FindPlugin(const nsACString& aMimeType);
