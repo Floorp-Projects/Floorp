@@ -118,7 +118,7 @@ public:
   }
 
   nsresult
-  PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+  PreHandleEvent(EventChainPreVisitor& aVisitor)
   {
     aVisitor.mForceContentDispatch = true;
     return NS_OK;

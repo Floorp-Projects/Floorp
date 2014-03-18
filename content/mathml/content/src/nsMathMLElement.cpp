@@ -21,6 +21,7 @@
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
+#include "nsEventDispatcher.h"
 
 #include "mozilla/dom/ElementBinding.h"
 
@@ -897,7 +898,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
 }
 
 nsresult
-nsMathMLElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsMathMLElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   nsresult rv = Element::PreHandleEvent(aVisitor);
   NS_ENSURE_SUCCESS(rv, rv);

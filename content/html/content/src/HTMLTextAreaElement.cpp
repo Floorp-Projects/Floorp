@@ -454,7 +454,7 @@ HTMLTextAreaElement::IsDisabledForEvents(uint32_t aMessage)
 }
 
 nsresult
-HTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLTextAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent->message)) {

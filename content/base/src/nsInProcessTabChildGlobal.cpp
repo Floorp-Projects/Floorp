@@ -24,11 +24,12 @@
 
 using mozilla::dom::StructuredCloneData;
 using mozilla::dom::StructuredCloneClosure;
+using namespace mozilla;
 
 bool
 nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
                                                  const nsAString& aMessage,
-                                                 const mozilla::dom::StructuredCloneData& aData,
+                                                 const dom::StructuredCloneData& aData,
                                                  JS::Handle<JSObject *> aCpows,
                                                  nsIPrincipal* aPrincipal,
                                                  InfallibleTArray<nsString>* aJSONRetVal,
@@ -138,7 +139,7 @@ nsInProcessTabChildGlobal::Init()
                    "Couldn't initialize nsInProcessTabChildGlobal");
   mMessageManager = new nsFrameMessageManager(this,
                                               nullptr,
-                                              mozilla::dom::ipc::MM_CHILD);
+                                              dom::ipc::MM_CHILD);
   return NS_OK;
 }
 
@@ -249,7 +250,7 @@ nsInProcessTabChildGlobal::GetOwnerContent()
 }
 
 nsresult
-nsInProcessTabChildGlobal::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
 

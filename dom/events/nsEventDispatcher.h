@@ -31,7 +31,7 @@ class EventTarget;
  * nsEventDispatcher::DispatchDOMEvent is called an event target chain is
  * created. nsEventDispatcher creates the chain by calling PreHandleEvent 
  * on each event target and the creation continues until either the mCanHandle
- * member of the nsEventChainPreVisitor object is false or the mParentTarget
+ * member of the EventChainPreVisitor object is false or the mParentTarget
  * does not point to a new target. The event target chain is created in the
  * heap.
  *
@@ -105,24 +105,29 @@ public:
   nsCOMPtr<nsISupports> mItemData;
 };
 
-} // namespace mozilla
-
-class nsEventChainPreVisitor : public mozilla::EventChainVisitor
+class EventChainPreVisitor : public EventChainVisitor
 {
 public:
-  nsEventChainPreVisitor(nsPresContext* aPresContext,
-                         mozilla::WidgetEvent* aEvent,
-                         nsIDOMEvent* aDOMEvent,
-                         nsEventStatus aEventStatus,
-                         bool aIsInAnon)
-  : mozilla::EventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
-    mCanHandle(true), mAutomaticChromeDispatch(true),
-    mForceContentDispatch(false), mRelatedTargetIsInAnon(false),
-    mOriginalTargetIsInAnon(aIsInAnon), mWantsWillHandleEvent(false),
-    mMayHaveListenerManager(true), mParentTarget(nullptr),
-    mEventTargetAtParent(nullptr) {}
+  EventChainPreVisitor(nsPresContext* aPresContext,
+                       WidgetEvent* aEvent,
+                       nsIDOMEvent* aDOMEvent,
+                       nsEventStatus aEventStatus,
+                       bool aIsInAnon)
+    : EventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus)
+    , mCanHandle(true)
+    , mAutomaticChromeDispatch(true)
+    , mForceContentDispatch(false)
+    , mRelatedTargetIsInAnon(false)
+    , mOriginalTargetIsInAnon(aIsInAnon)
+    , mWantsWillHandleEvent(false)
+    , mMayHaveListenerManager(true)
+    , mParentTarget(nullptr)
+    , mEventTargetAtParent(nullptr)
+  {
+  }
 
-  void Reset() {
+  void Reset()
+  {
     mItemFlags = 0;
     mItemData = nullptr;
     mCanHandle = true;
@@ -182,14 +187,16 @@ public:
   /**
    * Parent item in the event target chain.
    */
-  mozilla::dom::EventTarget* mParentTarget;
+  dom::EventTarget* mParentTarget;
 
   /**
    * If the event needs to be retargeted, this is the event target,
    * which should be used when the event is handled at mParentTarget.
    */
-  mozilla::dom::EventTarget* mEventTargetAtParent;
+  dom::EventTarget* mEventTargetAtParent;
 };
+
+} // namespace mozilla
 
 class nsEventChainPostVisitor : public mozilla::EventChainVisitor
 {

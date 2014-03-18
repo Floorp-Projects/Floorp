@@ -187,7 +187,7 @@ HTMLButtonElement::IsDisabledForEvents(uint32_t aMessage)
 }
 
 nsresult
-HTMLButtonElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLButtonElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent->message)) {

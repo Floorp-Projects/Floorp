@@ -589,7 +589,7 @@ SVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
 // nsIContent methods:
 
 nsresult
-SVGSVGElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+SVGSVGElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->message == NS_SVG_LOAD) {
     if (mTimedDocumentRoot) {

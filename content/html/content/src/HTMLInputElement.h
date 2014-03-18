@@ -29,6 +29,9 @@ class nsIRadioVisitor;
 class nsTextEditorState;
 
 namespace mozilla {
+
+class EventChainPreVisitor;
+
 namespace dom {
 
 class Date;
@@ -148,7 +151,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   void PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor);
   void StartRangeThumbDrag(WidgetGUIEvent* aEvent);
@@ -891,7 +894,7 @@ protected:
    * Determine whether the editor needs to be initialized explicitly for
    * a particular event.
    */
-  bool NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const;
+  bool NeedToInitializeEditorForEvent(EventChainPreVisitor& aVisitor) const;
 
   /**
    * Get the value mode of the element, depending of the type.

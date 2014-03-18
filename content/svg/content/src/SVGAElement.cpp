@@ -9,6 +9,7 @@
 #include "mozilla/dom/SVGAElementBinding.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
 #include "nsSVGString.h"
 #include "nsIURI.h"
@@ -76,7 +77,7 @@ SVGAElement::Href()
 // nsINode methods
 
 nsresult
-SVGAElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+SVGAElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   nsresult rv = Element::PreHandleEvent(aVisitor);
   NS_ENSURE_SUCCESS(rv, rv);
