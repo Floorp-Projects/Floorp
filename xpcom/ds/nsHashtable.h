@@ -212,40 +212,6 @@ class nsCStringKey : public nsHashKey {
     Ownership   mOwnership;
 };
 
-// for null-terminated unicode strings
-class nsStringKey : public nsHashKey {
-  public:
-
-    // NB: when serializing, NEVER_OWN keys are deserialized as OWN.
-    enum Ownership {
-        NEVER_OWN,  // very long lived, even clones don't need to copy it.
-        OWN_CLONE,  // as long lived as this key. But clones make a copy.
-        OWN         // to be free'd in key dtor. Clones make their own copy.
-    };
-
-    nsStringKey(const nsStringKey& aKey);
-    nsStringKey(const char16_t* str, int32_t strLen = -1, Ownership own = OWN_CLONE);
-    nsStringKey(const nsAFlatString& str);
-    nsStringKey(const nsAString& str);
-    ~nsStringKey(void);
-
-    uint32_t HashCode(void) const;
-    bool Equals(const nsHashKey* aKey) const;
-    nsHashKey* Clone() const;
-    nsStringKey(nsIObjectInputStream* aStream, nsresult *aResult);
-    nsresult Write(nsIObjectOutputStream* aStream) const;
-
-    // For when the owner of the hashtable wants to peek at the actual
-    // string in the key. No copy is made, so be careful.
-    const char16_t* GetString() const { return mStr; }
-    uint32_t GetStringLength() const { return mStrLen; }
-
-  protected:
-    char16_t*  mStr;
-    uint32_t    mStrLen;
-    Ownership   mOwnership;
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif // nsHashtable_h__
