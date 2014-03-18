@@ -1403,3 +1403,7 @@ pref("ui.key.menuAccessKeyFocuses", true);
 
 // Delete HTTP cache v2 data of users that didn't opt-in manually
 pref("browser.cache.auto_delete_cache_version", 1);
+
+// Telemetry experiments settings.
+pref("experiments.enabled", false);
+pref("experiments.manifest.fetchIntervalSeconds", 86400);
