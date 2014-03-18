@@ -123,7 +123,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
   uint16_t Type() const;
-  dom::SVGMatrix* Matrix();
+  dom::SVGMatrix* GetMatrix();
   float Angle() const;
   void SetMatrix(dom::SVGMatrix& matrix, ErrorResult& rv);
   void SetTranslate(float tx, float ty, ErrorResult& rv);
@@ -139,7 +139,7 @@ protected:
     return mIsAnimValItem;
   }
   const gfxMatrix& Matrixgfx() const {
-    return Transform().Matrix();
+    return Transform().GetMatrix();
   }
   void SetMatrix(const gfxMatrix& aMatrix);
 

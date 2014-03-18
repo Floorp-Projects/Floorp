@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
@@ -75,7 +76,6 @@
 
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
-#include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
@@ -695,7 +695,8 @@ nsGenericHTMLElement::FindAncestorForm(HTMLFormElement* aCurrentForm)
 }
 
 bool
-nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor)
+nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(
+                        EventChainVisitor& aVisitor)
 {
   NS_PRECONDITION(nsCOMPtr<Link>(do_QueryObject(this)),
                   "should be called only when |this| implements |Link|");
@@ -717,7 +718,7 @@ nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisito
 }
 
 nsresult
-nsGenericHTMLElement::PreHandleEventForAnchors(nsEventChainPreVisitor& aVisitor)
+nsGenericHTMLElement::PreHandleEventForAnchors(EventChainPreVisitor& aVisitor)
 {
   nsresult rv = nsGenericHTMLElementBase::PreHandleEvent(aVisitor);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -730,7 +731,7 @@ nsGenericHTMLElement::PreHandleEventForAnchors(nsEventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor)
+nsGenericHTMLElement::PostHandleEventForAnchors(EventChainPostVisitor& aVisitor)
 {
   if (!CheckHandleEventForAnchorsPreconditions(aVisitor)) {
     return NS_OK;
@@ -2284,7 +2285,7 @@ nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsGenericHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsGenericHTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mFlags.mIsTrusted) {
     switch (aVisitor.mEvent->message) {
@@ -2694,7 +2695,7 @@ nsGenericHTMLElement::Click()
                          NS_MOUSE_CLICK, nullptr, WidgetMouseEvent::eReal);
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
-  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context, &event);
+  EventDispatcher::Dispatch(static_cast<nsIContent*>(this), context, &event);
 
   ClearHandlingClick();
 }
@@ -2800,7 +2801,8 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
 
-    nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext, &event);
+    EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                              presContext, &event);
   }
 }
 

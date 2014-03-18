@@ -11,7 +11,6 @@
 
 // Interface headers
 #include "imgLoader.h"
-#include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
@@ -81,6 +80,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Telemetry.h"
 
 #ifdef XP_WIN
@@ -376,7 +376,7 @@ nsPluginCrashedEvent::Run()
   variant->SetAsBool(mSubmittedCrashReport);
   containerEvent->SetData(NS_LITERAL_STRING("submittedCrashReport"), variant);
 
-  nsEventDispatcher::DispatchDOMEvent(mContent, nullptr, event, nullptr, nullptr);
+  EventDispatcher::DispatchDOMEvent(mContent, nullptr, event, nullptr, nullptr);
   return NS_OK;
 }
 

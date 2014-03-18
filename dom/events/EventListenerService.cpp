@@ -8,12 +8,12 @@
 #include "jsdIDebuggerService.h"
 #endif
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMArray.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfoID.h"
-#include "nsEventDispatcher.h"
 #include "nsIJSEventListener.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
@@ -207,8 +207,8 @@ EventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
   NS_ENSURE_ARG(aEventTarget);
   WidgetEvent event(true, NS_EVENT_NULL);
   nsCOMArray<EventTarget> targets;
-  nsresult rv = nsEventDispatcher::Dispatch(aEventTarget, nullptr, &event,
-                                            nullptr, nullptr, nullptr, &targets);
+  nsresult rv = EventDispatcher::Dispatch(aEventTarget, nullptr, &event,
+                                          nullptr, nullptr, nullptr, &targets);
   NS_ENSURE_SUCCESS(rv, rv);
   int32_t count = targets.Count();
   if (count == 0) {

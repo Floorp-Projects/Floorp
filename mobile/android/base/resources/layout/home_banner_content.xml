@@ -3,7 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
      <ImageView android:id="@+id/icon"
                 android:layout_width="48dip"
@@ -11,19 +12,18 @@
                 android:layout_marginLeft="10dp"
                 android:scaleType="centerInside"/>
 
-     <TextView android:id="@+id/text"
-               android:layout_width="0dip"
-               android:layout_height="fill_parent"
-               android:layout_weight="1"
-               android:layout_marginLeft="10dp"
-               android:paddingTop="7dp"
-               android:paddingBottom="7dp"
-               android:textAppearance="@style/TextAppearance.Widget.HomeBanner"
-               android:layout_gravity="bottom"
-               android:singleLine="false"
-               android:maxLines="3"
-               android:ellipsize="end"
-               android:gravity="center_vertical"/>
+     <org.mozilla.gecko.widget.EllipsisTextView
+         android:id="@+id/text"
+         android:layout_width="0dip"
+         android:layout_height="fill_parent"
+         android:layout_weight="1"
+         android:layout_marginLeft="10dp"
+         android:paddingTop="7dp"
+         android:paddingBottom="7dp"
+         android:textAppearance="@style/TextAppearance.Widget.HomeBanner"
+         android:layout_gravity="bottom"
+         android:gravity="center_vertical"
+         gecko:ellipsizeAtLine="3"/>
 
     <ImageButton android:id="@+id/close"
                  android:layout_width="34dip"

@@ -4870,7 +4870,6 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      */
     if (fun->isInterpreted()) {
         bool singleton =
-            cx->typeInferenceEnabled() &&
             bce->script->compileAndGo() &&
             fun->isInterpreted() &&
             (bce->checkSingletonContext() ||

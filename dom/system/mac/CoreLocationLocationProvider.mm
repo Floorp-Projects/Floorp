@@ -22,7 +22,6 @@
 #include <objc/objc-runtime.h>
 
 #include "nsObjCExceptions.h"
-#import <CoreWLAN/CoreWLAN.h>
 
 using namespace mozilla;
 
@@ -130,42 +129,6 @@ NS_IMPL_ISUPPORTS1(CoreLocationLocationProvider, nsIGeolocationProvider)
 CoreLocationLocationProvider::CoreLocationLocationProvider()
   : mCLObjects(nullptr)
 {
-}
-
-bool
-CoreLocationLocationProvider::IsCoreLocationAvailable()
-{
-#if !defined(MAC_OS_X_VERSION_10_9) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9
-  if (nsCocoaFeatures::OnMavericksOrLater()) {
-    return false;
-  }
-
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
-  @try {
-    NSBundle * bundle = [[[NSBundle alloc] initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"] autorelease];
-    if (!bundle) {
-      [pool release];
-      return false;
-    }
-
-    Class CWI_class = [bundle classNamed:@"CWInterface"];
-    if (!CWI_class) {
-      [pool release];
-      return false;
-    }
-
-    if ([[[CWI_class interface] interfaceState] intValue] == kCWInterfaceStateRunning) {
-      [pool release];
-      return true;
-    }
-  }
-  @catch(NSException *e) {
-  }
-  [pool release];
-#endif
-  return false;
 }
 
 NS_IMETHODIMP

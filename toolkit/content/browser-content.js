@@ -107,14 +107,20 @@ let ClickEventHandler = {
       }
     }
 
+    let [enabled] = sendSyncMessage("Autoscroll:Start",
+                                    {scrolldir: this._scrolldir,
+                                     screenX: event.screenX,
+                                     screenY: event.screenY});
+    if (!enabled) {
+      this._scrollable = null;
+      return;
+    }
+
     Cc["@mozilla.org/eventlistenerservice;1"]
       .getService(Ci.nsIEventListenerService)
       .addSystemEventListener(global, "mousemove", this, true);
     addEventListener("pagehide", this, true);
 
-    sendAsyncMessage("Autoscroll:Start", {scrolldir: this._scrolldir,
-                                          screenX: event.screenX,
-                                          screenY: event.screenY});
     this._ignoreMouseEvents = true;
     this._startX = event.screenX;
     this._startY = event.screenY;

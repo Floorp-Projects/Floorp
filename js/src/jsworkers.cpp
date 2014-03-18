@@ -312,7 +312,6 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
     if (!global)
         return false;
 
-    global->zone()->types.inferenceEnabled = cx->typeInferenceEnabled();
     JS_SetCompartmentPrincipals(global->compartment(), cx->compartment()->principals);
 
     RootedObject obj(cx);
