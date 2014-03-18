@@ -20,6 +20,7 @@
 
 using mozilla::dom::Optional;
 using mozilla::dom::Sequence;
+using namespace mozilla;
 
 USING_WORKERS_NAMESPACE
 
@@ -198,7 +199,7 @@ SharedWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 nsresult
-SharedWorker::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+SharedWorker::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   AssertIsOnMainThread();
 

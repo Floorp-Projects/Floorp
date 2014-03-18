@@ -25,6 +25,9 @@ class nsISelectControlFrame;
 class nsPresState;
 
 namespace mozilla {
+
+class EventChainPreVisitor;
+
 namespace dom {
 
 class HTMLSelectElement;
@@ -259,7 +262,7 @@ public:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // nsIContent
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable, int32_t* aTabIndex) MOZ_OVERRIDE;

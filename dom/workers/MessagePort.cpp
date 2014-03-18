@@ -17,6 +17,7 @@ using mozilla::dom::EventHandlerNonNull;
 using mozilla::dom::MessagePortBase;
 using mozilla::dom::Optional;
 using mozilla::dom::Sequence;
+using namespace mozilla;
 
 USING_WORKERS_NAMESPACE
 
@@ -244,7 +245,7 @@ MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 nsresult
-MessagePort::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+MessagePort::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   AssertCorrectThread();
 

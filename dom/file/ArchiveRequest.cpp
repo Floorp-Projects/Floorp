@@ -11,6 +11,8 @@
 #include "nsCxPusher.h"
 #include "nsEventDispatcher.h"
 
+using namespace mozilla;
+
 USING_FILE_NAMESPACE
 
 /**
@@ -66,7 +68,7 @@ ArchiveRequest::~ArchiveRequest()
 }
 
 nsresult
-ArchiveRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+ArchiveRequest::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = nullptr;

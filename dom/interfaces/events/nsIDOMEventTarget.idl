@@ -13,6 +13,7 @@
 using mozilla::dom::Nullable;
 
 namespace mozilla {
+class EventChainPreVisitor;
 class EventListenerManager;
 namespace dom {
 class EventTarget;
@@ -20,7 +21,6 @@ class EventTarget;
 } // namespace mozilla
 
 class nsPresContext;
-class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
 %}
 
@@ -32,12 +32,12 @@ class nsEventChainPostVisitor;
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[ref] native nsEventChainPreVisitorRef(nsEventChainPreVisitor);
 [ref] native nsEventChainPostVisitorRef(nsEventChainPostVisitor);
 [ptr] native WidgetEventPtr(mozilla::WidgetEvent);
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsEventStatusPtr(nsEventStatus);
 [ptr] native JSContextPtr(JSContext);
+[ref] native EventChainPreVisitorRef(mozilla::EventChainPreVisitor);
 [ptr] native EventListenerManagerPtr(mozilla::EventListenerManager);
 [ptr] native EventTargetPtr(mozilla::dom::EventTarget);
 
@@ -211,7 +211,7 @@ interface nsIDOMEventTarget : nsISupports
   /**
    * Called before the capture phase of the event flow.
    * This is used to create the event target chain and implementations
-   * should set the necessary members of nsEventChainPreVisitor.
+   * should set the necessary members of EventChainPreVisitor.
    * At least aVisitor.mCanHandle must be set,
    * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
    * First one tells that this object can handle the aVisitor.mEvent event and
@@ -224,10 +224,10 @@ interface nsIDOMEventTarget : nsISupports
    * @note Only nsEventDispatcher should call this method.
    */
   [noscript, nostdcall]
-  void PreHandleEvent(in nsEventChainPreVisitorRef aVisitor);
+  void PreHandleEvent(in EventChainPreVisitorRef aVisitor);
 
   /**
-   * If nsEventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
+   * If EventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
    * called just before possible event handlers on this object will be called.
    */
   [noscript, nostdcall]

@@ -23,6 +23,7 @@ class nsIScriptContext;
 class nsPIDOMWindow;
 
 namespace mozilla {
+class EventChainPreVisitor;
 namespace dom {
 class OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
 class ErrorEventInit;
@@ -61,7 +62,7 @@ public:
                                       IDBTransaction* aTransaction);
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   void GetSource(Nullable<OwningIDBObjectStoreOrIDBIndexOrIDBCursor>& aSource) const;
 

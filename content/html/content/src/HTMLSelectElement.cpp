@@ -1478,7 +1478,7 @@ HTMLSelectElement::IsDisabledForEvents(uint32_t aMessage)
 }
 
 nsresult
-HTMLSelectElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLSelectElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = false;
   if (IsDisabledForEvents(aVisitor.mEvent->message)) {

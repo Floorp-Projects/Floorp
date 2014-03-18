@@ -57,6 +57,7 @@
 #include <algorithm>
 #include "private/pprio.h"
 #include "nsContentPermissionHelper.h"
+#include "nsEventDispatcher.h"
 
 #include "mozilla/dom/DeviceStorageBinding.h"
 
@@ -4275,7 +4276,7 @@ nsDOMDeviceStorage::GetTargetForEventTargetChain()
 }
 
 nsresult
-nsDOMDeviceStorage::PreHandleEvent(nsEventChainPreVisitor & aVisitor)
+nsDOMDeviceStorage::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   return nsDOMEventTargetHelper::PreHandleEvent(aVisitor);
 }

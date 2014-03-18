@@ -164,7 +164,7 @@ public:
    * Resets aVisitor object and calls PreHandleEvent.
    * Copies mItemFlags and mItemData to the current nsEventTargetChainItem.
    */
-  void PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  void PreHandleEvent(EventChainPreVisitor& aVisitor);
 
   /**
    * If the current item in the event target chain has an event listener
@@ -219,7 +219,7 @@ nsEventTargetChainItem::nsEventTargetChainItem(EventTarget* aTarget)
 }
 
 void
-nsEventTargetChainItem::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsEventTargetChainItem::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.Reset();
   unused << mTarget->PreHandleEvent(aVisitor);
@@ -515,8 +515,8 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   // Create visitor object and start event dispatching.
   // PreHandleEvent for the original target.
   nsEventStatus status = aEventStatus ? *aEventStatus : nsEventStatus_eIgnore;
-  nsEventChainPreVisitor preVisitor(aPresContext, aEvent, aDOMEvent, status,
-                                    isInAnon);
+  EventChainPreVisitor preVisitor(aPresContext, aEvent, aDOMEvent, status,
+                                  isInAnon);
   targetEtci->PreHandleEvent(preVisitor);
 
   if (!preVisitor.mCanHandle && preVisitor.mAutomaticChromeDispatch && content) {
