@@ -603,7 +603,9 @@ class ManifestParser(object):
         return manifests in order in which they appear in the tests
         """
         if tests is None:
-            tests = self.tests
+            # Make sure to return all the manifests, even ones without tests.
+            return self.manifest_defaults.keys()
+
         manifests = []
         for test in tests:
             manifest = test.get('manifest')
