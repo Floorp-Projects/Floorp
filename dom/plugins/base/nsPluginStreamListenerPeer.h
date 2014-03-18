@@ -13,7 +13,8 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsWeakReference.h"
 #include "nsNPAPIPluginStreamListener.h"
-#include "nsHashtable.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
@@ -154,7 +155,7 @@ private:
   // or plugin asks stream as file and it expects file extension until bug 90558 got fixed
   nsRefPtr<CachedFileHolder> mLocalCachedFileHolder;
   nsCOMPtr<nsIOutputStream> mFileCacheOutputStream;
-  nsHashtable             *mDataForwardToRequest;
+  nsDataHashtable<nsUint32HashKey, uint32_t>* mDataForwardToRequest;
   
   nsCString mContentType;
   bool mSeekable;
