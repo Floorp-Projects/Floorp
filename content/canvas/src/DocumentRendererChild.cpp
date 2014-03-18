@@ -47,7 +47,7 @@ DocumentRendererChild::RenderDocument(nsIDOMWindow *window,
     if (flushLayout)
         nsContentUtils::FlushLayoutForTree(window);
 
-    nsCOMPtr<nsPresContext> presContext;
+    nsRefPtr<nsPresContext> presContext;
     nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(window);
     if (win) {
         nsIDocShell* docshell = win->GetDocShell();
