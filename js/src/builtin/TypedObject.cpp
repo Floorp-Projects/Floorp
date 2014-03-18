@@ -6,6 +6,8 @@
 
 #include "builtin/TypedObject.h"
 
+#include "mozilla/CheckedInt.h"
+
 #include "jscompartment.h"
 #include "jsfun.h"
 #include "jsobj.h"
@@ -24,6 +26,7 @@
 
 #include "vm/Shape-inl.h"
 
+using mozilla::CheckedInt32;
 using mozilla::DebugOnly;
 
 using namespace js;
@@ -67,9 +70,19 @@ ToObjectIf(HandleValue value)
     return &value.toObject().as<T>();
 }
 
-static inline int32_t alignTo(int32_t address, size_t align) {
+static inline CheckedInt32 roundUpToAlignment(CheckedInt32 address, int32_t align)
+{
     JS_ASSERT(IsPowerOfTwo(align));
-    return (address + align - 1) & -align;
+
+    // Note: Be careful to order operators such that we first make the
+    // value smaller and then larger, so that we don't get false
+    // overflow errors due to (e.g.) adding `align` and then
+    // subtracting `1` afterwards when merely adding `align-1` would
+    // not have overflowed. Note that due to the nature of two's
+    // complement representation, if `address` is already aligned,
+    // then adding `align-1` cannot itself cause an overflow.
+
+    return ((address + (align - 1)) / align) * align;
 }
 
 /*
@@ -711,8 +724,8 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
     Rooted<SizedTypeDescr*> elementType(cx, &unsizedTypeDescr->elementType());
 
     // Compute the size.
-    int32_t size;
-    if (!SafeMul(elementType->size(), length, &size)) {
+    CheckedInt32 size = CheckedInt32(elementType->size()) * length;
+    if (!size.isValid()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_TYPEDOBJECT_TOO_BIG);
         return nullptr;
@@ -734,7 +747,7 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
     Rooted<SizedArrayTypeDescr*> obj(cx);
     obj = ArrayMetaTypeDescr::create<SizedArrayTypeDescr>(cx, unsizedTypeDescr,
                                                           elementType,
-                                                          stringRepr, size);
+                                                          stringRepr, size.value());
     if (!obj)
         return false;
 
@@ -829,7 +842,7 @@ StructMetaTypeDescr::create(JSContext *cx,
     AutoValueVector fieldOffsets(cx);  // Offset of each field field.
     RootedObject userFieldOffsets(cx); // User-exposed {f:offset} object
     RootedObject userFieldTypes(cx);   // User-exposed {f:descr} object.
-    int32_t sizeSoFar = 0;             // Size of struct thus far.
+    CheckedInt32 sizeSoFar(0);         // Size of struct thus far.
     int32_t alignment = 1;             // Alignment of struct.
     bool opaque = false;               // Opacity of struct.
 
@@ -907,19 +920,19 @@ StructMetaTypeDescr::create(JSContext *cx,
 
         // Offset of this field is the current total size adjusted for
         // the field's alignment.
-        int32_t offset = alignTo(sizeSoFar, fieldType->alignment());
-        if (offset < sizeSoFar) {
+        CheckedInt32 offset = roundUpToAlignment(sizeSoFar, fieldType->alignment());
+        if (!offset.isValid()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_TYPEDOBJECT_TOO_BIG);
             return nullptr;
         }
-        if (!fieldOffsets.append(Int32Value(offset))) {
+        if (!fieldOffsets.append(Int32Value(offset.value()))) {
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
 
         // userFieldOffsets[id] = offset
-        RootedValue offsetValue(cx, Int32Value(offset));
+        RootedValue offsetValue(cx, Int32Value(offset.value()));
         if (!JSObject::defineGeneric(cx, userFieldOffsets, id,
                                      offsetValue, nullptr, nullptr,
                                      JSPROP_READONLY | JSPROP_PERMANENT))
@@ -927,7 +940,7 @@ StructMetaTypeDescr::create(JSContext *cx,
 
         // Add space for this field to the total struct size.
         sizeSoFar = offset + fieldType->size();
-        if (sizeSoFar < offset) {
+        if (!sizeSoFar.isValid()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_TYPEDOBJECT_TOO_BIG);
             return nullptr;
@@ -951,8 +964,8 @@ StructMetaTypeDescr::create(JSContext *cx,
         return nullptr;
 
     // Adjust the total size to be a multiple of the final alignment.
-    int32_t totalSize = alignTo(sizeSoFar, alignment);
-    if (totalSize < sizeSoFar) {
+    CheckedInt32 totalSize = roundUpToAlignment(sizeSoFar, alignment);
+    if (!totalSize.isValid()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_TYPEDOBJECT_TOO_BIG);
         return nullptr;
@@ -972,7 +985,7 @@ StructMetaTypeDescr::create(JSContext *cx,
     descr->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(TypeDescr::Struct));
     descr->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
     descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(alignment));
-    descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(totalSize));
+    descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(totalSize.value()));
     descr->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(opaque));
 
     // Construct for internal use an array with the name for each field.
@@ -1591,15 +1604,15 @@ TypedObject::createZeroed(JSContext *cx,
         Rooted<SizedTypeDescr*> elementTypeRepr(cx);
         elementTypeRepr = &descr->as<UnsizedArrayTypeDescr>().elementType();
 
-        int32_t totalSize;
-        if (!SafeMul(elementTypeRepr->size(), length, &totalSize)) {
+        CheckedInt32 totalSize = CheckedInt32(elementTypeRepr->size()) * length;
+        if (!totalSize.isValid()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_TYPEDOBJECT_TOO_BIG);
             return nullptr;
         }
 
         Rooted<ArrayBufferObject*> buffer(cx);
-        buffer = ArrayBufferObject::create(cx, totalSize);
+        buffer = ArrayBufferObject::create(cx, totalSize.value());
         if (!buffer)
             return nullptr;
 
