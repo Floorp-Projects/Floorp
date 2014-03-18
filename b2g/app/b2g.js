@@ -920,3 +920,9 @@ pref("browser.autofocus", false);
 
 // Enable wakelock
 pref("dom.wakelock.enabled", true);
+
+// Enable sync and mozId with Firefox Accounts.
+#ifdef MOZ_SERVICES_FXACCOUNTS
+pref("services.sync.fxaccounts.enabled", true);
+pref("identity.fxaccounts.enabled", true);
+#endif
