@@ -163,8 +163,13 @@ TrackRunBox::fillSampleTable()
           frag->SetLastFragmentLastFrameTime(frames.ElementAt(i)->GetTimeStamp());
         }
       }
-      sample_info_table[i].sample_duration =
-        frame_time * mVideoMeta->GetVideoClockRate() / USECS_PER_S;
+
+      // In TrackRunBox, there should be exactly one type, either audio or video.
+      MOZ_ASSERT((mTrackType & Video_Track) ^ (mTrackType & Audio_Track));
+      sample_info_table[i].sample_duration = (mTrackType & Video_Track ?
+        frame_time * mVideoMeta->GetVideoClockRate() / USECS_PER_S :
+        frame_time * mAudioMeta->GetAudioSampleRate() / USECS_PER_S);
+
       table_size += sizeof(uint32_t);
     }
 

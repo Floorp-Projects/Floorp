@@ -61,10 +61,11 @@ FragmentBuffer::AddFrame(EncodedFrame* aFrame)
   }
 
   EncodedFrame::FrameType type = aFrame->GetFrameType();
-  if (type == EncodedFrame::AAC_CSD || type == EncodedFrame::AVC_CSD) {
+  if (type == EncodedFrame::AAC_CSD || type == EncodedFrame::AVC_CSD ||
+      type == EncodedFrame::AMR_AUDIO_CSD) {
     mCSDFrame = aFrame;
-    // Ue CSD's timestamp as the start time. Encoder should send CSD frame first
-    // and data frames.
+    // Use CSD's timestamp as the start time. Encoder should send CSD frame first
+    // and then data frames.
     mMediaStartTime = aFrame->GetTimeStamp();
     mFragmentNumber = 1;
     return NS_OK;
@@ -79,7 +80,7 @@ FragmentBuffer::AddFrame(EncodedFrame* aFrame)
   mFragArray.LastElement().AppendElement(aFrame);
 
   // check if current fragment is reach the fragment duration.
-  if ((aFrame->GetTimeStamp() - mMediaStartTime) > (mFragDuration * mFragmentNumber)) {
+  if ((aFrame->GetTimeStamp() - mMediaStartTime) >= (mFragDuration * mFragmentNumber)) {
     mFragArray.AppendElement();
     mFragmentNumber++;
   }
