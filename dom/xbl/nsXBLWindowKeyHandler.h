@@ -35,23 +35,14 @@ protected:
   nsresult WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType);
 
   // walk the handlers, looking for one to handle the event
-  bool WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
-                            nsIAtom* aEventType,
-                            nsXBLPrototypeHandler* aHandler,
-                            bool aExecute);
+  nsresult WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
+                                nsIAtom* aEventType, 
+                                nsXBLPrototypeHandler* aHandler);
 
-  // walk the handlers for aEvent, aCharCode and aIgnoreShiftKey. Execute it
-  // if aExecute = true.
+  // walk the handlers for aEvent, aCharCode and aIgnoreShiftKey
   bool WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType,
-                              nsXBLPrototypeHandler* aHandler,
-                              uint32_t aCharCode, bool aIgnoreShiftKey,
-                              bool aExecute);
-
-  // HandleEvent function for the capturing phase.
-  void HandleEventOnCapture(nsIDOMKeyEvent* aEvent);
-
-  // Check if any handler would handle the given event.
-  bool HasHandlerForEvent(nsIDOMKeyEvent* aEvent);
+                                nsXBLPrototypeHandler* aHandler,
+                                uint32_t aCharCode, bool aIgnoreShiftKey);
 
   // lazily load the handlers. Overridden to handle being attached
   // to a particular element rather than the document
@@ -66,10 +57,8 @@ protected:
   bool IsHTMLEditableFieldFocused();
 
   // Returns the element which was passed as a parameter to the constructor,
-  // unless the element has been removed from the document. Optionally returns
-  // whether the disabled attribute is set on the element (assuming the element
-  // is non-null).
-  already_AddRefed<mozilla::dom::Element> GetElement(bool* aIsDisabled = nullptr);
+  // unless the element has been removed from the document.
+  already_AddRefed<mozilla::dom::Element> GetElement();
   // Using weak pointer to the DOM Element.
   nsWeakPtr              mWeakPtrForElement;
   mozilla::dom::EventTarget* mTarget; // weak ref
