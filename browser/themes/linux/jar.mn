@@ -220,7 +220,6 @@ browser.jar:
   skin/classic/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)
   skin/classic/browser/devtools/noise.png             (devtools/noise.png)
   skin/classic/browser/devtools/dropmarker.png        (devtools/dropmarker.png)
-  skin/classic/browser/devtools/layout-background-grid.png (devtools/layout-background-grid.png)
   skin/classic/browser/devtools/layoutview.css         (../shared/devtools/layoutview.css)
   skin/classic/browser/devtools/debugger-collapse.png  (../shared/devtools/images/debugger-collapse.png)
   skin/classic/browser/devtools/debugger-expand.png    (../shared/devtools/images/debugger-expand.png)
