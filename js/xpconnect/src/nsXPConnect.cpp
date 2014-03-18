@@ -1354,8 +1354,11 @@ WriteScriptOrFunction(nsIObjectOutputStream *stream, JSContext *cx,
     // Exactly one of script or functionObj must be given
     MOZ_ASSERT(!scriptArg != !functionObj);
 
-    RootedScript script(cx, scriptArg ? scriptArg :
-                                        JS_GetFunctionScript(cx, JS_GetObjectFunction(functionObj)));
+    RootedScript script(cx, scriptArg);
+    if (!script) {
+        RootedFunction fun(cx, JS_GetObjectFunction(functionObj));
+        script.set(JS_GetFunctionScript(cx, fun));
+    }
 
     nsIPrincipal *principal =
         nsJSPrincipals::get(JS_GetScriptPrincipals(script));

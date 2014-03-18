@@ -159,7 +159,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
     friend class mozilla::LinkedListElement<Debugger>;
-    friend bool (::JS_DefineDebuggerObject)(JSContext *cx, JSObject *obj);
+    friend bool (::JS_DefineDebuggerObject)(JSContext *cx, JS::HandleObject obj);
 
   public:
     enum Hook {

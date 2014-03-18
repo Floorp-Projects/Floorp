@@ -239,7 +239,7 @@ bool
 nsXBLProtoImpl::LookupMember(JSContext* aCx, nsString& aName,
                              JS::Handle<jsid> aNameAsId,
                              JS::MutableHandle<JSPropertyDescriptor> aDesc,
-                             JSObject* aClassObject)
+                             JS::Handle<JSObject*> aClassObject)
 {
   for (nsXBLProtoImplMember* m = mMembers; m; m = m->GetNext()) {
     if (aName.Equals(m->GetName())) {

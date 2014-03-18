@@ -338,7 +338,7 @@ private:
   nsRefPtr<Voicemail> mVoicemail;
 #endif
 #ifdef MOZ_B2G_BT
-  nsCOMPtr<bluetooth::BluetoothManager> mBluetooth;
+  nsRefPtr<bluetooth::BluetoothManager> mBluetooth;
 #endif
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
   nsRefPtr<system::AudioChannelManager> mAudioChannelManager;

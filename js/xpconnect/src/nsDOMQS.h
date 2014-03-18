@@ -60,6 +60,7 @@ NEW_BINDING(nsSVGElement, SVGElement);
 NEW_BINDING(mozilla::dom::Event, Event);
 NEW_BINDING(mozilla::dom::UIEvent, UIEvent);
 NEW_BINDING(mozilla::dom::MouseEvent, MouseEvent);
+NEW_BINDING(nsGlobalWindow, Window);
 
 #define DEFINE_UNWRAP_CAST(_interface, _base, _bit)                           \
 template <>                                                                   \
