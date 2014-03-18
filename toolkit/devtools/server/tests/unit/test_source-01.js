@@ -44,9 +44,6 @@ function test_source()
     gThreadClient.getSources(function (aResponse) {
       do_check_true(!!aResponse);
       do_check_true(!!aResponse.sources);
-      gClient.compat.supportsFeature("sources").then(function (supported) {
-        do_check_true(supported);
-      });
 
       let source = aResponse.sources.filter(function (s) {
         return s.url === SOURCE_URL;
