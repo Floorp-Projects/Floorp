@@ -58,4 +58,4 @@ load 654928-1.html
 load 655451-1.xhtml
 load 713606-1.html
 load 716349-1.html
-asserts(1) load 973322-1.xhtml
+test-pref(layout.css.sticky.enabled,true) asserts(1) load 973322-1.xhtml
