@@ -52,6 +52,16 @@ var properties3 = {
   tel: [{value: number3.international2}]
 };
 
+var number4 = {
+  local: "87654321",
+  international: "+56 9 87654321"
+};
+
+var properties4 = {
+  name: ["Testname2"],
+  tel: [{value: number4.international}]
+};
+
 var req;
 var createResult1;
 var findResult1;
@@ -224,7 +234,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Adding a new contact with country code");
+    ok(true, "Adding a contact with a Brazilian country code");
     createResult1 = new mozContact(properties3);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
@@ -235,7 +245,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Searching for international number with prefix");
+    ok(true, "Searching for Brazilian number with prefix");
     var options = {filterBy: ["tel"],
                    filterOp: "match",
                    filterValue: number3.international1};
@@ -244,6 +254,54 @@ var steps = [
       ok(req.result.length == 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding a contact with a Chilean number");
+    createResult1 = new mozContact(properties4);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for Chilean number with prefix");
+    req = mozContacts.find({
+      filterBy: ["tel"],
+      filterOp: "match",
+      filterValue: number4.international
+    });
+    req.onsuccess = function () {
+      ise(req.result.length, 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ise(findResult1.id, sample_id1, "Same ID");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for Chilean number using local number");
+    req = mozContacts.find({
+      filterBy: ["tel"],
+      filterOp: "match",
+      filterValue: number4.local
+    });
+    req.onsuccess = function () {
+      ise(req.result.length, 0, "Found 0 contacts.");
       next();
     };
     req.onerror = onFailure;
