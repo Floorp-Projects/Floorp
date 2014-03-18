@@ -1275,7 +1275,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         IonSpew(IonSpew_BaselineBailouts, "Resuming in catch or finally block");
 
     IonSpew(IonSpew_BaselineBailouts, "  Reading from snapshot offset %u size %u",
-            iter.snapshotOffset(), iter.ionScript()->snapshotsSize());
+            iter.snapshotOffset(), iter.ionScript()->snapshotsListSize());
 
     if (!excInfo)
         iter.ionScript()->incNumBailouts();

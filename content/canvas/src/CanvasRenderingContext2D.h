@@ -45,6 +45,57 @@ extern const mozilla::gfx::Float SIGMA_MAX;
 
 template<typename T> class Optional;
 
+class CanvasPath :
+  public nsWrapperCache
+{
+public:
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPath)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasPath)
+
+  nsCOMPtr<nsISupports> GetParentObject() { return mParent; }
+
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
+
+  static already_AddRefed<CanvasPath> Constructor(const GlobalObject& aGlobal,
+                                                  ErrorResult& rv);
+  static already_AddRefed<CanvasPath> Constructor(const GlobalObject& aGlobal,
+                                                  CanvasPath& aCanvasPath,
+                                                  ErrorResult& rv);
+
+  void ClosePath();
+  void MoveTo(double x, double y);
+  void LineTo(double x, double y);
+  void QuadraticCurveTo(double cpx, double cpy, double x, double y);
+  void BezierCurveTo(double cp1x, double cp1y,
+                     double cp2x, double cp2y,
+                     double x, double y);
+  void ArcTo(double x1, double y1, double x2, double y2, double radius,
+             ErrorResult& error);
+  void Rect(double x, double y, double w, double h);
+  void Arc(double x, double y, double radius,
+           double startAngle, double endAngle, bool anticlockwise,
+           ErrorResult& error);
+
+  void LineTo(const gfx::Point& aPoint);
+  void BezierTo(const gfx::Point& aCP1,
+                const gfx::Point& aCP2,
+                const gfx::Point& aCP3);
+
+  mozilla::RefPtr<mozilla::gfx::Path> GetPath(const CanvasWindingRule& winding,
+                                              const mozilla::RefPtr<mozilla::gfx::DrawTarget>& mTarget) const;
+
+  CanvasPath(nsCOMPtr<nsISupports> aParent);
+  CanvasPath(nsCOMPtr<nsISupports> aParent, RefPtr<gfx::PathBuilder> mPathBuilder);
+  virtual ~CanvasPath() {}
+
+private:
+
+  nsCOMPtr<nsISupports> mParent;
+  static gfx::Float ToFloat(double aValue) { return gfx::Float(aValue); }
+
+  mutable RefPtr<gfx::PathBuilder> mPathBuilder;
+};
+
 struct CanvasBidiProcessor;
 class CanvasRenderingContext2DUserData;
 
@@ -172,10 +223,13 @@ public:
   void StrokeRect(double x, double y, double w, double h);
   void BeginPath();
   void Fill(const CanvasWindingRule& winding);
+  void Fill(const CanvasPath& path, const CanvasWindingRule& winding);
   void Stroke();
+  void Stroke(const CanvasPath& path);
   void DrawFocusIfNeeded(mozilla::dom::Element& element);
   bool DrawCustomFocusRing(mozilla::dom::Element& element);
   void Clip(const CanvasWindingRule& winding);
+  void Clip(const CanvasPath& path, const CanvasWindingRule& winding);
   bool IsPointInPath(double x, double y, const CanvasWindingRule& winding);
   bool IsPointInStroke(double x, double y);
   void FillText(const nsAString& text, double x, double y,

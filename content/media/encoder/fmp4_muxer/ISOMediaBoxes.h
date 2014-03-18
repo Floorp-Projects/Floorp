@@ -26,8 +26,8 @@ namespace mozilla {
 #define Audio_Track 0x01
 #define Video_Track 0x02
 
-class AACTrackMetadata;
-class AVCTrackMetadata;
+class AudioTrackMetadata;
+class VideoTrackMetadata;
 class ES_Descriptor;
 class ISOControl;
 
@@ -53,22 +53,6 @@ public:
   nsresult Find(const nsACString& aType,
                 nsTArray<nsRefPtr<MuxerOperation>>& aOperations) MOZ_OVERRIDE;
 
-  // A helper class to check box written bytes number; it will compare
-  // the size generated from Box::Generate() and the actually written length in
-  // Box::Write().
-  class MetaHelper {
-  public:
-    nsresult Init(ISOControl* aControl);
-    bool AudioOnly() {
-      if (mAudMeta && !mVidMeta) {
-        return true;
-      }
-      return false;
-    }
-    nsRefPtr<AACTrackMetadata> mAudMeta;
-    nsRefPtr<AVCTrackMetadata> mVidMeta;
-  };
-
   // This helper class will compare the written size in Write() and the size in
   // Generate(). If their are not equal, it will assert.
   class BoxSizeChecker {
@@ -86,6 +70,8 @@ protected:
   Box(const nsACString& aType, ISOControl* aControl);
 
   ISOControl* mControl;
+  nsRefPtr<AudioTrackMetadata> mAudioMeta;
+  nsRefPtr<VideoTrackMetadata> mVideoMeta;
 };
 
 /**
@@ -189,9 +175,6 @@ public:
   MovieHeaderBox(ISOControl* aControl);
   ~MovieHeaderBox();
   uint32_t GetTimeScale();
-
-protected:
-  MetaHelper mMeta;
 };
 
 // 14496-12 8.4.2 'Media Header Box'
@@ -220,7 +203,6 @@ public:
 
 protected:
   uint32_t mTrackType;
-  MetaHelper mMeta;
 };
 
 // 14496-12 8.3.1 'Track Box'
@@ -299,7 +281,6 @@ protected:
 
   uint32_t mAllSampleSize;
   uint32_t mTrackType;
-  MetaHelper mMeta;
 };
 
 // tf_flags in TrackFragmentHeaderBox, 14496-12 8.8.7.1.
@@ -333,7 +314,6 @@ public:
 
 protected:
   uint32_t mTrackType;
-  MetaHelper mMeta;
 };
 
 // 14496-12 8.8.6 'Track Fragment Box'
@@ -404,7 +384,6 @@ public:
 
 protected:
   uint32_t mTrackType;
-  MetaHelper mMeta;
 };
 
 // 14496-12 8.8.1 'Movie Extends Box'
@@ -414,9 +393,6 @@ class MovieExtendsBox : public DefaultContainerImpl {
 public:
   MovieExtendsBox(ISOControl* aControl);
   ~MovieExtendsBox();
-
-protected:
-  MetaHelper mMeta;
 };
 
 // 14496-12 8.7.5 'Chunk Offset Box'
@@ -527,8 +503,6 @@ public:
 
 protected:
   SampleEntryBox() MOZ_DELETE;
-
-  MetaHelper mMeta;
 };
 
 // 14496-12 8.5.2 'Sample Description Box'
@@ -548,6 +522,9 @@ public:
   ~SampleDescriptionBox();
 
 protected:
+  nsresult CreateAudioSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry);
+  nsresult CreateVideoSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry);
+
   uint32_t mTrackType;
 };
 
@@ -764,7 +741,6 @@ public:
 
 protected:
   uint32_t mTrackType;
-  MetaHelper mMeta;
 };
 
 // 14496-12 8.4.3 'Handler Reference Box'

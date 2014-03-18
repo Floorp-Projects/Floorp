@@ -65,7 +65,7 @@ public:
     return mType;
   }
 
-  const gfxMatrix& Matrix() const { return mMatrix; }
+  const gfxMatrix& GetMatrix() const { return mMatrix; }
   void SetMatrix(const gfxMatrix& aMatrix);
   void SetTranslate(float aTx, float aTy);
   void SetScale(float aSx, float aSy);

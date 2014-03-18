@@ -166,7 +166,7 @@ SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
 
   switch (mTransformType) {
     case SVG_TRANSFORM_MATRIX: {
-      const gfxMatrix& mx = aTransform.Matrix();
+      const gfxMatrix& mx = aTransform.GetMatrix();
       mParams[0] = static_cast<float>(mx.xx);
       mParams[1] = static_cast<float>(mx.yx);
       mParams[2] = static_cast<float>(mx.xy);
@@ -176,13 +176,13 @@ SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
       break;
     }
     case SVG_TRANSFORM_TRANSLATE: {
-      const gfxMatrix& mx = aTransform.Matrix();
+      const gfxMatrix& mx = aTransform.GetMatrix();
       mParams[0] = static_cast<float>(mx.x0);
       mParams[1] = static_cast<float>(mx.y0);
       break;
     }
     case SVG_TRANSFORM_SCALE: {
-      const gfxMatrix& mx = aTransform.Matrix();
+      const gfxMatrix& mx = aTransform.GetMatrix();
       mParams[0] = static_cast<float>(mx.xx);
       mParams[1] = static_cast<float>(mx.yy);
       break;

@@ -10,8 +10,11 @@
 class nsPIDOMWindow;
 class nsIDOMEventListener;
 class nsIDOMEvent;
-class nsEventChainPreVisitor;
-class nsEventChainPostVisitor;
+
+namespace mozilla {
+class EventChainPostVisitor;
+class EventChainPreVisitor;
+} // namespace mozilla
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"

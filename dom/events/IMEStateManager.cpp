@@ -500,7 +500,7 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
                                           nsPresContext* aPresContext,
                                           WidgetEvent* aEvent,
                                           nsEventStatus* aStatus,
-                                          nsDispatchingCallback* aCallBack)
+                                          EventDispatchingCallback* aCallBack)
 {
   MOZ_ASSERT(aEvent->eventStructType == NS_COMPOSITION_EVENT ||
              aEvent->eventStructType == NS_TEXT_EVENT);

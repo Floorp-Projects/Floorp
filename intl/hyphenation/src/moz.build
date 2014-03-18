@@ -17,3 +17,10 @@ SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'i18n'
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-type-limits',
+    ]

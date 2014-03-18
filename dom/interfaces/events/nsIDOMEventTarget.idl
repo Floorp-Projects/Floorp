@@ -13,6 +13,8 @@
 using mozilla::dom::Nullable;
 
 namespace mozilla {
+class EventChainPostVisitor;
+class EventChainPreVisitor;
 class EventListenerManager;
 namespace dom {
 class EventTarget;
@@ -20,8 +22,6 @@ class EventTarget;
 } // namespace mozilla
 
 class nsPresContext;
-class nsEventChainPreVisitor;
-class nsEventChainPostVisitor;
 %}
 
 /**
@@ -32,12 +32,12 @@ class nsEventChainPostVisitor;
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[ref] native nsEventChainPreVisitorRef(nsEventChainPreVisitor);
-[ref] native nsEventChainPostVisitorRef(nsEventChainPostVisitor);
 [ptr] native WidgetEventPtr(mozilla::WidgetEvent);
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsEventStatusPtr(nsEventStatus);
 [ptr] native JSContextPtr(JSContext);
+[ref] native EventChainPostVisitorRef(mozilla::EventChainPostVisitor);
+[ref] native EventChainPreVisitorRef(mozilla::EventChainPreVisitor);
 [ptr] native EventListenerManagerPtr(mozilla::EventListenerManager);
 [ptr] native EventTargetPtr(mozilla::dom::EventTarget);
 
@@ -211,38 +211,38 @@ interface nsIDOMEventTarget : nsISupports
   /**
    * Called before the capture phase of the event flow.
    * This is used to create the event target chain and implementations
-   * should set the necessary members of nsEventChainPreVisitor.
+   * should set the necessary members of EventChainPreVisitor.
    * At least aVisitor.mCanHandle must be set,
    * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
    * First one tells that this object can handle the aVisitor.mEvent event and
    * the latter one is the possible parent object for the event target chain.
-   * @see nsEventDispatcher.h for more documentation about aVisitor.
+   * @see EventDispatcher.h for more documentation about aVisitor.
    *
    * @param aVisitor the visitor object which is used to create the
    *                 event target chain for event dispatching.
    *
-   * @note Only nsEventDispatcher should call this method.
+   * @note Only EventDispatcher should call this method.
    */
   [noscript, nostdcall]
-  void PreHandleEvent(in nsEventChainPreVisitorRef aVisitor);
+  void PreHandleEvent(in EventChainPreVisitorRef aVisitor);
 
   /**
-   * If nsEventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
+   * If EventChainPreVisitor.mWantsWillHandleEvent is set PR_TRUE,
    * called just before possible event handlers on this object will be called.
    */
   [noscript, nostdcall]
-  void WillHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+  void WillHandleEvent(in EventChainPostVisitorRef aVisitor);
 
   /**
    * Called after the bubble phase of the system event group.
    * The default handling of the event should happen here.
    * @param aVisitor the visitor object which is used during post handling.
    *
-   * @see nsEventDispatcher.h for documentation about aVisitor.
-   * @note Only nsEventDispatcher should call this method.
+   * @see EventDispatcher.h for documentation about aVisitor.
+   * @note Only EventDispatcher should call this method.
    */
   [noscript, nostdcall]
-  void PostHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+  void PostHandleEvent(in EventChainPostVisitorRef aVisitor);
 
   /**
    * Dispatch an event.
@@ -287,7 +287,7 @@ interface nsIDOMEventTarget : nsISupports
 #define NS_IMPL_DOMTARGET_DEFAULTS(_class) \
 mozilla::dom::EventTarget* _class::GetTargetForDOMEvent() { return this; } \
 mozilla::dom::EventTarget* _class::GetTargetForEventTargetChain() { return this; } \
-nsresult _class::WillHandleEvent(nsEventChainPostVisitor& aVisitor) { return NS_OK; } \
+nsresult _class::WillHandleEvent(mozilla::EventChainPostVisitor& aVisitor) { return NS_OK; } \
 JSContext* _class::GetJSContextForEventHandlers() { return nullptr; }
 
 #define NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(aClass) \

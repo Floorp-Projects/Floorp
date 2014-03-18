@@ -36,8 +36,9 @@ public:
 public:
 
   MozNDEFRecord(JSContext* aCx, nsPIDOMWindow* aWindow, uint8_t aTnf,
-                const Uint8Array& aType, const Uint8Array& aId,
-                const Uint8Array& aPlayload);
+                const Optional<Uint8Array>& aType,
+                const Optional<Uint8Array>& aId,
+                const Optional<Uint8Array>& aPlayload);
 
   ~MozNDEFRecord();
 
@@ -50,18 +51,23 @@ public:
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   static already_AddRefed<MozNDEFRecord>
-                  Constructor(const GlobalObject& aGlobal, uint8_t aTnf,
-                              const Uint8Array& aType, const Uint8Array& aId,
-                              const Uint8Array& aPayload, ErrorResult& aRv);
+  Constructor(const GlobalObject& aGlobal, uint8_t aTnf,
+              const Optional<Uint8Array>& aType,
+              const Optional<Uint8Array>& aId,
+              const Optional<Uint8Array>& aPayload, ErrorResult& aRv);
 
   uint8_t Tnf() const
   {
     return mTnf;
   }
 
-  JSObject* Type(JSContext* cx) const
+  JSObject* GetType(JSContext* cx) const
   {
-    return GetTypeObject();
+    if (mType) {
+      return GetTypeObject();
+    } else {
+      return nullptr;
+    }
   }
   JSObject* GetTypeObject() const
   {
@@ -69,9 +75,13 @@ public:
     return mType;
   }
 
-  JSObject* Id(JSContext* cx) const
+  JSObject* GetId(JSContext* cx) const
   {
-    return GetIdObject();
+    if (mId) {
+      return GetIdObject();
+    } else {
+      return nullptr;
+    }
   }
   JSObject* GetIdObject() const
   {
@@ -79,9 +89,13 @@ public:
     return mId;
   }
 
-  JSObject* Payload(JSContext* cx) const
+  JSObject* GetPayload(JSContext* cx) const
   {
-    return GetPayloadObject();
+    if (mPayload) {
+      return GetPayloadObject();
+    } else {
+      return nullptr;
+    }
   }
   JSObject* GetPayloadObject() const
   {

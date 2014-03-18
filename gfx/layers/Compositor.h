@@ -121,6 +121,7 @@ struct Effect;
 struct EffectChain;
 class Image;
 class ISurfaceAllocator;
+class Layer;
 class NewTextureSource;
 class DataTextureSource;
 class CompositingRenderTarget;
@@ -358,6 +359,8 @@ public:
    * Flush the current frame to the screen and tidy up.
    */
   virtual void EndFrame() = 0;
+
+  virtual void SetFBAcquireFence(Layer* aLayer) {}
 
   /**
    * Post-rendering stuff if the rendering is done outside of this Compositor
