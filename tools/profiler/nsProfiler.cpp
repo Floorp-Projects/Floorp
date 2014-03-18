@@ -92,12 +92,6 @@ NS_IMETHODIMP
 nsProfiler::StopProfiler()
 {
   profiler_stop();
-#ifdef MOZ_INSTRUMENT_EVENT_LOOP
-// XXX: On Windows this causes a deadlock. See Bug 965373
-#ifndef XP_WIN
-  mozilla::ShutdownEventTracing();
-#endif // ifndef XP_WIN
-#endif // ifndef MOZ_INSTRUMENT_EVENT_LOOP
   return NS_OK;
 }
 
