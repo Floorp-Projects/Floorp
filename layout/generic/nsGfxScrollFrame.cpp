@@ -2086,7 +2086,10 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
     mListeners[i]->ScrollPositionDidChange(pt.x, pt.y);
   }
 
-  presContext->GetDocShell()->NotifyScrollObservers();
+  nsCOMPtr<nsIDocShell> docShell = presContext->GetDocShell();
+  if (docShell) {
+    docShell->NotifyScrollObservers();
+  }
 }
 
 static void
