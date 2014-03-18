@@ -105,6 +105,8 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   sp<OMXCodecProxy> mVideoSource;
   sp<MediaSource> mAudioTrack;
   sp<MediaSource> mAudioSource;
+  int32_t mDisplayWidth;
+  int32_t mDisplayHeight;
   int32_t mVideoWidth;
   int32_t mVideoHeight;
   int32_t mVideoColorFormat;
@@ -218,9 +220,12 @@ public:
     *durationUs = mDurationUs;
   }
 
-  void GetVideoParameters(int32_t *width, int32_t *height) {
-    *width = mVideoWidth;
-    *height = mVideoHeight;
+  void GetVideoParameters(int32_t* aDisplayWidth, int32_t* aDisplayHeight,
+                          int32_t* aWidth, int32_t* aHeight) {
+    *aDisplayWidth = mDisplayWidth;
+    *aDisplayHeight = mDisplayHeight;
+    *aWidth = mVideoWidth;
+    *aHeight = mVideoHeight;
   }
 
   void GetAudioParameters(int32_t *numChannels, int32_t *sampleRate) {
