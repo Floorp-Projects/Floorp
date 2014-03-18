@@ -40,8 +40,7 @@
                           android:layout="@layout/home_banner"
                           android:layout_width="fill_parent"
                           android:layout_height="@dimen/home_banner_height"
-                          android:layout_gravity="bottom"
-                          android:translationY="@dimen/home_banner_height"/>
+                          android:layout_gravity="bottom"/>
 
             </FrameLayout>
 
