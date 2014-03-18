@@ -18,6 +18,7 @@
 class nsIDocument;
 
 namespace mozilla {
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
@@ -45,7 +46,7 @@ public:
   NS_DECL_NSIDOMHTMLAREAELEMENT
 
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   virtual bool IsLink(nsIURI** aURI) const MOZ_OVERRIDE;
   virtual void GetLinkTarget(nsAString& aTarget) MOZ_OVERRIDE;
   virtual already_AddRefed<nsIURI> GetHrefURI() const MOZ_OVERRIDE;

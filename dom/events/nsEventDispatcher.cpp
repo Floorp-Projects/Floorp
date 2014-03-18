@@ -156,7 +156,7 @@ public:
    * item in the chain.
    */
   static void HandleEventTargetChain(nsTArray<nsEventTargetChainItem>& aChain,
-                                     nsEventChainPostVisitor& aVisitor,
+                                     EventChainPostVisitor& aVisitor,
                                      nsDispatchingCallback* aCallback,
                                      ELMCreationDetector& aCd);
 
@@ -170,7 +170,7 @@ public:
    * If the current item in the event target chain has an event listener
    * manager, this method calls EventListenerManager::HandleEvent().
    */
-  void HandleEvent(nsEventChainPostVisitor& aVisitor,
+  void HandleEvent(EventChainPostVisitor& aVisitor,
                    ELMCreationDetector& aCd)
   {
     if (WantsWillHandleEvent()) {
@@ -200,7 +200,7 @@ public:
   /**
    * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent.
    */
-  void PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  void PostHandleEvent(EventChainPostVisitor& aVisitor);
 
   nsCOMPtr<EventTarget>             mTarget;
   uint16_t                          mFlags;
@@ -231,7 +231,7 @@ nsEventTargetChainItem::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 void
-nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+nsEventTargetChainItem::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   aVisitor.mItemFlags = mItemFlags;
   aVisitor.mItemData = mItemData;
@@ -241,7 +241,7 @@ nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 void
 nsEventTargetChainItem::HandleEventTargetChain(
                           nsTArray<nsEventTargetChainItem>& aChain,
-                          nsEventChainPostVisitor& aVisitor,
+                          EventChainPostVisitor& aVisitor,
                           nsDispatchingCallback* aCallback,
                           ELMCreationDetector& aCd)
 {
@@ -588,7 +588,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
         }
       } else {
         // Event target chain is created. Handle the chain.
-        nsEventChainPostVisitor postVisitor(preVisitor);
+        EventChainPostVisitor postVisitor(preVisitor);
         nsEventTargetChainItem::HandleEventTargetChain(chain,
                                                        postVisitor,
                                                        aCallback,

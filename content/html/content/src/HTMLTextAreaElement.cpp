@@ -509,7 +509,7 @@ HTMLTextAreaElement::FireChangeEventIfNeeded()
 }
 
 nsresult
-HTMLTextAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLTextAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   if (aVisitor.mEvent->message == NS_FORM_SELECTED) {
     mHandlingSelect = false;

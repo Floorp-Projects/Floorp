@@ -112,7 +112,7 @@ DestroyMouseDownPoint(void *    /*aObject*/,
 }
 
 nsresult
-HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   if (mHandlingEvent ||

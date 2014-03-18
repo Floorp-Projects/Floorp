@@ -30,6 +30,7 @@ class nsTextEditorState;
 
 namespace mozilla {
 
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 
 namespace dom {
@@ -152,8 +153,9 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
 
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
-  void PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor);
+  virtual nsresult PostHandleEvent(
+                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  void PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor);
   void StartRangeThumbDrag(WidgetGUIEvent* aEvent);
   void FinishRangeThumbDrag(WidgetGUIEvent* aEvent = nullptr);
   void CancelRangeThumbDrag(bool aIsForUserEvent = true);
@@ -1182,7 +1184,7 @@ protected:
    * this function checks if it is needed, and if so, open the corresponding
    * picker (color picker or file picker).
    */
-  nsresult MaybeInitPickers(nsEventChainPostVisitor& aVisitor);
+  nsresult MaybeInitPickers(EventChainPostVisitor& aVisitor);
 
   enum FilePickerType {
     FILE_PICKER_FILE,

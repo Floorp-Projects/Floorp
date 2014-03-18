@@ -1489,7 +1489,7 @@ HTMLSelectElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-HTMLSelectElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLSelectElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   if (aVisitor.mEvent->message == NS_FOCUS_CONTENT) {
     // If the invalid UI is shown, we should show it while focused and

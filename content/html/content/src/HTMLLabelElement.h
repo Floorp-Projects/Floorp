@@ -14,6 +14,7 @@
 #include "nsIDOMHTMLLabelElement.h"
 
 namespace mozilla {
+class EventChainPostVisitor;
 namespace dom {
 
 class HTMLLabelElement MOZ_FINAL : public nsGenericHTMLFormElement,
@@ -60,7 +61,8 @@ public:
   virtual bool IsDisabled() const MOZ_OVERRIDE { return false; }
 
   // nsIContent
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(
+                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   virtual void PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent) MOZ_OVERRIDE;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

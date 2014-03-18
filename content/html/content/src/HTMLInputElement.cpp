@@ -3731,7 +3731,7 @@ HTMLInputElement::ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget)
 }
 
 nsresult
-HTMLInputElement::MaybeInitPickers(nsEventChainPostVisitor& aVisitor)
+HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
 {
   // Open a file picker when we receive a click on a <input type='file'>, or
   // open a color picker when we receive a click on a <input type='color'>.
@@ -3757,7 +3757,7 @@ HTMLInputElement::MaybeInitPickers(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   if (!aVisitor.mPresContext) {
     // Hack alert! In order to open file picker even in case the element isn't
@@ -4240,7 +4240,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 void
-HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor)
+HTMLInputElement::PostHandleEventForRangeThumb(EventChainPostVisitor& aVisitor)
 {
   MOZ_ASSERT(mType == NS_FORM_INPUT_RANGE);
 

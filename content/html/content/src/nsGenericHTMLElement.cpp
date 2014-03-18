@@ -731,7 +731,7 @@ nsGenericHTMLElement::PreHandleEventForAnchors(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsGenericHTMLElement::PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor)
+nsGenericHTMLElement::PostHandleEventForAnchors(EventChainPostVisitor& aVisitor)
 {
   if (!CheckHandleEventForAnchorsPreconditions(aVisitor)) {
     return NS_OK;

@@ -99,7 +99,7 @@ HTMLAreaElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-HTMLAreaElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForAnchors(aVisitor);
 }

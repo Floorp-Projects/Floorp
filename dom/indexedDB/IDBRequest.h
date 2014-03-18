@@ -23,6 +23,7 @@ class nsIScriptContext;
 class nsPIDOMWindow;
 
 namespace mozilla {
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 class OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
@@ -192,7 +193,8 @@ public:
   void SetTransaction(IDBTransaction* aTransaction);
 
   // nsIDOMEventTarget
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(
+                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   DOMError* GetError(ErrorResult& aRv)
   {

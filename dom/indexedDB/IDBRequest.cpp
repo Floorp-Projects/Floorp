@@ -457,7 +457,7 @@ NS_IMPL_ADDREF_INHERITED(IDBOpenDBRequest, IDBRequest)
 NS_IMPL_RELEASE_INHERITED(IDBOpenDBRequest, IDBRequest)
 
 nsresult
-IDBOpenDBRequest::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+IDBOpenDBRequest::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return IndexedDatabaseManager::FireWindowOnError(GetOwner(), aVisitor);
 }

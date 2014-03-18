@@ -219,7 +219,7 @@ HTMLButtonElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   nsresult rv = NS_OK;
   if (!aVisitor.mPresContext) {

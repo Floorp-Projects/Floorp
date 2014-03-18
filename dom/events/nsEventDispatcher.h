@@ -196,17 +196,17 @@ public:
   dom::EventTarget* mEventTargetAtParent;
 };
 
-} // namespace mozilla
-
-class nsEventChainPostVisitor : public mozilla::EventChainVisitor
+class EventChainPostVisitor : public mozilla::EventChainVisitor
 {
 public:
-  nsEventChainPostVisitor(mozilla::EventChainVisitor& aOther)
-  : mozilla::EventChainVisitor(aOther.mPresContext, aOther.mEvent,
-                               aOther.mDOMEvent, aOther.mEventStatus)
+  EventChainPostVisitor(EventChainVisitor& aOther)
+    : EventChainVisitor(aOther.mPresContext, aOther.mEvent,
+                        aOther.mDOMEvent, aOther.mEventStatus)
   {
   }
 };
+
+} // namespace mozilla
 
 /**
  * If an nsDispatchingCallback object is passed to Dispatch,
@@ -216,7 +216,7 @@ public:
  */
 class MOZ_STACK_CLASS nsDispatchingCallback {
 public:
-  virtual void HandleEvent(nsEventChainPostVisitor& aVisitor) = 0;
+  virtual void HandleEvent(mozilla::EventChainPostVisitor& aVisitor) = 0;
 };
 
 /**

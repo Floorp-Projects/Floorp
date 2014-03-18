@@ -179,7 +179,7 @@ nsWindowRoot::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsWindowRoot::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+nsWindowRoot::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return NS_OK;
 }

@@ -86,7 +86,7 @@ SVGAElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-SVGAElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+SVGAElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForLinks(aVisitor);
 }
