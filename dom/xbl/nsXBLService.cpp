@@ -585,6 +585,15 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
   manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
                                   TrustedEventsAtSystemGroupBubble());
 
+  // The capturing listener is only used for XUL keysets to properly handle
+  // shortcut keys in a multi-process environment.
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
+                                  TrustedEventsAtSystemGroupCapture());
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
+                                  TrustedEventsAtSystemGroupCapture());
+  manager->AddEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
+                                  TrustedEventsAtSystemGroupCapture());
+
   if (contentNode)
     return contentNode->SetProperty(nsGkAtoms::listener,
                                     handler.forget().take(),
@@ -629,6 +638,13 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
                                      TrustedEventsAtSystemGroupBubble());
   manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
                                      TrustedEventsAtSystemGroupBubble());
+
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keydown"),
+                                     TrustedEventsAtSystemGroupCapture());
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keyup"),
+                                     TrustedEventsAtSystemGroupCapture());
+  manager->RemoveEventListenerByType(handler, NS_LITERAL_STRING("keypress"),
+                                     TrustedEventsAtSystemGroupCapture());
 
   contentNode->DeleteProperty(nsGkAtoms::listener);
 
