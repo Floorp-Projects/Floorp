@@ -588,7 +588,7 @@ class TypedObject : public ArrayBufferViewObject
     void attach(TypedObject &typedObj, int32_t offset);
 
     // Invoked when array buffer is transferred elsewhere
-    void neuter(JSContext *cx);
+    void neuter(void *newData);
 
     int32_t offset() const {
         return getReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET).toInt32();
