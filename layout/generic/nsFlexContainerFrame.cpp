@@ -2837,7 +2837,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
 // RAII class to clean up a list of FlexLines.
 // Specifically, this removes each line from the list, deletes all the
 // FlexItems in its list, and deletes the FlexLine.
-class AutoFlexLineListClearer MOZ_STACK_CLASS {
+class MOZ_STACK_CLASS AutoFlexLineListClearer
+{
 public:
   AutoFlexLineListClearer(LinkedList<FlexLine>& aLines
                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
