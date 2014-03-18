@@ -20,6 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=622558
 </div>
 <pre id="test">
 <script type="application/javascript">
+// Bug 940203
+if (navigator.platform.startsWith("Win")) {
+  SimpleTest.expectAssertions(0, 1);
+}
 
 /** Test for Bug 622558 **/
 
