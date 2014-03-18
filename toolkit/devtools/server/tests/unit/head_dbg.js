@@ -195,15 +195,6 @@ function initTestTracerServer()
   DebuggerServer.init(function () { return true; });
 }
 
-function initSourcesBackwardsCompatDebuggerServer()
-{
-  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/root.js");
-  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
-  DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/script.js");
-  DebuggerServer.addActors("resource://test/testcompatactors.js");
-  DebuggerServer.init(function () { return true; });
-}
-
 function finishClient(aClient)
 {
   aClient.close(function() {
