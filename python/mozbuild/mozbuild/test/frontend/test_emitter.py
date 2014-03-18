@@ -366,6 +366,24 @@ class TestEmitterBasic(unittest.TestCase):
         paths = sorted([v[0] for v in o.installs.values()])
         self.assertEqual(paths, expected)
 
+    def test_test_manifest_install_includes(self):
+        """Ensure that any [include:foo.ini] are copied to the objdir."""
+        reader = self.reader('test-manifest-install-includes')
+
+        objs = self.read_topsrcdir(reader)
+        self.assertEqual(len(objs), 1)
+        o = objs[0]
+        self.assertEqual(len(o.installs), 3)
+        self.assertEqual(o.manifest_relpath, "mochitest.ini")
+        self.assertEqual(o.manifest_obj_relpath, "subdir/mochitest.ini")
+        expected = [
+            mozpath.normpath(mozpath.join(o.install_prefix, "subdir/common.ini")),
+            mozpath.normpath(mozpath.join(o.install_prefix, "subdir/mochitest.ini")),
+            mozpath.normpath(mozpath.join(o.install_prefix, "subdir/test_foo.html")),
+        ]
+        paths = sorted([v[0] for v in o.installs.values()])
+        self.assertEqual(paths, expected)
+
     def test_test_manifest_keys_extracted(self):
         """Ensure all metadata from test manifests is extracted."""
         reader = self.reader('test-manifest-keys-extracted')
