@@ -242,6 +242,11 @@
     list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
   }
 
+  #toolbar-menubar > #sync-button[status="active"]:not(:-moz-lwtheme),
+  #toolbar-menubar > toolbarpaletteitem > #sync-button[status="active"]:not(:-moz-lwtheme) {
+    list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
+  }
+
   /* Glass Fog */
 
   #TabsToolbar:not(:-moz-lwtheme) {
