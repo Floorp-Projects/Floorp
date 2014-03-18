@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=975978
+-->
+
+<head>
+  <title>Media test: default video size</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=975978">Mozilla Bug 975978</a>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function IsWindows7OrLater() {
+  var re = /Windows NT (\d.\d)/;
+  var winver = navigator.userAgent.match(re);
+  return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.1;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// MP4 video with display size is difference to decode frame size.
+// The display size is recorded in TrackHeaderBox 'tkhd' of this mp4 video.
+var resource =
+  { name:"pixel_aspect_ratio.mp4", type:"video/mp4", width:525, height:288 };
+
+var v = document.createElement("video");
+v.onloadedmetadata = function() {
+  is(v.videoWidth, resource.width, "Intrinsic width should match video width");
+  is(v.videoHeight, resource.height, "Intrinsic height should match video height");
+  SimpleTest.finish();
+}
+v.addEventListener("error", function(ev) {
+  if (v.readyState < v.HAVE_METADATA) {
+    info("Video element returns with readyState " + v.readyState + " error.code " + v.error.code);
+    todo(false, "This platform doesn't support to retrieve MP4 metadata.");
+    SimpleTest.finish();
+  }
+}, false);
+
+v.src = resource.name;
+v.preload = "auto";
+
+document.body.appendChild(v);
+</script>
+</pre>
+</body>
+</html>
