@@ -578,6 +578,7 @@ Notification::ShowInternal()
         ops.mTextClickable = true;
         ops.mManifestURL = manifestUrl;
         ops.mId = alertName;
+        ops.mDbId = mID;
         ops.mDir = DirectionToString(mDir);
         ops.mLang = mLang;
         ops.mTag = mTag;
