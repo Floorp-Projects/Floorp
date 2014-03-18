@@ -1698,7 +1698,7 @@ private:
   char               *mBuf;
   uint32_t            mBufSize;
   int32_t             mBufPos;
-  nsCOMPtr<CacheHash> mHash;
+  nsRefPtr<CacheHash> mHash;
 };
 
 nsresult

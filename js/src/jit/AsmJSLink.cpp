@@ -56,13 +56,15 @@ LinkFail(JSContext *cx, const char *str)
 }
 
 static bool
-GetDataProperty(JSContext *cx, const Value &objVal, HandlePropertyName field, MutableHandleValue v)
+GetDataProperty(JSContext *cx, HandleValue objVal, HandlePropertyName field, MutableHandleValue v)
 {
     if (!objVal.isObject())
         return LinkFail(cx, "accessing property of non-object");
 
     Rooted<JSPropertyDescriptor> desc(cx);
-    if (!JS_GetPropertyDescriptorById(cx, &objVal.toObject(), NameToId(field), 0, &desc))
+    RootedObject obj(cx, &objVal.toObject());
+    RootedId id(cx, NameToId(field));
+    if (!JS_GetPropertyDescriptorById(cx, obj, id, 0, &desc))
         return false;
 
     if (!desc.object())

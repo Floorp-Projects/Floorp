@@ -225,8 +225,8 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *handlerp, void **closurep);
 /************************************************************************/
 
 extern JS_PUBLIC_API(bool)
-JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
-                 JSWatchPointHandler handler, JSObject *closure);
+JS_SetWatchPoint(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
+                 JSWatchPointHandler handler, JS::HandleObject closure);
 
 extern JS_PUBLIC_API(bool)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsid id,
@@ -272,7 +272,7 @@ extern JS_PUBLIC_API(void)
 JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mark);
 
 extern JS_PUBLIC_API(JSScript *)
-JS_GetFunctionScript(JSContext *cx, JSFunction *fun);
+JS_GetFunctionScript(JSContext *cx, JS::HandleFunction fun);
 
 extern JS_PUBLIC_API(JSNative)
 JS_GetFunctionNative(JSContext *cx, JSFunction *fun);
@@ -360,7 +360,7 @@ typedef struct JSPropertyDescArray {
 typedef struct JSScopeProperty JSScopeProperty;
 
 extern JS_PUBLIC_API(bool)
-JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda);
+JS_GetPropertyDescArray(JSContext *cx, JS::HandleObject obj, JSPropertyDescArray *pda);
 
 extern JS_PUBLIC_API(void)
 JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
@@ -529,7 +529,7 @@ JS_DefineProfilingFunctions(JSContext *cx, JSObject *obj);
 
 /* Defined in vm/Debugger.cpp. */
 extern JS_PUBLIC_API(bool)
-JS_DefineDebuggerObject(JSContext *cx, JSObject *obj);
+JS_DefineDebuggerObject(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *script);

@@ -87,13 +87,15 @@ public:
 
   TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
-                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
+                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT,
+                            gfx::BackendType aMoz2dBackend = gfx::BackendType::NONE);
 
   // If we return a non-null TextureClient, then AsTextureClientDrawTarget will
   // always be non-null.
   TemporaryRef<TextureClient>
   CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
                                 TextureFlags aTextureFlags,
+                                gfx::BackendType aMoz2dBackend,
                                 const gfx::IntSize& aSizeHint);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,

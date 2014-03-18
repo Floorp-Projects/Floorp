@@ -620,7 +620,7 @@ XPCWrappedNativeScope::SetExpandoChain(JSContext *cx, HandleObject target,
     MOZ_ASSERT_IF(chain, GetObjectScope(chain) == this);
     if (!mXrayExpandos.initialized() && !mXrayExpandos.init(cx))
         return false;
-    return mXrayExpandos.put(target, chain);
+    return mXrayExpandos.put(cx, target, chain);
 }
 
 /***************************************************************************/

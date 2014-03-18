@@ -82,7 +82,7 @@ public:
   }
 
 private:
-  nsCOMPtr<BackgroundFileSaver> mSaver;
+  nsRefPtr<BackgroundFileSaver> mSaver;
   nsCOMPtr<nsIFile> mTarget;
 };
 

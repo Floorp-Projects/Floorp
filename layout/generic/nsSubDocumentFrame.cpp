@@ -1042,7 +1042,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
     nsCOMPtr<nsIContentViewer> cv;
     ds->GetContentViewer(getter_AddRefs(cv));
     while (cv) {
-      nsCOMPtr<nsPresContext> pc;
+      nsRefPtr<nsPresContext> pc;
       cv->GetPresContext(getter_AddRefs(pc));
       if (pc && pc->GetPresShell()) {
         pc->GetPresShell()->SetNeverPainting(ds->IsInvisible());

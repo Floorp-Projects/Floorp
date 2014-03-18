@@ -410,26 +410,6 @@ nsHashtable::Write(nsIObjectOutputStream* aStream,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsISupportsKey::nsISupportsKey(nsIObjectInputStream* aStream, nsresult *aResult)
-    : mKey(nullptr)
-{
-    bool nonnull;
-    nsresult rv = aStream->ReadBoolean(&nonnull);
-    if (NS_SUCCEEDED(rv) && nonnull)
-        rv = aStream->ReadObject(true, &mKey);
-    *aResult = rv;
-}
-
-nsresult
-nsISupportsKey::Write(nsIObjectOutputStream* aStream) const
-{
-    bool nonnull = (mKey != nullptr);
-    nsresult rv = aStream->WriteBoolean(nonnull);
-    if (NS_SUCCEEDED(rv) && nonnull)
-        rv = aStream->WriteObject(mKey, true);
-    return rv;
-}
-
 // Copy Constructor
 // We need to free mStr if the object is passed with mOwnership as OWN. As the
 // destructor here is freeing mStr in that case, mStr is NOT getting leaked here.

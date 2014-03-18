@@ -53,16 +53,17 @@ extern JS_FRIEND_API(void)
 JS_SetIsWorkerRuntime(JSRuntime *rt);
 
 extern JS_FRIEND_API(JSObject *)
-JS_FindCompilationScope(JSContext *cx, JSObject *obj);
+JS_FindCompilationScope(JSContext *cx, JS::HandleObject obj);
 
 extern JS_FRIEND_API(JSFunction *)
 JS_GetObjectFunction(JSObject *obj);
 
 extern JS_FRIEND_API(bool)
-JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
+JS_SplicePrototype(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto);
 
 extern JS_FRIEND_API(JSObject *)
-JS_NewObjectWithUniqueType(JSContext *cx, const JSClass *clasp, JSObject *proto, JSObject *parent);
+JS_NewObjectWithUniqueType(JSContext *cx, const JSClass *clasp, JS::HandleObject proto,
+                           JS::HandleObject parent);
 
 extern JS_FRIEND_API(uint32_t)
 JS_ObjectCountDynamicSlots(JS::HandleObject obj);
@@ -74,7 +75,7 @@ extern JS_FRIEND_API(size_t)
 JS_GetCustomIteratorCount(JSContext *cx);
 
 extern JS_FRIEND_API(bool)
-JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *obj, JSObject **ret);
+JS_NondeterministicGetWeakMapKeys(JSContext *cx, JS::HandleObject obj, JS::MutableHandleObject ret);
 
 /*
  * Determine whether the given object is backed by a DeadObjectProxy.
@@ -185,7 +186,7 @@ js_DumpChars(const jschar *s, size_t n);
  * restrictions on the compartment of |cx|.
  */
 extern JS_FRIEND_API(bool)
-JS_CopyPropertiesFrom(JSContext *cx, JSObject *target, JSObject *obj);
+JS_CopyPropertiesFrom(JSContext *cx, JS::HandleObject target, JS::HandleObject obj);
 
 /*
  * Single-property version of the above. This function asserts that an |own|
@@ -222,7 +223,7 @@ struct JSFunctionSpecWithHelp {
     {nullptr, nullptr, 0, 0, nullptr, nullptr}
 
 extern JS_FRIEND_API(bool)
-JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
+JS_DefineFunctionsWithHelp(JSContext *cx, JS::HandleObject obj, const JSFunctionSpecWithHelp *fs);
 
 namespace js {
 

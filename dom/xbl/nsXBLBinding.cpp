@@ -1185,9 +1185,8 @@ nsXBLBinding::LookupMemberInternal(JSContext* aCx, nsString& aName,
   // Look for the property on this binding. If it's not there, try the next
   // binding on the chain.
   nsXBLProtoImpl* impl = mPrototypeBinding->GetImplementation();
-  if (impl && !impl->LookupMember(aCx, aName, aNameAsId, aDesc,
-                                  &classObject.toObject()))
-  {
+  JS::Rooted<JSObject*> object(aCx, &classObject.toObject());
+  if (impl && !impl->LookupMember(aCx, aName, aNameAsId, aDesc, object)) {
     return false;
   }
   if (aDesc.object() || !mNextBinding) {

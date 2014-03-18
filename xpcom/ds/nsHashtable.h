@@ -153,51 +153,6 @@ class nsObjectHashtable : public nsHashtable {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsISupportsKey: Where keys are nsISupports objects that get refcounted.
-
-class nsISupportsKey : public nsHashKey {
-  protected:
-    nsISupports* mKey;
-
-  public:
-    nsISupportsKey(const nsISupportsKey& aKey) : mKey(aKey.mKey) {
-#ifdef DEBUG
-        mKeyType = SupportsKey;
-#endif
-        NS_IF_ADDREF(mKey);
-    }
-
-    nsISupportsKey(nsISupports* key) {
-#ifdef DEBUG
-        mKeyType = SupportsKey;
-#endif
-        mKey = key;
-        NS_IF_ADDREF(mKey);
-    }
-
-    ~nsISupportsKey(void) {
-        NS_IF_RELEASE(mKey);
-    }
-
-    uint32_t HashCode(void) const {
-        return NS_PTR_TO_INT32(mKey);
-    }
-
-    bool Equals(const nsHashKey *aKey) const {
-        NS_ASSERTION(aKey->GetKeyType() == SupportsKey, "mismatched key types");
-        return (mKey == ((nsISupportsKey *) aKey)->mKey);
-    }
-
-    nsHashKey *Clone() const {
-        return new nsISupportsKey(mKey);
-    }
-
-    nsISupportsKey(nsIObjectInputStream* aStream, nsresult *aResult);
-    nsresult Write(nsIObjectOutputStream* aStream) const;
-
-    nsISupports* GetValue() { return mKey; }
-};
-
 
 class nsPRUint32Key : public nsHashKey {
 protected:

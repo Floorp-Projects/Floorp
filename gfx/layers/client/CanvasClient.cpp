@@ -65,7 +65,9 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                                 : gfxContentType::COLOR_ALPHA;
     gfxImageFormat format
       = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
-    mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
+    mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
+                                        TEXTURE_FLAGS_DEFAULT,
+                                        gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
     MOZ_ASSERT(mBuffer->AsTextureClientSurface());
     mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
 

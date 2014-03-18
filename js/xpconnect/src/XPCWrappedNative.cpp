@@ -194,7 +194,8 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
 
     // Set up the prototype on the global.
     MOZ_ASSERT(proto->GetJSProtoObject());
-    bool success = JS_SplicePrototype(cx, global, proto->GetJSProtoObject());
+    RootedObject protoObj(cx, proto->GetJSProtoObject());
+    bool success = JS_SplicePrototype(cx, global, protoObj);
     if (!success)
         return NS_ERROR_FAILURE;
 

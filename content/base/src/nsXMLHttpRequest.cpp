@@ -3817,8 +3817,7 @@ nsXMLHttpRequestXPCOMifier::GetInterface(const nsIID & aIID, void **aResult)
 namespace mozilla {
 
 ArrayBufferBuilder::ArrayBufferBuilder()
-  : mRawContents(nullptr),
-    mDataPtr(nullptr),
+  : mDataPtr(nullptr),
     mCapacity(0),
     mLength(0)
 {
@@ -3832,20 +3831,22 @@ ArrayBufferBuilder::~ArrayBufferBuilder()
 void
 ArrayBufferBuilder::reset()
 {
-  if (mRawContents) {
-    JS_free(nullptr, mRawContents);
+  if (mDataPtr) {
+    JS_free(nullptr, mDataPtr);
   }
-  mRawContents = mDataPtr = nullptr;
+  mDataPtr = nullptr;
   mCapacity = mLength = 0;
 }
 
 bool
 ArrayBufferBuilder::setCapacity(uint32_t aNewCap)
 {
-  if (!JS_ReallocateArrayBufferContents(nullptr, aNewCap, &mRawContents, &mDataPtr)) {
+  uint8_t *newdata = (uint8_t *) JS_ReallocateArrayBufferContents(nullptr, aNewCap, mDataPtr, mCapacity);
+  if (!newdata) {
     return false;
   }
 
+  mDataPtr = newdata;
   mCapacity = aNewCap;
   if (mLength > aNewCap) {
     mLength = aNewCap;
@@ -3903,12 +3904,12 @@ ArrayBufferBuilder::getArrayBuffer(JSContext* aCx)
     }
   }
 
-  JSObject* obj = JS_NewArrayBufferWithContents(aCx, mRawContents);
+  JSObject* obj = JS_NewArrayBufferWithContents(aCx, mLength, mDataPtr);
   if (!obj) {
     return nullptr;
   }
 
-  mRawContents = mDataPtr = nullptr;
+  mDataPtr = nullptr;
   mLength = mCapacity = 0;
 
   return obj;

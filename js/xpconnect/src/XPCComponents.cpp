@@ -2881,7 +2881,8 @@ nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(HandleValue aMap,
         return NS_OK;
     }
     RootedObject objRet(aCx);
-    if (!JS_NondeterministicGetWeakMapKeys(aCx, &aMap.toObject(), objRet.address()))
+    RootedObject mapObj(aCx, &aMap.toObject());
+    if (!JS_NondeterministicGetWeakMapKeys(aCx, mapObj, &objRet))
         return NS_ERROR_OUT_OF_MEMORY;
      aKeys.set(objRet ? ObjectValue(*objRet) : UndefinedValue());
     return NS_OK;

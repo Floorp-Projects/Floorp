@@ -54,7 +54,8 @@ FreezeThaw(JSContext *cx, JS::HandleScript script)
 static JSScript *
 GetScript(JSContext *cx, JS::HandleObject funobj)
 {
-    return JS_GetFunctionScript(cx, JS_GetObjectFunction(funobj));
+    JS::RootedFunction fun(cx, JS_GetObjectFunction(funobj));
+    return JS_GetFunctionScript(cx, fun);
 }
 
 static JSObject *

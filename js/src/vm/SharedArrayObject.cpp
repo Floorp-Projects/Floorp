@@ -23,8 +23,6 @@ using namespace js;
 using mozilla::IsNaN;
 using mozilla::PodCopy;
 
-#define SHAREDARRAYBUFFER_RESERVED_SLOTS 15
-
 /*
  * SharedArrayRawBuffer
  */
@@ -179,53 +177,26 @@ SharedArrayBufferObject::New(JSContext *cx, uint32_t length)
         return nullptr;
     }
 
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
-    if (!obj)
-        return nullptr;
-
-    JS_ASSERT(obj->getClass() == &class_);
-
-    Rooted<js::Shape*> empty(cx);
-    empty = EmptyShape::getInitialShape(cx, &class_, obj->getProto(), obj->getParent(),
-                                        obj->getMetadata(), gc::FINALIZE_OBJECT16_BACKGROUND);
-    if (!empty)
-        return nullptr;
-    obj->setLastPropertyInfallible(empty);
-
-    obj->setFixedElements();
-    obj->as<SharedArrayBufferObject>().initElementsHeader(obj->getElementsHeader(), length);
-    obj->getElementsHeader()->setIsSharedArrayBuffer();
-
     SharedArrayRawBuffer *buffer = SharedArrayRawBuffer::New(length);
     if (!buffer)
         return nullptr;
-    obj->as<SharedArrayBufferObject>().acceptRawBuffer(buffer);
 
-    return obj;
+    return New(cx, buffer);
 }
 
 JSObject *
 SharedArrayBufferObject::New(JSContext *cx, SharedArrayRawBuffer *buffer)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    Rooted<SharedArrayBufferObject*> obj(cx, NewBuiltinClassInstance<SharedArrayBufferObject>(cx));
     if (!obj)
         return nullptr;
 
     JS_ASSERT(obj->getClass() == &class_);
 
-    Rooted<js::Shape*> empty(cx);
-    empty = EmptyShape::getInitialShape(cx, &class_, obj->getProto(), obj->getParent(),
-                                        obj->getMetadata(), gc::FINALIZE_OBJECT16_BACKGROUND);
-    if (!empty)
-        return nullptr;
-    obj->setLastPropertyInfallible(empty);
+    obj->initialize(buffer->byteLength(), nullptr, DoesntOwnData);
 
-    obj->setFixedElements();
-    obj->as<SharedArrayBufferObject>().initElementsHeader(obj->getElementsHeader(),
-                                                          buffer->byteLength());
-    obj->getElementsHeader()->setIsSharedArrayBuffer();
-
-    obj->as<SharedArrayBufferObject>().acceptRawBuffer(buffer);
+    obj->acceptRawBuffer(buffer);
+    obj->setIsSharedArrayBuffer();
 
     return obj;
 }
@@ -283,8 +254,6 @@ SharedArrayBufferObject::Finalize(FreeOp *fop, JSObject *obj)
 
 const Class SharedArrayBufferObject::protoClass = {
     "SharedArrayBufferPrototype",
-    JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(SHAREDARRAYBUFFER_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
@@ -297,10 +266,8 @@ const Class SharedArrayBufferObject::protoClass = {
 
 const Class SharedArrayBufferObject::class_ = {
     "SharedArrayBuffer",
-    JSCLASS_HAS_PRIVATE |
     JSCLASS_IMPLEMENTS_BARRIERS |
-    Class::NON_NATIVE |
-    JSCLASS_HAS_RESERVED_SLOTS(SHAREDARRAYBUFFER_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(SharedArrayBufferObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_SharedArrayBuffer),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
@@ -315,29 +282,7 @@ const Class SharedArrayBufferObject::class_ = {
     nullptr,        /* construct   */
     ArrayBufferObject::obj_trace,
     JS_NULL_CLASS_SPEC,
-    JS_NULL_CLASS_EXT,
-    {
-        ArrayBufferObject::obj_lookupGeneric,
-        ArrayBufferObject::obj_lookupProperty,
-        ArrayBufferObject::obj_lookupElement,
-        ArrayBufferObject::obj_defineGeneric,
-        ArrayBufferObject::obj_defineProperty,
-        ArrayBufferObject::obj_defineElement,
-        ArrayBufferObject::obj_getGeneric,
-        ArrayBufferObject::obj_getProperty,
-        ArrayBufferObject::obj_getElement,
-        ArrayBufferObject::obj_setGeneric,
-        ArrayBufferObject::obj_setProperty,
-        ArrayBufferObject::obj_setElement,
-        ArrayBufferObject::obj_getGenericAttributes,
-        ArrayBufferObject::obj_setGenericAttributes,
-        ArrayBufferObject::obj_deleteProperty,
-        ArrayBufferObject::obj_deleteElement,
-        nullptr, nullptr, /* watch/unwatch */
-        nullptr,          /* slice */
-        ArrayBufferObject::obj_enumerate,
-        nullptr,          /* thisObject      */
-    }
+    JS_NULL_CLASS_EXT
 };
 
 JSObject *

@@ -31,7 +31,9 @@ class JS_PUBLIC_API(WeakMapPtr)
     void trace(JSTracer *tracer);
 
     V lookup(const K &key);
-    bool put(const K &key, const V &value);
+    bool put(JSContext *cx, const K &key, const V &value);
+
+    static void keyMarkCallback(JSTracer *trc, K key, void *data);
 
   private:
     void *ptr;

@@ -58,7 +58,6 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     propertyTree(thisForCtor()),
     selfHostingScriptSource(nullptr),
     gcIncomingGrayPointers(nullptr),
-    gcLiveArrayBuffers(nullptr),
     gcWeakMapList(nullptr),
     debugModeBits(runtime_->debugMode ? DebugFromC : 0),
     rngState(0),

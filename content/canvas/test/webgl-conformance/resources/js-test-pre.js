@@ -116,7 +116,7 @@ function testFailed(msg)
     }
 }
 
-function testFailedRender(msg, ref, test, width, height) 
+function testFailedRender(msg, ref, test, width, height)
 {
     var refData;
     if (typeof ref.getImageData == 'function') {
@@ -131,7 +131,7 @@ function testFailedRender(msg, ref, test, width, height)
     } else {
         testData = arrayToURLData(test, width, height);
     }
-    
+
     testFailed(msg);
 
     var data = 'REFTEST TEST-DEBUG-INFO | ' + msg + ' | image comparison (==)\n' +
@@ -472,4 +472,3 @@ function finishTest() {
     debug('<br /><span class="pass">TEST COMPLETE</span>');
     notifyFinishedToHarness();
 }
-

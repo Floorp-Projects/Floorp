@@ -3096,11 +3096,8 @@ JS_DefineUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t 
 }
 
 JS_PUBLIC_API(bool)
-JS_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg, jsval descriptorArg, bool *bp)
+JS_DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue descriptor, bool *bp)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
-    RootedValue descriptor(cx, descriptorArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, descriptor);
@@ -3136,9 +3133,8 @@ JS_DefineObject(JSContext *cx, JSObject *objArg, const char *name, const JSClass
 }
 
 JS_PUBLIC_API(bool)
-JS_DefineConstDoubles(JSContext *cx, JSObject *objArg, const JSConstDoubleSpec *cds)
+JS_DefineConstDoubles(JSContext *cx, HandleObject obj, const JSConstDoubleSpec *cds)
 {
-    RootedObject obj(cx, objArg);
     bool ok;
     unsigned attrs;
 
@@ -3159,9 +3155,8 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *objArg, const JSConstDoubleSpec *
 }
 
 JS_PUBLIC_API(bool)
-JS_DefineProperties(JSContext *cx, JSObject *objArg, const JSPropertySpec *ps)
+JS_DefineProperties(JSContext *cx, HandleObject obj, const JSPropertySpec *ps)
 {
-    RootedObject obj(cx, objArg);
     bool ok;
     for (ok = true; ps->name; ps++) {
         if (ps->flags & JSPROP_NATIVE_ACCESSORS) {
@@ -3245,11 +3240,9 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned
 }
 
 JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid idArg, unsigned flags,
+JS_GetOwnPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                                 MutableHandle<JSPropertyDescriptor> desc)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
@@ -3257,30 +3250,32 @@ JS_GetOwnPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid idArg, uns
 }
 
 JS_PUBLIC_API(bool)
-JS_GetOwnPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsigned flags,
+JS_GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name, unsigned flags,
                             MutableHandle<JSPropertyDescriptor> desc)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_GetOwnPropertyDescriptorById(cx, obj, AtomToId(atom), flags, desc);
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return JS_GetOwnPropertyDescriptorById(cx, obj, id, flags, desc);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptorById(JSContext *cx, JSObject *objArg, jsid idArg, unsigned flags,
+JS_GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                              MutableHandle<JSPropertyDescriptor> desc)
 {
-    RootedObject obj(cx, objArg);
-    RootedId id(cx, idArg);
     return GetPropertyDescriptorById(cx, obj, id, flags, false, desc);
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyDescriptor(JSContext *cx, JSObject *objArg, const char *name, unsigned flags,
+JS_GetPropertyDescriptor(JSContext *cx, HandleObject obj, const char *name, unsigned flags,
                          MutableHandle<JSPropertyDescriptor> desc)
 {
-    RootedObject obj(cx, objArg);
     JSAtom *atom = Atomize(cx, name, strlen(name));
-    return atom && JS_GetPropertyDescriptorById(cx, obj, AtomToId(atom), flags, desc);
+    if (!atom)
+        return false;
+    RootedId id(cx, AtomToId(atom));
+    return atom && JS_GetPropertyDescriptorById(cx, obj, id, flags, desc);
 }
 
 JS_PUBLIC_API(bool)
@@ -4712,9 +4707,8 @@ JS_DecompileFunctionBody(JSContext *cx, HandleFunction fun, unsigned indent)
 }
 
 MOZ_NEVER_INLINE JS_PUBLIC_API(bool)
-JS_ExecuteScript(JSContext *cx, JSObject *objArg, JSScript *scriptArg, jsval *rval)
+JS_ExecuteScript(JSContext *cx, HandleObject obj, HandleScript scriptArg, jsval *rval)
 {
-    RootedObject obj(cx, objArg);
     RootedScript script(cx, scriptArg);
 
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
@@ -4745,10 +4739,9 @@ JS_ExecuteScript(JSContext *cx, JSObject *objArg, JSScript *scriptArg, jsval *rv
 }
 
 JS_PUBLIC_API(bool)
-JS_ExecuteScriptVersion(JSContext *cx, JSObject *objArg, JSScript *script, jsval *rval,
+JS_ExecuteScriptVersion(JSContext *cx, HandleObject obj, HandleScript script, jsval *rval,
                         JSVersion version)
 {
-    RootedObject obj(cx, objArg);
     return JS_ExecuteScript(cx, obj, script, rval);
 }
 
@@ -4839,10 +4832,9 @@ JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const jschar *chars, unsign
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateScript(JSContext *cx, JSObject *objArg, const char *bytes, unsigned nbytes,
+JS_EvaluateScript(JSContext *cx, HandleObject obj, const char *bytes, unsigned nbytes,
                   const char *filename, unsigned lineno, jsval *rval)
 {
-    RootedObject obj(cx, objArg);
     CompileOptions options(cx);
     options.setFileAndLine(filename, lineno);
 

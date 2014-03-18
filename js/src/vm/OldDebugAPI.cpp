@@ -294,13 +294,11 @@ JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 /************************************************************************/
 
 JS_PUBLIC_API(bool)
-JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
-                 JSWatchPointHandler handler, JSObject *closure_)
+JS_SetWatchPoint(JSContext *cx, HandleObject origobj, HandleId id,
+                 JSWatchPointHandler handler, HandleObject closure)
 {
-    assertSameCompartment(cx, obj_);
+    assertSameCompartment(cx, origobj);
 
-    RootedId id(cx, id_);
-    RootedObject origobj(cx, obj_), closure(cx, closure_);
     RootedObject obj(cx, GetInnerObject(cx, origobj));
     if (!obj)
         return false;
@@ -496,14 +494,13 @@ JS_ReleaseFunctionLocalNameArray(JSContext *cx, void *mem)
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
+JS_GetFunctionScript(JSContext *cx, HandleFunction fun)
 {
     if (fun->isNative())
         return nullptr;
     if (fun->isInterpretedLazy()) {
-        RootedFunction rootedFun(cx, fun);
-        AutoCompartment funCompartment(cx, rootedFun);
-        JSScript *script = rootedFun->getOrCreateScript(cx);
+        AutoCompartment funCompartment(cx, fun);
+        JSScript *script = fun->getOrCreateScript(cx);
         if (!script)
             MOZ_CRASH();
         return script;
@@ -659,10 +656,8 @@ GetPropertyDesc(JSContext *cx, JSObject *obj_, HandleShape shape, JSPropertyDesc
 }
 
 JS_PUBLIC_API(bool)
-JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
+JS_GetPropertyDescArray(JSContext *cx, JS::HandleObject obj, JSPropertyDescArray *pda)
 {
-    RootedObject obj(cx, obj_);
-
     assertSameCompartment(cx, obj);
     uint32_t i = 0;
     JSPropertyDesc *pd = nullptr;
@@ -995,7 +990,7 @@ class AutoPropertyDescArray
             JS_PutPropertyDescArray(cx_, &descArray_);
     }
 
-    void fetch(JSObject *obj) {
+    void fetch(JS::HandleObject obj) {
         JS_ASSERT(!descArray_.array);
         if (!JS_GetPropertyDescArray(cx_, obj, &descArray_))
             descArray_.array = nullptr;
@@ -1059,8 +1054,10 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
     AutoPropertyDescArray thisProps(cx);
     if (iter.computeThis(cx)) {
         thisVal = iter.thisv();
-        if (showThisProps && !thisVal.isPrimitive())
-            thisProps.fetch(&thisVal.toObject());
+        if (showThisProps && !thisVal.isPrimitive()) {
+            RootedObject thisObj(cx, &thisVal.toObject());
+            thisProps.fetch(thisObj);
+        }
     }
 
     // print the frame number and function name

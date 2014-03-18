@@ -4576,7 +4576,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 stack[currentPtr].name == name &&
                 findInListOfActiveFormattingElements(stack[currentPtr]) == -1) {
             // If the current element matches the name but isn't on the list of active
-            // formatting elements, then it is possible that the list was mangled by the Noah's Arc
+            // formatting elements, then it is possible that the list was mangled by the Noah's Ark
             // clause. In this case, we want to match the end tag against the stack instead of
             // proceeding with the AAA algorithm that may match against the list of
             // active formatting elements (and possibly mangle the tree in unexpected ways).
@@ -4661,6 +4661,16 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
                 if (j > 3 && nodeListPos != -1) {
                     removeFromListOfActiveFormattingElements(nodeListPos);
+
+                    // Adjust the indices into the list to account
+                    // for the removal of nodeListPos.
+                    if (nodeListPos <= formattingEltListPos) {
+                        formattingEltListPos--;
+                    }
+                    if (nodeListPos <= bookmark) {
+                        bookmark--;
+                    }
+
                     // Update position to reflect removal from list.
                     nodeListPos = -1;
                 }

@@ -588,25 +588,33 @@ GetJunkScopeGlobal()
 }
 
 nsGlobalWindow*
-WindowGlobalOrNull(JSObject *aObj)
+WindowOrNull(JSObject *aObj)
 {
     MOZ_ASSERT(aObj);
-    JSObject *glob = js::GetGlobalForObjectCrossCompartment(aObj);
-    MOZ_ASSERT(glob);
+    MOZ_ASSERT(!js::IsWrapper(aObj));
 
     // This will always return null until we have Window on WebIDL bindings,
     // at which point it will do the right thing.
-    if (!IS_WN_CLASS(js::GetObjectClass(glob))) {
+    if (!IS_WN_CLASS(js::GetObjectClass(aObj))) {
         nsGlobalWindow* win = nullptr;
-        UNWRAP_OBJECT(Window, glob, win);
+        UNWRAP_OBJECT(Window, aObj, win);
         return win;
     }
 
-    nsISupports* supports = XPCWrappedNative::Get(glob)->GetIdentityObject();
+    nsISupports* supports = XPCWrappedNative::Get(aObj)->GetIdentityObject();
     nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(supports);
     if (!piWin)
         return nullptr;
     return static_cast<nsGlobalWindow*>(piWin.get());
+}
+
+nsGlobalWindow*
+WindowGlobalOrNull(JSObject *aObj)
+{
+    MOZ_ASSERT(aObj);
+    JSObject *glob = js::GetGlobalForObjectCrossCompartment(aObj);
+
+    return WindowOrNull(glob);
 }
 
 }
@@ -1382,15 +1390,12 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
     // Get the DOM window associated with the running script. If the script is
     // running in a non-DOM scope, we have to just let it keep running.
     RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    nsCOMPtr<nsPIDOMWindow> win;
-    if (IS_WN_REFLECTOR(global))
-        win = do_QueryWrappedNative(XPCWrappedNative::Get(global));
+    nsRefPtr<nsGlobalWindow> win = WindowOrNull(global);
     if (!win)
         return true;
 
     // Show the prompt to the user, and kill if requested.
-    nsGlobalWindow::SlowScriptResponse response =
-      static_cast<nsGlobalWindow*>(win.get())->ShowSlowScriptDialog();
+    nsGlobalWindow::SlowScriptResponse response = win->ShowSlowScriptDialog();
     if (response == nsGlobalWindow::KillSlowScript)
         return false;
 
@@ -2342,9 +2347,9 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
         KIND_HEAP, rtStats.runtime.gc.marker,
         "The GC mark stack and gray roots.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery"),
-        KIND_NONHEAP, rtStats.runtime.gc.nursery,
-        "The GC nursery.");
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery-committed"),
+        KIND_NONHEAP, rtStats.runtime.gc.nurseryCommitted,
+        "Memory being used by the GC's nursery.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/vals"),
         KIND_HEAP, rtStats.runtime.gc.storeBufferVals,
@@ -2386,6 +2391,11 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     REPORT_GC_BYTES(rtPath2 + NS_LITERAL_CSTRING("gc-heap/decommitted-arenas"),
         rtStats.gcHeapDecommittedArenas,
         "GC arenas in non-empty chunks that is decommitted, i.e. it takes up "
+        "address space but no physical memory or swap space.");
+
+    REPORT_GC_BYTES(rtPath2 + NS_LITERAL_CSTRING("runtime/gc/nursery-decommitted"),
+        rtStats.runtime.gc.nurseryDecommitted,
+        "Memory allocated to the GC's nursery this is decommitted, i.e. it takes up "
         "address space but no physical memory or swap space.");
 
     REPORT_GC_BYTES(rtPath + NS_LITERAL_CSTRING("gc-heap/unused-chunks"),
