@@ -134,4 +134,5 @@ add_task(function* test_startStop() {
 
 add_task(function* shutdown() {
   yield gReporter._shutdown();
+  yield removeCacheFile();
 });
