@@ -20,12 +20,13 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.widget.ImageView;
 import android.view.View;
+import android.view.animation.Animation;
 
 /**
  * Progress view used for page loads.
@@ -40,6 +41,8 @@ public class ToolbarProgressView extends ImageView {
     private static final int MSG_HIDE = 1;
     private static final int STEPS = 10;
     private static final int DELAY = 40;
+
+    private static final boolean PRE_HONEYCOMB = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB;
 
     private int mTargetProgress;
     private int mIncrement;
@@ -90,6 +93,27 @@ public class ToolbarProgressView extends ImageView {
             }
 
         };
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        // On GB/Froyo, setting the visibility to GONE/HIDDEN alone does not
+        // work with translations. Calling clearAnimation acts as a workaround.
+        if (PRE_HONEYCOMB && visibility != VISIBLE) {
+            clearAnimation();
+        }
+
+        super.setVisibility(visibility);
+    }
+
+    @Override
+    public void setAnimation(Animation animation) {
+        // On GB/Froyo, setting the animation after hiding the view causes it
+        // to reappear. As a workaround, disallow setAnimation from being
+        // called if the view is not shown.
+        if (PRE_HONEYCOMB && isShown()) {
+            super.setAnimation(animation);
+        }
     }
 
     @Override
