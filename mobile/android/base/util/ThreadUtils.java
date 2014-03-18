@@ -5,14 +5,23 @@
 
 package org.mozilla.gecko.util;
 
+import java.util.Map;
+
 import android.os.Handler;
 import android.os.MessageQueue;
 import android.util.Log;
 
-import java.util.Map;
-
 public final class ThreadUtils {
     private static final String LOGTAG = "ThreadUtils";
+
+    /**
+     * Controls the action taken when a method like
+     * {@link ThreadUtils#assertOnUiThread(AssertBehavior)} detects a problem.
+     */
+    public static enum AssertBehavior {
+        NONE,
+        THROW,
+    }
 
     private static Thread sUiThread;
     private static Thread sBackgroundThread;
@@ -101,28 +110,46 @@ public final class ThreadUtils {
         GeckoBackgroundThread.post(runnable);
     }
 
+    public static void assertOnUiThread(final AssertBehavior assertBehavior) {
+        assertOnThread(getUiThread(), assertBehavior);
+    }
+
     public static void assertOnUiThread() {
-        assertOnThread(getUiThread());
+        assertOnThread(getUiThread(), AssertBehavior.THROW);
     }
 
     public static void assertOnGeckoThread() {
-        assertOnThread(sGeckoThread);
+        assertOnThread(sGeckoThread, AssertBehavior.THROW);
     }
 
     public static void assertOnBackgroundThread() {
-        assertOnThread(getBackgroundThread());
+        assertOnThread(getBackgroundThread(), AssertBehavior.THROW);
     }
 
-    public static void assertOnThread(Thread expectedThread) {
-        Thread currentThread = Thread.currentThread();
-        long currentThreadId = currentThread.getId();
-        long expectedThreadId = expectedThread.getId();
+    public static void assertOnThread(final Thread expectedThread) {
+        assertOnThread(expectedThread, AssertBehavior.THROW);
+    }
 
-        if (currentThreadId != expectedThreadId) {
-            throw new IllegalThreadStateException("Expected thread " + expectedThreadId + " (\""
-                                                  + expectedThread.getName()
-                                                  + "\"), but running on thread " + currentThreadId
-                                                  + " (\"" + currentThread.getName() + ")");
+    public static void assertOnThread(final Thread expectedThread, AssertBehavior behavior) {
+        final Thread currentThread = Thread.currentThread();
+        final long currentThreadId = currentThread.getId();
+        final long expectedThreadId = expectedThread.getId();
+
+        if (currentThreadId == expectedThreadId) {
+            return;
+        }
+
+        final String message = "Expected thread " +
+                               expectedThreadId + " (\"" + expectedThread.getName() +
+                               "\"), but running on thread " +
+                               currentThreadId + " (\"" + currentThread.getName() + ")";
+        final IllegalThreadStateException e = new IllegalThreadStateException(message);
+
+        switch (behavior) {
+        case THROW:
+            throw e;
+        default:
+            Log.e(LOGTAG, "Method called on wrong thread!", e);
         }
     }
 
