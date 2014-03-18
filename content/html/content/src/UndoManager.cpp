@@ -15,13 +15,13 @@
 #include "nsVariant.h"
 #include "nsINode.h"
 #include "nsIDOMDOMTransactionEvent.h"
-#include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 #include "jsapi.h"
 #include "nsIDocument.h"
 
-#include "mozilla/Preferences.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/EventDispatcher.h"
+#include "mozilla/Preferences.h"
 
 // Includes for mutation observer.
 #include "nsIDOMHTMLElement.h"
@@ -1181,8 +1181,8 @@ UndoManager::DispatchTransactionEvent(JSContext* aCx, const nsAString& aType,
                                                     transactions))) {
     event->SetTrusted(true);
     event->SetTarget(mHostNode);
-    nsEventDispatcher::DispatchDOMEvent(mHostNode, nullptr, event,
-                                        nullptr, nullptr);
+    EventDispatcher::DispatchDOMEvent(mHostNode, nullptr, event,
+                                      nullptr, nullptr);
   }
 }
 

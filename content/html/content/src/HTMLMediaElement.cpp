@@ -41,7 +41,6 @@
 
 #include "nsITimer.h"
 
-#include "nsEventDispatcher.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
 #include "nsICategoryManager.h"

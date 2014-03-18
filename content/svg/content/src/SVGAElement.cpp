@@ -6,10 +6,10 @@
 #include "mozilla/dom/SVGAElement.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/SVGAElementBinding.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
 #include "nsSVGString.h"
 #include "nsIURI.h"

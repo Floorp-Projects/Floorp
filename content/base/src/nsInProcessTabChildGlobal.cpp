@@ -8,7 +8,6 @@
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIJSRuntimeService.h"
@@ -19,6 +18,7 @@
 #include "xpcpublic.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsDOMClassInfoID.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "js/StructuredClone.h"
 

@@ -29,7 +29,6 @@
 #include "nsISelection.h"
 #include "nsISupports.h"
 #include "nsPresContext.h"
-#include "nsEventDispatcher.h"
 
 namespace mozilla {
 

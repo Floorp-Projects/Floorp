@@ -22,11 +22,11 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/Utilities.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"

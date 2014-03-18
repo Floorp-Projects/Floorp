@@ -216,12 +216,12 @@ interface nsIDOMEventTarget : nsISupports
    * usually also aVisitor.mParentTarget if mCanHandle is PR_TRUE.
    * First one tells that this object can handle the aVisitor.mEvent event and
    * the latter one is the possible parent object for the event target chain.
-   * @see nsEventDispatcher.h for more documentation about aVisitor.
+   * @see EventDispatcher.h for more documentation about aVisitor.
    *
    * @param aVisitor the visitor object which is used to create the
    *                 event target chain for event dispatching.
    *
-   * @note Only nsEventDispatcher should call this method.
+   * @note Only EventDispatcher should call this method.
    */
   [noscript, nostdcall]
   void PreHandleEvent(in EventChainPreVisitorRef aVisitor);
@@ -238,8 +238,8 @@ interface nsIDOMEventTarget : nsISupports
    * The default handling of the event should happen here.
    * @param aVisitor the visitor object which is used during post handling.
    *
-   * @see nsEventDispatcher.h for documentation about aVisitor.
-   * @note Only nsEventDispatcher should call this method.
+   * @see EventDispatcher.h for documentation about aVisitor.
+   * @note Only EventDispatcher should call this method.
    */
   [noscript, nostdcall]
   void PostHandleEvent(in EventChainPostVisitorRef aVisitor);

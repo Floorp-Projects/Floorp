@@ -8,10 +8,10 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsDOMTokenList.h"

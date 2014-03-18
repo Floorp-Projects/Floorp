@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileIOObject.h"
+#include "mozilla/EventDispatcher.h"
 #include "nsDOMFile.h"
 #include "nsError.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsComponentManagerUtils.h"
-#include "nsEventDispatcher.h"
 
 #define ERROR_STR "error"
 #define ABORT_STR "abort"

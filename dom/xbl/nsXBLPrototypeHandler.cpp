@@ -41,7 +41,6 @@
 #include "nsCRT.h"
 #include "nsXBLEventHandler.h"
 #include "nsXBLSerialize.h"
-#include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"

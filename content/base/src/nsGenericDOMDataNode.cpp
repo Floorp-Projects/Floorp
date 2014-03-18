@@ -26,7 +26,6 @@
 #include "nsDOMString.h"
 #include "nsIDOMUserDataHandler.h"
 #include "nsChangeHint.h"
-#include "nsEventDispatcher.h"
 #include "nsCOMArray.h"
 #include "nsNodeUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
