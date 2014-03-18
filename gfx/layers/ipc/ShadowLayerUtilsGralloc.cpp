@@ -317,31 +317,11 @@ GrallocBufferActor::Create(const gfx::IntSize& aSize,
 
 void GrallocBufferActor::ActorDestroy(ActorDestroyReason)
 {
-  // used only for hacky fix for bug 862324
-  for (size_t i = 0; i < mDeprecatedTextureHosts.Length(); i++) {
-    mDeprecatedTextureHosts[i]->ForgetBuffer();
-  }
-
   // Used only for hacky fix for bug 966446.
   if (mTextureHost) {
     mTextureHost->ForgetBufferActor();
     mTextureHost = nullptr;
   }
-}
-
-// used only for hacky fix for bug 862324
-void GrallocBufferActor::AddDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost)
-{
-  mDeprecatedTextureHosts.AppendElement(aDeprecatedTextureHost);
-}
-
-// used only for hacky fix for bug 862324
-void GrallocBufferActor::RemoveDeprecatedTextureHost(DeprecatedTextureHost* aDeprecatedTextureHost)
-{
-  mDeprecatedTextureHosts.RemoveElement(aDeprecatedTextureHost);
-  // that should be the only occurence, otherwise we'd leak this TextureHost...
-  // assert that that's not happening.
-  MOZ_ASSERT(!mDeprecatedTextureHosts.Contains(aDeprecatedTextureHost));
 }
 
 void GrallocBufferActor::AddTextureHost(TextureHost* aTextureHost)
