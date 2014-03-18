@@ -890,8 +890,10 @@ js::Nursery::growAllocableSpace()
 void
 js::Nursery::shrinkAllocableSpace()
 {
+#ifdef JS_GC_ZEAL
     if (runtime()->gcZeal_ == ZealGenerationalGCValue)
         return;
+#endif
     numActiveChunks_ = Max(numActiveChunks_ - 1, 1);
     updateDecommittedRegion();
 }
