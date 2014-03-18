@@ -216,7 +216,7 @@ GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
     mList->outbufAcquireFenceFd = -1;
 #endif
     eglSwapBuffers(dpy, sur);
-    return Post(mFBSurface->lastHandle, mFBSurface->lastFenceFD);
+    return Post(mFBSurface->lastHandle, mFBSurface->GetPrevFBAcquireFd());
 }
 
 bool
@@ -302,6 +302,12 @@ void
 GonkDisplayJB::SetFBReleaseFd(int fd)
 {
     mFBSurface->setReleaseFenceFd(fd);
+}
+
+int
+GonkDisplayJB::GetPrevFBAcquireFd()
+{
+    return mFBSurface->GetPrevFBAcquireFd();
 }
 
 __attribute__ ((visibility ("default")))
