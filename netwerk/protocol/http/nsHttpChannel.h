@@ -316,7 +316,7 @@ private:
     // and ensure the transaction is updated to use it.
     void UpdateAggregateCallbacks();
 
-    static bool HasQueryString(nsHttpAtom method, nsIURI * uri);
+    static bool HasQueryString(nsHttpRequestHead::ParsedMethodType method, nsIURI * uri);
     bool ResponseWouldVary(nsICacheEntry* entry) const;
     bool MustValidateBasedOnQueryUrl() const;
     bool IsResumable(int64_t partialLen, int64_t contentLength,
