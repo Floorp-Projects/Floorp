@@ -170,4 +170,5 @@ add_task(function* test_times() {
 
 add_task(function* shutdown() {
   yield gReporter._shutdown();
+  yield removeCacheFile();
 });
