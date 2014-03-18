@@ -91,12 +91,15 @@ CodeGeneratorShared::generateOutOfLineCode()
             return false;
         masm.setFramePushed(outOfLineCode_[i]->framePushed());
         lastPC_ = outOfLineCode_[i]->pc();
+        if (!sps_.prepareForOOL())
+            return false;
         sps_.setPushed(outOfLineCode_[i]->script());
         outOfLineCode_[i]->bind(&masm);
 
         oolIns = outOfLineCode_[i];
         if (!outOfLineCode_[i]->generate(this))
             return false;
+        sps_.finishOOL();
     }
     oolIns = nullptr;
 
