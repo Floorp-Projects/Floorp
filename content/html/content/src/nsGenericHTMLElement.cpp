@@ -695,7 +695,8 @@ nsGenericHTMLElement::FindAncestorForm(HTMLFormElement* aCurrentForm)
 }
 
 bool
-nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisitor& aVisitor)
+nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(
+                        EventChainVisitor& aVisitor)
 {
   NS_PRECONDITION(nsCOMPtr<Link>(do_QueryObject(this)),
                   "should be called only when |this| implements |Link|");
