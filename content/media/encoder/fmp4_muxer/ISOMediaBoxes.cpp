@@ -11,6 +11,7 @@
 #include "EncodedFrameContainer.h"
 #include "ISOTrackMetadata.h"
 #include "MP4ESDS.h"
+#include "AMRBox.h"
 #include "AVCBox.h"
 #include "VideoUtils.h"
 
@@ -325,10 +326,12 @@ TrackFragmentBox::TrackFragmentBox(uint32_t aType, ISOControl* aControl)
   // Flags in TrackFragmentHeaderBox.
   uint32_t tf_flags = base_data_offset_present;
 
-  // Audio frame rate should be fixed; otherwise it will cause noise when playback.
-  // So it doesn't need to keep duration of each audio frame in TrackRunBox. It
-  // keeps the default sample duration in TrackFragmentHeaderBox.
-  tf_flags |= (mTrackType & Audio_Track ? default_sample_duration_present : 0);
+  // Ideally, audio encoder generates audio frame in const rate. However, some
+  // audio encoders don't do it so the audio frame duration needs to be checked
+  // here.
+  if ((mTrackType & Audio_Track) && mAudioMeta->GetAudioFrameDuration()) {
+    tf_flags |= default_sample_duration_present;
+  }
 
   boxes.AppendElement(new TrackFragmentHeaderBox(aType, tf_flags, aControl));
 
@@ -643,14 +646,41 @@ SampleDescriptionBox::SampleDescriptionBox(uint32_t aType, ISOControl* aControl)
   switch (mTrackType) {
   case Audio_Track:
     {
-      sample_entry_box = new MP4AudioSampleEntry(aControl);
-    } break;
+      CreateAudioSampleEntry(sample_entry_box);
+    }
+    break;
   case Video_Track:
     {
-      sample_entry_box = new AVCSampleEntry(aControl);
-    } break;
+      CreateVideoSampleEntry(sample_entry_box);
+    }
+    break;
   }
+  MOZ_ASSERT(sample_entry_box);
   MOZ_COUNT_CTOR(SampleDescriptionBox);
+}
+
+nsresult
+SampleDescriptionBox::CreateAudioSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry)
+{
+  if (mAudioMeta->GetKind() == TrackMetadataBase::METADATA_AMR) {
+    aSampleEntry = new AMRSampleEntry(mControl);
+  } else if (mAudioMeta->GetKind() == TrackMetadataBase::METADATA_AAC) {
+    aSampleEntry = new MP4AudioSampleEntry(mControl);
+  } else {
+    MOZ_ASSERT(0);
+  }
+  return NS_OK;
+}
+
+nsresult
+SampleDescriptionBox::CreateVideoSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry)
+{
+  if (mVideoMeta->GetKind() == TrackMetadataBase::METADATA_AVC) {
+    aSampleEntry = new AVCSampleEntry(mControl);
+  } else {
+    MOZ_ASSERT(0);
+  }
+  return NS_OK;
 }
 
 SampleDescriptionBox::~SampleDescriptionBox()
