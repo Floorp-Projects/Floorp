@@ -15,22 +15,17 @@ XPCOMUtils.defineLazyModuleGetter(this, "FirefoxAccounts",
 do_get_profile();
 
 function MockFXAManager() {
-  this.signedInUser = true;
+  this.signedIn = true;
 }
 MockFXAManager.prototype = {
   getAssertion: function(audience) {
-    let result = this.signedInUser ? TEST_ASSERTION : null;
+    let result = this.signedIn ? TEST_ASSERTION : null;
     return Promise.resolve(result);
   },
 
   signOut: function() {
-    this.signedInUser = false;
+    this.signedIn = false;
     return Promise.resolve(null);
-  },
-
-  signIn: function(user) {
-    this.signedInUser = user;
-    return Promise.resolve(user);
   },
 }
 
@@ -41,14 +36,6 @@ do_register_cleanup(() => {
   FirefoxAccounts.fxAccountsManager = originalManager;
 });
 
-function withNobodySignedIn() {
-  return FirefoxAccounts.fxAccountsManager.signOut();
-}
-
-function withSomebodySignedIn() {
-  return FirefoxAccounts.fxAccountsManager.signIn('Pertelote');
-}
-
 function test_overall() {
   do_check_neq(FirefoxAccounts, null);
   run_next_test();
@@ -57,12 +44,10 @@ function test_overall() {
 function test_mock() {
   do_test_pending();
 
-  withSomebodySignedIn().then(() => {
-    FirefoxAccounts.fxAccountsManager.getAssertion().then(assertion => {
-      do_check_eq(assertion, TEST_ASSERTION);
-      do_test_finished();
-      run_next_test();
-    });
+  FirefoxAccounts.fxAccountsManager.getAssertion().then(assertion => {
+    do_check_eq(assertion, TEST_ASSERTION);
+    do_test_finished();
+    run_next_test();
   });
 }
 
@@ -85,15 +70,15 @@ function test_watch_signed_in() {
     }
   });
 
-  withSomebodySignedIn().then(() => {
-    FirefoxAccounts.RP.watch(mockedRP);
-  });
+  FirefoxAccounts.RP.watch(mockedRP);
 }
 
 function test_watch_signed_out() {
   do_test_pending();
 
   let received = [];
+  let signedInState = FirefoxAccounts.fxAccountsManager.signedIn;
+  FirefoxAccounts.fxAccountsManager.signedIn = false;
 
   let mockedRP = mock_fxa_rp(null, TEST_URL, function(method) {
     received.push(method);
@@ -104,20 +89,24 @@ function test_watch_signed_out() {
       do_check_eq(received[0], "logout");
       do_check_eq(received[1], "ready");
 
+      // restore initial state
+      FirefoxAccounts.fxAccountsManager.signedIn = signedInState;
       do_test_finished();
       run_next_test();
     }
   });
 
-  withNobodySignedIn().then(() => {
-    FirefoxAccounts.RP.watch(mockedRP);
-  });
+  FirefoxAccounts.RP.watch(mockedRP);
 }
 
 function test_request() {
   do_test_pending();
 
   let received = [];
+
+  // initially signed out
+  let signedInState = FirefoxAccounts.fxAccountsManager.signedIn;
+  FirefoxAccounts.fxAccountsManager.signedIn = false;
 
   let mockedRP = mock_fxa_rp(null, TEST_URL, function(method, data) {
     received.push([method, data]);
@@ -136,15 +125,15 @@ function test_request() {
       do_check_eq(received[2][0], "login");
       do_check_eq(received[2][1], TEST_ASSERTION);
 
+      // restore initial state
+      FirefoxAccounts.fxAccountsManager.signedIn = signedInState;
       do_test_finished();
       run_next_test();
     }
   });
 
-  // First, call watch() with nobody signed in
-  withNobodySignedIn().then(() => {
-    FirefoxAccounts.RP.watch(mockedRP);
-  });
+  // First, call watch()
+  FirefoxAccounts.RP.watch(mockedRP);
 }
 
 function test_logout() {
@@ -171,9 +160,7 @@ function test_logout() {
   });
 
   // First, call watch()
-  withSomebodySignedIn().then(() => {
-    FirefoxAccounts.RP.watch(mockedRP);
-  });
+  FirefoxAccounts.RP.watch(mockedRP);
 }
 
 function test_error() {
@@ -205,9 +192,7 @@ function test_error() {
   });
 
   // First, call watch()
-  withSomebodySignedIn().then(() => {
-    FirefoxAccounts.RP.watch(mockedRP);
-  });
+  FirefoxAccounts.RP.watch(mockedRP);
 }
 
 function test_child_process_shutdown() {
@@ -245,9 +230,7 @@ function test_child_process_shutdown() {
   });
 
   mockedRP._mm = "my message manager";
-  withSomebodySignedIn().then(() => {
-    FirefoxAccounts.RP.watch(mockedRP);
-  });
+  FirefoxAccounts.RP.watch(mockedRP);
 
   // fake a dom window context
   DOMIdentity.newContext(mockedRP, mockedRP._mm);
