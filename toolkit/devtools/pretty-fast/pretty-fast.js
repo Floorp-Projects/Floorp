@@ -488,19 +488,42 @@
   }
 
   /**
-   * Make sure that we put "\n" into the output instead of actual newlines.
+   * Make sure that we output the escaped character combination inside string literals
+   * instead of various problematic characters.
    */
-  function sanitizeNewlines(str) {
-    return str.replace(/\n/g, "\\n");
-  }
+  var sanitize = (function () {
+    var escapeCharacters = {
+      // Backslash
+      "\\": "\\\\",
+      // Newlines
+      "\n": "\\n",
+      // Carriage return
+      "\r": "\\r",
+      // Tab
+      "\t": "\\t",
+      // Vertical tab
+      "\v": "\\v",
+      // Form feed
+      "\f": "\\f",
+      // Null character
+      "\0": "\\0",
+      // Single quotes
+      "'": "\\'"
+    };
 
-  /**
-   * Make sure that we put "\'" into the single-quoted output instead of raw single quotes.
-   */
-  function sanitizeSingleQuotes(str) {
-    return str.replace(/\'/g, "\\'");
-  }
+    var regExpString = "("
+      + Object.keys(escapeCharacters)
+              .map(function (c) { return escapeCharacters[c]; })
+              .join("|")
+      + ")";
+    var escapeCharactersRegExp = new RegExp(regExpString, "g");
 
+    return function(str) {
+      return str.replace(escapeCharactersRegExp, function (_, c) {
+        return escapeCharacters[c];
+      });
+    }
+  }());
   /**
    * Add the given token to the pretty printed results.
    *
@@ -513,7 +536,7 @@
    */
   function addToken(token, write, options) {
     if (token.type.type == "string") {
-      write("'" + sanitizeSingleQuotes(sanitizeNewlines(token.value)) + "'",
+      write("'" + sanitize(token.value) + "'",
             token.startLoc.line,
             token.startLoc.column);
     } else {
