@@ -16,7 +16,6 @@
 #include "nsMIMEInfoImpl.h"
 #include "nsCOMPtr.h"
 
-class nsHashtable;
 class nsILineInputStream;
 
 class nsOSHelperAppService : public nsExternalHelperAppService
@@ -54,7 +53,6 @@ private:
   static nsresult UnescapeCommand(const nsAString& aEscapedCommand,
                                   const nsAString& aMajorType,
                                   const nsAString& aMinorType,
-                                  nsHashtable& aTypeOptions,
                                   nsACString& aUnEscapedCommand);
   static nsresult GetFileLocation(const char* aPrefName,
                                   const char* aEnvVarName,
@@ -108,14 +106,12 @@ private:
 
   static nsresult LookUpHandlerAndDescription(const nsAString& aMajorType,
                                               const nsAString& aMinorType,
-                                              nsHashtable& aTypeOptions,
                                               nsAString& aHandler,
                                               nsAString& aDescription,
                                               nsAString& aMozillaFlags);
 
   static nsresult DoLookUpHandlerAndDescription(const nsAString& aMajorType,
                                                 const nsAString& aMinorType,
-                                                nsHashtable& aTypeOptions,
                                                 nsAString& aHandler,
                                                 nsAString& aDescription,
                                                 nsAString& aMozillaFlags,
@@ -124,7 +120,6 @@ private:
   static nsresult GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
                                                           const nsAString& aMajorType,
                                                           const nsAString& aMinorType,
-                                                          nsHashtable& aTypeOptions,
                                                           nsAString& aHandler,
                                                           nsAString& aDescription,
                                                           nsAString& aMozillaFlags);
