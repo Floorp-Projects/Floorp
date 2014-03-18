@@ -2164,12 +2164,12 @@ TypedObject::dataOffset()
 }
 
 void
-TypedObject::neuter(void *newData)
+TypedObject::neuter(JSContext *cx)
 {
     setSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(0));
     setSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH, Int32Value(0));
     setSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(0));
-    setPrivate(newData);
+    setPrivate(nullptr);
 }
 
 /******************************************************************************
