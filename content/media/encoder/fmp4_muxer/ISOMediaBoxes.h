@@ -522,6 +522,9 @@ public:
   ~SampleDescriptionBox();
 
 protected:
+  nsresult CreateAudioSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry);
+  nsresult CreateVideoSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry);
+
   uint32_t mTrackType;
 };
 
