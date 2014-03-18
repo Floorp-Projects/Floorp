@@ -56,6 +56,17 @@
   -moz-image-region: rect(0, 270px, 18px, 252px);
 }
 
+#sync-button[cui-areatype="toolbar"][status="active"],
+#sync-button[cui-areatype="toolbar"][status="active"]:hover:active:not([disabled="true"]) {
+  list-style-image: url("chrome://browser/skin/syncProgress-toolbar.png");
+  -moz-image-region: rect(0, 18px, 18px, 0px);
+}
+
+#sync-button[cui-areatype="toolbar"][status="active"]:-moz-lwtheme-brighttext,
+#sync-button[cui-areatype="toolbar"][status="active"]:-moz-lwtheme-brighttext:hover:active:not([disabled="true"]) {
+  list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
+}
+
 #feed-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 288px, 18px, 270px);
 }
