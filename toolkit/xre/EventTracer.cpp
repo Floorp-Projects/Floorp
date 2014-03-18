@@ -59,7 +59,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsDebug.h"
-#include "MainThreadUtils.h"
 #include <limits.h>
 #include <prenv.h>
 #include <prinrval.h>
@@ -77,17 +76,14 @@ using mozilla::TimeStamp;
 using mozilla::FireAndWaitForTracerEvent;
 
 namespace {
-  struct TracerStartClosure {
-    mozilla::Atomic<bool> mLogTracing;
-    mozilla::Atomic<int32_t> mThresholdInterval;
-  };
-}
 
+PRThread* sTracerThread = nullptr;
+bool sExit = false;
 
-static PRThread* sTracerThread = nullptr;
-static mozilla::Atomic<bool> sExit(0);
-static int sStartCount = 0;
-static TracerStartClosure *sTracerStartClosure = nullptr;
+struct TracerStartClosure {
+  bool mLogTracing;
+  int32_t mThresholdInterval;
+};
 
 #ifdef MOZ_WIDGET_GONK
 class EventLoopLagDispatcher : public nsRunnable
@@ -124,7 +120,7 @@ class EventLoopLagDispatcher : public nsRunnable
  * settting the environment variable MOZ_INSTRUMENT_EVENT_LOOP_OUTPUT
  * to the name of a file to use.
  */
-static void TracerThread(void *arg)
+void TracerThread(void *arg)
 {
   PR_SetCurrentThreadName("Event Tracer");
 
@@ -144,9 +140,8 @@ static void TracerThread(void *arg)
   if (envfile) {
     log = fopen(envfile, "w");
   }
-  if (log == nullptr) {
+  if (log == nullptr)
     log = stdout;
-  }
 
   char* thresholdenv = PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP_THRESHOLD");
   if (thresholdenv && *thresholdenv) {
@@ -211,52 +206,40 @@ static void TracerThread(void *arg)
     fprintf(log, "MOZ_EVENT_TRACE stop %llu\n", now);
   }
 
-  if (log != stdout) {
+  if (log != stdout)
     fclose(log);
-  }
 
   delete threadArgs;
 }
+
+} // namespace
 
 namespace mozilla {
 
 bool InitEventTracing(bool aLog)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Keep track of how many times we were started and wait for everyone
-  // who needs us to tell us to shut down before we shut down
-  sStartCount++;
-
-  // If the tracer is already on we just make sure that the logging
-  // setting is on (if anyone asked for it)
-  if (sTracerThread) {
-    if (aLog) {
-      sTracerStartClosure->mLogTracing = true;
-    }
+  if (sTracerThread)
     return true;
-  }
 
   // Initialize the widget backend.
-  if (!InitWidgetTracing()) {
+  if (!InitWidgetTracing())
     return false;
-  }
 
   // The tracer thread owns the object and will delete it.
-  sTracerStartClosure = new TracerStartClosure();
-  sTracerStartClosure->mLogTracing = aLog;
+  TracerStartClosure* args = new TracerStartClosure();
+  args->mLogTracing = aLog;
 
   // Pass the default threshold interval.
   int32_t thresholdInterval = 20;
   Preferences::GetInt("devtools.eventlooplag.threshold", &thresholdInterval);
-  sTracerStartClosure->mThresholdInterval = thresholdInterval;
+  args->mThresholdInterval = thresholdInterval;
 
   // Create a thread that will fire events back at the
   // main thread to measure responsiveness.
   NS_ABORT_IF_FALSE(!sTracerThread, "Event tracing already initialized!");
   sTracerThread = PR_CreateThread(PR_USER_THREAD,
                                   TracerThread,
-                                  sTracerStartClosure,
+                                  args,
                                   PR_PRIORITY_NORMAL,
                                   PR_GLOBAL_THREAD,
                                   PR_JOINABLE_THREAD,
@@ -266,30 +249,16 @@ bool InitEventTracing(bool aLog)
 
 void ShutdownEventTracing()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Wait for all starters to tell us they don't need us
-  sStartCount--;
-  if (sStartCount > 0) {
+  if (!sTracerThread)
     return;
-  }
-
-  // Make sure we don't stop the event tracer more times than we start it
-  MOZ_ASSERT(sStartCount == 0);
-
-  if (!sTracerThread) {
-    return;
-  }
 
   sExit = true;
   // Ensure that the tracer thread doesn't hang.
   SignalTracerThread();
 
-  if (sTracerThread) {
+  if (sTracerThread)
     PR_JoinThread(sTracerThread);
-  }
   sTracerThread = nullptr;
-  sTracerStartClosure = nullptr;
 
   // Allow the widget backend to clean up.
   CleanUpWidgetTracing();
