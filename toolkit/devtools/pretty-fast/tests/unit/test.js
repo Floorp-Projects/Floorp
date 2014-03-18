@@ -445,6 +445,42 @@ var testCases = [
             "}\n"
   },
 
+  {
+    name: "Escaping backslashes in strings",
+    input: "'\\\\'\n",
+    output: "'\\\\'\n"
+  },
+
+  {
+    name: "Escaping carriage return in strings",
+    input: "'\\r'\n",
+    output: "'\\r'\n"
+  },
+
+  {
+    name: "Escaping tab in strings",
+    input: "'\\t'\n",
+    output: "'\\t'\n"
+  },
+
+  {
+    name: "Escaping vertical tab in strings",
+    input: "'\\v'\n",
+    output: "'\\v'\n"
+  },
+
+  {
+    name: "Escaping form feed in strings",
+    input: "'\\f'\n",
+    output: "'\\f'\n"
+  },
+
+  {
+    name: "Escaping null character in strings",
+    input: "'\\0'\n",
+    output: "'\\0'\n"
+  },
+
 ];
 
 var sourceMap = this.sourceMap || require("source-map");

@@ -585,7 +585,7 @@ private:
     nsRefPtr<nsConsoleService>  mConsoleService;
     nsConsoleService* GetConsoleService();
 
-    nsDataHashtable<nsUint64HashKey, nsCOMPtr<ParentIdleListener> > mIdleListeners;
+    nsDataHashtable<nsUint64HashKey, nsRefPtr<ParentIdleListener> > mIdleListeners;
 
 #ifdef MOZ_X11
     // Dup of child's X socket, used to scope its resources to this

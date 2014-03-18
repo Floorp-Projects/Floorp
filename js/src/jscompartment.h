@@ -280,8 +280,8 @@ struct JSCompartment
      */
     JSObject                     *gcIncomingGrayPointers;
 
-    /* Linked list of live array buffers with >1 view. */
-    js::ArrayBufferObject        *gcLiveArrayBuffers;
+    /* During GC, list of live array buffers with >1 view accumulated during tracing. */
+    js::ArrayBufferVector        gcLiveArrayBuffers;
 
     /* Linked list of live weakmaps in this compartment. */
     js::WeakMapBase              *gcWeakMapList;

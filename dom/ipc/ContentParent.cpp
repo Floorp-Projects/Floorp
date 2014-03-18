@@ -3329,7 +3329,7 @@ ContentParent::RecvAddIdleObserver(const uint64_t& aObserver, const uint32_t& aI
     do_GetService("@mozilla.org/widget/idleservice;1", &rv);
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsCOMPtr<ParentIdleListener> listener = new ParentIdleListener(this, aObserver);
+  nsRefPtr<ParentIdleListener> listener = new ParentIdleListener(this, aObserver);
   mIdleListeners.Put(aObserver, listener);
   idleService->AddIdleObserver(listener, aIdleTimeInS);
   return true;
@@ -3343,7 +3343,7 @@ ContentParent::RecvRemoveIdleObserver(const uint64_t& aObserver, const uint32_t&
     do_GetService("@mozilla.org/widget/idleservice;1", &rv);
   NS_ENSURE_SUCCESS(rv, false);
 
-  nsCOMPtr<ParentIdleListener> listener;
+  nsRefPtr<ParentIdleListener> listener;
   bool found = mIdleListeners.Get(aObserver, &listener);
   if (found) {
     mIdleListeners.Remove(aObserver);

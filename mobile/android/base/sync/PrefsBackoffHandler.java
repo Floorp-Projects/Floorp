@@ -4,20 +4,13 @@
 
 package org.mozilla.gecko.sync;
 
-import org.mozilla.gecko.background.common.log.Logger;
-
-import android.content.ContentResolver;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.os.Bundle;
 
 public class PrefsBackoffHandler implements BackoffHandler {
-  private static final String LOG_TAG = "BackoffHandler";
-
   public static final String PREF_EARLIEST_NEXT = "earliestnext";
 
   private final SharedPreferences prefs;
-  private final String prefSuffix;
   private final String prefEarliest;
 
   public PrefsBackoffHandler(final SharedPreferences prefs, final String prefSuffix) {
@@ -25,7 +18,6 @@ public class PrefsBackoffHandler implements BackoffHandler {
       throw new IllegalArgumentException("prefs must not be null.");
     }
     this.prefs = prefs;
-    this.prefSuffix = prefSuffix;
     this.prefEarliest = PREF_EARLIEST_NEXT + "." + prefSuffix;
   }
 

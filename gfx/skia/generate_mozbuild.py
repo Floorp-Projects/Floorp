@@ -17,6 +17,11 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
     SOURCES += [
         'trunk/src/opts/memset.arm.S',
     ]
+    if CONFIG['BUILD_ARM_NEON']:
+        SOURCES += [
+            'trunk/src/opts/memset16_neon.S',
+            'trunk/src/opts/memset32_neon.S',
+        ]
 
 MSVC_ENABLE_PGO = True
 
@@ -83,6 +88,9 @@ if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['trunk/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += ['-msse2']
     SOURCES['trunk/src/opts/SkMorphology_opts_SSE2.cpp'].flags += ['-msse2']
     SOURCES['trunk/src/opts/SkUtils_opts_SSE2.cpp'].flags += ['-msse2']
+elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON']:
+    DEFINES['__ARM_HAVE_OPTIONAL_NEON_SUPPORT'] = 1
+    DEFINES['USE_ANDROID_NDK_CPU_FEATURES'] = 0
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 DEFINES['GR_IMPLEMENTATION'] = 1
@@ -145,7 +153,6 @@ def generate_separated_sources(platform_sources):
     'SkCity',
     'GrGLCreateNativeInterface',
     'fontconfig',
-    '_neon',
     'SkThreadUtils_pthread_',
     'SkImage_Codec',
     'SkBitmapChecksummer',
@@ -205,6 +212,10 @@ def generate_separated_sources(platform_sources):
     },
     'arm': {
       'trunk/src/opts/SkUtils_opts_arm.cpp',
+      'trunk/src/core/SkUtilsArm.cpp',
+    },
+    'neon': {
+      'trunk/src/opts/SkBitmapProcState_arm_neon.cpp',
     },
     'none': {
       'trunk/src/opts/SkUtils_opts_none.cpp',
@@ -223,7 +234,11 @@ def generate_separated_sources(platform_sources):
         separated['intel'].add(value)
         continue
 
-      if value.find('_arm') > 0 or value.find('_neon') > 0:
+      if value.find('_neon') > 0:
+        separated['neon'].add(value)
+        continue
+
+      if value.find('_arm') > 0:
         separated['arm'].add(value)
         continue
 
@@ -252,6 +267,22 @@ def uniq(seq):
   seen_add = seen.add
   return [ x for x in seq if x not in seen and not seen_add(x)]
 
+def write_cflags(f, values, subsearch, cflag, indent):
+  def write_indent(indent):
+    for _ in range(indent):
+        f.write(' ')
+
+  val_list = uniq(sorted(map(lambda val: val.replace('../', 'trunk/'), values), key=lambda x: x.lower()))
+
+  if len(val_list) == 0:
+    return
+
+  for val in val_list:
+    if val.find(subsearch) > 0:
+      write_indent(indent)
+      f.write("SOURCES[\'" + val + "\'].flags += [\'" + cflag + "\']\n")
+
+
 def write_list(f, name, values, indent):
   def write_indent(indent):
     for _ in range(indent):
@@ -268,7 +299,7 @@ def write_list(f, name, values, indent):
     write_indent(indent + 4)
     f.write('\'' + val + '\',\n')
 
-  write_indent(4)
+  write_indent(indent)
   f.write(']\n')
 
 def write_mozbuild(includes, sources):
@@ -302,6 +333,10 @@ def write_mozbuild(includes, sources):
 
   f.write("elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC']:\n")
   write_list(f, 'SOURCES', sources['arm'], 4)
+
+  f.write("    if CONFIG['BUILD_ARM_NEON']:\n")
+  write_list(f, 'SOURCES', sources['neon'], 8)
+  write_cflags(f, sources['neon'], 'neon', '-mfpu=neon', 8)
 
   f.write("else:\n")
   write_list(f, 'SOURCES', sources['none'], 4)

@@ -420,13 +420,12 @@ already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(bool aMemoryOnly,
       true, // truncate existing (this one)
       getter_AddRefs(handle));
 
-    LOG(("  exchanged entry %p by entry %p, rv=0x%08x", this, newEntry.get(), rv));
-
     if (NS_SUCCEEDED(rv)) {
       newEntry = handle->Entry();
+      LOG(("  exchanged entry %p by entry %p, rv=0x%08x", this, newEntry.get(), rv));
       newEntry->AsyncOpen(aCallback, nsICacheStorage::OPEN_TRUNCATE);
-    }
-    else {
+    } else {
+      LOG(("  exchanged of entry %p failed, rv=0x%08x", this, rv));
       AsyncDoom(nullptr);
     }
   }

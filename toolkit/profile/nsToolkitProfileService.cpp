@@ -50,7 +50,7 @@ public:
     NS_DECL_NSITOOLKITPROFILE
 
     friend class nsToolkitProfileService;
-    nsCOMPtr<nsToolkitProfile> mNext;
+    nsRefPtr<nsToolkitProfile> mNext;
     nsToolkitProfile          *mPrev;
 
     ~nsToolkitProfile() { }
@@ -85,7 +85,7 @@ public:
     ~nsToolkitProfileLock();
 
 private:
-    nsCOMPtr<nsToolkitProfile> mProfile;
+    nsRefPtr<nsToolkitProfile> mProfile;
     nsCOMPtr<nsIFile> mDirectory;
     nsCOMPtr<nsIFile> mLocalDirectory;
 
@@ -156,7 +156,7 @@ private:
           { mCurrent = first; }
     private:
         ~ProfileEnumerator() { }
-        nsCOMPtr<nsToolkitProfile> mCurrent;
+        nsRefPtr<nsToolkitProfile> mCurrent;
     };
 };
 
@@ -274,7 +274,7 @@ nsToolkitProfile::Lock(nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult)
         return NS_OK;
     }
 
-    nsCOMPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
+    nsRefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
     if (!lock) return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = lock->Init(this, aUnlocker);
@@ -595,7 +595,7 @@ nsresult
 NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
                    nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult)
 {
-    nsCOMPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
+    nsRefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
     if (!lock) return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = lock->Init(aPath, aTempPath, aUnlocker);
