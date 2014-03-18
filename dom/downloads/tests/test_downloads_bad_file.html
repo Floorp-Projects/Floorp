@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=960749
+-->
+<head>
+  <title>Test for Bug 960749 Downloads API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=960749">Mozilla Bug 960749</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<a href="serve_file.sjs?contentType=application/octet-stream&size=1024" download=".&lt;.EVIL.&gt;\ / : * ? &quot; |file.bin" id="download1">Download #1</a>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+// Testing a simple download, waiting for it to be done.
+
+SimpleTest.waitForExplicitFinish();
+
+var index = -1;
+var expected = "_.EVIL.__ _ _ _ _ _ _file.bin";
+
+function next() {
+  index += 1;
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+function checkTargetFilename(download) {
+  ok(download.path.endsWith(expected),
+     "Download path leaf name '" + download.path +
+     "' should match '" + expected + "' filename.");
+
+  SimpleTest.finish();
+}
+
+function downloadChange(evt) {
+  var download = evt.download;
+
+  if (download.state === "succeeded") {
+    checkTargetFilename(download);
+  }
+}
+
+function downloadStart(evt) {
+  var download = evt.download;
+  download.onstatechange = downloadChange;
+}
+
+var steps = [
+  // Start by setting the pref to true.
+  function() {
+    SpecialPowers.pushPrefEnv({
+      set: [["dom.mozDownloads.enabled", true]]
+    }, next);
+  },
+
+  // Setup the event listeners.
+  function() {
+    SpecialPowers.pushPermissions([
+      {type: "downloads", allow: true, context: document}
+    ], function() {
+      navigator.mozDownloadManager.ondownloadstart = downloadStart;
+      next();
+    });
+  },
+
+  // Click on the <a download> to start the download.
+  function() {
+    document.getElementById("download1").click();
+  }
+];
+
+next();
+
+</script>
+</pre>
+</body>
+</html>
+
