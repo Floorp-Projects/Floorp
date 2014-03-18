@@ -65,6 +65,34 @@ public:
   uint32_t mFrameRate;       // frames per second
 };
 
+
+// AMR sample rate is 8000 samples/s.
+#define AMR_SAMPLE_RATE 8000
+
+// Channel number is always 1.
+#define AMR_CHANNELS    1
+
+// AMR speech codec, 3GPP TS 26.071. Encoder and continer support AMR-NB only
+// currently.
+class AMRTrackMetadata : public AudioTrackMetadata {
+public:
+  // AudioTrackMetadata members
+  //
+  // The number of sample sets generates by encoder is variant. So the
+  // frame duration and frame size are both 0.
+  uint32_t GetAudioFrameDuration() MOZ_OVERRIDE { return 0; }
+  uint32_t GetAudioFrameSize() MOZ_OVERRIDE { return 0; }
+  uint32_t GetAudioSampleRate() MOZ_OVERRIDE { return AMR_SAMPLE_RATE; }
+  uint32_t GetAudioChannels() MOZ_OVERRIDE { return AMR_CHANNELS; }
+
+  // TrackMetadataBase member
+  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AMR; }
+
+  // AMRTrackMetadata members
+  AMRTrackMetadata() { MOZ_COUNT_CTOR(AMRTrackMetadata); }
+  ~AMRTrackMetadata() { MOZ_COUNT_DTOR(AMRTrackMetadata); }
+};
+
 }
 
 #endif // ISOTrackMetadata_h_
