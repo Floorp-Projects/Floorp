@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.sync.setup.activities;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
