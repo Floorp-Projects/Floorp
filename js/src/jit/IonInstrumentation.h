@@ -29,8 +29,12 @@ class IonInstrumentation : public BaseInstrumentation
         JS_ASSERT(pc != nullptr);
     }
 
-    void leave(MacroAssembler &masm, Register reg) {
-        BaseInstrumentation::leave(*trackedPc_, masm, reg);
+    void leave(MacroAssembler &masm, Register reg, bool inlinedFunction = false) {
+        BaseInstrumentation::leave(*trackedPc_, masm, reg, inlinedFunction);
+    }
+
+    bool enterInlineFrame() {
+        return BaseInstrumentation::enterInlineFrame(*trackedPc_);
     }
 };
 
