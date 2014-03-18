@@ -19,8 +19,7 @@ function parseTestManifest(testManifest, params, callback) {
   // For mochitest-plain, we define lists as an array of testnames.
   for (var obj of testManifest['tests']) {
     var path = obj['path'];
-    // Note that obj.disabled may be "". We still want to skip in that case.
-    if ("disabled" in obj) {
+    if (obj.disabled) {
       dump("TEST-SKIPPED | " + path + " | " + obj.disabled + "\n");
       continue;
     }
