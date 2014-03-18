@@ -433,7 +433,7 @@ SVGSVGElement::CreateSVGTransform()
 already_AddRefed<SVGTransform>
 SVGSVGElement::CreateSVGTransformFromMatrix(SVGMatrix& matrix)
 {
-  nsRefPtr<SVGTransform> transform = new SVGTransform(matrix.Matrix());
+  nsRefPtr<SVGTransform> transform = new SVGTransform(matrix.GetMatrix());
   return transform.forget();
 }
 
