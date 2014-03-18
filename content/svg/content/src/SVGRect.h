@@ -6,8 +6,8 @@
 #ifndef mozilla_dom_SVGRect_h
 #define mozilla_dom_SVGRect_h
 
-#include "gfxRect.h"
 #include "mozilla/dom/SVGIRect.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsSVGElement.h"
 
 ////////////////////////////////////////////////////////////////////////
@@ -84,6 +84,6 @@ NS_NewSVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f,
               float width=0.0f, float height=0.0f);
 
 already_AddRefed<mozilla::dom::SVGRect>
-NS_NewSVGRect(nsIContent* aParent, const gfxRect& rect);
+NS_NewSVGRect(nsIContent* aParent, const mozilla::gfx::Rect& rect);
 
 #endif //mozilla_dom_SVGRect_h
