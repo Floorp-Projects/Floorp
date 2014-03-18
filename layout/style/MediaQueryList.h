@@ -11,7 +11,6 @@
 #include "nsISupports.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "prclist.h"
 #include "mozilla/Attributes.h"
@@ -44,7 +43,7 @@ public:
 
   struct HandleChangeData {
     nsRefPtr<MediaQueryList> mql;
-    nsCOMPtr<mozilla::dom::MediaQueryListListener> callback;
+    nsRefPtr<mozilla::dom::MediaQueryListListener> callback;
   };
 
   typedef FallibleTArray< nsRefPtr<mozilla::dom::MediaQueryListListener> > CallbackList;

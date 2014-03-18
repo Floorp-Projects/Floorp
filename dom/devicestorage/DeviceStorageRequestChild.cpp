@@ -190,7 +190,7 @@ DeviceStorageRequestChild::
         cursor->mFiles.AppendElement(dsf);
       }
 
-      nsCOMPtr<ContinueCursorEvent> event = new ContinueCursorEvent(cursor);
+      nsRefPtr<ContinueCursorEvent> event = new ContinueCursorEvent(cursor);
       event->Continue();
       break;
     }

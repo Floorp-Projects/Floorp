@@ -74,8 +74,9 @@ class SharedArrayBufferObject : public ArrayBufferObject
     static const Class protoClass;
 
     // Slot used for storing a pointer to the SharedArrayRawBuffer.
-    // First two slots hold the ObjectElements.
-    static const int32_t RAWBUF_SLOT = 2;
+    static const uint8_t RAWBUF_SLOT = ArrayBufferObject::RESERVED_SLOTS;
+
+    static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS + 1;
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 

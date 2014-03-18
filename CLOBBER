@@ -22,4 +22,5 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 983185 requires a clobber. This may not affect all platforms.
+Bug 979480 changed some #defined slot numbers used in self hosted code and
+the selfhosted.js file isn't being regenerated properly
