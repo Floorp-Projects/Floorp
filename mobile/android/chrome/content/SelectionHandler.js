@@ -1,3 +1,4 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -275,6 +276,42 @@ var SelectionHandler = {
       return false;
     }
 
+    if (this._isPhoneNumber(selection.toString())) {
+      let anchorNode = selection.anchorNode;
+      let anchorOffset = selection.anchorOffset;
+      let focusNode = null;
+      let focusOffset = null;
+      while (this._isPhoneNumber(selection.toString().trim())) {
+        focusNode = selection.focusNode;
+        focusOffset = selection.focusOffset;
+        selection.modify("extend", "forward", "word");
+        // if we hit the end of the text on the page, we can't advance the selection
+        if (focusNode == selection.focusNode && focusOffset == selection.focusOffset) {
+          break;
+        }
+      }
+
+      // reverse selection
+      selection.collapse(focusNode, focusOffset);
+      selection.extend(anchorNode, anchorOffset);
+
+      anchorNode = focusNode;
+      anchorOffset = focusOffset
+
+      while (this._isPhoneNumber(selection.toString().trim())) {
+        focusNode = selection.focusNode;
+        focusOffset = selection.focusOffset;
+        selection.modify("extend", "backward", "word");
+        // if we hit the end of the text on the page, we can't advance the selection
+        if (focusNode == selection.focusNode && focusOffset == selection.focusOffset) {
+          break;
+        }
+      }
+
+      selection.collapse(focusNode, focusOffset);
+      selection.extend(anchorNode, anchorOffset);
+    }
+
     // Add a listener to end the selection if it's removed programatically
     selection.QueryInterface(Ci.nsISelectionPrivate).addSelectionListener(this);
     this._activeType = this.TYPE_SELECTION;
@@ -494,6 +531,20 @@ var SelectionHandler = {
       selector: ClipboardHelper.searchWithContext,
     },
 
+    CALL: {
+      label: Strings.browser.GetStringFromName("contextmenu.call"),
+      id: "call_action",
+      icon: "drawable://phone",
+      action: function() {
+        SelectionHandler.callSelection();
+      },
+      order: 1,
+      selector: {
+        matches: function isPhoneNumber(aElement, aX, aY) {
+          return null != SelectionHandler._getSelectedPhoneNumber();
+        }
+      },
+    },
   },
 
   /*
@@ -744,6 +795,24 @@ var SelectionHandler = {
     this._closeSelection();
   },
 
+  _phoneRegex: /^\+?[0-9\s,-.\(\)*#pw]{1,30}$/,
+
+  _getSelectedPhoneNumber: function sh_getSelectedPhoneNumber() {
+    return this._isPhoneNumber(this._getSelectedText().trim());
+  },
+
+  _isPhoneNumber: function sh_isPhoneNumber(selectedText) {
+    return (this._phoneRegex.test(selectedText) ? selectedText : null);
+  },
+
+  callSelection: function sh_callSelection() {
+    let selectedText = this._getSelectedPhoneNumber();
+    if (selectedText) {
+      BrowserApp.loadURI("tel:" + selectedText);
+    }
+    this._closeSelection();
+  },
+
   /*
    * Shuts SelectionHandler down.
    */
@@ -904,6 +973,7 @@ var SelectionHandler = {
       positions: positions,
       rtl: this._isRTL
     });
+    this._updateMenu();
   },
 
   subdocumentScrolled: function sh_subdocumentScrolled(aElement) {
