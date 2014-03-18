@@ -527,7 +527,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
         obj->privateRef(shape->numFixedSlots()) = nullptr;
 
     size_t span = shape->slotSpan();
-    if (span && clasp != &js::ArrayBufferObject::class_)
+    if (span)
         obj->initializeSlotRange(0, span);
 
     return obj;
@@ -573,12 +573,10 @@ JSObject::finish(js::FreeOp *fop)
 {
     if (hasDynamicSlots())
         fop->free_(slots);
+
     if (hasDynamicElements()) {
         js::ObjectElements *elements = getElementsHeader();
-        if (MOZ_UNLIKELY(elements->isAsmJSArrayBuffer()))
-            js::ArrayBufferObject::releaseAsmJSArrayBuffer(fop, this);
-        else
-            fop->free_(elements);
+        fop->free_(elements);
     }
 }
 
@@ -935,6 +933,17 @@ inline T *
 NewBuiltinClassInstance(ExclusiveContext *cx, NewObjectKind newKind = GenericObject)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &T::class_, newKind);
+    if (!obj)
+        return nullptr;
+
+    return &obj->as<T>();
+}
+
+template<typename T>
+inline T *
+NewBuiltinClassInstance(ExclusiveContext *cx, gc::AllocKind allocKind, NewObjectKind newKind = GenericObject)
+{
+    JSObject *obj = NewBuiltinClassInstance(cx, &T::class_, allocKind, newKind);
     if (!obj)
         return nullptr;
 

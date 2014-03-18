@@ -95,11 +95,26 @@ JS::WeakMapPtr<K, V>::lookup(const K &key)
 }
 
 template <typename K, typename V>
+/* static */ void
+JS::WeakMapPtr<K, V>::keyMarkCallback(JSTracer *trc, K key, void *data)
+{
+    auto map = static_cast< JS::WeakMapPtr<K, V>* >(data);
+    K prior = key;
+    JS_CallObjectTracer(trc, &key, "WeakMapPtr key");
+    return Utils<K, V>::cast(map->ptr)->rekeyIfMoved(prior, key);
+}
+
+template <typename K, typename V>
 bool
-JS::WeakMapPtr<K, V>::put(const K &key, const V &value)
+JS::WeakMapPtr<K, V>::put(JSContext *cx, const K &key, const V &value)
 {
     MOZ_ASSERT(initialized());
-    return Utils<K, V>::cast(ptr)->put(key, value);
+    if (!Utils<K, V>::cast(ptr)->put(key, value))
+        return false;
+    JS_StoreObjectPostBarrierCallback(cx, keyMarkCallback, key, this);
+    // Values do not need to be barriered because only put() is supported,
+    // which is always an initializing write.
+    return true;
 }
 
 //

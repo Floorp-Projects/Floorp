@@ -202,12 +202,14 @@ public:
   static TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(ISurfaceAllocator* aAllocator,
                             gfx::SurfaceFormat aFormat,
-                            TextureFlags aTextureFlags);
+                            TextureFlags aTextureFlags,
+                            gfx::BackendType aMoz2dBackend);
 
   static TemporaryRef<TextureClient>
   CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
                                 gfx::SurfaceFormat aFormat,
                                 TextureFlags aTextureFlags,
+                                gfx::BackendType aMoz2dBackend,
                                 const gfx::IntSize& aSizeHint);
 
   virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
@@ -393,7 +395,7 @@ class BufferTextureClient : public TextureClient
 {
 public:
   BufferTextureClient(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat,
-                      TextureFlags aFlags);
+                      gfx::BackendType aBackend, TextureFlags aFlags);
 
   virtual ~BufferTextureClient();
 
@@ -457,6 +459,7 @@ protected:
   RefPtr<ISurfaceAllocator> mAllocator;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
+  gfx::BackendType mBackend;
   OpenMode mOpenMode;
   bool mUsingFallbackDrawTarget;
   bool mLocked;
@@ -470,7 +473,7 @@ class ShmemTextureClient : public BufferTextureClient
 {
 public:
   ShmemTextureClient(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat,
-                     TextureFlags aFlags);
+                     gfx::BackendType aBackend, TextureFlags aFlags);
 
   ~ShmemTextureClient();
 
@@ -504,7 +507,7 @@ class MemoryTextureClient : public BufferTextureClient
 {
 public:
   MemoryTextureClient(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat aFormat,
-                      TextureFlags aFlags);
+                      gfx::BackendType aBackend, TextureFlags aFlags);
 
   ~MemoryTextureClient();
 
