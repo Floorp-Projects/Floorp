@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.os.Build;
 import android.os.Handler;
@@ -362,7 +361,7 @@ final class GeckoEditable
     }
 
     private void assertOnIcThread() {
-        ThreadUtils.assertOnThread(mIcRunHandler.getLooper().getThread(), AssertBehavior.THROW);
+        ThreadUtils.assertOnThread(mIcRunHandler.getLooper().getThread());
     }
 
     private void geckoPostToIc(Runnable runnable) {
