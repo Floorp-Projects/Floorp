@@ -13,6 +13,7 @@
 using mozilla::dom::Nullable;
 
 namespace mozilla {
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 class EventListenerManager;
 namespace dom {
@@ -21,7 +22,6 @@ class EventTarget;
 } // namespace mozilla
 
 class nsPresContext;
-class nsEventChainPostVisitor;
 %}
 
 /**
@@ -32,11 +32,11 @@ class nsEventChainPostVisitor;
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[ref] native nsEventChainPostVisitorRef(nsEventChainPostVisitor);
 [ptr] native WidgetEventPtr(mozilla::WidgetEvent);
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsEventStatusPtr(nsEventStatus);
 [ptr] native JSContextPtr(JSContext);
+[ref] native EventChainPostVisitorRef(mozilla::EventChainPostVisitor);
 [ref] native EventChainPreVisitorRef(mozilla::EventChainPreVisitor);
 [ptr] native EventListenerManagerPtr(mozilla::EventListenerManager);
 [ptr] native EventTargetPtr(mozilla::dom::EventTarget);
@@ -231,7 +231,7 @@ interface nsIDOMEventTarget : nsISupports
    * called just before possible event handlers on this object will be called.
    */
   [noscript, nostdcall]
-  void WillHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+  void WillHandleEvent(in EventChainPostVisitorRef aVisitor);
 
   /**
    * Called after the bubble phase of the system event group.
@@ -242,7 +242,7 @@ interface nsIDOMEventTarget : nsISupports
    * @note Only nsEventDispatcher should call this method.
    */
   [noscript, nostdcall]
-  void PostHandleEvent(in nsEventChainPostVisitorRef aVisitor);
+  void PostHandleEvent(in EventChainPostVisitorRef aVisitor);
 
   /**
    * Dispatch an event.
@@ -287,7 +287,7 @@ interface nsIDOMEventTarget : nsISupports
 #define NS_IMPL_DOMTARGET_DEFAULTS(_class) \
 mozilla::dom::EventTarget* _class::GetTargetForDOMEvent() { return this; } \
 mozilla::dom::EventTarget* _class::GetTargetForEventTargetChain() { return this; } \
-nsresult _class::WillHandleEvent(nsEventChainPostVisitor& aVisitor) { return NS_OK; } \
+nsresult _class::WillHandleEvent(mozilla::EventChainPostVisitor& aVisitor) { return NS_OK; } \
 JSContext* _class::GetJSContextForEventHandlers() { return nullptr; }
 
 #define NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(aClass) \

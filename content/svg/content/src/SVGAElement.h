@@ -15,6 +15,7 @@ nsresult NS_NewSVGAElement(nsIContent **aResult,
 
 namespace mozilla {
 
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 
 namespace dom {
@@ -37,7 +38,8 @@ public:
 
   // nsINode interface methods
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(
+                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // nsIContent

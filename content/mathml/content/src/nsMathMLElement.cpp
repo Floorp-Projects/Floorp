@@ -907,7 +907,7 @@ nsMathMLElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsMathMLElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+nsMathMLElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return PostHandleEventForLinks(aVisitor);
 }

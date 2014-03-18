@@ -13,6 +13,7 @@
 #include "nsStyleLinkElement.h"
 
 namespace mozilla {
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
@@ -43,7 +44,8 @@ public:
 
   // nsIDOMEventTarget
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(
+                     EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   // nsINode
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;

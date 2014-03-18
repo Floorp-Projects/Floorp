@@ -18,6 +18,7 @@ class nsCSSValue;
 typedef nsMappedAttributeElement nsMathMLElementBase;
 
 namespace mozilla {
+class EventChainPostVisitor;
 class EventChainPreVisitor;
 } // namespace mozilla
 
@@ -74,7 +75,8 @@ public:
   
   virtual nsresult PreHandleEvent(
                      mozilla::EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PostHandleEvent(
+                     mozilla::EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   nsresult Clone(nsINodeInfo*, nsINode**) const MOZ_OVERRIDE;
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
