@@ -265,13 +265,6 @@ struct AutoEnterAnalysis
 // Interface functions
 /////////////////////////////////////////////////////////////////////
 
-/*
- * These functions check whether inference is enabled before performing some
- * action on the type state. To avoid checking cx->typeInferenceEnabled()
- * everywhere, it is generally preferred to use one of these functions or
- * a type function on JSScript to perform inference operations.
- */
-
 inline const Class *
 GetClassForProtoKey(JSProtoKey key)
 {
@@ -332,12 +325,10 @@ GetTypeNewObject(JSContext *cx, JSProtoKey key)
 inline TypeObject *
 GetTypeCallerInitObject(JSContext *cx, JSProtoKey key)
 {
-    if (cx->typeInferenceEnabled()) {
-        jsbytecode *pc;
-        RootedScript script(cx, cx->currentScript(&pc));
-        if (script)
-            return TypeScript::InitObject(cx, script, pc, key);
-    }
+    jsbytecode *pc;
+    RootedScript script(cx, cx->currentScript(&pc));
+    if (script)
+        return TypeScript::InitObject(cx, script, pc, key);
     return GetTypeNewObject(cx, key);
 }
 
@@ -355,7 +346,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 {
     if (args.callee().is<JSFunction>()) {
         JSFunction *fun = &args.callee().as<JSFunction>();
-        if (fun->isInterpreted() && fun->nonLazyScript()->types && cx->typeInferenceEnabled())
+        if (fun->isInterpreted() && fun->nonLazyScript()->types)
             TypeMonitorCallSlow(cx, &args.callee(), args, constructing);
     }
 }
@@ -363,7 +354,7 @@ TypeMonitorCall(JSContext *cx, const js::CallArgs &args, bool constructing)
 inline bool
 TrackPropertyTypes(ExclusiveContext *cx, JSObject *obj, jsid id)
 {
-    if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
+    if (obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
 
     if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(id))
@@ -375,9 +366,6 @@ TrackPropertyTypes(ExclusiveContext *cx, JSObject *obj, jsid id)
 inline void
 EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 {
-    if (!cx->typeInferenceEnabled())
-        return;
-
     id = IdToTypeId(id);
 
     if (obj->hasSingletonType()) {
@@ -429,34 +417,30 @@ HasTypePropertyId(JSObject *obj, jsid id, const Value &value)
 inline void
 AddTypePropertyId(ExclusiveContext *cx, JSObject *obj, jsid id, Type type)
 {
-    if (cx->typeInferenceEnabled()) {
-        id = IdToTypeId(id);
-        if (TrackPropertyTypes(cx, obj, id))
-            obj->type()->addPropertyType(cx, id, type);
-    }
+    id = IdToTypeId(id);
+    if (TrackPropertyTypes(cx, obj, id))
+        obj->type()->addPropertyType(cx, id, type);
 }
 
 inline void
 AddTypePropertyId(ExclusiveContext *cx, JSObject *obj, jsid id, const Value &value)
 {
-    if (cx->typeInferenceEnabled()) {
-        id = IdToTypeId(id);
-        if (TrackPropertyTypes(cx, obj, id))
-            obj->type()->addPropertyType(cx, id, value);
-    }
+    id = IdToTypeId(id);
+    if (TrackPropertyTypes(cx, obj, id))
+        obj->type()->addPropertyType(cx, id, value);
 }
 
 inline void
 AddTypePropertyId(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
 {
-    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+    if (!obj->unknownProperties())
         obj->addPropertyType(cx, id, type);
 }
 
 inline void
 AddTypePropertyId(ExclusiveContext *cx, TypeObject *obj, jsid id, const Value &value)
 {
-    if (cx->typeInferenceEnabled() && !obj->unknownProperties())
+    if (!obj->unknownProperties())
         obj->addPropertyType(cx, id, value);
 }
 
@@ -464,7 +448,7 @@ AddTypePropertyId(ExclusiveContext *cx, TypeObject *obj, jsid id, const Value &v
 inline void
 MarkTypeObjectFlags(ExclusiveContext *cx, JSObject *obj, TypeObjectFlags flags)
 {
-    if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->hasAllFlags(flags))
+    if (!obj->hasLazyType() && !obj->type()->hasAllFlags(flags))
         obj->type()->setFlags(cx, flags);
 }
 
@@ -478,32 +462,26 @@ inline void
 MarkTypeObjectUnknownProperties(JSContext *cx, TypeObject *obj,
                                 bool markSetsUnknown = false)
 {
-    if (cx->typeInferenceEnabled()) {
-        if (!obj->unknownProperties())
-            obj->markUnknown(cx);
-        if (markSetsUnknown && !(obj->flags() & OBJECT_FLAG_SETS_MARKED_UNKNOWN))
-            cx->compartment()->types.markSetsUnknown(cx, obj);
-    }
+    if (!obj->unknownProperties())
+        obj->markUnknown(cx);
+    if (markSetsUnknown && !(obj->flags() & OBJECT_FLAG_SETS_MARKED_UNKNOWN))
+        cx->compartment()->types.markSetsUnknown(cx, obj);
 }
 
 inline void
 MarkTypePropertyNonData(ExclusiveContext *cx, JSObject *obj, jsid id)
 {
-    if (cx->typeInferenceEnabled()) {
-        id = IdToTypeId(id);
-        if (TrackPropertyTypes(cx, obj, id))
-            obj->type()->markPropertyNonData(cx, id);
-    }
+    id = IdToTypeId(id);
+    if (TrackPropertyTypes(cx, obj, id))
+        obj->type()->markPropertyNonData(cx, id);
 }
 
 inline void
 MarkTypePropertyNonWritable(ExclusiveContext *cx, JSObject *obj, jsid id)
 {
-    if (cx->typeInferenceEnabled()) {
-        id = IdToTypeId(id);
-        if (TrackPropertyTypes(cx, obj, id))
-            obj->type()->markPropertyNonWritable(cx, id);
-    }
+    id = IdToTypeId(id);
+    if (TrackPropertyTypes(cx, obj, id))
+        obj->type()->markPropertyNonWritable(cx, id);
 }
 
 inline bool
@@ -522,7 +500,7 @@ IsTypePropertyIdMarkedNonWritable(JSObject *obj, jsid id)
 inline void
 MarkObjectStateChange(ExclusiveContext *cx, JSObject *obj)
 {
-    if (cx->typeInferenceEnabled() && !obj->hasLazyType() && !obj->type()->unknownProperties())
+    if (!obj->hasLazyType() && !obj->type()->unknownProperties())
         obj->type()->markStateChange(cx);
 }
 
@@ -534,15 +512,13 @@ MarkObjectStateChange(ExclusiveContext *cx, JSObject *obj)
 inline void
 FixArrayType(ExclusiveContext *cx, HandleObject obj)
 {
-    if (cx->typeInferenceEnabled())
-        cx->compartment()->types.fixArrayType(cx, obj);
+    cx->compartment()->types.fixArrayType(cx, obj);
 }
 
 inline void
 FixObjectType(ExclusiveContext *cx, HandleObject obj)
 {
-    if (cx->typeInferenceEnabled())
-        cx->compartment()->types.fixObjectType(cx, obj);
+    cx->compartment()->types.fixObjectType(cx, obj);
 }
 
 /* Interface helpers for JSScript*. */
@@ -673,7 +649,7 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
     /* :XXX: Limit script->length so we don't need to check the offset up front? */
     uint32_t offset = script->pcToOffset(pc);
 
-    if (!cx->typeInferenceEnabled() || !script->compileAndGo() || offset >= AllocationSiteKey::OFFSET_LIMIT)
+    if (!script->compileAndGo() || offset >= AllocationSiteKey::OFFSET_LIMIT)
         return GetTypeNewObject(cx, kind);
 
     AllocationSiteKey key;
@@ -695,9 +671,6 @@ TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoK
 static inline bool
 SetInitializerObjectType(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj, NewObjectKind kind)
 {
-    if (!cx->typeInferenceEnabled())
-        return true;
-
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
     JS_ASSERT(key != JSProto_Null);
     JS_ASSERT(kind == UseNewTypeForInitializer(script, pc, key));
@@ -724,8 +697,7 @@ SetInitializerObjectType(JSContext *cx, HandleScript script, jsbytecode *pc, Han
 /* static */ inline void
 TypeScript::Monitor(JSContext *cx, JSScript *script, jsbytecode *pc, const js::Value &rval)
 {
-    if (cx->typeInferenceEnabled())
-        TypeMonitorResult(cx, script, pc, rval);
+    TypeMonitorResult(cx, script, pc, rval);
 }
 
 /* static */ inline void
@@ -739,7 +711,7 @@ TypeScript::Monitor(JSContext *cx, const js::Value &rval)
 /* static */ inline void
 TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
 {
-    if (cx->typeInferenceEnabled() && !obj->hasSingletonType()) {
+    if (!obj->hasSingletonType()) {
         /*
          * Mark as unknown any object which has had dynamic assignments to
          * non-integer properties at SETELEM opcodes. This avoids making large
@@ -765,7 +737,7 @@ TypeScript::MonitorAssign(JSContext *cx, HandleObject obj, jsid id)
 /* static */ inline void
 TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
 {
-    if (!cx->typeInferenceEnabled() || !script->types)
+    if (!script->types)
         return;
 
     if (!ThisTypes(script)->hasType(type)) {
@@ -780,14 +752,13 @@ TypeScript::SetThis(JSContext *cx, JSScript *script, Type type)
 /* static */ inline void
 TypeScript::SetThis(JSContext *cx, JSScript *script, const js::Value &value)
 {
-    if (cx->typeInferenceEnabled())
-        SetThis(cx, script, GetValueType(value));
+    SetThis(cx, script, GetValueType(value));
 }
 
 /* static */ inline void
 TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type)
 {
-    if (!cx->typeInferenceEnabled() || !script->types)
+    if (!script->types)
         return;
 
     if (!ArgTypes(script, arg)->hasType(type)) {
@@ -802,10 +773,8 @@ TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, Type type
 /* static */ inline void
 TypeScript::SetArgument(JSContext *cx, JSScript *script, unsigned arg, const js::Value &value)
 {
-    if (cx->typeInferenceEnabled()) {
-        Type type = GetValueType(value);
-        SetArgument(cx, script, arg, type);
-    }
+    Type type = GetValueType(value);
+    SetArgument(cx, script, arg, type);
 }
 
 /////////////////////////////////////////////////////////////////////

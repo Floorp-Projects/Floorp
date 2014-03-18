@@ -238,11 +238,11 @@ ThreadPoolWorker::terminate(AutoLockMonitor &lock)
 // them down when requested.
 
 ThreadPool::ThreadPool(JSRuntime *rt)
-  : runtime_(rt),
-    activeWorkers_(0),
+  : activeWorkers_(0),
     joinBarrier_(nullptr),
     job_(nullptr),
 #ifdef DEBUG
+    runtime_(rt),
     stolenSlices_(0),
 #endif
     pendingSlices_(0),

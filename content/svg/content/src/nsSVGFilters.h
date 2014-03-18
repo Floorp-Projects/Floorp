@@ -14,7 +14,6 @@
 #include "nsSVGNumber2.h"
 #include "nsSVGNumberPair.h"
 #include "FilterSupport.h"
-#include "gfxASurface.h"
 
 class nsSVGFilterInstance;
 class nsSVGFilterResource;
