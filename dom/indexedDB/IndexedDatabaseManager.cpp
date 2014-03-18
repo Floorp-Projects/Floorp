@@ -22,11 +22,11 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/Utilities.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
@@ -55,6 +55,7 @@
 #define LOW_DISK_SPACE_DATA_FREE "free"
 
 USING_INDEXEDDB_NAMESPACE
+using namespace mozilla;
 using namespace mozilla::dom;
 USING_QUOTA_NAMESPACE
 
@@ -306,7 +307,7 @@ IndexedDatabaseManager::Destroy()
 // static
 nsresult
 IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
-                                          nsEventChainPostVisitor& aVisitor)
+                                          EventChainPostVisitor& aVisitor)
 {
   NS_ENSURE_TRUE(aVisitor.mDOMEvent, NS_ERROR_UNEXPECTED);
   if (!aOwner) {

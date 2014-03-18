@@ -6,7 +6,6 @@
 
 #include "nsError.h"
 #include "nsIPresShell.h"
-#include "nsEventDispatcher.h"
 #include "nsNodeUtils.h"
 #include "nsIFrame.h"
 #include "mozilla/Likely.h"

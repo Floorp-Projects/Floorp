@@ -99,7 +99,7 @@
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
-#include "nsEventDispatcher.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozAutoDocUpdate.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsCCUncollectableMarker.h"
@@ -1139,7 +1139,7 @@ nsXULElement::List(FILE* out, int32_t aIndent) const
 #endif
 
 nsresult
-nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
     aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
     nsIAtom* tag = Tag();
@@ -1619,18 +1619,18 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource)
 
             // send mouse down
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                        context, &eventDown,  nullptr, &status);
+            EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                      context, &eventDown,  nullptr, &status);
 
             // send mouse up
             status = nsEventStatus_eIgnore;  // reset status
-            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                        context, &eventUp, nullptr, &status);
+            EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                      context, &eventUp, nullptr, &status);
 
             // send mouse click
             status = nsEventStatus_eIgnore;  // reset status
-            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                        context, &eventClick, nullptr, &status);
+            EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                      context, &eventClick, nullptr, &status);
         }
     }
 

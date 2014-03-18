@@ -75,7 +75,7 @@ public:
     SetIsDOMBinding();
   }
 
-  const gfxMatrix& Matrix() const {
+  const gfxMatrix& GetMatrix() const {
     return mTransform ? mTransform->Matrixgfx() : mMatrix;
   }
 
@@ -84,17 +84,17 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  float A() const { return static_cast<float>(Matrix().xx); }
+  float A() const { return static_cast<float>(GetMatrix().xx); }
   void SetA(float aA, ErrorResult& rv);
-  float B() const { return static_cast<float>(Matrix().yx); }
+  float B() const { return static_cast<float>(GetMatrix().yx); }
   void SetB(float aB, ErrorResult& rv);
-  float C() const { return static_cast<float>(Matrix().xy); }
+  float C() const { return static_cast<float>(GetMatrix().xy); }
   void SetC(float aC, ErrorResult& rv);
-  float D() const { return static_cast<float>(Matrix().yy); }
+  float D() const { return static_cast<float>(GetMatrix().yy); }
   void SetD(float aD, ErrorResult& rv);
-  float E() const { return static_cast<float>(Matrix().x0); }
+  float E() const { return static_cast<float>(GetMatrix().x0); }
   void SetE(float aE, ErrorResult& rv);
-  float F() const { return static_cast<float>(Matrix().y0); }
+  float F() const { return static_cast<float>(GetMatrix().y0); }
   void SetF(float aF, ErrorResult& rv);
   already_AddRefed<SVGMatrix> Multiply(SVGMatrix& aMatrix);
   already_AddRefed<SVGMatrix> Inverse(ErrorResult& aRv);

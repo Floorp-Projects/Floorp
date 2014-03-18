@@ -65,11 +65,12 @@ already_AddRefed<TextTrack>
 TextTrackList::AddTextTrack(TextTrackKind aKind,
                             const nsAString& aLabel,
                             const nsAString& aLanguage,
+                            TextTrackMode aMode,
                             TextTrackSource aTextTrackSource,
                             const CompareTextTracks& aCompareTT)
 {
   nsRefPtr<TextTrack> track = new TextTrack(mGlobal, this, aKind, aLabel, aLanguage,
-                                            aTextTrackSource);
+                                            aMode, aTextTrackSource);
   AddTextTrack(track, aCompareTT);
   return track.forget();
 }

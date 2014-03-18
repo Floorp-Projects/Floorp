@@ -11,6 +11,7 @@
 #include "EncodedFrameContainer.h"
 #include "ISOTrackMetadata.h"
 #include "MP4ESDS.h"
+#include "AMRBox.h"
 #include "AVCBox.h"
 #include "VideoUtils.h"
 
@@ -163,8 +164,13 @@ TrackRunBox::fillSampleTable()
           frag->SetLastFragmentLastFrameTime(frames.ElementAt(i)->GetTimeStamp());
         }
       }
-      sample_info_table[i].sample_duration =
-        frame_time * mMeta.mVidMeta->VideoFrequency / USECS_PER_S;
+
+      // In TrackRunBox, there should be exactly one type, either audio or video.
+      MOZ_ASSERT((mTrackType & Video_Track) ^ (mTrackType & Audio_Track));
+      sample_info_table[i].sample_duration = (mTrackType & Video_Track ?
+        frame_time * mVideoMeta->GetVideoClockRate() / USECS_PER_S :
+        frame_time * mAudioMeta->GetAudioSampleRate() / USECS_PER_S);
+
       table_size += sizeof(uint32_t);
     }
 
@@ -231,7 +237,6 @@ TrackRunBox::TrackRunBox(uint32_t aType, uint32_t aFlags, ISOControl* aControl)
   , mAllSampleSize(0)
   , mTrackType(aType)
 {
-  mMeta.Init(aControl);
   MOZ_COUNT_CTOR(TrackRunBox);
 }
 
@@ -250,7 +255,9 @@ TrackFragmentHeaderBox::UpdateBaseDataOffset(uint64_t aOffset)
 nsresult
 TrackFragmentHeaderBox::Generate(uint32_t* aBoxSize)
 {
-  track_ID = mControl->GetTrackID(mTrackType);
+  track_ID = (mTrackType == Audio_Track ?
+                mControl->GetTrackID(mAudioMeta->GetKind()) :
+                mControl->GetTrackID(mVideoMeta->GetKind()));
   size += sizeof(track_ID);
 
   if (flags.to_ulong() & base_data_offset_present) {
@@ -261,16 +268,16 @@ TrackFragmentHeaderBox::Generate(uint32_t* aBoxSize)
   }
   if (flags.to_ulong() & default_sample_duration_present) {
     if (mTrackType == Video_Track) {
-      if (!mMeta.mVidMeta->FrameRate) {
+      if (!mVideoMeta->GetVideoFrameRate()) {
         // 0 means frame rate is variant, so it is wrong to write
         // default_sample_duration.
         MOZ_ASSERT(0);
         default_sample_duration = 0;
       } else {
-        default_sample_duration = mMeta.mVidMeta->VideoFrequency / mMeta.mVidMeta->FrameRate;
+        default_sample_duration = mVideoMeta->GetVideoClockRate() / mVideoMeta->GetVideoFrameRate();
       }
     } else if (mTrackType == Audio_Track) {
-      default_sample_duration = mMeta.mAudMeta->FrameDuration;
+      default_sample_duration = mAudioMeta->GetAudioFrameDuration();
     } else {
       MOZ_ASSERT(0);
       return NS_ERROR_FAILURE;
@@ -304,7 +311,6 @@ TrackFragmentHeaderBox::TrackFragmentHeaderBox(uint32_t aType,
   , default_sample_duration(0)
 {
   mTrackType = aType;
-  mMeta.Init(mControl);
   MOZ_COUNT_CTOR(TrackFragmentHeaderBox);
 }
 
@@ -320,10 +326,12 @@ TrackFragmentBox::TrackFragmentBox(uint32_t aType, ISOControl* aControl)
   // Flags in TrackFragmentHeaderBox.
   uint32_t tf_flags = base_data_offset_present;
 
-  // Audio frame rate should be fixed; otherwise it will cause noise when playback.
-  // So it doesn't need to keep duration of each audio frame in TrackRunBox. It
-  // keeps the default sample duration in TrackFragmentHeaderBox.
-  tf_flags |= (mTrackType & Audio_Track ? default_sample_duration_present : 0);
+  // Ideally, audio encoder generates audio frame in const rate. However, some
+  // audio encoders don't do it so the audio frame duration needs to be checked
+  // here.
+  if ((mTrackType & Audio_Track) && mAudioMeta->GetAudioFrameDuration()) {
+    tf_flags |= default_sample_duration_present;
+  }
 
   boxes.AppendElement(new TrackFragmentHeaderBox(aType, tf_flags, aControl));
 
@@ -429,20 +437,22 @@ MovieFragmentBox::Generate(uint32_t* aBoxSize)
 nsresult
 TrackExtendsBox::Generate(uint32_t* aBoxSize)
 {
-  track_ID = mControl->GetTrackID(mTrackType);
+  track_ID = (mTrackType == Audio_Track ?
+                mControl->GetTrackID(mAudioMeta->GetKind()) :
+                mControl->GetTrackID(mVideoMeta->GetKind()));
 
   if (mTrackType == Audio_Track) {
     default_sample_description_index = 1;
-    default_sample_duration = mMeta.mAudMeta->FrameDuration;
-    default_sample_size = mMeta.mAudMeta->FrameSize;
+    default_sample_duration = mAudioMeta->GetAudioFrameDuration();
+    default_sample_size = mAudioMeta->GetAudioFrameSize();
     default_sample_flags = set_sample_flags(1);
   } else if (mTrackType == Video_Track) {
     default_sample_description_index = 1;
     // Video meta data has assigned framerate, it implies that this video's
     // frame rate should be fixed.
-    if (mMeta.mVidMeta->FrameRate) {
+    if (mVideoMeta->GetVideoFrameRate()) {
       default_sample_duration =
-        mMeta.mVidMeta->VideoFrequency / mMeta.mVidMeta->FrameRate;
+        mVideoMeta->GetVideoClockRate() / mVideoMeta->GetVideoFrameRate();
     }
     default_sample_size = 0;
     default_sample_flags = set_sample_flags(0);
@@ -484,7 +494,6 @@ TrackExtendsBox::TrackExtendsBox(uint32_t aType, ISOControl* aControl)
   , default_sample_flags(0)
   , mTrackType(aType)
 {
-  mMeta.Init(aControl);
   MOZ_COUNT_CTOR(TrackExtendsBox);
 }
 
@@ -496,11 +505,10 @@ TrackExtendsBox::~TrackExtendsBox()
 MovieExtendsBox::MovieExtendsBox(ISOControl* aControl)
   : DefaultContainerImpl(NS_LITERAL_CSTRING("mvex"), aControl)
 {
-  mMeta.Init(aControl);
-  if (mMeta.mAudMeta) {
+  if (mAudioMeta) {
     boxes.AppendElement(new TrackExtendsBox(Audio_Track, aControl));
   }
-  if (mMeta.mVidMeta) {
+  if (mVideoMeta) {
     boxes.AppendElement(new TrackExtendsBox(Video_Track, aControl));
   }
   MOZ_COUNT_CTOR(MovieExtendsBox);
@@ -638,14 +646,41 @@ SampleDescriptionBox::SampleDescriptionBox(uint32_t aType, ISOControl* aControl)
   switch (mTrackType) {
   case Audio_Track:
     {
-      sample_entry_box = new MP4AudioSampleEntry(aControl);
-    } break;
+      CreateAudioSampleEntry(sample_entry_box);
+    }
+    break;
   case Video_Track:
     {
-      sample_entry_box = new AVCSampleEntry(aControl);
-    } break;
+      CreateVideoSampleEntry(sample_entry_box);
+    }
+    break;
   }
+  MOZ_ASSERT(sample_entry_box);
   MOZ_COUNT_CTOR(SampleDescriptionBox);
+}
+
+nsresult
+SampleDescriptionBox::CreateAudioSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry)
+{
+  if (mAudioMeta->GetKind() == TrackMetadataBase::METADATA_AMR) {
+    aSampleEntry = new AMRSampleEntry(mControl);
+  } else if (mAudioMeta->GetKind() == TrackMetadataBase::METADATA_AAC) {
+    aSampleEntry = new MP4AudioSampleEntry(mControl);
+  } else {
+    MOZ_ASSERT(0);
+  }
+  return NS_OK;
+}
+
+nsresult
+SampleDescriptionBox::CreateVideoSampleEntry(nsRefPtr<SampleEntryBox>& aSampleEntry)
+{
+  if (mVideoMeta->GetKind() == TrackMetadataBase::METADATA_AVC) {
+    aSampleEntry = new AVCSampleEntry(mControl);
+  } else {
+    MOZ_ASSERT(0);
+  }
+  return NS_OK;
 }
 
 SampleDescriptionBox::~SampleDescriptionBox()
@@ -943,7 +978,6 @@ MediaHeaderBox::MediaHeaderBox(uint32_t aType, ISOControl* aControl)
   , pre_defined(0)
 {
   mTrackType = aType;
-  mMeta.Init(aControl);
   MOZ_COUNT_CTOR(MediaHeaderBox);
 }
 
@@ -956,10 +990,10 @@ uint32_t
 MediaHeaderBox::GetTimeScale()
 {
   if (mTrackType == Audio_Track) {
-    return mMeta.mAudMeta->SampleRate;
+    return mAudioMeta->GetAudioSampleRate();
   }
 
-  return mMeta.mVidMeta->VideoFrequency;
+  return mVideoMeta->GetVideoClockRate();
 }
 
 nsresult
@@ -1072,12 +1106,13 @@ MovieHeaderBox::Write()
 uint32_t
 MovieHeaderBox::GetTimeScale()
 {
-  if (mMeta.AudioOnly()) {
-    return mMeta.mAudMeta->SampleRate;
+  // Only audio track in container.
+  if (mAudioMeta && !mVideoMeta) {
+    return mAudioMeta->GetAudioSampleRate();
   }
 
   // return video rate
-  return mMeta.mVidMeta->VideoFrequency;
+  return mVideoMeta->GetVideoClockRate();
 }
 
 MovieHeaderBox::~MovieHeaderBox()
@@ -1096,7 +1131,6 @@ MovieHeaderBox::MovieHeaderBox(ISOControl* aControl)
   , reserved16(0)
   , next_track_ID(1)
 {
-  mMeta.Init(aControl);
   memcpy(matrix, iso_matrix, sizeof(matrix));
   memset(reserved32, 0, sizeof(reserved32));
   memset(pre_defined, 0, sizeof(pre_defined));
@@ -1120,7 +1154,6 @@ TrackHeaderBox::TrackHeaderBox(uint32_t aType, ISOControl* aControl)
   , height(0)
 {
   mTrackType = aType;
-  mMeta.Init(aControl);
   memcpy(matrix, iso_matrix, sizeof(matrix));
   memset(reserved2, 0, sizeof(reserved2));
   MOZ_COUNT_CTOR(TrackHeaderBox);
@@ -1136,8 +1169,9 @@ TrackHeaderBox::Generate(uint32_t* aBoxSize)
 {
   creation_time = mControl->GetTime();
   modification_time = mControl->GetTime();
-  track_ID = (mTrackType == Audio_Track ? mControl->GetTrackID(Audio_Track)
-                                        : mControl->GetTrackID(Video_Track));
+  track_ID = (mTrackType == Audio_Track ?
+                mControl->GetTrackID(mAudioMeta->GetKind()) :
+                mControl->GetTrackID(mVideoMeta->GetKind()));
   // fragmented mp4
   duration = 0;
 
@@ -1145,8 +1179,8 @@ TrackHeaderBox::Generate(uint32_t* aBoxSize)
   volume = (mTrackType == Audio_Track ? 0x0100 : 0);
 
   if (mTrackType == Video_Track) {
-    width = mMeta.mVidMeta->Width << 16;
-    height = mMeta.mVidMeta->Height << 16;
+    width = mVideoMeta->GetVideoWidth() << 16;
+    height = mVideoMeta->GetVideoHeight() << 16;
   }
 
   size += sizeof(creation_time) +
@@ -1319,14 +1353,6 @@ DefaultContainerImpl::DefaultContainerImpl(const nsACString& aType,
 }
 
 nsresult
-Box::MetaHelper::Init(ISOControl* aControl)
-{
-  aControl->GetAudioMetadata(mAudMeta);
-  aControl->GetVideoMetadata(mVidMeta);
-  return NS_OK;
-}
-
-nsresult
 Box::Write()
 {
   mControl->Write(size);
@@ -1348,6 +1374,8 @@ Box::Box(const nsACString& aType, ISOControl* aControl)
 {
   MOZ_ASSERT(aType.Length() == 4);
   boxType = aType;
+  aControl->GetAudioMetadata(mAudioMeta);
+  aControl->GetVideoMetadata(mVideoMeta);
 }
 
 FullBox::FullBox(const nsACString& aType, uint8_t aVersion, uint32_t aFlags,
@@ -1390,7 +1418,6 @@ SampleEntryBox::SampleEntryBox(const nsACString& aFormat, ISOControl* aControl)
   data_reference_index = 1; // There is only one data reference in each track.
   size += sizeof(reserved) +
           sizeof(data_reference_index);
-  mMeta.Init(aControl);
   memset(reserved, 0, sizeof(reserved));
 }
 
@@ -1426,10 +1453,9 @@ AudioSampleEntry::AudioSampleEntry(const nsACString& aFormat, ISOControl* aContr
   , packet_size(0)
   , timeScale(0)
 {
-  mMeta.Init(mControl);
   memset(reserved2, 0 , sizeof(reserved2));
-  channels = mMeta.mAudMeta->Channels;
-  timeScale = mMeta.mAudMeta->SampleRate << 16;
+  channels = mAudioMeta->GetAudioChannels();
+  timeScale = mAudioMeta->GetAudioSampleRate() << 16;
 
   size += sizeof(sound_version) +
           sizeof(reserved2) +
@@ -1481,8 +1507,8 @@ VisualSampleEntry::VisualSampleEntry(const nsACString& aFormat, ISOControl* aCon
   memset(compressorName, 0 , sizeof(compressorName));
 
   // both fields occupy 16 bits defined in 14496-2 6.2.3.
-  width = mMeta.mVidMeta->Width;
-  height = mMeta.mVidMeta->Height;
+  width = mVideoMeta->GetVideoWidth();
+  height = mVideoMeta->GetVideoHeight();
 
   size += sizeof(reserved) +
           sizeof(width) +

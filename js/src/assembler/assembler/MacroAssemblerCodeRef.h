@@ -199,13 +199,13 @@ public:
         if (!m_executablePool)
             return;
 
-#if defined DEBUG && (defined WTF_CPU_X86 || defined WTF_CPU_X86_64) 
-        void *addr = m_code.executableAddress();
-        memset(addr, 0xcc, m_allocSize);
-#endif
+        memset(m_code.executableAddress(), JS_FREE_PATTERN, m_allocSize);
+
+        m_code = MacroAssemblerCodePtr();
+
         // MacroAssemblerCodeRef is only used by Yarr.
         m_executablePool->release(m_allocSize, REGEXP_CODE);
-        m_executablePool = NULL;
+        m_executablePool = nullptr;
     }
 
     MacroAssemblerCodePtr code() const {

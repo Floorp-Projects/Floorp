@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfx2DGlue.h"
 #include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGTransformableElement.h"
 #include "mozilla/dom/SVGMatrix.h"
@@ -14,6 +15,8 @@
 #include "mozilla/dom/SVGRect.h"
 #include "nsSVGUtils.h"
 #include "SVGContentUtils.h"
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -183,7 +186,7 @@ SVGTransformableElement::GetBBox(ErrorResult& rv)
     return nullptr;
   }
 
-  return NS_NewSVGRect(this, nsSVGUtils::GetBBox(frame));
+  return NS_NewSVGRect(this, ToRect(nsSVGUtils::GetBBox(frame)));
 }
 
 already_AddRefed<SVGMatrix>

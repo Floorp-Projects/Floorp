@@ -1691,6 +1691,29 @@ CanvasRenderingContext2D::Fill(const CanvasWindingRule& winding)
   Redraw();
 }
 
+void CanvasRenderingContext2D::Fill(const CanvasPath& path, const CanvasWindingRule& winding)
+{
+  EnsureTarget();
+
+  RefPtr<gfx::Path> gfxpath = path.GetPath(winding, mTarget);
+
+  if (!gfxpath) {
+    return;
+  }
+
+  mgfx::Rect bounds;
+
+  if (NeedToDrawShadow()) {
+    bounds = gfxpath->GetBounds(mTarget->GetTransform());
+  }
+
+  AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
+    Fill(gfxpath, CanvasGeneralPattern().ForStyle(this, STYLE_FILL, mTarget),
+         DrawOptions(CurrentState().globalAlpha, UsedOperation()));
+
+  Redraw();
+}
+
 void
 CanvasRenderingContext2D::Stroke()
 {
@@ -1715,6 +1738,37 @@ CanvasRenderingContext2D::Stroke()
 
   AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
     Stroke(mPath, CanvasGeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
+           strokeOptions, DrawOptions(state.globalAlpha, UsedOperation()));
+
+  Redraw();
+}
+
+void
+CanvasRenderingContext2D::Stroke(const CanvasPath& path)
+{
+  EnsureTarget();
+
+  RefPtr<gfx::Path> gfxpath = path.GetPath(CanvasWindingRule::Nonzero, mTarget);
+
+  if (!gfxpath) {
+    return;
+  }
+
+  const ContextState &state = CurrentState();
+
+  StrokeOptions strokeOptions(state.lineWidth, state.lineJoin,
+                              state.lineCap, state.miterLimit,
+                              state.dash.Length(), state.dash.Elements(),
+                              state.dashOffset);
+
+  mgfx::Rect bounds;
+  if (NeedToDrawShadow()) {
+    bounds =
+      gfxpath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
+  }
+
+  AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
+    Stroke(gfxpath, CanvasGeneralPattern().ForStyle(this, STYLE_STROKE, mTarget),
            strokeOptions, DrawOptions(state.globalAlpha, UsedOperation()));
 
   Redraw();
@@ -1798,6 +1852,21 @@ CanvasRenderingContext2D::Clip(const CanvasWindingRule& winding)
 
   mTarget->PushClip(mPath);
   CurrentState().clipsPushed.push_back(mPath);
+}
+
+void
+CanvasRenderingContext2D::Clip(const CanvasPath& path, const CanvasWindingRule& winding)
+{
+  EnsureTarget();
+
+  RefPtr<gfx::Path> gfxpath = path.GetPath(winding, mTarget);
+
+  if (!gfxpath) {
+    return;
+  }
+
+  mTarget->PushClip(gfxpath);
+  CurrentState().clipsPushed.push_back(gfxpath);
 }
 
 void
@@ -4224,6 +4293,213 @@ bool
 CanvasRenderingContext2D::ShouldForceInactiveLayer(LayerManager *aManager)
 {
   return !aManager->CanUseCanvasLayerForSize(IntSize(mWidth, mHeight));
+}
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(CanvasPath, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CanvasPath, Release)
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(CanvasPath)
+
+CanvasPath::CanvasPath(nsCOMPtr<nsISupports> aParent) : mParent(aParent)
+{
+  SetIsDOMBinding();
+
+  mPathBuilder = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreatePathBuilder();
+}
+
+CanvasPath::CanvasPath(nsCOMPtr<nsISupports> aParent, RefPtr<PathBuilder> aPathBuilder): mParent(aParent), mPathBuilder(aPathBuilder)
+{
+  SetIsDOMBinding();
+
+  if (!mPathBuilder) {
+    mPathBuilder = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()->CreatePathBuilder();
+  }
+}
+
+JSObject*
+CanvasPath::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return Path2DBinding::Wrap(aCx, aScope, this);
+}
+
+already_AddRefed<CanvasPath>
+CanvasPath::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
+{
+  nsRefPtr<CanvasPath> path = new CanvasPath(aGlobal.GetAsSupports());
+  return path.forget();
+}
+
+already_AddRefed<CanvasPath>
+CanvasPath::Constructor(const GlobalObject& aGlobal, CanvasPath& aCanvasPath, ErrorResult& aRv)
+{
+  RefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(CanvasWindingRule::Nonzero,
+                                                   gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+
+  nsRefPtr<CanvasPath> path = new CanvasPath(aGlobal.GetAsSupports(), tempPath->CopyToBuilder());
+  return path.forget();
+}
+
+void
+CanvasPath::ClosePath()
+{
+  mPathBuilder->Close();
+}
+
+void
+CanvasPath::MoveTo(double x, double y)
+{
+  mPathBuilder->MoveTo(Point(ToFloat(x), ToFloat(y)));
+}
+
+void
+CanvasPath::LineTo(double x, double y)
+{
+  mPathBuilder->LineTo(Point(ToFloat(x), ToFloat(y)));
+}
+
+void
+CanvasPath::QuadraticCurveTo(double cpx, double cpy, double x, double y)
+{
+  mPathBuilder->QuadraticBezierTo(gfx::Point(ToFloat(cpx), ToFloat(cpy)),
+                                  gfx::Point(ToFloat(x), ToFloat(y)));
+}
+
+void
+CanvasPath::BezierCurveTo(double cp1x, double cp1y,
+                          double cp2x, double cp2y,
+                          double x, double y)
+{
+  BezierTo(gfx::Point(ToFloat(cp1x), ToFloat(cp1y)),
+             gfx::Point(ToFloat(cp2x), ToFloat(cp2y)),
+             gfx::Point(ToFloat(x), ToFloat(y)));
+}
+
+void
+CanvasPath::ArcTo(double x1, double y1, double x2, double y2, double radius,
+                  ErrorResult& error)
+{
+  if (radius < 0) {
+    error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  // Current point in user space!
+  Point p0 = mPathBuilder->CurrentPoint();
+  Point p1(x1, y1);
+  Point p2(x2, y2);
+
+  // Execute these calculations in double precision to avoid cumulative
+  // rounding errors.
+  double dir, a2, b2, c2, cosx, sinx, d, anx, any,
+         bnx, bny, x3, y3, x4, y4, cx, cy, angle0, angle1;
+  bool anticlockwise;
+
+  if (p0 == p1 || p1 == p2 || radius == 0) {
+    LineTo(p1.x, p1.y);
+    return;
+  }
+
+  // Check for colinearity
+  dir = (p2.x - p1.x) * (p0.y - p1.y) + (p2.y - p1.y) * (p1.x - p0.x);
+  if (dir == 0) {
+    LineTo(p1.x, p1.y);
+    return;
+  }
+
+
+  // XXX - Math for this code was already available from the non-azure code
+  // and would be well tested. Perhaps converting to bezier directly might
+  // be more efficient longer run.
+  a2 = (p0.x-x1)*(p0.x-x1) + (p0.y-y1)*(p0.y-y1);
+  b2 = (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2);
+  c2 = (p0.x-x2)*(p0.x-x2) + (p0.y-y2)*(p0.y-y2);
+  cosx = (a2+b2-c2)/(2*sqrt(a2*b2));
+
+  sinx = sqrt(1 - cosx*cosx);
+  d = radius / ((1 - cosx) / sinx);
+
+  anx = (x1-p0.x) / sqrt(a2);
+  any = (y1-p0.y) / sqrt(a2);
+  bnx = (x1-x2) / sqrt(b2);
+  bny = (y1-y2) / sqrt(b2);
+  x3 = x1 - anx*d;
+  y3 = y1 - any*d;
+  x4 = x1 - bnx*d;
+  y4 = y1 - bny*d;
+  anticlockwise = (dir < 0);
+  cx = x3 + any*radius*(anticlockwise ? 1 : -1);
+  cy = y3 - anx*radius*(anticlockwise ? 1 : -1);
+  angle0 = atan2((y3-cy), (x3-cx));
+  angle1 = atan2((y4-cy), (x4-cx));
+
+
+  LineTo(x3, y3);
+
+  Arc(cx, cy, radius, angle0, angle1, anticlockwise, error);
+}
+
+void
+CanvasPath::Rect(double x, double y, double w, double h)
+{
+  MoveTo(x, y);
+  LineTo(x + w, y);
+  LineTo(x + w, y + h);
+  LineTo(x, y + h);
+  ClosePath();
+}
+
+void
+CanvasPath::Arc(double x, double y, double radius,
+                double startAngle, double endAngle, bool anticlockwise,
+                ErrorResult& error)
+{
+  if (radius < 0.0) {
+    error.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  ArcToBezier(this, Point(x, y), Size(radius, radius), startAngle, endAngle, anticlockwise);
+}
+
+void
+CanvasPath::LineTo(const gfx::Point& aPoint)
+{
+  mPathBuilder->LineTo(aPoint);
+}
+
+void
+CanvasPath::BezierTo(const gfx::Point& aCP1,
+                     const gfx::Point& aCP2,
+                     const gfx::Point& aCP3)
+{
+  mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
+}
+
+RefPtr<gfx::Path>
+CanvasPath::GetPath(const CanvasWindingRule& winding, const mozilla::RefPtr<mozilla::gfx::DrawTarget>& mTarget) const
+{
+  FillRule fillRule = FillRule::FILL_WINDING;
+  if (winding == CanvasWindingRule::Evenodd) {
+    fillRule = FillRule::FILL_EVEN_ODD;
+  }
+
+  RefPtr<Path> mTempPath = mPathBuilder->Finish();
+  if (!mTempPath)
+    return mTempPath;
+
+  // retarget our backend if we're used with a different backend
+  if (mTempPath->GetBackendType() != mTarget->GetType()) {
+    mPathBuilder = mTarget->CreatePathBuilder(fillRule);
+    mTempPath->StreamToSink(mPathBuilder);
+    mTempPath = mPathBuilder->Finish();
+  } else if (mTempPath->GetFillRule() != fillRule) {
+    mPathBuilder = mTempPath->CopyToBuilder(fillRule);
+    mTempPath = mPathBuilder->Finish();
+  }
+
+  mPathBuilder = mTempPath->CopyToBuilder();
+
+  return mTempPath;
 }
 
 }
