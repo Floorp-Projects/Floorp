@@ -5,10 +5,16 @@
 
 package org.mozilla.gecko;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.SynchronousQueue;
+
 import org.mozilla.gecko.gfx.InputConnectionHandler;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.R;
 import android.content.Context;
@@ -32,11 +38,6 @@ import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.concurrent.SynchronousQueue;
 
 class GeckoInputConnection
     extends BaseInputConnection
@@ -115,7 +116,7 @@ class GeckoInputConnection
 
         public void waitForUiThread(Handler icHandler) {
             if (DEBUG) {
-                ThreadUtils.assertOnThread(icHandler.getLooper().getThread());
+                ThreadUtils.assertOnThread(icHandler.getLooper().getThread(), AssertBehavior.THROW);
                 Log.d(LOGTAG, "waitForUiThread() blocking on thread " +
                               icHandler.getLooper().getThread().getName());
             }
@@ -154,7 +155,7 @@ class GeckoInputConnection
         public Editable getEditableForUiThread(final Handler uiHandler,
                                                final GeckoEditableClient client) {
             if (DEBUG) {
-                ThreadUtils.assertOnThread(uiHandler.getLooper().getThread());
+                ThreadUtils.assertOnThread(uiHandler.getLooper().getThread(), AssertBehavior.THROW);
             }
             final Handler icHandler = client.getInputConnectionHandler();
             if (icHandler.getLooper() == uiHandler.getLooper()) {
@@ -171,7 +172,7 @@ class GeckoInputConnection
                                                final Method method,
                                                final Object[] args) throws Throwable {
                     if (DEBUG) {
-                        ThreadUtils.assertOnThread(uiHandler.getLooper().getThread());
+                        ThreadUtils.assertOnThread(uiHandler.getLooper().getThread(), AssertBehavior.THROW);
                         Log.d(LOGTAG, "UiEditable." + method.getName() + "() blocking");
                     }
                     synchronized (icHandler) {
