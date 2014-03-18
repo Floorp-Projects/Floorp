@@ -1192,6 +1192,28 @@ TabParent::GetChildProcessOffset()
            pt, targetFrame->PresContext()->AppUnitsPerDevPixel()));
 }
 
+bool
+TabParent::RecvReplyKeyEvent(const WidgetKeyboardEvent& event)
+{
+  NS_ENSURE_TRUE(mFrameElement, true);
+
+  WidgetKeyboardEvent localEvent(event);
+  // Set mNoCrossProcessBoundaryForwarding to avoid this event from
+  // being infinitely redispatched and forwarded to the child again.
+  localEvent.mFlags.mNoCrossProcessBoundaryForwarding = true;
+
+  // Here we convert the WidgetEvent that we received to an nsIDOMEvent
+  // to be able to dispatch it to the <browser> element as the target element.
+  nsIDocument* doc = mFrameElement->OwnerDoc();
+  nsIPresShell* presShell = doc->GetShell();
+  NS_ENSURE_TRUE(presShell, true);
+  nsPresContext* presContext = presShell->GetPresContext();
+  NS_ENSURE_TRUE(presContext, true);
+
+  nsEventDispatcher::Dispatch(mFrameElement, presContext, &localEvent);
+  return true;
+}
+
 /**
  * Try to answer query event using cached text.
  *
