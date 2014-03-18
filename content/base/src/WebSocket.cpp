@@ -17,7 +17,6 @@
 #include "nsIXPConnect.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsEventDispatcher.h"
 #include "nsError.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURL.h"

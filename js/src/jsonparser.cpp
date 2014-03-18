@@ -572,9 +572,9 @@ JSONParser::createFinishedObject(PropertyVector &properties)
      * Look for an existing cached type and shape for objects with this set of
      * properties.
      */
-    if (cx->typeInferenceEnabled()) {
+    {
         JSObject *obj = cx->compartment()->types.newTypedObject(cx, properties.begin(),
-                                                              properties.length());
+                                                                properties.length());
         if (obj)
             return obj;
     }
@@ -605,8 +605,7 @@ JSONParser::createFinishedObject(PropertyVector &properties)
      * properties, and update the initializer type object cache with this
      * object's final shape.
      */
-    if (cx->typeInferenceEnabled())
-        cx->compartment()->types.fixObjectType(cx, obj);
+    cx->compartment()->types.fixObjectType(cx, obj);
 
     return obj;
 }
@@ -637,8 +636,7 @@ JSONParser::finishArray(MutableHandleValue vp, ElementVector &elements)
         return false;
 
     /* Try to assign a new type to the array according to its elements. */
-    if (cx->typeInferenceEnabled())
-        cx->compartment()->types.fixArrayType(cx, obj);
+    cx->compartment()->types.fixArrayType(cx, obj);
 
     vp.setObject(*obj);
     if (!freeElements.append(&elements))

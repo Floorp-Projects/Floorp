@@ -278,7 +278,6 @@ struct Zone : public JS::shadow::Zone,
 
     Zone(JSRuntime *rt);
     ~Zone();
-    bool init(JSContext *cx);
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 

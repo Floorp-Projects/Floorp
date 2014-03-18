@@ -30,6 +30,10 @@
 class nsIThread;
 class nsPIDOMWindow;
 
+namespace mozilla {
+class EventChainPreVisitor;
+} // namespace mozilla
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
@@ -98,7 +102,7 @@ public:
   }
 
   // nsIDOMEventTarget
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   void OnNewRequest();
   void OnRequestFinished();

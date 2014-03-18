@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
@@ -63,7 +64,6 @@
 #include "imgIContainer.h"
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
-#include "nsEventDispatcher.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsITimer.h"
@@ -1966,8 +1966,8 @@ nsEventStateManager::FireContextClick()
       AutoHandlingUserInputStatePusher userInpStatePusher(true, &event, doc);
 
       // dispatch to DOM
-      nsEventDispatcher::Dispatch(mGestureDownContent, mPresContext, &event,
-                                  nullptr, &status);
+      EventDispatcher::Dispatch(mGestureDownContent, mPresContext, &event,
+                                nullptr, &status);
 
       // We don't need to dispatch to frame handling because no frames
       // watch NS_CONTEXTMENU except for nsMenuFrame and that's only for
@@ -2174,14 +2174,14 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       // elements in an editor, only fire the draggesture event so that the
       // editor code can handle it but content doesn't see a dragstart.
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEventDispatcher::Dispatch(targetContent, aPresContext, &startEvent, nullptr,
-                                  &status);
+      EventDispatcher::Dispatch(targetContent, aPresContext, &startEvent,
+                                nullptr, &status);
 
       WidgetDragEvent* event = &startEvent;
       if (status != nsEventStatus_eConsumeNoDefault) {
         status = nsEventStatus_eIgnore;
-        nsEventDispatcher::Dispatch(targetContent, aPresContext, &gestureEvent, nullptr,
-                                    &status);
+        EventDispatcher::Dispatch(targetContent, aPresContext, &gestureEvent,
+                                  nullptr, &status);
         event = &gestureEvent;
       }
 
@@ -2710,8 +2710,8 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.inputSource = aEvent->inputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(),
-                              &event, nullptr, &status);
+  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(),
+                            &event, nullptr, &status);
   aState.mDefaultPrevented =
     event.mFlags.mDefaultPrevented || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.mFlags.mDefaultPreventedByContent;
@@ -2749,8 +2749,8 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.inputSource = aEvent->inputSource;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(),
-                              &event, nullptr, &status);
+  EventDispatcher::Dispatch(targetContent, aTargetFrame->PresContext(),
+                            &event, nullptr, &status);
   aState.mDefaultPrevented =
     event.mFlags.mDefaultPrevented || status == nsEventStatus_eConsumeNoDefault;
   aState.mDefaultPreventedByContent = event.mFlags.mDefaultPreventedByContent;
@@ -4033,12 +4033,12 @@ nsEventStateManager::SetCursor(int32_t aCursor, imgIContainer* aContainer,
   return NS_OK;
 }
 
-class MOZ_STACK_CLASS nsESMEventCB : public nsDispatchingCallback
+class MOZ_STACK_CLASS nsESMEventCB : public EventDispatchingCallback
 {
 public:
   nsESMEventCB(nsIContent* aTarget) : mTarget(aTarget) {}
 
-  virtual void HandleEvent(nsEventChainPostVisitor& aVisitor)
+  virtual void HandleEvent(EventChainPostVisitor& aVisitor)
   {
     if (aVisitor.mPresContext) {
       nsIFrame* frame = aVisitor.mPresContext->GetPrimaryFrameFor(mTarget);
@@ -4128,8 +4128,8 @@ nsEventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   nsIFrame* targetFrame = nullptr;
   if (aTargetContent) {
     nsESMEventCB callback(aTargetContent);
-    nsEventDispatcher::Dispatch(aTargetContent, mPresContext, event, nullptr,
-                                &status, &callback);
+    EventDispatcher::Dispatch(aTargetContent, mPresContext, event, nullptr,
+                              &status, &callback);
 
     // Although the primary frame was checked in event callback, 
     // it may not be the same object after event dispatching and handling.
@@ -4649,9 +4649,10 @@ nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
 
   if (aTargetContent != aRelatedTarget) {
     //XXX This event should still go somewhere!!
-    if (aTargetContent)
-      nsEventDispatcher::Dispatch(aTargetContent, aPresContext, &event,
-                                  nullptr, &status);
+    if (aTargetContent) {
+      EventDispatcher::Dispatch(aTargetContent, aPresContext, &event,
+                                nullptr, &status);
+    }
 
     // adjust the drag hover if the dragenter event was cancelled or this is a drag exit
     if (status == nsEventStatus_eConsumeNoDefault || aMsg == NS_DRAGDROP_EXIT)

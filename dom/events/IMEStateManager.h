@@ -9,7 +9,6 @@
 #include "mozilla/EventForwards.h"
 #include "nsIWidget.h"
 
-class nsDispatchingCallback;
 class nsIContent;
 class nsIDOMMouseEvent;
 class nsINode;
@@ -19,6 +18,7 @@ class nsISelection;
 
 namespace mozilla {
 
+class EventDispatchingCallback;
 class IMEContentObserver;
 class TextCompositionArray;
 class TextComposition;
@@ -94,7 +94,7 @@ public:
                                        nsPresContext* aPresContext,
                                        WidgetEvent* aEvent,
                                        nsEventStatus* aStatus,
-                                       nsDispatchingCallback* aCallBack);
+                                       EventDispatchingCallback* aCallBack);
 
   /**
    * Get TextComposition from widget.

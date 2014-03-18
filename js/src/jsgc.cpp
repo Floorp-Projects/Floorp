@@ -2857,7 +2857,7 @@ static bool
 ShouldPreserveJITCode(JSCompartment *comp, int64_t currentTime)
 {
     JSRuntime *rt = comp->runtimeFromMainThread();
-    if (rt->gcShouldCleanUpEverything || !comp->zone()->types.inferenceEnabled)
+    if (rt->gcShouldCleanUpEverything)
         return false;
 
     if (rt->alwaysPreserveCode)
@@ -5112,9 +5112,6 @@ js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals,
             return nullptr;
 
         zoneHolder.reset(zone);
-
-        if (!zone->init(cx))
-            return nullptr;
 
         zone->setGCLastBytes(8192, GC_NORMAL);
 

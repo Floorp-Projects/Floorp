@@ -1355,6 +1355,18 @@ struct nsCSSValueTokenStream {
   uint32_t mLineNumber;
   uint32_t mLineOffset;
 
+  // This table is used to hold a reference on to any ImageValue that results
+  // from re-parsing this token stream at computed value time.  When properties
+  // like background-image contain a normal url(), the Declaration's data block
+  // will hold a reference to the ImageValue.  When a token stream is used,
+  // the Declaration only holds on to this nsCSSValueTokenStream object, and
+  // the ImageValue would only exist for the duration of
+  // nsRuleNode::WalkRuleTree, in the AutoCSSValueArray.  So instead when
+  // we re-parse a token stream and get an ImageValue, we record it in this
+  // table so that the Declaration can be the object that keeps holding
+  // a reference to it.
+  nsTHashtable<nsRefPtrHashKey<mozilla::css::ImageValue> > mImageValues;
+
 private:
   nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
   nsCSSValueTokenStream& operator=(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
@@ -1458,17 +1470,34 @@ struct nsCSSGridNamedArea {
 };
 
 struct nsCSSValueGridTemplateAreas {
-  nsTArray<nsCSSGridNamedArea> mNamedAreas; // Parsed value
-  nsTArray<nsString> mTemplates;  // Original <string> values, for serialization
+  // Parsed value
+  nsTArray<nsCSSGridNamedArea> mNamedAreas;
+
+  // Original <string> values. Length gives the number of rows,
+  // content makes serialization easier.
+  nsTArray<nsString> mTemplates;
+
+  // How many columns grid-template-areas contributes to the explicit grid.
+  // http://dev.w3.org/csswg/css-grid/#explicit-grid
+  uint32_t mNColumns;
+
+  // How many rows grid-template-areas contributes to the explicit grid.
+  // http://dev.w3.org/csswg/css-grid/#explicit-grid
+  uint32_t NRows() const {
+    return mTemplates.Length();
+  }
 
   nsCSSValueGridTemplateAreas()
+    : mNColumns(0)
+    // Default constructors for mNamedAreas and mTemplates: empty arrays.
   {
   }
 
-  nsCSSValueGridTemplateAreas(const nsCSSValueGridTemplateAreas& aOther)
-    : mNamedAreas(aOther.mNamedAreas)
-    , mTemplates(aOther.mTemplates)
+  void Reset()
   {
+    mNamedAreas.Clear();
+    mTemplates.Clear();
+    mNColumns = 0;
   }
 
   void AppendToString(nsCSSProperty aProperty, nsAString& aResult,

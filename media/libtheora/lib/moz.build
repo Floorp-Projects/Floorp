@@ -78,5 +78,5 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['THEORA_DISABLE_ENCODE'] = True
 
 # Suppress warnings in third-party code.
-if CONFIG['OS_TARGET'] == 'Darwin':
+if CONFIG['CLANG_CXX']:
     CFLAGS += ['-Wno-tautological-compare']

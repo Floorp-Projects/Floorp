@@ -242,7 +242,8 @@ struct IonScript
 
     // Offset from the start of the code buffer to its snapshot buffer.
     uint32_t snapshots_;
-    uint32_t snapshotsSize_;
+    uint32_t snapshotsListSize_;
+    uint32_t snapshotsRVATableSize_;
 
     // Constant table for constants stored in snapshots.
     uint32_t constantTable_;
@@ -337,8 +338,9 @@ struct IonScript
 
     static IonScript *New(JSContext *cx, types::RecompileInfo recompileInfo,
                           uint32_t frameLocals, uint32_t frameSize,
-                          size_t snapshotsSize, size_t snapshotEntries,
-                          size_t constants, size_t safepointIndexEntries, size_t osiIndexEntries,
+                          size_t snapshotsListSize, size_t snapshotsRVATableSize,
+                          size_t bailoutEntries, size_t constants,
+                          size_t safepointIndexEntries, size_t osiIndexEntries,
                           size_t cacheEntries, size_t runtimeSize, size_t safepointsSize,
                           size_t callTargetEntries, size_t backedgeEntries,
                           OptimizationLevel optimizationLevel);
@@ -446,8 +448,11 @@ struct IonScript
     const uint8_t *snapshots() const {
         return reinterpret_cast<const uint8_t *>(this) + snapshots_;
     }
-    size_t snapshotsSize() const {
-        return snapshotsSize_;
+    size_t snapshotsListSize() const {
+        return snapshotsListSize_;
+    }
+    size_t snapshotsRVATableSize() const {
+        return snapshotsRVATableSize_;
     }
     const uint8_t *safepoints() const {
         return reinterpret_cast<const uint8_t *>(this) + safepointsStart_;
