@@ -244,7 +244,7 @@ void
 HTMLVideoElement::NotifyOwnerDocumentActivityChanged()
 {
   HTMLMediaElement::NotifyOwnerDocumentActivityChanged();
-  UpdateScreenWakeLock();
+  WakeLockUpdate();
 }
 
 already_AddRefed<VideoPlaybackQuality>
@@ -281,19 +281,17 @@ HTMLVideoElement::GetVideoPlaybackQuality()
 void
 HTMLVideoElement::WakeLockCreate()
 {
-  HTMLMediaElement::WakeLockCreate();
-  UpdateScreenWakeLock();
+  WakeLockUpdate();
 }
 
 void
 HTMLVideoElement::WakeLockRelease()
 {
-  UpdateScreenWakeLock();
-  HTMLMediaElement::WakeLockRelease();
+  WakeLockUpdate();
 }
 
 void
-HTMLVideoElement::UpdateScreenWakeLock()
+HTMLVideoElement::WakeLockUpdate()
 {
   bool hidden = OwnerDoc()->Hidden();
 
