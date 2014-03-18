@@ -1470,17 +1470,34 @@ struct nsCSSGridNamedArea {
 };
 
 struct nsCSSValueGridTemplateAreas {
-  nsTArray<nsCSSGridNamedArea> mNamedAreas; // Parsed value
-  nsTArray<nsString> mTemplates;  // Original <string> values, for serialization
+  // Parsed value
+  nsTArray<nsCSSGridNamedArea> mNamedAreas;
+
+  // Original <string> values. Length gives the number of rows,
+  // content makes serialization easier.
+  nsTArray<nsString> mTemplates;
+
+  // How many columns grid-template-areas contributes to the explicit grid.
+  // http://dev.w3.org/csswg/css-grid/#explicit-grid
+  uint32_t mNColumns;
+
+  // How many rows grid-template-areas contributes to the explicit grid.
+  // http://dev.w3.org/csswg/css-grid/#explicit-grid
+  uint32_t NRows() const {
+    return mTemplates.Length();
+  }
 
   nsCSSValueGridTemplateAreas()
+    : mNColumns(0)
+    // Default constructors for mNamedAreas and mTemplates: empty arrays.
   {
   }
 
-  nsCSSValueGridTemplateAreas(const nsCSSValueGridTemplateAreas& aOther)
-    : mNamedAreas(aOther.mNamedAreas)
-    , mTemplates(aOther.mTemplates)
+  void Reset()
   {
+    mNamedAreas.Clear();
+    mTemplates.Clear();
+    mNColumns = 0;
   }
 
   void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
