@@ -100,7 +100,7 @@
   <project name="quic/lf/b2g/external/jsmin" path="external/jsmin" revision="cec896f0affaa0226c02605ad28d42df1bc0e393"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="d13aaf080177b7c48f243d51827db5c7a7873cd0"/>
   <project name="platform/vendor/qcom/msm7627a" path="device/qcom/msm7627a" revision="f06bcacc6f13cec895dc5d4c2385c076396194ec"/>
-  <project name="android-device-hamachi" path="device/qcom/hamachi" remote="b2g" revision="9071ac8f0830979fe4a96ce47c7443d8adf0929d"/>
+  <project name="android-device-hamachi" path="device/qcom/hamachi" remote="b2g" revision="a9b1bbfb55c2b28e884a367f89855e31d86a328a"/>
   <project name="kernel/msm" path="kernel" revision="a6578b9cacf9079f2dcf5bfe77c31b1be18809e3"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="19933e5d182a4799c6217b19a18562193a419298"/>
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="5a58382180c70d0c446badc9c9837918ab69ec60"/>
