@@ -654,6 +654,99 @@ private:
   nsRefPtr<gl::GLContext> mGL;
 };
 
+#ifdef MOZ_WIDGET_GONK
+
+// For direct texturing with gralloc buffers. The corresponding DeprecatedTextureClient is DeprecatedTextureClientShmem,
+// which automatically gets gralloc when it can, in which case the compositor sees that the
+// SurfaceDescriptor is gralloc, and decides to use a GrallocDeprecatedTextureHostOGL to do direct texturing,
+// saving the cost of a texture upload.
+class GrallocDeprecatedTextureHostOGL
+  : public DeprecatedTextureHost
+  , public TextureSourceOGL
+{
+public:
+  GrallocDeprecatedTextureHostOGL();
+
+  ~GrallocDeprecatedTextureHostOGL();
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  virtual void UpdateImpl(const SurfaceDescriptor& aImage,
+                          nsIntRegion* aRegion = nullptr,
+                          nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
+  virtual void SwapTexturesImpl(const SurfaceDescriptor& aImage,
+                          nsIntRegion* aRegion = nullptr) MOZ_OVERRIDE;
+  virtual bool Lock() MOZ_OVERRIDE;
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
+  {
+    return mGraphicBuffer.get() ? gfx::IntSize(mGraphicBuffer->getWidth(), mGraphicBuffer->getHeight()) : gfx::IntSize(0, 0);
+  }
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+
+  GLenum GetWrapMode() const MOZ_OVERRIDE
+  {
+    return LOCAL_GL_CLAMP_TO_EDGE;
+  }
+
+  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE
+  {
+    return mTextureTarget;
+  }
+
+  bool IsValid() const MOZ_OVERRIDE;
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
+
+  virtual const char* Name() { return "GrallocDeprecatedTextureHostOGL"; }
+
+  void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE;
+
+  virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
+  // only overridden for hacky fix in gecko 23 for bug 862324
+  // see bug 865908 about fixing this.
+  virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator) MOZ_OVERRIDE;
+
+  // used only for hacky fix in gecko 23 for bug 862324
+  virtual void ForgetBuffer()
+  {
+    if (mBuffer) {
+      // Intentionally don't destroy the actor held by mBuffer here.
+      // The point is that this is only called from GrallocBufferActor::ActorDestroy
+      // where we know that the actor is already being deleted.
+      // See bug 862324 comment 39.
+      delete mBuffer;
+      mBuffer = nullptr;
+    }
+
+    mGraphicBuffer = nullptr;
+    DeleteTextures();
+  }
+
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+
+  GLuint GetGLTexture();
+
+private:
+  gl::GLContext* gl() const;
+
+  void DeleteTextures();
+
+  RefPtr<CompositorOGL> mCompositor;
+  android::sp<android::GraphicBuffer> mGraphicBuffer;
+  GLenum mTextureTarget;
+  EGLImage mEGLImage;
+  //Set when the composer needs to swap RB pixels of gralloc buffer
+  bool mIsRBSwapped;
+};
+#endif
+
 } // namespace
 } // namespace
 
