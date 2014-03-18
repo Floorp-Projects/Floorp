@@ -168,23 +168,16 @@ class ObjectElements
   public:
     enum Flags {
         CONVERT_DOUBLE_ELEMENTS     = 0x1,
-        ASMJS_ARRAY_BUFFER          = 0x2,
-        NEUTERED_BUFFER             = 0x4,
-        SHARED_ARRAY_BUFFER         = 0x8,
 
         // Present only if these elements correspond to an array with
         // non-writable length; never present for non-arrays.
-        NONWRITABLE_ARRAY_LENGTH    = 0x10
+        NONWRITABLE_ARRAY_LENGTH    = 0x2
     };
 
   private:
     friend class ::JSObject;
     friend class ObjectImpl;
     friend class ArrayObject;
-    friend class ArrayBufferObject;
-    friend class ArrayBufferViewObject;
-    friend class SharedArrayBufferObject;
-    friend class TypedArrayObject;
     friend class Nursery;
 
     template <ExecutionMode mode>
@@ -230,24 +223,6 @@ class ObjectElements
     }
     void clearShouldConvertDoubleElements() {
         flags &= ~CONVERT_DOUBLE_ELEMENTS;
-    }
-    bool isAsmJSArrayBuffer() const {
-        return flags & ASMJS_ARRAY_BUFFER;
-    }
-    void setIsAsmJSArrayBuffer() {
-        flags |= ASMJS_ARRAY_BUFFER;
-    }
-    bool isNeuteredBuffer() const {
-        return flags & NEUTERED_BUFFER;
-    }
-    void setIsNeuteredBuffer() {
-        flags |= NEUTERED_BUFFER;
-    }
-    bool isSharedArrayBuffer() const {
-        return flags & SHARED_ARRAY_BUFFER;
-    }
-    void setIsSharedArrayBuffer() {
-        flags |= SHARED_ARRAY_BUFFER;
     }
     bool hasNonwritableArrayLength() const {
         return flags & NONWRITABLE_ARRAY_LENGTH;
@@ -1038,9 +1013,6 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp)
     return reinterpret_cast<ObjectImpl*>(&v.toObject())->compartment() == comp;
 }
 #endif
-
-extern JSObject *
-ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj);
 
 } /* namespace js */
 

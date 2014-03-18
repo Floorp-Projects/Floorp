@@ -383,20 +383,6 @@ js::ObjectImpl::markChildren(JSTracer *trc)
     }
 }
 
-JSObject *
-js::ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
-{
-    MOZ_ASSERT(obj->hasClass(&ArrayBufferObject::class_) ||
-               obj->hasClass(&SharedArrayBufferObject::class_));
-
-    if (obj->getPrivate())
-        return static_cast<JSObject *>(obj->getPrivate());
-    JSObject *delegate = NewObjectWithGivenProto(cx, &JSObject::class_,
-                                                 obj->getTaggedProto(), nullptr);
-    obj->setPrivateGCThing(delegate);
-    return delegate;
-}
-
 void
 AutoPropDescRooter::trace(JSTracer *trc)
 {
