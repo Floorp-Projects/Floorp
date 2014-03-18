@@ -1765,7 +1765,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   cache->SetPreservingWrapper(preserving);
 
   if (propertyHolder) {
-    JSObject* copyTo;
+    JS::Rooted<JSObject*> copyTo(aCx);
     if (isProxy) {
       copyTo = DOMProxyHandler::EnsureExpandoObject(aCx, aObj);
     } else {

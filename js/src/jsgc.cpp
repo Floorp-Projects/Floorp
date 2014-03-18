@@ -3001,7 +3001,7 @@ BeginMarkPhase(JSRuntime *rt)
     }
 
     for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
-        JS_ASSERT(!c->gcLiveArrayBuffers);
+        JS_ASSERT(c->gcLiveArrayBuffers.empty());
         c->marked = false;
         if (ShouldPreserveJITCode(c, currentTime))
             c->zone()->setPreservingCode(true);
@@ -4253,7 +4253,7 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
 #ifdef DEBUG
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         JS_ASSERT(!c->gcIncomingGrayPointers);
-        JS_ASSERT(!c->gcLiveArrayBuffers);
+        JS_ASSERT(c->gcLiveArrayBuffers.empty());
 
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             if (e.front().key().kind != CrossCompartmentKey::StringWrapper)
@@ -4468,7 +4468,7 @@ ResetIncrementalGC(JSRuntime *rt, const char *reason)
 
 #ifdef DEBUG
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-        JS_ASSERT(!c->gcLiveArrayBuffers);
+        JS_ASSERT(c->gcLiveArrayBuffers.empty());
 
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         JS_ASSERT(!zone->needsBarrier());
