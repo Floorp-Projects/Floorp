@@ -1185,8 +1185,14 @@ OomVictimLogger::Observe(
     for (size_t i = 0; i < regex_count; i++) {
       int matching = !regexec(&(mRegexes[i]), line_begin, 0, NULL, 0);
       if (matching) {
-        // Log content of kernel message
-        line_begin = strchr(line_begin, ']') + 2;
+        // Log content of kernel message. We try to skip the ], but if for
+        // some reason (most likely due to buffer overflow/wraparound), we
+        // can't find the ] then we just log the entire line.
+        char* endOfTimestamp = strchr(line_begin, ']');
+        if (endOfTimestamp && endOfTimestamp[1] == ' ') {
+          // skip the ] and the space that follows it
+          line_begin = endOfTimestamp + 2;
+        }
         if (!lineTimestampFound) {
           OOM_LOG(ANDROID_LOG_WARN, "following kill message may be a duplicate");
         }
