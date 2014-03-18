@@ -30,7 +30,6 @@
 #include "nsNetCID.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsHashtable.h"
 #include "nsCRT.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
@@ -77,7 +76,6 @@ nsresult
 nsOSHelperAppService::UnescapeCommand(const nsAString& aEscapedCommand,
                                       const nsAString& aMajorType,
                                       const nsAString& aMinorType,
-                                      nsHashtable& aTypeOptions,
                                       nsACString& aUnEscapedCommand) {
   LOG(("-- UnescapeCommand"));
   LOG(("Command to escape: '%s'\n",
@@ -838,7 +836,6 @@ nsOSHelperAppService::ParseNormalMIMETypesEntry(const nsAString& aEntry,
 nsresult
 nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
                                                   const nsAString& aMinorType,
-                                                  nsHashtable& aTypeOptions,
                                                   nsAString& aHandler,
                                                   nsAString& aDescription,
                                                   nsAString& aMozillaFlags) {
@@ -852,7 +849,6 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
   // in that order.  We want to pick up "soffice" for text/rtf in such cases
   nsresult rv = DoLookUpHandlerAndDescription(aMajorType,
                                               aMinorType,
-                                              aTypeOptions,
                                               aHandler,
                                               aDescription,
                                               aMozillaFlags,
@@ -860,7 +856,6 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
   if (NS_FAILED(rv)) {
     rv = DoLookUpHandlerAndDescription(aMajorType,
                                        aMinorType,
-                                       aTypeOptions,
                                        aHandler,
                                        aDescription,
                                        aMozillaFlags,
@@ -871,7 +866,6 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
   if (NS_FAILED(rv)) {
     rv = DoLookUpHandlerAndDescription(aMajorType,
                                        NS_LITERAL_STRING("*"),
-                                       aTypeOptions,
                                        aHandler,
                                        aDescription,
                                        aMozillaFlags,
@@ -881,7 +875,6 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
   if (NS_FAILED(rv)) {
     rv = DoLookUpHandlerAndDescription(aMajorType,
                                        NS_LITERAL_STRING("*"),
-                                       aTypeOptions,
                                        aHandler,
                                        aDescription,
                                        aMozillaFlags,
@@ -895,7 +888,6 @@ nsOSHelperAppService::LookUpHandlerAndDescription(const nsAString& aMajorType,
 nsresult
 nsOSHelperAppService::DoLookUpHandlerAndDescription(const nsAString& aMajorType,
                                                     const nsAString& aMinorType,
-                                                    nsHashtable& aTypeOptions,
                                                     nsAString& aHandler,
                                                     nsAString& aDescription,
                                                     nsAString& aMozillaFlags,
@@ -916,7 +908,6 @@ nsOSHelperAppService::DoLookUpHandlerAndDescription(const nsAString& aMajorType,
     rv = GetHandlerAndDescriptionFromMailcapFile(mailcapFileName,
                                                  aMajorType,
                                                  aMinorType,
-                                                 aTypeOptions,
                                                  aHandler,
                                                  aDescription,
                                                  aMozillaFlags);
@@ -932,7 +923,6 @@ nsresult
 nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
                                                               const nsAString& aMajorType,
                                                               const nsAString& aMinorType,
-                                                              nsHashtable& aTypeOptions,
                                                               nsAString& aHandler,
                                                               nsAString& aDescription,
                                                               nsAString& aMozillaFlags) {
@@ -1081,7 +1071,6 @@ nsOSHelperAppService::GetHandlerAndDescriptionFromMailcapFile(const nsAString& a
                   rv = UnescapeCommand(Substring(++equal_sign_iter, semicolon_iter),
                                        aMajorType,
                                        aMinorType,
-                                       aTypeOptions,
                                        testCommand);
                   if (NS_FAILED(rv))
                     continue;
@@ -1302,8 +1291,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
   nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(mimeType);
 
   mimeInfo->AppendExtension(aFileExt);
-  nsHashtable typeOptions; // empty hash table
-  rv = LookUpHandlerAndDescription(majorType, minorType, typeOptions,
+  rv = LookUpHandlerAndDescription(majorType, minorType,
                                    handler, mailcap_description,
                                    mozillaFlags);
   LOG(("Handler/Description results:  handler='%s', description='%s', mozillaFlags='%s'\n",
@@ -1358,7 +1346,6 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
   mimeType.EndReading(end_iter);
 
   // XXX FIXME: add typeOptions parsing in here
-  nsHashtable typeOptions;
   nsresult rv = ParseMIMEType(start_iter, majorTypeStart, majorTypeEnd,
                               minorTypeStart, minorTypeEnd, end_iter);
 
@@ -1373,7 +1360,6 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
   nsAutoString mailcap_description, handler, mozillaFlags;
   DoLookUpHandlerAndDescription(majorType,
                                 minorType,
-                                typeOptions,
                                 handler,
                                 mailcap_description,
                                 mozillaFlags,
@@ -1420,7 +1406,6 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
   if (handler.IsEmpty()) {
     DoLookUpHandlerAndDescription(majorType,
                                   minorType,
-                                  typeOptions,
                                   handler,
                                   mailcap_description,
                                   mozillaFlags,
@@ -1430,7 +1415,6 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
   if (handler.IsEmpty()) {
     DoLookUpHandlerAndDescription(majorType,
                                   NS_LITERAL_STRING("*"),
-                                  typeOptions,
                                   handler,
                                   mailcap_description,
                                   mozillaFlags,
@@ -1440,7 +1424,6 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
   if (handler.IsEmpty()) {
     DoLookUpHandlerAndDescription(majorType,
                                   NS_LITERAL_STRING("*"),
-                                  typeOptions,
                                   handler,
                                   mailcap_description,
                                   mozillaFlags,
