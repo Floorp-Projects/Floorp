@@ -7,6 +7,7 @@
 
 #include "jsapi.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLFormControlsCollection.h"
 #include "mozilla/dom/HTMLFormElementBinding.h"
 #include "nsIHTMLDocument.h"
@@ -46,8 +47,6 @@
 #include "nsIRadioVisitor.h"
 
 #include "nsLayoutUtils.h"
-
-#include "nsEventDispatcher.h"
 
 #include "mozAutoDocUpdate.h"
 #include "nsIHTMLCollection.h"
@@ -289,8 +288,7 @@ NS_IMETHODIMP
 HTMLFormElement::Reset()
 {
   InternalFormEvent event(true, NS_FORM_RESET);
-  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), nullptr,
-                              &event);
+  EventDispatcher::Dispatch(static_cast<nsIContent*>(this), nullptr, &event);
   return NS_OK;
 }
 

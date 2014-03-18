@@ -15,7 +15,7 @@
 #include "mozilla/storage.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "nsEventDispatcher.h"
+#include "mozilla/EventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
@@ -75,7 +76,6 @@
 
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
-#include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
@@ -2695,7 +2695,7 @@ nsGenericHTMLElement::Click()
                          NS_MOUSE_CLICK, nullptr, WidgetMouseEvent::eReal);
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN;
 
-  nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context, &event);
+  EventDispatcher::Dispatch(static_cast<nsIContent*>(this), context, &event);
 
   ClearHandlingClick();
 }
@@ -2801,7 +2801,8 @@ nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
 
-    nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext, &event);
+    EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                              presContext, &event);
   }
 }
 

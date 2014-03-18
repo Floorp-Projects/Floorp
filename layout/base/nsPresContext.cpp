@@ -7,6 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EventDispatcher.h"
 
 #include "base/basictypes.h"
 
@@ -34,7 +35,6 @@
 #include "RestyleManager.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleNode.h"
-#include "nsEventDispatcher.h"
 #include "gfxPlatform.h"
 #include "nsCSSRules.h"
 #include "nsFontFaceLoader.h"
@@ -2272,7 +2272,8 @@ nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList)
   // logically the event target.
   event->SetTarget(eventTarget);
   event->SetTrusted(true);
-  nsEventDispatcher::DispatchDOMEvent(dispatchTarget, nullptr, event, this, nullptr);
+  EventDispatcher::DispatchDOMEvent(dispatchTarget, nullptr, event, this,
+                                    nullptr);
 }
 
 static bool

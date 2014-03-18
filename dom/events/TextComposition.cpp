@@ -7,11 +7,11 @@
 #include "ContentEventHandler.h"
 #include "TextComposition.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsIContent.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
@@ -62,8 +62,8 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
     mLastData = aEvent->AsCompositionEvent()->data;
   }
 
-  nsEventDispatcher::Dispatch(mNode, mPresContext,
-                              aEvent, nullptr, aStatus, aCallBack);
+  EventDispatcher::Dispatch(mNode, mPresContext,
+                            aEvent, nullptr, aStatus, aCallBack);
 
   if (!mPresContext) {
     return;

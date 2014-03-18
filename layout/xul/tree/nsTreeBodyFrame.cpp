@@ -6,6 +6,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
@@ -54,7 +55,6 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
-#include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
 #include "nsTreeBoxObject.h"
 #include "nsRenderingContext.h"
@@ -930,7 +930,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
       mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
       nullptr);
     event.orient = InternalScrollPortEvent::vertical;
-    nsEventDispatcher::Dispatch(content, presContext, &event);
+    EventDispatcher::Dispatch(content, presContext, &event);
   }
 
   if (horizontalOverflowChanged) {
@@ -938,7 +938,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
       mHorizontalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
       nullptr);
     event.orient = InternalScrollPortEvent::horizontal;
-    nsEventDispatcher::Dispatch(content, presContext, &event);
+    EventDispatcher::Dispatch(content, presContext, &event);
   }
 
   // The synchronous event dispatch above can trigger reflow notifications.
@@ -4473,7 +4473,7 @@ nsTreeBodyFrame::FireScrollEvent()
   WidgetGUIEvent event(true, NS_SCROLL_EVENT, nullptr);
   // scroll events fired at elements don't bubble
   event.mFlags.mBubbles = false;
-  nsEventDispatcher::Dispatch(GetContent(), PresContext(), &event);
+  EventDispatcher::Dispatch(GetContent(), PresContext(), &event);
 }
 
 void

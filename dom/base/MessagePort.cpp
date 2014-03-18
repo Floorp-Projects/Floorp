@@ -10,7 +10,6 @@
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "nsGlobalWindow.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsPresContext.h"
 
 #include "nsIDocument.h"

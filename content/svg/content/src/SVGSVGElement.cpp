@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Likely.h"
 
 #include "nsGkAtoms.h"
@@ -32,7 +33,6 @@
 #include "nsStyleUtil.h"
 #include "SVGContentUtils.h"
 
-#include "nsEventDispatcher.h"
 #include "nsSMILTimeContainer.h"
 #include "nsSMILAnimationController.h"
 #include "nsSMILTypes.h"

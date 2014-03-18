@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsEventDispatcher.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
@@ -18,6 +17,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/TouchEvent.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MiscEvents.h"
@@ -373,16 +373,18 @@ EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aChain,
   return etci;
 }
 
+namespace mozilla {
+
 /* static */ nsresult
-nsEventDispatcher::Dispatch(nsISupports* aTarget,
-                            nsPresContext* aPresContext,
-                            WidgetEvent* aEvent,
-                            nsIDOMEvent* aDOMEvent,
-                            nsEventStatus* aEventStatus,
-                            EventDispatchingCallback* aCallback,
-                            nsCOMArray<EventTarget>* aTargets)
+EventDispatcher::Dispatch(nsISupports* aTarget,
+                          nsPresContext* aPresContext,
+                          WidgetEvent* aEvent,
+                          nsIDOMEvent* aDOMEvent,
+                          nsEventStatus* aEventStatus,
+                          EventDispatchingCallback* aCallback,
+                          nsCOMArray<EventTarget>* aTargets)
 {
-  PROFILER_LABEL("nsEventDispatcher", "Dispatch");
+  PROFILER_LABEL("EventDispatcher", "Dispatch");
   NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -632,11 +634,11 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 }
 
 /* static */ nsresult
-nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
-                                    WidgetEvent* aEvent,
-                                    nsIDOMEvent* aDOMEvent,
-                                    nsPresContext* aPresContext,
-                                    nsEventStatus* aEventStatus)
+EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
+                                  WidgetEvent* aEvent,
+                                  nsIDOMEvent* aDOMEvent,
+                                  nsPresContext* aPresContext,
+                                  nsEventStatus* aEventStatus)
 {
   if (aDOMEvent) {
     WidgetEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
@@ -655,21 +657,21 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
       aDOMEvent->SetTrusted(nsContentUtils::ThreadsafeIsCallerChrome());
     }
 
-    return nsEventDispatcher::Dispatch(aTarget, aPresContext, innerEvent,
-                                       aDOMEvent, aEventStatus);
+    return EventDispatcher::Dispatch(aTarget, aPresContext, innerEvent,
+                                     aDOMEvent, aEventStatus);
   } else if (aEvent) {
-    return nsEventDispatcher::Dispatch(aTarget, aPresContext, aEvent,
-                                       aDOMEvent, aEventStatus);
+    return EventDispatcher::Dispatch(aTarget, aPresContext, aEvent,
+                                     aDOMEvent, aEventStatus);
   }
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
 /* static */ nsresult
-nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
-                               nsPresContext* aPresContext,
-                               WidgetEvent* aEvent,
-                               const nsAString& aEventType,
-                               nsIDOMEvent** aDOMEvent)
+EventDispatcher::CreateEvent(EventTarget* aOwner,
+                             nsPresContext* aPresContext,
+                             WidgetEvent* aEvent,
+                             const nsAString& aEventType,
+                             nsIDOMEvent** aDOMEvent)
 {
   *aDOMEvent = nullptr;
 
@@ -836,3 +838,5 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
+
+} // namespace mozilla

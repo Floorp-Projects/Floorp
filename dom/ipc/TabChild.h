@@ -11,7 +11,6 @@
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsEventDispatcher.h"
 #include "nsIWebBrowserChrome2.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIWebBrowserChromeFocus.h"
@@ -31,6 +30,7 @@
 #include "nsITooltipListener.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/CompositorTypes.h"
 

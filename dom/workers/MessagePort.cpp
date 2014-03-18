@@ -5,8 +5,8 @@
 
 #include "MessagePort.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/MessagePortBinding.h"
-#include "nsEventDispatcher.h"
 #include "nsIDOMEvent.h"
 
 #include "SharedWorker.h"

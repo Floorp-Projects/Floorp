@@ -75,7 +75,6 @@
 #include "mozilla/css/Loader.h"
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"
-#include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
 #include "nsNodeUtils.h"
 #include "nsIDocShellTreeOwner.h"
@@ -87,6 +86,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/XULDocumentBinding.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
 #include "nsJSUtils.h"
@@ -944,8 +944,8 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
 
             // Handle the DOM event
             nsEventStatus status = nsEventStatus_eIgnore;
-            nsEventDispatcher::Dispatch(child, aPresContext, &event, nullptr,
-                                        &status);
+            EventDispatcher::Dispatch(child, aPresContext, &event, nullptr,
+                                      &status);
         }
     }
 

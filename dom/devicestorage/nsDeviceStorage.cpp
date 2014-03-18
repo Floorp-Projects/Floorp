@@ -20,6 +20,7 @@
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
@@ -57,7 +58,6 @@
 #include <algorithm>
 #include "private/pprio.h"
 #include "nsContentPermissionHelper.h"
-#include "nsEventDispatcher.h"
 
 #include "mozilla/dom/DeviceStorageBinding.h"
 

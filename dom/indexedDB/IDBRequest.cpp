@@ -9,6 +9,7 @@
 #include "nsIScriptContext.h"
 
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -17,7 +18,6 @@
 #include "nsDOMJSUtils.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"

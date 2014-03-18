@@ -4,9 +4,9 @@
 
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "nsPresContext.h"
-#include "nsEventDispatcher.h"
 #include "nsIPresShell.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "nsIDocument.h"
 
 using namespace mozilla;
@@ -32,7 +32,7 @@ nsHtml5SVGLoadDispatcher::Run()
   if (shell) {
     ctx = shell->GetPresContext();
   }
-  nsEventDispatcher::Dispatch(mElement, ctx, &event);
+  EventDispatcher::Dispatch(mElement, ctx, &event);
   // Unblocking onload on the same document that it was blocked even if
   // the element has moved between docs since blocking.
   mDocument->UnblockOnload(false);

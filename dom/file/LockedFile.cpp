@@ -13,7 +13,6 @@
 #include "nsISeekableStream.h"
 
 #include "jsfriendapi.h"
-#include "nsEventDispatcher.h"
 #include "nsNetUtil.h"
 #include "nsDOMClassInfoID.h"
 #include "nsJSUtils.h"
@@ -32,6 +31,7 @@
 #include "nsError.h"
 #include "nsContentUtils.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/LockedFileBinding.h"
 

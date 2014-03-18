@@ -16,7 +16,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
-#include "nsEventDispatcher.h"
 #include "nsEventStateManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsLayoutUtils.h"
@@ -37,6 +36,7 @@
 #include "nsIObserverService.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Services.h"
@@ -960,8 +960,8 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nullptr,
                          WidgetMouseEvent::eReal);
-  nsEventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(),
-                              &event, nullptr, &status);
+  EventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(),
+                            &event, nullptr, &status);
   ENSURE_TRUE(weakFrame.IsAlive());
 
   // if there are more popups to close, look for the next one
@@ -1210,7 +1210,7 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
 
   event.refPoint = LayoutDeviceIntPoint::FromUntyped(mCachedMousePoint);
   event.modifiers = mCachedModifiers;
-  nsEventDispatcher::Dispatch(popup, presContext, &event, nullptr, &status);
+  EventDispatcher::Dispatch(popup, presContext, &event, nullptr, &status);
 
   mCachedMousePoint = nsIntPoint(0, 0);
   mOpeningPopup = nullptr;
@@ -1275,7 +1275,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, NS_XUL_POPUP_HIDING, nullptr,
                          WidgetMouseEvent::eReal);
-  nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nullptr, &status);
+  EventDispatcher::Dispatch(aPopup, aPresContext, &event, nullptr, &status);
 
   // when a panel is closed, blur whatever has focus inside the popup
   if (aPopupType == ePopupTypePanel &&
