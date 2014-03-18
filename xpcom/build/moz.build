@@ -27,15 +27,12 @@ EXPORTS.mozilla += [
 if CONFIG['OS_ARCH'] == 'WINNT':
     EXPORTS += ['nsWindowsDllInterceptor.h']
     EXPORTS.mozilla += ['perfprobe.h']
-    SOURCES += ['perfprobe.cpp']
-    if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
-        SOURCES += [
-            'PoisonIOInterposerBase.cpp',
-            'PoisonIOInterposerWin.cpp',
-        ]
-    else:
-        SOURCES += ['PoisonIOInterposerStub.cpp']
-elif CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['MOZ_ENABLE_PROFILER_SPS']:
+    SOURCES += [
+        'perfprobe.cpp',
+        'PoisonIOInterposerBase.cpp',
+        'PoisonIOInterposerWin.cpp',
+    ]
+elif CONFIG['OS_ARCH'] == 'Darwin':
     SOURCES += [
         'mach_override.c',
         'PoisonIOInterposerBase.cpp',
@@ -51,20 +48,17 @@ UNIFIED_SOURCES += xpcom_glue_src_cppsrcs
 
 UNIFIED_SOURCES += [
     'FrozenFunctions.cpp',
+    'IOInterposer.cpp',
     'LateWriteChecks.cpp',
     'nsXPComInit.cpp',
     'nsXPCOMStrings.cpp',
     'Services.cpp',
 ]
 
-if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
+if CONFIG['OS_ARCH'] != 'WINNT':
     SOURCES += [
-        'IOInterposer.cpp',
+        'NSPRInterposer.cpp',
     ]
-    if CONFIG['OS_ARCH'] != 'WINNT':
-      SOURCES += [
-          'NSPRInterposer.cpp',
-      ]
 
 # FileLocation.cpp and Omnijar.cpp cannot be built in unified mode because they
 # use plarena.h.

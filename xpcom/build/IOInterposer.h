@@ -146,8 +146,6 @@ protected:
   static bool IsMainThread();
 };
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
-
 /**
  * Class offering the public static IOInterposer API.
  *
@@ -260,34 +258,14 @@ public:
   RegisterCurrentThread(bool aIsMainThread = false);
 };
 
-#else /* MOZ_ENABLE_PROFILER_SPS */
-
-class IOInterposer MOZ_FINAL
-{
-  IOInterposer();
-public:
-  static inline void Init()                                               {}
-  static inline void Clear()                                              {}
-  static inline void Disable()                                            {}
-  static inline void Report(IOInterposeObserver::Observation& aOb)        {}
-  static inline void Register(IOInterposeObserver::Operation aOp,
-                              IOInterposeObserver* aObserver)             {}
-  static inline void Unregister(IOInterposeObserver::Operation aOp,
-                                IOInterposeObserver* aObserver)           {}
-  static inline bool IsObservedOperation(IOInterposeObserver::Operation aOp) {
-    return false;
-  }
-  static inline void RegisterCurrentThread(bool)                          {}
-};
-
-#endif /* MOZ_ENABLE_PROFILER_SPS */
-
 class IOInterposerInit
 {
 public:
   IOInterposerInit()
   {
+#if defined(MOZ_ENABLE_PROFILER_SPS)
     IOInterposer::Init();
+#endif
   }
 
   // No destructor needed at the moment -- this stuff stays active for the
