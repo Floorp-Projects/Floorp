@@ -30,9 +30,9 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsError.h"
-#include "nsEventDispatcher.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
@@ -423,7 +423,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
 
       WidgetEvent event(true, NS_XUL_COMMAND_UPDATE);
 
-      nsEventDispatcher::Dispatch(content, context, &event, nullptr, &status);
+      EventDispatcher::Dispatch(content, context, &event, nullptr, &status);
     }
   }
   return NS_OK;

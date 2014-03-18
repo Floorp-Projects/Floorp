@@ -30,8 +30,6 @@ public:
   NS_DECL_NSIGEOLOCATIONPROVIDER
 
   CoreLocationLocationProvider();
-  static bool IsCoreLocationAvailable();
-
   void NotifyError(uint16_t aErrorCode);
   void Update(nsIDOMGeoPosition* aSomewhere);
 private:

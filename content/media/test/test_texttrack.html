@@ -60,9 +60,8 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       is(textTrack.mode, value, message);
     }
 
-    // Test that text tracks are sorted correctly when being inserted on the
-    // MediaElements list of text tracks. For this test we add four tracks, the
-    // first one was at the start of the test, the next three are below.
+    // Insert some tracks in an order that is not sorted, we will test if they
+    // are sorted later.
     var trackOne = document.createElement("track");
     trackOne.label = "first";
     trackOne.src = "basic.vtt";
@@ -90,16 +89,30 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       is(trackOne.readyState, 2, "First Track::ReadyState should be set to LOADED.");
       is(trackTwo.readyState, 2, "Second Track::ReadyState should be set to LOADED.");
 
+      // We're testing two things here, firstly that tracks created from a track
+      // element have a default mode 'disabled' and tracks created with the
+      // 'addTextTrack' method have a default mode of 'hidden'.
+      // Secondly we're testing that the tracks are sorted properly.
       // For the tracks to be sorted the first two tracks, added through a
       // TrackElement, must occupy the first two indexes in their TrackElement
       // tree order. The second two tracks, added through the 'addTextTrack'
       // method, will occupy the last two indexes in the order that they were
       // added in.
-      var labels = [ "first", "second", "third", "fourth" ];
-      is(video.textTracks.length, labels.length, "TextTracks length should be " + labels.length);
+      var trackInfo = [
+        { label: "first", mode: "disabled" },
+        { label: "second", mode: "disabled" },
+        { label: "third", mode: "hidden" },
+        { label: "fourth", mode:"hidden"}
+      ];
+      is(video.textTracks.length, trackInfo.length, "TextTracks length should be " + trackInfo.length);
       for (var i = 0; i < video.textTracks.length; i++) {
-        isnot(video.textTracks[i], null, "Video should have a text track at " + i + " index.");
-        is(video.textTracks[i].label, labels[i], "Text track at " + i + " should be " + labels[i]);
+        var track = video.textTracks[i];
+        isnot(track, null, "Video should have a text track at " + i + " index.");
+        var info = trackInfo[i];
+        for (var key in info) {
+          is(track[key], info[key], "Track at " + i + " should have a '" + key + "'' property " +
+                                    "with a value of '" + info[key] + "'.");
+        }
       }
       SimpleTest.finish();
     });

@@ -22,7 +22,6 @@
 #include "nsLayoutUtils.h"
 #include "nsIPresShell.h"
 #include "nsFrameTraversal.h"
-#include "nsEventDispatcher.h"
 #include "nsEventStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"
@@ -40,6 +39,7 @@
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -1870,7 +1870,7 @@ public:
     event.mFlags.mBubbles = false;
     event.fromRaise = mWindowRaised;
     event.isRefocus = mIsRefocus;
-    return nsEventDispatcher::Dispatch(mTarget, mContext, &event);
+    return EventDispatcher::Dispatch(mTarget, mContext, &event);
   }
 
   nsCOMPtr<nsISupports>   mTarget;

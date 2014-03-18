@@ -2073,6 +2073,14 @@ nsRuleNode::ResolveVariableReferences(const nsStyleStructID aSID,
       &aContext->StyleVariables()->mVariables;
     nsCSSValueTokenStream* tokenStream = value->GetTokenStreamValue();
 
+    // Note that ParsePropertyWithVariableReferences relies on the fact
+    // that the nsCSSValue in aRuleData for the property we are re-parsing
+    // is still the token stream value.  When
+    // ParsePropertyWithVariableReferences calls
+    // nsCSSExpandedDataBlock::MapRuleInfoInto, that function will add
+    // the ImageValue that is created into the token stream object's
+    // mImageValues table; see the comment above mImageValues for why.
+
     // XXX Should pass in sheet here (see bug 952338).
     parser.ParsePropertyWithVariableReferences(
         tokenStream->mPropertyID, tokenStream->mShorthandPropertyID,
@@ -7236,21 +7244,17 @@ SetGridTemplateAreas(const nsCSSValue& aValue,
 
   case eCSSUnit_Inherit:
     aCanStoreInRuleTree = false;
-    aResult.mNamedAreas = aParentValue.mNamedAreas;
-    aResult.mTemplates = aParentValue.mTemplates;
+    aResult = aParentValue;
     break;
 
   case eCSSUnit_Initial:
   case eCSSUnit_Unset:
   case eCSSUnit_None:
-    aResult.mNamedAreas.Clear();
-    aResult.mTemplates.Clear();
+    aResult.Reset();
     break;
 
   default:
-    const nsCSSValueGridTemplateAreas& value = aValue.GetGridTemplateAreas();
-    aResult.mNamedAreas = value.mNamedAreas;
-    aResult.mTemplates = value.mTemplates;
+    aResult = aValue.GetGridTemplateAreas();
   }
 }
 

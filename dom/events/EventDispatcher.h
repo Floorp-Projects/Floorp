@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZILLA_INTERNAL_API
-#ifndef nsEventDispatcher_h___
-#define nsEventDispatcher_h___
+#ifndef mozilla_EventDispatcher_h_
+#define mozilla_EventDispatcher_h_
 
 #include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
@@ -13,7 +13,6 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
-class nsEventTargetChainItem;
 class nsIDOMEvent;
 class nsIScriptGlobalObject;
 class nsPresContext;
@@ -23,16 +22,15 @@ template<class E> class nsCOMArray;
 namespace mozilla {
 namespace dom {
 class EventTarget;
-}
-}
+} // namespace dom
 
 /**
  * About event dispatching:
- * When either nsEventDispatcher::Dispatch or
- * nsEventDispatcher::DispatchDOMEvent is called an event target chain is
- * created. nsEventDispatcher creates the chain by calling PreHandleEvent 
+ * When either EventDispatcher::Dispatch or
+ * EventDispatcher::DispatchDOMEvent is called an event target chain is
+ * created. EventDispatcher creates the chain by calling PreHandleEvent 
  * on each event target and the creation continues until either the mCanHandle
- * member of the nsEventChainPreVisitor object is false or the mParentTarget
+ * member of the EventChainPreVisitor object is false or the mParentTarget
  * does not point to a new target. The event target chain is created in the
  * heap.
  *
@@ -46,15 +44,20 @@ class EventTarget;
  * is called right after calling event listener for the current event target.
  */
 
-class nsEventChainVisitor {
+class EventChainVisitor
+{
 public:
-  nsEventChainVisitor(nsPresContext* aPresContext,
-                      mozilla::WidgetEvent* aEvent,
-                      nsIDOMEvent* aDOMEvent,
-                      nsEventStatus aEventStatus = nsEventStatus_eIgnore)
-  : mPresContext(aPresContext), mEvent(aEvent), mDOMEvent(aDOMEvent),
-    mEventStatus(aEventStatus), mItemFlags(0)
-  {}
+  EventChainVisitor(nsPresContext* aPresContext,
+                    WidgetEvent* aEvent,
+                    nsIDOMEvent* aDOMEvent,
+                    nsEventStatus aEventStatus = nsEventStatus_eIgnore)
+    : mPresContext(aPresContext)
+    , mEvent(aEvent)
+    , mDOMEvent(aDOMEvent)
+    , mEventStatus(aEventStatus)
+    , mItemFlags(0)
+  {
+  }
 
   /**
    * The prescontext, possibly nullptr.
@@ -64,7 +67,7 @@ public:
   /**
    * The WidgetEvent which is being dispatched. Never nullptr.
    */
-  mozilla::WidgetEvent* const mEvent;
+  WidgetEvent* const mEvent;
 
   /**
    * The DOM Event assiciated with the mEvent. Possibly nullptr if a DOM Event
@@ -86,7 +89,7 @@ public:
    *       It is up to the Pre/PostHandleEvent implementation to decide how to
    *       use these bits.
    *
-   * @note Using uint16_t because that is used also in nsEventTargetChainItem.
+   * @note Using uint16_t because that is used also in EventTargetChainItem.
    */
   uint16_t              mItemFlags;
 
@@ -101,21 +104,29 @@ public:
   nsCOMPtr<nsISupports> mItemData;
 };
 
-class nsEventChainPreVisitor : public nsEventChainVisitor {
+class EventChainPreVisitor : public EventChainVisitor
+{
 public:
-  nsEventChainPreVisitor(nsPresContext* aPresContext,
-                         mozilla::WidgetEvent* aEvent,
-                         nsIDOMEvent* aDOMEvent,
-                         nsEventStatus aEventStatus,
-                         bool aIsInAnon)
-  : nsEventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus),
-    mCanHandle(true), mAutomaticChromeDispatch(true),
-    mForceContentDispatch(false), mRelatedTargetIsInAnon(false),
-    mOriginalTargetIsInAnon(aIsInAnon), mWantsWillHandleEvent(false),
-    mMayHaveListenerManager(true), mParentTarget(nullptr),
-    mEventTargetAtParent(nullptr) {}
+  EventChainPreVisitor(nsPresContext* aPresContext,
+                       WidgetEvent* aEvent,
+                       nsIDOMEvent* aDOMEvent,
+                       nsEventStatus aEventStatus,
+                       bool aIsInAnon)
+    : EventChainVisitor(aPresContext, aEvent, aDOMEvent, aEventStatus)
+    , mCanHandle(true)
+    , mAutomaticChromeDispatch(true)
+    , mForceContentDispatch(false)
+    , mRelatedTargetIsInAnon(false)
+    , mOriginalTargetIsInAnon(aIsInAnon)
+    , mWantsWillHandleEvent(false)
+    , mMayHaveListenerManager(true)
+    , mParentTarget(nullptr)
+    , mEventTargetAtParent(nullptr)
+  {
+  }
 
-  void Reset() {
+  void Reset()
+  {
     mItemFlags = 0;
     mItemData = nullptr;
     mCanHandle = true;
@@ -175,39 +186,42 @@ public:
   /**
    * Parent item in the event target chain.
    */
-  mozilla::dom::EventTarget* mParentTarget;
+  dom::EventTarget* mParentTarget;
 
   /**
    * If the event needs to be retargeted, this is the event target,
    * which should be used when the event is handled at mParentTarget.
    */
-  mozilla::dom::EventTarget* mEventTargetAtParent;
+  dom::EventTarget* mEventTargetAtParent;
 };
 
-class nsEventChainPostVisitor : public nsEventChainVisitor {
+class EventChainPostVisitor : public mozilla::EventChainVisitor
+{
 public:
-  nsEventChainPostVisitor(nsEventChainVisitor& aOther)
-  : nsEventChainVisitor(aOther.mPresContext, aOther.mEvent, aOther.mDOMEvent,
-                        aOther.mEventStatus)
-  {}
+  EventChainPostVisitor(EventChainVisitor& aOther)
+    : EventChainVisitor(aOther.mPresContext, aOther.mEvent,
+                        aOther.mDOMEvent, aOther.mEventStatus)
+  {
+  }
 };
 
 /**
- * If an nsDispatchingCallback object is passed to Dispatch,
+ * If an EventDispatchingCallback object is passed to Dispatch,
  * its HandleEvent method is called after handling the default event group,
  * before handling the system event group.
  * This is used in nsPresShell.
  */
-class MOZ_STACK_CLASS nsDispatchingCallback {
+class MOZ_STACK_CLASS EventDispatchingCallback
+{
 public:
-  virtual void HandleEvent(nsEventChainPostVisitor& aVisitor) = 0;
+  virtual void HandleEvent(EventChainPostVisitor& aVisitor) = 0;
 };
 
 /**
  * The generic class for event dispatching.
  * Must not be used outside Gecko!
  */
-class nsEventDispatcher
+class EventDispatcher
 {
 public:
   /**
@@ -228,22 +242,22 @@ public:
    */
   static nsresult Dispatch(nsISupports* aTarget,
                            nsPresContext* aPresContext,
-                           mozilla::WidgetEvent* aEvent,
+                           WidgetEvent* aEvent,
                            nsIDOMEvent* aDOMEvent = nullptr,
                            nsEventStatus* aEventStatus = nullptr,
-                           nsDispatchingCallback* aCallback = nullptr,
-                           nsCOMArray<mozilla::dom::EventTarget>* aTargets = nullptr);
+                           EventDispatchingCallback* aCallback = nullptr,
+                           nsCOMArray<dom::EventTarget>* aTargets = nullptr);
 
   /**
    * Dispatches an event.
    * If aDOMEvent is not nullptr, it is used for dispatching
    * (aEvent can then be nullptr) and (if aDOMEvent is not |trusted| already),
    * the |trusted| flag is set based on the UniversalXPConnect capability.
-   * Otherwise this works like nsEventDispatcher::Dispatch.
+   * Otherwise this works like EventDispatcher::Dispatch.
    * @note Use this method when dispatching nsIDOMEvent.
    */
   static nsresult DispatchDOMEvent(nsISupports* aTarget,
-                                   mozilla::WidgetEvent* aEvent,
+                                   WidgetEvent* aEvent,
                                    nsIDOMEvent* aDOMEvent,
                                    nsPresContext* aPresContext,
                                    nsEventStatus* aEventStatus);
@@ -251,13 +265,19 @@ public:
   /**
    * Creates a DOM Event.
    */
-  static nsresult CreateEvent(mozilla::dom::EventTarget* aOwner,
+  static nsresult CreateEvent(dom::EventTarget* aOwner,
                               nsPresContext* aPresContext,
-                              mozilla::WidgetEvent* aEvent,
+                              WidgetEvent* aEvent,
                               const nsAString& aEventType,
                               nsIDOMEvent** aDOMEvent);
 
+  /**
+   * Called at shutting down.
+   */
+  static void Shutdown();
 };
 
-#endif
+} // namespace mozilla
+
+#endif // mozilla_EventDispatcher_h_
 #endif

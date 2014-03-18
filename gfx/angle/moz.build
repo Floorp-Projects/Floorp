@@ -131,3 +131,12 @@ FINAL_LIBRARY = 'gkmedias'
 DEFINES['ANGLE_DISABLE_TRACE'] = True
 DEFINES['ANGLE_COMPILE_OPTIMIZATION_LEVEL'] = 'D3DCOMPILE_OPTIMIZATION_LEVEL1'
 DEFINES['COMPILER_IMPLEMENTATION'] = True
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-unknown-pragmas',
+    ]
+    if CONFIG['CLANG_CXX']:
+        CXXFLAGS += ['-Wno-unused-private-field']

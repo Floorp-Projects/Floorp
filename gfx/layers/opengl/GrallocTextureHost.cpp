@@ -88,12 +88,14 @@ TextureTargetForAndroidPixelFormat(android::PixelFormat aFormat)
 
 GrallocTextureSourceOGL::GrallocTextureSourceOGL(CompositorOGL* aCompositor,
                                                  android::GraphicBuffer* aGraphicBuffer,
-                                                 gfx::SurfaceFormat aFormat)
+                                                 gfx::SurfaceFormat aFormat,
+                                                 TextureFlags aFlags)
   : mCompositor(aCompositor)
   , mGraphicBuffer(aGraphicBuffer)
   , mEGLImage(0)
   , mFormat(aFormat)
   , mNeedsReset(true)
+  , mFlags(aFlags)
 {
   MOZ_ASSERT(mGraphicBuffer.get());
 }
@@ -147,9 +149,7 @@ void GrallocTextureSourceOGL::Lock()
 
   MOZ_ASSERT(IsValid());
 
-  CompositorOGLGonkBackendSpecificData* backendData =
-    static_cast<CompositorOGLGonkBackendSpecificData*>(mCompositor->GetCompositorBackendSpecificData());
-  mTexture = backendData->GetTexture();
+  mTexture = mCompositor->GetTemporaryTexture(LOCAL_GL_TEXTURE0);
 
   GLuint textureTarget = GetTextureTarget();
 
@@ -187,22 +187,34 @@ GrallocTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 GLenum
 GrallocTextureSourceOGL::GetTextureTarget() const
 {
+  MOZ_ASSERT(gl());
   MOZ_ASSERT(mGraphicBuffer.get());
-  if (!mGraphicBuffer.get()) {
+
+  if (!gl() || !mGraphicBuffer.get()) {
     return LOCAL_GL_TEXTURE_EXTERNAL;
   }
+
+  // SGX has a quirk that only TEXTURE_EXTERNAL works and any other value will
+  // result in black pixels when trying to draw from bound textures.
+  // Unfortunately, using TEXTURE_EXTERNAL on Adreno has a terrible effect on
+  // performance.
+  // See Bug 950050.
+  if (gl()->Renderer() == gl::GLRenderer::SGX530 ||
+      gl()->Renderer() == gl::GLRenderer::SGX540) {
+    return LOCAL_GL_TEXTURE_EXTERNAL;
+  }
+
   return TextureTargetForAndroidPixelFormat(mGraphicBuffer->getPixelFormat());
 }
 
 gfx::SurfaceFormat
 GrallocTextureSourceOGL::GetFormat() const {
+  MOZ_ASSERT(mGraphicBuffer.get());
   if (!mGraphicBuffer.get()) {
     return gfx::SurfaceFormat::UNKNOWN;
   }
-  if (GetTextureTarget() == LOCAL_GL_TEXTURE_EXTERNAL) {
-    return gfx::SurfaceFormat::R8G8B8A8;
-  }
-  return mFormat;
+  return SurfaceFormatForAndroidPixelFormat(mGraphicBuffer->getPixelFormat(),
+                                            mFlags & TEXTURE_RB_SWAPPED);
 }
 
 void
@@ -294,7 +306,8 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
   }
   mTextureSource = new GrallocTextureSourceOGL(nullptr,
                                                graphicBuffer,
-                                               format);
+                                               format,
+                                               aFlags);
 }
 
 GrallocTextureHostOGL::~GrallocTextureHostOGL()

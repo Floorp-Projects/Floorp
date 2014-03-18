@@ -41,7 +41,6 @@
 
 #include "nsITimer.h"
 
-#include "nsEventDispatcher.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
 #include "nsICategoryManager.h"
@@ -3951,6 +3950,7 @@ HTMLMediaElement::AddTextTrack(TextTrackKind aKind,
 {
   if (mTextTrackManager) {
     return mTextTrackManager->AddTextTrack(aKind, aLabel, aLanguage,
+                                           TextTrackMode::Hidden,
                                            TextTrackSource::AddTextTrack);
   }
   return nullptr;

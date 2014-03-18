@@ -130,7 +130,7 @@
 #include "nsToolkitCompsCID.h"
 #endif
 #include "nsCDefaultURIFixup.h"
-#include "nsEventDispatcher.h"
+#include "mozilla/EventDispatcher.h"
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
 #include "nsIXULWindow.h"
@@ -2951,7 +2951,7 @@ nsGlobalWindow::GetTargetForEventTargetChain()
 }
 
 nsresult
-nsGlobalWindow::WillHandleEvent(nsEventChainPostVisitor& aVisitor)
+nsGlobalWindow::WillHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return NS_OK;
 }
@@ -2963,7 +2963,7 @@ nsGlobalWindow::GetJSContextForEventHandlers()
 }
 
 nsresult
-nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsGlobalWindow::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   NS_PRECONDITION(IsInnerWindow(), "PreHandleEvent is used on outer window!?");
   static uint32_t count = 0;
@@ -3162,7 +3162,7 @@ nsGlobalWindow::EnableDialogs()
 }
 
 nsresult
-nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+nsGlobalWindow::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   NS_PRECONDITION(IsInnerWindow(), "PostHandleEvent is used on outer window!?");
 
@@ -3214,7 +3214,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // be a pres context available). Since we're not firing a GUI
       // event we don't need a pres context anyway so we just pass
       // null as the pres context all the time here.
-      nsEventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
+      EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
     }
   }
 
@@ -3227,10 +3227,9 @@ nsGlobalWindow::DispatchDOMEvent(WidgetEvent* aEvent,
                                  nsPresContext* aPresContext,
                                  nsEventStatus* aEventStatus)
 {
-  return
-    nsEventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMWindow*>(this),
-                                       aEvent, aDOMEvent, aPresContext,
-                                       aEventStatus);
+  return EventDispatcher::DispatchDOMEvent(static_cast<nsPIDOMWindow*>(this),
+                                           aEvent, aDOMEvent, aPresContext,
+                                           aEventStatus);
 }
 
 void
@@ -7892,11 +7891,11 @@ PostMessageEvent::Run()
   WidgetEvent* internalEvent = message->GetInternalNSEvent();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
-                              presContext,
-                              internalEvent,
-                              message,
-                              &status);
+  EventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
+                            presContext,
+                            internalEvent,
+                            message,
+                            &status);
   return NS_OK;
 }
 
@@ -9195,8 +9194,8 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(GetOuterWindow(), nullptr, aEvent,
-                                        presContext, &status);
+    EventDispatcher::DispatchDOMEvent(GetOuterWindow(), nullptr, aEvent,
+                                      presContext, &status);
 
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
@@ -9833,9 +9832,9 @@ nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
   // Create a new hashchange event.
   nsCOMPtr<nsIDOMEvent> domEvent;
   nsresult rv =
-    nsEventDispatcher::CreateEvent(this, presContext, nullptr,
-                                   NS_LITERAL_STRING("hashchangeevent"),
-                                   getter_AddRefs(domEvent));
+    EventDispatcher::CreateEvent(this, presContext, nullptr,
+                                 NS_LITERAL_STRING("hashchangeevent"),
+                                 getter_AddRefs(domEvent));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMHashChangeEvent> hashchangeEvent = do_QueryInterface(domEvent);
@@ -9889,9 +9888,9 @@ nsGlobalWindow::DispatchSyncPopState()
 
   // Create a new popstate event
   nsCOMPtr<nsIDOMEvent> domEvent;
-  rv = nsEventDispatcher::CreateEvent(this, presContext, nullptr,
-                                      NS_LITERAL_STRING("popstateevent"),
-                                      getter_AddRefs(domEvent));
+  rv = EventDispatcher::CreateEvent(this, presContext, nullptr,
+                                    NS_LITERAL_STRING("popstateevent"),
+                                    getter_AddRefs(domEvent));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the popstate event, which does bubble but isn't cancellable.
