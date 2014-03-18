@@ -162,8 +162,6 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
 
 toolbarbutton.bookmark-item:not(.subviewbutton):not(#bookmarks-menu-button),
 #personal-bookmarks[cui-areatype="toolbar"]:not([overflowedItem=true]) > #bookmarks-toolbar-placeholder {
-  font-weight: bold;
-  color: #222;
   border: 0;
   border-radius: 10000px;
   padding: 1px 8px;
