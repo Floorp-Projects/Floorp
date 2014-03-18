@@ -11,6 +11,7 @@
 #include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsContentUtils.h"
+#include "nsEventDispatcher.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsDOMTokenList.h"
@@ -302,7 +303,7 @@ HTMLLinkElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 }
 
 nsresult
-HTMLLinkElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLLinkElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   return PreHandleEventForAnchors(aVisitor);
 }

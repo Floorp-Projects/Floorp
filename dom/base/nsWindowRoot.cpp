@@ -168,7 +168,7 @@ nsWindowRoot::GetContextForEventHandlers(nsresult* aRv)
 }
 
 nsresult
-nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsWindowRoot::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119

@@ -40,6 +40,7 @@ class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
 
 namespace mozilla {
+class EventChainPreVisitor;
 class EventChainVisitor;
 class EventListenerManager;
 namespace dom {
@@ -591,7 +592,7 @@ public:
    */
   bool CheckHandleEventForAnchorsPreconditions(
          mozilla::EventChainVisitor& aVisitor);
-  nsresult PreHandleEventForAnchors(nsEventChainPreVisitor& aVisitor);
+  nsresult PreHandleEventForAnchors(mozilla::EventChainPreVisitor& aVisitor);
   nsresult PostHandleEventForAnchors(nsEventChainPostVisitor& aVisitor);
   bool IsHTMLLink(nsIURI** aURI) const;
 
@@ -1328,7 +1329,8 @@ public:
   virtual IMEState GetDesiredIMEState() MOZ_OVERRIDE;
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(
+                     mozilla::EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
 
   virtual bool IsDisabled() const MOZ_OVERRIDE;
 

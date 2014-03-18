@@ -251,7 +251,7 @@ HTMLMenuItemElement::SetChecked(bool aChecked)
 }
 
 nsresult
-HTMLMenuItemElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLMenuItemElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->message == NS_MOUSE_CLICK) {
 

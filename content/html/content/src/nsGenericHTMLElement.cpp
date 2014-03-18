@@ -718,7 +718,7 @@ nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(
 }
 
 nsresult
-nsGenericHTMLElement::PreHandleEventForAnchors(nsEventChainPreVisitor& aVisitor)
+nsGenericHTMLElement::PreHandleEventForAnchors(EventChainPreVisitor& aVisitor)
 {
   nsresult rv = nsGenericHTMLElementBase::PreHandleEvent(aVisitor);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2285,7 +2285,7 @@ nsGenericHTMLFormElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsGenericHTMLFormElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsGenericHTMLFormElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   if (aVisitor.mEvent->mFlags.mIsTrusted) {
     switch (aVisitor.mEvent->message) {

@@ -1139,7 +1139,7 @@ nsXULElement::List(FILE* out, int32_t aIndent) const
 #endif
 
 nsresult
-nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+nsXULElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
     aVisitor.mForceContentDispatch = true; //FIXME! Bug 329119
     nsIAtom* tag = Tag();

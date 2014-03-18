@@ -386,7 +386,7 @@ NS_IMPL_ADDREF_INHERITED(IDBRequest, IDBWrapperCache)
 NS_IMPL_RELEASE_INHERITED(IDBRequest, IDBWrapperCache)
 
 nsresult
-IDBRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+IDBRequest::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

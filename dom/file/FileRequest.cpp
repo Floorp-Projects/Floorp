@@ -15,6 +15,8 @@
 #include "FileHelper.h"
 #include "LockedFile.h"
 
+using namespace mozilla;
+
 USING_FILE_NAMESPACE
 
 FileRequest::FileRequest(nsPIDOMWindow* aWindow)
@@ -43,7 +45,7 @@ FileRequest::Create(nsPIDOMWindow* aOwner, LockedFile* aLockedFile,
 }
 
 nsresult
-FileRequest::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+FileRequest::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

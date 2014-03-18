@@ -102,6 +102,7 @@ enum {
 ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
 
 namespace mozilla {
+class EventChainPreVisitor;
 class EventChainVisitor;
 class EventListenerManager;
 
@@ -1112,7 +1113,7 @@ protected:
   /**
    * Handle status bar updates before they can be cancelled.
    */
-  nsresult PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor);
+  nsresult PreHandleEventForLinks(EventChainPreVisitor& aVisitor);
 
   /**
    * Handle default actions for link event if the event isn't consumed yet.

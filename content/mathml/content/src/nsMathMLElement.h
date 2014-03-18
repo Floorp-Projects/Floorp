@@ -17,6 +17,10 @@ class nsCSSValue;
 
 typedef nsMappedAttributeElement nsMathMLElementBase;
 
+namespace mozilla {
+class EventChainPreVisitor;
+} // namespace mozilla
+
 /*
  * The base class for MathML elements.
  */
@@ -68,7 +72,8 @@ public:
   static void MapMathMLAttributesInto(const nsMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
   
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
+  virtual nsresult PreHandleEvent(
+                     mozilla::EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   nsresult Clone(nsINodeInfo*, nsINode**) const MOZ_OVERRIDE;
   virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;

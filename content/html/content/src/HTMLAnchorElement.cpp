@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsIDocument.h"
@@ -244,7 +245,7 @@ HTMLAnchorElement::IsHTMLFocusable(bool aWithMouse,
 }
 
 nsresult
-HTMLAnchorElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLAnchorElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   return PreHandleEventForAnchors(aVisitor);
 }

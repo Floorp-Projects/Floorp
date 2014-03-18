@@ -36,6 +36,7 @@
 
 #define SAVEPOINT_NAME "savepoint"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 USING_INDEXEDDB_NAMESPACE
 using mozilla::dom::quota::QuotaManager;
@@ -722,7 +723,7 @@ IDBTransaction::ObjectStore(const nsAString& aName, ErrorResult& aRv)
 }
 
 nsresult
-IDBTransaction::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+IDBTransaction::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = mDatabase;

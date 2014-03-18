@@ -3222,7 +3222,8 @@ HTMLInputElement::SelectAll(nsPresContext* aPresContext)
 }
 
 bool
-HTMLInputElement::NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const
+HTMLInputElement::NeedToInitializeEditorForEvent(
+                    EventChainPreVisitor& aVisitor) const
 {
   // We only need to initialize the editor for single line input controls because they
   // are lazily initialized.  We don't need to initialize the control for
@@ -3253,7 +3254,7 @@ HTMLInputElement::IsDisabledForEvents(uint32_t aMessage)
 }
 
 nsresult
-HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   // Do not process any DOM events if the element is disabled
   aVisitor.mCanHandle = false;

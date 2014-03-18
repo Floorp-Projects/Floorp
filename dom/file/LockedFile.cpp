@@ -341,7 +341,7 @@ NS_IMPL_EVENT_HANDLER(LockedFile, abort)
 NS_IMPL_EVENT_HANDLER(LockedFile, error)
 
 nsresult
-LockedFile::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+LockedFile::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
