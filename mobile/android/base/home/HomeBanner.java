@@ -101,26 +101,17 @@ public class HomeBanner extends LinearLayout
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Hide and disable the banner.
-                HomeBanner.this.setVisibility(View.GONE);
-                HomeBanner.this.setEnabled(false);
+                HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Dismiss", (String) getTag()));
-
-                if (mOnDismissListener != null) {
-                    mOnDismissListener.onDismiss();
-                }
             }
         });
 
         setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Hide and disable the banner. This does not remove the message from the rotation,
-                // so it may appear again if the JS onclick handler doesn't choose to remove it.
-                HomeBanner.this.setVisibility(View.GONE);
-                HomeBanner.this.setEnabled(false);
+                HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Click", (String) getTag()));
@@ -154,6 +145,18 @@ public class HomeBanner extends LinearLayout
 
     public void setOnDismissListener(OnDismissListener listener) {
         mOnDismissListener = listener;
+    }
+
+    /**
+     * Hides and disables the banner.
+     */
+    private void dismiss() {
+        setVisibility(View.GONE);
+        setEnabled(false);
+
+        if (mOnDismissListener != null) {
+            mOnDismissListener.onDismiss();
+        }
     }
 
     /**
