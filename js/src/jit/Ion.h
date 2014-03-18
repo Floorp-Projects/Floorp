@@ -160,8 +160,8 @@ static inline bool
 IsIonEnabled(JSContext *cx)
 {
     return cx->runtime()->options().ion() &&
-        cx->runtime()->options().baseline() &&
-        cx->typeInferenceEnabled();
+           cx->runtime()->options().baseline() &&
+           cx->runtime()->jitSupportsFloatingPoint;
 }
 
 inline bool
