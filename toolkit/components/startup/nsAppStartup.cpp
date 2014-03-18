@@ -165,9 +165,9 @@ nsAppStartup::Init()
   os->AddObserver(this, "profile-change-teardown", true);
   os->AddObserver(this, "xul-window-registered", true);
   os->AddObserver(this, "xul-window-destroyed", true);
+  os->AddObserver(this, "xpcom-shutdown", true);
 
 #if defined(XP_WIN)
-  os->AddObserver(this, "xpcom-shutdown", true);
   os->AddObserver(this, "places-init-complete", true);
   // This last event is only interesting to us for xperf-based measures
 
@@ -695,6 +695,7 @@ nsAppStartup::Observe(nsISupports *aSubject,
     ExitLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "sessionstore-windows-restored")) {
     StartupTimeline::Record(StartupTimeline::SESSION_RESTORED);
+    Telemetry::LeavingStartupStage();
 #if defined(XP_WIN)
     if (mSessionWindowRestoredProbe) {
       mSessionWindowRestoredProbe->Trigger();
@@ -703,11 +704,14 @@ nsAppStartup::Observe(nsISupports *aSubject,
     if (mPlacesInitCompleteProbe) {
       mPlacesInitCompleteProbe->Trigger();
     }
+#endif //defined(XP_WIN)
   } else if (!strcmp(aTopic, "xpcom-shutdown")) {
+    Telemetry::EnteringShutdownStage();
+#if defined(XP_WIN)
     if (mXPCOMShutdownProbe) {
       mXPCOMShutdownProbe->Trigger();
     }
-#endif //defined(XP_WIN)
+#endif // defined(XP_WIN)
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
