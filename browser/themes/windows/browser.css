@@ -15,7 +15,7 @@
 %define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
-%define conditionalForwardWithUrlbarWidth 27
+%define conditionalForwardWithUrlbarWidth 30
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -819,10 +819,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   background-clip: padding-box !important;
   /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
   clip-path: url(chrome://browser/content/browser.xul#windows-keyhole-forward-clip-path) !important;
-  margin-left: -7px !important;
+  margin-left: -6px !important;
   border-left-style: none !important;
   border-radius: 0 !important;
-  padding-left: 7px !important;
+  padding-left: 9px !important;
   padding-right: 3px !important;
 }
 
@@ -871,7 +871,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   border-radius: 10000px !important;
   background-clip: padding-box !important;
   background-color: hsla(210,25%,98%,.08) !important;
-  padding: 5px !important;
+  padding: 6px !important;
   border-color: hsla(210,4%,10%,.25) !important;
   transition-property: background-color, border-color !important;
   transition-duration: 250ms !important;
