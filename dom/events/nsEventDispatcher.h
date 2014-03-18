@@ -206,18 +206,19 @@ public:
   }
 };
 
-} // namespace mozilla
-
 /**
- * If an nsDispatchingCallback object is passed to Dispatch,
+ * If an EventDispatchingCallback object is passed to Dispatch,
  * its HandleEvent method is called after handling the default event group,
  * before handling the system event group.
  * This is used in nsPresShell.
  */
-class MOZ_STACK_CLASS nsDispatchingCallback {
+class MOZ_STACK_CLASS EventDispatchingCallback
+{
 public:
-  virtual void HandleEvent(mozilla::EventChainPostVisitor& aVisitor) = 0;
+  virtual void HandleEvent(EventChainPostVisitor& aVisitor) = 0;
 };
+
+} // namespace mozilla
 
 /**
  * The generic class for event dispatching.
@@ -247,7 +248,7 @@ public:
                            mozilla::WidgetEvent* aEvent,
                            nsIDOMEvent* aDOMEvent = nullptr,
                            nsEventStatus* aEventStatus = nullptr,
-                           nsDispatchingCallback* aCallback = nullptr,
+                           mozilla::EventDispatchingCallback* aCallback = nullptr,
                            nsCOMArray<mozilla::dom::EventTarget>* aTargets = nullptr);
 
   /**
