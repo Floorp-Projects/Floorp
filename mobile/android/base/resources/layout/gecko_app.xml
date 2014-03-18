@@ -102,6 +102,15 @@
 
         </org.mozilla.gecko.widget.GeckoViewFlipper>
 
+        <org.mozilla.gecko.toolbar.ToolbarProgressView android:id="@+id/progress"
+                                                       android:layout_width="fill_parent"
+                                                       android:layout_height="14dp"
+                                                       android:layout_marginTop="-8dp"
+                                                       android:layout_below="@id/browser_actionbar"
+                                                       android:src="@drawable/progress"
+                                                       android:background="@null"
+                                                       android:visibility="gone" />
+
     </view>
 
     <ViewStub android:id="@+id/toast_stub"
