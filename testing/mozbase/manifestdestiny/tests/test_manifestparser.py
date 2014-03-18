@@ -200,5 +200,17 @@ class TestManifestParser(unittest.TestCase):
         self.assertTrue(manifest in parser.manifest_defaults)
         self.assertEquals(parser.manifest_defaults[manifest]['foo'], 'bar')
 
+    def test_manifest_list(self):
+        """
+        Ensure a manifest with just a DEFAULT section still returns
+        itself from the manifests() method.
+        """
+
+        parser = ManifestParser()
+        manifest = os.path.join(here, 'no-tests.ini')
+        parser.read(manifest)
+        self.assertEqual(len(parser.tests), 0)
+        self.assertTrue(len(parser.manifests()) == 1)
+
 if __name__ == '__main__':
     unittest.main()
