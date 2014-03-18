@@ -566,12 +566,9 @@ class TreeMetadataEmitter(LoggingMixin):
                 # If there are no tests, look for support-files under DEFAULT.
                 process_support_files(defaults)
 
-            # We also copy manifests into the output directory,
-            # including manifests from [include:foo] directives.
-            for mpath in m.manifests():
-                mpath = mozpath.normpath(mpath)
-                out_path = mozpath.join(out_dir, mozpath.basename(mpath))
-                obj.installs[mpath] = (out_path, False)
+            # We also copy the manifest into the output directory.
+            out_path = mozpath.join(out_dir, mozpath.basename(manifest_path))
+            obj.installs[path] = (out_path, False)
 
             # Some manifests reference files that are auto generated as
             # part of the build or shouldn't be installed for some

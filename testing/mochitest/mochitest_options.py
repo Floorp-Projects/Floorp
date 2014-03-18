@@ -404,8 +404,6 @@ class MochitestOptions(optparse.OptionParser):
     def verifyOptions(self, options, mochitest):
         """ verify correct options and cleanup paths """
 
-        mozinfo.update({"e10s": options.e10s}) # for test manifest parsing.
-
         if options.app is None:
             if build_obj is not None:
                 options.app = build_obj.get_binary_path()
