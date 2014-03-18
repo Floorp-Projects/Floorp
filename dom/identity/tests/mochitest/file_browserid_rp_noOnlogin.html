@@ -1,0 +1,44 @@
+<!--
+  * This Source Code Form is subject to the terms of the Mozilla Public
+  * License, v. 2.0. If a copy of the MPL was not distributed with this
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ -->
+<!DOCTYPE html>
+<html>
+  <!--
+  RPs have the correct callbacks for BrowserID or Firefox Accounts
+  https://bugzilla.mozilla.org/show_bug.cgi?id=945363
+  -->
+<head>
+  <meta charset="utf-8">
+  <title>Test app for bug 945363</title>
+</head>
+
+<body>
+<script type="application/javascript;version=1.7">
+
+  // This is a bad RP.  It does not provide an onlogin callback.
+  // nsDOMIdentity will throw an exception when we call watch().
+
+  function postMessage(message) {
+    SpecialPowers.wrap(window).parent
+      .postMessage(JSON.stringify(message), "*");
+  }
+
+  let error = false;
+
+  window.addEventListener('load', function onLoad(event) {
+    window.removeEventListener('load', onLoad);
+    try {
+      navigator.mozId.watch({ });
+    } catch(ex) {
+      error = true;
+    }
+    postMessage({error: error});
+  }, false);
+
+
+
+</script>
+</body>
+</html>
