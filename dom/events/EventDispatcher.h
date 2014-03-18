@@ -13,7 +13,6 @@
 // Microsoft's API Name hackery sucks
 #undef CreateEvent
 
-class nsEventTargetChainItem;
 class nsIDOMEvent;
 class nsIScriptGlobalObject;
 class nsPresContext;
@@ -90,7 +89,7 @@ public:
    *       It is up to the Pre/PostHandleEvent implementation to decide how to
    *       use these bits.
    *
-   * @note Using uint16_t because that is used also in nsEventTargetChainItem.
+   * @note Using uint16_t because that is used also in EventTargetChainItem.
    */
   uint16_t              mItemFlags;
 
@@ -272,6 +271,10 @@ public:
                               const nsAString& aEventType,
                               nsIDOMEvent** aDOMEvent);
 
+  /**
+   * Called at shutting down.
+   */
+  static void Shutdown();
 };
 
 } // namespace mozilla

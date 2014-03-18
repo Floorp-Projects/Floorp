@@ -26,17 +26,18 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/unused.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 class ELMCreationDetector
 {
 public:
-  ELMCreationDetector() :
+  ELMCreationDetector()
     // We can do this optimization only in the main thread.
-    mNonMainThread(!NS_IsMainThread()),
-    mInitialCount(mNonMainThread ?
-                    0 : EventListenerManager::sMainThreadCreatedCount)
+    : mNonMainThread(!NS_IsMainThread())
+    , mInitialCount(mNonMainThread ?
+                      0 : EventListenerManager::sMainThreadCreatedCount)
   {
   }
 
@@ -50,6 +51,7 @@ public:
   {
     return !mNonMainThread;
   }
+
 private:
   bool mNonMainThread;
   uint32_t mInitialCount;
@@ -59,27 +61,28 @@ private:
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
 #define NS_TARGET_CHAIN_MAY_HAVE_MANAGER        (1 << 2)
 
-// nsEventTargetChainItem represents a single item in the event target chain.
-class nsEventTargetChainItem
+// EventTargetChainItem represents a single item in the event target chain.
+class EventTargetChainItem
 {
 private:
-  nsEventTargetChainItem(EventTarget* aTarget);
+  EventTargetChainItem(EventTarget* aTarget);
 public:
-  nsEventTargetChainItem()
-  : mFlags(0), mItemFlags(0)
+  EventTargetChainItem()
+    : mFlags(0)
+    , mItemFlags(0)
   {
   }
 
-  static nsEventTargetChainItem* Create(nsTArray<nsEventTargetChainItem>& aChain,
-                                        EventTarget* aTarget,
-                                        nsEventTargetChainItem* aChild = nullptr)
+  static EventTargetChainItem* Create(nsTArray<EventTargetChainItem>& aChain,
+                                      EventTarget* aTarget,
+                                      EventTargetChainItem* aChild = nullptr)
   {
     MOZ_ASSERT(!aChild || &aChain.ElementAt(aChain.Length() - 1) == aChild);
-    return new (aChain.AppendElement()) nsEventTargetChainItem(aTarget);
+    return new (aChain.AppendElement()) EventTargetChainItem(aTarget);
   }
 
-  static void DestroyLast(nsTArray<nsEventTargetChainItem>& aChain,
-                          nsEventTargetChainItem* aItem)
+  static void DestroyLast(nsTArray<EventTargetChainItem>& aChain,
+                          EventTargetChainItem* aItem)
   {
     uint32_t lastIndex = aChain.Length() - 1;
     MOZ_ASSERT(&aChain[lastIndex] == aItem);
@@ -155,14 +158,14 @@ public:
    * and system event group and calls also PostHandleEvent for each
    * item in the chain.
    */
-  static void HandleEventTargetChain(nsTArray<nsEventTargetChainItem>& aChain,
+  static void HandleEventTargetChain(nsTArray<EventTargetChainItem>& aChain,
                                      EventChainPostVisitor& aVisitor,
                                      EventDispatchingCallback* aCallback,
                                      ELMCreationDetector& aCd);
 
   /**
    * Resets aVisitor object and calls PreHandleEvent.
-   * Copies mItemFlags and mItemData to the current nsEventTargetChainItem.
+   * Copies mItemFlags and mItemData to the current EventTargetChainItem.
    */
   void PreHandleEvent(EventChainPreVisitor& aVisitor);
 
@@ -212,14 +215,16 @@ public:
   nsRefPtr<EventListenerManager>    mManager;
 };
 
-nsEventTargetChainItem::nsEventTargetChainItem(EventTarget* aTarget)
-: mTarget(aTarget), mFlags(0), mItemFlags(0)
+EventTargetChainItem::EventTargetChainItem(EventTarget* aTarget)
+  : mTarget(aTarget)
+  , mFlags(0)
+  , mItemFlags(0)
 {
   MOZ_ASSERT(!aTarget || mTarget == aTarget->GetTargetForEventTargetChain());
 }
 
 void
-nsEventTargetChainItem::PreHandleEvent(EventChainPreVisitor& aVisitor)
+EventTargetChainItem::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.Reset();
   unused << mTarget->PreHandleEvent(aVisitor);
@@ -231,7 +236,7 @@ nsEventTargetChainItem::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 void
-nsEventTargetChainItem::PostHandleEvent(EventChainPostVisitor& aVisitor)
+EventTargetChainItem::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   aVisitor.mItemFlags = mItemFlags;
   aVisitor.mItemData = mItemData;
@@ -239,11 +244,11 @@ nsEventTargetChainItem::PostHandleEvent(EventChainPostVisitor& aVisitor)
 }
 
 void
-nsEventTargetChainItem::HandleEventTargetChain(
-                          nsTArray<nsEventTargetChainItem>& aChain,
-                          EventChainPostVisitor& aVisitor,
-                          EventDispatchingCallback* aCallback,
-                          ELMCreationDetector& aCd)
+EventTargetChainItem::HandleEventTargetChain(
+                        nsTArray<EventTargetChainItem>& aChain,
+                        EventChainPostVisitor& aVisitor,
+                        EventDispatchingCallback* aCallback,
+                        ELMCreationDetector& aCd)
 {
   // Save the target so that it can be restored later.
   nsCOMPtr<EventTarget> firstTarget = aVisitor.mEvent->target;
@@ -253,7 +258,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
   aVisitor.mEvent->mFlags.mInCapturePhase = true;
   aVisitor.mEvent->mFlags.mInBubblingPhase = false;
   for (uint32_t i = chainLength - 1; i > 0; --i) {
-    nsEventTargetChainItem& item = aChain[i];
+    EventTargetChainItem& item = aChain[i];
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item.ForceContentDispatch()) &&
         !aVisitor.mEvent->mFlags.mPropagationStopped) {
@@ -275,7 +280,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
 
   // Target
   aVisitor.mEvent->mFlags.mInBubblingPhase = true;
-  nsEventTargetChainItem& targetItem = aChain[0];
+  EventTargetChainItem& targetItem = aChain[0];
   if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        targetItem.ForceContentDispatch())) {
@@ -288,7 +293,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
   // Bubble
   aVisitor.mEvent->mFlags.mInCapturePhase = false;
   for (uint32_t i = 1; i < chainLength; ++i) {
-    nsEventTargetChainItem& item = aChain[i];
+    EventTargetChainItem& item = aChain[i];
     EventTarget* newTarget = item.GetNewTarget();
     if (newTarget) {
       // Item is at anonymous boundary. Need to retarget for the current item
@@ -341,19 +346,19 @@ nsEventTargetChainItem::HandleEventTargetChain(
   }
 }
 
-static nsTArray<nsEventTargetChainItem>* sCachedMainThreadChain = nullptr;
+static nsTArray<EventTargetChainItem>* sCachedMainThreadChain = nullptr;
 
-void
-NS_ShutdownEventTargetChainRecycler()
+/* static */ void
+EventDispatcher::Shutdown()
 {
   delete sCachedMainThreadChain;
   sCachedMainThreadChain = nullptr;
 }
 
-nsEventTargetChainItem*
-EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aChain,
+EventTargetChainItem*
+EventTargetChainItemForChromeTarget(nsTArray<EventTargetChainItem>& aChain,
                                     nsINode* aNode,
-                                    nsEventTargetChainItem* aChild = nullptr)
+                                    EventTargetChainItem* aChild = nullptr)
 {
   if (!aNode->IsInDoc()) {
     return nullptr;
@@ -362,18 +367,16 @@ EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aChain,
   EventTarget* piTarget = win ? win->GetParentTarget() : nullptr;
   NS_ENSURE_TRUE(piTarget, nullptr);
 
-  nsEventTargetChainItem* etci =
-    nsEventTargetChainItem::Create(aChain,
-                                   piTarget->GetTargetForEventTargetChain(),
-                                   aChild);
+  EventTargetChainItem* etci =
+    EventTargetChainItem::Create(aChain,
+                                 piTarget->GetTargetForEventTargetChain(),
+                                 aChild);
   if (!etci->IsValid()) {
-    nsEventTargetChainItem::DestroyLast(aChain, etci);
+    EventTargetChainItem::DestroyLast(aChain, etci);
     return nullptr;
   }
   return etci;
 }
-
-namespace mozilla {
 
 /* static */ nsresult
 EventDispatcher::Dispatch(nsISupports* aTarget,
@@ -466,21 +469,21 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
   nsRefPtr<nsPresContext> kungFuDeathGrip(aPresContext);
 
   ELMCreationDetector cd;
-  nsTArray<nsEventTargetChainItem> chain;
+  nsTArray<EventTargetChainItem> chain;
   if (cd.IsMainThread()) {
     if (!sCachedMainThreadChain) {
-      sCachedMainThreadChain = new nsTArray<nsEventTargetChainItem>();
+      sCachedMainThreadChain = new nsTArray<EventTargetChainItem>();
     }
     chain.SwapElements(*sCachedMainThreadChain);
     chain.SetCapacity(128);
   }
 
   // Create the event target chain item for the event target.
-  nsEventTargetChainItem* targetEtci =
-    nsEventTargetChainItem::Create(chain, target->GetTargetForEventTargetChain());
+  EventTargetChainItem* targetEtci =
+    EventTargetChainItem::Create(chain, target->GetTargetForEventTargetChain());
   MOZ_ASSERT(&chain[0] == targetEtci);
   if (!targetEtci->IsValid()) {
-    nsEventTargetChainItem::DestroyLast(chain, targetEtci);
+    EventTargetChainItem::DestroyLast(chain, targetEtci);
     return NS_ERROR_FAILURE;
   }
 
@@ -523,7 +526,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
 
   if (!preVisitor.mCanHandle && preVisitor.mAutomaticChromeDispatch && content) {
     // Event target couldn't handle the event. Try to propagate to chrome.
-    nsEventTargetChainItem::DestroyLast(chain, targetEtci);
+    EventTargetChainItem::DestroyLast(chain, targetEtci);
     targetEtci = EventTargetChainItemForChromeTarget(chain, content);
     NS_ENSURE_STATE(targetEtci);
     MOZ_ASSERT(&chain[0] == targetEtci);
@@ -534,14 +537,14 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     // Setting the retarget to the |target| simplifies retargeting code.
     nsCOMPtr<EventTarget> t = do_QueryInterface(aEvent->target);
     targetEtci->SetNewTarget(t);
-    nsEventTargetChainItem* topEtci = targetEtci;
+    EventTargetChainItem* topEtci = targetEtci;
     targetEtci = nullptr;
     while (preVisitor.mParentTarget) {
       EventTarget* parentTarget = preVisitor.mParentTarget;
-      nsEventTargetChainItem* parentEtci =
-        nsEventTargetChainItem::Create(chain, preVisitor.mParentTarget, topEtci);
+      EventTargetChainItem* parentEtci =
+        EventTargetChainItem::Create(chain, preVisitor.mParentTarget, topEtci);
       if (!parentEtci->IsValid()) {
-        nsEventTargetChainItem::DestroyLast(chain, parentEtci);
+        EventTargetChainItem::DestroyLast(chain, parentEtci);
         rv = NS_ERROR_FAILURE;
         break;
       }
@@ -558,7 +561,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
       if (preVisitor.mCanHandle) {
         topEtci = parentEtci;
       } else {
-        nsEventTargetChainItem::DestroyLast(chain, parentEtci);
+        EventTargetChainItem::DestroyLast(chain, parentEtci);
         parentEtci = nullptr;
         if (preVisitor.mAutomaticChromeDispatch && content) {
           // Even if the current target can't handle the event, try to
@@ -591,10 +594,8 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
       } else {
         // Event target chain is created. Handle the chain.
         EventChainPostVisitor postVisitor(preVisitor);
-        nsEventTargetChainItem::HandleEventTargetChain(chain,
-                                                       postVisitor,
-                                                       aCallback,
-                                                       cd);
+        EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
+                                                     aCallback, cd);
 
         preVisitor.mEventStatus = postVisitor.mEventStatus;
         // If the DOM event was created during event flow.
@@ -605,7 +606,7 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     }
   }
 
-  // Note, nsEventTargetChainItem objects are deleted when the chain goes out of
+  // Note, EventTargetChainItem objects are deleted when the chain goes out of
   // the scope.
 
   aEvent->mFlags.mIsBeingDispatched = false;
