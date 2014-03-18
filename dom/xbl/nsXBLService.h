@@ -84,10 +84,10 @@ protected:
 
   // Release any memory that we can
   nsresult FlushMemory();
-  
+
   // This method synchronously loads and parses an XBL file.
   nsresult FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-                                nsIURI* aDocumentURI, nsIURI* aBindingURI, 
+                                nsIURI* aDocumentURI, nsIURI* aBindingURI,
                                 bool aForceSyncLoad, nsIDocument** aResult);
 
   /**
