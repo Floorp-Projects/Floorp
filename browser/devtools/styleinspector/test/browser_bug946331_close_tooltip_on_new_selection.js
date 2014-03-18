@@ -25,11 +25,11 @@ function test() {
 function createDocument() {
   contentDoc.body.innerHTML = PAGE_CONTENT;
 
-  openRuleView((aInspector, aRuleView) => {
+  openView("ruleview", (aInspector, aRuleView) => {
     inspector = aInspector;
     ruleView = aRuleView;
-    inspector.sidebar.once("computedview-ready", () => {
-      computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
+    openView("computedview", (_, aComputedView) => {
+      computedView = aComputedView;
       startTests();
     });
   });
@@ -66,7 +66,6 @@ function testComputedView() {
   info("Testing computed view tooltip closes on new selection");
 
   inspector.sidebar.select("computedview");
-  computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
 
   // Show the computed view tooltip
   let tooltip = computedView.tooltip;

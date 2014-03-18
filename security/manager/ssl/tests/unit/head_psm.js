@@ -9,7 +9,7 @@ const { 'classes': Cc, 'interfaces': Ci, 'utils': Cu, 'results': Cr } = Componen
 let { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 let { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { Promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { HttpServer } = Cu.import("resource://testing-common/httpd.js", {});
 let { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm");
 
