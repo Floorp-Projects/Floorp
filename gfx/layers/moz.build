@@ -202,6 +202,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'opengl/GrallocTextureClient.cpp',
         'opengl/GrallocTextureHost.cpp',
     ]
+    LOCAL_INCLUDES += ['/widget/gonk']
     SOURCES += [
         'ipc/ShadowLayerUtilsGralloc.cpp',
     ]

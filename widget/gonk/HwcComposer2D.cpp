@@ -571,7 +571,7 @@ HwcComposer2D::TryHwComposition()
                 return false;
             }
             mList->hwLayers[idx].handle = fbsurface->lastHandle;
-            mList->hwLayers[idx].acquireFenceFd = fbsurface->lastFenceFD;
+            mList->hwLayers[idx].acquireFenceFd = fbsurface->GetPrevFBAcquireFd();
         }
     }
 
@@ -601,7 +601,7 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
     if (mPrepared) {
         // No mHwc prepare, if already prepared in current draw cycle
         mList->hwLayers[mList->numHwLayers - 1].handle = fbsurface->lastHandle;
-        mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = fbsurface->lastFenceFD;
+        mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = fbsurface->GetPrevFBAcquireFd();
     } else {
         mList->numHwLayers = 2;
         mList->hwLayers[0].hints = 0;
@@ -611,7 +611,7 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
         mList->hwLayers[0].acquireFenceFd = -1;
         mList->hwLayers[0].releaseFenceFd = -1;
         mList->hwLayers[0].displayFrame = {0, 0, mScreenRect.width, mScreenRect.height};
-        Prepare(fbsurface->lastHandle, fbsurface->lastFenceFD);
+        Prepare(fbsurface->lastHandle, fbsurface->GetPrevFBAcquireFd());
     }
 
     // GPU or partial HWC Composition

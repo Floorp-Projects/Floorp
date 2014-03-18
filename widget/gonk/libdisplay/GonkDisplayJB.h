@@ -20,6 +20,7 @@
 #include "FramebufferSurface.h"
 #include "hardware/hwcomposer.h"
 #include "hardware/power.h"
+#include "ui/Fence.h"
 #include "utils/RefBase.h"
 
 namespace mozilla {
@@ -48,6 +49,8 @@ public:
     virtual void UpdateFBSurface(EGLDisplay dpy, EGLSurface sur);
 
     virtual void SetFBReleaseFd(int fd);
+
+    virtual int GetPrevFBAcquireFd();
 
     bool Post(buffer_handle_t buf, int fence);
 
