@@ -26,7 +26,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/Event.h"
 #include "nsEventStateManager.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -277,23 +276,24 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   nsresult rv = EnsureHandlers();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool isDisabled;
-  nsCOMPtr<Element> el = GetElement(&isDisabled);
+  nsCOMPtr<Element> el = GetElement();
   if (!el) {
     if (mUserHandler) {
-      WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler, true);
+      WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler);
       aKeyEvent->GetDefaultPrevented(&prevent);
       if (prevent)
         return NS_OK; // Handled by the user bindings. Our work here is done.
     }
   }
 
+  nsCOMPtr<nsIContent> content = do_QueryInterface(el);
   // skip keysets that are disabled
-  if (isDisabled) {
+  if (content && content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                      nsGkAtoms::_true, eCaseMatters)) {
     return NS_OK;
   }
 
-  WalkHandlersInternal(aKeyEvent, aEventType, mHandler, true);
+  WalkHandlersInternal(aKeyEvent, aEventType, mHandler);
 
   return NS_OK;
 }
@@ -304,50 +304,20 @@ nsXBLWindowKeyHandler::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMKeyEvent> keyEvent(do_QueryInterface(aEvent));
   NS_ENSURE_TRUE(keyEvent, NS_ERROR_INVALID_ARG);
 
-  uint16_t eventPhase;
-  aEvent->GetEventPhase(&eventPhase);
-  if (eventPhase == nsIDOMEvent::CAPTURING_PHASE) {
-    HandleEventOnCapture(keyEvent);
-    return NS_OK;
-  }
-
   nsAutoString eventType;
   aEvent->GetType(eventType);
   nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(eventType);
   NS_ENSURE_TRUE(eventTypeAtom, NS_ERROR_OUT_OF_MEMORY);
 
+  if (!mWeakPtrForElement) {
+    nsCOMPtr<mozilla::dom::Element> originalTarget =
+      do_QueryInterface(aEvent->GetInternalNSEvent()->originalTarget);
+    if (nsEventStateManager::IsRemoteTarget(originalTarget)) {
+      return NS_OK;
+    }
+  }
+
   return WalkHandlers(keyEvent, eventTypeAtom);
-}
-
-void
-nsXBLWindowKeyHandler::HandleEventOnCapture(nsIDOMKeyEvent* aEvent)
-{
-  WidgetKeyboardEvent* widgetEvent =
-    aEvent->GetInternalNSEvent()->AsKeyboardEvent();
-
-  if (widgetEvent->mFlags.mNoCrossProcessBoundaryForwarding) {
-    return;
-  }
-
-  nsCOMPtr<mozilla::dom::Element> originalTarget =
-    do_QueryInterface(aEvent->GetInternalNSEvent()->originalTarget);
-  if (!nsEventStateManager::IsRemoteTarget(originalTarget)) {
-    return;
-  }
-
-  if (!HasHandlerForEvent(aEvent)) {
-    return;
-  }
-
-  // If this event hasn't been marked as mNoCrossProcessBoundaryForwarding
-  // yet, it means it wasn't processed by content. We'll not call any
-  // of the handlers at this moment, and will wait for the event to be
-  // redispatched with mNoCrossProcessBoundaryForwarding = 1 to process it.
-
-  // Inform the child process that this is a event that we want a reply
-  // from.
-  widgetEvent->mFlags.mWantReplyFromContentProcess = 1;
-  aEvent->StopPropagation();
 }
 
 //
@@ -421,31 +391,29 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
 // WalkHandlersInternal and WalkHandlersAndExecute
 //
 // Given a particular DOM event and a pointer to the first handler in the list,
-// scan through the list to find something to handle the event. If aExecute = true,
-// the handler will be executed; otherwise just return an answer telling if a handler
-// for that event was found.
+// scan through the list to find something to handle the event and then make it
+// so.
 //
-bool
+nsresult
 nsXBLWindowKeyHandler::WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent,
                                             nsIAtom* aEventType, 
-                                            nsXBLPrototypeHandler* aHandler,
-                                            bool aExecute)
+                                            nsXBLPrototypeHandler* aHandler)
 {
   nsAutoTArray<nsShortcutCandidate, 10> accessKeys;
   nsContentUtils::GetAccelKeyCandidates(aKeyEvent, accessKeys);
 
   if (accessKeys.IsEmpty()) {
-    return WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
-                                  0, false, aExecute);
+    WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler, 0, false);
+    return NS_OK;
   }
 
   for (uint32_t i = 0; i < accessKeys.Length(); ++i) {
     nsShortcutCandidate &key = accessKeys[i];
     if (WalkHandlersAndExecute(aKeyEvent, aEventType, aHandler,
-                               key.mCharCode, key.mIgnoreShift, aExecute))
-      return true;
+                               key.mCharCode, key.mIgnoreShift))
+      return NS_OK;
   }
-  return false;
+  return NS_OK;
 }
 
 bool
@@ -453,8 +421,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
                                               nsIAtom* aEventType,
                                               nsXBLPrototypeHandler* aHandler,
                                               uint32_t aCharCode,
-                                              bool aIgnoreShiftKey,
-                                              bool aExecute)
+                                              bool aIgnoreShiftKey)
 {
   nsresult rv;
 
@@ -524,10 +491,6 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
       piTarget = mTarget;
     }
 
-    if (!aExecute) {
-      return true;
-    }
-
     rv = currHandler->ExecuteHandler(piTarget, aKeyEvent);
     if (NS_SUCCEEDED(rv)) {
       return true;
@@ -537,38 +500,10 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(nsIDOMKeyEvent* aKeyEvent,
   return false;
 }
 
-bool
-nsXBLWindowKeyHandler::HasHandlerForEvent(nsIDOMKeyEvent* aEvent)
-{
-  if (!aEvent->InternalDOMEvent()->IsTrusted()) {
-    return false;
-  }
-
-  nsresult rv = EnsureHandlers();
-  NS_ENSURE_SUCCESS(rv, false);
-
-  bool isDisabled;
-  nsCOMPtr<Element> el = GetElement(&isDisabled);
-  if (el && isDisabled) {
-    return false;
-  }
-
-  nsAutoString eventType;
-  aEvent->GetType(eventType);
-  nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(eventType);
-  NS_ENSURE_TRUE(eventTypeAtom, false);
-
-  return WalkHandlersInternal(aEvent, eventTypeAtom, mHandler, false);
-}
-
 already_AddRefed<Element>
-nsXBLWindowKeyHandler::GetElement(bool* aIsDisabled)
+nsXBLWindowKeyHandler::GetElement()
 {
   nsCOMPtr<Element> element = do_QueryReferent(mWeakPtrForElement);
-  if (element && aIsDisabled) {
-    *aIsDisabled = element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                        nsGkAtoms::_true, eCaseMatters);
-  }
   return element.forget();
 }
 
