@@ -969,12 +969,9 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
 }
 
-#sync-button[cui-areatype="toolbar"][status="active"] {
-  /* !important because we need to override the glass selectors that trigger
-   * use of the Toolbar-inverted image. Those use a list of all primary toolbar
-   * buttons, so we can't easily fix those selectors. */
-  list-style-image: url("chrome://browser/skin/sync-throbber.png") !important;
-  -moz-image-region: rect(0, 18px, 18px, 0);
+#main-window[tabsintitlebar]:not([inFullscreen]) :-moz-any(#TabsToolbar, #toolbar-menubar) > #sync-button[status="active"]:-moz-system-metric(windows-classic):not(:-moz-lwtheme),
+#main-window[tabsintitlebar]:not([inFullscreen]) :-moz-any(#TabsToolbar, #toolbar-menubar) > toolbarpaletteitem > #sync-button[status="active"]:-moz-system-metric(windows-classic):not(:-moz-lwtheme) {
+  list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
 }
 
 /* tabview button & menu item */
