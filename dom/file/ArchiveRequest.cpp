@@ -6,10 +6,10 @@
 
 #include "ArchiveRequest.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/ArchiveRequestBinding.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsEventDispatcher.h"
 
 using namespace mozilla;
 

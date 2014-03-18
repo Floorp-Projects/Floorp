@@ -5,10 +5,10 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/EventTarget.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsIDOMEvent.h"
 
 namespace mozilla {
@@ -25,8 +25,8 @@ AsyncEventDispatcher::AsyncEventDispatcher(nsINode* aEventNode,
   , mDispatchChromeOnly(false)
 {
   MOZ_ASSERT(mEventNode);
-  nsEventDispatcher::CreateEvent(aEventNode, nullptr, &aEvent, EmptyString(),
-                                 getter_AddRefs(mEvent));
+  EventDispatcher::CreateEvent(aEventNode, nullptr, &aEvent, EmptyString(),
+                               getter_AddRefs(mEvent));
   NS_ASSERTION(mEvent, "Should never fail to create an event");
   mEvent->DuplicatePrivateData();
   mEvent->SetTrusted(aEvent.mFlags.mIsTrusted);
@@ -49,8 +49,8 @@ AsyncEventDispatcher::Run()
       if (!target) {
         return NS_ERROR_INVALID_ARG;
       }
-      nsEventDispatcher::DispatchDOMEvent(target, nullptr, mEvent,
-                                          nullptr, nullptr);
+      EventDispatcher::DispatchDOMEvent(target, nullptr, mEvent,
+                                        nullptr, nullptr);
     } else {
       nsCOMPtr<EventTarget> target = mEventNode.get();
       bool defaultActionEnabled; // This is not used because the caller is async

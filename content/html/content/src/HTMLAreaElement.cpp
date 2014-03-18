@@ -8,8 +8,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/HTMLAreaElementBinding.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsEventDispatcher.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Area)
 

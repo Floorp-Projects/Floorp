@@ -36,7 +36,7 @@
 #include "nsRuleData.h"
 
 #include "nsIDOMHTMLMapElement.h"
-#include "nsEventDispatcher.h"
+#include "mozilla/EventDispatcher.h"
 
 #include "nsLayoutUtils.h"
 

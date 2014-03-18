@@ -8,6 +8,7 @@
 
 #include "IDBDatabase.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "mozilla/dom/ContentParent.h"
@@ -15,7 +16,6 @@
 #include "mozilla/dom/DOMStringListBinding.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/QuotaManager.h"
-#include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"

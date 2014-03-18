@@ -15,7 +15,6 @@
 #include "nsIContent.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsEventDispatcher.h"
 #include "nsAutoPtr.h"
 #include "nsComponentManagerUtils.h"
 

@@ -7,10 +7,10 @@
 #include "mozilla/dom/HTMLAnchorElement.h"
 
 #include "mozilla/dom/HTMLAnchorElementBinding.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsIDocument.h"

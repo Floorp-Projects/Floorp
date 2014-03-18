@@ -21,8 +21,8 @@
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"
-#include "nsEventDispatcher.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/ElementBinding.h"
 
 using namespace mozilla;

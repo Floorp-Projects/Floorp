@@ -15,8 +15,8 @@
 #include "nsImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "nsEventStates.h"
-#include "nsEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 
 using namespace mozilla;
 

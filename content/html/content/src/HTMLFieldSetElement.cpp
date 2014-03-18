@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/HTMLFieldSetElementBinding.h"
 #include "nsContentList.h"
-#include "nsEventDispatcher.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(FieldSet)
 

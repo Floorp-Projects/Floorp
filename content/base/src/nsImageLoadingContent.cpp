@@ -40,7 +40,6 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsIContentPolicy.h"
-#include "nsEventDispatcher.h"
 #include "nsSVGEffects.h"
 
 #include "mozAutoDocUpdate.h"

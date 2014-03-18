@@ -7,10 +7,10 @@
 
 #include "nsPIDOMWindow.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIDOMEvent.h"
 

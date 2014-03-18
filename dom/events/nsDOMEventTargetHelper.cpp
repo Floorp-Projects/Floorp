@@ -5,11 +5,11 @@
 
 #include "nsDOMEventTargetHelper.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsIDocument.h"
 #include "prprf.h"
 #include "nsGlobalWindow.h"
 #include "ScriptSettings.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Likely.h"
 
@@ -242,7 +242,7 @@ nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
-    nsEventDispatcher::DispatchDOMEvent(this, nullptr, aEvent, nullptr, &status);
+    EventDispatcher::DispatchDOMEvent(this, nullptr, aEvent, nullptr, &status);
 
   *aRetVal = (status != nsEventStatus_eConsumeNoDefault);
   return rv;
@@ -316,9 +316,8 @@ nsDOMEventTargetHelper::DispatchDOMEvent(WidgetEvent* aEvent,
                                          nsPresContext* aPresContext,
                                          nsEventStatus* aEventStatus)
 {
-  return
-    nsEventDispatcher::DispatchDOMEvent(this, aEvent, aDOMEvent, aPresContext,
-                                        aEventStatus);
+  return EventDispatcher::DispatchDOMEvent(this, aEvent, aDOMEvent,
+                                           aPresContext, aEventStatus);
 }
 
 EventListenerManager*

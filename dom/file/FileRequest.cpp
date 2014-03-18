@@ -6,9 +6,9 @@
 
 #include "FileRequest.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/FileRequestBinding.h"
 #include "nsCxPusher.h"
-#include "nsEventDispatcher.h"
 #include "nsError.h"
 #include "nsIDOMProgressEvent.h"
 #include "nsDOMClassInfoID.h"

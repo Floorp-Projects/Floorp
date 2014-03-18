@@ -5,9 +5,9 @@
 
 #include "nsScriptElement.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsPresContext.h"
 #include "nsScriptLoader.h"
 #include "nsIParser.h"
@@ -63,7 +63,7 @@ nsScriptElement::ScriptEvaluated(nsresult aResult,
     // Load event doesn't bubble.
     event.mFlags.mBubbles = (type != NS_LOAD);
 
-    nsEventDispatcher::Dispatch(cont, presContext, &event, nullptr, &status);
+    EventDispatcher::Dispatch(cont, presContext, &event, nullptr, &status);
   }
 
   return rv;

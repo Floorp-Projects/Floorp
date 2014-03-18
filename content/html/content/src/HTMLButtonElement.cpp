@@ -23,11 +23,11 @@
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsPresState.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
@@ -278,9 +278,9 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                                    NS_MOUSE_CLICK, nullptr,
                                    WidgetMouseEvent::eReal);
             event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-            nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                        aVisitor.mPresContext, &event, nullptr,
-                                        &status);
+            EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                      aVisitor.mPresContext, &event, nullptr,
+                                      &status);
             aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
           }
         }

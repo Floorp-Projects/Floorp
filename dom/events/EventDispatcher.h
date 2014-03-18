@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZILLA_INTERNAL_API
-#ifndef nsEventDispatcher_h___
-#define nsEventDispatcher_h___
+#ifndef mozilla_EventDispatcher_h_
+#define mozilla_EventDispatcher_h_
 
 #include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
@@ -27,9 +27,9 @@ class EventTarget;
 
 /**
  * About event dispatching:
- * When either nsEventDispatcher::Dispatch or
- * nsEventDispatcher::DispatchDOMEvent is called an event target chain is
- * created. nsEventDispatcher creates the chain by calling PreHandleEvent 
+ * When either EventDispatcher::Dispatch or
+ * EventDispatcher::DispatchDOMEvent is called an event target chain is
+ * created. EventDispatcher creates the chain by calling PreHandleEvent 
  * on each event target and the creation continues until either the mCanHandle
  * member of the EventChainPreVisitor object is false or the mParentTarget
  * does not point to a new target. The event target chain is created in the
@@ -218,13 +218,11 @@ public:
   virtual void HandleEvent(EventChainPostVisitor& aVisitor) = 0;
 };
 
-} // namespace mozilla
-
 /**
  * The generic class for event dispatching.
  * Must not be used outside Gecko!
  */
-class nsEventDispatcher
+class EventDispatcher
 {
 public:
   /**
@@ -245,22 +243,22 @@ public:
    */
   static nsresult Dispatch(nsISupports* aTarget,
                            nsPresContext* aPresContext,
-                           mozilla::WidgetEvent* aEvent,
+                           WidgetEvent* aEvent,
                            nsIDOMEvent* aDOMEvent = nullptr,
                            nsEventStatus* aEventStatus = nullptr,
-                           mozilla::EventDispatchingCallback* aCallback = nullptr,
-                           nsCOMArray<mozilla::dom::EventTarget>* aTargets = nullptr);
+                           EventDispatchingCallback* aCallback = nullptr,
+                           nsCOMArray<dom::EventTarget>* aTargets = nullptr);
 
   /**
    * Dispatches an event.
    * If aDOMEvent is not nullptr, it is used for dispatching
    * (aEvent can then be nullptr) and (if aDOMEvent is not |trusted| already),
    * the |trusted| flag is set based on the UniversalXPConnect capability.
-   * Otherwise this works like nsEventDispatcher::Dispatch.
+   * Otherwise this works like EventDispatcher::Dispatch.
    * @note Use this method when dispatching nsIDOMEvent.
    */
   static nsresult DispatchDOMEvent(nsISupports* aTarget,
-                                   mozilla::WidgetEvent* aEvent,
+                                   WidgetEvent* aEvent,
                                    nsIDOMEvent* aDOMEvent,
                                    nsPresContext* aPresContext,
                                    nsEventStatus* aEventStatus);
@@ -268,13 +266,15 @@ public:
   /**
    * Creates a DOM Event.
    */
-  static nsresult CreateEvent(mozilla::dom::EventTarget* aOwner,
+  static nsresult CreateEvent(dom::EventTarget* aOwner,
                               nsPresContext* aPresContext,
-                              mozilla::WidgetEvent* aEvent,
+                              WidgetEvent* aEvent,
                               const nsAString& aEventType,
                               nsIDOMEvent** aDOMEvent);
 
 };
 
-#endif
+} // namespace mozilla
+
+#endif // mozilla_EventDispatcher_h_
 #endif

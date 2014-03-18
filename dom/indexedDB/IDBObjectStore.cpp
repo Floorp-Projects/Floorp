@@ -25,7 +25,6 @@
 #include "nsDOMClassInfo.h"
 #include "nsDOMFile.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"

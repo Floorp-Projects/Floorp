@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsDOMBlobBuilder.h"
@@ -36,7 +37,6 @@
 #include "nsICachingChannel.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
-#include "nsEventDispatcher.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
@@ -1393,9 +1393,9 @@ nsXMLHttpRequest::GetLoadGroup() const
 nsresult
 nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 {
-  nsresult rv = nsEventDispatcher::CreateEvent(this, nullptr, nullptr,
-                                               NS_LITERAL_STRING("Events"),
-                                               aDOMEvent);
+  nsresult rv = EventDispatcher::CreateEvent(this, nullptr, nullptr,
+                                             NS_LITERAL_STRING("Events"),
+                                             aDOMEvent);
   if (NS_FAILED(rv)) {
     return rv;
   }

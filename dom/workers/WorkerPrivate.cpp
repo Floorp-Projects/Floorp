@@ -35,6 +35,7 @@
 #include "js/MemoryMetrics.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ErrorEvent.h"
@@ -52,7 +53,6 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsError.h"
-#include "nsEventDispatcher.h"
 #include "nsDOMJSUtils.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsJSEnvironment.h"
@@ -1223,9 +1223,9 @@ public:
           event->SetTrusted(true);
 
           nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalTarget);
-          if (NS_FAILED(nsEventDispatcher::DispatchDOMEvent(target, nullptr,
-                                                            event, nullptr,
-                                                            &status))) {
+          if (NS_FAILED(EventDispatcher::DispatchDOMEvent(target, nullptr,
+                                                          event, nullptr,
+                                                          &status))) {
             NS_WARNING("Failed to dispatch worker thread error event!");
             status = nsEventStatus_eIgnore;
           }

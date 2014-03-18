@@ -57,11 +57,11 @@
 #include "nsLinebreakConverter.h" //to strip out carriage returns
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -3201,8 +3201,8 @@ HTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext)
     WidgetEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
 
     mHandlingSelectEvent = true;
-    nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                aPresContext, &event, nullptr, &status);
+    EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                              aPresContext, &event, nullptr, &status);
     mHandlingSelectEvent = false;
   }
 
@@ -3983,9 +3983,9 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                 event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
 
-                nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                            aVisitor.mPresContext, &event,
-                                            nullptr, &status);
+                EventDispatcher::Dispatch(static_cast<nsIContent*>(this),
+                                          aVisitor.mPresContext, &event,
+                                          nullptr, &status);
                 aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
               } // case
             } // switch
@@ -4017,9 +4017,10 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                                            NS_MOUSE_CLICK, nullptr,
                                            WidgetMouseEvent::eReal);
                     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
-                    rv = nsEventDispatcher::Dispatch(ToSupports(selectedRadioButton),
-                                                     aVisitor.mPresContext,
-                                                     &event, nullptr, &status);
+                    rv =
+                      EventDispatcher::Dispatch(ToSupports(selectedRadioButton),
+                                                aVisitor.mPresContext,
+                                                &event, nullptr, &status);
                     if (NS_SUCCEEDED(rv)) {
                       aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
                     }
@@ -5466,13 +5467,14 @@ FireEventForAccessibility(nsIDOMHTMLInputElement* aTarget,
 {
   nsCOMPtr<nsIDOMEvent> event;
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aTarget);
-  if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(element, aPresContext, nullptr,
-                                                  NS_LITERAL_STRING("Events"),
-                                                  getter_AddRefs(event)))) {
+  if (NS_SUCCEEDED(EventDispatcher::CreateEvent(element, aPresContext, nullptr,
+                                                NS_LITERAL_STRING("Events"),
+                                                getter_AddRefs(event)))) {
     event->InitEvent(aEventType, true, true);
     event->SetTrusted(true);
 
-    nsEventDispatcher::DispatchDOMEvent(aTarget, nullptr, event, aPresContext, nullptr);
+    EventDispatcher::DispatchDOMEvent(aTarget, nullptr, event, aPresContext,
+                                      nullptr);
   }
 
   return NS_OK;
