@@ -284,7 +284,7 @@ RilObject.prototype = {
     this.radioState = GECKO_RADIOSTATE_UNAVAILABLE;
 
     /**
-     * True if we are on CDMA network.
+     * True if we are on a CDMA phone.
      */
     this._isCdma = false;
 
@@ -3400,6 +3400,46 @@ RilObject.prototype = {
     return Math.floor((signal - min) * 100 / (max - min));
   },
 
+  /**
+   * Process LTE signal strength to the signal info object.
+   *
+   * @param signal
+   *        The signal object reported from RIL/modem.
+   *
+   * @return The object of signal strength info.
+   *         Or null if invalid signal input.
+   */
+  _processLteSignal: function(signal) {
+    // Valid values are 0-63 as defined in TS 27.007 clause 8.69.
+    if (signal.lteSignalStrength === undefined ||
+        signal.lteSignalStrength < 0 ||
+        signal.lteSignalStrength > 63) {
+      return;
+    }
+
+    let info = {
+      voice: {
+        signalStrength:    null,
+        relSignalStrength: null
+      },
+      data: {
+        signalStrength:    null,
+        relSignalStrength: null
+      }
+    };
+
+    // TODO: Bug 982013: reconsider signalStrength/relSignalStrength APIs for
+    //       GSM/CDMA/LTE, and take rsrp/rssnr into account for LTE case then.
+    let signalStrength = -111 + signal.lteSignalStrength;
+    info.voice.signalStrength = info.data.signalStrength = signalStrength;
+    // 0 and 12 are referred to AOSP's implementation. These values are not
+    // constants and can be customized based on different requirements.
+    let signalLevel = this._processSignalLevel(signal.lteSignalStrength, 0, 12);
+    info.voice.relSignalStrength = info.data.relSignalStrength = signalLevel;
+
+    return info;
+  },
+
   _processSignalStrength: function(signal) {
     let info = {
       voice: {
@@ -3412,7 +3452,7 @@ RilObject.prototype = {
       }
     };
 
-    if (this._isCdma) {
+    if (!this._isGsmTechGroup(this.voiceRegistrationState.radioTech)) {
       // CDMA RSSI.
       // Valid values are positive integers. This value is the actual RSSI value
       // multiplied by -1. Example: If the actual RSSI is -75, then this
@@ -3441,22 +3481,29 @@ RilObject.prototype = {
         info.data.relSignalStrength = signalLevel;
       }
     } else {
-      // GSM signal strength.
-      // Valid values are 0-31 as defined in TS 27.007 8.5.
-      // 0     : -113 dBm or less
-      // 1     : -111 dBm
-      // 2...30: -109...-53 dBm
-      // 31    : -51 dBm
-      if (signal.gsmSignalStrength &&
-          signal.gsmSignalStrength >= 0 &&
-          signal.gsmSignalStrength <= 31) {
-        let signalStrength = -113 + 2 * signal.gsmSignalStrength;
-        info.voice.signalStrength = info.data.signalStrength = signalStrength;
+      // Check LTE level first, and check GSM/UMTS level next if LTE one is not
+      // valid.
+      let lteInfo = this._processLteSignal(signal);
+      if (lteInfo) {
+        info = lteInfo;
+      } else {
+        // GSM signal strength.
+        // Valid values are 0-31 as defined in TS 27.007 8.5.
+        // 0     : -113 dBm or less
+        // 1     : -111 dBm
+        // 2...30: -109...-53 dBm
+        // 31    : -51 dBm
+        if (signal.gsmSignalStrength &&
+            signal.gsmSignalStrength >= 0 &&
+            signal.gsmSignalStrength <= 31) {
+          let signalStrength = -113 + 2 * signal.gsmSignalStrength;
+          info.voice.signalStrength = info.data.signalStrength = signalStrength;
 
-        // -115 and -85 are referred to AOSP's implementation. These values are
-        // not constants and can be customized based on different requirement.
-        let signalLevel = this._processSignalLevel(signalStrength, -110, -85);
-        info.voice.relSignalStrength = info.data.relSignalStrength = signalLevel;
+          // -115 and -85 are referred to AOSP's implementation. These values are
+          // not constants and can be customized based on different requirement.
+          let signalLevel = this._processSignalLevel(signalStrength, -110, -85);
+          info.voice.relSignalStrength = info.data.relSignalStrength = signalLevel;
+        }
       }
     }
 
@@ -4140,11 +4187,12 @@ RilObject.prototype = {
   },
 
   /**
-   * Process radio technology change.
+   * Check if GSM radio access technology group.
    */
-  _processRadioTech: function(radioTech) {
-    let isCdma = true;
-    this.radioTech = radioTech;
+  _isGsmTechGroup: function(radioTech) {
+    if (!radioTech) {
+      return true;
+    }
 
     switch(radioTech) {
       case NETWORK_CREG_TECH_GPRS:
@@ -4156,8 +4204,18 @@ RilObject.prototype = {
       case NETWORK_CREG_TECH_LTE:
       case NETWORK_CREG_TECH_HSPAP:
       case NETWORK_CREG_TECH_GSM:
-        isCdma = false;
+        return true;
     }
+
+    return false;
+  },
+
+  /**
+   * Process radio technology change.
+   */
+  _processRadioTech: function(radioTech) {
+    let isCdma = !this._isGsmTechGroup(radioTech);
+    this.radioTech = radioTech;
 
     if (DEBUG) {
       this.context.debug("Radio tech is set to: " + GECKO_RADIO_TECH[radioTech] +
