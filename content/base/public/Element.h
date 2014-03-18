@@ -102,6 +102,7 @@ enum {
 ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET);
 
 namespace mozilla {
+class EventChainVisitor;
 class EventListenerManager;
 
 namespace dom {
@@ -1105,8 +1106,8 @@ protected:
    * @param aURI the uri of the link, set only if the return value is true [OUT]
    * @return true if we can handle the link event, false otherwise
    */
-  bool CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,
-                                              nsIURI** aURI) const;
+  bool CheckHandleEventForLinksPrecondition(EventChainVisitor& aVisitor,
+                                            nsIURI** aURI) const;
 
   /**
    * Handle status bar updates before they can be cancelled.
