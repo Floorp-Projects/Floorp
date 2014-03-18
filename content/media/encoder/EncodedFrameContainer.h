@@ -58,6 +58,8 @@ public:
     AVC_CSD,          // AVC codec specific data
     AAC_AUDIO_FRAME,
     AAC_CSD,          // AAC codec specific data
+    AMR_AUDIO_CSD,
+    AMR_AUDIO_FRAME,
     UNKNOWN           // FrameType not set
   };
   nsresult SwapInFrameData(nsTArray<uint8_t>& aData)

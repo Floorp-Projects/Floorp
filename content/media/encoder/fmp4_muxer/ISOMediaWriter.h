@@ -13,8 +13,6 @@ namespace mozilla {
 
 class ISOControl;
 class FragmentBuffer;
-class AACTrackMetadata;
-class AVCTrackMetadata;
 class ISOMediaWriterRunnable;
 
 class ISOMediaWriter : public ContainerWriter
