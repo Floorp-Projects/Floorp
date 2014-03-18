@@ -213,8 +213,8 @@ function setup_provisioning(identity, afterSetupCallback, doneProvisioningCallba
         doneProvisioningCallback(err);
     },
     sandbox: {
-      // Emulate the free() method on the iframe sandbox
-      free: function() {}
+  // Emulate the free() method on the iframe sandbox
+  free: function() {}
     }
   };
 

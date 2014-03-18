@@ -101,7 +101,7 @@ nsDOMIdentity.prototype = {
    * Relying Party (RP) APIs
    */
 
-  watch: function nsDOMIdentity_watch(aOptions = {}) {
+  watch: function nsDOMIdentity_watch(aOptions) {
     if (this._rpWatcher) {
       // For the initial release of Firefox Accounts, we support callers who
       // invoke watch() either for Firefox Accounts, or Persona, but not both.
@@ -111,7 +111,33 @@ nsDOMIdentity.prototype = {
       throw new Error("navigator.id.watch was already called");
     }
 
-    assertCorrectCallbacks(aOptions);
+    if (!aOptions || typeof(aOptions) !== "object") {
+      throw new Error("options argument to watch is required");
+    }
+
+    // The relying party (RP) provides callbacks on watch().
+    //
+    // In the future, BrowserID will probably only require an onlogin()
+    // callback [1], lifting the requirement that BrowserID handle logged-in
+    // state management for RPs.  See
+    // https://github.com/mozilla/id-specs/blob/greenfield/browserid/api-rp.md
+    //
+    // However, Firefox Accounts will almost certainly require RPs to provide
+    // onlogout(), onready(), and possibly an onerror() callback.
+    // XXX Bug 945278
+    //
+    // To accomodate the more and less lenient uses of the API, we will simply
+    // be strict about checking for onlogin here.
+    if (typeof(aOptions["onlogin"]) != "function") {
+      throw new Error("onlogin() callback is required.");
+    }
+
+    // Optional callbacks
+    for (let cb of ["onready", "onerror", "onlogout"]) {
+      if (aOptions[cb] && typeof(aOptions[cb]) != "function") {
+        throw new Error(cb + " must be a function");
+      }
+    }
 
     let message = this.DOMIdentityMessage(aOptions);
 
@@ -771,38 +797,7 @@ nsDOMIdentityInternal.prototype = {
     interfaces: [],
     classDescription: "Identity DOM Implementation"
   })
+
 };
-
-function assertCorrectCallbacks(aOptions) {
-  // The relying party (RP) provides callbacks on watch().
-  //
-  // In the future, BrowserID will probably only require an onlogin()
-  // callback, lifting the requirement that BrowserID handle logged-in
-  // state management for RPs.  See
-  // https://github.com/mozilla/id-specs/blob/greenfield/browserid/api-rp.md
-  //
-  // However, Firefox Accounts requires callers to provide onlogout(),
-  // onready(), and also supports an onerror() callback.
-
-  let requiredCallbacks = ["onlogin"];
-  let optionalCallbacks = ["onlogout", "onready", "onerror"];
-
-  if (aOptions.wantIssuer == "firefox-accounts") {
-    requiredCallbacks = ["onlogin", "onlogout", "onready"];
-    optionalCallbacks = ["onerror"];
-  }
-
-  for (let cbName of requiredCallbacks) {
-    if (typeof(aOptions[cbName]) != "function") {
-      throw new Error(cbName + " callback is required.");
-    }
-  }
-
-  for (let cbName of optionalCallbacks) {
-    if (aOptions[cbName] && typeof(aOptions[cbName]) != "function") {
-      throw new Error(cbName + " must be a function");
-    }
-  }
-}
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDOMIdentityInternal]);
