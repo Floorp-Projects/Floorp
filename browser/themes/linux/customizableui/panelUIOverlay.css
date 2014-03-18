@@ -30,6 +30,7 @@
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-appearance: none;
   border: 0;
+  -moz-margin-start: 3px;
 }
 
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
