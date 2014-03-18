@@ -4,9 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/SVGFEFloodElement.h"
+
+#include "FilterSupport.h"
 #include "mozilla/dom/SVGFEFloodElementBinding.h"
-#include "gfxContext.h"
-#include "gfxColor.h"
+#include "nsColor.h"
 #include "nsIFrame.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEFlood)

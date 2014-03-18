@@ -10,8 +10,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "gfxMatrix.h"
+#include "mozilla/gfx/Matrix.h"
 #include "mozilla/RangedPtr.h"
+#include "nsError.h"
+#include "nsStringFwd.h"
 
 class nsIContent;
 class nsIDocument;
