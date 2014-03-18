@@ -3575,6 +3575,12 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
       int32_t nodeListPos = findInListOfActiveFormattingElements(node);
       if (j > 3 && nodeListPos != -1) {
         removeFromListOfActiveFormattingElements(nodeListPos);
+        if (nodeListPos <= formattingEltListPos) {
+          formattingEltListPos--;
+        }
+        if (nodeListPos <= bookmark) {
+          bookmark--;
+        }
         nodeListPos = -1;
       }
       if (nodeListPos == -1) {
