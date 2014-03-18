@@ -189,7 +189,7 @@ class ArrayBufferObject : public JSObject
     /*
      * Neuter all views of an ArrayBuffer.
      */
-    static bool neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer);
+    static bool neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer, void *newData);
 
     uint8_t * dataPointer() const;
 
@@ -275,7 +275,7 @@ class ArrayBufferViewObject : public JSObject
 
     void prependToViews(ArrayBufferViewObject *viewsHead);
 
-    void neuter(JSContext *cx);
+    void neuter(void *newData);
 
     static void trace(JSTracer *trc, JSObject *obj);
 };
@@ -302,13 +302,8 @@ InitArrayBufferViewDataPointer(ArrayBufferViewObject *obj, ArrayBufferObject *bu
      * private data rather than a slot to avoid alignment restrictions
      * on private Values.
      */
-
-    if (buffer->isNeutered()) {
-        JS_ASSERT(byteOffset == 0);
-        obj->initPrivate(nullptr);
-    } else {
-        obj->initPrivate(buffer->dataPointer() + byteOffset);
-    }
+    MOZ_ASSERT(buffer->dataPointer() != nullptr);
+    obj->initPrivate(buffer->dataPointer() + byteOffset);
 
     PostBarrierTypedArrayObject(obj);
 }
