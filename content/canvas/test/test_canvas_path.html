@@ -1,0 +1,199 @@
+<!DOCTYPE HTML>
+<title>Canvas Tests</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
+SpecialPowers.setBoolPref("canvas.path.enabled", true);
+
+function isPixel(ctx, x,y, c, d) {
+  var pos = x + "," + y;
+  var color = c[0] + "," + c[1] + "," + c[2] + "," + c[3];
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(c[0]-d <= pr && pr <= c[0]+d &&
+       c[1]-d <= pg && pg <= c[1]+d &&
+       c[2]-d <= pb && pb <= c[2]+d &&
+       c[3]-d <= pa && pa <= c[3]+d,
+       "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+color+" +/- "+d);
+}
+</script>
+
+<p>Canvas test: test_drawClipPath_canvas</p>
+<canvas id="c1" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_drawClipPath_canvas() {
+  var c = document.getElementById("c1");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.beginPath();
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.save();
+  ctx.clip(path);
+
+  ctx.fillRect(0, 0, 100, 100);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+  ctx.restore();
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.beginPath();
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.save();
+  ctx.clip(path, 'nonzero');
+
+  ctx.fillRect(0, 0, 100, 100);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+  ctx.restore();
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.beginPath();
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.save();
+  ctx.clip(path, 'evenodd');
+
+  ctx.fillRect(0, 0, 100, 100);
+  isPixel(ctx, 50, 50, [255, 0, 0, 255], 5);
+  ctx.restore();
+}
+</script>
+
+<p>Canvas test: test_drawFillPath_canvas</p>
+<canvas id="c2" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_drawFillPath_canvas() {
+  var c = document.getElementById("c2");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'nonzero');
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'evenodd');
+  isPixel(ctx, 50, 50, [255, 0, 0, 255], 5);
+}
+</script>
+
+<p>Canvas test: test_drawStrokePath_canvas</p>
+<canvas id="c3" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_drawStrokePath_canvas() {
+  var c = document.getElementById("c3");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.strokeStyle = 'rgb(0,255,0)';
+  ctx.lineWidth = 5;
+  ctx.stroke(path);
+  isPixel(ctx, 0, 0, [0, 255, 0, 255], 5);
+  isPixel(ctx, 25, 25, [0, 255, 0, 255], 5);
+  isPixel(ctx, 10, 10, [255, 0, 0, 255], 5);
+}
+</script>
+
+<p>Canvas test: test_large_canvas</p>
+<canvas id="c4" class="output" width="10000" height="100">+
+</canvas>
+<script type="text/javascript">
+function test_large_canvas() {
+  // test paths on large canvases. On certain platforms this will
+  // trigger retargeting of the backend
+  var c = document.getElementById("c4");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path);
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'nonzero');
+  isPixel(ctx, 50, 50, [0, 255, 0, 255], 5);
+
+  ctx.fillStyle = 'rgb(255,0,0)';
+  ctx.fillRect(0, 0, 100, 100);
+  ctx.fillStyle = 'rgb(0,255,0)';
+  ctx.fill(path, 'evenodd');
+  isPixel(ctx, 50, 50, [255, 0, 0, 255], 5);
+}
+</script>
+
+<script>
+
+function runTests() {
+ try {
+  test_drawClipPath_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_drawClipPath_canvas");
+ }
+ try {
+  test_drawFillPath_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_drawFillPath_canvas");
+ }
+ try {
+  test_drawStrokePath_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_drawStrokePath_canvas");
+ }
+ try {
+  test_large_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_large_canvas");
+ }
+
+ SpecialPowers.setBoolPref("canvas.path.enabled", false);
+ SimpleTest.finish();
+}
+
+addLoadEvent(runTests);
+
+</script>
