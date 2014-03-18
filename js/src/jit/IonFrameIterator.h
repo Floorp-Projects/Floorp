@@ -259,12 +259,25 @@ class SnapshotIterator : public SnapshotReader
 
   private:
     // Read a spilled register from the machine state.
-    bool hasRegister(const Location &loc);
-    uintptr_t fromRegister(const Location &loc);
+    bool hasRegister(Register reg) const {
+        return machine_.has(reg);
+    }
+    uintptr_t fromRegister(Register reg) const {
+        return machine_.read(reg);
+    }
+
+    bool hasRegister(FloatRegister reg) const {
+        return machine_.has(reg);
+    }
+    double fromRegister(FloatRegister reg) const {
+        return machine_.read(reg);
+    }
 
     // Read an uintptr_t from the stack.
-    bool hasStack(const Location &loc);
-    uintptr_t fromStack(const Location &loc);
+    bool hasStack(int32_t offset) const {
+        return true;
+    }
+    uintptr_t fromStack(int32_t offset) const;
 
     Value allocationValue(const RValueAllocation &a);
     bool allocationReadable(const RValueAllocation &a);

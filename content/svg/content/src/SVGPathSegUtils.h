@@ -6,7 +6,6 @@
 #ifndef MOZILLA_SVGPATHSEGUTILS_H__
 #define MOZILLA_SVGPATHSEGUTILS_H__
 
-#include "gfxPoint.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/Point.h"
 #include "nsDebug.h"

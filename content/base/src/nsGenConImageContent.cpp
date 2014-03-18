@@ -15,8 +15,10 @@
 #include "nsImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "nsEventStates.h"
-#include "nsEventDispatcher.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventDispatcher.h"
+
+using namespace mozilla;
 
 class nsGenConImageContent MOZ_FINAL : public nsXMLElement,
                                        public nsImageLoadingContent
@@ -43,7 +45,7 @@ public:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent);
   virtual nsEventStates IntrinsicState() const;
 
-  virtual nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor)
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor)
   {
     MOZ_ASSERT(IsInNativeAnonymousSubtree());
     if (aVisitor.mEvent->message == NS_LOAD ||

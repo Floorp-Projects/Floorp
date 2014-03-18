@@ -8,6 +8,7 @@
 
 #include "IDBDatabase.h"
 
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
 #include "mozilla/dom/ContentParent.h"
@@ -43,6 +44,7 @@ using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::ErrorResult;
+using namespace mozilla;
 using namespace mozilla::dom;
 
 namespace {
@@ -775,7 +777,7 @@ IDBDatabase::Origin()
 }
 
 nsresult
-IDBDatabase::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+IDBDatabase::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return IndexedDatabaseManager::FireWindowOnError(GetOwner(), aVisitor);
 }

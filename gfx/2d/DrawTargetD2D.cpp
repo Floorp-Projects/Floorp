@@ -282,8 +282,17 @@ DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
         return nullptr;
       }
 
-      if (aSource.width > mRT->GetMaximumBitmapSize() ||
-          aSource.height > mRT->GetMaximumBitmapSize()) {
+      // We need to include any pixels that are overlapped by aSource
+      Rect sourceRect(aSource);
+      sourceRect.RoundOut();
+
+      if (sourceRect.IsEmpty()) {
+        gfxDebug() << "Bitmap source is empty. DrawBitmap will silently fail.";
+        return nullptr;
+      }
+
+      if (sourceRect.width > mRT->GetMaximumBitmapSize() ||
+          sourceRect.height > mRT->GetMaximumBitmapSize()) {
         gfxDebug() << "Bitmap source larger than texture size specified. DrawBitmap will silently fail.";
         // Don't know how to deal with this yet.
         return nullptr;
@@ -292,12 +301,12 @@ DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
       int stride = srcSurf->Stride();
 
       unsigned char *data = srcSurf->GetData() +
-                            (uint32_t)aSource.y * stride +
-                            (uint32_t)aSource.x * BytesPerPixel(srcSurf->GetFormat());
+                            (uint32_t)sourceRect.y * stride +
+                            (uint32_t)sourceRect.x * BytesPerPixel(srcSurf->GetFormat());
 
       D2D1_BITMAP_PROPERTIES props =
         D2D1::BitmapProperties(D2DPixelFormat(srcSurf->GetFormat()));
-      mRT->CreateBitmap(D2D1::SizeU(UINT32(aSource.width), UINT32(aSource.height)), data, stride, props, byRef(bitmap));
+      mRT->CreateBitmap(D2D1::SizeU(UINT32(sourceRect.width), UINT32(sourceRect.height)), data, stride, props, byRef(bitmap));
 
       // subtract the integer part leaving the fractional part
       aSource.x -= (uint32_t)aSource.x;

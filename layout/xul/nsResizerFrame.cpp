@@ -21,7 +21,6 @@
 #include "nsIBaseWindow.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/MouseEvents.h"
-#include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIScreenManager.h"

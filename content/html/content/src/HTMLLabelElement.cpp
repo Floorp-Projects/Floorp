@@ -7,10 +7,10 @@
  * Implementation of HTML <label> elements.
  */
 #include "HTMLLabelElement.h"
-#include "mozilla/dom/HTMLLabelElementBinding.h"
-#include "nsEventDispatcher.h"
-#include "nsFocusManager.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/dom/HTMLLabelElementBinding.h"
+#include "nsFocusManager.h"
 #include "nsIDOMMouseEvent.h"
 
 // construction, destruction
@@ -112,7 +112,7 @@ DestroyMouseDownPoint(void *    /*aObject*/,
 }
 
 nsresult
-HTMLLabelElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
+HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
   if (mHandlingEvent ||
@@ -238,8 +238,8 @@ HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);
 
-    nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
-                                &event);
+    EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
+                              &event);
   }
 }
 

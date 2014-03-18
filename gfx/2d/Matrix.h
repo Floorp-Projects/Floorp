@@ -73,6 +73,11 @@ public:
     return *this;
   }
 
+  Matrix &Rotate(Float aAngle)
+  {
+    return *this = Matrix::Rotation(aAngle) * *this;
+  }
+
   bool Invert()
   {
     // Compute co-factors.
@@ -105,7 +110,17 @@ public:
   {
     return _11 * _22 - _12 * _21;
   }
-  
+
+  static Matrix Translation(Float aX, Float aY)
+  {
+    return Matrix(1.0f, 0.0f, 0.0f, 1.0f, aX, aY);
+  }
+
+  static Matrix Translation(Point aPoint)
+  {
+    return Translation(aPoint.x, aPoint.y);
+  }
+
   GFX2D_API static Matrix Rotation(Float aAngle);
 
   Matrix operator*(const Matrix &aMatrix) const
