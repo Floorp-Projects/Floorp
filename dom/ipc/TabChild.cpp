@@ -1932,10 +1932,6 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event)
     mIgnoreKeyPressEvent = status == nsEventStatus_eConsumeNoDefault;
   }
 
-  if (localEvent.mFlags.mWantReplyFromContentProcess) {
-    SendReplyKeyEvent(localEvent);
-  }
-
   return true;
 }
 
