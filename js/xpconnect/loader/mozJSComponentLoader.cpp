@@ -837,8 +837,12 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             // Make sure the file is closed, no matter how we return.
             FileAutoCloser fileCloser(fileHandle);
 
-            PRFileMap *map = PR_CreateFileMap(fileHandle, fileSize,
-                                              PR_PROT_READONLY);
+            // We don't provide the file size here.  If we did, PR_CreateFileMap
+            // would simply stat() the file to verify that the size we provided
+            // didn't require extending the file.  We know that the file doesn't
+            // need to be extended, so skip the extra work by not providing the
+            // size.
+            PRFileMap *map = PR_CreateFileMap(fileHandle, 0, PR_PROT_READONLY);
             if (!map) {
                 NS_ERROR("Failed to create file map");
                 return NS_ERROR_FAILURE;
