@@ -460,6 +460,8 @@ pref("accessibility.tabfocus_applies_to_xul", true);
 pref("canvas.focusring.enabled", false);
 pref("canvas.customfocusring.enabled", false);
 pref("canvas.hitregions.enabled", false);
+// Add support for canvas path objects
+pref("canvas.path.enabled", false);
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
