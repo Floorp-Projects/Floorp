@@ -368,7 +368,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
 // Static member variable initialization
 bool nsXBLService::gAllowDataURIs = false;
 
-nsHashtable* nsXBLService::gClassTable = nullptr;
+nsXBLService::ClassTable* nsXBLService::gClassTable = nullptr;
 
 LinkedList<nsXBLJSClass>* nsXBLService::gClassLRUList = nullptr;
 uint32_t nsXBLService::gClassLRUListLength = 0;
@@ -393,7 +393,7 @@ nsXBLService::Init()
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
 {
-  gClassTable = new nsHashtable();
+  gClassTable = new ClassTable();
   gClassLRUList = new LinkedList<nsXBLJSClass>();
 
   Preferences::AddBoolVarCache(&gAllowDataURIs, "layout.debug.enable_data_xbl");
