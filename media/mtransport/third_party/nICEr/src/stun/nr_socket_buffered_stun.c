@@ -315,7 +315,7 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
   /* Buffers are close to full, report error. Do this now so we never
      get partial writes */
   if ((sock->pending + len) > sock->max_pending) {
-    r_log(LOG_GENERIC, LOG_INFO, "Buffers full");
+    r_log(LOG_GENERIC, LOG_INFO, "Write buffer for %s full", sock->remote_addr.as_string);
     ABORT(R_WOULDBLOCK);
   }
 
