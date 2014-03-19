@@ -88,7 +88,7 @@ function testImageTooltip(index) {
     target = container.editor.getAttributeElement("src");
   }
 
-  assertTooltipShownOn(target, () => {
+  assertTooltipShownOn(target).then(() => {
     let images = markup.tooltip.panel.getElementsByTagName("image");
     is(images.length, 1,
       "Tooltip for [" + TEST_NODES[index].selector + "] contains an image");
@@ -97,7 +97,6 @@ function testImageTooltip(index) {
     is(label.textContent, TEST_NODES[index].size,
       "Tooltip label for [" + TEST_NODES[index].selector + "] displays the right image size")
 
-    markup.tooltip.hide();
     testImageTooltip(index + 1);
   });
 }
@@ -117,22 +116,10 @@ function compareImageData(img, imgData) {
 }
 
 function assertTooltipShownOn(element, cb) {
-  // If there is indeed a show-on-hover on element, the xul panel will be shown
-  markup.tooltip.panel.addEventListener("popupshown", function shown() {
-    markup.tooltip.panel.removeEventListener("popupshown", shown, true);
+  return Task.spawn(function*() {
+    info("Is the element a valid hover target");
 
-    // Poll until the image gets loaded in the tooltip. This is required because
-    // markup containers only load images in their associated tooltips when
-    // the image data comes back from the server. However, this test is executed
-    // synchronously as soon as "inspector-updated" is fired, which is before
-    // the data for images is known.
-    let hasImage = () => markup.tooltip.panel.getElementsByTagName("image").length;
-    let poll = setInterval(() => {
-      if (hasImage()) {
-        clearInterval(poll);
-        cb();
-      }
-    }, 200);
-  }, true);
-  markup.tooltip._showOnHover(element);
+    let isValid = yield markup.tooltip.isValidHoverTarget(element);
+    ok(isValid, "The element is a valid hover target for the image tooltip");
+  });
 }
