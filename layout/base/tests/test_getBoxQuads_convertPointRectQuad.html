@@ -216,8 +216,7 @@ window.scrollTo(0,0);
 function startTest() {
   SpecialPowers.pushPrefEnv({"set": [["layout.css.DOMPoint.enabled", true],
                                      ["layout.css.DOMQuad.enabled", true],
-                                     ["layout.css.getBoxQuads.enabled", true],
-                                     ["layout.css.convertFromNode.enabled", true]]}, runTest);
+                                     ["layout.css.getBoxQuads.enabled", true]]}, runTest);
 }
 
 function runTest() {
