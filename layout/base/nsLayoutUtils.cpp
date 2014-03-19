@@ -2408,6 +2408,48 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
   return NS_OK;
 }
 
+// aScrollFrame and aScrollFrameAsScrollable must be non-nullptr
+static FrameMetrics
+CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
+                                    nsIScrollableFrame* aScrollFrameAsScrollable) {
+  // Calculate the metrics necessary for calculating the displayport.
+  // This code has a lot in common with the code in RecordFrameMetrics();
+  // we may want to refactor this at some point.
+  FrameMetrics metrics;
+  nsPresContext* presContext = aScrollFrame->PresContext();
+  nsIPresShell* presShell = presContext->PresShell();
+  CSSToLayoutDeviceScale deviceScale(float(nsPresContext::AppUnitsPerCSSPixel())
+                                     / presContext->AppUnitsPerDevPixel());
+  ParentLayerToLayerScale resolution(presShell->GetResolution().width);
+  LayoutDeviceToLayerScale cumulativeResolution(presShell->GetCumulativeResolution().width);
+
+  metrics.mDevPixelsPerCSSPixel = deviceScale;
+  metrics.mResolution = resolution;
+  metrics.mCumulativeResolution = cumulativeResolution;
+  metrics.SetZoom(deviceScale * cumulativeResolution * LayerToScreenScale(1));
+
+  // Only the size of the composition bounds is relevant to the
+  // displayport calculation, not its origin.
+  nsSize compositionSize = nsLayoutUtils::CalculateCompositionSizeForFrame(aScrollFrame);
+  metrics.mCompositionBounds
+      = RoundedToInt(LayoutDeviceRect::FromAppUnits(nsRect(nsPoint(0, 0), compositionSize),
+                                                    presContext->AppUnitsPerDevPixel())
+                     * (cumulativeResolution / resolution));
+
+  // This function is used for setting a display port for subframes, so
+  // aScrollFrame will not be the root content document's root scroll frame.
+  metrics.SetRootCompositionSize(
+      nsLayoutUtils::CalculateRootCompositionSize(aScrollFrame, false, metrics));
+
+  metrics.SetScrollOffset(CSSPoint::FromAppUnits(
+      aScrollFrameAsScrollable->GetScrollPosition()));
+
+  metrics.mScrollableRect = CSSRect::FromAppUnits(
+      nsLayoutUtils::CalculateScrollableRectForFrame(aScrollFrameAsScrollable, nullptr));
+
+  return metrics;
+}
+
 nsresult
 nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
