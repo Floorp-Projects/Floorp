@@ -19,25 +19,15 @@
 #include "mozilla/dom/ValidityState.h"
 #include "mozilla/dom/ElementInlines.h"
 
-class nsIDOMAttr;
-class nsIDOMEventListener;
-class nsIDOMNodeList;
-class nsIFrame;
-class nsIStyleRule;
-class nsChildContentList;
-class nsDOMCSSDeclaration;
-class nsIDOMCSSStyleDeclaration;
-class nsIURI;
-class nsIFormControlFrame;
-class nsIForm;
-class nsPresState;
-class nsILayoutHistoryState;
-class nsIEditor;
-struct nsRect;
-struct nsSize;
-class nsIDOMHTMLMenuElement;
-class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
+class nsIDOMHTMLMenuElement;
+class nsIEditor;
+class nsIFormControlFrame;
+class nsIFrame;
+class nsILayoutHistoryState;
+class nsIURI;
+class nsPresState;
+struct nsSize;
 
 namespace mozilla {
 class EventChainPostVisitor;
