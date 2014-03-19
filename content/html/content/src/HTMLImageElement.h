@@ -159,6 +159,10 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::longdesc, aLongDesc, aError);
   }
+  void SetSizes(const nsAString& aSizes, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::sizes, aSizes, aError);
+  }
   void SetBorder(const nsAString& aBorder, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::border, aBorder, aError);
