@@ -66,9 +66,6 @@ class WrapperFactory {
     static bool WaiveXrayAndWrap(JSContext *cx, JS::MutableHandleValue vp);
     static bool WaiveXrayAndWrap(JSContext *cx, JS::MutableHandleObject object);
 
-    // Wrap a (same compartment) object in a SOW.
-    static JSObject *WrapSOWObject(JSContext *cx, JSObject *obj);
-
     // Returns true if the wrapper is in not shadowing mode for the id.
     static bool XrayWrapperNotShadowing(JSObject *wrapper, jsid id);
 };
