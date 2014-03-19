@@ -436,9 +436,7 @@ static BOOL FrameIsInActiveWindow(nsIFrame* aFrame)
 
   // XUL popups, e.g. the toolbar customization popup, can't become key windows,
   // but controls in these windows should still get the active look.
-  nsWindowType windowType;
-  topLevelWidget->GetWindowType(windowType);
-  if (windowType == eWindowType_popup)
+  if (topLevelWidget->WindowType() == eWindowType_popup)
     return YES;
   if ([win isSheet])
     return [win isKeyWindow];
@@ -3440,9 +3438,7 @@ nsNativeThemeCocoa::IsWindowSheet(nsIFrame* aFrame)
   if (!widget) {
     return false;
   }
-  nsWindowType windowType;
-  widget->GetWindowType(windowType);
-  return (windowType == eWindowType_sheet);
+  return (widget->WindowType() == eWindowType_sheet);
 }
 
 nsITheme::Transparency

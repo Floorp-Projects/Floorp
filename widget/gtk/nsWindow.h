@@ -125,15 +125,13 @@ public:
     NS_IMETHOD         PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
                                    nsIWidget                  *aWidget,
                                    bool                        aActivate);
-    NS_IMETHOD         SetZIndex(int32_t aZIndex);
+    void               SetZIndex(int32_t aZIndex);
     NS_IMETHOD         SetSizeMode(int32_t aMode);
     NS_IMETHOD         Enable(bool aState);
     NS_IMETHOD         SetFocus(bool aRaise = false);
     NS_IMETHOD         GetScreenBounds(nsIntRect &aRect);
     NS_IMETHOD         GetClientBounds(nsIntRect &aRect);
     virtual nsIntPoint GetClientOffset();
-    NS_IMETHOD         SetForegroundColor(const nscolor &aColor);
-    NS_IMETHOD         SetBackgroundColor(const nscolor &aColor);
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  uint32_t aHotspotX, uint32_t aHotspotY);
