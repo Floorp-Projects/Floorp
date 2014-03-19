@@ -75,7 +75,10 @@ nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
   }
   if (mContent->Tag() == nsGkAtoms::mi_ && childCount == 1) {
     nsAutoString data;
-    nsContentUtils::GetNodeTextContent(mContent, false, data);
+    if (!nsContentUtils::GetNodeTextContent(mContent, false, data)) {
+      NS_RUNTIMEABORT("OOM");
+    }
+
     data.CompressWhitespace();
     int32_t length = data.Length();
 
