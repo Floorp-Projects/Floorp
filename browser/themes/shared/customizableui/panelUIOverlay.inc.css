@@ -680,14 +680,16 @@ menuitem.subviewbutton@menuStateActive@,
   color: hsl(0,0%,25%)
 }
 
+menuitem.panel-subview-footer@menuStateHover@,
 .subviewbutton.panel-subview-footer@buttonStateHover@ {
-  background-color: hsla(210,4%,10%,.1);
-  border-top: 1px solid hsla(210,4%,10%,.12);
+  background-color: hsla(210,4%,10%,.15);
+  border-top: 1px solid hsla(210,4%,10%,.14);
 }
 
+menuitem.panel-subview-footer@menuStateActive@,
 .subviewbutton.panel-subview-footer@buttonStateActive@ {
-  background-color: hsla(210,4%,10%,.15);
-  border-top: 1px solid hsla(210,4%,10%,.12);
+  background-color: hsla(210,4%,10%,.19);
+  border-top: 1px solid hsla(210,4%,10%,.14);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
