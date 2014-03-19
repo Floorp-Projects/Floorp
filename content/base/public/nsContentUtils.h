@@ -1247,8 +1247,8 @@ public:
   /**
    * Same as GetNodeTextContents but appends the result rather than sets it.
    */
-  static void AppendNodeTextContent(nsINode* aNode, bool aDeep,
-                                    nsAString& aResult);
+  static bool AppendNodeTextContent(nsINode* aNode, bool aDeep,
+                                    nsAString& aResult, const mozilla::fallible_t&);
 
   /**
    * Utility method that checks if a given node has any non-empty
