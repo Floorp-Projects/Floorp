@@ -272,6 +272,10 @@ Spectrum.prototype = {
   },
 
   updateHelperLocations: function() {
+    // If the UI hasn't been shown yet then none of the dimensions will be correct
+    if (!this.element.classList.contains('spectrum-show'))
+      return;
+
     let h = this.hsv[0];
     let s = this.hsv[1];
     let v = this.hsv[2];
