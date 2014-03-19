@@ -1125,8 +1125,15 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::Handle<jsid> aId,
 
   // Get the scope of mBoundElement and the associated XBL scope. We should only
   // be calling into this machinery if we're running in a separate XBL scope.
+  //
+  // Note that we only end up in LookupMember for XrayWrappers from XBL scopes
+  // into content. So for NAC reflectors that live in the XBL scope, we should
+  // never get here. But on the off-chance that someone adds new callsites to
+  // LookupMember, we do a release-mode assertion as belt-and-braces.
+  // We do a release-mode assertion here to be extra safe.
   JS::Rooted<JSObject*> boundScope(aCx,
     js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper()));
+  MOZ_RELEASE_ASSERT(!xpc::IsInXBLScope(boundScope));
   JS::Rooted<JSObject*> xblScope(aCx, xpc::GetXBLScope(aCx, boundScope));
   NS_ENSURE_TRUE(xblScope, false);
   MOZ_ASSERT(boundScope != xblScope);
