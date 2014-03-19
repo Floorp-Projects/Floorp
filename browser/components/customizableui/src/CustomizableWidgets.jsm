@@ -81,6 +81,18 @@ function updateCombinedWidgetStyle(aNode, aArea, aModifyCloseMenu) {
   }
 }
 
+function addShortcut(aNode, aDocument, aItem) {
+  let shortcutId = aNode.getAttribute("key");
+  if (!shortcutId) {
+    return;
+  }
+  let shortcut = aDocument.getElementById(shortcutId);
+  if (!shortcut) {
+    return;
+  }
+  aItem.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(shortcut));
+}
+
 const CustomizableWidgets = [{
     id: "history-panelmenu",
     type: "view",
@@ -292,6 +304,7 @@ const CustomizableWidgets = [{
         } else if (node.localName == "menuitem") {
           item = doc.createElementNS(kNSXUL, "toolbarbutton");
           item.setAttribute("class", "subviewbutton");
+          addShortcut(node, doc, item);
         } else {
           continue;
         }
@@ -682,6 +695,7 @@ const CustomizableWidgets = [{
         elem.section = aSection == "detectors" ? "detectors" : "charsets";
         elem.value = item.id;
         elem.setAttribute("class", "subviewbutton");
+        addShortcut(item, doc, elem);
         containerElem.appendChild(elem);
       }
     },
