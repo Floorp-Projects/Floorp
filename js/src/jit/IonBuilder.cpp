@@ -1579,11 +1579,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CALLGNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
-        JSObject *obj = &script()->global();
-        bool succeeded;
-        if (!getStaticName(obj, name, &succeeded))
-            return false;
-        return succeeded || jsop_getname(name);
+        return jsop_getgname(name);
       }
 
       case JSOP_BINDGNAME:
@@ -6500,6 +6496,32 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
 }
 
 bool
+IonBuilder::jsop_getgname(PropertyName *name)
+{
+    JSObject *obj = &script()->global();
+    bool succeeded;
+    if (!getStaticName(obj, name, &succeeded))
+        return false;
+    if (succeeded)
+        return true;
+
+    types::TemporaryTypeSet *types = bytecodeTypes(pc);
+    // Spoof the stack to call into the getProp path.
+    // First, make sure there's room.
+    if (!current->ensureHasSlots(1))
+        return false;
+    pushConstant(ObjectValue(*obj));
+    if (!getPropTryCommonGetter(&succeeded, name, types))
+        return false;
+    if (succeeded)
+        return true;
+
+    // Clean up the pushed global object if we were not sucessful.
+    current->pop();
+    return jsop_getname(name);
+}
+
+bool
 IonBuilder::jsop_getname(PropertyName *name)
 {
     MDefinition *object;
@@ -8742,6 +8764,10 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
     }
 
     // Spoof stack to expected state for call.
+
+    // Make sure there's enough room
+    if (!current->ensureHasSlots(2))
+        return false;
     pushConstant(ObjectValue(*commonGetter));
 
     current->push(obj);
@@ -9026,11 +9052,8 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 
     // Dummy up the stack, as in getprop. We are pushing an extra value, so
     // ensure there is enough space.
-    uint32_t depth = current->stackDepth() + 3;
-    if (depth > current->nslots()) {
-        if (!current->increaseSlots(depth - current->nslots()))
-            return false;
-    }
+    if (!current->ensureHasSlots(3))
+        return false;
 
     pushConstant(ObjectValue(*commonSetter));
 
