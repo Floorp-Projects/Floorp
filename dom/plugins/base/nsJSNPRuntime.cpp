@@ -1439,11 +1439,12 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
 static bool
 CallNPMethod(JSContext *cx, unsigned argc, JS::Value *vp)
 {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JS::Rooted<JSObject*> obj(cx, JS_THIS_OBJECT(cx, vp));
   if (!obj)
       return false;
 
-  return CallNPMethodInternal(cx, obj, argc, JS_ARGV(cx, vp), vp, false);
+  return CallNPMethodInternal(cx, obj, args.length(), args.array(), vp, false);
 }
 
 struct NPObjectEnumerateState {
@@ -1640,15 +1641,17 @@ NPObjWrapper_Finalize(JSFreeOp *fop, JSObject *obj)
 static bool
 NPObjWrapper_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
-  return CallNPMethodInternal(cx, obj, argc, JS_ARGV(cx, vp), vp, false);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::Rooted<JSObject*> obj(cx, &args.callee());
+  return CallNPMethodInternal(cx, obj, args.length(), args.array(), vp, false);
 }
 
 static bool
 NPObjWrapper_Construct(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
-  return CallNPMethodInternal(cx, obj, argc, JS_ARGV(cx, vp), vp, true);
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::Rooted<JSObject*> obj(cx, &args.callee());
+  return CallNPMethodInternal(cx, obj, args.length(), args.array(), vp, true);
 }
 
 class NPObjWrapperHashEntry : public PLDHashEntryHdr
@@ -2028,13 +2031,14 @@ NPObjectMember_Finalize(JSFreeOp *fop, JSObject *obj)
 static bool
 NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  JS::Rooted<JSObject*> memobj(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::Rooted<JSObject*> memobj(cx, &args.callee());
   NS_ENSURE_TRUE(memobj, false);
 
   NPObjectMemberPrivate *memberPrivate =
     (NPObjectMemberPrivate *)::JS_GetInstancePrivate(cx, memobj,
                                                      &sNPObjectMemberClass,
-                                                     JS_ARGV(cx, vp));
+                                                     args.array());
   if (!memberPrivate || !memberPrivate->npobjWrapper)
     return false;
 
@@ -2048,10 +2052,10 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
   NPVariant npargs_buf[8];
   NPVariant *npargs = npargs_buf;
 
-  if (argc > (sizeof(npargs_buf) / sizeof(NPVariant))) {
+  if (args.length() > (sizeof(npargs_buf) / sizeof(NPVariant))) {
     // Our stack buffer isn't large enough to hold all arguments,
     // malloc a buffer.
-    npargs = (NPVariant *)PR_Malloc(argc * sizeof(NPVariant));
+    npargs = (NPVariant *)PR_Malloc(args.length() * sizeof(NPVariant));
 
     if (!npargs) {
       ThrowJSException(cx, "Out of memory!");
@@ -2061,10 +2065,8 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
   }
 
   // Convert arguments
-  uint32_t i;
-  JS::Value *argv = JS_ARGV(cx, vp);
-  for (i = 0; i < argc; ++i) {
-    if (!JSValToNPVariant(memberPrivate->npp, cx, argv[i], npargs + i)) {
+  for (uint32_t i = 0; i < args.length(); ++i) {
+    if (!JSValToNPVariant(memberPrivate->npp, cx, args[i], npargs + i)) {
       ThrowJSException(cx, "Error converting jsvals to NPVariants!");
 
       if (npargs != npargs_buf) {
@@ -2077,12 +2079,12 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
 
 
   NPVariant npv;
-  bool ok;
-  ok = npobj->_class->invoke(npobj, JSIdToNPIdentifier(memberPrivate->methodName),
-                             npargs, argc, &npv);
+  bool ok = npobj->_class->invoke(npobj,
+                                  JSIdToNPIdentifier(memberPrivate->methodName),
+                                  npargs, args.length(), &npv);
 
   // Release arguments.
-  for (i = 0; i < argc; ++i) {
+  for (uint32_t i = 0; i < args.length(); ++i) {
     _releasevariantvalue(npargs + i);
   }
 
@@ -2099,7 +2101,7 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
     return false;
   }
 
-  JS_SET_RVAL(cx, vp, NPVariantToJSVal(memberPrivate->npp, cx, &npv));
+  args.rval().set(NPVariantToJSVal(memberPrivate->npp, cx, &npv));
 
   // *vp now owns the value, release our reference.
   _releasevariantvalue(&npv);
