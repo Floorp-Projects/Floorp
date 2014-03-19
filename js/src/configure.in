@@ -1136,7 +1136,8 @@ if test "$GNU_CC"; then
     AC_MSG_CHECKING([for --build-id option to ld])
     _SAVE_LDFLAGS=$LDFLAGS
     LDFLAGS="$LDFLAGS -Wl,--build-id"
-    AC_TRY_LINK(,,AC_MSG_RESULT([yes]),
+    AC_TRY_LINK(,,AC_MSG_RESULT([yes])
+                  [NSPR_LDFLAGS="$NSPR_LDFLAGS -Wl,--build-id"],
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
