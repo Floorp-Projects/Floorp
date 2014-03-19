@@ -2183,7 +2183,7 @@ Widgets.ObjectRenderers.add({
         tagName.appendChild(this.el("span.cm-attribute", "#" + attributes.id));
       }
       if (attributes.class) {
-        tagName.appendChild(this.el("span.cm-attribute", "." + attributes.class.split(" ").join(".")));
+        tagName.appendChild(this.el("span.cm-attribute", "." + attributes.class.split(/\s+/g).join(".")));
       }
     } else {
       for (let name of Object.keys(attributes)) {
