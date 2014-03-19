@@ -26,163 +26,162 @@
       var iframe = doc.createElement("iframe");
       iframe.mozbrowser = true;
       iframe.addEventListener("mozbrowserloadend", function () {
-        var simpleMoveNext = { name: 'AccessFu:MoveCursor',
-                               json: { action: 'moveNext',
-                                       rule: 'Simple',
-                                       inputType: 'gesture',
-                                       origin: 'top' }
-                             };
+      var contentTest = new AccessFuContentTest(
+        [
+          // Simple traversal forward
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Phone status bar Traversal Rule test document'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: 'wow heading level 1 such app'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: 'many option not checked check button'
+          }],
+          // check checkbox
+          [ContentMessages.activateCurrent(), {
+            speak: 'checked'
+          }],
+          [null, {
+            speak: 'checked',
+            speak_checkFunc: 'todo_isnot'
+          }],
+          // uncheck checkbox
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Home button'
+          }],
 
-        var simpleMovePrevious = { name: 'AccessFu:MoveCursor',
-                                   json: { action: 'movePrevious',
-                                           rule: 'Simple',
-                                           inputType: 'gesture',
-                                           origin: 'top' }
-                                 };
+          // Simple traversal backward
+          [ContentMessages.simpleMovePrevious, {
+            speak: 'many option checked check button such app'
+          }],
+          [ContentMessages.activateCurrent(), {
+            speak: 'unchecked'
+          }],
+          [null, {
+            speak: 'unchecked',
+            speak_checkFunc: 'todo_isnot'
+          }],
+          [ContentMessages.simpleMovePrevious, {
+            speak: 'wow heading level 1'
+          }],
+          [ContentMessages.simpleMovePrevious, {
+            speak: 'Phone status bar'
+          }],
 
-        var activateCurrent = { name: 'AccessFu:Activate',
-                                json: { origin: 'top' } };
+          // Moving to the absolute last item from an embedded document
+          // fails. Bug 972035.
+          [ContentMessages.simpleMoveNext, {
+            speak: 'wow heading level 1 such app'
+          }],
+          // Move from an inner frame to the last element in the parent doc
+          [ContentMessages.simpleMoveLast, {
+            speak: 'Home button',
+            speak_checkFunc: 'todo_is'
+          }],
 
-        var simpleMoveLast = { name: 'AccessFu:MoveCursor',
-                               json: { action: 'moveLast',
-                                       rule: 'Simple',
-                                       inputType: 'gesture',
-                                       origin: 'top' }
-                             };
+          [ContentMessages.clearCursor, null], // Reset cursors
 
-        var simpleMoveFirst = { name: 'AccessFu:MoveCursor',
-                                json: { action: 'moveFirst',
-                                        rule: 'Simple',
-                                        inputType: 'gesture',
-                                        origin: 'top' }
-                              };
+          // Moving to the absolute first item from an embedded document
+          // fails. Bug 972035.
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Phone status bar Traversal Rule test document'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: 'wow heading level 1 such app'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: 'many option not checked check button'
+          }],
+          [ContentMessages.simpleMoveFirst, {
+            speak: 'Phone status bar',
+            speak_checkFunc: 'todo_is'
+          }],
 
-        var clearCursor = { name: 'AccessFu:ClearCursor',
-                            json: { origin: 'top' }
-                          };
+          // Reset cursors
+          [ContentMessages.clearCursor, null],
 
-        function focusFunc(aSelector, aBlur) {
-         return function (mm) {
-          mm.sendAsyncMessage(
-            'AccessFuTest:Focus', { selector: aSelector, blur: aBlur });
-          };
-        }
+          // Move cursor with focus in outside document
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Phone status bar Traversal Rule test document'
+          }],
+          [ContentMessages.focusSelector('button#home', false), {
+            speak: 'Home button'
+          }],
 
-        var contentTest = new AccessFuContentTest(
-          [
-            // Simple traversal forward
-            [simpleMoveNext,
-            { speak: 'Phone status bar Traversal Rule test document' }],
-           [simpleMoveNext,
-            { speak: 'wow heading level 1 such app' }],
-           [simpleMoveNext,
-            { speak: 'many option not checked check button' }],
-            // check checkbox
-           [activateCurrent,
-            { speak: 'checked' }],
-            [null,
-             { speak: 'checked', speak_checkFunc: 'todo_isnot' }],
-            // uncheck checkbox
-           [simpleMoveNext,
-            { speak: 'Home button' }],
+          // Blur button and reset cursor
+          [ContentMessages.focusSelector('button#home', true), null],
+          [ContentMessages.clearCursor, null],
 
-            // Simple traversal backward
-           [simpleMovePrevious,
-            { speak: 'many option checked check button such app' }],
-           [activateCurrent,
-            { speak: 'unchecked' }],
-           [null,
-            { speak: 'unchecked', speak_checkFunc: 'todo_isnot' }],
-           [simpleMovePrevious,
-            { speak: 'wow heading level 1' }],
-           [simpleMovePrevious,
-            { speak: 'Phone status bar' }],
+          // Set focus on element outside of embedded frame while
+          // cursor is in frame
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Phone status bar Traversal Rule test document'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: 'wow heading level 1 such app'
+          }],
+          [ContentMessages.focusSelector('button#home', false), {
+            speak: 'Home button'
+          }]
 
-            // Moving to the absolute last item from an embedded document fails.
-            // Bug 972035.
-            [simpleMoveNext,
-            { speak: 'wow heading level 1 such app' }],
-            // Move from an inner frame to the last element in the parent doc
-            [simpleMoveLast,
-             { speak: 'Home button', speak_checkFunc: 'todo_is' }],
+          // Blur button and reset cursor
+          [ContentMessages.focusSelector('button#home', true), null],
+          [ContentMessages.clearCursor, null],
 
-            [clearCursor, null], // Reset cursors
+          // XXX: Set focus on iframe itself.
+          // XXX: Set focus on element in iframe when cursor is outside of it.
+          // XXX: Set focus on element in iframe when cursor is in iframe.
 
-            // Moving to the absolute first item from an embedded document fails.
-            // Bug 972035.
-            [simpleMoveNext,
-            { speak: 'Phone status bar Traversal Rule test document' }],
-            [simpleMoveNext,
-             { speak: 'wow heading level 1 such app' }],
-            [simpleMoveNext,
-             { speak: 'many option not checked check button' }],
-            [simpleMoveFirst,
-             { speak: 'Phone status bar', speak_checkFunc: 'todo_is' }],
+          // Open dialog in outer doc, while cursor is also in outer doc
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Phone status bar Traversal Rule test document'
+          }],
+          [doc.defaultView.showAlert, {
+            speak: 'This is an alert! heading level 1 dialog'
+          }],
 
-            // Reset cursors
-            [clearCursor, null],
+          [function() {
+            doc.defaultView.hideAlert()
+          }, {
+            speak: 'wow heading level 1 such app'
+          }],
 
-            // Move cursor with focus in outside document
-            [simpleMoveNext,
-            { speak: 'Phone status bar Traversal Rule test document' }],
-            [ focusFunc('button#home', false), { speak: 'Home button' }],
+          [ContentMessages.clearCursor, null],
 
-            // Blur button and reset cursor
-            [focusFunc('button#home', true), null],
-            [clearCursor, null],
+          // Open dialog in outer doc, while cursor is in inner frame
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Phone status bar Traversal Rule test document'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: 'wow heading level 1 such app'
+          }],
+          [doc.defaultView.showAlert, {
+            speak: 'This is an alert! heading level 1 dialog'
+          }],
 
-            // Set focus on element outside of embedded frame while cursor is in frame
-            [simpleMoveNext,
-            { speak: 'Phone status bar Traversal Rule test document' }],
-            [simpleMoveNext,
-             { speak: 'wow heading level 1 such app' }],
-            [focusFunc('button#home', false), { speak: 'Home button' }]
+          // XXX: Place cursor back where it was.
+          [doc.defaultView.hideAlert, {
+            speak: 'many option not checked check button such app'
+          }],
 
-            // Blur button and reset cursor
-            [focusFunc('button#home', true), null],
-            [clearCursor, null],
+          [ContentMessages.clearCursor, null],
 
-            // XXX: Set focus on iframe itself.
-            // XXX: Set focus on element in iframe when cursor is outside of it.
-            // XXX: Set focus on element in iframe when cursor is in iframe.
+          // Open dialog, then focus on something when closing
+          [ContentMessages.simpleMoveNext, {
+            speak: 'Phone status bar Traversal Rule test document'
+          }],
+          [doc.defaultView.showAlert, {
+            speak: 'This is an alert! heading level 1 dialog'
+          }],
 
-            // Open dialog in outer doc, while cursor is also in outer doc
-            [simpleMoveNext,
-            { speak: 'Phone status bar Traversal Rule test document' }],
-            [doc.defaultView.showAlert,
-            { speak: 'This is an alert! heading level 1 dialog' }],
-
-            [function () { doc.defaultView.hideAlert() },
-            { speak: 'wow heading level 1 such app' }],
-
-            [clearCursor, null],
-
-            // Open dialog in outer doc, while cursor is in inner frame
-            [simpleMoveNext,
-            { speak: 'Phone status bar Traversal Rule test document' }],
-            [simpleMoveNext,
-            { speak: 'wow heading level 1 such app' }],
-            [doc.defaultView.showAlert,
-            { speak: 'This is an alert! heading level 1 dialog' }],
-
-            // XXX: Place cursor back where it was.
-            [doc.defaultView.hideAlert,
-            { speak: 'many option not checked check button such app' }],
-
-            [clearCursor, null],
-
-            // Open dialog, then focus on something when closing
-            [simpleMoveNext,
-            { speak: 'Phone status bar Traversal Rule test document' }],
-            [doc.defaultView.showAlert,
-            { speak: 'This is an alert! heading level 1 dialog' }],
-
-            [function () {
-		doc.defaultView.hideAlert();
-		doc.querySelector('button#home').focus();
-	     },
-	    { speak: 'Home button Traversal Rule test document' }]
-	  ]);
+          [function() {
+            doc.defaultView.hideAlert();
+            doc.querySelector('button#home').focus();
+          }, {
+            speak: 'Home button Traversal Rule test document'
+          }]
+        ]);
 
         contentTest.start(function () {
           closeBrowserWindow();
