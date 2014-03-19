@@ -48,6 +48,7 @@ import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
+import org.mozilla.gecko.toolbar.ToolbarProgressView;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
@@ -130,6 +131,7 @@ abstract public class BrowserApp extends GeckoApp
     public ViewFlipper mViewFlipper;
     public ActionModeCompatView mActionBar;
     private BrowserToolbar mBrowserToolbar;
+    private ToolbarProgressView mProgressView;
     private HomePager mHomePager;
     private TabsPanel mTabsPanel;
     private ViewGroup mHomePagerContainer;
@@ -455,6 +457,8 @@ abstract public class BrowserApp extends GeckoApp
         mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
 
         mBrowserToolbar = (BrowserToolbar) findViewById(R.id.browser_toolbar);
+        mProgressView = (ToolbarProgressView) findViewById(R.id.progress);
+        mBrowserToolbar.setProgressBar(mProgressView);
         if (Intent.ACTION_VIEW.equals(intent.getAction())) {
             // Show the target URL immediately in the toolbar.
             mBrowserToolbar.setTitle(intent.getDataString());
@@ -878,7 +882,9 @@ abstract public class BrowserApp extends GeckoApp
         final int marginTop = Math.round(aMetrics.marginTop);
         ThreadUtils.postToUiThread(new Runnable() {
             public void run() {
-                ViewHelper.setTranslationY(toolbarLayout, marginTop - toolbarLayout.getHeight());
+                final float translationY = marginTop - toolbarLayout.getHeight();
+                ViewHelper.setTranslationY(toolbarLayout, translationY);
+                ViewHelper.setTranslationY(mProgressView, translationY);
 
                 if (mDoorHangerPopup.isShowing()) {
                     mDoorHangerPopup.updatePopup();

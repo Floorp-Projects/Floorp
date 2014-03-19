@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2004, 2006, 2007 by
+# Copyright 1996-2000, 2003, 2004, 2006, 2007, 2014 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -23,7 +23,7 @@ ifeq ($(PLATFORM),ansi)
   #
   ifeq ($(OS),Windows_NT)
 
-    PLATFORM := win32
+    PLATFORM := windows
 
   else
 
@@ -44,7 +44,8 @@ ifeq ($(PLATFORM),ansi)
     #
     # A better test is to check whether there are both the environment
     # variables `winbootdir' and `windir'.  The first indicates an
-    # underlying DOS 7.x, while the second is set only if win32 is available.
+    # underlying DOS 7.x, while the second is set only if windows is
+    # available.
     #
     # Note that on Windows NT, such an environment variable will not be seen
     # from DOS-based tools like DJGPP's make; this is not actually a problem
@@ -53,7 +54,7 @@ ifeq ($(PLATFORM),ansi)
     ifdef winbootdir
       ifdef windir
 
-        PLATFORM := win32
+        PLATFORM := windows
 
       endif
     endif
@@ -62,7 +63,7 @@ ifeq ($(PLATFORM),ansi)
 
 endif # test PLATFORM ansi
 
-ifeq ($(PLATFORM),win32)
+ifeq ($(PLATFORM),windows)
 
   DELETE := del
   CAT    := type
@@ -177,7 +178,7 @@ ifeq ($(PLATFORM),win32)
     .PHONY: devel-gcc
   endif
 
-endif   # test PLATFORM win32
+endif   # test PLATFORM windows
 
 
 # EOF
