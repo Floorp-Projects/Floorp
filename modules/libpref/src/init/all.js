@@ -1802,9 +1802,6 @@ pref("layout.css.sticky.enabled", true);
 // Is support for CSS "will-change" enabled?
 pref("layout.css.will-change.enabled", false);
 
-// Is support for DOMPoint enabled?
-pref("layout.css.DOMPoint.enabled", true);
-
 // Is support for CSS "text-align: true X" enabled?
 pref("layout.css.text-align-true-value.enabled", false);
 
