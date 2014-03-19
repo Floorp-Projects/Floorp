@@ -44,3 +44,16 @@
   background-color: #d89b28;
   opacity: 0.6;
 }
+
+.editable {
+  border-bottom: 1px dashed transparent;
+}
+
+.editable:hover {
+  border-bottom-color: hsl(0,0%,50%);
+}
+
+.styleinspector-propertyeditor {
+  border: 1px solid #CCC;
+  padding: 0;
+}
