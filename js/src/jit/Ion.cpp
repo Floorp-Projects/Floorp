@@ -471,13 +471,15 @@ JitCompartment::JitCompartment()
     baselineGetPropReturnAddr_(nullptr),
     baselineSetPropReturnAddr_(nullptr),
     stringConcatStub_(nullptr),
-    parallelStringConcatStub_(nullptr)
+    parallelStringConcatStub_(nullptr),
+    activeParallelEntryScripts_(nullptr)
 {
 }
 
 JitCompartment::~JitCompartment()
 {
     js_delete(stubCodes_);
+    js_delete(activeParallelEntryScripts_);
 }
 
 bool
@@ -508,6 +510,28 @@ JitCompartment::ensureIonStubsExist(JSContext *cx)
 #endif
 
     return true;
+}
+
+bool
+JitCompartment::notifyOfActiveParallelEntryScript(JSContext *cx, HandleScript script)
+{
+    // Fast path. The isParallelEntryScript bit guarantees that the script is
+    // already in the set.
+    if (script->parallelIonScript()->isParallelEntryScript()) {
+        MOZ_ASSERT(activeParallelEntryScripts_ && activeParallelEntryScripts_->has(script));
+        script->parallelIonScript()->resetParallelAge();
+        return true;
+    }
+
+    if (!activeParallelEntryScripts_) {
+        activeParallelEntryScripts_ = cx->new_<ScriptSet>(cx);
+        if (!activeParallelEntryScripts_ || !activeParallelEntryScripts_->init())
+            return false;
+    }
+
+    script->parallelIonScript()->setIsParallelEntryScript();
+    ScriptSet::AddPtr p = activeParallelEntryScripts_->lookupForAdd(script);
+    return p || activeParallelEntryScripts_->add(p, script);
 }
 
 void
@@ -572,6 +596,34 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
 
     // Free temporary OSR buffer.
     trc->runtime->jitRuntime()->freeOsrTempData();
+
+    // Mark scripts with parallel IonScripts if we should preserve them.
+    if (activeParallelEntryScripts_) {
+        for (ScriptSet::Enum e(*activeParallelEntryScripts_); !e.empty(); e.popFront()) {
+            JSScript *script = e.front();
+
+            // If the script has since been invalidated or was attached by an
+            // off-thread worker too late (i.e., the ForkJoin finished with
+            // warmup doing all the work), remove it.
+            if (!script->hasParallelIonScript() ||
+                !script->parallelIonScript()->isParallelEntryScript())
+            {
+                e.removeFront();
+                continue;
+            }
+
+            // Check and increment the age. If the script is below the max
+            // age, mark it.
+            //
+            // Subtlety: We depend on the tracing of the parallel IonScript's
+            // callTargetEntries to propagate the parallel age to the entire
+            // call graph.
+            if (ShouldPreserveParallelJITCode(trc->runtime, script, /* increase = */ true)) {
+                MarkScript(trc, const_cast<EncapsulatedPtrScript *>(&e.front()), "par-script");
+                MOZ_ASSERT(script == e.front());
+            }
+        }
+    }
 }
 
 void
@@ -593,6 +645,16 @@ JitCompartment::sweep(FreeOp *fop)
 
     if (parallelStringConcatStub_ && !IsJitCodeMarked(parallelStringConcatStub_.unsafeGet()))
         parallelStringConcatStub_ = nullptr;
+
+    if (activeParallelEntryScripts_) {
+        for (ScriptSet::Enum e(*activeParallelEntryScripts_); !e.empty(); e.popFront()) {
+            JSScript *script = e.front();
+            if (!IsScriptMarked(&script))
+                e.removeFront();
+            else
+                MOZ_ASSERT(script == e.front());
+        }
+    }
 }
 
 JitCode *
@@ -730,6 +792,7 @@ IonScript::IonScript()
     invalidateEpilogueDataOffset_(0),
     numBailouts_(0),
     hasUncompiledCallTarget_(false),
+    isParallelEntryScript_(false),
     hasSPSInstrumentation_(false),
     recompiling_(false),
     runtimeData_(0),
@@ -756,6 +819,7 @@ IonScript::IonScript()
     backedgeList_(0),
     backedgeEntries_(0),
     refcount_(0),
+    parallelAge_(0),
     recompileInfo_(),
     osrPcMismatchCounter_(0),
     dependentAsmJSModules(nullptr)
@@ -876,8 +940,13 @@ IonScript::trace(JSTracer *trc)
 
     // No write barrier is needed for the call target list, as it's attached
     // at compilation time and is read only.
-    for (size_t i = 0; i < callTargetEntries(); i++)
+    for (size_t i = 0; i < callTargetEntries(); i++) {
+        // Propagate the parallelAge to the call targets.
+        if (callTargetList()[i]->hasParallelIonScript())
+            callTargetList()[i]->parallelIonScript()->parallelAge_ = parallelAge_;
+
         gc::MarkScriptUnbarriered(trc, &callTargetList()[i], "callTarget");
+    }
 }
 
 /* static */ void
@@ -2694,15 +2763,8 @@ jit::Invalidate(JSContext *cx, JSScript *script, bool resetUses, bool cancelOffT
 }
 
 static void
-FinishInvalidationOf(FreeOp *fop, JSScript *script, IonScript *ionScript, bool parallel)
+FinishInvalidationOf(FreeOp *fop, JSScript *script, IonScript *ionScript)
 {
-    // In all cases, nullptr out script->ion or script->parallelIon to avoid
-    // re-entry.
-    if (parallel)
-        script->setParallelIonScript(nullptr);
-    else
-        script->setIonScript(nullptr);
-
     types::TypeZone &types = script->zone()->types;
     ionScript->recompileInfo().compilerOutput(types)->invalidate();
 
@@ -2712,15 +2774,39 @@ FinishInvalidationOf(FreeOp *fop, JSScript *script, IonScript *ionScript, bool p
         jit::IonScript::Destroy(fop, ionScript);
 }
 
+template <ExecutionMode mode>
 void
 jit::FinishInvalidation(FreeOp *fop, JSScript *script)
 {
-    if (script->hasIonScript())
-        FinishInvalidationOf(fop, script, script->ionScript(), false);
+    // In all cases, nullptr out script->ion or script->parallelIon to avoid
+    // re-entry.
+    switch (mode) {
+      case SequentialExecution:
+        if (script->hasIonScript()) {
+            IonScript *ion = script->ionScript();
+            script->setIonScript(nullptr);
+            FinishInvalidationOf(fop, script, ion);
+        }
+        return;
 
-    if (script->hasParallelIonScript())
-        FinishInvalidationOf(fop, script, script->parallelIonScript(), true);
+      case ParallelExecution:
+        if (script->hasParallelIonScript()) {
+            IonScript *parallelIon = script->parallelIonScript();
+            script->setParallelIonScript(nullptr);
+            FinishInvalidationOf(fop, script, parallelIon);
+        }
+        return;
+
+      default:
+        MOZ_ASSUME_UNREACHABLE("bad execution mode");
+    }
 }
+
+template void
+jit::FinishInvalidation<SequentialExecution>(FreeOp *fop, JSScript *script);
+
+template void
+jit::FinishInvalidation<ParallelExecution>(FreeOp *fop, JSScript *script);
 
 void
 jit::MarkValueFromIon(JSRuntime *rt, Value *vp)
@@ -2923,7 +3009,8 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
         if ((comp_ && script->compartment() == comp_) ||
             (zone_ && script->compartment()->principals))
         {
-            FinishInvalidation(fop, script);
+            FinishInvalidation<SequentialExecution>(fop, script);
+            FinishInvalidation<ParallelExecution>(fop, script);
             FinishDiscardBaselineScript(fop, script);
             // script->clearAnalysis();
             script->resetUseCount();
