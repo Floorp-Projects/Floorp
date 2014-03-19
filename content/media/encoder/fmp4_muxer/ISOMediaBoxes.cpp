@@ -1179,8 +1179,13 @@ TrackHeaderBox::Generate(uint32_t* aBoxSize)
   volume = (mTrackType == Audio_Track ? 0x0100 : 0);
 
   if (mTrackType == Video_Track) {
-    width = mVideoMeta->GetVideoWidth() << 16;
-    height = mVideoMeta->GetVideoHeight() << 16;
+    width = mVideoMeta->GetVideoDisplayWidth() << 16;
+    height = mVideoMeta->GetVideoDisplayHeight() << 16;
+    // Check display size, using the pixel size if any of them is invalid.
+    if (!width || !height) {
+      width = mVideoMeta->GetVideoWidth() << 16;
+      height = mVideoMeta->GetVideoHeight() << 16;
+    }
   }
 
   size += sizeof(creation_time) +
