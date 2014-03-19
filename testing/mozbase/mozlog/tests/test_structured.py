@@ -1,10 +1,15 @@
+import argparse
 import os
 import time
 import unittest
 import StringIO
 import json
 
-from mozlog.structured import structuredlog, reader
+from mozlog.structured import (
+    commandline,
+    reader,
+    structuredlog,
+)
 
 
 class TestHandler(object):
@@ -181,6 +186,14 @@ class TestStructuredLog(BaseStructuredTest):
         self.assert_log_equals({"action": "log",
                                 "level": "INFO",
                                 "message": "line 4"})
+
+class TestCommandline(unittest.TestCase):
+    def test_setup_logging(self):
+        parser = argparse.ArgumentParser()
+        commandline.add_logging_group(parser)
+        args = parser.parse_args(["--log-raw=/tmp/foo"])
+        logger = commandline.setup_logging("test", args, {})
+        self.assertEqual(len(logger.handlers), 1)
 
 class TestReader(unittest.TestCase):
     def to_file_like(self, obj):
