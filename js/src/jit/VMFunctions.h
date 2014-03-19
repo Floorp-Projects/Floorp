@@ -665,7 +665,7 @@ bool PushBlockScope(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObjec
 bool PopBlockScope(JSContext *cx, BaselineFrame *frame);
 bool DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc);
 
-bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
+bool InitBaselineFrameForOsr(BaselineFrame *frame, InterpreterFrame *interpFrame,
                              uint32_t numStackValues);
 
 JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject descr,

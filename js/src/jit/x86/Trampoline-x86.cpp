@@ -123,7 +123,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     // Push the callee token.
     masm.push(Operand(ebp, ARG_CALLEETOKEN));
 
-    // Load the StackFrame address into the OsrFrameReg.
+    // Load the InterpreterFrame address into the OsrFrameReg.
     // This address is also used for setting the constructing bit on all paths.
     masm.loadPtr(Address(ebp, ARG_STACKFRAME), OsrFrameReg);
 
@@ -203,7 +203,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
         masm.setupUnalignedABICall(3, scratch);
         masm.passABIArg(framePtr); // BaselineFrame
-        masm.passABIArg(OsrFrameReg); // StackFrame
+        masm.passABIArg(OsrFrameReg); // InterpreterFrame
         masm.passABIArg(numStackValues);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, jit::InitBaselineFrameForOsr));
 

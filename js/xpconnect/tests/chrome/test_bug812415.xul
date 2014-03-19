@@ -50,11 +50,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
     is(expanded.regObj.foo, 20, "Expanded can set properties");
     checkThrows('expFun.bar = 0', regular, "Regular shouldn't write properties");
 
-    // Functions are callable regardless of security relationships.
+    // Check functions.
     is(Cu.evalInSandbox('regFun()', expanded), 42, "Expanded can call regular function");
-    is(Cu.evalInSandbox('expFun()', regular), 41, "Regular can call expanded function");
-
-    // Otherwise, the relationship is asymmetric.
+    checkThrows('expFun()', regular, "Regular cannot call expanded function");
     is(Cu.evalInSandbox('regFun.name', expanded), 'reg', "Expanded can see regular function's name");
     checkThrows('expFun.name', regular, "Regular can't see expanded function's name");
     Cu.evalInSandbox('regFun.expando = 30', expanded);

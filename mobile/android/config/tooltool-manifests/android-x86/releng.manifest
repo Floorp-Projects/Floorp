@@ -6,14 +6,14 @@
 "filename": "android-ndk.tar.bz2"
 },
 {
-"size": 147088338,
-"digest": "56fc5dc8c5e8cf46605667db153477e32bdf724bfa989663bbbed7e52ee47a4cb8cf7f8bf49b82b7e15fc89efe59a0f1656ca4b7a4ffcc8de31f9b2229549dab",
+"size": 156663204,
+"digest": "69c9be39a452c202ebe99fa3a7f31cb9a8028a8413afc344ef80d0f0d41e28c25cc9ad634e24e23639792b19f07d6acc22494429789dde725d8e202fe5625e27",
 "algorithm": "sha512",
-"filename": "android-sdk-16.tar.bz2"
+"filename": "android-sdk.tar.xz"
 },
 {
-"size": 292,
-"digest": "974584133bcee7648bfca4bf95145239926ece2ab788a9b9850d3ad77c390af6efcf4d888c5f9654201262d9c8b8ecf16022ada0182854dc8a89ecf14649193e",
+"size": 217,
+"digest": "5aaec0a91da377fb1bf86ac2a28a2adea3d3f7736b71c0fb2249ae8ca0ff66731311f89c9e933f0944e8e5771a0c14d6a3055f181721f52a0cd5397f175bcb14",
 "algorithm": "sha512",
 "filename": "setup.sh"
 },

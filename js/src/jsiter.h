@@ -241,12 +241,12 @@ enum JSGeneratorState
 
 struct JSGenerator
 {
-    js::HeapPtrObject   obj;
-    JSGeneratorState    state;
-    js::InterpreterRegs regs;
-    JSGenerator         *prevGenerator;
-    js::StackFrame      *fp;
-    js::HeapValue       stackSnapshot[1];
+    js::HeapPtrObject    obj;
+    JSGeneratorState     state;
+    js::InterpreterRegs  regs;
+    JSGenerator          *prevGenerator;
+    js::InterpreterFrame *fp;
+    js::HeapValue        stackSnapshot[1];
 };
 
 extern JSObject *

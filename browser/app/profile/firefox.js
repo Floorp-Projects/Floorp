@@ -1403,3 +1403,10 @@ pref("ui.key.menuAccessKeyFocuses", true);
 
 // Delete HTTP cache v2 data of users that didn't opt-in manually
 pref("browser.cache.auto_delete_cache_version", 1);
+
+// Telemetry experiments settings.
+pref("experiments.enabled", false);
+pref("experiments.manifest.fetchIntervalSeconds", 86400);
+pref("experiments.manifest.uri", "https://telemetry-experiment.cdn.mozilla.net/manifest/v1/firefox/%VERSION%/%CHANNEL%");
+pref("experiments.manifest.certs.1.commonName", "*.cdn.mozilla.net");
+pref("experiments.manifest.certs.1.issuerName", "CN=Cybertrust Public SureServer SV CA,O=Cybertrust Inc");

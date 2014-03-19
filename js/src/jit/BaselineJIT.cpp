@@ -55,7 +55,7 @@ static const size_t BASELINE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 4096;
 static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
 
 static bool
-CheckFrame(StackFrame *fp)
+CheckFrame(InterpreterFrame *fp)
 {
     if (fp->isGeneratorFrame()) {
         IonSpew(IonSpew_BaselineAbort, "generator frame");
@@ -159,7 +159,7 @@ jit::EnterBaselineMethod(JSContext *cx, RunState &state)
 }
 
 IonExecStatus
-jit::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
+jit::EnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
 
@@ -301,7 +301,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
 }
 
 MethodStatus
-jit::CanEnterBaselineAtBranch(JSContext *cx, StackFrame *fp, bool newType)
+jit::CanEnterBaselineAtBranch(JSContext *cx, InterpreterFrame *fp, bool newType)
 {
    // If constructing, allocate a new |this| object.
    if (fp->isConstructing() && fp->functionThis().isPrimitive()) {

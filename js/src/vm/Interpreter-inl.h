@@ -30,7 +30,7 @@ namespace js {
 inline bool
 ComputeThis(JSContext *cx, AbstractFramePtr frame)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), !frame.asStackFrame()->runningInJit());
+    JS_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
     if (frame.thisValue().isObject())
         return true;
     RootedValue thisv(cx, frame.thisValue());
@@ -108,7 +108,7 @@ GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, Handle
  * problem to the value at |spindex| on the stack.
  */
 MOZ_ALWAYS_INLINE JSObject *
-ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
+ValuePropertyBearer(JSContext *cx, InterpreterFrame *fp, HandleValue v, int spindex)
 {
     if (v.isObject())
         return &v.toObject();
