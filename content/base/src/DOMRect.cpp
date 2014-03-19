@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/DOMRect.h"
+#include "DOMRect.h"
 
 #include "nsPresContext.h"
 #include "mozilla/dom/DOMRectListBinding.h"
@@ -12,30 +12,20 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMRectReadOnly, mParent)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMRectReadOnly)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRectReadOnly)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRectReadOnly)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(DOMRect, mParent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMRect)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRect)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMRect)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsIDOMClientRect)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-JSObject*
-DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
-{
-  MOZ_ASSERT(mParent);
-  return DOMRectReadOnlyBinding::Wrap(aCx, aScope, this);
-}
-
-// -----------------------------------------------------------------------------
-
-NS_IMPL_ISUPPORTS_INHERITED1(DOMRect, DOMRectReadOnly, nsIDOMClientRect)
 
 #define FORWARD_GETTER(_name)                                                   \
   NS_IMETHODIMP                                                                 \
   DOMRect::Get ## _name(float* aResult)                                         \
   {                                                                             \
-    *aResult = float(_name());                                                  \
+    *aResult = _name();                                                         \
     return NS_OK;                                                               \
   }
 
@@ -53,23 +43,6 @@ DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return DOMRectBinding::Wrap(aCx, aScope, this);
 }
 
-already_AddRefed<DOMRect>
-DOMRect::Constructor(const GlobalObject& aGlobal, ErrorResult& aRV)
-{
-  nsRefPtr<DOMRect> obj =
-    new DOMRect(aGlobal.GetAsSupports(), 0.0, 0.0, 0.0, 0.0);
-  return obj.forget();
-}
-
-already_AddRefed<DOMRect>
-DOMRect::Constructor(const GlobalObject& aGlobal, double aX, double aY,
-                     double aWidth, double aHeight, ErrorResult& aRV)
-{
-  nsRefPtr<DOMRect> obj =
-    new DOMRect(aGlobal.GetAsSupports(), aX, aY, aWidth, aHeight);
-  return obj.forget();
-}
-
 // -----------------------------------------------------------------------------
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(DOMRectList, mParent, mArray)
@@ -84,7 +57,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMRectList)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMRectList)
 
 
-NS_IMETHODIMP
+NS_IMETHODIMP    
 DOMRectList::GetLength(uint32_t* aLength)
 {
   *aLength = Length();

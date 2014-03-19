@@ -24,6 +24,8 @@ CSSStyleDeclaration implements LegacyQueryInterface;
 CSSValueList implements LegacyQueryInterface;
 DOMImplementation implements LegacyQueryInterface;
 DOMParser implements LegacyQueryInterface;
+DOMRect implements LegacyQueryInterface;
+DOMRectList implements LegacyQueryInterface;
 DOMStringMap implements LegacyQueryInterface;
 DOMTokenList implements LegacyQueryInterface;
 Document implements LegacyQueryInterface;
