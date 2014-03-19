@@ -463,6 +463,14 @@ class BaseMarionetteOptions(OptionParser):
                         dest='shuffle',
                         default=False,
                         help='run tests in a random order')
+        self.add_option('--total-chunks',
+                        dest='total_chunks',
+                        type=int,
+                        help='how many chunks to split the tests up into')
+        self.add_option('--this-chunk',
+                        dest='this_chunk',
+                        type=int,
+                        help='which chunk to run')
 
     def parse_args(self, args=None, values=None):
         options, tests = OptionParser.parse_args(self, args, values)
@@ -500,6 +508,18 @@ class BaseMarionetteOptions(OptionParser):
             raise ValueError('Invalid emulator resolution format. '
                              'Should be like "480x800".')
 
+        if options.total_chunks is not None and options.this_chunk is None:
+            self.error('You must specify which chunk to run.')
+
+        if options.this_chunk is not None and options.total_chunks is None:
+            self.error('You must specify how many chunks to split the tests into.')
+
+        if options.total_chunks is not None:
+            if not 1 <= options.total_chunks:
+                self.error('Total chunks must be greater than 1.')
+            if not 1 <= options.this_chunk <= options.total_chunks:
+                self.error('Chunk to run must be between 1 and %s.' % options.total_chunks)
+
         for handler in self.verify_usage_handlers:
             handler(options, tests)
 
@@ -517,7 +537,7 @@ class BaseMarionetteTestRunner(object):
                  logcat_dir=None, xml_output=None, repeat=0, gecko_path=None,
                  testvars=None, tree=None, type=None, device_serial=None,
                  symbols_path=None, timeout=None, es_servers=None, shuffle=False,
-                 sdcard=None, **kwargs):
+                 sdcard=None, this_chunk=1, total_chunks=1, **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -552,6 +572,8 @@ class BaseMarionetteTestRunner(object):
         self.es_servers = es_servers
         self.shuffle = shuffle
         self.sdcard = sdcard
+        self.this_chunk = this_chunk
+        self.total_chunks = total_chunks
         self.mixin_run_tests = []
         self.manifest_skipped_tests = []
         self.tests = []
@@ -952,6 +974,20 @@ class BaseMarionetteTestRunner(object):
                 break
 
     def run_test_sets(self):
+        if self.total_chunks > len(self.tests):
+            raise ValueError('Total number of chunks must be between 1 and %d.' % len(self.tests))
+        if not self.total_chunks == 1:
+            chunks = [[] for i in range(self.total_chunks)]
+            for i, test in enumerate(self.tests):
+                target_chunk = i % self.total_chunks
+                chunks[target_chunk].append(test)
+
+            self.logger.info('Running chunk %d of %d (%d tests selected from a '
+                             'total of %d)' % (self.this_chunk, self.total_chunks,
+                                               len(chunks[self.this_chunk - 1]),
+                                               len(self.tests)))
+            self.tests = chunks[self.this_chunk - 1]
+
         oop_tests = [x for x in self.tests if x.get('oop')]
         self.run_test_set(oop_tests)
 
