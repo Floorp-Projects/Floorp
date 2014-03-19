@@ -5,13 +5,10 @@
 
 #include "GeometryUtils.h"
 
-#include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/GeometryUtilsBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMQuad.h"
-#include "mozilla/dom/DOMRect.h"
 #include "nsIFrame.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsCSSFrameConstructor.h"
@@ -22,6 +19,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 namespace mozilla {
+
+typedef OwningTextOrElementOrDocument GeometryNode;
 
 enum GeometryNodeType {
   GEOMETRY_NODE_ELEMENT,
@@ -56,14 +55,14 @@ GetFrameForNode(nsINode* aNode, GeometryNodeType aType)
 }
 
 static nsIFrame*
-GetFrameForGeometryNode(const Optional<OwningGeometryNode>& aGeometryNode,
+GetFrameForGeometryNode(const Optional<GeometryNode>& aGeometryNode,
                         nsINode* aDefaultNode)
 {
   if (!aGeometryNode.WasPassed()) {
     return GetFrameForNode(aDefaultNode->OwnerDoc(), GEOMETRY_NODE_DOCUMENT);
   }
 
-  const OwningGeometryNode& value = aGeometryNode.Value();
+  const GeometryNode& value = aGeometryNode.Value();
   if (value.IsElement()) {
     return GetFrameForNode(value.GetAsElement(), GEOMETRY_NODE_ELEMENT);
   }
@@ -71,18 +70,6 @@ GetFrameForGeometryNode(const Optional<OwningGeometryNode>& aGeometryNode,
     return GetFrameForNode(value.GetAsDocument(), GEOMETRY_NODE_DOCUMENT);
   }
   return GetFrameForNode(value.GetAsText(), GEOMETRY_NODE_TEXT);
-}
-
-static nsIFrame*
-GetFrameForGeometryNode(const GeometryNode& aGeometryNode)
-{
-  if (aGeometryNode.IsElement()) {
-    return GetFrameForNode(&aGeometryNode.GetAsElement(), GEOMETRY_NODE_ELEMENT);
-  }
-  if (aGeometryNode.IsDocument()) {
-    return GetFrameForNode(&aGeometryNode.GetAsDocument(), GEOMETRY_NODE_DOCUMENT);
-  }
-  return GetFrameForNode(&aGeometryNode.GetAsText(), GEOMETRY_NODE_TEXT);
 }
 
 static nsIFrame*
@@ -99,30 +86,10 @@ GetFrameForNode(nsINode* aNode)
 }
 
 static nsIFrame*
-GetFirstNonAnonymousFrameForGeometryNode(const Optional<OwningGeometryNode>& aNode,
+GetFirstNonAnonymousFrameForGeometryNode(const Optional<GeometryNode>& aNode,
                                          nsINode* aDefaultNode)
 {
   nsIFrame* f = GetFrameForGeometryNode(aNode, aDefaultNode);
-  if (f) {
-    f = nsLayoutUtils::GetFirstNonAnonymousFrame(f);
-  }
-  return f;
-}
-
-static nsIFrame*
-GetFirstNonAnonymousFrameForGeometryNode(const GeometryNode& aNode)
-{
-  nsIFrame* f = GetFrameForGeometryNode(aNode);
-  if (f) {
-    f = nsLayoutUtils::GetFirstNonAnonymousFrame(f);
-  }
-  return f;
-}
-
-static nsIFrame*
-GetFirstNonAnonymousFrameForNode(nsINode* aNode)
-{
-  nsIFrame* f = GetFrameForNode(aNode);
   if (f) {
     f = nsLayoutUtils::GetFirstNonAnonymousFrame(f);
   }
@@ -266,104 +233,6 @@ void GetBoxQuads(nsINode* aNode,
   AccumulateQuadCallback callback(ownerDoc, aResult, relativeToFrame,
                                   relativeToTopLeft, aOptions.mBox);
   nsLayoutUtils::GetAllInFlowBoxes(frame, &callback);
-}
-
-static void
-TransformPoints(nsINode* aTo, const GeometryNode& aFrom,
-                uint32_t aPointCount, CSSPoint* aPoints,
-                const ConvertCoordinateOptions& aOptions, ErrorResult& aRv)
-{
-  nsIFrame* fromFrame = GetFirstNonAnonymousFrameForGeometryNode(aFrom);
-  nsIFrame* toFrame = GetFirstNonAnonymousFrameForNode(aTo);
-  if (!fromFrame || !toFrame) {
-    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-    return;
-  }
-  if (!CheckFramesInSameTopLevelBrowsingContext(fromFrame, toFrame)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_FOUND_ERR);
-    return;
-  }
-
-  nsPoint fromOffset = GetBoxRectForFrame(&fromFrame, aOptions.mFromBox).TopLeft();
-  nsPoint toOffset = GetBoxRectForFrame(&toFrame, aOptions.mToBox).TopLeft();
-  CSSPoint fromOffsetGfx(nsPresContext::AppUnitsToFloatCSSPixels(fromOffset.x),
-                         nsPresContext::AppUnitsToFloatCSSPixels(fromOffset.y));
-  for (uint32_t i = 0; i < aPointCount; ++i) {
-    aPoints[i] += fromOffsetGfx;
-  }
-  nsLayoutUtils::TransformResult rv =
-    nsLayoutUtils::TransformPoints(fromFrame, toFrame, aPointCount, aPoints);
-  if (rv == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
-    CSSPoint toOffsetGfx(nsPresContext::AppUnitsToFloatCSSPixels(toOffset.x),
-                         nsPresContext::AppUnitsToFloatCSSPixels(toOffset.y));
-    for (uint32_t i = 0; i < aPointCount; ++i) {
-      aPoints[i] -= toOffsetGfx;
-    }
-  } else {
-    PodZero(aPoints, aPointCount);
-  }
-}
-
-already_AddRefed<DOMQuad>
-ConvertQuadFromNode(nsINode* aTo, dom::DOMQuad& aQuad,
-                    const GeometryNode& aFrom,
-                    const dom::ConvertCoordinateOptions& aOptions,
-                    ErrorResult& aRv)
-{
-  CSSPoint points[4];
-  for (uint32_t i = 0; i < 4; ++i) {
-    DOMPoint* p = aQuad.Point(i);
-    if (p->W() != 1.0 || p->Z() != 0.0) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return nullptr;
-    }
-    points[i] = CSSPoint(p->X(), p->Y());
-  }
-  TransformPoints(aTo, aFrom, 4, points, aOptions, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  nsRefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject(), points);
-  return result.forget();
-}
-
-already_AddRefed<DOMQuad>
-ConvertRectFromNode(nsINode* aTo, dom::DOMRectReadOnly& aRect,
-                    const GeometryNode& aFrom,
-                    const dom::ConvertCoordinateOptions& aOptions,
-                    ErrorResult& aRv)
-{
-  CSSPoint points[4];
-  double x = aRect.X(), y = aRect.Y(), w = aRect.Width(), h = aRect.Height();
-  points[0] = CSSPoint(x, y);
-  points[1] = CSSPoint(x + w, y);
-  points[2] = CSSPoint(x + w, y + h);
-  points[3] = CSSPoint(x, y + h);
-  TransformPoints(aTo, aFrom, 4, points, aOptions, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  nsRefPtr<DOMQuad> result = new DOMQuad(aTo->GetParentObject(), points);
-  return result.forget();
-}
-
-already_AddRefed<DOMPoint>
-ConvertPointFromNode(nsINode* aTo, const dom::DOMPointInit& aPoint,
-                     const GeometryNode& aFrom,
-                     const dom::ConvertCoordinateOptions& aOptions,
-                     ErrorResult& aRv)
-{
-  if (aPoint.mW != 1.0 || aPoint.mZ != 0.0) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-  CSSPoint point(aPoint.mX, aPoint.mY);
-  TransformPoints(aTo, aFrom, 1, &point, aOptions, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  nsRefPtr<DOMPoint> result = new DOMPoint(aTo->GetParentObject(), point.x, point.y);
-  return result.forget();
 }
 
 }
