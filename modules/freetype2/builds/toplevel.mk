@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2001, 2003, 2006, 2008-2010, 2012, 2013 by
+# Copyright 1996-2001, 2003, 2006, 2008-2010, 2012-2014 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -112,10 +112,10 @@ ifdef check_platform
 
   include $(TOP_DIR)/builds/detect.mk
 
-  # This rule makes sense for Unix only to remove files created by a run
-  # of the configure script which hasn't been successful (so that no
+  # This rule makes sense for Unix only to remove files created by a run of
+  # the configure script which hasn't been successful (so that no
   # `config.mk' has been created).  It uses the built-in $(RM) command of
-  # GNU make.  Similarly, `nul' is created if e.g. `make setup win32' has
+  # GNU make.  Similarly, `nul' is created if e.g. `make setup windows' has
   # been erroneously used.
   #
   # Note: This test is duplicated in `builds/unix/detect.mk'.

@@ -303,6 +303,9 @@
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
                   android:protectionLevel="signature"/>
 
+        <provider android:name="org.mozilla.gecko.GeckoProfilesProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.profiles"/>
+
         <provider android:name="org.mozilla.gecko.db.TabsProvider"
                   android:label="@string/sync_configure_engines_title_tabs"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
