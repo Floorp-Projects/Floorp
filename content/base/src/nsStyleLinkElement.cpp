@@ -381,9 +381,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   nsresult rv = NS_OK;
   if (isInline) {
     nsAutoString text;
-    if (!nsContentUtils::GetNodeTextContent(thisContent, false, text)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsContentUtils::GetNodeTextContent(thisContent, false, text);
 
     MOZ_ASSERT(thisContent->Tag() != nsGkAtoms::link,
                "<link> is not 'inline', and needs different CSP checks");

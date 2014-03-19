@@ -1240,16 +1240,15 @@ public:
    * @param aDeep If true child elements of aNode are recursivly descended
    *              into to find text children.
    * @param aResult the result. Out param.
-   * @return false on out of memory errors, true otherwise.
    */
-  static bool GetNodeTextContent(nsINode* aNode, bool aDeep,
-                                 nsAString& aResult) NS_WARN_UNUSED_RESULT;
+  static void GetNodeTextContent(nsINode* aNode, bool aDeep,
+                                 nsAString& aResult);
 
   /**
    * Same as GetNodeTextContents but appends the result rather than sets it.
    */
-  static bool AppendNodeTextContent(nsINode* aNode, bool aDeep,
-                                    nsAString& aResult, const mozilla::fallible_t&);
+  static void AppendNodeTextContent(nsINode* aNode, bool aDeep,
+                                    nsAString& aResult);
 
   /**
    * Utility method that checks if a given node has any non-empty

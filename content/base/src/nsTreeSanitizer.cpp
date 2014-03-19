@@ -1398,9 +1398,7 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
         NS_ASSERTION(ns == kNameSpaceID_XHTML || ns == kNameSpaceID_SVG,
             "Should have only HTML or SVG here!");
         nsAutoString styleText;
-        if (!nsContentUtils::GetNodeTextContent(node, false, styleText)) {
-          NS_RUNTIMEABORT("OOM");
-        }
+        nsContentUtils::GetNodeTextContent(node, false, styleText);
         nsAutoString sanitizedStyle;
         nsCOMPtr<nsIURI> baseURI = node->GetBaseURI();
         if (SanitizeStyleSheet(styleText,

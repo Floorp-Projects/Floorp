@@ -4191,58 +4191,40 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
   return rv;
 }
 
-static bool
-AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult,
-                              const mozilla::fallible_t&)
+static void AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult)
 {
   for (nsIContent* child = aNode->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     if (child->IsElement()) {
-      bool ok = AppendNodeTextContentsRecurse(child, aResult,
-                                              mozilla::fallible_t());
-      if (!ok) {
-        return false;
-      }
+      AppendNodeTextContentsRecurse(child, aResult);
     }
     else if (child->IsNodeOfType(nsINode::eTEXT)) {
-      bool ok = child->AppendTextTo(aResult, mozilla::fallible_t());
-      if (!ok) {
-        return false;
-      }
+      child->AppendTextTo(aResult);
     }
   }
-
-  return true;
 }
 
 /* static */
-bool
+void
 nsContentUtils::AppendNodeTextContent(nsINode* aNode, bool aDeep,
-                                      nsAString& aResult,
-                                      const mozilla::fallible_t&)
+                                      nsAString& aResult)
 {
   if (aNode->IsNodeOfType(nsINode::eTEXT)) {
-    return static_cast<nsIContent*>(aNode)->AppendTextTo(aResult,
-                                                         mozilla::fallible_t());
+    static_cast<nsIContent*>(aNode)->AppendTextTo(aResult);
   }
   else if (aDeep) {
-    return AppendNodeTextContentsRecurse(aNode, aResult, mozilla::fallible_t());
+    AppendNodeTextContentsRecurse(aNode, aResult);
   }
   else {
     for (nsIContent* child = aNode->GetFirstChild();
          child;
          child = child->GetNextSibling()) {
       if (child->IsNodeOfType(nsINode::eTEXT)) {
-        bool ok = child->AppendTextTo(aResult, mozilla::fallible_t());
-        if (!ok) {
-            return false;
-        }
+        child->AppendTextTo(aResult);
       }
     }
   }
-
-  return true;
 }
 
 bool
@@ -6587,11 +6569,11 @@ nsContentUtils::DOMWindowDumpEnabled()
 #endif
 }
 
-bool
+void
 nsContentUtils::GetNodeTextContent(nsINode* aNode, bool aDeep, nsAString& aResult)
 {
   aResult.Truncate();
-  return AppendNodeTextContent(aNode, aDeep, aResult, mozilla::fallible_t());
+  AppendNodeTextContent(aNode, aDeep, aResult);
 }
 
 void
