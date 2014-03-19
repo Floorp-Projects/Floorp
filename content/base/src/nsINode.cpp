@@ -2594,19 +2594,8 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
   }
 
   JS::Rooted<JSObject*> obj(aCx, WrapNode(aCx, aScope));
-  if (obj && ChromeOnlyAccess() &&
-      !nsContentUtils::IsSystemPrincipal(NodePrincipal()) &&
-      xpc::AllowXBLScope(js::GetObjectCompartment(obj)))
-  {
-    // Create a new wrapper and cache it.
-    JSAutoCompartment ac(aCx, obj);
-    JSObject* wrapper = xpc::WrapperFactory::WrapSOWObject(aCx, obj);
-    if (!wrapper) {
-      ClearWrapper();
-      return nullptr;
-    }
-    dom::SetSystemOnlyWrapper(obj, this, *wrapper);
-  }
+  MOZ_ASSERT_IF(ChromeOnlyAccess(),
+                xpc::IsInXBLScope(obj) || !xpc::UseXBLScope(js::GetObjectCompartment(obj)));
   return obj;
 }
 
