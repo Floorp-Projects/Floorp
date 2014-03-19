@@ -25,6 +25,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => new TextDecoder());
 XPCOMUtils.defineLazyGetter(this, "gTextEncoder", () => new TextEncoder());
 
+/**
+ * Generates an hash for the given string.
+ *
+ * @note The generated hash is returned in base64 form.  Mind the fact base64
+ * is case-sensitive if you are going to reuse this code.
+ */
+function generateHash(aString) {
+  let cryptoHash = Cc["@mozilla.org/security/hash;1"]
+                     .createInstance(Ci.nsICryptoHash);
+  cryptoHash.init(Ci.nsICryptoHash.MD5);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                       .createInstance(Ci.nsIStringInputStream);
+  stringStream.data = aString;
+  cryptoHash.updateFromStream(stringStream, -1);
+  // base64 allows the '/' char, but we can't use it for filenames.
+  return cryptoHash.finish(true).replace("/", "-", "g");
+}
+
 this.BookmarkJSONUtils = Object.freeze({
   /**
    * Import bookmarks from a url.
@@ -99,13 +117,19 @@ this.BookmarkJSONUtils = Object.freeze({
    *
    * @param aFilePath
    *        OS.File path string for the "bookmarks.json" file to be created.
-   *
+   * @param [optional] aOptions
+   *        Object containing options for the export:
+   *         - failIfHashIs: if the generated file would have the same hash
+   *                         defined here, will reject with ex.becauseSameHash
    * @return {Promise}
-   * @resolves To the exported bookmarks count when the file has been created.
+   * @resolves once the file has been created, to an object with the
+   *           following properties:
+   *            - count: number of exported bookmarks
+   *            - hash: file hash for contents comparison
    * @rejects JavaScript exception.
    * @deprecated passing an nsIFile is deprecated
    */
-  exportToFile: function BJU_exportToFile(aFilePath) {
+  exportToFile: function BJU_exportToFile(aFilePath, aOptions={}) {
     if (aFilePath instanceof Ci.nsIFile) {
       Deprecated.warning("Passing an nsIFile to BookmarksJSONUtils.exportToFile " +
                          "is deprecated. Please use an OS.File path string instead.",
@@ -125,12 +149,29 @@ this.BookmarkJSONUtils = Object.freeze({
         Components.utils.reportError("Unable to report telemetry.");
       }
 
+      startTime = Date.now();
+      let hash = generateHash(jsonString);
+      // Report the time taken to generate the hash.
+      try {
+        Services.telemetry
+                .getHistogramById("PLACES_BACKUPS_HASHING_MS")
+                .add(Date.now() - startTime);
+      } catch (ex) {
+        Components.utils.reportError("Unable to report telemetry.");
+      }
+
+      if (hash === aOptions.failIfHashIs) {
+        let e = new Error("Hash conflict");
+        e.becauseSameHash = true;
+        throw e;
+      }
+
       // Do not write to the tmp folder, otherwise if it has a different
       // filesystem writeAtomic will fail.  Eventual dangling .tmp files should
       // be cleaned up by the caller.
       yield OS.File.writeAtomic(aFilePath, jsonString,
                                 { tmpPath: OS.Path.join(aFilePath + ".tmp") });
-      return count;
+      return { count: count, hash: hash };
     });
   },
 

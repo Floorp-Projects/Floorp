@@ -428,7 +428,7 @@ function BookmarksStore(name, engine) {
 
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
-    for each ([query, stmt] in Iterator(this._stmts)) {
+    for each (let [query, stmt] in Iterator(this._stmts)) {
       stmt.finalize();
     }
     this._stmts = {};
