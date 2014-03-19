@@ -104,9 +104,9 @@ public:
 
   void SetSearch(const nsAString& aSearch);
 
-  URLSearchParams* GetSearchParams();
+  URLSearchParams* SearchParams();
 
-  void SetSearchParams(URLSearchParams* aSearchParams);
+  void SetSearchParams(URLSearchParams& aSearchParams);
 
   void GetHash(nsString& aHost) const;
 
