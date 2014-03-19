@@ -568,6 +568,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-badge-container > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
   padding: 2px 6px;
@@ -578,8 +579,14 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-badge-container > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   padding: 3px 7px;
+}
+
+toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
+  max-width: 32px !important;
 }
 
 /* Help SDK icons fit: */
@@ -599,6 +606,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):hover > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):hover > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):hover > .toolbarbutton-badge-container > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):hover > .toolbarbutton-icon {
   background-color: hsla(0,0%,100%,.3);
   background-image: linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.2));
@@ -616,6 +624,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled=true]):hover:active > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1[open="true"] > .toolbarbutton-menubutton-dropmarker:not([disabled=true]) > .dropmarker-icon,
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-badge-container > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1:not([disabled=true]):-moz-any([open],[checked],:hover:active) > .toolbarbutton-icon {
   background-color: rgba(154,154,154,.5);
   background-image: linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
