@@ -522,9 +522,10 @@ function check_JSON_backup(aIsAutomaticBackup) {
     bookmarksBackupDir.append("bookmarkbackups");
     let files = bookmarksBackupDir.directoryEntries;
     let backup_date = new Date().toLocaleFormat("%Y-%m-%d");
+    let rx = new RegExp("^bookmarks-" + backup_date + "_[0-9]+\.json$");
     while (files.hasMoreElements()) {
       let entry = files.getNext().QueryInterface(Ci.nsIFile);
-      if (PlacesBackups.filenamesRegex.test(entry.leafName)) {
+      if (entry.leafName.match(rx)) {
         profileBookmarksJSONFile = entry;
         break;
       }
