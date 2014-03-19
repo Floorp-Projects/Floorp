@@ -171,6 +171,16 @@ void InitIOReporting(nsIFile* aXreDir);
 void SetProfileDir(nsIFile* aProfD);
 
 /**
+ * Called to inform Telemetry that startup has completed.
+ */
+void LeavingStartupStage();
+
+/**
+ * Called to inform Telemetry that shutdown is commencing.
+ */
+void EnteringShutdownStage();
+
+/**
  * Thresholds for a statement to be considered slow, in milliseconds
  */
 const uint32_t kSlowSQLThresholdForMainThread = 50;

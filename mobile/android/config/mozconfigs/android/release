@@ -1,5 +1,8 @@
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
+# Android
+ac_add_options --target=arm-linux-androideabi
+
 ac_add_options --enable-updater
 
 ac_add_options --with-branding=mobile/android/branding/beta

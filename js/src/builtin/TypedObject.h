@@ -135,6 +135,14 @@ static T ConvertScalar(double d)
 class TypeDescr : public JSObject
 {
   public:
+    // This is *intentionally* not defined so as to produce link
+    // errors if a is<FooTypeDescr>() etc goes wrong. Otherwise, the
+    // default implementation resolves this to a reference to
+    // FooTypeDescr::class_ which resolves to
+    // JSObject::class_. Debugging the resulting errors leads to much
+    // fun and rejoicing.
+    static const Class class_;
+
     enum Kind {
         Scalar = JS_TYPEREPR_SCALAR_KIND,
         Reference = JS_TYPEREPR_REFERENCE_KIND,
@@ -269,10 +277,22 @@ class ReferenceTypeDescr : public SimpleTypeDescr
     macro_(ReferenceTypeDescr::TYPE_OBJECT, HeapPtrObject, Object) \
     macro_(ReferenceTypeDescr::TYPE_STRING, HeapPtrString, string)
 
+// Type descriptors whose instances are objects and hence which have
+// an associated `prototype` property.
+class ComplexTypeDescr : public SizedTypeDescr
+{
+  public:
+    // Returns the prototype that instances of this type descriptor
+    // will have.
+    JSObject &instancePrototype() const {
+        return getReservedSlot(JS_DESCR_SLOT_PROTO).toObject();
+    }
+};
+
 /*
  * Type descriptors `float32x4` and `int32x4`
  */
-class X4TypeDescr : public SizedTypeDescr
+class X4TypeDescr : public ComplexTypeDescr
 {
   public:
     enum Type {
@@ -346,6 +366,11 @@ class ArrayMetaTypeDescr : public JSObject
 
 /*
  * Type descriptor created by `new ArrayType(typeObj)`
+ *
+ * These have a prototype, and hence *could* be a subclass of
+ * `ComplexTypeDescr`, but it would require some reshuffling of the
+ * hierarchy, and it's not worth the trouble since they will be going
+ * away as part of bug 973238.
  */
 class UnsizedArrayTypeDescr : public TypeDescr
 {
@@ -364,7 +389,7 @@ class UnsizedArrayTypeDescr : public TypeDescr
 /*
  * Type descriptor created by `unsizedArrayTypeObj.dimension()`
  */
-class SizedArrayTypeDescr : public SizedTypeDescr
+class SizedArrayTypeDescr : public ComplexTypeDescr
 {
   public:
     static const Class class_;
@@ -413,7 +438,8 @@ class StructMetaTypeDescr : public JSObject
     static bool construct(JSContext *cx, unsigned argc, Value *vp);
 };
 
-class StructTypeDescr : public SizedTypeDescr {
+class StructTypeDescr : public ComplexTypeDescr
+{
   public:
     static const Class class_;
 
@@ -874,12 +900,18 @@ IsSimpleTypeDescrClass(const Class* clasp)
 }
 
 inline bool
+IsComplexTypeDescrClass(const Class* clasp)
+{
+    return clasp == &StructTypeDescr::class_ ||
+           clasp == &SizedArrayTypeDescr::class_ ||
+           clasp == &X4TypeDescr::class_;
+}
+
+inline bool
 IsSizedTypeDescrClass(const Class* clasp)
 {
     return IsSimpleTypeDescrClass(clasp) ||
-           clasp == &StructTypeDescr::class_ ||
-           clasp == &SizedArrayTypeDescr::class_ ||
-           clasp == &X4TypeDescr::class_;
+           IsComplexTypeDescrClass(clasp);
 }
 
 inline bool
@@ -906,6 +938,13 @@ inline bool
 JSObject::is<js::SizedTypeDescr>() const
 {
     return IsSizedTypeDescrClass(getClass());
+}
+
+template <>
+inline bool
+JSObject::is<js::ComplexTypeDescr>() const
+{
+    return IsComplexTypeDescrClass(getClass());
 }
 
 template <>

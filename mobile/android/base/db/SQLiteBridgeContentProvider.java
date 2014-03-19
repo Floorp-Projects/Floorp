@@ -66,6 +66,14 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
         shutdown();
     }
 
+    /**
+     * Return true of the query is from Firefox Sync.
+     * @param uri query URI
+     */
+    public static boolean isCallerSync(Uri uri) {
+        String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
+        return !TextUtils.isEmpty(isSync);
+    }
 
     private SQLiteBridge getDB(Context context, final String databasePath) {
         SQLiteBridge bridge = null;
@@ -327,7 +335,8 @@ public abstract class SQLiteBridgeContentProvider extends ContentProvider {
         }
 
         if (rowsAdded > 0) {
-            mContext.getContentResolver().notifyChange(uri, null);
+            final boolean shouldSyncToNetwork = !isCallerSync(uri);
+            mContext.getContentResolver().notifyChange(uri, null, shouldSyncToNetwork);
         }
 
         return rowsAdded;

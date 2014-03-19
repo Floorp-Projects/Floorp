@@ -332,7 +332,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
 
 static Wrapper *
 SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
-              bool waiveXrays)
+              bool waiveXrays, bool originIsXBLScope)
 {
     // Waived Xray uses a modified CCW that has transparent behavior but
     // transitively waives Xrays on arguments.
@@ -346,6 +346,13 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     if (!wantXrays || xrayType == NotXray) {
         if (!securityWrapper)
             return &CrossCompartmentWrapper::singleton;
+        // In general, we don't want opaque function wrappers to be callable.
+        // But in the case of XBL, we rely on content being able to invoke
+        // functions exposed from the XBL scope. We could remove this exception,
+        // if needed, by using ExportFunction to generate the content-side
+        // representations of XBL methods.
+        else if (originIsXBLScope)
+            return &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
     }
 
@@ -456,7 +463,12 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
         // wrappers.
         bool waiveXrays = wantXrays && !securityWrapper && waiveXrayFlag;
 
-        wrapper = SelectWrapper(securityWrapper, wantXrays, xrayType, waiveXrays);
+        // We have slightly different behavior for the case when the object
+        // being wrapped is in an XBL scope.
+        bool originIsXBLScope = IsXBLScope(origin);
+
+        wrapper = SelectWrapper(securityWrapper, wantXrays, xrayType, waiveXrays,
+                                originIsXBLScope);
     }
 
     if (!targetSubsumesOrigin) {

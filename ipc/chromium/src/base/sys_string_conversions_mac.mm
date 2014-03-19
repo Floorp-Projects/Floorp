@@ -113,11 +113,10 @@ static CFStringRef STLStringToCFStringWithEncodingsT(
 // Specify the byte ordering explicitly, otherwise CFString will be confused
 // when strings don't carry BOMs, as they typically won't.
 static const CFStringEncoding kNarrowStringEncoding = kCFStringEncodingUTF8;
+
 #ifdef __BIG_ENDIAN__
-static const CFStringEncoding kMediumStringEncoding = kCFStringEncodingUTF16BE;
 static const CFStringEncoding kWideStringEncoding = kCFStringEncodingUTF32BE;
 #elif defined(__LITTLE_ENDIAN__)
-static const CFStringEncoding kMediumStringEncoding = kCFStringEncodingUTF16LE;
 static const CFStringEncoding kWideStringEncoding = kCFStringEncodingUTF32LE;
 #endif  // __LITTLE_ENDIAN__
 

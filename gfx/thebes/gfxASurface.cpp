@@ -362,17 +362,10 @@ gfxASurface::CopyToARGB32ImageSurface()
     nsRefPtr<gfxImageSurface> imgSurface =
         new gfxImageSurface(size, gfxImageFormat::ARGB32);
 
-    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-        RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(imgSurface, IntSize(size.width, size.height));
-        RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, this);
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(imgSurface, IntSize(size.width, size.height));
+    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, this);
 
-        dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
-    } else {
-        gfxContext ctx(imgSurface);
-        ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx.SetSource(this);
-        ctx.Paint();
-    }
+    dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
 
     return imgSurface.forget();
 }

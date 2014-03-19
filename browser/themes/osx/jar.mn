@@ -44,6 +44,7 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-display@2x.png
   skin/classic/browser/Info.png
   skin/classic/browser/keyhole-circle.png
+  skin/classic/browser/keyhole-circle@2x.png
   skin/classic/browser/KUI-background.png
   skin/classic/browser/subtle-pattern.png
   skin/classic/browser/menu-back.png
@@ -418,8 +419,6 @@ browser.jar:
   skin/classic/browser/syncProgress-horizontalbar.png
   skin/classic/browser/syncProgress-horizontalbar@2x.png
 #endif
-  skin/classic/browser/lion/keyhole-circle.png              (keyhole-circle-lion.png)
-  skin/classic/browser/keyhole-circle@2x.png                (keyhole-circle-lion@2x.png)
   skin/classic/browser/Toolbar-background-noise.png         (Toolbar-background-noise.png)
   skin/classic/browser/lion/toolbarbutton-dropmarker.png    (toolbarbutton-dropmarker-lion.png)
   skin/classic/browser/toolbarbutton-dropmarker@2x.png      (toolbarbutton-dropmarker-lion@2x.png)
@@ -442,7 +441,6 @@ browser.jar:
   skin/classic/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
   skin/classic/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)
 
-% override chrome://browser/skin/keyhole-circle.png                        chrome://browser/skin/lion/keyhole-circle.png                           os=Darwin osversion>=10.7
 % override chrome://browser/skin/toolbarbutton-dropmarker.png              chrome://browser/skin/lion/toolbarbutton-dropmarker.png                 os=Darwin osversion>=10.7
 % override chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png     chrome://browser/skin/lion/tabbrowser/alltabs-box-bkgnd-icon.png        os=Darwin osversion>=10.7
 % override chrome://browser/skin/tabview/tabview.png                       chrome://browser/skin/lion/tabview/tabview.png                          os=Darwin osversion>=10.7

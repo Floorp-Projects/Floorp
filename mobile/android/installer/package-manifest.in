@@ -604,6 +604,10 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/marionettecomponent.js
 #endif
 
+#ifdef MOZ_ANDROID_SYNTHAPKS
+@BINPATH@/components/WebappsUpdateTimer.js
+#endif
+
 @BINPATH@/components/DataStore.manifest
 @BINPATH@/components/DataStoreService.js
 @BINPATH@/components/dom_datastore.xpt

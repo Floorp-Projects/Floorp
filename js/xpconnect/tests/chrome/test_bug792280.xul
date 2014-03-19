@@ -20,17 +20,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=792280
   /** Test for Bug 792280 **/
   const Cu = Components.utils;
 
-  function checkSb(sb, allowed) {
+  function checkSb(sb, expect) {
     var target = new Cu.Sandbox('http://www.example.com');
     Cu.evalInSandbox('function fun() { return arguments.callee.caller; };', target);
     sb.fun = target.fun;
-    var uncensored = Cu.evalInSandbox('function doTest() { return fun() == doTest; }; doTest()', sb);
-    is(uncensored, allowed, "should censor appropriately");
+    let allowed = false;
+    try {
+      allowed = Cu.evalInSandbox('function doTest() { return fun() == doTest; }; doTest()', sb);
+      isnot(expect, "throw", "Should have thrown");
+    } catch (e) {
+      is(expect, "throw", "Should expect exception");
+      ok(/denied|insecure/.test(e), "Should be a security exception: " + e);
+    }
+    is(allowed, expect == "allow", "should censor appropriately");
   }
 
-  checkSb(new Cu.Sandbox('http://www.example.com'), true);
-  checkSb(new Cu.Sandbox('http://www.example.org'), false);
-  checkSb(new Cu.Sandbox(window), false);
+  // Note that COWs are callable, but XOWs are not.
+  checkSb(new Cu.Sandbox('http://www.example.com'), "allow");
+  checkSb(new Cu.Sandbox('http://www.example.org'), "throw");
+  checkSb(new Cu.Sandbox(window), "censor");
 
   ]]>
   </script>
