@@ -59,100 +59,92 @@ function endTests() {
   finish();
 }
 
-function assertTooltipShownOn(tooltip, element, cb) {
-  // If there is indeed a show-on-hover on element, the xul panel will be shown
-  tooltip.panel.addEventListener("popupshown", function shown() {
-    tooltip.panel.removeEventListener("popupshown", shown, true);
-    cb();
-  }, true);
-  tooltip._showOnHover(element);
-}
-
 function testBodyRuleView() {
-  info("Testing tooltips in the rule view");
+  Task.spawn(function*() {
+    info("Testing tooltips in the rule view");
+    let panel = ruleView.previewTooltip.panel;
 
-  let panel = ruleView.previewTooltip.panel;
+    // Check that the rule view has a tooltip and that a XUL panel has been created
+    ok(ruleView.previewTooltip, "Tooltip instance exists");
+    ok(panel, "XUL panel exists");
 
-  // Check that the rule view has a tooltip and that a XUL panel has been created
-  ok(ruleView.previewTooltip, "Tooltip instance exists");
-  ok(panel, "XUL panel exists");
+    // Get the background-image property inside the rule view
+    let {valueSpan} = getRuleViewProperty("background-image");
+    let uriSpan = valueSpan.querySelector(".theme-link");
 
-  // Get the background-image property inside the rule view
-  let {valueSpan} = getRuleViewProperty("background-image");
-  let uriSpan = valueSpan.querySelector(".theme-link");
-  // And verify that the tooltip gets shown on this property
-  assertTooltipShownOn(ruleView.previewTooltip, uriSpan, () => {
+    yield assertTooltipShownOn(ruleView.previewTooltip, uriSpan);
+
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
-    ok(images[0].src.indexOf("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe") !== -1, "The image URL seems fine");
+    ok(images[0].getAttribute("src").indexOf("iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHe") !== -1,
+      "The image URL seems fine");
 
-    ruleView.previewTooltip.hide();
-
+    let onUpdated = inspector.once("inspector-updated");
     inspector.selection.setNode(contentDoc.querySelector(".test-element"));
-    inspector.once("inspector-updated", testDivRuleView);
-  });
+    yield onUpdated;
+  }).then(testDivRuleView);
 }
 
 function testDivRuleView() {
-  let panel = ruleView.previewTooltip.panel;
+  Task.spawn(function*() {
+    let panel = ruleView.previewTooltip.panel;
 
-  // Get the background property inside the rule view
-  let {valueSpan} = getRuleViewProperty("background");
-  let uriSpan = valueSpan.querySelector(".theme-link");
+    // Get the background property inside the rule view
+    let {valueSpan} = getRuleViewProperty("background");
+    let uriSpan = valueSpan.querySelector(".theme-link");
 
-  // And verify that the tooltip gets shown on this property
-  assertTooltipShownOn(ruleView.previewTooltip, uriSpan, () => {
+    yield assertTooltipShownOn(ruleView.previewTooltip, uriSpan);
+
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
-    ok(images[0].src.startsWith("data:"), "Tooltip contains a data-uri image as expected");
-
-    ruleView.previewTooltip.hide();
-
-    testTooltipAppearsEvenInEditMode();
-  });
+    ok(images[0].getAttribute("src").startsWith("data:"), "Tooltip contains a data-uri image as expected");
+  }).then(testTooltipAppearsEvenInEditMode);
 }
 
 function testTooltipAppearsEvenInEditMode() {
-  let panel = ruleView.previewTooltip.panel;
+  Task.spawn(function*() {
+    let panel = ruleView.previewTooltip.panel;
 
-  // Switch one field to edit mode
-  let brace = ruleView.doc.querySelector(".ruleview-ruleclose");
-  waitForEditorFocus(brace.parentNode, editor => {
-    // Now try to show the tooltip
+    info("Switching to edit mode in the rule view");
+    let editor = yield turnToEditMode(ruleView);
+
+    info("Now trying to show the preview tooltip");
     let {valueSpan} = getRuleViewProperty("background");
     let uriSpan = valueSpan.querySelector(".theme-link");
-    assertTooltipShownOn(ruleView.previewTooltip, uriSpan, () => {
-      is(ruleView.doc.activeElement, editor.input,
-        "Tooltip was shown in edit mode, and inplace-editor still focused");
+    yield assertTooltipShownOn(ruleView.previewTooltip, uriSpan);
 
-      ruleView.previewTooltip.hide();
+    is(ruleView.doc.activeElement, editor.input,
+      "Tooltip was shown in edit mode, and inplace-editor still focused");
+  }).then(testComputedView);
+}
 
-      testComputedView();
-    });
-  });
+function turnToEditMode(ruleView) {
+  let def = promise.defer();
+  let brace = ruleView.doc.querySelector(".ruleview-ruleclose");
+  waitForEditorFocus(brace.parentNode, def.resolve);
   brace.click();
+  return def.promise;
 }
 
 function testComputedView() {
-  info("Testing tooltips in the computed view");
+  Task.spawn(function*() {
+    info("Testing tooltips in the computed view");
 
-  inspector.sidebar.select("computedview");
-  computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
-  let doc = computedView.styleDocument;
+    inspector.sidebar.select("computedview");
+    computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
+    let doc = computedView.styleDocument;
 
-  let panel = computedView.tooltip.panel;
-  let {valueSpan} = getComputedViewProperty("background-image");
-  let uriSpan = valueSpan.querySelector(".theme-link");
+    let panel = computedView.tooltip.panel;
+    let {valueSpan} = getComputedViewProperty("background-image");
+    let uriSpan = valueSpan.querySelector(".theme-link");
 
-  assertTooltipShownOn(computedView.tooltip, uriSpan, () => {
+    yield assertTooltipShownOn(computedView.tooltip, uriSpan);
+
     let images = panel.getElementsByTagName("image");
     is(images.length, 1, "Tooltip contains an image");
-    ok(images[0].src.startsWith("data:"), "Tooltip contains a data-uri in the computed-view too");
 
-    computedView.tooltip.hide();
-
-    endTests();
-  });
+    ok(images[0].getAttribute("src").startsWith("data:"), "Tooltip contains a data-uri in the computed-view too");
+  }).then(endTests);
 }
 
 function getRuleViewProperty(name) {
