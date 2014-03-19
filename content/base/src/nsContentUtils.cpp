@@ -6587,11 +6587,11 @@ nsContentUtils::DOMWindowDumpEnabled()
 #endif
 }
 
-void
+bool
 nsContentUtils::GetNodeTextContent(nsINode* aNode, bool aDeep, nsAString& aResult)
 {
   aResult.Truncate();
-  AppendNodeTextContent(aNode, aDeep, aResult, mozilla::fallible_t());
+  return AppendNodeTextContent(aNode, aDeep, aResult, mozilla::fallible_t());
 }
 
 void
