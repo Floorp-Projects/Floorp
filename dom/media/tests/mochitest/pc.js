@@ -336,7 +336,9 @@ function isNetworkReady() {
                         .getService(SpecialPowers.Ci.nsINetworkInterfaceListService);
     var itfList = listService.getDataInterfaceList(
           SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_MMS_INTERFACES |
-          SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_SUPL_INTERFACES);
+          SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_SUPL_INTERFACES |
+          SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_IMS_INTERFACES |
+          SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_DUN_INTERFACES);
     var num = itfList.getNumberOfInterface();
     for (var i = 0; i < num; i++) {
       if (itfList.getInterface(i).ip) {
