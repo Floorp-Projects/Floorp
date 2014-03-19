@@ -919,7 +919,7 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
 
 // static
 nsresult
-nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
+nsXBLBinding::DoInitJSClass(JSContext *cx,
                             JS::Handle<JSObject*> obj,
                             const nsAFlatCString& aClassName,
                             nsXBLPrototypeBinding* aProtoBinding,
@@ -930,6 +930,13 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   nsAutoCString className(aClassName);
   nsAutoCString xblKey(aClassName);
 
+  // Note that, now that NAC reflectors are created in the XBL scope, the
+  // reflector is not necessarily same-compartment with the document. So we'll
+  // end up creating a separate instance of the oddly-named XBL class object
+  // and defining it as a property on the XBL scope's global. This works fine,
+  // but we need to make sure never to assume that the the reflector and
+  // prototype are same-compartment with the bound document.
+  JS::RootedObject global(cx, js::GetGlobalForObjectCrossCompartment(obj));
   JSAutoCompartment ac(cx, global);
 
   JS::Rooted<JSObject*> parent_proto(cx, nullptr);

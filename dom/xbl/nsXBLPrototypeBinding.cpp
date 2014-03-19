@@ -447,12 +447,11 @@ nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag)
 nsresult
 nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
                                  JSContext * aContext,
-                                 JS::Handle<JSObject*> aGlobal,
                                  JS::Handle<JSObject*> aScriptObject,
                                  JS::MutableHandle<JSObject*> aClassObject,
                                  bool* aNew)
 {
-  return nsXBLBinding::DoInitJSClass(aContext, aGlobal, aScriptObject,
+  return nsXBLBinding::DoInitJSClass(aContext, aScriptObject,
                                      aClassName, this, aClassObject, aNew);
 }
 
