@@ -225,6 +225,8 @@ public:
 
   ~VideoData();
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+
   // Dimensions at which to display the video frame. The picture region
   // will be scaled to this size. This is should be the picture region's
   // dimensions scaled with respect to its aspect ratio.
