@@ -4,10 +4,12 @@
 
 #include "domstubs.idl"
 
+interface nsIDOMMozActivityOptions;
+
 [scriptable, uuid(e70c4181-ea3f-4aa5-a2f7-af910dc65e45)]
 interface nsIDOMMozActivityRequestHandler : nsISupports
 {
     void postResult(in jsval result);
     void postError(in DOMString error);
-    readonly attribute jsval source;
+    readonly attribute nsIDOMMozActivityOptions source;
 };

@@ -7,7 +7,6 @@
 
 #include "DOMRequest.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/MozActivityBinding.h"
 #include "nsIActivityProxy.h"
 #include "mozilla/Preferences.h"
 #include "nsPIDOMWindow.h"
@@ -26,8 +25,7 @@ public:
 
   static already_AddRefed<Activity>
   Constructor(const GlobalObject& aOwner,
-              JSContext* aCx,
-              const ActivityOptions& aOptions,
+              nsIDOMMozActivityOptions* aOptions,
               ErrorResult& aRv)
   {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aOwner.GetAsSupports());
@@ -37,7 +35,7 @@ public:
     }
 
     nsRefPtr<Activity> activity = new Activity(window);
-    aRv = activity->Initialize(window, aCx, aOptions);
+    aRv = activity->Initialize(window, aOptions);
     return activity.forget();
   }
 
@@ -45,8 +43,7 @@ public:
 
 protected:
   nsresult Initialize(nsPIDOMWindow* aWindow,
-                      JSContext* aCx,
-                      const ActivityOptions& aOptions);
+                      nsIDOMMozActivityOptions* aOptions);
 
   nsCOMPtr<nsIActivityProxy> mProxy;
 
