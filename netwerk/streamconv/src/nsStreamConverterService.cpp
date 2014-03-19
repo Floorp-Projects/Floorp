@@ -51,13 +51,12 @@ struct BFSState {
 
 // Adjacency list data class.
 struct SCTableData {
-    nsCStringKey *key;
     union _data {
         BFSState *state;
         nsCOMArray<nsIAtom> *edges;
     } data;
 
-    SCTableData(nsCStringKey* aKey) : key(aKey) {
+    SCTableData() {
         data.state = nullptr;
     }
 };
@@ -96,8 +95,7 @@ nsStreamConverterService::~nsStreamConverterService() {
 // Delete all the entries in the adjacency list
 static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
     SCTableData *entry = (SCTableData*)aData;
-    NS_ASSERTION(entry->key && entry->data.edges, "malformed adjacency list entry");
-    delete entry->key;
+    NS_ASSERTION(entry->data.edges, "malformed adjacency list entry");
     delete entry->data.edges;
     delete entry;
     return true;
@@ -185,7 +183,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         // There is no fromStr vertex, create one.
 
         nsCStringKey *newFromKey = new nsCStringKey(ToNewCString(fromStr), fromStr.Length(), nsCStringKey::OWN);
-        SCTableData *data = new SCTableData(newFromKey);
+        SCTableData *data = new SCTableData();
         nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
         data->data.edges = edgeArray;
 
@@ -197,7 +195,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (!mAdjacencyList->Get(&toKey)) {
         // There is no toStr vertex, create one.
         nsCStringKey *newToKey = new nsCStringKey(ToNewCString(toStr), toStr.Length(), nsCStringKey::OWN);
-        SCTableData *data = new SCTableData(newToKey);
+        SCTableData *data = new SCTableData();
         nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
         data->data.edges = edgeArray;
         mAdjacencyList->Put(newToKey, data);
