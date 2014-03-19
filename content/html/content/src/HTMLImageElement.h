@@ -132,6 +132,10 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
   }
+  void SetSrcset(const nsAString& aSrcset, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::srcset, aSrcset, aError);
+  }
   void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::crossorigin, aCrossOrigin, aError);
