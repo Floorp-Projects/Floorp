@@ -84,7 +84,6 @@ WEBIDL_FILES = [
     'DOMMMIError.webidl',
     'DOMParser.webidl',
     'DOMPoint.webidl',
-    'DOMQuad.webidl',
     'DOMRect.webidl',
     'DOMRectList.webidl',
     'DOMRequest.webidl',
