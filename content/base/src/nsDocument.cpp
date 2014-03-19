@@ -5473,6 +5473,13 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   return true;
 }
 
+bool
+nsDocument::IsRegisterElementEnabled(JSContext* aCx, JSObject* aObject)
+{
+  return Preferences::GetBool("dom.webcomponents.enabled") ||
+    IsInCertifiedApp(aCx, aObject);
+}
+
 nsresult
 nsDocument::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
 {
