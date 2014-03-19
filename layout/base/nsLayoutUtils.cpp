@@ -76,6 +76,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/LookAndFeel.h"
 #include "UnitTransforms.h"
+#include "TiledLayerBuffer.h" // For TILEDLAYERBUFFER_TILE_SIZE
 
 #include "mozilla/Preferences.h"
 
@@ -87,6 +88,11 @@
 #include "nsAnimationManager.h"
 #include "nsTransitionManager.h"
 #include "RestyleManager.h"
+
+// Additional includes used on B2G by code in GetOrMaybeCreateDisplayPort().
+#ifdef MOZ_WIDGET_GONK
+#include "mozilla/layers/AsyncPanZoomController.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::css;
@@ -2486,6 +2492,59 @@ CalculateFrameMetricsForDisplayPort(nsIFrame* aScrollFrame,
   return metrics;
 }
 
+bool
+nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
+                                           nsIFrame* aScrollFrame,
+                                           nsRect aDisplayPortBase,
+                                           nsRect* aOutDisplayport) {
+  nsIContent* content = aScrollFrame->GetContent();
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollFrame);
+  if (!content || !scrollableFrame) {
+    return false;
+  }
+
+  // Set the base rect. Note that this will not influence 'haveDisplayPort',
+  // which is based on either the whole rect or margins being set, but it
+  // will affect what is returned in 'aOutDisplayPort' if margins are set.
+  SetDisplayPortBase(content, aDisplayPortBase);
+
+  bool haveDisplayPort = GetDisplayPort(content, aOutDisplayport);
+
+#ifdef MOZ_WIDGET_GONK
+  // On B2G, we perform an optimization where we ensure that at least one
+  // async-scrollable frame (i.e. one that WantsAsyncScroll()) has a displayport.
+  // If that's not the case yet, and we are async-scrollable, we will get a
+  // displayport.
+  // Note: we only do this in processes where we do subframe scrolling to
+  //       begin with (i.e., not in the parent process on B2G).
+  if (WantSubAPZC() &&
+      !aBuilder.HaveScrollableDisplayPort() &&
+      scrollableFrame->WantAsyncScroll()) {
+
+    // If we don't already have a displayport, calculate and set one.
+    if (!haveDisplayPort) {
+      FrameMetrics metrics = CalculateFrameMetricsForDisplayPort(aScrollFrame, scrollableFrame);
+      LayerMargin displayportMargins = AsyncPanZoomController::CalculatePendingDisplayPort(
+          metrics, ScreenPoint(0.0f, 0.0f), 0.0);
+      nsIPresShell* presShell = aScrollFrame->PresContext()->GetPresShell();
+      gfx::IntSize alignment = gfxPrefs::LayersTilesEnabled()
+          ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
+            gfx::IntSize(1, 1);
+      nsLayoutUtils::SetDisplayPortMargins(
+          content, presShell, displayportMargins, alignment.width,
+          alignment.height, 0, nsLayoutUtils::RepaintMode::DoNotRepaint);
+      haveDisplayPort = GetDisplayPort(content, aOutDisplayport);
+      NS_ASSERTION(haveDisplayPort, "should have a displayport after having just set it");
+    }
+
+    // Record that the we now have a scrollable display port.
+    aBuilder.SetHaveScrollableDisplayPort();
+  }
+#endif
+
+  return haveDisplayPort;
+}
+
 nsresult
 nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
@@ -2507,19 +2566,18 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     return NS_OK;
   }
 
+  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
+                           !(aFlags & PAINT_HIDE_CARET));
+
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   bool usingDisplayPort = false;
   nsRect displayport;
   if (rootScrollFrame && !aFrame->GetParent()) {
-    nsIContent* content = rootScrollFrame->GetContent();
-    if (content) {
-      usingDisplayPort = nsLayoutUtils::GetDisplayPort(content);
-      if (usingDisplayPort) {
-        nsLayoutUtils::SetDisplayPortBase(content,
-          nsRect(nsPoint(0,0), nsLayoutUtils::CalculateCompositionSizeForFrame(rootScrollFrame)));
-        nsLayoutUtils::GetDisplayPort(content, &displayport);
-      }
-    }
+    nsRect displayportBase(
+        nsPoint(0,0),
+        nsLayoutUtils::CalculateCompositionSizeForFrame(rootScrollFrame));
+    usingDisplayPort = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
+        builder, rootScrollFrame, displayportBase, &displayport);
   }
 
   nsRegion visibleRegion;
@@ -2543,9 +2601,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   // paint in a window then we will flush out any retained layer trees before
   // *and after* we draw.
   bool willFlushRetainedLayers = (aFlags & PAINT_HIDE_CARET) != 0;
-
-  nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
-		                       !(aFlags & PAINT_HIDE_CARET));
 
   nsDisplayList list;
   if (aFlags & PAINT_IN_TRANSFORM) {
