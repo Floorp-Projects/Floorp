@@ -146,6 +146,8 @@ public:
                               bool aNotify) MOZ_OVERRIDE;
   virtual bool TextIsOnlyWhitespace() MOZ_OVERRIDE;
   virtual void AppendTextTo(nsAString& aResult) MOZ_OVERRIDE;
+  virtual bool AppendTextTo(nsAString& aResult,
+                            const mozilla::fallible_t&) MOZ_OVERRIDE NS_WARN_UNUSED_RESULT;
   virtual void DestroyContent() MOZ_OVERRIDE;
   virtual void SaveSubtreeState() MOZ_OVERRIDE;
 
