@@ -1893,66 +1893,6 @@ nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncesto
   return ctm;
 }
 
-static nsIFrame*
-FindNearestCommonAncestorFrame(nsIFrame* aFrame1, nsIFrame* aFrame2)
-{
-  nsAutoTArray<nsIFrame*,100> ancestors1;
-  nsAutoTArray<nsIFrame*,100> ancestors2;
-  nsIFrame* commonAncestor = nullptr;
-  if (aFrame1->PresContext() == aFrame2->PresContext()) {
-    commonAncestor = aFrame1->PresContext()->PresShell()->GetRootFrame();
-  }
-  for (nsIFrame* f = aFrame1; f != commonAncestor;
-       f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    ancestors1.AppendElement(f);
-  }
-  for (nsIFrame* f = aFrame2; f != commonAncestor;
-       f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    ancestors2.AppendElement(f);
-  }
-  uint32_t minLengths = std::min(ancestors1.Length(), ancestors2.Length());
-  for (uint32_t i = 1; i <= minLengths; ++i) {
-    if (ancestors1[ancestors1.Length() - i] == ancestors2[ancestors2.Length() - i]) {
-      commonAncestor = ancestors1[ancestors1.Length() - i];
-    } else {
-      break;
-    }
-  }
-  return commonAncestor;
-}
-
-nsLayoutUtils::TransformResult
-nsLayoutUtils::TransformPoints(nsIFrame* aFromFrame, nsIFrame* aToFrame,
-                               uint32_t aPointCount, CSSPoint* aPoints)
-{
-  nsIFrame* nearestCommonAncestor = FindNearestCommonAncestorFrame(aFromFrame, aToFrame);
-  if (!nearestCommonAncestor) {
-    return NO_COMMON_ANCESTOR;
-  }
-  gfx3DMatrix downToDest = GetTransformToAncestor(aToFrame, nearestCommonAncestor);
-  if (downToDest.IsSingular()) {
-    return NONINVERTIBLE_TRANSFORM;
-  }
-  downToDest.Invert();
-  gfx3DMatrix upToAncestor = GetTransformToAncestor(aFromFrame, nearestCommonAncestor);
-  CSSToLayoutDeviceScale devPixelsPerCSSPixelFromFrame(
-    double(nsPresContext::AppUnitsPerCSSPixel())/
-      aFromFrame->PresContext()->AppUnitsPerDevPixel());
-  CSSToLayoutDeviceScale devPixelsPerCSSPixelToFrame(
-    double(nsPresContext::AppUnitsPerCSSPixel())/
-      aToFrame->PresContext()->AppUnitsPerDevPixel());
-  for (uint32_t i = 0; i < aPointCount; ++i) {
-    LayoutDevicePoint devPixels = aPoints[i] * devPixelsPerCSSPixelFromFrame;
-    gfxPoint toDevPixels = downToDest.ProjectPoint(
-        upToAncestor.ProjectPoint(gfxPoint(devPixels.x, devPixels.y)));
-    // Divide here so that when the devPixelsPerCSSPixels are the same, we get the correct
-    // answer instead of some inaccuracy multiplying a number by its reciprocal.
-    aPoints[i] = LayoutDevicePoint(toDevPixels.x, toDevPixels.y) /
-        devPixelsPerCSSPixelToFrame;
-  }
-  return TRANSFORM_SUCCEEDED;
-}
-
 bool
 nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
                                          gfx3DMatrix* aTransform)
@@ -2658,43 +2598,6 @@ nsLayoutUtils::GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback)
     AddBoxesForFrame(aFrame, aCallback);
     aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   }
-}
-
-nsIFrame*
-nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame)
-{
-  while (aFrame) {
-    nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
-
-    if (pseudoType == nsCSSAnonBoxes::tableOuter) {
-      nsIFrame* f = GetFirstNonAnonymousFrame(aFrame->GetFirstPrincipalChild());
-      if (f) {
-        return f;
-      }
-      nsIFrame* kid = aFrame->GetFirstChild(nsIFrame::kCaptionList);
-      if (kid) {
-        f = GetFirstNonAnonymousFrame(kid);
-        if (f) {
-          return f;
-        }
-      }
-    } else if (pseudoType == nsCSSAnonBoxes::mozAnonymousBlock ||
-               pseudoType == nsCSSAnonBoxes::mozAnonymousPositionedBlock ||
-               pseudoType == nsCSSAnonBoxes::mozMathMLAnonymousBlock ||
-               pseudoType == nsCSSAnonBoxes::mozXULAnonymousBlock) {
-      for (nsIFrame* kid = aFrame->GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
-        nsIFrame* f = GetFirstNonAnonymousFrame(kid);
-        if (f) {
-          return f;
-        }
-      }
-    } else {
-      return aFrame;
-    }
-
-    aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
-  }
-  return nullptr;
 }
 
 struct BoxToRect : public nsLayoutUtils::BoxCallback {
