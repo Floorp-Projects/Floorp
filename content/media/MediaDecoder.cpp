@@ -1564,9 +1564,9 @@ nsresult MediaDecoder::GetBuffered(dom::TimeRanges* aBuffered) {
   return NS_ERROR_FAILURE;
 }
 
-int64_t MediaDecoder::VideoQueueMemoryInUse() {
+size_t MediaDecoder::SizeOfVideoQueue() {
   if (mDecoderStateMachine) {
-    return mDecoderStateMachine->VideoQueueMemoryInUse();
+    return mDecoderStateMachine->SizeOfVideoQueue();
   }
   return 0;
 }
@@ -1836,7 +1836,7 @@ MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
   DecodersArray& decoders = Decoders();
   for (size_t i = 0; i < decoders.Length(); ++i) {
     MediaDecoder* decoder = decoders[i];
-    video += decoder->VideoQueueMemoryInUse();
+    video += decoder->SizeOfVideoQueue();
     audio += decoder->SizeOfAudioQueue();
 
     if (decoder->GetResource()) {

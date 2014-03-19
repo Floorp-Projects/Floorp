@@ -646,7 +646,7 @@ public:
 
   // Returns the size, in bytes, of the heap memory used by the currently
   // queued decoded video and audio data.
-  virtual int64_t VideoQueueMemoryInUse();
+  size_t SizeOfVideoQueue();
   size_t SizeOfAudioQueue();
 
   VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE
