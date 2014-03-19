@@ -21,12 +21,9 @@ RequestExecutionLevel user
 !addplugindir ./
 
 Var Dialog
-Var ProgressbarDownload
-Var ProgressbarInstall
-Var LabelDownloadingDown
-Var LabelDownloadingInProgress
-Var LabelInstallingInProgress
-Var LabelInstallingToBeDone
+Var Progressbar
+Var LabelDownloading
+Var LabelInstalling
 Var LabelFreeSpace
 Var CheckboxSetAsDefault
 Var CheckboxShortcutOnBar ; Used for Quicklaunch or Taskbar as appropriate
@@ -63,6 +60,7 @@ Var InitialInstallDir
 Var HandleDownload
 Var CanSetAsDefault
 Var InstallCounterStep
+Var InstallStepSize
 Var TmpVal
 
 Var ExitCode
@@ -1101,40 +1099,22 @@ Function createInstall
   ShowWindow $BitmapBlurb3 ${SW_HIDE}
   ShowWindow $LabelBlurb3 ${SW_HIDE}
 
-  nsDialogs::CreateControl /NOUNLOAD STATIC ${DEFAULT_STYLES}|${SS_SUNKEN} 0 260u 166u 1u 30u ""
-  Pop $0
-
-  ${NSD_CreateLabelCenter} 103u 180u 157u 20u "$(DOWNLOADING_IN_PROGRESS)"
-  Pop $LabelDownloadingInProgress
-  SendMessage $LabelDownloadingInProgress ${WM_SETFONT} $FontNormal 0
-  SetCtlColors $LabelDownloadingInProgress ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
-
-  ${NSD_CreateLabelCenter} 103u 180u 157u 20u "$(DOWNLOADING_DONE)"
-  Pop $LabelDownloadingDown
-  SendMessage $LabelDownloadingDown ${WM_SETFONT} $FontItalic 0
-  SetCtlColors $LabelDownloadingDown ${INSTALL_PROGRESS_TEXT_COLOR_FADED} transparent
-  ShowWindow $LabelDownloadingDown ${SW_HIDE}
-
-  ${NSD_CreateLabelCenter} 260uu 180u 84u 20u "$(INSTALLING_TO_BE_DONE)"
-  Pop $LabelInstallingToBeDone
-  SendMessage $LabelInstallingToBeDone ${WM_SETFONT} $FontItalic 0
-  SetCtlColors $LabelInstallingToBeDone ${INSTALL_PROGRESS_TEXT_COLOR_FADED} transparent
-
-  ${NSD_CreateLabelCenter} 260uu 180u 84u 20u "$(INSTALLING_IN_PROGRESS)"
-  Pop $LabelInstallingInProgress
-  SendMessage $LabelInstallingInProgress ${WM_SETFONT} $FontNormal 0
-  SetCtlColors $LabelInstallingInProgress ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
-  ShowWindow $LabelInstallingInProgress ${SW_HIDE}
-
-  ${NSD_CreateProgressBar} 103u 166u 157u 9u ""
-  Pop $ProgressbarDownload
-  ${NSD_AddStyle} $ProgressbarDownload ${PBS_MARQUEE}
-  SendMessage $ProgressbarDownload ${PBM_SETMARQUEE} 1 \
+  ${NSD_CreateProgressBar} 103u 166u 241u 9u ""
+  Pop $Progressbar
+  ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
+  SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
               ${ProgressbarMarqueeIntervalMS} ; start=1|stop=0 interval(ms)=+N
 
-  ${NSD_CreateProgressBar} 260u 166u 84u 9u ""
-  Pop $ProgressbarInstall
-  SendMessage $ProgressbarInstall ${PBM_SETRANGE32} 0 ${InstallProgresSteps}
+  ${NSD_CreateLabelCenter} 103u 180u 241u 20u "$(DOWNLOADING_LABEL)"
+  Pop $LabelDownloading
+  SendMessage $LabelDownloading ${WM_SETFONT} $FontNormal 0
+  SetCtlColors $LabelDownloading ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
+
+  ${NSD_CreateLabelCenter} 103u 180u 241u 20u "$(INSTALLING_LABEL)"
+  Pop $LabelInstalling
+  SendMessage $LabelInstalling ${WM_SETFONT} $FontNormal 0
+  SetCtlColors $LabelInstalling ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
+  ShowWindow $LabelInstalling ${SW_HIDE}
 
   ${NSD_CreateBitmap} ${APPNAME_BMP_EDGE_DU} ${APPNAME_BMP_TOP_DU} \
                       ${APPNAME_BMP_WIDTH_DU} ${APPNAME_BMP_HEIGHT_DU} ""
@@ -1247,8 +1227,8 @@ Function OnDownload
     IntOp $DownloadRetryCount $DownloadRetryCount + 1
     ${If} "$DownloadReset" != "true"
       StrCpy $DownloadedBytes "0"
-      ${NSD_AddStyle} $ProgressbarDownload ${PBS_MARQUEE}
-      SendMessage $ProgressbarDownload ${PBM_SETMARQUEE} 1 \
+      ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
+      SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
                   ${ProgressbarMarqueeIntervalMS} ; start=1|stop=0 interval(ms)=+N
     ${EndIf}
     InetBgDL::Get /RESET /END
@@ -1302,9 +1282,13 @@ Function OnDownload
     StrCpy $DownloadSizeBytes "$4"
     System::Int64Op $4 / 2
     Pop $HalfOfDownload
-    SendMessage $ProgressbarDownload ${PBM_SETMARQUEE} 0 0 ; start=1|stop=0 interval(ms)=+N
-    ${RemoveStyle} $ProgressbarDownload ${PBS_MARQUEE}
-    SendMessage $ProgressbarDownload ${PBM_SETRANGE32} 0 $DownloadSizeBytes
+    System::Int64Op $HalfOfDownload / ${InstallProgresSteps}
+    Pop $InstallStepSize
+    SendMessage $Progressbar ${PBM_SETMARQUEE} 0 0 ; start=1|stop=0 interval(ms)=+N
+    ${RemoveStyle} $Progressbar ${PBS_MARQUEE}
+    System::Int64Op $HalfOfDownload + $DownloadSizeBytes
+    Pop $R9
+    SendMessage $Progressbar ${PBM_SETRANGE32} 0 $R9
   ${EndIf}
 
   ; Don't update the status until after the download starts
@@ -1361,12 +1345,14 @@ Function OnDownload
       LockWindow on
       ; Update the progress bars first in the UI change so they take affect
       ; before other UI changes.
-      SendMessage $ProgressbarDownload ${PBM_SETPOS} $DownloadSizeBytes 0
-      SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
-      ShowWindow $LabelDownloadingInProgress ${SW_HIDE}
-      ShowWindow $LabelInstallingToBeDone ${SW_HIDE}
-      ShowWindow $LabelInstallingInProgress ${SW_SHOW}
-      ShowWindow $LabelDownloadingDown ${SW_SHOW}
+      SendMessage $Progressbar ${PBM_SETPOS} $DownloadSizeBytes 0
+      System::Int64Op $InstallStepSize * ${InstallProgressFirstStep}
+      Pop $R9
+      SendMessage $Progressbar ${PBM_SETSTEP} $R9 0
+      SendMessage $Progressbar ${PBM_STEPIT} 0 0
+      SendMessage $Progressbar ${PBM_SETSTEP} $InstallStepSize 0
+      ShowWindow $LabelDownloading ${SW_HIDE}
+      ShowWindow $LabelInstalling ${SW_SHOW}
       ShowWindow $LabelBlurb2 ${SW_HIDE}
       ShowWindow $BitmapBlurb2 ${SW_HIDE}
       ShowWindow $LabelBlurb3 ${SW_SHOW}
@@ -1476,7 +1462,7 @@ Function OnDownload
         LockWindow off
       ${EndIf}
       StrCpy $DownloadedBytes "$3"
-      SendMessage $ProgressbarDownload ${PBM_SETPOS} $3 0
+      SendMessage $Progressbar ${PBM_SETPOS} $3 0
     ${EndIf}
   ${EndIf}
 FunctionEnd
@@ -1511,7 +1497,7 @@ Function StartInstall
 
   IntOp $InstallCounterStep $InstallCounterStep + 1
   LockWindow on
-  SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
+  SendMessage $Progressbar ${PBM_STEPIT} 0 0
   LockWindow off
 
   Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
@@ -1530,7 +1516,7 @@ Function CheckInstall
     Return
   ${EndIf}
 
-  SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
+  SendMessage $Progressbar ${PBM_STEPIT} 0 0
 
   ${If} ${FileExists} "$INSTDIR\install.log"
     Delete "$INSTDIR\install.tmp"
@@ -1549,25 +1535,31 @@ Function CheckInstall
       Delete "$PLUGINSDIR\${CONFIG_INI}"
       System::Call "kernel32::GetTickCount()l .s"
       Pop $EndInstallPhaseTickCount
+      System::Int64Op $InstallStepSize * 20
+      Pop $InstallStepSize
+      SendMessage $Progressbar ${PBM_SETSTEP} $InstallStepSize 0
       ${NSD_CreateTimer} FinishInstall ${InstallIntervalMS}
     ${EndUnless}
   ${EndIf}
 FunctionEnd
 
 Function FinishInstall
-  ; The full installer has complete but we still need to finish the progress
-  ; bar so increase the size of the step
+  ; The full installer has completed but the progress bar still needs to finish
+  ; so increase the size of the step.
   IntOp $InstallCounterStep $InstallCounterStep + 20
   ${If} ${InstallProgresSteps} < $InstallCounterStep
     StrCpy $InstallCounterStep "${InstallProgresSteps}"
   ${EndIf}
 
-  SendMessage $ProgressbarInstall ${PBM_SETPOS} $InstallCounterStep 0
   ${If} ${InstallProgresSteps} != $InstallCounterStep
+    SendMessage $Progressbar ${PBM_STEPIT} 0 0
     Return
   ${EndIf}
 
   ${NSD_KillTimer} FinishInstall
+
+  SendMessage $Progressbar ${PBM_GETRANGE} 0 0 $R9
+  SendMessage $Progressbar ${PBM_SETPOS} $R9 0
 
   ${If} "$CheckboxSetAsDefault" == "1"
     ${GetParameters} $0
@@ -1602,6 +1594,19 @@ Function FinishInstall
   ${EndIf}
 
   StrCpy $ExitCode "${ERR_SUCCESS}"
+
+  StrCpy $InstallCounterStep 0
+  ${NSD_CreateTimer} FinishProgressBar ${InstallIntervalMS}
+FunctionEnd
+
+Function FinishProgressBar
+  IntOp $InstallCounterStep $InstallCounterStep + 1
+
+  ${If} $InstallCounterStep < 10
+    Return
+  ${EndIf}
+
+  ${NSD_KillTimer} FinishProgressBar
 
   Call LaunchApp
 

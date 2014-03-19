@@ -84,7 +84,9 @@
 
 ; !define SHCNF_DWORD     0x0003
 ; !define SHCNF_FLUSH     0x1000
-!define SHCNF_DWORDFLUSH  0x1003
+!ifndef SHCNF_DWORDFLUSH
+  !define SHCNF_DWORDFLUSH 0x1003
+!endif
 !ifndef SHCNE_ASSOCCHANGED
   !define SHCNE_ASSOCCHANGED 0x08000000
 !endif
@@ -949,8 +951,12 @@
   !endif
 !macroend
 
-!define KEY_SET_VALUE 0x0002
-!define KEY_WOW64_64KEY 0x0100
+!ifndef KEY_SET_VALUE
+  !define KEY_SET_VALUE 0x0002
+!endif
+!ifndef KEY_WOW64_64KEY
+  !define KEY_WOW64_64KEY 0x0100
+!endif
 !ifndef HAVE_64BIT_OS
   !define CREATE_KEY_SAM ${KEY_SET_VALUE}
 !else
@@ -7250,24 +7256,53 @@
 ################################################################################
 # Helpers for the new user interface
 
-!define MAXDWORD 0xffffffff
+!ifndef MAXDWORD
+  !define MAXDWORD 0xffffffff
+!endif
 
-!define DT_WORDBREAK 0x0010
-!define DT_SINGLELINE 0x0020
-!define DT_NOCLIP 0x0100
-!define DT_CALCRECT 0x0400
-!define DT_EDITCONTROL 0x2000
-!define DT_RTLREADING 0x00020000
-!define DT_NOFULLWIDTHCHARBREAK 0x00080000
+!ifndef DT_WORDBREAK
+  !define DT_WORDBREAK 0x0010
+!endif
+!ifndef DT_SINGLELINE
+  !define DT_SINGLELINE 0x0020
+!endif
+!ifndef DT_NOCLIP
+  !define DT_NOCLIP 0x0100
+!endif
+!ifndef DT_CALCRECT
+  !define DT_CALCRECT 0x0400
+!endif
+!ifndef DT_EDITCONTROL
+  !define DT_EDITCONTROL 0x2000
+!endif
+!ifndef DT_RTLREADING
+  !define DT_RTLREADING 0x00020000
+!endif
+!ifndef DT_NOFULLWIDTHCHARBREAK
+  !define DT_NOFULLWIDTHCHARBREAK 0x00080000
+!endif
 
-!define WS_EX_NOINHERITLAYOUT 0x00100000
-!define WS_EX_LAYOUTRTL 0x00400000
+!ifndef WS_EX_NOINHERITLAYOUT
+  !define WS_EX_NOINHERITLAYOUT 0x00100000
+!endif
+!ifndef WS_EX_LAYOUTRTL
+  !define WS_EX_LAYOUTRTL 0x00400000
+!endif
 
-!define PBS_MARQUEE 0x08
+!ifndef PBS_MARQUEE
+  !define PBS_MARQUEE 0x08
+!endif
 
-!define /math PBM_SETRANGE32 ${WM_USER} + 6
+!ifndef PBM_SETRANGE32
+  !define PBM_SETRANGE32 0x406
+!endif
+!ifndef PBM_GETRANGE
+  !define PBM_GETRANGE 0x407
+!endif
 
-!define SHACF_FILESYSTEM 1
+!ifndef SHACF_FILESYSTEM
+  !define SHACF_FILESYSTEM 1
+!endif
 
 !define MOZ_LOADTRANSPARENT ${LR_LOADFROMFILE}|${LR_LOADTRANSPARENT}|${LR_LOADMAP3DCOLORS}
 
