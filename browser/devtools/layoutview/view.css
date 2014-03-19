@@ -86,14 +86,7 @@ body {
 #main > p > span {
   vertical-align: middle;
   pointer-events: auto;
-}
-
-.size > span {
   cursor: default;
-}
-
-.editable {
-  -moz-user-select: text;
 }
 
 .top,
@@ -186,3 +179,4 @@ body.dim > #main > p,
 body.dim > #main > .tooltip {
   visibility: hidden;
 }
+
