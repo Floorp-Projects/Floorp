@@ -1110,7 +1110,11 @@ Function createInstall
   SendMessage $LabelDownloading ${WM_SETFONT} $FontNormal 0
   SetCtlColors $LabelDownloading ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
 
-  ${NSD_CreateLabelCenter} 103u 180u 241u 20u "$(INSTALLING_LABEL)"
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    ${NSD_CreateLabelCenter} 103u 180u 241u 20u "$(UPGRADING_LABEL)"
+  ${Else}
+    ${NSD_CreateLabelCenter} 103u 180u 241u 20u "$(INSTALLING_LABEL)"
+  ${EndIf}
   Pop $LabelInstalling
   SendMessage $LabelInstalling ${WM_SETFONT} $FontNormal 0
   SetCtlColors $LabelInstalling ${INSTALL_PROGRESS_TEXT_COLOR_NORMAL} transparent
@@ -1150,7 +1154,11 @@ Function createInstall
   ${EndIf}
 
   GetDlgItem $0 $HWNDPARENT 11
-  SendMessage $0 ${WM_SETTEXT} 0 "STR:$(ONE_MOMENT)"
+  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(ONE_MOMENT_UPGRADE)"
+  ${Else}
+    SendMessage $0 ${WM_SETTEXT} 0 "STR:$(ONE_MOMENT_INSTALL)"
+  ${EndIf}
   SendMessage $0 ${WM_SETFONT} $FontNormal 0
   SetCtlColors $0 ${FOOTER_CONTROL_TEXT_COLOR_FADED} ${FOOTER_BKGRD_COLOR}
   ShowWindow $0 ${SW_SHOW}
