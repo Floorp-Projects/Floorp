@@ -27,6 +27,7 @@ add_task(function check_max_backups_is_respected() {
   // Allow 2 backups, the older one should be removed.
   yield PlacesBackups.create(2);
   let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
 
   let count = 0;
   let lastBackupPath = null;
@@ -34,7 +35,7 @@ add_task(function check_max_backups_is_respected() {
   try {
     yield iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (aEntry.name.match(re))
         lastBackupPath = aEntry.path;
     });
   } finally {
@@ -55,6 +56,7 @@ add_task(function check_max_backups_greater_than_backups() {
   // Allow 3 backups, none should be removed.
   yield PlacesBackups.create(3);
   let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
 
   let count = 0;
   let lastBackupPath = null;
@@ -62,7 +64,7 @@ add_task(function check_max_backups_greater_than_backups() {
   try {
     yield iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (aEntry.name.match(re))
         lastBackupPath = aEntry.path;
     });
   } finally {
@@ -81,6 +83,7 @@ add_task(function check_max_backups_null() {
   // since one for today already exists.
   yield PlacesBackups.create(null);
   let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
 
   let count = 0;
   let lastBackupPath = null;
@@ -88,7 +91,7 @@ add_task(function check_max_backups_null() {
   try {
     yield iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (aEntry.name.match(re))
         lastBackupPath = aEntry.path;
     });
   } finally {
@@ -107,6 +110,7 @@ add_task(function check_max_backups_undefined() {
   // since one for today already exists.
   yield PlacesBackups.create();
   let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
 
   let count = 0;
   let lastBackupPath = null;
@@ -114,7 +118,7 @@ add_task(function check_max_backups_undefined() {
   try {
     yield iterator.forEach(aEntry => {
       count++;
-      if (PlacesBackups.filenamesRegex.test(aEntry.name))
+      if (aEntry.name.match(re))
         lastBackupPath = aEntry.path;
     });
   } finally {
