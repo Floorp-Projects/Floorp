@@ -811,7 +811,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   NS_ENSURE_STATE(context);
 
   // Push a context to make sure exceptions are reported in the right place.
-  AutoPushJSContext cx(context->GetNativeContext());
+  AutoPushJSContextForErrorReporting cx(context->GetNativeContext());
   JS::Rooted<JSObject*> handler(cx);
 
   JS::Rooted<JSObject*> scope(cx, jsListener->GetEventScope());
