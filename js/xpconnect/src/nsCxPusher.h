@@ -174,6 +174,16 @@ public:
   operator JSContext*() { return mCx; }
 };
 
+/**
+ * AutoPushJSContextForErrorReporting has been defined for work being carried
+ * out for bug 951991.  It is to be used where an AutoPushJSContext is only
+ * being used to make sure errors are reported using the error reporter for the
+ * appropriate DOM Window and we don't want to replace it with AutoEntryScript.
+ * This will make it easy to find these cases once the JSContext is no longer
+ * required for error reporting.
+ */
+typedef AutoPushJSContext AutoPushJSContextForErrorReporting;
+
 } // namespace mozilla
 
 #endif /* nsCxPusher_h */
