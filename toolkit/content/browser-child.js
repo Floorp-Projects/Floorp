@@ -267,24 +267,77 @@ let DocumentObserver = {
 };
 DocumentObserver.init();
 
-function _getMarkupViewer() {
-  return docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
-}
+const ZoomManager = {
+  get fullZoom() {
+    return this._cache.fullZoom;
+  },
+
+  get textZoom() {
+    return this._cache.textZoom;
+  },
+
+  set fullZoom(value) {
+    this._cache.fullZoom = value;
+    this._markupViewer.fullZoom = value;
+  },
+
+  set textZoom(value) {
+    this._cache.textZoom = value;
+    this._markupViewer.textZoom = value;
+  },
+
+  refreshFullZoom: function() {
+    return this._refreshZoomValue('fullZoom');
+  },
+
+  refreshTextZoom: function() {
+    return this._refreshZoomValue('textZoom');
+  },
+
+  /**
+   * Retrieves specified zoom property value from markupViewer and refreshes
+   * cache if needed.
+   * @param valueName Either 'fullZoom' or 'textZoom'.
+   * @returns Returns true if cached value was actually refreshed.
+   * @private
+   */
+  _refreshZoomValue: function(valueName) {
+    let actualZoomValue = this._markupViewer[valueName];
+    if (actualZoomValue != this._cache[valueName]) {
+      this._cache[valueName] = actualZoomValue;
+      return true;
+    }
+    return false;
+  },
+
+  get _markupViewer() {
+    return docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+  },
+
+  _cache: {
+    fullZoom: NaN,
+    textZoom: NaN
+  }
+};
 
 addMessageListener("FullZoom", function (aMessage) {
-  _getMarkupViewer().fullZoom = aMessage.data.value;
+  ZoomManager.fullZoom = aMessage.data.value;
 });
 
 addMessageListener("TextZoom", function (aMessage) {
-  _getMarkupViewer().textZoom = aMessage.data.value;
+  ZoomManager.textZoom = aMessage.data.value;
 });
 
-addEventListener("FullZoomChange", function (aEvent) {
-  sendAsyncMessage("FullZoomChange", { value: _getMarkupViewer().fullZoom });
+addEventListener("FullZoomChange", function () {
+  if (ZoomManager.refreshFullZoom()) {
+    sendAsyncMessage("FullZoomChange", { value:  ZoomManager.fullZoom});
+  }
 }, false);
 
 addEventListener("TextZoomChange", function (aEvent) {
-  sendAsyncMessage("TextZoomChange", { value: _getMarkupViewer().textZoom });
+  if (ZoomManager.refreshTextZoom()) {
+    sendAsyncMessage("TextZoomChange", { value:  ZoomManager.textZoom});
+  }
 }, false);
 
 RemoteAddonsChild.init(this);
