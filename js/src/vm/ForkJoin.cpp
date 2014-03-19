@@ -320,6 +320,7 @@ class ForkJoinOperation
     TrafficLight sequentialExecution(bool disqualified, ExecutionStatus *status);
     TrafficLight recoverFromBailout(ExecutionStatus *status);
     TrafficLight fatalError(ExecutionStatus *status);
+    bool isInitialScript(HandleScript script);
     void determineBailoutCause();
     bool invalidateBailedOutScripts();
     ExecutionStatus sequentialExecution(bool disqualified);
@@ -684,7 +685,15 @@ ForkJoinOperation::enqueueInitialScript(ExecutionStatus *status)
     RootedScript script(cx_, callee->getOrCreateScript(cx_));
     if (!script)
         return RedLight;
+
     if (script->hasParallelIonScript()) {
+        // Notify that there's been activity on the entry script.
+        JitCompartment *jitComp = cx_->compartment()->jitCompartment();
+        if (!jitComp->notifyOfActiveParallelEntryScript(cx_, script)) {
+            *status = ExecutionFatal;
+            return RedLight;
+        }
+
         if (!script->parallelIonScript()->hasUncompiledCallTarget()) {
             Spew(SpewOps, "Script %p:%s:%d already compiled, no uncompiled callees",
                  script.get(), script->filename(), script->lineno());
@@ -805,6 +814,15 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
                          "Script %p:%s:%d compiled",
                          script.get(), script->filename(), script->lineno());
                     JS_ASSERT(script->hasParallelIonScript());
+
+                    if (isInitialScript(script)) {
+                        JitCompartment *jitComp = cx_->compartment()->jitCompartment();
+                        if (!jitComp->notifyOfActiveParallelEntryScript(cx_, script)) {
+                            *status = ExecutionFatal;
+                            return RedLight;
+                        }
+                    }
+
                     break;
                 }
             }
@@ -1043,6 +1061,12 @@ BailoutExplanation(ParallelBailoutCause cause)
       default:
         return "no known reason";
     }
+}
+
+bool
+ForkJoinOperation::isInitialScript(HandleScript script)
+{
+    return fun_->is<JSFunction>() && (fun_->as<JSFunction>().nonLazyScript() == script);
 }
 
 void

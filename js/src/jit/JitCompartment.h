@@ -382,6 +382,12 @@ class JitCompartment
     ReadBarriered<JitCode> stringConcatStub_;
     ReadBarriered<JitCode> parallelStringConcatStub_;
 
+    // Set of JSScripts invoked by ForkJoin (i.e. the entry script). These
+    // scripts are marked if their respective parallel IonScripts' age is less
+    // than a certain amount. See IonScript::parallelAge_.
+    typedef HashSet<EncapsulatedPtrScript> ScriptSet;
+    ScriptSet *activeParallelEntryScripts_;
+
     JitCode *generateStringConcatStub(JSContext *cx, ExecutionMode mode);
 
   public:
@@ -424,6 +430,8 @@ class JitCompartment
         return baselineSetPropReturnAddr_;
     }
 
+    bool notifyOfActiveParallelEntryScript(JSContext *cx, HandleScript script);
+
     void toggleBaselineStubBarriers(bool enabled);
 
     JSC::ExecutableAllocator *createIonAlloc();
@@ -451,7 +459,16 @@ class JitCompartment
 
 // Called from JSCompartment::discardJitCode().
 void InvalidateAll(FreeOp *fop, JS::Zone *zone);
+template <ExecutionMode mode>
 void FinishInvalidation(FreeOp *fop, JSScript *script);
+
+inline bool
+ShouldPreserveParallelJITCode(JSRuntime *rt, JSScript *script, bool increase = false)
+{
+    IonScript *parallelIon = script->parallelIonScript();
+    uint32_t age = increase ? parallelIon->increaseParallelAge() : parallelIon->parallelAge();
+    return age < jit::IonScript::MAX_PARALLEL_AGE && !rt->gcShouldCleanUpEverything;
+}
 
 // On windows systems, really large frames need to be incrementally touched.
 // The following constant defines the minimum increment of the touch.
