@@ -1894,7 +1894,7 @@ nsresult nsTableFrame::Reflow(nsPresContext*           aPresContext,
 
   // If there are any relatively-positioned table parts, we need to reflow their
   // absolutely-positioned descendants now that their dimensions are final.
-  FixupPositionedTableParts(aPresContext, aReflowState);
+  FixupPositionedTableParts(aPresContext, aDesiredSize, aReflowState);
 
   // make sure the table overflow area does include the table rect.
   nsRect tableRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height()) ;
@@ -1917,7 +1917,8 @@ nsresult nsTableFrame::Reflow(nsPresContext*           aPresContext,
 }
 
 void
-nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
+nsTableFrame::FixupPositionedTableParts(nsPresContext*           aPresContext,
+                                        nsHTMLReflowMetrics&     aDesiredSize,
                                         const nsHTMLReflowState& aReflowState)
 {
   auto positionedParts =
@@ -1965,6 +1966,11 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
 
   // Propagate updated overflow areas up the tree.
   overflowTracker.Flush();
+
+  // Update our own overflow areas. (OverflowChangedTracker doesn't update the
+  // subtree root itself.)
+  aDesiredSize.SetOverflowAreasToDesiredBounds();
+  nsLayoutUtils::UnionChildOverflow(this, aDesiredSize.mOverflowAreas);
 }
 
 bool
