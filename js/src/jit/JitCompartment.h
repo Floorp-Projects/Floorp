@@ -38,7 +38,7 @@ struct EnterJitData
     {}
 
     uint8_t *jitcode;
-    StackFrame *osrFrame;
+    InterpreterFrame *osrFrame;
 
     void *calleeToken;
 
@@ -53,7 +53,7 @@ struct EnterJitData
     bool constructing;
 };
 
-typedef void (*EnterJitCode)(void *code, unsigned argc, Value *argv, StackFrame *fp,
+typedef void (*EnterJitCode)(void *code, unsigned argc, Value *argv, InterpreterFrame *fp,
                              CalleeToken calleeToken, JSObject *scopeChain,
                              size_t numStackValues, Value *vp);
 

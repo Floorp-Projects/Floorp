@@ -23,7 +23,7 @@ class JSAtom;
 class JSFreeOp;
 
 namespace js {
-class StackFrame;
+class InterpreterFrame;
 class ScriptFrameIter;
 }
 
@@ -94,7 +94,7 @@ FormatStackDump(JSContext *cx, char *buf, bool showArgs, bool showLocals, bool s
 # ifdef JS_DEBUG
 JS_FRIEND_API(void) js_DumpValue(const JS::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
-JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = nullptr);
+JS_FRIEND_API(void) js_DumpInterpreterFrame(JSContext *cx, js::InterpreterFrame *start = nullptr);
 # endif
 
 JS_FRIEND_API(void)
