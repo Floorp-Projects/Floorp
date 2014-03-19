@@ -6,29 +6,6 @@
 #ifndef nsLayoutUtils_h__
 #define nsLayoutUtils_h__
 
-#include "mozilla/MemoryReporting.h"
-#include "nsChangeHint.h"
-#include "nsAutoPtr.h"
-#include "nsFrameList.h"
-#include "nsThreadUtils.h"
-#include "nsIPrincipal.h"
-#include "GraphicsFilter.h"
-#include "nsCSSPseudoElements.h"
-#include "FrameMetrics.h"
-#include "gfx3DMatrix.h"
-#include "nsIWidget.h"
-#include "nsCSSProperty.h"
-#include "nsStyleCoord.h"
-#include "nsStyleConsts.h"
-#include "nsGkAtoms.h"
-#include "nsRuleNode.h"
-#include "imgIContainer.h"
-#include "mozilla/gfx/2D.h"
-#include "Units.h"
-
-#include <limits>
-#include <algorithm>
-
 class nsIFormControlFrame;
 class nsPresContext;
 class nsIContent;
@@ -53,10 +30,31 @@ class gfxContext;
 class nsPIDOMWindow;
 class imgIRequest;
 class nsIDocument;
-class gfxPoint;
 struct nsStyleFont;
 struct nsStyleImageOrientation;
 struct nsOverflowAreas;
+
+#include "mozilla/MemoryReporting.h"
+#include "nsChangeHint.h"
+#include "nsAutoPtr.h"
+#include "nsFrameList.h"
+#include "nsThreadUtils.h"
+#include "nsIPrincipal.h"
+#include "GraphicsFilter.h"
+#include "nsCSSPseudoElements.h"
+#include "FrameMetrics.h"
+#include "gfx3DMatrix.h"
+#include "nsIWidget.h"
+#include "nsCSSProperty.h"
+#include "nsStyleCoord.h"
+#include "nsStyleConsts.h"
+#include "nsGkAtoms.h"
+#include "nsRuleNode.h"
+#include "imgIContainer.h"
+#include "mozilla/gfx/2D.h"
+
+#include <limits>
+#include <algorithm>
 
 namespace mozilla {
 class SVGImageContext;
@@ -109,7 +107,6 @@ class nsLayoutUtils
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef FrameMetrics::ViewID ViewID;
-  typedef mozilla::CSSPoint CSSPoint;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -687,24 +684,6 @@ public:
   static gfx3DMatrix GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor);
 
   /**
-   * Transforms a list of CSSPoints from aFromFrame to aToFrame, taking into
-   * account all relevant transformations on the frames up to (but excluding)
-   * their nearest common ancestor.
-   * If we encounter a transform that we need to invert but which is
-   * non-invertible, we return NONINVERTIBLE_TRANSFORM. If the frames have
-   * no common ancestor, we return NO_COMMON_ANCESTOR.
-   * If this returns TRANSFORM_SUCCEEDED, the points in aPoints are transformed
-   * in-place, otherwise they are untouched.
-   */
-  enum TransformResult {
-    TRANSFORM_SUCCEEDED,
-    NO_COMMON_ANCESTOR,
-    NONINVERTIBLE_TRANSFORM
-  };
-  static TransformResult TransformPoints(nsIFrame* aFromFrame, nsIFrame* aToFrame,
-                                         uint32_t aPointCount, CSSPoint* aPoints);
-
-  /**
    * Return true if a "layer transform" could be computed for aFrame,
    * and optionally return the computed transform.  The returned
    * transform is what would be set on the layer currently if a layers
@@ -903,12 +882,6 @@ public:
    * SVG frames return a single box, themselves.
    */
   static void GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback);
-
-  /**
-   * Find the first frame descendant of aFrame (including aFrame) which is
-   * not an anonymous frame that getBoxQuads/getClientRects should ignore.
-   */
-  static nsIFrame* GetFirstNonAnonymousFrame(nsIFrame* aFrame);
 
   class RectCallback {
   public:
