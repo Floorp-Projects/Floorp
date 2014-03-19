@@ -472,6 +472,26 @@ PlanarYCbCrImage::~PlanarYCbCrImage()
   }
 }
 
+size_t
+PlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // Ignoring:
+  // - mData - just wraps mBuffer
+  // - Surfaces should be reported under gfx-surfaces-*:
+  //   - mDeprecatedSurface
+  //   - mSourceSurface
+  // - Base class:
+  //   - mImplData is not used
+  // Not owned:
+  // - mRecycleBin
+  size_t size = mBuffer.SizeOfExcludingThis(aMallocSizeOf);
+
+  // Could add in the future:
+  // - mBackendData (from base class)
+
+  return size;
+}
+
 uint8_t* 
 PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 {

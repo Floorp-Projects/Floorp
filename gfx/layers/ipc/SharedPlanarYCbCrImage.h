@@ -113,6 +113,13 @@ public:
 
   virtual bool IsValid() MOZ_OVERRIDE;
 
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+
 private:
   RefPtr<BufferTextureClient> mTextureClient;
   RefPtr<ImageClient> mCompositable;
