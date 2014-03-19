@@ -87,7 +87,7 @@ static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
     delete entry->key;
     delete entry->data.edges;
     delete entry;
-    return true;   
+    return true;
 }
 
 nsresult
@@ -98,16 +98,16 @@ nsStreamConverterService::Init() {
     return NS_OK;
 }
 
-// Builds the graph represented as an adjacency list (and built up in 
+// Builds the graph represented as an adjacency list (and built up in
 // memory using an nsObjectHashtable and nsISupportsArray combination).
 //
-// :BuildGraph() consults the category manager for all stream converter 
+// :BuildGraph() consults the category manager for all stream converter
 // CONTRACTIDS then fills the adjacency list with edges.
 // An edge in this case is comprised of a FROM and TO MIME type combination.
-// 
+//
 // CONTRACTID format:
 // @mozilla.org/streamconv;1?from=text/html&to=text/plain
-// XXX curently we only handle a single from and to combo, we should repeat the 
+// XXX curently we only handle a single from and to combo, we should repeat the
 // XXX registration process for any series of from-to combos.
 // XXX can use nsTokenizer for this.
 //
@@ -135,7 +135,7 @@ nsStreamConverterService::BuildGraph() {
         nsAutoCString entryString;
         rv = entry->GetData(entryString);
         if (NS_FAILED(rv)) return rv;
-        
+
         // cobble the entry string w/ the converter key to produce a full contractID.
         nsAutoCString contractID(NS_ISTREAMCONVERTER_KEY);
         contractID.Append(entryString);
@@ -216,7 +216,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         data->data.edges = edgeArray;
         mAdjacencyList->Put(newToKey, data);
     }
-    
+
     // Now we know the FROM and TO types are represented as keys in the hashtable.
     // Let's "connect" the verticies, making an edge.
 
@@ -259,7 +259,7 @@ nsStreamConverterService::ParseFromTo(const char *aContractID, nsCString &aFromR
 // Initializes the BFS state table.
 static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     NS_ASSERTION((SCTableData*)aData, "no data in the table enumeration");
-    
+
     nsHashtable *BFSTable = (nsHashtable*)closure;
     if (!BFSTable) return false;
 
@@ -278,7 +278,7 @@ static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     data->data.state = state;
 
     BFSTable->Put(aKey, data);
-    return true;   
+    return true;
 }
 
 // cleans up the BFS state table
@@ -434,7 +434,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         BFSState *curState = data->data.state;
 
         nsCStringKey *key = data->key;
-        
+
         if (fromStr.Equals(key->GetString())) {
             // found it. We're done here.
             *aEdgeList = shortestPath;
@@ -457,7 +457,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
 
         newContractID.AppendLiteral("&to=");
         newContractID.Append(key->GetString());
-    
+
         // Add this CONTRACTID to the chain.
         rv = shortestPath->AppendElement(newContractID) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
         NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
@@ -555,7 +555,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
             converter = do_CreateInstance(lContractID, &rv);
 
             if (NS_FAILED(rv)) {
-                delete converterChain;                
+                delete converterChain;
                 return rv;
             }
 
@@ -582,7 +582,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
         // we're going direct.
         rv = converter->Convert(aFromStream, aFromType, aToType, aContext, _retval);
     }
-    
+
     return rv;
 }
 
@@ -677,7 +677,7 @@ nsStreamConverterService::AsyncConvertData(const char *aFromType,
 
         rv = listener->AsyncConvertData(aFromType, aToType, aListener, aContext);
     }
-    
+
     return rv;
 
 }
