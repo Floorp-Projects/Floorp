@@ -52,6 +52,13 @@ struct BFSState {
 // Adjacency list data class.
 typedef nsCOMArray<nsIAtom> SCTableData;
 
+// Delete all the entries in the adjacency list
+static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
+    SCTableData *entry = (SCTableData*)aData;
+    delete entry;
+    return true;
+}
+
 // BFS hashtable data class.
 struct BFSTableData {
     nsCStringKey *key;
@@ -75,26 +82,15 @@ NS_IMPL_ISUPPORTS1(nsStreamConverterService, nsIStreamConverterService)
 
 ////////////////////////////////////////////////////////////
 // nsStreamConverterService methods
-nsStreamConverterService::nsStreamConverterService() : mAdjacencyList(nullptr) {
+nsStreamConverterService::nsStreamConverterService()
+  : mAdjacencyList (new nsObjectHashtable(nullptr, nullptr,
+                                          DeleteAdjacencyEntry, nullptr))
+{
 }
 
 nsStreamConverterService::~nsStreamConverterService() {
     NS_ASSERTION(mAdjacencyList, "init wasn't called, or the retval was ignored");
     delete mAdjacencyList;
-}
-
-// Delete all the entries in the adjacency list
-static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
-    SCTableData *entry = (SCTableData*)aData;
-    delete entry;
-    return true;
-}
-
-nsresult
-nsStreamConverterService::Init() {
-    mAdjacencyList = new nsObjectHashtable(nullptr, nullptr,
-                                           DeleteAdjacencyEntry, nullptr);
-    return NS_OK;
 }
 
 // Builds the graph represented as an adjacency list (and built up in
@@ -640,11 +636,7 @@ NS_NewStreamConv(nsStreamConverterService** aStreamConv)
     if (!aStreamConv) return NS_ERROR_NULL_POINTER;
 
     *aStreamConv = new nsStreamConverterService();
-
     NS_ADDREF(*aStreamConv);
-    nsresult rv = (*aStreamConv)->Init();
-    if (NS_FAILED(rv))
-        NS_RELEASE(*aStreamConv);
 
-    return rv;
+    return NS_OK;
 }
