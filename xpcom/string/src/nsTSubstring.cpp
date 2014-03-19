@@ -484,30 +484,9 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, char_type
       mData[cutStart] = c;
   }
 
-bool
-nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, char_type c, const mozilla::fallible_t& )
-  {
-    cutStart = XPCOM_MIN(cutStart, Length());
-
-    if (!ReplacePrep(cutStart, cutLength, 1))
-      return false;
-
-    mData[cutStart] = c;
-
-    return true;
-  }
 
 void
 nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length )
-  {
-    if (!Replace(cutStart, cutLength, data, length, mozilla::fallible_t()))
-      {
-        NS_ABORT_OOM(Length() - cutLength + 1);
-      }
-  }
-
-bool
-nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length, const mozilla::fallible_t& )
   {
       // unfortunately, some callers pass null :-(
     if (!data)
@@ -522,20 +501,15 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const cha
         if (IsDependentOn(data, data + length))
           {
             nsTAutoString_CharT temp(data, length);
-            return Replace(cutStart, cutLength, temp, mozilla::fallible_t());
+            Replace(cutStart, cutLength, temp);
+            return;
           }
       }
 
     cutStart = XPCOM_MIN(cutStart, Length());
 
-    bool ok = ReplacePrep(cutStart, cutLength, length);
-    if (!ok)
-      return false;
-
-    if (length > 0)
+    if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       char_traits::copy(mData + cutStart, data, length);
-
-    return true;
   }
 
 void
@@ -543,7 +517,7 @@ nsTSubstring_CharT::ReplaceASCII( index_type cutStart, size_type cutLength, cons
   {
     if (length == size_type(-1))
       length = strlen(data);
-
+    
     // A Unicode string can't depend on an ASCII string buffer,
     // so this dependence check only applies to CStrings.
 #ifdef CharT_is_char

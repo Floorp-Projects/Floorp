@@ -415,12 +415,8 @@ class nsTSubstring_CharT
          */
 
       void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, char_type c );
-      bool NS_FASTCALL Replace( index_type cutStart, size_type cutLength, char_type c, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT;
       void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) );
-      bool NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT;
       void Replace( index_type cutStart, size_type cutLength, const self_type& str )      { Replace(cutStart, cutLength, str.Data(), str.Length()); }
-      bool Replace( index_type cutStart, size_type cutLength, const self_type& str, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT
-                 { return Replace(cutStart, cutLength, str.Data(), str.Length(), mozilla::fallible_t()); }
       void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
 
       void NS_FASTCALL ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
@@ -432,10 +428,7 @@ class nsTSubstring_CharT
       void ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type (&str)[N] ) { ReplaceLiteral(cutStart, cutLength, str, N - 1); }
 
       void Append( char_type c )                                                                 { Replace(mLength, 0, c); }
-      bool Append( char_type c, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT                { return Replace(mLength, 0, c, mozilla::fallible_t()); }
       void Append( const char_type* data, size_type length = size_type(-1) )                     { Replace(mLength, 0, data, length); }
-      bool Append( const char_type* data, size_type length, const mozilla::fallible_t&) NS_WARN_UNUSED_RESULT
-                 { return Replace(mLength, 0, data, length, mozilla::fallible_t()); }
 
 #if defined(CharT_is_PRUnichar) && defined(MOZ_USE_CHAR16_WRAPPER)
     void Append( char16ptr_t data, size_type length = size_type(-1) )                            { Append(static_cast<const char16_t*>(data), length); }
