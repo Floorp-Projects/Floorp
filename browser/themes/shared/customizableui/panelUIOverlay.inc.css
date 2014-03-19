@@ -631,6 +631,16 @@ panelview .toolbarbutton-1,
   font: menu;
 }
 
+.PanelUI-subView .subviewbutton[shortcut]::after {
+  content: attr(shortcut);
+  float: right;
+  color: hsl(0,0%,50%);
+}
+
+.PanelUI-subView.cui-widget-panelview .subviewbutton[shortcut]::after {
+  -moz-margin-start: 10px;
+}
+
 /* This is a <label> but it should fit in with the menu font- and colorwise. */
 #PanelUI-characterEncodingView-autodetect-label {
   font: menu;
