@@ -73,3 +73,10 @@ if CONFIG['SOLARIS_SUNPRO_CC']:
 if CONFIG['OS_ARCH'] == 'WINNT':
     RCFILE  = 'sqlite.rc'
     RESFILE = 'sqlite.res'
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += [
+        '-Wno-sign-compare',
+        '-Wno-type-limits',
+    ]

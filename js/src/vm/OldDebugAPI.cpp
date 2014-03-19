@@ -70,7 +70,7 @@ IsTopFrameConstructing(JSContext *cx, AbstractFramePtr frame)
 JSTrapStatus
 js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
+    JS_ASSERT_IF(frame.isInterpreterFrame(), frame.asInterpreterFrame() == cx->interpreterFrame());
 
     if (!frame.script()->selfHosted()) {
         JSAbstractFramePtr jsframe(frame.raw(), pc);
@@ -108,7 +108,7 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 bool
 js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc, bool okArg)
 {
-    JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
+    JS_ASSERT_IF(frame.isInterpreterFrame(), frame.asInterpreterFrame() == cx->interpreterFrame());
 
     bool ok = okArg;
 

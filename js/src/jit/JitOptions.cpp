@@ -110,6 +110,9 @@ JitOptions::JitOptions()
 
     // How many uses of a parallel kernel before we attempt compilation.
     usesBeforeCompilePar = 1;
+
+    // Whether to profile inlined functions in Ion or not.
+    profileInlineFrames = false;
 }
 
 bool

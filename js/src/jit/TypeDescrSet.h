@@ -85,7 +85,7 @@ class TypeDescrSet {
     //////////////////////////////////////////////////////////////////////
     // Query the set
 
-    bool empty();
+    bool empty() const;
     bool allOfKind(TypeDescr::Kind kind);
 
     // Returns true only when non-empty and `kind()` is
@@ -102,10 +102,18 @@ class TypeDescrSet {
     // lands, some array types will be unsized.
     bool allHaveSameSize(size_t *out);
 
+    types::TemporaryTypeSet *suitableTypeSet(IonBuilder &builder,
+                                             const Class *knownClass);
+
     //////////////////////////////////////////////////////////////////////
     // The following operations are only valid on a non-empty set:
 
     TypeDescr::Kind kind();
+
+    // Returns the prototype that a typed object whose type is within
+    // this TypeDescrSet would have. Returns `null` if this cannot be
+    // predicted or instances of the type are not objects (e.g., uint8).
+    JSObject *knownPrototype() const;
 
     //////////////////////////////////////////////////////////////////////
     // Scalar operations

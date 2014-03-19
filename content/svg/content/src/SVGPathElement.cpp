@@ -334,7 +334,7 @@ SVGPathElement::ConstructPath(gfxContext *aCtx)
   mD.GetAnimValue().ConstructPath(aCtx);
 }
 
-gfxFloat
+float
 SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
 {
   NS_ABORT_IF_FALSE(aFor == eForTextPath || aFor == eForStroking,

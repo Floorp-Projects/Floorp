@@ -3155,7 +3155,7 @@ class LStart : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(Start)
 };
 
-// Passed the StackFrame address in the OsrFrameReg by SideCannon().
+// Passed the BaselineFrame address in the OsrFrameReg by SideCannon().
 // Forwards this object to the LOsrValues for Value materialization.
 class LOsrEntry : public LInstructionHelper<1, 0, 0>
 {

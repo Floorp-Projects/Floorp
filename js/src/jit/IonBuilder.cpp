@@ -792,10 +792,11 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     // considered as part of the function that we're inlining. We also need to
     // keep track of the inlining depth because all scripts inlined on the same
     // level contiguously have only one Inline_Exit node.
-    if (instrumentedProfiling())
+    if (instrumentedProfiling()) {
         predecessor->add(MFunctionBoundary::New(alloc(), script(),
                                                 MFunctionBoundary::Inline_Enter,
                                                 inliningDepth_));
+    }
 
     predecessor->end(MGoto::New(alloc(), current));
     if (!current->addPredecessorWithoutPhis(predecessor))
@@ -3638,8 +3639,10 @@ IonBuilder::processReturn(JSOp op)
         MOZ_ASSUME_UNREACHABLE("unknown return op");
     }
 
-    if (instrumentedProfiling())
-        current->add(MFunctionBoundary::New(alloc(), script(), MFunctionBoundary::Exit));
+    if (instrumentedProfiling()) {
+        current->add(MFunctionBoundary::New(alloc(), script(), MFunctionBoundary::Exit,
+                                            inliningDepth_));
+    }
     MReturn *ret = MReturn::New(alloc(), def);
     current->end(ret);
 
@@ -6852,27 +6855,48 @@ IonBuilder::pushDerivedTypedObject(bool *emitted,
     current->add(derivedTypedObj);
     current->push(derivedTypedObj);
 
-    // Insert a barrier. This is necessary because, while we know from
-    // the inputs that the result of this access operation will be a
-    // derived typed object, and we know the set of type descriptor(s)
-    // it will be associated with (`derivedDescrs`), we do *not* know
-    // precisely what TI type object the result will have at
-    // runtime. The observed type set could be incomplete for two
-    // reasons:
+    // Determine (if possible) the class/proto that `derivedTypedObj`
+    // will have. For derived typed objects, the class (transparent vs
+    // opaque) will be the same as the incoming object from which the
+    // derived typed object is, well, derived. The prototype will be
+    // determined based on the type descriptor (and is immutable).
+    types::TemporaryTypeSet *objTypes = obj->resultTypeSet();
+    const Class *expectedClass = objTypes ? objTypes->getKnownClass() : nullptr;
+    JSObject *expectedProto = derivedTypeDescrs.knownPrototype();
+    JS_ASSERT_IF(expectedClass, IsTypedObjectClass(expectedClass));
+
+    // Determine (if possible) the class/proto that the observed type set
+    // describes.
+    types::TemporaryTypeSet *observedTypes = bytecodeTypes(pc);
+    const Class *observedClass = observedTypes->getKnownClass();
+    JSObject *observedProto = observedTypes->getCommonPrototype();
+
+    // If expectedClass/expectedProto are both non-null (and hence
+    // known), we can predict precisely what TI type object
+    // derivedTypedObj will have. Therefore, if we observe that this
+    // TI type object is already contained in the set of
+    // observedTypes, we can skip the barrier.
     //
-    // 1. We may simply not have executed this instruction yet.
-    //    This occurs frequently with --ion-eager but can happen
-    //    under other scenarios as well.
+    // Barriers still wind up being needed in some relatively
+    // rare cases:
     //
-    // 2. Users can mutate the prototypes of descriptors,
-    //    and hence a single descriptor can be associated with multiple
-    //    type objects over the course of the execution. Therefore,
-    //    even if we have executed this instruction, the TI type object
-    //    of the result might be different this time around from
-    //    previous executions.
-    types::TemporaryTypeSet *resultTypes = bytecodeTypes(pc);
-    if (!pushTypeBarrier(derivedTypedObj, resultTypes, true))
-        return false;
+    // - if multiple kinds of typed objects flow into this point,
+    //   in which case we will not be able to predict expectedClass
+    //   nor expectedProto.
+    //
+    // - if the code has never executed, in which case the set of
+    //   observed types will be incomplete.
+    //
+    // Barriers are particularly expensive here because they prevent
+    // us from optimizing the MNewDerivedTypedObject away.
+    if (observedClass && observedProto && observedClass == expectedClass &&
+        observedProto == expectedProto)
+    {
+        derivedTypedObj->setResultTypeSet(observedTypes);
+    } else {
+        if (!pushTypeBarrier(derivedTypedObj, observedTypes, true))
+            return false;
+    }
 
     *emitted = true;
     return true;

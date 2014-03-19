@@ -182,7 +182,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     CUSTOM_OP(NewArray)
     CUSTOM_OP(NewObject)
     CUSTOM_OP(NewCallObject)
-    UNSAFE_OP(NewDerivedTypedObject)
+    CUSTOM_OP(NewDerivedTypedObject)
     UNSAFE_OP(InitElem)
     UNSAFE_OP(InitElemGetterSetter)
     UNSAFE_OP(MutateProto)
@@ -567,6 +567,20 @@ ParallelSafetyVisitor::visitNewArray(MNewArray *newInstruction)
     }
 
     return replaceWithNewPar(newInstruction, newInstruction->templateObject());
+}
+
+bool
+ParallelSafetyVisitor::visitNewDerivedTypedObject(MNewDerivedTypedObject *ins)
+{
+    // FIXME(Bug 984090) -- There should really be a parallel-safe
+    // version of NewDerivedTypedObject. However, until that is
+    // implemented, let's just ignore those with 0 uses, since they
+    // will be stripped out by DCE later.
+    if (ins->useCount() == 0)
+        return true;
+
+    SpewMIR(ins, "visitNewDerivedTypedObject");
+    return markUnsafe();
 }
 
 bool

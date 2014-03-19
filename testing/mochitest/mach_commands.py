@@ -320,7 +320,6 @@ class MochitestRunner(MozbuildObject):
         options.dumpAboutMemoryAfterTest = dump_about_memory_after_test
         options.dumpDMDAfterTest = dump_dmd_after_test
         options.dumpOutputDirectory = dump_output_directory
-        mozinfo.update({"e10s": e10s}) # for test manifest parsing.
 
         options.failureFile = failure_file_path
         if install_extension != None:

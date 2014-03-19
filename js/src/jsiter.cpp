@@ -1471,7 +1471,7 @@ FinalizeGenerator(FreeOp *fop, JSObject *obj)
               gen->state == JSGEN_OPEN);
     // If gen->state is JSGEN_CLOSED, gen->fp may be nullptr.
     if (gen->fp)
-        JS_POISON(gen->fp, JS_FREE_PATTERN, sizeof(StackFrame));
+        JS_POISON(gen->fp, JS_FREE_PATTERN, sizeof(InterpreterFrame));
     JS_POISON(gen, JS_FREE_PATTERN, sizeof(JSGenerator));
     fop->free_(gen);
 }
@@ -1566,7 +1566,7 @@ GeneratorState::~GeneratorState()
         cx_->leaveGenerator(gen_);
 }
 
-StackFrame *
+InterpreterFrame *
 GeneratorState::pushInterpreterFrame(JSContext *cx)
 {
     /*
@@ -1639,7 +1639,7 @@ const Class StarGeneratorObject::class_ = {
 /*
  * Called from the JSOP_GENERATOR case in the interpreter, with fp referring
  * to the frame by which the generator function was activated.  Create a new
- * JSGenerator object, which contains its own StackFrame that we populate
+ * JSGenerator object, which contains its own InterpreterFrame that we populate
  * from *fp.  We know that upon return, the JSOP_GENERATOR opcode will return
  * from the activation in fp, so we can steal away fp->callobj and fp->argsobj
  * if they are non-null.
@@ -1648,7 +1648,7 @@ JSObject *
 js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
 {
     JS_ASSERT(stackRegs.stackDepth() == 0);
-    StackFrame *stackfp = stackRegs.fp();
+    InterpreterFrame *stackfp = stackRegs.fp();
 
     JS_ASSERT(stackfp->script()->isGenerator());
 
@@ -1690,7 +1690,7 @@ js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
                     stackfp->script()->nslots()) * sizeof(HeapValue);
 
     JS_ASSERT(nbytes % sizeof(Value) == 0);
-    JS_STATIC_ASSERT(sizeof(StackFrame) % sizeof(HeapValue) == 0);
+    JS_STATIC_ASSERT(sizeof(InterpreterFrame) % sizeof(HeapValue) == 0);
 
     JSGenerator *gen = (JSGenerator *) cx->calloc_(nbytes);
     if (!gen)
@@ -1700,7 +1700,7 @@ js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
     HeapValue *genvp = gen->stackSnapshot;
     SetValueRangeToUndefined((Value *)genvp, vplen);
 
-    StackFrame *genfp = reinterpret_cast<StackFrame *>(genvp + vplen);
+    InterpreterFrame *genfp = reinterpret_cast<InterpreterFrame *>(genvp + vplen);
 
     /* Initialize JSGenerator. */
     gen->obj.init(obj);
@@ -1710,7 +1710,7 @@ js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
 
     /* Copy from the stack to the generator's floating frame. */
     gen->regs.rebaseFromTo(stackRegs, *genfp);
-    genfp->copyFrameAndValues<StackFrame::DoPostBarrier>(cx, (Value *)genvp, stackfp,
+    genfp->copyFrameAndValues<InterpreterFrame::DoPostBarrier>(cx, (Value *)genvp, stackfp,
                                                          stackvp, stackRegs.sp);
     genfp->setSuspended();
     obj->setPrivate(gen);

@@ -257,20 +257,6 @@ public:
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
     /**
-     * Returns true if we will render content using Azure using a gfxPlatform
-     * provided DrawTarget.
-     * Prefer using SupportsAzureContentForDrawTarget or 
-     * SupportsAzureContentForType.
-     * This function is potentially misleading and dangerous because we might
-     * support a certain Azure backend on the current platform, but when you
-     * ask for a DrawTarget you get one for a different backend which is not
-     * supported for content drawing.
-     */
-    bool SupportsAzureContent() {
-      return GetContentBackend() != mozilla::gfx::BackendType::NONE;
-    }
-
-    /**
      * Returns true if we should use Azure to render content with aTarget. For
      * example, it is possible that we are using Direct2D for rendering and thus
      * using Azure. But we want to render to a CairoDrawTarget, in which case

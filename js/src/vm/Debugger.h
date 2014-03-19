@@ -426,7 +426,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline void onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global);
     static JSTrapStatus onTrap(JSContext *cx, MutableHandleValue vp);
     static JSTrapStatus onSingleStep(JSContext *cx, MutableHandleValue vp);
-    static bool handleBaselineOsr(JSContext *cx, StackFrame *from, jit::BaselineFrame *to);
+    static bool handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::BaselineFrame *to);
 
     /************************************* Functions for use by Debugger.cpp. */
 

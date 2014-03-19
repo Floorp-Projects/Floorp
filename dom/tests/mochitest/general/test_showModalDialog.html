@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=862918
     is(evt.data, 'dosetup', "message from modal window is correct");
     var win = SpecialPowers.wrap(evt.source);
     win.wrappedJSObject.SpecialPowers = SpecialPowers;
-    win.wrappedJSObject.is = is;
-    win.wrappedJSObject.ok = ok;
+    win.wrappedJSObject.is = SpecialPowers.wrap(is);
+    win.wrappedJSObject.ok = SpecialPowers.wrap(ok);
     win.wrappedJSObject.go();
   };
 

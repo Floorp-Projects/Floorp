@@ -945,18 +945,21 @@ function TypedArrayMap(a, b) {
 
 // Warning: user exposed!
 function TypedArrayMapPar(a, b) {
+  // Arguments: [depth], func
+
+  // Defer to the sequential variant for error cases or
+  // when not working with typed objects.
   if (!IsObject(this) || !ObjectIsTypedObject(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    return callFunction(TypedArrayMap, this, a, b);
   var thisType = TYPEDOBJ_TYPE_DESCR(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+    return callFunction(TypedArrayMap, this, a, b);
 
-  // Arguments: [depth], func
-  if (typeof a === "number" && typeof b === "function")
+  if (typeof a === "number" && IsCallable(b))
     return MapTypedParImpl(this, a, thisType, b);
-  else if (typeof a === "function")
+  else if (IsCallable(a))
     return MapTypedParImpl(this, 1, thisType, a);
-  return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+  return callFunction(TypedArrayMap, this, a, b);
 }
 
 // Warning: user exposed!
@@ -1017,6 +1020,20 @@ function TypedObjectArrayTypeBuildPar(a,b,c) {
 
 // Warning: user exposed!
 function TypedObjectArrayTypeFromPar(a,b,c) {
+  // Arguments: arrayLike, [depth], func
+
+  // Use the sequential version for error cases or when arrayLike is
+  // not a typed object.
+  if (!IsObject(this) || !ObjectIsTypeDescr(this) || !TypeDescrIsArrayType(this))
+    return callFunction(TypedObjectArrayTypeFrom, this, a, b, c);
+  if (!IsObject(a) || !ObjectIsTypedObject(a))
+    return callFunction(TypedObjectArrayTypeFrom, this, a, b, c);
+
+  // Detect whether an explicit depth is supplied.
+  if (typeof b === "number" && IsCallable(c))
+    return MapTypedParImpl(a, b, this, c);
+  if (IsCallable(b))
+    return MapTypedParImpl(a, 1, this, b);
   return callFunction(TypedObjectArrayTypeFrom, this, a, b, c);
 }
 
@@ -1355,6 +1372,10 @@ function MapTypedParImpl(inArray, depth, outputType, func) {
          "Map/From called on non-object or untyped input array.");
   assert(TypeDescrIsArrayType(outputType),
          "Map/From called on non array-type outputType");
+  assert(typeof depth === "number",
+         "Map/From called with non-numeric depth");
+  assert(IsCallable(func),
+         "Map/From called on something not callable");
 
   var inArrayType = TypeOfTypedObject(inArray);
 
@@ -1515,6 +1536,12 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
         inOffset += inGrainTypeSize;
         outOffset += outGrainTypeSize;
       }
+
+      // A transparent result type cannot contain references, and
+      // hence there is no way for a pointer to a thread-local object
+      // to escape.
+      if (outGrainTypeIsTransparent)
+        ClearThreadLocalArenas();
 
       MARK_SLICE_DONE(slicesInfo, sliceId);
       if (warmup)

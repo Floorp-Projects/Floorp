@@ -1427,7 +1427,7 @@ namespace {
 struct ExpressionDecompiler
 {
     JSContext *cx;
-    StackFrame *fp;
+    InterpreterFrame *fp;
     RootedScript script;
     RootedFunction fun;
     BindingVector *localNames;
@@ -1759,7 +1759,7 @@ DecompileExpressionFromStack(JSContext *cx, int spindex, int skipStackHits, Hand
 #ifdef JS_MORE_DETERMINISTIC
     /*
      * Give up if we need deterministic behavior for differential testing.
-     * IonMonkey doesn't use StackFrames and this ensures we get the same
+     * IonMonkey doesn't use InterpreterFrames and this ensures we get the same
      * error messages.
      */
     return true;

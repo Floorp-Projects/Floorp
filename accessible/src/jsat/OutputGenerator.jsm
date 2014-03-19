@@ -625,7 +625,8 @@ this.UtteranceGenerator = {
     // This is because we expose the checked information on the node itself.
     // XXX: this means the checked state is always appended to the end, regardless
     // of the utterance ordering preference.
-    if (Utils.AndroidSdkVersion < 16 && aState.contains(States.CHECKABLE)) {
+    if ((Utils.AndroidSdkVersion < 16 || Utils.MozBuildApp === 'browser') &&
+      aState.contains(States.CHECKABLE)) {
       let statetr = aState.contains(States.CHECKED) ?
         'stateChecked' : 'stateNotChecked';
       stateUtterances.push(Utils.stringBundle.GetStringFromName(statetr));

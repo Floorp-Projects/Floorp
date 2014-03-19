@@ -25,7 +25,7 @@ namespace jit {
 
 enum FrameType
 {
-    // A JS frame is analagous to a js::StackFrame, representing one scripted
+    // A JS frame is analagous to a js::InterpreterFrame, representing one scripted
     // functon activation. OptimizedJS frames are used by the optimizing compiler.
     IonFrame_OptimizedJS,
 
@@ -63,7 +63,7 @@ enum FrameType
 
     // An OSR frame is added when performing OSR from within a bailout. It
     // looks like a JS frame, but does not push scripted arguments, as OSR
-    // reads arguments from a js::StackFrame.
+    // reads arguments from a BaselineFrame.
     IonFrame_Osr
 };
 
