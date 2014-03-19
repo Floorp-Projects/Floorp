@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.2 API Reference</title>
+<title>FreeType-2.5.3 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,16 +35,17 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.2 API Reference</h1></center>
+<center><h1>FreeType-2.5.3 API Reference</h1></center>
 
 <center><h1>
 The auto-hinter
 </h1></center>
 <h2>Synopsis</h2>
 <table align=center cellspacing=5 cellpadding=0 border=0>
-<tr><td></td><td><a href="#glyph-to-script-map">glyph-to-script-map</a></td><td></td><td><a href="#fallback-script">fallback-script</a></td></tr>
+<tr><td></td><td><a href="#glyph-to-script-map">glyph-to-script-map</a></td><td></td><td><a href="#default-script">default-script</a></td></tr>
 <tr><td></td><td><a href="#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_XXX</a></td><td></td><td><a href="#increase-x-height">increase-x-height</a></td></tr>
 <tr><td></td><td><a href="#FT_Prop_GlyphToScriptMap">FT_Prop_GlyphToScriptMap</a></td><td></td><td><a href="#FT_Prop_IncreaseXHeight">FT_Prop_IncreaseXHeight</a></td></tr>
+<tr><td></td><td><a href="#fallback-script">fallback-script</a></td><td></td><td></td></tr>
 </table><br><br>
 
 <table align=center width="87%"><tr><td>
@@ -250,7 +251,34 @@ Defined in FT_AUTOHINTER_H (ftautoh.h).
 </td></tr></table><br>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>This property can be used with <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a> also.</p>
-<p>It's important to use the right timing for changing this value: The creation of the glyph-to-script map that eventually uses the fallback script value gets triggered either by setting or reading a face-specific property like <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a>, or by auto-hinting any glyph from that face. In particular, if you have already created an <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure but not loaded any glyph (using the auto-hinter), a change of the fallback glyph will affect this face.</p>
+<p>It's important to use the right timing for changing this value: The creation of the glyph-to-script map that eventually uses the fallback script value gets triggered either by setting or reading a face-specific property like <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a>, or by auto-hinting any glyph from that face. In particular, if you have already created an <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure but not loaded any glyph (using the auto-hinter), a change of the fallback script will affect this face.</p>
+</td></tr></table>
+</td></tr></table>
+<hr width="75%">
+<table align=center width="75%"><tr><td><font size=-2>[<a href="ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+
+<table align=center width="75%"><tr><td>
+<h4><a name="default-script">default-script</a></h4>
+<table align=center width="87%"><tr><td>
+<p><b>Experimental</b> <b>only</b></p>
+<p>If Freetype gets compiled with FT_CONFIG_OPTION_USE_HARFBUZZ to make the HarfBuzz library access OpenType features for getting better glyph coverages, this property sets the (auto-fitter) script to be used for the default (OpenType) script data of a font's GSUB table. Features for the default script are intended for all scripts not explicitly handled in GSUB; an example is a &lsquo;dlig&rsquo; feature, containing the combination of the characters &lsquo;T&rsquo;, &lsquo;E&rsquo;, and &lsquo;L&rsquo; to form a &lsquo;TEL&rsquo; ligature.</p>
+<p>By default, this is <a href="ft2-auto_hinter.html#FT_AUTOHINTER_SCRIPT_XXX">FT_AUTOHINTER_SCRIPT_LATIN</a>. Using the &lsquo;default-script&rsquo; property, this default value can be changed.</p>
+<pre class="colored">
+  FT_Library  library;
+  FT_UInt     default_script = FT_AUTOHINTER_SCRIPT_NONE;
+
+
+  FT_Init_FreeType( &amp;library );
+
+  FT_Property_Set( library, "autofitter",
+                            "default-script", &amp;default_script );
+</pre>
+</td></tr></table><br>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>This property can be used with <a href="ft2-module_management.html#FT_Property_Get">FT_Property_Get</a> also.</p>
+<p>It's important to use the right timing for changing this value: The creation of the glyph-to-script map that eventually uses the default script value gets triggered either by setting or reading a face-specific property like <a href="ft2-auto_hinter.html#glyph-to-script-map">glyph-to-script-map</a>, or by auto-hinting any glyph from that face. In particular, if you have already created an <a href="ft2-base_interface.html#FT_Face">FT_Face</a> structure but not loaded any glyph (using the auto-hinter), a change of the default script will affect this face.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

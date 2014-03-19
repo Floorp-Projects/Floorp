@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2005, 2006, 2013 by
+# Copyright 1996-2000, 2003, 2005, 2006, 2013, 2014 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -17,7 +17,7 @@ DELETE    := del
 CAT       := type
 SEP       := $(strip \ )
 BUILD_DIR := $(TOP_DIR)/builds/windows
-PLATFORM  := win32
+PLATFORM  := windows
 
 # The executable file extension (for tools). NOTE: WE INCLUDE THE DOT HERE !!
 #

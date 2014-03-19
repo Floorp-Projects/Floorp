@@ -1,6 +1,6 @@
 # FreeType 2 top Jamfile.
 #
-# Copyright 2001-2011, 2013 by
+# Copyright 2001-2014 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -195,7 +195,7 @@ rule RefDoc
 
 actions RefDoc
 {
-  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.5.2 --output=$(DOC_DIR) $(FT2_INCLUDE)/*.h $(FT2_INCLUDE)/config/*.h
+  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.5.3 --output=$(DOC_DIR) $(FT2_INCLUDE)/*.h $(FT2_INCLUDE)/config/*.h
 }
 
 RefDoc  refdoc ;
