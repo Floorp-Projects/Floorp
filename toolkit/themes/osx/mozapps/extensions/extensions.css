@@ -259,6 +259,9 @@
 #category-dictionary > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-dictionaries.png");
 }
+#category-experiment > .category-icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/category-experiments.png");
+}
 #category-availableUpdates > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-available.png");
 }
@@ -481,6 +484,10 @@
 
 .addon-view[type="dictionary"] .icon {
   list-style-image: url("chrome://mozapps/skin/extensions/dictionaryGeneric.png");
+}
+
+.addon-view[type="experiment"] .icon {
+  list-style-image: url("chrome://mozapps/skin/extensions/experimentGeneric.png");
 }
 
 .name-container {
