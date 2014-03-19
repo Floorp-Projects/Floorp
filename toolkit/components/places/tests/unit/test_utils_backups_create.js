@@ -8,8 +8,6 @@
   * Check for correct functionality of bookmarks backups
   */
 
-const PREFIX = "bookmarks-";
-const SUFFIX = ".json";
 const NUMBER_OF_BACKUPS = 10;
 
 function run_test() {
@@ -40,7 +38,7 @@ add_task(function () {
   // creation time.
   // Create fake backups for the newest dates.
   for (let i = dates.length - 1; i >= 0; i--) {
-    let backupFilename = PREFIX + dates[i] + SUFFIX;
+    let backupFilename = PlacesBackups.getFilenameForDate(new Date(dates[i]));
     let backupFile = bookmarksBackupDir.clone();
     backupFile.append(backupFilename);
     backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
@@ -61,10 +59,9 @@ add_task(function () {
     let backupFile;
     if (i > 0) {
       let files = bookmarksBackupDir.directoryEntries;
-      let rx = new RegExp("^" + PREFIX + dates[i] + "(_[0-9]+){0,1}" + SUFFIX + "$");
       while (files.hasMoreElements()) {
         let entry = files.getNext().QueryInterface(Ci.nsIFile);
-        if (entry.leafName.match(rx)) {
+        if (PlacesBackups.filenamesRegex.test(entry.leafName)) {
           backupFilename = entry.leafName;
           backupFile = entry;
           break;
@@ -73,7 +70,7 @@ add_task(function () {
       shouldExist = true;
     }
     else {
-      backupFilename = PREFIX + dates[i] + SUFFIX;
+      backupFilename = PlacesBackups.getFilenameForDate(new Date(dates[i]));
       backupFile = bookmarksBackupDir.clone();
       backupFile.append(backupFilename);
       shouldExist = false;
