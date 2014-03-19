@@ -746,8 +746,8 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
   }
 
-  :-moz-any(@primaryToolbarButtons@):-moz-lwtheme-brighttext,
-  #bookmarks-menu-button[cui-areatype="toolbar"]:-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  :-moz-any(@primaryToolbarButtons@):not(@inAnyPanel@):-moz-lwtheme-brighttext,
+  #bookmarks-menu-button:not(@inAnyPanel@):-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
     list-style-image: url("chrome://browser/skin/Toolbar-inverted@2x.png");
   }
 
