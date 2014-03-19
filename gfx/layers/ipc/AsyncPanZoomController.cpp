@@ -67,7 +67,7 @@
 #define APZC_LOG_FM(fm, prefix, ...) \
   APZC_LOG(prefix ":" \
            " i=(%ld %lld) cb=(%d %d %d %d) dp=(%.3f %.3f %.3f %.3f) v=(%.3f %.3f %.3f %.3f) " \
-           "s=(%.3f %.3f) sr=(%.3f %.3f %.3f %.3f) z=(%.3f %.3f %.3f %.3f) u=(%d %lu)\n", \
+           "s=(%.3f %.3f) sr=(%.3f %.3f %.3f %.3f) z=(%.3f %.3f %.3f %.3f) u=(%d %llu)\n", \
            __VA_ARGS__, \
            fm.mPresShellId, fm.mScrollId, \
            fm.mCompositionBounds.x, fm.mCompositionBounds.y, fm.mCompositionBounds.width, fm.mCompositionBounds.height, \
@@ -1718,13 +1718,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.mViewport = aLayerMetrics.mViewport;
   }
 
-  // If the layers update was not triggered by our own repaint request, then
-  // we want to take the new scroll offset. Check the scroll generation as well
-  // to filter duplicate calls to NotifyLayersUpdated with the same scroll offset
-  // update message.
-  bool scrollOffsetUpdated = aLayerMetrics.GetScrollOffsetUpdated()
-        && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());
-
   if (aIsFirstPaint || isDefault) {
     // Initialize our internal state to something sane when the content
     // that was just painted is something we knew nothing about previously
@@ -1760,12 +1753,14 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.mCumulativeResolution = aLayerMetrics.mCumulativeResolution;
     mFrameMetrics.mHasScrollgrab = aLayerMetrics.mHasScrollgrab;
 
-    if (scrollOffsetUpdated) {
+    // If the layers update was not triggered by our own repaint request, then
+    // we want to take the new scroll offset.
+    if (aLayerMetrics.GetScrollOffsetUpdated()) {
       APZC_LOG("%p updating scroll offset from (%f, %f) to (%f, %f)\n", this,
         mFrameMetrics.mScrollOffset.x, mFrameMetrics.mScrollOffset.y,
         aLayerMetrics.mScrollOffset.x, aLayerMetrics.mScrollOffset.y);
 
-      mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
+      mFrameMetrics.SetScrollOffset(aLayerMetrics.GetScrollOffset());
 
       // Because of the scroll offset update, any inflight paint requests are
       // going to be ignored by layout, and so mLastDispatchedPaintMetrics
@@ -1776,14 +1771,13 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     }
   }
 
-  if (scrollOffsetUpdated) {
+  if (aLayerMetrics.GetScrollOffsetUpdated()) {
     // Once layout issues a scroll offset update, it becomes impervious to
     // scroll offset updates from APZ until we acknowledge the update it sent.
     // This prevents APZ updates from clobbering scroll updates from other
     // more "legitimate" sources like content scripts.
     nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
     if (controller) {
-      APZC_LOG("%p sending scroll update acknowledgement with gen %lu\n", this, aLayerMetrics.GetScrollGeneration());
       controller->AcknowledgeScrollUpdate(aLayerMetrics.mScrollId,
                                           aLayerMetrics.GetScrollGeneration());
     }
