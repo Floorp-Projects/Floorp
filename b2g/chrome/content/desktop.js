@@ -16,7 +16,7 @@ function enableTouch() {
   touchEventHandler.start();
 }
 
-function setupHomeButton() {
+function setupButtons() {
   let homeButton = document.getElementById('home-button');
   if (!homeButton) {
     // The toolbar only exists in b2g desktop build with
@@ -34,9 +34,19 @@ function setupHomeButton() {
     shell.sendChromeEvent({type: 'home-button-release'});
     homeButton.classList.remove('active');
   });
+
+  Cu.import("resource://gre/modules/GlobalSimulatorScreen.jsm");
+  let rotateButton = document.getElementById('rotate-button');
+  rotateButton.addEventListener('touchstart', function () {
+    rotateButton.classList.add('active');
+  });
+  rotateButton.addEventListener('touchend', function() {
+    GlobalSimulatorScreen.flipScreen();
+    rotateButton.classList.remove('active');
+  });
 }
 
 window.addEventListener('ContentStart', function() {
   enableTouch();
-  setupHomeButton();
+  setupButtons();
 });
