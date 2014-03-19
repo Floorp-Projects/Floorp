@@ -207,7 +207,7 @@ class ScopeObject : public JSObject
 
     /*
      * Get or set an aliased variable contained in this scope. Unaliased
-     * variables should instead access the StackFrame. Aliased variable access
+     * variables should instead access the stack frame. Aliased variable access
      * is primarily made through JOF_SCOPECOORD ops which is why these members
      * take a ScopeCoordinate instead of just the slot index.
      */
@@ -630,12 +630,12 @@ class ScopeIter
     ScopeIter(const ScopeIter &si, JSContext *cx
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
-    /* Constructing from StackFrame places ScopeIter on the innermost scope. */
+    /* Constructing from AbstractFramePtr places ScopeIter on the innermost scope. */
     ScopeIter(AbstractFramePtr frame, jsbytecode *pc, JSContext *cx
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     /*
-     * Without a StackFrame, the resulting ScopeIter is done() with
+     * Without a stack frame, the resulting ScopeIter is done() with
      * enclosingScope() as given.
      */
     ScopeIter(JSObject &enclosingScope, JSContext *cx

@@ -248,29 +248,8 @@ DisableGralloc(SurfaceFormat aFormat)
   if (aFormat == gfx::SurfaceFormat::A8) {
     return true;
   }
-#if ANDROID_VERSION <= 15
-  static bool checkedDevice = false;
-  static bool disableGralloc = false;
 
-  if (!checkedDevice) {
-    char propValue[PROPERTY_VALUE_MAX];
-    property_get("ro.product.device", propValue, "None");
-
-    if (strcmp("crespo",propValue) == 0) {
-      NS_WARNING("Nexus S has issues with gralloc, falling back to shmem");
-      disableGralloc = true;
-    }
-
-    checkedDevice = true;
-  }
-
-  if (disableGralloc) {
-    return true;
-  }
   return false;
-#else
-  return false;
-#endif
 }
 #endif
 
@@ -678,25 +657,13 @@ BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
     return false;
   }
 
-  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-    RefPtr<DrawTarget> dt = GetAsDrawTarget();
-    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
+  RefPtr<DrawTarget> dt = GetAsDrawTarget();
+  RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
 
-    dt->CopySurface(source, IntRect(IntPoint(), serializer.GetSize()), IntPoint());
-    // XXX - if the Moz2D backend is D2D, we would be much better off memcpying
-    // the content of the surface directly because with D2D, GetAsDrawTarget is
-    // very expensive.
-  } else {
-    RefPtr<gfxImageSurface> surf = serializer.GetAsThebesSurface();
-    if (!surf) {
-      return false;
-    }
-
-    nsRefPtr<gfxContext> tmpCtx = new gfxContext(surf.get());
-    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx->DrawSurface(aSurface, gfxSize(serializer.GetSize().width,
-                                          serializer.GetSize().height));
-  }
+  dt->CopySurface(source, IntRect(IntPoint(), serializer.GetSize()), IntPoint());
+  // XXX - if the Moz2D backend is D2D, we would be much better off memcpying
+  // the content of the surface directly because with D2D, GetAsDrawTarget is
+  // very expensive.
 
   if (TextureRequiresLocking(mFlags) && !ImplementsLocking()) {
     // We don't have support for proper locking yet, so we'll

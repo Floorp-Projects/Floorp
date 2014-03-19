@@ -1467,7 +1467,7 @@ MacroAssembler::printf(const char *output)
     setupUnalignedABICall(1, temp);
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, Printf0_));
+    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, Printf0_));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1493,7 +1493,7 @@ MacroAssembler::printf(const char *output, Register value)
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
     passABIArg(value);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, Printf1_));
+    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, Printf1_));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1517,7 +1517,7 @@ MacroAssembler::tracelogStart(JSScript *script)
     passABIArg(type);
     movePtr(ImmGCPtr(script), rscript);
     passABIArg(rscript);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStart));
+    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogStart));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1538,7 +1538,7 @@ MacroAssembler::tracelogStop()
     passABIArg(logger);
     move32(Imm32(TraceLogging::SCRIPT_STOP), type);
     passABIArg(type);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStop));
+    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogStop));
 
     PopRegsInMask(RegisterSet::Volatile());
 }
@@ -1559,7 +1559,7 @@ MacroAssembler::tracelogLog(TraceLogging::Type type)
     passABIArg(logger);
     move32(Imm32(type), rtype);
     passABIArg(rtype);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLogStop));
+    callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, TraceLogStop));
 
     PopRegsInMask(RegisterSet::Volatile());
 }

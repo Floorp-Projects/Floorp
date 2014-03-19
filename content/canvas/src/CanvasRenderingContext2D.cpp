@@ -3577,7 +3577,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     thebes = new gfxContext(mTarget);
     thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                                 matrix._22, matrix._31, matrix._32));
-  } else if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+  } else {
     drawDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(ceil(sw), ceil(sh)),
                                                                    SurfaceFormat::B8G8R8A8);
@@ -3587,17 +3587,6 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     }
 
     thebes = new gfxContext(drawDT);
-    thebes->Scale(matrix._11, matrix._22);
-  } else {
-    drawSurf =
-      gfxPlatform::GetPlatform()->CreateOffscreenSurface(IntSize(ceil(sw), ceil(sh)),
-                                                         gfxContentType::COLOR_ALPHA);
-    if (!drawSurf) {
-      error.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    thebes = new gfxContext(drawSurf);
     thebes->Scale(matrix._11, matrix._22);
   }
 

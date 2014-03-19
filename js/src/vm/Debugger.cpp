@@ -146,7 +146,7 @@ ValueToIdentifier(JSContext *cx, HandleValue v, MutableHandleId id)
 }
 
 /*
- * A range of all the Debugger.Frame objects for a particular StackFrame.
+ * A range of all the Debugger.Frame objects for a particular AbstractFramePtr.
  *
  * FIXME This checks only current debuggers, so it relies on a hack in
  * Debugger::removeDebuggeeGlobal to make sure only current debuggers have Frame
@@ -1609,7 +1609,7 @@ Debugger::trace(JSTracer *trc)
 
     /*
      * Mark Debugger.Frame objects. These are all reachable from JS, because the
-     * corresponding StackFrames are still on the stack.
+     * corresponding JS frames are still on the stack.
      *
      * (Once we support generator frames properly, we will need
      * weakly-referenced Debugger.Frame objects as well, for suspended generator
@@ -2286,7 +2286,7 @@ Debugger::removeDebuggeeGlobal(FreeOp *fop, GlobalObject *global,
 
     /*
      * FIXME Debugger::slowPathOnLeaveFrame needs to kill all Debugger.Frame
-     * objects referring to a particular js::StackFrame. This is hard if
+     * objects referring to a particular JS stack frame. This is hard if
      * Debugger objects that are no longer debugging the relevant global might
      * have live Frame objects. So we take the easy way out and kill them here.
      * This is a bug, since it's observable and contrary to the spec. One
@@ -3546,7 +3546,7 @@ Debugger::observesScript(JSScript *script) const
 }
 
 /* static */ bool
-Debugger::handleBaselineOsr(JSContext *cx, StackFrame *from, jit::BaselineFrame *to)
+Debugger::handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::BaselineFrame *to)
 {
     ScriptFrameIter iter(cx);
     JS_ASSERT(iter.abstractFramePtr() == to);

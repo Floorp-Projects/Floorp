@@ -259,3 +259,16 @@ fuzzy-if(OSX,1,100) == menclose-5-circle.html menclose-5-circle-ref.html
 == rowlines-2b.html rowlines-2-ref.html
 != rowlines-3-1.html rowlines-3-1-ref.html
 == rowlines-3-2.html rowlines-3-2-ref.html
+!= op-dict-1.html op-dict-1-ref.html
+== op-dict-2.html op-dict-2-ref.html
+!= op-dict-3.html op-dict-3-ref.html
+== op-dict-4.html op-dict-4-ref.html
+!= op-dict-5.html op-dict-5-ref.html
+== op-dict-6.html op-dict-6-ref.html
+!= op-dict-7.html op-dict-7-ref.html
+== op-dict-8.html op-dict-8-ref.html
+!= op-dict-9.html op-dict-9-ref.html
+== op-dict-10.html op-dict-10-ref.html
+!= op-dict-11.html op-dict-11-ref.html
+== op-dict-12.html op-dict-12-ref.html
+!= op-dict-13.html op-dict-13-ref.html

@@ -40,8 +40,7 @@
                           android:layout="@layout/home_banner"
                           android:layout_width="fill_parent"
                           android:layout_height="@dimen/home_banner_height"
-                          android:layout_gravity="bottom"
-                          android:translationY="@dimen/home_banner_height"/>
+                          android:layout_gravity="bottom"/>
 
             </FrameLayout>
 
@@ -102,6 +101,15 @@
                                                     style="@style/GeckoActionBar"/>
 
         </org.mozilla.gecko.widget.GeckoViewFlipper>
+
+        <org.mozilla.gecko.toolbar.ToolbarProgressView android:id="@+id/progress"
+                                                       android:layout_width="fill_parent"
+                                                       android:layout_height="14dp"
+                                                       android:layout_marginTop="-8dp"
+                                                       android:layout_below="@id/browser_actionbar"
+                                                       android:src="@drawable/progress"
+                                                       android:background="@null"
+                                                       android:visibility="gone" />
 
     </view>
 

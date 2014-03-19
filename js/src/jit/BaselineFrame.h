@@ -26,7 +26,7 @@ namespace jit {
 
 // Eval frames
 //
-// Like js::StackFrame, every BaselineFrame is either a global frame
+// Like js::InterpreterFrame, every BaselineFrame is either a global frame
 // or a function frame. Both global and function frames can optionally
 // be "eval frames". The callee token for eval function frames is the
 // enclosing function. BaselineFrame::evalScript_ stores the eval script
@@ -35,7 +35,7 @@ class BaselineFrame
 {
   public:
     enum Flags {
-        // The frame has a valid return value. See also StackFrame::HAS_RVAL.
+        // The frame has a valid return value. See also InterpreterFrame::HAS_RVAL.
         HAS_RVAL         = 1 << 0,
 
         // A call object has been pushed on the scope chain.
@@ -44,7 +44,7 @@ class BaselineFrame
         // Frame has an arguments object, argsObj_.
         HAS_ARGS_OBJ     = 1 << 4,
 
-        // See StackFrame::PREV_UP_TO_DATE.
+        // See InterpreterFrame::PREV_UP_TO_DATE.
         PREV_UP_TO_DATE  = 1 << 5,
 
         // Eval frame, see the "eval frames" comment.
@@ -82,7 +82,7 @@ class BaselineFrame
     // This is the old frame pointer saved in the prologue.
     static const uint32_t FramePointerOffset = sizeof(void *);
 
-    bool initForOsr(StackFrame *fp, uint32_t numStackValues);
+    bool initForOsr(InterpreterFrame *fp, uint32_t numStackValues);
 
     uint32_t frameSize() const {
         return frameSize_;

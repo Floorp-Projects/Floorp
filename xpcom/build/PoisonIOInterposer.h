@@ -26,7 +26,7 @@ void MozillaUnRegisterDebugFILE(FILE *f);
 
 MOZ_END_EXTERN_C
 
-#if defined(MOZ_ENABLE_PROFILER_SPS) && (defined(XP_WIN) || defined(XP_MACOSX))
+#if defined(XP_WIN) || defined(XP_MACOSX)
 
 #ifdef __cplusplus
 namespace mozilla {
@@ -63,7 +63,7 @@ void ClearPoisonIOInterposer();
 } // namespace mozilla
 #endif /* __cplusplus */
 
-#else /* MOZ_ENABLE_PROFILER_SPS && (XP_WIN || XP_MACOSX) */
+#else /* XP_WIN || XP_MACOSX */
 
 #ifdef __cplusplus
 namespace mozilla {
@@ -76,6 +76,6 @@ inline void OnlyReportDirtyWrites(){}
 } // namespace mozilla
 #endif /* __cplusplus */
 
-#endif /* MOZ_ENABLE_PROFILER_SPS && (XP_WIN || XP_MACOSX) */
+#endif /* XP_WIN || XP_MACOSX */
 
 #endif // mozilla_PoisonIOInterposer_h
