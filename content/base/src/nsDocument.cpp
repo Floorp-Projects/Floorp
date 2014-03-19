@@ -5476,8 +5476,9 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
 bool
 nsDocument::IsRegisterElementEnabled(JSContext* aCx, JSObject* aObject)
 {
+  JS::Rooted<JSObject*> obj(aCx, aObject);
   return Preferences::GetBool("dom.webcomponents.enabled") ||
-    IsInCertifiedApp(aCx, aObject);
+    IsInCertifiedApp(aCx, obj);
 }
 
 nsresult
