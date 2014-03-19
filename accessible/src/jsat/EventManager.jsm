@@ -289,6 +289,15 @@ this.EventManager.prototype = {
           aEvent.accessible, { delay: 500 });
         break;
       }
+      case Events.VALUE_CHANGE:
+      {
+        let position = this.contentScope.contentControl.vc.position;
+        let target = aEvent.accessible;
+        if (position === target ||
+            Utils.getEmbeddedControl(position) === target) {
+          this.present(Presentation.valueChanged(target));
+        }
+      }
     }
   },
 
