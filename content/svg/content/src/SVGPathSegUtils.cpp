@@ -131,14 +131,14 @@ SplitCubicBezier(const Point* aCurve, Point* aLeft, Point* aRight)
   aLeft[3].y = aRight[0].y = (aLeft[2].y + aRight[1].y) / 2;
 }
 
-static gfxFloat
+static float
 CalcBezLengthHelper(const Point* aCurve, uint32_t aNumPts,
                     uint32_t aRecursionCount,
                     void (*aSplit)(const Point*, Point*, Point*))
 {
   Point left[4];
   Point right[4];
-  gfxFloat length = 0, dist;
+  float length = 0, dist;
   for (uint32_t i = 0; i < aNumPts - 1; i++) {
     length += CalcDistanceBetweenPoints(aCurve[i], aCurve[i+1]);
   }
@@ -153,7 +153,7 @@ CalcBezLengthHelper(const Point* aCurve, uint32_t aNumPts,
   return length;
 }
 
-static inline gfxFloat
+static inline float
 CalcLengthOfCubicBezier(const Point& aPos, const Point &aCP1,
                         const Point& aCP2, const Point &aTo)
 {
@@ -161,7 +161,7 @@ CalcLengthOfCubicBezier(const Point& aPos, const Point &aCP1,
   return CalcBezLengthHelper(curve, 4, 0, SplitCubicBezier);
 }
 
-static inline gfxFloat
+static inline float
 CalcLengthOfQuadraticBezier(const Point& aPos, const Point& aCP,
                             const Point& aTo)
 {
