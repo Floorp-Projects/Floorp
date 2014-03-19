@@ -46,7 +46,7 @@ let inputTests = [
 
   {
     input: "testNodeList()",
-    output: 'NodeList [ <html>, <head>, <meta>, <title>, <body#body-id.body-class>, <p>, <iframe>, <script> ]',
+    output: 'NodeList [ <html>, <head>, <meta>, <title>, <body#body-id.body-class>, <p>, <iframe>, <div.some.classname.here.with.more.classnames.here>, <script> ]',
     printOutput: "[object NodeList]",
     inspectable: true,
     noClick: true,
