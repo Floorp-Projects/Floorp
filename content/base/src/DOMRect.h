@@ -14,29 +14,33 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
-#include <algorithm>
 
 struct nsRect;
 
 namespace mozilla {
 namespace dom {
 
-class DOMRectReadOnly : public nsISupports
-                      , public nsWrapperCache
+class DOMRect MOZ_FINAL : public nsIDOMClientRect
+                        , public nsWrapperCache
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMRectReadOnly)
-
-  virtual ~DOMRectReadOnly() {}
-
-  DOMRectReadOnly(nsISupports* aParent)
-    : mParent(aParent)
+  DOMRect(nsISupports* aParent)
+    : mParent(aParent), mX(0.0), mY(0.0), mWidth(0.0), mHeight(0.0)
   {
     SetIsDOMBinding();
   }
+  virtual ~DOMRect() {}
+  
+  void SetRect(float aX, float aY, float aWidth, float aHeight) {
+    mX = aX; mY = aY; mWidth = aWidth; mHeight = aHeight;
+  }
+  void SetLayoutRect(const nsRect& aLayoutRect);
+
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMRect)
+  NS_DECL_NSIDOMCLIENTRECT
+
 
   nsISupports* GetParentObject() const
   {
@@ -46,103 +50,40 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual double X() const = 0;
-  virtual double Y() const = 0;
-  virtual double Width() const = 0;
-  virtual double Height() const = 0;
 
-  double Left() const
-  {
-    double x = X(), w = Width();
-    return std::min(x, x + w);
-  }
-  double Top() const
-  {
-    double y = Y(), h = Height();
-    return std::min(y, y + h);
-  }
-  double Right() const
-  {
-    double x = X(), w = Width();
-    return std::max(x, x + w);
-  }
-  double Bottom() const
-  {
-    double y = Y(), h = Height();
-    return std::max(y, y + h);
-  }
-
-protected:
-  nsCOMPtr<nsISupports> mParent;
-};
-
-class DOMRect MOZ_FINAL : public DOMRectReadOnly
-                        , public nsIDOMClientRect
-{
-public:
-  DOMRect(nsISupports* aParent, double aX = 0, double aY = 0,
-          double aWidth = 0, double aHeight = 0)
-    : DOMRectReadOnly(aParent)
-    , mX(aX)
-    , mY(aY)
-    , mWidth(aWidth)
-    , mHeight(aHeight)
-  {
-  }
-  
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMCLIENTRECT
-
-  static already_AddRefed<DOMRect>
-  Constructor(const GlobalObject& aGlobal, ErrorResult& aRV);
-  static already_AddRefed<DOMRect>
-  Constructor(const GlobalObject& aGlobal, double aX, double aY,
-              double aWidth, double aHeight, ErrorResult& aRV);
-
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-
-  void SetRect(float aX, float aY, float aWidth, float aHeight) {
-    mX = aX; mY = aY; mWidth = aWidth; mHeight = aHeight;
-  }
-  void SetLayoutRect(const nsRect& aLayoutRect);
-
-  virtual double X() const MOZ_OVERRIDE
+  float Left() const
   {
     return mX;
   }
-  virtual double Y() const MOZ_OVERRIDE
+
+  float Top() const
   {
     return mY;
   }
-  virtual double Width() const MOZ_OVERRIDE
+
+  float Right() const
+  {
+    return mX + mWidth;
+  }
+
+  float Bottom() const
+  {
+    return mY + mHeight;
+  }
+
+  float Width() const
   {
     return mWidth;
   }
-  virtual double Height() const MOZ_OVERRIDE
+
+  float Height() const
   {
     return mHeight;
   }
 
-  void SetX(double aX)
-  {
-    mX = aX;
-  }
-  void SetY(double aY)
-  {
-    mY = aY;
-  }
-  void SetWidth(double aWidth)
-  {
-    mWidth = aWidth;
-  }
-  void SetHeight(double aHeight)
-  {
-    mHeight = aHeight;
-  }
-
 protected:
-  double mX, mY, mWidth, mHeight;
+  nsCOMPtr<nsISupports> mParent;
+  float mX, mY, mWidth, mHeight;
 };
 
 class DOMRectList MOZ_FINAL : public nsIDOMClientRectList,
@@ -204,7 +145,9 @@ public:
   }
 
 protected:
-  nsTArray<nsRefPtr<DOMRect> > mArray;
+  virtual ~DOMRectList() {}
+
+  nsTArray< nsRefPtr<DOMRect> > mArray;
   nsCOMPtr<nsISupports> mParent;
 };
 
