@@ -993,6 +993,19 @@ GetParentPointer(const ParentObject& aObject)
   return aObject.mObject;
 }
 
+template <typename T>
+inline bool
+GetUseXBLScope(T* aParentObject)
+{
+  return false;
+}
+
+inline bool
+GetUseXBLScope(const ParentObject& aParentObject)
+{
+  return aParentObject.mUseXBLScope;
+}
+
 template<class T>
 inline void
 ClearWrapper(T* p, nsWrapperCache* cache)
@@ -1234,13 +1247,30 @@ struct WrapNativeParentHelper<T, false >
 template<typename T>
 static inline JSObject*
 WrapNativeParent(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
-                 nsWrapperCache* cache)
+                 nsWrapperCache* cache, bool useXBLScope = false)
 {
   if (!p) {
     return scope;
   }
 
-  return WrapNativeParentHelper<T>::Wrap(cx, scope, p, cache);
+  JSObject* parent = WrapNativeParentHelper<T>::Wrap(cx, scope, p, cache);
+  if (!useXBLScope) {
+    return parent;
+  }
+
+  // If useXBLScope is true, it means that the canonical reflector for this
+  // native object should live in the XBL scope.
+  if (xpc::IsInXBLScope(parent)) {
+    return parent;
+  }
+  JS::Rooted<JSObject*> rootedParent(cx, parent);
+  JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScope(cx, rootedParent));
+  JSAutoCompartment ac(cx, xblScope);
+  if (NS_WARN_IF(!JS_WrapObject(cx, &rootedParent))) {
+    return nullptr;
+  }
+
+  return rootedParent;
 }
 
 // Wrapping of our native parent, when we don't want to explicitly pass in
@@ -1249,7 +1279,7 @@ template<typename T>
 static inline JSObject*
 WrapNativeParent(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
 {
-  return WrapNativeParent(cx, scope, GetParentPointer(p), GetWrapperCache(p));
+  return WrapNativeParent(cx, scope, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
 }
 
 // A way to differentiate between nodes, which use the parent object
