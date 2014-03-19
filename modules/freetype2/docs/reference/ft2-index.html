@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.2 API Reference</title>
+<title>FreeType-2.5.3 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -34,21 +34,22 @@
 
 <table align=center><tr><td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.2 API Reference</h1></center>
+<center><h1>FreeType-2.5.3 API Reference</h1></center>
 
 <table align=center border=0 cellpadding=0 cellspacing=0>
-<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_ATOM</a></td><td><a href="ft2-header_file_macros.html#FT_LCD_FILTER_H">FT_LCD_FILTER_H</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_ParseOutline">FT_Stroker_ParseOutline</a></td></tr>
-<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_CARDINAL</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_LEGACY</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_Rewind">FT_Stroker_Rewind</a></td></tr>
-<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_INTEGER</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_LIGHT</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_Set">FT_Stroker_Set</a></td></tr>
-<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_NONE</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_NONE</a></td><td><a href="ft2-glyph_stroker.html#FT_StrokerBorder">FT_StrokerBorder</a></td></tr>
-<tr><td><a href="ft2-bdf_fonts.html#BDF_Property">BDF_Property</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LcdFilter</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_2X2</a></td></tr>
-<tr><td><a href="ft2-bdf_fonts.html#BDF_PropertyRec">BDF_PropertyRec</a></td><td><a href="ft2-header_file_macros.html#FT_LIST_H">FT_LIST_H</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_ARGS_ARE_WORDS</a></td></tr>
-<tr><td><a href="ft2-type1_tables.html#CID_FaceDict">CID_FaceDict</a></td><td><a href="ft2-base_interface.html#FT_Library">FT_Library</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES</a></td></tr>
-<tr><td><a href="ft2-type1_tables.html#CID_FaceDictRec">CID_FaceDictRec</a></td><td><a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_ROUND_XY_TO_GRID</a></td></tr>
-<tr><td><a href="ft2-type1_tables.html#CID_FaceInfo">CID_FaceInfo</a></td><td><a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilterWeights">FT_Library_SetLcdFilterWeights</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_SCALE</a></td></tr>
-<tr><td><a href="ft2-type1_tables.html#CID_FaceInfoRec">CID_FaceInfoRec</a></td><td><a href="ft2-version.html#FT_Library_Version">FT_Library_Version</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_USE_MY_METRICS</a></td></tr>
-<tr><td><a href="ft2-type1_tables.html#CID_Info">CID_Info</a></td><td><a href="ft2-list_processing.html#FT_List">FT_List</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_XXX</a></td></tr>
-<tr><td><a href="ft2-cff_driver.html#darkening-parameters">darkening-parameters</a></td><td><a href="ft2-list_processing.html#FT_List_Add">FT_List_Add</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_XY_SCALE</a></td></tr>
+<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_ATOM</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_DEFAULT</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_New">FT_Stroker_New</a></td></tr>
+<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_CARDINAL</a></td><td><a href="ft2-header_file_macros.html#FT_LCD_FILTER_H">FT_LCD_FILTER_H</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_ParseOutline">FT_Stroker_ParseOutline</a></td></tr>
+<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_INTEGER</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_LEGACY</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_Rewind">FT_Stroker_Rewind</a></td></tr>
+<tr><td><a href="ft2-bdf_fonts.html#FT_PropertyType">BDF_PROPERTY_TYPE_NONE</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_LIGHT</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_Set">FT_Stroker_Set</a></td></tr>
+<tr><td><a href="ft2-bdf_fonts.html#BDF_Property">BDF_Property</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_NONE</a></td><td><a href="ft2-glyph_stroker.html#FT_StrokerBorder">FT_StrokerBorder</a></td></tr>
+<tr><td><a href="ft2-bdf_fonts.html#BDF_PropertyRec">BDF_PropertyRec</a></td><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LcdFilter</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_2X2</a></td></tr>
+<tr><td><a href="ft2-type1_tables.html#CID_FaceDict">CID_FaceDict</a></td><td><a href="ft2-header_file_macros.html#FT_LIST_H">FT_LIST_H</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_ARGS_ARE_WORDS</a></td></tr>
+<tr><td><a href="ft2-type1_tables.html#CID_FaceDictRec">CID_FaceDictRec</a></td><td><a href="ft2-base_interface.html#FT_Library">FT_Library</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES</a></td></tr>
+<tr><td><a href="ft2-type1_tables.html#CID_FaceInfo">CID_FaceInfo</a></td><td><a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilter">FT_Library_SetLcdFilter</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_ROUND_XY_TO_GRID</a></td></tr>
+<tr><td><a href="ft2-type1_tables.html#CID_FaceInfoRec">CID_FaceInfoRec</a></td><td><a href="ft2-lcd_filtering.html#FT_Library_SetLcdFilterWeights">FT_Library_SetLcdFilterWeights</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_SCALE</a></td></tr>
+<tr><td><a href="ft2-type1_tables.html#CID_Info">CID_Info</a></td><td><a href="ft2-version.html#FT_Library_Version">FT_Library_Version</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_USE_MY_METRICS</a></td></tr>
+<tr><td><a href="ft2-cff_driver.html#darkening-parameters">darkening-parameters</a></td><td><a href="ft2-list_processing.html#FT_List">FT_List</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_XXX</a></td></tr>
+<tr><td><a href="ft2-auto_hinter.html#default-script">default-script</a></td><td><a href="ft2-list_processing.html#FT_List_Add">FT_List_Add</a></td><td><a href="ft2-base_interface.html#FT_SUBGLYPH_FLAG_XXX">FT_SUBGLYPH_FLAG_XY_SCALE</a></td></tr>
 <tr><td><a href="ft2-version.html#FREETYPE_XXX">FREETYPE_MAJOR</a></td><td><a href="ft2-list_processing.html#FT_List_Destructor">FT_List_Destructor</a></td><td><a href="ft2-base_interface.html#FT_SubGlyph">FT_SubGlyph</a></td></tr>
 <tr><td><a href="ft2-version.html#FREETYPE_XXX">FREETYPE_MINOR</a></td><td><a href="ft2-list_processing.html#FT_List_Finalize">FT_List_Finalize</a></td><td><a href="ft2-header_file_macros.html#FT_SYNTHESIS_H">FT_SYNTHESIS_H</a></td></tr>
 <tr><td><a href="ft2-version.html#FREETYPE_XXX">FREETYPE_PATCH</a></td><td><a href="ft2-list_processing.html#FT_List_Find">FT_List_Find</a></td><td><a href="ft2-header_file_macros.html#FT_SYSTEM_H">FT_SYSTEM_H</a></td></tr>
@@ -295,11 +296,10 @@
 <tr><td><a href="ft2-base_interface.html#FT_Kerning_Mode">FT_KERNING_UNFITTED</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_LineCap">FT_Stroker_LineCap</a></td><td><a href="ft2-truetype_tables.html#TT_Postscript">TT_Postscript</a></td></tr>
 <tr><td><a href="ft2-base_interface.html#FT_Kerning_Mode">FT_KERNING_UNSCALED</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_LineJoin">FT_Stroker_LineJoin</a></td><td><a href="ft2-truetype_tables.html#TT_VertHeader">TT_VertHeader</a></td></tr>
 <tr><td><a href="ft2-base_interface.html#FT_Kerning_Mode">FT_Kerning_Mode</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_LineTo">FT_Stroker_LineTo</a></td><td></td></tr>
-<tr><td><a href="ft2-lcd_filtering.html#FT_LcdFilter">FT_LCD_FILTER_DEFAULT</a></td><td><a href="ft2-glyph_stroker.html#FT_Stroker_New">FT_Stroker_New</a></td><td></td></tr>
 </table>
 <hr>
 <table><tr><td width="100%"></td>
 <td><font size=-2>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
 
-<center><font size=-2>generated on Sun Dec  8 23:17:30 2013</font></center></body>
+<center><font size=-2>generated on Thu Mar  6 23:13:44 2014</font></center></body>
 </html>

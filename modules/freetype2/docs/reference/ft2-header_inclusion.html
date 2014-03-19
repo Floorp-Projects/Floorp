@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>FreeType-2.5.3 API Reference</title>
+<style type="text/css">
+  body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
+         color: #000000;
+         background: #FFFFFF; }
+
+  p { text-align: justify; }
+  h1 { text-align: center; }
+  li { text-align: justify; }
+  td { padding: 0 0.5em 0 0.5em; }
+  td.left { padding: 0 0.5em 0 0.5em;
+            text-align: left; }
+
+  a:link { color: #0000EF; }
+  a:visited { color: #51188E; }
+  a:hover { color: #FF0000; }
+
+  span.keyword { font-family: monospace;
+                 text-align: left;
+                 white-space: pre;
+                 color: darkblue; }
+
+  pre.colored { color: blue; }
+
+  ul.empty { list-style-type: none; }
+</style>
+</head>
+<body>
+
+<table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
+<td width="100%"></td>
+<td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
+<center><h1>FreeType-2.5.3 API Reference</h1></center>
+
+<center><h1>
+FreeType's header inclusion scheme
+</h1></center>
+<table align=center width="87%"><tr><td>
+<p>To be as flexible as possible (and for historical reasons), FreeType uses a very special inclusion scheme to load header files, for example</p>
+<pre class="colored">
+  #include &lt;ft2build.h&gt;                                            
+                                                                   
+  #include FT_FREETYPE_H                                           
+  #include FT_OUTLINE_H                                            
+</pre>
+<p>A compiler and its preprocessor only needs an include path to find the file &lsquo;ft2build.h&rsquo;; the exact locations and names of the other FreeType header files are hidden by preprocessor macro names, loaded by &lsquo;ft2build.h&rsquo;. The API documentation always gives the header macro name needed for a particular function.</p>
+</td></tr></table><br>
+</body>
+</html>

@@ -52,7 +52,7 @@ instructions in the file `INSTALL.UNIX' instead.
 
       The following settings are used:
 
-        platform                     win32
+        platform                     windows
         compiler                     gcc
         configuration directory      .\builds\windows
         configuration rules          .\builds\windows\w32-gcc.mk
@@ -148,7 +148,7 @@ instructions in the file `INSTALL.UNIX' instead.
 
 ----------------------------------------------------------------------
 
-Copyright 2003, 2004, 2005, 2006, 2008, 2013 by
+Copyright 2003-2006, 2008, 2013, 2014 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

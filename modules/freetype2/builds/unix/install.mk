@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002, 2003, 2006, 2013 by
+# Copyright 1996-2000, 2002, 2003, 2006, 2013, 2014 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -33,7 +33,8 @@ install: $(PROJECT_LIBRARY)
                          $(DESTDIR)$(libdir)/pkgconfig            \
                          $(DESTDIR)$(includedir)/freetype2/config \
                          $(DESTDIR)$(bindir)                      \
-                         $(DESTDIR)$(datadir)/aclocal
+                         $(DESTDIR)$(datadir)/aclocal             \
+                         $(DESTDIR)$(mandir)/man1
 	$(LIBTOOL) --mode=install $(INSTALL)                             \
                                   $(PROJECT_LIBRARY) $(DESTDIR)$(libdir)
 	-for P in $(PUBLIC_H) ; do                  \
@@ -58,6 +59,8 @@ install: $(PROJECT_LIBRARY)
           $(DESTDIR)$(datadir)/aclocal/freetype2.m4
 	$(INSTALL_SCRIPT) -m 644 $(OBJ_BUILD)/freetype2.pc \
           $(DESTDIR)$(libdir)/pkgconfig/freetype2.pc
+	$(INSTALL_DATA) $(TOP_DIR)/docs/freetype-config.1 \
+          $(DESTDIR)$(mandir)/man1/freetype-config.1
 
 
 uninstall:
@@ -69,6 +72,7 @@ uninstall:
 	-$(DELETE) $(DESTDIR)$(bindir)/freetype-config
 	-$(DELETE) $(DESTDIR)$(datadir)/aclocal/freetype2.m4
 	-$(DELETE) $(DESTDIR)$(libdir)/pkgconfig/freetype2.pc
+	-$(DELETE) $(DESTDIR)$(mandir)/man1/freetype-config.1
 
 
 check:

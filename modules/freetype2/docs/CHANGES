@@ -1,4 +1,72 @@
 
+CHANGES BETWEEN 2.5.2 and 2.5.3
+
+  I. IMPORTANT BUG FIXES
+
+    - A vulnerability was  identified and fixed in the  new CFF driver
+      (cf. http://savannah.nongnu.org/bugs/?41697;  it doesn't  have a
+      CVE number yet).  All users should upgrade.
+
+    - More  bug  fixes related  to  correct  positioning of  composite
+      glyphs.
+
+    - Many fixes to better protect against malformed input.
+
+
+  II. IMPORTANT CHANGES
+
+    - FreeType can now use the HarfBuzz library to greatly improve the
+      auto-hinting of  fonts that  use OpenType features:  Many glyphs
+      that are part  of such features but don't have  cmap entries are
+      now handled  properly, for  example small caps  or superscripts.
+      Define the configuration  macro FT_CONFIG_OPTION_USE_HARFBUZZ to
+      activate HarfBuzz support.
+
+      You need HarfBuzz version 0.9.19 or newer.
+
+      Note that HarfBuzz depends on  FreeType; this currently causes a
+      chicken-and-egg problem  that can be  solved as follows  in case
+      HarfBuzz is not yet installed on your system.
+
+        1. Compile  and  install  FreeType without  the  configuration
+           macro FT_CONFIG_OPTION_USE_HARFBUZZ.
+
+        2. Compile and install HarfBuzz.
+
+        3. Define  macro  FT_CONFIG_OPTION_USE_HARFBUZZ, then  compile
+           and install FreeType again.
+
+      With FreeType's  `configure' script the procedure  boils down to
+      configure, build, and install Freetype, then configure, compile,
+      and  install  HarfBuzz,  then configure,  compile,  and  install
+      FreeType again (after executing `make distclean').
+
+    - All  libraries FreeType  depends on  are now  checked using  the
+      `pkg-config' configuration files  first, followed by alternative
+      methods.
+
+    - The  new  value  `auto'  for the  various  `--with-XXX'  library
+      options   (for   example   `--with-harfbuzz=auto')   makes   the
+      `configure' script automatically link to the libraries it finds.
+      This is now the default.
+
+    - In case FreeType's `configure' script  can't find a library, you
+      can  pass environment  variables to  circumvent pkg-config,  and
+      those variables  have been  harmonized as  a consequence  of the
+      changes mentioned above:
+
+        LIBZ           -> removed; use LIBZ_CFLAGS and LIBZ_LIBS
+        LIBBZ2         -> removed; use BZIP2_CFLAGS and BZIP2_LIBS
+        LIBPNG_LDFLAGS -> LIBPNG_LIBS
+
+      `./configure --help' shows all available environment variables.
+
+    - The `freetype-config'  script now understands  option `--static'
+      to emit static linking information.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.5.1 and 2.5.2
 
   I. IMPORTANT BUG FIXES
