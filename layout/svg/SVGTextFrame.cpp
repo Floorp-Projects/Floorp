@@ -4152,7 +4152,8 @@ SVGTextFrame::GetStartPositionOfChar(nsIContent* aContent,
   // We need to return the start position of the whole glyph.
   uint32_t startIndex = it.GlyphStartTextElementCharIndex();
 
-  NS_ADDREF(*aResult = new DOMSVGPoint(mPositions[startIndex].mPosition));
+  NS_ADDREF(*aResult =
+    new DOMSVGPoint(ToPoint(mPositions[startIndex].mPosition)));
   return NS_OK;
 }
 
@@ -4184,10 +4185,10 @@ SVGTextFrame::GetEndPositionOfChar(nsIContent* aContent,
 
   // The end position is the start position plus the advance in the direction
   // of the glyph's rotation.
-  gfxMatrix m;
-  m.Translate(mPositions[startIndex].mPosition);
-  m.Rotate(mPositions[startIndex].mAngle);
-  gfxPoint p = m.Transform(gfxPoint(advance / mFontSizeScaleFactor, 0));
+  Matrix m =
+    Matrix::Rotation(mPositions[startIndex].mAngle) *
+    Matrix::Translation(ToPoint(mPositions[startIndex].mPosition));
+  Point p = m * Point(advance / mFontSizeScaleFactor, 0);
 
   NS_ADDREF(*aResult = new DOMSVGPoint(p));
   return NS_OK;
