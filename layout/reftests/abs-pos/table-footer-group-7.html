@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      table {
+        margin: 0;
+        padding: 0;
+        width: 25px;
+        height: 50px;
+        border-collapse: collapse;
+      }
+      td {
+        margin: 0;
+        padding: 0;
+      }
+      #rel {
+        position: relative;
+        margin: 0;
+        padding: 0;
+      }
+      #abs {
+        position: absolute;
+        margin: 0;
+        padding: 0;
+        bottom: 25px;
+        right: 25px;
+        width: 50px;
+        height: 50px;
+        background-color: green;
+      }
+      #bottomright {
+        position: absolute;
+        margin: 0;
+        padding: 0;
+        bottom: 0;
+        right: 0;
+        width: 50px;
+        height: 50px;
+        overflow: visible;
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    The green square should not overlap the blue square.
+    <div id="bottomright">
+      <table>
+        <colgroup>
+          <col style="width: 20%">
+          <col>
+        </colgroup>
+        <tfoot id="rel">
+          <tr>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>
+              <div id="abs"></div>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </body>
+</html>
