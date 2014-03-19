@@ -376,9 +376,9 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 bool
 Constructor(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   const JS::Value& v =
-    js::GetFunctionNativeReserved(callee,
+    js::GetFunctionNativeReserved(&args.callee(),
                                   CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT);
   const JSNativeHolder* nativeHolder =
     static_cast<const JSNativeHolder*>(v.toPrivate());
