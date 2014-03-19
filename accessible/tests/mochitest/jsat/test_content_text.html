@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu content integration</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="jsatcommon.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      var doc = currentTabDocument();
+      var textTest = new AccessFuContentTest(
+        [
+          // Read-only text tests
+          [ContentMessages.simpleMoveFirst, {
+            speak: 'These are my awards, Mother. From Army. ' +
+              'The seal is for marksmanship, and the gorilla is ' +
+              'for sand racing. Text content test document'
+          }],
+          [ContentMessages.moveNextBy('word'), {
+            speak: 'These',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 0,
+              toIndex: 5
+            }]
+          }],
+          [ContentMessages.moveNextBy('word'), {
+            speak: 'are',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 6,
+              toIndex: 9
+            }]
+          }],
+          [ContentMessages.moveNextBy('word'), {
+            speak: 'my',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 10,
+              toIndex: 12
+            }]
+          }],
+          [ContentMessages.moveNextBy('word'), {
+            speak: 'awards,',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 13,
+              toIndex: 20
+            }]
+          }],
+          [ContentMessages.moveNextBy('word'), {
+            speak: 'Mother.',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 21,
+              toIndex: 28
+            }]
+          }],
+          [ContentMessages.movePreviousBy('word'), {
+            speak: 'awards,',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 13,
+              toIndex: 20
+            }]
+          }],
+          [ContentMessages.movePreviousBy('word'), {
+            speak: 'my',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 10,
+              toIndex: 12
+            }]
+          }],
+          [ContentMessages.movePreviousBy('word'), {
+            speak: 'are',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 6,
+              toIndex: 9
+            }]
+          }],
+          [ContentMessages.movePreviousBy('word'), {
+            speak: 'These',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 0,
+              toIndex: 5
+            }]
+          }],
+          // XXX: Bug 980510: doing next after text traversal should
+          // bring us to the next paragraph.
+          [ContentMessages.simpleMoveNext, {
+            speak: 'You\'re a good guy, mon frere. ' +
+              'That means brother in French. ' +
+              'I don\'t know how I know that. ' +
+              'I took four years of Spanish.',
+            speak_checkFunc: 'todo_is' // Bug 980510
+          }],
+          // XXX: extra move op here because of bug 980510.
+          [ContentMessages.simpleMoveNext, {
+            speak: 'You\'re a good guy, mon frere. ' +
+              'That means brother in French. ' +
+              'I don\'t know how I know that. ' +
+              'I took four years of Spanish.',
+          }],
+          // XXX: Word boundary should be past the apostraphe.
+          [ContentMessages.moveNextBy('word'), {
+            speak: 'You\'re',
+            speak_checkFunc: 'todo_is', // Bug 980509
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 0,
+              toIndex: 6
+            }],
+            android_checkFunc: 'todo' // Bug 980512
+          }],
+
+          // Editable text tests.
+          [ContentMessages.focusSelector('textarea'), {
+            speak: 'Please refrain from Mayoneggs during this ' +
+              'salmonella scare. text area'
+          }],
+          [null, { // When we first focus, caret is at 0.
+              android: [{
+                eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
+                brailleOutput: {
+                  selectionStart: 0,
+                  selectionEnd: 0
+                }
+              }]
+            }
+          ],
+          [ContentMessages.activateCurrent(10), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 0,
+              toIndex: 10
+            }]
+          }],
+          [null, {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
+              brailleOutput: {
+                selectionStart: 10,
+                selectionEnd: 10
+              }
+            }]
+          }],
+          [ContentMessages.activateCurrent(20), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 10,
+              toIndex: 20
+            }]
+          }],
+          [null, {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
+              brailleOutput: {
+                selectionStart: 20,
+                selectionEnd: 20
+              }
+            }]
+          }],
+          [ContentMessages.moveCaretNextBy('word'), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 20,
+              toIndex: 29
+            }]
+          }],
+          [ContentMessages.moveCaretNextBy('word'), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 29,
+              toIndex: 36
+            }]
+          }],
+          [ContentMessages.moveCaretNextBy('character'), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 36,
+              toIndex: 37
+            }]
+          }],
+          [ContentMessages.moveCaretNextBy('character'), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 37,
+              toIndex: 38
+            }]
+          }],
+          [ContentMessages.moveCaretNextBy('paragraph'), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 38,
+              toIndex: 59
+            }]
+          }],
+          [ContentMessages.moveCaretPreviousBy('word'), {
+            android: [{
+              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+              fromIndex: 53,
+              toIndex: 59
+            }]
+          }]
+        ]);
+
+      textTest.start(function () {
+        closeBrowserWindow();
+        SimpleTest.finish();
+      });
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(
+      function () {
+        openBrowserWindow(
+          doTest,
+          getRootDirectory(window.location.href) + "doc_content_text.html");
+        });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for text editing and navigating"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=972047">Mozilla Bug 933808</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>
