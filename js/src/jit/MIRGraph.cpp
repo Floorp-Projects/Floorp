@@ -335,6 +335,17 @@ MBasicBlock::increaseSlots(size_t num)
     return slots_.growBy(graph_.alloc(), num);
 }
 
+bool
+MBasicBlock::ensureHasSlots(size_t num)
+{
+    size_t depth = stackDepth() + num;
+    if (depth > nslots()) {
+        if (!increaseSlots(depth - nslots()))
+            return false;
+    }
+    return true;
+}
+
 void
 MBasicBlock::copySlots(MBasicBlock *from)
 {
