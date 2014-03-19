@@ -328,11 +328,15 @@ nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
   // When the parent window is moved, adjust any child popups. Dismissable
   // menus and panels are expected to roll up when a window is moved, so there
   // is no need to check these popups, only the noautohide popups.
+
+  // The items are added to a list so that they can be adjusted bottom to top.
+  nsTArray<nsMenuPopupFrame *> list;
+
   nsMenuChainItem* item = mNoHidePanels;
   while (item) {
     // only move popups that are within the same window and where auto
     // positioning has not been disabled
-    nsMenuPopupFrame* frame= item->Frame();
+    nsMenuPopupFrame* frame = item->Frame();
     if (frame->GetAutoPosition()) {
       nsIContent* popup = frame->GetContent();
       if (popup) {
@@ -342,7 +346,7 @@ nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
           if (window) {
             window = window->GetPrivateRoot();
             if (window == aWindow) {
-              frame->SetPopupPosition(nullptr, true, false);
+              list.AppendElement(frame);
             }
           }
         }
@@ -350,6 +354,17 @@ nsXULPopupManager::AdjustPopupsOnWindowChange(nsPIDOMWindow* aWindow)
     }
 
     item = item->GetParent();
+  }
+
+  for (int32_t l = list.Length() - 1; l >= 0; l--) {
+    list[l]->SetPopupPosition(nullptr, true, false);
+  }
+}
+
+void nsXULPopupManager::AdjustPopupsOnWindowChange(nsIPresShell* aPresShell)
+{
+  if (aPresShell->GetDocument()) {
+    AdjustPopupsOnWindowChange(aPresShell->GetDocument()->GetWindow());
   }
 }
 
