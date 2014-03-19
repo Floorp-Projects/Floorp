@@ -31,11 +31,6 @@ class nsPresContext;
 class nsIContent;
 class imgRequestProxy;
 
-#ifdef LoadImage
-// Undefine LoadImage to prevent naming conflict with Windows.
-#undef LoadImage
-#endif
-
 class nsImageLoadingContent : public nsIImageLoadingContent,
                               public imgIOnloadBlocker
 {
