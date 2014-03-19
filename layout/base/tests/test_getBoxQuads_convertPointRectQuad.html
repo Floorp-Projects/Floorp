@@ -12,13 +12,6 @@
 var f1d;
 var text;
 var suppressedText;
-var suppressedText2;
-var comment;
-var fragment;
-var openedWindow;
-var zeroPoint = new DOMPoint(0,0);
-var zeroRect = new DOMRect(0,0,0,0);
-var zeroQuad = new DOMQuad(zeroRect);
 var notInDocument = document.createElement('div');
 
 function isEval(expr, b) {
@@ -45,105 +38,6 @@ function makeQuadsExpr(fromStr, options) {
   return fromStr + ".getBoxQuads({" + getBoxQuadsOptionParts.join(',') + "})";
 }
 
-function makePointExpr(fromStr, options, x, y) {
-  var convertPointOptionParts = [];
-  if ('box' in options) {
-    convertPointOptionParts.push("fromBox:'" + options.box + "'");
-  }
-  if ('toBox' in options) {
-    convertPointOptionParts.push("toBox:'" + options.toBox + "'");
-  }
-  return ('toStr' in options ? options.toStr : "document") +
-    ".convertPointFromNode(new DOMPoint(" + x + "," + y + ")," + fromStr + ",{" +
-    convertPointOptionParts.join(",") + "})";
-}
-
-function checkConvertPoints(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
-  var selfQuads = eval(fromStr).getBoxQuads(
-    {box:options.box == "" ? "border" : options.box,
-     relativeTo:eval(fromStr)});
-  var boxWidth = selfQuads[0].bounds.width;
-  var boxHeight = selfQuads[0].bounds.height;
-
-  var convertTopLeftPointExpr = makePointExpr(fromStr, options, 0, 0);
-  var topLeft = eval(convertTopLeftPointExpr);
-  isApprox(topLeft.x, x1, convertTopLeftPointExpr + ".x", options);
-  isApprox(topLeft.y, y1, convertTopLeftPointExpr + ".y", options);
-
-  var convertTopRightPointExpr = makePointExpr(fromStr, options, boxWidth, 0);
-  var topRight = eval(convertTopRightPointExpr);
-  isApprox(topRight.x, x2, convertTopRightPointExpr + ".x", options);
-  isApprox(topRight.y, y2, convertTopRightPointExpr + ".y", options);
-
-  var convertBottomRightPointExpr = makePointExpr(fromStr, options, boxWidth, boxHeight);
-  var bottomRight = eval(convertBottomRightPointExpr);
-  isApprox(bottomRight.x, x3, convertBottomRightPointExpr + ".x", options);
-  isApprox(bottomRight.y, y3, convertBottomRightPointExpr + ".y", options);
-
-  var convertBottomLeftPointExpr = makePointExpr(fromStr, options, 0, boxHeight);
-  var bottomLeft = eval(convertBottomLeftPointExpr);
-  isApprox(bottomLeft.x, x4, convertBottomLeftPointExpr + ".x", options);
-  isApprox(bottomLeft.y, y4, convertBottomLeftPointExpr + ".y", options);
-}
-
-function checkConvertRect(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
-  var selfQuads = eval(fromStr).getBoxQuads(
-    {box:options.box == "" ? "border" : options.box,
-     relativeTo:eval(fromStr)});
-  var boxWidth = selfQuads[0].bounds.width;
-  var boxHeight = selfQuads[0].bounds.height;
-
-  var convertPointOptionParts = [];
-  if ('box' in options) {
-    convertPointOptionParts.push("fromBox:'" + options.box + "'");
-  }
-  if ('toBox' in options) {
-    convertPointOptionParts.push("toBox:'" + options.toBox + "'");
-  }
-
-  var convertRectExpr = ('toStr' in options ? options.toStr : "document") +
-    ".convertRectFromNode(new DOMRect(0,0," + boxWidth + "," + boxHeight + ")," +
-    fromStr + ",{" + convertPointOptionParts.join(",") + "})";
-  var quad = eval(convertRectExpr);
-  isApprox(quad.p1.x, x1, convertRectExpr + ".p1.x", options);
-  isApprox(quad.p1.y, y1, convertRectExpr + ".p1.y", options);
-  isApprox(quad.p2.x, x2, convertRectExpr + ".p2.x", options);
-  isApprox(quad.p2.y, y2, convertRectExpr + ".p2.y", options);
-  isApprox(quad.p3.x, x3, convertRectExpr + ".p3.x", options);
-  isApprox(quad.p3.y, y3, convertRectExpr + ".p3.y", options);
-  isApprox(quad.p4.x, x4, convertRectExpr + ".p4.x", options);
-  isApprox(quad.p4.y, y4, convertRectExpr + ".p4.y", options);
-}
-
-function checkConvertQuad(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
-  var selfQuads = eval(fromStr).getBoxQuads(
-    {box:options.box == "" ? "border" : options.box,
-     relativeTo:eval(fromStr)});
-  var boxWidth = selfQuads[0].bounds.width;
-  var boxHeight = selfQuads[0].bounds.height;
-
-  var convertPointOptionParts = [];
-  if ('box' in options) {
-    convertPointOptionParts.push("fromBox:'" + options.box + "'");
-  }
-  if ('toBox' in options) {
-    convertPointOptionParts.push("toBox:'" + options.toBox + "'");
-  }
-
-  var convertQuadExpr = ('toStr' in options ? options.toStr : "document") +
-    ".convertQuadFromNode(new DOMQuad(new DOMRect(0,0," + boxWidth + "," + boxHeight + "))," +
-    fromStr + ",{" + convertPointOptionParts.join(",") + "})";
-  var quad = eval(convertQuadExpr);
-  isApprox(quad.p1.x, x1, convertQuadExpr + ".p1.x", options);
-  isApprox(quad.p1.y, y1, convertQuadExpr + ".p1.y", options);
-  isApprox(quad.p2.x, x2, convertQuadExpr + ".p2.x", options);
-  isApprox(quad.p2.y, y2, convertQuadExpr + ".p2.y", options);
-  isApprox(quad.p3.x, x3, convertQuadExpr + ".p3.x", options);
-  isApprox(quad.p3.y, y3, convertQuadExpr + ".p3.y", options);
-  isApprox(quad.p4.x, x4, convertQuadExpr + ".p4.x", options);
-  isApprox(quad.p4.y, y4, convertQuadExpr + ".p4.y", options);
-}
-
 function checkQuadIsRect(fromStr, options, x, y, w, h) {
   var quadsExpr = makeQuadsExpr(fromStr, options);
   var quads = eval(quadsExpr);
@@ -162,10 +56,6 @@ function checkQuadIsRect(fromStr, options, x, y, w, h) {
   isApprox(q.bounds.top, y, quadsExpr + " checking quad.bounds.top", options);
   isApprox(q.bounds.width, w, quadsExpr + " checking quad.bounds.width", options);
   isApprox(q.bounds.height, h, quadsExpr + " checking quad.bounds.height", options);
-
-  checkConvertPoints(fromStr, options, x, y, x + w, y, x + w, y + h, x, y + h);
-  checkConvertRect(fromStr, options, x, y, x + w, y, x + w, y + h, x, y + h);
-  checkConvertQuad(fromStr, options, x, y, x + w, y, x + w, y + h, x, y + h);
 }
 
 function checkQuadIsQuad(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -186,33 +76,6 @@ function checkQuadIsQuad(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4) {
   isApprox(q.bounds.top, Math.min(y1,y2,y3,y4), quadsExpr + " checking quad.bounds.top", options);
   isApprox(q.bounds.right, Math.max(x1,x2,x3,x4), quadsExpr + " checking quad.bounds.right", options);
   isApprox(q.bounds.bottom, Math.max(y1,y2,y3,y4), quadsExpr + " checking quad.bounds.bottom", options);
-
-  checkConvertPoints(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4);
-  checkConvertRect(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4);
-  checkConvertQuad(fromStr, options, x1, y1, x2, y2, x3, y3, x4, y4);
-}
-
-function checkException(expr, name) {
-  try {
-    eval(expr);
-    ok(false, "Exception should have been thrown for " + expr);
-  } catch (ex) {
-    is(ex.name, name, "Checking exception type for " + expr);
-  }
-}
-
-function checkNotFound(fromStr, toStr, x1, y1, x2, y2) {
-  var convertPointExpr = toStr + ".convertPointFromNode(new DOMPoint(" + x1 +
-    "," + y1 + ")," + fromStr + ")";
-  checkException(convertPointExpr, "NotFoundError");
-
-  var convertRectExpr = toStr + ".convertRectFromNode(new DOMRect(" + x1 +
-    "," + y1 + "," + x2 + "," + y2 + ")," + fromStr + ")";
-  checkException(convertRectExpr, "NotFoundError");
-
-  var convertQuadExpr = toStr + ".convertQuadFromNode(new DOMQuad(new DOMRect(" + x1 +
-    "," + y1 + "," + x2 + "," + y2 + "))," + fromStr + ")";
-  checkException(convertQuadExpr, "NotFoundError");
 }
 </script>
 <style>
@@ -273,7 +136,6 @@ TextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextTextText
 ></div>
 
 <div id="suppressedTextContainer"> </div>
-<div id="suppressedTextContainer2"> </div>
 
 <div id="commentContainer"><!-- COMMENT --></div>
 
@@ -363,9 +225,6 @@ function runTest() {
   f1d = f1.contentWindow.f1d;
   text = textContainer.firstChild;
   suppressedText = suppressedTextContainer.firstChild;
-  suppressedText2 = suppressedTextContainer2.firstChild;
-  comment = commentContainer.firstChild;
-  fragment = document.createDocumentFragment();
 
   // Test basic BoxQuadOptions.box.
   var dX = d.getBoundingClientRect().left;
@@ -433,8 +292,6 @@ function runTest() {
   var tableY = table.getClientRects()[0].top;
   checkQuadIsRect("d", {toStr:"table"},
                   dX - tableX, dY - tableY, dW, dH);
-  isEval("ibSplit.convertPointFromNode(zeroPoint,d).x", dX - ibSplitPart1X);
-  isEval("table.convertPointFromNode(zeroPoint,d).x", dX - table.getClientRects()[0].left);
 
   // Test boxes generated by block splitting. Check for borders being placed correctly.
   var colSplitY = colSplit.getClientRects()[0].top;
@@ -485,34 +342,40 @@ function runTest() {
   isEval("suppressedText.getBoxQuads()[0].bounds.left", suppressedTextContainerX);
   isEval("suppressedText.getBoxQuads()[0].bounds.width", 0);
 
-  var suppressedTextContainer2X = suppressedTextContainer2.getBoundingClientRect().left;
-  isEval("document.convertPointFromNode(zeroPoint,suppressedText2).x",
-         suppressedTextContainer2X);
+  var comment = commentContainer.firstChild;
+  try {
+    comment.getBoxQuads();
+    ok(false, "Exception should have been thrown");
+  } catch (ex) {
+    is(ex.name, "TypeError",
+       "Exception for comment.getBoxQuads()");
+  }
+  try {
+    d.getBoxQuads({relativeTo:comment});
+    ok(false, "Exception should have been thrown");
+  } catch (ex) {
+    is(ex.name, "TypeError",
+       "Exception for getBoxQuads({relativeTo:comment})");
+  }
 
-  checkException("comment.getBoxQuads()", "TypeError");
-  checkException("d.getBoxQuads({relativeTo:comment})", "TypeError");
-  checkException("comment.convertPointFromNode(zeroPoint,document)", "TypeError");
-  checkException("document.convertPointFromNode(zeroPoint,comment)", "TypeError");
-  checkException("comment.convertRectFromNode(zeroRect,document)", "TypeError");
-  checkException("document.convertRectFromNode(zeroRect,comment)", "TypeError");
-  checkException("comment.convertQuadFromNode(zeroQuad,document)", "TypeError");
-  checkException("document.convertQuadFromNode(zeroQuad,comment)", "TypeError");
-
-  checkException("fragment.getBoxQuads()", "TypeError");
-  checkException("d.getBoxQuads({relativeTo:fragment})", "TypeError");
-  checkException("fragment.convertPointFromNode(zeroPoint,document)", "TypeError");
-  checkException("document.convertPointFromNode(zeroPoint,fragment)", "TypeError");
-  checkException("fragment.convertRectFromNode(zeroRect,document)", "TypeError");
-  checkException("document.convertRectFromNode(zeroRect,fragment)", "TypeError");
-  checkException("fragment.convertQuadFromNode(zeroQuad,document)", "TypeError");
-  checkException("document.convertQuadFromNode(zeroQuad,fragment)", "TypeError");
+  var fragment = document.createDocumentFragment();
+  try {
+    fragment.getBoxQuads();
+    ok(false, "Exception should have been thrown");
+  } catch (ex) {
+    is(ex.name, "TypeError",
+       "Exception for fragment.getBoxQuads()");
+  }
+  try {
+    d.getBoxQuads({relativeTo:fragment});
+    ok(false, "Exception should have been thrown");
+  } catch (ex) {
+    is(ex.name, "TypeError",
+       "Exception for getBoxQuads({relativeTo:fragment})");
+  }
 
   isEval("displayNone.getBoxQuads().length", 0);
   isEval("notInDocument.getBoxQuads().length", 0);
-  checkNotFound("displayNone", "document", 1, 2, 3, 4);
-  checkNotFound("notInDocument", "document", 1, 2, 3, 4);
-  checkNotFound("document", "displayNone", 1, 2, 3, 4);
-  checkNotFound("document", "notInDocument", 1, 2, 3, 4);
 
   // Test an overflow:hidden version of d. overflow:hidden should not affect
   // the quads, basically.
@@ -576,7 +439,7 @@ function runTest() {
   var rot45tcX = rot45TransformContainer.getBoundingClientRect().left;
   var rot45tcY = rot45TransformContainer.getBoundingClientRect().top;
   var halfDiagonal = 100/Math.sqrt(2);
-  checkQuadIsQuad("rot45Transform", {tolerance:0.01},
+  checkQuadIsQuad("rot45Transform", {tolerance:0.0001},
                   rot45tcX + 50, rot45tcY + 50 - halfDiagonal,
                   rot45tcX + 50 + halfDiagonal, rot45tcY + 50,
                   rot45tcX + 50, rot45tcY + 50 + halfDiagonal,
@@ -601,13 +464,13 @@ function runTest() {
   // Test 3D transforms.
   var t3tcX = threeDTransformContainer.getBoundingClientRect().left;
   var t3tcY = threeDTransformContainer.getBoundingClientRect().top;
-  checkQuadIsQuad("threeDTransform", {tolerance:0.01},
+  checkQuadIsQuad("threeDTransform", {tolerance:0.0001},
                   t3tcX + 59.446714, t3tcY - 18.569847,
                   t3tcX + 129.570778, t3tcY + 13.540874,
                   t3tcX + 129.570778, t3tcY + 100,
                   t3tcX + 59.446714, t3tcY + 100);
   // Test nested 3D transforms (without preserve-3d).
-  checkQuadIsQuad("threeDTransformChild", {tolerance:0.01},
+  checkQuadIsQuad("threeDTransformChild", {tolerance:0.0001},
                   t3tcX + 89.395061, t3tcY + 2.243033,
                   t3tcX + 113.041727, t3tcY - 2.758530,
                   t3tcX + 113.041727, t3tcY + 52.985921,
@@ -615,11 +478,11 @@ function runTest() {
   // Test preserve-3D.
   var p3dtcX = preserve3DTransformContainer.getBoundingClientRect().left;
   var p3dtcY = preserve3DTransformContainer.getBoundingClientRect().top;
-  checkQuadIsRect("preserve3DTransformChild", {tolerance:0.01},
+  checkQuadIsRect("preserve3DTransformChild", {tolerance:0.0001},
                   p3dtcX, p3dtcY, 200, 50,
                   {tolerance:0.0001});
   // Test mapping back into preserve-3D.
-  checkQuadIsRect("d", {toStr:"preserve3DTransformChild",tolerance:0.01},
+  checkQuadIsRect("d", {toStr:"preserve3DTransformChild",tolerance:0.0001},
                   dX - p3dtcX, dY - p3dtcY, dW, dH);
 
   // Test SVG.
@@ -644,16 +507,15 @@ function runTest() {
 
   // Test that converting between nodes in different toplevel browsing contexts
   // throws an exception.
-  openedWindow = window.open("data:text/html,<div id='d'>","");
+  var openedWindow = window.open("data:text/html,<div id='d'>","");
   openedWindow.addEventListener("load", function() {
-    checkException("openedWindow.d.getBoxQuads({relativeTo:document})", "NotFoundError");
-    checkException("document.getBoxQuads({relativeTo:openedWindow.d})", "NotFoundError");
-    checkException("openedWindow.d.convertPointFromNode(zeroPoint,document)", "NotFoundError");
-    checkException("document.convertPointFromNode(zeroPoint,openedWindow.d)", "NotFoundError");
-    checkException("openedWindow.d.convertRectFromNode(zeroRect,document)", "NotFoundError");
-    checkException("document.convertRectFromNode(zeroRect,openedWindow.d)", "NotFoundError");
-    checkException("openedWindow.d.convertQuadFromNode(zeroQuad,document)", "NotFoundError");
-    checkException("document.convertQuadFromNode(zeroQuad,openedWindow.d)", "NotFoundError");
+    try {
+      openedWindow.d.getBoxQuads({relativeTo:document});
+      ok(false, "Exception should have been thrown");
+    } catch (ex) {
+      is(ex.name, "NotFoundError",
+         "Exception for getBoxQuads on nodes in different toplevel browsing contexts");
+    }
     openedWindow.close();
 
     SimpleTest.finish();
