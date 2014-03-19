@@ -545,6 +545,7 @@ ArrayBufferObject::releaseData(FreeOp *fop)
 void
 ArrayBufferObject::setDataPointer(void *data, OwnsState ownsData)
 {
+    MOZ_ASSERT_IF(!is<SharedArrayBufferObject>(), data != nullptr);
     setSlot(DATA_SLOT, PrivateValue(data));
     setOwnsData(ownsData);
 }
