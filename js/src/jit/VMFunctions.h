@@ -617,9 +617,9 @@ bool SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, Handl
 
 bool InterruptCheck(JSContext *cx);
 
-void *MallocWrapper(JSRuntime *rt, size_t nbytes);
+HeapSlot *NewSlots(JSRuntime *rt, unsigned nslots);
 JSObject *NewCallObject(JSContext *cx, HandleScript script,
-                        HandleShape shape, HandleTypeObject type);
+                        HandleShape shape, HandleTypeObject type, HeapSlot *slots);
 JSObject *NewStringObject(JSContext *cx, HandleString str);
 
 bool SPSEnter(JSContext *cx, HandleScript script);
