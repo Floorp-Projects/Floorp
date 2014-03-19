@@ -290,3 +290,30 @@ registerCleanupFunction(tearDown);
 
 waitForExplicitFinish();
 
+/**
+ * @return a promise that resolves when the tooltip is shown
+ */
+function assertTooltipShownOn(tooltip, element) {
+  return Task.spawn(function*() {
+    let isTarget = yield isHoverTooltipTarget(tooltip, element);
+    ok(isTarget, "The element is a tooltip target");
+  });
+}
+
+/**
+ * Given a tooltip object instance (see Tooltip.js), checks if it is set to
+ * toggle and hover and if so, checks if the given target is a valid hover target.
+ * This won't actually show the tooltip (the less we interact with XUL panels
+ * during test runs, the better).
+ * @return a promise that resolves when the answer is known. Also, this will
+ * delegate to a function in the rule-view which will insert content into the
+ * tooltip
+ */
+function isHoverTooltipTarget(tooltip, target) {
+  if (!tooltip._basedNode || !tooltip.panel) {
+    return promise.reject(new Error("The tooltip passed isn't set to toggle on hover or is not a tooltip"));
+  }
+  // The tooltip delegates to a user defined cb that inserts content in the tooltip
+  // when calling isValidHoverTarget
+  return tooltip.isValidHoverTarget(target);
+}
