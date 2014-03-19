@@ -165,7 +165,6 @@ extern const Class IntlClass;
 extern const Class JSONClass;
 extern const Class MathClass;
 
-class ArrayBufferObject;
 class GlobalObject;
 class MapObject;
 class NewObjectCache;
