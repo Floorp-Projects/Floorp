@@ -2169,7 +2169,7 @@ js::SetMarkStackLimit(JSRuntime *rt, size_t limit)
 }
 
 void
-js::MarkCompartmentActive(StackFrame *fp)
+js::MarkCompartmentActive(InterpreterFrame *fp)
 {
     fp->script()->compartment()->zone()->active = true;
 }

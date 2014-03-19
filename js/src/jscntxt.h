@@ -320,7 +320,7 @@ class ExclusiveContext : public ThreadSafeContext
 
     /*
      * "Entering" a compartment changes cx->compartment (which changes
-     * cx->global). Note that this does not push any StackFrame which means
+     * cx->global). Note that this does not push any InterpreterFrame which means
      * that it is possible for cx->fp()->compartment() != cx->compartment.
      * This is not a problem since, in general, most places in the VM cannot
      * know that they were called from script (e.g., they may have been called
@@ -515,7 +515,7 @@ struct JSContext : public js::ExclusiveContext,
     bool currentlyRunningInJit() const {
         return mainThread().activation()->isJit();
     }
-    js::StackFrame *interpreterFrame() const {
+    js::InterpreterFrame *interpreterFrame() const {
         return mainThread().activation()->asInterpreter()->current();
     }
     js::InterpreterRegs &interpreterRegs() const {

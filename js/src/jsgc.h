@@ -703,10 +703,10 @@ js_FinishGC(JSRuntime *rt);
 
 namespace js {
 
-class StackFrame;
+class InterpreterFrame;
 
 extern void
-MarkCompartmentActive(js::StackFrame *fp);
+MarkCompartmentActive(js::InterpreterFrame *fp);
 
 extern void
 TraceRuntime(JSTracer *trc);
