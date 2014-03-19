@@ -65,8 +65,6 @@ inline bool IsSpaceCharacter(char aChar) {
          aChar == '\f';
 }
 class Element;
-struct BoxQuadOptions;
-class DOMQuad;
 class EventHandlerNonNull;
 class OnErrorEventHandlerNonNull;
 template<typename T> class Optional;
@@ -280,10 +278,6 @@ private:
 class nsINode : public mozilla::dom::EventTarget
 {
 public:
-  typedef mozilla::dom::BoxQuadOptions BoxQuadOptions;
-  typedef mozilla::dom::DOMQuad DOMQuad;
-  typedef mozilla::ErrorResult ErrorResult;
-
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 
   // Among the sub-classes that inherit (directly or indirectly) from nsINode,
@@ -1614,10 +1608,6 @@ public:
   // ParentNode methods
   mozilla::dom::Element* GetFirstElementChild() const;
   mozilla::dom::Element* GetLastElementChild() const;
-
-  void GetBoxQuads(const BoxQuadOptions& aOptions,
-                   nsTArray<nsRefPtr<DOMQuad> >& aResult,
-                   mozilla::ErrorResult& aRv);
 
 protected:
 
