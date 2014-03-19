@@ -608,6 +608,8 @@ ArrayMetaTypeDescr::create(JSContext *cx,
     if (!prototypeObj)
         return nullptr;
 
+    obj->initReservedSlot(JS_DESCR_SLOT_PROTO, ObjectValue(*prototypeObj));
+
     if (!LinkConstructorAndPrototype(cx, obj, prototypeObj))
         return nullptr;
 
@@ -978,6 +980,8 @@ StructMetaTypeDescr::create(JSContext *cx,
         cx, CreatePrototypeObjectForComplexTypeInstance(cx, structTypePrototype));
     if (!prototypeObj)
         return nullptr;
+
+    descr->initReservedSlot(JS_DESCR_SLOT_PROTO, ObjectValue(*prototypeObj));
 
     if (!LinkConstructorAndPrototype(cx, descr, prototypeObj))
         return nullptr;

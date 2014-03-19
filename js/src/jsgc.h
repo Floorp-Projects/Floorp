@@ -513,13 +513,16 @@ class ArenaLists
      * run the finalizers over unitialized bytes from free things.
      */
     void purge() {
-        for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
-            FreeSpan *headSpan = &freeLists[i];
-            if (!headSpan->isEmpty()) {
-                ArenaHeader *aheader = headSpan->arenaHeader();
-                aheader->setFirstFreeSpan(headSpan);
-                headSpan->initAsEmpty();
-            }
+        for (size_t i = 0; i != FINALIZE_LIMIT; ++i)
+            purge(AllocKind(i));
+    }
+
+    void purge(AllocKind i) {
+        FreeSpan *headSpan = &freeLists[i];
+        if (!headSpan->isEmpty()) {
+            ArenaHeader *aheader = headSpan->arenaHeader();
+            aheader->setFirstFreeSpan(headSpan);
+            headSpan->initAsEmpty();
         }
     }
 
@@ -622,8 +625,11 @@ class ArenaLists
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
     static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
 
+    void wipeDuringParallelExecution(JSRuntime *rt);
+
   private:
     inline void finalizeNow(FreeOp *fop, AllocKind thingKind);
+    inline void forceFinalizeNow(FreeOp *fop, AllocKind thingKind);
     inline void queueForForegroundSweep(FreeOp *fop, AllocKind thingKind);
     inline void queueForBackgroundSweep(FreeOp *fop, AllocKind thingKind);
 
@@ -697,10 +703,10 @@ js_FinishGC(JSRuntime *rt);
 
 namespace js {
 
-class StackFrame;
+class InterpreterFrame;
 
 extern void
-MarkCompartmentActive(js::StackFrame *fp);
+MarkCompartmentActive(js::InterpreterFrame *fp);
 
 extern void
 TraceRuntime(JSTracer *trc);

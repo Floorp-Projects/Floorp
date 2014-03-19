@@ -1169,19 +1169,19 @@
 #include tab-shape.inc.svg
 
 #ifndef XP_UNIX
-    <svg:clipPath id="windows-keyhole-forward-clip-path" clipPathUnits="objectBoundingBox">
-      <svg:path d="m 0,0 c .3,.25 .3,.75, 0,1 l 1,0 0,-1 z"/>
+    <svg:clipPath id="windows-keyhole-forward-clip-path" clipPathUnits="userSpaceOnUse">
+      <svg:path d="M 0,0 a 16 16 0 0 1 0,24 l 10000,0 l 0,-24 l -10000,0 z"/>
     </svg:clipPath>
     <svg:clipPath id="windows-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m 0,-5 l 0,7.8 c 2.5,3.2 4,6.2 4,10.2 c 0,4 -1.5,7 -4,10 l 0,22l10000,0 l 0,-50 l -10000,0 z"/>
+      <svg:path d="M -1,1 a 16 16 0 0 1 0,24 l 10000,0 l 0,-24 l -10000,0 z"/>
     </svg:clipPath>
 #endif
 #ifdef XP_MACOSX
-    <svg:clipPath id="osx-keyhole-forward-clip-path" clipPathUnits="objectBoundingBox">
-      <svg:path d="M 0,0 C 0.15,0.12 0.25,0.3 0.25,0.5 0.25,0.7 0.15,0.88 0,1 L 1,1 1,0 0,0 z"/>
+    <svg:clipPath id="osx-keyhole-forward-clip-path" clipPathUnits="userSpaceOnUse">
+      <svg:path d="M 0,0 a 16 16 0 0 1 0,24 l 10000,0 l 0,-24 l -10000,0 z"/>
     </svg:clipPath>
     <svg:clipPath id="osx-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
-      <svg:path d="m -3,-10 l -0.1,7.7 c 6.6,1.8 8.8,7.6 8.8,12.5 c 0,5 -1.9,11.5 -8.25,13.25 l 0.05,25.75 l 10000,0 l 0,-55 l -10000,-4.2 z"/>
+      <svg:path d="M -12,-5 a 16 16 0 0 1 0,34 l 10000,0 l 0,-34 l -10000,0 z"/>
     </svg:clipPath>
 #endif
   </svg:svg>

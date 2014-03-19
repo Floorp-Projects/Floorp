@@ -408,14 +408,6 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
   
   if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     FillTexturesBlackWhite(aRegion, visibleRect.TopLeft());
-    if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-      gfxASurface* surfaces[2] = { mD2DSurface.get(), mD2DSurfaceOnWhite.get() };
-      destinationSurface = new gfxTeeSurface(surfaces, ArrayLength(surfaces));
-      // Using this surface as a source will likely go horribly wrong, since
-      // only the onBlack surface will really be used, so alpha information will
-      // be incorrect.
-      destinationSurface->SetAllowUseAsSource(false);
-    }
   } else {
     destinationSurface = mD2DSurface;
   }
@@ -465,18 +457,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode
       NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
     }
 
-    if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-      mD2DSurface = new gfxD2DSurface(mTexture, aMode != SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA ?
-                                                gfxContentType::COLOR : gfxContentType::COLOR_ALPHA);
-
-      if (!mD2DSurface || mD2DSurface->CairoStatus()) {
-        NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
-        mD2DSurface = nullptr;
-        return;
-      }
-    } else {
-      mDrawTarget = nullptr;
-    }
+    mDrawTarget = nullptr;
   }
 
   if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA && !mTextureOnWhite) {
@@ -493,20 +474,10 @@ ThebesLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode
       NS_WARNING("Failed to create shader resource view for ThebesLayerD3D10.");
     }
 
-    if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-      mD2DSurfaceOnWhite = new gfxD2DSurface(mTextureOnWhite, gfxContentType::COLOR);
-
-      if (!mD2DSurfaceOnWhite || mD2DSurfaceOnWhite->CairoStatus()) {
-        NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
-        mD2DSurfaceOnWhite = nullptr;
-        return;
-      }
-    } else {
-      mDrawTarget = nullptr;
-    }
+    mDrawTarget = nullptr;
   }
 
-  if (gfxPlatform::GetPlatform()->SupportsAzureContent() && !mDrawTarget) {
+  if (!mDrawTarget) {
     if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
       mDrawTarget = Factory::CreateDualDrawTargetForD3D10Textures(mTexture, mTextureOnWhite, SurfaceFormat::B8G8R8X8);
     } else {

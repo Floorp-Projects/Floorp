@@ -8,7 +8,7 @@
 %filter substitution
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
-%define conditionalForwardWithUrlbarWidth 27
+%define conditionalForwardWithUrlbarWidth 30
 %define spaceAboveTabbar 9px
 %define toolbarButtonPressed :hover:active:not([disabled="true"]):not([cui-areatype="menu-panel"])
 
@@ -451,7 +451,7 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
 .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
 #restore-button {
   -moz-box-orient: vertical;
-  height: 22px;
+  height: 24px;
   padding: 0;
   border: 0;
 }
@@ -1366,14 +1366,14 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-margin-end: -7px;
   position: relative;
   z-index: 1;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   padding: 4px 5px 4px 3px;
   border-radius: 10000px;
 }
 
 #back-button:not(:-moz-lwtheme) {
-  height: 31px;
+  height: 33px;
   padding: 4px 5px 5px 3px;
   margin-bottom: -1px;
   background: url(chrome://browser/skin/keyhole-circle.png) 0 0 no-repeat;
@@ -1382,17 +1382,17 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 @media (min-resolution: 2dppx) {
   #back-button:not(:-moz-lwtheme) {
     background-image: url(chrome://browser/skin/keyhole-circle@2x.png);
-    background-size: 90px;
+    background-size: 96px;
   }
 }
 
 #back-button:-moz-window-inactive:not(:-moz-lwtheme) {
-  background-position: -60px 0;
+  background-position: -64px 0;
 }
 
 #back-button:not([disabled="true"]):active:hover:not(:-moz-lwtheme),
 #back-button[open="true"]:not(:-moz-lwtheme) {
-  background-position: -30px 0;
+  background-position: -32px 0;
 }
 
 /* Forward button styles */
@@ -1400,6 +1400,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #forward-button {
   -moz-margin-start: 0;
   -moz-margin-end: 0;
+  width: 32px;
   clip-path: url(chrome://browser/content/browser.xul#osx-keyhole-forward-clip-path);
 }
 
@@ -1624,7 +1625,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-appearance: none;
   box-shadow: 0 1px rgba(255, 255, 255, 0.2), inset 0 1px hsla(0,0%,0%,.05);
   margin: 0 4px;
-  padding: 0;
+  padding: 1px 0;
   border: 1px solid;
   border-color: #626262 #787878 #8c8c8c;
   background-clip: padding-box;
@@ -2823,9 +2824,17 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   cursor: default;
 }
 
+.tab-close-button.close-icon:not([selected=true]):not(:hover):-moz-lwtheme-brighttext {
+  -moz-image-region: rect(0, 64px, 16px, 48px);
+}
+
 @media (min-resolution: 2dppx) {
   .tab-close-button > .toolbarbutton-icon {
     width: 16px;
+  }
+
+  .tab-close-button.close-icon:not([selected=true]):not(:hover):-moz-lwtheme-brighttext {
+    -moz-image-region: rect(0, 128px, 32px, 96px);
   }
 }
 

@@ -151,7 +151,7 @@ BaselineFrame::initFunctionScopeObjects(JSContext *cx)
 }
 
 bool
-BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
+BaselineFrame::initForOsr(InterpreterFrame *fp, uint32_t numStackValues)
 {
     mozilla::PodZero(this);
 
@@ -192,8 +192,8 @@ BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
 
     JSContext *cx = GetJSContextFromJitCode();
     if (cx->compartment()->debugMode()) {
-        // In debug mode, update any Debugger.Frame objects for the StackFrame to
-        // point to the BaselineFrame.
+        // In debug mode, update any Debugger.Frame objects for the
+        // InterpreterFrame to point to the BaselineFrame.
 
         // The caller pushed a fake return address. ScriptFrameIter, used by the
         // debugger, wants a valid return address, but it's okay to just pick one.

@@ -8,8 +8,6 @@
 
 extern "C" {
 
-  // Define empty implementations so we can compile when
-  // MOZ_ENABLE_PROFILER_SPS is undefined
   void MozillaRegisterDebugFD(int fd) {}
   void MozillaRegisterDebugFILE(FILE *f) {}
   void MozillaUnRegisterDebugFD(int fd) {}
