@@ -67,6 +67,8 @@ OmxVideoTrackEncoder::GetMetadata()
   nsRefPtr<AVCTrackMetadata> meta = new AVCTrackMetadata();
   meta->mWidth = mFrameWidth;
   meta->mHeight = mFrameHeight;
+  meta->mDisplayWidth = mDisplayWidth;
+  meta->mDisplayHeight = mDisplayHeight;
   meta->mFrameRate = ENCODER_CONFIG_FRAME_RATE;
   return meta.forget();
 }
