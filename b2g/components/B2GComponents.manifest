@@ -81,3 +81,9 @@ contract @mozilla.org/fxaccounts/fxaccounts-ui-glue;1 {51875c14-91d7-4b8c-b65d-3
 # HelperAppDialog.js
 component {710322af-e6ae-4b0c-b2c9-1474a87b077e} HelperAppDialog.js
 contract @mozilla.org/helperapplauncherdialog;1 {710322af-e6ae-4b0c-b2c9-1474a87b077e}
+
+#ifndef MOZ_WIDGET_GONK
+component {c83c02c0-5d43-4e3e-987f-9173b313e880} SimulatorScreen.js
+contract @mozilla.org/simulator-screen;1 {c83c02c0-5d43-4e3e-987f-9173b313e880}
+category profile-after-change SimulatorScreen @mozilla.org/simulator-screen;1
+#endif
