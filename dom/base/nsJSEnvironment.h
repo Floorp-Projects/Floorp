@@ -44,13 +44,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
                                                          nsIScriptContext)
 
-  virtual nsresult EvaluateString(const nsAString& aScript,
-                                  JS::Handle<JSObject*> aScopeObject,
-                                  JS::CompileOptions &aOptions,
-                                  bool aCoerceToString,
-                                  JS::Value* aRetValue,
-                                  void **aOffThreadToken = nullptr) MOZ_OVERRIDE;
-
   virtual nsresult BindCompiledEventHandler(nsISupports *aTarget,
                                             JS::Handle<JSObject*> aScope,
                                             JS::Handle<JSObject*> aHandler,

@@ -27,8 +27,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x513c2c1a, 0xf4f1, 0x44da, \
-  { 0x8e, 0x38, 0xf4, 0x0c, 0x30, 0x9a, 0x5d, 0xef } }
+{ 0x7cf47061, 0x745d, 0x4c6c, \
+  { 0xa0, 0xe5, 0x9f, 0xef, 0xa8, 0xcc, 0x2a, 0xf0 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -44,29 +44,6 @@ class nsIScriptContext : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
-
-  /**
-   * Compile and execute a script.
-   *
-   * @param aScript a string representing the script to be executed
-   * @param aScopeObject a script object for the scope to execute in.
-   * @param aOptions an options object. You probably want to at least set
-   *                 filename and line number. The principal is computed
-   *                 internally, though 'originPrincipals' may be passed.
-   * @param aCoerceToString if the return value is not JSVAL_VOID, convert it
-   *                        to a string before returning.
-   * @param aRetValue the result of executing the script.  Pass null if you
-   *                  don't care about the result.  Note that asking for a
-   *                  result will deoptimize your script somewhat in many cases.
-   * @param aOffThreadToken if specified, the result of compiling the script
-   *                        on another thread.
-   */
-  virtual nsresult EvaluateString(const nsAString& aScript,
-                                  JS::Handle<JSObject*> aScopeObject,
-                                  JS::CompileOptions& aOptions,
-                                  bool aCoerceToString,
-                                  JS::Value* aRetValue,
-                                  void **aOffThreadToken = nullptr) = 0;
 
   /**
    * Bind an already-compiled event handler function to the given

@@ -16,8 +16,9 @@
 #include "nsIURI.h"
 #include "nsXBLSerialize.h"
 #include "nsXBLPrototypeBinding.h"
-#include "nsCxPusher.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "nsGlobalWindow.h"
 #include "xpcpublic.h"
 #include "WrapperFactory.h"
 
@@ -204,20 +205,7 @@ InstallXBLField(JSContext* cx,
   nsXBLProtoImplField* field = protoBinding->FindField(fieldName);
   MOZ_ASSERT(field);
 
-  // This mirrors code in nsXBLProtoImpl::InstallImplementation
-  nsCOMPtr<nsIScriptGlobalObject> global =
-    do_QueryInterface(xblNode->OwnerDoc()->GetWindow());
-  if (!global) {
-    return true;
-  }
-
-  nsCOMPtr<nsIScriptContext> context = global->GetContext();
-  if (!context) {
-    return true;
-  }
-
-  nsresult rv = field->InstallField(context, thisObj, protoBinding->DocURI(),
-                                    installed);
+  nsresult rv = field->InstallField(thisObj, protoBinding->DocURI(), installed);
   if (NS_SUCCEEDED(rv)) {
     return true;
   }
@@ -388,8 +376,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
 }
 
 nsresult
-nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
-                                  JS::Handle<JSObject*> aBoundNode,
+nsXBLProtoImplField::InstallField(JS::Handle<JSObject*> aBoundNode,
                                   nsIURI* aBindingDocURI,
                                   bool* aDidInstall) const
 {
@@ -413,7 +400,16 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   nsAutoCString uriSpec;
   aBindingDocURI->GetSpec(uriSpec);
 
-  AutoPushJSContext cx(aContext->GetNativeContext());
+  nsIGlobalObject* globalObject = xpc::WindowGlobalOrNull(aBoundNode);
+  if (!globalObject) {
+    return NS_OK;
+  }
+
+  // We are going to run script via EvaluateString, so we need a script entry
+  // point, but as this is XBL related it does not appear in the HTML spec.
+  AutoEntryScript entryScript(globalObject, true);
+  JSContext* cx = entryScript.cx();
+
   NS_ASSERTION(!::JS_IsExceptionPending(cx),
                "Shouldn't get here when an exception is pending!");
 
@@ -431,11 +427,11 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriSpec.get(), mLineNumber)
          .setVersion(JSVERSION_LATEST);
-  rv = aContext->EvaluateString(nsDependentString(mFieldText,
-                                                  mFieldTextLength),
-                                wrappedNode, options,
-                                /* aCoerceToString = */ false,
-                                result.address());
+  nsJSUtils::EvaluateOptions evalOptions;
+  rv = nsJSUtils::EvaluateString(cx, nsDependentString(mFieldText,
+                                                       mFieldTextLength),
+                                 wrappedNode, options, evalOptions,
+                                 result.address());
   if (NS_FAILED(rv)) {
     return rv;
   }
