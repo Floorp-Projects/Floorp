@@ -62,13 +62,10 @@ static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
 // BFS hashtable data class.
 struct BFSTableData {
     nsCStringKey *key;
-    union _data {
-        BFSState *state;
-        nsCOMArray<nsIAtom> *edges;
-    } data;
+    BFSState *state;
 
-    BFSTableData(nsCStringKey* aKey) : key(aKey) {
-        data.state = nullptr;
+    BFSTableData(nsCStringKey* aKey) : key(aKey), state(nullptr)
+    {
     }
 };
 
@@ -228,7 +225,7 @@ static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     state->predecessor = nullptr;
 
     BFSTableData *data = new BFSTableData(static_cast<nsCStringKey*>(aKey));
-    data->data.state = state;
+    data->state = state;
 
     BFSTable->Put(aKey, data);
     return true;
@@ -237,7 +234,7 @@ static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
 // cleans up the BFS state table
 static bool DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
     BFSTableData *data = (BFSTableData*)aData;
-    BFSState *state = data->data.state;
+    BFSState *state = data->state;
     delete state;
     data->key = nullptr;
     delete data;
@@ -288,7 +285,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         return NS_ERROR_FAILURE;
     }
 
-    BFSState *state = data->data.state;
+    BFSState *state = data->state;
 
     state->color = gray;
     state->distance = 0;
@@ -308,7 +305,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         BFSTableData *data2b = (BFSTableData*)lBFSTable.Get(currentHead);
         if (!data2b) return NS_ERROR_FAILURE;
 
-        BFSState *headVertexState = data2b->data.state;
+        BFSState *headVertexState = data2b->state;
         NS_ASSERTION(headVertexState, "problem with the BFS strmconv algorithm");
         if (!headVertexState) return NS_ERROR_FAILURE;
 
@@ -326,7 +323,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
                 delete curVertex;
                 return NS_ERROR_FAILURE;
             }
-            BFSState *curVertexState = data3->data.state;
+            BFSState *curVertexState = data3->state;
             NS_ASSERTION(curVertexState, "something went wrong with the BFS strmconv algorithm");
             if (!curVertexState) return NS_ERROR_FAILURE;
 
@@ -373,7 +370,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     }
 
     while (data) {
-        BFSState *curState = data->data.state;
+        BFSState *curState = data->state;
 
         nsCStringKey *key = data->key;
 
