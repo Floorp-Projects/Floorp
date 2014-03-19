@@ -3,8 +3,8 @@
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
-:-moz-any(@primaryToolbarButtons@):-moz-lwtheme-brighttext,
-#bookmarks-menu-button:-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+:-moz-any(@primaryToolbarButtons@):not(@inAnyPanel@):-moz-lwtheme-brighttext,
+#bookmarks-menu-button:not(@inAnyPanel@):-moz-lwtheme-brighttext > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
 }
 
