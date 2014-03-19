@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/OrderedBroadcast.jsm");
-Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Components.utils.import("resource://gre/modules/Promise.jsm");
 
 let _observerId = 0;
 

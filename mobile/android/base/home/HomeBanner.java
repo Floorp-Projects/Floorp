@@ -44,7 +44,7 @@ public class HomeBanner extends LinearLayout
     // Used to detect for upwards scroll to push banner all the way up
     private boolean mSnapBannerToTop;
 
-    // Tracks whether or not the banner should be shown.
+    // Tracks whether or not the banner should be shown on the current panel.
     private boolean mActive = false;
 
     // The user is currently swiping between HomePager pages
@@ -58,6 +58,9 @@ public class HomeBanner extends LinearLayout
     // will not wrap more than 2 lines.
     private final EllipsisTextView mTextView;
     private final ImageView mIconView;
+
+    // The height of the banner view.
+    private final float mHeight;
 
     // Listener that gets called when the banner is dismissed from the close button.
     private OnDismissListener mOnDismissListener;
@@ -77,6 +80,11 @@ public class HomeBanner extends LinearLayout
 
         mTextView = (EllipsisTextView) findViewById(R.id.text);
         mIconView = (ImageView) findViewById(R.id.icon);
+
+        mHeight = getResources().getDimensionPixelSize(R.dimen.home_banner_height);
+
+        // Disable the banner until a message is set.
+        setEnabled(false);
     }
 
     @Override
@@ -93,23 +101,17 @@ public class HomeBanner extends LinearLayout
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                HomeBanner.this.setVisibility(View.GONE);
+                HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Dismiss", (String) getTag()));
-
-                if (mOnDismissListener != null) {
-                    mOnDismissListener.onDismiss();
-                }
             }
         });
 
         setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Hide the banner. This does not remove the message from the rotation, so it may appear
-                // again if the JS onclick handler doesn't choose to remove it.
-                HomeBanner.this.setVisibility(View.GONE);
+                HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Click", (String) getTag()));
@@ -146,6 +148,18 @@ public class HomeBanner extends LinearLayout
     }
 
     /**
+     * Hides and disables the banner.
+     */
+    private void dismiss() {
+        setVisibility(View.GONE);
+        setEnabled(false);
+
+        if (mOnDismissListener != null) {
+            mOnDismissListener.onDismiss();
+        }
+    }
+
+    /**
      * Sends a message to gecko to request a new banner message. UI is updated in handleMessage.
      */
     public void update() {
@@ -158,16 +172,15 @@ public class HomeBanner extends LinearLayout
         final String text = message.optString("text");
         final String iconURI = message.optString("iconURI");
 
+        // Don't update the banner if the message doesn't have valid id and text.
+        if (TextUtils.isEmpty(id) || TextUtils.isEmpty(text)) {
+            return;
+        }
+
         // Update the banner message on the UI thread.
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                // Hide the banner if the message doesn't have valid id and text.
-                if (TextUtils.isEmpty(id) || TextUtils.isEmpty(text)) {
-                    setVisibility(View.GONE);
-                    return;
-                }
-
                 // Store the current message id to pass back to JS in the view's OnClickListener.
                 setTag(id);
                 mTextView.setOriginalText(Html.fromHtml(text));
@@ -184,8 +197,10 @@ public class HomeBanner extends LinearLayout
                     }
                 });
 
-                setVisibility(View.VISIBLE);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Shown", id));
+
+                // Enable the banner after a message is set.
+                setEnabled(true);
 
                 // Animate the banner if it is currently active.
                 if (mActive) {
@@ -203,8 +218,8 @@ public class HomeBanner extends LinearLayout
 
         mActive = active;
 
-        // Don't animate if the banner isn't visible.
-        if (getVisibility() != View.VISIBLE) {
+        // Don't animate if the banner isn't enabled.
+        if (!isEnabled()) {
             return;
         }
 
@@ -215,12 +230,23 @@ public class HomeBanner extends LinearLayout
         }
     }
 
+    private void ensureVisible() {
+        // The banner visibility is set to GONE after it is animated off screen,
+        // so we need to make it visible again.
+        if (getVisibility() == View.GONE) {
+            // Translate the banner off screen before setting it to VISIBLE.
+            ViewHelper.setTranslationY(this, mHeight);
+            setVisibility(View.VISIBLE);
+        }
+    }
+
     private void animateUp() {
-        // Don't try to animate if the banner is already translated, or if the user swiped
-        // the banner down previously to hide it.
-        if (ViewHelper.getTranslationY(this) == 0 || mUserSwipedDown) {
+        // Don't try to animate if the user swiped the banner down previously to hide it.
+        if (mUserSwipedDown) {
             return;
         }
+
+        ensureVisible();
 
         final PropertyAnimator animator = new PropertyAnimator(100);
         animator.attach(this, Property.TRANSLATION_Y, 0);
@@ -228,20 +254,34 @@ public class HomeBanner extends LinearLayout
     }
 
     private void animateDown() {
-        // Don't try to animate if the banner is already translated.
-        if (ViewHelper.getTranslationY(this) == getHeight()) {
+        if (ViewHelper.getTranslationY(this) == mHeight) {
+            // Hide the banner to avoid intercepting clicks on pre-honeycomb devices.
+            setVisibility(View.GONE);
             return;
         }
 
         final PropertyAnimator animator = new PropertyAnimator(100);
-        animator.attach(this, Property.TRANSLATION_Y, getHeight());
+        animator.attach(this, Property.TRANSLATION_Y, mHeight);
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                // Hide the banner to avoid intercepting clicks on pre-honeycomb devices.
+                setVisibility(View.GONE);
+            }
+        });
         animator.start();
     }
 
     public void handleHomeTouch(MotionEvent event) {
-        if (!mActive || getVisibility() == GONE || mScrollingPages) {
+        if (!mActive || !isEnabled() || mScrollingPages) {
             return;
         }
+
+        ensureVisible();
 
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN: {
@@ -255,19 +295,18 @@ public class HomeBanner extends LinearLayout
                 final float delta = mTouchY - curY;
                 mSnapBannerToTop = delta <= 0.0f;
 
-                final float height = getHeight();
                 float newTranslationY = ViewHelper.getTranslationY(this) + delta;
 
                 // Clamp the values to be between 0 and height.
                 if (newTranslationY < 0.0f) {
                     newTranslationY = 0.0f;
-                } else if (newTranslationY > height) {
-                    newTranslationY = height;
+                } else if (newTranslationY > mHeight) {
+                    newTranslationY = mHeight;
                 }
 
                 // Don't change this value if it wasn't a significant movement
                 if (delta >= 10 || delta <= -10) {
-                    mUserSwipedDown = newTranslationY == height;
+                    mUserSwipedDown = (newTranslationY == mHeight);
                 }
 
                 ViewHelper.setTranslationY(this, newTranslationY);
@@ -278,15 +317,11 @@ public class HomeBanner extends LinearLayout
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL: {
                 mTouchY = -1;
-                final float y = ViewHelper.getTranslationY(this);
-                final float height = getHeight();
-                if (y > 0.0f && y < height) {
-                    if (mSnapBannerToTop) {
-                        animateUp();
-                    } else {
-                        animateDown();
-                        mUserSwipedDown = true;
-                    }
+                if (mSnapBannerToTop) {
+                    animateUp();
+                } else {
+                    animateDown();
+                    mUserSwipedDown = true;
                 }
                 break;
             }
