@@ -106,7 +106,14 @@ this.FxAccountsClient.prototype = {
         email: creds.emailUTF8,
         authPW: CommonUtils.bytesAsHex(creds.authPW),
       };
-      return this._request("/account/login", "POST", null, data);
+      return this._request("/account/login", "POST", null, data).then(
+        // Include the canonical capitalization of the email in the response so
+        // the caller can set its signed-in user state accordingly.
+        result => {
+          result.email = data.email;
+          return result;
+        }
+      );
     });
   },
 
