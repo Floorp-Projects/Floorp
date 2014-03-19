@@ -18,6 +18,7 @@ chrome.jar:
   content/desktop.css                   (content/desktop.css)
   content/images/desktop/home-black.png (content/images/desktop/home-black.png)
   content/images/desktop/home-white.png (content/images/desktop/home-white.png)
+  content/images/desktop/rotate.png     (content/images/desktop/rotate.png)
 #endif
 #ifndef MOZ_WIDGET_GONK
   content/desktop.js                    (content/desktop.js)
