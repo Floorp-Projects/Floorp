@@ -568,21 +568,14 @@ mozInlineSpellWordUtil::BuildSoftText()
           }
         }
       }
-
+      
       if (firstOffsetInNode < lastOffsetInNode) {
         int32_t len = lastOffsetInNode - firstOffsetInNode;
         mSoftTextDOMMapping.AppendElement(
           DOMTextMapping(NodeOffset(node, firstOffsetInNode), mSoftText.Length(), len));
-
-        bool ok = textFragment->AppendTo(mSoftText, firstOffsetInNode, len,
-                                         mozilla::fallible_t());
-        if (!ok) {
-            // probably out of memory, remove from mSoftTextDOMMapping
-            mSoftTextDOMMapping.RemoveElementAt(mSoftTextDOMMapping.Length() - 1);
-            exit = true;
-        }
+        textFragment->AppendTo(mSoftText, firstOffsetInNode, len);
       }
-
+      
       firstOffsetInNode = 0;
     }
 

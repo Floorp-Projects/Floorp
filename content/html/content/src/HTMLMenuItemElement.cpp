@@ -371,9 +371,7 @@ void
 HTMLMenuItemElement::GetText(nsAString& aText)
 {
   nsAutoString text;
-  if (!nsContentUtils::GetNodeTextContent(this, false, text)) {
-    NS_RUNTIMEABORT("OOM");
-  }
+  nsContentUtils::GetNodeTextContent(this, false, text);
 
   text.CompressWhitespace(true, true);
   aText = text;

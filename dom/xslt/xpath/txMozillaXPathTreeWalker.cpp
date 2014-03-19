@@ -514,8 +514,7 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
     if (aNode.isDocument() ||
         aNode.mNode->IsElement() ||
         aNode.mNode->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT)) {
-        nsContentUtils::AppendNodeTextContent(aNode.mNode, true, aResult,
-                                              mozilla::fallible_t());
+        nsContentUtils::AppendNodeTextContent(aNode.mNode, true, aResult);
 
         return;
     }

@@ -49,9 +49,7 @@ HTMLElement::GetInnerHTML(nsAString& aInnerHTML)
    */
   if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
       mNodeInfo->Equals(nsGkAtoms::plaintext)) {
-    if (!nsContentUtils::GetNodeTextContent(this, false, aInnerHTML)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsContentUtils::GetNodeTextContent(this, false, aInnerHTML);
     return NS_OK;
   }
 

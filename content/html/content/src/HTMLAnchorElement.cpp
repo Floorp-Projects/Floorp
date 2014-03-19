@@ -322,9 +322,7 @@ IMPL_URI_PART(Hash)
 NS_IMETHODIMP    
 HTMLAnchorElement::GetText(nsAString& aText)
 {
-  if(!nsContentUtils::GetNodeTextContent(this, true, aText)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsContentUtils::GetNodeTextContent(this, true, aText);
   return NS_OK;
 }
 
