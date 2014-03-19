@@ -361,13 +361,17 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     JS_ASSERT(global);
     JS_ASSERT(objGlobal);
 
-    JS_ASSERT(!cx->runtime()->isSelfHostingGlobal(global) &&
-              !cx->runtime()->isSelfHostingGlobal(objGlobal));
-
     const JSWrapObjectCallbacks *cb = cx->runtime()->wrapObjectCallbacks;
 
     if (obj->compartment() == this)
         return WrapForSameCompartment(cx, obj, cb);
+
+    // If we have a cross-compartment wrapper, make sure that the cx isn't
+    // associated with the self-hosting global. We don't want to create
+    // wrappers for objects in other runtimes, which may be the case for the
+    // self-hosting global.
+    JS_ASSERT(!cx->runtime()->isSelfHostingGlobal(global) &&
+              !cx->runtime()->isSelfHostingGlobal(objGlobal));
 
     // Unwrap the object, but don't unwrap outer windows.
     unsigned flags = 0;
