@@ -7,7 +7,7 @@
   <body>
     <span id="msg"></span>
     <script>
-      navigator.mozGetUserMedia({ video: true, audio: true },
+      navigator.mozGetUserMedia({ video: true, audio: true, fake: true },
         function(localMediaStream) {
           document.getElementById("msg").textContent = window.URL.createObjectURL(localMediaStream);
         },
