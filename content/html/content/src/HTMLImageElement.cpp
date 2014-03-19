@@ -86,6 +86,7 @@ NS_IMPL_BOOL_ATTR(HTMLImageElement, IsMap, ismap)
 NS_IMPL_URI_ATTR(HTMLImageElement, LongDesc, longdesc)
 NS_IMPL_STRING_ATTR(HTMLImageElement, Lowsrc, lowsrc)
 NS_IMPL_URI_ATTR(HTMLImageElement, Src, src)
+NS_IMPL_STRING_ATTR(HTMLImageElement, Srcset, srcset)
 NS_IMPL_STRING_ATTR(HTMLImageElement, UseMap, usemap)
 NS_IMPL_INT_ATTR(HTMLImageElement, Vspace, vspace)
 
