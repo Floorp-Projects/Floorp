@@ -113,7 +113,7 @@ category update-timer Snippets @mozilla.org/snippets;1,getService,snippets-updat
 # WebappsUpdateTimer.js
 component {8f7002cb-e959-4f0a-a2e8-563232564385} WebappsUpdateTimer.js
 contract @mozilla.org/b2g/webapps-update-timer;1 {8f7002cb-e959-4f0a-a2e8-563232564385}
-category update-timer WebappsUpdateTimer @mozilla.org/b2g/webapps-update-timer;1,getService,background-update-timer,browser.webapps.updateInterval,86400
+category update-timer WebappsUpdateTimer @mozilla.org/b2g/webapps-update-timer;1,getService,webapp-background-update-timer,browser.webapps.updateInterval,86400
 
 # ColorPicker.js
 component {430b987f-bb9f-46a3-99a5-241749220b29} ColorPicker.js
