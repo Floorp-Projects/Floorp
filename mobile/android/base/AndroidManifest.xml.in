@@ -141,6 +141,25 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
 
+            <!-- For XPI installs from websites and the download manager. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="application/x-xpinstall" />
+            </intent-filter>
+
+            <!-- For XPI installs from file: URLs. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:host="" />
+                <data android:scheme="file" />
+                <data android:pathPattern=".*\\.xpi" />
+            </intent-filter>
+
 #ifdef MOZ_ANDROID_BEAM
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
