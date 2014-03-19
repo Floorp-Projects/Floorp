@@ -128,8 +128,15 @@ window.addEventListener('ContentStart', function() {
   let scale = rescale ? hostDPI / dpi : 1;
 
   // Set the window width and height to desired size plus chrome
+  // Set the window width and height to desired size plus chrome
+  // Include the size of the toolbox displayed under the system app
+  let controls = document.getElementById('controls');
+  let controlsHeight = 0;
+  if (controls) {
+    controlsHeight = controls.getBoundingClientRect().height;
+  }
   let chromewidth = window.outerWidth - window.innerWidth;
-  let chromeheight = window.outerHeight - window.innerHeight;
+  let chromeheight = window.outerHeight - window.innerHeight + controlsHeight;
   window.resizeTo(Math.round(width * scale) + chromewidth,
                   Math.round(height * scale) + chromeheight);
 
