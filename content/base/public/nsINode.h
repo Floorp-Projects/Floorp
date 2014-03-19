@@ -20,6 +20,7 @@
 #include "mozilla/dom/EventTarget.h" // for base class
 #include "js/TypeDecls.h"     // for Handle, Value, JSObject, JSContext
 #include "mozilla/dom/DOMString.h"
+#include "mozilla/dom/BindingDeclarations.h"
 
 // Including 'windows.h' will #define GetClassInfo to something else.
 #ifdef XP_WIN
@@ -392,17 +393,17 @@ protected:
     return nullptr;
   }
 
-public:
-  nsIDocument* GetParentObject() const
-  {
-    // Make sure that we get the owner document of the content node, in case
-    // we're in document teardown.  If we are, it's important to *not* use
-    // globalObj as the node's parent since that would give the node the
-    // principal of globalObj (i.e. the principal of the document that's being
-    // loaded) and not the principal of the document that's being unloaded.
-    // See http://bugzilla.mozilla.org/show_bug.cgi?id=227417
-    return OwnerDoc();
+  // Subclasses that wish to override the parent behavior should return the
+  // result of GetParentObjectIntenral, which handles the XBL scope stuff.
+  //
+  mozilla::dom::ParentObject GetParentObjectInternal(nsINode* aNativeParent) const {
+    mozilla::dom::ParentObject p(aNativeParent);
+    p.mUseXBLScope = ChromeOnlyAccess();
+    return p;
   }
+
+public:
+  mozilla::dom::ParentObject GetParentObject() const; // Implemented in nsIDocument.h
 
   /**
    * Return whether the node is an Element node

@@ -1927,12 +1927,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsGenericHTMLFormElement,
                              nsGenericHTMLElement,
                              nsIFormControl)
 
-nsINode*
+mozilla::dom::ParentObject
 nsGenericHTMLFormElement::GetParentObject() const
 {
   // We use the parent chain to implement the scope for event handlers.
-  return mForm ? static_cast<nsINode*>(mForm)
-               : static_cast<nsINode*>(OwnerDoc());
+  if (mForm) {
+    return GetParentObjectInternal(mForm);
+  }
+  return nsGenericHTMLElement::GetParentObject();
 }
 
 bool
