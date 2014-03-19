@@ -124,7 +124,10 @@ var WebrtcUI = {
         // if this is a Camera input, convert the name to something readable
         let res = /Camera\ \d+,\ Facing (front|back)/.exec(device.name);
         if (res)
-          return Strings.browser.GetStringFromName("getUserMedia." + aType + "." + res[1]);
+          return Strings.browser.GetStringFromName("getUserMedia." + aType + "." + res[1] + "Camera");
+
+        if (device.name.startsWith("&") && device.name.endsWith(";"))
+          return Strings.browser.GetStringFromName(device.name.substring(1, device.name.length -1));
 
         if (device.name.trim() == "") {
           defaultCount++;
