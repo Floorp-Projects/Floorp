@@ -25,6 +25,7 @@
     _(Goto)                         \
     _(NewArray)                     \
     _(NewObject)                    \
+    _(NewSlots)                     \
     _(NewDeclEnvObject)             \
     _(NewCallObject)                \
     _(NewStringObject)              \
