@@ -2488,27 +2488,31 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // dirty rect here.
   nsRect dirtyRect = aDirtyRect.Intersect(mScrollPort);
 
-  // Override the dirty rectangle if the displayport has been set.
-  bool usingDisplayport =
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent()) &&
-    !aBuilder->IsForEventDelivery();
-
-  // don't set the display port base rect for root scroll frames,
-  // nsLayoutUtils::PaintFrame or nsSubDocumentFrame::BuildDisplayList
-  // does that for root scroll frames before it expands the dirty rect
-  // to the display port.
-  if (usingDisplayport && !mIsRoot) {
-    nsLayoutUtils::SetDisplayPortBase(mOuter->GetContent(), dirtyRect);
-  }
-
-  // now that we have an updated base rect we can get the display port
   nsRect displayPort;
-  nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
-  if (usingDisplayport && DisplayportExceedsMaxTextureSize(mOuter->PresContext(), displayPort)) {
-    usingDisplayport = false;
-  }
-  if (usingDisplayport) {
-    dirtyRect = displayPort;
+  bool usingDisplayport = false;
+  if (!aBuilder->IsForEventDelivery()) {
+    if (!mIsRoot) {
+      // For a non-root scroll frame, override the value of the display port
+      // base rect, and possibly create a display port if there isn't one
+      // already. For root scroll frame, nsLayoutUtils::PaintFrame or
+      // nsSubDocumentFrame::BuildDisplayList takes care of this.
+      nsRect displayportBase = dirtyRect;
+      usingDisplayport = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
+          *aBuilder, mOuter, displayportBase, &displayPort);
+    } else {
+      // For a root frmae, just get the value of the existing of the display
+      // port, if any.
+      usingDisplayport = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
+    }
+
+    if (usingDisplayport && DisplayportExceedsMaxTextureSize(mOuter->PresContext(), displayPort)) {
+      usingDisplayport = false;
+    }
+
+    // Override the dirty rectangle if the displayport has been set.
+    if (usingDisplayport) {
+      dirtyRect = displayPort;
+    }
   }
 
   if (aBuilder->IsForImageVisibility()) {
