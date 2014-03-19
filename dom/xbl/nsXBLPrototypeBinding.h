@@ -90,7 +90,6 @@ public:
   }
 
   nsresult InitClass(const nsCString& aClassName, JSContext * aContext,
-                     JS::Handle<JSObject*> aGlobal,
                      JS::Handle<JSObject*> aScriptObject,
                      JS::MutableHandle<JSObject*> aClassObject,
                      bool* aNew);
