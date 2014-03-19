@@ -613,11 +613,26 @@ panelview .toolbarbutton-1,
   border: none;
 }
 
-.subviewbutton.panel-subview-footer > .toolbarbutton-text,
 .subviewbutton.panel-subview-footer > .menu-text {
-  -moz-padding-start: 0;
-  -moz-padding-end: 12px;
+  -moz-appearance: none;
+  -moz-margin-start: 0px !important;
+  -moz-padding-start: 6px;
+  -moz-padding-end: 6px;
   -moz-box-flex: 0;
+  text-align: center;
+}
+
+.subviewbutton.panel-subview-footer > .toolbarbutton-icon {
+  margin: 0;
+}
+
+.subviewbutton.panel-subview-footer > .toolbarbutton-text {
+  text-align: center;
+  padding: 0;
+}
+
+.subviewbutton.panel-subview-footer > .menu-accel-container {
+  -moz-padding-start: 6px;
 }
 
 .subviewbutton:not(.panel-subview-footer) {
