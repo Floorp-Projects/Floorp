@@ -241,10 +241,6 @@ function resolveGeckoURI(aURI) {
   return aURI;
 }
 
-function shouldShowProgress(url) {
-  return !url.startsWith("about:");
-}
-
 /**
  * Cache of commonly used string bundles.
  */
@@ -3882,15 +3878,14 @@ Tab.prototype = {
 
       // Check to see if we restoring the content from a previous presentation (session)
       // since there should be no real network activity
-      let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
-      let showProgress = restoring ? false : shouldShowProgress(uri);
+      let restoring = (aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) > 0;
 
       let message = {
         type: "Content:StateChange",
         tabID: this.id,
         uri: uri,
         state: aStateFlags,
-        showProgress: showProgress,
+        restoring: restoring,
         success: success
       };
       sendMessageToJava(message);
