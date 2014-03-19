@@ -209,6 +209,36 @@ function isDiscoverEnabled() {
 }
 
 /**
+ * Obtain the main DOMWindow for the current context.
+ */
+function getMainWindow() {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIWebNavigation)
+               .QueryInterface(Ci.nsIDocShellTreeItem)
+               .rootTreeItem
+               .QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindow);
+}
+
+/**
+ * Obtain the DOMWindow that can open a preferences pane.
+ *
+ * This is essentially "get the browser chrome window" with the added check
+ * that the supposed browser chrome window is capable of opening a preferences
+ * pane.
+ *
+ * This may return null if we can't find the browser chrome window.
+ */
+function getMainWindowWithPreferencesPane() {
+  let mainWindow = getMainWindow();
+  if (mainWindow && "openAdvancedPreferences" in mainWindow) {
+    return mainWindow;
+  } else {
+    return null;
+  }
+}
+
+/**
  * A wrapper around the HTML5 session history service that allows the browser
  * back/forward controls to work within the manager
  */
@@ -1245,6 +1275,27 @@ var gViewController = {
         aAddon.userDisabled = true;
       }
     },
+
+    cmd_experimentsLearnMore: {
+      isEnabled: function cmd_experimentsLearnMore_isEnabled() {
+        let mainWindow = getMainWindow();
+        return mainWindow && "switchToTabHavingURI" in mainWindow;
+      },
+      doCommand: function cmd_experimentsLearnMore_doCommand() {
+        let url = Services.prefs.getCharPref("toolkit.telemetry.infoURL");
+        openOptionsInTab(url);
+      },
+    },
+
+    cmd_experimentsOpenTelemetryPreferences: {
+      isEnabled: function cmd_experimentsOpenTelemetryPreferences_isEnabled() {
+        return !!getMainWindowWithPreferencesPane();
+      },
+      doCommand: function cmd_experimentsOpenTelemetryPreferences_doCommand() {
+        let mainWindow = getMainWindowWithPreferencesPane();
+        mainWindow.openAdvancedPreferences("dataChoicesTab");
+      },
+    },
   },
 
   supportsCommand: function gVC_supportsCommand(aCommand) {
@@ -1302,11 +1353,7 @@ function hasInlineOptions(aAddon) {
 }
 
 function openOptionsInTab(optionsURL) {
-  var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIWebNavigation)
-                         .QueryInterface(Ci.nsIDocShellTreeItem)
-                         .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindow);
+  let mainWindow = getMainWindow();
   if ("switchToTabHavingURI" in mainWindow) {
     mainWindow.switchToTabHavingURI(optionsURL, true);
     return true;
