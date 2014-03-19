@@ -205,7 +205,7 @@ class RunState
 
     JSScript *script() const { return script_; }
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx) = 0;
+    virtual InterpreterFrame *pushInterpreterFrame(JSContext *cx) = 0;
     virtual void setReturnValue(Value v) = 0;
 
   private:
@@ -242,7 +242,7 @@ class ExecuteState : public RunState
     JSObject *scopeChain() const { return scopeChain_; }
     ExecuteType type() const { return type_; }
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+    virtual InterpreterFrame *pushInterpreterFrame(JSContext *cx);
 
     virtual void setReturnValue(Value v) {
         if (result_)
@@ -271,7 +271,7 @@ class InvokeState : public RunState
     bool constructing() const { return InitialFrameFlagsAreConstructing(initial_); }
     CallArgs &args() const { return args_; }
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+    virtual InterpreterFrame *pushInterpreterFrame(JSContext *cx);
 
     virtual void setReturnValue(Value v) {
         args_.rval().set(v);
@@ -290,7 +290,7 @@ class GeneratorState : public RunState
     GeneratorState(JSContext *cx, JSGenerator *gen, JSGeneratorState futureState);
     ~GeneratorState();
 
-    virtual StackFrame *pushInterpreterFrame(JSContext *cx);
+    virtual InterpreterFrame *pushInterpreterFrame(JSContext *cx);
     virtual void setReturnValue(Value) { }
 
     JSGenerator *gen() const { return gen_; }

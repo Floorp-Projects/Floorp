@@ -69,6 +69,7 @@ struct JitOptions
     uint32_t osrPcMismatchesBeforeRecompile;
     uint32_t smallFunctionMaxBytecodeLength_;
     uint32_t usesBeforeCompilePar;
+    bool profileInlineFrames;
 
     JitOptions();
     bool isSmallFunction(JSScript *script) const;

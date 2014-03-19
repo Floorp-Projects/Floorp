@@ -21,6 +21,10 @@ XPCOMUtils.defineLazyModuleGetter(this, 'Presentation',
 
 this.EXPORTED_SYMBOLS = ['ContentControl'];
 
+const MOVEMENT_GRANULARITY_CHARACTER = 1;
+const MOVEMENT_GRANULARITY_WORD = 2;
+const MOVEMENT_GRANULARITY_PARAGRAPH = 8;
+
 this.ContentControl = function ContentControl(aContentScope) {
   this._contentScope = Cu.getWeakReference(aContentScope);
   this._vcCache = new WeakMap();
@@ -31,16 +35,19 @@ this.ContentControl.prototype = {
   messagesOfInterest: ['AccessFu:MoveCursor',
                        'AccessFu:ClearCursor',
                        'AccessFu:MoveToPoint',
-                       'AccessFu:AutoMove'],
+                       'AccessFu:AutoMove',
+                       'AccessFu:Activate',
+                       'AccessFu:MoveCaret',
+                       'AccessFu:MoveByGranularity'],
 
-  start: function ContentControl_start() {
+  start: function cc_start() {
     let cs = this._contentScope.get();
     for (let message of this.messagesOfInterest) {
       cs.addMessageListener(message, this);
     }
   },
 
-  stop: function ContentControl_stop() {
+  stop: function cc_stop() {
     let cs = this._contentScope.get();
     for (let message of this.messagesOfInterest) {
       cs.removeMessageListener(message, this);
@@ -59,29 +66,19 @@ this.ContentControl.prototype = {
     return Utils.getVirtualCursor(this.document);
   },
 
-  receiveMessage: function ContentControl_receiveMessage(aMessage) {
+  receiveMessage: function cc_receiveMessage(aMessage) {
     Logger.debug(() => {
       return ['ContentControl.receiveMessage',
-        this.document.location.toString(),
+        aMessage.name,
         JSON.stringify(aMessage.json)];
     });
 
     try {
-      switch (aMessage.name) {
-        case 'AccessFu:MoveCursor':
-          this.handleMove(aMessage);
-          break;
-        case 'AccessFu:ClearCursor':
-          this.handleClear(aMessage);
-          break;
-        case 'AccessFu:MoveToPoint':
-          this.handleMoveToPoint(aMessage);
-          break;
-        case 'AccessFu:AutoMove':
-          this.handleAutoMove(aMessage);
-          break;
-        default:
-          break;
+      let func = this['handle' + aMessage.name.slice(9)]; // 'AccessFu:'.length
+      if (func) {
+        func.bind(this)(aMessage);
+      } else {
+        Logger.warning('ContentControl: Unhandled message:', aMessage.name);
       }
     } catch (x) {
       Logger.logException(
@@ -89,7 +86,7 @@ this.ContentControl.prototype = {
     }
   },
 
-  handleMove: function ContentControl_handleMove(aMessage) {
+  handleMoveCursor: function cc_handleMoveCursor(aMessage) {
     let origin = aMessage.json.origin;
     let action = aMessage.json.action;
     let vc = this.vc;
@@ -127,7 +124,7 @@ this.ContentControl.prototype = {
     }
   },
 
-  handleMoveToPoint: function ContentControl_handleMoveToPoint(aMessage) {
+  handleMoveToPoint: function cc_handleMoveToPoint(aMessage) {
     let [x, y] = [aMessage.json.x, aMessage.json.y];
     let rule = TraversalRules[aMessage.json.rule];
     let vc = this.vc;
@@ -141,16 +138,169 @@ this.ContentControl.prototype = {
     this.sendToChild(vc, aMessage, delta);
   },
 
-  handleClear: function ContentControl_handleClear(aMessage) {
+  handleClearCursor: function cc_handleClearCursor(aMessage) {
     this.sendToChild(this.vc, aMessage);
     this.vc.position = null;
   },
 
-  handleAutoMove: function ContentControl_handleAutoMove(aMessage) {
+  handleAutoMove: function cc_handleAutoMove(aMessage) {
     this.autoMove(null, aMessage.json);
   },
 
-  getChildCursor: function ContentControl_getChildCursor(aAccessible) {
+  handleActivate: function cc_handleActivate(aMessage) {
+    let activateAccessible = (aAccessible) => {
+      Logger.debug(() => {
+        return ['activateAccessible', Logger.accessibleToString(aAccessible)];
+      });
+      try {
+        if (aMessage.json.activateIfKey &&
+          aAccessible.role != Roles.KEY) {
+          // Only activate keys, don't do anything on other objects.
+          return;
+        }
+      } catch (e) {
+        // accessible is invalid. Silently fail.
+        return;
+      }
+
+      if (aAccessible.actionCount > 0) {
+        aAccessible.doAction(0);
+      } else {
+        let control = Utils.getEmbeddedControl(aAccessible);
+        if (control && control.actionCount > 0) {
+          control.doAction(0);
+        }
+
+        // XXX Some mobile widget sets do not expose actions properly
+        // (via ARIA roles, etc.), so we need to generate a click.
+        // Could possibly be made simpler in the future. Maybe core
+        // engine could expose nsCoreUtiles::DispatchMouseEvent()?
+        let docAcc = Utils.AccRetrieval.getAccessibleFor(content.document);
+        let docX = {}, docY = {}, docW = {}, docH = {};
+        docAcc.getBounds(docX, docY, docW, docH);
+
+        let objX = {}, objY = {}, objW = {}, objH = {};
+        aAccessible.getBounds(objX, objY, objW, objH);
+
+        let x = Math.round((objX.value - docX.value) + objW.value / 2);
+        let y = Math.round((objY.value - docY.value) + objH.value / 2);
+
+        let node = aAccessible.DOMNode || aAccessible.parent.DOMNode;
+
+        for (let eventType of ['mousedown', 'mouseup']) {
+          let evt = content.document.createEvent('MouseEvents');
+          evt.initMouseEvent(eventType, true, true, content,
+            x, y, 0, 0, 0, false, false, false, false, 0, null);
+          node.dispatchEvent(evt);
+        }
+      }
+
+      if (aAccessible.role !== Roles.KEY) {
+        // Keys will typically have a sound of their own.
+        this._contentScope.get().sendAsyncMessage('AccessFu:Present',
+          Presentation.actionInvoked(aAccessible, 'click'));
+      }
+    };
+
+    let focusedAcc = Utils.AccRetrieval.getAccessibleFor(
+      this.document.activeElement);
+    if (focusedAcc && focusedAcc.role === Roles.ENTRY) {
+      let accText = focusedAcc.QueryInterface(Ci.nsIAccessibleText);
+      let oldOffset = accText.caretOffset;
+      let newOffset = aMessage.json.offset;
+      let text = accText.getText(0, accText.characterCount);
+
+      if (newOffset >= 0 && newOffset <= accText.characterCount) {
+        accText.caretOffset = newOffset;
+      }
+
+      this.presentCaretChange(text, oldOffset, accText.caretOffset);
+      return;
+    }
+
+    let vc = this.vc;
+    if (!this.sendToChild(vc, aMessage)) {
+      activateAccessible(vc.position);
+    }
+  },
+
+  handleMoveByGranularity: function cc_handleMoveByGranularity(aMessage) {
+    // XXX: Add sendToChild. Right now this is only used in Android, so no need.
+    let direction = aMessage.json.direction;
+    let granularity;
+
+    switch(aMessage.json.granularity) {
+      case MOVEMENT_GRANULARITY_CHARACTER:
+        granularity = Ci.nsIAccessiblePivot.CHAR_BOUNDARY;
+        break;
+      case MOVEMENT_GRANULARITY_WORD:
+        granularity = Ci.nsIAccessiblePivot.WORD_BOUNDARY;
+        break;
+      default:
+        return;
+    }
+
+    if (direction === 'Previous') {
+      this.vc.movePreviousByText(granularity);
+    } else if (direction === 'Next') {
+      this.vc.moveNextByText(granularity);
+    }
+  },
+
+  presentCaretChange: function cc_presentCaretChange(
+    aText, aOldOffset, aNewOffset) {
+    if (aOldOffset !== aNewOffset) {
+      let msg = Presentation.textSelectionChanged(aText, aNewOffset, aNewOffset,
+        aOldOffset, aOldOffset, true);
+      this._contentScope.get().sendAsyncMessage('AccessFu:Present', msg);
+    }
+  },
+
+  handleMoveCaret: function cc_handleMoveCaret(aMessage) {
+    let direction = aMessage.json.direction;
+    let granularity = aMessage.json.granularity;
+    let accessible = this.vc.position;
+    let accText = accessible.QueryInterface(Ci.nsIAccessibleText);
+    let oldOffset = accText.caretOffset;
+    let text = accText.getText(0, accText.characterCount);
+
+    let start = {}, end = {};
+    if (direction === 'Previous' && !aMessage.json.atStart) {
+      switch (granularity) {
+        case MOVEMENT_GRANULARITY_CHARACTER:
+          accText.caretOffset--;
+          break;
+        case MOVEMENT_GRANULARITY_WORD:
+          accText.getTextBeforeOffset(accText.caretOffset,
+            Ci.nsIAccessibleText.BOUNDARY_WORD_START, start, end);
+          accText.caretOffset = end.value === accText.caretOffset ?
+            start.value : end.value;
+          break;
+        case MOVEMENT_GRANULARITY_PARAGRAPH:
+          let startOfParagraph = text.lastIndexOf('\n', accText.caretOffset - 1);
+          accText.caretOffset = startOfParagraph !== -1 ? startOfParagraph : 0;
+          break;
+      }
+    } else if (direction === 'Next' && !aMessage.json.atEnd) {
+      switch (granularity) {
+        case MOVEMENT_GRANULARITY_CHARACTER:
+          accText.caretOffset++;
+          break;
+        case MOVEMENT_GRANULARITY_WORD:
+          accText.getTextAtOffset(accText.caretOffset,
+                                  Ci.nsIAccessibleText.BOUNDARY_WORD_END, start, end);
+          accText.caretOffset = end.value;
+          break;
+        case MOVEMENT_GRANULARITY_PARAGRAPH:
+          accText.caretOffset = text.indexOf('\n', accText.caretOffset + 1);
+          break;
+      }
+    }
+
+    this.presentCaretChange(text, oldOffset, accText.caretOffset);
+  },
+
+  getChildCursor: function cc_getChildCursor(aAccessible) {
     let acc = aAccessible || this.vc.position;
     if (Utils.isAliveAndVisible(acc) && acc.role === Roles.INTERNAL_FRAME) {
       let domNode = acc.DOMNode;
@@ -167,9 +317,7 @@ this.ContentControl.prototype = {
     return null;
   },
 
-  sendToChild: function ContentControl_sendToChild(aVirtualCursor,
-                                                   aMessage,
-                                                   aReplacer) {
+  sendToChild: function cc_sendToChild(aVirtualCursor, aMessage, aReplacer) {
     let mm = this.getChildCursor(aVirtualCursor.position);
     if (!mm) {
       return false;
@@ -186,7 +334,7 @@ this.ContentControl.prototype = {
     return true;
   },
 
-  sendToParent: function ContentControl_sendToParent(aMessage) {
+  sendToParent: function cc_sendToParent(aMessage) {
     // XXX: This is a silly way to make a deep copy
     let newJSON = JSON.parse(JSON.stringify(aMessage.json));
     newJSON.origin = 'child';
@@ -205,7 +353,7 @@ this.ContentControl.prototype = {
    *    precedence over given anchor.
    * - moveMethod: pivot move method to use, default is 'moveNext',
    */
-  autoMove: function ContentControl_autoMove(aAnchor, aOptions = {}) {
+  autoMove: function cc_autoMove(aAnchor, aOptions = {}) {
     let win = this.window;
     win.clearTimeout(this._autoMove);
 

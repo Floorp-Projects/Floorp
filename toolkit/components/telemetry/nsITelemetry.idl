@@ -245,7 +245,9 @@ interface nsITelemetry : nsISupports
    *
    * The statistics are returned as an object whose propoerties are the names
    * of the files that have been accessed and whose corresponding values are
-   * arrays of the form [total_time, #creates, #reads, #writes, #fsyncs, #stats]
+   * arrays of size three, representing startup, normal, and shutdown stages.
+   * Each stage's entry is either null or an array with the layout
+   * [total_time, #creates, #reads, #writes, #fsyncs, #stats]
    */
   [implicit_jscontext]
   readonly attribute jsval fileIOReports;

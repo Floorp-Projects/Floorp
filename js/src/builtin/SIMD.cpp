@@ -211,6 +211,7 @@ CreateX4Class(JSContext *cx, Handle<GlobalObject*> global)
         return nullptr;
     x4->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
     x4->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(T::type));
+    x4->initReservedSlot(JS_DESCR_SLOT_PROTO, ObjectValue(*proto));
 
     // Link constructor to prototype and install properties.
 

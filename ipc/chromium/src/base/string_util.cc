@@ -302,20 +302,6 @@ TrimPositions TrimStringT(const STR& input,
       ((last_good_char == last_char) ? TRIM_NONE : TRIM_TRAILING));
 }
 
-// Removes characters in trim_chars from the beginning and end of input.
-// NOTE: Safe to use the same variable for both input and output.
-static bool TrimString(const std::wstring& input,
-                       const wchar_t trim_chars[],
-                       std::wstring* output) {
-  return TrimStringT(input, trim_chars, TRIM_ALL, output) != TRIM_NONE;
-}
-
-static bool TrimString(const std::string& input,
-                       const char trim_chars[],
-                       std::string* output) {
-  return TrimStringT(input, trim_chars, TRIM_ALL, output) != TRIM_NONE;
-}
-
 TrimPositions TrimWhitespace(const std::wstring& input,
                              TrimPositions positions,
                              std::wstring* output) {
@@ -501,6 +487,24 @@ struct IntToStringT {
     }
   };
 
+  // This set of templates is very similar to the above templates, but
+  // for testing whether an integer is negative.
+  template <typename INT2, bool NEG2>
+  struct TestNegT {};
+  template <typename INT2>
+  struct TestNegT<INT2, false> {
+    static bool TestNeg(INT2 value) {
+      // value is unsigned, and can never be negative.
+      return false;
+    }
+  };
+  template <typename INT2>
+  struct TestNegT<INT2, true> {
+    static bool TestNeg(INT2 value) {
+      return value < 0;
+    }
+  };
+
   static STR IntToString(INT value) {
     // log10(2) ~= 0.3 bytes needed per bit or per byte log10(2**8) ~= 2.4.
     // So round up to allocate 3 output characters per byte, plus 1 for '-'.
@@ -510,7 +514,7 @@ struct IntToStringT {
     // then return the substr of what we ended up using.
     STR outbuf(kOutputBufSize, 0);
 
-    bool is_neg = value < 0;
+    bool is_neg = TestNegT<INT, NEG>::TestNeg(value);
     // Even though is_neg will never be true when INT is parameterized as
     // unsigned, even the presence of the unary operation causes a warning.
     UINT res = ToUnsignedT<INT, UINT, NEG>::ToUnsigned(value);

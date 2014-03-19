@@ -334,6 +334,8 @@ parent:
 
     __delete__();
 
+    ReplyKeyEvent(WidgetKeyboardEvent event);
+
 child:
     /**
      * Notify the remote browser that it has been Show()n on this

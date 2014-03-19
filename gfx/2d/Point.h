@@ -10,6 +10,7 @@
 #include "Types.h"
 #include "BasePoint.h"
 #include "BasePoint3D.h"
+#include "BasePoint4D.h"
 #include "BaseSize.h"
 
 #include <cmath>
@@ -91,6 +92,27 @@ struct Point3DTyped :
   }
 };
 typedef Point3DTyped<UnknownUnits> Point3D;
+
+template<class units>
+struct Point4DTyped :
+  public BasePoint4D< Float, Point4DTyped<units> > {
+  typedef BasePoint4D< Float, Point4DTyped<units> > Super;
+
+  Point4DTyped() : Super() {}
+  Point4DTyped(Float aX, Float aY, Float aZ, Float aW) : Super(aX, aY, aZ, aW) {}
+
+  // XXX When all of the code is ported, the following functions to convert to and from
+  // unknown types should be removed.
+
+  static Point4DTyped<units> FromUnknownPoint(const Point4DTyped<UnknownUnits>& aPoint) {
+    return Point4DTyped<units>(aPoint.x, aPoint.y, aPoint.z, aPoint.w);
+  }
+
+  Point4DTyped<UnknownUnits> ToUnknownPoint() const {
+    return Point4DTyped<UnknownUnits>(this->x, this->y, this->z, this->w);
+  }
+};
+typedef Point4DTyped<UnknownUnits> Point4D;
 
 template<class units>
 struct IntSizeTyped :

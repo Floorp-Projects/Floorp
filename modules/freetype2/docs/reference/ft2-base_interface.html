@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.2 API Reference</title>
+<title>FreeType-2.5.3 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.2 API Reference</h1></center>
+<center><h1>FreeType-2.5.3 API Reference</h1></center>
 
 <center><h1>
 Base Interface
@@ -2279,6 +2279,7 @@ Defined in FT_FREETYPE_H (freetype.h).
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>Although drivers may select the bitmap strike matching the request, you should not rely on this if you intend to select a particular bitmap strike. Use <a href="ft2-base_interface.html#FT_Select_Size">FT_Select_Size</a> instead in that case.</p>
 <p>The relation between the requested size and the resulting glyph size is dependent entirely on how the size is defined in the source face. The font designer chooses the final size of each glyph relative to this size. For more information refer to &lsquo;<a href="http://www.freetype.org/freetype2/docs/glyphs/glyphs-2.html">http://www.freetype.org/freetype2/docs/glyphs/glyphs-2.html</a>&rsquo;</p>
+<p>Don't use this function if you are using the FreeType cache API.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -2384,6 +2385,7 @@ Defined in FT_FREETYPE_H (freetype.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
 <p>You should not rely on the resulting glyphs matching, or being constrained, to this pixel size. Refer to <a href="ft2-base_interface.html#FT_Request_Size">FT_Request_Size</a> to understand how requested sizes relate to actual sizes.</p>
+<p>Don't use this function if you are using the FreeType cache API.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">
@@ -2838,6 +2840,9 @@ Defined in FT_FREETYPE_H (freetype.h).
 </td></tr></table>
 <table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>return</b></em></td></tr><tr><td>
 <p>FreeType error code. 0&nbsp;means success.</p>
+</td></tr></table>
+<table align=center width="87%" cellpadding=5><tr bgcolor="#EEEEFF"><td><em><b>note</b></em></td></tr><tr><td>
+<p>To get meaningful results, font scaling values must be set with functions like <a href="ft2-base_interface.html#FT_Set_Char_Size">FT_Set_Char_Size</a> before calling FT_Render_Glyph.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

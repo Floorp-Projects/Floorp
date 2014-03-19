@@ -699,12 +699,24 @@ var Output = {
     }
   },
 
+  get androidBridge() {
+    delete this.androidBridge;
+    if (Utils.MozBuildApp === 'mobile/android') {
+      this.androidBridge = Cc['@mozilla.org/android/bridge;1'].getService(
+      Ci.nsIAndroidBridge);
+    } else {
+      this.androidBridge = null;
+    }
+    return this.androidBridge;
+  },
+
   Android: function Android(aDetails, aBrowser) {
     const ANDROID_VIEW_TEXT_CHANGED = 0x10;
     const ANDROID_VIEW_TEXT_SELECTION_CHANGED = 0x2000;
 
-    if (!this._bridge)
-      this._bridge = Cc['@mozilla.org/android/bridge;1'].getService(Ci.nsIAndroidBridge);
+    if (!this.androidBridge) {
+      return;
+    }
 
     for each (let androidEvent in aDetails) {
       androidEvent.type = 'Accessibility:Event';
@@ -722,7 +734,7 @@ var Output = {
           androidEvent.brailleOutput = this.brailleState.init(androidEvent.brailleOutput);
           break;
       }
-      this._bridge.handleGeckoMessage(JSON.stringify(androidEvent));
+      this.androidBridge.handleGeckoMessage(JSON.stringify(androidEvent));
     }
   },
 

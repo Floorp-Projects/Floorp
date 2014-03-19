@@ -98,7 +98,7 @@ this.Utils = {
         this._AndroidSdkVersion = Services.sysinfo.getPropertyAsInt32('version');
       } else {
         // Most useful in desktop debugging.
-        this._AndroidSdkVersion = 15;
+        this._AndroidSdkVersion = 16;
       }
     }
     return this._AndroidSdkVersion;
