@@ -148,8 +148,7 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, JS::MutableHand
     if (cache) {
         JSObject* wrapper = cache->GetWrapper();
         if (wrapper &&
-            js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
-            !(cache->IsDOMBinding() && cache->HasSystemOnlyWrapper()))
+            js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope))
         {
             vp.setObject(*wrapper);
             return wrapper;

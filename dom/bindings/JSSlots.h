@@ -14,15 +14,9 @@
 // globals and non-globals.
 #define DOM_OBJECT_SLOT 0
 
-// We use slot 2 for holding either a JS::ObjectValue which points to the cached
-// SOW or JS::UndefinedValue if this class doesn't need SOWs. This is not safe
-// for globals until bug 760095 is fixed, so that bug blocks converting Window
-// to new bindings.
-#define DOM_OBJECT_SLOT_SOW 1
-
 // The total number of slots non-proxy DOM objects use by default.
 // Specific objects may have more for storing cached values.
-#define DOM_INSTANCE_RESERVED_SLOTS 2
+#define DOM_INSTANCE_RESERVED_SLOTS 1
 
 // NOTE: This is baked into the Ion JIT as 0 in codegen for LGetDOMProperty and
 // LSetDOMProperty. Those constants need to be changed accordingly if this value

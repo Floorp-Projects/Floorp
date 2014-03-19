@@ -121,20 +121,6 @@ public:
     return HasWrapperFlag(WRAPPER_IS_DOM_BINDING);
   }
 
-  void SetHasSystemOnlyWrapper()
-  {
-    MOZ_ASSERT(GetWrapperPreserveColor(),
-               "This flag should be set after wrapper creation.");
-    MOZ_ASSERT(IsDOMBinding(),
-               "This flag should only be set for DOM bindings.");
-    SetWrapperFlags(WRAPPER_HAS_SOW);
-  }
-
-  bool HasSystemOnlyWrapper() const
-  {
-    return HasWrapperFlag(WRAPPER_HAS_SOW);
-  }
-
   /**
    * Wrap the object corresponding to this wrapper cache. If non-null is
    * returned, the object has already been stored in the wrapper cache.
@@ -300,21 +286,13 @@ private:
    */
   enum { WRAPPER_IS_DOM_BINDING = 1 << 1 };
 
-  /**
-   * If this bit is set then the wrapper for the native object is a DOM binding
-   * (regular JS object or proxy) that has a system only wrapper for same-origin
-   * access.
-   */
-  enum { WRAPPER_HAS_SOW = 1 << 2 };
-
-  enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING |
-                              WRAPPER_HAS_SOW) };
+  enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_DOM_BINDING) };
 
   JS::Heap<JSObject*> mWrapper;
   uint32_t            mFlags;
 };
 
-enum { WRAPPER_CACHE_FLAGS_BITS_USED = 3 };
+enum { WRAPPER_CACHE_FLAGS_BITS_USED = 2 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsWrapperCache, NS_WRAPPERCACHE_IID)
 
