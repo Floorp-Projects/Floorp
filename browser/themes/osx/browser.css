@@ -841,17 +841,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(36px, 540px, 72px, 504px);
   }
 
-  #sync-button[cui-areatype="toolbar"][status="active"],
-  #sync-button[cui-areatype="toolbar"][status="active"]:hover:active:not([disabled="true"]) {
-    list-style-image: url("chrome://browser/skin/syncProgress-toolbar@2x.png");
-    -moz-image-region: rect(0, 36px, 36px, 0px);
-  }
-
-  #sync-button[cui-areatype="toolbar"][status="active"]:-moz-lwtheme-brighttext,
-  #sync-button[cui-areatype="toolbar"][status="active"]:-moz-lwtheme-brighttext:hover:active:not([disabled="true"]) {
-    list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted@2x.png");
-  }
-
   #feed-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 576px, 36px, 540px);
   }
@@ -1101,11 +1090,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
   #sync-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #sync-button {
     -moz-image-region: rect(0px, 768px, 64px, 704px);
-  }
-
-  #sync-button[cui-areatype="menu-panel"][status="active"] {
-    list-style-image: url(chrome://browser/skin/syncProgress-menuPanel@2x.png);
-    -moz-image-region: rect(0px, 64px, 64px, 0px);
   }
 
   #feed-button[cui-areatype="menu-panel"],
@@ -1607,6 +1591,13 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
   padding-top: 4px;
   margin: 2px;
+}
+
+/* sync button */
+
+#sync-button[status="active"] {
+  list-style-image: url("chrome://browser/skin/sync-throbber.png");
+  -moz-image-region: rect(0, 20px, 20px, 0px);
 }
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
