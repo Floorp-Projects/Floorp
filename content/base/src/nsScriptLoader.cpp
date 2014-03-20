@@ -8,11 +8,14 @@
  * A class that handles loading and evaluation of <script> elements.
  */
 
+#include "nsScriptLoader.h"
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "nsScriptLoader.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIContent.h"
+#include "nsJSUtils.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/Element.h"
 #include "nsGkAtoms.h"
 #include "nsNetUtil.h"
@@ -42,7 +45,6 @@
 #include "nsChannelPolicy.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
-#include "mozilla/dom/Element.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsSandboxFlags.h"
 #include "nsContentTypeParser.h"
@@ -1068,8 +1070,11 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
     return NS_ERROR_FAILURE;
   }
 
-  AutoPushJSContext cx(context->GetNativeContext());
-  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
+  // New script entry point required, due to the "Create a script" sub-step of
+  // http://www.whatwg.org/specs/web-apps/current-work/#execute-the-script-block
+  AutoEntryScript entryScript(globalObject, true, context->GetNativeContext());
+  JS::Rooted<JSObject*> global(entryScript.cx(),
+                               globalObject->GetGlobalJSObject());
 
   bool oldProcessingScriptTag = context->GetProcessingScriptTag();
   context->SetProcessingScriptTag(true);
@@ -1080,11 +1085,11 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   JSVersion version = JSVersion(aRequest->mJSVersion);
   if (version != JSVERSION_UNKNOWN) {
-    JS::CompileOptions options(cx);
+    JS::CompileOptions options(entryScript.cx());
     FillCompileOptionsForRequest(aRequest, global, &options);
-    rv = context->EvaluateString(aScript, global,
-                                 options, /* aCoerceToString = */ false, nullptr,
-                                 aOffThreadToken);
+    nsJSUtils::EvaluateOptions evalOptions;
+    rv = nsJSUtils::EvaluateString(entryScript.cx(), aScript, global, options,
+                                   evalOptions, nullptr, aOffThreadToken);
   }
 
   // Put the old script back in case it wants to do anything else.

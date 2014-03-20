@@ -116,12 +116,6 @@ TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 }
 
 void
-TextTrack::CueChanged(TextTrackCue& aCue)
-{
-  //XXX: Implement Cue changed. Bug 867823.
-}
-
-void
 TextTrack::UpdateActiveCueList()
 {
   if (!mTextTrackList) {

@@ -462,7 +462,23 @@ NS_IMPL_BOOL_ATTR(HTMLMediaElement, Autoplay, autoplay)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, Loop, loop)
 NS_IMPL_BOOL_ATTR(HTMLMediaElement, DefaultMuted, muted)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMediaElement, Preload, preload, nullptr)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLMediaElement, MozAudioChannelType, mozaudiochannel, "normal")
+
+NS_IMETHODIMP
+HTMLMediaElement::GetMozAudioChannelType(nsAString& aValue)
+{
+  nsString defaultValue;
+  AudioChannelService::GetDefaultAudioChannelString(defaultValue);
+
+  NS_ConvertUTF16toUTF8 str(defaultValue);
+  GetEnumAttr(nsGkAtoms::mozaudiochannel, str.get(), aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLMediaElement::SetMozAudioChannelType(const nsAString& aValue)
+{
+  return SetAttrHelper(nsGkAtoms::mozaudiochannel, aValue);
+}
 
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetMozSrcObject() const
@@ -2344,19 +2360,28 @@ bool HTMLMediaElement::CheckAudioChannelPermissions(const nsAString& aString)
   }
 
   // Only normal channel doesn't need permission.
-  if (!aString.EqualsASCII("normal")) {
-    nsCOMPtr<nsIPermissionManager> permissionManager =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-    if (!permissionManager) {
-      return false;
-    }
+  if (aString.EqualsASCII("normal")) {
+    return true;
+  }
 
-    uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
-    permissionManager->TestExactPermissionFromPrincipal(NodePrincipal(),
-      nsCString(NS_LITERAL_CSTRING("audio-channel-") + NS_ConvertUTF16toUTF8(aString)).get(), &perm);
-    if (perm != nsIPermissionManager::ALLOW_ACTION) {
-      return false;
-    }
+  // Maybe this audio channel is equal to the default value from the pref.
+  nsString audioChannel;
+  AudioChannelService::GetDefaultAudioChannelString(audioChannel);
+  if (audioChannel.Equals(aString)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permissionManager) {
+    return false;
+  }
+
+  uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
+  permissionManager->TestExactPermissionFromPrincipal(NodePrincipal(),
+    nsCString(NS_LITERAL_CSTRING("audio-channel-") + NS_ConvertUTF16toUTF8(aString)).get(), &perm);
+  if (perm != nsIPermissionManager::ALLOW_ACTION) {
+    return false;
   }
 
   return true;
@@ -3988,7 +4013,7 @@ HTMLMediaElement::MozAudioChannelType() const
       return AudioChannel::Publicnotification;
 
     default:
-      return AudioChannel::Normal;
+      return AudioChannelService::GetDefaultAudioChannel();
   }
 }
 

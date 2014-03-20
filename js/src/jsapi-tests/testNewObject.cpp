@@ -63,9 +63,9 @@ BEGIN_TEST(testNewObject_1)
     JS::RootedObject Array(cx, JSVAL_TO_OBJECT(v));
 
     // With no arguments.
-    JS::RootedObject obj(cx, JS_New(cx, Array, 0, nullptr));
+    JS::RootedObject obj(cx, JS_New(cx, Array, JS::HandleValueArray::empty()));
     CHECK(obj);
-    JS::RootedValue rt(cx, OBJECT_TO_JSVAL(obj));
+    JS::RootedValue rt(cx, JS::ObjectValue(*obj));
     CHECK(JS_IsArrayObject(cx, obj));
     uint32_t len;
     CHECK(JS_GetArrayLength(cx, obj, &len));
@@ -73,7 +73,7 @@ BEGIN_TEST(testNewObject_1)
 
     // With one argument.
     argv[0].setInt32(4);
-    obj = JS_New(cx, Array, 1, argv.begin());
+    obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, 1));
     CHECK(obj);
     rt = OBJECT_TO_JSVAL(obj);
     CHECK(JS_IsArrayObject(cx, obj));
@@ -83,7 +83,7 @@ BEGIN_TEST(testNewObject_1)
     // With N arguments.
     for (size_t i = 0; i < N; i++)
         argv[i].setInt32(i);
-    obj = JS_New(cx, Array, N, argv.begin());
+    obj = JS_New(cx, Array, JS::HandleValueArray::subarray(argv, 0, N));
     CHECK(obj);
     rt = OBJECT_TO_JSVAL(obj);
     CHECK(JS_IsArrayObject(cx, obj));
@@ -103,7 +103,7 @@ BEGIN_TEST(testNewObject_1)
     JS::RootedObject ctor(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
     CHECK(ctor);
     JS::RootedValue rt2(cx, OBJECT_TO_JSVAL(ctor));
-    obj = JS_New(cx, ctor, 3, argv.begin());
+    obj = JS_New(cx, ctor, JS::HandleValueArray::subarray(argv, 0, 3));
     CHECK(obj);
     CHECK(JS_GetElement(cx, ctor, 0, &v));
     CHECK_SAME(v, JSVAL_ZERO);

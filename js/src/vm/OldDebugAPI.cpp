@@ -223,10 +223,9 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *scriptArg, bool singleStep)
 }
 
 JS_PUBLIC_API(bool)
-JS_SetTrap(JSContext *cx, JSScript *scriptArg, jsbytecode *pc, JSTrapHandler handler, jsval closureArg)
+JS_SetTrap(JSContext *cx, HandleScript script, jsbytecode *pc, JSTrapHandler handler,
+           HandleValue closure)
 {
-    RootedScript script(cx, scriptArg);
-    RootedValue closure(cx, closureArg);
     assertSameCompartment(cx, script, closure);
 
     if (!CheckDebugMode(cx))
