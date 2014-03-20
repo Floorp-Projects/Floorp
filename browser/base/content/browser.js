@@ -6855,14 +6855,6 @@ let gRemoteTabsUI = {
 function switchToTabHavingURI(aURI, aOpenNew, aOpenParams) {
   // This will switch to the tab in aWindow having aURI, if present.
   function switchIfURIInWindow(aWindow) {
-    // Only switch to the tab if neither the source and desination window are
-    // private and they are not in permanent private borwsing mode
-    if ((PrivateBrowsingUtils.isWindowPrivate(window) ||
-        PrivateBrowsingUtils.isWindowPrivate(aWindow)) &&
-        !PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      return false;
-    }
-
     let browsers = aWindow.gBrowser.browsers;
     for (let i = 0; i < browsers.length; i++) {
       let browser = browsers[i];
