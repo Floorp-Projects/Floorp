@@ -1810,19 +1810,6 @@ pref("layout.css.sticky.enabled", true);
 // Is support for CSS "will-change" enabled?
 pref("layout.css.will-change.enabled", false);
 
-// Is support for DOMPoint enabled?
-pref("layout.css.DOMPoint.enabled", true);
-
-// Is support for DOMQuad enabled?
-pref("layout.css.DOMQuad.enabled", true);
-
-// Is support for GeometryUtils.getBoxQuads enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.getBoxQuads.enabled", false);
-#else
-pref("layout.css.getBoxQuads.enabled", true);
-#endif
-
 // Is support for CSS "text-align: true X" enabled?
 pref("layout.css.text-align-true-value.enabled", false);
 
