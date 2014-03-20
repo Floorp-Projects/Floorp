@@ -288,11 +288,13 @@ public:
     kPrimitiveIndexStrokePaint = -4
   };
 
+  FilterPrimitiveDescription();
   FilterPrimitiveDescription(PrimitiveType aType);
   FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther);
   FilterPrimitiveDescription& operator=(const FilterPrimitiveDescription& aOther);
 
   PrimitiveType Type() const { return mType; }
+  void SetType(PrimitiveType aType) { mType = aType; }
   const AttributeMap& Attributes() const { return mAttributes; }
   AttributeMap& Attributes() { return mAttributes; }
 
