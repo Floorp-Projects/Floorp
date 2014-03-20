@@ -68,7 +68,7 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
   temp.setConfig(GfxFormatToSkiaConfig(aFormat), aSize.width, aSize.height, aStride);
   temp.setPixels(aData);
 
-  if (!temp.copyTo(&mBitmap, GfxFormatToSkiaConfig(aFormat))) {
+  if (!temp.copyTo(&mBitmap, GfxFormatToSkiaColorType(aFormat))) {
     return false;
   }
 
@@ -108,7 +108,7 @@ SourceSurfaceSkia::DrawTargetWillChange()
     mDrawTarget = nullptr;
     SkBitmap temp = mBitmap;
     mBitmap.reset();
-    temp.copyTo(&mBitmap, temp.getConfig());
+    temp.copyTo(&mBitmap, temp.colorType());
   }
 }
 
