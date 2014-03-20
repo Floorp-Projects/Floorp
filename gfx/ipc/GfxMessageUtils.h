@@ -469,6 +469,26 @@ struct ParamTraits< mozilla::gfx::PointTyped<T> >
 };
 
 template<class T>
+struct ParamTraits< mozilla::gfx::Point3DTyped<T> >
+{
+  typedef mozilla::gfx::Point3DTyped<T> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.x);
+    WriteParam(msg, param.y);
+    WriteParam(msg, param.z);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->x) &&
+            ReadParam(msg, iter, &result->y) &&
+            ReadParam(msg, iter, &result->z));
+  }
+};
+
+template<class T>
 struct ParamTraits< mozilla::gfx::IntPointTyped<T> >
 {
   typedef mozilla::gfx::IntPointTyped<T> paramType;
