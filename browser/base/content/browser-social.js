@@ -177,6 +177,7 @@ SocialUI = {
     SocialShare.populateProviderMenu();
     SocialStatus.populateToolbarPalette();
     SocialMarks.populateToolbarPalette();
+    SocialShare.update();
   },
 
   // This handles "ActivateSocialFeature" events fired against content documents
@@ -514,7 +515,7 @@ SocialShare = {
     if (!provider)
       provider = SocialSidebar.provider;
     // if our provider has no shareURL, select the first one that does
-    if (provider && !provider.shareURL) {
+    if (!provider || !provider.shareURL) {
       let providers = [p for (p of Social.providers) if (p.shareURL)];
       provider = providers.length > 0  && providers[0];
     }
@@ -582,7 +583,10 @@ SocialShare = {
     // also update the relevent command's disabled state so the keyboard
     // shortcut only works when available.
     let cmd = document.getElementById("Social:SharePage");
-    cmd.setAttribute("disabled", shareButton.disabled ? "true" : "false");
+    if (shareButton.disabled)
+      cmd.setAttribute("disabled", "true");
+    else
+      cmd.removeAttribute("disabled");
   },
 
   onShowing: function() {
@@ -1411,6 +1415,7 @@ SocialMarks = {
     for (let cfg of contextMenus) {
       this._populateContextPopup(cfg, providers);
     }
+    this.updatePanelButtons();
   },
 
   MENU_LIMIT: 3, // adjustable for testing
