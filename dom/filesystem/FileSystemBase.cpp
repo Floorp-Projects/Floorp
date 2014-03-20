@@ -68,5 +68,11 @@ FileSystemBase::IsSafeFile(nsIFile* aFile) const
   return false;
 }
 
+bool
+FileSystemBase::IsSafeDirectory(Directory* aDir) const
+{
+  return false;
+}
+
 } // namespace dom
 } // namespace mozilla

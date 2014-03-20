@@ -85,7 +85,9 @@ this.Keyboard = {
     mm.addMessageListener('Forms:GetText:Result:OK', this);
     mm.addMessageListener('Forms:GetText:Result:Error', this);
     mm.addMessageListener('Forms:SetSelectionRange:Result:OK', this);
+    mm.addMessageListener('Forms:SetSelectionRange:Result:Error', this);
     mm.addMessageListener('Forms:ReplaceSurroundingText:Result:OK', this);
+    mm.addMessageListener('Forms:ReplaceSurroundingText:Result:Error', this);
     mm.addMessageListener('Forms:SendKey:Result:OK', this);
     mm.addMessageListener('Forms:SendKey:Result:Error', this);
     mm.addMessageListener('Forms:SequenceError', this);
@@ -146,6 +148,8 @@ this.Keyboard = {
       case 'Forms:GetContext:Result:OK':
       case 'Forms:SetComposition:Result:OK':
       case 'Forms:EndComposition:Result:OK':
+      case 'Forms:SetSelectionRange:Result:Error':
+      case 'Forms:ReplaceSurroundingText:Result:Error':
         let name = msg.name.replace(/^Forms/, 'Keyboard');
         this.forwardEvent(name, msg);
         break;

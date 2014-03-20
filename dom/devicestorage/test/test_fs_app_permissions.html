@@ -88,6 +88,32 @@ function TestGet(iframe, data) {
   }, cbError);
 }
 
+function TestRemove(iframe, data) {
+  function cbError(e) {
+    is(e.name, "SecurityError", "[TestRemove] Should fire a SecurityError for type " + data.type);
+    is(data.shouldPass, false, "[TestRemove] Error callback was called for type " + data.type + '. Error: ' + e.name);
+    testComplete(iframe, data);
+  }
+
+  createTestFile(data.fileExtension);
+
+  let storage = iframe.contentDocument.defaultView.navigator.getDeviceStorage(data.type);
+  isnot(storage, null, "[TestRemove] Should be able to get storage object for " + data.type);
+
+  if (!storage) {
+    testComplete(iframe, data);
+    return;
+  }
+
+  storage.getRoot().then(function(root) {
+    ok(true, "[TestRemove] Success callback of getRoot was called for type " + data.type);
+    root.remove("testfile" + data.fileExtension).then(function() {
+      is(data.shouldPass, true, "[TestRemove] Success callback was called for type " + data.type);
+      testComplete(iframe, data);
+    }, cbError);
+  }, cbError);
+}
+
 let gTestUri = "https://example.com/tests/dom/devicestorage/test/test_fs_app_permissions.html"
 
 let gData = [
@@ -344,6 +370,164 @@ let gData = [
     permissions: ["device-storage:sdcard"],
 
     test: TestCreateDirectory
+  },
+
+  // Directory#remove
+
+  // Web applications with no permissions
+  {
+    type: 'pictures',
+    shouldPass: false,
+    fileExtension: '.png',
+    test: TestRemove
+  },
+  {
+    type: 'videos',
+    shouldPass: false,
+    fileExtension: '.ogv',
+    test: TestRemove
+  },
+  {
+    type: 'videos',
+    shouldPass: false,
+    fileExtension: '.ogg',
+    test: TestRemove
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.ogg',
+    test: TestRemove
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.txt',
+    test: TestRemove
+  },
+  {
+    type: 'sdcard',
+    shouldPass: false,
+    fileExtension: '.txt',
+    test: TestRemove
+  },
+
+  // Web applications with permission granted
+  {
+    type: 'pictures',
+    shouldPass: true,
+    fileExtension: '.png',
+
+    permissions: ["device-storage:pictures"],
+
+    test: TestRemove
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogv',
+
+    permissions: ["device-storage:videos"],
+
+    test: TestRemove
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    permissions: ["device-storage:videos"],
+
+    test: TestRemove
+  },
+  {
+    type: 'music',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    permissions: ["device-storage:music"],
+
+    test: TestRemove
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.txt',
+
+    permissions: ["device-storage:music"],
+
+    test: TestRemove
+  },
+  {
+    type: 'sdcard',
+    shouldPass: true,
+    fileExtension: '.txt',
+
+    permissions: ["device-storage:sdcard"],
+
+    test: TestRemove
+  },
+
+  // Certified application with permision granted
+  {
+    type: 'pictures',
+    shouldPass: true,
+    fileExtension: '.png',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:pictures"],
+
+    test: TestRemove
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogv',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:videos"],
+
+    test: TestRemove
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:videos"],
+
+    test: TestRemove
+  },
+  {
+    type: 'music',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:music"],
+
+    test: TestRemove
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.txt',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:music"],
+
+    test: TestRemove
+  },
+  {
+    type: 'sdcard',
+    shouldPass: true,
+    fileExtension: '.txt',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:sdcard"],
+
+    test: TestRemove
   }
 
 ];

@@ -67,6 +67,8 @@ const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
+const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
+const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_XPI_UNPACK                 = "extensions.alwaysUnpack";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
@@ -3446,6 +3448,28 @@ var XPIProvider = {
   },
 
   /**
+   * Called to test whether installing XPI add-ons by direct URL requests is
+   * whitelisted.
+   *
+   * @return true if installing by direct requests is whitelisted
+   */
+  isDirectRequestWhitelisted: function XPI_isDirectRequestWhitelisted() {
+    // Default to whitelisted if the preference does not exist.
+    return Prefs.getBoolPref(PREF_XPI_DIRECT_WHITELISTED, true);
+  },
+
+  /**
+   * Called to test whether installing XPI add-ons from file referrers is
+   * whitelisted.
+   *
+   * @return true if installing from file referrers is whitelisted
+   */
+  isFileRequestWhitelisted: function XPI_isFileRequestWhitelisted() {
+    // Default to whitelisted if the preference does not exist.
+    return Prefs.getBoolPref(PREF_XPI_FILE_WHITELISTED, true);
+  },
+
+  /**
    * Called to test whether installing XPI add-ons from a URI is allowed.
    *
    * @param  aUri
@@ -3456,11 +3480,13 @@ var XPIProvider = {
     if (!this.isInstallEnabled())
       return false;
 
+    // Direct requests without a referrer are either whitelisted or blocked.
     if (!aUri)
-      return true;
+      return this.isDirectRequestWhitelisted();
 
-    // file: and chrome: don't need whitelisted hosts
-    if (aUri.schemeIs("chrome") || aUri.schemeIs("file"))
+    // Local referrers can be whitelisted.
+    if (this.isFileRequestWhitelisted() &&
+        (aUri.schemeIs("chrome") || aUri.schemeIs("file")))
       return true;
 
     this.importPermissions();

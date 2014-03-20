@@ -15,6 +15,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/CrashReports.jsm");
 #endif
 
+let Experiments;
+try {
+  Experiments = Cu.import("resource:///modules/experiments/Experiments.jsm").Experiments;
+}
+catch (e) {
+}
+
 // We use a preferences whitelist to make sure we only show preferences that
 // are useful for support and won't compromise the user's privacy.  Note that
 // entries are *prefixes*: for example, "accessibility." applies to all prefs
@@ -172,6 +179,18 @@ let dataProviders = {
         }, {});
       }));
     });
+  },
+
+  experiments: function experiments(done) {
+    if (Experiments === undefined) {
+      done([]);
+      return;
+    }
+
+    // getExperiments promises experiment history
+    Experiments.instance().getExperiments().then(
+      experiments => done(experiments)
+    );
   },
 
   modifiedPreferences: function modifiedPreferences(done) {
