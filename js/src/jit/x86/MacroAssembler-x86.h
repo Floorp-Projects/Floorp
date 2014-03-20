@@ -561,6 +561,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void subPtr(const Address &addr, const Register &dest) {
         subl(Operand(addr), dest);
     }
+    void subPtr(const Register &src, const Address &dest) {
+        subl(src, Operand(dest));
+    }
 
     void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
         cmpl(Operand(lhs), rhs);
