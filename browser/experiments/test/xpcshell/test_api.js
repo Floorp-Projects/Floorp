@@ -264,6 +264,33 @@ add_task(function* test_getExperiments() {
   yield removeCacheFile();
 });
 
+add_task(function* test_lastActiveToday() {
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  replaceExperiments(experiments, FAKE_EXPERIMENTS_1);
+
+  let e = yield experiments.getExperiments();
+  Assert.equal(e.length, 1, "Monkeypatch successful.");
+  Assert.equal(e[0].id, "id1", "ID looks sane");
+  Assert.ok(e[0].active, "Experiment is active.");
+
+  let lastActive = yield experiments.lastActiveToday();
+  Assert.equal(e[0], lastActive, "Last active object is expected.");
+
+  replaceExperiments(experiments, FAKE_EXPERIMENTS_2);
+  e = yield experiments.getExperiments();
+  Assert.equal(e.length, 2, "Monkeypatch successful.");
+
+  defineNow(gPolicy, e[0].endDate);
+
+  lastActive = yield experiments.lastActiveToday();
+  Assert.ok(lastActive, "Have a last active experiment");
+  Assert.equal(lastActive, e[0], "Last active object is expected.");
+
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
+
 // Test explicitly disabling experiments.
 
 add_task(function* test_disableExperiment() {
@@ -636,6 +663,9 @@ add_task(function* test_userDisabledAndUpdated() {
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
+  let todayActive = yield experiments.lastActiveToday();
+  Assert.ok(todayActive, "Last active for today reports a value.");
+  Assert.equal(todayActive.id, list[0].id, "The entry is what we expect.");
 
   // Explicitly disable an experiment.
 
@@ -649,6 +679,9 @@ add_task(function* test_userDisabledAndUpdated() {
   Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, false, "Experiment should not be active anymore.");
+  todayActive = yield experiments.lastActiveToday();
+  Assert.ok(todayActive, "Last active for today still returns a value.");
+  Assert.equal(todayActive.id, list[0].id, "The ID is still the same.");
 
   // Trigger an update with a faked change for experiment 1.
 
@@ -718,6 +751,9 @@ add_task(function* test_updateActiveExperiment() {
   let list = yield experiments.getExperiments();
   Assert.equal(list.length, 0, "Experiment list should be empty.");
 
+  let todayActive = yield experiments.lastActiveToday();
+  Assert.equal(todayActive, null, "No experiment active today.");
+
   // Trigger update, clock set for the experiment to start.
 
   now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
@@ -731,6 +767,9 @@ add_task(function* test_updateActiveExperiment() {
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should be active.");
   Assert.equal(list[0].name, EXPERIMENT1_NAME, "Experiments name should match.");
+  todayActive = yield experiments.lastActiveToday();
+  Assert.ok(todayActive, "todayActive() returns a value.");
+  Assert.equal(todayActive.id, list[0].id, "It returns the active experiment.");
 
   // Trigger an update for the active experiment by changing it's hash (and xpi)
   // in the manifest.
@@ -748,6 +787,8 @@ add_task(function* test_updateActiveExperiment() {
   Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
   Assert.equal(list[0].active, true, "Experiment 1 should still be active.");
   Assert.equal(list[0].name, EXPERIMENT1A_NAME, "Experiments name should have been updated.");
+  todayActive = yield experiments.lastActiveToday();
+  Assert.equal(todayActive.id, list[0].id, "last active today is still sane.");
 
   // Cleanup.
 
