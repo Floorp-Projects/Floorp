@@ -89,6 +89,10 @@ var gTimerRegistered = false;
 // Map of datasetId -> { interval: <integer>, callback: <function> }
 var gSyncCallbacks = {};
 
+// Whether or not writes to the provider are expected.
+// e.g. save() and deleteAll()
+var gWritesAreExpected = false;
+
 /**
  * nsITimerCallback implementation. Checks to see if it's time to sync any registered datasets.
  *
@@ -154,7 +158,10 @@ this.HomeProvider = Object.freeze({
       return false;
     }
 
+    gWritesAreExpected = true;
     callback(datasetId);
+    gWritesAreExpected = false;
+
     return true;
   },
 
@@ -292,6 +299,10 @@ HomeStorage.prototype = {
    * @resolves When the operation has completed.
    */
   save: function(data) {
+    if (!gWritesAreExpected) {
+      Cu.reportError("HomeStorage: save() called outside of sync window");
+    }
+
     return Task.spawn(function save_task() {
       let db = yield getDatabaseConnection();
       try {
@@ -331,6 +342,10 @@ HomeStorage.prototype = {
    * @resolves When the operation has completed.
    */
   deleteAll: function() {
+    if (!gWritesAreExpected) {
+      Cu.reportError("HomeStorage: deleteAll() called outside of sync window");
+    }
+
     return Task.spawn(function delete_all_task() {
       let db = yield getDatabaseConnection();
       try {
