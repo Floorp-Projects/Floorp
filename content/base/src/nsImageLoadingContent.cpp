@@ -47,7 +47,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 
-#ifdef LoadImage
+#if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
 #undef LoadImage
 #endif
