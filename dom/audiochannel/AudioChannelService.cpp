@@ -29,6 +29,8 @@
 #define NS_AUDIOMANAGER_CONTRACTID "@mozilla.org/telephony/audiomanager;1"
 #endif
 
+#include "mozilla/Preferences.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -879,4 +881,53 @@ AudioChannelService::CountWindow(nsIDOMWindow* aWindow)
   CountWindowData data(aWindow);
   mAgents.EnumerateRead(CountWindowEnumerator, &data);
   return data.mCount;
+}
+
+// Mappings from 'mozaudiochannel' attribute strings to an enumeration.
+static const struct AudioChannelTable
+{
+  const char* string;
+  AudioChannel value;
+} kMozAudioChannelAttributeTable[] = {
+  { "normal",             AudioChannel::Normal },
+  { "content",            AudioChannel::Content },
+  { "notification",       AudioChannel::Notification },
+  { "alarm",              AudioChannel::Alarm },
+  { "telephony",          AudioChannel::Telephony },
+  { "ringer",             AudioChannel::Ringer },
+  { "publicnotification", AudioChannel::Publicnotification },
+  { nullptr }
+};
+
+/* static */ AudioChannel
+AudioChannelService::GetDefaultAudioChannel()
+{
+  nsString audioChannel = Preferences::GetString("media.defaultAudioChannel");
+  if (audioChannel.IsEmpty()) {
+    return AudioChannel::Normal;
+  }
+
+  for (uint32_t i = 0; kMozAudioChannelAttributeTable[i].string; ++i) {
+    if (audioChannel.EqualsASCII(kMozAudioChannelAttributeTable[i].string)) {
+      return kMozAudioChannelAttributeTable[i].value;
+    }
+  }
+
+  return AudioChannel::Normal;
+}
+
+/* static */ void
+AudioChannelService::GetDefaultAudioChannelString(nsString& aString)
+{
+  aString.AssignASCII("normal");
+
+  nsString audioChannel = Preferences::GetString("media.defaultAudioChannel");
+  if (!audioChannel.IsEmpty()) {
+    for (uint32_t i = 0; kMozAudioChannelAttributeTable[i].string; ++i) {
+      if (audioChannel.EqualsASCII(kMozAudioChannelAttributeTable[i].string)) {
+        aString = audioChannel;
+        break;
+      }
+    }
+  }
 }
