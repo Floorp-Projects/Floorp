@@ -438,6 +438,7 @@ public:
     bool             mHasSpaceFeatures : 1;
     bool             mHasSpaceFeaturesKerning : 1;
     bool             mHasSpaceFeaturesNonKerning : 1;
+    bool             mSkipDefaultFeatureSpaceCheck : 1;
     bool             mHasGraphiteTables : 1;
     bool             mCheckedForGraphiteTables : 1;
     bool             mHasCmapTable : 1;
@@ -676,7 +677,8 @@ public:
         mHasStyles(false),
         mIsSimpleFamily(false),
         mIsBadUnderlineFamily(false),
-        mFamilyCharacterMapInitialized(false)
+        mFamilyCharacterMapInitialized(false),
+        mSkipDefaultFeatureSpaceCheck(false)
         { }
 
     virtual ~gfxFontFamily() { }
@@ -697,6 +699,7 @@ public:
             aFontEntry->mIgnoreGDEF = true;
         }
         aFontEntry->mFamilyName = Name();
+        aFontEntry->mSkipDefaultFeatureSpaceCheck = mSkipDefaultFeatureSpaceCheck;
         mAvailableFonts.AppendElement(aFontEntry);
     }
 
@@ -798,6 +801,10 @@ public:
         return false;
     }
 
+    void SetSkipSpaceFeatureCheck(bool aSkipCheck) {
+        mSkipDefaultFeatureSpaceCheck = aSkipCheck;
+    }
+
 protected:
     // fills in an array with weights of faces that match style,
     // returns whether any matching entries found
@@ -828,6 +835,7 @@ protected:
     bool mIsSimpleFamily : 1;
     bool mIsBadUnderlineFamily : 1;
     bool mFamilyCharacterMapInitialized : 1;
+    bool mSkipDefaultFeatureSpaceCheck : 1;
 
     enum {
         // for "simple" families, the faces are stored in mAvailableFonts
