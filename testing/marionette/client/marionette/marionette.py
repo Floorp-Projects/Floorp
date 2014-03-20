@@ -608,8 +608,16 @@ class Marionette(object):
 
         # Process any emulator commands that are sent from a script
         # while it's executing.
-        while response.get("emulator_cmd"):
-            response = self._handle_emulator_cmd(response)
+        while True:
+            if response.get("emulator_cmd"):
+                response = self._handle_emulator_cmd(response)
+                continue;
+
+            if response.get("emulator_shell"):
+                response = self._handle_emulator_shell(response)
+                continue;
+
+            break;
 
         if response_key in response:
             return response[response_key]
@@ -622,6 +630,16 @@ class Marionette(object):
                 "No emulator in this test to run command against")
         cmd = cmd.encode("ascii")
         result = self.emulator._run_telnet(cmd)
+        return self.client.send({"name": "emulatorCmdResult",
+                                 "id": response.get("id"),
+                                 "result": result})
+
+    def _handle_emulator_shell(self, response):
+        args = response.get("emulator_shell")
+        if not isinstance(args, list) or not self.emulator:
+            raise MarionetteException(
+                "No emulator in this test to run shell command against")
+        result = self.emulator._run_shell(args)
         return self.client.send({"name": "emulatorCmdResult",
                                  "id": response.get("id"),
                                  "result": result})
