@@ -62,10 +62,11 @@ disable(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 Prof(JSContext* cx, unsigned argc, jsval *vp)
 {
-    JSObject *obj = JS_NewObjectForConstructor(cx, &ptestClass, vp);
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+    JSObject *obj = JS_NewObjectForConstructor(cx, &ptestClass, args);
     if (!obj)
         return false;
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
+    args.rval().setObject(*obj);
     return true;
 }
 

@@ -513,7 +513,7 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
         JSAutoCompartment ac(cx, obj);
         JS::RootedId id(cx, nameid);
 
-        if(!JS_WrapId(cx, id.address()))
+        if(!JS_WrapId(cx, &id))
             return nullptr;
         if(!JS_GetOwnPropertyDescriptorById(cx, obj, id, 0, &desc))
             return nullptr;
