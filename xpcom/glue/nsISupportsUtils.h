@@ -6,25 +6,12 @@
 #ifndef nsISupportsUtils_h__
 #define nsISupportsUtils_h__
 
-#ifndef nscore_h___
 #include "nscore.h"
-#endif
-
-#ifndef nsISupportsBase_h__
 #include "nsISupportsBase.h"
-#endif
-
-#ifndef nsError_h__
 #include "nsError.h"
-#endif
-
-#ifndef nsDebug_h___
 #include "nsDebug.h"
-#endif
-
-#ifndef nsISupportsImpl_h__
 #include "nsISupportsImpl.h"
-#endif
+#include "mozilla/TypeTraits.h"
 
 /**
  * Macro for adding a reference to an interface.
@@ -142,9 +129,15 @@ inline
 nsresult
 CallQueryInterface( T* aSource, DestinationType** aDestination )
 {
+    // We permit nsISupports-to-nsISupports here so that one can still obtain
+    // the canonical nsISupports pointer with CallQueryInterface.
+    static_assert(!mozilla::IsSame<T, DestinationType>::value ||
+                  mozilla::IsSame<DestinationType, nsISupports>::value,
+                  "don't use CallQueryInterface for compile-time-determinable casts");
+
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
-    
+
     return aSource->QueryInterface(NS_GET_TEMPLATE_IID(DestinationType),
                                    reinterpret_cast<void**>(aDestination));
 }

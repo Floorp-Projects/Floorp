@@ -92,7 +92,7 @@ if not CONFIG['_MSC_VER']:
     for f in SOURCES:
         if f.endswith('.c'):
             if 'sse2' in f:
-                SOURCES[f].flags += ['-msse2']
+                SOURCES[f].flags += CONFIG['SSE2_FLAGS']
             if 'ssse3' in f:
                 SOURCES[f].flags += ['-mssse3']
             if 'avx2' in f:

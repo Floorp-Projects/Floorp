@@ -228,15 +228,6 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
     return false;
 }
 
-bool
-AccessCheck::needsSystemOnlyWrapper(JSObject *obj)
-{
-    JSObject* wrapper = obj;
-    if (dom::GetSameCompartmentWrapperForDOMBinding(wrapper))
-        return wrapper != obj;
-    return false;
-}
-
 enum Access { READ = (1<<0), WRITE = (1<<1), NO_ACCESS = 0 };
 
 static void

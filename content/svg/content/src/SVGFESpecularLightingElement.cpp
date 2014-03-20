@@ -78,10 +78,10 @@ SVGFESpecularLightingElement::GetPrimitiveDescription(nsSVGFilterInstance* aInst
 
   // specification defined range (15.22)
   if (specularExponent < 1 || specularExponent > 128) {
-    return FilterPrimitiveDescription(FilterPrimitiveDescription::eNone);
+    return FilterPrimitiveDescription(PrimitiveType::Empty);
   }
 
-  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eSpecularLighting);
+  FilterPrimitiveDescription descr(PrimitiveType::SpecularLighting);
   descr.Attributes().Set(eSpecularLightingSpecularConstant, specularConstant);
   descr.Attributes().Set(eSpecularLightingSpecularExponent, specularExponent);
   return AddLightingAttributes(descr, aInstance);

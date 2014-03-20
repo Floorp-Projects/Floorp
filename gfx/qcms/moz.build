@@ -40,9 +40,8 @@ elif 'ppc' in CONFIG['CPU_ARCH']:
 
 if use_sse1:
     SOURCES += ['transform-sse1.c']
-    if CONFIG['GNU_CC']:
-        SOURCES['transform-sse1.c'].flags += ['-msse']
-    elif CONFIG['SOLARIS_SUNPRO_CC']:
+    SOURCES['transform-sse1.c'].flags += CONFIG['SSE_FLAGS']
+    if CONFIG['SOLARIS_SUNPRO_CC']:
         if '64' in CONFIG['OS_TEST']:
             # Sun Studio doesn't work correctly for x86 intristics
             # with -m64 and without optimization.
@@ -52,9 +51,8 @@ if use_sse1:
 
 if use_sse2:
     SOURCES += ['transform-sse2.c']
-    if CONFIG['GNU_CC']:
-        SOURCES['transform-sse2.c'].flags += ['-msse2']
-    elif CONFIG['SOLARIS_SUNPRO_CC']:
+    SOURCES['transform-sse2.c'].flags += CONFIG['SSE2_FLAGS']
+    if CONFIG['SOLARIS_SUNPRO_CC']:
         if '64' in CONFIG['OS_TEST']:
             # Sun Studio doesn't work correctly for x86 intristics
             # with -m64 and without optimization.

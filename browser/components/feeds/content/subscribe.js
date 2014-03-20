@@ -11,7 +11,6 @@ var SubscribeHandler = {
   
   init: function SH_init() {
     this._feedWriter = new BrowserFeedWriter();
-    this._feedWriter.init(window);
   },
 
   writeContent: function SH_writeContent() {
@@ -20,9 +19,5 @@ var SubscribeHandler = {
 
   uninit: function SH_uninit() {
     this._feedWriter.close();
-  },
-  
-  subscribe: function SH_subscribe() {
-    this._feedWriter.subscribe();
   }
 };

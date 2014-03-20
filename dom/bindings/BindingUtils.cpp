@@ -376,9 +376,9 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 bool
 Constructor(JSContext* cx, unsigned argc, JS::Value* vp)
 {
-  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   const JS::Value& v =
-    js::GetFunctionNativeReserved(callee,
+    js::GetFunctionNativeReserved(&args.callee(),
                                   CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT);
   const JSNativeHolder* nativeHolder =
     static_cast<const JSNativeHolder*>(v.toPrivate());
@@ -1667,15 +1667,6 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     return NS_OK;
   }
 
-  // Before proceeding, eagerly create any same-compartment security wrappers
-  // that the object might have. This forces us to take the 'WithWrapper' path
-  // while transplanting that handles this stuff correctly.
-  JS::Rooted<JSObject*> ww(aCx,
-                           xpc::WrapperFactory::WrapForSameCompartment(aCx, aObj));
-  if (!ww) {
-    return NS_ERROR_FAILURE;
-  }
-
   bool isProxy = js::IsProxy(aObj);
   JS::Rooted<JSObject*> expandoObject(aCx);
   if (isProxy) {
@@ -1744,21 +1735,13 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
     js::SetReservedSlot(aObj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
   }
 
-  nsWrapperCache* cache = nullptr;
-  CallQueryInterface(native, &cache);
-  if (ww != aObj) {
-    MOZ_ASSERT(cache->HasSystemOnlyWrapper());
-
-    // Oops. We don't support transplanting objects with SOWs anymore.
+  aObj = xpc::TransplantObject(aCx, aObj, newobj);
+  if (!aObj) {
     MOZ_CRASH();
-
-  } else {
-    aObj = xpc::TransplantObject(aCx, aObj, newobj);
-    if (!aObj) {
-      MOZ_CRASH();
-    }
   }
 
+  nsWrapperCache* cache = nullptr;
+  CallQueryInterface(native, &cache);
   bool preserving = cache->PreservingWrapper();
   cache->SetPreservingWrapper(false);
   cache->SetWrapper(aObj);

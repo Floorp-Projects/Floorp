@@ -25,21 +25,9 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/Move.h"
 
-  // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
-#ifndef nsDebug_h___
-#include "nsDebug.h"
-  // for |NS_ABORT_IF_FALSE|, |NS_ASSERTION|
-#endif
-
-#ifndef nsISupportsUtils_h__
-#include "nsISupportsUtils.h"
-  // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
-#endif
-
-#ifndef nscore_h___
-#include "nscore.h"
-  // for |NS_COM_GLUE|
-#endif
+#include "nsDebug.h" // for |NS_ABORT_IF_FALSE|, |NS_ASSERTION|
+#include "nsISupportsUtils.h" // for |nsresult|, |NS_ADDREF|, |NS_GET_TEMPLATE_IID| et al
+#include "nscore.h" // for |NS_COM_GLUE|
 
 #include "nsCycleCollectionNoteChild.h"
 

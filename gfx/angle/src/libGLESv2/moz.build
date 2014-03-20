@@ -172,8 +172,7 @@ SOURCES += ['renderer/' + src for src in [
     'VertexDeclarationCache.cpp',
 ]]
 
-if CONFIG['GNU_CC']:
-    SOURCES['renderer/ImageSSE2.cpp'].flags += ['-msse2']
+SOURCES['renderer/ImageSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 # On Windows, we don't automatically get "lib" prepended, but we need it.
 LIBRARY_NAME = 'libGLESv2'

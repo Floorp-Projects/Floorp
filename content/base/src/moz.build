@@ -51,12 +51,7 @@ if CONFIG['MOZ_WEBRTC']:
 # nsTextFragment.cpp
 if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsTextFragmentSSE2.cpp']
-    if CONFIG['GNU_CC']:
-        # gcc requires -msse2 for this file since it uses SSE2 intrinsics.  (See bug
-        # 585538 comment 12.)
-        SOURCES['nsTextFragmentSSE2.cpp'].flags += ['-msse2']
-    if CONFIG['SOLARIS_SUNPRO_CXX']:
-        SOURCES['nsTextFragmentSSE2.cpp'].flags += ['-xarch=sse2', '-xO4']
+    SOURCES['nsTextFragmentSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 EXPORTS.mozilla.dom += [
     'Attr.h',
