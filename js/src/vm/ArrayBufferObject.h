@@ -157,6 +157,12 @@ class ArrayBufferObject : public JSObject
 
     static void finalize(FreeOp *fop, JSObject *obj);
 
+    static size_t flagsOffset() {
+        return getFixedSlotOffset(FLAGS_SLOT);
+    }
+
+    static uint32_t neuteredFlag() { return NEUTERED_BUFFER; }
+
   protected:
     enum OwnsState {
         DoesntOwnData = 0,
@@ -244,7 +250,7 @@ class ArrayBufferViewObject : public JSObject
 
     inline void setNextView(ArrayBufferViewObject *view);
 
-    void neuter(JSContext *cx);
+    void neuter(void *newData);
 
     static void trace(JSTracer *trc, JSObject *obj);
 
@@ -275,13 +281,8 @@ InitArrayBufferViewDataPointer(ArrayBufferViewObject *obj, ArrayBufferObject *bu
      * private data rather than a slot to avoid alignment restrictions
      * on private Values.
      */
-
-    if (buffer->isNeutered()) {
-        JS_ASSERT(byteOffset == 0);
-        obj->initPrivate(nullptr);
-    } else {
-        obj->initPrivate(buffer->dataPointer() + byteOffset);
-    }
+    MOZ_ASSERT(buffer->dataPointer() != nullptr);
+    obj->initPrivate(buffer->dataPointer() + byteOffset);
 
     PostBarrierTypedArrayObject(obj);
 }

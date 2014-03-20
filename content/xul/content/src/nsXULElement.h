@@ -598,11 +598,11 @@ public:
     void SwapFrameLoaders(nsXULElement& aOtherOwner, mozilla::ErrorResult& rv);
 
     // For XUL, the parent is the parent element, if any
-    nsINode* GetParentObject() const
+    mozilla::dom::ParentObject GetParentObject() const
     {
         Element* parent = GetParentElement();
         if (parent) {
-            return parent;
+          return GetParentObjectInternal(parent);
         }
         return nsStyledElement::GetParentObject();
     }

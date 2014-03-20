@@ -24,16 +24,10 @@ UNIFIED_SOURCES += [
 if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
         SOURCES += ['sse_optimized.cpp']
-        if CONFIG['GNU_CC']:
-            SOURCES['sse_optimized.cpp'].flags += ['-msse2']
-        if CONFIG['SOLARIS_SUNPRO_CXX']:
-            SOURCES['sse_optimized.cpp'].flags += ['-xarch=sse2', '-xO4']
+        SOURCES['sse_optimized.cpp'].flags += CONFIG['SSE2_FLAGS']
     else:
         SOURCES += ['mmx_optimized.cpp']
-        if CONFIG['GNU_CC']:
-            SOURCES['mmx_optimized.cpp'].flags += ['-mmmx']
-        if CONFIG['SOLARIS_SUNPRO_CXX']:
-            SOURCES['mmx_optimized.cpp'].flags += ['-xarch=mmx', '-xO4']
+        SOURCES['mmx_optimized.cpp'].flags += CONFIG['MMX_FLAGS']
 
 MSVC_ENABLE_PGO = True
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:

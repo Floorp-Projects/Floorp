@@ -31,7 +31,7 @@ InitialListener.prototype = {
         do_execute_soon(function() {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
-            channel.requestMethod = "post";
+            channel.requestMethod = "POST";
             channel.asyncOpen(new RedirectingListener(), null);
         });
     }
@@ -46,7 +46,7 @@ RedirectingListener.prototype = {
         do_execute_soon(function() {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
-            channel.requestMethod = "post";
+            channel.requestMethod = "POST";
             channel.asyncOpen(new VerifyingListener(), null);
         });
     }

@@ -70,6 +70,9 @@ private:
 JSObject *
 TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject target);
 
+bool IsXBLScope(JSCompartment *compartment);
+bool IsInXBLScope(JSObject *obj);
+
 // Return a raw XBL scope object corresponding to contentScope, which must
 // be an object whose global is a DOM window.
 //
@@ -79,8 +82,19 @@ TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject targe
 // Also note that XBL scopes are lazily created, so the return-value should be
 // null-checked unless the caller can ensure that the scope must already
 // exist.
+//
+// This function asserts if |contentScope| is itself in an XBL scope to catch
+// sloppy consumers. Conversely, GetXBLScopeOrGlobal will handle objects that
+// are in XBL scope (by just returning the global).
 JSObject *
 GetXBLScope(JSContext *cx, JSObject *contentScope);
+
+inline JSObject *
+GetXBLScopeOrGlobal(JSContext *cx, JSObject *obj) {
+    if (IsInXBLScope(obj))
+        return js::GetGlobalForObjectCrossCompartment(obj);
+    return GetXBLScope(cx, obj);
+}
 
 // Returns whether XBL scopes have been explicitly disabled for code running
 // in this compartment. See the comment around mAllowXBLScope.
@@ -134,8 +148,7 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, JS::MutableHand
     if (cache) {
         JSObject* wrapper = cache->GetWrapper();
         if (wrapper &&
-            js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
-            !(cache->IsDOMBinding() && cache->HasSystemOnlyWrapper()))
+            js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope))
         {
             vp.setObject(*wrapper);
             return wrapper;
@@ -344,9 +357,6 @@ bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 }
 
 nsIPrincipal *GetCompartmentPrincipal(JSCompartment *compartment);
-
-bool IsXBLScope(JSCompartment *compartment);
-bool IsInXBLScope(JSObject *obj);
 
 void SetLocationForGlobal(JSObject *global, const nsACString& location);
 void SetLocationForGlobal(JSObject *global, nsIURI *locationURI);

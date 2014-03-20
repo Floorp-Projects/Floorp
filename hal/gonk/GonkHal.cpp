@@ -27,7 +27,6 @@
 #include <sys/resource.h>
 #include <time.h>
 #include <asm/page.h>
-#include <sched.h>
 
 #include "mozilla/DebugOnly.h"
 
@@ -39,7 +38,6 @@
 #include "hardware_legacy/vibrator.h"
 #include "hardware_legacy/power.h"
 #include "libdisplay/GonkDisplay.h"
-#include "utils/threads.h"
 
 #include "base/message_loop.h"
 
@@ -1359,14 +1357,6 @@ SetNiceForPid(int aPid, int aNice)
 
     int tid = static_cast<int>(tidlong);
 
-    // Do not set the priority of threads running with a real-time policy
-    // as part of the bulk process adjustment.  These threads need to run
-    // at their specified priority in order to meet timing guarantees.
-    int schedPolicy = sched_getscheduler(tid);
-    if (schedPolicy == SCHED_FIFO || schedPolicy == SCHED_RR) {
-      continue;
-    }
-
     errno = 0;
     // Get and set the task's new priority.
     int origtaskpriority = getpriority(PRIO_PROCESS, tid);
@@ -1379,15 +1369,6 @@ SetNiceForPid(int aPid, int aNice)
 
     int newtaskpriority =
       std::max(origtaskpriority - origProcPriority + aNice, aNice);
-
-    // Do not reduce priority of threads already running at priorities greater
-    // than normal.  These threads are likely special service threads that need
-    // elevated priorities to process audio, display composition, etc.
-    if (newtaskpriority > origtaskpriority &&
-        origtaskpriority < ANDROID_PRIORITY_NORMAL) {
-      continue;
-    }
-
     rv = setpriority(PRIO_PROCESS, tid, newtaskpriority);
 
     if (rv) {
@@ -1479,54 +1460,6 @@ SetProcessPriority(int aPid,
   if (NS_SUCCEEDED(rv)) {
     LOG("Setting nice for pid %d to %d", aPid, nice);
     SetNiceForPid(aPid, nice);
-  }
-}
-
-void
-SetCurrentThreadPriority(ThreadPriority aPriority)
-{
-  int policy = SCHED_OTHER;
-  int priorityOrNice = ANDROID_PRIORITY_NORMAL;
-
-  switch(aPriority) {
-  case THREAD_PRIORITY_COMPOSITOR:
-    priorityOrNice = Preferences::GetInt("hal.gonk.compositor.rt_priority", 0);
-    if (priorityOrNice >= sched_get_priority_min(SCHED_FIFO) &&
-        priorityOrNice <= sched_get_priority_max(SCHED_FIFO)) {
-      policy = SCHED_FIFO;
-    } else {
-      priorityOrNice = Preferences::GetInt("hal.gonk.compositor.nice",
-                                           ANDROID_PRIORITY_URGENT_DISPLAY);
-    }
-    break;
-  default:
-    LOG("Unrecognized thread priority %d; Doing nothing", aPriority);
-    return;
-  }
-
-  int tid = gettid();
-  int rv = 0;
-
-  // If a RT scheduler policy is used, then we must set the priority using
-  // sched_setscheduler() and the sched_param.sched_priority value.
-  if (policy == SCHED_FIFO || policy == SCHED_RR) {
-    LOG("Setting thread %d to priority level %s; RT priority %d",
-        tid, ThreadPriorityToString(aPriority), priorityOrNice);
-    sched_param schedParam;
-    schedParam.sched_priority = priorityOrNice;
-    rv = sched_setscheduler(tid, policy, &schedParam);
-
-  // Otherwise priority is solely defined by the nice level, so use the
-  // setpriority() function.
-  } else {
-    LOG("Setting thread %d to priority level %s; nice level %d",
-        tid, ThreadPriorityToString(aPriority), priorityOrNice);
-    rv = setpriority(PRIO_PROCESS, tid, priorityOrNice);
-  }
-
-  if (rv) {
-    LOG("Failed to set thread %d to priority level %s; error code %d",
-        tid, ThreadPriorityToString(aPriority), rv);
   }
 }
 

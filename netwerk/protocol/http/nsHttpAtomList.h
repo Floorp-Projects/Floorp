@@ -86,27 +86,4 @@ HTTP_ATOM(WWW_Authenticate,          "WWW-Authenticate")
 HTTP_ATOM(Warning,                   "Warning")
 HTTP_ATOM(X_Firefox_Spdy,            "X-Firefox-Spdy")
 
-// methods are atoms too.
-//
-// Note: winnt.h defines DELETE macro, so we'll just keep the methods mixedcase
-// even though they're normally written all uppercase. -- darin
-
-HTTP_ATOM(Connect,                   "CONNECT")
-HTTP_ATOM(Copy,                      "COPY")
-HTTP_ATOM(Delete,                    "DELETE")
-HTTP_ATOM(Get,                       "GET")
-HTTP_ATOM(Head,                      "HEAD")
-HTTP_ATOM(Index,                     "INDEX")
-HTTP_ATOM(Lock,                      "LOCK")
-HTTP_ATOM(M_Post,                    "M-POST")
-HTTP_ATOM(Mkcol,                     "MKCOL")
-HTTP_ATOM(Move,                      "MOVE")
-HTTP_ATOM(Options,                   "OPTIONS")
-HTTP_ATOM(Post,                      "POST")
-HTTP_ATOM(Propfind,                  "PROPFIND")
-HTTP_ATOM(Proppatch,                 "PROPPATCH")
-HTTP_ATOM(Put,                       "PUT")
-HTTP_ATOM(Report,                    "REPORT")
-HTTP_ATOM(Search,                    "SEARCH")
-HTTP_ATOM(Trace,                     "TRACE")
-HTTP_ATOM(Unlock,                    "UNLOCK")
+// methods are case sensitive and do not use atom table

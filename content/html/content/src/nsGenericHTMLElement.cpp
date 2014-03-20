@@ -106,64 +106,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class nsINodeInfo;
-class nsIDOMNodeList;
-class nsRuleWalker;
-
-// XXX todo: add in missing out-of-memory checks
-
-//----------------------------------------------------------------------
-
-#ifdef GATHER_ELEMENT_USEAGE_STATISTICS
-
-// static objects that have constructors are kinda bad, but we don't
-// care here, this is only debugging code!
-
-static nsHashtable sGEUS_ElementCounts;
-
-void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
-{
-  nsAutoString name;
-  aNodeInfo->GetName(name);
-
-  nsStringKey key(name);
-
-  int32_t count = (int32_t)sGEUS_ElementCounts.Get(&key);
-
-  count++;
-
-  sGEUS_ElementCounts.Put(&key, (void *)count);
-}
-
-bool GEUS_enum_func(nsHashKey *aKey, void *aData, void *aClosure)
-{
-  const char16_t *name_chars = ((nsStringKey *)aKey)->GetString();
-  NS_ConvertUTF16toUTF8 name(name_chars);
-
-  printf ("%s %d\n", name.get(), aData);
-
-  return true;
-}
-
-void GEUS_DumpElementCounts()
-{
-  printf ("Element count statistics:\n");
-
-  sGEUS_ElementCounts.Enumerate(GEUS_enum_func, nullptr);
-
-  printf ("End of element count statistics:\n");
-}
-
-nsresult
-nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
-{
-  GEUS_ElementCreated(aNodeInfo);
-
-  return nsGenericHTMLElementBase::Init(aNodeInfo);
-}
-
-#endif
-
 /**
  * nsAutoFocusEvent is used to dispatch a focus event when a
  * nsGenericHTMLFormElement is binded to the tree with the autofocus attribute
@@ -1985,12 +1927,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsGenericHTMLFormElement,
                              nsGenericHTMLElement,
                              nsIFormControl)
 
-nsINode*
+mozilla::dom::ParentObject
 nsGenericHTMLFormElement::GetParentObject() const
 {
   // We use the parent chain to implement the scope for event handlers.
-  return mForm ? static_cast<nsINode*>(mForm)
-               : static_cast<nsINode*>(OwnerDoc());
+  if (mForm) {
+    return GetParentObjectInternal(mForm);
+  }
+  return nsGenericHTMLElement::GetParentObject();
 }
 
 bool

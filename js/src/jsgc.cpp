@@ -3358,9 +3358,10 @@ js::gc::MarkingValidator::nonIncrementalMark()
     }
 
     /*
-     * Save the lists of live weakmaps and array buffers for the compartments we
-     * are collecting.
+     * Temporarily clear the lists of live weakmaps and array buffers for the
+     * compartments we are collecting.
      */
+
     WeakMapVector weakmaps;
     ArrayBufferVector arrayBuffers;
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
@@ -3377,10 +3378,6 @@ js::gc::MarkingValidator::nonIncrementalMark()
      */
     initialized = true;
 
-    /*
-     * Reset the lists of live weakmaps and array buffers for the compartments we
-     * are collecting.
-     */
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
         WeakMapBase::resetCompartmentWeakMapList(c);
         ArrayBufferObject::resetArrayBufferList(c);
@@ -3437,7 +3434,6 @@ js::gc::MarkingValidator::nonIncrementalMark()
         Swap(*entry, *bitmap);
     }
 
-    /* Restore the weak map and array buffer lists. */
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
         WeakMapBase::resetCompartmentWeakMapList(c);
         ArrayBufferObject::resetArrayBufferList(c);

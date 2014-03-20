@@ -110,9 +110,9 @@ elif 'arm' in CONFIG['OS_TEST']:
 if use_mmx:
     DEFINES['USE_MMX'] = True
     SOURCES += ['pixman-mmx.c']
+    SOURCES['pixman-mmx.c'].flags += CONFIG['MMX_FLAGS']
     if CONFIG['GNU_CC']:
         SOURCES['pixman-mmx.c'].flags += [
-            '-mmmx',
             '-Winline',
             '--param inline-unit-growth=10000',
             '--param large-function-growth=10000',
@@ -122,12 +122,9 @@ if use_sse2:
     DEFINES['USE_SSE'] = True
     DEFINES['USE_SSE2'] = True
     SOURCES += ['pixman-sse2.c']
+    SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
     if CONFIG['GNU_CC']:
-        SOURCES['pixman-sse2.c'].flags += [
-            '-msse',
-            '-msse2',
-            '-Winline',
-        ]
+        SOURCES['pixman-sse2.c'].flags += ['-Winline']
 
 if use_vmx:
     DEFINES['USE_VMX'] = True

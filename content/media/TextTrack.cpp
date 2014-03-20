@@ -29,28 +29,22 @@ NS_IMPL_RELEASE_INHERITED(TextTrack, nsDOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrack)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-TextTrack::TextTrack(nsISupports* aParent, TextTrackSource aTextTrackSource)
-  : mParent(aParent)
-  , mTextTrackSource(aTextTrackSource)
-{
-  SetDefaultSettings();
-  SetIsDOMBinding();
-}
-
 TextTrack::TextTrack(nsISupports* aParent,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
                      const nsAString& aLanguage,
                      TextTrackMode aMode,
+                     TextTrackReadyState aReadyState,
                      TextTrackSource aTextTrackSource)
   : mParent(aParent)
+  , mKind(aKind)
+  , mLabel(aLabel)
+  , mLanguage(aLanguage)
+  , mMode(aMode)
+  , mReadyState(aReadyState)
   , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
-  mKind = aKind;
-  mLabel = aLabel;
-  mLanguage = aLanguage;
-  mMode = aMode;
   SetIsDOMBinding();
 }
 
@@ -60,29 +54,28 @@ TextTrack::TextTrack(nsISupports* aParent,
                      const nsAString& aLabel,
                      const nsAString& aLanguage,
                      TextTrackMode aMode,
+                     TextTrackReadyState aReadyState,
                      TextTrackSource aTextTrackSource)
   : mParent(aParent)
   , mTextTrackList(aTextTrackList)
+  , mKind(aKind)
+  , mLabel(aLabel)
+  , mLanguage(aLanguage)
+  , mMode(aMode)
+  , mReadyState(aReadyState)
   , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
-  mKind = aKind;
-  mLabel = aLabel;
-  mLanguage = aLanguage;
-  mMode = aMode;
   SetIsDOMBinding();
 }
 
 void
 TextTrack::SetDefaultSettings()
 {
-  mKind = TextTrackKind::Subtitles;
-  mMode = TextTrackMode::Hidden;
   mCueList = new TextTrackCueList(mParent);
   mActiveCueList = new TextTrackCueList(mParent);
   mCuePos = 0;
   mDirty = false;
-  mReadyState = HTMLTrackElement::READY_STATE_NONE;
 }
 
 JSObject*
@@ -187,14 +180,14 @@ TextTrack::GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
   }
 }
 
-uint16_t
+TextTrackReadyState
 TextTrack::ReadyState() const
 {
   return mReadyState;
 }
 
 void
-TextTrack::SetReadyState(uint16_t aState)
+TextTrack::SetReadyState(TextTrackReadyState aState)
 {
   mReadyState = aState;
 
@@ -203,8 +196,8 @@ TextTrack::SetReadyState(uint16_t aState)
   }
 
   HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
-  if (mediaElement && (mReadyState == HTMLTrackElement::READY_STATE_LOADED ||
-      mReadyState == HTMLTrackElement::READY_STATE_ERROR)) {
+  if (mediaElement && (mReadyState == TextTrackReadyState::Loaded||
+      mReadyState == TextTrackReadyState::FailedToLoad)) {
     mediaElement->RemoveTextTrack(this, true);
   }
 }

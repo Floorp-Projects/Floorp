@@ -392,19 +392,34 @@ Tooltip.prototype = {
       this.hide();
       this._lastHovered = event.target;
       setNamedTimeout(this.uid, this._showDelay, () => {
-        this._showOnHover(event.target);
+        this.isValidHoverTarget(event.target).then(target => {
+          this.show(target);
+        });
       });
     }
   },
 
-  _showOnHover: function(target) {
+  /**
+   * Is the given target DOMNode a valid node for toggling the tooltip on hover.
+   * This delegates to the user-defined _targetNodeCb callback.
+   * @return a promise that resolves or rejects depending if the tooltip should
+   * be shown or not. If it resolves, it does to the actual anchor to be used
+   */
+  isValidHoverTarget: function(target) {
+    // Execute the user-defined callback which should return either true/false
+    // or a promise that resolves or rejects
     let res = this._targetNodeCb(target, this);
-    let show = arg => this.show(arg instanceof Ci.nsIDOMNode ? arg : target);
 
+    // The callback can additionally return a DOMNode to replace the anchor of
+    // the tooltip when shown
     if (res && res.then) {
-      res.then(show);
-    } else if (res) {
-      show(res);
+      return res.then(arg => {
+        return arg instanceof Ci.nsIDOMNode ? arg : target;
+      }, () => {
+        return false;
+      });
+    } else {
+      return res ? promise.resolve(res) : promise.reject(false);
     }
   },
 
@@ -620,42 +635,44 @@ Tooltip.prototype = {
    *        a number here
    */
   setImageContent: function(imageUrl, options={}) {
-    if (imageUrl) {
-      // Main container
-      let vbox = this.doc.createElement("vbox");
-      vbox.setAttribute("align", "center");
-
-      // Display the image
-      let image = this.doc.createElement("image");
-      image.setAttribute("src", imageUrl);
-      if (options.maxDim) {
-        image.style.maxWidth = options.maxDim + "px";
-        image.style.maxHeight = options.maxDim + "px";
-      }
-      vbox.appendChild(image);
-
-      // Dimension label
-      let label = this.doc.createElement("label");
-      label.classList.add("devtools-tooltip-caption");
-      label.classList.add("theme-comment");
-      if (options.naturalWidth && options.naturalHeight) {
-        label.textContent = this._getImageDimensionLabel(options.naturalWidth,
-          options.naturalHeight);
-      } else {
-        // If no dimensions were provided, load the image to get them
-        label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
-        let imgObj = new this.doc.defaultView.Image();
-        imgObj.src = imageUrl;
-        imgObj.onload = () => {
-          imgObj.onload = null;
-          label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
-            imgObj.naturalHeight);
-        }
-      }
-      vbox.appendChild(label);
-
-      this.content = vbox;
+    if (!imageUrl) {
+      return;
     }
+
+    // Main container
+    let vbox = this.doc.createElement("vbox");
+    vbox.setAttribute("align", "center");
+
+    // Display the image
+    let image = this.doc.createElement("image");
+    image.setAttribute("src", imageUrl);
+    if (options.maxDim) {
+      image.style.maxWidth = options.maxDim + "px";
+      image.style.maxHeight = options.maxDim + "px";
+    }
+    vbox.appendChild(image);
+
+    // Dimension label
+    let label = this.doc.createElement("label");
+    label.classList.add("devtools-tooltip-caption");
+    label.classList.add("theme-comment");
+    if (options.naturalWidth && options.naturalHeight) {
+      label.textContent = this._getImageDimensionLabel(options.naturalWidth,
+        options.naturalHeight);
+    } else {
+      // If no dimensions were provided, load the image to get them
+      label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
+      let imgObj = new this.doc.defaultView.Image();
+      imgObj.src = imageUrl;
+      imgObj.onload = () => {
+        imgObj.onload = null;
+        label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
+          imgObj.naturalHeight);
+      }
+    }
+    vbox.appendChild(label);
+
+    this.content = vbox;
   },
 
   _getImageDimensionLabel: (w, h) => w + " x " + h,

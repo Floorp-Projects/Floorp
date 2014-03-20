@@ -336,7 +336,15 @@ this.DOMIdentity = {
 
   _unwatch: function DOMIdentity_unwatch(message, targetMM) {
     log("DOMIDentity__unwatch: " + message.id);
-    this.getService(message).RP.unwatch(message.id, targetMM);
+    // If watch failed for some reason (e.g., exception thrown because RP did
+    // not have the right callbacks, we don't want unwatch to throw, because it
+    // will break the process of releasing the page's resources and leak
+    // memory.
+    try {
+      this.getService(message).RP.unwatch(message.id, targetMM);
+    } catch(ex) {
+      log("ERROR: can't unwatch " + message.id + ": " + ex);
+    }
   },
 
   _request: function DOMIdentity__request(message) {

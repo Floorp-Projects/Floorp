@@ -131,9 +131,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
     is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
 
-    url.searchParams = null;
-    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
-    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
+    try {
+      url.searchParams = null;
+      ok(false, "URLSearchParams is not nullable");
+    } catch(e) {
+      ok(true, "URLSearchParams is not nullable");
+    }
 
     var url2 = new URL('http://www.example.net?e=f');
     url.searchParams = url2.searchParams;
@@ -164,9 +167,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     is(e.searchParams.get('foo'), 'bar', "e.searchParams.get('foo')");
     is(e.href, 'http://www.example.net/?foo=bar', 'e is right');
 
-    e.searchParams = null;
-    is(e.searchParams.get('foo'), 'bar', "e.searchParams.get('foo')");
-    is(e.href, 'http://www.example.net/?foo=bar', 'e is right');
+    try {
+      e.searchParams = null;
+      ok(false, "URLSearchParams is not nullable");
+    } catch(e) {
+      ok(true, "URLSearchParams is not nullable");
+    }
 
     var url2 = new URL('http://www.example.net?e=f');
     e.searchParams = url2.searchParams;
