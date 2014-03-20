@@ -18,6 +18,14 @@ const { open, close, focus } = require('sdk/window/helpers');
 const WM = Cc['@mozilla.org/appshell/window-mediator;1'].getService(Ci.nsIWindowMediator);
 const { isPrivate } = require('sdk/private-browsing');
 const { fromIterator: toArray } = require('sdk/util/array');
+const { defer } = require('sdk/core/promise');
+const { setTimeout } = require('sdk/timers');
+
+function tick() {
+  let deferred = defer();
+  setTimeout(deferred.resolve);
+  return deferred.promise;
+}
 
 function makeEmptyBrowserWindow(options) {
   options = options || {};
@@ -64,31 +72,26 @@ exports.testWindowTrackerIgnoresPrivateWindows = function(assert, done) {
     assert.equal(getWindowTitle(window), window.document.title,
                  'getWindowTitle works');
 
-    close(window).then(function() {
-      makeEmptyBrowserWindow().then(function(window) {
+    return close(window).then(function() {
+      return makeEmptyBrowserWindow().then(function(window) {
         myNonPrivateWindow = window;
         assert.pass('opened new window');
-        window.close();
+        return close(window);
       });
     });
-  });
+  }).then(null, assert.fail);
 };
 
 // Test setting activeWIndow and onFocus for private windows
 exports.testSettingActiveWindowDoesNotIgnorePrivateWindow = function(assert, done) {
   let browserWindow = WM.getMostRecentWindow("navigator:browser");
-  let testSteps;
 
   assert.equal(windowUtils.activeBrowserWindow, browserWindow,
                "Browser window is the active browser window.");
   assert.ok(!isPrivate(browserWindow), "Browser window is not private.");
 
   // make a new private window
-  makeEmptyBrowserWindow({
-    private: true
-  }).then(focus).then(function(window) {
-    let continueAfterFocus = function(window) onFocus(window).then(nextTest);
-
+  makeEmptyBrowserWindow({ private: true }).then(focus).then(window => {
     // PWPB case
     if (isWindowPBSupported) {
       assert.ok(isPrivate(window), "window is private");
@@ -104,59 +107,42 @@ exports.testSettingActiveWindowDoesNotIgnorePrivateWindow = function(assert, don
     assert.notStrictEqual(browserWindow, window,
                  "The window is not the old browser window");
 
-    testSteps = [
-      function() {
-        // test setting a non private window
-        continueAfterFocus(windowUtils.activeWindow = browserWindow);
-      },
-      function() {
-        assert.strictEqual(windowUtils.activeWindow, browserWindow,
-                           "Correct active window [1]");
-        assert.strictEqual(windowUtils.activeBrowserWindow, browserWindow,
-                           "Correct active browser window [1]");
 
-        // test focus(window)
-        focus(window).then(nextTest);
-      },
-      function(w) {
+    return onFocus(windowUtils.activeWindow = browserWindow).then(_ => {
+      assert.strictEqual(windowUtils.activeWindow, browserWindow,
+                         "Correct active window [1]");
+      assert.strictEqual(windowUtils.activeBrowserWindow, browserWindow,
+                         "Correct active browser window [1]");
+
+      // test focus(window)
+      return focus(window).then(w => {
         assert.strictEqual(w, window, 'require("sdk/window/helpers").focus on window works');
-        assert.strictEqual(windowUtils.activeBrowserWindow, window,
-                           "Correct active browser window [2]");
-        assert.strictEqual(windowUtils.activeWindow, window,
-                           "Correct active window [2]");
+      }).then(tick);
+    }).then(_ => {
+      assert.strictEqual(windowUtils.activeBrowserWindow, window,
+                         "Correct active browser window [2]");
+      assert.strictEqual(windowUtils.activeWindow, window,
+                         "Correct active window [2]");
 
-        // test setting a private window
-        continueAfterFocus(windowUtils.activeWindow = window);
-      },
-      function() {
-        assert.deepEqual(windowUtils.activeBrowserWindow, window,
-                         "Correct active browser window [3]");
-        assert.deepEqual(windowUtils.activeWindow, window,
-                         "Correct active window [3]");
+      // test setting a private window
+      return onFocus(windowUtils.activeWindow = window);
+    }).then(function() {
+      assert.deepEqual(windowUtils.activeBrowserWindow, window,
+                       "Correct active browser window [3]");
+      assert.deepEqual(windowUtils.activeWindow, window,
+                       "Correct active window [3]");
 
-        // just to get back to original state
-        continueAfterFocus(windowUtils.activeWindow = browserWindow);
-      },
-      function() {
-        assert.deepEqual(windowUtils.activeBrowserWindow, browserWindow,
-                         "Correct active browser window when pb mode is supported [4]");
-        assert.deepEqual(windowUtils.activeWindow, browserWindow,
-                         "Correct active window when pb mode is supported [4]");
+      // just to get back to original state
+      return onFocus(windowUtils.activeWindow = browserWindow);
+    }).then(_ => {
+      assert.deepEqual(windowUtils.activeBrowserWindow, browserWindow,
+                       "Correct active browser window when pb mode is supported [4]");
+      assert.deepEqual(windowUtils.activeWindow, browserWindow,
+                       "Correct active window when pb mode is supported [4]");
 
-        close(window).then(done);
-      }
-    ];
-
-    function nextTest() {
-      let args = arguments;
-      if (testSteps.length) {
-        require('sdk/timers').setTimeout(function() {
-          (testSteps.shift()).apply(null, args);
-        }, 0);
-      }
-    }
-    nextTest();
-  });
+      return close(window);
+    })
+  }).then(done).then(null, assert.fail);
 };
 
 exports.testActiveWindowDoesNotIgnorePrivateWindow = function(assert, done) {
@@ -195,8 +181,8 @@ exports.testActiveWindowDoesNotIgnorePrivateWindow = function(assert, done) {
       assert.equal(isPrivate(window), false, "window is not private");
     }
 
-    close(window).then(done);
-  });
+    return close(window);
+  }).then(done).then(null, assert.fail);
 }
 
 exports.testWindowIteratorIgnoresPrivateWindows = function(assert, done) {
@@ -214,11 +200,11 @@ exports.testWindowIteratorIgnoresPrivateWindows = function(assert, done) {
     else {
       assert.equal(isWindowPrivate(window), false, "window is not private");
       assert.ok(toArray(windowUtils.windowIterator()).indexOf(window) > -1,
-                "window is in windowIterator()"); 
+                "window is in windowIterator()");
     }
 
-    close(window).then(done);
-  });
+    return close(window);
+  }).then(done).then(null, assert.fail);
 };
 
-require("test").run(exports);
+require("sdk/test").run(exports);

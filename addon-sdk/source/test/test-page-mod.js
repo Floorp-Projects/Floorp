@@ -532,7 +532,7 @@ exports.testContentScriptWhenForNewTabs = function(assert, done) {
   handleReadyState(url, 'start', {
     onLoading: (tab) => {
       assert.pass("PageMod is attached while document is loading");
-      if (++count === 3) 
+      if (++count === 3)
         tab.close(done);
     },
     onInteractive: () => assert.fail("onInteractive should not be called with 'start'."),
@@ -542,7 +542,7 @@ exports.testContentScriptWhenForNewTabs = function(assert, done) {
   handleReadyState(url, 'ready', {
     onInteractive: (tab) => {
       assert.pass("PageMod is attached while document is interactive");
-      if (++count === 3) 
+      if (++count === 3)
         tab.close(done);
     },
     onLoading: () => assert.fail("onLoading should not be called with 'ready'."),
@@ -552,7 +552,7 @@ exports.testContentScriptWhenForNewTabs = function(assert, done) {
   handleReadyState(url, 'end', {
     onComplete: (tab) => {
       assert.pass("PageMod is attached when document is complete");
-      if (++count === 3) 
+      if (++count === 3)
         tab.close(done);
     },
     onLoading: () => assert.fail("onLoading should not be called with 'end'."),
@@ -575,7 +575,7 @@ exports.testContentScriptWhenOnTabOpen = function(assert, done) {
       handleReadyState(url, 'start', {
         onLoading: () => {
           assert.pass("PageMod is attached while document is loading");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onInteractive: () => assert.fail("onInteractive should not be called with 'start'."),
@@ -585,7 +585,7 @@ exports.testContentScriptWhenOnTabOpen = function(assert, done) {
       handleReadyState(url, 'ready', {
         onInteractive: () => {
           assert.pass("PageMod is attached while document is interactive");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'ready'."),
@@ -595,7 +595,7 @@ exports.testContentScriptWhenOnTabOpen = function(assert, done) {
       handleReadyState(url, 'end', {
         onComplete: () => {
           assert.pass("PageMod is attached when document is complete");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'end'."),
@@ -619,7 +619,7 @@ exports.testContentScriptWhenOnTabReady = function(assert, done) {
       handleReadyState(url, 'start', {
         onInteractive: () => {
           assert.pass("PageMod is attached while document is interactive");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'start'."),
@@ -629,7 +629,7 @@ exports.testContentScriptWhenOnTabReady = function(assert, done) {
       handleReadyState(url, 'ready', {
         onInteractive: () => {
           assert.pass("PageMod is attached while document is interactive");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'ready'."),
@@ -639,7 +639,7 @@ exports.testContentScriptWhenOnTabReady = function(assert, done) {
       handleReadyState(url, 'end', {
         onComplete: () => {
           assert.pass("PageMod is attached when document is complete");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'end'."),
@@ -663,7 +663,7 @@ exports.testContentScriptWhenOnTabLoad = function(assert, done) {
       handleReadyState(url, 'start', {
         onComplete: () => {
           assert.pass("PageMod is attached when document is complete");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'start'."),
@@ -673,7 +673,7 @@ exports.testContentScriptWhenOnTabLoad = function(assert, done) {
       handleReadyState(url, 'ready', {
         onComplete: () => {
           assert.pass("PageMod is attached when document is complete");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'ready'."),
@@ -683,7 +683,7 @@ exports.testContentScriptWhenOnTabLoad = function(assert, done) {
       handleReadyState(url, 'end', {
         onComplete: () => {
           assert.pass("PageMod is attached when document is complete");
-          if (++count === 3) 
+          if (++count === 3)
             tab.close(done);
         },
         onLoading: () => assert.fail("onLoading should not be called with 'end'."),
@@ -764,7 +764,6 @@ exports.testAutomaticDestroy = function(assert, done) {
 };
 
 exports.testAttachToTabsOnly = function(assert, done) {
-
   let { PageMod } = require('sdk/page-mod');
   let openedTab = null; // Tab opened in openTabWithIframe()
   let workerCount = 0;
@@ -789,6 +788,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
   });
 
   function openHiddenFrame() {
+    assert.pass('Open iframe in hidden window');
     let hiddenFrames = require('sdk/frame/hidden-frame');
     let hiddenFrame = hiddenFrames.add(hiddenFrames.HiddenFrame({
       onReady: function () {
@@ -810,6 +810,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
   }
 
   function openToplevelWindow() {
+    assert.pass('Open toplevel window');
     let win = open('data:text/html;charset=utf-8,bar');
     win.addEventListener('DOMContentLoaded', function onload() {
       win.removeEventListener('DOMContentLoaded', onload, false);
@@ -819,6 +820,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
   }
 
   function openBrowserIframe() {
+    assert.pass('Open iframe in browser window');
     let window = require('sdk/deprecated/window-utils').activeBrowserWindow;
     let document = window.document;
     let iframe = document.createElement('iframe');
@@ -834,6 +836,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
 
   // Only these three documents will be accepted by the page-mod
   function openTabWithIframes() {
+    assert.pass('Open iframes in a tab');
     let subContent = '<iframe src="data:text/html;charset=utf-8,sub frame" />'
     let content = '<iframe src="data:text/html;charset=utf-8,' +
                   encodeURIComponent(subContent) + '" />';
@@ -1368,6 +1371,8 @@ exports.testWorkerTabClose = function(assert, done) {
       include: "about:",
       contentScript: '',
       onAttach: function(worker) {
+        assert.pass("The page-mod was attached");
+
         worker.tab.close(function () {
           // On Fennec, tab is completely destroyed right after close event is
           // dispatch, so we need to wait for the next event loop cycle to

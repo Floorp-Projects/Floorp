@@ -4,18 +4,6 @@
 "use strict";
 
 const { Cu } = require("chrome");
-
-// Because Firefox Holly, we still need to check if `CustomizableUI` is
-// available. Once Australis will officially land, we can safely remove it.
-// See Bug 959142
-try {
-  Cu.import("resource:///modules/CustomizableUI.jsm", {});
-}
-catch (e) {
-  throw Error("Unsupported Application: The module"  + module.id +
-              " does not support this application.");
-}
-
 const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
 const { receive } = require("../event/utils");
 const { InputPort } = require("./system");
