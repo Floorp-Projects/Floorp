@@ -59,6 +59,10 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-declaration-58.html support/color-green-ref.html
 == variable-declaration-59.html support/color-green-ref.html
 == variable-declaration-60.html support/color-green-ref.html
+== variable-external-declaration-01.html support/color-green-ref.html
+== variable-external-font-face-01.html variable-external-font-face-01-ref.html
+== variable-external-reference-01.html support/color-green-ref.html
+== variable-external-supports-01.html support/color-green-ref.html
 == variable-font-face-01.html variable-font-face-01-ref.html
 == variable-font-face-02.html variable-font-face-02-ref.html
 == variable-reference-01.html support/color-green-ref.html
