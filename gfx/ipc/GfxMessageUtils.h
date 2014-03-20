@@ -864,6 +864,121 @@ struct ParamTraits<mozilla::layers::EventRegions>
   }
 };
 
+struct MessageAndAttributeMap
+{
+  Message* msg;
+  const mozilla::gfx::AttributeMap& map;
+};
+
+static bool
+WriteAttribute(mozilla::gfx::AttributeName aName,
+               mozilla::gfx::AttributeType aType,
+               void* aUserData)
+{
+  MessageAndAttributeMap* msgAndMap =
+    static_cast<MessageAndAttributeMap*>(aUserData);
+
+  WriteParam(msgAndMap->msg, aType);
+  WriteParam(msgAndMap->msg, aName);
+
+  switch (aType) {
+
+#define HANDLE_TYPE(typeName)                                          \
+    case mozilla::gfx::AttributeType::e##typeName:                     \
+      WriteParam(msgAndMap->msg, msgAndMap->map.Get##typeName(aName)); \
+      break;
+
+    HANDLE_TYPE(Bool)
+    HANDLE_TYPE(Uint)
+    HANDLE_TYPE(Float)
+    HANDLE_TYPE(Size)
+    HANDLE_TYPE(IntSize)
+    HANDLE_TYPE(IntPoint)
+    HANDLE_TYPE(Matrix)
+    HANDLE_TYPE(Matrix5x4)
+    HANDLE_TYPE(Point3D)
+    HANDLE_TYPE(Color)
+    HANDLE_TYPE(AttributeMap)
+    HANDLE_TYPE(Floats)
+
+#undef HANDLE_TYPE
+
+    default:
+      MOZ_CRASH("unhandled attribute type");
+  }
+  return true;
+}
+
+template <>
+struct ParamTraits<mozilla::gfx::AttributeMap>
+{
+  typedef mozilla::gfx::AttributeMap paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.Count());
+    MessageAndAttributeMap msgAndMap = { aMsg, aParam };
+    aParam.EnumerateRead(WriteAttribute, &msgAndMap);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    uint32_t count;
+    if (!ReadParam(aMsg, aIter, &count)) {
+      return false;
+    }
+    for (uint32_t i = 0; i < count; i++) {
+      mozilla::gfx::AttributeType type;
+      if (!ReadParam(aMsg, aIter, &type)) {
+        return false;
+      }
+      mozilla::gfx::AttributeName name;
+      if (!ReadParam(aMsg, aIter, &name)) {
+        return false;
+      }
+      switch (type) {
+
+#define HANDLE_TYPE(type, typeName)                                    \
+        case mozilla::gfx::AttributeType::e##typeName:                 \
+        {                                                              \
+          type value;                                                  \
+          if (!ReadParam(aMsg, aIter, &value)) {                       \
+            return false;                                              \
+          }                                                            \
+          aResult->Set(name, value);                                   \
+        }
+
+        HANDLE_TYPE(bool, Bool)
+        HANDLE_TYPE(uint32_t, Uint)
+        HANDLE_TYPE(float, Float)
+        HANDLE_TYPE(mozilla::gfx::Size, Size)
+        HANDLE_TYPE(mozilla::gfx::IntSize, IntSize)
+        HANDLE_TYPE(mozilla::gfx::IntPoint, IntPoint)
+        HANDLE_TYPE(mozilla::gfx::Matrix, Matrix)
+        HANDLE_TYPE(mozilla::gfx::Matrix5x4, Matrix5x4)
+        HANDLE_TYPE(mozilla::gfx::Point3D, Point3D)
+        HANDLE_TYPE(mozilla::gfx::Color, Color)
+        HANDLE_TYPE(mozilla::gfx::AttributeMap, AttributeMap)
+
+#undef HANDLE_TYPE
+
+        case mozilla::gfx::AttributeType::eFloats:
+        {
+          nsTArray<float> value;
+          if (!ReadParam(aMsg, aIter, &value)) {
+            return false;
+          }
+          aResult->Set(name, &value[0], value.Length());
+          break;
+        }
+        default:
+          MOZ_CRASH("unhandled attribute type");
+      }
+    }
+    return true;
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __GFXMESSAGEUTILS_H__ */
