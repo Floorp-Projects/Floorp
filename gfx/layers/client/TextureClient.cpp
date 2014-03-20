@@ -619,7 +619,7 @@ MemoryTextureClient::~MemoryTextureClient()
     // if the buffer has never been shared we must deallocate it or it would
     // leak.
     GfxMemoryImageReporter::WillFree(mBuffer);
-    delete mBuffer;
+    delete [] mBuffer;
   }
 }
 
