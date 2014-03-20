@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TypedEnum.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsClassHashtable.h"
@@ -145,6 +146,22 @@ class DrawTarget;
 class SourceSurface;
 class FilterNode;
 struct FilterAttribute;
+
+MOZ_BEGIN_ENUM_CLASS(AttributeType)
+  eBool,
+  eUint,
+  eFloat,
+  eSize,
+  eIntSize,
+  eIntPoint,
+  eMatrix,
+  eMatrix5x4,
+  ePoint3D,
+  eColor,
+  eAttributeMap,
+  eFloats,
+  Max
+MOZ_END_ENUM_CLASS(AttributeType)
 
 // A class that stores values of different types, keyed by an attribute name.
 // The Get*() methods assert that they're called for the same type that the
