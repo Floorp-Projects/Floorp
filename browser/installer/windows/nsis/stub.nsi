@@ -61,6 +61,7 @@ Var HandleDownload
 Var CanSetAsDefault
 Var InstallCounterStep
 Var InstallStepSize
+Var InstallTotalSteps
 Var TmpVal
 
 Var ExitCode
@@ -140,7 +141,7 @@ Var ControlRightPX
  * The following errors prefixed with ERR_INSTALL apply to the install phase.
  */
 ; The installation timed out. The installation timeout is defined by the number
-; of progress steps defined in InstallProgresSteps and the install timer
+; of progress steps defined in InstallTotalSteps and the install timer
 ; interval defined in InstallIntervalMS
 !define ERR_INSTALL_TIMEOUT 30
 
@@ -164,17 +165,24 @@ Var ControlRightPX
 ; Interval for the install timer
 !define InstallIntervalMS 100
 
-; Number of steps for the install progress.
-; This is 120 seconds with a 100 millisecond timer and a first step of 20 as
-; defined by InstallProgressFirstStep. This might not be enough when installing
-; on a slow network drive so it will fallback to downloading the full installer
-; if it reaches this number. The size of the install progress step increases
-; when the full installer finishes instead of waiting the entire 120 seconds.
-!define InstallProgresSteps 1220
-
 ; The first step for the install progress bar. By starting with a large step
 ; immediate feedback is given to the user.
 !define InstallProgressFirstStep 20
+
+; Number of steps for the install progress.
+; This might not be enough when installing on a slow network drive so it will
+; fallback to downloading the full installer if it reaches this number. The size
+; of the install progress step is increased when the full installer finishes
+; instead of waiting.
+
+; Approximately 150 seconds with a 100 millisecond timer and a first step of 20
+; as defined by InstallProgressFirstStep.
+!define /math InstallCleanTotalSteps ${InstallProgressFirstStep} + 1500
+
+; Approximately 165 seconds (minus 0.2 seconds for each file that is removed)
+; with a 100 millisecond timer and a first step of 20 as defined by
+; InstallProgressFirstStep .
+!define /math InstallPaveOverTotalSteps ${InstallProgressFirstStep} + 1800
 
 ; The interval in MS used for the progress bars set as marquee.
 !define ProgressbarMarqueeIntervalMS 10
@@ -1245,6 +1253,12 @@ Function createInstall
   System::Call "kernel32::GetTickCount()l .s"
   Pop $StartDownloadPhaseTickCount
 
+  ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
+    StrCpy $InstallTotalSteps ${InstallPaveOverTotalSteps}
+  ${Else}
+    StrCpy $InstallTotalSteps ${InstallCleanTotalSteps}
+  ${EndIf}
+
   ${NSD_CreateTimer} StartDownload ${DownloadIntervalMS}
 
   LockWindow off
@@ -1338,7 +1352,7 @@ Function OnDownload
     StrCpy $DownloadSizeBytes "$4"
     System::Int64Op $4 / 2
     Pop $HalfOfDownload
-    System::Int64Op $HalfOfDownload / ${InstallProgresSteps}
+    System::Int64Op $HalfOfDownload / $InstallTotalSteps
     Pop $InstallStepSize
     SendMessage $Progressbar ${PBM_SETMARQUEE} 0 0 ; start=1|stop=0 interval(ms)=+N
     ${RemoveStyle} $Progressbar ${PBS_MARQUEE}
@@ -1493,7 +1507,7 @@ Function OnDownload
         WriteIniStr "$0" "TASKBAR" "Migrated" "true"
       ${EndIf}
 
-      ${OnStubInstallUninstall}
+      ${OnStubInstallUninstall} $Progressbar $InstallCounterStep
 
       ; Delete the install.log and let the full installer create it. When the
       ; installer closes it we can detect that it has completed.
@@ -1562,7 +1576,7 @@ FunctionEnd
 
 Function CheckInstall
   IntOp $InstallCounterStep $InstallCounterStep + 1
-  ${If} $InstallCounterStep >= ${InstallProgresSteps}
+  ${If} $InstallCounterStep >= $InstallTotalSteps
     ${NSD_KillTimer} CheckInstall
     ; Close the handle that prevents modification of the full installer
     System::Call 'kernel32::CloseHandle(i $HandleDownload)'
@@ -1602,12 +1616,12 @@ FunctionEnd
 Function FinishInstall
   ; The full installer has completed but the progress bar still needs to finish
   ; so increase the size of the step.
-  IntOp $InstallCounterStep $InstallCounterStep + 20
-  ${If} ${InstallProgresSteps} < $InstallCounterStep
-    StrCpy $InstallCounterStep "${InstallProgresSteps}"
+  IntOp $InstallCounterStep $InstallCounterStep + 40
+  ${If} $InstallTotalSteps < $InstallCounterStep
+    StrCpy $InstallCounterStep "$InstallTotalSteps"
   ${EndIf}
 
-  ${If} ${InstallProgresSteps} != $InstallCounterStep
+  ${If} $InstallTotalSteps != $InstallCounterStep
     SendMessage $Progressbar ${PBM_STEPIT} 0 0
     Return
   ${EndIf}
