@@ -70,6 +70,28 @@ function test() {
 }
 
 var tests = {
+  testButtonDisabledOnActivate: function(next) {
+    // starting on about:blank page, share should be visible but disabled when
+    // adding provider
+    is(gBrowser.contentDocument.location.href, "about:blank");
+    SocialService.addProvider(manifest2, function(provider) {
+      is(provider.origin, manifest2.origin, "provider is installed");
+      let id = SocialMarks._toolbarHelper.idFromOrigin(manifest2.origin);
+      let widget = CustomizableUI.getWidget(id).forWindow(window)
+      ok(widget.node, "button added to widget set");
+
+      // bypass widget go directly to dom, check attribute states
+      let button = document.getElementById(id);
+      is(button.disabled, true, "mark button is disabled");
+      // verify the attribute for proper css
+      is(button.getAttribute("disabled"), "true", "mark button attribute is disabled");
+      // button should be visible
+      is(button.hidden, false, "mark button is visible");
+
+      checkSocialUI(window);
+      SocialService.removeProvider(manifest2.origin, next);
+    });
+  },
   testNoButtonOnEnable: function(next) {
     // we expect the addon install dialog to appear, we need to accept the
     // install from the dialog.
@@ -117,6 +139,15 @@ var tests = {
           let id = SocialMarks._toolbarHelper.idFromOrigin(manifest2.origin);
           let widget = CustomizableUI.getWidget(id).forWindow(window)
           ok(widget.node, "button added to widget set");
+
+          // bypass widget go directly to dom, check attribute states
+          let button = document.getElementById(id);
+          is(button.disabled, false, "mark button is disabled");
+          // verify the attribute for proper css
+          ok(!button.hasAttribute("disabled"), "mark button attribute is disabled");
+          // button should be visible
+          is(button.hidden, false, "mark button is visible");
+
           checkSocialUI(window);
           gBrowser.removeTab(tab);
           next();
