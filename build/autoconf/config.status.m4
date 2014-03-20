@@ -11,24 +11,39 @@ dnl can mess around with things like:
 dnl    AC_SOMETHING(foo,AC_SUBST(),bar)
 define([AC_SUBST],
 [ifdef([AC_SUBST_SET_$1], [m4_fatal([Cannot use AC_SUBST and AC_SUBST_SET on the same variable ($1)])],
+[ifdef([AC_SUBST_LIST_$1], [m4_fatal([Cannot use AC_SUBST and AC_SUBST_LIST on the same variable ($1)])],
 [ifdef([AC_SUBST_$1], ,
 [define([AC_SUBST_$1], )dnl
 AC_DIVERT_PUSH(MOZ_DIVERSION_SUBST)dnl
     (''' $1 ''', r''' [$]$1 ''')
 AC_DIVERT_POP()dnl
-])])])
+])])])])
 
 dnl Like AC_SUBST, but makes the value available as a set in python,
 dnl with values got from the value of the environment variable, split on
 dnl whitespaces.
 define([AC_SUBST_SET],
 [ifdef([AC_SUBST_$1], [m4_fatal([Cannot use AC_SUBST and AC_SUBST_SET on the same variable ($1)])],
+[ifdef([AC_SUBST_LIST$1], [m4_fatal([Cannot use AC_SUBST_LIST and AC_SUBST_SET on the same variable ($1)])],
 [ifdef([AC_SUBST_SET_$1], ,
 [define([AC_SUBST_SET_$1], )dnl
 AC_DIVERT_PUSH(MOZ_DIVERSION_SUBST)dnl
     (''' $1 ''', set(r''' [$]$1 '''.split()))
 AC_DIVERT_POP()dnl
-])])])
+])])])])
+
+dnl Like AC_SUBST, but makes the value available as a list in python,
+dnl with values got from the value of the environment variable, split on
+dnl whitespaces.
+define([AC_SUBST_LIST],
+[ifdef([AC_SUBST_$1], [m4_fatal([Cannot use AC_SUBST and AC_SUBST_LIST on the same variable ($1)])],
+[ifdef([AC_SUBST_SET_$1], [m4_fatal([Cannot use AC_SUBST_SET and AC_SUBST_LIST on the same variable ($1)])],
+[ifdef([AC_SUBST_LIST_$1], ,
+[define([AC_SUBST_LIST_$1], )dnl
+AC_DIVERT_PUSH(MOZ_DIVERSION_SUBST)dnl
+    (''' $1 ''', list(r''' [$]$1 '''.split()))
+AC_DIVERT_POP()dnl
+])])])])
 
 dnl Wrap AC_DEFINE to store values in a format suitable for python.
 dnl autoconf's AC_DEFINE still needs to be used to fill confdefs.h,
