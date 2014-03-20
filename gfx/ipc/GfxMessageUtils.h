@@ -979,6 +979,60 @@ struct ParamTraits<mozilla::gfx::AttributeMap>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
+{
+  typedef mozilla::gfx::FilterPrimitiveDescription paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.Type());
+    WriteParam(aMsg, aParam.PrimitiveSubregion());
+    WriteParam(aMsg, aParam.IsTainted());
+    WriteParam(aMsg, aParam.OutputColorSpace());
+    WriteParam(aMsg, aParam.NumberOfInputs());
+    for (size_t i = 0; i < aParam.NumberOfInputs(); i++) {
+      WriteParam(aMsg, aParam.InputPrimitiveIndex(i));
+      WriteParam(aMsg, aParam.InputColorSpace(i));
+    }
+    WriteParam(aMsg, aParam.Attributes());
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    mozilla::gfx::PrimitiveType type;
+    mozilla::gfx::IntRect primitiveSubregion;
+    bool isTainted = false;
+    mozilla::gfx::ColorSpace outputColorSpace;
+    size_t numberOfInputs = 0;
+    if (!ReadParam(aMsg, aIter, &type) ||
+        !ReadParam(aMsg, aIter, &primitiveSubregion) ||
+        !ReadParam(aMsg, aIter, &isTainted) ||
+        !ReadParam(aMsg, aIter, &outputColorSpace) ||
+        !ReadParam(aMsg, aIter, &numberOfInputs)) {
+      return false;
+    }
+
+    aResult->SetType(type);
+    aResult->SetPrimitiveSubregion(primitiveSubregion);
+    aResult->SetIsTainted(isTainted);
+    aResult->SetOutputColorSpace(outputColorSpace);
+
+    for (size_t i = 0; i < numberOfInputs; i++) {
+      int32_t inputPrimitiveIndex = 0;
+      mozilla::gfx::ColorSpace inputColorSpace;
+      if (!ReadParam(aMsg, aIter, &inputPrimitiveIndex) ||
+          !ReadParam(aMsg, aIter, &inputColorSpace)) {
+        return false;
+      }
+      aResult->SetInputPrimitive(i, inputPrimitiveIndex);
+      aResult->SetInputColorSpace(i, inputColorSpace);
+    }
+
+    return ReadParam(aMsg, aIter, &aResult->Attributes());
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __GFXMESSAGEUTILS_H__ */
