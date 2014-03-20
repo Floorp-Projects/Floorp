@@ -287,6 +287,28 @@ struct ParamTraits<gfxRGBA>
 };
 
 template<>
+struct ParamTraits<mozilla::gfx::Color>
+{
+  typedef mozilla::gfx::Color paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.r);
+    WriteParam(msg, param.g);
+    WriteParam(msg, param.b);
+    WriteParam(msg, param.a);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->r) &&
+            ReadParam(msg, iter, &result->g) &&
+            ReadParam(msg, iter, &result->b) &&
+            ReadParam(msg, iter, &result->a));
+  }
+};
+
+template<>
 struct ParamTraits<nsPoint>
 {
   typedef nsPoint paramType;
