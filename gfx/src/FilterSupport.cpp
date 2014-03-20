@@ -1572,25 +1572,24 @@ FilterPrimitiveDescription::operator=(const FilterPrimitiveDescription& aOther)
 // A class that wraps different types for easy storage in a hashtable. Only
 // used by AttributeMap.
 struct FilterAttribute {
-  FilterAttribute() : mType(eNone) {}
   FilterAttribute(const FilterAttribute& aOther);
   ~FilterAttribute();
 
 #define MAKE_CONSTRUCTOR_AND_ACCESSOR_BASIC(type, typeLabel)   \
   FilterAttribute(type aValue)                                 \
-   : mType(e##typeLabel), m##typeLabel(aValue)                 \
+   : mType(AttributeType::e##typeLabel), m##typeLabel(aValue)  \
   {}                                                           \
   type As##typeLabel() {                                       \
-    MOZ_ASSERT(mType == e##typeLabel);                         \
+    MOZ_ASSERT(mType == AttributeType::e##typeLabel);          \
     return m##typeLabel;                                       \
   }
 
 #define MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS(className)         \
   FilterAttribute(const className& aValue)                     \
-   : mType(e##className), m##className(new className(aValue))  \
+   : mType(AttributeType::e##className), m##className(new className(aValue)) \
   {}                                                           \
   className As##className() {                                  \
-    MOZ_ASSERT(mType == e##className);                         \
+    MOZ_ASSERT(mType == AttributeType::e##className);          \
     return *m##className;                                      \
   }
 
@@ -1610,32 +1609,16 @@ struct FilterAttribute {
 #undef MAKE_CONSTRUCTOR_AND_ACCESSOR_CLASS
 
   FilterAttribute(const float* aValue, uint32_t aLength)
-   : mType(eFloats)
+   : mType(AttributeType::eFloats)
   {
     mFloats = new nsTArray<float>();
     mFloats->AppendElements(aValue, aLength);
   }
 
   const nsTArray<float>& AsFloats() const {
-    MOZ_ASSERT(mType == eFloats);
+    MOZ_ASSERT(mType == AttributeType::eFloats);
     return *mFloats;
   }
-
-  enum AttributeType {
-    eNone = 0,
-    eBool,
-    eUint,
-    eFloat,
-    eSize,
-    eIntSize,
-    eIntPoint,
-    eMatrix,
-    eMatrix5x4,
-    ePoint3D,
-    eColor,
-    eAttributeMap,
-    eFloats
-  };
 
 private:
   const AttributeType mType;
@@ -1660,18 +1643,18 @@ FilterAttribute::FilterAttribute(const FilterAttribute& aOther)
  : mType(aOther.mType)
 {
   switch (mType) {
-    case eBool:
+    case AttributeType::eBool:
       mBool = aOther.mBool;
       break;
-    case eUint:
+    case AttributeType::eUint:
       mUint = aOther.mUint;
       break;
-    case eFloat:
+    case AttributeType::eFloat:
       mFloat = aOther.mFloat;
       break;
 
 #define HANDLE_CLASS(className)                            \
-    case e##className:                                     \
+    case AttributeType::e##className:                      \
       m##className = new className(*aOther.m##className);  \
       break;
 
@@ -1686,24 +1669,24 @@ FilterAttribute::FilterAttribute(const FilterAttribute& aOther)
 
 #undef HANDLE_CLASS
 
-    case eFloats:
+    case AttributeType::eFloats:
       mFloats = new nsTArray<float>(*aOther.mFloats);
       break;
-    case eNone:
+    case AttributeType::Max:
       break;
   }
 }
 
 FilterAttribute::~FilterAttribute() {
   switch (mType) {
-    case eNone:
-    case eBool:
-    case eUint:
-    case eFloat:
+    case AttributeType::Max:
+    case AttributeType::eBool:
+    case AttributeType::eUint:
+    case AttributeType::eFloat:
       break;
 
 #define HANDLE_CLASS(className)                            \
-    case e##className:                                     \
+    case AttributeType::e##className:                      \
       delete m##className;                                 \
       break;
 
@@ -1718,7 +1701,7 @@ FilterAttribute::~FilterAttribute() {
 
 #undef HANDLE_CLASS
 
-    case eFloats:
+    case AttributeType::eFloats:
       delete mFloats;
       break;
   }
