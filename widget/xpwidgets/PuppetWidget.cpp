@@ -81,6 +81,10 @@ PuppetWidget::PuppetWidget(TabChild* aTabChild)
   , mDefaultScale(-1)
 {
   MOZ_COUNT_CTOR(PuppetWidget);
+
+  mSingleLineCommands.SetCapacity(4);
+  mMultiLineCommands.SetCapacity(4);
+  mRichTextCommands.SetCapacity(4);
 }
 
 PuppetWidget::~PuppetWidget()
@@ -306,6 +310,36 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   }
 
   return NS_OK;
+}
+
+
+NS_IMETHODIMP_(bool)
+PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
+                                      const mozilla::WidgetKeyboardEvent& aEvent,
+                                      DoCommandCallback aCallback,
+                                      void* aCallbackData)
+{
+  nsTArray<mozilla::CommandInt>& commands = mSingleLineCommands;
+  switch (aType) {
+    case nsIWidget::NativeKeyBindingsForSingleLineEditor:
+      commands = mSingleLineCommands;
+      break;
+    case nsIWidget::NativeKeyBindingsForMultiLineEditor:
+      commands = mMultiLineCommands;
+      break;
+    case nsIWidget::NativeKeyBindingsForRichTextEditor:
+      commands = mRichTextCommands;
+      break;
+  }
+
+  if (commands.IsEmpty()) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < commands.Length(); i++) {
+    aCallback(static_cast<mozilla::Command>(commands[i]), aCallbackData);
+  }
+  return true;
 }
 
 LayerManager*

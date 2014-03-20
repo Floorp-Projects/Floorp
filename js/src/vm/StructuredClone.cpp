@@ -230,7 +230,7 @@ struct JSStructuredCloneReader {
     // Any value passed to JS_ReadStructuredClone.
     void *closure;
 
-    friend bool JS_ReadTypedArray(JSStructuredCloneReader *r, JS::Value *vp);
+    friend bool JS_ReadTypedArray(JSStructuredCloneReader *r, JS::MutableHandleValue vp);
 };
 
 struct JSStructuredCloneWriter {
@@ -1808,18 +1808,18 @@ JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len)
 }
 
 JS_PUBLIC_API(bool)
-JS_ReadTypedArray(JSStructuredCloneReader *r, JS::Value *vp)
+JS_ReadTypedArray(JSStructuredCloneReader *r, JS::MutableHandleValue vp)
 {
     uint32_t tag, nelems;
     if (!r->input().readPair(&tag, &nelems))
         return false;
     if (tag >= SCTAG_TYPED_ARRAY_V1_MIN && tag <= SCTAG_TYPED_ARRAY_V1_MAX) {
-        return r->readTypedArray(TagToV1ArrayType(tag), nelems, vp, true);
+        return r->readTypedArray(TagToV1ArrayType(tag), nelems, vp.address(), true);
     } else if (tag == SCTAG_TYPED_ARRAY_OBJECT) {
         uint64_t arrayType;
         if (!r->input().read(&arrayType))
             return false;
-        return r->readTypedArray(arrayType, nelems, vp);
+        return r->readTypedArray(arrayType, nelems, vp.address());
     } else {
         JS_ReportErrorNumber(r->context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "expected type array");

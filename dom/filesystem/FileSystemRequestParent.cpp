@@ -7,6 +7,7 @@
 
 #include "CreateDirectoryTask.h"
 #include "GetFileOrDirectoryTask.h"
+#include "RemoveTask.h"
 
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/dom/FileSystemBase.h"
@@ -40,6 +41,7 @@ FileSystemRequestParent::Dispatch(ContentParent* aParent,
 
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(CreateDirectory)
     FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(GetFileOrDirectory)
+    FILESYSTEM_REQUEST_PARENT_DISPATCH_ENTRY(Remove)
 
     default: {
       NS_RUNTIMEABORT("not reached");
