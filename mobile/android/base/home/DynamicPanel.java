@@ -156,6 +156,15 @@ public class DynamicPanel extends HomeFragment {
         return datasetId.hashCode();
     }
 
+    private void restartDatasetLoader(DatasetRequest request) {
+        final Bundle bundle = new Bundle();
+        bundle.putParcelable(DATASET_REQUEST, request);
+
+        // Ensure one loader per dataset
+        final int loaderId = generateLoaderId(request.getDatasetId());
+        getLoaderManager().restartLoader(loaderId, bundle, mLoaderCallbacks);
+    }
+
     /**
      * Used by the PanelLayout to make load and reset requests to
      * the holding fragment.
@@ -171,12 +180,7 @@ public class DynamicPanel extends HomeFragment {
                 return;
             }
 
-            final Bundle bundle = new Bundle();
-            bundle.putParcelable(DATASET_REQUEST, request);
-
-            // Ensure one loader per dataset
-            final int loaderId = generateLoaderId(request.getDatasetId());
-            getLoaderManager().restartLoader(loaderId, bundle, mLoaderCallbacks);
+            restartDatasetLoader(request);
         }
 
         @Override
