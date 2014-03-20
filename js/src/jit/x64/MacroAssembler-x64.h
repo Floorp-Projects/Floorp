@@ -554,6 +554,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void subPtr(const Address &addr, const Register &dest) {
         subq(Operand(addr), dest);
     }
+    void subPtr(const Register &src, const Address &dest) {
+        subq(src, Operand(dest));
+    }
 
     void branch32(Condition cond, const AbsoluteAddress &lhs, Imm32 rhs, Label *label) {
         if (JSC::X86Assembler::isAddressImmediate(lhs.addr)) {
