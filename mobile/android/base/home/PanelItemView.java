@@ -42,19 +42,22 @@ class PanelItemView extends LinearLayout {
 
         // Only show title if the item has one
         final boolean hasTitle = !TextUtils.isEmpty(title);
-        mTitleDescContainer.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
+        mTitle.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
         if (hasTitle) {
             mTitle.setText(title);
-
-            int descriptionIndex = cursor.getColumnIndexOrThrow(HomeItems.DESCRIPTION);
-            final String description = cursor.getString(descriptionIndex);
-
-            final boolean hasDescription = !TextUtils.isEmpty(description);
-            mDescription.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
-            if (hasDescription) {
-                mDescription.setText(description);
-            }
         }
+
+        int descriptionIndex = cursor.getColumnIndexOrThrow(HomeItems.DESCRIPTION);
+        final String description = cursor.getString(descriptionIndex);
+
+        // Only show description if the item has one
+        final boolean hasDescription = !TextUtils.isEmpty(description);
+        mDescription.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
+        if (hasDescription) {
+            mDescription.setText(description);
+        }
+
+        mTitleDescContainer.setVisibility(hasTitle || hasDescription ? View.VISIBLE : View.GONE);
 
         int imageIndex = cursor.getColumnIndexOrThrow(HomeItems.IMAGE_URL);
         final String imageUrl = cursor.getString(imageIndex);
