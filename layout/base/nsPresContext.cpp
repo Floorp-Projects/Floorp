@@ -165,7 +165,7 @@ static void DumpPresContextState(nsPresContext* aPC)
 }
 
 bool
-nsPresContext::IsDOMPaintEventPending() 
+nsPresContext::IsDOMPaintEventPending()
 {
   if (mFireAfterPaintEvents) {
     return true;
@@ -266,7 +266,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   SetBackgroundColorDraw(true);
 
   mBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
-  
+
   mUseDocumentColors = true;
   mUseDocumentFonts = true;
 
@@ -471,8 +471,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 static const char* const kGenericFont[] = {
   ".variable.",
   ".fixed.",
-  ".serif.", 
-  ".sans-serif.", 
+  ".serif.",
+  ".sans-serif.",
   ".monospace.",
   ".cursive.",
   ".fantasy."
@@ -634,11 +634,11 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
         if (!value.IsEmpty()) {
           prefs->mDefaultVariableFont.name.Assign(value);
         }
-      } 
+      }
     }
     else {
       if (eType == eDefaultFont_Monospace) {
-        // This takes care of the confusion whereby people often expect "monospace" 
+        // This takes care of the confusion whereby people often expect "monospace"
         // to have the same default font-size as "-moz-fixed" (this tentative
         // size may be overwritten with the specific value for "monospace" when
         // "font.size.monospace.[langGroup]" is read -- see below)
@@ -829,7 +829,7 @@ nsPresContext::GetUserPreferences()
     Preferences::GetInt("browser.display.focus_ring_style", mFocusRingStyle);
 
   mBodyTextColor = mDefaultColor;
-  
+
   // * use fonts?
   mUseDocumentFonts =
     Preferences::GetInt("browser.display.use_document_fonts") != 0;
@@ -1155,7 +1155,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (doc) {
       doc->RemoveCharSetObserver(this);
     }
-  }    
+  }
 
   mShell = aShell;
 
@@ -1254,7 +1254,7 @@ nsPresContext::UpdateCharSet(const nsCString& aCharSet)
 }
 
 NS_IMETHODIMP
-nsPresContext::Observe(nsISupports* aSubject, 
+nsPresContext::Observe(nsISupports* aSubject,
                         const char* aTopic,
                         const char16_t* aData)
 {
@@ -1393,7 +1393,7 @@ static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, uint16_t aMode)
   }
 }
 
-// IMPORTANT: Assumption is that all images for a Presentation 
+// IMPORTANT: Assumption is that all images for a Presentation
 // have the same Animation Mode (pavlov said this was OK)
 //
 // Walks content and set the animation mode
@@ -1407,7 +1407,7 @@ void nsPresContext::SetImgAnimations(nsIContent *aParent, uint16_t aMode)
                            getter_AddRefs(imgReq));
     SetImgAnimModeOnImgReq(imgReq, aMode);
   }
-  
+
   uint32_t count = aParent->GetChildCount();
   for (uint32_t i = 0; i < count; ++i) {
     SetImgAnimations(aParent->GetChildAt(i), aMode);
@@ -1447,7 +1447,7 @@ nsPresContext::SetImageAnimationModeInternal(uint16_t aMode)
   if (!IsDynamic())
     return;
 
-  // Now walk the content tree and set the animation mode 
+  // Now walk the content tree and set the animation mode
   // on all the images.
   if (mShell != nullptr) {
     nsIDocument *doc = mShell->GetDocument();
@@ -1498,7 +1498,7 @@ nsPresContext::GetDefaultFont(uint8_t aFontID, nsIAtom *aLanguage) const
     case kGenericFont_cursive:
       font = &prefs->mDefaultCursiveFont;
       break;
-    case kGenericFont_fantasy: 
+    case kGenericFont_fantasy:
       font = &prefs->mDefaultFantasyFont;
       break;
     default:
@@ -1674,7 +1674,7 @@ nsPresContext::SetBidi(uint32_t aSource, bool aForceRestyle)
     return;
   }
 
-  NS_ASSERTION(!(aForceRestyle && (GetBidi() == 0)), 
+  NS_ASSERTION(!(aForceRestyle && (GetBidi() == 0)),
                "ForceReflow on new prescontext");
 
   Document()->SetBidiOptions(aSource);
@@ -1748,14 +1748,14 @@ nsPresContext::ThemeChanged()
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPendingThemeChanged = true;
     }
-  }    
+  }
 }
 
 void
 nsPresContext::ThemeChangedInternal()
 {
   mPendingThemeChanged = false;
-  
+
   // Tell the theme that it changed, so it can flush any handles to stale theme
   // data.
   if (mTheme && sThemeChanged) {
@@ -1797,13 +1797,13 @@ void
 nsPresContext::SysColorChangedInternal()
 {
   mPendingSysColorChanged = false;
-  
+
   if (sLookAndFeelChanged) {
      // Don't use the cached values for the system colors
     LookAndFeel::Refresh();
     sLookAndFeelChanged = false;
   }
-   
+
   // Reset default background and foreground colors for the document since
   // they may be using system colors
   GetDocumentColorPreferences();
@@ -2198,7 +2198,7 @@ nsPresContext::RebuildUserFontSet()
     if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
       mPostedFlushUserFontSet = true;
     }
-  }    
+  }
 }
 
 void
@@ -2385,7 +2385,7 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
   // MayHavePaintEventListener is pretty cheap and we could make it
   // even cheaper by providing a more efficient
   // nsPIDOMWindow::GetListenerManager.
-  
+
   if (mAllInvalidated) {
     return;
   }
@@ -2412,11 +2412,11 @@ nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
   request->mFlags = aFlags;
 }
 
-/* static */ void 
+/* static */ void
 nsPresContext::NotifySubDocInvalidation(ContainerLayer* aContainer,
                                         const nsIntRegion& aRegion)
 {
-  ContainerLayerPresContext *data = 
+  ContainerLayerPresContext *data =
     static_cast<ContainerLayerPresContext*>(
       aContainer->GetUserData(&gNotifySubDocInvalidationData));
   if (!data) {
