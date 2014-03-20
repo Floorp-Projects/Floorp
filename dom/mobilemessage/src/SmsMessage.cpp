@@ -8,7 +8,6 @@
 #include "jsapi.h" // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
 #include "jsfriendapi.h" // For js_DateGetMsecSinceEpoch
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
-#include "MessageUtils.h"
 
 using namespace mozilla::dom::mobilemessage;
 
@@ -60,10 +59,10 @@ SmsMessage::Create(int32_t aId,
                    const nsAString& aReceiver,
                    const nsAString& aBody,
                    const nsAString& aMessageClass,
-                   const JS::Value& aTimestamp,
-                   const JS::Value& aSentTimestamp,
-                   const JS::Value& aDeliveryTimestamp,
-                   const bool aRead,
+                   uint64_t aTimestamp,
+                   uint64_t aSentTimestamp,
+                   uint64_t aDeliveryTimestamp,
+                   bool aRead,
                    JSContext* aCx,
                    nsIDOMMozSmsMessage** aMessage)
 {
@@ -119,16 +118,13 @@ SmsMessage::Create(int32_t aId,
   }
 
   // Set |timestamp|.
-  nsresult rv = convertTimeToInt(aCx, aTimestamp, data.timestamp());
-  NS_ENSURE_SUCCESS(rv, rv);
+  data.timestamp() = aTimestamp;
 
   // Set |sentTimestamp|.
-  rv = convertTimeToInt(aCx, aSentTimestamp, data.sentTimestamp());
-  NS_ENSURE_SUCCESS(rv, rv);
+  data.sentTimestamp() = aSentTimestamp;
 
   // Set |deliveryTimestamp|.
-  rv = convertTimeToInt(aCx, aDeliveryTimestamp, data.deliveryTimestamp());
-  NS_ENSURE_SUCCESS(rv, rv);
+  data.deliveryTimestamp() = aDeliveryTimestamp;
 
   nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(data);
   message.swap(*aMessage);

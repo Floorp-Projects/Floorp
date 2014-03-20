@@ -91,7 +91,7 @@ public:
                       double aWidth,
                       double aHeight,
                       bool aRepaint);
-    NS_IMETHOD SetZIndex(int32_t aZIndex);
+    void SetZIndex(int32_t aZIndex);
     NS_IMETHOD PlaceBehind(nsTopLevelWidgetZPlacement aPlacement,
                            nsIWidget *aWidget,
                            bool aActivate);
@@ -110,8 +110,6 @@ public:
 
 
 
-    NS_IMETHOD SetForegroundColor(const nscolor &aColor) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD SetBackgroundColor(const nscolor &aColor) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetCursor(nsCursor aCursor) { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD SetCursor(imgIContainer* aCursor,
                          uint32_t aHotspotX,

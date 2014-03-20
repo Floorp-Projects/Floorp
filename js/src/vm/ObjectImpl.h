@@ -193,15 +193,8 @@ class ObjectElements
      * is <= the length. Memory for elements above the initialized length is
      * uninitialized, but values between the initialized length and the proper
      * length are conceptually holes.
-     *
-     * ArrayBufferObject uses this field to store byteLength.
      */
     uint32_t initializedLength;
-
-    /*
-     * Beware, one or both of the following fields is clobbered by
-     * ArrayBufferObject. See GetViewList.
-     */
 
     /* Number of allocated slots. */
     uint32_t capacity;
@@ -287,13 +280,15 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
  * The |shape_| member stores the shape of the object, which includes the
  * object's class and the layout of all its properties.
  *
- * The type member stores the type of the object, which contains its prototype
- * object and the possible types of its properties.
+ * The |type_| member stores the type of the object, which contains its
+ * prototype object and the possible types of its properties.
  *
  * The rest of the object stores its named properties and indexed elements.
- * These are stored separately from one another. Objects are followed by an
+ * These are stored separately from one another. Objects are followed by a
  * variable-sized array of values for inline storage, which may be used by
- * either properties of native objects (fixed slots) or by elements.
+ * either properties of native objects (fixed slots), by elements (fixed
+ * elements), or by other data for certain kinds of objects, such as
+ * ArrayBufferObjects.
  *
  * Two native objects with the same shape are guaranteed to have the same
  * number of fixed slots.
@@ -315,12 +310,7 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
  *   slots may be either names or indexes; no indexed property will be in both
  *   the slots and elements.
  *
- * - For non-native objects other than typed arrays, properties and elements
- *   are both empty.
- *
- * - For typed array buffers, elements are used and properties are not used.
- *   The data indexed by the elements do not represent Values, but primitive
- *   unboxed integers or floating point values.
+ * - For non-native objects, slots and elements are both empty.
  *
  * The members of this class are currently protected; in the long run this will
  * will change so that some members are private, and only certain methods that

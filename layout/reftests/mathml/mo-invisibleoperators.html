@@ -2,16 +2,24 @@
   <math>
     <mrow>
       <mn>1</mn>
-      <mo>&#x200B;<!-- INVISIBLE COMMA --></mo>
-      <mn>2</mn>
       <mo>&#x2061;<!-- FUNCTION APPLICATION --></mo>
-      <mn>3</mn>
+      <mn>2</mn>
       <mo>&#x2062;<!-- INVISIBLE TIMES --></mo>
-      <mn>4</mn>
+      <mn>3</mn>
       <mo>&#x2063;<!-- INVISIBLE SEPARATOR --></mo>
-      <mn>5</mn>
+      <mn>4</mn>
       <mo>&#x2064;<!-- INVISIBLE PLUS --></mo>
-      <mn>6</mn>
+      <mn>5</mn>
+      <!-- Hack.  The invisible operators may not belong to the same font as
+           the numbers, so they may have different heights.  The mspace
+           compensates for this by ensuring the height of the mrow does not
+           depend on character height -->
+      <mspace height="2em" width="0.1em"></mspace>
     </mrow>
+  </math>
+  <p>
+  <!-- Should be invisible -->
+  <math>
+    <mo style="background: red; color: blue;">&ApplyFunction;</mo>
   </math>
 </html>

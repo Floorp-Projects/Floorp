@@ -114,7 +114,7 @@ SVGFECompositeElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                const nsTArray<bool>& aInputsAreTainted,
                                                nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eComposite);
+  FilterPrimitiveDescription descr(PrimitiveType::Composite);
   uint32_t op = mEnumAttributes[OPERATOR].GetAnimValue();
   descr.Attributes().Set(eCompositeOperator, op);
 

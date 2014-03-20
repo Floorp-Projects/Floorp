@@ -7,7 +7,6 @@
 XPIDL_SOURCES += [
     'nsIActivityProxy.idl',
     'nsIActivityUIGlue.idl',
-    'nsIDOMActivityOptions.idl',
     'nsIDOMActivityRequestHandler.idl',
 ]
 

@@ -1168,7 +1168,7 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetZIndex(int32_t aZIndex)
 {
     nsIWidget* oldPrev = GetPrevSibling();
@@ -1176,7 +1176,7 @@ nsWindow::SetZIndex(int32_t aZIndex)
     nsBaseWidget::SetZIndex(aZIndex);
 
     if (GetPrevSibling() == oldPrev) {
-        return NS_OK;
+        return;
     }
 
     NS_ASSERTION(!mContainer, "Expected Mozilla child widget");
@@ -1196,7 +1196,6 @@ nsWindow::SetZIndex(int32_t aZIndex)
                 gdk_window_lower(w->mGdkWindow);
         }
     }
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1492,18 +1491,6 @@ nsWindow::GetClientOffset()
     g_free(frame_extents);
 
     return nsIntPoint(left, top);
-}
-
-NS_IMETHODIMP
-nsWindow::SetForegroundColor(const nscolor &aColor)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWindow::SetBackgroundColor(const nscolor &aColor)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

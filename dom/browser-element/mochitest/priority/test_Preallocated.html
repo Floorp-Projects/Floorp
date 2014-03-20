@@ -61,7 +61,7 @@ function runTest()
   // Ensure that the preallocated process initially gets BACKGROUND priority.
   // That's it.
   expectProcessCreated().then(function(childID) {
-    return expectPriorityChange(childID, 'BACKGROUND');
+    return expectPriorityChange(childID, 'PREALLOC');
   }).then(function() {
     cleanUp();
     SimpleTest.finish();

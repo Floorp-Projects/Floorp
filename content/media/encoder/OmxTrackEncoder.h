@@ -43,25 +43,53 @@ private:
   nsAutoPtr<android::OMXVideoEncoder> mEncoder;
 };
 
-class OmxAudioTrackEncoder MOZ_FINAL : public AudioTrackEncoder
+class OmxAudioTrackEncoder : public AudioTrackEncoder
 {
 public:
   OmxAudioTrackEncoder()
     : AudioTrackEncoder()
   {}
 
-  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+  already_AddRefed<TrackMetadataBase> GetMetadata() = 0;
 
   nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_OVERRIDE;
 
 protected:
-  nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
+  nsresult Init(int aChannels, int aSamplingRate) = 0;
 
-private:
   // Append encoded frames to aContainer.
   nsresult AppendEncodedFrames(EncodedFrameContainer& aContainer);
 
   nsAutoPtr<android::OMXAudioEncoder> mEncoder;
+};
+
+class OmxAACAudioTrackEncoder MOZ_FINAL : public OmxAudioTrackEncoder
+{
+public:
+  OmxAACAudioTrackEncoder()
+    : OmxAudioTrackEncoder()
+  {}
+
+  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+
+protected:
+  nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
+};
+
+class OmxAMRAudioTrackEncoder MOZ_FINAL : public OmxAudioTrackEncoder
+{
+public:
+  OmxAMRAudioTrackEncoder()
+    : OmxAudioTrackEncoder()
+  {}
+
+  enum {
+    AMR_NB_SAMPLERATE = 8000,
+  };
+  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+
+protected:
+  nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
 };
 
 }

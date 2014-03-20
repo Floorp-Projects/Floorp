@@ -49,9 +49,13 @@ public:
 // The base class for video metadata.
 class VideoTrackMetadata : public TrackMetadataBase {
 public:
+  // VideoHeight and VideoWidth are the frame size of the elementary stream.
   virtual uint32_t GetVideoHeight() = 0;
-
   virtual uint32_t GetVideoWidth() = 0;
+
+  // VideoDisplayHeight and VideoDisplayWidth are the display frame size.
+  virtual uint32_t GetVideoDisplayHeight() = 0;
+  virtual uint32_t GetVideoDisplayWidth() = 0;
 
   // VideoClockRate is the number of samples per second in video frame's
   // timestamp.

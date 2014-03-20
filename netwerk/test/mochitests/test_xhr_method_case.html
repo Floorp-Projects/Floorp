@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+XHR uppercases certain method names, but not others
+-->
+<head>
+  <title>Test for XHR Method casing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+
+const testMethods = [
+// these methods should be normalized
+ ["get", "GET"],
+ ["GET", "GET"],
+ ["GeT", "GET"],
+ ["geT", "GET"],
+ ["GEt", "GET"],
+ ["post", "POST"],
+ ["POST", "POST"],
+ ["delete", "DELETE"],
+ ["DELETE", "DELETE"],
+ ["options", "OPTIONS"],
+ ["OPTIONS", "OPTIONS"],
+ ["put", "PUT"],
+ ["PUT", "PUT"],
+// HEAD is not tested because we use the resposne body as part of the test
+// ["head", "HEAD"],
+// ["HEAD", "HEAD"],
+
+// other custom methods should not be normalized
+ ["Foo", "Foo"],
+ ["bAR", "bAR"],
+ ["foobar", "foobar"],
+ ["FOOBAR", "FOOBAR"]
+]
+
+function doIter(index)
+{
+  var xhr = new XMLHttpRequest();
+  xhr.open(testMethods[index][0], 'method.sjs', false); // sync request
+  xhr.send();
+  is(xhr.status, 200, 'transaction failed');
+  is(xhr.response, testMethods[index][1], 'unexpected method');
+}
+
+function dotest()
+{
+  SimpleTest.waitForExplicitFinish();
+  for (var i = 0; i < testMethods.length; i++) {
+    doIter(i);
+  }
+  SimpleTest.finish();
+}
+
+</script>
+</head>
+<body onload="dotest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
+
