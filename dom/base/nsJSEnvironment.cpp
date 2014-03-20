@@ -355,7 +355,7 @@ AsyncErrorReporter::AsyncErrorReporter(JSRuntime* aRuntime,
                                        nsPIDOMWindow* aWindow)
   : mSourceLine(static_cast<const char16_t*>(aErrorReport->uclinebuf))
   , mLineNumber(aErrorReport->lineno)
-  , mColumn(aErrorReport->uctokenptr - aErrorReport->uclinebuf)
+  , mColumn(aErrorReport->column)
   , mFlags(aErrorReport->flags)
 {
   if (!aErrorReport->filename) {
@@ -483,6 +483,7 @@ public:
         if (sameOrigin) {
           init.mMessage = mErrorMsg;
           init.mLineno = mLineNumber;
+          init.mColumn = mColumn;
           init.mError = mError;
         } else {
           NS_WARNING("Not same origin error!");
