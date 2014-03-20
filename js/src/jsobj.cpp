@@ -5030,10 +5030,12 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
                 // conversions.
                 if (vp.isObject())
                     return false;
+                if (!NonObjectToNumber(cxArg, vp, &d))
+                    return false;
+            } else {
+                if (!ToNumber(cxArg->asJSContext(), vp, &d))
+                    return false;
             }
-
-            if (!ToDoubleForTypedArray(cxArg, vp, &d))
-                return false;
 
             TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
             return true;

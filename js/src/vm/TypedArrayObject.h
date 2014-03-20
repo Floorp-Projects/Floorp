@@ -337,8 +337,6 @@ ClampIntForUint8Array(int32_t x)
     return x;
 }
 
-bool ToDoubleForTypedArray(ThreadSafeContext *cx, JS::HandleValue vp, double *d);
-
 } // namespace js
 
 template <>
