@@ -591,10 +591,10 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
   const AttributeMap& atts = aDescription.Attributes();
   switch (aDescription.Type()) {
 
-    case FilterPrimitiveDescription::eNone:
+    case PrimitiveType::Empty:
       return nullptr;
 
-    case FilterPrimitiveDescription::eBlend:
+    case PrimitiveType::Blend:
     {
       uint32_t mode = atts.GetUint(eBlendBlendmode);
       RefPtr<FilterNode> filter;
@@ -622,7 +622,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eColorMatrix:
+    case PrimitiveType::ColorMatrix:
     {
       float colorMatrix[20];
       uint32_t type = atts.GetUint(eColorMatrixType);
@@ -642,7 +642,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eMorphology:
+    case PrimitiveType::Morphology:
     {
       Size radii = atts.GetSize(eMorphologyRadii);
       int32_t rx = radii.width;
@@ -669,7 +669,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eFlood:
+    case PrimitiveType::Flood:
     {
       Color color = atts.GetColor(eFloodColor);
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
@@ -677,7 +677,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eTile:
+    case PrimitiveType::Tile:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TILE);
       filter->SetAttribute(ATT_TILE_SOURCE_RECT, aSourceRegions[0]);
@@ -685,7 +685,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eComponentTransfer:
+    case PrimitiveType::ComponentTransfer:
     {
       RefPtr<FilterNode> filters[4]; // one for each FILTER_*_TRANSFER type
       static const AttributeName componentFunctionNames[4] = {
@@ -713,7 +713,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return lastFilter;
     }
 
-    case FilterPrimitiveDescription::eConvolveMatrix:
+    case PrimitiveType::ConvolveMatrix:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CONVOLVE_MATRIX);
       filter->SetAttribute(ATT_CONVOLVE_MATRIX_KERNEL_SIZE, atts.GetIntSize(eConvolveMatrixKernelSize));
@@ -744,13 +744,13 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eOffset:
+    case PrimitiveType::Offset:
     {
       return FilterWrappers::Offset(aDT, aSources[0],
                                     atts.GetIntPoint(eOffsetOffset));
     }
 
-    case FilterPrimitiveDescription::eDisplacementMap:
+    case PrimitiveType::DisplacementMap:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::DISPLACEMENT_MAP);
       filter->SetAttribute(ATT_DISPLACEMENT_MAP_SCALE,
@@ -771,7 +771,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eTurbulence:
+    case PrimitiveType::Turbulence:
     {
       RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TURBULENCE);
       filter->SetAttribute(ATT_TURBULENCE_BASE_FREQUENCY,
@@ -794,7 +794,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return FilterWrappers::Offset(aDT, filter, atts.GetIntPoint(eTurbulenceOffset));
     }
 
-    case FilterPrimitiveDescription::eComposite:
+    case PrimitiveType::Composite:
     {
       RefPtr<FilterNode> filter;
       uint32_t op = atts.GetUint(eCompositeOperator);
@@ -822,7 +822,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eMerge:
+    case PrimitiveType::Merge:
     {
       if (aSources.Length() == 0) {
         return nullptr;
@@ -838,13 +838,13 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eGaussianBlur:
+    case PrimitiveType::GaussianBlur:
     {
       return FilterWrappers::GaussianBlur(aDT, aSources[0],
                                           atts.GetSize(eGaussianBlurStdDeviation));
     }
 
-    case FilterPrimitiveDescription::eDropShadow:
+    case PrimitiveType::DropShadow:
     {
       RefPtr<FilterNode> alpha = FilterWrappers::ToAlpha(aDT, aSources[0]);
       RefPtr<FilterNode> blur = FilterWrappers::GaussianBlur(aDT, alpha,
@@ -873,11 +873,11 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eDiffuseLighting:
-    case FilterPrimitiveDescription::eSpecularLighting:
+    case PrimitiveType::DiffuseLighting:
+    case PrimitiveType::SpecularLighting:
     {
       bool isSpecular =
-        aDescription.Type() == FilterPrimitiveDescription::eSpecularLighting;
+        aDescription.Type() == PrimitiveType::SpecularLighting;
 
       AttributeMap lightAttributes = atts.GetAttributeMap(eLightingLight);
 
@@ -945,7 +945,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       return filter;
     }
 
-    case FilterPrimitiveDescription::eImage:
+    case PrimitiveType::Image:
     {
       Matrix TM = atts.GetMatrix(eImageTransform);
       if (!TM.Determinant()) {
@@ -997,18 +997,18 @@ InputAlphaModelForPrimitive(const FilterPrimitiveDescription& aDescr,
                             AlphaModel aOriginalAlphaModel)
 {
   switch (aDescr.Type()) {
-    case FilterPrimitiveDescription::eTile:
-    case FilterPrimitiveDescription::eOffset:
+    case PrimitiveType::Tile:
+    case PrimitiveType::Offset:
       return aOriginalAlphaModel;
 
-    case FilterPrimitiveDescription::eColorMatrix:
-    case FilterPrimitiveDescription::eComponentTransfer:
+    case PrimitiveType::ColorMatrix:
+    case PrimitiveType::ComponentTransfer:
       return UNPREMULTIPLIED;
 
-    case FilterPrimitiveDescription::eDisplacementMap:
+    case PrimitiveType::DisplacementMap:
       return aInputIndex == 0 ? PREMULTIPLIED : UNPREMULTIPLIED;
 
-    case FilterPrimitiveDescription::eConvolveMatrix:
+    case PrimitiveType::ConvolveMatrix:
       return aDescr.Attributes().GetBool(eConvolveMatrixPreserveAlpha) ?
         UNPREMULTIPLIED : PREMULTIPLIED;
 
@@ -1180,22 +1180,22 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
   const AttributeMap& atts = aDescription.Attributes();
   switch (aDescription.Type()) {
 
-    case FilterPrimitiveDescription::eNone:
-    case FilterPrimitiveDescription::eFlood:
-    case FilterPrimitiveDescription::eTurbulence:
-    case FilterPrimitiveDescription::eImage:
+    case PrimitiveType::Empty:
+    case PrimitiveType::Flood:
+    case PrimitiveType::Turbulence:
+    case PrimitiveType::Image:
       return nsIntRegion();
 
-    case FilterPrimitiveDescription::eBlend:
-    case FilterPrimitiveDescription::eComposite:
-    case FilterPrimitiveDescription::eMerge:
+    case PrimitiveType::Blend:
+    case PrimitiveType::Composite:
+    case PrimitiveType::Merge:
       return UnionOfRegions(aInputChangeRegions);
 
-    case FilterPrimitiveDescription::eColorMatrix:
-    case FilterPrimitiveDescription::eComponentTransfer:
+    case PrimitiveType::ColorMatrix:
+    case PrimitiveType::ComponentTransfer:
       return aInputChangeRegions[0];
 
-    case FilterPrimitiveDescription::eMorphology:
+    case PrimitiveType::Morphology:
     {
       Size radii = atts.GetSize(eMorphologyRadii);
       int32_t rx = clamped(int32_t(ceil(radii.width)), 0, kMorphologyMaxRadius);
@@ -1203,10 +1203,10 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return aInputChangeRegions[0].Inflated(nsIntMargin(ry, rx, ry, rx));
     }
 
-    case FilterPrimitiveDescription::eTile:
+    case PrimitiveType::Tile:
       return ThebesIntRect(aDescription.PrimitiveSubregion());
 
-    case FilterPrimitiveDescription::eConvolveMatrix:
+    case PrimitiveType::ConvolveMatrix:
     {
       Size kernelUnitLength = atts.GetSize(eConvolveMatrixKernelUnitLength);
       IntSize kernelSize = atts.GetIntSize(eConvolveMatrixKernelSize);
@@ -1218,19 +1218,19 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return aInputChangeRegions[0].Inflated(m);
     }
 
-    case FilterPrimitiveDescription::eOffset:
+    case PrimitiveType::Offset:
     {
       IntPoint offset = atts.GetIntPoint(eOffsetOffset);
       return aInputChangeRegions[0].MovedBy(offset.x, offset.y);
     }
 
-    case FilterPrimitiveDescription::eDisplacementMap:
+    case PrimitiveType::DisplacementMap:
     {
       int32_t scale = ceil(abs(atts.GetFloat(eDisplacementMapScale)));
       return aInputChangeRegions[0].Inflated(nsIntMargin(scale, scale, scale, scale));
     }
 
-    case FilterPrimitiveDescription::eGaussianBlur:
+    case PrimitiveType::GaussianBlur:
     {
       Size stdDeviation = atts.GetSize(eGaussianBlurStdDeviation);
       int32_t dx = InflateSizeForBlurStdDev(stdDeviation.width);
@@ -1238,7 +1238,7 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return aInputChangeRegions[0].Inflated(nsIntMargin(dy, dx, dy, dx));
     }
 
-    case FilterPrimitiveDescription::eDropShadow:
+    case PrimitiveType::DropShadow:
     {
       IntPoint offset = atts.GetIntPoint(eDropShadowOffset);
       nsIntRegion offsetRegion = aInputChangeRegions[0].MovedBy(offset.x, offset.y);
@@ -1250,8 +1250,8 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return blurRegion;
     }
 
-    case FilterPrimitiveDescription::eDiffuseLighting:
-    case FilterPrimitiveDescription::eSpecularLighting:
+    case PrimitiveType::DiffuseLighting:
+    case PrimitiveType::SpecularLighting:
     {
       Size kernelUnitLength = atts.GetSize(eLightingKernelUnitLength);
       int32_t dx = ceil(kernelUnitLength.width);
@@ -1304,10 +1304,10 @@ PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
   const AttributeMap& atts = aDescription.Attributes();
   switch (aDescription.Type()) {
 
-    case FilterPrimitiveDescription::eNone:
+    case PrimitiveType::Empty:
       return nsIntRect();
 
-    case FilterPrimitiveDescription::eComposite:
+    case PrimitiveType::Composite:
     {
       uint32_t op = atts.GetUint(eCompositeOperator);
       if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
@@ -1339,7 +1339,7 @@ PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
       return ResultChangeRegionForPrimitive(aDescription, aInputExtents);
     }
 
-    case FilterPrimitiveDescription::eFlood:
+    case PrimitiveType::Flood:
     {
       if (atts.GetColor(eFloodColor).a == 0.0f) {
         return nsIntRect();
@@ -1347,13 +1347,13 @@ PostFilterExtentsForPrimitive(const FilterPrimitiveDescription& aDescription,
       return ThebesIntRect(aDescription.PrimitiveSubregion());
     }
 
-    case FilterPrimitiveDescription::eTurbulence:
-    case FilterPrimitiveDescription::eImage:
+    case PrimitiveType::Turbulence:
+    case PrimitiveType::Image:
     {
       return ThebesIntRect(aDescription.PrimitiveSubregion());
     }
 
-    case FilterPrimitiveDescription::eMorphology:
+    case PrimitiveType::Morphology:
     {
       uint32_t op = atts.GetUint(eMorphologyOperator);
       if (op == SVG_OPERATOR_ERODE) {
@@ -1408,23 +1408,23 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
   const AttributeMap& atts = aDescription.Attributes();
   switch (aDescription.Type()) {
 
-    case FilterPrimitiveDescription::eFlood:
-    case FilterPrimitiveDescription::eTurbulence:
-    case FilterPrimitiveDescription::eImage:
+    case PrimitiveType::Flood:
+    case PrimitiveType::Turbulence:
+    case PrimitiveType::Image:
       MOZ_CRASH("this shouldn't be called for filters without inputs");
       return nsIntRegion();
 
-    case FilterPrimitiveDescription::eNone:
+    case PrimitiveType::Empty:
       return nsIntRegion();
 
-    case FilterPrimitiveDescription::eBlend:
-    case FilterPrimitiveDescription::eComposite:
-    case FilterPrimitiveDescription::eMerge:
-    case FilterPrimitiveDescription::eColorMatrix:
-    case FilterPrimitiveDescription::eComponentTransfer:
+    case PrimitiveType::Blend:
+    case PrimitiveType::Composite:
+    case PrimitiveType::Merge:
+    case PrimitiveType::ColorMatrix:
+    case PrimitiveType::ComponentTransfer:
       return aResultNeededRegion;
 
-    case FilterPrimitiveDescription::eMorphology:
+    case PrimitiveType::Morphology:
     {
       Size radii = atts.GetSize(eMorphologyRadii);
       int32_t rx = clamped(int32_t(ceil(radii.width)), 0, kMorphologyMaxRadius);
@@ -1432,10 +1432,10 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return aResultNeededRegion.Inflated(nsIntMargin(ry, rx, ry, rx));
     }
 
-    case FilterPrimitiveDescription::eTile:
+    case PrimitiveType::Tile:
       return nsIntRect(INT32_MIN/2, INT32_MIN/2, INT32_MAX, INT32_MAX);
 
-    case FilterPrimitiveDescription::eConvolveMatrix:
+    case PrimitiveType::ConvolveMatrix:
     {
       Size kernelUnitLength = atts.GetSize(eConvolveMatrixKernelUnitLength);
       IntSize kernelSize = atts.GetIntSize(eConvolveMatrixKernelSize);
@@ -1447,13 +1447,13 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return aResultNeededRegion.Inflated(m);
     }
 
-    case FilterPrimitiveDescription::eOffset:
+    case PrimitiveType::Offset:
     {
       IntPoint offset = atts.GetIntPoint(eOffsetOffset);
       return aResultNeededRegion.MovedBy(-nsIntPoint(offset.x, offset.y));
     }
 
-    case FilterPrimitiveDescription::eDisplacementMap:
+    case PrimitiveType::DisplacementMap:
     {
       if (aInputIndex == 1) {
         return aResultNeededRegion;
@@ -1462,7 +1462,7 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return aResultNeededRegion.Inflated(nsIntMargin(scale, scale, scale, scale));
     }
 
-    case FilterPrimitiveDescription::eGaussianBlur:
+    case PrimitiveType::GaussianBlur:
     {
       Size stdDeviation = atts.GetSize(eGaussianBlurStdDeviation);
       int32_t dx = InflateSizeForBlurStdDev(stdDeviation.width);
@@ -1470,7 +1470,7 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return aResultNeededRegion.Inflated(nsIntMargin(dy, dx, dy, dx));
     }
 
-    case FilterPrimitiveDescription::eDropShadow:
+    case PrimitiveType::DropShadow:
     {
       IntPoint offset = atts.GetIntPoint(eDropShadowOffset);
       nsIntRegion offsetRegion =
@@ -1483,8 +1483,8 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       return blurRegion;
     }
 
-    case FilterPrimitiveDescription::eDiffuseLighting:
-    case FilterPrimitiveDescription::eSpecularLighting:
+    case PrimitiveType::DiffuseLighting:
+    case PrimitiveType::SpecularLighting:
     {
       Size kernelUnitLength = atts.GetSize(eLightingKernelUnitLength);
       int32_t dx = ceil(kernelUnitLength.width);
