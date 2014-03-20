@@ -314,7 +314,6 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
     immediatelyDominated_(graph.alloc()),
     immediateDominator_(nullptr),
     numDominated_(0),
-    loopHeader_(nullptr),
     trackedPc_(pc)
 #if defined (JS_ION_PERF)
     , lineno_(0u),
@@ -962,7 +961,7 @@ MBasicBlock::assertUsesAreNotWithin(MUseIterator use, MUseIterator end)
 }
 
 bool
-MBasicBlock::dominates(MBasicBlock *other)
+MBasicBlock::dominates(const MBasicBlock *other) const
 {
     uint32_t high = domIndex() + numDominated();
     uint32_t low  = domIndex();
