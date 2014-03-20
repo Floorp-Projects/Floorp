@@ -34,9 +34,11 @@ public:
   public:
     LookupRunnable(nsIUrlClassifierDBServiceWorker* aTarget,
                    nsIPrincipal* aPrincipal,
+                   const nsACString& aTables,
                    nsIUrlClassifierCallback* aCB)
       : mTarget(aTarget)
       , mPrincipal(aPrincipal)
+      , mLookupTables(aTables)
       , mCB(aCB)
     { }
 
@@ -45,6 +47,7 @@ public:
   private:
     nsCOMPtr<nsIUrlClassifierDBServiceWorker> mTarget;
     nsCOMPtr<nsIPrincipal> mPrincipal;
+    nsCString mLookupTables;
     nsCOMPtr<nsIUrlClassifierCallback> mCB;
   };
 

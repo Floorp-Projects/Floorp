@@ -23,16 +23,18 @@ NS_IMPL_ISUPPORTS1(UrlClassifierDBServiceWorkerProxy,
 
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::Lookup(nsIPrincipal* aPrincipal,
+                                          const nsACString& aTables,
                                           nsIUrlClassifierCallback* aCB)
 {
-  nsCOMPtr<nsIRunnable> r = new LookupRunnable(mTarget, aPrincipal, aCB);
+  nsCOMPtr<nsIRunnable> r = new LookupRunnable(mTarget, aPrincipal, aTables,
+                                               aCB);
   return DispatchToWorkerThread(r);
 }
 
 NS_IMETHODIMP
 UrlClassifierDBServiceWorkerProxy::LookupRunnable::Run()
 {
-  (void) mTarget->Lookup(mPrincipal, mCB);
+  (void) mTarget->Lookup(mPrincipal, mLookupTables, mCB);
   return NS_OK;
 }
 
