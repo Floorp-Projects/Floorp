@@ -15,17 +15,22 @@ XPCOMUtils.defineLazyModuleGetter(this, "FirefoxAccounts",
 do_get_profile();
 
 function MockFXAManager() {
-  this.signedIn = true;
+  this.signedInUser = true;
 }
 MockFXAManager.prototype = {
   getAssertion: function(audience) {
-    let result = this.signedIn ? TEST_ASSERTION : null;
+    let result = this.signedInUser ? TEST_ASSERTION : null;
     return Promise.resolve(result);
   },
 
   signOut: function() {
-    this.signedIn = false;
+    this.signedInUser = false;
     return Promise.resolve(null);
+  },
+
+  signIn: function(user) {
+    this.signedInUser = user;
+    return Promise.resolve(user);
   },
 }
 
@@ -36,6 +41,14 @@ do_register_cleanup(() => {
   FirefoxAccounts.fxAccountsManager = originalManager;
 });
 
+function withNobodySignedIn() {
+  return FirefoxAccounts.fxAccountsManager.signOut();
+}
+
+function withSomebodySignedIn() {
+  return FirefoxAccounts.fxAccountsManager.signIn('Pertelote');
+}
+
 function test_overall() {
   do_check_neq(FirefoxAccounts, null);
   run_next_test();
@@ -44,10 +57,12 @@ function test_overall() {
 function test_mock() {
   do_test_pending();
 
-  FirefoxAccounts.fxAccountsManager.getAssertion().then(assertion => {
-    do_check_eq(assertion, TEST_ASSERTION);
-    do_test_finished();
-    run_next_test();
+  withSomebodySignedIn().then(() => {
+    FirefoxAccounts.fxAccountsManager.getAssertion().then(assertion => {
+      do_check_eq(assertion, TEST_ASSERTION);
+      do_test_finished();
+      run_next_test();
+    });
   });
 }
 
@@ -70,15 +85,15 @@ function test_watch_signed_in() {
     }
   });
 
-  FirefoxAccounts.RP.watch(mockedRP);
+  withSomebodySignedIn().then(() => {
+    FirefoxAccounts.RP.watch(mockedRP);
+  });
 }
 
 function test_watch_signed_out() {
   do_test_pending();
 
   let received = [];
-  let signedInState = FirefoxAccounts.fxAccountsManager.signedIn;
-  FirefoxAccounts.fxAccountsManager.signedIn = false;
 
   let mockedRP = mock_fxa_rp(null, TEST_URL, function(method) {
     received.push(method);
@@ -89,24 +104,20 @@ function test_watch_signed_out() {
       do_check_eq(received[0], "logout");
       do_check_eq(received[1], "ready");
 
-      // restore initial state
-      FirefoxAccounts.fxAccountsManager.signedIn = signedInState;
       do_test_finished();
       run_next_test();
     }
   });
 
-  FirefoxAccounts.RP.watch(mockedRP);
+  withNobodySignedIn().then(() => {
+    FirefoxAccounts.RP.watch(mockedRP);
+  });
 }
 
 function test_request() {
   do_test_pending();
 
   let received = [];
-
-  // initially signed out
-  let signedInState = FirefoxAccounts.fxAccountsManager.signedIn;
-  FirefoxAccounts.fxAccountsManager.signedIn = false;
 
   let mockedRP = mock_fxa_rp(null, TEST_URL, function(method, data) {
     received.push([method, data]);
@@ -117,23 +128,24 @@ function test_request() {
       do_check_eq(received[1][0], "ready");
 
       // Pretend request() showed ux and the user signed in
-      FirefoxAccounts.fxAccountsManager.signedIn = true;
-      FirefoxAccounts.RP.request(mockedRP.id);
+      withSomebodySignedIn().then(() => {
+        FirefoxAccounts.RP.request(mockedRP.id);
+      });
     }
 
     if (received.length === 3) {
       do_check_eq(received[2][0], "login");
       do_check_eq(received[2][1], TEST_ASSERTION);
 
-      // restore initial state
-      FirefoxAccounts.fxAccountsManager.signedIn = signedInState;
       do_test_finished();
       run_next_test();
     }
   });
 
-  // First, call watch()
-  FirefoxAccounts.RP.watch(mockedRP);
+  // First, call watch() with nobody signed in
+  withNobodySignedIn().then(() => {
+    FirefoxAccounts.RP.watch(mockedRP);
+  });
 }
 
 function test_logout() {
@@ -160,7 +172,9 @@ function test_logout() {
   });
 
   // First, call watch()
-  FirefoxAccounts.RP.watch(mockedRP);
+  withSomebodySignedIn().then(() => {
+    FirefoxAccounts.RP.watch(mockedRP);
+  });
 }
 
 function test_error() {
@@ -171,11 +185,9 @@ function test_error() {
   // Mock the fxAccountsManager so that getAssertion rejects its promise and
   // triggers our onerror handler.  (This is the method that's used internally
   // by FirefoxAccounts.RP.request().)
-  let originalManager = FirefoxAccounts.fxAccountsManager;
-  FirefoxAccounts.RP.fxAccountsManager = {
-    getAssertion: function(audience) {
-      return Promise.reject(new Error("barf!"));
-    }
+  let originalGetAssertion = FirefoxAccounts.fxAccountsManager.getAssertion;
+  FirefoxAccounts.fxAccountsManager.getAssertion = function(audience) {
+    return Promise.reject(new Error("barf!"));
   };
 
   let mockedRP = mock_fxa_rp(null, TEST_URL, function(method, message) {
@@ -185,14 +197,16 @@ function test_error() {
     do_check_true(/barf/.test(message));
 
     // Put things back the way they were
-    FirefoxAccounts.fxAccountsManager = originalManager;
+    FirefoxAccounts.fxAccountsManager.getAssertion = originalGetAssertion;
 
     do_test_finished();
     run_next_test();
   });
 
   // First, call watch()
-  FirefoxAccounts.RP.watch(mockedRP);
+  withSomebodySignedIn().then(() => {
+    FirefoxAccounts.RP.watch(mockedRP);
+  });
 }
 
 function test_child_process_shutdown() {
@@ -230,7 +244,9 @@ function test_child_process_shutdown() {
   });
 
   mockedRP._mm = "my message manager";
-  FirefoxAccounts.RP.watch(mockedRP);
+  withSomebodySignedIn().then(() => {
+    FirefoxAccounts.RP.watch(mockedRP);
+  });
 
   // fake a dom window context
   DOMIdentity.newContext(mockedRP, mockedRP._mm);

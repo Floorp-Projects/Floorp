@@ -51,7 +51,6 @@
     <dimen name="menu_item_row_height">44dp</dimen>
     <dimen name="menu_item_row_width">240dp</dimen>
     <dimen name="menu_item_more_offset">5dp</dimen>
-    <dimen name="menu_item_textsize">16sp</dimen>
     <dimen name="menu_popup_arrow_offset">8dp</dimen>
     <dimen name="menu_popup_arrow_margin">5dip</dimen>
     <dimen name="menu_popup_arrow_width">40dip</dimen>

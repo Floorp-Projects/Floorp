@@ -27,6 +27,8 @@ using namespace mozilla::layers;
 #define ENCODER_CONFIG_I_FRAME_INTERVAL 1
 // Wait up to 5ms for input buffers.
 #define INPUT_BUFFER_TIMEOUT_US (5 * 1000ll)
+// AMR NB kbps
+#define AMRNB_BITRATE 12200
 
 #define CODEC_ERROR(args...)                                                   \
   do {                                                                         \
@@ -45,6 +47,16 @@ OMXCodecWrapper::CreateAACEncoder()
   return aac.forget();
 }
 
+OMXAudioEncoder*
+OMXCodecWrapper::CreateAMRNBEncoder()
+{
+  nsAutoPtr<OMXAudioEncoder> amr(new OMXAudioEncoder(CodecType::AMR_NB_ENC));
+  // Return the object only when media codec is valid.
+  NS_ENSURE_TRUE(amr->IsValid(), nullptr);
+
+  return amr.forget();
+}
+
 OMXVideoEncoder*
 OMXCodecWrapper::CreateAVCEncoder()
 {
@@ -56,7 +68,9 @@ OMXCodecWrapper::CreateAVCEncoder()
 }
 
 OMXCodecWrapper::OMXCodecWrapper(CodecType aCodecType)
-  : mStarted(false)
+  : mCodecType(aCodecType)
+  , mStarted(false)
+  , mAMRCSDProvided(false)
 {
   ProcessState::self()->startThreadPool();
 
@@ -65,6 +79,8 @@ OMXCodecWrapper::OMXCodecWrapper(CodecType aCodecType)
 
   if (aCodecType == CodecType::AVC_ENC) {
     mCodec = MediaCodec::CreateByType(mLooper, MEDIA_MIMETYPE_VIDEO_AVC, true);
+  } else if (aCodecType == CodecType::AMR_NB_ENC) {
+    mCodec = MediaCodec::CreateByType(mLooper, MEDIA_MIMETYPE_AUDIO_AMR_NB, true);
   } else if (aCodecType == CodecType::AAC_ENC) {
     mCodec = MediaCodec::CreateByType(mLooper, MEDIA_MIMETYPE_AUDIO_AAC, true);
   } else {
@@ -380,28 +396,53 @@ void OMXVideoEncoder::AppendFrame(nsTArray<uint8_t>* aOutputBuf,
 }
 
 nsresult
-OMXAudioEncoder::Configure(int aChannels, int aSamplingRate)
+OMXAudioEncoder::Configure(int aChannels, int aInputSampleRate,
+                           int aEncodedSampleRate)
 {
   MOZ_ASSERT(!mStarted);
 
-  NS_ENSURE_TRUE(aChannels > 0 && aSamplingRate > 0, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_TRUE(aChannels > 0 && aInputSampleRate > 0 && aEncodedSampleRate >= 0,
+                 NS_ERROR_INVALID_ARG);
 
+  if (aInputSampleRate != aEncodedSampleRate) {
+    int error;
+    mResampler = speex_resampler_init(aChannels,
+                                      aInputSampleRate,
+                                      aEncodedSampleRate,
+                                      SPEEX_RESAMPLER_QUALITY_DEFAULT,
+                                      &error);
+
+    if (error != RESAMPLER_ERR_SUCCESS) {
+      return NS_ERROR_FAILURE;
+    }
+    speex_resampler_skip_zeros(mResampler);
+  }
   // Set up configuration parameters for AAC encoder.
   sp<AMessage> format = new AMessage;
   // Fixed values.
-  format->setString("mime", MEDIA_MIMETYPE_AUDIO_AAC);
-  format->setInt32("bitrate", kAACBitrate);
-  format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+  if (mCodecType == AAC_ENC) {
+    format->setString("mime", MEDIA_MIMETYPE_AUDIO_AAC);
+    format->setInt32("aac-profile", OMX_AUDIO_AACObjectLC);
+    format->setInt32("bitrate", kAACBitrate);
+    format->setInt32("sample-rate", aInputSampleRate);
+  } else if (mCodecType == AMR_NB_ENC) {
+    format->setString("mime", MEDIA_MIMETYPE_AUDIO_AMR_NB);
+    format->setInt32("bitrate", AMRNB_BITRATE);
+    format->setInt32("sample-rate", aEncodedSampleRate);
+  } else {
+    MOZ_ASSERT(false, "Can't support this codec type!!");
+  }
   // Input values.
   format->setInt32("channel-count", aChannels);
-  format->setInt32("sample-rate", aSamplingRate);
 
   status_t result = mCodec->configure(format, nullptr, nullptr,
                                       MediaCodec::CONFIGURE_FLAG_ENCODE);
   NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
 
   mChannels = aChannels;
-  mSampleDuration = 1000000 / aSamplingRate;
+  mSampleDuration = 1000000 / aInputSampleRate;
+  mResamplingRatio = aEncodedSampleRate > 0 ? 1.0 *
+                      aEncodedSampleRate / aInputSampleRate : 1.0;
   result = Start();
 
   return result == OK ? NS_OK : NS_ERROR_FAILURE;
@@ -474,6 +515,14 @@ private:
   size_t mOffset;
 };
 
+OMXAudioEncoder::~OMXAudioEncoder()
+{
+  if (mResampler) {
+    speex_resampler_destroy(mResampler);
+    mResampler = nullptr;
+  }
+}
+
 nsresult
 OMXAudioEncoder::Encode(AudioSegment& aSegment, int aInputFlags)
 {
@@ -495,16 +544,16 @@ OMXAudioEncoder::Encode(AudioSegment& aSegment, int aInputFlags)
   }
   NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
 
-  size_t samplesCopied = 0; // Number of copied samples.
+  size_t sourceSamplesCopied = 0; // Number of copied samples.
 
   if (numSamples > 0) {
     // Copy input PCM data to input buffer until queue is empty.
     AudioSegment::ChunkIterator iter(const_cast<AudioSegment&>(aSegment));
     while (!iter.IsEnded()) {
       AudioChunk chunk = *iter;
-      size_t samplesToCopy = chunk.GetDuration(); // Number of samples to copy.
-      size_t bytesToCopy = samplesToCopy * mChannels * sizeof(AudioDataValue);
-
+      size_t sourceSamplesToCopy = chunk.GetDuration(); // Number of samples to copy.
+      size_t bytesToCopy = sourceSamplesToCopy * mChannels *
+                           sizeof(AudioDataValue) * mResamplingRatio;
       if (bytesToCopy > buffer.AvailableSize()) {
         // Not enough space left in input buffer. Send it to encoder and get a
         // new one.
@@ -515,32 +564,47 @@ OMXAudioEncoder::Encode(AudioSegment& aSegment, int aInputFlags)
         if (result == -EAGAIN) {
           // All input buffers are full. Caller can try again later after
           // consuming some output buffers.
-          aSegment.RemoveLeading(samplesCopied);
+          aSegment.RemoveLeading(sourceSamplesCopied);
           return NS_OK;
         }
 
-        mTimestamp += samplesCopied * mSampleDuration;
-        samplesCopied = 0;
+        mTimestamp += sourceSamplesCopied * mSampleDuration;
+        sourceSamplesCopied = 0;
 
         NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
       }
 
       AudioDataValue* dst = reinterpret_cast<AudioDataValue*>(buffer.GetPointer());
+      uint32_t dstSamplesCopied = sourceSamplesToCopy;
       if (!chunk.IsNull()) {
-        // Append the interleaved data to input buffer.
-        AudioTrackEncoder::InterleaveTrackData(chunk, samplesToCopy, mChannels,
-                                               dst);
+        if (mResampler) {
+          nsAutoTArray<AudioDataValue, 9600> pcm;
+          pcm.SetLength(bytesToCopy);
+          // Append the interleaved data to input buffer.
+          AudioTrackEncoder::InterleaveTrackData(chunk, sourceSamplesToCopy,
+                                                 mChannels,
+                                                 pcm.Elements());
+          uint32_t inframes = sourceSamplesToCopy;
+          short* in = reinterpret_cast<short*>(pcm.Elements());
+          speex_resampler_process_interleaved_int(mResampler, in, &inframes,
+                                                              dst, &dstSamplesCopied);
+        } else {
+          AudioTrackEncoder::InterleaveTrackData(chunk, sourceSamplesToCopy,
+                                                 mChannels,
+                                                 dst);
+          dstSamplesCopied = sourceSamplesToCopy * mChannels;
+        }
       } else {
         // Silence.
-        memset(dst, 0, bytesToCopy);
+        memset(dst, 0, mResamplingRatio * sourceSamplesToCopy * sizeof(AudioDataValue));
       }
 
-      samplesCopied += samplesToCopy;
-      buffer.IncreaseOffset(bytesToCopy);
+      sourceSamplesCopied += sourceSamplesToCopy;
+      buffer.IncreaseOffset(dstSamplesCopied * sizeof(AudioDataValue));
       iter.Next();
     }
-    if (samplesCopied > 0) {
-      aSegment.RemoveLeading(samplesCopied);
+    if (sourceSamplesCopied > 0) {
+      aSegment.RemoveLeading(sourceSamplesCopied);
     }
   } else if (aInputFlags & BUFFER_EOS) {
     // No audio data left in segment but we still have to feed something to
@@ -548,10 +612,10 @@ OMXAudioEncoder::Encode(AudioSegment& aSegment, int aInputFlags)
     size_t bytesToCopy = mChannels * sizeof(AudioDataValue);
     memset(buffer.GetPointer(), 0, bytesToCopy);
     buffer.IncreaseOffset(bytesToCopy);
-    samplesCopied = 1;
+    sourceSamplesCopied = 1;
   }
 
-  if (samplesCopied > 0) {
+  if (sourceSamplesCopied > 0) {
     int flags = aInputFlags;
     if (aSegment.GetDuration() > 0) {
       // Don't signal EOS until source segment is empty.
@@ -560,7 +624,7 @@ OMXAudioEncoder::Encode(AudioSegment& aSegment, int aInputFlags)
     result = buffer.Enqueue(mTimestamp, flags);
     NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
 
-    mTimestamp += samplesCopied * mSampleDuration;
+    mTimestamp += sourceSamplesCopied * mSampleDuration;
   }
 
   return NS_OK;
@@ -663,6 +727,20 @@ OMXCodecWrapper::GetNextEncodedFrame(nsTArray<uint8_t>* aOutputBuf,
         mCodec->releaseOutputBuffer(index);
         return NS_ERROR_FAILURE;
       }
+    } else if ((mCodecType == AMR_NB_ENC) && !mAMRCSDProvided){
+      // OMX AMR codec won't provide csd data, need to generate a fake one.
+      nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
+      // Decoder config descriptor
+      const uint8_t decConfig[] = {
+        0x0, 0x0, 0x0, 0x0, // vendor: 4 bytes
+        0x0,                // decoder version
+        0x83, 0xFF,         // mode set: all enabled
+        0x00,               // mode change period
+        0x01,               // frames per sample
+      };
+      aOutputBuf->AppendElements(decConfig, sizeof(decConfig));
+      outFlags |= MediaCodec::BUFFER_FLAG_CODECCONFIG;
+      mAMRCSDProvided = true;
     } else {
       AppendFrame(aOutputBuf, omxBuf->data(), omxBuf->size());
     }

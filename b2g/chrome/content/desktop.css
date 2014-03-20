@@ -1,0 +1,59 @@
+#controls {
+  position: absolute;
+  left: 0;
+  bottom:0;
+  right: 0;
+  height: 30px;
+  background-color: -moz-dialog;
+}
+
+#home-button {
+  margin: auto;
+  margin-top: 3px;
+  width: 24px;
+  height: 24px;
+  background: #eee url("images/desktop/home-black.png") center no-repeat;
+  border: 1px solid #888;
+  border-radius: 12px;
+  display: block;
+}
+
+#home-button::-moz-focus-inner {
+  padding: 0;
+  border: 0;
+}
+
+#home-button:hover {
+  background-image: url("images/desktop/home-white.png");
+  background-color: #ccc;
+  border-color: #555;
+}
+
+#home-button.active {
+  background-image: url("images/desktop/home-white.png");
+  background-color: #888;
+  border-color: black;
+}
+
+#rotate-button {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  right: 3px;
+  width: 24px;
+  height: 24px;
+  background: #eee url("images/desktop/rotate.png") center no-repeat;
+  border: 1px solid #888;
+  border-radius: 12px;
+  display: block;
+}
+
+#rotate-button:hover {
+  background-color: #ccc;
+  border-color: #555;
+}
+
+#rotate-button.active {
+  background-color: #888;
+  border-color: black;
+}
