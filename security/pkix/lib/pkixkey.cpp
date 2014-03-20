@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "insanity/pkix.h"
+#include "pkix/pkix.h"
 
 #include <limits>
 #include <stdint.h>
@@ -25,7 +25,7 @@
 #include "prerror.h"
 #include "secerr.h"
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 SECStatus
 VerifySignedData(const CERTSignedData* sd, const CERTCertificate* cert,
@@ -86,4 +86,4 @@ VerifySignedData(const CERTSignedData* sd, const CERTCertificate* cert,
   return SECSuccess;
 }
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix

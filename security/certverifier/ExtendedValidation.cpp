@@ -9,7 +9,7 @@
 #include "cert.h"
 #include "certdb.h"
 #include "base64.h"
-#include "insanity/nullptr.h"
+#include "pkix/nullptr.h"
 #include "pk11pub.h"
 #include "secerr.h"
 #include "prerror.h"

@@ -10,8 +10,8 @@ LIBS = \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
   $(MOZALLOC_LIB) \
-  ../../../../../../insanity/$(LIB_PREFIX)insanitypkix.$(LIB_SUFFIX) \
-  ../../../../../../insanity/test/lib/$(LIB_PREFIX)pkixtestutil.$(LIB_SUFFIX) \
+  ../../../../../../pkix/$(LIB_PREFIX)mozillapkix.$(LIB_SUFFIX) \
+  ../../../../../../pkix/test/lib/$(LIB_PREFIX)pkixtestutil.$(LIB_SUFFIX) \
   ../lib/$(LIB_PREFIX)tlsserver.$(LIB_SUFFIX) \
   $(NULL)
 

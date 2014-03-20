@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-#ifndef insanity_pkix__ScopedPtr_h
-#define insanity_pkix__ScopedPtr_h
+#ifndef mozilla_pkix__ScopedPtr_h
+#define mozilla_pkix__ScopedPtr_h
 
-#include "insanity/nullptr.h"
+#include "pkix/nullptr.h"
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 // Similar to boost::scoped_ptr and std::unique_ptr. Does not support copying
 // or assignment.
@@ -94,6 +94,6 @@ operator!=(const ScopedPtr<T, Destroyer>& a, T* b)
   return a.get() != b;
 }
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix
 
-#endif // insanity_pkix__ScopedPtr_h
+#endif // mozilla_pkix__ScopedPtr_h

@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#include "insanity/pkix.h"
+#include "pkix/pkix.h"
 
 #include <limits>
 
 #include "pkixcheck.h"
 #include "pkixder.h"
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 // We assume ext has been zero-initialized by its constructor and otherwise
 // not modified.
@@ -172,7 +172,7 @@ BuildForwardInner(TrustDomain& trustDomain,
 // Be very careful about changing the order of checks. The order is significant
 // because it affects which error we return when a certificate or certificate
 // chain has multiple problems. See the error ranking documentation in
-// insanity/pkix.h.
+// pkix/pkix.h.
 static Result
 BuildForward(TrustDomain& trustDomain,
              BackCert& subject,
@@ -363,4 +363,4 @@ BackCert::PrependNSSCertToList(CERTCertList* results)
   return Success;
 }
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix

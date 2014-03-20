@@ -10,7 +10,7 @@
 
 #include "nsNSSCertificateDB.h"
 
-#include "insanity/pkix.h"
+#include "pkix/pkix.h"
 #include "mozilla/RefPtr.h"
 #include "CryptoTask.h"
 #include "AppTrustDomain.h"
@@ -33,7 +33,7 @@
 #include "plstr.h"
 #include "prlog.h"
 
-using namespace insanity::pkix;
+using namespace mozilla::pkix;
 using namespace mozilla;
 using namespace mozilla::psm;
 
@@ -525,9 +525,9 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
 nsresult
 VerifySignature(AppTrustedRoot trustedRoot,
                 const SECItem& buffer, const SECItem& detachedDigest,
-        /*out*/ insanity::pkix::ScopedCERTCertList& builtChain)
+        /*out*/ mozilla::pkix::ScopedCERTCertList& builtChain)
 {
-  insanity::pkix::ScopedPtr<NSSCMSMessage, NSS_CMSMessage_Destroy>
+  mozilla::pkix::ScopedPtr<NSSCMSMessage, NSS_CMSMessage_Destroy>
     cmsMsg(NSS_CMSMessage_CreateFromDER(const_cast<SECItem*>(&buffer), nullptr,
                                         nullptr, nullptr, nullptr, nullptr,
                                         nullptr));
@@ -560,13 +560,13 @@ VerifySignature(AppTrustedRoot trustedRoot,
 
   // Parse the certificates into CERTCertificate objects held in memory, so that
   // AppTrustDomain will be able to find them during path building.
-  insanity::pkix::ScopedCERTCertList certs(CERT_NewCertList());
+  mozilla::pkix::ScopedCERTCertList certs(CERT_NewCertList());
   if (!certs) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   if (signedData->rawCerts) {
     for (size_t i = 0; signedData->rawCerts[i]; ++i) {
-      insanity::pkix::ScopedCERTCertificate
+      mozilla::pkix::ScopedCERTCertificate
         cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
                                      signedData->rawCerts[i], nullptr, false,
                                      true));
@@ -666,7 +666,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
   }
 
   sigBuffer.type = siBuffer;
-  insanity::pkix::ScopedCERTCertList builtChain;
+  mozilla::pkix::ScopedCERTCertList builtChain;
   rv = VerifySignature(aTrustedRoot, sigBuffer, sfCalculatedDigest.get(),
                        builtChain);
   if (NS_FAILED(rv)) {

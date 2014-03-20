@@ -19,8 +19,8 @@
 // implementation isn't intended to be complete; rather, it is the minimal
 // implementation needed to make our use of std::bind work.
 
-#ifndef insanity_pkix__bind_h
-#define insanity_pkix__bind_h
+#ifndef mozilla_pkix__bind_h
+#define mozilla_pkix__bind_h
 
 #ifdef _MSC_VER
 #pragma warning(disable:4275) //Suppress spurious MSVC warning
@@ -30,7 +30,7 @@
 #pragma warning(default:4275)
 #endif
 
-namespace insanity {
+namespace mozilla { namespace pkix {
 
 #ifdef _MSC_VER
 
@@ -92,6 +92,6 @@ bind(R (*f)(P1&, B1&, B2&), Placeholder1 &, B1 & b1, B2 & b2)
 
 #endif // _MSC_VER
 
-} // namespace insanity
+} } // namespace mozilla::pkix
 
-#endif // insanity_pkix__bind_h
+#endif // mozilla_pkix__bind_h

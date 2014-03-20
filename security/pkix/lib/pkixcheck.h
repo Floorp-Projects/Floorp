@@ -15,14 +15,27 @@
  * limitations under the License.
  */
 
-#ifndef _MSC_VER
+#ifndef mozilla_pkix__pkixcheck_h
+#define mozilla_pkix__pkixcheck_h
 
-#include "insanity/bind.h"
+#include "pkixutil.h"
+#include "certt.h"
 
-namespace insanity {
+namespace mozilla { namespace pkix {
 
-Placeholder1 _1;
-  
-} // namespace insanity
+Result CheckIssuerIndependentProperties(
+          TrustDomain& trustDomain,
+          BackCert& cert,
+          PRTime time,
+          EndEntityOrCA endEntityOrCA,
+          KeyUsages requiredKeyUsagesIfPresent,
+          SECOidTag requiredEKUIfPresent,
+          SECOidTag requiredPolicy,
+          unsigned int subCACount,
+          /*optional out*/ TrustDomain::TrustLevel* trustLevel = nullptr);
 
-#endif // _MSC_VER
+Result CheckNameConstraints(BackCert& cert);
+
+} } // namespace mozilla::pkix
+
+#endif // mozilla_pkix__pkixcheck_h
