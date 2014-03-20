@@ -44,9 +44,6 @@ SERV_FILES = 	\
 		android.json \
 		androidx86.json \
 		android23.json \
-		b2g.json \
-		b2g-desktop.json \
-		b2g-debug.json \
 		gl.json \
 		b2g_start_script.js \
 		$(NULL)	

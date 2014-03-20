@@ -650,6 +650,9 @@ pref("hal.processPriorityManager.gonk.MASTER.OomScoreAdjust", 0);
 pref("hal.processPriorityManager.gonk.MASTER.KillUnderKB", 4096);
 pref("hal.processPriorityManager.gonk.MASTER.Nice", 0);
 
+pref("hal.processPriorityManager.gonk.PREALLOC.OomScoreAdjust", 67);
+pref("hal.processPriorityManager.gonk.PREALLOC.Nice", 18);
+
 pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.OomScoreAdjust", 67);
 pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.KillUnderKB", 5120);
 pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.Nice", 0);

@@ -64,11 +64,11 @@ EXTRA_COMPONENTS += [
     'NetworkInterfaceListService.js',
     'NetworkInterfaceListService.manifest',
     'NetworkManager.manifest',
+    'NetworkService.js',
     'NetworkService.manifest',
 ]
 EXTRA_PP_COMPONENTS += [
     'NetworkManager.js',
-    'NetworkService.js',
 ]
 EXTRA_JS_MODULES += [
     'systemlibs.js',

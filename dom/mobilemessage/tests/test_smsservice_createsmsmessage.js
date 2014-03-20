@@ -33,7 +33,7 @@ function run_test() {
  */
 add_test(function test_interface() {
   let sms = newMessage(null, null, ICC_ID, "sent", "success", null, null, null,
-                       "normal", new Date(), new Date(), new Date(), true);
+                       "normal", Date.now(), Date.now(), Date.now(), true);
   do_check_true(sms instanceof Ci.nsIDOMMozSmsMessage);
   do_check_eq(sms.id, 0);
   do_check_eq(sms.threadId, 0);
@@ -53,7 +53,7 @@ add_test(function test_interface() {
  */
 add_test(function test_icc_id_not_available() {
   let sms = newMessage(null, null, null, "sent", "success", null, null, null,
-                       "normal", new Date(), new Date(), new Date(), true);
+                       "normal", Date.now(), Date.now(), Date.now(), true);
   do_check_true(sms instanceof Ci.nsIDOMMozSmsMessage);
   do_check_eq(sms.id, 0);
   do_check_eq(sms.threadId, 0);
@@ -73,7 +73,7 @@ add_test(function test_icc_id_not_available() {
  */
 add_test(function test_readonly_attributes() {
   let sms = newMessage(null, null, ICC_ID, "sent", "success", null, null, null,
-                       "normal", new Date(), new Date(), new Date(), true);
+                       "normal", Date.now(), Date.now(), Date.now(), true);
 
   sms.id = 1;
   do_check_eq(sms.id, 0);
@@ -144,7 +144,8 @@ add_test(function test_timestamp_number() {
 });
 
 /**
- * Test supplying the timestamp as a Date object.
+ * Test supplying the timestamp as a Date object, which will be automatically
+ * casted to unsigned long long.
  */
 add_test(function test_timestamp_date() {
   let date = new Date();
@@ -167,112 +168,12 @@ add_test(function test_timestamp_date() {
 });
 
 /**
- * Test that a floating point number for the timestamp is not allowed.
- */
-add_test(function test_invalid_timestamp_float() {
-  // Test timestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", 3.1415, new Date(), new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test sentTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), 3.1415, new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test deliveryTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), new Date(), 3.1415, true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  run_next_test();
-});
-
-/**
- * Test that a null value for the timestamp is not allowed.
- */
-add_test(function test_invalid_timestamp_null() {
-  // Test timestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", null, new Date(), new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test sentTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), null, new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test deliveryTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), new Date(), null, true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  run_next_test();
-});
-
-/**
- * Test that undefined for the timestamp is not allowed.
- */
-add_test(function test_invalid_timestamp_undefined() {
-  // Test timestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", undefined, new Date(), new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test sentTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), undefined, new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test deliveryTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), new Date(), undefined, true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  run_next_test();
-});
-
-/**
- * Test that a random object for the timestamp is not allowed.
- */
-add_test(function test_invalid_timestamp_object() {
-  // Test timestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", {}, new Date(), new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test sentTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), {}, new Date(), true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  // Test deliveryTimestamp.
-  do_check_throws(function() {
-    newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "normal", new Date(), new Date(), {}, true);
-  }, Cr.NS_ERROR_INVALID_ARG);
-
-  run_next_test();
-});
-
-/**
  * Test that an invalid delivery string is not accepted.
  */
 add_test(function test_invalid_delivery_string() {
   do_check_throws(function() {
     newMessage(42, 1, ICC_ID, "this is invalid", "pending", "the sender",
-               "the receiver", "the body", "normal", new Date(), 0, 0, true);
+               "the receiver", "the body", "normal", Date.now(), 0, 0, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -283,7 +184,7 @@ add_test(function test_invalid_delivery_string() {
 add_test(function test_invalid_delivery_string() {
   do_check_throws(function() {
     newMessage(42, 1, ICC_ID, 1, "pending", "the sender", "the receiver", "the body",
-               "normal", new Date(), 0, 0, true);
+               "normal", Date.now(), 0, 0, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -294,7 +195,7 @@ add_test(function test_invalid_delivery_string() {
 add_test(function test_invalid_delivery_status_string() {
   do_check_throws(function() {
     newMessage(42, 1, ICC_ID, "sent", "this is invalid", "the sender", "the receiver",
-               "the body", "normal", new Date(), new Date(), 0, true);
+               "the body", "normal", Date.now(), Date.now(), 0, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -305,7 +206,7 @@ add_test(function test_invalid_delivery_status_string() {
 add_test(function test_invalid_delivery_status_string() {
   do_check_throws(function() {
     newMessage(42, 1, ICC_ID, "sent", 1, "the sender", "the receiver", "the body",
-               "normal", new Date(), new Date(), 0, true);
+               "normal", Date.now(), Date.now(), 0, true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -316,7 +217,7 @@ add_test(function test_invalid_delivery_status_string() {
 add_test(function test_invalid_message_class_string() {
   do_check_throws(function() {
     newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", "this is invalid", new Date(), new Date(), new Date(), true);
+               "the body", "this is invalid", Date.now(), Date.now(), Date.now(), true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
@@ -327,7 +228,7 @@ add_test(function test_invalid_message_class_string() {
 add_test(function test_invalid_message_class_string() {
   do_check_throws(function() {
     newMessage(42, 1, ICC_ID, "sent", "success", "the sender", "the receiver",
-               "the body", 1, new Date(), new Date(), new Date(), true);
+               "the body", 1, Date.now(), Date.now(), Date.now(), true);
   }, Cr.NS_ERROR_INVALID_ARG);
   run_next_test();
 });
