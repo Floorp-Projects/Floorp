@@ -488,6 +488,10 @@ class BaseMarionetteOptions(OptionParser):
             print 'must specify --binary, --emulator or --address'
             sys.exit(1)
 
+        if options.emulator and options.bin:
+            print 'can\'t specify both --emulator and --binary'
+            sys.exit(1)
+
         if not options.es_servers:
             options.es_servers = ['elasticsearch-zlb.dev.vlan81.phx.mozilla.com:9200',
                                   'elasticsearch-zlb.webapp.scl3.mozilla.com:9200']
@@ -652,61 +656,60 @@ class BaseMarionetteTestRunner(object):
         self.marionette.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
         self.logger.info('running webserver on %s' % self.marionette.baseurl)
 
-    def start_marionette(self):
+
+    def _build_kwargs(self):
+        kwargs = {
+            'device_serial': self.device_serial,
+            'symbols_path': self.symbols_path,
+            'timeout': self.timeout,
+        }
         if self.bin:
-            if self.address:
-                host, port = self.address.split(':')
-            else:
-                host = 'localhost'
-                port = 2828
-            self.marionette = Marionette(host=host,
-                                         port=int(port),
-                                         app=self.app,
-                                         app_args=self.app_args,
-                                         bin=self.bin,
-                                         profile=self.profile,
-                                         timeout=self.timeout,
-                                         device_serial=self.device_serial)
-        elif self.address:
+            kwargs.update({
+                'host': 'localhost',
+                'port': 2828,
+                'app': self.app,
+                'app_args': self.app_args,
+                'bin': self.bin,
+                'profile': self.profile,
+            })
+
+        if self.emulator:
+            kwargs.update({
+                'homedir': self.homedir,
+                'logcat_dir': self.logcat_dir,
+                'gecko_path': self.gecko_path,
+            })
+
+        if self.address:
             host, port = self.address.split(':')
-            try:
-                #establish a socket connection so we can vertify the data come back
-                connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-                connection.connect((host,int(port)))
-                connection.close()
-            except Exception, e:
-                raise Exception("Connection attempt to %s:%s failed with error: %s" %(host,port,e))
+            kwargs.update({
+                'host': host,
+                'port': int(port),
+            })
             if self.emulator:
-                self.marionette = Marionette.getMarionetteOrExit(
-                                             host=host, port=int(port),
-                                             connectToRunningEmulator=True,
-                                             homedir=self.homedir,
-                                             logcat_dir=self.logcat_dir,
-                                             gecko_path=self.gecko_path,
-                                             symbols_path=self.symbols_path,
-                                             timeout=self.timeout,
-                                             device_serial=self.device_serial)
-            else:
-                self.marionette = Marionette(host=host,
-                                             port=int(port),
-                                             timeout=self.timeout,
-                                             device_serial=self.device_serial)
+                kwargs['connectToRunningEmulator'] = True
+
+            if not self.bin:
+                try:
+                    #establish a socket connection so we can vertify the data come back
+                    connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                    connection.connect((host,int(port)))
+                    connection.close()
+                except Exception, e:
+                    raise Exception("Connection attempt to %s:%s failed with error: %s" %(host,port,e))
         elif self.emulator:
-            self.marionette = Marionette.getMarionetteOrExit(
-                                         emulator=self.emulator,
-                                         emulatorBinary=self.emulatorBinary,
-                                         emulatorImg=self.emulatorImg,
-                                         emulator_res=self.emulator_res,
-                                         homedir=self.homedir,
-                                         noWindow=self.noWindow,
-                                         logcat_dir=self.logcat_dir,
-                                         gecko_path=self.gecko_path,
-                                         symbols_path=self.symbols_path,
-                                         timeout=self.timeout,
-                                         sdcard=self.sdcard,
-                                         device_serial=self.device_serial)
-        else:
-            raise Exception("must specify binary, address or emulator")
+            kwargs.update({
+                'emulator': self.emulator,
+                'emulatorBinary': self.emulatorBinary,
+                'emulatorImg': self.emulatorImg,
+                'emulator_res': self.emulator_res,
+                'noWindow': self.noWindow,
+                'sdcard': self.sdcard,
+            })
+        return kwargs
+
+    def start_marionette(self):
+        self.marionette = Marionette(**self._build_kwargs())
 
     def post_to_autolog(self, elapsedtime):
         self.logger.info('posting results to autolog')
