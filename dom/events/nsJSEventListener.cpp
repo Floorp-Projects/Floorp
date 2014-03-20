@@ -179,6 +179,9 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       lineNumber.Construct();
       lineNumber.Value() = scriptEvent->Lineno();
 
+      columnNumber.Construct();
+      columnNumber.Value() = scriptEvent->Column();
+
       ThreadsafeAutoJSContext cx;
       error.Construct(cx);
       error.Value() = scriptEvent->Error(cx);
