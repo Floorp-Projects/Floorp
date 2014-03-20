@@ -168,6 +168,12 @@ AlarmsManager.prototype = {
       return null;
     }
 
+    // SystemPrincipal documents do not have any origin.
+    // Reject them for now.
+    if (!principal.URI) {
+      return null;
+    }
+
     this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                    .getService(Ci.nsISyncMessageSender);
 
@@ -180,7 +186,7 @@ AlarmsManager.prototype = {
     // Get the manifest URL if this is an installed app
     let appsService = Cc["@mozilla.org/AppsService;1"]
                         .getService(Ci.nsIAppsService);
-    this._pageURL = aWindow.location.href;
+    this._pageURL = principal.URI.spec;
     this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
     this._window = aWindow;
   },
