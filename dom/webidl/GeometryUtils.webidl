@@ -25,12 +25,9 @@ dictionary ConvertCoordinateOptions {
 interface GeometryUtils {
   [Throws, Pref="layout.css.getBoxQuads.enabled"]
   sequence<DOMQuad> getBoxQuads(optional BoxQuadOptions options);
-  [Throws, Pref="layout.css.convertFromNode.enabled"]
-  DOMQuad convertQuadFromNode(DOMQuad quad, GeometryNode from, optional ConvertCoordinateOptions options);
-  [Throws, Pref="layout.css.convertFromNode.enabled"]
-  DOMQuad convertRectFromNode(DOMRectReadOnly rect, GeometryNode from, optional ConvertCoordinateOptions options);
-  [Throws, Pref="layout.css.convertFromNode.enabled"]
-  DOMPoint convertPointFromNode(DOMPointInit point, GeometryNode from, optional ConvertCoordinateOptions options);
+//  DOMQuad convertQuadFromNode(DOMQuad quad, GeometryNode from, optional ConvertCoordinateOptions options);
+//  DOMQuad convertRectFromNode(DOMRectReadOnly rect, GeometryNode from, optional ConvertCoordinateOptions options);
+//  DOMPoint convertPointFromNode(DOMPointInit point, GeometryNode from, optional ConvertCoordinateOptions options);
 };
 
 Text implements GeometryUtils;
