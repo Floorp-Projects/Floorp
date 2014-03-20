@@ -842,35 +842,6 @@ moz_FcPatternRemove(FcPattern *p, const char *object, int id)
     return (*sFcPatternRemovePtr)(p, object, id);
 }
 
-// fontconfig always prefers a matching family to a matching slant, but CSS
-// mostly prioritizes slant.  The logic here is from CSS 2.1.
-static bool
-SlantIsAcceptable(FcPattern *aFont, int aRequestedSlant)
-{
-    // CSS accepts (possibly synthetic) oblique for italic.
-    if (aRequestedSlant == FC_SLANT_ITALIC)
-        return true;
-
-    int slant;
-    FcResult result = FcPatternGetInteger(aFont, FC_SLANT, 0, &slant);
-    // Not having a value would be strange.
-    // fontconfig sort and match functions would consider no value a match.
-    if (result != FcResultMatch)
-        return true;
-
-    switch (aRequestedSlant) {
-        case FC_SLANT_ROMAN:
-            // CSS requires an exact match
-            return slant == aRequestedSlant;
-        case FC_SLANT_OBLIQUE:
-            // Accept synthetic oblique from Roman,
-            // but CSS doesn't accept italic.
-            return slant != FC_SLANT_ITALIC;
-    }
-
-    return true;
-}
-
 // fontconfig prefers a matching family or lang to pixelsize of bitmap
 // fonts.  CSS suggests a tolerance of 20% on pixelsize.
 static bool
@@ -1032,8 +1003,6 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
 
             // User fonts are already filtered by slant (but not size) in
             // mUserFontSet->FindFontEntry().
-            if (!isUserFont && !SlantIsAcceptable(font, requestedSlant))
-                continue;
             if (requestedSize != -1.0 && !SizeIsAcceptable(font, requestedSize))
                 continue;
 
@@ -1068,8 +1037,6 @@ gfxFcFontSet::SortPreferredFonts(bool &aWaitForUserFont)
         bool haveLangFont = false;
         for (uint32_t f = 0; f < langFonts.Length(); ++f) {
             FcPattern *font = langFonts[f];
-            if (!SlantIsAcceptable(font, requestedSlant))
-                continue;
             if (requestedSize != -1.0 && !SizeIsAcceptable(font, requestedSize))
                 continue;
 

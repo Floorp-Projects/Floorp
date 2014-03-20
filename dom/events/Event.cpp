@@ -1081,5 +1081,7 @@ NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
                WidgetEvent* aEvent) 
 {
   Event* it = new Event(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }

@@ -93,7 +93,7 @@ SVGFEColorMatrixElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   uint32_t type = mEnumAttributes[TYPE].GetAnimValue();
   const SVGNumberList &values = mNumberListAttributes[VALUES].GetAnimValue();
 
-  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eColorMatrix);
+  FilterPrimitiveDescription descr(PrimitiveType::ColorMatrix);
   if (!mNumberListAttributes[VALUES].IsExplicitlySet() &&
       (type == SVG_FECOLORMATRIX_TYPE_MATRIX ||
        type == SVG_FECOLORMATRIX_TYPE_SATURATE ||

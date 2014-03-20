@@ -202,12 +202,7 @@ UNIFIED_SOURCES += [
 
 if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsUTF8ToUnicodeSSE2.cpp']
-    if CONFIG['GNU_CC']:
-        # nsUTF8ToUnicodeSSE2.cpp uses SSE2 intrinsics, so we need to pass -msse2 if
-        # we're using gcc. (See bug 585538 comment 12.)
-        SOURCES['nsUTF8ToUnicodeSSE2.cpp'].flags += ['-msse2']
-    if CONFIG['SOLARIS_SUNPRO_CXX']:
-        SOURCES['nsUTF8ToUnicodeSSE2.cpp'].flags += ['-xarch=sse2', '-xO4']
+    SOURCES['nsUTF8ToUnicodeSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 MSVC_ENABLE_PGO = True
 

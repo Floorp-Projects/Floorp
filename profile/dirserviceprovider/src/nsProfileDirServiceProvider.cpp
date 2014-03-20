@@ -232,11 +232,12 @@ nsProfileDirServiceProvider::GetFile(const char *prop, bool *persistant, nsIFile
     }
   }
 
-  
-  if (localFile && NS_SUCCEEDED(rv))
-    return CallQueryInterface(localFile, _retval);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  return rv;
+  localFile.forget(_retval);
+  return NS_OK;
 }
 
 //*****************************************************************************

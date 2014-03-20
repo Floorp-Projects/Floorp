@@ -45,6 +45,8 @@ public:
   // VideoTrackMetadata members
   uint32_t GetVideoHeight() MOZ_OVERRIDE { return mHeight; }
   uint32_t GetVideoWidth() MOZ_OVERRIDE {return mWidth; }
+  uint32_t GetVideoDisplayHeight() MOZ_OVERRIDE { return mDisplayHeight; }
+  uint32_t GetVideoDisplayWidth() MOZ_OVERRIDE { return mDisplayWidth;  }
   uint32_t GetVideoClockRate() MOZ_OVERRIDE { return AVC_CLOCK_RATE; }
   uint32_t GetVideoFrameRate() MOZ_OVERRIDE { return mFrameRate; }
 
@@ -55,6 +57,8 @@ public:
   AVCTrackMetadata()
     : mHeight(0)
     , mWidth(0)
+    , mDisplayHeight(0)
+    , mDisplayWidth(0)
     , mFrameRate(0) {
     MOZ_COUNT_CTOR(AVCTrackMetadata);
   }
@@ -62,6 +66,8 @@ public:
 
   uint32_t mHeight;
   uint32_t mWidth;
+  uint32_t mDisplayHeight;
+  uint32_t mDisplayWidth;
   uint32_t mFrameRate;       // frames per second
 };
 

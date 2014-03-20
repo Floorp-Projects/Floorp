@@ -2496,20 +2496,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   return NS_OK;
 }
 
-int32_t
-nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
-  if (!aFrame->IsPositioned() && !aFrame->IsFlexItem())
-    return 0;
-
-  const nsStylePosition* position =
-    aFrame->StylePosition();
-  if (position->mZIndex.GetUnit() == eStyleUnit_Integer)
-    return position->mZIndex.GetIntValue();
-
-  // sort the auto and 0 elements together
-  return 0;
-}
-
 /**
  * Uses a binary search for find where the cursor falls in the line of text
  * It also keeps track of the part of the string that has already been measured

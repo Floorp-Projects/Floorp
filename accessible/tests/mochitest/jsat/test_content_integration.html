@@ -46,15 +46,31 @@
             speak: 'checked',
             speak_checkFunc: 'todo_isnot'
           }],
-          // uncheck checkbox
+          [ContentMessages.simpleMoveNext, {
+            speak: 'much range label'
+          }],
+          [ContentMessages.simpleMoveNext, {
+            speak: 'much range 5 slider'
+          }],
+          [ContentMessages.adjustRangeUp,
+           { speak: '6'}],
           [ContentMessages.simpleMoveNext, {
             speak: 'Home button'
           }],
 
           // Simple traversal backward
           [ContentMessages.simpleMovePrevious, {
-            speak: 'many option checked check button such app'
+            speak: 'much range 6 slider such app'
           }],
+          [ContentMessages.adjustRangeDown,
+           { speak: '5'}],
+          [ContentMessages.simpleMovePrevious, {
+            speak: 'much range label'
+          }],
+          [ContentMessages.simpleMovePrevious, {
+            speak: 'many option checked check button'
+          }],
+          // uncheck checkbox
           [ContentMessages.activateCurrent(), {
             speak: 'unchecked'
           }],

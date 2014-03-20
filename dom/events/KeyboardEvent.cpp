@@ -236,5 +236,7 @@ NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
                        WidgetKeyboardEvent* aEvent)
 {
   KeyboardEvent* it = new KeyboardEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }

@@ -15,11 +15,25 @@
 #include "nsQueryFrame.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Preferences.h"
 
 namespace mozilla {
 namespace layout {
 
 NS_IMPL_ISUPPORTS1(ScrollbarActivity, nsIDOMEventListener)
+
+static bool
+GetForceAlwaysVisiblePref()
+{
+  static bool sForceAlwaysVisible;
+  static bool sForceAlwaysVisiblePrefCached = false;
+  if (!sForceAlwaysVisiblePrefCached) {
+    Preferences::AddBoolVarCache(&sForceAlwaysVisible,
+                                 "layout.testing.overlay-scrollbars.always-visible");
+    sForceAlwaysVisiblePrefCached = true;
+  }
+  return sForceAlwaysVisible;
+}
 
 void
 ScrollbarActivity::QueryLookAndFeelVals()
@@ -406,6 +420,9 @@ ScrollbarActivity::SetIsFading(bool aNewFading)
 void
 ScrollbarActivity::StartFadeBeginTimer()
 {
+  if (GetForceAlwaysVisiblePref()) {
+    return;
+  }
   if (!mFadeBeginTimer) {
     mFadeBeginTimer = do_CreateInstance("@mozilla.org/timer;1");
   }

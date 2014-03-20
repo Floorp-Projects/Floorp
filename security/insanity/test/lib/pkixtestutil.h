@@ -27,13 +27,15 @@ namespace insanity { namespace test {
 class OCSPResponseContext
 {
 public:
+  OCSPResponseContext(PLArenaPool* arena, CERTCertificate* cert, PRTime time);
+
   PLArenaPool* arena;
   // TODO(bug 980538): add a way to specify what certificates are included.
   pkix::ScopedCERTCertificate cert; // The subject of the OCSP response
   pkix::ScopedCERTCertificate issuerCert; // The issuer of the subject
   pkix::ScopedCERTCertificate signerCert; // This cert signs the response
   uint8_t responseStatus; // See the OCSPResponseStatus enum in rfc 6960
-  // TODO(bug 979070): add ability to generate a response with no responseBytes
+  bool skipResponseBytes; // If true, don't include responseBytes
 
   // The following fields are on a per-SingleResponse basis. In the future we
   // may support including multiple SingleResponses per response.

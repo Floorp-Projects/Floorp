@@ -4049,8 +4049,7 @@ nsDocumentViewer::ShouldAttachToTopLevel()
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   // On windows, in the parent process we also attach, but just to
   // chrome items
-  nsWindowType winType;
-  mParentWidget->GetWindowType(winType);
+  nsWindowType winType = mParentWidget->WindowType();
   if ((winType == eWindowType_toplevel ||
        winType == eWindowType_dialog ||
        winType == eWindowType_invisible) &&

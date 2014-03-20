@@ -357,14 +357,6 @@ DeprecatedTextureHost::SwapTextures(const SurfaceDescriptor& aImage,
     *aResult = *mBuffer;
   }
   *mBuffer = aImage;
-  // The following SetBuffer call was added in bug 912725 as a fix for the
-  // hacky fix introduced in gecko 23 for bug 862324.
-  // Note that it is a no-op in the generic case, but not for
-  // GrallocDeprecatedTextureHostOGL which overrides SetBuffer to make it
-  // register the TextureHost with the GrallocBufferActor.
-  // The reason why this SetBuffer calls is needed here is that just above we
-  // overwrote *mBuffer in place, so we need to tell the new mBuffer about this
-  // TextureHost.
   SetBuffer(mBuffer, mDeAllocator);
 }
 

@@ -104,7 +104,7 @@ private:
                                     nsIContent* aStartChild,
                                     nsIContent* aEndChild,
                                     bool aAllowLazyConstruction);
-  
+
   // Checks if the children of aContainer in the range [aStartChild, aEndChild)
   // can be inserted/appended to one insertion point together. If so, returns
   // that insertion point. If not, returns null and issues single
@@ -262,7 +262,7 @@ private:
   struct FrameConstructionItem;
   class FrameConstructionItemList;
 
-  nsIFrame* ConstructPageFrame(nsIPresShell*  aPresShell, 
+  nsIFrame* ConstructPageFrame(nsIPresShell*  aPresShell,
                                nsPresContext* aPresContext,
                                nsIFrame*      aParentFrame,
                                nsIFrame*      aPrevPageFrame,
@@ -1057,7 +1057,7 @@ private:
   // END TABLE SECTION
 
 protected:
-  static nsIFrame* CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
+  static nsIFrame* CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
                                              nsIContent*      aContent,
                                              nsIFrame*        aFrame,
                                              nsStyleContext*  aStyleContext,
@@ -1394,7 +1394,7 @@ public:
 private:
   nsIContent* PropagateScrollToViewport();
 
-  // Build a scroll frame: 
+  // Build a scroll frame:
   //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
   // @param aNewFrame the created scrollframe --- output only
   // @param aParentFrame the geometric parent that the scrollframe will have.
@@ -1454,14 +1454,14 @@ private:
   bool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
                                                nsresult* aResult);
 
-  nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
+  nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell,
                                             nsPresContext*  aPresContext,
                                             nsIFrame*        aFrame,
                                             nsIFrame*        aParentFrame,
                                             nsIContent*      aContent,
                                             nsStyleContext*  aStyleContext);
 
-  nsIFrame* CreateContinuingTableFrame(nsIPresShell*    aPresShell, 
+  nsIFrame* CreateContinuingTableFrame(nsIPresShell*    aPresShell,
                                        nsPresContext*  aPresContext,
                                        nsIFrame*        aFrame,
                                        nsIFrame*        aParentFrame,
@@ -1637,7 +1637,7 @@ private:
 
   void RecoverLetterFrames(nsIFrame* aBlockFrame);
 
-  // 
+  //
   nsresult RemoveLetterFrames(nsPresContext*  aPresContext,
                               nsIPresShell*    aPresShell,
                               nsIFrame*        aBlockFrame);
@@ -1743,7 +1743,7 @@ private:
   bool IsValidSibling(nsIFrame*              aSibling,
                         nsIContent*            aContent,
                         uint8_t&               aDisplay);
-  
+
   void QuotesDirty() {
     NS_PRECONDITION(mUpdateCount != 0, "Instant quote updates are bad news");
     mQuotesDirty = true;
@@ -1778,7 +1778,7 @@ private:
 
   // See the comment at the start of ConstructRootFrame for more details
   // about the following frames.
-  
+
   // This is just the outermost frame for the root element.
   nsIFrame*           mRootElementFrame;
   // This is the frame for the root element that has no pseudo-element style.

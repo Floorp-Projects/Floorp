@@ -65,7 +65,7 @@ function get_modules_under(uri) {
 }
 
 function load_modules_under(spec, uri) {
-  var entries = get_modules_under(uri);
+  var entries = get_modules_under(uri).sort();
   // The precompilation of JS here sometimes reports errors, which we don't
   // really care about. But if the errors are ever reported to xpcshell's
   // error reporter, it will cause it to return an error code, which will break

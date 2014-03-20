@@ -85,13 +85,6 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::_default, aDefault, aError);
   }
 
-  // Constants for numeric readyState property values.
-  enum {
-    READY_STATE_NONE = 0U,
-    READY_STATE_LOADING = 1U,
-    READY_STATE_LOADED = 2U,
-    READY_STATE_ERROR = 3U
-  };
   uint16_t ReadyState() const;
 
   TextTrack* Track();

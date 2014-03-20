@@ -31,11 +31,10 @@ function ActivityRequestHandler() {
   // creation of an ActivityWrapper which in turns replace the default
   // system message callback. The newly created wrapper then create a
   // nsIDOMActivityRequestHandler object and fills up the properties of
-  // this object as well as the properties of the nsIDOMActivityOptions
-  // object contains by the request handler.
+  // this object as well as the properties of the ActivityOptions
+  // dictionary contained by the request handler.
   this._id = null;
-  this._options = Cc["@mozilla.org/dom/activities/options;1"]
-                    .createInstance(Ci.nsIDOMMozActivityOptions);
+  this._options = null;
 }
 
 ActivityRequestHandler.prototype = {
@@ -46,6 +45,9 @@ ActivityRequestHandler.prototype = {
                     },
 
   get source() {
+    if (this._options === null) {
+      Cu.reportError("ActivityRequestHandler._options must be initialized at this point");
+    }
     return this._options;
   },
 
