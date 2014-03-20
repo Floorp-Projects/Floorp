@@ -51,10 +51,37 @@ function test_permission(aChannel) {
   is(ac.mozAudioChannelType, "normal", "Default ac channel == 'normal'");
 
   SpecialPowers.pushPermissions(
-    [{ "type": "audio-channel-" + aChannel, "allow": 1, "context": document }],
+    [{ "type": "audio-channel-" + aChannel, "allow": true, "context": document }],
     function() {
       ac.mozAudioChannelType = aChannel;
       is(ac.mozAudioChannelType, aChannel, "Default ac channel == '" + aChannel + "'");
+      runTest();
+    }
+  );
+}
+
+function test_preferences(aChannel) {
+  SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", aChannel ]]},
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "audio-channel-" + aChannel, "allow": false, "context": document }],
+        function() {
+          var ac = new AudioContext();
+          ok(ac, "AudioContext created");
+          is(ac.mozAudioChannelType, aChannel, "Default ac channel == '" + aChannel + "'");
+          runTest();
+        }
+      );
+    }
+  );
+}
+
+function test_wrong_preferences() {
+  SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", 'foobar' ]]},
+    function() {
+      var ac = new AudioContext();
+      ok(ac, "AudioContext created");
+      is(ac.mozAudioChannelType, 'normal', "Default ac channel == 'normal'");
       runTest();
     }
   );
@@ -68,7 +95,16 @@ var tests = [
   function() { test_permission("alarm"); },
   function() { test_permission("telephony"); },
   function() { test_permission("ringer"); },
-  function() { test_permission("publicnotification"); }
+  function() { test_permission("publicnotification"); },
+
+  function() { test_preferences("content"); },
+  function() { test_preferences("notification"); },
+  function() { test_preferences("alarm"); },
+  function() { test_preferences("telephony"); },
+  function() { test_preferences("ringer"); },
+  function() { test_preferences("publicnotification"); },
+
+  test_wrong_preferences,
 ];
 
 function runTest() {
