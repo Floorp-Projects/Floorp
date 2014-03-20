@@ -75,7 +75,7 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrowcontent {
-  padding: 4px;
+  padding: 10px;
   color: -moz-FieldText;
   background: -moz-field;
   background-clip: padding-box;
