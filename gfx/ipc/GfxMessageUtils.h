@@ -285,6 +285,13 @@ struct ParamTraits<gfxImageFormat>
 {};
 
 template <>
+struct ParamTraits<mozilla::gfx::AttributeName>
+  : public EnumSerializer<mozilla::gfx::AttributeName,
+                          mozilla::gfx::eBlendBlendmode,
+                          mozilla::gfx::eLastAttributeName>
+{};
+
+template <>
 struct ParamTraits<mozilla::gfx::AttributeType>
   : public TypedEnumSerializer<mozilla::gfx::AttributeType,
                                mozilla::gfx::AttributeType::eBool,
