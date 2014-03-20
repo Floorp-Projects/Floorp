@@ -4112,7 +4112,7 @@ CodeGenerator::visitNeuterCheck(LNeuterCheck *lir)
     Register obj = ToRegister(lir->object());
     Register temp = ToRegister(lir->temp());
 
-    masm.extractObject(Address(obj, TypedObject::ownerOffset()), temp);
+    masm.extractObject(Address(obj, TypedObject::offsetOfOwnerSlot()), temp);
     masm.unboxInt32(Address(temp, ArrayBufferObject::flagsOffset()), temp);
     masm.and32(Imm32(ArrayBufferObject::neuteredFlag()), temp);
 
@@ -4126,7 +4126,56 @@ CodeGenerator::visitTypedObjectElements(LTypedObjectElements *lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.loadPtr(Address(obj, TypedObject::dataOffset()), out);
+    masm.loadPtr(Address(obj, TypedObject::offsetOfDataSlot()), out);
+    return true;
+}
+
+bool
+CodeGenerator::visitSetTypedObjectOffset(LSetTypedObjectOffset *lir)
+{
+    Register object = ToRegister(lir->object());
+    Register offset = ToRegister(lir->offset());
+    Register temp0 = ToRegister(lir->temp0());
+
+    // `offset` is an absolute offset into the base buffer. One way
+    // to implement this instruction would be load the base address
+    // from the buffer and add `offset`. But that'd be an extra load.
+    // We can instead load the current base pointer and current
+    // offset, compute the difference with `offset`, and then adjust
+    // the current base pointer. This is two loads but to adjacent
+    // fields in the same object, which should come in the same cache
+    // line.
+    //
+    // The C code I would probably write is the following:
+    //
+    // void SetTypedObjectOffset(TypedObject *obj, int32_t offset) {
+    //     int32_t temp0 = obj->byteOffset;
+    //     obj->pointer = obj->pointer - temp0 + offset;
+    //     obj->byteOffset = offset;
+    // }
+    //
+    // But what we actually compute is more like this, because it
+    // saves us a temporary to do it this way:
+    //
+    // void SetTypedObjectOffset(TypedObject *obj, int32_t offset) {
+    //     int32_t temp0 = obj->byteOffset;
+    //     obj->pointer = obj->pointer - (temp0 - offset);
+    //     obj->byteOffset = offset;
+    // }
+
+    // temp0 = typedObj->byteOffset;
+    masm.unboxInt32(Address(object, TypedObject::offsetOfByteOffsetSlot()), temp0);
+
+    // temp0 -= offset;
+    masm.subPtr(offset, temp0);
+
+    // obj->pointer -= temp0;
+    masm.subPtr(temp0, Address(object, TypedObject::offsetOfDataSlot()));
+
+    // obj->byteOffset = offset;
+    masm.storeValue(JSVAL_TYPE_INT32, offset,
+                    Address(object, TypedObject::offsetOfByteOffsetSlot()));
+
     return true;
 }
 
