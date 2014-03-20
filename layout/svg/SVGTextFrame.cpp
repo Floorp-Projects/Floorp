@@ -3312,7 +3312,7 @@ SVGTextFrame::ScheduleReflowSVGNonDisplayText()
   MOZ_ASSERT(f, "should have found an ancestor frame to reflow");
 
   PresContext()->PresShell()->FrameNeedsReflow(
-    f, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+    f, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 NS_IMPL_ISUPPORTS1(SVGTextFrame::MutationObserver, nsIMutationObserver)

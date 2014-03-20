@@ -3423,51 +3423,6 @@ nsLayoutUtils::ComputeHeightDependentValue(
   return 0;
 }
 
-/* static */ void
-nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
-{
-  nsAutoTArray<nsIFrame*, 4> subtrees;
-  subtrees.AppendElement(aSubtreeRoot);
-
-  // dirty descendants, iterating over subtrees that may include
-  // additional subtrees associated with placeholders
-  do {
-    nsIFrame *subtreeRoot = subtrees.ElementAt(subtrees.Length() - 1);
-    subtrees.RemoveElementAt(subtrees.Length() - 1);
-
-    // Mark all descendants dirty (using an nsTArray stack rather than
-    // recursion).
-    // Note that nsHTMLReflowState::InitResizeFlags has some similar
-    // code; see comments there for how and why it differs.
-    nsAutoTArray<nsIFrame*, 32> stack;
-    stack.AppendElement(subtreeRoot);
-
-    do {
-      nsIFrame *f = stack.ElementAt(stack.Length() - 1);
-      stack.RemoveElementAt(stack.Length() - 1);
-
-      f->MarkIntrinsicWidthsDirty();
-
-      if (f->GetType() == nsGkAtoms::placeholderFrame) {
-        nsIFrame *oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
-        if (!nsLayoutUtils::IsProperAncestorFrame(subtreeRoot, oof)) {
-          // We have another distinct subtree we need to mark.
-          subtrees.AppendElement(oof);
-        }
-      }
-
-      nsIFrame::ChildListIterator lists(f);
-      for (; !lists.IsDone(); lists.Next()) {
-        nsFrameList::Enumerator childFrames(lists.CurrentList());
-        for (; !childFrames.AtEnd(); childFrames.Next()) {
-          nsIFrame* kid = childFrames.get();
-          stack.AppendElement(kid);
-        }
-      }
-    } while (stack.Length() != 0);
-  } while (subtrees.Length() != 0);
-}
-
 #define MULDIV(a,b,c) (nscoord(int64_t(a) * int64_t(b) / int64_t(c)))
 
 /* static */ nsSize
