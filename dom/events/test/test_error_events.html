@@ -9,27 +9,36 @@
   var file;
   var line;
   var msg;
+  var column;
+  var error;
   window.addEventListener("error", function errorListener(e) {
     window.removeEventListener("error", errorListener);
     errorEvent = e;
   });
   var oldOnerror = window.onerror;
-  window.onerror = function(message, filename, lineno) {
+  window.onerror = function(message, filename, lineno, columnno, errorObject) {
     window.onerror = oldOnerror;
     file = filename;
     line = lineno;
     msg = message;
+    column = columnno;
+    error = errorObject;
   }
-  throw new Error("hello");
+  var thrown = new Error("hello");
+  throw thrown;
 </script>
 <script>
   generate_tests(assert_equals, [
     [ "Event filename", errorEvent.filename, location.href ],
     [ "Callback filename", file, location.href ],
-    [ "Event line number", errorEvent.lineno, 23 ],
-    [ "Callback line number", line, 23 ],
+    [ "Event line number", errorEvent.lineno, 27 ],
+    [ "Callback line number", line, 27 ],
     [ "Event message", errorEvent.message, "Error: hello" ],
-    [ "Callback message", msg, "Error: hello" ]
+    [ "Callback message", msg, "Error: hello" ],
+    [ "Event error-object", errorEvent.error, thrown],
+    [ "Callback error-object", error, thrown ],
+    [ "Event column", errorEvent.column, 0 ], // Sadly not correct right now
+    [ "Callback column", column, 0 ]
   ]);
 </script>
 <script>
