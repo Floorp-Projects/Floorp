@@ -12,6 +12,7 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     'Sandbox.cpp',
+    'SandboxFilter.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

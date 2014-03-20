@@ -21,7 +21,6 @@
 #include <errno.h>
 
 #include "mozilla/Atomics.h"
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/Exceptions.h"
@@ -38,8 +37,8 @@
 #endif
 
 #if defined(MOZ_CONTENT_SANDBOX)
-#include "seccomp_filter.h"
 #include "linux_seccomp.h"
+#include "SandboxFilter.h"
 #endif
 
 #ifdef MOZ_LOGGING
@@ -57,22 +56,6 @@ static PRLogModuleInfo* gSeccompSandboxLog;
 #else
 #define LOG_ERROR(args...)
 #endif
-
-struct sock_filter seccomp_filter[] = {
-  VALIDATE_ARCHITECTURE,
-  EXAMINE_SYSCALL,
-  SECCOMP_WHITELIST,
-#ifdef MOZ_CONTENT_SANDBOX_REPORTER
-  TRAP_PROCESS,
-#else
-  KILL_PROCESS,
-#endif
-};
-
-struct sock_fprog seccomp_prog = {
-  (unsigned short)MOZ_ARRAY_LENGTH(seccomp_filter),
-  seccomp_filter,
-};
 
 /**
  * Log JS stack info in the same place as the sandbox violation
@@ -236,7 +219,9 @@ InstallSyscallFilter(void)
     return 1;
   }
 
-  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &seccomp_prog, 0, 0)) {
+  const sock_fprog *filter = GetSandboxFilter();
+
+  if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, (unsigned long)filter, 0, 0)) {
     return 1;
   }
   return 0;
