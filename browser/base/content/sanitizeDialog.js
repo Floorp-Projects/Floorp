@@ -120,7 +120,9 @@ var gSanitizePromptDialog = {
                               this.bundleBrowser.getString("sanitizeButtonClearing"));
     docElt.getButton("cancel").disabled = true;
     try {
-      s.sanitize().then(window.close, window.close);
+      s.sanitize().then(null, Components.utils.reportError)
+                  .then(() => window.close())
+                  .then(null, Components.utils.reportError);
     } catch (er) {
       Components.utils.reportError("Exception during sanitize: " + er);
       return true; // We *do* want to close immediately on error.
