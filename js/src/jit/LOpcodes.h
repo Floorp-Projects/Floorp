@@ -248,6 +248,7 @@
     _(TypedArrayLength)             \
     _(TypedArrayElements)           \
     _(TypedObjectElements)          \
+    _(SetTypedObjectOffset)         \
     _(StringLength)                 \
     _(ArgumentsLength)              \
     _(GetFrameArgument)             \
