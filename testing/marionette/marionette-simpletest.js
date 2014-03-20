@@ -22,7 +22,7 @@ this.Marionette = function Marionette(scope, window, context, logObj, timeout,
 
 Marionette.prototype = {
   exports: ['ok', 'is', 'isnot', 'log', 'getLogs', 'generate_results', 'waitFor',
-            'runEmulatorCmd', 'TEST_PASS', 'TEST_KNOWN_FAIL',
+            'runEmulatorCmd', 'runEmulatorShell', 'TEST_PASS', 'TEST_KNOWN_FAIL',
             'TEST_UNEXPECTED_FAIL'],
 
   ok: function Marionette__ok(condition, name, passString, failString, diag) {
@@ -161,6 +161,11 @@ Marionette.prototype = {
   runEmulatorCmd: function runEmulatorCmd(cmd, callback) {
     this.heartbeatCallback();
     this.scope.runEmulatorCmd(cmd, callback);
+  },
+
+  runEmulatorShell: function runEmulatorShell(args, callback) {
+    this.heartbeatCallback();
+    this.scope.runEmulatorShell(args, callback);
   },
 
 };
