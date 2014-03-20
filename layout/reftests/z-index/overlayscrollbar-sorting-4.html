@@ -1,0 +1,35 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test that overlay scrollbars are covered by positioned siblings with higher z-index even when the scrollable frame has a positioned descendant</title>
+
+<style>
+
+#outer {
+  width: 200px;
+  height: 200px;
+  overflow: auto;
+}
+
+#content {
+  height: 400px;
+  background: cyan;
+  position: relative;
+  z-index: 1;
+}
+
+#cover {
+  width: 200px;
+  height: 200px;
+  background: cyan;
+  position: absolute;
+  z-index: 2;
+}
+
+</style>
+
+<div id="cover"></div>
+<div id="outer"><div id="content"></div></div>
