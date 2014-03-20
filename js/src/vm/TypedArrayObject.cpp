@@ -166,25 +166,25 @@ js::ClampDoubleToUint8(const double x)
     return y;
 }
 
-static bool
-ToDoubleForTypedArray(ThreadSafeContext *cx, const Value &vp, double *d)
+bool
+js::ToDoubleForTypedArray(ThreadSafeContext *cx, HandleValue vp, double *d)
 {
     if (vp.isDouble()) {
         *d = vp.toDouble();
+    } else if (vp.isInt32()) {
+        *d = vp.toInt32();
     } else if (vp.isNull()) {
         *d = 0.0;
-    } else if (vp.isPrimitive()) {
-        JS_ASSERT(vp.isString() || vp.isUndefined() || vp.isBoolean());
-        if (vp.isString()) {
-            if (!StringToNumber(cx, vp.toString(), d))
-                return false;
-        } else if (vp.isUndefined()) {
-            *d = GenericNaN();
-        } else {
-            *d = double(vp.toBoolean());
-        }
+    } else if (vp.isString()) {
+        if (!StringToNumber(cx, vp.toString(), d))
+            return false;
+    } else if (vp.isUndefined()) {
+        *d = GenericNaN();
+    } else if (vp.isBoolean()) {
+        *d = double(vp.toBoolean());
     } else {
-        // non-primitive assignments become NaN or 0 (for float/int arrays)
+        // Non-primitive assignments become NaN or 0 (for float/int arrays).
+        MOZ_ASSERT(vp.isObject());
         *d = GenericNaN();
     }
 
@@ -242,21 +242,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         return v.isObject() && v.toObject().hasClass(fastClass());
     }
 
-    static bool
-    setIndexValue(ThreadSafeContext *cx, JSObject *tarray, uint32_t index, const Value &value)
+    static void
+    setIndexValue(TypedArrayObject &tarray, uint32_t index, double d)
     {
-        JS_ASSERT(tarray);
-        JS_ASSERT(index < tarray->as<TypedArrayObject>().length());
-
-        if (value.isInt32()) {
-            setIndex(tarray, index, NativeType(value.toInt32()));
-            return true;
-        }
-
-        double d;
-        if (!ToDoubleForTypedArray(cx, value, &d))
-            return false;
-
         // If the array is an integer array, we only handle up to
         // 32-bit ints from this point on.  if we want to handle
         // 64-bit ints, we'll need some changes.
@@ -277,8 +265,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             int32_t n = ToInt32(d);
             setIndex(tarray, index, NativeType(n));
         }
-
-        return true;
     }
 
     static TypedArrayObject *
@@ -825,9 +811,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static void
-    setIndex(JSObject *obj, uint32_t index, NativeType val)
+    setIndex(TypedArrayObject &tarray, uint32_t index, NativeType val)
     {
-        *(static_cast<NativeType*>(obj->as<TypedArrayObject>().viewData()) + index) = val;
+        MOZ_ASSERT(index < tarray.length());
+        static_cast<NativeType*>(tarray.viewData())[index] = val;
     }
 
     static Value getIndexValue(JSObject *tarray, uint32_t index);
@@ -1973,38 +1960,36 @@ TypedArrayObject::getElement(uint32_t index)
     }
 }
 
-bool
-TypedArrayObject::setElement(ThreadSafeContext *cx, uint32_t index, const Value &value)
+void
+TypedArrayObject::setElement(TypedArrayObject &obj, uint32_t index, double d)
 {
-    JS_ASSERT(index < length());
-
-    switch (type()) {
+    switch (obj.type()) {
       case ScalarTypeDescr::TYPE_INT8:
-        return TypedArrayObjectTemplate<int8_t>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<int8_t>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_UINT8:
-        return TypedArrayObjectTemplate<uint8_t>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<uint8_t>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
-        return TypedArrayObjectTemplate<uint8_clamped>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<uint8_clamped>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_INT16:
-        return TypedArrayObjectTemplate<int16_t>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<int16_t>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_UINT16:
-        return TypedArrayObjectTemplate<uint16_t>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<uint16_t>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_INT32:
-        return TypedArrayObjectTemplate<int32_t>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<int32_t>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_UINT32:
-        return TypedArrayObjectTemplate<uint32_t>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<uint32_t>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_FLOAT32:
-        return TypedArrayObjectTemplate<float>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<float>::setIndexValue(obj, index, d);
         break;
       case ScalarTypeDescr::TYPE_FLOAT64:
-        return TypedArrayObjectTemplate<double>::setIndexValue(cx, this, index, value);
+        TypedArrayObjectTemplate<double>::setIndexValue(obj, index, d);
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown TypedArray type");
