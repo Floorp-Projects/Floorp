@@ -112,12 +112,14 @@ add_task(function test() {
   checkOrder(id1, id3, id2);
 
   // Add a visit, then check frecency ordering.
-  yield promiseAddVisits({ uri: uri2,
-                           transition: TRANSITION_TYPED});
+
   // When the bookmarks service gets onVisit, it asynchronously fetches all
   // items for that visit, and then notifies onItemVisited.  Thus we must
   // explicitly wait for that.
-  yield promiseOnItemVisited();
+  let waitForVisited = promiseOnItemVisited();
+  yield promiseAddVisits({ uri: uri2,
+                           transition: TRANSITION_TYPED});
+  yield waitForVisited;
 
   do_print("Sort by frecency desc");
   result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
