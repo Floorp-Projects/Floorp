@@ -953,20 +953,33 @@ MPhi::removeOperand(size_t index)
 }
 
 MDefinition *
-MPhi::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+MPhi::operandIfRedundant()
 {
-    JS_ASSERT(!inputs_.empty());
+    JS_ASSERT(inputs_.length() != 0);
 
+    // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
+    // returns the operand that it will always be equal to (a, in
+    // those two cases).
     MDefinition *first = getOperand(0);
-
-    for (size_t i = 1; i < inputs_.length(); i++) {
+    for (size_t i = 1, e = numOperands(); i < e; i++) {
         // Phis need dominator information to fold based on value numbers. For
         // simplicity, we only compare SSA names right now (bug 714727).
-        if (!EqualValues(false, getOperand(i), first))
-            return this;
+        if (!EqualValues(false, getOperand(i), first) &&
+            !EqualValues(false, getOperand(i), this))
+        {
+            return nullptr;
+        }
     }
-
     return first;
+}
+
+MDefinition *
+MPhi::foldsTo(TempAllocator &alloc, bool useValueNumbers)
+{
+    if (MDefinition *def = operandIfRedundant())
+        return def;
+
+    return this;
 }
 
 bool
