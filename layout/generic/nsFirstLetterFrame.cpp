@@ -85,7 +85,6 @@ nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
   for (nsFrameList::Enumerator e(aChildList); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(e.get()->GetParent() == this, "Unexpected parent");
     restyleManager->ReparentStyleContext(e.get());
-    nsLayoutUtils::MarkDescendantsDirty(e.get());
   }
 
   mFrames.SetFrames(aChildList);

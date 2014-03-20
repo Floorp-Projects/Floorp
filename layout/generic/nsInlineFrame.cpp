@@ -286,7 +286,6 @@ ReparentChildListStyle(nsPresContext* aPresContext,
   for (nsFrameList::Enumerator e(aFrames); !e.AtEnd(); e.Next()) {
     NS_ASSERTION(e.get()->GetParent() == aParentFrame, "Bogus parentage");
     restyleManager->ReparentStyleContext(e.get());
-    nsLayoutUtils::MarkDescendantsDirty(e.get());
   }
 }
 
@@ -425,7 +424,6 @@ nsInlineFrame::DrainSelfOverflowListInternal(DrainFlags aFlags,
         f->SetParent(this);
         if (inFirstLine) {
           restyleManager->ReparentStyleContext(f);
-          nsLayoutUtils::MarkDescendantsDirty(f);
         }
       }
     }
@@ -531,7 +529,6 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
         child->SetParent(this);
         if (inFirstLine) {
           restyleManager->ReparentStyleContext(child);
-          nsLayoutUtils::MarkDescendantsDirty(child);
         }
         // We also need to do the same for |frame|'s next-in-flows that are in
         // the sibling list. Otherwise, if we reflow |frame| and it's complete
@@ -566,7 +563,6 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
               nextInFlow->SetParent(this);
               if (inFirstLine) {
                 restyleManager->ReparentStyleContext(nextInFlow);
-                nsLayoutUtils::MarkDescendantsDirty(nextInFlow);
               }
             }
             else {
@@ -1009,7 +1005,6 @@ nsFirstLineFrame::PullOneFrame(nsPresContext* aPresContext, InlineReflowState& i
     // style-context that we just pulled.
     NS_ASSERTION(frame->GetParent() == this, "Incorrect parent?");
     aPresContext->RestyleManager()->ReparentStyleContext(frame);
-    nsLayoutUtils::MarkDescendantsDirty(frame);
   }
   return frame;
 }
