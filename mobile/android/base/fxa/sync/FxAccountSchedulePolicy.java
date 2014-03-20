@@ -20,9 +20,12 @@ public class FxAccountSchedulePolicy implements SchedulePolicy {
 
   // Our poll intervals are used to trigger automatic background syncs
   // in the absence of user activity.
-
-  // If we're waiting for the user to click on a verification link, we
-  // sync very often in order to detect a change in state.
+  //
+  // We also receive sync requests as a result of network tickles, so
+  // these intervals are long, with the exception of the rapid polling
+  // while we wait for verification: if we're waiting for the user to
+  // click on a verification link, we sync very often in order to detect
+  // a change in state.
   //
   // In the case of unverified -> unverified (no transition), this should be
   // very close to a single HTTP request (with the SyncAdapter overhead, of
@@ -37,23 +40,36 @@ public class FxAccountSchedulePolicy implements SchedulePolicy {
   // If we're in some kind of error state, there's no point trying often.
   // This is not the same as a server-imposed backoff, which will be
   // reflected dynamically.
-  public static final long POLL_INTERVAL_ERROR_STATE = 24 * 60 * 60;        // 24 hours.
+  public static final long POLL_INTERVAL_ERROR_STATE_SEC = 24 * 60 * 60;    // 24 hours.
 
-  // If we're the only device, just sync a few times a day in case that
+  // If we're the only device, just sync once or twice a day in case that
   // changes.
-  public static final long POLL_INTERVAL_SINGLE_DEVICE_SEC = 8 * 60 * 60;   // 8 hours.
+  public static final long POLL_INTERVAL_SINGLE_DEVICE_SEC = 18 * 60 * 60;  // 18 hours.
 
   // And if we know there are other devices, let's sync often enough that
-  // we'll likely be caught up (even if not completely) by the time you
-  // next use this device.
-  public static final long POLL_INTERVAL_MULTI_DEVICE_SEC = 30 * 60;        // 30 minutes.
-
-  // Never sync more frequently than this, unless forced.
-  public static final long POLL_INTERVAL_MINIMUM_SEC = 45;                  // 45 seconds.
+  // we'll be more likely to be caught up (even if not completely) by the
+  // time you next use this device. This is also achieved via Android's
+  // network tickles.
+  public static final long POLL_INTERVAL_MULTI_DEVICE_SEC = 12 * 60 * 60;   // 12 hours.
 
   // This is used solely as an optimization for backoff handling, so it's not
   // persisted.
   private static volatile long POLL_INTERVAL_CURRENT_SEC = POLL_INTERVAL_SINGLE_DEVICE_SEC;
+
+  // Never sync more frequently than this, unless forced.
+  // This is to avoid overly-frequent syncs during active browsing.
+  public static final long RATE_LIMIT_FUNDAMENTAL_SEC = 90;                 // 90 seconds.
+
+  /**
+   * We are prompted to sync by several inputs:
+   * * Periodic syncs that we schedule at long intervals. See the POLL constants.
+   * * Network-tickle-based syncs that Android starts.
+   * * Upload-only syncs that are caused by local database writes.
+   *
+   * We rate-limit periodic and network-sourced events with this constant.
+   * We rate limit <b>both</b> with {@link FxAccountSchedulePolicy#RATE_LIMIT_FUNDAMENTAL_SEC}.
+   */
+  public static final long RATE_LIMIT_BACKGROUND_SEC = 60 * 60;             // 1 hour.
 
   private final AndroidFxAccount account;
   private final Context context;
@@ -101,7 +117,7 @@ public class FxAccountSchedulePolicy implements SchedulePolicy {
     switch (needed) {
     case NeedsPassword:
     case NeedsUpgrade:
-      requestPeriodicSync(POLL_INTERVAL_ERROR_STATE);
+      requestPeriodicSync(POLL_INTERVAL_ERROR_STATE_SEC);
       break;
     case NeedsVerification:
       requestPeriodicSync(POLL_INTERVAL_PENDING_VERIFICATION);
@@ -117,14 +133,14 @@ public class FxAccountSchedulePolicy implements SchedulePolicy {
   public void onUpgradeRequired() {
     // TODO: this shouldn't occur in FxA, but when we upgrade we
     // need to reduce the interval again.
-    requestPeriodicSync(POLL_INTERVAL_ERROR_STATE);
+    requestPeriodicSync(POLL_INTERVAL_ERROR_STATE_SEC);
   }
 
   @Override
   public void onUnauthorized() {
     // TODO: this shouldn't occur in FxA, but when we fix our credentials
     // we need to reduce the interval again.
-    requestPeriodicSync(POLL_INTERVAL_ERROR_STATE);
+    requestPeriodicSync(POLL_INTERVAL_ERROR_STATE_SEC);
   }
 
   @Override
@@ -147,8 +163,14 @@ public class FxAccountSchedulePolicy implements SchedulePolicy {
     }
   }
 
+  /**
+   * Accepts two {@link BackoffHandler} instances as input. These are used
+   * respectively to track fundamental rate limiting, and to separately
+   * rate-limit periodic and network-tickled syncs.
+   */
   @Override
-  public void configureBackoffMillisBeforeSyncing(BackoffHandler backoffHandler) {
-    backoffHandler.setEarliestNextRequest(delay(POLL_INTERVAL_MINIMUM_SEC * 1000));
+  public void configureBackoffMillisBeforeSyncing(BackoffHandler fundamentalRateHandler, BackoffHandler backgroundRateHandler) {
+    fundamentalRateHandler.setEarliestNextRequest(delay(RATE_LIMIT_FUNDAMENTAL_SEC * 1000));
+    backgroundRateHandler.setEarliestNextRequest(delay(RATE_LIMIT_BACKGROUND_SEC * 1000));
   }
 }
