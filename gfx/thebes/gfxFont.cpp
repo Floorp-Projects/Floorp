@@ -79,6 +79,14 @@ static uint32_t gGlyphExtentsSetupLazyTight = 0;
 static uint32_t gGlyphExtentsSetupFallBackToTight = 0;
 #endif
 
+#ifdef PR_LOGGING
+#define LOG_FONTINIT(args) PR_LOG(gfxPlatform::GetLog(eGfxLog_fontinit), \
+                                  PR_LOG_DEBUG, args)
+#define LOG_FONTINIT_ENABLED() PR_LOG_TEST( \
+                                        gfxPlatform::GetLog(eGfxLog_fontinit), \
+                                        PR_LOG_DEBUG)
+#endif // PR_LOGGING
+
 void
 gfxCharacterMap::NotifyReleased()
 {
@@ -104,6 +112,7 @@ gfxFontEntry::gfxFontEntry() :
     mHasSpaceFeatures(false),
     mHasSpaceFeaturesKerning(false),
     mHasSpaceFeaturesNonKerning(false),
+    mSkipDefaultFeatureSpaceCheck(false),
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
@@ -132,6 +141,7 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     mHasSpaceFeatures(false),
     mHasSpaceFeaturesKerning(false),
     mHasSpaceFeaturesNonKerning(false),
+    mSkipDefaultFeatureSpaceCheck(false),
     mCheckedForGraphiteTables(false),
     mHasCmapTable(false),
     mGrFaceInitialized(false),
@@ -2196,6 +2206,14 @@ gfxFont::CheckForFeaturesInvolvingSpace()
 {
     mFontEntry->mHasSpaceFeaturesInitialized = true;
 
+#ifdef PR_LOGGING
+    bool log = LOG_FONTINIT_ENABLED();
+    TimeStamp start;
+    if (MOZ_UNLIKELY(log)) {
+        start = TimeStamp::Now();
+    }
+#endif
+
     bool result = false;
 
     uint32_t spaceGlyph = GetSpaceGlyph();
@@ -2291,22 +2309,28 @@ gfxFont::CheckForFeaturesInvolvingSpace()
     hb_face_destroy(face);
     mFontEntry->mHasSpaceFeatures = result;
 
-#ifdef DEBUG_SPACE_LOOKUPS
-    printf("font: %s - subst default: %8.8x %8.8x %8.8x %8.8x "
-           "subst non-default: %8.8x %8.8x %8.8x %8.8x "
-           "kerning: %s non-kerning: %s\n",
-           NS_ConvertUTF16toUTF8(mFontEntry->Name()).get(),
-           mFontEntry->mDefaultSubSpaceFeatures[3],
-           mFontEntry->mDefaultSubSpaceFeatures[2],
-           mFontEntry->mDefaultSubSpaceFeatures[1],
-           mFontEntry->mDefaultSubSpaceFeatures[0],
-           mFontEntry->mNonDefaultSubSpaceFeatures[3],
-           mFontEntry->mNonDefaultSubSpaceFeatures[2],
-           mFontEntry->mNonDefaultSubSpaceFeatures[1],
-           mFontEntry->mNonDefaultSubSpaceFeatures[0],
-           (mFontEntry->mHasSpaceFeaturesKerning ? "true" : "false"),
-           (mFontEntry->mHasSpaceFeaturesNonKerning ? "true" : "false")
-    );
+#ifdef PR_LOGGING
+    if (MOZ_UNLIKELY(log)) {
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        LOG_FONTINIT((
+            "(fontinit-spacelookups) font: %s - "
+            "subst default: %8.8x %8.8x %8.8x %8.8x "
+            "subst non-default: %8.8x %8.8x %8.8x %8.8x "
+            "kerning: %s non-kerning: %s time: %6.3f\n",
+            NS_ConvertUTF16toUTF8(mFontEntry->Name()).get(),
+            mFontEntry->mDefaultSubSpaceFeatures[3],
+            mFontEntry->mDefaultSubSpaceFeatures[2],
+            mFontEntry->mDefaultSubSpaceFeatures[1],
+            mFontEntry->mDefaultSubSpaceFeatures[0],
+            mFontEntry->mNonDefaultSubSpaceFeatures[3],
+            mFontEntry->mNonDefaultSubSpaceFeatures[2],
+            mFontEntry->mNonDefaultSubSpaceFeatures[1],
+            mFontEntry->mNonDefaultSubSpaceFeatures[0],
+            (mFontEntry->mHasSpaceFeaturesKerning ? "true" : "false"),
+            (mFontEntry->mHasSpaceFeaturesNonKerning ? "true" : "false"),
+            elapsed.ToMilliseconds()
+        ));
+    }
 #endif
 }
 
@@ -2348,6 +2372,14 @@ gfxFont::HasSubstitutionRulesWithSpaceLookups(int32_t aRunScript)
 bool
 gfxFont::SpaceMayParticipateInShaping(int32_t aRunScript)
 {
+    // avoid checking fonts known not to include default space-dependent features
+    if (MOZ_UNLIKELY(mFontEntry->mSkipDefaultFeatureSpaceCheck)) {
+        if (!mKerningSet && mStyle.featureSettings.IsEmpty() &&
+            mFontEntry->mFeatureSettings.IsEmpty()) {
+            return false;
+        }
+    }
+
     // We record the presence of space-dependent features in the font entry
     // so that subsequent instantiations for the same font face won't
     // require us to re-check the tables; however, the actual check is done
