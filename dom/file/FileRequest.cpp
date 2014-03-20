@@ -71,7 +71,7 @@ FileRequest::NotifyHelperCompleted(FileHelper* aFileHelper)
   nsIScriptContext* sc = GetContextForEventHandlers(&rv);
   NS_ENSURE_STATE(sc);
 
-  AutoPushJSContext cx(sc->GetNativeContext());
+  AutoJSContext cx;
   NS_ASSERTION(cx, "Failed to get a context!");
 
   JS::Rooted<JS::Value> result(cx);

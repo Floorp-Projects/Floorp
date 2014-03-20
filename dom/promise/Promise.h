@@ -214,6 +214,13 @@ private:
                     JSObject* aScope,
                     JS::MutableHandle<JS::Value> aValue);
 
+  // Accept booleans.
+  bool
+  ArgumentToJSValue(bool aArgument,
+                    JSContext* aCx,
+                    JSObject* aScope,
+                    JS::MutableHandle<JS::Value> aValue);
+
   // Accept objects that inherit from nsWrapperCache and nsISupports (e.g. most
   // DOM objects).
   template <class T>
