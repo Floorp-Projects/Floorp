@@ -1783,6 +1783,41 @@ AttributeMap::operator=(const AttributeMap& aOther)
   return *this;
 }
 
+namespace {
+  struct MatchingMap {
+    typedef nsClassHashtable<nsUint32HashKey, Attribute> Map;
+    const Map& map;
+    bool matches;
+  };
+}
+
+static PLDHashOperator
+CheckAttributeEquality(const uint32_t& aAttributeName,
+                       Attribute* aAttribute,
+                       void* aMatchingMap)
+{
+  MatchingMap& matchingMap = *static_cast<MatchingMap*>(aMatchingMap);
+  Attribute* matchingAttribute = matchingMap.map.Get(aAttributeName);
+  if (!matchingAttribute ||
+      *matchingAttribute != *aAttribute) {
+    matchingMap.matches = false;
+    return PL_DHASH_STOP;
+  }
+  return PL_DHASH_NEXT;
+}
+
+bool
+AttributeMap::operator==(const AttributeMap& aOther) const
+{
+  if (mMap.Count() != aOther.mMap.Count()) {
+    return false;
+  }
+
+  MatchingMap matchingMap = { mMap, true };
+  aOther.mMap.EnumerateRead(CheckAttributeEquality, &matchingMap);
+  return matchingMap.matches;
+}
+
 #define MAKE_ATTRIBUTE_HANDLERS_BASIC(type, typeLabel, defaultValue) \
   type                                                               \
   AttributeMap::Get##typeLabel(AttributeName aName) const {          \
