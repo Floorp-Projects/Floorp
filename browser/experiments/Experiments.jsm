@@ -52,6 +52,7 @@ const PREF_LOGGING_DUMP         = PREF_LOGGING + ".dump"; // experiments.logging
 const PREF_MANIFEST_URI         = "manifest.uri"; // experiments.logging.manifest.uri
 const PREF_MANIFEST_CHECKCERT   = "manifest.cert.checkAttributes"; // experiments.manifest.cert.checkAttributes
 const PREF_MANIFEST_REQUIREBUILTIN = "manifest.cert.requireBuiltin"; // experiments.manifest.cert.requireBuiltin
+const PREF_FORCE_SAMPLE = "force-sample-value"; // experiments.force-sample-value
 
 const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
 
@@ -164,6 +165,18 @@ Experiments.Policy.prototype = {
   },
 
   random: function () {
+    let pref = gPrefs.get(PREF_FORCE_SAMPLE);
+    if (pref !== undefined) {
+      let val = Number.parseFloat(pref);
+      gLogger.debug("Experiments::Policy::random sample forced: " + val);
+      if (IsNaN(val) || val < 0) {
+        return 0;
+      }
+      if (val > 1) {
+        return 1;
+      }
+      return val;
+    }
     return Math.random();
   },
 
