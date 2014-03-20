@@ -63,8 +63,9 @@ BEGIN_TEST(testTrap_gc)
 
         trapClosure = JS_NewStringCopyZ(cx, trapClosureText);
         CHECK(trapClosure);
-        JS_SetTrap(cx, script, line2, EmptyTrapHandler, STRING_TO_JSVAL(trapClosure));
-        JS_SetTrap(cx, script, line6, EmptyTrapHandler, STRING_TO_JSVAL(trapClosure));
+        JS::RootedValue closureValue(cx, JS::StringValue(trapClosure));
+        JS_SetTrap(cx, script, line2, EmptyTrapHandler, closureValue);
+        JS_SetTrap(cx, script, line6, EmptyTrapHandler, closureValue);
 
         JS_GC(rt);
 

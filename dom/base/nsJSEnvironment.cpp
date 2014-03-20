@@ -355,7 +355,7 @@ AsyncErrorReporter::AsyncErrorReporter(JSRuntime* aRuntime,
                                        nsPIDOMWindow* aWindow)
   : mSourceLine(static_cast<const char16_t*>(aErrorReport->uclinebuf))
   , mLineNumber(aErrorReport->lineno)
-  , mColumn(aErrorReport->uctokenptr - aErrorReport->uclinebuf)
+  , mColumn(aErrorReport->column)
   , mFlags(aErrorReport->flags)
 {
   if (!aErrorReport->filename) {
@@ -431,6 +431,7 @@ public:
                    nsIPrincipal* aScriptOriginPrincipal,
                    nsIPrincipal* aGlobalPrincipal,
                    nsPIDOMWindow* aWindow,
+                   JS::Handle<JS::Value> aError,
                    bool aDispatchEvent)
     // Pass an empty category, then compute ours
     : AsyncErrorReporter(aRuntime, aErrorReport, aFallbackMessage,
@@ -439,6 +440,7 @@ public:
     , mScriptGlobal(aScriptGlobal)
     , mOriginPrincipal(aScriptOriginPrincipal)
     , mDispatchEvent(aDispatchEvent)
+    , mError(aRuntime, aError)
   {
   }
 
@@ -458,7 +460,8 @@ public:
         nsRefPtr<nsPresContext> presContext;
         docShell->GetPresContext(getter_AddRefs(presContext));
 
-        ErrorEventInit init;
+        ThreadsafeAutoJSContext cx;
+        RootedDictionary<ErrorEventInit> init(cx);
         init.mCancelable = true;
         init.mFilename = mFileName;
         init.mBubbles = true;
@@ -480,6 +483,8 @@ public:
         if (sameOrigin) {
           init.mMessage = mErrorMsg;
           init.mLineno = mLineNumber;
+          init.mColumn = mColumn;
+          init.mError = mError;
         } else {
           NS_WARNING("Not same origin error!");
           init.mMessage = xoriginMsg;
@@ -507,6 +512,7 @@ private:
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
   nsCOMPtr<nsIPrincipal>          mOriginPrincipal;
   bool                            mDispatchEvent;
+  JS::PersistentRootedValue       mError;
 
   static bool sHandlingScriptError;
 };
@@ -551,6 +557,9 @@ NS_ScriptErrorReporter(JSContext *cx,
   // XXX this means we are not going to get error reports on non DOM contexts
   nsIScriptContext *context = nsJSUtils::GetDynamicScriptContext(cx);
 
+  JS::Rooted<JS::Value> exception(cx);
+  ::JS_GetPendingException(cx, &exception);
+
   // Note: we must do this before running any more code on cx (if cx is the
   // dynamic script context).
   ::JS_ClearPendingException(cx);
@@ -573,6 +582,7 @@ NS_ScriptErrorReporter(JSContext *cx,
                              nsJSPrincipals::get(report->originPrincipals),
                              scriptPrincipal->GetPrincipal(),
                              win,
+                             exception,
                              /* We do not try to report Out Of Memory via a dom
                               * event because the dom event handler would
                               * encounter an OOM exception trying to process the
@@ -878,23 +888,6 @@ nsJSContext::GetCCRefcnt()
   }
 
   return refcnt;
-}
-
-nsresult
-nsJSContext::EvaluateString(const nsAString& aScript,
-                            JS::Handle<JSObject*> aScopeObject,
-                            JS::CompileOptions& aCompileOptions,
-                            bool aCoerceToString,
-                            JS::Value* aRetValue,
-                            void **aOffThreadToken)
-{
-  NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
-  AutoCxPusher pusher(mContext);
-  nsJSUtils::EvaluateOptions evalOptions;
-  evalOptions.setCoerceToString(aCoerceToString);
-  return nsJSUtils::EvaluateString(mContext, aScript, aScopeObject,
-                                   aCompileOptions, evalOptions, aRetValue,
-                                   aOffThreadToken);
 }
 
 #ifdef DEBUG
@@ -2860,7 +2853,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
     uint32_t width, height;
     JS::Rooted<JS::Value> dataArray(cx);
     if (!JS_ReadUint32Pair(reader, &width, &height) ||
-        !JS_ReadTypedArray(reader, dataArray.address())) {
+        !JS_ReadTypedArray(reader, &dataArray)) {
       return nullptr;
     }
     MOZ_ASSERT(dataArray.isObject());

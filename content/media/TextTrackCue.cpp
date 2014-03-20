@@ -162,15 +162,7 @@ TextTrackCue::SetRegion(TextTrackRegion* aRegion)
   }
   mRegion = aRegion;
   mReset = true;
-  CueChanged();
 }
 
-void
-TextTrackCue::CueChanged()
-{
-  if (mTrack) {
-    mTrack->CueChanged(*this);
-  }
-}
 } // namespace dom
 } // namespace mozilla

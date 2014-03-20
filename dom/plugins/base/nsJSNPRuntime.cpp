@@ -653,7 +653,7 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
 
   if (ctorCall) {
     JSObject *newObj =
-      ::JS_New(cx, jsobj, jsargs.length(), jsargs.begin());
+      ::JS_New(cx, jsobj, jsargs);
 
     if (newObj) {
       v.setObject(*newObj);
@@ -2038,7 +2038,7 @@ NPObjectMember_Call(JSContext *cx, unsigned argc, JS::Value *vp)
   NPObjectMemberPrivate *memberPrivate =
     (NPObjectMemberPrivate *)::JS_GetInstancePrivate(cx, memobj,
                                                      &sNPObjectMemberClass,
-                                                     args.array());
+                                                     &args);
   if (!memberPrivate || !memberPrivate->npobjWrapper)
     return false;
 
