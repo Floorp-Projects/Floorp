@@ -81,7 +81,7 @@ this.DownloadsIPC = {
 
   receiveMessage: function(aMessage) {
     let download = aMessage.data;
-    debug("message: " + aMessage.name + " " + download.id);
+    debug("message: " + aMessage.name);
     switch(aMessage.name) {
       case "Downloads:GetList:Return":
         this._updateDownloadsArray(download);
