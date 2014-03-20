@@ -140,6 +140,9 @@ Object.defineProperty(this, "NetworkHelper", {
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Curl",
+  "resource:///modules/devtools/Curl.jsm");
+
 /**
  * Object defining the network monitor controller components.
  */
