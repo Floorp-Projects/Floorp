@@ -1067,7 +1067,8 @@ FragmentOrElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 void
 FragmentOrElement::GetTextContentInternal(nsAString& aTextContent)
 {
-  nsContentUtils::GetNodeTextContent(this, true, aTextContent);
+  if(!nsContentUtils::GetNodeTextContent(this, true, aTextContent))
+    NS_RUNTIMEABORT("OOM");
 }
 
 void
