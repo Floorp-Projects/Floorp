@@ -203,8 +203,8 @@ JS_SetSingleStepMode(JSContext *cx, JSScript *script, bool singleStep);
 
 /* The closure argument will be marked. */
 extern JS_PUBLIC_API(bool)
-JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-           JSTrapHandler handler, JS::Value closure);
+JS_SetTrap(JSContext *cx, JS::HandleScript script, jsbytecode *pc,
+           JSTrapHandler handler, JS::HandleValue closure);
 
 extern JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,

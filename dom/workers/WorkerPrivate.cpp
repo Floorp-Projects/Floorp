@@ -358,7 +358,7 @@ struct WorkerStructuredCloneCallbacks
       uint32_t width, height;
       JS::Rooted<JS::Value> dataArray(aCx);
       if (!JS_ReadUint32Pair(aReader, &width, &height) ||
-          !JS_ReadTypedArray(aReader, dataArray.address()))
+          !JS_ReadTypedArray(aReader, &dataArray))
       {
         return nullptr;
       }
