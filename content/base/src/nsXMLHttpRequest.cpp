@@ -1537,11 +1537,11 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
 }
 
 nsresult
-nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
+nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                        bool async, const Optional<nsAString>& user,
                        const Optional<nsAString>& password)
 {
-  NS_ENSURE_ARG(!method.IsEmpty());
+  NS_ENSURE_ARG(!inMethod.IsEmpty());
 
   if (!async && !DontWarnAboutSyncXHR() && GetOwner() &&
       GetOwner()->GetExtantDoc()) {
@@ -1555,9 +1555,29 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
 
   // Disallow HTTP/1.1 TRACE method (see bug 302489)
   // and MS IIS equivalent TRACK (see bug 381264)
-  if (method.LowerCaseEqualsLiteral("trace") ||
-      method.LowerCaseEqualsLiteral("track")) {
-    return NS_ERROR_INVALID_ARG;
+  // and CONNECT
+  if (inMethod.LowerCaseEqualsLiteral("trace") ||
+      inMethod.LowerCaseEqualsLiteral("connect") ||
+      inMethod.LowerCaseEqualsLiteral("track")) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsAutoCString method;
+  // GET, POST, DELETE, HEAD, OPTIONS, PUT methods normalized to upper case
+  if (inMethod.LowerCaseEqualsLiteral("get")) {
+    method.Assign(NS_LITERAL_CSTRING("GET"));
+  } else if (inMethod.LowerCaseEqualsLiteral("post")) {
+    method.Assign(NS_LITERAL_CSTRING("POST"));
+  } else if (inMethod.LowerCaseEqualsLiteral("delete")) {
+    method.Assign(NS_LITERAL_CSTRING("DELETE"));
+  } else if (inMethod.LowerCaseEqualsLiteral("head")) {
+    method.Assign(NS_LITERAL_CSTRING("HEAD"));
+  } else if (inMethod.LowerCaseEqualsLiteral("options")) {
+    method.Assign(NS_LITERAL_CSTRING("OPTIONS"));
+  } else if (inMethod.LowerCaseEqualsLiteral("put")) {
+    method.Assign(NS_LITERAL_CSTRING("PUT"));
+  } else {
+    method = inMethod; // other methods are not normalized
   }
 
   // sync request is not allowed using withCredential or responseType

@@ -24,10 +24,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     # These files use MMX and SSE2 intrinsics, so they need special compile flags
     # on some compilers.
     SOURCES += ['yuv_convert_sse2.cpp']
-    if CONFIG['GNU_CC']:
-        SOURCES['yuv_convert_sse2.cpp'].flags += ['-msse2']
-    if CONFIG['SOLARIS_SUNPRO_CXX']:
-        SOURCES['yuv_convert_sse2.cpp'].flags += ['-xarch=sse2', '-xO4']
+    SOURCES['yuv_convert_sse2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
     # MSVC doesn't support MMX when targeting AMD64.
     if CONFIG['_MSC_VER']:
@@ -37,10 +34,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
             ]
     else:
         SOURCES += ['yuv_convert_mmx.cpp']
-        if CONFIG['GNU_CC']:
-            SOURCES['yuv_convert_mmx.cpp'].flags += ['-mmmx']
-        if CONFIG['SOLARIS_SUNPRO_CXX']:
-            SOURCES['yuv_convert_mmx.cpp'].flags += ['-xarch=mmx', '-xO4']
+        SOURCES['yuv_convert_mmx.cpp'].flags += CONFIG['MMX_FLAGS']
 
 if CONFIG['_MSC_VER']:
     if CONFIG['OS_TEST'] == 'x86_64':

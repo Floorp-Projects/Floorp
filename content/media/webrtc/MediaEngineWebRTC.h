@@ -71,14 +71,13 @@ class GetCameraNameRunnable;
  *
  * MediaThread:
  *   mState, mImage, mWidth, mHeight, mCapability, mPrefs, mDeviceName, mUniqueId, mInitDone,
- *   mSources, mImageContainer, mSources, mState, mImage, mLastCapture
+ *   mImageContainer, mSources, mState, mImage
  *
  * MainThread:
- *   mCaptureIndex, mWindowId,
- *   mNativeCameraControl, mPreviewStream, mState, mLastCapture, mWidth, mHeight
+ *   mCaptureIndex, mLastCapture, mState,  mWidth, mHeight,
  *
  * Where mWidth, mHeight, mImage are protected by mMonitor
- *       mState, mLastCapture is protected by mCallbackMonitor
+ *       mState is protected by mCallbackMonitor
  * Other variable is accessed only from single thread
  */
 class MediaEngineWebRTCVideoSource : public MediaEngineVideoSource

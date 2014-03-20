@@ -202,10 +202,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['gfxAlphaRecoverySSE2.cpp']
     # The file uses SSE2 intrinsics, so it needs special compile flags on some
     # compilers.
-    if CONFIG['GNU_CC']:
-        SOURCES['gfxAlphaRecoverySSE2.cpp'].flags += ['-msse2']
-    if CONFIG['SOLARIS_SUNPRO_CXX']:
-        SOURCES['gfxAlphaRecoverySSE2.cpp'].flags += ['-xarch=sse2', '-xO4']
+    SOURCES['gfxAlphaRecoverySSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 SOURCES += [
     # Includes mac system header conflicting with point/size,

@@ -511,7 +511,7 @@ nsSVGFELightingElement::AddLightingAttributes(FilterPrimitiveDescription aDescri
 {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
-    return FilterPrimitiveDescription(FilterPrimitiveDescription::eNone);
+    return FilterPrimitiveDescription(PrimitiveType::Empty);
   }
 
   nsStyleContext* style = frame->StyleContext();

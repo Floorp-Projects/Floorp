@@ -559,6 +559,8 @@ class TypedObject : public ArrayBufferViewObject
                               MutableHandleValue statep, MutableHandleId idp);
 
   public:
+    static size_t ownerOffset();
+
     // Each typed object contains a void* pointer pointing at the
     // binary data that it represents. (That data may be owned by this
     // object or this object may alias data owned by someone else.)
@@ -614,7 +616,7 @@ class TypedObject : public ArrayBufferViewObject
     void attach(TypedObject &typedObj, int32_t offset);
 
     // Invoked when array buffer is transferred elsewhere
-    void neuter(JSContext *cx);
+    void neuter(void *newData);
 
     int32_t offset() const {
         return getReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET).toInt32();
@@ -634,6 +636,10 @@ class TypedObject : public ArrayBufferViewObject
 
     uint8_t *typedMem() const {
         return (uint8_t*) getPrivate();
+    }
+
+    size_t byteLength() const {
+        return getReservedSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH).toInt32();
     }
 
     size_t length() const {

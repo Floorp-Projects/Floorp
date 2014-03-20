@@ -39,12 +39,8 @@ SimpleTest.waitForExplicitFinish();
 function mouseHandler(aEvent)
 {
   gNumberOfMouseEventsCatched++;
-  var classList = SpecialPowers.getPrivilegedProps(aEvent, "originalTarget.classList");
-  var nodeName = SpecialPowers.getPrivilegedProps(aEvent, "originalTarget.nodeName");
-
-  is(nodeName, "DIV", "An inner div should be the target of the event");
-
-  ok(classList.contains("anonymous-div"), "the target div should be the editor div");
+  is(SpecialPowers.wrap(aEvent).originalTarget.nodeName, "DIV", "An inner div should be the target of the event");
+  ok(SpecialPowers.wrap(aEvent).originalTarget.classList.contains("anonymous-div"), "the target div should be the editor div");
 }
 
 function checkMouseEvents(element)

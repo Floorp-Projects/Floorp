@@ -6032,7 +6032,7 @@ class CGGenericMethod(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-            "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
+            "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());\n"
             "MOZ_ASSERT(info->type() == JSJitInfo::Method);\n"
             "JSJitMethodOp method = info->method;\n"
             "return method(cx, obj, self, JSJitMethodCallArgs(args));"))
@@ -6098,7 +6098,7 @@ class CGLegacyCallHook(CGAbstractBindingMethod):
         # Our "self" is actually the callee in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
             self, descriptor, LEGACYCALLER_HOOK_NAME,
-            args, getThisObj="&JS_CALLEE(cx, vp).toObject()")
+            args, getThisObj="&args.callee()")
 
     def define(self):
         if not self._legacycaller:
@@ -6270,7 +6270,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
 
     def generate_code(self):
         return CGIndenter(CGGeneric(
-            "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
+            "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());\n"
             "MOZ_ASSERT(info->type() == JSJitInfo::Getter);\n"
             "JSJitGetterOp getter = info->getter;\n"
             "return getter(cx, obj, self, JSJitGetterCallArgs(args));"))
@@ -6386,7 +6386,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
                 "if (args.length() == 0) {\n"
                 '  return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s attribute setter");\n'
                 "}\n"
-                "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(JS_CALLEE(cx, vp));\n"
+                "const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());\n"
                 "MOZ_ASSERT(info->type() == JSJitInfo::Setter);\n"
                 "JSJitSetterOp setter = info->setter;\n"
                 "if (!setter(cx, obj, self, JSJitSetterCallArgs(args))) {\n"
