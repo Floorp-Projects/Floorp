@@ -1,5 +1,15 @@
+# Make overlay scrollbars never fade out
+default-preferences pref(layout.testing.overlay-scrollbars.always-visible,true)
+
 == 480053-1.html 480053-1-ref.html
 == z-index-1.html z-index-1-ref.html
 != stacking-context-yes.html stacking-context-no.html
 == stacking-context-perspective.html stacking-context-yes.html
 == stacking-context-backface-visibility.html stacking-context-no.html
+
+fails-if(Android) != overlayscrollbar-sorting-ref-visible.html overlayscrollbar-sorting-ref-hidden.html
+== overlayscrollbar-sorting-1.html overlayscrollbar-sorting-ref-visible.html
+== overlayscrollbar-sorting-2.html overlayscrollbar-sorting-ref-hidden.html
+== overlayscrollbar-sorting-3.html overlayscrollbar-sorting-ref-hidden.html
+== overlayscrollbar-sorting-4.html overlayscrollbar-sorting-ref-hidden.html
+== overlayscrollbar-sorting-5.html overlayscrollbar-sorting-ref-visible.html
