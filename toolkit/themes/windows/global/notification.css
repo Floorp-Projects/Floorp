@@ -167,6 +167,6 @@ XXX: apply styles to all themes until bug 509642 is fixed
 %endif
 
 .popup-notification-closebutton {
-  -moz-margin-end: -8px;
-  margin-top: -4px;
+  -moz-margin-end: -14px;
+  margin-top: -10px;
 }
