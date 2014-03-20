@@ -310,7 +310,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
   JS::Rooted<JSObject*> thisObject(cx, &v.toObject());
-  JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScope(cx, globalObject));
+  JS::Rooted<JSObject*> scopeObject(cx, xpc::GetXBLScopeOrGlobal(cx, globalObject));
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
   JSAutoCompartment ac(cx, scopeObject);

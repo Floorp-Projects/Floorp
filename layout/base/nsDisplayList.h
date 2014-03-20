@@ -841,6 +841,12 @@ public:
    */
   inline nsIFrame* Frame() const { return mFrame; }
   /**
+   * Compute the used z-index of our frame; returns zero for elements to which
+   * z-index does not apply, and for z-index:auto.
+   * @note This can be overridden, @see nsDisplayWrapList::SetOverrideZIndex.
+   */
+  virtual int32_t ZIndex() const;
+  /**
    * The default bounds is the frame border rect.
    * @param aSnap *aSnap is set to true if the returned rect will be
    * snapped to nearest device pixel edges during actual drawing.
@@ -2447,7 +2453,7 @@ public:
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem, const nsIFrame* aReferenceFrame, const nsPoint& aToReferenceFrame);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame) {}
+    : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0) {}
   virtual ~nsDisplayWrapList();
   /**
    * Call this if the wrapped list is changed.
@@ -2506,6 +2512,16 @@ public:
   }
   virtual nsDisplayList* GetChildren() MOZ_OVERRIDE { return &mList; }
 
+  virtual int32_t ZIndex() const MOZ_OVERRIDE
+  {
+    return (mOverrideZIndex > 0) ? mOverrideZIndex : nsDisplayItem::ZIndex();
+  }
+
+  void SetOverrideZIndex(int32_t aZIndex)
+  {
+    mOverrideZIndex = aZIndex;
+  }
+
   /**
    * This creates a copy of this item, but wrapping aItem instead of
    * our existing list. Only gets called if this item returned nullptr
@@ -2549,6 +2565,8 @@ protected:
   // this item's own frame.
   nsTArray<nsIFrame*> mMergedFrames;
   nsRect mBounds;
+  // Overrides the ZIndex of our frame if > 0.
+  int32_t mOverrideZIndex;
 };
 
 /**

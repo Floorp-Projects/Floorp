@@ -65,7 +65,7 @@ SVGFEOffsetElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                             const nsTArray<bool>& aInputsAreTainted,
                                             nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eOffset);
+  FilterPrimitiveDescription descr(PrimitiveType::Offset);
   IntPoint offset(int32_t(aInstance->GetPrimitiveNumber(
                             SVGContentUtils::X, &mNumberAttributes[DX])),
                   int32_t(aInstance->GetPrimitiveNumber(

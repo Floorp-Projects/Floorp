@@ -204,12 +204,6 @@ public:
     mZoom.scale *= aFactor;
   }
 
-  void CopyScrollInfoFrom(const FrameMetrics& aOther)
-  {
-    mScrollOffset = aOther.mScrollOffset;
-    mScrollGeneration = aOther.mScrollGeneration;
-  }
-
   // ---------------------------------------------------------------------------
   // The following metrics are all in widget space/device pixels.
   //

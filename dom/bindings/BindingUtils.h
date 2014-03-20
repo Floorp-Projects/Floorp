@@ -512,48 +512,10 @@ CouldBeDOMBinding(nsWrapperCache* aCache)
   return aCache->IsDOMBinding();
 }
 
-// The DOM_OBJECT_SLOT_SOW slot contains a JS::ObjectValue which points to the
-// cached system object wrapper (SOW) or JS::UndefinedValue if this class
-// doesn't need SOWs.
-
-inline const JS::Value&
-GetSystemOnlyWrapperSlot(JSObject* obj)
-{
-  MOZ_ASSERT(IsNonProxyDOMClass(js::GetObjectJSClass(obj)) &&
-             !(js::GetObjectJSClass(obj)->flags & JSCLASS_DOM_GLOBAL));
-  return js::GetReservedSlot(obj, DOM_OBJECT_SLOT_SOW);
-}
-inline void
-SetSystemOnlyWrapperSlot(JSObject* obj, const JS::Value& v)
-{
-  MOZ_ASSERT(IsNonProxyDOMClass(js::GetObjectJSClass(obj)) &&
-             !(js::GetObjectJSClass(obj)->flags & JSCLASS_DOM_GLOBAL));
-  js::SetReservedSlot(obj, DOM_OBJECT_SLOT_SOW, v);
-}
-
 inline bool
 GetSameCompartmentWrapperForDOMBinding(JSObject*& obj)
 {
-  const js::Class* clasp = js::GetObjectClass(obj);
-  if (dom::IsDOMClass(clasp)) {
-    if (!clasp->isProxy() &&
-        !(clasp->flags & JSCLASS_DOM_GLOBAL))
-    {
-      JS::Value v = GetSystemOnlyWrapperSlot(obj);
-      if (v.isObject()) {
-        obj = &v.toObject();
-      }
-    }
-    return true;
-  }
-  return false;
-}
-
-inline void
-SetSystemOnlyWrapper(JSObject* obj, nsWrapperCache* cache, JSObject& wrapper)
-{
-  SetSystemOnlyWrapperSlot(obj, JS::ObjectValue(wrapper));
-  cache->SetHasSystemOnlyWrapper();
+  return IsDOMObject(obj);
 }
 
 // Make sure to wrap the given string value into the right compartment, as
@@ -654,26 +616,6 @@ MaybeWrapValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
   return MaybeWrapObjectValue(cx, rval);
 }
 
-static inline void
-WrapNewBindingForSameCompartment(JSContext* cx, JSObject* obj, void* value,
-                                 JS::MutableHandle<JS::Value> rval)
-{
-  rval.set(JS::ObjectValue(*obj));
-}
-
-static inline void
-WrapNewBindingForSameCompartment(JSContext* cx, JSObject* obj,
-                                 nsWrapperCache* value,
-                                 JS::MutableHandle<JS::Value> rval)
-{
-  if (value->HasSystemOnlyWrapper()) {
-    rval.set(GetSystemOnlyWrapperSlot(obj));
-    MOZ_ASSERT(rval.isObject());
-  } else {
-    rval.set(JS::ObjectValue(*obj));
-  }
-}
-
 // Create a JSObject wrapping "value", if there isn't one already, and store it
 // in rval.  "value" must be a concrete class that implements a
 // GetWrapperPreserveColor() which can return its existing wrapper, if any, and
@@ -686,6 +628,7 @@ WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T* value,
 {
   MOZ_ASSERT(value);
   JSObject* obj = value->GetWrapperPreserveColor();
+  // We can get rid of this when we remove support for hasXPConnectImpls.
   bool couldBeDOMBinding = CouldBeDOMBinding(value);
   if (obj) {
     JS::ExposeObjectToActiveJS(obj);
@@ -731,7 +674,7 @@ WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T* value,
   bool sameCompartment =
     js::GetObjectCompartment(obj) == js::GetContextCompartment(cx);
   if (sameCompartment && couldBeDOMBinding) {
-    WrapNewBindingForSameCompartment(cx, obj, value, rval);
+    rval.set(JS::ObjectValue(*obj));
     return true;
   }
 
@@ -993,6 +936,19 @@ GetParentPointer(const ParentObject& aObject)
   return aObject.mObject;
 }
 
+template <typename T>
+inline bool
+GetUseXBLScope(T* aParentObject)
+{
+  return false;
+}
+
+inline bool
+GetUseXBLScope(const ParentObject& aParentObject)
+{
+  return aParentObject.mUseXBLScope;
+}
+
 template<class T>
 inline void
 ClearWrapper(T* p, nsWrapperCache* cache)
@@ -1234,13 +1190,30 @@ struct WrapNativeParentHelper<T, false >
 template<typename T>
 static inline JSObject*
 WrapNativeParent(JSContext* cx, JS::Handle<JSObject*> scope, T* p,
-                 nsWrapperCache* cache)
+                 nsWrapperCache* cache, bool useXBLScope = false)
 {
   if (!p) {
     return scope;
   }
 
-  return WrapNativeParentHelper<T>::Wrap(cx, scope, p, cache);
+  JSObject* parent = WrapNativeParentHelper<T>::Wrap(cx, scope, p, cache);
+  if (!useXBLScope) {
+    return parent;
+  }
+
+  // If useXBLScope is true, it means that the canonical reflector for this
+  // native object should live in the XBL scope.
+  if (xpc::IsInXBLScope(parent)) {
+    return parent;
+  }
+  JS::Rooted<JSObject*> rootedParent(cx, parent);
+  JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScope(cx, rootedParent));
+  JSAutoCompartment ac(cx, xblScope);
+  if (NS_WARN_IF(!JS_WrapObject(cx, &rootedParent))) {
+    return nullptr;
+  }
+
+  return rootedParent;
 }
 
 // Wrapping of our native parent, when we don't want to explicitly pass in
@@ -1249,7 +1222,7 @@ template<typename T>
 static inline JSObject*
 WrapNativeParent(JSContext* cx, JS::Handle<JSObject*> scope, const T& p)
 {
-  return WrapNativeParent(cx, scope, GetParentPointer(p), GetWrapperCache(p));
+  return WrapNativeParent(cx, scope, GetParentPointer(p), GetWrapperCache(p), GetUseXBLScope(p));
 }
 
 // A way to differentiate between nodes, which use the parent object

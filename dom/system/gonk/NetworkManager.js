@@ -452,7 +452,8 @@ NetworkManager.prototype = {
   isNetworkTypeSecondaryMobile: function(type) {
     return (type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
             type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL ||
-            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS);
+            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS ||
+            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
   },
 
   isNetworkTypeMobile: function(type) {

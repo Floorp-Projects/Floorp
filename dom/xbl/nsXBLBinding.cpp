@@ -919,7 +919,7 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
 
 // static
 nsresult
-nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
+nsXBLBinding::DoInitJSClass(JSContext *cx,
                             JS::Handle<JSObject*> obj,
                             const nsAFlatCString& aClassName,
                             nsXBLPrototypeBinding* aProtoBinding,
@@ -930,6 +930,13 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
   nsAutoCString className(aClassName);
   nsAutoCString xblKey(aClassName);
 
+  // Note that, now that NAC reflectors are created in the XBL scope, the
+  // reflector is not necessarily same-compartment with the document. So we'll
+  // end up creating a separate instance of the oddly-named XBL class object
+  // and defining it as a property on the XBL scope's global. This works fine,
+  // but we need to make sure never to assume that the the reflector and
+  // prototype are same-compartment with the bound document.
+  JS::RootedObject global(cx, js::GetGlobalForObjectCrossCompartment(obj));
   JSAutoCompartment ac(cx, global);
 
   JS::Rooted<JSObject*> parent_proto(cx, nullptr);
@@ -1118,8 +1125,15 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::Handle<jsid> aId,
 
   // Get the scope of mBoundElement and the associated XBL scope. We should only
   // be calling into this machinery if we're running in a separate XBL scope.
+  //
+  // Note that we only end up in LookupMember for XrayWrappers from XBL scopes
+  // into content. So for NAC reflectors that live in the XBL scope, we should
+  // never get here. But on the off-chance that someone adds new callsites to
+  // LookupMember, we do a release-mode assertion as belt-and-braces.
+  // We do a release-mode assertion here to be extra safe.
   JS::Rooted<JSObject*> boundScope(aCx,
     js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper()));
+  MOZ_RELEASE_ASSERT(!xpc::IsInXBLScope(boundScope));
   JS::Rooted<JSObject*> xblScope(aCx, xpc::GetXBLScope(aCx, boundScope));
   NS_ENSURE_TRUE(xblScope, false);
   MOZ_ASSERT(boundScope != xblScope);

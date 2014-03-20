@@ -98,6 +98,8 @@ NS_NewDOMDataContainerEvent(nsIDOMEvent** aInstancePtrResult,
                             WidgetEvent* aEvent)
 {
   DataContainerEvent* it = new DataContainerEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }
 

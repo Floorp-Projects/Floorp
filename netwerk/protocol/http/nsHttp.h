@@ -160,14 +160,6 @@ struct nsHttp
     // Return whether the HTTP status code represents a permanent redirect
     static bool IsPermanentRedirect(uint32_t httpStatus);
 
-    // Return whether upon a redirect code of httpStatus for method, the
-    // request method should be rewritten to GET.
-    static bool ShouldRewriteRedirectToGET(uint32_t httpStatus, nsHttpAtom method);
-
-    // Return whether the specified method is safe as per RFC 2616,
-    // Section 9.1.1.
-    static bool IsSafeMethod(nsHttpAtom method);
-
     // Declare all atoms
     //
     // The atom names and values are stored in nsHttpAtomList.h and are brought

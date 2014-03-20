@@ -52,8 +52,9 @@ CSS2Properties.webidl: $(css2properties_dependencies)
 #
 # The generated .pp file contains all the important dependencies such as
 # changes to .webidl or .py files should result in code generation being
-# performed.
+# performed. But we do pull in file-lists.jon to catch file additions.
 codegen_dependencies := \
+  file-lists.json \
   $(nonstatic_webidl_files) \
   $(GLOBAL_DEPS) \
   $(NULL)

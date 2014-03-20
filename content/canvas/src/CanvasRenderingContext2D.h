@@ -231,7 +231,9 @@ public:
   void Clip(const CanvasWindingRule& winding);
   void Clip(const CanvasPath& path, const CanvasWindingRule& winding);
   bool IsPointInPath(double x, double y, const CanvasWindingRule& winding);
+  bool IsPointInPath(const CanvasPath& path, double x, double y, const CanvasWindingRule& winding);
   bool IsPointInStroke(double x, double y);
+  bool IsPointInStroke(const CanvasPath& path, double x, double y);
   void FillText(const nsAString& text, double x, double y,
                 const Optional<double>& maxWidth,
                 mozilla::ErrorResult& error);

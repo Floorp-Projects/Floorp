@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TypedEnum.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsClassHashtable.h"
@@ -139,12 +140,29 @@ enum AttributeName {
   eImageNativeSize,
   eImageSubregion,
   eImageTransform,
+  eLastAttributeName
 };
 
 class DrawTarget;
 class SourceSurface;
 class FilterNode;
 struct FilterAttribute;
+
+MOZ_BEGIN_ENUM_CLASS(AttributeType)
+  eBool,
+  eUint,
+  eFloat,
+  eSize,
+  eIntSize,
+  eIntPoint,
+  eMatrix,
+  eMatrix5x4,
+  ePoint3D,
+  eColor,
+  eAttributeMap,
+  eFloats,
+  Max
+MOZ_END_ENUM_CLASS(AttributeType)
 
 // A class that stores values of different types, keyed by an attribute name.
 // The Get*() methods assert that they're called for the same type that the
@@ -155,6 +173,11 @@ public:
   AttributeMap();
   AttributeMap(const AttributeMap& aOther);
   AttributeMap& operator=(const AttributeMap& aOther);
+  bool operator==(const AttributeMap& aOther) const;
+  bool operator!=(const AttributeMap& aOther) const
+  {
+    return !(*this == aOther);
+  }
   ~AttributeMap();
 
   void Set(AttributeName aName, bool aValue);
@@ -183,32 +206,72 @@ public:
   AttributeMap GetAttributeMap(AttributeName aName) const;
   const nsTArray<float>& GetFloats(AttributeName aName) const;
 
+  typedef bool (*AttributeHandleCallback)(AttributeName aName, AttributeType aType, void* aUserData);
+  void EnumerateRead(AttributeHandleCallback aCallback, void* aUserData) const;
+  uint32_t Count() const;
+
 private:
   mutable nsClassHashtable<nsUint32HashKey, FilterAttribute>  mMap;
 };
 
-enum ColorSpace { SRGB, LINEAR_RGB };
-enum AlphaModel { UNPREMULTIPLIED, PREMULTIPLIED };
+MOZ_BEGIN_ENUM_CLASS(ColorSpace)
+  SRGB,
+  LinearRGB,
+  Max
+MOZ_END_ENUM_CLASS(ColorSpace)
+
+MOZ_BEGIN_ENUM_CLASS(AlphaModel)
+  Unpremultiplied,
+  Premultiplied
+MOZ_END_ENUM_CLASS(AlphaModel)
 
 class ColorModel {
 public:
-  static ColorModel PremulSRGB() { return ColorModel(SRGB, PREMULTIPLIED); }
+  static ColorModel PremulSRGB()
+  {
+    return ColorModel(ColorSpace::SRGB, AlphaModel::Premultiplied);
+  }
 
   ColorModel(ColorSpace aColorSpace, AlphaModel aAlphaModel) :
     mColorSpace(aColorSpace), mAlphaModel(aAlphaModel) {}
   ColorModel() :
-    mColorSpace(SRGB), mAlphaModel(PREMULTIPLIED) {}
+    mColorSpace(ColorSpace::SRGB), mAlphaModel(AlphaModel::Premultiplied) {}
   bool operator==(const ColorModel& aOther) const {
     return mColorSpace == aOther.mColorSpace &&
            mAlphaModel == aOther.mAlphaModel;
   }
 
   // Used to index FilterCachedColorModels::mFilterForColorModel.
-  uint8_t ToIndex() const { return (mColorSpace << 1) + mAlphaModel; }
+  uint8_t ToIndex() const
+  {
+    return (uint8_t(mColorSpace) << 1) + uint8_t(mAlphaModel);
+  }
 
   ColorSpace mColorSpace;
   AlphaModel mAlphaModel;
 };
+
+MOZ_BEGIN_ENUM_CLASS(PrimitiveType)
+  Empty = 0,
+  Blend,
+  Morphology,
+  ColorMatrix,
+  Flood,
+  Tile,
+  ComponentTransfer,
+  ConvolveMatrix,
+  Offset,
+  DisplacementMap,
+  Turbulence,
+  Composite,
+  Merge,
+  Image,
+  GaussianBlur,
+  DropShadow,
+  DiffuseLighting,
+  SpecularLighting,
+  Max
+MOZ_END_ENUM_CLASS(PrimitiveType)
 
 /**
  * A data structure to carry attributes for a given primitive that's part of a
@@ -218,26 +281,6 @@ public:
  */
 class FilterPrimitiveDescription MOZ_FINAL {
 public:
-  enum PrimitiveType {
-    eNone = 0,
-    eBlend,
-    eMorphology,
-    eColorMatrix,
-    eFlood,
-    eTile,
-    eComponentTransfer,
-    eConvolveMatrix,
-    eOffset,
-    eDisplacementMap,
-    eTurbulence,
-    eComposite,
-    eMerge,
-    eImage,
-    eGaussianBlur,
-    eDropShadow,
-    eDiffuseLighting,
-    eSpecularLighting
-  };
   enum {
     kPrimitiveIndexSourceGraphic = -1,
     kPrimitiveIndexSourceAlpha = -2,
@@ -245,11 +288,13 @@ public:
     kPrimitiveIndexStrokePaint = -4
   };
 
+  FilterPrimitiveDescription();
   FilterPrimitiveDescription(PrimitiveType aType);
   FilterPrimitiveDescription(const FilterPrimitiveDescription& aOther);
   FilterPrimitiveDescription& operator=(const FilterPrimitiveDescription& aOther);
 
   PrimitiveType Type() const { return mType; }
+  void SetType(PrimitiveType aType) { mType = aType; }
   const AttributeMap& Attributes() const { return mAttributes; }
   AttributeMap& Attributes() { return mAttributes; }
 
@@ -298,6 +343,12 @@ public:
     mOutputColorSpace = aColorSpace;
   }
 
+  bool operator==(const FilterPrimitiveDescription& aOther) const;
+  bool operator!=(const FilterPrimitiveDescription& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
 private:
   PrimitiveType mType;
   AttributeMap mAttributes;
@@ -320,6 +371,12 @@ struct FilterDescription MOZ_FINAL {
    : mPrimitives(aPrimitives)
    , mFilterSpaceBounds(aFilterSpaceBounds)
   {}
+
+  bool operator==(const FilterDescription& aOther) const;
+  bool operator!=(const FilterDescription& aOther) const
+  {
+    return !(*this == aOther);
+  }
 
   nsTArray<FilterPrimitiveDescription> mPrimitives;
   IntRect mFilterSpaceBounds;

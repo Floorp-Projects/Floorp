@@ -78,7 +78,7 @@ protected:
                    const OptionalURIParams&   internalRedirectUri,
                    const uint32_t&            loadFlags,
                    const RequestHeaderTuples& requestHeaders,
-                   const nsHttpAtom&          requestMethod,
+                   const nsCString&           requestMethod,
                    const OptionalInputStreamParams& uploadStream,
                    const bool&                uploadStreamHasHeaders,
                    const uint16_t&            priority,

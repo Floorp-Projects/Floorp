@@ -3181,10 +3181,15 @@ nsCycleCollector::CleanupAfterCollection()
     uint32_t interval = (uint32_t) ((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: total cycle collector time was %ums\n", interval);
-    printf("cc: visited %u ref counted and %u GCed objects, freed %d ref counted and %d GCed objects.\n",
+    printf("cc: visited %u ref counted and %u GCed objects, freed %d ref counted and %d GCed objects",
            mResults.mVisitedRefCounted, mResults.mVisitedGCed,
            mResults.mFreedRefCounted, mResults.mFreedGCed);
-    printf("cc: \n");
+    uint32_t numVisited = mResults.mVisitedRefCounted + mResults.mVisitedGCed;
+    if (numVisited > 1000) {
+        uint32_t numFreed = mResults.mFreedRefCounted + mResults.mFreedGCed;
+        printf(" (%d%%)", 100 * numFreed / numVisited);
+    }
+    printf(".\ncc: \n");
 #endif
     CC_TELEMETRY( , interval);
     CC_TELEMETRY(_VISITED_REF_COUNTED, mResults.mVisitedRefCounted);
@@ -3207,7 +3212,7 @@ nsCycleCollector::ShutdownCollect()
             break;
         }
     }
-    NS_ASSERTION(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
+    NS_WARN_IF_FALSE(i < NORMAL_SHUTDOWN_COLLECTIONS, "Extra shutdown CC");
 }
 
 static void

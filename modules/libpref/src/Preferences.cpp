@@ -720,7 +720,9 @@ Preferences::GetBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
     rv = CallQueryInterface(prefBranch, _retval);
   } else {
     // special case caching the default root
-    rv = CallQueryInterface(sRootBranch, _retval);
+    nsCOMPtr<nsIPrefBranch> root(sRootBranch);
+    root.forget(_retval);
+    rv = NS_OK;
   }
   return rv;
 }
@@ -729,15 +731,18 @@ NS_IMETHODIMP
 Preferences::GetDefaultBranch(const char *aPrefRoot, nsIPrefBranch **_retval)
 {
   if (!aPrefRoot || !aPrefRoot[0]) {
-    return CallQueryInterface(sDefaultRootBranch, _retval);
+    nsCOMPtr<nsIPrefBranch> root(sDefaultRootBranch);
+    root.forget(_retval);
+    return NS_OK;
   }
 
   // TODO: - cache this stuff and allow consumers to share branches (hold weak references I think)
-  nsPrefBranch* prefBranch = new nsPrefBranch(aPrefRoot, true);
+  nsRefPtr<nsPrefBranch> prefBranch = new nsPrefBranch(aPrefRoot, true);
   if (!prefBranch)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  return CallQueryInterface(prefBranch, _retval);
+  prefBranch.forget(_retval);
+  return NS_OK;
 }
 
 

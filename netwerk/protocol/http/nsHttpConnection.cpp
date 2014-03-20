@@ -1577,7 +1577,7 @@ nsHttpConnection::SetupProxyConnect()
 
     // CONNECT host:port HTTP/1.1
     nsHttpRequestHead request;
-    request.SetMethod(nsHttp::Connect);
+    request.SetMethod(NS_LITERAL_CSTRING("CONNECT"));
     request.SetVersion(gHttpHandler->HttpVersion());
     request.SetRequestURI(buf);
     request.SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());

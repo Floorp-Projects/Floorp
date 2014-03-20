@@ -78,9 +78,9 @@ public:
     SetHTMLAttr(nsGkAtoms::align, aAlign, aError);
   }
 
-  nsINode* GetParentObject() {
+  ParentObject GetParentObject() {
     Element* form = GetFormElement();
-    return form ? static_cast<nsINode*>(form)
+    return form ? GetParentObjectInternal(form)
                 : nsGenericHTMLElement::GetParentObject();
   }
 
