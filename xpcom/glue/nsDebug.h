@@ -6,13 +6,8 @@
 #ifndef nsDebug_h___
 #define nsDebug_h___
 
-#ifndef nscore_h___
 #include "nscore.h"
-#endif
-
-#ifndef nsError_h__
 #include "nsError.h"
-#endif
 
 #include "nsXPCOM.h"
 #include "mozilla/Assertions.h"

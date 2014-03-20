@@ -2684,10 +2684,12 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     nsCOMPtr<nsIFile> localFile;
     nsresult rv = NS_NewLocalFile(parentPath, mFollowSymlinks, getter_AddRefs(localFile));
 
-    if (NS_SUCCEEDED(rv) && localFile) {
-        return CallQueryInterface(localFile, aParent);
+    if (NS_FAILED(rv)) {
+        return rv;
     }
-    return rv;
+
+    localFile.forget(aParent);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

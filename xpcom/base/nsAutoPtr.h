@@ -6,13 +6,7 @@
 #ifndef nsAutoPtr_h___
 #define nsAutoPtr_h___
 
-  // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
-#ifndef nsCOMPtr_h___
-  // For |already_AddRefed|, |NSCAP_Zero|,
-  // |NSCAP_DONT_PROVIDE_NONCONST_OPEQ|,
-  // |NSCAP_FEATURE_INLINE_STARTASSIGNMENT|
 #include "nsCOMPtr.h"
-#endif
 
 #include "nsCycleCollectionNoteChild.h"
 #include "mozilla/MemoryReporting.h"

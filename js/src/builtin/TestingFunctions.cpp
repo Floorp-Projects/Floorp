@@ -1459,6 +1459,15 @@ WorkerThreadCount(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+TimesAccessed(JSContext *cx, unsigned argc, jsval *vp)
+{
+    static int32_t accessed = 0;
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setInt32(++accessed);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1697,11 +1706,20 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FS_HELP_END
 };
 
+static const JSPropertySpec TestingProperties[] = {
+    JS_PSG("timesAccessed", TimesAccessed, 0),
+    JS_PS_END
+};
+
 bool
 js::DefineTestingFunctions(JSContext *cx, HandleObject obj, bool fuzzingSafe_)
 {
     fuzzingSafe = fuzzingSafe_;
     if (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0')
         fuzzingSafe = true;
+
+    if (!JS_DefineProperties(cx, obj, TestingProperties))
+        return false;
+
     return JS_DefineFunctionsWithHelp(cx, obj, TestingFunctions);
 }

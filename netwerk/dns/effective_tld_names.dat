@@ -5733,7 +5733,7 @@ gov.sd
 info.sd
 
 // se : http://en.wikipedia.org/wiki/.se
-// Submitted by registry <Patrik.Wallstrom@iis.se> 2008-06-24
+// Submitted by registry <patrik.wallstrom@iis.se> 2014-03-18
 se
 a.se
 ac.se
@@ -5767,7 +5767,6 @@ pp.se
 press.se
 r.se
 s.se
-sshn.se
 t.se
 tm.se
 u.se
@@ -7535,6 +7534,126 @@ bzh
 // rio : 2014-02-27 Empresa Municipal de Informática SA - IPLANRIO
 rio
 
+// cash : 2014-03-07 Delta Lake, LLC
+cash
+
+// gives : 2014-03-07 United TLD Holdco Ltd.
+gives
+
+// hiphop : 2014-03-07 Uniregistry, Corp.
+hiphop
+
+// degree : 2014-03-07 Puff House, LLC
+degree
+
+// digital : 2014-03-07 Dash Park, LLC
+digital
+
+// rehab : 2014-03-07 United TLD Holdco Ltd.
+rehab
+
+// wtf : 2014-03-07 Hidden Way, LLC
+wtf
+
+// financial : 2014-03-07 Just Cover, LLC
+financial
+
+// limited : 2014-03-07 Big Fest, LLC
+limited
+
+// discount : 2014-03-07 Holly Hill, LLC
+discount
+
+// fail : 2014-03-07 Atomic Pipe, LLC
+fail
+
+// vet : 2014-03-07 Wild Dale, LLC
+vet
+
+// ngo : 2014-03-07 Public Interest Registry
+ngo
+
+// fitness : 2014-03-07 Brice Orchard, LLC
+fitness
+
+// schule : 2014-03-07 Outer Moon, LLC
+schule
+
+// navy : 2014-03-07 United TLD Holdco Ltd.
+navy
+
+// bio : 2014-03-07 STARTING DOT LIMITED
+bio
+
+// ong : 2014-03-07 Public Interest Registry
+ong
+
+// town : 2014-03-07 Koko Moon, LLC
+town
+
+// toys : 2014-03-07 Pioneer Orchard, LLC
+toys
+
+// army : 2014-03-07 United TLD Holdco Ltd.
+army
+
+// engineering : 2014-03-07 Romeo Canyon
+engineering
+
+// capital : 2014-03-07 Delta Mill, LLC
+capital
+
+// exchange : 2014-03-07 Spring Falls, LLC
+exchange
+
+// fan : 2014-03-07 Goose Glen, LLC
+fan
+
+// market : 2014-03-07 Victor Way, LLC
+market
+
+// media : 2014-03-07 Grand Glen, LLC
+media
+
+// lease : 2014-03-07 Victor Trail, LLC
+lease
+
+// university : 2014-03-07 Little Station, LLC
+university
+
+// reisen : 2014-03-07 New Cypress, LLC
+reisen
+
+// airforce : 2014-03-07 United TLD Holdco Ltd.
+airforce
+
+// pictures : 2014-03-07 Foggy Sky, LLC
+pictures
+
+// gripe : 2014-03-07 Corn Sunset, LLC
+gripe
+
+// engineering : 2014-03-07 United TLD Holdco Ltd.
+engineering
+
+// associates : 2014-03-07 Baxter Hill, LLC
+associates
+
+// xn--mxtq1m : 2014-03-07 Net-Chinese Co., Ltd.
+政府
+
+// williamhill : 2014-03-13 William Hill Organization Limited 
+williamhill
+
+// hiv : 2014-03-13 dotHIV gemeinnuetziger e.V. 
+hiv
+
+// sca : 2014-03-13 SVENSKA CELLULOSA AKTIEBOLAGET SCA (publ) 
+sca
+
+// reise : 2014-03-13 dotreise GmbH 
+reise
+
 
 // ===END ICANN DOMAINS===
 // ===BEGIN PRIVATE DOMAINS===
@@ -8021,6 +8140,10 @@ nyc.mn
 // Opera Software, A.S.A.
 // Submitted by Yngve Pettersen <yngve@opera.com> 2009-11-26
 operaunite.com
+
+// OutSystems
+// Submitted by Duarte Santos <domain-admin@outsystemscloud.com> 2014-03-11
+outsystemscloud.com
 
 // Red Hat, Inc. OpenShift : https://openshift.redhat.com/
 // Submitted by Tim Kramer <tkramer@rhcloud.com> 2012-10-24

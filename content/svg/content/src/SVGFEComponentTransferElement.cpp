@@ -78,7 +78,7 @@ SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aIns
     eComponentTransferFunctionA
   };
 
-  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eComponentTransfer);
+  FilterPrimitiveDescription descr(PrimitiveType::ComponentTransfer);
   for (int32_t i = 0; i < 4; i++) {
     if (childForChannel[i]) {
       descr.Attributes().Set(attributeNames[i], childForChannel[i]->ComputeAttributes());

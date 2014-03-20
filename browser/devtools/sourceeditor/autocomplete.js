@@ -91,7 +91,7 @@ function autoComplete({ ed, cm }) {
   let cur = ed.getCursor();
   completer.complete(cm.getRange({line: 0, ch: 0}, cur), cur)
     .then(suggestions => {
-    if (!suggestions || !suggestions.length || !suggestions[0].preLabel) {
+    if (!suggestions || !suggestions.length || suggestions[0].preLabel == null) {
       private.suggestionInsertedOnce = false;
       popup.hidePopup();
       ed.emit("after-suggest");

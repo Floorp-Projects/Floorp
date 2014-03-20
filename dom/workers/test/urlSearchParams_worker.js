@@ -123,9 +123,12 @@ onmessage = function() {
     is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
     is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
 
-    url.searchParams = null;
-    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
-    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
+    try {
+      url.searchParams = null;
+      ok(false, "URLSearchParams is not nullable");
+    } catch(e) {
+      ok(true, "URLSearchParams is not nullable");
+    }
 
     var url2 = new URL('http://www.example.net?e=f');
     url.searchParams = url2.searchParams;

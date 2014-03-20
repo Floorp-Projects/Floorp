@@ -842,12 +842,6 @@ public:
                              uint32_t aFlags = 0);
 
   /**
-   * Compute the used z-index of aFrame; returns zero for elements to which
-   * z-index does not apply, and for z-index:auto
-   */
-  static int32_t GetZIndex(nsIFrame* aFrame);
-
-  /**
    * Uses a binary search for find where the cursor falls in the line of text
    * It also keeps track of the part of the string that has already been measured
    * so it doesn't have to keep measuring the same text over and over

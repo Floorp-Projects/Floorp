@@ -20,15 +20,15 @@ namespace mozilla { namespace net {
 class nsHttpRequestHead
 {
 public:
-    nsHttpRequestHead() : mMethod(nsHttp::Get), mVersion(NS_HTTP_VERSION_1_1) {}
+    nsHttpRequestHead();
 
-    void SetMethod(nsHttpAtom method) { mMethod = method; }
+    void SetMethod(const nsACString &method);
     void SetVersion(nsHttpVersion version) { mVersion = version; }
     void SetRequestURI(const nsCSubstring &s) { mRequestURI = s; }
 
     const nsHttpHeaderArray &Headers() const { return mHeaders; }
     nsHttpHeaderArray & Headers()          { return mHeaders; }
-    nsHttpAtom          Method()     const { return mMethod; }
+    const nsCString &Method()        const { return mMethod; }
     nsHttpVersion       Version()    const { return mVersion; }
     const nsCSubstring &RequestURI() const { return mRequestURI; }
 
@@ -63,12 +63,37 @@ public:
         return NS_OK;
     }
 
+    bool IsSafeMethod() const;
+
+    enum ParsedMethodType
+    {
+        kMethod_Custom,
+        kMethod_Get,
+        kMethod_Post,
+        kMethod_Options,
+        kMethod_Connect,
+        kMethod_Head,
+        kMethod_Put,
+        kMethod_Trace
+    };
+
+    ParsedMethodType ParsedMethod() const { return mParsedMethod; }
+    bool EqualsMethod(ParsedMethodType aType) const { return mParsedMethod == aType; }
+    bool IsGet() const { return EqualsMethod(kMethod_Get); }
+    bool IsPost() const { return EqualsMethod(kMethod_Post); }
+    bool IsOptions() const { return EqualsMethod(kMethod_Options); }
+    bool IsConnect() const { return EqualsMethod(kMethod_Connect); }
+    bool IsHead() const { return EqualsMethod(kMethod_Head); }
+    bool IsPut() const { return EqualsMethod(kMethod_Put); }
+    bool IsTrace() const { return EqualsMethod(kMethod_Trace); }
+
 private:
     // All members must be copy-constructable and assignable
     nsHttpHeaderArray mHeaders;
-    nsHttpAtom        mMethod;
+    nsCString         mMethod;
     nsHttpVersion     mVersion;
     nsCString         mRequestURI;
+    ParsedMethodType  mParsedMethod;
 };
 
 }} // namespace mozilla::net

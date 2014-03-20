@@ -155,5 +155,7 @@ NS_NewDOMSimpleGestureEvent(nsIDOMEvent** aInstancePtrResult,
                             WidgetSimpleGestureEvent* aEvent)
 {
   SimpleGestureEvent* it = new SimpleGestureEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }

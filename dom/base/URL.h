@@ -110,9 +110,9 @@ public:
 
   void SetSearch(const nsAString& aArg);
 
-  URLSearchParams* GetSearchParams();
+  URLSearchParams* SearchParams();
 
-  void SetSearchParams(URLSearchParams* aSearchParams);
+  void SetSearchParams(URLSearchParams& aSearchParams);
 
   void GetHash(nsString& aRetval) const;
 
