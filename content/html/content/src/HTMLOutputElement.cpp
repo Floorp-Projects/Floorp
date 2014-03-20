@@ -144,7 +144,9 @@ HTMLOutputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 HTMLOutputElement::GetValue(nsAString& aValue)
 {
-  nsContentUtils::GetNodeTextContent(this, true, aValue);
+  if (!nsContentUtils::GetNodeTextContent(this, true, aValue)) {
+    NS_RUNTIMEABORT("OOM");
+  }
 }
 
 void
@@ -175,7 +177,9 @@ HTMLOutputElement::HtmlFor()
 void HTMLOutputElement::DescendantsChanged()
 {
   if (mValueModeFlag == eModeDefault) {
-    nsContentUtils::GetNodeTextContent(this, true, mDefaultValue);
+    if (!nsContentUtils::GetNodeTextContent(this, true, mDefaultValue)) {
+      NS_RUNTIMEABORT("OOM");
+    }
   }
 }
 

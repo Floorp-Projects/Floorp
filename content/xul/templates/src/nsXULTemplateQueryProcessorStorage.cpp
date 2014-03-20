@@ -288,7 +288,9 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
     nsAutoString sqlQuery;
 
     // Let's get all text nodes (which should be the query) 
-    nsContentUtils::GetNodeTextContent(queryContent, false, sqlQuery);
+    if (!nsContentUtils::GetNodeTextContent(queryContent, false, sqlQuery)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     nsresult rv = mStorageConnection->CreateStatement(NS_ConvertUTF16toUTF8(sqlQuery),
                                                               getter_AddRefs(statement));
@@ -304,7 +306,9 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
 
         if (child->NodeInfo()->Equals(nsGkAtoms::param, kNameSpaceID_XUL)) {
             nsAutoString value;
-            nsContentUtils::GetNodeTextContent(child, false, value);
+            if (!nsContentUtils::GetNodeTextContent(child, false, value)) {
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
 
             uint32_t index = parameterCount;
             nsAutoString name, indexValue;

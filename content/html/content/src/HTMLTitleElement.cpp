@@ -42,7 +42,9 @@ HTMLTitleElement::WrapNode(JSContext* cx, JS::Handle<JSObject*> scope)
 NS_IMETHODIMP 
 HTMLTitleElement::GetText(nsAString& aTitle)
 {
-  nsContentUtils::GetNodeTextContent(this, false, aTitle);
+  if (!nsContentUtils::GetNodeTextContent(this, false, aTitle)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   return NS_OK;
 }
 

@@ -6622,7 +6622,8 @@ nsDocument::GetTitleFromElement(uint32_t aNamespace, nsAString& aTitle)
   nsIContent* title = GetTitleContent(aNamespace);
   if (!title)
     return;
-  nsContentUtils::GetNodeTextContent(title, false, aTitle);
+  if(!nsContentUtils::GetNodeTextContent(title, false, aTitle))
+    NS_RUNTIMEABORT("OOM");
 }
 
 NS_IMETHODIMP
