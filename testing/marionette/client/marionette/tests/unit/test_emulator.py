@@ -17,6 +17,14 @@ class TestEmulatorContent(MarionetteTestCase):
         """);
         self.assertEqual(result, expected)
 
+    def test_emulator_shell(self):
+        self.marionette.set_script_timeout(10000)
+        expected = ["Hello World!", ""]
+        result = self.marionette.execute_async_script("""
+        runEmulatorShell(["echo", "Hello World!"], marionetteScriptFinished)
+        """);
+        self.assertEqual(result, expected)
+
     def test_emulator_order(self):
         self.marionette.set_script_timeout(10000)
         self.assertRaises(MarionetteException,

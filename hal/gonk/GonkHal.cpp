@@ -1256,6 +1256,9 @@ EnsureKernelLowMemKillerParamsSet()
           nsPrintfCString("hal.processPriorityManager.gonk.%s.KillUnderKB",
                           ProcessPriorityToString(priority)).get(),
           &killUnderKB))) {
+      // ProcessPriority values like PROCESS_PRIORITY_FOREGROUND_KEYBOARD,
+      // which has only OomScoreAdjust but lacks KillUnderMB value, will not
+      // create new LMK parameters.
       continue;
     }
 
