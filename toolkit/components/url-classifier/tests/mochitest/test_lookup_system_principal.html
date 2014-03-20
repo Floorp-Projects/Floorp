@@ -19,7 +19,7 @@ var Ci = Components.interfaces;
 var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
                 .getService(Ci.nsIUrlClassifierDBService);
 
-dbService.lookup(document.nodePrincipal, function(arg) {});
+dbService.lookup(document.nodePrincipal, "", function(arg) {});
 
 ok(true, "lookup() didn't crash");
 

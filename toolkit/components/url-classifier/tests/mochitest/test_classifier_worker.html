@@ -6,7 +6,6 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 
-<body onload="doUpdate(testUpdate);">
 <p id="display"></p>
 <div id="content" style="display: none">
 </div>
@@ -72,6 +71,11 @@ function onmessage(event)
 
   is(pieces[0], "success", pieces[1]);
 }
+
+SpecialPowers.pushPrefEnv(
+  {"set" : [["urlclassifier.malware_table", "test-malware-simple"],
+            ["urlclassifier.phish_table", "test-phish-simple"]]},
+  function() { doUpdate(testUpdate); });
 
 window.addEventListener("message", onmessage, false);
 
