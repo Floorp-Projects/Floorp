@@ -388,12 +388,14 @@ let LightweightThemeListener = {
     });
 
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
+    Services.obs.addObserver(this, "lightweight-theme-optimized", false);
     if (document.documentElement.hasAttribute("lwtheme"))
       this.updateStyleSheet(document.documentElement.style.backgroundImage);
   },
 
   uninit: function () {
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
+    Services.obs.removeObserver(this, "lightweight-theme-optimized");
   },
 
   /**
@@ -433,7 +435,11 @@ let LightweightThemeListener = {
 
   // nsIObserver
   observe: function (aSubject, aTopic, aData) {
-    if (aTopic != "lightweight-theme-styling-update" || !this.styleSheet)
+    if ((aTopic != "lightweight-theme-styling-update" && aTopic != "lightweight-theme-optimized") ||
+          !this.styleSheet)
+      return;
+
+    if (aTopic == "lightweight-theme-optimized" && aSubject != window)
       return;
 
     let themeData = JSON.parse(aData);
