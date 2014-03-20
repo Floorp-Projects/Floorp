@@ -222,6 +222,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(TypedArrayLength)
     SAFE_OP(TypedArrayElements)
     SAFE_OP(TypedObjectElements)
+    SAFE_OP(SetTypedObjectOffset)
     SAFE_OP(InitializedLength)
     WRITE_GUARDED_OP(SetInitializedLength, elements)
     SAFE_OP(Not)

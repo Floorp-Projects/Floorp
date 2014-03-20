@@ -2369,6 +2369,16 @@ LIRGenerator::visitTypedObjectElements(MTypedObjectElements *ins)
 }
 
 bool
+LIRGenerator::visitSetTypedObjectOffset(MSetTypedObjectOffset *ins)
+{
+    return add(new(alloc()) LSetTypedObjectOffset(
+                   useRegister(ins->object()),
+                   useRegister(ins->offset()),
+                   temp()),
+               ins);
+}
+
+bool
 LIRGenerator::visitInitializedLength(MInitializedLength *ins)
 {
     JS_ASSERT(ins->elements()->type() == MIRType_Elements);
