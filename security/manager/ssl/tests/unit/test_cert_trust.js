@@ -167,7 +167,7 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA, useMozillaPKI
   check_cert_err_generic(ee_cert, 0, certificateUsageSSLServer);
   check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNTRUSTED_ISSUER
                                            : useMozillaPKIX ? SEC_ERROR_UNTRUSTED_ISSUER
-                                                            : 0, // Insanity is OK, NSS bug
+                                                            : 0, // mozilla::pkix is OK, NSS bug
                          certificateUsageSSLClient);
   check_cert_err_generic(ee_cert, useMozillaPKIX ? SEC_ERROR_CA_CERT_INVALID
                                                  : SEC_ERROR_INADEQUATE_CERT_TYPE,
