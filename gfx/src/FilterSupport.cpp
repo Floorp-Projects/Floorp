@@ -1568,6 +1568,27 @@ FilterPrimitiveDescription::operator=(const FilterPrimitiveDescription& aOther)
   return *this;
 }
 
+bool
+FilterPrimitiveDescription::operator==(const FilterPrimitiveDescription& aOther) const
+{
+  return mType == aOther.mType &&
+    mFilterPrimitiveSubregion.IsEqualInterior(aOther.mFilterPrimitiveSubregion) &&
+    mOutputColorSpace == aOther.mOutputColorSpace &&
+    mIsTainted == aOther.mIsTainted &&
+    mInputPrimitives == aOther.mInputPrimitives &&
+    mInputColorSpaces == aOther.mInputColorSpaces &&
+    mAttributes == aOther.mAttributes;
+}
+
+// FilterDescription
+
+bool
+FilterDescription::operator==(const FilterDescription& aOther) const
+{
+  return mFilterSpaceBounds.IsEqualInterior(aOther.mFilterSpaceBounds) &&
+    mPrimitives == aOther.mPrimitives;
+}
+
 // AttributeMap
 
 // A class that wraps different types for easy storage in a hashtable. Only
