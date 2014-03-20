@@ -497,13 +497,6 @@ void SetProcessPriority(int aPid,
                         uint32_t aLRU = 0);
 
 /**
- * Set the current thread's priority to appropriate platform-specific value for
- * given functionality.  Instead of providing arbitrary priority numbers you
- * must specify a type of function like THREAD_PRIORITY_COMPOSITOR.
- */
-void SetCurrentThreadPriority(hal::ThreadPriority aPriority);
-
-/**
  * Register an observer for the FM radio.
  */
 void RegisterFMRadioObserver(hal::FMRadioObserver* aRadioObserver);
