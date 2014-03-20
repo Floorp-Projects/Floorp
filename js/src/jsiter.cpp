@@ -1472,8 +1472,8 @@ FinalizeGenerator(FreeOp *fop, JSObject *obj)
               gen->state == JSGEN_OPEN);
     // If gen->state is JSGEN_CLOSED, gen->fp may be nullptr.
     if (gen->fp)
-        JS_POISON(gen->fp, JS_FREE_PATTERN, sizeof(InterpreterFrame));
-    JS_POISON(gen, JS_FREE_PATTERN, sizeof(JSGenerator));
+        JS_POISON(gen->fp, JS_SWEPT_FRAME_PATTERN, sizeof(InterpreterFrame));
+    JS_POISON(gen, JS_SWEPT_FRAME_PATTERN, sizeof(JSGenerator));
     fop->free_(gen);
 }
 

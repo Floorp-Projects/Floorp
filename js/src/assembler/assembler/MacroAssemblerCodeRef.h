@@ -36,6 +36,8 @@
 
 #if ENABLE_ASSEMBLER
 
+#include "jsutil.h"
+
 // ASSERT_VALID_CODE_POINTER checks that ptr is a non-null pointer, and that it is a valid
 // instruction address on the platform (for example, check any alignment requirements).
 #if WTF_CPU_ARM_THUMB2
@@ -199,7 +201,7 @@ public:
         if (!m_executablePool)
             return;
 
-        memset(m_code.executableAddress(), JS_FREE_PATTERN, m_allocSize);
+        JS_POISON(m_code.executableAddress(), JS_SWEPT_CODE_PATTERN, m_allocSize);
 
         m_code = MacroAssemblerCodePtr();
 
