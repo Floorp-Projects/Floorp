@@ -4,64 +4,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Tests that errors still show up in the Web Console after a page reload.
+// See bug 580030: the error handler fails silently after page reload.
+// https://bugzilla.mozilla.org/show_bug.cgi?id=580030
 
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-error.html";
 
 function test() {
-  expectUncaughtException();
-  addTab(TEST_URI);
-  browser.addEventListener("load", onLoad, true);
-}
+  Task.spawn(function*() {
+    const {tab} = yield loadTab(TEST_URI);
+    const hud = yield openConsole(tab);
+    info("console opened");
 
-// see bug 580030: the error handler fails silently after page reload.
-// https://bugzilla.mozilla.org/show_bug.cgi?id=580030
-function onLoad(aEvent) {
-  browser.removeEventListener(aEvent.type, onLoad, true);
-
-  openConsole(null, function(hud) {
-    hud.jsterm.clearOutput();
-    browser.addEventListener("load", testErrorsAfterPageReload, true);
-    content.location.reload();
-  });
-}
-
-function testErrorsAfterPageReload(aEvent) {
-  browser.removeEventListener(aEvent.type, testErrorsAfterPageReload, true);
-
-  // dispatch a click event to the button in the test page and listen for
-  // errors.
-
-  Services.console.registerListener(consoleObserver);
-
-  let button = content.document.querySelector("button").wrappedJSObject;
-  ok(button, "button found");
-  EventUtils.sendMouseEvent({type: "click"}, button, content.wrappedJSObject);
-}
-
-var consoleObserver = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-
-  observe: function test_observe(aMessage)
-  {
-    // Ignore errors we don't care about.
-    if (!(aMessage instanceof Ci.nsIScriptError) ||
-      aMessage.category != "content javascript") {
-      return;
-    }
-
-    Services.console.unregisterListener(this);
-
-    let outputNode = HUDService.getHudByWindow(content).outputNode;
-
-    waitForSuccess({
-      name: "error message after page reload",
-      validatorFn: function()
-      {
-        return outputNode.textContent.indexOf("fooBazBaz") > -1;
-      },
-      successFn: finishTest,
-      failureFn: finishTest,
+    executeSoon(() => {
+      hud.jsterm.clearOutput();
+      info("wait for reload");
+      content.location.reload();
     });
-  }
-};
 
+    yield hud.target.once("navigate");
+    info("target navigated");
+
+    let button = content.document.querySelector("button");
+    ok(button, "button found");
+
+    expectUncaughtException();
+    EventUtils.sendMouseEvent({type: "click"}, button, content);
+
+    yield waitForMessages({
+      webconsole: hud,
+      messages: [{
+        text: "fooBazBaz is not defined",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
+      }],
+    });
+  }).then(finishTest);
+}
