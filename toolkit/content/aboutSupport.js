@@ -111,6 +111,21 @@ let snapshotFormatters = {
     }));
   },
 
+  experiments: function experiments(data) {
+    $.append($("experiments-tbody"), data.map(function (experiment) {
+      return $.new("tr", [
+        $.new("td", experiment.name),
+        $.new("td", experiment.id),
+        $.new("td", experiment.description),
+        $.new("td", experiment.active),
+        $.new("td", experiment.endDate),
+        $.new("td", [
+          $.new("a", experiment.detailURL, null, {href : experiment.detailURL,})
+        ]),
+      ]);
+    }));
+  },
+
   modifiedPreferences: function modifiedPreferences(data) {
     $.append($("prefs-tbody"), sortedArrayFromObject(data).map(
       function ([name, value]) {
