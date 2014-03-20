@@ -1033,6 +1033,24 @@ struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::gfx::FilterDescription>
+{
+  typedef mozilla::gfx::FilterDescription paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mFilterSpaceBounds);
+    WriteParam(aMsg, aParam.mPrimitives);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mFilterSpaceBounds) &&
+            ReadParam(aMsg, aIter, &aResult->mPrimitives));
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __GFXMESSAGEUTILS_H__ */
