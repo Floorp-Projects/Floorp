@@ -508,5 +508,7 @@ NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                  WidgetGUIEvent* aEvent) 
 {
   UIEvent* it = new UIEvent(aOwner, aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  NS_ADDREF(it);
+  *aInstancePtrResult = static_cast<Event*>(it);
+  return NS_OK;
 }

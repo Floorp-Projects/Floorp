@@ -288,8 +288,7 @@ void nsView::DoResetWidgetBounds(bool aMoveOnly,
   nsIntRect newBounds;
   nsRefPtr<nsDeviceContext> dx = mViewManager->GetDeviceContext();
 
-  nsWindowType type;
-  widget->GetWindowType(type);
+  nsWindowType type = widget->WindowType();
 
   nsIntRect curBounds;
   widget->GetClientBounds(curBounds);
@@ -515,9 +514,7 @@ static void UpdateNativeWidgetZIndexes(nsView* aView, int32_t aZIndex)
 {
   if (aView->HasWidget()) {
     nsIWidget* widget = aView->GetWidget();
-    int32_t curZ;
-    widget->GetZIndex(&curZ);
-    if (curZ != aZIndex) {
+    if (widget->GetZIndex() != aZIndex) {
       widget->SetZIndex(aZIndex);
     }
   } else {
@@ -714,9 +711,7 @@ nsresult nsView::AttachToTopLevelWidget(nsIWidget* aWidget)
   mWidgetIsTopLevel = true;
 
   // Refresh the view bounds
-  nsWindowType type;
-  mWindow->GetWindowType(type);
-  CalcWidgetBounds(type);
+  CalcWidgetBounds(mWindow->WindowType());
 
   return NS_OK;
 }
@@ -791,8 +786,7 @@ void nsView::List(FILE* out, int32_t aIndent) const
     nsRect nonclientBounds = rect.ToAppUnits(p2a);
     nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
     mWindow->Release();
-    int32_t Z;
-    mWindow->GetZIndex(&Z);
+    int32_t Z = mWindow->GetZIndex();
     fprintf(out, "(widget=%p[%d] z=%d pos={%d,%d,%d,%d}) ",
             (void*)mWindow, widgetRefCnt, Z,
             nonclientBounds.x, nonclientBounds.y,
@@ -965,9 +959,7 @@ nsView::ConvertFromParentCoords(nsPoint aPt) const
 static bool
 IsPopupWidget(nsIWidget* aWidget)
 {
-  nsWindowType type;
-  aWidget->GetWindowType(type);
-  return (type == eWindowType_popup);
+  return (aWidget->WindowType() == eWindowType_popup);
 }
 
 nsIPresShell*
@@ -1002,6 +994,15 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
     int32_t p2a = devContext->AppUnitsPerDevPixel();
     mViewManager->SetWindowDimensions(NSIntPixelsToAppUnits(aWidth, p2a),
                                       NSIntPixelsToAppUnits(aHeight, p2a));
+
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
+      nsIPresShell* presShell = mViewManager->GetPresShell();
+      if (presShell && presShell->GetDocument()) {
+        pm->AdjustPopupsOnWindowChange(presShell);
+      }
+    }
+
     return true;
   }
   else if (IsPopupWidget(aWidget)) {

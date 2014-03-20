@@ -6,10 +6,7 @@
 #ifndef nsAlgorithm_h___
 #define nsAlgorithm_h___
 
-#ifndef nsCharTraits_h___
-#include "nsCharTraits.h"
-  // for |nsCharSourceTraits|, |nsCharSinkTraits|
-#endif
+#include "nsCharTraits.h"  // for |nsCharSourceTraits|, |nsCharSinkTraits|
 
 template <class T>
 inline

@@ -27,7 +27,7 @@ function run_test() {
                  "/bug412945", null, null);
 
   channel.QueryInterface(Components.interfaces.nsIHttpChannel);
-  channel.requestMethod = "post";
+  channel.requestMethod = "POST";
   channel.asyncOpen(new TestListener(), null);
 
   do_test_pending();

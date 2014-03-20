@@ -745,9 +745,10 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       // binding, some of which may not be exposed on the prototype of
       // untrusted content.
       //
-      // If there's no separate XBL scope, we'll end up with the global of the
-      // reflector, and this will all be a no-op.
-      JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScope(cx, jsobj));
+      // If there's no separate XBL scope, or if the reflector itself lives in
+      // the XBL scope, we'll end up with the global of the reflector, and this
+      // will all be a no-op.
+      JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScopeOrGlobal(cx, jsobj));
       JSAutoCompartment ac(cx, xblScope);
       bool ok = JS_WrapObject(cx, &jsobj);
       NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
