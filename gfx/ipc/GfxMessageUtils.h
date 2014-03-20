@@ -291,6 +291,13 @@ struct ParamTraits<mozilla::gfx::AttributeType>
                                mozilla::gfx::AttributeType::Max>
 {};
 
+template <>
+struct ParamTraits<mozilla::gfx::PrimitiveType>
+  : public TypedEnumSerializer<mozilla::gfx::PrimitiveType,
+                               mozilla::gfx::PrimitiveType::Empty,
+                               mozilla::gfx::PrimitiveType::Max>
+{};
+
 /*
 template <>
 struct ParamTraits<mozilla::PixelFormat>
