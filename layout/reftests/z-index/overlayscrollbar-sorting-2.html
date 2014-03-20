@@ -1,0 +1,32 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test that overlay scrollbars are covered by overlapping non-positioned siblings</title>
+
+<style>
+
+#outer {
+  width: 200px;
+  height: 200px;
+  overflow: auto;
+  background: cyan;
+}
+
+#content {
+  height: 400px;
+}
+
+#cover {
+  margin-top: -200px;
+  width: 200px;
+  height: 200px;
+  background: cyan;
+}
+
+</style>
+
+<div id="outer"><div id="content"></div></div>
+<div id="cover"></div>
