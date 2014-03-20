@@ -6,6 +6,7 @@
   "content/media/test/test_audio_event_adopt.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_autoplay.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_autoplay_contentEditable.html": "Android 2.3 only; bug 981898",
+  "content/media/test/test_bug448534.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_chaining.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_loop.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_mediarecorder_record_4ch_audiocontext.html": "Android 2.3 only; bug 981898",
@@ -16,6 +17,7 @@
   "content/media/test/test_mediarecorder_record_stopms.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_mediarecorder_record_timeslice.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_mediarecorder_unsupported_src.html": "Android 2.3 only; bug 981898",
+  "content/media/test/test_play_twice.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_playback.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_streams_autoplay.html": "Android 2.3 only; bug 981898",
   "content/media/test/test_streams_element_capture.html": "Android 2.3 only; bug 981898",
@@ -30,9 +32,13 @@
   "content/media/webaudio/test/test_bug866737.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_bug867104.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_bug938022.html": "Android 2.3 only; bug 981889",
+  "content/media/webaudio/test/test_channelMergerNodeWithVolume.html": "Android 2.3 only; bug 981889",
+  "content/media/webaudio/test/test_channelSplitterNode.html": "Android 2.3 only; bug 981889",
+  "content/media/webaudio/test/test_channelSplitterNodeWithVolume.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_convolverNodeChannelCount.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_convolverNodeWithGain.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_delayNode.html": "Android 2.3 only; bug 981889",
+  "content/media/webaudio/test/test_delayNodeAtMax.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_delayNodeTailWithDisconnect.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_delayNodeTailWithGain.html": "Android 2.3 only; bug 981889",
   "content/media/webaudio/test/test_delayNodeTailWithReconnect.html": "Android 2.3 only; bug 981889",
@@ -80,6 +86,7 @@
   "dom/media/tests/mochitest/test_peerConnection_basicAudioVideoCombined.html":"Android 2.3 only; bug 981881",
   "dom/media/tests/mochitest/test_peerConnection_basicVideo.htm":"Android 2.3 only; bug 981881",
   "dom/media/tests/mochitest/test_peerConnection_bug825703.html":"Android 2.3 only; bug 981881",
-  "dom/media/tests/mochitest/test_peerConnection_bug827843.html":"Android 2.3 only; bug 981881"
+  "dom/media/tests/mochitest/test_peerConnection_bug827843.html":"Android 2.3 only; bug 981881",
+  "layout/style/test/test_media_queries.html": "Android 2.3 only; bug 981881"
   }
 }
