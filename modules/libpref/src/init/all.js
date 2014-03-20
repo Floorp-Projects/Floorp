@@ -1872,6 +1872,9 @@ pref("layout.css.overflow-clip-box.enabled", false);
 // 3 = left
 pref("layout.scrollbar.side", 0);
 
+// pref to stop overlay scrollbars from fading out, for testing purposes
+pref("layout.testing.overlay-scrollbars.always-visible", false);
+
 // pref to control browser frame rate, in Hz. A value <= 0 means choose
 // automatically based on knowledge of the platform (or 60Hz if no platform-
 // specific information is available).
