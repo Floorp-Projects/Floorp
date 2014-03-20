@@ -1576,6 +1576,12 @@ struct FilterAttribute {
   FilterAttribute(const FilterAttribute& aOther);
   ~FilterAttribute();
 
+  bool operator==(const FilterAttribute& aOther) const;
+  bool operator!=(const FilterAttribute& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
 #define MAKE_CONSTRUCTOR_AND_ACCESSOR_BASIC(type, typeLabel)   \
   FilterAttribute(type aValue)                                 \
    : mType(AttributeType::e##typeLabel), m##typeLabel(aValue)  \
@@ -1705,6 +1711,39 @@ FilterAttribute::~FilterAttribute() {
     case AttributeType::eFloats:
       delete mFloats;
       break;
+  }
+}
+
+bool
+FilterAttribute::operator==(const FilterAttribute& aOther) const
+{
+  if (mType != aOther.mType) {
+    return false;
+  }
+
+  switch (mType) {
+
+#define HANDLE_TYPE(typeName)                              \
+    case AttributeType::e##typeName:                       \
+      return m##typeName == aOther.m##typeName;
+
+    HANDLE_TYPE(Bool)
+    HANDLE_TYPE(Uint)
+    HANDLE_TYPE(Float)
+    HANDLE_TYPE(Size)
+    HANDLE_TYPE(IntSize)
+    HANDLE_TYPE(IntPoint)
+    HANDLE_TYPE(Matrix)
+    HANDLE_TYPE(Matrix5x4)
+    HANDLE_TYPE(Point3D)
+    HANDLE_TYPE(Color)
+    HANDLE_TYPE(AttributeMap)
+    HANDLE_TYPE(Floats)
+
+#undef HANDLE_TYPE
+
+    default:
+      return false;
   }
 }
 
