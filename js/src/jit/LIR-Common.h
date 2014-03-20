@@ -3725,6 +3725,31 @@ class LTypedObjectElements : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Load a typed array's elements vector.
+class LSetTypedObjectOffset : public LInstructionHelper<0, 2, 1>
+{
+  public:
+    LIR_HEADER(SetTypedObjectOffset)
+
+    LSetTypedObjectOffset(const LAllocation &object,
+                          const LAllocation &offset,
+                          const LDefinition &temp0)
+    {
+        setOperand(0, object);
+        setOperand(1, offset);
+        setTemp(0, temp0);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LAllocation *offset() {
+        return getOperand(1);
+    }
+    const LDefinition *temp0() {
+        return getTemp(0);
+    }
+};
+
 // Check whether a typed object has a neutered owner buffer.
 class LNeuterCheck : public LInstructionHelper<0, 1, 1>
 {
