@@ -17,7 +17,7 @@ const Runtime = require("sdk/system/runtime");
 const Self = require("sdk/self");
 const URL = require("sdk/url");
 const Subprocess = require("subprocess");
-const Promise = require("sdk/core/promise");
+const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const { rootURI: ROOT_URI } = require('@loader/options');
 const PROFILE_URL = ROOT_URI + "profile/";

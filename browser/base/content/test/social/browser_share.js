@@ -1,20 +1,20 @@
 
+let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+
 let baseURL = "https://example.com/browser/browser/base/content/test/social/";
+
+let manifest = { // normal provider
+  name: "provider 1",
+  origin: "https://example.com",
+  workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
+  iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
+  shareURL: "https://example.com/browser/browser/base/content/test/social/share.html"
+};
 
 function test() {
   waitForExplicitFinish();
 
-  let manifest = { // normal provider
-    name: "provider 1",
-    origin: "https://example.com",
-    sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
-    workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-    iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
-    shareURL: "https://example.com/browser/browser/base/content/test/social/share.html"
-  };
-  runSocialTestWithProvider(manifest, function (finishcb) {
-    runSocialTests(tests, undefined, undefined, finishcb);
-  });
+  runSocialTests(tests);
 }
 
 let corpus = [
@@ -78,7 +78,7 @@ function loadURLInTab(url, callback) {
   tab.linkedBrowser.addEventListener("load", function listener() {
     is(tab.linkedBrowser.currentURI.spec, url, "tab loaded")
     tab.linkedBrowser.removeEventListener("load", listener, true);
-    callback(tab);
+    executeSoon(function() { callback(tab) });
   }, true);
 }
 
@@ -101,10 +101,46 @@ function hasoptions(testOptions, options) {
 }
 
 var tests = {
+  testShareDisabledOnActivation: function(next) {
+    // starting on about:blank page, share should be visible but disabled when
+    // adding provider
+    is(gBrowser.contentDocument.location.href, "about:blank");
+    SocialService.addProvider(manifest, function(provider) {
+      is(SocialUI.enabled, true, "SocialUI is enabled");
+      checkSocialUI();
+      // share should not be enabled since we only have about:blank page
+      let shareButton = SocialShare.shareButton;
+      is(shareButton.disabled, true, "share button is disabled");
+      // verify the attribute for proper css
+      is(shareButton.getAttribute("disabled"), "true", "share button attribute is disabled");
+      // button should be visible
+      is(shareButton.hidden, false, "share button is visible");
+      SocialService.removeProvider(manifest.origin, next);
+    });
+  },
+  testShareEnabledOnActivation: function(next) {
+    // starting from *some* page, share should be visible and enabled when
+    // activating provider
+    let testData = corpus[0];
+    loadURLInTab(testData.url, function(tab) {
+      SocialService.addProvider(manifest, function(provider) {
+        is(SocialUI.enabled, true, "SocialUI is enabled");
+        checkSocialUI();
+        // share should not be enabled since we only have about:blank page
+        let shareButton = SocialShare.shareButton;
+        is(shareButton.disabled, false, "share button is enabled");
+        // verify the attribute for proper css
+        ok(!shareButton.hasAttribute("disabled"), "share button is enabled");
+        // button should be visible
+        is(shareButton.hidden, false, "share button is visible");
+        gBrowser.removeTab(tab);
+        next();
+      });
+    });
+  },
   testSharePage: function(next) {
-    let panel = document.getElementById("social-flyout-panel");
-    SocialSidebar.show();
-    let port = SocialSidebar.provider.getWorkerPort();
+    let provider = Social._getProviderFromOrigin(manifest.origin);
+    let port = provider.getWorkerPort();
     ok(port, "provider has a port");
     let testTab;
     let testIndex = 0;
@@ -120,22 +156,19 @@ var tests = {
     port.onmessage = function (e) {
       let topic = e.data.topic;
       switch (topic) {
-        case "got-sidebar-message":
-          // open a tab with share data, then open the share panel
-          runOneTest();
-          break;
         case "got-share-data-message":
           gBrowser.removeTab(testTab);
           hasoptions(testData.options, e.data.result);
           testData = corpus[testIndex++];
           if (testData) {
-            runOneTest();
+            executeSoon(runOneTest);
           } else {
-            next();
+            SocialService.removeProvider(manifest.origin, next);
           }
           break;
       }
     }
     port.postMessage({topic: "test-init"});
+    executeSoon(runOneTest);
   }
 }

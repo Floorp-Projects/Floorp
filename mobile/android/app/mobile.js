@@ -170,6 +170,8 @@ pref("dom.experimental_forms", true);
 pref("dom.forms.number", true);
 
 /* extension manager and xpinstall */
+pref("xpinstall.whitelist.directRequest", false);
+pref("xpinstall.whitelist.fileRequest", false);
 pref("xpinstall.whitelist.add", "addons.mozilla.org");
 pref("xpinstall.whitelist.add.180", "marketplace.firefox.com");
 

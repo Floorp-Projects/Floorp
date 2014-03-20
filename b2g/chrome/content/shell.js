@@ -1138,7 +1138,7 @@ let RemoteDebugger = {
        */
       DebuggerServer.createRootActor = function createRootActor(connection)
       {
-        let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+        let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
         let parameters = {
           // We do not expose browser tab actors yet,
           // but we still have to define tabList.getList(),

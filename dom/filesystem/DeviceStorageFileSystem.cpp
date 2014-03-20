@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsDeviceStorage.h"
+#include "nsIDOMFile.h"
 #include "nsIFile.h"
 #include "nsPIDOMWindow.h"
 
@@ -112,6 +113,23 @@ DeviceStorageFileSystem::GetLocalFile(const nsAString& aRealPath) const
   return file.forget();
 }
 
+bool
+DeviceStorageFileSystem::GetRealPath(nsIDOMFile* aFile, nsAString& aRealPath) const
+{
+  MOZ_ASSERT(FileSystemUtils::IsParentProcess(),
+             "Should be on parent process!");
+  MOZ_ASSERT(aFile, "aFile Should not be null.");
+
+  aRealPath.Truncate();
+
+  nsAutoString filePath;
+  if (NS_FAILED(aFile->GetMozFullPathInternal(filePath))) {
+    return false;
+  }
+
+  return LocalPathToRealPath(filePath, aRealPath);
+}
+
 const nsAString&
 DeviceStorageFileSystem::GetRootName() const
 {
@@ -130,8 +148,7 @@ DeviceStorageFileSystem::IsSafeFile(nsIFile* aFile) const
   if (NS_FAILED(aFile->GetPath(path))) {
     return false;
   }
-  FileSystemUtils::LocalPathToNormalizedPath(path, path);
-  if (!FileSystemUtils::IsDescendantPath(mNormalizedLocalRootPath, path)) {
+  if (!LocalPathToRealPath(path, path)) {
     return false;
   }
 
@@ -140,6 +157,31 @@ DeviceStorageFileSystem::IsSafeFile(nsIFile* aFile) const
     = DeviceStorageTypeChecker::CreateOrGet();
   MOZ_ASSERT(typeChecker);
   return typeChecker->Check(mStorageType, aFile);
+}
+
+bool
+DeviceStorageFileSystem::IsSafeDirectory(Directory* aDir) const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  MOZ_ASSERT(aDir);
+  nsRefPtr<FileSystemBase> fs = aDir->GetFileSystem();
+  MOZ_ASSERT(fs);
+  // Check if the given directory is from this storage.
+  return fs->ToString() == mString;
+}
+
+bool
+DeviceStorageFileSystem::LocalPathToRealPath(const nsAString& aLocalPath,
+                                             nsAString& aRealPath) const
+{
+  nsAutoString path;
+  FileSystemUtils::LocalPathToNormalizedPath(aLocalPath, path);
+  if (!FileSystemUtils::IsDescendantPath(mNormalizedLocalRootPath, path)) {
+    aRealPath.Truncate();
+    return false;
+  }
+  aRealPath = Substring(path, mNormalizedLocalRootPath.Length());
+  return true;
 }
 
 } // namespace dom
