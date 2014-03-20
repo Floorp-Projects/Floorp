@@ -1807,8 +1807,8 @@ protected:
     // whether font contains substitution lookups containing spaces
     bool HasSubstitutionRulesWithSpaceLookups(int32_t aRunScript);
 
-    // whether to use word cache or not
-    bool BypassShapedWordCache(int32_t aRunScript);
+    // do spaces participate in shaping rules? if so, can't used word cache
+    bool SpaceMayParticipateInShaping(int32_t aRunScript);
 
     // For 8-bit text, expand to 16-bit and then call the following method.
     bool ShapeText(gfxContext    *aContext,
