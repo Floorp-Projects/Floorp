@@ -2268,6 +2268,18 @@ MmsService.prototype = {
         }
       }
 
+      // IccInfo in RadioInterface is not available when radio is off and
+      // NO_SIM_CARD_ERROR will be replied instead of RADIO_DISABLED_ERROR.
+      // Hence, for manual retrieving, instead of checking radio state later
+      // in MmsConnection.acquire(), We have to check radio state in prior to
+      // iccId to return the error correctly.
+      if (getRadioDisabledState()) {
+        if (DEBUG) debug("Error! Radio is disabled when retrieving MMS.");
+        aRequest.notifyGetMessageFailed(
+          Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR);
+        return;
+      }
+
       // Get the RIL service ID based on the saved MMS message record's ICC ID,
       // which could fail when the corresponding SIM card isn't installed.
       let serviceId;
