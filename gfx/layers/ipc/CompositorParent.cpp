@@ -51,8 +51,6 @@
 #endif
 #include "GeckoProfiler.h"
 #include "mozilla/ipc/ProtocolTypes.h"
-#include "mozilla/Hal.h"
-#include "mozilla/HalTypes.h"
 
 using namespace base;
 using namespace mozilla;
@@ -111,11 +109,6 @@ static void ReleaseCompositorThread()
   }
 }
 
-static void SetThreadPriority()
-{
-  hal::SetCurrentThreadPriority(hal::THREAD_PRIORITY_COMPOSITOR);
-}
-
 void
 CompositorParent::StartUpWithExistingThread(MessageLoop* aMsgLoop,
                                             PlatformThreadId aThreadID)
@@ -169,7 +162,6 @@ bool CompositorParent::CreateThread()
     sCompositorThread = nullptr;
     return false;
   }
-
   return true;
 }
 
@@ -207,8 +199,6 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   // this task has been processed.
   CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(&AddCompositor,
                                                           this, &mCompositorID));
-
-  CompositorLoop()->PostTask(FROM_HERE, NewRunnableFunction(SetThreadPriority));
 
   mRootLayerTreeID = AllocateLayerTreeId();
   sIndirectLayerTrees[mRootLayerTreeID].mParent = this;
