@@ -1535,6 +1535,13 @@ FilterSupport::ComputeSourceNeededRegions(const FilterDescription& aFilter,
 
 // FilterPrimitiveDescription
 
+FilterPrimitiveDescription::FilterPrimitiveDescription()
+ : mType(PrimitiveType::Empty)
+ , mOutputColorSpace(ColorSpace::SRGB)
+ , mIsTainted(false)
+{
+}
+
 FilterPrimitiveDescription::FilterPrimitiveDescription(PrimitiveType aType)
  : mType(aType)
  , mOutputColorSpace(ColorSpace::SRGB)
