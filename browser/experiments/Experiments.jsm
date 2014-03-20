@@ -638,7 +638,7 @@ Experiments.Experiments.prototype = {
       if (!entry.initFromCacheData(item)) {
         continue;
       }
-      experiments.set(item.id, entry);
+      experiments.set(entry.id, entry);
     }
 
     this._experiments = experiments;
@@ -679,7 +679,7 @@ Experiments.Experiments.prototype = {
         continue;
       }
 
-      experiments.set(data.id, entry);
+      experiments.set(entry.id, entry);
     }
 
     // Make sure we keep experiments that are or were running.
