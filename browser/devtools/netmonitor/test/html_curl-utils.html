@@ -1,0 +1,99 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Performing requests</p>
+
+    <p>
+      <canvas width="100" height="100"></canvas>
+    </p>
+
+    <hr/>
+
+    <form method="post" action="#" enctype="multipart/form-data" target="target" id="post-form">
+      <input type="text" name="param1" value="value1"/>
+      <input type="text" name="param2" value="value2"/>
+      <input type="text" name="param3" value="value3"/>
+      <input type="submit"/>
+    </form>
+    <iframe name="target"></iframe>
+
+    <script type="text/javascript">
+
+      function ajaxGet(aUrl, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", aUrl + "?param1=value1&param2=value2&param3=value3", true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.onload = function() {
+          aCallback();
+        };
+        xhr.send();
+      }
+
+      function ajaxPost(aUrl, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", aUrl, true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.onload = function() {
+          aCallback();
+        };
+        var params = "param1=value1&param2=value2&param3=value3";
+        xhr.send(params);
+      }
+
+      function ajaxMultipart(aUrl, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", aUrl, true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.onload = function() {
+          aCallback();
+        };
+
+        getCanvasElem().toBlob((blob) => {
+          var formData = new FormData();
+          formData.append("param1", "value1");
+          formData.append("file", blob, "filename.png");
+          xhr.send(formData);
+        });
+      }
+
+      function submitForm() {
+        var form = document.querySelector("#post-form");
+        form.submit();
+      }
+
+      function getCanvasElem() {
+        return document.querySelector("canvas");
+      }
+
+      function initCanvas() {
+        var canvas = getCanvasElem();
+        var ctx = canvas.getContext("2d");
+        ctx.fillRect(0,0,100,100);
+        ctx.clearRect(20,20,60,60);
+        ctx.strokeRect(25,25,50,50);
+      }
+
+      function performRequests(aUrl) {
+        ajaxGet(aUrl, () => {
+          ajaxPost(aUrl, () => {
+            ajaxMultipart(aUrl, () => {
+              submitForm();
+            });
+          });
+        });
+      }
+
+      initCanvas();
+    </script>
+  </body>
+
+</html>
