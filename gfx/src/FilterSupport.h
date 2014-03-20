@@ -227,6 +227,28 @@ public:
   AlphaModel mAlphaModel;
 };
 
+MOZ_BEGIN_ENUM_CLASS(PrimitiveType)
+  Empty = 0,
+  Blend,
+  Morphology,
+  ColorMatrix,
+  Flood,
+  Tile,
+  ComponentTransfer,
+  ConvolveMatrix,
+  Offset,
+  DisplacementMap,
+  Turbulence,
+  Composite,
+  Merge,
+  Image,
+  GaussianBlur,
+  DropShadow,
+  DiffuseLighting,
+  SpecularLighting,
+  Max
+MOZ_END_ENUM_CLASS(PrimitiveType)
+
 /**
  * A data structure to carry attributes for a given primitive that's part of a
  * filter. Will be serializable via IPDL, so it must not contain complex
@@ -235,26 +257,6 @@ public:
  */
 class FilterPrimitiveDescription MOZ_FINAL {
 public:
-  enum PrimitiveType {
-    eNone = 0,
-    eBlend,
-    eMorphology,
-    eColorMatrix,
-    eFlood,
-    eTile,
-    eComponentTransfer,
-    eConvolveMatrix,
-    eOffset,
-    eDisplacementMap,
-    eTurbulence,
-    eComposite,
-    eMerge,
-    eImage,
-    eGaussianBlur,
-    eDropShadow,
-    eDiffuseLighting,
-    eSpecularLighting
-  };
   enum {
     kPrimitiveIndexSourceGraphic = -1,
     kPrimitiveIndexSourceAlpha = -2,
