@@ -25,6 +25,35 @@ const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org"
 const EXPERIMENT2_XPI_SHA1 = "sha1:81877991ec70360fb48db84c34a9b2da7aa41d6a";
 const EXPERIMENT2_XPI_NAME = "experiment-2.xpi";
 
+const FAKE_EXPERIMENTS_1 = [
+  {
+    id: "id1",
+    name: "experiment1",
+    description: "experiment 1",
+    active: true,
+    detailUrl: "https://dummy/experiment1",
+  },
+];
+
+const FAKE_EXPERIMENTS_2 = [
+  {
+    id: "id2",
+    name: "experiment2",
+    description: "experiment 2",
+    active: false,
+    endDate: new Date(2014, 2, 11, 2, 4, 35, 42).getTime(),
+    detailUrl: "https://dummy/experiment2",
+  },
+  {
+    id: "id1",
+    name: "experiment1",
+    description: "experiment 1",
+    active: false,
+    endDate: new Date(2014, 2, 10, 0, 0, 0, 0).getTime(),
+    detailURL: "https://dummy/experiment1",
+  },
+];
+
 let gAppInfo = null;
 
 function getReporter(name, uri, inspected) {
@@ -128,4 +157,19 @@ function createAppInfo(options) {
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
+}
+
+/**
+ * Replace the experiments on an Experiments with a new list.
+ *
+ * This monkeypatches getExperiments(). It doesn't monkeypatch the internal
+ * experiments list. So its utility is not as great as it could be.
+ */
+function replaceExperiments(experiment, list) {
+  Object.defineProperty(experiment, "getExperiments", {
+    writable: true,
+    value: () => {
+      return Promise.resolve(list);
+    },
+  });
 }
