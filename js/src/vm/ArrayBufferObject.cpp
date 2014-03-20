@@ -15,6 +15,10 @@
 # include <sys/mman.h>
 #endif
 
+#ifdef MOZ_VALGRIND
+# include <valgrind/memcheck.h>
+#endif
+
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jscntxt.h"
@@ -428,10 +432,16 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
         return false;
     }
 # else
-    if (mprotect(data, buffer->byteLength(), PROT_READ | PROT_WRITE)) {
+    size_t validLength = buffer->byteLength();
+    if (mprotect(data, validLength, PROT_READ | PROT_WRITE)) {
         munmap(data, AsmJSMappedSize);
         return false;
     }
+#   if defined(MOZ_VALGRIND) && defined(VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+    // Tell Valgrind/Memcheck to not report accesses in the inaccessible region.
+    VALGRIND_DISABLE_ADDR_ERROR_REPORTING_IN_RANGE((unsigned char*)data + validLength,
+                                                   AsmJSMappedSize-validLength);
+#   endif
 # endif
 
     // Copy over the current contents of the typed array.
@@ -458,6 +468,13 @@ ArrayBufferObject::releaseAsmJSArray(FreeOp *fop)
     VirtualFree(data, 0, MEM_RELEASE);
 # else
     munmap(data, AsmJSMappedSize);
+#   if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+    // Tell Valgrind/Memcheck to recommence reporting accesses in the
+    // previously-inaccessible region.
+    if (AsmJSMappedSize > 0) {
+        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(data, AsmJSMappedSize);
+    }
+#   endif
 # endif
 }
 #else  /* defined(JS_ION) && defined(JS_CPU_X64) */
