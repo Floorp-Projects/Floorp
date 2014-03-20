@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = [ "HomeProvider" ];
 
 const { utils: Cu, classes: Cc, interfaces: Ci } = Components;
 
+Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -315,6 +316,11 @@ HomeStorage.prototype = {
       } finally {
         yield db.close();
       }
+
+      sendMessageToJava({
+        type: "HomePanels:RefreshDataset",
+        datasetId: this.datasetId,
+      });
     }.bind(this));
   },
 
@@ -333,6 +339,11 @@ HomeStorage.prototype = {
       } finally {
         yield db.close();
       }
+
+      sendMessageToJava({
+        type: "HomePanels:RefreshDataset",
+        datasetId: this.datasetId,
+      });
     }.bind(this));
   }
 };
