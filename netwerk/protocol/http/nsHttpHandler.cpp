@@ -232,13 +232,6 @@ nsHttpHandler::~nsHttpHandler()
         mPipelineTestTimer = nullptr;
     }
 
-    if (!mDoNotTrackEnabled) {
-        Telemetry::Accumulate(Telemetry::DNT_USAGE, DONOTTRACK_VALUE_UNSET);
-    }
-    else {
-        Telemetry::Accumulate(Telemetry::DNT_USAGE, mDoNotTrackValue);
-    }
-
     gHttpHandler = nullptr;
 }
 
@@ -1811,6 +1804,13 @@ nsHttpHandler::Observe(nsISupports *subject,
         // need to reset the session start time since cache validation may
         // depend on this value.
         mSessionStartTime = NowInSeconds();
+
+        if (!mDoNotTrackEnabled) {
+            Telemetry::Accumulate(Telemetry::DNT_USAGE, DONOTTRACK_VALUE_UNSET);
+        }
+        else {
+            Telemetry::Accumulate(Telemetry::DNT_USAGE, mDoNotTrackValue);
+        }
     }
     else if (strcmp(topic, "profile-change-net-restore") == 0) {
         // initialize connection manager
