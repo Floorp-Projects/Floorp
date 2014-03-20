@@ -291,22 +291,22 @@ FilterCachedColorModels::WrapForColorModel(ColorModel aColorModel)
   // Conversions between different color spaces can only happen on
   // unpremultiplied color channels.
 
-  if (aColorModel.mAlphaModel == PREMULTIPLIED) {
+  if (aColorModel.mAlphaModel == AlphaModel::Premultiplied) {
     RefPtr<FilterNode> unpre =
-      ForColorModel(ColorModel(aColorModel.mColorSpace, UNPREMULTIPLIED));
+      ForColorModel(ColorModel(aColorModel.mColorSpace, AlphaModel::Unpremultiplied));
     return FilterWrappers::Premultiply(mDT, unpre);
   }
 
-  MOZ_ASSERT(aColorModel.mAlphaModel == UNPREMULTIPLIED);
+  MOZ_ASSERT(aColorModel.mAlphaModel == AlphaModel::Unpremultiplied);
   if (aColorModel.mColorSpace == mOriginalColorModel.mColorSpace) {
     RefPtr<FilterNode> premultiplied =
-      ForColorModel(ColorModel(aColorModel.mColorSpace, PREMULTIPLIED));
+      ForColorModel(ColorModel(aColorModel.mColorSpace, AlphaModel::Premultiplied));
     return FilterWrappers::Unpremultiply(mDT, premultiplied);
   }
 
   RefPtr<FilterNode> unpremultipliedOriginal =
-    ForColorModel(ColorModel(mOriginalColorModel.mColorSpace, UNPREMULTIPLIED));
-  if (aColorModel.mColorSpace == LINEAR_RGB) {
+    ForColorModel(ColorModel(mOriginalColorModel.mColorSpace, AlphaModel::Unpremultiplied));
+  if (aColorModel.mColorSpace == ColorSpace::LinearRGB) {
     return FilterWrappers::SRGBToLinearRGB(mDT, unpremultipliedOriginal);
   }
   return FilterWrappers::LinearRGBToSRGB(mDT, unpremultipliedOriginal);
@@ -853,7 +853,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
                                         atts.GetIntPoint(eDropShadowOffset));
       RefPtr<FilterNode> flood = aDT->CreateFilter(FilterType::FLOOD);
       Color color = atts.GetColor(eDropShadowColor);
-      if (aDescription.InputColorSpace(0) == LINEAR_RGB) {
+      if (aDescription.InputColorSpace(0) == ColorSpace::LinearRGB) {
         color = Color(gsRGBToLinearRGBMap[uint8_t(color.r * 255)],
                       gsRGBToLinearRGBMap[uint8_t(color.g * 255)],
                       gsRGBToLinearRGBMap[uint8_t(color.b * 255)],
@@ -1003,17 +1003,18 @@ InputAlphaModelForPrimitive(const FilterPrimitiveDescription& aDescr,
 
     case PrimitiveType::ColorMatrix:
     case PrimitiveType::ComponentTransfer:
-      return UNPREMULTIPLIED;
+      return AlphaModel::Unpremultiplied;
 
     case PrimitiveType::DisplacementMap:
-      return aInputIndex == 0 ? PREMULTIPLIED : UNPREMULTIPLIED;
+      return aInputIndex == 0 ?
+        AlphaModel::Premultiplied : AlphaModel::Unpremultiplied;
 
     case PrimitiveType::ConvolveMatrix:
       return aDescr.Attributes().GetBool(eConvolveMatrixPreserveAlpha) ?
-        UNPREMULTIPLIED : PREMULTIPLIED;
+        AlphaModel::Unpremultiplied : AlphaModel::Premultiplied;
 
     default:
-      return PREMULTIPLIED;
+      return AlphaModel::Premultiplied;
   }
 }
 
@@ -1028,7 +1029,7 @@ OutputAlphaModelForPrimitive(const FilterPrimitiveDescription& aDescr,
   }
 
   // All filters without inputs produce premultiplied alpha.
-  return PREMULTIPLIED;
+  return AlphaModel::Premultiplied;
 }
 
 // Returns the output FilterNode, in premultiplied sRGB space.
@@ -1536,7 +1537,7 @@ FilterSupport::ComputeSourceNeededRegions(const FilterDescription& aFilter,
 
 FilterPrimitiveDescription::FilterPrimitiveDescription(PrimitiveType aType)
  : mType(aType)
- , mOutputColorSpace(SRGB)
+ , mOutputColorSpace(ColorSpace::SRGB)
  , mIsTainted(false)
 {
 }

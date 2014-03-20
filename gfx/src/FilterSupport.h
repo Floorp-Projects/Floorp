@@ -204,24 +204,37 @@ private:
   mutable nsClassHashtable<nsUint32HashKey, FilterAttribute>  mMap;
 };
 
-enum ColorSpace { SRGB, LINEAR_RGB };
-enum AlphaModel { UNPREMULTIPLIED, PREMULTIPLIED };
+MOZ_BEGIN_ENUM_CLASS(ColorSpace)
+  SRGB,
+  LinearRGB
+MOZ_END_ENUM_CLASS(ColorSpace)
+
+MOZ_BEGIN_ENUM_CLASS(AlphaModel)
+  Unpremultiplied,
+  Premultiplied
+MOZ_END_ENUM_CLASS(AlphaModel)
 
 class ColorModel {
 public:
-  static ColorModel PremulSRGB() { return ColorModel(SRGB, PREMULTIPLIED); }
+  static ColorModel PremulSRGB()
+  {
+    return ColorModel(ColorSpace::SRGB, AlphaModel::Premultiplied);
+  }
 
   ColorModel(ColorSpace aColorSpace, AlphaModel aAlphaModel) :
     mColorSpace(aColorSpace), mAlphaModel(aAlphaModel) {}
   ColorModel() :
-    mColorSpace(SRGB), mAlphaModel(PREMULTIPLIED) {}
+    mColorSpace(ColorSpace::SRGB), mAlphaModel(AlphaModel::Premultiplied) {}
   bool operator==(const ColorModel& aOther) const {
     return mColorSpace == aOther.mColorSpace &&
            mAlphaModel == aOther.mAlphaModel;
   }
 
   // Used to index FilterCachedColorModels::mFilterForColorModel.
-  uint8_t ToIndex() const { return (mColorSpace << 1) + mAlphaModel; }
+  uint8_t ToIndex() const
+  {
+    return (uint8_t(mColorSpace) << 1) + uint8_t(mAlphaModel);
+  }
 
   ColorSpace mColorSpace;
   AlphaModel mAlphaModel;
