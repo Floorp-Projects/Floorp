@@ -173,6 +173,11 @@ public:
   AttributeMap();
   AttributeMap(const AttributeMap& aOther);
   AttributeMap& operator=(const AttributeMap& aOther);
+  bool operator==(const AttributeMap& aOther) const;
+  bool operator!=(const AttributeMap& aOther) const
+  {
+    return !(*this == aOther);
+  }
   ~AttributeMap();
 
   void Set(AttributeName aName, bool aValue);
