@@ -1830,7 +1830,7 @@ class AttrDefiner(PropertyDefiner):
 
         return self.generatePrefableArray(
             array, name,
-            '  { "%s", %s, %s, %s}',
+            '  { "%s", 0, %s, %s, %s}',
             '  JS_PS_END',
             'JSPropertySpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)

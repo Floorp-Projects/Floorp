@@ -532,6 +532,14 @@ class StaticBlockObject : public BlockObject
         return reinterpret_cast<frontend::Definition *>(v.toPrivate());
     }
 
+    /*
+     * While ScopeCoordinate can generally reference up to 2^24 slots, block objects have an
+     * additional limitation that all slot indices must be storable as uint16_t short-ids in the
+     * associated Shape. If we could remove the block dependencies on shape->shortid, we could
+     * remove INDEX_LIMIT.
+     */
+    static const unsigned LOCAL_INDEX_LIMIT = JS_BIT(16);
+
     static Shape *addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                          unsigned index, bool *redeclared);
 };
