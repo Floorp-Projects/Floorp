@@ -177,8 +177,14 @@
              <data android:scheme="package" />
           </intent-filter>
         </receiver>
-#endif
 
+        <receiver android:name="org.mozilla.gecko.webapp.TaskKiller">
+          <intent-filter>
+             <action android:name="org.mozilla.webapp.TASK_REMOVED" />
+             <category android:name="android.intent.category.DEFAULT" />
+          </intent-filter>
+        </receiver>
+#endif
         <activity android:name=".Webapp"
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
@@ -344,4 +350,4 @@
     <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
                 android:protectionLevel="signature"/>
 
-</manifest> 
+</manifest>
