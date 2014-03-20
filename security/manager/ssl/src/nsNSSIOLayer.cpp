@@ -6,7 +6,7 @@
 
 #include "nsNSSIOLayer.h"
 
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h"
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
@@ -1870,9 +1870,9 @@ ClientAuthDataRunnable::RunOnTargetThread()
 {
   PLArenaPool* arena = nullptr;
   char** caNameStrings;
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
   ScopedSECKEYPrivateKey privKey;
-  insanity::pkix::ScopedCERTCertList certList;
+  mozilla::pkix::ScopedCERTCertList certList;
   CERTCertListNode* node;
   ScopedCERTCertNicknames nicknames;
   char* extracted = nullptr;

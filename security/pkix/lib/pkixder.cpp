@@ -17,7 +17,7 @@
 
 #include "pkixder.h"
 
-namespace insanity { namespace der {
+namespace mozilla { namespace pkix { namespace der {
 
 // not inline
 Result
@@ -78,4 +78,4 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
   return Success;
 }
 
-} } // namespace insanity::der
+} } } // namespace mozilla::pkix::der

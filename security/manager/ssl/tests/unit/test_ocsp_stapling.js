@@ -21,10 +21,10 @@ function add_ocsp_test(aHost, aExpectedResult, aStaplingEnabled) {
     });
 }
 
-function add_tests_in_mode(useInsanity, certDB, otherTestCA) {
+function add_tests_in_mode(useMozillaPKIX, certDB, otherTestCA) {
   add_test(function () {
-    Services.prefs.setBoolPref("security.use_insanity_verification",
-                               useInsanity);
+    Services.prefs.setBoolPref("security.use_mozillapkix_verification",
+                               useMozillaPKIX);
     run_next_test();
   });
 
@@ -54,7 +54,7 @@ function add_tests_in_mode(useInsanity, certDB, otherTestCA) {
 
   // SEC_ERROR_OCSP_INVALID_SIGNING_CERT vs SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE
   // depends on whether the CA that signed the response is a trusted CA
-  // (but only with the classic implementation - insanity::pkix always
+  // (but only with the classic implementation - mozilla::pkix always
   // results in the error SEC_ERROR_OCSP_INVALID_SIGNING_CERT).
 
   // This stapled response is from a CA that is untrusted and did not issue
@@ -113,7 +113,7 @@ function add_tests_in_mode(useInsanity, certDB, otherTestCA) {
                 getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_RESPONSE), true);
 
   // TODO(bug 979070): NSS can't handle this yet.
-  if (useInsanity) {
+  if (useMozillaPKIX) {
     add_ocsp_test("ocsp-stapling-skip-responseBytes.example.com",
                   getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_RESPONSE), true);
   }

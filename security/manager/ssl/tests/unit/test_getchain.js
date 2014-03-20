@@ -70,8 +70,8 @@ function check_getchain(ee_cert, ssl_ca, email_ca){
   check_matching_issuer_and_getchain(ee_cert.issuer.serialNumber, ee_cert);
 }
 
-function run_test_in_mode(useInsanity) {
-  Services.prefs.setBoolPref("security.use_insanity_verification", useInsanity);
+function run_test_in_mode(useMozillaPKIX) {
+  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
   clearOCSPCache();
   clearSessionCache();
 

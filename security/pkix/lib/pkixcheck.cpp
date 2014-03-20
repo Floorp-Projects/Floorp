@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include "insanity/pkix.h"
+#include "pkix/pkix.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
 #include "pkixutil.h"
 #include "secder.h"
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 Result
 CheckTimes(const CERTCertificate* cert, PRTime time)
@@ -479,4 +479,4 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   return Success;
 }
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix

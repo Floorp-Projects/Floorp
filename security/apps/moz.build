@@ -16,8 +16,8 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../certverifier',
-    '../insanity/include',
     '../manager/ssl/src',
+    '../pkix/include',
 ]
 
 DEFINES['NSS_ENABLE_ECC'] = 'True'

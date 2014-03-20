@@ -20,7 +20,7 @@
 
 #include "certt.h"
 #include "hasht.h"
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Vector.h"
 #include "prerror.h"

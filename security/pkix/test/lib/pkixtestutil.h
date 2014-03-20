@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#ifndef insanity_test__pkixtestutils_h
-#define insanity_test__pkixtestutils_h
+#ifndef mozilla_pkix_test__pkixtestutils_h
+#define mozilla_pkix_test__pkixtestutils_h
 
-#include "insanity/ScopedPtr.h"
-#include "insanity/pkixtypes.h"
+#include "pkix/ScopedPtr.h"
+#include "pkix/pkixtypes.h"
 #include "seccomon.h"
 
-namespace insanity { namespace test {
+namespace mozilla { namespace pkix { namespace test {
 
 class OCSPResponseContext
 {
@@ -62,6 +62,6 @@ public:
 // error of the failed operation). However, this is not guaranteed.
 SECItem* CreateEncodedOCSPResponse(OCSPResponseContext& context);
 
-} } // namespace insanity::test
+} } } // namespace mozilla::pkix::test
 
-#endif // insanity_test__pkixtestutils_h
+#endif // mozilla_pkix_test__pkixtestutils_h

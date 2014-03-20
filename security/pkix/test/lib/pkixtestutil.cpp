@@ -25,7 +25,7 @@
 #include "prinit.h"
 #include "secder.h"
 
-namespace insanity { namespace test {
+namespace mozilla { namespace pkix { namespace test {
 
 class Output
 {
@@ -632,4 +632,4 @@ CertStatus(OCSPResponseContext& context)
   return nullptr;
 }
 
-} } // namespace insanity::test
+} } } // namespace mozilla::pkix::test

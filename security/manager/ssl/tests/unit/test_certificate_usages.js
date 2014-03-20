@@ -35,36 +35,36 @@ function run_test() {
   run_test_in_mode(false);
 }
 
-function run_test_in_mode(useInsanity) {
-  Services.prefs.setBoolPref("security.use_insanity_verification", useInsanity);
+function run_test_in_mode(useMozillaPKIX) {
+  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
   clearOCSPCache();
   clearSessionCache();
 
-  // insanity::pkix does not allow CA certs to be validated for non-CA usages.
-  var allCAUsages = useInsanity
+  // mozilla::pkix does not allow CA certs to be validated for non-CA usages.
+  var allCAUsages = useMozillaPKIX
                   ? 'SSL CA'
                   : 'Client,Server,Sign,Encrypt,SSL CA,Status Responder';
 
-  // insanity::pkix doesn't allow CA certificates to have the Status Responder
+  // mozilla::pkix doesn't allow CA certificates to have the Status Responder
   // EKU.
   var ca_usages = [allCAUsages,
                    'SSL CA',
                    allCAUsages,
-                   useInsanity ? ''
-                               : 'Client,Server,Sign,Encrypt,Status Responder'];
+                   useMozillaPKIX ? ''
+                                  : 'Client,Server,Sign,Encrypt,Status Responder'];
 
-  // insanity::pkix doesn't implement the Netscape Object Signer restriction.
-  var basicEndEntityUsages = useInsanity
+  // mozilla::pkix doesn't implement the Netscape Object Signer restriction.
+  var basicEndEntityUsages = useMozillaPKIX
                            ? 'Client,Server,Sign,Encrypt,Object Signer'
                            : 'Client,Server,Sign,Encrypt';
   var basicEndEntityUsagesWithObjectSigner = basicEndEntityUsages + ",Object Signer"
 
-  // insanity::pkix won't let a certificate with the "Status Responder" EKU get
+  // mozilla::pkix won't let a certificate with the "Status Responder" EKU get
   // validated for any other usage.
-  var statusResponderUsages = (useInsanity ? "" : "Server,") + "Status Responder";
+  var statusResponderUsages = (useMozillaPKIX ? "" : "Server,") + "Status Responder";
   var statusResponderUsagesFull
-      = useInsanity ? statusResponderUsages
-                    : basicEndEntityUsages + ',Object Signer,Status Responder';
+      = useMozillaPKIX ? statusResponderUsages
+                       : basicEndEntityUsages + ',Object Signer,Status Responder';
 
   var ee_usages = [
     [ basicEndEntityUsages,
@@ -101,16 +101,16 @@ function run_test_in_mode(useInsanity) {
     //
     // The 'classic' NSS mode uses the 'union' of the
     // capabilites so the cert is considered a CA.
-    // insanity::pkix and libpkix use the intersection of
+    // mozilla::pkix and libpkix use the intersection of
     // capabilites, so the cert is NOT considered a CA.
-    [ useInsanity ? '' : basicEndEntityUsages,
-      useInsanity ? '' : basicEndEntityUsages,
-      useInsanity ? '' : basicEndEntityUsages,
+    [ useMozillaPKIX ? '' : basicEndEntityUsages,
+      useMozillaPKIX ? '' : basicEndEntityUsages,
+      useMozillaPKIX ? '' : basicEndEntityUsages,
       '',
-      useInsanity ? '' : statusResponderUsagesFull,
-      useInsanity ? '' : 'Client,Server',
-      useInsanity ? '' : 'Sign,Encrypt,Object Signer',
-      useInsanity ? '' : 'Server,Status Responder'
+      useMozillaPKIX ? '' : statusResponderUsagesFull,
+      useMozillaPKIX ? '' : 'Client,Server',
+      useMozillaPKIX ? '' : 'Sign,Encrypt,Object Signer',
+      useMozillaPKIX ? '' : 'Server,Status Responder'
      ]
   ];
 
