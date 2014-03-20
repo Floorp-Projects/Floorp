@@ -4029,9 +4029,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   padding: 0;
   position: relative;
 }
-.toolbarbutton-badge-container > .toolbarbutton-icon {
-  margin: 4px 2px;
-}
 
 .toolbarbutton-badge[badge]:not([badge=""]) {
   /* The |content| property is set in the content stylesheet. */
