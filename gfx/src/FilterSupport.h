@@ -337,6 +337,12 @@ public:
     mOutputColorSpace = aColorSpace;
   }
 
+  bool operator==(const FilterPrimitiveDescription& aOther) const;
+  bool operator!=(const FilterPrimitiveDescription& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
 private:
   PrimitiveType mType;
   AttributeMap mAttributes;
@@ -359,6 +365,12 @@ struct FilterDescription MOZ_FINAL {
    : mPrimitives(aPrimitives)
    , mFilterSpaceBounds(aFilterSpaceBounds)
   {}
+
+  bool operator==(const FilterDescription& aOther) const;
+  bool operator!=(const FilterDescription& aOther) const
+  {
+    return !(*this == aOther);
+  }
 
   nsTArray<FilterPrimitiveDescription> mPrimitives;
   IntRect mFilterSpaceBounds;
