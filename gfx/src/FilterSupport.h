@@ -140,6 +140,7 @@ enum AttributeName {
   eImageNativeSize,
   eImageSubregion,
   eImageTransform,
+  eLastAttributeName
 };
 
 class DrawTarget;
