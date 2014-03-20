@@ -151,6 +151,40 @@ XPCOMUtils.defineLazyGetter(this, "MMS", function() {
   return MMS;
 });
 
+// Internal Utilities
+
+/**
+ * Return default service Id for MMS.
+ */
+function getDefaultServiceId() {
+  let id = Services.prefs.getIntPref(kPrefDefaultServiceId);
+  let numRil = Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
+
+  if (id >= numRil || id < 0) {
+    id = 0;
+  }
+
+  return id;
+}
+
+/**
+ * Return Radio disabled state.
+ */
+function getRadioDisabledState() {
+  let state;
+  try {
+    state = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
+  } catch (e) {
+    if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
+    state = false;
+  }
+
+  return state;
+}
+
+/**
+ * Helper Class to control MMS Data Connection.
+ */
 function MmsConnection(aServiceId) {
   this.serviceId = aServiceId;
   this.radioInterface = gRil.getRadioInterface(aServiceId);
@@ -192,9 +226,6 @@ MmsConnection.prototype = {
     return proxyInfo;
   },
 
-  // For keeping track of the radio status.
-  radioDisabled: false,
-  settings: [kPrefRilRadioDisabled],
   connected: false,
 
   //A queue to buffer the MMS HTTP requests when the MMS network
@@ -236,16 +267,6 @@ MmsConnection.prototype = {
     Services.obs.addObserver(this, kNetworkConnStateChangedTopic,
                              false);
     Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    this.settings.forEach(function(name) {
-      Services.prefs.addObserver(name, this, false);
-    }, this);
-
-    try {
-      this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-    } catch (e) {
-      if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
-      this.radioDisabled = false;
-    }
 
     this.connected = this.radioInterface.getDataCallStateByType("mms") ==
       Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
@@ -353,7 +374,7 @@ MmsConnection.prototype = {
       this.pendingCallbacks.push(callback);
 
       let errorStatus;
-      if (this.radioDisabled) {
+      if (getRadioDisabledState()) {
         if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
         errorStatus = _HTTP_STATUS_RADIO_DISABLED;
       } else if (this.radioInterface.rilContext.cardState != "ready") {
@@ -457,18 +478,6 @@ MmsConnection.prototype = {
         this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
         break;
       }
-      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
-        if (data == kPrefRilRadioDisabled) {
-          try {
-            this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-          } catch (e) {
-            if (DEBUG) debug("Updating preference 'ril.radio.disabled' fails.");
-            this.radioDisabled = false;
-          }
-          return;
-        }
-        break;
-      }
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
         this.shutdown();
       }
@@ -496,6 +505,9 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnections", function() {
   };
 });
 
+/**
+ * Implementation of nsIProtocolProxyFilter for MMS Proxy
+ */
 function MmsProxyFilter(mmsConnection, url) {
   this.mmsConnection = mmsConnection;
   this.uri = Services.io.newURI(url, null, null);
@@ -940,13 +952,8 @@ CancellableTransaction.prototype = {
       }
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
         if (data == kPrefRilRadioDisabled) {
-          try {
-            let radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-            if (radioDisabled) {
-              this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
-            }
-          } catch (e) {
-            if (DEBUG) debug("Failed to get preference of 'ril.radio.disabled'.");
+          if (getRadioDisabledState()) {
+            this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
           }
         } else if (data === kPrefDefaultServiceId &&
                    this.serviceId != getDefaultServiceId()) {
@@ -1349,17 +1356,6 @@ AcknowledgeTransaction.prototype = {
                                       requestCallback);
   }
 };
-
-function getDefaultServiceId() {
-  let id = Services.prefs.getIntPref(kPrefDefaultServiceId);
-  let numRil = Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
-
-  if (id >= numRil || id < 0) {
-    id = 0;
-  }
-
-  return id;
-}
 
 /**
  * Return M-Read-Rec.ind back to MMSC
