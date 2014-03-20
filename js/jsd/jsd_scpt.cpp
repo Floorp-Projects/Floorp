@@ -783,9 +783,9 @@ jsd_SetExecutionHook(JSDContext*           jsdc,
     {
         AutoSafeJSContext cx;
         JSAutoCompartment ac(cx, jsdscript->script);
-        rv = JS_SetTrap(cx, jsdscript->script, 
-                        (jsbytecode*)pc, jsd_TrapHandler,
-                        PRIVATE_TO_JSVAL(jsdhook));
+        JS::RootedScript script(cx, jsdscript->script);
+        JS::RootedValue hookValue(cx, PRIVATE_TO_JSVAL(jsdhook));
+        rv = JS_SetTrap(cx, script, (jsbytecode*)pc, jsd_TrapHandler, hookValue);
     }
 
     if ( ! rv ) {
