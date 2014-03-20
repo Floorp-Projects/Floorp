@@ -84,7 +84,9 @@
 
 ; !define SHCNF_DWORD     0x0003
 ; !define SHCNF_FLUSH     0x1000
-!define SHCNF_DWORDFLUSH  0x1003
+!ifndef SHCNF_DWORDFLUSH
+  !define SHCNF_DWORDFLUSH 0x1003
+!endif
 !ifndef SHCNE_ASSOCCHANGED
   !define SHCNE_ASSOCCHANGED 0x08000000
 !endif
@@ -949,8 +951,12 @@
   !endif
 !macroend
 
-!define KEY_SET_VALUE 0x0002
-!define KEY_WOW64_64KEY 0x0100
+!ifndef KEY_SET_VALUE
+  !define KEY_SET_VALUE 0x0002
+!endif
+!ifndef KEY_WOW64_64KEY
+  !define KEY_WOW64_64KEY 0x0100
+!endif
 !ifndef HAVE_64BIT_OS
   !define CREATE_KEY_SAM ${KEY_SET_VALUE}
 !else
@@ -4331,6 +4337,15 @@
  *
  * When modifying this macro be aware that LineFind uses all registers except
  * $R0-$R3 so be cautious. Callers of this macro are not affected.
+ *
+ * @param   _PROGRESSBAR
+ *          The progress bar to update using PBM_STEPIT.
+ * @param   _INSTALL_STEP_COUNTER
+ *          The install step counter to increment. The variable specified in
+ *          this parameter is also updated.
+ *
+ * $R2 = _INSTALL_STEP_COUNTER
+ * $R3 = _PROGRESSBAR
  */
 !macro OnStubInstallUninstall
 
@@ -4344,14 +4359,15 @@
     !define OnStubInstallUninstall "!insertmacro OnStubInstallUninstallCall"
 
     Function OnStubInstallUninstall
+      Exch $R2
+      Exch 1
+      Exch $R3
       Push $R9
       Push $R8
       Push $R7
       Push $R6
       Push $R5
       Push $R4
-      Push $R3
-      Push $R2
       Push $R1
       Push $R0
       Push $TmpVal
@@ -4378,14 +4394,15 @@
       Pop $TmpVal
       Pop $R0
       Pop $R1
-      Pop $R2
-      Pop $R3
       Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7
       Pop $R8
       Pop $R9
+      Exch $R3
+      Exch 1
+      Exch $R2
     FunctionEnd
 
     Function StubRemoveFilesCallback
@@ -4403,16 +4420,20 @@
       StrCpy $R1 "$INSTDIR$R9" ; Copy the install dir path and suffix it with the string
       IfFileExists "$R1" +1 end
 
+      IntOp $R2 $R2 + 2
+      SendMessage $R3 ${PBM_STEPIT} 0 0
+      SendMessage $R3 ${PBM_STEPIT} 0 0
+
       ClearErrors
       Delete "$R1"
       ${Unless} ${Errors}
         Goto end
       ${EndUnless}
 
-      GetTempFileName $R2 "$INSTDIR\${TO_BE_DELETED}"
-      Delete "$R2"
+      GetTempFileName $R0 "$INSTDIR\${TO_BE_DELETED}"
+      Delete "$R0"
       ClearErrors
-      Rename "$R1" "$R2"
+      Rename "$R1" "$R0"
       ${If} ${Errors}
         Delete /REBOOTOK "$R1"
       ${EndUnless}
@@ -4427,10 +4448,13 @@
   !endif
 !macroend
 
-!macro OnStubInstallUninstallCall
+!macro OnStubInstallUninstallCall _PROGRESSBAR _INSTALL_STEP_COUNTER
   !verbose push
+  Push "${_PROGRESSBAR}"
+  Push "${_INSTALL_STEP_COUNTER}"
   !verbose ${_MOZFUNC_VERBOSE}
   Call OnStubInstallUninstall
+  Pop ${_INSTALL_STEP_COUNTER}
   !verbose pop
 !macroend
 
@@ -7250,24 +7274,53 @@
 ################################################################################
 # Helpers for the new user interface
 
-!define MAXDWORD 0xffffffff
+!ifndef MAXDWORD
+  !define MAXDWORD 0xffffffff
+!endif
 
-!define DT_WORDBREAK 0x0010
-!define DT_SINGLELINE 0x0020
-!define DT_NOCLIP 0x0100
-!define DT_CALCRECT 0x0400
-!define DT_EDITCONTROL 0x2000
-!define DT_RTLREADING 0x00020000
-!define DT_NOFULLWIDTHCHARBREAK 0x00080000
+!ifndef DT_WORDBREAK
+  !define DT_WORDBREAK 0x0010
+!endif
+!ifndef DT_SINGLELINE
+  !define DT_SINGLELINE 0x0020
+!endif
+!ifndef DT_NOCLIP
+  !define DT_NOCLIP 0x0100
+!endif
+!ifndef DT_CALCRECT
+  !define DT_CALCRECT 0x0400
+!endif
+!ifndef DT_EDITCONTROL
+  !define DT_EDITCONTROL 0x2000
+!endif
+!ifndef DT_RTLREADING
+  !define DT_RTLREADING 0x00020000
+!endif
+!ifndef DT_NOFULLWIDTHCHARBREAK
+  !define DT_NOFULLWIDTHCHARBREAK 0x00080000
+!endif
 
-!define WS_EX_NOINHERITLAYOUT 0x00100000
-!define WS_EX_LAYOUTRTL 0x00400000
+!ifndef WS_EX_NOINHERITLAYOUT
+  !define WS_EX_NOINHERITLAYOUT 0x00100000
+!endif
+!ifndef WS_EX_LAYOUTRTL
+  !define WS_EX_LAYOUTRTL 0x00400000
+!endif
 
-!define PBS_MARQUEE 0x08
+!ifndef PBS_MARQUEE
+  !define PBS_MARQUEE 0x08
+!endif
 
-!define /math PBM_SETRANGE32 ${WM_USER} + 6
+!ifndef PBM_SETRANGE32
+  !define PBM_SETRANGE32 0x406
+!endif
+!ifndef PBM_GETRANGE
+  !define PBM_GETRANGE 0x407
+!endif
 
-!define SHACF_FILESYSTEM 1
+!ifndef SHACF_FILESYSTEM
+  !define SHACF_FILESYSTEM 1
+!endif
 
 !define MOZ_LOADTRANSPARENT ${LR_LOADFROMFILE}|${LR_LOADTRANSPARENT}|${LR_LOADMAP3DCOLORS}
 

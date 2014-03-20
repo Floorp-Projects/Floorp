@@ -162,6 +162,159 @@ function test_large_canvas() {
 }
 </script>
 
+<p>Canvas test: test_isPointInPath_canvas</p>
+<canvas id="c5" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+
+function shouldThrow(ctx, s) {
+  var _ok = false;
+  try {
+    eval(s);
+  } catch(e) {
+    _ok = true;
+  }
+  ok(_ok, s);
+}
+
+function shouldBeTrue(ctx, path, s) {
+  var _ok = eval(s);
+  ok(_ok, s);
+}
+function shouldBeFalse(ctx, path, s) {
+  var _ok = !eval(s);
+  ok(_ok, s);
+}
+
+function test_isPointInPath_canvas() {
+  var c = document.getElementById("c5");
+  var ctx = c.getContext("2d");
+
+  var path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+  shouldBeTrue(ctx, path, "ctx.isPointInPath(path, 50, 50)");
+  shouldBeFalse(ctx, path, "ctx.isPointInPath(path, NaN, 50)");
+  shouldBeFalse(ctx, path, "ctx.isPointInPath(path, 50, NaN)");
+
+  path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+  shouldBeTrue(ctx, path, "ctx.isPointInPath(path, 50, 50, 'nonzero')");
+
+  path = new Path2D();
+  path.rect(0, 0, 100, 100);
+  path.rect(25, 25, 50, 50);
+  shouldBeFalse(ctx, path, "ctx.isPointInPath(path, 50, 50, 'evenodd')");
+
+  shouldThrow(ctx, "ctx.isPointInPath(null, 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath(null, 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath(null, 50, 50, 'evenodd')");
+  shouldThrow(ctx, "ctx.isPointInPath(path, 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath(path, 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath(path, 50, 50, 'evenodd')");
+
+  shouldThrow(ctx, "ctx.isPointInPath([], 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath([], 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath([], 50, 50, 'evenodd')");
+  shouldThrow(ctx, "ctx.isPointInPath({}, 50, 50)");
+  shouldThrow(ctx, "ctx.isPointInPath({}, 50, 50, 'nonzero')");
+  shouldThrow(ctx, "ctx.isPointInPath({}, 50, 50, 'evenodd')");
+}
+</script>
+
+<p>Canvas test: test_isPointInStroke_canvas</p>
+<canvas id="c6" class="output" width="100" height="100">+
+</canvas>
+<script type="text/javascript">
+
+function test_isPointInStroke_canvas() {
+  var c = document.getElementById("c6");
+  var ctx = c.getContext("2d");
+
+  ctx.strokeStyle = '#0ff';
+
+  var path = new Path2D();
+  path.rect(20,20,100,100);
+
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,20,20)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,120,20)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,20,120)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,120,120)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,20)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,20,70)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,120,70)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,120)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,22,22)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,118,22)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,22,118)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,118,118)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,18)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,122,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,122)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,18,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,NaN,122)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,18,NaN)");
+
+  shouldThrow(ctx, "ctx.isPointInStroke(null,70,20)");
+  shouldThrow(ctx, "ctx.isPointInStroke([],20,70)");
+  shouldThrow(ctx, "ctx.isPointInStroke({},120,70)");
+
+  ctx.lineWidth = 10;
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,22,22)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,118,22)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,22,118)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,118,118)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,18)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,122,70)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,70,122)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,18,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,26,70)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,26)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,70,114)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,114,70)");
+
+  path = new Path2D();
+  path.moveTo(10,10);
+  path.lineTo(110,20);
+  path.lineTo(10,30);
+  ctx.lineJoin = "bevel";
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,113,20)");
+
+  ctx.miterLimit = 40.0;
+  ctx.lineJoin = "miter";
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,113,20)");
+
+  ctx.miterLimit = 2.0;
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,113,20)");
+
+  path = new Path2D();
+  path.moveTo(10,10);
+  path.lineTo(110,10);
+  ctx.lineCap = "butt";
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,112,10)");
+
+  ctx.lineCap = "round";
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,112,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,117,10)");
+
+  ctx.lineCap = "square";
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,112,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,117,10)");
+
+  ctx.lineCap = "butt";
+  ctx.setLineDash([10,10]);
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,15,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,25,10)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,35,10)");
+
+  ctx.lineDashOffset = 10;
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,15,10)");
+  shouldBeTrue(ctx, path, "ctx.isPointInStroke(path,25,10)");
+  shouldBeFalse(ctx, path, "ctx.isPointInStroke(path,35,10)");
+}
+</script>
+
 <script>
 
 function runTests() {
@@ -189,7 +342,18 @@ function runTests() {
   throw e;
   ok(false, "unexpected exception thrown in: test_large_canvas");
  }
-
+ try {
+  test_isPointInPath_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_isPointInPath_canvas");
+ }
+ try {
+  test_isPointInStroke_canvas();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_isPointInStroke_canvas");
+ }
  SpecialPowers.setBoolPref("canvas.path.enabled", false);
  SimpleTest.finish();
 }

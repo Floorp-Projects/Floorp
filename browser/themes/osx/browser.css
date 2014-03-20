@@ -2738,18 +2738,26 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   min-height: @tabHeight@;
 }
 
-#main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing])) #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before,
-#main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing],[tabsintitlebar])) #navigator-toolbox:not(:-moz-lwtheme)::before {
-  /* We want the titlebar to be unified, but we still want to be able
-   * to give #TabsToolbar a background. So we can't set -moz-appearance:
-   * toolbar on #TabsToolbar itself. Instead, we set it on a box of the
-   * right size which is put underneath #TabsToolbar.
-   */
+/* We want the titlebar to be unified, but we still want to be able
+ * to give #TabsToolbar a background. So we can't set -moz-appearance:
+ * toolbar on #TabsToolbar itself. Instead, we set it on a box of the
+ * right size which is put underneath #TabsToolbar.
+ *
+ * Because of Bug 941309, we make sure this pseudoelement always exists,
+ * but we only make it visible when we need it.
+ */
+#navigator-toolbox::before {
   content: '';
   display: block;
   -moz-appearance: toolbar;
   height: calc(@tabHeight@ + 1px);
   margin-bottom: calc(-1px - @tabHeight@);
+  visibility: hidden;
+}
+
+#main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing])) #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before,
+#main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing],[tabsintitlebar])) #navigator-toolbox:not(:-moz-lwtheme)::before {
+  visibility: visible;
 }
 
 #TabsToolbar {
@@ -2764,11 +2772,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 /*
- * Draw the bottom border of the tabstrip when core doesn't do it for us:
+ * Draw the bottom border of the tabstrip when core doesn't do it for us.
+ * Because of Bug 941309, we make sure this pseudoelement always exists,
+ * but we only make it visible when we need it.
  */
-#main-window:-moz-any([privatebrowsingmode=temporary],[sizemode="fullscreen"],[customize-entered]) #TabsToolbar::after,
-#main-window:not([tabsintitlebar]) #TabsToolbar::after,
-#TabsToolbar:-moz-lwtheme::after {
+#TabsToolbar::after {
   content: '';
   /* Because we use placeholders for window controls etc. in the tabstrip,
    * and position those with ordinal attributes, and because our layout code
@@ -2782,6 +2790,13 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   right: 0;
   z-index: 0;
   border-bottom: 1px solid hsla(0,0%,0%,.3);
+  visibility: hidden;
+}
+
+#main-window:-moz-any([privatebrowsingmode=temporary],[sizemode="fullscreen"],[customize-entered]) #TabsToolbar::after,
+#main-window:not([tabsintitlebar]) #TabsToolbar::after,
+#TabsToolbar:-moz-lwtheme::after {
+  visibility: visible;
 }
 
 #tabbrowser-tabs {
@@ -4013,9 +4028,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0;
   padding: 0;
   position: relative;
-}
-.toolbarbutton-badge-container > .toolbarbutton-icon {
-  margin: 4px 2px;
 }
 
 .toolbarbutton-badge[badge]:not([badge=""]) {

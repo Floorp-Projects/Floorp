@@ -560,6 +560,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_compare(JSOp op);
     bool getStaticName(JSObject *staticObject, PropertyName *name, bool *psucceeded);
     bool setStaticName(JSObject *staticObject, PropertyName *name);
+    bool jsop_getgname(PropertyName *name);
     bool jsop_getname(PropertyName *name);
     bool jsop_intrinsic(PropertyName *name);
     bool jsop_bindname(PropertyName *name);

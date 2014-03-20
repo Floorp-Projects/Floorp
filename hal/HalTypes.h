@@ -102,16 +102,6 @@ enum ProcessCPUPriority {
   NUM_PROCESS_CPU_PRIORITY
 };
 
-// Values that can be passed to hal::SetThreadPriority().  These should be
-// functional in nature, such as COMPOSITOR, instead of levels, like LOW/HIGH.
-// This allows us to tune our priority scheme for the system in one place such
-// that it makes sense holistically for the overall operating system.  On gonk
-// or android we may want different priority schemes than on windows, etc.
-enum ThreadPriority {
-  THREAD_PRIORITY_COMPOSITOR,
-  NUM_THREAD_PRIORITY
-};
-
 // Convert a ProcessPriority enum value (with an optional ProcessCPUPriority)
 // to a string.  The strings returned by this function are statically
 // allocated; do not attempt to free one!
@@ -124,14 +114,6 @@ ProcessPriorityToString(ProcessPriority aPriority);
 const char*
 ProcessPriorityToString(ProcessPriority aPriority,
                         ProcessCPUPriority aCPUPriority);
-
-// Convert a ThreadPriority enum value to a string.  The strings returned by
-// this function are statically allocated; do not attempt to free one!
-//
-// If you pass an unknown process priority (or NUM_THREAD_PRIORITY), we
-// fatally assert in debug builds and otherwise return "???".
-const char *
-ThreadPriorityToString(ThreadPriority aPriority);
 
 /**
  * Used by ModifyWakeLock

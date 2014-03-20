@@ -58,7 +58,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-  EventTarget* GetParentObject() { return mTarget; }
+
+  EventTarget* GetParentObject();
 
   // WebIDL
   int32_t Identifier() const { return mIdentifier; }

@@ -1579,11 +1579,7 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CALLGNAME:
       {
         PropertyName *name = info().getAtom(pc)->asPropertyName();
-        JSObject *obj = &script()->global();
-        bool succeeded;
-        if (!getStaticName(obj, name, &succeeded))
-            return false;
-        return succeeded || jsop_getname(name);
+        return jsop_getgname(name);
       }
 
       case JSOP_BINDGNAME:
@@ -4670,9 +4666,23 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     // creation.
     CallObject *templateObj = inspector->templateCallObject();
 
-    // Allocate the object. Run-once scripts need a singleton type, so always do
-    // a VM call in such cases.
-    MNewCallObject *callObj = MNewCallObject::New(alloc(), templateObj, script()->treatAsRunOnce());
+    // If the CallObject needs dynamic slots, allocate those now.
+    MInstruction *slots;
+    if (templateObj->hasDynamicSlots()) {
+        size_t nslots = JSObject::dynamicSlotsCount(templateObj->numFixedSlots(),
+                                                    templateObj->lastProperty()->slotSpan(templateObj->getClass()),
+                                                    templateObj->getClass());
+        slots = MNewSlots::New(alloc(), nslots);
+    } else {
+        slots = MConstant::New(alloc(), NullValue());
+    }
+    current->add(slots);
+
+    // Allocate the actual object. It is important that no intervening
+    // instructions could potentially bailout, thus leaking the dynamic slots
+    // pointer. Run-once scripts need a singleton type, so always do a VM call
+    // in such cases.
+    MNewCallObject *callObj = MNewCallObject::New(alloc(), templateObj, script()->treatAsRunOnce(), slots);
     current->add(callObj);
 
     // Initialize the object's reserved slots. No post barrier is needed here,
@@ -4681,20 +4691,14 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     current->add(MStoreFixedSlot::New(alloc(), callObj, CallObject::calleeSlot(), callee));
 
     // Initialize argument slots.
-    MSlots *slots = nullptr;
     for (AliasedFormalIter i(script()); i; i++) {
         unsigned slot = i.scopeSlot();
         unsigned formal = i.frameIndex();
         MDefinition *param = current->getSlot(info().argSlotUnchecked(formal));
-        if (slot >= templateObj->numFixedSlots()) {
-            if (!slots) {
-                slots = MSlots::New(alloc(), callObj);
-                current->add(slots);
-            }
+        if (slot >= templateObj->numFixedSlots())
             current->add(MStoreSlot::New(alloc(), slots, slot - templateObj->numFixedSlots(), param));
-        } else {
+        else
             current->add(MStoreFixedSlot::New(alloc(), callObj, slot, param));
-        }
     }
 
     return callObj;
@@ -6492,6 +6496,32 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
 }
 
 bool
+IonBuilder::jsop_getgname(PropertyName *name)
+{
+    JSObject *obj = &script()->global();
+    bool succeeded;
+    if (!getStaticName(obj, name, &succeeded))
+        return false;
+    if (succeeded)
+        return true;
+
+    types::TemporaryTypeSet *types = bytecodeTypes(pc);
+    // Spoof the stack to call into the getProp path.
+    // First, make sure there's room.
+    if (!current->ensureHasSlots(1))
+        return false;
+    pushConstant(ObjectValue(*obj));
+    if (!getPropTryCommonGetter(&succeeded, name, types))
+        return false;
+    if (succeeded)
+        return true;
+
+    // Clean up the pushed global object if we were not sucessful.
+    current->pop();
+    return jsop_getname(name);
+}
+
+bool
 IonBuilder::jsop_getname(PropertyName *name)
 {
     MDefinition *object;
@@ -7628,10 +7658,6 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
         return true;
 
     TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-
-    if (gc::IsInsideNursery(tarr->runtimeFromMainThread(), tarr->viewData()))
-        return true;
-
     ArrayBufferView::ViewType viewType = (ArrayBufferView::ViewType) tarr->type();
 
     MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
@@ -8738,6 +8764,10 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, PropertyName *name,
     }
 
     // Spoof stack to expected state for call.
+
+    // Make sure there's enough room
+    if (!current->ensureHasSlots(2))
+        return false;
     pushConstant(ObjectValue(*commonGetter));
 
     current->push(obj);
@@ -9022,11 +9052,8 @@ IonBuilder::setPropTryCommonSetter(bool *emitted, MDefinition *obj,
 
     // Dummy up the stack, as in getprop. We are pushing an extra value, so
     // ensure there is enough space.
-    uint32_t depth = current->stackDepth() + 3;
-    if (depth > current->nslots()) {
-        if (!current->increaseSlots(depth - current->nslots()))
-            return false;
-    }
+    if (!current->ensureHasSlots(3))
+        return false;
 
     pushConstant(ObjectValue(*commonSetter));
 

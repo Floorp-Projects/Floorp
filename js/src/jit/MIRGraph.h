@@ -110,6 +110,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Increase the number of slots available
     bool increaseSlots(size_t num);
+    bool ensureHasSlots(size_t num);
 
     // Initializes a slot value; must not be called for normal stack
     // operations, as it will not create new SSA names for copies.

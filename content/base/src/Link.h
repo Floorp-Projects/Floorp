@@ -62,7 +62,7 @@ public:
   void SetHostname(const nsAString &aHostname);
   void SetPathname(const nsAString &aPathname);
   void SetSearch(const nsAString &aSearch);
-  void SetSearchParams(mozilla::dom::URLSearchParams* aSearchParams);
+  void SetSearchParams(mozilla::dom::URLSearchParams& aSearchParams);
   void SetPort(const nsAString &aPort);
   void SetHash(const nsAString &aHash);
   void GetOrigin(nsAString &aOrigin);
@@ -73,7 +73,7 @@ public:
   void GetHostname(nsAString &_hostname);
   void GetPathname(nsAString &_pathname);
   void GetSearch(nsAString &_search);
-  URLSearchParams* GetSearchParams();
+  URLSearchParams* SearchParams();
   void GetPort(nsAString &_port);
   void GetHash(nsAString &_hash);
 

@@ -643,7 +643,6 @@ MediaEngineWebRTCVideoSource::OnError(CameraErrorContext aContext, CameraError a
 void
 MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
 {
-  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   mLastCapture =
     static_cast<nsIDOMFile*>(new nsDOMMemoryFile(static_cast<void*>(aData),
                                                  static_cast<uint64_t>(aLength),
@@ -715,10 +714,14 @@ MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth
 
 bool
 MediaEngineWebRTCVideoSource::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) {
-  MonitorAutoLock enter(mMonitor);
-  if (mState == kStopped) {
-    return false;
+  {
+    ReentrantMonitorAutoEnter sync(mCallbackMonitor);
+    if (mState == kStopped) {
+      return false;
+    }
   }
+
+  MonitorAutoLock enter(mMonitor);
   // Bug XXX we'd prefer to avoid converting if mRotation == 0, but that causes problems in UpdateImage()
   RotateImage(aImage, aWidth, aHeight);
   if (mRotation != 0 && mRotation != 180) {

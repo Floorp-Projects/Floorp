@@ -422,7 +422,7 @@ protected:
   friend struct RenderingState;
 
   struct RenderingState {
-    RenderingState(PresShell* aPresShell) 
+    RenderingState(PresShell* aPresShell)
       : mXResolution(aPresShell->mXResolution)
       , mYResolution(aPresShell->mYResolution)
       , mRenderFlags(aPresShell->mRenderFlags)
@@ -598,7 +598,7 @@ protected:
     }
 
     NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent)
-    
+
     void Revoke() {
       if (mPresShell) {
         mPresShell->GetPresContext()->RefreshDriver()->
@@ -658,7 +658,7 @@ protected:
    */
   bool AdjustContextMenuKeyEvent(mozilla::WidgetMouseEvent* aEvent);
 
-  // 
+  //
   bool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);
 
   // Get the selected item and coordinates in device pixels relative to root
@@ -730,7 +730,7 @@ protected:
   nsPoint                   mMouseLocation;
 
   // mStyleSet owns it but we maintain a ref, may be null
-  nsRefPtr<nsCSSStyleSheet> mPrefStyleSheet; 
+  nsRefPtr<nsCSSStyleSheet> mPrefStyleSheet;
 
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.
@@ -786,7 +786,7 @@ protected:
   // middle of frame construction and the like... it really shouldn't be
   // needed, one hopes, but it is for now.
   uint16_t                  mChangeNestCount;
-  
+
   bool                      mDocumentLoading : 1;
   bool                      mIgnoreFrameDestruction : 1;
   bool                      mHaveShutDown : 1;

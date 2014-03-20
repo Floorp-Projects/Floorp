@@ -478,10 +478,12 @@ DataStoreServiceChild.prototype = {
 
     switch (aMessage.name) {
       case 'DataStore:Get:Return:OK':
+        this.destroyDOMRequestHelper();
         this._successCb(aMessage.data.stores);
         break;
 
       case 'DataStore:Get:Return:KO':
+        this.destroyDOMRequestHelper();
         this._errorCb();
         break;
     }

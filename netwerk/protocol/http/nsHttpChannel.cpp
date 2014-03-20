@@ -622,6 +622,24 @@ nsHttpChannel::RetrieveSSLOptions()
     }
 }
 
+static bool
+SafeForPipelining(nsHttpRequestHead::ParsedMethodType method,
+                  const nsCString &methodString)
+{
+    if (method == nsHttpRequestHead::kMethod_Get ||
+        method == nsHttpRequestHead::kMethod_Head ||
+        method == nsHttpRequestHead::kMethod_Options) {
+        return true;
+    }
+
+    if (method != nsHttpRequestHead::kMethod_Custom) {
+        return false;
+    }
+
+    return (!strcmp(methodString.get(), "PROPFIND") ||
+            !strcmp(methodString.get(), "PROPPATCH"));
+}
+
 nsresult
 nsHttpChannel::SetupTransaction()
 {
@@ -642,11 +660,7 @@ nsHttpChannel::SetupTransaction()
         //
         if (!mAllowPipelining ||
            (mLoadFlags & (LOAD_INITIAL_DOCUMENT_URI | INHIBIT_PIPELINE)) ||
-            !(mRequestHead.Method() == nsHttp::Get ||
-              mRequestHead.Method() == nsHttp::Head ||
-              mRequestHead.Method() == nsHttp::Options ||
-              mRequestHead.Method() == nsHttp::Propfind ||
-              mRequestHead.Method() == nsHttp::Proppatch)) {
+            !SafeForPipelining(mRequestHead.ParsedMethod(), mRequestHead.Method())) {
             LOG(("  pipelining disallowed\n"));
             mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
         }
@@ -2483,7 +2497,7 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     nsresult rv;
 
     mLoadedFromApplicationCache = false;
-    mHasQueryString = HasQueryString(mRequestHead.Method(), mURI);
+    mHasQueryString = HasQueryString(mRequestHead.ParsedMethod(), mURI);
 
     LOG(("nsHttpChannel::OpenCacheEntry [this=%p]", this));
 
@@ -2492,15 +2506,14 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
 
     nsAutoCString cacheKey;
 
-    if (mRequestHead.Method() == nsHttp::Post) {
+    if (mRequestHead.IsPost()) {
         // If the post id is already set then this is an attempt to replay
         // a post transaction via the cache.  Otherwise, we need a unique
         // post id for this transaction.
         if (mPostID == 0)
             mPostID = gHttpHandler->GenerateUniqueID();
     }
-    else if ((mRequestHead.Method() != nsHttp::Get) &&
-             (mRequestHead.Method() != nsHttp::Head)) {
+    else if (!mRequestHead.IsGet() && !mRequestHead.IsHead()) {
         // don't use the cache for other types of requests
         return NS_OK;
     }
@@ -2613,7 +2626,7 @@ bypassCacheEntryOpen:
         return NS_OK;
     }
 
-    if (mRequestHead.Method() != nsHttp::Get) {
+    if (!mRequestHead.IsGet()) {
         // only cache complete documents offline
         return NS_OK;
     }
@@ -2685,12 +2698,15 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     rv = entry->GetMetaDataElement("request-method", getter_Copies(buf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsHttpAtom method = nsHttp::ResolveAtom(buf);
-    if (method == nsHttp::Head) {
+    bool methodWasHead = buf.EqualsLiteral("HEAD");
+    bool methodWasGet = buf.EqualsLiteral("GET");
+
+    if (methodWasHead) {
         // The cached response does not contain an entity.  We can only reuse
         // the response if the current request is also HEAD.
-        if (mRequestHead.Method() != nsHttp::Head)
+        if (!mRequestHead.IsHead()) {
             return NS_OK;
+        }
     }
     buf.Adopt(0);
 
@@ -2739,7 +2755,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
 
     bool wantCompleteEntry = false;
 
-    if (method != nsHttp::Head && !isCachedRedirect) {
+    if (!methodWasHead && !isCachedRedirect) {
         // If the cached content-length is set and it does not match the data
         // size of the cached content, then the cached response is partial...
         // either we need to issue a byte range request or we need to refetch
@@ -2870,7 +2886,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     }
 
     if (!doValidation && mRequestHead.PeekHeader(nsHttp::If_Match) &&
-        (method == nsHttp::Get || method == nsHttp::Head)) {
+        (methodWasGet || methodWasHead)) {
         const char *requestedETag, *cachedETag;
         cachedETag = mCachedResponseHead->PeekHeader(nsHttp::ETag);
         requestedETag = mRequestHead.PeekHeader(nsHttp::If_Match);
@@ -2939,8 +2955,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
         //
         // do not override conditional headers when consumer has defined its own
         if (!mCachedResponseHead->NoStore() &&
-            (mRequestHead.Method() == nsHttp::Get ||
-             mRequestHead.Method() == nsHttp::Head) &&
+            (mRequestHead.IsGet() || mRequestHead.IsHead()) &&
              !mCustomConditionalRequest) {
 
             if (mConcurentCacheAccess) {
@@ -3294,13 +3309,14 @@ nsHttpChannel::UpdateExpirationTime()
 }
 
 /*static*/ inline bool
-nsHttpChannel::HasQueryString(nsHttpAtom method, nsIURI * uri)
+nsHttpChannel::HasQueryString(nsHttpRequestHead::ParsedMethodType method, nsIURI * uri)
 {
     // Must be called on the main thread because nsIURI does not implement
     // thread-safe QueryInterface.
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (method != nsHttp::Get && method != nsHttp::Head)
+    if (method != nsHttpRequestHead::kMethod_Get &&
+        method != nsHttpRequestHead::kMethod_Head)
         return false;
 
     nsAutoCString query;
@@ -4179,12 +4195,11 @@ nsHttpChannel::ContinueProcessRedirectionAfterFallback(nsresult rv)
         }
     }
 
-    bool rewriteToGET = nsHttp::ShouldRewriteRedirectToGET(
-                                    mRedirectType, mRequestHead.Method());
+    bool rewriteToGET = ShouldRewriteRedirectToGET(mRedirectType,
+                                                   mRequestHead.ParsedMethod());
 
     // prompt if the method is not safe (such as POST, PUT, DELETE, ...)
-    if (!rewriteToGET &&
-        !nsHttp::IsSafeMethod(mRequestHead.Method())) {
+    if (!rewriteToGET && !mRequestHead.IsSafeMethod()) {
         rv = PromptTempRedirect();
         if (NS_FAILED(rv)) return rv;
     }
@@ -6054,13 +6069,11 @@ nsHttpChannel::MaybeInvalidateCacheEntryForSubsequentGet()
     // referred resource. POST, PUT and DELETE as well as any
     // other method not listed here will potentially invalidate
     // any cached copy of the resource
-    if (mRequestHead.Method() == nsHttp::Options ||
-       mRequestHead.Method() == nsHttp::Get ||
-       mRequestHead.Method() == nsHttp::Head ||
-       mRequestHead.Method() == nsHttp::Trace ||
-       mRequestHead.Method() == nsHttp::Connect)
+    if (mRequestHead.IsGet() || mRequestHead.IsOptions() ||
+        mRequestHead.IsHead() || mRequestHead.IsTrace() ||
+        mRequestHead.IsConnect()) {
         return;
-
+    }
 
     // Invalidate the request-uri.
 #ifdef PR_LOGGING

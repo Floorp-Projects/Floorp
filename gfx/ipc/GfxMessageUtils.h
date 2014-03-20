@@ -25,6 +25,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"
+#include "FilterSupport.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -102,6 +103,34 @@ struct ParamTraits<mozilla::gfx::Matrix4x4>
             Rd(_21) && Rd(_22) && Rd(_23) && Rd(_24) &&
             Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
             Rd(_41) && Rd(_42) && Rd(_43) && Rd(_44));
+#undef Rd
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::Matrix5x4>
+{
+  typedef mozilla::gfx::Matrix5x4 paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+#define Wr(_f)  WriteParam(msg, param. _f)
+    Wr(_11); Wr(_12); Wr(_13); Wr(_14);
+    Wr(_21); Wr(_22); Wr(_23); Wr(_24);
+    Wr(_31); Wr(_32); Wr(_33); Wr(_34);
+    Wr(_41); Wr(_42); Wr(_43); Wr(_44);
+    Wr(_51); Wr(_52); Wr(_53); Wr(_54);
+#undef Wr
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+#define Rd(_f)  ReadParam(msg, iter, &result-> _f)
+    return (Rd(_11) && Rd(_12) && Rd(_13) && Rd(_14) &&
+            Rd(_21) && Rd(_22) && Rd(_23) && Rd(_24) &&
+            Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
+            Rd(_41) && Rd(_42) && Rd(_43) && Rd(_44) &&
+            Rd(_51) && Rd(_52) && Rd(_53) && Rd(_54));
 #undef Rd
   }
 };
@@ -255,6 +284,34 @@ struct ParamTraits<gfxImageFormat>
                                gfxImageFormat::Unknown>
 {};
 
+template <>
+struct ParamTraits<mozilla::gfx::AttributeName>
+  : public EnumSerializer<mozilla::gfx::AttributeName,
+                          mozilla::gfx::eBlendBlendmode,
+                          mozilla::gfx::eLastAttributeName>
+{};
+
+template <>
+struct ParamTraits<mozilla::gfx::AttributeType>
+  : public TypedEnumSerializer<mozilla::gfx::AttributeType,
+                               mozilla::gfx::AttributeType::eBool,
+                               mozilla::gfx::AttributeType::Max>
+{};
+
+template <>
+struct ParamTraits<mozilla::gfx::PrimitiveType>
+  : public TypedEnumSerializer<mozilla::gfx::PrimitiveType,
+                               mozilla::gfx::PrimitiveType::Empty,
+                               mozilla::gfx::PrimitiveType::Max>
+{};
+
+template <>
+struct ParamTraits<mozilla::gfx::ColorSpace>
+  : public TypedEnumSerializer<mozilla::gfx::ColorSpace,
+                               mozilla::gfx::ColorSpace::SRGB,
+                               mozilla::gfx::ColorSpace::Max>
+{};
+
 /*
 template <>
 struct ParamTraits<mozilla::PixelFormat>
@@ -268,6 +325,28 @@ template<>
 struct ParamTraits<gfxRGBA>
 {
   typedef gfxRGBA paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.r);
+    WriteParam(msg, param.g);
+    WriteParam(msg, param.b);
+    WriteParam(msg, param.a);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->r) &&
+            ReadParam(msg, iter, &result->g) &&
+            ReadParam(msg, iter, &result->b) &&
+            ReadParam(msg, iter, &result->a));
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::gfx::Color>
+{
+  typedef mozilla::gfx::Color paramType;
 
   static void Write(Message* msg, const paramType& param)
   {
@@ -443,6 +522,26 @@ struct ParamTraits< mozilla::gfx::PointTyped<T> >
   {
     return (ReadParam(msg, iter, &result->x) &&
             ReadParam(msg, iter, &result->y));
+  }
+};
+
+template<class T>
+struct ParamTraits< mozilla::gfx::Point3DTyped<T> >
+{
+  typedef mozilla::gfx::Point3DTyped<T> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.x);
+    WriteParam(msg, param.y);
+    WriteParam(msg, param.z);
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+    return (ReadParam(msg, iter, &result->x) &&
+            ReadParam(msg, iter, &result->y) &&
+            ReadParam(msg, iter, &result->z));
   }
 };
 
@@ -762,6 +861,193 @@ struct ParamTraits<mozilla::layers::EventRegions>
   {
     return (ReadParam(aMsg, aIter, &aResult->mHitRegion) &&
             ReadParam(aMsg, aIter, &aResult->mDispatchToContentHitRegion));
+  }
+};
+
+struct MessageAndAttributeMap
+{
+  Message* msg;
+  const mozilla::gfx::AttributeMap& map;
+};
+
+static bool
+WriteAttribute(mozilla::gfx::AttributeName aName,
+               mozilla::gfx::AttributeType aType,
+               void* aUserData)
+{
+  MessageAndAttributeMap* msgAndMap =
+    static_cast<MessageAndAttributeMap*>(aUserData);
+
+  WriteParam(msgAndMap->msg, aType);
+  WriteParam(msgAndMap->msg, aName);
+
+  switch (aType) {
+
+#define HANDLE_TYPE(typeName)                                          \
+    case mozilla::gfx::AttributeType::e##typeName:                     \
+      WriteParam(msgAndMap->msg, msgAndMap->map.Get##typeName(aName)); \
+      break;
+
+    HANDLE_TYPE(Bool)
+    HANDLE_TYPE(Uint)
+    HANDLE_TYPE(Float)
+    HANDLE_TYPE(Size)
+    HANDLE_TYPE(IntSize)
+    HANDLE_TYPE(IntPoint)
+    HANDLE_TYPE(Matrix)
+    HANDLE_TYPE(Matrix5x4)
+    HANDLE_TYPE(Point3D)
+    HANDLE_TYPE(Color)
+    HANDLE_TYPE(AttributeMap)
+    HANDLE_TYPE(Floats)
+
+#undef HANDLE_TYPE
+
+    default:
+      MOZ_CRASH("unhandled attribute type");
+  }
+  return true;
+}
+
+template <>
+struct ParamTraits<mozilla::gfx::AttributeMap>
+{
+  typedef mozilla::gfx::AttributeMap paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.Count());
+    MessageAndAttributeMap msgAndMap = { aMsg, aParam };
+    aParam.EnumerateRead(WriteAttribute, &msgAndMap);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    uint32_t count;
+    if (!ReadParam(aMsg, aIter, &count)) {
+      return false;
+    }
+    for (uint32_t i = 0; i < count; i++) {
+      mozilla::gfx::AttributeType type;
+      if (!ReadParam(aMsg, aIter, &type)) {
+        return false;
+      }
+      mozilla::gfx::AttributeName name;
+      if (!ReadParam(aMsg, aIter, &name)) {
+        return false;
+      }
+      switch (type) {
+
+#define HANDLE_TYPE(type, typeName)                                    \
+        case mozilla::gfx::AttributeType::e##typeName:                 \
+        {                                                              \
+          type value;                                                  \
+          if (!ReadParam(aMsg, aIter, &value)) {                       \
+            return false;                                              \
+          }                                                            \
+          aResult->Set(name, value);                                   \
+        }
+
+        HANDLE_TYPE(bool, Bool)
+        HANDLE_TYPE(uint32_t, Uint)
+        HANDLE_TYPE(float, Float)
+        HANDLE_TYPE(mozilla::gfx::Size, Size)
+        HANDLE_TYPE(mozilla::gfx::IntSize, IntSize)
+        HANDLE_TYPE(mozilla::gfx::IntPoint, IntPoint)
+        HANDLE_TYPE(mozilla::gfx::Matrix, Matrix)
+        HANDLE_TYPE(mozilla::gfx::Matrix5x4, Matrix5x4)
+        HANDLE_TYPE(mozilla::gfx::Point3D, Point3D)
+        HANDLE_TYPE(mozilla::gfx::Color, Color)
+        HANDLE_TYPE(mozilla::gfx::AttributeMap, AttributeMap)
+
+#undef HANDLE_TYPE
+
+        case mozilla::gfx::AttributeType::eFloats:
+        {
+          nsTArray<float> value;
+          if (!ReadParam(aMsg, aIter, &value)) {
+            return false;
+          }
+          aResult->Set(name, &value[0], value.Length());
+          break;
+        }
+        default:
+          MOZ_CRASH("unhandled attribute type");
+      }
+    }
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::gfx::FilterPrimitiveDescription>
+{
+  typedef mozilla::gfx::FilterPrimitiveDescription paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.Type());
+    WriteParam(aMsg, aParam.PrimitiveSubregion());
+    WriteParam(aMsg, aParam.IsTainted());
+    WriteParam(aMsg, aParam.OutputColorSpace());
+    WriteParam(aMsg, aParam.NumberOfInputs());
+    for (size_t i = 0; i < aParam.NumberOfInputs(); i++) {
+      WriteParam(aMsg, aParam.InputPrimitiveIndex(i));
+      WriteParam(aMsg, aParam.InputColorSpace(i));
+    }
+    WriteParam(aMsg, aParam.Attributes());
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    mozilla::gfx::PrimitiveType type;
+    mozilla::gfx::IntRect primitiveSubregion;
+    bool isTainted = false;
+    mozilla::gfx::ColorSpace outputColorSpace;
+    size_t numberOfInputs = 0;
+    if (!ReadParam(aMsg, aIter, &type) ||
+        !ReadParam(aMsg, aIter, &primitiveSubregion) ||
+        !ReadParam(aMsg, aIter, &isTainted) ||
+        !ReadParam(aMsg, aIter, &outputColorSpace) ||
+        !ReadParam(aMsg, aIter, &numberOfInputs)) {
+      return false;
+    }
+
+    aResult->SetType(type);
+    aResult->SetPrimitiveSubregion(primitiveSubregion);
+    aResult->SetIsTainted(isTainted);
+    aResult->SetOutputColorSpace(outputColorSpace);
+
+    for (size_t i = 0; i < numberOfInputs; i++) {
+      int32_t inputPrimitiveIndex = 0;
+      mozilla::gfx::ColorSpace inputColorSpace;
+      if (!ReadParam(aMsg, aIter, &inputPrimitiveIndex) ||
+          !ReadParam(aMsg, aIter, &inputColorSpace)) {
+        return false;
+      }
+      aResult->SetInputPrimitive(i, inputPrimitiveIndex);
+      aResult->SetInputColorSpace(i, inputColorSpace);
+    }
+
+    return ReadParam(aMsg, aIter, &aResult->Attributes());
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::gfx::FilterDescription>
+{
+  typedef mozilla::gfx::FilterDescription paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mFilterSpaceBounds);
+    WriteParam(aMsg, aParam.mPrimitives);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mFilterSpaceBounds) &&
+            ReadParam(aMsg, aIter, &aResult->mPrimitives));
   }
 };
 

@@ -148,11 +148,11 @@ typedef struct CapturingContentInfo {
 
 #undef NOISY_INTERRUPTIBLE_REFLOW
 
-enum nsRectVisibility { 
-  nsRectVisibility_kVisible, 
-  nsRectVisibility_kAboveViewport, 
-  nsRectVisibility_kBelowViewport, 
-  nsRectVisibility_kLeftOfViewport, 
+enum nsRectVisibility {
+  nsRectVisibility_kVisible,
+  nsRectVisibility_kAboveViewport,
+  nsRectVisibility_kBelowViewport,
+  nsRectVisibility_kLeftOfViewport,
   nsRectVisibility_kRightOfViewport
 };
 
@@ -542,7 +542,7 @@ public:
   /**
    * Determine if it is safe to flush all pending notifications
    * @param aIsSafeToFlush true if it is safe, false otherwise.
-   * 
+   *
    */
   virtual NS_HIDDEN_(bool) IsSafeToFlush() const = 0;
 
@@ -688,7 +688,7 @@ public:
   /**
    * Scrolls the view of the document so that the given area of a frame
    * is visible, if possible. Layout is not flushed before scrolling.
-   * 
+   *
    * @param aRect relative to aFrame
    * @param aVertical see ScrollContentIntoView and ScrollAxis
    * @param aHorizontal see ScrollContentIntoView and ScrollAxis
@@ -711,18 +711,18 @@ public:
                                        uint32_t      aFlags) = 0;
 
   /**
-   * Determine if a rectangle specified in the frame's coordinate system 
+   * Determine if a rectangle specified in the frame's coordinate system
    * intersects the viewport "enough" to be considered visible.
    * @param aFrame frame that aRect coordinates are specified relative to
-   * @param aRect rectangle in twips to test for visibility 
+   * @param aRect rectangle in twips to test for visibility
    * @param aMinTwips is the minimum distance in from the edge of the viewport
    *                  that an object must be to be counted visible
    * @return nsRectVisibility_kVisible if the rect is visible
    *         nsRectVisibility_kAboveViewport
-   *         nsRectVisibility_kBelowViewport 
-   *         nsRectVisibility_kLeftOfViewport 
+   *         nsRectVisibility_kBelowViewport
+   *         nsRectVisibility_kLeftOfViewport
    *         nsRectVisibility_kRightOfViewport rectangle is outside the viewport
-   *         in the specified direction 
+   *         in the specified direction
    */
   virtual nsRectVisibility GetRectVisibility(nsIFrame *aFrame,
                                              const nsRect &aRect,
@@ -774,7 +774,7 @@ public:
    */
   NS_IMETHOD SetSelectionFlags(int16_t aInEnable) = 0;
 
-  /** 
+  /**
     * Gets the current state of non text selection effects
     * @return   current state of non text selection,
     *           as set by SetDisplayNonTextSelection
@@ -822,7 +822,7 @@ public:
                                                      mozilla::WidgetEvent* aEvent) = 0;
 
   /**
-   * Get and set the history state for the current document 
+   * Get and set the history state for the current document
    */
 
   virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
@@ -1323,7 +1323,7 @@ public:
   virtual void DidPaintWindow() = 0;
 
   /**
-   * Ensures that the refresh driver is running, and schedules a view 
+   * Ensures that the refresh driver is running, and schedules a view
    * manager flush on the next tick.
    *
    * @param aType PAINT_DELAYED_COMPRESS : Schedule a paint to be executed after a delay, and
@@ -1639,7 +1639,7 @@ protected:
   // The maximum width of a line box. Text on a single line that exceeds this
   // width will be wrapped. A value of 0 indicates that no limit is enforced.
   nscoord mMaxLineBoxWidth;
-  
+
   // If a document belongs to an invisible DocShell, this flag must be set
   // to true, so we can avoid any paint calls for widget related to this
   // presshell.

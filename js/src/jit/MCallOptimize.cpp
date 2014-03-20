@@ -974,9 +974,9 @@ IonBuilder::inlineMathMinMax(CallInfo &callInfo, bool max)
         if (!IsNumberType(argType))
             return InliningStatus_NotInlined;
 
-        // We would need to inform TI if we happen to return a double.
+        // When one of the arguments is double, do a double MMinMax.
         if (returnType == MIRType_Int32 && IsFloatingPointType(argType))
-            return InliningStatus_NotInlined;
+            returnType = MIRType_Double;
     }
 
     callInfo.setImplicitlyUsedUnchecked();

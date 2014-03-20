@@ -838,24 +838,20 @@ URL::SetSearchInternal(const nsAString& aSearch)
 }
 
 mozilla::dom::URLSearchParams*
-URL::GetSearchParams()
+URL::SearchParams()
 {
   CreateSearchParamsIfNeeded();
   return mSearchParams;
 }
 
 void
-URL::SetSearchParams(URLSearchParams* aSearchParams)
+URL::SetSearchParams(URLSearchParams& aSearchParams)
 {
-  if (!aSearchParams) {
-    return;
-  }
-
   if (mSearchParams) {
     mSearchParams->RemoveObserver(this);
   }
 
-  mSearchParams = aSearchParams;
+  mSearchParams = &aSearchParams;
   mSearchParams->AddObserver(this);
 
   nsString search;

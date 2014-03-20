@@ -399,8 +399,11 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
     for (uint32_t i = 0; i < sourceIndices.Length(); i++) {
       int32_t inputIndex = sourceIndices[i];
       descr.SetInputPrimitive(i, inputIndex);
-      ColorSpace inputColorSpace =
-        inputIndex < 0 ? SRGB : aPrimitiveDescrs[inputIndex].OutputColorSpace();
+
+      ColorSpace inputColorSpace = inputIndex >= 0
+        ? aPrimitiveDescrs[inputIndex].OutputColorSpace()
+        : ColorSpace(ColorSpace::SRGB);
+
       ColorSpace desiredInputColorSpace = filter->GetInputColorSpace(i, inputColorSpace);
       descr.SetInputColorSpace(i, desiredInputColorSpace);
       if (i == 0) {

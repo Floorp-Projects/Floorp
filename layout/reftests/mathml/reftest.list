@@ -142,6 +142,7 @@ skip-if(B2G) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 == mo-lspace-rspace.html mo-lspace-rspace-ref.html
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
+== mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 skip-if(B2G) == maction-dynamic-3.html maction-dynamic-3-ref.html # bug 773482
 == whitespace-trim-1.html whitespace-trim-1-ref.html
 == whitespace-trim-2.html whitespace-trim-2-ref.html

@@ -309,7 +309,8 @@ nsFilePicker::GetFile(nsIFile **aFile)
   rv = fileURL->GetFile(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(file, aFile);
+  file.forget(aFile);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

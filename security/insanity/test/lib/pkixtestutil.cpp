@@ -111,6 +111,27 @@ private:
   void operator=(const Output&) /* = delete */;
 };
 
+OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
+                                         CERTCertificate* cert,
+                                         PRTime time)
+  : arena(arena)
+  , cert(CERT_DupCertificate(cert))
+  , issuerCert(nullptr)
+  , signerCert(nullptr)
+  , responseStatus(0)
+  , skipResponseBytes(false)
+  , producedAt(time)
+  , thisUpdate(time)
+  , nextUpdate(time + 10 * PR_USEC_PER_SEC)
+  , includeNextUpdate(true)
+  , certIDHashAlg(SEC_OID_SHA1)
+  , certStatus(0)
+  , revocationTime(0)
+  , badSignature(false)
+  , responderIDType(ByKeyHash)
+{
+}
+
 static SECItem* ResponseBytes(OCSPResponseContext& context);
 static SECItem* BasicOCSPResponse(OCSPResponseContext& context);
 static SECItem* ResponseData(OCSPResponseContext& context);
@@ -241,26 +262,30 @@ CreateEncodedOCSPResponse(OCSPResponseContext& context)
   responseStatus->data[1] = 1;
   responseStatus->data[2] = context.responseStatus;
 
-  SECItem* responseBytes = ResponseBytes(context);
-  if (!responseBytes) {
-    return nullptr;
-  }
+  SECItem* responseBytesNested = nullptr;
+  if (!context.skipResponseBytes) {
+    SECItem* responseBytes = ResponseBytes(context);
+    if (!responseBytes) {
+      return nullptr;
+    }
 
-  SECItem* responseBytesNested = EncodeNested(context.arena,
-                                              der::CONSTRUCTED |
-                                              der::CONTEXT_SPECIFIC |
-                                              0,
-                                              responseBytes);
-  if (!responseBytesNested) {
-    return nullptr;
+    responseBytesNested = EncodeNested(context.arena,
+                                       der::CONSTRUCTED |
+                                       der::CONTEXT_SPECIFIC,
+                                       responseBytes);
+    if (!responseBytesNested) {
+      return nullptr;
+    }
   }
 
   Output output;
   if (output.Add(responseStatus) != der::Success) {
     return nullptr;
   }
-  if (output.Add(responseBytesNested) != der::Success) {
-    return nullptr;
+  if (responseBytesNested) {
+    if (output.Add(responseBytesNested) != der::Success) {
+      return nullptr;
+    }
   }
   return output.Squash(context.arena, der::SEQUENCE);
 }
