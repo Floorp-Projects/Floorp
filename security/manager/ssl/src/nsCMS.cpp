@@ -6,7 +6,7 @@
 #include "nsCMS.h"
 
 #include "CertVerifier.h"
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "nsISupports.h"
 #include "nsNSSHelper.h"
 #include "nsNSSCertificate.h"
@@ -515,7 +515,7 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
     if (!nssRecipientCert)
       return NS_ERROR_FAILURE;
 
-    insanity::pkix::ScopedCERTCertificate c(nssRecipientCert->GetCert());
+    mozilla::pkix::ScopedCERTCertificate c(nssRecipientCert->GetCert());
     recipientCerts.set(i, c.get());
   }
   
@@ -553,7 +553,7 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsIArray * aRecipientCerts)
 
   // Create and attach recipient information //
   for (i=0; i < recipientCertCount; i++) {
-    insanity::pkix::ScopedCERTCertificate rc(recipientCerts.get(i));
+    mozilla::pkix::ScopedCERTCertificate rc(recipientCerts.get(i));
     if ((recipientInfo = NSS_CMSRecipientInfo_Create(m_cmsMsg, rc.get())) == nullptr) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CreateEncrypted - can't create recipient info\n"));
       goto loser;
@@ -584,8 +584,8 @@ NS_IMETHODIMP nsCMSMessage::CreateSigned(nsIX509Cert* aSigningCert, nsIX509Cert*
   NSSCMSContentInfo *cinfo;
   NSSCMSSignedData *sigd;
   NSSCMSSignerInfo *signerinfo;
-  insanity::pkix::ScopedCERTCertificate scert;
-  insanity::pkix::ScopedCERTCertificate ecert;
+  mozilla::pkix::ScopedCERTCertificate scert;
+  mozilla::pkix::ScopedCERTCertificate ecert;
   nsCOMPtr<nsIX509Cert2> aSigningCert2 = do_QueryInterface(aSigningCert);
   nsresult rv = NS_ERROR_FAILURE;
 

@@ -23,6 +23,6 @@ DIRS += [
 
 FAIL_ON_WARNINGS = True
 
-LIBRARY_NAME = 'insanitypkix'
+LIBRARY_NAME = 'mozillapkix'
 
 FINAL_LIBRARY = 'xul'

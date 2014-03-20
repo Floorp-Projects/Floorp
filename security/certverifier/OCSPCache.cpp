@@ -28,14 +28,14 @@ extern PRLogModuleInfo* gCertVerifierLog;
 namespace mozilla { namespace psm {
 
 void
-Insanity_PK11_DestroyContext_true(PK11Context* context)
+MozillaPKIX_PK11_DestroyContext_true(PK11Context* context)
 {
   PK11_DestroyContext(context, true);
 }
 
-typedef insanity::pkix::ScopedPtr<PK11Context,
-                                  Insanity_PK11_DestroyContext_true>
-                                  ScopedPK11Context;
+typedef mozilla::pkix::ScopedPtr<PK11Context,
+                                 MozillaPKIX_PK11_DestroyContext_true>
+                                 ScopedPK11Context;
 
 // Let derIssuer be the DER encoding of the issuer of aCert.
 // Let derPublicKey be the DER encoding of the public key of aIssuerCert.
@@ -138,9 +138,9 @@ OCSPCache::LogWithCerts(const char* aMessage, const CERTCertificate* aCert,
 {
 #ifdef PR_LOGGING
   if (PR_LOG_TEST(gCertVerifierLog, PR_LOG_DEBUG)) {
-    insanity::pkix::ScopedPtr<char, mozilla::psm::PORT_Free_string>
+    mozilla::pkix::ScopedPtr<char, mozilla::psm::PORT_Free_string>
       cn(CERT_GetCommonName(&aCert->subject));
-    insanity::pkix::ScopedPtr<char, mozilla::psm::PORT_Free_string>
+    mozilla::pkix::ScopedPtr<char, mozilla::psm::PORT_Free_string>
       cnIssuer(CERT_GetCommonName(&aIssuerCert->subject));
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, (aMessage, cn.get(), cnIssuer.get()));
   }

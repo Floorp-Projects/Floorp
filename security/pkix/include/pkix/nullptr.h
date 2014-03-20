@@ -15,27 +15,14 @@
  * limitations under the License.
  */
 
-#ifndef insanity__pkixcheck_h
-#define insanity__pkixcheck_h
+#ifndef mozilla_pkix__nullptr_h
+#define mozilla_pkix__nullptr_h
 
-#include "pkixutil.h"
-#include "certt.h"
+// GCC does not understand nullptr until 4.6
+#if defined(__GNUC__) && !defined(__clang__)
+#if __GNUC__ * 100 + __GNUC_MINOR__ < 406
+#define nullptr __null
+#endif
+#endif
 
-namespace insanity { namespace pkix {
-
-Result CheckIssuerIndependentProperties(
-          TrustDomain& trustDomain,
-          BackCert& cert,
-          PRTime time,
-          EndEntityOrCA endEntityOrCA,
-          KeyUsages requiredKeyUsagesIfPresent,
-          SECOidTag requiredEKUIfPresent,
-          SECOidTag requiredPolicy,
-          unsigned int subCACount,
-          /*optional out*/ TrustDomain::TrustLevel* trustLevel = nullptr);
-
-Result CheckNameConstraints(BackCert& cert);
-
-} } // namespace insanity::pkix
-
-#endif // insanity__pkixcheck_h
+#endif // mozilla_pkix__nullptr_h

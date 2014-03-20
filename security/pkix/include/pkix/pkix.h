@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#ifndef insanity_pkix__pkix_h
-#define insanity_pkix__pkix_h
+#ifndef mozilla_pkix__pkix_h
+#define mozilla_pkix__pkix_h
 
 #include "pkixtypes.h"
 #include "prtime.h"
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 // ----------------------------------------------------------------------------
 // LIMITED SUPPORT FOR CERTIFICATE POLICIES
@@ -118,6 +118,6 @@ SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                  /* optional out */ PRTime* thisUpdate,
                  /* optional out */ PRTime* validThrough);
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix
 
-#endif // insanity_pkix__pkix_h
+#endif // mozilla_pkix__pkix_h

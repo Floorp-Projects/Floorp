@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef insanity_pkix__pkixtypes_h
-#define insanity_pkix__pkixtypes_h
+#ifndef mozilla_pkix__pkixtypes_h
+#define mozilla_pkix__pkixtypes_h
 
-#include "insanity/ScopedPtr.h"
+#include "pkix/ScopedPtr.h"
 #include "plarena.h"
 #include "cert.h"
 #include "keyhi.h"
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 typedef ScopedPtr<PLArenaPool, PL_FreeArenaPool> ScopedPLArenaPool;
 
@@ -88,7 +88,7 @@ public:
   // certificate is not trying to use EC(DSA) parameter inheritance.
   //
   // Most implementations of this function should probably forward the call
-  // directly to insanity::pkix::VerifySignedData.
+  // directly to mozilla::pkix::VerifySignedData.
   virtual SECStatus VerifySignedData(const CERTSignedData* signedData,
                                      const CERTCertificate* cert) = 0;
 
@@ -108,6 +108,6 @@ private:
   void operator=(const TrustDomain&) /* = delete */;
 };
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix
 
-#endif // insanity_pkix__pkixtypes_h
+#endif // mozilla_pkix__pkixtypes_h

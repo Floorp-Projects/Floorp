@@ -15,7 +15,7 @@ SOURCES += [
 
 LOCAL_INCLUDES += [
     '../../../../certverifier',
-    '../../../../insanity/include',
+    '../../../../pkix/include',
     '/security/manager/ssl/src',
 ]
 

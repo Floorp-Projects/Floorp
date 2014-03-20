@@ -50,8 +50,8 @@ function check_fail_ca(x) {
   return check_cert_err_generic(x, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLCA);
 }
 
-function run_test_in_mode(useInsanity) {
-  Services.prefs.setBoolPref("security.use_insanity_verification", useInsanity);
+function run_test_in_mode(useMozillaPKIX) {
+  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
 
   // Note that CN is only looked at when there is NO subjectAltName!
 
@@ -261,7 +261,7 @@ function run_test_in_mode(useInsanity) {
   check_fail(certFromFile('cn-www.foo.com_o-bar_c-us-alt-foo.com-a.a.us-b.a.us-int-ca-nc-perm-foo.com.der'));
 
   // We don't enforce dNSName name constraints on CN unless we're validating
-  // for the server EKU. libpkix gets this wrong but insanity::pkix and classic
+  // for the server EKU. libpkix gets this wrong but mozilla::pkix and classic
   // NSS get it right.
   {
     let cert = certFromFile('cn-www.foo.org-int-nc-perm-foo.com-ca-nc.der');

@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 
-#ifndef insanity_pkix__nullptr_h
-#define insanity_pkix__nullptr_h
+#ifndef _MSC_VER
 
-// GCC does not understand nullptr until 4.6
-#if defined(__GNUC__) && !defined(__clang__)
-#if __GNUC__ * 100 + __GNUC_MINOR__ < 406
-#define nullptr __null
-#endif
-#endif
+#include "pkix/bind.h"
 
-#endif // insanity_pkix__nullptr_h
+namespace mozilla { namespace pkix {
+
+Placeholder1 _1;
+
+} } // namespace mozilla::pkix
+
+#endif // _MSC_VER

@@ -15,15 +15,15 @@
  * limitations under the License.
  */
 
-#ifndef insanity_pkix__pkixutil_h
-#define insanity_pkix__pkixutil_h
+#ifndef mozilla_pkix__pkixutil_h
+#define mozilla_pkix__pkixutil_h
 
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "prerror.h"
 #include "seccomon.h"
 #include "secerr.h"
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 enum Result
 {
@@ -141,6 +141,6 @@ private:
   void operator=(const BackCert&); /* = delete */;
 };
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix
 
-#endif // insanity_pkix__pkixutil_h
+#endif // mozilla_pkix__pkixutil_h

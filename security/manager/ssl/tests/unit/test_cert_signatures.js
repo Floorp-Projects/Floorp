@@ -49,8 +49,8 @@ function run_test() {
   run_test_in_mode(false);
 }
 
-function run_test_in_mode(useInsanity) {
-  Services.prefs.setBoolPref("security.use_insanity_verification", useInsanity);
+function run_test_in_mode(useMozillaPKIX) {
+  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
   clearOCSPCache();
   clearSessionCache();
 
@@ -58,14 +58,14 @@ function run_test_in_mode(useInsanity) {
   check_ca("ca-p384");
   check_ca("ca-dsa");
 
-  // insanity::pkix does not allow CA certs to be validated for end-entity
+  // mozilla::pkix does not allow CA certs to be validated for end-entity
   // usages.
-  let int_usage = useInsanity
+  let int_usage = useMozillaPKIX
                 ? 'SSL CA'
                 : 'Client,Server,Sign,Encrypt,SSL CA,Status Responder';
 
-  // insanity::pkix doesn't implement the Netscape Object Signer restriction.
-  const ee_usage = useInsanity
+  // mozilla::pkix doesn't implement the Netscape Object Signer restriction.
+  const ee_usage = useMozillaPKIX
                  ? 'Client,Server,Sign,Encrypt,Object Signer'
                  : 'Client,Server,Sign,Encrypt';
 

@@ -10,7 +10,7 @@
 #include "prprf.h"
 #include "CertVerifier.h"
 #include "ExtendedValidation.h"
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSCleaner.h"
 #include "nsCOMPtr.h"
@@ -822,7 +822,7 @@ nsNSSCertificate::GetChain(nsIArray** _rvChain)
   nsresult rv;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
 
-  ::insanity::pkix::ScopedCERTCertList nssChain;
+  ::mozilla::pkix::ScopedCERTCertList nssChain;
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
@@ -1542,7 +1542,7 @@ nsNSSCertificate::GetValidEVPolicyOid(nsACString& outDottedOid)
 
 NS_IMPL_ISUPPORTS1(nsNSSCertList, nsIX509CertList)
 
-nsNSSCertList::nsNSSCertList(insanity::pkix::ScopedCERTCertList& certList,
+nsNSSCertList::nsNSSCertList(mozilla::pkix::ScopedCERTCertList& certList,
                              const nsNSSShutDownPreventionLock& proofOfLock)
 {
   if (certList) {

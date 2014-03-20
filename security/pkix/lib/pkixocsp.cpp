@@ -17,8 +17,8 @@
 
 #include <limits>
 
-#include "insanity/bind.h"
-#include "insanity/pkix.h"
+#include "pkix/bind.h"
+#include "pkix/pkix.h"
 #include "pkixcheck.h"
 #include "pkixder.h"
 
@@ -36,7 +36,7 @@
 // TODO: use typed/qualified typedefs everywhere?
 // TODO: When should we return SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE?
 
-namespace insanity { namespace pkix {
+namespace mozilla { namespace pkix {
 
 static const PRTime ONE_DAY
   = INT64_C(24) * INT64_C(60) * INT64_C(60) * PR_USEC_PER_SEC;
@@ -993,4 +993,4 @@ CreateEncodedOCSPRequest(PLArenaPool* arena,
   return encodedRequest;
 }
 
-} } // namespace insanity::pkix
+} } // namespace mozilla::pkix
