@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>contextual substitutions for fonts with spaces in lookups</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="author" title="John Daggett" href="mailto:jdaggett@mozilla.com"/>
+<style type="text/css">
+
+@font-face {
+  font-family: spacelookup-defscr-deflang-deffeat;
+  src: url(../fonts/spacelookups/spacelookup-defscr-deflang-deffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-defscr-deflang-ndeffeat;
+  src: url(../fonts/spacelookups/spacelookup-defscr-deflang-ndeffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-deflang-deffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-deflang-deffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-deflang-ndeffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-deflang-ndeffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-fralang-deffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-fralang-deffeat.ttf);
+}
+
+@font-face {
+  font-family: spacelookup-latnscr-fralang-ndeffeat;
+  src: url(../fonts/spacelookups/spacelookup-latnscr-fralang-ndeffeat.ttf);
+}
+
+body {
+  margin: 20px 40px;
+  line-height: 1.2;
+}
+
+div { font-size: 200%; }
+
+p { margin: 0; line-height: 1.2; }
+
+.spacelookup-defscr-deflang-deffeat { font-family: spacelookup-defscr-deflang-deffeat; }
+.spacelookup-defscr-deflang-ndeffeat { font-family: spacelookup-defscr-deflang-ndeffeat; }
+.spacelookup-latnscr-deflang-deffeat { font-family: spacelookup-latnscr-deflang-deffeat; }
+.spacelookup-latnscr-deflang-ndeffeat { font-family: spacelookup-latnscr-deflang-ndeffeat; }
+.spacelookup-latnscr-fralang-deffeat { font-family: spacelookup-latnscr-fralang-deffeat; }
+.spacelookup-latnscr-fralang-ndeffeat { font-family: spacelookup-latnscr-fralang-ndeffeat; }
+
+p.kern {
+  -webkit-font-feature-settings: "liga" on, "kern" on;
+  -moz-font-feature-settings: "liga" on, "kern" on;
+  font-feature-settings: "liga" on, "kern" on;
+}
+
+p.nokern {
+  -webkit-font-feature-settings: "liga" on, "kern" off;
+  -moz-font-feature-settings: "liga" on, "kern" off;
+  font-feature-settings: "liga" on, "kern" off;
+}
+
+</style>
+
+</head>
+<body>
+<div class="spacelookup-defscr-deflang-deffeat" lang="en">
+<p class="spacelookup-defscr-deflang-deffeat kern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-latnscr-deflang-deffeat kern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-latnscr-fralang-deffeat kern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-defscr-deflang-ndeffeat nokern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-latnscr-deflang-ndeffeat nokern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-latnscr-fralang-ndeffeat nokern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-defscr-deflang-ndeffeat kern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-latnscr-deflang-ndeffeat kern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+<p class="spacelookup-latnscr-fralang-ndeffeat kern">&#xf002; &#xf001; &#xf004; &#xf003; &#xf006; &#xf005;</p>
+</div>
+</body>
+</html>
