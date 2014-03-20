@@ -107,6 +107,34 @@ struct ParamTraits<mozilla::gfx::Matrix4x4>
 };
 
 template<>
+struct ParamTraits<mozilla::gfx::Matrix5x4>
+{
+  typedef mozilla::gfx::Matrix5x4 paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+#define Wr(_f)  WriteParam(msg, param. _f)
+    Wr(_11); Wr(_12); Wr(_13); Wr(_14);
+    Wr(_21); Wr(_22); Wr(_23); Wr(_24);
+    Wr(_31); Wr(_32); Wr(_33); Wr(_34);
+    Wr(_41); Wr(_42); Wr(_43); Wr(_44);
+    Wr(_51); Wr(_52); Wr(_53); Wr(_54);
+#undef Wr
+  }
+
+  static bool Read(const Message* msg, void** iter, paramType* result)
+  {
+#define Rd(_f)  ReadParam(msg, iter, &result-> _f)
+    return (Rd(_11) && Rd(_12) && Rd(_13) && Rd(_14) &&
+            Rd(_21) && Rd(_22) && Rd(_23) && Rd(_24) &&
+            Rd(_31) && Rd(_32) && Rd(_33) && Rd(_34) &&
+            Rd(_41) && Rd(_42) && Rd(_43) && Rd(_44) &&
+            Rd(_51) && Rd(_52) && Rd(_53) && Rd(_54));
+#undef Rd
+  }
+};
+
+template<>
 struct ParamTraits<gfxPoint>
 {
   typedef gfxPoint paramType;
