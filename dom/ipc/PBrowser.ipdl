@@ -368,7 +368,7 @@ child:
 
     UpdateDimensions(nsRect rect, nsIntSize size, ScreenOrientation orientation) compress;
 
-    UpdateFrame(FrameMetrics frame) compress;
+    UpdateFrame(FrameMetrics frame);
 
     /**
      * Acknowledge the receipt of a scroll offset update from the content
