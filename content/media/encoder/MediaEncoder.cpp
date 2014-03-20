@@ -115,7 +115,7 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint8_t aTrackTypes)
           (aMIMEType.EqualsLiteral(VIDEO_MP4) ||
           (aTrackTypes & ContainerWriter::CREATE_VIDEO_TRACK))) {
     if (aTrackTypes & ContainerWriter::CREATE_AUDIO_TRACK) {
-      audioEncoder = new OmxAudioTrackEncoder();
+      audioEncoder = new OmxAACAudioTrackEncoder();
       NS_ENSURE_TRUE(audioEncoder, nullptr);
     }
     videoEncoder = new OmxVideoTrackEncoder();
@@ -123,6 +123,14 @@ MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint8_t aTrackTypes)
     NS_ENSURE_TRUE(writer, nullptr);
     NS_ENSURE_TRUE(videoEncoder, nullptr);
     mimeType = NS_LITERAL_STRING(VIDEO_MP4);
+  } else if (MediaEncoder::IsOMXEncoderEnabled() &&
+            (aMIMEType.EqualsLiteral(AUDIO_3GPP))) {
+    audioEncoder = new OmxAMRAudioTrackEncoder();
+    NS_ENSURE_TRUE(audioEncoder, nullptr);
+
+    writer = new ISOMediaWriter(aTrackTypes, ISOMediaWriter::TYPE_FRAG_3GP);
+    NS_ENSURE_TRUE(writer, nullptr);
+    mimeType = NS_LITERAL_STRING(AUDIO_3GPP);
   }
 #endif // MOZ_OMX_ENCODER
   else if (MediaDecoder::IsOggEnabled() && MediaDecoder::IsOpusEnabled() &&

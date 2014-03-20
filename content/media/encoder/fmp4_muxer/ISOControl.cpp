@@ -167,6 +167,7 @@ nsresult
 ISOControl::SetMetadata(TrackMetadataBase* aTrackMeta)
 {
   if (aTrackMeta->GetKind() == TrackMetadataBase::METADATA_AAC ||
+      aTrackMeta->GetKind() == TrackMetadataBase::METADATA_AMR ||
       aTrackMeta->GetKind() == TrackMetadataBase::METADATA_AVC) {
     mMetaArray.AppendElement(aTrackMeta);
     return NS_OK;
@@ -178,7 +179,8 @@ nsresult
 ISOControl::GetAudioMetadata(nsRefPtr<AudioTrackMetadata>& aAudMeta)
 {
   for (uint32_t i = 0; i < mMetaArray.Length() ; i++) {
-    if (mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AAC) {
+    if (mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AAC ||
+        mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AMR) {
       aAudMeta = static_cast<AudioTrackMetadata*>(mMetaArray[i].get());
       return NS_OK;
     }

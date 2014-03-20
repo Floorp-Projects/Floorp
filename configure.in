@@ -176,7 +176,11 @@ fi
 if test -n "$FXOS_SIMULATOR" -a -z "$GAIADIR" ; then
     AC_MSG_ERROR([FXOS_SIMULATOR=1 requires GAIADIR to be defined])
 fi
-AC_SUBST(FXOS_SIMULATOR)
+
+if test -n "$FXOS_SIMULATOR" ; then
+    AC_DEFINE(FXOS_SIMULATOR)
+    AC_SUBST(FXOS_SIMULATOR)
+fi
 
 MOZ_ARG_WITH_STRING(gonk,
 [  --with-gonk=DIR

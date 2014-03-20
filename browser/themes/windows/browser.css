@@ -48,14 +48,6 @@
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
 }
 
-#main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme) {
-  color: CaptionText;
-}
-
-#main-window[tabsintitlebar] #main-menubar > menu:not(:-moz-lwtheme):-moz-window-inactive {
-  color: InactiveCaptionText;
-}
-
 #main-window[customize-entered][tabsintitlebar]:not([inFullscreen]) #toolbar-menubar[customizing-dragovertarget].customization-target::before,
 #main-window[customize-entered][tabsintitlebar]:not([inFullscreen]) #TabsToolbar[customizing-dragovertarget].customization-target::before,
 #main-window[customize-entered][tabsintitlebar]:not([inFullscreen]) #toolbar-menubar.customization-target:hover::before,
@@ -90,10 +82,12 @@
     background-color: transparent !important;
   }
 
+  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:not(:-moz-lwtheme),
   #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
     color: CaptionText;
   }
 
+  #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive,
   #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
     color: InactiveCaptionText;
   }
@@ -113,6 +107,13 @@
 %ifdef WINDOWS_AERO
 }
 %endif
+
+/* Make the menu inherit the toolbar's color. On non-compositor (Aero Basic, XP modern, classic)
+ * this is defined above. Otherwise (Aero Glass, Windows 8), this is hardcoded to black in
+ * browser-aero.css. */
+#main-menubar > menu:not(:-moz-lwtheme) {
+  color: inherit;
+}
 
 /**
  * In the classic themes, the titlebar has a horizontal gradient, which is
@@ -2755,10 +2756,82 @@ chatbox {
 
 /* End customization mode */
 
-#main-window[privatebrowsingmode=temporary] #private-browsing-indicator {
-  width: 40px;
-  background: url("chrome://browser/skin/privatebrowsing-indicator.png") no-repeat center center;
+/* Private browsing indicators */
+
+/**
+ * Currently, we have two places where we put private browsing indicators on
+ * Windows. When tabsintitlebar is enabled, we draw the indicator in the titlebar.
+ * When tabsintitlebar is disabled, we draw the indicator at the end of the
+ * tabstrip. The titlebar indicator is the fiddliest of the bunch, since we
+ * want the bottom border of the image to line up with the bottom of the window
+ * caption buttons. That's why there's so much special-casing going on in here.
+ */
+.private-browsing-indicator {
+  display: none;
+  pointer-events: none;
 }
+
+#private-browsing-indicator-titlebar {
+  display: block;
+  position: absolute;
+}
+
+#main-window[privatebrowsingmode=temporary][tabsintitlebar] #private-browsing-indicator-titlebar > .private-browsing-indicator {
+  display: block;
+}
+
+#main-window[privatebrowsingmode=temporary]:not([tabsintitlebar]) #TabsToolbar > .private-browsing-indicator {
+  display: -moz-box;
+}
+
+#TabsToolbar > .private-browsing-indicator {
+  background: url("chrome://browser/skin/privatebrowsing-mask-tabstrip.png") no-repeat center -3px;
+  -moz-margin-start: 4px;
+  width: 48px;
+}
+
+#private-browsing-indicator-titlebar > .private-browsing-indicator {
+  background: url("chrome://browser/skin/privatebrowsing-mask-titlebar.png") no-repeat center 0px;
+  -moz-margin-end: 4px;
+  width: 40px;
+  height: 20px;
+  position: relative;
+}
+
+%ifndef WINDOWS_AERO
+#TabsToolbar > .private-browsing-indicator {
+  background-image: url("chrome://browser/skin/privatebrowsing-mask-tabstrip-XPVista7.png");
+}
+
+@media not all and (-moz-windows-classic) {
+  #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7-tall.png");
+    height: 28px;
+  }
+  #main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    top: -5px;
+  }
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    top: -1px;
+  }
+}
+%endif
+
+@media (-moz-windows-classic) {
+  #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7.png");
+  }
+  /**
+   * We have to use top instead of background-position in this case, otherwise
+   * the bottom of the indicator would get cut off by the bounds of the
+   * private-browsing-indicator element.
+   */
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    top: 4px;
+  }
+}
+
+/* End private browsing indicators */
 
 %include ../shared/UITour.inc.css
 

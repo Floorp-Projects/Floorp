@@ -64,106 +64,82 @@ function endTests() {
 }
 
 function testTransformTooltipOnIDSelector() {
-  info("Testing that a transform tooltip appears on the #ID rule");
+  Task.spawn(function*() {
+    info("Testing that a transform tooltip appears on the #ID rule");
 
-  let panel = ruleView.previewTooltip.panel;
-  ok(panel, "The XUL panel exists for the rule-view preview tooltips");
+    let panel = ruleView.previewTooltip.panel;
+    ok(panel, "The XUL panel exists for the rule-view preview tooltips");
 
-  let {valueSpan} = getRuleViewProperty("#testElement", "transform");
-  assertTooltipShownOn(ruleView.previewTooltip, valueSpan, () => {
+    let {valueSpan} = getRuleViewProperty("#testElement", "transform");
+    yield assertTooltipShownOn(ruleView.previewTooltip, valueSpan);
+
     // The transform preview is canvas, so there's not much we can test, so for
     // now, let's just be happy with the fact that the tooltips is shown!
     ok(true, "Tooltip shown on the transform property of the #ID rule");
-    ruleView.previewTooltip.hide();
-    executeSoon(testTransformTooltipOnClassSelector);
-  });
+  }).then(testTransformTooltipOnClassSelector);
 }
 
 function testTransformTooltipOnClassSelector() {
-  info("Testing that a transform tooltip appears on the .class rule");
+  Task.spawn(function*() {
+    info("Testing that a transform tooltip appears on the .class rule");
 
-  let {valueSpan} = getRuleViewProperty(".test-element", "transform");
-  assertTooltipShownOn(ruleView.previewTooltip, valueSpan, () => {
+    let {valueSpan} = getRuleViewProperty(".test-element", "transform");
+    yield assertTooltipShownOn(ruleView.previewTooltip, valueSpan);
+
     // The transform preview is canvas, so there's not much we can test, so for
     // now, let's just be happy with the fact that the tooltips is shown!
     ok(true, "Tooltip shown on the transform property of the .class rule");
-    ruleView.previewTooltip.hide();
-    executeSoon(testTransformTooltipOnTagSelector);
-  });
+  }).then(testTransformTooltipOnTagSelector);
 }
 
 function testTransformTooltipOnTagSelector() {
-  info("Testing that a transform tooltip appears on the tag rule");
+  Task.spawn(function*() {
+    info("Testing that a transform tooltip appears on the tag rule");
 
-  let {valueSpan} = getRuleViewProperty("div", "transform");
-  assertTooltipShownOn(ruleView.previewTooltip, valueSpan, () => {
+    let {valueSpan} = getRuleViewProperty("div", "transform");
+    yield assertTooltipShownOn(ruleView.previewTooltip, valueSpan);
+
     // The transform preview is canvas, so there's not much we can test, so for
     // now, let's just be happy with the fact that the tooltips is shown!
     ok(true, "Tooltip shown on the transform property of the tag rule");
-    ruleView.previewTooltip.hide();
-    executeSoon(testTransformTooltipNotShownOnInvalidTransform);
-  });
+  }).then(testTransformTooltipNotShownOnInvalidTransform);
 }
 
 function testTransformTooltipNotShownOnInvalidTransform() {
-  info("Testing that a transform tooltip does not appear for invalid values");
+  Task.spawn(function*() {
+    info("Testing that a transform tooltip does not appear for invalid values");
 
-  let ruleEditor;
-  for (let rule of ruleView._elementStyle.rules) {
-    if (rule.matchedSelectors[0] === "[attr]") {
-      ruleEditor = rule.editor;
+    let ruleEditor;
+    for (let rule of ruleView._elementStyle.rules) {
+      if (rule.matchedSelectors[0] === "[attr]") {
+        ruleEditor = rule.editor;
+      }
     }
-  }
-  ruleEditor.addProperty("transform", "muchTransform(suchAngle)", "");
+    ruleEditor.addProperty("transform", "muchTransform(suchAngle)", "");
 
-  let {valueSpan} = getRuleViewProperty("[attr]", "transform");
-  assertTooltipNotShownOn(ruleView.previewTooltip, valueSpan, () => {
-    executeSoon(testTransformTooltipOnComputedView);
-  });
+    let {valueSpan} = getRuleViewProperty("[attr]", "transform");
+    let isValid = yield isHoverTooltipTarget(ruleView.previewTooltip, valueSpan);
+    ok(!isValid, "The tooltip did not appear on hover of an invalid transform value");
+  }).then(testTransformTooltipOnComputedView);
 }
 
 function testTransformTooltipOnComputedView() {
-  info("Testing that a transform tooltip appears in the computed view too");
+  Task.spawn(function*() {
+    info("Testing that a transform tooltip appears in the computed view too");
 
-  inspector.sidebar.select("computedview");
-  computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
-  let doc = computedView.styleDocument;
+    inspector.sidebar.select("computedview");
+    computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
+    let doc = computedView.styleDocument;
 
-  let panel = computedView.tooltip.panel;
-  let {valueSpan} = getComputedViewProperty("transform");
+    let panel = computedView.tooltip.panel;
+    let {valueSpan} = getComputedViewProperty("transform");
 
-  assertTooltipShownOn(computedView.tooltip, valueSpan, () => {
+    yield assertTooltipShownOn(computedView.tooltip, valueSpan);
+
     // The transform preview is canvas, so there's not much we can test, so for
     // now, let's just be happy with the fact that the tooltips is shown!
     ok(true, "Tooltip shown on the computed transform property");
-    computedView.tooltip.hide();
-    executeSoon(endTests);
-  });
-}
-
-function assertTooltipShownOn(tooltip, element, cb) {
-  // If there is indeed a show-on-hover on element, the xul panel will be shown
-  tooltip.panel.addEventListener("popupshown", function shown() {
-    tooltip.panel.removeEventListener("popupshown", shown, true);
-    cb();
-  }, true);
-
-  // Run _showOnHover at stable state after the next refresh driver tick.
-  // This way nothing during reflow or painting should be able to
-  // cancel showing the popup.
-  element.ownerDocument.defaultView.requestAnimationFrame(() => {
-      executeSoon(() => { tooltip._showOnHover(element); });
-    });
-}
-
-function assertTooltipNotShownOn(tooltip, element, cb) {
-  // The only way to make sure the tooltip is not shown is try and show it, wait
-  // for a given amount of time, and then check if it's shown or not
-  tooltip._showOnHover(element);
-  setTimeout(() => {
-    ok(!tooltip.isShown(), "The tooltip did not appear on hover of the element");
-    cb();
-  }, tooltip.defaultShowDelay + 100);
+  }).then(endTests);
 }
 
 function getRule(selectorText) {
