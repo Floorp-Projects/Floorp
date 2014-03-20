@@ -175,6 +175,7 @@ function testPropDelete(aProp)
 
   waitForSuccess({
     name: "property deleted",
+    timeout: 60000,
     validatorFn: () => !("testUpdatedProp" in content.wrappedJSObject.fooObj),
     successFn: finishTest,
     failureFn: finishTest,
