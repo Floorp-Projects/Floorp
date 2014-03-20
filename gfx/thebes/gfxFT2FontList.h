@@ -156,6 +156,8 @@ protected:
 #ifdef ANDROID
     void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC);
 #endif
+
+    nsTHashtable<nsStringHashKey> mSkipSpaceLookupCheckFamilies;
 };
 
 #endif /* GFX_FT2FONTLIST_H */
