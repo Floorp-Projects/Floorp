@@ -648,6 +648,11 @@ CSSCompleter.prototype = {
     } else {
       this.completing = "";
     }
+    // Special case the situation when the user just entered ":" after typing a
+    // property name.
+    if (this.completing == ":" && _state == CSS_STATES.value)
+      this.completing = "";
+
     // Special check for !important; case.
     if (tokens[cursor - 2] && tokens[cursor - 2].value == "!" &&
         this.completing == "important".slice(0, this.completing.length)) {
@@ -760,6 +765,9 @@ CSSCompleter.prototype = {
    */
   completeProperties: function(startProp) {
     let finalList = [];
+    if (!startProp)
+      return finalList;
+
     let length = propertyNames.length;
     let i = 0, count = 0;
     for (; i < length && count < this.maxEntries; i++) {
@@ -787,6 +795,11 @@ CSSCompleter.prototype = {
   completeValues: function(propName, startValue) {
     let finalList = [];
     let list = ["!important;", ...(properties[propName] || [])];
+    // If there is no character being completed, we are showing an initial list
+    // of possible values. Skipping '!important' in this case.
+    if (!startValue)
+      list.splice(0, 1);
+
     let length = list.length;
     let i = 0, count = 0;
     for (; i < length && count < this.maxEntries; i++) {

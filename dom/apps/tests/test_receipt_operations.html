@@ -35,8 +35,8 @@ function go() {
 function continueTest() {
   try {
     gGenerator.next();
-  } catch (e) {
-    dump("Got exception: " + e + "\n");
+  } catch (e if e instanceof StopIteration) {
+    finish();
   }
 }
 
@@ -236,10 +236,6 @@ function runTest() {
   request.onsuccess = continueTest;
   yield undefined;
   ok(true, "App uninstalled");
-
-  // All done.
-  ok(true, "All done");
-  finish();
 }
 
 addLoadEvent(go);

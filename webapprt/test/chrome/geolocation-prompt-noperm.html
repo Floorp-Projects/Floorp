@@ -5,13 +5,17 @@
   </head>
   <body>
     <script>
-    function failureCallback() {
-      document.getElementById("msg").textContent = "Failure.";
-    }
-    function successCallback() {
-      document.getElementById("msg").textContent = "Success.";
-    }
-    navigator.geolocation.getCurrentPosition(successCallback, failureCallback);
+    window.onload = function() {
+      function failureCallback() {
+        document.getElementById("msg").textContent = "Failure.";
+      }
+
+      function successCallback() {
+        document.getElementById("msg").textContent = "Success.";
+      }
+
+      navigator.geolocation.getCurrentPosition(successCallback, failureCallback);
+    };
     </script>
     <p id="msg">Webapp waiting for geolocation...</p>
   </body>
