@@ -24,6 +24,12 @@ XPCOMUtils.defineLazyGetter(this, "domWindowUtils", function () {
 });
 
 const RESIZE_SCROLL_DELAY = 20;
+// In content editable node, when there are hidden elements such as <br>, it
+// may need more than one (usually less than 3 times) move/extend operations
+// to change the selection range. If we cannot change the selection range
+// with more than 20 opertations, we are likely being blocked and cannot change
+// the selection range any more.
+const MAX_BLOCKED_COUNT = 20;
 
 let HTMLDocument = Ci.nsIDOMHTMLDocument;
 let HTMLHtmlElement = Ci.nsIDOMHTMLHtmlElement;
@@ -570,7 +576,17 @@ let FormAssistant = {
 
         let start = json.selectionStart;
         let end =  json.selectionEnd;
-        setSelectionRange(target, start, end);
+
+        if (!setSelectionRange(target, start, end)) {
+          if (json.requestId) {
+            sendAsyncMessage("Forms:SetSelectionRange:Result:Error", {
+              requestId: json.requestId,
+              error: "failed"
+            });
+          }
+          break;
+        }
+
         this.updateSelection();
 
         if (json.requestId) {
@@ -586,12 +602,20 @@ let FormAssistant = {
         CompositionManager.endComposition('');
 
         let selectionRange = getSelectionRange(target);
-        replaceSurroundingText(target,
-                               json.text,
-                               selectionRange[0],
-                               selectionRange[1],
-                               json.offset,
-                               json.length);
+        if (!replaceSurroundingText(target,
+                                    json.text,
+                                    selectionRange[0],
+                                    selectionRange[1],
+                                    json.offset,
+                                    json.length)) {
+          if (json.requestId) {
+            sendAsyncMessage("Forms:ReplaceSurroundingText:Result:Error", {
+              requestId: json.requestId,
+              error: "failed"
+            });
+          }
+          break;
+        }
 
         if (json.requestId) {
           sendAsyncMessage("Forms:ReplaceSurroundingText:Result:OK", {
@@ -911,6 +935,7 @@ function getDocumentEncoder(element) {
                 .createInstance(Ci.nsIDocumentEncoder);
   let flags = Ci.nsIDocumentEncoder.SkipInvisibleContent |
               Ci.nsIDocumentEncoder.OutputRaw |
+              Ci.nsIDocumentEncoder.OutputDropInvisibleBreak |
               // Bug 902847. Don't trim trailing spaces of a line.
               Ci.nsIDocumentEncoder.OutputDontRemoveLineEndingSpaces |
               Ci.nsIDocumentEncoder.OutputLFLineBreak |
@@ -978,7 +1003,7 @@ function setSelectionRange(element, start, end) {
   if (!isTextField && !isContentEditable(element)) {
     // Skip HTMLOptionElement and HTMLSelectElement elements, as they don't
     // support the operation of setSelectionRange
-    return;
+    return false;
   }
 
   let text = isTextField ? element.value : getContentEditableText(element);
@@ -996,6 +1021,7 @@ function setSelectionRange(element, start, end) {
   if (isTextField) {
     // Set the selection range of <input> and <textarea> elements
     element.setSelectionRange(start, end, "forward");
+    return true;
   } else {
     // set the selection range of contenteditable elements
     let win = element.ownerDocument.defaultView;
@@ -1007,8 +1033,22 @@ function setSelectionRange(element, start, end) {
       sel.modify("move", "forward", "character");
     }
 
-    while (getContentEditableSelectionStart(element, sel) < start) {
+    // Avoid entering infinite loop in case we cannot change the selection
+    // range. See bug https://bugzilla.mozilla.org/show_bug.cgi?id=978918
+    let oldStart = getContentEditableSelectionStart(element, sel);
+    let counter = 0;
+    while (oldStart < start) {
       sel.modify("move", "forward", "character");
+      let newStart = getContentEditableSelectionStart(element, sel);
+      if (oldStart == newStart) {
+        counter++;
+        if (counter > MAX_BLOCKED_COUNT) {
+          return false;
+        }
+      } else {
+        counter = 0;
+        oldStart = newStart;
+      }
     }
 
     // Extend the selection to the end position
@@ -1016,10 +1056,25 @@ function setSelectionRange(element, start, end) {
       sel.modify("extend", "forward", "character");
     }
 
+    // Avoid entering infinite loop in case we cannot change the selection
+    // range. See bug https://bugzilla.mozilla.org/show_bug.cgi?id=978918
+    counter = 0;
     let selectionLength = end - start;
-    while (getContentEditableSelectionLength(element, sel) < selectionLength) {
+    let oldSelectionLength = getContentEditableSelectionLength(element, sel);
+    while (oldSelectionLength  < selectionLength) {
       sel.modify("extend", "forward", "character");
+      let newSelectionLength = getContentEditableSelectionLength(element, sel);
+      if (oldSelectionLength == newSelectionLength ) {
+        counter++;
+        if (counter > MAX_BLOCKED_COUNT) {
+          return false;
+        }
+      } else {
+        counter = 0;
+        oldSelectionLength = newSelectionLength;
+      }
     }
+    return true;
   }
 }
 
@@ -1068,7 +1123,7 @@ function replaceSurroundingText(element, text, selectionStart, selectionEnd,
                                 offset, length) {
   let editor = FormAssistant.editor;
   if (!editor) {
-    return;
+    return false;
   }
 
   // Check the parameters.
@@ -1083,7 +1138,9 @@ function replaceSurroundingText(element, text, selectionStart, selectionEnd,
 
   if (selectionStart != start || selectionEnd != end) {
     // Change selection range before replacing.
-    setSelectionRange(element, start, end);
+    if (!setSelectionRange(element, start, end)) {
+      return false;
+    }
   }
 
   if (start != end) {
@@ -1098,6 +1155,7 @@ function replaceSurroundingText(element, text, selectionStart, selectionEnd,
     // Insert the text to be replaced with.
     editor.insertText(text);
   }
+  return true;
 }
 
 let CompositionManager =  {
