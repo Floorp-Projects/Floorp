@@ -380,23 +380,6 @@ Boolean(Input& input, /*out*/ bool& value)
   }
 }
 
-// This is for any BOOLEAN DEFAULT FALSE.
-// (If it is present and false, this is a bad encoding.)
-inline Result
-OptionalBoolean(Input& input, /*out*/ bool& value)
-{
-  value = false;
-  if (input.Peek(BOOLEAN)) {
-    if (Boolean(input, value) != Success) {
-      return Failure;
-    }
-    if (!value) {
-      return Fail(SEC_ERROR_BAD_DER);
-    }
-  }
-  return Success;
-}
-
 inline Result
 Enumerated(Input& input, uint8_t& value)
 {
