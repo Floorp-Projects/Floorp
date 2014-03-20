@@ -346,8 +346,6 @@
     /* Introducing an additional hover state for the Bookmark button */
     #nav-bar .toolbarbutton-1[buttonover] > .toolbarbutton-menubutton-button:hover > .toolbarbutton-icon {
       background-color: hsla(210,4%,10%,.08);
-      -moz-border-end: 1px solid;
-      -moz-padding-end: 5px;
       border-color: hsla(210,4%,10%,.1);
     }
   }
