@@ -2304,7 +2304,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                          disp->mPosition == NS_STYLE_POSITION_FIXED &&
                          nsLayoutUtils::IsReallyFixedPos(child));
   nsDisplayListBuilder::AutoInFixedPosSetter
-    buildingInFixedPos(aBuilder, isFixedPos);
+    buildingInFixedPos(aBuilder, isInFixedPos);
 
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingForChild(aBuilder, child, pseudoStackingContext);
