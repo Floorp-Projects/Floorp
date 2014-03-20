@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>contextual substitutions for fonts with spaces in lookups</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="author" title="John Daggett" href="mailto:jdaggett@mozilla.com"/>
+<style type="text/css">
+@font-face {
+  font-family: spacelookup-defscr-deflang-deffeat;
+  src: url(../fonts/spacelookups/spacelookup-defscr-deflang-deffeat.ttf);
+}
+body {
+  margin: 20px 40px;
+  line-height: 1.2;
+}
+
+div { font-size: 400%; }
+
+.spacelookup-defscr-deflang-deffeat { font-family: spacelookup-defscr-deflang-deffeat; }
+</style>
+
+</head>
+<body>
+<div class="spacelookup-defscr-deflang-deffeat">
+<span>&#xf007;</span>
+<span>&#xf007;</span>
+<span>&#xf007;</span>
+<span>&#xf007;</span>
+<span>&#xf007;</span>
+<span>&#xf007;</span>
+</div>
+</body>
+</html>

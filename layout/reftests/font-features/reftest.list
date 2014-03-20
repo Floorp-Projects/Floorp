@@ -89,6 +89,9 @@ HTTP(..) != kerning-sanity-check-nokern.html kerning-sanity-check-default.html
 
 # OpenType features should work across inter-word spaces
 HTTP(..) == font-features-across-space-1.html font-features-across-space-1-ref.html
+HTTP(..) == spacelookups.html spacelookups-ref.html
+# tests whether word cache is in use by testing for ignored space kerns
+HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache-ref.html
 # requires Japanese font with feature support, WinXP lacks one
 random-if(!winWidget&&!cocoaWidget) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == fwid-spaces.html fwid-spaces-ref.html
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces
