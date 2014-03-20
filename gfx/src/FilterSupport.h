@@ -206,7 +206,8 @@ private:
 
 MOZ_BEGIN_ENUM_CLASS(ColorSpace)
   SRGB,
-  LinearRGB
+  LinearRGB,
+  Max
 MOZ_END_ENUM_CLASS(ColorSpace)
 
 MOZ_BEGIN_ENUM_CLASS(AlphaModel)
