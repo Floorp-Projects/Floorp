@@ -182,14 +182,13 @@ PeerConnectionIdp.prototype = {
 
     try {
       let contents = JSON.parse(message.contents);
-      if (typeof contents.fingerprint !== "object" ||
-          typeof message.identity !== "object") {
-        warn("fingerprint or identity not objects");
+      if (typeof contents.fingerprint !== "object") {
+        warn("fingerprint is not an object");
       } else if (contents.fingerprint.digest !== fingerprint.digest ||
-          contents.fingerprint.algorithm !== fingerprint.algorithm) {
+                 contents.fingerprint.algorithm !== fingerprint.algorithm) {
         warn("fingerprint does not match");
       } else {
-        let error = this._validateName(message.identity.name);
+        let error = this._validateName(message.identity);
         if (error) {
           warn(error);
         } else {
