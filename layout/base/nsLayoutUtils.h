@@ -1151,8 +1151,6 @@ public:
             nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);
   }
 
-  static void MarkDescendantsDirty(nsIFrame *aSubtreeRoot);
-
   /*
    * Calculate the used values for 'width' and 'height' for a replaced element.
    *
