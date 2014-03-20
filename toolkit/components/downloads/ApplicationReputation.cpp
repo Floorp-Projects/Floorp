@@ -438,5 +438,17 @@ nsresult ApplicationReputationService::QueryReputationInternal(
 
   // Check local lists to see if the URI has already been whitelisted or
   // blacklisted.
-  return mDBService->Lookup(principal, lookup);
+  nsAutoCString tables;
+  nsAutoCString allowlist;
+  Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allowlist);
+  if (!allowlist.IsEmpty()) {
+    tables.Append(allowlist);
+  }
+  nsAutoCString blocklist;
+  Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &blocklist);
+  if (!blocklist.IsEmpty()) {
+    tables.Append(",");
+    tables.Append(blocklist);
+  }
+  return mDBService->Lookup(principal, tables, lookup);
 }
