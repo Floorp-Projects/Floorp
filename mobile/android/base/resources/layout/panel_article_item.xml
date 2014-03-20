@@ -9,6 +9,7 @@
                android:layout_width="54dp"
                android:layout_height="44dp"
                android:layout_marginTop="10dip"
+               android:layout_marginBottom="10dip"
                android:layout_marginLeft="10dip"
                android:scaleType="centerCrop"/>
 
@@ -34,6 +35,7 @@
                   android:layout_width="fill_parent"
                   android:layout_height="0dp"
                   android:layout_weight="2"
+                  android:gravity="center_vertical"
                   android:maxLength="1024"/>
 
     </LinearLayout>
