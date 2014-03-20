@@ -298,6 +298,13 @@ struct ParamTraits<mozilla::gfx::PrimitiveType>
                                mozilla::gfx::PrimitiveType::Max>
 {};
 
+template <>
+struct ParamTraits<mozilla::gfx::ColorSpace>
+  : public TypedEnumSerializer<mozilla::gfx::ColorSpace,
+                               mozilla::gfx::ColorSpace::SRGB,
+                               mozilla::gfx::ColorSpace::Max>
+{};
+
 /*
 template <>
 struct ParamTraits<mozilla::PixelFormat>
