@@ -1869,6 +1869,12 @@ AttributeMap::EnumerateRead(AttributeMap::AttributeHandleCallback aCallback, voi
   mMap.EnumerateRead(PassAttributeToHandleCallback, &handlerWithUserData);
 }
 
+uint32_t
+AttributeMap::Count() const
+{
+  return mMap.Count();
+}
+
 #define MAKE_ATTRIBUTE_HANDLERS_BASIC(type, typeLabel, defaultValue) \
   type                                                               \
   AttributeMap::Get##typeLabel(AttributeName aName) const {          \

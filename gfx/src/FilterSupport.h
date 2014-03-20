@@ -208,6 +208,7 @@ public:
 
   typedef bool (*AttributeHandleCallback)(AttributeName aName, AttributeType aType, void* aUserData);
   void EnumerateRead(AttributeHandleCallback aCallback, void* aUserData) const;
+  uint32_t Count() const;
 
 private:
   mutable nsClassHashtable<nsUint32HashKey, FilterAttribute>  mMap;
