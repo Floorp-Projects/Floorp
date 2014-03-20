@@ -71,6 +71,7 @@ private:
   nsUrlClassifierDBService(nsUrlClassifierDBService&);
 
   nsresult LookupURI(nsIPrincipal* aPrincipal,
+                     const nsACString& tables,
                      nsIUrlClassifierCallback* c,
                      bool forceCheck, bool *didCheck);
 
@@ -102,6 +103,9 @@ private:
 
   // The list of tables that can use the default hash completer object.
   nsTArray<nsCString> mGethashTables;
+
+  // The list of tables that should never be hash completed.
+  nsTArray<nsCString> mDisallowCompletionsTables;
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;
