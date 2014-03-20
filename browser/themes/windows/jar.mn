@@ -312,6 +312,7 @@ browser.jar:
         skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
         skin/classic/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
 #ifdef MOZ_SERVICES_SYNC
+        skin/classic/browser/sync-throbber.png
         skin/classic/browser/sync-16.png
         skin/classic/browser/sync-32.png
         skin/classic/browser/sync-128.png
@@ -327,10 +328,6 @@ browser.jar:
         skin/classic/browser/syncProgress.css
         skin/classic/browser/syncProgress-horizontalbar.png
         skin/classic/browser/syncProgress-horizontalbar-XPVista7.png
-        skin/classic/browser/syncProgress-menuPanel.png
-        skin/classic/browser/syncProgress-toolbar.png
-        skin/classic/browser/syncProgress-toolbar-inverted.png
-        skin/classic/browser/syncProgress-toolbar-XPVista7.png
 #endif
         skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
         skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
@@ -651,6 +648,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
 
 #ifdef MOZ_SERVICES_SYNC
+        skin/classic/aero/browser/sync-throbber.png
         skin/classic/aero/browser/sync-16.png
         skin/classic/aero/browser/sync-32.png
         skin/classic/aero/browser/sync-128.png
@@ -666,10 +664,6 @@ browser.jar:
         skin/classic/aero/browser/syncProgress.css
         skin/classic/aero/browser/syncProgress-horizontalbar.png
         skin/classic/aero/browser/syncProgress-horizontalbar-XPVista7.png
-        skin/classic/aero/browser/syncProgress-menuPanel.png
-        skin/classic/aero/browser/syncProgress-toolbar.png
-        skin/classic/aero/browser/syncProgress-toolbar-inverted.png
-        skin/classic/aero/browser/syncProgress-toolbar-XPVista7.png
 #endif
 #endif
         skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
