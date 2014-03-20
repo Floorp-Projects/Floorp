@@ -1603,6 +1603,8 @@ struct FilterAttribute {
     return !(*this == aOther);
   }
 
+  AttributeType Type() const { return mType; }
+
 #define MAKE_CONSTRUCTOR_AND_ACCESSOR_BASIC(type, typeLabel)   \
   FilterAttribute(type aValue)                                 \
    : mType(AttributeType::e##typeLabel), m##typeLabel(aValue)  \
@@ -1837,6 +1839,34 @@ AttributeMap::operator==(const AttributeMap& aOther) const
   MatchingMap matchingMap = { mMap, true };
   aOther.mMap.EnumerateRead(CheckAttributeEquality, &matchingMap);
   return matchingMap.matches;
+}
+
+namespace {
+  struct HandlerWithUserData
+  {
+    AttributeMap::AttributeHandleCallback handler;
+    void* userData;
+  };
+}
+
+static PLDHashOperator
+PassAttributeToHandleCallback(const uint32_t& aAttributeName,
+                              Attribute* aAttribute,
+                              void* aHandlerWithUserData)
+{
+  HandlerWithUserData* handlerWithUserData =
+    static_cast<HandlerWithUserData*>(aHandlerWithUserData);
+  return handlerWithUserData->handler(AttributeName(aAttributeName),
+                                      aAttribute->Type(),
+                                      handlerWithUserData->userData) ?
+    PL_DHASH_NEXT : PL_DHASH_STOP;
+}
+
+void
+AttributeMap::EnumerateRead(AttributeMap::AttributeHandleCallback aCallback, void* aUserData) const
+{
+  HandlerWithUserData handlerWithUserData = { aCallback, aUserData };
+  mMap.EnumerateRead(PassAttributeToHandleCallback, &handlerWithUserData);
 }
 
 #define MAKE_ATTRIBUTE_HANDLERS_BASIC(type, typeLabel, defaultValue) \
