@@ -25,6 +25,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"
+#include "FilterSupport.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4800 )
@@ -281,6 +282,13 @@ struct ParamTraits<gfxImageFormat>
   : public TypedEnumSerializer<gfxImageFormat,
                                gfxImageFormat::ARGB32,
                                gfxImageFormat::Unknown>
+{};
+
+template <>
+struct ParamTraits<mozilla::gfx::AttributeType>
+  : public TypedEnumSerializer<mozilla::gfx::AttributeType,
+                               mozilla::gfx::AttributeType::eBool,
+                               mozilla::gfx::AttributeType::Max>
 {};
 
 /*
