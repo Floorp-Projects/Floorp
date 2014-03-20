@@ -8,6 +8,7 @@
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
 #include "mozilla/Preferences.h"
 #include "AudioChannelAgent.h"
+#include "AudioChannelService.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "MediaStreamGraph.h"
@@ -237,6 +238,12 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream->AddMainThreadListener(this);
   mStream->AddAudioOutput(&gWebAudioOutputKey);
 
+  AudioChannel channel = AudioChannelService::GetDefaultAudioChannel();
+  if (channel != AudioChannel::Normal) {
+    ErrorResult rv;
+    SetMozAudioChannelType(channel, rv);
+  }
+
   if (!aIsOffline && UseAudioChannelService()) {
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
     if (target) {
@@ -433,6 +440,11 @@ AudioDestinationNode::CheckAudioChannelPermissions(AudioChannel aValue)
 
   // Only normal channel doesn't need permission.
   if (aValue == AudioChannel::Normal) {
+    return true;
+  }
+
+  // Maybe this audio channel is equal to the default one.
+  if (aValue == AudioChannelService::GetDefaultAudioChannel()) {
     return true;
   }
 

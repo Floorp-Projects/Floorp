@@ -15,6 +15,7 @@
 #include "AudioChannelCommon.h"
 #include "AudioChannelAgent.h"
 #include "nsClassHashtable.h"
+#include "mozilla/dom/AudioChannelBinding.h"
 
 class nsPIDOMWindow;
 
@@ -102,6 +103,10 @@ public:
     mSpeakerManager.RemoveElement(aSpeakerManager);
   }
 #endif
+
+  static AudioChannel GetDefaultAudioChannel();
+  static void GetDefaultAudioChannelString(nsString& aString);
+
 protected:
   void Notify();
 
