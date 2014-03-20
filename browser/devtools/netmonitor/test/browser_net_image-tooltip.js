@@ -59,16 +59,17 @@ function test() {
       });
     }
 
-    function showTooltipOn(aTooltip, aTarget) {
-      let deferred = promise.defer();
-
-      aTooltip.panel.addEventListener("popupshown", function onEvent() {
-        aTooltip.panel.removeEventListener("popupshown", onEvent, true);
-        deferred.resolve(aTooltip);
-      }, true);
-
-      aTooltip._showOnHover(aTarget);
-      return deferred.promise;
+    /**
+     * @return a promise that resolves when the tooltip is shown
+     */
+    function showTooltipOn(tooltip, element) {
+      return Task.spawn(function*() {
+        let isTarget = yield tooltip.isValidHoverTarget(element);
+        let onShown = tooltip.once("shown");
+        tooltip.show();
+        yield onShown;
+        return tooltip;
+      });
     }
 
     aDebuggee.performRequests();

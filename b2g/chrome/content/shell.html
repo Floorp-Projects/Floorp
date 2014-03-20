@@ -12,7 +12,11 @@
       >
 
 <head>
-  <link rel="stylesheet" href="shell.css" type="text/css" media="all" />
+  <link rel="stylesheet" href="shell.css" type="text/css">
+#ifdef FXOS_SIMULATOR
+  <link rel="stylesheet" href="desktop.css" type="text/css">
+#endif
+
   <script type="application/javascript;version=1.8"
           src="chrome://b2g/content/settings.js"> </script>
   <script type="application/javascript;version=1.8"
@@ -31,7 +35,15 @@
 #endif
 </head>
   <body id="container">
-#ifdef MOZ_WIDGET_COCOA
+#ifdef FXOS_SIMULATOR
+    <!--
+     Some additional buttons are displayed on desktop to fake hardware buttons.
+    -->
+    <footer id="controls">
+      <button id="home-button"></button>
+      <button id="rotate-button"></button>
+    </footer>
+#elifdef MOZ_WIDGET_COCOA
     <!--
      If the document is empty at startup, we don't display the window
      at all on Mac OS...

@@ -30,7 +30,7 @@ ContentPermission.prototype = {
   },
 
   prompt: function(request) {
-    // Only allow exactly one permission rquest here.
+    // Only allow exactly one permission request here.
     let types = request.types.QueryInterface(Ci.nsIArray);
     if (types.length != 1) {
       request.cancel();

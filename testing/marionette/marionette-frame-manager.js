@@ -163,6 +163,7 @@ FrameManager.prototype = {
     messageManager.addWeakMessageListener("Marionette:shareData", this.server);
     messageManager.addWeakMessageListener("Marionette:register", this.server);
     messageManager.addWeakMessageListener("Marionette:runEmulatorCmd", this.server);
+    messageManager.addWeakMessageListener("Marionette:runEmulatorShell", this.server);
     messageManager.addWeakMessageListener("Marionette:switchToModalOrigin", this.server);
     messageManager.addWeakMessageListener("Marionette:switchToFrame", this.server);
     messageManager.addWeakMessageListener("Marionette:switchedToFrame", this.server);
@@ -190,6 +191,7 @@ FrameManager.prototype = {
     messageManager.removeWeakMessageListener("Marionette:shareData", this.server);
     messageManager.removeWeakMessageListener("Marionette:register", this.server);
     messageManager.removeWeakMessageListener("Marionette:runEmulatorCmd", this.server);
+    messageManager.removeWeakMessageListener("Marionette:runEmulatorShell", this.server);
     messageManager.removeWeakMessageListener("Marionette:switchToFrame", this.server);
     messageManager.removeWeakMessageListener("Marionette:switchedToFrame", this.server);
     messageManager.removeWeakMessageListener("MarionetteFrame:handleModal", this);

@@ -143,13 +143,6 @@ class MochitestRunner(MozbuildObject):
                 test_path_dir = True;
             options.testPath = test_path
 
-        # filter test directiories or all tests according to the manifest
-        if not test_path or test_path_dir:
-            if conditions.is_b2g_desktop(self):
-                options.testManifest = 'b2g-desktop.json'
-            else:
-                options.testManifest = 'b2g.json'
-
         for k, v in kwargs.iteritems():
             setattr(options, k, v)
         options.noWindow = no_window

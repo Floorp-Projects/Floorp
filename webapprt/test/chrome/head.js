@@ -27,10 +27,10 @@ function loadWebapp(manifest, parameters, onLoad) {
 
   becomeWebapp(url.spec, parameters, function onBecome() {
     function onLoadApp() {
-      gAppBrowser.removeEventListener("load", onLoadApp, true);
+      gAppBrowser.removeEventListener("DOMContentLoaded", onLoadApp, true);
       onLoad();
     }
-    gAppBrowser.addEventListener("load", onLoadApp, true);
+    gAppBrowser.addEventListener("DOMContentLoaded", onLoadApp, true);
     gAppBrowser.setAttribute("src", WebappRT.launchURI);
   });
 

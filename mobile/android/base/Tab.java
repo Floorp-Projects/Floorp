@@ -117,7 +117,7 @@ public class Tab {
         mZoomConstraints = new ZoomConstraints(false);
         mPluginViews = new ArrayList<View>();
         mPluginLayers = new HashMap<Object, Layer>();
-        mState = shouldShowProgress(url) ? STATE_SUCCESS : STATE_LOADING;
+        mState = shouldShowProgress(url) ? STATE_LOADING : STATE_SUCCESS;
         mLoadProgress = LOAD_PROGRESS_INIT;
 
         // At startup, the background is set to a color specified by LayerView
@@ -641,9 +641,7 @@ public class Tab {
     }
 
     private static boolean shouldShowProgress(final String url) {
-        return AboutPages.isAboutHome(url) ||
-               AboutPages.isAboutReader(url) ||
-               AboutPages.isAboutPrivateBrowsing(url);
+        return !AboutPages.isAboutPage(url);
     }
 
     void handleDocumentStart(boolean showProgress, String url) {

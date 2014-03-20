@@ -14,7 +14,13 @@ chrome.jar:
 * content/shell.js                      (content/shell.js)
   content/shell.css                     (content/shell.css)
   content/devtools.js                   (content/devtools.js)
-#ifndef ANDROID
+#ifdef FXOS_SIMULATOR
+  content/desktop.css                   (content/desktop.css)
+  content/images/desktop/home-black.png (content/images/desktop/home-black.png)
+  content/images/desktop/home-white.png (content/images/desktop/home-white.png)
+  content/images/desktop/rotate.png     (content/images/desktop/rotate.png)
+#endif
+#ifndef MOZ_WIDGET_GONK
   content/desktop.js                    (content/desktop.js)
   content/screen.js                     (content/screen.js)
   content/runapp.js                     (content/runapp.js)
