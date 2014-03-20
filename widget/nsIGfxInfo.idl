@@ -79,6 +79,8 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBGL_MSAA = 8;
   /* Whether Stagefright is supported */
   const long FEATURE_STAGEFRIGHT = 9;
+  /* Whether Webrtc Hardware acceleration is supported */
+  const long FEATURE_WEBRTC_HW_ACCELERATION = 10;
 
   /*
    * A set of return values from GetFeatureStatus
