@@ -206,10 +206,25 @@ struct FileSystemGetFileOrDirectoryParams
   nsString realPath;
 };
 
+union FileSystemPathOrFileValue
+{
+  nsString;
+  PBlob;
+};
+
+struct FileSystemRemoveParams
+{
+  nsString filesystem;
+  nsString directory;
+  FileSystemPathOrFileValue target;
+  bool recursive;
+};
+
 union FileSystemParams
 {
   FileSystemCreateDirectoryParams;
   FileSystemGetFileOrDirectoryParams;
+  FileSystemRemoveParams;
 };
 
 union PrefValue {

@@ -2011,26 +2011,37 @@ nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
         /* Unlike position, force size out-of-bounds check only if
            size actually was specified. Otherwise, intrinsically sized
            windows are broken. */
-        if (height < 100)
+        if (height < 100) {
           height = 100;
-        if (winHeight > screenHeight)
+          winHeight = height + (sizeChromeHeight ? 0 : chromeHeight);
+        }
+        if (winHeight > screenHeight) {
           height = screenHeight - (sizeChromeHeight ? 0 : chromeHeight);
-        if (width < 100)
+        }
+        if (width < 100) {
           width = 100;
-        if (winWidth > screenWidth)
+          winWidth = width + (sizeChromeWidth ? 0 : chromeWidth);
+        }
+        if (winWidth > screenWidth) {
           width = screenWidth - (sizeChromeWidth ? 0 : chromeWidth);
+        }
       }
 
-      if (left + winWidth > screenLeft + screenWidth)
+      if (left + winWidth > screenLeft + screenWidth || left + winWidth < left) {
         left = screenLeft + screenWidth - winWidth;
-      if (left < screenLeft)
+      }
+      if (left < screenLeft) {
         left = screenLeft;
-      if (top + winHeight > screenTop + screenHeight)
+      }
+      if (top + winHeight > screenTop + screenHeight || top + winHeight < top) {
         top = screenTop + screenHeight - winHeight;
-      if (top < screenTop)
+      }
+      if (top < screenTop) {
         top = screenTop;
-      if (top != oldTop || left != oldLeft)
+      }
+      if (top != oldTop || left != oldLeft) {
         positionSpecified = true;
+      }
     }
   }
 

@@ -992,24 +992,23 @@ SEGVHandler::SEGVHandler()
   sigemptyset(&action.sa_mask);
   action.sa_flags = SA_SIGINFO | SA_NODEFER;
   action.sa_restorer = nullptr;
-  if (sys_sigaction(SIGSEGV, &action, nullptr))
-    return;
   stackPtr.Assign(MemoryRange::mmap(nullptr, PageSize(),
                                     PROT_READ | PROT_WRITE,
                                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   if (stackPtr.get() == MAP_FAILED)
+    return;
+  if (sys_sigaction(SIGSEGV, &action, nullptr))
     return;
 
   TmpData *data = reinterpret_cast<TmpData*>(stackPtr.get());
   data->crash_timestamp = ProcessTimeStamp_Now();
   mprotect(stackPtr, stackPtr.GetLength(), PROT_NONE);
   data->crash_int = 123;
+  /* Restore the original segfault signal handler. */
+  sys_sigaction(SIGSEGV, &this->action, nullptr);
   stackPtr.Assign(MAP_FAILED, 0);
-  if (signalHandlingBroken || signalHandlingSlow) {
-    /* Restore the original segfault signal handler. */
-    sys_sigaction(SIGSEGV, &this->action, nullptr);
+  if (signalHandlingBroken || signalHandlingSlow)
     return;
-  }
 
   /* Setup an alternative stack if the already existing one is not big
    * enough, or if there is none. */
@@ -1111,11 +1110,12 @@ int
 SEGVHandler::__wrap_sigaction(int signum, const struct sigaction *act,
                               struct sigaction *oldact)
 {
+  SEGVHandler &that = ElfLoader::Singleton;
+
   /* Use system sigaction() function for all but SIGSEGV signals. */
-  if (signum != SIGSEGV)
+  if (!that.registeredHandler || (signum != SIGSEGV))
     return sys_sigaction(signum, act, oldact);
 
-  SEGVHandler &that = ElfLoader::Singleton;
   if (oldact)
     *oldact = that.action;
   if (act)

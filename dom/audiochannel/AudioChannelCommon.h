@@ -30,6 +30,7 @@ enum AudioChannelState {
   AUDIO_CHANNEL_STATE_FADED,
   AUDIO_CHANNEL_STATE_LAST
 };
+
 } // namespace dom
 } // namespace mozilla
 

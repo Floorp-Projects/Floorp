@@ -304,6 +304,7 @@ class MinorCollectionTracer : public JSTracer
     bool savedRuntimeNeedBarrier;
     AutoDisableProxyCheck disableStrictProxyChecking;
     AutoEnterOOMUnsafeRegion oomUnsafeRegion;
+    ArrayBufferVector liveArrayBuffers;
 
     /* Insert the given relocation entry into the list of things to visit. */
     MOZ_ALWAYS_INLINE void insertIntoFixupList(RelocationOverlay *entry) {
@@ -335,10 +336,25 @@ class MinorCollectionTracer : public JSTracer
          * GCs between incremental slices will allocate their objects marked.
          */
         rt->setNeedsBarrier(false);
+
+        /*
+         * We use the live array buffer lists to track traced buffers so we can
+         * sweep their dead views. Incremental collection also use these lists,
+         * so we may need to save and restore their contents here.
+         */
+        if (rt->gcIncrementalState != NO_INCREMENTAL) {
+            for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
+                if (!ArrayBufferObject::saveArrayBufferList(c, liveArrayBuffers))
+                    CrashAtUnhandlableOOM("OOM while saving live array buffers");
+                ArrayBufferObject::resetArrayBufferList(c);
+            }
+        }
     }
 
     ~MinorCollectionTracer() {
         runtime->setNeedsBarrier(savedRuntimeNeedBarrier);
+        if (runtime->gcIncrementalState != NO_INCREMENTAL)
+            ArrayBufferObject::restoreArrayBufferLists(liveArrayBuffers);
     }
 };
 

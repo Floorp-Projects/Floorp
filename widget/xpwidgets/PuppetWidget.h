@@ -21,6 +21,7 @@
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 
 class gfxASurface;
 
@@ -129,6 +130,28 @@ public:
                                  bool aDoCapture)
   { return NS_ERROR_UNEXPECTED; }
 
+  NS_IMETHOD_(bool)
+  ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
+                          const mozilla::WidgetKeyboardEvent& aEvent,
+                          DoCommandCallback aCallback,
+                          void* aCallbackData) MOZ_OVERRIDE;
+
+  void CacheNativeKeyCommands(const InfallibleTArray<mozilla::CommandInt>& aSingleLineCommands,
+                              const InfallibleTArray<mozilla::CommandInt>& aMultiLineCommands,
+                              const InfallibleTArray<mozilla::CommandInt>& aRichTextCommands)
+  {
+    mSingleLineCommands = aSingleLineCommands;
+    mMultiLineCommands = aMultiLineCommands;
+    mRichTextCommands = aRichTextCommands;
+  }
+
+  void ClearNativeKeyCommands()
+  {
+    mSingleLineCommands.Clear();
+    mMultiLineCommands.Clear();
+    mRichTextCommands.Clear();
+  }
+
   //
   // nsBaseWidget methods we override
   //
@@ -225,6 +248,11 @@ private:
   // The DPI of the screen corresponding to this widget
   float mDPI;
   double mDefaultScale;
+
+  // Precomputed answers for ExecuteNativeKeyBinding
+  InfallibleTArray<mozilla::CommandInt> mSingleLineCommands;
+  InfallibleTArray<mozilla::CommandInt> mMultiLineCommands;
+  InfallibleTArray<mozilla::CommandInt> mRichTextCommands;
 };
 
 class PuppetScreen : public nsBaseScreen

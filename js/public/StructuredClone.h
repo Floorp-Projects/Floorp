@@ -149,7 +149,7 @@ JS_PUBLIC_API(bool)
 JS_ReadBytes(JSStructuredCloneReader *r, void *p, size_t len);
 
 JS_PUBLIC_API(bool)
-JS_ReadTypedArray(JSStructuredCloneReader *r, JS::Value *vp);
+JS_ReadTypedArray(JSStructuredCloneReader *r, JS::MutableHandleValue vp);
 
 JS_PUBLIC_API(bool)
 JS_WriteUint32Pair(JSStructuredCloneWriter *w, uint32_t tag, uint32_t data);

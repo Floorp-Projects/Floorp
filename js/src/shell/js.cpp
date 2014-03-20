@@ -1785,7 +1785,8 @@ Trap(JSContext *cx, unsigned argc, jsval *vp)
     if (!GetScriptAndPCArgs(cx, argc, args.array(), &script, &i))
         return false;
     args.rval().setUndefined();
-    return JS_SetTrap(cx, script, script->offsetToPC(i), TrapHandler, STRING_TO_JSVAL(str));
+    RootedValue strValue(cx, StringValue(str));
+    return JS_SetTrap(cx, script, script->offsetToPC(i), TrapHandler, strValue);
 }
 
 static bool
