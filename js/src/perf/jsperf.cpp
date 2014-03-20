@@ -181,7 +181,7 @@ pm_construct(JSContext* cx, unsigned argc, jsval* vp)
     if (!JS::ToUint32(cx, args[0], &mask))
         return false;
 
-    JS::RootedObject obj(cx, JS_NewObjectForConstructor(cx, &pm_class, vp));
+    JS::RootedObject obj(cx, JS_NewObjectForConstructor(cx, &pm_class, args));
     if (!obj)
         return false;
 

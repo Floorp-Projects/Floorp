@@ -8970,7 +8970,7 @@ if test "$MOZ_TREE_FREETYPE"; then
    export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS"
    export LIBPNG_LIBS="$MOZ_PNG_LIBS"
    export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
-   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes --with-png=yes"
+   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes --with-png=yes --without-harfbuzz"
 
    if ! test -e modules; then
      mkdir modules

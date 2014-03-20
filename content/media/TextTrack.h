@@ -111,7 +111,6 @@ public:
 
   void AddCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
-  void CueChanged(TextTrackCue& aCue);
   void SetDirty() { mDirty = true; }
 
   TextTrackList* GetTextTrackList();

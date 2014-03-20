@@ -408,7 +408,7 @@ RValueAllocation::dumpPayload(FILE *fp, PayloadType type, Payload p)
         fprintf(fp, "reg %s", p.fpu.name());
         break;
       case PAYLOAD_PACKED_TAG:
-        fprintf(fp, ValTypeToString(p.type));
+        fprintf(fp, "%s", ValTypeToString(p.type));
         break;
     }
 }
