@@ -438,14 +438,15 @@ public:
     bool             mHasSpaceFeatures : 1;
     bool             mHasSpaceFeaturesKerning : 1;
     bool             mHasSpaceFeaturesNonKerning : 1;
-    bool             mHasSpaceFeaturesSubDefault : 1;
     bool             mHasGraphiteTables : 1;
     bool             mCheckedForGraphiteTables : 1;
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
 
-    // bitvector of substitution space features per script
-    uint32_t         mHasSpaceFeaturesSub[(MOZ_NUM_SCRIPT_CODES + 31) / 32];
+    // bitvector of substitution space features per script, one each
+    // for default and non-default features
+    uint32_t         mDefaultSubSpaceFeatures[(MOZ_NUM_SCRIPT_CODES + 31) / 32];
+    uint32_t         mNonDefaultSubSpaceFeatures[(MOZ_NUM_SCRIPT_CODES + 31) / 32];
 
     uint16_t         mWeight;
     int16_t          mStretch;
@@ -1794,53 +1795,20 @@ public:
         return mFontEntry->TryGetSVGData(this);
     }
 
+    static void DestroySingletons() {
+        delete sScriptTagToCode;
+        delete sDefaultFeatures;
+    }
+
 protected:
     void AddGlyphChangeObserver(GlyphChangeObserver *aObserver);
     void RemoveGlyphChangeObserver(GlyphChangeObserver *aObserver);
 
-    bool HasSubstitutionRulesWithSpaceLookups(int32_t aRunScript) {
-        NS_ASSERTION(GetFontEntry()->mHasSpaceFeaturesInitialized,
-                     "need to initialize space lookup flags");
-        NS_ASSERTION(aRunScript < MOZ_NUM_SCRIPT_CODES, "weird script code");
-        if (aRunScript == MOZ_SCRIPT_INVALID ||
-            aRunScript >= MOZ_NUM_SCRIPT_CODES) {
-            return false;
-        }
-        uint32_t index = aRunScript >> 5;
-        uint32_t bit = aRunScript & 0x1f;
-        return (mFontEntry->mHasSpaceFeaturesSub[index] & (1 << bit)) != 0;
-    }
+    // whether font contains substitution lookups containing spaces
+    bool HasSubstitutionRulesWithSpaceLookups(int32_t aRunScript);
 
-    bool BypassShapedWordCache(int32_t aRunScript) {
-        // We record the presence of space-dependent features in the font entry
-        // so that subsequent instantiations for the same font face won't
-        // require us to re-check the tables; however, the actual check is done
-        // by gfxFont because not all font entry subclasses know how to create
-        // a harfbuzz face for introspection.
-        if (!mFontEntry->mHasSpaceFeaturesInitialized) {
-            CheckForFeaturesInvolvingSpace();
-        }
-
-        if (!mFontEntry->mHasSpaceFeatures) {
-            return false;
-        }
-
-        // if font has substitution rules or non-kerning positioning rules
-        // that involve spaces, bypass
-        if (HasSubstitutionRulesWithSpaceLookups(aRunScript) ||
-            mFontEntry->mHasSpaceFeaturesNonKerning ||
-            mFontEntry->mHasSpaceFeaturesSubDefault) {
-            return true;
-        }
-
-        // if kerning explicitly enabled/disabled via font-feature-settings or
-        // font-kerning and kerning rules use spaces, only bypass when enabled
-        if (mKerningSet && mFontEntry->mHasSpaceFeaturesKerning) {
-            return mKerningEnabled;
-        }
-
-        return false;
-    }
+    // whether to use word cache or not
+    bool BypassShapedWordCache(int32_t aRunScript);
 
     // For 8-bit text, expand to 16-bit and then call the following method.
     bool ShapeText(gfxContext    *aContext,
@@ -1904,7 +1872,9 @@ protected:
     // font and the style. aFeatureOn set if resolved feature value is non-zero
     bool HasFeatureSet(uint32_t aFeature, bool& aFeatureOn);
 
+    // used when analyzing whether a font has space contextual lookups
     static nsDataHashtable<nsUint32HashKey, int32_t> *sScriptTagToCode;
+    static nsTHashtable<nsUint32HashKey>             *sDefaultFeatures;
 
     nsRefPtr<gfxFontEntry> mFontEntry;
 
