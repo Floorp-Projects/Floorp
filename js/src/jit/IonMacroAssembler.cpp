@@ -380,7 +380,7 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
             masm.storeFloat32(value, dest);
         } else {
 #ifdef JS_MORE_DETERMINISTIC
-            // See the comment in ToDoubleForTypedArray.
+            // See the comment in TypedArrayObjectTemplate::doubleToNative.
             masm.canonicalizeDouble(value);
 #endif
             masm.convertDoubleToFloat32(value, ScratchFloatReg);
@@ -389,7 +389,7 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
         break;
       case ScalarTypeDescr::TYPE_FLOAT64:
 #ifdef JS_MORE_DETERMINISTIC
-        // See the comment in ToDoubleForTypedArray.
+        // See the comment in TypedArrayObjectTemplate::doubleToNative.
         masm.canonicalizeDouble(value);
 #endif
         masm.storeDouble(value, dest);
@@ -1633,9 +1633,8 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
                           behavior == IntConversion_ClampToUint8) &&
                          handleStringEntry &&
                          handleStringRejoin;
-    bool zeroObjects = behavior == IntConversion_ClampToUint8;
 
-    JS_ASSERT_IF(handleStrings || zeroObjects, conversion == IntConversion_Any);
+    JS_ASSERT_IF(handleStrings, conversion == IntConversion_Any);
 
     Label done, isInt32, isBool, isDouble, isNull, isString;
 
@@ -1658,8 +1657,7 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
             branchEqualTypeIfNeeded(MIRType_Null, maybeInput, tag, &isNull);
             if (handleStrings)
                 branchEqualTypeIfNeeded(MIRType_String, maybeInput, tag, &isString);
-            if (zeroObjects)
-                branchEqualTypeIfNeeded(MIRType_Object, maybeInput, tag, &isNull);
+            branchEqualTypeIfNeeded(MIRType_Object, maybeInput, tag, fail);
             branchTestUndefined(Assembler::NotEqual, tag, fail);
             break;
         }
@@ -1718,7 +1716,6 @@ MacroAssembler::convertValueToInt(JSContext *cx, const Value &v, Register output
 {
     bool handleStrings = (behavior == IntConversion_Truncate ||
                           behavior == IntConversion_ClampToUint8);
-    bool zeroObjects = behavior == IntConversion_ClampToUint8;
 
     if (v.isNumber() || (handleStrings && v.isString())) {
         double d;
@@ -1761,10 +1758,7 @@ MacroAssembler::convertValueToInt(JSContext *cx, const Value &v, Register output
 
     JS_ASSERT(v.isObject());
 
-    if (zeroObjects)
-        move32(Imm32(0), output);
-    else
-        jump(fail);
+    jump(fail);
     return true;
 }
 
