@@ -341,31 +341,36 @@ function DBAddonInternal(aLoaded) {
     });
 }
 
-DBAddonInternal.prototype = {
-  applyCompatibilityUpdate: function DBA_applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
-    this.targetApplications.forEach(function(aTargetApp) {
-      aUpdate.targetApplications.forEach(function(aUpdateTarget) {
-        if (aTargetApp.id == aUpdateTarget.id && (aSyncCompatibility ||
-            Services.vc.compare(aTargetApp.maxVersion, aUpdateTarget.maxVersion) < 0)) {
-          aTargetApp.minVersion = aUpdateTarget.minVersion;
-          aTargetApp.maxVersion = aUpdateTarget.maxVersion;
-          XPIDatabase.saveChanges();
-        }
+function DBAddonInternalPrototype()
+{
+  this.applyCompatibilityUpdate =
+    function(aUpdate, aSyncCompatibility) {
+      this.targetApplications.forEach(function(aTargetApp) {
+        aUpdate.targetApplications.forEach(function(aUpdateTarget) {
+          if (aTargetApp.id == aUpdateTarget.id && (aSyncCompatibility ||
+              Services.vc.compare(aTargetApp.maxVersion, aUpdateTarget.maxVersion) < 0)) {
+            aTargetApp.minVersion = aUpdateTarget.minVersion;
+            aTargetApp.maxVersion = aUpdateTarget.maxVersion;
+            XPIDatabase.saveChanges();
+          }
+        });
       });
-    });
-    XPIProvider.updateAddonDisabledState(this);
-  },
+      XPIProvider.updateAddonDisabledState(this);
+    };
 
-  get inDatabase() {
-    return true;
-  },
+  this.toJSON =
+    function() {
+      return copyProperties(this, PROP_JSON_FIELDS);
+    };
 
-  toJSON: function() {
-    return copyProperties(this, PROP_JSON_FIELDS);
-  }
+  Object.defineProperty(this, "inDatabase",
+                        { get: function() { return true; },
+                          enumerable: true,
+                          configurable: true });
 }
+DBAddonInternalPrototype.prototype = AddonInternal.prototype;
 
-DBAddonInternal.prototype.__proto__ = AddonInternal.prototype;
+DBAddonInternal.prototype = new DBAddonInternalPrototype();
 
 /**
  * Internal interface: find an addon from an already loaded addonDB

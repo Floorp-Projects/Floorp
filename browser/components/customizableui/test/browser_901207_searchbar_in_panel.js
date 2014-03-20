@@ -12,10 +12,19 @@ openUILinkIn = (aUrl, aWhichTab) => {
   is(aWhichTab, "current", "Should use the current tab for the search page.");
   openUILinkInCalled = true;
   if (!expectOpenUILinkInCall) {
-    ok(false, "OpenUILink in was called when it shouldn't have been.");
+    ok(false, "OpenUILinkIn was called when it shouldn't have been.");
   }
 };
 logActiveElement();
+
+function* waitForSearchBarFocus()
+{
+  let searchbar = document.getElementById("searchbar");
+  yield waitForCondition(function () {
+    logActiveElement();
+    return document.activeElement === searchbar.textbox.inputField;
+  });
+}
 
 // Ctrl+K should open the menu panel and focus the search bar if the search bar is in the panel.
 add_task(function() {
@@ -28,8 +37,7 @@ add_task(function() {
   sendWebSearchKeyCommand();
   yield shownPanelPromise;
 
-  logActiveElement();
-  is(document.activeElement, searchbar.textbox.inputField, "The searchbar should be focused");
+  yield waitForSearchBarFocus();
 
   let hiddenPanelPromise = promisePanelHidden(window);
   EventUtils.synthesizeKey("VK_ESCAPE", {});
@@ -49,8 +57,8 @@ add_task(function() {
   yield shownPanelPromise;
 
   sendWebSearchKeyCommand();
-  logActiveElement();
-  is(document.activeElement, searchbar.textbox.inputField, "The searchbar should be focused");
+
+  yield waitForSearchBarFocus();
 
   let hiddenPanelPromise = promisePanelHidden(window);
   EventUtils.synthesizeKey("VK_ESCAPE", {});
@@ -68,7 +76,6 @@ add_task(function() {
   window.resizeTo(360, window.outerHeight);
   yield waitForCondition(() => navbar.getAttribute("overflowing") == "true");
   ok(!navbar.querySelector("#search-container"), "Search container should be overflowing");
-  let searchbar = document.getElementById("searchbar");
 
   let shownPanelPromise = promiseOverflowShown(window);
   sendWebSearchKeyCommand();
@@ -76,8 +83,8 @@ add_task(function() {
 
   let chevron = document.getElementById("nav-bar-overflow-button");
   yield waitForCondition(function() chevron.open);
-  logActiveElement();
-  is(document.activeElement, searchbar.textbox.inputField, "The searchbar should be focused");
+
+  yield waitForSearchBarFocus();
 
   let hiddenPanelPromise = promiseOverflowHidden(window);
   EventUtils.synthesizeKey("VK_ESCAPE", {});
@@ -90,13 +97,12 @@ add_task(function() {
 
 // Ctrl+K should focus the search bar if it is in the navbar and not overflowing.
 add_task(function() {
-  let searchbar = document.getElementById("searchbar");
   let placement = CustomizableUI.getPlacementOfWidget("search-container");
   is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in nav-bar");
 
   sendWebSearchKeyCommand();
-  logActiveElement();
-  is(document.activeElement, searchbar.textbox.inputField, "The searchbar should be focused");
+
+  yield waitForSearchBarFocus();
 });
 
 // Ctrl+K should open the search page if the search bar has been customized out.

@@ -1,0 +1,40 @@
+// ----------------------------------------------------------------------------
+// Tests installing an add-on from a local file with whitelisting disabled.
+// This should be blocked by the whitelist check.
+function test() {
+  Harness.installBlockedCallback = allow_blocked;
+  Harness.installsCompletedCallback = finish_test;
+  Harness.setup();
+
+  // Disable file request whitelisting, installing by file referrer should be blocked.
+  Services.prefs.setBoolPref("xpinstall.whitelist.fileRequest", false);
+
+  var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
+                     .getService(Components.interfaces.nsIChromeRegistry);
+
+  var chromeroot = extractChromeRoot(gTestPath);
+  try {
+    var xpipath = cr.convertChromeURL(makeURI(chromeroot)).spec;
+  } catch (ex) {
+    var xpipath = chromeroot; //scenario where we are running from a .jar and already extracted
+  }
+  var triggers = encodeURIComponent(JSON.stringify({
+    "Unsigned XPI": TESTROOT + "unsigned.xpi"
+  }));
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.loadURI(xpipath + "installtrigger.html?" + triggers);
+}
+
+function allow_blocked(installInfo) {
+  ok(true, "Seen blocked");
+  return false;
+}
+
+function finish_test(count) {
+  is(count, 0, "No add-ons should have been installed");
+
+  Services.prefs.clearUserPref("xpinstall.whitelist.fileRequest");
+
+  gBrowser.removeCurrentTab();
+  Harness.finish();
+}
