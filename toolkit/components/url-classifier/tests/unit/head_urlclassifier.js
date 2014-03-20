@@ -31,6 +31,9 @@ prefBranch.setIntPref("urlclassifier.gethashnoise", 0);
 prefBranch.setBoolPref("browser.safebrowsing.malware.enabled", true);
 prefBranch.setBoolPref("browser.safebrowsing.enabled", true);
 
+// Enable all completions for tests
+prefBranch.setCharPref("urlclassifier.disallow_completions", "");
+
 function delFile(name) {
   try {
     // Delete a previously created sqlite file
@@ -52,6 +55,8 @@ function cleanUp() {
   delFile("safebrowsing/test-phish-simple.pset");
   delFile("safebrowsing/test-malware-simple.pset");
 }
+
+var allTables = "test-phish-simple,test-malware-simple";
 
 var dbservice = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(Ci.nsIUrlClassifierDBService);
 var streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
@@ -200,11 +205,11 @@ checkUrls: function(urls, expected, cb)
     if (urls.length > 0) {
       var fragment = urls.shift();
       var principal = secMan.getNoAppCodebasePrincipal(iosvc.newURI("http://" + fragment, null, null));
-      dbservice.lookup(principal,
-                       function(arg) {
-                         do_check_eq(expected, arg);
-                         doLookup();
-                       }, true);
+      dbservice.lookup(principal, allTables,
+                                function(arg) {
+                                  do_check_eq(expected, arg);
+                                  doLookup();
+                                }, true);
     } else {
       cb();
     }
