@@ -30,12 +30,10 @@ function startTest(test, token) {
   }
   manager.started(token);
   var a = new Audio(test.name);
-  a.addEventListener("canplaythrough",
-                     function(e){ e.target.play(); },
-                      false);
+  a.autoplay = true;
   a.addEventListener("ended",
                      function(e){
-                        ok(true, "We should get to the end. Oh look we did.");
+                        ok(true, "[" + a.src + "]We should get to the end. Oh look we did.");
                         manager.finished(token);
                      },
                      false);

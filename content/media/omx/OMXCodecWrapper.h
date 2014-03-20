@@ -15,6 +15,8 @@
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 
+#include <speex/speex_resampler.h>
+
 namespace android {
 
 class OMXAudioEncoder;
@@ -53,6 +55,7 @@ public:
   // Codec types.
   enum CodecType {
     AAC_ENC, // AAC encoder.
+    AMR_NB_ENC, // AMR_NB encoder.
     AVC_ENC, // AVC/H.264 encoder.
     TYPE_COUNT
   };
@@ -83,6 +86,9 @@ public:
   /** Create a AAC audio encoder. Returns nullptr when failed. */
   static OMXAudioEncoder* CreateAACEncoder();
 
+  /** Create a AMR audio encoder. Returns nullptr when failed. */
+  static OMXAudioEncoder* CreateAMRNBEncoder();
+
   /** Create a AVC/H.264 video encoder. Returns nullptr when failed. */
   static OMXVideoEncoder* CreateAVCEncoder();
 
@@ -97,7 +103,10 @@ public:
   nsresult GetNextEncodedFrame(nsTArray<uint8_t>* aOutputBuf,
                                int64_t* aOutputTimestamp, int* aOutputFlags,
                                int64_t aTimeOut);
-
+  /*
+   * Get the codec type
+   */
+  int GetCodecType() { return mCodecType; }
 protected:
   /**
    * See whether the object has been initialized successfully and is ready to
@@ -160,7 +169,9 @@ private:
   Vector<sp<ABuffer> > mInputBufs;  // MediaCodec buffers to hold input data.
   Vector<sp<ABuffer> > mOutputBufs; // MediaCodec buffers to hold output data.
 
+  int mCodecType;
   bool mStarted; // Has MediaCodec been started?
+  bool mAMRCSDProvided;
 };
 
 /**
@@ -172,8 +183,9 @@ public:
   /**
    * Configure audio codec parameters and start media codec. It must be called
    * before calling Encode() and GetNextEncodedFrame().
+   * aReSamplingRate = 0 means no resampler required
    */
-  nsresult Configure(int aChannelCount, int aSampleRate);
+  nsresult Configure(int aChannelCount, int aInputSampleRate, int aEncodedSampleRate);
 
   /**
    * Encode 16-bit PCM audio samples stored in aSegment. To notify end of
@@ -183,10 +195,10 @@ public:
    */
   nsresult Encode(mozilla::AudioSegment& aSegment, int aInputFlags = 0);
 
+  ~OMXAudioEncoder();
 protected:
   virtual status_t AppendDecoderConfig(nsTArray<uint8_t>* aOutputBuf,
                                        ABuffer* aData) MOZ_OVERRIDE;
-
 private:
   // Hide these. User should always use creator functions to get a media codec.
   OMXAudioEncoder() MOZ_DELETE;
@@ -199,15 +211,24 @@ private:
    */
   OMXAudioEncoder(CodecType aCodecType)
     : OMXCodecWrapper(aCodecType)
+    , mResampler(nullptr)
     , mChannels(0)
     , mTimestamp(0)
-    , mSampleDuration(0) {}
+    , mSampleDuration(0)
+    , mResamplingRatio(0) {}
 
   // For creator function to access hidden constructor.
   friend class OMXCodecWrapper;
 
+  /**
+   * If the input sample rate does not divide 48kHz evenly, the input data are
+   * resampled.
+   */
+  SpeexResamplerState* mResampler;
   // Number of audio channels.
   size_t mChannels;
+
+  float mResamplingRatio;
   // The total duration of audio samples that have been encoded in microseconds.
   int64_t mTimestamp;
   // Time per audio sample in microseconds.

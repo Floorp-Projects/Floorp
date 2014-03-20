@@ -67,6 +67,8 @@ OmxVideoTrackEncoder::GetMetadata()
   nsRefPtr<AVCTrackMetadata> meta = new AVCTrackMetadata();
   meta->mWidth = mFrameWidth;
   meta->mHeight = mFrameHeight;
+  meta->mDisplayWidth = mDisplayWidth;
+  meta->mDisplayHeight = mDisplayHeight;
   meta->mFrameRate = ENCODER_CONFIG_FRAME_RATE;
   return meta.forget();
 }
@@ -156,49 +158,6 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
 }
 
 nsresult
-OmxAudioTrackEncoder::Init(int aChannels, int aSamplingRate)
-{
-  mChannels = aChannels;
-  mSamplingRate = aSamplingRate;
-
-  mEncoder = OMXCodecWrapper::CreateAACEncoder();
-  NS_ENSURE_TRUE(mEncoder, NS_ERROR_FAILURE);
-
-  nsresult rv = mEncoder->Configure(mChannels, mSamplingRate);
-
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  mInitialized = (rv == NS_OK);
-
-  mReentrantMonitor.NotifyAll();
-
-  return NS_OK;
-}
-
-already_AddRefed<TrackMetadataBase>
-OmxAudioTrackEncoder::GetMetadata()
-{
-  {
-    // Wait if mEncoder is not initialized nor is being canceled.
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    while (!mCanceled && !mInitialized) {
-      mReentrantMonitor.Wait();
-    }
-  }
-
-  if (mCanceled || mEncodingComplete) {
-    return nullptr;
-  }
-
-  nsRefPtr<AACTrackMetadata> meta = new AACTrackMetadata();
-  meta->mChannels = mChannels;
-  meta->mSampleRate = mSamplingRate;
-  meta->mFrameSize = OMXCodecWrapper::kAACFrameSize;
-  meta->mFrameDuration = OMXCodecWrapper::kAACFrameDuration;
-
-  return meta.forget();
-}
-
-nsresult
 OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
 {
   nsTArray<uint8_t> frameData;
@@ -218,8 +177,15 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
     }
 
     nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
-    audiodata->SetFrameType(isCSD ?
-      EncodedFrame::AAC_CSD : EncodedFrame::AAC_AUDIO_FRAME);
+    if (mEncoder->GetCodecType() == OMXCodecWrapper::AAC_ENC) {
+      audiodata->SetFrameType(isCSD ?
+        EncodedFrame::AAC_CSD : EncodedFrame::AAC_AUDIO_FRAME);
+    } else if (mEncoder->GetCodecType() == OMXCodecWrapper::AMR_NB_ENC){
+      audiodata->SetFrameType(isCSD ?
+        EncodedFrame::AMR_AUDIO_CSD : EncodedFrame::AMR_AUDIO_FRAME);
+    } else {
+      MOZ_ASSERT("audio codec not supported");
+    }
     audiodata->SetTimeStamp(outTimeUs);
     rv = audiodata->SwapInFrameData(frameData);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -275,6 +241,84 @@ OmxAudioTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   }
 
   return NS_OK;
+}
+
+nsresult
+OmxAACAudioTrackEncoder::Init(int aChannels, int aSamplingRate)
+{
+  mChannels = aChannels;
+  mSamplingRate = aSamplingRate;
+
+  mEncoder = OMXCodecWrapper::CreateAACEncoder();
+  NS_ENSURE_TRUE(mEncoder, NS_ERROR_FAILURE);
+
+  nsresult rv = mEncoder->Configure(mChannels, mSamplingRate, mSamplingRate);
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mInitialized = (rv == NS_OK);
+
+  mReentrantMonitor.NotifyAll();
+
+  return NS_OK;
+}
+
+already_AddRefed<TrackMetadataBase>
+OmxAACAudioTrackEncoder::GetMetadata()
+{
+  {
+    // Wait if mEncoder is not initialized nor is being canceled.
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    while (!mCanceled && !mInitialized) {
+      mReentrantMonitor.Wait();
+    }
+  }
+
+  if (mCanceled || mEncodingComplete) {
+    return nullptr;
+  }
+  nsRefPtr<AACTrackMetadata> meta = new AACTrackMetadata();
+  meta->mChannels = mChannels;
+  meta->mSampleRate = mSamplingRate;
+  meta->mFrameSize = OMXCodecWrapper::kAACFrameSize;
+  meta->mFrameDuration = OMXCodecWrapper::kAACFrameDuration;
+  return meta.forget();
+}
+
+nsresult
+OmxAMRAudioTrackEncoder::Init(int aChannels, int aSamplingRate)
+{
+  mChannels = aChannels;
+  mSamplingRate = aSamplingRate;
+
+  mEncoder = OMXCodecWrapper::CreateAMRNBEncoder();
+  NS_ENSURE_TRUE(mEncoder, NS_ERROR_FAILURE);
+
+  nsresult rv = mEncoder->Configure(mChannels, mSamplingRate, AMR_NB_SAMPLERATE);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mInitialized = (rv == NS_OK);
+
+  mReentrantMonitor.NotifyAll();
+
+  return NS_OK;
+}
+
+already_AddRefed<TrackMetadataBase>
+OmxAMRAudioTrackEncoder::GetMetadata()
+{
+  {
+    // Wait if mEncoder is not initialized nor is being canceled.
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    while (!mCanceled && !mInitialized) {
+      mReentrantMonitor.Wait();
+    }
+  }
+
+  if (mCanceled || mEncodingComplete) {
+    return nullptr;
+  }
+
+  nsRefPtr<AMRTrackMetadata> meta = new AMRTrackMetadata();
+  return meta.forget();
 }
 
 }
