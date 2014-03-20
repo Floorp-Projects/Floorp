@@ -1,14 +1,19 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "SandboxFilter.h"
 
 #include "linux_seccomp.h"
 #include "linux_syscalls.h"
 
-/* This is the actual seccomp whitelist.
- * This is used for B2G content-processes.
- */
+#include "mozilla/ArrayUtils.h"
+
+#include <errno.h>
+
+namespace mozilla {
 
 /* Architecture-specific frequently used syscalls */
 #if defined(__arm__)
@@ -295,3 +300,26 @@
   ALLOW_SYSCALL(exit_group), \
   ALLOW_SYSCALL(exit)
 
+static struct sock_filter seccomp_filter[] = {
+  VALIDATE_ARCHITECTURE,
+  EXAMINE_SYSCALL,
+  SECCOMP_WHITELIST,
+#ifdef MOZ_CONTENT_SANDBOX_REPORTER
+  TRAP_PROCESS,
+#else
+  KILL_PROCESS,
+#endif
+};
+
+static struct sock_fprog seccomp_prog = {
+  (unsigned short)MOZ_ARRAY_LENGTH(seccomp_filter),
+  seccomp_filter,
+};
+
+const sock_fprog*
+GetSandboxFilter()
+{
+  return &seccomp_prog;
+}
+
+}
