@@ -165,4 +165,8 @@ label.small {
   margin-bottom: 0.6em;
 }
 
+#fxa-pweng-help-link > label {
+  margin: 0;
+}
+
 %endif
