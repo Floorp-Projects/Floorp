@@ -4,7 +4,7 @@
 
 'use strict';
 
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 /**
  * WebappRT-specific actors.
@@ -90,7 +90,7 @@ WebappTabList.prototype.getList = function() {
   this._mustNotify = true;
   this._checkListening();
 
-  return promise.resolve([actor for ([_, actor] of this._actorByBrowser)]);
+  return Promise.resolve([actor for ([_, actor] of this._actorByBrowser)]);
 };
 
 /**
