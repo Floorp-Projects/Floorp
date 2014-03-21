@@ -51,11 +51,7 @@ struct BFSState {
 
 // Adjacency list data class.
 struct SCTableData {
-    nsCOMArray<nsIAtom> *edges;
-
-    SCTableData() : edges(nullptr)
-    {
-    }
+    nsCOMArray<nsIAtom> edges;
 };
 
 // BFS hashtable data class.
@@ -92,8 +88,6 @@ nsStreamConverterService::~nsStreamConverterService() {
 // Delete all the entries in the adjacency list
 static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
     SCTableData *entry = (SCTableData*)aData;
-    NS_ASSERTION(entry->edges, "malformed adjacency list entry");
-    delete entry->edges;
     delete entry;
     return true;
 }
@@ -179,9 +173,6 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (!fromEdges) {
         // There is no fromStr vertex, create one.
         SCTableData *data = new SCTableData();
-        nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
-        data->edges = edgeArray;
-
         mAdjacencyList->Put(&fromKey, data);
         fromEdges = data;
     }
@@ -190,8 +181,6 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (!mAdjacencyList->Get(&toKey)) {
         // There is no toStr vertex, create one.
         SCTableData *data = new SCTableData();
-        nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
-        data->edges = edgeArray;
         mAdjacencyList->Put(&toKey, data);
     }
 
@@ -205,8 +194,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (!fromEdges)
         return NS_ERROR_FAILURE;
 
-    nsCOMArray<nsIAtom> *adjacencyList = fromEdges->edges;
-    return adjacencyList->AppendObject(vertex) ? NS_OK : NS_ERROR_FAILURE;
+    return fromEdges->edges.AppendObject(vertex) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -323,10 +311,6 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         SCTableData *data2 = (SCTableData*)mAdjacencyList->Get(currentHead);
         if (!data2) return NS_ERROR_FAILURE;
 
-        nsCOMArray<nsIAtom> *edges = data2->edges;
-        NS_ASSERTION(edges, "something went wrong with BFS strmconv algorithm");
-        if (!edges) return NS_ERROR_FAILURE;
-
         // Get the state of the current head to calculate the distance of each
         // reachable vertex in the loop.
         BFSTableData *data2b = (BFSTableData*)lBFSTable.Get(currentHead);
@@ -336,10 +320,10 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         NS_ASSERTION(headVertexState, "problem with the BFS strmconv algorithm");
         if (!headVertexState) return NS_ERROR_FAILURE;
 
-        int32_t edgeCount = edges->Count();
+        int32_t edgeCount = data2->edges.Count();
 
         for (int32_t i = 0; i < edgeCount; i++) {
-            nsIAtom* curVertexAtom = edges->ObjectAt(i);
+            nsIAtom* curVertexAtom = data2->edges.ObjectAt(i);
             nsAutoString curVertexStr;
             curVertexAtom->ToString(curVertexStr);
             nsCStringKey *curVertex = new nsCStringKey(ToNewCString(curVertexStr), 
