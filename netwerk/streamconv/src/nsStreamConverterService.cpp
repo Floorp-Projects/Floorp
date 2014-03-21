@@ -49,7 +49,7 @@ struct BFSState {
     }
 };
 
-// adjacency list and BFS hashtable data class.
+// Adjacency list data class.
 struct SCTableData {
     nsCStringKey *key;
     union _data {
@@ -58,6 +58,19 @@ struct SCTableData {
     } data;
 
     SCTableData(nsCStringKey* aKey) : key(aKey) {
+        data.state = nullptr;
+    }
+};
+
+// BFS hashtable data class.
+struct BFSTableData {
+    nsCStringKey *key;
+    union _data {
+        BFSState *state;
+        nsCOMArray<nsIAtom> *edges;
+    } data;
+
+    BFSTableData(nsCStringKey* aKey) : key(aKey) {
         data.state = nullptr;
     }
 };
@@ -242,7 +255,7 @@ static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     state->distance = -1;
     state->predecessor = nullptr;
 
-    SCTableData *data = new SCTableData(static_cast<nsCStringKey*>(aKey));
+    BFSTableData *data = new BFSTableData(static_cast<nsCStringKey*>(aKey));
     data->data.state = state;
 
     BFSTable->Put(aKey, data);
@@ -251,7 +264,7 @@ static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
 
 // cleans up the BFS state table
 static bool DeleteBFSEntry(nsHashKey *aKey, void *aData, void *closure) {
-    SCTableData *data = (SCTableData*)aData;
+    BFSTableData *data = (BFSTableData*)aData;
     BFSState *state = data->data.state;
     delete state;
     data->key = nullptr;
@@ -297,7 +310,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
 
     nsCStringKey *source = new nsCStringKey(fromC.get());
 
-    SCTableData *data = (SCTableData*)lBFSTable.Get(source);
+    BFSTableData *data = (BFSTableData*)lBFSTable.Get(source);
     if (!data) {
         delete source;
         return NS_ERROR_FAILURE;
@@ -324,10 +337,10 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
 
         // Get the state of the current head to calculate the distance of each
         // reachable vertex in the loop.
-        data2 = (SCTableData*)lBFSTable.Get(currentHead);
-        if (!data2) return NS_ERROR_FAILURE;
+        BFSTableData *data2b = (BFSTableData*)lBFSTable.Get(currentHead);
+        if (!data2b) return NS_ERROR_FAILURE;
 
-        BFSState *headVertexState = data2->data.state;
+        BFSState *headVertexState = data2b->data.state;
         NS_ASSERTION(headVertexState, "problem with the BFS strmconv algorithm");
         if (!headVertexState) return NS_ERROR_FAILURE;
 
@@ -340,7 +353,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
             nsCStringKey *curVertex = new nsCStringKey(ToNewCString(curVertexStr), 
                                         curVertexStr.Length(), nsCStringKey::OWN);
 
-            SCTableData *data3 = (SCTableData*)lBFSTable.Get(curVertex);
+            BFSTableData *data3 = (BFSTableData*)lBFSTable.Get(curVertex);
             if (!data3) {
                 delete curVertex;
                 return NS_ERROR_FAILURE;
@@ -383,7 +396,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     nsTArray<nsCString> *shortestPath = new nsTArray<nsCString>();
 
     nsCStringKey toMIMEType(toStr);
-    data = (SCTableData*)lBFSTable.Get(&toMIMEType);
+    data = (BFSTableData*)lBFSTable.Get(&toMIMEType);
     if (!data) {
         // If this vertex isn't in the BFSTable, then no-one has registered for it,
         // therefore we can't do the conversion.
@@ -405,7 +418,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         // reconstruct the CONTRACTID.
         // Get the predecessor.
         if (!curState->predecessor) break; // no predecessor
-        SCTableData *predecessorData = (SCTableData*)lBFSTable.Get(curState->predecessor);
+        BFSTableData *predecessorData = (BFSTableData*)lBFSTable.Get(curState->predecessor);
 
         if (!predecessorData) break; // no predecessor, chain doesn't exist.
 
