@@ -94,7 +94,6 @@
 #include "nsGlobalWindow.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
-#include "SVGContentUtils.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -4358,18 +4357,6 @@ CanvasPath::Constructor(const GlobalObject& aGlobal, CanvasPath& aCanvasPath, Er
 {
   RefPtr<gfx::Path> tempPath = aCanvasPath.GetPath(CanvasWindingRule::Nonzero,
                                                    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
-
-  nsRefPtr<CanvasPath> path = new CanvasPath(aGlobal.GetAsSupports(), tempPath->CopyToBuilder());
-  return path.forget();
-}
-
-already_AddRefed<CanvasPath>
-CanvasPath::Constructor(const GlobalObject& aGlobal, const nsAString& aPathString, ErrorResult& aRv)
-{
-  RefPtr<gfx::Path> tempPath = SVGContentUtils::GetPath(aPathString);
-  if (!tempPath) {
-    return Constructor(aGlobal, aRv);
-  }
 
   nsRefPtr<CanvasPath> path = new CanvasPath(aGlobal.GetAsSupports(), tempPath->CopyToBuilder());
   return path.forget();

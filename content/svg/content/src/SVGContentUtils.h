@@ -14,7 +14,6 @@
 #include "mozilla/RangedPtr.h"
 #include "nsError.h"
 #include "nsStringFwd.h"
-#include "gfx2DGlue.h"
 
 class nsIContent;
 class nsIDocument;
@@ -244,13 +243,6 @@ public:
   static float CoordToFloat(nsPresContext *aPresContext,
                             nsSVGElement *aContent,
                             const nsStyleCoord &aCoord);
-  /**
-   * Parse the SVG path string
-   * Returns a path
-   * string formatted as an SVG path
-   */
-  static mozilla::RefPtr<mozilla::gfx::Path>
-  GetPath(const nsAString& aPathString);
 };
 
 #endif
