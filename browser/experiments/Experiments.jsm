@@ -611,6 +611,8 @@ Experiments.Experiments.prototype = {
     return this._run();
   },
 
+  // START OF ADD-ON LISTENERS
+
   onDisabled: function (addon) {
     gLogger.trace("Experiments::onDisabled() - addon id: " + addon.id);
     if (addon.id == this._pendingUninstall) {
@@ -635,6 +637,8 @@ Experiments.Experiments.prototype = {
     }
     this.disableExperiment();
   },
+
+  // END OF ADD-ON LISTENERS.
 
   _getExperimentByAddonId: function (addonId) {
     for (let [, entry] of this._experiments) {
@@ -1401,6 +1405,9 @@ Experiments.ExperimentEntry.prototype = {
           gLogger.error("ExperimentEntry::_installAddon() - onInstallStarted, wrong addon type");
           return false;
         }
+
+        // Experiment add-ons default to userDisabled = true.
+        install.addon.userDisabled = false;
       },
 
       onInstallEnded: install => {
