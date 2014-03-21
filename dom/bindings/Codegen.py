@@ -5169,6 +5169,8 @@ class CGPerSignatureCall(CGThing):
                  setter=False, isConstructor=False):
         assert idlNode.isMethod() == (not getter and not setter)
         assert idlNode.isAttr() == (getter or setter)
+        # Constructors are always static
+        assert not isConstructor or static
 
         CGThing.__init__(self)
         self.returnType = returnType
@@ -5192,11 +5194,20 @@ class CGPerSignatureCall(CGThing):
         if static:
             nativeMethodName = "%s::%s" % (descriptor.nativeType,
                                            nativeMethodName)
-            cgThings.append(CGGeneric("""GlobalObject global(cx, obj);
+            # If we're a constructor, "obj" may not be a function, so calling
+            # XrayAwareCalleeGlobal() on it is not safe.  Of course in the
+            # constructor case either "obj" is an Xray or we're already in the
+            # content compartment, not the Xray compartment, so just
+            # constructing the GlobalObject from "obj" is fine.
+            if isConstructor:
+                objForGlobalObject = "obj"
+            else:
+                objForGlobalObject = "xpc::XrayAwareCalleeGlobal(obj)"
+            cgThings.append(CGGeneric("""GlobalObject global(cx, %s);
 if (global.Failed()) {
   return false;
 }
-"""))
+""" % objForGlobalObject))
             argsPre.append("global")
 
         # For JS-implemented interfaces we do not want to base the
@@ -5997,11 +6008,10 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
     def definition_body(self):
+        # Make sure that "obj" is in the same compartment as "cx", since we'll
+        # later use it to wrap return values.
         unwrap = CGGeneric("""JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-JS::Rooted<JSObject*> obj(cx, args.computeThis(cx).toObjectOrNull());
-if (!obj) {
-  return false;
-}""")
+JS::Rooted<JSObject*> obj(cx, &args.callee());""")
         return CGList([ CGIndenter(unwrap),
                         self.generate_code() ], "\n\n").define()
 
