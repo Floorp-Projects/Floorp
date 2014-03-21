@@ -30,8 +30,8 @@ M4x4.scale3 = function M4x4_scale3(x, y, z, m) {
     m[11] *= z;
 };
 M4x4.makeLookAt = function M4x4_makeLookAt() {
-    tm1 = Float32Array(16);
-    tm2 = Float32Array(16);
+    tm1 = new Float32Array(16);
+    tm2 = new Float32Array(16);
     r = new Float32Array(16)
     return M4x4.mul(tm1, tm2, r);
 };
