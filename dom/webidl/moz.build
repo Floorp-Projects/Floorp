@@ -615,7 +615,7 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothStatusChangedEvent.webidl',
     ]
 
-if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner']:
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
     WEBIDL_FILES += [
         'BrowserFeedWriter.webidl',
     ]
