@@ -439,6 +439,7 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
                                                 TextureClient* aTextureOnBlack,
                                                 TextureClient* aTextureOnWhite)
 {
+  MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
   mTxn->AddEdit(OpUseComponentAlphaTextures(nullptr, aCompositable->GetIPDLActor(),
                                             nullptr, aTextureOnBlack->GetIPDLActor(),
                                             nullptr, aTextureOnWhite->GetIPDLActor()));
