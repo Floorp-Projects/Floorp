@@ -679,6 +679,8 @@ protected:
   bool ParseGridTemplate();
   bool ParseGridTemplateAfterSlash(bool aColumnsIsTrackList);
   bool ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames);
+  bool ParseGrid();
+  bool ParseGridShorthandAutoProps();
   bool ParseGridLine(nsCSSValue& aValue);
   bool ParseGridAutoPosition();
   bool ParseGridColumnRowStartEnd(nsCSSProperty aPropID);
@@ -7413,6 +7415,99 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
   return true;
 }
 
+// <'grid-template'> |
+// [ <'grid-auto-flow'> [ <'grid-auto-columns'> [ / <'grid-auto-rows'> ]? ]? ]
+bool
+CSSParserImpl::ParseGrid()
+{
+  nsCSSValue value;
+  if (ParseVariant(value, VARIANT_INHERIT, nullptr)) {
+    for (const nsCSSProperty* subprops =
+           nsCSSProps::SubpropertyEntryFor(eCSSProperty_grid);
+         *subprops != eCSSProperty_UNKNOWN; ++subprops) {
+      AppendValue(*subprops, value);
+    }
+    return true;
+  }
+
+  // 'none' at the beginning could be a <'grid-auto-flow'>
+  // (which also covers 'none' by itself)
+  // or a <'grid-template-columns'> (as part of <'grid-template'>)
+  if (ParseVariant(value, VARIANT_NONE, nullptr)) {
+    if (ExpectSymbol('/', true)) {
+      AppendValue(eCSSProperty_grid_template_columns, value);
+
+      // Set grid-auto-* subproperties to their initial values.
+      AppendValue(eCSSProperty_grid_auto_flow, value);
+      value.SetAutoValue();
+      AppendValue(eCSSProperty_grid_auto_columns, value);
+      AppendValue(eCSSProperty_grid_auto_rows, value);
+
+      return ParseGridTemplateAfterSlash(/* aColumnsIsTrackList = */ false);
+    }
+    AppendValue(eCSSProperty_grid_auto_flow, value);
+    return ParseGridShorthandAutoProps();
+  }
+
+  // An empty value is always invalid.
+  if (!GetToken(true)) {
+    return false;
+  }
+
+  // If the value starts with a 'dense', 'column' or 'row' keyword,
+  // it can only start with a <'grid-auto-flow'>
+  if (mToken.mType == eCSSToken_Ident) {
+    nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+    if (keyword == eCSSKeyword_dense ||
+        keyword == eCSSKeyword_column ||
+        keyword == eCSSKeyword_row) {
+      UngetToken();
+      return ParseGridAutoFlow() && ParseGridShorthandAutoProps();
+    }
+  }
+  UngetToken();
+
+  // Set other subproperties to their initial values
+  // and parse <'grid-template'>.
+  value.SetNoneValue();
+  AppendValue(eCSSProperty_grid_auto_flow, value);
+  value.SetAutoValue();
+  AppendValue(eCSSProperty_grid_auto_columns, value);
+  AppendValue(eCSSProperty_grid_auto_rows, value);
+  return ParseGridTemplate();
+}
+
+// Parse [ <'grid-auto-columns'> [ / <'grid-auto-rows'> ]? ]?
+// for the 'grid' shorthand.
+// Assumes that <'grid-auto-flow'> was already parsed by the caller.
+bool
+CSSParserImpl::ParseGridShorthandAutoProps()
+{
+  nsCSSValue autoColumnsValue;
+  nsCSSValue autoRowsValue;
+  nsParsingStatus result = ParseGridTrackSize(autoColumnsValue);
+  if (result == nsParsingStatus::Error) {
+    return false;
+  }
+  if (result == nsParsingStatus::NotFound) {
+    autoColumnsValue.SetAutoValue();
+    autoRowsValue.SetAutoValue();
+  } else {
+    if (!ExpectSymbol('/', true)) {
+      autoRowsValue.SetAutoValue();
+    } else if (ParseGridTrackSize(autoRowsValue) != nsParsingStatus::Ok) {
+      return false;
+    }
+  }
+  AppendValue(eCSSProperty_grid_auto_columns, autoColumnsValue);
+  AppendValue(eCSSProperty_grid_auto_rows, autoRowsValue);
+  nsCSSValue templateValue(eCSSUnit_None);  // Initial values
+  AppendValue(eCSSProperty_grid_template_areas, templateValue);
+  AppendValue(eCSSProperty_grid_template_columns, templateValue);
+  AppendValue(eCSSProperty_grid_template_rows, templateValue);
+  return true;
+}
+
 // Parse a <grid-line>.
 // If successful, set aValue to eCSSUnit_Auto,
 // or a eCSSUnit_List containing, in that order:
@@ -8672,6 +8767,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseGridTemplateColumnsRows(aPropID);
   case eCSSProperty_grid_template:
     return ParseGridTemplate();
+  case eCSSProperty_grid:
+    return ParseGrid();
   case eCSSProperty_grid_auto_position:
     return ParseGridAutoPosition();
   case eCSSProperty_grid_column_start:

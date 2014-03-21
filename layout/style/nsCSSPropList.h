@@ -2090,6 +2090,12 @@ CSS_PROP_SHORTHAND(
     GridTemplate,
     CSS_PROPERTY_PARSE_FUNCTION,
     "layout.css.grid.enabled")
+CSS_PROP_SHORTHAND(
+    grid,
+    grid,
+    Grid,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled")
 CSS_PROP_POSITION(
     grid-column-start,
     grid_column_start,
