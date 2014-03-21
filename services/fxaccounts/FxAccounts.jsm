@@ -360,13 +360,15 @@ FxAccountsInternal.prototype = {
    *        The credentials object obtained by logging in or creating
    *        an account on the FxA server:
    *        {
-   *          email: The users email address
-   *          uid: The user's unique id
-   *          sessionToken: Session for the FxA server
-   *          keyFetchToken: an unused keyFetchToken
-   *          verified: true/false
    *          authAt: The time (seconds since epoch) that this record was
    *                  authenticated
+   *          email: The users email address
+   *          keyFetchToken: a keyFetchToken which has not yet been used
+   *          sessionToken: Session for the FxA server
+   *          uid: The user's unique id
+   *          unwrapBKey: used to unwrap kB, derived locally from the
+   *                      password (not revealed to the FxA server)
+   *          verified: true/false
    *        }
    * @return Promise
    *         The promise resolves to null when the data is saved
