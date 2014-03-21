@@ -283,16 +283,22 @@ add_task(function test_signIn() {
   let client = new FxAccountsClient(server.baseURI);
   let result = yield client.signIn('mé@example.com', 'bigsecret');
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
+  do_check_eq(result.unwrapBKey,
+              "c076ec3f4af123a615157154c6e1d0d6293e514fd7b0221e32d50517ecf002b8");
   do_check_eq(undefined, result.keyFetchToken);
 
   // Login with retrieving optional keys
   let result = yield client.signIn('you@example.com', 'bigsecret', true);
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
+  do_check_eq(result.unwrapBKey,
+              "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
   do_check_eq("keyFetchToken", result.keyFetchToken);
 
   // Retry due to wrong email capitalization
   let result = yield client.signIn('You@example.com', 'bigsecret', true);
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
+  do_check_eq(result.unwrapBKey,
+              "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
   do_check_eq("keyFetchToken", result.keyFetchToken);
 
   // Don't retry due to wrong email capitalization

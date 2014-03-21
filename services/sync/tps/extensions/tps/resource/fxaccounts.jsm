@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/main.js");
@@ -33,17 +34,11 @@ var FxAccountsHelper = {
     let cb = Async.makeSpinningCallback();
 
     var client = new FxAccountsClient();
-    client.signIn(email, password).then(credentials => {
-      // Add keys because without those setSignedInUser() will fail
-      credentials.kA = 'foo';
-      credentials.kB = 'bar';
-
-      Weave.Service.identity._fxaService.setSignedInUser(credentials).then(() => {
-        cb(null);
-      }, err => {
-        cb(err);
-      });
-    }, (err) => {
+    client.signIn(email, password, true).then(credentials => {
+      return fxAccounts.setSignedInUser(credentials);
+    }).then(() => {
+      cb(null);
+    }, err => {
       cb(err);
     });
 
