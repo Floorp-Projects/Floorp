@@ -1681,7 +1681,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 }
 
 .panel-promo-box {
-  margin: 10px -4px -4px;
+  margin: 10px -10px -10px;
   padding: 8px 10px;
   border-top: 1px solid ThreeDShadow;
   background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
@@ -2186,19 +2186,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 /* Notification icon box */
-#notification-popup > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 10px;
-}
-
-#notification-popup .popup-notification-closebutton {
-  -moz-margin-end: -14px;
-  margin-top: -10px;
-}
-
-#notification-popup .panel-promo-box {
-  margin: 10px -10px -10px;
-}
-
 #notification-popup-box {
   position: relative;
   background-color: #fff;
