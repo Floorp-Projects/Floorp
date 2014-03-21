@@ -147,6 +147,62 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   return RecoverableError;
 }
 
+//  BasicConstraints ::= SEQUENCE {
+//          cA                      BOOLEAN DEFAULT FALSE,
+//          pathLenConstraint       INTEGER (0..MAX) OPTIONAL }
+der::Result
+DecodeBasicConstraints(const SECItem* encodedBasicConstraints,
+                       CERTBasicConstraints& basicConstraints)
+{
+  PR_ASSERT(encodedBasicConstraints);
+  if (!encodedBasicConstraints) {
+    return der::Fail(SEC_ERROR_INVALID_ARGS);
+  }
+
+  basicConstraints.isCA = false;
+  basicConstraints.pathLenConstraint = 0;
+
+  der::Input input;
+  if (input.Init(encodedBasicConstraints->data, encodedBasicConstraints->len)
+        != der::Success) {
+    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+  }
+
+  if (der::ExpectTagAndIgnoreLength(input, der::SEQUENCE) != der::Success) {
+    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+  }
+
+  bool isCA = false;
+  if (der::OptionalBoolean(input, isCA) != der::Success) {
+    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+  }
+  basicConstraints.isCA = isCA;
+
+  if (input.Peek(der::INTEGER)) {
+    SECItem pathLenConstraintEncoded;
+    if (der::Integer(input, pathLenConstraintEncoded) != der::Success) {
+      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+    }
+    long pathLenConstraint = DER_GetInteger(&pathLenConstraintEncoded);
+    if (pathLenConstraint >= std::numeric_limits<int>::max() ||
+        pathLenConstraint < 0) {
+      return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+    }
+    basicConstraints.pathLenConstraint = static_cast<int>(pathLenConstraint);
+    // TODO(bug 985025): If isCA is false, pathLenConstraint MUST NOT
+    // be included (as per RFC 5280 section 4.2.1.9), but for compatibility
+    // reasons, we don't check this for now.
+  } else if (basicConstraints.isCA) {
+    // If this is a CA but the path length is omitted, it is unlimited.
+    basicConstraints.pathLenConstraint = CERT_UNLIMITED_PATH_CONSTRAINT;
+  }
+
+  if (der::End(input) != der::Success) {
+    return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
+  }
+  return der::Success;
+}
+
 // RFC5280 4.2.1.9. Basic Constraints (id-ce-basicConstraints)
 Result
 CheckBasicConstraints(const BackCert& cert,
@@ -156,10 +212,9 @@ CheckBasicConstraints(const BackCert& cert,
 {
   CERTBasicConstraints basicConstraints;
   if (cert.encodedBasicConstraints) {
-    SECStatus rv = CERT_DecodeBasicConstraintValue(&basicConstraints,
-                                                   cert.encodedBasicConstraints);
-    if (rv != SECSuccess) {
-      return MapSECStatus(rv);
+    if (DecodeBasicConstraints(cert.encodedBasicConstraints,
+                               basicConstraints) != der::Success) {
+      return RecoverableError;
     }
   } else {
     // Synthesize a non-CA basic constraints by default
