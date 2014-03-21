@@ -131,8 +131,12 @@ class Loader MOZ_FINAL {
 public:
   Loader();
   Loader(nsIDocument*);
+
+ private:
+  // Private destructor, to discourage deletion outside of Release():
   ~Loader();
 
+ public:
   NS_INLINE_DECL_REFCOUNTING(Loader)
 
   void DropDocumentReference(); // notification that doc is going away
