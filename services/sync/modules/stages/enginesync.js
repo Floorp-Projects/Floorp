@@ -254,25 +254,37 @@ EngineSynchronizer.prototype = {
         continue;
       }
 
-      if (Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
-        // The engine was disabled locally. Wipe server data and
-        // disable it everywhere.
-        this._log.trace("Wiping data for " + engineName + " engine.");
-        engine.wipeServer();
-        delete meta.payload.engines[engineName];
-        meta.changed = true;             // TODO: Should we still do this?
-
-        // We also here mark the engine as declined, because the pref
-        // was explicitly changed to false.
-        // This will be reflected in meta/global in the next stage.
-        this._log.trace("Engine " + engineName + " was disabled locally. Marking as declined.");
-        toDecline.add(engineName);
-      } else {
-        // The engine was enabled remotely. Enable it locally.
+      let attemptedEnable = false;
+      // If the engine was enabled remotely, enable it locally.
+      if (!Svc.Prefs.get("engineStatusChanged." + engine.prefName, false)) {
         this._log.trace("Engine " + engineName + " was enabled. Marking as non-declined.");
         toUndecline.add(engineName);
         this._log.trace(engineName + " engine was enabled remotely.");
         engine.enabled = true;
+        // Note that setting engine.enabled to true might not have worked for
+        // the password engine if a master-password is enabled.  However, it's
+        // still OK that we added it to undeclined - the user *tried* to enable
+        // it remotely - so it still winds up as not being flagged as declined
+        // even though it's disabled remotely.
+        attemptedEnable = true;
+      }
+
+      // If either the engine was disabled locally or enabling the engine
+      // failed (see above re master-password) then wipe server data and
+      // disable it everywhere.
+      if (!engine.enabled) {
+        this._log.trace("Wiping data for " + engineName + " engine.");
+        engine.wipeServer();
+        delete meta.payload.engines[engineName];
+        meta.changed = true; // the new enabled state must propagate
+        // We also here mark the engine as declined, because the pref
+        // was explicitly changed to false - unless we tried, and failed,
+        // to enable it - in which case we leave the declined state alone.
+        if (!attemptedEnable) {
+          // This will be reflected in meta/global in the next stage.
+          this._log.trace("Engine " + engineName + " was disabled locally. Marking as declined.");
+          toDecline.add(engineName);
+        }
       }
     }
 
@@ -290,8 +302,8 @@ EngineSynchronizer.prototype = {
       }
     }
 
-    this.service.engineManager.decline(toDecline);
-    this.service.engineManager.undecline(toUndecline);
+    engineManager.decline(toDecline);
+    engineManager.undecline(toUndecline);
 
     Svc.Prefs.resetBranch("engineStatusChanged.");
     this.service._ignorePrefObserver = false;
