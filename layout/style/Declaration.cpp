@@ -963,6 +963,44 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       AppendValueToString(subprops[3], aValue, aSerialization);
       break;
     }
+
+    // This can express either grid-template-{areas,columns,rows}
+    // or grid-auto-{flow,columns,rows}, but not both.
+    case eCSSProperty_grid: {
+      const nsCSSValue& areasValue =
+        *data->ValueFor(eCSSProperty_grid_template_areas);
+      const nsCSSValue& columnsValue =
+        *data->ValueFor(eCSSProperty_grid_template_columns);
+      const nsCSSValue& rowsValue =
+        *data->ValueFor(eCSSProperty_grid_template_rows);
+
+      const nsCSSValue& autoFlowValue =
+        *data->ValueFor(eCSSProperty_grid_auto_flow);
+      const nsCSSValue& autoColumnsValue =
+        *data->ValueFor(eCSSProperty_grid_auto_columns);
+      const nsCSSValue& autoRowsValue =
+        *data->ValueFor(eCSSProperty_grid_auto_rows);
+
+      if (areasValue.GetUnit() == eCSSUnit_None &&
+          columnsValue.GetUnit() == eCSSUnit_None &&
+          rowsValue.GetUnit() == eCSSUnit_None) {
+        AppendValueToString(eCSSProperty_grid_auto_flow,
+                            aValue, aSerialization);
+        aValue.Append(char16_t(' '));
+        AppendValueToString(eCSSProperty_grid_auto_columns,
+                            aValue, aSerialization);
+        aValue.AppendLiteral(" / ");
+        AppendValueToString(eCSSProperty_grid_auto_rows,
+                            aValue, aSerialization);
+        break;
+      } else if (!(autoFlowValue.GetUnit() == eCSSUnit_None &&
+                   autoColumnsValue.GetUnit() == eCSSUnit_Auto &&
+                   autoRowsValue.GetUnit() == eCSSUnit_Auto)) {
+        // Not serializable, bail.
+        return;
+      }
+      // Fall through to eCSSProperty_grid_template
+    }
     case eCSSProperty_grid_template: {
       const nsCSSValue& areasValue =
         *data->ValueFor(eCSSProperty_grid_template_areas);

@@ -2522,6 +2522,16 @@ static const nsCSSProperty gGridTemplateSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gGridSubpropTable[] = {
+  eCSSProperty_grid_template_areas,
+  eCSSProperty_grid_template_columns,
+  eCSSProperty_grid_template_rows,
+  eCSSProperty_grid_auto_flow,
+  eCSSProperty_grid_auto_columns,
+  eCSSProperty_grid_auto_rows,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gGridColumnSubpropTable[] = {
   eCSSProperty_grid_column_start,
   eCSSProperty_grid_column_end,
