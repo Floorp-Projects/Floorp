@@ -207,6 +207,8 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
   NS_ASSERTION(!aCallback && !aCallbackData, "Not expecting callbacks here");
   mInTransaction = false;
 
+  printf_stderr("XXX - Bas - Starting to draw host side!");
+
   if (!mIsCompositorReady) {
     return;
   }
@@ -252,6 +254,8 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
   Log();
   MOZ_LAYERS_LOG(("]----- EndTransaction"));
 #endif
+
+  printf_stderr("XXX - Bas - Finished compositing host side!");
 }
 
 already_AddRefed<gfxASurface>
