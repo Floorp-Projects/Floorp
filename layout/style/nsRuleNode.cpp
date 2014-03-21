@@ -7234,8 +7234,8 @@ SetGridTrackList(const nsCSSValue& aValue,
 
 static void
 SetGridTemplateAreas(const nsCSSValue& aValue,
-                     nsCSSValueGridTemplateAreas& aResult,
-                     const nsCSSValueGridTemplateAreas& aParentValue,
+                     css::GridTemplateAreasValue& aResult,
+                     const css::GridTemplateAreasValue& aParentValue,
                      bool& aCanStoreInRuleTree)
 {
   switch (aValue.GetUnit()) {
