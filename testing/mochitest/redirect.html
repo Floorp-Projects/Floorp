@@ -7,11 +7,14 @@
     {
       // We create a listener for this event in browser-test.js 
       // which will get picked up when specifying --chrome or --a11y
-      var element = document.createEvent("datacontainerevent");
-      element.initEvent("contentEvent", true, false);
-      element.setData("data", aURL + location.search);
-      element.setData("type", "loadURI");
-      document.dispatchEvent(element);
+      var event = new CustomEvent("contentEvent", {
+        bubbles: true,
+        detail: {
+          "data": aURL + location.search,
+          "type": "loadURI"
+        }
+      });
+      document.dispatchEvent(event);
     }
 
     function onLoad() {
