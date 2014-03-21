@@ -173,6 +173,9 @@ var gSecurityPane = {
       this.changeMasterPassword();
 
     this._initMasterPasswordUI();
+
+    // We might want to hide sync's password engine.
+    gSyncPane.updateWeavePrefs();
   },
 
   /**
