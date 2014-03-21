@@ -503,6 +503,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
       }
       AddAnimationsForProperty(aFrame, aProperty, anim,
                                aLayer, data, pending);
+      anim->mIsRunningOnCompositor = true;
     }
     aLayer->SetAnimationGeneration(ea->mAnimationGeneration);
   }
