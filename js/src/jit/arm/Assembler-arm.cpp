@@ -1860,6 +1860,10 @@ Assembler::as_b(Label *l, Condition c, bool isPatchable)
         old = l->offset();
         // This will currently throw an assertion if we couldn't actually
         // encode the offset of the branch.
+        if (!BOffImm::isInRange(old)) {
+            m_buffer.bail();
+            return ret;
+        }
         ret = as_b(BOffImm(old), c, isPatchable);
     } else {
         old = LabelBase::INVALID_OFFSET;
@@ -1918,6 +1922,10 @@ Assembler::as_bl(Label *l, Condition c)
         // This will currently throw an assertion if we couldn't actually
         // encode the offset of the branch.
         old = l->offset();
+        if (!BOffImm::isInRange(old)) {
+            m_buffer.bail();
+            return ret;
+        }
         ret = as_bl(BOffImm(old), c);
     } else {
         old = LabelBase::INVALID_OFFSET;
