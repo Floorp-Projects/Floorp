@@ -206,8 +206,8 @@ public:
     static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                MutableHandle<JSPropertyDescriptor> desc,
                                Handle<JSPropertyDescriptor> existingDesc, bool *defined);
-    static bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
-                               AutoIdVector &props);
+    virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
+                                AutoIdVector &props);
     static bool call(JSContext *cx, HandleObject wrapper,
                      const JS::CallArgs &args, js::Wrapper& baseInstance);
     static bool construct(JSContext *cx, HandleObject wrapper,
@@ -257,8 +257,8 @@ public:
     static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                MutableHandle<JSPropertyDescriptor> desc,
                                Handle<JSPropertyDescriptor> existingDesc, bool *defined);
-    static bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
-                               AutoIdVector &props);
+    virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
+                                AutoIdVector &props);
     static bool call(JSContext *cx, HandleObject wrapper,
                      const JS::CallArgs &args, js::Wrapper& baseInstance);
     static bool construct(JSContext *cx, HandleObject wrapper,
@@ -309,8 +309,8 @@ public:
         return true;
     }
 
-    static bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
-                               AutoIdVector &props)
+    virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
+                                AutoIdVector &props)
     {
         MOZ_ASSUME_UNREACHABLE("Not yet implemented");
     }
@@ -1921,7 +1921,7 @@ XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper, unsign
     if (!JS_WrapAutoIdVector(cx, props))
         return false;
 
-    return Traits::enumerateNames(cx, wrapper, flags, props);
+    return Traits::singleton.enumerateNames(cx, wrapper, flags, props);
 }
 
 template <typename Base, typename Traits>
