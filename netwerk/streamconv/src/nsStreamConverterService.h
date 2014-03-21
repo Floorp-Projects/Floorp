@@ -29,9 +29,6 @@ public:
     nsStreamConverterService();
     virtual ~nsStreamConverterService();
 
-    // Initialization routine. Must be called after this object is constructed.
-    nsresult Init();
-
 private:
     // Responsible for finding a converter for the given MIME-type.
     nsresult FindConverter(const char *aContractID, nsTArray<nsCString> **aEdgeList);
