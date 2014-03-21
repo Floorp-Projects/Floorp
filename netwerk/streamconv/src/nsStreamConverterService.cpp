@@ -94,7 +94,6 @@ nsresult
 nsStreamConverterService::Init() {
     mAdjacencyList = new nsObjectHashtable(nullptr, nullptr,
                                            DeleteAdjacencyEntry, nullptr);
-    if (!mAdjacencyList) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 
@@ -173,21 +172,8 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         // There is no fromStr vertex, create one.
 
         nsCStringKey *newFromKey = new nsCStringKey(ToNewCString(fromStr), fromStr.Length(), nsCStringKey::OWN);
-        if (!newFromKey) return NS_ERROR_OUT_OF_MEMORY;
-
         SCTableData *data = new SCTableData(newFromKey);
-        if (!data) {
-            delete newFromKey;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
         nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
-        if (!edgeArray) {
-            delete newFromKey;
-            data->key = nullptr;
-            delete data;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
         data->data.edges = edgeArray;
 
         mAdjacencyList->Put(newFromKey, data);
@@ -198,21 +184,8 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (!mAdjacencyList->Get(&toKey)) {
         // There is no toStr vertex, create one.
         nsCStringKey *newToKey = new nsCStringKey(ToNewCString(toStr), toStr.Length(), nsCStringKey::OWN);
-        if (!newToKey) return NS_ERROR_OUT_OF_MEMORY;
-
         SCTableData *data = new SCTableData(newToKey);
-        if (!data) {
-            delete newToKey;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-
         nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
-        if (!edgeArray) {
-            delete newToKey;
-            data->key = nullptr;
-            delete data;
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
         data->data.edges = edgeArray;
         mAdjacencyList->Put(newToKey, data);
     }
@@ -264,17 +237,12 @@ static bool InitBFSTable(nsHashKey *aKey, void *aData, void* closure) {
     if (!BFSTable) return false;
 
     BFSState *state = new BFSState;
-    if (!state) return false;
 
     state->color = white;
     state->distance = -1;
     state->predecessor = nullptr;
 
     SCTableData *data = new SCTableData(static_cast<nsCStringKey*>(aKey));
-    if (!data) {
-        delete state;
-        return false;
-    }
     data->data.state = state;
 
     BFSTable->Put(aKey, data);
@@ -328,7 +296,6 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     if (NS_FAILED(rv)) return rv;
 
     nsCStringKey *source = new nsCStringKey(fromC.get());
-    if (!source) return NS_ERROR_OUT_OF_MEMORY;
 
     SCTableData *data = (SCTableData*)lBFSTable.Get(source);
     if (!data) {
@@ -341,10 +308,6 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     state->color = gray;
     state->distance = 0;
     CStreamConvDeallocator *dtorFunc = new CStreamConvDeallocator();
-    if (!dtorFunc) {
-        delete source;
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     nsDeque grayQ(dtorFunc);
 
@@ -376,7 +339,6 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
             curVertexAtom->ToString(curVertexStr);
             nsCStringKey *curVertex = new nsCStringKey(ToNewCString(curVertexStr), 
                                         curVertexStr.Length(), nsCStringKey::OWN);
-            if (!curVertex) return NS_ERROR_OUT_OF_MEMORY;
 
             SCTableData *data3 = (SCTableData*)lBFSTable.Get(curVertex);
             if (!data3) {
@@ -419,7 +381,6 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     // get the root CONTRACTID
     nsAutoCString ContractIDPrefix(NS_ISTREAMCONVERTER_KEY);
     nsTArray<nsCString> *shortestPath = new nsTArray<nsCString>();
-    if (!shortestPath) return NS_ERROR_OUT_OF_MEMORY;
 
     nsCStringKey toMIMEType(toStr);
     data = (SCTableData*)lBFSTable.Get(&toMIMEType);
@@ -689,7 +650,6 @@ NS_NewStreamConv(nsStreamConverterService** aStreamConv)
     if (!aStreamConv) return NS_ERROR_NULL_POINTER;
 
     *aStreamConv = new nsStreamConverterService();
-    if (!*aStreamConv) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aStreamConv);
     nsresult rv = (*aStreamConv)->Init();
