@@ -855,9 +855,14 @@ toolbarpaletteitem[place="palette"] > #search-container {
   border-color: hsla(210,4%,10%,0);
   border-bottom-color: hsla(210,4%,10%,.1);
   padding: 0;
-  margin-bottom: -1px;
   transition-property: background-color, border-color;
   transition-duration: 150ms;
+}
+
+/* Make direct siblings overlap borders: */
+.toolbaritem-combined-buttons + .toolbaritem-combined-buttons@inAnyPanel@ {
+  margin-top: -1px;
+  border-top-color: transparent !important;
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
