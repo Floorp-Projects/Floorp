@@ -698,7 +698,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     metrics.mScrollableRect = CSSRect::FromAppUnits(contentBounds);
   }
 
-  metrics.mScrollId = aScrollId;
+  metrics.SetScrollId(aScrollId);
   metrics.mIsRoot = aIsRoot;
 
   // Only the root scrollable frame for a given presShell should pick up

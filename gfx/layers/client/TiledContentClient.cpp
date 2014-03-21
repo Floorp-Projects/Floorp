@@ -156,7 +156,7 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   const FrameMetrics& contentMetrics = aLayer->GetFrameMetrics();
   FrameMetrics compositorMetrics;
 
-  if (!compositor->LookupCompositorFrameMetrics(contentMetrics.mScrollId,
+  if (!compositor->LookupCompositorFrameMetrics(contentMetrics.GetScrollId(),
                                                 compositorMetrics)) {
     FindFallbackContentFrameMetrics(aLayer, aCompositionBounds, aZoom);
     return false;
