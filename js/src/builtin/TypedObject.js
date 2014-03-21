@@ -851,11 +851,6 @@ function TypeOfTypedObject(obj) {
   }
 }
 
-function ObjectIsTypedObject(obj) {
-  assert(IsObject(obj), "ObjectIsTypedObject invoked with non-object")
-  return ObjectIsTransparentTypedObject(obj) || ObjectIsOpaqueTypedObject(obj);
-}
-
 ///////////////////////////////////////////////////////////////////////////
 // TypedObject surface API methods (sequential implementations).
 
@@ -1065,67 +1060,6 @@ function GET_BIT(data, index) {
   var word = index >> 3;
   var mask = 1 << (index & 0x7);
   return (data[word] & mask) != 0;
-}
-
-function TypeDescrIsUnsizedArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t),
-         "TypeDescrIsArrayType called on non-type-object");
-  return DESCR_KIND(t) === JS_TYPEREPR_UNSIZED_ARRAY_KIND;
-}
-
-function TypeDescrIsArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsArrayType called on non-type-object");
-
-  var kind = DESCR_KIND(t);
-  switch (kind) {
-  case JS_TYPEREPR_SIZED_ARRAY_KIND:
-  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    return true;
-  case JS_TYPEREPR_SCALAR_KIND:
-  case JS_TYPEREPR_REFERENCE_KIND:
-  case JS_TYPEREPR_X4_KIND:
-  case JS_TYPEREPR_STRUCT_KIND:
-    return false;
-  default:
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  }
-}
-
-function TypeDescrIsSizedArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsSizedArrayType called on non-type-object");
-
-  var kind = DESCR_KIND(t);
-  switch (kind) {
-  case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    return true;
-  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-  case JS_TYPEREPR_SCALAR_KIND:
-  case JS_TYPEREPR_REFERENCE_KIND:
-  case JS_TYPEREPR_X4_KIND:
-  case JS_TYPEREPR_STRUCT_KIND:
-    return false;
-  default:
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  }
-}
-
-function TypeDescrIsSimpleType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t),
-         "TypeDescrIsSimpleType called on non-type-object");
-
-  var kind = DESCR_KIND(t);
-  switch (kind) {
-  case JS_TYPEREPR_SCALAR_KIND:
-  case JS_TYPEREPR_REFERENCE_KIND:
-  case JS_TYPEREPR_X4_KIND:
-    return true;
-  case JS_TYPEREPR_SIZED_ARRAY_KIND:
-  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-  case JS_TYPEREPR_STRUCT_KIND:
-    return false;
-  default:
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  }
 }
 
 // Bug 956914: make performance-tuned variants tailored to 1, 2, and 3 dimensions.
