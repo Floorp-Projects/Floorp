@@ -500,16 +500,16 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
       !matrix2D.HasNonTranslation() &&
       matrix2D.HasNonIntegerTranslation()) {
     IntPoint snappedTranslation = RoundedToInt(matrix2D.GetTranslation());
-    Matrix snappedMatrix = Matrix().Translate(snappedTranslation.x,
-                                              snappedTranslation.y);
+    Matrix snappedMatrix = Matrix::Translation(snappedTranslation.x,
+                                               snappedTranslation.y);
     result = Matrix4x4::From2D(snappedMatrix);
     if (aResidualTransform) {
       // set aResidualTransform so that aResidual * snappedMatrix == matrix2D.
       // (I.e., appying snappedMatrix after aResidualTransform gives the
       // ideal transform.)
       *aResidualTransform =
-        Matrix().Translate(matrix2D._31 - snappedTranslation.x,
-                           matrix2D._32 - snappedTranslation.y);
+        Matrix::Translation(matrix2D._31 - snappedTranslation.x,
+                            matrix2D._32 - snappedTranslation.y);
     }
   } else {
     result = aTransform;
