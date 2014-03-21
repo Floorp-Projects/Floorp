@@ -2010,11 +2010,7 @@ pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);
 
 // Is support for the SVG 2 paint-order property enabled?
-#ifdef RELEASE_BUILD
-pref("svg.paint-order.enabled", false);
-#else
 pref("svg.paint-order.enabled", true);
-#endif
 
 // Is support for the new marker features from SVG 2 enabled?  Currently
 // this just includes <marker orient="auto-start-reverse">.
