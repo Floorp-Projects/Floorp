@@ -30,7 +30,6 @@ function run_test() {
   let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
-  ensureLegacyIdentityManager();
   // This test expects a clean slate -- no saved passphrase.
   Services.logins.removeAllLogins();
   let johnHelper = track_collections_helper();
