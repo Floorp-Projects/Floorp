@@ -60,8 +60,8 @@ function checkPrototype(ctor) {
 
 function test() {
     // Test cloning ArrayBuffer objects.
-    check(ArrayBuffer(0));
-    check(ArrayBuffer(7));
+    check(new ArrayBuffer(0));
+    check(new ArrayBuffer(7));
     checkPrototype(ArrayBuffer);
 
     // Test cloning typed array objects.
@@ -81,11 +81,11 @@ function test() {
         var ctor = ctors[i];
 
         // check empty array
-        b = ctor(0);
+        b = new ctor(0);
         check(b);
 
         // check array with some elements
-        b = ctor(100);
+        b = new ctor(100);
         var v = 1;
         for (var j = 0; j < 100; j++) {
             b[j] = v;
@@ -102,15 +102,15 @@ function test() {
     // ArrayBuffer. This also tests cloning TypedArrays where the arr->data
     // pointer is not 8-byte-aligned.
 
-    var base = Int8Array([0, 1, 2, 3]);
-    b = [Int8Array(base.buffer, 0, 3), Int8Array(base.buffer, 1, 3)];
+    var base = new Int8Array([0, 1, 2, 3]);
+    b = [new Int8Array(base.buffer, 0, 3), new Int8Array(base.buffer, 1, 3)];
     var a = deserialize(serialize(b));
     base[1] = -1;
     a[0][2] = -2;
-    assertArraysEqual(b[0], Int8Array([0, -1, 2])); // shared with base
-    assertArraysEqual(b[1], Int8Array([-1, 2, 3])); // shared with base
-    assertArraysEqual(a[0], Int8Array([0, 1, -2])); // not shared with base
-    assertArraysEqual(a[1], Int8Array([1, 2, 3]));  // not shared with base or a[0]
+    assertArraysEqual(b[0], new Int8Array([0, -1, 2])); // shared with base
+    assertArraysEqual(b[1], new Int8Array([-1, 2, 3])); // shared with base
+    assertArraysEqual(a[0], new Int8Array([0, 1, -2])); // not shared with base
+    assertArraysEqual(a[1], new Int8Array([1, 2, 3]));  // not shared with base or a[0]
 }
 
 test();

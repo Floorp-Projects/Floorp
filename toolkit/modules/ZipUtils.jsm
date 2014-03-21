@@ -52,7 +52,7 @@ function saveStreamAsync(aPath, aStream, aFile) {
                createInstance(Ci.nsIBinaryInputStream);
   source.setInputStream(input);
 
-  let data = Uint8Array(EXTRACTION_BUFFER);
+  let data = new Uint8Array(EXTRACTION_BUFFER);
 
   function readFailed(error) {
     try {
