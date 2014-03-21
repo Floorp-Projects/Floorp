@@ -2433,9 +2433,9 @@ WifiWorker.prototype = {
 
   _clearPendingRequest: function() {
     if (this._domRequest.length === 0) return;
-    this._domRequest.forEach(function(req) {
+    this._domRequest.forEach((function(req) {
       this._sendMessage(req.name + ":Return", false, "Wifi is disabled", req.msg);
-    });
+    }).bind(this));
   },
 
   receiveMessage: function MessageManager_receiveMessage(aMessage) {
