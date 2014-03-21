@@ -73,7 +73,7 @@ public:
 
   virtual void Clear() = 0;
 
-  virtual GLuint GetTexture(GLenum aUnit) = 0;
+  virtual GLuint GetTexture(GLenum aTarget, GLenum aEnum) = 0;
 
   virtual void EndFrame() = 0;
 };
@@ -86,7 +86,8 @@ class PerUnitTexturePoolOGL : public CompositorTexturePoolOGL
 {
 public:
   PerUnitTexturePoolOGL(gl::GLContext* aGL)
-  : mGL(aGL)
+  : mTextureTarget(0) // zero is never a valid texture target
+  , mGL(aGL)
   {}
 
   virtual ~PerUnitTexturePoolOGL()
@@ -99,13 +100,14 @@ public:
     DestroyTextures();
   }
 
-  virtual GLuint GetTexture(GLenum aUnit) MOZ_OVERRIDE;
+  virtual GLuint GetTexture(GLenum aTarget, GLenum aUnit) MOZ_OVERRIDE;
 
   virtual void EndFrame() MOZ_OVERRIDE {}
 
 protected:
   void DestroyTextures();
 
+  GLenum mTextureTarget;
   nsTArray<GLuint> mTextures;
   RefPtr<gl::GLContext> mGL;
 };
@@ -123,7 +125,8 @@ class PerFrameTexturePoolOGL : public CompositorTexturePoolOGL
 {
 public:
   PerFrameTexturePoolOGL(gl::GLContext* aGL)
-  : mGL(aGL)
+  : mTextureTarget(0) // zero is never a valid texture target
+  , mGL(aGL)
   {}
 
   virtual ~PerFrameTexturePoolOGL()
@@ -136,13 +139,14 @@ public:
     DestroyTextures();
   }
 
-  virtual GLuint GetTexture(GLenum aUnit) MOZ_OVERRIDE;
+  virtual GLuint GetTexture(GLenum aTarget, GLenum aUnit) MOZ_OVERRIDE;
 
   virtual void EndFrame() MOZ_OVERRIDE;
 
 protected:
   void DestroyTextures();
 
+  GLenum mTextureTarget;
   RefPtr<gl::GLContext> mGL;
   nsTArray<GLuint> mCreatedTextures;
   nsTArray<GLuint> mUnusedTextures;
@@ -267,7 +271,7 @@ public:
    * Doing so lets us use gralloc the way it has been designed to be used
    * (see https://wiki.mozilla.org/Platform/GFX/Gralloc)
    */
-  GLuint GetTemporaryTexture(GLenum aUnit);
+  GLuint GetTemporaryTexture(GLenum aTarget, GLenum aUnit);
 
   const gfx::Matrix4x4& GetProjMatrix() const {
     return mProjMatrix;
