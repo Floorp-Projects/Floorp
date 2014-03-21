@@ -162,9 +162,6 @@ MDefinition::valueHash() const
 bool
 MDefinition::congruentIfOperandsEqual(MDefinition *ins) const
 {
-    if (numOperands() != ins->numOperands())
-        return false;
-
     if (op() != ins->op())
         return false;
 
@@ -172,6 +169,9 @@ MDefinition::congruentIfOperandsEqual(MDefinition *ins) const
         return false;
 
     if (isEffectful() || ins->isEffectful())
+        return false;
+
+    if (numOperands() != ins->numOperands())
         return false;
 
     for (size_t i = 0, e = numOperands(); i < e; i++) {
