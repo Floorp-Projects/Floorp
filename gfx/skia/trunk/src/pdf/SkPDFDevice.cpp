@@ -404,10 +404,8 @@ static bool get_clip_stack_path(const SkMatrix& transform,
             outClipPath->reset();
             outClipPath->setFillType(SkPath::kInverseWinding_FillType);
             continue;
-        } else if (SkClipStack::Element::kRect_Type == clipEntry->getType()) {
-            entryPath.addRect(clipEntry->getRect());
-        } else if (SkClipStack::Element::kPath_Type == clipEntry->getType()) {
-            entryPath = clipEntry->getPath();
+        } else {
+            clipEntry->asPath(&entryPath);
         }
         entryPath.transform(transform);
 
@@ -505,14 +503,13 @@ void GraphicStackState::updateClip(const SkClipStack& clipStack,
                     emit_clip(NULL, &translatedClip, fContentStream);
                     break;
                 }
-                case SkClipStack::Element::kPath_Type: {
+                default: {
                     SkPath translatedPath;
-                    clipEntry->getPath().transform(transform, &translatedPath);
+                    clipEntry->asPath(&translatedPath);
+                    translatedPath.transform(transform, &translatedPath);
                     emit_clip(&translatedPath, NULL, fContentStream);
                     break;
                 }
-                default:
-                    SkASSERT(false);
             }
         }
     }
@@ -585,13 +582,10 @@ void GraphicStackState::updateDrawingState(const GraphicStateEntry& state) {
     }
 }
 
-SkBaseDevice* SkPDFDevice::onCreateCompatibleDevice(SkBitmap::Config config,
-                                                    int width, int height,
-                                                    bool isOpaque,
-                                                    Usage usage) {
+SkBaseDevice* SkPDFDevice::onCreateDevice(const SkImageInfo& info, Usage usage) {
     SkMatrix initialTransform;
     initialTransform.reset();
-    SkISize size = SkISize::Make(width, height);
+    SkISize size = SkISize::Make(info.width(), info.height());
     return SkNEW_ARGS(SkPDFDevice, (size, size, initialTransform));
 }
 
@@ -710,7 +704,7 @@ private:
 
 static inline SkBitmap makeContentBitmap(const SkISize& contentSize,
                                          const SkMatrix* initialTransform) {
-    SkBitmap bitmap;
+    SkImageInfo info;
     if (initialTransform) {
         // Compute the size of the drawing area.
         SkVector drawingSize;
@@ -724,17 +718,19 @@ static inline SkBitmap makeContentBitmap(const SkISize& contentSize,
         }
         inverse.mapVectors(&drawingSize, 1);
         SkISize size = SkSize::Make(drawingSize.fX, drawingSize.fY).toRound();
-        bitmap.setConfig(SkBitmap::kNo_Config, abs(size.fWidth),
-                         abs(size.fHeight));
+        info = SkImageInfo::MakeUnknown(abs(size.fWidth), abs(size.fHeight));
     } else {
-        bitmap.setConfig(SkBitmap::kNo_Config, abs(contentSize.fWidth),
-                         abs(contentSize.fHeight));
+        info = SkImageInfo::MakeUnknown(abs(contentSize.fWidth),
+                                        abs(contentSize.fHeight));
     }
 
+    SkBitmap bitmap;
+    bitmap.setConfig(info);
     return bitmap;
 }
 
 // TODO(vandebo) change pageSize to SkSize.
+// TODO: inherit from SkBaseDevice instead of SkBitmapDevice
 SkPDFDevice::SkPDFDevice(const SkISize& pageSize, const SkISize& contentSize,
                          const SkMatrix& initialTransform)
     : SkBitmapDevice(makeContentBitmap(contentSize, &initialTransform)),
@@ -809,10 +805,6 @@ void SkPDFDevice::cleanUp(bool clearFontUsage) {
     if (clearFontUsage) {
         fFontGlyphUsage->reset();
     }
-}
-
-uint32_t SkPDFDevice::getDeviceCapabilities() {
-    return kVector_Capability;
 }
 
 void SkPDFDevice::clear(SkColor color) {
@@ -1345,13 +1337,7 @@ void SkPDFDevice::drawVertices(const SkDraw& d, SkCanvas::VertexMode,
 
 void SkPDFDevice::drawDevice(const SkDraw& d, SkBaseDevice* device,
                              int x, int y, const SkPaint& paint) {
-    if ((device->getDeviceCapabilities() & kVector_Capability) == 0) {
-        // If we somehow get a raster device, do what our parent would do.
-        INHERITED::drawDevice(d, device, x, y, paint);
-        return;
-    }
-
-    // Assume that a vector capable device means that it's a PDF Device.
+    // our onCreateDevice() always creates SkPDFDevice subclasses.
     SkPDFDevice* pdfDevice = static_cast<SkPDFDevice*>(device);
     if (pdfDevice->isContentEmpty()) {
         return;

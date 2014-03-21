@@ -21,7 +21,7 @@ protected:
     explicit SkAlphaThresholdFilterImpl(SkReadBuffer& buffer);
     virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
 
-    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const SkMatrix&,
+    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
                                SkBitmap* result, SkIPoint* offset) const SK_OVERRIDE;
 #if SK_SUPPORT_GPU
     virtual bool asNewEffect(GrEffectRef** effect, GrTexture* texture,
@@ -304,16 +304,16 @@ void SkAlphaThresholdFilterImpl::flatten(SkWriteBuffer& buffer) const {
 }
 
 bool SkAlphaThresholdFilterImpl::onFilterImage(Proxy*, const SkBitmap& src,
-                                               const SkMatrix& matrix, SkBitmap* dst,
+                                               const Context& ctx, SkBitmap* dst,
                                                SkIPoint* offset) const {
-    SkASSERT(src.config() == SkBitmap::kARGB_8888_Config);
+    SkASSERT(src.colorType() == kPMColor_SkColorType);
 
-    if (src.config() != SkBitmap::kARGB_8888_Config) {
+    if (src.colorType() != kPMColor_SkColorType) {
         return false;
     }
 
     SkMatrix localInverse;
-    if (!matrix.invert(&localInverse)) {
+    if (!ctx.ctm().invert(&localInverse)) {
         return false;
     }
 

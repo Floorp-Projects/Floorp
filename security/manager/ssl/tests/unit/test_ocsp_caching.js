@@ -47,10 +47,10 @@ function run_test() {
   run_next_test();
 }
 
-function add_tests_in_mode(useInsanity) {
+function add_tests_in_mode(useMozillaPKIX) {
   add_test(function () {
-    Services.prefs.setBoolPref("security.use_insanity_verification",
-                               useInsanity);
+    Services.prefs.setBoolPref("security.use_mozillapkix_verification",
+                               useMozillaPKIX);
     run_next_test();
   });
 
@@ -107,8 +107,8 @@ function add_tests_in_mode(useInsanity) {
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
 
-  // TODO(bug 977865): implement this for insanity
-  if (!useInsanity) {
+  // TODO(bug 977865): implement this for mozilla::pkix
+  if (!useMozillaPKIX) {
     // The error entry will prevent a fetch from happening for a while.
     add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
                         clearSessionCache);

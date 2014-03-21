@@ -3,9 +3,9 @@
 // Binary: cache/js-dbg-32-0428dbdf3d58-linux
 // Flags:
 //
-o1 = Float32Array().buffer
+o1 = new Float32Array().buffer
 o2 = ArrayBuffer.prototype
-o3 = Uint32Array().buffer
+o3 = new Uint32Array().buffer
 for (i = 0; i < 2; i++) {
     for (var x in o2) {
         o3.__defineGetter__("", function() {})

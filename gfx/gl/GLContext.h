@@ -2213,21 +2213,32 @@ public:
     void fDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
     {
         BeforeGLDrawCall();
-        BEFORE_GL_CALL;
-        ASSERT_SYMBOL_PRESENT(fDrawArraysInstanced);
-        mSymbols.fDrawArraysInstanced(mode, first, count, primcount);
-        AFTER_GL_CALL;
+        raw_fDrawArraysInstanced(mode, first, count, primcount);
         AfterGLDrawCall();
     }
 
     void fDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount)
     {
         BeforeGLDrawCall();
+        raw_fDrawElementsInstanced(mode, count, type, indices, primcount);
+        AfterGLDrawCall();
+    }
+
+private:
+    void raw_fDrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDrawArraysInstanced);
+        mSymbols.fDrawArraysInstanced(mode, first, count, primcount);
+        AFTER_GL_CALL;
+    }
+
+    void raw_fDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices, GLsizei primcount)
+    {
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDrawElementsInstanced);
         mSymbols.fDrawElementsInstanced(mode, count, type, indices, primcount);
         AFTER_GL_CALL;
-        AfterGLDrawCall();
     }
 
 // -----------------------------------------------------------------------------
@@ -2235,6 +2246,15 @@ public:
 public:
     void fDrawRangeElements(GLenum mode, GLuint start, GLuint end,
                             GLsizei count, GLenum type, const GLvoid* indices)
+    {
+        BeforeGLDrawCall();
+        raw_fDrawRangeElements(mode, start, end, count, type, indices);
+        AfterGLDrawCall();
+    }
+
+private:
+    void raw_fDrawRangeElements(GLenum mode, GLuint start, GLuint end,
+                                GLsizei count, GLenum type, const GLvoid* indices)
     {
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDrawRangeElements);

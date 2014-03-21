@@ -14,7 +14,7 @@ function checkCommon(f, makeFn) {
   assertEqArray(makeFn("1, ...[], 2, 3")(f), [1, 2, 3]);
 
   // other iterable objects
-  assertEqArray(makeFn("...arg")(f, Int32Array([1, 2, 3])), [1, 2, 3]);
+  assertEqArray(makeFn("...arg")(f, new Int32Array([1, 2, 3])), [1, 2, 3]);
   assertEqArray(makeFn("...arg")(f, "abc"), ["a", "b", "c"]);
   assertEqArray(makeFn("...arg")(f, [1, 2, 3][std_iterator]()), [1, 2, 3]);
   assertEqArray(makeFn("...arg")(f, Set([1, 2, 3])), [1, 2, 3]);

@@ -196,6 +196,7 @@ pref("media.directshow.enabled", true);
 #endif
 #ifdef MOZ_FMP4
 pref("media.fragmented-mp4.enabled", true);
+pref("media.fragmented-mp4.ffmpeg.enabled", false);
 // Denotes that the fragmented MP4 parser can be created by <video> elements.
 // This is for testing, since the parser can't yet handle non-fragmented MP4,
 // so it will fail to play most MP4 files.
@@ -1810,6 +1811,26 @@ pref("layout.css.sticky.enabled", true);
 // Is support for CSS "will-change" enabled?
 pref("layout.css.will-change.enabled", false);
 
+// Is support for DOMPoint enabled?
+pref("layout.css.DOMPoint.enabled", true);
+
+// Is support for DOMQuad enabled?
+pref("layout.css.DOMQuad.enabled", true);
+
+// Is support for GeometryUtils.getBoxQuads enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.getBoxQuads.enabled", false);
+#else
+pref("layout.css.getBoxQuads.enabled", true);
+#endif
+
+// Is support for GeometryUtils.getBoxQuads enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.convertFromNode.enabled", false);
+#else
+pref("layout.css.convertFromNode.enabled", true);
+#endif
+
 // Is support for CSS "text-align: true X" enabled?
 pref("layout.css.text-align-true-value.enabled", false);
 
@@ -2010,11 +2031,7 @@ pref("svg.display-lists.hit-testing.enabled", true);
 pref("svg.display-lists.painting.enabled", true);
 
 // Is support for the SVG 2 paint-order property enabled?
-#ifdef RELEASE_BUILD
-pref("svg.paint-order.enabled", false);
-#else
 pref("svg.paint-order.enabled", true);
-#endif
 
 // Is support for the new marker features from SVG 2 enabled?  Currently
 // this just includes <marker orient="auto-start-reverse">.

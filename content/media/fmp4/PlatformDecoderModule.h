@@ -109,6 +109,7 @@ protected:
   PlatformDecoderModule() {}
   // Caches pref media.fragmented-mp4.use-blank-decoder
   static bool sUseBlankDecoder;
+  static bool sFFmpegDecoderEnabled;
 };
 
 // A callback used by MediaDataDecoder to return output/errors to the

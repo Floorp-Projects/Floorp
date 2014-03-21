@@ -46,7 +46,7 @@ nsNSSCertCache::CacheAllCerts()
 
   nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
   
-  insanity::pkix::ScopedCERTCertList newList(
+  mozilla::pkix::ScopedCERTCertList newList(
     PK11_ListCerts(PK11CertListUnique, cxt));
 
   if (newList) {

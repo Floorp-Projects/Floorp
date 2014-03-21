@@ -1,4 +1,4 @@
-var ab = ArrayBuffer(5);
+var ab = new ArrayBuffer(5);
 var p = new Proxy(ab, {});
 var ps = Object.getOwnPropertyDescriptor(Object.prototype, "__proto__").set;
 var threw = 0;

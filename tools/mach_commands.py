@@ -9,6 +9,7 @@ import os
 import stat
 import platform
 import urllib2
+import errno
 
 from mach.decorators import (
     CommandArgument,
@@ -361,9 +362,17 @@ class FormatProvider(MachCommandBase):
                                   "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
         else:
             git_process = Popen(["git", "diff", "-U0", "HEAD^"], stdout=PIPE)
-            diff_process = Popen(["filterdiff", "--include=*.h", "--include=*.cpp",
-                                  "--exclude-from-file=.clang-format-ignore"],
-                                 stdin=git_process.stdout, stdout=PIPE)
+            try:
+                diff_process = Popen(["filterdiff", "--include=*.h", "--include=*.cpp",
+                                      "--exclude-from-file=.clang-format-ignore"],
+                                     stdin=git_process.stdout, stdout=PIPE)
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    print("Can't find filterdiff. Please install patchutils.")
+                else:
+                    print("OSError {0}: {1}".format(e.code, e.reason))
+                return 1
+
 
         args = [sys.executable, clang_format_diff, "-p1"]
         if not show:
