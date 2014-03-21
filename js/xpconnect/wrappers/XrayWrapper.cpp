@@ -344,7 +344,15 @@ public:
                                JS::HandleObject target,
                                JS::MutableHandleObject protop)
     {
-        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+        RootedObject holder(cx, ensureHolder(cx, wrapper));
+        JSProtoKey key = isPrototype(holder) ? JSProto_Object
+                                             : getProtoKey(holder);
+        {
+            JSAutoCompartment ac(cx, target);
+            if (!JS_GetClassPrototype(cx, key, protop))
+                return nullptr;
+        }
+        return JS_WrapObject(cx, protop);
     }
 
     virtual void preserveWrapper(JSObject *target) {
