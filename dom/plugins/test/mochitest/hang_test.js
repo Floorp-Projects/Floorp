@@ -92,16 +92,17 @@ function onPluginCrashed(aEvent) {
   var pluginElement = document.getElementById("plugin1");
   is (pluginElement, aEvent.target, "Plugin crashed event target is plugin element");
 
-  ok(aEvent instanceof Ci.nsIDOMDataContainerEvent,
+  ok(aEvent instanceof Ci.nsIDOMCustomEvent,
      "plugin crashed event has the right interface");
 
-  var minidumpID = aEvent.getData("minidumpID");
-  isnot(minidumpID, "", "got a non-empty dump ID");
-  var pluginName = aEvent.getData("pluginName");
+  var propBag = aEvent.detail.QueryInterface(Ci.nsIPropertyBag2);
+  var pluginDumpID = propBag.getPropertyAsAString("pluginDumpID");
+  isnot(pluginDumpID, "", "got a non-empty dump ID");
+  var pluginName = propBag.getPropertyAsAString("pluginName");
   is(pluginName, "Test Plug-in", "got correct plugin name");
-  var pluginFilename = aEvent.getData("pluginFilename");
+  var pluginFilename = propBag.getPropertyAsAString("pluginFilename");
   isnot(pluginFilename, "", "got a non-empty filename");
-  var didReport = aEvent.getData("submittedCrashReport");
+  var didReport = propBag.getPropertyAsBool("submittedCrashReport");
   // The app itself may or may not have decided to submit the report, so
   // allow either true or false here.
   ok((didReport == true || didReport == false), "event said crash report was submitted");

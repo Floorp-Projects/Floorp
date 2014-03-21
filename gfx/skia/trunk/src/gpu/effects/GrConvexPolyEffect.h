@@ -10,7 +10,7 @@
 
 #include "GrDrawTargetCaps.h"
 #include "GrEffect.h"
-#include "GrVertexEffect.h"
+#include "GrTypesPriv.h"
 
 class GrGLConvexPolyEffect;
 class SkPath;
@@ -22,17 +22,7 @@ class SkPath;
  */
 class GrConvexPolyEffect : public GrEffect {
 public:
-    /** This could be expanded to include a AA hairline mode. If so, unify with GrBezierEffect's
-        enum. */
-    enum EdgeType {
-        kFillNoAA_EdgeType,
-        kFillAA_EdgeType,
-
-        kLastEdgeType = kFillAA_EdgeType,
-    };
-
     enum {
-        kEdgeTypeCnt = kLastEdgeType + 1,
         kMaxEdges = 8,
     };
 
@@ -47,8 +37,8 @@ public:
      * have to modify the effect/shaderbuilder interface to make it possible (e.g. give access
      * to the view matrix or untransformed positions in the fragment shader).
      */
-    static GrEffectRef* Create(EdgeType edgeType, int n, const SkScalar edges[]) {
-        if (n <= 0 || n > kMaxEdges) {
+    static GrEffectRef* Create(GrEffectEdgeType edgeType, int n, const SkScalar edges[]) {
+        if (n <= 0 || n > kMaxEdges || kHairlineAA_GrEffectEdgeType == edgeType) {
             return NULL;
         }
         return CreateEffectRef(AutoEffectUnref(SkNEW_ARGS(GrConvexPolyEffect,
@@ -60,18 +50,18 @@ public:
      * inverse filled, or has too many edges, this will return NULL. If offset is non-NULL, then
      * the path is translated by the vector.
      */
-    static GrEffectRef* Create(EdgeType, const SkPath&, const SkVector* offset= NULL);
+    static GrEffectRef* Create(GrEffectEdgeType, const SkPath&, const SkVector* offset = NULL);
 
     /**
      * Creates an effect that fills inside the rect with AA edges..
      */
-    static GrEffectRef* CreateForAAFillRect(const SkRect&);
+    static GrEffectRef* Create(GrEffectEdgeType, const SkRect&);
 
     virtual ~GrConvexPolyEffect();
 
     static const char* Name() { return "ConvexPoly"; }
 
-    EdgeType getEdgeType() const { return fEdgeType; }
+    GrEffectEdgeType getEdgeType() const { return fEdgeType; }
 
     int getEdgeCount() const { return fEdgeCount; }
 
@@ -84,13 +74,13 @@ public:
     virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE;
 
 private:
-    GrConvexPolyEffect(EdgeType edgeType, int n, const SkScalar edges[]);
+    GrConvexPolyEffect(GrEffectEdgeType edgeType, int n, const SkScalar edges[]);
 
     virtual bool onIsEqual(const GrEffect& other) const SK_OVERRIDE;
 
-    EdgeType fEdgeType;
-    int      fEdgeCount;
-    SkScalar fEdges[3 * kMaxEdges];
+    GrEffectEdgeType    fEdgeType;
+    int                 fEdgeCount;
+    SkScalar            fEdges[3 * kMaxEdges];
 
     GR_DECLARE_EFFECT_TEST;
 

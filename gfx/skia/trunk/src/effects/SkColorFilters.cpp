@@ -77,7 +77,7 @@ public:
         }
     }
 
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
     virtual void toString(SkString* str) const SK_OVERRIDE {
         str->append("SkModeColorFilter: color: 0x");
         str->appendHex(fColor);
@@ -557,7 +557,7 @@ SkColorFilter* SkColorFilter::CreateLightingFilter(SkColor mul, SkColor add) {
                          SkIntToScalar(SkColorGetG(add)),
                          SkIntToScalar(SkColorGetB(add)),
                          0);
-    return SkNEW_ARGS(SkColorMatrixFilter, (matrix));
+    return SkColorMatrixFilter::Create(matrix);
 }
 
 SK_DEFINE_FLATTENABLE_REGISTRAR_GROUP_START(SkColorFilter)

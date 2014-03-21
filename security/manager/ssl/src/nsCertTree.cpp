@@ -4,7 +4,7 @@
 
 #include "nsCertTree.h"
 
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsITreeColumns.h"
 #include "nsIX509Cert.h"
@@ -638,7 +638,7 @@ nsCertTree::GetCertsByType(uint32_t           aType,
 {
   nsNSSShutDownPreventionLock locker;
   nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
-  insanity::pkix::ScopedCERTCertList certList(
+  mozilla::pkix::ScopedCERTCertList certList(
     PK11_ListCerts(PK11CertListUnique, cxt));
   return GetCertsByTypeFromCertList(certList.get(), aType, aCertCmpFn,
                                     aCertCmpFnArg);
@@ -809,7 +809,7 @@ nsCertTree::DeleteEntryObject(uint32_t index)
             // although there are still overrides stored,
             // so, we keep the cert, but remove the trust
 
-            insanity::pkix::ScopedCERTCertificate nsscert;
+            mozilla::pkix::ScopedCERTCertificate nsscert;
 
             nsCOMPtr<nsIX509Cert2> cert2 = do_QueryInterface(cert);
             if (cert2) {

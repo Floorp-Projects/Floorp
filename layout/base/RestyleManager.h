@@ -35,6 +35,13 @@ public:
 
   RestyleManager(nsPresContext* aPresContext);
 
+private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~RestyleManager()
+  {
+  }
+
+public:
   NS_INLINE_DECL_REFCOUNTING(mozilla::RestyleManager)
 
   void Disconnect() {

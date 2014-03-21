@@ -15,7 +15,7 @@ assertEqArray([,,...[1, 2, 3],,,,], [,,1,2,3,,,,]);
 assertEqArray([...[undefined]], [undefined]);
 
 // other iterable objects
-assertEqArray([...Int32Array([1, 2, 3])], [1, 2, 3]);
+assertEqArray([...new Int32Array([1, 2, 3])], [1, 2, 3]);
 assertEqArray([..."abc"], ["a", "b", "c"]);
 assertEqArray([...[1, 2, 3][std_iterator]()], [1, 2, 3]);
 assertEqArray([...Set([1, 2, 3])], [1, 2, 3]);

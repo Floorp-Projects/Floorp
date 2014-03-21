@@ -67,6 +67,26 @@ if CONFIG['MOZ_WMF']:
       'wmf/WMFVideoOutputSource.cpp',
   ]
 
+if CONFIG['MOZ_FFMPEG']:
+  EXPORTS += [
+      'ffmpeg/FFmpegAACDecoder.h',
+      'ffmpeg/FFmpegDataDecoder.h',
+      'ffmpeg/FFmpegDecoderModule.h',
+      'ffmpeg/FFmpegFunctionList.h',
+      'ffmpeg/FFmpegH264Decoder.h',
+      'ffmpeg/FFmpegRuntimeLinker.h',
+  ]
+  UNIFIED_SOURCES += [
+      'ffmpeg/FFmpegAACDecoder.cpp',
+      'ffmpeg/FFmpegDataDecoder.cpp',
+      'ffmpeg/FFmpegDecoderModule.cpp',
+      'ffmpeg/FFmpegH264Decoder.cpp',
+      'ffmpeg/FFmpegRuntimeLinker.cpp',
+  ]
+  LOCAL_INCLUDES += [
+      'ffmpeg/include',
+  ]
+
 FINAL_LIBRARY = 'gklayout'
 
 FAIL_ON_WARNINGS = True

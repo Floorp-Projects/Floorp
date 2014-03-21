@@ -1,6 +1,6 @@
 x = newGlobal()
 Int32Array = x.Int32Array
-x.p = ArrayBuffer()
+x.p = new ArrayBuffer()
 schedulegc(29);
 (function(stdlib, n, heap) {
     "use asm"
@@ -11,4 +11,4 @@ schedulegc(29);
     return f
 })(this, {
     f: new Function
-}, ArrayBuffer())
+}, new ArrayBuffer())
