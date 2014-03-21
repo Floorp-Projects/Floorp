@@ -19,6 +19,7 @@ import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
@@ -63,6 +64,8 @@ public class FxAccountConfirmAccountActivity extends FxAccountAbstractActivity i
       @Override
       public void onClick(View v) {
         ActivityUtils.openURLInFennec(v.getContext(), null);
+        setResult(Activity.RESULT_OK);
+        finish();
       }
     });
   }

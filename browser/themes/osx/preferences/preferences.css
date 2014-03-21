@@ -230,4 +230,8 @@ html|a.inline-link:-moz-focusring {
   margin-bottom: 0.6em;
 }
 
+#fxa-pweng-help-link > label {
+  margin: 0;
+}
+
 %endif
