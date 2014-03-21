@@ -761,6 +761,7 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
     // scheduled in order to better match the behavior under regular sampling
     // conditions.
     if (mIsTesting && root && mCurrentCompositeTask) {
+      AutoResolveRefLayers resolve(mCompositionManager);
       bool requestNextFrame =
         mCompositionManager->TransformShadowTree(mTestTime);
       if (!requestNextFrame) {
@@ -790,6 +791,7 @@ CompositorParent::SetTestSampleTime(LayerTransactionParent* aLayerTree,
 
   // Update but only if we were already scheduled to animate
   if (mCompositionManager && mCurrentCompositeTask) {
+    AutoResolveRefLayers resolve(mCompositionManager);
     bool requestNextFrame = mCompositionManager->TransformShadowTree(aTime);
     if (!requestNextFrame) {
       CancelCurrentCompositeTask();
