@@ -14,6 +14,8 @@
 #include "nsIMozNavigatorNetwork.h"
 #include "nsAutoPtr.h"
 #include "nsWrapperCache.h"
+#include "nsHashKeys.h"
+#include "nsInterfaceHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -348,6 +350,13 @@ private:
   nsTArray<nsRefPtr<nsDOMDeviceStorage> > mDeviceStorageStores;
   nsRefPtr<time::TimeManager> mTimeManager;
   nsCOMPtr<nsPIDOMWindow> mWindow;
+
+  // Hashtable for saving cached objects newresolve created, so we don't create
+  // the object twice if asked for it twice, whether due to use of "delete" or
+  // due to Xrays.  We could probably use a nsJSThingHashtable here, but then
+  // we'd need to figure out exactly how to trace that, and that seems to be
+  // rocket science.  :(
+  nsInterfaceHashtable<nsStringHashKey, nsISupports> mCachedResolveResults;
 };
 
 } // namespace dom
