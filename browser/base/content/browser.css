@@ -793,6 +793,12 @@ panelview > .social-panel-frame {
   height: auto;
 }
 
+/* Translation */
+notification[value="translation"] {
+  -moz-binding: url("chrome://browser/content/translation-infobar.xml#translationbar");
+}
+
+/* Social */
 /* Note the chatbox 'width' values are duplicated in socialchat.xml */
 chatbox {
   -moz-binding: url("chrome://browser/content/socialchat.xml#chatbox");
