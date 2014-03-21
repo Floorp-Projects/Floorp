@@ -11,7 +11,8 @@ const { setTimeout } = require('sdk/timers');
 const app = require("sdk/system/xul-app");
 const tabs = require('sdk/tabs');
 const isAustralis = "gCustomizeMode" in windows.activeBrowserWindow;
-const { set: setPref } = require("sdk/preferences/service");
+const { set: setPref, get: getPref } = require("sdk/preferences/service");
+const { PrefsTarget } = require("sdk/preferences/event-target");
 const { defer } = require('sdk/core/promise');
 
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
@@ -42,20 +43,31 @@ function isChromeVisible(window) {
 // module.metadata.engines
 if (app.is('Firefox')) {
 
-exports['test add-on page deprecation message'] = function(assert) {
+exports['test add-on page deprecation message'] = function(assert, done) {
   let { loader, messages } = LoaderWithHookedConsole(module);
-  loader.require('sdk/addon-page');
+
+  loader.require('sdk/preferences/event-target').PrefsTarget({
+    branchName: "devtools.errorconsole."
+  }).on("deprecation_warnings", function() {
+    if (!getPref(DEPRECATE_PREF, false)) {
+      return undefined;
+    }
+
+    loader.require('sdk/addon-page');
+
+    assert.equal(messages.length, 1, "only one error is dispatched");
+    assert.equal(messages[0].type, "error", "the console message is an error");
+
+    let msg = messages[0].msg;
+    assert.ok(msg.indexOf("DEPRECATED") === 0,
+              "The message is deprecation message");
+
+    loader.unload();
+    done();
+    return undefined;
+  });
+  setPref(DEPRECATE_PREF, false);
   setPref(DEPRECATE_PREF, true);
-
-  assert.equal(messages.length, 1, "only one error is dispatched");
-  assert.equal(messages[0].type, "error", "the console message is an error");
-
-  let msg = messages[0].msg;
-
-  assert.ok(msg.indexOf("DEPRECATED") === 0,
-            "The message is deprecation message");
-
-  loader.unload();
 };
 
 exports['test that add-on page has no chrome'] = function(assert, done) {
