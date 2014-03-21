@@ -2515,6 +2515,13 @@ static const nsCSSProperty gFlexFlowSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gGridTemplateSubpropTable[] = {
+  eCSSProperty_grid_template_areas,
+  eCSSProperty_grid_template_columns,
+  eCSSProperty_grid_template_rows,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gGridColumnSubpropTable[] = {
   eCSSProperty_grid_column_start,
   eCSSProperty_grid_column_end,

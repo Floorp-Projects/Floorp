@@ -1667,12 +1667,12 @@ AppendGridTemplateToString(const nsCSSValueList* val,
 {
   // This is called for the "list" that's the top-level value of the property.
   for (;;) {
-    bool addSpaceSpearator = true;
+    bool addSpaceSeparator = true;
     nsCSSUnit unit = val->mValue.GetUnit();
 
     if (unit == eCSSUnit_Null) {
       // Empty or omitted <line-names>. Serializes to nothing.
-      addSpaceSpearator = false;  // Avoid a double space.
+      addSpaceSeparator = false;  // Avoid a double space.
 
     } else if (unit == eCSSUnit_List || unit == eCSSUnit_ListDep) {
       // Non-empty <line-names>
@@ -1691,7 +1691,7 @@ AppendGridTemplateToString(const nsCSSValueList* val,
       break;
     }
 
-    if (addSpaceSpearator) {
+    if (addSpaceSeparator) {
       aResult.Append(char16_t(' '));
     }
   }

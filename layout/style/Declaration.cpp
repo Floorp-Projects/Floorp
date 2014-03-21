@@ -14,6 +14,7 @@
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 #include "gfxFontConstants.h"
+#include "nsStyleUtil.h"
 
 namespace mozilla {
 namespace css {
@@ -960,6 +961,82 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       AppendValueToString(subprops[2], aValue, aSerialization);
       aValue.AppendLiteral(" / ");
       AppendValueToString(subprops[3], aValue, aSerialization);
+      break;
+    }
+    case eCSSProperty_grid_template: {
+      const nsCSSValue& areasValue =
+        *data->ValueFor(eCSSProperty_grid_template_areas);
+      const nsCSSValue& columnsValue =
+        *data->ValueFor(eCSSProperty_grid_template_columns);
+      const nsCSSValue& rowsValue =
+        *data->ValueFor(eCSSProperty_grid_template_rows);
+      if (areasValue.GetUnit() == eCSSUnit_None) {
+        AppendValueToString(eCSSProperty_grid_template_columns,
+                            aValue, aSerialization);
+        aValue.AppendLiteral(" / ");
+        AppendValueToString(eCSSProperty_grid_template_rows,
+                            aValue, aSerialization);
+        break;
+      }
+      if (rowsValue.GetUnit() != eCSSUnit_List &&
+          rowsValue.GetUnit() != eCSSUnit_ListDep) {
+        // We have "grid-template-areas:[something]; grid-template-rows:none"
+        // which isn't a value that the shorthand can express. Bail.
+        return;
+      }
+      const nsCSSValueGridTemplateAreas& areas =
+        areasValue.GetGridTemplateAreas();
+      const nsCSSValueList* rowsItem = rowsValue.GetListValue();
+      uint32_t nRowItems = 0;
+      while (rowsItem) {
+        nRowItems++;
+        rowsItem = rowsItem->mNext;
+      }
+      MOZ_ASSERT(nRowItems % 2 == 1, "expected an odd number of items");
+      if ((nRowItems - 1) / 2 != areas.NRows()) {
+        // Not serializable, bail.
+        return;
+      }
+      if (columnsValue.GetUnit() != eCSSUnit_None) {
+        AppendValueToString(eCSSProperty_grid_template_columns,
+                            aValue, aSerialization);
+        aValue.AppendLiteral(" / ");
+      }
+      rowsItem = rowsValue.GetListValue();
+      uint32_t row = 0;
+      for (;;) {
+        bool addSpaceSeparator = true;
+        nsCSSUnit unit = rowsItem->mValue.GetUnit();
+
+        if (unit == eCSSUnit_Null) {
+          // Empty or omitted <line-names>. Serializes to nothing.
+          addSpaceSeparator = false;  // Avoid a double space.
+
+        } else if (unit == eCSSUnit_List || unit == eCSSUnit_ListDep) {
+          // Non-empty <line-names>
+          aValue.AppendLiteral("(");
+          rowsItem->mValue.AppendToString(eCSSProperty_grid_template_rows,
+                                          aValue, aSerialization);
+          aValue.AppendLiteral(")");
+
+        } else {
+          nsStyleUtil::AppendEscapedCSSString(areas.mTemplates[row++], aValue);
+          aValue.Append(char16_t(' '));
+
+          // <track-size>
+          rowsItem->mValue.AppendToString(eCSSProperty_grid_template_rows,
+                                          aValue, aSerialization);
+        }
+
+        rowsItem = rowsItem->mNext;
+        if (!rowsItem) {
+          break;
+        }
+
+        if (addSpaceSeparator) {
+          aValue.Append(char16_t(' '));
+        }
+      }
       break;
     }
     case eCSSProperty__moz_transform: {

@@ -2084,6 +2084,12 @@ CSS_PROP_POSITION(
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_SHORTHAND(
+    grid-template,
+    grid_template,
+    GridTemplate,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "layout.css.grid.enabled")
 CSS_PROP_POSITION(
     grid-column-start,
     grid_column_start,
