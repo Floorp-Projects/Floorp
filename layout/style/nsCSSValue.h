@@ -144,7 +144,7 @@ struct GridNamedArea {
   uint32_t mRowEnd;
 };
 
-struct GridTemplateAreasValue {
+struct GridTemplateAreasValue MOZ_FINAL {
   // Parsed value
   nsTArray<GridNamedArea> mNamedAreas;
 
@@ -168,13 +168,6 @@ struct GridTemplateAreasValue {
   {
   }
 
-  void Reset()
-  {
-    mNamedAreas.Clear();
-    mTemplates.Clear();
-    mNColumns = 0;
-  }
-
   bool operator==(const GridTemplateAreasValue& aOther) const
   {
     return mTemplates == aOther.mTemplates;
@@ -188,6 +181,17 @@ struct GridTemplateAreasValue {
   NS_INLINE_DECL_REFCOUNTING(GridTemplateAreasValue)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+private:
+  // Private destructor to make sure this isn't used as a stack variable
+  // or member variable.
+  ~GridTemplateAreasValue()
+  {
+  }
+
+  GridTemplateAreasValue(const GridTemplateAreasValue& aOther) MOZ_DELETE;
+  GridTemplateAreasValue&
+  operator=(const GridTemplateAreasValue& aOther) MOZ_DELETE;
 };
 
 }
@@ -247,6 +251,8 @@ enum nsCSSUnit {
   eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
   eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
   eCSSUnit_TokenStream  = 43,     // (nsCSSValueTokenStream*) value
+  eCSSUnit_GridTemplateAreas   = 44,   // (GridTemplateAreasValue*)
+                                       // for grid-template-areas
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
   eCSSUnit_Triplet      = 51,     // (nsCSSValueTriplet*) triplet of values
@@ -259,8 +265,6 @@ enum nsCSSUnit {
   eCSSUnit_PairList     = 56,     // (nsCSSValuePairList*) list of value pairs
   eCSSUnit_PairListDep  = 57,     // (nsCSSValuePairList*) same as PairList
                                   //   but does not own the list
-
-  eCSSUnit_GridTemplateAreas   = 60,   // (GridTemplateAreasValue*) for grid-template-areas
 
   eCSSUnit_Integer      = 70,     // (int) simple value
   eCSSUnit_Enumerated   = 71,     // (int) value has enumerated meaning
@@ -359,6 +363,7 @@ public:
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(nsCSSValueGradient* aValue);
   explicit nsCSSValue(nsCSSValueTokenStream* aValue);
+  explicit nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue() { Reset(); }
 
@@ -553,8 +558,6 @@ public:
   inline nsCSSValueTriplet& GetTripletValue();
   inline const nsCSSValueTriplet& GetTripletValue() const;
 
-  inline mozilla::css::GridTemplateAreasValue& GetGridTemplateAreas();
-  inline const mozilla::css::GridTemplateAreasValue& GetGridTemplateAreas() const;
 
   mozilla::css::URLValue* GetURLStructValue() const
   {
@@ -568,6 +571,13 @@ public:
   {
     NS_ABORT_IF_FALSE(mUnit == eCSSUnit_Image, "not an Image value");
     return mValue.mImage;
+  }
+
+  mozilla::css::GridTemplateAreasValue* GetGridTemplateAreas() const
+  {
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_GridTemplateAreas,
+                      "not a grid-template-areas value");
+    return mValue.mGridTemplateAreas;
   }
 
   const char16_t* GetOriginalURLValue() const
@@ -611,6 +621,7 @@ public:
   void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGradientValue(nsCSSValueGradient* aGradient);
   void SetTokenStreamValue(nsCSSValueTokenStream* aTokenStream);
+  void SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aValue);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
   void SetSharedListValue(nsCSSValueSharedList* aList);
@@ -634,7 +645,6 @@ public:
   nsCSSRect& SetRectValue();
   nsCSSValueList* SetListValue();
   nsCSSValuePairList* SetPairListValue();
-  mozilla::css::GridTemplateAreasValue& SetGridTemplateAreas();
 
   void StartImageLoad(nsIDocument* aDocument) const;  // Only pretend const
 
@@ -1244,22 +1254,6 @@ nsCSSValue::GetPairListValue() const
     NS_ABORT_IF_FALSE (mUnit == eCSSUnit_PairListDep, "not a pairlist value");
     return mValue.mPairListDependent;
   }
-}
-
-inline mozilla::css::GridTemplateAreasValue&
-nsCSSValue::GetGridTemplateAreas()
-{
-  NS_ABORT_IF_FALSE (mUnit == eCSSUnit_GridTemplateAreas,
-                     "not a grid-template-areas value");
-  return *mValue.mGridTemplateAreas;
-}
-
-inline const mozilla::css::GridTemplateAreasValue&
-nsCSSValue::GetGridTemplateAreas() const
-{
-  NS_ABORT_IF_FALSE (mUnit == eCSSUnit_GridTemplateAreas,
-                     "not a grid-template-areas value");
-  return *mValue.mGridTemplateAreas;
 }
 
 struct nsCSSValueGradientStop {
