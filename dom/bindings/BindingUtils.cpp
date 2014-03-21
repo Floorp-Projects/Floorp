@@ -2301,6 +2301,26 @@ GenericPromiseReturningBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp
 }
 
 bool
+StaticMethodPromiseWrapper(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  // Make sure to save the callee before someone maybe messes with rval().
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::Rooted<JSObject*> callee(cx, &args.callee());
+
+  const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
+  MOZ_ASSERT(info);
+  MOZ_ASSERT(info->type() == JSJitInfo::StaticMethod);
+
+  bool ok = info->staticMethod(cx, argc, vp);
+  if (ok) {
+    return true;
+  }
+
+  return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
+                                   args.rval());
+}
+
+bool
 ConvertExceptionToPromise(JSContext* cx,
                           JSObject* promiseScope,
                           JS::MutableHandle<JS::Value> rval)

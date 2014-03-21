@@ -2460,6 +2460,9 @@ GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 bool
 GenericPromiseReturningBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 
+bool
+StaticMethodPromiseWrapper(JSContext* cx, unsigned argc, JS::Value* vp);
+
 // ConvertExceptionToPromise should only be called when we have an error
 // condition (e.g. returned false from a JSAPI method).  Note that there may be
 // no exception on cx, in which case this is an uncatchable failure that will
