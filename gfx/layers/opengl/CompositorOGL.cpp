@@ -1442,7 +1442,7 @@ CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg,
 }
 
 GLuint
-CompositorOGL::GetTemporaryTexture(GLenum aUnit)
+CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit)
 {
   if (!mTexturePool) {
 #ifdef MOZ_WIDGET_GONK
@@ -1451,12 +1451,17 @@ CompositorOGL::GetTemporaryTexture(GLenum aUnit)
     mTexturePool = new PerUnitTexturePoolOGL(gl());
 #endif
   }
-  return mTexturePool->GetTexture(aUnit);
+  return mTexturePool->GetTexture(aTarget, aUnit);
 }
 
 GLuint
-PerUnitTexturePoolOGL::GetTexture(GLenum aTextureUnit)
+PerUnitTexturePoolOGL::GetTexture(GLenum aTarget, GLenum aTextureUnit)
 {
+  if (mTextureTarget == 0) {
+    mTextureTarget = aTarget;
+  }
+  MOZ_ASSERT(mTextureTarget == aTarget);
+
   size_t index = aTextureUnit - LOCAL_GL_TEXTURE0;
   // lazily grow the array of temporary textures
   if (mTextures.Length() <= index) {
@@ -1472,6 +1477,9 @@ PerUnitTexturePoolOGL::GetTexture(GLenum aTextureUnit)
       return 0;
     }
     mGL->fGenTextures(1, &mTextures[index]);
+    mGL->fBindTexture(aTarget, mTextures[index]);
+    mGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+    mGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
   }
   return mTextures[index];
 }
@@ -1506,8 +1514,20 @@ PerFrameTexturePoolOGL::DestroyTextures()
 }
 
 GLuint
-PerFrameTexturePoolOGL::GetTexture(GLenum)
+PerFrameTexturePoolOGL::GetTexture(GLenum aTarget, GLenum)
 {
+  if (mTextureTarget == 0) {
+    mTextureTarget = aTarget;
+  }
+
+  // The pool should always use the same texture target because it is illegal
+  // to change the target of an already exisiting gl texture.
+  // If we need to use several targets, a pool with several sub-pools (one per
+  // target) will have to be implemented.
+  // At the moment this pool is only used with tiling on b2g so we always need
+  // the same target.
+  MOZ_ASSERT(mTextureTarget == aTarget);
+
   GLuint texture = 0;
 
   if (!mUnusedTextures.IsEmpty()) {
@@ -1517,6 +1537,9 @@ PerFrameTexturePoolOGL::GetTexture(GLenum)
   } else if (mGL->MakeCurrent()) {
     // There isn't one to reuse, create one.
     mGL->fGenTextures(1, &texture);
+    mGL->fBindTexture(aTarget, texture);
+    mGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+    mGL->fTexParameteri(aTarget, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
   }
 
   if (texture) {
