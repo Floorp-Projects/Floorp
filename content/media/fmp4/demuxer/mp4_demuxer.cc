@@ -97,8 +97,6 @@ bool MP4Demuxer::Init()
 void MP4Demuxer::Reset() {
   moov_ = nullptr;
   runs_ = nullptr;
-  stream_offset_; // TODO; Not sure if this needs to be reset?
-  DMX_LOG("Warning: resetting stream_offset_\n");
   moof_head_ = 0;
   mdat_tail_ = 0;
 }
@@ -303,15 +301,7 @@ bool MP4Demuxer::ParseBox() {
 }
 
 bool MP4Demuxer::EmitSample(nsAutoPtr<MP4Sample>* sample) {
-  bool ok = true;
   if (!runs_->IsRunValid()) {
-
-    // Flush any buffers we've gotten in this chunk so that buffers don't
-    // cross NewSegment() calls
-    //ok = SendAndFlushSamples(/*audio_buffers, video_buffers*/);
-    //if (!ok)
-    //  return false;
-
     ChangeState(kParsingBoxes);
     //end_of_segment_cb_.Run();
     return true;
