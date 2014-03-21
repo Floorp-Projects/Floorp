@@ -88,6 +88,9 @@
   -moz-image-region: rect(0, 414px, 18px, 396px);
 }
 
+%ifdef XP_MACOSX
+#restore-button,
+%endif
 #fullscreen-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 432px, 18px, 414px);
 }

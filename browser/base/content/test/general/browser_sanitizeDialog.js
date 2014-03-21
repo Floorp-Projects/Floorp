@@ -139,7 +139,8 @@ var gAllTests = [
         this.selectDuration(Sanitizer.TIMESPAN_HOUR);
         this.checkPrefCheckbox("history", true);
         this.acceptDialog();
-
+      };
+      wh.onunload = function () {
         intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_HOUR,
                   "timeSpan pref should be hour after accepting dialog with " +
                   "hour selected");
@@ -149,8 +150,7 @@ var gAllTests = [
         boolPrefIs("cpd.downloads", true,
                    "downloads pref should be true after accepting dialog with " +
                    "history checkbox checked");
-      };
-      wh.onunload = function () {
+
         // History visits and downloads within one hour should be cleared.
         yield promiseHistoryClearedState(uris, true);
         yield ensureDownloadsClearedState(downloadIDs, true);
@@ -224,7 +224,8 @@ var gAllTests = [
         this.checkPrefCheckbox("history", false);
         this.checkPrefCheckbox("formdata", true);
         this.acceptDialog();
-
+      };
+      wh.onunload = function () {
         intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_HOUR,
                   "timeSpan pref should be hour after accepting dialog with " +
                   "hour selected");
@@ -234,8 +235,7 @@ var gAllTests = [
         boolPrefIs("cpd.downloads", false,
                    "downloads pref should be false after accepting dialog with " +
                    "history checkbox unchecked");
-      };
-      wh.onunload = function () {
+
         // Of the three only form entries should be cleared.
         yield promiseHistoryClearedState(uris, false);
         yield ensureDownloadsClearedState(downloadIDs, false);
@@ -288,12 +288,12 @@ var gAllTests = [
         this.checkDetails(true);
 
         this.acceptDialog();
-
+      };
+      wh.onunload = function () {
         intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
                   "timeSpan pref should be everything after accepting dialog " +
                   "with everything selected");
-      };
-      wh.onunload = function () {
+
         yield promiseHistoryClearedState(uris, true);
       };
       wh.open();
@@ -325,12 +325,12 @@ var gAllTests = [
         this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
         this.checkPrefCheckbox("history", true);
         this.acceptDialog();
-
+      };
+      wh.onunload = function () {
         intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
                   "timeSpan pref should be everything after accepting dialog " +
                   "with everything selected");
-      };
-      wh.onunload = function () {
+
         yield promiseHistoryClearedState(uris, true);
       };
       wh.open();
@@ -582,7 +582,8 @@ var gAllTests = [
       this.uncheckAllCheckboxes();
       this.checkPrefCheckbox("offlineApps", true);
       this.acceptDialog();
-
+    };
+    wh.onunload = function () {
       // Check if the cache has been deleted
       var size = -1;
       var visitor = {
@@ -643,7 +644,8 @@ var gAllTests = [
       this.uncheckAllCheckboxes();
       this.checkPrefCheckbox("siteSettings", true);
       this.acceptDialog();
-
+    };
+    wh.onunload = function () {
       // Check all has been deleted (privileges, data, cache)
       var pm = Cc["@mozilla.org/permissionmanager;1"]
                .getService(Ci.nsIPermissionManager);
