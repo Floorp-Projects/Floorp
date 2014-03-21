@@ -135,47 +135,6 @@ for (let [constProp, dirKey] of [
  */
 let clone = SharedAll.clone;
 
-/**
- * Extract a shortened version of an object, fit for logging.
- *
- * This function returns a copy of the original object in which all
- * long strings, Arrays, TypedArrays, ArrayBuffers are removed and
- * replaced with plceholders. Use this function to sanitize objects
- * if you wish to log them or to keep them in memory.
- *
- * @param {*} obj The obj to shorten.
- * @return {*} array A shorter object, fit for logging.
- */
-function summarizeObject(obj) {
-  if (!obj) {
-    return null;
-  }
-  if (typeof obj == "string") {
-    if (obj.length > 1024) {
-      return {"Long string": obj.length};
-    }
-    return obj;
-  }
-  if (typeof obj == "object") {
-    if (Array.isArray(obj)) {
-      if (obj.length > 32) {
-        return {"Long array": obj.length};
-      }
-      return [summarizeObject(k) for (k of obj)];
-    }
-    if ("byteLength" in obj) {
-      // Assume TypedArray or ArrayBuffer
-      return {"Binary Data": obj.byteLength};
-    }
-    let result = {};
-    for (let k of Object.keys(obj)) {
-      result[k] = summarizeObject(obj[k]);
-    }
-    return result;
-  }
-  return obj;
-}
-
 let worker = null;
 let Scheduler = {
   /**
@@ -198,41 +157,19 @@ let Scheduler = {
   queue: Promise.resolve(),
 
   /**
-   * Miscellaneous debugging information
+   * The latest message sent and still waiting for a reply. In DEBUG
+   * builds, the entire message is stored, which may be memory-consuming.
+   * In non-DEBUG builds, only the method name is stored.
    */
-  Debugging: {
-    /**
-     * The latest message sent and still waiting for a reply. In DEBUG
-     * builds, the entire message is stored, which may be memory-consuming.
-     * In non-DEBUG builds, only the method name is stored.
-     */
-    latestSent: undefined,
+  latestSent: undefined,
 
-    /**
-     * The latest reply received, or null if we are waiting for a reply.
-     * In DEBUG builds, the entire response is stored, which may be
-     * memory-consuming.  In non-DEBUG builds, only exceptions and
-     * method names are stored.
-     */
-    latestReceived: undefined,
-
-    /**
-     * Number of messages sent to the worker. This includes the
-     * initial SET_DEBUG, if applicable.
-     */
-    messagesSent: 0,
-
-    /**
-     * Total number of messages ever queued, including the messages
-     * sent.
-     */
-    messagesQueued: 0,
-
-    /**
-     * Number of messages received from the worker.
-     */
-    messagesReceived: 0,
-  },
+  /**
+   * The latest reply received, or null if we are waiting for a reply.
+   * In DEBUG builds, the entire response is stored, which may be
+   * memory-consuming.  In non-DEBUG builds, only exceptions and
+   * method names are stored.
+   */
+  latestReceived: undefined,
 
   /**
    * A timer used to automatically shut down the worker after some time.
@@ -297,7 +234,6 @@ let Scheduler = {
     if (firstLaunch && SharedAll.Config.DEBUG) {
       // If we have delayed sending SET_DEBUG, do it now.
       worker.post("SET_DEBUG", [true]);
-      Scheduler.Debugging.messagesSent++;
     }
 
     // By convention, the last argument of any message may be an |options| object.
@@ -306,43 +242,41 @@ let Scheduler = {
     if (methodArgs) {
       options = methodArgs[methodArgs.length - 1];
     }
-    Scheduler.Debugging.messagesQueued++;
     return this.push(() => Task.spawn(function*() {
-      // Update debugging information. As |args| may be quite
-      // expensive, we only keep a shortened version of it.
-      Scheduler.Debugging.latestReceived = null;
-      Scheduler.Debugging.latestSent = [Date.now(), method, summarizeObject(methodArgs)];
+      Scheduler.latestReceived = null;
+      if (OS.Constants.Sys.DEBUG) {
+        // Update possibly memory-expensive debugging information
+        Scheduler.latestSent = [Date.now(), method, ...args];
+      } else {
+        Scheduler.latestSent = [Date.now(), method];
+      }
       let data;
       let reply;
       let isError = false;
       try {
-        try {
-          data = yield worker.post(method, ...args);
-        } finally {
-          Scheduler.Debugging.messagesReceived++;
-        }
+        data = yield worker.post(method, ...args);
         reply = data;
-      } catch (error) {
+      } catch (error if error instanceof PromiseWorker.WorkerError) {
         reply = error;
         isError = true;
-        if (error instanceof PromiseWorker.WorkerError) {
-          throw EXCEPTION_CONSTRUCTORS[error.data.exn || "OSError"](error.data);
+        throw EXCEPTION_CONSTRUCTORS[error.data.exn || "OSError"](error.data);
+      } catch (error if error instanceof ErrorEvent) {
+        reply = error;
+        let message = error.message;
+        if (message == "uncaught exception: [object StopIteration]") {
+          throw StopIteration;
         }
-        if (error instanceof ErrorEvent) {
-          let message = error.message;
-          if (message == "uncaught exception: [object StopIteration]") {
-            isError = false;
-            throw StopIteration;
-          }
-          throw new Error(message, error.filename, error.lineno);
-        }
-        throw ex;
+        isError = true;
+        throw new Error(message, error.filename, error.lineno);
       } finally {
-        Scheduler.Debugging.latestSent = Scheduler.Debugging.latestSent.slice(0, 2);
-        if (isError) {
-          Scheduler.Debugging.latestReceived = [Date.now(), reply.message, reply.fileName, reply.lineNumber];
+        Scheduler.latestSent = Scheduler.latestSent.slice(0, 2);
+        if (OS.Constants.Sys.DEBUG) {
+          // Update possibly memory-expensive debugging information
+          Scheduler.latestReceived = [Date.now(), reply];
+        } else if (isError) {
+          Scheduler.latestReceived = [Date.now(), reply.message, reply.fileName, reply.lineNumber];
         } else {
-          Scheduler.Debugging.latestReceived = [Date.now(), summarizeObject(reply)];
+          Scheduler.latestReceived = [Date.now()];
         }
         if (firstLaunch) {
           Scheduler._updateTelemetry();
@@ -1429,12 +1363,8 @@ AsyncShutdown.profileBeforeChange.addBlocker(
       shutdown: Scheduler.shutdown,
       worker: !!worker,
       pendingReset: !!Scheduler.resetTimer,
-      latestSent: Scheduler.Debugging.latestSent,
-      latestReceived: Scheduler.Debugging.latestReceived,
-      messagesSent: Scheduler.Debugging.messagesSent,
-      messagesReceived: Scheduler.Debugging.messagesReceived,
-      messagesQueued: Scheduler.Debugging.messagesQueued,
-      DEBUG: SharedAll.Config.DEBUG
+      latestSent: Scheduler.latestSent,
+      latestReceived: Scheduler.latestReceived
     };
     // Convert dates to strings for better readability
     for (let key of ["latestSent", "latestReceived"]) {

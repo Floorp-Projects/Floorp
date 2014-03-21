@@ -29,9 +29,6 @@
       <menuitem id="request-menu-context-copy-url"
                 label="&netmonitorUI.context.copyUrl;"
                 accesskey="&netmonitorUI.context.copyUrl.accesskey;"/>
-      <menuitem id="request-menu-context-copy-as-curl"
-                label="&netmonitorUI.context.copyAsCurl;"
-                oncommand="NetMonitorView.RequestsMenu.copyAsCurl();"/>
       <menuitem id="request-menu-context-copy-image-as-data-uri"
                 label="&netmonitorUI.context.copyImageAsDataUri;"
                 accesskey="&netmonitorUI.context.copyImageAsDataUri.accesskey;"/>

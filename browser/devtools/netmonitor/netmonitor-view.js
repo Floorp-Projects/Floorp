@@ -524,37 +524,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Copy a cURL command from the currently selected item.
-   */
-  copyAsCurl: function() {
-    let selected = this.selectedItem.attachment;
-    Task.spawn(function*() {
-      // Create a sanitized object for the Curl command generator.
-      let data = {
-        url: selected.url,
-        method: selected.method,
-        headers: [],
-        httpVersion: selected.httpVersion,
-        postDataText: null
-      };
-
-      // Fetch header values.
-      for (let { name, value } of selected.requestHeaders.headers) {
-        let text = yield gNetwork.getString(value);
-        data.headers.push({ name: name, value: text });
-      }
-
-      // Fetch the request payload.
-      if (selected.requestPostData) {
-        let postData = selected.requestPostData.postData.text;
-        data.postDataText = yield gNetwork.getString(postData);
-      }
-
-      clipboardHelper.copyString(Curl.generateCommand(data), document);
-    });
-  },
-
-  /**
    * Copy image as data uri.
    */
   copyImageAsDataUri: function() {
@@ -1590,9 +1559,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
 
     let copyUrlElement = $("#request-menu-context-copy-url");
     copyUrlElement.hidden = !selectedItem;
-
-    let copyAsCurlElement = $("#request-menu-context-copy-as-curl");
-    copyAsCurlElement.hidden = !selectedItem || !selectedItem.attachment.responseContent;
 
     let copyImageAsDataUriElement = $("#request-menu-context-copy-image-as-data-uri");
     copyImageAsDataUriElement.hidden = !selectedItem ||

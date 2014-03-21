@@ -187,8 +187,6 @@ RootActor.prototype = {
         storageInspector: true,
         // Wether storage inspector is read only
         storageInspectorReadOnly: true,
-        // Wether conditional breakpoints are supported
-        conditionalBreakpoints: true
       }
     };
   },
