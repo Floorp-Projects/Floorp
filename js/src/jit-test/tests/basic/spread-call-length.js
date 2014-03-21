@@ -19,7 +19,7 @@ function checkLength(f, makeFn) {
   assertEq(makeFn("...[undefined]")(f), 1);
 
   // other iterable objects
-  assertEq(makeFn("...arg")(f, Int32Array([1, 2, 3])), 3);
+  assertEq(makeFn("...arg")(f, new Int32Array([1, 2, 3])), 3);
   assertEq(makeFn("...arg")(f, "abc"), 3);
   assertEq(makeFn("...arg")(f, [1, 2, 3][std_iterator]()), 3);
   assertEq(makeFn("...arg")(f, Set([1, 2, 3])), 3);

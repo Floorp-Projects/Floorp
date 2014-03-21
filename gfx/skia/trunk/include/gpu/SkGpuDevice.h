@@ -14,6 +14,7 @@
 #include "SkGr.h"
 #include "SkBitmap.h"
 #include "SkBitmapDevice.h"
+#include "SkPicture.h"
 #include "SkRegion.h"
 #include "GrContext.h"
 
@@ -37,11 +38,21 @@ public:
 
     /**
      *  New device that will create an offscreen renderTarget based on the
+     *  ImageInfo and sampleCount. The device's storage will not
+     *  count against the GrContext's texture cache budget. The device's pixels
+     *  will be uninitialized. On failure, returns NULL.
+     */
+    static SkGpuDevice* Create(GrContext*, const SkImageInfo&, int sampleCount);
+
+#ifdef SK_SUPPORT_LEGACY_COMPATIBLEDEVICE_CONFIG
+    /**
+     *  New device that will create an offscreen renderTarget based on the
      *  config, width, height, and sampleCount. The device's storage will not
      *  count against the GrContext's texture cache budget. The device's pixels
      *  will be uninitialized. TODO: This can fail, replace with a factory function.
      */
     SkGpuDevice(GrContext*, SkBitmap::Config, int width, int height, int sampleCount = 0);
+#endif
 
     /**
      *  DEPRECATED -- need to make this private, call Create(surface)
@@ -64,9 +75,6 @@ public:
     virtual GrRenderTarget* accessRenderTarget() SK_OVERRIDE;
 
     // overrides from SkBaseDevice
-    virtual uint32_t getDeviceCapabilities() SK_OVERRIDE {
-        return 0;
-    }
     virtual int width() const SK_OVERRIDE {
         return NULL == fRenderTarget ? 0 : fRenderTarget->width();
     }
@@ -80,9 +88,10 @@ public:
     virtual SkBitmap::Config config() const SK_OVERRIDE;
 
     virtual void clear(SkColor color) SK_OVERRIDE;
+#ifdef SK_SUPPORT_LEGACY_WRITEPIXELSCONFIG
     virtual void writePixels(const SkBitmap& bitmap, int x, int y,
                              SkCanvas::Config8888 config8888) SK_OVERRIDE;
-
+#endif
     virtual void drawPaint(const SkDraw&, const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPoints(const SkDraw&, SkCanvas::PointMode mode, size_t count,
                             const SkPoint[], const SkPaint& paint) SK_OVERRIDE;
@@ -132,16 +141,21 @@ public:
     virtual void makeRenderTargetCurrent();
 
     virtual bool canHandleImageFilter(const SkImageFilter*) SK_OVERRIDE;
-    virtual bool filterImage(const SkImageFilter*, const SkBitmap&, const SkMatrix&,
+    virtual bool filterImage(const SkImageFilter*, const SkBitmap&,
+                             const SkImageFilter::Context&,
                              SkBitmap*, SkIPoint*) SK_OVERRIDE;
 
     class SkAutoCachedTexture; // used internally
 
+
 protected:
-    // overrides from SkBaseDevice
-    virtual bool onReadPixels(const SkBitmap& bitmap,
-                              int x, int y,
-                              SkCanvas::Config8888 config8888) SK_OVERRIDE;
+    virtual bool onReadPixels(const SkBitmap&, int x, int y, SkCanvas::Config8888) SK_OVERRIDE;
+    virtual bool onWritePixels(const SkImageInfo&, const void*, size_t, int, int) SK_OVERRIDE;
+
+    /**  PRIVATE / EXPERIMENTAL -- do not call */
+    virtual void EXPERIMENTAL_optimize(SkPicture* picture) SK_OVERRIDE;
+    /**  PRIVATE / EXPERIMENTAL -- do not call */
+    virtual bool EXPERIMENTAL_drawPicture(const SkPicture& picture) SK_OVERRIDE;
 
 private:
     GrContext*      fContext;
@@ -163,11 +177,7 @@ private:
     // used by createCompatibleDevice
     SkGpuDevice(GrContext*, GrTexture* texture, bool needClear);
 
-    // override from SkBaseDevice
-    virtual SkBaseDevice* onCreateCompatibleDevice(SkBitmap::Config config,
-                                                   int width, int height,
-                                                   bool isOpaque,
-                                                   Usage usage) SK_OVERRIDE;
+    virtual SkBaseDevice* onCreateDevice(const SkImageInfo&, Usage) SK_OVERRIDE;
 
     virtual SkSurface* newSurface(const SkImageInfo&) SK_OVERRIDE;
 
@@ -211,6 +221,8 @@ private:
                          SkCanvas::DrawBitmapRectFlags flags,
                          int tileSize,
                          bool bicubic);
+
+    static SkPicture::AccelData::Key ComputeAccelDataKey();
 
     typedef SkBitmapDevice INHERITED;
 };

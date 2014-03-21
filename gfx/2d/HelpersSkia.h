@@ -38,6 +38,25 @@ GfxFormatToSkiaConfig(SurfaceFormat format)
   }
 }
 
+static inline SkColorType
+GfxFormatToSkiaColorType(SurfaceFormat format)
+{
+  switch (format)
+  {
+    case SurfaceFormat::B8G8R8A8:
+      return kBGRA_8888_SkColorType;
+    case SurfaceFormat::B8G8R8X8:
+      // We probably need to do something here.
+      return kBGRA_8888_SkColorType;
+    case SurfaceFormat::R5G6B5:
+      return kRGB_565_SkColorType;
+    case SurfaceFormat::A8:
+      return kAlpha_8_SkColorType;
+    default:
+      return kRGBA_8888_SkColorType;
+  }
+}
+
 static inline SurfaceFormat
 SkiaConfigToGfxFormat(SkBitmap::Config config)
 {
@@ -144,9 +163,9 @@ StrokeOptionsToPaint(SkPaint& aPaint, const StrokeOptions &aOptions)
       pattern[i] = SkFloatToScalar(aOptions.mDashPattern[i % aOptions.mDashLength]);
     }
 
-    SkDashPathEffect* dash = new SkDashPathEffect(&pattern.front(),
-                                                  dashCount, 
-                                                  SkFloatToScalar(aOptions.mDashOffset));
+    SkDashPathEffect* dash = SkDashPathEffect::Create(&pattern.front(),
+                                                      dashCount, 
+                                                      SkFloatToScalar(aOptions.mDashOffset));
     SkSafeUnref(aPaint.setPathEffect(dash));
   }
 

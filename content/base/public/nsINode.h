@@ -65,10 +65,17 @@ inline bool IsSpaceCharacter(char aChar) {
   return aChar == ' ' || aChar == '\t' || aChar == '\n' || aChar == '\r' ||
          aChar == '\f';
 }
+struct BoxQuadOptions;
+struct ConvertCoordinateOptions;
+class DOMPoint;
+class DOMQuad;
+class DOMRectReadOnly;
 class Element;
 class EventHandlerNonNull;
 class OnErrorEventHandlerNonNull;
 template<typename T> class Optional;
+class TextOrElementOrDocument;
+struct DOMPointInit;
 } // namespace dom
 } // namespace mozilla
 
@@ -279,6 +286,15 @@ private:
 class nsINode : public mozilla::dom::EventTarget
 {
 public:
+  typedef mozilla::dom::BoxQuadOptions BoxQuadOptions;
+  typedef mozilla::dom::ConvertCoordinateOptions ConvertCoordinateOptions;
+  typedef mozilla::dom::DOMPoint DOMPoint;
+  typedef mozilla::dom::DOMPointInit DOMPointInit;
+  typedef mozilla::dom::DOMQuad DOMQuad;
+  typedef mozilla::dom::DOMRectReadOnly DOMRectReadOnly;
+  typedef mozilla::dom::TextOrElementOrDocument TextOrElementOrDocument;
+  typedef mozilla::ErrorResult ErrorResult;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODE_IID)
 
   // Among the sub-classes that inherit (directly or indirectly) from nsINode,
@@ -1609,6 +1625,23 @@ public:
   // ParentNode methods
   mozilla::dom::Element* GetFirstElementChild() const;
   mozilla::dom::Element* GetLastElementChild() const;
+
+  void GetBoxQuads(const BoxQuadOptions& aOptions,
+                   nsTArray<nsRefPtr<DOMQuad> >& aResult,
+                   mozilla::ErrorResult& aRv);
+
+  already_AddRefed<DOMQuad> ConvertQuadFromNode(DOMQuad& aQuad,
+                                                const TextOrElementOrDocument& aFrom,
+                                                const ConvertCoordinateOptions& aOptions,
+                                                ErrorResult& aRv);
+  already_AddRefed<DOMQuad> ConvertRectFromNode(DOMRectReadOnly& aRect,
+                                                const TextOrElementOrDocument& aFrom,
+                                                const ConvertCoordinateOptions& aOptions,
+                                                ErrorResult& aRv);
+  already_AddRefed<DOMPoint> ConvertPointFromNode(const DOMPointInit& aPoint,
+                                                  const TextOrElementOrDocument& aFrom,
+                                                  const ConvertCoordinateOptions& aOptions,
+                                                  ErrorResult& aRv);
 
 protected:
 

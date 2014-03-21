@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include "insanity/pkix.h"
+#include "pkix/pkix.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "cert.h"
@@ -17,9 +17,9 @@
 #include "prerror.h"
 #include "sslerr.h"
 
-// ScopedXXX in this file are insanity::pkix::ScopedXXX, not
+// ScopedXXX in this file are mozilla::pkix::ScopedXXX, not
 // mozilla::ScopedXXX.
-using namespace insanity::pkix;
+using namespace mozilla::pkix;
 using namespace mozilla::psm;
 
 #ifdef PR_LOGGING
@@ -65,7 +65,7 @@ InitCertVerifierLog()
 }
 
 #if 0
-// Once we migrate to insanity::pkix or change the overridable error
+// Once we migrate to mozilla::pkix or change the overridable error
 // logic this will become unnecesary.
 static SECStatus
 insertErrorIntoVerifyLog(CERTCertificate* cert, const PRErrorCode err,
@@ -223,17 +223,17 @@ BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
 }
 
 SECStatus
-CertVerifier::InsanityVerifyCert(
+CertVerifier::MozillaPKIXVerifyCert(
                    CERTCertificate* cert,
                    const SECCertificateUsage usage,
                    const PRTime time,
                    void* pinArg,
                    const Flags flags,
       /*optional*/ const SECItem* stapledOCSPResponse,
-  /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain,
+  /*optional out*/ mozilla::pkix::ScopedCERTCertList* validationChain,
   /*optional out*/ SECOidTag* evOidPolicy)
 {
-  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("Top of InsanityVerifyCert\n"));
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("Top of MozillaPKIXVerifyCert\n"));
 
   PR_ASSERT(cert);
   PR_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));
@@ -267,7 +267,7 @@ CertVerifier::InsanityVerifyCert(
   // TODO(bug 915931): Pass in stapled OCSP response in all calls to
   //                   BuildCertChain.
 
-  insanity::pkix::ScopedCERTCertList builtChain;
+  mozilla::pkix::ScopedCERTCertList builtChain;
   switch (usage) {
     case certificateUsageSSLClient: {
       // XXX: We don't really have a trust bit for SSL client authentication so
@@ -389,8 +389,8 @@ CertVerifier::InsanityVerifyCert(
       // by the implementation of window.crypto.importCertificates and in the
       // certificate viewer UI. Because we don't know what trust bit is
       // interesting, we just try them all.
-      insanity::pkix::EndEntityOrCA endEntityOrCA;
-      insanity::pkix::KeyUsages keyUsage;
+      mozilla::pkix::EndEntityOrCA endEntityOrCA;
+      mozilla::pkix::KeyUsages keyUsage;
       SECOidTag eku;
       if (usage == certificateUsageVerifyCA) {
         endEntityOrCA = MustBeCA;
@@ -449,10 +449,10 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
                          /*optional out*/ SECOidTag* evOidPolicy,
                          /*optional out*/ CERTVerifyLog* verifyLog)
 {
-  if (mImplementation == insanity) {
-    return InsanityVerifyCert(cert, usage, time, pinArg, flags,
-                              stapledOCSPResponse, validationChain,
-                              evOidPolicy);
+  if (mImplementation == mozillapkix) {
+    return MozillaPKIXVerifyCert(cert, usage, time, pinArg, flags,
+                                 stapledOCSPResponse, validationChain,
+                                 evOidPolicy);
   }
 
   if (!cert)
@@ -799,7 +799,7 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
                      /*optional*/ void* pinarg,
                                   const char* hostname,
                                   bool saveIntermediatesInPermanentDatabase,
-                 /*optional out*/ insanity::pkix::ScopedCERTCertList* certChainOut,
+                 /*optional out*/ mozilla::pkix::ScopedCERTCertList* certChainOut,
                  /*optional out*/ SECOidTag* evOidPolicy)
 {
   PR_ASSERT(peerCert);

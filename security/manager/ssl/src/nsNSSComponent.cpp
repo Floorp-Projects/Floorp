@@ -971,9 +971,9 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
   CertVerifier::implementation_config certVerifierImplementation
     = CertVerifier::classic;
 
-  // The insanity::pkix pref overrides the libpkix pref
-  if (Preferences::GetBool("security.use_insanity_verification", false)) {
-    certVerifierImplementation = CertVerifier::insanity;
+  // The mozilla::pkix pref overrides the libpkix pref
+  if (Preferences::GetBool("security.use_mozillapkix_verification", false)) {
+    certVerifierImplementation = CertVerifier::mozillapkix;
   } else {
 #ifndef NSS_NO_LIBPKIX
   if (Preferences::GetBool("security.use_libpkix_verification", false)) {
@@ -997,9 +997,9 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
 #endif
       odc, osc, ogc);
 
-  // insanity::pkix has its own OCSP cache, so disable the NSS cache
+  // mozilla::pkix has its own OCSP cache, so disable the NSS cache
   // if appropriate.
-  if (certVerifierImplementation == CertVerifier::insanity) {
+  if (certVerifierImplementation == CertVerifier::mozillapkix) {
     // Using -1 disables the cache. The other arguments are the default
     // values and aren't exposed by the API.
     CERT_OCSPCacheSettings(-1, 1*60*60L, 24*60*60L);
@@ -1617,7 +1617,7 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
                || prefName.Equals("security.OCSP.require")
                || prefName.Equals("security.OCSP.GET.enabled")
                || prefName.Equals("security.ssl.enable_ocsp_stapling")
-               || prefName.Equals("security.use_insanity_verification")
+               || prefName.Equals("security.use_mozillapkix_verification")
                || prefName.Equals("security.use_libpkix_verification")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(false, lock);

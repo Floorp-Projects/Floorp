@@ -739,9 +739,9 @@ File.openUnique = function openUnique(path, options) {
  * @resolves {OS.File.Info}
  * @rejects {OS.Error}
  */
-File.stat = function stat(path) {
+File.stat = function stat(path, options) {
   return Scheduler.post(
-    "stat", [Type.path.toMsg(path)],
+    "stat", [Type.path.toMsg(path), options],
     path).then(File.Info.fromMsg);
 };
 
@@ -847,6 +847,24 @@ File.move = function move(sourcePath, destPath, options) {
   return Scheduler.post("move", [Type.path.toMsg(sourcePath),
     Type.path.toMsg(destPath), options], [sourcePath, destPath]);
 };
+
+/**
+ * Create a symbolic link to a source.
+ *
+ * @param {string} sourcePath The platform-specific path to which
+ * the symbolic link should point.
+ * @param {string} destPath The platform-specific path at which the
+ * symbolic link should be created.
+ *
+ * @returns {Promise}
+ * @rejects {OS.File.Error} In case of any error.
+ */
+if (!SharedAll.Constants.Win) {
+  File.unixSymLink = function unixSymLink(sourcePath, destPath) {
+    return Scheduler.post("unixSymLink", [Type.path.toMsg(sourcePath),
+      Type.path.toMsg(destPath)], [sourcePath, destPath]);
+  };
+}
 
 /**
  * Gets the number of bytes available on disk to the current user.

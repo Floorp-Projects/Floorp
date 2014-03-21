@@ -51,7 +51,7 @@ function runTests() {
   is(written, samples1.length, "Not all samples in JS Array written.");
 
   // Test writing with Float32Array
-  var samples2 = Float32Array([.2, .3, .2, .3]);
+  var samples2 = new Float32Array([.2, .3, .2, .3]);
   written = a1.mozWriteAudio(samples2);
   is(written, samples2.length, "Not all samples in Float32Array written.");
 

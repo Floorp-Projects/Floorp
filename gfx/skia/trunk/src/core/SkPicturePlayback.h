@@ -31,6 +31,7 @@ class SkStream;
 class SkWStream;
 class SkBBoxHierarchy;
 class SkPictureStateTree;
+class SkOffsetTable;
 
 struct SkPictInfo {
     enum Flags {
@@ -39,11 +40,27 @@ struct SkPictInfo {
         kPtrIs64Bit_Flag        = 1 << 2,
     };
 
+    char        fMagic[8];
     uint32_t    fVersion;
     uint32_t    fWidth;
     uint32_t    fHeight;
     uint32_t    fFlags;
 };
+
+#define SK_PICT_READER_TAG     SkSetFourByteTag('r', 'e', 'a', 'd')
+#define SK_PICT_FACTORY_TAG    SkSetFourByteTag('f', 'a', 'c', 't')
+#define SK_PICT_TYPEFACE_TAG   SkSetFourByteTag('t', 'p', 'f', 'c')
+#define SK_PICT_PICTURE_TAG    SkSetFourByteTag('p', 'c', 't', 'r')
+
+// This tag specifies the size of the ReadBuffer, needed for the following tags
+#define SK_PICT_BUFFER_SIZE_TAG     SkSetFourByteTag('a', 'r', 'a', 'y')
+// these are all inside the ARRAYS tag
+#define SK_PICT_BITMAP_BUFFER_TAG  SkSetFourByteTag('b', 't', 'm', 'p')
+#define SK_PICT_PAINT_BUFFER_TAG   SkSetFourByteTag('p', 'n', 't', ' ')
+#define SK_PICT_PATH_BUFFER_TAG    SkSetFourByteTag('p', 't', 'h', ' ')
+
+// Always write this guy last (with no length field afterwards)
+#define SK_PICT_EOF_TAG     SkSetFourByteTag('e', 'o', 'f', ' ')
 
 /**
  * Container for data that is needed to deep copy a SkPicture. The container
@@ -91,6 +108,8 @@ protected:
     virtual bool preDraw(int opIndex, int type);
     virtual void postDraw(int opIndex);
 #endif
+
+    void preLoadBitmaps(const SkTDArray<void*>& results);
 
 private:
     class TextContainer {
@@ -210,6 +229,7 @@ private:
     SkTRefArray<SkPaint>* fPaints;
 
     SkData* fOpData;    // opcodes and parameters
+    SkAutoTUnref<SkOffsetTable> fBitmapUseOffsets;
 
     SkPicture** fPictureRefs;
     int fPictureCount;

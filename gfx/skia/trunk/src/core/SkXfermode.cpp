@@ -876,7 +876,7 @@ void SkProcXfermode::flatten(SkWriteBuffer& buffer) const {
     }
 }
 
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
 void SkProcXfermode::toString(SkString* str) const {
     str->appendf("SkProcXfermode: %p", fProc);
 }
@@ -1413,7 +1413,7 @@ const char* SkXfermode::ModeName(Mode mode) {
     SK_COMPILE_ASSERT(SK_ARRAY_COUNT(gModeStrings) == kLastMode + 1, mode_count);
 }
 
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
 void SkProcCoeffXfermode::toString(SkString* str) const {
     str->append("SkProcCoeffXfermode: ");
 
@@ -1444,15 +1444,18 @@ void SkProcCoeffXfermode::toString(SkString* str) const {
 
 class SkClearXfermode : public SkProcCoeffXfermode {
 public:
-    SkClearXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kClear_Mode) {}
+    static SkClearXfermode* Create(const ProcCoeff& rec) {
+        return SkNEW_ARGS(SkClearXfermode, (rec));
+    }
 
     virtual void xfer32(SkPMColor*, const SkPMColor*, int, const SkAlpha*) const SK_OVERRIDE;
     virtual void xferA8(SkAlpha*, const SkPMColor*, int, const SkAlpha*) const SK_OVERRIDE;
 
-    SK_DEVELOPER_TO_STRING()
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkClearXfermode)
 
 private:
+    SkClearXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kClear_Mode) {}
     SkClearXfermode(SkReadBuffer& buffer)
         : SkProcCoeffXfermode(buffer) {}
 
@@ -1496,7 +1499,7 @@ void SkClearXfermode::xferA8(SkAlpha* SK_RESTRICT dst,
     }
 }
 
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
 void SkClearXfermode::toString(SkString* str) const {
     this->INHERITED::toString(str);
 }
@@ -1506,15 +1509,18 @@ void SkClearXfermode::toString(SkString* str) const {
 
 class SkSrcXfermode : public SkProcCoeffXfermode {
 public:
-    SkSrcXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kSrc_Mode) {}
+    static SkSrcXfermode* Create(const ProcCoeff& rec) {
+        return SkNEW_ARGS(SkSrcXfermode, (rec));
+    }
 
     virtual void xfer32(SkPMColor*, const SkPMColor*, int, const SkAlpha*) const SK_OVERRIDE;
     virtual void xferA8(SkAlpha*, const SkPMColor*, int, const SkAlpha*) const SK_OVERRIDE;
 
-    SK_DEVELOPER_TO_STRING()
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkSrcXfermode)
 
 private:
+    SkSrcXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kSrc_Mode) {}
     SkSrcXfermode(SkReadBuffer& buffer)
         : SkProcCoeffXfermode(buffer) {}
 
@@ -1563,7 +1569,7 @@ void SkSrcXfermode::xferA8(SkAlpha* SK_RESTRICT dst,
         }
     }
 }
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
 void SkSrcXfermode::toString(SkString* str) const {
     this->INHERITED::toString(str);
 }
@@ -1573,14 +1579,17 @@ void SkSrcXfermode::toString(SkString* str) const {
 
 class SkDstInXfermode : public SkProcCoeffXfermode {
 public:
-    SkDstInXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kDstIn_Mode) {}
+    static SkDstInXfermode* Create(const ProcCoeff& rec) {
+        return SkNEW_ARGS(SkDstInXfermode, (rec));
+    }
 
     virtual void xfer32(SkPMColor*, const SkPMColor*, int, const SkAlpha*) const SK_OVERRIDE;
 
-    SK_DEVELOPER_TO_STRING()
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDstInXfermode)
 
 private:
+    SkDstInXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kDstIn_Mode) {}
     SkDstInXfermode(SkReadBuffer& buffer) : INHERITED(buffer) {}
 
     typedef SkProcCoeffXfermode INHERITED;
@@ -1606,7 +1615,7 @@ void SkDstInXfermode::xfer32(SkPMColor* SK_RESTRICT dst,
     } while (--count != 0);
 }
 
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
 void SkDstInXfermode::toString(SkString* str) const {
     this->INHERITED::toString(str);
 }
@@ -1616,14 +1625,17 @@ void SkDstInXfermode::toString(SkString* str) const {
 
 class SkDstOutXfermode : public SkProcCoeffXfermode {
 public:
-    SkDstOutXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kDstOut_Mode) {}
+    static SkDstOutXfermode* Create(const ProcCoeff& rec) {
+        return SkNEW_ARGS(SkDstOutXfermode, (rec));
+    }
 
     virtual void xfer32(SkPMColor*, const SkPMColor*, int, const SkAlpha*) const SK_OVERRIDE;
 
-    SK_DEVELOPER_TO_STRING()
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDstOutXfermode)
 
 private:
+    SkDstOutXfermode(const ProcCoeff& rec) : SkProcCoeffXfermode(rec, kDstOut_Mode) {}
     SkDstOutXfermode(SkReadBuffer& buffer)
         : INHERITED(buffer) {}
 
@@ -1650,7 +1662,7 @@ void SkDstOutXfermode::xfer32(SkPMColor* SK_RESTRICT dst,
     } while (--count != 0);
 }
 
-#ifdef SK_DEVELOPER
+#ifndef SK_IGNORE_TO_STRING
 void SkDstOutXfermode::toString(SkString* str) const {
     this->INHERITED::toString(str);
 }
@@ -1712,23 +1724,23 @@ SkXfermode* SkXfermode::Create(Mode mode) {
             // commonly used, so we call those out for their own subclasses here.
             switch (mode) {
                 case kClear_Mode:
-                    xfer = SkNEW_ARGS(SkClearXfermode, (rec));
+                    xfer = SkClearXfermode::Create(rec);
                     break;
                 case kSrc_Mode:
-                    xfer = SkNEW_ARGS(SkSrcXfermode, (rec));
+                    xfer = SkSrcXfermode::Create(rec);
                     break;
                 case kSrcOver_Mode:
                     SkASSERT(false);    // should not land here
                     break;
                 case kDstIn_Mode:
-                    xfer = SkNEW_ARGS(SkDstInXfermode, (rec));
+                    xfer = SkDstInXfermode::Create(rec);
                     break;
                 case kDstOut_Mode:
-                    xfer = SkNEW_ARGS(SkDstOutXfermode, (rec));
+                    xfer = SkDstOutXfermode::Create(rec);
                     break;
                 default:
                     // no special-case, just rely in the rec and its function-ptrs
-                    xfer = SkNEW_ARGS(SkProcCoeffXfermode, (rec, mode));
+                    xfer = SkProcCoeffXfermode::Create(rec, mode);
                     break;
             }
         }

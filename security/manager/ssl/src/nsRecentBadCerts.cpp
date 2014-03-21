@@ -6,7 +6,7 @@
 
 #include "nsRecentBadCerts.h"
 
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "nsIX509Cert.h"
 #include "nsIObserverService.h"
 #include "mozilla/RefPtr.h"
@@ -72,7 +72,7 @@ nsRecentBadCerts::GetRecentBadCert(const nsAString & aHostNameWithPort,
 
   if (foundDER.len) {
     CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-    insanity::pkix::ScopedCERTCertificate nssCert(
+    mozilla::pkix::ScopedCERTCertificate nssCert(
       CERT_FindCertByDERCert(certdb, &foundDER));
     if (!nssCert) 
       nssCert = CERT_NewTempCertificate(certdb, &foundDER,

@@ -25,9 +25,11 @@ public:
      *  Note that this treats the buffer as a series of uint8_t values.
      */
     virtual bool write(const void* buffer, size_t size) SK_OVERRIDE {
-        update(reinterpret_cast<const uint8_t*>(buffer), size);
+        this->update(reinterpret_cast<const uint8_t*>(buffer), size);
         return true;
     }
+
+    virtual size_t bytesWritten() const SK_OVERRIDE { return SkToSizeT(this->byteCount); }
 
     /** Processes input, adding it to the digest. Calling this after finish is undefined. */
     void update(const uint8_t* input, size_t length);

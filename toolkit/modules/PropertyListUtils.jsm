@@ -138,7 +138,7 @@ this.PropertyListUtils = Object.freeze({
     // Convert the buffer into an XML tree.
     let domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
                     createInstance(Ci.nsIDOMParser);
-    let bytesView = Uint8Array(aBuffer);
+    let bytesView = new Uint8Array(aBuffer);
     try {
       let doc = domParser.parseFromBuffer(bytesView, bytesView.length,
                                           "application/xml");
@@ -261,7 +261,7 @@ BinaryPropertyListReader.prototype = {
    * It can be called on the prototype.
    */
   canProcess: function BPLR_canProcess(aBuffer)
-    [String.fromCharCode(c) for each (c in Uint8Array(aBuffer, 0, 8))].
+    [String.fromCharCode(c) for each (c in new Uint8Array(aBuffer, 0, 8))].
     join("") == "bplist00",
 
   get root() this._readObject(this._rootObjectIndex),
@@ -311,9 +311,9 @@ BinaryPropertyListReader.prototype = {
   _readReal: function BPLR__readReal(aByteOffset, aRealSize) {
     let swapped = this._swapForBigEndian(aByteOffset, aRealSize, 1);
     if (aRealSize == 4)
-      return Float32Array(swapped.buffer, 0, 1)[0];
+      return new Float32Array(swapped.buffer, 0, 1)[0];
     if (aRealSize == 8)
-      return Float64Array(swapped.buffer, 0, 1)[0];
+      return new Float64Array(swapped.buffer, 0, 1)[0];
 
     throw new Error("Unsupported real size: " + aRealSize);
   },
@@ -415,7 +415,7 @@ BinaryPropertyListReader.prototype = {
   _readUnsignedInts:
   function BPLR__readUnsignedInts(aByteOffset, aIntSize, aLength, aBigIntAllowed) {
     if (aIntSize == 1)
-      return Uint8Array(this._buffer, aByteOffset, aLength);
+      return new Uint8Array(this._buffer, aByteOffset, aLength);
 
     // There are two reasons for the complexity you see here:
     // (1) 64-bit integers - For which we use ctypes. When possible, the
@@ -424,9 +424,9 @@ BinaryPropertyListReader.prototype = {
     //     bytes, is not yet implemented (bug 575688).
     let swapped = this._swapForBigEndian(aByteOffset, aIntSize, aLength);
     if (aIntSize == 2)
-      return Uint16Array(swapped.buffer);
+      return new Uint16Array(swapped.buffer);
     if (aIntSize == 4)
-      return Uint32Array(swapped.buffer);
+      return new Uint32Array(swapped.buffer);
     if (aIntSize == 8) {
       let intsArray = [];
       let lo_hi_view = new Uint32Array(swapped.buffer);
@@ -695,7 +695,7 @@ XMLPropertyListReader.prototype = {
         // Strip spaces and new lines.
         let base64str = aDOMElt.textContent.replace(/\s*/g, "");
         let decoded = atob(base64str);
-        return Uint8Array([decoded.charCodeAt(i) for (i in decoded)]);
+        return new Uint8Array([decoded.charCodeAt(i) for (i in decoded)]);
       case "dict":
         return this._wrapDictionary(aDOMElt);
       case "array":

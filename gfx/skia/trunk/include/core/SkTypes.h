@@ -115,20 +115,37 @@ inline void operator delete(void* p) {
 
 #ifdef SK_DEVELOPER
     #define SkDEVCODE(code)             code
-    // the 'toString' helper functions convert Sk* objects to human-readable
-    // form in developer mode
-    #define SK_DEVELOPER_TO_STRING()    virtual void toString(SkString* str) const SK_OVERRIDE;
 #else
     #define SkDEVCODE(code)
-    #define SK_DEVELOPER_TO_STRING()
+#endif
+
+#ifdef SK_IGNORE_TO_STRING
+    #define SK_TO_STRING_NONVIRT()
+    #define SK_TO_STRING_VIRT()
+    #define SK_TO_STRING_PUREVIRT()
+    #define SK_TO_STRING_OVERRIDE()
+#else
+    // the 'toString' helper functions convert Sk* objects to human-readable
+    // form in developer mode
+    #define SK_TO_STRING_NONVIRT() void toString(SkString* str) const;
+    #define SK_TO_STRING_VIRT() virtual void toString(SkString* str) const;
+    #define SK_TO_STRING_PUREVIRT() virtual void toString(SkString* str) const = 0;
+    #define SK_TO_STRING_OVERRIDE() virtual void toString(SkString* str) const SK_OVERRIDE;
 #endif
 
 template <bool>
 struct SkCompileAssert {
 };
 
+// Uses static_cast<bool>(expr) instead of bool(expr) due to
+// https://connect.microsoft.com/VisualStudio/feedback/details/832915
+
+// The extra parentheses in SkCompileAssert<(...)> are a work around for
+// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=57771
+// which was fixed in gcc 4.8.2.
 #define SK_COMPILE_ASSERT(expr, msg) \
-    typedef SkCompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] SK_UNUSED
+    typedef SkCompileAssert<(static_cast<bool>(expr))> \
+            msg[static_cast<bool>(expr) ? 1 : -1] SK_UNUSED
 
 /*
  *  Usage:  SK_MACRO_CONCAT(a, b)   to construct the symbol ab
@@ -219,6 +236,7 @@ typedef uint8_t SkBool8;
     SK_API uint32_t    SkToU32(uintmax_t);
     SK_API int         SkToInt(intmax_t);
     SK_API unsigned    SkToUInt(uintmax_t);
+    SK_API size_t      SkToSizeT(uintmax_t);
 #else
     #define SkToS8(x)   ((int8_t)(x))
     #define SkToU8(x)   ((uint8_t)(x))
@@ -228,6 +246,7 @@ typedef uint8_t SkBool8;
     #define SkToU32(x)  ((uint32_t)(x))
     #define SkToInt(x)  ((int)(x))
     #define SkToUInt(x) ((unsigned)(x))
+    #define SkToSizeT(x) ((size_t)(x))
 #endif
 
 /** Returns 0 or 1 based on the condition

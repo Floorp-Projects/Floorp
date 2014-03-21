@@ -143,10 +143,10 @@ function test()
         // Buffer with multiple views, kill all possible subsets of views
         buffer = new ArrayBuffer(128);
         for (let order = 0; order < 16; order++) {
-            var views = [ Uint8Array(buffer),
-                          Uint8Array(buffer),
-                          Uint8Array(buffer),
-                          Uint8Array(buffer) ];
+            var views = [ new Uint8Array(buffer),
+                          new Uint8Array(buffer),
+                          new Uint8Array(buffer),
+                          new Uint8Array(buffer) ];
             gc();
 
             // Kill views according to the bits set in 'order'
@@ -164,10 +164,10 @@ function test()
         // Similar: multiple views, kill them one at a time in every possible order
         buffer = new ArrayBuffer(128);
         for (let order = 0; order < 4*3*2*1; order++) {
-            var views = [ Uint8Array(buffer),
-                          Uint8Array(buffer),
-                          Uint8Array(buffer),
-                          Uint8Array(buffer) ];
+            var views = [ new Uint8Array(buffer),
+                          new Uint8Array(buffer),
+                          new Uint8Array(buffer),
+                          new Uint8Array(buffer) ];
             gc();
 
             var sequence = [ 0, 1, 2, 3 ];
@@ -191,7 +191,7 @@ function test()
         for (let numViews of [ 1, 2, 0, 3, 2, 1 ]) {
             buffer = new ArrayBuffer(128);
             for (let viewNum = 0; viewNum < numViews; viewNum++) {
-                views.push(Int8Array(buffer));
+                views.push(new Int8Array(buffer));
             }
         }
 
