@@ -7,8 +7,8 @@
 #include "txExprResult.h"
 #include "txNodeSet.h"
 #include "nsError.h"
-#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
+#include "nsIAttribute.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
@@ -362,7 +362,7 @@ nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
                     ->GetBindingParent();
         } else if (contextNode->IsNodeOfType(nsINode::eATTRIBUTE)) {
             nsIContent* parent =
-              static_cast<Attr*>(contextNode.get())->GetElement();
+              static_cast<nsIAttribute*>(contextNode.get())->GetContent();
             if (parent) {
                 ctxBindingParent = parent->GetBindingParent();
             }
