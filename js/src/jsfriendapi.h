@@ -1578,6 +1578,12 @@ class JSJitMethodCallArgs : protected JS::detail::CallArgsBase<JS::detail::NoUse
         return Base::hasDefined(i);
     }
 
+    JSObject &callee() const {
+        // We can't use Base::callee() because that will try to poke at
+        // this->usedRval_, which we don't have.
+        return argv_[-2].toObject();
+    }
+
     // Add get() as needed
 };
 
