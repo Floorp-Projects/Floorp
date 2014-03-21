@@ -7,7 +7,6 @@
 this.EXPORTED_SYMBOLS = [
   "btoa", // It comes from a module import.
   "encryptPayload",
-  "ensureLegacyIdentityManager",
   "setBasicCredentials",
   "makeIdentityConfig",
   "configureFxAccountIdentity",
@@ -48,17 +47,6 @@ this.waitForZeroTimer = function waitForZeroTimer(callback) {
     callback();
   }
   CommonUtils.namedTimer(wait, 150, {}, "timer");
-}
-
-/**
-  * Ensure Sync is configured with the "legacy" identity provider.
-  */
-this.ensureLegacyIdentityManager = function() {
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-
-  Status.__authManager = ns.Service.identity = new IdentityManager();
-  ns.Service._clusterManager = ns.Service.identity.createClusterManager(ns.Service);
 }
 
 this.setBasicCredentials =
@@ -182,7 +170,7 @@ this.SyncTestingInfrastructure = function (server, username, password, syncKey) 
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
-  ensureLegacyIdentityManager();
+  let auth = ns.Service.identity;
   let config = makeIdentityConfig();
   // XXX - hacks for the sync identity provider.
   if (username)
@@ -245,7 +233,7 @@ this.add_identity_test = function(test, testFunction) {
   test.add_task(function() {
     note("sync");
     let oldIdentity = Status._authManager;
-    ensureLegacyIdentityManager();
+    Status.__authManager = ns.Service.identity = new IdentityManager();
     yield testFunction();
     Status.__authManager = ns.Service.identity = oldIdentity;
   });

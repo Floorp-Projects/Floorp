@@ -8,7 +8,6 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 let cryptoWrap;
 
@@ -31,7 +30,6 @@ function run_test() {
   let server;
   do_test_pending();
 
-  ensureLegacyIdentityManager();
   Service.identity.username = "john@example.com";
   Service.identity.syncKey = "a-abcde-abcde-abcde-abcde-abcde";
   let keyBundle = Service.identity.syncKeyBundle;

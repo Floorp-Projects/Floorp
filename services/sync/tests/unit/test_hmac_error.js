@@ -21,7 +21,6 @@ function shared_setup() {
   hmacErrorCount = 0;
 
   // Do not instantiate SyncTestingInfrastructure; we need real crypto.
-  ensureLegacyIdentityManager();
   setBasicCredentials("foo", "foo", "aabcdeabcdeabcdeabcdeabcde");
 
   // Make sure RotaryEngine is the only one we sync.
