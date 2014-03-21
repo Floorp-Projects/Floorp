@@ -316,8 +316,7 @@ interface TextMetrics {
 
 [Pref="canvas.path.enabled",
  Constructor,
- Constructor(Path2D other),
- Constructor(DOMString pathString)]
+ Constructor(Path2D other)]
 interface Path2D
 {};
 Path2D implements CanvasPathMethods;
