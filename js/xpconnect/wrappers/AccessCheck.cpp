@@ -355,7 +355,7 @@ bool
 ExposedPropertiesOnly::allowNativeCall(JSContext *cx, JS::IsAcceptableThis test,
                                        JS::NativeImpl impl)
 {
-    return js::IsReadOnlyDateMethod(test, impl) || js::IsTypedArrayThisCheck(test);
+    return js::IsTypedArrayThisCheck(test);
 }
 
 }
