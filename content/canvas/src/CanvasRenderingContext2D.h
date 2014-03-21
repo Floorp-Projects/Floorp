@@ -61,9 +61,6 @@ public:
   static already_AddRefed<CanvasPath> Constructor(const GlobalObject& aGlobal,
                                                   CanvasPath& aCanvasPath,
                                                   ErrorResult& rv);
-  static already_AddRefed<CanvasPath> Constructor(const GlobalObject& aGlobal,
-                                                  const nsAString& aPathString,
-                                                  ErrorResult& rv);
 
   void ClosePath();
   void MoveTo(double x, double y);

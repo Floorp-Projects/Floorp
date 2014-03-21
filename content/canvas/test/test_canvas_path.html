@@ -315,23 +315,6 @@ function test_isPointInStroke_canvas() {
 }
 </script>
 
-<p>Canvas test: test_pathconstructor_canvas</p>
-<canvas id="c7" class="output" width="200" height="100">+
-</canvas>
-<script type="text/javascript">
-
-function test_pathconstructor_canvas() {
-  var c = document.getElementById("c7");
-  var ctx = c.getContext("2d");
-
-  var p = new Path2D("M100,0L200,0L200,100L100,100z");
-  ctx.fillStyle = 'blue';
-  ctx.fill(p);
-  isPixel(ctx, 105, 5, [0, 0, 255, 255], 0);
-  isPixel(ctx, 5, 5, [0, 0, 0, 0], 0);
-}
-</script>
-
 <script>
 
 function runTests() {
@@ -370,12 +353,6 @@ function runTests() {
  } catch(e) {
   throw e;
   ok(false, "unexpected exception thrown in: test_isPointInStroke_canvas");
- }
- try {
-  test_pathconstructor_canvas();
- } catch(e) {
-  throw e;
-  ok(false, "unexpected exception thrown in: test_pathconstructor_canvas");
  }
  SpecialPowers.setBoolPref("canvas.path.enabled", false);
  SimpleTest.finish();

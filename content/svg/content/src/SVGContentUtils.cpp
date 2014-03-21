@@ -20,7 +20,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
-#include "nsSVGPathDataParser.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -584,16 +583,4 @@ SVGContentUtils::CoordToFloat(nsPresContext *aPresContext,
   default:
     return 0.0f;
   }
-}
-
-RefPtr<gfx::Path>
-SVGContentUtils::GetPath(const nsAString& aPathString)
-{
-  SVGPathData pathData;
-  nsSVGPathDataParser parser(aPathString, &pathData);
-  if (!parser.Parse()) {
-    return NULL;
-  }
-
-  return pathData.BuildPath(FillRule::FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 1);
 }
