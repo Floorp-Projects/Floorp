@@ -20,6 +20,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975261
        0% { transform: translate(50px); }
        100% { transform: translate(50px); }
     }
+    @keyframes anim-transform-2 {
+       0% { transform: translate(0px); }
+       100% { transform: translate(100px); }
+    }
     .target {
       /* These two lines are needed so that an opacity/transform layer
        * already exists when the animation is applied. */
@@ -38,14 +42,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975261
 <a target="_blank"
   href="https://bugzilla.mozilla.org/show_bug.cgi?id=975261">Mozilla Bug
   975261</a>
-<div id="display"><div class="target"></div></div>
+<div id="display"></div>
 <pre id="test">
 <script type="application/javascript">
 "use strict";
 
+var gUtils = SpecialPowers.DOMWindowUtils;
 var gOMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
-var gOMTCEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote;
-var gTarget = document.querySelector(".target");
+var gOMTCEnabled = gUtils.layerManagerRemote;
 
 if (gOMTCEnabled && SpecialPowers.getBoolPref(gOMTAPrefKey)) {
   SimpleTest.waitForExplicitFinish();
@@ -58,42 +62,75 @@ if (gOMTCEnabled && SpecialPowers.getBoolPref(gOMTAPrefKey)) {
   ok(true, "OMTA not available");
 }
 
-function testDelay() {
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+function newTarget() {
+  var target = document.createElement("div");
+  target.classList.add("target");
+  document.getElementById("display").appendChild(target);
+  return target;
+}
 
-  gTarget.setAttribute("style", "animation: 10s 10s anim-opacity linear");
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+function testDelay() {
+  gUtils.advanceTimeAndRefresh(0);
+
+  var target = newTarget();
+  target.setAttribute("style", "animation: 10s 10s anim-opacity linear");
+  gUtils.advanceTimeAndRefresh(0);
 
   waitForAllPaints(function() {
-    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(10100);
+    gUtils.advanceTimeAndRefresh(10100);
     waitForAllPaints(function() {
-      var opacity =
-        SpecialPowers.DOMWindowUtils.getOMTAStyle(gTarget, "opacity");
+      var opacity = gUtils.getOMTAStyle(target, "opacity");
       is(opacity, 0.5,
          "opacity is set on compositor thread after delayed start");
-      gTarget.removeAttribute("style");
-      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+      target.removeAttribute("style");
+      gUtils.restoreNormalRefresh();
       testTransform();
     });
   });
 }
 
 function testTransform() {
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+  gUtils.advanceTimeAndRefresh(0);
 
-  gTarget.setAttribute("style", "animation: 10s 10s anim-transform linear");
-  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+  var target = newTarget();
+  target.setAttribute("style", "animation: 10s 10s anim-transform linear");
+  gUtils.advanceTimeAndRefresh(0);
 
   waitForAllPaints(function() {
-    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(10100);
+    gUtils.advanceTimeAndRefresh(10100);
     waitForAllPaints(function() {
-      var transform =
-        SpecialPowers.DOMWindowUtils.getOMTAStyle(gTarget, "transform");
+      var transform = gUtils.getOMTAStyle(target, "transform");
       is(transform, "matrix(1, 0, 0, 1, 50, 0)",
          "transform is set on compositor thread after delayed start");
-      gTarget.removeAttribute("style");
-      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
-      SimpleTest.finish();
+      target.removeAttribute("style");
+      gUtils.restoreNormalRefresh();
+      testBackwardsFill();
+    });
+  });
+}
+
+function testBackwardsFill() {
+  gUtils.advanceTimeAndRefresh(0);
+
+  var target = newTarget();
+  target.setAttribute("style",
+    "transform: translate(30px); " +
+    "animation: 10s 10s anim-transform-2 linear backwards");
+
+  gUtils.advanceTimeAndRefresh(0);
+  waitForAllPaints(function() {
+    gUtils.advanceTimeAndRefresh(10000);
+    waitForAllPaints(function() {
+      gUtils.advanceTimeAndRefresh(100);
+      waitForAllPaints(function() {
+        var transform = gUtils.getOMTAStyle(target, "transform");
+        todo_is(transform, "matrix(1, 0, 0, 1, 1, 0)",
+                "transform is set on compositor thread after delayed start " +
+                "with backwards fill");
+        target.removeAttribute("style");
+        gUtils.restoreNormalRefresh();
+        SimpleTest.finish();
+      });
     });
   });
 }
