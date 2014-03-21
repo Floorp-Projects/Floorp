@@ -1391,6 +1391,9 @@ class IDLType(IDLObject):
     def isObject(self):
         return self.tag() == IDLType.Tags.object
 
+    def isPromise(self):
+        return False
+
     def isComplete(self):
         return True
 
@@ -2030,6 +2033,10 @@ class IDLWrapperType(IDLType):
 
     def isEnum(self):
         return isinstance(self.inner, IDLEnum)
+
+    def isPromise(self):
+        return isinstance(self.inner, IDLInterface) and \
+               self.inner.identifier.name == "Promise"
 
     def isSerializable(self):
         if self.isInterface():
@@ -3241,6 +3248,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 self._overloads]
 
     def finish(self, scope):
+        overloadWithPromiseReturnType = None
+        overloadWithoutPromiseReturnType = None
         for overload in self._overloads:
             variadicArgument = None
 
@@ -3279,15 +3288,29 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                     variadicArgument = argument
 
             returnType = overload.returnType
-            if returnType.isComplete():
-                continue
+            if not returnType.isComplete():
+                returnType = returnType.complete(scope)
+                assert not isinstance(returnType, IDLUnresolvedType)
+                assert not isinstance(returnType, IDLTypedefType)
+                assert not isinstance(returnType.name, IDLUnresolvedIdentifier)
+                overload.returnType = returnType
 
-            type = returnType.complete(scope)
+            if returnType.isPromise():
+                overloadWithPromiseReturnType = overload
+            else:
+                overloadWithoutPromiseReturnType = overload
 
-            assert not isinstance(type, IDLUnresolvedType)
-            assert not isinstance(type, IDLTypedefType)
-            assert not isinstance(type.name, IDLUnresolvedIdentifier)
-            overload.returnType = type
+        # Make sure either all our overloads return Promises or none do
+        if overloadWithPromiseReturnType and overloadWithoutPromiseReturnType:
+            raise WebIDLError("We have overloads with both Promise and "
+                              "non-Promise return types",
+                              [overloadWithPromiseReturnType.location,
+                               overloadWithoutPromiseReturnType.location])
+
+        if overloadWithPromiseReturnType and self._legacycaller:
+            raise WebIDLError("May not have a Promise return type for a "
+                              "legacycaller.",
+                              [overloadWithPromiseReturnType.location])
 
         # Now compute various information that will be used by the
         # WebIDL overload resolution algorithm.
