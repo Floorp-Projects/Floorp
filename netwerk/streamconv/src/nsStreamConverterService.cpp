@@ -50,9 +50,7 @@ struct BFSState {
 };
 
 // Adjacency list data class.
-struct SCTableData {
-    nsCOMArray<nsIAtom> edges;
-};
+typedef nsCOMArray<nsIAtom> SCTableData;
 
 // BFS hashtable data class.
 struct BFSTableData {
@@ -194,7 +192,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (!fromEdges)
         return NS_ERROR_FAILURE;
 
-    return fromEdges->edges.AppendObject(vertex) ? NS_OK : NS_ERROR_FAILURE;
+    return fromEdges->AppendObject(vertex) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -320,10 +318,10 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         NS_ASSERTION(headVertexState, "problem with the BFS strmconv algorithm");
         if (!headVertexState) return NS_ERROR_FAILURE;
 
-        int32_t edgeCount = data2->edges.Count();
+        int32_t edgeCount = data2->Count();
 
         for (int32_t i = 0; i < edgeCount; i++) {
-            nsIAtom* curVertexAtom = data2->edges.ObjectAt(i);
+            nsIAtom* curVertexAtom = data2->ObjectAt(i);
             nsAutoString curVertexStr;
             curVertexAtom->ToString(curVertexStr);
             nsCStringKey *curVertex = new nsCStringKey(ToNewCString(curVertexStr), 
