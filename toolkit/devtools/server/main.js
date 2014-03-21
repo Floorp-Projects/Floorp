@@ -65,6 +65,7 @@ this.promised = promised;
 this.all = all;
 
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
+Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 function dumpn(str) {
   if (wantLogging) {
