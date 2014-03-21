@@ -4,9 +4,9 @@
 <script type="application/javascript">
   function setup() {
     // Set up different target objects for expandos, one for each binding type.
-    window.targetWN = window;
-    window.targetDOM = new XMLHttpRequest();
-    window.targetJS = new Date();
+    window.targetWN = document.body.firstChild;
+    window.targetNodeList = document.getElementsByTagName('span');
+    window.targetXHR = new XMLHttpRequest();
   }
 
   function placeExpando(name, val, target) {
