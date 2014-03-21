@@ -20,6 +20,7 @@
 
 #include "nsStreamConverterService.h"
 #include "nsIComponentRegistrar.h"
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsDeque.h"
@@ -55,15 +56,11 @@ struct BFSTableData {
     nsCStringKey *key;
     BFScolors color;
     int32_t distance;
-    nsCStringKey *predecessor;
+    nsAutoPtr<nsCStringKey> predecessor;
 
     explicit BFSTableData(nsCStringKey* aKey)
-      : key(aKey), color(white), distance(-1), predecessor(nullptr)
+      : key(aKey), color(white), distance(-1)
     {
-    }
-
-    ~BFSTableData() {
-        delete predecessor;
     }
 };
 
