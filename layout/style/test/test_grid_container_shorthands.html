@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test parsing of grid container shorthands (grid-template, grid)</title>
+  <link rel="author" title="Simon Sapin" href="mailto:simon.sapin@exyr.org">
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel='stylesheet' href='/resources/testharness.css'>
+</head>
+<body>
+
+<script>
+
+// TODO: test the 'grid' shorthand when it's implemented.
+
+// For various specified values of the grid-template shorthand,
+// test the computed values of the corresponding longhands.
+var grid_template_test_cases = [
+    {
+        specified: "none",
+        gridTemplateAreas: "none",
+        gridTemplateColumns: "none",
+        gridTemplateRows: "none",
+    },
+    {
+        specified: "40px / 100px",
+        gridTemplateAreas: "none",
+        gridTemplateColumns: "40px",
+        gridTemplateRows: "100px",
+    },
+    {
+        specified: "(foo) 40px (bar) / (baz) 100px (fizz)",
+        gridTemplateAreas: "none",
+        gridTemplateColumns: "(foo) 40px (bar)",
+        gridTemplateRows: "(baz) 100px (fizz)",
+    },
+    {
+        specified: " none/100px",
+        gridTemplateAreas: "none",
+        gridTemplateColumns: "none",
+        gridTemplateRows: "100px",
+    },
+    {
+        specified: "40px/none",
+        gridTemplateAreas: "none",
+        gridTemplateColumns: "40px",
+        gridTemplateRows: "none",
+    },
+    {
+        specified: "'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "none",
+        gridTemplateRows: "minmax(min-content, max-content)",
+    },
+    {
+        specified: "(bar) 'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "none",
+        gridTemplateRows: "(bar) minmax(min-content, max-content)",
+    },
+    {
+        specified: "(foo) 40px / 'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "minmax(min-content, max-content)",
+    },
+    {
+        specified: "(foo) 40px / (bar) 'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "(bar) minmax(min-content, max-content)",
+    },
+    {
+        specified: "(foo) 40px / 'fizz' 100px",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "100px",
+    },
+    {
+        specified: "(foo) 40px / (bar) 'fizz' 100px (buzz) \n (a) '.' 200px (b)",
+        gridTemplateAreas: "\"fizz\" \".\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "(bar) 100px (buzz a) 200px (b)",
+    },
+];
+
+grid_template_test_cases.forEach(function(test_case) {
+    test(function() {
+        var element = document.createElement('div');
+        document.body.appendChild(element);
+        element.style.gridTemplate = test_case.specified;
+        var computed = window.getComputedStyle(element);
+        [
+            "gridTemplateAreas", "gridTemplateColumns", "gridTemplateRows"
+        ].forEach(function(longhand) {
+            assert_equals(computed[longhand], test_case[longhand], longhand);
+        });
+    }, "test parsing of 'grid-template: " + test_case.specified + "'");
+});
+
+</script>
+
+</body>
+</html>

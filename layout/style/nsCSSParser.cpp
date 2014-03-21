@@ -676,6 +676,9 @@ protected:
                                   nsCSSValueGridTemplateAreas& aResult,
                                   nsDataHashtable<nsStringHashKey, uint32_t>& aAreaIndices);
   bool ParseGridTemplateAreas();
+  bool ParseGridTemplate();
+  bool ParseGridTemplateAfterSlash(bool aColumnsIsTrackList);
+  bool ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames);
   bool ParseGridLine(nsCSSValue& aValue);
   bool ParseGridAutoPosition();
   bool ParseGridColumnRowStartEnd(nsCSSProperty aPropID);
@@ -7138,7 +7141,7 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
     AppendValue(aPropID, value);
     return true;
   }
-  // FIXME: add subgrid parsing
+  // FIXME (bug 983175): add subgrid parsing
 
   nsCSSValue firstLineNames;
   if (!(ParseGridLineNames(firstLineNames) &&
@@ -7261,6 +7264,152 @@ CSSParserImpl::ParseGridTemplateAreas()
   }
 
   AppendValue(eCSSProperty_grid_template_areas, value);
+  return true;
+}
+
+bool
+CSSParserImpl::ParseGridTemplate()
+{
+  // none |
+  // subgrid |
+  // <'grid-template-columns'> / <'grid-template-rows'> |
+  // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
+  nsCSSValue value;
+  if (ParseVariant(value, VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_grid_template_areas, value);
+    AppendValue(eCSSProperty_grid_template_columns, value);
+    AppendValue(eCSSProperty_grid_template_rows, value);
+    return true;
+  }
+
+  // TODO (bug 983175): add parsing for 'subgrid' by itself
+
+  if (ParseVariant(value, VARIANT_NONE, nullptr)) {
+    AppendValue(eCSSProperty_grid_template_columns, value);
+    if (ExpectSymbol('/', true)) {
+      return ParseGridTemplateAfterSlash(/* aColumnsIsTrackList = */ false);
+    }
+    AppendValue(eCSSProperty_grid_template_areas, value);
+    AppendValue(eCSSProperty_grid_template_rows, value);
+    return true;
+  }
+
+  // TODO (bug 983175): add parsing for subgrid
+  // as part of <'grid-template-columns'>
+
+  // [ <line-names>? ] here is ambiguous:
+  // it can be either the start of a <track-list>,
+  // or the start of [ <line-names>? <string> <track-size>? <line-names>? ]+
+  nsCSSValue firstLineNames;
+  if (!(ParseGridLineNames(firstLineNames) &&
+        GetToken(true))) {
+    return false;
+  }
+  if (mToken.mType == eCSSToken_String) {
+    // [ <track-list> / ]? was omitted
+    // Parse [ <line-names>? <string> <track-size>? <line-names>? ]+
+    value.SetNoneValue();
+    AppendValue(eCSSProperty_grid_template_columns, value);
+    return ParseGridTemplateAfterString(firstLineNames);
+  }
+  UngetToken();
+
+  if (!(ParseGridTrackListWithFirstLineNames(value, firstLineNames) &&
+        ExpectSymbol('/', true))) {
+    return false;
+  }
+  AppendValue(eCSSProperty_grid_template_columns, value);
+  return ParseGridTemplateAfterSlash(/* aColumnsIsTrackList = */ true);
+}
+
+// Helper for parsing the 'grid-template' shorthand
+bool
+CSSParserImpl::ParseGridTemplateAfterSlash(bool aColumnsIsTrackList)
+{
+  nsCSSValue rowsValue;
+  if (!ParseVariant(rowsValue, VARIANT_NONE, nullptr)) {
+    // TODO (bug 983175): add parsing for subgrid
+    // as part of <'grid-template-rows'>
+
+    nsCSSValue firstLineNames;
+    if (!(ParseGridLineNames(firstLineNames) &&
+          GetToken(true))) {
+      return false;
+    }
+    if (aColumnsIsTrackList && mToken.mType == eCSSToken_String) {
+      return ParseGridTemplateAfterString(firstLineNames);
+    }
+    UngetToken();
+
+    if (!ParseGridTrackListWithFirstLineNames(rowsValue, firstLineNames)) {
+      return false;
+    }
+  }
+  // <'grid-template-columns'> / <'grid-template-rows'>
+  // rowsValue is set by either ParseVariant
+  // or ParseGridTrackListWithFirstLineNames
+  nsCSSValue areasValue(eCSSUnit_None);  // implied
+  AppendValue(eCSSProperty_grid_template_areas, areasValue);
+  AppendValue(eCSSProperty_grid_template_rows, rowsValue);
+  return true;
+}
+
+// Helper for parsing the 'grid-template' shorthand:
+// Parse [ <line-names>? <string> <track-size>? <line-names>? ]+
+// with a <line-names>? already consumed, stored in |aFirstLineNames|,
+// and the current token a <string>
+bool
+CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
+{
+  MOZ_ASSERT(mToken.mType == eCSSToken_String,
+             "ParseGridTemplateAfterString called with a non-string token");
+
+  nsCSSValue areasValue;
+  nsCSSValue rowsValue;
+  nsCSSValueGridTemplateAreas& areas = areasValue.SetGridTemplateAreas();
+  nsDataHashtable<nsStringHashKey, uint32_t> areaIndices;
+  nsCSSValueList* rowsItem = rowsValue.SetListValue();
+  rowsItem->mValue = aFirstLineNames;
+
+  for (;;) {
+    if (!ParseGridTemplateAreasLine(mToken.mIdent, areas, areaIndices)) {
+      return false;
+    }
+
+    rowsItem->mNext = new nsCSSValueList;
+    rowsItem = rowsItem->mNext;
+    // TODO: add repeat()
+    nsParsingStatus result = ParseGridTrackSize(rowsItem->mValue);
+    if (result == nsParsingStatus::Error) {
+      return false;
+    }
+    if (result == nsParsingStatus::NotFound) {
+      rowsItem->mValue.SetAutoValue();
+    }
+
+    rowsItem->mNext = new nsCSSValueList;
+    rowsItem = rowsItem->mNext;
+    if (!ParseGridLineNames(rowsItem->mValue)) {
+      return false;
+    }
+
+    if (CheckEndProperty()) {
+      break;
+    }
+
+    // Append to the same list as the previous call to ParseGridLineNames.
+    if (!(ParseGridLineNames(rowsItem->mValue) &&
+          GetToken(true))) {
+      return false;
+    }
+    if (eCSSToken_String != mToken.mType) {
+      UngetToken();
+      return false;
+    }
+  }
+
+  AppendValue(eCSSProperty_grid_template_areas, areasValue);
+  AppendValue(eCSSProperty_grid_template_rows, rowsValue);
   return true;
 }
 
@@ -8521,6 +8670,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_grid_template_columns:
   case eCSSProperty_grid_template_rows:
     return ParseGridTemplateColumnsRows(aPropID);
+  case eCSSProperty_grid_template:
+    return ParseGridTemplate();
   case eCSSProperty_grid_auto_position:
     return ParseGridAutoPosition();
   case eCSSProperty_grid_column_start:
