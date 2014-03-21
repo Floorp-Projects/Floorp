@@ -593,10 +593,14 @@ protected:
       : mPresShell(aPresShell), mFromScroll(aFromScroll) {
       NS_ASSERTION(mPresShell, "null parameter");
     }
+
+  private:
+  // Private destructor, to discourage deletion outside of Release():
     ~nsSynthMouseMoveEvent() {
       Revoke();
     }
 
+  public:
     NS_INLINE_DECL_REFCOUNTING(nsSynthMouseMoveEvent)
 
     void Revoke() {
