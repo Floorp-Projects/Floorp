@@ -85,6 +85,13 @@ function run_test() {
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.scheduler").level = Log.Level.Trace;
 
+  // The scheduler checks Weave.fxaEnabled to determine whether to use
+  // FxA defaults or legacy defaults.  As .fxaEnabled checks the username, we
+  // set a username here then reset the default to ensure they are used.
+  ensureLegacyIdentityManager();
+  setBasicCredentials("johndoe");
+  scheduler.setDefaults();
+
   run_next_test();
 }
 
