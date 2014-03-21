@@ -859,19 +859,4 @@ exports['test button after destroy'] = function(assert) {
   loader.unload();
 };
 
-// If the module doesn't support the app we're being run in, require() will
-// throw.  In that case, remove all tests above from exports, and add one dummy
-// test that passes.
-try {
-  require('sdk/ui/button/action');
-}
-catch (err) {
-  if (!/^Unsupported Application/.test(err.message))
-    throw err;
-
-  module.exports = {
-    'test Unsupported Application': assert => assert.pass(err.message)
-  }
-}
-
 require('sdk/test').run(exports);

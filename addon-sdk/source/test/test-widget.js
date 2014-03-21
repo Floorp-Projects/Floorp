@@ -28,8 +28,6 @@ try {
   jetpackID = require("sdk/self").id;
 } catch(e) {}
 
-const australis = !!require("sdk/window/utils").getMostRecentBrowserWindow().CustomizableUI;
-
 function openNewWindowTab(url, options) {
   return open('chrome://browser/content/browser.xul', {
     features: {
@@ -49,23 +47,19 @@ exports.testConstructor = function(assert, done) {
   let browserWindow = windowUtils.activeBrowserWindow;
   let doc = browserWindow.document;
   let AddonsMgrListener;
-  if (australis) {
-    AddonsMgrListener = {
-      onInstalling: () => {},
-      onInstalled: () => {},
-      onUninstalling: () => {},
-      onUninstalled: () => {}
-    };
-  }
-  else {
-    AddonsMgrListener = browserWindow.AddonsMgrListener;
-  }
 
-  function container() australis ? doc.getElementById("nav-bar") : doc.getElementById("addon-bar");
-  function getWidgets() container() ? container().querySelectorAll('[id^="widget\:"]') : [];
-  function widgetCount() getWidgets().length;
+  AddonsMgrListener = {
+    onInstalling: () => {},
+    onInstalled: () => {},
+    onUninstalling: () => {},
+    onUninstalled: () => {}
+  };
+
+  let container = () => doc.getElementById("nav-bar");
+  let getWidgets = () => container() ? container().querySelectorAll('[id^="widget\:"]') : [];
+  let widgetCount = () => getWidgets().length;
   let widgetStartCount = widgetCount();
-  function widgetNode(index) getWidgets()[index];
+  let widgetNode = (index) => getWidgets()[index];
 
   // Test basic construct/destroy
   AddonsMgrListener.onInstalling();
@@ -172,38 +166,13 @@ exports.testConstructor = function(assert, done) {
   w3.destroy();
   AddonsMgrListener.onUninstalled();
 
-  // Test concurrent widget module instances on addon-bar hiding
-  if (!australis) {
-    let loader = Loader(module);
-    let anotherWidgetsInstance = loader.require("sdk/widget");
-    assert.ok(container().collapsed, "UI is hidden when no widgets");
-    AddonsMgrListener.onInstalling();
-    let w1 = widgets.Widget({id: "ui-unhide", label: "foo", content: "bar"});
-    // Ideally we would let AddonsMgrListener display the addon bar
-    // But, for now, addon bar is immediatly displayed by sdk code
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=627484
-    assert.ok(!container().collapsed, "UI is already visible when we just added the widget");
-    AddonsMgrListener.onInstalled();
-    assert.ok(!container().collapsed, "UI become visible when we notify AddonsMgrListener about end of addon installation");
-    let w2 = anotherWidgetsInstance.Widget({id: "ui-stay-open", label: "bar", content: "foo"});
-    assert.ok(!container().collapsed, "UI still visible when we add a second widget");
-    AddonsMgrListener.onUninstalling();
-    w1.destroy();
-    AddonsMgrListener.onUninstalled();
-    assert.ok(!container().collapsed, "UI still visible when we remove one of two widgets");
-    AddonsMgrListener.onUninstalling();
-    w2.destroy();
-    assert.ok(!container().collapsed, "UI is still visible when we have removed all widget but still not called onUninstalled");
-    AddonsMgrListener.onUninstalled();
-    assert.ok(container().collapsed, "UI is hidden when we have removed all widget and called onUninstalled");
-  }
   // Helper for testing a single widget.
   // Confirms proper addition and content setup.
   function testSingleWidget(widgetOptions) {
     // We have to display which test is being run, because here we do not
     // use the regular test framework but rather a custom one that iterates
     // the `tests` array.
-    console.info("executing: " + widgetOptions.id);
+    assert.pass("executing: " + widgetOptions.id);
 
     let startCount = widgetCount();
     let widget = widgets.Widget(widgetOptions);
@@ -530,13 +499,13 @@ exports.testConstructor = function(assert, done) {
 
   // test multiple windows
   tests.push(function testMultipleWindows() {
-    console.log('executing test multiple windows');
+    assert.pass('executing test multiple windows');
     openNewWindowTab("about:blank", { inNewWindow: true, onLoad: function(e) {
       let browserWindow = e.target.defaultView;
       assert.ok(browserWindow, 'window was opened');
       let doc = browserWindow.document;
-      function container() australis ? doc.getElementById("nav-bar") : doc.getElementById("addon-bar");
-      function widgetCount2() container() ? container().querySelectorAll('[id^="widget\:"]').length : 0;
+      let container = () => doc.getElementById("nav-bar");
+      let widgetCount2 = () => container() ? container().querySelectorAll('[id^="widget\:"]').length : 0;
       let widgetStartCount2 = widgetCount2();
 
       let w1Opts = {id:"first-multi-window", label: "first widget", content: "first content"};
@@ -777,17 +746,7 @@ exports.testPanelWidget3 = function testPanelWidget3(assert, done) {
 };
 
 exports.testWidgetWithPanelInMenuPanel = function(assert, done) {
-  let CustomizableUI;
-
-  try {
-    ({CustomizableUI}) = Cu.import("resource:///modules/CustomizableUI.jsm", {});
-  }
-  catch (e) {
-    assert.pass("Test skipped: no CustomizableUI object found.");
-    done();
-    return;
-  }
-
+  const { CustomizableUI } = Cu.import("resource:///modules/CustomizableUI.jsm", {});
   const widgets = require("sdk/widget");
 
   let widget1 = widgets.Widget({
@@ -1141,107 +1100,13 @@ exports.testReinsertion = function(assert, done) {
   });
   let realWidgetId = "widget:" + jetpackID + "-" + WIDGETID;
   // Remove the widget:
-  if (australis) {
-    browserWindow.CustomizableUI.removeWidgetFromArea(realWidgetId);
-  } else {
-    let widget = browserWindow.document.getElementById(realWidgetId);
-    let container = widget.parentNode;
-    container.currentSet = container.currentSet.replace("," + realWidgetId, "");
-    container.setAttribute("currentset", container.currentSet);
-    container.ownerDocument.persist(container.id, "currentset");
-  }
+
+  browserWindow.CustomizableUI.removeWidgetFromArea(realWidgetId);
 
   openNewWindowTab("about:blank", { inNewWindow: true, onLoad: function(e) {
     assert.equal(e.target.defaultView.document.getElementById(realWidgetId), null);
     close(e.target.defaultView).then(done);
   }});
 };
-
-if (!australis) {
-  exports.testNavigationBarWidgets = function testNavigationBarWidgets(assert, done) {
-    let w1 = widgets.Widget({id: "1st", label: "1st widget", content: "1"});
-    let w2 = widgets.Widget({id: "2nd", label: "2nd widget", content: "2"});
-    let w3 = widgets.Widget({id: "3rd", label: "3rd widget", content: "3"});
-
-    // First wait for all 3 widgets to be added to the current browser window
-    let firstAttachCount = 0;
-    function onAttachFirstWindow(widget) {
-      if (++firstAttachCount<3)
-        return;
-      onWidgetsReady();
-    }
-    w1.once("attach", onAttachFirstWindow);
-    w2.once("attach", onAttachFirstWindow);
-    w3.once("attach", onAttachFirstWindow);
-
-    function getWidgetNode(toolbar, position) {
-      return toolbar.getElementsByTagName("toolbaritem")[position];
-    }
-    function openBrowserWindow() {
-      let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
-               getService(Ci.nsIWindowWatcher);
-      let urlString = Cc["@mozilla.org/supports-string;1"].
-                      createInstance(Ci.nsISupportsString);
-      urlString.data = "about:blank";
-      return ww.openWindow(null, "chrome://browser/content/browser.xul",
-                                 "_blank", "chrome,all,dialog=no", urlString);
-    }
-
-    // Then move them before openeing a new browser window
-    function onWidgetsReady() {
-      // Hack to move 2nd and 3rd widgets manually to the navigation bar right after
-      // the search box.
-      let browserWindow = windowUtils.activeBrowserWindow;
-      let doc = browserWindow.document;
-      let addonBar = doc.getElementById("addon-bar");
-      let w2ToolbarItem = getWidgetNode(addonBar, 1);
-      let w3ToolbarItem = getWidgetNode(addonBar, 2);
-      let navBar = doc.getElementById("nav-bar");
-      let searchBox = doc.getElementById("search-container");
-      // Insert 3rd at the right of search box by adding it before its right sibling
-      navBar.insertItem(w3ToolbarItem.id, searchBox.nextSibling, null, false);
-      // Then insert 2nd before 3rd
-      navBar.insertItem(w2ToolbarItem.id, w3ToolbarItem, null, false);
-      // Widget and Firefox codes rely on this `currentset` attribute,
-      // so ensure it is correctly saved
-      navBar.setAttribute("currentset", navBar.currentSet);
-      doc.persist(navBar.id, "currentset");
-      // Update addonbar too as we removed widget from there.
-      // Otherwise, widgets may still be added to this toolbar.
-      addonBar.setAttribute("currentset", addonBar.currentSet);
-      doc.persist(addonBar.id, "currentset");
-
-      // Wait for all widget to be attached to this new window before checking
-      // their position
-      let attachCount = 0;
-      let browserWindow2;
-      function onAttach(widget) {
-        if (++attachCount < 3)
-          return;
-        let doc = browserWindow2.document;
-        let addonBar = doc.getElementById("addon-bar");
-        let searchBox = doc.getElementById("search-container");
-
-        // Ensure that 1st is in addon bar
-        assert.equal(getWidgetNode(addonBar, 0).getAttribute("label"), w1.label);
-        // And that 2nd and 3rd keep their original positions in navigation bar,
-        // i.e. right after search box
-        assert.equal(searchBox.nextSibling.getAttribute("label"), w2.label);
-        assert.equal(searchBox.nextSibling.nextSibling.getAttribute("label"), w3.label);
-
-        w1.destroy();
-        w2.destroy();
-        w3.destroy();
-
-        close(browserWindow2).then(done);
-      }
-      w1.on("attach", onAttach);
-      w2.on("attach", onAttach);
-      w3.on("attach", onAttach);
-
-      browserWindow2 = openBrowserWindow(browserWindow);
-    }
-  };
-}
 
 require("sdk/test").run(exports);

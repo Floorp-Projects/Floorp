@@ -123,7 +123,6 @@ exports['test the weird objects, that they get parsed properly'] = function(asse
 
 exports['test non munge test cases'] = function(assert) {
   qsNoMungeTestCases.forEach(function(testCase) {
-    //console.log(testCase[0], JSON.stringify(testCase[1]), qs.stringify(testCase[1], '&', '=', false));
     assert.deepEqual(testCase[0], qs.stringify(testCase[1], '&', '=', false),
                      'stringify ' + JSON.stringify(testCase[1]) + ' -> & =');
   });

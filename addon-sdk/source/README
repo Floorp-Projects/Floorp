@@ -6,8 +6,7 @@ Before proceeding, please make sure you've installed Python 2.5,
 
   http://python.org/download/
 
-Note that Python 3 is not supported on any platform, and Python 2.7.6 
-is not supported on Windows.
+Note that Python 3 is not supported.
 
 For Windows users, MozillaBuild (https://wiki.mozilla.org/MozillaBuild)
 will install the correct version of Python and the MSYS package, which

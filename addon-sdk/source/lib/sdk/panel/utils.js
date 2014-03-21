@@ -138,6 +138,8 @@ function display(panel, options, anchor) {
     // menu panel.
     // In such cases clicking this widget will hide the overflow/menu panel,
     // and the widget's panel will show instead.
+    // If `CustomizableUI` is not available, it means the anchor is not in a
+    // chrome browser window, and therefore there is no need for this check.
     if (CustomizableUI) {
       let node = anchor;
       ({anchor}) = CustomizableUI.getWidget(anchor.id).forWindow(window);
