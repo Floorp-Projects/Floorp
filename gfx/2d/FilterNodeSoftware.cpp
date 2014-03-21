@@ -1108,8 +1108,8 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  Matrix transform = Matrix().Translate(srcRect.x, srcRect.y) * mMatrix *
-                     Matrix().Translate(-aRect.x, -aRect.y);
+  Matrix transform = Matrix::Translation(srcRect.x, srcRect.y) * mMatrix *
+                     Matrix::Translation(-aRect.x, -aRect.y);
   if (transform.IsIdentity() && srcRect.Size() == aRect.Size()) {
     return input;
   }
