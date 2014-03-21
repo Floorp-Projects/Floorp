@@ -142,6 +142,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Navigator)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Navigator)
   tmp->Invalidate();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedResolveResults)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -173,6 +174,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTimeManager)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedResolveResults)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -1852,9 +1854,26 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
         }
       }
 
-      domObject = construct(aCx, naviObj);
-      if (!domObject) {
-        return Throw(aCx, NS_ERROR_FAILURE);
+      nsISupports* existingObject = mCachedResolveResults.GetWeak(name);
+      if (existingObject) {
+        // We know all of our WebIDL objects here are wrappercached, so just go
+        // ahead and WrapObject() them.  We can't use WrapNewBindingObject,
+        // because we don't have the concrete type.
+        JS::Rooted<JS::Value> wrapped(aCx);
+        if (!dom::WrapObject(aCx, naviObj, existingObject, &wrapped)) {
+          return false;
+        }
+        domObject = &wrapped.toObject();
+      } else {
+        domObject = construct(aCx, naviObj);
+        if (!domObject) {
+          return Throw(aCx, NS_ERROR_FAILURE);
+        }
+
+        // Store the value in our cache
+        nsISupports* native = UnwrapDOMObjectToISupports(domObject);
+        MOZ_ASSERT(native);
+        mCachedResolveResults.Put(name, native);
       }
     }
 
@@ -1871,31 +1890,47 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
 
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));
-  if (NS_FAILED(rv)) {
-    return Throw(aCx, rv);
-  }
-
-  JS::Rooted<JS::Value> prop_val(aCx, JS::UndefinedValue()); // Property value.
-
-  nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
-
-  if (gpi) {
-    if (!mWindow) {
-      return Throw(aCx, NS_ERROR_UNEXPECTED);
-    }
-
-    rv = gpi->Init(mWindow, &prop_val);
+  nsCOMPtr<nsISupports> native;
+  bool hadCachedNative = mCachedResolveResults.Get(name, getter_AddRefs(native));
+  bool okToUseNative;
+  JS::Rooted<JS::Value> prop_val(aCx);
+  if (hadCachedNative) {
+    okToUseNative = true;
+  } else {
+    native = do_CreateInstance(name_struct->mCID, &rv);
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);
     }
+
+    JS::Rooted<JS::Value> prop_val(aCx, JS::UndefinedValue()); // Property value.
+
+    nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
+
+    if (gpi) {
+      if (!mWindow) {
+        return Throw(aCx, NS_ERROR_UNEXPECTED);
+      }
+
+      rv = gpi->Init(mWindow, &prop_val);
+      if (NS_FAILED(rv)) {
+        return Throw(aCx, rv);
+      }
+    }
+
+    okToUseNative = !prop_val.isObjectOrNull();
   }
 
-  if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
+  if (okToUseNative) {
     rv = nsContentUtils::WrapNative(aCx, aObject, native, &prop_val);
 
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);
+    }
+
+    // Now that we know we managed to wrap this thing properly, go ahead and
+    // cache it as needed.
+    if (!hadCachedNative) {
+      mCachedResolveResults.Put(name, native);
     }
   }
 
