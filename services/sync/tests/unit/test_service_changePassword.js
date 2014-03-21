@@ -13,8 +13,6 @@ function run_test() {
   Log.repository.getLogger("Sync.Resource").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
 
-  ensureLegacyIdentityManager();
-
   run_next_test();
 }
 
