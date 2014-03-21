@@ -8,9 +8,9 @@
 
 #include "nsIStreamConverterService.h"
 
+#include "nsHashtable.h"
 #include "nsTArrayForwardDeclare.h"
 
-class nsObjectHashtable;
 class nsCString;
 
 class nsStreamConverterService : public nsIStreamConverterService {
@@ -37,7 +37,7 @@ private:
     nsresult ParseFromTo(const char *aContractID, nsCString &aFromRes, nsCString &aToRes);
 
     // member variables
-    nsObjectHashtable              *mAdjacencyList;
+    nsObjectHashtable mAdjacencyList;
 };
 
 #endif // __nsstreamconverterservice__h___
