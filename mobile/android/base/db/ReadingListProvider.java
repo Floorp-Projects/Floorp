@@ -9,7 +9,6 @@ import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -17,9 +16,7 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
 
-public class ReadingListProvider extends TransactionalProvider<BrowserDatabaseHelper> {
-    private static final String LOGTAG = "GeckoReadingListProv";
-
+public class ReadingListProvider extends SharedBrowserDatabaseProvider {
     static final String TABLE_READING_LIST = ReadingListItems.TABLE_NAME;
 
     static final int ITEMS = 101;
@@ -103,7 +100,7 @@ public class ReadingListProvider extends TransactionalProvider<BrowserDatabaseHe
         ContentValues values = new ContentValues();
         values.put(ReadingListItems.IS_DELETED, 1);
 
-        cleanupSomeDeletedRecords(uri, ReadingListItems.CONTENT_URI, TABLE_READING_LIST);
+        cleanUpSomeDeletedRecords(uri, TABLE_READING_LIST);
         return updateItems(uri, values, selection, selectionArgs);
     }
 
@@ -246,16 +243,5 @@ public class ReadingListProvider extends TransactionalProvider<BrowserDatabaseHe
 
         debug("URI has unrecognized type: " + uri);
         return null;
-    }
-
-    @Override
-    protected BrowserDatabaseHelper createDatabaseHelper(Context context,
-            String databasePath) {
-        return new BrowserDatabaseHelper(context, databasePath);
-    }
-
-    @Override
-    protected String getDatabaseName() {
-        return BrowserDatabaseHelper.DATABASE_NAME;
     }
 }
