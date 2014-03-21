@@ -81,7 +81,7 @@ DEBUGGER_INFO = {
     "interactive": False,
     "args": " ".join(["--leak-check=full",
                       "--show-possibly-lost=no",
-                      "--smc-check=all-non-file,"
+                      "--smc-check=all-non-file",
                       "--vex-iropt-register-updates=allregs-at-mem-access"])
   }
 }
