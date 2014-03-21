@@ -519,7 +519,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
         if (!fval.isObject() || !fval.toObject().is<JSFunction>() ||
             !fval.toObject().as<JSFunction>().isNative() ||
             !fval.toObject().as<JSFunction>().jitInfo() ||
-            !fval.toObject().as<JSFunction>().jitInfo()->isDOMJitInfo())
+            fval.toObject().as<JSFunction>().jitInfo()->needsOuterizedThisObject())
         {
             RootedObject thisObj(cx, &args.thisv().toObject());
             JSObject *thisp = JSObject::thisObject(cx, thisObj);
