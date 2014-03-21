@@ -1656,7 +1656,9 @@ class MethodDefiner(PropertyDefiner):
                        "length": methodLength(m),
                        "flags": "JSPROP_ENUMERATE",
                        "condition": PropertyDefiner.getControllingCondition(m),
-                       "allowCrossOriginThis": m.getExtendedAttribute("CrossOriginCallable")}
+                       "allowCrossOriginThis": m.getExtendedAttribute("CrossOriginCallable"),
+                       "returnsPromise": m.returnsPromise(),
+                       }
             if isChromeOnly(m):
                 self.chrome.append(method)
             else:
@@ -1734,9 +1736,19 @@ class MethodDefiner(PropertyDefiner):
                     # JSTypedMethodJitInfo.
                     jitinfo = ("reinterpret_cast<const JSJitInfo*>(&%s_methodinfo)" % accessor)
                     if m.get("allowCrossOriginThis", False):
+                        if m.get("returnsPromise", False):
+                            raise TypeError("%s returns a Promise but should "
+                                            "be allowed cross-origin?" %
+                                            accessor)
                         accessor = "genericCrossOriginMethod"
                     elif self.descriptor.needsSpecialGenericOps():
+                        if m.get("returnsPromise", False):
+                            raise TypeError("%s returns a Promise but needs "
+                                            "special generic ops?" %
+                                            accessor)
                         accessor = "genericMethod"
+                    elif m.get("returnsPromise", False):
+                        accessor = "GenericPromiseReturningBindingMethod"
                     else:
                         accessor = "GenericBindingMethod"
                 else:

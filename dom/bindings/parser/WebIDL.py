@@ -3431,6 +3431,9 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                               [attr.location])
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
 
+    def returnsPromise(self):
+        return self._overloads[0].returnType.isPromise()
+
     def _getDependentObjects(self):
         deps = set()
         for overload in self._overloads:
