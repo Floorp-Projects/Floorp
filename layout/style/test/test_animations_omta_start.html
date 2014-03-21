@@ -12,12 +12,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975261
     src="/tests/SimpleTest/paint_listener.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style type="text/css">
-    @keyframes anim {
+    @keyframes anim-opacity {
        0% { opacity: 0.5 }
        100% { opacity: 0.5 }
     }
+    @keyframes anim-transform {
+       0% { transform: translate(50px); }
+       100% { transform: translate(50px); }
+    }
     .target {
-      opacity: 0.99; /* Needed so there is an opacity layer already */
+      /* These two lines are needed so that an opacity/transform layer
+       * already exists when the animation is applied. */
+      opacity: 0.99;
+      transform: translate(99px);
+
+      /* Element needs geometry in order to be animated on the
+       * compositor. */
       width: 100px;
       height: 100px;
       background-color: white;
@@ -35,6 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975261
 
 var gOMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
 var gOMTCEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote;
+var gTarget = document.querySelector(".target");
 
 if (gOMTCEnabled && SpecialPowers.getBoolPref(gOMTAPrefKey)) {
   SimpleTest.waitForExplicitFinish();
@@ -50,21 +61,37 @@ if (gOMTCEnabled && SpecialPowers.getBoolPref(gOMTAPrefKey)) {
 function testDelay() {
   SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
 
-  var target = document.querySelector(".target");
-  target.setAttribute("style", "animation: 10s 10s anim linear");
-
-  // Wait for initial paint
+  gTarget.setAttribute("style", "animation: 10s 10s anim-opacity linear");
   SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
-  waitForAllPaints(function() {
 
-    // Skip past delay
+  waitForAllPaints(function() {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(10100);
     waitForAllPaints(function() {
       var opacity =
-        SpecialPowers.DOMWindowUtils.getOMTAStyle(target, "opacity");
+        SpecialPowers.DOMWindowUtils.getOMTAStyle(gTarget, "opacity");
       is(opacity, 0.5,
          "opacity is set on compositor thread after delayed start");
-      target.removeAttribute("style");
+      gTarget.removeAttribute("style");
+      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+      testTransform();
+    });
+  });
+}
+
+function testTransform() {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+
+  gTarget.setAttribute("style", "animation: 10s 10s anim-transform linear");
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+
+  waitForAllPaints(function() {
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(10100);
+    waitForAllPaints(function() {
+      var transform =
+        SpecialPowers.DOMWindowUtils.getOMTAStyle(gTarget, "transform");
+      is(transform, "matrix(1, 0, 0, 1, 50, 0)",
+         "transform is set on compositor thread after delayed start");
+      gTarget.removeAttribute("style");
       SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
       SimpleTest.finish();
     });
