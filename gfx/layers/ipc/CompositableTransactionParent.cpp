@@ -318,6 +318,11 @@ CompositableParentManager::ReturnTextureDataIfNecessary(CompositableHost* aCompo
         aCompositable->GetCompositableBackendSpecificData()->GetPendingReleaseFenceTextureList();
   // Return pending Texture data
   for (size_t i = 0; i < textureList.size(); i++) {
+    // File descriptor number is limited to 4 per IPC message.
+    // See Bug 986253
+    if (mPrevFenceHandles.size() >= 4) {
+      break;
+    }
     TextureHostOGL* hostOGL = textureList[i]->AsHostOGL();
     PTextureParent* actor = textureList[i]->GetIPDLActor();
     if (!hostOGL || !actor) {
