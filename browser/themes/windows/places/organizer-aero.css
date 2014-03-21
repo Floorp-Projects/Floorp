@@ -36,6 +36,18 @@
   }
 }
 
+@media (-moz-windows-default-theme) {
+  #placesView > splitter {
+    border: 0;
+    -moz-border-end: 1px solid #A9B7C9;
+    min-width: 0;
+    width: 3px;
+    background-color: transparent;
+    -moz-margin-start: -3px;
+    position: relative;
+  }
+}
+
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
        (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
   #placesView,
@@ -48,16 +60,6 @@
   #placesToolbar {
     background-color: @customToolbarColor@;
     color: black;
-  }
-
-  #placesView > splitter {
-    border: 0;
-    -moz-border-end: 1px solid #A9B7C9;
-    min-width: 0;
-    width: 3px;
-    background-color: transparent;
-    -moz-margin-start: -3px;
-    position: relative;
   }
 
   #detailsDeck {
