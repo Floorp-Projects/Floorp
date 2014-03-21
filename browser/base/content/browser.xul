@@ -922,6 +922,12 @@
                        oncommand="window.minimize();"/>
 
         <toolbarbutton id="restore-button"
+#ifdef XP_MACOSX
+# Prior to 10.7 there wasn't a native fullscreen button so we use #restore-button
+# to exit fullscreen and want it to behave like other toolbar buttons.
+                       class="toolbarbutton-1"
+                       cui-areatype="toolbar"
+#endif
                        tooltiptext="&fullScreenRestore.tooltip;"
                        oncommand="BrowserFullScreen();"/>
 

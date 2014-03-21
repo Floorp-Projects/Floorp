@@ -17,7 +17,7 @@
   -  the corresponding box is hovered. -->
 
 <!ENTITY title                  "Box Model">
-<!ENTITY margins.tooltip        "margins">
-<!ENTITY borders.tooltip        "borders">
+<!ENTITY margin.tooltip         "margin">
+<!ENTITY border.tooltip         "border">
 <!ENTITY padding.tooltip        "padding">
 <!ENTITY content.tooltip        "content">

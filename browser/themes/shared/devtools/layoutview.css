@@ -2,12 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.theme-dark .theme-sidebar {
-  background-image: url(layout-background-grid.png);
-}
-
 .theme-sidebar {
-  color: hsl(210,53%,45%) !important;
   box-sizing: border-box;
 }
 
@@ -15,6 +10,7 @@
   background-color: white;
   border-color: hsla(210,100%,85%,0.7);
   border-style: dotted;
+  color: hsl(210,53%,45%);
 }
 
 #content {
@@ -37,7 +33,6 @@
   background-color: #ffe431;
   border-style: dotted;
   border-color: hsl(210,100%,85%);
-  box-shadow: 0 0 8px #000;
 }
 
 #margins {
