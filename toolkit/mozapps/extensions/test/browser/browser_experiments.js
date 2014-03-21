@@ -50,7 +50,8 @@ add_test(function testActiveExperiment() {
   install_addon("addons/browser_experiment1.xpi", (addon) => {
     gInstalledAddons.push(addon);
 
-    Assert.ok(addon.isActive, "Add-on is active.");
+    Assert.ok(addon.userDisabled, "Add-on is disabled upon initial install.");
+    Assert.equal(addon.isActive, false, "Add-on is not active.");
 
     Assert.ok(gCategoryUtilities.isTypeVisible("experiment"), "Experiment tab visible.");
 
@@ -143,6 +144,9 @@ add_test(function testButtonPresence() {
     // Corresponds to lack of disable permission.
     el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "disable-btn");
     is_element_hidden(el, "Disable button not visible.");
+    // Corresponds to lack of enable permission.
+    el = item.ownerDocument.getAnonymousElementByAttribute(item, "anonid", "enable-btn");
+    is_element_hidden(el, "Enable button not visible.");
 
     run_next_test();
   });

@@ -908,6 +908,11 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.userDisabled = !!LightweightThemeManager.currentTheme ||
                          addon.internalName != XPIProvider.selectedSkin;
   }
+  // Experiments are disabled by default. It is up to the Experiments Manager
+  // to enable them (it drives installation).
+  else if (addon.type == "experiment") {
+    addon.userDisabled = true;
+  }
   else {
     addon.userDisabled = false;
     addon.softDisabled = addon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
@@ -2082,8 +2087,19 @@ var XPIProvider = {
    * Persists changes to XPIProvider.bootstrappedAddons to its store (a pref).
    */
   persistBootstrappedAddons: function XPI_persistBootstrappedAddons() {
+    // Experiments are disabled upon app load, so don't persist references.
+    let filtered = {};
+    for (let id in this.bootstrappedAddons) {
+      let entry = this.bootstrappedAddons[id];
+      if (entry.type == "experiment") {
+        continue;
+      }
+
+      filtered[id] = entry;
+    }
+
     Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                               JSON.stringify(this.bootstrappedAddons));
+                               JSON.stringify(filtered));
   },
 
   /**
@@ -4238,12 +4254,16 @@ var XPIProvider = {
     // no onDisabling/onEnabling is sent - so send a onPropertyChanged.
     let appDisabledChanged = aAddon.appDisabled != appDisabled;
 
-    // Update the properties in the database
-    XPIDatabase.setAddonProperties(aAddon, {
-      userDisabled: aUserDisabled,
-      appDisabled: appDisabled,
-      softDisabled: aSoftDisabled
-    });
+    // Update the properties in the database.
+    // We never persist this for experiments because the disabled flags
+    // are controlled by the Experiments Manager.
+    if (aAddon.type != "experiment") {
+      XPIDatabase.setAddonProperties(aAddon, {
+        userDisabled: aUserDisabled,
+        appDisabled: appDisabled,
+        softDisabled: aSoftDisabled
+      });
+    }
 
     if (appDisabledChanged) {
       AddonManagerPrivate.callAddonListeners("onPropertyChanged",
