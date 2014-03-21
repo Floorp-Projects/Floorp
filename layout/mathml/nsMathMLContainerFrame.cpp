@@ -527,11 +527,11 @@ nsMathMLContainerFrame::FinalizeReflow(nsRenderingContext& aRenderingContext,
     }
   }
 
-  // see if we should fix the spacing
-  FixInterFrameSpacing(aDesiredSize);
-
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+
+  // see if we should fix the spacing
+  FixInterFrameSpacing(aDesiredSize);
 
   if (!parentWillFireStretch) {
     // Not expecting a stretch.
@@ -971,6 +971,9 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   return NS_OK;
 }
 
+static nscoord AddInterFrameSpacingToSize(nsHTMLReflowMetrics&    aDesiredSize,
+                                          nsMathMLContainerFrame* aFrame);
+
 /* virtual */ nscoord
 nsMathMLContainerFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
@@ -978,9 +981,11 @@ nsMathMLContainerFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
   DISPLAY_MIN_WIDTH(this, result);
   nsHTMLReflowMetrics desiredSize(GetWritingMode());
   GetIntrinsicWidthMetrics(aRenderingContext, desiredSize);
-  nsBoundingMetrics bm = desiredSize.mBoundingMetrics;
-  // We include the overflow to compensate for FixInterFrameSpacing.
-  result = std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
+
+  // Include the additional width added by FixInterFrameSpacing to ensure
+  // consistent width calculations.
+  AddInterFrameSpacingToSize(desiredSize, this);
+  result = desiredSize.Width();
   return result;
 }
 
@@ -988,12 +993,14 @@ nsMathMLContainerFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 nsMathMLContainerFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
-  DISPLAY_MIN_WIDTH(this, result);
+  DISPLAY_PREF_WIDTH(this, result);
   nsHTMLReflowMetrics desiredSize(GetWritingMode());
   GetIntrinsicWidthMetrics(aRenderingContext, desiredSize);
-  nsBoundingMetrics bm = desiredSize.mBoundingMetrics;
-  // We include the overflow to compensate for FixInterFrameSpacing.
-  result = std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
+
+  // Include the additional width added by FixInterFrameSpacing to ensure
+  // consistent width calculations.
+  AddInterFrameSpacingToSize(desiredSize, this);
+  result = desiredSize.Width();
   return result;
 }
 
@@ -1385,36 +1392,50 @@ GetInterFrameSpacingFor(int32_t         aScriptLevel,
   return 0;
 }
 
-nscoord
-nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
+static nscoord
+AddInterFrameSpacingToSize(nsHTMLReflowMetrics&    aDesiredSize,
+                           nsMathMLContainerFrame* aFrame)
 {
   nscoord gap = 0;
-  nsIContent* parentContent = mParent->GetContent();
+  nsIFrame* parent = aFrame->GetParent();
+  nsIContent* parentContent = parent->GetContent();
   if (MOZ_UNLIKELY(!parentContent)) {
     return 0;
   }
   nsIAtom *parentTag = parentContent->Tag();
   if (parentContent->GetNameSpaceID() == kNameSpaceID_MathML && 
       (parentTag == nsGkAtoms::math || parentTag == nsGkAtoms::mtd_)) {
-    gap = GetInterFrameSpacingFor(StyleFont()->mScriptLevel, mParent, this);
+    gap = GetInterFrameSpacingFor(aFrame->StyleFont()->mScriptLevel,
+                                  parent, aFrame);
     // add our own italic correction
     nscoord leftCorrection = 0, italicCorrection = 0;
-    GetItalicCorrection(mBoundingMetrics, leftCorrection, italicCorrection);
+    aFrame->GetItalicCorrection(aDesiredSize.mBoundingMetrics,
+                                leftCorrection, italicCorrection);
     gap += leftCorrection;
-    // see if we should shift our children to account for the correction
     if (gap) {
-      nsIFrame* childFrame = mFrames.FirstChild();
-      while (childFrame) {
-        childFrame->SetPosition(childFrame->GetPosition() + nsPoint(gap, 0));
-        childFrame = childFrame->GetNextSibling();
-      }
-      mBoundingMetrics.leftBearing += gap;
-      mBoundingMetrics.rightBearing += gap;
-      mBoundingMetrics.width += gap;
+      aDesiredSize.mBoundingMetrics.leftBearing += gap;
+      aDesiredSize.mBoundingMetrics.rightBearing += gap;
+      aDesiredSize.mBoundingMetrics.width += gap;
       aDesiredSize.Width() += gap;
     }
-    mBoundingMetrics.width += italicCorrection;
+    aDesiredSize.mBoundingMetrics.width += italicCorrection;
     aDesiredSize.Width() += italicCorrection;
+  }
+  return gap;
+}
+
+nscoord
+nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
+{
+  nscoord gap = 0;
+  gap = AddInterFrameSpacingToSize(aDesiredSize, this);
+  if (gap) {
+    // Shift our children to account for the correction
+    nsIFrame* childFrame = mFrames.FirstChild();
+    while (childFrame) {
+      childFrame->SetPosition(childFrame->GetPosition() + nsPoint(gap, 0));
+      childFrame = childFrame->GetNextSibling();
+    }
   }
   return gap;
 }
