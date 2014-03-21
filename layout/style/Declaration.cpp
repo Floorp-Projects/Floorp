@@ -1022,7 +1022,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         // which isn't a value that the shorthand can express. Bail.
         return;
       }
-      const GridTemplateAreasValue& areas = areasValue.GetGridTemplateAreas();
+      const GridTemplateAreasValue* areas = areasValue.GetGridTemplateAreas();
       const nsCSSValueList* rowsItem = rowsValue.GetListValue();
       uint32_t nRowItems = 0;
       while (rowsItem) {
@@ -1030,7 +1030,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         rowsItem = rowsItem->mNext;
       }
       MOZ_ASSERT(nRowItems % 2 == 1, "expected an odd number of items");
-      if ((nRowItems - 1) / 2 != areas.NRows()) {
+      if ((nRowItems - 1) / 2 != areas->NRows()) {
         // Not serializable, bail.
         return;
       }
@@ -1057,7 +1057,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
           aValue.AppendLiteral(")");
 
         } else {
-          nsStyleUtil::AppendEscapedCSSString(areas.mTemplates[row++], aValue);
+          nsStyleUtil::AppendEscapedCSSString(areas->mTemplates[row++], aValue);
           aValue.Append(char16_t(' '));
 
           // <track-size>
