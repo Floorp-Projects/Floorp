@@ -62,8 +62,8 @@ function testDelay() {
     waitForAllPaints(function() {
       var opacity =
         SpecialPowers.DOMWindowUtils.getOMTAStyle(target, "opacity");
-      todo_is(opacity, 0.5,
-              "opacity is set on compositor thread after delayed start");
+      is(opacity, 0.5,
+         "opacity is set on compositor thread after delayed start");
       target.removeAttribute("style");
       SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
       SimpleTest.finish();
