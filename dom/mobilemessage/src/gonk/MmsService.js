@@ -62,6 +62,7 @@ const _MMS_ERROR_NO_SIM_CARD                   = -3;
 const _MMS_ERROR_SIM_CARD_CHANGED              = -4;
 const _MMS_ERROR_SHUTDOWN                      = -5;
 const _MMS_ERROR_USER_CANCELLED_NO_REASON      = -6;
+const _MMS_ERROR_SIM_NOT_MATCHED               = -7;
 
 const CONFIG_SEND_REPORT_NEVER       = 0;
 const CONFIG_SEND_REPORT_DEFAULT_NO  = 1;
@@ -501,6 +502,35 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnections", function() {
       conn = this._connections[id] = new MmsConnection(id);
       conn.init();
       return conn;
+    },
+    getConnByIccId: function(aIccId) {
+      if (!aIccId) {
+        // If the ICC ID isn't available, it means the MMS has been received
+        // during the previous version that didn't take the DSDS scenario
+        // into consideration. Tentatively, get connection from serviceId(0) by
+        // default is better than nothing. Although it might use the wrong
+        // SIM to download the desired MMS, eventually it would still fail to
+        // download due to the wrong MMSC and proxy settings.
+        return this.getConnByServiceId(0);
+      }
+
+      let numCardAbsent = 0;
+      let numRadioInterfaces = gRil.numRadioInterfaces;
+      for (let clientId = 0; clientId < numRadioInterfaces; clientId++) {
+        let mmsConnection = this.getConnByServiceId(clientId);
+        let iccId = mmsConnection.getIccId();
+        if (iccId === null) {
+          numCardAbsent++;
+          continue;
+        }
+
+        if (iccId === aIccId) {
+          return mmsConnection;
+        }
+      }
+
+      throw ((numCardAbsent === numRadioInterfaces)?
+               _MMS_ERROR_NO_SIM_CARD: _MMS_ERROR_SIM_NOT_MATCHED);
     },
   };
 });
@@ -2280,37 +2310,28 @@ MmsService.prototype = {
         return;
       }
 
-      // Get the RIL service ID based on the saved MMS message record's ICC ID,
+      // Get MmsConnection based on the saved MMS message record's ICC ID,
       // which could fail when the corresponding SIM card isn't installed.
-      let serviceId;
+      let mmsConnection;
       try {
-        if (aMessageRecord.iccId == null) {
-          // If the ICC ID isn't available, it means the MMS has been received
-          // during the previous version that didn't take the DSDS scenario
-          // into consideration. Tentatively, setting the service ID to be 0 by
-          // default is better than nothing. Although it might use the wrong
-          // SIM to download the desired MMS, eventually it would still fail to
-          // download due to the wrong MMSC and proxy settings.
-          serviceId = 0;
-        } else {
-          serviceId = gRil.getClientIdByIccId(aMessageRecord.iccId);
-        }
+        mmsConnection = gMmsConnections.getConnByIccId(aMessageRecord.iccId);
       } catch (e) {
-        if (DEBUG) debug("RIL service is not available for ICC ID.");
-        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR);
+        if (DEBUG) debug("Failed to get connection by IccId. e= " + e);
+        let error = (e === _MMS_ERROR_SIM_NOT_MATCHED) ?
+                      Ci.nsIMobileMessageCallback.SIM_NOT_MATCHED_ERROR :
+                      Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR;
+        aRequest.notifyGetMessageFailed(error);
         return;
       }
 
       // To support DSDS, we have to stop users retrieving MMS when the needed
       // SIM is not active, thus avoiding the data disconnection of the current
       // SIM. Users have to manually swith the default SIM before retrieving.
-      if (serviceId != this.mmsDefaultServiceId) {
+      if (mmsConnection.serviceId != this.mmsDefaultServiceId) {
         if (DEBUG) debug("RIL service is not active to retrieve MMS.");
         aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NON_ACTIVE_SIM_CARD_ERROR);
         return;
       }
-
-      let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
 
       let url =  aMessageRecord.headers["x-mms-content-location"].uri;
       // For X-Mms-Report-Allowed
@@ -2430,27 +2451,16 @@ MmsService.prototype = {
             JSON.stringify(toAddress));
     }
 
-    // Get the RIL service ID based on the saved MMS message record's ICC ID,
+    // Get MmsConnection based on the saved MMS message record's ICC ID,
     // which could fail when the corresponding SIM card isn't installed.
-    let serviceId;
+    let mmsConnection;
     try {
-      if (iccId == null) {
-        // If the ICC ID isn't available, it means the MMS has been received
-        // during the previous version that didn't take the DSDS scenario
-        // into consideration. Tentatively, setting the service ID to be 0 by
-        // default is better than nothing. Although it might use the wrong
-        // SIM to send the read report for the desired MMS, eventually it
-        // would still fail to send due to the wrong MMSC and proxy settings.
-        serviceId = 0;
-      } else {
-        serviceId = gRil.getClientIdByIccId(iccId);
-      }
+      mmsConnection = gMmsConnections.getConnByIccId(iccId);
     } catch (e) {
-      if (DEBUG) debug("RIL service is not available for ICC ID.");
+      if (DEBUG) debug("Failed to get connection by IccId. e = " + e);
       return;
     }
 
-    let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
     try {
       let transaction =
         new ReadRecTransaction(mmsConnection, messageID, toAddress);
