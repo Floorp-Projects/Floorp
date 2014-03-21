@@ -4,16 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdio.h>
-#include <stdlib.h>
-
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
-#include <sys/time.h>
-#elif defined(_WIN32)
-#include <windows.h>
-#else
-#error "Architecture not supported"
-#endif
-
+#include <time.h>
 
 int main(int argc, char **argv)
 {
@@ -28,42 +19,20 @@ int main(int argc, char **argv)
      * of this program and omit the library build time
      * in PRVersionDescription.
      */
-#elif defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
-    long long now;
-    struct timeval tv;
-#ifdef HAVE_SVID_GETTOD
-    gettimeofday(&tv);
-#else
-    gettimeofday(&tv, NULL);
-#endif
-    now = ((1000000LL) * tv.tv_sec) + (long long)tv.tv_usec;
-#if defined(OSF1)
-    fprintf(stdout, "%ld", now);
-#elif defined(BEOS) && defined(__POWERPC__)
-    fprintf(stdout, "%Ld", now);  /* Metroworks on BeOS PPC */
-#else
-    fprintf(stdout, "%lld", now);
-#endif
-
-#elif defined(_WIN32)
+#elif defined(_MSC_VER)
     __int64 now;
-    FILETIME ft;
-    GetSystemTimeAsFileTime(&ft);
-    CopyMemory(&now, &ft, sizeof(now));
-    /*
-     * 116444736000000000 is the number of 100-nanosecond intervals
-     * between Jan. 1, 1601 and Jan. 1, 1970.
-     */
-#ifdef __GNUC__
-    now = (now - 116444736000000000LL) / 10LL;
-    fprintf(stdout, "%lld", now);
-#else
-    now = (now - 116444736000000000i64) / 10i64;
-    fprintf(stdout, "%I64d", now);
-#endif
+    time_t sec;
 
+    sec = time(NULL);
+    now = (1000000i64) * sec;
+    fprintf(stdout, "%I64d", now);
 #else
-#error "Architecture not supported"
+    long long now;
+    time_t sec;
+
+    sec = time(NULL);
+    now = (1000000LL) * sec;
+    fprintf(stdout, "%lld", now);
 #endif
 
     return 0;
