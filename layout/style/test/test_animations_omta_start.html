@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=975261
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test OMTA animations start correctly (Bug 975261)</title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    @keyframes anim {
+       0% { opacity: 0.5 }
+       100% { opacity: 0.5 }
+    }
+    .target {
+      opacity: 0.99; /* Needed so there is an opacity layer already */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=975261">Mozilla Bug
+  975261</a>
+<div id="display"><div class="target"></div></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+var gOMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
+var gOMTCEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote;
+
+if (gOMTCEnabled && SpecialPowers.getBoolPref(gOMTAPrefKey)) {
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", function() {
+    // Using paint_listener.js functions inside an onload handler is not safe
+    // (bug 986367) so spin the event loop first
+    SimpleTest.executeSoon(testDelay);
+  });
+} else {
+  ok(true, "OMTA not available");
+}
+
+function testDelay() {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+
+  var target = document.querySelector(".target");
+  target.setAttribute("style", "animation: 10s 10s anim linear");
+
+  // Wait for initial paint
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+  waitForAllPaints(function() {
+
+    // Skip past delay
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(10100);
+    waitForAllPaints(function() {
+      var opacity =
+        SpecialPowers.DOMWindowUtils.getOMTAStyle(target, "opacity");
+      todo_is(opacity, 0.5,
+              "opacity is set on compositor thread after delayed start");
+      target.removeAttribute("style");
+      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+      SimpleTest.finish();
+    });
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
