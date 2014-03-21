@@ -932,6 +932,36 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       AppendValueToString(subprops[1], aValue, aSerialization);
       break;
     }
+    case eCSSProperty_grid_row:
+    case eCSSProperty_grid_column: {
+      // grid-{row,column}-start, grid-{row,column}-end, separated by a slash
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ABORT_IF_FALSE(subprops[2] == eCSSProperty_UNKNOWN,
+                        "must have exactly two subproperties");
+
+      // TODO: should we simplify when possible?
+      AppendValueToString(subprops[0], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[1], aValue, aSerialization);
+      break;
+    }
+    case eCSSProperty_grid_area: {
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ABORT_IF_FALSE(subprops[4] == eCSSProperty_UNKNOWN,
+                        "must have exactly four subproperties");
+
+      // TODO: should we simplify when possible?
+      AppendValueToString(subprops[0], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[1], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[2], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[3], aValue, aSerialization);
+      break;
+    }
     case eCSSProperty__moz_transform: {
       // shorthands that are just aliases with different parsing rules
       const nsCSSProperty* subprops =

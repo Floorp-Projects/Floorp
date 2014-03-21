@@ -5020,6 +5020,7 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 		gridAutoPositionOtherValues.push(val + "/2");
 	});
 	var gridAutoPositionInvalidValues = [
+		"foo",
 		"foo, bar",
 		"foo / bar / baz",
 	];
@@ -5034,6 +5035,88 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 		initial_values: [ "1 / 1" ],
 		other_values: gridAutoPositionOtherValues,
 		invalid_values: gridAutoPositionInvalidValues
+	};
+
+	// The grid-column and grid-row shorthands take values of the form
+	//   <grid-line> [ / <grid-line> ]?
+	// which is equivalent to:
+	//   <grid-line> | [ <grid-line> / <grid-line> ]
+	// which is equivalent to:
+	//   <grid-line> | <'grid-auto-position'>
+	var gridColumnRowOtherValues = [].concat(
+		gridLineOtherValues,
+		gridAutoPositionOtherValues);
+	var gridColumnRowInvalidValues = [].concat(
+		gridLineInvalidValues,
+		gridAutoPositionInvalidValues);
+	// A single <grid-line> is invalid for grid-auto-position,
+	// but not for grid-column or grid-row:
+	gridColumnRowInvalidValues.splice(
+		gridColumnRowInvalidValues.indexOf("foo"),
+		1);
+	gCSSProperties["grid-column"] = {
+		domProp: "gridColumn",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"grid-column-start",
+			"grid-column-end"
+		],
+		initial_values: [ "auto", "auto / auto" ],
+		other_values: gridColumnRowOtherValues,
+		invalid_values: gridColumnRowInvalidValues
+	};
+	gCSSProperties["grid-row"] = {
+		domProp: "gridRow",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"grid-row-start",
+			"grid-row-end"
+		],
+		initial_values: [ "auto", "auto / auto" ],
+		other_values: gridColumnRowOtherValues,
+		invalid_values: gridColumnRowInvalidValues
+	};
+
+	var gridAreaOtherValues = gridLineOtherValues.slice();
+	gridLineOtherValues.forEach(function(val) {
+		gridAreaOtherValues.push("foo / " + val);
+		gridAreaOtherValues.push(val + "/2/3");
+		gridAreaOtherValues.push("foo / bar / " + val + " / baz");
+	});
+	var gridAreaInvalidValues = [
+		"foo, bar",
+		"foo / bar / baz / fizz / buzz",
+		"default / foo / bar / baz",
+		"foo / initial / bar / baz",
+		"foo / bar / inherit / baz",
+		"foo / bar / baz / unset",
+	].concat(gridLineInvalidValues);
+	gridLineInvalidValues.forEach(function(val) {
+		gridAreaInvalidValues.push("foo / " + val);
+		gridAreaInvalidValues.push("foo / bar / " + val);
+		gridAreaInvalidValues.push("foo / 4 / bar / " + val);
+	});
+
+	gCSSProperties["grid-area"] = {
+		domProp: "gridArea",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"grid-row-start",
+			"grid-column-start",
+			"grid-row-end",
+			"grid-column-end"
+		],
+		initial_values: [
+			"auto",
+			"auto / auto",
+			"auto / auto / auto",
+			"auto / auto / auto / auto"
+		],
+		other_values: gridAreaOtherValues,
+		invalid_values: gridAreaInvalidValues
 	};
 }
 

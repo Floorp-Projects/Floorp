@@ -648,6 +648,9 @@ protected:
   bool ParseGridLine(nsCSSValue& aValue);
   bool ParseGridAutoPosition();
   bool ParseGridColumnRowStartEnd(nsCSSProperty aPropID);
+  bool ParseGridColumnRow(nsCSSProperty aStartPropID,
+                          nsCSSProperty aEndPropID);
+  bool ParseGridArea();
 
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
@@ -7332,6 +7335,102 @@ CSSParserImpl::ParseGridColumnRowStartEnd(nsCSSProperty aPropID)
   return false;
 }
 
+// If |aFallback| is a List containing a single Ident, set |aValue| to that.
+// Otherwise, set |aValue| to Auto.
+// Used with |aFallback| from ParseGridLine()
+static void
+HandleGridLineFallback(const nsCSSValue& aFallback, nsCSSValue& aValue)
+{
+  if (aFallback.GetUnit() == eCSSUnit_List &&
+      aFallback.GetListValue()->mValue.GetUnit() == eCSSUnit_Ident &&
+      !aFallback.GetListValue()->mNext) {
+    aValue = aFallback;
+  } else {
+    aValue.SetAutoValue();
+  }
+}
+
+bool
+CSSParserImpl::ParseGridColumnRow(nsCSSProperty aStartPropID,
+                                  nsCSSProperty aEndPropID)
+{
+  nsCSSValue value;
+  nsCSSValue secondValue;
+  if (ParseVariant(value, VARIANT_INHERIT, nullptr)) {
+    AppendValue(aStartPropID, value);
+    AppendValue(aEndPropID, value);
+    return true;
+  }
+
+  if (!ParseGridLine(value)) {
+    return false;
+  }
+  if (GetToken(true)) {
+    if (mToken.IsSymbol('/')) {
+      if (ParseGridLine(secondValue)) {
+        AppendValue(aStartPropID, value);
+        AppendValue(aEndPropID, secondValue);
+        return true;
+      } else {
+        return false;
+      }
+    }
+    UngetToken();
+  }
+
+  // A single <custom-ident> is repeated to both properties,
+  // anything else sets the grid-{column,row}-end property to 'auto'.
+  HandleGridLineFallback(value, secondValue);
+
+  AppendValue(aStartPropID, value);
+  AppendValue(aEndPropID, secondValue);
+  return true;
+}
+
+bool
+CSSParserImpl::ParseGridArea()
+{
+  nsCSSValue values[4];
+  if (ParseVariant(values[0], VARIANT_INHERIT, nullptr)) {
+    AppendValue(eCSSProperty_grid_row_start, values[0]);
+    AppendValue(eCSSProperty_grid_column_start, values[0]);
+    AppendValue(eCSSProperty_grid_row_end, values[0]);
+    AppendValue(eCSSProperty_grid_column_end, values[0]);
+    return true;
+  }
+
+  int32_t i = 0;
+  for (;;) {
+    if (!ParseGridLine(values[i])) {
+      return false;
+    }
+    if (++i == 4 || !GetToken(true)) {
+      break;
+    }
+    if (!mToken.IsSymbol('/')) {
+      UngetToken();
+      break;
+    }
+  }
+
+  MOZ_ASSERT(i >= 1, "should have parsed at least one grid-line (or returned)");
+  if (i < 2) {
+    HandleGridLineFallback(values[0], values[1]);
+  }
+  if (i < 3) {
+    HandleGridLineFallback(values[0], values[2]);
+  }
+  if (i < 4) {
+    HandleGridLineFallback(values[1], values[3]);
+  }
+
+  AppendValue(eCSSProperty_grid_row_start, values[0]);
+  AppendValue(eCSSProperty_grid_column_start, values[1]);
+  AppendValue(eCSSProperty_grid_row_end, values[2]);
+  AppendValue(eCSSProperty_grid_column_end, values[3]);
+  return true;
+}
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -8363,6 +8462,14 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_grid_row_start:
   case eCSSProperty_grid_row_end:
     return ParseGridColumnRowStartEnd(aPropID);
+  case eCSSProperty_grid_column:
+    return ParseGridColumnRow(eCSSProperty_grid_column_start,
+                              eCSSProperty_grid_column_end);
+  case eCSSProperty_grid_row:
+    return ParseGridColumnRow(eCSSProperty_grid_row_start,
+                              eCSSProperty_grid_row_end);
+  case eCSSProperty_grid_area:
+    return ParseGridArea();
   case eCSSProperty_image_region:
     return ParseRect(eCSSProperty_image_region);
   case eCSSProperty_list_style:
