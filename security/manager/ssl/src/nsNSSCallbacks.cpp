@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNSSCallbacks.h"
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsNSSComponent.h"
@@ -1189,7 +1189,7 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
     nsContentUtils::LogSimpleConsoleError(msg, "SSL");
   }
 
-  insanity::pkix::ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
+  mozilla::pkix::ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
 
   /* Set the SSL Status information */
   RefPtr<nsSSLStatus> status(infoObject->SSLStatus());

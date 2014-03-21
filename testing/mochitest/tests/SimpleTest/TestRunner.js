@@ -17,12 +17,15 @@ function contentDispatchEvent(type, data, sync) {
     data = {};
   }
 
-  var element = document.createEvent("datacontainerevent");
-  element.initEvent("contentEvent", true, false);
-  element.setData("sync", sync);
-  element.setData("type", type);
-  element.setData("data", JSON.stringify(data));
-  document.dispatchEvent(element);
+  var event = new CustomEvent("contentEvent", {
+    bubbles: true,
+    detail: {
+      "sync": sync,
+      "type": type,
+      "data": JSON.stringify(data)
+    }
+  });
+  document.dispatchEvent(event);
 }
 
 function contentAsyncEvent(type, data) {

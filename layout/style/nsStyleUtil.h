@@ -37,7 +37,9 @@ public:
   // Append the identifier given by |aIdent| to |aResult|, with
   // appropriate escaping so that it can be reparsed to the same
   // identifier.
-  static void AppendEscapedCSSIdent(const nsAString& aIdent,
+  // Returns false if |aIdent| contains U+0000
+  // Returns true for all other cases
+  static bool AppendEscapedCSSIdent(const nsAString& aIdent,
                                     nsAString& aResult);
 
   // Append a bitmask-valued property's value(s) (space-separated) to aResult.

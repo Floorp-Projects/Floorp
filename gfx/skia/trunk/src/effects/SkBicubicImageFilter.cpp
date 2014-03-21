@@ -18,7 +18,6 @@
 #include "effects/GrBicubicEffect.h"
 #include "GrContext.h"
 #include "GrTexture.h"
-#include "SkImageFilterUtils.h"
 #endif
 
 #define DS(x) SkDoubleToScalar(x)
@@ -83,16 +82,16 @@ inline SkPMColor cubicBlend(const SkScalar c[16], SkScalar t, SkPMColor c0, SkPM
 
 bool SkBicubicImageFilter::onFilterImage(Proxy* proxy,
                                          const SkBitmap& source,
-                                         const SkMatrix& matrix,
+                                         const Context& ctx,
                                          SkBitmap* result,
                                          SkIPoint* offset) const {
     SkBitmap src = source;
     SkIPoint srcOffset = SkIPoint::Make(0, 0);
-    if (getInput(0) && !getInput(0)->filterImage(proxy, source, matrix, &src, &srcOffset)) {
+    if (getInput(0) && !getInput(0)->filterImage(proxy, source, ctx, &src, &srcOffset)) {
         return false;
     }
 
-    if (src.config() != SkBitmap::kARGB_8888_Config) {
+    if (src.colorType() != kPMColor_SkColorType) {
         return false;
     }
 
@@ -169,10 +168,10 @@ bool SkBicubicImageFilter::onFilterImage(Proxy* proxy,
 
 #if SK_SUPPORT_GPU
 
-bool SkBicubicImageFilter::filterImageGPU(Proxy* proxy, const SkBitmap& src, const SkMatrix& ctm,
+bool SkBicubicImageFilter::filterImageGPU(Proxy* proxy, const SkBitmap& src, const Context& ctx,
                                           SkBitmap* result, SkIPoint* offset) const {
-    SkBitmap srcBM;
-    if (!SkImageFilterUtils::GetInputResultGPU(getInput(0), proxy, src, ctm, &srcBM, offset)) {
+    SkBitmap srcBM = src;
+    if (getInput(0) && !getInput(0)->getInputResultGPU(proxy, src, ctx, &srcBM, offset)) {
         return false;
     }
     GrTexture* srcTexture = srcBM.getTexture();
@@ -198,7 +197,8 @@ bool SkBicubicImageFilter::filterImageGPU(Proxy* proxy, const SkBitmap& src, con
     SkRect srcRect;
     srcBM.getBounds(&srcRect);
     context->drawRectToRect(paint, dstRect, srcRect);
-    return SkImageFilterUtils::WrapTexture(dst, desc.fWidth, desc.fHeight, result);
+    WrapTexture(dst, desc.fWidth, desc.fHeight, result);
+    return true;
 }
 #endif
 

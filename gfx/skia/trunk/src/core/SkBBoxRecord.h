@@ -19,8 +19,7 @@
 class SkBBoxRecord : public SkPictureRecord {
 public:
 
-    SkBBoxRecord(uint32_t recordFlags, SkBaseDevice* device)
-            : INHERITED(recordFlags, device) { }
+    SkBBoxRecord(const SkISize& size, uint32_t recordFlags) : INHERITED(size, recordFlags) {}
     virtual ~SkBBoxRecord() { }
 
     /**
@@ -64,6 +63,9 @@ public:
                               const uint16_t indices[], int indexCount,
                               const SkPaint& paint) SK_OVERRIDE;
     virtual void drawPicture(SkPicture& picture) SK_OVERRIDE;
+
+protected:
+    virtual void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) SK_OVERRIDE;
 
 private:
     /**

@@ -3948,6 +3948,7 @@ MOZ_GSTREAMER=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_FMP4=
+MOZ_FFMPEG=
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -5267,9 +5268,26 @@ if test -n "$MOZ_WMF"; then
 fi;
 
 dnl ========================================================
+dnl FFmpeg H264/AAC Decoding Support
+dnl ========================================================
+if test "$OS_TARGET" = "Linux"; then
+  MOZ_FFMPEG=1
+fi
+
+MOZ_ARG_DISABLE_BOOL(ffmpeg,
+[  --disable-ffmpeg         Disable FFmpeg for fragmented H264/AAC decoding],
+    MOZ_FFMPEG=,
+    MOZ_FFMPEG=1
+)
+
+if test -n "$MOZ_FFMPEG"; then
+    AC_DEFINE(MOZ_FFMPEG)
+fi;
+
+dnl ========================================================
 dnl = Built-in fragmented MP4 support.
 dnl ========================================================
-if test -n "$MOZ_WMF"; then
+if test -n "$MOZ_WMF" -o -n "$MOZ_FFMPEG"; then
     dnl Enable fragmented MP4 parser on Windows by default.
     dnl We will also need to enable it on other platforms as we implement
     dnl platform decoder support there too.
@@ -8693,6 +8711,7 @@ AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_OPUS)
 AC_SUBST(MOZ_WEBM)
 AC_SUBST(MOZ_WMF)
+AC_SUBST(MOZ_FFMPEG)
 AC_SUBST(MOZ_FMP4)
 AC_SUBST(MOZ_DIRECTSHOW)
 AC_SUBST(MOZ_MEDIA_PLUGINS)

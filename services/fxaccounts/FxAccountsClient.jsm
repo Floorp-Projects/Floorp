@@ -94,19 +94,21 @@ this.FxAccountsClient.prototype = {
    * @return Promise
    *        Returns a promise that resolves to an object:
    *        {
-   *          uid: the user's unique ID (hex)
-   *          sessionToken: a session token (hex)
-   *          keyFetchToken: a key fetch token (hex)
-   *          verified: flag indicating verification status of the email
    *          authAt: authentication time for the session (seconds since epoch)
    *          email: the primary email for this account
+   *          keyFetchToken: a key fetch token (hex)
+   *          sessionToken: a session token (hex)
+   *          uid: the user's unique ID (hex)
+   *          unwrapBKey: used to unwrap kB, derived locally from the
+   *                      password (not revealed to the FxA server)
+   *          verified: flag indicating verification status of the email
    *        }
    */
   signIn: function signIn(email, password, getKeys=false, retryOK=true) {
     return Credentials.setup(email, password).then((creds) => {
       let data = {
-        email: creds.emailUTF8,
         authPW: CommonUtils.bytesAsHex(creds.authPW),
+        email: creds.emailUTF8,
       };
       let keys = getKeys ? "?keys=true" : "";
 
@@ -115,6 +117,8 @@ this.FxAccountsClient.prototype = {
         // the caller can set its signed-in user state accordingly.
         result => {
           result.email = data.email;
+          result.unwrapBKey = CommonUtils.bytesAsHex(creds.unwrapBKey);
+
           return result;
         },
         error => {

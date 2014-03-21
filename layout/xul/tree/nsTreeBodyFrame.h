@@ -476,7 +476,7 @@ protected:
 #ifdef ACCESSIBILITY
   /**
    * Fires 'treeRowCountChanged' event asynchronously. The event supports
-   * nsIDOMDataContainerEvent interface that is used to expose the following
+   * nsIDOMCustomEvent interface that is used to expose the following
    * information structures.
    *
    * @param aIndex  the row index rows are added/removed from
@@ -487,7 +487,7 @@ protected:
 
   /**
    * Fires 'treeInvalidated' event asynchronously. The event supports
-   * nsIDOMDataContainerEvent interface that is used to expose the information
+   * nsIDOMCustomEvent interface that is used to expose the information
    * structures described by method arguments.
    *
    * @param aStartRow  the start index of invalidated rows, -1 means that

@@ -3,7 +3,7 @@
     //
     (function(){
         var g = {};
-        x = Float32Array()
+        x = new Float32Array()
         Function('g', "g.o = x[1]")(g);
     })();
     //
@@ -33,9 +33,9 @@
     //
     (function() {
         x = y = {};
-        z = Float32Array(6)
+        z = new Float32Array(6)
         for (c in this) {
-            Array.prototype.unshift.call(x, ArrayBuffer())
+            Array.prototype.unshift.call(x, new ArrayBuffer())
         }
         Array.prototype.sort.call(x, (function (j) {
             y.s = z[2]

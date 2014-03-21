@@ -64,6 +64,9 @@ const char* SkDrawCommand::GetCommandString(DrawType type) {
         case BEGIN_COMMENT_GROUP: return "BeginCommentGroup";
         case COMMENT: return "Comment";
         case END_COMMENT_GROUP: return "EndCommentGroup";
+        case DRAW_DRRECT: return "Draw DRRect";
+        case PUSH_CULL: return "PushCull";
+        case POP_CULL: return "PopCull";
         default:
             SkDebugf("DrawType error 0x%08x\n", type);
             SkASSERT(0);
@@ -167,6 +170,22 @@ void render_rrect(SkCanvas* canvas, const SkRRect& rrect) {
     p.setStyle(SkPaint::kStroke_Style);
 
     canvas->drawRRect(rrect, p);
+    canvas->restore();
+}
+
+void render_drrect(SkCanvas* canvas, const SkRRect& outer, const SkRRect& inner) {
+    canvas->clear(0xFFFFFFFF);
+    canvas->save();
+
+    const SkRect& bounds = outer.getBounds();
+
+    xlate_and_scale_to_bounds(canvas, bounds);
+
+    SkPaint p;
+    p.setColor(SK_ColorBLACK);
+    p.setStyle(SkPaint::kStroke_Style);
+
+    canvas->drawDRRect(outer, inner, p);
     canvas->restore();
 }
 
@@ -634,6 +653,28 @@ bool SkDrawRRectCommand::render(SkCanvas* canvas) const {
     return true;
 }
 
+SkDrawDRRectCommand::SkDrawDRRectCommand(const SkRRect& outer,
+                                         const SkRRect& inner,
+                                         const SkPaint& paint) {
+    fOuter = outer;
+    fInner = inner;
+    fPaint = paint;
+    fDrawType = DRAW_DRRECT;
+
+    fInfo.push(SkObjectParser::RRectToString(outer));
+    fInfo.push(SkObjectParser::RRectToString(inner));
+    fInfo.push(SkObjectParser::PaintToString(paint));
+}
+
+void SkDrawDRRectCommand::execute(SkCanvas* canvas) {
+    canvas->drawDRRect(fOuter, fInner, fPaint);
+}
+
+bool SkDrawDRRectCommand::render(SkCanvas* canvas) const {
+    render_drrect(canvas, fOuter, fInner);
+    return true;
+}
+
 SkDrawSpriteCommand::SkDrawSpriteCommand(const SkBitmap& bitmap, int left, int top,
                                          const SkPaint* paint) {
     fBitmap = bitmap;
@@ -844,6 +885,10 @@ void SkSaveLayerCommand::execute(SkCanvas* canvas) {
                       fFlags);
 }
 
+void SkSaveLayerCommand::vizExecute(SkCanvas* canvas) {
+    canvas->save();
+}
+
 void SkSaveLayerCommand::trackSaveState(int* state) {
     (*state)++;
 }
@@ -896,4 +941,31 @@ SkTranslateCommand::SkTranslateCommand(SkScalar dx, SkScalar dy) {
 
 void SkTranslateCommand::execute(SkCanvas* canvas) {
     canvas->translate(fDx, fDy);
+}
+
+SkPushCullCommand::SkPushCullCommand(const SkRect& cullRect)
+    : fCullRect(cullRect) {
+    fDrawType = PUSH_CULL;
+    fInfo.push(SkObjectParser::RectToString(cullRect));
+}
+
+void SkPushCullCommand::execute(SkCanvas* canvas) {
+    canvas->pushCull(fCullRect);
+}
+
+void SkPushCullCommand::vizExecute(SkCanvas* canvas) {
+    canvas->pushCull(fCullRect);
+
+    SkPaint p;
+    p.setColor(SK_ColorCYAN);
+    p.setStyle(SkPaint::kStroke_Style);
+    canvas->drawRect(fCullRect, p);
+}
+
+SkPopCullCommand::SkPopCullCommand() {
+    fDrawType = POP_CULL;
+}
+
+void SkPopCullCommand::execute(SkCanvas* canvas) {
+    canvas->popCull();
 }

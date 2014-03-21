@@ -58,17 +58,15 @@ void SkDropShadowImageFilter::flatten(SkWriteBuffer& buffer) const
     buffer.writeColor(fColor);
 }
 
-bool SkDropShadowImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source, const SkMatrix& matrix, SkBitmap* result, SkIPoint* offset) const
+bool SkDropShadowImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source, const Context& ctx, SkBitmap* result, SkIPoint* offset) const
 {
     SkBitmap src = source;
     SkIPoint srcOffset = SkIPoint::Make(0, 0);
-    if (getInput(0) && !getInput(0)->filterImage(proxy, source, matrix, &src, &srcOffset))
+    if (getInput(0) && !getInput(0)->filterImage(proxy, source, ctx, &src, &srcOffset))
         return false;
 
     SkIRect bounds;
-    src.getBounds(&bounds);
-    bounds.offset(srcOffset);
-    if (!this->applyCropRect(&bounds, matrix)) {
+    if (!this->applyCropRect(ctx, src, srcOffset, &bounds)) {
         return false;
     }
 
@@ -79,18 +77,19 @@ bool SkDropShadowImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source
     SkCanvas canvas(device.get());
 
     SkVector sigma, localSigma = SkVector::Make(fSigmaX, fSigmaY);
-    matrix.mapVectors(&sigma, &localSigma, 1);
+    ctx.ctm().mapVectors(&sigma, &localSigma, 1);
     sigma.fX = SkMaxScalar(0, sigma.fX);
     sigma.fY = SkMaxScalar(0, sigma.fY);
-    SkAutoTUnref<SkImageFilter> blurFilter(new SkBlurImageFilter(sigma.fX, sigma.fY));
+    SkAutoTUnref<SkImageFilter> blurFilter(SkBlurImageFilter::Create(sigma.fX, sigma.fY));
     SkAutoTUnref<SkColorFilter> colorFilter(SkColorFilter::CreateModeFilter(fColor, SkXfermode::kSrcIn_Mode));
     SkPaint paint;
     paint.setImageFilter(blurFilter.get());
     paint.setColorFilter(colorFilter.get());
     paint.setXfermodeMode(SkXfermode::kSrcOver_Mode);
     SkVector offsetVec, localOffsetVec = SkVector::Make(fDx, fDy);
-    matrix.mapVectors(&offsetVec, &localOffsetVec, 1);
-    canvas.translate(-SkIntToScalar(bounds.fLeft), -SkIntToScalar(bounds.fTop));
+    ctx.ctm().mapVectors(&offsetVec, &localOffsetVec, 1);
+    canvas.translate(SkIntToScalar(srcOffset.fX - bounds.fLeft),
+                     SkIntToScalar(srcOffset.fY - bounds.fTop));
     canvas.drawBitmap(src, offsetVec.fX, offsetVec.fY, &paint);
     canvas.drawBitmap(src, 0, 0);
     *result = device->accessBitmap(false);

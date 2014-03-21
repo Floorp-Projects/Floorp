@@ -24,8 +24,8 @@ public:
      *  Bits specifies which aspects of the layer's paint should replace the
      *  corresponding aspects on the draw's paint.
      *  kEntirePaint_Bits means use the layer's paint completely.
-     *  0 means ignore the layer's paint... except that LayerInfo's fFlagsMask
-     *  and fColorMode are always applied.
+     *  0 means ignore the layer's paint... except for fColorMode, which is
+     *  always applied.
      */
     enum Bits {
         kStyle_Bit      = 1 << 0,   //!< use this layer's Style/stroke settings
@@ -40,8 +40,7 @@ public:
          *  Use the layer's paint entirely, with these exceptions:
          *  - We never override the draw's paint's text_encoding, since that is
          *    used to interpret the text/len parameters in draw[Pos]Text.
-         *  - Flags and Color are always computed using the LayerInfo's
-         *    fFlagsMask and fColorMode.
+         *  - Color is always computed using the LayerInfo's fColorMode.
          */
         kEntirePaint_Bits = -1
 
@@ -50,12 +49,6 @@ public:
 
     /**
      *  Info for how to apply the layer's paint and offset.
-     *
-     *  fFlagsMask selects which flags in the layer's paint should be applied.
-     *      result = (draw-flags & ~fFlagsMask) | (layer-flags & fFlagsMask)
-     *  In the extreme:
-     *      If fFlagsMask is 0, we ignore all of the layer's flags
-     *      If fFlagsMask is -1, we use all of the layer's flags
      *
      *  fColorMode controls how we compute the final color for the layer:
      *      The layer's paint's color is treated as the SRC
@@ -66,7 +59,6 @@ public:
      *      kDst_Mode: to just keep the draw's color, ignoring the layer's
      */
     struct SK_API LayerInfo {
-        uint32_t            fFlagsMask; // SkPaint::Flags
         BitFlags            fPaintBits;
         SkXfermode::Mode    fColorMode;
         SkVector            fOffset;
@@ -102,15 +94,17 @@ public:
     /// Similar to addLayer, but adds a layer to the top.
     SkPaint* addLayerOnTop(const LayerInfo&);
 
-    // overrides from SkDrawLooper
-    virtual void init(SkCanvas*);
-    virtual bool next(SkCanvas*, SkPaint* paint);
+    virtual SkDrawLooper::Context* createContext(SkCanvas*, void* storage) const SK_OVERRIDE;
 
-    SK_DEVELOPER_TO_STRING()
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkLayerDrawLooper)
+    virtual size_t contextSize() const SK_OVERRIDE { return sizeof(LayerDrawLooperContext); }
+
+    SK_TO_STRING_OVERRIDE()
+
+    /// Implements Flattenable.
+    virtual Factory getFactory() const SK_OVERRIDE { return CreateProc; }
+    static SkFlattenable* CreateProc(SkReadBuffer& buffer);
 
 protected:
-    SkLayerDrawLooper(SkReadBuffer&);
     virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
 
 private:
@@ -124,9 +118,18 @@ private:
     int     fCount;
 
     // state-machine during the init/next cycle
-    Rec* fCurrRec;
+    class LayerDrawLooperContext : public SkDrawLooper::Context {
+    public:
+        explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
 
-    static void ApplyInfo(SkPaint* dst, const SkPaint& src, const LayerInfo&);
+    protected:
+        virtual bool next(SkCanvas*, SkPaint* paint) SK_OVERRIDE;
+
+    private:
+        Rec* fCurrRec;
+
+        static void ApplyInfo(SkPaint* dst, const SkPaint& src, const LayerInfo&);
+    };
 
     class MyRegistrar : public SkFlattenable::Registrar {
     public:
@@ -134,6 +137,44 @@ private:
     };
 
     typedef SkDrawLooper INHERITED;
+
+public:
+    class SK_API Builder {
+    public:
+        Builder();
+        ~Builder();
+
+        /**
+         *  Call for each layer you want to add (from top to bottom).
+         *  This returns a paint you can modify, but that ptr is only valid until
+         *  the next call made to addLayer().
+         */
+        SkPaint* addLayer(const LayerInfo&);
+
+        /**
+         *  This layer will draw with the original paint, at the specified offset
+         */
+        void addLayer(SkScalar dx, SkScalar dy);
+
+        /**
+         *  This layer will with the original paint and no offset.
+         */
+        void addLayer() { this->addLayer(0, 0); }
+
+        /// Similar to addLayer, but adds a layer to the top.
+        SkPaint* addLayerOnTop(const LayerInfo&);
+
+        /**
+          * Pass list of layers on to newly built looper and return it. This will
+          * also reset the builder, so it can be used to build another looper.
+          */
+        SkLayerDrawLooper* detachLooper();
+
+    private:
+        Rec* fRecs;
+        Rec* fTopRec;
+        int  fCount;
+    };
 };
 
 #endif

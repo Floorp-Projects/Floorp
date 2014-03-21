@@ -5,7 +5,7 @@
 //
 try {
     (function () {
-        __proto__ = Uint32Array()
+        __proto__ = new Uint32Array()
     }())
 } catch (e) {}(function () {
 })()
