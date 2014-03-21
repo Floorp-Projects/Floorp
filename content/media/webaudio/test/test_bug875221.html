@@ -150,7 +150,7 @@ try { o9.connect(o4); } catch(e) {  }
 try { o1.listener.speedOfSound = 1; } catch(e) {  }
 try { o15.disconnect() } catch(e) {  }
 try { o11.gain.exponentialRampToValueAtTime(0, 15) } catch(e) {  }
-try { o15.curve = Float32Array(15); } catch(e) {  }
+try { o15.curve = new Float32Array(15); } catch(e) {  }
 try { o4.listener.setVelocity(1, 1, 1) } catch(e) {  }
 try { o14.connect(o6, 0, 0) } catch(e) {  }
 try { o2.connect(o9); } catch(e) {  }
@@ -193,7 +193,7 @@ try { o9.disconnect() } catch(e) {  }
 try { o4.listener.speedOfSound = 1; } catch(e) {  }
 try { o2.connect(o7); } catch(e) {  }
 try { o7.connect(o4); } catch(e) {  }
-try { o11.gain.setValueCurveAtTime(Float32Array(3), 2048, 3) } catch(e) {  }
+try { o11.gain.setValueCurveAtTime(new Float32Array(3), 2048, 3) } catch(e) {  }
 try { o13.gain.value = 8; } catch(e) {  }
 try { o2.connect(o7); } catch(e) {  }
 try { o9.connect(o4); } catch(e) {  }

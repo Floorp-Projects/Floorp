@@ -1558,12 +1558,12 @@ function test() {
     assertEq(view.getUint8(0), 1);
 
     // Test WebIDL-specific class and prototype class names
-    assertEq(Object.prototype.toString.apply(Uint8Array(0)), "[object Uint8Array]");
-    assertEq(Object.prototype.toString.apply(Float32Array(0)), "[object Float32Array]");
+    assertEq(Object.prototype.toString.apply(new Uint8Array(0)), "[object Uint8Array]");
+    assertEq(Object.prototype.toString.apply(new Float32Array(0)), "[object Float32Array]");
     assertEq(Object.prototype.toString.apply(Uint8Array.prototype), "[object Uint8ArrayPrototype]");
     assertEq(Object.prototype.toString.apply(Float32Array.prototype), "[object Float32ArrayPrototype]");
-    assertEq(Object.prototype.toString.apply(ArrayBuffer()), "[object ArrayBuffer]");
-    assertEq(Object.prototype.toString.apply(DataView(view.buffer)), "[object DataView]");
+    assertEq(Object.prototype.toString.apply(new ArrayBuffer()), "[object ArrayBuffer]");
+    assertEq(Object.prototype.toString.apply(new DataView(view.buffer)), "[object DataView]");
     assertEq(Object.prototype.toString.apply(DataView.prototype), "[object DataViewPrototype]");
 
     // Accessing DataView fields on DataView.prototype should crash

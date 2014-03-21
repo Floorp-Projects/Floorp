@@ -49,7 +49,7 @@ public:
     MOZ_COUNT_CTOR(MP4Stream);
     MOZ_ASSERT(aResource);
   }
-  ~MP4Stream() {
+  virtual ~MP4Stream() {
     MOZ_COUNT_DTOR(MP4Stream);
   }
 
@@ -83,10 +83,10 @@ private:
 
 MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder)
-  , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
   , mAudio("MP4 audio decoder data", Preferences::GetUint("media.mp4-audio-decode-ahead", 2))
   , mVideo("MP4 video decoder data", Preferences::GetUint("media.mp4-video-decode-ahead", 2))
   , mLastReportedNumDecodedFrames(0)
+  , mLayersBackendType(layers::LayersBackend::LAYERS_NONE)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   MOZ_COUNT_CTOR(MP4Reader);
@@ -371,6 +371,7 @@ MP4Reader::Decode(TrackType aTrack)
   return true;
 }
 
+#ifdef LOG_SAMPLE_DECODE
 static const char*
 TrackTypeToStr(TrackType aTrack)
 {
@@ -381,6 +382,7 @@ TrackTypeToStr(TrackType aTrack)
     default: return "Unknown";
   }
 }
+#endif
 
 void
 MP4Reader::Output(mp4_demuxer::TrackType aTrack, MediaData* aSample)

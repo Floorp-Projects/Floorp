@@ -376,7 +376,7 @@ JSObject::setSingletonType(js::ExclusiveContext *cx, js::HandleObject obj)
     JS_ASSERT_IF(cx->isJSContext(),
                  !IsInsideNursery(cx->asJSContext()->runtime(), obj.get()));
 
-    js::types::TypeObject *type = cx->getLazyType(obj->getClass(), obj->getTaggedProto());
+    js::types::TypeObject *type = cx->getSingletonType(obj->getClass(), obj->getTaggedProto());
     if (!type)
         return false;
 

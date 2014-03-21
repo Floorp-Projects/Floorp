@@ -60,6 +60,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'GeometryUtils.h',
     'PaintTracker.h',
 ]
 
@@ -69,6 +70,7 @@ UNIFIED_SOURCES += [
     'DisplayListClipState.cpp',
     'FrameLayerBuilder.cpp',
     'FramePropertyTable.cpp',
+    'GeometryUtils.cpp',
     'MaskLayerImageCache.cpp',
     'nsCaret.cpp',
     'nsCounterManager.cpp',

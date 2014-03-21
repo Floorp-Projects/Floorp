@@ -14,7 +14,7 @@
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
-#include "nsIDOMDataContainerEvent.h"
+#include "nsIDOMCustomEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLAppletElement.h"
@@ -318,63 +318,52 @@ nsPluginCrashedEvent::Run()
 
   ErrorResult rv;
   nsRefPtr<Event> event =
-    doc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"), rv);
-  nsCOMPtr<nsIDOMDataContainerEvent> containerEvent(do_QueryObject(event));
-  if (!containerEvent) {
+    doc->CreateEvent(NS_LITERAL_STRING("customevent"), rv);
+  nsCOMPtr<nsIDOMCustomEvent> customEvent(do_QueryObject(event));
+  if (!customEvent) {
     NS_WARNING("Couldn't QI event for PluginCrashed event!");
     return NS_OK;
   }
 
-  event->InitEvent(NS_LITERAL_STRING("PluginCrashed"), true, true);
+  nsCOMPtr<nsIWritableVariant> variant;
+  variant = do_CreateInstance("@mozilla.org/variant;1");
+  if (!variant) {
+    NS_WARNING("Couldn't create detail variant for PluginCrashed event!");
+    return NS_OK;
+  }
+  customEvent->InitCustomEvent(NS_LITERAL_STRING("PluginCrashed"),
+                               true, true, variant);
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
 
-  nsCOMPtr<nsIWritableVariant> variant;
+  nsCOMPtr<nsIWritablePropertyBag2> propBag;
+  propBag = do_CreateInstance("@mozilla.org/hash-property-bag;1");
+  if (!propBag) {
+    NS_WARNING("Couldn't create a property bag for PluginCrashed event!");
+    return NS_OK;
+  }
 
   // add a "pluginDumpID" property to this event
-  variant = do_CreateInstance("@mozilla.org/variant;1");
-  if (!variant) {
-    NS_WARNING("Couldn't create pluginDumpID variant for PluginCrashed event!");
-    return NS_OK;
-  }
-  variant->SetAsAString(mPluginDumpID);
-  containerEvent->SetData(NS_LITERAL_STRING("pluginDumpID"), variant);
+  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginDumpID"),
+                                mPluginDumpID);
 
   // add a "browserDumpID" property to this event
-  variant = do_CreateInstance("@mozilla.org/variant;1");
-  if (!variant) {
-    NS_WARNING("Couldn't create browserDumpID variant for PluginCrashed event!");
-    return NS_OK;
-  }
-  variant->SetAsAString(mBrowserDumpID);
-  containerEvent->SetData(NS_LITERAL_STRING("browserDumpID"), variant);
+  propBag->SetPropertyAsAString(NS_LITERAL_STRING("browserDumpID"),
+                                mBrowserDumpID);
 
   // add a "pluginName" property to this event
-  variant = do_CreateInstance("@mozilla.org/variant;1");
-  if (!variant) {
-    NS_WARNING("Couldn't create pluginName variant for PluginCrashed event!");
-    return NS_OK;
-  }
-  variant->SetAsAString(mPluginName);
-  containerEvent->SetData(NS_LITERAL_STRING("pluginName"), variant);
+  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginName"),
+                                mPluginName);
 
   // add a "pluginFilename" property to this event
-  variant = do_CreateInstance("@mozilla.org/variant;1");
-  if (!variant) {
-    NS_WARNING("Couldn't create pluginFilename variant for PluginCrashed event!");
-    return NS_OK;
-  }
-  variant->SetAsAString(mPluginFilename);
-  containerEvent->SetData(NS_LITERAL_STRING("pluginFilename"), variant);
+  propBag->SetPropertyAsAString(NS_LITERAL_STRING("pluginFilename"),
+                                mPluginFilename);
 
   // add a "submittedCrashReport" property to this event
-  variant = do_CreateInstance("@mozilla.org/variant;1");
-  if (!variant) {
-    NS_WARNING("Couldn't create crashSubmit variant for PluginCrashed event!");
-    return NS_OK;
-  }
-  variant->SetAsBool(mSubmittedCrashReport);
-  containerEvent->SetData(NS_LITERAL_STRING("submittedCrashReport"), variant);
+  propBag->SetPropertyAsBool(NS_LITERAL_STRING("submittedCrashReport"),
+                             mSubmittedCrashReport);
+
+  variant->SetAsISupports(propBag);
 
   EventDispatcher::DispatchDOMEvent(mContent, nullptr, event, nullptr, nullptr);
   return NS_OK;

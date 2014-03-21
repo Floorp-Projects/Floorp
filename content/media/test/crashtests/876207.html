@@ -21,10 +21,10 @@ try { o7.channelInterpretation = 'speakers'; } catch(e) { }
 try { o1.destination.channelInterpretation = 'speakers'; } catch(e) { }
 try { o5.connect(o1.destination, 1, 1) } catch(e) { }
 try { o1.listener.setOrientation(0, 1073741824, 1073741824, 4194304, 1, 0) } catch(e) { }
-try { o4.curve = Float32Array(127); } catch(e) { }
-try { o6.getByteFrequencyData(Uint8Array(12)) } catch(e) { }
+try { o4.curve = new Float32Array(127); } catch(e) { }
+try { o6.getByteFrequencyData(new Uint8Array(12)) } catch(e) { }
 try { o6.disconnect() } catch(e) { }
 try { o1.destination.channelCount = 33554432; } catch(e) { }
 try { o7.playbackRate.setTargetAtTime(0, 8388608, 1) } catch(e) { }
-try { o6.getByteTimeDomainData(Uint8Array(12)) } catch(e) { }
+try { o6.getByteTimeDomainData(new Uint8Array(12)) } catch(e) { }
 </script>

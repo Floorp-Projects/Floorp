@@ -27,7 +27,7 @@ struct Box {
 class StreamReader {
  public:
   StreamReader(Stream* stream, int64_t offset, int64_t size)
-    : stream_(stream), start_(offset), pos_(0), size_(size) {}
+    : start_(offset), size_(size), pos_(0), stream_(stream) {}
 
   bool HasBytes(int count) { return (pos() + count <= size()); }
 

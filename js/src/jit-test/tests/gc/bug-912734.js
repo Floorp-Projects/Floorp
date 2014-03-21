@@ -14,7 +14,7 @@ Object.create(a2);
         e: true,
         e: RegExp(""),
         get: function() {
-            return Uint32Array(this.a2)
+            return new Uint32Array(this.a2)
         }
     })
 })()

@@ -19,7 +19,7 @@ struct GrGLInterface;
  * queried. It supports both glGetString- and glGetStringi-style extension string APIs and will
  * use the latter if it is available.
  */
-class GrGLExtensions {
+class SK_API GrGLExtensions {
 public:
     GrGLExtensions() : fInitialized(false), fStrings(SkNEW(SkTArray<SkString>)) {}
 
@@ -53,6 +53,11 @@ public:
      * Removes an extension if present. Returns true if the extension was present before the call.
      */
     bool remove(const char[]);
+
+    /**
+     * Adds an extension to list
+     */
+    void add(const char[]);
 
     void reset() { fStrings->reset(); }
 

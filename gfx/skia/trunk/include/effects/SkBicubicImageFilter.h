@@ -20,30 +20,30 @@
 
 class SK_API SkBicubicImageFilter : public SkImageFilter {
 public:
+    virtual ~SkBicubicImageFilter();
+
+    static SkBicubicImageFilter* CreateMitchell(const SkSize& scale, SkImageFilter* input = NULL);
+
+    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBicubicImageFilter)
+
+protected:
     /** Construct a (scaling-only) bicubic resampling image filter.
         @param scale        How much to scale the image.
         @param coefficients The 16 coefficients of the bicubic matrix.
         @param input        The input image filter.  If NULL, the src bitmap
                             passed to filterImage() is used instead.
     */
-
     SkBicubicImageFilter(const SkSize& scale, const SkScalar coefficients[16],
                          SkImageFilter* input = NULL);
-    static SkBicubicImageFilter* CreateMitchell(const SkSize& scale, SkImageFilter* input = NULL);
-    virtual ~SkBicubicImageFilter();
-
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkBicubicImageFilter)
-
-protected:
     SkBicubicImageFilter(SkReadBuffer& buffer);
     virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
 
-    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const SkMatrix&,
+    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
                                SkBitmap* result, SkIPoint* loc) const SK_OVERRIDE;
 
 #if SK_SUPPORT_GPU
     virtual bool canFilterImageGPU() const SK_OVERRIDE { return true; }
-    virtual bool filterImageGPU(Proxy* proxy, const SkBitmap& src, const SkMatrix& ctm,
+    virtual bool filterImageGPU(Proxy* proxy, const SkBitmap& src, const Context& ctx,
                                 SkBitmap* result, SkIPoint* offset) const SK_OVERRIDE;
 #endif
 
