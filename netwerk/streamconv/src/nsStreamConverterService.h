@@ -14,7 +14,7 @@ class nsObjectHashtable;
 class nsCString;
 
 class nsStreamConverterService : public nsIStreamConverterService {
-public:    
+public:
     /////////////////////////////////////////////////////
     // nsISupports methods
     NS_DECL_ISUPPORTS
