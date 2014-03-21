@@ -136,26 +136,6 @@
     border-right-style: none !important;
   }
 
-  #main-window[darkwindowframe="true"] #toolbar-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive),
-  #main-window[darkwindowframe="true"] #TabsToolbar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
-    color: white;
-  }
-
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme):not(:-moz-window-inactive),
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) #bookmarks-menu-button:not(:-moz-lwtheme) > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-window-inactive) {
-    list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
-  }
-
-  #main-window[darkwindowframe="true"] .tabs-newtab-button:not(:-moz-lwtheme):not(:-moz-window-inactive),
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) > #new-tab-button:not(:-moz-lwtheme):not(:-moz-window-inactive),
-  #main-window[darkwindowframe="true"] :-moz-any(#toolbar-menubar, #TabsToolbar) > toolbarpaletteitem > #new-tab-button:not(:-moz-lwtheme):not(:-moz-window-inactive) {
-    list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
-  }
-
-  #main-window[darkwindowframe="true"] .tab-close-button:not(:-moz-any(:hover, [selected="true"], :-moz-lwtheme, :-moz-window-inactive)) {
-    -moz-image-region: rect(0, 64px, 16px, 48px);
-  }
-
   #toolbar-menubar:not(:-moz-lwtheme) {
     text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
@@ -215,7 +195,6 @@
 
   #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
     background-color: rgba(255,255,255,.5);
-    color: black;
   }
 
   @media (-moz-os-version: windows-vista),
