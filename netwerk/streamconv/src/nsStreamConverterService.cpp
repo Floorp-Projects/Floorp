@@ -83,14 +83,11 @@ NS_IMPL_ISUPPORTS1(nsStreamConverterService, nsIStreamConverterService)
 ////////////////////////////////////////////////////////////
 // nsStreamConverterService methods
 nsStreamConverterService::nsStreamConverterService()
-  : mAdjacencyList (new nsObjectHashtable(nullptr, nullptr,
-                                          DeleteAdjacencyEntry, nullptr))
+  : mAdjacencyList(nullptr, nullptr, DeleteAdjacencyEntry, nullptr)
 {
 }
 
 nsStreamConverterService::~nsStreamConverterService() {
-    NS_ASSERTION(mAdjacencyList, "init wasn't called, or the retval was ignored");
-    delete mAdjacencyList;
 }
 
 // Builds the graph represented as an adjacency list (and built up in
@@ -163,19 +160,19 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     // each MIME-type is represented as a key in our hashtable.
 
     nsCStringKey fromKey(fromStr);
-    SCTableData *fromEdges = (SCTableData*)mAdjacencyList->Get(&fromKey);
+    SCTableData *fromEdges = (SCTableData*)mAdjacencyList.Get(&fromKey);
     if (!fromEdges) {
         // There is no fromStr vertex, create one.
         SCTableData *data = new SCTableData();
-        mAdjacencyList->Put(&fromKey, data);
+        mAdjacencyList.Put(&fromKey, data);
         fromEdges = data;
     }
 
     nsCStringKey toKey(toStr);
-    if (!mAdjacencyList->Get(&toKey)) {
+    if (!mAdjacencyList.Get(&toKey)) {
         // There is no toStr vertex, create one.
         SCTableData *data = new SCTableData();
-        mAdjacencyList->Put(&toKey, data);
+        mAdjacencyList.Put(&toKey, data);
     }
 
     // Now we know the FROM and TO types are represented as keys in the hashtable.
@@ -268,12 +265,12 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
 
     // walk the graph in search of the appropriate converter.
 
-    int32_t vertexCount = mAdjacencyList->Count();
+    int32_t vertexCount = mAdjacencyList.Count();
     if (0 >= vertexCount) return NS_ERROR_FAILURE;
 
     // Create a corresponding color table for each vertex in the graph.
     nsObjectHashtable lBFSTable(nullptr, nullptr, DeleteBFSEntry, nullptr);
-    mAdjacencyList->Enumerate(InitBFSTable, &lBFSTable);
+    mAdjacencyList.Enumerate(InitBFSTable, &lBFSTable);
 
     NS_ASSERTION(lBFSTable.Count() == vertexCount, "strmconv BFS table init problem");
 
@@ -302,7 +299,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
     grayQ.Push(source);
     while (0 < grayQ.GetSize()) {
         nsCStringKey *currentHead = (nsCStringKey*)grayQ.PeekFront();
-        SCTableData *data2 = (SCTableData*)mAdjacencyList->Get(currentHead);
+        SCTableData *data2 = (SCTableData*)mAdjacencyList.Get(currentHead);
         if (!data2) return NS_ERROR_FAILURE;
 
         // Get the state of the current head to calculate the distance of each
