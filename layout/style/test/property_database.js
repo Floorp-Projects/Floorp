@@ -4978,6 +4978,45 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 		]
 	};
 
+	gCSSProperties["grid"] = {
+		domProp: "grid",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"grid-template-areas",
+			"grid-template-columns",
+			"grid-template-rows",
+			"grid-auto-flow",
+			"grid-auto-columns",
+			"grid-auto-rows",
+		],
+		initial_values: [
+			"none",
+			"none / none",
+			"none auto",
+			"none auto / auto",
+		],
+		other_values: [
+			"row",
+			"none 40px",
+			"column dense auto",
+			"dense row minmax(min-content, 2fr)",
+			"row 40px / 100px",
+		].concat(
+			gCSSProperties["grid-template"].other_values,
+			gCSSProperties["grid-auto-flow"].other_values
+		),
+		invalid_values: [
+			"row column 40px",
+			"row -20px",
+			"row 200ms",
+			"row 40px 100px",
+		].concat(
+			gCSSProperties["grid-template"].invalid_values,
+			gCSSProperties["grid-auto-flow"].invalid_values
+		)
+	};
+
 	var gridLineOtherValues = [
 		"foo",
 		"2",
