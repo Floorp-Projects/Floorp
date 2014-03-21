@@ -337,6 +337,10 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
+.close-icon:-moz-system-metric(windows-classic):not(:-moz-lwtheme):not(:hover):not([selected=true]) {
+  -moz-image-region: rect(0, 64px, 16px, 48px);
+}
+
 %ifdef XP_WIN
 @media (-moz-windows-theme: luna-blue) {
   .close-icon {
