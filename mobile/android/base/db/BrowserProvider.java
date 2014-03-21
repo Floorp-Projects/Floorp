@@ -1317,7 +1317,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // require the transaction to be upgraded from a reader to a writer.
         final int updated = updateBookmarks(uri, values, selection, selectionArgs);
         try {
-            cleanUpSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
+            cleanUpSomeDeletedRecords(uri, TABLE_BOOKMARKS);
         } catch (Exception e) {
             // We don't care.
             Log.e(LOGTAG, "Unable to clean up deleted bookmark records: ", e);
