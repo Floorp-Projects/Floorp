@@ -21,37 +21,7 @@
   }
 }
 
-@media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
-       (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
-  #navigator-toolbox > toolbar:not(:-moz-lwtheme),
-  #browser-bottombox:not(:-moz-lwtheme),
-  .browserContainer > findbar {
-    background-color: @customToolbarColor@;
-  }
-
-  .tab-background-middle[selected=true]:not(:-moz-lwtheme) {
-    background-color: @customToolbarColor@;
-  }
-
-  #navigator-toolbox:not(:-moz-lwtheme)::after {
-    background-color: #aabccf;
-  }
-
-  #urlbar:not(:-moz-lwtheme),
-  .searchbar-textbox:not(:-moz-lwtheme) {
-    border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
-  }
-
-  #urlbar:not(:-moz-lwtheme):not([focused]):hover,
-  .searchbar-textbox:not(:-moz-lwtheme):not([focused]):hover {
-    border-color: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
-  }
-
-  #urlbar:not(:-moz-lwtheme)[focused],
-  .searchbar-textbox:not(:-moz-lwtheme)[focused] {
-    border-color: hsla(206,100%,60%,.65) hsla(206,100%,55%,.65) hsla(206,100%,50%,.65);
-  }
-
+@media (-moz-windows-default-theme) {
   .sidebar-header,
   #sidebar-header {
     -moz-appearance: none;
@@ -81,6 +51,38 @@
     -moz-border-end: none;
     -moz-margin-start: 0;
     -moz-margin-end: -3px;
+  }
+}
+
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
+       (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
+  #navigator-toolbox > toolbar:not(:-moz-lwtheme),
+  #browser-bottombox:not(:-moz-lwtheme),
+  .browserContainer > findbar {
+    background-color: @customToolbarColor@;
+  }
+
+  .tab-background-middle[selected=true]:not(:-moz-lwtheme) {
+    background-color: @customToolbarColor@;
+  }
+
+  #navigator-toolbox:not(:-moz-lwtheme)::after {
+    background-color: #aabccf;
+  }
+
+  #urlbar:not(:-moz-lwtheme),
+  .searchbar-textbox:not(:-moz-lwtheme) {
+    border-color: hsla(210,54%,20%,.25) hsla(210,54%,20%,.27) hsla(210,54%,20%,.3);
+  }
+
+  #urlbar:not(:-moz-lwtheme):not([focused]):hover,
+  .searchbar-textbox:not(:-moz-lwtheme):not([focused]):hover {
+    border-color: hsla(210,54%,20%,.35) hsla(210,54%,20%,.37) hsla(210,54%,20%,.4);
+  }
+
+  #urlbar:not(:-moz-lwtheme)[focused],
+  .searchbar-textbox:not(:-moz-lwtheme)[focused] {
+    border-color: hsla(206,100%,60%,.65) hsla(206,100%,55%,.65) hsla(206,100%,50%,.65);
   }
 
   .menu-accel,
