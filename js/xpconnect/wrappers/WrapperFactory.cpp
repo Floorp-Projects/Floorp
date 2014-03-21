@@ -359,15 +359,23 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     if (!securityWrapper) {
         if (xrayType == XrayForWrappedNative)
             return &PermissiveXrayXPCWN::singleton;
-        return &PermissiveXrayDOM::singleton;
+        else if (xrayType == XrayForDOMObject)
+            return &PermissiveXrayDOM::singleton;
+        MOZ_ASSERT(xrayType == XrayForJSObject);
+        return &PermissiveXrayJS::singleton;
     }
 
     // This is a security wrapper. Use the security versions and filter.
     if (xrayType == XrayForWrappedNative)
         return &FilteringWrapper<SecurityXrayXPCWN,
                                  CrossOriginAccessiblePropertiesOnly>::singleton;
-    return &FilteringWrapper<SecurityXrayDOM,
-                             CrossOriginAccessiblePropertiesOnly>::singleton;
+    else if (xrayType == XrayForDOMObject)
+        return &FilteringWrapper<SecurityXrayDOM,
+                                 CrossOriginAccessiblePropertiesOnly>::singleton;
+    // There's never any reason to expose pure JS objects to non-subsuming actors.
+    // Just use an opaque wrapper in this case.
+    MOZ_ASSERT(xrayType == XrayForJSObject);
+    return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
 }
 
 JSObject *
