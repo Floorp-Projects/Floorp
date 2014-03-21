@@ -673,7 +673,7 @@ protected:
   // |aAreaIndices| is a lookup table to help us parse faster,
   // mapping area names to indices in |aResult.mNamedAreas|.
   bool ParseGridTemplateAreasLine(const nsAutoString& aInput,
-                                  css::GridTemplateAreasValue& aResult,
+                                  css::GridTemplateAreasValue* aResult,
                                   nsDataHashtable<nsStringHashKey, uint32_t>& aAreaIndices);
   bool ParseGridTemplateAreas();
   bool ParseGridTemplate();
@@ -7156,15 +7156,15 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
 
 bool
 CSSParserImpl::ParseGridTemplateAreasLine(const nsAutoString& aInput,
-                                          css::GridTemplateAreasValue& aAreas,
+                                          css::GridTemplateAreasValue* aAreas,
                                           nsDataHashtable<nsStringHashKey, uint32_t>& aAreaIndices)
 {
-  aAreas.mTemplates.AppendElement(mToken.mIdent);
+  aAreas->mTemplates.AppendElement(mToken.mIdent);
 
   nsCSSGridTemplateAreaScanner scanner(aInput);
   nsCSSGridTemplateAreaToken token;
   css::GridNamedArea* currentArea = nullptr;
-  uint32_t row = aAreas.NRows();
+  uint32_t row = aAreas->NRows();
   uint32_t column;
   for (column = 1; scanner.Next(token); column++) {
     if (token.isTrash) {
@@ -7194,9 +7194,9 @@ CSSParserImpl::ParseGridTemplateAreasLine(const nsAutoString& aInput,
       // Check if this is the continuation of an existing named area:
       uint32_t index;
       if (aAreaIndices.Get(token.mName, &index)) {
-        MOZ_ASSERT(index < aAreas.mNamedAreas.Length(),
+        MOZ_ASSERT(index < aAreas->mNamedAreas.Length(),
                    "Invalid aAreaIndices hash table");
-        currentArea = &aAreas.mNamedAreas[index];
+        currentArea = &aAreas->mNamedAreas[index];
         if (currentArea->mColumnStart != column ||
             currentArea->mRowEnd != row) {
           // Existing named area, but not forming a rectangle
@@ -7206,8 +7206,8 @@ CSSParserImpl::ParseGridTemplateAreasLine(const nsAutoString& aInput,
         currentArea->mRowEnd++;
       } else {
         // New named area
-        aAreaIndices.Put(token.mName, aAreas.mNamedAreas.Length());
-        currentArea = aAreas.mNamedAreas.AppendElement();
+        aAreaIndices.Put(token.mName, aAreas->mNamedAreas.Length());
+        currentArea = aAreas->mNamedAreas.AppendElement();
         currentArea->mName = token.mName;
         // For column or row N (starting at 1),
         // the start line is N, the end line is N + 1
@@ -7230,8 +7230,8 @@ CSSParserImpl::ParseGridTemplateAreasLine(const nsAutoString& aInput,
   // On other rows, check that the number of columns is consistent
   // between rows.
   if (row == 1) {
-    aAreas.mNColumns = column;
-  } else if (aAreas.mNColumns != column) {
+    aAreas->mNColumns = column;
+  } else if (aAreas->mNColumns != column) {
     return false;
   }
   return true;
@@ -7246,7 +7246,8 @@ CSSParserImpl::ParseGridTemplateAreas()
     return true;
   }
 
-  css::GridTemplateAreasValue& areas = value.SetGridTemplateAreas();
+  nsRefPtr<css::GridTemplateAreasValue> areas =
+    new css::GridTemplateAreasValue();
   nsDataHashtable<nsStringHashKey, uint32_t> areaIndices;
   for (;;) {
     if (!GetToken(true)) {
@@ -7261,11 +7262,11 @@ CSSParserImpl::ParseGridTemplateAreas()
     }
   }
 
-  if (areas.NRows() == 0) {
+  if (areas->NRows() == 0) {
     return false;
   }
 
-  AppendValue(eCSSProperty_grid_template_areas, value);
+  AppendValue(eCSSProperty_grid_template_areas, nsCSSValue(areas));
   return true;
 }
 
@@ -7366,9 +7367,9 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
   MOZ_ASSERT(mToken.mType == eCSSToken_String,
              "ParseGridTemplateAfterString called with a non-string token");
 
-  nsCSSValue areasValue;
   nsCSSValue rowsValue;
-  css::GridTemplateAreasValue& areas = areasValue.SetGridTemplateAreas();
+  nsRefPtr<css::GridTemplateAreasValue> areas =
+    new css::GridTemplateAreasValue();
   nsDataHashtable<nsStringHashKey, uint32_t> areaIndices;
   nsCSSValueList* rowsItem = rowsValue.SetListValue();
   rowsItem->mValue = aFirstLineNames;
@@ -7410,7 +7411,7 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
     }
   }
 
-  AppendValue(eCSSProperty_grid_template_areas, areasValue);
+  AppendValue(eCSSProperty_grid_template_areas, nsCSSValue(areas));
   AppendValue(eCSSProperty_grid_template_rows, rowsValue);
   return true;
 }

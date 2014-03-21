@@ -1254,12 +1254,11 @@ nsStylePosition::nsStylePosition(void)
   mZIndex.SetAutoValue();
   mGridAutoPositionColumn.SetToInteger(1);
   mGridAutoPositionRow.SetToInteger(1);
-  // mGridTemplateRows, mGridTemplateColumns, and mGridTemplateAreas
-  // get their default constructors
-  // which initialize them to empty arrays,
-  // which represent the properties' initial value 'none'.
-
-  // mGrid{Column,Row}{Start,End} get their default constructor, 'auto'
+  // Other members get their default constructors
+  // which initialize them to representations of their respective initial value.
+  // mGridTemplateAreas: nullptr for 'none'
+  // mGridTemplate{Rows,Columns}: empty arrays for 'none'
+  // mGrid{Column,Row}{Start,End}: false/0/empty values for 'auto'
 }
 
 nsStylePosition::~nsStylePosition(void)
