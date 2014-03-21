@@ -49,13 +49,11 @@ HasNativeProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
 class XrayTraits;
 class XPCWrappedNativeXrayTraits;
 class DOMXrayTraits;
-class JSXrayTraits;
 
 
 enum XrayType {
     XrayForDOMObject,
     XrayForWrappedNative,
-    XrayForJSObject,
     NotXray
 };
 
@@ -145,7 +143,6 @@ class XrayWrapper : public Base {
 #define SecurityXrayXPCWN xpc::XrayWrapper<js::CrossCompartmentSecurityWrapper, xpc::XPCWrappedNativeXrayTraits>
 #define PermissiveXrayDOM xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::DOMXrayTraits>
 #define SecurityXrayDOM xpc::XrayWrapper<js::CrossCompartmentSecurityWrapper, xpc::DOMXrayTraits>
-#define PermissiveXrayJS xpc::XrayWrapper<js::CrossCompartmentWrapper, xpc::JSXrayTraits>
 #define SCSecurityXrayXPCWN xpc::XrayWrapper<js::SameCompartmentSecurityWrapper, xpc::XPCWrappedNativeXrayTraits>
 
 class SandboxProxyHandler : public js::Wrapper {
