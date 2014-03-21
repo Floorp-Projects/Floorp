@@ -1902,8 +1902,6 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       return Throw(aCx, rv);
     }
 
-    JS::Rooted<JS::Value> prop_val(aCx, JS::UndefinedValue()); // Property value.
-
     nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
 
     if (gpi) {
