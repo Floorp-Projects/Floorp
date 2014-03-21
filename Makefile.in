@@ -41,7 +41,9 @@ ifndef MOZ_PROFILE_USE
 # otherwise the rule in rules.mk doesn't run early enough.
 libs binaries export tools:: CLOBBER $(configure_dir)/configure config.status backend.RecursiveMakeBackend
 ifndef JS_STANDALONE
+ifndef LIBXUL_SDK
 libs binaries export tools:: $(topsrcdir)/js/src/configure js/src/config.status
+endif
 endif
 endif
 
@@ -101,10 +103,12 @@ install_manifest_depends = \
   $(NULL)
 
 ifndef JS_STANDALONE
+ifndef LIBXUL_SDK
 install_manifest_depends += \
   $(topsrcdir)/js/src/configure \
   js/src/config.status \
   $(NULL)
+endif
 endif
 
 .PHONY: install-manifests
