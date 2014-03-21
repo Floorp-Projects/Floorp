@@ -17,7 +17,15 @@
 
     {"process": "P3", "path": "p3", "kind": 2, "units": 0, "amount": 55, "description": "Desc."},
 
-    {"process": "P5", "path": "p5", "kind": 2, "units": 0, "amount": 0, "description": "Desc."}
+    {"process": "P5", "path": "p5", "kind": 2, "units": 0, "amount": 0, "description": "Desc."},
+
+    {"process": "P7", "path": "p7", "kind": 2, "units": 0, "amount": 5, "description": "Desc."},
+
+    {"process": "P8", "path": "p8/a/b/c/d", "kind": 2, "units": 0, "amount": 3, "description": "Desc."},
+    {"process": "P8", "path": "p8/a/b/c/e", "kind": 2, "units": 0, "amount": 4, "description": "Desc."},
+    {"process": "P8", "path": "p8/a/b/f", "kind": 2, "units": 0, "amount": 5, "description": "Desc."},
+    {"process": "P8", "path": "p8/a/g/h", "kind": 2, "units": 0, "amount": 6, "description": "Desc."},
+    {"process": "P8", "path": "p8/a/g/i", "kind": 2, "units": 0, "amount": 7, "description": "Desc."}
   ]
 }
 
