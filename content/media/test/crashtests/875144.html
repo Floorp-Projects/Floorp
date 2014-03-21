@@ -57,8 +57,8 @@ o16[i] = Math.sin(i * 7);
 }
 return o15;
 }(); } catch(e) { Logger.error(Logger.comment(e)); }
-try { o12.getFrequencyResponse(Float32Array(7), Float32Array(127), Float32Array(7)) } catch(e) { Logger.error(Logger.comment(e)); }
-try { o12.getFrequencyResponse(Float32Array(15), Float32Array(127), Float32Array(7)) } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.getFrequencyResponse(new Float32Array(7), new Float32Array(127), new Float32Array(7)) } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.getFrequencyResponse(new Float32Array(15), new Float32Array(127), new Float32Array(7)) } catch(e) { Logger.error(Logger.comment(e)); }
 try { o17 = document.createElement('audio'); } catch(e) { Logger.error(Logger.comment(e)); }
 try { (document.body || document.documentElement).appendChild(o0); } catch(e) { Logger.error(Logger.comment(e)); }
 try { o3.buffer = function() { o18 = o1.createBuffer(1, 7, 91261);
@@ -68,7 +68,7 @@ o19[i] = Math.sin(i * 7);
 }
 return o18;
 }(); } catch(e) { Logger.error(Logger.comment(e)); }
-try { o12.getFrequencyResponse(Float32Array(31), Float32Array(31), Float32Array(127)) } catch(e) { Logger.error(Logger.comment(e)); }
+try { o12.getFrequencyResponse(new Float32Array(31), new Float32Array(31), new Float32Array(127)) } catch(e) { Logger.error(Logger.comment(e)); }
 try { o20 = o1.createChannelSplitter(1, 2, 4, 16, 32); } catch(e) { Logger.error(Logger.comment(e)); }
 try { o12.channelCountMode = 'explicit'; } catch(e) { Logger.error(Logger.comment(e)); }
 try { o3.buffer = function() { o21 = o1.createBuffer(1, 0, 14451);
