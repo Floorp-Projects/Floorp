@@ -354,61 +354,12 @@ public:
         // nothing to do here.
     }
 
-    enum {
-        SLOT_PROTOKEY = 0,
-        SLOT_ISPROTOTYPE,
-        SLOT_COUNT
-    };
-    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
-
-    static JSProtoKey getProtoKey(JSObject *holder) {
-        int32_t key = js::GetReservedSlot(holder, SLOT_PROTOKEY).toInt32();
-        return static_cast<JSProtoKey>(key);
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
     }
 
-    static bool isPrototype(JSObject *holder) {
-        return js::GetReservedSlot(holder, SLOT_ISPROTOTYPE).toBoolean();
-    }
-
-    static const JSClass HolderClass;
     static JSXrayTraits singleton;
 };
-
-const JSClass JSXrayTraits::HolderClass = {
-    "JSXrayHolder", JSCLASS_HAS_RESERVED_SLOTS(SLOT_COUNT),
-    JS_PropertyStub, JS_DeletePropertyStub,
-    JS_PropertyStub, JS_StrictPropertyStub,
-    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
-};
-
-JSObject*
-JSXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
-{
-    RootedObject global(cx, JS_GetGlobalForObject(cx, wrapper));
-    RootedObject target(cx, getTargetObject(wrapper));
-    RootedObject holder(cx, JS_NewObjectWithGivenProto(cx, &HolderClass,
-                                                       JS::NullPtr(), global));
-    if (!holder)
-        return nullptr;
-
-    // Compute information about the target.
-    bool isPrototype = false;
-    JSProtoKey key = IdentifyStandardInstance(target);
-    if (key == JSProto_Null) {
-        isPrototype = true;
-        key = IdentifyStandardPrototype(target);
-    }
-    MOZ_ASSERT(key != JSProto_Null);
-
-    // Store it on the holder.
-    RootedValue v(cx);
-    v.setNumber(static_cast<uint32_t>(key));
-    js::SetReservedSlot(holder, SLOT_PROTOKEY, v);
-    v.setBoolean(isPrototype);
-    js::SetReservedSlot(holder, SLOT_ISPROTOTYPE, v);
-
-    return holder;
-}
 
 XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
 DOMXrayTraits DOMXrayTraits::singleton;
