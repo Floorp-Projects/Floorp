@@ -1183,6 +1183,33 @@ var gBrowserInit = {
       WindowsPrefSync.init();
     }
 
+#ifdef XP_WIN
+    if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
+        window.matchMedia("(-moz-windows-default-theme)").matches) {
+      let windows8WindowFrameColor = Cu.import("resource:///modules/Windows8WindowFrameColor.jsm", {}).Windows8WindowFrameColor;
+      let windowFrameColor = windows8WindowFrameColor.get();
+
+      // Formula from W3C Techniques For Accessibility Evaluation And
+      // Repair Tools, Section 2.2 http://www.w3.org/TR/AERT#color
+      let brightnessThreshold = 125;
+      let colorThreshold = 500;
+      let bY = windowFrameColor[0] * .299 +
+               windowFrameColor[1] * .587 +
+               windowFrameColor[2] * .114;
+      let fY = 0; // Default to black for foreground text.
+      let brightnessDifference = Math.abs(bY - fY);
+      // Color difference calculation is simplified because black is 0 for R,G,B.
+      let colorDifference = windowFrameColor[0] + windowFrameColor[1] + windowFrameColor[2];
+
+      // Brightness is defined within {0, 255}. Set an attribute
+      // if the window frame color doesn't reach these thresholds
+      // so the theme can be adjusted for readability.
+      if (brightnessDifference < brightnessThreshold && colorDifference < colorThreshold) {
+        document.documentElement.setAttribute("darkwindowframe", "true");
+      }
+    }
+#endif
+
     if (gMultiProcessBrowser) {
       // Bug 862519 - Backspace doesn't work in electrolysis builds.
       // We bypass the problem by disabling the backspace-to-go-back command.
