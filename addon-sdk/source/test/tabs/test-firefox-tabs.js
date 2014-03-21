@@ -921,7 +921,6 @@ exports['test unique tab ids'] = function(assert, done) {
   var { all, defer } = require('sdk/core/promise');
 
   function openWindow() {
-    // console.log('in openWindow');
     let deferred = defer();
     let win = windows.open({
       url: "data:text/html;charset=utf-8,<html>foo</html>",
