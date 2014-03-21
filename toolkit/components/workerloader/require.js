@@ -195,7 +195,12 @@
           "function(exports, require, module) {" +
           source +
         "\n}\n";
-        let blob = new Blob([(new TextEncoder()).encode(source)]);
+        let blob = new Blob(
+          [
+            (new TextEncoder()).encode(source)
+          ], {
+            type: "application/javascript"
+          });
         objectURL = URL.createObjectURL(blob);
         paths.set(objectURL, path);
         importScripts(objectURL);
