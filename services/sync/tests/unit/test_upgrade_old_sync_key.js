@@ -4,11 +4,13 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 // Test upgrade of a dashed old-style sync key.
 function run_test() {
   const PBKDF2_KEY_BYTES = 16;
   initTestLogging("Trace");
+  ensureLegacyIdentityManager();
 
   let passphrase = "abcde-abcde-abcde-abcde";
   do_check_false(Utils.isPassphrase(passphrase));
