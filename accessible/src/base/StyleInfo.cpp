@@ -74,6 +74,7 @@ StyleInfo::TextIndent(nsAString& aValue)
     case eStyleUnit_Grad:
     case eStyleUnit_Radian:
     case eStyleUnit_Turn:
+    case eStyleUnit_FlexFraction:
     case eStyleUnit_Integer:
     case eStyleUnit_Enumerated:
     case eStyleUnit_Calc:
