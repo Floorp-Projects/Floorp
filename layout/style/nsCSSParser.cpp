@@ -673,7 +673,7 @@ protected:
   // |aAreaIndices| is a lookup table to help us parse faster,
   // mapping area names to indices in |aResult.mNamedAreas|.
   bool ParseGridTemplateAreasLine(const nsAutoString& aInput,
-                                  nsCSSValueGridTemplateAreas& aResult,
+                                  css::GridTemplateAreasValue& aResult,
                                   nsDataHashtable<nsStringHashKey, uint32_t>& aAreaIndices);
   bool ParseGridTemplateAreas();
   bool ParseGridTemplate();
@@ -7156,14 +7156,14 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
 
 bool
 CSSParserImpl::ParseGridTemplateAreasLine(const nsAutoString& aInput,
-                                          nsCSSValueGridTemplateAreas& aAreas,
+                                          css::GridTemplateAreasValue& aAreas,
                                           nsDataHashtable<nsStringHashKey, uint32_t>& aAreaIndices)
 {
   aAreas.mTemplates.AppendElement(mToken.mIdent);
 
   nsCSSGridTemplateAreaScanner scanner(aInput);
   nsCSSGridTemplateAreaToken token;
-  nsCSSGridNamedArea* currentArea = nullptr;
+  css::GridNamedArea* currentArea = nullptr;
   uint32_t row = aAreas.NRows();
   uint32_t column;
   for (column = 1; scanner.Next(token); column++) {
@@ -7246,7 +7246,7 @@ CSSParserImpl::ParseGridTemplateAreas()
     return true;
   }
 
-  nsCSSValueGridTemplateAreas& areas = value.SetGridTemplateAreas();
+  css::GridTemplateAreasValue& areas = value.SetGridTemplateAreas();
   nsDataHashtable<nsStringHashKey, uint32_t> areaIndices;
   for (;;) {
     if (!GetToken(true)) {
@@ -7368,7 +7368,7 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
 
   nsCSSValue areasValue;
   nsCSSValue rowsValue;
-  nsCSSValueGridTemplateAreas& areas = areasValue.SetGridTemplateAreas();
+  css::GridTemplateAreasValue& areas = areasValue.SetGridTemplateAreas();
   nsDataHashtable<nsStringHashKey, uint32_t> areaIndices;
   nsCSSValueList* rowsItem = rowsValue.SetListValue();
   rowsItem->mValue = aFirstLineNames;
