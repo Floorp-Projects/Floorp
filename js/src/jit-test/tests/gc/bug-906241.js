@@ -1,7 +1,7 @@
 // |jit-test| error: InternalError: too much recursion
 for (let y in []);
 (function f(x) {
-    Float64Array(ArrayBuffer());
+    new Float64Array(new ArrayBuffer());
     {
         f(x)
         function t() {}

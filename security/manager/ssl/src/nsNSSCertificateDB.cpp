@@ -13,7 +13,7 @@
 #include "CertVerifier.h"
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
-#include "insanity/pkixtypes.h"
+#include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h"
 #include "mozilla/Base64.h"
 #include "nsCOMPtr.h"
@@ -113,7 +113,7 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
   char *asciiname = nullptr;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
   asciiname = const_cast<char*>(aUtf8Nickname.get());
@@ -159,7 +159,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
     return NS_ERROR_INVALID_ARG;
   }
 
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
   // someday maybe we can speed up the search using the moduleID and slotID
   // moduleID = NS_NSS_GET_LONG(keyItem.data);
   // slotID = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG]);
@@ -203,7 +203,7 @@ nsNSSCertificateDB::FindCertNicknames(nsISupports *aToken,
   /*
    * obtain the cert list from NSS
    */
-  insanity::pkix::ScopedCERTCertList certList;
+  mozilla::pkix::ScopedCERTCertList certList;
   certList = PK11_ListCerts(PK11CertListUnique, nullptr);
   if (!certList)
     goto cleanup;
@@ -358,7 +358,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
     return rv;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
-  insanity::pkix::ScopedCERTCertificate tmpCert;
+  mozilla::pkix::ScopedCERTCertificate tmpCert;
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
   tmpCert = CERT_FindCertByDERCert(certdb, &der);
   if (!tmpCert) {
@@ -415,7 +415,7 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   // Import additional delivered certificates that can be verified.
 
   // build a CertList for filtering
-  insanity::pkix::ScopedCERTCertList certList(CERT_NewCertList());
+  mozilla::pkix::ScopedCERTCertList certList(CERT_NewCertList());
   if (!certList) {
     return NS_ERROR_FAILURE;
   }
@@ -511,7 +511,7 @@ nsNSSCertificateDB::ImportCertificates(uint8_t * data, uint32_t length,
 static 
 SECStatus 
 ImportCertsIntoPermanentStorage(
-  const insanity::pkix::ScopedCERTCertList& certChain,
+  const mozilla::pkix::ScopedCERTCertList& certChain,
   const SECCertUsage usage, const PRBool caOnly)
 {
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
@@ -561,7 +561,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
   nsresult nsrv = NS_OK;
   CERTCertDBHandle *certdb;
   CERTCertificate **certArray = nullptr;
-  insanity::pkix::ScopedCERTCertList certList;
+  mozilla::pkix::ScopedCERTCertList certList;
   CERTCertListNode *node;
   SECItem **rawArray;
   int numcerts;
@@ -632,7 +632,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
       continue;
     }
 
-    insanity::pkix::ScopedCERTCertList certChain;
+    mozilla::pkix::ScopedCERTCertList certChain;
 
     SECStatus rv = certVerifier->VerifyCert(node->cert, nullptr,
                                             certificateUsageEmailRecipient,
@@ -673,7 +673,7 @@ nsNSSCertificateDB::ImportServerCertificate(uint8_t * data, uint32_t length,
 
   SECStatus srv = SECFailure;
   nsresult nsrv = NS_OK;
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
   SECItem **rawCerts = nullptr;
   int numcerts;
   int i;
@@ -800,7 +800,7 @@ nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfac
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node,certList);
        node = CERT_LIST_NEXT(node)) {
-    insanity::pkix::ScopedCERTCertList certChain;
+    mozilla::pkix::ScopedCERTCertList certChain;
     SECStatus rv = certVerifier->VerifyCert(node->cert, nullptr,
                                             certificateUsageVerifyCA,
                                             PR_Now(), ctx, 0, &certChain);
@@ -877,7 +877,7 @@ nsNSSCertificateDB::ImportUserCertificate(uint8_t *data, uint32_t length, nsIInt
   SECItem *CACerts;
   CERTDERCerts * collectArgs;
   PLArenaPool *arena;
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
 
   arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena) {
@@ -954,7 +954,7 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
     return NS_ERROR_NOT_AVAILABLE;
   }
   nsCOMPtr<nsIX509Cert2> nssCert = do_QueryInterface(aCert);
-  insanity::pkix::ScopedCERTCertificate cert(nssCert->GetCert());
+  mozilla::pkix::ScopedCERTCertificate cert(nssCert->GetCert());
   if (!cert) return NS_ERROR_FAILURE;
   SECStatus srv = SECSuccess;
 
@@ -1001,7 +1001,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   if (!pipCert) {
     return rv;
   }
-  insanity::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
+  mozilla::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
 
   rv = attemptToLogInWithDefaultPassword();
   if (NS_WARN_IF(rv != NS_OK)) {
@@ -1054,7 +1054,7 @@ nsNSSCertificateDB::IsCertTrusted(nsIX509Cert *cert,
   }
   SECStatus srv;
   nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
-  insanity::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
+  mozilla::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
   CERTCertTrust nsstrust;
   srv = CERT_GetCertTrust(nsscert.get(), &nsstrust);
   if (srv != SECSuccess)
@@ -1302,7 +1302,7 @@ nsNSSCertificateDB::FindEmailEncryptionCert(const nsAString &aNickname, nsIX509C
   asciiname = const_cast<char*>(aUtf8Nickname.get());
 
   /* Find a good cert in the user's database */
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
   cert = CERT_FindUserCertByUsage(CERT_GetDefaultCertDB(), asciiname, 
            certUsageEmailRecipient, true, ctx);
   if (!cert) {
@@ -1332,7 +1332,7 @@ nsNSSCertificateDB::FindEmailSigningCert(const nsAString &aNickname, nsIX509Cert
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   char *asciiname = nullptr;
   NS_ConvertUTF16toUTF8 aUtf8Nickname(aNickname);
@@ -1462,7 +1462,7 @@ nsNSSCertificateDB::ConstructX509(const char* certDER,
   secitem_cert.data = (unsigned char*)certDER;
   secitem_cert.len = lengthDER;
 
-  insanity::pkix::ScopedCERTCertificate cert;
+  mozilla::pkix::ScopedCERTCertificate cert;
   cert =
     CERT_NewTempCertificate(CERT_GetDefaultCertDB(), &secitem_cert,
                             nullptr, false, true);
@@ -1561,7 +1561,7 @@ nsNSSCertificateDB::get_default_nickname(CERTCertificate *cert,
       PR_smprintf_free(tmp);
     }
 
-    insanity::pkix::ScopedCERTCertificate dummycert;
+    mozilla::pkix::ScopedCERTCertificate dummycert;
 
     if (PK11_IsInternal(slot)) {
       /* look up the nickname to make sure it isn't in use already */
@@ -1622,7 +1622,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-  insanity::pkix::ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
+  mozilla::pkix::ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
   if (!tmpCert)
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nullptr, false, true);
@@ -1677,7 +1677,7 @@ nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert3* cert,
   if (srv != SECSuccess) {
     return MapSECStatus(SECFailure);
   }
-  insanity::pkix::ScopedCERTCertificate nssCert(cert->GetCert());
+  mozilla::pkix::ScopedCERTCertificate nssCert(cert->GetCert());
 
   nsresult rv = attemptToLogInWithDefaultPassword();
   if (NS_WARN_IF(rv != NS_OK)) {
@@ -1698,7 +1698,7 @@ nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsCOMPtr<nsIX509CertList> nssCertList;
-  insanity::pkix::ScopedCERTCertList certList(
+  mozilla::pkix::ScopedCERTCertList certList(
     PK11_ListCerts(PK11CertListUnique, ctx));
 
   // nsNSSCertList 1) adopts certList, and 2) handles the nullptr case fine.
@@ -1768,7 +1768,7 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 
-  insanity::pkix::ScopedCERTCertList resultChain;
+  mozilla::pkix::ScopedCERTCertList resultChain;
   SECOidTag evOidPolicy;
   SECStatus srv;
 
@@ -1811,7 +1811,7 @@ nsNSSCertificateDB::ClearOCSPCache()
 
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
-  if (certVerifier->mImplementation == CertVerifier::insanity) {
+  if (certVerifier->mImplementation == CertVerifier::mozillapkix) {
     certVerifier->ClearOCSPCache();
   } else {
     SECStatus srv = CERT_ClearOCSPCache();

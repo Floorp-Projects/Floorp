@@ -12,6 +12,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsIURI.h"
+#include "nsStyleUtil.h"
 
 namespace mozilla {
 namespace dom {
@@ -78,6 +79,19 @@ CSS::Supports(const GlobalObject& aGlobal,
 
   return parser.EvaluateSupportsCondition(aCondition, info.mDocURI,
                                           info.mBaseURI, info.mPrincipal);
+}
+
+/* static */ void
+CSS::Escape(const GlobalObject& aGlobal,
+            const nsAString& aIdent,
+            nsAString& aReturn,
+            ErrorResult& aRv)
+{
+  bool success = nsStyleUtil::AppendEscapedCSSIdent(aIdent, aReturn);
+
+  if (!success) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_CHARACTER_ERR);
+  }
 }
 
 } // dom

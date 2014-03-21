@@ -166,7 +166,7 @@ def generate_separated_sources(platform_sources):
     'SkBitmapHasher',
     'SkWGL',
     'SkImages',
-    'SkDiscardableMemory_ashmem'
+    'SkDiscardableMemory_ashmem',
     'SkMemory_malloc'
   ]
 

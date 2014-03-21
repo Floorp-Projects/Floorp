@@ -2932,7 +2932,7 @@ nsHTMLEditRules::MoveBlock(nsIDOMNode *aLeftBlock, nsIDOMNode *aRightBlock, int3
   nsCOMArray<nsIDOMNode> arrayOfNodes;
   nsCOMPtr<nsISupports> isupports;
   // GetNodesFromPoint is the workhorse that figures out what we wnat to move.
-  nsresult res = GetNodesFromPoint(DOMPoint(aRightBlock,aRightOffset),
+  nsresult res = GetNodesFromPoint(::DOMPoint(aRightBlock,aRightOffset),
                                    EditAction::makeList, arrayOfNodes, true);
   NS_ENSURE_SUCCESS(res, res);
   int32_t listCount = arrayOfNodes.Count();
@@ -6459,7 +6459,7 @@ nsHTMLEditRules::GetHighestInlineParent(nsIDOMNode* aNode)
 //                     of nodes from a point that will be operated on. 
 //                       
 nsresult 
-nsHTMLEditRules::GetNodesFromPoint(DOMPoint point,
+nsHTMLEditRules::GetNodesFromPoint(::DOMPoint point,
                                    EditAction operation,
                                    nsCOMArray<nsIDOMNode> &arrayOfNodes,
                                    bool dontTouchContent)

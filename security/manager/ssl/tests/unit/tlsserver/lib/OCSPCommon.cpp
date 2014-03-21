@@ -13,6 +13,7 @@
 
 using namespace mozilla;
 using namespace mozilla::test;
+using namespace mozilla::pkix::test;
 
 
 SECItemArray *
@@ -38,7 +39,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   PRTime oneDay = 60*60*24 * (PRTime)PR_USEC_PER_SEC;
   PRTime oldNow = now - (8 * oneDay);
 
-  insanity::test::OCSPResponseContext context(aArena, aCert, now);
+  OCSPResponseContext context(aArena, aCert, now);
 
   if (aORT == ORTGoodOtherCert) {
     context.cert = PK11_FindCertFromNickname(aAdditionalCertName, nullptr);
@@ -103,7 +104,7 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     context.signerCert = CERT_DupCertificate(context.issuerCert.get());
   }
 
-  SECItem* response = insanity::test::CreateEncodedOCSPResponse(context);
+  SECItem* response = CreateEncodedOCSPResponse(context);
   if (!response) {
     PrintPRError("CreateEncodedOCSPResponse failed");
     return nullptr;

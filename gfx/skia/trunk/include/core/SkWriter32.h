@@ -10,6 +10,7 @@
 #ifndef SkWriter32_DEFINED
 #define SkWriter32_DEFINED
 
+#include "SkData.h"
 #include "SkMatrix.h"
 #include "SkPath.h"
 #include "SkPoint.h"
@@ -18,7 +19,7 @@
 #include "SkRegion.h"
 #include "SkScalar.h"
 #include "SkStream.h"
-#include "SkTDArray.h"
+#include "SkTemplates.h"
 #include "SkTypes.h"
 
 class SkWriter32 : SkNoncopyable {
@@ -30,12 +31,7 @@ public:
      *  first time an allocation doesn't fit.  From then it will use dynamically allocated storage.
      *  This used to be optional behavior, but pipe now relies on it.
      */
-    SkWriter32(void* external = NULL, size_t externalBytes = 0)
-        : fData(0)
-        , fCapacity(0)
-        , fUsed(0)
-        , fExternal(0)
-    {
+    SkWriter32(void* external = NULL, size_t externalBytes = 0) {
         this->reset(external, externalBytes);
     }
 
@@ -49,6 +45,7 @@ public:
         SkASSERT(SkIsAlign4((uintptr_t)external));
         SkASSERT(SkIsAlign4(externalBytes));
 
+        fSnapshot.reset(NULL);
         fData = (uint8_t*)external;
         fCapacity = externalBytes;
         fUsed = 0;
@@ -75,7 +72,7 @@ public:
 
     /**
      *  Read a T record at offset, which must be a multiple of 4. Only legal if the record
-     *  was writtern atomically using the write methods below.
+     *  was written atomically using the write methods below.
      */
     template<typename T>
     const T& readTAt(size_t offset) const {
@@ -86,12 +83,13 @@ public:
 
     /**
      *  Overwrite a T record at offset, which must be a multiple of 4. Only legal if the record
-     *  was writtern atomically using the write methods below.
+     *  was written atomically using the write methods below.
      */
     template<typename T>
     void overwriteTAt(size_t offset, const T& value) {
         SkASSERT(SkAlign4(offset) == offset);
         SkASSERT(offset < fUsed);
+        SkASSERT(fSnapshot.get() == NULL);
         *(T*)(fData + offset) = value;
     }
 
@@ -235,14 +233,27 @@ public:
         return stream->read(this->reservePad(length), length);
     }
 
+    /**
+     *  Captures a snapshot of the data as it is right now, and return it.
+     *  Multiple calls without intervening writes may return the same SkData,
+     *  but this is not guaranteed.
+     *  Future appends will not affect the returned buffer.
+     *  It is illegal to call overwriteTAt after this without an intervening
+     *  append. It may cause the snapshot buffer to be corrupted.
+     *  Callers must unref the returned SkData.
+     *  This is not thread safe, it should only be called on the writing thread,
+     *  the result however can be shared across threads.
+     */
+    SkData* snapshotAsData() const;
 private:
     void growToAtLeast(size_t size);
 
-    uint8_t* fData;                // Points to either fInternal or fExternal.
-    size_t fCapacity;              // Number of bytes we can write to fData.
-    size_t fUsed;                  // Number of bytes written.
-    void* fExternal;               // Unmanaged memory block.
-    SkTDArray<uint8_t> fInternal;  // Managed memory block.
+    uint8_t* fData;                    // Points to either fInternal or fExternal.
+    size_t fCapacity;                  // Number of bytes we can write to fData.
+    size_t fUsed;                      // Number of bytes written.
+    void* fExternal;                   // Unmanaged memory block.
+    SkAutoTMalloc<uint8_t> fInternal;  // Managed memory block.
+    SkAutoTUnref<SkData> fSnapshot;    // Holds the result of last asData.
 };
 
 /**

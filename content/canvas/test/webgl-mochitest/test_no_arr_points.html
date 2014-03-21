@@ -62,7 +62,7 @@ void main(void) {
 
   function isScreenBlack() {
     var pixels = gl.drawingBufferWidth * gl.drawingBufferHeight;
-    var data = Uint8Array(4 * pixels);
+    var data = new Uint8Array(4 * pixels);
     gl.readPixels(0, 0,
                   gl.drawingBufferWidth, gl.drawingBufferHeight,
                   gl.RGBA, gl.UNSIGNED_BYTE,
@@ -98,11 +98,11 @@ void main(void) {
 
     var indexType = gl.UNSIGNED_SHORT;
     var indexStride = 2;
-    var indexArr = Uint16Array([0, 1, Math.min(hugeIndex, UINT16_MAX)]);
+    var indexArr = new Uint16Array([0, 1, Math.min(hugeIndex, UINT16_MAX)]);
     if (gl.getExtension('OES_element_index_uint')) {
       indexType = gl.UNSIGNED_INT;
       indexStride = 4;
-      indexArr = Uint32Array([0, 1, hugeIndex]);
+      indexArr = new Uint32Array([0, 1, hugeIndex]);
     }
 
     gl.clear(gl.COLOR_BUFFER_BIT);

@@ -103,6 +103,7 @@
 #include <algorithm>
 #include "nsGlobalWindow.h"
 #include "nsDOMMutationObserver.h"
+#include "GeometryUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1138,6 +1139,41 @@ nsINode::PreHandleEvent(EventChainPreVisitor& aVisitor)
   // This is only here so that we can use the NS_DECL_NSIDOMTARGET macro
   NS_ABORT();
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void
+nsINode::GetBoxQuads(const BoxQuadOptions& aOptions,
+                     nsTArray<nsRefPtr<DOMQuad> >& aResult,
+                     mozilla::ErrorResult& aRv)
+{
+  mozilla::GetBoxQuads(this, aOptions, aResult, aRv);
+}
+
+already_AddRefed<DOMQuad>
+nsINode::ConvertQuadFromNode(DOMQuad& aQuad,
+                             const GeometryNode& aFrom,
+                             const ConvertCoordinateOptions& aOptions,
+                             ErrorResult& aRv)
+{
+  return mozilla::ConvertQuadFromNode(this, aQuad, aFrom, aOptions, aRv);
+}
+
+already_AddRefed<DOMQuad>
+nsINode::ConvertRectFromNode(DOMRectReadOnly& aRect,
+                             const GeometryNode& aFrom,
+                             const ConvertCoordinateOptions& aOptions,
+                             ErrorResult& aRv)
+{
+  return mozilla::ConvertRectFromNode(this, aRect, aFrom, aOptions, aRv);
+}
+
+already_AddRefed<DOMPoint>
+nsINode::ConvertPointFromNode(const DOMPointInit& aPoint,
+                              const GeometryNode& aFrom,
+                              const ConvertCoordinateOptions& aOptions,
+                              ErrorResult& aRv)
+{
+  return mozilla::ConvertPointFromNode(this, aPoint, aFrom, aOptions, aRv);
 }
 
 nsresult
