@@ -596,11 +596,11 @@ void nsCSSValue::SetDependentPairListValue(nsCSSValuePairList* aList)
   }
 }
 
-nsCSSValueGridTemplateAreas& nsCSSValue::SetGridTemplateAreas()
+mozilla::css::GridTemplateAreasValue& nsCSSValue::SetGridTemplateAreas()
 {
   Reset();
   mUnit = eCSSUnit_GridTemplateAreas;
-  mValue.mGridTemplateAreas = new nsCSSValueGridTemplateAreas;
+  mValue.mGridTemplateAreas = new mozilla::css::GridTemplateAreasValue;
   mValue.mGridTemplateAreas->AddRef();
   return *mValue.mGridTemplateAreas;
 }
@@ -1345,7 +1345,14 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         break;
     }
   } else if (eCSSUnit_GridTemplateAreas == unit) {
-    GetGridTemplateAreas().AppendToString(aProperty, aResult, aSerialization);
+    const mozilla::css::GridTemplateAreasValue& areas = GetGridTemplateAreas();
+    MOZ_ASSERT(!areas.mTemplates.IsEmpty(),
+               "Unexpected empty array in GridTemplateAreasValue");
+    nsStyleUtil::AppendEscapedCSSString(areas.mTemplates[0], aResult);
+    for (uint32_t i = 1; i < areas.mTemplates.Length(); i++) {
+      aResult.Append(char16_t(' '));
+      nsStyleUtil::AppendEscapedCSSString(areas.mTemplates[i], aResult);
+    }
   }
 
   switch (unit) {
@@ -2381,25 +2388,8 @@ nsCSSCornerSizes::corners[4] = {
   &nsCSSCornerSizes::mBottomLeft,
 };
 
-void
-nsCSSValueGridTemplateAreas::AppendToString(nsCSSProperty aProperty,
-                                       nsAString& aResult,
-                                       nsCSSValue::Serialization aValueSerialization) const
-{
-  uint32_t length = mTemplates.Length();
-  if (length == 0) {
-    aResult.AppendLiteral("none");
-  } else {
-    nsStyleUtil::AppendEscapedCSSString(mTemplates[0], aResult);
-    for (uint32_t i = 1; i < length; i++) {
-      aResult.Append(char16_t(' '));
-      nsStyleUtil::AppendEscapedCSSString(mTemplates[i], aResult);
-    }
-  }
-}
-
 size_t
-nsCSSValueGridTemplateAreas::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+mozilla::css::GridTemplateAreasValue::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = mNamedAreas.SizeOfExcludingThis(aMallocSizeOf);
   n += mTemplates.SizeOfIncludingThis(aMallocSizeOf);

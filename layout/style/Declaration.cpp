@@ -1022,8 +1022,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
         // which isn't a value that the shorthand can express. Bail.
         return;
       }
-      const nsCSSValueGridTemplateAreas& areas =
-        areasValue.GetGridTemplateAreas();
+      const GridTemplateAreasValue& areas = areasValue.GetGridTemplateAreas();
       const nsCSSValueList* rowsItem = rowsValue.GetListValue();
       uint32_t nRowItems = 0;
       while (rowsItem) {
