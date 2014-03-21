@@ -3179,3 +3179,19 @@ static const NativeImpl sReadOnlyDateMethods[] = {
     date_toString_impl,
     date_valueOf_impl
 };
+
+JS_FRIEND_API(bool)
+js::IsReadOnlyDateMethod(IsAcceptableThis test, NativeImpl method)
+{
+    /* Avoid a linear search in the common case by checking the |this| test. */
+    if (test != IsDate)
+        return false;
+
+    /* Linear search, comparing function pointers. */
+    unsigned max = sizeof(sReadOnlyDateMethods) / sizeof(sReadOnlyDateMethods[0]);
+    for (unsigned i = 0; i < max; ++i) {
+        if (method == sReadOnlyDateMethods[i])
+            return true;
+    }
+    return false;
+}

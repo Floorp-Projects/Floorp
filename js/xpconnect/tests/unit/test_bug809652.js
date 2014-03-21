@@ -36,18 +36,14 @@ function run_test() {
   checkThrows("ArrayBuffer.prototype.slice.call(ab, 0);", sb);
   checkThrows("DataView.prototype.getInt8.call(dv, 0);", sb);
 
-  /* Now that Date is on Xrays, these should all throw. */
-  /* XXXbholley - We have to remove the old tests in this patch, because we're
-     removing the machinery that made them possible. But they won't fully behave
-     in an Xray-like way until the later patch where we turn on Xray-to-Date. So
-     we update the tests to the new behavior here but leave them commented out,
-     and uncomment them in the final patch.
-  checkThrows("Date.prototype.getYear.call(d)", sb);
-  checkThrows("Date.prototype.valueOf.call(d)", sb);
-  checkThrows("d.valueOf()", sb);
-  checkThrows("Date.prototype.toString.call(d)", sb);
-  checkThrows("d.toString()", sb);
-  */
+  /* Things we explicitly allow in ExposedPropertiesOnly::allowNativeCall. */
+
+  /* Date */
+  do_check_eq(Cu.evalInSandbox("Date.prototype.getYear.call(d)", sb), sb.d.getYear());
+  do_check_eq(Cu.evalInSandbox("Date.prototype.valueOf.call(d)", sb), sb.d.valueOf());
+  do_check_eq(Cu.evalInSandbox("d.valueOf()", sb), sb.d.valueOf());
+  do_check_eq(Cu.evalInSandbox("Date.prototype.toString.call(d)", sb), sb.d.toString());
+  do_check_eq(Cu.evalInSandbox("d.toString()", sb), sb.d.toString());
 
   /* Typed arrays. */
   function testForTypedArray(t) {
