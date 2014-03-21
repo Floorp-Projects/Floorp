@@ -63,6 +63,15 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 // Length of the "var-" prefix of custom property names.
 #define VAR_PREFIX_LENGTH 4
 
+MOZ_BEGIN_ENUM_CLASS(nsParsingStatus, int32_t)
+  // Parsed something successfully:
+  Ok,
+  // Did not find what we were looking for, but did not consume any token:
+  NotFound,
+  // Unexpected token or token value, too late for UngetToken() to be enough:
+  Error
+MOZ_END_ENUM_CLASS(nsParsingStatus)
+
 namespace {
 
 // Rule processing function
@@ -633,11 +642,33 @@ protected:
 
   // CSS Grid
   bool ParseGridAutoFlow();
+
+  // Parse an optional <line-names> expression.
+  // If successful, leave aValue untouched,
+  // to indicate that we parsed the empty list,
+  // or set it to a eCSSUnit_List of eCSSUnit_Ident.
+  // Not finding an open paren is considered the same as an empty list.
+  //
+  // If aValue is already a eCSSUnit_List, append to that list.
   bool ParseGridLineNames(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
-  bool ParseGridTrackSize(nsCSSValue& aValue);
+  nsParsingStatus ParseGridTrackSize(nsCSSValue& aValue);
   bool ParseGridAutoColumnsRows(nsCSSProperty aPropID);
-  bool ParseGridTrackList(nsCSSProperty aPropID);
+
+  // Assuming a [ <line-names>? ] has already been parsed,
+  // parse the rest of a <track-list>.
+  //
+  // This exists because [ <line-names>? ] is ambiguous in the
+  // 'grid-template' shorthand: it can be either the start of a <track-list>,
+  // or of the intertwined syntax that sets both
+  // grid-template-rows and grid-template-areas.
+  //
+  // On success, |aValue| will be a list of odd length >= 3,
+  // starting with a <line-names> (which is itself a list)
+  // and alternating between that and <track-size>.
+  bool ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
+                                            const nsCSSValue& aFirstLineNames);
+  bool ParseGridTemplateColumnsRows(nsCSSProperty aPropID);
 
   // |aAreaIndices| is a lookup table to help us parse faster,
   // mapping area names to indices in |aResult.mNamedAreas|.
@@ -6896,13 +6927,13 @@ CSSParserImpl::ParseGridAutoFlow()
   bool gotDense = false;
   bool gotColumn = false;
   bool gotRow = false;
-  do {
+  for (;;) {
     if (!GetToken(true)) {
-      return false;
+      break;
     }
     if (mToken.mType != eCSSToken_Ident) {
       UngetToken();
-      return false;
+      break;
     }
     nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
     if (keyword == eCSSKeyword_dense && !gotDense) {
@@ -6912,9 +6943,10 @@ CSSParserImpl::ParseGridAutoFlow()
     } else if (keyword == eCSSKeyword_row && !gotColumn && !gotRow) {
       gotRow = true;
     } else {
-      return false;
+      UngetToken();
+      break;
     }
-  } while (!CheckEndProperty());
+  }
 
   if (!(gotColumn || gotRow)) {
     return false;
@@ -6941,22 +6973,10 @@ CSSParserImpl::ParseGridAutoFlow()
   return true;
 }
 
-// Parse an optional <line-names> expression.
-// If successful, leaves aValue with eCSSUnit_Null for the empty list,
-// or sets it to a eCSSUnit_List of eCSSUnit_Ident.
-// Not finding an open paren is considered the same as an empty list.
-
-// aPropertyKeywords contains additional keywords for the 'grid' shorthand.
 bool
 CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
 {
-  MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Null,
-             "Unexpected unit, aValue should not be initialized yet");
-  if (!GetToken(true)) {
-    return true;
-  }
-  if (!mToken.IsSymbol('(')) {
-    UngetToken();
+  if (!ExpectSymbol('(', true)) {
     return true;
   }
   if (!GetToken(true) || mToken.IsSymbol(')')) {
@@ -6964,7 +6984,24 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
   }
   // 'return true' so far keeps eCSSUnit_Null, to represent an empty list.
 
-  nsCSSValueList* item = aValue.SetListValue();
+  nsCSSValueList* item;
+  if (aValue.GetUnit() == eCSSUnit_List) {
+    // Find the end of an existing list.
+    // The grid-template shorthand uses this, at most once for a given list.
+
+    // NOTE: we could avoid this traversal by somehow keeping around
+    // a pointer to the last item from the previous call.
+    // It's not yet clear if this is worth the additional code complexity.
+    item = aValue.GetListValue();
+    while (item->mNext) {
+      item = item->mNext;
+    }
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+  } else {
+    MOZ_ASSERT(aValue.GetUnit() == eCSSUnit_Null, "Unexpected unit");
+    item = aValue.SetListValue();
+  }
   for (;;) {
     if (!(eCSSToken_Ident == mToken.mType &&
           ParseCustomIdent(item->mValue, mToken.mIdent))) {
@@ -7005,33 +7042,33 @@ CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
 }
 
 // Parse a <track-size>
-bool
+nsParsingStatus
 CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue)
 {
   // Attempt to parse 'auto' or a single <track-breadth>
   if (ParseGridTrackBreadth(aValue) ||
       ParseVariant(aValue, VARIANT_AUTO, nullptr)) {
-    return true;
+    return nsParsingStatus::Ok;
   }
 
   // Attempt to parse a minmax() function
   if (!GetToken(true)) {
-    return false;
+    return nsParsingStatus::NotFound;
   }
   if (!(eCSSToken_Function == mToken.mType &&
         mToken.mIdent.LowerCaseEqualsLiteral("minmax"))) {
     UngetToken();
-    return false;
+    return nsParsingStatus::NotFound;
   }
   nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_minmax, 2);
   if (ParseGridTrackBreadth(func->Item(1)) &&
       ExpectSymbol(',', true) &&
       ParseGridTrackBreadth(func->Item(2)) &&
       ExpectSymbol(')', true)) {
-    return true;
+    return nsParsingStatus::Ok;
   }
   SkipUntil(')');
-  return false;
+  return nsParsingStatus::Error;
 }
 
 bool
@@ -7039,7 +7076,7 @@ CSSParserImpl::ParseGridAutoColumnsRows(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (ParseVariant(value, VARIANT_INHERIT, nullptr) ||
-      ParseGridTrackSize(value)) {
+      ParseGridTrackSize(value) == nsParsingStatus::Ok) {
     AppendValue(aPropID, value);
     return true;
   }
@@ -7047,38 +7084,67 @@ CSSParserImpl::ParseGridAutoColumnsRows(nsCSSProperty aPropID)
 }
 
 bool
-CSSParserImpl::ParseGridTrackList(nsCSSProperty aPropID)
+CSSParserImpl::ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
+                                                    const nsCSSValue& aFirstLineNames)
+{
+  nsAutoPtr<nsCSSValueList> firstTrackSizeItem(new nsCSSValueList);
+
+  // FIXME: add repeat()
+  if (ParseGridTrackSize(firstTrackSizeItem->mValue) != nsParsingStatus::Ok) {
+    // We need at least one <track-size>,
+    // so even nsParsingStatus::NotFound is an error here.
+    return false;
+  }
+
+  nsCSSValueList* item = firstTrackSizeItem;
+  for (;;) {
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+    if (!ParseGridLineNames(item->mValue)) {
+      return false;
+    }
+
+    // FIXME: add repeat()
+    nsCSSValue trackSize;
+    nsParsingStatus result = ParseGridTrackSize(trackSize);
+    if (result == nsParsingStatus::Error) {
+      return false;
+    }
+    if (result == nsParsingStatus::NotFound) {
+      // What we've parsed so far is a valid <track-list>. Stop here.
+      break;
+    }
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+    item->mValue = trackSize;
+  }
+
+  // Set up our outparam as a list, with aFirstLineNames as the first entry,
+  // followed by the rest of the <track-list> that we just finished parsing.
+  item = aValue.SetListValue();
+  item->mValue = aFirstLineNames;
+  item->mNext = firstTrackSizeItem.forget();
+  MOZ_ASSERT(aValue.GetListValue() && aValue.GetListValue()->mNext &&
+             aValue.GetListValue()->mNext->mNext,
+             "<track-list> should have a minimum length of 3");
+  return true;
+}
+
+bool
+CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
     AppendValue(aPropID, value);
     return true;
   }
-  // FIXME: add subgrid
+  // FIXME: add subgrid parsing
 
-  // |value| will be a list of odd length >= 3,
-  // starting with a <line-names> (which is itself a list)
-  // and alternating between that and <track-size>
-  nsCSSValueList* item = value.SetListValue();
-  if (!ParseGridLineNames(item->mValue)) {
+  nsCSSValue firstLineNames;
+  if (!(ParseGridLineNames(firstLineNames) &&
+        ParseGridTrackListWithFirstLineNames(value, firstLineNames))) {
     return false;
   }
-  do {
-    item->mNext = new nsCSSValueList;
-    item = item->mNext;
-    // FIXME: add repeat()
-    if (!ParseGridTrackSize(item->mValue)) {
-      return false;
-    }
-    item->mNext = new nsCSSValueList;
-    item = item->mNext;
-    if (!ParseGridLineNames(item->mValue)) {
-      return false;
-    }
-  } while (!CheckEndProperty());
-  MOZ_ASSERT(value.GetListValue() && value.GetListValue()->mNext &&
-             value.GetListValue()->mNext->mNext,
-             "<track-list> should have a minimum length of 3");
   AppendValue(aPropID, value);
   return true;
 }
@@ -8454,7 +8520,7 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseGridTemplateAreas();
   case eCSSProperty_grid_template_columns:
   case eCSSProperty_grid_template_rows:
-    return ParseGridTrackList(aPropID);
+    return ParseGridTemplateColumnsRows(aPropID);
   case eCSSProperty_grid_auto_position:
     return ParseGridAutoPosition();
   case eCSSProperty_grid_column_start:
