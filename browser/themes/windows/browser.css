@@ -109,8 +109,8 @@
 %endif
 
 /* Make the menu inherit the toolbar's color. On non-compositor (Aero Basic, XP modern, classic)
- * this is defined above. Otherwise (Aero Glass, Windows 8), this is hardcoded to black in
- * browser-aero.css. */
+ * this is defined above. Otherwise (Aero Glass, Windows 8 inactive windows), this is hardcoded
+ * to black in browser-aero.css. */
 #main-menubar > menu:not(:-moz-lwtheme) {
   color: inherit;
 }
