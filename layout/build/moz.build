@@ -129,4 +129,9 @@ if CONFIG['MOZ_WEBSPEECH']:
         '/content/media/webspeech/synth',
     ]
 
+if CONFIG['MOZ_FFMPEG']:
+    LOCAL_INCLUDES += [
+        '/content/media/fmp4/ffmpeg/include',
+    ]
+
 FINAL_LIBRARY = 'xul'
