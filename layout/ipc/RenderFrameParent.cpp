@@ -212,7 +212,7 @@ BuildListForLayer(Layer* aLayer,
   gfx3DMatrix transform;
 
   if (metrics && metrics->IsScrollable()) {
-    const ViewID scrollId = metrics->mScrollId;
+    const ViewID scrollId = metrics->GetScrollId();
 
     // We need to figure out the bounds of the scrollable region using the
     // shadow layer tree from the remote process. The metrics viewport is
@@ -280,7 +280,7 @@ TransformShadowTree(nsDisplayListBuilder* aBuilder, nsFrameLoader* aFrameLoader,
   ViewTransform layerTransform = aTransform;
 
   if (metrics && metrics->IsScrollable()) {
-    const ViewID scrollId = metrics->mScrollId;
+    const ViewID scrollId = metrics->GetScrollId();
     const nsContentView* view =
       aFrameLoader->GetCurrentRemoteFrame()->GetContentView(scrollId);
     NS_ABORT_IF_FALSE(view, "Array of views should be consistent with layer tree");
@@ -382,7 +382,7 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
   if (!container)
     return;
   const FrameMetrics metrics = container->GetFrameMetrics();
-  const ViewID scrollId = metrics.mScrollId;
+  const ViewID scrollId = metrics.GetScrollId();
   gfx3DMatrix transform;
   To3DMatrix(aLayer->GetTransform(), transform);
   aXScale *= GetXScale(transform);
@@ -744,7 +744,7 @@ RenderFrameParent::Init(nsFrameLoader* aFrameLoader,
   }
 
   if (lm && lm->GetRoot() && lm->GetRoot()->AsContainerLayer()) {
-    ViewID rootScrollId = lm->GetRoot()->AsContainerLayer()->GetFrameMetrics().mScrollId;
+    ViewID rootScrollId = lm->GetRoot()->AsContainerLayer()->GetFrameMetrics().GetScrollId();
     if (rootScrollId != FrameMetrics::NULL_SCROLL_ID) {
       mContentViews[rootScrollId] = new nsContentView(aFrameLoader, rootScrollId, true);
     }

@@ -24,7 +24,7 @@ public:
 
     NS_IMETHOD Run() {
         MOZ_ASSERT(NS_IsMainThread());
-        nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(mFrameMetrics.mScrollId);
+        nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(mFrameMetrics.GetScrollId());
         if (content) {
             APZCCallbackHelper::UpdateSubFrame(content, mFrameMetrics);
         }
@@ -38,7 +38,7 @@ protected:
 void
 ParentProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 {
-    if (aFrameMetrics.mScrollId == FrameMetrics::NULL_SCROLL_ID) {
+    if (aFrameMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
         return;
     }
 
