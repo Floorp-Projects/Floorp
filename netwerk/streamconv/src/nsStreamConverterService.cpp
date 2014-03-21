@@ -51,13 +51,10 @@ struct BFSState {
 
 // Adjacency list data class.
 struct SCTableData {
-    union _data {
-        BFSState *state;
-        nsCOMArray<nsIAtom> *edges;
-    } data;
+    nsCOMArray<nsIAtom> *edges;
 
-    SCTableData() {
-        data.state = nullptr;
+    SCTableData() : edges(nullptr)
+    {
     }
 };
 
@@ -95,8 +92,8 @@ nsStreamConverterService::~nsStreamConverterService() {
 // Delete all the entries in the adjacency list
 static bool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
     SCTableData *entry = (SCTableData*)aData;
-    NS_ASSERTION(entry->data.edges, "malformed adjacency list entry");
-    delete entry->data.edges;
+    NS_ASSERTION(entry->edges, "malformed adjacency list entry");
+    delete entry->edges;
     delete entry;
     return true;
 }
@@ -183,7 +180,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         // There is no fromStr vertex, create one.
         SCTableData *data = new SCTableData();
         nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
-        data->data.edges = edgeArray;
+        data->edges = edgeArray;
 
         mAdjacencyList->Put(&fromKey, data);
         fromEdges = data;
@@ -194,7 +191,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         // There is no toStr vertex, create one.
         SCTableData *data = new SCTableData();
         nsCOMArray<nsIAtom>* edgeArray = new nsCOMArray<nsIAtom>;
-        data->data.edges = edgeArray;
+        data->edges = edgeArray;
         mAdjacencyList->Put(&toKey, data);
     }
 
@@ -208,7 +205,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (!fromEdges)
         return NS_ERROR_FAILURE;
 
-    nsCOMArray<nsIAtom> *adjacencyList = fromEdges->data.edges;
+    nsCOMArray<nsIAtom> *adjacencyList = fromEdges->edges;
     return adjacencyList->AppendObject(vertex) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -326,7 +323,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
         SCTableData *data2 = (SCTableData*)mAdjacencyList->Get(currentHead);
         if (!data2) return NS_ERROR_FAILURE;
 
-        nsCOMArray<nsIAtom> *edges = data2->data.edges;
+        nsCOMArray<nsIAtom> *edges = data2->edges;
         NS_ASSERTION(edges, "something went wrong with BFS strmconv algorithm");
         if (!edges) return NS_ERROR_FAILURE;
 
