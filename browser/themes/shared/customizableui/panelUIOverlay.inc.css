@@ -21,7 +21,7 @@
 %include ../browser.inc
 
 #PanelUI-popup #PanelUI-contents:empty {
-    height: 128px;
+  height: 128px;
 }
 
 #PanelUI-popup #PanelUI-contents:empty::before {
@@ -326,6 +326,16 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] > iframe {
   margin: 4px auto;
+}
+
+#PanelUI-multiView[viewtype="subview"] > .panel-viewcontainer > .panel-viewstack > .panel-mainview >  #PanelUI-mainView {
+  background-color: hsla(210,4%,10%,.1);
+}
+
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .panel-wide-item,
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-contents-scroller > #PanelUI-contents > .toolbarbutton-1:not([panel-multiview-anchor="true"]),
+#PanelUI-multiView[viewtype="subview"] #PanelUI-mainView > #PanelUI-footer {
+  opacity: .5;
 }
 
 /*
