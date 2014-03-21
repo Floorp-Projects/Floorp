@@ -124,9 +124,9 @@ function testBackwardsFill() {
       gUtils.advanceTimeAndRefresh(100);
       waitForAllPaints(function() {
         var transform = gUtils.getOMTAStyle(target, "transform");
-        todo_is(transform, "matrix(1, 0, 0, 1, 1, 0)",
-                "transform is set on compositor thread after delayed start " +
-                "with backwards fill");
+        is(transform, "matrix(1, 0, 0, 1, 1, 0)",
+           "transform is set on compositor thread after delayed start " +
+           "with backwards fill");
         target.removeAttribute("style");
         gUtils.restoreNormalRefresh();
         SimpleTest.finish();
