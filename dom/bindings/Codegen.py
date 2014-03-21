@@ -1752,7 +1752,11 @@ class MethodDefiner(PropertyDefiner):
                     else:
                         accessor = "GenericBindingMethod"
                 else:
-                    jitinfo = "nullptr"
+                    if m.get("returnsPromise", False):
+                        jitinfo = "&%s_methodinfo" % accessor
+                        accessor = "StaticMethodPromiseWrapper"
+                    else:
+                        jitinfo = "nullptr"
 
             return (m["name"], accessor, jitinfo, m["length"], m["flags"], selfHostedName)
 
@@ -6842,6 +6846,22 @@ class CGMemberJITInfo(CGThing):
             return existingType
         return "%s | %s" % (existingType, type)
 
+class CGStaticMethodJitinfo(CGGeneric):
+    """
+    A class for generating the JITInfo for a promise-returning static method.
+    """
+    def __init__(self, method):
+        CGGeneric.__init__(
+            self,
+            "\n"
+            "static const JSJitInfo %s_methodinfo = {\n"
+            "  { (JSJitGetterOp)%s },\n"
+            "  prototypes::id::_ID_Count, 0, JSJitInfo::StaticMethod,\n"
+            "  JSJitInfo::AliasEverything, JSVAL_TYPE_MISSING, false, false,\n"
+            "  false, false, 0\n"
+            "};\n" %
+            (method.identifier.name, method.identifier.name))
+
 def getEnumValueName(value):
     # Some enum values can be empty strings.  Others might have weird
     # characters in them.  Deal with the former by returning "_empty",
@@ -8909,6 +8929,8 @@ class CGDescriptor(CGThing):
                 if m.isStatic():
                     assert descriptor.interface.hasInterfaceObject
                     cgThings.append(CGStaticMethod(descriptor, m))
+                    if m.returnsPromise():
+                        cgThings.append(CGStaticMethodJitinfo(m))
                 elif descriptor.interface.hasInterfacePrototypeObject():
                     specializedMethod = CGSpecializedMethod(descriptor, m)
                     cgThings.append(specializedMethod)
