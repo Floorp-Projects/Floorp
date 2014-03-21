@@ -6083,6 +6083,35 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
         name = method.identifier.name
         return MakeNativeName(descriptor.binaryNames.get(name, name))
 
+class CGMethodPromiseWrapper(CGAbstractStaticMethod):
+    """
+    A class for generating a wrapper around another method that will
+    convert exceptions to promises.
+    """
+    def __init__(self, descriptor, methodToWrap):
+        self.method = methodToWrap
+        name = self.makeName(methodToWrap.name)
+        args = list(methodToWrap.args)
+        CGAbstractStaticMethod.__init__(self, descriptor, name, 'bool', args)
+
+    def definition_body(self):
+        return (
+            "  // Make sure to save the callee before someone maybe messes\n"
+            "  // with rval().\n"
+            "  JS::Rooted<JSObject*> callee(cx, &args.callee());\n"
+            "  bool ok = %s(%s);\n"
+            "  if (ok) {\n"
+            "    return true;\n"
+            "  }\n"
+            "  return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),\n"
+            "                                   args.rval());" %
+            (self.method.name,
+             ", ".join(arg.name for arg in self.args)))
+
+    @staticmethod
+    def makeName(methodName):
+        return methodName + "_promiseWrapper"
+
 class CGJsonifierMethod(CGSpecializedMethod):
     def __init__(self, descriptor, method):
         assert method.isJsonifier()
@@ -6618,6 +6647,8 @@ class CGMemberJITInfo(CGThing):
         if self.member.isMethod():
             methodinfo = ("%s_methodinfo" % self.member.identifier.name)
             name = CppKeywords.checkMethodName(self.member.identifier.name)
+            if self.member.returnsPromise():
+                name = CGMethodPromiseWrapper.makeName(name)
             # Actually a JSJitMethodOp, but JSJitGetterOp is first in the union.
             method = ("(JSJitGetterOp)%s" % name)
             methodPure = self.member.getExtendedAttribute("Pure")
@@ -8879,7 +8910,10 @@ class CGDescriptor(CGThing):
                     assert descriptor.interface.hasInterfaceObject
                     cgThings.append(CGStaticMethod(descriptor, m))
                 elif descriptor.interface.hasInterfacePrototypeObject():
-                    cgThings.append(CGSpecializedMethod(descriptor, m))
+                    specializedMethod = CGSpecializedMethod(descriptor, m)
+                    cgThings.append(specializedMethod)
+                    if m.returnsPromise():
+                        cgThings.append(CGMethodPromiseWrapper(descriptor, specializedMethod))
                     cgThings.append(CGMemberJITInfo(descriptor, m))
                     if m.getExtendedAttribute("CrossOriginCallable"):
                         crossOriginMethods.add(m.identifier.name)
