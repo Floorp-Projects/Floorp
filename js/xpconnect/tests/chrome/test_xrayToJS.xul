@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                         'WeakMap', 'Map', 'Set'];
 
   function go() {
-    var iwin = document.getElementById('ifr').contentWindow;
+    window.iwin = document.getElementById('ifr').contentWindow;
 
     // Test constructors that can be instantiated with zero arguments.
     for (var c of simpleConstructors) {
@@ -101,6 +101,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(iwin.eval(toEval).b.foo, 'bar', "eval-ed object looks right");
     is(iwin.eval(toEval).f(), iwin, "evaled function works right");
 
+    testDate();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -108,8 +110,59 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     SimpleTest.finish();
   }
 
+  function filterOut(array, props) {
+    return array.filter(p => props.indexOf(p) == -1);
+  }
 
+  function testXray(classname, xray, xray2, propsToSkip) {
+    propsToSkip = propsToSkip || [];
+    let xrayProto = Object.getPrototypeOf(xray);
+    let localProto = window[classname].prototype;
+    let protoProps = filterOut(Object.getOwnPropertyNames(localProto), propsToSkip).sort();
+    let protoMethods = protoProps.filter(name => typeof localProto[name] == 'function' &&
+                                         name != 'constructor');
+    ok(protoMethods.length > 0, "Need something to test");
+    is(xrayProto, iwin[classname].prototype, "Xray proto is correct");
+    is(xrayProto, xray.__proto__, "Proto accessors agree");
+    is(Object.getPrototypeOf(xrayProto), iwin.Object.prototype, "proto proto is correct");
+    for (let name of protoMethods) {
+      info("Running tests for property: " + name);
+      ok(xrayProto.hasOwnProperty(name), "proto should have the property as own");
+      ok(!xray.hasOwnProperty(name), "instance should not have the property as own");
+      let method = xrayProto[name];
+      is(typeof method, 'function', "Methods from Xrays are functions");
+      is(global(method), window, "Methods from Xrays are local");
+      ok(method instanceof Function, "instanceof works on methods from Xrays");
+      is(xrayProto[name], method, "Holder caching works properly");
+      is(xray[name], method, "Proto props resolve on the instance");
+      let local = localProto[name];
+      is(method.length, local.length, "Function.length identical");
+      if (method.length == 0) {
+        is(xray[name]() + "", local.call(xray) + "",
+           "Xray and local method results stringify identically");
+         is(xray[name]() + "", xray.wrappedJSObject[name]() + "",
+            "Xray and waived method results stringify identically");
+      }
+    }
+    is(Object.getOwnPropertyNames(xrayProto).sort().toSource(),
+       protoProps.toSource(), "getOwnPropertyNames works");
 
+    is(xrayProto.constructor, iwin[classname], "constructor property works");
+
+    xrayProto.expando = 42;
+    is(xray.expando, 42, "Xrayed instances see proto expandos");
+    is(xray2.expando, 42, "Xrayed instances see proto expandos");
+  }
+
+  function testDate() {
+    // toGMTString is handled oddly in the engine. We don't bother to support
+    // it over Xrays.
+    //
+    // We don't yet support self-hosted functions on Xrays. See bug 972987.
+    let propsToSkip = ['toGMTString', 'toLocaleString',
+                       'toLocaleDateString', 'toLocaleTimeString'];
+    testXray('Date', new iwin.Date(), new iwin.Date(), propsToSkip);
+  }
 
   ]]>
   </script>
