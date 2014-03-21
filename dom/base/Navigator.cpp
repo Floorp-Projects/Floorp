@@ -1815,19 +1815,21 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
     return true;
   }
 
+  JS::Rooted<JSObject*> naviObj(aCx,
+                                js::CheckedUnwrap(aObject,
+                                                  /* stopAtOuter = */ false));
+  if (!naviObj) {
+    return Throw(aCx, NS_ERROR_DOM_SECURITY_ERR);
+  }
+
   if (name_struct->mType == nsGlobalNameStruct::eTypeNewDOMBinding) {
     ConstructNavigatorProperty construct = name_struct->mConstructNavigatorProperty;
     MOZ_ASSERT(construct);
 
-    JS::Rooted<JSObject*> naviObj(aCx,
-                                  js::CheckedUnwrap(aObject,
-                                                    /* stopAtOuter = */ false));
-    if (!naviObj) {
-      return Throw(aCx, NS_ERROR_DOM_SECURITY_ERR);
-    }
-
     JS::Rooted<JSObject*> domObject(aCx);
     {
+      // Make sure to do the creation of our object in the compartment
+      // of naviObj, especially since we plan to cache that object.
       JSAutoCompartment ac(aCx, naviObj);
 
       // Check whether our constructor is enabled after we unwrap Xrays, since
@@ -1919,7 +1921,11 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
   }
 
   if (okToUseNative) {
-    rv = nsContentUtils::WrapNative(aCx, aObject, native, &prop_val);
+    // Make sure to do the creation of our object in the compartment
+    // of naviObj, especially since we plan to cache that object.
+    JSAutoCompartment ac(aCx, naviObj);
+
+    rv = nsContentUtils::WrapNative(aCx, naviObj, native, &prop_val);
 
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);
