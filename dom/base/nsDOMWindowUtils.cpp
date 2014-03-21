@@ -2554,9 +2554,13 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
 
   nsIWidget* widget = GetWidget();
   if (widget) {
-    CompositorChild* compositor = widget->GetRemoteRenderer();
-    if (compositor) {
-      compositor->SendSetTestSampleTime(driver->MostRecentRefresh());
+    LayerManager* manager = widget->GetLayerManager();
+    if (manager) {
+      ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+      if (forwarder && forwarder->HasShadowManager()) {
+        forwarder->GetShadowManager()->SendSetTestSampleTime(
+          driver->MostRecentRefresh());
+      }
     }
   }
 
@@ -2575,9 +2579,12 @@ nsDOMWindowUtils::RestoreNormalRefresh()
   // compositor.
   nsIWidget* widget = GetWidget();
   if (widget) {
-    CompositorChild* compositor = widget->GetRemoteRenderer();
-    if (compositor) {
-      compositor->SendLeaveTestMode();
+    LayerManager* manager = widget->GetLayerManager();
+    if (manager) {
+      ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+      if (forwarder && forwarder->HasShadowManager()) {
+        forwarder->GetShadowManager()->SendLeaveTestMode();
+      }
     }
   }
 
