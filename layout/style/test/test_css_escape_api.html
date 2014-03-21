@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=955860
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 955860</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=955860">Mozilla Bug 955860</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script>
+SimpleTest.doesThrow(() => CSS.escape('\0'), "InvalidCharacterError Character :\\0");
+SimpleTest.doesThrow(() => CSS.escape('a\0'), "InvalidCharacterError Character : a\\0");
+SimpleTest.doesThrow(() => CSS.escape('\0b'), "InvalidCharacterError Character : \\0b");
+SimpleTest.doesThrow(() => CSS.escape('a\0b'), "InvalidCharacterError Character : a\\0b");
+SimpleTest.doesThrow(() => CSS.escape(), 'undefined');
+is(CSS.escape(true), 'true', "escapingFailed Character : true(bool)");
+is(CSS.escape(false), 'false', "escapingFailed Character : false(bool)");
+is(CSS.escape(null), 'null', "escapingFailed Character : null");
+is(CSS.escape(''), '', "escapingFailed Character : '' ");
+
+is(CSS.escape('\x01\x02\x1E\x1F'), '\\1 \\2 \\1E \\1F ',"escapingFailed Char: \\x01\\x02\\x1E\\x1F");
+
+is(CSS.escape('0a'), '\\30 a', "escapingFailed Char: 0a");
+is(CSS.escape('1a'), '\\31 a', "escapingFailed Char: 1a");
+is(CSS.escape('2a'), '\\32 a', "escapingFailed Char: 2a");
+is(CSS.escape('3a'), '\\33 a', "escapingFailed Char: 3a");
+is(CSS.escape('4a'), '\\34 a', "escapingFailed Char: 4a");
+is(CSS.escape('5a'), '\\35 a', "escapingFailed Char: 5a");
+is(CSS.escape('6a'), '\\36 a', "escapingFailed Char: 6a");
+is(CSS.escape('7a'), '\\37 a', "escapingFailed Char: 7a");
+is(CSS.escape('8a'), '\\38 a', "escapingFailed Char: 8a");
+is(CSS.escape('9a'), '\\39 a', "escapingFailed Char: 9a");
+
+is(CSS.escape('a0b'), 'a0b', "escapingFailed Char: a0b");
+is(CSS.escape('a1b'), 'a1b', "escapingFailed Char: a1b");
+is(CSS.escape('a2b'), 'a2b', "escapingFailed Char: a2b");
+is(CSS.escape('a3b'), 'a3b', "escapingFailed Char: a3b");
+is(CSS.escape('a4b'), 'a4b', "escapingFailed Char: a4b");
+is(CSS.escape('a5b'), 'a5b', "escapingFailed Char: a5b");
+is(CSS.escape('a6b'), 'a6b', "escapingFailed Char: a6b");
+is(CSS.escape('a7b'), 'a7b', "escapingFailed Char: a7b");
+is(CSS.escape('a8b'), 'a8b', "escapingFailed Char: a8b");
+is(CSS.escape('a9b'), 'a9b', "escapingFailed Char: a9b");
+
+is(CSS.escape('-0a'), '-\\30 a', "escapingFailed Char: -0a");
+is(CSS.escape('-1a'), '-\\31 a', "escapingFailed Char: -1a");
+is(CSS.escape('-2a'), '-\\32 a', "escapingFailed Char: -2a");
+is(CSS.escape('-3a'), '-\\33 a', "escapingFailed Char: -3a");
+is(CSS.escape('-4a'), '-\\34 a', "escapingFailed Char: -4a");
+is(CSS.escape('-5a'), '-\\35 a', "escapingFailed Char: -5a");
+is(CSS.escape('-6a'), '-\\36 a', "escapingFailed Char: -6a");
+is(CSS.escape('-7a'), '-\\37 a', "escapingFailed Char: -7a");
+is(CSS.escape('-8a'), '-\\38 a', "escapingFailed Char: -8a");
+is(CSS.escape('-9a'), '-\\39 a', "escapingFailed Char: -9a");
+
+is(CSS.escape('--a'), '-\\-a', "escapingFailed Char: --a");
+
+is(CSS.escape('\x80\x2D\x5F\xA9'), '\\80 \x2D\x5F\xA9', "escapingFailed Char: \\x80\\x2D\\x5F\\xA9");
+is(CSS.escape('\xA0\xA1\xA2'), '\xA0\xA1\xA2', "escapingFailed Char: \\xA0\\xA1\\xA2");
+is(CSS.escape('a0123456789b'), 'a0123456789b', "escapingFailed Char: a0123465789");
+is(CSS.escape('abcdefghijklmnopqrstuvwxyz'), 'abcdefghijklmnopqrstuvwxyz', "escapingFailed Char: abcdefghijklmnopqrstuvwxyz");
+is(CSS.escape('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', "escapingFailed Char: ABCDEFGHIJKLMNOPQRSTUVWXYZBCDEFGHIJKLMNOPQRSTUVWXYZ");
+
+is(CSS.escape('\x20\x21\x78\x79'), '\\ \\!xy', "escapingFailed Char: \\x20\\x21\\x78\\x79");
+
+// astral symbol (U+1D306 TETRAGRAM FOR CENTRE)
+is(CSS.escape('\uD834\uDF06'), '\uD834\uDF06', "escapingFailed Char:\\uD834\\uDF06");
+// lone surrogates
+is(CSS.escape('\uDF06'), '\uDF06', "escapingFailed Char: \\uDF06");
+is(CSS.escape('\uD834'), '\uD834', "escapingFailed Char: \\uD834");
+</script>
+</pre>
+</body>
+</html>
