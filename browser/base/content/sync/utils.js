@@ -87,6 +87,12 @@ let gSyncUtils = {
     this._openLink(Weave.Svc.Prefs.get(root + "privacyURL"));
   },
 
+  openMPInfoPage: function (event) {
+    event.stopPropagation();
+    let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    this._openLink(baseURL + "sync-master-password");
+  },
+
   openFirstSyncProgressPage: function () {
     this._openLink("about:sync-progress");
   },

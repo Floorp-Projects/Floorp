@@ -555,6 +555,22 @@ this.Utils = {
     return function innerBind() { return method.apply(object, arguments); };
   },
 
+  /**
+   * Is there a master password configured, regardless of current lock state?
+   */
+  mpEnabled: function mpEnabled() {
+    let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"]
+                    .getService(Ci.nsIPKCS11ModuleDB);
+    let sdrSlot = modules.findSlotByName("");
+    let status  = sdrSlot.status;
+    let slots = Ci.nsIPKCS11Slot;
+
+    return status != slots.SLOT_UNINITIALIZED && status != slots.SLOT_READY;
+  },
+
+  /**
+   * Is there a master password configured and currently locked?
+   */
   mpLocked: function mpLocked() {
     let modules = Cc["@mozilla.org/security/pkcs11moduledb;1"]
                     .getService(Ci.nsIPKCS11ModuleDB);
