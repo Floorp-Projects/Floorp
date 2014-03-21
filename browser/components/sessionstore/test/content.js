@@ -163,3 +163,17 @@ addMessageListener("ss-test:click", function ({data}) {
   content.document.getElementById(data.id).click();
   sendAsyncMessage("ss-test:click");
 });
+
+addMessageListener("ss-test:historyPushState", function ({data}) {
+  content.window.history.
+    pushState(data.stateObj || {}, data.title || "", data.url);
+
+  sendAsyncMessage("ss-test:historyPushState");
+});
+
+addMessageListener("ss-test:historyReplaceState", function ({data}) {
+  content.window.history.
+    replaceState(data.stateObj || {}, data.title || "", data.url);
+
+  sendAsyncMessage("ss-test:historyReplaceState");
+});
