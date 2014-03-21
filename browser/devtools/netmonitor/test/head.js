@@ -9,7 +9,6 @@ let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let { CurlUtils } = Cu.import("resource:///modules/devtools/Curl.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
 
@@ -35,8 +34,6 @@ const FILTERING_URL = EXAMPLE_URL + "html_filter-test-page.html";
 const INFINITE_GET_URL = EXAMPLE_URL + "html_infinite-get-page.html";
 const CUSTOM_GET_URL = EXAMPLE_URL + "html_custom-get-page.html";
 const STATISTICS_URL = EXAMPLE_URL + "html_statistics-test-page.html";
-const CURL_URL = EXAMPLE_URL + "html_copy-as-curl.html";
-const CURL_UTILS_URL = EXAMPLE_URL + "html_curl-utils.html";
 
 const SIMPLE_SJS = EXAMPLE_URL + "sjs_simple-test-server.sjs";
 const CONTENT_TYPE_SJS = EXAMPLE_URL + "sjs_content-type-test-server.sjs";

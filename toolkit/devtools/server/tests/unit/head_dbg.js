@@ -30,7 +30,6 @@ function tryImport(url) {
 tryImport("resource://gre/modules/devtools/dbg-server.jsm");
 tryImport("resource://gre/modules/devtools/dbg-client.jsm");
 tryImport("resource://gre/modules/devtools/Loader.jsm");
-tryImport("resource://gre/modules/devtools/Console.jsm");
 
 function testExceptionHook(ex) {
   try {
