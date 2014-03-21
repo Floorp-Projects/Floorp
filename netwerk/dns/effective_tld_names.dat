@@ -7723,12 +7723,12 @@ de.com
 eu.com
 gb.com
 gb.net
-gr.com
 hu.com
 hu.net
 jp.net
 jpn.com
 kr.com
+mex.com
 no.com
 qc.com
 ru.com
@@ -7738,9 +7738,29 @@ se.net
 uk.com
 uk.net
 us.com
-us.org
 uy.com
+za.bz
 za.com
+
+// Africa.com Web Solutions Ltd : https://registry.africa.com
+// Submitted by Gavin Brown <gavin.brown@centralnic.com> 2014-02-04
+africa.com
+
+// iDOT Services Limited : http://www.domain.gr.com
+// Submitted by Gavin Brown <gavin.brown@centralnic.com> 2014-02-04
+gr.com
+
+// Radix FZC : http://domains.in.net
+// Submitted by Gavin Brown <gavin.brown@centralnic.com> 2014-02-04
+in.net
+
+// US REGISTRY LLC : http://us.org
+// Submitted by Gavin Brown <gavin.brown@centralnic.com> 2014-02-04
+us.org
+
+// co.com Registry, LLC : https://registry.co.com
+// Submitted by Gavin Brown <gavin.brown@centralnic.com> 2014-02-04
+co.com
 
 // c.la : http://www.c.la/
 c.la
