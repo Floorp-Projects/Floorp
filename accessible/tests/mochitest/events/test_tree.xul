@@ -32,10 +32,11 @@
       this.target = gTree;
       this.check = function check(aEvent)
       {
-        var index = aEvent.getData("index");
+        var propBag = aEvent.detail.QueryInterface(Components.interfaces.nsIPropertyBag2);
+        var index = propBag.getPropertyAsInt32("index");
         is(index, aIdx, "Wrong 'index' data of 'treeRowCountChanged' event.");
 
-        var count = aEvent.getData("count");
+        var count = propBag.getPropertyAsInt32("count");
         is(count, aCount, "Wrong 'count' data of 'treeRowCountChanged' event.");
       }
       this.getID = function getID()
@@ -53,19 +54,36 @@
       this.target = gTree;
       this.check = function check(aEvent)
       {
-        var startRow = aEvent.getData("startrow");
+        var propBag = aEvent.detail.QueryInterface(Components.interfaces.nsIPropertyBag2);
+        try {
+          var startRow = propBag.getPropertyAsInt32("startrow");
+        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+          startRow = null;
+        }
         is(startRow, aStartRow,
            "Wrong 'startrow' of 'treeInvalidated' event on " + aMsg);
 
-        var endRow = aEvent.getData("endrow");
+        try {
+          var endRow = propBag.getPropertyAsInt32("endrow");
+        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+          endRow = null;
+        }
         is(endRow, aEndRow,
            "Wrong 'endrow' of 'treeInvalidated' event on " + aMsg);
 
-        var startCol = aEvent.getData("startcolumn");
+        try {
+          var startCol = propBag.getPropertyAsInt32("startcolumn");
+        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+          startCol = null;
+        }
         is(startCol, aStartCol,
            "Wrong 'startcolumn' of 'treeInvalidated' event on " + aMsg);
 
-        var endCol = aEvent.getData("endcolumn");
+        try {
+          var endCol = propBag.getPropertyAsInt32("endcolumn");
+        } catch (e if e.name == 'NS_ERROR_NOT_AVAILABLE') {
+          startCol = null;
+        }
         is(endCol, aEndCol,
            "Wrong 'endcolumn' of 'treeInvalidated' event on " + aMsg);
       }
