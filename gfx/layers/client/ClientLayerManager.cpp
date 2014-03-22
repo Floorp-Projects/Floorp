@@ -213,21 +213,10 @@ ClientLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   if (mWidget) {
     mWidget->PrepareWindowEffects();
   }
-
-  printf_stderr("XXX - Bas - Wanting to draw client side!");
-
-  FlushRendering();
-
-  printf_stderr("XXX - Bas - Starting to draw client side!");
-
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
-
-  printf_stderr("XXX - Bas - Finished validation!");
-
   ForwardTransaction(!(aFlags & END_NO_REMOTE_COMPOSITE));
 
   if (mRepeatTransaction) {
-    printf_stderr("XXX - Bas - Repeating transaction!");
     mRepeatTransaction = false;
     mIsRepeatTransaction = true;
     BeginTransaction();
@@ -240,8 +229,6 @@ ClientLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
   for (size_t i = 0; i < mTexturePools.Length(); i++) {
     mTexturePools[i]->ReturnDeferredClients();
   }
-
-  printf_stderr("XXX - Bas - Finished drawing client side!");
 }
 
 bool
@@ -424,8 +411,6 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   } else if (HasShadowManager()) {
     NS_WARNING("failed to forward Layers transaction");
   }
-
-  printf_stderr("XXX - Bas - Forwarded transaction!");
 
   mForwarder->RemoveTexturesIfNecessary();
   mPhase = PHASE_NONE;
