@@ -732,9 +732,17 @@ bool ObjectIsTypeDescr(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo ObjectIsTypeDescrJitInfo;
 
 /*
+ * Usage: ObjectIsTypedObject(obj)
+ *
+ * True if `obj` is a transparent or opaque typed object.
+ */
+bool ObjectIsTypedObject(ThreadSafeContext *cx, unsigned argc, Value *vp);
+extern const JSJitInfo ObjectIsTypedObjectJitInfo;
+
+/*
  * Usage: ObjectIsOpaqueTypedObject(obj)
  *
- * True if `obj` is a handle.
+ * True if `obj` is an opaque typed object.
  */
 bool ObjectIsOpaqueTypedObject(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo ObjectIsOpaqueTypedObjectJitInfo;
@@ -742,10 +750,24 @@ extern const JSJitInfo ObjectIsOpaqueTypedObjectJitInfo;
 /*
  * Usage: ObjectIsTransparentTypedObject(obj)
  *
- * True if `obj` is a typed object.
+ * True if `obj` is a transparent typed object.
  */
 bool ObjectIsTransparentTypedObject(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo ObjectIsTransparentTypedObjectJitInfo;
+
+/* Predicates on type descriptor objects.  In all cases, 'obj' must be a type descriptor. */
+
+bool TypeDescrIsSimpleType(ThreadSafeContext *, unsigned argc, Value *vp);
+extern const JSJitInfo TypeDescrIsSimpleTypeJitInfo;
+
+bool TypeDescrIsArrayType(ThreadSafeContext *, unsigned argc, Value *vp);
+extern const JSJitInfo TypeDescrIsArrayTypeJitInfo;
+
+bool TypeDescrIsSizedArrayType(ThreadSafeContext *, unsigned argc, Value *vp);
+extern const JSJitInfo TypeDescrIsSizedArrayTypeJitInfo;
+
+bool TypeDescrIsUnsizedArrayType(ThreadSafeContext *, unsigned argc, Value *vp);
+extern const JSJitInfo TypeDescrIsUnsizedArrayTypeJitInfo;
 
 /*
  * Usage: TypedObjectIsAttached(obj)
@@ -965,6 +987,20 @@ inline bool
 JSObject::is<js::TypedObject>() const
 {
     return IsTypedObjectClass(getClass());
+}
+
+template<>
+inline bool
+JSObject::is<js::SizedArrayTypeDescr>() const
+{
+    return getClass() == &js::SizedArrayTypeDescr::class_;
+}
+
+template<>
+inline bool
+JSObject::is<js::UnsizedArrayTypeDescr>() const
+{
+    return getClass() == &js::UnsizedArrayTypeDescr::class_;
 }
 
 #endif /* builtin_TypedObject_h */

@@ -56,7 +56,7 @@ public:
 
   // nsIAttribute interface
   void SetMap(nsDOMAttributeMap *aMap) MOZ_OVERRIDE;
-  Element *GetElement() const;
+  nsIContent *GetContent() const MOZ_OVERRIDE;
   nsresult SetOwnerDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
   // nsINode interface
@@ -94,16 +94,19 @@ public:
   // XPCOM GetPrefix() is OK
   // XPCOM GetLocalName() is OK
 
+  Element* GetOwnerElement(ErrorResult& aRv);
+
 protected:
   virtual Element* GetNameSpaceElement()
   {
-    return GetElement();
+    return GetContentInternal();
   }
 
   static bool sInitialized;
 
 private:
   already_AddRefed<nsIAtom> GetNameAtom(nsIContent* aContent);
+  Element* GetContentInternal() const;
 
   nsString mValue;
 };

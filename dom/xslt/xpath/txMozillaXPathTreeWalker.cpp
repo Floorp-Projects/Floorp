@@ -21,12 +21,9 @@
 #include "nsUnicharUtils.h"
 #include "nsAttrName.h"
 #include "nsTArray.h"
-#include "mozilla/dom/Attr.h"
 #include "mozilla/dom/Element.h"
 #include <stdint.h>
 #include <algorithm>
-
-using mozilla::dom::Attr;
 
 const uint32_t kUnknownIndex = uint32_t(-1);
 
@@ -514,7 +511,8 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
     if (aNode.isDocument() ||
         aNode.mNode->IsElement() ||
         aNode.mNode->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT)) {
-        nsContentUtils::AppendNodeTextContent(aNode.mNode, true, aResult);
+        nsContentUtils::AppendNodeTextContent(aNode.mNode, true, aResult,
+                                              mozilla::fallible_t());
 
         return;
     }
@@ -693,7 +691,7 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, bool aKeepRootAlive)
         NS_ASSERTION(attr, "doesn't implement nsIAttribute");
 
         nsINodeInfo *nodeInfo = attr->NodeInfo();
-        nsIContent *parent = static_cast<Attr*>(attr.get())->GetElement();
+        nsIContent *parent = attr->GetContent();
         if (!parent) {
             return nullptr;
         }

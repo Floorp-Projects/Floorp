@@ -3570,7 +3570,14 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
     if (!ool)
         return false;
 
-    if (lir->mir()->needsSingletonType()) {
+    if (lir->mir()->needsSingletonType()
+#ifdef JSGC_GENERATIONAL
+        // Slot initialization is not barriered in this case, so we must either
+        // allocate in the nursery or bail if that is not possible.
+        || lir->mir()->templateObject()->hasDynamicSlots()
+#endif
+       )
+    {
         // Objects can only be given singleton types in VM calls.
         masm.jump(ool->entry());
     } else {

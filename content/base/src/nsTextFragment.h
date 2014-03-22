@@ -125,10 +125,27 @@ public:
    * Append the contents of this string fragment to aString
    */
   void AppendTo(nsAString& aString) const {
+    if (!AppendTo(aString, mozilla::fallible_t())) {
+      NS_ABORT_OOM(GetLength());
+    }
+  }
+
+  /**
+   * Append the contents of this string fragment to aString
+   * @return false if an out of memory condition is detected, true otherwise
+   */
+  bool AppendTo(nsAString& aString,
+                const mozilla::fallible_t&) const NS_WARN_UNUSED_RESULT {
     if (mState.mIs2b) {
-      aString.Append(m2b, mState.mLength);
+      bool ok = aString.Append(m2b, mState.mLength, mozilla::fallible_t());
+      if (!ok) {
+        return false;
+      }
+
+      return true;
     } else {
-      AppendASCIItoUTF16(Substring(m1b, mState.mLength), aString);
+      return AppendASCIItoUTF16(Substring(m1b, mState.mLength), aString,
+                                mozilla::fallible_t());
     }
   }
 
@@ -138,10 +155,31 @@ public:
    * @param aLength the length of the substring
    */
   void AppendTo(nsAString& aString, int32_t aOffset, int32_t aLength) const {
+    if (!AppendTo(aString, aOffset, aLength, mozilla::fallible_t())) {
+      NS_ABORT_OOM(aLength);
+    }
+  }
+
+  /**
+   * Append a substring of the contents of this string fragment to aString.
+   * @param aString the string in which to append
+   * @param aOffset where to start the substring in this text fragment
+   * @param aLength the length of the substring
+   * @return false if an out of memory condition is detected, true otherwise
+   */
+  bool AppendTo(nsAString& aString, int32_t aOffset, int32_t aLength,
+                const mozilla::fallible_t&) const NS_WARN_UNUSED_RESULT
+  {
     if (mState.mIs2b) {
-      aString.Append(m2b + aOffset, aLength);
+      bool ok = aString.Append(m2b + aOffset, aLength, mozilla::fallible_t());
+      if (!ok) {
+        return false;
+      }
+
+      return true;
     } else {
-      AppendASCIItoUTF16(Substring(m1b + aOffset, aLength), aString);
+      return AppendASCIItoUTF16(Substring(m1b + aOffset, aLength), aString,
+                                mozilla::fallible_t());
     }
   }
 

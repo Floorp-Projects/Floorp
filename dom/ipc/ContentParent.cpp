@@ -15,6 +15,11 @@
 # include <sys/resource.h>
 #endif
 
+#ifdef XP_UNIX
+#include <sys/types.h>
+#include <sys/wait.h>
+#endif
+
 #include "chrome/common/process_watcher.h"
 
 #include "AppProcessChecker.h"
@@ -912,12 +917,17 @@ ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
     // still alive.  Hopefully we've set the priority to FOREGROUND*, so the
     // process won't unexpectedly crash after this point!
     //
-    // It's not legal to call DidProcessCrash on Windows if the process has not
-    // terminated yet, so we have to skip this check here.
-#ifndef XP_WIN
-    bool exited = false;
-    base::DidProcessCrash(&exited, mSubprocess->GetChildProcessHandle());
-    if (exited) {
+    // Bug 943174: use waitid() with WNOWAIT so that, if the process
+    // did exit, we won't consume its zombie and confuse the
+    // GeckoChildProcessHost dtor.  Also, if the process isn't a
+    // direct child because of Nuwa this will fail with ECHILD, and we
+    // need to assume the child is alive in that case rather than
+    // assuming it's dead (as is otherwise a reasonable fallback).
+#ifdef XP_UNIX
+    siginfo_t info;
+    info.si_pid = 0;
+    if (waitid(P_PID, Pid(), &info, WNOWAIT | WNOHANG | WEXITED) == 0
+        && info.si_pid != 0) {
         return false;
     }
 #endif
@@ -2387,6 +2397,7 @@ ContentParent::KillHard()
     if (!KillProcess(OtherProcess(), 1, false)) {
         NS_WARNING("failed to kill subprocess!");
     }
+    mSubprocess->SetAlreadyDead();
     XRE_GetIOMessageLoop()->PostTask(
         FROM_HERE,
         NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated,

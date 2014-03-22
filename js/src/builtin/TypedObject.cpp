@@ -2684,6 +2684,20 @@ JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypeDescrJitInfo, ObjectIsType
                                       js::ObjectIsTypeDescr);
 
 bool
+js::ObjectIsTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+    args.rval().setBoolean(args[0].toObject().is<TypedObject>());
+    return true;
+}
+
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypedObjectJitInfo,
+                                      ObjectIsTypedObjectJitInfo,
+                                      js::ObjectIsTypedObject);
+
+bool
 js::ObjectIsOpaqueTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2710,6 +2724,68 @@ js::ObjectIsTransparentTypedObject(ThreadSafeContext *, unsigned argc, Value *vp
 JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTransparentTypedObjectJitInfo,
                                       ObjectIsTransparentTypedObjectJitInfo,
                                       js::ObjectIsTransparentTypedObject);
+
+bool
+js::TypeDescrIsSimpleType(ThreadSafeContext *, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[0].toObject().is<js::TypeDescr>());
+    args.rval().setBoolean(args[0].toObject().is<js::SimpleTypeDescr>());
+    return true;
+}
+
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypeDescrIsSimpleTypeJitInfo,
+                                      TypeDescrIsSimpleTypeJitInfo,
+                                      js::TypeDescrIsSimpleType);
+
+bool
+js::TypeDescrIsArrayType(ThreadSafeContext *, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[0].toObject().is<js::TypeDescr>());
+    JSObject& obj = args[0].toObject();
+    args.rval().setBoolean(obj.is<js::SizedArrayTypeDescr>() ||
+                           obj.is<js::UnsizedArrayTypeDescr>());
+    return true;
+}
+
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypeDescrIsArrayTypeJitInfo,
+                                      TypeDescrIsArrayTypeJitInfo,
+                                      js::TypeDescrIsArrayType);
+
+bool
+js::TypeDescrIsSizedArrayType(ThreadSafeContext *, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[0].toObject().is<js::TypeDescr>());
+    args.rval().setBoolean(args[0].toObject().is<js::SizedArrayTypeDescr>());
+    return true;
+}
+
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypeDescrIsSizedArrayTypeJitInfo,
+                                      TypeDescrIsSizedArrayTypeJitInfo,
+                                      js::TypeDescrIsSizedArrayType);
+
+bool
+js::TypeDescrIsUnsizedArrayType(ThreadSafeContext *, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+    JS_ASSERT(args[0].toObject().is<js::TypeDescr>());
+    args.rval().setBoolean(args[0].toObject().is<js::UnsizedArrayTypeDescr>());
+    return true;
+}
+
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::TypeDescrIsUnsizedArrayTypeJitInfo,
+                                      TypeDescrIsUnsizedArrayTypeJitInfo,
+                                      js::TypeDescrIsUnsizedArrayType);
 
 bool
 js::TypedObjectIsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
