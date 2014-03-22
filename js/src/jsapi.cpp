@@ -4622,7 +4622,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     if (!frontend::CompileFunctionBody(cx, &fun, options, formals, chars, length))
         return nullptr;
 
-    if (obj && funAtom) {
+    if (obj && funAtom && options.defineOnScope) {
         Rooted<jsid> id(cx, AtomToId(funAtom));
         RootedValue value(cx, ObjectValue(*fun));
         if (!JSObject::defineGeneric(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
