@@ -903,7 +903,6 @@ LOCAL_INCLUDES += \
 ifeq (WINNT,$(OS_TARGET))
 # These get set via VC project file settings for normal GYP builds.
 DEFINES += -DUNICODE -D_UNICODE
-LOCAL_INCLUDES += -I'$(MOZ_DIRECTX_SDK_PATH)/include'
 endif
 
 DISABLE_STL_WRAPPING := 1
