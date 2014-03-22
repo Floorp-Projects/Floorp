@@ -271,6 +271,7 @@ WEBIDL_FILES = [
     'PerformanceNavigation.webidl',
     'PerformanceTiming.webidl',
     'PeriodicWave.webidl',
+    'PermissionSettings.webidl',
     'PhoneNumberService.webidl',
     'Plugin.webidl',
     'PluginArray.webidl',
