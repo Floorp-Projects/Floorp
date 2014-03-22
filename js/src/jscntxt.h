@@ -1040,9 +1040,14 @@ bool intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_ForkJoinGetSlice(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_InParallelSection(JSContext *cx, unsigned argc, Value *vp);
 
+bool intrinsic_ObjectIsTypedObject(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_ObjectIsTransparentTypedObject(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_ObjectIsOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_ObjectIsTypeDescr(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_TypeDescrIsSimpleType(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_TypeDescrIsArrayType(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_TypeDescrIsUnsizedArrayType(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_TypeDescrIsSizedArrayType(JSContext *cx, unsigned argc, Value *vp);
 
 class AutoLockForExclusiveAccess
 {

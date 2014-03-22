@@ -12,8 +12,8 @@ class nsDOMAttributeMap;
 class nsIContent;
 
 #define NS_IATTRIBUTE_IID  \
-{ 0x727dc139, 0xf516, 0x46ff, \
-  { 0x86, 0x11, 0x18, 0xea, 0xee, 0x4a, 0x3e, 0x6a } }
+{ 0x8d9d7dbf, 0xc42d, 0x4715, \
+  { 0x95, 0xcf, 0x7a, 0x5e, 0xd5, 0xa4, 0x47, 0x70 } }
 
 class nsIAttribute : public nsINode
 {
@@ -31,6 +31,8 @@ public:
   {
     return mNodeInfo;
   }
+
+  virtual nsIContent* GetContent() const = 0;
 
   /**
    * Called when our ownerElement is moved into a new document.
