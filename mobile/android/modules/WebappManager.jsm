@@ -246,6 +246,13 @@ this.WebappManager = {
   _autoUpdate: function(aData, aOldApp) { return Task.spawn((function*() {
     log("_autoUpdate app of type " + aData.type);
 
+    if (aOldApp.apkPackageName != aData.apkPackageName) {
+      // This happens when the app was installed as a shortcut via the old
+      // runtime and is now being updated to an APK.
+      debug("update apkPackageName from " + aOldApp.apkPackageName + " to " + aData.apkPackageName);
+      aOldApp.apkPackageName = aData.apkPackageName;
+    }
+
     // The data object has a manifestUrl property for the manifest URL,
     // but updateHostedApp expects it to be called manifestURL, and we pass
     // the data object to it, so we need to change the name.
