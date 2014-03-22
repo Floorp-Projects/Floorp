@@ -228,7 +228,11 @@ public:
                       mCapId(-1),
                       mCurSendCodecConfig(nullptr),
                       mSendingWidth(0),
-                      mSendingHeight(0)
+		      mSendingHeight(0),
+		      mReceivingWidth(640),
+		      mReceivingHeight(480),
+		      mVideoLatencyTestEnable(false),
+		      mVideoLatencyAvg(0)
   {
   }
 
@@ -253,6 +257,7 @@ public:
   bool GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                            unsigned int* packetsSent,
                            uint64_t* bytesSent);
+  uint64_t MozVideoLatencyAvg();
 
 private:
 
@@ -280,6 +285,9 @@ private:
 
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
+
+  // Video Latency Test averaging filter
+  void VideoLatencyUpdate(uint64_t new_sample);
 
   // The two sides of a send/receive pair of conduits each keep a pointer to the other.
   // They also share a single VideoEngine and mChannel.  Shutdown must be coordinated
@@ -314,6 +322,14 @@ private:
   VideoCodecConfig* mCurSendCodecConfig;
   unsigned short mSendingWidth;
   unsigned short mSendingHeight;
+  unsigned short mReceivingWidth;
+  unsigned short mReceivingHeight;
+  bool mVideoLatencyTestEnable;
+  uint64_t mVideoLatencyAvg;
+
+  static const unsigned int sAlphaNum = 7;
+  static const unsigned int sAlphaDen = 8;
+  static const unsigned int sRoundingPadding = 1024;
 
   mozilla::RefPtr<WebrtcAudioConduit> mSyncedTo;
 };
