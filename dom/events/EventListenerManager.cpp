@@ -897,7 +897,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
                                                       str.Length()));
   NS_ENSURE_TRUE(jsStr, NS_ERROR_OUT_OF_MEMORY);
 
-
   // Get the reflector for |aElement|, so that we can pass to setElement.
   if (NS_WARN_IF(!WrapNewBindingObject(cx, target, aElement, &v))) {
     return NS_ERROR_FAILURE;
@@ -907,10 +906,11 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
          .setFileAndLine(url.get(), lineNo)
          .setVersion(SCRIPTVERSION_DEFAULT)
          .setElement(&v.toObject())
-         .setElementAttributeName(jsStr);
+         .setElementAttributeName(jsStr)
+         .setDefineOnScope(false);
 
   JS::Rooted<JSObject*> handlerFun(cx);
-  result = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options,
+  result = nsJSUtils::CompileFunction(cx, target, options,
                                       nsAtomCString(typeAtom),
                                       argCount, argNames, *body, handlerFun.address());
   NS_ENSURE_SUCCESS(result, result);
