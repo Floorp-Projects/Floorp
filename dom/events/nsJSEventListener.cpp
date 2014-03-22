@@ -43,45 +43,16 @@ using namespace mozilla::dom;
 /*
  * nsJSEventListener implementation
  */
-nsJSEventListener::nsJSEventListener(JSObject* aScopeObject,
-                                     nsISupports *aTarget,
+nsJSEventListener::nsJSEventListener(nsISupports *aTarget,
                                      nsIAtom* aType,
                                      const nsEventHandler& aHandler)
-  : nsIJSEventListener(aScopeObject, aTarget, aType, aHandler)
+  : nsIJSEventListener(aTarget, aType, aHandler)
 {
-  if (mScopeObject) {
-    mozilla::HoldJSObjects(this);
-  }
-}
-
-nsJSEventListener::~nsJSEventListener() 
-{
-  if (mScopeObject) {
-    mScopeObject = nullptr;
-    mozilla::DropJSObjects(this);
-  }
-}
-
-/* virtual */
-void
-nsJSEventListener::UpdateScopeObject(JS::Handle<JSObject*> aScopeObject)
-{
-  if (mScopeObject && !aScopeObject) {
-    mScopeObject = nullptr;
-    mozilla::DropJSObjects(this);
-  } else if (aScopeObject && !mScopeObject) {
-    mozilla::HoldJSObjects(this);
-  }
-  mScopeObject = aScopeObject;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
-  if (tmp->mScopeObject) {
-    tmp->mScopeObject = nullptr;
-    mozilla::DropJSObjects(tmp);
-  }
   tmp->mHandler.ForgetHandler();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
@@ -97,10 +68,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mHandler.Ptr())
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSEventListener)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mScopeObject)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsJSEventListener)
   if (tmp->IsBlackForCC()) {
@@ -143,12 +110,7 @@ nsJSEventListener::IsBlackForCC()
 {
   // We can claim to be black if all the things we reference are
   // effectively black already.
-  if ((!mScopeObject || !xpc_IsGrayGCThing(mScopeObject)) &&
-      (!mHandler.HasEventHandler() ||
-       !mHandler.Ptr()->HasGrayCallable())) {
-    return true;
-  }
-  return false;
+  return !mHandler.HasEventHandler() || !mHandler.Ptr()->HasGrayCallable();
 }
 
 nsresult
@@ -274,14 +236,13 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
  */
 
 nsresult
-NS_NewJSEventListener(JSObject* aScopeObject,
-                      nsISupports*aTarget, nsIAtom* aEventType,
+NS_NewJSEventListener(nsISupports*aTarget, nsIAtom* aEventType,
                       const nsEventHandler& aHandler,
                       nsIJSEventListener** aReturn)
 {
   NS_ENSURE_ARG(aEventType || !NS_IsMainThread());
   nsJSEventListener* it =
-    new nsJSEventListener(aScopeObject, aTarget, aEventType, aHandler);
+    new nsJSEventListener(aTarget, aEventType, aHandler);
   NS_ADDREF(*aReturn = it);
 
   return NS_OK;
