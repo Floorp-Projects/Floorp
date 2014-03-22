@@ -66,6 +66,7 @@
         '../../../netwerk/srtp/src/include',
         '../../../netwerk/srtp/src/crypto/include',
         '../../../ipc/chromium/src',
+        '../../mtransport/third_party/nrappkit/src/util/libekr',
       ],
 
       #
@@ -87,6 +88,9 @@
         './src/media-conduit/AudioConduit.cpp',
         './src/media-conduit/VideoConduit.h',
         './src/media-conduit/VideoConduit.cpp',
+        './src/media-conduit/YuvStamper.h',
+        './src/media-conduit/YuvStamper.cpp',
+
         # Common
         './src/common/CommonTypes.h',
         './src/common/csf_common.h',
