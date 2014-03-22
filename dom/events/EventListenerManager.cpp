@@ -807,7 +807,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
 
   // Push a context to make sure exceptions are reported in the right place.
   AutoPushJSContextForErrorReporting cx(context->GetNativeContext());
-  JS::Rooted<JSObject*> handler(cx);
   JS::Rooted<JSObject*> scope(cx, jsListener->GetEventScope());
 
   nsCOMPtr<nsIAtom> typeAtom = aListener->mTypeAtom;
@@ -909,35 +908,25 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
          .setElementAttributeName(jsStr)
          .setDefineOnScope(false);
 
-  JS::Rooted<JSObject*> handlerFun(cx);
+  JS::Rooted<JSObject*> handler(cx);
   result = nsJSUtils::CompileFunction(cx, target, options,
                                       nsAtomCString(typeAtom),
-                                      argCount, argNames, *body, handlerFun.address());
+                                      argCount, argNames, *body, handler.address());
   NS_ENSURE_SUCCESS(result, result);
-  handler = handlerFun;
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
-  // Bind it
-  JS::Rooted<JSObject*> boundHandler(cx);
-  context->BindCompiledEventHandler(mTarget, scope, handler, &boundHandler);
-  // Note - We pass null for aIncumbentGlobal below. We could also pass the
-  // compilation global, but since the handler is guaranteed to be scripted,
-  // there's no need to use an override, since the JS engine will always give
-  // us the right answer.
-  if (!boundHandler) {
-    jsListener->ForgetHandler();
-  } else if (jsListener->EventName() == nsGkAtoms::onerror && win) {
+  if (jsListener->EventName() == nsGkAtoms::onerror && win) {
     nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
-      new OnErrorEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
+      new OnErrorEventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
     jsListener->SetHandler(handlerCallback);
   } else if (jsListener->EventName() == nsGkAtoms::onbeforeunload && win) {
     nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
-      new OnBeforeUnloadEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
+      new OnBeforeUnloadEventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
     jsListener->SetHandler(handlerCallback);
   } else {
     nsRefPtr<EventHandlerNonNull> handlerCallback =
-      new EventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
+      new EventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
     jsListener->SetHandler(handlerCallback);
   }
 
