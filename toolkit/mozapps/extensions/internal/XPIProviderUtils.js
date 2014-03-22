@@ -1482,8 +1482,7 @@ this.XPIDatabase = {
         Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
       }
       catch (e) {
-        logger.error("Failed to write add-ons list to " + addonsListTmp.parent + "/" +
-              FILE_XPI_ADDONS_LIST, e);
+        logger.error("Failed to write add-ons list to profile directory", e);
         return false;
       }
     }

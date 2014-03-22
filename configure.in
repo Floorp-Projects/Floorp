@@ -7463,7 +7463,7 @@ fi
 AC_SUBST(MOZ_AUDIO_CHANNEL_MANAGER)
 
 dnl ========================================================
-dnl = Enable Support for Firefox Accounts in B2G
+dnl = Enable Support for Firefox Accounts (services/fxaccounts)
 dnl ========================================================
 if test -n "$MOZ_SERVICES_FXACCOUNTS"; then
     AC_DEFINE(MOZ_SERVICES_FXACCOUNTS)

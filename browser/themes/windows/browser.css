@@ -109,8 +109,8 @@
 %endif
 
 /* Make the menu inherit the toolbar's color. On non-compositor (Aero Basic, XP modern, classic)
- * this is defined above. Otherwise (Aero Glass, Windows 8), this is hardcoded to black in
- * browser-aero.css. */
+ * this is defined above. Otherwise (Aero Glass, Windows 8 inactive windows), this is hardcoded
+ * to black in browser-aero.css. */
 #main-menubar > menu:not(:-moz-lwtheme) {
   color: inherit;
 }
@@ -155,6 +155,11 @@
 
   #main-window[tabsintitlebar]:not([sizemode=fullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive::after {
     box-shadow: 0 0 50px 8px InactiveCaption;
+  }
+
+  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) toolbar[customindex]:not(:-moz-lwtheme),
+  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) #PersonalToolbar:not(:-moz-lwtheme) {
+    position: relative;
   }
 
   /* Need to constrain the box shadow fade to avoid overlapping layers, see bug 886281. */
@@ -671,7 +676,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 #nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
-#nav-bar .toolbarbutton-1:not([disabled=true]):hover > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
+#nav-bar .toolbarbutton-1:not([disabled=true]):-moz-any(:hover,[open]) > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-text,
 #nav-bar .toolbarbutton-1:not([disabled=true]):not([checked]):not([open]):not(:active):hover > .toolbarbutton-badge-container,
@@ -969,12 +974,9 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
 }
 
-#sync-button[cui-areatype="toolbar"][status="active"] {
-  /* !important because we need to override the glass selectors that trigger
-   * use of the Toolbar-inverted image. Those use a list of all primary toolbar
-   * buttons, so we can't easily fix those selectors. */
-  list-style-image: url("chrome://browser/skin/sync-throbber.png") !important;
-  -moz-image-region: rect(0, 18px, 18px, 0);
+#main-window[tabsintitlebar]:not([inFullscreen]) :-moz-any(#TabsToolbar, #toolbar-menubar) > #sync-button[status="active"]:-moz-system-metric(windows-classic):not(:-moz-lwtheme),
+#main-window[tabsintitlebar]:not([inFullscreen]) :-moz-any(#TabsToolbar, #toolbar-menubar) > toolbarpaletteitem > #sync-button[status="active"]:-moz-system-metric(windows-classic):not(:-moz-lwtheme) {
+  list-style-image: url("chrome://browser/skin/syncProgress-toolbar-inverted.png");
 }
 
 /* tabview button & menu item */

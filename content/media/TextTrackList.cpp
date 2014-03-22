@@ -37,11 +37,19 @@ TextTrackList::TextTrackList(nsISupports* aGlobal, TextTrackManager* aTextTrackM
 }
 
 void
-TextTrackList::GetAllActiveCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
+TextTrackList::UpdateAndGetShowingCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
 {
   nsTArray< nsRefPtr<TextTrackCue> > cues;
   for (uint32_t i = 0; i < Length(); i++) {
-    if (mTextTracks[i]->Mode() != TextTrackMode::Disabled) {
+    TextTrackMode mode = mTextTracks[i]->Mode();
+    // If the mode is hidden then we just need to update the active cue list,
+    // we don't need to show it on the video.
+    if (mode == TextTrackMode::Hidden) {
+      mTextTracks[i]->UpdateActiveCueList();
+    } else if (mode == TextTrackMode::Showing) {
+      // If the mode is showing then we need to update the cue list and show it
+      // on the video. GetActiveCueArray() calls UpdateActiveCueList() so we
+      // don't need to call it explicitly.
       mTextTracks[i]->GetActiveCueArray(cues);
       aCues.AppendElements(cues);
     }
