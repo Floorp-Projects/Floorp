@@ -157,6 +157,11 @@
     box-shadow: 0 0 50px 8px InactiveCaption;
   }
 
+  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) toolbar[customindex]:not(:-moz-lwtheme),
+  #main-window[tabsintitlebar]:not([sizemode=fullscreen]) #PersonalToolbar:not(:-moz-lwtheme) {
+    position: relative;
+  }
+
   /* Need to constrain the box shadow fade to avoid overlapping layers, see bug 886281. */
   #main-window[tabsintitlebar]:not([sizemode=fullscreen]) #navigator-toolbox:not(:-moz-lwtheme) {
     overflow: -moz-hidden-unscrollable;
