@@ -1059,6 +1059,27 @@ BrowserGlue.prototype = {
         importBookmarks = true;
     } catch(ex) {}
 
+    // Support legacy bookmarks.html format for apps that depend on that format.
+    let autoExportHTML = false;
+    try {
+      autoExportHTML = Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML");
+    } catch (ex) {} // Do not export.
+    if (autoExportHTML) {
+      // Sqlite.jsm and Places shutdown happen at profile-before-change, thus,
+      // to be on the safe side, this should run earlier.
+      AsyncShutdown.profileChangeTeardown.addBlocker(
+        "Places: export bookmarks.html",
+        () => Task.spawn(function* () {
+          try {
+            yield BookmarkHTMLUtils.exportToFile(BookmarkHTMLUtils.defaultPath);
+          } catch(ex) {
+            // At this point there's no UI, so just dump.
+            dump("ERROR: Unable to export bookmarks.html " + ex + "\n"
+                                                           + ex.stack + "\n");
+          }
+        }));
+    }
+
     Task.spawn(function() {
       // Check if Safe Mode or the user has required to restore bookmarks from
       // default profile's bookmarks.html
@@ -1116,10 +1137,6 @@ BrowserGlue.prototype = {
         // An import operation is about to run.
         // Don't try to recreate smart bookmarks if autoExportHTML is true or
         // smart bookmarks are disabled.
-        let autoExportHTML = false;
-        try {
-          autoExportHTML = Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML");
-        } catch(ex) {}
         let smartBookmarksVersion = 0;
         try {
           smartBookmarksVersion = Services.prefs.getIntPref("browser.places.smartBookmarksVersion");
@@ -1222,19 +1239,6 @@ BrowserGlue.prototype = {
       this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
       delete this._bookmarksBackupIdleTime;
     }
-
-    // Support legacy bookmarks.html format for apps that depend on that format.
-    try {
-      if (Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML")) {
-        // places-shutdown happens at profile-change-teardown, so here we
-        // can safely add a profile-before-change blocker.
-        AsyncShutdown.profileBeforeChange.addBlocker(
-          "Places: bookmarks.html",
-          () => BookmarkHTMLUtils.exportToFile(BookmarkHTMLUtils.defaultPath)
-                                 .then(null, Cu.reportError)
-        );
-      }
-    } catch (ex) {} // Do not export.
   },
 
   /**
