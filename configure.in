@@ -3761,7 +3761,7 @@ dnl ========================================================
 MOZ_ZLIB_CHECK([1.2.3])
 
 if test "$MOZ_NATIVE_ZLIB" != 1; then
-    MOZ_ZLIB_CFLAGS=
+    MOZ_ZLIB_CFLAGS="-I${_topsrcdir}/modules/zlib/src"
     MOZ_ZLIB_LIBS='$(call EXPAND_LIBNAME_PATH,mozz,'"$MOZ_BUILD_ROOT"'/modules/zlib/src)'
 fi
 
@@ -9057,10 +9057,14 @@ if test "$MOZ_TREE_FREETYPE"; then
    export CPPFLAGS="$CPPFLAGS $MOZ_DEBUG_FLAGS"
    export CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
    export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
-   export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS"
-   export LIBPNG_LIBS="$MOZ_PNG_LIBS"
+   # Spaces in the *_CFLAGS and *_LIBS variables are intentionally placed
+   # to force freetype to use our settings rather than autodetecting
+   export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS "
+   export LIBPNG_LIBS="$MOZ_PNG_LIBS "
+   export ZLIB_CFLAGS="$MOZ_ZLIB_CFLAGS "
+   export ZLIB_LIBS="$MOZ_ZLIB_LIBS "
    export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
-   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes --with-png=yes --without-harfbuzz"
+   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes --with-zlib=yes --without-bzip2 --with-png=yes --without-harfbuzz"
 
    if ! test -e modules; then
      mkdir modules
