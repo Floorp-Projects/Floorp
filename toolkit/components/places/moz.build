@@ -68,6 +68,7 @@ if CONFIG['MOZ_PLACES']:
         'PlacesBackups.jsm',
         'PlacesDBUtils.jsm',
         'PlacesTransactions.jsm',
+        'PriorityUrlProvider.jsm'
     ]
 
     EXTRA_PP_JS_MODULES += [
