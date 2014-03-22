@@ -70,6 +70,12 @@ if 'Android' != CONFIG['OS_TARGET']:
         'LightweightThemeConsumer.jsm',
     ]
 
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    EXTRA_JS_MODULES += [
+        'WindowsRegistry.jsm',
+    ]
+
 DEFINES['MOZ_APP_NAME'] = CONFIG['MOZ_APP_NAME']
 DEFINES['MOZ_BUILD_APP'] = CONFIG['MOZ_BUILD_APP']
 

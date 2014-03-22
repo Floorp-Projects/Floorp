@@ -292,6 +292,7 @@ browser.jar:
   skin/classic/browser/sync-notification-24.png
   skin/classic/browser/syncProgress-menuPanel.png
   skin/classic/browser/syncProgress-toolbar.png
+  skin/classic/browser/syncProgress-toolbar-inverted.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
   skin/classic/browser/syncQuota.css
