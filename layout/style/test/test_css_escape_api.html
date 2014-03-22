@@ -18,6 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=955860
 </div>
 <pre id="test">
 <script>
+// Tests taken from:
+// https://github.com/mathiasbynens/CSS.escape/blob/master/tests/tests.js
+
 SimpleTest.doesThrow(() => CSS.escape('\0'), "InvalidCharacterError Character :\\0");
 SimpleTest.doesThrow(() => CSS.escape('a\0'), "InvalidCharacterError Character : a\\0");
 SimpleTest.doesThrow(() => CSS.escape('\0b'), "InvalidCharacterError Character : \\0b");
