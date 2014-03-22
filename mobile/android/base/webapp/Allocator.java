@@ -11,6 +11,7 @@ import org.mozilla.gecko.GeckoAppShell;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class Allocator {
 
@@ -18,6 +19,13 @@ public class Allocator {
 
     private static final String PREFIX_ORIGIN = "webapp-origin-";
     private static final String PREFIX_PACKAGE_NAME = "webapp-package-name-";
+
+    // These prefixes are for prefs used by the old shortcut-based runtime.
+    // We define them here so maybeMigrateOldPrefs can migrate them to their
+    // new equivalents if this app was originally installed as a shortcut.
+    // Maybe we can remove this code in the future!
+    private static final String PREFIX_OLD_APP = "app";
+    private static final String PREFIX_OLD_ICON = "icon";
 
     // The number of Webapp# and WEBAPP# activities/apps/intents
     private final static int MAX_WEB_APPS = 100;
@@ -51,6 +59,14 @@ public class Allocator {
 
     public static String originKey(int i) {
         return PREFIX_ORIGIN + i;
+    }
+
+    private static String oldAppKey(int index) {
+        return PREFIX_OLD_APP + index;
+    }
+
+    private static String oldIconKey(int index) {
+        return PREFIX_OLD_ICON + index;
     }
 
     public ArrayList<String> getInstalledPackageNames() {
@@ -137,5 +153,28 @@ public class Allocator {
 
     public int getColor(int index) {
         return mPrefs.getInt(iconKey(index), -1);
+    }
+
+    /**
+     * Migrate old prefs to their new equivalents if this app was originally
+     * installed by the shortcut-based implementation.
+     */
+    public void maybeMigrateOldPrefs(int index) {
+        if (!mPrefs.contains(oldAppKey(index))) {
+            return;
+        }
+
+        Log.i(LOGTAG, "migrating old prefs");
+
+        // The old appKey pref stored the origin, while the new appKey pref
+        // stores the packageName, so we migrate oldAppKey to the origin pref.
+        putOrigin(index, mPrefs.getString(oldAppKey(index), null));
+
+        // The old iconKey pref actually stored the splash screen background
+        // color, so we migrate oldIconKey to the color pref.
+        updateColor(index, mPrefs.getInt(oldIconKey(index), -1));
+
+        // Remove the old prefs so we don't migrate them the next time around.
+        mPrefs.edit().remove(oldAppKey(index)).remove(oldIconKey(index)).apply();
     }
 }
