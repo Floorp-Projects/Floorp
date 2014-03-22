@@ -106,8 +106,8 @@ public:
     }
   }
 
-  const CSSToScreenScale& GetFrameResolution() const { return mFrameResolution; }
-  void SetFrameResolution(const CSSToScreenScale& aResolution) { mFrameResolution = aResolution; }
+  const CSSToParentLayerScale& GetFrameResolution() const { return mFrameResolution; }
+  void SetFrameResolution(const CSSToParentLayerScale& aResolution) { mFrameResolution = aResolution; }
 
   bool HasFormatChanged() const;
 private:
@@ -116,7 +116,7 @@ private:
   ClientLayerManager* mManager;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
-  CSSToScreenScale mFrameResolution;
+  CSSToParentLayerScale mFrameResolution;
   bool mLastPaintOpaque;
 
   gfxContentType GetContentType() const;
@@ -180,11 +180,7 @@ public:
 protected:
   ClientLayerManager* ClientManager() { return static_cast<ClientLayerManager*>(mManager); }
 
-  void BeginPaint();
-  void EndPaint(bool aFinish);
-
   RefPtr<SimpleTiledContentClient> mContentClient;
-  BasicTiledLayerPaintData mPaintData;
 };
 
 } // mozilla
