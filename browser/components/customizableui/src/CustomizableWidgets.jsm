@@ -695,7 +695,6 @@ const CustomizableWidgets = [{
         elem.section = aSection == "detectors" ? "detectors" : "charsets";
         elem.value = item.id;
         elem.setAttribute("class", "subviewbutton");
-        addShortcut(item, doc, elem);
         containerElem.appendChild(elem);
       }
     },
