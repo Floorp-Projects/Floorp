@@ -139,6 +139,7 @@
           return this._fullZoom;
         ]]></getter>
         <setter><![CDATA[
+          this._fullZoom = val;
           this.messageManager.sendAsyncMessage("FullZoom", {value: val});
         ]]></setter>
       </property>
@@ -149,6 +150,7 @@
           return this._textZoom;
         ]]></getter>
         <setter><![CDATA[
+          this._textZoom = val;
           this.messageManager.sendAsyncMessage("TextZoom", {value: val});
         ]]></setter>
       </property>

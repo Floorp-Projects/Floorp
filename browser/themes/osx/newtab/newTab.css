@@ -82,32 +82,16 @@
   }
 }
 
-/* ROWS */
-.newtab-row {
-  margin-bottom: 20px;
-}
-
-.newtab-row:last-child {
-  margin-bottom: 0;
-}
-
 /* CELLS */
 .newtab-cell {
-  -moz-margin-end: 20px;
   background-color: rgba(255,255,255,.2);
-  border: 1px solid;
-  border-color: rgba(8,22,37,.12) rgba(8,22,37,.14) rgba(8,22,37,.16);
-  border-radius: 1px;
+  border: 1px solid #dee0e1;
   transition: border-color 100ms ease-out;
 }
 
 .newtab-cell:empty {
   border: 1px dashed;
   border-color: rgba(8,22,37,.15) rgba(8,22,37,.17) rgba(8,22,37,.19);
-}
-
-.newtab-cell:last-child {
-  -moz-margin-end: 0;
 }
 
 .newtab-cell:hover:not(:empty):not([dragged]) {
@@ -140,10 +124,9 @@
 
 /* TITLES */
 .newtab-title {
-  padding: 0 8px;
-  background-color: rgba(248,249,251,.95);
-  color: #1f364c;
-  line-height: 24px;
+  color: #525c66;
+  font-family: Lucida Grande;
+  font-size: 13px;
 }
 
 /* CONTROLS */

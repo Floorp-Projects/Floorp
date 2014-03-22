@@ -188,6 +188,10 @@ TextureClientD3D11::Unlock()
 {
   MOZ_ASSERT(mIsLocked, "Unlocked called while the texture is not locked!");
   if (mDrawTarget) {
+    // see the comment on TextureClientDrawTarget::GetAsDrawTarget.
+    // This DrawTarget is internal to the TextureClient and is only exposed to the
+    // outside world between Lock() and Unlock(). This assertion checks that no outside
+    // reference remains by the time Unlock() is called.
     MOZ_ASSERT(mDrawTarget->refCount() == 1);
     mDrawTarget->Flush();
   }
