@@ -22,6 +22,8 @@
 #include "nsISupportsUtils.h"
 #endif
 
+#include "YuvStamper.h"
+
 #define VIDEO_RATE USECS_PER_S
 #define AUDIO_RATE 16000
 #define AUDIO_FRAME_LENGTH ((AUDIO_RATE * MediaEngine::DEFAULT_AUDIO_TIMER_MS) / 1000)
@@ -239,6 +241,13 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
       static_cast<layers::PlanarYCbCrImage*>(image.get());
   layers::PlanarYCbCrData data;
   AllocateSolidColorFrame(data, mOpts.mWidth, mOpts.mHeight, 0x80, mCb, mCr);
+
+ uint64_t timestamp = PR_Now();
+  YuvStamper::Encode(mOpts.mWidth, mOpts.mHeight, mOpts.mWidth,
+		     reinterpret_cast<uint8_t*>(data.mYChannel),
+		     reinterpret_cast<uint8_t*>(&timestamp), sizeof(timestamp),
+		     0, 0);
+
   ycbcr_image->SetData(data);
   // SetData copies data, so we can free the frame
   ReleaseFrame(data);
