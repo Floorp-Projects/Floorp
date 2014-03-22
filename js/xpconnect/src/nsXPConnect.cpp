@@ -393,8 +393,8 @@ CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
         AllocateProtoAndIfaceCache(global,
                                    (strcmp(className, "Window") == 0 ||
                                     strcmp(className, "ChromeWindow") == 0)
-                                   ? ProtoAndIfaceArray::WindowLike
-                                   : ProtoAndIfaceArray::NonWindowLike);
+                                   ? ProtoAndIfaceCache::WindowLike
+                                   : ProtoAndIfaceCache::NonWindowLike);
     }
 
     return global;

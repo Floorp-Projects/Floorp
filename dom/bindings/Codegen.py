@@ -1949,7 +1949,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('ProtoAndIfaceArray&', 'aProtoAndIfaceArray'),
+                Argument('ProtoAndIfaceCache&', 'aProtoAndIfaceCache'),
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
@@ -2074,13 +2074,13 @@ if (!unforgeableHolder) {
 
         if needInterfacePrototypeObject:
             protoClass = "&PrototypeClass.mBase"
-            protoCache = "&aProtoAndIfaceArray.EntrySlotOrCreate(prototypes::id::%s)" % self.descriptor.name
+            protoCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s)" % self.descriptor.name
         else:
             protoClass = "nullptr"
             protoCache = "nullptr"
         if needInterfaceObject:
             interfaceClass = "&InterfaceObjectClass.mBase"
-            interfaceCache = "&aProtoAndIfaceArray.EntrySlotOrCreate(constructors::id::%s)" % self.descriptor.name
+            interfaceCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(constructors::id::%s)" % self.descriptor.name
         else:
             # We don't have slots to store the named constructors.
             assert len(self.descriptor.interface.namedConstructors) == 0
@@ -2120,7 +2120,7 @@ if (!unforgeableHolder) {
         if UseHolderForUnforgeable(self.descriptor):
             assert needInterfacePrototypeObject
             setUnforgeableHolder = CGGeneric(
-                "JSObject* proto = aProtoAndIfaceArray.EntrySlotOrCreate(prototypes::id::%s);\n"
+                "JSObject* proto = aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s);\n"
                 "if (proto) {\n"
                 "  js::SetReservedSlot(proto, DOM_INTERFACE_PROTO_SLOTS_BASE,\n"
                 "                      JS::ObjectValue(*unforgeableHolder));\n"
@@ -2152,19 +2152,19 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     return JS::NullPtr();
   }
   /* Check to see whether the interface objects are already installed */
-  ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(aGlobal);
-  if (!protoAndIfaceArray.EntrySlotIfExists(%s)) {
-    CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray, aDefineOnGlobal);
+  ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(aGlobal);
+  if (!protoAndIfaceCache.EntrySlotIfExists(%s)) {
+    CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceCache, aDefineOnGlobal);
   }
 
   /*
    * The object might _still_ be null, but that's OK.
    *
-   * Calling fromMarkedLocation() is safe because protoAndIfaceArray is
+   * Calling fromMarkedLocation() is safe because protoAndIfaceCache is
    * traced by TraceProtoAndIfaceCache() and its contents are never
    * changed after they have been set.
    */
-  return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceArray.EntrySlotMustExist(%s).address());""" % (self.id, self.id))
+  return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceCache.EntrySlotMustExist(%s).address());""" % (self.id, self.id))
 
 class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
     """
@@ -9894,7 +9894,7 @@ class CGForwardDeclarations(CGWrapper):
 
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks")
-        builder.addInMozillaDom("ProtoAndIfaceArray")
+        builder.addInMozillaDom("ProtoAndIfaceCache")
 
         for callback in mainCallbacks:
             forwardDeclareForType(callback)
