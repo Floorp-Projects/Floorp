@@ -808,15 +808,13 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   // Push a context to make sure exceptions are reported in the right place.
   AutoPushJSContextForErrorReporting cx(context->GetNativeContext());
   JS::Rooted<JSObject*> handler(cx);
-
   JS::Rooted<JSObject*> scope(cx, jsListener->GetEventScope());
 
   nsCOMPtr<nsIAtom> typeAtom = aListener->mTypeAtom;
   nsIAtom* attrName = typeAtom;
 
-  // OK, we didn't find an existing compiled event handler.  Flag us
-  // as not a string so we don't keep trying to compile strings
-  // which can't be compiled
+  // Flag us as not a string so we don't keep trying to compile strings which
+  // can't be compiled.
   aListener->mHandlerIsString = false;
 
   // mTarget may not be an Element if it's a window and we're
@@ -871,30 +869,45 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
                                    typeAtom,
                                    &argCount, &argNames);
 
-  JSAutoCompartment ac(cx, context->GetWindowProxy());
+  // Wrap the event target, so that we can use it as the scope for the event
+  // handler. Note that mTarget is different from aElement in the <body> case,
+  // where mTarget is a Window.
+  //
+  // The wrapScope doesn't really matter here, because the target will create
+  // its reflector in the proper scope, and then we'll enter that compartment.
+  JS::Rooted<JSObject*> wrapScope(cx, context->GetWindowProxy());
+  JS::Rooted<JS::Value> v(cx);
+  {
+    JSAutoCompartment ac(cx, wrapScope);
+    nsresult rv = nsContentUtils::WrapNative(cx, wrapScope, mTarget, &v,
+                                             /* aAllowWrapping = */ false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+  JS::Rooted<JSObject*> target(cx, &v.toObject());
+  JSAutoCompartment ac(cx, target);
+
+  nsDependentAtomString str(attrName);
+  // Most of our names are short enough that we don't even have to malloc
+  // the JS string stuff, so don't worry about playing games with
+  // refcounting XPCOM stringbuffers.
+  JS::Rooted<JSString*> jsStr(cx, JS_NewUCStringCopyN(cx,
+                                                      str.BeginReading(),
+                                                      str.Length()));
+  NS_ENSURE_TRUE(jsStr, NS_ERROR_OUT_OF_MEMORY);
+
+
+  // Get the reflector for |aElement|, so that we can pass to setElement.
+  if (NS_WARN_IF(!WrapNewBindingObject(cx, target, aElement, &v))) {
+    return NS_ERROR_FAILURE;
+  }
   JS::CompileOptions options(cx);
   options.setIntroductionType("eventHandler")
          .setFileAndLine(url.get(), lineNo)
-         .setVersion(SCRIPTVERSION_DEFAULT);
-
-  JS::Rooted<JS::Value> targetVal(cx);
-  // Go ahead and wrap into the current compartment of cx directly.
-  JS::Rooted<JSObject*> wrapScope(cx, JS::CurrentGlobalOrNull(cx));
-  if (WrapNewBindingObject(cx, wrapScope, aElement, &targetVal)) {
-    MOZ_ASSERT(targetVal.isObject());
-
-    nsDependentAtomString str(attrName);
-    // Most of our names are short enough that we don't even have to malloc
-    // the JS string stuff, so don't worry about playing games with
-    // refcounting XPCOM stringbuffers.
-    JS::Rooted<JSString*> jsStr(cx, JS_NewUCStringCopyN(cx,
-                                                        str.BeginReading(),
-                                                        str.Length()));
-    NS_ENSURE_TRUE(jsStr, NS_ERROR_OUT_OF_MEMORY);
-
-    options.setElement(&targetVal.toObject())
-           .setElementAttributeName(jsStr);
-  }
+         .setVersion(SCRIPTVERSION_DEFAULT)
+         .setElement(&v.toObject())
+         .setElementAttributeName(jsStr);
 
   JS::Rooted<JSObject*> handlerFun(cx);
   result = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options,
