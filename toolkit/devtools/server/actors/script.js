@@ -3706,8 +3706,10 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     let url;
     if (aRawObj instanceof Ci.nsIDOMWindow && aRawObj.location) {
       url = aRawObj.location.href;
-    } else {
+    } else if (aRawObj.href) {
       url = aRawObj.href;
+    } else {
+      return false;
     }
 
     aGrip.preview = {
