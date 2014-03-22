@@ -5,8 +5,12 @@
 ifdef MOZ_ANGLE_RENDERER
 
 libs::
+ifdef MOZ_HAS_WINSDK_WITH_D3D
+	cp -fp "$(MOZ_D3DCOMPILER_DLL_PATH)" "$(DIST)/bin"
+else
 ifdef MOZ_D3DCOMPILER_CAB
 	expand '$(MOZ_D3DCOMPILER_CAB)' -F:$(MOZ_D3DCOMPILER_DLL) '$(DIST)/bin'
+endif
 endif
 
 endif
