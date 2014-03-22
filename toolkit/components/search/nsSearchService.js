@@ -861,12 +861,14 @@ function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
  *        The URL to which search queries should be sent. For GET requests,
  *        must contain the string "{searchTerms}", to indicate where the user
  *        entered search terms should be inserted.
+ * @param aResultDomain
+ *        The root domain for this URL.  Defaults to the template's host.
  *
  * @see http://opensearch.a9.com/spec/1.1/querysyntax/#urltag
  *
  * @throws NS_ERROR_NOT_IMPLEMENTED if aType is unsupported.
  */
-function EngineURL(aType, aMethod, aTemplate) {
+function EngineURL(aType, aMethod, aTemplate, aResultDomain) {
   if (!aType || !aMethod || !aTemplate)
     FAIL("missing type, method or template for EngineURL!");
 
@@ -897,6 +899,14 @@ function EngineURL(aType, aMethod, aTemplate) {
       break;
     default:
       FAIL("new EngineURL: template uses invalid scheme!", Cr.NS_ERROR_FAILURE);
+  }
+
+  // If no resultDomain was specified in the engine definition file, use the
+  // host from the template.
+  this.resultDomain = aResultDomain || templateURI.host;
+  // We never want to return a "www." prefix, so eventually strip it.
+  if (this.resultDomain.startsWith("www.")) {
+    this.resultDomain = this.resultDomain.substr(4);
   }
 }
 EngineURL.prototype = {
@@ -1018,7 +1028,8 @@ EngineURL.prototype = {
   _serializeToJSON: function SRCH_EURL__serializeToJSON() {
     var json = {
       template: this.template,
-      rels: this.rels
+      rels: this.rels,
+      resultDomain: this.resultDomain
     };
 
     if (this.type != URLTYPE_SEARCH_HTML)
@@ -1049,6 +1060,8 @@ EngineURL.prototype = {
     url.setAttribute("template", this.template);
     if (this.rels.length)
       url.setAttribute("rel", this.rels.join(" "));
+    if (this.resultDomain)
+      url.setAttribute("resultDomain", this.resultDomain);
 
     for (var i = 0; i < this.params.length; ++i) {
       var param = aDoc.createElementNS(OPENSEARCH_NS_11, "Param");
@@ -1770,9 +1783,10 @@ Engine.prototype = {
     // specified
     var method   = aElement.getAttribute("method") || "GET";
     var template = aElement.getAttribute("template");
+    var resultDomain = aElement.getAttribute("resultdomain");
 
     try {
-      var url = new EngineURL(type, method, template);
+      var url = new EngineURL(type, method, template, resultDomain);
     } catch (ex) {
       FAIL("_parseURL: failed to add " + template + " as a URL",
            Cr.NS_ERROR_FAILURE);
@@ -2271,7 +2285,8 @@ Engine.prototype = {
     for (let i = 0; i < aJson._urls.length; ++i) {
       let url = aJson._urls[i];
       let engineURL = new EngineURL(url.type || URLTYPE_SEARCH_HTML,
-                                    url.method || "GET", url.template);
+                                    url.method || "GET", url.template,
+                                    url.resultDomain);
       engineURL._initWithJSON(url, this);
       this._urls.push(engineURL);
     }
@@ -2717,6 +2732,25 @@ Engine.prototype = {
   // from nsISearchEngine
   supportsResponseType: function SRCH_ENG_supportsResponseType(type) {
     return (this._getURLOfType(type) != null);
+  },
+
+  // from nsISearchEngine
+  getResultDomain: function SRCH_ENG_getResultDomain(aResponseType) {
+#ifdef ANDROID
+    if (!aResponseType) {
+      aResponseType = this._defaultMobileResponseType;
+    }
+#endif
+    if (!aResponseType) {
+      aResponseType = URLTYPE_SEARCH_HTML;
+    }
+
+    LOG("getResultDomain: responseType: \"" + aResponseType + "\"");
+
+    let url = this._getURLOfType(aResponseType);
+    if (url)
+      return url.resultDomain;
+    return "";
   },
 
   // nsISupports
