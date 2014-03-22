@@ -55,7 +55,7 @@ private:
   GonkGPSGeolocationProvider();
   GonkGPSGeolocationProvider(const GonkGPSGeolocationProvider &);
   GonkGPSGeolocationProvider & operator = (const GonkGPSGeolocationProvider &);
-  ~GonkGPSGeolocationProvider();
+  virtual ~GonkGPSGeolocationProvider();
 
   static void LocationCallback(GpsLocation* location);
   static void StatusCallback(GpsStatus* status);
@@ -81,6 +81,7 @@ private:
   void Init();
   void StartGPS();
   void ShutdownGPS();
+  void InjectLocation(double latitude, double longitude, float accuracy);
 #ifdef MOZ_B2G_RIL
   void SetupAGPS();
   int32_t GetDataConnectionState();
@@ -113,7 +114,21 @@ private:
   nsCOMPtr<nsIRadioInterface> mRadioInterface;
 #endif
   nsCOMPtr<nsIGeolocationUpdate> mLocationCallback;
+  PRTime mLastGPSDerivedLocationTime;
   nsCOMPtr<nsIThread> mInitThread;
+  nsCOMPtr<nsIGeolocationProvider> mNetworkLocationProvider;
+
+  class NetworkLocationUpdate : public nsIGeolocationUpdate
+  {
+    public:
+      NS_DECL_ISUPPORTS
+      NS_DECL_NSIGEOLOCATIONUPDATE
+
+      NetworkLocationUpdate() {}
+
+    private:
+      virtual ~NetworkLocationUpdate() {}
+  };
 };
 
 #endif /* GonkGPSGeolocationProvider_h */
