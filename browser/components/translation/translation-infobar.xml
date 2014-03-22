@@ -1,0 +1,196 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE bindings [
+<!ENTITY % notificationDTD SYSTEM "chrome://global/locale/notification.dtd">
+%notificationDTD;
+<!ENTITY % translationDTD SYSTEM "chrome://browser/locale/translation.dtd" >
+%translationDTD;
+]>
+
+<bindings id="translationBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+  <binding id="translationbar" extends="chrome://global/content/bindings/notification.xml#notification" role="xul:alert">
+    <resources>
+      <stylesheet src="chrome://global/skin/notification.css"/>
+    </resources>
+    <content>
+      <xul:hbox class="notification-inner outset" flex="1" xbl:inherits="type">
+        <xul:hbox anonid="details" align="center" flex="1">
+          <xul:image anonid="messageImage" class="messageImage" xbl:inherits="src=image,type,value"/>
+          <xul:deck anonid="translationStates" selectedIndex="0">
+
+            <!-- offer to translate -->
+            <xul:hbox class="translate-offer-box" align="baseline">
+              <xul:label value="&translation.thisPageIsIn.label;"/>
+              <xul:menulist anonid="detectedLanguage">
+                <xul:menupopup/>
+              </xul:menulist>
+              <xul:label value="&translation.translateThisPage.label;"/>
+              <xul:button label="&translation.translate.button;" anonid="translate"
+                          oncommand="document.getBindingParent(this).translate();"/>
+              <xul:button label="&translation.notNow.button;" anonid="notNow"
+                          oncommand="document.getBindingParent(this).close();"/>
+            </xul:hbox>
+
+            <!-- translating -->
+            <xul:vbox class="translating-box" pack="center">
+              <xul:label value="&translation.translatingContent.label;"/>
+            </xul:vbox>
+
+            <!-- translated -->
+            <xul:hbox class="translated-box" align="baseline">
+              <xul:label value="&translation.translatedFrom.label;"/>
+              <xul:menulist anonid="fromLanguage"
+                            oncommand="document.getBindingParent(this).translate()">
+                <xul:menupopup/>
+              </xul:menulist>
+              <xul:label value="&translation.translatedTo.label;"/>
+              <xul:menulist anonid="toLanguage"
+                            oncommand="document.getBindingParent(this).translate()">
+                <xul:menupopup/>
+              </xul:menulist>
+              <xul:button anonid="showOriginal"
+                          label="&translation.showOriginal.button;"
+                          oncommand="document.getBindingParent(this).showOriginal();"/>
+              <xul:button anonid="showTranslation"
+                          label="&translation.showTranslation.button;"
+                          oncommand="document.getBindingParent(this).showTranslation();"/>
+            </xul:hbox>
+
+            <!-- error -->
+            <xul:hbox class="translation-error" align="baseline">
+              <xul:label value="&translation.errorTranslating.label;"/>
+              <xul:button label="&translation.tryAgain.button;" anonid="tryAgain"
+                          oncommand="document.getBindingParent(this).translate();"/>
+            </xul:hbox>
+
+          </xul:deck>
+          <xul:spacer flex="1"/>
+
+          <xul:button type="menu" label="&translation.options.menu;">
+            <xul:menupopup/>
+          </xul:button>
+
+        </xul:hbox>
+        <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                           class="messageCloseButton close-icon tabbable"
+                           xbl:inherits="hidden=hideclose"
+                           tooltiptext="&closeNotification.tooltip;"
+                           oncommand="document.getBindingParent(this).close();"/>
+      </xul:hbox>
+    </content>
+    <implementation>
+      <field name="STATE_OFFER" readonly="true">0</field>
+      <field name="STATE_TRANSLATING" readonly="true">1</field>
+      <field name="STATE_TRANSLATED" readonly="true">2</field>
+      <field name="STATE_ERROR" readonly="true">3</field>
+
+      <property name="state"
+                onget="return this._getAnonElt('translationStates').selectedIndex;"
+                onset="this._getAnonElt('translationStates').selectedIndex = val;"/>
+
+      <!-- Initialize the infobar with a translation object exposing these
+           properties:
+            - supportedSourceLanguages, array of supported source language codes
+            - supportedTargetLanguages, array of supported target language codes
+            - defaultTargetLanguage, code of the language to use by default for
+              translation.
+            - translate, method starting the translation of the current page.
+              Returns a promise.
+            - showOriginalContent, method showing the original page content.
+            - showTranslatedContent, method showing the translation for an
+              already translated page whose original content is shown.
+      -->
+      <method name="init">
+        <parameter name="aTranslation"/>
+        <body>
+          <![CDATA[
+            this.translation = aTranslation;
+            let bundle = Cc["@mozilla.org/intl/stringbundle;1"]
+                           .getService(Ci.nsIStringBundleService)
+                           .createBundle("chrome://global/locale/languageNames.properties");
+
+            let detectedLanguage = this._getAnonElt("detectedLanguage");
+            let fromLanguage = this._getAnonElt("fromLanguage");
+            for (let code of this.translation.supportedSourceLanguages) {
+              let name = bundle.GetStringFromName(code);
+              detectedLanguage.appendItem(name, code);
+              fromLanguage.appendItem(name, code);
+            }
+
+            let toLanguage = this._getAnonElt("toLanguage");
+            for (let code of this.translation.supportedTargetLanguages)
+              toLanguage.appendItem(bundle.GetStringFromName(code), code);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_getAnonElt">
+        <parameter name="aAnonId"/>
+        <body>
+          return document.getAnonymousElementByAttribute(this, "anonid", aAnonId);
+        </body>
+      </method>
+
+
+      <field name="_detectedLanguage">""</field>
+      <property name="detectedLanguage" onget="return this._detectedLanguage;">
+        <setter><![CDATA[
+          this._getAnonElt("detectedLanguage").value = val;
+          this._detectedLanguage = val;
+          return val;
+        ]]></setter>
+      </property>
+
+      <method name="translate">
+        <body>
+          <![CDATA[
+            if (this.state == this.STATE_OFFER) {
+              this._getAnonElt("fromLanguage").value =
+                this._getAnonElt("detectedLanguage").value;
+              this._getAnonElt("toLanguage").value =
+                this.translation.defaultTargetLanguage;
+            }
+
+            this._getAnonElt("showOriginal").hidden = false;
+            this._getAnonElt("showTranslation").hidden = true;
+
+            this.state = this.STATE_TRANSLATING;
+            this.translation.translate(this._getAnonElt("fromLanguage").value,
+                                       this._getAnonElt("toLanguage").value)
+                .then(() => { this.state = this.STATE_TRANSLATED; },
+                      () => { this.state = this.STATE_ERROR; });
+          ]]>
+        </body>
+      </method>
+
+      <method name="showOriginal">
+        <body>
+          <![CDATA[
+            this._getAnonElt("showOriginal").hidden = true;
+            this._getAnonElt("showTranslation").hidden = false;
+
+            this.translation.showOriginalContent();
+          ]]>
+        </body>
+      </method>
+
+      <method name="showTranslation">
+        <body>
+          <![CDATA[
+            this._getAnonElt("showOriginal").hidden = false;
+            this._getAnonElt("showTranslation").hidden = true;
+
+            this.translation.showTranslatedContent();
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+</bindings>
