@@ -417,6 +417,7 @@ pref("dom.global-constructor.disable.mozContact", false);
 pref("dom.phonenumber.substringmatching.BR", 8);
 pref("dom.phonenumber.substringmatching.CO", 10);
 pref("dom.phonenumber.substringmatching.VE", 7);
+pref("dom.phonenumber.substringmatching.CL", 8);
 
 // WebAlarms
 pref("dom.mozAlarms.enabled", true);

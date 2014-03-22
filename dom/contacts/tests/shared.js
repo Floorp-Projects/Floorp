@@ -402,15 +402,17 @@ function next() {
   }
 }
 
+SimpleTest.waitForExplicitFinish();
+
 function start_tests() {
   // Skip tests on Android < 4.0 due to test failures on tbpl (see bugs 897924 & 888891)
   let androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
                                     .getService(SpecialPowers.Ci.nsIPropertyBag2)
                                     .getProperty('version');
   if (!isAndroid || androidVersion >= 14) {
-    SimpleTest.waitForExplicitFinish();
-    addLoadEvent(next);
+    next();
   } else {
     ok(true, "Skip tests on Android < 4.0 (bugs 897924 & 888891");
+    SimpleTest.finish();
   }
 }
