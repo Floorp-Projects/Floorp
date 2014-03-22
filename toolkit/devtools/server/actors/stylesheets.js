@@ -129,7 +129,11 @@ let StyleSheetsActor = protocol.ActorClass({
 
         // Recursively handle style sheets of the documents in iframes.
         for (let iframe of doc.getElementsByTagName("iframe")) {
-          documents.push(iframe.contentDocument);
+          if (iframe.contentDocument) {
+            // Sometimes, iframes don't have any document, like the
+            // one that are over deeply nested (bug 285395)
+            documents.push(iframe.contentDocument);
+          }
         }
       }
       throw new Task.Result(actors);
