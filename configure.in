@@ -271,6 +271,9 @@ if test -n "$gonkdir" ; then
         MOZ_OMX_DECODER=1
         MOZ_OMX_ENCODER=1
         AC_DEFINE(MOZ_OMX_ENCODER)
+        MOZ_AUDIO_OFFLOAD=1
+        AC_SUBST(MOZ_AUDIO_OFFLOAD)
+        AC_DEFINE(MOZ_AUDIO_OFFLOAD)
 
         ;;
     *)
