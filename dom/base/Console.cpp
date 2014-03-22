@@ -918,7 +918,7 @@ Console::Notify(nsITimer *timer)
     delete data;
   }
 
-  if (mQueuedCalls.isEmpty()) {
+  if (mQueuedCalls.isEmpty() && mTimer) {
     mTimer->Cancel();
     mTimer = nullptr;
   }

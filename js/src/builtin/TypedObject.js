@@ -851,11 +851,6 @@ function TypeOfTypedObject(obj) {
   }
 }
 
-function ObjectIsTypedObject(obj) {
-  assert(IsObject(obj), "ObjectIsTypedObject invoked with non-object")
-  return ObjectIsTransparentTypedObject(obj) || ObjectIsOpaqueTypedObject(obj);
-}
-
 ///////////////////////////////////////////////////////////////////////////
 // TypedObject surface API methods (sequential implementations).
 
@@ -1067,67 +1062,6 @@ function GET_BIT(data, index) {
   return (data[word] & mask) != 0;
 }
 
-function TypeDescrIsUnsizedArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t),
-         "TypeDescrIsArrayType called on non-type-object");
-  return DESCR_KIND(t) === JS_TYPEREPR_UNSIZED_ARRAY_KIND;
-}
-
-function TypeDescrIsArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsArrayType called on non-type-object");
-
-  var kind = DESCR_KIND(t);
-  switch (kind) {
-  case JS_TYPEREPR_SIZED_ARRAY_KIND:
-  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    return true;
-  case JS_TYPEREPR_SCALAR_KIND:
-  case JS_TYPEREPR_REFERENCE_KIND:
-  case JS_TYPEREPR_X4_KIND:
-  case JS_TYPEREPR_STRUCT_KIND:
-    return false;
-  default:
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  }
-}
-
-function TypeDescrIsSizedArrayType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsSizedArrayType called on non-type-object");
-
-  var kind = DESCR_KIND(t);
-  switch (kind) {
-  case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    return true;
-  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-  case JS_TYPEREPR_SCALAR_KIND:
-  case JS_TYPEREPR_REFERENCE_KIND:
-  case JS_TYPEREPR_X4_KIND:
-  case JS_TYPEREPR_STRUCT_KIND:
-    return false;
-  default:
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  }
-}
-
-function TypeDescrIsSimpleType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t),
-         "TypeDescrIsSimpleType called on non-type-object");
-
-  var kind = DESCR_KIND(t);
-  switch (kind) {
-  case JS_TYPEREPR_SCALAR_KIND:
-  case JS_TYPEREPR_REFERENCE_KIND:
-  case JS_TYPEREPR_X4_KIND:
-    return true;
-  case JS_TYPEREPR_SIZED_ARRAY_KIND:
-  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-  case JS_TYPEREPR_STRUCT_KIND:
-    return false;
-  default:
-    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  }
-}
-
 // Bug 956914: make performance-tuned variants tailored to 1, 2, and 3 dimensions.
 function BuildTypedSeqImpl(arrayType, len, depth, func) {
   assert(IsObject(arrayType) && ObjectIsTypeDescr(arrayType), "Build called on non-type-object");
@@ -1302,11 +1236,16 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   var inGrainTypeIsComplex = !TypeDescrIsSimpleType(inGrainType);
   var outGrainTypeIsComplex = !TypeDescrIsSimpleType(outGrainType);
 
-  var inPointer = new TypedObjectPointer(inGrainType, inArray, 0);
-  var outPointer = new TypedObjectPointer(outGrainType, result, 0);
+  // Specialize for depth=1 non-complex types, for now.  May disappear if
+  // optimization becomes good enough or be generalized beyond depth=1.
 
-  var inUnitSize = DESCR_SIZE(inGrainType);
-  var outUnitSize = DESCR_SIZE(outGrainType);
+  var isDepth1Simple = depth == 1 && !(inGrainTypeIsComplex || outGrainTypeIsComplex);
+
+  var inPointer = isDepth1Simple ? null : new TypedObjectPointer(inGrainType, inArray, 0);
+  var outPointer = isDepth1Simple ? null : new TypedObjectPointer(outGrainType, result, 0);
+
+  var inUnitSize = isDepth1Simple ? 0 : DESCR_SIZE(inGrainType);
+  var outUnitSize = isDepth1Simple ? 0 : DESCR_SIZE(outGrainType);
 
   // Bug 956914: add additional variants for depth = 2, 3, etc.
 
@@ -1326,6 +1265,16 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
       // Update offsets and (implicitly) increment indices.
       inPointer.bump(inUnitSize);
       outPointer.bump(outUnitSize);
+    }
+
+    return result;
+  }
+
+  function DoMapTypedSeqDepth1Simple(inArray, totalLength, func, result) {
+    for (var i = 0; i < totalLength; i++) {
+      var r = func(inArray[i], i, inArray, undefined);
+      if (r !== undefined)
+        result[i] = r;
     }
 
     return result;
@@ -1356,12 +1305,13 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
     return result;
   }
 
-  if  (depth == 1) {
-    return DoMapTypedSeqDepth1();
-  } else {
-    return DoMapTypedSeqDepthN();
-  }
+  if (isDepth1Simple)
+    return DoMapTypedSeqDepth1Simple(inArray, totalLength, func, result);
 
+  if (depth == 1)
+    return DoMapTypedSeqDepth1();
+
+  return DoMapTypedSeqDepthN();
 }
 
 // Implements |map| and |from| methods for typed |inArray|.
