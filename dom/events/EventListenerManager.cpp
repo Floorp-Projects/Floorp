@@ -597,14 +597,11 @@ EventListenerManager::FindEventHandler(uint32_t aEventType,
 
 EventListenerManager::Listener*
 EventListenerManager::SetEventHandlerInternal(
-                        JS::Handle<JSObject*> aScopeObject,
                         nsIAtom* aName,
                         const nsAString& aTypeString,
                         const nsEventHandler& aHandler,
                         bool aPermitUntrustedEvents)
 {
-  MOZ_ASSERT(aScopeObject || aHandler.HasEventHandler(),
-             "Must have one or the other!");
   MOZ_ASSERT(aName || !aTypeString.IsEmpty());
 
   uint32_t eventType = nsContentUtils::GetEventId(aName);
@@ -617,7 +614,7 @@ EventListenerManager::SetEventHandlerInternal(
     flags.mListenerIsJSListener = true;
 
     nsCOMPtr<nsIJSEventListener> jsListener;
-    NS_NewJSEventListener(aScopeObject, mTarget, aName,
+    NS_NewJSEventListener(mTarget, aName,
                           aHandler, getter_AddRefs(jsListener));
     EventListenerHolder listenerHolder(jsListener);
     AddEventListenerInternal(listenerHolder, eventType, aName, aTypeString,
@@ -631,7 +628,7 @@ EventListenerManager::SetEventHandlerInternal(
 
     bool same = jsListener->GetHandler() == aHandler;
     // Possibly the same listener, but update still the context and scope.
-    jsListener->SetHandler(aHandler, aScopeObject);
+    jsListener->SetHandler(aHandler);
     if (mTarget && !same && aName) {
       mTarget->EventListenerRemoved(aName);
       mTarget->EventListenerAdded(aName);
@@ -746,14 +743,9 @@ EventListenerManager::SetEventHandler(nsIAtom* aName,
 
   nsIScriptContext* context = global->GetScriptContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-
   NS_ENSURE_STATE(global->GetGlobalJSObject());
 
-  JSAutoRequest ar(context->GetNativeContext());
-  JS::Rooted<JSObject*> scope(context->GetNativeContext(),
-                              global->GetGlobalJSObject());
-
-  Listener* listener = SetEventHandlerInternal(scope, aName,
+  Listener* listener = SetEventHandlerInternal(aName,
                                                EmptyString(),
                                                nsEventHandler(),
                                                aPermitUntrustedEvents);
@@ -807,7 +799,6 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
 
   // Push a context to make sure exceptions are reported in the right place.
   AutoPushJSContextForErrorReporting cx(context->GetNativeContext());
-  JS::Rooted<JSObject*> scope(cx, jsListener->GetEventScope());
 
   nsCOMPtr<nsIAtom> typeAtom = aListener->mTypeAtom;
   nsIAtom* attrName = typeAtom;
@@ -1231,8 +1222,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aEventName,
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
-  SetEventHandlerInternal(JS::NullPtr(), aEventName,
-                          aTypeString, nsEventHandler(aHandler),
+  SetEventHandlerInternal(aEventName, aTypeString, nsEventHandler(aHandler),
                           !mIsMainThreadELM ||
                           !nsContentUtils::IsCallerChrome());
 }
@@ -1248,8 +1238,8 @@ EventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
 
     // Untrusted events are always permitted for non-chrome script
     // handlers.
-    SetEventHandlerInternal(JS::NullPtr(), nsGkAtoms::onerror,
-                            EmptyString(), nsEventHandler(aHandler),
+    SetEventHandlerInternal(nsGkAtoms::onerror, EmptyString(),
+                            nsEventHandler(aHandler),
                             !nsContentUtils::IsCallerChrome());
   } else {
     if (!aHandler) {
@@ -1258,8 +1248,7 @@ EventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
     }
 
     // Untrusted events are always permitted.
-    SetEventHandlerInternal(JS::NullPtr(), nullptr,
-                            NS_LITERAL_STRING("error"),
+    SetEventHandlerInternal(nullptr, NS_LITERAL_STRING("error"),
                             nsEventHandler(aHandler), true);
   }
 }
@@ -1275,8 +1264,8 @@ EventListenerManager::SetEventHandler(
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
-  SetEventHandlerInternal(JS::NullPtr(), nsGkAtoms::onbeforeunload,
-                          EmptyString(), nsEventHandler(aHandler),
+  SetEventHandlerInternal(nsGkAtoms::onbeforeunload, EmptyString(),
+                          nsEventHandler(aHandler),
                           !mIsMainThreadELM ||
                           !nsContentUtils::IsCallerChrome());
 }
@@ -1331,9 +1320,6 @@ EventListenerManager::MarkForCC()
     if (jsListener) {
       if (jsListener->GetHandler().HasEventHandler()) {
         JS::ExposeObjectToActiveJS(jsListener->GetHandler().Ptr()->Callable());
-      }
-      if (JSObject* scope = jsListener->GetEventScope()) {
-        JS::ExposeObjectToActiveJS(scope);
       }
     } else if (listener.mListenerType == Listener::eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
