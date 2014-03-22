@@ -2457,6 +2457,25 @@ GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 bool
 GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 
+bool
+GenericPromiseReturningBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp);
+
+bool
+StaticMethodPromiseWrapper(JSContext* cx, unsigned argc, JS::Value* vp);
+
+// ConvertExceptionToPromise should only be called when we have an error
+// condition (e.g. returned false from a JSAPI method).  Note that there may be
+// no exception on cx, in which case this is an uncatchable failure that will
+// simply be propagated.  Otherwise this method will attempt to convert the
+// exception to a Promise rejected with the exception that it will store in
+// rval.
+//
+// promiseScope should be the scope in which the Promise should be created.
+bool
+ConvertExceptionToPromise(JSContext* cx,
+                          JSObject* promiseScope,
+                          JS::MutableHandle<JS::Value> rval);
+
 } // namespace dom
 } // namespace mozilla
 
