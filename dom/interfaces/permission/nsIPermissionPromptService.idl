@@ -14,7 +14,7 @@ interface nsIPermissionPromptService : nsISupports
 {
   /**
    * Checks if the capability requires a permission, fires the corresponding cancel() 
-   * or allow() method in aRequest after consulting nsIDOMPermissionSettings, etc.
+   * or allow() method in aRequest after consulting PermissionSettings, etc.
    */
   void getPermission(in nsIContentPermissionRequest aRequest);
 };
