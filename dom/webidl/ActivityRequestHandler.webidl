@@ -10,5 +10,6 @@ interface ActivityRequestHandler
 {
     void postResult(any result);
     void postError(DOMString error);
-    readonly attribute object source;
+    [Pure, Cached, Frozen]
+    readonly attribute ActivityOptions source;
 };

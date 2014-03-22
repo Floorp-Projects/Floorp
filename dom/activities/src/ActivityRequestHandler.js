@@ -42,6 +42,9 @@ ActivityRequestHandler.prototype = {
   },
 
   get source() {
+    // We need to clone this object because the this._options.data has
+    // the type any in WebIDL which will cause the binding layer to pass
+    // the value which is a COW unmodified to content.
     return Cu.cloneInto(this._options, this._window);
   },
 
