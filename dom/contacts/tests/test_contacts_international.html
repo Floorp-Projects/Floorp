@@ -43,13 +43,13 @@ var properties2 = {
 };
 
 var number3 = {
-  international1: "0041557932012345",
-  international2: "+557932012345"
+  local: "7932012345",
+  international: "+557932012345"
 };
 
 var properties3 = {
   name: ["Testname2"],
-  tel: [{value: number3.international2}]
+  tel: [{value: number3.international}]
 };
 
 var req;
@@ -95,9 +95,9 @@ var steps = [
                    filterValue: number1.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ok(req.result.length == 1, "Found exactly 1 contact.");
+      ise(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ok(findResult1.id == sample_id1, "Same ID");
+      ise(findResult1.id, sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;
@@ -109,7 +109,7 @@ var steps = [
                    filterValue: number1.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ok(req.result.length == 0, "Found exactly 0 contacts.");
+      ise(req.result.length, 0, "Found exactly 0 contacts.");
       next();
     };
     req.onerror = onFailure;
@@ -122,7 +122,7 @@ var steps = [
                    filterValue: shortNumber};
     req = mozContacts.find(options);
     req.onsuccess = function() {
-      ok(req.result.length == 0, "The prefix short number should not match any contact.");
+      ise(req.result.length, 0, "The prefix short number should not match any contact.");
       next();
     };
     req.onerror = onFailure;
@@ -135,7 +135,7 @@ var steps = [
                    filterValue: shortNumber};
     req = mozContacts.find(options);
     req.onsuccess = function() {
-      ok(req.result.length == 0, "The suffix short number should not match any contact.");
+      ise(req.result.length, 0, "The suffix short number should not match any contact.");
       next();
     };
     req.onerror = onFailure;
@@ -147,7 +147,7 @@ var steps = [
                    filterValue: shortNumber};
     req = mozContacts.find(options);
     req.onsuccess = function() {
-      ok(req.result.length == 1, "Found the contact equally matching the shortNumber.");
+      ise(req.result.length, 1, "Found the contact equally matching the shortNumber.");
       next();
     };
     req.onerror = onFailure;
@@ -171,7 +171,7 @@ var steps = [
                    filterValue: number1.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ok(req.result.length == 0, "Found exactly 0 contact.");
+      ise(req.result.length, 0, "Found exactly 0 contact.");
       next();
     };
     req.onerror = onFailure;
@@ -183,7 +183,7 @@ var steps = [
                    filterValue: number1.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ok(req.result.length == 0, "Found exactly 0 contact.");
+      ise(req.result.length, 0, "Found exactly 0 contact.");
       next();
     };
     req.onerror = onFailure;
@@ -195,9 +195,9 @@ var steps = [
                    filterValue: number2.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ok(req.result.length == 1, "Found exactly 1 contact.");
+      ise(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ok(findResult1.id == sample_id1, "Same ID");
+      ise(findResult1.id, sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;
@@ -209,7 +209,7 @@ var steps = [
                    filterValue: number2.international};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ok(req.result.length == 0, "Found exactly 1 contact.");
+      ise(req.result.length, 0, "Found exactly 1 contact.");
       next();
     };
     req.onerror = onFailure;
@@ -224,7 +224,7 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Adding a new contact with country code");
+    ok(true, "Adding a contact with a Brazilian country code");
     createResult1 = new mozContact(properties3);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
@@ -235,15 +235,15 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Searching for international number with prefix");
+    ok(true, "Searching for Brazilian number using local number");
     var options = {filterBy: ["tel"],
                    filterOp: "match",
-                   filterValue: number3.international1};
+                   filterValue: number3.local};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      ok(req.result.length == 1, "Found exactly 1 contact.");
+      ise(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
-      ok(findResult1.id == sample_id1, "Same ID");
+      ise(findResult1.id, sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;
@@ -263,7 +263,11 @@ var steps = [
   }
 ];
 
-start_tests();
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["ril.lastKnownSimMcc", "000"]
+  ]
+}, start_tests);
 </script>
 </pre>
 </body>
