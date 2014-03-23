@@ -1,0 +1,27 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Performing a GET request</p>
+
+    <script type="text/javascript">
+      function performRequest(aUrl) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", aUrl, true);
+        xhr.setRequestHeader("Accept-Language", window.navigator.language);
+        xhr.setRequestHeader("X-Custom-Header-1", "Custom value");
+        xhr.setRequestHeader("X-Custom-Header-2", "8.8.8.8");
+        xhr.setRequestHeader("X-Custom-Header-3", "Mon, 3 Mar 2014 11:11:11 GMT");
+        xhr.send(null);
+      }
+    </script>
+  </body>
+
+</html>

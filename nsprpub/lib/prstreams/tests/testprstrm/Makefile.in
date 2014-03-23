@@ -150,7 +150,7 @@ else
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
-	link $(LDOPTS) $< $(LIBPR) $(LIBPRSTRMS) wsock32.lib -out:$@
+	link $(LDOPTS) $< $(LIBPR) $(LIBPRSTRMS) ws2_32.lib -out:$@
 else
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPR) $(LIBPRSTRMS) $(OS_LIBS) $(EXTRA_LIBS)

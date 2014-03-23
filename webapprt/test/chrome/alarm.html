@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <script>
+    navigator.mozSetMessageHandler("alarm", function (message) { 
+        document.getElementById("msgFired").textContent = "Alarm fired.";
+    });
+
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    var request = navigator.mozAlarms.add(yesterday, "honorTimezone", {});
+
+    request.onsuccess = function(e) {
+      navigator.mozAlarms.remove(e.target.result);
+
+      document.getElementById("msgSet").textContent = "Success.";
+    };
+    request.onerror = function(e) {
+      document.getElementById("msgSet").textContent = "Failure.";
+    };
+    </script>
+    <p id="msgSet">Webapp waiting to set an alarm...</p>
+    <p id="msgFired">Webapp waiting for an alarm to fire...</p>
+  </body>
+</html>

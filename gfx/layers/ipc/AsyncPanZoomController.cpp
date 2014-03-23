@@ -69,7 +69,7 @@
            " i=(%ld %lld) cb=(%d %d %d %d) dp=(%.3f %.3f %.3f %.3f) v=(%.3f %.3f %.3f %.3f) " \
            "s=(%.3f %.3f) sr=(%.3f %.3f %.3f %.3f) z=(%.3f %.3f %.3f %.3f) u=(%d %llu)\n", \
            __VA_ARGS__, \
-           fm.mPresShellId, fm.mScrollId, \
+           fm.mPresShellId, fm.GetScrollId(), \
            fm.mCompositionBounds.x, fm.mCompositionBounds.y, fm.mCompositionBounds.width, fm.mCompositionBounds.height, \
            fm.mDisplayPort.x, fm.mDisplayPort.y, fm.mDisplayPort.width, fm.mDisplayPort.height, \
            fm.mViewport.x, fm.mViewport.y, fm.mViewport.width, fm.mViewport.height, \
@@ -325,7 +325,7 @@ static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const ch
   static const TimeStamp sRenderStart = TimeStamp::Now();
   TimeDuration delta = TimeStamp::Now() - sRenderStart;
   printf_stderr("(%llu,%lu,%llu)%s RENDERTRACE %f rect %s %f %f %f %f\n",
-    aGuid.mLayersId, aGuid.mPresShellId, aGuid.mScrollId,
+    aGuid.mLayersId, aGuid.mPresShellId, aGuid.GetScrollId(),
     aDesc, delta.ToMilliseconds(), aColor,
     aRect.x, aRect.y, aRect.width, aRect.height);
 #endif
@@ -480,7 +480,7 @@ AsyncPanZoomController::~AsyncPanZoomController() {
 
   // Only send the release message if the SharedFrameMetrics has been created.
   if (compositor && mSharedFrameMetricsBuffer) {
-    unused << compositor->SendReleaseSharedCompositorFrameMetrics(mFrameMetrics.mScrollId, mAPZCId);
+    unused << compositor->SendReleaseSharedCompositorFrameMetrics(mFrameMetrics.GetScrollId(), mAPZCId);
   }
 
   delete mSharedFrameMetricsBuffer;
@@ -1778,7 +1778,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // more "legitimate" sources like content scripts.
     nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
     if (controller) {
-      controller->AcknowledgeScrollUpdate(aLayerMetrics.mScrollId,
+      controller->AcknowledgeScrollUpdate(aLayerMetrics.GetScrollId(),
                                           aLayerMetrics.GetScrollGeneration());
     }
   }
@@ -1989,10 +1989,10 @@ void AsyncPanZoomController::SetState(PanZoomState aNewState) {
   if (mGeckoContentController) {
     if (!IsTransformingState(oldState) && IsTransformingState(aNewState)) {
       mGeckoContentController->NotifyTransformBegin(
-        ScrollableLayerGuid(mLayersId, mFrameMetrics.mPresShellId, mFrameMetrics.mScrollId));
+        ScrollableLayerGuid(mLayersId, mFrameMetrics.mPresShellId, mFrameMetrics.GetScrollId()));
     } else if (IsTransformingState(oldState) && !IsTransformingState(aNewState)) {
       mGeckoContentController->NotifyTransformEnd(
-        ScrollableLayerGuid(mLayersId, mFrameMetrics.mPresShellId, mFrameMetrics.mScrollId));
+        ScrollableLayerGuid(mLayersId, mFrameMetrics.mPresShellId, mFrameMetrics.GetScrollId()));
     }
   }
 }

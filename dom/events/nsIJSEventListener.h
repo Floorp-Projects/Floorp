@@ -14,8 +14,8 @@
 #include "mozilla/dom/EventHandlerBinding.h"
 
 #define NS_IJSEVENTLISTENER_IID \
-{ 0x5077b12a, 0x5a1f, 0x4583, \
-  { 0xbb, 0xa7, 0x78, 0x84, 0x94, 0x0e, 0x5e, 0xff } }
+{ 0x8f06b4af, 0xbd0d, 0x486b, \
+  { 0x81, 0xc8, 0x20, 0x42, 0x40, 0x2b, 0xf1, 0xef } }
 
 class nsEventHandler
 {
@@ -172,10 +172,9 @@ class nsIJSEventListener : public nsIDOMEventListener
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
-  nsIJSEventListener(JSObject* aScopeObject,
-                     nsISupports *aTarget, nsIAtom* aType,
+  nsIJSEventListener(nsISupports *aTarget, nsIAtom* aType,
                      const nsEventHandler& aHandler)
-  : mScopeObject(aScopeObject), mEventName(aType), mHandler(aHandler)
+  : mEventName(aType), mHandler(aHandler)
   {
     nsCOMPtr<nsISupports> base = do_QueryInterface(aTarget);
     mTarget = base.get();
@@ -189,17 +188,6 @@ public:
   void Disconnect()
   {
     mTarget = nullptr;
-  }
-
-  // Can return null if we already have a handler.
-  JSObject* GetEventScope() const
-  {
-    if (!mScopeObject) {
-      return nullptr;
-    }
-
-    JS::ExposeObjectToActiveJS(mScopeObject);
-    return mScopeObject;
   }
 
   const nsEventHandler& GetHandler() const
@@ -219,11 +207,9 @@ public:
 
   // Set a handler for this event listener.  The handler must already
   // be bound to the right target.
-  void SetHandler(const nsEventHandler& aHandler,
-                  JS::Handle<JSObject*> aScopeObject)
+  void SetHandler(const nsEventHandler& aHandler)
   {
     mHandler.SetHandler(aHandler);
-    UpdateScopeObject(aScopeObject);
   }
   void SetHandler(mozilla::dom::EventHandlerNonNull* aHandler)
   {
@@ -247,8 +233,6 @@ public:
     // - mTarget
     //
     // The following members are not measured:
-    // - mScopeObject: because they're measured by the JS memory
-    //   reporters
     // - mHandler: may be shared with others
     // - mEventName: shared with others
   }
@@ -264,11 +248,6 @@ protected:
     NS_ASSERTION(!mTarget, "Should have called Disconnect()!");
   }
 
-  // Update our mScopeObject; we have to make sure we properly handle
-  // the hold/drop stuff, so have to do it in nsJSEventListener.
-  virtual void UpdateScopeObject(JS::Handle<JSObject*> aScopeObject) = 0;
-
-  JS::Heap<JSObject*> mScopeObject;
   nsISupports* mTarget;
   nsCOMPtr<nsIAtom> mEventName;
   nsEventHandler mHandler;
@@ -279,8 +258,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)
 /* factory function.  aHandler must already be bound to aTarget.
    aContext is allowed to be null if aHandler is already set up.
  */
-nsresult NS_NewJSEventListener(JSObject* aScopeObject, nsISupports* aTarget,
-                               nsIAtom* aType, const nsEventHandler& aHandler,
+nsresult NS_NewJSEventListener(nsISupports* aTarget, nsIAtom* aType,
+                               const nsEventHandler& aHandler,
                                nsIJSEventListener **aReturn);
 
 #endif // nsIJSEventListener_h__

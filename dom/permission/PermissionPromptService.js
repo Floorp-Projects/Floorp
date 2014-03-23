@@ -26,11 +26,6 @@ const PERMISSIONPROMPTSERVICE_CONTRACTID = "@mozilla.org/permission-prompt-servi
 const PERMISSIONPROMPTSERVICE_CID = Components.ID("{e5f953b3-a6ca-444e-a88d-cdc81383741c}");
 const permissionPromptService = Ci.nsIPermissionPromptService;
 
-XPCOMUtils.defineLazyServiceGetter(this,
-                                   "PermSettings",
-                                   "@mozilla.org/permissionSettings;1",
-                                   "nsIDOMPermissionSettings");
-
 var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 

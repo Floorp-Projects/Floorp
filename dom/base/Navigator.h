@@ -306,6 +306,8 @@ public:
 
   static bool HasDownloadsSupport(JSContext* aCx, JSObject* aGlobal);
 
+  static bool HasPermissionSettingsSupport(JSContext* aCx, JSObject* aGlobal);
+
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();

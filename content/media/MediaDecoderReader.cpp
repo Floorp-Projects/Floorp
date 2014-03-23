@@ -31,18 +31,36 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-void* MediaDecoderReader::VideoQueueMemoryFunctor::operator()(void* anObject) {
-  const VideoData* v = static_cast<const VideoData*>(anObject);
-  if (!v->mImage) {
+class VideoQueueMemoryFunctor : public nsDequeFunctor {
+public:
+  VideoQueueMemoryFunctor() : mSize(0) {}
+
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
+  virtual void* operator()(void* aObject) {
+    const VideoData* v = static_cast<const VideoData*>(aObject);
+    mSize += v->SizeOfIncludingThis(MallocSizeOf);
     return nullptr;
   }
 
-  if (v->mImage->GetFormat() == ImageFormat::PLANAR_YCBCR) {
-    mozilla::layers::PlanarYCbCrImage* vi = static_cast<mozilla::layers::PlanarYCbCrImage*>(v->mImage.get());
-    mResult += vi->GetDataSize();
+  size_t mSize;
+};
+
+
+class AudioQueueMemoryFunctor : public nsDequeFunctor {
+public:
+  AudioQueueMemoryFunctor() : mSize(0) {}
+
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
+  virtual void* operator()(void* aObject) {
+    const AudioData* audioData = static_cast<const AudioData*>(aObject);
+    mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
+    return nullptr;
   }
-  return nullptr;
-}
+
+  size_t mSize;
+};
 
 MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   : mAudioCompactor(mAudioQueue),
@@ -56,6 +74,20 @@ MediaDecoderReader::~MediaDecoderReader()
 {
   ResetDecode();
   MOZ_COUNT_DTOR(MediaDecoderReader);
+}
+
+size_t MediaDecoderReader::SizeOfVideoQueueInBytes() const
+{
+  VideoQueueMemoryFunctor functor;
+  mVideoQueue.LockedForEach(functor);
+  return functor.mSize;
+}
+
+size_t MediaDecoderReader::SizeOfAudioQueueInBytes() const
+{
+  AudioQueueMemoryFunctor functor;
+  mAudioQueue.LockedForEach(functor);
+  return functor.mSize;
 }
 
 nsresult MediaDecoderReader::ResetDecode()
