@@ -6,6 +6,7 @@
 
 this.EXPORTED_SYMBOLS = [
   "Experiments",
+  "ExperimentsProvider",
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
@@ -19,6 +20,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
+Cu.import("resource://gre/modules/Metrics.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
@@ -386,6 +388,45 @@ Experiments.Experiments.prototype = {
       },
       () => []
     );
+  },
+
+  /**
+   * Determine whether another date has the same UTC day as now().
+   */
+  _dateIsTodayUTC: function (d) {
+    let now = this._policy.now();
+
+    return stripDateToMidnight(now).getTime() == stripDateToMidnight(d).getTime();
+  },
+
+  /**
+   * Obtain the entry of the most recent active experiment that was active
+   * today.
+   *
+   * If no experiment was active today, this resolves to nothing.
+   *
+   * Assumption: Only a single experiment can be active at a time.
+   *
+   * @return Promise<object>
+   */
+  lastActiveToday: function () {
+    return Task.spawn(function* getMostRecentActiveExperimentTask() {
+      let experiments = yield this.getExperiments();
+
+      // Assumption: Ordered chronologically, descending, with active always
+      // first.
+      for (let experiment of experiments) {
+        if (experiment.active) {
+          return experiment;
+        }
+
+        if (experiment.endDate && this._dateIsTodayUTC(experiment.endDate)) {
+          return experiment;
+        }
+      }
+
+      return null;
+    }.bind(this));
   },
 
   /**
@@ -1432,3 +1473,105 @@ Experiments.ExperimentEntry.prototype = {
     return true;
   },
 };
+
+
+
+/**
+ * Strip a Date down to its UTC midnight.
+ *
+ * This will return a cloned Date object. The original is unchanged.
+ */
+let stripDateToMidnight = function (d) {
+  let m = new Date(d);
+  m.setUTCHours(0, 0, 0, 0);
+
+  return m;
+};
+
+function ExperimentsLastActiveMeasurement1() {
+  Metrics.Measurement.call(this);
+}
+
+const FIELD_DAILY_LAST_TEXT = {type: Metrics.Storage.FIELD_DAILY_LAST_TEXT};
+
+ExperimentsLastActiveMeasurement1.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "info",
+  version: 1,
+
+  fields: {
+    lastActive: FIELD_DAILY_LAST_TEXT,
+  }
+});
+
+this.ExperimentsProvider = function () {
+  Metrics.Provider.call(this);
+
+  this._experiments = null;
+};
+
+ExperimentsProvider.prototype = Object.freeze({
+  __proto__: Metrics.Provider.prototype,
+
+  name: "org.mozilla.experiments",
+
+  measurementTypes: [
+    ExperimentsLastActiveMeasurement1,
+  ],
+
+  _OBSERVERS: [
+    OBSERVER_TOPIC,
+  ],
+
+  postInit: function () {
+    this._experiments = Experiments.instance();
+
+    for (let o of this._OBSERVERS) {
+      Services.obs.addObserver(this, o, false);
+    }
+
+    return Promise.resolve();
+  },
+
+  onShutdown: function () {
+    for (let o of this._OBSERVERS) {
+      Services.obs.removeObserver(this, o);
+    }
+
+    return Promise.resolve();
+  },
+
+  observe: function (subject, topic, data) {
+    switch (topic) {
+      case OBSERVER_TOPIC:
+        this.recordLastActiveExperiment();
+        break;
+    }
+  },
+
+  collectDailyData: function () {
+    return this.recordLastActiveExperiment();
+  },
+
+  recordLastActiveExperiment: function () {
+    let m = this.getMeasurement(ExperimentsLastActiveMeasurement1.prototype.name,
+                                ExperimentsLastActiveMeasurement1.prototype.version);
+
+    return this.enqueueStorageOperation(() => {
+      return Task.spawn(function* recordTask() {
+        let todayActive = yield this._experiments.lastActiveToday();
+
+        if (!todayActive) {
+          this._log.info("No active experiment on this day: " +
+                         this._experiments._policy.now());
+          return;
+        }
+
+        this._log.info("Recording last active experiment: " + todayActive.id);
+        yield m.setDailyLastText("lastActive", todayActive.id,
+                                 this._experiments._policy.now());
+      }.bind(this));
+    });
+  },
+});
