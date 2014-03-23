@@ -38,6 +38,10 @@ function setDefaultPrefs() {
     branch.setBoolPref("security.fileuri.strict_origin_policy", false);
     // Disable the thumbnailing service
     branch.setBoolPref("browser.pagethumbnails.capturing_disabled", true);
+    // Disable the fade out (over time) of overlay scrollbars, since we
+    // can't guarantee taking both reftest snapshots at the same point
+    // during the fade.
+    branch.setBoolPref("layout.testing.overlay-scrollbars.always-visible", true);
 }
 
 function setPermissions() {

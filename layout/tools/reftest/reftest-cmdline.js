@@ -114,6 +114,10 @@ RefTestCmdLineHandler.prototype =
     // in our 800px window we don't zoom out by default to try to fit the
     // assumed 980px content.
     branch.setIntPref("browser.viewport.desktopWidth", 800);
+    // Disable the fade out (over time) of overlay scrollbars, since we
+    // can't guarantee taking both reftest snapshots at the same point
+    // during the fade.
+    branch.setBoolPref("layout.testing.overlay-scrollbars.always-visible", true);
 
     var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                            .getService(nsIWindowWatcher);
