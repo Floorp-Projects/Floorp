@@ -11,7 +11,7 @@
   <Param name="s" value="0"/>
   <Param name="q" value="{searchTerms}"/>
 </Url>
-<Url type="text/html" method="GET" template="http://rover.ebay.com/rover/1/711-47294-18009-3/4">
+<Url type="text/html" method="GET" template="http://rover.ebay.com/rover/1/711-47294-18009-3/4" resultdomain="ebay.com">
   <Param name="mpre" value="http://shop.ebay.com/?_nkw={searchTerms}"/>
 </Url>
 <SearchForm>http://search.ebay.com/</SearchForm>
