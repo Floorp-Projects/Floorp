@@ -173,15 +173,16 @@ function uninstallFakePAC() {
   Cm.nsIComponentRegistrar.unregisterFactory(CID, PACSystemSettings);
 }
 
-// Many tests do service.startOver() and don't expect the provider type to
-// change (whereas by default, a startOver will do exactly that so FxA is
-// subsequently used). The tests that know how to deal with
+// We want to ensure the legacy provider is used for most of these tests,
+// including after a service.startOver.  The tests that know how to deal with
 // the Firefox Accounts identity hack things to ensure that still works.
-function ensureStartOverKeepsIdentity() {
+function setDefaultIdentityConfig() {
   Cu.import("resource://gre/modules/Services.jsm");
+  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
   Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", true);
   do_register_cleanup(function() {
+    Services.prefs.clearUserPref("services.sync.fxaccounts.enabled");
     Services.prefs.clearUserPref("services.sync-testing.startOverKeepIdentity");
   });
 }
-ensureStartOverKeepsIdentity();
+setDefaultIdentityConfig();

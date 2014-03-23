@@ -186,7 +186,6 @@ function run_test() {
 
   // Simulate Sync setup with credentials in place. We want to make
   // sure the J-PAKE requests don't include those data.
-  ensureLegacyIdentityManager();
   setBasicCredentials("johndoe", "ilovejane");
 
   initTestLogging("Trace");

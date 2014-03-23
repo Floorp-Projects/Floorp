@@ -15,10 +15,10 @@ add_task(function* test_startover() {
   let oldValue = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity", true);
   Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", false);
 
-  ensureLegacyIdentityManager();
   yield configureIdentity({username: "johndoe"});
-
-  // The boolean flag on the xpcom service should reflect a legacy provider.
+  // The pref that forces FxA identities should not be set.
+  do_check_false(Services.prefs.getBoolPref("services.sync.fxaccounts.enabled"));
+  // And the boolean flag on the xpcom service should reflect this.
   let xps = Cc["@mozilla.org/weave/service;1"]
             .getService(Components.interfaces.nsISupports)
             .wrappedJSObject;
@@ -43,7 +43,9 @@ add_task(function* test_startover() {
   Service.startOver();
   yield deferred.promise; // wait for the observer to fire.
 
-  // the xpcom service should indicate FxA is enabled.
+  // should have reset the pref that indicates if FxA is enabled.
+  do_check_true(Services.prefs.getBoolPref("services.sync.fxaccounts.enabled"));
+  // the xpcom service should agree FxA is enabled.
   do_check_true(xps.fxAccountsEnabled);
   // should have swapped identities.
   do_check_true(Service.identity instanceof BrowserIDManager);
@@ -55,5 +57,6 @@ add_task(function* test_startover() {
   do_check_neq(oldClusterManager, Service._clusterManager);
 
   // reset the world.
+  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
   Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", oldValue);
 });

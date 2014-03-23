@@ -7,7 +7,6 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 function run_test() {
   do_test_pending();
-  ensureLegacyIdentityManager();
   let server = httpd_setup({
     "/user/1.0/johndoe": httpd_handler(200, "OK", "1"),
     "/user/1.0/janedoe": httpd_handler(200, "OK", "0"),

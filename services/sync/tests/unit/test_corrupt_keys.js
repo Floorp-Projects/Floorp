@@ -204,8 +204,6 @@ function run_test() {
   let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
-  ensureLegacyIdentityManager();
-
   run_next_test();
 }
 

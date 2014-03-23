@@ -6,7 +6,6 @@ Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 
 function test_toJSON() {
@@ -79,7 +78,6 @@ function test_fetch() {
 
 function run_test() {
   initTestLogging("Trace");
-  ensureLegacyIdentityManager();
 
   test_toJSON();
   test_fetch();
