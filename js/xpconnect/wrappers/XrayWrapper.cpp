@@ -42,7 +42,12 @@ using namespace XrayUtils;
 static bool
 IsJSXraySupported(JSProtoKey key)
 {
-    return false;
+    switch (key) {
+      case JSProto_Date:
+        return true;
+      default:
+        return false;
+    }
 }
 
 XrayType
