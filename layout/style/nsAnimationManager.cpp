@@ -203,8 +203,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       // indicator that the animation has finished, it should be reserved for
       // events. If we use it differently in the future this use might need
       // changing.
-      if (anim.mLastNotification == ElementAnimation::LAST_NOTIFICATION_END &&
-          anim.mLastNotification != oldLastNotification) {
+      if (!anim.mIsRunningOnCompositor ||
+          (anim.mLastNotification != oldLastNotification &&
+           anim.mLastNotification == ElementAnimation::LAST_NOTIFICATION_END)) {
         aIsThrottled = false;
         break;
       }

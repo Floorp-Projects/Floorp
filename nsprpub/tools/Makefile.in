@@ -167,7 +167,7 @@ ifeq ($(OS_TARGET),WIN16)
 	echo winsock.lib     >>w16link
 	wlink @w16link.
 else
-	link $(LDOPTS) $< $(LIBPR) $(LIBPLC) wsock32.lib -out:$@
+	link $(LDOPTS) $< $(LIBPR) $(LIBPLC) ws2_32.lib -out:$@
 endif
 else
 ifeq ($(OS_ARCH),OS2)

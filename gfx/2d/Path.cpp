@@ -10,6 +10,15 @@
 namespace mozilla {
 namespace gfx {
 
+static float CubicRoot(float aValue) {
+  if (aValue < 0.0) {
+    return -CubicRoot(-aValue);
+  }
+  else {
+    return powf(aValue, 1.0f / 3.0f);
+  }
+}
+
 struct BezierControlPoints
 {
   BezierControlPoints() {}
@@ -269,8 +278,8 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
 
     if (cp21.x == 0 && cp21.y == 0) {
       // In this case s3 becomes lim[n->0] (cp41.x * n) / n - (cp41.y * n) / n = cp41.x - cp41.y.
-      *aMin = aT - pow(aTolerance / (cp41.x - cp41.y), Float(1. / 3.));
-      *aMax = aT + pow(aTolerance / (cp41.x - cp41.y), Float(1. / 3.));;
+      *aMin = aT - CubicRoot(double(aTolerance / (cp41.x - cp41.y)));
+      *aMax = aT + CubicRoot(aTolerance / (cp41.x - cp41.y));
       return;
     }
 
@@ -285,7 +294,7 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
       return;
     }
 
-    Float tf = pow(abs(aTolerance / s3), Float(1. / 3.));
+    Float tf = CubicRoot(abs(aTolerance / s3));
 
     *aMin = aT - tf * (1 - aT);
     *aMax = aT + tf * (1 - aT);
@@ -445,7 +454,7 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
                 &remainingCP, t1min);
     FlattenBezierCurveSegment(prevCPs, aSink, aTolerance);
   }
-  if (t1max < 1.0 && (count == 1 || t2min > t1max)) {
+  if (t1max >= 0 && t1max < 1.0 && (count == 1 || t2min > t1max)) {
     // The second inflection point's approximation range begins after the end
     // of the first, approximate the first inflection point by a line and
     // subsequently flatten up until the end or the next inflection point.

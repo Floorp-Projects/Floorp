@@ -22,6 +22,9 @@ export LIB=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.0/Lib/win8/um/x86:${_VSPAT
 ## paths: win8 sdk x86 (32-bit) tools, msvc 10 (32-bit) build toolchain, moz tools  ##
 export PATH="/c/Program Files (x86)/Windows Kits/8.0/bin/x86:${_VSPATH}/Common7/IDE:${_VSPATH}/VC/BIN:${_VSPATH}/Common7/Tools:${_VSPATH}/VC/VCPackages:/c/mozilla-build/moztools:${PATH}"
 
+## WindowsSDKDir ##
+export WINDOWSSDKDIR="/c/Program Files (x86)/Windows Kits/8.0/"
+
 . $topsrcdir/build/mozconfig.vs2010-common
 
 mk_export_correct_style LIB
