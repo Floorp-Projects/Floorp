@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99 ft=cpp:
  *
@@ -39,6 +38,13 @@ namespace xpc {
 
 using namespace XrayUtils;
 
+// Whitelist for the standard ES classes we can Xray to.
+static bool
+IsJSXraySupported(JSProtoKey key)
+{
+    return false;
+}
+
 XrayType
 GetXrayType(JSObject *obj)
 {
@@ -49,6 +55,10 @@ GetXrayType(JSObject *obj)
     const js::Class* clasp = js::GetObjectClass(obj);
     if (IS_WN_CLASS(clasp) || clasp->ext.innerObject)
         return XrayForWrappedNative;
+
+    JSProtoKey standardProto = IdentifyStandardInstanceOrPrototype(obj);
+    if (IsJSXraySupported(standardProto))
+        return XrayForJSObject;
 
     return NotXray;
 }
@@ -279,8 +289,81 @@ public:
     static DOMXrayTraits singleton;
 };
 
+class JSXrayTraits : public XrayTraits
+{
+public:
+    enum {
+        HasPrototype = 1
+    };
+    static const XrayType Type = XrayForJSObject;
+
+    virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
+                                       HandleObject holder, HandleId id,
+                                       MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
+    {
+        MOZ_ASSUME_UNREACHABLE("resolveNativeProperty hook should never be called with HasPrototype = 1");
+    }
+
+    virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
+                                    HandleObject holder, HandleId id,
+                                    MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
+    {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                               MutableHandle<JSPropertyDescriptor> desc,
+                               Handle<JSPropertyDescriptor> existingDesc, bool *defined)
+    {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    static bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
+                               AutoIdVector &props)
+    {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    static bool call(JSContext *cx, HandleObject wrapper,
+                     const JS::CallArgs &args, js::Wrapper& baseInstance)
+    {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    static bool construct(JSContext *cx, HandleObject wrapper,
+                          const JS::CallArgs &args, js::Wrapper& baseInstance)
+    {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    static bool isResolving(JSContext *cx, JSObject *holder, jsid id)
+    {
+        return false;
+    }
+
+    typedef ResolvingIdDummy ResolvingIdImpl;
+
+    bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                               JS::HandleObject target,
+                               JS::MutableHandleObject protop)
+    {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    virtual void preserveWrapper(JSObject *target) {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) {
+        MOZ_ASSUME_UNREACHABLE("Not yet implemented");
+    }
+
+    static JSXrayTraits singleton;
+};
+
 XPCWrappedNativeXrayTraits XPCWrappedNativeXrayTraits::singleton;
 DOMXrayTraits DOMXrayTraits::singleton;
+JSXrayTraits JSXrayTraits::singleton;
 
 XrayTraits*
 GetXrayTraits(JSObject *obj)
@@ -290,6 +373,8 @@ GetXrayTraits(JSObject *obj)
         return &DOMXrayTraits::singleton;
       case XrayForWrappedNative:
         return &XPCWrappedNativeXrayTraits::singleton;
+      case XrayForJSObject:
+        return &JSXrayTraits::singleton;
       default:
         return nullptr;
     }
@@ -1957,6 +2042,10 @@ template class PermissiveXrayDOM;
 template<>
 SecurityXrayDOM SecurityXrayDOM::singleton(0);
 template class SecurityXrayDOM;
+
+template<>
+PermissiveXrayJS PermissiveXrayJS::singleton(0);
+template class PermissiveXrayJS;
 
 template<>
 SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
