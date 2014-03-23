@@ -1925,9 +1925,6 @@ IdToValue(jsid id)
 }
 
 extern JS_FRIEND_API(bool)
-IsReadOnlyDateMethod(JS::IsAcceptableThis test, JS::NativeImpl method);
-
-extern JS_FRIEND_API(bool)
 IsTypedArrayThisCheck(JS::IsAcceptableThis test);
 
 /*
