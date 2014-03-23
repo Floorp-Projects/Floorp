@@ -1,6 +1,6 @@
 /* -*- js-indent-level: 2; tab-width: 2; indent-tabs-mode: nil -*- */
 // Test timeout (seconds)
-var gTimeoutSeconds = 30;
+var gTimeoutSeconds = 45;
 var gConfig;
 
 if (Cc === undefined) {
