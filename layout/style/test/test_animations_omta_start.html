@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=975261
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test OMTA animations start correctly (Bug 975261)</title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    @keyframes anim-opacity {
+       0% { opacity: 0.5 }
+       100% { opacity: 0.5 }
+    }
+    @keyframes anim-transform {
+       0% { transform: translate(50px); }
+       100% { transform: translate(50px); }
+    }
+    @keyframes anim-transform-2 {
+       0% { transform: translate(0px); }
+       100% { transform: translate(100px); }
+    }
+    .target {
+      /* These two lines are needed so that an opacity/transform layer
+       * already exists when the animation is applied. */
+      opacity: 0.99;
+      transform: translate(99px);
+
+      /* Element needs geometry in order to be animated on the
+       * compositor. */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=975261">Mozilla Bug
+  975261</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+var gUtils = SpecialPowers.DOMWindowUtils;
+var gOMTAPrefKey = "layers.offmainthreadcomposition.async-animations";
+var gOMTCEnabled = gUtils.layerManagerRemote;
+
+if (gOMTCEnabled && SpecialPowers.getBoolPref(gOMTAPrefKey)) {
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", function() {
+    // Using paint_listener.js functions inside an onload handler is not safe
+    // (bug 986367) so spin the event loop first
+    SimpleTest.executeSoon(testDelay);
+  });
+} else {
+  ok(true, "OMTA not available");
+}
+
+function newTarget() {
+  var target = document.createElement("div");
+  target.classList.add("target");
+  document.getElementById("display").appendChild(target);
+  return target;
+}
+
+function testDelay() {
+  gUtils.advanceTimeAndRefresh(0);
+
+  var target = newTarget();
+  target.setAttribute("style", "animation: 10s 10s anim-opacity linear");
+  gUtils.advanceTimeAndRefresh(0);
+
+  waitForAllPaints(function() {
+    gUtils.advanceTimeAndRefresh(10100);
+    waitForAllPaints(function() {
+      var opacity = gUtils.getOMTAStyle(target, "opacity");
+      is(opacity, 0.5,
+         "opacity is set on compositor thread after delayed start");
+      target.removeAttribute("style");
+      gUtils.restoreNormalRefresh();
+      testTransform();
+    });
+  });
+}
+
+function testTransform() {
+  gUtils.advanceTimeAndRefresh(0);
+
+  var target = newTarget();
+  target.setAttribute("style", "animation: 10s 10s anim-transform linear");
+  gUtils.advanceTimeAndRefresh(0);
+
+  waitForAllPaints(function() {
+    gUtils.advanceTimeAndRefresh(10100);
+    waitForAllPaints(function() {
+      var transform = gUtils.getOMTAStyle(target, "transform");
+      is(transform, "matrix(1, 0, 0, 1, 50, 0)",
+         "transform is set on compositor thread after delayed start");
+      target.removeAttribute("style");
+      gUtils.restoreNormalRefresh();
+      testBackwardsFill();
+    });
+  });
+}
+
+function testBackwardsFill() {
+  gUtils.advanceTimeAndRefresh(0);
+
+  var target = newTarget();
+  target.setAttribute("style",
+    "transform: translate(30px); " +
+    "animation: 10s 10s anim-transform-2 linear backwards");
+
+  gUtils.advanceTimeAndRefresh(0);
+  waitForAllPaints(function() {
+    gUtils.advanceTimeAndRefresh(10000);
+    waitForAllPaints(function() {
+      gUtils.advanceTimeAndRefresh(100);
+      waitForAllPaints(function() {
+        var transform = gUtils.getOMTAStyle(target, "transform");
+        is(transform, "matrix(1, 0, 0, 1, 1, 0)",
+           "transform is set on compositor thread after delayed start " +
+           "with backwards fill");
+        target.removeAttribute("style");
+        gUtils.restoreNormalRefresh();
+        SimpleTest.finish();
+      });
+    });
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>

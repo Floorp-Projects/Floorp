@@ -245,6 +245,10 @@ Leading by example::
                   "google": 1
                 },
                 "_v": "4"
+              },
+              "org.mozilla.experiment": {
+                "lastActive": "some.experiment.id"
+                "_v": "1"
               }
             }
           }
@@ -1459,5 +1463,31 @@ Example
       "architecture": "x86-64",
       "name": "Darwin",
       "version": "12.2.0"
+    }
+
+
+
+org.mozilla.experiments.info
+----------------------------------
+
+Daily measurement reporting information about the Telemetry Experiments service.
+
+Version 1
+^^^^^^^^^
+
+Property:
+
+lastActive
+    ID of the final Telemetry Experiment that is active on a given day, if any.
+
+
+Example
+^^^^^^^
+
+::
+
+    "org.mozilla.experiments.info": {
+      "_v": 1,
+      "lastActive": "some.experiment.id"
     }
 

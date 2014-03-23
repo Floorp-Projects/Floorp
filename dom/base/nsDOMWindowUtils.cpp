@@ -162,6 +162,23 @@ nsDOMWindowUtils::GetDocument()
   return window->GetExtantDoc();
 }
 
+LayerTransactionChild*
+nsDOMWindowUtils::GetLayerTransaction()
+{
+  nsIWidget* widget = GetWidget();
+  if (!widget)
+    return nullptr;
+
+  LayerManager* manager = widget->GetLayerManager();
+  if (!manager)
+    return nullptr;
+
+  ShadowLayerForwarder* forwarder = manager->AsShadowForwarder();
+  return forwarder && forwarder->HasShadowManager() ?
+         forwarder->GetShadowManager() :
+         nullptr;
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::GetImageAnimationMode(uint16_t *aMode)
 {
@@ -2552,12 +2569,9 @@ nsDOMWindowUtils::AdvanceTimeAndRefresh(int64_t aMilliseconds)
   nsRefreshDriver* driver = GetPresContext()->RefreshDriver();
   driver->AdvanceTimeAndRefresh(aMilliseconds);
 
-  nsIWidget* widget = GetWidget();
-  if (widget) {
-    CompositorChild* compositor = widget->GetRemoteRenderer();
-    if (compositor) {
-      compositor->SendSetTestSampleTime(driver->MostRecentRefresh());
-    }
+  LayerTransactionChild* transaction = GetLayerTransaction();
+  if (transaction) {
+    transaction->SendSetTestSampleTime(driver->MostRecentRefresh());
   }
 
   return NS_OK;
@@ -2573,12 +2587,9 @@ nsDOMWindowUtils::RestoreNormalRefresh()
   // Kick the compositor out of test mode before the refresh driver, so that
   // the refresh driver doesn't send an update that gets ignored by the
   // compositor.
-  nsIWidget* widget = GetWidget();
-  if (widget) {
-    CompositorChild* compositor = widget->GetRemoteRenderer();
-    if (compositor) {
-      compositor->SendLeaveTestMode();
-    }
+  LayerTransactionChild* transaction = GetLayerTransaction();
+  if (transaction) {
+    transaction->SendLeaveTestMode();
   }
 
   nsRefreshDriver* driver = GetPresContext()->RefreshDriver();

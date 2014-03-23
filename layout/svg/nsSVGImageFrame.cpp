@@ -239,7 +239,7 @@ nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
                                          element->mPreserveAspectRatio);
 
   return viewBoxTM *
-         gfx::Matrix().Translate(x, y) *
+         gfx::Matrix::Translation(x, y) *
          gfx::ToMatrix(GetCanvasTM(aFor, aTransformRoot));
 }
 
@@ -255,7 +255,7 @@ nsSVGImageFrame::GetVectorImageTransform(uint32_t aFor,
   // "native size" that the SVG image has, and it will handle viewBox and
   // preserveAspectRatio on its own once we give it a region to draw into.
 
-  return gfx::Matrix().Translate(x, y) *
+  return gfx::Matrix::Translation(x, y) *
          gfx::ToMatrix(GetCanvasTM(aFor, aTransformRoot));
 }
 

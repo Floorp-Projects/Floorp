@@ -107,9 +107,11 @@ EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib)
 
 ifdef MOZ_WEBRTC
 ifeq (WINNT,$(OS_TARGET))
+ifndef MOZ_HAS_WINSDK_WITH_D3D
 EXTRA_DSO_LDOPTS += \
   -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)' \
   $(NULL)
+endif
 OS_LIBS += $(call EXPAND_LIBNAME,secur32 crypt32 iphlpapi strmiids dmoguids wmcodecdspuuid amstrmid msdmo wininet)
 endif
 endif
@@ -232,11 +234,15 @@ OS_LIBS += $(call EXPAND_LIBNAME,uiautomationcore runtimeobject)
 endif
 ifdef MOZ_GAMEPAD
 ifndef GNU_CC
+ifdef MOZ_HAS_WINSDK_WITH_D3D
+OS_LIBS += dxguid.lib dinput8.lib
+else
 DXSDK := $(subst \,/,$(MOZ_DIRECTX_SDK_PATH))/Lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
 OS_LIBS += \
   '$(DXSDK)/dxguid.lib' \
   '$(DXSDK)/dinput8.lib' \
   $(NULL)
+endif
 else
 OS_LIBS += $(call EXPAND_LIBNAME,dxguid dinput8)
 endif

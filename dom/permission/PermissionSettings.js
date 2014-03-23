@@ -22,7 +22,6 @@ var cpm = Cc["@mozilla.org/childprocessmessagemanager;1"].getService(Ci.nsISyncM
 
 const PERMISSIONSETTINGS_CONTRACTID = "@mozilla.org/permissionSettings;1";
 const PERMISSIONSETTINGS_CID        = Components.ID("{cd2cf7a1-f4c1-487b-8c1b-1a71c7097431}");
-const nsIDOMPermissionSettings      = Ci.nsIDOMPermissionSettings;
 
 function PermissionSettings()
 {
@@ -129,27 +128,8 @@ PermissionSettings.prototype = {
     });
   },
 
-  init: function init(aWindow) {
-    debug("init");
-
-    // Set navigator.mozPermissionSettings to null.
-    let perm = Services.perms.testExactPermissionFromPrincipal(aWindow.document.nodePrincipal, "permissions");
-    if (!Services.prefs.getBoolPref("dom.mozPermissionSettings.enabled")
-        || perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
-      return null;
-    }
-
-    debug("Permission to get/set permissions granted!");
-  },
-
   classID : PERMISSIONSETTINGS_CID,
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMPermissionSettings, Ci.nsIDOMGlobalPropertyInitializer]),
-
-  classInfo : XPCOMUtils.generateCI({classID: PERMISSIONSETTINGS_CID,
-                                     contractID: PERMISSIONSETTINGS_CONTRACTID,
-                                     classDescription: "PermissionSettings",
-                                     interfaces: [nsIDOMPermissionSettings],
-                                     flags: Ci.nsIClassInfo.DOM_OBJECT})
+  QueryInterface : XPCOMUtils.generateQI([])
 }
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PermissionSettings])

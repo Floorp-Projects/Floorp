@@ -597,14 +597,11 @@ EventListenerManager::FindEventHandler(uint32_t aEventType,
 
 EventListenerManager::Listener*
 EventListenerManager::SetEventHandlerInternal(
-                        JS::Handle<JSObject*> aScopeObject,
                         nsIAtom* aName,
                         const nsAString& aTypeString,
                         const nsEventHandler& aHandler,
                         bool aPermitUntrustedEvents)
 {
-  MOZ_ASSERT(aScopeObject || aHandler.HasEventHandler(),
-             "Must have one or the other!");
   MOZ_ASSERT(aName || !aTypeString.IsEmpty());
 
   uint32_t eventType = nsContentUtils::GetEventId(aName);
@@ -617,7 +614,7 @@ EventListenerManager::SetEventHandlerInternal(
     flags.mListenerIsJSListener = true;
 
     nsCOMPtr<nsIJSEventListener> jsListener;
-    NS_NewJSEventListener(aScopeObject, mTarget, aName,
+    NS_NewJSEventListener(mTarget, aName,
                           aHandler, getter_AddRefs(jsListener));
     EventListenerHolder listenerHolder(jsListener);
     AddEventListenerInternal(listenerHolder, eventType, aName, aTypeString,
@@ -631,7 +628,7 @@ EventListenerManager::SetEventHandlerInternal(
 
     bool same = jsListener->GetHandler() == aHandler;
     // Possibly the same listener, but update still the context and scope.
-    jsListener->SetHandler(aHandler, aScopeObject);
+    jsListener->SetHandler(aHandler);
     if (mTarget && !same && aName) {
       mTarget->EventListenerRemoved(aName);
       mTarget->EventListenerAdded(aName);
@@ -746,14 +743,9 @@ EventListenerManager::SetEventHandler(nsIAtom* aName,
 
   nsIScriptContext* context = global->GetScriptContext();
   NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-
   NS_ENSURE_STATE(global->GetGlobalJSObject());
 
-  JSAutoRequest ar(context->GetNativeContext());
-  JS::Rooted<JSObject*> scope(context->GetNativeContext(),
-                              global->GetGlobalJSObject());
-
-  Listener* listener = SetEventHandlerInternal(scope, aName,
+  Listener* listener = SetEventHandlerInternal(aName,
                                                EmptyString(),
                                                nsEventHandler(),
                                                aPermitUntrustedEvents);
@@ -791,17 +783,12 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
                                                   const nsAString* aBody,
                                                   Element* aElement)
 {
-  NS_PRECONDITION(aListener->GetJSListener(),
-                  "Why do we not have a JS listener?");
-  NS_PRECONDITION(aListener->mHandlerIsString,
-                  "Why are we compiling a non-string JS listener?");
+  MOZ_ASSERT(aListener->GetJSListener());
+  MOZ_ASSERT(aListener->mHandlerIsString, "Why are we compiling a non-string JS listener?");
+  nsIJSEventListener* jsListener = aListener->GetJSListener();
+  MOZ_ASSERT(!jsListener->GetHandler().HasEventHandler(), "What is there to compile?");
 
   nsresult result = NS_OK;
-
-  nsIJSEventListener* jsListener = aListener->GetJSListener();
-  NS_ASSERTION(!jsListener->GetHandler().HasEventHandler(),
-               "What is there to compile?");
-
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIScriptGlobalObject> global =
     GetScriptGlobalAndDocument(getter_AddRefs(doc));
@@ -812,131 +799,126 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
 
   // Push a context to make sure exceptions are reported in the right place.
   AutoPushJSContextForErrorReporting cx(context->GetNativeContext());
-  JS::Rooted<JSObject*> handler(cx);
-
-  JS::Rooted<JSObject*> scope(cx, jsListener->GetEventScope());
 
   nsCOMPtr<nsIAtom> typeAtom = aListener->mTypeAtom;
   nsIAtom* attrName = typeAtom;
 
-  if (aListener->mHandlerIsString) {
-    // OK, we didn't find an existing compiled event handler.  Flag us
-    // as not a string so we don't keep trying to compile strings
-    // which can't be compiled
-    aListener->mHandlerIsString = false;
+  // Flag us as not a string so we don't keep trying to compile strings which
+  // can't be compiled.
+  aListener->mHandlerIsString = false;
 
-    // mTarget may not be an Element if it's a window and we're
-    // getting an inline event listener forwarded from <html:body> or
-    // <html:frameset> or <xul:window> or the like.
-    // XXX I don't like that we have to reference content from
-    // here. The alternative is to store the event handler string on
-    // the nsIJSEventListener itself, and that still doesn't address
-    // the arg names issue.
-    nsCOMPtr<Element> element = do_QueryInterface(mTarget);
-    MOZ_ASSERT(element || aBody, "Where will we get our body?");
-    nsAutoString handlerBody;
-    const nsAString* body = aBody;
-    if (!aBody) {
-      if (aListener->mTypeAtom == nsGkAtoms::onSVGLoad) {
-        attrName = nsGkAtoms::onload;
-      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGUnload) {
-        attrName = nsGkAtoms::onunload;
-      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGResize) {
-        attrName = nsGkAtoms::onresize;
-      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGScroll) {
-        attrName = nsGkAtoms::onscroll;
-      } else if (aListener->mTypeAtom == nsGkAtoms::onSVGZoom) {
-        attrName = nsGkAtoms::onzoom;
-      } else if (aListener->mTypeAtom == nsGkAtoms::onbeginEvent) {
-        attrName = nsGkAtoms::onbegin;
-      } else if (aListener->mTypeAtom == nsGkAtoms::onrepeatEvent) {
-        attrName = nsGkAtoms::onrepeat;
-      } else if (aListener->mTypeAtom == nsGkAtoms::onendEvent) {
-        attrName = nsGkAtoms::onend;
-      }
-
-      element->GetAttr(kNameSpaceID_None, attrName, handlerBody);
-      body = &handlerBody;
-      aElement = element;
-    }
-    aListener = nullptr;
-
-    uint32_t lineNo = 0;
-    nsAutoCString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
-    MOZ_ASSERT(body);
-    MOZ_ASSERT(aElement);
-    nsIURI *uri = aElement->OwnerDoc()->GetDocumentURI();
-    if (uri) {
-      uri->GetSpec(url);
-      lineNo = 1;
+  // mTarget may not be an Element if it's a window and we're
+  // getting an inline event listener forwarded from <html:body> or
+  // <html:frameset> or <xul:window> or the like.
+  // XXX I don't like that we have to reference content from
+  // here. The alternative is to store the event handler string on
+  // the nsIJSEventListener itself, and that still doesn't address
+  // the arg names issue.
+  nsCOMPtr<Element> element = do_QueryInterface(mTarget);
+  MOZ_ASSERT(element || aBody, "Where will we get our body?");
+  nsAutoString handlerBody;
+  const nsAString* body = aBody;
+  if (!aBody) {
+    if (aListener->mTypeAtom == nsGkAtoms::onSVGLoad) {
+      attrName = nsGkAtoms::onload;
+    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGUnload) {
+      attrName = nsGkAtoms::onunload;
+    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGResize) {
+      attrName = nsGkAtoms::onresize;
+    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGScroll) {
+      attrName = nsGkAtoms::onscroll;
+    } else if (aListener->mTypeAtom == nsGkAtoms::onSVGZoom) {
+      attrName = nsGkAtoms::onzoom;
+    } else if (aListener->mTypeAtom == nsGkAtoms::onbeginEvent) {
+      attrName = nsGkAtoms::onbegin;
+    } else if (aListener->mTypeAtom == nsGkAtoms::onrepeatEvent) {
+      attrName = nsGkAtoms::onrepeat;
+    } else if (aListener->mTypeAtom == nsGkAtoms::onendEvent) {
+      attrName = nsGkAtoms::onend;
     }
 
-    uint32_t argCount;
-    const char **argNames;
-    nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(),
-                                     typeAtom,
-                                     &argCount, &argNames);
+    element->GetAttr(kNameSpaceID_None, attrName, handlerBody);
+    body = &handlerBody;
+    aElement = element;
+  }
+  aListener = nullptr;
 
-    JSAutoCompartment ac(cx, context->GetWindowProxy());
-    JS::CompileOptions options(cx);
-    options.setIntroductionType("eventHandler")
-           .setFileAndLine(url.get(), lineNo)
-           .setVersion(SCRIPTVERSION_DEFAULT);
-
-    JS::Rooted<JS::Value> targetVal(cx);
-    // Go ahead and wrap into the current compartment of cx directly.
-    JS::Rooted<JSObject*> wrapScope(cx, JS::CurrentGlobalOrNull(cx));
-    if (WrapNewBindingObject(cx, wrapScope, aElement, &targetVal)) {
-      MOZ_ASSERT(targetVal.isObject());
-
-      nsDependentAtomString str(attrName);
-      // Most of our names are short enough that we don't even have to malloc
-      // the JS string stuff, so don't worry about playing games with
-      // refcounting XPCOM stringbuffers.
-      JS::Rooted<JSString*> jsStr(cx, JS_NewUCStringCopyN(cx,
-                                                          str.BeginReading(),
-                                                          str.Length()));
-      NS_ENSURE_TRUE(jsStr, NS_ERROR_OUT_OF_MEMORY);
-
-      options.setElement(&targetVal.toObject())
-             .setElementAttributeName(jsStr);
-    }
-
-    JS::Rooted<JSObject*> handlerFun(cx);
-    result = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options,
-                                        nsAtomCString(typeAtom),
-                                        argCount, argNames, *body, handlerFun.address());
-    NS_ENSURE_SUCCESS(result, result);
-    handler = handlerFun;
-    NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
-  } else {
-    aListener = nullptr;
+  uint32_t lineNo = 0;
+  nsAutoCString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
+  MOZ_ASSERT(body);
+  MOZ_ASSERT(aElement);
+  nsIURI *uri = aElement->OwnerDoc()->GetDocumentURI();
+  if (uri) {
+    uri->GetSpec(url);
+    lineNo = 1;
   }
 
-  if (handler) {
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
-    // Bind it
-    JS::Rooted<JSObject*> boundHandler(cx);
-    context->BindCompiledEventHandler(mTarget, scope, handler, &boundHandler);
-    // Note - We pass null for aIncumbentGlobal below. We could also pass the
-    // compilation global, but since the handler is guaranteed to be scripted,
-    // there's no need to use an override, since the JS engine will always give
-    // us the right answer.
-    if (!boundHandler) {
-      jsListener->ForgetHandler();
-    } else if (jsListener->EventName() == nsGkAtoms::onerror && win) {
-      nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
-        new OnErrorEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
-      jsListener->SetHandler(handlerCallback);
-    } else if (jsListener->EventName() == nsGkAtoms::onbeforeunload && win) {
-      nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
-        new OnBeforeUnloadEventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
-      jsListener->SetHandler(handlerCallback);
-    } else {
-      nsRefPtr<EventHandlerNonNull> handlerCallback =
-        new EventHandlerNonNull(boundHandler, /* aIncumbentGlobal = */ nullptr);
-      jsListener->SetHandler(handlerCallback);
+  uint32_t argCount;
+  const char **argNames;
+  nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(),
+                                   typeAtom,
+                                   &argCount, &argNames);
+
+  // Wrap the event target, so that we can use it as the scope for the event
+  // handler. Note that mTarget is different from aElement in the <body> case,
+  // where mTarget is a Window.
+  //
+  // The wrapScope doesn't really matter here, because the target will create
+  // its reflector in the proper scope, and then we'll enter that compartment.
+  JS::Rooted<JSObject*> wrapScope(cx, context->GetWindowProxy());
+  JS::Rooted<JS::Value> v(cx);
+  {
+    JSAutoCompartment ac(cx, wrapScope);
+    nsresult rv = nsContentUtils::WrapNative(cx, wrapScope, mTarget, &v,
+                                             /* aAllowWrapping = */ false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
+  }
+  JS::Rooted<JSObject*> target(cx, &v.toObject());
+  JSAutoCompartment ac(cx, target);
+
+  nsDependentAtomString str(attrName);
+  // Most of our names are short enough that we don't even have to malloc
+  // the JS string stuff, so don't worry about playing games with
+  // refcounting XPCOM stringbuffers.
+  JS::Rooted<JSString*> jsStr(cx, JS_NewUCStringCopyN(cx,
+                                                      str.BeginReading(),
+                                                      str.Length()));
+  NS_ENSURE_TRUE(jsStr, NS_ERROR_OUT_OF_MEMORY);
+
+  // Get the reflector for |aElement|, so that we can pass to setElement.
+  if (NS_WARN_IF(!WrapNewBindingObject(cx, target, aElement, &v))) {
+    return NS_ERROR_FAILURE;
+  }
+  JS::CompileOptions options(cx);
+  options.setIntroductionType("eventHandler")
+         .setFileAndLine(url.get(), lineNo)
+         .setVersion(SCRIPTVERSION_DEFAULT)
+         .setElement(&v.toObject())
+         .setElementAttributeName(jsStr)
+         .setDefineOnScope(false);
+
+  JS::Rooted<JSObject*> handler(cx);
+  result = nsJSUtils::CompileFunction(cx, target, options,
+                                      nsAtomCString(typeAtom),
+                                      argCount, argNames, *body, handler.address());
+  NS_ENSURE_SUCCESS(result, result);
+  NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
+  if (jsListener->EventName() == nsGkAtoms::onerror && win) {
+    nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
+      new OnErrorEventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
+    jsListener->SetHandler(handlerCallback);
+  } else if (jsListener->EventName() == nsGkAtoms::onbeforeunload && win) {
+    nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
+      new OnBeforeUnloadEventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
+    jsListener->SetHandler(handlerCallback);
+  } else {
+    nsRefPtr<EventHandlerNonNull> handlerCallback =
+      new EventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
+    jsListener->SetHandler(handlerCallback);
   }
 
   return result;
@@ -1240,8 +1222,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aEventName,
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
-  SetEventHandlerInternal(JS::NullPtr(), aEventName,
-                          aTypeString, nsEventHandler(aHandler),
+  SetEventHandlerInternal(aEventName, aTypeString, nsEventHandler(aHandler),
                           !mIsMainThreadELM ||
                           !nsContentUtils::IsCallerChrome());
 }
@@ -1257,8 +1238,8 @@ EventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
 
     // Untrusted events are always permitted for non-chrome script
     // handlers.
-    SetEventHandlerInternal(JS::NullPtr(), nsGkAtoms::onerror,
-                            EmptyString(), nsEventHandler(aHandler),
+    SetEventHandlerInternal(nsGkAtoms::onerror, EmptyString(),
+                            nsEventHandler(aHandler),
                             !nsContentUtils::IsCallerChrome());
   } else {
     if (!aHandler) {
@@ -1267,8 +1248,7 @@ EventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
     }
 
     // Untrusted events are always permitted.
-    SetEventHandlerInternal(JS::NullPtr(), nullptr,
-                            NS_LITERAL_STRING("error"),
+    SetEventHandlerInternal(nullptr, NS_LITERAL_STRING("error"),
                             nsEventHandler(aHandler), true);
   }
 }
@@ -1284,8 +1264,8 @@ EventListenerManager::SetEventHandler(
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
-  SetEventHandlerInternal(JS::NullPtr(), nsGkAtoms::onbeforeunload,
-                          EmptyString(), nsEventHandler(aHandler),
+  SetEventHandlerInternal(nsGkAtoms::onbeforeunload, EmptyString(),
+                          nsEventHandler(aHandler),
                           !mIsMainThreadELM ||
                           !nsContentUtils::IsCallerChrome());
 }
@@ -1340,9 +1320,6 @@ EventListenerManager::MarkForCC()
     if (jsListener) {
       if (jsListener->GetHandler().HasEventHandler()) {
         JS::ExposeObjectToActiveJS(jsListener->GetHandler().Ptr()->Callable());
-      }
-      if (JSObject* scope = jsListener->GetEventScope()) {
-        JS::ExposeObjectToActiveJS(scope);
       }
     } else if (listener.mListenerType == Listener::eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());
