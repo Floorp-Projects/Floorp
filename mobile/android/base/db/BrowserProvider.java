@@ -19,6 +19,7 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.sync.Utils;
 
 import android.app.SearchManager;
@@ -26,6 +27,7 @@ import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.OperationApplicationException;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -38,7 +40,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
-public class BrowserProvider extends SharedBrowserDatabaseProvider {
+public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper> {
     private static final String LOGTAG = "GeckoBrowserProvider";
 
     // How many records to reposition in a single query.
@@ -813,6 +815,21 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return cursor;
     }
 
+    private static int getUrlCount(SQLiteDatabase db, String table, String url) {
+        final Cursor c = db.query(table, new String[] { "COUNT(*)" },
+                                  URLColumns.URL + " = ?", new String[] { url },
+                                  null, null, null);
+        try {
+            if (c.moveToFirst()) {
+                return c.getInt(0);
+            }
+        } finally {
+            c.close();
+        }
+
+        return 0;
+    }
+
     /**
      * Update the positions of bookmarks in batches.
      *
@@ -1288,7 +1305,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // it if we can.
         final int updated = db.update(TABLE_HISTORY, values, selection, selectionArgs);
         try {
-            cleanUpSomeDeletedRecords(uri, TABLE_HISTORY);
+            cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
         } catch (Exception e) {
             // We don't care.
             Log.e(LOGTAG, "Unable to clean up deleted history records: ", e);
@@ -1317,7 +1334,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         // require the transaction to be upgraded from a reader to a writer.
         final int updated = updateBookmarks(uri, values, selection, selectionArgs);
         try {
-            cleanUpSomeDeletedRecords(uri, TABLE_BOOKMARKS);
+            cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
         } catch (Exception e) {
             // We don't care.
             Log.e(LOGTAG, "Unable to clean up deleted bookmark records: ", e);
@@ -1443,5 +1460,16 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         }
 
         return results;
+    }
+
+    @Override
+    protected BrowserDatabaseHelper createDatabaseHelper(
+            Context context, String databasePath) {
+         return new BrowserDatabaseHelper(context, databasePath);
+    }
+
+    @Override
+    protected String getDatabaseName() {
+        return BrowserDatabaseHelper.DATABASE_NAME;
     }
 }

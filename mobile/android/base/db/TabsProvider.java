@@ -4,25 +4,37 @@
 
 package org.mozilla.gecko.db;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract.Clients;
 import org.mozilla.gecko.db.BrowserContract.Tabs;
+import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
 
+import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.Build;
 import android.text.TextUtils;
+import android.util.Log;
 
-public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDatabaseHelper> {
+public class TabsProvider extends ContentProvider {
+    private static final String LOGTAG = "GeckoTabsProvider";
+    private Context mContext;
+
+    private PerProfileDatabases<TabsDatabaseHelper> mDatabases;
+
     static final String DATABASE_NAME = "tabs.db";
 
     static final int DATABASE_VERSION = 2;
@@ -75,8 +87,33 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         CLIENTS_PROJECTION_MAP = Collections.unmodifiableMap(map);
     }
 
-    private static final String selectColumn(String table, String column) {
+    static final String selectColumn(String table, String column) {
         return table + "." + column + " = ?";
+    }
+
+    // Calculate these once, at initialization. isLoggable is too expensive to
+    // have in-line in each log call.
+    private static boolean logDebug   = Log.isLoggable(LOGTAG, Log.DEBUG);
+    private static boolean logVerbose = Log.isLoggable(LOGTAG, Log.VERBOSE);
+    protected static void trace(String message) {
+        if (logVerbose) {
+            Log.v(LOGTAG, message);
+        }
+    }
+
+    protected static void debug(String message) {
+        if (logDebug) {
+            Log.d(LOGTAG, message);
+        }
+    }
+
+    /**
+     * Return true of the query is from Firefox Sync.
+     * @param uri query URI
+     */
+    public static boolean isCallerSync(Uri uri) {
+        String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
+        return !TextUtils.isEmpty(isSync);
     }
 
     final class TabsDatabaseHelper extends SQLiteOpenHelper {
@@ -91,34 +128,35 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
 
             // Table for each tab on any client.
             db.execSQL("CREATE TABLE " + TABLE_TABS + "(" +
-                       Tabs._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                       Tabs.CLIENT_GUID + " TEXT," +
-                       Tabs.TITLE + " TEXT," +
-                       Tabs.URL + " TEXT," +
-                       Tabs.HISTORY + " TEXT," +
-                       Tabs.FAVICON + " TEXT," +
-                       Tabs.LAST_USED + " INTEGER," +
-                       Tabs.POSITION + " INTEGER" +
-                       ");");
+                    Tabs._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    Tabs.CLIENT_GUID + " TEXT," +
+                    Tabs.TITLE + " TEXT," +
+                    Tabs.URL + " TEXT," +
+                    Tabs.HISTORY + " TEXT," +
+                    Tabs.FAVICON + " TEXT," +
+                    Tabs.LAST_USED + " INTEGER," +
+                    Tabs.POSITION + " INTEGER" +
+                    ");");
 
             // Indices on CLIENT_GUID and POSITION.
-            db.execSQL("CREATE INDEX " + INDEX_TABS_GUID +
-                       " ON " + TABLE_TABS + "(" + Tabs.CLIENT_GUID + ")");
-            db.execSQL("CREATE INDEX " + INDEX_TABS_POSITION +
-                       " ON " + TABLE_TABS + "(" + Tabs.POSITION + ")");
+            db.execSQL("CREATE INDEX " + INDEX_TABS_GUID + " ON " + TABLE_TABS + "("
+                    + Tabs.CLIENT_GUID + ")");
+
+            db.execSQL("CREATE INDEX " + INDEX_TABS_POSITION + " ON " + TABLE_TABS + "("
+                    + Tabs.POSITION + ")");
 
             debug("Creating " + TABLE_CLIENTS + " table");
 
             // Table for client's name-guid mapping.
             db.execSQL("CREATE TABLE " + TABLE_CLIENTS + "(" +
-                       Clients.GUID + " TEXT PRIMARY KEY," +
-                       Clients.NAME + " TEXT," +
-                       Clients.LAST_MODIFIED + " INTEGER" +
-                       ");");
+                    Clients.GUID + " TEXT PRIMARY KEY," +
+                    Clients.NAME + " TEXT," +
+                    Clients.LAST_MODIFIED + " INTEGER" +
+                    ");");
 
             // Index on GUID.
-            db.execSQL("CREATE INDEX " + INDEX_CLIENTS_GUID +
-                       " ON " + TABLE_CLIENTS + "(" + Clients.GUID + ")");
+            db.execSQL("CREATE INDEX " + INDEX_CLIENTS_GUID + " ON " + TABLE_CLIENTS + "("
+                    + Clients.GUID + ")");
 
             createLocalClient(db);
         }
@@ -135,7 +173,7 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             debug("Upgrading tabs.db: " + db.getPath() + " from " +
-                  oldVersion + " to " + newVersion);
+                    oldVersion + " to " + newVersion);
 
             // We have to do incremental upgrades until we reach the current
             // database schema version.
@@ -151,18 +189,71 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         @Override
         public void onOpen(SQLiteDatabase db) {
             debug("Opening tabs.db: " + db.getPath());
-            db.rawQuery("PRAGMA synchronous=OFF", null).close();
 
-            if (shouldUseTransactions()) {
-                db.enableWriteAheadLogging();
-                db.setLockingEnabled(false);
-                return;
+            Cursor cursor = null;
+            try {
+                cursor = db.rawQuery("PRAGMA synchronous=OFF", null);
+            } finally {
+                if (cursor != null)
+                    cursor.close();
             }
 
-            // If we're not using transactions (in particular, prior to
-            // Honeycomb), then we can do some lesser optimizations.
-            db.rawQuery("PRAGMA journal_mode=PERSIST", null).close();
+            // From Honeycomb on, it's possible to run several db
+            // commands in parallel using multiple connections.
+            if (Build.VERSION.SDK_INT >= 11) {
+                db.enableWriteAheadLogging();
+                db.setLockingEnabled(false);
+            } else {
+                // Pre-Honeycomb, we can do some lesser optimizations.
+                cursor = null;
+                try {
+                    cursor = db.rawQuery("PRAGMA journal_mode=PERSIST", null);
+                } finally {
+                    if (cursor != null)
+                        cursor.close();
+                }
+            }
         }
+    }
+
+    private SQLiteDatabase getReadableDatabase(Uri uri) {
+        trace("Getting readable database for URI: " + uri);
+
+        String profile = null;
+
+        if (uri != null)
+            profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+
+        return mDatabases.getDatabaseHelperForProfile(profile).getReadableDatabase();
+    }
+
+    private SQLiteDatabase getWritableDatabase(Uri uri) {
+        trace("Getting writable database for URI: " + uri);
+
+        String profile = null;
+
+        if (uri != null)
+            profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+
+        return mDatabases.getDatabaseHelperForProfile(profile).getWritableDatabase();
+    }
+
+    @Override
+    public boolean onCreate() {
+        debug("Creating TabsProvider");
+
+        synchronized (this) {
+            mContext = getContext();
+            mDatabases = new PerProfileDatabases<TabsDatabaseHelper>(
+                getContext(), DATABASE_NAME, new DatabaseHelperFactory<TabsDatabaseHelper>() {
+                    @Override
+                    public TabsDatabaseHelper makeDatabaseHelper(Context context, String databasePath) {
+                        return new TabsDatabaseHelper(context, databasePath);
+                    }
+                });
+        }
+
+        return true;
     }
 
     @Override
@@ -192,6 +283,35 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         debug("URI has unrecognized type: " + uri);
 
         return null;
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        trace("Calling delete on URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        int deleted = 0;
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            trace("Beginning delete transaction: " + uri);
+            db.beginTransaction();
+            try {
+                deleted = deleteInTransaction(uri, selection, selectionArgs);
+                db.setTransactionSuccessful();
+                trace("Successful delete transaction: " + uri);
+            } finally {
+                db.endTransaction();
+            }
+        } else {
+            deleted = deleteInTransaction(uri, selection, selectionArgs);
+        }
+
+        if (deleted > 0) {
+            final boolean shouldSyncToNetwork = !isCallerSync(uri);
+            getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork);
+        }
+
+        return deleted;
     }
 
     @SuppressWarnings("fallthrough")
@@ -235,6 +355,35 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         return deleted;
     }
 
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        trace("Calling insert on URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        Uri result = null;
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            trace("Beginning insert transaction: " + uri);
+            db.beginTransaction();
+            try {
+                result = insertInTransaction(uri, values);
+                db.setTransactionSuccessful();
+                trace("Successful insert transaction: " + uri);
+            } finally {
+                db.endTransaction();
+            }
+        } else {
+            result = insertInTransaction(uri, values);
+        }
+
+        if (result != null) {
+            final boolean shouldSyncToNetwork = !isCallerSync(uri);
+            getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork);
+        }
+
+        return result;
+    }
+
     public Uri insertInTransaction(Uri uri, ContentValues values) {
         trace("Calling insert in transaction on URI: " + uri);
 
@@ -267,7 +416,38 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         return null;
     }
 
-    public int updateInTransaction(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    @Override
+    public int update(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
+        trace("Calling update on URI: " + uri);
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        int updated = 0;
+
+        if (Build.VERSION.SDK_INT >= 11) {
+            trace("Beginning update transaction: " + uri);
+            db.beginTransaction();
+            try {
+                updated = updateInTransaction(uri, values, selection, selectionArgs);
+                db.setTransactionSuccessful();
+                trace("Successful update transaction: " + uri);
+            } finally {
+                db.endTransaction();
+            }
+        } else {
+            updated = updateInTransaction(uri, values, selection, selectionArgs);
+        }
+
+        if (updated > 0) {
+            final boolean shouldSyncToNetwork = !isCallerSync(uri);
+            getContext().getContentResolver().notifyChange(uri, null, shouldSyncToNetwork);
+        }
+
+        return updated;
+    }
+
+    public int updateInTransaction(Uri uri, ContentValues values, String selection,
+            String[] selectionArgs) {
         trace("Calling update in transaction on URI: " + uri);
 
         int match = URI_MATCHER.match(uri);
@@ -357,8 +537,10 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         }
 
         trace("Running built query.");
-        final Cursor cursor = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder, limit);
-        cursor.setNotificationUri(getContext().getContentResolver(), BrowserContract.TABS_AUTHORITY_URI);
+        Cursor cursor = qb.query(db, projection, selection, selectionArgs, null,
+                null, sortOrder, limit);
+        cursor.setNotificationUri(getContext().getContentResolver(),
+                BrowserContract.TABS_AUTHORITY_URI);
 
         return cursor;
     }
@@ -367,7 +549,7 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         trace("Updating tabs on URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
-        beginWrite(db);
+
         return db.update(table, values, selection, selectionArgs);
     }
 
@@ -375,17 +557,46 @@ public class TabsProvider extends PerProfileDatabaseProvider<TabsProvider.TabsDa
         debug("Deleting tabs for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
-        beginWrite(db);
+
         return db.delete(table, selection, selectionArgs);
     }
 
     @Override
-    protected TabsDatabaseHelper createDatabaseHelper(Context context, String databasePath) {
-        return new TabsDatabaseHelper(context, databasePath);
-    }
+    public int bulkInsert(Uri uri, ContentValues[] values) {
+        if (values == null)
+            return 0;
 
-    @Override
-    protected String getDatabaseName() {
-        return DATABASE_NAME;
+        int numValues = values.length;
+        int successes = 0;
+
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        db.beginTransaction();
+        try {
+            for (int i = 0; i < numValues; i++) {
+                try {
+                    insertInTransaction(uri, values[i]);
+                    successes++;
+                } catch (SQLException e) {
+                    Log.e(LOGTAG, "SQLException in bulkInsert", e);
+
+                    // Restart the transaction to continue insertions.
+                    db.setTransactionSuccessful();
+                    db.endTransaction();
+                    db.beginTransaction();
+                }
+            }
+            trace("Flushing DB bulkinsert...");
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+
+        if (successes > 0) {
+            final boolean shouldSyncToNetwork = !isCallerSync(uri);
+            mContext.getContentResolver().notifyChange(uri, null, shouldSyncToNetwork);
+        }
+
+        return successes;
     }
 }
