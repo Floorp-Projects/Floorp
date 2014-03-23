@@ -376,3 +376,38 @@
 #close-button:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
+
+/* ::::: private browsing indicator ::::: */
+
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+  #TabsToolbar > .private-browsing-indicator {
+    background-image: url("chrome://browser/skin/privatebrowsing-mask-tabstrip-XPVista7.png");
+  }
+
+  #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7.png");
+  }
+}
+
+@media (-moz-windows-glass) {
+  #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    top: 1px;
+  }
+  #main-window[sizemode="maximized"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
+    top: -1px;
+  }
+}
+
+/**
+ * This next block targets Aero Basic, which has different positioning for the
+ * window caption buttons, and therefore needs to be special-cased.
+ */
+@media (-moz-windows-default-theme) {
+  @media not all and (-moz-windows-compositor) {
+    #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #titlebar-buttonbox-container > #private-browsing-indicator-titlebar > .private-browsing-indicator {
+      background-image: url("chrome://browser/skin/privatebrowsing-mask-titlebar-XPVista7-tall.png");
+      height: 28px;
+    }
+  }
+}
