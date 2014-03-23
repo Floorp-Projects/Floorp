@@ -1698,7 +1698,7 @@ let GUIDHelper = {
         if (row)
           itemId = row.getResultByIndex(0);
       },
-      handleCompletion: function (aReason) {
+      handleCompletion: aReason => {
         if (aReason == REASON_FINISHED && itemId != -1) {
           deferred.resolve(itemId);
 
@@ -1732,7 +1732,7 @@ let GUIDHelper = {
           guid = row.getResultByIndex(1);
         }
       },
-      handleCompletion: function (aReason) {
+      handleCompletion: aReason => {
         if (aReason == REASON_FINISHED && guid) {
           deferred.resolve(guid);
 
