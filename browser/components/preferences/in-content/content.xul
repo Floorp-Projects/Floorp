@@ -21,6 +21,15 @@
 <script type="application/javascript" 
         src="chrome://browser/content/preferences/in-content/content.js"/>
 
+<hbox id="header-content"
+      class="header"
+      hidden="true"
+      data-category="paneContent">
+  <image class="header-icon"/>
+  <label class="header-name"
+         value="&paneContent.title;"/>
+</hbox>
+
 <groupbox id="miscGroup" data-category="paneContent" hidden="true">
   <caption label="&popups.label;"/>
 
