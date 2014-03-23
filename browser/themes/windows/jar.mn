@@ -65,7 +65,9 @@ browser.jar:
         skin/classic/browser/Privacy-16.png
         skin/classic/browser/Privacy-32.png
         skin/classic/browser/Privacy-48.png
-        skin/classic/browser/privatebrowsing-indicator.png
+        skin/classic/browser/privatebrowsing-mask-tabstrip-XPVista7.png
+        skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7.png
+        skin/classic/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
         skin/classic/browser/reload-stop-go.png
         skin/classic/browser/searchbar.css
         skin/classic/browser/searchbar-dropdown-arrow.png
@@ -397,7 +399,11 @@ browser.jar:
         skin/classic/aero/browser/Privacy-16.png                     (Privacy-16-aero.png)
         skin/classic/aero/browser/Privacy-32.png                     (Privacy-32-aero.png)
         skin/classic/aero/browser/Privacy-48.png                     (Privacy-48-aero.png)
-        skin/classic/aero/browser/privatebrowsing-indicator.png
+        skin/classic/aero/browser/privatebrowsing-mask-tabstrip.png
+        skin/classic/aero/browser/privatebrowsing-mask-tabstrip-XPVista7.png
+        skin/classic/aero/browser/privatebrowsing-mask-titlebar.png
+        skin/classic/aero/browser/privatebrowsing-mask-titlebar-XPVista7.png
+        skin/classic/aero/browser/privatebrowsing-mask-titlebar-XPVista7-tall.png
         skin/classic/aero/browser/reload-stop-go.png
         skin/classic/aero/browser/searchbar.css
         skin/classic/aero/browser/searchbar-dropdown-arrow.png       (searchbar-dropdown-arrow-aero.png)
