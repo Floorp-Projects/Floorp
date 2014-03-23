@@ -2,3 +2,7 @@ component {f7800463-3b97-47f9-9341-b7617e6d8d49} ExperimentsService.js
 contract @mozilla.org/browser/experiments-service;1 {f7800463-3b97-47f9-9341-b7617e6d8d49}
 category update-timer ExperimentsService @mozilla.org/browser/experiments-service;1,getService,experiments-update-timer,experiments.manifest.fetchIntervalSeconds,86400
 category profile-after-change ExperimentsService @mozilla.org/browser/experiments-service;1
+
+category healthreport-js-provider-default ExperimentsProvider resource://gre/browser/modules/Experiments/Experiments.jsm
+
+
