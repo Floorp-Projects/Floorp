@@ -1,0 +1,751 @@
+%if 0
+/* - This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+@namespace html "http://www.w3.org/1999/xhtml";
+
+@font-face {
+  font-family: "Clear Sans";
+  src: url("chrome://browser/skin/fonts/ClearSans-Regular.ttf");
+}
+
+page {
+  -moz-appearance: none;
+  background-image: linear-gradient(#FFFFFF, #EDEDED 100px);
+}
+
+caption {
+  -moz-appearance: none;
+  margin: 0;
+}
+
+.caption-text {
+  font-size: 1.3rem;
+  font-weight: bold;
+  line-height: 22px;
+  margin: 0 !important;
+}
+
+.main-content {
+  max-width: 800px;
+}
+
+prefpane > .content-box {
+  overflow: auto;
+}
+
+prefpane {
+  padding: 40px 48px 48px;
+  font-family: "Clear Sans", sans-serif;
+  font-size: 1.25rem;
+  line-height: 22px;
+  color: #424E5A;
+}
+
+prefpane > .content-box {
+  overflow: auto;
+}
+
+/* groupboxes */
+
+groupbox {
+  -moz-appearance: none;
+  border: none;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  -moz-margin-start: 60px;
+  -moz-padding-start: 0;
+  font-size: 1.25rem;
+}
+
+groupbox label {
+  -moz-margin-start: 0;
+}
+
+/* tabpanels and tabs */
+
+tabpanels {
+  -moz-appearance: none;
+  font-size: 1.25rem;
+  line-height: 22px;
+  color: #424E5A;
+  border: none;
+  padding: 0;
+  background-color: transparent;
+}
+
+tabs {
+  -moz-margin-start: 60px;
+  margin-bottom: 15px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  -moz-border-top-colors: #BBBBBB #F9F9F9;
+  -moz-border-bottom-colors: #F9F9F9 #BBBBBB;
+}
+
+.tabs-left,
+.tabs-right {
+  border-bottom: none;
+}
+
+tab {
+  -moz-appearance: none;
+  margin-top: 0;
+  padding: 0;
+  -moz-margin-end: 30px;
+  min-height: 60px;
+  background-color: transparent;
+  border-width: 0;
+  border-bottom: 3px solid transparent;
+}
+
+tab[selected] {
+  border-bottom-color: #FF9500;
+}
+
+.tab-text {
+  font-size: 1.3rem;
+  line-height: 22px;
+  color: #737980;
+  border: 1px solid transparent;
+  border-radius: 5px;
+}
+
+tab:not([selected]):hover > .tab-middle > .tab-text {
+  background-color: rgba(255,255,255,0.5);
+  border-color: #FFFFFF;
+}
+
+tab:not([selected]):hover:active > .tab-middle > .tab-text {
+  background-color: rgba(0,0,0,0.03);
+}
+
+tab[selected] > .tab-middle > .tab-text {
+  font-weight: bold;
+  color: #424E5A;
+}
+
+/* buttons and menulists */
+
+button,
+menulist {
+  -moz-appearance: none;
+  height: 30px;
+  max-height: 30px;
+  color: #737980;
+  line-height: 20px;
+  text-shadow: 0 1px 1px #FEFFFE;
+  border: 1px solid rgba(23,50,77,0.4);
+  -moz-border-top-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-left-colors: none !important;
+  border-radius: 5px;
+  box-shadow: 0 1px 1px 0 #FFFFFF, inset 0 2px 2px 0 #FFFFFF;
+  background-color: #F1F1F1;
+  background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.1));
+}
+
+button:not([disabled]):hover,
+menulist:not([disabled]):hover {
+  background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.6));
+}
+
+button:not([disabled]):hover:active,
+menulist[open="true"]:not([disabled]) {
+  background-image: linear-gradient(rgba(255,255,255,0.1),
+                                    rgba(255,255,255,0.6));
+}
+
+button[disabled],
+menulist[disabled] {
+  background-image: linear-gradient(rgba(255,255,255,0.5),
+                                    rgba(255,255,255,0.1));
+  border-color: rgba(23,50,77,0.25);
+  color: rgba(115,121,128,0.5);
+  text-shadow: 0 1px 1px #FFFFFF;
+}
+
+button > .button-box,
+menulist > .menulist-label-box {
+  padding-right: 10px !important;
+  padding-left: 10px !important;
+}
+
+button[type="menu"] > .button-box > .button-menu-dropmarker {
+  -moz-appearance: none;
+  margin: 1px 0;
+  -moz-margin-start: 10px;
+  padding: 0;
+  width: 10px;
+  height: 15px;
+  border: none;
+  background-color: transparent;
+  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown.png")
+}
+
+.spinbuttons-button {
+  -moz-margin-start: 10px !important;
+  -moz-margin-end: 2px !important;
+}
+
+.spinbuttons-up {
+  margin-top: 2px !important;
+  border-radius: 4px 4px 0 0;
+}
+
+.spinbuttons-down  {
+  margin-bottom: 2px !important;
+  border-radius: 0 0 4px 4px;
+}
+
+.spinbuttons-button > .button-box {
+  padding: 1px 5px 2px !important;
+}
+
+.spinbuttons-up > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up.gif");
+}
+
+.spinbuttons-up[disabled] > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/arrow/arrow-up-dis.gif");
+}
+
+.spinbuttons-down > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.spinbuttons-down[disabled] > .button-box > .button-icon {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+}
+
+menulist:not([editable="true"]) > .menulist-dropmarker {
+  -moz-appearance: none;
+  -moz-margin-end: 10px;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown.png")
+}
+
+menulist[disabled]:not([editable="true"]) > .menulist-dropmarker {
+  list-style-image: url("chrome://browser/skin/preferences/in-content/dropdown-disabled.png")
+}
+
+menulist > menupopup,
+button[type="menu"] > menupopup {
+  -moz-appearance: none;
+  border: 1px solid rgba(23,50,77,0.4);
+  border-radius: 5px;
+  background-color: #FFFFFF;
+}
+
+menulist > menupopup menu,
+menulist > menupopup menuitem,
+button[type="menu"] > menupopup menu,
+button[type="menu"] > menupopup menuitem {
+  -moz-appearance: none;
+  font-size: 1.25rem;
+  line-height: 22px;
+  height: 40px;
+  color: #737980;
+}
+
+menulist > menupopup > menu[_moz-menuactive="true"],
+menulist > menupopup > menuitem[_moz-menuactive="true"],
+button[type="menu"] > menupopup > menu[_moz-menuactive="true"],
+button[type="menu"] > menupopup > menuitem[_moz-menuactive="true"] {
+  color: #FFFFFF;
+  background-image: linear-gradient(#4CB1FF, #1792E5);
+}
+
+menulist > menupopup menuseparator,
+button[type="menu"] > menupopup menuseparator {
+  -moz-appearance: none;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  padding: 0;
+  border-top: 1px solid rgba(23,50,77,0.4);
+  border-bottom: none;
+}
+
+/* textboxes */
+
+textbox {
+  -moz-appearance: none;
+  height: 30px;
+  color: #737980;
+  line-height: 20px;
+  text-shadow: 0 1px 1px #FEFFFE;
+  padding-right: 10px;
+  padding-left: 10px;
+  border: 1px solid rgba(23,50,77,0.4);
+  -moz-border-top-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-left-colors: none !important;
+  border-radius: 5px;
+  box-shadow: 0 1px 1px 0 #FFFFFF, inset 0 2px 2px 0 rgba(0,0,0,0.03);
+  background-color: #F1F1F1;
+  background-image: linear-gradient(#FFFFFF, rgba(255,255,255,0.8));
+}
+
+textbox[focused] {
+  color: #424E5A;
+  border-color: #0096DC;
+  box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096DC;
+}
+
+textbox[disabled] {
+  color: rgba(115,121,128,0.5);
+  border-color: rgba(23,50,77,0.25);
+  background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.4));
+}
+
+/* Links */
+
+.text-link,
+.inline-link,
+html|a.inline-link {
+  font-size: 1.25rem;
+  line-height: 22px;
+  color: #0096DC;
+}
+
+.text-link:hover,
+.inline-link:hover {
+  color: #4CB1FF;
+  text-decoration: none;
+}
+
+.text-link:hover:active,
+.inline-link:hover:active {
+  color: #FF9500;
+  text-decoration: none;
+}
+
+/* Checkboxes and radio buttons */
+
+checkbox {
+  margin: 7px 0;
+}
+
+.checkbox-check {
+  -moz-appearance: none;
+  width: 23px;
+  height: 23px;
+  border-radius: 2px;
+  border: 1px solid rgba(23,50,77,0.40);
+  -moz-margin-end: 10px;
+  background-color: #f1f1f1;
+  background-image: linear-gradient(#ffffff 0%, rgba(255,255,255,0.80) 100%);
+  box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
+}
+
+.checkbox-check[checked] {
+  border-color: #0096dc;
+  box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096dc;
+}
+
+.checkbox-label-box {
+  -moz-margin-start: -1px; /* negative margin for the transparent border */
+  -moz-padding-start: 0;
+}
+
+checkbox:hover::before,
+checkbox[checked]::before {
+  position: absolute;
+  content: "";
+  width: 15px;
+  height: 10px;
+  background-image: url("chrome://browser/skin/preferences/in-content/check.png");
+}
+
+checkbox[checked]::before {
+  background-position: -15px 0;
+}
+
+.radio-check {
+  -moz-appearance: none;
+  width: 23px;
+  height: 23px;
+  border: 1px solid rgba(23,50,77,0.40);
+  border-radius: 50%;
+  -moz-margin-end: 10px;
+  background-color: #f1f1f1;
+  background-image: linear-gradient(#ffffff 0%, rgba(255,255,255,0.80) 100%);
+  box-shadow: 0 1px 1px 0 #ffffff, inset 0 2px 0 0 rgba(0,0,0,0.03);
+}
+
+.radio-check[selected] {
+  border-color: #0096dc;
+  box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096dc;
+}
+
+.radio-label-box {
+  -moz-margin-start: -1px; /* negative margin for the transparent border */
+  -moz-margin-end: 10px;
+  -moz-padding-start: 0;
+}
+
+radio:hover::before,
+radio[selected]::before {
+  position: absolute;
+  content: "";
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  margin-bottom: 1px;
+  background-image: linear-gradient(rgba(76,177,255,0.25) 0%, rgba(23,146,229,0.25) 100%);
+}
+
+radio[selected]::before {
+  background-image: linear-gradient(#4cb1ff 0%, #1792e5 100%);
+}
+
+/* Category List */
+
+#categories {
+  -moz-appearance: none;
+  background-color: #424e5a;
+  -moz-border-end: 1px solid rgba(0,0,0,0.20);
+  padding-top: 39px;
+  margin: 0;
+}
+
+.category {
+  -moz-appearance: none;
+  color: rgba(241,241,241,0.70);
+  border: 1px solid transparent;
+  -moz-border-end-width: 0;
+  -moz-padding-start: 14px;
+  -moz-padding-end: 21px;
+  margin-bottom: -1px;
+  min-height: 40px;
+}
+
+.category:hover {
+  background-color: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.20);
+}
+
+.category[selected] {
+  background-color: rgba(0,0,0,0.20);
+  border-color: rgba(255,255,255,0.20);
+  -moz-border-start-width: 3px;
+  -moz-border-start-color: #ff9500;
+  -moz-padding-start: 12px;
+  color: #f1f1f1;
+}
+
+.category-name {
+  line-height: 22px;
+  font-family: "Clear Sans", sans-serif;
+  font-size: 1.25rem;
+  padding-bottom: 2px;
+  -moz-padding-start: 9px;
+  margin: 0;
+}
+
+.category-icon {
+  width: 24px;
+  height: 24px;
+  list-style-image: url("chrome://browser/skin/preferences/in-content/icons.png");
+}
+
+#category-general > .category-icon {
+  -moz-image-region: rect(0, 24px, 24px, 0);
+}
+
+#category-general[selected] > .category-icon {
+  -moz-image-region: rect(24px, 24px, 48px, 0);
+}
+
+#category-content > .category-icon {
+  -moz-image-region: rect(0, 48px, 24px, 24px);
+}
+
+#category-content[selected] > .category-icon {
+  -moz-image-region: rect(24px, 48px, 48px, 24px);
+}
+
+#category-application > .category-icon {
+  -moz-image-region: rect(0, 72px, 24px, 48px);
+}
+
+#category-application[selected] > .category-icon {
+  -moz-image-region: rect(24px, 72px, 48px, 48px);
+}
+
+#category-privacy > .category-icon {
+  -moz-image-region: rect(0, 96px, 24px, 72px);
+}
+
+#category-privacy[selected] > .category-icon {
+  -moz-image-region: rect(24px, 96px, 48px, 72px);
+}
+
+#category-security > .category-icon {
+  -moz-image-region: rect(0, 120px, 24px, 96px);
+}
+
+#category-security[selected] > .category-icon {
+  -moz-image-region: rect(24px, 120px, 48px, 96px);
+}
+
+#category-sync > .category-icon {
+  -moz-image-region: rect(0, 144px, 24px, 120px);
+}
+
+#category-sync[selected] > .category-icon {
+  -moz-image-region: rect(24px, 144px, 48px, 120px);
+}
+
+#category-advanced > .category-icon {
+  -moz-image-region: rect(0, 168px, 24px, 144px);
+}
+
+#category-advanced[selected] > .category-icon {
+  -moz-image-region: rect(24px, 168px, 48px, 144px);
+}
+
+/* header */
+
+.header {
+  margin-bottom: 15px;
+}
+
+.header-icon {
+  width: 40px;
+  max-height: 40px;
+  -moz-margin-end: 20px;
+  list-style-image: url("chrome://browser/skin/preferences/in-content/header.png");
+}
+
+.header-name {
+  font-size: 2.5rem;
+  font-weight: normal;
+  line-height: 40px;
+  margin: 0;
+}
+
+#header-general > .header-icon {
+  -moz-image-region: rect(3px, 45px, 45px, 3px);
+}
+
+#header-content > .header-icon {
+  -moz-image-region: rect(3px, 93px, 45px, 51px);
+}
+
+#header-application > .header-icon {
+  -moz-image-region: rect(3px, 141px, 45px, 99px);
+}
+
+#header-privacy > .header-icon {
+  -moz-image-region: rect(3px, 189px, 45px, 147px);
+}
+
+#header-security > .header-icon {
+  -moz-image-region: rect(3px, 237px, 45px, 195px);
+}
+
+#header-sync > .header-icon {
+  -moz-image-region: rect(3px, 285px, 45px, 243px);
+}
+
+#header-advanced > .header-icon {
+  -moz-image-region: rect(3px, 333px, 45px, 291px);
+}
+
+.indent {
+  margin-top: 7px;
+  margin-bottom: 7px;
+}
+
+/* General Pane */
+
+filefield {
+  -moz-appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+}
+
+.fileFieldContentBox {
+  background-color: transparent;
+}
+
+.fileFieldIcon {
+  -moz-margin-start: 10px;
+  -moz-margin-end: 0;
+}
+
+.fileFieldLabel {
+  -moz-margin-start: -26px;
+  -moz-padding-start: 36px;
+}
+
+#chooseFolder {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+/* Applications Pane Styles */
+
+#applications-content {
+  -moz-margin-start: 60px;
+  padding: 15px;
+}
+
+#handlersView {
+  -moz-appearance: none;
+  font-size: 1.25rem;
+  line-height: 22px;
+  color: #737980;
+  border: 1px solid rgba(23,50,77,0.4);
+  border-radius: 5px;
+  background-color: #F1F1F1;
+  overflow-y: auto;
+}
+
+#typeColumn,
+#actionColumn {
+  -moz-appearance: none;
+  font-family: "Clear Sans", sans-serif;
+  line-height: 20px;
+  color: #737980;
+  height: 36px;
+  padding: 0 10px;
+  background-color: #F7F7F7;
+  border: 1px solid #CCCCCC;
+  -moz-border-top-colors: none;
+  -moz-border-right-colors: none;
+  -moz-border-bottom-colors: none;
+  -moz-border-left-colors: none;
+  text-shadow: 0 1px 1px #FFFFFF;
+}
+
+#typeColumn:-moz-locale-dir(ltr),
+#actionColumn:-moz-locale-dir(rtl) {
+  border-top-left-radius: 5px;
+}
+
+#typeColumn:-moz-locale-dir(rtl),
+#actionColumn:-moz-locale-dir(ltr) {
+  border-top-right-radius: 5px;
+}
+
+#typeColumn:hover,
+#actionColumn:hover {
+  border-color: #737980;
+}
+
+#typeColumn:hover:active,
+#actionColumn:hover:active {
+  padding: 0 10px;
+  border-color: #0096DC;
+  box-shadow: 0 0 2px 2px rgba(0,150,220,0.35), inset 0 0 2px 0 #0096DC;
+}
+
+#typeColumn > .treecol-sortdirection[sortDirection=ascending],
+#actionColumn > .treecol-sortdirection[sortDirection=ascending],
+#typeColumn > .treecol-sortdirection[sortDirection=descending],
+#actionColumn > .treecol-sortdirection[sortDirection=descending]  {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/preferences/in-content/sorter.png");
+}
+
+#typeColumn > .treecol-sortdirection[sortDirection=descending],
+#actionColumn > .treecol-sortdirection[sortDirection=descending] {
+  transform: scaleY(-1);
+}
+
+#handlersView > richlistitem {
+  min-height: 40px !important;
+}
+
+.typeIcon {
+  -moz-margin-start: 10px !important;
+  -moz-margin-end: 9px !important;
+}
+
+.actionIcon {
+  -moz-margin-start: 11px !important;
+  -moz-margin-end: 8px !important;
+}
+
+.actionsMenu {
+  height: 40px;
+  max-height: 40px;
+}
+
+.actionsMenu > menupopup > menuitem {
+  -moz-padding-start: 10px !important;
+}
+
+.actionsMenu > menupopup > menuitem > .menu-iconic-left {
+  -moz-margin-end: 8px !important;
+}
+
+/* XXX This style is for bug 740213 and should be removed once that
+   bug has a solution. */
+description > html|a {
+  cursor: pointer;
+}
+
+/* Content Pane */
+
+#defaultFontSize {
+  min-width: 5.5em;
+}
+
+/* Security Pane */
+
+/* Add margins to this buttons to unsqueeze the checkboxed in same hbox */
+#addonExceptions,
+#cookieExceptions,
+#passwordExceptions,
+#changeMasterPassword {
+  margin-top: 4px;
+  margin-bottom: 5px;
+}
+
+/* Sync Pane */
+
+#syncEnginesList {
+  -moz-appearance: none;
+  color: #737980;
+  padding: 10px;
+  border: 1px solid rgba(23,50,77,0.4);
+  border-radius: 5px;
+  background-color: #F1F1F1;
+}
+
+/* Advanced Pane */
+
+#advancedPrefs {
+  padding-bottom: 0; /* no padding needed in inContent prefs */
+}
+
+#encryptionPanel {
+  margin-top: 15px;
+  -moz-margin-start: 60px;
+}
+
+#offlineAppsList {
+  -moz-appearance: none;
+  color: #737980;
+  padding: 2px;
+  border: 1px solid rgba(23,50,77,0.4);
+  border-radius: 5px;
+  background-color: #F1F1F1;
+}
+
+#telemetryLearnMore,
+#FHRLearnMore,
+#crashReporterLearnMore {
+  /* center the links */
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
