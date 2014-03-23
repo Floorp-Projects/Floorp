@@ -43,8 +43,6 @@ add_test(function v4_upgrade() {
     "/1.1/johndoe/storage/prefs": new ServerCollection().handler()
   });
 
-  ensureLegacyIdentityManager();
-
   try {
 
     _("Set up some tabs.");
