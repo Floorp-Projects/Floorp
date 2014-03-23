@@ -55,6 +55,18 @@ public:
   already_AddRefed<gfxASurface> DeprecatedGetAsSurface();
   TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
 
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    size_t size = PlanarYCbCrImage::SizeOfExcludingThis(aMallocSizeOf);
+    size += mDecodedBuffer.SizeOfExcludingThis(aMallocSizeOf);
+    return size;
+  }
+
 private:
   nsAutoArrayPtr<uint8_t> mDecodedBuffer;
   gfx::IntSize mScaleHint;

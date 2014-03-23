@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>Test parsing of grid container shorthands (grid-template, grid)</title>
+  <link rel="author" title="Simon Sapin" href="mailto:simon.sapin@exyr.org">
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+  <link rel='stylesheet' href='/resources/testharness.css'>
+</head>
+<body>
+
+<script>
+
+var initial_values = {
+    gridTemplateAreas: "none",
+    gridTemplateColumns: "none",
+    gridTemplateRows: "none",
+    gridAutoFlow: "none",
+    // Computed value for 'auto'
+    gridAutoColumns: "minmax(min-content, max-content)",
+    gridAutoRows: "minmax(min-content, max-content)",
+};
+
+// For various specified values of the grid-template shorthand,
+// test the computed values of the corresponding longhands.
+var grid_template_test_cases = [
+    {
+        specified: "none",
+    },
+    {
+        specified: "40px / 100px",
+        gridTemplateColumns: "40px",
+        gridTemplateRows: "100px",
+    },
+    {
+        specified: "(foo) 40px (bar) / (baz) 100px (fizz)",
+        gridTemplateColumns: "(foo) 40px (bar)",
+        gridTemplateRows: "(baz) 100px (fizz)",
+    },
+    {
+        specified: " none/100px",
+        gridTemplateColumns: "none",
+        gridTemplateRows: "100px",
+    },
+    {
+        specified: "40px/none",
+        gridTemplateColumns: "40px",
+        gridTemplateRows: "none",
+    },
+    {
+        specified: "'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateRows: "minmax(min-content, max-content)",
+    },
+    {
+        specified: "(bar) 'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateRows: "(bar) minmax(min-content, max-content)",
+    },
+    {
+        specified: "(foo) 40px / 'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "minmax(min-content, max-content)",
+    },
+    {
+        specified: "(foo) 40px / (bar) 'fizz'",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "(bar) minmax(min-content, max-content)",
+    },
+    {
+        specified: "(foo) 40px / 'fizz' 100px",
+        gridTemplateAreas: "\"fizz\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "100px",
+    },
+    {
+        specified: "(foo) 40px / (bar) 'fizz' 100px (buzz) \n (a) '.' 200px (b)",
+        gridTemplateAreas: "\"fizz\" \".\"",
+        gridTemplateColumns: "(foo) 40px",
+        gridTemplateRows: "(bar) 100px (buzz a) 200px (b)",
+    },
+];
+
+grid_test_cases = grid_template_test_cases.concat([
+    {
+        specified: "row",
+        gridAutoFlow: "row",
+    },
+    {
+        specified: "none 40px",
+        gridAutoFlow: "none",
+        gridAutoColumns: "40px",
+    },
+    {
+        specified: "column dense auto",
+        gridAutoFlow: "column dense",
+        gridAutoColumns: "minmax(min-content, max-content)",
+    },
+    {
+        specified: "dense row minmax(min-content, 2fr)",
+        gridAutoFlow: "row dense",
+        gridAutoColumns: "minmax(min-content, 2fr)",
+    },
+    {
+        specified: "row 40px / 100px",
+        gridAutoFlow: "row",
+        gridAutoColumns: "40px",
+        gridAutoRows: "100px",
+    },
+]);
+
+function run_tests(test_cases, shorthand, subproperties) {
+    test_cases.forEach(function(test_case) {
+        test(function() {
+            var element = document.createElement('div');
+            document.body.appendChild(element);
+            element.style[shorthand] = test_case.specified;
+            var computed = window.getComputedStyle(element);
+            subproperties.forEach(function(longhand) {
+                assert_equals(
+                    computed[longhand],
+                    test_case[longhand] || initial_values[longhand],
+                    longhand
+                );
+            });
+        }, "test parsing of 'grid-template: " + test_case.specified + "'");
+    });
+}
+
+run_tests(grid_template_test_cases, "gridTemplate", [
+    "gridTemplateAreas", "gridTemplateColumns", "gridTemplateRows"]);
+
+run_tests(grid_test_cases, "grid", [
+    "gridTemplateAreas", "gridTemplateColumns", "gridTemplateRows",
+    "gridAutoFlow", "gridAutoColumns", "gridAutoRows"]);
+
+</script>
+</body>
+</html>

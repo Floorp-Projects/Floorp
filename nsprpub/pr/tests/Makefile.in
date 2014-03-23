@@ -206,9 +206,9 @@ INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/incl
 
 ifeq ($(OS_ARCH), WINNT)
 ifdef NS_USE_GCC
-  EXTRA_LIBS += -lwsock32
+  EXTRA_LIBS += -lws2_32
 else
-  EXTRA_LIBS += wsock32.lib
+  EXTRA_LIBS += ws2_32.lib
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
   ifdef PROFILE
     LDOPTS += -PROFILE -MAP

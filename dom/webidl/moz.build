@@ -16,6 +16,7 @@ PREPROCESSED_WEBIDL_FILES = [
 
 WEBIDL_FILES = [
     'AbstractWorker.webidl',
+    'ActivityRequestHandler.webidl',
     'AnalyserNode.webidl',
     'AnimationEvent.webidl',
     'AppInfo.webidl',
@@ -270,6 +271,7 @@ WEBIDL_FILES = [
     'PerformanceNavigation.webidl',
     'PerformanceTiming.webidl',
     'PeriodicWave.webidl',
+    'PermissionSettings.webidl',
     'PhoneNumberService.webidl',
     'Plugin.webidl',
     'PluginArray.webidl',
@@ -615,7 +617,7 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothStatusChangedEvent.webidl',
     ]
 
-if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner']:
+if CONFIG['MOZ_BUILD_APP'] == 'browser':
     WEBIDL_FILES += [
         'BrowserFeedWriter.webidl',
     ]

@@ -27,8 +27,8 @@ class nsIDOMWindow;
 class nsIURI;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x7cf47061, 0x745d, 0x4c6c, \
-  { 0xa0, 0xe5, 0x9f, 0xef, 0xa8, 0xcc, 0x2a, 0xf0 } }
+{ 0x274840b6, 0x7349, 0x4798, \
+  { 0xbe, 0x24, 0xbd, 0x75, 0xa6, 0x46, 0x99, 0xb7 } }
 
 /* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
    know what language we have is a little silly... */
@@ -44,32 +44,6 @@ class nsIScriptContext : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
-
-  /**
-   * Bind an already-compiled event handler function to the given
-   * target.  Scripting languages with static scoping must re-bind the
-   * scope chain for aHandler to begin (after the activation scope for
-   * aHandler itself, typically) with aTarget's scope.
-   *
-   * The result of the bind operation is a new handler object, with
-   * principals now set and scope set as above.  This is returned in
-   * aBoundHandler.  When this function is called, aBoundHandler is
-   * expected to not be holding an object.
-   *
-   * @param aTarget an object telling the scope in which to bind the compiled
-   *        event handler function.  The context will presumably associate
-   *        this nsISupports with a native script object.
-   * @param aScope the scope in which the script object for aTarget should be
-   *        looked for.
-   * @param aHandler the function object to bind, created by an earlier call to
-   *        CompileEventHandler
-   * @param aBoundHandler [out] the result of the bind operation.
-   * @return NS_OK if the function was successfully bound
-   */
-  virtual nsresult BindCompiledEventHandler(nsISupports* aTarget,
-                                            JS::Handle<JSObject*> aScope,
-                                            JS::Handle<JSObject*> aHandler,
-                                            JS::MutableHandle<JSObject*> aBoundHandler) = 0;
 
   /**
    * Return the global object.

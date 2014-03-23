@@ -1,0 +1,11 @@
+{
+  "name": "Alarm API Test Webapp",
+  "description": "A webapp for testing the alarm API.",
+  "launch_path": "/webapprtChrome/webapprt/test/chrome/alarm.html",
+  "permissions": {
+    "alarms": { "description": "Desc" }
+  },
+  "messages": [
+    { "alarm": "/alarm.html" }
+  ]
+}

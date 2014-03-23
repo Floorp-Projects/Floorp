@@ -14,6 +14,7 @@
 #include "mozilla/css/Declaration.h"
 #include "nsPrintfCString.h"
 #include "gfxFontConstants.h"
+#include "nsStyleUtil.h"
 
 namespace mozilla {
 namespace css {
@@ -930,6 +931,149 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       AppendValueToString(subprops[0], aValue, aSerialization);
       aValue.Append(char16_t(' '));
       AppendValueToString(subprops[1], aValue, aSerialization);
+      break;
+    }
+    case eCSSProperty_grid_row:
+    case eCSSProperty_grid_column: {
+      // grid-{row,column}-start, grid-{row,column}-end, separated by a slash
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ABORT_IF_FALSE(subprops[2] == eCSSProperty_UNKNOWN,
+                        "must have exactly two subproperties");
+
+      // TODO: should we simplify when possible?
+      AppendValueToString(subprops[0], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[1], aValue, aSerialization);
+      break;
+    }
+    case eCSSProperty_grid_area: {
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      NS_ABORT_IF_FALSE(subprops[4] == eCSSProperty_UNKNOWN,
+                        "must have exactly four subproperties");
+
+      // TODO: should we simplify when possible?
+      AppendValueToString(subprops[0], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[1], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[2], aValue, aSerialization);
+      aValue.AppendLiteral(" / ");
+      AppendValueToString(subprops[3], aValue, aSerialization);
+      break;
+    }
+
+    // This can express either grid-template-{areas,columns,rows}
+    // or grid-auto-{flow,columns,rows}, but not both.
+    case eCSSProperty_grid: {
+      const nsCSSValue& areasValue =
+        *data->ValueFor(eCSSProperty_grid_template_areas);
+      const nsCSSValue& columnsValue =
+        *data->ValueFor(eCSSProperty_grid_template_columns);
+      const nsCSSValue& rowsValue =
+        *data->ValueFor(eCSSProperty_grid_template_rows);
+
+      const nsCSSValue& autoFlowValue =
+        *data->ValueFor(eCSSProperty_grid_auto_flow);
+      const nsCSSValue& autoColumnsValue =
+        *data->ValueFor(eCSSProperty_grid_auto_columns);
+      const nsCSSValue& autoRowsValue =
+        *data->ValueFor(eCSSProperty_grid_auto_rows);
+
+      if (areasValue.GetUnit() == eCSSUnit_None &&
+          columnsValue.GetUnit() == eCSSUnit_None &&
+          rowsValue.GetUnit() == eCSSUnit_None) {
+        AppendValueToString(eCSSProperty_grid_auto_flow,
+                            aValue, aSerialization);
+        aValue.Append(char16_t(' '));
+        AppendValueToString(eCSSProperty_grid_auto_columns,
+                            aValue, aSerialization);
+        aValue.AppendLiteral(" / ");
+        AppendValueToString(eCSSProperty_grid_auto_rows,
+                            aValue, aSerialization);
+        break;
+      } else if (!(autoFlowValue.GetUnit() == eCSSUnit_None &&
+                   autoColumnsValue.GetUnit() == eCSSUnit_Auto &&
+                   autoRowsValue.GetUnit() == eCSSUnit_Auto)) {
+        // Not serializable, bail.
+        return;
+      }
+      // Fall through to eCSSProperty_grid_template
+    }
+    case eCSSProperty_grid_template: {
+      const nsCSSValue& areasValue =
+        *data->ValueFor(eCSSProperty_grid_template_areas);
+      const nsCSSValue& columnsValue =
+        *data->ValueFor(eCSSProperty_grid_template_columns);
+      const nsCSSValue& rowsValue =
+        *data->ValueFor(eCSSProperty_grid_template_rows);
+      if (areasValue.GetUnit() == eCSSUnit_None) {
+        AppendValueToString(eCSSProperty_grid_template_columns,
+                            aValue, aSerialization);
+        aValue.AppendLiteral(" / ");
+        AppendValueToString(eCSSProperty_grid_template_rows,
+                            aValue, aSerialization);
+        break;
+      }
+      if (rowsValue.GetUnit() != eCSSUnit_List &&
+          rowsValue.GetUnit() != eCSSUnit_ListDep) {
+        // We have "grid-template-areas:[something]; grid-template-rows:none"
+        // which isn't a value that the shorthand can express. Bail.
+        return;
+      }
+      const GridTemplateAreasValue* areas = areasValue.GetGridTemplateAreas();
+      const nsCSSValueList* rowsItem = rowsValue.GetListValue();
+      uint32_t nRowItems = 0;
+      while (rowsItem) {
+        nRowItems++;
+        rowsItem = rowsItem->mNext;
+      }
+      MOZ_ASSERT(nRowItems % 2 == 1, "expected an odd number of items");
+      if ((nRowItems - 1) / 2 != areas->NRows()) {
+        // Not serializable, bail.
+        return;
+      }
+      if (columnsValue.GetUnit() != eCSSUnit_None) {
+        AppendValueToString(eCSSProperty_grid_template_columns,
+                            aValue, aSerialization);
+        aValue.AppendLiteral(" / ");
+      }
+      rowsItem = rowsValue.GetListValue();
+      uint32_t row = 0;
+      for (;;) {
+        bool addSpaceSeparator = true;
+        nsCSSUnit unit = rowsItem->mValue.GetUnit();
+
+        if (unit == eCSSUnit_Null) {
+          // Empty or omitted <line-names>. Serializes to nothing.
+          addSpaceSeparator = false;  // Avoid a double space.
+
+        } else if (unit == eCSSUnit_List || unit == eCSSUnit_ListDep) {
+          // Non-empty <line-names>
+          aValue.AppendLiteral("(");
+          rowsItem->mValue.AppendToString(eCSSProperty_grid_template_rows,
+                                          aValue, aSerialization);
+          aValue.AppendLiteral(")");
+
+        } else {
+          nsStyleUtil::AppendEscapedCSSString(areas->mTemplates[row++], aValue);
+          aValue.Append(char16_t(' '));
+
+          // <track-size>
+          rowsItem->mValue.AppendToString(eCSSProperty_grid_template_rows,
+                                          aValue, aSerialization);
+        }
+
+        rowsItem = rowsItem->mNext;
+        if (!rowsItem) {
+          break;
+        }
+
+        if (addSpaceSeparator) {
+          aValue.Append(char16_t(' '));
+        }
+      }
       break;
     }
     case eCSSProperty__moz_transform: {

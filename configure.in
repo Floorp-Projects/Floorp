@@ -5770,10 +5770,12 @@ dnl = * only applies to win32
 dnl = * enabled by default (shipping build); requires explicit --disable to disable
 dnl ========================================================
 MOZ_ANGLE_RENDERER=
-MOZ_DIRECTX_SDK_PATH=
 MOZ_DIRECTX_SDK_CPU_SUFFIX=
-MOZ_D3DCOMPILER_CAB=
+MOZ_DIRECTX_SDK_PATH=
 MOZ_D3DCOMPILER_DLL=
+MOZ_HAS_WINSDK_WITH_D3D=
+MOZ_D3DCOMPILER_DLL_PATH=
+MOZ_D3DCOMPILER_CAB=
 case "$target_os" in
 *mingw*)
     MOZ_ANGLE_RENDERER=1
@@ -5795,6 +5797,11 @@ MOZ_ARG_DISABLE_BOOL(webgl,
     MOZ_WEBGL_DISABLED=1,
     MOZ_WEBGL_DISABLED=)
 
+MOZ_ARG_ENABLE_BOOL(winsdk-directx,
+[  --enable-winsdk-directx use DirectX SDK in Windows SDK],
+    MOZ_WINSDK_DIRECTX=1,
+    MOZ_WINSDK_DIRECTX=)
+
 if test -n "$MOZ_WEBGL_DISABLED"; then
   MOZ_WEBGL=
   MOZ_ANGLE_RENDERER=
@@ -5808,6 +5815,7 @@ if test -n "$MOZ_WEBGL_CONFORMANT"; then
   AC_DEFINE(MOZ_WEBGL_CONFORMANT)
 fi
 
+
 # Locate a DirectX SDK here so we can use it for both ANGLE and
 # Joystick support.
 if test "$OS_TARGET" = "WINNT" -a -z "$CROSS_COMPILE"; then
@@ -5819,36 +5827,94 @@ if test "$OS_TARGET" = "WINNT" -a -z "$CROSS_COMPILE"; then
     MOZ_DIRECTX_SDK_REG_KEY=`reg query 'HKLM\Software\Microsoft\DirectX' //s | grep 'Microsoft DirectX SDK' | head -n 1`
   fi
   MOZ_DIRECTX_SDK_PATH=`reg query "$MOZ_DIRECTX_SDK_REG_KEY" //v InstallPath | grep REG_SZ | sed 's/.*\([[a-zA-Z]]\)\\:\\\\/\\1\\:\\\\/' | sed 's,\\\\,/,g'`
-fi
-
-if test -n "$MOZ_ANGLE_RENDERER" -a -z "$CROSS_COMPILE"; then
-  if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
-    AC_MSG_ERROR([Found the February 2010 DirectX SDK. Need the June 2010 DirectX SDK, or newer.  Upgrade your SDK or reconfigure with --disable-webgl.])
-  fi
 
   if test -n "$MOZ_DIRECTX_SDK_PATH" &&
-     test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h &&
      test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
     AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
   else
-    AC_MSG_ERROR([Couldn't find the DirectX SDK, needed for WebGL. Either install it (June 2010 version or newer), or reconfigure with --disable-webgl.])
+    AC_MSG_RESULT([Couldn't find the DirectX SDK.])
   fi
-
-  # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
-  MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
-
-  if test -z "$MOZ_D3DX9_VERSION" ; then
-      AC_MSG_ERROR([Couldn't determine the D3DX9 version, needed for WebGL. Either reinstall the DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
-  fi
-
-  MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
-
-  if test -z "$MOZ_D3DCOMPILER_CAB"; then
-    AC_MSG_ERROR([Couldn't find the DirectX redistributable files. Either reinstall the DirectX SDK (making sure the "DirectX Redistributable Files" option is selected), or reconfigure with --disable-webgl.])
-  fi
-
-  MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
 fi
+
+
+dnl ========================================================
+dnl D3D compiler DLL
+dnl ========================================================
+
+if test -n "$MOZ_ANGLE_RENDERER"; then
+  # Check that our DirectX SDK is acceptable.
+  if test -n "$MOZ_DIRECTX_SDK_PATH"; then
+    if test -n "`echo $MOZ_DIRECTX_SDK_REG_KEY | grep 'February 2010'`" ; then
+      AC_MSG_RESULT([Found the February 2010 DirectX SDK, which is unacceptable to ANGLE.])
+      MOZ_DIRECTX_SDK_PATH_BAD=1
+    fi
+
+    if test -n "$MOZ_DIRECTX_SDK_PATH" &&
+       test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h &&
+       test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
+      AC_MSG_RESULT([Found acceptable DirectX SDK for ANGLE.])
+    else
+      AC_MSG_RESULT([Found DirectX SDK is unacceptable for ANGLE.])
+      MOZ_DIRECTX_SDK_PATH_BAD=1
+    fi
+  fi
+
+  if test -n "$MOZ_DIRECTX_SDK_PATH_BAD"; then
+    AC_MSG_ERROR([Couldn't find an acceptable DirectX SDK for ANGLE. Either install DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
+  fi
+
+  # Find a D3D compiler DLL in a Windows SDK.
+  MOZ_D3DCOMPILER_DLL=
+  if test -n "$MOZ_WINSDK_DIRECTX"; then
+    case "$MOZ_WINSDK_MAXVER" in
+    0x0603*)
+      MOZ_D3DCOMPILER_DLL=d3dcompiler_47.dll
+      AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.1.])
+    ;;
+    0x0602*)
+      MOZ_D3DCOMPILER_DLL=d3dcompiler_46.dll
+      AC_MSG_RESULT([Found D3D compiler in Windows SDK 8.0.])
+    ;;
+    esac
+  fi
+
+  if test -n "$MOZ_D3DCOMPILER_DLL"; then
+    # We have a name, now track down the path.
+    if test -n "$WINDOWSSDKDIR"; then
+      MOZ_D3DCOMPILER_DLL_PATH="$WINDOWSSDKDIR/Redist/D3D/$MOZ_DIRECTX_SDK_CPU_SUFFIX/$MOZ_D3DCOMPILER_DLL"
+      if test -f "$MOZ_D3DCOMPILER_DLL_PATH"; then
+        MOZ_HAS_WINSDK_WITH_D3D=1
+        AC_MSG_RESULT([Found MOZ_D3DCOMPILER_DLL_PATH: $MOZ_D3DCOMPILER_DLL_PATH])
+      else
+        AC_MSG_RESULT([MOZ_D3DCOMPILER_DLL_PATH doesn't exist: $MOZ_D3DCOMPILER_DLL_PATH])
+      fi
+    else
+      AC_MSG_RESULT([WINDOWSSDKDIR is missing.])
+    fi
+  fi
+
+  # Find a D3D compiler DLL in the DirectX SDK, if we didn't find one already.
+  # Get the SDK numeric version (e.g. 43) by looking at the dependencies of d3dx9.lib
+  if test -z "$MOZ_HAS_WINSDK_WITH_D3D"; then
+    MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
+
+    if test -n "$MOZ_D3DX9_VERSION" ; then
+      MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
+      MOZ_D3DCOMPILER_DLL=D3DCompiler_$MOZ_D3DX9_VERSION.dll
+    else
+      AC_MSG_RESULT([Couldn't determine the D3DX9 version for the DirectX SDK.])
+    fi
+
+    if test -z "$MOZ_D3DCOMPILER_CAB"; then
+      AC_MSG_RESULT([Couldn't find a CAB containing the D3D compiler DLL.])
+    fi
+  fi
+
+  if test -z "$MOZ_D3DCOMPILER_DLL_PATH" -a -z "$MOZ_D3DCOMPILER_CAB"; then
+    AC_MSG_ERROR([Couldn't find an acceptable D3D compiler DLL. Either install Windows SDK 8.0+ and reconfigure with --enable-winsdk-directx, install DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
+  fi
+fi
+
 
 dnl ========================================================
 dnl Gamepad support
@@ -5876,12 +5942,14 @@ if test "$MOZ_GAMEPAD"; then
         MOZ_GAMEPAD_BACKEND=cocoa
         ;;
     WINNT)
-        if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
-            if ! test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
-               MOZ_GAMEPAD=
+        if test -z "$MOZ_HAS_WINSDK_WITH_D3D"; then
+            if test -n "$MOZ_DIRECTX_SDK_PATH" ; then
+                if ! test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
+                   MOZ_GAMEPAD=
+                fi
+            elif test "$GCC" != "yes"; then
+                MOZ_GAMEPAD=
             fi
-        elif test "$GCC" != "yes"; then
-            MOZ_GAMEPAD=
         fi
         if test -z "$MOZ_GAMEPAD"; then
            AC_MSG_ERROR([Couldn't find the DirectX SDK, needed for gamepad support. Please install it or, reconfigure with --disable-gamepad to disable gamepad support.])
@@ -8388,12 +8456,15 @@ AC_SUBST(MOZ_STUB_INSTALLER)
 AC_SUBST(MOZ_VERIFY_MAR_SIGNATURE)
 AC_SUBST(MOZ_ENABLE_SIGNMAR)
 AC_SUBST(MOZ_UPDATER)
+
 AC_SUBST(MOZ_ANGLE_RENDERER)
-AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_DIRECTX_SDK_CPU_SUFFIX)
-AC_SUBST(MOZ_D3DX9_VERSION)
-AC_SUBST(MOZ_D3DCOMPILER_CAB)
+AC_SUBST(MOZ_DIRECTX_SDK_PATH)
 AC_SUBST(MOZ_D3DCOMPILER_DLL)
+AC_SUBST(MOZ_HAS_WINSDK_WITH_D3D)
+AC_SUBST(MOZ_D3DCOMPILER_DLL_PATH)
+AC_SUBST(MOZ_D3DCOMPILER_CAB)
+
 AC_SUBST(MOZ_METRO)
 
 AC_SUBST(MOZ_ANDROID_HISTORY)

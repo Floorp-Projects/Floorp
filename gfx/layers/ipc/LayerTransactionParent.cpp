@@ -560,6 +560,19 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 }
 
 bool
+LayerTransactionParent::RecvSetTestSampleTime(const TimeStamp& aTime)
+{
+  return mShadowLayersManager->SetTestSampleTime(this, aTime);
+}
+
+bool
+LayerTransactionParent::RecvLeaveTestMode()
+{
+  mShadowLayersManager->LeaveTestMode(this);
+  return true;
+}
+
+bool
 LayerTransactionParent::RecvGetOpacity(PLayerParent* aParent,
                                        float* aOpacity)
 {
