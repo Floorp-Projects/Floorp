@@ -8,10 +8,6 @@ SOURCES += [
     'nsFeedSniffer.cpp',
 ]
 
-EXPORTS.mozilla += [
-    'FeedWriterEnabled.h',
-]
-
 EXTRA_COMPONENTS += [
     'BrowserFeeds.manifest',
     'FeedConverter.js',

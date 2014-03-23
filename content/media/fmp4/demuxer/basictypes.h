@@ -25,7 +25,7 @@ namespace mp4_demuxer {
 
 
 
-#define OVERRIDE override
+#define OVERRIDE MOZ_OVERRIDE
 #define WARN_UNUSED_RESULT
 
 #define DCHECK(condition) \
