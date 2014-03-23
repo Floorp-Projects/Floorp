@@ -158,7 +158,7 @@ namespace FilterWrappers {
   Offset(DrawTarget* aDT, FilterNode* aInputFilter, const IntPoint& aOffset)
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
-    filter->SetAttribute(ATT_TRANSFORM_MATRIX, Matrix().Translate(aOffset.x, aOffset.y));
+    filter->SetAttribute(ATT_TRANSFORM_MATRIX, Matrix::Translation(aOffset.x, aOffset.y));
     filter->SetInput(IN_TRANSFORM_IN, aInputFilter);
     return filter;
   }
@@ -199,7 +199,7 @@ namespace FilterWrappers {
   {
     RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
     filter->SetAttribute(ATT_TRANSFORM_MATRIX,
-      Matrix().Translate(aSurfacePosition.x, aSurfacePosition.y));
+      Matrix::Translation(aSurfacePosition.x, aSurfacePosition.y));
     filter->SetInput(IN_TRANSFORM_IN, aSurface);
     return filter;
   }

@@ -62,6 +62,17 @@ DeprecatedSharedPlanarYCbCrImage::~DeprecatedSharedPlanarYCbCrImage() {
   }
 }
 
+size_t
+SharedPlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  // NB: Explicitly skipping mTextureClient, the memory is already reported
+  //     at time of allocation in GfxMemoryImageReporter.
+  // Not owned:
+  // - mCompositable
+  size_t size = PlanarYCbCrImage::SizeOfExcludingThis(aMallocSizeOf);
+  return size;
+}
+
 TextureClient*
 SharedPlanarYCbCrImage::GetTextureClient(CompositableClient* aClient)
 {

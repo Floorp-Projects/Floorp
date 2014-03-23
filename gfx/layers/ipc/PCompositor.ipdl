@@ -75,12 +75,6 @@ parent:
   sync StopFrameTimeRecording(uint32_t startIndex)
     returns (float[] intervals);
 
-  // Enter test mode, set the sample time to sampleTime, and resample animations.
-  // sampleTime must not be null.
-  sync SetTestSampleTime(TimeStamp sampleTime);
-  // Leave test mode and resume normal compositing
-  sync LeaveTestMode();
-
   // layersBackendHints is an ordered list of preffered backends where
   // layersBackendHints[0] is the best backend. If any hints are LayersBackend::LAYERS_NONE
   // that hint is ignored.

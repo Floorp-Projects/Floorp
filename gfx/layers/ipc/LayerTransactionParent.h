@@ -93,6 +93,8 @@ protected:
 
   virtual bool RecvClearCachedResources() MOZ_OVERRIDE;
   virtual bool RecvForceComposite() MOZ_OVERRIDE;
+  virtual bool RecvSetTestSampleTime(const TimeStamp& aTime) MOZ_OVERRIDE;
+  virtual bool RecvLeaveTestMode() MOZ_OVERRIDE;
   virtual bool RecvGetOpacity(PLayerParent* aParent,
                               float* aOpacity) MOZ_OVERRIDE;
   virtual bool RecvGetAnimationTransform(PLayerParent* aParent,

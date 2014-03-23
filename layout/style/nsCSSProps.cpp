@@ -2515,6 +2515,43 @@ static const nsCSSProperty gFlexFlowSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
+static const nsCSSProperty gGridTemplateSubpropTable[] = {
+  eCSSProperty_grid_template_areas,
+  eCSSProperty_grid_template_columns,
+  eCSSProperty_grid_template_rows,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gGridSubpropTable[] = {
+  eCSSProperty_grid_template_areas,
+  eCSSProperty_grid_template_columns,
+  eCSSProperty_grid_template_rows,
+  eCSSProperty_grid_auto_flow,
+  eCSSProperty_grid_auto_columns,
+  eCSSProperty_grid_auto_rows,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gGridColumnSubpropTable[] = {
+  eCSSProperty_grid_column_start,
+  eCSSProperty_grid_column_end,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gGridRowSubpropTable[] = {
+  eCSSProperty_grid_row_start,
+  eCSSProperty_grid_row_end,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gGridAreaSubpropTable[] = {
+  eCSSProperty_grid_row_start,
+  eCSSProperty_grid_column_start,
+  eCSSProperty_grid_row_end,
+  eCSSProperty_grid_column_end,
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gOverflowSubpropTable[] = {
   eCSSProperty_overflow_x,
   eCSSProperty_overflow_y,

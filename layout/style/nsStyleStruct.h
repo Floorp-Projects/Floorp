@@ -1300,7 +1300,9 @@ struct nsStylePosition {
   // in nsStyleStruct.cpp
   nsStyleGridTrackList mGridTemplateColumns;
   nsStyleGridTrackList mGridTemplateRows;
-  nsCSSValueGridTemplateAreas mGridTemplateAreas;
+
+  // nullptr for 'none'
+  nsRefPtr<mozilla::css::GridTemplateAreasValue> mGridTemplateAreas;
 
   // We represent the "grid-auto-position" property in two parts:
   nsStyleGridLine mGridAutoPositionColumn;

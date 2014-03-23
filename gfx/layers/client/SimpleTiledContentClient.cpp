@@ -248,9 +248,6 @@ SimpleClientTiledThebesLayer::SimpleClientTiledThebesLayer(ClientLayerManager* a
   , mContentClient()
 {
   MOZ_COUNT_CTOR(SimpleClientTiledThebesLayer);
-
-  mPaintData.mLastScrollOffset = ScreenPoint(0, 0);
-  mPaintData.mFirstPaint = true;
 }
 
 SimpleClientTiledThebesLayer::~SimpleClientTiledThebesLayer()
@@ -262,102 +259,6 @@ void
 SimpleClientTiledThebesLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 {
   aAttrs = ThebesLayerAttributes(GetValidRegion());
-}
-
-static LayoutDeviceRect
-ApplyParentLayerToLayoutTransform(const gfx3DMatrix& aTransform, const ParentLayerRect& aParentLayerRect)
-{
-  return TransformTo<LayoutDevicePixel>(aTransform, aParentLayerRect);
-}
-
-void
-SimpleClientTiledThebesLayer::BeginPaint()
-{
-  if (ClientManager()->IsRepeatTransaction()) {
-    return;
-  }
-
-  mPaintData.mLowPrecisionPaintCount = 0;
-  mPaintData.mPaintFinished = false;
-
-  // Get the metrics of the nearest scroll container.
-  ContainerLayer* scrollParent = nullptr;
-  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-    const FrameMetrics& metrics = parent->GetFrameMetrics();
-    if (metrics.mScrollId != FrameMetrics::NULL_SCROLL_ID) {
-      scrollParent = parent;
-      break;
-    }
-  }
-
-  if (!scrollParent) {
-    // XXX I don't think this can happen, but if it does, warn and set the
-    //     composition bounds to empty so that progressive updates are disabled.
-    NS_WARNING("Tiled Thebes layer with no scrollable container parent");
-    mPaintData.mCompositionBounds.SetEmpty();
-    return;
-  }
-
-  const FrameMetrics& metrics = scrollParent->GetFrameMetrics();
-
-  // Calculate the transform required to convert screen space into transformed
-  // layout device space.
-  gfx::Matrix4x4 effectiveTransform = GetEffectiveTransform();
-  for (ContainerLayer* parent = GetParent(); parent; parent = parent->GetParent()) {
-    if (parent->UseIntermediateSurface()) {
-      effectiveTransform = effectiveTransform * parent->GetEffectiveTransform();
-    }
-  }
-  gfx3DMatrix layoutToParentLayer;
-  gfx::To3DMatrix(effectiveTransform, layoutToParentLayer);
-  layoutToParentLayer.ScalePost(metrics.GetParentResolution().scale,
-                                metrics.GetParentResolution().scale,
-                                1.f);
-
-  mPaintData.mTransformParentLayerToLayout = layoutToParentLayer.Inverse();
-
-  // Compute the critical display port in layer space.
-  mPaintData.mLayoutCriticalDisplayPort.SetEmpty();
-  if (!metrics.mCriticalDisplayPort.IsEmpty()) {
-    // Convert the display port to screen space first so that we can transform
-    // it into layout device space.
-    const ParentLayerRect& criticalDisplayPort = metrics.mCriticalDisplayPort
-                                               * metrics.mDevPixelsPerCSSPixel
-                                               * metrics.GetParentResolution();
-    LayoutDeviceRect transformedCriticalDisplayPort =
-      ApplyParentLayerToLayoutTransform(mPaintData.mTransformParentLayerToLayout, criticalDisplayPort);
-    mPaintData.mLayoutCriticalDisplayPort =
-      LayoutDeviceIntRect::ToUntyped(RoundedOut(transformedCriticalDisplayPort));
-  }
-
-  // Calculate the frame resolution. Because this is Gecko-side, before any
-  // async transforms have occurred, we can use mZoom for this.
-  mPaintData.mResolution = metrics.GetZoom();
-
-  // Calculate the scroll offset since the last transaction, and the
-  // composition bounds.
-  mPaintData.mCompositionBounds.SetEmpty();
-  mPaintData.mScrollOffset.MoveTo(0, 0);
-  Layer* primaryScrollable = ClientManager()->GetPrimaryScrollableLayer();
-  if (primaryScrollable) {
-    const FrameMetrics& metrics = primaryScrollable->AsContainerLayer()->GetFrameMetrics();
-    mPaintData.mScrollOffset = metrics.GetScrollOffset() * metrics.GetZoom();
-    mPaintData.mCompositionBounds =
-      ApplyParentLayerToLayoutTransform(mPaintData.mTransformParentLayerToLayout,
-                                        ParentLayerRect(metrics.mCompositionBounds));
-  }
-}
-
-void
-SimpleClientTiledThebesLayer::EndPaint(bool aFinish)
-{
-  if (!aFinish && !mPaintData.mPaintFinished) {
-    return;
-  }
-
-  mPaintData.mLastScrollOffset = mPaintData.mScrollOffset;
-  mPaintData.mPaintFinished = true;
-  mPaintData.mFirstPaint = false;
 }
 
 void
@@ -388,83 +289,29 @@ SimpleClientTiledThebesLayer::RenderLayer()
   nsIntRegion invalidRegion = mVisibleRegion;
   invalidRegion.Sub(invalidRegion, mValidRegion);
   if (invalidRegion.IsEmpty()) {
-    EndPaint(true);
     return;
   }
-
-  const FrameMetrics& parentMetrics = GetParent()->GetFrameMetrics();
-
-  nsIntRegion wantToPaintRegion = mVisibleRegion;
 
   // Only paint the mask layer on the first transaction.
   if (GetMaskLayer() && !ClientManager()->IsRepeatTransaction()) {
     ToClientLayer(GetMaskLayer())->RenderLayer();
   }
 
-  // Fast path for no progressive updates, no low-precision updates and no
-  // critical display-port set, or no display-port set.
-  if (parentMetrics.mCriticalDisplayPort.IsEmpty() ||
-      parentMetrics.mDisplayPort.IsEmpty())
-  {
-    mValidRegion = wantToPaintRegion;
+  // SimpleTiledContentClient doesn't support progressive updates or the low
+  // precision buffer yet.
+  MOZ_ASSERT(!gfxPrefs::UseProgressiveTilePainting() &&
+             !gfxPrefs::UseLowPrecisionBuffer());
 
-    NS_ASSERTION(!ClientManager()->IsRepeatTransaction(), "Didn't paint our mask layer");
+  mValidRegion = mVisibleRegion;
 
-    mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion,
-                                             callback, data);
+  NS_ASSERTION(!ClientManager()->IsRepeatTransaction(), "Didn't paint our mask layer");
 
-    ClientManager()->Hold(this);
+  mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion,
+                                           callback, data);
 
-    mContentClient->UseTiledLayerBuffer();
+  ClientManager()->Hold(this);
 
-    return;
-  }
-
-  // Calculate everything we need to perform the paint.
-  BeginPaint();
-
-  if (mPaintData.mPaintFinished) {
-    return;
-  }
-
-  // Make sure that tiles that fall outside of the visible region are
-  // discarded on the first update.
-  if (!ClientManager()->IsRepeatTransaction()) {
-    mValidRegion.And(mValidRegion, wantToPaintRegion);
-    if (!mPaintData.mLayoutCriticalDisplayPort.IsEmpty()) {
-      // Make sure that tiles that fall outside of the critical displayport are
-      // discarded on the first update.
-      mValidRegion.And(mValidRegion, mPaintData.mLayoutCriticalDisplayPort);
-    }
-  }
-
-  nsIntRegion lowPrecisionInvalidRegion;
-  if (!mPaintData.mLayoutCriticalDisplayPort.IsEmpty()) {
-    // Clip the invalid region to the critical display-port
-    invalidRegion.And(invalidRegion, mPaintData.mLayoutCriticalDisplayPort);
-    if (invalidRegion.IsEmpty() && lowPrecisionInvalidRegion.IsEmpty()) {
-      EndPaint(true);
-      return;
-    }
-  }
-
-  if (!invalidRegion.IsEmpty()) {
-    mValidRegion = wantToPaintRegion;
-    if (!mPaintData.mLayoutCriticalDisplayPort.IsEmpty()) {
-      mValidRegion.And(mValidRegion, mPaintData.mLayoutCriticalDisplayPort);
-    }
-    mContentClient->mTiledBuffer.SetFrameResolution(mPaintData.mResolution);
-    mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion,
-                                             callback, data);
-
-    ClientManager()->Hold(this);
-    mContentClient->UseTiledLayerBuffer();
-
-    EndPaint(false);
-    return;
-  }
-
-  EndPaint(false);
+  mContentClient->UseTiledLayerBuffer();
 }
 
 
