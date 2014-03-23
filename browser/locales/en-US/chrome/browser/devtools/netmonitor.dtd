@@ -202,6 +202,12 @@
   -  on the context menu that copies the selected request's url -->
 <!ENTITY netmonitorUI.context.copyUrl     "Copy URL">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyAsCurl): This is the label displayed
+  -  on the context menu that copies the selected request as a cURL command.
+  -  The capitalization is part of the official name and should be used throughout all languages.
+  -  http://en.wikipedia.org/wiki/CURL -->
+<!ENTITY netmonitorUI.context.copyAsCurl    "Copy as cURL">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.context.copyUrl.accesskey): This is the access key
   -  for the Copy URL menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.context.copyUrl.accesskey "C">
