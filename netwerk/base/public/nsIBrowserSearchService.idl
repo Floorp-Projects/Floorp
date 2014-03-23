@@ -22,7 +22,7 @@ interface nsISearchSubmission : nsISupports
   readonly attribute nsIURI uri;
 };
 
-[scriptable, uuid(7914c4b8-f05b-40c9-a982-38a058cd1769)]
+[scriptable, uuid(77de6680-57ec-4105-a183-cc7cf7e84b09)]
 interface nsISearchEngine : nsISupports
 {
   /**
@@ -157,6 +157,18 @@ interface nsISearchEngine : nsISupports
    */
   readonly attribute AString identifier;
 
+  /**
+   * Gets a string representing the hostname from which search results for a
+   * given responseType are returned, minus the leading "www." (if present).
+   * This can be specified as an url attribute in the engine description file,
+   * but will default to host from the <Url>'s template otherwise.
+   *
+   * @param  responseType [optional]
+   *         The MIME type to get resultDomain for.  Defaults to "text/html".
+   *
+   * @return the resultDomain for the given responseType.
+   */
+  AString getResultDomain([optional] in AString responseType);
 };
 
 [scriptable, uuid(9fc39136-f08b-46d3-b232-96f4b7b0e235)]
