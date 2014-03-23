@@ -260,7 +260,15 @@ class IDLScope(IDLObject):
            isinstance(newObject, IDLExternalInterface) and \
            originalObject.identifier.name == newObject.identifier.name:
             return originalObject
-            
+
+        if (isinstance(originalObject, IDLExternalInterface) or
+            isinstance(newObject, IDLExternalInterface)):
+            raise WebIDLError(
+                "Name collision between "
+                "interface declarations for identifier '%s' at '%s' and '%s'"
+                % (identifier.name,
+                    originalObject.location, newObject.location), [])
+
         # We do the merging of overloads here as opposed to in IDLInterface
         # because we need to merge overloads of NamedConstructors and we need to
         # detect conflicts in those across interfaces. See also the comment in

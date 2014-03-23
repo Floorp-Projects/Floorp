@@ -132,41 +132,13 @@ public:
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
                                int64_t aStartTime);
 
-  class VideoQueueMemoryFunctor : public nsDequeFunctor {
-  public:
-    VideoQueueMemoryFunctor() : mResult(0) {}
+  // Returns the number of bytes of memory allocated by structures/frames in
+  // the video queue.
+  size_t SizeOfVideoQueueInBytes() const;
 
-    virtual void* operator()(void* anObject);
-
-    int64_t mResult;
-  };
-
-  virtual int64_t VideoQueueMemoryInUse() {
-    VideoQueueMemoryFunctor functor;
-    mVideoQueue.LockedForEach(functor);
-    return functor.mResult;
-  }
-
-  class AudioQueueMemoryFunctor : public nsDequeFunctor {
-  public:
-    AudioQueueMemoryFunctor() : mSize(0) {}
-
-    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
-
-    virtual void* operator()(void* anObject) {
-      const AudioData* audioData = static_cast<const AudioData*>(anObject);
-      mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
-      return nullptr;
-    }
-
-    size_t mSize;
-  };
-
-  size_t SizeOfAudioQueue() {
-    AudioQueueMemoryFunctor functor;
-    mAudioQueue.LockedForEach(functor);
-    return functor.mSize;
-  }
+  // Returns the number of bytes of memory allocated by structures/frames in
+  // the audio queue.
+  size_t SizeOfAudioQueueInBytes() const;
 
   // Only used by WebMReader and MediaOmxReader for now, so stub here rather
   // than in every reader than inherits from MediaDecoderReader.

@@ -511,10 +511,10 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   metrics.mResolution = ParentLayerToLayerScale(2);
   metrics.SetZoom(CSSToScreenScale(6));
   metrics.mDevPixelsPerCSSPixel = CSSToLayoutDeviceScale(3);
-  metrics.mScrollId = FrameMetrics::START_SCROLL_ID;
+  metrics.SetScrollId(FrameMetrics::START_SCROLL_ID);
 
   FrameMetrics childMetrics = metrics;
-  childMetrics.mScrollId = FrameMetrics::START_SCROLL_ID + 1;
+  childMetrics.SetScrollId(FrameMetrics::START_SCROLL_ID + 1);
 
   layers[0]->AsContainerLayer()->SetFrameMetrics(metrics);
   layers[1]->AsContainerLayer()->SetFrameMetrics(childMetrics);
@@ -927,7 +927,7 @@ SetScrollableFrameMetrics(Layer* aLayer, FrameMetrics::ViewID aScrollId,
 {
   ContainerLayer* container = aLayer->AsContainerLayer();
   FrameMetrics metrics;
-  metrics.mScrollId = aScrollId;
+  metrics.SetScrollId(aScrollId);
   nsIntRect layerBound = aLayer->GetVisibleRegion().GetBounds();
   metrics.mCompositionBounds = ParentLayerIntRect(layerBound.x, layerBound.y,
                                                   layerBound.width, layerBound.height);

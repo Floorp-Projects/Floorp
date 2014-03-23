@@ -13,6 +13,20 @@ using mozilla::AudioDataValue;
 using mozilla::MediaDecoderReader;
 using mozilla::MediaQueue;
 
+class MemoryFunctor : public nsDequeFunctor {
+public:
+  MemoryFunctor() : mSize(0) {}
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
+
+  virtual void* operator()(void* anObject) {
+    const AudioData* audioData = static_cast<const AudioData*>(anObject);
+    mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
+    return nullptr;
+  }
+
+  size_t mSize;
+};
+
 class TestCopy
 {
 public:
@@ -60,7 +74,7 @@ static void TestAudioCompactor(size_t aBytes)
   EXPECT_GT(callCount, 0U) << "copy functor never called";
   EXPECT_EQ(frames, frameCount) << "incorrect number of frames copied";
 
-  MediaDecoderReader::AudioQueueMemoryFunctor memoryFunc;
+  MemoryFunctor memoryFunc;
   queue.LockedForEach(memoryFunc);
   size_t allocSize = memoryFunc.mSize - (callCount * sizeof(AudioData));
   size_t slop = allocSize - aBytes;
