@@ -53,6 +53,10 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += ['nsTextFragmentSSE2.cpp']
     SOURCES['nsTextFragmentSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
+EXPORTS.mozilla += [
+    'FeedWriterEnabled.h',
+]
+
 EXPORTS.mozilla.dom += [
     'Attr.h',
     'Comment.h',
