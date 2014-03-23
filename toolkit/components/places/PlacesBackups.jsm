@@ -28,12 +28,71 @@ XPCOMUtils.defineLazyGetter(this, "localFileCtor",
   () => Components.Constructor("@mozilla.org/file/local;1",
                                "nsILocalFile", "initWithPath"));
 
+XPCOMUtils.defineLazyGetter(this, "filenamesRegex",
+  () => new RegExp("^bookmarks-([0-9\-]+)(?:_([0-9]+)){0,1}(?:_([a-z0-9=\+\-]{24})){0,1}\.(json|html)", "i")
+);
+
+/**
+ * Appends meta-data information to a given filename.
+ */
+function appendMetaDataToFilename(aFilename, aMetaData) {
+  let matches = aFilename.match(filenamesRegex);
+  return "bookmarks-" + matches[1] +
+                  "_" + aMetaData.count +
+                  "_" + aMetaData.hash +
+                  "." + matches[4];
+}
+
+/**
+ * Gets the hash from a backup filename.
+ *
+ * @return the extracted hash or null.
+ */
+function getHashFromFilename(aFilename) {
+  let matches = aFilename.match(filenamesRegex);
+  if (matches && matches[3])
+    return matches[3];
+  return null;
+}
+
+/**
+ * Given two filenames, checks if they contain the same date.
+ */
+function isFilenameWithSameDate(aSourceName, aTargetName) {
+  let sourceMatches = aSourceName.match(filenamesRegex);
+  let targetMatches = aTargetName.match(filenamesRegex);
+
+  return sourceMatches && targetMatches &&
+         sourceMatches[1] == targetMatches[1] &&
+         sourceMatches[4] == targetMatches[4];
+}
+
+/**
+ * Given a filename, searches for another backup with the same date.
+ *
+ * @return OS.File path string or null.
+ */
+function getBackupFileForSameDate(aFilename) {
+  return Task.spawn(function* () {
+    let backupFiles = yield PlacesBackups.getBackupFiles();
+    for (let backupFile of backupFiles) {
+      if (isFilenameWithSameDate(OS.Path.basename(backupFile), aFilename))
+        return backupFile;
+    }
+    return null;
+  });
+}
+
 this.PlacesBackups = {
-  get _filenamesRegex() {
-    delete this._filenamesRegex;
-    return this._filenamesRegex =
-      new RegExp("^(bookmarks)-([0-9-]+)(_[0-9]+)*\.(json|html)");
-  },
+  /**
+   * Matches the backup filename:
+   *  0: file name
+   *  1: date in form Y-m-d
+   *  2: bookmarks count
+   *  3: contents hash
+   *  4: file extension
+   */
+  get filenamesRegex() filenamesRegex,
 
   get folder() {
     Deprecated.warning(
@@ -99,8 +158,7 @@ this.PlacesBackups = {
       let entry = files.getNext().QueryInterface(Ci.nsIFile);
       // A valid backup is any file that matches either the localized or
       // not-localized filename (bug 445704).
-      let matches = entry.leafName.match(this._filenamesRegex);
-      if (!entry.isHidden() && matches) {
+      if (!entry.isHidden() && filenamesRegex.test(entry.leafName)) {
         // Remove bogus backups in future dates.
         if (this.getDateForFile(entry) > new Date()) {
           entry.remove(false);
@@ -139,8 +197,7 @@ this.PlacesBackups = {
           return;
         }
 
-        let matches = aEntry.name.match(this._filenamesRegex);
-        if (matches) {
+        if (filenamesRegex.test(aEntry.name)) {
           // Remove bogus backups in future dates.
           let filePath = aEntry.path;
           if (this.getDateForFile(filePath) > new Date()) {
@@ -188,10 +245,10 @@ this.PlacesBackups = {
   getDateForFile: function PB_getDateForFile(aBackupFile) {
     let filename = (aBackupFile instanceof Ci.nsIFile) ? aBackupFile.leafName
                                                        : OS.Path.basename(aBackupFile);
-    let matches = filename.match(this._filenamesRegex);
+    let matches = filename.match(filenamesRegex);
     if (!matches)
       throw("Invalid backup file name: " + filename);
-    return new Date(matches[2].replace(/-/g, "/"));
+    return new Date(matches[1].replace(/-/g, "/"));
   },
 
   /**
@@ -258,7 +315,8 @@ this.PlacesBackups = {
       aFilePath = aFilePath.path;
     }
     return Task.spawn(function* () {
-      let nodeCount = yield BookmarkJSONUtils.exportToFile(aFilePath);
+      let { count: nodeCount, hash: hash } =
+        yield BookmarkJSONUtils.exportToFile(aFilePath);
 
       let backupFolderPath = yield this.getBackupFolder();
       if (OS.Path.dirname(aFilePath) == backupFolderPath) {
@@ -274,22 +332,33 @@ this.PlacesBackups = {
         // we also want to copy this new backup to it.
         // This way we ensure the latest valid backup is the same saved by the
         // user.  See bug 424389.
-        let name = this.getFilenameForDate();
-        let newFilename = this._appendMetaDataToFilename(name,
-                                                         { nodeCount: nodeCount });
-        let newFilePath = OS.Path.join(backupFolderPath, newFilename);
-        let backupFile = yield this._getBackupFileForSameDate(name);
-        if (!backupFile) {
-          // Update internal cache if we are not replacing an existing
-          // backup file.
-          this._entries.unshift(new localFileCtor(newFilePath));
-          if (!this._backupFiles) {
-            yield this.getBackupFiles();
+        let mostRecentBackupFile = yield this.getMostRecentBackup("json");
+        if (!mostRecentBackupFile ||
+            hash != getHashFromFilename(OS.Path.basename(mostRecentBackupFile))) {
+          let name = this.getFilenameForDate();
+          let newFilename = appendMetaDataToFilename(name,
+                                                     { count: nodeCount,
+                                                       hash: hash });
+          let newFilePath = OS.Path.join(backupFolderPath, newFilename);
+          let backupFile = yield getBackupFileForSameDate(name);
+          if (backupFile) {
+            // There is already a backup for today, replace it.
+            yield OS.File.remove(backupFile, { ignoreAbsent: true });
+            if (!this._backupFiles)
+              yield this.getBackupFiles();
+            else
+              this._backupFiles.shift();
+            this._backupFiles.unshift(newFilePath);
+          } else {
+            // There is no backup for today, add the new one.
+            this._entries.unshift(new localFileCtor(newFilePath));
+            if (!this._backupFiles)
+              yield this.getBackupFiles();
+            this._backupFiles.unshift(newFilePath);
           }
-          this._backupFiles.unshift(newFilePath);
-        }
 
-        yield OS.File.copy(aFilePath, newFilePath);
+          yield OS.File.copy(aFilePath, newFilePath);
+        }
       }
 
       return nodeCount;
@@ -303,83 +372,90 @@ this.PlacesBackups = {
    *       "places/excludeFromBackup".
    *
    * @param [optional] int aMaxBackups
-   *                       The maximum number of backups to keep.
+   *                       The maximum number of backups to keep.  If set to 0
+   *                       all existing backups are removed and aForceBackup is
+   *                       ignored, so a new one won't be created.
    * @param [optional] bool aForceBackup
    *                        Forces creating a backup even if one was already
    *                        created that day (overwrites).
    * @return {Promise}
    */
   create: function PB_create(aMaxBackups, aForceBackup) {
+    let limitBackups = function* () {
+      let backupFiles = yield this.getBackupFiles();
+      if (typeof aMaxBackups == "number" && aMaxBackups > -1 &&
+          backupFiles.length >= aMaxBackups) {
+        let numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
+        while (numberOfBackupsToDelete--) {
+          this._entries.pop();
+          let oldestBackup = this._backupFiles.pop();
+          yield OS.File.remove(oldestBackup);
+        }
+      }
+    }.bind(this);
+
     return Task.spawn(function* () {
-      // Construct the new leafname.
+      if (aMaxBackups === 0) {
+        // Backups are disabled, delete any existing one and bail out.
+        yield limitBackups(0);
+        return;
+      }
+
+      // Ensure to initialize _backupFiles
+      if (!this._backupFiles)
+        yield this.getBackupFiles();
       let newBackupFilename = this.getFilenameForDate();
-      let mostRecentBackupFile = yield this.getMostRecentBackup();
+      // If we already have a backup for today we should do nothing, unless we
+      // were required to enforce a new backup.
+      let backupFile = yield getBackupFileForSameDate(newBackupFilename);
+      if (backupFile && !aForceBackup)
+        return;
 
-      if (!aForceBackup) {
-        let backupFiles = yield this.getBackupFiles();
-        // If there are backups, limit them to aMaxBackups, if requested.
-        if (backupFiles.length > 0 && typeof aMaxBackups == "number" &&
-            aMaxBackups > -1 && backupFiles.length >= aMaxBackups) {
-          let numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
-
-          // If we don't have today's backup, remove one more so that
-          // the total backups after this operation does not exceed the
-          // number specified in the pref.
-          if (!this._isFilenameWithSameDate(OS.Path.basename(mostRecentBackupFile),
-                                            newBackupFilename)) {
-            numberOfBackupsToDelete++;
-          }
-
-          while (numberOfBackupsToDelete--) {
-            this._entries.pop();
-            let oldestBackup = this._backupFiles.pop();
-            yield OS.File.remove(oldestBackup);
-          }
-        }
-
-        // Do nothing if we already have this backup or we don't want backups.
-        if (aMaxBackups === 0 ||
-            (mostRecentBackupFile &&
-             this._isFilenameWithSameDate(OS.Path.basename(mostRecentBackupFile),
-                                          newBackupFilename)))
-          return;
-      }
-
-      let backupFile = yield this._getBackupFileForSameDate(newBackupFilename);
       if (backupFile) {
-        if (aForceBackup) {
-          yield OS.File.remove(backupFile, { ignoreAbsent: true });
-        } else {
-          return;
-        }
+        // In case there is a backup for today we should recreate it.
+        this._backupFiles.shift();
+        this._entries.shift();
+        yield OS.File.remove(backupFile, { ignoreAbsent: true });
       }
+
+      // Now check the hash of the most recent backup, and try to create a new
+      // backup, if that fails due to hash conflict, just rename the old backup.
+      let mostRecentBackupFile = yield this.getMostRecentBackup();
+      let mostRecentHash = mostRecentBackupFile &&
+                           getHashFromFilename(OS.Path.basename(mostRecentBackupFile));
 
       // Save bookmarks to a backup file.
       let backupFolder = yield this.getBackupFolder();
       let newBackupFile = OS.Path.join(backupFolder, newBackupFilename);
-      let nodeCount = yield this.saveBookmarksToJSONFile(newBackupFile);
-      // Rename the filename with metadata.
-      let newFilenameWithMetaData = this._appendMetaDataToFilename(
-                                      newBackupFilename,
-                                      { nodeCount: nodeCount });
+      let newFilenameWithMetaData;
+      try {
+        let { count: nodeCount, hash: hash } =
+          yield BookmarkJSONUtils.exportToFile(newBackupFile,
+                                               { failIfHashIs: mostRecentHash });
+        newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename,
+                                                           { count: nodeCount,
+                                                             hash: hash });
+      } catch (ex if ex.becauseSameHash) {
+        // The last backup already contained up-to-date information, just
+        // rename it as if it was today's backup.
+        this._backupFiles.shift();
+        this._entries.shift();
+        newBackupFile = mostRecentBackupFile;
+        newFilenameWithMetaData = appendMetaDataToFilename(
+          newBackupFilename,
+          { count: this.getBookmarkCountForFile(mostRecentBackupFile),
+            hash: mostRecentHash });
+      }
+
+      // Append metadata to the backup filename.
       let newBackupFileWithMetadata = OS.Path.join(backupFolder, newFilenameWithMetaData);
       yield OS.File.move(newBackupFile, newBackupFileWithMetadata);
-
-      // Update internal cache.
-      let newFileWithMetaData = new localFileCtor(newBackupFileWithMetadata);
-      this._entries.pop();
-      this._entries.unshift(newFileWithMetaData);
-      this._backupFiles.pop();
+      this._entries.unshift(new localFileCtor(newBackupFileWithMetadata));
       this._backupFiles.unshift(newBackupFileWithMetadata);
-    }.bind(this));
-  },
 
-  _appendMetaDataToFilename:
-  function PB__appendMetaDataToFilename(aFilename, aMetaData) {
-    let matches = aFilename.match(this._filenamesRegex);
-    let newFilename = matches[1] + "-" + matches[2] + "_" +
-                      aMetaData.nodeCount + "." + matches[4];
-    return newFilename;
+      // Limit the number of backups.
+      yield limitBackups(aMaxBackups);
+    }.bind(this));
   },
 
   /**
@@ -393,41 +469,10 @@ this.PlacesBackups = {
   getBookmarkCountForFile: function PB_getBookmarkCountForFile(aFilePath) {
     let count = null;
     let filename = OS.Path.basename(aFilePath);
-    let matches = filename.match(this._filenamesRegex);
-
-    if (matches && matches[3])
-      count = matches[3].replace(/_/g, "");
+    let matches = filename.match(filenamesRegex);
+    if (matches && matches[2])
+      count = matches[2];
     return count;
-  },
-
-  _isFilenameWithSameDate:
-  function PB__isFilenameWithSameDate(aSourceName, aTargetName) {
-    let sourceMatches = aSourceName.match(this._filenamesRegex);
-    let targetMatches = aTargetName.match(this._filenamesRegex);
-
-    return (sourceMatches && targetMatches &&
-            sourceMatches[1] == targetMatches[1] &&
-            sourceMatches[2] == targetMatches[2] &&
-            sourceMatches[4] == targetMatches[4]);
-    },
-
-  _getBackupFileForSameDate:
-  function PB__getBackupFileForSameDate(aFilename) {
-    return Task.spawn(function* () {
-      let backupFolderPath = yield this.getBackupFolder();
-      let iterator = new OS.File.DirectoryIterator(backupFolderPath);
-      let backupFile;
-
-      yield iterator.forEach(function(aEntry) {
-        if (this._isFilenameWithSameDate(aEntry.name, aFilename)) {
-          backupFile = aEntry.path;
-          return iterator.close();
-        }
-      }.bind(this));
-      yield iterator.close();
-
-      return backupFile;
-    }.bind(this));
   },
 
   /**
