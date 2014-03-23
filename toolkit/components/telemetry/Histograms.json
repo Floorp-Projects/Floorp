@@ -2845,6 +2845,15 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to convert and write bookmarks.html"
   },
+  "PLACES_BACKUPS_HASHING_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": 2000,
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "PLACES: Time to calculate the md5 hash for a backup"
+  },
   "FENNEC_FAVICONS_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",

@@ -1574,6 +1574,16 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (NS_FAILED(AssembleSandboxMemoryReporterName(cx, options.sandboxName)))
         return ThrowAndFail(NS_ERROR_INVALID_ARG, cx, _retval);
 
+    if (options.metadata.isNullOrUndefined()) {
+        // If the caller is running in a sandbox, inherit.
+        RootedObject callerGlobal(cx, CurrentGlobalOrNull(cx));
+        if (IsSandbox(callerGlobal)) {
+            rv = GetSandboxMetadata(cx, callerGlobal, &options.metadata);
+            if (NS_WARN_IF(NS_FAILED(rv)))
+                return rv;
+        }
+    }
+
     rv = CreateSandboxObject(cx, args.rval(), prinOrSop, options);
 
     if (NS_FAILED(rv))
