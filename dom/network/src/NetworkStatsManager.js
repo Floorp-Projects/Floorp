@@ -31,10 +31,10 @@ const nsIClassInfo              = Ci.nsIClassInfo;
 const NETWORKSTATSDATA_CID      = Components.ID("{3b16fe17-5583-483a-b486-b64a3243221c}");
 const nsIDOMMozNetworkStatsData = Ci.nsIDOMMozNetworkStatsData;
 
-function NetworkStatsData(aData) {
+function NetworkStatsData(aWindow, aData) {
   this.rxBytes = aData.rxBytes;
   this.txBytes = aData.txBytes;
-  this.date = aData.date;
+  this.date = new aWindow.Date(aData.date.getTime());
 }
 
 NetworkStatsData.prototype = {
@@ -95,12 +95,12 @@ function NetworkStats(aWindow, aStats) {
   this.appManifestURL = aStats.appManifestURL || null;
   this.serviceType = aStats.serviceType || null;
   this.network = new NetworkStatsInterface(aStats.network);
-  this.start = aStats.start || null;
-  this.end = aStats.end || null;
+  this.start = aStats.start ? new aWindow.Date(aStats.start.getTime()) : null;
+  this.end = aStats.end ? new aWindow.Date(aStats.end.getTime()) : null;
 
   let samples = this.data = Cu.createArrayIn(aWindow);
   for (let i = 0; i < aStats.data.length; i++) {
-    samples.push(new NetworkStatsData(aStats.data[i]));
+    samples.push(new NetworkStatsData(aWindow, aStats.data[i]));
   }
 }
 
