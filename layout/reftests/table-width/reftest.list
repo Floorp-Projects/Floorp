@@ -23,10 +23,10 @@
 == conflicting-widths-2.html conflicting-widths-ref-100xx.html
 == conflicting-widths-3.html conflicting-widths-ref-100xx.html
 == conflicting-widths-4.html conflicting-widths-ref-100xx.html
-== conflicting-widths-5.html conflicting-widths-5-ref.html
+fuzzy-if(B2G,9,1) == conflicting-widths-5.html conflicting-widths-5-ref.html # can't see the difference
 == conflicting-widths-6.html conflicting-widths-6-ref.html
-== conflicting-widths-7.html conflicting-widths-7-ref.html
-== conflicting-widths-8.html conflicting-widths-8-ref.html
+fuzzy-if(B2G,9,1) == conflicting-widths-7.html conflicting-widths-7-ref.html # can't see the difference
+fuzzy-if(B2G,9,1) == conflicting-widths-8.html conflicting-widths-8-ref.html # can't see the difference
 == conflicting-widths-9.html conflicting-widths-9-ref.html
 == conflicting-widths-10.html conflicting-widths-10-ref.html
 == conflicting-percent-widths-1.html conflicting-percent-widths-1-ref.html
