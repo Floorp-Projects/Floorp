@@ -82,6 +82,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappManager",
                                   "resource://gre/modules/WebappManager.jsm");
 #endif
 
+XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
+                                  "resource://gre/modules/CharsetMenu.jsm");
+
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -247,8 +250,7 @@ function resolveGeckoURI(aURI) {
 var Strings = {};
 [
   ["brand",      "chrome://branding/locale/brand.properties"],
-  ["browser",    "chrome://browser/locale/browser.properties"],
-  ["charset",    "chrome://global/locale/charsetTitles.properties"]
+  ["browser",    "chrome://browser/locale/browser.properties"]
 ].forEach(function (aStringBundle) {
   let [name, bundle] = aStringBundle;
   XPCOMUtils.defineLazyGetter(Strings, name, function() {
@@ -6421,40 +6423,31 @@ var CharacterEncoding = {
   },
 
   getEncoding: function getEncoding() {
-    function normalizeCharsetCode(charsetCode) {
-      return charsetCode.trim().toLowerCase();
-    }
-
-    function getTitle(charsetCode) {
-      let charsetTitle = charsetCode;
-      try {
-        charsetTitle = Strings.charset.GetStringFromName(charsetCode + ".title");
-      } catch (e) {
-        dump("error: title not found for " + charsetCode);
-      }
-      return charsetTitle;
+    function infoToCharset(info) {
+      return { code: info.value, title: info.label };
     }
 
     if (!this._charsets.length) {
-      let charsets = Services.prefs.getComplexValue("intl.charsetmenu.browser.static", Ci.nsIPrefLocalizedString).data;
-      this._charsets = charsets.split(",").map(function (charset) {
-        return {
-          code: normalizeCharsetCode(charset),
-          title: getTitle(charset)
-        };
-      });
+      let data = CharsetMenu.getData();
+
+      // In the desktop UI, the pinned charsets are shown above the rest.
+      let pinnedCharsets = data.pinnedCharsets.map(infoToCharset);
+      let otherCharsets = data.otherCharsets.map(infoToCharset)
+
+      this._charsets = pinnedCharsets.concat(otherCharsets);
     }
 
-    // if document charset is not in charset options, add it
-    let docCharset = normalizeCharsetCode(BrowserApp.selectedBrowser.contentDocument.characterSet);
-    let selected = 0;
+    // Look for the index of the selected charset. Default to -1 if the
+    // doc charset isn't found in the list of available charsets.
+    let docCharset = BrowserApp.selectedBrowser.contentDocument.characterSet;
+    let selected = -1;
     let charsetCount = this._charsets.length;
-    for (; selected < charsetCount && this._charsets[selected].code != docCharset; selected++);
-    if (selected == charsetCount) {
-      this._charsets.push({
-        code: docCharset,
-        title: getTitle(docCharset)
-      });
+
+    for (let i = 0; i < charsetCount; i++) {
+      if (this._charsets[i].code === docCharset) {
+        selected = i;
+        break;
+      }
     }
 
     sendMessageToJava({
