@@ -135,6 +135,24 @@ tests.push(make_promise_test(
     return result;
   }));
 
+// Test that observers get the correct "this" value in strict mode.
+tests.push(
+  make_promise_test(function handlers_this_value(test) {
+    return Promise.resolve().then(
+      function onResolve() {
+        // Since this file is in strict mode, the correct value is "undefined".
+        do_check_eq(this, undefined);
+        throw "reject";
+      }
+    ).then(
+      null,
+      function onReject() {
+        // Since this file is in strict mode, the correct value is "undefined".
+        do_check_eq(this, undefined);
+      }
+    );
+  }));
+
 // Test that observers registered on a pending promise are notified in order.
 tests.push(
   make_promise_test(function then_returns_before_callbacks(test) {
@@ -682,11 +700,10 @@ tests.push(
     }
 
     let executorRan = false;
-    let receiver;
     let promise = new Promise(
       function executor(resolve, reject) {
         executorRan = true;
-        receiver = this;
+        do_check_eq(this, undefined);
         do_check_eq(typeof resolve, "function",
                     "resolve function should be passed to the executor");
         do_check_eq(typeof reject, "function",
@@ -695,7 +712,6 @@ tests.push(
     );
     do_check_instanceof(promise, Promise);
     do_check_true(executorRan, "Executor should execute synchronously");
-    do_check_eq(receiver, promise, "The promise is the |this| in the executor");
 
     // resolve a promise from the executor
     let resolvePromise = new Promise(
