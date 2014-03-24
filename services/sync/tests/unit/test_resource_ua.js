@@ -31,6 +31,7 @@ function run_test() {
     "/1.1/johndoe/storage/meta/global": uaHandler(meta_global.handler()),
   });
 
+  ensureLegacyIdentityManager();
   setBasicCredentials("johndoe", "ilovejane");
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
