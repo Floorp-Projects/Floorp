@@ -1072,7 +1072,7 @@ this.XPIDatabase = {
       })
     .then(null,
         error => {
-          logger.error("getAddonList failed", e);
+          logger.error("getAddonList failed", error);
           makeSafe(aCallback)([]);
         });
   },

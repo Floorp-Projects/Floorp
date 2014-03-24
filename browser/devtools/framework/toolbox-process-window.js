@@ -32,7 +32,16 @@ function connect() {
   );
   gClient = new DebuggerClient(transport);
   gClient.connect(() => {
-    gClient.listTabs(openToolbox);
+    let addonID = getParameterByName("addonID");
+
+    if (addonID) {
+      gClient.listAddons(({addons}) => {
+        let addonActor = addons.filter(addon => addon.id === addonID).pop();
+        openToolbox({ addonActor: addonActor.actor });
+      });
+    } else {
+      gClient.listTabs(openToolbox);
+    }
   });
 }
 
@@ -105,4 +114,11 @@ function quitApp() {
   if (shouldProceed) {
     Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
   }
+}
+
+function getParameterByName (name) {
+  let name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+  let regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+  let results = regex.exec(window.location.search);
+  return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }

@@ -164,6 +164,7 @@ function getAddonActorForUrl(aClient, aUrl) {
 
   aClient.listAddons(aResponse => {
     let addonActor = aResponse.addons.filter(aGrip => aGrip.url == aUrl).pop();
+    info("got addon actor for URL: " + addonActor.actor);
     deferred.resolve(addonActor);
   });
 
@@ -497,6 +498,34 @@ function initDebugger(aTarget, aWindow) {
     });
 
     return deferred.promise;
+  });
+}
+
+function initAddonDebugger(aClient, aUrl, aFrame) {
+  info("Initializing an addon debugger panel.");
+
+  return getAddonActorForUrl(aClient, aUrl).then(({actor}) => {
+    let targetOptions = {
+      form: { addonActor: actor },
+      client: aClient,
+      chrome: true
+    };
+
+    let toolboxOptions = {
+      customIframe: aFrame
+    };
+
+    let target = devtools.TargetFactory.forTab(targetOptions);
+    return gDevTools.showToolbox(target, "jsdebugger", devtools.Toolbox.HostType.CUSTOM, toolboxOptions);
+  }).then(aToolbox => {
+    info("Addon debugger panel shown successfully.");
+
+    let debuggerPanel = aToolbox.getCurrentPanel();
+
+    // Wait for the initial resume...
+    return waitForClientEvents(debuggerPanel, "resumed")
+      .then(() => prepareDebugger(debuggerPanel))
+      .then(() => debuggerPanel);
   });
 }
 
