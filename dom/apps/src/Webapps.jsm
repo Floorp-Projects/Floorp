@@ -38,14 +38,25 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import("resource://gre/modules/AppsUtils.jsm");
-Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
-Cu.import("resource://gre/modules/OfflineCacheInstaller.jsm");
-Cu.import("resource://gre/modules/SystemMessagePermissionsChecker.jsm");
 Cu.import("resource://gre/modules/AppDownloadManager.jsm");
-Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PermissionsInstaller",
+  "resource://gre/modules/PermissionsInstaller.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "OfflineCacheInstaller",
+  "resource://gre/modules/OfflineCacheInstaller.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "SystemMessagePermissionsChecker",
+  "resource://gre/modules/SystemMessagePermissionsChecker.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "WebappOSUtils",
+  "resource://gre/modules/WebappOSUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+  "resource://gre/modules/NetUtil.jsm");
 
 #ifdef MOZ_WIDGET_GONK
 XPCOMUtils.defineLazyGetter(this, "libcutils", function() {
@@ -78,11 +89,6 @@ const MIN_PROGRESS_EVENT_DELAY = 1500;
 const WEBAPP_RUNTIME = Services.appinfo.ID == "webapprt@mozilla.org";
 
 const chromeWindowType = WEBAPP_RUNTIME ? "webapprt:webapp" : "navigator:browser";
-
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
-  return NetUtil;
-});
 
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
