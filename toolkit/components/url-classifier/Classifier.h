@@ -43,9 +43,11 @@ public:
   nsresult ActiveTables(nsTArray<nsCString>& aTables);
 
   /**
-   * Check a URL against the database.
+   * Check a URL against the specified tables.
    */
-  nsresult Check(const nsACString& aSpec, LookupResultArray& aResults);
+  nsresult Check(const nsACString& aSpec,
+                 const nsACString& tables,
+                 LookupResultArray& aResults);
 
   /**
    * Apply the table updates in the array.  Takes ownership of
@@ -68,6 +70,8 @@ public:
                             const nsACString& aTableName,
                             uint32_t aCount,
                             PrefixArray* aNoiseEntries);
+  static void SplitTables(const nsACString& str, nsTArray<nsCString>& tables);
+
 private:
   void DropStores();
   nsresult CreateStoreDirectory();

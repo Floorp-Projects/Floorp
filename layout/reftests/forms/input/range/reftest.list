@@ -27,7 +27,7 @@ fuzzy-if(B2G,1,1) == max-prop.html 100pct-common-ref.html
 == direction-unthemed-1.html direction-unthemed-1-ref.html
 
 # ::-moz-range-progress pseudo-element:
-fails-if(B2G) == moz-range-progress-1.html moz-range-progress-1-ref.html
+fails-if(B2G||Android) == moz-range-progress-1.html moz-range-progress-1-ref.html
 == moz-range-progress-2.html moz-range-progress-2-ref.html
 == moz-range-progress-3.html moz-range-progress-3-ref.html
 

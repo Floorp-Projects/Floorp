@@ -16,6 +16,7 @@ function run_test() {
   Log.repository.getLogger("Sync.StorageRequest").level = Log.Level.Trace;
   initTestLogging();
 
+  ensureLegacyIdentityManager();
   setBasicCredentials("johndoe", "ilovejane");
 
   run_next_test();
