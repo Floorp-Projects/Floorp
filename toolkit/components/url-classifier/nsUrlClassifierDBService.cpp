@@ -71,8 +71,8 @@ PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 
 #define MALWARE_TABLE_PREF      "urlclassifier.malware_table"
 #define PHISH_TABLE_PREF        "urlclassifier.phish_table"
-#define DOWNLOAD_BLOCK_TABLE_PREF "urlclassifier.download_block_table"
-#define DOWNLOAD_ALLOW_TABLE_PREF "urlclassifier.download_allow_table"
+#define DOWNLOAD_BLOCK_TABLE_PREF "urlclassifier.downloadBlockTable"
+#define DOWNLOAD_ALLOW_TABLE_PREF "urlclassifier.downloadAllowTable"
 #define DISALLOW_COMPLETION_TABLE_PREF "urlclassifier.disallow_completions"
 
 #define CONFIRM_AGE_PREF        "urlclassifier.max-complete-age"
