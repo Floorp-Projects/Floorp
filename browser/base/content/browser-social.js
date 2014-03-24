@@ -608,7 +608,10 @@ SocialShare = {
     // also update the relevent command's disabled state so the keyboard
     // shortcut only works when available.
     let cmd = document.getElementById("Social:SharePage");
-    cmd.setAttribute("disabled", shareButton.disabled ? "true" : "false");
+    if (shareButton.disabled)
+      cmd.setAttribute("disabled", "true");
+    else
+      cmd.removeAttribute("disabled");
   },
 
   onShowing: function() {
@@ -1330,6 +1333,7 @@ SocialMarks = {
     for (let cfg of contextMenus) {
       this._populateContextPopup(cfg, providers);
     }
+    this.updatePanelButtons();
   },
 
   MENU_LIMIT: 3, // adjustable for testing
