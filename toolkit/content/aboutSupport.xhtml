@@ -29,10 +29,10 @@
 
   <body dir="&locale.dir;">
 
-    <div id="reset-box" style="visibility: hidden">
+    <div id="reset-box">
       <h3>&resetProfile.title;</h3>
       <p>&resetProfile.description;</p>
-      <button onclick="ResetProfile.openConfirmationDialog(window)">
+      <button id="reset-box-button">
         &resetProfile.button.label2;
       </button>
     </div>
@@ -46,11 +46,10 @@
     </div>
 
     <div>
-      <button id="copy-raw-data-to-clipboard"
-              onclick="copyRawDataToClipboard(this);">
+      <button id="copy-raw-data-to-clipboard">
         &aboutSupport.copyRawDataToClipboard.label;
       </button>
-      <button id="copy-to-clipboard" onclick="copyContentsToClipboard()">
+      <button id="copy-to-clipboard">
         &aboutSupport.copyTextToClipboard.label;
       </button>
     </div>
@@ -90,7 +89,7 @@
             </th>
 
             <td>
-              <button onclick="showUpdateHistory()">
+              <button id="show-update-history-button">
                 &aboutSupport.appBasicsShowUpdateHistory;
               </button>
             </td>
@@ -120,7 +119,7 @@
             </th>
 
             <td>
-              <button onclick="openProfileDirectory()">
+              <button id="profile-dir-button">
 #ifdef XP_WIN
                 &aboutSupport.showWin.label;
 #else
@@ -188,10 +187,10 @@
         <tbody id="crashes-tbody">
         </tbody>
       </table>
-      <p id="crashes-allReports" class="no-copy" style="display: none">
-        <a href="about:crashes" id="crashes-allReportsWithPending" style="display: block">&aboutSupport.crashes.allReports;</a>
+      <p id="crashes-allReports" class="hidden no-copy">
+        <a href="about:crashes" id="crashes-allReportsWithPending" class="block">&aboutSupport.crashes.allReports;</a>
       </p>
-      <p id="crashes-noConfig" class="no-copy" style="display: none">&aboutSupport.crashes.noConfig;</p>
+      <p id="crashes-noConfig" class="hidden no-copy">&aboutSupport.crashes.noConfig;</p>
 
 #endif
       <!-- - - - - - - - - - - - - - - - - - - - - -->
@@ -242,7 +241,7 @@
         </tbody>
       </table>
 
-      <section id="prefs-user-js-section" class="no-copy" style="display:none">
+      <section id="prefs-user-js-section" class="hidden no-copy">
         <h3>&aboutSupport.userJSTitle;</h3>
         <p>&aboutSupport.userJSDescription;</p>
       </section>
