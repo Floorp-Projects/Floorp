@@ -89,6 +89,7 @@ td {
   -moz-margin-end: 0;
   padding: 16px;
   width: 30%;
+  visibility: hidden;
 }
 
 #reset-box:-moz-dir(rtl) {
@@ -102,4 +103,12 @@ td {
 #reset-box > button {
   display: block;
   margin: auto;
+}
+
+.block {
+  display: block;
+}
+
+.hidden {
+  display: none;
 }

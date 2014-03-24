@@ -38,7 +38,7 @@ function BreakpointStore() {
   //
   // is an object
   //
-  //   { url, line[, actor] }
+  //   { url, line, column[, actor] }
   //
   // where the `actor` property is optional.
   this._breakpoints = Object.create(null);
@@ -58,6 +58,7 @@ BreakpointStore.prototype = {
    *          - line
    *          - column (optional; omission implies that the breakpoint is for
    *            the whole line)
+   *          - condition (optional)
    *          - actor (optional)
    */
   addBreakpoint: function (aBreakpoint) {
@@ -1374,7 +1375,8 @@ ThreadActor.prototype = {
       let response = this._createAndStoreBreakpoint({
         url: url,
         line: line,
-        column: column
+        column: column,
+        condition: aRequest.condition
       });
       // If the original location of our generated location is different from
       // the original location we attempted to set the breakpoint on, we will
@@ -1442,11 +1444,13 @@ ThreadActor.prototype = {
     let storedBp = this.breakpointStore.getBreakpoint(aLocation);
     if (storedBp.actor) {
       actor = storedBp.actor;
+      actor.condition = aLocation.condition;
     } else {
       storedBp.actor = actor = new BreakpointActor(this, {
         url: aLocation.url,
         line: aLocation.line,
-        column: aLocation.column
+        column: aLocation.column,
+        condition: aLocation.condition
       });
       this.threadLifetimePool.addActor(actor);
     }
@@ -4221,15 +4225,17 @@ FrameActor.prototype.requestTypes = {
  * @param object aLocation
  *        The location of the breakpoint as specified in the protocol.
  */
-function BreakpointActor(aThreadActor, aLocation)
+function BreakpointActor(aThreadActor, { url, line, column, condition })
 {
   this.scripts = [];
   this.threadActor = aThreadActor;
-  this.location = aLocation;
+  this.location = { url: url, line: line, column: column };
+  this.condition = condition;
 }
 
 BreakpointActor.prototype = {
   actorPrefix: "breakpoint",
+  condition: null,
 
   /**
    * Called when this same breakpoint is added to another Debugger.Script
@@ -4255,6 +4261,14 @@ BreakpointActor.prototype = {
     this.scripts = [];
   },
 
+  isValidCondition: function(aFrame) {
+    if(!this.condition) {
+      return true;
+    }
+    var res = aFrame.eval(this.condition);
+    return res.return;
+  },
+
   /**
    * A function that the engine calls when a breakpoint has been hit.
    *
@@ -4271,7 +4285,9 @@ BreakpointActor.prototype = {
         column: this.location.column
       }));
 
-    if (this.threadActor.sources.isBlackBoxed(url) || aFrame.onStep) {
+    if (this.threadActor.sources.isBlackBoxed(url)
+        || aFrame.onStep
+        || !this.isValidCondition(aFrame)) {
       return undefined;
     }
 
