@@ -81,6 +81,7 @@ add_test(function test_bad_hmac() {
   }
 
   try {
+    ensureLegacyIdentityManager();
     let passphrase     = "abcdeabcdeabcdeabcdeabcdea";
     Service.serverURL  = server.baseURI;
     Service.login("foo", "ilovejane", passphrase);
