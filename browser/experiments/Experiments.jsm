@@ -888,22 +888,32 @@ Experiments.Experiments.prototype = {
    */
   _scheduleExperimentEvaluation: function () {
     this._checkForShutdown();
+
+    if (this._timer) {
+      this._timer.clear();
+    }
+
     if (!gExperimentsEnabled || this._experiments.length == 0) {
       return;
     }
 
-    let time = new Date(90000, 0, 1, 12).getTime();
+    let time = null;
     let now = this._policy.now().getTime();
 
     for (let [id, experiment] of this._experiments) {
       let scheduleTime = experiment.getScheduleTime();
       if (scheduleTime > now) {
-        time = Math.min(time, scheduleTime);
+        if (time !== null) {
+          time = Math.min(time, scheduleTime);
+        } else {
+          time = scheduleTime;
+        }
       }
     }
 
-    if (this._timer) {
-      this._timer.clear();
+    if (time === null) {
+      // No schedule time found.
+      return;
     }
 
     gLogger.trace("Experiments::scheduleExperimentEvaluation() - scheduling for "+time+", now: "+now);
