@@ -12,35 +12,35 @@ include reftest-sanity/reftest.list
 include ../../image/test/reftest/reftest.list
 
 # CSSWG tests
-skip-if(B2G) include w3c-css/submitted/reftest.list
-skip-if(B2G) include w3c-css/received/reftest.list
+include w3c-css/submitted/reftest.list
+include w3c-css/received/reftest.list
 
 # relative and absolute positioning
-skip-if(B2G) include abs-pos/reftest.list
+include abs-pos/reftest.list
 
 # backgrounds/
-skip-if(B2G) include backgrounds/reftest.list
+include backgrounds/reftest.list
 
 # bidi/
-skip-if(B2G) include bidi/reftest.list
+include bidi/reftest.list
 
 # border-image
-skip-if(Android||B2G) include border-image/reftest.list
+include border-image/reftest.list
 
 # border-radius/
-skip-if(B2G) include border-radius/reftest.list
+include border-radius/reftest.list
 
 # -moz-box tests
-skip-if(B2G) include box/reftest.list
+include box/reftest.list
 
 # box-ordinal/
-skip-if(B2G) include box-ordinal/reftest.list
+include box-ordinal/reftest.list
 
 # box-properties/
-skip-if(B2G) include box-properties/reftest.list
+include box-properties/reftest.list
 
 # box-shadow/
-skip-if(Android||B2G) include box-shadow/reftest.list
+include box-shadow/reftest.list
 
 # bugs/
 include bugs/reftest.list
@@ -52,70 +52,70 @@ include canvas/reftest.list
 include css-animations/reftest.list
 
 # blending/
-skip-if(B2G||Android) include css-blending/reftest.list
+include css-blending/reftest.list
 
 # css calc() tests
 include css-calc/reftest.list
 
 # css character encoding tests
-skip-if(B2G) include css-charset/reftest.list
+include css-charset/reftest.list
 
 # css default pseudo class tests
-skip-if(B2G) include css-default/reftest.list
+include css-default/reftest.list
 
 # css :disable tests
-skip-if(Android||B2G) include css-disabled/reftest.list
+include css-disabled/reftest.list
 
 # css :enable tests
-skip-if(Android||B2G) include css-enabled/reftest.list
+include css-enabled/reftest.list
 
 # css @import tests
-skip-if(B2G) include css-import/reftest.list
+include css-import/reftest.list
 
 # css gradients
 include css-gradients/reftest.list
 
 # css media queries (tests for print mode)
-skip-if(B2G) include css-mediaqueries/reftest.list
+include css-mediaqueries/reftest.list
 
 # css parsing
-skip-if(B2G) include css-parsing/reftest.list
+include css-parsing/reftest.list
 
 # css placeholder
-skip-if(B2G) include css-placeholder/reftest.list
+include css-placeholder/reftest.list
 
 # css required
-skip-if(B2G) include css-required/reftest.list
+include css-required/reftest.list
 
 # css optional
-skip-if(B2G) include css-optional/reftest.list
+include css-optional/reftest.list
 
 # css valid
-skip-if(Android||B2G) include css-valid/reftest.list
+include css-valid/reftest.list
 
 # css invalid
-skip-if(Android||B2G) include css-invalid/reftest.list
+include css-invalid/reftest.list
 
 # css-submit-invalid
-skip-if(B2G) include css-submit-invalid/reftest.list
+include css-submit-invalid/reftest.list
 
 # css text-overflow
-skip-if(B2G) include text-overflow/reftest.list
+include text-overflow/reftest.list
 
 # css selectors
 include css-selectors/reftest.list
 
 # css transitions
-skip-if(B2G) include css-transitions/reftest.list
+include css-transitions/reftest.list
 
 # css :-moz-ui-invalid
-skip-if(Android||B2G) include css-ui-invalid/reftest.list
+include css-ui-invalid/reftest.list
 
 # css :-moz-ui-valid
-skip-if(Android||B2G) include css-ui-valid/reftest.list
+include css-ui-valid/reftest.list
 
 # css values and units
-skip-if(B2G) include css-valuesandunits/reftest.list
+include css-valuesandunits/reftest.list
 
 # css variables
 include css-variables/reftest.list
@@ -124,108 +124,109 @@ include css-variables/reftest.list
 # layout/style/test/test_visited_reftests instead of using the reftest
 # harness.
 
-skip-if(B2G) include cssom/reftest.list
+include cssom/reftest.list
 
 # columns/
-skip-if(B2G) include columns/reftest.list
+include columns/reftest.list
 
 # content/
 include ../../content/test/reftest/reftest.list
 
 # counters/
-skip-if(B2G) include counters/reftest.list
+include counters/reftest.list
 
 # datalist
-skip-if(B2G) include datalist/reftest.list
+include datalist/reftest.list
 
 # dom/
-skip-if(B2G) include dom/reftest.list
+include dom/reftest.list
 
 # generated-content/
-skip-if(B2G) include generated-content/reftest.list
+include generated-content/reftest.list
 
 # first-letter/
-skip-if(Android||B2G) include first-letter/reftest.list
+include first-letter/reftest.list
 
 # first-line/
-skip-if(B2G) include first-line/reftest.list
+include first-line/reftest.list
 
 # flexbox (display: flex, display: inline-flex)
 include flexbox/reftest.list
 
 # floats/
-skip-if(B2G) include floats/reftest.list
+include floats/reftest.list
 
 # font-face
 include font-face/reftest.list
 
 # font features (opentype)
-skip-if(B2G) include font-features/reftest.list
+include font-features/reftest.list
 
 # mobile font size inflation
-skip-if(B2G&&browserIsRemote) include font-inflation/reftest.list
+include font-inflation/reftest.list
 
 # font matching
-skip-if(B2G) include font-matching/reftest.list
+include font-matching/reftest.list
 
 # forms
-skip-if(Android) include forms/reftest.list
+include forms/reftest.list
 
 # gfx
 include ../../gfx/tests/reftest/reftest.list
 
 # block-inside-inline splits
-skip-if(B2G) include ib-split/reftest.list
+include ib-split/reftest.list
 
 # image/
 include image/reftest.list
 
 # image-element/
-skip-if(B2G) include image-element/reftest.list
+include image-element/reftest.list
 
 # image-rect/
-skip-if(B2G) include image-rect/reftest.list
+include image-rect/reftest.list
 
 # image-region/
-skip-if(B2G) include image-region/reftest.list
+include image-region/reftest.list
 
 # indic shaping with harfbuzz
-skip-if(B2G) include indic-shaping/reftest.list
+include indic-shaping/reftest.list
 
 # inline layout
 include inline/reftest.list
 
 # inline borders and padding
-skip-if(B2G) include inline-borderpadding/reftest.list
+include inline-borderpadding/reftest.list
 
 # layers/
 include layers/reftest.list
 
 # line-breaking/
-skip-if(B2G) include line-breaking/reftest.list
+include line-breaking/reftest.list
 
 # list-item/
-skip-if(B2G) include list-item/reftest.list
+include list-item/reftest.list
 
 # mathml/
-skip-if(B2G) include mathml/reftest.list
+include mathml/reftest.list
 
 # margin-collapsing
-skip-if(B2G) include margin-collapsing/reftest.list
+include margin-collapsing/reftest.list
 
 # marquee/
-skip-if(B2G) include marquee/reftest.list
+include marquee/reftest.list
 
 # native-theme/
-skip-if(Android||B2G) include native-theme/reftest.list
+# skipping for B2G since something around radio-nonnative.html makes the whole suite hang
+skip-if(B2G) include native-theme/reftest.list
 
 # netwerk/
-skip-if(B2G) include ../../netwerk/test/reftest/reftest.list
+include ../../netwerk/test/reftest/reftest.list
 
 include outline/reftest.list
 
 # object/
-skip-if(B2G) include object/reftest.list
+include object/reftest.list
 
 # ogg-video/
 include ogg-video/reftest.list
@@ -234,29 +235,29 @@ include ogg-video/reftest.list
 include webm-video/reftest.list
 
 # parser/
-skip-if(B2G) include ../../parser/htmlparser/tests/reftest/reftest.list
+include ../../parser/htmlparser/tests/reftest/reftest.list
 
 # percent-overflow-sizing/
-skip-if(B2G) include percent-overflow-sizing/reftest.list
+include percent-overflow-sizing/reftest.list
 
 # pixel-rounding/
-skip-if(B2G) include pixel-rounding/reftest.list
+include pixel-rounding/reftest.list
 
 # plugin/
-skip-if(B2G) include ../../dom/plugins/test/reftest/reftest.list
+include ../../dom/plugins/test/reftest/reftest.list
 
 # position-dynamic-changes/
 include position-dynamic-changes/reftest.list
 
 # printing
-skip-if(B2G) include printing/reftest.list
-skip-if(B2G) include pagination/reftest.list
+include printing/reftest.list
+include pagination/reftest.list
 
 # <style scoped>
-skip-if(B2G) include scoped-style/reftest.list
+include scoped-style/reftest.list
 
 # scrolling 
-skip-if(Android&&AndroidVersion>=15) include scrolling/reftest.list
+include scrolling/reftest.list
 
 # selection
 include selection/reftest.list
@@ -268,45 +269,45 @@ include position-sticky/reftest.list
 include svg/reftest.list
 
 # tab-size/
-skip-if(B2G) include tab-size/reftest.list
+include tab-size/reftest.list
 
 # table-anonymous-boxes/
-skip-if(B2G) include table-anonymous-boxes/reftest.list
+include table-anonymous-boxes/reftest.list
 
 # table-background/
-skip-if(B2G) include table-background/reftest.list
+include table-background/reftest.list
 
 # table-bordercollapse/
-skip-if(B2G) include table-bordercollapse/reftest.list
+include table-bordercollapse/reftest.list
 
 # table-dom/
-skip-if(B2G) include table-dom/reftest.list
+include table-dom/reftest.list
 
-skip-if(B2G) include table-overflow/reftest.list
+include table-overflow/reftest.list
 
 # table-width/
-skip-if(B2G) include table-width/reftest.list
+include table-width/reftest.list
 
 # text/
 include text/reftest.list
 
 # text-decoration/
-skip-if(B2G) include text-decoration/reftest.list
+include text-decoration/reftest.list
 
 # text-indent/
-skip-if(B2G) include text-indent/reftest.list
+include text-indent/reftest.list
 
 # text-shadow/
-skip-if(Android||B2G) include text-shadow/reftest.list
+include text-shadow/reftest.list
 
 # text-svgglyphs/
 include text-svgglyphs/reftest.list
 
 # text-transform/
-skip-if(B2G) include text-transform/reftest.list
+include text-transform/reftest.list
 
 # theme (osx)
-skip-if(B2G) include ../../toolkit/themes/osx/reftests/reftest.list
+include ../../toolkit/themes/osx/reftests/reftest.list
 
 # -moz-transform/
 include transform/reftest.list
@@ -315,45 +316,45 @@ include transform/reftest.list
 include transform-3d/reftest.list
 
 # unicode/ (verify that we don't do expend effort doing unicode-aware case checks)
-skip-if(B2G) include unicode/reftest.list
+include unicode/reftest.list
 
 # webcomonents/
 include webcomponents/reftest.list
 
 # widget/
-skip-if(B2G) include ../../widget/reftests/reftest.list
+include ../../widget/reftests/reftest.list
 
 # xml-stylesheet/
-skip-if(B2G) include ../../content/test/reftest/xml-stylesheet/reftest.list
+include ../../content/test/reftest/xml-stylesheet/reftest.list
 
 # xul-document-load/
-skip-if(B2G) include xul-document-load/reftest.list
+include xul-document-load/reftest.list
 
 # xul/
-skip-if(B2G) include xul/reftest.list
+include xul/reftest.list
 
 # webcomonents/
 include webcomponents/reftest.list
 
 # xul
-skip-if(B2G) include ../xul/reftest/reftest.list
+include ../xul/reftest/reftest.list
 
 # xul grid
-skip-if(B2G) include ../xul/grid/reftests/reftest.list
+include ../xul/grid/reftests/reftest.list
 
 # z-index/
-skip-if(B2G) include z-index/reftest.list
+include z-index/reftest.list
 
 # reftest(s) to verify content bugfixes
-skip-if(B2G) include ../../content/html/document/reftests/reftests.list
-skip-if(B2G) include ../../content/html/content/reftests/reftest.list
-skip-if(B2G) include ../../dom/imptests/reftest.list
+include ../../content/html/document/reftests/reftests.list
+include ../../content/html/content/reftests/reftest.list
+include ../../dom/imptests/reftest.list
 
 # editor/
-skip-if(B2G) include ../../editor/reftests/reftest.list
+include ../../editor/reftests/reftest.list
 
 # box-sizing
-skip-if(B2G) include box-sizing/reftest.list
+include box-sizing/reftest.list
 
 # invalidation - only run on B2G
 skip-if(!B2G) include invalidation/reftest.list

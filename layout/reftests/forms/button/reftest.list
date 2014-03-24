@@ -6,10 +6,10 @@ asserts(1) != first-letter-1.html first-letter-1-noref.html
 # The buttons in these tests have some fancy shading applied to their corners
 # on B2G, despite their "-moz-appearance: none; background: gray", so they
 # don't quite match the reference case's normal <div>. That's why they're fuzzy.
-fuzzy-if(B2G,125,20) == percent-height-child-1.html percent-height-child-1-ref.html
-fuzzy-if(B2G,125,80) == percent-height-child-2.html percent-height-child-2-ref.html
-fuzzy-if(B2G,125,20) == percent-width-child-1.html  percent-width-child-1-ref.html
-fuzzy-if(B2G,125,80) == percent-width-child-2.html  percent-width-child-2-ref.html
+fuzzy-if(B2G||Android,125,20) == percent-height-child-1.html percent-height-child-1-ref.html
+fuzzy-if(B2G||Android,125,80) == percent-height-child-2.html percent-height-child-2-ref.html
+fuzzy-if(B2G||Android,125,20) == percent-width-child-1.html  percent-width-child-1-ref.html
+fuzzy-if(B2G||Android,125,80) == percent-width-child-2.html  percent-width-child-2-ref.html
 
 == vertical-centering.html vertical-centering-ref.html
 
