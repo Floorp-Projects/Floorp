@@ -123,6 +123,7 @@ let Agent = {
     let startMs = Date.now();
     let result = File.writeAtomic(this.path, bytes, {tmpPath: this.path + ".tmp"});
     telemetry.FX_SESSION_RESTORE_WRITE_FILE_MS = Date.now() - startMs;
+    telemetry.FX_SESSION_RESTORE_FILE_SIZE_BYTES = bytes.byteLength;
     return {result: result, telemetry: telemetry};
   },
 
