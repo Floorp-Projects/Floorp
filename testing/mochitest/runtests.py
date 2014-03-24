@@ -503,6 +503,7 @@ class MochitestUtilsMixin(object):
     if options.webServer != '127.0.0.1':
       return
 
+    log.info('Stopping web socket server')
     self.wsserver.stop()
 
   def startWebServer(self, options):
@@ -527,6 +528,7 @@ class MochitestUtilsMixin(object):
     if options.webServer != '127.0.0.1':
       return
 
+    log.info('Stopping web server')
     self.server.stop()
 
   def copyExtraFilesToProfile(self, options):
@@ -1086,83 +1088,98 @@ class Mochitest(MochitestUtilsMixin):
     self.httpPort = options.httpPort
     self.sslPort = options.sslPort
     self.webSocketPort = options.webSocketPort
-    self.startWebServer(options)
-    self.startWebSocketServer(options, debuggerInfo)
 
-    testURL = self.buildTestPath(options)
-    self.buildURLOptions(options, browserEnv)
-    if self.urlOpts:
-      testURL += "?" + "&".join(self.urlOpts)
-
-    if options.webapprtContent:
-      options.browserArgs.extend(('-test-mode', testURL))
-      testURL = None
-
-    if options.immersiveMode:
-      options.browserArgs.extend(('-firefoxpath', options.app))
-      options.app = self.immersiveHelperPath
-
-    if options.jsdebugger:
-      options.browserArgs.extend(['-jsdebugger'])
-
-    # Remove the leak detection file so it can't "leak" to the tests run.
-    # The file is not there if leak logging was not enabled in the application build.
-    if os.path.exists(self.leak_report_file):
-      os.remove(self.leak_report_file)
-
-    # then again to actually run mochitest
-    if options.timeout:
-      timeout = options.timeout + 30
-    elif options.debugger or not options.autorun:
-      timeout = None
-    else:
-      timeout = 330.0 # default JS harness timeout is 300 seconds
-
-    if options.vmwareRecording:
-      self.startVMwareRecording(options);
-
-    log.info("runtests.py | Running tests: start.\n")
     try:
-      status = self.runApp(testURL,
-                           browserEnv,
-                           options.app,
-                           profile=self.profile,
-                           extraArgs=options.browserArgs,
-                           utilityPath=options.utilityPath,
-                           xrePath=options.xrePath,
-                           certPath=options.certPath,
-                           debuggerInfo=debuggerInfo,
-                           symbolsPath=options.symbolsPath,
-                           timeout=timeout,
-                           onLaunch=onLaunch,
-                           webapprtChrome=options.webapprtChrome,
-                           hide_subtests=options.hide_subtests
-                           )
-    except KeyboardInterrupt:
-      log.info("runtests.py | Received keyboard interrupt.\n");
-      status = -1
-    except:
-      traceback.print_exc()
-      log.error("Automation Error: Received unexpected exception while running application\n")
-      status = 1
+        self.startWebServer(options)
+        self.startWebSocketServer(options, debuggerInfo)
 
-    if options.vmwareRecording:
-      self.stopVMwareRecording();
+        testURL = self.buildTestPath(options)
+        self.buildURLOptions(options, browserEnv)
+        if self.urlOpts:
+          testURL += "?" + "&".join(self.urlOpts)
 
-    self.stopWebServer(options)
-    self.stopWebSocketServer(options)
-    processLeakLog(self.leak_report_file, options.leakThreshold)
+        if options.webapprtContent:
+          options.browserArgs.extend(('-test-mode', testURL))
+          testURL = None
 
-    if self.nsprLogs:
-      with zipfile.ZipFile("%s/nsprlog.zip" % browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:
-        for logfile in glob.glob("%s/nspr*.log*" % tempfile.gettempdir()):
-          logzip.write(logfile)
-          os.remove(logfile)
+        if options.immersiveMode:
+          options.browserArgs.extend(('-firefoxpath', options.app))
+          options.app = self.immersiveHelperPath
 
-    log.info("runtests.py | Running tests: end.")
+        if options.jsdebugger:
+          options.browserArgs.extend(['-jsdebugger'])
 
-    if manifest is not None:
-      self.cleanup(manifest, options)
+        # Remove the leak detection file so it can't "leak" to the tests run.
+        # The file is not there if leak logging was not enabled in the application build.
+        if os.path.exists(self.leak_report_file):
+          os.remove(self.leak_report_file)
+
+        # then again to actually run mochitest
+        if options.timeout:
+          timeout = options.timeout + 30
+        elif options.debugger or not options.autorun:
+          timeout = None
+        else:
+          timeout = 330.0 # default JS harness timeout is 300 seconds
+
+        if options.vmwareRecording:
+          self.startVMwareRecording(options);
+
+        log.info("runtests.py | Running tests: start.\n")
+        try:
+          status = self.runApp(testURL,
+                               browserEnv,
+                               options.app,
+                               profile=self.profile,
+                               extraArgs=options.browserArgs,
+                               utilityPath=options.utilityPath,
+                               xrePath=options.xrePath,
+                               certPath=options.certPath,
+                               debuggerInfo=debuggerInfo,
+                               symbolsPath=options.symbolsPath,
+                               timeout=timeout,
+                               onLaunch=onLaunch,
+                               webapprtChrome=options.webapprtChrome,
+                               hide_subtests=options.hide_subtests
+                               )
+        except KeyboardInterrupt:
+          log.info("runtests.py | Received keyboard interrupt.\n");
+          status = -1
+        except:
+          traceback.print_exc()
+          log.error("Automation Error: Received unexpected exception while running application\n")
+          status = 1
+
+    finally:
+        if options.vmwareRecording:
+            try:
+              self.stopVMwareRecording();
+            except Exception:
+                log.exception('Error stopping VMWare recording')
+
+        try:
+            self.stopWebServer(options)
+        except Exception:
+            log.exception('Exception when stopping web server')
+
+        try:
+            self.stopWebSocketServer(options)
+        except Exception:
+            log.exception('Exception when stopping websocket server')
+
+        processLeakLog(self.leak_report_file, options.leakThreshold)
+
+        if self.nsprLogs:
+            with zipfile.ZipFile("%s/nsprlog.zip" % browserEnv["MOZ_UPLOAD_DIR"], "w", zipfile.ZIP_DEFLATED) as logzip:
+                for logfile in glob.glob("%s/nspr*.log*" % tempfile.gettempdir()):
+                    logzip.write(logfile)
+                    os.remove(logfile)
+
+        log.info("runtests.py | Running tests: end.")
+
+        if manifest is not None:
+            self.cleanup(manifest, options)
+
     return status
 
   def handleTimeout(self, timeout, proc, utilityPath, debuggerInfo, browserProcessId):
