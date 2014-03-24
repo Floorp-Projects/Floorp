@@ -28,6 +28,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/devtools/Console.jsm");
+
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 const { defer, resolve, reject } = promise;
 
@@ -1407,17 +1409,28 @@ ThreadClient.prototype = {
    * @param function aOnResponse
    *        Called with the thread's response.
    */
-  setBreakpoint: function (aLocation, aOnResponse) {
+  setBreakpoint: function ({ url, line, column, condition }, aOnResponse) {
     // A helper function that sets the breakpoint.
     let doSetBreakpoint = function (aCallback) {
-      let packet = { to: this._actor, type: "setBreakpoint",
-                     location: aLocation };
+      const location = {
+        url: url,
+        line: line,
+        column: column
+      };
+
+      let packet = {
+        to: this._actor,
+        type: "setBreakpoint",
+        location: location,
+        condition: condition
+      };
       this.client.request(packet, function (aResponse) {
         // Ignoring errors, since the user may be setting a breakpoint in a
         // dead script that will reappear on a page reload.
         if (aOnResponse) {
-          let bpClient = new BreakpointClient(this.client, aResponse.actor,
-                                              aLocation);
+          let bpClient = new BreakpointClient(this.client,
+                                              aResponse.actor,
+                                              location);
           if (aCallback) {
             aCallback(aOnResponse(aResponse, bpClient));
           } else {

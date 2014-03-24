@@ -16,6 +16,7 @@ window.addEventListener("load", function onload(event) {
       snapshotFormatters[prop](snapshot[prop]);
   });
   populateResetBox();
+  setupEventListeners();
 }, false);
 
 // Each property in this object corresponds to a property in Troubleshoot.jsm's
@@ -594,16 +595,32 @@ function openProfileDirectory() {
   new nsLocalFile(profileDir).reveal();
 }
 
-function showUpdateHistory() {
-  var prompter = Cc["@mozilla.org/updates/update-prompt;1"]
-                   .createInstance(Ci.nsIUpdatePrompt);
-  prompter.showUpdateHistory(window);
-}
-
 /**
  * Profile reset is only supported for the default profile if the appropriate migrator exists.
  */
 function populateResetBox() {
   if (ResetProfile.resetSupported())
     $("reset-box").style.visibility = "visible";
+}
+
+/**
+ * Set up event listeners for buttons.
+ */
+function setupEventListeners(){
+  $("show-update-history-button").addEventListener("click", function (event) {
+    var prompter = Cc["@mozilla.org/updates/update-prompt;1"].createInstance(Ci.nsIUpdatePrompt);
+      prompter.showUpdateHistory(window);
+  });
+  $("reset-box-button").addEventListener("click", function (event){
+    ResetProfile.openConfirmationDialog(window);
+  });
+  $("copy-raw-data-to-clipboard").addEventListener("click", function (event){
+    copyRawDataToClipboard(this);
+  });
+  $("copy-to-clipboard").addEventListener("click", function (event){
+    copyContentsToClipboard();
+  });
+  $("profile-dir-button").addEventListener("click", function (event){
+    openProfileDirectory();
+  });
 }
