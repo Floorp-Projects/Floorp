@@ -49,8 +49,7 @@ public:
 
 typedef AudioSampleTraits<AUDIO_OUTPUT_FORMAT>::Type AudioDataValue;
 
-// Single-sample conversion
-
+// Single-sample conversion 
 /*
  * Use "2^N" conversion since it's simple, fast, "bit transparent", used by
  * many other libraries and apparently behaves reasonably.
