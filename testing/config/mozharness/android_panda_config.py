@@ -9,7 +9,8 @@ config = {
         "--utility-path=../hostutils/bin", "--certificate-path=certs",
         "--app=%(app_name)s", "--console-level=INFO",
         "--http-port=%(http_port)s", "--ssl-port=%(ssl_port)s",
-        "--run-only-tests=android.json", "--symbols-path=%(symbols_path)s"
+        "--run-only-tests=android.json", "--symbols-path=%(symbols_path)s",
+        "--quiet"
     ],
     "reftest_options": [
         "--deviceIP=%(device_ip)s",
