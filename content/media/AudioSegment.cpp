@@ -8,6 +8,7 @@
 #include "AudioStream.h"
 #include "AudioChannelFormat.h"
 #include "Latency.h"
+#include "speex/speex_resampler.h"
 
 namespace mozilla {
 
@@ -107,6 +108,29 @@ DownmixAndInterleave(const nsTArray<const void*>& aChannelData,
   }
   InterleaveAndConvertBuffer(outputChannelData.Elements(), AUDIO_FORMAT_FLOAT32,
                              aDuration, aVolume, aOutputChannels, aOutput);
+}
+
+void AudioSegment::ResampleChunks(SpeexResamplerState* aResampler)
+{
+  uint32_t inRate, outRate;
+
+  if (mChunks.IsEmpty()) {
+    return;
+  }
+
+  speex_resampler_get_rate(aResampler, &inRate, &outRate);
+
+  switch (mChunks[0].mBufferFormat) {
+    case AUDIO_FORMAT_FLOAT32:
+      Resample<float>(aResampler, inRate, outRate);
+    break;
+    case AUDIO_FORMAT_S16:
+      Resample<int16_t>(aResampler, inRate, outRate);
+    break;
+    default:
+      MOZ_ASSERT(false);
+    break;
+  }
 }
 
 void

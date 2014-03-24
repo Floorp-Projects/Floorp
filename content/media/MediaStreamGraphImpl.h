@@ -53,6 +53,10 @@ static const int VIDEO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
     SCHEDULE_SAFETY_MARGIN_MS;
 
 /**
+ * Rate at which we run the video tracks.
+ */
+
+/**
  * A per-stream update message passed from the media graph thread to the
  * main thread.
  */
