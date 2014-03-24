@@ -1,7 +1,7 @@
 == select-fieldset-1.html select-fieldset-ref.html
 fails-if(Android) == select-fieldset-2.html select-fieldset-ref-disabled.html
 fails-if(Android) == select-fieldset-3.html select-fieldset-ref-disabled.html
-fails-if(Android) == select-fieldset-4.html select-fieldset-ref.html
+== select-fieldset-4.html select-fieldset-ref.html
 == select-fieldset-legend-1.html select-fieldset-legend-ref-1.html
 fails-if(Android) == select-fieldset-legend-2.html select-fieldset-legend-ref-2.html
 fails-if(Android) == select-fieldset-legend-3.html select-fieldset-legend-ref-3.html

@@ -76,7 +76,9 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 # These tests have been written to test the overflow of the window widget
 # (bug 568825) but we can't test it on Windows and Cocoa because they have
 # animated progress bars.
+# Nothing shows up on Android, presumably because that appearance type is
+# not implemented.
 skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
-skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
+fails-if(Android) skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
 
 == 676387-1.xul 676387-1-ref.xul
