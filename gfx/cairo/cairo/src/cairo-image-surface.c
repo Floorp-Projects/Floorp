@@ -4009,7 +4009,9 @@ _composite_glyphs (void				*closure,
 		y2 = extents->y + extents->height;
 
 	    if (glyph_surface->format == CAIRO_FORMAT_A8 ||
-	        glyph_surface->format == CAIRO_FORMAT_A1)
+	        glyph_surface->format == CAIRO_FORMAT_A1 ||
+	        (glyph_surface->format == CAIRO_FORMAT_ARGB32 &&
+	         pixman_image_get_component_alpha (glyph_surface->pixman_image)))
 	    {
 		if (unlikely (src == NULL)) {
 		    if (pattern != NULL) {
