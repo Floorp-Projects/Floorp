@@ -525,8 +525,9 @@ VerifyPreBarriers(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 VerifyPostBarriers(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     if (argc) {
-        RootedObject callee(cx, &JS_CALLEE(cx, vp).toObject());
+        RootedObject callee(cx, &args.callee());
         ReportUsageError(cx, callee, "Too many arguments");
         return false;
     }
@@ -944,7 +945,7 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
     if (dumpFile)
         fclose(dumpFile);
 
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
     return true;
 }
 
@@ -978,7 +979,7 @@ EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
     cx->runtime()->spsProfiler.enableSlowAssertions(args[0].toBoolean());
     cx->runtime()->spsProfiler.enable(true);
 
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
     return true;
 }
 
@@ -991,12 +992,13 @@ DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-EnableOsiPointRegisterChecks(JSContext *, unsigned, jsval *vp)
+EnableOsiPointRegisterChecks(JSContext *, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
 #if defined(JS_ION) && defined(CHECK_OSIPOINT_REGISTERS)
     jit::js_JitOptions.checkOsiPointRegisters = true;
 #endif
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
     return true;
 }
 
@@ -1019,10 +1021,12 @@ DisplayName(JSContext *cx, unsigned argc, jsval *vp)
 bool
 js::testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     // If we were actually *in* a parallel section, then this function
     // would be inlined to TRUE in ion-generated code.
     JS_ASSERT(!InParallelSection());
-    JS_SET_RVAL(cx, vp, JSVAL_FALSE);
+    args.rval().setBoolean(false);
     return true;
 }
 
@@ -1112,16 +1116,20 @@ GetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
 bool
 js::testingFunc_bailout(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     // NOP when not in IonMonkey
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
     return true;
 }
 
 bool
 js::testingFunc_assertFloat32(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     // NOP when not in IonMonkey
-    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    args.rval().setUndefined();
     return true;
 }
 
