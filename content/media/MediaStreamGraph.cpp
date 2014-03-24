@@ -577,17 +577,30 @@ MediaStreamGraphImpl::UpdateStreamOrderForStream(mozilla::LinkedList<MediaStream
   *mStreams.AppendElement() = stream.forget();
 }
 
+static void AudioMixerCallback(AudioDataValue* aMixedBuffer,
+                               AudioSampleFormat aFormat,
+                               uint32_t aChannels,
+                               uint32_t aFrames)
+{
+  // Need an api to register mixer callbacks, bug 989921
+}
+
 void
 MediaStreamGraphImpl::UpdateStreamOrder()
 {
   mOldStreams.SwapElements(mStreams);
   mStreams.ClearAndRetainStorage();
+  bool shouldMix = false;
   for (uint32_t i = 0; i < mOldStreams.Length(); ++i) {
     MediaStream* stream = mOldStreams[i];
     stream->mHasBeenOrdered = false;
     stream->mIsConsumed = false;
     stream->mIsOnOrderingStack = false;
     stream->mInBlockingSet = false;
+    if (stream->AsSourceStream() &&
+        stream->AsSourceStream()->NeedsMixing()) {
+      shouldMix = true;
+    }
     ProcessedMediaStream* ps = stream->AsProcessedStream();
     if (ps) {
       ps->mInCycle = false;
@@ -596,6 +609,12 @@ MediaStreamGraphImpl::UpdateStreamOrder()
         ns->Unmute();
       }
     }
+  }
+
+  if (!mMixer && shouldMix) {
+    mMixer = new AudioMixer(AudioMixerCallback);
+  } else if (mMixer && !shouldMix) {
+    mMixer = nullptr;
   }
 
   mozilla::LinkedList<MediaStream> stack;
@@ -810,6 +829,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
           aStream->mAudioOutputStreams.AppendElement();
         audioOutputStream->mAudioPlaybackStartTime = aAudioOutputStartTime;
         audioOutputStream->mBlockedAudioTime = 0;
+        audioOutputStream->mLastTickWritten = 0;
         audioOutputStream->mStream = new AudioStream();
         // XXX for now, allocate stereo output. But we need to fix this to
         // match the system's ideal channel configuration.
@@ -831,14 +851,22 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
   }
 }
 
-void
+TrackTicks
 MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
                                 GraphTime aFrom, GraphTime aTo)
 {
   MOZ_ASSERT(mRealtime, "Should only attempt to play audio in realtime mode");
 
+  TrackTicks ticksWritten = 0;
+  // We compute the number of needed ticks by converting a difference of graph
+  // time rather than by substracting two converted stream time to ensure that
+  // the rounding between {Graph,Stream}Time and track ticks is not dependant
+  // on the absolute value of the {Graph,Stream}Time, and so that number of
+  // ticks to play is the same for each cycle.
+  TrackTicks ticksNeeded = TimeToTicksRoundDown(IdealAudioRate(), aTo) - TimeToTicksRoundDown(IdealAudioRate(), aFrom);
+
   if (aStream->mAudioOutputStreams.IsEmpty()) {
-    return;
+    return 0;
   }
 
   // When we're playing multiple copies of this stream at the same time, they're
@@ -852,6 +880,25 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     MediaStream::AudioOutputStream& audioOutput = aStream->mAudioOutputStreams[i];
     StreamBuffer::Track* track = aStream->mBuffer.FindTrack(audioOutput.mTrackID);
     AudioSegment* audio = track->Get<AudioSegment>();
+    AudioSegment output;
+    MOZ_ASSERT(track->GetRate() == IdealAudioRate());
+
+    // offset and audioOutput.mLastTickWritten can differ by at most one sample,
+    // because of the rounding issue. We track that to ensure we don't skip a
+    // sample, or play a sample twice.
+    TrackTicks offset = track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, aFrom));
+    if (!audioOutput.mLastTickWritten) {
+        audioOutput.mLastTickWritten = offset;
+    }
+    if (audioOutput.mLastTickWritten != offset) {
+      // If there is a global underrun of the MSG, this property won't hold, and
+      // we reset the sample count tracking.
+      if (std::abs(audioOutput.mLastTickWritten - offset) != 1) {
+        audioOutput.mLastTickWritten = offset;
+      } else {
+        offset = audioOutput.mLastTickWritten;
+      }
+    }
 
     // We don't update aStream->mBufferStartTime here to account for
     // time spent blocked. Instead, we'll update it in UpdateCurrentTime after the
@@ -859,54 +906,59 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     // right offsets in the stream buffer, even if we've already written silence for
     // some amount of blocked time after the current time.
     GraphTime t = aFrom;
-    while (t < aTo) {
+    while (ticksNeeded) {
       GraphTime end;
       bool blocked = aStream->mBlocked.GetAt(t, &end);
       end = std::min(end, aTo);
 
-      AudioSegment output;
-      if (blocked) {
-        // Track total blocked time in aStream->mBlockedAudioTime so that
-        // the amount of silent samples we've inserted for blocking never gets
-        // more than one sample away from the ideal amount.
-        TrackTicks startTicks =
-            TimeToTicksRoundDown(IdealAudioRate(), audioOutput.mBlockedAudioTime);
-        audioOutput.mBlockedAudioTime += end - t;
-        TrackTicks endTicks =
-            TimeToTicksRoundDown(IdealAudioRate(), audioOutput.mBlockedAudioTime);
-
-        output.InsertNullDataAtStart(endTicks - startTicks);
-        STREAM_LOG(PR_LOG_DEBUG+1, ("MediaStream %p writing blocking-silence samples for %f to %f",
-                                    aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end)));
+      // Check how many ticks of sound we can provide if we are blocked some
+      // time in the middle of this cycle.
+      TrackTicks toWrite = 0;
+      if (end >= aTo) {
+        toWrite = ticksNeeded;
       } else {
-        TrackTicks startTicks =
-            track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, t));
-        TrackTicks endTicks =
-            track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, end));
-
-        // If startTicks is before the track start, then that part of 'audio'
-        // will just be silence, which is fine here. But if endTicks is after
-        // the track end, then 'audio' won't be long enough, so we'll need
-        // to explicitly play silence.
-        TrackTicks sliceEnd = std::min(endTicks, audio->GetDuration());
-        if (sliceEnd > startTicks) {
-          output.AppendSlice(*audio, startTicks, sliceEnd);
-        }
-        // Play silence where the track has ended
-        output.AppendNullData(endTicks - sliceEnd);
-        NS_ASSERTION(endTicks == sliceEnd || track->IsEnded(),
-                     "Ran out of data but track not ended?");
-        output.ApplyVolume(volume);
-        STREAM_LOG(PR_LOG_DEBUG+1, ("MediaStream %p writing samples for %f to %f (samples %lld to %lld)",
-                                    aStream, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
-                                    startTicks, endTicks));
+        toWrite = TimeToTicksRoundDown(IdealAudioRate(), end - aFrom);
       }
-      // Need unique id for stream & track - and we want it to match the inserter
-      output.WriteTo(LATENCY_STREAM_ID(aStream, track->GetID()),
-                     audioOutput.mStream);
+
+      if (blocked) {
+        output.InsertNullDataAtStart(toWrite);
+        STREAM_LOG(PR_LOG_DEBUG+1, ("MediaStream %p writing %ld blocking-silence samples for %f to %f (%ld to %ld)\n",
+                                    aStream, toWrite, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
+                                    offset, offset + toWrite));
+        ticksNeeded -= toWrite;
+      } else {
+        TrackTicks endTicksNeeded = offset + toWrite;
+        TrackTicks endTicksAvailable = audio->GetDuration();
+        if (endTicksNeeded <= endTicksAvailable) {
+          output.AppendSlice(*audio, offset, endTicksNeeded);
+        } else {
+          MOZ_ASSERT(track->IsEnded(), "Not enough data, and track not ended.");
+          // If we are at the end of the track, maybe write the remaining
+          // samples, and pad with/output silence.
+          if (endTicksNeeded > endTicksAvailable &&
+              offset < endTicksAvailable) {
+            output.AppendSlice(*audio, offset, endTicksAvailable);
+            ticksNeeded -= endTicksAvailable - offset;
+            toWrite -= endTicksAvailable - offset;
+          }
+          output.AppendNullData(toWrite);
+        }
+        output.ApplyVolume(volume);
+        STREAM_LOG(PR_LOG_DEBUG+1, ("MediaStream %p writing %ld samples for %f to %f (samples %ld to %ld)\n",
+                                     aStream, toWrite, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
+                                     offset, endTicksNeeded));
+        ticksNeeded -= toWrite;
+      }
       t = end;
+      offset += toWrite;
+      audioOutput.mLastTickWritten += toWrite;
     }
+
+    // Need unique id for stream & track - and we want it to match the inserter
+    output.WriteTo(LATENCY_STREAM_ID(aStream, track->GetID()),
+                   audioOutput.mStream, mMixer);
   }
+  return ticksWritten;
 }
 
 static void
@@ -1241,6 +1293,9 @@ MediaStreamGraphImpl::RunThread()
     bool allBlockedForever = true;
     // True when we've done ProcessInput for all processed streams.
     bool doneAllProducing = false;
+    // This is the number of frame that are written to the AudioStreams, for
+    // this cycle.
+    TrackTicks ticksPlayed = 0;
     // Figure out what each stream wants to do
     for (uint32_t i = 0; i < mStreams.Length(); ++i) {
       MediaStream* stream = mStreams[i];
@@ -1277,7 +1332,13 @@ MediaStreamGraphImpl::RunThread()
       if (mRealtime) {
         // Only playback audio and video in real-time mode
         CreateOrDestroyAudioStreams(prevComputedTime, stream);
-        PlayAudio(stream, prevComputedTime, mStateComputedTime);
+        TrackTicks ticksPlayedForThisStream = PlayAudio(stream, prevComputedTime, mStateComputedTime);
+        if (!ticksPlayed) {
+          ticksPlayed = ticksPlayedForThisStream;
+        } else {
+          MOZ_ASSERT(!ticksPlayedForThisStream || ticksPlayedForThisStream == ticksPlayed,
+              "Each stream should have the same number of frame.");
+        }
         PlayVideo(stream);
       }
       SourceMediaStream* is = stream->AsSourceStream();
@@ -1289,6 +1350,11 @@ MediaStreamGraphImpl::RunThread()
         allBlockedForever = false;
       }
     }
+
+    if (mMixer) {
+      mMixer->FinishMixing();
+    }
+
     if (ensureNextIteration || !allBlockedForever) {
       EnsureNextIteration();
     }
@@ -2318,6 +2384,20 @@ SourceMediaStream::GetBufferedTicks(TrackID aID)
 }
 
 void
+SourceMediaStream::RegisterForAudioMixing()
+{
+  MutexAutoLock lock(mMutex);
+  mNeedsMixing = true;
+}
+
+bool
+SourceMediaStream::NeedsMixing()
+{
+  MutexAutoLock lock(mMutex);
+  return mNeedsMixing;
+}
+
+void
 MediaInputPort::Init()
 {
   STREAM_LOG(PR_LOG_DEBUG, ("Adding MediaInputPort %p (from %p to %p) to the graph",
@@ -2501,6 +2581,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
   , mLatencyLog(AsyncLatencyLogger::Get())
+  , mMixer(nullptr)
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
