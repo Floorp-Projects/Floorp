@@ -17,6 +17,7 @@
 #include "xpcpublic.h"
 #include "nsJSEnvironment.h"
 #include "nsDOMJSUtils.h"
+#include "WorkerPrivate.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -154,8 +155,19 @@ nsresult
 nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<EventTarget> target = do_QueryInterface(mTarget);
-  if (!target || !mHandler.HasEventHandler())
+  if (!target || !mHandler.HasEventHandler() ||
+      !GetHandler().Ptr()->CallbackPreserveColor()) {
     return NS_ERROR_FAILURE;
+  }
+
+  nsDOMEvent* event = aEvent->InternalDOMEvent();
+  bool isMainThread = event->IsMainThreadEvent();
+  bool isChromeHandler =
+    isMainThread ?
+      nsContentUtils::GetObjectPrincipal(
+        GetHandler().Ptr()->CallbackPreserveColor()) ==
+        nsContentUtils::GetSystemPrincipal() :
+      mozilla::dom::workers::IsCurrentThreadRunningChromeWorker();
 
   if (mHandler.Type() == nsEventHandler::eOnError) {
     MOZ_ASSERT_IF(mEventName, mEventName == nsGkAtoms::onerror);
@@ -194,7 +206,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     }
 
     if (handled) {
-      aEvent->PreventDefault();
+      event->PreventDefaultInternal(isChromeHandler);
     }
     return NS_OK;
   }
@@ -215,7 +227,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     NS_ENSURE_STATE(beforeUnload);
 
     if (!DOMStringIsNull(retval)) {
-      aEvent->PreventDefault();
+      event->PreventDefaultInternal(isChromeHandler);
 
       nsAutoString text;
       beforeUnload->GetReturnValue(text);
@@ -246,7 +258,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   if (retval.isBoolean() &&
       retval.toBoolean() == (mEventName == nsGkAtoms::onerror ||
                              mEventName == nsGkAtoms::onmouseover)) {
-    aEvent->PreventDefault();
+    event->PreventDefaultInternal(isChromeHandler);
   }
 
   return NS_OK;
