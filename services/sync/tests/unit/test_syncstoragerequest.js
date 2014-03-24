@@ -12,6 +12,8 @@ function run_test() {
   Log.repository.getLogger("Sync.RESTRequest").level = Log.Level.Trace;
   initTestLogging();
 
+  ensureLegacyIdentityManager();
+
   run_next_test();
 }
 

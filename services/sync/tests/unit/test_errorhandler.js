@@ -55,6 +55,8 @@ function run_test() {
   Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
+  ensureLegacyIdentityManager();
+
   run_next_test();
 }
 
