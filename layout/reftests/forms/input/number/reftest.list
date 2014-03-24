@@ -24,10 +24,10 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63
 == number-auto-width-1.html number-auto-width-1-ref.html
 
 # min-height/max-height tests:
-skip-if(B2G) == number-min-height-1.html number-min-height-1-ref.html
-skip-if(B2G) == number-min-height-2.html number-min-height-2-ref.html
-skip-if(B2G) == number-max-height-1.html number-max-height-1-ref.html
-skip-if(B2G) == number-max-height-2.html number-max-height-2-ref.html
+skip-if(B2G||Android) == number-min-height-1.html number-min-height-1-ref.html
+skip-if(B2G||Android) == number-min-height-2.html number-min-height-2-ref.html
+skip-if(B2G||Android) == number-max-height-1.html number-max-height-1-ref.html
+skip-if(B2G||Android) == number-max-height-2.html number-max-height-2-ref.html
 
 # focus
 # autofocus is disabled on B2G

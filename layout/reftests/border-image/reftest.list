@@ -15,8 +15,8 @@
 != different-h-v-2.html different-h-v-ref.html
 != different-h-v-1.html different-h-v-2.html
 == center-scaling-1.html center-scaling-1-ref.html
-== center-scaling-2.html center-scaling-2-ref.html
-== center-scaling-3.html center-scaling-3-ref.html
+fails-if(Android||B2G) == center-scaling-2.html center-scaling-2-ref.html # Android/B2G: very different scaling (blurriness) on some sides
+fails-if(Android||B2G) == center-scaling-3.html center-scaling-3-ref.html # Android/B2G: very different scaling (blurriness) on some sides
 == center-scaling-4t.html center-scaling-4t-ref.html
 == center-scaling-4r.html center-scaling-4r-ref.html
 == center-scaling-4b.html center-scaling-4b-ref.html
