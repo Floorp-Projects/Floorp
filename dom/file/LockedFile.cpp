@@ -6,21 +6,8 @@
 
 #include "LockedFile.h"
 
-#include "nsIAppShell.h"
-#include "nsIDOMEvent.h"
-#include "nsIDOMFile.h"
-#include "nsIFileStorage.h"
-#include "nsISeekableStream.h"
-
-#include "jsfriendapi.h"
-#include "nsNetUtil.h"
-#include "nsDOMClassInfoID.h"
-#include "nsJSUtils.h"
-#include "nsStringStream.h"
-#include "nsWidgetsCID.h"
-#include "xpcpublic.h"
-
 #include "AsyncHelper.h"
+#include "nsIDOMEvent.h"
 #include "FileHandle.h"
 #include "FileHelper.h"
 #include "FileRequest.h"
@@ -28,18 +15,25 @@
 #include "FileStreamWrappers.h"
 #include "MemoryStreams.h"
 #include "MetadataHelper.h"
-#include "nsError.h"
-#include "nsContentUtils.h"
-
-#include "mozilla/EventDispatcher.h"
+#include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/LockedFileBinding.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/UnionTypes.h"
+#include "mozilla/EventDispatcher.h"
+#include "nsContentUtils.h"
+#include "nsError.h"
+#include "nsIAppShell.h"
+#include "nsIDOMFile.h"
+#include "nsIFileStorage.h"
+#include "nsISeekableStream.h"
+#include "nsNetUtil.h"
+#include "nsStringStream.h"
+#include "nsWidgetsCID.h"
 
 #define STREAM_COPY_BLOCK_SIZE 32768
 
-using namespace mozilla;
-using namespace mozilla::dom;
-USING_FILE_NAMESPACE
+BEGIN_FILE_NAMESPACE
 
 namespace {
 
@@ -215,61 +209,6 @@ CreateGenericEvent(mozilla::dom::EventTarget* aEventOwner,
   return event.forget();
 }
 
-inline nsresult
-GetInputStreamForJSVal(JS::Handle<JS::Value> aValue, JSContext* aCx,
-                       nsIInputStream** aInputStream, uint64_t* aInputLength)
-{
-  nsresult rv;
-
-  if (aValue.isObject()) {
-    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
-    if (JS_IsArrayBufferObject(obj)) {
-      char* data = reinterpret_cast<char*>(JS_GetArrayBufferData(obj));
-      uint32_t length = JS_GetArrayBufferByteLength(obj);
-
-      rv = NS_NewByteInputStream(aInputStream, data, length,
-                                 NS_ASSIGNMENT_COPY);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      *aInputLength = length;
-
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(
-      nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj));
-    if (blob) {
-      rv = blob->GetSize(aInputLength);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = blob->GetInternalStream(aInputStream);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      return NS_OK;
-    }
-  }
-
-  JSString* jsstr = JS::ToString(aCx, aValue);
-  NS_ENSURE_TRUE(jsstr, NS_ERROR_XPC_BAD_CONVERT_JS);
-
-  nsDependentJSString str;
-  if (!str.init(aCx, jsstr)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCString cstr;
-  CopyUTF16toUTF8(str, cstr);
-
-  nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewCStringInputStream(getter_AddRefs(stream), cstr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  stream.forget(aInputStream);
-  *aInputLength = cstr.Length();
-
-  return NS_OK;
-}
-
 } // anonymous namespace
 
 // static
@@ -305,6 +244,54 @@ LockedFile::Create(FileHandle* aFileHandle,
   return lockedFile.forget();
 }
 
+/* static */ already_AddRefed<nsIInputStream>
+LockedFile::GetInputStream(const ArrayBuffer& aValue, uint64_t* aInputLength,
+                           ErrorResult& aRv)
+{
+  const char* data = reinterpret_cast<const char*>(aValue.Data());
+  uint32_t length = aValue.Length();
+
+  nsCOMPtr<nsIInputStream> stream;
+  aRv = NS_NewByteInputStream(getter_AddRefs(stream), data, length,
+                              NS_ASSIGNMENT_COPY);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  *aInputLength = length;
+  return stream.forget();
+}
+
+/* static */ already_AddRefed<nsIInputStream>
+LockedFile::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
+                           ErrorResult& aRv)
+{
+  aRv = aValue->GetSize(aInputLength);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIInputStream> stream;
+  aRv = aValue->GetInternalStream(getter_AddRefs(stream));
+  return stream.forget();
+}
+
+/* static */ already_AddRefed<nsIInputStream>
+LockedFile::GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
+                           ErrorResult& aRv)
+{
+  NS_ConvertUTF16toUTF8 cstr(aValue);
+
+  nsCOMPtr<nsIInputStream> stream;
+  aRv = NS_NewCStringInputStream(getter_AddRefs(stream), cstr);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  *aInputLength = cstr.Length();
+  return stream.forget();
+}
+
 LockedFile::LockedFile()
 : mReadyState(INITIAL),
   mMode(FileMode::Readonly),
@@ -315,6 +302,7 @@ LockedFile::LockedFile()
   mCreating(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  SetIsDOMBinding();
 }
 
 LockedFile::~LockedFile()
@@ -326,19 +314,11 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED_1(LockedFile, nsDOMEventTargetHelper,
                                      mFileHandle)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(LockedFile)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMLockedFile)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(LockedFile)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(LockedFile, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(LockedFile, nsDOMEventTargetHelper)
-
-DOMCI_DATA(LockedFile, LockedFile)
-
-NS_IMPL_EVENT_HANDLER(LockedFile, complete)
-NS_IMPL_EVENT_HANDLER(LockedFile, abort)
-NS_IMPL_EVENT_HANDLER(LockedFile, error)
 
 nsresult
 LockedFile::PreHandleEvent(EventChainPreVisitor& aVisitor)
@@ -457,103 +437,27 @@ LockedFile::IsOpen() const
   return false;
 }
 
-NS_IMETHODIMP
-LockedFile::GetFileHandle(nsISupports** aFileHandle)
-{
-  nsCOMPtr<nsISupports> result(mFileHandle);
-  result.forget(aFileHandle);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LockedFile::GetMode(nsAString& aMode)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  switch (mMode) {
-   case FileMode::Readonly:
-     aMode.AssignLiteral("readonly");
-     break;
-   case FileMode::Readwrite:
-     aMode.AssignLiteral("readwrite");
-     break;
-   default:
-     NS_NOTREACHED("Unknown mode!");
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LockedFile::GetActive(bool* aActive)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  *aActive = IsOpen();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LockedFile::GetLocation(JSContext* aCx,
-                        JS::MutableHandle<JS::Value> aLocation)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (mLocation == UINT64_MAX) {
-    aLocation.setNull();
-  }
-  else {
-    aLocation.setDouble(double(mLocation));
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LockedFile::SetLocation(JSContext* aCx,
-                        JS::Handle<JS::Value> aLocation)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  // Null means the end-of-file.
-  if (aLocation.isNull()) {
-    mLocation = UINT64_MAX;
-    return NS_OK;
-  }
-
-  uint64_t location;
-  if (!JS::ToUint64(aCx, aLocation, &location)) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  mLocation = location;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LockedFile::GetMetadata(JS::Handle<JS::Value> aParameters,
-                        JSContext* aCx,
-                        nsISupports** _retval)
+already_AddRefed<FileRequest>
+LockedFile::GetMetadata(const DOMFileMetadataParameters& aParameters,
+                        ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!IsOpen()) {
-    return NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR;
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR);
+    return nullptr;
   }
 
   // Do nothing if the window is closed
   if (!GetOwner()) {
-    return NS_OK;
+    return nullptr;
   }
 
-  // Get optional arguments.
-  DOMFileMetadataParameters config;
-  JS::Rooted<JS::Value> parameters(aCx, aParameters);
-  bool result = config.Init(aCx, parameters);
-  NS_ENSURE_TRUE(result, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-
   nsRefPtr<MetadataParameters> params =
-    new MetadataParameters(config.mSize, config.mLastModified);
+    new MetadataParameters(aParameters.mSize, aParameters.mLastModified);
   if (!params->IsConfigured()) {
-    return NS_ERROR_TYPE_ERR;
+    aRv.ThrowTypeError(MSG_METADATA_NOT_CONFIGURED);
+    return nullptr;
   }
 
   nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
@@ -561,36 +465,47 @@ LockedFile::GetMetadata(JS::Handle<JS::Value> aParameters,
   nsRefPtr<MetadataHelper> helper =
     new MetadataHelper(this, fileRequest, params);
 
-  nsresult rv = helper->Enqueue();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+  if (NS_FAILED(helper->Enqueue())) {
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return nullptr;
+  }
 
-  nsRefPtr<nsIDOMDOMRequest> request = fileRequest.forget();
-  request.forget(_retval);
-  return NS_OK;
+  return fileRequest.forget();
 }
 
-NS_IMETHODIMP
-LockedFile::ReadAsArrayBuffer(uint64_t aSize,
-                              JSContext* aCx,
-                              nsISupports** _retval)
+bool
+LockedFile::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
   if (!IsOpen()) {
-    return NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR;
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR);
+    return false;
   }
 
   if (mLocation == UINT64_MAX) {
-    return NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR;
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
+    return false;
   }
 
   if (!aSize) {
-    return NS_ERROR_TYPE_ERR;
+    aRv.ThrowTypeError(MSG_INVALID_READ_SIZE);
+    return false;
   }
 
   // Do nothing if the window is closed
   if (!GetOwner()) {
-    return NS_OK;
+    return false;
+  }
+
+  return true;
+}
+
+already_AddRefed<FileRequest>
+LockedFile::ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (!CheckStateAndArgumentsForRead(aSize, aRv)) {
+    return nullptr;
   }
 
   nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
@@ -598,41 +513,24 @@ LockedFile::ReadAsArrayBuffer(uint64_t aSize,
   nsRefPtr<ReadHelper> helper =
     new ReadHelper(this, fileRequest, mLocation, aSize);
 
-  nsresult rv = helper->Init();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-
-  rv = helper->Enqueue();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+  if (NS_FAILED(helper->Init()) || NS_FAILED(helper->Enqueue())) {
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return nullptr;
+  }
 
   mLocation += aSize;
 
-  nsRefPtr<nsIDOMDOMRequest> request = fileRequest.forget();
-  request.forget(_retval);
-  return NS_OK;
+  return fileRequest.forget();
 }
 
-NS_IMETHODIMP
-LockedFile::ReadAsText(uint64_t aSize,
-                       const nsAString& aEncoding,
-                       nsISupports** _retval)
+already_AddRefed<FileRequest>
+LockedFile::ReadAsText(uint64_t aSize, const nsAString& aEncoding,
+                       ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!IsOpen()) {
-    return NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR;
-  }
-
-  if (mLocation == UINT64_MAX) {
-    return NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR;
-  }
-
-  if (!aSize) {
-    return NS_ERROR_TYPE_ERR;
-  }
-
-  // Do nothing if the window is closed
-  if (!GetOwner()) {
-    return NS_OK;
+  if (!CheckStateAndArgumentsForRead(aSize, aRv)) {
+    return nullptr;
   }
 
   nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
@@ -640,70 +538,57 @@ LockedFile::ReadAsText(uint64_t aSize,
   nsRefPtr<ReadTextHelper> helper =
     new ReadTextHelper(this, fileRequest, mLocation, aSize, aEncoding);
 
-  nsresult rv = helper->Init();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-
-  rv = helper->Enqueue();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+  if (NS_FAILED(helper->Init()) || NS_FAILED(helper->Enqueue())) {
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return nullptr;
+  }
 
   mLocation += aSize;
 
-  nsRefPtr<nsIDOMDOMRequest> request = fileRequest.forget();
-  request.forget(_retval);
-  return NS_OK;
+  return fileRequest.forget();
 }
 
-NS_IMETHODIMP
-LockedFile::Write(JS::Handle<JS::Value> aValue,
-                  JSContext* aCx,
-                  nsISupports** _retval)
+bool
+LockedFile::CheckStateForWrite(ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return WriteOrAppend(aValue, aCx, _retval, false);
-}
-
-NS_IMETHODIMP
-LockedFile::Append(JS::Handle<JS::Value> aValue,
-                   JSContext* aCx,
-                   nsISupports** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  return WriteOrAppend(aValue, aCx, _retval, true);
-}
-
-NS_IMETHODIMP
-LockedFile::Truncate(uint64_t aSize,
-                     uint8_t aOptionalArgCount,
-                     nsISupports** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
   if (!IsOpen()) {
-    return NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR;
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR);
+    return false;
   }
 
   if (mMode != FileMode::Readwrite) {
-    return NS_ERROR_DOM_FILEHANDLE_READ_ONLY_ERR;
-  }
-
-  uint64_t location;
-  if (aOptionalArgCount) {
-    // Just in case someone calls us from C++
-    NS_ASSERTION(aSize != UINT64_MAX, "Passed wrong size!");
-    location = aSize;
-  }
-  else {
-    if (mLocation == UINT64_MAX) {
-      return NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR;
-    }
-    location = mLocation;
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_READ_ONLY_ERR);
+    return false;
   }
 
   // Do nothing if the window is closed
   if (!GetOwner()) {
-    return NS_OK;
+    return false;
+  }
+
+  return true;
+}
+
+already_AddRefed<FileRequest>
+LockedFile::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  uint64_t location;
+  if (aSize.WasPassed()) {
+    // Just in case someone calls us from C++
+    NS_ASSERTION(aSize.Value() != UINT64_MAX, "Passed wrong size!");
+    location = aSize.Value();
+  } else {
+    if (mLocation == UINT64_MAX) {
+      aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
+      return nullptr;
+    }
+    location = mLocation;
+  }
+
+  if (!CheckStateForWrite(aRv)) {
+    return nullptr;
   }
 
   nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
@@ -711,50 +596,41 @@ LockedFile::Truncate(uint64_t aSize,
   nsRefPtr<TruncateHelper> helper =
     new TruncateHelper(this, fileRequest, location);
 
-  nsresult rv = helper->Enqueue();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-
-  if (aOptionalArgCount) {
-    mLocation = aSize;
+  if (NS_FAILED(helper->Enqueue())) {
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return nullptr;
   }
 
-  nsRefPtr<nsIDOMDOMRequest> request = fileRequest.forget();
-  request.forget(_retval);
-  return NS_OK;
+  if (aSize.WasPassed()) {
+    mLocation = aSize.Value();
+  }
+
+  return fileRequest.forget();
 }
 
-NS_IMETHODIMP
-LockedFile::Flush(nsISupports** _retval)
+already_AddRefed<FileRequest>
+LockedFile::Flush(ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!IsOpen()) {
-    return NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR;
-  }
-
-  if (mMode != FileMode::Readwrite) {
-    return NS_ERROR_DOM_FILEHANDLE_READ_ONLY_ERR;
-  }
-
-  // Do nothing if the window is closed
-  if (!GetOwner()) {
-    return NS_OK;
+  if (!CheckStateForWrite(aRv)) {
+    return nullptr;
   }
 
   nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
 
   nsRefPtr<FlushHelper> helper = new FlushHelper(this, fileRequest);
 
-  nsresult rv = helper->Enqueue();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+  if (NS_FAILED(helper->Enqueue())) {
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return nullptr;
+  }
 
-  nsRefPtr<nsIDOMDOMRequest> request = fileRequest.forget();
-  request.forget(_retval);
-  return NS_OK;
+  return fileRequest.forget();
 }
 
-NS_IMETHODIMP
-LockedFile::Abort()
+void
+LockedFile::Abort(ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -762,7 +638,8 @@ LockedFile::Abort()
   // even from outside of transaction callbacks.
   if (mReadyState != LockedFile::INITIAL &&
       mReadyState != LockedFile::LOADING) {
-    return NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR;
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
+    return;
   }
 
   bool needToFinish = mReadyState == INITIAL;
@@ -773,10 +650,8 @@ LockedFile::Abort()
   // Fire the abort event if there are no outstanding requests. Otherwise the
   // abort event will be fired when all outstanding requests finish.
   if (needToFinish) {
-    return Finish();
+    aRv = Finish();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -829,38 +704,23 @@ LockedFile::OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
   return NS_OK;
 }
 
-nsresult
-LockedFile::WriteOrAppend(JS::Handle<JS::Value> aValue,
-                          JSContext* aCx,
-                          nsISupports** _retval,
-                          bool aAppend)
+already_AddRefed<FileRequest>
+LockedFile::WriteOrAppend(nsIInputStream* aInputStream, uint64_t aInputLength,
+                          bool aAppend, ErrorResult& aRv)
 {
-  if (!IsOpen()) {
-    return NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR;
-  }
-
-  if (mMode != FileMode::Readwrite) {
-    return NS_ERROR_DOM_FILEHANDLE_READ_ONLY_ERR;
-  }
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!aAppend && mLocation == UINT64_MAX) {
-    return NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR;
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
+    return nullptr;
   }
 
-  // Do nothing if the window is closed
-  if (!GetOwner()) {
-    return NS_OK;
+  if (!CheckStateForWrite(aRv)) {
+    return nullptr;
   }
 
-  nsCOMPtr<nsIInputStream> inputStream;
-  uint64_t inputLength;
-  nsresult rv =
-    GetInputStreamForJSVal(aValue, aCx, getter_AddRefs(inputStream),
-                           &inputLength);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!inputLength) {
-    return NS_OK;
+  if (!aInputLength) {
+    return nullptr;
   }
 
   nsRefPtr<FileRequest> fileRequest = GenerateFileRequest();
@@ -868,21 +728,21 @@ LockedFile::WriteOrAppend(JS::Handle<JS::Value> aValue,
   uint64_t location = aAppend ? UINT64_MAX : mLocation;
 
   nsRefPtr<WriteHelper> helper =
-    new WriteHelper(this, fileRequest, location, inputStream, inputLength);
+    new WriteHelper(this, fileRequest, location, aInputStream, aInputLength);
 
-  rv = helper->Enqueue();
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+  if (NS_FAILED(helper->Enqueue())) {
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
+    return nullptr;
+  }
 
   if (aAppend) {
     mLocation = UINT64_MAX;
   }
   else {
-    mLocation += inputLength;
+    mLocation += aInputLength;
   }
 
-  nsRefPtr<nsIDOMDOMRequest> request = fileRequest.forget();
-  request.forget(_retval);
-  return NS_OK;
+  return fileRequest.forget();
 }
 
 nsresult
@@ -902,6 +762,13 @@ LockedFile::Finish()
 
   return NS_OK;
 }
+
+/* virtual */ JSObject*
+LockedFile::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return LockedFileBinding::Wrap(aCx, aScope, this);
+}
+
 
 FinishHelper::FinishHelper(LockedFile* aLockedFile)
 : mLockedFile(aLockedFile),
@@ -1152,3 +1019,5 @@ OpenStreamHelper::DoAsyncRun(nsISupports* aStream)
 
   return NS_OK;
 }
+
+END_FILE_NAMESPACE

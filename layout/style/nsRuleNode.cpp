@@ -7484,7 +7484,6 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
       break;
     case eCSSUnit_Initial:
     case eCSSUnit_Unset:
-    case eCSSUnit_None:
       pos->mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_NONE;
       break;
     default:

@@ -819,24 +819,17 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
     // object will create (and fill the cache) from its WrapObject call.
     nsWrapperCache *cache = aHelper.GetWrapperCache();
 
-    RootedObject flat(cx);
-    if (cache) {
-        flat = cache->GetWrapper();
-        if (cache->IsDOMBinding()) {
-            if (!flat) {
-                RootedObject global(cx, xpcscope->GetGlobalJSObject());
-                flat = cache->WrapObject(cx, global);
-                if (!flat)
-                    return false;
-            }
-
-            if (allowNativeWrapper && !JS_WrapObject(cx, &flat))
-                return false;
-
-            return CreateHolderIfNeeded(flat, d, dest);
-        }
-    } else {
-        flat = nullptr;
+    RootedObject flat(cx, cache ? cache->GetWrapper() : nullptr);
+    if (!flat && cache && cache->IsDOMBinding()) {
+        RootedObject global(cx, xpcscope->GetGlobalJSObject());
+        flat = cache->WrapObject(cx, global);
+        if (!flat)
+            return false;
+    }
+    if (flat) {
+        if (allowNativeWrapper && !JS_WrapObject(cx, &flat))
+            return false;
+        return CreateHolderIfNeeded(flat, d, dest);
     }
 
     // Don't double wrap CPOWs. This is a temporary measure for compatibility

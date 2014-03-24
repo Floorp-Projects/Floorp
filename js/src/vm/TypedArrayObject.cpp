@@ -1429,7 +1429,7 @@ DataViewObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
         args2.setCallee(global->createDataViewForThis());
         args2.setThis(ObjectValue(*bufobj));
         PodCopy(args2.array(), args.array(), args.length());
-        args2[argc].setObject(*proto);
+        args2[args.length()].setObject(*proto);
         if (!Invoke(cx, args2))
             return false;
         args.rval().set(args2.rval());

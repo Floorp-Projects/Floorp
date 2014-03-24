@@ -664,6 +664,8 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
                                   const IntSize &aSize,
                                   SurfaceFormat aFormat)
 {
+  MOZ_ASSERT(aGrContext, "null GrContext");
+
   mGrContext = aGrContext;
 
   mSize = aSize;
