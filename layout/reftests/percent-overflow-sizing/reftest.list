@@ -11,7 +11,7 @@ skip-if(B2G) fails-if(Android&&browserIsRemote) == hScrollAbsHeightQuirks.html g
 skip-if(B2G) fails-if(Android&&browserIsRemote) == hScrollSimpleHeightD.html greenboxhbar.html # bug 650591, 732565 # bug 773482
 skip-if(B2G) fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-1D.html greenboxhbar.html # bug 650591, 732565 # bug 773482
 skip-if(B2G) fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-2D.html greenboxhbar.html # bug 650591, 732565 # bug 773482
-fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-3D.html greenboxhbar.html # bug 650591, 732565
+fails-if(B2G) fails-if(Android&&browserIsRemote) == hScrollSimpleHeightQuirks-3D.html greenboxhbar.html # bug 650591, 732565
 skip-if(B2G) fails-if(Android&&browserIsRemote) == hScrollAbsHeightD.html greenboxhbar.html # bug 650591, 732565 # bug 773482
 skip-if(B2G) fails-if(Android&&browserIsRemote) == hScrollAbsHeightQuirksD.html greenboxhbar.html # bug 650591, 732565 # bug 773482
 == simpleMinHeight100D.html greenbox.html

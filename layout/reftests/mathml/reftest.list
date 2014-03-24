@@ -98,9 +98,9 @@ skip-if(B2G) == quotes-1.xhtml quotes-1-ref.xhtml
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-== mpadded-7.html mpadded-7-ref.html
-== mpadded-8.html mpadded-8-ref.html
-== mpadded-9.html mpadded-9-ref.html
+fails-if(B2G) == mpadded-7.html mpadded-7-ref.html # B2G: slight character width variation
+fails-if(B2G) == mpadded-8.html mpadded-8-ref.html # B2G: slight character width variation
+fails-if(B2G) == mpadded-9.html mpadded-9-ref.html # B2G: slight character width variation
 == math-display.html math-display-ref.html
 == scriptlevel-1.html scriptlevel-1-ref.html
 == scriptlevel-movablelimits-1.html scriptlevel-movablelimits-1-ref.html
@@ -152,7 +152,7 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == operator-1.xhtml operator-1-ref.xhtml
 == scriptshift-1.xhtml scriptshift-1-ref.xhtml
 == number-size-1.xhtml number-size-1-ref.xhtml
-== multiscripts-1.html multiscripts-1-ref.html
+fails-if(B2G) == multiscripts-1.html multiscripts-1-ref.html # B2G - slight height variation from font metrics
 == mathml-mmultiscript-base.html mathml-mmultiscript-base-ref.html
 == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript-ref.html
 != menclose-1a.html menclose-1-ref.html
@@ -171,21 +171,21 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 != menclose-1n.html menclose-1-ref.html
 != menclose-1o.html menclose-1-ref.html
 != menclose-1p.html menclose-1-ref.html
-== menclose-2-actuarial.html menclose-2-actuarial-ref.html
+fails-if(B2G) == menclose-2-actuarial.html menclose-2-actuarial-ref.html # B2G slight thickness variation
 == menclose-2-bottom.html menclose-2-bottom-ref.html
-== menclose-2-box.html menclose-2-box-ref.html
+fails-if(B2G) == menclose-2-box.html menclose-2-box-ref.html # B2G slight thickness variation
 == menclose-2-circle.html menclose-2-circle-ref.html
 == menclose-2-downdiagonalstrike.html menclose-2-downdiagonalstrike-ref.html
 == menclose-2-horizontalstrike.html menclose-2-horizontalstrike-ref.html
-== menclose-2-left.html menclose-2-left-ref.html
+fails-if(B2G) == menclose-2-left.html menclose-2-left-ref.html # B2G slight thickness variation
 == menclose-2-longdiv.html menclose-2-longdiv-ref.html
 == menclose-2-right.html menclose-2-right-ref.html
-== menclose-2-roundedbox.html menclose-2-roundedbox-ref.html
-== menclose-2-top.html menclose-2-top-ref.html
-== menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow-ref.html
+fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G slight thickness variation
+fails-if(B2G) == menclose-2-top.html menclose-2-top-ref.html # B2G slight thickness variation
+fails-if(B2G) == menclose-2-updiagonalarrow.html menclose-2-updiagonalarrow-ref.html # B2G slight thickness variation
 == menclose-2-updiagonalstrike.html menclose-2-updiagonalstrike-ref.html
 == menclose-2-verticalstrike.html menclose-2-verticalstrike-ref.html
-== menclose-2-roundedbox.html menclose-2-roundedbox-ref.html
+fails-if(B2G) == menclose-2-roundedbox.html menclose-2-roundedbox-ref.html # B2G slight thickness variation
 == menclose-3-box.html menclose-3-box-ref.html
 == menclose-3-madruwb.html menclose-3-madruwb-ref.html
 fails random-if(winWidget) == menclose-3-radical.html menclose-3-radical-ref.html # Bug 973917
