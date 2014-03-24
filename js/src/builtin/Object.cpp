@@ -703,13 +703,13 @@ obj_isPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 static bool
 obj_create(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (argc == 0) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
                              "Object.create", "0", "s");
         return false;
     }
 
-    CallArgs args = CallArgsFromVp(argc, vp);
     RootedValue v(cx, args[0]);
     if (!v.isObjectOrNull()) {
         char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NullPtr());
