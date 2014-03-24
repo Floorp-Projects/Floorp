@@ -104,17 +104,7 @@ function attachSpecialPowersToWindow(aWindow) {
     if ((aWindow !== null) &&
         (aWindow !== undefined) &&
         (aWindow.wrappedJSObject) &&
-        (aWindow.parent !== null) &&
-        (aWindow.parent !== undefined) &&
-        (aWindow.parent.wrappedJSObject.SpecialPowers) &&
-        !(aWindow.wrappedJSObject.SpecialPowers) &&
-        aWindow.location.hostname == aWindow.parent.location.hostname) {
-      aWindow.wrappedJSObject.SpecialPowers = aWindow.parent.wrappedJSObject.SpecialPowers;
-    }
-    else if ((aWindow !== null) &&
-             (aWindow !== undefined) &&
-             (aWindow.wrappedJSObject) &&
-             !(aWindow.wrappedJSObject.SpecialPowers)) {
+        !(aWindow.wrappedJSObject.SpecialPowers)) {
       aWindow.wrappedJSObject.SpecialPowers = new SpecialPowers(aWindow);
     }
   } catch(ex) {
