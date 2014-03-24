@@ -171,7 +171,7 @@ exports.SimulatorProcess = Class({
     Cu.reportError(profile);
 
     // NOTE: push dbgport option on the b2g-desktop commandline
-    args.push("-dbgport", "" + this.remoteDebuggerPort);
+    args.push("-start-debugger-server", "" + this.remoteDebuggerPort);
 
     // Ignore eventual zombie instances of b2g that are left over
     args.push("-no-remote");
