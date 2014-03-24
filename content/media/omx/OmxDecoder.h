@@ -103,6 +103,7 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   sp<GonkNativeWindowClient> mNativeWindowClient;
   sp<MediaSource> mVideoTrack;
   sp<OMXCodecProxy> mVideoSource;
+  sp<MediaSource> mAudioOffloadTrack;
   sp<MediaSource> mAudioTrack;
   sp<MediaSource> mAudioSource;
   int32_t mVideoWidth;
@@ -258,6 +259,8 @@ public:
   void onMessageReceived(const sp<AMessage> &msg);
 
   int64_t ProcessCachedData(int64_t aOffset, bool aWaitForCompletion);
+
+  sp<MediaSource> GetAudioOffloadTrack() { return mAudioOffloadTrack; }
 };
 
 }

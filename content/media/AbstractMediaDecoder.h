@@ -116,6 +116,12 @@ public:
   // required to begin playback have been acquired. Can be called on any thread.
   virtual void NotifyWaitingForResourcesStatusChanged() = 0;
 
+  // Called by Reader if the current audio track can be offloaded
+  virtual void SetCanOffloadAudio(bool aCanOffloadAudio) {}
+
+  // Called from HTMLMediaElement when owner document activity changes
+  virtual void SetElementVisibility(bool aIsVisible) {}
+
   // Stack based class to assist in notifying the frame statistics of
   // parsed and decoded frames. Use inside video demux & decode functions
   // to ensure all parsed and decoded frames are reported on all return paths.
