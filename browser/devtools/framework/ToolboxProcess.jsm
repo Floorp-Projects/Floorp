@@ -26,10 +26,22 @@ this.EXPORTED_SYMBOLS = ["BrowserToolboxProcess"];
  *        A function called when the process stops running.
  * @param function aOnRun [optional]
  *        A function called when the process starts running.
+ * @param object aOptions [optional]
+ *        An object with properties for configuring BrowserToolboxProcess.
  */
-this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun) {
-  this._closeCallback = aOnClose;
-  this._runCallback = aOnRun;
+this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun, aOptions) {
+  // If first argument is an object, use those properties instead of
+  // all three arguments
+  if (typeof aOnClose === "object") {
+    this._closeCallback = aOnClose.onClose;
+    this._runCallback = aOnClose.onRun;
+    this._options = aOnClose;
+  } else {
+    this._closeCallback = aOnClose;
+    this._runCallback = aOnRun;
+    this._options = aOptions || {};
+  }
+
   this._telemetry = new Telemetry();
 
   this.close = this.close.bind(this);
@@ -43,8 +55,8 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun) {
  * Initializes and starts a chrome toolbox process.
  * @return object
  */
-BrowserToolboxProcess.init = function(aOnClose, aOnRun) {
-  return new BrowserToolboxProcess(aOnClose, aOnRun);
+BrowserToolboxProcess.init = function(aOnClose, aOnRun, aOptions) {
+  return new BrowserToolboxProcess(aOnClose, aOnRun, aOptions);
 };
 
 BrowserToolboxProcess.prototype = {
@@ -143,8 +155,15 @@ BrowserToolboxProcess.prototype = {
     let process = this._dbgProcess = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
     process.init(Services.dirsvc.get("XREExeF", Ci.nsIFile));
 
+    let xulURI = DBG_XUL;
+
+    if (this._options.addonID) {
+      xulURI += "?addonID=" + this._options.addonID;
+    }
+
     dumpn("Running chrome debugging process.");
-    let args = ["-no-remote", "-foreground", "-P", this._dbgProfile.name, "-chrome", DBG_XUL];
+    let args = ["-no-remote", "-foreground", "-P", this._dbgProfile.name, "-chrome", xulURI];
+
     process.runwAsync(args, args.length, { observe: () => this.close() });
 
     this._telemetry.toolOpened("jsbrowserdebugger");

@@ -126,10 +126,17 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *        - staged: true to stage the item to be appended later
    */
   addSource: function(aSource, aOptions = {}) {
-    let url = aSource.url;
-    let label = SourceUtils.getSourceLabel(url.split(" -> ").pop());
-    let group = SourceUtils.getSourceGroup(url.split(" -> ").pop());
-    let unicodeUrl = NetworkHelper.convertToUnicode(unescape(url));
+    let fullUrl = aSource.url;
+    let url = fullUrl.split(" -> ").pop();
+    let label = SourceUtils.getSourceLabel(url);
+    let group = SourceUtils.getSourceGroup(url);
+    let unicodeUrl = NetworkHelper.convertToUnicode(unescape(fullUrl));
+
+    let sdkModuleName = getSDKModuleName(url);
+    if (sdkModuleName) {
+      label = sdkModuleName;
+      group = "Add-on SDK";
+    }
 
     let contents = document.createElement("label");
     contents.className = "plain dbg-source-item";
@@ -139,7 +146,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     contents.setAttribute("tooltiptext", unicodeUrl);
 
     // Append a source item to this container.
-    this.push([contents, url], {
+    this.push([contents, fullUrl], {
       staged: aOptions.staged, /* stage the item to be appended later? */
       attachment: {
         label: label,
