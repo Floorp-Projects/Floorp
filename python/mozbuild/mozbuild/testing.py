@@ -13,14 +13,25 @@ from .base import MozbuildObject
 from .util import DefaultOnReadDict
 
 
-def rewrite_test_base(test, new_base):
+def rewrite_test_base(test, new_base, honor_install_to_subdir=False):
     """Rewrite paths in a test to be under a new base path.
 
     This is useful for running tests from a separate location from where they
     were defined.
+
+    honor_install_to_subdir and the underlying install-to-subdir field are a
+    giant hack intended to work around the restriction where the mochitest
+    runner can't handle single test files with multiple configurations. This
+    argument should be removed once the mochitest runner talks manifests
+    (bug 984670).
     """
     test['here'] = mozpath.join(new_base, test['dir_relpath'])
-    test['path'] = mozpath.join(new_base, test['file_relpath'])
+
+    if honor_install_to_subdir and test.get('install-to-subdir'):
+        test['path'] = mozpath.join(new_base, test['dir_relpath'],
+            test['install-to-subdir'], test['relpath'])
+    else:
+        test['path'] = mozpath.join(new_base, test['file_relpath'])
 
     return test
 
@@ -174,6 +185,7 @@ class TestResolver(MozbuildObject):
             rewrite_base = self._test_rewrites.get(test['flavor'], None)
 
             if rewrite_base:
-                yield rewrite_test_base(test, rewrite_base)
+                yield rewrite_test_base(test, rewrite_base,
+                    honor_install_to_subdir=True)
             else:
                 yield test
