@@ -30,7 +30,7 @@ function fakeSessionSvc() {
 
 function run_test() {
 
-  _("test locallyOpenTabMatchesURL");
+  _("test getOpenURLs");
   let engine = new TabEngine(Service);
 
   // 3 tabs
@@ -39,10 +39,11 @@ function run_test() {
   let matches;
 
   _("  test matching works (true)");
-  matches = engine.locallyOpenTabMatchesURL("http://foo.com");
+  let openurlsset = engine.getOpenURLs();
+  matches = openurlsset.has("http://foo.com");
   do_check_true(matches);
 
   _("  test matching works (false)");
-  matches = engine.locallyOpenTabMatchesURL("http://barfoo.com");
+  matches = openurlsset.has("http://barfoo.com");
   do_check_false(matches);
 }
