@@ -37,6 +37,13 @@ MOZ_PACKAGER_MINIFY=1
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk
 
+# Note that JS_BINARY can be defined in packager.mk, so this test must come after
+# including that file. MOZ_PACKAGER_MINIFY_JS is used in packager.mk, but since
+# recipe evaluation is deferred, we can set it here after the inclusion.
+ifneq (,$(JS_BINARY))
+MOZ_PACKAGER_MINIFY_JS=1
+endif
+
 ifeq (bundle, $(MOZ_FS_LAYOUT))
 BINPATH = $(_BINPATH)
 DEFINES += -DAPPNAME=$(_APPNAME)
