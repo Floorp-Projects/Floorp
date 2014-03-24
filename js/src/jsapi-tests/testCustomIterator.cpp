@@ -10,9 +10,10 @@ static int iterCount = 0;
 static bool
 IterNext(JSContext *cx, unsigned argc, jsval *vp)
 {
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
     if (iterCount++ == 100)
         return JS_ThrowStopIteration(cx);
-    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(iterCount));
+    args.rval().setInt32(iterCount);
     return true;
 }
 

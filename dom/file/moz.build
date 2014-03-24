@@ -6,12 +6,6 @@
 
 TEST_DIRS += ['test']
 
-XPIDL_SOURCES += [
-    'nsIDOMLockedFile.idl',
-]
-
-XPIDL_MODULE = 'dom_file'
-
 EXPORTS += [
     'nsIFileStorage.h',
 ]
