@@ -51,7 +51,7 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // WebIDL
-  nsIDOMLockedFile*
+  LockedFile*
   GetLockedFile() const;
 
   IMPL_EVENT_HANDLER(progress)

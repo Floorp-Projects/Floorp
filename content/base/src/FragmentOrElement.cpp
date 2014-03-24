@@ -2361,20 +2361,21 @@ StartElement(Element* aContent, StringBuilder& aBuilder)
       continue;
     }
     
+    aBuilder.Append(" ");
+
     if (MOZ_LIKELY(attNs == kNameSpaceID_None) ||
         (attNs == kNameSpaceID_XMLNS &&
          attName == nsGkAtoms::xmlns)) {
-      aBuilder.Append(" ");
+      // Nothing else required
     } else if (attNs == kNameSpaceID_XML) {
-      aBuilder.Append(" xml:");
+      aBuilder.Append("xml:");
     } else if (attNs == kNameSpaceID_XMLNS) {
-      aBuilder.Append(" xmlns:");
+      aBuilder.Append("xmlns:");
     } else if (attNs == kNameSpaceID_XLink) {
-      aBuilder.Append(" xlink:");
+      aBuilder.Append("xlink:");
     } else {
       nsIAtom* prefix = name->GetPrefix();
       if (prefix) {
-        aBuilder.Append(" ");
         aBuilder.Append(prefix);
         aBuilder.Append(":");
       }

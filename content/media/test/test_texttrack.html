@@ -67,6 +67,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
     trackOne.label = "first";
     trackOne.src = "basic.vtt";
     trackOne.default = true;
+    trackOne.id = "2";
     video.appendChild(trackOne);
 
     video.addTextTrack("subtitles", "fourth", "en-CA");
@@ -102,10 +103,10 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
       // method, will occupy the last two indexes in the order that they were
       // added in.
       var trackData = [
-        { label: "first", mode: "showing" },
-        { label: "second", mode: "disabled" },
-        { label: "third", mode: "hidden" },
-        { label: "fourth", mode: "hidden"}
+        { label: "first", mode: "showing", id: "2" },
+        { label: "second", mode: "disabled", id: "" },
+        { label: "third", mode: "hidden", id: "" },
+        { label: "fourth", mode: "hidden", id: "" }
       ];
       is(video.textTracks.length, trackData.length, "TextTracks length should be " + trackData.length);
       for (var i = 0; i < trackData.length; i++) {

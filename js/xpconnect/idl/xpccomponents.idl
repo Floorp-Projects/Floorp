@@ -121,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(0b81b4f2-cad7-4602-a5cb-b99c9d514196)]
+[scriptable, uuid(5e253a02-f91f-4fb3-9335-db0fca23f2e0)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -363,22 +363,6 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     jsval createObjectIn(in jsval vobj, [optional] in jsval voptions);
-
-    /*
-     * To be called from JS only.
-     *
-     * Returns an array created in |vobj|'s compartment.
-     */
-    [implicit_jscontext]
-    jsval createArrayIn(in jsval vobj);
-
-    /*
-     * To be called from JS only.
-     *
-     * Returns a date given timestamp |msec| created in |vobj|'s compartment.
-     */
-    [implicit_jscontext]
-    jsval createDateIn(in jsval vobj, in long long msec);
 
     /*
      * To be called from JS only.

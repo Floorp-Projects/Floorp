@@ -96,6 +96,16 @@ TextTrack::SetMode(TextTrackMode aValue)
 }
 
 void
+TextTrack::GetId(nsAString& aId) const
+{
+  // If the track has a track element then its id should be the same as the
+  // track element's id.
+  if (mTrackElement) {
+    mTrackElement->GetAttribute(NS_LITERAL_STRING("id"), aId);
+  }
+}
+
+void
 TextTrack::AddCue(TextTrackCue& aCue)
 {
   mCueList->AddCue(aCue);

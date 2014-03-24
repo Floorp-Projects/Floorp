@@ -18,7 +18,13 @@
 
     {"process": "P4", "path": "p4", "kind": 2, "units": 0, "amount": 66, "description": "Desc."},
 
-    {"process": "P6", "path": "p6", "kind": 2, "units": 0, "amount": 0, "description": "Desc."}
+    {"process": "P6", "path": "p6", "kind": 2, "units": 0, "amount": 0, "description": "Desc."},
+
+    {"process": "P7", "path": "p7/b", "kind": 2, "units": 0, "amount": 3, "description": "Desc."},
+    {"process": "P7", "path": "p7/c", "kind": 2, "units": 0, "amount": 4, "description": "Desc."},
+
+    {"process": "P8", "path": "p8/a/b", "kind": 2, "units": 0, "amount": 1, "description": "Desc."},
+    {"process": "P8", "path": "p8/a/g", "kind": 2, "units": 0, "amount": 2, "description": "Desc."}
   ]
 }
 
