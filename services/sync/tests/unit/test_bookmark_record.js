@@ -7,6 +7,7 @@ Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 function prepareBookmarkItem(collection, id) {
   let b = new Bookmark(collection, id);
@@ -15,6 +16,7 @@ function prepareBookmarkItem(collection, id) {
 }
 
 function run_test() {
+  ensureLegacyIdentityManager();
   Service.identity.username = "john@example.com";
   Service.identity.syncKey = "abcdeabcdeabcdeabcdeabcdea";
   generateNewKeys(Service.collectionKeys);

@@ -98,23 +98,14 @@ WeaveService.prototype = {
    * @return bool
    */
   get fxAccountsEnabled() {
-    // work out what identity manager to use.  This is stored in a preference;
-    // if the preference exists, we trust it.
-    let fxAccountsEnabled;
     try {
-      fxAccountsEnabled = Services.prefs.getBoolPref("services.sync.fxaccounts.enabled");
+      // Old sync guarantees '@' will never appear in the username while FxA
+      // uses the FxA email address - so '@' is the flag we use.
+      let username = Services.prefs.getCharPref(SYNC_PREFS_BRANCH + "username");
+      return !username || username.contains('@');
     } catch (_) {
-      // That pref doesn't exist - so let's assume this is a first-run.
-      // If sync already appears configured, we assume it's for the legacy
-      // provider.
-      let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-      fxAccountsEnabled = !prefs.prefHasUserValue("username");
-      Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", fxAccountsEnabled);
+      return true; // No username == only allow FxA to be configured.
     }
-    // Currently we don't support toggling this pref after initialization -
-    // except when sync is reset - but this 1 exception is enough that we can't
-    // cache the value.
-    return fxAccountsEnabled;
   },
 
   /**
