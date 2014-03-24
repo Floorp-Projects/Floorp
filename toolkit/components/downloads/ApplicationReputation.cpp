@@ -55,8 +55,8 @@ using safe_browsing::ClientDownloadRequest_CertificateChain;
 #define PREF_SB_APP_REP_URL "browser.safebrowsing.appRepURL"
 #define PREF_SB_MALWARE_ENABLED "browser.safebrowsing.malware.enabled"
 #define PREF_GENERAL_LOCALE "general.useragent.locale"
-#define PREF_DOWNLOAD_BLOCK_TABLE "urlclassifier.download_block_table"
-#define PREF_DOWNLOAD_ALLOW_TABLE "urlclassifier.download_allow_table"
+#define PREF_DOWNLOAD_BLOCK_TABLE "urlclassifier.downloadBlockTable"
+#define PREF_DOWNLOAD_ALLOW_TABLE "urlclassifier.downloadAllowTable"
 
 // NSPR_LOG_MODULES=ApplicationReputation:5
 #if defined(PR_LOGGING)
