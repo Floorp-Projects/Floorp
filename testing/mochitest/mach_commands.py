@@ -181,7 +181,7 @@ class MochitestRunner(MozbuildObject):
         options.xrePath = xre_path
         return mochitest.run_remote_mochitests(parser, options)
 
-    def run_desktop_test(self, suite=None, test_file=None, debugger=None,
+    def run_desktop_test(self, context, suite=None, test_file=None, debugger=None,
         debugger_args=None, slowscript=False, shuffle=False, keep_open=False,
         rerun_failures=False, no_autorun=False, repeat=0, run_until_failure=False,
         slow=False, chunk_by_dir=0, total_chunks=None, this_chunk=None,
@@ -238,6 +238,8 @@ class MochitestRunner(MozbuildObject):
 
         import mozinfo
         import mochitest
+        from manifestparser import TestManifest
+        from mozbuild.testing import TestResolver
 
         # This is required to make other components happy. Sad, isn't it?
         os.chdir(self.topobjdir)
@@ -254,15 +256,17 @@ class MochitestRunner(MozbuildObject):
         opts = mochitest.MochitestOptions()
         options, args = opts.parse_args([])
 
+        flavor = suite
 
         # Need to set the suite options before verifyOptions below.
         if suite == 'plain':
             # Don't need additional options for plain.
-            pass
+            flavor = 'mochitest'
         elif suite == 'chrome':
             options.chrome = True
         elif suite == 'browser':
             options.browserChrome = True
+            flavor = 'browser-chrome'
         elif suite == 'metro':
             options.immersiveMode = True
             options.browserChrome = True
@@ -312,22 +316,21 @@ class MochitestRunner(MozbuildObject):
             setattr(options, k, v)
 
         if test_path:
-            test_root = runner.getTestRoot(options)
-            test_root_file = mozpack.path.join(self.mochitest_dir, test_root, test_path)
-            if not os.path.exists(test_root_file):
-                print('Specified test path does not exist: %s' % test_root_file)
-                print('You may need to run |mach build| to build the test files.')
+            resolver = self._spawn(TestResolver)
+
+            tests = list(resolver.resolve_tests(path=test_path, flavor=flavor,
+                cwd=context.cwd))
+
+            if not tests:
+                print('No tests could be found in the path specified. Please '
+                    'specify a path that is a test file or is a directory '
+                    'containing tests.')
                 return 1
 
-            # Handle test_path pointing at a manifest file so conditions in
-            # the manifest are processed.  This is a temporary solution
-            # pending bug 938019.
-            # The manifest basename is the same as |suite|, except for plain
-            manifest_base = 'mochitest' if suite == 'plain' else suite
-            if os.path.basename(test_root_file) == manifest_base + '.ini':
-                options.manifestFile = test_root_file
-            else:
-                options.testPath = test_path
+            manifest = TestManifest()
+            manifest.tests.extend(tests)
+
+            options.manifestFile = manifest
 
         if rerun_failures:
             options.testManifest = failure_file_path
@@ -620,8 +623,8 @@ class MachCommands(MachCommandBase):
 
         mochitest = self._spawn(MochitestRunner)
 
-        return mochitest.run_desktop_test(test_file=test_file, suite=flavor,
-            **kwargs)
+        return mochitest.run_desktop_test(self._mach_context,
+            test_file=test_file, suite=flavor, **kwargs)
 
 
 # TODO For now b2g commands will only work with the emulator,
