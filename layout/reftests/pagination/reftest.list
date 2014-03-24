@@ -60,4 +60,4 @@ skip-if(B2G) == table-caption-splitaftercaption-7.html table-caption-splitafterc
 # == table-caption-splitaftercaption-10.html blank.html # bug 672654
 # == table-caption-splitaftercaption-11.html blank.html # bug 672654
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
-== combobox-page-break-inside.html combobox-page-break-inside-ref.html
+fails-if(B2G) == combobox-page-break-inside.html combobox-page-break-inside-ref.html # reftest-print doesn't work on B2G
