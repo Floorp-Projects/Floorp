@@ -38,6 +38,18 @@ function setDefaultPrefs() {
     branch.setIntPref("urlclassifier.updateinterval", 172800);
     // Disable high-quality downscaling, since it makes reftests more difficult.
     branch.setBoolPref("image.high_quality_downscaling.enabled", false);
+    // Checking whether two files are the same is slow on Windows.
+    // Setting this pref makes tests run much faster there.
+    branch.setBoolPref("security.fileuri.strict_origin_policy", false);
+    // Disable the thumbnailing service
+    branch.setBoolPref("browser.pagethumbnails.capturing_disabled", true);
+    // Enable APZC so we can test it
+    branch.setBoolPref("layers.async-pan-zoom.enabled", true);
+    // Since our tests are 800px wide, set the assume-designed-for width of all
+    // pages to be 800px (instead of the default of 980px). This ensures that
+    // in our 800px window we don't zoom out by default to try to fit the
+    // assumed 980px content.
+    branch.setIntPref("browser.viewport.desktopWidth", 800);
     // Disable the fade out (over time) of overlay scrollbars, since we
     // can't guarantee taking both reftest snapshots at the same point
     // during the fade.

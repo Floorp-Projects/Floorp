@@ -118,15 +118,15 @@ add_task(function* test_startStop() {
   yield experiment.start();
   Assert.equal(experiment.enabled, true, "Experiment should now be enabled.");
 
-  let shouldStop = yield experiment._shouldStop();
-  Assert.equal(shouldStop, false, "shouldStop should be false.");
+  let result = yield experiment._shouldStop();
+  Assert.equal(result.shouldStop, false, "shouldStop should be false.");
   let maybeStop = yield experiment.maybeStop();
   Assert.equal(maybeStop, false, "Experiment should not have been stopped.");
   Assert.equal(experiment.enabled, true, "Experiment should be enabled.");
 
   defineNow(gPolicy, futureDate(endDate, MS_IN_ONE_DAY));
-  shouldStop = yield experiment._shouldStop();
-  Assert.equal(shouldStop, true, "shouldStop should now be true.");
+  result = yield experiment._shouldStop();
+  Assert.equal(result.shouldStop, true, "shouldStop should now be true.");
   maybeStop = yield experiment.maybeStop();
   Assert.equal(maybeStop, true, "Experiment should have been stopped.");
   Assert.equal(experiment.enabled, false, "Experiment should be disabled.");

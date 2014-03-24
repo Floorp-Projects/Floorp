@@ -1,6 +1,6 @@
 == textarea-valid.html textarea-ref.html
 fuzzy(11,4) == textarea-customerror.html textarea-ref.html
-fails-if(Android) == textarea-disabled.html textarea-ref.html
+fails-if(Android||B2G) == textarea-disabled.html textarea-ref.html
 fuzzy(11,4) fails-if(Android||B2G) == textarea-dyn-disabled.html textarea-ref.html
 fuzzy(11,4) == textarea-dyn-not-disabled.html textarea-ref.html
 == textarea-readonly.html textarea-ref.html
