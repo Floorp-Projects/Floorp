@@ -73,7 +73,7 @@ obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp)
     }
 
     if (pobj != obj) {
-        vp->setBoolean(false);
+        args.rval().setBoolean(false);
         return true;
     }
 
