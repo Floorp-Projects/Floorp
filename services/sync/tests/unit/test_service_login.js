@@ -72,6 +72,7 @@ add_test(function test_login_logout() {
 
   try {
     _("Force the initial state.");
+    ensureLegacyIdentityManager();
     Service.status.service = STATUS_OK;
     do_check_eq(Service.status.service, STATUS_OK);
 
