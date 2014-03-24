@@ -14,6 +14,7 @@
 #include "nsIMIMEInfo.h"
 #include "Navigator.h"
 #include "nsServiceManagerUtils.h"
+#include "nsUnicharUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
