@@ -5,7 +5,7 @@
 #define JPEG_LIB_VERSION 62
 
 /* libjpeg-turbo version */
-#define LIBJPEG_TURBO_VERSION 1.3.0
+#define LIBJPEG_TURBO_VERSION 1.3.1
 
 /* Support in-memory source/destination managers */
 /* #undef MEM_SRCDST_SUPPORTED */
@@ -39,6 +39,9 @@
 
 /* Broken compiler shifts signed values as an unsigned shift. */
 /* #undef RIGHT_SHIFT_IS_UNSIGNED */
+
+/* The size of a `long', as computed by sizeof. */
+#undef SIZEOF_LONG
 
 /* Use accelerated SIMD routines. */
 #define WITH_SIMD 1
