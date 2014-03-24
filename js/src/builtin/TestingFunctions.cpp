@@ -203,6 +203,8 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 GC(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     /*
      * If the first argument is 'compartment', we collect any compartments
      * previously scheduled for GC via schedulegc. If the first argument is an
@@ -210,7 +212,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
      * scheduled for GC). Otherwise, we collect all compartments.
      */
     bool compartment = false;
-    if (argc == 1) {
+    if (args.length() == 1) {
         Value arg = vp[2];
         if (arg.isString()) {
             if (!JS_StringEqualsAscii(cx, arg.toString(), "compartment", &compartment))
@@ -345,7 +347,7 @@ static bool
 IsProxy(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc != 1) {
+    if (args.length() != 1) {
         JS_ReportError(cx, "the function takes exactly one argument");
         return false;
     }
@@ -361,7 +363,7 @@ static bool
 IsLazyFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc != 1) {
+    if (args.length() != 1) {
         JS_ReportError(cx, "The function takes exactly one argument.");
         return false;
     }
@@ -377,7 +379,7 @@ static bool
 IsRelazifiableFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc != 1) {
+    if (args.length() != 1) {
         JS_ReportError(cx, "The function takes exactly one argument.");
         return false;
     }
@@ -423,7 +425,7 @@ GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc != 0) {
+    if (args.length() != 0) {
         RootedObject callee(cx, &args.callee());
         ReportUsageError(cx, callee, "Wrong number of arguments");
         return false;
@@ -467,7 +469,7 @@ ScheduleGC(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc != 1) {
+    if (args.length() != 1) {
         RootedObject callee(cx, &args.callee());
         ReportUsageError(cx, callee, "Wrong number of arguments");
         return false;
@@ -526,7 +528,7 @@ static bool
 VerifyPostBarriers(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc) {
+    if (args.length()) {
         RootedObject callee(cx, &args.callee());
         ReportUsageError(cx, callee, "Too many arguments");
         return false;
@@ -541,7 +543,7 @@ GCState(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc != 0) {
+    if (args.length() != 0) {
         RootedObject callee(cx, &args.callee());
         ReportUsageError(cx, callee, "Too many arguments");
         return false;
@@ -644,7 +646,7 @@ NondeterministicGetWeakMapKeys(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc != 1) {
+    if (args.length() != 1) {
         RootedObject callee(cx, &args.callee());
         ReportUsageError(cx, callee, "Wrong number of arguments");
         return false;
@@ -902,7 +904,7 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
     FILE *dumpFile = nullptr;
 
     unsigned i = 0;
-    if (argc > i) {
+    if (args.length() > i) {
         Value v = args[i];
         if (v.isString()) {
             JSString *str = v.toString();
@@ -916,7 +918,7 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    if (argc > i) {
+    if (args.length() > i) {
         Value v = args[i];
         if (v.isString()) {
             if (!fuzzingSafe) {
@@ -935,7 +937,7 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    if (i != argc) {
+    if (i != args.length()) {
         JS_ReportError(cx, "bad arguments passed to dumpHeapComplete");
         return false;
     }
@@ -966,7 +968,7 @@ static bool
 EnableSPSProfilingAssertions(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc == 0 || !args[0].isBoolean()) {
+    if (!args.get(0).isBoolean()) {
         RootedObject arg(cx, &args.callee());
         ReportUsageError(cx, arg, "Must have one boolean argument");
         return false;
@@ -1006,7 +1008,7 @@ static bool
 DisplayName(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc == 0 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+    if (!args.get(0).isObject() || !args[0].toObject().is<JSFunction>()) {
         RootedObject arg(cx, &args.callee());
         ReportUsageError(cx, arg, "Must have one function argument");
         return false;
@@ -1077,7 +1079,7 @@ SetObjectMetadataCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    bool enabled = argc ? ToBoolean(args[0]) : false;
+    bool enabled = args.length() ? ToBoolean(args[0]) : false;
     SetObjectMetadataCallback(cx, enabled ? ShellObjectMetadataCallback : nullptr);
 
     args.rval().setUndefined();
@@ -1088,7 +1090,7 @@ static bool
 SetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc != 2 || !args[0].isObject() || !args[1].isObject()) {
+    if (args.length() != 2 || !args[0].isObject() || !args[1].isObject()) {
         JS_ReportError(cx, "Both arguments must be objects");
         return false;
     }
@@ -1104,7 +1106,7 @@ static bool
 GetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc != 1 || !args[0].isObject()) {
+    if (args.length() != 1 || !args[0].isObject()) {
         JS_ReportError(cx, "Argument must be an object");
         return false;
     }
