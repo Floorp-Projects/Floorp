@@ -797,6 +797,353 @@ add_task(function* test_updateActiveExperiment() {
   yield removeCacheFile();
 });
 
+// Tests that setting the disable flag for an active experiment
+// stops it.
+
+add_task(function* test_disableActiveExperiment() {
+  const OBSERVER_TOPIC = "experiments-changed";
+  let observerFireCount = 0;
+  let expectedObserverFireCount = 0;
+  let observer = () => ++observerFireCount;
+  Services.obs.addObserver(observer, OBSERVER_TOPIC, false);
+
+  // Dates the following tests are based on.
+
+  let baseDate   = new Date(2014, 5, 1, 12);
+  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
+
+  // The manifest data we test with.
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id:               EXPERIMENT1_ID,
+        xpiURL:           gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash:          EXPERIMENT1_XPI_SHA1,
+        startTime:        dateToSeconds(startDate),
+        endTime:          dateToSeconds(endDate),
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName:          ["XPCShell"],
+        channel:          ["nightly"],
+      },
+    ],
+  };
+
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  // Trigger update, clock set to before any activation.
+
+  let now = baseDate;
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, 0,
+               "Experiments observer should not have been called yet.");
+  let list = yield experiments.getExperiments();
+  Assert.equal(list.length, 0, "Experiment list should be empty.");
+
+  // Trigger update, clock set for the experiment to start.
+
+  now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, ++expectedObserverFireCount,
+               "Experiments observer should have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, true, "Experiment 1 should be active.");
+
+  // Trigger an update with the experiment being disabled.
+
+  now = futureDate(now, 1 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  gManifestObject.experiments[0].disabled = true;
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, ++expectedObserverFireCount,
+               "Experiments observer should have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, false, "Experiment 1 should be disabled.");
+
+  // Check that the experiment stays disabled.
+
+  now = futureDate(now, 1 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  delete gManifestObject.experiments[0].disabled;
+  yield experiments.updateManifest();
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, false, "Experiment 1 should still be disabled.");
+
+  // Cleanup.
+
+  Services.obs.removeObserver(observer, OBSERVER_TOPIC);
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
+
+// Test that:
+// * setting the frozen flag for a not-yet-started experiment keeps
+//   it from starting
+// * after a removing the frozen flag, the experiment can still start
+
+add_task(function* test_freezePendingExperiment() {
+  const OBSERVER_TOPIC = "experiments-changed";
+  let observerFireCount = 0;
+  let expectedObserverFireCount = 0;
+  let observer = () => ++observerFireCount;
+  Services.obs.addObserver(observer, OBSERVER_TOPIC, false);
+
+  // Dates the following tests are based on.
+
+  let baseDate   = new Date(2014, 5, 1, 12);
+  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
+
+  // The manifest data we test with.
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id:               EXPERIMENT1_ID,
+        xpiURL:           gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash:          EXPERIMENT1_XPI_SHA1,
+        startTime:        dateToSeconds(startDate),
+        endTime:          dateToSeconds(endDate),
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName:          ["XPCShell"],
+        channel:          ["nightly"],
+      },
+    ],
+  };
+
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  // Trigger update, clock set to before any activation.
+
+  let now = baseDate;
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, 0,
+               "Experiments observer should not have been called yet.");
+  let list = yield experiments.getExperiments();
+  Assert.equal(list.length, 0, "Experiment list should be empty.");
+
+  // Trigger update, clock set for the experiment to start but frozen.
+
+  now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  gManifestObject.experiments[0].frozen = true;
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, 0,
+               "Experiments observer should not have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 0, "Experiment list should have no entries yet.");
+
+  // Trigger an update with the experiment not being frozen anymore.
+
+  now = futureDate(now, 1 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  delete gManifestObject.experiments[0].frozen;
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, ++expectedObserverFireCount,
+               "Experiments observer should have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, true, "Experiment 1 should be active now.");
+
+  // Cleanup.
+
+  Services.obs.removeObserver(observer, OBSERVER_TOPIC);
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
+
+// Test that setting the frozen flag for an active experiment doesn't
+// stop it.
+
+add_task(function* test_freezeActiveExperiment() {
+  const OBSERVER_TOPIC = "experiments-changed";
+  let observerFireCount = 0;
+  let expectedObserverFireCount = 0;
+  let observer = () => ++observerFireCount;
+  Services.obs.addObserver(observer, OBSERVER_TOPIC, false);
+
+  // Dates the following tests are based on.
+
+  let baseDate   = new Date(2014, 5, 1, 12);
+  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
+
+  // The manifest data we test with.
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id:               EXPERIMENT1_ID,
+        xpiURL:           gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash:          EXPERIMENT1_XPI_SHA1,
+        startTime:        dateToSeconds(startDate),
+        endTime:          dateToSeconds(endDate),
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName:          ["XPCShell"],
+        channel:          ["nightly"],
+      },
+    ],
+  };
+
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  // Trigger update, clock set to before any activation.
+
+  let now = baseDate;
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, 0,
+               "Experiments observer should not have been called yet.");
+  let list = yield experiments.getExperiments();
+  Assert.equal(list.length, 0, "Experiment list should be empty.");
+
+  // Trigger update, clock set for the experiment to start.
+
+  now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, ++expectedObserverFireCount,
+               "Experiments observer should have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, true, "Experiment 1 should be active.");
+  Assert.equal(list[0].name, EXPERIMENT1_NAME, "Experiments name should match.");
+
+  // Trigger an update with the experiment being disabled.
+
+  now = futureDate(now, 1 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  gManifestObject.experiments[0].frozen = true;
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, expectedObserverFireCount,
+               "Experiments observer should have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, true, "Experiment 1 should still be active.");
+
+  // Cleanup.
+
+  Services.obs.removeObserver(observer, OBSERVER_TOPIC);
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
+
+// Test that removing an active experiment from the manifest doesn't
+// stop it.
+
+add_task(function* test_removeActiveExperiment() {
+  const OBSERVER_TOPIC = "experiments-changed";
+  let observerFireCount = 0;
+  let expectedObserverFireCount = 0;
+  let observer = () => ++observerFireCount;
+  Services.obs.addObserver(observer, OBSERVER_TOPIC, false);
+
+  // Dates the following tests are based on.
+
+  let baseDate   = new Date(2014, 5, 1, 12);
+  let startDate  = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let endDate    = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
+  let startDate2 = futureDate(baseDate, 20000 * MS_IN_ONE_DAY);
+  let endDate2   = futureDate(baseDate, 30000 * MS_IN_ONE_DAY);
+
+  // The manifest data we test with.
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id:               EXPERIMENT1_ID,
+        xpiURL:           gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash:          EXPERIMENT1_XPI_SHA1,
+        startTime:        dateToSeconds(startDate),
+        endTime:          dateToSeconds(endDate),
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName:          ["XPCShell"],
+        channel:          ["nightly"],
+      },
+      {
+        id:               EXPERIMENT2_ID,
+        xpiURL:           gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash:          EXPERIMENT2_XPI_SHA1,
+        startTime:        dateToSeconds(startDate2),
+        endTime:          dateToSeconds(endDate2),
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName:          ["XPCShell"],
+        channel:          ["nightly"],
+      },
+    ],
+  };
+
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  // Trigger update, clock set to before any activation.
+
+  let now = baseDate;
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, 0,
+               "Experiments observer should not have been called yet.");
+  let list = yield experiments.getExperiments();
+  Assert.equal(list.length, 0, "Experiment list should be empty.");
+
+  // Trigger update, clock set for the experiment to start.
+
+  now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, ++expectedObserverFireCount,
+               "Experiments observer should have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, true, "Experiment 1 should be active.");
+  Assert.equal(list[0].name, EXPERIMENT1_NAME, "Experiments name should match.");
+
+  // Trigger an update with experiment 1 missing from the manifest
+
+  now = futureDate(now, 1 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  gManifestObject.experiments[0].frozen = true;
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, expectedObserverFireCount,
+               "Experiments observer should have been called.");
+
+  list = yield experiments.getExperiments();
+  Assert.equal(list.length, 1, "Experiment list should have 1 entry now.");
+  Assert.equal(list[0].id, EXPERIMENT1_ID, "Experiment 1 should be the sole entry.");
+  Assert.equal(list[0].active, true, "Experiment 1 should still be active.");
+
+  // Cleanup.
+
+  Services.obs.removeObserver(observer, OBSERVER_TOPIC);
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
+
 add_task(function* shutdown() {
   yield gReporter._shutdown();
   yield removeCacheFile();
