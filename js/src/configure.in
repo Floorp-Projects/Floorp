@@ -3259,17 +3259,6 @@ if test -n "$JSGC_GENERATIONAL"; then
 fi
 
 dnl ========================================================
-dnl = Perform moving GC stack rooting analysis
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(root-analysis,
-[  --enable-root-analysis  Enable moving GC stack root analysis],
-    JSGC_ROOT_ANALYSIS=1,
-    JSGC_ROOT_ANALYSIS= )
-if test -n "$JSGC_ROOT_ANALYSIS"; then
-    AC_DEFINE(JSGC_ROOT_ANALYSIS)
-fi
-
-dnl ========================================================
 dnl = Use exact stack rooting for GC
 dnl ========================================================
 dnl Use exact rooting by default in all shell builds. The top-level mozilla

@@ -393,12 +393,6 @@ class ExclusiveContext : public ThreadSafeContext
     void addPendingOverRecursed();
 };
 
-inline void
-MaybeCheckStackRoots(ExclusiveContext *cx)
-{
-    MaybeCheckStackRoots(cx->maybeJSContext());
-}
-
 } /* namespace js */
 
 struct JSContext : public js::ExclusiveContext,
@@ -934,7 +928,7 @@ class AutoArrayRooter : private AutoGCRooter
   public:
     AutoArrayRooter(JSContext *cx, size_t len, Value *vec
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, len), array(vec), skip(cx, array, len)
+      : AutoGCRooter(cx, len), array(vec)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(tag_ >= 0);
@@ -980,7 +974,6 @@ class AutoArrayRooter : private AutoGCRooter
 
   private:
     Value *array;
-    js::SkipRoot skip;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

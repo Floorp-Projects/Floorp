@@ -245,10 +245,7 @@ IsNullOrUndefined(MIRType type)
 
 // Make sure registers are not modified between an instruction and
 // its OsiPoint.
-//
-// Skip this check in rooting analysis builds, which poison unrooted
-// pointers on the stack.
-#  if defined(JS_ION) && !defined(JSGC_ROOT_ANALYSIS)
+#  if defined(JS_ION)
 #    define CHECK_OSIPOINT_REGISTERS 1
 #  endif
 #endif
