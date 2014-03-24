@@ -204,6 +204,19 @@ public:
 
   bool GetPreventDefault() const;
 
+  /**
+   * @param aCalledByDefaultHandler     Should be true when this is called by
+   *                                    C++ or Chrome.  Otherwise, e.g., called
+   *                                    by a call of Event.preventDefault() in
+   *                                    content script, false.
+   */
+  void PreventDefaultInternal(bool aCalledByDefaultHandler);
+
+  bool IsMainThreadEvent()
+  {
+    return mIsMainThreadEvent;
+  }
+
 protected:
 
   // Internal helper functions
@@ -215,14 +228,6 @@ protected:
    * in chrome's thread.  Otherwise, false.
    */
   bool IsChrome(JSContext* aCx) const;
-
-  /**
-   * @param aCalledByDefaultHandler     Should be true when this is called by
-   *                                    C++ or Chrome.  Otherwise, e.g., called
-   *                                    by a call of Event.preventDefault() in
-   *                                    content script, false.
-   */
-  void PreventDefaultInternal(bool aCalledByDefaultHandler);
 
   mozilla::WidgetEvent*       mEvent;
   nsRefPtr<nsPresContext>     mPresContext;

@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=985988
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 985988</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 985988 **/
+
+  function handler() {
+    return false;
+  }
+
+  function reversedHandler() {
+    return true;
+  }
+
+  function test() {
+    var t = document.getElementById("testtarget");
+
+    t.onclick = handler;
+    var e = new MouseEvent("click", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(e.defaultPrevented, "Should have prevented default handling.");
+
+    t.onclick = reversedHandler;
+    e = new MouseEvent("click", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(!e.defaultPrevented, "Shouldn't have prevented default handling.");
+
+    // mouseover has reversed meaning for handler return value.
+    t.onmouseover = reversedHandler;
+    e = new MouseEvent("mouseover", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(e.defaultPrevented, "Should have prevented default handling.");
+
+    t.onmouseover = handler;
+    e = new MouseEvent("mouseover", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(!e.defaultPrevented, "Shouldn't have prevented default handling.");
+
+    // error has reversed meaning for handler return value.
+    t.onerror = reversedHandler;
+    e = new ErrorEvent("error", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(e.defaultPrevented, "Should have prevented default handling.");
+
+    t.onerror = handler;
+    e = new MouseEvent("error", {cancelable: true});
+    t.dispatchEvent(e);
+    ok(!e.defaultPrevented, "Shouldn't have prevented default handling.");
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(test);
+
+  </script>
+</head>
+<body onload="test()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=985988">Mozilla Bug 985988</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<a href="#" id="testtarget">test target</a>
+<pre id="test">
+</pre>
+</body>
+</html>

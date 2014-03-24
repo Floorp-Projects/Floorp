@@ -130,6 +130,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/settings',
     '/dom/src/storage',
+    '/dom/workers',
     '/js/xpconnect/wrappers',
     '/layout/generic',
     '/layout/xul',
