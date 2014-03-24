@@ -86,14 +86,12 @@ relativesrcdir toolkit/locales:
 
 # overrides for dom l10n, also for en-US
 relativesrcdir dom/locales:
-  locale/@AB_CD@/browser/overrides/charsetTitles.properties    (%chrome/charsetTitles.properties)
   locale/@AB_CD@/browser/overrides/global.dtd                  (%chrome/global.dtd)
   locale/@AB_CD@/browser/overrides/AccessFu.properties         (%chrome/accessibility/AccessFu.properties)
   locale/@AB_CD@/browser/overrides/dom/dom.properties          (%chrome/dom/dom.properties)
 #about:plugins
   locale/@AB_CD@/browser/overrides/plugins.properties          (%chrome/plugins.properties)
 
-% override chrome://global/locale/charsetTitles.properties chrome://browser/locale/overrides/charsetTitles.properties
 % override chrome://global/locale/global.dtd chrome://browser/locale/overrides/global.dtd
 % override chrome://global/locale/AccessFu.properties chrome://browser/locale/overrides/AccessFu.properties
 % override chrome://global/locale/dom/dom.properties chrome://browser/locale/overrides/dom/dom.properties
