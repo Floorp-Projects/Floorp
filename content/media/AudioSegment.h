@@ -9,11 +9,22 @@
 #include "MediaSegment.h"
 #include "AudioSampleFormat.h"
 #include "SharedBuffer.h"
+#include "WebAudioUtils.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/TimeStamp.h"
 #endif
 
 namespace mozilla {
+
+template<typename T>
+class SharedChannelArrayBuffer : public ThreadSharedObject {
+public:
+  SharedChannelArrayBuffer(nsTArray<nsTArray<T>>* aBuffers)
+  {
+    mBuffers.SwapElements(*aBuffers);
+  }
+  nsTArray<nsTArray<T>> mBuffers;
+};
 
 class AudioStream;
 
@@ -111,6 +122,7 @@ struct AudioChunk {
 #endif
 };
 
+
 /**
  * A list of audio samples consisting of a sequence of slices of SharedBuffers.
  * The audio rate is determined by the track, not stored in this class.
@@ -120,6 +132,43 @@ public:
   typedef mozilla::AudioSampleFormat SampleFormat;
 
   AudioSegment() : MediaSegmentBase<AudioSegment, AudioChunk>(AUDIO) {}
+
+  // Resample the whole segment in place.
+  template<typename T>
+  void Resample(SpeexResamplerState* aResampler, uint32_t aInRate, uint32_t aOutRate)
+  {
+    mDuration = 0;
+
+    for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
+      nsAutoTArray<nsTArray<T>, GUESS_AUDIO_CHANNELS> output;
+      nsAutoTArray<const T*, GUESS_AUDIO_CHANNELS> bufferPtrs;
+      AudioChunk& c = *ci;
+      uint32_t channels = c.mChannelData.Length();
+      output.SetLength(channels);
+      bufferPtrs.SetLength(channels);
+      uint32_t inFrames = c.mDuration,
+      outFrames = c.mDuration * aOutRate / aInRate;
+      for (uint32_t i = 0; i < channels; i++) {
+        const T* in = static_cast<const T*>(c.mChannelData[i]);
+        T* out = output[i].AppendElements(outFrames);
+
+        dom::WebAudioUtils::SpeexResamplerProcess(aResampler, i,
+                                                  in, &inFrames,
+                                                  out, &outFrames);
+
+        bufferPtrs[i] = out;
+        output[i].SetLength(outFrames);
+      }
+      c.mBuffer = new mozilla::SharedChannelArrayBuffer<T>(&output);
+      for (uint32_t i = 0; i < channels; i++) {
+        c.mChannelData[i] = bufferPtrs[i];
+      }
+      c.mDuration = outFrames;
+      mDuration += c.mDuration;
+    }
+  }
+
+  void ResampleChunks(SpeexResamplerState* aResampler);
 
   void AppendFrames(already_AddRefed<ThreadSharedObject> aBuffer,
                     const nsTArray<const float*>& aChannelData,
@@ -167,6 +216,12 @@ public:
   }
   void ApplyVolume(float aVolume);
   void WriteTo(uint64_t aID, AudioStream* aOutput);
+
+  int ChannelCount() {
+    NS_WARN_IF_FALSE(!mChunks.IsEmpty(),
+        "Cannot query channel count on a AudioSegment with no chunks.");
+    return mChunks.IsEmpty() ? 0 : mChunks[0].mChannelData.Length();
+  }
 
   static Type StaticType() { return AUDIO; }
 };
