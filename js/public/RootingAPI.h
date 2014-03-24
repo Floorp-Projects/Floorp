@@ -152,11 +152,6 @@ template <typename T> class PersistentRooted;
 /* This is exposing internal state of the GC for inlining purposes. */
 JS_FRIEND_API(bool) isGCEnabled();
 
-#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-extern void
-CheckStackRoots(JSContext *cx);
-#endif
-
 /*
  * JS::NullPtr acts like a nullptr pointer in contexts that require a Handle.
  *
@@ -819,15 +814,6 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     Rooted<void*> **stack, *prev;
 #endif
 
-#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-    /* Has the rooting analysis ever scanned this Rooted's stack location? */
-    friend void JS::CheckStackRoots(JSContext*);
-#endif
-
-#ifdef JSGC_ROOT_ANALYSIS
-    bool scanned;
-#endif
-
     /*
      * |ptr| must be the last field in Rooted because the analysis treats all
      * Rooted as Rooted<void*> during the analysis. See bug 829372.
@@ -861,81 +847,6 @@ class RootedBase<JSObject*>
     JS::Handle<U*> as() const;
 };
 
-/*
- * Mark a stack location as a root for the rooting analysis, without actually
- * rooting it in release builds. This should only be used for stack locations
- * of GC things that cannot be relocated by a garbage collection, and that
- * are definitely reachable via another path.
- */
-class SkipRoot
-{
-#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-
-    SkipRoot **stack, *prev;
-    const uint8_t *start;
-    const uint8_t *end;
-
-    template <typename CX, typename T>
-    void init(CX *cx, const T *ptr, size_t count) {
-        SkipRoot **head = &cx->skipGCRooters;
-        this->stack = head;
-        this->prev = *stack;
-        *stack = this;
-        this->start = (const uint8_t *) ptr;
-        this->end = this->start + (sizeof(T) * count);
-    }
-
-  public:
-    ~SkipRoot() {
-        MOZ_ASSERT(*stack == this);
-        *stack = prev;
-    }
-
-    SkipRoot *previous() { return prev; }
-
-    bool contains(const uint8_t *v, size_t len) {
-        return v >= start && v + len <= end;
-    }
-
-#else /* JS_DEBUG && JSGC_ROOT_ANALYSIS */
-
-    template <typename T>
-    void init(js::ContextFriendFields *cx, const T *ptr, size_t count) {}
-
-  public:
-    ~SkipRoot() {
-        // An empty destructor is needed to avoid warnings from clang about
-        // unused local variables of this type.
-    }
-
-#endif /* JS_DEBUG && JSGC_ROOT_ANALYSIS */
-
-    template <typename T>
-    SkipRoot(JSContext *cx, const T *ptr, size_t count = 1
-             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        init(ContextFriendFields::get(cx), ptr, count);
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename T>
-    SkipRoot(ContextFriendFields *cx, const T *ptr, size_t count = 1
-             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        init(cx, ptr, count);
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename T>
-    SkipRoot(PerThreadData *pt, const T *ptr, size_t count = 1
-             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    {
-        init(PerThreadDataFriendFields::get(pt), ptr, count);
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 /*
  * RootedGeneric<T> allows a class to instantiate its own Rooted type by
@@ -958,15 +869,14 @@ class JS_PUBLIC_API(RootedGeneric)
 {
   public:
     JS::Rooted<GCType> rooter;
-    SkipRoot skip;
 
     RootedGeneric(js::ContextFriendFields *cx)
-        : rooter(cx), skip(cx, rooter.address())
+        : rooter(cx)
     {
     }
 
     RootedGeneric(js::ContextFriendFields *cx, const GCType &initial)
-        : rooter(cx, initial), skip(cx, rooter.address())
+        : rooter(cx, initial)
     {
     }
 
@@ -1286,17 +1196,6 @@ class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T> 
 } /* namespace JS */
 
 namespace js {
-
-/*
- * Hook for dynamic root analysis. Checks the native stack and poisons
- * references to GC things which have not been rooted.
- */
-inline void MaybeCheckStackRoots(JSContext *cx)
-{
-#if defined(JS_DEBUG) && defined(JS_GC_ZEAL) && defined(JSGC_ROOT_ANALYSIS) && !defined(JS_THREADSAFE)
-    JS::CheckStackRoots(cx);
-#endif
-}
 
 /* Base class for automatic read-only object rooting during compilation. */
 class CompilerRootNode

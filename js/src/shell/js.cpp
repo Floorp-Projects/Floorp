@@ -2720,8 +2720,6 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     if (!src)
         return false;
 
-    SkipRoot skip(cx, &src);
-
     bool lazy = false;
     if (srclen == 4) {
         if (src[0] == 'l' && src[1] == 'a' && src[2] == 'z' && src[3] == 'y') {
