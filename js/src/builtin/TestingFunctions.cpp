@@ -39,6 +39,7 @@ static bool fuzzingSafe = false;
 static bool
 GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject info(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     if (!info)
         return false;
@@ -196,7 +197,7 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "binary-data", value))
         return false;
 
-    *vp = ObjectValue(*info);
+    args.rval().setObject(*info);
     return true;
 }
 
@@ -213,7 +214,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
      */
     bool compartment = false;
     if (args.length() == 1) {
-        Value arg = vp[2];
+        Value arg = args[0];
         if (arg.isString()) {
             if (!JS_StringEqualsAscii(cx, arg.toString(), "compartment", &compartment))
                 return false;
@@ -241,7 +242,7 @@ GC(JSContext *cx, unsigned argc, jsval *vp)
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return false;
-    *vp = STRING_TO_JSVAL(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -412,7 +413,7 @@ InternalConst(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     if (JS_FlatStringEqualsAscii(flat, "INCREMENTAL_MARK_STACK_BASE_CAPACITY")) {
-        vp[0] = UINT_TO_JSVAL(js::INCREMENTAL_MARK_STACK_BASE_CAPACITY);
+        args.rval().setNumber(uint32_t(js::INCREMENTAL_MARK_STACK_BASE_CAPACITY));
     } else {
         JS_ReportError(cx, "unknown const name");
         return false;
@@ -433,7 +434,7 @@ GCPreserveCode(JSContext *cx, unsigned argc, jsval *vp)
 
     cx->runtime()->alwaysPreserveCode = true;
 
-    *vp = JSVAL_VOID;
+    args.rval().setUndefined();
     return true;
 }
 
@@ -534,7 +535,7 @@ VerifyPostBarriers(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
     gc::VerifyBarriers(cx->runtime(), gc::PostBarrierVerifier);
-    *vp = JSVAL_VOID;
+    args.rval().setUndefined();
     return true;
 }
 
@@ -563,7 +564,7 @@ GCState(JSContext *cx, unsigned argc, jsval *vp)
     JSString *str = JS_NewStringCopyZ(cx, state);
     if (!str)
         return false;
-    *vp = StringValue(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -830,7 +831,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    *vp = JS_NumberValue((double) counter);
+    args.rval().setNumber(double(counter));
     return true;
 }
 
@@ -876,6 +877,7 @@ static const JSClass FinalizeCounterClass = {
 static bool
 MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject scope(cx, JS::CurrentGlobalOrNull(cx));
     if (!scope)
         return false;
@@ -884,14 +886,15 @@ MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj)
         return false;
 
-    *vp = OBJECT_TO_JSVAL(obj);
+    args.rval().setObject(*obj);
     return true;
 }
 
 static bool
 FinalizeCount(JSContext *cx, unsigned argc, jsval *vp)
 {
-    *vp = INT_TO_JSVAL(finalizeCount);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setInt32(finalizeCount);
     return true;
 }
 
@@ -1016,7 +1019,7 @@ DisplayName(JSContext *cx, unsigned argc, jsval *vp)
 
     JSFunction *fun = &args[0].toObject().as<JSFunction>();
     JSString *str = fun->displayAtom();
-    vp->setString(str == nullptr ? cx->runtime()->emptyString : str);
+    args.rval().setString(str ? str : cx->runtime()->emptyString);
     return true;
 }
 
@@ -1185,6 +1188,7 @@ SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 GetJitCompilerOptions(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject info(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     if (!info)
         return false;
@@ -1201,7 +1205,7 @@ GetJitCompilerOptions(JSContext *cx, unsigned argc, jsval *vp)
     JIT_COMPILER_OPTIONS(JIT_COMPILER_MATCH);
 #undef JIT_COMPILER_MATCH
 
-    *vp = ObjectValue(*info);
+    args.rval().setObject(*info);
 
     return true;
 }
