@@ -36,14 +36,12 @@ function run_test() {
   checkThrows("ArrayBuffer.prototype.slice.call(ab, 0);", sb);
   checkThrows("DataView.prototype.getInt8.call(dv, 0);", sb);
 
-  /* Things we explicitly allow in ExposedPropertiesOnly::allowNativeCall. */
-
-  /* Date */
-  do_check_eq(Cu.evalInSandbox("Date.prototype.getYear.call(d)", sb), sb.d.getYear());
-  do_check_eq(Cu.evalInSandbox("Date.prototype.valueOf.call(d)", sb), sb.d.valueOf());
-  do_check_eq(Cu.evalInSandbox("d.valueOf()", sb), sb.d.valueOf());
-  do_check_eq(Cu.evalInSandbox("Date.prototype.toString.call(d)", sb), sb.d.toString());
-  do_check_eq(Cu.evalInSandbox("d.toString()", sb), sb.d.toString());
+  /* Now that Date is on Xrays, these should all throw. */
+  checkThrows("Date.prototype.getYear.call(d)", sb);
+  checkThrows("Date.prototype.valueOf.call(d)", sb);
+  checkThrows("d.valueOf()", sb);
+  checkThrows("Date.prototype.toString.call(d)", sb);
+  checkThrows("d.toString()", sb);
 
   /* Typed arrays. */
   function testForTypedArray(t) {

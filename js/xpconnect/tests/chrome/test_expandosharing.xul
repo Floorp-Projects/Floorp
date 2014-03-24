@@ -55,14 +55,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
     window.gWinC = document.getElementById('frameC').contentWindow;
 
     // Test expando sharing with a JSM for different types of Xrays.
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetWN), is);
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetNodeList), is);
-    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetXHR), is);
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetWN));
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetDOM));
+    testJSM(XPCNativeWrapper(gWinC.wrappedJSObject.targetJS));
 
     // Make sure sandboxes never share expandos with anyone else.
     testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetWN));
-    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetNodeList));
-    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetXHR));
+    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetDOM));
+    testSandbox(XPCNativeWrapper(gWinB.wrappedJSObject.targetJS));
 
     // Test Content Xrays.
     testContentXrays();
@@ -71,11 +71,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758415
   }
 
   // Make sure that expandos are shared between us and a JSM.
-  function testJSM(target, is_op) {
+  function testJSM(target) {
     target.numProp = 42;
     target.strProp = "foo";
     target.objProp = { bar: "baz" };
-    checkFromJSM(target, is_op);
+    checkFromJSM(target, is);
   }
 
   function testSandbox(target) {
