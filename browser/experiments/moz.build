@@ -9,7 +9,7 @@ EXTRA_COMPONENTS += [
 
 JS_MODULES_PATH = 'modules/experiments'
 
-EXTRA_JS_MODULES += [
+EXTRA_PP_JS_MODULES += [
   'Experiments.jsm',
 ]
 
