@@ -486,6 +486,20 @@ test_drain(void)
   END_TEST
 }
 
+int is_windows_7()
+{
+#ifdef __WIN32__
+#include <windows.h>
+    DWORD version = GetVersion();
+    DWORD major = (DWORD) (LOBYTE(LOWORD(version)));
+    DWORD minor = (DWORD) (HIBYTE(LOWORD(version)));
+
+    return (major == 6) && (minor == 1);
+#else
+  return-0;
+#endif
+}
+
 int
 main(int argc, char * argv[])
 {
@@ -496,16 +510,24 @@ main(int argc, char * argv[])
   test_init_destroy_multiple_contexts_and_streams();
   test_basic_stream_operations();
   test_stream_position();
-  delay_callback = 0;
-  test_init_start_stop_destroy_multiple_streams(0, 0);
-  test_init_start_stop_destroy_multiple_streams(1, 0);
-  test_init_start_stop_destroy_multiple_streams(0, 150);
-  test_init_start_stop_destroy_multiple_streams(1, 150);
-  delay_callback = 1;
-  test_init_start_stop_destroy_multiple_streams(0, 0);
-  test_init_start_stop_destroy_multiple_streams(1, 0);
-  test_init_start_stop_destroy_multiple_streams(0, 150);
-  test_init_start_stop_destroy_multiple_streams(1, 150);
+
+  /* Sometimes, when using WASAPI on windows 7 (vista and 8 are okay), and
+   * calling Activate a lot on an AudioClient, 0x800700b7 is returned. This is
+   * the HRESULT value for "Cannot create a file when that file already exists",
+   * and is not documented as a possible return value for this call. Hence, we
+   * try to limit the number of streams we create in this test. */
+  if (!is_windows_7()) {
+    delay_callback = 0;
+    test_init_start_stop_destroy_multiple_streams(0, 0);
+    test_init_start_stop_destroy_multiple_streams(1, 0);
+    test_init_start_stop_destroy_multiple_streams(0, 150);
+    test_init_start_stop_destroy_multiple_streams(1, 150);
+    delay_callback = 1;
+    test_init_start_stop_destroy_multiple_streams(0, 0);
+    test_init_start_stop_destroy_multiple_streams(1, 0);
+    test_init_start_stop_destroy_multiple_streams(0, 150);
+    test_init_start_stop_destroy_multiple_streams(1, 150);
+  }
   delay_callback = 0;
   test_drain();
 /*
