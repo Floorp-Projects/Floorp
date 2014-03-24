@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <assert.h>
+#include <string.h>
 
 #include "cubeb/cubeb.h"
 #include "common.h"
@@ -97,6 +98,20 @@ void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
 {
 }
 
+/* Our android backends don't support float, only int16. */
+int supports_float32(const char* backend_id)
+{
+  return (strcmp(backend_id, "opensl") != 0 &&
+          strcmp(backend_id, "audiotrack") != 0);
+}
+
+/* Some backends don't have code to deal with more than mono or stereo. */
+int supports_channel_count(const char* backend_id, int nchannels)
+{
+  return nchannels <= 2 ||
+    (strcmp(backend_id, "opensl") != 0 && strcmp(backend_id, "audiotrack") != 0);
+}
+
 int run_test(int num_channels, int sampling_rate, int is_float)
 {
   int ret = CUBEB_OK;
@@ -104,10 +119,19 @@ int run_test(int num_channels, int sampling_rate, int is_float)
   cubeb *ctx = NULL;
   synth_state* synth = NULL;
   cubeb_stream *stream = NULL;
+  const char * backend_id = NULL;
 
   ret = cubeb_init(&ctx, "Cubeb audio test");
   if (ret != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb library\n");
+    goto cleanup;
+  }
+
+  backend_id = cubeb_get_backend_id(ctx);
+
+  if ((is_float && !supports_float32(backend_id)) ||
+      !supports_channel_count(backend_id, num_channels)) {
+    /* don't treat this as a test failure. */
     goto cleanup;
   }
 
@@ -125,7 +149,7 @@ int run_test(int num_channels, int sampling_rate, int is_float)
   }
 
   ret = cubeb_stream_init(ctx, &stream, "test tone", params,
-                          250, is_float ? data_cb_float : data_cb_short, state_cb, synth);
+                          100, is_float ? data_cb_float : data_cb_short, state_cb, synth);
   if (ret != CUBEB_OK) {
     fprintf(stderr, "Error initializing cubeb stream: %d\n", ret);
     goto cleanup;
@@ -148,23 +172,24 @@ int main(int argc, char *argv[])
   int channel_values[] = {
     1,
     2,
+    3,
     4,
-    5,
     6,
   };
 
   int freq_values[] = {
+    16000,
     24000,
     44100,
     48000,
   };
 
-  for(int j=0;j < NELEMS(channel_values);++j) {
-    for(int i=0;i < NELEMS(freq_values);++i) {
+  for(int j = 0; j < NELEMS(channel_values); ++j) {
+    for(int i = 0; i < NELEMS(freq_values); ++i) {
       assert(channel_values[j] < MAX_NUM_CHANNELS);
       fprintf(stderr, "--------------------------\n");
-      run_test(channel_values[j], freq_values[i], 0);
-      run_test(channel_values[j], freq_values[i], 1);
+      assert(run_test(channel_values[j], freq_values[i], 0) == CUBEB_OK);
+      assert(run_test(channel_values[j], freq_values[i], 1) == CUBEB_OK);
     }
   }
 
