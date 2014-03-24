@@ -5478,7 +5478,7 @@ DebuggerObject_unwrap(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "unwrap", args, dbg, referent);
     JSObject *unwrapped = UnwrapOneChecked(referent);
     if (!unwrapped) {
-        vp->setNull();
+        args.rval().setNull();
         return true;
     }
 

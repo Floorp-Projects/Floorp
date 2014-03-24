@@ -1282,7 +1282,7 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     if (constructing ? !InvokeConstructor(cx, invokeArgs) : !Invoke(cx, invokeArgs))
         return false;
 
-    *vp = invokeArgs.rval();
+    args.rval().set(invokeArgs.rval());
     return true;
 }
 
@@ -1291,7 +1291,7 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JSFunction *fun;
-    if (!IsFunctionObject(vp[1], &fun)) {
+    if (!IsFunctionObject(args.thisv(), &fun)) {
         args.rval().setBoolean(false);
         return true;
     }
