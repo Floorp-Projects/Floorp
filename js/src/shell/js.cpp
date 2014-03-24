@@ -2533,7 +2533,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    if (argc > 1) {
+    if (args.length() > 1) {
         if (!JS_ValueToObject(cx, args[1], &parent))
             return false;
     } else {
@@ -2550,12 +2550,12 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 GetPDA(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject vobj(cx);
     bool ok;
     JSPropertyDescArray pda;
     JSPropertyDesc *pd;
 
-    CallArgs args = CallArgsFromVp(argc, vp);
     if (!JS_ValueToObject(cx, args.get(0), &vobj))
         return false;
     if (!vobj) {
@@ -2612,7 +2612,7 @@ GetSLX(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script(cx);
 
-    script = ValueToScript(cx, argc == 0 ? UndefinedValue() : vp[2]);
+    script = ValueToScript(cx, args.get(0));
     if (!script)
         return false;
     args.rval().setInt32(js_GetScriptLineExtent(script));
@@ -2898,7 +2898,7 @@ static bool
 EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc < 1 || !args[0].isString()) {
+    if (!args.get(0).isString()) {
         JS_ReportError(cx, "Invalid arguments to evalInWorker");
         return false;
     }
@@ -3055,7 +3055,7 @@ Resolver(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     RootedObject parent(cx, JS_GetParent(referent));
-    JSObject *result = (argc > 1
+    JSObject *result = (args.length() > 1
                         ? JS_NewObjectWithGivenProto
                         : JS_NewObject)(cx, &resolver_class, proto, parent);
     if (!result)
@@ -3374,7 +3374,7 @@ static bool
 Elapsed(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc == 0) {
+    if (args.length() == 0) {
         double d = 0.0;
         JSShellContextData *data = GetContextData(cx);
         if (data)
@@ -3390,7 +3390,7 @@ static bool
 Parent(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc != 1) {
+    if (args.length() != 1) {
         JS_ReportError(cx, "Wrong number of arguments");
         return false;
     }
@@ -4122,7 +4122,7 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Value obj = UndefinedValue(), proto = UndefinedValue();
-    if (argc == 2) {
+    if (args.length() == 2) {
         obj = args[0];
         proto = args[1];
     }
@@ -4247,7 +4247,7 @@ GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc != 1 || !args[0].isString()) {
+    if (args.length() != 1 || !args[0].isString()) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
                              "getSelfHostedValue");
         return false;
@@ -4859,7 +4859,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
     fprintf(gOutFile, "%s\n", JS_GetImplementationVersion());
 
     RootedObject obj(cx);
-    if (argc == 0) {
+    if (args.length() == 0) {
         RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
         AutoIdArray ida(cx, JS_Enumerate(cx, global));
         if (!ida)
@@ -4879,7 +4879,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
         }
     } else {
-        for (unsigned i = 0; i < argc; i++) {
+        for (unsigned i = 0; i < args.length(); i++) {
             if (args[i].isPrimitive()) {
                 JS_ReportError(cx, "primitive arg");
                 return false;
@@ -5227,7 +5227,7 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
     if (!obj)
         return false;
 
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(args.length() == 1);
 
     if (JS_GetClass(obj) != &dom_class) {
         args.rval().set(UndefinedValue());

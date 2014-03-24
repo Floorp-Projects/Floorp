@@ -2116,7 +2116,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     /* Check that the arguments, if any, are cross-compartment wrappers. */
-    for (unsigned i = 0; i < argc; i++) {
+    for (unsigned i = 0; i < args.length(); i++) {
         const Value &arg = args[i];
         if (!arg.isObject())
             return ReportObjectRequired(cx);
@@ -2159,7 +2159,7 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     /* Now the JSObject owns the js::Debugger instance, so we needn't delete it. */
 
     /* Add the initial debuggees, if any. */
-    for (unsigned i = 0; i < argc; i++) {
+    for (unsigned i = 0; i < args.length(); i++) {
         Rooted<GlobalObject*>
             debuggee(cx, &args[i].toObject().as<ProxyObject>().private_().toObject().global());
         if (!dbg->addDebuggeeGlobal(cx, debuggee))
@@ -2713,7 +2713,7 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     if (!query.init())
         return false;
 
-    if (argc >= 1) {
+    if (args.length() >= 1) {
         RootedObject queryObject(cx, NonNullObject(cx, args[0]));
         if (!queryObject || !query.parseQuery(queryObject))
             return false;
@@ -3617,7 +3617,7 @@ DebuggerScript_getBreakpoints(JSContext *cx, unsigned argc, Value *vp)
     Debugger *dbg = Debugger::fromChildJSObject(obj);
 
     jsbytecode *pc;
-    if (argc > 0) {
+    if (args.length() > 0) {
         size_t offset;
         if (!ScriptOffset(cx, script, args[0], &offset))
             return false;
@@ -5321,7 +5321,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
     Value *callArgv = nullptr;
     AutoValueVector argv(cx);
     if (mode == ApplyMode) {
-        if (argc >= 2 && !args[1].isNullOrUndefined()) {
+        if (args.length() >= 2 && !args[1].isNullOrUndefined()) {
             if (!args[1].isObject()) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_APPLY_ARGS,
                                      js_apply_str);
@@ -5336,7 +5336,7 @@ ApplyOrCall(JSContext *cx, unsigned argc, Value *vp, ApplyOrCallMode mode)
             callArgv = argv.begin();
         }
     } else {
-        callArgc = argc > 0 ? unsigned(Min(argc - 1, ARGS_LENGTH_MAX)) : 0;
+        callArgc = args.length() > 0 ? unsigned(Min(args.length() - 1, ARGS_LENGTH_MAX)) : 0;
         callArgv = args.array() + 1;
     }
 

@@ -51,7 +51,7 @@ bool
 Library::Name(JSContext* cx, unsigned argc, jsval *vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  if (argc != 1) {
+  if (args.length() != 1) {
     JS_ReportError(cx, "libraryName takes one argument");
     return false;
   }
@@ -233,7 +233,7 @@ Library::Close(JSContext* cx, unsigned argc, jsval* vp)
     return false;
   }
 
-  if (argc != 0) {
+  if (args.length() != 0) {
     JS_ReportError(cx, "close doesn't take any arguments");
     return false;
   }
@@ -274,7 +274,7 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
   //    This data will be both readable and writable via the usual CData
   //    accessors. If 'type' is a PointerType to a FunctionType, the result will
   //    be a function pointer, as with 1). 
-  if (argc < 2) {
+  if (args.length() < 2) {
     JS_ReportError(cx, "declare requires at least two arguments");
     return false;
   }
@@ -286,7 +286,7 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
 
   RootedObject fnObj(cx, nullptr);
   RootedObject typeObj(cx);
-  bool isFunction = argc > 2;
+  bool isFunction = args.length() > 2;
   if (isFunction) {
     // Case 1).
     // Create a FunctionType representing the function.
