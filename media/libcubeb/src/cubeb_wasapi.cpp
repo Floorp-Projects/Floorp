@@ -328,8 +328,7 @@ wasapi_stream_render_loop(LPVOID stream)
     stm->context->set_mm_thread_characteristics("Audio", &mmcss_task_index);
   if (!mmcss_handle) {
     /* This is not fatal, but we might glitch under heavy load. */
-    LOG("Unable to use mmcss to bump the render thread priority: %d",
-        GetLastError());
+    LOG("Unable to use mmcss to bump the render thread priority: %x", GetLastError());
   }
 
   hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -486,7 +485,7 @@ int wasapi_init(cubeb ** context, char const * context_name)
       (revert_mm_thread_characteristics_function) GetProcAddress(
           ctx->mmcss_module, "AvRevertMmThreadCharacteristics");
     if (!(ctx->set_mm_thread_characteristics && ctx->revert_mm_thread_characteristics)) {
-      LOG("Could not load AvSetMmThreadCharacteristics or AvRevertMmThreadCharacteristics: %d", GetLastError());
+      LOG("Could not load AvSetMmThreadCharacteristics or AvRevertMmThreadCharacteristics: %x", GetLastError());
       FreeLibrary(ctx->mmcss_module);
     }
   } else {
@@ -729,14 +728,14 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->refill_event = CreateEvent(NULL, 0, 0, NULL);
 
   if (!stm->shutdown_event) {
-    LOG("Can't create the shutdown event, error: %d.", GetLastError());
+    LOG("Can't create the shutdown event, error: %x.", GetLastError());
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
   if (!stm->refill_event) {
     SafeRelease(stm->shutdown_event);
-    LOG("Can't create the refill event, error: %d.", GetLastError());
+    LOG("Can't create the refill event, error: %x.", GetLastError());
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -744,6 +743,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   IMMDevice * device;
   hr = get_default_endpoint(&device);
   if (FAILED(hr)) {
+    LOG("Could not get default endpoint, error: %x", hr);
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -755,7 +755,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
                         NULL, (void **)&stm->client);
   SafeRelease(device);
   if (FAILED(hr)) {
-    LOG("Could not activate the device to get an audio client.");
+    LOG("Could not activate the device to get an audio client: error: %x", hr);
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -764,7 +764,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   * and the format the stream we want to play uses. */
   hr = stm->client->GetMixFormat(&mix_format);
   if (FAILED(hr)) {
-    LOG("Could not fetch current mix format from the audio client.");
+    LOG("Could not fetch current mix format from the audio client: error: %x", hr);
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -792,6 +792,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
                                           SPEEX_RESAMPLER_QUALITY_DESKTOP,
                                           NULL);
     if (!stm->resampler) {
+      LOG("Could not get a resampler");
       CoTaskMemFree(mix_format);
       wasapi_stream_destroy(stm);
       return CUBEB_ERROR;
@@ -826,7 +827,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
   hr = stm->client->GetBufferSize(&stm->buffer_frame_count);
   if (FAILED(hr)) {
-    LOG("Could not get the buffer size from the client.");
+    LOG("Could not get the buffer size from the client %x.", hr);
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -846,7 +847,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
   hr = stm->client->SetEventHandle(stm->refill_event);
   if (FAILED(hr)) {
-    LOG("Could set the event handle for the client.");
+    LOG("Could set the event handle for the client %x.", hr);
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -854,7 +855,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   hr = stm->client->GetService(__uuidof(IAudioRenderClient),
                                (void **)&stm->render_client);
   if (FAILED(hr)) {
-    LOG("Could not get the render client.");
+    LOG("Could not get the render client %x.", hr);
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
@@ -862,14 +863,14 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   hr = stm->client->GetService(__uuidof(IAudioClock),
                                (void **)&stm->audio_clock);
   if (FAILED(hr)) {
-    LOG("Could not get the IAudioClock.");
+    LOG("Could not get the IAudioClock, %x", hr);
     wasapi_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
   hr = stm->audio_clock->GetFrequency(&stm->clock_freq);
   if (FAILED(hr)) {
-    LOG("failed to get audio clock frequency.");
+    LOG("failed to get audio clock frequency, %x", hr);
     return CUBEB_ERROR;
   }
 
