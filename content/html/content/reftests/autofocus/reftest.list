@@ -1,13 +1,13 @@
 default-preferences pref(dom.forms.number,true)
-needs-focus == input-load.html input-ref.html
-needs-focus == input-create.html input-ref.html
-needs-focus == input-number.html input-number-ref.html
-needs-focus == button-load.html button-ref.html
-needs-focus == button-create.html button-ref.html
-needs-focus == textarea-load.html textarea-ref.html
-needs-focus == textarea-create.html textarea-ref.html
-needs-focus == select-load.html select-ref.html
-needs-focus == select-create.html select-ref.html
+skip-if(B2G) needs-focus == input-load.html input-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == input-create.html input-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == input-number.html input-number-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == button-load.html button-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == button-create.html button-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == textarea-load.html textarea-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == textarea-create.html textarea-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == select-load.html select-ref.html # B2G timed out waiting for reftest-wait to be removed
+skip-if(B2G) needs-focus == select-create.html select-ref.html # B2G timed out waiting for reftest-wait to be removed
 needs-focus == autofocus-after-load.html autofocus-after-load-ref.html
-needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html
+fails-if(B2G) needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe-ref.html # B2G focus difference between test and reference
 skip-if(B2G) needs-focus == autofocus-after-body-focus.html autofocus-after-body-focus-ref.html # bug 773482

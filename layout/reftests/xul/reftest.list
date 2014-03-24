@@ -5,5 +5,5 @@ random-if(Android||B2G) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulis
 == textbox-overflow-1.xul textbox-overflow-1-ref.xul # for bug 749658
 # accesskeys are not normally displayed on Mac, so skip this test
 skip-if(cocoaWidget) == accesskey.xul accesskey-ref.xul
-fails-if(cocoaWidget) == tree-row-outline-1.xul tree-row-outline-1-ref.xul
+fails-if(cocoaWidget) fails-if(B2G) == tree-row-outline-1.xul tree-row-outline-1-ref.xul
 != tree-row-outline-1.xul tree-row-outline-1-notref.xul
