@@ -1144,6 +1144,62 @@ add_task(function* test_removeActiveExperiment() {
   yield removeCacheFile();
 });
 
+// Test that we correctly handle experiment start & install failures.
+
+add_task(function* test_invalidUrl() {
+  const OBSERVER_TOPIC = "experiments-changed";
+  let observerFireCount = 0;
+  let expectedObserverFireCount = 0;
+  let observer = () => ++observerFireCount;
+  Services.obs.addObserver(observer, OBSERVER_TOPIC, false);
+
+  // Dates the following tests are based on.
+
+  let baseDate   = new Date(2014, 5, 1, 12);
+  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
+
+  // The manifest data we test with.
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id:               EXPERIMENT1_ID,
+        xpiURL:           gDataRoot + EXPERIMENT1_XPI_NAME + ".invalid",
+        xpiHash:          EXPERIMENT1_XPI_SHA1,
+        startTime:        0,
+        endTime:          dateToSeconds(endDate),
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName:          ["XPCShell"],
+        channel:          ["nightly"],
+      },
+    ],
+  };
+
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  // Trigger update, clock set for the experiment to start.
+
+  let now = futureDate(startDate, 10 * MS_IN_ONE_DAY);
+  defineNow(gPolicy, now);
+  gTimerScheduleOffset = null;
+
+  yield experiments.updateManifest();
+  Assert.equal(observerFireCount, expectedObserverFireCount,
+               "Experiments observer should not have been called.");
+  Assert.equal(gTimerScheduleOffset, null, "No new timer should have been scheduled.");
+
+  let list = yield experiments.getExperiments();
+  Assert.equal(list.length, 0, "Experiment list should be empty.");
+
+  // Cleanup.
+
+  Services.obs.removeObserver(observer, OBSERVER_TOPIC);
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
+
 add_task(function* shutdown() {
   yield gReporter._shutdown();
   yield removeCacheFile();
