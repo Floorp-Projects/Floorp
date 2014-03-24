@@ -816,7 +816,7 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
 
     JS::Anchor<JSString *> anchor(flat);
 
-    RootedValue reviver(cx, (argc >= 2) ? args[1] : UndefinedValue());
+    RootedValue reviver(cx, args.get(1));
 
     /* Steps 2-5. */
     return ParseJSONWithReviver(cx, ConstTwoByteChars(flat->chars(), flat->length()),
@@ -827,6 +827,7 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
 bool
 json_stringify(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject replacer(cx, (argc >= 2 && vp[3].isObject())
                               ? &vp[3].toObject()
                               : nullptr);

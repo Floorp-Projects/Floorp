@@ -330,7 +330,7 @@ static bool
 Censor(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 2);
+    JS_ASSERT(args.length() == 2);
 #ifdef DEBUG
     JS_ASSERT(args[0].isString());
 #endif
