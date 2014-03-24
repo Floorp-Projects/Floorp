@@ -69,17 +69,16 @@ class TestMetadata(object):
         for path in sorted(self._tests_by_flavor.get(flavor, [])):
             yield self._tests_by_path[path]
 
-    def resolve_tests(self, path=None, flavor=None, under_path=None):
+    def resolve_tests(self, paths=None, flavor=None, under_path=None):
         """Resolve tests from an identifier.
 
         This is a generator of dicts describing each test.
 
-        If ``path`` is a known test file, the tests associated with that file
-        are returned. Files can be specified by full path (relative to main
-        directory), or as a file fragment. The lookup simply tests whether
-        the string is in the path of a test file.
-
-        If ``path`` is a directory, the tests in that directory are returned.
+        ``paths`` can be an iterable of values to use to identify tests to run.
+        If an entry is a known test file, tests associated with that file are
+        returned (there may be multiple configurations for a single file). If
+        an entry is a directory, all tests in that directory are returned. If
+        the string appears in a known test file, that test file is considered.
 
         If ``under_path`` is a string, it will be used to filter out tests that
         aren't in the specified path prefix relative to topsrcdir or the
@@ -101,29 +100,32 @@ class TestMetadata(object):
                 # Make a copy so modifications don't change the source.
                 yield dict(test)
 
-        path = mozpath.normpath(path) if path else None
+        paths = paths or []
+        paths = [mozpath.normpath(p) for p in paths]
+        if not paths:
+            paths = [None]
 
-        if path in self._test_dirs:
-            candidates = []
-            for p, tests in sorted(self._tests_by_path.items()):
-                if not p.startswith(path):
-                    continue
+        candidate_paths = set()
 
-                candidates.extend(tests)
+        for path in sorted(paths):
+            if path is None:
+                candidate_paths |= set(self._tests_by_path.keys())
+                continue
 
-            for test in fltr(candidates):
+            # If the path is a directory, pull in all tests in that directory.
+            if path in self._test_dirs:
+                candidate_paths |= {p for p in self._tests_by_path
+                                    if p.startswith(path)}
+                continue
+
+            # If it's a test file, add just that file.
+            candidate_paths |= {p for p in self._tests_by_path if path in p}
+
+        for p in sorted(candidate_paths):
+            tests = self._tests_by_path[p]
+
+            for test in fltr(tests):
                 yield test
-
-            return
-
-        # Do file lookup.
-        candidates = []
-        for p, tests in sorted(self._tests_by_path.items()):
-            if path is None or path in p:
-                candidates.extend(tests)
-
-        for test in fltr(candidates):
-            yield test
 
 
 class TestResolver(MozbuildObject):
