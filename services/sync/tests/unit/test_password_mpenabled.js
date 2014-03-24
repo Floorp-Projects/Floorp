@@ -14,7 +14,14 @@ function run_test() {
 }
 
 add_test(function test_simple() {
-  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", true);
+  ensureLegacyIdentityManager();
+  // Stub fxAccountsEnabled
+  let xpcs = Cc["@mozilla.org/weave/service;1"]
+             .getService(Components.interfaces.nsISupports)
+             .wrappedJSObject;
+  let fxaEnabledGetter = xpcs.__lookupGetter__("fxAccountsEnabled");
+  xpcs.__defineGetter__("fxAccountsEnabled", () => true);
+
   // Stub mpEnabled.
   let mpEnabledF = Utils.mpEnabled;
   let mpEnabled = false;
@@ -122,9 +129,9 @@ add_test(function test_simple() {
     // restore the damage we did above...
     engine.wipeServer = engineWipeServerF;
     engine._store.wipe();
-    // Un-stub mpEnabled.
+    // Un-stub mpEnabled and fxAccountsEnabled
     Utils.mpEnabled = mpEnabledF;
-    Services.prefs.clearUserPref("services.sync.fxaccounts.enabled");
+    xpcs.__defineGetter__("fxAccountsEnabled", fxaEnabledGetter);
     server.stop(run_next_test);
   }
 });
