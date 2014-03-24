@@ -113,7 +113,7 @@ public:
     aType = mType;
   }
 
-  already_AddRefed<nsIDOMLockedFile>
+  already_AddRefed<LockedFile>
   Open(FileMode aMode, ErrorResult& aError);
 
   already_AddRefed<DOMRequest>
