@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=986542
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 986542</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 986542 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    var ifr = document.getElementById("ifr");
+    var doc = ifr.contentDocument;
+    var scr = doc.createElement("script");
+    scr.textContent = "function f() { onF(); }";
+    ifr.contentWindow.onF = function() {
+      ok(true, "Called event handler in detached window");
+      SimpleTest.finish();
+    }
+    doc.body.appendChild(scr);
+    var target = document.getElementById("target");
+    target.onclick = ifr.contentWindow.f;
+    ifr.parentNode.removeChild(ifr);
+    info("Removed frame from document. Waiting for event handler to be called.");
+    target.dispatchEvent(new MouseEvent('click'));
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=986542">Mozilla Bug 986542</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="target"></div>
+<iframe id="ifr"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>
