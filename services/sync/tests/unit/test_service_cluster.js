@@ -18,11 +18,12 @@ function do_check_throws(func) {
 add_test(function test_findCluster() {
   _("Test Service._findCluster()");
   let server;
+  ensureLegacyIdentityManager();
   try {
     _("_findCluster() throws on network errors (e.g. connection refused).");
     do_check_throws(function() {
       Service.serverURL = "http://dummy:9000/";
-      Service.identify.account = "johndoe";
+      Service.identity.account = "johndoe";
       Service._clusterManager._findCluster();
     });
 

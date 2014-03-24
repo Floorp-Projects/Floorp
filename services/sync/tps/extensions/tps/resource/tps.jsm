@@ -95,11 +95,10 @@ let TPS = {
    * Check if the Firefox Accounts feature is enabled
    */
   get fxaccounts_enabled() {
-    try {
-      return Services.prefs.getBoolPref("services.sync.fxaccounts.enabled");
-    } catch (e) {
-      return false;
-    }
+    let service = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
+    return service.fxAccountsEnabled;
   },
 
   DumpError: function (msg) {

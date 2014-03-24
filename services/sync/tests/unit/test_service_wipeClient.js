@@ -82,6 +82,7 @@ add_test(function test_credentials_preserved() {
   _("Ensure that credentials are preserved if client is wiped.");
 
   // Required for wipeClient().
+  ensureLegacyIdentityManager();
   Service.identity.account = "testaccount";
   Service.identity.basicPassword = "testpassword";
   Service.clusterURL = "http://dummy:9000/";
