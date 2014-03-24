@@ -268,7 +268,7 @@ this.Promise = function Promise(aExecutor)
                             .bind(PromiseWalker, this, STATUS_REJECTED);
 
   try {
-    Function.prototype.call.call(aExecutor, this, resolve, reject);
+    aExecutor.call(undefined, resolve, reject);
   } catch (ex) {
     reject(ex);
   }
@@ -704,10 +704,10 @@ Handler.prototype = {
       // the returned value, that can also be another promise.
       if (nextStatus == STATUS_RESOLVED) {
         if (typeof(this.onResolve) == "function") {
-          nextValue = this.onResolve(nextValue);
+          nextValue = this.onResolve.call(undefined, nextValue);
         }
       } else if (typeof(this.onReject) == "function") {
-        nextValue = this.onReject(nextValue);
+        nextValue = this.onReject.call(undefined, nextValue);
         nextStatus = STATUS_RESOLVED;
       }
     } catch (ex) {
