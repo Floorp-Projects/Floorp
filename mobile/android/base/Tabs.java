@@ -446,8 +446,8 @@ public class Tabs implements GeckoEventListener {
                 int state = message.getInt("state");
                 if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
-                        boolean showProgress = message.getBoolean("showProgress");
-                        tab.handleDocumentStart(showProgress, message.getString("uri"));
+                        boolean restoring = message.getBoolean("restoring");
+                        tab.handleDocumentStart(restoring, message.getString("uri"));
                         notifyListeners(tab, Tabs.TabEvents.START);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         tab.handleDocumentStop(message.getBoolean("success"));
