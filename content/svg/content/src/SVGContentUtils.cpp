@@ -19,7 +19,10 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsContentUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Types.h"
 #include "gfx2DGlue.h"
+#include "nsSVGPathDataParser.h"
+#include "SVGPathData.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -583,4 +586,16 @@ SVGContentUtils::CoordToFloat(nsPresContext *aPresContext,
   default:
     return 0.0f;
   }
+}
+
+RefPtr<gfx::Path>
+SVGContentUtils::GetPath(const nsAString& aPathString)
+{
+  SVGPathData pathData;
+  nsSVGPathDataParser parser(aPathString, &pathData);
+  if (!parser.Parse()) {
+    return NULL;
+  }
+
+  return pathData.BuildPath(mozilla::gfx::FillRule::FILL_WINDING, NS_STYLE_STROKE_LINECAP_BUTT, 1);
 }

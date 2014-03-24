@@ -360,7 +360,7 @@ function run_miscellaneous_tests() {
       baseRange.setStart(null, 0);
       do_throw("Should have thrown NOT_OBJECT_ERR!");
     } catch (e) {
-      do_check_eq(e instanceof TypeError, true);
+      do_check_eq(e.constructor.name, "TypeError");
     }
 
     // Invalid start node
@@ -368,7 +368,7 @@ function run_miscellaneous_tests() {
       baseRange.setStart({}, 0);
       do_throw("Should have thrown SecurityError!");
     } catch (e) {
-      do_check_true(e instanceof TypeError);
+      do_check_eq(e.constructor.name, "TypeError");
     }
 
     // Invalid index
