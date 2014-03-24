@@ -1289,13 +1289,14 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 static bool
 fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     JSFunction *fun;
     if (!IsFunctionObject(vp[1], &fun)) {
-        JS_SET_RVAL(cx, vp, BooleanValue(false));
+        args.rval().setBoolean(false);
         return true;
     }
 
-    JS_SET_RVAL(cx, vp, BooleanValue(fun->isGenerator()));
+    args.rval().setBoolean(fun->isGenerator());
     return true;
 }
 
