@@ -26,13 +26,14 @@ ThrowException(nsresult ex, JSContext *cx)
 static bool
 UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
 {
-  if (argc != 1) {
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  if (args.length() != 1) {
     return ThrowException(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx);
   }
 
-  JS::RootedValue v(cx, JS_ARGV(cx, vp)[0]);
+  JS::RootedValue v(cx, args[0]);
   if (!v.isObject() || !js::IsWrapper(&v.toObject())) {
-    JS_SET_RVAL(cx, vp, v);
+    args.rval().set(v);
     return true;
   }
 
@@ -41,7 +42,7 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
     NS_ENSURE_TRUE(ok, false);
   }
 
-  JS_SET_RVAL(cx, vp, v);
+  args.rval().set(v);
   return true;
 }
 
