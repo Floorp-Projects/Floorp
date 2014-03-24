@@ -527,7 +527,7 @@ Func(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc == 1) {
+    if (args.length() == 1) {
         if((!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject()))) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
@@ -546,7 +546,7 @@ Func(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setObject(*obj);
         return true;
 
-    } else if (argc == 2) {
+    } else if (args.length() == 2) {
         if((!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject())) ||
            (!args[1].isObject() || !ObjectIsVector<V>(args[1].toObject())))
         {
@@ -583,7 +583,7 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if ((argc != 2) ||
+    if ((args.length() != 2) ||
         (!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject())) ||
         (!args[1].isNumber() && !args[1].isBoolean()))
     {
@@ -619,7 +619,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if(argc == 2){
+    if (args.length() == 2) {
         if ((!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject())) ||
             (!args[1].isNumber()))
         {
@@ -642,7 +642,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
 
         args.rval().setObject(*obj);
         return true;
-    } else if (argc == 3){
+    } else if (args.length() == 3) {
         if ((!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject())) ||
             (!args[1].isObject() || !ObjectIsVector<V>(args[1].toObject())) ||
             (!args[2].isNumber()))
@@ -684,7 +684,7 @@ FuncConvert(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if ((argc != 1) ||
+    if ((args.length() != 1) ||
        (!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -711,7 +711,7 @@ FuncConvertBits(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if ((argc != 1) ||
+    if ((args.length() != 1) ||
        (!args[0].isObject() || !ObjectIsVector<V>(args[0].toObject())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -735,7 +735,7 @@ FuncZero(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc != 0) {
+    if (args.length() != 0) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
     }
@@ -757,7 +757,7 @@ FuncSplat(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if ((argc != 1) || (!args[0].isNumber())) {
+    if ((args.length() != 1) || (!args[0].isNumber())) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
         return false;
     }
@@ -781,7 +781,7 @@ Int32x4Bool(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if ((argc != 4) ||
+    if ((args.length() != 4) ||
         (!args[0].isBoolean()) || !args[1].isBoolean() ||
         (!args[2].isBoolean()) || !args[3].isBoolean())
     {
@@ -805,7 +805,7 @@ Float32x4Clamp(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if ((argc != 3) ||
+    if ((args.length() != 3) ||
         (!args[0].isObject() || !ObjectIsVector<Float32x4>(args[0].toObject())) ||
         (!args[1].isObject() || !ObjectIsVector<Float32x4>(args[1].toObject())) ||
         (!args[2].isObject() || !ObjectIsVector<Float32x4>(args[2].toObject())))
@@ -842,7 +842,7 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if ((argc != 3) ||
+    if ((args.length() != 3) ||
         (!args[0].isObject() || !ObjectIsVector<Int32x4>(args[0].toObject())) ||
         (!args[1].isObject() || !ObjectIsVector<Float32x4>(args[1].toObject())) ||
         (!args[2].isObject() || !ObjectIsVector<Float32x4>(args[2].toObject())))
