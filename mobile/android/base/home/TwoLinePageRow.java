@@ -102,14 +102,9 @@ public class TwoLinePageRow extends LinearLayout
 
     @Override
     protected void onDetachedFromWindow() {
-        // Delay removing the listener to avoid modifying mTabsChangedListeners
-        // while notifyListeners is iterating through the array.
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Tabs.unregisterOnTabsChangedListener(TwoLinePageRow.this);
-            }
-        });
+        // Tabs' listener array is safe to modify during use: its
+        // iteration pattern is based on snapshots.
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     @Override
