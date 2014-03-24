@@ -5,13 +5,13 @@
 == 272830-1.html 272830-1-ref.html
 == 318022-1.html 318022-1-ref.html
 == 403669-1.html 403669-1-ref.html
-== 381497-n.html 381497-f.html
+fails-if(B2G) == 381497-n.html 381497-f.html # reftest-print doesn't work on B2G (scrollbar difference only)
 == test-async-print.html 272830-1-ref.html
-== 129941-1a.html 129941-1-ref.html
+fails-if(B2G) == 129941-1a.html 129941-1-ref.html # reftest-print doesn't work on B2G
 == 129941-1b.html 129941-1-ref.html
 == 609227-1.html 609227-1-ref.html
-== 609227-2a.html 609227-2-ref.html
-== 609227-2b.html 609227-2-ref.html
+fails-if(B2G) == 609227-2a.html 609227-2-ref.html # reftest-print doesn't work on B2G
+fails-if(B2G) == 609227-2b.html 609227-2-ref.html # reftest-print doesn't work on B2G
 == 577450-1.html 577450-1-ref.html
 == 626395-1a.html 626395-1-ref.html
 == 626395-1b.html 626395-1-ref.html
@@ -20,15 +20,15 @@
 == 626395-2c.html 626395-2-ref.html
 == 626395-2d.html 626395-2-ref.html
 == 652178-1.html 652178-1-ref.html
-== 115199-1.html 115199-1-ref.html
+fails-if(B2G) == 115199-1.html 115199-1-ref.html # reftest-print doesn't work on B2G
 == 115199-2a.html 115199-2-ref.html
 == 115199-2b.html 115199-2-ref.html
 == 652178-1.html 652178-1-ref2.html
-fuzzy-if(cocoaWidget,1,5000) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255,100) == 745025-1.html 745025-1-ref.html
-== 820496-1.html 820496-1-ref.html
+fails-if(B2G) fuzzy-if(cocoaWidget,1,5000) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),255,100) == 745025-1.html 745025-1-ref.html # reftest-print doesn't work on B2G
+fails-if(B2G) == 820496-1.html 820496-1-ref.html # reftest-print doesn't work on B2G (scrollbar difference only)
 
 # NOTE: These tests don't yet rigorously test what they're
 # trying to test (shrink-to-fit behavior), due to bug 967311.
-== 960822.html 960822-ref.html
+fails-if(B2G) == 960822.html 960822-ref.html # reftest-print doesn't work on B2G (scrollbar difference only)
 == 966419-1.html 966419-1-ref.html
 == 966419-2.html 966419-2-ref.html

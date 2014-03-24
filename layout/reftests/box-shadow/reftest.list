@@ -2,15 +2,15 @@
 != boxshadow-blur.html boxshadow-blur-notref.html
 != boxshadow-blur.html boxshadow-blur-notref2.html
 random == boxshadow-blur-2.html boxshadow-blur-2-ref.html # fixedpoint division in blur code makes this fail
-random fails-if(Android) != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint division in blur code makes this fail
+random != boxshadow-blur-2.html boxshadow-blur-2-notref.html # fixedpoint division in blur code makes this fail
 == boxshadow-multiple.html boxshadow-multiple-ref.html
 == boxshadow-spread.html boxshadow-spread-ref.html
 == tableboxshadow-basic.html tableboxshadow-basic-ref.html
 == tableboxshadow-trshadow.html tableboxshadow-trshadow-ref.html
 == tableboxshadow-tdshadow.html tableboxshadow-tdshadow-ref.html
 == boxshadow-rounding.html boxshadow-rounding-ref.html
-fails-if(Android) == boxshadow-button.html boxshadow-button-ref.html
-fails-if(Android) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
+fails-if(Android||B2G) == boxshadow-button.html boxshadow-button-ref.html
+fails-if(Android||B2G) == boxshadow-fileupload.html boxshadow-fileupload-ref.html
 == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed-ref.html
 random-if(d2d) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
@@ -25,6 +25,6 @@ random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
-fails-if(Android) == 611574-1.html 611574-1-ref.html
-fails-if(Android) == 611574-2.html 611574-2-ref.html
+fails-if(Android||B2G) == 611574-1.html 611574-1-ref.html
+fails-if(Android||B2G) == 611574-2.html 611574-2-ref.html
 fuzzy-if(winWidget,5,30) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows

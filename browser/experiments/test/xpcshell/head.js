@@ -25,6 +25,9 @@ const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org"
 const EXPERIMENT2_XPI_SHA1 = "sha1:81877991ec70360fb48db84c34a9b2da7aa41d6a";
 const EXPERIMENT2_XPI_NAME = "experiment-2.xpi";
 
+const EXPERIMENT3_ID       = "test-experiment-3@tests.mozilla.org";
+const EXPERIMENT4_ID       = "test-experiment-4@tests.mozilla.org";
+
 const FAKE_EXPERIMENTS_1 = [
   {
     id: "id1",
@@ -98,6 +101,61 @@ function futureDate(date, offset) {
 
 function dateToSeconds(date) {
   return date.getTime() / 1000;
+}
+
+// Install addon and return a Promise<boolean> that is
+// resolve with true on success, false otherwise.
+function installAddon(url, hash) {
+  let deferred = Promise.defer();
+  let success = () => deferred.resolve(true);
+  let fail = () => deferred.resolve(false);
+  let listener = {
+    onDownloadCancelled: fail,
+    onDownloadFailed: fail,
+    onInstallCancelled: fail,
+    onInstallFailed: fail,
+    onInstallEnded: success,
+  };
+
+  let installCallback = install => {
+    install.addListener(listener);
+    install.install();
+  };
+
+  AddonManager.getInstallForURL(url, installCallback,
+                     "application/x-xpinstall", hash);
+
+  return deferred.promise;
+}
+
+// Uninstall addon and return a Promise<boolean> that is
+// resolve with true on success, false otherwise.
+function uninstallAddon(id) {
+  let deferred = Promise.defer();
+
+  AddonManager.getAddonByID(id, addon => {
+    if (!addon) {
+      deferred.resolve(false);
+    }
+
+    let listener = {};
+    let handler = addon => {
+      if (addon.id !== id) {
+        return;
+      }
+
+      AddonManager.removeAddonListener(listener);
+      deferred.resolve(true);
+    };
+
+    listener.onUninstalled = handler;
+    listener.onDisabled = handler;
+
+    AddonManager.addAddonListener(listener);
+    addon.uninstall();
+  });
+
+  return deferred.promise;
 }
 
 function createAppInfo(options) {

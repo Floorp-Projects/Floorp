@@ -125,11 +125,12 @@ add_test(function test_update() {
 add_test(function test_url_not_whitelisted() {
   let uri = createURI("http://example.com");
   let principal = gSecMan.getNoAppCodebasePrincipal(uri);
-  gDbService.lookup(principal, function handleEvent(aEvent) {
-    // This URI is not on any lists.
-    do_check_eq("", aEvent);
-    run_next_test();
-  });
+  gDbService.lookup(principal, "goog-downloadwhite-digest256",
+    function handleEvent(aEvent) {
+      // This URI is not on any lists.
+      do_check_eq("", aEvent);
+      run_next_test();
+    });
 });
 
 add_test(function test_url_whitelisted() {
@@ -137,8 +138,9 @@ add_test(function test_url_whitelisted() {
   // 93CA5F48E15E9861CD37C2D95DB43D23CC6E6DE5C3F8FA6E8BE66F97CC518907
   let uri = createURI("http://whitelisted.com");
   let principal = gSecMan.getNoAppCodebasePrincipal(uri);
-  gDbService.lookup(principal, function handleEvent(aEvent) {
-    do_check_eq("goog-downloadwhite-digest256", aEvent);
-    run_next_test();
-  });
+  gDbService.lookup(principal, "goog-downloadwhite-digest256",
+    function handleEvent(aEvent) {
+      do_check_eq("goog-downloadwhite-digest256", aEvent);
+      run_next_test();
+    });
 });

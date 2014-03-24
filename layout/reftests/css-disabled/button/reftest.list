@@ -1,9 +1,9 @@
 == button-fieldset-1.html button-fieldset-ref.html
-fails-if(Android) == button-fieldset-2.html button-fieldset-ref.html
-fails-if(Android) == button-fieldset-3.html button-fieldset-ref.html
+fails-if(Android||B2G) == button-fieldset-2.html button-fieldset-ref.html
+fails-if(Android||B2G) == button-fieldset-3.html button-fieldset-ref.html
 == button-fieldset-4.html button-fieldset-ref.html
 == button-fieldset-legend-1.html button-fieldset-legend-ref-1.html
-fails-if(Android) == button-fieldset-legend-2.html button-fieldset-legend-ref-2.html
-fails-if(Android) == button-fieldset-legend-3.html button-fieldset-legend-ref-3.html
+fails-if(Android||B2G) == button-fieldset-legend-2.html button-fieldset-legend-ref-2.html
+fails-if(Android||B2G) == button-fieldset-legend-3.html button-fieldset-legend-ref-3.html
 == button-fieldset-legend-4.html button-fieldset-legend-ref-4.html
 == button-fieldset-legend-5.html button-fieldset-legend-ref-5.html
