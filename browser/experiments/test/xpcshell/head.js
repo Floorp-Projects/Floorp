@@ -25,6 +25,9 @@ const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org"
 const EXPERIMENT2_XPI_SHA1 = "sha1:81877991ec70360fb48db84c34a9b2da7aa41d6a";
 const EXPERIMENT2_XPI_NAME = "experiment-2.xpi";
 
+const EXPERIMENT3_ID       = "test-experiment-3@tests.mozilla.org";
+const EXPERIMENT4_ID       = "test-experiment-4@tests.mozilla.org";
+
 const FAKE_EXPERIMENTS_1 = [
   {
     id: "id1",
