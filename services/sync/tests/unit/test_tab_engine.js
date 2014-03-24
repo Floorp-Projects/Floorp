@@ -5,36 +5,23 @@ Cu.import("resource://services-sync/engines/tabs.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 
-function fakeSessionSvc() {
-  let tabs = [];
-  for(let i = 0; i < arguments.length; i++) {
-    tabs.push({
-      index: 1,
-      entries: [{
-        url: arguments[i],
-        title: "title"
-      }],
-      attributes: {
-        image: "image"
-      }
-    });
-  }
-  let obj = {windows: [{tabs: tabs}]};
-
-  // delete the getter, or the previously created fake Session
-  delete Svc.Session;
-  Svc.Session = {
-    getBrowserState: function() JSON.stringify(obj)
-  };
+function getMocks() {
+  let engine = new TabEngine(Service);
+  let store = engine._store;
+  store.getTabState = mockGetTabState;
+  store.shouldSkipWindow = mockShouldSkipWindow;
+  return [engine, store];
 }
 
 function run_test() {
+  _("Test getOpenURLs.");
+  let [engine, store] = getMocks();
 
-  _("test getOpenURLs");
-  let engine = new TabEngine(Service);
-
-  // 3 tabs
-  fakeSessionSvc("http://bar.com", "http://foo.com", "http://foobar.com");
+  let urls = ["http://bar.com", "http://foo.com", "http://foobar.com"];
+  function threeURLs() {
+    return urls.pop();
+  }
+  store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, threeURLs, 1, 3);
 
   let matches;
 

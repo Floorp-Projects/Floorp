@@ -96,39 +96,60 @@ TabStore.prototype = {
     return id == this.engine.service.clientsEngine.localID;
   },
 
-  getAllTabs: function getAllTabs(filter) {
+  getWindowEnumerator: function () {
+    return Services.wm.getEnumerator("navigator:browser");
+  },
+
+  shouldSkipWindow: function (win) {
+    return win.closed ||
+           PrivateBrowsingUtils.isWindowPrivate(win);
+  },
+
+  getTabState: function (tab) {
+    return JSON.parse(Svc.Session.getTabState(tab));
+  },
+
+  getAllTabs: function (filter) {
     let filteredUrls = new RegExp(Svc.Prefs.get("engine.tabs.filteredUrls"), "i");
 
     let allTabs = [];
 
-    let currentState = JSON.parse(Svc.Session.getBrowserState());
-    currentState.windows.forEach(function (window) {
-      if (window.isPrivate) {
-        return;
+    let winEnum = this.getWindowEnumerator();
+    while (winEnum.hasMoreElements()) {
+      let win = winEnum.getNext();
+      if (this.shouldSkipWindow(win)) {
+        continue;
       }
-      window.tabs.forEach(function (tab) {
+
+      dump("WIN IS " + JSON.stringify(win)  + "\n");
+      for (let tab of win.gBrowser.tabs) {
+        tabState = this.getTabState(tab);
+
         // Make sure there are history entries to look at.
-        if (!tab.entries.length)
-          return;
+        if (!tabState || !tabState.entries.length) {
+          continue;
+        }
+
         // Until we store full or partial history, just grab the current entry.
         // index is 1 based, so make sure we adjust.
-        let entry = tab.entries[tab.index - 1];
+        let entry = tabState.entries[tabState.index - 1];
 
         // Filter out some urls if necessary. SessionStore can return empty
         // tabs in some cases - easiest thing is to just ignore them for now.
-        if (!entry.url || filter && filteredUrls.test(entry.url))
-          return;
+        if (!entry.url || filter && filteredUrls.test(entry.url)) {
+          continue;
+        }
 
         // I think it's also possible that attributes[.image] might not be set
         // so handle that as well.
         allTabs.push({
           title: entry.title || "",
           urlHistory: [entry.url],
-          icon: tab.attributes && tab.attributes.image || "",
-          lastUsed: Math.floor((tab.lastAccessed || 0) / 1000)
+          icon: tabState.attributes && tabState.attributes.image || "",
+          lastUsed: Math.floor((tabState.lastAccessed || 0) / 1000)
         });
-      });
-    });
+      }
+    }
 
     return allTabs;
   },
