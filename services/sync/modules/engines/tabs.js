@@ -73,19 +73,15 @@ TabEngine.prototype = {
     this.service.resource(url).delete();
   },
 
-  /* The intent is not to show tabs in the menu if they're already
-   * open locally.  There are a couple ways to interpret this: for
-   * instance, we could do it by removing a tab from the list when
-   * you open it -- but then if you close it, you can't get back to
-   * it.  So the way I'm doing it here is to not show a tab in the menu
-   * if you have a tab open to the same URL, even though this means
-   * that as soon as you navigate anywhere, the original tab will
-   * reappear in the menu.
+  /**
+   * Return a Set of open URLs.
    */
-  locallyOpenTabMatchesURL: function TabEngine_localTabMatches(url) {
-    return this._store.getAllTabs().some(function (tab) {
-      return tab.urlHistory[0] == url;
-    });
+  getOpenURLs: function () {
+    let urls = new Set();
+    for (let entry of this._store.getAllTabs()) {
+      urls.add(entry.urlHistory[0]);
+    }
+    return urls;
   }
 };
 
