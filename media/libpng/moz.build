@@ -38,12 +38,6 @@ if CONFIG['MOZ_PNG_ARM_NEON']:
         'arm/filter_neon.S'
     ]
 
-    if CONFIG['MOZ_PNG_ARM_NEON_CHECK']:
-        DEFINES['MOZ_PNG_HAVE_ARM_NEON_CHECK'] = True
-        UNIFIED_SOURCES += [
-            'arm/MOZ_PNG_cpu-features.c'
-        ]
-
 LIBRARY_NAME = 'mozpng'
 
 MSVC_ENABLE_PGO = True
