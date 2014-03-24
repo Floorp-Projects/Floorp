@@ -196,7 +196,7 @@
           this._status.value = val;
         ]]></setter>
       </property>
-      
+
       <method name="cancel">
         <body><![CDATA[
           this.mInstall.cancel();
@@ -867,6 +867,11 @@
                             tooltiptext="&cmd.showPreferencesUnix.tooltip;"
 #endif
                             oncommand="document.getBindingParent(this).showPreferences();"/>
+                            <!-- label="&cmd.debugAddon.label;" -->
+                <xul:button anonid="debug-btn" class="addon-control debug"
+                            label="&cmd.debugAddon.label;"
+                            oncommand="document.getBindingParent(this).debug();"/>
+
                 <xul:button anonid="enable-btn"  class="addon-control enable"
                             label="&cmd.enableAddon.label;"
                             oncommand="document.getBindingParent(this).userDisabled = false;"/>
@@ -1002,6 +1007,10 @@
       <field name="_enableBtn">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "enable-btn");
+      </field>
+      <field name="_debugBtn">
+        document.getAnonymousElementByAttribute(this, "anonid",
+                                                "debug-btn");
       </field>
       <field name="_disableBtn">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -1332,6 +1341,12 @@
           var showProgress = this.mAddon.purchaseURL || (this.mAddon.install &&
                              this.mAddon.install.state != AddonManager.STATE_INSTALLED);
           this._showStatus(showProgress ? "progress" : "none");
+
+          let debuggable = this.mAddon.isDebuggable &&
+                           Services.prefs.getBoolPref('devtools.debugger.addon-enabled') &&
+                           Services.prefs.getBoolPref('devtools.debugger.remote-enabled');
+
+          this._debugBtn.disabled = this._debugBtn.hidden = !debuggable
         ]]></body>
       </method>
 
@@ -1353,11 +1368,11 @@
           }
 
           var relNotesData = null, transformData = null;
- 
+
           this._relNotesLoaded = true;
           this._relNotesLoading.hidden = false;
           this._relNotesError.hidden = true;
-          
+
           function sendToggleEvent() {
             var event = document.createEvent("Events");
             event.initEvent("RelNotesToggle", true, true);
@@ -1489,6 +1504,12 @@
           } else {
             this.mAddon.uninstall();
           }
+        ]]></body>
+      </method>
+
+      <method name="debug">
+        <body><![CDATA[
+          gViewController.doCommand("cmd_debugItem", this.mAddon);
         ]]></body>
       </method>
 
@@ -1880,7 +1901,7 @@
             this._icon.src = this.mAddon.iconURL ||
                              (this.mInstall ? this.mInstall.iconURL : "");
             this._name.value = this.mAddon.name;
-            
+
             if (this.mAddon.version) {
               this._version.value = this.mAddon.version;
               this._version.hidden = false;
@@ -1931,7 +1952,7 @@
           }
         ]]></body>
       </method>
-      
+
       <method name="retryInstall">
         <body><![CDATA[
           this.mInstall.install();
