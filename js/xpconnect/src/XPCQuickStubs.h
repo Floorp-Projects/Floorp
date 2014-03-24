@@ -608,7 +608,7 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
 
     v = js::GetFunctionNativeReserved(callee, 1);
 
-    JS::RootedValue argval(cx, (argc > 0) ? args.get(0) : JSVAL_VOID);
+    JS::RootedValue argval(cx, args.get(0));
     JS::RootedId id(cx);
     if (!JS_ValueToId(cx, v, &id))
         return false;
