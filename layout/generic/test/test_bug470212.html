@@ -20,12 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=470212
 function doShiftDrag(){
   setTimeout(function() {
     var wu = SpecialPowers.DOMWindowUtils;
-    wu.sendMouseEvent('mousedown',  0, 50, 0, 1, 4);
-    wu.sendMouseEvent('mousemove',  70, 70, 0, 0, 4);
-    wu.sendMouseEvent('mousemove',  80, 500, 0, 0, 4);
+    wu.sendMouseEvent('mousedown',  0, 0, 0, 1, 4);
+    wu.sendMouseEvent('mousemove',  60, 10, 0, 0, 4);
+    wu.sendMouseEvent('mousemove',  70, 250, 0, 0, 4);
 
     is(window.getSelection().rangeCount, 0, "rangeCount should be 0");
-    wu.sendMouseEvent('mouseup',  80, 500, 0, 0, 4);
+    wu.sendMouseEvent('mouseup',  70, 250, 0, 0, 4);
 
     SimpleTest.finish();
   }, 0);
