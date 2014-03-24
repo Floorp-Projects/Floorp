@@ -1,0 +1,5 @@
+{
+  "name": "Test app",
+  "description": "A test application",
+  "launch_path": "/index.html"
+}

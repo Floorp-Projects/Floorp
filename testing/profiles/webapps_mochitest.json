@@ -94,5 +94,21 @@
     "manifestURL": "https://aprivileged.com/manifest.webapp",
     "description": "https://aprivileged.com Privileged App ",
     "appStatus": 2
+  },
+  {
+    "name": "test_desktop_hosted_launch",
+    "csp": "",
+    "origin": "http://127.0.0.1:8888/",
+    "manifestURL": "http://127.0.0.1:8888/sample.manifest",
+    "description": "Hosted app",
+    "appStatus": 1
+  },
+  {
+    "name": "test_desktop_packaged_launch",
+    "csp": "",
+    "origin": "app://test_desktop_packaged_launch",
+    "manifestURL": "http://127.0.0.1:8888/sample.manifest",
+    "description": "Packaged App",
+    "appStatus": 2
   }
 ]
