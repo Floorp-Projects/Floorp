@@ -20,8 +20,3 @@ LIBS += $(JEMALLOC_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-ifdef MOZ_VTUNE
-CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
-LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
-endif
