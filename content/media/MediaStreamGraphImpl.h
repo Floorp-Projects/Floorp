@@ -13,11 +13,14 @@
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "Latency.h"
+#include "mozilla/WeakPtr.h"
 
 namespace mozilla {
 
 template <typename T>
 class LinkedList;
+
+class AudioMixer;
 
 /**
  * Assume we can run an iteration of the MediaStreamGraph loop in this much time
@@ -51,10 +54,6 @@ static const int AUDIO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
  */
 static const int VIDEO_TARGET_MS = 2*MEDIA_GRAPH_TARGET_PERIOD_MS +
     SCHEDULE_SAFETY_MARGIN_MS;
-
-/**
- * Rate at which we run the video tracks.
- */
 
 /**
  * A per-stream update message passed from the media graph thread to the
@@ -327,9 +326,9 @@ public:
                                    MediaStream* aStream);
   /**
    * Queue audio (mix of stream audio and silence for blocked intervals)
-   * to the audio output stream.
+   * to the audio output stream. Returns the number of frames played.
    */
-  void PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
+  TrackTicks PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
   /**
    * Set the correct current video frame for stream aStream.
    */
@@ -575,6 +574,10 @@ public:
    * Hold a ref to the Latency logger
    */
   nsRefPtr<AsyncLatencyLogger> mLatencyLog;
+  /**
+   * If this is not null, all the audio output for the MSG will be mixed down.
+   */
+  nsAutoPtr<AudioMixer> mMixer;
 };
 
 }
