@@ -325,7 +325,6 @@ AtomizeAndtake(ExclusiveContext *cx, jschar *tbchars, size_t length, InternBehav
      */
     AtomSet& atoms = cx->atoms();
     AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
-    SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
     if (p) {
         JSAtom *atom = p->asPtr();
         p->setTagged(bool(ib));
@@ -377,7 +376,6 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
 
     AtomSet& atoms = cx->atoms();
     AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
-    SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
     if (p) {
         JSAtom *atom = p->asPtr();
         p->setTagged(bool(ib));

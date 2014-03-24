@@ -795,7 +795,7 @@ class AutoPropDescArrayRooter : private AutoGCRooter
 {
   public:
     AutoPropDescArrayRooter(JSContext *cx)
-      : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx), skip(cx, &descriptors)
+      : AutoGCRooter(cx, DESCRIPTORS), descriptors(cx)
     { }
 
     PropDesc *append() {
@@ -817,7 +817,6 @@ class AutoPropDescArrayRooter : private AutoGCRooter
 
   private:
     PropDescArray descriptors;
-    SkipRoot skip;
 };
 
 /*

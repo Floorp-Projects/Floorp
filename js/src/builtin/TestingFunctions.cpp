@@ -43,13 +43,8 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject info(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     if (!info)
         return false;
-    RootedValue value(cx);
 
-#ifdef JSGC_ROOT_ANALYSIS
-    value = BooleanValue(true);
-#else
-    value = BooleanValue(false);
-#endif
+    RootedValue value(cx, BooleanValue(false));
     if (!JS_SetProperty(cx, info, "rooting-analysis", value))
         return false;
 
