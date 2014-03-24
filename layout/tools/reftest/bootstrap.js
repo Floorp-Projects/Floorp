@@ -38,6 +38,11 @@ function setDefaultPrefs() {
     branch.setIntPref("urlclassifier.updateinterval", 172800);
     // Disable high-quality downscaling, since it makes reftests more difficult.
     branch.setBoolPref("image.high_quality_downscaling.enabled", false);
+    // Checking whether two files are the same is slow on Windows.
+    // Setting this pref makes tests run much faster there.
+    branch.setBoolPref("security.fileuri.strict_origin_policy", false);
+    // Disable the thumbnailing service
+    branch.setBoolPref("browser.pagethumbnails.capturing_disabled", true);
     // Disable the fade out (over time) of overlay scrollbars, since we
     // can't guarantee taking both reftest snapshots at the same point
     // during the fade.
