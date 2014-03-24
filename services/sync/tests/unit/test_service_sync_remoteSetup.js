@@ -65,6 +65,7 @@ function run_test() {
 
   try {
     _("Log in.");
+    ensureLegacyIdentityManager();
     Service.serverURL = server.baseURI;
 
     _("Checking Status.sync with no credentials.");

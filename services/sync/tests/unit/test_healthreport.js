@@ -14,15 +14,6 @@ Cu.import("resource://testing-common/services/healthreport/utils.jsm", this);
 function run_test() {
   initTestLogging();
 
-  // A head JS file always sets the
-  // services.sync.fxaccounts.enabled pref. This prevents us from testing
-  // pristine profile conditions and likely indicates there isn't test
-  // coverage of the Sync service's fxAccountsEnabled property. Check
-  // that pre-condition and hack around it.
-  let branch = new Preferences("services.sync.");
-  Assert.ok(branch.isSet("fxaccounts.enabled"), "Check precondition");
-  branch.reset("fxaccounts.enabled");
-
   run_next_test();
 }
 
