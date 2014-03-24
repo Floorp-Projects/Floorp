@@ -927,7 +927,7 @@ WebrtcAudioConduit::GetNum10msSamplesForFrequency(int samplingFreqHz) const
   {
     case 16000: return 160; //160 samples
     case 32000: return 320; //320 samples
-    case 44000: return 440; //440 samples
+    case 44100: return 441; //441 samples
     case 48000: return 480; //480 samples
     default:    return 0; // invalid or unsupported
   }
