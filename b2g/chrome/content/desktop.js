@@ -46,7 +46,30 @@ function setupButtons() {
   });
 }
 
+function checkDebuggerPort() {
+  // XXX: To be removed once bug 942756 lands.
+  // We are hacking 'unix-domain-socket' pref by setting a tcp port (number).
+  // DebuggerServer.openListener detects that it isn't a file path (string),
+  // and starts listening on the tcp port given here as command line argument.
+
+  // Get the command line arguments that were passed to the b2g client
+  let args = window.arguments[0].QueryInterface(Ci.nsICommandLine);
+
+  let dbgport;
+  try {
+    dbgport = args.handleFlagWithParam('start-debugger-server', false);
+  } catch(e) {}
+
+  if (dbgport) {
+    dump('Opening debugger server on ' + dbgport + '\n');
+    Services.prefs.setCharPref('devtools.debugger.unix-domain-socket', dbgport);
+    navigator.mozSettings.createLock().set(
+      {'debugger.remote-mode': 'adb-devtools'});
+  }
+}
+
 window.addEventListener('ContentStart', function() {
   enableTouch();
   setupButtons();
+  checkDebuggerPort();
 });
