@@ -223,15 +223,10 @@ abstract public class BrowserApp extends GeckoApp
                     final TabsPanel.Panel panel = tab.isPrivate()
                                                 ? TabsPanel.Panel.PRIVATE_TABS
                                                 : TabsPanel.Panel.NORMAL_TABS;
-                    // Delay calling showTabs so that it does not modify the mTabsChangedListeners
-                    // array while we are still iterating through the array.
-                    ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel)
-                                showTabs(panel);
-                        }
-                    });
+
+                    if (areTabsShown() && mTabsPanel.getCurrentPanel() != panel) {
+                        showTabs(panel);
+                    }
                 }
                 break;
             case START:
