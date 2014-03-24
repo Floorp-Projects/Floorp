@@ -25,7 +25,7 @@ skip-if(B2G) include backgrounds/reftest.list
 skip-if(B2G) include bidi/reftest.list
 
 # border-image
-skip-if(Android||B2G) include border-image/reftest.list
+skip-if(B2G) include border-image/reftest.list
 
 # border-radius/
 skip-if(B2G) include border-radius/reftest.list
@@ -40,7 +40,7 @@ skip-if(B2G) include box-ordinal/reftest.list
 skip-if(B2G) include box-properties/reftest.list
 
 # box-shadow/
-skip-if(Android||B2G) include box-shadow/reftest.list
+skip-if(B2G) include box-shadow/reftest.list
 
 # bugs/
 include bugs/reftest.list
@@ -52,7 +52,7 @@ include canvas/reftest.list
 include css-animations/reftest.list
 
 # blending/
-skip-if(B2G||Android) include css-blending/reftest.list
+skip-if(B2G) include css-blending/reftest.list
 
 # css calc() tests
 include css-calc/reftest.list
@@ -64,10 +64,10 @@ skip-if(B2G) include css-charset/reftest.list
 skip-if(B2G) include css-default/reftest.list
 
 # css :disable tests
-skip-if(Android||B2G) include css-disabled/reftest.list
+skip-if(B2G) include css-disabled/reftest.list
 
 # css :enable tests
-skip-if(Android||B2G) include css-enabled/reftest.list
+skip-if(B2G) include css-enabled/reftest.list
 
 # css @import tests
 skip-if(B2G) include css-import/reftest.list
@@ -91,10 +91,10 @@ skip-if(B2G) include css-required/reftest.list
 skip-if(B2G) include css-optional/reftest.list
 
 # css valid
-skip-if(Android||B2G) include css-valid/reftest.list
+skip-if(B2G) include css-valid/reftest.list
 
 # css invalid
-skip-if(Android||B2G) include css-invalid/reftest.list
+skip-if(B2G) include css-invalid/reftest.list
 
 # css-submit-invalid
 skip-if(B2G) include css-submit-invalid/reftest.list
@@ -109,10 +109,10 @@ include css-selectors/reftest.list
 skip-if(B2G) include css-transitions/reftest.list
 
 # css :-moz-ui-invalid
-skip-if(Android||B2G) include css-ui-invalid/reftest.list
+skip-if(B2G) include css-ui-invalid/reftest.list
 
 # css :-moz-ui-valid
-skip-if(Android||B2G) include css-ui-valid/reftest.list
+skip-if(B2G) include css-ui-valid/reftest.list
 
 # css values and units
 skip-if(B2G) include css-valuesandunits/reftest.list
@@ -145,7 +145,7 @@ skip-if(B2G) include dom/reftest.list
 skip-if(B2G) include generated-content/reftest.list
 
 # first-letter/
-skip-if(Android||B2G) include first-letter/reftest.list
+skip-if(B2G) include first-letter/reftest.list
 
 # first-line/
 skip-if(B2G) include first-line/reftest.list
@@ -169,7 +169,7 @@ skip-if(B2G&&browserIsRemote) include font-inflation/reftest.list
 skip-if(B2G) include font-matching/reftest.list
 
 # forms
-skip-if(Android) include forms/reftest.list
+include forms/reftest.list
 
 # gfx
 include ../../gfx/tests/reftest/reftest.list
@@ -217,7 +217,7 @@ skip-if(B2G) include margin-collapsing/reftest.list
 skip-if(B2G) include marquee/reftest.list
 
 # native-theme/
-skip-if(Android||B2G) include native-theme/reftest.list
+skip-if(B2G) include native-theme/reftest.list
 
 # netwerk/
 skip-if(B2G) include ../../netwerk/test/reftest/reftest.list
@@ -256,7 +256,7 @@ skip-if(B2G) include pagination/reftest.list
 skip-if(B2G) include scoped-style/reftest.list
 
 # scrolling 
-skip-if(Android&&AndroidVersion>=15) include scrolling/reftest.list
+include scrolling/reftest.list
 
 # selection
 include selection/reftest.list
@@ -297,7 +297,7 @@ skip-if(B2G) include text-decoration/reftest.list
 skip-if(B2G) include text-indent/reftest.list
 
 # text-shadow/
-skip-if(Android||B2G) include text-shadow/reftest.list
+skip-if(B2G) include text-shadow/reftest.list
 
 # text-svgglyphs/
 include text-svgglyphs/reftest.list
