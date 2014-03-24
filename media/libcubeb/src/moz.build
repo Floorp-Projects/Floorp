@@ -43,9 +43,8 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['USE_WASAPI'] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
-    SOURCES += [
-        'cubeb_opensl.c',
-    ]
+    SOURCES += ['cubeb_opensl.c']
+    SOURCES['cubeb_opensl.c'].flags += ['-Wno-declaration-after-statement']
     DEFINES['USE_OPENSL'] = True
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         SOURCES += [
