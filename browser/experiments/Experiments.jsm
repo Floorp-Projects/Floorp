@@ -28,6 +28,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryPing",
                                   "resource://gre/modules/TelemetryPing.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryLog",
+                                  "resource://gre/modules/TelemetryLog.jsm");
 // CertUtils.jsm doesn't expose a single "CertUtils" object like a normal .jsm
 // would.
 XPCOMUtils.defineLazyGetter(this, "CertUtils",
@@ -61,6 +63,27 @@ const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_BRANCH_TELEMETRY     = "toolkit.telemetry.";
 const PREF_TELEMETRY_ENABLED    = "enabled";
 const PREF_TELEMETRY_PRERELEASE = "enabledPreRelease";
+
+const TELEMETRY_LOG = {
+  // log(key, [kind, experimentId, details])
+  ACTIVATION_KEY: "EXPERIMENT_ACTIVATION",
+  ACTIVATION: {
+    ACTIVATED: "ACTIVATED",             // successfully activated
+    INSTALL_FAILURE: "INSTALL_FAILURE", // failed to install the extension
+    REJECTED: "REJECTED",               // experiment was rejected because of it's conditions,
+                                        // provides details on which
+  },
+
+  // log(key, [kind, experimentId, optionalDetails...])
+  TERMINATION_KEY: "EXPERIMENT_TERMINATION",
+  TERMINATION: {
+    USERDISABLED: "USERDISABLED", // the user disabled this experiment
+    FROM_API: "FROM_API",         // the experiment disabled itself
+    EXPIRED: "EXPIRED",           // experiment expired e.g. by exceeding the end-date
+    RECHECK: "RECHECK",           // disabled after re-evaluating conditions,
+                                  // provides details on which
+  },
+};
 
 const gPrefs = new Preferences(PREF_BRANCH);
 const gPrefsTelemetry = new Preferences(PREF_BRANCH_TELEMETRY);
@@ -737,11 +760,12 @@ Experiments.Experiments.prototype = {
     // Make sure we keep experiments that are or were running.
     // We remove them after KEEP_HISTORY_N_DAYS.
     for (let [id, entry] of this._experiments) {
-      if (experiments.has(id) || !entry.startDate || !entry.shouldDiscard()) {
+      if (experiments.has(id) || !entry.startDate || entry.shouldDiscard()) {
+        gLogger.trace("Experiments::updateExperiments() - discarding entry for " + id);
         continue;
       }
 
-      experiments.set(id, experiment);
+      experiments.set(id, entry);
     }
 
     this._experiments = experiments;
@@ -805,16 +829,25 @@ Experiments.Experiments.prototype = {
     }
 
     if (!experiment.enabled) {
-      return Promise.reject();
+      let message = "experiment is not enabled";
+      gLogger.debug("Experiments::disableExperiment() - " + message);
+      return Promise.reject(new Error(message));
     }
 
     return Task.spawn(function* Experiments_disableExperimentTaskOuter() {
+      gLogger.trace("Experiments_disableExperimentTaskOuter");
       // We need to wait on possible previous disable tasks.
       yield this._pendingTasks.disableExperiment;
 
       let disableTask = Task.spawn(function* Experiments_disableExperimentTaskInner() {
         yield this._pendingTasksDone([this._pendingTasks.disableExperiment]);
-        yield experiment.stop(userDisabled);
+
+        let terminationKind = TELEMETRY_LOG.TERMINATION.USERDISABLED;
+        if (!userDisabled) {
+          terminationKind = TELEMETRY_LOG.TERMINATION.FROM_API;
+        }
+
+        yield experiment.stop(terminationKind);
         Services.obs.notifyObservers(null, OBSERVER_TOPIC, null);
         this._pendingTasks.disableExperiment = null;
       }.bind(this));
@@ -839,6 +872,7 @@ Experiments.Experiments.prototype = {
       this._checkForShutdown();
       let activeExperiment = this._getActiveExperiment();
       let activeChanged = false;
+      let now = this._policy.now();
 
       if (activeExperiment) {
         let wasStopped = yield activeExperiment.maybeStop();
@@ -865,13 +899,22 @@ Experiments.Experiments.prototype = {
       if (!activeExperiment) {
         for (let [id, experiment] of this._experiments) {
           let applicable;
+          let reason = null;
           yield experiment.isApplicable().then(
             result => applicable = result,
-            reason => {
+            result => {
               applicable = false;
-              // TODO telemetry: experiment rejection reason
+              reason = result;
             }
           );
+
+          if (!applicable && reason && reason[0] != "was-active") {
+            // Report this from here to avoid over-reporting.
+            let desc = TELEMETRY_LOG.ACTIVATION;
+            let data = [TELEMETRY_LOG.ACTIVATION.REJECTED, id];
+            data = data.concat(reason);
+            TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY, data);
+          }
 
           if (applicable) {
             gLogger.debug("Experiments::evaluateExperiments() - activating experiment " + id);
@@ -1173,7 +1216,7 @@ Experiments.ExperimentEntry.prototype = {
     // Not applicable if it already ran.
 
     if (!this.enabled && this._endDate) {
-      return Promise.reject("was already active");
+      return Promise.reject(["was-active"]);
     }
 
     // Define and run the condition checks.
@@ -1222,7 +1265,7 @@ Experiments.ExperimentEntry.prototype = {
       if (!result) {
         gLogger.debug("ExperimentEntry::isApplicable() - id="
                       + data.id + " - test '" + check.name + "' failed");
-        return Promise.reject(check.name);
+        return Promise.reject([check.name]);
       }
     }
 
@@ -1256,7 +1299,7 @@ Experiments.ExperimentEntry.prototype = {
         Cu.evalInSandbox(jsfilter, sandbox);
       } catch (e) {
         gLogger.error("ExperimentEntry::runFilterFunction() - failed to eval jsfilter: " + e.message);
-        throw "jsfilter:evalFailure";
+        throw ["jsfilter-evalfailed"];
       }
 
       // You can't insert arbitrarily complex objects into a sandbox, so
@@ -1272,13 +1315,17 @@ Experiments.ExperimentEntry.prototype = {
       catch (e) {
         gLogger.debug("ExperimentEntry::runFilterFunction() - filter function failed: "
                       + e.message + ", " + e.stack);
-        throw "jsfilter:rejected " + e.message;
+        throw ["jsfilter-threw", e.message];
       }
       finally {
         Cu.nukeSandbox(sandbox);
       }
 
-      throw new Task.Result(result);
+      if (!result) {
+        throw ["jsfilter-false"];
+      }
+
+      throw new Task.Result(true);
     }.bind(this));
   },
 
@@ -1297,7 +1344,8 @@ Experiments.ExperimentEntry.prototype = {
         gLogger.error("ExperimentEntry::start() - " + message);
         this._failedStart = true;
 
-        // TODO telemetry: install failure
+        TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
+                         [TELEMETRY_LOG.ACTIVATION.INSTALL_FAILURE, this.id]);
 
         deferred.reject(new Error(message));
       };
@@ -1328,7 +1376,8 @@ Experiments.ExperimentEntry.prototype = {
           this._startDate = this._policy.now();
           this._enabled = true;
 
-          // TODO telemetry: install success
+          TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
+                           [TELEMETRY_LOG.ACTIVATION.ACTIVATED, this.id]);
 
           deferred.resolve();
         },
@@ -1352,11 +1401,13 @@ Experiments.ExperimentEntry.prototype = {
 
   /*
    * Stop running the experiment if it is active.
-   * @param userDisabled (optional) Whether this is disabled by user action, defaults to false.
+   * @param terminationKind (optional) The termination kind, e.g. USERDISABLED or EXPIRED.
+   * @param terminationReason (optional) The termination reason details for
+   *                          termination kind RECHECK.
    * @return Promise<> Resolved when the operation is complete.
    */
-  stop: function (userDisabled=false) {
-    gLogger.trace("ExperimentEntry::stop() - id=" + this.id + ", userDisabled=" + userDisabled);
+  stop: function (terminationKind, terminationReason) {
+    gLogger.trace("ExperimentEntry::stop() - id=" + this.id + ", terminationKind=" + terminationKind);
     if (!this._enabled) {
       gLogger.warning("ExperimentEntry::stop() - experiment not enabled: " + id);
       return Promise.reject();
@@ -1386,6 +1437,7 @@ Experiments.ExperimentEntry.prototype = {
         }
 
         updateDates();
+        this._logTermination(terminationKind, terminationReason);
 
         AddonManager.removeAddonListener(listener);
         deferred.resolve();
@@ -1397,11 +1449,27 @@ Experiments.ExperimentEntry.prototype = {
       AddonManager.addAddonListener(listener);
 
       addon.uninstall();
-
-      // TODO telemetry: experiment disabling, differentiate by userDisabled
     });
 
     return deferred.promise;
+  },
+
+  _logTermination: function (terminationKind, terminationReason) {
+    if (terminationKind === undefined) {
+      return;
+    }
+
+    if (!(terminationKind in TELEMETRY_LOG.TERMINATION)) {
+      gLogger.warn("ExperimentEntry::stop() - unknown terminationKind " + terminationKind);
+      return;
+    }
+
+    let data = [terminationKind, this.id];
+    if (terminationReason) {
+      data = data.concat(terminationReason);
+    }
+
+    TelemetryLog.log(TELEMETRY_LOG.TERMINATION_KEY, data);
   },
 
   /*
@@ -1413,11 +1481,17 @@ Experiments.ExperimentEntry.prototype = {
     gLogger.trace("ExperimentEntry::maybeStop()");
 
     return Task.spawn(function ExperimentEntry_maybeStop_task() {
-      let shouldStop = yield this._shouldStop();
-      if (shouldStop) {
-        yield this.stop();
+      let result = yield this._shouldStop();
+      if (result.shouldStop) {
+        let expireReasons = ["endTime", "maxActiveSeconds"];
+        if (expireReasons.indexOf(result.reason[0]) != -1) {
+          yield this.stop(TELEMETRY_LOG.TERMINATION.EXPIRED);
+        } else {
+          yield this.stop(TELEMETRY_LOG.TERMINATION.RECHECK, result.reason);
+        }
       }
-      throw new Task.Result(shouldStop);
+
+      throw new Task.Result(result.shouldStop);
     }.bind(this));
   },
 
@@ -1427,13 +1501,13 @@ Experiments.ExperimentEntry.prototype = {
     let maxActiveSec = data.maxActiveSeconds || 0;
 
     if (!this._enabled) {
-      return Promise.resolve(false);
+      return Promise.resolve({shouldStop: false});
     }
 
     let deferred = Promise.defer();
     this.isApplicable().then(
-      () => deferred.resolve(false),
-      () => deferred.resolve(true)
+      () => deferred.resolve({shouldStop: false}),
+      reason => deferred.resolve({shouldStop: true, reason: reason})
     );
 
     return deferred.promise;
