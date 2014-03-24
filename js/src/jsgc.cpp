@@ -2811,7 +2811,7 @@ SweepZones(FreeOp *fop, bool lastGC)
     while (read < end) {
         Zone *zone = *read++;
 
-        if (!zone->hold && zone->wasGCStarted()) {
+        if (zone->wasGCStarted()) {
             if (zone->allocator.arenas.arenaListsAreEmpty() || lastGC) {
                 zone->allocator.arenas.checkEmptyFreeLists();
                 if (callback)
@@ -2991,7 +2991,7 @@ BeginMarkPhase(JSRuntime *rt)
         }
 
         zone->scheduledForDestruction = false;
-        zone->maybeAlive = zone->hold;
+        zone->maybeAlive = false;
         zone->setPreservingCode(false);
     }
 
