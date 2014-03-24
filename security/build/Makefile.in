@@ -213,7 +213,6 @@ ifeq ($(OS_TARGET), Android)
 DEFAULT_GMAKE_FLAGS += \
 	OS_RELEASE='2.6' \
 	OS_PTHREAD= \
-	STANDARDS_CFLAGS='-std=gnu89' \
 	$(NULL)
 
 DEFAULT_GMAKE_FLAGS += ARCHFLAG='$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -include $(topsrcdir)/security/manager/android_stub.h'
