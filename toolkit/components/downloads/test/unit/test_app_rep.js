@@ -61,10 +61,10 @@ function run_test() {
   });
 
   // Set download_block_table explicitly.
-  Services.prefs.setCharPref("urlclassifier.download_block_table",
+  Services.prefs.setCharPref("urlclassifier.downloadBlockTable",
                              "goog-badbinurl-shavar");
   do_register_cleanup(function() {
-    Services.prefs.clearUserPref("urlclassifier.download_block_table");
+    Services.prefs.clearUserPref("urlclassifier.downloadBlockTable");
   });
 
   gHttpServ = new HttpServer();
