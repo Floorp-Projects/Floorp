@@ -505,23 +505,34 @@ Experiments.Experiments.prototype = {
   },
 
   onDisabled: function (addon) {
-    this._checkForShutdown();
-    let experiment = this._experiments.get(addon.id);
-    if (!experiment) {
-      return;
-    }
-
+    gLogger.trace("Experiments::onDisabled() - addon id: " + addon.id)
     this.disableExperiment(addon.id);
   },
 
   onUninstalled: function (addon) {
+    gLogger.trace("Experiments::onUninstalled() - addon id: " + addon.id);
+    this.disableExperiment(addon.id);
+  },
+
+  _getExperimentByAddonId: function (addonId) {
+    for (let [, entry] of this._experiments) {
+      if (entry._addonId === addonId) {
+        return entry;
+      }
+    }
+
+    return null;
+  },
+
+  _disableExperimentByAddonId: function (addonId) {
     this._checkForShutdown();
-    let experiment = this._experiments.get(addon.id);
+    gLogger.trace("Experiments::disableExperimentByAddonId() - addon id: " + addonId);
+    let experiment = this._getExperimentByAddonId(addonId);
     if (!experiment) {
       return;
     }
 
-    this.disableExperiment(addon.id);
+    this.disableExperiment(experiment.id);
   },
 
   /*
@@ -950,6 +961,7 @@ Experiments.ExperimentEntry = function (policy) {
   this._name = null;
   this._description = null;
   this._homepageURL = null;
+  this._addonId = null;
 };
 
 Experiments.ExperimentEntry.prototype = {
@@ -1293,13 +1305,6 @@ Experiments.ExperimentEntry.prototype = {
       let listener = {
         onDownloadEnded: install => {
           gLogger.trace("ExperimentEntry::start() - onDownloadEnded for " + this.id);
-          let addon = install.addon;
-
-          if (addon.id !== this.id) {
-            let message = "id mismatch: '" + this.id + "' vs. '" + addon.id + "'";
-            gLogger.error("ExperimentEntry::start() - " + message);
-            install.cancel();
-          }
         },
 
         onInstallStarted: install => {
@@ -1312,6 +1317,7 @@ Experiments.ExperimentEntry.prototype = {
 
           let addon = install.addon;
           this._name = addon.name;
+          this._addonId = addon.id;
           this._description = addon.description || "";
           this._homepageURL = addon.homepageURL || "";
         },
@@ -1329,7 +1335,9 @@ Experiments.ExperimentEntry.prototype = {
       };
 
       ["onDownloadCancelled", "onDownloadFailed", "onInstallCancelled", "onInstallFailed"]
-        .forEach(what => listener[what] = install => failureHandler(install, what));
+        .forEach(what => {
+          listener[what] = install => failureHandler(install, what)
+        });
 
       install.addListener(listener);
       install.install();
@@ -1362,7 +1370,7 @@ Experiments.ExperimentEntry.prototype = {
       this._endDate = now;
     };
 
-    AddonManager.getAddonByID(this.id, addon => {
+    AddonManager.getAddonByID(this._addonId, addon => {
       if (!addon) {
         let message = "could not get Addon for " + this.id;
         gLogger.warn("ExperimentEntry::stop() - " + message);
@@ -1373,7 +1381,7 @@ Experiments.ExperimentEntry.prototype = {
 
       let listener = {};
       let handler = addon => {
-        if (addon.id !== this.id) {
+        if (addon.id !== this._addonId) {
           return;
         }
 
