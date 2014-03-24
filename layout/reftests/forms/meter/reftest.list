@@ -1,4 +1,4 @@
-== values.html values-ref.html
+fuzzy-if(Android,128,16) == values.html values-ref.html
 == values-rtl.html values-rtl-ref.html
 == margin-padding.html margin-padding-ref.html
 == margin-padding-rtl.html margin-padding-rtl-ref.html
