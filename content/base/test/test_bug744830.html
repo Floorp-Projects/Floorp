@@ -89,6 +89,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
   is(t.innerHTML, '<style>1&2<3>4\xA0\u003C/style>');
 
   t.innerHTML = null;
+  t.appendChild(document.createElement("span"));
+  t.firstChild.setAttributeNS("ext", "attr", "foo");
+  t.firstChild.textContent = "1&2<3>4\xA0";
+  is(t.innerHTML, '<span attr="foo">1&amp;2&lt;3&gt;4&nbsp;\u003C/span>');
+
+  t.innerHTML = null;
   t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
   is(t.firstChild.namespaceURI, "http://www.w3.org/2000/svg");
   t.firstChild.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "script"));

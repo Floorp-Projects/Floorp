@@ -1185,7 +1185,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
-        vp->setNaN();
+        args.rval().setNaN();
         return true;
     }
 
@@ -1199,12 +1199,12 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
 
     double result;
     if (!date_parseString(linearStr, &result, &cx->runtime()->dateTimeInfo)) {
-        vp->setNaN();
+        args.rval().setNaN();
         return true;
     }
 
     result = TimeClip(result);
-    vp->setNumber(result);
+    args.rval().setNumber(result);
     return true;
 }
 
@@ -1217,7 +1217,8 @@ NowAsMillis()
 static bool
 date_now(JSContext *cx, unsigned argc, Value *vp)
 {
-    vp->setDouble(NowAsMillis());
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setDouble(NowAsMillis());
     return true;
 }
 

@@ -792,7 +792,8 @@ js::ParseJSONWithReviver(JSContext *cx, ConstTwoByteChars chars, size_t length,
 static bool
 json_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
-    vp->setString(cx->names().JSON);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(cx->names().JSON);
     return true;
 }
 #endif
@@ -816,7 +817,7 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
 
     JS::Anchor<JSString *> anchor(flat);
 
-    RootedValue reviver(cx, (argc >= 2) ? args[1] : UndefinedValue());
+    RootedValue reviver(cx, args.get(1));
 
     /* Steps 2-5. */
     return ParseJSONWithReviver(cx, ConstTwoByteChars(flat->chars(), flat->length()),
@@ -827,11 +828,10 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
 bool
 json_stringify(JSContext *cx, unsigned argc, Value *vp)
 {
-    RootedObject replacer(cx, (argc >= 2 && vp[3].isObject())
-                              ? &vp[3].toObject()
-                              : nullptr);
-    RootedValue value(cx, (argc >= 1) ? vp[2] : UndefinedValue());
-    RootedValue space(cx, (argc >= 3) ? vp[4] : UndefinedValue());
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject replacer(cx, args.get(1).isObject() ? &args[1].toObject() : nullptr);
+    RootedValue value(cx, args.get(0));
+    RootedValue space(cx, args.get(2));
 
     StringBuffer sb(cx);
     if (!js_Stringify(cx, &value, replacer, space, sb))
@@ -844,9 +844,9 @@ json_stringify(JSContext *cx, unsigned argc, Value *vp)
         JSString *str = sb.finishString();
         if (!str)
             return false;
-        vp->setString(str);
+        args.rval().setString(str);
     } else {
-        vp->setUndefined();
+        args.rval().setUndefined();
     }
 
     return true;

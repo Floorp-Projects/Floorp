@@ -2651,7 +2651,7 @@ bool
 js::SetTypedObjectOffset(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 2);
+    JS_ASSERT(args.length() == 2);
     JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());
     JS_ASSERT(args[1].isInt32());
 

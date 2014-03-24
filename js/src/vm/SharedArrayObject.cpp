@@ -169,7 +169,7 @@ SharedArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *
 {
     int32_t length = 0;
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc > 0 && !ToInt32(cx, args[0], &length))
+    if (args.length() > 0 && !ToInt32(cx, args[0], &length))
         return false;
 
     if (length < 0) {
