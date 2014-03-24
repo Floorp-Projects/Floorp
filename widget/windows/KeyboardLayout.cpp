@@ -1447,6 +1447,13 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
       continue;
     }
 
+    // Typically, this case occurs with WM_DEADCHAR.  If the removed message's
+    // wParam becomes 0, that means that the key event shouldn't cause text
+    // input.  So, let's ignore the strange char message.
+    if (removedMsg.message == nextKeyMsg.message && !removedMsg.wParam) {
+      return false;
+    }
+
     // NOTE: Although, we don't know when this case occurs, the scan code value
     //       in lParam may be changed from 0 to something.  The changed value
     //       is different from the scan code of handling keydown message.
