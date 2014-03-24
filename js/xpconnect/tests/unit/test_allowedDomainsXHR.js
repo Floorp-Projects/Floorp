@@ -70,9 +70,13 @@ function run_test()
     httpserver.stop(finishIfDone);
   }
 
-  sb.checkResults = checkResults;
-  
+  // We want to execute checkResults from the scope of the sandbox as well to
+  // make sure that there are no permission errors related to nsEP. For that
+  // we need to clone the function into the sandbox and make a few things
+  // available for it.
+  cu.evalInSandbox('var checkResults = ' + checkResults.toSource(), sb);
   sb.do_check_eq = do_check_eq;
+  sb.httpbody = httpbody;
 
   function changeListener(event) {
     if (checkResults(async))

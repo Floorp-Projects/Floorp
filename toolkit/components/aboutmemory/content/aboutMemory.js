@@ -720,10 +720,11 @@ DReport.prototype = {
   }
 };
 
-// Constants that indicate if a DReport was present in both data sets, or
-// added/removed in the second data set.
+// Constants that indicate if a DReport was present only in one of the data
+// sets, or had to be added for balance.
 DReport.PRESENT_IN_FIRST_ONLY  = 1;
 DReport.PRESENT_IN_SECOND_ONLY = 2;
+DReport.ADDED_FOR_BALANCE = 3;
 
 /**
  * Make a report map, which has combined path+process strings for keys, and
@@ -1112,13 +1113,31 @@ function fillInTree(aRoot)
 
     } else {
       // Non-leaf node with multiple children.  Derive its _amount and
-      // _description entirely from its children.
+      // _description entirely from its children...
       let kidsBytes = 0;
       for (let i = 0; i < aT._kids.length; i++) {
         kidsBytes += fillInNonLeafNodes(aT._kids[i]);
       }
-      assert(aT._amount === undefined, "_amount already set for non-leaf node");
-      aT._amount = kidsBytes;
+
+      // ... except in one special case. When diffing two memory report sets,
+      // if one set has a node with children and the other has the same node
+      // but without children -- e.g. the first has "a/b/c" and "a/b/d", but
+      // the second only has "a/b" -- we need to add a fake node "a/b/(fake)"
+      // to the second to make the trees comparable. It's ugly, but it works.
+      if (aT._amount !== undefined &&
+          (aT._presence === DReport.PRESENT_IN_FIRST_ONLY ||
+           aT._presence === DReport.PRESENT_IN_SECOND_ONLY)) {
+        aT._amount += kidsBytes;
+        let fake = new TreeNode('(fake child)', aT._units);
+        fake._presence = DReport.ADDED_FOR_BALANCE;
+        fake._amount = aT._amount - kidsBytes;
+        aT._kids.push(fake);
+        delete aT._presence;
+      } else {
+        assert(aT._amount === undefined,
+               "_amount already set for non-leaf node")
+        aT._amount = kidsBytes;
+      }
       aT._description = "The sum of all entries below this one.";
     }
     return aT._amount;
@@ -1580,23 +1599,28 @@ function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
   }
 
   if (aPresence) {
-    let c, nth;
+    let c, title;
     switch (aPresence) {
      case DReport.PRESENT_IN_FIRST_ONLY:
       c = '-';
-      nth = "first";
+      title = "This value was only present in the first set of memory reports.";
       break;
      case DReport.PRESENT_IN_SECOND_ONLY:
       c = '+';
-      nth = "second";
+      title = "This value was only present in the second set of memory reports.";
+      break;
+     case DReport.ADDED_FOR_BALANCE:
+      c = '!';
+      title = "One of the sets of memory reports lacked children for this " +
+              "node's parent. This is a fake child node added to make the " +
+              "two memory sets comparable.";
       break;
      default: assert(false, "bad presence");
       break;
     }
     let noteSpan = appendElementWithText(aP, "span", "mrNote",
                                          " [" + c + "]\n");
-    noteSpan.title =
-      "This value was only present in the " + nth + " set of memory reports.";
+    noteSpan.title = title;
   }
 }
 

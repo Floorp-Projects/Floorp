@@ -3,7 +3,7 @@
 == dir-3.html dir-3-ref.html
 == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
-fails == dir-6.html dir-6-ref.html
+== dir-6.html dir-6-ref.html
 == dir-7.html dir-7-ref.html
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215

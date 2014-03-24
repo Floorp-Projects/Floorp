@@ -284,7 +284,8 @@ FileService::AbortLockedFilesForStorage(nsIFileStorage* aFileStorage)
                                                        lockedFiles);
 
   for (uint32_t index = 0; index < lockedFiles.Length(); index++) {
-    lockedFiles[index]->Abort();
+    ErrorResult ignored;
+    lockedFiles[index]->Abort(ignored);
   }
 }
 

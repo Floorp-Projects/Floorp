@@ -2382,9 +2382,9 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 7. */
     uint32_t actualDeleteCount;
-    if (argc != 1) {
+    if (args.length() != 1) {
         double deleteCountDouble;
-        RootedValue cnt(cx, argc >= 2 ? args[1] : Int32Value(0));
+        RootedValue cnt(cx, args.length() >= 2 ? args[1] : Int32Value(0));
         if (!ToInteger(cx, cnt, &deleteCountDouble))
             return false;
         actualDeleteCount = Min(Max(deleteCountDouble, 0.0), double(len - actualStart));
@@ -2424,7 +2424,7 @@ array_splice(JSContext *cx, unsigned argc, Value *vp)
     }
 
     /* Step 11. */
-    uint32_t itemCount = (argc >= 2) ? (argc - 2) : 0;
+    uint32_t itemCount = (args.length() >= 2) ? (args.length() - 2) : 0;
 
     if (itemCount < actualDeleteCount) {
         /* Step 12: the array is being shrunk. */
@@ -2913,7 +2913,7 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
     RootedObject obj(cx);
     {
         RootedValue v(cx);
-        Value argv[1] = {NumberValue(argc)};
+        Value argv[1] = {NumberValue(args.length())};
         if (!InvokeConstructor(cx, args.thisv(), 1, argv, v.address()))
             return false;
         obj = ToObject(cx, v);
@@ -2922,13 +2922,13 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Step 8.
-    for (unsigned k = 0; k < argc; k++) {
+    for (unsigned k = 0; k < args.length(); k++) {
         if (!JSObject::defineElement(cx, obj, k, args[k]))
             return false;
     }
 
     // Steps 9-10.
-    RootedValue v(cx, NumberValue(argc));
+    RootedValue v(cx, NumberValue(args.length()));
     if (!JSObject::setProperty(cx, obj, obj, cx->names().length, &v, true))
         return false;
 

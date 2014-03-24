@@ -953,7 +953,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 2.
     if (args.length() < 2 || args[1].isNullOrUndefined())
-        return js_fun_call(cx, (argc > 0) ? 1 : 0, vp);
+        return js_fun_call(cx, (args.length() > 0) ? 1 : 0, vp);
 
     InvokeArgs args2(cx);
 
@@ -1253,7 +1253,7 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
     unsigned argslen = fun->getBoundFunctionArgumentCount();
 
-    if (argc + argslen > ARGS_LENGTH_MAX) {
+    if (args.length() + argslen > ARGS_LENGTH_MAX) {
         js_ReportAllocationOverflow(cx);
         return false;
     }
@@ -1265,13 +1265,13 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     const Value &boundThis = fun->getBoundFunctionThis();
 
     InvokeArgs invokeArgs(cx);
-    if (!invokeArgs.init(argc + argslen))
+    if (!invokeArgs.init(args.length() + argslen))
         return false;
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
     for (unsigned i = 0; i < argslen; i++)
         invokeArgs[i].set(fun->getBoundFunctionArgument(i));
-    PodCopy(invokeArgs.array() + argslen, vp + 2, argc);
+    PodCopy(invokeArgs.array() + argslen, vp + 2, args.length());
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
     invokeArgs.setCallee(ObjectValue(*target));
@@ -1282,20 +1282,21 @@ js::CallOrConstructBoundFunction(JSContext *cx, unsigned argc, Value *vp)
     if (constructing ? !InvokeConstructor(cx, invokeArgs) : !Invoke(cx, invokeArgs))
         return false;
 
-    *vp = invokeArgs.rval();
+    args.rval().set(invokeArgs.rval());
     return true;
 }
 
 static bool
 fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     JSFunction *fun;
-    if (!IsFunctionObject(vp[1], &fun)) {
-        JS_SET_RVAL(cx, vp, BooleanValue(false));
+    if (!IsFunctionObject(args.thisv(), &fun)) {
+        args.rval().setBoolean(false);
         return true;
     }
 
-    JS_SET_RVAL(cx, vp, BooleanValue(fun->isGenerator()));
+    args.rval().setBoolean(fun->isGenerator());
     return true;
 }
 
