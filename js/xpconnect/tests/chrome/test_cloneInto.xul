@@ -103,7 +103,23 @@
     }
   }
 
-  var sandbox = new Cu.Sandbox(window, { sandboxPrototype: window, wantXrays: true } );
+  var sandboxOptions = {
+    wantXrays: true,
+    wantExportHelpers: true,
+  };
+  var sandbox = new Cu.Sandbox(window, sandboxOptions);
+  // The second sandbox is for testing the exportHelper version of the cloneInto
+  var sandbox2 = new Cu.Sandbox("http://example.com", sandboxOptions);
+  sandbox.sandbox2 = sandbox2;
+
+  function cloneAndTest(test, cloneOptions) {
+    var output = sandbox.test = Cu.cloneInto(test, sandbox, cloneOptions);
+    compare(test, output);
+
+    sandbox.cloneOptions = cloneOptions;
+    output = Cu.evalInSandbox('cloneInto(test, sandbox2, cloneOptions)', sandbox);
+    compare(test, output);
+  }
 
   var tests = [
     1,
@@ -118,10 +134,7 @@
   ];
 
   for (var i = 0; i < tests.length; ++i) {
-    var test = tests[i];
-
-    var output = Cu.cloneInto(test, sandbox);
-    compare(output, test);
+    cloneAndTest(tests[i]);
   }
 
   try {
@@ -131,10 +144,17 @@
     ok(true, 'Function should not be cloned by default');
   }
 
-  var test = { a: function() { return 42; } }
-  var output = Cu.cloneInto(test, sandbox, { cloneFunctions: true });
-  compare(test, output);
+  try {
+    sandbox2.sandbox = sandbox;
+    Cu.evalInSandbox('cloneInto({}, sandbox)', sandbox2);
+    ok(false, 'CloneInto should only work on less privileged target scopes.');
+  } catch(e) {
+    ok(/denied|insecure/.test(e),
+       'CloneInto should only work on less privileged target scopes.');
+  }
 
+  var test = { a: function() { return 42; } }
+  cloneAndTest(test, { cloneFunctions: true });
   ]]>
   </script>
 </window>
