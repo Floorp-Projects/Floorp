@@ -119,4 +119,5 @@ let setRadioDisabled = function(aDisabled) {
 testRetrieve(Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR,
              setRadioDisabled.bind(null, true),
              setRadioDisabled.bind(null, false))
+  .then(() => testRetrieve(Ci.nsIMobileMessageCallback.SIM_NOT_MATCHED_ERROR))
   .then(finish);
