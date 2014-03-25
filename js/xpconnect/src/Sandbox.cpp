@@ -628,6 +628,20 @@ CreateObjectIn(JSContext *cx, unsigned argc, jsval *vp)
 
     return xpc::CreateObjectIn(cx, args[0], options, args.rval());
 }
+
+static bool
+CloneInto(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 2) {
+        JS_ReportError(cx, "Function requires at least 2 arguments");
+        return false;
+    }
+
+    RootedValue options(cx, args.length() > 2 ? args[2] : UndefinedValue());
+    return xpc::CloneInto(cx, args[0], args[1], options, args.rval());
+}
+
 } /* namespace xpc */
 
 static bool
@@ -1137,6 +1151,7 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
             (!JS_DefineFunction(cx, sandbox, "exportFunction", ExportFunction, 3, 0) ||
              !JS_DefineFunction(cx, sandbox, "evalInWindow", EvalInWindow, 2, 0) ||
              !JS_DefineFunction(cx, sandbox, "createObjectIn", CreateObjectIn, 2, 0) ||
+             !JS_DefineFunction(cx, sandbox, "cloneInto", CloneInto, 3, 0) ||
              !JS_DefineFunction(cx, sandbox, "isProxy", IsProxy, 1, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
