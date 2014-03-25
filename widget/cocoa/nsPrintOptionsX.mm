@@ -24,7 +24,7 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   rv = nsPrintOptions::ReadPrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::ReadPrefs() failed");
   
-  nsCOMPtr<nsPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  nsRefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
   rv = printSettingsX->ReadPageFormatFromPrefs();
@@ -59,7 +59,7 @@ nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName
   rv = nsPrintOptions::WritePrefs(aPS, aPrinterName, aFlags);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::WritePrefs() failed");
 
-  nsCOMPtr<nsPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  nsRefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
   if (!printSettingsX)
     return NS_ERROR_NO_INTERFACE;
   rv = printSettingsX->WritePageFormatToPrefs();
