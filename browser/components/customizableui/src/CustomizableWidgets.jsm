@@ -503,7 +503,7 @@ const CustomizableWidgets = [{
         // tabbrowser. This breaks the zoom toolkit code (see bug 897410). Don't let that happen:
         let zoomFactor = 100;
         try {
-          zoomFactor = Math.floor(window.ZoomManager.zoom * 100);
+          zoomFactor = Math.round(window.ZoomManager.zoom * 100);
         } catch (e) {}
         zoomResetButton.setAttribute("label", CustomizableUI.getLocalizedProperty(
           buttons[1], "label", [updateDisplay ? zoomFactor : 100]
