@@ -1700,11 +1700,9 @@ bool
 TabChild::RecvNotifyTransformBegin(const ViewID& aViewId)
 {
   nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
-  if (sf) {
-    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
-    if (scrollbarOwner) {
-      scrollbarOwner->ScrollbarActivityStarted();
-    }
+  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
+  if (scrollbarOwner) {
+    scrollbarOwner->ScrollbarActivityStarted();
   }
   return true;
 }
@@ -1713,11 +1711,9 @@ bool
 TabChild::RecvNotifyTransformEnd(const ViewID& aViewId)
 {
   nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
-  if (sf) {
-    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
-    if (scrollbarOwner) {
-      scrollbarOwner->ScrollbarActivityStopped();
-    }
+  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
+  if (scrollbarOwner) {
+    scrollbarOwner->ScrollbarActivityStopped();
   }
   return true;
 }
