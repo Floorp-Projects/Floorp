@@ -75,7 +75,7 @@
   function getFail() {
     return function (err) {
       window.onerror = oldOnError;
-      unexpectedCallbackAndFinish()(err);
+      generateErrorCallback()(err);
     };
   }
 </script>

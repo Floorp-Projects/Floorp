@@ -34,11 +34,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822109
         videoStreamPlayback.playMedia(true, function() {
           videoStream.stop();
           SimpleTest.finish();
-        }, unexpectedCallbackAndFinish());
+        }, generateErrorCallback());
 
-      }, unexpectedCallbackAndFinish());
+      }, generateErrorCallback());
 
-    }, unexpectedCallbackAndFinish());
+    }, generateErrorCallback());
   });
 
 </script>

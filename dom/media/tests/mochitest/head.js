@@ -127,7 +127,7 @@ function runTest(aCallback) {
         aCallback();
       }
       catch (err) {
-        unexpectedCallbackAndFinish()(err);
+        generateErrorCallback()(err);
       }
     });
   } else {
@@ -214,7 +214,7 @@ function getBlobContent(blob, onSuccess) {
  *        An optional message to show if no object gets passed into the
  *        generated callback method.
  */
-function unexpectedCallbackAndFinish(message) {
+function generateErrorCallback(message) {
   var stack = new Error().stack.split("\n");
   stack.shift(); // Don't include this instantiation frame
 
@@ -223,9 +223,15 @@ function unexpectedCallbackAndFinish(message) {
    *        The object fired back from the callback
    */
   return function (aObj) {
-    if (aObj && aObj.name && aObj.message) {
-      ok(false, "Unexpected callback for '" + aObj.name + "' with message = '" +
-         aObj.message + "' at " + JSON.stringify(stack));
+    if (aObj) {
+      if (aObj.name && aObj.message) {
+        ok(false, "Unexpected callback for '" + aObj.name +
+           "' with message = '" + aObj.message + "' at " +
+           JSON.stringify(stack));
+      } else {
+        ok(false, "Unexpected callback with = '" + aObj +
+           "' at: " + JSON.stringify(stack));
+      }
     } else {
       ok(false, "Unexpected callback with message = '" + message +
          "' at: " + JSON.stringify(stack));
