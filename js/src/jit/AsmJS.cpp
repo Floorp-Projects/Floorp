@@ -1425,21 +1425,17 @@ class MOZ_STACK_CLASS ModuleCompiler
         return true;
     }
 
-#ifdef MOZ_VTUNE
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     bool trackProfiledFunction(const Func &func, unsigned endCodeOffset) {
-        unsigned startCodeOffset = func.code()->offset();
-        return module_->trackProfiledFunction(func.name(), startCodeOffset, endCodeOffset);
-    }
-#endif
-#ifdef JS_ION_PERF
-    bool trackPerfProfiledFunction(const Func &func, unsigned endCodeOffset) {
         unsigned lineno = 0U, columnIndex = 0U;
         parser().tokenStream.srcCoords.lineNumAndColumnIndex(func.srcOffset(), &lineno, &columnIndex);
         unsigned startCodeOffset = func.code()->offset();
-        return module_->trackPerfProfiledFunction(func.name(), startCodeOffset, endCodeOffset,
-                                                  lineno, columnIndex);
+        return module_->trackProfiledFunction(func.name(), startCodeOffset, endCodeOffset,
+                                              lineno, columnIndex);
     }
+#endif
 
+#ifdef JS_ION_PERF
     bool trackPerfProfiledBlocks(AsmJSPerfSpewer &perfSpewer, const Func &func, unsigned endCodeOffset) {
         unsigned startCodeOffset = func.code()->offset();
         perfSpewer.noteBlocksOffsets();
@@ -1448,6 +1444,7 @@ class MOZ_STACK_CLASS ModuleCompiler
                                                 endCodeOffset, perfSpewer.basicBlocks());
     }
 #endif
+
     bool addFunctionCounts(IonScriptCounts *counts) {
         return module_->addFunctionCounts(counts);
     }
@@ -1533,18 +1530,20 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(masm_.preBarrierTableBytes() == 0);
         JS_ASSERT(!masm_.hasEnteredExitFrame());
 
-#ifdef JS_ION_PERF
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
         // Fix up the code offsets.  Note the endCodeOffset should not be
         // filtered through 'actualOffset' as it is generated using 'size()'
         // rather than a label.
-        for (unsigned i = 0; i < module_->numPerfFunctions(); i++) {
-            AsmJSModule::ProfiledFunction &func = module_->perfProfiledFunction(i);
-            func.startCodeOffset = masm_.actualOffset(func.startCodeOffset);
+        for (unsigned i = 0; i < module_->numProfiledFunctions(); i++) {
+            AsmJSModule::ProfiledFunction &func = module_->profiledFunction(i);
+            func.pod.startCodeOffset = masm_.actualOffset(func.pod.startCodeOffset);
         }
+#endif
 
+#ifdef JS_ION_PERF
         for (unsigned i = 0; i < module_->numPerfBlocksFunctions(); i++) {
             AsmJSModule::ProfiledBlocksFunction &func = module_->perfProfiledBlocksFunction(i);
-            func.startCodeOffset = masm_.actualOffset(func.startCodeOffset);
+            func.pod.startCodeOffset = masm_.actualOffset(func.pod.startCodeOffset);
             func.endInlineCodeOffset = masm_.actualOffset(func.endInlineCodeOffset);
             BasicBlocksVector &basicBlocks = func.blocks;
             for (uint32_t i = 0; i < basicBlocks.length(); i++) {
@@ -5462,17 +5461,20 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
         return false;
     }
 
-#ifdef MOZ_VTUNE
-    if (IsVTuneProfilingActive() && !m.trackProfiledFunction(func, m.masm().size()))
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+    // Profiling might not be active now, but it may be activated later (perhaps
+    // after the module has been cached and reloaded from the cache). Function
+    // profiling info isn't huge, so store it always (in --enable-profiling
+    // builds, which is only Nightly builds, but default).
+    if (!m.trackProfiledFunction(func, m.masm().size()))
         return false;
 #endif
 
 #ifdef JS_ION_PERF
+    // Per-block profiling info uses significantly more memory so only store
+    // this information if it is actively requested.
     if (PerfBlockEnabled()) {
         if (!m.trackPerfProfiledBlocks(mir.perfSpewer(), func, m.masm().size()))
-            return false;
-    } else if (PerfFuncEnabled()) {
-        if (!m.trackPerfProfiledFunction(func, m.masm().size()))
             return false;
     }
 #endif
