@@ -80,6 +80,11 @@ TEST_SUITES = {
         'mach_command': 'mochitest-chrome',
         'kwargs': {'test_file': None},
     },
+    'mochitest-devtools': {
+        'aliases': ('dt', 'DT', 'Dt'),
+        'mach_command': 'mochitest-browser --subsuite=devtools',
+        'kwargs': {'test_file': None},
+    },
     'mochitest-ipcplugins': {
         'make_target': 'mochitest-ipcplugins',
     },
