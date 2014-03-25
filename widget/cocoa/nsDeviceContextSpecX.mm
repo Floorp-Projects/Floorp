@@ -43,7 +43,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsCOMPtr<nsPrintSettingsX> settings(do_QueryInterface(aPS));
+  nsRefPtr<nsPrintSettingsX> settings(do_QueryObject(aPS));
   if (!settings)
     return NS_ERROR_NO_INTERFACE;
 
