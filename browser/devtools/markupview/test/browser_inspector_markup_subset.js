@@ -1,150 +1,84 @@
-/* Any copyright", " is dedicated to the Public Domain.
-http://creativecommons.org/publicdomain/zero/1.0/ */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * Tests that the markup view loads only as many nodes as specified
- * by the devtools.markup.pagesize preference.
- */
+// Tests that the markup view loads only as many nodes as specified by the
+// devtools.markup.pagesize preference.
 
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.markup.pagesize");
-});
 Services.prefs.setIntPref("devtools.markup.pagesize", 5);
 
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_subset.html";
+const TEST_DATA = [{
+  desc: "Select the last item",
+  selector: "#z",
+  expected: "*more*vwxyz"
+}, {
+  desc: "Select the first item",
+  selector: "#a",
+  expected: "abcde*more*"
+}, {
+  desc: "Select the last item",
+  selector: "#z",
+  expected: "*more*vwxyz"
+}, {
+  desc: "Select an already-visible item",
+  selector: "#v",
+  // Because "v" was already visible, we shouldn't have loaded
+  // a different page.
+  expected: "*more*vwxyz"
+}, {
+  desc: "Verify childrenDirty reloads the page",
+  selector: "#w",
+  forceReload: true,
+  // But now that we don't already have a loaded page, selecting
+  // w should center around w.
+  expected: "*more*uvwxy*more*"
+}];
 
-function test() {
-  waitForExplicitFinish();
+let test = asyncTest(function*() {
+  let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
-  // Will hold the doc we're viewing
-  let doc;
+  info("Start iterating through the test data");
+  for (let step of TEST_DATA) {
+    info("Start test: " + step.desc);
 
-  let inspector;
-
-  // Holds the MarkupTool object we're testing.
-  let markup;
-
-  function assertChildren(expected)
-  {
-    let container = getContainerForRawNode(markup, doc.querySelector("body"));
-    let found = [];
-    for (let child of container.children.children) {
-      if (child.classList.contains("more-nodes")) {
-        found += "*more*";
-      } else {
-        found += child.container.node.getAttribute("id");
-      }
+    if (step.forceReload) {
+      forceReload(inspector);
     }
-    is(found, expected, "Got the expected children.");
+    info("Selecting the node that corresponds to " + step.selector);
+    yield selectNode(step.selector, inspector);
+
+    info("Checking that the right nodes are shwon");
+    assertChildren(step.expected, inspector);
   }
 
-  function forceReload()
-  {
-    let container = getContainerForRawNode(markup, doc.querySelector("body"));
-    container.childrenDirty = true;
-  }
+  info("Checking that clicking the more button loads everything");
+  clickShowMoreNodes(inspector);
+  yield inspector.markup._waitForChildren();
+  assertChildren("abcdefghijklmnopqrstuvwxyz", inspector);
+});
 
-  let selections = [
-    {
-      desc: "Select the last item",
-      selector: "#z",
-      before: function() {},
-      after: function() {
-        assertChildren("*more*vwxyz");
-      }
-    },
-    {
-      desc: "Select the first item",
-      selector: "#a",
-      before: function() {
-      },
-      after: function() {
-        assertChildren("abcde*more*");
-      }
-    },
-    {
-      desc: "Select the last item",
-      selector: "#z",
-      before: function() {},
-      after: function() {
-        assertChildren("*more*vwxyz");
-      }
-    },
-    {
-      desc: "Select an already-visible item",
-      selector: "#v",
-      before: function() {},
-      after: function() {
-        // Because "v" was already visible, we shouldn't have loaded
-        // a different page.
-        assertChildren("*more*vwxyz");
-      },
-    },
-    {
-      desc: "Verify childrenDirty reloads the page",
-      selector: "#w",
-      before: function() {
-        forceReload();
-      },
-      after: function() {
-        // But now that we don't already have a loaded page, selecting
-        // w should center around w.
-        assertChildren("*more*uvwxy*more*");
-      },
-    },
-  ];
-
-  // Create the helper tab for parsing...
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    doc = content.document;
-    waitForFocus(setupTest, content);
-  }, true);
-  content.location = "http://mochi.test:8888/browser/browser/devtools/markupview/test/browser_inspector_markup_subset.html";
-
-  function setupTest() {
-    var target = TargetFactory.forTab(gBrowser.selectedTab);
-    let toolbox = gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-      inspector = toolbox.getCurrentPanel();
-      markup = inspector.markup;
-      inspector.once("inspector-updated", runNextSelection);
-    });
-  }
-
-  function runNextSelection() {
-    let selection = selections.shift();
-    if (!selection) {
-      clickMore();
-      return;
+function assertChildren(expected, inspector) {
+  let container = getContainerForRawNode("body", inspector);
+  let found = "";
+  for (let child of container.children.children) {
+    if (child.classList.contains("more-nodes")) {
+      found += "*more*";
+    } else {
+      found += child.container.node.getAttribute("id");
     }
-
-    info(selection.desc);
-    selection.before();
-    inspector.once("inspector-updated", function() {
-      selection.after();
-      runNextSelection();
-    });
-    inspector.selection.setNode(doc.querySelector(selection.selector));
   }
+  is(found, expected, "Got the expected children.");
+}
 
-  function clickMore() {
-    info("Check that clicking more loads the whole thing.");
-    // Make sure that clicking the "more" button loads all the nodes.
-    let container = getContainerForRawNode(markup, doc.querySelector("body"));
-    let button = container.elt.querySelector("button");
-    let win = button.ownerDocument.defaultView;
+function forceReload(inspector) {
+  let container = getContainerForRawNode("body", inspector);
+  container.childrenDirty = true;
+}
 
-    EventUtils.sendMouseEvent({type: "click"}, button, win);
-
-    markup._waitForChildren().then(() => {
-      assertChildren("abcdefghijklmnopqrstuvwxyz");
-      finishUp();
-    });
-  }
-
-  function finishUp() {
-    doc = inspector = markup = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  }
+function clickShowMoreNodes(inspector) {
+  let container = getContainerForRawNode("body", inspector);
+  let button = container.elt.querySelector("button");
+  let win = button.ownerDocument.defaultView;
+  EventUtils.sendMouseEvent({type: "click"}, button, win);
 }

@@ -1,28 +1,21 @@
-/* Any copyright", " is dedicated to the Public Domain.
-http://creativecommons.org/publicdomain/zero/1.0/ */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-/**
- * Tests that various editors work as expected. Also checks
- * that the various changes are properly undoable and redoable.
- * For each step in the test, we:
- * - Run the setup for that test (if any)
- * - Check that the node we're editing is as we expect
- * - Make the change, check that the change was made as we expect
- * - Undo the change, check that the node is back in its original state
- * - Redo the change, check that the node change was made again correctly.
- *
- * This test mostly tries to verify that the editor makes changes to the
- * underlying DOM, not that the UI updates - UI updates are based on
- * underlying DOM changes, and the mutation tests should cover those cases.
- */
+// Tests that various editors work as expected. Also checks
+// that the various changes are properly undoable and redoable.
+// For each step in the test, we:
+// - Check that the node we're editing is as we expect
+// - Make the change, check that the change was made as we expect
+// - Undo the change, check that the node is back in its original state
+// - Redo the change, check that the node change was made again correctly.
+// This test mostly tries to verify that the editor makes changes to the
+// underlying DOM, not that the UI updates - UI updates are based on
+// underlying DOM changes, and the mutation tests should cover those cases.
 
-waitForExplicitFinish();
-
-let doc, inspector, markup;
-
-let TEST_URL = "http://mochi.test:8888/browser/browser/devtools/markupview/test/browser_inspector_markup_edit.html";
+let TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_edit.html";
 let LONG_ATTRIBUTE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let LONG_ATTRIBUTE_COLLAPSED = "ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEF\u2026UVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ-ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 let DATA_URL_INLINE_STYLE='color: red; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC");';
@@ -33,20 +26,20 @@ let DATA_URL_ATTRIBUTE_COLLAPSED = "data:image/png;base64,iVBORw0K\u20269/AFGGFy
 let TEST_DATA = [
   {
     desc: "Change an attribute",
-    before: function() {
-      assertAttributes(doc.querySelector("#node1"), {
+    before: function(inspector) {
+      assertAttributes("#node1", {
         id: "node1",
         class: "node1"
       });
     },
-    execute: function(after) {
+    execute: function(after, inspector) {
       inspector.once("markupmutation", after);
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node1")).editor;
+      let editor = getContainerForRawNode("#node1", inspector).editor;
       let attr = editor.attrs["class"].querySelector(".editable");
       setEditableFieldValue(attr, 'class="changednode1"', inspector);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node1"), {
+    after: function(inspector) {
+      assertAttributes("#node1", {
         id: "node1",
         class: "changednode1"
       });
@@ -55,20 +48,20 @@ let TEST_DATA = [
   {
     desc: 'Try changing an attribute to a quote (") - this should result ' +
           'in it being set to an empty string',
-    before: function() {
-      assertAttributes(doc.querySelector("#node22"), {
+    before: function(inspector) {
+      assertAttributes("#node22", {
         id: "node22",
         class: "unchanged"
       });
     },
-    execute: function(after) {
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node22")).editor;
+    execute: function(after, inspector) {
+      let editor = getContainerForRawNode("#node22", inspector).editor;
       let attr = editor.attrs["class"].querySelector(".editable");
       setEditableFieldValue(attr, 'class="""', inspector);
       inspector.once("markupmutation", after);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node22"), {
+    after: function(inspector) {
+      assertAttributes("#node22", {
         id: "node22",
         class: ""
       });
@@ -76,39 +69,39 @@ let TEST_DATA = [
   },
   {
     desc: "Remove an attribute",
-    before: function() {
-      assertAttributes(doc.querySelector("#node4"), {
+    before: function(inspector) {
+      assertAttributes("#node4", {
         id: "node4",
         class: "node4"
       });
     },
-    execute: function(after) {
+    execute: function(after, inspector) {
       inspector.once("markupmutation", after);
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node4")).editor;
+      let editor = getContainerForRawNode("#node4", inspector).editor;
       let attr = editor.attrs["class"].querySelector(".editable");
       setEditableFieldValue(attr, '', inspector);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node4"), {
+    after: function(inspector) {
+      assertAttributes("#node4", {
         id: "node4",
       });
     }
   },
   {
     desc: "Add an attribute by clicking the empty space after a node",
-    before: function() {
-      assertAttributes(doc.querySelector("#node14"), {
+    before: function(inspector) {
+      assertAttributes("#node14", {
         id: "node14",
       });
     },
-    execute: function(after) {
+    execute: function(after, inspector) {
       inspector.once("markupmutation", after);
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node14")).editor;
+      let editor = getContainerForRawNode("#node14", inspector).editor;
       let attr = editor.newAttr;
       setEditableFieldValue(attr, 'class="newclass" style="color:green"', inspector);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node14"), {
+    after: function(inspector) {
+      assertAttributes("#node14", {
         id: "node14",
         class: "newclass",
         style: "color:green"
@@ -119,19 +112,19 @@ let TEST_DATA = [
     desc: 'Try add an attribute containing a quote (") attribute by ' +
           'clicking the empty space after a node - this should result ' +
           'in it being set to an empty string',
-    before: function() {
-      assertAttributes(doc.querySelector("#node23"), {
+    before: function(inspector) {
+      assertAttributes("#node23", {
         id: "node23",
       });
     },
-    execute: function(after) {
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node23")).editor;
+    execute: function(after, inspector) {
+      let editor = getContainerForRawNode("#node23", inspector).editor;
       let attr = editor.newAttr;
       setEditableFieldValue(attr, 'class="newclass" style="""', inspector);
       inspector.once("markupmutation", after);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node23"), {
+    after: function(inspector) {
+      assertAttributes("#node23", {
         id: "node23",
         class: "newclass",
         style: ""
@@ -140,19 +133,19 @@ let TEST_DATA = [
   },
   {
     desc: "Try add attributes by adding to an existing attribute's entry",
-    before: function() {
-      assertAttributes(doc.querySelector("#node24"), {
+    before: function(inspector) {
+      assertAttributes("#node24", {
         id: "node24",
       });
     },
-    execute: function(after) {
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+    execute: function(after, inspector) {
+      let editor = getContainerForRawNode("#node24", inspector).editor;
       let attr = editor.attrs["id"].querySelector(".editable");
       setEditableFieldValue(attr, attr.textContent + ' class="""', inspector);
       inspector.once("markupmutation", after);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node24"), {
+    after: function(inspector) {
+      assertAttributes("#node24", {
         id: "node24",
         class: ""
       });
@@ -160,25 +153,24 @@ let TEST_DATA = [
   },
   {
     desc: "Try to add long attribute to make sure it is collapsed in attribute editor.",
-    before: function() {
-      assertAttributes(doc.querySelector("#node24"), {
+    before: function(inspector) {
+      assertAttributes("#node24", {
         id: "node24",
         class: ""
       });
     },
-    execute: function(after) {
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+    execute: function(after, inspector) {
+      let editor = getContainerForRawNode("#node24", inspector).editor;
       let attr = editor.newAttr;
       setEditableFieldValue(attr, 'data-long="'+LONG_ATTRIBUTE+'"', inspector);
       inspector.once("markupmutation", after);
     },
-    after: function() {
-
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+    after: function(inspector) {
+      let editor = getContainerForRawNode("#node24", inspector).editor;
       let visibleAttrText = editor.attrs["data-long"].querySelector(".attr-value").textContent;
       is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
 
-      assertAttributes(doc.querySelector("#node24"), {
+      assertAttributes("#node24", {
         id: "node24",
         class: "",
         'data-long':LONG_ATTRIBUTE
@@ -187,15 +179,15 @@ let TEST_DATA = [
   },
   {
     desc: "Try to modify the collapsed long attribute, making sure it expands.",
-    before: function() {
-      assertAttributes(doc.querySelector("#node24"), {
+    before: function(inspector) {
+      assertAttributes("#node24", {
         id: "node24",
         class: "",
         'data-long': LONG_ATTRIBUTE
       });
     },
-    execute: function(after) {
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+    execute: function(after, inspector) {
+      let editor = getContainerForRawNode("#node24", inspector).editor;
       let attr = editor.attrs["data-long"].querySelector(".editable");
 
       // Check to make sure it has expanded after focus
@@ -208,13 +200,12 @@ let TEST_DATA = [
       setEditableFieldValue(attr, input.value  + ' data-short="ABC"', inspector);
       inspector.once("markupmutation", after);
     },
-    after: function() {
-
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node24")).editor;
+    after: function(inspector) {
+      let editor = getContainerForRawNode("#node24", inspector).editor;
       let visibleAttrText = editor.attrs["data-long"].querySelector(".attr-value").textContent;
       is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
 
-      assertAttributes(doc.querySelector("#node24"), {
+      assertAttributes("#node24", {
         id: "node24",
         class: "",
         'data-long': LONG_ATTRIBUTE,
@@ -224,24 +215,23 @@ let TEST_DATA = [
   },
   {
     desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
-    before: function() {
-      assertAttributes(doc.querySelector("#node-data-url"), {
+    before: function(inspector) {
+      assertAttributes("#node-data-url", {
         id: "node-data-url"
       });
     },
-    execute: function(after) {
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url")).editor;
+    execute: function(after, inspector) {
+      let editor = getContainerForRawNode("#node-data-url", inspector).editor;
       let attr = editor.newAttr;
       setEditableFieldValue(attr, 'src="'+DATA_URL_ATTRIBUTE+'"', inspector);
       inspector.once("markupmutation", after);
     },
-    after: function() {
-
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url")).editor;
+    after: function(inspector) {
+      let editor = getContainerForRawNode("#node-data-url", inspector).editor;
       let visibleAttrText = editor.attrs["src"].querySelector(".attr-value").textContent;
       is (visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
 
-      let node = doc.querySelector("#node-data-url");
+      let node = getNode("#node-data-url");
       is (node.width, 16, "Image width has been set after data url src.");
       is (node.height, 16, "Image height has been set after data url src.");
 
@@ -253,24 +243,23 @@ let TEST_DATA = [
   },
   {
     desc: "Try to add long data URL to make sure it is collapsed in attribute editor.",
-    before: function() {
-      assertAttributes(doc.querySelector("#node-data-url-style"), {
+    before: function(inspector) {
+      assertAttributes("#node-data-url-style", {
         id: "node-data-url-style"
       });
     },
-    execute: function(after) {
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url-style")).editor;
+    execute: function(after, inspector) {
+      let editor = getContainerForRawNode("#node-data-url-style", inspector).editor;
       let attr = editor.newAttr;
       setEditableFieldValue(attr, "style='"+DATA_URL_INLINE_STYLE+"'", inspector);
       inspector.once("markupmutation", after);
     },
-    after: function() {
-
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node-data-url-style")).editor;
+    after: function(inspector) {
+      let editor = getContainerForRawNode("#node-data-url-style", inspector).editor;
       let visibleAttrText = editor.attrs["style"].querySelector(".attr-value").textContent;
       is (visibleAttrText, DATA_URL_INLINE_STYLE_COLLAPSED)
 
-      assertAttributes(doc.querySelector("#node-data-url-style"), {
+      assertAttributes("#node-data-url-style", {
         id: "node-data-url-style",
         'style': DATA_URL_INLINE_STYLE
       });
@@ -278,37 +267,37 @@ let TEST_DATA = [
   },
   {
     desc: "Edit text",
-    before: function() {
-      let node = doc.querySelector('.node6').firstChild;
+    before: function(inspector) {
+      let node = getNode('.node6').firstChild;
       is(node.nodeValue, "line6", "Text should be unchanged");
     },
-    execute: function(after) {
+    execute: function(after, inspector) {
       inspector.once("markupmutation", after);
-      let node = doc.querySelector('.node6').firstChild;
-      let editor = getContainerForRawNode(markup, node).editor;
+      let node = getNode('.node6').firstChild;
+      let editor = getContainerForRawNode(node, inspector).editor;
       let field = editor.elt.querySelector("pre");
       setEditableFieldValue(field, "New text", inspector);
     },
-    after: function() {
-      let node = doc.querySelector('.node6').firstChild;
+    after: function(inspector) {
+      let node = getNode('.node6').firstChild;
       is(node.nodeValue, "New text", "Text should be changed.");
     },
   },
   {
     desc: "Add an attribute value containing < > &uuml; \" & '",
-    before: function() {
-      assertAttributes(doc.querySelector("#node25"), {
+    before: function(inspector) {
+      assertAttributes("#node25", {
         id: "node25",
       });
     },
-    execute: function(after) {
+    execute: function(after, inspector) {
       inspector.once("markupmutation", after);
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node25")).editor;
+      let editor = getContainerForRawNode("#node25", inspector).editor;
       let attr = editor.newAttr;
       setEditableFieldValue(attr, 'src="somefile.html?param1=<a>&param2=&uuml;&param3=\'&quot;\'"', inspector);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node25"), {
+    after: function(inspector) {
+      assertAttributes("#node25", {
         id: "node25",
         src: "somefile.html?param1=<a>&param2=\xfc&param3='\"'"
       });
@@ -316,17 +305,16 @@ let TEST_DATA = [
   },
   {
     desc: "Modify inline style containing \"",
-    before: function() {
-      assertAttributes(doc.querySelector("#node26"), {
+    before: function(inspector) {
+      assertAttributes("#node26", {
         id: "node26",
         style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");'
       });
     },
-    execute: function(after) {
+    execute: function(after, inspector) {
       inspector.once("markupmutation", after);
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node26")).editor;
+      let editor = getContainerForRawNode("#node26", inspector).editor;
       let attr = editor.attrs["style"].querySelector(".editable");
-
 
       attr.focus();
       EventUtils.sendKey("return", inspector.panelWin);
@@ -344,8 +332,8 @@ let TEST_DATA = [
 
       EventUtils.sendKey("return", inspector.panelWin);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node26"), {
+    after: function(inspector) {
+      assertAttributes("#node26", {
         id: "node26",
         style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");'
       });
@@ -353,15 +341,15 @@ let TEST_DATA = [
   },
   {
     desc: "Modify inline style containing \" and \'",
-    before: function() {
-      assertAttributes(doc.querySelector("#node27"), {
+    before: function(inspector) {
+      assertAttributes("#node27", {
         id: "node27",
         class: 'Double " and single \''
       });
     },
-    execute: function(after) {
+    execute: function(after, inspector) {
       inspector.once("markupmutation", after);
-      let editor = getContainerForRawNode(markup, doc.querySelector("#node27")).editor;
+      let editor = getContainerForRawNode("#node27", inspector).editor;
       let attr = editor.attrs["class"].querySelector(".editable");
 
       attr.focus();
@@ -377,8 +365,8 @@ let TEST_DATA = [
 
       EventUtils.sendKey("return", inspector.panelWin);
     },
-    after: function() {
-      assertAttributes(doc.querySelector("#node27"), {
+    after: function(inspector) {
+      assertAttributes("#node27", {
         id: "node27",
         class: '" " and \' \''
       });
@@ -386,56 +374,36 @@ let TEST_DATA = [
   }
 ];
 
-function test() {
-  addTab(TEST_URL).then(openInspector).then(args => {
-    inspector = args.inspector;
-    doc = content.document;
-    markup = inspector.markup;
+let test = asyncTest(function*() {
+  let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
-    markup.expandAll().then(() => {
-      // Iterate through the items in TEST_DATA
-      let cursor = 0;
+  info("Expanding all nodes in the markup-view");
+  yield inspector.markup.expandAll();
 
-      function nextEditTest() {
-        executeSoon(function() {
-          if (cursor >= TEST_DATA.length) {
-            return finishUp();
-          }
-
-          let step = TEST_DATA[cursor++];
-          info("Start test for: " + step.desc);
-          if (step.setup) {
-            step.setup();
-          }
-          step.before();
-          step.execute(function() {
-            step.after();
-
-            undoChange(inspector).then(() => {
-              step.before();
-
-              redoChange(inspector).then(() => {
-                step.after();
-                info("End test for: " + step.desc);
-                nextEditTest();
-              });
-            });
-          });
-        });
-      }
-
-      nextEditTest();
-    });
-  });
-}
-
-function finishUp() {
-  while (markup.undo.canUndo()) {
-    markup.undo.undo();
+  for (let step of TEST_DATA) {
+    yield executeStep(step, inspector);
   }
-  inspector.once("inspector-updated", () => {
-    doc = inspector = markup = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  });
+  yield inspector.once("inspector-updated");
+});
+
+function executeStep(step, inspector) {
+  let def = promise.defer();
+
+  info("Start test for: " + step.desc);
+  step.before(inspector);
+  step.execute(function() {
+    step.after(inspector);
+
+    undoChange(inspector).then(() => {
+      step.before(inspector);
+
+      redoChange(inspector).then(() => {
+        step.after(inspector);
+        info("End test for: " + step.desc);
+        def.resolve();
+      });
+    });
+  }, inspector);
+
+  return def.promise;
 }
