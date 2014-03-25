@@ -103,7 +103,8 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         if (!TextUtils.isEmpty(title)) {
-            builder.setTitle(title);
+            // Long strings can delay showing the dialog, so we cap the number of characters shown to 256.
+            builder.setTitle(title.substring(0, Math.min(title.length(), 256) - 1));
         }
 
         if (!TextUtils.isEmpty(text)) {
