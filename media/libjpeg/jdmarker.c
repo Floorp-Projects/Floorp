@@ -3,7 +3,7 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modifications:
+ * libjpeg-turbo Modifications:
  * Copyright (C) 2012, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -478,13 +478,14 @@ get_dht (j_decompress_ptr cinfo)
 
     if (index & 0x10) {		/* AC table definition */
       index -= 0x10;
+      if (index < 0 || index >= NUM_HUFF_TBLS)
+        ERREXIT1(cinfo, JERR_DHT_INDEX, index);
       htblptr = &cinfo->ac_huff_tbl_ptrs[index];
     } else {			/* DC table definition */
+      if (index < 0 || index >= NUM_HUFF_TBLS)
+        ERREXIT1(cinfo, JERR_DHT_INDEX, index);
       htblptr = &cinfo->dc_huff_tbl_ptrs[index];
     }
-
-    if (index < 0 || index >= NUM_HUFF_TBLS)
-      ERREXIT1(cinfo, JERR_DHT_INDEX, index);
 
     if (*htblptr == NULL)
       *htblptr = jpeg_alloc_huff_table((j_common_ptr) cinfo);
