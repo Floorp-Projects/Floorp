@@ -20,15 +20,16 @@ import java.net.Proxy;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
@@ -114,47 +115,27 @@ import android.widget.Toast;
 public class GeckoAppShell
 {
     private static final String LOGTAG = "GeckoAppShell";
+    private static final boolean LOGGING = false;
 
-    // static members only
+    // We have static members only.
     private GeckoAppShell() { }
 
-    static private LinkedList<GeckoEvent> gPendingEvents =
-        new LinkedList<GeckoEvent>();
+    private static boolean restartScheduled = false;
+    private static GeckoEditableListener editableListener = null;
 
-    static private boolean gRestartScheduled = false;
+    private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
+    private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
 
-    static private GeckoEditableListener mEditableListener = null;
+    private static volatile boolean locationHighAccuracyEnabled;
 
-    static private final HashMap<String, String>
-        mAlertCookies = new HashMap<String, String>();
+    // Accessed by NotificationHelper. This should be encapsulated.
+    /* package */ static NotificationClient notificationClient;
 
     // See also HardwareUtils.LOW_MEMORY_THRESHOLD_MB.
-    static private final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
-
-    /* Keep in sync with constants found here:
-      http://mxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
-    */
-    static public final int WPL_STATE_START = 0x00000001;
-    static public final int WPL_STATE_STOP = 0x00000010;
-    static public final int WPL_STATE_IS_DOCUMENT = 0x00020000;
-    static public final int WPL_STATE_IS_NETWORK = 0x00040000;
-
-    /* Keep in sync with constants found here:
-      http://mxr.mozilla.org/mozilla-central/source/netwerk/base/public/nsINetworkLinkService.idl
-    */
-    static public final int LINK_TYPE_UNKNOWN = 0;
-    static public final int LINK_TYPE_ETHERNET = 1;
-    static public final int LINK_TYPE_USB = 2;
-    static public final int LINK_TYPE_WIFI = 3;
-    static public final int LINK_TYPE_WIMAX = 4;
-    static public final int LINK_TYPE_2G = 5;
-    static public final int LINK_TYPE_3G = 6;
-    static public final int LINK_TYPE_4G = 7;
+    private static final int HIGH_MEMORY_DEVICE_THRESHOLD_MB = 768;
 
     public static final String SHORTCUT_TYPE_WEBAPP = "webapp";
     public static final String SHORTCUT_TYPE_BOOKMARK = "bookmark";
-
-    static private final boolean LOGGING = false;
 
     static private int sDensityDpi = 0;
     static private int sScreenDepth = 0;
@@ -182,9 +163,26 @@ public class GeckoAppShell
     private static Sensor gProximitySensor = null;
     private static Sensor gLightSensor = null;
 
-    private static volatile boolean mLocationHighAccuracy;
+    /*
+     * Keep in sync with constants found here:
+     * http://mxr.mozilla.org/mozilla-central/source/uriloader/base/nsIWebProgressListener.idl
+    */
+    static public final int WPL_STATE_START = 0x00000001;
+    static public final int WPL_STATE_STOP = 0x00000010;
+    static public final int WPL_STATE_IS_DOCUMENT = 0x00020000;
+    static public final int WPL_STATE_IS_NETWORK = 0x00040000;
 
-    static NotificationClient sNotificationClient;
+    /* Keep in sync with constants found here:
+      http://mxr.mozilla.org/mozilla-central/source/netwerk/base/public/nsINetworkLinkService.idl
+    */
+    static public final int LINK_TYPE_UNKNOWN = 0;
+    static public final int LINK_TYPE_ETHERNET = 1;
+    static public final int LINK_TYPE_USB = 2;
+    static public final int LINK_TYPE_WIFI = 3;
+    static public final int LINK_TYPE_WIMAX = 4;
+    static public final int LINK_TYPE_2G = 5;
+    static public final int LINK_TYPE_3G = 6;
+    static public final int LINK_TYPE_4G = 7;
 
     /* The Android-side API: API methods that Android calls */
 
@@ -354,27 +352,48 @@ public class GeckoAppShell
     private static void geckoLoaded() {
         GeckoEditable editable = new GeckoEditable();
         // install the gecko => editable listener
-        mEditableListener = editable;
+        editableListener = editable;
     }
 
     static void sendPendingEventsToGecko() {
         try {
-            while (!gPendingEvents.isEmpty()) {
-                GeckoEvent e = gPendingEvents.removeFirst();
+            while (!PENDING_EVENTS.isEmpty()) {
+                final GeckoEvent e = PENDING_EVENTS.poll();
                 notifyGeckoOfEvent(e);
             }
         } catch (NoSuchElementException e) {}
     }
 
+    /**
+     * If the Gecko thread is running, immediately dispatches the event to
+     * Gecko.
+     *
+     * If the Gecko thread is not running, queues the event. If the queue is
+     * full, throws {@link IllegalStateException}.
+     *
+     * Queued events will be dispatched in order of arrival when the Gecko
+     * thread becomes live.
+     *
+     * This method can be called from any thread.
+     *
+     * @param e
+     *            the event to dispatch. Cannot be null.
+     */
     @RobocopTarget
     public static void sendEventToGecko(GeckoEvent e) {
+        if (e == null) {
+            throw new IllegalArgumentException("e cannot be null.");
+        }
+
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
-            // Gecko will copy the event data into a normal C++ object. We can recycle the evet now.
+            // Gecko will copy the event data into a normal C++ object. We can recycle the event now.
             e.recycle();
-        } else {
-            gPendingEvents.addLast(e);
+            return;
         }
+
+        // Throws if unable to add the event due to capacity restrictions.
+        PENDING_EVENTS.add(e);
     }
 
     // Tell the Gecko event loop that an event is available.
@@ -427,16 +446,16 @@ public class GeckoAppShell
 
     @WrapElementForJNI(generateStatic = true)
     public static void notifyIME(int type) {
-        if (mEditableListener != null) {
-            mEditableListener.notifyIME(type);
+        if (editableListener != null) {
+            editableListener.notifyIME(type);
         }
     }
 
     @WrapElementForJNI(generateStatic = true)
     public static void notifyIMEContext(int state, String typeHint,
                                         String modeHint, String actionHint) {
-        if (mEditableListener != null) {
-            mEditableListener.notifyIMEContext(state, typeHint,
+        if (editableListener != null) {
+            editableListener.notifyIMEContext(state, typeHint,
                                                modeHint, actionHint);
         }
     }
@@ -444,9 +463,9 @@ public class GeckoAppShell
     @WrapElementForJNI(generateStatic = true)
     public static void notifyIMEChange(String text, int start, int end, int newEnd) {
         if (newEnd < 0) { // Selection change
-            mEditableListener.onSelectionChange(start, end);
+            editableListener.onSelectionChange(start, end);
         } else { // Text change
-            mEditableListener.onTextChange(text, start, end, newEnd);
+            editableListener.onTextChange(text, start, end, newEnd);
         }
     }
 
@@ -544,7 +563,7 @@ public class GeckoAppShell
                         criteria.setSpeedRequired(false);
                         criteria.setBearingRequired(false);
                         criteria.setAltitudeRequired(false);
-                        if (mLocationHighAccuracy) {
+                        if (locationHighAccuracyEnabled) {
                             criteria.setAccuracy(Criteria.ACCURACY_FINE);
                             criteria.setCostAllowed(true);
                             criteria.setPowerRequirement(Criteria.POWER_HIGH);
@@ -582,7 +601,7 @@ public class GeckoAppShell
 
     @WrapElementForJNI
     public static void enableLocationHighAccuracy(final boolean enable) {
-        mLocationHighAccuracy = enable;
+        locationHighAccuracyEnabled = enable;
     }
 
     @WrapElementForJNI
@@ -700,7 +719,7 @@ public class GeckoAppShell
         // The launch state can only be Launched or GeckoRunning at this point
         GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoExiting);
         if (getGeckoInterface() != null) {
-            if (gRestartScheduled) {
+            if (restartScheduled) {
                 getGeckoInterface().doRestart();
             } else {
                 getGeckoInterface().getActivity().finish();
@@ -718,7 +737,7 @@ public class GeckoAppShell
 
     @WrapElementForJNI
     static void scheduleRestart() {
-        gRestartScheduled = true;
+        restartScheduled = true;
     }
 
     public static Intent getWebappIntent(String aURI, String aOrigin, String aTitle, Bitmap aIcon) {
@@ -1316,9 +1335,12 @@ public class GeckoAppShell
         return intent;
     }
 
+    /**
+     * Only called from GeckoApp.
+     */
     public static void setNotificationClient(NotificationClient client) {
-        if (sNotificationClient == null) {
-            sNotificationClient = client;
+        if (notificationClient == null) {
+            notificationClient = client;
         } else {
             Log.d(LOGTAG, "Notification client already set");
         }
@@ -1345,30 +1367,30 @@ public class GeckoAppShell
         PendingIntent contentIntent = PendingIntent.getActivity(
                 getContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        mAlertCookies.put(aAlertName, aAlertCookie);
+        ALERT_COOKIES.put(aAlertName, aAlertCookie);
         callObserver(aAlertName, "alertshow", aAlertCookie);
 
-        sNotificationClient.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
+        notificationClient.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
     }
 
     @WrapElementForJNI
     public static void alertsProgressListener_OnProgress(String aAlertName, long aProgress, long aProgressMax, String aAlertText) {
         int notificationID = aAlertName.hashCode();
-        sNotificationClient.update(notificationID, aProgress, aProgressMax, aAlertText);
+        notificationClient.update(notificationID, aProgress, aProgressMax, aAlertText);
     }
 
     @WrapElementForJNI
     public static void closeNotification(String aAlertName) {
-        String alertCookie = mAlertCookies.get(aAlertName);
+        String alertCookie = ALERT_COOKIES.get(aAlertName);
         if (alertCookie != null) {
             callObserver(aAlertName, "alertfinished", alertCookie);
-            mAlertCookies.remove(aAlertName);
+            ALERT_COOKIES.remove(aAlertName);
         }
 
         removeObserver(aAlertName);
 
         int notificationID = aAlertName.hashCode();
-        sNotificationClient.remove(notificationID);
+        notificationClient.remove(notificationID);
     }
 
     public static void handleNotification(String aAction, String aAlertName, String aAlertCookie) {
@@ -1377,7 +1399,7 @@ public class GeckoAppShell
         if (GeckoApp.ACTION_ALERT_CALLBACK.equals(aAction)) {
             callObserver(aAlertName, "alertclickcallback", aAlertCookie);
 
-            if (sNotificationClient.isOngoing(notificationID)) {
+            if (notificationClient.isOngoing(notificationID)) {
                 // When clicked, keep the notification if it displays progress
                 return;
             }

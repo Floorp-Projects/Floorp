@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/async.js");
+Cu.import("resource://testing-common/services-common/utils.js");
 
 let provider = {
   getFile: function(prop, persistent) {
@@ -124,3 +125,70 @@ function generateNewKeys(collectionKeys, collections=null) {
   collectionKeys.setContents(wbo.cleartext, modified);
 }
 
+// Helpers for testing open tabs.
+// These reflect part of the internal structure of TabEngine,
+// and stub part of Service.wm.
+
+function mockShouldSkipWindow (win) {
+  return win.closed ||
+         win.mockIsPrivate;
+}
+
+function mockGetTabState (tab) {
+  return tab;
+}
+
+function mockGetWindowEnumerator(url, numWindows, numTabs) {
+  let elements = [];
+  for (let w = 0; w < numWindows; ++w) {
+    let tabs = [];
+    let win = {
+      closed: false,
+      mockIsPrivate: false,
+      gBrowser: {
+        tabs: tabs,
+      },
+    };
+    elements.push(win);
+
+    for (let t = 0; t < numTabs; ++t) {
+      tabs.push(TestingUtils.deepCopy({
+        index: 1,
+        entries: [{
+          url: ((typeof url == "string") ? url : url()),
+          title: "title"
+        }],
+        attributes: {
+          image: "image"
+        },
+        lastAccessed: 1499
+      }));
+    }
+  }
+
+  // Always include a closed window and a private window.
+  elements.push({
+    closed: true,
+    mockIsPrivate: false,
+    gBrowser: {
+      tabs: [],
+    },
+  });
+ 
+  elements.push({
+    closed: false,
+    mockIsPrivate: true,
+    gBrowser: {
+      tabs: [],
+    },
+  });
+
+  return {
+    hasMoreElements: function () {
+      return elements.length;
+    },
+    getNext: function () {
+      return elements.shift();
+    },
+  };
+}
