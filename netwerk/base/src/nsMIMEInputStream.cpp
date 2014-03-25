@@ -301,7 +301,7 @@ nsMIMEInputStream::Serialize(InputStreamParams& aParams,
     MIMEInputStreamParams params;
 
     if (mData) {
-        nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mStream);
+        nsCOMPtr<nsIInputStream> stream = do_QueryInterface(mData);
         MOZ_ASSERT(stream);
 
         InputStreamParams wrappedParams;
