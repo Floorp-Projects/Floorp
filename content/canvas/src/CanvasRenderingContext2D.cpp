@@ -2411,20 +2411,6 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
   return new TextMetrics(width);
 }
 
-#ifdef ACCESSIBILITY
-// Callback function, for freeing hit regions bounds values stored in property table
-static void
-ReleaseBBoxPropertyValue(void*    aObject,       /* unused */
-                            nsIAtom* aPropertyName, /* unused */
-                            void*    aPropertyValue,
-                            void*    aData          /* unused */)
-{
-  nsRect* valPtr =
-    static_cast<nsRect*>(aPropertyValue);
-  delete valPtr;
-}
-#endif
-
 void
 CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorResult& error)
 {
@@ -2466,7 +2452,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
     *nsBounds = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
     options.mControl->DeleteProperty(nsGkAtoms::hitregion);
     options.mControl->SetProperty(nsGkAtoms::hitregion, nsBounds,
-                                  ReleaseBBoxPropertyValue);
+                                  nsINode::DeleteProperty<nsRect>);
   }
 #endif
 
