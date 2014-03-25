@@ -369,6 +369,7 @@ gbjar.sources += [
     'webapp/EventListener.java',
     'webapp/InstallHelper.java',
     'webapp/InstallListener.java',
+    'webapp/TaskKiller.java',
     'webapp/UninstallListener.java',
     'webapp/WebappImpl.java',
     'WebappAllocator.java',
