@@ -6479,6 +6479,10 @@ function AddonWrapper(aAddon) {
     return ops;
   });
 
+  this.__defineGetter__("isDebuggable", function AddonWrapper_isDebuggable() {
+    return this.isActive && aAddon.bootstrap;
+  });
+
   this.__defineGetter__("permissions", function AddonWrapper_permisionsGetter() {
     let permissions = 0;
 
