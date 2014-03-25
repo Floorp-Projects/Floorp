@@ -21,9 +21,11 @@ let brace;
 //    total items in the popup
 //  ]
 let testData = [
+  ["a", {accelKey: true, ctrlKey: true}, "", -1, 0],
   ["d", {}, "direction", 0, 3],
   ["VK_DOWN", {}, "display", 1, 3],
   ["VK_TAB", {}, "", -1, 10],
+  ["VK_DOWN", {}, "-moz-box", 0, 10],
   ["n", {}, "none", -1, 0],
   ["VK_TAB", {shiftKey: true}, "display", -1, 0],
   ["VK_BACK_SPACE", {}, "", -1, 0],
@@ -85,7 +87,8 @@ function checkStateAndMoveOn(index) {
       checkState();
     });
   }
-  else if (/(right|back_space|escape|return)/ig.test(key)) {
+  else if (/(right|back_space|escape|return)/ig.test(key) ||
+           (modifiers.accelKey || modifiers.ctrlKey)) {
     info("added event listener for right|escape|back_space|return keys");
     editor.input.addEventListener("keypress", function onKeypress() {
       if (editor.input) {
