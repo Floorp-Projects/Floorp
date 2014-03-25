@@ -405,11 +405,10 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModu
                         exits_.sizeOfExcludingThis(mallocSizeOf) +
                         exports_.sizeOfExcludingThis(mallocSizeOf) +
                         heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
-#if defined(MOZ_VTUNE)
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
                         profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
 #if defined(JS_ION_PERF)
-                        profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
                         perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
                         functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
@@ -761,6 +760,31 @@ AsmJSModule::StaticLinkData::deserialize(ExclusiveContext *cx, const uint8_t *cu
     return cursor;
 }
 
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+size_t
+AsmJSModule::ProfiledFunction::serializedSize() const
+{
+    return SerializedNameSize(name) +
+           sizeof(pod);
+}
+
+uint8_t *
+AsmJSModule::ProfiledFunction::serialize(uint8_t *cursor) const
+{
+    cursor = SerializeName(cursor, name);
+    cursor = WriteBytes(cursor, &pod, sizeof(pod));
+    return cursor;
+}
+
+const uint8_t *
+AsmJSModule::ProfiledFunction::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
+{
+    (cursor = DeserializeName(cx, cursor, &name)) &&
+    (cursor = ReadBytes(cursor, &pod, sizeof(pod)));
+    return cursor;
+}
+#endif
+
 bool
 AsmJSModule::StaticLinkData::clone(ExclusiveContext *cx, StaticLinkData *out) const
 {
@@ -788,6 +812,9 @@ AsmJSModule::serializedSize() const
            SerializedVectorSize(exits_) +
            SerializedVectorSize(exports_) +
            SerializedPodVectorSize(heapAccesses_) +
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+           SerializedVectorSize(profiledFunctions_) +
+#endif
            staticLinkData_.serializedSize();
 }
 
@@ -803,6 +830,9 @@ AsmJSModule::serialize(uint8_t *cursor) const
     cursor = SerializeVector(cursor, exits_);
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, heapAccesses_);
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+    cursor = SerializeVector(cursor, profiledFunctions_);
+#endif
     cursor = staticLinkData_.serialize(cursor);
     return cursor;
 }
@@ -824,6 +854,9 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     (cursor = DeserializeVector(cx, cursor, &exits_)) &&
     (cursor = DeserializeVector(cx, cursor, &exports_)) &&
     (cursor = DeserializePodVector(cx, cursor, &heapAccesses_)) &&
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+    (cursor = DeserializeVector(cx, cursor, &profiledFunctions_)) &&
+#endif
     (cursor = staticLinkData_.deserialize(cx, cursor));
 
     loadedFromCache_ = true;
