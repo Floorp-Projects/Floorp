@@ -71,61 +71,24 @@ extern JS_PUBLIC_API(void) JS_Abort(void);
 extern JS_PUBLIC_DATA(uint32_t) OOM_maxAllocations; /* set in builtins/TestingFunctions.cpp */
 extern JS_PUBLIC_DATA(uint32_t) OOM_counter; /* data race, who cares. */
 
-#ifdef JS_OOM_DO_BACKTRACES
-#define JS_OOM_BACKTRACE_SIZE 32
-static MOZ_ALWAYS_INLINE void
-PrintBacktrace()
-{
-    void* OOM_trace[JS_OOM_BACKTRACE_SIZE];
-    char** OOM_traceSymbols = nullptr;
-    int32_t OOM_traceSize = 0;
-    int32_t OOM_traceIdx = 0;
-    OOM_traceSize = backtrace(OOM_trace, JS_OOM_BACKTRACE_SIZE);
-    OOM_traceSymbols = backtrace_symbols(OOM_trace, OOM_traceSize);
-
-    if (!OOM_traceSymbols)
-        return;
-
-    for (OOM_traceIdx = 0; OOM_traceIdx < OOM_traceSize; ++OOM_traceIdx) {
-        fprintf(stderr, "#%d %s\n", OOM_traceIdx, OOM_traceSymbols[OOM_traceIdx]);
-    }
-
-    // This must be free(), not js_free(), because backtrace_symbols()
-    // allocates with malloc().
-    free(OOM_traceSymbols);
-}
-
-#define JS_OOM_EMIT_BACKTRACE() \
-    do {\
-        fprintf(stderr, "Forcing artificial memory allocation function failure:\n");\
-	PrintBacktrace();\
-    } while (0)
-# else
-#  define JS_OOM_EMIT_BACKTRACE() do {} while(0)
-#endif /* JS_OOM_DO_BACKTRACES */
+#ifdef JS_OOM_BREAKPOINT
+static MOZ_NEVER_INLINE void js_failedAllocBreakpoint() { asm(""); }
+#define JS_OOM_CALL_BP_FUNC() js_failedAllocBreakpoint()
+#else
+#define JS_OOM_CALL_BP_FUNC() do {} while(0)
+#endif
 
 #  define JS_OOM_POSSIBLY_FAIL() \
     do \
     { \
         if (++OOM_counter > OOM_maxAllocations) { \
-            JS_OOM_EMIT_BACKTRACE();\
+            JS_OOM_CALL_BP_FUNC();\
             return nullptr; \
-        } \
-    } while (0)
-
-#  define JS_OOM_POSSIBLY_FAIL_REPORT(cx) \
-    do \
-    { \
-        if (++OOM_counter > OOM_maxAllocations) { \
-            JS_OOM_EMIT_BACKTRACE();\
-            js_ReportOutOfMemory(cx);\
-            return false; \
         } \
     } while (0)
 
 # else
 #  define JS_OOM_POSSIBLY_FAIL() do {} while(0)
-#  define JS_OOM_POSSIBLY_FAIL_REPORT(cx) do {} while(0)
 # endif /* JS_DEBUG */
 
 static inline void* js_malloc(size_t bytes)
