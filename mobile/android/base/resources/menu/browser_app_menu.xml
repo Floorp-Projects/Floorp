@@ -18,29 +18,9 @@
           android:icon="@drawable/ic_menu_forward"
           android:title="@string/forward"/>
 
-    <item android:id="@+id/save"
+    <item android:id="@+id/bookmark"
           android:icon="@drawable/ic_menu_bookmark_add"
-          android:title="@string/save">
-
-        <menu>
-
-            <item android:id="@+id/bookmark"
-                  android:title="@string/bookmark"
-                  android:checkable="true" />
-
-            <item android:id="@+id/reading_list_add"
-                  android:title="@string/reading_list_add"
-                  android:checkable="true" />
-
-            <item android:id="@+id/launcher_add"
-                  android:title="@string/contextmenu_add_to_launcher" />
-
-            <item android:id="@+id/save_subscribe"
-                  android:title="@string/contextmenu_subscribe" />
-
-        </menu>
-
-    </item>
+          android:title="@string/bookmark"/>
 
     <item android:id="@+id/new_tab"
           android:icon="@drawable/ic_menu_new_tab"

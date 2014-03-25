@@ -178,6 +178,10 @@
     z-index: 1;
   }
 
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tab-close-button:not(:-moz-any(:hover,:-moz-lwtheme,[selected="true"])) {
+    -moz-image-region: rect(0, 64px, 16px, 48px);
+  }
+
   #main-window[tabsintitlebar][sizemode="normal"] #titlebar-content:-moz-lwtheme {
     /* Render a window top border: */
     background-image: linear-gradient(to bottom,
@@ -888,6 +892,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   box-shadow: none !important;
 }
 
+#back-button:not([disabled="true"]):hover:active > .toolbarbutton-icon,
 #back-button[open="true"] > .toolbarbutton-icon {
   background-color: hsla(210,4%,10%,.12) !important;
   box-shadow: 0 1px 0 0 hsla(210,80%,20%,.1) inset !important;
