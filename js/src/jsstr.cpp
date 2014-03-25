@@ -1860,7 +1860,8 @@ DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearSt
         return true;
     }
 
-    res->updateFromMatchPairs(cx, input, matches);
+    if (!res->updateFromMatchPairs(cx, input, matches))
+        return false;
 
     RootedValue rval(cx);
     if (!CreateRegExpMatchResult(cx, input, matches, &rval))
@@ -2172,7 +2173,9 @@ DoMatchForReplaceLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*
     if (status == RegExpRunStatus_Success_NotFound)
         return true;
 
-    res->updateFromMatchPairs(cx, linearStr, matches);
+    if (!res->updateFromMatchPairs(cx, linearStr, matches))
+        return false;
+
     return ReplaceRegExp(cx, res, rdata);
 }
 
@@ -2193,7 +2196,8 @@ DoMatchForReplaceGlobal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString
         if (status == RegExpRunStatus_Success_NotFound)
             break;
 
-        res->updateFromMatchPairs(cx, linearStr, matches);
+        if (!res->updateFromMatchPairs(cx, linearStr, matches))
+            return false;
 
         if (!ReplaceRegExp(cx, res, rdata))
             return false;
@@ -3290,7 +3294,8 @@ class SplitRegExpMatcher
             return true;
         }
 
-        res->updateFromMatchPairs(cx, str, matches);
+        if (!res->updateFromMatchPairs(cx, str, matches))
+            return false;
 
         JSSubString sep;
         res->getLastMatch(&sep);
