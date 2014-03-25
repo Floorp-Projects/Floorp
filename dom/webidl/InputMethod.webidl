@@ -150,11 +150,15 @@ interface MozInputContext: EventTarget {
     /*
       * send a character with its key events.
       * @param modifiers see http://mxr.mozilla.org/mozilla-central/source/dom/interfaces/base/nsIDOMWindowUtils.idl#206
+      * @param repeat indicates whether a key would be sent repeatedly.
       * @return true if succeeds. Otherwise false if the input context becomes void.
       * Alternative: sendKey(KeyboardEvent event), but we will likely
       * waste memory for creating the KeyboardEvent object.
+      * Note that, if you want to send a key n times repeatedly, make sure set
+      * parameter repeat to true and invoke sendKey n-1 times, and then set
+      * repeat to false in the last invoke.
       */
-    Promise sendKey(long keyCode, long charCode, long modifiers);
+    Promise sendKey(long keyCode, long charCode, long modifiers, optional boolean repeat);
 
     /*
      * Set current composing text. This method will start composition or update
