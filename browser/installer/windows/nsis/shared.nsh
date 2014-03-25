@@ -5,6 +5,23 @@
 ; The registration ID of the COM server which is used for choosing wether
 ; to launch the Win8 metro browser or desktop browser.
 !define DELEGATE_EXECUTE_HANDLER_ID {5100FEC1-212B-4BF5-9BF8-3E650FD794A3}
+;
+; Defines for adjust token privs and for enumerating keys
+!ifndef TOKEN_QUERY
+  !define TOKEN_QUERY             0x0008
+!endif
+!ifndef TOKEN_ADJUST_PRIVILEGES
+  !define TOKEN_ADJUST_PRIVILEGES 0x0020
+!endif
+!ifndef SE_RESTORE_NAME
+  !define SE_RESTORE_NAME         SeRestorePrivilege
+!endif
+!ifndef SE_PRIVILEGE_ENABLED
+  !define SE_PRIVILEGE_ENABLED    0x00000002
+!endif
+!ifndef HKEY_USERS
+  !define HKEY_USERS              0x80000003
+!endif
 
 ; Does metro registration for the command execute handler
 Function RegisterCEH
@@ -215,6 +232,14 @@ FunctionEnd
       Sleep 3000
     ${EndIf}
     Call RegisterCEH
+  ${EndIf}
+!else
+  ; The metro browser is not enabled by the mozconfig.
+  ${If} ${AtLeastWin8}
+    ${RemoveDEHRegistration} ${DELEGATE_EXECUTE_HANDLER_ID} \
+                             $AppUserModelID \
+                             "FirefoxURL" \
+                             "FirefoxHTML"
   ${EndIf}
 !endif
 !macroend
@@ -749,23 +774,23 @@ FunctionEnd
 !macroend
 !define RemoveDeprecatedKeys "!insertmacro RemoveDeprecatedKeys"
 
-!ifdef MOZ_METRO
 ; Resets Win8+ specific toast keys Windows sets. We call this on a
 ; fresh install and on uninstall.
-!macro ResetWin8PromptKeys
+!macro ResetWin8PromptKeys KEY PREFIX
   ${If} ${AtLeastWin8}
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.htm"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.html"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xht"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xhtml"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.shtml"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_ftp"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_http"
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_https"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.htm"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.html"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xht"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.xhtml"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxHTML_.shtml"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_ftp"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_http"
+    DeleteRegValue ${KEY} "${PREFIX}Software\Microsoft\Windows\CurrentVersion\ApplicationAssociationToasts" "FirefoxURL_https"
   ${EndIf}
 !macroend
 !define ResetWin8PromptKeys "!insertmacro ResetWin8PromptKeys"
 
+!ifdef MOZ_METRO
 ; Resets Win8+ Metro specific splash screen info. Relies
 ; on AppUserModelID.
 !macro ResetWin8MetroSplash
@@ -776,6 +801,152 @@ FunctionEnd
 !macroend
 !define ResetWin8MetroSplash "!insertmacro ResetWin8MetroSplash"
 !endif
+
+; Adds SE_RESTORE_NAME privs
+!macro AcquireSERestoreName
+  StrCpy $R1 0
+
+  System::Call "kernel32::GetCurrentProcess() i .R0"
+  System::Call "advapi32::OpenProcessToken(i R0, i ${TOKEN_QUERY}|${TOKEN_ADJUST_PRIVILEGES}, \
+                                          *i R1R1) i .R0"
+  ${If} $R0 != 0
+    System::Call "advapi32::LookupPrivilegeValue(t n, t '${SE_RESTORE_NAME}', *l .R2) i .R0"
+    ${If} $R0 != 0
+      System::Call "*(i 1, l R2, i ${SE_PRIVILEGE_ENABLED}) i .R0"
+      System::Call "advapi32::AdjustTokenPrivileges(i R1, i 0, i R0, i 0, i 0, i 0)"
+      System::Free $R0
+    ${EndIf}
+    System::Call "kernel32::CloseHandle(i R1)"
+  ${EndIf}
+!macroend
+!define AcquireSERestoreName "!insertmacro AcquireSERestoreName"
+!define un.AcquireSERestoreName "!insertmacro AcquireSERestoreName"
+
+; Mounts all user ntuser.dat files into the registry as a subkey of HKU
+!macro MountRegistryIntoHKU
+  ; $0 is used as an index for HKEY_USERS enumeration
+  StrCpy $0 0
+  ${Do}
+    EnumRegKey $1 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" $0
+    ${If} $1 == ""
+      ${Break}
+    ${EndIf}
+    ReadRegStr $2 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\$1" "ProfileImagePath"
+    System::Call "advapi32::RegLoadKey(i ${HKEY_USERS}, t 'User-$0', t '$2\ntuser.dat')"
+    System::Call "advapi32::RegLoadKey(i ${HKEY_USERS}, t 'User-$0_Classes', t '$2\AppData\Local\Microsoft\Windows\UsrClass.dat')"
+    IntOp $0 $0 + 1
+  ${Loop}
+!macroend
+!define MountRegistryIntoHKU "!insertmacro MountRegistryIntoHKU"
+!define un.MountRegistryIntoHKU "!insertmacro MountRegistryIntoHKU"
+;
+; Unmounts all user ntuser.dat files into the registry as a subkey of HKU
+!macro UnmountRegistryIntoHKU
+  ; $0 is used as an index for HKEY_USERS enumeration
+  StrCpy $0 0
+  ${Do}
+    EnumRegKey $1 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList" $0
+    ${If} $1 == ""
+      ${Break}
+    ${EndIf}
+    ReadRegStr $2 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\$1" "ProfileImagePath"
+    System::Call "advapi32::RegUnLoadKey(i ${HKEY_USERS}, t 'User-$0')"
+    System::Call "advapi32::RegUnLoadKey(i ${HKEY_USERS}, t 'User-$0_Classes')"
+    IntOp $0 $0 + 1
+  ${Loop}
+!macroend
+!define UnmountRegistryIntoHKU "!insertmacro UnmountRegistryIntoHKU"
+!define un.UnmountRegistryIntoHKU "!insertmacro UnmountRegistryIntoHKU"
+
+; Unconditionally removes the delegate execute handler registration used to
+; launch the metro browser and misc. metro related registry values.
+!macro RemoveDEHRegistration DELEGATE_EXECUTE_HANDLER_ID \
+                             APP_USER_MODEL_ID \
+                             PROTOCOL_ACTIVATION_ID \
+                             FILE_ACTIVATION_ID
+  ${AcquireSERestoreName}
+  ${MountRegistryIntoHKU}
+
+  ; $0 is used as an index for HKEY_USERS enumeration
+  StrCpy $0 0
+
+  ${Do}
+    EnumRegKey $1 HKU "" $0
+    ${If} $1 == ""
+      ${Break}
+    ${EndIf}
+
+    ClearErrors
+    ${WordFind} "$1" "_Classes" "E#" $3
+    ${Unless} ${Errors}
+      ; remove the app user model id root registration. We don't need this
+      ; here anymore, we just use it for tray registrationdown in widget,
+      ; which we read out of the mozilla keys.
+      ${If} "${APP_USER_MODEL_ID}" != ""
+        ; The removal of this key intermittently fails, so do the best we can in cleanup
+        DeleteRegValue HKU "$1\${APP_USER_MODEL_ID}\.exe\shell\open\command" "DelegateExecute"
+        DeleteRegKey HKU "$1\${APP_USER_MODEL_ID}\.exe\shell\open"
+        DeleteRegKey HKU "$1\${APP_USER_MODEL_ID}\.exe\shell"
+        DeleteRegKey HKU "$1\${APP_USER_MODEL_ID}\.exe"
+        DeleteRegKey HKU "$1\\${APP_USER_MODEL_ID}"
+      ${EndIf}
+      ;
+      ; Remove delegate execute handler clsid registration
+      DeleteRegKey HKU "$1\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}"
+
+      ; Remove protocol and file delegate execute handler id assoc
+      DeleteRegValue HKU "$1\${PROTOCOL_ACTIVATION_ID}" "AppUserModelID"
+      DeleteRegValue HKU "$1\${FILE_ACTIVATION_ID}" "AppUserModelID"
+
+      ; Remove delegate execute application registry keys
+      DeleteRegKey HKU "$1\${PROTOCOL_ACTIVATION_ID}\Application"
+      DeleteRegKey HKU "$1\${FILE_ACTIVATION_ID}\Application"
+
+      ; Remove misc. shell open info
+      DeleteRegValue HKU "$1\${PROTOCOL_ACTIVATION_ID}\shell\open" "CommandId"
+      DeleteRegValue HKU "$1\${FILE_ACTIVATION_ID}\shell\open" "CommandId"
+      DeleteRegValue HKU "$1\${PROTOCOL_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+      DeleteRegValue HKU "$1\${FILE_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+
+      ; remove metro browser splash image data
+      DeleteRegKey HKU "$1\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\DefaultBrowser_NOPUBLISHERID\SplashScreen\DefaultBrowser_NOPUBLISHERID!${APP_USER_MODEL_ID}"
+    ${Else}
+      ; misc. Metro keys
+      DeleteRegKey HKU "$1\Software\Mozilla\Firefox\Metro"
+      DeleteRegValue HKU "$1\Software\Mozilla\Firefox" "CEHDump"
+      DeleteRegValue HKU "$1\Software\Mozilla\Firefox" "MetroD3DAvailable"
+      DeleteRegValue HKU "$1\Software\Mozilla\Firefox" "MetroLastAHE"
+      ${ResetWin8PromptKeys} "HKU" "$1\"
+    ${EndIf}
+    IntOp $0 $0 + 1
+  ${Loop}
+  ${UnmountRegistryIntoHKU}
+
+  ; The removal of this key intermittently fails, so do the best we can in cleanup
+  ${If} "${APP_USER_MODEL_ID}" != ""
+    DeleteRegValue HKLM "Software\Classes\${APP_USER_MODEL_ID}\.exe\shell\open\command" "DelegateExecute"
+    DeleteRegKey HKLM "Software\Classes\${APP_USER_MODEL_ID}\.exe\shell\open"
+    DeleteRegKey HKLM "Software\Classes\${APP_USER_MODEL_ID}\.exe\shell"
+    DeleteRegKey HKLM "Software\Classes\${APP_USER_MODEL_ID}\.exe"
+    DeleteRegKey HKLM "Software\Classes\${APP_USER_MODEL_ID}"
+  ${EndIf}
+
+  ; Remove HKLM entries
+  DeleteRegKey HKLM "Software\Classes\CLSID\${DELEGATE_EXECUTE_HANDLER_ID}"
+  DeleteRegKey HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}\Application"
+  DeleteRegKey HKLM "Software\Classes\${FILE_ACTIVATION_ID}\Application"
+  DeleteRegValue HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKLM "Software\Classes\${FILE_ACTIVATION_ID}\shell\open\command" "DelegateExecute"
+  DeleteRegValue HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}" "AppUserModelID"
+  DeleteRegValue HKLM "Software\Classes\${FILE_ACTIVATION_ID}" "AppUserModelID"
+  DeleteRegValue HKLM "Software\Classes\${PROTOCOL_ACTIVATION_ID}\shell\open" "CommandId"
+  DeleteRegValue HKLM "Software\Classes\${FILE_ACTIVATION_ID}\shell\open" "CommandId"
+
+  ClearErrors
+!macroend
+
+!define RemoveDEHRegistration "!insertmacro RemoveDEHRegistration"
+!define un.RemoveDEHRegistration "!insertmacro RemoveDEHRegistration"
 
 ; Removes various directories and files for reasons noted below.
 !macro RemoveDeprecatedFiles
