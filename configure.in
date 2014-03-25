@@ -462,14 +462,14 @@ case "$target" in
         changequote([,])
 
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
+        CC_VERSION=`${CC} -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
         _CC_MINOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $2 }'`
         _CC_RELEASE=`echo ${CC_VERSION} | $AWK -F\. '{ print $3 }'`
         _CC_BUILD=`echo ${CC_VERSION} | $AWK -F\. '{ print $4 }'`
         _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
-        CXX_VERSION=`"${CXX}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
+        CXX_VERSION=`${CXX} -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
