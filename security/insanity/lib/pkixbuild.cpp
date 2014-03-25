@@ -232,6 +232,7 @@ BuildForward(TrustDomain& trustDomain,
                                        candidates) != SECSuccess) {
     return MapSECStatus(SECFailure);
   }
+  PORT_Assert(candidates.get());
   if (!candidates) {
     return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER);
   }
