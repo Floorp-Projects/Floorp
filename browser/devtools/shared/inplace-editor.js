@@ -1008,6 +1008,11 @@ InplaceEditor.prototype = {
    *        true if you don't want to automatically insert the first suggestion
    */
   _maybeSuggestCompletion: function(aNoAutoInsert) {
+    // Input can be null in cases when you intantaneously switch out of it.
+    if (!this.input) {
+      return;
+    }
+    let preTimeoutQuery = this.input.value;
     // Since we are calling this method from a keypress event handler, the
     // |input.value| does not include currently typed character. Thus we perform
     // this method async.
@@ -1019,15 +1024,26 @@ InplaceEditor.prototype = {
       if (this.contentType == CONTENT_TYPES.PLAIN_TEXT) {
         return;
       }
-
+      if (!this.input) {
+        return;
+      }
       let input = this.input;
-      // Input can be null in cases when you intantaneously switch out of it.
-      if (!input) {
+      // The length of input.value should be increased by 1
+      if (input.value.length - preTimeoutQuery.length > 1) {
         return;
       }
       let query = input.value.slice(0, input.selectionStart);
       let startCheckQuery = query;
       if (query == null) {
+        return;
+      }
+      // If nothing is selected and there is a non-space character after the
+      // cursor, do not autocomplete.
+      if (input.selectionStart == input.selectionEnd &&
+          input.selectionStart < input.value.length &&
+          input.value.slice(input.selectionStart)[0] != " ") {
+        // This emit is mainly to make the test flow simpler.
+        this.emit("after-suggest", "nothing to autocomplete");
         return;
       }
       let list = [];
