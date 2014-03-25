@@ -1838,7 +1838,7 @@ nsCreateReqFromKeyPairs(nsKeyPairInfo *keyids, int32_t numRequests,
   return retString;
 loser:
   nsFreeCertReqMessages(certReqMsgs,numRequests);
-  return nullptr;;
+  return nullptr;
 }
 
 static nsISupports *
@@ -2024,6 +2024,7 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
   }
   CRMFObject* newObject = new CRMFObject();
   newObject->SetCRMFRequest(encodedRequest);
+  PORT_Free(encodedRequest);
   nsFreeKeyPairInfo(keyids, numRequests);
 
   // Post an event on the UI queue so that the JS gets called after
