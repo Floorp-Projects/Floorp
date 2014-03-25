@@ -5064,26 +5064,23 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
                                     ErrorResult& aRv)
 {
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
+  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
+  if (textControlFrame) {
+    // Default to forward, even if not specified.
+    // Note that we don't currently support directionless selections, so
+    // "none" is treated like "forward".
+    nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
+    if (aDirection.WasPassed() && aDirection.Value().EqualsLiteral("backward")) {
+      dir = nsITextControlFrame::eBackward;
+    }
 
-  if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame) {
-      // Default to forward, even if not specified.
-      // Note that we don't currently support directionless selections, so
-      // "none" is treated like "forward".
-      nsITextControlFrame::SelectionDirection dir = nsITextControlFrame::eForward;
-      if (aDirection.WasPassed() && aDirection.Value().EqualsLiteral("backward")) {
-        dir = nsITextControlFrame::eBackward;
-      }
-
-      aRv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
-      if (!aRv.Failed()) {
-        aRv = textControlFrame->ScrollSelectionIntoView();
-        nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
-          new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
-                                   true, false);
-        asyncDispatcher->PostDOMEvent();
-      }
+    aRv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
+    if (!aRv.Failed()) {
+      aRv = textControlFrame->ScrollSelectionIntoView();
+      nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, NS_LITERAL_STRING("select"),
+                                 true, false);
+      asyncDispatcher->PostDOMEvent();
     }
   }
 }
@@ -5350,16 +5347,13 @@ nsresult
 HTMLInputElement::GetSelectionRange(int32_t* aSelectionStart,
                                     int32_t* aSelectionEnd)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-
-  if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
-      rv = textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
+  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
+  if (textControlFrame) {
+    return textControlFrame->GetSelectionRange(aSelectionStart, aSelectionEnd);
   }
 
-  return rv;
+  return NS_ERROR_FAILURE;
 }
 
 static void
@@ -5381,15 +5375,12 @@ HTMLInputElement::GetSelectionDirection(nsAString& aDirection, ErrorResult& aRv)
 {
   nsresult rv = NS_ERROR_FAILURE;
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-
-  if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame) {
-      nsITextControlFrame::SelectionDirection dir;
-      rv = textControlFrame->GetSelectionRange(nullptr, nullptr, &dir);
-      if (NS_SUCCEEDED(rv)) {
-        DirectionToName(dir, aDirection);
-      }
+  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
+  if (textControlFrame) {
+    nsITextControlFrame::SelectionDirection dir;
+    rv = textControlFrame->GetSelectionRange(nullptr, nullptr, &dir);
+    if (NS_SUCCEEDED(rv)) {
+      DirectionToName(dir, aDirection);
     }
   }
 
@@ -5449,11 +5440,9 @@ HTMLInputElement::GetPhonetic(nsAString& aPhonetic)
 {
   aPhonetic.Truncate();
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(true);
-
-  if (formControlFrame) {
-    nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
-    if (textControlFrame)
-      textControlFrame->GetPhonetic(aPhonetic);
+  nsITextControlFrame* textControlFrame = do_QueryFrame(formControlFrame);
+  if (textControlFrame) {
+    textControlFrame->GetPhonetic(aPhonetic);
   }
 
   return NS_OK;
