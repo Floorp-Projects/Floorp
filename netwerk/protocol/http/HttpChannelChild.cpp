@@ -1197,7 +1197,11 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   openArgs.requestMethod() = mRequestHead.Method();
-  SerializeInputStream(mUploadStream, openArgs.uploadStream());
+
+  nsTArray<mozilla::ipc::FileDescriptor> fds;
+  SerializeInputStream(mUploadStream, openArgs.uploadStream(), fds);
+  MOZ_ASSERT(fds.IsEmpty());
+
   openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
   openArgs.priority() = mPriority;
   openArgs.redirectionLimit() = mRedirectionLimit;

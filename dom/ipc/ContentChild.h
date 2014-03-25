@@ -40,6 +40,7 @@ class PrefObserver;
 class ConsoleListener;
 class PStorageChild;
 class ClonedMessageData;
+class PFileDescriptorSetChild;
 
 class ContentChild : public PContentChild
 {
@@ -270,6 +271,12 @@ public:
     bool IsForBrowser() { return mIsForBrowser; }
 
     BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
+
+    virtual PFileDescriptorSetChild*
+    AllocPFileDescriptorSetChild(const FileDescriptor&) MOZ_OVERRIDE;
+
+    virtual bool
+    DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*) MOZ_OVERRIDE;
 
 protected:
     virtual bool RecvPBrowserConstructor(PBrowserChild* actor,
