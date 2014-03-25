@@ -36,6 +36,8 @@
         </div>
       </div>
 
+      <xul:spacer flex="1"/>
+
       <div id="newtab-horizontal-margin">
         <div class="newtab-side-margin"/>
 
@@ -45,7 +47,7 @@
         <div class="newtab-side-margin"/>
       </div>
 
-      <div id="newtab-margin-bottom"/>
+      <xul:spacer flex="1"/>
     </div>
     <input id="newtab-toggle" type="button"/>
   </div>
