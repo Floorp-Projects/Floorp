@@ -13,9 +13,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 const phishingList = Services.prefs.getCharPref("urlclassifier.phish_table");
 const malwareList = Services.prefs.getCharPref("urlclassifier.malware_table");
 const downloadBlockList =
-  Services.prefs.getCharPref("urlclassifier.downloadBlockTable");
+  Services.prefs.getCharPref("urlclassifier.download_block_table");
 const downloadAllowList =
-  Services.prefs.getCharPref("urlclassifier.downloadAllowTable");
+  Services.prefs.getCharPref("urlclassifier.download_allow_table");
 
 var debug = false;
 function log(...stuff) {
