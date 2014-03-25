@@ -1991,7 +1991,8 @@ class ParallelSpewer
             filename = script->filename();
         }
 
-        spew(SpewOps, "%s%sBAILOUT %d%s: %d at %s:%d:%d", bold(), yellow(), count, reset(), cause, filename, line, column);
+        spew(SpewOps, "%s%sBAILOUT %d%s: %s (%d) at %s:%d:%d", bold(), yellow(), count, reset(),
+             BailoutExplanation(cause), cause, filename, line, column);
     }
 
     void beginCompile(HandleScript script) {
