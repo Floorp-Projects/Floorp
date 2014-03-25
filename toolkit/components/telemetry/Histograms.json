@@ -1210,12 +1210,6 @@
     "extended_statistics_ok": true,
     "description": "ms elapsed time of OCSP etc.. that failed"
   },
-  "CERT_VALIDATION_LIBRARY": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "Which certificate validation library is in use? (1=classic, 2=libpkix, 3=mozilla::pkix)"
-  },
   "SSL_KEY_EXCHANGE_ALGORITHM_FULL": {
     "expires_in_version": "never",
     "kind": "enumerated",
