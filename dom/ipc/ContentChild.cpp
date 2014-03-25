@@ -14,6 +14,7 @@
 
 #include "ContentChild.h"
 #include "CrashReporterChild.h"
+#include "FileDescriptorSetChild.h"
 #include "TabChild.h"
 
 #include "mozilla/Attributes.h"
@@ -798,6 +799,18 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* actor,
     return true;
 }
 
+PFileDescriptorSetChild*
+ContentChild::AllocPFileDescriptorSetChild(const FileDescriptor& aFD)
+{
+    return new FileDescriptorSetChild(aFD);
+}
+
+bool
+ContentChild::DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor)
+{
+    delete static_cast<FileDescriptorSetChild*>(aActor);
+    return true;
+}
 
 bool
 ContentChild::DeallocPBrowserChild(PBrowserChild* iframe)
@@ -904,7 +917,9 @@ ContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     InputStreamParams inputStreamParams;
-    SerializeInputStream(stream, inputStreamParams);
+    nsTArray<mozilla::ipc::FileDescriptor> fds;
+    SerializeInputStream(stream, inputStreamParams, fds);
+    MOZ_ASSERT(fds.IsEmpty());
 
     params.optionalInputStreamParams() = inputStreamParams;
 

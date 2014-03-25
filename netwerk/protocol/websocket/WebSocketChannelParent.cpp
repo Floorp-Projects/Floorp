@@ -148,7 +148,8 @@ WebSocketChannelParent::RecvSendBinaryStream(const InputStreamParams& aStream,
 {
   LOG(("WebSocketChannelParent::RecvSendBinaryStream() %p\n", this));
   if (mChannel) {
-    nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aStream);
+    nsTArray<mozilla::ipc::FileDescriptor> fds;
+    nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aStream, fds);
     if (!stream) {
       return false;
     }
