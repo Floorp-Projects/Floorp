@@ -13,51 +13,49 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  * - Redo the change, check that the node change was made again correctly.
  */
 
-requestLongerTimeout(2);
-
 let TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
 let TEST_DATA = [{
   desc: "Add an attribute value without closing \"",
-  enteredText: 'style="display: block;',
+  text: 'style="display: block;',
   expectedAttributes: {
     style: "display: block;"
   }
 }, {
   desc: "Add an attribute value without closing '",
-  enteredText: "style='display: inline;",
+  text: "style='display: inline;",
   expectedAttributes: {
     style: "display: inline;"
   }
 }, {
   desc: "Add an attribute wrapped with with double quotes double quote in it",
-  enteredText: 'style="display: "inline',
+  text: 'style="display: "inline',
   expectedAttributes: {
     style: "display: ",
     inline: ""
   }
 }, {
   desc: "Add an attribute wrapped with single quotes with single quote in it",
-  enteredText: "style='display: 'inline",
+  text: "style='display: 'inline",
   expectedAttributes: {
     style: "display: ",
     inline: ""
   }
 }, {
   desc: "Add an attribute with no value",
-  enteredText: "disabled",
+  text: "disabled",
   expectedAttributes: {
     disabled: ""
   }
 }, {
   desc: "Add multiple attributes with no value",
-  enteredText: "disabled autofocus",
+  text: "disabled autofocus",
   expectedAttributes: {
     disabled: "",
     autofocus: ""
   }
 }, {
   desc: "Add multiple attributes with no value, and some with value",
-  enteredText: "disabled name='name' data-test='test' autofocus",
+  text: "disabled name='name' data-test='test' autofocus",
   expectedAttributes: {
     disabled: "",
     autofocus: "",
@@ -66,100 +64,13 @@ let TEST_DATA = [{
   }
 }, {
   desc: "Add attribute with xmlns",
-  enteredText: "xmlns:edi='http://ecommerce.example.org/schema'",
+  text: "xmlns:edi='http://ecommerce.example.org/schema'",
   expectedAttributes: {
     'xmlns:edi': "http://ecommerce.example.org/schema"
-  }
-}, {
-  desc: "Mixed single and double quotes",
-  enteredText: "name=\"hi\" maxlength='not a number'",
-  expectedAttributes: {
-    maxlength: "not a number",
-    name: "hi"
-  }
-}, {
-  desc: "Invalid attribute name",
-  enteredText: "x='y' <why-would-you-do-this>=\"???\"",
-  expectedAttributes: {
-    x: "y"
-  }
-}, {
-  desc: "Double quote wrapped in single quotes",
-  enteredText: "x='h\"i'",
-  expectedAttributes: {
-    x: "h\"i"
-  }
-}, {
-  desc: "Single quote wrapped in double quotes",
-  enteredText: "x=\"h'i\"",
-  expectedAttributes: {
-    x: "h'i"
-  }
-}, {
-  desc: "No quote wrapping",
-  enteredText: "a=b x=y data-test=Some spaced data",
-  expectedAttributes: {
-    a: "b",
-    x: "y",
-    "data-test": "Some",
-    spaced: "",
-    data: ""
-  }
-}, {
-  desc: "Duplicate Attributes",
-  enteredText: "a=b a='c' a=\"d\"",
-  expectedAttributes: {
-    a: "b"
-  }
-}, {
-  desc: "Inline styles",
-  enteredText: "style=\"font-family: 'Lucida Grande', sans-serif; font-size: 75%;\"",
-  expectedAttributes: {
-    style: "font-family: 'Lucida Grande', sans-serif; font-size: 75%;"
-  }
-}, {
-  desc: "Object attribute names",
-  enteredText: "toString=\"true\" hasOwnProperty=\"false\"",
-  expectedAttributes: {
-    toString: "true",
-    hasOwnProperty: "false"
-  }
-}, {
-  desc: "Add event handlers",
-  enteredText: "onclick=\"javascript: throw new Error('wont fire');\" onload=\"alert('here');\"",
-  expectedAttributes: {
-    onclick: "javascript: throw new Error('wont fire');",
-    onload: "alert('here');"
   }
 }];
 
 let test = asyncTest(function*() {
-  info("Opening the inspector on the test URL");
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
-  let markup = inspector.markup;
-
-  info("Selecting the test node");
-  let div = getNode("div");
-  yield selectNode(div, inspector);
-  let editor = getContainerForRawNode(div, inspector).editor;
-
-  for (let test of TEST_DATA) {
-    info("Starting test: " + test.desc);
-
-    info("Enter the new attribute(s) test: " + test.enteredText);
-    let nodeMutated = inspector.once("markupmutation");
-    setEditableFieldValue(editor.newAttr, test.enteredText, inspector);
-    yield nodeMutated;
-
-    info("Assert that the attribute(s) has/have been applied correctly");
-    assertAttributes(div, test.expectedAttributes);
-
-    info("Undo the change");
-    yield undoChange(inspector);
-
-    info("Assert that the attribute(s) has/have been removed correctly");
-    assertAttributes(div, {});
-  }
-
-  yield inspector.once("inspector-updated");
+  yield runAddAttributesTests(TEST_DATA, "div", inspector)
 });
