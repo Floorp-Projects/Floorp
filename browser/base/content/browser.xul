@@ -1179,14 +1179,15 @@
   <svg:svg height="0">
 #include tab-shape.inc.svg
 
-#ifndef XP_MACOSX
-    <svg:clipPath id="keyhole-forward-clip-path" clipPathUnits="objectBoundingBox">
+#ifndef XP_UNIX
+    <svg:clipPath id="windows-keyhole-forward-clip-path" clipPathUnits="userSpaceOnUse">
       <svg:path d="M 0,0 a 16 16 0 0 1 0,24 l 10000,0 l 0,-24 l -10000,0 z"/>
     </svg:clipPath>
-    <svg:clipPath id="urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
+    <svg:clipPath id="windows-urlbar-back-button-clip-path" clipPathUnits="userSpaceOnUse">
       <svg:path d="M -1,1 a 16 16 0 0 1 0,24 l 10000,0 l 0,-24 l -10000,0 z"/>
     </svg:clipPath>
-#else
+#endif
+#ifdef XP_MACOSX
     <svg:clipPath id="osx-keyhole-forward-clip-path" clipPathUnits="userSpaceOnUse">
       <svg:path d="M 0,0 a 16 16 0 0 1 0,24 l 10000,0 l 0,-24 l -10000,0 z"/>
     </svg:clipPath>
