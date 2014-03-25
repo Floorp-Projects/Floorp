@@ -100,13 +100,14 @@ protected:
   void SetMimeType(const nsString &aMimeType);
 
   MediaRecorder(const MediaRecorder& x) MOZ_DELETE; // prevent bad usage
-
+  // Remove session pointer.
+  void RemoveSession(Session* aSession);
   // MediaStream passed from js context
   nsRefPtr<DOMMediaStream> mStream;
   // The current state of the MediaRecorder object.
   RecordingState mState;
-  // Current recording session.
-  nsRefPtr<Session> mSession;
+  // Hold the sessions pointer in media recorder and clean in the destructor of recorder.
+  nsTArray<Session*> mSessions;
   // Thread safe for mMimeType.
   Mutex mMutex;
   // It specifies the container format as well as the audio and video capture formats.
