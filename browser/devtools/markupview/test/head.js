@@ -232,6 +232,28 @@ function setEditableFieldValue(field, value, inspector) {
 }
 
 /**
+ * Focus the new-attribute inplace-editor field of the nodeOrSelector's markup
+ * container, and enters the given text, then wait for it to be applied and the
+ * for the node to mutates (when new attribute(s) is(are) created)
+ * @param {DOMNode|String} nodeOrSelector The node or node selector to edit.
+ * @param {String} text The new attribute text to be entered (e.g. "id='test'")
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * loaded in the toolbox
+ * @return a promise that resolves when the node has mutated
+ */
+function addNewAttributes(nodeOrSelector, text, inspector) {
+  info("Entering text '" + text + "' in node '" + nodeOrSelector + "''s new attribute field");
+
+  let container = getContainerForRawNode(nodeOrSelector, inspector);
+  ok(container, "The container for '" + nodeOrSelector + "' was found");
+
+  info("Listening for the markupmutation event");
+  let nodeMutated = inspector.once("markupmutation");
+  setEditableFieldValue(container.editor.newAttr, text, inspector);
+  return nodeMutated;
+}
+
+/**
  * Checks that a node has the given attributes
  *
  * @param {DOMNode|String} nodeOrSelector The node or node selector to check.
@@ -316,6 +338,66 @@ function searchUsingSelectorSearch(selector, inspector) {
 }
 
 /**
+ * Run a series of add-attributes tests.
+ * This function will iterate over the provided tests array and run each test.
+ * Each test's goal is to provide some text to be entered into the test node's
+ * new-attribute field and check that the given attributes have been created.
+ * After each test has run, the markup-view's undo command will be called and
+ * the test runner will check if all the new attributes are gone.
+ * @param {Array} tests See runAddAttributesTest for the structure
+ * @param {DOMNode|String} nodeOrSelector The node or node selector
+ * corresponding to an element on the current test page that has *no attributes*
+ * when the test starts. It will be used to add and remove attributes.
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * opened
+ * @return a promise that resolves when the tests have run
+ */
+function runAddAttributesTests(tests, nodeOrSelector, inspector) {
+  info("Running " + tests.length + " add-attributes tests");
+  return Task.spawn(function*() {
+    info("Selecting the test node");
+    let div = getNode("div");
+    yield selectNode(div, inspector);
+
+    for (let test of tests) {
+      yield runAddAttributesTest(test, div, inspector);
+    }
+
+    yield inspector.once("inspector-updated");
+  });
+}
+
+/**
+ * Run a single add-attribute test.
+ * See runAddAttributesTests for a description.
+ * @param {Object} test A test object should contain the following properties:
+ *        - desc {String} a textual description for that test, to help when
+ *        reading logs
+ *        - text {String} the string to be inserted into the new attribute field
+ *        - expectedAttributes {Object} a key/value pair object that will be
+ *        used to check the attributes on the test element
+ * @param {DOMNode|String} nodeOrSelector The node or node selector
+ * corresponding to the test element
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+ * opened
+ */
+function* runAddAttributesTest(test, nodeOrSelector, inspector) {
+  let element = getNode(nodeOrSelector);
+
+  info("Starting add-attribute test: " + test.desc);
+  yield addNewAttributes(element, test.text, inspector);
+
+  info("Assert that the attribute(s) has/have been applied correctly");
+  assertAttributes(element, test.expectedAttributes);
+
+  info("Undo the change");
+  yield undoChange(inspector);
+
+  info("Assert that the attribute(s) has/have been removed correctly");
+  assertAttributes(element, {});
+}
+
+/**
  * Run a series of edit-outer-html tests.
  * This function will iterate over the provided tests array and run each test.
  * Each test's goal is to provide a node (a selector) and a new outer-HTML to be
@@ -326,8 +408,10 @@ function searchUsingSelectorSearch(selector, inspector) {
  * @param {Array} tests See runEditOuterHTMLTest for the structure
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * opened
+ * @return a promise that resolves when the tests have run
  */
 function runEditOuterHTMLTests(tests, inspector) {
+  info("Running " + tests.length + " edit-outer-html tests");
   return Task.spawn(function* () {
     for (let step of TEST_DATA) {
       yield runEditOuterHTMLTest(step, inspector);
