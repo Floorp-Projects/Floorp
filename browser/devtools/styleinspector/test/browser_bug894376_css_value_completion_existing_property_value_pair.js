@@ -26,7 +26,7 @@ let testData = [
   ["VK_DOWN", {}, "blanchedalmond", 1, 4],
   ["VK_DOWN", {}, "blue", 2, 4],
   ["VK_RIGHT", {}, "blue", -1, 0],
-  [" ", {}, "blue ", -1, 0],
+  [" ", {}, "blue !important", 0, 10],
   ["!", {}, "blue !important", 0, 0],
   ["VK_BACK_SPACE", {}, "blue !", -1, 0],
   ["VK_BACK_SPACE", {}, "blue ", -1, 0],
