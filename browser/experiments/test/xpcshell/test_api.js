@@ -1262,6 +1262,7 @@ add_task(function* test_unexpectedUninstall() {
   // the experiments API.
 
   let success = yield uninstallAddon(EXPERIMENT1_ID);
+  yield experiments._mainTask;
   Assert.ok(success, "Addon should have been uninstalled.");
 
   yield experiments.notify();
