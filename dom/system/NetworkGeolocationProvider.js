@@ -38,11 +38,7 @@ function WifiGeoCoordsObject(lat, lon, acc, alt, altacc) {
 }
 
 WifiGeoCoordsObject.prototype = {
-  QueryInterface:  XPCOMUtils.generateQI([Ci.nsIDOMGeoPositionCoords]),
-
-  classInfo: XPCOMUtils.generateCI({interfaces: [Ci.nsIDOMGeoPositionCoords],
-                                    flags: Ci.nsIClassInfo.DOM_OBJECT,
-                                    classDescription: "wifi geo position coords object"}),
+  QueryInterface:  XPCOMUtils.generateQI([Ci.nsIDOMGeoPositionCoords])
 };
 
 function WifiGeoPositionObject(lat, lng, acc) {
@@ -52,12 +48,7 @@ function WifiGeoPositionObject(lat, lng, acc) {
 }
 
 WifiGeoPositionObject.prototype = {
-  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDOMGeoPosition]),
-
-  // Class Info is required to be able to pass objects back into the DOM.
-  classInfo: XPCOMUtils.generateCI({interfaces: [Ci.nsIDOMGeoPosition],
-                                    flags: Ci.nsIClassInfo.DOM_OBJECT,
-                                    classDescription: "wifi geo location position object"}),
+  QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDOMGeoPosition])
 };
 
 function WifiGeoPositionProvider() {

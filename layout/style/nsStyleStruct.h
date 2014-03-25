@@ -2035,6 +2035,10 @@ struct nsStyleDisplay {
            (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM);
   }
 
+  bool HasPerspectiveStyle() const {
+    return mChildPerspective.GetUnit() == eStyleUnit_Coord;
+  }
+
   bool BackfaceIsHidden() const {
     return mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
   }
