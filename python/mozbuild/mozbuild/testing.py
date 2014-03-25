@@ -90,7 +90,9 @@ class TestMetadata(object):
         """
         def fltr(tests):
             for test in tests:
-                if flavor and test.get('flavor') != flavor:
+                if flavor:
+                   if (flavor == 'devtools' and test.get('flavor') != 'browser-chrome') or \
+                      (flavor != 'devtools' and test.get('flavor') != flavor):
                     continue
 
                 if under_path \

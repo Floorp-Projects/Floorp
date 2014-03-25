@@ -105,7 +105,7 @@ class TestManifestParser(unittest.TestCase):
         buffer = StringIO()
         parser.write(fp=buffer, global_kwargs={'foo': 'bar'})
         self.assertEqual(buffer.getvalue().strip(),
-                         '[DEFAULT]\nfoo = bar\n\n[fleem]\n\n[include/flowers]\nblue = ocean\nred = roses\nyellow = submarine')
+                         '[DEFAULT]\nfoo = bar\n\n[fleem]\nsubsuite = \n\n[include/flowers]\nblue = ocean\nred = roses\nsubsuite = \nyellow = submarine')
 
     def test_copy(self):
         """Test our ability to copy a set of manifests"""
