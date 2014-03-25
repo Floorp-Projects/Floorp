@@ -1743,7 +1743,7 @@ case "$host" in
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:$@'
-        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -Fd\$(HOST_PDBFILE)"
+        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
         HOST_RANLIB='echo ranlib'
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
@@ -2125,8 +2125,8 @@ ia64*-hpux*)
         _USE_CPP_INCLUDE_FLAG=1
         _DEFINES_CFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
-        CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-        CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
+        CFLAGS="$CFLAGS -W3 -Gy"
+        CXXFLAGS="$CXXFLAGS -W3 -Gy"
         if test "$_CC_SUITE" -ge "12"; then
             dnl VS2013+ requires -FS when parallel building by make -jN.
             dnl If nothing, compiler sometimes causes C1041 error.

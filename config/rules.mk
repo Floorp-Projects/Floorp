@@ -231,10 +231,12 @@ ifndef GNU_CC
 #
 
 ifdef SIMPLE_PROGRAMS
-COMPILE_PDBFILE = $(basename $(@F)).pdb
+COMPILE_PDB_FLAG ?= -Fd$(basename $(@F)).pdb
 else
-COMPILE_PDBFILE = generated.pdb
+COMPILE_PDB_FLAG ?= -Fdgenerated.pdb
 endif
+COMPILE_CFLAGS += $(COMPILE_PDB_FLAG)
+COMPILE_CXXFLAGS += $(COMPILE_PDB_FLAG)
 
 LINK_PDBFILE = $(basename $(@F)).pdb
 ifdef MOZ_DEBUG
@@ -265,6 +267,9 @@ endif # Solaris Sun Studio C++
 
 ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_PDBFILE=$(basename $(@F)).pdb
+HOST_PDB_FLAG ?= -Fd$(HOST_PDBFILE)
+HOST_CFLAGS += $(HOST_PDB_FLAG)
+HOST_CXXFLAGS += $(HOST_PDB_FLAG)
 endif
 
 # Don't build SIMPLE_PROGRAMS during the MOZ_PROFILE_GENERATE pass
