@@ -1384,9 +1384,13 @@ CssRuleView.prototype = {
 
     this._elementStyle = new ElementStyle(aElement, this.store, this.pageStyle);
     return this._populate().then(() => {
-      this._elementStyle.onChanged = () => {
-        this._changed();
-      };
+      // A new node may already be selected, in which this._elementStyle will
+      // be null.
+      if (this._elementStyle) {
+        this._elementStyle.onChanged = () => {
+          this._changed();
+        };
+      }
     }).then(null, console.error);
   },
 
