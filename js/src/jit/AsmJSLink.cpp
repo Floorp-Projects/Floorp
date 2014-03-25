@@ -478,8 +478,8 @@ SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
     for (unsigned i = 0; i < module.numProfiledFunctions(); i++) {
         const AsmJSModule::ProfiledFunction &func = module.profiledFunction(i);
 
-        uint8_t *start = base + func.startCodeOffset;
-        uint8_t *end   = base + func.endCodeOffset;
+        uint8_t *start = base + func.pod.startCodeOffset;
+        uint8_t *end   = base + func.pod.endCodeOffset;
         JS_ASSERT(end >= start);
 
         unsigned method_id = iJIT_GetNewMethodID();
@@ -519,10 +519,10 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
     uintptr_t base = (uintptr_t) module.codeBase();
     const char *filename = module.scriptSource()->filename();
 
-    for (unsigned i = 0; i < module.numPerfFunctions(); i++) {
-        const AsmJSModule::ProfiledFunction &func = module.perfProfiledFunction(i);
-        uintptr_t start = base + (unsigned long) func.startCodeOffset;
-        uintptr_t end   = base + (unsigned long) func.endCodeOffset;
+    for (unsigned i = 0; i < module.numProfiledFunctions(); i++) {
+        const AsmJSModule::ProfiledFunction &func = module.profiledFunction(i);
+        uintptr_t start = base + (unsigned long) func.pod.startCodeOffset;
+        uintptr_t end   = base + (unsigned long) func.pod.endCodeOffset;
         JS_ASSERT(end >= start);
         size_t size = end - start;
 
@@ -531,7 +531,8 @@ SendFunctionsToPerf(JSContext *cx, AsmJSModule &module)
         if (!name)
             return false;
 
-        writePerfSpewerAsmJSFunctionMap(start, size, filename, func.lineno, func.columnIndex, name);
+        writePerfSpewerAsmJSFunctionMap(start, size, filename, func.pod.lineno,
+                                        func.pod.columnIndex, name);
     }
 
     return true;
@@ -549,14 +550,14 @@ SendBlocksToPerf(JSContext *cx, AsmJSModule &module)
     for (unsigned i = 0; i < module.numPerfBlocksFunctions(); i++) {
         const AsmJSModule::ProfiledBlocksFunction &func = module.perfProfiledBlocksFunction(i);
 
-        size_t size = func.endCodeOffset - func.startCodeOffset;
+        size_t size = func.pod.endCodeOffset - func.pod.startCodeOffset;
 
         JSAutoByteString bytes;
         const char *name = AtomToPrintableString(cx, func.name, &bytes);
         if (!name)
             return false;
 
-        writePerfSpewerAsmJSBlocksMap(funcBaseAddress, func.startCodeOffset,
+        writePerfSpewerAsmJSBlocksMap(funcBaseAddress, func.pod.startCodeOffset,
                                       func.endInlineCodeOffset, size, filename, name, func.blocks);
     }
 
