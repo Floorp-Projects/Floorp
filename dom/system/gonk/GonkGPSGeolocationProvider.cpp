@@ -741,8 +741,10 @@ GonkGPSGeolocationProvider::Shutdown()
     return NS_OK;
   }
   mStarted = false;
-  mNetworkLocationProvider = nullptr;
-
+  if (mNetworkLocationProvider) {
+    mNetworkLocationProvider->Shutdown();
+    mNetworkLocationProvider = nullptr;
+  }
 #ifdef MOZ_B2G_RIL
   if (mRadioInterface) {
     mRadioInterface->UnregisterDataCallCallback(this);

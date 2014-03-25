@@ -139,8 +139,11 @@ this.ContentControl.prototype = {
   },
 
   handleClearCursor: function cc_handleClearCursor(aMessage) {
-    this.sendToChild(this.vc, aMessage);
+    let forwarded = this.sendToChild(this.vc, aMessage);
     this.vc.position = null;
+    if (!forwarded) {
+      this._contentScope.get().sendAsyncMessage('AccessFu:CursorCleared');
+    }
   },
 
   handleAutoMove: function cc_handleAutoMove(aMessage) {
@@ -175,7 +178,7 @@ this.ContentControl.prototype = {
         // (via ARIA roles, etc.), so we need to generate a click.
         // Could possibly be made simpler in the future. Maybe core
         // engine could expose nsCoreUtiles::DispatchMouseEvent()?
-        let docAcc = Utils.AccRetrieval.getAccessibleFor(content.document);
+        let docAcc = Utils.AccRetrieval.getAccessibleFor(this.document);
         let docX = {}, docY = {}, docW = {}, docH = {};
         docAcc.getBounds(docX, docY, docW, docH);
 
@@ -188,8 +191,8 @@ this.ContentControl.prototype = {
         let node = aAccessible.DOMNode || aAccessible.parent.DOMNode;
 
         for (let eventType of ['mousedown', 'mouseup']) {
-          let evt = content.document.createEvent('MouseEvents');
-          evt.initMouseEvent(eventType, true, true, content,
+          let evt = this.document.createEvent('MouseEvents');
+          evt.initMouseEvent(eventType, true, true, this.window,
             x, y, 0, 0, 0, false, false, false, false, 0, null);
           node.dispatchEvent(evt);
         }
