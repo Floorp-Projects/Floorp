@@ -29,5 +29,5 @@
   <MozParam name="channel" condition="purpose" purpose="homepage" value="np"/>
   <MozParam name="source" condition="purpose" purpose="homepage" value="hp"/>
 </Url>
-<SearchForm>https://www.google.com/</SearchForm>
+<Url type="text/html" method="GET" template="https://www.google.com/" rel="searchform"/>
 </SearchPlugin>

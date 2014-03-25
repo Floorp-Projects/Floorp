@@ -1163,7 +1163,7 @@ Engine.prototype = {
   _type: null,
   // The name of the charset used to submit the search terms.
   _queryCharset: null,
-  // A URL string pointing to the engine's search form.
+  // The engine's raw SearchForm value (URL string pointing to a search form).
   __searchForm: null,
   get _searchForm() {
     return this.__searchForm;
@@ -1364,10 +1364,11 @@ Engine.prototype = {
    * if no matching URL is found.
    *
    * @param aType string to match the EngineURL's type attribute
+   * @param aRel [optional] only return URLs that with this rel value
    */
-  _getURLOfType: function SRCH_ENG__getURLOfType(aType) {
+  _getURLOfType: function SRCH_ENG__getURLOfType(aType, aRel) {
     for (var i = 0; i < this._urls.length; ++i) {
-      if (this._urls[i].type == aType)
+      if (this._urls[i].type == aType && (!aRel || this._urls[i]._hasRelation(aRel)))
         return this._urls[i];
     }
 
@@ -1535,11 +1536,11 @@ Engine.prototype = {
       if (engineToUpdate._isInAppDir) {
         let oldUpdateURL = engineToUpdate._updateURL;
         let newUpdateURL = aEngine._updateURL;
-        let oldSelfURL = engineToUpdate._getURLOfType(URLTYPE_OPENSEARCH);
-        if (oldSelfURL && oldSelfURL._hasRelation("self")) {
+        let oldSelfURL = engineToUpdate._getURLOfType(URLTYPE_OPENSEARCH, "self");
+        if (oldSelfURL) {
           oldUpdateURL = oldSelfURL.template;
-          let newSelfURL = aEngine._getURLOfType(URLTYPE_OPENSEARCH);
-          if (!newSelfURL || !newSelfURL._hasRelation("self")) {
+          let newSelfURL = aEngine._getURLOfType(URLTYPE_OPENSEARCH, "self");
+          if (!newSelfURL) {
             LOG("_onLoad: updateURL missing in updated engine for " +
                 aEngine.name + " aborted");
             onError();
@@ -1758,7 +1759,7 @@ Engine.prototype = {
                 "Can't call _initFromMetaData on a readonly engine!",
                 Cr.NS_ERROR_FAILURE);
 
-    this._urls.push(new EngineURL("text/html", aMethod, aTemplate));
+    this._urls.push(new EngineURL(URLTYPE_SEARCH_HTML, aMethod, aTemplate));
 
     this._name = aName;
     this.alias = aAlias;
@@ -2240,11 +2241,11 @@ Engine.prototype = {
         } else if (name != "")
           template += "&" + name + "=" + value;
       }
-      url = new EngineURL("text/html", method, template);
+      url = new EngineURL(URLTYPE_SEARCH_HTML, method, template);
 
     } else if (method == "POST") {
       // Create the URL object and just add the parameters directly
-      url = new EngineURL("text/html", method, template);
+      url = new EngineURL(URLTYPE_SEARCH_HTML, method, template);
       for (var i = 0; i < inputs.length; i++) {
         var name  = inputs[i][0];
         var value = inputs[i][1];
@@ -2623,9 +2624,8 @@ Engine.prototype = {
 
   get _hasUpdates() {
     // Whether or not the engine has an update URL
-    let selfURL = this._getURLOfType(URLTYPE_OPENSEARCH);
-    return !!(this._updateURL || this._iconUpdateURL || (selfURL &&
-              selfURL._hasRelation("self")));
+    let selfURL = this._getURLOfType(URLTYPE_OPENSEARCH, "self");
+    return !!(this._updateURL || this._iconUpdateURL || selfURL);
   },
 
   get name() {
@@ -2637,8 +2637,19 @@ Engine.prototype = {
   },
 
   get searchForm() {
+    // First look for a <Url rel="searchform">
+    var searchFormURL = this._getURLOfType(URLTYPE_SEARCH_HTML, "searchform");
+    if (searchFormURL) {
+      let submission = searchFormURL.getSubmission("", this);
+
+      // If the rel=searchform URL is not type="get" (i.e. has postData),
+      // ignore it, since we can only return a URL.
+      if (!submission.postData)
+        return submission.uri.spec;
+    }
+
     if (!this._searchForm) {
-      // No searchForm specified in the engine definition file, use the prePath
+      // No SearchForm specified in the engine definition file, use the prePath
       // (e.g. https://foo.com for https://foo.com/search.php?q=bar).
       var htmlUrl = this._getURLOfType(URLTYPE_SEARCH_HTML);
       ENSURE_WARN(htmlUrl, "Engine has no HTML URL!", Cr.NS_ERROR_UNEXPECTED);
