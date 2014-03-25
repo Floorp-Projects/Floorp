@@ -99,8 +99,14 @@ AC_DEFUN([MOZ_DEBUGGING_OPTS],
 [
 dnl Debug info is ON by default.
 if test -z "$MOZ_DEBUG_FLAGS"; then
-  MOZ_DEBUG_FLAGS="-g"
+  if test -n "$_MSC_VER"; then
+    MOZ_DEBUG_FLAGS="-Zi"
+  else
+    MOZ_DEBUG_FLAGS="-g"
+  fi
 fi
+
+AC_SUBST(MOZ_DEBUG_FLAGS)
 
 MOZ_ARG_ENABLE_STRING(debug,
 [  --enable-debug[=DBG]    Enable building with developer debug info
