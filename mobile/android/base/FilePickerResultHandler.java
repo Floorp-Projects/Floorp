@@ -244,14 +244,9 @@ class FilePickerResultHandler implements ActivityResultHandler {
                     }
                 });
 
-                // We're already on the UIThread, but we have to post this back to the uithread to avoid
-                // modifying the listener array while its being iterated through.
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Tabs.unregisterOnTabsChangedListener(FileLoaderCallbacks.this);
-                    }
-                });
+                // Tabs' listener array is safe to modify during use: its
+                // iteration pattern is based on snapshots.
+                Tabs.unregisterOnTabsChangedListener(this);
             }
         }
     }
