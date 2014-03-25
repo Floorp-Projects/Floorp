@@ -273,7 +273,7 @@ add_task(function* test_telemetryBasics() {
   now = futureDate(now, MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
 
-  yield experiments.disableExperiment(EXPERIMENT2_ID);
+  yield experiments.disableExperiment();
   list = yield experiments.getExperiments();
   Assert.equal(list.length, 2, "Experiment list should have 2 entries.");
 
@@ -305,7 +305,7 @@ add_task(function* test_telemetryBasics() {
   now = futureDate(now, MS_IN_ONE_DAY);
   defineNow(gPolicy, now);
 
-  yield experiments.disableExperiment(EXPERIMENT3_ID, false);
+  yield experiments.disableExperiment(false);
   list = yield experiments.getExperiments();
   Assert.equal(list.length, 3, "Experiment list should have 3 entries.");
 

@@ -96,22 +96,26 @@ let gExperimentsEnabled = false;
 let gExperiments = null;
 let gLogAppenderDump = null;
 
-XPCOMUtils.defineLazyGetter(this, "gLogger", function() {
-  let logger = Log.repository.getLogger("Browser.Experiments");
-  logger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
-  return logger;
-});
-
+let gLogger;
+let gLogDumping = false;
 
 function configureLogging() {
+  if (!gLogger) {
+    gLogger = Log.repository.getLogger("Browser.Experiments");
+    gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
+  }
   gLogger.level = gPrefs.get(PREF_LOGGING_LEVEL, 50);
 
-  if (gPrefs.get(PREF_LOGGING_DUMP, false)) {
-    gLogAppenderDump = new Log.DumpAppender(new Log.BasicFormatter());
-    gLogger.addAppender(gLogAppenderDump);
-  } else {
-    gLogger.removeAppender(gLogAppenderDump);
-    gLogAppenderDump = null;
+  let logDumping = gPrefs.get(PREF_LOGGING_DUMP, false);
+  if (logDumping != gLogDumping) {
+    if (logDumping) {
+      gLogAppenderDump = new Log.DumpAppender(new Log.BasicFormatter());
+      gLogger.addAppender(gLogAppenderDump);
+    } else {
+      gLogger.removeAppender(gLogAppenderDump);
+      gLogAppenderDump = null;
+    }
+    gLogDumping = logDumping;
   }
 }
 
@@ -252,16 +256,25 @@ Experiments.Experiments = function (policy=new Experiments.Policy()) {
   // This is a Map of (string -> ExperimentEntry), keyed with the experiment id.
   // It holds both the current experiments and history.
   // Map() preserves insertion order, which means we preserve the manifest order.
+  // This is null until we've successfully completed loading the cache from
+  // disk the first time.
   this._experiments = null;
-  // Holds tasks that hit the experiments list and files.
-  // We need to serialize them, so only one is running at a time.
-  this._pendingTasks = {
-    updateManifest: null,
-    loadFromCache: null,
-    saveToCache: null,
-    evaluateExperiments: null,
-    disableExperiment: null,
-  };
+  this._refresh = false;
+  this._terminateReason = null; // or TELEMETRY_LOG.TERMINATION....
+  this._dirty = false;
+
+  // Loading the cache happens once asynchronously on startup
+  this._loadTask = null;
+
+  // Ignore addon-manager notifications for addons that we are uninstalling ourself
+  this._pendingUninstall = null;
+
+  // The _main task handles all other actions:
+  // * refreshing the manifest off the network (if _refresh)
+  // * disabling/enabling experiments
+  // * saving the cache (if _dirty)
+  this._mainTask = null;
+
   // Timer for re-evaluating experiment status.
   this._timer = null;
 
@@ -291,8 +304,15 @@ Experiments.Experiments.prototype = {
 
     AddonManager.addAddonListener(this);
 
-    this._experiments = new Map();
-    this._loadFromCache();
+    this._loadTask = Task.spawn(this._loadFromCache.bind(this)).then(
+      () => {
+        this._loadTask = null;
+        this._run();
+      },
+      (e) => {
+        gLogger.error("Experiments::_loadFromCache caught error: " + e);
+      }
+    );
   },
 
   /**
@@ -316,8 +336,8 @@ Experiments.Experiments.prototype = {
     }
 
     this._shutdown = true;
-    if (this._pendingTasks.saveToCache) {
-      return this._pendingTasks.saveToCache;
+    if (this._mainTask) {
+      return this._mainTask;
     }
     return Promise.resolve();
   },
@@ -352,18 +372,17 @@ Experiments.Experiments.prototype = {
     gExperimentsEnabled = enabled && telemetryEnabled();
 
     if (wasEnabled == gExperimentsEnabled) {
-      return Promise.resolve();
+      return;
     }
 
     if (gExperimentsEnabled) {
-      return this.updateManifest();
+      this.updateManifest();
+    } else {
+      this.disableExperiment();
+      if (this._timer) {
+        this._timer.clear();
+      }
     }
-
-    let promise = this._disableExperiments();
-    if (wasEnabled) {
-      Services.obs.notifyObservers(null, OBSERVER_TOPIC, null);
-    }
-    return promise;
   },
 
   _telemetryStatusChanged: function () {
@@ -389,33 +408,30 @@ Experiments.Experiments.prototype = {
    * @return Promise<Array<ExperimentInfo>> Array of experiment info objects.
    */
   getExperiments: function () {
-    return Promise.resolve(this._experiments || this._loadFromCache()).then(
-      () => {
-        let list = [];
+    return Task.spawn(function*() {
+      yield this._loadTask;
+      let list = [];
 
-        for (let [id, experiment] of this._experiments) {
-          if (!experiment.startDate) {
-            // We only collect experiments that are or were active.
-            continue;
-          }
-
-          list.push({
-            id: id,
-            name: experiment._name,
-            description: experiment._description,
-            active: experiment.enabled,
-            endDate: experiment.endDate.getTime(),
-            detailURL: experiment._homepageURL,
-          });
+      for (let [id, experiment] of this._experiments) {
+        if (!experiment.startDate) {
+          // We only collect experiments that are or were active.
+          continue;
         }
 
-        // Sort chronologically, descending.
-        list.sort((a, b) => b.endDate - a.endDate);
+        list.push({
+          id: id,
+          name: experiment._name,
+          description: experiment._description,
+          active: experiment.enabled,
+          endDate: experiment.endDate.getTime(),
+          detailURL: experiment._homepageURL,
+        });
+      }
 
-        return list;
-      },
-      () => []
-    );
+      // Sort chronologically, descending.
+      list.sort((a, b) => b.endDate - a.endDate);
+      return list;
+    }.bind(this));
   },
 
   /**
@@ -452,9 +468,61 @@ Experiments.Experiments.prototype = {
           return experiment;
         }
       }
-
       return null;
     }.bind(this));
+  },
+
+  _run: function() {
+    this._checkForShutdown();
+    if (!this._mainTask) {
+      this._mainTask = Task.spawn(this._main.bind(this)).then(
+        null,
+        (e) => {
+          gLogger.error("Experiments::_main caught error: " + e);
+          this._mainTask = null;
+        }
+      );
+    }
+    return this._mainTask;
+  },
+
+  _main: function*() {
+    do {
+      yield this._loadTask;
+      if (this._refresh) {
+        yield this._loadManifest();
+      }
+      yield this._evaluateExperiments();
+      if (this._dirty) {
+        yield this._saveToCache();
+      }
+      // If somebody called .updateManifest() or disableExperiment()
+      // while we were running, go again right now.
+    }
+    while (this._refresh || this._terminateReason);
+    this._mainTask = null;
+    this._scheduleNextRun();
+  },
+
+  _loadManifest: function*() {
+    let uri = Services.urlFormatter.formatURLPref(PREF_BRANCH + PREF_MANIFEST_URI);
+
+    this._checkForShutdown();
+
+    this._refresh = false;
+    try {
+      let responseText = yield this._httpGetRequest(uri);
+      gLogger.trace("Experiments::_loadManifest() - responseText=\"" + responseText + "\"");
+
+      if (this._shutdown) {
+        return;
+      }
+
+      let data = JSON.parse(responseText);
+      this._updateExperiments(data);
+    } catch (e) {
+      gLogger.error("Experiments::_loadManifest - failure to fetch/parse manifest (continuing anyway): " + e);
+    }
   },
 
   /**
@@ -475,71 +543,39 @@ Experiments.Experiments.prototype = {
       return Promise.reject(Error("uninit() alrady called"));
     }
 
-    if (this._pendingTasks.updateManifest) {
-      return this._pendingTasks.updateManifest;
-    }
-
-    let uri = Services.urlFormatter.formatURLPref(PREF_BRANCH + PREF_MANIFEST_URI);
-
-    this._pendingTasks.updateManifest = Task.spawn(function () {
-      this._checkForShutdown();
-
-      // Don't interfere while we're saving or loading the cache.
-      try {
-        yield this._pendingTasksDone([this._pendingTasks.updateManifest]);
-      } catch (e) {
-        // Ignore a failed cache load/save.
-      }
-
-      try {
-        let responseText = yield this._httpGetRequest(uri);
-        gLogger.trace("Experiments::updateManifest::updateTask() - responseText=\"" + responseText + "\"");
-
-        this._checkForShutdown();
-
-        let data = JSON.parse(responseText);
-        this._updateExperiments(data);
-        yield this._evaluateExperiments();
-        this._scheduleExperimentEvaluation();
-      } catch (e if e instanceof SyntaxError) {
-        gLogger.error("Experiments::updateManifest::updateTask() - failed to parse manifest - " + e);
-        throw e;
-      } finally {
-        this._pendingTasks.updateManifest = null;
-      }
-
-      yield this._saveToCache(this._experiments);
-    }.bind(this));
-
-    return this._pendingTasks.updateManifest;
+    this._refresh = true;
+    return this._run();
   },
 
   notify: function (timer) {
     gLogger.trace("Experiments::notify()");
-
     this._checkForShutdown();
-
-    if (this._pendingTasks.evaluateExperiments) {
-      return;
-    }
-
-    this._pendingTasks.evaluateExperiments = new Task.spawn(function scheduledEvaluateTask() {
-      gLogger.trace("Experiments::notify::scheduledEvaluateTask()");
-      yield this._pendingTasksDone([this._pendingTasks.evaluateExperiments]);
-      yield this._evaluateExperiments();
-      this._pendingTasks.evaluateExperiments = null;
-      this._scheduleExperimentEvaluation();
-    }.bind(this));
+    return this._run();
   },
 
   onDisabled: function (addon) {
-    gLogger.trace("Experiments::onDisabled() - addon id: " + addon.id)
-    this.disableExperiment(addon.id);
+    gLogger.trace("Experiments::onDisabled() - addon id: " + addon.id);
+    if (addon.id == this._pendingUninstall) {
+      return;
+    }
+    let activeExperiment = this._getActiveExperiment();
+    if (!activeExperiment || activeExperiment._addonId != addon.id) {
+      return;
+    }
+    this.disableExperiment();
   },
 
   onUninstalled: function (addon) {
     gLogger.trace("Experiments::onUninstalled() - addon id: " + addon.id);
-    this.disableExperiment(addon.id);
+    if (addon.id == this._pendingUninstall) {
+      gLogger.trace("onUninstalled: matches pending uninstall");
+      return;
+    }
+    let activeExperiment = this._getActiveExperiment();
+    if (!activeExperiment || activeExperiment._addonId != addon.id) {
+      return;
+    }
+    this.disableExperiment();
   },
 
   _getExperimentByAddonId: function (addonId) {
@@ -550,17 +586,6 @@ Experiments.Experiments.prototype = {
     }
 
     return null;
-  },
-
-  _disableExperimentByAddonId: function (addonId) {
-    this._checkForShutdown();
-    gLogger.trace("Experiments::disableExperimentByAddonId() - addon id: " + addonId);
-    let experiment = this._getExperimentByAddonId(addonId);
-    if (!experiment) {
-      return;
-    }
-
-    this.disableExperiment(experiment.id);
   },
 
   /*
@@ -624,87 +649,44 @@ Experiments.Experiments.prototype = {
   },
 
   /*
-   * Returns a promise that is resolved when all _pendingTasks are resolved
-   * or rejected.
-   * exceptThese is optional and allows to specify exceptions of tasks not to
-   * wait on.
+   * Part of the main task to save the cache to disk, called from _main.
    */
-  _pendingTasksDone: function (exceptThese) {
-    exceptThese = exceptThese || [];
-    let ts = this._pendingTasks;
-    let list = [ts[k] for (k of Object.keys(ts))
-                  if (ts.hasOwnProperty(k) && exceptThese.indexOf(ts[k]) == -1)]
-    return allResolvedOrRejected(list);
-  },
-
-  /*
-   * Save the experiment data on disk. Returns a promise that
-   * is resolved when the operation is done.
-   */
-  _saveToCache: function (data) {
-    if (this._pendingTasks.saveToCache) {
-      return this._pendingTasks.saveToCache;
-    }
-
+  _saveToCache: function* () {
     let path = this._cacheFilePath;
     let textData = JSON.stringify({
       version: CACHE_VERSION,
-      data: [e[1].toJSON() for (e of data.entries())],
+      data: [e[1].toJSON() for (e of this._experiments.entries())],
     });
 
-    this._pendingTasks.saveToCache = Task.spawn(function Experiments_saveToCache_fileTask() {
-      try {
-        yield this._pendingTasksDone([this._pendingTasks.saveToCache]);
-        let encoder = new TextEncoder();
-        let data = encoder.encode(textData);
-        let options = { tmpPath: path + ".tmp", compression: "lz4" };
-        yield OS.File.writeAtomic(path, data, options);
-      } finally {
-        this._pendingTasks.saveToCache = null;
-      }
-    }.bind(this)).then(
-      () => gLogger.debug("Experiments::saveToCache::fileTask() saved to: " + path),
-       e => gLogger.error("Experiments::saveToCache::fileTask() failed: " + e));
-
-    return this._pendingTasks.saveToCache;
+    let encoder = new TextEncoder();
+    let data = encoder.encode(textData);
+    let options = { tmpPath: path + ".tmp", compression: "lz4" };
+    yield OS.File.writeAtomic(path, data, options);
+    this._dirty = false;
+    gLogger.debug("Experiments._saveToCache saved to " + path);
   },
 
   /*
-   * Load the cached experiments manifest file from disk.
-   * Returns a promise that is resolved when the experiments are loaded and updated.
+   * Task function, load the cached experiments manifest file from disk.
    */
-  _loadFromCache: function () {
-    if (this._pendingTasks.loadFromCache) {
-      return this._pendingTasks.loadFromCache;
-    }
-
+  _loadFromCache: function*() {
     let path = this._cacheFilePath;
-    this._pendingTasks.loadFromCache = Task.spawn(function () {
-      try {
-        yield this._pendingTasksDone([this._pendingTasks.loadFromCache]);
-        let result = yield loadJSONAsync(path, { compression: "lz4" });
-
-        this._populateFromCache(result);
-        yield this._evaluateExperiments();
-        this._scheduleExperimentEvaluation();
-      } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
-        // No cached manifest yet.
-      } finally {
-        this._pendingTasks.loadFromCache = null;
-      }
-    }.bind(this)).then(null, error => {
-      gLogger.error("Experiments::loadFromCache::fileTask() failed: " + error);
-    });
-
-    return this._pendingTasks.loadFromCache;
+    try {
+      let result = yield loadJSONAsync(path, { compression: "lz4" });
+      this._populateFromCache(result);
+    } catch (e if e instanceof OS.File.Error && e.becauseNoSuchFile) {
+      // No cached manifest yet.
+      this._experiments = new Map();
+    }
   },
 
   _populateFromCache: function (data) {
     gLogger.trace("Experiments::populateFromCache() - data: " + JSON.stringify(data));
 
+    // If the user has a newer cache version than we can understand, we fail
+    // hard; no experiments should be active in this older client.
     if (CACHE_VERSION !== data.version) {
-      gLogger.warn("Experiments::populateFromCache() - invalid cache version");
-      return false;
+      throw new Error("Experiments::_populateFromCache() - invalid cache version");
     }
 
     let experiments = new Map();
@@ -717,7 +699,6 @@ Experiments.Experiments.prototype = {
     }
 
     this._experiments = experiments;
-    return true;
   },
 
   /*
@@ -729,7 +710,6 @@ Experiments.Experiments.prototype = {
 
     if (manifestObject.version !== MANIFEST_VERSION) {
       gLogger.warning("Experiments::updateExperiments() - unsupported version " + manifestObject.version);
-      return false;
     }
 
     let experiments = new Map(); // The new experiments map
@@ -769,7 +749,7 @@ Experiments.Experiments.prototype = {
     }
 
     this._experiments = experiments;
-    return true;
+    this._dirty = true;
   },
 
   _getActiveExperiment: function () {
@@ -787,96 +767,44 @@ Experiments.Experiments.prototype = {
     return null;
   },
 
-  /*
-   * Stop running experiments and disable further activations.
-   */
-  _disableExperiments: function () {
-    gLogger.trace("Experiments::disableExperiments()");
-
-    if (this._shutdown) {
-      return Promise.reject(Error("uninit() alrady called"));
-    }
-
-    let active = this._getActiveExperiment();
-    let promise = Promise.resolve();
-    if (active) {
-      promise = active.stop();
-    }
-
-    if (this._timer) {
-      this._timer.clear();
-    }
-
-    return promise;
-  },
-
   /**
    * Disable an experiment by id.
    * @param experimentId The id of the experiment.
    * @param userDisabled (optional) Whether this is disabled as a result of a user action.
    * @return Promise<> Promise that will get resolved once the task is done or failed.
    */
-  disableExperiment: function (experimentId, userDisabled=true) {
-    gLogger.trace("Experiments::disableExperiment() - " + experimentId);
+  disableExperiment: function (userDisabled=true) {
+    gLogger.trace("Experiments::disableExperiment()");
 
-    this._checkForShutdown();
-
-    let experiment = this._experiments.get(experimentId);
-    if (!experiment) {
-      let message = "no experiment with this id";
-      gLogger.warning("Experiments::disableExperiment() - " + message);
-      return Promise.reject(new Error(message));
-    }
-
-    if (!experiment.enabled) {
-      let message = "experiment is not enabled";
-      gLogger.debug("Experiments::disableExperiment() - " + message);
-      return Promise.reject(new Error(message));
-    }
-
-    return Task.spawn(function* Experiments_disableExperimentTaskOuter() {
-      gLogger.trace("Experiments_disableExperimentTaskOuter");
-      // We need to wait on possible previous disable tasks.
-      yield this._pendingTasks.disableExperiment;
-
-      let disableTask = Task.spawn(function* Experiments_disableExperimentTaskInner() {
-        yield this._pendingTasksDone([this._pendingTasks.disableExperiment]);
-
-        let terminationKind = TELEMETRY_LOG.TERMINATION.USERDISABLED;
-        if (!userDisabled) {
-          terminationKind = TELEMETRY_LOG.TERMINATION.FROM_API;
-        }
-
-        yield experiment.stop(terminationKind);
-        Services.obs.notifyObservers(null, OBSERVER_TOPIC, null);
-        this._pendingTasks.disableExperiment = null;
-      }.bind(this));
-
-      this._pendingTasks.disableExperiment = disableTask;
-      yield disableTask;
-    }.bind(this));
+    this._terminateReason = userDisabled ? TELEMETRY_LOG.TERMINATION.USERDISABLED : TELEMETRY_LOG.TERMINATION.FROM_API;
+    return this._run();
   },
 
   /*
-   * Check applicability of experiments, disable the active one if needed and
-   * activate the first applicable candidate.
-   * @return Promise<boolean> Resolved when done, the value indicates whether
-   *                          the activity status of any experiment changed.
+   * Task function to check applicability of experiments, disable the active
+   * experiment if needed and activate the first applicable candidate.
    */
-  _evaluateExperiments: function () {
-    gLogger.trace("Experiments::evaluateExperiments()");
+  _evaluateExperiments: function*() {
+    gLogger.trace("Experiments::_evaluateExperiments");
 
     this._checkForShutdown();
 
-    return Task.spawn(function Experiments_evaluateExperiments_evaluateTask() {
-      this._checkForShutdown();
-      let activeExperiment = this._getActiveExperiment();
-      let activeChanged = false;
-      let now = this._policy.now();
+    let activeExperiment = this._getActiveExperiment();
+    let activeChanged = false;
+    let now = this._policy.now();
 
-      if (activeExperiment) {
-        let wasStopped = yield activeExperiment.maybeStop();
+    if (activeExperiment) {
+      this._pendingUninstall = activeExperiment._addonId;
+      try {
+        let wasStopped;
+        if (this._terminateReason) {
+          yield activeExperiment.stop(this._terminateReason);
+          wasStopped = true;
+        } else {
+          wasStopped = yield activeExperiment.maybeStop();
+        }
         if (wasStopped) {
+          this._dirty = true;
           gLogger.debug("Experiments::evaluateExperiments() - stopped experiment "
                         + activeExperiment.id);
           activeExperiment = null;
@@ -892,63 +820,65 @@ Experiments.Experiments.prototype = {
             // On failure try the next experiment.
             activeExperiment = null;
           }
-
+          this._dirty = true;
           activeChanged = true;
         }
+      } finally {
+        this._pendingUninstall = null;
       }
+    }
+    this._terminateReason = null;
 
-      if (!activeExperiment) {
-        for (let [id, experiment] of this._experiments) {
-          let applicable;
-          let reason = null;
-          yield experiment.isApplicable().then(
-            result => applicable = result,
-            result => {
-              applicable = false;
-              reason = result;
-            }
-          );
+    if (!activeExperiment) {
+      for (let [id, experiment] of this._experiments) {
+        let applicable;
+        let reason = null;
+        try {
+          applicable = yield experiment.isApplicable();
+        }
+        catch (e) {
+          applicable = false;
+          reason = e;
+        }
 
-          if (!applicable && reason && reason[0] != "was-active") {
-            // Report this from here to avoid over-reporting.
-            let desc = TELEMETRY_LOG.ACTIVATION;
-            let data = [TELEMETRY_LOG.ACTIVATION.REJECTED, id];
-            data = data.concat(reason);
-            TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY, data);
-          }
+        if (!applicable && reason && reason[0] != "was-active") {
+          // Report this from here to avoid over-reporting.
+          let desc = TELEMETRY_LOG.ACTIVATION;
+          let data = [TELEMETRY_LOG.ACTIVATION.REJECTED, id];
+          data = data.concat(reason);
+          TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY, data);
+        }
 
-          if (applicable) {
-            gLogger.debug("Experiments::evaluateExperiments() - activating experiment " + id);
-            try {
-              yield experiment.start();
-              activeChanged = true;
-              activeExperiment = experiment;
-              break;
-            } catch (e) {
-              // On failure try the next experiment.
-            }
+        if (applicable) {
+          gLogger.debug("Experiments::evaluateExperiments() - activating experiment " + id);
+          try {
+            yield experiment.start();
+            activeChanged = true;
+            activeExperiment = experiment;
+            this._dirty = true;
+            break;
+          } catch (e) {
+            // On failure try the next experiment.
           }
         }
       }
+    }
 
-      if (activeChanged) {
-        Services.obs.notifyObservers(null, OBSERVER_TOPIC, null);
-      }
+    if (activeChanged) {
+      Services.obs.notifyObservers(null, OBSERVER_TOPIC, null);
+    }
 
 #ifdef MOZ_CRASHREPORTER
-      if (activeExperiment) {
-        gCrashReporter.annotateCrashReport("ActiveExperiment", activeExperiment.id);
-      }
+    if (activeExperiment) {
+      gCrashReporter.annotateCrashReport("ActiveExperiment", activeExperiment.id);
+    }
 #endif
-
-      throw new Task.Result(activeChanged);
-    }.bind(this));
   },
 
   /*
    * Schedule the soonest re-check of experiment applicability that is needed.
    */
-  _scheduleExperimentEvaluation: function () {
+  _scheduleNextRun: function () {
     this._checkForShutdown();
 
     if (this._timer) {
@@ -1661,7 +1591,6 @@ ExperimentsProvider.prototype = Object.freeze({
     return this.enqueueStorageOperation(() => {
       return Task.spawn(function* recordTask() {
         let todayActive = yield this._experiments.lastActiveToday();
-
         if (!todayActive) {
           this._log.info("No active experiment on this day: " +
                          this._experiments._policy.now());

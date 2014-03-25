@@ -47,7 +47,7 @@ add_task(function* test_fetchAndCache() {
   Services.prefs.setCharPref(PREF_MANIFEST_URI, gHttpRoot + "experiments_1.manifest");
   let ex = new Experiments.Experiments(gPolicy);
 
-  Assert.equal(ex._experiments.size, 0, "There should be no cached experiments yet.");
+  Assert.equal(ex._experiments, null, "There should be no cached experiments yet.");
   yield ex.updateManifest();
   Assert.notEqual(ex._experiments.size, 0, "There should be cached experiments now.");
 
@@ -56,25 +56,23 @@ add_task(function* test_fetchAndCache() {
 
 add_task(function* test_checkCache() {
   let ex = new Experiments.Experiments(gPolicy);
-  Assert.equal(ex._experiments.size, 0, "There should be no cached experiments yet.");
-
-  yield ex._loadFromCache();
+  yield ex.notify();
   Assert.notEqual(ex._experiments.size, 0, "There should be cached experiments now.");
 
   yield ex.uninit();
 });
 
 add_task(function* test_fetchInvalid() {
-  Services.prefs.setCharPref(PREF_MANIFEST_URI, gHttpRoot + "invalid.manifest");
   yield removeCacheFile();
 
+  Services.prefs.setCharPref(PREF_MANIFEST_URI, gHttpRoot + "experiments_1.manifest");
   let ex = new Experiments.Experiments(gPolicy);
-  Assert.equal(ex._experiments.size, 0, "There should be no cached experiments yet.");
+  yield ex.updateManifest();
+  Assert.notEqual(ex._experiments.size, 0, "There should be experiments");
 
-  let error;
-  yield ex.updateManifest().then(() => error = false, () => error = true);
-  Assert.ok(error, "Updating the manifest should not have succeeded.");
-  Assert.equal(ex._experiments.size, 0, "There should still be no cached experiments.");
+  Services.prefs.setCharPref(PREF_MANIFEST_URI, gHttpRoot + "invalid.manifest");
+  yield ex.updateManifest()
+  Assert.notEqual(ex._experiments.size, 0, "There should still be experiments: fetch failure shouldn't remove them.");
 
   yield ex.uninit();
 });
