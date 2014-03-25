@@ -3456,15 +3456,15 @@ if test -n "$JS_MORE_DETERMINISTIC"; then
 fi
 
 dnl ========================================================
-dnl Enable output of backtraces on artificial OOMs
+dnl Enable breakpoint for artificial OOMs
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(oom-backtrace,
-[  --enable-oom-backtrace
-                          Enable output of backtraces on artificial OOMs (-A)],
-    JS_OOM_DO_BACKTRACES=1,
-    JS_OOM_DO_BACKTRACES= )
-if test -n "$JS_OOM_DO_BACKTRACES"; then
-    AC_DEFINE(JS_OOM_DO_BACKTRACES)
+MOZ_ARG_ENABLE_BOOL(oom-breakpoint,
+[  --enable-oom-breakpoint
+                          Enable a breakpoint function for artificial OOMs],
+    JS_OOM_BREAKPOINT=1,
+    JS_OOM_BREAKPOINT= )
+if test -n "$JS_OOM_BREAKPOINT"; then
+    AC_DEFINE(JS_OOM_BREAKPOINT)
 fi
 
 MOZ_CHECK_CCACHE
