@@ -13,7 +13,7 @@ let gUpdater = {
    * Updates the current grid according to its pinned and blocked sites.
    * This removes old, moves existing and creates new sites to fill gaps.
    */
-  updateGrid: function Updater_updateGrid(draggedSite = null) {
+  updateGrid: function Updater_updateGrid() {
     let links = gLinks.getLinks().slice(0, gGrid.cells.length);
 
     // Find all sites that remain in the grid.
@@ -32,8 +32,7 @@ let gUpdater = {
 
       // Now it's time to animate the sites actually moving to their new
       // positions.
-      let opts = {unfreeze: true};
-      gTransformation.rearrangeSites(sites, draggedSite, opts).then(() => {
+      this._rearrangeSites(sites).then(() => {
         // Try to fill empty cells and finish.
         this._fillEmptyCells(links);
 
@@ -105,6 +104,14 @@ let gUpdater = {
           cellNode.appendChild(aSite.node);
       }
     }, this);
+  },
+
+  /**
+   * Rearranges the given sites and slides them to their new positions.
+   * @param aSites The array of sites to re-arrange.
+   */
+  _rearrangeSites: function (aSites) {
+    return gTransformation.rearrangeSites(aSites, {unfreeze: true});
   },
 
   /**
