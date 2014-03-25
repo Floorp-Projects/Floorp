@@ -15,11 +15,14 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
-  return Cc["@mozilla.org/network/util;1"]
-           .getService(Ci.nsINetUtil);
-});
+XPCOMUtils.defineLazyServiceGetter(this, "NetworkUtil",
+                                   "@mozilla.org/network/util;1",
+                                   "nsINetUtil");
+
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+  "resource://gre/modules/NetUtil.jsm");
 
 // Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
 
@@ -339,7 +342,7 @@ this.AppsUtils = {
      checkManifestContentType(aInstallOrigin, aWebappOrigin, aContentType) {
     let hadCharset = { };
     let charset = { };
-    let contentType = NetUtil.parseContentType(aContentType, charset, hadCharset);
+    let contentType = NetworkUtil.parseContentType(aContentType, charset, hadCharset);
     if (aInstallOrigin != aWebappOrigin &&
         contentType != "application/x-web-app-manifest+json") {
       return false;
@@ -496,30 +499,57 @@ this.AppsUtils = {
     return true;
   },
 
-  // Loads a JSON file using OS.file. aFile is a string representing the path
+  // Asynchronously loads a JSON file. aPath is a string representing the path
   // of the file to be read.
-  // Returns a Promise resolved with the json payload or rejected with
-  // OS.File.Error
-  loadJSONAsync: function(aFile) {
-    debug("_loadJSONAsync: " + aFile);
-    return Task.spawn(function() {
-      let file = yield OS.File.open(aFile, { read: true });
-      let rawData = yield file.read();
-      // Read json file into a string
-      let data;
-      try {
-        // Obtain a converter to read from a UTF-8 encoded input stream.
-        let converter = new TextDecoder();
-        data = JSON.parse(converter.decode(rawData));
-        file.close();
-      } catch (ex) {
-        debug("Error parsing JSON: " + aFile + ". Error: " + ex);
-        Cu.reportError("OperatorApps: Could not parse JSON: " +
-                       aFile + " " + ex + "\n" + ex.stack);
-        throw ex;
-      }
-      throw new Task.Result(data);
-    });
+  loadJSONAsync: function(aPath) {
+    let deferred = Promise.defer();
+
+    try {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      file.initWithPath(aPath);
+
+      let channel = NetUtil.newChannel(file);
+      channel.contentType = "application/json";
+
+      NetUtil.asyncFetch(channel, function(aStream, aResult) {
+        if (!Components.isSuccessCode(aResult)) {
+          deferred.resolve(null);
+
+          if (aResult == Cr.NS_ERROR_FILE_NOT_FOUND) {
+            // We expect this under certain circumstances, like for webapps.json
+            // on firstrun, so we return early without reporting an error.
+            return;
+          }
+
+          Cu.reportError("AppsUtils: Could not read from json file " + aPath);
+          return;
+        }
+
+        try {
+          // Obtain a converter to read from a UTF-8 encoded input stream.
+          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                            .createInstance(Ci.nsIScriptableUnicodeConverter);
+          converter.charset = "UTF-8";
+
+          // Read json file into a string
+          let data = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(aStream,
+                                                            aStream.available()) || ""));
+          aStream.close();
+
+          deferred.resolve(data);
+        } catch (ex) {
+          Cu.reportError("AppsUtils: Could not parse JSON: " +
+                         aPath + " " + ex + "\n" + ex.stack);
+          deferred.resolve(null);
+        }
+      });
+    } catch (ex) {
+      Cu.reportError("AppsUtils: Could not read from " +
+                     aPath + " : " + ex + "\n" + ex.stack);
+      deferred.resolve(null);
+    }
+
+    return deferred.promise;
   },
 
   // Returns the MD5 hash of a string.
