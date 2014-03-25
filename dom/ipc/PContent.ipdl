@@ -302,6 +302,8 @@ both:
 
     async PJavaScript();
 
+    PFileDescriptorSet(FileDescriptor fd);
+
 child:
     /**
      * Enable system-level sandboxing features, if available.  Can
@@ -311,8 +313,6 @@ child:
     async SetProcessSandbox();
 
     PMemoryReportRequest(uint32_t generation, bool minimizeMemoryUsage, nsString DMDDumpIdent);
-
-    PFileDescriptorSet(FileDescriptor fd);
 
     /**
      * Notify the AudioChannelService in the child processes.
