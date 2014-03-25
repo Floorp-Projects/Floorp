@@ -43,6 +43,7 @@
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
+#include "mozilla/dom/FileDescriptorSetParent.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
 #include "SmsParent.h"
@@ -293,19 +294,6 @@ MaybeTestPBackground()
 
 namespace mozilla {
 namespace dom {
-
-namespace {
-
-// The parent side of FileDescriptorSet doesn't need to do anything, really.
-class FileDescriptorSetParent MOZ_FINAL: public PFileDescriptorSetParent
-{
-    friend class mozilla::dom::ContentParent;
-
-    FileDescriptorSetParent() { }
-    ~FileDescriptorSetParent() { }
-};
-
-} // anonymous namespace
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
 
@@ -3369,15 +3357,15 @@ ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
 }
 
 PFileDescriptorSetParent*
-ContentParent::AllocPFileDescriptorSetParent(const FileDescriptor& /* aFD */)
+ContentParent::AllocPFileDescriptorSetParent(const FileDescriptor& aFD)
 {
-    return new FileDescriptorSetParent();
+    return new FileDescriptorSetParent(aFD);
 }
 
 bool
 ContentParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
 {
-    delete aActor;
+    delete static_cast<FileDescriptorSetParent*>(aActor);
     return true;
 }
 

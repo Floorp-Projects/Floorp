@@ -11,10 +11,9 @@ protocol PFileDescriptorSet
 {
   manager PContent;
 
-child:
+both:
   AddFileDescriptor(FileDescriptor fd);
 
-parent:
   __delete__();
 };
 

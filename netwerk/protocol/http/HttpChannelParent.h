@@ -90,7 +90,8 @@ protected:
                    const nsCString&           entityID,
                    const bool&                chooseApplicationCache,
                    const nsCString&           appCacheClientID,
-                   const bool&                allowSpdy);
+                   const bool&                allowSpdy,
+                   const OptionalFileDescriptorSet& aFds);
 
   virtual bool RecvSetPriority(const uint16_t& priority) MOZ_OVERRIDE;
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset) MOZ_OVERRIDE;

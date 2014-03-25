@@ -11,12 +11,6 @@ using mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace dom {
 
-union OptionalFileDescriptorSet
-{
-  PFileDescriptorSet;
-  void_t;
-};
-
 protocol PBlobStream
 {
   manager PBlob;
