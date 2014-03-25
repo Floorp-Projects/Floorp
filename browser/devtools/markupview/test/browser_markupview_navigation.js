@@ -4,7 +4,7 @@
 
 // Test that the markup-view nodes can be navigated to with the keyboard
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_navigation.html";
+const TEST_URL = TEST_URL_ROOT + "doc_markup_navigation.html";
 const TEST_DATA = [
   ["pageup", "*doctype*"],
   ["down", "html"],
