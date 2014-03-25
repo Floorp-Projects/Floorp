@@ -52,18 +52,10 @@ input[type=button] {
 }
 
 #newtab-margin-top {
-  min-height: 50px;
-  max-height: 80px;
   display: -moz-box;
-  -moz-box-flex: 1;
+  height: 40px;
   -moz-box-align: center;
   -moz-box-pack: center;
-}
-
-#newtab-margin-bottom {
-  min-height: 40px;
-  max-height: 100px;
-  -moz-box-flex: 1;
 }
 
 #newtab-horizontal-margin {
@@ -72,19 +64,15 @@ input[type=button] {
 }
 
 .newtab-side-margin {
-  min-width: 40px;
-  max-width: 300px;
+  min-width: 16px;
   -moz-box-flex: 1;
 }
 
 /* GRID */
 #newtab-grid {
-  display: -moz-box;
   -moz-box-flex: 5;
-  -moz-box-orient: vertical;
-  -moz-box-pack: center;
-  min-width: 600px;
-  min-height: 400px;
+  overflow: hidden;
+  text-align: center;
   transition: 100ms ease-out;
   transition-property: opacity;
 }
@@ -96,14 +84,6 @@ input[type=button] {
 #newtab-grid[locked],
 #newtab-grid[page-disabled] {
   pointer-events: none;
-}
-
-/* ROWS */
-.newtab-row {
-  display: -moz-box;
-  -moz-box-orient: horizontal;
-  -moz-box-direction: normal;
-  -moz-box-pack: center;
 }
 
 /* CELLS */
@@ -160,6 +140,7 @@ input[type=button] {
   left: 0;
   line-height: 20px;
   right: 0;
+  text-align: start;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
