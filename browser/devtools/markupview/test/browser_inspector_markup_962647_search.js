@@ -6,45 +6,34 @@
 // selects the right nodes in the markup-view, even when those nodes are deeply
 // nested (and therefore not attached yet when the markup-view is initialized).
 
-const TEST_URL = "http://mochi.test:8888/browser/browser/devtools/markupview/test/browser_inspector_markup_962647_search.html";
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_962647_search.html";
 
-function test() {
-  waitForExplicitFinish();
+let test = asyncTest(function*() {
+  let {inspector, toolbox} = yield addTab(TEST_URL).then(openInspector);
 
-  let p = content.document.querySelector("p");
-  Task.spawn(function() {
-    info("loading the test page");
-    yield addTab(TEST_URL);
+  ok(!getContainerForRawNode("em", inspector),
+    "The <em> tag isn't present yet in the markup-view");
 
-    info("opening the inspector");
-    let {inspector, toolbox} = yield openInspector();
+  // Searching for the innermost element first makes sure that the inspector
+  // back-end is able to attach the resulting node to the tree it knows at the
+  // moment. When the inspector is started, the <body> is the default selected
+  // node, and only the parents up to the ROOT are known, and its direct children
+  info("searching for the innermost child: <em>");
+  let updated = inspector.once("inspector-updated");
+  searchUsingSelectorSearch("em", inspector);
+  yield updated;
 
-    ok(!getContainerForRawNode(inspector.markup, getNode("em")),
-      "The <em> tag isn't present yet in the markup-view");
+  ok(getContainerForRawNode("em", inspector),
+    "The <em> tag is now imported in the markup-view");
+  is(inspector.selection.node, getNode("em"),
+    "The <em> tag is the currently selected node");
 
-    // Searching for the innermost element first makes sure that the inspector
-    // back-end is able to attach the resulting node to the tree it knows at the
-    // moment. When the inspector is started, the <body> is the default selected
-    // node, and only the parents up to the ROOT are known, and its direct children
-    info("searching for the innermost child: <em>");
+  info("searching for other nodes too");
+  for (let node of ["span", "li", "ul"]) {
     let updated = inspector.once("inspector-updated");
-    searchUsingSelectorSearch("em", inspector);
+    searchUsingSelectorSearch(node, inspector);
     yield updated;
-
-    ok(getContainerForRawNode(inspector.markup, getNode("em")),
-      "The <em> tag is now imported in the markup-view");
-    is(inspector.selection.node, getNode("em"),
-      "The <em> tag is the currently selected node");
-
-    info("searching for other nodes too");
-    for (let node of ["span", "li", "ul"]) {
-      let updated = inspector.once("inspector-updated");
-      searchUsingSelectorSearch(node, inspector);
-      yield updated;
-      is(inspector.selection.node, getNode(node),
-        "The <" + node + "> tag is the currently selected node");
-    }
-
-    gBrowser.removeCurrentTab();
-  }).then(null, ok.bind(null, false)).then(finish);
-}
+    is(inspector.selection.node, getNode(node),
+      "The <" + node + "> tag is the currently selected node");
+  }
+});

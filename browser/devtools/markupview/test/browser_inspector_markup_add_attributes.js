@@ -13,7 +13,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
  * - Redo the change, check that the node change was made again correctly.
  */
 
-waitForExplicitFinish();
 requestLongerTimeout(2);
 
 let TEST_URL = "data:text/html,<div>markup-view attributes addition test</div>";
@@ -134,38 +133,33 @@ let TEST_DATA = [{
   }
 }];
 
-function test() {
-  Task.spawn(function() {
-    info("Opening the inspector on the test URL");
-    let args = yield addTab(TEST_URL).then(openInspector);
-    let inspector = args.inspector;
-    let markup = inspector.markup;
+let test = asyncTest(function*() {
+  info("Opening the inspector on the test URL");
+  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let markup = inspector.markup;
 
-    info("Selecting the test node");
-    let div = getNode("div");
-    yield selectNode(div, inspector);
-    let editor = getContainerForRawNode(markup, div).editor;
+  info("Selecting the test node");
+  let div = getNode("div");
+  yield selectNode(div, inspector);
+  let editor = getContainerForRawNode(div, inspector).editor;
 
-    for (let test of TEST_DATA) {
-      info("Starting test: " + test.desc);
+  for (let test of TEST_DATA) {
+    info("Starting test: " + test.desc);
 
-      info("Enter the new attribute(s) test: " + test.enteredText);
-      let nodeMutated = inspector.once("markupmutation");
-      setEditableFieldValue(editor.newAttr, test.enteredText, inspector);
-      yield nodeMutated;
+    info("Enter the new attribute(s) test: " + test.enteredText);
+    let nodeMutated = inspector.once("markupmutation");
+    setEditableFieldValue(editor.newAttr, test.enteredText, inspector);
+    yield nodeMutated;
 
-      info("Assert that the attribute(s) has/have been applied correctly");
-      assertAttributes(div, test.expectedAttributes);
+    info("Assert that the attribute(s) has/have been applied correctly");
+    assertAttributes(div, test.expectedAttributes);
 
-      info("Undo the change");
-      yield undoChange(inspector);
+    info("Undo the change");
+    yield undoChange(inspector);
 
-      info("Assert that the attribute(s) has/have been removed correctly");
-      assertAttributes(div, {});
-    }
+    info("Assert that the attribute(s) has/have been removed correctly");
+    assertAttributes(div, {});
+  }
 
-    yield inspector.once("inspector-updated");
-
-    gBrowser.removeCurrentTab();
-  }).then(null, ok.bind(null, false)).then(finish);
-}
+  yield inspector.once("inspector-updated");
+});

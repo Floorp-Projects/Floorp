@@ -1,105 +1,44 @@
-/* Any copyright", " is dedicated to the Public Domain.
-http://creativecommons.org/publicdomain/zero/1.0/ */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * Tests that the markup view loads only as many nodes as specified
- * by the devtools.markup.pagesize preference.
- */
+// Tests that the markup view loads only as many nodes as specified
+// by the devtools.markup.pagesize preference and that pressing the "show all nodes"
+// actually shows the nodes
 
-let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let promise = devtools.require("sdk/core/promise");
-let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_950732.html";
 
 // Make sure nodes are hidden when there are more than 5 in a row
-registerCleanupFunction(function() {
-  Services.prefs.clearUserPref("devtools.markup.pagesize");
-});
 Services.prefs.setIntPref("devtools.markup.pagesize", 5);
 
-function test() {
-  waitForExplicitFinish();
+let test = asyncTest(function*() {
+  let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
-  let doc;
-  let inspector;
-  let markup;
+  info("Selecting the UL node");
+  yield clickContainer("ul", inspector);
+  info("Reloading the page with the UL node selected will expand its children");
+  yield reloadPage(inspector);
+  yield inspector.markup._waitForChildren();
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    doc = content.document;
-    waitForFocus(runTests, content);
-  }, true);
-  content.location = "http://mochi.test:8888/browser/browser/devtools/markupview/test/browser_inspector_markup_950732.html";
+  info("Click on the 'show all nodes' button in the UL's list of children");
+  yield showAllNodes(inspector);
 
-  function runTests() {
-    Task.spawn(function() {
-      yield openMarkupView();
-      yield selectUL();
-      yield reloadPage();
-      yield showAllNodes();
+  assertAllNodesAreVisible(inspector);
+});
 
-      assertAllNodesAreVisible();
-      finishUp();
-    }).then(null, Cu.reportError);
-  }
+function showAllNodes(inspector) {
+  let container = getContainerForRawNode("ul", inspector);
+  let button = container.elt.querySelector("button");
+  ok(button, "All nodes button is here");
+  let win = button.ownerDocument.defaultView;
 
-  function openMarkupView() {
-    let deferred = promise.defer();
+  EventUtils.sendMouseEvent({type: "click"}, button, win);
+  return inspector.markup._waitForChildren();
+}
 
-    var target = TargetFactory.forTab(gBrowser.selectedTab);
-    let toolbox = gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-      inspector = toolbox.getCurrentPanel();
-      markup = inspector.markup;
-      inspector.once("inspector-updated", deferred.resolve);
-    });
-
-    return deferred.promise;
-  }
-
-  function selectUL() {
-    let deferred = promise.defer();
-
-    let container = getContainerForRawNode(markup, doc.querySelector("ul"));
-    let win = container.elt.ownerDocument.defaultView;
-
-    EventUtils.sendMouseEvent({type: "mousedown"}, container.elt, win);
-    inspector.once("inspector-updated", deferred.resolve);
-
-    return deferred.promise;
-  }
-
-  function reloadPage() {
-    let deferred = promise.defer();
-
-    inspector.once("new-root", () => {
-      doc = content.document;
-      markup = inspector.markup;
-      markup._waitForChildren().then(deferred.resolve);
-    });
-    content.location.reload();
-
-    return deferred.promise;
-  }
-
-  function showAllNodes() {
-    let container = getContainerForRawNode(markup, doc.querySelector("ul"));
-    let button = container.elt.querySelector("button");
-    let win = button.ownerDocument.defaultView;
-
-    EventUtils.sendMouseEvent({type: "click"}, button, win);
-    return markup._waitForChildren();
-  }
-
-  function assertAllNodesAreVisible() {
-    let ul = doc.querySelector("ul");
-    let container = getContainerForRawNode(markup, ul);
-    ok(!container.elt.querySelector("button"), "All nodes button isn't here");
-    is(container.children.childNodes.length, ul.children.length);
-  }
-
-  function finishUp() {
-    doc = inspector = markup = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  }
+function assertAllNodesAreVisible(inspector) {
+  let ul = getNode("ul");
+  let container = getContainerForRawNode(ul, inspector);
+  ok(!container.elt.querySelector("button"), "All nodes button isn't here anymore");
+  is(container.children.childNodes.length, ul.children.length);
 }

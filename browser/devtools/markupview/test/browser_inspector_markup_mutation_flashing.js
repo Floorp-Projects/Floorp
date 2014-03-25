@@ -1,130 +1,89 @@
-/* Any copyright", " is dedicated to the Public Domain.
-http://creativecommons.org/publicdomain/zero/1.0/ */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  waitForExplicitFinish();
+// Test that markup-containers in the markup-view do flash when their
+// corresponding DOM nodes mutate
 
-  // Will hold the doc we're viewing
-  let contentTab;
-  let doc;
-  let listElement;
+const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_mutation_flashing.html";
+// The test data contains a list of mutations to test.
+// Each item is an object:
+// - desc: a description of the test step, for better logging
+// - mutate: a function that should make changes to the content DOM
+// - shouldFlash: a function that returns the element that should be the one flashing
+const TEST_DATA = [{
+  desc: "Adding a new node should flash the new node",
+  mutate: (doc, rootNode) => {
+    let newLi = doc.createElement("LI");
+    newLi.textContent = "new list item";
+    rootNode.appendChild(newLi);
+  },
+  shouldFlash: rootNode => rootNode.lastElementChild
+}, {
+  desc: "Removing a node should flash its parent",
+  mutate: (doc, rootNode) => {
+    rootNode.removeChild(rootNode.lastElementChild);
+  },
+  shouldFlash: rootNode => rootNode
+}, {
+  desc: "Re-appending an existing node should only flash this node",
+  mutate: (doc, rootNode) => {
+    rootNode.appendChild(rootNode.firstElementChild);
+  },
+  shouldFlash: rootNode => rootNode.lastElementChild
+}, {
+  desc: "Adding an attribute should flash the node",
+  mutate: (doc, rootNode) => {
+    rootNode.setAttribute("name-" + Date.now(), "value-" + Date.now());
+  },
+  shouldFlash: rootNode => rootNode
+}, {
+  desc: "Editing an attribute should flash the node",
+  mutate: (doc, rootNode) => {
+    rootNode.setAttribute("class", "list value-" + Date.now());
+  },
+  shouldFlash: rootNode => rootNode
+}, {
+  desc: "Removing an attribute should flash the node",
+  mutate: (doc, rootNode) => {
+    rootNode.removeAttribute("class");
+  },
+  shouldFlash: rootNode => rootNode
+}];
 
-  // Holds the MarkupTool object we're testing.
-  let markup;
-  let inspector;
+let test = asyncTest(function*() {
+  let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
-  // Then create the actual dom we're inspecting...
-  contentTab = gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    doc = content.document;
-    waitForFocus(setupTest, content);
-  }, true);
-  content.location = "http://mochi.test:8888/browser/browser/devtools/markupview/test/browser_inspector_markup_mutation_flashing.html";
+  info("Getting the <ul.list> root node to test mutations on");
+  let rootNode = getNode(".list");
 
-  function setupTest() {
-    var target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-      inspector = toolbox.getCurrentPanel();
-      startTests();
-    });
+  info("Selecting the last element of the root node before starting");
+  yield selectNode(rootNode.lastElementChild, inspector);
+
+  for (let {mutate, shouldFlash, desc} of TEST_DATA) {
+    info("Starting test: " + desc);
+
+    info("Mutating the DOM and listening for markupmutation event");
+    let mutated = inspector.once("markupmutation");
+    let updated = inspector.once("inspector-updated");
+    mutate(content.document, rootNode);
+    yield mutated;
+
+    info("Asserting that the correct markup-container is flashing");
+    assertNodeFlashing(shouldFlash(rootNode), inspector);
+
+    // Making sure the inspector has finished updating before moving on
+    yield updated;
   }
+});
 
-  function startTests() {
-    markup = inspector.markup;
+function assertNodeFlashing(node, inspector) {
+  let container = getContainerForRawNode(node, inspector);
 
-    // Get the content UL element
-    listElement = doc.querySelector(".list");
-
-    // Making sure children are expanded
-    inspector.selection.setNode(listElement.lastElementChild);
-    inspector.once("inspector-updated", () => {
-      // testData contains a list of mutations to test
-      // Each array item is an object with:
-      // - mutate: a function that should make changes to the content DOM
-      // - assert: a function that should test flashing background
-      let testData = [{
-        // Adding a new node should flash the new node
-        mutate: () => {
-          let newLi = doc.createElement("LI");
-          newLi.textContent = "new list item";
-          listElement.appendChild(newLi);
-        },
-        assert: () => {
-          assertNodeFlashing(listElement.lastElementChild);
-        }
-      }, {
-        // Removing a node should flash its parent
-        mutate: () => {
-          listElement.removeChild(listElement.lastElementChild);
-        },
-        assert: () => {
-          assertNodeFlashing(listElement);
-        }
-      }, {
-        // Re-appending an existing node should only flash this node
-        mutate: () => {
-          listElement.appendChild(listElement.firstElementChild);
-        },
-        assert: () => {
-          assertNodeFlashing(listElement.lastElementChild);
-        }
-      }, {
-        // Adding an attribute should flash the node
-        mutate: () => {
-          listElement.setAttribute("name-" + Date.now(), "value-" + Date.now());
-        },
-        assert: () => {
-          assertNodeFlashing(listElement);
-        }
-      }, {
-        // Editing an attribute should flash the node
-        mutate: () => {
-          listElement.setAttribute("class", "list value-" + Date.now());
-        },
-        assert: () => {
-          assertNodeFlashing(listElement);
-        }
-      }, {
-        // Removing an attribute should flash the node
-        mutate: () => {
-          listElement.removeAttribute("class");
-        },
-        assert: () => {
-          assertNodeFlashing(listElement);
-        }
-      }];
-      testMutation(testData, 0);
-    });
-  }
-
-  function testMutation(testData, cursor) {
-    if (cursor < testData.length) {
-      let {mutate, assert} = testData[cursor];
-      mutate();
-      inspector.once("markupmutation", () => {
-        assert();
-        testMutation(testData, cursor + 1);
-      });
-    } else {
-      endTests();
-    }
-  }
-
-  function endTests() {
-    gBrowser.removeTab(contentTab);
-    doc = inspector = contentTab = markup = listElement = null;
-    finish();
-  }
-
-  function assertNodeFlashing(rawNode) {
-    let container = getContainerForRawNode(markup, rawNode);
-
-    if(!container) {
-      ok(false, "Node not found");
-    } else {
-      ok(container.tagState.classList.contains("theme-bg-contrast"),
-        "Node is flashing");
-    }
+  if (!container) {
+    ok(false, "Node not found");
+  } else {
+    ok(container.tagState.classList.contains("theme-bg-contrast"),
+      "Node is flashing");
   }
 }
