@@ -6,14 +6,17 @@
 #define MOZPNGCONF_H
 #define PNGLCONF_H /* So we don't try to use libpng's pnglibconf.h */
 
+/* limit image dimensions (bug #251381, #591822, and #967656) */
+#define MOZ_PNG_MAX_DIMENSION 32767
+
 #define PNG_API_RULE 0
 #define PNG_COST_SHIFT 3
 #define PNG_GAMMA_THRESHOLD_FIXED 5000
 #define PNG_MAX_GAMMA_8 11
 #define PNG_USER_CHUNK_CACHE_MAX 128
 #define PNG_USER_CHUNK_MALLOC_MAX 4000000L
-#define PNG_USER_HEIGHT_MAX 1000000
-#define PNG_USER_WIDTH_MAX 1000000
+#define PNG_USER_HEIGHT_MAX MOZ_PNG_MAX_DIMENSION
+#define PNG_USER_WIDTH_MAX MOZ_PNG_MAX_DIMENSION
 #define PNG_WEIGHT_SHIFT 8
 #define PNG_ZBUF_SIZE 8192
 #define PNG_IDAT_READ_SIZE PNG_ZBUF_SIZE
@@ -115,8 +118,11 @@
 #define PNG_SETJMP_SUPPORTED
 #define PNG_STDIO_SUPPORTED
 #define PNG_TEXT_SUPPORTED
+
+#ifdef PR_LOGGING
 #define PNG_ERROR_TEXT_SUPPORTED
 #define PNG_WARNINGS_SUPPORTED
+#endif
 
 /* Mangle names of exported libpng functions so different libpng versions
    can coexist. It is recommended that if you do this, you give your
@@ -622,8 +628,12 @@
 /* libpng-1.6.x additions */
 #define png_app_error                             MOZ_PNG_app_err
 #define png_app_warning                           MOZ_PNG_app_warn
-#define png_benign_error                          MOZ_PNG_benign_err
-#define png_chunk_benign_error                    MOZ_PNG_chunk_benign_err
+#ifndef png_benign_error
+#  define png_benign_error                        MOZ_PNG_benign_err
+#endif
+#ifndef png_chunk_benign_error
+#  define png_chunk_benign_error                  MOZ_PNG_chunk_benign_err
+#endif
 #define png_chunk_report                          MOZ_PNG_chunk_report
 #define png_colorspace_set_ICC                    MOZ_PNG_cs_set_ICC
 #define png_colorspace_set_chromaticities         MOZ_PNG_cs_set_chromats
@@ -647,15 +657,18 @@
 #define png_realloc_array                         MOZ_PNG_realloc_array
 #define png_zstream_error                         MOZ_PNG_zstream_error
 
-/* needed by FreeType's PNG support */
-#define png_error                       MOZ_PNG_error
-
-#if defined(PR_LOGGING) && defined(PNG_WARNINGS_SUPPORTED)
-#define png_warning                     MOZ_PNG_warning
-#define png_chunk_error                 MOZ_PNG_chunk_err
+#if defined(PR_LOGGING)
+#ifndef png_warning
+#  define png_warning                     MOZ_PNG_warning
+#endif
+#ifndef png_chunk_error
+#  define png_chunk_error                 MOZ_PNG_chunk_err
+#endif
+#ifndef png_chunk_warning
+#  define png_chunk_warning               MOZ_PNG_chunk_warn
+#endif
 #define png_fixed_error                 MOZ_PNG_fixed_err
 #define png_formatted_warning           MOZ_PNG_formatted_warning
-#define png_chunk_warning               MOZ_PNG_chunk_warn
 #define png_warning_parameter           MOZ_PNG_warn_param
 #define png_warning_parameter_signed    MOZ_PNG_warn_param_signed
 #define png_warning_parameter_unsigned  MOZ_PNG_warn_param_unsigned
