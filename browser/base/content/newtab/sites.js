@@ -60,7 +60,7 @@ Site.prototype = {
   },
 
   /**
-   * Unpins the site.
+   * Unpins the site and calls the given callback when done.
    */
   unpin: function Site_unpin() {
     if (this.isPinned()) {
@@ -79,7 +79,8 @@ Site.prototype = {
   },
 
   /**
-   * Blocks the site (removes it from the grid).
+   * Blocks the site (removes it from the grid) and calls the given callback
+   * when done.
    */
   block: function Site_block() {
     if (!gBlockedLinks.isBlocked(this._link)) {
