@@ -245,17 +245,7 @@ MozInputMethodManager.prototype = {
 
   classID: Components.ID("{7e9d7280-ef86-11e2-b778-0800200c9a66}"),
 
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIInputMethodManager
-  ]),
-
-  classInfo: XPCOMUtils.generateCI({
-    "classID": Components.ID("{7e9d7280-ef86-11e2-b778-0800200c9a66}"),
-    "contractID": "@mozilla.org/b2g-imm;1",
-    "interfaces": [Ci.nsIInputMethodManager],
-    "flags": Ci.nsIClassInfo.DOM_OBJECT,
-    "classDescription": "B2G Input Method Manager"
-  }),
+  QueryInterface: XPCOMUtils.generateQI([]),
 
   showAll: function() {
     if (!WindowMap.isActive(this._window)) {
@@ -301,18 +291,9 @@ MozInputMethod.prototype = {
   classID: Components.ID("{4607330d-e7d2-40a4-9eb8-43967eae0142}"),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIInputMethod,
     Ci.nsIDOMGlobalPropertyInitializer,
     Ci.nsIObserver
   ]),
-
-  classInfo: XPCOMUtils.generateCI({
-    "classID": Components.ID("{4607330d-e7d2-40a4-9eb8-43967eae0142}"),
-    "contractID": "@mozilla.org/b2g-inputmethod;1",
-    "interfaces": [Ci.nsIInputMethod],
-    "flags": Ci.nsIClassInfo.DOM_OBJECT,
-    "classDescription": "B2G Input Method"
-  }),
 
   init: function mozInputMethodInit(win) {
     this._window = win;
@@ -473,18 +454,9 @@ MozInputContext.prototype = {
   classID: Components.ID("{1e38633d-d08b-4867-9944-afa5c648adb6}"),
 
   QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsIB2GInputContext,
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference
   ]),
-
-  classInfo: XPCOMUtils.generateCI({
-    "classID": Components.ID("{1e38633d-d08b-4867-9944-afa5c648adb6}"),
-    "contractID": "@mozilla.org/b2g-inputcontext;1",
-    "interfaces": [Ci.nsIB2GInputContext],
-    "flags": Ci.nsIClassInfo.DOM_OBJECT,
-    "classDescription": "B2G Input Context"
-  }),
 
   init: function ic_init(win) {
     this._window = win;
