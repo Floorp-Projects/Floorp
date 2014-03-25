@@ -440,23 +440,24 @@ exports["test debounce"] = (assert, done) => {
 exports["test throttle"] = (assert, done) => {
   let called = 0;
   let attempt = 0;
-  let throttledFn = throttle(() => called++, 100);
+  let atleast100ms = false;
+  let throttledFn = throttle(() => {
+    called++;
+    if (called === 2) {
+      assert.equal(attempt, 10, "called twice, but attempted 10 times");
+      fn();
+    }
+    if (called === 3) {
+      assert.ok(atleast100ms, "atleast 100ms have passed");
+      assert.equal(attempt, 11, "called third, waits for delay to happen");
+      done();
+    }
+  }, 200);
   let fn = () => ++attempt && throttledFn();
 
-  new Array(11).join(0).split("").forEach((_, i) => {
-    setTimeout(fn, 20 * (i+1));
-  });
+  setTimeout(() => atleast100ms = true, 100);
 
-  setTimeout(() => {
-    assert.equal(called, 1, "function called atleast once during first throttle period");
-    assert.ok(attempt >= 2, "function attempted to be called several times during first period");
-  }, 50);
-
-  setTimeout(() => {
-    assert.equal(called, 3, "function called again during second throttle period");
-    assert.equal(attempt, 10, "function attempted to be called several times during second period");
-    done();
-  }, 300);
+  new Array(11).join(0).split("").forEach(fn);
 };
 
 require('test').run(exports);
