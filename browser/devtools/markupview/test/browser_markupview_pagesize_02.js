@@ -6,7 +6,7 @@
 // by the devtools.markup.pagesize preference and that pressing the "show all nodes"
 // actually shows the nodes
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_950732.html";
+const TEST_URL = TEST_URL_ROOT + "doc_markup_pagesize_02.html";
 
 // Make sure nodes are hidden when there are more than 5 in a row
 Services.prefs.setIntPref("devtools.markup.pagesize", 5);

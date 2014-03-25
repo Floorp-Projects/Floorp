@@ -5,7 +5,7 @@
 // Test that markup-containers in the markup-view do flash when their
 // corresponding DOM nodes mutate
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_mutation_flashing.html";
+const TEST_URL = TEST_URL_ROOT + "doc_markup_flashing.html";
 // The test data contains a list of mutations to test.
 // Each item is an object:
 // - desc: a description of the test step, for better logging
