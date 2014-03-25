@@ -7,7 +7,7 @@
 
 Services.prefs.setIntPref("devtools.markup.pagesize", 5);
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_subset.html";
+const TEST_URL = TEST_URL_ROOT + "doc_markup_pagesize_01.html";
 const TEST_DATA = [{
   desc: "Select the last item",
   selector: "#z",

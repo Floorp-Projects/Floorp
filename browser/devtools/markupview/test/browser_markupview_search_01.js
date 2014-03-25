@@ -6,7 +6,7 @@
 // selects the right nodes in the markup-view, even when those nodes are deeply
 // nested (and therefore not attached yet when the markup-view is initialized).
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_962647_search.html";
+const TEST_URL = TEST_URL_ROOT + "doc_markup_search.html";
 
 let test = asyncTest(function*() {
   let {inspector, toolbox} = yield addTab(TEST_URL).then(openInspector);
