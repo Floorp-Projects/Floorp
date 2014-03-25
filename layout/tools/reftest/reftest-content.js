@@ -443,12 +443,6 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
                 notification.initEvent("MozReftestInvalidate", true, false);
                 contentRootElement.dispatchEvent(notification);
             }
-
-            if (!inPrintMode && doPrintMode(contentRootElement)) {
-                LogInfo("MakeProgress: setting up print mode");
-                setupPrintMode();
-            }
-
             if (hasReftestWait && !shouldWaitForReftestWaitRemoval(contentRootElement)) {
                 // MozReftestInvalidate handler removed reftest-wait.
                 // We expect something to have been invalidated...
@@ -484,6 +478,10 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
             }
 
             state = STATE_WAITING_TO_FINISH;
+            if (!inPrintMode && doPrintMode(contentRootElement)) {
+                LogInfo("MakeProgress: setting up print mode");
+                setupPrintMode();
+            }
             // Try next state
             MakeProgress();
             return;
