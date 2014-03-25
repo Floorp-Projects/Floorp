@@ -10,7 +10,7 @@
 // The correctness and cycling of the suggestions is covered in the ruleview
 // tests.
 
-const TEST_URL = TEST_URL_ROOT + "browser_inspector_markup_edit.html";
+const TEST_URL = TEST_URL_ROOT + "doc_markup_edit.html";
 // test data format :
 //  [
 //    what key to press,
