@@ -2936,8 +2936,12 @@ ObjectActor.prototype = {
       let previewers = DebuggerServer.ObjectActorPreviewers[this.obj.class] ||
                        DebuggerServer.ObjectActorPreviewers.Object;
       for (let fn of previewers) {
-        if (fn(this, g, raw)) {
-          break;
+        try {
+          if (fn(this, g, raw)) {
+            break;
+          }
+        } catch (e) {
+          DevToolsUtils.reportException("ObjectActor.prototype.grip previewer function", e);
         }
       }
     }

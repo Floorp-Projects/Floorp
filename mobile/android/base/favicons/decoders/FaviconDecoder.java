@@ -93,9 +93,15 @@ public class FaviconDecoder {
             result.length = length;
             result.isICO = false;
 
+            Bitmap decodedImage = BitmapUtils.decodeByteArray(buffer, offset, length);
+            if (decodedImage == null) {
+                // What we got wasn't decodable after all. Probably corrupted image, or we got a muffled OOM.
+                return null;
+            }
+
             // We assume here that decodeByteArray doesn't hold on to the entire supplied
             // buffer -- worst case, each of our buffers will be twice the necessary size.
-            result.bitmapsDecoded = new SingleBitmapIterator(BitmapUtils.decodeByteArray(buffer, offset, length));
+            result.bitmapsDecoded = new SingleBitmapIterator(decodedImage);
             result.faviconBytes = buffer;
 
             return result;

@@ -1164,36 +1164,37 @@ nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, 
     NS_LossyConvertUTF16toASCII(aError).get());
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<CameraErrorCallback>* errorCb;
+  nsRefPtr<CameraErrorCallback> errorCb;
+
   switch (aContext) {
     case CameraControlListener::kInStartCamera:
       mGetCameraOnSuccessCb = nullptr;
-      errorCb = &mGetCameraOnErrorCb;
+      errorCb = mGetCameraOnErrorCb.forget();
       break;
 
     case CameraControlListener::kInStopCamera:
       mReleaseOnSuccessCb = nullptr;
-      errorCb = &mReleaseOnErrorCb;
+      errorCb = mReleaseOnErrorCb.forget();
       break;
 
     case CameraControlListener::kInSetConfiguration:
       mSetConfigurationOnSuccessCb = nullptr;
-      errorCb = &mSetConfigurationOnErrorCb;
+      errorCb = mSetConfigurationOnErrorCb.forget();
       break;
 
     case CameraControlListener::kInAutoFocus:
       mAutoFocusOnSuccessCb = nullptr;
-      errorCb = &mAutoFocusOnErrorCb;
+      errorCb = mAutoFocusOnErrorCb.forget();
       break;
 
     case CameraControlListener::kInTakePicture:
       mTakePictureOnSuccessCb = nullptr;
-      errorCb = &mTakePictureOnErrorCb;
+      errorCb = mTakePictureOnErrorCb.forget();
       break;
 
     case CameraControlListener::kInStartRecording:
       mStartRecordingOnSuccessCb = nullptr;
-      errorCb = &mStartRecordingOnErrorCb;
+      errorCb = mStartRecordingOnErrorCb.forget();
       break;
 
     case CameraControlListener::kInStopRecording:
@@ -1231,17 +1232,13 @@ nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, 
       return;
   }
 
-  MOZ_ASSERT(errorCb);
-
-  if (!*errorCb) {
+  if (!errorCb) {
     DOM_CAMERA_LOGW("DOM No error handler for error '%s' in context=%d\n",
       NS_LossyConvertUTF16toASCII(aError).get(), aContext);
     return;
   }
 
-  // kung-fu death grip
-  nsRefPtr<CameraErrorCallback> cb = (*errorCb).forget();
   ErrorResult ignored;
-  cb->Call(aError, ignored);
+  errorCb->Call(aError, ignored);
 }
 

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>engine-rel-searchform-post.xml</ShortName>
+<Url type="text/html" method="POST" template="http://engine-rel-searchform-post.xml/POST" rel="searchform"/>
+<SearchForm>http://engine-rel-searchform-post.xml/?search</SearchForm>
+</SearchPlugin>
