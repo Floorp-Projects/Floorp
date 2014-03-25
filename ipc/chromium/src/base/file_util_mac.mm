@@ -10,10 +10,12 @@
 #include "base/file_path.h"
 #include "base/logging.h"
 #include "base/string_util.h"
+#include "base/scoped_nsautorelease_pool.h"
 
 namespace file_util {
 
 bool GetTempDir(FilePath* path) {
+  base::ScopedNSAutoreleasePool autorelease_pool;
   NSString* tmp = NSTemporaryDirectory();
   if (tmp == nil)
     return false;
