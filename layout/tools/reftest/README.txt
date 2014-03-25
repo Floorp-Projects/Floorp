@@ -522,10 +522,8 @@ The suggested first lines for any printing test is
 <style>html{font-size:12pt}</style>
 
 The reftest-print class on the root element triggers the reftest to
-switch into page mode. Fixing the font size is suggested, although not
-required, because the pages are a fixed size in inches. The switch to page mode
-happens on load if the reftest-wait class is not present; otherwise it happens
-immediately after firing the MozReftestInvalidate event.
+switch into page mode on load. Fixing the font size is suggested,
+although not required, because the pages are a fixed size in inches.
 
 The underlying layout support for this mode isn't really complete; it
 doesn't use exactly the same codepath as real print preview/print. In
