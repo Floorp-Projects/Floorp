@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>capture for possible memory leak when record AudioContext</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=973765">Mozill
+a Bug 973765</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+   // This test case want to capture the memory leak if exit the browser after running those script.
+   var ac = new window.AudioContext();
+   var destStream = ac.createMediaStreamDestination().stream;
+   var recorder = new MediaRecorder(destStream);
+   recorder.start(1000);
+   is(recorder.state, 'recording', 'Media recorder should be recording');
+   is(recorder.stream, destStream,
+      'Media recorder stream = element stream at the start of recording');
+</script>
+</pre>
+</body>
+</html>
