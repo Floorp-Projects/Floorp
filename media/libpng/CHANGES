@@ -4754,7 +4754,7 @@ Version 1.6.8 [December 19, 2013]
 Version 1.6.9beta01 [December 26, 2013]
   Bookkeeping: Moved functions around (no changes). Moved transform
     function definitions before the place where they are called so that
-    they can be masde static. Move the intrapixel functions and the
+    they can be made static. Move the intrapixel functions and the
     grayscale palette builder out of the png?tran.c files. The latter
     isn't a transform function and is no longer used internally, and the
     former MNG specific functions are better placed in pngread/pngwrite.c
@@ -4799,6 +4799,80 @@ Version 1.6.9rc02 [January 30, 2014]
   Quiet an uninitialized memory warning from VC2013 in png_get_png().
 
 Version 1.6.9 [February 6, 2014]
+
+Version 1.6.10beta01 [February 9, 2014]
+  Backported changes from libpng-1.7.0beta30 and beta31:
+  Fixed a large number of instances where PNGCBAPI was omitted from
+    function definitions.
+  Added pngimage test program for png_read_png() and png_write_png()
+    with two new test scripts.
+  Removed dependence on !PNG_READ_EXPAND_SUPPORTED for calling
+    png_set_packing() in png_read_png().
+  Fixed combination of ~alpha with shift. On read invert alpha, processing
+    occurred after shift processing, which causes the final values to be
+    outside the range that should be produced by the shift. Reversing the
+    order on read makes the two transforms work together correctly and mirrors
+    the order used on write.
+  Do not read invalid sBIT chunks. Previously libpng only checked sBIT
+    values on write, so a malicious PNG writer could therefore cause
+    the read code to return an invalid sBIT chunk, which might lead to
+    application errors or crashes.  Such chunks are now skipped (with
+    chunk_benign_error).
+  Make png_read_png() and png_write_png() prototypes in png.h depend
+    upon PNG_READ_SUPPORTED and PNG_WRITE_SUPPORTED.
+  Support builds with unsupported PNG_TRANSFORM_* values.  All of the
+    PNG_TRANSFORM_* values are always defined in png.h and, because they
+    are used for both read and write in some cases, it is not reliable
+    to #if out ones that are totally unsupported. This change adds error
+    detection in png_read_image() and png_write_image() to do a
+    png_app_error() if the app requests something that cannot be done
+    and it adds corresponding code to pngimage.c to handle such options
+    by not attempting to test them.
+
+Version 1.6.10beta02 [February 23, 2014]
+  Moved redefines of png_error(), png_warning(), png_chunk_error(),
+    and png_chunk_warning() from pngpriv.h to png.h to make them visible
+    to libpng-calling applications.
+  Moved OS dependent code from arm/arm_init.c, to allow the included
+    implementation of the ARM NEON discovery function to be set at
+    build-time and provide sample implementations from the current code in the
+    contrib/arm-neon subdirectory. The __linux__ code has also been changed to
+    compile and link on Android by using /proc/cpuinfo, and the old linux code
+    is in contrib/arm-neon/linux-auxv.c.  The new code avoids POSIX and Linux
+    dependencies apart from opening /proc/cpuinfo and is C90 compliant.
+  Check for info_ptr == NULL early in png_read_end() so we don't need to
+    run all the png_handle_*() and depend on them to return if info_ptr == NULL.
+    This improves the performance of png_read_end(png_ptr, NULL) and makes
+    it more robust against future programming errors.
+  Check for __has_extension before using it in pngconf.h, to
+    support older Clang versions (Jeremy Sequoia).
+  Treat CRC error handling with png_set_crc_action(), instead of with
+    png_set_benign_errors(), which has been the case since libpng-1.6.0beta18.
+  Use a user warning handler in contrib/gregbook/readpng2.c instead of default,
+    so warnings will be put on stderr even if libpng has CONSOLE_IO disabled.
+  Added png_ptr->process_mode = PNG_READ_IDAT_MODE in png_push_read_chunk
+    after recognizing the IDAT chunk, which avoids an infinite loop while
+    reading a datastream whose first IDAT chunk is of zero-length.
+    This fixes CERT VU#684412 and CVE-2014-0333.
+  Don't recognize known sRGB profiles as sRGB if they have been hacked,
+    but don't reject them and don't issue a copyright violation warning.
+
+Version 1.6.10beta03 [February 25, 2014]
+  Moved some documentation from png.h to libpng.3 and libpng-manual.txt
+  Minor editing of contrib/arm-neon/README and contrib/examples/*.c
+
+Version 1.6.10rc01 [February 27, 2014]
+  Fixed typos in the manual and in scripts/pnglibconf.dfa (CFLAGS -> CPPFLAGS
+    and PNG_USR_CONFIG -> PNG_USER_CONFIG).
+
+Version 1.6.10rc02 [February 28, 2014]
+  Removed unreachable return statement after png_chunk_error()
+    in pngrutil.c
+
+Version 1.6.10rc03 [March 4, 2014]
+  Un-deprecated png_data_freer().
+
+Version 1.6.10 [March 6, 2014]
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

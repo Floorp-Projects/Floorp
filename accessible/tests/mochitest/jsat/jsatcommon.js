@@ -209,6 +209,7 @@ AccessFuContentTest.prototype = {
     }
 
     aMessageManager.addMessageListener('AccessFu:Present', this);
+    aMessageManager.addMessageListener('AccessFu:CursorCleared', this);
     aMessageManager.addMessageListener('AccessFu:Ready', function () {
       aMessageManager.addMessageListener('AccessFu:ContentStarted', aCallback);
       aMessageManager.sendAsyncMessage('AccessFu:Start',
@@ -249,11 +250,20 @@ AccessFuContentTest.prototype = {
     }
 
     var expected = this.currentPair[1] || {};
+
+    // |expected| can simply be a name of a message, no more further testing.
+    if (aMessage.name === expected) {
+      ok(true, 'Received ' + expected);
+      this.pump();
+      return;
+    }
+
     var speech = this.extractUtterance(aMessage.json);
     var android = this.extractAndroid(aMessage.json, expected.android);
     if ((speech && expected.speak) || (android && expected.android)) {
       if (expected.speak) {
-        (SimpleTest[expected.speak_checkFunc] || is)(speech, expected.speak);
+        (SimpleTest[expected.speak_checkFunc] || is)(speech, expected.speak,
+          '"' + speech + '" spoken');
       }
 
       if (expected.android) {

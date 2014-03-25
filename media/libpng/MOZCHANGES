@@ -1,5 +1,15 @@
 
-Changes made to pristine png source by mozilla.org developers.
+Changes made to pristine libpng source by mozilla.org developers.
+
+2014/03/21  -- Synced with libpng-1.6.10 (bug #980488) and disabled
+               PNG_WARNINGS and PNG_ERROR_TEXT in non-debug builds.
+               Limit image dimensions to 32767 (bug #251381, #591822,
+               and #967656).
+
+2014/03/04  -- Enabled PNG_WARNINGS and other stuff in mozpngconf.h
+               as part of enabling Freetype2 with PNG (bug #969814).
+
+2014/03/03  -- Fixed hang with empty IDAT (bug #974825).
 
 2014/02/18  -- Exposed png_error(), etc. redefinitions to applications
                (moved them from pngpriv.h to png.h).
@@ -9,13 +19,13 @@ Changes made to pristine png source by mozilla.org developers.
 
 2014/02/15  -- Synced with libpng-1.6.9 (bug #952505).
 
-2014/02/11  -- Fixed crash with empty PLTE, CVE-2013-6954 (bug #945912)
+2014/02/11  -- Fixed crash with empty PLTE, CVE-2013-6954 (bug #945912).
 
 2013/12/11  -- Enable ARM support (bug #832390).
 
 2013/11/17  -- Synced with libpng-1.6.7 (bug #938740).
 
-2013/09/21  -- Synced with libpng-1.6.6 (bug #886499).
+2013/09/21  -- Synced with libpng-1.6.6 (bug #841734).
 
 2013/07/17  -- Synced with libpng-1.5.17 (bug #886499).
 
@@ -66,21 +76,21 @@ Changes made to pristine png source by mozilla.org developers.
 2008/01/18  -- Synced with libpng-1.2.24 (bug #408429).
 
 2007/11/13  -- Synced with libpng-1.2.23; Removed pnggccrd.c and pngvcrd.c;
-               Reduced footprint by removing error and warning text
-               (bug #403239)
+               Reduced footprint by removing error and warning text in
+               non-debug builds via settings in mozpngconf.h (bug #403239).
 
-2007/11/06  -- Synced with libpng-1.2.22 (removes MMX support) (bug #386585)
+2007/11/06  -- Synced with libpng-1.2.22 (removes MMX support) (bug #386585).
 
-2007/07/27  -- Enabled cHRM and iCCP chunks for color management (bug #16769)
+2007/07/27  -- Enabled cHRM and iCCP chunks for color management (bug #16769).
 
-2007/05/05  -- Zeroed png_ptr->num_trans on CRC error (bug #374810)
+2007/05/05  -- Zeroed png_ptr->num_trans on CRC error (bug #374810).
 
-2007/04/19  -- Synced with libpng-1.2.16 tree (bug #373249)
+2007/04/19  -- Synced with libpng-1.2.16 tree (bug #373249).
 
-2007/03/20  -- Added support for APNG (bug #257197)
+2007/03/20  -- Added support for APNG (bug #257197).
 
-2006/06/27  -- Synced with libpng-1.2.12 tree (bug #334110)
+2006/06/27  -- Synced with libpng-1.2.12 tree (bug #334110).
 
-2004/10/07  -- Synced with libpng-1.2.7 tree (bug #261922)
+2004/10/07  -- Synced with libpng-1.2.7 tree (bug #261922).
 
-2004/10/07  -- Added mozpngconf.h (bug #208607)
+2004/10/07  -- Added mozpngconf.h (bug #208607).

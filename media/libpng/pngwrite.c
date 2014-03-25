@@ -1,7 +1,7 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.6.9 [February 6, 2014]
+ * Last changed in libpng 1.6.10 [March 6, 2014]
  * Copyright (c) 1998-2014 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -1555,81 +1555,117 @@ png_write_png(png_structrp png_ptr, png_inforp info_ptr,
    if (png_ptr == NULL || info_ptr == NULL)
       return;
 
+   if ((info_ptr->valid & PNG_INFO_IDAT) == 0)
+   {
+      png_app_error(png_ptr, "no rows for png_write_image to write");
+      return;
+   }
+
    /* Write the file header information. */
    png_write_info(png_ptr, info_ptr);
 
    /* ------ these transformations don't touch the info structure ------- */
 
-#ifdef PNG_WRITE_INVERT_SUPPORTED
    /* Invert monochrome pixels */
    if (transforms & PNG_TRANSFORM_INVERT_MONO)
+#ifdef PNG_WRITE_INVERT_SUPPORTED
       png_set_invert_mono(png_ptr);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_INVERT_MONO not supported");
 #endif
 
-#ifdef PNG_WRITE_SHIFT_SUPPORTED
    /* Shift the pixels up to a legal bit depth and fill in
     * as appropriate to correctly scale the image.
     */
-   if ((transforms & PNG_TRANSFORM_SHIFT)
-       && (info_ptr->valid & PNG_INFO_sBIT))
-      png_set_shift(png_ptr, &info_ptr->sig_bit);
+   if (transforms & PNG_TRANSFORM_SHIFT)
+#ifdef PNG_WRITE_SHIFT_SUPPORTED
+      if (info_ptr->valid & PNG_INFO_sBIT)
+         png_set_shift(png_ptr, &info_ptr->sig_bit);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_SHIFT not supported");
 #endif
 
-#ifdef PNG_WRITE_PACK_SUPPORTED
    /* Pack pixels into bytes */
    if (transforms & PNG_TRANSFORM_PACKING)
-       png_set_packing(png_ptr);
+#ifdef PNG_WRITE_PACK_SUPPORTED
+      png_set_packing(png_ptr);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_PACKING not supported");
 #endif
 
-#ifdef PNG_WRITE_SWAP_ALPHA_SUPPORTED
    /* Swap location of alpha bytes from ARGB to RGBA */
    if (transforms & PNG_TRANSFORM_SWAP_ALPHA)
+#ifdef PNG_WRITE_SWAP_ALPHA_SUPPORTED
       png_set_swap_alpha(png_ptr);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_SWAP_ALPHA not supported");
 #endif
 
+   /* Remove a filler (X) from XRGB/RGBX/AG/GA into to convert it into
+    * RGB, note that the code expects the input color type to be G or RGB; no
+    * alpha channel.
+    */
+   if (transforms &
+      (PNG_TRANSFORM_STRIP_FILLER_AFTER|PNG_TRANSFORM_STRIP_FILLER_BEFORE))
+   {
 #ifdef PNG_WRITE_FILLER_SUPPORTED
-   /* Pack XRGB/RGBX/ARGB/RGBA into RGB (4 channels -> 3 channels) */
-   if (transforms & PNG_TRANSFORM_STRIP_FILLER_AFTER)
-      png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
+      if (transforms & PNG_TRANSFORM_STRIP_FILLER_AFTER)
+      {
+         if (transforms & PNG_TRANSFORM_STRIP_FILLER_BEFORE)
+            png_app_error(png_ptr,
+               "PNG_TRANSFORM_STRIP_FILLER: BEFORE+AFTER not supported");
 
-   else if (transforms & PNG_TRANSFORM_STRIP_FILLER_BEFORE)
-      png_set_filler(png_ptr, 0, PNG_FILLER_BEFORE);
+         /* Continue if ignored - this is the pre-1.6.10 behavior */
+         png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
+      }
+
+      else if (transforms & PNG_TRANSFORM_STRIP_FILLER_BEFORE)
+         png_set_filler(png_ptr, 0, PNG_FILLER_BEFORE);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_STRIP_FILLER not supported");
 #endif
+   }
 
-#ifdef PNG_WRITE_BGR_SUPPORTED
    /* Flip BGR pixels to RGB */
    if (transforms & PNG_TRANSFORM_BGR)
+#ifdef PNG_WRITE_BGR_SUPPORTED
       png_set_bgr(png_ptr);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_BGR not supported");
 #endif
 
-#ifdef PNG_WRITE_SWAP_SUPPORTED
    /* Swap bytes of 16-bit files to most significant byte first */
    if (transforms & PNG_TRANSFORM_SWAP_ENDIAN)
+#ifdef PNG_WRITE_SWAP_SUPPORTED
       png_set_swap(png_ptr);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_SWAP_ENDIAN not supported");
 #endif
 
-#ifdef PNG_WRITE_PACKSWAP_SUPPORTED
    /* Swap bits of 1, 2, 4 bit packed pixel formats */
    if (transforms & PNG_TRANSFORM_PACKSWAP)
+#ifdef PNG_WRITE_PACKSWAP_SUPPORTED
       png_set_packswap(png_ptr);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_PACKSWAP not supported");
 #endif
 
-#ifdef PNG_WRITE_INVERT_ALPHA_SUPPORTED
    /* Invert the alpha channel from opacity to transparency */
    if (transforms & PNG_TRANSFORM_INVERT_ALPHA)
+#ifdef PNG_WRITE_INVERT_ALPHA_SUPPORTED
       png_set_invert_alpha(png_ptr);
+#else
+      png_app_error(png_ptr, "PNG_TRANSFORM_INVERT_ALPHA not supported");
 #endif
 
    /* ----------------------- end of transformations ------------------- */
 
    /* Write the bits */
-   if (info_ptr->valid & PNG_INFO_IDAT)
-       png_write_image(png_ptr, info_ptr->row_pointers);
+   png_write_image(png_ptr, info_ptr->row_pointers);
 
    /* It is REQUIRED to call this to finish writing the rest of the file */
    png_write_end(png_ptr, info_ptr);
 
-   PNG_UNUSED(transforms)   /* Quiet compiler warnings */
    PNG_UNUSED(params)
 }
 #endif

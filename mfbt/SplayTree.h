@@ -52,11 +52,10 @@ template<typename T, class Comparator>
 class SplayTree
 {
     T* root;
-    T* freeList;
 
   public:
     SplayTree()
-      : root(nullptr), freeList(nullptr)
+      : root(nullptr)
     {}
 
     bool empty() const {

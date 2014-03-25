@@ -257,11 +257,7 @@ Nested(Input& input, uint8_t tag, Decoder decoder)
     return Failure;
   }
 
-  if (!nested.AtEnd() != Success) {
-    return Fail(SEC_ERROR_BAD_DER);
-  }
-
-  return Success;
+  return End(nested);
 }
 
 template <typename Decoder>
@@ -283,11 +279,7 @@ Nested(Input& input, uint8_t outerTag, uint8_t innerTag, Decoder decoder)
     return Failure;
   }
 
-  if (!nestedInput.AtEnd()) {
-    return Fail(SEC_ERROR_BAD_DER);
-  }
-
-  return Success;
+  return End(nestedInput);
 }
 
 // This can be used to decode constructs like this:
