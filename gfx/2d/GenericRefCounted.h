@@ -58,20 +58,37 @@ class GenericRefCounted : public GenericRefCountedBase
 
   public:
     virtual void AddRef() {
+      // Note: this method must be thread safe for GenericAtomicRefCounted.
       MOZ_ASSERT(int32_t(refCnt) >= 0);
+#ifndef MOZ_REFCOUNTED_LEAK_CHECKING
       ++refCnt;
-#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
-      detail::RefCountLogger::logAddRef(this, refCnt, typeName(), typeSize());
+#else
+      const char* type = typeName();
+      uint32_t size = typeSize();
+      const void* ptr = this;
+      MozRefCountType cnt = ++refCnt;
+      detail::RefCountLogger::logAddRef(ptr, cnt, type, size);
 #endif
     }
 
     virtual void Release() {
+      // Note: this method must be thread safe for GenericAtomicRefCounted.
       MOZ_ASSERT(int32_t(refCnt) > 0);
-      --refCnt;
-#ifdef MOZ_REFCOUNTED_LEAK_CHECKING
-      detail::RefCountLogger::logRelease(this, refCnt, typeName());
+#ifndef MOZ_REFCOUNTED_LEAK_CHECKING
+      MozRefCountType cnt = --refCnt;
+#else
+      const char* type = typeName();
+      const void* ptr = this;
+      MozRefCountType cnt = --refCnt;
+      // Note: it's not safe to touch |this| after decrementing the refcount,
+      // except for below.
+      detail::RefCountLogger::logRelease(ptr, cnt, type);
 #endif
-      if (0 == refCnt) {
+      if (0 == cnt) {
+        // Because we have atomically decremented the refcount above, only
+        // one thread can get a 0 count here, so as long as we can assume that
+        // everything else in the system is accessing this object through
+        // RefPtrs, it's safe to access |this| here.
 #ifdef DEBUG
         refCnt = detail::DEAD;
 #endif
