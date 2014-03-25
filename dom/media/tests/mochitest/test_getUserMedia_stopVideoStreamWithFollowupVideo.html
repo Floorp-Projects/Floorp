@@ -38,13 +38,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822109
           streamPlayback.playMedia(false, function() {
             secondStream.stop();
             SimpleTest.finish();
-          }, unexpectedCallbackAndFinish());
+          }, generateErrorCallback());
 
-        }, unexpectedCallbackAndFinish());
+        }, generateErrorCallback());
 
-      }, unexpectedCallbackAndFinish());
+      }, generateErrorCallback());
 
-    }, unexpectedCallbackAndFinish());
+    }, generateErrorCallback());
   });
 
 </script>
