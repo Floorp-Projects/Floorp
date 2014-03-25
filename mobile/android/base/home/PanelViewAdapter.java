@@ -24,8 +24,6 @@ class PanelViewAdapter extends CursorAdapter {
     private final ViewConfig viewConfig;
     private FilterManager filterManager;
     private final Context context;
-    private int targetWidth = 0;
-    private int targetHeight = 0;
 
     public PanelViewAdapter(Context context, ViewConfig viewConfig) {
         super(context, null, 0);
@@ -40,11 +38,6 @@ class PanelViewAdapter extends CursorAdapter {
     @Override
     public final int getViewTypeCount() {
         return 2;
-    }
-
-    public void setTargetImageSize(int targetWidth, int targetHeight) {
-        this.targetWidth = targetWidth;
-        this.targetHeight = targetHeight;
     }
 
     @Override
@@ -72,18 +65,11 @@ class PanelViewAdapter extends CursorAdapter {
     }
 
     private View newView(Context context, int position, ViewGroup parent) {
-        final PanelItemView item;
         if (getItemViewType(position) == VIEW_TYPE_BACK) {
-            item = new PanelBackItemView(context, viewConfig.getBackImageUrl());
+            return new PanelBackItemView(context, viewConfig.getBackImageUrl());
         } else {
-            item = PanelItemView.create(context, viewConfig.getItemType());
+            return PanelItemView.create(context, viewConfig.getItemType());
         }
-
-        if (viewConfig.getItemType() == ItemType.IMAGE && targetWidth > 0 && targetHeight > 0) {
-            item.setTargetImageSize(targetWidth, targetHeight);
-        }
-
-        return item;
     }
 
     private void bindView(View view, int position) {
