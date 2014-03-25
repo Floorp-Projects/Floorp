@@ -20,15 +20,16 @@ import java.net.Proxy;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Queue;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
@@ -122,8 +123,8 @@ public class GeckoAppShell
     private static boolean restartScheduled = false;
     private static GeckoEditableListener editableListener = null;
 
-    private static final LinkedList<GeckoEvent> PENDING_EVENTS = new LinkedList<GeckoEvent>();
-    private static final HashMap<String, String> ALERT_COOKIES = new HashMap<String, String>();
+    private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
+    private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
 
     private static volatile boolean locationHighAccuracyEnabled;
 
@@ -357,21 +358,42 @@ public class GeckoAppShell
     static void sendPendingEventsToGecko() {
         try {
             while (!PENDING_EVENTS.isEmpty()) {
-                GeckoEvent e = PENDING_EVENTS.removeFirst();
+                final GeckoEvent e = PENDING_EVENTS.poll();
                 notifyGeckoOfEvent(e);
             }
         } catch (NoSuchElementException e) {}
     }
 
+    /**
+     * If the Gecko thread is running, immediately dispatches the event to
+     * Gecko.
+     *
+     * If the Gecko thread is not running, queues the event. If the queue is
+     * full, throws {@link IllegalStateException}.
+     *
+     * Queued events will be dispatched in order of arrival when the Gecko
+     * thread becomes live.
+     *
+     * This method can be called from any thread.
+     *
+     * @param e
+     *            the event to dispatch. Cannot be null.
+     */
     @RobocopTarget
     public static void sendEventToGecko(GeckoEvent e) {
+        if (e == null) {
+            throw new IllegalArgumentException("e cannot be null.");
+        }
+
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
-            // Gecko will copy the event data into a normal C++ object. We can recycle the evet now.
+            // Gecko will copy the event data into a normal C++ object. We can recycle the event now.
             e.recycle();
-        } else {
-            PENDING_EVENTS.addLast(e);
+            return;
         }
+
+        // Throws if unable to add the event due to capacity restrictions.
+        PENDING_EVENTS.add(e);
     }
 
     // Tell the Gecko event loop that an event is available.
