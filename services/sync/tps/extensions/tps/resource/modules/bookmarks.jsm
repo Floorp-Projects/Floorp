@@ -12,34 +12,21 @@ var EXPORTED_SYMBOLS = ["PlacesItem", "Bookmark", "Separator", "Livemark",
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/BookmarkJSONUtils.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/PlacesBackups.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
-
 Cu.import("resource://tps/logger.jsm");
 
 var DumpBookmarks = function TPS_Bookmarks__DumpBookmarks() {
-  let writer = {
-    value: "",
-    write: function PlacesItem__dump__write(aStr, aLen) {
-      this.value += aStr;
-    }
-  };
-
-  let options = PlacesUtils.history.getNewQueryOptions();
-  options.queryType = options.QUERY_TYPE_BOOKMARKS;
-  let query = PlacesUtils.history.getNewQuery();
-  query.setFolders([PlacesUtils.placesRootId], 1);
-  let root = PlacesUtils.history.executeQuery(query, options).root;
-  root.containerOpen = true;
   let cb = Async.makeSpinningCallback();
-  Task.spawn(function() {
-    yield BookmarkJSONUtils.serializeNodeAsJSONToOutputStream(root, writer, true, false);
-    let value = JSON.parse(writer.value);
-    Logger.logInfo("dumping bookmarks\n\n" + JSON.stringify(value, null, ' ') + "\n\n");
-    cb();
+  PlacesBackups.getBookmarksTree().then(result => {
+    let [bookmarks, count] = result;
+    Logger.logInfo("Dumping Bookmarks...\n" + JSON.stringify(bookmarks) + "\n\n");
+    cb(null);
+  }).then(null, error => {
+    cb(error);
   });
   cb.wait();
 };
