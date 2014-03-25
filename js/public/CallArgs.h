@@ -388,11 +388,7 @@ CallArgsFromSp(unsigned argc, Value *sp)
  * take a const JS::CallArgs&.
  */
 
-#define JS_CALLEE(cx,vp)        ((vp)[0])
 #define JS_THIS_OBJECT(cx,vp)   (JSVAL_TO_OBJECT(JS_THIS(cx,vp)))
-#define JS_ARGV(cx,vp)          ((vp) + 2)
-#define JS_RVAL(cx,vp)          (*(vp))
-#define JS_SET_RVAL(cx,vp,v)    (*(vp) = (v))
 
 /*
  * Note: if this method returns null, an error has occurred and must be
