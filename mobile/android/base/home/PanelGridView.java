@@ -18,6 +18,7 @@ import org.mozilla.gecko.home.PanelLayout.OnItemOpenListener;
 import org.mozilla.gecko.home.PanelLayout.PanelView;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.view.View;
 import android.widget.AdapterView;
@@ -38,6 +39,10 @@ public class PanelGridView extends GridView
         itemHandler = new PanelViewItemHandler(viewConfig);
 
         adapter = new PanelViewAdapter(context, viewConfig);
+        Resources res = getResources();
+        int size = res.getDimensionPixelSize(R.dimen.panel_grid_view_column_width);
+        // Gridview images are square
+        adapter.setTargetImageSize(size, size);
         setAdapter(adapter);
 
         setOnItemClickListener(new PanelGridItemClickListener());
