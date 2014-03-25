@@ -3532,8 +3532,11 @@ bool
 LIRGenerator::visitGetDOMMember(MGetDOMMember *ins)
 {
     MOZ_ASSERT(ins->isDomMovable(), "Members had better be movable");
-    MOZ_ASSERT(ins->domAliasSet() == JSJitInfo::AliasNone,
-               "Members had better not alias anything");
+    // We wish we could assert that ins->domAliasSet() == JSJitInfo::AliasNone,
+    // but some MGetDOMMembers are for [Pure], not [Constant] properties, whose
+    // value can in fact change as a result of DOM setters and method calls.
+    MOZ_ASSERT(ins->domAliasSet() != JSJitInfo::AliasEverything,
+               "Member gets had better not alias the world");
     LGetDOMMember *lir =
         new(alloc()) LGetDOMMember(useRegister(ins->object()));
     return defineBox(lir, ins);
