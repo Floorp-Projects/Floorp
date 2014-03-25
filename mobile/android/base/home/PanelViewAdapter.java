@@ -21,18 +21,18 @@ class PanelViewAdapter extends CursorAdapter {
     private static final int VIEW_TYPE_ITEM = 0;
     private static final int VIEW_TYPE_BACK = 1;
 
-	private final Context mContext;
-    private final ViewConfig mViewConfig;
-    private FilterManager mFilterManager;
+    private final ViewConfig viewConfig;
+    private FilterManager filterManager;
+    private final Context context;
 
     public PanelViewAdapter(Context context, ViewConfig viewConfig) {
         super(context, null, 0);
-        mContext = context;
-        mViewConfig = viewConfig;
+        this.context = context;
+        this.viewConfig = viewConfig;
     }
 
     public void setFilterManager(FilterManager manager) {
-        mFilterManager = manager;
+        this.filterManager = manager;
     }
 
     @Override
@@ -66,9 +66,9 @@ class PanelViewAdapter extends CursorAdapter {
 
     private View newView(Context context, int position, ViewGroup parent) {
         if (getItemViewType(position) == VIEW_TYPE_BACK) {
-            return new PanelBackItemView(context, mViewConfig.getBackImageUrl());
+            return new PanelBackItemView(context, viewConfig.getBackImageUrl());
         } else {
-            return PanelItemView.create(context, mViewConfig.getItemType());
+            return PanelItemView.create(context, viewConfig.getItemType());
         }
     }
 
@@ -76,7 +76,7 @@ class PanelViewAdapter extends CursorAdapter {
         if (isShowingBack()) {
             if (position == 0) {
                 final PanelBackItemView item = (PanelBackItemView) view;
-                item.updateFromFilter(mFilterManager.getPreviousFilter());
+                item.updateFromFilter(filterManager.getPreviousFilter());
                 return;
             }
 
@@ -89,7 +89,7 @@ class PanelViewAdapter extends CursorAdapter {
     }
 
     private boolean isShowingBack() {
-        return (mFilterManager != null ? mFilterManager.canGoBack() : false);
+        return (filterManager != null ? filterManager.canGoBack() : false);
     }
 
     private final Cursor getCursor(int position) {
