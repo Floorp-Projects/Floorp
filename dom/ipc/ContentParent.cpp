@@ -34,6 +34,7 @@
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
+#include "mozilla/dom/PFileDescriptorSetParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -292,6 +293,19 @@ MaybeTestPBackground()
 
 namespace mozilla {
 namespace dom {
+
+namespace {
+
+// The parent side of FileDescriptorSet doesn't need to do anything, really.
+class FileDescriptorSetParent MOZ_FINAL: public PFileDescriptorSetParent
+{
+    friend class mozilla::dom::ContentParent;
+
+    FileDescriptorSetParent() { }
+    ~FileDescriptorSetParent() { }
+};
+
+} // anonymous namespace
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
 
@@ -3237,7 +3251,10 @@ ContentParent::RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamPa
     return true;
   }
 
-  SerializeInputStream(postData, *aPostData);
+  nsTArray<mozilla::ipc::FileDescriptor> fds;
+  SerializeInputStream(postData, *aPostData, fds);
+  MOZ_ASSERT(fds.IsEmpty());
+
   SerializeURI(uri, *aURI);
   return true;
 }
@@ -3348,6 +3365,19 @@ ContentParent::RecvBackUpXResources(const FileDescriptor& aXSocketFd)
       mChildXSocketFdDup.reset(aXSocketFd.PlatformHandle());
     }
 #endif
+    return true;
+}
+
+PFileDescriptorSetParent*
+ContentParent::AllocPFileDescriptorSetParent(const FileDescriptor& /* aFD */)
+{
+    return new FileDescriptorSetParent();
+}
+
+bool
+ContentParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
+{
+    delete aActor;
     return true;
 }
 
