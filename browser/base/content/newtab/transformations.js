@@ -137,11 +137,10 @@ let gTransformation = {
    * Rearranges a given array of sites and moves them to their new positions or
    * fades in/out new/removed sites.
    * @param aSites An array of sites to rearrange.
-   * @param aDraggedSite The currently dragged site, may be null.
    * @param aOptions Set of options (see below).
    *        unfreeze - unfreeze the site after rearranging
    */
-  rearrangeSites: function (aSites, aDraggedSite, aOptions) {
+  rearrangeSites: function (aSites, aOptions) {
     let self = this;
     let cells = gGrid.cells;
     let unfreeze = aOptions && aOptions.unfreeze;
@@ -150,7 +149,7 @@ let gTransformation = {
       let index = 0;
 
       for (let site of aSites) {
-        if (site && site !== aDraggedSite) {
+        if (site && site !== gDrag.draggedSite) {
           if (!cells[index]) {
             // The site disappeared from the grid, hide it.
             yield self.hideSite(site);
