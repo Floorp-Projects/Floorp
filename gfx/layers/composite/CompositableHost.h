@@ -333,11 +333,17 @@ public:
 
   virtual void RemoveTextureHost(TextureHost* aTexture);
 
+  // Called every time this is composited
+  void BumpFlashCounter() {
+    mFlashCounter = mFlashCounter >= DIAGNOSTIC_FLASH_COUNTER_MAX
+                  ? DIAGNOSTIC_FLASH_COUNTER_MAX : mFlashCounter + 1;
+  }
 protected:
   TextureInfo mTextureInfo;
   Compositor* mCompositor;
   Layer* mLayer;
   RefPtr<CompositableBackendSpecificData> mBackendData;
+  uint32_t mFlashCounter; // used when the pref "layers.flash-borders" is true.
   bool mAttached;
   bool mKeepAttached;
 };
