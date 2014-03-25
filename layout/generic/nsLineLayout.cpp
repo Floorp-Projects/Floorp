@@ -2456,7 +2456,7 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
     // Don't reposition bullets (and other frames that occur out of X-order?)
     if (!pfd->GetFlag(PFD_ISBULLET)) {
       nscoord dw = 0;
-      WritingMode lineWM = aPSD->mWritingMode;
+      WritingMode lineWM = mRootSpan->mWritingMode;
 
       pfd->mBounds.IStart(lineWM) += deltaICoord;
 

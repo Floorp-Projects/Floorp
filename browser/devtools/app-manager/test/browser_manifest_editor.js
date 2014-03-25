@@ -24,6 +24,7 @@ function test() {
     yield changeManifestValueBad("name", "the worst app");
     yield addNewManifestProperty("developer", "foo", "bar");
     yield addNewManifestPropertyBad("developer", "blob", "bob");
+    yield removeManifestProperty("developer", "foo");
     gManifestWindow = null;
     gManifestEditor = null;
 
@@ -160,5 +161,28 @@ function addNewManifestPropertyBad(parent, key, value) {
     ok(!newElem, "Key was added, but it should not have been");
     ok(!(key in gManifestEditor.manifest[parent]),
        "Manifest contains key, but it should not");
+  });
+}
+
+function removeManifestProperty(parent, key) {
+  info("*** Remove property test ***");
+
+  return Task.spawn(function() {
+    let parentElem = gManifestWindow.document
+                     .querySelector("[id ^= '" + parent + "']");
+    ok(parentElem, "Found parent element");
+
+    let keyExists = key in gManifestEditor.manifest[parent];
+    ok(keyExists,
+       "The manifest contains the key under the expected parent");
+
+    let newElem = gManifestWindow.document.querySelector("[id ^= '" + key + "']");
+    let removePropertyButton = newElem.querySelector(".variables-view-delete");
+    ok(removePropertyButton, "The remove property button was found");
+    removePropertyButton.click();
+
+    yield waitForUpdate();
+
+    ok(!(key in gManifestEditor.manifest[parent]), "Property was successfully removed");
   });
 }

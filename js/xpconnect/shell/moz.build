@@ -23,8 +23,6 @@ if CONFIG['MOZ_SHARK']:
     DEFINES['MOZ_SHARK'] = True
 if CONFIG['MOZ_CALLGRIND']:
     DEFINES['MOZ_CALLGRIND'] = True
-if CONFIG['MOZ_VTUNE']:
-    DEFINES['MOZ_VTUNE'] = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

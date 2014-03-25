@@ -96,7 +96,7 @@
             speak_checkFunc: 'todo_is'
           }],
 
-          [ContentMessages.clearCursor, null], // Reset cursors
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Moving to the absolute first item from an embedded document
           // fails. Bug 972035.
@@ -115,7 +115,7 @@
           }],
 
           // Reset cursors
-          [ContentMessages.clearCursor, null],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Move cursor with focus in outside document
           [ContentMessages.simpleMoveNext, {
@@ -127,7 +127,7 @@
 
           // Blur button and reset cursor
           [ContentMessages.focusSelector('button#home', true), null],
-          [ContentMessages.clearCursor, null],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Set focus on element outside of embedded frame while
           // cursor is in frame
@@ -143,7 +143,7 @@
 
           // Blur button and reset cursor
           [ContentMessages.focusSelector('button#home', true), null],
-          [ContentMessages.clearCursor, null],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // XXX: Set focus on iframe itself.
           // XXX: Set focus on element in iframe when cursor is outside of it.
@@ -163,7 +163,7 @@
             speak: 'wow heading level 1 such app'
           }],
 
-          [ContentMessages.clearCursor, null],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Open dialog in outer doc, while cursor is in inner frame
           [ContentMessages.simpleMoveNext, {
@@ -181,7 +181,7 @@
             speak: 'many option not checked check button such app'
           }],
 
-          [ContentMessages.clearCursor, null],
+          [ContentMessages.clearCursor, 'AccessFu:CursorCleared'],
 
           // Open dialog, then focus on something when closing
           [ContentMessages.simpleMoveNext, {

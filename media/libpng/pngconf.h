@@ -1,7 +1,7 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.6.9 - February 6, 2014
+ * libpng version 1.6.10 - March 6, 2014
  *
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
@@ -376,9 +376,11 @@
 #      define PNG_DEPRECATED __attribute__((__deprecated__))
 #    endif
 #    if !defined(PNG_PRIVATE)
-#      if __has_extension(attribute_unavailable_with_message)
-#        define PNG_PRIVATE __attribute__((__unavailable__(\
-           "This function is not exported by libpng.")))
+#      ifdef __has_extension
+#        if __has_extension(attribute_unavailable_with_message)
+#          define PNG_PRIVATE __attribute__((__unavailable__(\
+             "This function is not exported by libpng.")))
+#        endif
 #      endif
 #    endif
 #    ifndef PNG_RESTRICT
