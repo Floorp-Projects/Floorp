@@ -68,7 +68,8 @@ void
 Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                             const nsIntRegion& aVisibleRegion,
                             const gfx::Rect& aClipRect,
-                            const gfx::Matrix4x4& aTransform)
+                            const gfx::Matrix4x4& aTransform,
+                            uint32_t aFlashCounter)
 {
   if (!ShouldDrawDiagnostics(aFlags)) {
     return;
@@ -80,33 +81,35 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
     while (const nsIntRect* rect = screenIter.Next())
     {
       DrawDiagnostics(aFlags | DIAGNOSTIC_REGION_RECT,
-                      ToRect(*rect), aClipRect, aTransform);
+                      ToRect(*rect), aClipRect, aTransform, aFlashCounter);
     }
   }
 
   DrawDiagnostics(aFlags, ToRect(aVisibleRegion.GetBounds()),
-                  aClipRect, aTransform);
+                  aClipRect, aTransform, aFlashCounter);
 }
 
 void
 Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                             const gfx::Rect& aVisibleRect,
                             const gfx::Rect& aClipRect,
-                            const gfx::Matrix4x4& aTransform)
+                            const gfx::Matrix4x4& aTransform,
+                            uint32_t aFlashCounter)
 {
   if (!ShouldDrawDiagnostics(aFlags)) {
     return;
   }
 
-  DrawDiagnosticsInternal(aFlags, aVisibleRect,
-                          aClipRect, aTransform);
+  DrawDiagnosticsInternal(aFlags, aVisibleRect, aClipRect, aTransform,
+                          aFlashCounter);
 }
 
 void
 Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                     const gfx::Rect& aVisibleRect,
                                     const gfx::Rect& aClipRect,
-                                    const gfx::Matrix4x4& aTransform)
+                                    const gfx::Matrix4x4& aTransform,
+                                    uint32_t aFlashCounter)
 {
 #ifdef MOZ_B2G
   int lWidth = 4;
@@ -140,6 +143,13 @@ Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
     color.r *= 0.7f;
     color.g *= 0.7f;
     color.b *= 0.7f;
+  }
+
+  if (mDiagnosticTypes & DIAGNOSTIC_FLASH_BORDERS) {
+    float flash = (float)aFlashCounter / (float)DIAGNOSTIC_FLASH_COUNTER_MAX;
+    color.r *= flash;
+    color.g *= flash;
+    color.b *= flash;
   }
 
   EffectChain effects;

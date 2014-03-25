@@ -104,6 +104,9 @@ const DiagnosticTypes DIAGNOSTIC_NONE             = 0;
 const DiagnosticTypes DIAGNOSTIC_TILE_BORDERS     = 1 << 0;
 const DiagnosticTypes DIAGNOSTIC_LAYER_BORDERS    = 1 << 1;
 const DiagnosticTypes DIAGNOSTIC_BIGIMAGE_BORDERS = 1 << 2;
+const DiagnosticTypes DIAGNOSTIC_FLASH_BORDERS    = 1 << 3;
+
+#define DIAGNOSTIC_FLASH_COUNTER_MAX 100
 
 /**
  * Information about the object that is being diagnosed.
