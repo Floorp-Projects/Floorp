@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=463830
+-->
+<head>
+  <title>Test for Bug 463830</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463830">Mozilla Bug 463830</a>
+<p id="display"></p>
+<iframe id="i"></iframe>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 463830 **/
+
+var gTests = [
+  { file: "r11025_s16_c1.wav", title: "r11025_s16_c1.wav" }
+];
+
+var gTestNum = 0;
+
+addLoadEvent(runTest);
+
+var title;
+var i = document.getElementById("i");
+
+function runTest() {
+  if (gTestNum == gTests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  if (gTestNum == 0) {
+    i.addEventListener("load", function() {
+          is(i.contentDocument.title, title, "Doc title incorrect");
+          setTimeout(runTest, 0);
+        }, false);
+  }
+
+  title = gTests[gTestNum].title;
+  i.src = gTests[gTestNum].file;
+  gTestNum++;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
