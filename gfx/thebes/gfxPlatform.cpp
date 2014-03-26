@@ -923,6 +923,10 @@ gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
     new gfxImageSurface(data->GetData(), gfxIntSize(size.width, size.height),
                         data->Stride(), format);
 
+  if (surf->CairoStatus()) {
+    return nullptr;
+  }
+
   surf->SetData(&kDrawSourceSurface, data.forget().drop(), DataSourceSurfaceDestroy);
   // keep the draw target alive as long as we need its data
   aTarget->AddRef();
