@@ -523,8 +523,12 @@ let FormAssistant = {
           domWindowUtils.sendKeyEvent('keypress', json.keyCode,
                                   json.charCode, json.modifiers);
         }
-        domWindowUtils.sendKeyEvent('keyup', json.keyCode,
-                                  json.charCode, json.modifiers);
+
+        if(!json.repeat) {
+          domWindowUtils.sendKeyEvent('keyup', json.keyCode,
+                                    json.charCode, json.modifiers);
+        }
+
         this._editing = false;
 
         if (json.requestId && doKeypress) {

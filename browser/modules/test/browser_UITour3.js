@@ -138,5 +138,21 @@ let tests = [
 
     let infoOptions = gContentWindow.makeInfoOptions();
     gContentAPI.showInfo("urlbar", "Close me", "X marks the spot", null, null, infoOptions);
-  }
+  },
+
+  function test_info_target_callback(done) {
+    let popup = document.getElementById("UITourTooltip");
+    popup.addEventListener("popupshown", function onPopupShown() {
+      popup.removeEventListener("popupshown", onPopupShown);
+      PanelUI.show().then(() => {
+        is(gContentWindow.callbackResult, "target", "target callback called");
+        is(gContentWindow.callbackData.target, "appMenu", "target callback was from the appMenu");
+        is(gContentWindow.callbackData.type, "popupshown", "target callback was from the mousedown");
+        done();
+      });
+    });
+
+    let infoOptions = gContentWindow.makeInfoOptions();
+    gContentAPI.showInfo("appMenu", "I want to know when the target is clicked", "*click*", null, null, infoOptions);
+  },
 ];
