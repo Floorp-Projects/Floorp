@@ -335,7 +335,7 @@ intrinsic_ForkJoinGetSlicePar(ForkJoinContext *cx, unsigned argc, Value *vp)
     if (cx->getSlice(&sliceId))
         args.rval().setInt32(sliceId);
     else
-        args.rval().setInt32(-1);
+        args.rval().setInt32(ThreadPool::MAX_SLICE_ID);
 
     return true;
 }
