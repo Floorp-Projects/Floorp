@@ -178,6 +178,10 @@
     z-index: 1;
   }
 
+  #main-window[tabsintitlebar]:not([inFullscreen]) .tab-close-button:not(:-moz-any(:hover,:-moz-lwtheme,[selected="true"])) {
+    -moz-image-region: rect(0, 64px, 16px, 48px);
+  }
+
   #main-window[tabsintitlebar][sizemode="normal"] #titlebar-content:-moz-lwtheme {
     /* Render a window top border: */
     background-image: linear-gradient(to bottom,
