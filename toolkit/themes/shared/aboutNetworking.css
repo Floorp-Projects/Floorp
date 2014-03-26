@@ -2,59 +2,110 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@import url("chrome://global/skin/in-content/common.css");
+
+html {
+  height: 100%;
+}
+
 body {
-  min-width: 330px;
-  max-width: 100%;
-  min-height: 330px;
-  max-height: 100%;
+  display: flex;
+  align-items: stretch;
+  height: 100%;
 }
 
-#menu {
-  position: absolute;
-  top: 5px;
-  color: gray;
+#sectionTitle {
+  float: left;
 }
 
+#refreshDiv {
+  text-align: end;
+  margin-bottom: 0.5em;
+}
+
+.category {
+  cursor: pointer;
+}
+
+.category .category-name {
+  pointer-events: none;
+}
+
+/* XXX: a lot of this is duplicated from info-pages.css since that stylesheet
+   is incompatible with this type of layout */
+.warningBackground:not([hidden]) {
+  display: flex;
+}
 .warningBackground {
-  display: none;
-  background: -moz-Dialog;
-  width:100%;
-  height:100%;
-  z-index:10;
-  top:0;
-  left:0;
-  position:fixed;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  position: fixed;
+  background: var(--in-content-page-background);
 }
 
-.warningMessage {
-  color: -moz-FieldText;
+.title {
   position: relative;
-  min-width: 330px;
-  max-width: 50em;
-  margin: 4em auto;
-  border: 1px solid ThreeDShadow;
-  border-radius: 10px;
-  padding: 3em;
-  -moz-padding-start: 30px;
-  background: -moz-Field;
-  margin-left: auto;
-  text-align: center;
+  border-bottom: 1px solid var(--in-content-box-border-color);
+  margin-bottom: 2em;
+  padding-bottom: 0.5em;
+}
+
+.title::before {
+  content: "";
+  left: -2.3em;
+  top: 0;
+  position: absolute;
+  display: block;
+  width: 1.6em;
+  height: 1.6em;
+  background: url("chrome://global/skin/icons/warning.svg") no-repeat left center;
+  background-size: 1.6em;
+}
+
+.warningBackground button {
+  margin-top: 1em;
+  margin-left: 0;
+  min-width: 100px;
+}
+
+.main-content {
+  flex: 1;
 }
 
 .tab {
-  display: none;
+  padding: 0.5em;
 }
 
-.active {
-  display: block;
+.tab table {
+  border: 1;
+  width: 100%;
 }
 
-#menu .selected {
- color: blue;
+hr {
+  border: none;
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
 
-#refreshdiv {
-  top: 5px;
-  position: absolute;
-  right: 30px;
+th {
+  padding-bottom: 0.5em;
+  font-size: larger;
+}
+
+th, td, table {
+  border-collapse: collapse;
+  border: none;
+  text-align: start;
+}
+
+td {
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--in-content-box-border-color);
 }
