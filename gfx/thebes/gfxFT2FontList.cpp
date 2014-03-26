@@ -1358,8 +1358,9 @@ static void
 LoadSkipSpaceLookupCheck(nsTHashtable<nsStringHashKey>& aSkipSpaceLookupCheck)
 {
     nsAutoTArray<nsString, 5> skiplist;
-    gfxFontUtils::GetPrefsFontList("font.whitelist.skip_space_lookup_check",
-                                   skiplist);
+    gfxFontUtils::GetPrefsFontList(
+        "font.whitelist.skip_default_features_space_check",
+        skiplist);
     uint32_t numFonts = skiplist.Length();
     for (uint32_t i = 0; i < numFonts; i++) {
         ToLowerCase(skiplist[i]);
