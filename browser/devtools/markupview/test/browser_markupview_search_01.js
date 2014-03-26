@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that searching for nodes using the selector-search input expands and
 // selects the right nodes in the markup-view, even when those nodes are deeply
 // nested (and therefore not attached yet when the markup-view is initialized).
