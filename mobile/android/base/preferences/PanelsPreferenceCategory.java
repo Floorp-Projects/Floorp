@@ -11,6 +11,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 
 public class PanelsPreferenceCategory extends CustomListCategory {
@@ -47,13 +48,13 @@ public class PanelsPreferenceCategory extends CustomListCategory {
     public void onAttachedToActivity() {
         super.onAttachedToActivity();
 
-        loadHomeConfig();
+        loadHomeConfig(null);
     }
 
     /**
      * Load the Home Panels config and populate the preferences screen and maintain local state.
      */
-    private void loadHomeConfig() {
+    private void loadHomeConfig(final String animatePanelId) {
         mLoadTask = new UiAsyncTask<Void, Void, HomeConfig.State>(ThreadUtils.getBackgroundHandler()) {
             @Override
             public HomeConfig.State doInBackground(Void... params) {
@@ -63,22 +64,27 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             @Override
             public void onPostExecute(HomeConfig.State configState) {
                 mConfigEditor = configState.edit();
-                displayHomeConfig(configState);
+                displayHomeConfig(configState, animatePanelId);
             }
         };
         mLoadTask.execute();
     }
 
+    /**
+     * Simplified refresh of Home Panels when there is no state to be persisted.
+     */
     public void refresh() {
-        refresh(null);
+        refresh(null, null);
     }
 
     /**
-     * Reload the Home Panels list.
-     * @param State HomeConfig.State to rebuild Home Panels list from.
+     * Refresh the Home Panels list and animate a panel, if specified.
      * If null, load from HomeConfig.
+     *
+     * @param State HomeConfig.State to rebuild Home Panels list from.
+     * @param String panelId of panel to be animated.
      */
-    public void refresh(State state) {
+    public void refresh(State state, String animatePanelId) {
         // Clear all the existing home panels, but leave the
         // first item (Add panels).
         int prefCount = getPreferenceCount();
@@ -88,19 +94,22 @@ public class PanelsPreferenceCategory extends CustomListCategory {
         }
 
         if (state == null) {
-            loadHomeConfig();
+            loadHomeConfig(animatePanelId);
         } else {
-            displayHomeConfig(state);
+            displayHomeConfig(state, animatePanelId);
         }
     }
 
-    private void displayHomeConfig(HomeConfig.State configState) {
+    private void displayHomeConfig(HomeConfig.State configState, String animatePanelId) {
         int index = 0;
         for (PanelConfig panelConfig : configState) {
             final boolean isRemovable = panelConfig.isDynamic();
 
             // Create and add the pref.
-            final PanelsPreference pref = new PanelsPreference(getContext(), PanelsPreferenceCategory.this, isRemovable, index);
+            final String panelId = panelConfig.getId();
+            final boolean animate = TextUtils.equals(animatePanelId, panelId);
+
+            final PanelsPreference pref = new PanelsPreference(getContext(), PanelsPreferenceCategory.this, isRemovable, index, animate);
             pref.setTitle(panelConfig.getTitle());
             pref.setKey(panelConfig.getId());
             // XXX: Pull icon from PanelInfo.
@@ -181,18 +190,20 @@ public class PanelsPreferenceCategory extends CustomListCategory {
     public void moveUp(PanelsPreference pref) {
         final int panelIndex = pref.getIndex();
         if (panelIndex > 0) {
-            mConfigEditor.moveTo(pref.getKey(), panelIndex - 1);
+            final String panelKey = pref.getKey();
+            mConfigEditor.moveTo(panelKey, panelIndex - 1);
             final State state = mConfigEditor.apply();
-            refresh(state);
+            refresh(state, panelKey);
         }
     }
 
     public void moveDown(PanelsPreference pref) {
         final int panelIndex = pref.getIndex();
         if (panelIndex < getPreferenceCount() - 1) {
-            mConfigEditor.moveTo(pref.getKey(), panelIndex + 1);
+            final String panelKey = pref.getKey();
+            mConfigEditor.moveTo(panelKey, panelIndex + 1);
             final State state = mConfigEditor.apply();
-            refresh(state);
+            refresh(state, panelKey);
         }
     }
 
