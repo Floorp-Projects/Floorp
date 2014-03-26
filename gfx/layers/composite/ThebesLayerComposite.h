@@ -74,6 +74,8 @@ public:
     Mutated();
   }
 
+  MOZ_LAYER_DECL_NAME("ThebesLayerComposite", TYPE_THEBES)
+
 protected:
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;

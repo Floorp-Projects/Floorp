@@ -1259,9 +1259,6 @@ nsIScrollableFrame*
 nsLayoutUtils::GetScrollableFrameFor(const nsIFrame *aScrolledFrame)
 {
   nsIFrame *frame = aScrolledFrame->GetParent();
-  if (!frame) {
-    return nullptr;
-  }
   nsIScrollableFrame *sf = do_QueryFrame(frame);
   return sf;
 }

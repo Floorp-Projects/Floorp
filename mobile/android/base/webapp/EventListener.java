@@ -153,39 +153,48 @@ public class EventListener implements GeckoEventListener {
         allocator.putOrigin(index, aOrigin);
     }
 
-    public static void uninstallWebapp(final String uniqueURI) {
+    public static void uninstallWebapp(final String packageName) {
         // On uninstall, we need to do a couple of things:
         //   1. nuke the running app process.
         //   2. nuke the profile that was assigned to that webapp
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                int index;
-                index = Allocator.getInstance(GeckoAppShell.getContext()).releaseIndexForApp(uniqueURI);
+                int index = Allocator.getInstance(GeckoAppShell.getContext()).releaseIndexForApp(packageName);
 
                 // if -1, nothing to do; we didn't think it was installed anyway
                 if (index == -1)
                     return;
 
-                // kill the app if it's running
-                String targetProcessName = GeckoAppShell.getContext().getPackageName();
-                targetProcessName = targetProcessName + ":" + targetProcessName + ".Webapp" + index;
-
-                ActivityManager am = (ActivityManager) GeckoAppShell.getContext().getSystemService(Context.ACTIVITY_SERVICE);
-                List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
-                if (procs != null) {
-                    for (ActivityManager.RunningAppProcessInfo proc : procs) {
-                        if (proc.processName.equals(targetProcessName)) {
-                            android.os.Process.killProcess(proc.pid);
-                            break;
-                        }
-                    }
-                }
+                killWebappSlot(GeckoAppShell.getContext(), index);
 
                 // then nuke the profile
                 GeckoProfile.removeProfile(GeckoAppShell.getContext(), "webapp" + index);
             }
         });
+    }
+
+    /**
+     * Used in both uninstall and swiping away from the recent task list.
+     *
+     * @param context
+     * @param slot
+     */
+    public static void killWebappSlot(Context context, int slot) {
+        // kill the app if it's running
+        String targetProcessName = context.getPackageName();
+        targetProcessName = targetProcessName + ":" + targetProcessName + ".Webapp" + slot;
+
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> procs = am.getRunningAppProcesses();
+        if (procs != null) {
+            for (ActivityManager.RunningAppProcessInfo proc : procs) {
+                if (proc.processName.equals(targetProcessName)) {
+                    android.os.Process.killProcess(proc.pid);
+                    break;
+                }
+            }
+        }
     }
 
     public static void installApk(final Activity context, String filePath, String data) {

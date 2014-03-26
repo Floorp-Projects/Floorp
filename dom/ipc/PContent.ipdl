@@ -13,6 +13,7 @@ include protocol PCompositor;
 include protocol PCrashReporter;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
+include protocol PFileDescriptorSet;
 include protocol PFMRadio;
 include protocol PFileSystemRequest;
 include protocol PHal;
@@ -258,6 +259,7 @@ intr protocol PContent
     manages PDeviceStorageRequest;
     manages PFileSystemRequest;
     manages PExternalHelperApp;
+    manages PFileDescriptorSet;
     manages PFMRadio;
     manages PHal;
     manages PIndexedDB;
@@ -299,6 +301,8 @@ both:
     async PBlob(BlobConstructorParams params);
 
     async PJavaScript();
+
+    PFileDescriptorSet(FileDescriptor fd);
 
 child:
     /**
