@@ -118,7 +118,12 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mTargetBBox = aOverrideBBox ?
     *aOverrideBBox : nsSVGUtils::GetBBox(mTargetFrame);
 
-  nsresult rv = BuildPrimitives();
+  nsresult rv = ComputeUserSpaceToFilterSpaceScale();
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  rv = BuildPrimitives();
   if (NS_FAILED(rv)) {
     return;
   }
@@ -130,9 +135,9 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
 
   // Get various transforms:
 
-  gfxMatrix filterToUserSpace(mFilterRegion.Width() / mFilterSpaceBounds.width, 0.0f,
-                              0.0f, mFilterRegion.Height() / mFilterSpaceBounds.height,
-                              mFilterRegion.X(), mFilterRegion.Y());
+  gfxMatrix filterToUserSpace(mFilterSpaceToUserSpaceScale.width, 0.0f,
+                              0.0f, mFilterSpaceToUserSpaceScale.height,
+                              0.0f, 0.0f);
 
   // Only used (so only set) when we paint:
   if (mPaintCallback) {
@@ -164,23 +169,44 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mInitialized = true;
 }
 
-gfxRect
-nsFilterInstance::UserSpaceToFilterSpace(const gfxRect& aRect) const
+nsresult
+nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
 {
-  gfxRect r = aRect - mFilterRegion.TopLeft();
-  r.Scale(mFilterSpaceBounds.width / mFilterRegion.Width(),
-          mFilterSpaceBounds.height / mFilterRegion.Height());
-  return r;
+  gfxMatrix canvasTransform =
+    nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_OUTERSVG_TM);
+  if (canvasTransform.IsSingular()) {
+    // Nothing should be rendered.
+    return NS_ERROR_FAILURE;
+  }
+
+  mUserSpaceToFilterSpaceScale = canvasTransform.ScaleFactors(true);
+  if (mUserSpaceToFilterSpaceScale.width <= 0.0f ||
+      mUserSpaceToFilterSpaceScale.height <= 0.0f) {
+    // Nothing should be rendered.
+    return NS_ERROR_FAILURE;
+  }
+
+  mFilterSpaceToUserSpaceScale = gfxSize(1.0f / mUserSpaceToFilterSpaceScale.width,
+                                         1.0f / mUserSpaceToFilterSpaceScale.height);
+  return NS_OK;
 }
 
-gfxMatrix
-nsFilterInstance::GetUserSpaceToFilterSpaceTransform() const
+gfxRect
+nsFilterInstance::UserSpaceToFilterSpace(const gfxRect& aUserSpaceRect) const
 {
-  gfxFloat widthScale = mFilterSpaceBounds.width / mFilterRegion.Width();
-  gfxFloat heightScale = mFilterSpaceBounds.height / mFilterRegion.Height();
-  return gfxMatrix(widthScale, 0.0f,
-                   0.0f, heightScale,
-                   -mFilterRegion.X() * widthScale, -mFilterRegion.Y() * heightScale);
+  gfxRect filterSpaceRect = aUserSpaceRect;
+  filterSpaceRect.Scale(mUserSpaceToFilterSpaceScale.width,
+                        mUserSpaceToFilterSpaceScale.height);
+  return filterSpaceRect;
+}
+
+gfxRect
+nsFilterInstance::FilterSpaceToUserSpace(const gfxRect& aFilterSpaceRect) const
+{
+  gfxRect userSpaceRect = aFilterSpaceRect;
+  userSpaceRect.Scale(mFilterSpaceToUserSpaceScale.width,
+                      mFilterSpaceToUserSpaceScale.height);
+  return userSpaceRect;
 }
 
 nsresult
@@ -202,9 +228,15 @@ nsFilterInstance::BuildPrimitives()
 nsresult
 nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
 {
+  NS_ASSERTION(mUserSpaceToFilterSpaceScale.width > 0.0f &&
+               mFilterSpaceToUserSpaceScale.height > 0.0f,
+               "scale factors between spaces should be positive values");
+
   if (aFilter.GetType() == NS_STYLE_FILTER_URL) {
     // Build primitives for an SVG filter.
-    nsSVGFilterInstance svgFilterInstance(aFilter, mTargetFrame, mTargetBBox);
+    nsSVGFilterInstance svgFilterInstance(aFilter, mTargetFrame, mTargetBBox,
+                                          mUserSpaceToFilterSpaceScale,
+                                          mFilterSpaceToUserSpaceScale);
     if (!svgFilterInstance.IsInitialized()) {
       return NS_ERROR_FAILURE;
     }
@@ -212,7 +244,7 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
     // For now, we use the last SVG filter region as the overall filter region
     // for the filter chain. Eventually, we will compute the overall filter
     // using all of the generated FilterPrimitiveDescriptions.
-    mFilterRegion = svgFilterInstance.GetFilterRegion();
+    mUserSpaceBounds = svgFilterInstance.GetFilterRegion();
     mFilterSpaceBounds = svgFilterInstance.GetFilterSpaceBounds();
 
     // If this overflows, we can at least paint the maximum surface size.
@@ -289,10 +321,6 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   nsRenderingContext tmpCtx;
   tmpCtx.Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
 
-  gfxMatrix m = GetUserSpaceToFilterSpaceTransform();
-  m.Invert();
-  gfxRect r = m.TransformBounds(mFilterSpaceBounds);
-
   gfxMatrix deviceToFilterSpace = GetFilterSpaceToDeviceSpaceTransform().Invert();
   gfxContext *gfx = tmpCtx.ThebesContext();
   gfx->Multiply(deviceToFilterSpace);
@@ -304,7 +332,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
                             mTransformRoot);
   if (!matrix.IsSingular()) {
     gfx->Multiply(matrix);
-    gfx->Rectangle(r);
+    gfx->Rectangle(mUserSpaceBounds);
     if ((aSource == &mFillPaint && 
          nsSVGUtils::SetupCairoFillPaint(mTargetFrame, gfx)) ||
         (aSource == &mStrokePaint &&
@@ -376,9 +404,7 @@ nsFilterInstance::BuildSourceImage(gfxASurface* aTargetSurface,
   nsRenderingContext tmpCtx;
   tmpCtx.Init(mTargetFrame->PresContext()->DeviceContext(), ctx);
 
-  gfxMatrix m = GetUserSpaceToFilterSpaceTransform();
-  m.Invert();
-  gfxRect r = m.TransformBounds(neededRect);
+  gfxRect r = FilterSpaceToUserSpace(neededRect);
   r.RoundOut();
   nsIntRect dirty;
   if (!gfxUtils::GfxRectToIntRect(r, &dirty))
