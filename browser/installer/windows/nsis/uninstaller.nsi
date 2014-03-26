@@ -298,16 +298,8 @@ Section "Uninstall"
                                            "FirefoxURL" \
                                            "FirefoxHTML"
   ${EndIf}
-  ${ResetWin8PromptKeys} "HKCU" ""
+  ${ResetWin8PromptKeys}
   ${ResetWin8MetroSplash}
-!else
-  ; The metro browser is not enabled by the mozconfig.
-  ${If} ${AtLeastWin8}
-    ${RemoveDEHRegistration} ${DELEGATE_EXECUTE_HANDLER_ID} \
-                             $AppUserModelID \
-                             "FirefoxURL" \
-                             "FirefoxHTML"
-  ${EndIf}
 !endif
 
   ${un.RegCleanAppHandler} "FirefoxURL"
