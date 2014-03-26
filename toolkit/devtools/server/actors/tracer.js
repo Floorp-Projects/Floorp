@@ -95,7 +95,13 @@ function TraceActor(aConn, aParentActor)
   this._buffer = [];
   this.onExitFrame = this.onExitFrame.bind(this);
 
-  this.global = aParentActor.window.wrappedJSObject;
+  // aParentActor.window might be an Xray for a window, but it might also be a
+  // double-wrapper for a Sandbox.  We want to unwrap the latter but not the
+  // former.
+  this.global = aParentActor.window;
+  if (!Cu.isXrayWrapper(this.global)) {
+      this.global = this.global.wrappedJSObject;
+  }
 }
 
 TraceActor.prototype = {
