@@ -185,10 +185,6 @@ public: /* internal necko use only */
 
     void ForcePending(bool aForcePending);
 
-    already_AddRefed<nsIStreamListener> GetListener() {
-        return nsCOMPtr<nsIStreamListener>(mListener).forget();
-    }
-
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 

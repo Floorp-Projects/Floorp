@@ -588,10 +588,6 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   chan->GetCacheToken(getter_AddRefs(cacheEntry));
   mCacheEntry = do_QueryInterface(cacheEntry);
 
-  if (!mParentListener) {
-    mParentListener = chan->GetListener().downcast<HttpChannelParentListener>();
-    MOZ_ASSERT(mParentListener);
-  }
 
   nsCString secInfoSerialization;
   nsCOMPtr<nsISupports> secInfoSupp;
