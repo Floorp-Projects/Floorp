@@ -20,7 +20,7 @@ if (process.env.HTTP2_LOG) {
       name: name,
       stream: logOutput,
       level: process.env.HTTP2_LOG,
-      serializers: require('../lib/http').serializers
+      serializers: require('..').serializers
     });
   };
   exports.log = exports.createLogger('test');

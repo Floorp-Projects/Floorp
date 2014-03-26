@@ -25,7 +25,7 @@ var bigListenerMD5 = '8f607cfdd2c87d6a7eedb657dafbd836';
 
 function checkIsHttp2(request) {
   try {
-    if (request.getResponseHeader("X-Firefox-Spdy") == "HTTP-draft-09/2.0") {
+    if (request.getResponseHeader("X-Firefox-Spdy") == "h2-10") {
       if (request.getResponseHeader("X-Connection-Http2") == "yes") {
         return true;
       }
@@ -437,7 +437,7 @@ function run_test() {
 
   prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 
-  // Enable all versions of spdy to see that we auto negotiate spdy/3
+  // Enable all versions of spdy to see that we auto negotiate http/2
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");
   spdy3pref = prefs.getBoolPref("network.http.spdy.enabled.v3");
   spdypush = prefs.getBoolPref("network.http.spdy.allow-push");

@@ -1,7 +1,7 @@
 node-http2
 ==========
 
-An HTTP/2 ([draft-ietf-httpbis-http2-09](http://tools.ietf.org/html/draft-ietf-httpbis-http2-9))
+An HTTP/2 ([draft-ietf-httpbis-http2-10](http://tools.ietf.org/html/draft-ietf-httpbis-http2-10))
 client and server implementation for node.js.
 
 Installation
@@ -102,9 +102,9 @@ For pretty printing logs, you will also need a global install of bunyan (`npm in
 
 ### Developer documentation ###
 
-The developer documentation is located in the `doc` directory. The docs are usually updated only
-before releasing a new version. To regenerate them manually, run `npm run-script prepublish`.
-There's a hosted version which is located [here](http://molnarg.github.io/node-http2/doc/).
+The developer documentation is generated from the source code using docco and can be viewed online
+[here](http://molnarg.github.io/node-http2/doc/). If you'd like to have an offline copy, just run
+`npm run-script doc`.
 
 ### Running the tests ###
 
