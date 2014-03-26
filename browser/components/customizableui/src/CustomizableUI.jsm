@@ -2042,6 +2042,13 @@ let CustomizableUIInternal = {
   destroyWidget: function(aWidgetId) {
     let widget = gPalette.get(aWidgetId);
     if (!widget) {
+      gGroupWrapperCache.delete(aWidgetId);
+      for (let [window, ] of gBuildWindows) {
+        let windowCache = gSingleWrapperCache.get(window);
+        if (windowCache) {
+          windowCache.delete(aWidgetId);
+        }
+      }
       return;
     }
 
