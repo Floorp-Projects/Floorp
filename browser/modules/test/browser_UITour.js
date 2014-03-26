@@ -154,8 +154,19 @@ let tests = [
       waitForHighlightWithEffect(highlight, "zoom", () => {
         let style = window.getComputedStyle(highlight);
         is(style.animationName, "uitour-zoom", "The animation-name should be uitour-zoom");
-        checkRandomEffect();
+        checkSameEffectOnDifferentTarget();
       }, "There should be a zoom effect");
+    }
+    function checkSameEffectOnDifferentTarget() {
+      gContentAPI.showHighlight("appMenu", "wobble");
+      waitForHighlightWithEffect(highlight, "wobble", () => {
+        highlight.addEventListener("animationstart", function onAnimationStart(aEvent) {
+          highlight.removeEventListener("animationstart", onAnimationStart);
+          ok(true, "Animation occurred again even though the effect was the same");
+          checkRandomEffect();
+        });
+        gContentAPI.showHighlight("backForward", "wobble");
+      }, "There should be a wobble effect");
     }
     function checkRandomEffect() {
       function waitForActiveHighlight(highlightEl, next, error) {
