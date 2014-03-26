@@ -50,5 +50,5 @@ fails == column-contain-1a.html column-contain-1-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
 fuzzy-if(Android,8,1533) skip-if(B2G&&browserIsRemote) == block-in-inline-2.html block-in-inline-2-ref.html
 fuzzy-if(Android,8,630) fuzzy-if(OSX==10.8,1,11) skip-if(B2G&&browserIsRemote) == block-in-inline-3.html block-in-inline-3-ref.html
-+== block-in-inline-continuations.html block-in-inline-continuations-ref.html
+== block-in-inline-continuations.html block-in-inline-continuations-ref.html
 == inner-table-1.html inner-table-1-ref.html
