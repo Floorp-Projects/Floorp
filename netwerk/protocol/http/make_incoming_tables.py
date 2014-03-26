@@ -1,6 +1,6 @@
 # This script exists to auto-generate Http2HuffmanIncoming.h from the table
 # contained in the HPACK spec. It's pretty simple to run:
-#   python make_incoming_tables.py < huff_incoming.txt > Http2HuffmanIncoming.h
+#   python make_incoming_tables.py < http2_huffman_table.txt > Http2HuffmanIncoming.h
 # where huff_incoming.txt is copy/pasted text from the latest version of the
 # HPACK spec, with all non-relevant lines removed (the most recent version
 # of huff_incoming.txt also lives in this directory as an example).
@@ -74,10 +74,6 @@ for r in raw_entries:
                         'mask': int(bstrs[0], 2),
                         'value': ascii}
 
-def make_entry_list(table, max_prefix_len):
-    if max_prefix_len == 8:
-        return table
-    return [t for t in table if isinstance(t, dict) and t['prefix_len'] > 0]
 
 def output_table(table, name_suffix=''):
     max_prefix_len = 0
@@ -86,16 +82,16 @@ def output_table(table, name_suffix=''):
             if t['prefix_len'] > max_prefix_len:
                 max_prefix_len = t['prefix_len']
         elif t is not None:
-            output_table(t, '%s%s' % (name_suffix, i))
+            output_table(t, '%s_%s' % (name_suffix, i))
 
     tablename = 'HuffmanIncoming%s' % (name_suffix if name_suffix else 'Root',)
     entriestable = tablename.replace('HuffmanIncoming', 'HuffmanIncomingEntries')
     sys.stdout.write('static HuffmanIncomingEntry %s[] = {\n' % (entriestable,))
-    entries = make_entry_list(table, max_prefix_len)
     prefix_len = 0
     value = 0
     ptr = 'nullptr'
-    for i, t in enumerate(entries):
+    for i in range(256):
+        t = table[i]
         if isinstance(t, dict):
             prefix_len = t['prefix_len']
             value = t['value']
@@ -103,18 +99,18 @@ def output_table(table, name_suffix=''):
         elif t is not None:
             prefix_len = 0
             value = 0
-            subtable = '%s%s' % (name_suffix, i)
+            subtable = '%s_%s' % (name_suffix, i)
             ptr = '&HuffmanIncoming%s' % (subtable,)
         sys.stdout.write('  { %s, %s, %s }' %
-                         (prefix_len, value, ptr))
-        if i < (len(table) - 1):
+                         (ptr, value, prefix_len))
+        if i < 255:
             sys.stdout.write(',')
         sys.stdout.write('\n')
     sys.stdout.write('};\n')
     sys.stdout.write('\n')
     sys.stdout.write('static HuffmanIncomingTable %s = {\n' % (tablename,))
-    sys.stdout.write('  %s,\n' % (max_prefix_len,))
-    sys.stdout.write('  %s\n' % (entriestable,))
+    sys.stdout.write('  %s,\n' % (entriestable,))
+    sys.stdout.write('  %s\n' % (max_prefix_len,))
     sys.stdout.write('};\n')
     sys.stdout.write('\n')
 
@@ -130,14 +126,14 @@ namespace net {
 struct HuffmanIncomingTable;
 
 struct HuffmanIncomingEntry {
-  uint8_t mPrefixLen;
-  uint16_t mValue;
   HuffmanIncomingTable *mPtr;
+  uint16_t mValue;
+  uint8_t mPrefixLen;
 };
 
 struct HuffmanIncomingTable {
-  uint8_t mPrefixLen;
   HuffmanIncomingEntry *mEntries;
+  uint8_t mPrefixLen;
 };
 
 ''')
