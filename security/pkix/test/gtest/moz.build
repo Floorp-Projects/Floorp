@@ -4,26 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
-    'lib/pkixbind.cpp',
-    'lib/pkixbuild.cpp',
-    'lib/pkixcheck.cpp',
-    'lib/pkixder.cpp',
-    'lib/pkixkey.cpp',
-    'lib/pkixocsp.cpp',
+LIBRARY_NAME = 'mozillapkix_gtest'
+
+SOURCES += [
+    'pkixder_input_tests.cpp',
+    'pkixder_pki_types_tests.cpp',
+    'pkixder_universal_types_tests.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    'include',
+    '../../include',
+    '../../lib',
 ]
 
-TEST_DIRS += [
-    'test/gtest',
-    'test/lib',
-]
+FINAL_LIBRARY='xul-gtest'
 
-FAIL_ON_WARNINGS = True
-
-LIBRARY_NAME = 'mozillapkix'
-
-FINAL_LIBRARY = 'xul'
+include('/ipc/chromium/chromium-config.mozbuild')
