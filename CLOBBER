@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 973238 part 7 needs clobber due to self-hosted code (bug 1019955).
+Bug 973238 part 8 needs clobber due to self-hosted code (bug 1019955).
