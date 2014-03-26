@@ -15,9 +15,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccountsUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsClient",
+  "resource://gre/modules/FxAccountsClient.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
   "resource://gre/modules/identity/jwcrypto.jsm");
@@ -249,8 +251,6 @@ function FxAccountsInternal() {
   this.currentTimer = null;
   this.currentAccountState = new AccountState(this);
 
-  this.fxAccountsClient = new FxAccountsClient();
-
   // We don't reference |profileDir| in the top-level module scope
   // as we may be imported before we know where it is.
   this.signedInUserStorage = new JSONStorage({
@@ -268,6 +268,15 @@ FxAccountsInternal.prototype = {
    * The current data format's version number.
    */
   version: DATA_FORMAT_VERSION,
+
+  _fxAccountsClient: null,
+
+  get fxAccountsClient() {
+    if (!this._fxAccountsClient) {
+      this._fxAccountsClient = new FxAccountsClient();
+    }
+    return this._fxAccountsClient;
+  },
 
   /**
    * Return the current time in milliseconds as an integer.  Allows tests to
