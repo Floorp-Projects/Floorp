@@ -82,13 +82,6 @@ describe('flow.js', function() {
 
       });
     });
-    describe('.disableLocalFlowControl() method', function() {
-      it('should increase `this._window` by Infinity', function() {
-        flow._send = util.noop;
-        flow.disableLocalFlowControl();
-        expect(flow._window).to.equal(Infinity);
-      });
-    });
     describe('.read() method', function() {
       describe('when the flow control queue is not empty', function() {
         it('should return the first item in the queue if the window is enough', function() {
@@ -132,7 +125,6 @@ describe('flow.js', function() {
     describe('.write() method', function() {
       it('call with a DATA frame should trigger sending WINDOW_UPDATE if remote flow control is not' +
          'disabled', function(done) {
-        flow._remoteFlowControlDisabled = false;
         flow._window = 100;
         flow._send = util.noop;
         flow._receive = function(frame, callback) {
@@ -159,7 +151,6 @@ describe('flow.js', function() {
       flow1 = createFlow({ flow: 1 });
       flow2 = createFlow({ flow: 2 });
       flow1._flowControlId = flow2._flowControlId;
-      flow1._remoteFlowControlDisabled = flow2._remoteFlowControlDisabled = false;
       flow1._send = flow2._send = util.noop;
       flow1._receive = flow2._receive = function(frame, callback) { callback(); };
     });

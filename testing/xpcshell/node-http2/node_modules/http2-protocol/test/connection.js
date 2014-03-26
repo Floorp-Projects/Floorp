@@ -63,47 +63,6 @@ describe('connection.js', function() {
       });
     });
     describe('invalid operation', function() {
-      describe('disabling and the re-enabling flow control', function() {
-        it('should result in an error event with type "FLOW_CONTROL_ERROR"', function(done) {
-          var connection = new Connection(util.log, 1, settings);
-
-          connection.on('error', function(error) {
-            expect(error).to.equal('FLOW_CONTROL_ERROR');
-            done();
-          });
-
-          connection._setLocalFlowControl(true);
-          connection._setLocalFlowControl(false);
-        });
-      });
-      describe('manipulating flow control window after flow control was turned off', function() {
-        it('should result in an error event with type "FLOW_CONTROL_ERROR"', function(done) {
-          var connection = new Connection(util.log, 1, settings);
-
-          connection.on('error', function(error) {
-            expect(error).to.equal('FLOW_CONTROL_ERROR');
-            done();
-          });
-
-          connection._setLocalFlowControl(true);
-          connection._setInitialStreamWindowSize(10);
-        });
-      });
-      describe('disabling flow control twice', function() {
-        it('should be ignored', function() {
-          var connection = new Connection(util.log, 1, settings);
-
-          connection._setLocalFlowControl(true);
-          connection._setLocalFlowControl(true);
-        });
-      });
-      describe('enabling flow control when already enabled', function() {
-        it('should be ignored', function() {
-          var connection = new Connection(util.log, 1, settings);
-
-          connection._setLocalFlowControl(false);
-        });
-      });
       describe('unsolicited ping answer', function() {
         it('should be ignored', function() {
           var connection = new Connection(util.log, 1, settings);
