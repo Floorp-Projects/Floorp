@@ -2,14 +2,14 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/**
- * Tests that various mutations to the dom update the markup view correctly.
- * The test for comparing the markup view to the real dom is a bit weird:
- * - Select the text in the markup view
- * - Parse that as innerHTML in a document we've created for the purpose.
- * - Remove extraneous whitespace in that tree
- * - Compare it to the real dom with isEqualNode.
- */
+"use strict";
+
+// Tests that various mutations to the dom update the markup view correctly.
+// The test for comparing the markup view to the real dom is a bit weird:
+// - Select the text in the markup view
+// - Parse that as innerHTML in a document we've created for the purpose.
+// - Remove extraneous whitespace in that tree
+// - Compare it to the real dom with isEqualNode.
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_mutation.html";
 // All the mutation types we want to test.

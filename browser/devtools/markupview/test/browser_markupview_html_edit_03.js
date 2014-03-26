@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that outerHTML editing keybindings work as expected and that *special*
 // elements like <html>, <body> and <head> can be edited correctly.
 
