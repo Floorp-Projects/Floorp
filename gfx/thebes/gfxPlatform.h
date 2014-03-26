@@ -589,7 +589,6 @@ public:
     bool UseDeprecatedTextures() const { return mLayersUseDeprecated; }
 
     mozilla::gl::SkiaGLGlue* GetSkiaGLGlue();
-    void DestroySkiaGLGlue();
     void PurgeSkiaCache();
 
 protected:
