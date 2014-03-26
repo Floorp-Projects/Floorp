@@ -699,6 +699,11 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        "flash" or "other".
    */
   _enableFilter: function (aType) {
+    // Make sure this is a valid filter type.
+    if (Object.keys(this._allFilterPredicates).indexOf(aType) == -1) {
+      return;
+    }
+
     // Add the filter to the list of active filters.
     this._activeFilters.push(aType);
 
@@ -717,18 +722,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * the active filters.
    */
   get _filterPredicate() {
-    let filterPredicates = {
-      "all": () => true,
-      "html": this.isHtml,
-      "css": this.isCss,
-      "js": this.isJs,
-      "xhr": this.isXHR,
-      "fonts": this.isFont,
-      "images": this.isImage,
-      "media": this.isMedia,
-      "flash": this.isFlash,
-      "other": this.isOther
-    };
+    let filterPredicates = this._allFilterPredicates;
 
      if (this._activeFilters.length === 1) {
        // The simplest case: only one filter active.
@@ -742,6 +736,22 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
        };
      }
   },
+
+  /**
+   * Returns an object with all the filter predicates as [key: function] pairs.
+   */
+  get _allFilterPredicates() ({
+    all: () => true,
+    html: this.isHtml,
+    css: this.isCss,
+    js: this.isJs,
+    xhr: this.isXHR,
+    fonts: this.isFont,
+    images: this.isImage,
+    media: this.isMedia,
+    flash: this.isFlash,
+    other: this.isOther
+  }),
 
   /**
    * Sorts all network requests in this container by a specified detail.
