@@ -51,7 +51,7 @@ js::Nursery::init()
     if (!hugeSlots.init())
         return false;
 
-    void *heap = MapAlignedPages(runtime(), NurserySize, Alignment);
+    void *heap = AllocateAlignedAddressRange(runtime(), NurserySize, Alignment);
 #ifdef JSGC_ROOT_ANALYSIS
     // Our poison pointers are not guaranteed to be invalid on 64-bit
     // architectures, and often are valid. We can't just reserve the full
@@ -72,12 +72,11 @@ js::Nursery::init()
     rt->gcNurseryStart_ = uintptr_t(heap);
     currentStart_ = start();
     rt->gcNurseryEnd_ = chunk(LastNurseryChunk).end();
-    numActiveChunks_ = 1;
-#ifdef JS_GC_ZEAL
-    JS_POISON(heap, FreshNursery, NurserySize);
-#endif
+
+    if (!setNumActiveChunks(1))
+        return false;
+
     setCurrentChunk(0);
-    updateDecommittedRegion();
 
 #ifdef PROFILE_NURSERY
     char *env = getenv("JS_MINORGC_TIME");
@@ -101,7 +100,8 @@ js::Nursery::enable()
     JS_ASSERT(isEmpty());
     if (isEnabled())
         return;
-    numActiveChunks_ = 1;
+    if (!setNumActiveChunks(1))
+        CrashAtUnhandlableOOM("Failed to commit nursery for enable.");
     setCurrentChunk(0);
     currentStart_ = position();
 #ifdef JS_GC_ZEAL
@@ -116,9 +116,9 @@ js::Nursery::disable()
     JS_ASSERT(isEmpty());
     if (!isEnabled())
         return;
-    numActiveChunks_ = 0;
+    DebugOnly<bool> result = setNumActiveChunks(0);
+    JS_ASSERT(result); // Decommit is infallible.
     currentEnd_ = 0;
-    updateDecommittedRegion();
 }
 
 bool
@@ -181,9 +181,7 @@ js::Nursery::allocate(size_t size)
     void *thing = (void *)position();
     position_ = position() + size;
 
-#ifdef JS_GC_ZEAL
     JS_POISON(thing, AllocatedThing, size);
-#endif
     return thing;
 }
 
@@ -874,12 +872,14 @@ js::Nursery::freeHugeSlots(JSRuntime *rt)
 void
 js::Nursery::sweep(JSRuntime *rt)
 {
-#ifdef JS_GC_ZEAL
+#ifdef JS_CRASH_DIAGNOSTICS
     /* Poison the nursery contents so touching a freed object will crash. */
-    JS_POISON((void *)start(), SweptNursery, NurserySize - sizeof(JSRuntime *));
-    for (int i = 0; i < NumNurseryChunks; ++i)
+    JS_POISON((void *)start(), SweptNursery, ChunkSize * numActiveChunks_);
+    for (int i = 0; i < numActiveChunks_; ++i)
         chunk(i).trailer.runtime = runtime();
+#endif
 
+#ifdef JS_GC_ZEAL
     if (rt->gcZeal_ == ZealGenerationalGCValue) {
         MOZ_ASSERT(numActiveChunks_ == NumNurseryChunks);
 
@@ -900,7 +900,8 @@ void
 js::Nursery::growAllocableSpace()
 {
     MOZ_ASSERT_IF(runtime()->gcZeal_ == ZealGenerationalGCValue, numActiveChunks_ == NumNurseryChunks);
-    numActiveChunks_ = Min(numActiveChunks_ * 2, NumNurseryChunks);
+    // If we fail to grow, we can continue using existing range.
+    (void)setNumActiveChunks(Min(numActiveChunks_ * 2, NumNurseryChunks));
 }
 
 void
@@ -910,8 +911,27 @@ js::Nursery::shrinkAllocableSpace()
     if (runtime()->gcZeal_ == ZealGenerationalGCValue)
         return;
 #endif
-    numActiveChunks_ = Max(numActiveChunks_ - 1, 1);
-    updateDecommittedRegion();
+    DebugOnly<bool> result = setNumActiveChunks(Max(numActiveChunks_ - 1, 1));
+    JS_ASSERT(result); // Decommit is infallible.
+}
+
+bool
+js::Nursery::enterZealMode()
+{
+    if (!isEnabled())
+        return true;
+    MinorGC(runtime_, JS::gcreason::EVICT_NURSERY);
+    return setNumActiveChunks(NumNurseryChunks);
+}
+
+void
+js::Nursery::leaveZealMode()
+{
+    if (isEnabled()) {
+        JS_ASSERT(isEmpty());
+        setCurrentChunk(0);
+        currentStart_ = start();
+    }
 }
 
 #endif /* JSGC_GENERATIONAL */
