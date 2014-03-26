@@ -227,7 +227,7 @@ BrowserTabList.prototype.getList = function() {
     // For each tab in this XUL window, ensure that we have an actor for
     // it, reusing existing actors where possible. We actually iterate
     // over 'browser' XUL elements, and BrowserTabActor uses
-    // browser.contentWindow.wrappedJSObject as the debuggee global.
+    // browser.contentWindow as the debuggee global.
     for (let browser of this._getChildren(win)) {
       // Do we have an existing actor for this browser? If not, create one.
       let actor = this._actorByBrowser.get(browser);
@@ -655,7 +655,7 @@ BrowserTabActor.prototype = {
     this._contextPool = new ActorPool(this.conn);
     this.conn.addActorPool(this._contextPool);
 
-    this.threadActor = new ThreadActor(this, this.window.wrappedJSObject);
+    this.threadActor = new ThreadActor(this, this.window);
     this._contextPool.addActor(this.threadActor);
   },
 
@@ -904,7 +904,7 @@ BrowserTabActor.prototype = {
       this.threadActor.clearDebuggees();
       if (this.threadActor.dbg) {
         this.threadActor.dbg.enabled = true;
-        this.threadActor.global = evt.target.defaultView.wrappedJSObject;
+        this.threadActor.global = evt.target.defaultView;
         this.threadActor.maybePauseOnExceptions();
       }
     }
