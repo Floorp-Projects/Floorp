@@ -47,7 +47,8 @@ public class PromptListItem {
         } else {
             mIntent = null;
             showAsActions = false;
-            isParent = aObject.optBoolean("isParent");
+            // Support both "isParent" (backwards compat for older consumers), and "menu" for the new Tabbed prompt ui.
+            isParent = aObject.optBoolean("isParent") || aObject.optBoolean("menu");
         }
 
         BitmapUtils.getDrawable(GeckoAppShell.getContext(), aObject.optString("icon"), new BitmapUtils.BitmapLoader() {
