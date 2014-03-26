@@ -39,13 +39,6 @@ wrap(JSContext *cx, JS::HandleObject toWrap, JS::HandleObject target)
 }
 
 static JSObject *
-SameCompartmentWrap(JSContext *cx, JS::HandleObject obj)
-{
-    JS_GC(JS_GetRuntime(cx));
-    return obj;
-}
-
-static JSObject *
 PreWrap(JSContext *cx, JS::HandleObject scope, JS::HandleObject obj, unsigned flags)
 {
     JS_GC(JS_GetRuntime(cx));
@@ -61,7 +54,6 @@ Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj,
 
 static const JSWrapObjectCallbacks WrapObjectCallbacks = {
     Wrap,
-    SameCompartmentWrap,
     PreWrap
 };
 
