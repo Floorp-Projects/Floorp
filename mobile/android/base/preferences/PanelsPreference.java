@@ -4,6 +4,9 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.R;
 
 import android.app.AlertDialog;
@@ -40,17 +43,22 @@ public class PanelsPreference extends CustomListPreference {
     private String LABEL_HIDE;
     private String LABEL_SHOW;
 
+    private View preferenceView;
     protected boolean mIsHidden = false;
     private boolean mIsRemovable;
+
+    private boolean mAnimate;
+    private static final int ANIMATION_DURATION_MS = 400;
 
     // State for reordering.
     private int mPositionState = -1;
     private final int mIndex;
 
-    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable, int index) {
+    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable, int index, boolean animate) {
         super(context, parentCategory);
         mIsRemovable = isRemovable;
         mIndex = index;
+        mAnimate = animate;
     }
 
     @Override
@@ -70,6 +78,18 @@ public class PanelsPreference extends CustomListPreference {
             for (int i = 0; i < group.getChildCount(); i++) {
                 group.getChildAt(i).setEnabled(!mIsHidden);
             }
+            preferenceView = group;
+        }
+
+        if (mAnimate) {
+            ViewHelper.setAlpha(preferenceView, 0);
+
+            final PropertyAnimator animator = new PropertyAnimator(ANIMATION_DURATION_MS);
+            animator.attach(preferenceView, Property.ALPHA, 1);
+            animator.start();
+
+            // Clear animate flag.
+            mAnimate = false;
         }
     }
 
