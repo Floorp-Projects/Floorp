@@ -20,7 +20,7 @@ bool BrowserTabsRemote();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(ef6df588-f0bf-4e38-949e-9de838c228ea)]
+[scriptable, uuid(e080b1f6-8452-4bde-9368-c795808b86d1)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -75,6 +75,11 @@ interface nsIXULRuntime : nsISupports
    * The type of the caller's process.  Returns one of the values above.
    */
   readonly attribute unsigned long processType;
+
+  /**
+   * The system process ID of the caller's process.
+   */
+  readonly attribute unsigned long processID;
 
   /**
    * If true, browser tabs may be opened in a different process from the main
