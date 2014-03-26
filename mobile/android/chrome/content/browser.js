@@ -508,7 +508,7 @@ var BrowserApp = {
       NativeWindow.contextmenus.emailLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        let emailAddr = NativeWindow.contextmenus._stripScheme(url);
+        let [,emailAddr] = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(emailAddr);
       });
 
@@ -516,35 +516,59 @@ var BrowserApp = {
       NativeWindow.contextmenus.phoneNumberLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
+        let [,phoneNumber] = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(phoneNumber);
       });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareLink"),
-      NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.linkShareableContext),
-      function(aTarget) {
-        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        let title = aTarget.textContent || aTarget.title;
-        NativeWindow.contextmenus._shareStringWithDefault(url, title);
-      });
+    NativeWindow.contextmenus.add({
+      label: Strings.browser.GetStringFromName("contextmenu.shareLink"),
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER-1, // Show above HTML5 menu items
+      selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.linkShareableContext),
+      showAsActions: function(aElement) {
+        return {
+          title: aElement.textContent.trim() || aElement.title.trim(),
+          uri: NativeWindow.contextmenus._getLinkURL(aElement),
+        }
+      },
+      icon: "drawable://ic_menu_share",
+      callback: function(aTarget) { }
+    });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareEmailAddress"),
-      NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.emailLinkContext),
-      function(aTarget) {
-        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        let emailAddr = NativeWindow.contextmenus._stripScheme(url);
-        let title = aTarget.textContent || aTarget.title;
-        NativeWindow.contextmenus._shareStringWithDefault(emailAddr, title);
-      });
+    NativeWindow.contextmenus.add({
+      label: Strings.browser.GetStringFromName("contextmenu.shareEmailAddress"),
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1,
+      selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.emailLinkContext),
+      showAsActions: function(aElement) {
+        let url = NativeWindow.contextmenus._getLinkURL(aElement);
+        let [, emailAddr] = NativeWindow.contextmenus._stripScheme(url);
+        let title = aElement.textContent || aElement.title;
+        return {
+          title: title,
+          uri: emailAddr,
+          type: "text/mailto",
+        }
+      },
+      icon: "drawable://ic_menu_share",
+      callback: function(aTarget) { }
+    });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.sharePhoneNumber"),
-      NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.phoneNumberLinkContext),
-      function(aTarget) {
-        let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
-        let title = aTarget.textContent || aTarget.title;
-        NativeWindow.contextmenus._shareStringWithDefault(phoneNumber, title);
-      });
+    NativeWindow.contextmenus.add({
+      label: Strings.browser.GetStringFromName("contextmenu.sharePhoneNumber"),
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1,
+      selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.phoneNumberLinkContext),
+      showAsActions: function(aElement) {
+        let url = NativeWindow.contextmenus._getLinkURL(aElement);
+        let [, phoneNumber] = NativeWindow.contextmenus._stripScheme(url);
+        let title = aElement.textContent || aElement.title;
+        return {
+          title: title,
+          uri: phoneNumber,
+          type: "text/tel",
+        }
+      },
+      icon: "drawable://ic_menu_share",
+      callback: function(aTarget) { }
+    });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.addToContacts"),
       NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.emailLinkContext),
@@ -596,13 +620,23 @@ var BrowserApp = {
         aTarget.setAttribute("controls", true);
       });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareMedia"),
-      NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.SelectorContext("video")),
-      function(aTarget) {
-        let url = (aTarget.currentSrc || aTarget.src);
-        let title = aTarget.textContent || aTarget.title;
-        NativeWindow.contextmenus._shareStringWithDefault(url, title);
-      });
+    NativeWindow.contextmenus.add({
+      label: Strings.browser.GetStringFromName("contextmenu.shareMedia"),
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER-1,
+      selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.SelectorContext("video")),
+      showAsActions: function(aElement) {
+        let url = (aElement.currentSrc || aElement.src);
+        let title = aElement.textContent || aElement.title;
+        return {
+          title: title,
+          uri: url,
+          type: "video/*",
+        }
+      },
+      icon: "drawable://ic_menu_share",
+      callback: function(aTarget) {
+      }
+    });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
       NativeWindow.contextmenus.SelectorContext("video:not(:-moz-full-screen)"),
@@ -629,26 +663,26 @@ var BrowserApp = {
         NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
       });
 
-    NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.shareImage"),
-      NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.imageSaveableContext),
-      function(aTarget) {
+    NativeWindow.contextmenus.add({
+      label: Strings.browser.GetStringFromName("contextmenu.shareImage"),
+      selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.imageSaveableContext),
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER-1, // Show above HTML5 menu items
+      showAsActions: function(aTarget) {
         let doc = aTarget.ownerDocument;
         let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                                                          .getImgCacheForDocument(doc);
         let props = imageCache.findEntryProperties(aTarget.currentURI, doc.characterSet);
         let src = aTarget.src;
-        let type = "";
-        try {
-           type = String(props.get("type", Ci.nsISupportsCString));
-        } catch(ex) {
-           type = "";
+        return {
+          title: src,
+          uri: src,
+          type: "image/*",
         }
-        sendMessageToJava({
-          type: "Share:Image",
-          url: src,
-          mime: type,
-        });
-      });
+      },
+      icon: "drawable://ic_menu_share",
+      menu: true,
+      callback: function(aTarget) { }
+    });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
       NativeWindow.contextmenus.imageSaveableContext,
@@ -2205,13 +2239,13 @@ var NativeWindow = {
 
     _getUrl: function(node) {
       if ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
-                 (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {
         return this._getLinkURL(node);
       } else if (node instanceof Ci.nsIImageLoadingContent && node.currentURI) {
         return node.currentURI.spec;
       } else if (node instanceof Ci.nsIDOMHTMLMediaElement) {
         return (node.currentSrc || node.src);
       }
+
       return "";
     },
 
@@ -2283,7 +2317,10 @@ var NativeWindow = {
       let title = this._findTitle(target);
 
       this.menuitems.sort((a,b) => {
-        if (a.order == b.order) return 0;
+        if (a.order == b.order) {
+          return 0;
+        }
+
         return (a.order > b.order) ? 1 : -1;
       });
 
@@ -2393,7 +2430,8 @@ var NativeWindow = {
     },
 
     _stripScheme: function(aString) {
-      return aString.slice(aString.indexOf(":") + 1);
+      let index = aString.indexOf(":");
+      return [aString.slice(0, index), aString.slice(index + 1)];
     }
   }
 };
@@ -8313,7 +8351,7 @@ ContextMenuItem.prototype = {
     return {
       id: this.id,
       label: this.addVal("label", elt),
-      shareData: this.addVal("shareData", elt),
+      showAsActions: this.addVal("showAsActions", elt),
       icon: this.addVal("icon", elt),
       isGroup: this.addVal("isGroup", elt, false),
       inGroup: this.addVal("inGroup", elt, false),
