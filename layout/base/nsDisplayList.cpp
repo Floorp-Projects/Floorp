@@ -637,6 +637,85 @@ static bool GetApzcTreePrintPref() {
   return gPrintApzcTree;
 }
 
+static CSSSize
+CalculateRootCompositionSize(FrameMetrics& aMetrics,
+                             bool aIsRootContentDocRootScrollFrame,
+                             nsPresContext* aPresContext,
+                             nsIFrame* aForFrame, nsIFrame* aScrollFrame)
+{
+
+  if (aIsRootContentDocRootScrollFrame) {
+    // convert from parent layer pixels to layer pixels to css pixels
+    return ParentLayerSize(aMetrics.mCompositionBounds.Size())
+                           * aMetrics.mResolution / aMetrics.LayersPixelsPerCSSPixel();
+  }
+  ParentLayerIntSize rootCompositionSize;
+  nsPresContext* rootPresContext =
+    aPresContext->GetToplevelContentDocumentPresContext();
+  if (!rootPresContext) {
+    rootPresContext = aPresContext->GetRootPresContext();
+  }
+  nsIPresShell* rootPresShell = nullptr;
+  if (rootPresContext) {
+    nsIPresShell* rootPresShell = rootPresContext->PresShell();
+    if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
+      if (nsView* view = rootFrame->GetView()) {
+        nsIWidget* widget = view->GetWidget();
+  #ifdef MOZ_WIDGET_ANDROID
+        // Android hack - temporary workaround for bug 983208 until we figure
+        // out what a proper fix is.
+        if (!widget) {
+          widget = rootFrame->GetNearestWidget();
+        }
+  #endif
+        if (widget) {
+          nsIntRect bounds;
+          widget->GetBounds(bounds);
+          rootCompositionSize = ParentLayerIntSize::FromUnknownSize(mozilla::gfx::IntSize(
+            bounds.width, bounds.height));
+        } else {
+          gfxSize res = rootPresShell->GetCumulativeResolution();
+          LayoutDeviceToParentLayerScale parentResolution(res.width);
+          int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
+          nsRect viewBounds = view->GetBounds();
+          rootCompositionSize =
+            RoundedToInt(LayoutDeviceRect::FromAppUnits(viewBounds, rootAUPerDevPixel)
+            * parentResolution).Size();
+        }
+      }
+    }
+  } else {
+    nsIWidget* widget = (aScrollFrame ? aScrollFrame : aForFrame)->GetNearestWidget();
+    nsIntRect bounds;
+    widget->GetBounds(bounds);
+    rootCompositionSize = ParentLayerIntSize::FromUnknownSize(mozilla::gfx::IntSize(
+      bounds.width, bounds.height));
+  }
+
+  LayoutDeviceToParentLayerScale parentResolution(1.0f);
+  if (rootPresShell) {
+    parentResolution.scale =
+      rootPresShell->GetCumulativeResolution().width / rootPresShell->GetResolution().width;
+  }
+
+  CSSSize size =
+    ParentLayerSize(rootCompositionSize) / (parentResolution * aMetrics.mDevPixelsPerCSSPixel);
+
+  // Adjust composition size for the size of scroll bars.
+  nsIFrame* rootRootScrollFrame = rootPresShell ? rootPresShell->GetRootScrollFrame() : nullptr;
+  nsIScrollableFrame* rootScrollableFrame = nullptr;
+  if (rootRootScrollFrame) {
+    rootScrollableFrame = aScrollFrame->GetScrollTargetFrame();
+  }
+  if (rootScrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+    CSSMargin margins = CSSMargin::FromAppUnits(rootScrollableFrame->GetActualScrollbarSizes());
+    size.width -= margins.LeftRight();
+    size.height -= margins.TopBottom();
+  }
+
+  return size;
+}
+
 static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsIFrame* aScrollFrame,
                                const nsIFrame* aReferenceFrame,
@@ -804,6 +883,10 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
     ParentLayerIntMargin boundMargins = RoundedToInt(CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f));
     metrics.mCompositionBounds.Deflate(boundMargins);
   }
+
+  metrics.SetRootCompositionSize(
+    CalculateRootCompositionSize(metrics, isRootContentDocRootScrollFrame,
+                                 presContext, aForFrame, aScrollFrame));
 
   if (GetApzcTreePrintPref()) {
     if (nsIContent* content = frameForCompositionBoundsCalculation->GetContent()) {

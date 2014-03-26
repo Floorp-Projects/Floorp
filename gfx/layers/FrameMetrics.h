@@ -85,6 +85,7 @@ public:
     , mZoom(1)
     , mUpdateScrollOffset(false)
     , mScrollGeneration(0)
+    , mRootCompositionSize(0, 0)
   {}
 
   // Default copy ctor and operator= are fine
@@ -94,6 +95,7 @@ public:
     // mContentDescription is not compared on purpose as it's only used
     // for debugging.
     return mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
+           mRootCompositionSize == aOther.mRootCompositionSize &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
            mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mViewport.IsEqualEdges(aOther.mViewport) &&
@@ -370,6 +372,16 @@ public:
     mContentDescription = aContentDescription;
   }
 
+  void SetRootCompositionSize(const CSSSize& aRootCompositionSize)
+  {
+    mRootCompositionSize = aRootCompositionSize;
+  }
+
+  const CSSSize& GetRootCompositionSize() const
+  {
+    return mRootCompositionSize;
+  }
+
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
@@ -406,6 +418,9 @@ private:
   // A description of the content element corresponding to this frame.
   // This is empty unless the apz.printtree pref is turned on.
   std::string mContentDescription;
+
+  // The size of the root scrollable's composition bounds, but in local CSS pixels.
+  CSSSize mRootCompositionSize;
 };
 
 /**
