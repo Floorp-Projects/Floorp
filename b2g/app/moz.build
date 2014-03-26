@@ -17,9 +17,6 @@ if not CONFIG['LIBXUL_SDK']:
         # a console application.
         WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
-if CONFIG['ENABLE_MARIONETTE']:
-    DEFINES['ENABLE_MARIONETTE'] = 1
-
 DEFINES['XPCOM_GLUE'] = True
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION', 'MOZ_UPDATER', 'MOZ_SERVICES_FXACCOUNTS'):

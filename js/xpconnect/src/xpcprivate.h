@@ -3436,7 +3436,11 @@ EvalInWindow(JSContext *cx, const nsAString &source, JS::HandleObject scope,
 
 bool
 ExportFunction(JSContext *cx, JS::HandleValue vscope, JS::HandleValue vfunction,
-               JS::HandleValue vname, JS::MutableHandleValue rval);
+               JS::HandleValue voptions, JS::MutableHandleValue rval);
+
+bool
+CloneInto(JSContext *cx, JS::HandleValue vobj, JS::HandleValue vscope,
+          JS::HandleValue voptions, JS::MutableHandleValue rval);
 
 } /* namespace xpc */
 

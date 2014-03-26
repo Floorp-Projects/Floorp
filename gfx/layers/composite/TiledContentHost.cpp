@@ -356,7 +356,7 @@ TiledContentHost::RenderTile(const TileHost& aTile,
     mCompositor->DrawQuad(graphicsRect, aClipRect, aEffectChain, aOpacity, aTransform);
   }
   mCompositor->DrawDiagnostics(DIAGNOSTIC_CONTENT|DIAGNOSTIC_TILE,
-                               aScreenRegion, aClipRect, aTransform);
+                               aScreenRegion, aClipRect, aTransform, mFlashCounter);
 }
 
 void
@@ -436,7 +436,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   gfx::Rect rect(aVisibleRect.x, aVisibleRect.y,
                  aVisibleRect.width, aVisibleRect.height);
   GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTENT,
-                                   rect, aClipRect, aTransform);
+                                   rect, aClipRect, aTransform, mFlashCounter);
 }
 
 void

@@ -323,14 +323,6 @@ APZCCallbackHelper::AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollI
     }
 }
 
-static void
-DestroyCSSPoint(void* aObject, nsIAtom* aPropertyName,
-                void* aPropertyValue, void* aData)
-{
-  CSSPoint* point = static_cast<CSSPoint*>(aPropertyValue);
-  delete point;
-}
-
 void
 APZCCallbackHelper::UpdateCallbackTransform(const FrameMetrics& aApzcMetrics, const FrameMetrics& aActualMetrics)
 {
@@ -339,7 +331,8 @@ APZCCallbackHelper::UpdateCallbackTransform(const FrameMetrics& aApzcMetrics, co
         return;
     }
     CSSPoint scrollDelta = aApzcMetrics.GetScrollOffset() - aActualMetrics.GetScrollOffset();
-    content->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta), DestroyCSSPoint);
+    content->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta),
+                         nsINode::DeleteProperty<CSSPoint>);
 }
 
 CSSPoint

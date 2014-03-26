@@ -4,6 +4,7 @@
 == currency-2.html currency-2-ref.html
 == datetime-1.html datetime-1-ref.html
 == hyphens-1.html hyphens-1-ref.html
+== hyphens-2.html hyphens-2-ref.html
 # The following three tests may fail if rendering with Core Text (see bug 389074)
 # due to subpixel glyph positioning differences between the reference cases with <br>
 # and the automatically-wrapped lines in the test file
