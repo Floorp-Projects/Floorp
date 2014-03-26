@@ -436,3 +436,4 @@ MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_TO_UNSIZED, 381, 0, JSEXN_TYPEERR, "cannot crea
 MSG_DEF(JSMSG_SETPROTOTYPEOF_FAIL,      382, 1, JSEXN_TYPEERR, "[[SetPrototypeOf]] failed on {0}")
 MSG_DEF(JSMSG_INVALID_ARG_TYPE,         383, 3, JSEXN_TYPEERR, "Invalid type: {0} can't be a{1} {2}")
 MSG_DEF(JSMSG_TERMINATED,               384, 1, JSEXN_ERR, "Script terminated by timeout at:\n{0}")
+MSG_DEF(JSMSG_NO_SUCH_SELF_HOSTED_PROP, 385, 1, JSEXN_ERR, "No such property on self-hosted object: {0}")

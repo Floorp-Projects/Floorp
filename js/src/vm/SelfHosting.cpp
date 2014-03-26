@@ -1000,15 +1000,17 @@ GetUnclonedValue(JSContext *cx, JSObject *selfHostedObject, jsid id, Value *vp)
     if (JSID_IS_STRING(id) && !JSID_TO_STRING(id)->isPermanentAtom()) {
         JS_ASSERT(selfHostedObject->is<GlobalObject>());
         gc::AutoSuppressGC suppress(cx);
-        JS_ReportError(cx, "No such property on self hosted object");
-        return false;
+        RootedValue value(cx, IdToValue(id));
+        return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
+                                        JSDVG_IGNORE_STACK, value, NullPtr(), nullptr, nullptr);
     }
 
     Shape *shape = selfHostedObject->nativeLookupPure(id);
     if (!shape) {
         gc::AutoSuppressGC suppress(cx);
-        JS_ReportError(cx, "No such property on self hosted object");
-        return false;
+        RootedValue value(cx, IdToValue(id));
+        return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
+                                        JSDVG_IGNORE_STACK, value, NullPtr(), nullptr, nullptr);
     }
 
     JS_ASSERT(shape->hasSlot() && shape->hasDefaultGetter());
