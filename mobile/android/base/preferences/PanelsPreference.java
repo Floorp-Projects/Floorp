@@ -6,7 +6,12 @@ package org.mozilla.gecko.preferences;
 
 import org.mozilla.gecko.R;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnShowListener;
 import android.content.res.Resources;
 import android.util.Log;
 import android.view.View;
@@ -16,12 +21,21 @@ import android.widget.TextView;
 public class PanelsPreference extends CustomListPreference {
     protected String LOGTAG = "PanelsPreference";
 
+    // Position state of this Preference in enclosing category.
+    private static final int STATE_IS_FIRST = 0;
+    private static final int STATE_IS_LAST = 1;
+
     /**
      * Index of the context menu button for controlling display options.
      * For (removable) Dynamic panels, this button removes the panel.
      * For built-in panels, this button toggles showing or hiding the panel.
      */
     private static final int INDEX_DISPLAY_BUTTON = 1;
+    private static final int INDEX_REORDER_BUTTON = 2;
+
+    // Indices of buttons in context menu for reordering.
+    private static final int INDEX_MOVE_UP_BUTTON = 0;
+    private static final int INDEX_MOVE_DOWN_BUTTON = 1;
 
     private String LABEL_HIDE;
     private String LABEL_SHOW;
@@ -29,9 +43,14 @@ public class PanelsPreference extends CustomListPreference {
     protected boolean mIsHidden = false;
     private boolean mIsRemovable;
 
-    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable) {
+    // State for reordering.
+    private int mPositionState = -1;
+    private final int mIndex;
+
+    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable, int index) {
         super(context, parentCategory);
         mIsRemovable = isRemovable;
+        mIndex = index;
     }
 
     @Override
@@ -56,16 +75,18 @@ public class PanelsPreference extends CustomListPreference {
 
     @Override
     protected String[] createDialogItems() {
+        final Resources res = getContext().getResources();
+        final String labelReorder = res.getString(R.string.pref_panels_reorder);
+
         if (mIsRemovable) {
-            return new String[] { LABEL_SET_AS_DEFAULT, LABEL_REMOVE };
+            return new String[] { LABEL_SET_AS_DEFAULT, LABEL_REMOVE, labelReorder };
         }
 
         // Built-in panels can't be removed, so use show/hide options.
-        Resources res = getContext().getResources();
         LABEL_HIDE = res.getString(R.string.pref_panels_hide);
         LABEL_SHOW = res.getString(R.string.pref_panels_show);
 
-        return new String[] { LABEL_SET_AS_DEFAULT, LABEL_HIDE };
+        return new String[] { LABEL_SET_AS_DEFAULT, LABEL_HIDE, labelReorder };
     }
 
     @Override
@@ -100,6 +121,12 @@ public class PanelsPreference extends CustomListPreference {
                 }
                 break;
 
+            case INDEX_REORDER_BUTTON:
+                // Display dialog for changing preference order.
+                final Dialog orderDialog = makeReorderDialog();
+                orderDialog.show();
+                break;
+
             default:
                 Log.w(LOGTAG, "Selected index out of range: " + index);
         }
@@ -116,6 +143,77 @@ public class PanelsPreference extends CustomListPreference {
         }
     }
 
+
+    private Dialog makeReorderDialog() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+
+        final Resources res = getContext().getResources();
+        final String labelUp = res.getString(R.string.pref_panels_move_up);
+        final String labelDown = res.getString(R.string.pref_panels_move_down);
+
+        builder.setTitle(getTitle());
+        builder.setItems(new String[] { labelUp, labelDown }, new OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int index) {
+                dialog.dismiss();
+                switch (index) {
+                    case INDEX_MOVE_UP_BUTTON:
+                        ((PanelsPreferenceCategory) mParentCategory).moveUp(PanelsPreference.this);
+                        break;
+
+                    case INDEX_MOVE_DOWN_BUTTON:
+                        ((PanelsPreferenceCategory) mParentCategory).moveDown(PanelsPreference.this);
+                        break;
+                }
+            }
+        });
+
+        final Dialog dialog = builder.create();
+        dialog.setOnShowListener(new OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+               setReorderItemsEnabled(dialog);
+            }
+        });
+
+        return dialog;
+    }
+
+    public void setIsFirst() {
+        mPositionState = STATE_IS_FIRST;
+    }
+
+    public void setIsLast() {
+        mPositionState = STATE_IS_LAST;
+    }
+
+    /**
+     * Configure enabled state of the reorder dialog, which must be done after the dialog is shown.
+     * @param dialog Dialog to configure
+     */
+    private void setReorderItemsEnabled(DialogInterface dialog) {
+        // Update button enabled-ness for reordering.
+        switch (mPositionState) {
+            case STATE_IS_FIRST:
+                final TextView itemUp = (TextView) ((AlertDialog) dialog).getListView().getChildAt(INDEX_MOVE_UP_BUTTON);
+                itemUp.setEnabled(false);
+                // Disable clicks to this view.
+                itemUp.setOnClickListener(null);
+                break;
+
+            case STATE_IS_LAST:
+                final TextView itemDown = (TextView) ((AlertDialog) dialog).getListView().getChildAt(INDEX_MOVE_DOWN_BUTTON);
+                itemDown.setEnabled(false);
+                // Disable clicks to this view.
+                itemDown.setOnClickListener(null);
+                break;
+
+            default:
+                // Do nothing.
+                break;
+        }
+    }
+
     public void setHidden(boolean toHide) {
         if (toHide) {
             setIsDefault(false);
@@ -129,5 +227,9 @@ public class PanelsPreference extends CustomListPreference {
 
     public boolean isHidden() {
         return mIsHidden;
+    }
+
+    public int getIndex() {
+        return mIndex;
     }
 }
