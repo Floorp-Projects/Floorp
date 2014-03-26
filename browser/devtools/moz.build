@@ -23,7 +23,6 @@ DIRS += [
     'styleeditor',
     'styleinspector',
     'tilt',
-    'webaudioeditor',
     'webconsole',
 ]
 
