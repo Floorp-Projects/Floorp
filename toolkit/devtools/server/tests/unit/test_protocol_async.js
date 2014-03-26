@@ -9,7 +9,6 @@
 
 let protocol = devtools.require("devtools/server/protocol");
 let {method, Arg, Option, RetVal} = protocol;
-let promise = devtools.require("sdk/core/promise");
 let events = devtools.require("sdk/event/core");
 
 function simpleHello() {
@@ -127,35 +126,45 @@ function run_test()
       do_check_true(false, "simpleThrow shouldn't succeed!");
     }, error => {
       do_check_eq(sequence++, 3); // Check right return order
-      return promise.resolve(null);
     }));
+
+    // While packets are sent in the correct order, rejection handlers
+    // registered in "Promise.jsm" may be invoked later than fulfillment
+    // handlers, meaning that we can't check the actual order with certainty.
+    let deferAfterRejection = promise.defer();
 
     calls.push(rootClient.promiseThrow().then(() => {
       do_check_true(false, "promiseThrow shouldn't succeed!");
     }, error => {
       do_check_eq(sequence++, 4); // Check right return order
       do_check_true(true, "simple throw should throw");
-      return promise.resolve(null);
+      deferAfterRejection.resolve();
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
-      do_check_eq(sequence, 5); // Check right return order
-      do_check_eq(ret, sequence++); // Check request handling order
+      return deferAfterRejection.promise.then(function () {
+        do_check_eq(sequence, 5); // Check right return order
+        do_check_eq(ret, sequence++); // Check request handling order
+      });
     }));
 
     // Break up the backlog with a long request that waits
     // for another simpleReturn before completing
     calls.push(rootClient.promiseReturn(1).then(ret => {
-      do_check_eq(sequence, 6); // Check right return order
-      do_check_eq(ret, sequence++); // Check request handling order
+      return deferAfterRejection.promise.then(function () {
+        do_check_eq(sequence, 6); // Check right return order
+        do_check_eq(ret, sequence++); // Check request handling order
+      });
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
-      do_check_eq(sequence, 7); // Check right return order
-      do_check_eq(ret, sequence++); // Check request handling order
+      return deferAfterRejection.promise.then(function () {
+        do_check_eq(sequence, 7); // Check right return order
+        do_check_eq(ret, sequence++); // Check request handling order
+      });
     }));
 
-    promise.all.apply(null, calls).then(() => {
+    promise.all(calls).then(() => {
       client.close(() => {
         do_test_finished();
       });
