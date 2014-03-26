@@ -445,18 +445,17 @@ add_test(function(test_getAccount_existing_unverified_session_verified_user) {
   FxAccountsManager._activeSession.verified = false;
   FxAccountsManager._fxAccounts._signedInUser.verified = false;
   FakeFxAccountsClient._verified = true;
-  FxAccountsManager.getAccount().then(
-    result => {
-      do_check_true(FakeFxAccountsClient._recoveryEmailStatusCalled);
-      do_check_true(result.verified);
-      do_check_eq(result.accountId, FxAccountsManager._user.accountId);
-      FakeFxAccountsClient._reset();
-      run_next_test();
-    },
-    error => {
-      do_throw("Unexpected error: " + error);
-    }
-  );
+  FxAccountsManager.getAccount();
+  do_execute_soon(function() {
+    do_check_true(FakeFxAccountsClient._recoveryEmailStatusCalled);
+    FxAccountsManager.getAccount().then(
+      result => {
+        do_check_true(result.verified);
+        do_check_eq(result.accountId, FxAccountsManager._user.accountId);
+        FakeFxAccountsClient._reset();
+        run_next_test();
+    });
+  });
 });
 
 add_test(function(test_signOut) {
@@ -471,20 +470,6 @@ add_test(function(test_signOut) {
     },
     error => {
       do_throw("Unexpected error: " + error);
-    }
-  );
-});
-
-add_test(function(test_verificationStatus_no_token_session) {
-  do_print("= verificationStatus, no token session =");
-  do_check_null(FxAccountsManager._activeSession);
-  FxAccountsManager.verificationStatus().then(
-    () => {
-      do_throw("Unexpected success");
-    },
-    error => {
-      do_check_eq(error.error, ERROR_NO_TOKEN_SESSION);
-      run_next_test();
     }
   );
 });
@@ -598,33 +583,27 @@ add_test(function(test_signIn_already_signed_user) {
 add_test(function(test_verificationStatus_unverified_session_unverified_user) {
   do_print("= verificationStatus unverified session and user =");
   FakeFxAccountsClient._verified = false;
-  FxAccountsManager.verificationStatus().then(
-    user => {
-      do_check_false(user.verified);
-      do_check_true(FakeFxAccountsClient._recoveryEmailStatusCalled);
-      do_check_false(FxAccountsManager._fxAccounts._setSignedInUserCalled);
-      run_next_test();
-    },
-    error => {
-      do_throw("Unexpected error: " + error);
-    }
-  );
+  FxAccountsManager.verificationStatus();
+  do_execute_soon(function() {
+    let user = FxAccountsManager._user;
+    do_check_false(user.verified);
+    do_check_true(FakeFxAccountsClient._recoveryEmailStatusCalled);
+    do_check_false(FxAccountsManager._fxAccounts._setSignedInUserCalled);
+    run_next_test();
+  });
 });
 
 add_test(function(test_verificationStatus_unverified_session_verified_user) {
   do_print("= verificationStatus unverified session, verified user =");
   FakeFxAccountsClient._verified = true;
-  FxAccountsManager.verificationStatus().then(
-    user => {
-      do_check_true(user.verified);
-      do_check_true(FakeFxAccountsClient._recoveryEmailStatusCalled);
-      do_check_true(FxAccountsManager._fxAccounts._setSignedInUserCalled);
-      run_next_test();
-    },
-    error => {
-      do_throw("Unexpected error: " + error);
-    }
-  );
+  FxAccountsManager.verificationStatus();
+  do_execute_soon(function() {
+    let user = FxAccountsManager._user;
+    do_check_true(user.verified);
+    do_check_true(FakeFxAccountsClient._recoveryEmailStatusCalled);
+    do_check_true(FxAccountsManager._fxAccounts._setSignedInUserCalled);
+    run_next_test();
+  });
 });
 
 add_test(function(test_queryAccount_no_exists) {
