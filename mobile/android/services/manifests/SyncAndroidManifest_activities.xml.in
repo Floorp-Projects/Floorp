@@ -69,8 +69,6 @@
             android:name="org.mozilla.gecko.sync.receivers.SyncAccountDeletedReceiver"
             android:permission="@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE">
             <intent-filter>
-                <!-- This needs to be kept the same as
-                     GlobalConstants.SYNC_ACCOUNT_DELETED_ACTION. -->
                 <action android:name="@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.accounts.SYNC_ACCOUNT_DELETED_ACTION"/>
             </intent-filter>
         </receiver>
