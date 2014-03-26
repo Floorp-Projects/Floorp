@@ -692,6 +692,15 @@ public:
                                void **aOldValue = nullptr);
 
   /**
+   * A generic destructor for property values allocated with new.
+   */
+  template<class T>
+  static void DeleteProperty(void *, nsIAtom *, void *aPropertyValue, void *)
+  {
+    delete static_cast<T *>(aPropertyValue);
+  }
+
+  /**
    * Destroys a property associated with this node. The value is destroyed
    * using the destruction function given when that value was set.
    *

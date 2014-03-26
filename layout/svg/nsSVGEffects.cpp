@@ -679,13 +679,6 @@ nsSVGRenderingObserverList::RemoveAll()
   }
 }
 
-static void
-DestroyObservers(void *aObject, nsIAtom *aPropertyName,
-                 void *aPropertyValue, void *aData)
-{
-  delete static_cast<nsSVGRenderingObserverList*>(aPropertyValue);
-}
-
 void
 nsSVGEffects::AddRenderingObserver(Element *aElement, nsSVGRenderingObserver *aObserver)
 {
@@ -694,7 +687,8 @@ nsSVGEffects::AddRenderingObserver(Element *aElement, nsSVGRenderingObserver *aO
     observerList = new nsSVGRenderingObserverList();
     if (!observerList)
       return;
-    aElement->SetProperty(nsGkAtoms::renderingobserverlist, observerList, DestroyObservers);
+    aElement->SetProperty(nsGkAtoms::renderingobserverlist, observerList,
+                          nsINode::DeleteProperty<nsSVGRenderingObserverList>);
   }
   aElement->SetHasRenderingObservers(true);
   observerList->Add(aObserver);

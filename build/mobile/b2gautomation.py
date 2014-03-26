@@ -76,7 +76,7 @@ class B2GRemoteAutomation(Automation):
             Automation.installExtension(self, extensionSource, profileDir, extensionID)
 
     # Set up what we need for the remote environment
-    def environment(self, env=None, xrePath=None, crashreporter=True):
+    def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False):
         # Because we are running remote, we don't want to mimic the local env
         # so no copying of os.environ
         if env is None:

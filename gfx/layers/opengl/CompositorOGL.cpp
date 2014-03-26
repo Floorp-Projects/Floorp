@@ -1249,6 +1249,9 @@ CompositorOGL::EndFrameForExternalComposition(const gfx::Matrix& aTransform)
     CopyToTarget(mTarget, aTransform);
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
   }
+  if (mTexturePool) {
+    mTexturePool->EndFrame();
+  }
 }
 
 void

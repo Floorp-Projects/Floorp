@@ -9,7 +9,10 @@
 #include "HttpLog.h"
 
 #include "nsHttp.h"
+#include "mozilla/unused.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/FileDescriptorSetChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 
@@ -1197,7 +1200,29 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   openArgs.loadFlags() = mLoadFlags;
   openArgs.requestHeaders() = mClientSetRequestHeaders;
   openArgs.requestMethod() = mRequestHead.Method();
-  SerializeInputStream(mUploadStream, openArgs.uploadStream());
+
+  nsTArray<mozilla::ipc::FileDescriptor> fds;
+  SerializeInputStream(mUploadStream, openArgs.uploadStream(), fds);
+
+  PFileDescriptorSetChild* fdSet = nullptr;
+  if (!fds.IsEmpty()) {
+    MOZ_ASSERT(gNeckoChild->Manager());
+
+    fdSet = gNeckoChild->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
+    for (uint32_t i = 1; i < fds.Length(); ++i) {
+      unused << fdSet->SendAddFileDescriptor(fds[i]);
+    }
+  }
+
+  OptionalFileDescriptorSet optionalFDs;
+  if (fdSet) {
+    optionalFDs = fdSet;
+  } else {
+    optionalFDs = mozilla::void_t();
+  }
+
+  openArgs.fds() = optionalFDs;
+
   openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;
   openArgs.priority() = mPriority;
   openArgs.redirectionLimit() = mRedirectionLimit;
@@ -1217,6 +1242,13 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   gNeckoChild->SendPHttpChannelConstructor(this, tabChild,
                                            IPC::SerializedLoadContext(this),
                                            openArgs);
+
+  if (fdSet) {
+    FileDescriptorSetChild* fdSetActor =
+      static_cast<FileDescriptorSetChild*>(fdSet);
+
+    fdSetActor->ForgetFileDescriptors(fds);
+  }
 
   return NS_OK;
 }

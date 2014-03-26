@@ -16,10 +16,21 @@ var script = SpecialPowers.loadChromeScript(url);
 
 var MESSAGE = { bar: true };
 script.addMessageListener("bar", function (message) {
-  is(JSON.stringify(message), JSON.stringify(MESSAGE));
+  is(JSON.stringify(message), JSON.stringify(MESSAGE),
+     "received back message from the chrome script");
+
+  checkAssert();
+});
+
+function checkAssert() {
+  script.sendAsyncMessage("valid-assert");
+  script.addMessageListener("valid-assert-done", endOfTest);
+}
+
+function endOfTest() {
   script.destroy();
   SimpleTest.finish();
-});
+}
 
 script.sendAsyncMessage("foo", MESSAGE);
 </script>
