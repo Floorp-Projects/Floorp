@@ -7,7 +7,7 @@
     android:versionName="1.0" >
 
     <uses-sdk android:minSdkVersion="8"
-              android:targetSdkVersion="16" />
+              android:targetSdkVersion="@ANDROID_TARGET_SDK@" />
 
     <uses-permission android:name="@ANDROID_BACKGROUND_TARGET_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
     <uses-permission android:name="@ANDROID_BACKGROUND_TARGET_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"/>
