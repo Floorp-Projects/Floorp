@@ -520,10 +520,6 @@ FragmentOrElement::nsDOMSlots::~nsDOMSlots()
   if (mAttributeMap) {
     mAttributeMap->DropReference();
   }
-
-  if (mClassList) {
-    mClassList->DropReference();
-  }
 }
 
 void
@@ -589,10 +585,7 @@ FragmentOrElement::nsDOMSlots::Unlink(bool aIsXUL)
   mChildrenList = nullptr;
   mUndoManager = nullptr;
   mCustomElementData = nullptr;
-  if (mClassList) {
-    mClassList->DropReference();
-    mClassList = nullptr;
-  }
+  mClassList = nullptr;
 }
 
 size_t
