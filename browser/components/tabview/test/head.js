@@ -400,3 +400,21 @@ function whenAppTabIconAdded(groupItem, callback) {
     executeSoon(callback);
   });
 }
+
+/**
+ * Chrome windows aren't closed synchronously. Provide a helper method to close
+ * a window and wait until we received the "domwindowclosed" notification for it.
+ */
+function promiseWindowClosed(win) {
+  let deferred = Promise.defer();
+
+  Services.obs.addObserver(function obs(subject, topic) {
+    if (subject == win) {
+      Services.obs.removeObserver(obs, topic);
+      deferred.resolve();
+    }
+  }, "domwindowclosed", false);
+
+  win.close();
+  return deferred.promise;
+}
