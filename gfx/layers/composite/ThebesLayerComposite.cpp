@@ -149,7 +149,7 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
                      &visibleRegion,
                      mRequiresTiledProperties ? &tiledLayerProps
                                               : nullptr);
-
+  mBuffer->BumpFlashCounter();
 
   if (mRequiresTiledProperties) {
     mValidRegion = tiledLayerProps.mValidRegion;

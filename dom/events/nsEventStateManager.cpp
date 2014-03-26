@@ -801,13 +801,11 @@ nsScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
     nsIScrollableFrame* target =
       aESM->ComputeScrollTarget(aTargetFrame, dir->deltaX, dir->deltaY, aEvent, 
                                 nsEventStateManager::COMPUTE_DEFAULT_ACTION_TARGET);
-    if (target) {
-      nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(target);
-      if (scrollbarOwner) {
-        nsIFrame* targetFrame = do_QueryFrame(target);
-        *scrollTarget = targetFrame;
-        scrollbarOwner->ScrollbarActivityStarted();
-      }
+    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(target);
+    if (scrollbarOwner) {
+      nsIFrame* targetFrame = do_QueryFrame(target);
+      *scrollTarget = targetFrame;
+      scrollbarOwner->ScrollbarActivityStarted();
     }
   }
 }

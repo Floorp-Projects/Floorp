@@ -518,16 +518,14 @@ public:
   AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
-  TextTrackList* TextTracks() const;
+  TextTrackList* TextTracks();
 
   already_AddRefed<TextTrack> AddTextTrack(TextTrackKind aKind,
                                            const nsAString& aLabel,
                                            const nsAString& aLanguage);
 
   void AddTextTrack(TextTrack* aTextTrack) {
-    if (mTextTrackManager) {
-      mTextTrackManager->AddTextTrack(aTextTrack);
-    }
+    GetOrCreateTextTrackManager()->AddTextTrack(aTextTrack);
   }
 
   void RemoveTextTrack(TextTrack* aTextTrack, bool aPendingListOnly = false) {
@@ -870,6 +868,10 @@ protected:
   // in the element's list of text tracks whose text track mode is not disabled
   // and whose text track readiness state is loading.
   void PopulatePendingTextTrackList();
+
+  // Gets a reference to the MediaElement's TextTrackManager. If the
+  // MediaElement doesn't yet have one then it will create it.
+  TextTrackManager* GetOrCreateTextTrackManager();
 
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
