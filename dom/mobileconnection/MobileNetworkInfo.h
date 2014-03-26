@@ -40,12 +40,6 @@ public:
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // WebIDL interface
-  static already_AddRefed<MobileNetworkInfo>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aShortName,
-              const nsAString& aLongName, const nsAString& aMcc,
-              const nsAString& aMnc, const nsAString& aState,
-              ErrorResult& aRv);
-
   Nullable<MobileNetworkState>
   GetState() const
   {
