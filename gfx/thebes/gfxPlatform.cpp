@@ -474,8 +474,6 @@ gfxPlatform::Shutdown()
         gPlatform->mMemoryPressureObserver = nullptr;
     }
 
-    gPlatform->DestroySkiaGLGlue();
-
 #ifdef MOZ_WIDGET_ANDROID
     // Shut down the texture pool
     mozilla::gl::TexturePoolOGL::Shutdown();
@@ -881,12 +879,6 @@ gfxPlatform::GetSkiaGLGlue()
 #endif
 
   return mSkiaGlue;
-}
-
-void
-gfxPlatform::DestroySkiaGLGlue()
-{
-  mSkiaGlue = nullptr;
 }
 
 void
