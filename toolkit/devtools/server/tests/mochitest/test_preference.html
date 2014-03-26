@@ -38,7 +38,6 @@ function runTests() {
       var prefs = {};
 
       var localPref = {
-        accessible: true,
         boolPref: true,
         intPref: 0x1234,
         charPref: "Hello World",
@@ -46,7 +45,6 @@ function runTests() {
 
 
       function checkValues() {
-        is(prefs.accessible, localPref.accessible, "preference is accessible");
         is(prefs.boolPref, localPref.boolPref, "read/write bool pref");
         is(prefs.intPref, localPref.intPref, "read/write int pref");
         is(prefs.charPref, localPref.charPref, "read/write string pref");
@@ -83,8 +81,7 @@ function runTests() {
       }
 
 
-      p.arePrefsAccessible().then((value) => prefs["accessible"] = value)
-      .then(() => p.getAllPrefs()).then((json) => prefs["allPrefs"]  = json)
+      p.getAllPrefs().then((json) => prefs["allPrefs"]  = json)
       .then(() => p.setBoolPref("test.bool", localPref.boolPref))
       .then(() => p.setIntPref("test.int", localPref.intPref))
       .then(() => p.setCharPref("test.string", localPref.charPref))
