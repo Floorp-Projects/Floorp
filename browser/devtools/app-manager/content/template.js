@@ -57,6 +57,7 @@ const NOT_FOUND_STRING = "n/a";
  */
 function Template(root, store, l10nResolver) {
   this._store = store;
+  this._rootResolver = new Resolver(this._store.object);
   this._l10n = l10nResolver;
 
   // Listeners are stored in Maps.
@@ -69,6 +70,8 @@ function Template(root, store, l10nResolver) {
   this._root = root;
   this._doc = this._root.ownerDocument;
 
+  this._queuedNodeRegistrations = [];
+
   this._storeChanged = this._storeChanged.bind(this);
   this._store.on("set", this._storeChanged);
 }
@@ -76,45 +79,13 @@ function Template(root, store, l10nResolver) {
 Template.prototype = {
   start: function() {
     this._processTree(this._root);
+    this._registerQueuedNodes();
   },
 
   destroy: function() {
     this._store.off("set", this._storeChanged);
     this._root = null;
     this._doc = null;
-  },
-
-  _resolvePath: function(path, defaultValue=null) {
-
-    // From the store, get the value of an object located
-    // at @path.
-    //
-    // For example, if the store is designed as:
-    //
-    // {
-    //   foo: {
-    //     bar: [
-    //       {},
-    //       {},
-    //       {a: 2}
-    //   }
-    // }
-    //
-    // _resolvePath("foo.bar.2.a") will return "2".
-    //
-    // Array indexes are not surrounded by brackets.
-
-    let chunks = path.split(".");
-    let obj = this._store.object;
-    for (let word of chunks) {
-      if ((typeof obj) == "object" &&
-          (word in obj)) {
-        obj = obj[word];
-      } else {
-        return defaultValue;
-      }
-    }
-    return obj;
   },
 
   _storeChanged: function(event, path, value) {
@@ -131,6 +102,8 @@ Template.prototype = {
         this._invalidate(registeredPath);
       }
     }
+
+    this._registerQueuedNodes();
   },
 
   _invalidate: function(path) {
@@ -159,28 +132,42 @@ Template.prototype = {
     }
   },
 
-  _registerNode: function(path, element) {
+  // Delay node registration until the last step of starting / updating the UI.
+  // This allows us to avoid doing double work in _storeChanged where the first
+  // call to |_invalidate| registers new nodes, which would then be visited a
+  // second time when it iterates over node listeners.
+  _queueNodeRegistration: function(path, element) {
+    this._queuedNodeRegistrations.push([path, element]);
+  },
 
-    // We map a node to a path.
-    // If the value behind this path is updated,
-    // we get notified from the ObjectEmitter,
-    // and then we know which objects to update.
-
-    if (!this._nodeListeners.has(path)) {
-      this._nodeListeners.set(path, new Set());
+  _registerQueuedNodes: function() {
+    for (let [path, element] of this._queuedNodeRegistrations) {
+      // We map a node to a path.
+      // If the value behind this path is updated,
+      // we get notified from the ObjectEmitter,
+      // and then we know which objects to update.
+      if (!this._nodeListeners.has(path)) {
+        this._nodeListeners.set(path, new Set());
+      }
+      let set = this._nodeListeners.get(path);
+      set.add(element);
     }
-    let set = this._nodeListeners.get(path);
-    set.add(element);
+    this._queuedNodeRegistrations.length = 0;
   },
 
   _unregisterNodes: function(nodes) {
-    for (let [registeredPath, set] of this._nodeListeners) {
-      for (let e of nodes) {
+    for (let e of nodes) {
+      for (let registeredPath of e.registeredPaths) {
+        let set = this._nodeListeners.get(registeredPath);
+        if (!set) {
+          continue;
+        }
         set.delete(e);
+        if (set.size === 0) {
+          this._nodeListeners.delete(registeredPath);
+        }
       }
-      if (set.size == 0) {
-        this._nodeListeners.delete(registeredPath);
-      }
+      e.registeredPaths = null;
     }
   },
 
@@ -200,21 +187,17 @@ Template.prototype = {
     set.add(element);
   },
 
-  _processNode: function(element, rootPath="") {
+  _processNode: function(element, resolver=this._rootResolver) {
     // The actual magic.
     // The element has a template attribute.
     // The value is supposed to be a JSON string.
-    // rootPath is the prefex to the path used by
-    // these elements (if children of template-loop);
+    // resolver is a helper object that is used to retrieve data
+    // from the template's data store, give the current path into
+    // the data store, or descend down another level of the store.
+    // See the Resolver object below.
 
     let e = element;
     let str = e.getAttribute("template");
-
-    if (rootPath) {
-      // We will prefix paths with this rootPath.
-      // It needs to end with a dot.
-      rootPath = rootPath + ".";
-    }
 
     try {
       let json = JSON.parse(str);
@@ -225,12 +208,12 @@ Template.prototype = {
       if (json.rootPath) {
         // If node has been generated through a loop, we stored
         // previously its rootPath.
-        rootPath = json.rootPath;
+        resolver = this._rootResolver.descend(json.rootPath);
       }
 
       // paths is an array that will store all the paths we needed
-      // to expand the node. We will then, via _registerNode, link
-      // this element to these paths.
+      // to expand the node. We will then, via
+      // _registerQueuedNodes, link this element to these paths.
 
       let paths = [];
 
@@ -240,16 +223,16 @@ Template.prototype = {
               !("path" in json)) {
             throw new Error("missing property");
           }
-          e.setAttribute(json.name, this._resolvePath(rootPath + json.path, NOT_FOUND_STRING));
-          paths.push(rootPath + json.path);
+          e.setAttribute(json.name, resolver.get(json.path, NOT_FOUND_STRING));
+          paths.push(resolver.rootPathTo(json.path));
           break;
         }
         case "textContent": {
           if (!("path" in json)) {
             throw new Error("missing property");
           }
-          e.textContent = this._resolvePath(rootPath + json.path, NOT_FOUND_STRING);
-          paths.push(rootPath + json.path);
+          e.textContent = resolver.get(json.path, NOT_FOUND_STRING);
+          paths.push(resolver.rootPathTo(json.path));
           break;
         }
         case "localizedContent": {
@@ -258,30 +241,32 @@ Template.prototype = {
             throw new Error("missing property");
           }
           let params = json.paths.map((p) => {
-            paths.push(rootPath + p);
-            let str = this._resolvePath(rootPath + p, NOT_FOUND_STRING);
+            paths.push(resolver.rootPathTo(p));
+            let str = resolver.get(p, NOT_FOUND_STRING);
             return str;
           });
           e.textContent = this._l10n(json.property, params);
           break;
         }
       }
-      if (rootPath) {
+      if (resolver !== this._rootResolver) {
         // We save the rootPath if any.
-        json.rootPath = rootPath;
+        json.rootPath = resolver.path;
         e.setAttribute("template", JSON.stringify(json));
       }
       if (paths.length > 0) {
         for (let path of paths) {
-          this._registerNode(path, e);
+          this._queueNodeRegistration(path, e);
         }
       }
+      // Store all the paths on the node, to speed up unregistering later
+      e.registeredPaths = paths;
     } catch(exception) {
       console.error("Invalid template: " + e.outerHTML + " (" + exception + ")");
     }
   },
 
-  _processLoop: function(element, rootPath="") {
+  _processLoop: function(element, resolver=this._rootResolver) {
     // The element has a template-loop attribute.
     // The related path must be an array. We go
     // through the array, and build one child per
@@ -296,9 +281,7 @@ Template.prototype = {
           !("childSelector" in json)) {
         throw new Error("missing property");
       }
-      if (rootPath) {
-        json.arrayPath = rootPath + "." + json.arrayPath;
-      }
+      let descendedResolver = resolver.descend(json.arrayPath);
       let templateParent = this._doc.querySelector(json.childSelector);
       if (!templateParent) {
         throw new Error("can't find child");
@@ -306,7 +289,7 @@ Template.prototype = {
       template = this._doc.createElement("div");
       template.innerHTML = templateParent.innerHTML;
       template = template.firstElementChild;
-      let array = this._resolvePath(json.arrayPath, []);
+      let array = descendedResolver.get("", []);
       if (!Array.isArray(array)) {
         console.error("referenced array is not an array");
       }
@@ -315,11 +298,11 @@ Template.prototype = {
       let fragment = this._doc.createDocumentFragment();
       for (let i = 0; i < count; i++) {
         let node = template.cloneNode(true);
-        this._processTree(node, json.arrayPath + "." + i);
+        this._processTree(node, descendedResolver.descend(i));
         fragment.appendChild(node);
       }
-      this._registerLoop(json.arrayPath, e);
-      this._registerLoop(json.arrayPath + ".length", e);
+      this._registerLoop(descendedResolver.path, e);
+      this._registerLoop(descendedResolver.rootPathTo("length"), e);
       this._unregisterNodes(e.querySelectorAll("[template]"));
       e.innerHTML = "";
       e.appendChild(fragment);
@@ -328,7 +311,7 @@ Template.prototype = {
     }
   },
 
-  _processFor: function(element, rootPath="") {
+  _processFor: function(element, resolver=this._rootResolver) {
     let e = element;
     try {
       let template;
@@ -339,10 +322,6 @@ Template.prototype = {
         throw new Error("missing property");
       }
 
-      if (rootPath) {
-        json.path = rootPath + "." + json.path;
-      }
-
       if (!json.path) {
         // Nothing to show.
         this._unregisterNodes(e.querySelectorAll("[template]"));
@@ -350,6 +329,7 @@ Template.prototype = {
         return;
       }
 
+      let descendedResolver = resolver.descend(json.path);
       let templateParent = this._doc.querySelector(json.childSelector);
       if (!templateParent) {
         throw new Error("can't find child");
@@ -358,10 +338,10 @@ Template.prototype = {
       content.innerHTML = templateParent.innerHTML;
       content = content.firstElementChild;
 
-      this._processTree(content, json.path);
+      this._processTree(content, descendedResolver);
 
       this._unregisterNodes(e.querySelectorAll("[template]"));
-      this._registerFor(json.path, e);
+      this._registerFor(descendedResolver.path, e);
 
       e.innerHTML = "";
       e.appendChild(content);
@@ -371,21 +351,56 @@ Template.prototype = {
     }
   },
 
-  _processTree: function(parent, rootPath="") {
+  _processTree: function(parent, resolver=this._rootResolver) {
     let loops = parent.querySelectorAll(":not(template) [template-loop]");
     let fors = parent.querySelectorAll(":not(template) [template-for]");
     let nodes = parent.querySelectorAll(":not(template) [template]");
-    for (let e of loops) {
-      this._processLoop(e, rootPath);
+    for (let i = 0; i < loops.length; i++) {
+      this._processLoop(loops[i], resolver);
     }
-    for (let e of fors) {
-      this._processFor(e, rootPath);
+    for (let i = 0; i < fors.length; i++) {
+      this._processFor(fors[i], resolver);
     }
-    for (let e of nodes) {
-      this._processNode(e, rootPath);
+    for (let i = 0; i < nodes.length; i++) {
+      this._processNode(nodes[i], resolver);
     }
     if (parent.hasAttribute("template")) {
-      this._processNode(parent, rootPath);
+      this._processNode(parent, resolver);
     }
   },
+};
+
+function Resolver(object, path = "") {
+  this._object = object;
+  this.path = path;
 }
+
+Resolver.prototype = {
+
+  get: function(path, defaultValue = null) {
+    let obj = this._object;
+    if (path === "") {
+      return obj;
+    }
+    let chunks = path.toString().split(".");
+    for (let i = 0; i < chunks.length; i++) {
+      let word = chunks[i];
+      if ((typeof obj) == "object" &&
+          (word in obj)) {
+        obj = obj[word];
+      } else {
+        return defaultValue;
+      }
+    }
+    return obj;
+  },
+
+  rootPathTo: function(path) {
+    return this.path ? this.path + "." + path : path;
+  },
+
+  descend: function(path) {
+    return new Resolver(this.get(path), this.rootPathTo(path));
+  }
+
+};

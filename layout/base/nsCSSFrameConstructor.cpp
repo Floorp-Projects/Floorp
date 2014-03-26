@@ -1510,15 +1510,6 @@ struct nsGenConInitializer {
     : mNode(aNode), mList(aList), mDirtyAll(aDirtyAll) {}
 };
 
-static void
-DestroyGenConInitializer(void*    aFrame,
-                         nsIAtom* aPropertyName,
-                         void*    aPropertyValue,
-                         void*    aDtorData)
-{
-  delete static_cast<nsGenConInitializer*>(aPropertyValue);
-}
-
 already_AddRefed<nsIContent>
 nsCSSFrameConstructor::CreateGenConTextNode(nsFrameConstructorState& aState,
                                             const nsString& aString,
@@ -1532,7 +1523,7 @@ nsCSSFrameConstructor::CreateGenConTextNode(nsFrameConstructorState& aState,
   }
   if (aInitializer) {
     content->SetProperty(nsGkAtoms::genConInitializerProperty, aInitializer,
-                         DestroyGenConInitializer);
+                         nsINode::DeleteProperty<nsGenConInitializer>);
     aState.mGeneratedTextNodesWithInitializer.AppendObject(content);
   }
   return content.forget();

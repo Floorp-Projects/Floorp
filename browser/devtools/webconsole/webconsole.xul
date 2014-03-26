@@ -112,7 +112,7 @@ function goUpdateConsoleCommands() {
                       prefKey="csserror"/>
             <menuitem label="&btnConsoleWarnings;" type="checkbox"
                       autocheck="false" prefKey="cssparser"/>
-            <menuitem label="&btnConsoleLog;" type="checkbox"
+            <menuitem label="&btnConsoleReflows;" type="checkbox"
                       autocheck="false" prefKey="csslog"/>
           </menupopup>
         </toolbarbutton>

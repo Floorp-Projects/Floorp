@@ -295,7 +295,7 @@ opensl_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
   int rv;
   void * libmedia;
   size_t (*get_primary_output_frame_count)(void);
-  int (*get_output_frame_count)(int * frameCount, int streamType);
+  int (*get_output_frame_count)(size_t * frameCount, int streamType);
   uint32_t primary_sampling_rate;
   size_t primary_buffer_size;
 

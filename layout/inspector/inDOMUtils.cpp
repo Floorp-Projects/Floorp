@@ -557,6 +557,16 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
   if (aParserVariant & VARIANT_URL) {
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("url"));
   }
+  if (aParserVariant & VARIANT_GRADIENT) {
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("linear-gradient"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("radial-gradient"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("repeating-linear-gradient"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("repeating-radial-gradient"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-linear-gradient"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-radial-gradient"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-repeating-linear-gradient"));
+    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-repeating-radial-gradient"));
+  }
 }
 
 NS_IMETHODIMP

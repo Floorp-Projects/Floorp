@@ -259,13 +259,18 @@
             case "string":
               if (!aIgnoreNextCall) {
                 try {
-                  // Work around bug 872772 by wrapping the cross-compartment-
-                  // wrapped function in a function from this scope.
-                  //
-                  // NB: Make sure to wrap the constructor in parentheses to
-                  // deal with the weird precedence of |new| in JS.
-                  var contentFn = new (XPCNativeWrapper.unwrap(window).Function)("event", aValue);
-                  this["_on" + aName] = function(e) { return contentFn.call(this, e); };
+                  // Things to watch out for here:
+                  // * Weird |new| precedence.
+                  // * Getting the correct constructor (via Xrays).
+                  // * Waiving the constructor before invoking it, so that we can
+                  //   call it (since XBL gets opaque non-callable wrappers to content).
+                  // * The fact that contentFn is transitively waived, which we need
+                  //   in order to be able to invoke it.
+                  // * Using the local |bind| to be sure that it does the right thing.
+                  //   Note that the underlying function still executes in the content
+                  //   scope.
+                  var contentFn = new (XPCNativeWrapper.unwrap(window.Function))("event", aValue);
+                  this["_on" + aName] = Function.prototype.bind.call(contentFn, this);
                 }
                 catch(e) {
                   return false;

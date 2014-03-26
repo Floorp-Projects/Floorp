@@ -376,8 +376,11 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
         }
 
         if (aPostData) {
-            nsCOMPtr<nsIInputStream> temp = DeserializeInputStream(postData);
+            nsTArray<ipc::FileDescriptor> fds;
+            nsCOMPtr<nsIInputStream> temp = DeserializeInputStream(postData, fds);
             temp.forget(aPostData);
+
+            MOZ_ASSERT(fds.IsEmpty());
         }
 
         nsCOMPtr<nsIURI> temp = DeserializeURI(uri);

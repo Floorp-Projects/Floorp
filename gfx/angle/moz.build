@@ -135,6 +135,7 @@ DEFINES['COMPILER_IMPLEMENTATION'] = True
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [
+        '-Wno-attributes',
         '-Wno-sign-compare',
         '-Wno-unknown-pragmas',
     ]
