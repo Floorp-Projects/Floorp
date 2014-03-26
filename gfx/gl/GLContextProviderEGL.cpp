@@ -374,8 +374,8 @@ GLContextEGL::MakeCurrentImpl(bool aForce) {
         succeeded = sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                               surface, surface,
                                               mContext);
-        int eglError = sEGLLibrary.fGetError();
         if (!succeeded) {
+            int eglError = sEGLLibrary.fGetError();
             if (eglError == LOCAL_EGL_CONTEXT_LOST) {
                 mContextLost = true;
                 NS_WARNING("EGL context has been lost.");
