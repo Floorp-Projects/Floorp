@@ -53,13 +53,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private PromptListAdapter mAdapter;
 
     private static boolean mInitialized = false;
-    private static int mGroupPaddingSize;
-    private static int mLeftRightTextWithIconPadding;
-    private static int mTopBottomTextWithIconPadding;
-    private static int mIconTextPadding;
-    private static int mIconSize;
     private static int mInputPaddingSize;
-    private static int mMinRowSize;
 
     public Prompt(Context context, PromptCallback callback) {
         this(context);
@@ -72,13 +66,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
         if (!mInitialized) {
             Resources res = mContext.getResources();
-            mGroupPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_group_padding_size));
-            mLeftRightTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_left_right_text_with_icon_padding));
-            mTopBottomTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_top_bottom_text_with_icon_padding));
-            mIconTextPadding = (int) (res.getDimension(R.dimen.prompt_service_icon_text_padding));
-            mIconSize = (int) (res.getDimension(R.dimen.prompt_service_icon_size));
             mInputPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_inputs_padding));
-            mMinRowSize = (int) (res.getDimension(R.dimen.prompt_service_min_list_item_height));
             mInitialized = true;
         }
     }
@@ -340,6 +328,8 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             }
 
             if (scrollable) {
+                // If we're showing some sort of scrollable list, force an inverse background.
+                builder.setInverseBackgroundForced(true);
                 builder.setView(root);
             } else {
                 ScrollView view = new ScrollView(mContext);
