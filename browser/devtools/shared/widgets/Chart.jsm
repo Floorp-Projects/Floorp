@@ -273,7 +273,7 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
     let hoverX = translateDistance * Math.sin(midAngle);
     let hoverY = -translateDistance * Math.cos(midAngle);
     let hoverTransform = "transform: translate(" + hoverX + "px, " + hoverY + "px)";
-    pathNode.setAttribute("style", hoverTransform);
+    pathNode.setAttribute("style", data.length > 1 ? hoverTransform : "");
 
     proxy.slices.set(sliceInfo, pathNode);
     delegate(proxy, ["click", "mouseenter", "mouseleave"], pathNode, sliceInfo);
