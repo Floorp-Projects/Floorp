@@ -98,4 +98,47 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
 
     return null;
   }
+
+  /**
+   * If the account is going to be removed, broadcast an "account deleted"
+   * intent. This allows us to clean up the account.
+   * <p>
+   * It is preferable to receive Android's LOGIN_ACCOUNTS_CHANGED_ACTION broadcast
+   * than to create our own hacky broadcast here, but that doesn't include enough
+   * information about which Accounts changed to correctly identify whether a Sync
+   * account has been removed (when some Firefox channels are installed on the SD
+   * card). We can work around this by storing additional state but it's both messy
+   * and expensive because the broadcast is noisy.
+   * <p>
+   * Note that this is <b>not</b> called when an Android Account is blown away
+   * due to the SD card being unmounted.
+   */
+  @Override
+  public Bundle getAccountRemovalAllowed(final AccountAuthenticatorResponse response, Account account)
+      throws NetworkErrorException {
+    Bundle result = super.getAccountRemovalAllowed(response, account);
+
+    if (result == null ||
+        !result.containsKey(AccountManager.KEY_BOOLEAN_RESULT) ||
+        result.containsKey(AccountManager.KEY_INTENT)) {
+      return result;
+    }
+
+    final boolean removalAllowed = result.getBoolean(AccountManager.KEY_BOOLEAN_RESULT);
+    if (!removalAllowed) {
+      return result;
+    }
+
+    // Broadcast a message to all Firefox channels sharing this Android
+    // Account type telling that this Firefox account has been deleted.
+    //
+    // Broadcast intents protected with permissions are secure, so it's okay
+    // to include private information such as a password.
+    final Intent intent = AndroidFxAccount.makeDeletedAccountIntent(context, account);
+    Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
+        "broadcasting secure intent " + intent.getAction() + ".");
+    context.sendBroadcast(intent, FxAccountConstants.PER_ACCOUNT_TYPE_PERMISSION);
+
+    return result;
+  }
 }
