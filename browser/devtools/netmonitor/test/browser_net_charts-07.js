@@ -2,8 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Makes sure Pie Charts have the right internal structure when
- * initialized with empty data.
+ * Makes sure Table Charts correctly handle empty source data.
  */
 
 function test() {
@@ -14,8 +13,7 @@ function test() {
     let container = document.createElement("box");
 
     let table = Chart.Table(document, {
-      title: "Table title",
-      data: null,
+      data: [],
       totals: {
         label1: value => "Hello " + L10N.numberWithDecimals(value, 2),
         label2: value => "World " + L10N.numberWithDecimals(value, 2)
@@ -23,20 +21,10 @@ function test() {
     });
 
     let node = table.node;
-    let title = node.querySelector(".table-chart-title");
     let grid = node.querySelector(".table-chart-grid");
     let totals = node.querySelector(".table-chart-totals");
     let rows = grid.querySelectorAll(".table-chart-row");
     let sums = node.querySelectorAll(".table-chart-summary-label");
-
-    ok(node.classList.contains("table-chart-container") &&
-       node.classList.contains("generic-chart-container"),
-      "A table chart container was created successfully.");
-
-    ok(title,
-      "A title node was created successfully.");
-    is(title.getAttribute("value"), "Table title",
-      "The title node displays the correct text.");
 
     is(rows.length, 1,
       "There should be 1 table chart row created.");
@@ -49,7 +37,7 @@ function test() {
       "The second column of the first row exists.");
     is(rows[0].querySelectorAll("label")[0].getAttribute("value"), "",
       "The first column of the first row displays the correct text.");
-    is(rows[0].querySelectorAll("label")[1].getAttribute("value"), L10N.getStr("tableChart.loading"),
+    is(rows[0].querySelectorAll("label")[1].getAttribute("value"), L10N.getStr("tableChart.unavailable"),
       "The second column of the first row displays the correct text.");
 
     is(sums.length, 2,

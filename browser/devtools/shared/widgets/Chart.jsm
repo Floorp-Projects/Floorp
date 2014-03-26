@@ -107,7 +107,7 @@ function PieTableChart(node, pie, table) {
  *           - "click", when the mouse enters a slice or a row
  */
 function createPieTableChart(document, { title, diameter, data, strings, totals, sorted }) {
-  if (sorted) {
+  if (data && sorted) {
     data = data.slice().sort((a, b) => +(a.size < b.size));
   }
 
@@ -207,7 +207,11 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
   data = data ? data.filter(e => e.size > EPSILON) : null;
 
   // If there's no data available, display an empty placeholder.
-  if (!data || !data.length) {
+  if (!data) {
+    data = loadingPieChartData;
+    isPlaceholder = true;
+  }
+  if (!data.length) {
     data = emptyPieChartData;
     isPlaceholder = true;
   }
@@ -341,7 +345,11 @@ function createTableChart(document, { title, data, strings, totals }) {
   let isPlaceholder = false;
 
   // If there's no data available, display an empty placeholder.
-  if (!data || !data.length) {
+  if (!data) {
+    data = loadingTableChartData;
+    isPlaceholder = true;
+  }
+  if (!data.length) {
     data = emptyTableChartData;
     isPlaceholder = true;
   }
@@ -407,12 +415,20 @@ function createTableChart(document, { title, data, strings, totals }) {
   return proxy;
 }
 
+XPCOMUtils.defineLazyGetter(this, "loadingPieChartData", () => {
+  return [{ size: 1, label: L10N.getStr("pieChart.loading") }];
+});
+
 XPCOMUtils.defineLazyGetter(this, "emptyPieChartData", () => {
-  return [{ size: 1, label: L10N.getStr("pieChart.empty") }];
+  return [{ size: 1, label: L10N.getStr("pieChart.unavailable") }];
+});
+
+XPCOMUtils.defineLazyGetter(this, "loadingTableChartData", () => {
+  return [{ size: "", label: L10N.getStr("tableChart.loading") }];
 });
 
 XPCOMUtils.defineLazyGetter(this, "emptyTableChartData", () => {
-  return [{ size: "", label: L10N.getStr("tableChart.empty") }];
+  return [{ size: "", label: L10N.getStr("tableChart.unavailable") }];
 });
 
 /**
