@@ -81,7 +81,7 @@ class ThreadPoolWorker
     bool isMainThread() const { return id() == 0; }
 
     // Submits a new set of slices. Assumes !hasWork().
-    void submitSlices(uint16_t sliceStart, uint16_t sliceEnd);
+    void submitSlices(uint16_t sliceFrom, uint16_t sliceTo);
 
     // Get the next slice; work stealing happens here if work stealing is
     // on. Returns false if there are no more slices to hand out.
@@ -207,8 +207,6 @@ class ThreadPool : public Monitor
     static size_t offsetOfWorkers() {
         return offsetof(ThreadPool, workers_);
     }
-
-    static const uint16_t MAX_SLICE_ID = std::numeric_limits<uint16_t>::max();
 
     ThreadPool(JSRuntime *rt);
     ~ThreadPool();
