@@ -4654,7 +4654,17 @@ update(AddonThreadActor.prototype, {
    * sure every script and source with a URL is stored when debugging
    * add-ons.
    */
-  _allowSource: (aSourceURL) => !!aSourceURL,
+  _allowSource: function(aSourceURL) {
+    // Hide eval scripts
+    if (!aSourceURL)
+      return false;
+
+    // XPIProvider.jsm evals some code in every add-on's bootstrap.js. Hide it
+    if (aSourceURL == "resource://gre/modules/addons/XPIProvider.jsm")
+      return false;
+
+    return true;
+  },
 
   /**
    * An object that will be used by ThreadActors to tailor their
