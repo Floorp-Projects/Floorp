@@ -43,18 +43,10 @@ SafepointWriter::writeOsiCallPointOffset(uint32_t osiCallPointOffset)
 static void
 WriteRegisterMask(CompactBufferWriter &stream, uint32_t bits)
 {
-    if (sizeof(PackedRegisterMask) == 1)
+    if (sizeof(PackedRegisterMask) == 8)
         stream.writeByte(bits);
     else
         stream.writeUnsigned(bits);
-}
-
-static int32_t
-ReadRegisterMask(CompactBufferReader &stream)
-{
-    if (sizeof(PackedRegisterMask) == 1)
-        return stream.readByte();
-    return stream.readUnsigned();
 }
 
 void
@@ -350,20 +342,20 @@ SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
     osiCallPointOffset_ = stream_.readUnsigned();
 
     // gcSpills is a subset of allGprSpills.
-    allGprSpills_ = GeneralRegisterSet(ReadRegisterMask(stream_));
+    allGprSpills_ = GeneralRegisterSet(stream_.readUnsigned());
     if (allGprSpills_.empty()) {
         gcSpills_ = allGprSpills_;
         valueSpills_ = allGprSpills_;
         slotsOrElementsSpills_ = allGprSpills_;
     } else {
-        gcSpills_ = GeneralRegisterSet(ReadRegisterMask(stream_));
-        slotsOrElementsSpills_ = GeneralRegisterSet(ReadRegisterMask(stream_));
+        gcSpills_ = GeneralRegisterSet(stream_.readUnsigned());
+        slotsOrElementsSpills_ = GeneralRegisterSet(stream_.readUnsigned());
 #ifdef JS_PUNBOX64
-        valueSpills_ = GeneralRegisterSet(stream_.ReadRegisterMask(stream_));
+        valueSpills_ = GeneralRegisterSet(stream_.readUnsigned());
 #endif
     }
 
-    allFloatSpills_ = FloatRegisterSet(ReadRegisterMask(stream_));
+    allFloatSpills_ = FloatRegisterSet(stream_.readUnsigned());
 
     advanceFromGcRegs();
 }
