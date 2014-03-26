@@ -17,7 +17,6 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     NS_DECL_NSIDOMEVENTLISTENER
     NS_DECL_NSITIMERCALLBACK
     MediaEngineTabVideoSource();
-    ~MediaEngineTabVideoSource();
 
     virtual void GetName(nsAString_internal&);
     virtual void GetUUID(nsAString_internal&);
@@ -56,11 +55,10 @@ private:
     int mBufW;
     int mBufH;
     int mTimePerFrame;
-    unsigned char *mData;
+    ScopedFreePtr<unsigned char> mData;
     nsCOMPtr<nsIDOMWindow> mWindow;
     nsRefPtr<layers::CairoImage> mImage;
     nsCOMPtr<nsITimer> mTimer;
-    nsAutoString mName, mUuid;
     Monitor mMonitor;
     nsCOMPtr<nsITabSource> mTabSource;
   };
