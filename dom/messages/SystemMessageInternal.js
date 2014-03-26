@@ -342,7 +342,8 @@ SystemMessageInternal.prototype = {
     // To prevent the hacked child process from sending commands to parent
     // to manage system messages, we need to check its manifest URL.
     if (["SystemMessageManager:Register",
-         "SystemMessageManager:Unregister",
+         // TODO: fix bug 988142 to re-enable.
+         // "SystemMessageManager:Unregister",
          "SystemMessageManager:GetPendingMessages",
          "SystemMessageManager:HasPendingMessages",
          "SystemMessageManager:Message:Return:OK",
