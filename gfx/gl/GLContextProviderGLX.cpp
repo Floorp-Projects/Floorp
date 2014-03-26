@@ -15,6 +15,7 @@
 #include <X11/Xutil.h>
 
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/X11Util.h"
 
 #include "prenv.h"
@@ -1188,7 +1189,7 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& size,
     return glContext.forget();
 }
 
-static nsRefPtr<GLContext> gGlobalContext;
+static StaticRefPtr<GLContext> gGlobalContext;
 // TODO move that out of static initializaion
 static bool gUseContextSharing = getenv("MOZ_DISABLE_CONTEXT_SHARING_GLX") == 0;
 
@@ -1205,7 +1206,11 @@ GLContextProviderGLX::GetGlobalContext()
         triedToCreateContext = true;
 
         gfxIntSize dummySize = gfxIntSize(16, 16);
-        gGlobalContext = CreateOffscreenPixmapContext(dummySize);
+        // StaticPtr doesn't support assignments from already_AddRefed,
+        // so use a temporary nsRefPtr to make the reference counting
+        // fall out correctly.
+        nsRefPtr<GLContext> holder = CreateOffscreenPixmapContext(dummySize);
+        gGlobalContext = holder;
     }
 
     return gGlobalContext;
