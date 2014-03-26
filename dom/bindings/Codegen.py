@@ -9347,7 +9347,8 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
     def initIdsMethod(self):
         assert self.needToInitIds
         idinit = [CGGeneric('!atomsCache->%s.init(cx, "%s")' %
-                            (m.identifier.name + "_id", m.identifier.name))
+                            (CGDictionary.makeIdName(m.identifier.name),
+                             m.identifier.name))
                   for m in self.dictionary.members]
         idinit.reverse();
         idinit = CGList(idinit, " ||\n")
@@ -9567,6 +9568,21 @@ if (""",
         else:
             # The data is inside the Optional<>
             memberData = "%s.InternalValue()" % memberLoc
+
+        # If you have to change this list (which you shouldn't!), make sure it
+        # continues to match the list in test_Object.prototype_props.html
+        if (member.identifier.name in
+            ["constructor", "toSource", "toString", "toLocaleString", "valueOf",
+             "watch", "unwatch", "hasOwnProperty", "isPrototypeOf",
+             "propertyIsEnumerable", "__defineGetter__", "__defineSetter__",
+             "__lookupGetter__", "__lookupSetter__", "__proto__"]):
+            raise TypeError("'%s' member of %s dictionary shadows "
+                            "a property of Object.prototype, and Xrays to "
+                            "Object can't handle that.\n"
+                            "%s" %
+                            (member.identifier.name,
+                             self.dictionary.identifier.name,
+                             member.location))
 
         propDef = (
             'JS_DefinePropertyById(cx, obj, atomsCache->%s, temp, nullptr, nullptr, JSPROP_ENUMERATE)' %
@@ -11748,7 +11764,7 @@ class GlobalGenRoots():
             if len(dictMembers) == 0:
                 continue
 
-            classMembers = [ClassMember(m.identifier.name + "_id",
+            classMembers = [ClassMember(CGDictionary.makeIdName(m.identifier.name),
                                         "InternedStringId",
                                         visibility="public") for m in dictMembers]
 
