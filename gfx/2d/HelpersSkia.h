@@ -19,22 +19,6 @@
 namespace mozilla {
 namespace gfx {
 
-static inline SkAlphaType
-SkAlphaTypeForGfxFormat(SurfaceFormat format)
-{
-  switch (format)
-  {
-    case SurfaceFormat::B8G8R8X8:
-    case SurfaceFormat::R8G8B8X8:
-      return kIgnore_SkAlphaType;
-    case SurfaceFormat::R5G6B5:
-      return kOpaque_SkAlphaType;
-    default:
-      return kPremul_SkAlphaType;
-  }
-}
-
-
 static inline SkBitmap::Config
 GfxFormatToSkiaConfig(SurfaceFormat format)
 {
