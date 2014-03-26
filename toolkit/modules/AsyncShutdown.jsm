@@ -250,7 +250,7 @@ Spinner.prototype = {
     if (!this._conditions) {
       throw new Error("Phase " + this._topic +
                       " has already begun, it is too late to register" +
-                      " completion condition '" + condition.name + "'.");
+                      " completion conditions.");
     }
     this._conditions.add(condition);
   },
@@ -413,7 +413,6 @@ Spinner.prototype = {
 // when they start/stop. For compatibility with existing startup/shutdown
 // mechanisms, we register a few runstates here.
 
-this.AsyncShutdown.profileChangeTeardown = getPhase("profile-change-teardown");
 this.AsyncShutdown.profileBeforeChange = getPhase("profile-before-change");
 this.AsyncShutdown.sendTelemetry = getPhase("profile-before-change2");
 this.AsyncShutdown.webWorkersShutdown = getPhase("web-workers-shutdown");
