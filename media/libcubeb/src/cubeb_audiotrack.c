@@ -314,7 +314,7 @@ audiotrack_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 {
   status_t rv;
 
-  rv = ctx->klass.get_output_samplingrate(rate, 3 /* MUSIC */);
+  rv = ctx->klass.get_output_samplingrate((int32_t *)rate, 3 /* MUSIC */);
 
   return rv == 0 ? CUBEB_OK : CUBEB_ERROR;
 }
@@ -338,7 +338,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
 {
   cubeb_stream * stm;
   int32_t channels;
-  int32_t min_frame_count;
+  uint32_t min_frame_count;
 
   assert(ctx && stream);
 

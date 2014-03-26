@@ -179,7 +179,10 @@ FTPChannelChild::AsyncOpen(::nsIStreamListener* listener, nsISupports* aContext)
     mLoadGroup->AddRequest(this, nullptr);
 
   OptionalInputStreamParams uploadStream;
-  SerializeInputStream(mUploadStream, uploadStream);
+  nsTArray<mozilla::ipc::FileDescriptor> fds;
+  SerializeInputStream(mUploadStream, uploadStream, fds);
+
+  MOZ_ASSERT(fds.IsEmpty());
 
   FTPChannelOpenArgs openArgs;
   SerializeURI(nsBaseChannel::URI(), openArgs.uri());

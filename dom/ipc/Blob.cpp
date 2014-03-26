@@ -21,6 +21,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/unused.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/dom/PFileDescriptorSetParent.h"
 #include "nsDOMFile.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -29,6 +30,7 @@
 #include "ContentChild.h"
 #include "ContentParent.h"
 #include "nsNetCID.h"
+#include "FileDescriptorSetChild.h"
 
 #define PRIVATE_REMOTE_INPUT_STREAM_IID \
   {0x30c7699f, 0x51d2, 0x48c8, {0xad, 0x56, 0xc0, 0x16, 0xd7, 0x6f, 0x71, 0x27}}
@@ -167,7 +169,8 @@ public:
   }
 
   void
-  Serialize(InputStreamParams& aParams)
+  Serialize(InputStreamParams& aParams,
+            FileDescriptorArray& /* aFileDescriptors */)
   {
     nsCOMPtr<nsIRemoteBlob> remote = do_QueryInterface(mSourceBlob);
     MOZ_ASSERT(remote);
@@ -182,7 +185,8 @@ public:
   }
 
   bool
-  Deserialize(const InputStreamParams& aParams)
+  Deserialize(const InputStreamParams& aParams,
+              const FileDescriptorArray& /* aFileDescriptors */)
   {
     // See InputStreamUtils.cpp to see how deserialization of a
     // RemoteInputStream is special-cased.
@@ -448,20 +452,63 @@ public:
 private:
   // This method is only called by the IPDL message machinery.
   virtual bool
-  Recv__delete__(const InputStreamParams& aParams) MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mRemoteStream);
-
-    nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aParams);
-    if (!stream) {
-      return false;
-    }
-
-    mRemoteStream->SetStream(stream);
-    return true;
-  }
+  Recv__delete__(const InputStreamParams& aParams,
+                 const OptionalFileDescriptorSet& aFDs) MOZ_OVERRIDE;
 };
+
+template <>
+bool
+InputStreamActor<Parent>::Recv__delete__(const InputStreamParams& aParams,
+                                         const OptionalFileDescriptorSet& aFDs)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mRemoteStream);
+
+  if (aFDs.type() != OptionalFileDescriptorSet::Tvoid_t) {
+    NS_WARNING("Child cannot send FileDescriptors to the parent!");
+    return false;
+  }
+
+  nsTArray<FileDescriptor> fds;
+  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aParams, fds);
+  if (!stream) {
+    return false;
+  }
+
+  MOZ_ASSERT(fds.IsEmpty());
+
+  mRemoteStream->SetStream(stream);
+  return true;
+}
+
+template <>
+bool
+InputStreamActor<Child>::Recv__delete__(const InputStreamParams& aParams,
+                                        const OptionalFileDescriptorSet& aFDs)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mRemoteStream);
+
+  nsTArray<FileDescriptor> fds;
+  if (aFDs.type() == OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
+    FileDescriptorSetChild* fdSetActor =
+      static_cast<FileDescriptorSetChild*>(aFDs.get_PFileDescriptorSetChild());
+    MOZ_ASSERT(fdSetActor);
+
+    fdSetActor->ForgetFileDescriptors(fds);
+    MOZ_ASSERT(!fds.IsEmpty());
+
+    fdSetActor->Send__delete__(fdSetActor);
+  }
+
+  nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aParams, fds);
+  if (!stream) {
+    return false;
+  }
+
+  mRemoteStream->SetStream(stream);
+  return true;
+}
 
 template <ActorFlavorEnum ActorFlavor>
 inline
@@ -678,11 +725,34 @@ private:
       MOZ_ASSERT(mStreamActor);
 
       InputStreamParams params;
-      serializable->Serialize(params);
+      nsAutoTArray<FileDescriptor, 10> fds;
+      serializable->Serialize(params, fds);
 
       MOZ_ASSERT(params.type() != InputStreamParams::T__None);
 
-      unused << mStreamActor->Send__delete__(mStreamActor, params);
+      PFileDescriptorSetParent* fdSet = nullptr;
+
+      if (!fds.IsEmpty()) {
+        Blob<Parent>* blob = static_cast<Blob<Parent>*>(mBlobActor);
+
+        MOZ_ASSERT(blob->Manager());
+
+        fdSet = blob->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
+        if (fdSet) {
+          for (uint32_t index = 1; index < fds.Length(); index++) {
+            unused << fdSet->SendAddFileDescriptor(fds[index]);
+          }
+        }
+      }
+
+      OptionalFileDescriptorSet optionalFDs;
+      if (fdSet) {
+        optionalFDs = fdSet;
+      } else {
+        optionalFDs = mozilla::void_t();
+      }
+
+      unused << mStreamActor->Send__delete__(mStreamActor, params, optionalFDs);
 
       mBlobActor->NoteRunnableCompleted(this);
 
@@ -1094,8 +1164,9 @@ NS_IMETHODIMP
 RemoteBlob<Parent>::GetInternalStream(nsIInputStream** aStream)
 {
   if (mInputStreamParams.type() != InputStreamParams::T__None) {
+    nsTArray<FileDescriptor> fds;
     nsCOMPtr<nsIInputStream> realStream =
-      DeserializeInputStream(mInputStreamParams);
+      DeserializeInputStream(mInputStreamParams, fds);
     if (!realStream) {
       NS_WARNING("Failed to deserialize stream!");
       return NS_ERROR_UNEXPECTED;
@@ -1473,11 +1544,13 @@ Blob<Child>::RecvPBlobStreamConstructor(StreamType* aActor)
   }
 
   InputStreamParams params;
-  serializable->Serialize(params);
+  nsTArray<FileDescriptor> fds;
+  serializable->Serialize(params, fds);
 
   MOZ_ASSERT(params.type() != InputStreamParams::T__None);
+  MOZ_ASSERT(fds.IsEmpty());
 
-  return aActor->Send__delete__(aActor, params);
+  return aActor->Send__delete__(aActor, params, mozilla::void_t());
 }
 
 BlobTraits<Parent>::StreamType*
