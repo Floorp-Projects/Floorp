@@ -196,6 +196,13 @@
              <data android:scheme="package" />
           </intent-filter>
         </receiver>
+
+        <receiver android:name="org.mozilla.gecko.webapp.TaskKiller">
+          <intent-filter>
+             <action android:name="org.mozilla.webapp.TASK_REMOVED" />
+             <category android:name="android.intent.category.DEFAULT" />
+          </intent-filter>
+        </receiver>
 #endif
 
         <activity android:name=".Webapp"
@@ -366,4 +373,4 @@
     <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
                 android:protectionLevel="signature"/>
 
-</manifest> 
+</manifest>

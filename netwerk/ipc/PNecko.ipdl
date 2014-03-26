@@ -19,6 +19,7 @@ include protocol PRemoteOpenFile;
 include protocol PDNSRequest;
 include protocol PChannelDiverter;
 include protocol PBlob; //FIXME: bug #792908
+include protocol PFileDescriptorSet;
 
 include protocol PRtspController;
 include URIParams;

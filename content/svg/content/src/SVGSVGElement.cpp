@@ -805,14 +805,11 @@ SVGSVGElement::WillBeOutermostSVG(nsIContent* aParent,
 void
 SVGSVGElement::InvalidateTransformNotifyFrame()
 {
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame) {
-    nsISVGSVGFrame* svgframe = do_QueryFrame(frame);
-    // might fail this check if we've failed conditional processing
-    if (svgframe) {
-      svgframe->NotifyViewportOrTransformChanged(
-                  nsISVGChildFrame::TRANSFORM_CHANGED);
-    }
+  nsISVGSVGFrame* svgframe = do_QueryFrame(GetPrimaryFrame());
+  // might fail this check if we've failed conditional processing
+  if (svgframe) {
+    svgframe->NotifyViewportOrTransformChanged(
+                nsISVGChildFrame::TRANSFORM_CHANGED);
   }
 }
 
@@ -1043,26 +1040,13 @@ SVGSVGElement::ShouldSynthesizeViewBox() const
     !GetParent();
 }
 
-
-// Callback function, for freeing SVGPreserveAspectRatio values stored in property table
-static void
-ReleasePreserveAspectRatioPropertyValue(void*    aObject,       /* unused */
-                                        nsIAtom* aPropertyName, /* unused */
-                                        void*    aPropertyValue,
-                                        void*    aData          /* unused */)
-{
-  SVGPreserveAspectRatio* valPtr =
-    static_cast<SVGPreserveAspectRatio*>(aPropertyValue);
-  delete valPtr;
-}
-
 bool
 SVGSVGElement::SetPreserveAspectRatioProperty(const SVGPreserveAspectRatio& aPAR)
 {
   SVGPreserveAspectRatio* pAROverridePtr = new SVGPreserveAspectRatio(aPAR);
   nsresult rv = SetProperty(nsGkAtoms::overridePreserveAspectRatio,
                             pAROverridePtr,
-                            ReleasePreserveAspectRatioPropertyValue,
+                            nsINode::DeleteProperty<SVGPreserveAspectRatio>,
                             true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting override value when it's already set...?"); 
@@ -1158,25 +1142,13 @@ SVGSVGElement::FlushImageTransformInvalidation()
   }
 }
 
-// Callback function, for freeing nsSVGViewBoxRect values stored in property table
-static void
-ReleaseViewBoxPropertyValue(void*    aObject,       /* unused */
-                            nsIAtom* aPropertyName, /* unused */
-                            void*    aPropertyValue,
-                            void*    aData          /* unused */)
-{
-  nsSVGViewBoxRect* valPtr =
-    static_cast<nsSVGViewBoxRect*>(aPropertyValue);
-  delete valPtr;
-}
-
 bool
 SVGSVGElement::SetViewBoxProperty(const nsSVGViewBoxRect& aViewBox)
 {
   nsSVGViewBoxRect* pViewBoxOverridePtr = new nsSVGViewBoxRect(aViewBox);
   nsresult rv = SetProperty(nsGkAtoms::viewBox,
                             pViewBoxOverridePtr,
-                            ReleaseViewBoxPropertyValue,
+                            nsINode::DeleteProperty<nsSVGViewBoxRect>,
                             true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting override value when it's already set...?"); 
@@ -1235,25 +1207,13 @@ SVGSVGElement::ClearZoomAndPanProperty()
   return UnsetProperty(nsGkAtoms::zoomAndPan);
 }
 
-// Callback function, for freeing SVGTransformList values stored in property table
-static void
-ReleaseTransformPropertyValue(void*    aObject,       /* unused */
-                              nsIAtom* aPropertyName, /* unused */
-                              void*    aPropertyValue,
-                              void*    aData          /* unused */)
-{
-  SVGTransformList* valPtr =
-    static_cast<SVGTransformList*>(aPropertyValue);
-  delete valPtr;
-}
-
 bool
 SVGSVGElement::SetTransformProperty(const SVGTransformList& aTransform)
 {
   SVGTransformList* pTransformOverridePtr = new SVGTransformList(aTransform);
   nsresult rv = SetProperty(nsGkAtoms::transform,
                             pTransformOverridePtr,
-                            ReleaseTransformPropertyValue,
+                            nsINode::DeleteProperty<SVGTransformList>,
                             true);
   NS_ABORT_IF_FALSE(rv != NS_PROPTABLE_PROP_OVERWRITTEN,
                     "Setting override value when it's already set...?"); 

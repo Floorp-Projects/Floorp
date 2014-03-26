@@ -683,12 +683,25 @@ ContextualAnalysis(char16_t prev, char16_t cur, char16_t next,
     if (!aState.UseConservativeBreaking(1)) {
       char16_t prevOfHyphen = aState.GetPreviousNonHyphenCharacter();
       if (prevOfHyphen && next) {
-        bool prevIsChar = !NEED_CONTEXTUAL_ANALYSIS(prevOfHyphen) &&
-                            GetClass(prevOfHyphen) == CLASS_CHARACTER;
-        bool nextIsChar = !NEED_CONTEXTUAL_ANALYSIS(next) &&
-                            GetClass(next) == CLASS_CHARACTER;
-        if ((prevIsNum || prevIsChar) && (nextIsNum || nextIsChar))
+        int8_t prevClass = GetClass(prevOfHyphen);
+        int8_t nextClass = GetClass(next);
+        bool prevIsNumOrCharOrClose =
+          prevIsNum ||
+          (prevClass == CLASS_CHARACTER &&
+            !NEED_CONTEXTUAL_ANALYSIS(prevOfHyphen)) ||
+          prevClass == CLASS_CLOSE ||
+          prevClass == CLASS_CLOSE_LIKE_CHARACTER;
+        bool nextIsNumOrCharOrOpen =
+          nextIsNum ||
+          (nextClass == CLASS_CHARACTER && !NEED_CONTEXTUAL_ANALYSIS(next)) ||
+          nextClass == CLASS_OPEN ||
+          nextClass == CLASS_OPEN_LIKE_CHARACTER ||
+          next == U_OPEN_SINGLE_QUOTE ||
+          next == U_OPEN_DOUBLE_QUOTE ||
+          next == U_OPEN_GUILLEMET;
+        if (prevIsNumOrCharOrClose && nextIsNumOrCharOrOpen) {
           return CLASS_CLOSE;
+        }
       }
     }
   } else {
