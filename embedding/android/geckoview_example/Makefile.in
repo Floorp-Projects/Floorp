@@ -1,3 +1,9 @@
+PP_TARGETS = properties manifest
+
+manifest = AndroidManifest.xml.in
+manifest_PATH = .
+manifest_deps := $(patsubst %.in,%,$(manifest))
+
 include $(topsrcdir)/config/rules.mk
 
 GARBAGE = \
@@ -22,7 +28,7 @@ GARBAGE_DIRS = \
 
 ANDROID=$(ANDROID_SDK)/../../tools/android
 
-TARGET= $(notdir $(ANDROID_SDK))
+TARGET="android-$(ANDROID_TARGET_SDK)"
 
 PACKAGE_DEPS = \
 	assets/libxul.so \
@@ -35,22 +41,20 @@ PACKAGE_DEPS = \
 $(CURDIR)/res/layout/main.xml: $(srcdir)/main.xml
 	$(NSINSTALL) $(srcdir)/main.xml res/layout/
 
-$(CURDIR)/AndroidManifest.xml: $(srcdir)/AndroidManifest.xml
-	$(NSINSTALL) $(srcdir)/AndroidManifest.xml $(CURDIR)
-
 src/org/mozilla/geckoviewexample/GeckoViewExample.java: $(srcdir)/GeckoViewExample.java
 	$(NSINSTALL) $(srcdir)/GeckoViewExample.java src/org/mozilla/geckoviewexample/
 
 assets/libxul.so: $(DIST)/geckoview_library/geckoview_assets.zip FORCE
 	$(UNZIP) -o $(DIST)/geckoview_library/geckoview_assets.zip
 
-build.xml:
+build.xml: AndroidManifest.xml
+	mv AndroidManifest.xml AndroidManifest.xml.save
 	$(ANDROID) create project --name GeckoViewExample --target $(TARGET) --path $(CURDIR) --activity GeckoViewExample --package org.mozilla.geckoviewexample
 	$(ANDROID) update project --target $(TARGET) --path $(CURDIR) --library $(DEPTH)/mobile/android/geckoview_library
 	$(RM) $(CURDIR)/res/layout/main.xml
 	$(NSINSTALL) $(srcdir)/main.xml res/layout/
-	$(RM) $(CURDIR)/AndroidManifest.xml
-	$(NSINSTALL) $(srcdir)/AndroidManifest.xml $(CURDIR)
+	$(RM) AndroidManifest.xml
+	mv AndroidManifest.xml.save AndroidManifest.xml
 	echo jar.libs.dir=libs >> project.properties
 
 package: $(PACKAGE_DEPS) FORCE
