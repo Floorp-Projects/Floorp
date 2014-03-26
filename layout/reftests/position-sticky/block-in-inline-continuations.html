@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - continuations have no effect when resizing</title>
+    <link rel="author" title="Abel Lin" href="mailto:alin@mozilla.com">
+    <link rel="match" href="block-in-inline-continuations-ref.html">
+    <meta name="assert" content="Inline elements split and contain blocks should always have all parts moved the same offset from their normal position">
+    <script>
+    function run() {
+      document.getElementById("toresize").width = "750px";
+    }
+    </script>
+  </head>
+  <body onload="run()">
+    <iframe id="toresize" src="block-in-inline-continuations-inner.html">
+    </iframe>
+  </body>
+</html>

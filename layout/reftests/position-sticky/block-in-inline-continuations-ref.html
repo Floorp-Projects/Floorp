@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test Reference: Sticky Positioning - continuations have no effect when resizing</title>
+    <link rel="author" title="Abel Lin" href="mailto:alin@mozilla.com">
+    <script>
+    function run() {
+      document.getElementById("toresize").width = "750px";
+    }
+    </script>
+  </head>
+  <body onload="run()">
+    <iframe id="toresize" src="block-in-inline-continuations-ref-inner.html">
+    </iframe>
+  </body>
+</html>
