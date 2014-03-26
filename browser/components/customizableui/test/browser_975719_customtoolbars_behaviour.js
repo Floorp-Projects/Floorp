@@ -30,6 +30,9 @@ add_task(function customizeToolbarAndKeepIt() {
   ok(toolbarElement.hasChildNodes(), "Toolbar should now have a button.");
   assertAreaPlacements(toolbarDOMID, ["open-file-button"]);
 
+  gNavToolbox.toolbarset.setAttribute("toolbar1", toolbarID + ":open-file-button");
+  document.persist(gNavToolbox.toolbarset.id, "toolbar1");
+
   yield startCustomizing();
   // First, exit customize mode without doing anything, and verify the toolbar doesn't get removed.
   yield endCustomizing();
@@ -40,6 +43,12 @@ add_task(function customizeToolbarAndKeepIt() {
   ok(toolbarElement.parentNode, "Toolbar should still be in the DOM.");
   ok(toolbarElement.hasChildNodes(), "Toolbar should still have items in it.");
   assertAreaPlacements(toolbarDOMID, ["open-file-button"]);
+
+  let newWindow = yield openAndLoadWindow({}, true);
+  is(newWindow.gNavToolbox.toolbarset.getAttribute("toolbar1"),
+     gNavToolbox.toolbarset.getAttribute("toolbar1"),
+     "Attribute should be the same in new window");
+  yield promiseWindowClosed(newWindow);
 
   // Then customize again, and this time empty out the toolbar and verify it *does* get removed.
   yield startCustomizing();
@@ -55,6 +64,12 @@ add_task(function customizeToolbarAndKeepIt() {
   ok(!CustomizableUI.inDefaultState, "Shouldn't be in default state because there's a non-collapsed toolbar again.");
   yield endCustomizing();
   ok(CustomizableUI.inDefaultState, "Should be in default state because the toolbar should have been removed.");
+
+  newWindow = yield openAndLoadWindow({}, true);
+  ok(!newWindow.gNavToolbox.toolbarset.hasAttribute("toolbar1"),
+     "Attribute should be gone in new window");
+  yield promiseWindowClosed(newWindow);
+
   ok(!toolbarElement.parentNode, "Toolbar should no longer be in the DOM.");
   cuiAreaType = CustomizableUI.getAreaType(toolbarDOMID);
   is(cuiAreaType, null, "CustomizableUI should have forgotten all about the area");
@@ -86,7 +101,21 @@ add_task(function resetShouldDealWithCustomToolbars() {
   ok(toolbarElement.hasChildNodes(), "Toolbar should now have a button.");
   assertAreaPlacements(toolbarDOMID, ["sync-button"]);
 
+  gNavToolbox.toolbarset.setAttribute("toolbar2", toolbarID + ":sync-button");
+  document.persist(gNavToolbox.toolbarset.id, "toolbar2");
+
+  let newWindow = yield openAndLoadWindow({}, true);
+  is(newWindow.gNavToolbox.toolbarset.getAttribute("toolbar2"),
+     gNavToolbox.toolbarset.getAttribute("toolbar2"),
+     "Attribute should be the same in new window");
+  yield promiseWindowClosed(newWindow);
+
   CustomizableUI.reset();
+
+  newWindow = yield openAndLoadWindow({}, true);
+  ok(!newWindow.gNavToolbox.toolbarset.hasAttribute("toolbar2"),
+     "Attribute should be gone in new window");
+  yield promiseWindowClosed(newWindow);
 
   ok(CustomizableUI.inDefaultState, "Should be in default state after reset.");
   let syncButton = document.getElementById("sync-button");
@@ -98,3 +127,10 @@ add_task(function resetShouldDealWithCustomToolbars() {
   is(cuiAreaType, null, "CustomizableUI should have forgotten all about the area");
 });
 
+
+add_task(function() {
+  let newWin = yield openAndLoadWindow({}, true);
+  ok(!newWin.gNavToolbox.toolbarset.hasAttribute("toolbar1"), "New window shouldn't have attribute toolbar1");
+  ok(!newWin.gNavToolbox.toolbarset.hasAttribute("toolbar2"), "New window shouldn't have attribute toolbar2");
+  yield promiseWindowClosed(newWin);
+});
