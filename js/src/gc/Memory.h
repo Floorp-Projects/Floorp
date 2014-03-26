@@ -19,6 +19,14 @@ namespace gc {
 void
 InitMemorySubsystem(JSRuntime *rt);
 
+// Add a mapping for an aligned address range, but do not commit the memory.
+void *
+AllocateAlignedAddressRange(JSRuntime *rt, size_t size, size_t alignment);
+
+// Commit memory which was previously retained.
+bool
+CommitAddressRange(void *addr, size_t size);
+
 // Allocate or deallocate pages from the system with the given alignment.
 void *
 MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment);
