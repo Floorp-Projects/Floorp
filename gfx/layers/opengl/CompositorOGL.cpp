@@ -1260,6 +1260,10 @@ CompositorOGL::AbortFrame()
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
   mFrameInProgress = false;
   mCurrentRenderTarget = nullptr;
+
+  if (mTexturePool) {
+    mTexturePool->EndFrame();
+  }
 }
 
 void
