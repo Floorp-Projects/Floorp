@@ -114,7 +114,7 @@ protected:
 
   virtual void WakeLockCreate();
   virtual void WakeLockRelease();
-  void WakeLockUpdate();
+  void UpdateScreenWakeLock();
 
   nsRefPtr<WakeLock> mScreenWakeLock;
 

@@ -108,6 +108,7 @@ CanvasLayerComposite::RenderLayer(const nsIntRect& aClipRect)
                         GetEffectiveTransform(),
                         gfx::ToFilter(filter),
                         clipRect);
+  mImageHost->BumpFlashCounter();
 }
 
 CompositableHost*

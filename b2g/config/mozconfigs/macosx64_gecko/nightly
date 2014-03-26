@@ -21,8 +21,6 @@ ac_add_options --enable-warnings-as-errors
 ac_add_options --enable-application=b2g
 ac_add_options --enable-debug-symbols
 . "$topsrcdir/build/mozconfig.cache"
-ENABLE_MARIONETTE=1
-
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
 
 GAIADIR=$topsrcdir/gaia
