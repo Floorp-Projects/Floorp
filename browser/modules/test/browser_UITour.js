@@ -120,22 +120,25 @@ let tests = [
   function test_highlight_customize_manual_open_close(done) {
     let highlight = document.getElementById("UITourHighlight");
     // Manually open the app menu then show a highlight there. The menu should remain open.
+    let shownPromise = promisePanelShown(window);
     gContentAPI.showMenu("appMenu");
-    isnot(PanelUI.panel.state, "closed", "Panel should have opened");
-    gContentAPI.showHighlight("customize");
+    shownPromise.then(() => {
+      isnot(PanelUI.panel.state, "closed", "Panel should have opened");
+      gContentAPI.showHighlight("customize");
 
-    waitForElementToBeVisible(highlight, function checkPanelIsStillOpen() {
-      isnot(PanelUI.panel.state, "closed", "Panel should still be open");
+      waitForElementToBeVisible(highlight, function checkPanelIsStillOpen() {
+        isnot(PanelUI.panel.state, "closed", "Panel should still be open");
 
-      // Move the highlight outside which shouldn't close the app menu since it was manually opened.
-      gContentAPI.showHighlight("appMenu");
-      waitForElementToBeVisible(highlight, function () {
-        isnot(PanelUI.panel.state, "closed",
-              "Panel should remain open since UITour didn't open it in the first place");
-        gContentAPI.hideMenu("appMenu");
-        done();
-      }, "Highlight should move to the appMenu button");
-    }, "Highlight should be shown after showHighlight() for fixed panel items");
+        // Move the highlight outside which shouldn't close the app menu since it was manually opened.
+        gContentAPI.showHighlight("appMenu");
+        waitForElementToBeVisible(highlight, function () {
+          isnot(PanelUI.panel.state, "closed",
+                "Panel should remain open since UITour didn't open it in the first place");
+          gContentAPI.hideMenu("appMenu");
+          done();
+        }, "Highlight should move to the appMenu button");
+      }, "Highlight should be shown after showHighlight() for fixed panel items");
+    }).then(null, Components.utils.reportError);
   },
   function test_highlight_effect(done) {
     function waitForHighlightWithEffect(highlightEl, effect, next, error) {
