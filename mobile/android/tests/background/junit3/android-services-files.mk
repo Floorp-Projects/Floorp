@@ -22,6 +22,7 @@ BACKGROUND_TESTS_JAVA_FILES := \
   src/db/TestFennecTabsStorage.java \
   src/db/TestFormHistoryRepositorySession.java \
   src/db/TestPasswordsRepository.java \
+  src/fxa/authenticator/TestAccountPickler.java \
   src/fxa/TestBrowserIDKeyPairGeneration.java \
   src/healthreport/MockDatabaseEnvironment.java \
   src/healthreport/MockHealthReportDatabaseStorage.java \
