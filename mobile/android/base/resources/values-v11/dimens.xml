@@ -7,5 +7,9 @@
 
     <dimen name="tabs_counter_size">22sp</dimen>
     <dimen name="doorhanger_spinner_textsize">6sp</dimen>
+    <!-- This is chosen to be close to Android's listPreferredItemHeightSmall.
+         TODO: We should inherit these from the system.
+         http://androidxref.com/4.2.2_r1/xref/frameworks/base/core/res/res/values/themes.xml#1287 -->
+    <dimen name="menu_item_row_height">44dp</dimen>
 
 </resources>
