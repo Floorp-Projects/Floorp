@@ -51,6 +51,7 @@ function testSources() {
   let deferred = promise.defer();
   let foundAddonModule = false;
   let foundSDKModule = 0;
+  let foundAddonBootstrap = false;
 
   gThreadClient.getSources(({sources}) => {
     ok(sources.length, "retrieved sources");
@@ -60,8 +61,8 @@ function testSources() {
       info(source.url + "\n\n\n" + url);
       let { label, group } = gSources.getItemByValue(source.url).attachment;
 
-      if (url.indexOf("resource://gre/modules/commonjs/sdk") === 0) {
-        is(label.indexOf("sdk/"), 0, "correct truncated label");
+      if (url.indexOf("resource://gre/modules/commonjs/") === 0) {
+        is(label, url.substring(32), "correct truncated label");
         is(group, "Add-on SDK", "correct SDK group");
         foundSDKModule++;
       } else if (url.indexOf("resource://gre/modules/commonjs/method") === 0) {
@@ -72,12 +73,17 @@ function testSources() {
         is(label, "main.js", "correct label for addon code");
         is(group, "resource://jid1-ami3akps3baaeg-at-jetpack", "addon code is in its own group");
         foundAddonModule = true;
+      } else if (url.endsWith("/jid1-ami3akps3baaeg@jetpack.xpi!/bootstrap.js")) {
+        is(label, "bootstrap.js", "correct label for bootstrap script");
+        is(group, "jar:", "bootstrap script is in its own group");
+        foundAddonBootstrap = true;
       } else {
-        throw new Error("Found source outside of the SDK or addon");
+        ok(false, "Saw an unexpected source: " + url);
       }
     });
 
     ok(foundAddonModule, "found code for the addon in the list");
+    ok(foundAddonBootstrap, "found bootstrap for the addon in the list");
     // Be flexible in this number, as SDK changes could change the exact number of
     // built-in browser SDK modules
     ok(foundSDKModule > 10, "SDK modules are listed");
