@@ -2146,15 +2146,15 @@ let CustomizableUIInternal = {
   },
 
   _resetExtraToolbars: function(aFilter = null) {
-    let firstWindow = true; // Only need to persist once
+    let firstWindow = true; // Only need to unregister and persist once
     for (let [win, ] of gBuildWindows) {
       let toolbox = win.gNavToolbox;
       for (let child of toolbox.children) {
         let matchesFilter = !aFilter || aFilter == child.id;
         if (child.hasAttribute("customindex") && matchesFilter) {
+          let toolbarId = "toolbar" + child.getAttribute("customindex");
+          toolbox.toolbarset.removeAttribute(toolbarId);
           if (firstWindow) {
-            let toolbarId = "toolbar" + child.getAttribute("customindex");
-            toolbox.toolbarset.removeAttribute(toolbarId);
             win.document.persist(toolbox.toolbarset.id, toolbarId);
             // We have to unregister it properly to ensure we don't kill
             // XUL widgets which might be in here
@@ -2170,6 +2170,7 @@ let CustomizableUIInternal = {
   _rebuildRegisteredAreas: function() {
     for (let [areaId, areaNodes] of gBuildAreas) {
       let placements = gPlacements.get(areaId);
+      let isFirstChangedToolbar = true;
       for (let areaNode of areaNodes) {
         this.buildArea(areaId, placements, areaNode);
 
@@ -2178,9 +2179,10 @@ let CustomizableUIInternal = {
           let defaultCollapsed = area.get("defaultCollapsed");
           let win = areaNode.ownerDocument.defaultView;
           if (defaultCollapsed !== null) {
-            win.setToolbarVisibility(areaNode, !defaultCollapsed);
+            win.setToolbarVisibility(areaNode, !defaultCollapsed, isFirstChangedToolbar);
           }
         }
+        isFirstChangedToolbar = false;
       }
     }
   },
@@ -2377,7 +2379,25 @@ let CustomizableUIInternal = {
     }
 
     return true;
-  }
+  },
+
+  setToolbarVisibility: function(aToolbarId, aIsVisible) {
+    let area = gAreas.get(aToolbarId);
+    if (area.get("type") != CustomizableUI.TYPE_TOOLBAR) {
+      return;
+    }
+    let areaNodes = gBuildAreas.get(aToolbarId);
+    if (!areaNodes) {
+      return;
+    }
+    // We only persist the attribute the first time.
+    let isFirstChangedToolbar = true;
+    for (let areaNode of areaNodes) {
+      let window = areaNode.ownerDocument.defaultView;
+      window.setToolbarVisibility(areaNode, aIsVisible, isFirstChangedToolbar);
+      isFirstChangedToolbar = false;
+    }
+  },
 };
 Object.freeze(CustomizableUIInternal);
 
@@ -3095,6 +3115,16 @@ this.CustomizableUI = {
   get inDefaultState() {
     return CustomizableUIInternal.inDefaultState;
   },
+
+  /**
+   * Set a toolbar's visibility state in all windows.
+   * @param aToolbarId    the toolbar whose visibility should be adjusted
+   * @param aIsVisible    whether the toolbar should be visible
+   */
+  setToolbarVisibility: function(aToolbarId, aIsVisible) {
+    CustomizableUIInternal.setToolbarVisibility(aToolbarId, aIsVisible);
+  },
+
   /**
    * Get a localized property off a (widget?) object.
    *
