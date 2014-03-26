@@ -397,6 +397,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/call-watcher");
     this.registerModule("devtools/server/actors/canvas");
     this.registerModule("devtools/server/actors/webgl");
+    this.registerModule("devtools/server/actors/webaudio");
     this.registerModule("devtools/server/actors/stylesheets");
     this.registerModule("devtools/server/actors/styleeditor");
     this.registerModule("devtools/server/actors/storage");
