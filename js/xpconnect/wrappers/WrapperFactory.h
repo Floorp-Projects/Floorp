@@ -58,10 +58,6 @@ class WrapperFactory {
                             JS::HandleObject parent,
                             unsigned flags);
 
-    // Wrap an object for same-compartment access.
-    static JSObject *WrapForSameCompartment(JSContext *cx,
-                                            JS::HandleObject obj);
-
     // Wrap wrapped object into a waiver wrapper and then re-wrap it.
     static bool WaiveXrayAndWrap(JSContext *cx, JS::MutableHandleValue vp);
     static bool WaiveXrayAndWrap(JSContext *cx, JS::MutableHandleObject object);

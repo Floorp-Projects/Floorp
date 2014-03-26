@@ -512,12 +512,6 @@ CouldBeDOMBinding(nsWrapperCache* aCache)
   return aCache->IsDOMBinding();
 }
 
-inline bool
-GetSameCompartmentWrapperForDOMBinding(JSObject*& obj)
-{
-  return IsDOMObject(obj);
-}
-
 // Make sure to wrap the given string value into the right compartment, as
 // needed.
 MOZ_ALWAYS_INLINE
@@ -540,15 +534,14 @@ MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(rval.isObject());
 
+  // Cross-compartment always requires wrapping.
   JSObject* obj = &rval.toObject();
   if (js::GetObjectCompartment(obj) != js::GetContextCompartment(cx)) {
     return JS_WrapValue(cx, rval);
   }
 
-  // We're same-compartment, but even then we might need to wrap
-  // objects specially.  Check for that.
-  if (GetSameCompartmentWrapperForDOMBinding(obj)) {
-    // We're a new-binding object, and "obj" now points to the right thing
+  // We're same-compartment. If we're a WebIDL object, we're done.
+  if (IsDOMObject(obj)) {
     rval.set(JS::ObjectValue(*obj));
     return true;
   }

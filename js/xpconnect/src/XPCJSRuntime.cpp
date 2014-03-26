@@ -2993,7 +2993,6 @@ class XPCJSSourceHook: public js::SourceHook {
 
 static const JSWrapObjectCallbacks WrapObjectCallbacks = {
     xpc::WrapperFactory::Rewrap,
-    xpc::WrapperFactory::WrapForSameCompartment,
     xpc::WrapperFactory::PrepareForWrapping
 };
 
