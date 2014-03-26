@@ -604,4 +604,17 @@
         <item name="android:gravity">right</item>
     </style>
 
+    <style name="TabInput"></style>
+
+    <style name="TabInput.TabWidget">
+        <item name="android:divider">@drawable/divider_vertical</item>
+        <item name="android:background">@drawable/tab_indicator_background</item>
+    </style>
+
+    <style name="TabInput.Tab">
+        <item name="android:background">@drawable/tabs_panel_indicator</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">@dimen/menu_item_row_height</item>
+    </style>
+
 </resources>
