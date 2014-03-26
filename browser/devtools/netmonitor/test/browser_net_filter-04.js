@@ -11,7 +11,10 @@ function test() {
   initNetMonitor(FILTERING_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { Prefs } = aMonitor.panelWin;
+    let { Prefs, NetMonitorView } = aMonitor.panelWin;
+    let { RequestsMenu } = NetMonitorView;
+
+    RequestsMenu.lazyUpdate = false;
 
     is(Prefs.filters.length, 2,
       "All filter types were loaded as an array from the preferences.");
