@@ -106,7 +106,7 @@ public:
   void Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat);
 
 #ifdef USE_SKIA_GPU
-  void InitWithGrContext(GrContext* aGrContext,
+  bool InitWithGrContext(GrContext* aGrContext,
                          const IntSize &aSize,
                          SurfaceFormat aFormat) MOZ_OVERRIDE;
 #endif
