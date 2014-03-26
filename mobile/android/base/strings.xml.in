@@ -193,6 +193,9 @@
 
   <string name="pref_panels_show">&pref_panels_show;</string>
   <string name="pref_panels_hide">&pref_panels_hide;</string>
+  <string name="pref_panels_reorder">&pref_panels_reorder;</string>
+  <string name="pref_panels_move_up">&pref_panels_move_up;</string>
+  <string name="pref_panels_move_down">&pref_panels_move_down;</string>
 
   <string name="datareporting_notification_title">&datareporting_notification_title;</string>
   <string name="datareporting_notification_action_long">&datareporting_notification_action_long;</string>
