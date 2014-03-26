@@ -30,7 +30,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
 
 this.WebappRT = {
   get launchURI() {
-    return this.localeManifest.fullLaunchPath();
+    let manifest = this.localeManifest;
+    return manifest.fullLaunchPath();
   },
 
   get localeManifest() {
