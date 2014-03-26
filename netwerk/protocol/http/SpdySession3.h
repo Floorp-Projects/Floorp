@@ -178,6 +178,7 @@ public:
   uint32_t GetServerInitialWindow() { return mServerInitialWindow; }
 
   void ConnectPushedStream(SpdyStream3 *stream);
+  void DecrementConcurrent(SpdyStream3 *stream);
 
   uint64_t Serial() { return mSerial; }
 
@@ -205,7 +206,6 @@ private:
   void        ChangeDownstreamState(enum stateType);
   void        ResetDownstreamState();
   nsresult    UncompressAndDiscard(uint32_t, uint32_t);
-  void        DecrementConcurrent(SpdyStream3 *);
   void        zlibInit();
   void        GeneratePing(uint32_t);
   void        GenerateRstStream(uint32_t, uint32_t);
