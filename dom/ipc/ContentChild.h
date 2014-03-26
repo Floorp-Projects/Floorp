@@ -75,7 +75,7 @@ public:
         return mAppInfo;
     }
 
-    void SetProcessName(const nsAString& aName);
+    void SetProcessName(const nsAString& aName, bool aDontOverride = false);
     void GetProcessName(nsAString& aName);
     void GetProcessName(nsACString& aName);
     static void AppendProcessId(nsACString& aName);
@@ -314,6 +314,7 @@ private:
 
     bool mIsForApp;
     bool mIsForBrowser;
+    bool mCanOverrideProcessName;
     nsString mProcessName;
 
     static ContentChild* sSingleton;
