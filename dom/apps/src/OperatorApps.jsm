@@ -18,8 +18,6 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-let Path = OS.Path;
-
 #ifdef MOZ_B2G_RIL
 XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
                                    "@mozilla.org/ril/content-helper;1",
@@ -60,6 +58,9 @@ function isFirstRunWithSIM() {
 }
 
 #ifdef MOZ_B2G_RIL
+let File = OS.File;
+let Path = OS.Path;
+
 let iccListener = {
   notifyStkCommand: function() {},
 
@@ -139,37 +140,38 @@ this.OperatorAppsRegistry = {
     debug("copying " + aOrg + " to " + aDst);
     return aDst && Task.spawn(function() {
       try {
-        let orgDir = Cc["@mozilla.org/file/local;1"]
-                       .createInstance(Ci.nsIFile);
-        orgDir.initWithPath(aOrg);
-        if (!orgDir.isDirectory()) {
+        let orgInfo = yield File.stat(aOrg);
+        if (!orgInfo.isDir) {
           return;
         }
 
-        let dstDir = Cc["@mozilla.org/file/local;1"]
-                       .createInstance(Ci.nsIFile);
-        dstDir.initWithPath(aDst);
-        if (!dstDir.exists()) {
-          dstDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+        let dirDstExists = yield File.exists(aDst);
+        if (!dirDstExists) {
+          yield File.makeDir(aDst);
         }
-
-        let entries = orgDir.directoryEntries;
-        while (entries.hasMoreElements()) {
-          let entry = entries.getNext().QueryInterface(Ci.nsIFile);
-
-          if (!entry.isDirectory()) {
-            // Remove the file, because copyTo doesn't overwrite files.
-            let dstFile = dstDir.clone();
-            dstFile.append(entry.leafName);
-            if(dstFile.exists()) {
-              dstFile.remove(false);
+        let iterator = new File.DirectoryIterator(aOrg);
+        if (!iterator) {
+          debug("No iterator over: " + aOrg);
+          return;
+        }
+        try {
+          while (true) {
+            let entry;
+            try {
+              entry = yield iterator.next();
+            } catch (ex if ex == StopIteration) {
+              break;
             }
 
-            entry.copyTo(dstDir, entry.leafName);
-          } else {
-            yield this._copyDirectory(entry.path,
-                                      Path.join(aDst, entry.name));
+            if (!entry.isDir) {
+              yield File.copy(entry.path, Path.join(aDst, entry.name));
+            } else {
+              yield this._copyDirectory(entry.path,
+                                        Path.join(aDst, entry.name));
+            }
           }
+        } finally {
+          iterator.close();
         }
       } catch (e) {
         debug("Error copying " + aOrg + " to " + aDst + ". " + e);
@@ -193,27 +195,23 @@ this.OperatorAppsRegistry = {
       // DIRECTORY_NAME + SINGLE_VARIANT_SOURCE_DIR and move all apps (and
       // configuration file) to PREF_SINGLE_VARIANT_DIR and return
       // PREF_SINGLE_VARIANT_DIR as sourceDir.
-      let svFinalDir = Cc["@mozilla.org/file/local;1"]
-                         .createInstance(Ci.nsIFile);
-      svFinalDir.initWithPath(svFinalDirName);
-      if (!svFinalDir.exists()) {
-        svFinalDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+      let existsDir = yield File.exists(svFinalDirName);
+      if (!existsDir) {
+        yield File.makeDir(svFinalDirName, {ignoreExisting: true});
       }
 
-      let svIndex = svFinalDir.clone();
-      svIndex.append(SINGLE_VARIANT_CONF_FILE);
-      if (!svIndex.exists()) {
-        let svSourceDir = FileUtils.getFile(DIRECTORY_NAME,
-                                            [SINGLE_VARIANT_SOURCE_DIR]);
-
-        yield this._copyDirectory(svSourceDir.path, svFinalDirName);
-
-        debug("removing directory:" + svSourceDir.path);
-        try {
-          svSourceDir.remove(true);
-        } catch(ex) { }
+      let existsSvIndex = yield File.exists(Path.join(svFinalDirName,
+                                            SINGLE_VARIANT_CONF_FILE));
+      if (!existsSvIndex) {
+        let svSourceDirName = FileUtils.getFile(DIRECTORY_NAME,
+                                              [SINGLE_VARIANT_SOURCE_DIR]).path;
+        yield this._copyDirectory(svSourceDirName, svFinalDirName);
+        debug("removing directory:" + svSourceDirName);
+        File.removeDir(svSourceDirName, {
+          ignoreAbsent: true,
+          ignorePermissions: true
+        });
       }
-
       this.appsDir = svFinalDirName;
     }.bind(this));
   },
@@ -285,18 +283,18 @@ this.OperatorAppsRegistry = {
 
     if (isPackage) {
       debug("aId:" + aId + ". Installing as packaged app.");
-      let installPack = this.appsDir.clone();
-      installPack.append(aId);
-      installPack.append(APPLICATION_ZIP);
-
-      if (!installPack.exists()) {
-        debug("SV " + installPack.path + " file do not exists for app " + aId);
-        return;
-      }
-
-      appData.app.localInstallPath = installPack.path;
-      appData.app.updateManifest = aManifest;
-      DOMApplicationRegistry.confirmInstall(appData);
+      let installPack = OS.Path.join(this.appsDir.path, aId, APPLICATION_ZIP);
+      OS.File.exists(installPack).then(
+        function(aExists) {
+          if (!aExists) {
+            debug("SV " + installPack.path + " file do not exists for app " +
+                  aId);
+            return;
+          }
+          appData.app.localInstallPath = installPack;
+          appData.app.updateManifest = aManifest;
+          DOMApplicationRegistry.confirmInstall(appData);
+      });
     } else {
       debug("aId:" + aId + ". Installing as hosted app.");
       appData.app.manifest = aManifest;
@@ -317,24 +315,18 @@ this.OperatorAppsRegistry = {
       for (let i = 0; i < aIdsApp.length; i++) {
         let aId = aIdsApp[i];
         let aMetadata = yield AppsUtils.loadJSONAsync(
-                           Path.join(this.appsDir.path, aId, METADATA));
-        if (!aMetadata) {
-          debug("Error reading metadata file");
-          return;
-        }
-
+                           OS.Path.join(this.appsDir.path, aId, METADATA));
         debug("metadata:" + JSON.stringify(aMetadata));
         let isPackage = true;
         let manifest;
         let manifests = [UPDATEMANIFEST, MANIFEST];
         for (let j = 0; j < manifests.length; j++) {
-          manifest = yield AppsUtils.loadJSONAsync(
-                        Path.join(this.appsDir.path, aId, manifests[j]));
-
-          if (!manifest) {
-            isPackage = false;
-          } else {
+          try {
+            manifest = yield AppsUtils.loadJSONAsync(
+                          OS.Path.join(this.appsDir.path, aId, manifests[j]));
             break;
+          } catch (e) {
+            isPackage = false;
           }
         }
         if (manifest) {
@@ -364,7 +356,7 @@ this.OperatorAppsRegistry = {
 
     return Task.spawn(function () {
       let key = normalizeCode(aMcc) + "-" + normalizeCode(aMnc);
-      let file = Path.join(this.appsDir.path, SINGLE_VARIANT_CONF_FILE);
+      let file = OS.Path.join(this.appsDir.path, SINGLE_VARIANT_CONF_FILE);
       let aData = yield AppsUtils.loadJSONAsync(file);
       if (!aData || !(key in aData)) {
         return;
