@@ -538,3 +538,52 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
      /// 'sequenceMS' = one processing sequence length in milliseconds
      /// 'seekwindowMS' = seeking window length for scanning the best overlapping 
      ///      position
+--- /src/FIRFilter.cpp
++++ /src/FIRFilter.cpp
+@@ -223,19 +223,21 @@ void * FIRFilter::operator new(size_t s)
+     // Notice! don't use "new FIRFilter" directly, use "newInstance" to create a new instance instead!
+     ST_THROW_RT_ERROR("Error in FIRFilter::new: Don't use 'new FIRFilter', use 'newInstance' member instead!");
+     return newInstance();
+ }
+ 
+ 
+ FIRFilter * FIRFilter::newInstance()
+ {
++#if defined(SOUNDTOUCH_ALLOW_MMX) || defined(SOUNDTOUCH_ALLOW_SSE)
+     uint uExtensions;
+ 
+     uExtensions = detectCPUextensions();
++#endif
+ 
+     // Check if MMX/SSE instruction set extensions supported by CPU
+ 
+ #ifdef SOUNDTOUCH_ALLOW_MMX
+     // MMX routines available only with integer sample types
+     if (uExtensions & SUPPORT_MMX)
+     {
+         return ::new FIRFilterMMX;
+--- /src/TDStretch.cpp
++++ /src/TDStretch.cpp
+@@ -604,19 +604,21 @@ void * TDStretch::operator new(size_t s)
+     // Notice! don't use "new TDStretch" directly, use "newInstance" to create a new instance instead!
+     ST_THROW_RT_ERROR("Error in TDStretch::new: Don't use 'new TDStretch' directly, use 'newInstance' member instead!");
+     return newInstance();
+ }
+ 
+ 
+ TDStretch * TDStretch::newInstance()
+ {
++#if defined(SOUNDTOUCH_ALLOW_MMX) || defined(SOUNDTOUCH_ALLOW_SSE)
+     uint uExtensions;
+ 
+     uExtensions = detectCPUextensions();
++#endif
+ 
+     // Check if MMX/SSE instruction set extensions supported by CPU
+ 
+ #ifdef SOUNDTOUCH_ALLOW_MMX
+     // MMX routines available only with integer sample types
+     if (uExtensions & SUPPORT_MMX)
+     {
+         return ::new TDStretchMMX;
+(END)

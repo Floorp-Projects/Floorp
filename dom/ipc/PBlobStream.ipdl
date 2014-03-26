@@ -3,7 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
+include protocol PFileDescriptorSet;
 include InputStreamParams;
+
+using mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -13,7 +16,7 @@ protocol PBlobStream
   manager PBlob;
 
 both:
-  __delete__(InputStreamParams params);
+  __delete__(InputStreamParams params, OptionalFileDescriptorSet fds);
 };
 
 } // namespace dom

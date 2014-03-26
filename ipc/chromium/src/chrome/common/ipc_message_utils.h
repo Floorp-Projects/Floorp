@@ -696,8 +696,9 @@ struct ParamTraitsIPC<base::FileDescriptor> {
     WriteParam(m, valid);
 
     if (valid) {
-      if (!m->WriteFileDescriptor(p))
-        NOTREACHED();
+      if (!m->WriteFileDescriptor(p)) {
+        NOTREACHED() << "Too many file descriptors for one message!";
+      }
     }
   }
   static bool Read(const Message* m, void** iter, param_type* r) {
