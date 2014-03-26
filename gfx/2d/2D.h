@@ -979,7 +979,7 @@ public:
   }
 
 #ifdef USE_SKIA_GPU
-  virtual bool InitWithGrContext(GrContext* aGrContext,
+  virtual void InitWithGrContext(GrContext* aGrContext,
                                  const IntSize &aSize,
                                  SurfaceFormat aFormat)
   {
