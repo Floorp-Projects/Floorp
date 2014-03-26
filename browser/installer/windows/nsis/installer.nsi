@@ -287,7 +287,7 @@ Section "-Application" APP_IDX
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
 !ifdef MOZ_METRO
-  ${ResetWin8PromptKeys} "HKCU" ""
+  ${ResetWin8PromptKeys}
 !endif
   ${UpdateProtocolHandlers}
 
@@ -386,14 +386,6 @@ Section "-Application" APP_IDX
                                     $AppUserModelID \
                                     "FirefoxURL" \
                                     "FirefoxHTML"
-!else
-  ; The metro browser is not enabled by the mozconfig.
-  ${If} ${AtLeastWin8}
-    ${RemoveDEHRegistration} ${DELEGATE_EXECUTE_HANDLER_ID} \
-                             $AppUserModelID \
-                             "FirefoxURL" \
-                             "FirefoxHTML"
-  ${EndIf}
 !endif
   ${EndIf}
 
