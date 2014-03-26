@@ -787,6 +787,14 @@ CustomizeMode.prototype = {
       wrapper.setAttribute("flex", aNode.getAttribute("flex"));
     }
 
+    if (aPlace == "panel") {
+      if (aNode.classList.contains(CustomizableUI.WIDE_PANEL_CLASS)) {
+        wrapper.setAttribute("haswideitem", "true");
+      } else if (wrapper.hasAttribute("haswideitem")) {
+        wrapper.removeAttribute("haswideitem");
+      }
+    }
+
     let removable = aPlace == "palette" || CustomizableUI.isWidgetRemovable(aNode);
     wrapper.setAttribute("removable", removable);
 
