@@ -268,6 +268,15 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         builder.setSingleChoiceItems(mAdapter, mAdapter.getSelectedIndex(), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                // The adapter isn't aware of single vs. multi choice lists, so manually
+                // clear any other selected items first.
+                ArrayList<Integer> selected = mAdapter.getSelected();
+                for (Integer sel : selected) {
+                    mAdapter.toggleSelected(sel);
+                }
+
+                // Now select this item.
+                mAdapter.toggleSelected(which);
                 closeIfNoButtons(which);
             }
         });
