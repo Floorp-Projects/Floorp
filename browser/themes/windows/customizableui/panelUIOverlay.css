@@ -134,13 +134,11 @@ menu[disabled="true"].subviewbutton > .menu-right {
     .subviewbutton,
     .widget-overflow-list .toolbarbutton-1,
     .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+    #BMB_bookmarksPopup menupopup[placespopup=true] > hbox,
+    #edit-controls@inAnyPanel@,
+    #zoom-controls@inAnyPanel@,
     #edit-controls@inAnyPanel@ > toolbarbutton,
     #zoom-controls@inAnyPanel@ > toolbarbutton {
-      border-radius: 0;
-    }
-
-    #edit-controls@inAnyPanel@,
-    #zoom-controls@inAnyPanel@ {
       border-radius: 0;
     }
   }
