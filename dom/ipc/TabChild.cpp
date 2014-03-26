@@ -595,6 +595,8 @@ TabChild::HandlePossibleViewportChange()
   metrics.mCompositionBounds = ParentLayerIntRect(
       ParentLayerIntPoint(),
       ViewAs<ParentLayerPixel>(mInnerSize, PixelCastJustification::ScreenToParentLayerForRoot));
+  metrics.SetRootCompositionSize(
+      ScreenSize(mInnerSize) * ScreenToLayoutDeviceScale(1.0f) / metrics.mDevPixelsPerCSSPixel);
 
   // This change to the zoom accounts for all types of changes I can conceive:
   // 1. screen size changes, CSS viewport does not (pages with no meta viewport
