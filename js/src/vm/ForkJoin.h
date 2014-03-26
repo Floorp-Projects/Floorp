@@ -30,7 +30,7 @@
 // to enable parallel execution.  At the top-level, it consists of a native
 // function (exposed as the ForkJoin intrinsic) that is used like so:
 //
-//     ForkJoin(func, boundsFunc, mode)
+//     ForkJoin(func, sliceStart, sliceEnd, mode)
 //
 // The intention of this statement is to start some some number (usually the
 // number of hardware threads) of copies of |func()| running in parallel. Each
@@ -41,38 +41,39 @@
 // is not something you should rely upon---if work-stealing is enabled it
 // could be that a single worker thread winds up handling multiple slices.
 //
-// The second argument, |boundsFunc|, is a function that must return an array
-// of exactly two integers. This function is called before every attempt at
-// execution: warmup, sequential, or parallel. The bounds are taken from a
-// function call instead of taken as two static integers so that the bounds
-// may be shrunk when recovering from bailout.
+// The second and third arguments, |sliceStart| and |sliceEnd|, are the slice
+// boundaries. These numbers must each fit inside an uint16_t.
 //
-// The third argument, |mode|, is an internal mode integer giving finer
+// The fourth argument, |mode|, is an internal mode integer giving finer
 // control over the behavior of ForkJoin. See the |ForkJoinMode| enum.
 //
 // func() should expect the following arguments:
 //
-//     func(warmup)
+//     func(workerId, sliceStart, sliceEnd)
 //
-// The parameter |warmup| is true for a *warmup or recovery phase*. Warmup
-// phases are discussed below in more detail, but the general idea is that if
-// |warmup| is true, |func| should only do a fixed amount of work. If |warmup|
-// is false, |func| should try to do all remaining work is assigned.
+// The |workerId| parameter is the id of the worker executing the function. It
+// is 0 in sequential mode.
+//
+// The |sliceStart| and |sliceEnd| parameters are the current bounds that that
+// the worker is handling. In parallel execution, these parameters are not
+// used. In sequential execution, they tell the worker what slices should be
+// processed. During the warm up phase, sliceEnd == sliceStart + 1.
 //
 // |func| can keep asking for more work from the scheduler by calling the
-// intrinsic |GetForkJoinSlice(id)|. When there are no more slices to hand
-// out, -1 is returned as a sentinel value. By exposing this function as an
-// intrinsic, we reduce the number of JS-C++ boundary crossings incurred by
-// workstealing, which may have many slices.
+// intrinsic |GetForkJoinSlice(sliceStart, sliceEnd, id)|. When there are no
+// more slices to hand out, ThreadPool::MAX_SLICE_ID is returned as a sentinel
+// value. By exposing this function as an intrinsic, we reduce the number of
+// JS-C++ boundary crossings incurred by workstealing, which may have many
+// slices.
 //
-// |func| MUST PROCESS ALL SLICES BEFORE RETURNING! Not doing so is an error
-// |and is protected by debug asserts in ThreadPool.
+// In sequential execution, |func| should return the maximum computed slice id
+// S for which all slices with id < S have already been processed. This is so
+// ThreadPool can track the leftmost completed slice id to maintain
+// determinism. Slices which have been completed in sequential execution
+// cannot be re-run in parallel execution.
 //
-// Note well that there is a separation of concern between *scheduling* slices
-// and *interpreting* slices. ForkJoin only schedules slices by handing out
-// slice ids; it does not interpret what slice ids mean. Instead, |func|
-// should track how much work it has accomplished thus far; consult |Array.js|
-// for some examples.
+// In parallel execution, |func| MUST PROCESS ALL SLICES BEFORE RETURNING!
+// Not doing so is an error and is protected by debug asserts in ThreadPool.
 //
 // Warmups and Sequential Fallbacks
 // --------------------------------
@@ -192,7 +193,7 @@
 // during parallel exeution. But we're not there yet.
 //
 // Load balancing (work stealing):
-
+//
 // The ForkJoin job is dynamically divided into a fixed number of slices,
 // and is submitted for parallel execution in the pool. When the number
 // of slices is big enough (typically greater than the number of workers

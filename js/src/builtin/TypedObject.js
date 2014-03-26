@@ -1434,23 +1434,26 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
   // relative to its owner (which is often but not always 0).
   const inBaseOffset = TYPEDOBJ_BYTEOFFSET(inArray);
 
-  ForkJoin(mapThread, ShrinkLeftmost(slicesInfo), ForkJoinMode(mode));
+  ForkJoin(mapThread, 0, slicesInfo.count, ForkJoinMode(mode));
   return outArray;
 
-  function mapThread(workerId, warmup) {
+  function mapThread(workerId, sliceStart, sliceEnd) {
     assert(TO_INT32(workerId) === workerId,
            "workerId not int: " + workerId);
-    assert(workerId >= 0 && workerId < pointers.length,
-          "workerId too large: " + workerId + " >= " + pointers.length);
-    assert(!!pointers[workerId],
+    assert(workerId < pointers.length,
+           "workerId too large: " + workerId + " >= " + pointers.length);
+
+    var pointerIndex = InParallelSection() ? workerId : 0;
+    assert(!!pointers[pointerIndex],
           "no pointer data for workerId: " + workerId);
 
+    const { inTypedObject, outTypedObject } = pointers[pointerIndex];
+    const sliceShift = slicesInfo.shift;
     var sliceId;
-    const { inTypedObject, outTypedObject } = pointers[workerId];
 
-    while (GET_SLICE(slicesInfo, sliceId)) {
-      const indexStart = SLICE_START(slicesInfo, sliceId);
-      const indexEnd = SLICE_END(slicesInfo, indexStart, length);
+    while (GET_SLICE(sliceStart, sliceEnd, sliceId)) {
+      const indexStart = SLICE_START_INDEX(sliceShift, sliceId);
+      const indexEnd = SLICE_END_INDEX(sliceShift, indexStart, length);
 
       var inOffset = inBaseOffset + std_Math_imul(inGrainTypeSize, indexStart);
       var outOffset = std_Math_imul(outGrainTypeSize, indexStart);
@@ -1482,7 +1485,7 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
           if (outGrainTypeIsComplex)
             SetTypedObjectValue(outGrainType, outArray, outOffset, r);
           else
-          UnsafePutElements(outArray, i, r);
+            UnsafePutElements(outArray, i, r);
         }
         inOffset += inGrainTypeSize;
         outOffset += outGrainTypeSize;
@@ -1493,11 +1496,9 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
       // to escape.
       if (outGrainTypeIsTransparent)
         ClearThreadLocalArenas();
-
-      MARK_SLICE_DONE(slicesInfo, sliceId);
-      if (warmup)
-        return;
     }
+
+    return sliceId;
   }
 
   return undefined;

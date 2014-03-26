@@ -96,57 +96,6 @@ var std_Set_iterator_next = Object.getPrototypeOf(Set()[std_iterator]()).next;
 #define ARRAY_SLICE(ARRAY, ELEMENT) \
   callFunction(std_Array_slice, ARRAY, ELEMENT);
 
-/********** Parallel JavaScript macros and so on **********/
-
-#ifdef ENABLE_PARALLEL_JS
-
-/* The mode asserts options object. */
-#define TRY_PARALLEL(MODE) \
-  ((!MODE || MODE.mode !== "seq"))
-#define ASSERT_SEQUENTIAL_IS_OK(MODE) \
-  do { if (MODE) AssertSequentialIsOK(MODE) } while(false)
-
-/**
- * The ParallelSpew intrinsic is only defined in debug mode, so define a dummy
- * if debug is not on.
- */
-#ifndef DEBUG
-#define ParallelSpew(args)
-#endif
-
-#define MAX_SLICE_SHIFT 6
-#define MAX_SLICE_SIZE 64
-#define MAX_SLICES_PER_WORKER 8
-
-/**
- * Macros to help compute the start and end indices of slices based on id. Use
- * with the object returned by ComputeSliceInfo.
- */
-#define SLICE_START(info, id) \
-    (id << info.shift)
-#define SLICE_END(info, start, length) \
-    std_Math_min(start + (1 << info.shift), length)
-#define SLICE_COUNT(info) \
-    info.statuses.length
-
-/**
- * ForkJoinGetSlice acts as identity when we are not in a parallel section, so
- * pass in the next sequential value when we are in sequential mode. The
- * reason for this odd API is because intrinsics *need* to be called during
- * ForkJoin's warmup to fill the TI info.
- */
-#define GET_SLICE(info, id) \
-    ((id = ForkJoinGetSlice(InParallelSection() ? -1 : NextSequentialSliceId(info, -1))) >= 0)
-
-#define SLICE_STATUS_DONE 1
-
-/**
- * Macro to mark a slice as completed in the info object.
- */
-#define MARK_SLICE_DONE(info, id) \
-    UnsafePutElements(info.statuses, id, SLICE_STATUS_DONE)
-
-#endif // ENABLE_PARALLEL_JS
 
 /********** List specification type **********/
 
