@@ -18,6 +18,14 @@ CRCCheck on
 
 RequestExecutionLevel user
 
+; The commands inside this ifdef require NSIS 3.0a2 or greater so the ifdef can
+; be removed after we require NSIS 3.0a2 or greater.
+!ifdef NSIS_PACKEDVERSION
+  Unicode true
+  ManifestSupportedOS all
+  ManifestDPIAware true
+!endif
+
 !addplugindir ./
 
 Var Dialog
@@ -273,12 +281,7 @@ ChangeUI all "nsisui.exe"
 
 !if "${AB_CD}" == "en-US"
   ; Custom strings for en-US. This is done here so they aren't translated.
-  !define INDENT "     "
-  !define INTRO_BLURB "Thanks for choosing $BrandFullName. We’re not just designed to be different, we’re different by design."
-  !define INSTALL_BLURB1 "You're about to enjoy the very latest in speed, flexibility and security so you're always in control."
-  !define INSTALL_BLURB2 "And you're joining a global community of users, contributors and developers working to make the best browser in the world."
-  !define INSTALL_BLURB3 "You even get a haiku:$\n${INDENT}Proudly non-profit$\n${INDENT}Free to innovate for you$\n${INDENT}And a better Web"
-  !undef INDENT
+  !include oneoff_en-US.nsh
 !else
   !define INTRO_BLURB "$(INTRO_BLURB1)"
   !define INSTALL_BLURB1 "$(INSTALL_BLURB1)"
@@ -347,9 +350,13 @@ Function .onInit
   ; Require elevation if the user can elevate
   ${ElevateUAC}
 
+; The commands inside this ifndef are needed prior to NSIS 3.0a2 and can be
+; removed after we require NSIS 3.0a2 or greater.
+!ifndef NSIS_PACKEDVERSION
   ${If} ${AtLeastWinVista}
     System::Call 'user32::SetProcessDPIAware()'
   ${EndIf}
+!endif
 
   SetShellVarContext all ; Set SHCTX to HKLM
   ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
