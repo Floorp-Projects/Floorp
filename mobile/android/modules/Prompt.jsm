@@ -195,6 +195,12 @@ Prompt.prototype = {
       if (item.child)
         obj.inGroup = true;
 
+      if (item.showAsActions)
+        obj.showAsActions = item.showAsActions;
+
+      if (item.icon)
+        obj.icon = item.icon;
+
       this.msg.listitems.push(obj);
 
     }, this);
