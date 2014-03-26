@@ -99,8 +99,8 @@ ThreadPoolWorker::discardSlices()
 bool
 ThreadPoolWorker::stealFrom(ThreadPoolWorker *victim, uint16_t *sliceId)
 {
-    // Instead of popping the slice from the front by incrementing sliceStart_,
-    // decrement sliceEnd_. Usually this gives us better locality.
+    // Instead of popping the slice from the front by incrementing sliceFrom_,
+    // decrement sliceTo_. Usually this gives us better locality.
     if (!victim->popSliceBack(sliceId))
         return false;
 #ifdef DEBUG
@@ -198,10 +198,10 @@ ThreadPoolWorker::helperLoop()
 }
 
 void
-ThreadPoolWorker::submitSlices(uint16_t sliceStart, uint16_t sliceEnd)
+ThreadPoolWorker::submitSlices(uint16_t sliceFrom, uint16_t sliceTo)
 {
     MOZ_ASSERT(!hasWork());
-    sliceBounds_ = ComposeSliceBounds(sliceStart, sliceEnd);
+    sliceBounds_ = ComposeSliceBounds(sliceFrom, sliceTo);
 }
 
 bool
@@ -392,9 +392,9 @@ ThreadPool::waitForWorkers(AutoLockMonitor &lock)
 }
 
 ParallelResult
-ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceStart, uint16_t sliceMax)
+ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceFrom, uint16_t sliceMax)
 {
-    MOZ_ASSERT(sliceStart < sliceMax);
+    MOZ_ASSERT(sliceFrom < sliceMax);
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
     MOZ_ASSERT(activeWorkers_ == 0);
     MOZ_ASSERT(!hasWork());
@@ -403,19 +403,19 @@ ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceStart, uin
         return TP_FATAL;
 
     // Evenly distribute slices to the workers.
-    uint16_t numSlices = sliceMax - sliceStart;
+    uint16_t numSlices = sliceMax - sliceFrom;
     uint16_t slicesPerWorker = numSlices / numWorkers();
     uint16_t leftover = numSlices % numWorkers();
-    uint16_t sliceEnd = sliceStart;
+    uint16_t sliceTo = sliceFrom;
     for (uint32_t workerId = 0; workerId < numWorkers(); workerId++) {
         if (leftover > 0) {
-            sliceEnd += slicesPerWorker + 1;
+            sliceTo += slicesPerWorker + 1;
             leftover--;
         } else {
-            sliceEnd += slicesPerWorker;
+            sliceTo += slicesPerWorker;
         }
-        workers_[workerId]->submitSlices(sliceStart, sliceEnd);
-        sliceStart = sliceEnd;
+        workers_[workerId]->submitSlices(sliceFrom, sliceTo);
+        sliceFrom = sliceTo;
     }
     MOZ_ASSERT(leftover == 0);
 

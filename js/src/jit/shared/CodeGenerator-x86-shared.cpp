@@ -2010,9 +2010,9 @@ JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
     masm.pop(cxReg);
     masm.ret();
 
-    // There's no more slices to give out, return a sentinel value.
+    // There's no more slices to give out, return -1.
     masm.bind(&noMoreWork);
-    masm.move32(Imm32(ThreadPool::MAX_SLICE_ID), output);
+    masm.move32(Imm32(-1), output);
     masm.pop(cxReg);
     masm.ret();
 
