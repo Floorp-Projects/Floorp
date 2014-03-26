@@ -4,16 +4,12 @@
 
 package org.mozilla.gecko.preferences;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.Context;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 
 public class PanelsPreferenceCategory extends CustomListCategory {
