@@ -665,21 +665,27 @@ dictionary MozMMIResult
    * request. The UI is supposed to handle the localization of the strings
    * associated with this string key.
    */
-  DOMString serviceCode;
+  DOMString serviceCode = "";
 
   /**
    * String key containing the status message of the associated MMI request.
    * The UI is supposed to handle the localization of the strings associated
    * with this string key.
    */
-  DOMString statusMessage;
+  DOMString statusMessage = "";
 
   /**
    * Some MMI requests like call forwarding or PIN/PIN2/PUK/PUK2 related
    * requests provide extra information along with the status message, this
-   * information can be a number, a string key or an array of string keys.
+   * information can be a number, an array of string keys or an array of
+   * MozCallForwardingOptions.
+   *
+   * And it should be
+   * (unsigned short or sequence<DOMString> or sequence<MozCallForwardingOptions>)
+   * But we cannot yet use sequences as union member types (please see bug 767924)
+   * ,so we use object here.
    */
-  any additionalInformation;
+  (unsigned short or object) additionalInformation;
 };
 
 dictionary MozClirStatus
