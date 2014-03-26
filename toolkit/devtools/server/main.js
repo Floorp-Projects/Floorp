@@ -357,11 +357,11 @@ var DebuggerServer = {
     if (!restrictPrivileges) {
       this.addTabActors();
       this.addGlobalActor(this.ChromeDebuggerActor, "chromeDebugger");
+      this.registerModule("devtools/server/actors/preference");
     }
 
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     this.registerModule("devtools/server/actors/device");
-    this.registerModule("devtools/server/actors/preference");
   },
 
   /**

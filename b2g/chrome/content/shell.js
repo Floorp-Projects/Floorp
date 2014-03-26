@@ -1150,7 +1150,6 @@ let RemoteDebugger = {
           globalActorFactories: restrictPrivileges ? {
             webappsActor: DebuggerServer.globalActorFactories.webappsActor,
             deviceActor: DebuggerServer.globalActorFactories.deviceActor,
-            preferenceActor: DebuggerServer.globalActorFactories.preferenceActor,
           } : DebuggerServer.globalActorFactories
         };
         let root = new DebuggerServer.RootActor(connection, parameters);
