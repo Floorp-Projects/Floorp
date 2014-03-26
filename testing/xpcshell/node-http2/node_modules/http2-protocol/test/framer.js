@@ -21,7 +21,8 @@ var frame_types = {
 var test_frames = [{
   frame: {
     type: 'DATA',
-    flags: { END_STREAM: false, RESERVED: false },
+    flags: { END_STREAM: false, END_SEGMENT: false, RESERVED4: false,
+             RESERVED8: false, PAD_LOW: false, PAD_HIGH: false },
     stream: 10,
 
     data: new Buffer('12345678', 'hex')
@@ -32,7 +33,8 @@ var test_frames = [{
 }, {
   frame: {
     type: 'HEADERS',
-    flags: { END_STREAM: false, RESERVED: false, END_HEADERS: false, PRIORITY: false },
+    flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
+             PRIORITY: false, PAD_LOW: false, PAD_HIGH: false },
     stream: 15,
 
     data: new Buffer('12345678', 'hex')
@@ -42,7 +44,8 @@ var test_frames = [{
 }, {
   frame: {
     type: 'HEADERS',
-    flags: { END_STREAM: false, RESERVED: false, END_HEADERS: false, PRIORITY: true },
+    flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
+             PRIORITY: true, PAD_LOW: false, PAD_HIGH: false },
     stream: 15,
 
     priority: 3,
@@ -80,15 +83,13 @@ var test_frames = [{
       SETTINGS_HEADER_TABLE_SIZE: 0x12345678,
       SETTINGS_ENABLE_PUSH: true,
       SETTINGS_MAX_CONCURRENT_STREAMS: 0x01234567,
-      SETTINGS_INITIAL_WINDOW_SIZE:    0x89ABCDEF,
-      SETTINGS_FLOW_CONTROL_OPTIONS:   true
+      SETTINGS_INITIAL_WINDOW_SIZE:    0x89ABCDEF
     }
   },
-  buffer: new Buffer('0028' + '04' + '00' + '0000000A' +   '00' + '000001' + '12345678' +
-                                                           '00' + '000002' + '00000001' +
-                                                           '00' + '000004' + '01234567' +
-                                                           '00' + '000007' + '89ABCDEF' +
-                                                           '00' + '00000A' + '00000001', 'hex')
+  buffer: new Buffer('0014' + '04' + '00' + '0000000A' +   '01' + '12345678' +
+                                                           '02' + '00000001' +
+                                                           '03' + '01234567' +
+                                                           '04' + '89ABCDEF', 'hex')
 
 }, {
   frame: {
@@ -130,18 +131,71 @@ var test_frames = [{
 
     window_size: 0x12345678
   },
-  buffer: new Buffer('0004' + '09' + '00' + '0000000A' +   '12345678', 'hex')
+  buffer: new Buffer('0004' + '08' + '00' + '0000000A' +   '12345678', 'hex')
 }, {
   frame: {
     type: 'CONTINUATION',
-    flags: { RESERVED1: false, RESERVED2: false, END_HEADERS: true },
+    flags: { RESERVED1: false, RESERVED2: false, END_HEADERS: true,
+             RESERVED8: false, PAD_LOW: false, PAD_HIGH: false },
     stream: 10,
 
     data: new Buffer('12345678', 'hex')
   },
   // length + type + flags + stream +   content
-  buffer: new Buffer('0004' + '0A' + '04' + '0000000A' +   '12345678', 'hex')
+  buffer: new Buffer('0004' + '09' + '04' + '0000000A' +   '12345678', 'hex')
 }];
+
+var deserializer_test_frames = test_frames.slice(0);
+var padded_test_frames = [{
+  frame: {
+    type: 'DATA',
+    flags: { END_STREAM: false, END_SEGMENT: false, RESERVED4: false,
+             RESERVED8: false, PAD_LOW: true, PAD_HIGH: false },
+    stream: 10,
+    data: new Buffer('12345678', 'hex')
+  },
+  // length + type + flags + stream + pad_low control + content + padding
+  buffer: new Buffer('000B' + '00' + '10' + '0000000A' + '06' + '12345678' + '000000000000', 'hex')
+
+}, {
+  frame: {
+    type: 'HEADERS',
+    flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
+             PRIORITY: false, PAD_LOW: true, PAD_HIGH: false },
+    stream: 15,
+
+    data: new Buffer('12345678', 'hex')
+  },
+  buffer: new Buffer('000B' + '01' + '10' + '0000000F' + '06' + '12345678' + '000000000000', 'hex')
+
+}, {
+  frame: {
+    type: 'HEADERS',
+    flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
+             PRIORITY: true, PAD_LOW: true, PAD_HIGH: false },
+    stream: 15,
+
+    priority: 3,
+    data: new Buffer('12345678', 'hex')
+  },
+  buffer: new Buffer('000F' + '01' + '18' + '0000000F' + '06' + '00000003' + '12345678' + '000000000000', 'hex')
+
+}, {
+  frame: {
+    type: 'CONTINUATION',
+    flags: { RESERVED1: false, RESERVED2: false, END_HEADERS: true,
+             RESERVED8: false, PAD_LOW: true, PAD_HIGH: false },
+    stream: 10,
+
+    data: new Buffer('12345678', 'hex')
+  },
+  // length + type + flags + stream +   content
+  buffer: new Buffer('000B' + '09' + '14' + '0000000A' + '06' + '12345678' + '000000000000', 'hex')
+}];
+for (var idx = 0; idx < padded_test_frames.length; idx++) {
+  deserializer_test_frames.push(padded_test_frames[idx]);
+}
+
 
 describe('framer.js', function() {
   describe('Serializer', function() {
@@ -192,8 +246,8 @@ describe('framer.js', function() {
   describe('Deserializer', function() {
     describe('static method .commonHeader(header_buffer, frame)', function() {
       it('should augment the frame object with these properties: { type, flags, stream })', function() {
-        for (var i = 0; i < test_frames.length; i++) {
-          var test = test_frames[i], frame = {};
+        for (var i = 0; i < deserializer_test_frames.length; i++) {
+          var test = deserializer_test_frames[i], frame = {};
           Deserializer.commonHeader(test.buffer.slice(0,8), frame);
           expect(frame).to.deep.equal({
             type:   test.frame.type,
@@ -205,7 +259,7 @@ describe('framer.js', function() {
     });
 
     Object.keys(frame_types).forEach(function(type) {
-      var tests = test_frames.filter(function(test) { return test.frame.type === type; });
+      var tests = deserializer_test_frames.filter(function(test) { return test.frame.type === type; });
       var frame_shape = '{ ' + frame_types[type].join(', ') + ' }';
       describe('static method .' + type + '(payload_buffer, frame)', function() {
         it('should augment the frame object with these properties: ' + frame_shape, function() {
@@ -227,11 +281,11 @@ describe('framer.js', function() {
       it('should transform buffers to appropriate frame object', function() {
         var stream = new Deserializer(util.log);
 
-        var shuffled = util.shuffleBuffers(test_frames.map(function(test) { return test.buffer; }));
+        var shuffled = util.shuffleBuffers(deserializer_test_frames.map(function(test) { return test.buffer; }));
         shuffled.forEach(stream.write.bind(stream));
 
-        for (var j = 0; j < test_frames.length; j++) {
-          expect(stream.read()).to.be.deep.equal(test_frames[j].frame);
+        for (var j = 0; j < deserializer_test_frames.length; j++) {
+          expect(stream.read()).to.be.deep.equal(deserializer_test_frames[j].frame);
         }
       });
     });
