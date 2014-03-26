@@ -508,7 +508,7 @@ var BrowserApp = {
       NativeWindow.contextmenus.emailLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        let [,emailAddr] = NativeWindow.contextmenus._stripScheme(url);
+        let emailAddr = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(emailAddr);
       });
 
@@ -516,19 +516,19 @@ var BrowserApp = {
       NativeWindow.contextmenus.phoneNumberLinkContext,
       function(aTarget) {
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
-        let [,phoneNumber] = NativeWindow.contextmenus._stripScheme(url);
+        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(phoneNumber);
       });
 
     NativeWindow.contextmenus.add({
       label: Strings.browser.GetStringFromName("contextmenu.shareLink"),
-      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER-1, // Show above HTML5 menu items
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1, // Show above HTML5 menu items
       selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.linkShareableContext),
       showAsActions: function(aElement) {
         return {
           title: aElement.textContent.trim() || aElement.title.trim(),
           uri: NativeWindow.contextmenus._getLinkURL(aElement),
-        }
+        };
       },
       icon: "drawable://ic_menu_share",
       callback: function(aTarget) { }
@@ -540,13 +540,13 @@ var BrowserApp = {
       selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.emailLinkContext),
       showAsActions: function(aElement) {
         let url = NativeWindow.contextmenus._getLinkURL(aElement);
-        let [, emailAddr] = NativeWindow.contextmenus._stripScheme(url);
+        let emailAddr = NativeWindow.contextmenus._stripScheme(url);
         let title = aElement.textContent || aElement.title;
         return {
           title: title,
           uri: emailAddr,
           type: "text/mailto",
-        }
+        };
       },
       icon: "drawable://ic_menu_share",
       callback: function(aTarget) { }
@@ -558,13 +558,13 @@ var BrowserApp = {
       selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.phoneNumberLinkContext),
       showAsActions: function(aElement) {
         let url = NativeWindow.contextmenus._getLinkURL(aElement);
-        let [, phoneNumber] = NativeWindow.contextmenus._stripScheme(url);
+        let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
         let title = aElement.textContent || aElement.title;
         return {
           title: title,
           uri: phoneNumber,
           type: "text/tel",
-        }
+        };
       },
       icon: "drawable://ic_menu_share",
       callback: function(aTarget) { }
@@ -622,7 +622,7 @@ var BrowserApp = {
 
     NativeWindow.contextmenus.add({
       label: Strings.browser.GetStringFromName("contextmenu.shareMedia"),
-      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER-1,
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1,
       selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.SelectorContext("video")),
       showAsActions: function(aElement) {
         let url = (aElement.currentSrc || aElement.src);
@@ -631,7 +631,7 @@ var BrowserApp = {
           title: title,
           uri: url,
           type: "video/*",
-        }
+        };
       },
       icon: "drawable://ic_menu_share",
       callback: function(aTarget) {
@@ -666,7 +666,7 @@ var BrowserApp = {
     NativeWindow.contextmenus.add({
       label: Strings.browser.GetStringFromName("contextmenu.shareImage"),
       selector: NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.imageSaveableContext),
-      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER-1, // Show above HTML5 menu items
+      order: NativeWindow.contextmenus.DEFAULT_HTML5_ORDER - 1, // Show above HTML5 menu items
       showAsActions: function(aTarget) {
         let doc = aTarget.ownerDocument;
         let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
@@ -677,7 +677,7 @@ var BrowserApp = {
           title: src,
           uri: src,
           type: "image/*",
-        }
+        };
       },
       icon: "drawable://ic_menu_share",
       menu: true,
@@ -1991,7 +1991,7 @@ var NativeWindow = {
             return aElt.mozMatchesSelector(aSelector);
           return false;
         }
-      }
+      };
     },
 
     linkOpenableNonPrivateContext: {
@@ -2127,72 +2127,128 @@ var NativeWindow = {
           }
           return false;
         }
-      }
+      };
     },
 
+    /* Holds a WeakRef to the original target element this context menu was shown for.
+     * Most API's will have to walk up the tree from this node to find the correct element
+     * to act on
+     */
     get _target() {
       if (this._targetRef)
         return this._targetRef.get();
       return null;
     },
-  
+
     set _target(aTarget) {
       if (aTarget)
         this._targetRef = Cu.getWeakReference(aTarget);
       else this._targetRef = null;
     },
 
-    _addHTMLContextMenuItemsForElement: function(element) {
+    /* Gets menuitems for an arbitrary node
+     * Parameters:
+     *   element - The element to look at. If this element has a contextmenu attribute, the
+     *             corresponding contextmenu will be used.
+     */
+    _getHTMLContextMenuItemsForElement: function(element) {
       let htmlMenu = element.contextMenu;
-      if (!htmlMenu)
-        return;
+      if (!htmlMenu) {
+        return [];
+      }
 
       htmlMenu.QueryInterface(Components.interfaces.nsIHTMLMenu);
       htmlMenu.sendShowEvent();
 
-      this._addHTMLContextMenuItemsForMenu(htmlMenu, element);
+      return this._getHTMLContextMenuItemsForMenu(htmlMenu, element);
     },
 
-    _addHTMLContextMenuItemsForMenu: function(menu, target) {
+    /* Add a menuitem for an HTML <menu> node
+     * Parameters:
+     *   menu - The <menu> element to iterate through for menuitems
+     *   target - The target element these context menu items are attached to
+     */
+    _getHTMLContextMenuItemsForMenu: function(menu, target) {
+      let items = [];
       for (let i = 0; i < menu.childNodes.length; i++) {
         let elt = menu.childNodes[i];
         if (!elt.label)
           continue;
 
-        this.menuitems.push(new HTMLContextMenuItem(elt, target));
+        items.push(new HTMLContextMenuItem(elt, target));
       }
+
+      return items;
     },
 
-    _containsItem: function(aId) {
-      if (!this.menuitems)
+    // Searches the current list of menuitems to show for any that match this id
+    _findMenuItem: function(aId) {
+      if (!this.menus) {
         return null;
-
-      let menu = this.menuitems;
-      for (let i = 0; i < menu.length; i++) {
-        if (menu[i].id == aId)
-          return menu[i];
       }
 
+      for (let context in this.menus) {
+        let menu = this.menus[context];
+        for (let i = 0; i < menu.length; i++) {
+          if (menu[i].id === aId) {
+            return menu[i];
+          }
+        }
+      }
       return null;
     },
 
+    // Returns true if there are any context menu items to show
     shouldShow: function() {
-      return this.menuitems.length > 0;
+      for (let context in this.menus) {
+        let menu = this.menus[context];
+        if (menu.length > 0) {
+          return true;
+        }
+      }
+      return false;
     },
 
-    _addNativeContextMenuItems: function(element, x, y) {
+    /* Returns a label to be shown in a tabbed ui if there are multiple "contexts". For instance, if this
+     * is an image inside an <a> tag, we may have a "link" context and an "image" one.
+     */
+    _getContextType: function(element) {
+      // For anchor nodes, we try to use the scheme to pick a string
+      if (element instanceof Ci.nsIDOMHTMLAnchorElement) {
+        let uri = this.makeURI(this._getLinkURL(element));
+        try {
+          return Strings.browser.GetStringFromName("browser.menu.context." + uri.scheme);
+        } catch(ex) { }
+      }
+
+      // Otherwise we try the nodeName
+      try {
+        return Strings.browser.GetStringFromName("browser.menu.context." + element.nodeName.toLowerCase());
+      } catch(ex) { }
+
+      // Fallback to the default
+      return Strings.browser.GetStringFromName("browser.menu.context.default");
+    },
+
+    // Adds context menu items added through the add-on api
+    _getNativeContextMenuItems: function(element, x, y) {
+      let res = [];
       for (let itemId of Object.keys(this.items)) {
         let item = this.items[itemId];
 
-        if (!this._containsItem(item.id) && item.matches(element, x, y)) {
-          this.menuitems.push(item);
+        if (!this._findMenuItem(item.id) && item.matches(element, x, y)) {
+          res.push(item);
         }
       }
+
+      return res;
     },
 
-    // Checks if there are context menu items to show, and if it finds them
-    // sends a contextmenu event to content. We also send showing events to
-    // any html5 context menus we are about to show
+    /* Checks if there are context menu items to show, and if it finds them
+     * sends a contextmenu event to content. We also send showing events to
+     * any html5 context menus we are about to show, and fire some local notifications
+     * for chrome consumers to do lazy menuitem construction
+     */
     _sendToContent: function(x, y) {
       let target = BrowserEventHandler._highlightElement || ElementTouchHelper.elementFromPoint(x, y);
       if (!target)
@@ -2215,7 +2271,7 @@ var NativeWindow = {
         target.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
         target.dispatchEvent(event);
       } else {
-        this.menuitems = null;
+        this.menus = null;
         Services.obs.notifyObservers({target: target, x: x, y: y}, "context-menu-not-shown", "");
 
         if (SelectionHandler.canSelect(target)) {
@@ -2230,6 +2286,7 @@ var NativeWindow = {
       }
     },
 
+    // Returns a title for a context menu. If no title attribute exists, will fall back to looking for a url
     _getTitle: function(node) {
       if (node.hasAttribute && node.hasAttribute("title")) {
         return node.getAttribute("title");
@@ -2237,8 +2294,10 @@ var NativeWindow = {
       return this._getUrl(node);
     },
 
+    // Returns a url associated with a node
     _getUrl: function(node) {
       if ((node instanceof Ci.nsIDOMHTMLAnchorElement && node.href) ||
+          (node instanceof Ci.nsIDOMHTMLAreaElement && node.href)) {
         return this._getLinkURL(node);
       } else if (node instanceof Ci.nsIImageLoadingContent && node.currentURI) {
         return node.currentURI.spec;
@@ -2249,16 +2308,43 @@ var NativeWindow = {
       return "";
     },
 
+    // Adds an array of menuitems to the current list of items to show, in the correct context
+    _addMenuItems: function(items, context) {
+        if (!this.menus[context]) {
+          this.menus[context] = [];
+        }
+        this.menus[context] = this.menus[context].concat(items);
+    },
+
+    /* Does the basic work of building a context menu to show. Will combine HTML and Native
+     * context menus items, as well as sorting menuitems into different menus based on context.
+     */
     _buildMenu: function(x, y) {
       // now walk up the tree and for each node look for any context menu items that apply
       let element = this._target;
-      this.menuitems = [];
+
+      // this.menus holds a hashmap of "contexts" to menuitems associated with that context
+      // For instance, if the user taps an image inside a link, we'll have something like:
+      // {
+      //   link:  [ ContextMenuItem, ContextMenuItem ]
+      //   image: [ ContextMenuItem, ContextMenuItem ]
+      // }
+      this.menus = {};
 
       while (element) {
+        let context = this._getContextType(element);
+
         // First check for any html5 context menus that might exist...
-        this._addHTMLContextMenuItemsForElement(element);
+        var items = this._getHTMLContextMenuItemsForElement(element);
+        if (items.length > 0) {
+          this._addMenuItems(items, context);
+        }
+
         // then check for any context menu items registered in the ui.
-        this._addNativeContextMenuItems(element, x, y);
+        items = this._getNativeContextMenuItems(element, x, y);
+        if (items.length > 0) {
+          this._addMenuItems(items, context);
+        }
 
         // walk up the tree and find more items to show
         element = element.parentNode;
@@ -2276,6 +2362,7 @@ var NativeWindow = {
       this._innerShow(popupNode, aEvent.clientX, aEvent.clientY);
     },
 
+    // Walks the DOM tree to find a title from a node
     _findTitle: function(node) {
       let title = "";
       while(node && !title) {
@@ -2285,17 +2372,57 @@ var NativeWindow = {
       return title;
     },
 
-    _getItems: function(target) {
-      return this._getItemsInList(target, this.menuitems);
+    /* Reformats the list of menus to show into an object that can be sent to Prompt.jsm
+     * If there is one menu, will return a flat array of menuitems. If there are multiple
+     * menus, will return an array with appropriate tabs/items inside it. i.e. :
+     * [
+     *    { label: "link", items: [...] },
+     *    { label: "image", items: [...] }
+     * ]
+     */
+    _reformatList: function(target) {
+      let contexts = Object.keys(this.menus);
+      if (contexts.length == 1) {
+        // If there's only one context, we'll only show a single flat single select list
+        return this._reformatMenuItems(target, this.menus[contexts[0]]);
+      }
+
+      // If there are multiple contexts, we'll only show a tabbed ui with multiple lists
+      return this._reformatListAsTabs(target, this.menus);
     },
 
-    _getItemsInList: function(target, list) {
+    /* Reformats the list of menus to show into an object that can be sent to Prompt.jsm's
+     * addTabs method. i.e. :
+     * { link: [...], image: [...] } becomes
+     * [ { label: "link", items: [...] } ]
+     *
+     * Also reformats items and resolves any parmaeters that aren't known until display time
+     * (for instance Helper app menu items adjust their title to reflect what Helper App can be used for this link).
+     */
+    _reformatListAsTabs: function(target, menus) {
       let itemArray = [];
-      for (let i = 0; i < list.length; i++) {
+      for (let context in menus) {
+        itemArray.push({
+          label: context,
+          items: this._reformatMenuItems(target, menus[context])
+        });
+      }
+
+      return itemArray;
+    },
+
+    /* Reformats an array of ContextMenuItems into an array that can be handled by Prompt.jsm. Also reformats items
+     * and resolves any parmaeters that aren't known until display time
+     * (for instance Helper app menu items adjust their title to reflect what Helper App can be used for this link).
+     */
+    _reformatMenuItems: function(target, menuitems) {
+      let itemArray = [];
+
+      for (let i = 0; i < menuitems.length; i++) {
         let t = target;
         while(t) {
-          if (list[i].matches(t)) {
-            let val = list[i].getValue(t);
+          if (menuitems[i].matches(t)) {
+            let val = menuitems[i].getValue(t);
 
             // hidden menu items will return null from getValue
             if (val) {
@@ -2307,42 +2434,63 @@ var NativeWindow = {
           t = t.parentNode;
         }
       }
+
       return itemArray;
     },
 
+    // Called where we're finally ready to actually show the contextmenu. Sorts the items and shows a prompt.
     _innerShow: function(target, x, y) {
       Haptic.performSimpleAction(Haptic.LongPress);
 
       // spin through the tree looking for a title for this context menu
       let title = this._findTitle(target);
 
-      this.menuitems.sort((a,b) => {
-        if (a.order == b.order) {
-          return 0;
-        }
+      for (let context in this.menus) {
+        let menu = this.menus[context];
+        menu.sort((a,b) => {
+          if (a.order === b.order) {
+            return 0;
+          }
+          return (a.order > b.order) ? 1 : -1;
+        });
+      }
 
-        return (a.order > b.order) ? 1 : -1;
-      });
-
+      let useTabs = Object.keys(this.menus).length > 1;
       let prompt = new Prompt({
         window: target.ownerDocument.defaultView,
-        title: title
+        title: useTabs ? undefined : title
       });
 
-      let items = this._getItems(target);
-      prompt.setSingleChoiceItems(items);
+      let items = this._reformatList(target);
+      if (useTabs) {
+        prompt.addTabs({
+          id: "tabs",
+          items: items
+        });
+      } else {
+        prompt.setSingleChoiceItems(items);
+      }
+
       prompt.show(this._promptDone.bind(this, target, x, y, items));
     },
 
+    // Called when the contextmenu prompt is closed
     _promptDone: function(target, x, y, items, data) {
       if (data.button == -1) {
-        // prompt was cancelled
+        // Prompt was cancelled, or an ActionView was used.
         return;
       }
 
-      let selectedItemId = items[data.list[0]].id;
-      let selectedItem = this._containsItem(selectedItemId);
-      this.menuitems = null;
+      let selectedItemId;
+      if (data.tabs) {
+        let menu = items[data.tabs.tab];
+        selectedItemId = menu.items[data.tabs.item].id;
+      } else {
+        selectedItemId = items[data.list[0]].id
+      }
+
+      let selectedItem = this._findMenuItem(selectedItemId);
+      this.menus = null;
 
       if (!selectedItem || !selectedItem.matches || !selectedItem.callback) {
         return;
@@ -2358,12 +2506,14 @@ var NativeWindow = {
       }
     },
 
+    // Called when the contextmenu is done propagating to content. If the event wasn't cancelled, will show a contextmenu.
     handleEvent: function(aEvent) {
       BrowserEventHandler._cancelTapHighlight();
       aEvent.target.ownerDocument.defaultView.removeEventListener("contextmenu", this, false);
       this._show(aEvent);
     },
 
+    // Called when a long press is observed in the native Java frontend. Will start the process of generating/showing a contextmenu.
     observe: function(aSubject, aTopic, aData) {
       let data = JSON.parse(aData);
       // content gets first crack at cancelling context menus
@@ -2401,7 +2551,7 @@ var NativeWindow = {
             return false;
           return selector.matches(aElement, aX, aY);
         }
-      }
+      };
     },
 
     _getLinkURL: function ch_getLinkURL(aLink) {
@@ -2431,7 +2581,7 @@ var NativeWindow = {
 
     _stripScheme: function(aString) {
       let index = aString.indexOf(":");
-      return [aString.slice(0, index), aString.slice(index + 1)];
+      return aString.slice(index + 1);
     }
   }
 };
@@ -6375,7 +6525,7 @@ var ClipboardHelper = {
         }
         return false;
       }
-    }
+    };
   },
 
   selectAllContext: {
@@ -8417,11 +8567,13 @@ HTMLContextMenuItem.prototype = Object.create(ContextMenuItem.prototype, {
   getValue: {
     value: function(target) {
       let elt = this.menuElementRef.get();
-      if (!elt)
+      if (!elt) {
         return null;
+      }
 
-      if (elt.hasAttribute("hidden"))
+      if (elt.hasAttribute("hidden")) {
         return null;
+      }
 
       return {
         id: this.id,
