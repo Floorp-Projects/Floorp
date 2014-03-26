@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>iframe for CSS Test Reference: Sticky Positioning - continuations have no effect when resizing</title>
+    <link rel="author" title="Abel Lin" href="mailto:alin@mozilla.com">
+    <link rel="stylesheet" type="text/css" href="ahem.css">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+        font: 20px/1 Ahem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 20px"></div>
+        <div><span class="sticky">in block</span></div>
+        <span class="sticky">after block</span>
+    </div>
+  </body>
+</html>
