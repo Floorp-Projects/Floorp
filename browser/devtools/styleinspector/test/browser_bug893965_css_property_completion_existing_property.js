@@ -48,6 +48,9 @@ let testData = [
   ["VK_BACK_SPACE", "", -1, 0],
   ["f", "fill", 0, MAX_ENTRIES],
   ["i", "fill", 0, 4],
+  ["VK_LEFT", "fill", -1, 0],
+  ["VK_LEFT", "fill", -1, 0],
+  ["i", "fiill", -1, 0],
   ["VK_ESCAPE", null, -1, 0],
 ];
 
@@ -90,7 +93,7 @@ function checkStateAndMoveOn(index) {
 
   info("pressing key " + key + " to get result: [" + testData[index].slice(1) +
        "] for state " + state);
-  if (/(right|back_space|escape)/ig.test(key)) {
+  if (/(left|right|back_space|escape)/ig.test(key)) {
     info("added event listener for right|back_space|escape keys");
     editor.input.addEventListener("keypress", function onKeypress() {
       if (editor.input) {
