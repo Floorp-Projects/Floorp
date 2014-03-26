@@ -12,7 +12,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
-import android.view.ActionProvider;
 import android.view.MenuItem;
 import android.view.MenuItem.OnMenuItemClickListener;
 import android.view.SubMenu;
@@ -23,7 +22,7 @@ import android.text.TextUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class GeckoActionProvider extends ActionProvider {
+public class GeckoActionProvider {
     private static int MAX_HISTORY_SIZE = 2;
 
     /**
@@ -85,11 +84,9 @@ public class GeckoActionProvider extends ActionProvider {
     }
 
     public GeckoActionProvider(Context context) {
-        super(context);
         mContext = context;
     }
 
-    @Override
     public View onCreateActionView() {
         // Create the view and set its data model.
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
@@ -121,12 +118,10 @@ public class GeckoActionProvider extends ActionProvider {
         return onCreateActionView();
     }
 
-    @Override
     public boolean hasSubMenu() {
         return true;
     }
 
-    @Override
     public void onPrepareSubMenu(SubMenu subMenu) {
         // Clear since the order of items may change.
         subMenu.clear();

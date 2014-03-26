@@ -47,7 +47,7 @@ public class GeckoMenuItem implements MenuItem {
     private boolean mEnabled = true;
     private Drawable mIcon;
     private int mIconRes;
-    private ActionProvider mActionProvider;
+    private GeckoActionProvider mActionProvider;
     private GeckoMenu mMenu;
     private GeckoSubMenu mSubMenu;
     private MenuItem.OnMenuItemClickListener mMenuItemClickListener = null;
@@ -89,15 +89,19 @@ public class GeckoMenuItem implements MenuItem {
         return mActionEnum;
     }
 
-    @Override
-    public ActionProvider getActionProvider() {
+    public GeckoActionProvider getGeckoActionProvider() {
         return mActionProvider;
     }
 
     @Override
+    public ActionProvider getActionProvider() {
+        return null;
+    }
+
+    @Override
     public View getActionView() {
-        if (mActionProvider != null && mActionProvider instanceof GeckoActionProvider) {
-            return ((GeckoActionProvider) mActionProvider).getView();
+        if (mActionProvider != null) {
+            return mActionProvider.getView();
         }
 
         return mActionView;
@@ -204,10 +208,13 @@ public class GeckoMenuItem implements MenuItem {
 
     @Override
     public MenuItem setActionProvider(ActionProvider actionProvider) {
+        return this;
+    }
+
+    public MenuItem setActionProvider(GeckoActionProvider actionProvider) {
         mActionProvider = actionProvider;
-        if (mActionProvider != null && mActionProvider instanceof GeckoActionProvider) {
-            GeckoActionProvider provider = (GeckoActionProvider) mActionProvider;
-            provider.setOnTargetSelectedListener(new GeckoActionProvider.OnTargetSelectedListener() {
+        if (mActionProvider != null) {
+            actionProvider.setOnTargetSelectedListener(new GeckoActionProvider.OnTargetSelectedListener() {
                 @Override
                 public void onTargetSelected() {
                     mMenu.close();
