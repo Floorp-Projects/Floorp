@@ -2146,15 +2146,15 @@ let CustomizableUIInternal = {
   },
 
   _resetExtraToolbars: function(aFilter = null) {
-    let firstWindow = true; // Only need to persist once
+    let firstWindow = true; // Only need to unregister and persist once
     for (let [win, ] of gBuildWindows) {
       let toolbox = win.gNavToolbox;
       for (let child of toolbox.children) {
         let matchesFilter = !aFilter || aFilter == child.id;
         if (child.hasAttribute("customindex") && matchesFilter) {
+          let toolbarId = "toolbar" + child.getAttribute("customindex");
+          toolbox.toolbarset.removeAttribute(toolbarId);
           if (firstWindow) {
-            let toolbarId = "toolbar" + child.getAttribute("customindex");
-            toolbox.toolbarset.removeAttribute(toolbarId);
             win.document.persist(toolbox.toolbarset.id, toolbarId);
             // We have to unregister it properly to ensure we don't kill
             // XUL widgets which might be in here
