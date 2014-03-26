@@ -449,6 +449,7 @@ class Automation(object):
     pk12util = os.path.join(utilityPath, "pk12util" + self.BIN_SUFFIX)
 
     status = self.Process([certutil, "-N", "-d", profileDir, "-f", pwfilePath], env = env).wait()
+    automationutils.printstatus(status, "certutil")
     if status != 0:
       return status
 
@@ -460,13 +461,15 @@ class Automation(object):
         trustBits = "CT,,"
         if root.endswith("-object"):
           trustBits = "CT,,CT"
-        self.Process([certutil, "-A", "-i", os.path.join(certPath, item),
+        status = self.Process([certutil, "-A", "-i", os.path.join(certPath, item),
                     "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", trustBits],
                     env = env).wait()
+        automationutils.printstatus(status, "certutil")
       if ext == ".client":
-        self.Process([pk12util, "-i", os.path.join(certPath, item), "-w",
+        status = self.Process([pk12util, "-i", os.path.join(certPath, item), "-w",
                     pwfilePath, "-d", profileDir], 
                     env = env).wait()
+        automationutils.printstatus(status, "pk12util")
 
     os.unlink(pwfilePath)
     return 0
@@ -654,8 +657,11 @@ class Automation(object):
       else:
         # We should have a "crashinject" program in our utility path
         crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
-        if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(processPID)]).wait() == 0:
-          return
+        if os.path.exists(crashinject):
+          status = subprocess.Popen([crashinject, str(processPID)]).wait()
+          automationutils.printstatus(status, "crashinject")
+          if status == 0:
+            return
     self.log.info("Can't trigger Breakpad, just killing process")
     self.killPid(processPID)
 
@@ -728,12 +734,14 @@ class Automation(object):
         self.killAndGetStack(browserProcessId, utilityPath, debuggerInfo)
 
     status = proc.wait()
+    automationutils.printstatus(status, "Main app process")
     if status == 0:
       self.lastTestSeen = "Main app process exited normally"
     if status != 0 and not didTimeout and not hitMaxTime:
       self.log.info("TEST-UNEXPECTED-FAIL | %s | Exited with code %d during test run", self.lastTestSeen, status)
     if stackFixerProcess is not None:
       fixerStatus = stackFixerProcess.wait()
+      automationutils.printstatus(status, "stackFixerProcess")
       if fixerStatus != 0 and not didTimeout and not hitMaxTime:
         self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Stack fixer process exited with code %d during test run", fixerStatus)
     return status
