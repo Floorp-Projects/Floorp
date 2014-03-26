@@ -1016,6 +1016,25 @@ public final class HomeConfig {
         }
 
         /**
+         * Moves panel associated with panelId to the specified position.
+         *
+         * @param panelId Id of panel
+         * @param destIndex Destination position
+         * @return true if move succeeded
+         */
+        public boolean moveTo(String panelId, int destIndex) {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            if (!mConfigOrder.contains(panelId)) {
+                return false;
+            }
+
+            mConfigOrder.remove(panelId);
+            mConfigOrder.add(destIndex, panelId);
+            return true;
+        }
+
+        /**
          * Replaces an existing panel with a new {@code PanelConfig} instance.
          *
          * @return true if the item has been updated.
