@@ -19,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.os.Build;
 
 public class MenuItemActionView extends LinearLayout
                                 implements GeckoMenuItem.Layout {
@@ -37,9 +38,19 @@ public class MenuItemActionView extends LinearLayout
         this(context, attrs, R.attr.menuItemActionViewStyle);
     }
 
-    @TargetApi(11)
+    @TargetApi(14)
     public MenuItemActionView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
+
+        // Set these explicitly, since setting a style isn't supported for LinearLayouts until V11.
+        if (Build.VERSION.SDK_INT >= 11) {
+            setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
+            setDividerDrawable(getResources().getDrawable(R.drawable.divider_vertical));
+        }
+
+        if (Build.VERSION.SDK_INT >= 14) {
+            setDividerPadding(0);
+        }
 
         LayoutInflater.from(context).inflate(R.layout.menu_item_action_view, this);
         mMenuItem = (MenuItemDefault) findViewById(R.id.menu_item);

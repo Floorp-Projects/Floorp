@@ -91,6 +91,7 @@
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
         <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
         <item name="menuItemActionModeStyle">@style/GeckoActionBar.Button</item>
+        <item name="menuItemShareActionButtonStyle">@style/Widget.MenuItemSecondaryActionBar</item>
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase"/>
