@@ -281,6 +281,7 @@ class YarrPatternConstructor {
 public:
     YarrPatternConstructor(YarrPattern& pattern)
         : m_pattern(pattern)
+        , m_stackBase(nullptr)
         , m_characterClassConstructor(pattern.m_ignoreCase)
         , m_invertParentheticalAssertion(false)
     {
@@ -573,6 +574,14 @@ public:
     ErrorCode setupAlternativeOffsets(PatternAlternative* alternative, unsigned currentCallFrameSize, unsigned initialInputPosition,
                                       unsigned *callFrameSizeOut)
     {
+        /*
+         * Attempt detection of over-recursion:
+         * "1MB should be enough stack for anyone."
+         */
+        uint8_t stackDummy_;
+        if (m_stackBase - &stackDummy_ > 1024*1024)
+            return PatternTooLarge;
+
         alternative->m_hasFixedSize = true;
         Checked<unsigned> currentInputPosition = initialInputPosition;
 
@@ -841,8 +850,13 @@ public:
         }
     }
 
+    void setStackBase(uint8_t *stackBase) {
+        m_stackBase = stackBase;
+    }
+
 private:
     YarrPattern& m_pattern;
+    uint8_t * m_stackBase;
     PatternAlternative* m_alternative;
     CharacterClassConstructor m_characterClassConstructor;
     bool m_invertCharacterClass;
@@ -872,6 +886,9 @@ ErrorCode YarrPattern::compile(const String& patternString)
         ASSERT(!error);
         ASSERT(numSubpatterns == m_numSubpatterns);
     }
+
+    uint8_t stackDummy_;
+    constructor.setStackBase(&stackDummy_);
 
     constructor.checkForTerminalParentheses();
     constructor.optimizeDotStarWrappedExpressions();
