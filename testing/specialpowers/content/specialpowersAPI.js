@@ -532,6 +532,7 @@ SpecialPowersAPI.prototype = {
       destroy: () => {
         listeners = [];
         this._removeMessageListener("SPChromeScriptMessage", chromeScript);
+        this._removeMessageListener("SPChromeScriptAssert", chromeScript);
       },
 
       receiveMessage: (aMessage) => {
@@ -542,11 +543,59 @@ SpecialPowersAPI.prototype = {
         if (messageId != id)
           return;
 
-        listeners.filter(o => (o.name == name))
-                 .forEach(o => o.listener(this.wrap(message)));
+        if (aMessage.name == "SPChromeScriptMessage") {
+          listeners.filter(o => (o.name == name))
+                   .forEach(o => o.listener(this.wrap(message)));
+        } else if (aMessage.name == "SPChromeScriptAssert") {
+          assert(aMessage.json);
+        }
       }
     };
     this._addMessageListener("SPChromeScriptMessage", chromeScript);
+    this._addMessageListener("SPChromeScriptAssert", chromeScript);
+
+    let assert = json => {
+      // An assertion has been done in a mochitest chrome script
+      let {url, err, message, stack} = json;
+
+      // Try to fetch a test runner from the mochitest
+      // in order to properly log these assertions and notify
+      // all usefull log observers
+      let window = this.window.get();
+      let parentRunner, repr = function (o) o;
+      if (window) {
+        window = window.wrappedJSObject;
+        parentRunner = window.TestRunner;
+        if (window.repr) {
+          repr = window.repr;
+        }
+      }
+
+      // Craft a mochitest-like report string
+      var resultString = err ? "TEST-UNEXPECTED-FAIL" : "TEST-PASS";
+      var diagnostic =
+        message ? message :
+                  ("assertion @ " + stack.filename + ":" + stack.lineNumber);
+      if (err) {
+        diagnostic +=
+          " - got " + repr(err.actual) +
+          ", expected " + repr(err.expected) +
+          " (operator " + err.operator + ")";
+      }
+      var msg = [resultString, url, diagnostic].join(" | ");
+      if (parentRunner) {
+        if (err) {
+          parentRunner.addFailedTest(url);
+          parentRunner.error(msg);
+        } else {
+          parentRunner.log(msg);
+        }
+      } else {
+        // When we are running only a single mochitest, there is no test runner
+        dump(msg + "\n");
+      }
+    };
+
     return this.wrap(chromeScript);
   },
 

@@ -202,6 +202,8 @@
           progressTotal.nodeValue = '';
           customMessage = true; // Hack to avoid adding to output
         }
+        if (window.mozilla_setStatus)
+          mozilla_setStatus(message, type, customMessage);
         if (verbose && !customMessage)  customMessage = message;
         setStatus(message, type);
         if (customMessage && customMessage.length > 0) {

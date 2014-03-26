@@ -21,11 +21,14 @@ function test() {
     var win = browser.contentWindow.wrappedJSObject;
     var doc = win.document;
     var out = doc.getElementById("status");
+    if (out && !win.mozilla_setStatus)
+      win.mozilla_setStatus = codeMirror_setStatus;
 
     if (!out || !out.classList.contains("done"))
       return void setTimeout(check, 100);
 
     ok(!win.failed, "CodeMirror tests all passed");
+    win.mozilla_setStatus = null;
 
     while (gBrowser.tabs.length > 1) gBrowser.removeCurrentTab();
     finish();

@@ -38,7 +38,7 @@ let developerHUD = {
   _targets: new Map(),
   _frames: new Map(),
   _client: null,
-  _webappsActor: null,
+  _conn: null,
   _watchers: [],
   _logging: true,
 
@@ -61,32 +61,33 @@ let developerHUD = {
       RemoteDebugger.start();
     }
 
-    this._client = new DebuggerClient(DebuggerServer.connectPipe());
-    this._client.connect((type, traits) => {
+    // We instantiate a local debugger connection so that watchers can use our
+    // DebuggerClient to send requests to tab actors (e.g. the consoleActor).
+    // Note the special usage of the private _serverConnection, which we need
+    // to call connectToChild and set up child process actors on a frame we
+    // intend to track. These actors will use the connection to communicate with
+    // our DebuggerServer in the parent process.
+    let transport = DebuggerServer.connectPipe();
+    this._conn = transport._serverConnection;
+    this._client = new DebuggerClient(transport);
 
-      // FIXME(Bug 962577) see below.
-      this._client.listTabs((res) => {
-        this._webappsActor = res.webappsActor;
+    for (let w of this._watchers) {
+      if (w.init) {
+        w.init(this._client);
+      }
+    }
 
-        for (let w of this._watchers) {
-          if (w.init) {
-            w.init(this._client);
-          }
-        }
+    Services.obs.addObserver(this, 'remote-browser-shown', false);
+    Services.obs.addObserver(this, 'inprocess-browser-shown', false);
+    Services.obs.addObserver(this, 'message-manager-disconnect', false);
 
-        Services.obs.addObserver(this, 'remote-browser-shown', false);
-        Services.obs.addObserver(this, 'inprocess-browser-shown', false);
-        Services.obs.addObserver(this, 'message-manager-disconnect', false);
+    let systemapp = document.querySelector('#systemapp');
+    this.trackFrame(systemapp);
 
-        let systemapp = document.querySelector('#systemapp');
-        this.trackFrame(systemapp);
-
-        let frames = systemapp.contentWindow.document.querySelectorAll('iframe[mozapp]');
-        for (let frame of frames) {
-          this.trackFrame(frame);
-        }
-      });
-    });
+    let frames = systemapp.contentWindow.document.querySelectorAll('iframe[mozapp]');
+    for (let frame of frames) {
+      this.trackFrame(frame);
+    }
 
     SettingsListener.observe('hud.logging', this._logging, enabled => {
       this._logging = enabled;
@@ -117,17 +118,12 @@ let developerHUD = {
     if (this._targets.has(frame))
       return;
 
-    // FIXME(Bug 962577) Factor getAppActor out of webappsActor.
-    this._client.request({
-      to: this._webappsActor,
-      type: 'getAppActor',
-      manifestURL: frame.appManifestURL
-    }, (res) => {
-      if (res.error) {
-        return;
-      }
+    let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner)
+                  .frameLoader
+                  .messageManager;
 
-      let target = new Target(frame, res.actor);
+    DebuggerServer.connectToChild(this._conn, mm).then(actor => {
+      let target = new Target(frame, actor);
       this._targets.set(frame, target);
 
       for (let w of this._watchers) {

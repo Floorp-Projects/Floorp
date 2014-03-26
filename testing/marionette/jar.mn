@@ -31,3 +31,4 @@ marionette.jar:
   modules/MockFilePicker.jsm (../specialpowers/content/MockFilePicker.jsm)
   modules/MockColorPicker.jsm (../specialpowers/content/MockColorPicker.jsm)
   modules/MockPermissionPrompt.jsm (../specialpowers/content/MockPermissionPrompt.jsm)
+  modules/Assert.jsm (../modules/Assert.jsm)
