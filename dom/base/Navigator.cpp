@@ -91,7 +91,6 @@
 
 #include "nsIUploadChannel2.h"
 #include "nsFormData.h"
-#include "nsIPrivateBrowsingChannel.h"
 
 namespace mozilla {
 namespace dom {
@@ -1137,18 +1136,6 @@ Navigator::SendBeacon(const nsAString& aUrl,
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
-  }
-
-  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
-  if (pbChannel) {
-    nsIDocShell* docShell = mWindow->GetDocShell();
-    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
-    if (loadContext) {
-      rv = pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Setting the privacy status on the beacon channel failed");
-      }
-    }
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
