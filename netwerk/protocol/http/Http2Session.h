@@ -189,6 +189,7 @@ public:
   uint32_t GetServerInitialStreamWindow() { return mServerInitialStreamWindow; }
 
   void ConnectPushedStream(Http2Stream *stream);
+  void MaybeDecrementConcurrent(Http2Stream *stream);
 
   nsresult ConfirmTLSProfile();
 
@@ -227,7 +228,6 @@ private:
   void        ResetDownstreamState();
   nsresult    ReadyToProcessDataFrame(enum internalStateType);
   nsresult    UncompressAndDiscard();
-  void        MaybeDecrementConcurrent(Http2Stream *);
   void        GeneratePing(bool);
   void        GenerateSettingsAck();
   void        GeneratePriority(uint32_t, uint32_t);
