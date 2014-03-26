@@ -240,11 +240,19 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item),
 .panelUI-grid .toolbarbutton-1,
+toolbarpaletteitem[place="panel"]:not([haswideitem=true]),
 .panel-customization-placeholder-child {
   -moz-appearance: none;
   -moz-box-orient: vertical;
   width: calc(@menuPanelButtonWidth@);
   height: calc(51px + 2.2em);
+}
+
+/* In order to have button labels constrained appropriately, items inside the toolbarpaletteitem
+ * should have a min-width set so they abide by the width set above (which they do outside of
+ * customize mode because they're in a flexed container) */
+toolbarpaletteitem[place="panel"]:not([haswideitem=true]) > .toolbarbutton-1 {
+  min-width: 0.01px;
 }
 
 /* Help SDK buttons fit in. */
