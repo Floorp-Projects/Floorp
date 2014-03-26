@@ -389,26 +389,6 @@ function Reify(sourceDescr,
   return TypedObjectGet(sourceDescr, sourceTypedObj, sourceOffset);
 }
 
-function FillTypedArrayWithValue(destArray, fromValue) {
-  assert(IsObject(handle) && ObjectIsTypedObject(destArray),
-         "FillTypedArrayWithValue: not typed handle");
-
-  var descr = TypedObjectTypeDescr(destArray);
-  var length = DESCR_SIZED_ARRAY_LENGTH(descr);
-  if (length === 0)
-    return;
-
-  // Use convert and copy to to produce the first element:
-  var elemDescr = DESCR_ARRAY_ELEMENT_TYPE(descr);
-  TypedObjectSet(elemDescr, destArray, 0, fromValue);
-
-  // Stamp out the remaining copies:
-  var elemSize = DESCR_SIZE(elemDescr);
-  var totalSize = length * elemSize;
-  for (var offset = elemSize; offset < totalSize; offset += elemSize)
-    Memcpy(destArray, offset, destArray, 0, elemSize);
-}
-
 // Warning: user exposed!
 function TypeDescrEquivalent(otherDescr) {
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
