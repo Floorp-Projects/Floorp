@@ -178,7 +178,7 @@ this.DOMApplicationRegistry = {
 
   // loads the current registry, that could be empty on first run.
   loadCurrentRegistry: function() {
-    return AppsUtils.loadJSONAsync(this.appsFile).then((aData) => {
+    return this._loadJSONAsync(this.appsFile).then((aData) => {
       if (!aData) {
         return;
       }
@@ -513,7 +513,7 @@ this.DOMApplicationRegistry = {
       }
 
       // a
-      let data = yield AppsUtils.loadJSONAsync(file.path);
+      let data = yield this._loadJSONAsync(file.path);
       if (!data) {
         return;
       }
@@ -944,6 +944,56 @@ this.DOMApplicationRegistry = {
     }
   },
 
+  _loadJSONAsync: function(aPath) {
+    let deferred = Promise.defer();
+
+    try {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      file.initWithPath(aPath);
+      let channel = NetUtil.newChannel(file);
+      channel.contentType = "application/json";
+      NetUtil.asyncFetch(channel, function(aStream, aResult) {
+        if (!Components.isSuccessCode(aResult)) {
+          deferred.resolve(null);
+
+          if (aResult == Cr.NS_ERROR_FILE_NOT_FOUND) {
+            // We expect this under certain circumstances, like for webapps.json
+            // on firstrun, so we return early without reporting an error.
+            return;
+          }
+
+          Cu.reportError("DOMApplicationRegistry: Could not read from json file "
+                         + aPath);
+          return;
+        }
+
+        try {
+          // Obtain a converter to read from a UTF-8 encoded input stream.
+          let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                          .createInstance(Ci.nsIScriptableUnicodeConverter);
+          converter.charset = "UTF-8";
+
+          // Read json file into a string
+          let data = JSON.parse(converter.ConvertToUnicode(NetUtil.readInputStreamToString(aStream,
+                                                            aStream.available()) || ""));
+          aStream.close();
+
+          deferred.resolve(data);
+        } catch (ex) {
+          Cu.reportError("DOMApplicationRegistry: Could not parse JSON: " +
+                         aPath + " " + ex + "\n" + ex.stack);
+          deferred.resolve(null);
+        }
+      });
+    } catch (ex) {
+      Cu.reportError("DOMApplicationRegistry: Could not read from " +
+                     aPath + " : " + ex + "\n" + ex.stack);
+      deferred.resolve(null);
+    }
+
+    return deferred.promise;
+  },
+
   addMessageListener: function(aMsgNames, aApp, aMm) {
     aMsgNames.forEach(function (aMsgName) {
       let man = aApp && aApp.manifestURL;
@@ -1179,30 +1229,10 @@ this.DOMApplicationRegistry = {
   _writeFile: function(aPath, aData) {
     debug("Saving " + aPath);
 
-    let deferred = Promise.defer();
-
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    file.initWithPath(aPath);
-
-    // Initialize the file output stream
-    let ostream = FileUtils.openSafeFileOutputStream(file);
-
-    // Obtain a converter to convert our data to a UTF-8 encoded input stream.
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                      .createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-
-    // Asynchronously copy the data to the file.
-    let istream = converter.convertToInputStream(aData);
-    NetUtil.asyncCopy(istream, ostream, function(aResult) {
-      if (!Components.isSuccessCode(aResult)) {
-        deferred.reject()
-      } else {
-        deferred.resolve();
-      }
-    });
-
-    return deferred.promise;
+    return OS.File.writeAtomic(aPath,
+                               new TextEncoder().encode(aData),
+                               { tmpPath: aPath + ".tmp" })
+                  .then(null, Cu.reportError);
   },
 
   doLaunch: function (aData, aMm) {
@@ -1371,7 +1401,7 @@ this.DOMApplicationRegistry = {
       return;
     }
 
-    AppsUtils.loadJSONAsync(file.path).then((aJSON) => {
+    this._loadJSONAsync(file.path).then((aJSON) => {
       if (!aJSON) {
         debug("startDownload: No update manifest found at " + file.path + " " +
               aManifestURL);
@@ -1484,7 +1514,7 @@ this.DOMApplicationRegistry = {
           // Update the handlers and permissions for this app.
           this.updateAppHandlers(aOldManifest, aData, app);
 
-          AppsUtils.loadJSONAsync(staged.path).then((aUpdateManifest) => {
+          this._loadJSONAsync(staged.path).then((aUpdateManifest) => {
             let appObject = AppsUtils.cloneAppObject(app);
             appObject.updateManifest = aUpdateManifest;
             this.notifyUpdateHandlers(appObject, aData, appFile.path);
@@ -2575,7 +2605,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
           let fileNames = ["manifest.webapp", "update.webapp", "manifest.json"];
           for (let fileName of fileNames) {
-            this._manifestCache[id] = yield AppsUtils.loadJSONAsync(OS.Path.join(dir.path, fileName));
+            this._manifestCache[id] = yield this._loadJSONAsync(OS.Path.join(dir.path, fileName));
             if (this._manifestCache[id]) {
               break;
             }
@@ -2866,30 +2896,39 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
    * @returns {String} the MD5 hash of the file
    */
   _computeFileHash: function(aFilePath) {
-    let deferred = Promise.defer();
-
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    file.initWithPath(aFilePath);
-
-    NetUtil.asyncFetch(file, function(inputStream, status) {
-      if (!Components.isSuccessCode(status)) {
-        debug("Error reading " + aFilePath + ": " + e);
-        deferred.reject();
-        return;
-      }
-
+    return Task.spawn(function*() {
       let hasher = Cc["@mozilla.org/security/hash;1"]
                      .createInstance(Ci.nsICryptoHash);
       // We want to use the MD5 algorithm.
       hasher.init(hasher.MD5);
 
-      const PR_UINT32_MAX = 0xffffffff;
-      hasher.updateFromStream(inputStream, PR_UINT32_MAX);
+      const CHUNK_SIZE = 16384;
 
       // Return the two-digit hexadecimal code for a byte.
       function toHexString(charCode) {
         return ("0" + charCode.toString(16)).slice(-2);
       }
+
+      let file;
+      try {
+        file = yield OS.File.open(aFilePath, { read: true });
+      } catch(e) {
+        debug("Error opening " + aFilePath + ": " + e);
+        return null;
+      }
+
+      try {
+        let array;
+        do {
+          array = yield file.read(CHUNK_SIZE);
+          hasher.update(array, array.length);
+        } while (array.length == CHUNK_SIZE);
+      } catch(e) {
+        debug("Error reading " + aFilePath + ": " + e);
+        return null;
+      }
+
+      yield file.close();
 
       // We're passing false to get the binary hash and not base64.
       let data = hasher.finish(false);
@@ -2897,10 +2936,8 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       let hash = [toHexString(data.charCodeAt(i)) for (i in data)].join("");
       debug("File hash computed: " + hash);
 
-      deferred.resolve(hash);
+      return hash;
     });
-
-    return deferred.promise;
   },
 
   /**
@@ -2928,15 +2965,12 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       aOldApp.manifestHash = aOldApp.staged.manifestHash;
       aOldApp.etag = aOldApp.staged.etag || aOldApp.etag;
       aOldApp.staged = {};
-
       // Move the staged update manifest to a non staged one.
-      try {
-        let staged = this._getAppDir(aId);
-        staged.append("staged-update.webapp");
-        staged.moveTo(staged.parent, "update.webapp");
-      } catch (ex) {
-        // We don't really mind much if this fails.
-      }
+      let dirPath = this._getAppDir(aId).path;
+
+      // We don't really mind much if this fails.
+      OS.File.move(OS.Path.join(dirPath, "staged-update.webapp"),
+                   OS.Path.join(dirPath, "update.webapp"));
     }
 
     // Save the updated registry, and cleanup the tmp directory.
