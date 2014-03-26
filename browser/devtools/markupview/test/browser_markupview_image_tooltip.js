@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that image preview tooltips are shown on img and canvas tags in the
 // markup-view and that the tooltip actually contains an image and shows the
 // right dimension label

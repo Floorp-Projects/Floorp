@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that image nodes have the "copy data-uri" contextual menu item enabled
 // and that clicking it puts the image data into the clipboard
 

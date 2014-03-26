@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that the markup view loads only as many nodes as specified by the
 // devtools.markup.pagesize preference.
 

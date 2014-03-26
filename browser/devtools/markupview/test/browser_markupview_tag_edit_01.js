@@ -6,6 +6,8 @@
 
 // Test editing various markup-containers' attribute fields
 
+loadHelperScript("helper_attributes_test_runner.js");
+
 const TEST_URL = TEST_URL_ROOT + "doc_markup_edit.html";
 let TEST_DATA = [{
   desc: "Change an attribute",

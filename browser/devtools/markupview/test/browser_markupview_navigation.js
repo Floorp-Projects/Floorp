@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that the markup-view nodes can be navigated to with the keyboard
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_navigation.html";
