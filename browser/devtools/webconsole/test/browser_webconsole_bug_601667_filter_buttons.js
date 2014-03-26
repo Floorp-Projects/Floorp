@@ -45,7 +45,7 @@ function testMenuFilterButton(aCategory) {
   // Turn all the filters off, if they were on.
   let menuItem = firstMenuItem;
   while (menuItem != null) {
-    if (isChecked(menuItem)) {
+    if (menuItem.hasAttribute("prefKey") && isChecked(menuItem)) {
       chooseMenuItem(menuItem);
     }
     menuItem = menuItem.nextSibling;
@@ -89,10 +89,12 @@ function testMenuFilterButton(aCategory) {
   menuItem = firstMenuItem;
   while (menuItem) {
     let prefKey = menuItem.getAttribute("prefKey");
-    ok(!isChecked(menuItem), "menu item " + prefKey + " for category " +
-       aCategory + " is no longer checked after clicking the button");
-    ok(!hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
-       "off after clicking the button");
+    if (prefKey) {
+      ok(!isChecked(menuItem), "menu item " + prefKey + " for category " +
+         aCategory + " is no longer checked after clicking the button");
+      ok(!hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
+         "off after clicking the button");
+    }
     menuItem = menuItem.nextSibling;
   }
 
@@ -127,7 +129,8 @@ function testMenuFilterButton(aCategory) {
   while (menuItem) {
     // The csslog menu item is already unchecked at this point.
     // Make sure it is not selected. See bug 971798.
-    if (menuItem.getAttribute("prefKey") != "csslog") {
+    prefKey = menuItem.getAttribute("prefKey");
+    if (prefKey && prefKey != "csslog") {
       chooseMenuItem(menuItem);
     }
     menuItem = menuItem.nextSibling;
@@ -164,7 +167,7 @@ function testIsolateFilterButton(aCategory) {
         aCategory + " should not be checked after isolating for " + aCategory);
       ok(!hud.ui.filterPrefs[prefKey], prefKey + " messages should be " +
         "turned off after isolating for " + aCategory);
-    } else {
+    } else if (prefKey) {
       ok(isChecked(item), "menu item " + prefKey + " for category " +
         aCategory + " is checked after isolating for " + aCategory);
       ok(hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
@@ -184,10 +187,12 @@ function testIsolateFilterButton(aCategory) {
       menuItems = filterButton.querySelectorAll("menuitem");
       Array.forEach(menuItems, (item) => {
         let prefKey = item.getAttribute("prefKey");
-        ok(!isChecked(item), "menu item " + prefKey + " for category " +
-          aCategory + " is unchecked after isolating for " + aCategory);
-        ok(!hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
-          "turned off after isolating for " + aCategory);
+        if (prefKey) {
+          ok(!isChecked(item), "menu item " + prefKey + " for category " +
+            aCategory + " is unchecked after isolating for " + aCategory);
+          ok(!hud.ui.filterPrefs[prefKey], prefKey + " messages are " +
+            "turned off after isolating for " + aCategory);
+        }
       });
 
       // Turn all the filters on again by clicking the button.
