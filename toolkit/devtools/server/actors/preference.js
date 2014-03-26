@@ -20,23 +20,7 @@ exports.unregister = function(handle) {
 let PreferenceActor = protocol.ActorClass({
   typeName: "preference",
 
-  _arePrefsAccessible: function() {
-    // We are using the authorization to debug certified apps as a proxy for the
-    // authorization to read and write preferences.  We also perform this check
-    // inside every operation.
-    return !Services.prefs.getBoolPref("devtools.debugger.forbid-certified-apps");
-  },
-  arePrefsAccessible: method(function() {
-    return this._arePrefsAccessible();
-  }, {
-    request: {},
-    response: { value: RetVal("boolean") },
-  }),
-
   getBoolPref: method(function(name) {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     return Services.prefs.getBoolPref(name);
   }, {
     request: { value: Arg(0) },
@@ -44,9 +28,6 @@ let PreferenceActor = protocol.ActorClass({
   }),
 
   getCharPref: method(function(name) {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     return Services.prefs.getCharPref(name);
   }, {
     request: { value: Arg(0) },
@@ -54,9 +35,6 @@ let PreferenceActor = protocol.ActorClass({
   }),
 
   getIntPref: method(function(name) {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     return Services.prefs.getIntPref(name);
   }, {
     request: { value: Arg(0) },
@@ -64,9 +42,6 @@ let PreferenceActor = protocol.ActorClass({
   }),
 
   getAllPrefs: method(function() {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     let prefs = {};
     Services.prefs.getChildList("").forEach(function(name, index) {
       // append all key/value pairs into a huge json object.
@@ -99,9 +74,6 @@ let PreferenceActor = protocol.ActorClass({
   }),
 
   setBoolPref: method(function(name, value) {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     Services.prefs.setBoolPref(name, value);
     Services.prefs.savePrefFile(null);
   }, {
@@ -110,9 +82,6 @@ let PreferenceActor = protocol.ActorClass({
   }),
 
   setCharPref: method(function(name, value) {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     Services.prefs.setCharPref(name, value);
     Services.prefs.savePrefFile(null);
   }, {
@@ -121,9 +90,6 @@ let PreferenceActor = protocol.ActorClass({
   }),
 
   setIntPref: method(function(name, value) {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     Services.prefs.setIntPref(name, value);
     Services.prefs.savePrefFile(null);
   }, {
@@ -132,9 +98,6 @@ let PreferenceActor = protocol.ActorClass({
   }),
 
   clearUserPref: method(function(name) {
-    if (!this._arePrefsAccessible()) {
-      throw new Error("Operation not permitted");
-    }
     Services.prefs.clearUserPref(name);
     Services.prefs.savePrefFile(null);
   }, {
