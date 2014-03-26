@@ -313,8 +313,10 @@ public:
 
   /**
    * Get width and height, using given image request if attributes are unset.
+   * Pass a reference to the image request, since the method may change the
+   * value and we want to use the updated value.
    */
-  nsSize GetWidthHeightForImage(imgIRequest *aImageRequest);
+  nsSize GetWidthHeightForImage(nsRefPtr<imgRequestProxy>& aImageRequest);
 
   // XPIDL methods
   NS_FORWARD_NSIDOMNODE_TO_NSINODE
