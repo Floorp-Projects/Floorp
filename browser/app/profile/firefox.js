@@ -1226,7 +1226,7 @@ pref("devtools.webconsole.filter.cssparser", false);
 pref("devtools.webconsole.filter.csslog", false);
 pref("devtools.webconsole.filter.exception", true);
 pref("devtools.webconsole.filter.jswarn", false);
-pref("devtools.webconsole.filter.jslog", true);
+pref("devtools.webconsole.filter.jslog", false);
 pref("devtools.webconsole.filter.error", true);
 pref("devtools.webconsole.filter.warn", true);
 pref("devtools.webconsole.filter.info", true);
@@ -1236,10 +1236,10 @@ pref("devtools.webconsole.filter.secwarn", true);
 
 // Remember the Browser Console filters
 pref("devtools.browserconsole.filter.network", true);
-pref("devtools.browserconsole.filter.networkinfo", true);
+pref("devtools.browserconsole.filter.networkinfo", false);
 pref("devtools.browserconsole.filter.netwarn", true);
 pref("devtools.browserconsole.filter.csserror", true);
-pref("devtools.browserconsole.filter.cssparser", true);
+pref("devtools.browserconsole.filter.cssparser", false);
 pref("devtools.browserconsole.filter.csslog", false);
 pref("devtools.browserconsole.filter.exception", true);
 pref("devtools.browserconsole.filter.jswarn", true);
