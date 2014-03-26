@@ -6,10 +6,11 @@
     <script type="application/javascript" src="uitour.js">
     </script>
     <script type="application/javascript">
-      var callbackResult;
+      var callbackResult, callbackData;
       function makeCallback(name) {
-        return (function() {
+        return (function(data) {
           callbackResult = name;
+          callbackData = data;
         });
       }
 
@@ -23,7 +24,8 @@
 
       function makeInfoOptions() {
         return {
-          closeButtonCallback: makeCallback("closeButton")
+          closeButtonCallback: makeCallback("closeButton"),
+          targetCallback: makeCallback("target"),
         };
       }
     </script>
