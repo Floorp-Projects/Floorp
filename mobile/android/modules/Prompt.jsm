@@ -148,6 +148,14 @@ Prompt.prototype = {
     });
   },
 
+  addTabs: function(aOptions) {
+    return this._addInput({
+      type: "tabs",
+      items: aOptions.items,
+      id: aOptions.id
+    });
+  },
+
   show: function(callback) {
     this.callback = callback;
     log("Sending message");
