@@ -8,8 +8,6 @@
  * name twice results in only one trace being collected for that name.
  */
 
-let {defer} = devtools.require("sdk/core/promise");
-
 var gDebuggee;
 var gClient;
 var gTraceClient;
@@ -49,7 +47,7 @@ function test_start_stop_reentrant()
 
 function start_named_trace(aName)
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.startTrace([], aName, function(aResponse) {
     do_check_true(!!gTraceClient.tracing, "TraceClient should be in tracing state");
     do_check_true(!aResponse.error,
@@ -67,7 +65,7 @@ function start_named_trace(aName)
 
 function stop_trace(aName, aExpectedName)
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.stopTrace(aName, function(aResponse) {
     do_check_true(!aResponse.error,
                   'stopTrace should not respond with error: ' + aResponse.error);

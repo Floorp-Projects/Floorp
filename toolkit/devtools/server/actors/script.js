@@ -3704,7 +3704,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
 
     let url;
-    if (aRawObj instanceof Ci.nsIDOMWindow) {
+    if (aRawObj instanceof Ci.nsIDOMWindow && aRawObj.location) {
       url = aRawObj.location.href;
     } else {
       url = aRawObj.href;
@@ -3790,7 +3790,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       nodeName: aRawObj.nodeName,
     };
 
-    if (aRawObj instanceof Ci.nsIDOMDocument) {
+    if (aRawObj instanceof Ci.nsIDOMDocument && aRawObj.location) {
       preview.location = threadActor.createValueGrip(aRawObj.location.href);
     } else if (aRawObj instanceof Ci.nsIDOMDocumentFragment) {
       preview.childNodesLength = aRawObj.childNodes.length;

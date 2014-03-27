@@ -24,6 +24,7 @@
 #include "nsContentUtils.h"
 #include "nsTArrayHelpers.h"
 #include "nsCxPusher.h"
+#include "xpcpublic.h"
 #include "nsServiceManagerUtils.h"
 
 namespace mozilla {
@@ -477,7 +478,12 @@ SmsRequestParent::DoRequest(const SendMessageRequest& aRequest)
       nsCOMPtr<nsIMmsService> mmsService = do_GetService(MMS_SERVICE_CONTRACTID);
       NS_ENSURE_TRUE(mmsService, true);
 
+      // There are cases (see bug 981202) where this is called with no JS on the
+      // stack. And since mmsService might be JS-Implemented, we need to pass a
+      // jsval to ::Send. Only system code should be looking at the result here,
+      // so we just create it in the System-Principaled Junk Scope.
       AutoJSContext cx;
+      JSAutoCompartment ac(cx, xpc::GetJunkScope());
       JS::Rooted<JS::Value> params(cx);
       const SendMmsMessageRequest &req = aRequest.get_SendMmsMessageRequest();
       if (!GetParamsFromSendMmsMessageRequest(cx,

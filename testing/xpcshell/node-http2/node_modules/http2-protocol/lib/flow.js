@@ -19,11 +19,7 @@ exports.Flow = Flow;
 // * **setInitialWindow(size)**: the initial flow control window size can be changed *any time*
 //   ([as described in the standard][1]) using this method
 //
-// * **disableRemoteFlowControl()**: sends a WINDOW_UPDATE signaling that we don't want flow control
-//
-// * **disableLocalFlowControl()**: disables flow control for outgoing frames
-//
-// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-09#section-6.9.2
+// [1]: http://tools.ietf.org/html/draft-ietf-httpbis-http2-10#section-6.9.2
 
 // API for child classes
 // ---------------------
@@ -68,7 +64,6 @@ function Flow(flowControlId) {
   this._queue = [];
   this._ended = false;
   this._received = 0;
-  this._remoteFlowControlDisabled = false;
 }
 Flow.prototype = Object.create(Duplex.prototype, { constructor: { value: Flow } });
 
@@ -89,7 +84,7 @@ Flow.prototype._write = function _write(frame, encoding, callback) {
     this._ended = true;
   }
 
-  if ((frame.type === 'DATA') && (frame.data.length > 0) && !this._remoteFlowControlDisabled) {
+  if ((frame.type === 'DATA') && (frame.data.length > 0)) {
     this._receive(frame, function() {
       this._received += frame.data.length;
       if (!this._restoreWindowTimer) {
@@ -113,7 +108,7 @@ Flow.prototype._write = function _write(frame, encoding, callback) {
 // a WINDOW_UPDATE that restores the flow control window of the remote end.
 Flow.prototype._restoreWindow = function _restoreWindow() {
   delete this._restoreWindowTimer;
-  if (!this._ended && !this._remoteFlowControlDisabled && (this._received > 0)) {
+  if (!this._ended && (this._received > 0)) {
     this.push({
       type: 'WINDOW_UPDATE',
       flags: {},
@@ -122,12 +117,6 @@ Flow.prototype._restoreWindow = function _restoreWindow() {
     });
     this._received = 0;
   }
-};
-
-// Must be called after sending a SETTINGS frame that turns off flow control on the remote side.
-Flow.prototype.disableRemoteFlowControl = function disableRemoteFlowControl() {
-  this._log.debug('Turning off remote flow control');
-  this._remoteFlowControlDisabled = true;
 };
 
 // Outgoing frames - sending procedure
@@ -354,9 +343,4 @@ Flow.prototype._updateWindow = function _updateWindow(frame) {
 Flow.prototype.setInitialWindow = function setInitialWindow(initialWindow) {
   this._increaseWindow(initialWindow - this._initialWindow);
   this._initialWindow = initialWindow;
-};
-
-// Flow control for outgoing frames can be disabled by the peer with various methods.
-Flow.prototype.disableLocalFlowControl = function disableLocalFlowControl() {
-  this._increaseWindow(Infinity);
 };
