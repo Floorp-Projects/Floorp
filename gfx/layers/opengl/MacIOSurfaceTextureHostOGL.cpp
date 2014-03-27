@@ -90,7 +90,7 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilt
     NS_WARNING("Trying to bind a texture without a GLContext");
     return;
   }
-  GLuint tex = mCompositor->GetTemporaryTexture(aTextureUnit);
+  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
 
   gl()->fActiveTexture(aTextureUnit);
   gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
