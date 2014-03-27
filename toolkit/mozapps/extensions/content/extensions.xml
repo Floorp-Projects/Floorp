@@ -1343,7 +1343,7 @@
           this._showStatus(showProgress ? "progress" : "none");
 
           let debuggable = this.mAddon.isDebuggable &&
-                           Services.prefs.getBoolPref('devtools.debugger.addon-enabled') &&
+                           Services.prefs.getBoolPref('devtools.chrome.enabled') &&
                            Services.prefs.getBoolPref('devtools.debugger.remote-enabled');
 
           this._debugBtn.disabled = this._debugBtn.hidden = !debuggable
