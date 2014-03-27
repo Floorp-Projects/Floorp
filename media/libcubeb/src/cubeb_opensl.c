@@ -559,7 +559,7 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
   uint64_t samplerate;
   SLresult res;
   int rv;
-  int32_t mixer_latency;
+  uint32_t mixer_latency;
 
   res = (*stm->play)->GetPosition(stm->play, &msec);
   if (res != SL_RESULT_SUCCESS)
