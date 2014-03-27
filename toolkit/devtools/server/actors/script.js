@@ -4635,6 +4635,8 @@ update(ChromeDebuggerActor.prototype, {
 
 function AddonThreadActor(aConnect, aHooks, aAddonID) {
   this.addonID = aAddonID;
+  this.addonManager = Cc["@mozilla.org/addons/integration;1"].
+                      getService(Ci.amIAddonManager);
   ThreadActor.call(this, aHooks);
 }
 
@@ -4651,7 +4653,17 @@ update(AddonThreadActor.prototype, {
    * sure every script and source with a URL is stored when debugging
    * add-ons.
    */
-  _allowSource: (aSourceURL) => !!aSourceURL,
+  _allowSource: function(aSourceURL) {
+    // Hide eval scripts
+    if (!aSourceURL)
+      return false;
+
+    // XPIProvider.jsm evals some code in every add-on's bootstrap.js. Hide it
+    if (aSourceURL == "resource://gre/modules/addons/XPIProvider.jsm")
+      return false;
+
+    return true;
+  },
 
   /**
    * An object that will be used by ThreadActors to tailor their
@@ -4695,14 +4707,30 @@ update(AddonThreadActor.prototype, {
    * @param aGlobal Debugger.Object
    */
   _checkGlobal: function ADA_checkGlobal(aGlobal) {
-    let metadata;
     try {
       // This will fail for non-Sandbox objects, hence the try-catch block.
-      metadata = Cu.getSandboxMetadata(aGlobal.unsafeDereference());
+      let metadata = Cu.getSandboxMetadata(aGlobal.unsafeDereference());
+      if (metadata)
+        return metadata.addonID === this.addonID;
     } catch (e) {
     }
 
-    return metadata && metadata.addonID === this.addonID;
+    // Check the global for a __URI__ property and then try to map that to an
+    // add-on
+    let uridescriptor = aGlobal.getOwnPropertyDescriptor("__URI__");
+    if (uridescriptor && "value" in uridescriptor) {
+      try {
+        let uri = Services.io.newURI(uridescriptor.value, null, null);
+        let id = {};
+        if (this.addonManager.mapURIToAddonID(uri, id))
+          return id.value === this.addonID;
+      }
+      catch (e) {
+        console.log("Unexpected URI " + uridescriptor.value);
+      }
+    }
+
+    return false;
   }
 });
 

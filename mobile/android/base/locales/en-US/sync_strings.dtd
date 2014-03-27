@@ -178,6 +178,8 @@
 <!ENTITY fxaccount_status_needs_verification2 'Your account needs to be verified. Tap to resend verification email.'>
 <!ENTITY fxaccount_status_needs_credentials 'Cannot connect. Tap to sign in.'>
 <!ENTITY fxaccount_status_needs_upgrade 'You need to upgrade &brandShortName; to sign in.'>
+<!ENTITY fxaccount_status_needs_master_sync_automatically_enabled '&syncBrand.shortName.label; is set up, but not syncing automatically. Toggle “Auto-sync data” in Android Settings &gt; Data Usage.'>
+<!ENTITY fxaccount_status_needs_account_enabled '&syncBrand.shortName.label; is set up, but not syncing automatically. Tap to start syncing.'>
 <!ENTITY fxaccount_status_bookmarks 'Bookmarks'>
 <!ENTITY fxaccount_status_history 'History'>
 <!ENTITY fxaccount_status_passwords 'Passwords'>
