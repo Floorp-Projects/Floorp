@@ -12,7 +12,7 @@ interface nsIAsyncVerifyRedirectCallback;
  * Implemented by chrome side of IPC protocols that support redirect responses.
  */
 
-[scriptable, uuid(cb7edc1c-096f-44de-957c-cb93de1545f6)]
+[scriptable, uuid(3ed1d288-5324-46ee-8a98-33ac37d1080b)]
 interface nsIParentRedirectingChannel : nsIParentChannel
 {
   /**
