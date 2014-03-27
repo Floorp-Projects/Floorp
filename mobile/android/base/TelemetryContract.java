@@ -29,10 +29,6 @@ public interface TelemetryContract {
     public interface Session {
         // Started when a user enters about:home.
         public static final String HOME = "home.v1";
-
-        // Started when a user enters a given home panel.
-        // Session name is dynamic, encoded as "homepanel.v1:<panel_id>"
-        public static final String HOME_PANEL = "homepanel.v1:";
     }
 
     /**

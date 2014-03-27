@@ -32,6 +32,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class HomePager extends ViewPager {
+
     private static final int LOADER_ID_CONFIG = 0;
 
     private final Context mContext;
@@ -50,9 +51,6 @@ public class HomePager extends ViewPager {
 
     // Cached original ViewPager background.
     private final Drawable mOriginalBackground;
-
-    // Telemetry session for current panel.
-    private String mCurrentPanelSession;
 
     // This is mostly used by UI tests to easily fetch
     // specific list views at runtime.
@@ -208,9 +206,6 @@ public class HomePager extends ViewPager {
     public void unload() {
         mLoaded = false;
         setAdapter(null);
-
-        // Stop UI Telemetry sessions.
-        stopCurrentPanelTelemetrySession();
         Telemetry.stopUISession(TelemetryContract.Session.HOME);
     }
 
@@ -370,10 +365,6 @@ public class HomePager extends ViewPager {
             if (mHomeBanner != null) {
                 mHomeBanner.setActive(position == mDefaultPageIndex);
             }
-
-            // Start a UI telemetry session for the newly selected panel.
-            final String newPanelId = ((HomeAdapter) getAdapter()).getPanelIdAtPosition(position);
-            startNewPanelTelemetrySession(newPanelId);
         }
 
         @Override
@@ -389,30 +380,5 @@ public class HomePager extends ViewPager {
 
         @Override
         public void onPageScrollStateChanged(int state) { }
-    }
-
-    /**
-     * Start UI telemetry session for the a panel.
-     * If there is currently a session open for a panel,
-     * it will be stopped before a new one is started.
-     *
-     * @param panelId of panel to start a session for
-     */
-    private void startNewPanelTelemetrySession(String panelId) {
-        // Stop the current panel's session if we have one.
-        stopCurrentPanelTelemetrySession();
-
-        mCurrentPanelSession = TelemetryContract.Session.HOME_PANEL + panelId;
-        Telemetry.startUISession(mCurrentPanelSession);
-    }
-
-    /**
-     * Stop the current panel telemetry session if one exists.
-     */
-    private void stopCurrentPanelTelemetrySession() {
-        if (mCurrentPanelSession != null) {
-            Telemetry.stopUISession(mCurrentPanelSession);
-            mCurrentPanelSession = null;
-        }
     }
 }
