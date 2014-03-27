@@ -188,34 +188,24 @@ endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 endif # ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
 
 ifdef MOZ_PSEUDO_DERECURSE
-ifeq (.,$(DEPTH))
-# top-level directories
-ifndef JS_STANDALONE
-# Only define recurse_targets for js, when it is built as part of gecko.
-recurse_targets := $(addsuffix /binaries,$(call TIER_DIRS,binaries))
-# we want to adjust paths for js/src.
-want_abspaths = 1
-endif
-endif
 
 ifdef COMPILE_ENVIRONMENT
 
 # Aggregate all dependency files relevant to a binaries build except in
 # the mozilla top-level directory.
-ifneq (_.,$(recurse_targets)_$(DEPTH))
+ifneq (.,$(DEPTH))
 ALL_DEP_FILES := \
   $(BINARIES_PP) \
   $(addsuffix .pp,$(addprefix $(MDDEPDIR)/,$(sort \
     $(TARGETS) \
     $(filter-out $(SOBJS) $(ASOBJS) $(EXCLUDED_OBJS),$(OBJ_TARGETS)) \
   ))) \
-  $(recurse_targets) \
   $(NULL)
 endif
 
 binaries libs:: $(TARGETS) $(BINARIES_PP)
-ifneq (_.,$(recurse_targets)_$(DEPTH))
-	@$(if $(or $(recurse_targets),$^),$(call py_action,link_deps,-o binaries --group-all $(if $(want_abspaths),--abspaths )--topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
+ifneq (.,$(DEPTH))
+	@$(if $^,$(call py_action,link_deps,-o binaries --group-all --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
 endif
 
 endif
