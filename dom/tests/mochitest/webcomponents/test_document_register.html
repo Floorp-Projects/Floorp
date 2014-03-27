@@ -125,6 +125,10 @@ function startTest() {
   var svgButton = document.createElementNS("http://www.w3.org/2000/svg", "button", "x-extended-button");
   isnot(svgButton.__proto__, extendedProto, "Definition for element is in html namespace, registration should not apply for SVG elements.");
 
+  // document.createElementNS with no namespace.
+  var noNamespaceButton = document.createElementNS("", "button", "x-extended-button");
+  isnot(noNamespaceButton.__proto__, extendedProto, "Definition for element is in html namespace, registration should not apply for elements with no namespace.");
+
   // document.createElement with non-existant extended type.
   var normalButton = document.createElement("button", "x-non-existant");
   is(normalButton.__proto__, HTMLButtonElement.prototype, "When the extended type doesn't exist, prototype should not change.");
