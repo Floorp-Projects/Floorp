@@ -87,7 +87,7 @@ EmitTailCallVM(JitCode *target, MacroAssembler &masm, uint32_t argSize)
     masm.store32(ebx, Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize()));
 
     // Push frame descriptor and perform the tail call.
-    masm.makeFrameDescriptor(eax, IonFrame_BaselineJS);
+    masm.makeFrameDescriptor(eax, JitFrame_BaselineJS);
     masm.push(eax);
     masm.push(BaselineTailCallReg);
     masm.jmp(target);
@@ -102,7 +102,7 @@ EmitCreateStubFrameDescriptor(MacroAssembler &masm, Register reg)
     masm.addl(Imm32(sizeof(void *) * 2), reg);
     masm.subl(BaselineStackReg, reg);
 
-    masm.makeFrameDescriptor(reg, IonFrame_BaselineStub);
+    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub);
 }
 
 inline void
@@ -135,7 +135,7 @@ EmitEnterStubFrame(MacroAssembler &masm, Register scratch)
     // if needed.
 
     // Push frame descriptor and return address.
-    masm.makeFrameDescriptor(scratch, IonFrame_BaselineJS);
+    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
     masm.push(scratch);
     masm.push(BaselineTailCallReg);
 
