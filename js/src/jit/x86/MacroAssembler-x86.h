@@ -1077,14 +1077,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void linkParallelExitFrame(const Register &pt) {
         movl(StackPointer, Operand(pt, offsetof(PerThreadData, ionTop)));
     }
-
-    void enterOsr(Register calleeToken, Register code) {
-        push(Imm32(0)); // num actual args.
-        push(calleeToken);
-        push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
-        call(code);
-        addl(Imm32(sizeof(uintptr_t) * 2), esp);
-    }
 };
 
 typedef MacroAssemblerX86 MacroAssemblerSpecific;

@@ -268,8 +268,6 @@ SizeOfFramePrefix(FrameType type)
         return IonUnwoundRectifierFrameLayout::Size();
       case IonFrame_Exit:
         return IonExitFrameLayout::Size();
-      case IonFrame_Osr:
-        return IonOsrFrameLayout::Size();
       default:
         MOZ_ASSUME_UNREACHABLE("unknown frame type");
     }
@@ -1179,11 +1177,6 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
             break;
           case IonFrame_Unwound_Rectifier:
             break;
-          case IonFrame_Osr:
-            // The callee token will be marked by the callee JS frame;
-            // otherwise, it does not need to be marked, since the frame is
-            // dead.
-            break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected frame type");
         }
@@ -1871,9 +1864,6 @@ IonFrameIterator::dump() const
         fprintf(stderr, "Warning! Unwound JS frames are not observable.\n");
         break;
       case IonFrame_Exit:
-        break;
-      case IonFrame_Osr:
-        fprintf(stderr, "Warning! OSR frame are not defined yet.\n");
         break;
     };
     fputc('\n', stderr);
