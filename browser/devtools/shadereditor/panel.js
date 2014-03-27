@@ -9,7 +9,6 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const { WebGLFront } = require("devtools/server/actors/webgl");
-const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 
 function ShaderEditorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -22,12 +21,6 @@ function ShaderEditorPanel(iframeWindow, toolbox) {
 exports.ShaderEditorPanel = ShaderEditorPanel;
 
 ShaderEditorPanel.prototype = {
-  /**
-   * Open is effectively an asynchronous constructor.
-   *
-   * @return object
-   *         A promise that is resolved when the Shader Editor completes opening.
-   */
   open: function() {
     let targetPromise;
 
@@ -51,7 +44,8 @@ ShaderEditorPanel.prototype = {
         return this;
       })
       .then(null, function onError(aReason) {
-        DevToolsUtils.reportException("ShaderEditorPanel.prototype.open", aReason);
+        Cu.reportError("ShaderEditorPanel open failed. " +
+                       aReason.error + ": " + aReason.message);
       });
   },
 

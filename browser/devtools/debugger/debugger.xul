@@ -434,7 +434,7 @@
         <tabpanels flex="1">
           <tabpanel id="variables-tabpanel">
             <vbox id="expressions"/>
-            <splitter class="devtools-horizontal-splitter devtools-invisible-splitter"/>
+            <splitter class="devtools-horizontal-splitter devtools-invisible splitter"/>
             <vbox id="variables" flex="1"/>
           </tabpanel>
           <tabpanel id="events-tabpanel">
