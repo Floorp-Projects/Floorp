@@ -283,7 +283,7 @@ inline JSScript *
 GetTopIonJSScript(uint8_t *ionTop, void **returnAddrOut, ExecutionMode mode)
 {
     IonFrameIterator iter(ionTop, mode);
-    JS_ASSERT(iter.type() == IonFrame_Exit);
+    JS_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
 
     JS_ASSERT(iter.returnAddressToFp() != nullptr);
