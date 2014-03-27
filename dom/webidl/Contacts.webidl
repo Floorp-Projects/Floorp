@@ -44,8 +44,10 @@ dictionary ContactProperties {
   sequence<DOMString>?           name;
   sequence<DOMString>?           honorificPrefix;
   sequence<DOMString>?           givenName;
+  sequence<DOMString>?           phoneticGivenName;
   sequence<DOMString>?           additionalName;
   sequence<DOMString>?           familyName;
+  sequence<DOMString>?           phoneticFamilyName;
   sequence<DOMString>?           honorificSuffix;
   sequence<DOMString>?           nickname;
   sequence<DOMString>?           category;
@@ -81,8 +83,10 @@ interface mozContact {
   [Cached, Pure] attribute sequence<DOMString>?       name;
   [Cached, Pure] attribute sequence<DOMString>?       honorificPrefix;
   [Cached, Pure] attribute sequence<DOMString>?       givenName;
+  [Cached, Pure] attribute sequence<DOMString>?       phoneticGivenName;
   [Cached, Pure] attribute sequence<DOMString>?       additionalName;
   [Cached, Pure] attribute sequence<DOMString>?       familyName;
+  [Cached, Pure] attribute sequence<DOMString>?       phoneticFamilyName;
   [Cached, Pure] attribute sequence<DOMString>?       honorificSuffix;
   [Cached, Pure] attribute sequence<DOMString>?       nickname;
   [Cached, Pure] attribute sequence<DOMString>?       category;
