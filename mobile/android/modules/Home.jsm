@@ -235,6 +235,25 @@ let HomePanels = (function () {
         throw "Home.panels: No dataset provided for view: panel.id = " + this.id + ", view.type = " + view.type;
       }
     }
+
+    if (options.authHandler) {
+      if (!options.authHandler.messageText) {
+        throw "Home.panels: Invalid authHandler messageText: panel.id = " + this.id;
+      }
+      if (!options.authHandler.buttonText) {
+        throw "Home.panels: Invalid authHandler buttonText: panel.id = " + this.id;
+      }
+
+      this.authConfig = {
+        messageText: options.authHandler.messageText,
+        buttonText: options.authHandler.buttonText
+      };
+
+      // Include optional image URL if it is specified.
+      if (options.authHandler.imageUrl) {
+        this.authConfig.imageUrl = options.authHandler.imageUrl;
+      }
+    }
   }
 
   let _generatePanel = function(id) {
