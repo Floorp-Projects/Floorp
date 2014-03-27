@@ -153,15 +153,6 @@ class BuildProgressFooter(object):
             else:
                 parts.extend([tier, ' '])
 
-        parts.extend([('bold', 'SUBTIER'), ':', ' '])
-        for subtier, active, finished in tiers.current_subtier_status():
-            if active:
-                parts.extend([('underline_yellow', subtier), ' '])
-            elif finished:
-                parts.extend([('green', subtier), ' '])
-            else:
-                parts.extend([subtier, ' '])
-
         # We don't want to write more characters than the current width of the
         # terminal otherwise wrapping may result in weird behavior. We can't
         # simply truncate the line at terminal width characters because a)
