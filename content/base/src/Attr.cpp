@@ -135,13 +135,6 @@ Attr::GetContent() const
   return GetContentInternal();
 }
 
-Element*
-Attr::GetElement() const
-{
-  nsIContent* content = GetContent();
-  return content ? content->AsElement() : nullptr;
-}
-
 nsresult
 Attr::SetOwnerDocument(nsIDocument* aDocument)
 {
@@ -238,6 +231,29 @@ Attr::GetSpecified(bool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
   *aSpecified = Specified();
+  return NS_OK;
+}
+
+Element*
+Attr::GetOwnerElement(ErrorResult& aRv)
+{
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
+  return GetContentInternal();
+}
+
+NS_IMETHODIMP
+Attr::GetOwnerElement(nsIDOMElement** aOwnerElement)
+{
+  NS_ENSURE_ARG_POINTER(aOwnerElement);
+  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
+
+  nsIContent* content = GetContentInternal();
+  if (content) {
+    return CallQueryInterface(content, aOwnerElement);
+  }
+
+  *aOwnerElement = nullptr;
+
   return NS_OK;
 }
 
