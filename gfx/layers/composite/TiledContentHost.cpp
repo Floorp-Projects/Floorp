@@ -9,6 +9,7 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
+#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
@@ -30,6 +31,12 @@ TiledLayerBufferComposite::TiledLayerBufferComposite()
   , mHasDoubleBufferedTiles(false)
   , mUninitialized(true)
 {}
+
+/* static */ void
+TiledLayerBufferComposite::RecycleCallback(TextureHost* textureHost, void* aClosure)
+{
+  textureHost->CompositorRecycle();
+}
 
 TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocator,
                                                      const SurfaceDescriptorTiles& aDescriptor,
@@ -56,6 +63,11 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
     switch (tileDesc.type()) {
       case TileDescriptor::TTexturedTileDescriptor : {
         texture = TextureHost::AsTextureHost(tileDesc.get_TexturedTileDescriptor().textureParent());
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+        if (!gfxPrefs::LayersUseSimpleTiles()) {
+          texture->SetRecycleCallback(RecycleCallback, nullptr);
+        }
+#endif
         const TileLock& ipcLock = tileDesc.get_TexturedTileDescriptor().sharedLock();
         nsRefPtr<gfxSharedReadLock> sharedLock;
         if (ipcLock.type() == TileLock::TShmemSection) {
@@ -159,6 +171,23 @@ TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
     mRetainedTiles[i].mTextureHost->SetCompositor(aCompositor);
   }
 }
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+void
+TiledLayerBufferComposite::SetReleaseFence(const android::sp<android::Fence>& aReleaseFence)
+{
+  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
+    if (!mRetainedTiles[i].mTextureHost) {
+      continue;
+    }
+    TextureHostOGL* texture = mRetainedTiles[i].mTextureHost->AsHostOGL();
+    if (!texture) {
+      continue;
+    }
+    texture->SetReleaseFence(new android::Fence(aReleaseFence->dup()));
+  }
+}
+#endif
 
 TiledContentHost::TiledContentHost(const TextureInfo& aTextureInfo)
   : ContentHost(aTextureInfo)

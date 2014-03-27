@@ -340,6 +340,13 @@ public:
     return mReleaseFenceHandle;
   }
 
+  /**
+   * Wait until the current buffer is no longer being read.
+   *
+   * Platform support is necessary. gonk JB supports this function.
+   */
+  virtual void WaitReleaseFence() {}
+
 private:
   /**
    * Called once, just before the destructor.
