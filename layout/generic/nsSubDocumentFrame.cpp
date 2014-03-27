@@ -376,18 +376,24 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   bool ignoreViewportScrolling = false;
   nsIFrame* savedIgnoreScrollFrame = nullptr;
   if (subdocRootFrame) {
-    nsRect displayPort;
-    if (nsLayoutUtils::ViewportHasDisplayPort(presContext, &displayPort)) {
-      haveDisplayPort = true;
-      dirty = displayPort;
-    } else {
-      // get the dirty rect relative to the root frame of the subdoc
-      dirty = aDirtyRect + GetOffsetToCrossDoc(subdocRootFrame);
-      // and convert into the appunits of the subdoc
-      dirty = dirty.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
-    }
+    // get the dirty rect relative to the root frame of the subdoc
+    dirty = aDirtyRect + GetOffsetToCrossDoc(subdocRootFrame);
+    // and convert into the appunits of the subdoc
+    dirty = dirty.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
 
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+    if (nsLayoutUtils::ViewportHasDisplayPort(presContext)) {
+      haveDisplayPort = true;
+      // for root content documents we want the base to be the composition bounds
+      nsLayoutUtils::SetDisplayPortBase(rootScrollFrame->GetContent(),
+        presContext->IsRootContentDocument() ?
+          nsRect(nsPoint(0,0), nsLayoutUtils::CalculateCompositionSizeForFrame(rootScrollFrame)) :
+          dirty);
+      nsRect displayPort;
+      nsLayoutUtils::ViewportHasDisplayPort(presContext, &displayPort);
+      dirty = displayPort;
+    }
+
     ignoreViewportScrolling =
       rootScrollFrame && presShell->IgnoringViewportScrolling();
     if (ignoreViewportScrolling) {

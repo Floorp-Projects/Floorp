@@ -27,6 +27,10 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsACString
 
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+#include <ui/Fence.h>
+#endif
+
 class gfxReusableSurfaceWrapper;
 struct nsIntPoint;
 struct nsIntRect;
@@ -132,6 +136,14 @@ public:
   bool HasDoubleBufferedTiles() { return mHasDoubleBufferedTiles; }
 
   bool IsValid() const { return !mUninitialized; }
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  virtual void SetReleaseFence(const android::sp<android::Fence>& aReleaseFence);
+#endif
+
+  // Recycle callback for TextureHost.
+  // Used when TiledContentClient is present in client side.
+  static void RecycleCallback(TextureHost* textureHost, void* aClosure);
 
 protected:
   TileHost ValidateTile(TileHost aTile,
@@ -242,6 +254,18 @@ public:
 #endif
 
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  /**
+   * Store a fence that will signal when the current buffer is no longer being read.
+   * Similar to android's GLConsumer::setReleaseFence()
+   */
+  virtual void SetReleaseFence(const android::sp<android::Fence>& aReleaseFence)
+  {
+    mTiledBuffer.SetReleaseFence(aReleaseFence);
+    mLowPrecisionTiledBuffer.SetReleaseFence(aReleaseFence);
+  }
+#endif
 
 private:
   void RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
