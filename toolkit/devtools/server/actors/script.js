@@ -448,10 +448,7 @@ function ThreadActor(aHooks, aGlobal)
   this._state = "detached";
   this._frameActors = [];
   this._hooks = aHooks;
-  this.global = this.globalSafe = aGlobal;
-  if (aGlobal && aGlobal.wrappedJSObject) {
-    this.global = aGlobal.wrappedJSObject;
-  }
+  this.global = aGlobal;
   // A map of actorID -> actor for breakpoints created and managed by the server.
   this._hiddenBreakpoints = new Map();
 
@@ -1818,7 +1815,7 @@ ThreadActor.prototype = {
     // Clear DOM event breakpoints.
     // XPCShell tests don't use actual DOM windows for globals and cause
     // removeListenerForAllEvents to throw.
-    if (this.globalSafe && !this.globalSafe.toString().contains("Sandbox")) {
+    if (this.global && !this.global.toString().contains("Sandbox")) {
       let els = Cc["@mozilla.org/eventlistenerservice;1"]
                 .getService(Ci.nsIEventListenerService);
       els.removeListenerForAllEvents(this.global, this._allEventsListener, true);

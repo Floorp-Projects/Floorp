@@ -85,6 +85,18 @@ struct DisplayPortPropertyData {
   uint32_t mPriority;
 };
 
+struct DisplayPortMarginsPropertyData {
+  DisplayPortMarginsPropertyData(const LayerMargin& aMargins,
+                                 uint32_t aAlignment, uint32_t aPriority)
+    : mMargins(aMargins)
+    , mAlignment(aAlignment)
+    , mPriority(aPriority)
+  {}
+  LayerMargin mMargins;
+  uint32_t mAlignment;
+  uint32_t mPriority;
+};
+
 template <class AnimationsOrTransitions>
 extern AnimationsOrTransitions* HasAnimationOrTransition(nsIContent* aContent,
                                                          nsIAtom* aAnimationProperty,
@@ -137,6 +149,12 @@ public:
    * Get display port for the given element.
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
+
+ /**
+  * Set the display port base rect for given element to be used with display
+  * port margins.
+  */
+ static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
 
   /**
    * Get the critical display port for the given element.
@@ -2053,6 +2071,29 @@ public:
    */
   static void
   UpdateImageVisibilityForFrame(nsIFrame* aImageFrame);
+
+ /**
+  * Calculate the compostion size for a frame. See FrameMetrics.h for
+  * defintion of composition size (or bounds).
+  */
+  static nsSize
+  CalculateCompositionSizeForFrame(nsIFrame* aFrame);
+
+ /**
+  * Calculate the scrollable rect for a frame. See FrameMetrics.h for
+  * defintion of scrollable rect. aScrollableFrame is the scroll frame to calculate
+  * the scrollable rect for. If it's null then we calculate the scrollable rect
+  * as the rect of the root frame.
+  */
+  static nsRect
+  CalculateScrollableRectForFrame(nsIScrollableFrame* aScrollableFrame, nsIFrame* aRootFrame);
+
+ /**
+  * Calculate the expanded scrollable rect for a frame. See FrameMetrics.h for
+  * defintion of expanded scrollable rect.
+  */
+  static nsRect
+  CalculateExpandedScrollableRect(nsIFrame* aFrame);
 
 private:
   static uint32_t sFontSizeInflationEmPerLine;

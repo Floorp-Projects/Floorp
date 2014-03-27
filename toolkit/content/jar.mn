@@ -39,6 +39,7 @@ toolkit.jar:
 *  content/global/customizeToolbar.js         (customizeToolbar.js)
    content/global/customizeToolbar.xul        (customizeToolbar.xul)
    content/global/devicestorage.properties    (devicestorage.properties)
+   content/global/directoryLinks.json         (directoryLinks.json)
    content/global/editMenuOverlay.js          (editMenuOverlay.js)
 *+ content/global/editMenuOverlay.xul         (editMenuOverlay.xul)
    content/global/finddialog.js               (finddialog.js)
