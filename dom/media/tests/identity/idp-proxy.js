@@ -3,6 +3,7 @@
 
   function IDPJS() {
     this.domain = window.location.host;
+    this.username = "someone@" + this.domain;
     // so rather than create a million different IdP configurations and litter
     // the world with files all containing near-identical code, let's use the
     // hash/URL fragment as a way of generating instructions for the IdP
@@ -55,6 +56,14 @@
     var message = ev.data;
     switch (message.type) {
     case "SIGN":
+      if (message.username) {
+        var at = message.username.indexOf("@");
+        if (at < 0) {
+          this.username = message.username + "@" + this.domain;
+        } else if (message.username.substring(at + 1) === this.domain) {
+          this.username = message.username;
+        }
+      }
       this.sendResponse({
         type : "SUCCESS",
         id : message.id,
@@ -64,28 +73,31 @@
             protocol : "idp.html"
           },
           assertion : JSON.stringify({
-            identity : "someone@" + this.domain,
+            username : this.username,
             contents : message.message
           })
         }
       });
       break;
+
     case "VERIFY":
+      var payload = JSON.parse(message.message);
       this.sendResponse({
         type : "SUCCESS",
         id : message.id,
         message : {
           identity : {
-            name : "someone@" + this.domain,
-            displayname : "Someone"
+            name : payload.username
           },
-          contents : JSON.parse(message.message).contents
+          contents : payload.contents
         }
       });
       break;
+
     default:
       this.sendResponse({
         type : "ERROR",
+        id : message.id,
         error : JSON.stringify(message)
       });
       break;

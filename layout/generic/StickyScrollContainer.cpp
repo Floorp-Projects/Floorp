@@ -329,12 +329,12 @@ StickyScrollContainer::PositionContinuations(nsIFrame* aFrame)
 {
   NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame),
                "Should be starting from the first continuation");
-  nsPoint translation = ComputePosition(aFrame) - aFrame->GetPosition();
+  nsPoint translation = ComputePosition(aFrame) - aFrame->GetNormalPosition();
 
   // Move all continuation frames by the same amount.
   for (nsIFrame* cont = aFrame; cont;
        cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
-    cont->SetPosition(cont->GetPosition() + translation);
+    cont->SetPosition(cont->GetNormalPosition() + translation);
   }
 }
 
