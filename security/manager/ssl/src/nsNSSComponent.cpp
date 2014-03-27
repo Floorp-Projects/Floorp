@@ -982,6 +982,18 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting,
 #endif
   }
 
+  if (isInitialSetting) {
+    if (certVerifierImplementation == CertVerifier::classic) {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_LIBRARY, 1);
+#ifndef NSS_NO_LIBPKIX
+    } else if (certVerifierImplementation == CertVerifier::libpkix) {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_LIBRARY, 2);
+#endif
+    } else if (certVerifierImplementation == CertVerifier::mozillapkix) {
+      Telemetry::Accumulate(Telemetry::CERT_VALIDATION_LIBRARY, 3);
+    }
+  }
+
   CertVerifier::ocsp_download_config odc;
   CertVerifier::ocsp_strict_config osc;
   CertVerifier::ocsp_get_config ogc;

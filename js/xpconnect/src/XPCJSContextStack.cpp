@@ -23,6 +23,11 @@ using mozilla::dom::DestroyProtoAndIfaceCache;
 XPCJSContextStack::~XPCJSContextStack()
 {
     if (mSafeJSContext) {
+        {
+            JSAutoRequest ar(mSafeJSContext);
+            JS_RemoveObjectRoot(mSafeJSContext, &mSafeJSContextGlobal);
+        }
+        mSafeJSContextGlobal = nullptr;
         JS_DestroyContextNoGC(mSafeJSContext);
         mSafeJSContext = nullptr;
     }
@@ -74,17 +79,17 @@ XPCJSContextStack::Push(JSContext *cx)
         if ((e.cx == cx) && ssm) {
             // DOM JSContexts don't store their default compartment object on
             // the cx, so in those cases we need to fetch it via the scx
-            // instead.
+            // instead. And in some cases (i.e. the SafeJSContext), we have no
+            // default compartment object at all.
             RootedObject defaultScope(cx, GetDefaultScopeFromJSContext(cx));
-
-            nsIPrincipal *currentPrincipal =
-              GetCompartmentPrincipal(js::GetContextCompartment(cx));
-            nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultScope);
-            bool equal = false;
-            currentPrincipal->Equals(defaultPrincipal, &equal);
-            if (equal) {
-                mStack.AppendElement(cx);
-                return true;
+            if (defaultScope) {
+                nsIPrincipal *currentPrincipal =
+                  GetCompartmentPrincipal(js::GetContextCompartment(cx));
+                nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultScope);
+                if (currentPrincipal->Equals(defaultPrincipal)) {
+                    mStack.AppendElement(cx);
+                    return true;
+                }
             }
         }
 
@@ -142,6 +147,13 @@ XPCJSContextStack::GetSafeJSContext()
     return mSafeJSContext;
 }
 
+JSObject*
+XPCJSContextStack::GetSafeJSContextGlobal()
+{
+    MOZ_ASSERT(mSafeJSContextGlobal);
+    return mSafeJSContextGlobal;
+}
+
 JSContext*
 XPCJSContextStack::InitSafeJSContext()
 {
@@ -163,32 +175,32 @@ XPCJSContextStack::InitSafeJSContext()
     if (!mSafeJSContext)
         MOZ_CRASH();
     JSAutoRequest req(mSafeJSContext);
+    ContextOptionsRef(mSafeJSContext).setNoDefaultCompartmentObject(true);
 
-    JS::RootedObject glob(mSafeJSContext);
     JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
 
     JS::CompartmentOptions options;
     options.setZone(JS::SystemZone);
-    glob = xpc::CreateGlobalObject(mSafeJSContext, &SafeJSContextGlobalClass, principal, options);
-    if (!glob)
+    mSafeJSContextGlobal = CreateGlobalObject(mSafeJSContext,
+                                              &SafeJSContextGlobalClass,
+                                              principal, options);
+    if (!mSafeJSContextGlobal)
         MOZ_CRASH();
-
-    // Make sure the context is associated with a proper compartment
-    // and not the default compartment.
-    js::SetDefaultObjectForContext(mSafeJSContext, glob);
+    JS_AddNamedObjectRoot(mSafeJSContext, &mSafeJSContextGlobal, "SafeJSContext global");
 
     // Note: make sure to set the private before calling
     // InitClasses
-    nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, glob);
-    JS_SetPrivate(glob, sp.forget().take());
+    nsRefPtr<SandboxPrivate> sp = new SandboxPrivate(principal, mSafeJSContextGlobal);
+    JS_SetPrivate(mSafeJSContextGlobal, sp.forget().take());
 
     // After this point either glob is null and the
     // nsIScriptObjectPrincipal ownership is either handled by the
     // nsCOMPtr or dealt with, or we'll release in the finalize
     // hook.
-    if (NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
+    if (NS_FAILED(xpc->InitClasses(mSafeJSContext, mSafeJSContextGlobal)))
         MOZ_CRASH();
 
+    JS::RootedObject glob(mSafeJSContext, mSafeJSContextGlobal);
     JS_FireOnNewGlobalObject(mSafeJSContext, glob);
 
     return mSafeJSContext;

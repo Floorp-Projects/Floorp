@@ -306,7 +306,7 @@ class CLI(MozProfileCLI):
 
     def command_args(self):
         """additional arguments for the mozilla application"""
-        return self.options.appArgs
+        return map(os.path.expanduser, self.options.appArgs)
 
     def runner_args(self):
         """arguments to instantiate the runner class"""
