@@ -10,6 +10,10 @@
 #include "base/basictypes.h"
 #include "base/pickle.h"
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+#endif
+
 #ifndef NDEBUG
 #define IPC_MESSAGE_LOG_ENABLED
 #endif
@@ -336,6 +340,11 @@ class Message : public Pickle {
     uint32_t interrupt_local_stack_depth;
     // Sequence number
     int32_t seqno;
+#ifdef MOZ_TASK_TRACER
+    uint64_t source_event_id;
+    uint64_t parent_task_id;
+    mozilla::tasktracer::SourceEventType source_event_type;
+#endif
   };
 
   Header* header() {
