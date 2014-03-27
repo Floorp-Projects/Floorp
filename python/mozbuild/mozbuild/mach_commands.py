@@ -153,42 +153,6 @@ class BuildProgressFooter(object):
             else:
                 parts.extend([tier, ' '])
 
-        parts.extend([('bold', 'SUBTIER'), ':', ' '])
-        for subtier, active, finished in tiers.current_subtier_status():
-            if active:
-                parts.extend([('underline_yellow', subtier), ' '])
-            elif finished:
-                parts.extend([('green', subtier), ' '])
-            else:
-                parts.extend([subtier, ' '])
-
-        if tiers.active_dirs:
-            parts.extend([('bold', 'DIRECTORIES'), ': '])
-            have_dirs = False
-
-            for subtier, all_dirs, active_dirs, complete in tiers.current_dirs_status():
-                if len(all_dirs) < 2:
-                    continue
-
-                have_dirs = True
-
-                parts.extend([
-                    '%02d' % (complete + 1),
-                    '/',
-                    '%02d' % len(all_dirs),
-                    ' ',
-                    '(',
-                ])
-                if active_dirs:
-                    commas = [', '] * (len(active_dirs) - 1)
-                    magenta_dirs = [('magenta', d) for d in active_dirs]
-                    parts.extend(i.next() for i in itertools.cycle((iter(magenta_dirs),
-                                                                    iter(commas))))
-                parts.append(')')
-
-            if not have_dirs:
-                parts = parts[0:-2]
-
         # We don't want to write more characters than the current width of the
         # terminal otherwise wrapping may result in weird behavior. We can't
         # simply truncate the line at terminal width characters because a)
