@@ -2114,7 +2114,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
     masm.freeStack(unusedStack);
 
     // Construct the IonFramePrefix.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
     masm.Push(Imm32(call->numActualArgs()));
     masm.Push(calleereg);
     masm.Push(Imm32(descriptor));
@@ -2235,7 +2235,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     masm.freeStack(unusedStack);
 
     // Construct the IonFramePrefix.
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), IonFrame_OptimizedJS);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed(), JitFrame_IonJS);
     masm.Push(Imm32(call->numActualArgs()));
     masm.Push(calleereg);
     masm.Push(Imm32(descriptor));
@@ -2442,7 +2442,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
         // Create the frame descriptor.
         unsigned pushed = masm.framePushed();
         masm.addPtr(Imm32(pushed), copyreg);
-        masm.makeFrameDescriptor(copyreg, IonFrame_OptimizedJS);
+        masm.makeFrameDescriptor(copyreg, JitFrame_IonJS);
 
         masm.Push(argcreg);
         masm.Push(calleereg);
