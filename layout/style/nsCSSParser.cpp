@@ -657,6 +657,7 @@ protected:
   //
   // If aValue is already a eCSSUnit_List, append to that list.
   CSSParseResult ParseGridLineNames(nsCSSValue& aValue);
+  bool ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
   CSSParseResult ParseGridTrackSize(nsCSSValue& aValue);
   bool ParseGridAutoColumnsRows(nsCSSProperty aPropID);
@@ -7005,6 +7006,29 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
   }
 }
 
+// Assuming a 'subgrid' keyword was already consumed, parse <line-name-list>?
+bool
+CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
+{
+  nsCSSValueList* item = aValue.SetListValue();
+  // This marker distinguishes the value from a <track-list>.
+  item->mValue.SetIntValue(NS_STYLE_GRID_TEMPLATE_SUBGRID,
+                           eCSSUnit_Enumerated);
+  for (;;) {
+    nsCSSValue lineNames;
+    CSSParseResult result = ParseGridLineNames(lineNames);
+    if (result == CSSParseResult::NotFound) {
+      return true;
+    }
+    if (result == CSSParseResult::Error) {
+      return false;
+    }
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+    item->mValue = lineNames;
+  }
+}
+
 // Parse a <track-breadth>
 bool
 CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
@@ -7126,7 +7150,18 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
     AppendValue(aPropID, value);
     return true;
   }
-  // FIXME (bug 983175): add subgrid parsing
+
+  nsSubstring* ident = NextIdent();
+  if (ident) {
+    if (ident->LowerCaseEqualsLiteral("subgrid")) {
+      if (!ParseOptionalLineNameListAfterSubgrid(value)) {
+        return false;
+      }
+      AppendValue(aPropID, value);
+      return true;
+    }
+    UngetToken();
+  }
 
   nsCSSValue firstLineNames;
   if (ParseGridLineNames(firstLineNames) == CSSParseResult::Error ||
@@ -7270,6 +7305,8 @@ CSSParserImpl::ParseGridTemplate()
 
   // TODO (bug 983175): add parsing for 'subgrid' by itself
 
+  // 'none' can appear either by itself,
+  // or as the beginning of <'grid-template-columns'> / <'grid-template-rows'>
   if (ParseVariant(value, VARIANT_NONE, nullptr)) {
     AppendValue(eCSSProperty_grid_template_columns, value);
     if (ExpectSymbol('/', true)) {
@@ -7280,8 +7317,33 @@ CSSParserImpl::ParseGridTemplate()
     return true;
   }
 
-  // TODO (bug 983175): add parsing for subgrid
-  // as part of <'grid-template-columns'>
+  // 'subgrid' can appear either by itself,
+  // or as the beginning of <'grid-template-columns'> / <'grid-template-rows'>
+  nsSubstring* ident = NextIdent();
+  if (ident) {
+    if (ident->LowerCaseEqualsLiteral("subgrid")) {
+      if (!ParseOptionalLineNameListAfterSubgrid(value)) {
+        return false;
+      }
+      AppendValue(eCSSProperty_grid_template_columns, value);
+      if (ExpectSymbol('/', true)) {
+        return ParseGridTemplateAfterSlash(/* aColumnsIsTrackList = */ false);
+      }
+      if (value.GetListValue()->mNext) {
+        // Non-empty <line-name-list> after 'subgrid'.
+        // This is only valid as part of <'grid-template-columns'>,
+        // which must be followed by a slash.
+        return false;
+      }
+      // 'subgrid' by itself sets both grid-template-columns
+      // and grid-template-rows.
+      AppendValue(eCSSProperty_grid_template_rows, value);
+      value.SetNoneValue();
+      AppendValue(eCSSProperty_grid_template_areas, value);
+      return true;
+    }
+    UngetToken();
+  }
 
   // [ <line-names>? ] here is ambiguous:
   // it can be either the start of a <track-list>,
@@ -7309,34 +7371,61 @@ CSSParserImpl::ParseGridTemplate()
 }
 
 // Helper for parsing the 'grid-template' shorthand
+//
+// NOTE: This parses the portion after the slash, for *one* of the
+// following types of expressions:
+// - <'grid-template-columns'> / <'grid-template-rows'>
+// - <track-list> / [ <line-names>? <string> <track-size>? <line-names>? ]+
+//
+// We don't know which type of expression we've got until we've parsed the
+// second half, since the pre-slash part is ambiguous. The various return
+// clauses below are labeled with the type of expression they're completing.
 bool
 CSSParserImpl::ParseGridTemplateAfterSlash(bool aColumnsIsTrackList)
 {
   nsCSSValue rowsValue;
-  if (!ParseVariant(rowsValue, VARIANT_NONE, nullptr)) {
-    // TODO (bug 983175): add parsing for subgrid
-    // as part of <'grid-template-rows'>
+  if (ParseVariant(rowsValue, VARIANT_NONE, nullptr)) {
+    // <'grid-template-columns'> / <'grid-template-rows'>
+    AppendValue(eCSSProperty_grid_template_rows, rowsValue);
+    nsCSSValue areasValue(eCSSUnit_None);  // implied
+    AppendValue(eCSSProperty_grid_template_areas, areasValue);
+    return true;
+  }
 
-    nsCSSValue firstLineNames;
-    if (ParseGridLineNames(firstLineNames) == CSSParseResult::Error ||
-        !GetToken(true)) {
-      return false;
-    }
-    if (aColumnsIsTrackList && mToken.mType == eCSSToken_String) {
-      return ParseGridTemplateAfterString(firstLineNames);
+  nsSubstring* ident = NextIdent();
+  if (ident) {
+    if (ident->LowerCaseEqualsLiteral("subgrid")) {
+      if (!ParseOptionalLineNameListAfterSubgrid(rowsValue)) {
+        return false;
+      }
+      // <'grid-template-columns'> / <'grid-template-rows'>
+      AppendValue(eCSSProperty_grid_template_rows, rowsValue);
+      nsCSSValue areasValue(eCSSUnit_None);  // implied
+      AppendValue(eCSSProperty_grid_template_areas, areasValue);
+      return true;
     }
     UngetToken();
-
-    if (!ParseGridTrackListWithFirstLineNames(rowsValue, firstLineNames)) {
-      return false;
-    }
   }
+
+  nsCSSValue firstLineNames;
+  if (ParseGridLineNames(firstLineNames) == CSSParseResult::Error ||
+      !GetToken(true)) {
+    return false;
+  }
+  if (aColumnsIsTrackList && mToken.mType == eCSSToken_String) {
+    // [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
+    return ParseGridTemplateAfterString(firstLineNames);
+  }
+  UngetToken();
+
+  if (!ParseGridTrackListWithFirstLineNames(rowsValue, firstLineNames)) {
+    return false;
+  }
+
   // <'grid-template-columns'> / <'grid-template-rows'>
-  // rowsValue is set by either ParseVariant
-  // or ParseGridTrackListWithFirstLineNames
+  AppendValue(eCSSProperty_grid_template_rows, rowsValue);
   nsCSSValue areasValue(eCSSUnit_None);  // implied
   AppendValue(eCSSProperty_grid_template_areas, areasValue);
-  AppendValue(eCSSProperty_grid_template_rows, rowsValue);
   return true;
 }
 
