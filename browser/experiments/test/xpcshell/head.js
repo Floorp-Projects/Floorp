@@ -105,6 +105,18 @@ function dateToSeconds(date) {
   return date.getTime() / 1000;
 }
 
+let gGlobalScope = this;
+function loadAddonManager() {
+  let ns = {};
+  Cu.import("resource://gre/modules/Services.jsm", ns);
+  let head = "../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js";
+  let file = do_get_file(head);
+  let uri = ns.Services.io.newFileURI(file);
+  ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  startupManager();
+}
+
 // Install addon and return a Promise<boolean> that is
 // resolve with true on success, false otherwise.
 function installAddon(url, hash) {
@@ -156,6 +168,14 @@ function uninstallAddon(id) {
     AddonManager.addAddonListener(listener);
     addon.uninstall();
   });
+
+  return deferred.promise;
+}
+
+function getExperimentAddons() {
+  let deferred = Promise.defer();
+
+  AddonManager.getAddonsByTypes(["experiment"], deferred.resolve);
 
   return deferred.promise;
 }
