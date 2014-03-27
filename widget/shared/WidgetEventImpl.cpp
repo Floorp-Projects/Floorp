@@ -232,6 +232,13 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
              wheelEvent->deltaZ != 0.0;
     }
 
+    // Following events are handled in EventStateManager, so, we don't need to
+    // dispatch DOM event for them into the DOM tree.
+    case NS_QUERY_CONTENT_EVENT:
+    case NS_SELECTION_EVENT:
+    case NS_CONTENT_COMMAND_EVENT:
+      return false;
+
     default:
       return true;
   }
