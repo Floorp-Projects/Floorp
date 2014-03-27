@@ -22,7 +22,7 @@ let SourceMap = {};
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm", SourceMap);
 
 let loader = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}).Loader;
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+let promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
                          "SrcdirProvider"];
@@ -34,6 +34,7 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
 let loaderGlobals = {
   btoa: btoa,
   console: console,
+  promise: promise,
   _Iterator: Iterator,
   ChromeWorker: ChromeWorker,
   loader: {

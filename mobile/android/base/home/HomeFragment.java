@@ -21,6 +21,7 @@ import org.mozilla.gecko.util.UiAsyncTask;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -197,6 +198,12 @@ abstract class HomeFragment extends Fragment {
 
         super.setUserVisibleHint(isVisibleToUser);
         loadIfVisible();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mIsLoaded = false;
     }
 
     void setCanLoadHint(boolean canLoadHint) {

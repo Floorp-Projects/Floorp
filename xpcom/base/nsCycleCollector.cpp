@@ -174,7 +174,7 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIMemoryReporter.h"
 #include "nsIFile.h"
-#include "nsMemoryInfoDumper.h"
+#include "nsDumpUtils.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
 #include "js/SliceBudget.h"
@@ -1754,7 +1754,14 @@ private:
             NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
                                   &logFile);
         }
-        nsresult rv = nsMemoryInfoDumper::OpenTempFile(filename, &logFile);
+
+        // In Android case, this function will open a file named aFilename under
+        // specific folder (/data/local/tmp/memory-reports). Otherwise, it will
+        // open a file named aFilename under "NS_OS_TEMP_DIR".
+        nsresult rv = nsDumpUtils::OpenTempFile(
+                                     filename,
+                                     &logFile,
+                                     NS_LITERAL_CSTRING("memory-reports"));
         if (NS_FAILED(rv)) {
           NS_IF_RELEASE(logFile);
           return nullptr;

@@ -62,7 +62,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
             mTopBottomTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_top_bottom_text_with_icon_padding));
             mIconTextPadding = (int) (res.getDimension(R.dimen.prompt_service_icon_text_padding));
             mIconSize = (int) (res.getDimension(R.dimen.prompt_service_icon_size));
-            mMinRowSize = (int) (res.getDimension(R.dimen.prompt_service_min_list_item_height));
+            mMinRowSize = (int) (res.getDimension(R.dimen.menu_item_row_height));
             mTextSize = res.getDimension(R.dimen.menu_item_textsize);
 
             mInitialized = true;

@@ -434,13 +434,16 @@ class MochitestUtilsMixin(object):
 
     testRoot = self.getTestRoot(options)
     testRootAbs = os.path.abspath(testRoot)
-    if options.manifestFile and os.path.isfile(options.manifestFile):
+    if isinstance(options.manifestFile, TestManifest):
+        manifest = options.manifestFile
+    elif options.manifestFile and os.path.isfile(options.manifestFile):
       manifestFileAbs = os.path.abspath(options.manifestFile)
       assert manifestFileAbs.startswith(testRootAbs)
       manifest = TestManifest([options.manifestFile], strict=False)
     else:
       masterName = self.getTestFlavor(options) + '.ini'
       masterPath = os.path.join(testRoot, masterName)
+
       if os.path.exists(masterPath):
         manifest = TestManifest([masterPath], strict=False)
 
@@ -1358,32 +1361,6 @@ class Mochitest(MochitestUtilsMixin):
 
   def makeTestConfig(self, options):
     "Creates a test configuration file for customizing test execution."
-    def jsonString(val):
-      if isinstance(val, bool):
-        if val:
-          return "true"
-        return "false"
-      elif val is None:
-        return '""'
-      elif isinstance(val, basestring):
-        return '"%s"' % (val.replace('\\', '\\\\'))
-      elif isinstance(val, int):
-        return '%s' % (val)
-      elif isinstance(val, list):
-        content = '['
-        first = True
-        for item in val:
-          if first:
-            first = False
-          else:
-            content += ", "
-          content += jsonString(item)
-        content += ']'
-        return content
-      else:
-        print "unknown type: %s: %s" % (opt, val)
-        sys.exit(1)
-
     options.logFile = options.logFile.replace("\\", "\\\\")
     options.testPath = options.testPath.replace("\\", "\\\\")
     testRoot = self.getTestRoot(options)
@@ -1391,20 +1368,9 @@ class Mochitest(MochitestUtilsMixin):
     if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
       options.hideResultsTable = True
 
-    #TODO: when we upgrade to python 2.6, just use json.dumps(options.__dict__)
-    content = "{"
-    content += '"testRoot": "%s", ' % (testRoot)
-    first = True
-    for opt in options.__dict__.keys():
-      val = options.__dict__[opt]
-      if first:
-        first = False
-      else:
-        content += ", "
-
-      content += '"' + opt + '": '
-      content += jsonString(val)
-    content += "}"
+    d = dict(options.__dict__)
+    d['testRoot'] = testRoot
+    content = json.dumps(d)
 
     with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
       config.write(content)
