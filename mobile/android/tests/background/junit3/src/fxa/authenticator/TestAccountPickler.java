@@ -4,12 +4,12 @@
 package org.mozilla.gecko.background.fxa.authenticator;
 
 import org.mozilla.gecko.background.helpers.AndroidSyncTestCase;
+import org.mozilla.gecko.background.sync.TestSyncAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Separated;
 import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.background.sync.TestSyncAccounts;
 import org.mozilla.gecko.sync.Utils;
 
 import android.accounts.Account;
@@ -34,6 +34,7 @@ public class TestAccountPickler extends AndroidSyncTestCase {
     this.accountManager = AccountManager.get(context);
   }
 
+  @Override
   public void tearDown() {
     if (this.account != null) {
       deleteAccount(this, this.accountManager, this.account);
@@ -104,7 +105,7 @@ public class TestAccountPickler extends AndroidSyncTestCase {
     assertEquals(expected.getAudience(), actual.getAudience());
     assertEquals(expected.getTokenServerURI(), actual.getTokenServerURI());
     assertEquals(expected.getSyncPrefsPath(), actual.getSyncPrefsPath());
-    assertEquals(expected.isSyncingEnabled(), actual.isSyncingEnabled());
+    assertEquals(expected.isSyncing(), actual.isSyncing());
     assertEquals(expected.getEmail(), actual.getEmail());
     assertStateEquals(expected.getState(), actual.getState());
   }
