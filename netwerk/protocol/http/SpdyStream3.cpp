@@ -25,6 +25,7 @@
 #include "SpdySession3.h"
 #include "SpdyStream3.h"
 #include "PSpdyPush.h"
+#include "SpdyZlibReporter.h"
 
 #include <algorithm>
 
@@ -985,20 +986,6 @@ const unsigned char SpdyStream3::kDictionary[] = {
 	0x31, 0x2c, 0x75, 0x74, 0x66, 0x2d, 0x2c, 0x2a,   // 1 - u t f - - -
 	0x2c, 0x65, 0x6e, 0x71, 0x3d, 0x30, 0x2e          // - e n q - 0 -
 };
-
-// use for zlib data types
-void *
-SpdyStream3::zlib_allocator(void *opaque, uInt items, uInt size)
-{
-  return moz_xmalloc(items * size);
-}
-
-// use for zlib data types
-void
-SpdyStream3::zlib_destructor(void *opaque, void *addr)
-{
-  moz_free(addr);
-}
 
 // This can be called N times.. 1 for syn_reply and 0->N for headers
 nsresult

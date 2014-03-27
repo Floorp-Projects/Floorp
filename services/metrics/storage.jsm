@@ -156,368 +156,368 @@ DailyValues.prototype = Object.freeze({
  */
 const SQL = {
   // Create the providers table.
-  createProvidersTable:
-    "CREATE TABLE providers (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "name TEXT, " +
-      "UNIQUE (name) " +
-    ")",
+  createProvidersTable: "\
+CREATE TABLE providers (\
+  id INTEGER PRIMARY KEY AUTOINCREMENT, \
+  name TEXT, \
+  UNIQUE (name) \
+)",
 
-  createProviderStateTable:
-    "CREATE TABLE provider_state (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "provider_id INTEGER, " +
-      "name TEXT, " +
-      "VALUE TEXT, " +
-      "UNIQUE (provider_id, name), " +
-      "FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE" +
-    ")",
+  createProviderStateTable: "\
+CREATE TABLE provider_state (\
+  id INTEGER PRIMARY KEY AUTOINCREMENT, \
+  provider_id INTEGER, \
+  name TEXT, \
+  VALUE TEXT, \
+  UNIQUE (provider_id, name), \
+  FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE\
+)",
 
-  createProviderStateProviderIndex:
-    "CREATE INDEX i_provider_state_provider_id ON provider_state (provider_id)",
+  createProviderStateProviderIndex: "\
+CREATE INDEX i_provider_state_provider_id ON provider_state (provider_id)",
 
-  createMeasurementsTable:
-    "CREATE TABLE measurements (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "provider_id INTEGER, " +
-      "name TEXT, " +
-      "version INTEGER, " +
-      "UNIQUE (provider_id, name, version), " +
-      "FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE" +
-    ")",
+  createMeasurementsTable: "\
+CREATE TABLE measurements (\
+  id INTEGER PRIMARY KEY AUTOINCREMENT, \
+  provider_id INTEGER, \
+  name TEXT, \
+  version INTEGER, \
+  UNIQUE (provider_id, name, version), \
+  FOREIGN KEY (provider_id) REFERENCES providers(id) ON DELETE CASCADE\
+)",
 
-  createMeasurementsProviderIndex:
-    "CREATE INDEX i_measurements_provider_id ON measurements (provider_id)",
+  createMeasurementsProviderIndex: "\
+CREATE INDEX i_measurements_provider_id ON measurements (provider_id)",
 
-  createMeasurementsView:
-    "CREATE VIEW v_measurements AS " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version " +
-      "FROM providers, measurements " +
-      "WHERE " +
-        "measurements.provider_id = providers.id",
+  createMeasurementsView: "\
+CREATE VIEW v_measurements AS \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version \
+  FROM providers, measurements \
+  WHERE \
+    measurements.provider_id = providers.id",
 
-  createTypesTable:
-    "CREATE TABLE types (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "name TEXT, " +
-      "UNIQUE (name)" +
-    ")",
+  createTypesTable: "\
+CREATE TABLE types (\
+  id INTEGER PRIMARY KEY AUTOINCREMENT, \
+  name TEXT, \
+  UNIQUE (name)\
+)",
 
-  createFieldsTable:
-    "CREATE TABLE fields (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "measurement_id INTEGER, " +
-      "name TEXT, " +
-      "value_type INTEGER , " +
-      "UNIQUE (measurement_id, name), " +
-      "FOREIGN KEY (measurement_id) REFERENCES measurements(id) ON DELETE CASCADE " +
-      "FOREIGN KEY (value_type) REFERENCES types(id) ON DELETE CASCADE " +
-    ")",
+  createFieldsTable: "\
+CREATE TABLE fields (\
+  id INTEGER PRIMARY KEY AUTOINCREMENT, \
+  measurement_id INTEGER, \
+  name TEXT, \
+  value_type INTEGER , \
+  UNIQUE (measurement_id, name), \
+  FOREIGN KEY (measurement_id) REFERENCES measurements(id) ON DELETE CASCADE \
+  FOREIGN KEY (value_type) REFERENCES types(id) ON DELETE CASCADE \
+)",
 
-  createFieldsMeasurementIndex:
-    "CREATE INDEX i_fields_measurement_id ON fields (measurement_id)",
+  createFieldsMeasurementIndex: "\
+CREATE INDEX i_fields_measurement_id ON fields (measurement_id)",
 
-  createFieldsView:
-    "CREATE VIEW v_fields AS " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version, " +
-        "fields.id AS field_id, " +
-        "fields.name AS field_name, " +
-        "types.id AS type_id, " +
-        "types.name AS type_name " +
-      "FROM providers, measurements, fields, types " +
-      "WHERE " +
-        "fields.measurement_id = measurements.id " +
-        "AND measurements.provider_id = providers.id " +
-        "AND fields.value_type = types.id",
+  createFieldsView: "\
+CREATE VIEW v_fields AS \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version, \
+    fields.id AS field_id, \
+    fields.name AS field_name, \
+    types.id AS type_id, \
+    types.name AS type_name \
+  FROM providers, measurements, fields, types \
+  WHERE \
+    fields.measurement_id = measurements.id \
+    AND measurements.provider_id = providers.id \
+    AND fields.value_type = types.id",
 
-  createDailyCountersTable:
-    "CREATE TABLE daily_counters (" +
-      "field_id INTEGER, " +
-      "day INTEGER, " +
-      "value INTEGER, " +
-      "UNIQUE(field_id, day), " +
-      "FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE" +
-    ")",
+  createDailyCountersTable: "\
+CREATE TABLE daily_counters (\
+  field_id INTEGER, \
+  day INTEGER, \
+  value INTEGER, \
+  UNIQUE(field_id, day), \
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE\
+)",
 
-  createDailyCountersFieldIndex:
-    "CREATE INDEX i_daily_counters_field_id ON daily_counters (field_id)",
+  createDailyCountersFieldIndex: "\
+CREATE INDEX i_daily_counters_field_id ON daily_counters (field_id)",
 
-  createDailyCountersDayIndex:
-    "CREATE INDEX i_daily_counters_day ON daily_counters (day)",
+  createDailyCountersDayIndex: "\
+CREATE INDEX i_daily_counters_day ON daily_counters (day)",
 
-  createDailyCountersView:
-    "CREATE VIEW v_daily_counters AS SELECT " +
-      "providers.id AS provider_id, " +
-      "providers.name AS provider_name, " +
-      "measurements.id AS measurement_id, " +
-      "measurements.name AS measurement_name, " +
-      "measurements.version AS measurement_version, " +
-      "fields.id AS field_id, " +
-      "fields.name AS field_name, " +
-      "daily_counters.day AS day, " +
-      "daily_counters.value AS value " +
-    "FROM providers, measurements, fields, daily_counters " +
-    "WHERE " +
-      "daily_counters.field_id = fields.id " +
-      "AND fields.measurement_id = measurements.id " +
-      "AND measurements.provider_id = providers.id",
+  createDailyCountersView: "\
+CREATE VIEW v_daily_counters AS SELECT \
+  providers.id AS provider_id, \
+  providers.name AS provider_name, \
+  measurements.id AS measurement_id, \
+  measurements.name AS measurement_name, \
+  measurements.version AS measurement_version, \
+  fields.id AS field_id, \
+  fields.name AS field_name, \
+  daily_counters.day AS day, \
+  daily_counters.value AS value \
+FROM providers, measurements, fields, daily_counters \
+WHERE \
+  daily_counters.field_id = fields.id \
+  AND fields.measurement_id = measurements.id \
+  AND measurements.provider_id = providers.id",
 
-  createDailyDiscreteNumericsTable:
-    "CREATE TABLE daily_discrete_numeric (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "field_id INTEGER, " +
-      "day INTEGER, " +
-      "value INTEGER, " +
-      "FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE" +
-    ")",
+  createDailyDiscreteNumericsTable: "\
+CREATE TABLE daily_discrete_numeric (\
+  id INTEGER PRIMARY KEY AUTOINCREMENT, \
+  field_id INTEGER, \
+  day INTEGER, \
+  value INTEGER, \
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE\
+)",
 
-  createDailyDiscreteNumericsFieldIndex:
-    "CREATE INDEX i_daily_discrete_numeric_field_id " +
-    "ON daily_discrete_numeric (field_id)",
+  createDailyDiscreteNumericsFieldIndex: "\
+CREATE INDEX i_daily_discrete_numeric_field_id \
+ON daily_discrete_numeric (field_id)",
 
-  createDailyDiscreteNumericsDayIndex:
-    "CREATE INDEX i_daily_discrete_numeric_day " +
-    "ON daily_discrete_numeric (day)",
+  createDailyDiscreteNumericsDayIndex: "\
+CREATE INDEX i_daily_discrete_numeric_day \
+ON daily_discrete_numeric (day)",
 
-  createDailyDiscreteTextTable:
-    "CREATE TABLE daily_discrete_text (" +
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-      "field_id INTEGER, " +
-      "day INTEGER, " +
-      "value TEXT, " +
-      "FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE" +
-    ")",
+  createDailyDiscreteTextTable: "\
+CREATE TABLE daily_discrete_text (\
+  id INTEGER PRIMARY KEY AUTOINCREMENT, \
+  field_id INTEGER, \
+  day INTEGER, \
+  value TEXT, \
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE\
+)",
 
-  createDailyDiscreteTextFieldIndex:
-    "CREATE INDEX i_daily_discrete_text_field_id " +
-    "ON daily_discrete_text (field_id)",
+  createDailyDiscreteTextFieldIndex: "\
+CREATE INDEX i_daily_discrete_text_field_id \
+ON daily_discrete_text (field_id)",
 
-  createDailyDiscreteTextDayIndex:
-    "CREATE INDEX i_daily_discrete_text_day " +
-    "ON daily_discrete_text (day)",
+  createDailyDiscreteTextDayIndex: "\
+CREATE INDEX i_daily_discrete_text_day \
+ON daily_discrete_text (day)",
 
-  createDailyDiscreteView:
-    "CREATE VIEW v_daily_discrete AS " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version, " +
-        "fields.id AS field_id, " +
-        "fields.name AS field_name, " +
-        "daily_discrete_numeric.id AS value_id, " +
-        "daily_discrete_numeric.day AS day, " +
-        "daily_discrete_numeric.value AS value, " +
-        '"numeric" AS value_type ' +
-        "FROM providers, measurements, fields, daily_discrete_numeric " +
-        "WHERE " +
-          "daily_discrete_numeric.field_id = fields.id " +
-          "AND fields.measurement_id = measurements.id " +
-          "AND measurements.provider_id = providers.id " +
-      "UNION ALL " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version, " +
-        "fields.id AS field_id, " +
-        "fields.name AS field_name, " +
-        "daily_discrete_text.id AS value_id, " +
-        "daily_discrete_text.day AS day, " +
-        "daily_discrete_text.value AS value, " +
-        '"text" AS value_type ' +
-        "FROM providers, measurements, fields, daily_discrete_text " +
-        "WHERE " +
-          "daily_discrete_text.field_id = fields.id " +
-          "AND fields.measurement_id = measurements.id " +
-          "AND measurements.provider_id = providers.id " +
-      "ORDER BY day ASC, value_id ASC",
+  createDailyDiscreteView: "\
+CREATE VIEW v_daily_discrete AS \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version, \
+    fields.id AS field_id, \
+    fields.name AS field_name, \
+    daily_discrete_numeric.id AS value_id, \
+    daily_discrete_numeric.day AS day, \
+    daily_discrete_numeric.value AS value, \
+    \"numeric\" AS value_type \
+    FROM providers, measurements, fields, daily_discrete_numeric \
+    WHERE \
+      daily_discrete_numeric.field_id = fields.id \
+      AND fields.measurement_id = measurements.id \
+      AND measurements.provider_id = providers.id \
+  UNION ALL \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version, \
+    fields.id AS field_id, \
+    fields.name AS field_name, \
+    daily_discrete_text.id AS value_id, \
+    daily_discrete_text.day AS day, \
+    daily_discrete_text.value AS value, \
+    \"text\" AS value_type \
+    FROM providers, measurements, fields, daily_discrete_text \
+    WHERE \
+      daily_discrete_text.field_id = fields.id \
+      AND fields.measurement_id = measurements.id \
+      AND measurements.provider_id = providers.id \
+  ORDER BY day ASC, value_id ASC",
 
-  createLastNumericTable:
-    "CREATE TABLE last_numeric (" +
-      "field_id INTEGER PRIMARY KEY, " +
-      "day INTEGER, " +
-      "value NUMERIC, " +
-      "FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE" +
-    ")",
+  createLastNumericTable: "\
+CREATE TABLE last_numeric (\
+  field_id INTEGER PRIMARY KEY, \
+  day INTEGER, \
+  value NUMERIC, \
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE\
+)",
 
-  createLastTextTable:
-    "CREATE TABLE last_text (" +
-      "field_id INTEGER PRIMARY KEY, " +
-      "day INTEGER, " +
-      "value TEXT, " +
-      "FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE" +
-    ")",
+  createLastTextTable: "\
+CREATE TABLE last_text (\
+  field_id INTEGER PRIMARY KEY, \
+  day INTEGER, \
+  value TEXT, \
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE\
+)",
 
-  createLastView:
-    "CREATE VIEW v_last AS " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version, " +
-        "fields.id AS field_id, " +
-        "fields.name AS field_name, " +
-        "last_numeric.day AS day, " +
-        "last_numeric.value AS value, " +
-        '"numeric" AS value_type ' +
-        "FROM providers, measurements, fields, last_numeric " +
-        "WHERE " +
-          "last_numeric.field_id = fields.id " +
-          "AND fields.measurement_id = measurements.id " +
-          "AND measurements.provider_id = providers.id " +
-      "UNION ALL " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version, " +
-        "fields.id AS field_id, " +
-        "fields.name AS field_name, " +
-        "last_text.day AS day, " +
-        "last_text.value AS value, " +
-        '"text" AS value_type ' +
-        "FROM providers, measurements, fields, last_text " +
-        "WHERE " +
-          "last_text.field_id = fields.id " +
-          "AND fields.measurement_id = measurements.id " +
-          "AND measurements.provider_id = providers.id",
+  createLastView: "\
+CREATE VIEW v_last AS \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version, \
+    fields.id AS field_id, \
+    fields.name AS field_name, \
+    last_numeric.day AS day, \
+    last_numeric.value AS value, \
+    \"numeric\" AS value_type \
+    FROM providers, measurements, fields, last_numeric \
+    WHERE \
+      last_numeric.field_id = fields.id \
+      AND fields.measurement_id = measurements.id \
+      AND measurements.provider_id = providers.id \
+  UNION ALL \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version, \
+    fields.id AS field_id, \
+    fields.name AS field_name, \
+    last_text.day AS day, \
+    last_text.value AS value, \
+    \"text\" AS value_type \
+    FROM providers, measurements, fields, last_text \
+    WHERE \
+      last_text.field_id = fields.id \
+      AND fields.measurement_id = measurements.id \
+      AND measurements.provider_id = providers.id",
 
-  createDailyLastNumericTable:
-    "CREATE TABLE daily_last_numeric (" +
-      "field_id INTEGER, " +
-      "day INTEGER, " +
-      "value NUMERIC, " +
-      "UNIQUE (field_id, day) " +
-      "FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE" +
-    ")",
+  createDailyLastNumericTable: "\
+CREATE TABLE daily_last_numeric (\
+  field_id INTEGER, \
+  day INTEGER, \
+  value NUMERIC, \
+  UNIQUE (field_id, day) \
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE\
+)",
 
-  createDailyLastNumericFieldIndex:
-    "CREATE INDEX i_daily_last_numeric_field_id ON daily_last_numeric (field_id)",
+  createDailyLastNumericFieldIndex: "\
+CREATE INDEX i_daily_last_numeric_field_id ON daily_last_numeric (field_id)",
 
-  createDailyLastNumericDayIndex:
-    "CREATE INDEX i_daily_last_numeric_day ON daily_last_numeric (day)",
+  createDailyLastNumericDayIndex: "\
+CREATE INDEX i_daily_last_numeric_day ON daily_last_numeric (day)",
 
-  createDailyLastTextTable:
-    "CREATE TABLE daily_last_text (" +
-      "field_id INTEGER, " +
-      "day INTEGER, " +
-      "value TEXT, " +
-      "UNIQUE (field_id, day) " +
-      "FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE" +
-    ")",
+  createDailyLastTextTable: "\
+CREATE TABLE daily_last_text (\
+  field_id INTEGER, \
+  day INTEGER, \
+  value TEXT, \
+  UNIQUE (field_id, day) \
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE\
+)",
 
-  createDailyLastTextFieldIndex:
-    "CREATE INDEX i_daily_last_text_field_id ON daily_last_text (field_id)",
+  createDailyLastTextFieldIndex: "\
+CREATE INDEX i_daily_last_text_field_id ON daily_last_text (field_id)",
 
-  createDailyLastTextDayIndex:
-    "CREATE INDEX i_daily_last_text_day ON daily_last_text (day)",
+  createDailyLastTextDayIndex: "\
+CREATE INDEX i_daily_last_text_day ON daily_last_text (day)",
 
-  createDailyLastView:
-    "CREATE VIEW v_daily_last AS " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version, " +
-        "fields.id AS field_id, " +
-        "fields.name AS field_name, " +
-        "daily_last_numeric.day AS day, " +
-        "daily_last_numeric.value AS value, " +
-        '"numeric" as value_type ' +
-        "FROM providers, measurements, fields, daily_last_numeric " +
-        "WHERE " +
-          "daily_last_numeric.field_id = fields.id " +
-          "AND fields.measurement_id = measurements.id " +
-          "AND measurements.provider_id = providers.id " +
-      "UNION ALL " +
-      "SELECT " +
-        "providers.id AS provider_id, " +
-        "providers.name AS provider_name, " +
-        "measurements.id AS measurement_id, " +
-        "measurements.name AS measurement_name, " +
-        "measurements.version AS measurement_version, " +
-        "fields.id AS field_id, " +
-        "fields.name AS field_name, " +
-        "daily_last_text.day AS day, " +
-        "daily_last_text.value AS value, " +
-        '"text" as value_type ' +
-        "FROM providers, measurements, fields, daily_last_text " +
-        "WHERE " +
-          "daily_last_text.field_id = fields.id " +
-          "AND fields.measurement_id = measurements.id " +
-          "AND measurements.provider_id = providers.id",
+  createDailyLastView: "\
+CREATE VIEW v_daily_last AS \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version, \
+    fields.id AS field_id, \
+    fields.name AS field_name, \
+    daily_last_numeric.day AS day, \
+    daily_last_numeric.value AS value, \
+    \"numeric\" as value_type \
+    FROM providers, measurements, fields, daily_last_numeric \
+    WHERE \
+      daily_last_numeric.field_id = fields.id \
+      AND fields.measurement_id = measurements.id \
+      AND measurements.provider_id = providers.id \
+  UNION ALL \
+  SELECT \
+    providers.id AS provider_id, \
+    providers.name AS provider_name, \
+    measurements.id AS measurement_id, \
+    measurements.name AS measurement_name, \
+    measurements.version AS measurement_version, \
+    fields.id AS field_id, \
+    fields.name AS field_name, \
+    daily_last_text.day AS day, \
+    daily_last_text.value AS value, \
+    \"text\" as value_type \
+    FROM providers, measurements, fields, daily_last_text \
+    WHERE \
+      daily_last_text.field_id = fields.id \
+      AND fields.measurement_id = measurements.id \
+      AND measurements.provider_id = providers.id",
 
   // Mutation.
 
   addProvider: "INSERT INTO providers (name) VALUES (:provider)",
 
-  setProviderState:
-    "INSERT OR REPLACE INTO provider_state " +
-      "(provider_id, name, value) " +
-      "VALUES (:provider_id, :name, :value)",
+  setProviderState: "\
+INSERT OR REPLACE INTO provider_state \
+  (provider_id, name, value) \
+  VALUES (:provider_id, :name, :value)",
 
-  addMeasurement:
-    "INSERT INTO measurements (provider_id, name, version) " +
-      "VALUES (:provider_id, :measurement, :version)",
+  addMeasurement: "\
+INSERT INTO measurements (provider_id, name, version) \
+  VALUES (:provider_id, :measurement, :version)",
 
   addType: "INSERT INTO types (name) VALUES (:name)",
 
-  addField:
-    "INSERT INTO fields (measurement_id, name, value_type) " +
-      "VALUES (:measurement_id, :field, :value_type)",
+  addField: "\
+INSERT INTO fields (measurement_id, name, value_type) \
+  VALUES (:measurement_id, :field, :value_type)",
 
-  incrementDailyCounterFromFieldID:
-    "INSERT OR REPLACE INTO daily_counters VALUES (" +
-      ":field_id, " +
-      ":days, " +
-      "COALESCE(" +
-        "(SELECT value FROM daily_counters WHERE " +
-          "field_id = :field_id AND day = :days " +
-        "), " +
-        "0" +
-      ") + :by)",
+  incrementDailyCounterFromFieldID: "\
+INSERT OR REPLACE INTO daily_counters VALUES (\
+  :field_id, \
+  :days, \
+  COALESCE(\
+    (SELECT value FROM daily_counters WHERE \
+      field_id = :field_id AND day = :days \
+    ), \
+    0\
+  ) + :by)",
 
-  deleteLastNumericFromFieldID:
-    "DELETE FROM last_numeric WHERE field_id = :field_id",
+  deleteLastNumericFromFieldID: "\
+DELETE FROM last_numeric WHERE field_id = :field_id",
 
-  deleteLastTextFromFieldID:
-    "DELETE FROM last_text WHERE field_id = :field_id",
+  deleteLastTextFromFieldID: "\
+DELETE FROM last_text WHERE field_id = :field_id",
 
-  setLastNumeric:
-    "INSERT OR REPLACE INTO last_numeric VALUES (:field_id, :days, :value)",
+  setLastNumeric: "\
+INSERT OR REPLACE INTO last_numeric VALUES (:field_id, :days, :value)",
 
-  setLastText:
-    "INSERT OR REPLACE INTO last_text VALUES (:field_id, :days, :value)",
+  setLastText: "\
+INSERT OR REPLACE INTO last_text VALUES (:field_id, :days, :value)",
 
-  setDailyLastNumeric:
-    "INSERT OR REPLACE INTO daily_last_numeric VALUES (:field_id, :days, :value)",
+  setDailyLastNumeric: "\
+INSERT OR REPLACE INTO daily_last_numeric VALUES (:field_id, :days, :value)",
 
-  setDailyLastText:
-    "INSERT OR REPLACE INTO daily_last_text VALUES (:field_id, :days, :value)",
+  setDailyLastText: "\
+INSERT OR REPLACE INTO daily_last_text VALUES (:field_id, :days, :value)",
 
-  addDailyDiscreteNumeric:
-    "INSERT INTO daily_discrete_numeric " +
-    "(field_id, day, value) VALUES (:field_id, :days, :value)",
+  addDailyDiscreteNumeric: "\
+INSERT INTO daily_discrete_numeric \
+(field_id, day, value) VALUES (:field_id, :days, :value)",
 
-  addDailyDiscreteText:
-    "INSERT INTO daily_discrete_text " +
-    "(field_id, day, value) VALUES (:field_id, :days, :value)",
+  addDailyDiscreteText: "\
+INSERT INTO daily_discrete_text \
+(field_id, day, value) VALUES (:field_id, :days, :value)",
 
   pruneOldDailyCounters: "DELETE FROM daily_counters WHERE day < :days",
   pruneOldDailyDiscreteNumeric: "DELETE FROM daily_discrete_numeric WHERE day < :days",
@@ -533,102 +533,102 @@ const SQL = {
 
   getProviders: "SELECT id, name FROM providers",
 
-  getProviderStateWithName:
-    "SELECT value FROM provider_state " +
-      "WHERE provider_id = :provider_id " +
-      "AND name = :name",
+  getProviderStateWithName: "\
+SELECT value FROM provider_state \
+  WHERE provider_id = :provider_id \
+  AND name = :name",
 
   getMeasurements: "SELECT * FROM v_measurements",
 
-  getMeasurementID:
-    "SELECT id FROM measurements " +
-      "WHERE provider_id = :provider_id " +
-        "AND name = :measurement " +
-        "AND version = :version",
+  getMeasurementID: "\
+SELECT id FROM measurements \
+  WHERE provider_id = :provider_id \
+    AND name = :measurement \
+    AND version = :version",
 
-  getFieldID:
-    "SELECT id FROM fields " +
-      "WHERE measurement_id = :measurement_id " +
-        "AND name = :field " +
-        "AND value_type = :value_type " +
-    "",
+  getFieldID: "\
+SELECT id FROM fields \
+  WHERE measurement_id = :measurement_id \
+    AND name = :field \
+    AND value_type = :value_type \
+",
 
   getTypes: "SELECT * FROM types",
 
   getTypeID: "SELECT id FROM types WHERE name = :name",
 
-  getDailyCounterCountsFromFieldID:
-    "SELECT day, value FROM daily_counters " +
-      "WHERE field_id = :field_id " +
-      "ORDER BY day ASC",
+  getDailyCounterCountsFromFieldID: "\
+SELECT day, value FROM daily_counters \
+  WHERE field_id = :field_id \
+  ORDER BY day ASC",
 
-  getDailyCounterCountFromFieldID:
-    "SELECT value FROM daily_counters " +
-      "WHERE field_id = :field_id " +
-        "AND day = :days",
+  getDailyCounterCountFromFieldID: "\
+SELECT value FROM daily_counters \
+  WHERE field_id = :field_id \
+    AND day = :days",
 
-  getMeasurementDailyCounters:
-    "SELECT field_name, day, value FROM v_daily_counters " +
-    "WHERE measurement_id = :measurement_id",
+  getMeasurementDailyCounters: "\
+SELECT field_name, day, value FROM v_daily_counters \
+WHERE measurement_id = :measurement_id",
 
   getFieldInfo: "SELECT * FROM v_fields",
 
-  getLastNumericFromFieldID:
-    "SELECT day, value FROM last_numeric WHERE field_id = :field_id",
+  getLastNumericFromFieldID: "\
+SELECT day, value FROM last_numeric WHERE field_id = :field_id",
 
-  getLastTextFromFieldID:
-    "SELECT day, value FROM last_text WHERE field_id = :field_id",
+  getLastTextFromFieldID: "\
+SELECT day, value FROM last_text WHERE field_id = :field_id",
 
-  getMeasurementLastValues:
-    "SELECT field_name, day, value FROM v_last " +
-    "WHERE measurement_id = :measurement_id",
+  getMeasurementLastValues: "\
+SELECT field_name, day, value FROM v_last \
+WHERE measurement_id = :measurement_id",
 
-  getDailyDiscreteNumericFromFieldID:
-    "SELECT day, value FROM daily_discrete_numeric " +
-      "WHERE field_id = :field_id " +
-      "ORDER BY day ASC, id ASC",
+  getDailyDiscreteNumericFromFieldID: "\
+SELECT day, value FROM daily_discrete_numeric \
+  WHERE field_id = :field_id \
+  ORDER BY day ASC, id ASC",
 
-  getDailyDiscreteNumericFromFieldIDAndDay:
-    "SELECT day, value FROM daily_discrete_numeric " +
-      "WHERE field_id = :field_id AND day = :days " +
-      "ORDER BY id ASC",
+  getDailyDiscreteNumericFromFieldIDAndDay: "\
+SELECT day, value FROM daily_discrete_numeric \
+  WHERE field_id = :field_id AND day = :days \
+  ORDER BY id ASC",
 
-  getDailyDiscreteTextFromFieldID:
-    "SELECT day, value FROM daily_discrete_text " +
-      "WHERE field_id = :field_id " +
-      "ORDER BY day ASC, id ASC",
+  getDailyDiscreteTextFromFieldID: "\
+SELECT day, value FROM daily_discrete_text \
+  WHERE field_id = :field_id \
+  ORDER BY day ASC, id ASC",
 
-  getDailyDiscreteTextFromFieldIDAndDay:
-    "SELECT day, value FROM daily_discrete_text " +
-      "WHERE field_id = :field_id AND day = :days " +
-      "ORDER BY id ASC",
+  getDailyDiscreteTextFromFieldIDAndDay: "\
+SELECT day, value FROM daily_discrete_text \
+  WHERE field_id = :field_id AND day = :days \
+  ORDER BY id ASC",
 
-  getMeasurementDailyDiscreteValues:
-    "SELECT field_name, day, value_id, value FROM v_daily_discrete " +
-    "WHERE measurement_id = :measurement_id " +
-    "ORDER BY day ASC, value_id ASC",
+  getMeasurementDailyDiscreteValues: "\
+SELECT field_name, day, value_id, value FROM v_daily_discrete \
+WHERE measurement_id = :measurement_id \
+ORDER BY day ASC, value_id ASC",
 
-  getDailyLastNumericFromFieldID:
-    "SELECT day, value FROM daily_last_numeric " +
-      "WHERE field_id = :field_id " +
-      "ORDER BY day ASC",
+  getDailyLastNumericFromFieldID: "\
+SELECT day, value FROM daily_last_numeric \
+  WHERE field_id = :field_id \
+  ORDER BY day ASC",
 
-  getDailyLastNumericFromFieldIDAndDay:
-    "SELECT day, value FROM daily_last_numeric " +
-      "WHERE field_id = :field_id AND day = :days",
+  getDailyLastNumericFromFieldIDAndDay: "\
+SELECT day, value FROM daily_last_numeric \
+  WHERE field_id = :field_id AND day = :days",
 
-  getDailyLastTextFromFieldID:
-    "SELECT day, value FROM daily_last_text " +
-      "WHERE field_id = :field_id " +
-      "ORDER BY day ASC",
+  getDailyLastTextFromFieldID: "\
+SELECT day, value FROM daily_last_text \
+  WHERE field_id = :field_id \
+  ORDER BY day ASC",
 
-  getDailyLastTextFromFieldIDAndDay:
-    "SELECT day, value FROM daily_last_text " +
-      "WHERE field_id = :field_id AND day = :days",
+  getDailyLastTextFromFieldIDAndDay: "\
+SELECT day, value FROM daily_last_text \
+  WHERE field_id = :field_id AND day = :days",
 
-  getMeasurementDailyLastValues:
-    "SELECT field_name, day, value FROM v_daily_last " +
-    "WHERE measurement_id = :measurement_id",
+  getMeasurementDailyLastValues: "\
+SELECT field_name, day, value FROM v_daily_last \
+WHERE measurement_id = :measurement_id",
 };
 
 

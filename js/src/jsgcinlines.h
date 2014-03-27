@@ -424,7 +424,7 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
 #endif
 
     // For testing out of memory conditions
-    JS_OOM_POSSIBLY_FAIL_REPORT(ncx);
+    JS_OOM_POSSIBLY_FAIL();
 
     if (allowGC) {
 #ifdef JS_GC_ZEAL

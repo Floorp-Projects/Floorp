@@ -1127,14 +1127,15 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
 static bool
 ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
                               JS::Handle<JSObject*> obj,
-                              size_t protoAndIfaceArrayIndex, unsigned attrs,
+                              size_t protoAndIfaceCacheIndex, unsigned attrs,
                               JS::MutableHandle<JSPropertyDescriptor> desc)
 {
   JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
   {
     JSAutoCompartment ac(cx, global);
-    ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(global);
-    JSObject* protoOrIface = protoAndIfaceArray[protoAndIfaceArrayIndex];
+    ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(global);
+    JSObject* protoOrIface =
+      protoAndIfaceCache.EntrySlotIfExists(protoAndIfaceCacheIndex);
     if (!protoOrIface) {
       return false;
     }

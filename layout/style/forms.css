@@ -282,6 +282,7 @@ select:empty {
   /* Make sure to size correctly if the combobox has a non-auto height. */
   height: 100% ! important;
   box-sizing: border-box ! important;
+  line-height: -moz-block-height;
 }
 
 option {

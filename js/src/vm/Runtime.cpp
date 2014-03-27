@@ -105,7 +105,6 @@ PerThreadData::init()
 
 static const JSWrapObjectCallbacks DefaultWrapObjectCallbacks = {
     TransparentObjectWrapper,
-    nullptr,
     nullptr
 };
 
