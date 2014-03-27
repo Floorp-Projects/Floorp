@@ -2552,12 +2552,13 @@ RilObject.prototype = {
    */
   queryCallForwardStatus: function(options) {
     let Buf = this.context.Buf;
+    let number = options.number || "";
     Buf.newParcel(REQUEST_QUERY_CALL_FORWARD_STATUS, options);
     Buf.writeInt32(CALL_FORWARD_ACTION_QUERY_STATUS);
     Buf.writeInt32(options.reason);
     Buf.writeInt32(options.serviceClass || ICC_SERVICE_CLASS_NONE);
-    Buf.writeInt32(this._toaFromString(options.number));
-    Buf.writeString(options.number);
+    Buf.writeInt32(this._toaFromString(number));
+    Buf.writeString(number);
     Buf.writeInt32(0);
     Buf.sendParcel();
   },
