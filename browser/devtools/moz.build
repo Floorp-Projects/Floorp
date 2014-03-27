@@ -6,7 +6,6 @@
 
 DIRS += [
     'app-manager',
-    'canvasdebugger',
     'commandline',
     'debugger',
     'fontinspector',

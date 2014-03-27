@@ -390,7 +390,8 @@ let DebuggerView = {
     this._setEditorText(L10N.getStr("loadingText"));
     this._editorSource = { url: aSource.url, promise: deferred.promise };
 
-    DebuggerController.SourceScripts.getText(aSource).then(([, aText, aContentType]) => {
+    DebuggerController.SourceScripts.getText(aSource)
+                                    .then(([, aText, aContentType]) => {
       // Avoid setting an unexpected source. This may happen when switching
       // very fast between sources that haven't been fetched yet.
       if (this._editorSource.url != aSource.url) {
@@ -468,7 +469,8 @@ let DebuggerView = {
 
     // Make sure the requested source client is shown in the editor, then
     // update the source editor's caret position and debug location.
-    return this._setEditorSource(sourceForm, aFlags).then(([,, aContentType]) => {
+    return this._setEditorSource(sourceForm, aFlags)
+               .then(([,, aContentType]) => {
       // Record the contentType learned from fetching
       sourceForm.contentType = aContentType;
       // Line numbers in the source editor should start from 1. If invalid
