@@ -61,10 +61,7 @@ public:
 
   virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) MOZ_OVERRIDE;
 
-  const FenceHandle& GetReleaseFenceHandle() const
-  {
-    return mReleaseFenceHandle;
-  }
+  virtual void WaitReleaseFence() MOZ_OVERRIDE;
 
   void InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize);
 

@@ -288,6 +288,16 @@ public:
                                           TextureFlags aFlags);
 
   /**
+   * Tell to TextureChild that TextureHost is recycled.
+   * This function should be called from TextureHost's RecycleCallback.
+   * If SetRecycleCallback is set to TextureHost.
+   * TextureHost can be recycled by calling RecycleCallback
+   * when reference count becomes one.
+   * One reference count is always added by TextureChild.
+   */
+  void CompositorRecycle();
+
+  /**
    * Lock the texture host for compositing.
    */
   virtual bool Lock() { return true; }
