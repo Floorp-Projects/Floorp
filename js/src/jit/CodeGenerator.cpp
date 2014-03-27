@@ -3567,7 +3567,7 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
         return false;
 
 #ifdef JSGC_GENERATIONAL
-    if (ins->templateObject()->hasDynamicSlots()) {
+    if (templateObj->hasDynamicSlots()) {
         // Slot initialization is unbarriered in this case, so we must either
         // allocate in the nursery or bail if that is not possible.
         masm.jump(ool->entry());
