@@ -153,7 +153,7 @@ libs export tools::
 	$(call BUILDSTATUS,TIER_START $@)
 	$(foreach tier,$(TIERS), $(if $(filter-out libs_precompile tools_precompile,$@_$(tier)), \
 		$(if $(filter libs,$@),$(foreach dir, $(tier_$(tier)_staticdirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),,1))) \
-		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@)) \
+		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@))))
 	$(call BUILDSTATUS,TIER_FINISH $@)
 
 else
