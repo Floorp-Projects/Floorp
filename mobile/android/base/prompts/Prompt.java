@@ -53,13 +53,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private PromptListAdapter mAdapter;
 
     private static boolean mInitialized = false;
-    private static int mGroupPaddingSize;
-    private static int mLeftRightTextWithIconPadding;
-    private static int mTopBottomTextWithIconPadding;
-    private static int mIconTextPadding;
-    private static int mIconSize;
     private static int mInputPaddingSize;
-    private static int mMinRowSize;
 
     public Prompt(Context context, PromptCallback callback) {
         this(context);
@@ -72,13 +66,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
         if (!mInitialized) {
             Resources res = mContext.getResources();
-            mGroupPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_group_padding_size));
-            mLeftRightTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_left_right_text_with_icon_padding));
-            mTopBottomTextWithIconPadding = (int) (res.getDimension(R.dimen.prompt_service_top_bottom_text_with_icon_padding));
-            mIconTextPadding = (int) (res.getDimension(R.dimen.prompt_service_icon_text_padding));
-            mIconSize = (int) (res.getDimension(R.dimen.prompt_service_icon_size));
             mInputPaddingSize = (int) (res.getDimension(R.dimen.prompt_service_inputs_padding));
-            mMinRowSize = (int) (res.getDimension(R.dimen.prompt_service_min_list_item_height));
             mInitialized = true;
         }
     }
@@ -103,7 +91,8 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         if (!TextUtils.isEmpty(title)) {
-            builder.setTitle(title);
+            // Long strings can delay showing the dialog, so we cap the number of characters shown to 256.
+            builder.setTitle(title.substring(0, Math.min(title.length(), 256)));
         }
 
         if (!TextUtils.isEmpty(text)) {
@@ -267,6 +256,15 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         builder.setSingleChoiceItems(mAdapter, mAdapter.getSelectedIndex(), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                // The adapter isn't aware of single vs. multi choice lists, so manually
+                // clear any other selected items first.
+                ArrayList<Integer> selected = mAdapter.getSelected();
+                for (Integer sel : selected) {
+                    mAdapter.toggleSelected(sel);
+                }
+
+                // Now select this item.
+                mAdapter.toggleSelected(which);
                 closeIfNoButtons(which);
             }
         });
@@ -330,6 +328,8 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             }
 
             if (scrollable) {
+                // If we're showing some sort of scrollable list, force an inverse background.
+                builder.setInverseBackgroundForced(true);
                 builder.setView(root);
             } else {
                 ScrollView view = new ScrollView(mContext);
