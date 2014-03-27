@@ -6,6 +6,7 @@
 
 const { Cu } = require("chrome");
 const { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
@@ -91,7 +92,13 @@ function TraceActor(aConn, aParentActor)
   this._buffer = [];
   this.onExitFrame = this.onExitFrame.bind(this);
 
-  this.global = aParentActor.window.wrappedJSObject;
+  // aParentActor.window might be an Xray for a window, but it might also be a
+  // double-wrapper for a Sandbox.  We want to unwrap the latter but not the
+  // former.
+  this.global = aParentActor.window;
+  if (!Cu.isXrayWrapper(this.global)) {
+      this.global = this.global.wrappedJSObject;
+  }
 }
 
 TraceActor.prototype = {
