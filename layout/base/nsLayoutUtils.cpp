@@ -760,6 +760,13 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
   return true;
 }
 
+void
+nsLayoutUtils::SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase)
+{
+  aContent->SetProperty(nsGkAtoms::DisplayPortBase, new nsRect(aBase),
+                        nsINode::DeleteProperty<nsRect>);
+}
+
 bool
 nsLayoutUtils::GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult)
 {
@@ -2373,7 +2380,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   if (rootScrollFrame && !aFrame->GetParent()) {
     nsIContent* content = rootScrollFrame->GetContent();
     if (content) {
-      usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayport);
+      usingDisplayPort = nsLayoutUtils::GetDisplayPort(content);
+      if (usingDisplayPort) {
+        nsLayoutUtils::SetDisplayPortBase(content,
+          nsRect(nsPoint(0,0), nsLayoutUtils::CalculateCompositionSizeForFrame(rootScrollFrame)));
+        nsLayoutUtils::GetDisplayPort(content, &displayport);
+      }
     }
   }
 
