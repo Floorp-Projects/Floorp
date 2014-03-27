@@ -10,8 +10,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.Telemetry;
-import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.home.HomeAdapter.OnAddPanelListener;
@@ -197,7 +195,6 @@ public class HomePager extends ViewPager {
                             PropertyAnimator.Property.ALPHA,
                             1.0f);
         }
-        Telemetry.startUISession(TelemetryContract.Session.HOME);
     }
 
     /**
@@ -206,7 +203,6 @@ public class HomePager extends ViewPager {
     public void unload() {
         mLoaded = false;
         setAdapter(null);
-        Telemetry.stopUISession(TelemetryContract.Session.HOME);
     }
 
     /**
