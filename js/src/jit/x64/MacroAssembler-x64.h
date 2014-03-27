@@ -1232,14 +1232,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         storePtr(StackPointer, Address(pt, offsetof(PerThreadData, ionTop)));
     }
 
-    void enterOsr(Register calleeToken, Register code) {
-        push(Imm32(0)); // num actual args.
-        push(calleeToken);
-        push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
-        call(code);
-        addq(Imm32(sizeof(uintptr_t) * 2), rsp);
-    }
-
     // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
     void patchAsmJSGlobalAccess(CodeOffsetLabel patchAt, uint8_t *code, uint8_t *globalData,
                                 unsigned globalDataOffset)

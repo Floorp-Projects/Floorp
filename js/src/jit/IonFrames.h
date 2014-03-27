@@ -782,14 +782,6 @@ struct IonDOMMethodExitFrameLayoutTraits {
         offsetof(IonDOMMethodExitFrameLayout, argv_);
 };
 
-class IonOsrFrameLayout : public IonJSFrameLayout
-{
-  public:
-    static inline size_t Size() {
-        return sizeof(IonOsrFrameLayout);
-    }
-};
-
 class ICStub;
 
 class IonBaselineStubFrameLayout : public IonCommonFrameLayout
