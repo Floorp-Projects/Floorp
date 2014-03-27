@@ -20,8 +20,7 @@ Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "Heritage", "ViewHelpers", "WidgetMethods",
-  "setNamedTimeout", "clearNamedTimeout",
-  "setConditionalTimeout", "clearConditionalTimeout",
+  "setNamedTimeout", "clearNamedTimeout"
 ];
 
 /**
@@ -58,7 +57,7 @@ this.Heritage = {
  * @param function aCallback
  *        Invoked when no more events are fired after the specified time.
  */
-this.setNamedTimeout = function setNamedTimeout(aId, aWait, aCallback) {
+this.setNamedTimeout = function(aId, aWait, aCallback) {
   clearNamedTimeout(aId);
 
   namedTimeoutsStore.set(aId, setTimeout(() =>
@@ -72,47 +71,12 @@ this.setNamedTimeout = function setNamedTimeout(aId, aWait, aCallback) {
  * @param string aId
  *        A string identifier for the named timeout.
  */
-this.clearNamedTimeout = function clearNamedTimeout(aId) {
+this.clearNamedTimeout = function(aId) {
   if (!namedTimeoutsStore) {
     return;
   }
   clearTimeout(namedTimeoutsStore.get(aId));
   namedTimeoutsStore.delete(aId);
-};
-
-/**
- * Same as `setNamedTimeout`, but invokes the callback only if the provided
- * predicate function returns true. Otherwise, the timeout is re-triggered.
- *
- * @param string aId
- *        A string identifier for the conditional timeout.
- * @param number aWait
- *        The amount of milliseconds to wait after no more events are fired.
- * @param function aPredicate
- *        The predicate function used to determine whether the timeout restarts.
- * @param function aCallback
- *        Invoked when no more events are fired after the specified time, and
- *        the provided predicate function returns true.
- */
-this.setConditionalTimeout = function setConditionalTimeout(aId, aWait, aPredicate, aCallback) {
-  setNamedTimeout(aId, aWait, function maybeCallback() {
-    if (aPredicate()) {
-      aCallback();
-      return;
-    }
-    setConditionalTimeout(aId, aWait, aPredicate, aCallback);
-  });
-};
-
-/**
- * Clears a conditional timeout.
- * @see setConditionalTimeout
- *
- * @param string aId
- *        A string identifier for the conditional timeout.
- */
-this.clearConditionalTimeout = function clearConditionalTimeout(aId) {
-  clearNamedTimeout(aId);
 };
 
 XPCOMUtils.defineLazyGetter(this, "namedTimeoutsStore", () => new Map());
