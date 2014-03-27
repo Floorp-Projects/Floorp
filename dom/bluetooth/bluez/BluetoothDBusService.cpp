@@ -279,7 +279,7 @@ static const char* sBluetoothDBusSignals[] =
 };
 
 // The DBus connection to the BlueZ daemon
-static RawDBusConnection* sDBusConnection;
+static StaticAutoPtr<RawDBusConnection> sDBusConnection;
 
 // Only A2DP and HID are authorized.
 static nsTArray<BluetoothServiceClass> sAuthorizedServiceClass;
@@ -1884,11 +1884,35 @@ public:
 
   void Run()
   {
-    MOZ_ASSERT(!sDBusConnection);
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
-    sDBusConnection = mConnection;
+    if (sDBusConnection) {
+      BT_WARNING("DBus connection has already been established.");
+      nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(true);
+      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+        BT_WARNING("Failed to dispatch to main thread!");
+      }
+      return;
+    }
+
+    // Add a filter for all incoming messages_base
+    if (!dbus_connection_add_filter(mConnection->GetConnection(),
+                                    EventFilter, nullptr, nullptr)) {
+      BT_WARNING("Cannot create DBus Event Filter for DBus Thread!");
+      nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+        BT_WARNING("Failed to dispatch to main thread!");
+      }
+      return;
+    }
 
     mConnection->Watch();
+
+    if (!sPairingReqTable) {
+      sPairingReqTable = new nsDataHashtable<nsStringHashKey, DBusMessage* >;
+    }
+
+    sDBusConnection = mConnection.forget();
 
     nsRefPtr<nsRunnable> runnable =
       new BluetoothService::ToggleBtAck(true);
@@ -1904,11 +1928,11 @@ public:
      * explicitly here.
      */
     if (mQueryDefaultAdapter) {
-      bool success = mConnection->SendWithReply(OnDefaultAdapterReply, nullptr,
-                                                1000, "/",
-                                                DBUS_MANAGER_IFACE,
-                                                "DefaultAdapter",
-                                                DBUS_TYPE_INVALID);
+      bool success = sDBusConnection->SendWithReply(OnDefaultAdapterReply, nullptr,
+                                                    1000, "/",
+                                                    DBUS_MANAGER_IFACE,
+                                                    "DefaultAdapter",
+                                                    DBUS_TYPE_INVALID);
       if (!success) {
         BT_WARNING("Failed to query default adapter!");
       }
@@ -1916,7 +1940,7 @@ public:
   }
 
 private:
-  RawDBusConnection* mConnection;
+  nsAutoPtr<RawDBusConnection> mConnection;
   bool mQueryDefaultAdapter;
 };
 
@@ -1931,8 +1955,8 @@ public:
 #ifdef MOZ_WIDGET_GONK
     if (!sBluedroid.Enable()) {
       BT_WARNING("Bluetooth not available.");
-      nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
-      if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+      nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
       return NS_ERROR_FAILURE;
@@ -1943,8 +1967,8 @@ public:
     nsresult rv = connection->EstablishDBusConnection();
     if (NS_FAILED(rv)) {
       BT_WARNING("Failed to establish connection to BlueZ daemon");
-      nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
-      if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+      nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
       return NS_ERROR_FAILURE;
@@ -1956,7 +1980,9 @@ public:
     // Set which messages will be processed by this dbus connection.
     // Since we are maintaining a single thread for all the DBus bluez
     // signals we want, register all of them in this thread at startup.
-    // The event handler will sort the destinations out as needed.
+    // The event handler will sort the destinations out as needed. The
+    // call to dbus_bus_add_match has to run on the BT thread because
+    // it can block.
     for (uint32_t i = 0; i < ArrayLength(sBluetoothDBusSignals); ++i) {
       dbus_bus_add_match(connection->GetConnection(),
                          sBluetoothDBusSignals[i],
@@ -1964,21 +1990,6 @@ public:
       if (dbus_error_is_set(&err)) {
         LOG_AND_FREE_DBUS_ERROR(&err);
       }
-    }
-
-    // Add a filter for all incoming messages_base
-    if (!dbus_connection_add_filter(connection->GetConnection(),
-                                    EventFilter, nullptr, nullptr)) {
-      BT_WARNING("Cannot create DBus Event Filter for DBus Thread!");
-      nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
-      if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-        BT_WARNING("Failed to dispatch to main thread!");
-      }
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!sPairingReqTable) {
-      sPairingReqTable = new nsDataHashtable<nsStringHashKey, DBusMessage* >;
     }
 
     Task* task = new StartDBusConnectionTask(connection, sAdapterPath.IsEmpty());
@@ -1999,68 +2010,56 @@ BluetoothDBusService::StartInternal()
   return rv;
 }
 
-PLDHashOperator
-UnrefDBusMessages(const nsAString& key, DBusMessage* value, void* arg)
-{
-  dbus_message_unref(value);
-
-  return PL_DHASH_NEXT;
-}
-
-class DeleteDBusConnectionTask : public Task
-{
-public:
-  DeleteDBusConnectionTask(RawDBusConnection* aConnection)
-  : mConnection(aConnection)
-  {
-    MOZ_ASSERT(mConnection);
-  }
-
-  void Run()
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    // This command closes the DBus connection and all instances of
-    // DBusWatch will be removed and free'd.
-    delete mConnection;
-  }
-
-private:
-  RawDBusConnection* mConnection;
-};
-
-class StopBluetoothRunnable MOZ_FINAL : public nsRunnable
+class DisableBluetoothRunnable MOZ_FINAL : public nsRunnable
 {
 public:
   NS_IMETHOD Run()
   {
-    // This could block. It should never be run on the main thread.
-    MOZ_ASSERT(!NS_IsMainThread());
-
-    {
-      MonitorAutoLock lock(*sStopBluetoothMonitor);
-      if (sConnectedDeviceCount > 0) {
-        lock.Wait(PR_SecondsToInterval(TIMEOUT_FORCE_TO_DISABLE_BT));
-      }
+    if (NS_IsMainThread()) {
+      // Forward this runnable to BT thread
+      return DispatchToBtThread(this);
     }
+
+#ifdef MOZ_WIDGET_GONK
+    MOZ_ASSERT(sBluedroid.IsEnabled());
+    // Disable() return true on success, so we need to invert it
+    bool isEnabled = !sBluedroid.Disable();
+#else
+    bool isEnabled = false;
+#endif
+
+    nsRefPtr<nsRunnable> runnable =
+      new BluetoothService::ToggleBtAck(isEnabled);
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
+    return rv;
+  }
+};
+
+class DeleteDBusConnectionTask MOZ_FINAL : public Task
+{
+public:
+  DeleteDBusConnectionTask()
+  { }
+
+  void Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
     if (!sDBusConnection) {
-      nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
-      if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+      BT_WARNING("DBus connection has not been established.");
+      nsRefPtr<nsRunnable> runnable = new BluetoothService::ToggleBtAck(false);
+      if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
         BT_WARNING("Failed to dispatch to main thread!");
       }
-      return NS_OK;
+      return;
     }
 
-    DBusError err;
-    dbus_error_init(&err);
     for (uint32_t i = 0; i < ArrayLength(sBluetoothDBusSignals); ++i) {
       dbus_bus_remove_match(sDBusConnection->GetConnection(),
-                            sBluetoothDBusSignals[i],
-                            &err);
-      if (dbus_error_is_set(&err)) {
-        LOG_AND_FREE_DBUS_ERROR(&err);
-      }
+                            sBluetoothDBusSignals[i], NULL);
     }
 
     dbus_connection_remove_filter(sDBusConnection->GetConnection(),
@@ -2078,8 +2077,8 @@ public:
           __FUNCTION__, KEY_REMOTE_AGENT);
     }
 
-    // unref stored DBusMessages before clear the hashtable
-    sPairingReqTable->EnumerateRead(UnrefDBusMessages, nullptr);
+    // unref stored DBusMessages before clearing the hashtable
+    sPairingReqTable->EnumerateRead(UnrefDBusMessage, nullptr);
     sPairingReqTable->Clear();
 
     sIsPairing = 0;
@@ -2088,26 +2087,42 @@ public:
     sAuthorizedServiceClass.Clear();
     sControllerArray.Clear();
 
-    RawDBusConnection* connection = sDBusConnection;
+    // This command closes the DBus connection and all its instances
+    // of DBusWatch will be removed and free'd.
     sDBusConnection = nullptr;
 
-    DispatchToDBusThread(new DeleteDBusConnectionTask(connection));
-
-#ifdef MOZ_WIDGET_GONK
-    MOZ_ASSERT(sBluedroid.IsEnabled());
-    if (!sBluedroid.Disable()) {
-      nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(true);
-      if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-        BT_WARNING("Failed to dispatch to main thread!");
-      }
-      return NS_ERROR_FAILURE;
+    // We can only dispatch to the BT thread if we're on the main
+    // thread. Thus we dispatch our runnable to the main thread
+    // from where it will forward itself to the BT thread.
+    nsRefPtr<nsRunnable> runnable = new DisableBluetoothRunnable();
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to BT thread!");
     }
-#endif
+  }
 
-    nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
-    if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-      BT_WARNING("Failed to dispatch to main thread!");
+private:
+  static PLDHashOperator
+  UnrefDBusMessage(const nsAString& key, DBusMessage* value, void* arg)
+  {
+    dbus_message_unref(value);
+    return PL_DHASH_NEXT;
+  }
+};
+
+class StopBluetoothRunnable MOZ_FINAL : public nsRunnable
+{
+public:
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // BT thread
+
+    // This could block. It should never be run on the main thread.
+    MonitorAutoLock lock(*sStopBluetoothMonitor);
+    if (sConnectedDeviceCount > 0) {
+      lock.Wait(PR_SecondsToInterval(TIMEOUT_FORCE_TO_DISABLE_BT));
     }
+
+    DispatchToDBusThread(new DeleteDBusConnectionTask());
 
     return NS_OK;
   }
