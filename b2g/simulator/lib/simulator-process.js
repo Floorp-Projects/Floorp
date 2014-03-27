@@ -141,7 +141,7 @@ exports.SimulatorProcess = Class({
     let bin = URL.toFilename(BIN_URL);
     let executables = {
       WINNT: "b2g-bin.exe",
-      Darwin: "Contents/MacOS/b2g-bin",
+      Darwin: "B2G.app/Contents/MacOS/b2g-bin",
       Linux: "b2g-bin",
     };
 
