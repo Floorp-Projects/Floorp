@@ -45,9 +45,19 @@ public:
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
-    // This event isn't an internal event of any DOM event.
-    MOZ_CRASH("WidgetGestureNotifyEvent doesn't support Duplicate()");
-    return nullptr;
+    // XXX Looks like this event is handled only in PostHandleEvent() of
+    //     EventStateManager.  Therefore, it might be possible to handle this
+    //     in PreHandleEvent() and not to dispatch as a DOM event into the DOM
+    //     tree like ContentQueryEvent.  Then, this event doesn't need to
+    //     support Duplicate().
+    MOZ_ASSERT(eventStructType == NS_GESTURENOTIFY_EVENT,
+               "Duplicate() must be overridden by sub class");
+    // Not copying widget, it is a weak reference.
+    WidgetGestureNotifyEvent* result =
+      new WidgetGestureNotifyEvent(false, message, nullptr);
+    result->AssignGestureNotifyEventData(*this, true);
+    result->mFlags = mFlags;
+    return result;
   }
 
   enum ePanDirection
@@ -60,6 +70,15 @@ public:
 
   ePanDirection panDirection;
   bool displayPanFeedback;
+
+  void AssignGestureNotifyEventData(const WidgetGestureNotifyEvent& aEvent,
+                                    bool aCopyTargets)
+  {
+    AssignGUIEventData(aEvent, aCopyTargets);
+
+    panDirection = aEvent.panDirection;
+    displayPanFeedback = aEvent.displayPanFeedback;
+  }
 };
 
 /******************************************************************************
