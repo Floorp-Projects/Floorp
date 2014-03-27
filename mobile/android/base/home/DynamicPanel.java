@@ -31,6 +31,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 
 /**
  * Fragment that displays dynamic content specified by a {@code PanelConfig}.
@@ -58,8 +59,14 @@ public class DynamicPanel extends HomeFragment
     // Dataset ID to be used by the loader
     private static final String DATASET_REQUEST = "dataset_request";
 
+    // The main view for this fragment. This contains the PanelLayout and PanelAuthLayout.
+    private FrameLayout mView;
+
     // The panel layout associated with this panel
     private PanelLayout mPanelLayout;
+
+    // The layout used to show authentication UI for this panel
+    private PanelAuthLayout mPanelAuthLayout;
 
     // The configuration associated with this panel
     private PanelConfig mPanelConfig;
@@ -117,7 +124,10 @@ public class DynamicPanel extends HomeFragment
 
         Log.d(LOGTAG, "Created layout of type: " + mPanelConfig.getLayoutType());
 
-        return mPanelLayout;
+        mView = new FrameLayout(getActivity());
+        mView.addView(mPanelLayout);
+
+        return mView;
     }
 
     @Override
@@ -129,7 +139,9 @@ public class DynamicPanel extends HomeFragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        mView = null;
         mPanelLayout = null;
+        mPanelAuthLayout = null;
 
         GeckoAppShell.unregisterEventListener("HomePanels:RefreshDataset", this);
     }
@@ -159,7 +171,31 @@ public class DynamicPanel extends HomeFragment
     @Override
     protected void load() {
         Log.d(LOGTAG, "Loading layout");
-        mPanelLayout.load();
+
+        if (requiresAuth()) {
+            // TODO: check to see if the panel isn't already authenticated
+            setAuthVisible(true);
+        } else {
+            mPanelLayout.load();
+        }
+    }
+
+    /**
+     * @return true if this panel requires authentication.
+     */
+    private boolean requiresAuth() {
+        return mPanelConfig.getAuthConfig() != null;
+    }
+
+    private void setAuthVisible(boolean visible) {
+        // Lazily create PanelAuthLayout.
+        if (visible && mPanelAuthLayout == null) {
+            mPanelAuthLayout = new PanelAuthLayout(getActivity(), mPanelConfig);
+            mView.addView(mPanelAuthLayout, 0);
+        }
+
+        mPanelAuthLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
+        mPanelLayout.setVisibility(visible ? View.GONE : View.VISIBLE);
     }
 
     @Override
