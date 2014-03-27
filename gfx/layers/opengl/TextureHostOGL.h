@@ -157,7 +157,7 @@ private:
 class TextureHostOGL
 {
 public:
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 
   /**
    * Store a fence that will signal when the current buffer is no longer being read.
@@ -169,8 +169,16 @@ public:
    * Return a releaseFence's Fence and clear a reference to the Fence.
    */
   virtual android::sp<android::Fence> GetAndResetReleaseFence();
+
 protected:
   android::sp<android::Fence> mReleaseFence;
+
+  /**
+   * Hold previous ReleaseFence to prevent Fence delivery failure via gecko IPC.
+   * Fence is a kernel object and its lifetime is managed by a reference count.
+   * Until the Fence is delivered to client side, need to hold Fence on host side.
+   */
+  android::sp<android::Fence> mPrevReleaseFence;
 #endif
 };
 
