@@ -4030,16 +4030,21 @@ var XPIProvider = {
 
     if (!aFile.exists()) {
       this.bootstrapScopes[aId] =
-        new Cu.Sandbox(principal, {sandboxName: aFile.path,
-                                   wantGlobalProperties: ["indexedDB"]});
+        new Cu.Sandbox(principal, { sandboxName: aFile.path,
+                                    wantGlobalProperties: ["indexedDB"],
+                                    metadata: { addonID: aId } });
       logger.error("Attempted to load bootstrap scope from missing directory " + aFile.path);
       return;
     }
 
     let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
+    if (aType == "dictionary")
+      uri = "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js"
+
     this.bootstrapScopes[aId] =
-      new Cu.Sandbox(principal, {sandboxName: uri,
-                                 wantGlobalProperties: ["indexedDB"]});
+      new Cu.Sandbox(principal, { sandboxName: uri,
+                                  wantGlobalProperties: ["indexedDB"],
+                                  metadata: { addonID: aId, URI: uri } });
 
     let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                  createInstance(Ci.mozIJSSubScriptLoader);
@@ -4061,12 +4066,7 @@ var XPIProvider = {
       // As we don't want our caller to control the JS version used for the
       // bootstrap file, we run loadSubScript within the context of the
       // sandbox with the latest JS version set explicitly.
-      if (aType == "dictionary") {
-        this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ =
-            "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js"
-      } else {
-        this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ = uri;
-      }
+      this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ = uri;
       Components.utils.evalInSandbox(
         "Components.classes['@mozilla.org/moz/jssubscript-loader;1'] \
                    .createInstance(Components.interfaces.mozIJSSubScriptLoader) \
@@ -6477,6 +6477,10 @@ function AddonWrapper(aAddon) {
       ops |= AddonManager.OP_NEEDS_RESTART_DISABLE;
 
     return ops;
+  });
+
+  this.__defineGetter__("isDebuggable", function AddonWrapper_isDebuggable() {
+    return this.isActive && aAddon.bootstrap;
   });
 
   this.__defineGetter__("permissions", function AddonWrapper_permisionsGetter() {

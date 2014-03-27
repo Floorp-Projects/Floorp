@@ -16,7 +16,10 @@ Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
-
+XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function () {
+  return Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {}).
+         BrowserToolboxProcess;
+});
 
 const PREF_DISCOVERURL = "extensions.webservice.discoverURL";
 const PREF_DISCOVER_ENABLED = "extensions.getAddons.showPane";
@@ -26,6 +29,8 @@ const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_ID_ENABLED = "extensions.%ID%.getAddons.cache.enabled";
 const PREF_UI_TYPE_HIDDEN = "extensions.ui.%TYPE%.hidden";
 const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
+const PREF_ADDON_DEBUGGING_ENABLED = "devtools.debugger.addon-enabled";
+const PREF_REMOTE_DEBUGGING_ENABLED = "devtools.debugger.remote-enabled";
 
 const LOADING_MSG_DELAY = 100;
 
@@ -143,6 +148,9 @@ function initialize(event) {
   }
 
   gViewController.loadInitialView(view);
+
+  Services.prefs.addObserver(PREF_ADDON_DEBUGGING_ENABLED, debuggingPrefChanged, false);
+  Services.prefs.addObserver(PREF_REMOTE_DEBUGGING_ENABLED, debuggingPrefChanged, false);
 }
 
 function notifyInitialized() {
@@ -163,6 +171,8 @@ function shutdown() {
   gEventManager.shutdown();
   gViewController.shutdown();
   Services.obs.removeObserver(sendEMPong, "EM-ping");
+  Services.prefs.removeObserver(PREF_ADDON_DEBUGGING_ENABLED, debuggingPrefChanged);
+  Services.prefs.removeObserver(PREF_REMOTE_DEBUGGING_ENABLED, debuggingPrefChanged);
 }
 
 function sendEMPong(aSubject, aTopic, aData) {
@@ -372,7 +382,7 @@ var gEventManager = {
     contextMenu.addEventListener("popupshowing", function contextMenu_onPopupshowing() {
       var addon = gViewController.currentViewObj.getSelectedAddon();
       contextMenu.setAttribute("addontype", addon.type);
-      
+
       var menuSep = document.getElementById("addonitem-menuseparator");
       var countEnabledMenuCmds = 0;
       for (let child of contextMenu.children) {
@@ -381,10 +391,10 @@ var gEventManager = {
             countEnabledMenuCmds++;
         }
       }
-      
+
       // with only one menu item, we hide the menu separator
       menuSep.hidden = (countEnabledMenuCmds <= 1);
-      
+
     }, false);
   },
 
@@ -460,14 +470,14 @@ var gEventManager = {
       }
     }
   },
-  
+
   refreshGlobalWarning: function gEM_refreshGlobalWarning() {
     var page = document.getElementById("addons-page");
 
     if (Services.appinfo.inSafeMode) {
       page.setAttribute("warning", "safemode");
       return;
-    } 
+    }
 
     if (AddonManager.checkUpdateSecurityDefault &&
         !AddonManager.checkUpdateSecurity) {
@@ -945,6 +955,20 @@ var gViewController = {
       }
     },
 
+    cmd_debugItem: {
+      doCommand: function cmd_debugItem_doCommand(aAddon) {
+        BrowserToolboxProcess.init({ addonID: aAddon.id });
+      },
+
+      isEnabled: function cmd_debugItem_isEnabled(aAddon) {
+        let debuggerEnabled = Services.prefs.
+                              getBoolPref(PREF_ADDON_DEBUGGING_ENABLED);
+        let remoteEnabled = Services.prefs.
+                            getBoolPref(PREF_REMOTE_DEBUGGING_ENABLED);
+        return aAddon && aAddon.isDebuggable && debuggerEnabled && remoteEnabled;
+      }
+    },
+
     cmd_showItemPreferences: {
       isEnabled: function cmd_showItemPreferences_isEnabled(aAddon) {
         if (!aAddon || !aAddon.isActive || !aAddon.optionsURL)
@@ -1282,7 +1306,7 @@ function openOptionsInTab(optionsURL) {
                          .getInterface(Ci.nsIWebNavigation)
                          .QueryInterface(Ci.nsIDocShellTreeItem)
                          .rootTreeItem.QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindow); 
+                         .getInterface(Ci.nsIDOMWindow);
   if ("switchToTabHavingURI" in mainWindow) {
     mainWindow.switchToTabHavingURI(optionsURL, true);
     return true;
@@ -1979,7 +2003,7 @@ var gDiscoverView = {
     this._loadURL(this.homepageURL.spec, aIsRefresh,
                   gViewController.notifyViewChanged.bind(gViewController));
   },
-  
+
   canRefresh: function gDiscoverView_canRefresh() {
     if (this._browser.currentURI &&
         this._browser.currentURI.spec == this._browser.homePage)
@@ -2279,7 +2303,7 @@ var gSearchView = {
       }
     });
   },
-  
+
   showLoading: function gSearchView_showLoading(aLoading) {
     this._loading.hidden = !aLoading;
     this._listBox.hidden = aLoading;
@@ -2620,7 +2644,7 @@ var gDetailView = {
       self._addon.applyBackgroundUpdates = self._autoUpdate.value;
     }, true);
   },
-  
+
   shutdown: function gDetailView_shutdown() {
     AddonManager.removeManagerListener(this);
   },
@@ -2791,7 +2815,7 @@ var gDetailView = {
 
     document.getElementById("detail-prefs-btn").hidden = !aIsRemote &&
       !gViewController.commands.cmd_showItemPreferences.isEnabled(aAddon);
-    
+
     var gridRows = document.querySelectorAll("#detail-grid rows row");
     let first = true;
     for (let gridRow of gridRows) {
@@ -3108,7 +3132,7 @@ var gDetailView = {
     if (firstRow) {
       let top = firstRow.boxObject.y;
       top -= parseInt(window.getComputedStyle(firstRow, null).getPropertyValue("margin-top"));
-      
+
       let detailViewBoxObject = gDetailView.node.boxObject;
       top -= detailViewBoxObject.y;
 
@@ -3348,7 +3372,7 @@ var gUpdatesView = {
         notifyInitialized();
     });
   },
-  
+
   maybeDisableUpdateSelected: function gUpdatesView_maybeDisableUpdateSelected() {
     for (let item of this._listBox.childNodes) {
       if (item.includeUpdate) {
@@ -3411,6 +3435,11 @@ var gUpdatesView = {
   }
 };
 
+function debuggingPrefChanged() {
+  gViewController.updateState();
+  gViewController.updateCommands();
+  gViewController.notifyViewChanged();
+}
 
 var gDragDrop = {
   onDragOver: function gDragDrop_onDragOver(aEvent) {
