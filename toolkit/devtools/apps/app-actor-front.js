@@ -24,7 +24,6 @@ function addDirToZip(writer, dir, basePath) {
     let file = files.getNext().QueryInterface(Ci.nsIFile);
 
     if (file.isHidden() ||
-        file.isSymlink() ||
         file.isSpecial() ||
         file.equals(writer.file))
     {

@@ -6,8 +6,6 @@
  * "arguments", and "return" trace types.
  */
 
-let { defer } = devtools.require("sdk/core/promise");
-
 var gDebuggee;
 var gClient;
 var gTraceClient;
@@ -50,7 +48,7 @@ function check_location(actual, expected)
 function test_enter_exit_frame()
 {
   let traces = [];
-  let traceStopped = defer();
+  let traceStopped = promise.defer();
 
   gClient.addListener("traces", function(aEvent, aPacket) {
     for (let t of aPacket.traces) {
@@ -120,7 +118,7 @@ function test_enter_exit_frame()
 
 function start_trace()
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.startTrace(
     ["name", "location", "callsite", "time", "parameterNames", "arguments", "return"],
     null,
@@ -137,7 +135,7 @@ function eval_code()
 
 function stop_trace()
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.stopTrace(null, function() { deferred.resolve(); });
   return deferred.promise;
 }

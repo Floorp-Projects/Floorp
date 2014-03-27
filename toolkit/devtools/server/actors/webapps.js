@@ -124,7 +124,6 @@ function WebappsActor(aConnection) {
   Cu.import("resource://gre/modules/Webapps.jsm");
   Cu.import("resource://gre/modules/AppsUtils.jsm");
   Cu.import("resource://gre/modules/FileUtils.jsm");
-  promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 
   // Keep reference of already created app actors.
   // key: app frame message manager, value: ContentActor's grip() value

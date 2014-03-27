@@ -4,7 +4,6 @@
 
 // Test that we can detect nested event loops in tabs with the same URL.
 
-const { defer } = devtools.require("sdk/core/promise");
 var gClient1, gClient2, gThreadClient1, gThreadClient2;
 
 function run_test() {
@@ -33,7 +32,7 @@ function start_second_connection() {
 }
 
 function test_nesting() {
-  const { resolve, reject, promise } = defer();
+  const { resolve, reject, promise: p } = promise.defer();
 
   gThreadClient1.resume(aResponse => {
     do_check_eq(aResponse.error, "wrongOrder");

@@ -5,7 +5,6 @@
 // Test that we can nest event loops when needed in
 // ThreadActor.prototype.synchronize.
 
-const { defer } = devtools.require("sdk/core/promise");
 var gClient;
 var gThreadActor;
 
@@ -26,7 +25,7 @@ function run_test() {
 
 function test_nesting() {
   const thread = gThreadActor;
-  const { resolve, reject, promise } = defer();
+  const { resolve, reject, promise: p } = promise.defer();
 
   let currentStep = 0;
 
@@ -38,7 +37,7 @@ function test_nesting() {
     resolve(true);
   });
 
-  do_check_eq(thread.synchronize(promise), true);
+  do_check_eq(thread.synchronize(p), true);
 
   // Should be on the second step
   do_check_eq(++currentStep, 2);
