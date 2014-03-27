@@ -169,7 +169,6 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
-    '/xpcom/ds',
 ]
 
 for var in ('MOZ_JSDEBUGGER', 'MOZ_B2G_RIL', 'MOZ_B2G_FM'):
