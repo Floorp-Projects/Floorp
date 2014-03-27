@@ -93,6 +93,55 @@ function addShortcut(aNode, aDocument, aItem) {
   aItem.setAttribute("shortcut", ShortcutUtils.prettifyShortcut(shortcut));
 }
 
+function fillSubviewFromMenuItems(aMenuItems, aSubview) {
+  let attrs = ["oncommand", "onclick", "label", "key", "disabled",
+               "command", "observes", "hidden", "class", "origin",
+               "image", "checked"];
+
+  let doc = aSubview.ownerDocument;
+  let fragment = doc.createDocumentFragment();
+  for (let menuChild of aMenuItems) {
+    if (menuChild.hidden)
+      continue;
+
+    let subviewItem;
+    if (menuChild.localName == "menuseparator") {
+      // Don't insert duplicate or leading separators. This can happen if there are
+      // menus (which we don't copy) above the separator.
+      if (!fragment.lastChild || fragment.lastChild.localName == "menuseparator") {
+        continue;
+      }
+      subviewItem = doc.createElementNS(kNSXUL, "menuseparator");
+    } else if (menuChild.localName == "menuitem") {
+      subviewItem = doc.createElementNS(kNSXUL, "toolbarbutton");
+      subviewItem.setAttribute("class", "subviewbutton");
+      addShortcut(menuChild, doc, subviewItem);
+    } else {
+      continue;
+    }
+    for (let attr of attrs) {
+      let attrVal = menuChild.getAttribute(attr);
+      if (attrVal)
+        subviewItem.setAttribute(attr, attrVal);
+    }
+    fragment.appendChild(subviewItem);
+  }
+  aSubview.appendChild(fragment);
+}
+
+function clearSubview(aSubview) {
+  let parent = aSubview.parentNode;
+  // We'll take the container out of the document before cleaning it out
+  // to avoid reflowing each time we remove something.
+  parent.removeChild(aSubview);
+
+  while (aSubview.firstChild) {
+    aSubview.firstChild.remove();
+  }
+
+  parent.appendChild(aSubview);
+}
+
 const CustomizableWidgets = [{
     id: "history-panelmenu",
     type: "view",
@@ -284,59 +333,18 @@ const CustomizableWidgets = [{
       let doc = aEvent.target.ownerDocument;
       let win = doc.defaultView;
 
-      let items = doc.getElementById("PanelUI-developerItems");
       let menu = doc.getElementById("menuWebDeveloperPopup");
-      let attrs = ["oncommand", "onclick", "label", "key", "disabled",
-                   "command", "observes"];
 
-      let fragment = doc.createDocumentFragment();
       let itemsToDisplay = [...menu.children];
       // Hardcode the addition of the "work offline" menuitem at the bottom:
       itemsToDisplay.push({localName: "menuseparator", getAttribute: () => {}});
       itemsToDisplay.push(doc.getElementById("goOfflineMenuitem"));
-      for (let node of itemsToDisplay) {
-        if (node.hidden)
-          continue;
-
-        let item;
-        if (node.localName == "menuseparator") {
-          // Don't insert duplicate or leading separators. This can happen if there are
-          // menus (which we don't copy) above the separator.
-          if (!fragment.lastChild || fragment.lastChild.localName == "menuseparator") {
-            continue;
-          }
-          item = doc.createElementNS(kNSXUL, "menuseparator");
-        } else if (node.localName == "menuitem") {
-          item = doc.createElementNS(kNSXUL, "toolbarbutton");
-          item.setAttribute("class", "subviewbutton");
-          addShortcut(node, doc, item);
-        } else {
-          continue;
-        }
-        for (let attr of attrs) {
-          let attrVal = node.getAttribute(attr);
-          if (attrVal)
-            item.setAttribute(attr, attrVal);
-        }
-        fragment.appendChild(item);
-      }
-      items.appendChild(fragment);
+      fillSubviewFromMenuItems(itemsToDisplay, doc.getElementById("PanelUI-developerItems"));
 
     },
     onViewHiding: function(aEvent) {
       let doc = aEvent.target.ownerDocument;
-      let win = doc.defaultView;
-      let items = doc.getElementById("PanelUI-developerItems");
-      let parent = items.parentNode;
-      // We'll take the container out of the document before cleaning it out
-      // to avoid reflowing each time we remove something.
-      parent.removeChild(items);
-
-      while (items.firstChild) {
-        items.firstChild.remove();
-      }
-
-      parent.appendChild(items);
+      clearSubview(doc.getElementById("PanelUI-developerItems"));
     }
   }, {
     id: "sidebar-button",
@@ -350,8 +358,6 @@ const CustomizableWidgets = [{
       // of dealing with those right now.
       let doc = aEvent.target.ownerDocument;
       let win = doc.defaultView;
-
-      let items = doc.getElementById("PanelUI-sidebarItems");
       let menu = doc.getElementById("viewSidebarMenu");
 
       // First clear any existing menuitems then populate. Social sidebar
@@ -362,51 +368,11 @@ const CustomizableWidgets = [{
       if (providerMenuSeps.length > 0)
         win.SocialSidebar.populateProviderMenu(providerMenuSeps[0]);
 
-      let attrs = ["oncommand", "onclick", "label", "key", "disabled",
-                   "command", "observes", "hidden", "class", "origin",
-                   "image", "checked"];
-
-      let fragment = doc.createDocumentFragment();
-      let itemsToDisplay = [...menu.children];
-      for (let node of itemsToDisplay) {
-        if (node.hidden)
-          continue;
-
-        let item;
-        if (node.localName == "menuseparator") {
-          item = doc.createElementNS(kNSXUL, "menuseparator");
-        } else if (node.localName == "menuitem") {
-          item = doc.createElementNS(kNSXUL, "toolbarbutton");
-        } else {
-          continue;
-        }
-        for (let attr of attrs) {
-          let attrVal = node.getAttribute(attr);
-          if (attrVal)
-            item.setAttribute(attr, attrVal);
-        }
-        if (node.localName == "menuitem") {
-          item.classList.add("subviewbutton");
-          addShortcut(node, doc, item);
-        }
-        fragment.appendChild(item);
-      }
-
-      items.appendChild(fragment);
+      fillSubviewFromMenuItems([...menu.children], doc.getElementById("PanelUI-sidebarItems"));
     },
     onViewHiding: function(aEvent) {
       let doc = aEvent.target.ownerDocument;
-      let items = doc.getElementById("PanelUI-sidebarItems");
-      let parent = items.parentNode;
-      // We'll take the container out of the document before cleaning it out
-      // to avoid reflowing each time we remove something.
-      parent.removeChild(items);
-
-      while (items.firstChild) {
-        items.firstChild.remove();
-      }
-
-      parent.appendChild(items);
+      clearSubview(doc.getElementById("PanelUI-sidebarItems"));
     }
   }, {
     id: "add-ons-button",
