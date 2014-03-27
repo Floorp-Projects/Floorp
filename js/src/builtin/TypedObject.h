@@ -126,6 +126,33 @@ static T ConvertScalar(double d)
     }
 }
 
+namespace type {
+
+enum Kind {
+    Scalar = JS_TYPEREPR_SCALAR_KIND,
+    Reference = JS_TYPEREPR_REFERENCE_KIND,
+    X4 = JS_TYPEREPR_X4_KIND,
+    Struct = JS_TYPEREPR_STRUCT_KIND,
+    SizedArray = JS_TYPEREPR_SIZED_ARRAY_KIND,
+    UnsizedArray = JS_TYPEREPR_UNSIZED_ARRAY_KIND,
+};
+
+static inline bool isSized(type::Kind kind) {
+    return kind > JS_TYPEREPR_MAX_UNSIZED_KIND;
+}
+
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Typed Prototypes
+
+class SizedTypeDescr;
+class SimpleTypeDescr;
+class ComplexTypeDescr;
+class X4TypeDescr;
+class StructTypeDescr;
+class SizedTypedProto;
+
 /*
  * The prototype for a typed object. Currently, carries a link to the
  * type descriptor. Eventually will carry most of the type information
@@ -154,25 +181,21 @@ class TypeDescr : public JSObject
     // fun and rejoicing.
     static const Class class_;
 
-    enum Kind {
-        Scalar = JS_TYPEREPR_SCALAR_KIND,
-        Reference = JS_TYPEREPR_REFERENCE_KIND,
-        X4 = JS_TYPEREPR_X4_KIND,
-        Struct = JS_TYPEREPR_STRUCT_KIND,
-        SizedArray = JS_TYPEREPR_SIZED_ARRAY_KIND,
-        UnsizedArray = JS_TYPEREPR_UNSIZED_ARRAY_KIND,
-    };
-
-    static bool isSized(Kind kind) {
+  public:
+    static bool isSized(type::Kind kind) {
         return kind > JS_TYPEREPR_MAX_UNSIZED_KIND;
+    }
+
+    TypedProto &typedProto() const {
+        return getReservedSlot(JS_DESCR_SLOT_TYPROTO).toObject().as<TypedProto>();
     }
 
     JSAtom &stringRepr() const {
         return getReservedSlot(JS_DESCR_SLOT_STRING_REPR).toString()->asAtom();
     }
 
-    TypeDescr::Kind kind() const {
-        return (TypeDescr::Kind) getReservedSlot(JS_DESCR_SLOT_KIND).toInt32();
+    type::Kind kind() const {
+        return (type::Kind) getReservedSlot(JS_DESCR_SLOT_KIND).toInt32();
     }
 
     bool opaque() const {
@@ -183,7 +206,7 @@ class TypeDescr : public JSObject
         return !opaque();
     }
 
-    int32_t alignment() {
+    int32_t alignment() const {
         return getReservedSlot(JS_DESCR_SLOT_ALIGNMENT).toInt32();
     }
 };
@@ -193,7 +216,7 @@ typedef Handle<TypeDescr*> HandleTypeDescr;
 class SizedTypeDescr : public TypeDescr
 {
   public:
-    int32_t size() {
+    int32_t size() const {
         return getReservedSlot(JS_DESCR_SLOT_SIZE).toInt32();
     }
 
@@ -233,7 +256,7 @@ class ScalarTypeDescr : public SimpleTypeDescr
     };
     static const int32_t TYPE_MAX = TYPE_UINT8_CLAMPED + 1;
 
-    static const TypeDescr::Kind Kind = TypeDescr::Scalar;
+    static const type::Kind Kind = type::Scalar;
     static const bool Opaque = false;
     static int32_t size(Type t);
     static int32_t alignment(Type t);
@@ -282,7 +305,7 @@ class ReferenceTypeDescr : public SimpleTypeDescr
     static const int32_t TYPE_MAX = TYPE_STRING + 1;
     static const char *typeName(Type type);
 
-    static const TypeDescr::Kind Kind = TypeDescr::Reference;
+    static const type::Kind Kind = type::Reference;
     static const bool Opaque = true;
     static const Class class_;
     static int32_t size(Type t);
@@ -328,7 +351,7 @@ class X4TypeDescr : public ComplexTypeDescr
         TYPE_FLOAT32 = JS_X4TYPEREPR_FLOAT32,
     };
 
-    static const TypeDescr::Kind Kind = TypeDescr::X4;
+    static const type::Kind Kind = type::X4;
     static const bool Opaque = false;
     static const Class class_;
     static int32_t size(Type t);
@@ -407,13 +430,13 @@ class UnsizedArrayTypeDescr : public TypeDescr
 {
   public:
     static const Class class_;
-    static const TypeDescr::Kind Kind = TypeDescr::UnsizedArray;
+    static const type::Kind Kind = type::UnsizedArray;
 
     // This is the sized method on unsized array type objects.  It
     // produces a sized variant.
     static bool dimension(JSContext *cx, unsigned int argc, jsval *vp);
 
-    SizedTypeDescr &elementType() {
+    SizedTypeDescr &elementType() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
     }
 };
@@ -425,13 +448,13 @@ class SizedArrayTypeDescr : public ComplexTypeDescr
 {
   public:
     static const Class class_;
-    static const TypeDescr::Kind Kind = TypeDescr::SizedArray;
+    static const type::Kind Kind = type::SizedArray;
 
-    SizedTypeDescr &elementType() {
+    SizedTypeDescr &elementType() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
     }
 
-    int32_t length() {
+    int32_t length() const {
         return getReservedSlot(JS_DESCR_SLOT_SIZED_ARRAY_LENGTH).toInt32();
     }
 };
@@ -469,20 +492,20 @@ class StructTypeDescr : public ComplexTypeDescr
     static const Class class_;
 
     // Returns the number of fields defined in this struct.
-    size_t fieldCount();
+    size_t fieldCount() const;
 
     // Set `*out` to the index of the field named `id` and returns true,
     // or return false if no such field exists.
-    bool fieldIndex(jsid id, size_t *out);
+    bool fieldIndex(jsid id, size_t *out) const;
 
     // Return the name of the field at index `index`.
-    JSAtom &fieldName(size_t index);
+    JSAtom &fieldName(size_t index) const;
 
     // Return the type descr of the field at index `index`.
-    SizedTypeDescr &fieldDescr(size_t index);
+    SizedTypeDescr &fieldDescr(size_t index) const;
 
     // Return the offset of the field at index `index`.
-    int32_t fieldOffset(size_t index);
+    int32_t fieldOffset(size_t index) const;
 };
 
 typedef Handle<StructTypeDescr*> HandleStructTypeDescr;
@@ -670,14 +693,14 @@ class TypedObject : public ArrayBufferViewObject
 
     int32_t size() const {
         switch (typeDescr().kind()) {
-          case TypeDescr::Scalar:
-          case TypeDescr::X4:
-          case TypeDescr::Reference:
-          case TypeDescr::Struct:
-          case TypeDescr::SizedArray:
+          case type::Scalar:
+          case type::X4:
+          case type::Reference:
+          case type::Struct:
+          case type::SizedArray:
             return typeDescr().as<SizedTypeDescr>().size();
 
-          case TypeDescr::UnsizedArray: {
+          case type::UnsizedArray: {
             SizedTypeDescr &elementType = typeDescr().as<UnsizedArrayTypeDescr>().elementType();
             return elementType.size() * length();
           }
