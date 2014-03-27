@@ -66,14 +66,14 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 // End-of-array marker for mask arguments to ParseBitmaskValues
 #define MASK_END_VALUE  (-1)
 
-MOZ_BEGIN_ENUM_CLASS(nsParsingStatus, int32_t)
+MOZ_BEGIN_ENUM_CLASS(CSSParseResult, int32_t)
   // Parsed something successfully:
   Ok,
   // Did not find what we were looking for, but did not consume any token:
   NotFound,
   // Unexpected token or token value, too late for UngetToken() to be enough:
   Error
-MOZ_END_ENUM_CLASS(nsParsingStatus)
+MOZ_END_ENUM_CLASS(CSSParseResult)
 
 namespace {
 
@@ -655,7 +655,7 @@ protected:
   // If aValue is already a eCSSUnit_List, append to that list.
   bool ParseGridLineNames(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
-  nsParsingStatus ParseGridTrackSize(nsCSSValue& aValue);
+  CSSParseResult ParseGridTrackSize(nsCSSValue& aValue);
   bool ParseGridAutoColumnsRows(nsCSSProperty aPropID);
 
   // Assuming a [ <line-names>? ] has already been parsed,
@@ -7027,33 +7027,33 @@ CSSParserImpl::ParseGridTrackBreadth(nsCSSValue& aValue)
 }
 
 // Parse a <track-size>
-nsParsingStatus
+CSSParseResult
 CSSParserImpl::ParseGridTrackSize(nsCSSValue& aValue)
 {
   // Attempt to parse 'auto' or a single <track-breadth>
   if (ParseGridTrackBreadth(aValue) ||
       ParseVariant(aValue, VARIANT_AUTO, nullptr)) {
-    return nsParsingStatus::Ok;
+    return CSSParseResult::Ok;
   }
 
   // Attempt to parse a minmax() function
   if (!GetToken(true)) {
-    return nsParsingStatus::NotFound;
+    return CSSParseResult::NotFound;
   }
   if (!(eCSSToken_Function == mToken.mType &&
         mToken.mIdent.LowerCaseEqualsLiteral("minmax"))) {
     UngetToken();
-    return nsParsingStatus::NotFound;
+    return CSSParseResult::NotFound;
   }
   nsCSSValue::Array* func = aValue.InitFunction(eCSSKeyword_minmax, 2);
   if (ParseGridTrackBreadth(func->Item(1)) &&
       ExpectSymbol(',', true) &&
       ParseGridTrackBreadth(func->Item(2)) &&
       ExpectSymbol(')', true)) {
-    return nsParsingStatus::Ok;
+    return CSSParseResult::Ok;
   }
   SkipUntil(')');
-  return nsParsingStatus::Error;
+  return CSSParseResult::Error;
 }
 
 bool
@@ -7061,7 +7061,7 @@ CSSParserImpl::ParseGridAutoColumnsRows(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (ParseVariant(value, VARIANT_INHERIT, nullptr) ||
-      ParseGridTrackSize(value) == nsParsingStatus::Ok) {
+      ParseGridTrackSize(value) == CSSParseResult::Ok) {
     AppendValue(aPropID, value);
     return true;
   }
@@ -7075,9 +7075,9 @@ CSSParserImpl::ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
   nsAutoPtr<nsCSSValueList> firstTrackSizeItem(new nsCSSValueList);
 
   // FIXME: add repeat()
-  if (ParseGridTrackSize(firstTrackSizeItem->mValue) != nsParsingStatus::Ok) {
+  if (ParseGridTrackSize(firstTrackSizeItem->mValue) != CSSParseResult::Ok) {
     // We need at least one <track-size>,
-    // so even nsParsingStatus::NotFound is an error here.
+    // so even CSSParseResult::NotFound is an error here.
     return false;
   }
 
@@ -7091,11 +7091,11 @@ CSSParserImpl::ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
 
     // FIXME: add repeat()
     nsCSSValue trackSize;
-    nsParsingStatus result = ParseGridTrackSize(trackSize);
-    if (result == nsParsingStatus::Error) {
+    CSSParseResult result = ParseGridTrackSize(trackSize);
+    if (result == CSSParseResult::Error) {
       return false;
     }
-    if (result == nsParsingStatus::NotFound) {
+    if (result == CSSParseResult::NotFound) {
       // What we've parsed so far is a valid <track-list>. Stop here.
       break;
     }
@@ -7362,11 +7362,11 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
     rowsItem->mNext = new nsCSSValueList;
     rowsItem = rowsItem->mNext;
     // TODO: add repeat()
-    nsParsingStatus result = ParseGridTrackSize(rowsItem->mValue);
-    if (result == nsParsingStatus::Error) {
+    CSSParseResult result = ParseGridTrackSize(rowsItem->mValue);
+    if (result == CSSParseResult::Error) {
       return false;
     }
-    if (result == nsParsingStatus::NotFound) {
+    if (result == CSSParseResult::NotFound) {
       rowsItem->mValue.SetAutoValue();
     }
 
@@ -7468,17 +7468,17 @@ CSSParserImpl::ParseGridShorthandAutoProps()
 {
   nsCSSValue autoColumnsValue;
   nsCSSValue autoRowsValue;
-  nsParsingStatus result = ParseGridTrackSize(autoColumnsValue);
-  if (result == nsParsingStatus::Error) {
+  CSSParseResult result = ParseGridTrackSize(autoColumnsValue);
+  if (result == CSSParseResult::Error) {
     return false;
   }
-  if (result == nsParsingStatus::NotFound) {
+  if (result == CSSParseResult::NotFound) {
     autoColumnsValue.SetAutoValue();
     autoRowsValue.SetAutoValue();
   } else {
     if (!ExpectSymbol('/', true)) {
       autoRowsValue.SetAutoValue();
-    } else if (ParseGridTrackSize(autoRowsValue) != nsParsingStatus::Ok) {
+    } else if (ParseGridTrackSize(autoRowsValue) != CSSParseResult::Ok) {
       return false;
     }
   }
