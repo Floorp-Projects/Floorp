@@ -157,8 +157,8 @@ StatementJSHelper::getParams(Statement *aStatement,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsrefcnt) StatementJSHelper::AddRef() { return 2; }
-NS_IMETHODIMP_(nsrefcnt) StatementJSHelper::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) StatementJSHelper::AddRef() { return 2; }
+NS_IMETHODIMP_(MozExternalRefCountType) StatementJSHelper::Release() { return 1; }
 NS_INTERFACE_MAP_BEGIN(StatementJSHelper)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

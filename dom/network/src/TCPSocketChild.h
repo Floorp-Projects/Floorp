@@ -40,7 +40,7 @@ class TCPSocketChild : public mozilla::net::PTCPSocketChild
 {
 public:
   NS_DECL_NSITCPSOCKETCHILD
-  NS_IMETHOD_(nsrefcnt) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
 
   TCPSocketChild();
   ~TCPSocketChild();

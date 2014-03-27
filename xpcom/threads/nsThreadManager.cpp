@@ -43,8 +43,8 @@ AppendAndRemoveThread(PRThread *key, nsRefPtr<nsThread> &thread, void *arg)
 }
 
 // statically allocated instance
-NS_IMETHODIMP_(nsrefcnt) nsThreadManager::AddRef() { return 2; }
-NS_IMETHODIMP_(nsrefcnt) nsThreadManager::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) nsThreadManager::AddRef() { return 2; }
+NS_IMETHODIMP_(MozExternalRefCountType) nsThreadManager::Release() { return 1; }
 NS_IMPL_CLASSINFO(nsThreadManager, nullptr,
                   nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON,
                   NS_THREADMANAGER_CID)

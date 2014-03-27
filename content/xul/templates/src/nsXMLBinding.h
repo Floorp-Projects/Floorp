@@ -56,8 +56,8 @@ public:
 
 public:
 
-  NS_METHOD_(nsrefcnt) AddRef();
-  NS_METHOD_(nsrefcnt) Release();
+  NS_METHOD_(MozExternalRefCountType) AddRef();
+  NS_METHOD_(MozExternalRefCountType) Release();
   NS_DECL_OWNINGTHREAD
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXMLBindingSet)
 

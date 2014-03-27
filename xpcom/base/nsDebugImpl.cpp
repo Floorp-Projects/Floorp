@@ -77,13 +77,13 @@ static Atomic<int32_t> gAssertionCount;
 
 NS_IMPL_QUERY_INTERFACE2(nsDebugImpl, nsIDebug, nsIDebug2)
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsDebugImpl::AddRef()
 {
   return 2;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsDebugImpl::Release()
 {
   return 1;

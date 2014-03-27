@@ -98,7 +98,7 @@ private:
 
 
 NS_IMPL_ADDREF(CacheFileChunk)
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 CacheFileChunk::Release()
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");

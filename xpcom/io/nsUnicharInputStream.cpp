@@ -373,8 +373,8 @@ NS_IMPL_QUERY_INTERFACE2(nsSimpleUnicharStreamFactory,
                          nsIFactory,
                          nsISimpleUnicharStreamFactory)
 
-NS_IMETHODIMP_(nsrefcnt) nsSimpleUnicharStreamFactory::AddRef() { return 2; }
-NS_IMETHODIMP_(nsrefcnt) nsSimpleUnicharStreamFactory::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) nsSimpleUnicharStreamFactory::AddRef() { return 2; }
+NS_IMETHODIMP_(MozExternalRefCountType) nsSimpleUnicharStreamFactory::Release() { return 1; }
 
 NS_IMETHODIMP
 nsSimpleUnicharStreamFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,

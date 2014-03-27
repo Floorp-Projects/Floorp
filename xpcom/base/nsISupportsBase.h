@@ -61,7 +61,7 @@ public:
    *
    * @return The resulting reference count.
    */
-  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
 
   /**
    * Decreases the reference count for this interface.
@@ -70,7 +70,7 @@ public:
    *
    * @return The resulting reference count.
    */
-  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
 
   //@}
 };

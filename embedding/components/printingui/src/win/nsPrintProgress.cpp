@@ -16,7 +16,7 @@
 NS_IMPL_ADDREF(nsPrintProgress)
 NS_IMPL_RELEASE(nsPrintProgress)
 #else
-NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::AddRef(void)
+NS_IMETHODIMP_(MozExternalRefCountType) nsPrintProgress::AddRef(void)
 {
   NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
   nsrefcnt count;
@@ -25,7 +25,7 @@ NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::AddRef(void)
   return count;
 }
 
-NS_IMETHODIMP_(nsrefcnt) nsPrintProgress::Release(void)
+NS_IMETHODIMP_(MozExternalRefCountType) nsPrintProgress::Release(void)
 {
   nsrefcnt count;
   NS_PRECONDITION(0 != mRefCnt, "dup release");

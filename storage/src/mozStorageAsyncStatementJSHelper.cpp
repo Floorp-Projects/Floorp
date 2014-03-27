@@ -64,8 +64,8 @@ AsyncStatementJSHelper::getParams(AsyncStatement *aStatement,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsrefcnt) AsyncStatementJSHelper::AddRef() { return 2; }
-NS_IMETHODIMP_(nsrefcnt) AsyncStatementJSHelper::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementJSHelper::AddRef() { return 2; }
+NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementJSHelper::Release() { return 1; }
 NS_INTERFACE_MAP_BEGIN(AsyncStatementJSHelper)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

@@ -35,12 +35,12 @@ public:
 };
 
 // nsISupports interface
-NS_IMETHODIMP_(nsrefcnt) EmptyEnumeratorImpl::AddRef(void)
+NS_IMETHODIMP_(MozExternalRefCountType) EmptyEnumeratorImpl::AddRef(void)
 {
     return 2;
 }
 
-NS_IMETHODIMP_(nsrefcnt) EmptyEnumeratorImpl::Release(void)
+NS_IMETHODIMP_(MozExternalRefCountType) EmptyEnumeratorImpl::Release(void)
 {
     return 1;
 }
