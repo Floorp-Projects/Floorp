@@ -110,6 +110,7 @@ CanvasClientSurfaceStream::CanvasClientSurfaceStream(CompositableForwarder* aLay
 void
 CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
+  aLayer->mGLContext->MakeCurrent();
   GLScreenBuffer* screen = aLayer->mGLContext->Screen();
   SurfaceStream* stream = nullptr;
 
