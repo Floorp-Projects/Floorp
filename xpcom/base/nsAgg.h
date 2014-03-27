@@ -54,8 +54,8 @@ private:                                                                    \
         Internal() {}                                                       \
                                                                             \
         NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);  \
-        NS_IMETHOD_(nsrefcnt) AddRef(void);                                 \
-        NS_IMETHOD_(nsrefcnt) Release(void);                                \
+        NS_IMETHOD_(MozExternalRefCountType) AddRef(void);                  \
+        NS_IMETHOD_(MozExternalRefCountType) Release(void);                 \
                                                                             \
         NS_DECL_OWNINGTHREAD                                                \
     };                                                                      \
@@ -107,7 +107,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
                                                                             \
 NS_IMPL_AGGREGATED_HELPER(_class)                                           \
                                                                             \
-NS_IMETHODIMP_(nsrefcnt)                                                    \
+NS_IMETHODIMP_(MozExternalRefCountType)                                     \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
@@ -118,7 +118,7 @@ _class::Internal::AddRef(void)                                              \
     return agg->mRefCnt;                                                    \
 }                                                                           \
                                                                             \
-NS_IMETHODIMP_(nsrefcnt)                                                    \
+NS_IMETHODIMP_(MozExternalRefCountType)                                     \
 _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
@@ -138,7 +138,7 @@ _class::Internal::Release(void)                                             \
                                                                             \
 NS_IMPL_AGGREGATED_HELPER(_class)                                           \
                                                                             \
-NS_IMETHODIMP_(nsrefcnt)                                                    \
+NS_IMETHODIMP_(MozExternalRefCountType)                                     \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
@@ -148,7 +148,7 @@ _class::Internal::AddRef(void)                                              \
     NS_LOG_ADDREF(this, count, #_class, sizeof(*agg));                      \
     return count;                                                           \
 }                                                                           \
-NS_IMETHODIMP_(nsrefcnt)                                                    \
+NS_IMETHODIMP_(MozExternalRefCountType)                                     \
 _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
@@ -171,13 +171,13 @@ _class::QueryInterface(const nsIID& aIID, void** aInstancePtr)              \
     return fOuter->QueryInterface(aIID, aInstancePtr);                      \
 }                                                                           \
                                                                             \
-NS_IMETHODIMP_(nsrefcnt)                                                    \
+NS_IMETHODIMP_(MozExternalRefCountType)                                     \
 _class::AddRef(void)                                                        \
 {                                                                           \
     return fOuter->AddRef();                                                \
 }                                                                           \
                                                                             \
-NS_IMETHODIMP_(nsrefcnt)                                                    \
+NS_IMETHODIMP_(MozExternalRefCountType)                                     \
 _class::Release(void)                                                       \
 {                                                                           \
     return fOuter->Release();                                               \

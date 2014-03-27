@@ -23,7 +23,7 @@ namespace net {
 
 NS_IMPL_ADDREF(WebSocketChannelChild)
 
-NS_IMETHODIMP_(nsrefcnt) WebSocketChannelChild::Release()
+NS_IMETHODIMP_(MozExternalRefCountType) WebSocketChannelChild::Release()
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");
   NS_ASSERT_OWNINGTHREAD(WebSocketChannelChild);

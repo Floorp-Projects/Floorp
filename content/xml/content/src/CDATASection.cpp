@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/CDATASectionBinding.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 namespace mozilla {
 namespace dom {
@@ -48,7 +49,7 @@ CDATASection::List(FILE* out, int32_t aIndent) const
   int32_t index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "CDATASection refcount=%d<", mRefCnt.get());
+  fprintf(out, "CDATASection refcount=%" PRIuPTR "<", mRefCnt.get());
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());
