@@ -108,23 +108,16 @@ public class Telemetry {
     }
 
     public static void startUISession(String sessionName) {
-        Log.d(LOGTAG, "StartUISession: " + sessionName);
         GeckoEvent event = GeckoEvent.createTelemetryUISessionStartEvent(sessionName, realtime());
         GeckoAppShell.sendEventToGecko(event);
     }
 
     public static void stopUISession(String sessionName, String reason) {
-        Log.d(LOGTAG, "StopUISession: " + sessionName + ", reason=" + reason);
         GeckoEvent event = GeckoEvent.createTelemetryUISessionStopEvent(sessionName, reason, realtime());
         GeckoAppShell.sendEventToGecko(event);
     }
 
-    public static void stopUISession(String sessionName) {
-        stopUISession(sessionName, null);
-    }
-
     public static void sendUIEvent(String action, String method, long timestamp, String extras) {
-        Log.d(LOGTAG, "SendUIEvent: action = " + action + " method = " + method + " timestamp = " + timestamp + " extras = " + extras);
         GeckoEvent event = GeckoEvent.createTelemetryUIEvent(action, method, timestamp, extras);
         GeckoAppShell.sendEventToGecko(event);
     }
