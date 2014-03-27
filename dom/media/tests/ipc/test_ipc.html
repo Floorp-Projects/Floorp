@@ -31,7 +31,6 @@
 
     function iframeScriptSecond() {
       let TestRunner = content.wrappedJSObject.TestRunner;
-
       let oldComplete = TestRunner.onComplete;
 
       TestRunner.onComplete = function() {
@@ -45,11 +44,13 @@
           oldComplete();
         }
       };
-
       let oldLog = TestRunner.log;
       TestRunner.log = function(msg) {
         sendAsyncMessage("test:PeerConnection:ipcTestMessage", { msg: msg });
-      }
+      };
+      TestRunner.error = function(msg) {
+        sendAsyncMessage("test:PeerConnection:ipcTestMessage", { msg: msg });
+      };
     }
 
     let regex = /^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO) \| ([^\|]+) \|(.*)/;
@@ -148,8 +149,8 @@
       let href =  window.location.href;
       href = href.substring(0, href.lastIndexOf('/'));
       href = href.substring(0, href.lastIndexOf('/'));
-      iframe.src = href + "/mochitest?consoleLevel=INFO";
-
+      let manifest = "tests/dom/media/tests/ipc/ipc.json";
+      iframe.src = href + "/mochitest?consoleLevel=INFO&testManifest=" + manifest;
       document.body.appendChild(iframe);
     }
 
