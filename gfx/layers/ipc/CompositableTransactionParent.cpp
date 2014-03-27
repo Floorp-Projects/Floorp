@@ -304,7 +304,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
   return true;
 }
 
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 void
 CompositableParentManager::ReturnTextureDataIfNecessary(CompositableHost* aCompositable,
                                                         EditReplyVector& replyv,
