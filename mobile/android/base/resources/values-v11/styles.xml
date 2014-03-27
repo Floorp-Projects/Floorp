@@ -100,4 +100,13 @@
         <item name="android:src">@drawable/menu_light</item>
     </style>
 
+    <style name="TabInput"></style>
+
+    <style name="TabInput.TabWidget" parent="android:style/Widget.Holo.Light.TabWidget"/>
+
+    <style name="TabInput.Tab" parent="android:style/Widget.Holo.Light.Tab">
+        <item name="android:minHeight">@dimen/menu_item_row_height</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
 </resources>

@@ -29,7 +29,7 @@ import traceback
 import urllib2
 import zipfile
 
-from automationutils import environment, getDebuggerInfo, isURL, KeyValueParseError, parseKeyValue, processLeakLog, systemMemory, dumpScreen, ShutdownLeaks
+from automationutils import environment, getDebuggerInfo, isURL, KeyValueParseError, parseKeyValue, processLeakLog, systemMemory, dumpScreen, ShutdownLeaks, printstatus
 from datetime import datetime
 from manifestparser import TestManifest
 from mochitest_options import MochitestOptions
@@ -434,13 +434,16 @@ class MochitestUtilsMixin(object):
 
     testRoot = self.getTestRoot(options)
     testRootAbs = os.path.abspath(testRoot)
-    if options.manifestFile and os.path.isfile(options.manifestFile):
+    if isinstance(options.manifestFile, TestManifest):
+        manifest = options.manifestFile
+    elif options.manifestFile and os.path.isfile(options.manifestFile):
       manifestFileAbs = os.path.abspath(options.manifestFile)
       assert manifestFileAbs.startswith(testRootAbs)
       manifest = TestManifest([options.manifestFile], strict=False)
     else:
       masterName = self.getTestFlavor(options) + '.ini'
       masterPath = os.path.join(testRoot, masterName)
+
       if os.path.exists(masterPath):
         manifest = TestManifest([masterPath], strict=False)
 
@@ -790,8 +793,11 @@ class Mochitest(MochitestUtilsMixin):
       if mozinfo.isWin:
         # We should have a "crashinject" program in our utility path
         crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
-        if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(processPID)]).wait() == 0:
-          return
+        if os.path.exists(crashinject):
+          status = subprocess.Popen([crashinject, str(processPID)]).wait()
+          printstatus(status, "crashinject")
+          if status == 0:
+            return
       else:
         try:
           os.kill(processPID, signal.SIGABRT)
@@ -1019,6 +1025,7 @@ class Mochitest(MochitestUtilsMixin):
       # until bug 913970 is fixed regarding mozrunner `wait` not returning status
       # see https://bugzilla.mozilla.org/show_bug.cgi?id=913970
       status = proc.wait()
+      printstatus(status, "Main app process")
       runner.process_handler = None
 
       if timeout is None:
@@ -1354,32 +1361,6 @@ class Mochitest(MochitestUtilsMixin):
 
   def makeTestConfig(self, options):
     "Creates a test configuration file for customizing test execution."
-    def jsonString(val):
-      if isinstance(val, bool):
-        if val:
-          return "true"
-        return "false"
-      elif val is None:
-        return '""'
-      elif isinstance(val, basestring):
-        return '"%s"' % (val.replace('\\', '\\\\'))
-      elif isinstance(val, int):
-        return '%s' % (val)
-      elif isinstance(val, list):
-        content = '['
-        first = True
-        for item in val:
-          if first:
-            first = False
-          else:
-            content += ", "
-          content += jsonString(item)
-        content += ']'
-        return content
-      else:
-        print "unknown type: %s: %s" % (opt, val)
-        sys.exit(1)
-
     options.logFile = options.logFile.replace("\\", "\\\\")
     options.testPath = options.testPath.replace("\\", "\\\\")
     testRoot = self.getTestRoot(options)
@@ -1387,20 +1368,9 @@ class Mochitest(MochitestUtilsMixin):
     if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ["MOZ_HIDE_RESULTS_TABLE"] == "1":
       options.hideResultsTable = True
 
-    #TODO: when we upgrade to python 2.6, just use json.dumps(options.__dict__)
-    content = "{"
-    content += '"testRoot": "%s", ' % (testRoot)
-    first = True
-    for opt in options.__dict__.keys():
-      val = options.__dict__[opt]
-      if first:
-        first = False
-      else:
-        content += ", "
-
-      content += '"' + opt + '": '
-      content += jsonString(val)
-    content += "}"
+    d = dict(options.__dict__)
+    d['testRoot'] = testRoot
+    content = json.dumps(d)
 
     with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
       config.write(content)
@@ -1497,6 +1467,7 @@ class Mochitest(MochitestUtilsMixin):
     pk12util = os.path.join(utilityPath, "pk12util" + bin_suffix)
 
     status = call([certutil, "-N", "-d", profileDir, "-f", pwfilePath], env=env)
+    printstatus(status, "certutil")
     if status:
       return status
 
@@ -1508,13 +1479,15 @@ class Mochitest(MochitestUtilsMixin):
         trustBits = "CT,,"
         if root.endswith("-object"):
           trustBits = "CT,,CT"
-        call([certutil, "-A", "-i", os.path.join(certPath, item),
+        status = call([certutil, "-A", "-i", os.path.join(certPath, item),
               "-d", profileDir, "-f", pwfilePath, "-n", root, "-t", trustBits],
               env=env)
+        printstatus(status, "certutil")
       elif ext == ".client":
-        call([pk12util, "-i", os.path.join(certPath, item), "-w",
+        status = call([pk12util, "-i", os.path.join(certPath, item), "-w",
               pwfilePath, "-d", profileDir],
               env=env)
+        printstatus(status, "pk2util")
 
     os.unlink(pwfilePath)
     return 0

@@ -7,7 +7,6 @@
 let protocol = devtools.require("devtools/server/protocol");
 let {method, preEvent, types, Arg, Option, RetVal} = protocol;
 
-let {resolve} = devtools.require("sdk/core/promise");
 let events = devtools.require("sdk/event/core");
 
 function simpleHello() {
@@ -244,7 +243,7 @@ let RootFront = protocol.FrontClass(RootActor, {
 
   clearTemporaryChildren: protocol.custom(function() {
     if (!this._temporaryHolder) {
-      return resolve(undefined);
+      return promise.resolve(undefined);
     }
     this._temporaryHolder.destroy();
     delete this._temporaryHolder;

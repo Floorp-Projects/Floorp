@@ -5,8 +5,6 @@
  * Tests that the exit frame packets get the correct `why` value.
  */
 
-let { defer } = devtools.require("sdk/core/promise");
-
 var gDebuggee;
 var gClient;
 var gTraceClient;
@@ -49,7 +47,7 @@ function test_exit_frame_whys()
 
 function start_trace()
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.startTrace(["name"], null, function() { deferred.resolve(); });
   return deferred.promise;
 }
@@ -84,7 +82,7 @@ function eval_code()
 
 function stop_trace()
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.stopTrace(null, function() { deferred.resolve(); });
   return deferred.promise;
 }

@@ -377,7 +377,6 @@ Connection.prototype._receive = function _receive(frame, done) {
 // -------------------
 
 var defaultSettings = {
-  SETTINGS_FLOW_CONTROL_OPTIONS: true
 };
 
 // Settings management initialization:
@@ -563,15 +562,9 @@ Connection.prototype._initializeFlowControl = function _initializeFlowControl() 
   this._initialStreamWindowSize = INITIAL_STREAM_WINDOW_SIZE;
   this.on('new_stream', function(stream) {
     stream.upstream.setInitialWindow(this._initialStreamWindowSize);
-    if (this._remoteFlowControlDisabled) {
-      stream.upstream.disableRemoteFlowControl();
-    }
   });
   this.on('RECEIVING_SETTINGS_INITIAL_WINDOW_SIZE', this._setInitialStreamWindowSize);
-  this.on('RECEIVING_SETTINGS_FLOW_CONTROL_OPTIONS', this._setLocalFlowControl);
-  this.on('SENDING_SETTINGS_FLOW_CONTROL_OPTIONS', this._setRemoteFlowControl);
   this._streamIds[0].upstream.setInitialWindow = function noop() {};
-  this._streamIds[0].upstream.disableRemoteFlowControl = function noop() {};
 };
 
 // The initial connection flow control window is 65535 bytes.
@@ -591,29 +584,5 @@ Connection.prototype._setInitialStreamWindowSize = function _setInitialStreamWin
     this._streamIds.forEach(function(stream) {
       stream.upstream.setInitialWindow(size);
     });
-  }
-};
-
-// `_setStreamFlowControl()` may be used to disable/enable flow control. In practice, it is just
-// for turning off flow control since it can not be turned on.
-Connection.prototype._setLocalFlowControl = function _setLocalFlowControl(disable) {
-  if (disable) {
-    this._increaseWindow(Infinity);
-    this._setInitialStreamWindowSize(Infinity);
-  } else if (this._initialStreamWindowSize === Infinity) {
-    this._log.error('Trying to re-enable flow control after it was turned off.');
-    this.emit('error', 'FLOW_CONTROL_ERROR');
-  }
-};
-
-Connection.prototype._setRemoteFlowControl = function _setRemoteFlowControl(disable) {
-  if (disable) {
-    this.disableRemoteFlowControl();
-    this._streamIds.forEach(function(stream) {
-      stream.upstream.disableRemoteFlowControl();
-    });
-  } else if (this._remoteFlowControlDisabled) {
-    this._log.error('Trying to re-enable flow control after it was turned off.');
-    throw new Error('Trying to re-enable flow control after it was turned off.');
   }
 };

@@ -21,9 +21,7 @@ function test() {
         ok(aResponse.tabs[0].traceActor, "traceActor set");
         ok(aResponse.chromeDebugger, "chromeDebugger set");
         ok(aResponse.consoleActor, "consoleActor set");
-        ok(aResponse.gcliActor, "gcliActor set");
         ok(aResponse.profilerActor, "profilerActor set");
-        ok(aResponse.gcliActor, "gcliActor set");
         ok(aResponse.deviceActor, "deviceActor set");
 
         client.close(() => {

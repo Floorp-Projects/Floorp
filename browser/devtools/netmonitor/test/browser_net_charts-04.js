@@ -49,7 +49,7 @@ function test() {
       "The second column of the first row exists.");
     is(rows[0].querySelectorAll("label")[0].getAttribute("value"), "",
       "The first column of the first row displays the correct text.");
-    is(rows[0].querySelectorAll("label")[1].getAttribute("value"), L10N.getStr("tableChart.empty"),
+    is(rows[0].querySelectorAll("label")[1].getAttribute("value"), L10N.getStr("tableChart.loading"),
       "The second column of the first row displays the correct text.");
 
     is(sums.length, 2,

@@ -577,11 +577,24 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
         return p.forget();
     }
 
-    nsRefPtr<ContentParent> p =
-        new ContentParent(/* app = */ nullptr,
-                          aForBrowserElement,
-                          /* isForPreallocated = */ false,
-                          PROCESS_PRIORITY_FOREGROUND);
+    // Try to take and transform the preallocated process into browser.
+    nsRefPtr<ContentParent> p = PreallocatedProcessManager::Take();
+    if (p) {
+        p->TransformPreallocatedIntoBrowser();
+    } else {
+      // Failed in using the preallocated process: fork from the chrome process.
+#ifdef MOZ_NUWA_PROCESS
+        if (Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+            // Wait until the Nuwa process forks a new process.
+            return nullptr;
+        }
+#endif
+        p = new ContentParent(/* app = */ nullptr,
+                              aForBrowserElement,
+                              /* isForPreallocated = */ false,
+                              PROCESS_PRIORITY_FOREGROUND);
+    }
+
     p->Init();
     sNonAppContentParents->AppendElement(p);
     return p.forget();
@@ -1001,6 +1014,14 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL)
     MOZ_ASSERT(IsPreallocated());
     mAppManifestURL = aAppManifestURL;
     TryGetNameFromManifestURL(aAppManifestURL, mAppName);
+}
+
+void
+ContentParent::TransformPreallocatedIntoBrowser()
+{
+    // Reset mAppManifestURL, mIsForBrowser and mOSPrivileges for browser.
+    mAppManifestURL.Truncate();
+    mIsForBrowser = true;
 }
 
 void

@@ -11,6 +11,7 @@ import org.mozilla.gecko.GeckoAppShell;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
 public class Allocator {
@@ -69,6 +70,19 @@ public class Allocator {
         return PREFIX_OLD_ICON + index;
     }
 
+    private static void save(Editor editor) {
+        // Use SharedPreferences.Editor.apply() where available and commit()
+        // where it isn't.  We could also use a background thread with commit(),
+        // but our callers might expect the changes we make to be available
+        // immediately, so we instead take the commit() performance hit
+        // on the small percentage of extant devices that don't support apply().
+        if (android.os.Build.VERSION.SDK_INT > 8) {
+            editor.apply();
+        } else {
+            editor.commit();
+        }
+    }
+
     public ArrayList<String> getInstalledPackageNames() {
         ArrayList<String> installedPackages = new ArrayList<String>();
 
@@ -98,11 +112,11 @@ public class Allocator {
     }
 
     public synchronized void putPackageName(final int index, final String packageName) {
-        mPrefs.edit().putString(appKey(index), packageName).apply();
+        save(mPrefs.edit().putString(appKey(index), packageName));
     }
 
     public void updateColor(int index, int color) {
-        mPrefs.edit().putInt(iconKey(index), color).apply();
+        save(mPrefs.edit().putInt(iconKey(index), color));
     }
 
     public synchronized int getIndexForApp(String packageName) {
@@ -136,15 +150,11 @@ public class Allocator {
     }
 
     public synchronized void releaseIndex(final int index) {
-        mPrefs.edit()
-              .remove(appKey(index))
-              .remove(iconKey(index))
-              .remove(originKey(index))
-              .apply();
+        save(mPrefs.edit().remove(appKey(index)).remove(iconKey(index)).remove(originKey(index)));
     }
 
     public void putOrigin(int index, String origin) {
-        mPrefs.edit().putString(originKey(index), origin).apply();
+        save(mPrefs.edit().putString(originKey(index), origin));
     }
 
     public String getOrigin(int index) {
@@ -175,6 +185,6 @@ public class Allocator {
         updateColor(index, mPrefs.getInt(oldIconKey(index), -1));
 
         // Remove the old prefs so we don't migrate them the next time around.
-        mPrefs.edit().remove(oldAppKey(index)).remove(oldIconKey(index)).apply();
+        save(mPrefs.edit().remove(oldAppKey(index)).remove(oldIconKey(index)));
     }
 }
