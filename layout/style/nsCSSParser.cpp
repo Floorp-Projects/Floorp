@@ -7767,22 +7767,38 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
 
     rowsItem->mNext = new nsCSSValueList;
     rowsItem = rowsItem->mNext;
-    if (ParseGridLineNames(rowsItem->mValue) == CSSParseResult::Error) {
+    result = ParseGridLineNames(rowsItem->mValue);
+    if (result == CSSParseResult::Error) {
       return false;
     }
+    if (result == CSSParseResult::Ok) {
+      // Append to the same list as the previous call to ParseGridLineNames.
+      result = ParseGridLineNames(rowsItem->mValue);
+      if (result == CSSParseResult::Error) {
+        return false;
+      }
+      if (result == CSSParseResult::Ok) {
+        // Parsed <line-name> twice.
+        // The property value can not end here, we expect a string next.
+        if (!GetToken(true)) {
+          return false;
+        }
+        if (eCSSToken_String != mToken.mType) {
+          UngetToken();
+          return false;
+        }
+        continue;
+      }
+    }
 
-    if (CheckEndProperty()) {
+    // Did not find a <line-names>.
+    // Next, we expect either a string or the end of the property value.
+    if (!GetToken(true)) {
       break;
-    }
-
-    // Append to the same list as the previous call to ParseGridLineNames.
-    if (ParseGridLineNames(rowsItem->mValue) == CSSParseResult::Error ||
-        !GetToken(true)) {
-      return false;
     }
     if (eCSSToken_String != mToken.mType) {
       UngetToken();
-      return false;
+      break;
     }
   }
 
