@@ -3414,7 +3414,7 @@ RilObject.prototype = {
     if (signal.lteSignalStrength === undefined ||
         signal.lteSignalStrength < 0 ||
         signal.lteSignalStrength > 63) {
-      return;
+      return null;
     }
 
     let info = {
