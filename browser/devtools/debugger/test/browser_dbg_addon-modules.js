@@ -62,7 +62,7 @@ function testSources(expectSecondModule) {
   gThreadClient.getSources(({sources}) => {
     ok(sources.length, "retrieved sources");
 
-    sources.forEach(source => {
+    for (let source of sources) {
       let url = source.url.split(" -> ").pop();
       let { label, group } = gSources.getItemByValue(source.url).attachment;
 
@@ -81,7 +81,7 @@ function testSources(expectSecondModule) {
       } else {
         ok(false, "Saw an unexpected source: " + url);
       }
-    });
+    }
 
     ok(foundAddonModule, "found JS module for the addon in the list");
     is(foundAddonModule2, expectSecondModule, "saw the second addon module");
