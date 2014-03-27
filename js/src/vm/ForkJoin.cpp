@@ -517,7 +517,7 @@ js::ForkJoin(JSContext *cx, CallArgs &args)
 
     MOZ_ASSERT(sliceStart == args[1].toInt32());
     MOZ_ASSERT(sliceEnd == args[2].toInt32());
-    MOZ_ASSERT(sliceStart < sliceEnd);
+    MOZ_ASSERT(sliceStart <= sliceEnd);
 
     ForkJoinOperation op(cx, fun, sliceStart, sliceEnd, mode);
     ExecutionStatus status = op.apply();
