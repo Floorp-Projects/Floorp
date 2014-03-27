@@ -7,8 +7,6 @@
  * trace type works for function declarations.
  */
 
-let {defer} = devtools.require("sdk/core/promise");
-
 var gDebuggee;
 var gClient;
 var gTraceClient;
@@ -33,7 +31,7 @@ function test_enter_exit_frame()
 {
   let tracesSeen = 0;
   let traceNames = [];
-  let traceStopped = defer();
+  let traceStopped = promise.defer();
 
   gClient.addListener("traces", function onTraces(aEvent, { traces }) {
     for (let t of traces) {
@@ -82,7 +80,7 @@ function test_enter_exit_frame()
 
 function start_trace()
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.startTrace(["name"], null, function() { deferred.resolve(); });
   return deferred.promise;
 }
@@ -105,7 +103,7 @@ function eval_code()
 
 function stop_trace()
 {
-  let deferred = defer();
+  let deferred = promise.defer();
   gTraceClient.stopTrace(null, function() { deferred.resolve(); });
   return deferred.promise;
 }

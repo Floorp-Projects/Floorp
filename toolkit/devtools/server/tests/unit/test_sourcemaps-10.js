@@ -9,7 +9,6 @@ var gDebuggee;
 var gClient;
 var gThreadClient;
 
-const promise = devtools.require("sdk/core/promise");
 Components.utils.import('resource:///modules/devtools/SourceMap.jsm');
 
 function run_test() {

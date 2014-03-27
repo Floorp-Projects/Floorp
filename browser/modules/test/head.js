@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://gre/modules/Promise.jsm");
+
 function waitForCondition(condition, nextTest, errorMsg) {
   var tries = 0;
   var interval = setInterval(function() {
@@ -70,6 +72,24 @@ function waitForPopupAtAnchor(popup, anchorNode, nextTest, msg) {
                      nextTest();
                    },
                    "Timeout waiting for popup at anchor: " + msg);
+}
+
+function promisePanelShown(win) {
+  let panelEl = win.PanelUI.panel;
+  return promisePanelElementShown(win, panelEl);
+}
+
+function promisePanelElementShown(win, aPanel) {
+  let deferred = Promise.defer();
+  let timeoutId = win.setTimeout(() => {
+    deferred.reject("Panel did not show within 5 seconds.");
+  }, 5000);
+  aPanel.addEventListener("popupshown", function onPanelOpen(e) {
+    aPanel.removeEventListener("popupshown", onPanelOpen);
+    win.clearTimeout(timeoutId);
+    deferred.resolve();
+  });
+  return deferred.promise;
 }
 
 function is_element_hidden(element, msg) {

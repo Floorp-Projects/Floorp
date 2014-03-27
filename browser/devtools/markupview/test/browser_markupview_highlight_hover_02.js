@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that when after an element is selected and highlighted on hover, if the
 // mouse leaves the markup-view and comes back again on the same element, that
 // the highlighter is shown again on the node

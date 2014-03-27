@@ -194,14 +194,7 @@ this.BookmarkJSONUtils = Object.freeze({
    *          cause it still has some internal usage.
    */
   serializeNodeAsJSONToOutputStream: function (aNode, aStream) {
-    let deferred = Promise.defer();
-    try {
-      BookmarkNode.serializeAsJSONToOutputStream(aNode, aStream);
-      deferred.resolve();
-    } catch (ex) {
-      deferred.reject(ex);
-    }
-    return deferred.promise;
+    return BookmarkNode.serializeAsJSONToOutputStream(aNode, aStream);
   }
 });
 
