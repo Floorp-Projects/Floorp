@@ -12,6 +12,8 @@
 #if defined(__ANDROID__)
 #include "android/sles_definitions.h"
 #include <SLES/OpenSLES_Android.h>
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Cubeb_OpenSL" , ## args)
 #endif
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
@@ -21,6 +23,8 @@ static struct cubeb_ops const opensl_ops;
 struct cubeb {
   struct cubeb_ops const * ops;
   void * lib;
+  void * libmedia;
+  int32_t (* get_output_latency)(uint32_t * latency, int stream_type);
   SLInterfaceID SL_IID_BUFFERQUEUE;
   SLInterfaceID SL_IID_PLAY;
 #if defined(__ANDROID__)
@@ -135,9 +139,28 @@ opensl_init(cubeb ** context, char const * context_name)
   ctx->ops = &opensl_ops;
 
   ctx->lib = dlopen("libOpenSLES.so", RTLD_LAZY);
-  if (!ctx->lib) {
+  ctx->libmedia = dlopen("libmedia.so", RTLD_LAZY);
+  if (!ctx->lib || !ctx->libmedia) {
     free(ctx);
     return CUBEB_ERROR;
+  }
+
+  /* Get the latency, in ms, from AudioFlinger */
+  /* status_t AudioSystem::getOutputLatency(uint32_t* latency,
+   *                                        audio_stream_type_t streamType) */
+  /* First, try the most recent signature. */
+  ctx->get_output_latency =
+    dlsym(ctx->libmedia, "_ZN7android11AudioSystem16getOutputLatencyEPj19audio_stream_type_t");
+  if (!ctx->get_output_latency) {
+    /* in case of failure, try the legacy version. */
+    /* status_t AudioSystem::getOutputLatency(uint32_t* latency,
+     *                                        int streamType) */
+    ctx->get_output_latency =
+      dlsym(ctx->libmedia, "_ZN7android11AudioSystem16getOutputLatencyEPji");
+    if (!ctx->get_output_latency) {
+      opensl_destroy(ctx);
+      return CUBEB_ERROR;
+    }
   }
 
   typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
@@ -351,6 +374,7 @@ opensl_destroy(cubeb * ctx)
   if (ctx->engObj)
     (*ctx->engObj)->Destroy(ctx->engObj);
   dlclose(ctx->lib);
+  dlclose(ctx->libmedia);
   free(ctx);
 }
 
@@ -489,7 +513,6 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   }
 
   *stream = stm;
-
   return CUBEB_OK;
 }
 
@@ -502,6 +525,7 @@ opensl_stream_destroy(cubeb_stream * stm)
   for (i = 0; i < NBUFS; i++) {
     free(stm->queuebuf[i]);
   }
+
   free(stm);
 }
 
@@ -534,6 +558,8 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
   SLmillisecond msec;
   uint64_t samplerate;
   SLresult res;
+  int rv;
+  int32_t mixer_latency;
 
   res = (*stm->play)->GetPosition(stm->play, &msec);
   if (res != SL_RESULT_SUCCESS)
@@ -541,7 +567,16 @@ opensl_stream_get_position(cubeb_stream * stm, uint64_t * position)
 
   samplerate = stm->bytespersec / stm->framesize;
 
-  *position = samplerate * msec / 1000;
+  rv = stm->context->get_output_latency(&mixer_latency, stm->stream_type);
+  if (rv) {
+    return CUBEB_ERROR;
+  }
+
+  if (msec > mixer_latency) {
+    *position = samplerate * (msec - mixer_latency) / 1000;
+  } else {
+    *position = 0;
+  }
   return CUBEB_OK;
 }
 
@@ -549,8 +584,6 @@ int
 opensl_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 {
   int rv;
-  void * libmedia;
-  int32_t (*get_output_latency)(uint32_t * latency, int stream_type);
   uint32_t mixer_latency;
   uint32_t samplerate;
 
@@ -561,41 +594,14 @@ opensl_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
     return CUBEB_ERROR;
   }
 
-  libmedia = dlopen("libmedia.so", RTLD_LAZY);
-  if (!libmedia) {
-    return CUBEB_ERROR;
-  }
-
-  /* Get the latency, in ms, from AudioFlinger */
-  /* status_t AudioSystem::getOutputLatency(uint32_t* latency,
-   *                                        audio_stream_type_t streamType) */
-  /* First, try the most recent signature. */
-    get_output_latency =
-      dlsym(libmedia, "_ZN7android11AudioSystem16getOutputLatencyEPj19audio_stream_type_t");
-  if (!get_output_latency) {
-    /* in case of failure, try the legacy version. */
-    /* status_t AudioSystem::getOutputLatency(uint32_t* latency,
-     *                                        int streamType) */
-    get_output_latency =
-      dlsym(libmedia, "_ZN7android11AudioSystem16getOutputLatencyEPji");
-    if (!get_output_latency) {
-      dlclose(libmedia);
-      return CUBEB_ERROR;
-    }
-  }
-
   /* audio_stream_type_t is an int, so this is okay. */
-  rv = get_output_latency(&mixer_latency, stm->stream_type);
-
+  rv = stm->context->get_output_latency(&mixer_latency, stm->stream_type);
   if (rv) {
-    dlclose(libmedia);
     return CUBEB_ERROR;
   }
 
   *latency = NBUFS * stm->queuebuf_len / stm->framesize + // OpenSL latency
              mixer_latency * samplerate / 1000; // AudioFlinger latency
-
-  dlclose(libmedia);
 
   return CUBEB_OK;
 }

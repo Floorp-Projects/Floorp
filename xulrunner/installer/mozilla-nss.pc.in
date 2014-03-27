@@ -1,6 +1,6 @@
 prefix=%prefix%
 sdkdir=%sdkdir%
-includedir=%includedir%
+includedir=%includedir%/nss
 
 Name: NSS
 Description: Mozilla Network Security Services

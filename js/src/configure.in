@@ -414,14 +414,14 @@ case "$target" in
         changequote([,])
 
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
+        CC_VERSION=`${CC} -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
         _CC_MINOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $2 }'`
         _CC_RELEASE=`echo ${CC_VERSION} | $AWK -F\. '{ print $3 }'`
         _CC_BUILD=`echo ${CC_VERSION} | $AWK -F\. '{ print $4 }'`
         _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
 
-        CXX_VERSION=`"${CXX}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
+        CXX_VERSION=`${CXX} -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
@@ -1331,7 +1331,7 @@ case "$host" in
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:$@'
-        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -Fd\$(HOST_PDBFILE)"
+        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
         HOST_RANLIB='echo ranlib'
     else
         HOST_CFLAGS="$HOST_CFLAGS -mwindows"
@@ -1642,8 +1642,8 @@ ia64*-hpux*)
         _USE_CPP_INCLUDE_FLAG=1
         _DEFINES_CFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
-        CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-        CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
+        CFLAGS="$CFLAGS -W3 -Gy"
+        CXXFLAGS="$CXXFLAGS -W3 -Gy"
         if test "$_CC_SUITE" -ge "12"; then
             dnl VS2013+ requires -FS when parallel building by make -jN.
             dnl If nothing, compiler sometimes causes C1041 error.
@@ -1664,7 +1664,6 @@ ia64*-hpux*)
         CFLAGS="$CFLAGS -we4553"
         CXXFLAGS="$CXXFLAGS -we4553"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib psapi.lib"
-        MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS="-O2"
@@ -3457,15 +3456,15 @@ if test -n "$JS_MORE_DETERMINISTIC"; then
 fi
 
 dnl ========================================================
-dnl Enable output of backtraces on artificial OOMs
+dnl Enable breakpoint for artificial OOMs
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(oom-backtrace,
-[  --enable-oom-backtrace
-                          Enable output of backtraces on artificial OOMs (-A)],
-    JS_OOM_DO_BACKTRACES=1,
-    JS_OOM_DO_BACKTRACES= )
-if test -n "$JS_OOM_DO_BACKTRACES"; then
-    AC_DEFINE(JS_OOM_DO_BACKTRACES)
+MOZ_ARG_ENABLE_BOOL(oom-breakpoint,
+[  --enable-oom-breakpoint
+                          Enable a breakpoint function for artificial OOMs],
+    JS_OOM_BREAKPOINT=1,
+    JS_OOM_BREAKPOINT= )
+if test -n "$JS_OOM_BREAKPOINT"; then
+    AC_DEFINE(JS_OOM_BREAKPOINT)
 fi
 
 MOZ_CHECK_CCACHE
@@ -3885,7 +3884,6 @@ AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
 AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
-AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_JPROF)

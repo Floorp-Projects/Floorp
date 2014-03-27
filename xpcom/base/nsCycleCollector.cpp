@@ -165,6 +165,7 @@
 #include "nsDeque.h"
 #include "nsCycleCollector.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 #include "prenv.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
@@ -173,7 +174,7 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIMemoryReporter.h"
 #include "nsIFile.h"
-#include "nsMemoryInfoDumper.h"
+#include "nsDumpUtils.h"
 #include "xpcpublic.h"
 #include "GeckoProfiler.h"
 #include "js/SliceBudget.h"
@@ -208,6 +209,12 @@ using namespace mozilla;
 // log either. The default value is "all". This must be used with either
 // MOZ_CC_LOG_ALL or MOZ_CC_LOG_SHUTDOWN for it to do anything.
 //
+// MOZ_CC_LOG_PROCESS: If set to "main", only automatically log main process
+// CCs. If set to "content", only automatically log tab CCs. If set to
+// "plugins", only automatically log plugin CCs. If set to "all", log
+// everything. The default value is "all". This must be used with either
+// MOZ_CC_LOG_ALL or MOZ_CC_LOG_SHUTDOWN for it to do anything.
+//
 // MOZ_CC_ALL_TRACES_AT_SHUTDOWN: If defined, any cycle collector
 // logging done at shutdown will be WantAllTraces, which disables
 // various cycle collector optimizations to give a fuller picture of
@@ -233,17 +240,37 @@ struct nsCycleCollectorParams
     nsCycleCollectorParams() :
         mLogAll      (PR_GetEnv("MOZ_CC_LOG_ALL") != nullptr),
         mLogShutdown (PR_GetEnv("MOZ_CC_LOG_SHUTDOWN") != nullptr),
-        mAllTracesAtShutdown (PR_GetEnv("MOZ_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr),
-        mLogThisThread(true)
+        mAllTracesAtShutdown (PR_GetEnv("MOZ_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr)
     {
         const char* logThreadEnv = PR_GetEnv("MOZ_CC_LOG_THREAD");
+        bool threadLogging = true;
         if (logThreadEnv && !!strcmp(logThreadEnv, "all")) {
             if (NS_IsMainThread()) {
-                mLogThisThread = !strcmp(logThreadEnv, "main");
+                threadLogging = !strcmp(logThreadEnv, "main");
             } else {
-                mLogThisThread = !strcmp(logThreadEnv, "worker");
+                threadLogging = !strcmp(logThreadEnv, "worker");
             }
         }
+
+        const char* logProcessEnv = PR_GetEnv("MOZ_CC_LOG_PROCESS");
+        bool processLogging = true;
+        if (logProcessEnv && !!strcmp(logProcessEnv, "all")) {
+            switch (XRE_GetProcessType()) {
+                case GeckoProcessType_Default:
+                    processLogging = !strcmp(logProcessEnv, "main");
+                    break;
+                case GeckoProcessType_Plugin:
+                    processLogging = !strcmp(logProcessEnv, "plugins");
+                    break;
+                case GeckoProcessType_Content:
+                    processLogging = !strcmp(logProcessEnv, "content");
+                    break;
+                default:
+                    processLogging = false;
+                    break;
+            }
+        }
+        mLogThisThread = threadLogging && processLogging;
     }
 
     bool LogThisCC(bool aIsShutdown)
@@ -1727,7 +1754,14 @@ private:
             NS_NewNativeLocalFile(nsCString(env), /* followLinks = */ true,
                                   &logFile);
         }
-        nsresult rv = nsMemoryInfoDumper::OpenTempFile(filename, &logFile);
+
+        // In Android case, this function will open a file named aFilename under
+        // specific folder (/data/local/tmp/memory-reports). Otherwise, it will
+        // open a file named aFilename under "NS_OS_TEMP_DIR".
+        nsresult rv = nsDumpUtils::OpenTempFile(
+                                     filename,
+                                     &logFile,
+                                     NS_LITERAL_CSTRING("memory-reports"));
         if (NS_FAILED(rv)) {
           NS_IF_RELEASE(logFile);
           return nullptr;

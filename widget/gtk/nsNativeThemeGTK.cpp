@@ -1468,10 +1468,10 @@ nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
 {
   switch (aWidgetType) {
   // These widgets always draw a default background.
+#if (MOZ_WIDGET_GTK == 2)
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
   case NS_THEME_TOOLBAR:
-#if (MOZ_WIDGET_GTK == 2)
   case NS_THEME_MENUBAR:
 #endif
   case NS_THEME_MENUPOPUP:

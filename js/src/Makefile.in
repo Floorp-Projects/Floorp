@@ -366,6 +366,7 @@ selfhosting:: selfhosted.out.h
 
 selfhosting_srcs := \
   $(srcdir)/builtin/Utilities.js \
+  $(srcdir)/builtin/ParallelUtilities.js \
   $(srcdir)/builtin/Array.js \
   $(srcdir)/builtin/Date.js \
   $(srcdir)/builtin/Intl.js \
@@ -373,7 +374,6 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Iterator.js \
   $(srcdir)/builtin/Map.js \
   $(srcdir)/builtin/Number.js \
-  $(srcdir)/builtin/Parallel.js \
   $(srcdir)/builtin/String.js \
   $(srcdir)/builtin/Set.js \
   $(srcdir)/builtin/TypedObject.js \

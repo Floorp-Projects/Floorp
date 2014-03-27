@@ -489,26 +489,6 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     return Wrapper::New(cx, obj, parent, wrapper);
 }
 
-JSObject *
-WrapperFactory::WrapForSameCompartment(JSContext *cx, HandleObject objArg)
-{
-    RootedObject obj(cx, objArg);
-    MOZ_ASSERT(js::IsObjectInContextCompartment(obj, cx));
-
-    // NB: The contract of WrapForSameCompartment says that |obj| may or may not
-    // be a security wrapper. These checks implicitly handle the security
-    // wrapper case.
-
-    // Outerize if necessary. This, in combination with the check in
-    // PrepareForUnwrapping, means that calling JS_Wrap* always outerizes.
-    obj = JS_ObjectToOuterObject(cx, obj);
-    NS_ENSURE_TRUE(obj, nullptr);
-
-    // The method below is a no-op for non-DOM objects.
-    dom::GetSameCompartmentWrapperForDOMBinding(*obj.address());
-    return obj;
-}
-
 // Call WaiveXrayAndWrap when you have a JS object that you don't want to be
 // wrapped in an Xray wrapper. cx->compartment is the compartment that will be
 // using the returned object. If the object to be wrapped is already in the

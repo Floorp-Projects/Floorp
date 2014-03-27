@@ -1,4 +1,4 @@
-// [node-http2][homepage] is an [HTTP/2 (draft 09)][http2] implementation for [node.js][node].
+// [node-http2][homepage] is an [HTTP/2 (draft 10)][http2] implementation for [node.js][node].
 //
 // The core of the protocol is implemented by the [http2-protocol] module. This module provides
 // two important features on top of http2-protocol:
@@ -11,7 +11,7 @@
 //
 // [homepage]:            https://github.com/molnarg/node-http2
 // [http2-protocol]:      https://github.com/molnarg/node-http2-protocol
-// [http2]:               http://tools.ietf.org/html/draft-ietf-httpbis-http2-09
+// [http2]:               http://tools.ietf.org/html/draft-ietf-httpbis-http2-10
 // [node]:                http://nodejs.org/
 // [node-https]:          http://nodejs.org/api/https.html
 // [node-http]:           http://nodejs.org/api/http.html

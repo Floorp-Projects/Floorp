@@ -577,11 +577,24 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement)
         return p.forget();
     }
 
-    nsRefPtr<ContentParent> p =
-        new ContentParent(/* app = */ nullptr,
-                          aForBrowserElement,
-                          /* isForPreallocated = */ false,
-                          PROCESS_PRIORITY_FOREGROUND);
+    // Try to take and transform the preallocated process into browser.
+    nsRefPtr<ContentParent> p = PreallocatedProcessManager::Take();
+    if (p) {
+        p->TransformPreallocatedIntoBrowser();
+    } else {
+      // Failed in using the preallocated process: fork from the chrome process.
+#ifdef MOZ_NUWA_PROCESS
+        if (Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+            // Wait until the Nuwa process forks a new process.
+            return nullptr;
+        }
+#endif
+        p = new ContentParent(/* app = */ nullptr,
+                              aForBrowserElement,
+                              /* isForPreallocated = */ false,
+                              PROCESS_PRIORITY_FOREGROUND);
+    }
+
     p->Init();
     sNonAppContentParents->AppendElement(p);
     return p.forget();
@@ -686,7 +699,8 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
             new nsDataHashtable<nsStringHashKey, ContentParent*>();
     }
 
-    // Each app gets its own ContentParent instance.
+    // Each app gets its own ContentParent instance unless it shares it with
+    // a parent app.
     nsAutoString manifestURL;
     if (NS_FAILED(ownApp->GetManifestURL(manifestURL))) {
         NS_ERROR("Failed to get manifest URL");
@@ -694,8 +708,41 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     }
 
     ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
-
     nsRefPtr<ContentParent> p = sAppContentParents->Get(manifestURL);
+
+    if (!p && Preferences::GetBool("dom.ipc.reuse_parent_app")) {
+        nsAutoString parentAppURL;
+        aFrameElement->GetAttr(kNameSpaceID_None,
+                               nsGkAtoms::parentapp, parentAppURL);
+        nsAdoptingString systemAppURL =
+            Preferences::GetString("browser.homescreenURL");
+        nsCOMPtr<nsIAppsService> appsService =
+            do_GetService(APPS_SERVICE_CONTRACTID);
+        if (!parentAppURL.IsEmpty() &&
+            !parentAppURL.Equals(systemAppURL) &&
+            appsService) {
+            nsCOMPtr<mozIApplication> parentApp;
+            nsCOMPtr<mozIApplication> app;
+            appsService->GetAppByManifestURL(parentAppURL,
+                                             getter_AddRefs(parentApp));
+            appsService->GetAppByManifestURL(manifestURL,
+                                             getter_AddRefs(app));
+
+            // Only let certified apps re-use the same process.
+            unsigned short parentAppStatus = 0;
+            unsigned short appStatus = 0;
+            if (app &&
+                NS_SUCCEEDED(app->GetAppStatus(&appStatus)) &&
+                appStatus == nsIPrincipal::APP_STATUS_CERTIFIED &&
+                parentApp &&
+                NS_SUCCEEDED(parentApp->GetAppStatus(&parentAppStatus)) &&
+                parentAppStatus == nsIPrincipal::APP_STATUS_CERTIFIED) {
+                // Check if we can re-use the process of the parent app.
+                p = sAppContentParents->Get(parentAppURL);
+            }
+        }
+    }
+
     if (p) {
         // Check that the process is still alive and set its priority.
         // Hopefully the process won't die after this point, if this call
@@ -967,6 +1014,14 @@ ContentParent::TransformPreallocatedIntoApp(const nsAString& aAppManifestURL)
     MOZ_ASSERT(IsPreallocated());
     mAppManifestURL = aAppManifestURL;
     TryGetNameFromManifestURL(aAppManifestURL, mAppName);
+}
+
+void
+ContentParent::TransformPreallocatedIntoBrowser()
+{
+    // Reset mAppManifestURL, mIsForBrowser and mOSPrivileges for browser.
+    mAppManifestURL.Truncate();
+    mIsForBrowser = true;
 }
 
 void

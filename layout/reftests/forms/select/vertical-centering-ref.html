@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<style>
+  @font-face {
+    font-family: "Ahem";
+    src: url(../../fonts/Ahem.ttf);
+  }
+  select {
+    -moz-appearance: none;
+    border: none;
+    font-family: Ahem;
+    font-size: 20px;
+    box-sizing: content-box;
+    /*
+     * Why are these top/bottom paddings 7px rather than 10px?  1px each is
+     * eaten up by padding on the combobox display area, but I have no idea
+     * where the extra 4px somewhere else are coming from...
+     */
+    padding: 7px 0 7px 0;
+  }
+</style>
+<select>
+  <option>X</option>
+</select>

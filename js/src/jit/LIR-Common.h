@@ -490,8 +490,33 @@ class LNewCallObject : public LInstructionHelper<1, 1, 1>
     const LAllocation *slots() {
         return getOperand(0);
     }
+
     MNewCallObject *mir() const {
         return mir_->toNewCallObject();
+    }
+};
+
+// Allocates a new CallObject with singleton type through an out-of-line VM
+// call. The inputs are:
+//      slots: either a reg representing a HeapSlot *, or a placeholder
+//             meaning that no slots pointer is needed.
+//
+class LNewSingletonCallObject : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(NewSingletonCallObject)
+
+    LNewSingletonCallObject(const LAllocation &slots) {
+        setOperand(0, slots);
+    }
+
+    const LAllocation *slots() {
+        return getOperand(0);
+    }
+
+    MNewCallObjectBase * mir() const {
+        MOZ_ASSERT(mir_->isNewCallObject() || mir_->isNewRunOnceCallObject());
+        return static_cast<MNewCallObjectBase *>(mir_);
     }
 };
 
@@ -2410,7 +2435,7 @@ class LMinMaxD : public LInstructionHelper<1, 2, 0>
 {
   public:
     LIR_HEADER(MinMaxD)
-    LMinMaxD(const LAllocation &first, const LAllocation &second) 
+    LMinMaxD(const LAllocation &first, const LAllocation &second)
     {
         setOperand(0, first);
         setOperand(1, second);
