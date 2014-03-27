@@ -104,7 +104,7 @@ function configureLogging() {
     gLogger = Log.repository.getLogger("Browser.Experiments");
     gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
   }
-  gLogger.level = gPrefs.get(PREF_LOGGING_LEVEL, 50);
+  gLogger.level = gPrefs.get(PREF_LOGGING_LEVEL, Log.Level.Warn);
 
   let logDumping = gPrefs.get(PREF_LOGGING_DUMP, false);
   if (logDumping != gLogDumping) {
@@ -304,8 +304,10 @@ Experiments.Experiments.prototype = {
 
     AddonManager.addAddonListener(this);
 
-    this._loadTask = Task.spawn(this._loadFromCache.bind(this)).then(
+    this._loadTask = Task.spawn(this._loadFromCache.bind(this));
+    this._loadTask.then(
       () => {
+        gLogger.trace("Experiments::_loadTask finished ok");
         this._loadTask = null;
         this._run();
       },
@@ -386,7 +388,7 @@ Experiments.Experiments.prototype = {
   },
 
   _telemetryStatusChanged: function () {
-    _toggleExperimentsEnabled(gExperimentsEnabled);
+    this._toggleExperimentsEnabled(gExperimentsEnabled);
   },
 
   /**
@@ -473,10 +475,16 @@ Experiments.Experiments.prototype = {
   },
 
   _run: function() {
+    gLogger.trace("Experiments::_run");
     this._checkForShutdown();
     if (!this._mainTask) {
-      this._mainTask = Task.spawn(this._main.bind(this)).then(
-        null,
+      this._mainTask = Task.spawn(this._main.bind(this));
+      this._mainTask.then(
+        () => {
+          gLogger.trace("Experiments::_main finished, scheduling next run");
+          this._mainTask = null;
+          this._scheduleNextRun();
+        },
         (e) => {
           gLogger.error("Experiments::_main caught error: " + e);
           this._mainTask = null;
@@ -488,6 +496,7 @@ Experiments.Experiments.prototype = {
 
   _main: function*() {
     do {
+      gLogger.trace("Experiments::_main iteration");
       yield this._loadTask;
       if (this._refresh) {
         yield this._loadManifest();
@@ -500,11 +509,10 @@ Experiments.Experiments.prototype = {
       // while we were running, go again right now.
     }
     while (this._refresh || this._terminateReason);
-    this._mainTask = null;
-    this._scheduleNextRun();
   },
 
   _loadManifest: function*() {
+    gLogger.trace("Experiments::_loadManifest");
     let uri = Services.urlFormatter.formatURLPref(PREF_BRANCH + PREF_MANIFEST_URI);
 
     this._checkForShutdown();
@@ -652,6 +660,7 @@ Experiments.Experiments.prototype = {
    * Part of the main task to save the cache to disk, called from _main.
    */
   _saveToCache: function* () {
+    gLogger.trace("Experiments::_saveToCache");
     let path = this._cacheFilePath;
     let textData = JSON.stringify({
       version: CACHE_VERSION,
@@ -670,6 +679,7 @@ Experiments.Experiments.prototype = {
    * Task function, load the cached experiments manifest file from disk.
    */
   _loadFromCache: function*() {
+    gLogger.trace("Experiments::_loadFromCache");
     let path = this._cacheFilePath;
     try {
       let result = yield loadJSONAsync(path, { compression: "lz4" });
@@ -706,7 +716,7 @@ Experiments.Experiments.prototype = {
    * array in the manifest
    */
   _updateExperiments: function (manifestObject) {
-    gLogger.trace("Experiments::updateExperiments() - experiments: " + JSON.stringify(manifestObject));
+    gLogger.trace("Experiments::_updateExperiments() - experiments: " + JSON.stringify(manifestObject));
 
     if (manifestObject.version !== MANIFEST_VERSION) {
       gLogger.warning("Experiments::updateExperiments() - unsupported version " + manifestObject.version);
