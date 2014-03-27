@@ -116,7 +116,16 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
     // let other side we terminated the channel
     mOtherDirection->mShutDown = true;
     mVideoEngine = nullptr;
- } else {
+  } else {
+    // We can't delete the VideoEngine until all these are released!
+    // And we can't use a Scoped ptr, since the order is arbitrary
+    mPtrViEBase = nullptr;
+    mPtrViECapture = nullptr;
+    mPtrViECodec = nullptr;
+    mPtrViENetwork = nullptr;
+    mPtrViERender = nullptr;
+    mPtrRTP = nullptr;
+
     // only one opener can call Delete.  Have it be the last to close.
     if(mVideoEngine)
     {

@@ -38,29 +38,32 @@ let tests = [
   function test_info_customize_manual_open_close(done) {
     let popup = document.getElementById("UITourTooltip");
     // Manually open the app menu then show an info panel there. The menu should remain open.
+    let shownPromise = promisePanelShown(window);
     gContentAPI.showMenu("appMenu");
-    isnot(PanelUI.panel.state, "closed", "Panel should have opened");
-    ok(PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been set");
-    gContentAPI.showInfo("customize", "Customization", "Customize me please!");
+    shownPromise.then(() => {
+      isnot(PanelUI.panel.state, "closed", "Panel should have opened");
+      ok(PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been set");
+      gContentAPI.showInfo("customize", "Customization", "Customize me please!");
 
-    UITour.getTarget(window, "customize").then((customizeTarget) => {
-      waitForPopupAtAnchor(popup, customizeTarget.node, function checkMenuIsStillOpen() {
-        isnot(PanelUI.panel.state, "closed", "Panel should still be open");
-        ok(PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should still be set");
+      UITour.getTarget(window, "customize").then((customizeTarget) => {
+        waitForPopupAtAnchor(popup, customizeTarget.node, function checkMenuIsStillOpen() {
+          isnot(PanelUI.panel.state, "closed", "Panel should still be open");
+          ok(PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should still be set");
 
-        // Move the info outside which shouldn't close the app menu since it was manually opened.
-        gContentAPI.showInfo("appMenu", "Open Me", "You know you want to");
-        UITour.getTarget(window, "appMenu").then((target) => {
-          waitForPopupAtAnchor(popup, target.node, function checkMenuIsStillOpen() {
-            isnot(PanelUI.panel.state, "closed",
-                  "Menu should remain open since UITour didn't open it in the first place");
-            gContentAPI.hideMenu("appMenu");
-            ok(!PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been cleaned up on close");
-            done();
-          }, "Info should move to the appMenu button");
-        });
-      }, "Info should be shown after showInfo() for fixed menu panel items");
-    });
+          // Move the info outside which shouldn't close the app menu since it was manually opened.
+          gContentAPI.showInfo("appMenu", "Open Me", "You know you want to");
+          UITour.getTarget(window, "appMenu").then((target) => {
+            waitForPopupAtAnchor(popup, target.node, function checkMenuIsStillOpen() {
+              isnot(PanelUI.panel.state, "closed",
+                    "Menu should remain open since UITour didn't open it in the first place");
+              gContentAPI.hideMenu("appMenu");
+              ok(!PanelUI.panel.hasAttribute("noautohide"), "@noautohide on the menu panel should have been cleaned up on close");
+              done();
+            }, "Info should move to the appMenu button");
+          });
+        }, "Info should be shown after showInfo() for fixed menu panel items");
+      });
+    }).then(null, Components.utils.reportError);
   },
   function test_pinnedTab(done) {
     is(UITour.pinnedTabs.get(window), null, "Should not already have a pinned tab");

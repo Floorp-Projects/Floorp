@@ -7,7 +7,6 @@
 
 let protocol = devtools.require("devtools/server/protocol");
 let {method, Arg, Option, RetVal} = protocol;
-let {defer, resolve} = devtools.require("sdk/core/promise");
 let events = devtools.require("sdk/event/core");
 
 function simpleHello() {
@@ -36,7 +35,7 @@ let RootActor = protocol.ActorClass({
   }),
 
   promiseReturn: method(function() {
-    return resolve(1);
+    return promise.resolve(1);
   }, {
     response: { value: RetVal("number") },
   }),
@@ -259,7 +258,7 @@ function run_test()
 
       do_check_eq(str, "hello");
 
-      let deferred = defer();
+      let deferred = promise.defer();
       rootClient.on("oneway", (response) => {
         trace.expectSend({"type":"testOneWay","a":"hello","to":"<actorid>"});
         trace.expectReceive({"type":"oneway","a":"hello","from":"<actorid>"});

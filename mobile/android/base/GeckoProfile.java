@@ -107,8 +107,12 @@ public final class GeckoProfile {
 
     public static GeckoProfile get(Context context, String profileName, String profilePath) {
         File dir = null;
-        if (!TextUtils.isEmpty(profilePath))
+        if (!TextUtils.isEmpty(profilePath)) {
             dir = new File(profilePath);
+            if (!dir.exists() || !dir.isDirectory()) {
+                Log.w(LOGTAG, "requested profile directory missing: " + profilePath);
+            }
+        }
         return get(context, profileName, dir);
     }
 
@@ -312,8 +316,6 @@ public final class GeckoProfile {
     private void setDir(File dir) {
         if (dir != null && dir.exists() && dir.isDirectory()) {
             mProfileDir = dir;
-        } else {
-            Log.w(LOGTAG, "Requested profile directory missing.");
         }
     }
 

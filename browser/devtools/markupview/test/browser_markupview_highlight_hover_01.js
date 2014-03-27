@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that when first hovering over a node and immediately after selecting it
 // by clicking on it leaves the highlighter visible for as long as the mouse is
 // over the node

@@ -21,55 +21,56 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 class PanelItemView extends LinearLayout {
-    private final TextView mTitle;
-    private final TextView mDescription;
-    private final ImageView mImage;
-    private final LinearLayout mTitleDescContainer;
+    private final TextView title;
+    private final TextView description;
+    private final ImageView image;
+    private final LinearLayout titleDescContainer;
 
     private PanelItemView(Context context, int layoutId) {
         super(context);
 
         LayoutInflater.from(context).inflate(layoutId, this);
-        mTitle = (TextView) findViewById(R.id.title);
-        mDescription = (TextView) findViewById(R.id.description);
-        mImage = (ImageView) findViewById(R.id.image);
-        mTitleDescContainer = (LinearLayout) findViewById(R.id.title_desc_container);
+        title = (TextView) findViewById(R.id.title);
+        description = (TextView) findViewById(R.id.description);
+        image = (ImageView) findViewById(R.id.image);
+        titleDescContainer = (LinearLayout) findViewById(R.id.title_desc_container);
     }
 
     public void updateFromCursor(Cursor cursor) {
         int titleIndex = cursor.getColumnIndexOrThrow(HomeItems.TITLE);
-        final String title = cursor.getString(titleIndex);
+        final String titleText = cursor.getString(titleIndex);
 
         // Only show title if the item has one
-        final boolean hasTitle = !TextUtils.isEmpty(title);
-        mTitle.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
+        final boolean hasTitle = !TextUtils.isEmpty(titleText);
+        title.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
+        titleDescContainer.setVisibility(hasTitle ? View.VISIBLE : View.GONE);
         if (hasTitle) {
-            mTitle.setText(title);
+            title.setText(titleText);
         }
 
         int descriptionIndex = cursor.getColumnIndexOrThrow(HomeItems.DESCRIPTION);
-        final String description = cursor.getString(descriptionIndex);
+        final String descriptionText = cursor.getString(descriptionIndex);
 
         // Only show description if the item has one
-        final boolean hasDescription = !TextUtils.isEmpty(description);
-        mDescription.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
+        final boolean hasDescription = !TextUtils.isEmpty(descriptionText);
+        description.setVisibility(hasDescription ? View.VISIBLE : View.GONE);
         if (hasDescription) {
-            mDescription.setText(description);
+            description.setText(descriptionText);
         }
 
-        mTitleDescContainer.setVisibility(hasTitle || hasDescription ? View.VISIBLE : View.GONE);
+        titleDescContainer.setVisibility(hasTitle || hasDescription ? View.VISIBLE : View.GONE);
 
         int imageIndex = cursor.getColumnIndexOrThrow(HomeItems.IMAGE_URL);
         final String imageUrl = cursor.getString(imageIndex);
 
         // Only try to load the image if the item has define image URL
         final boolean hasImageUrl = !TextUtils.isEmpty(imageUrl);
-        mImage.setVisibility(hasImageUrl ? View.VISIBLE : View.GONE);
+        image.setVisibility(hasImageUrl ? View.VISIBLE : View.GONE);
 
         if (hasImageUrl) {
             Picasso.with(getContext())
                    .load(imageUrl)
-                   .into(mImage);
+                   .into(image);
         }
     }
 
