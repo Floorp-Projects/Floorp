@@ -137,18 +137,18 @@ class Scoped
      *
      * @return this
      */
-    Scoped<Traits>& operator=(const Resource& other) {
+    Scoped& operator=(const Resource& other) {
       return reset(other);
     }
-    Scoped<Traits>& reset(const Resource& other) {
+    Scoped& reset(const Resource& other) {
       Traits::release(value);
       value = other;
       return *this;
     }
 
   private:
-    explicit Scoped(const Scoped<Traits>& value) MOZ_DELETE;
-    Scoped<Traits>& operator=(const Scoped<Traits>& value) MOZ_DELETE;
+    explicit Scoped(const Scoped& value) MOZ_DELETE;
+    Scoped& operator=(const Scoped& value) MOZ_DELETE;
 
   private:
     Resource value;
