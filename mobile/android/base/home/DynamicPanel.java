@@ -59,7 +59,7 @@ public class DynamicPanel extends HomeFragment
     private static final String DATASET_REQUEST = "dataset_request";
 
     // The panel layout associated with this panel
-    private PanelLayout mLayout;
+    private PanelLayout mPanelLayout;
 
     // The configuration associated with this panel
     private PanelConfig mPanelConfig;
@@ -108,7 +108,7 @@ public class DynamicPanel extends HomeFragment
         switch(mPanelConfig.getLayoutType()) {
             case FRAME:
                 final PanelDatasetHandler datasetHandler = new PanelDatasetHandler();
-                mLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler, mUrlOpenListener);
+                mPanelLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler, mUrlOpenListener);
                 break;
 
             default:
@@ -117,7 +117,7 @@ public class DynamicPanel extends HomeFragment
 
         Log.d(LOGTAG, "Created layout of type: " + mPanelConfig.getLayoutType());
 
-        return mLayout;
+        return mPanelLayout;
     }
 
     @Override
@@ -129,7 +129,7 @@ public class DynamicPanel extends HomeFragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        mLayout = null;
+        mPanelLayout = null;
 
         GeckoAppShell.unregisterEventListener("HomePanels:RefreshDataset", this);
     }
@@ -159,7 +159,7 @@ public class DynamicPanel extends HomeFragment
     @Override
     protected void load() {
         Log.d(LOGTAG, "Loading layout");
-        mLayout.load();
+        mPanelLayout.load();
     }
 
     @Override
@@ -312,15 +312,15 @@ public class DynamicPanel extends HomeFragment
             final DatasetRequest request = getRequestFromLoader(loader);
 
             Log.d(LOGTAG, "Finished loader for request: " + request);
-            mLayout.deliverDataset(request, cursor);
+            mPanelLayout.deliverDataset(request, cursor);
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
             final DatasetRequest request = getRequestFromLoader(loader);
             Log.d(LOGTAG, "Resetting loader for request: " + request);
-            if (mLayout != null) {
-                mLayout.releaseDataset(request.getDatasetId());
+            if (mPanelLayout != null) {
+                mPanelLayout.releaseDataset(request.getDatasetId());
             }
         }
 
