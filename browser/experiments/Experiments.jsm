@@ -168,6 +168,51 @@ function telemetryEnabled() {
          gPrefsTelemetry.get(PREF_TELEMETRY_PRERELEASE, false);
 }
 
+// Returns a promise that is resolved with the AddonInstall for that URL.
+function addonInstallForURL(url, hash) {
+  let deferred = Promise.defer();
+  AddonManager.getInstallForURL(url, install => deferred.resolve(install),
+                                "application/x-xpinstall", hash);
+  return deferred.promise;
+}
+
+// Returns a promise that is resolved with an Array<Addon> of the installed
+// experiment addons.
+function installedExperimentAddons() {
+  let deferred = Promise.defer();
+  AddonManager.getAddonsByTypes(["experiment"],
+                                addons => deferred.resolve(addons));
+  return deferred.promise;
+}
+
+// Takes an Array<Addon> and returns a promise that is resolved when the
+// addons are uninstalled.
+function uninstallAddons(addons) {
+  let ids = new Set([a.id for (a of addons)]);
+  let deferred = Promise.defer();
+
+  let listener = {};
+  listener.onUninstalled = addon => {
+    if (!ids.has(addon.id)) {
+      return;
+    }
+
+    ids.delete(addon.id);
+    if (ids.size == 0) {
+      AddonManager.removeAddonListener(listener);
+      deferred.resolve();
+    }
+  };
+
+  AddonManager.addAddonListener(listener);
+
+  for (let addon of addons) {
+    addon.uninstall();
+  }
+
+  return deferred.promise;
+}
+
 /**
  * The experiments module.
  */
@@ -1300,68 +1345,91 @@ Experiments.ExperimentEntry.prototype = {
    */
   start: function () {
     gLogger.trace("ExperimentEntry::start() for " + this.id);
+
+    return Task.spawn(function* ExperimentEntry_start_task() {
+      let addons = yield installedExperimentAddons();
+      if (addons.length > 0) {
+        gLogger.error("ExperimentEntry::start() - there are already "
+                      + addons.length + " experiment addons installed");
+        yield uninstallAddons(addons);
+      }
+
+      yield this._installAddon();
+    }.bind(this));
+  },
+
+  // Async install of the addon for this experiment, part of the start task above.
+  _installAddon: function* () {
     let deferred = Promise.defer();
 
-    let installCallback = install => {
-      let failureHandler = (install, handler) => {
-        let message = "AddonInstall " + handler + " for " + this.id + ", state=" +
-                      (install.state || "?") + ", error=" + install.error;
-        gLogger.error("ExperimentEntry::start() - " + message);
-        this._failedStart = true;
+    let install = yield addonInstallForURL(this._manifestData.xpiURL,
+                                           this._manifestData.xpiHash);
+    let failureHandler = (install, handler) => {
+      let message = "AddonInstall " + handler + " for " + this.id + ", state=" +
+                   (install.state || "?") + ", error=" + install.error;
+      gLogger.error("ExperimentEntry::_installAddon() - " + message);
+      this._failedStart = true;
 
-        TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
-                         [TELEMETRY_LOG.ACTIVATION.INSTALL_FAILURE, this.id]);
+      TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
+                      [TELEMETRY_LOG.ACTIVATION.INSTALL_FAILURE, this.id]);
 
-        deferred.reject(new Error(message));
-      };
-
-      let listener = {
-        onDownloadEnded: install => {
-          gLogger.trace("ExperimentEntry::start() - onDownloadEnded for " + this.id);
-        },
-
-        onInstallStarted: install => {
-          gLogger.trace("ExperimentEntry::start() - onInstallStarted for " + this.id);
-          if (install.addon.type !== "experiment") {
-            gLogger.error("ExperimentEntry::start() - wrong addon type");
-            failureHandler({state: -1, error: -1}, "onInstallStarted");
-            install.cancel();
-            return;
-          }
-
-          let addon = install.addon;
-          this._name = addon.name;
-          this._addonId = addon.id;
-          this._description = addon.description || "";
-          this._homepageURL = addon.homepageURL || "";
-        },
-
-        onInstallEnded: install => {
-          gLogger.trace("ExperimentEntry::start() - install ended for " + this.id);
-          this._lastChangedDate = this._policy.now();
-          this._startDate = this._policy.now();
-          this._enabled = true;
-
-          TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
-                           [TELEMETRY_LOG.ACTIVATION.ACTIVATED, this.id]);
-
-          deferred.resolve();
-        },
-      };
-
-      ["onDownloadCancelled", "onDownloadFailed", "onInstallCancelled", "onInstallFailed"]
-        .forEach(what => {
-          listener[what] = install => failureHandler(install, what)
-        });
-
-      install.addListener(listener);
-      install.install();
+      deferred.reject(new Error(message));
     };
 
-    AddonManager.getInstallForURL(this._manifestData.xpiURL,
-                                  installCallback,
-                                  "application/x-xpinstall",
-                                  this._manifestData.xpiHash);
+    let listener = {
+      onDownloadEnded: install => {
+        gLogger.trace("ExperimentEntry::_installAddon() - onDownloadEnded for " + this.id);
+
+        if (install.existingAddon) {
+          gLogger.warn("ExperimentEntry::_installAddon() - onDownloadEnded, addon already installed");
+        }
+
+        if (install.addon.type !== "experiment") {
+          gLogger.error("ExperimentEntry::_installAddon() - onDownloadEnded, wrong addon type");
+          install.cancel();
+        }
+      },
+
+      onInstallStarted: install => {
+        gLogger.trace("ExperimentEntry::_installAddon() - onInstallStarted for " + this.id);
+
+        if (install.existingAddon) {
+          gLogger.warn("ExperimentEntry::_installAddon() - onInstallStarted, addon already installed");
+        }
+
+        if (install.addon.type !== "experiment") {
+          gLogger.error("ExperimentEntry::_installAddon() - onInstallStarted, wrong addon type");
+          return false;
+        }
+      },
+
+      onInstallEnded: install => {
+        gLogger.trace("ExperimentEntry::_installAddon() - install ended for " + this.id);
+        this._lastChangedDate = this._policy.now();
+        this._startDate = this._policy.now();
+        this._enabled = true;
+
+        TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
+                       [TELEMETRY_LOG.ACTIVATION.ACTIVATED, this.id]);
+
+        let addon = install.addon;
+        this._name = addon.name;
+        this._addonId = addon.id;
+        this._description = addon.description || "";
+        this._homepageURL = addon.homepageURL || "";
+
+        deferred.resolve();
+      },
+    };
+
+    ["onDownloadCancelled", "onDownloadFailed", "onInstallCancelled", "onInstallFailed"]
+      .forEach(what => {
+        listener[what] = install => failureHandler(install, what)
+      });
+
+    install.addListener(listener);
+    install.install();
+
     return deferred.promise;
   },
 
@@ -1396,25 +1464,9 @@ Experiments.ExperimentEntry.prototype = {
         return;
       }
 
-      let listener = {};
-      let handler = addon => {
-        if (addon.id !== this._addonId) {
-          return;
-        }
-
-        updateDates();
-        this._logTermination(terminationKind, terminationReason);
-
-        AddonManager.removeAddonListener(listener);
-        deferred.resolve();
-      };
-
-      listener.onUninstalled = handler;
-      listener.onDisabled = handler;
-
-      AddonManager.addAddonListener(listener);
-
-      addon.uninstall();
+      updateDates();
+      this._logTermination(terminationKind, terminationReason);
+      deferred.resolve(uninstallAddons([addon]));
     });
 
     return deferred.promise;
