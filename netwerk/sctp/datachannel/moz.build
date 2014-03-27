@@ -24,7 +24,6 @@ LOCAL_INCLUDES += [
     '../src',
     '/media/mtransport',
     '/media/webrtc/trunk/third_party/libjingle/source',
-    '/xpcom/ds',
 ]
 
 DEFINES['INET'] = 1

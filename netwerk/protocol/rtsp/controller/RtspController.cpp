@@ -31,8 +31,8 @@
 #include "nsProxyRelease.h"
 #include "nsNetUtil.h"
 #include "mozilla/Attributes.h"
-#include "TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 #include "prlog.h"
 
 #include "plbase64.h"
