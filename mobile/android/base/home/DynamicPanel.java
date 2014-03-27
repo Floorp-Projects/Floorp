@@ -17,6 +17,7 @@ import org.mozilla.gecko.home.PanelLayout.DatasetHandler;
 import org.mozilla.gecko.home.PanelLayout.DatasetRequest;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -68,6 +69,13 @@ public class DynamicPanel extends HomeFragment
     // The layout used to show authentication UI for this panel
     private PanelAuthLayout mPanelAuthLayout;
 
+    // Cache used to keep track of whether or not the user has been authenticated.
+    private PanelAuthCache mPanelAuthCache;
+
+    // Hold a reference to the UiAsyncTask we use to check the state of the
+    // PanelAuthCache, so that we can cancel it if necessary.
+    private UiAsyncTask<Void, Void, Boolean> mAuthStateTask;
+
     // The configuration associated with this panel
     private PanelConfig mPanelConfig;
 
@@ -76,6 +84,17 @@ public class DynamicPanel extends HomeFragment
 
     // On URL open listener
     private OnUrlOpenListener mUrlOpenListener;
+
+    /*
+     * Different UI modes to display depending on the authentication state.
+     *
+     * PANEL: Layout to display panel data.
+     * AUTH: Authentication UI.
+     */
+    private enum UIMode {
+        PANEL,
+        AUTH
+    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -108,31 +127,21 @@ public class DynamicPanel extends HomeFragment
         if (mPanelConfig == null) {
             throw new IllegalStateException("Can't create a DynamicPanel without a PanelConfig");
         }
+
+        mPanelAuthCache = new PanelAuthCache(getActivity());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        switch(mPanelConfig.getLayoutType()) {
-            case FRAME:
-                final PanelDatasetHandler datasetHandler = new PanelDatasetHandler();
-                mPanelLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler, mUrlOpenListener);
-                break;
-
-            default:
-                throw new IllegalStateException("Unrecognized layout type in DynamicPanel");
-        }
-
-        Log.d(LOGTAG, "Created layout of type: " + mPanelConfig.getLayoutType());
-
         mView = new FrameLayout(getActivity());
-        mView.addView(mPanelLayout);
-
         return mView;
     }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        mPanelAuthCache.setOnChangeListener(new PanelAuthChangeListener());
         GeckoAppShell.registerEventListener("HomePanels:RefreshDataset", this);
     }
 
@@ -143,7 +152,13 @@ public class DynamicPanel extends HomeFragment
         mPanelLayout = null;
         mPanelAuthLayout = null;
 
+        mPanelAuthCache.setOnChangeListener(null);
         GeckoAppShell.unregisterEventListener("HomePanels:RefreshDataset", this);
+
+        if (mAuthStateTask != null) {
+            mAuthStateTask.cancel(true);
+            mAuthStateTask = null;
+        }
     }
 
     @Override
@@ -173,10 +188,21 @@ public class DynamicPanel extends HomeFragment
         Log.d(LOGTAG, "Loading layout");
 
         if (requiresAuth()) {
-            // TODO: check to see if the panel isn't already authenticated
-            setAuthVisible(true);
+            mAuthStateTask = new UiAsyncTask<Void, Void, Boolean>(ThreadUtils.getBackgroundHandler()) {
+                @Override
+                public synchronized Boolean doInBackground(Void... params) {
+                    return mPanelAuthCache.isAuthenticated(mPanelConfig.getId());
+                }
+
+                @Override
+                public void onPostExecute(Boolean isAuthenticated) {
+                    mAuthStateTask = null;
+                    setUIMode(isAuthenticated ? UIMode.PANEL : UIMode.AUTH);
+                }
+            };
+            mAuthStateTask.execute();
         } else {
-            mPanelLayout.load();
+            setUIMode(UIMode.PANEL);
         }
     }
 
@@ -187,15 +213,61 @@ public class DynamicPanel extends HomeFragment
         return mPanelConfig.getAuthConfig() != null;
     }
 
-    private void setAuthVisible(boolean visible) {
-        // Lazily create PanelAuthLayout.
-        if (visible && mPanelAuthLayout == null) {
-            mPanelAuthLayout = new PanelAuthLayout(getActivity(), mPanelConfig);
-            mView.addView(mPanelAuthLayout, 0);
+    /**
+     * Lazily creates layout for panel data.
+     */
+    private void createPanelLayout() {
+        switch(mPanelConfig.getLayoutType()) {
+            case FRAME:
+                final PanelDatasetHandler datasetHandler = new PanelDatasetHandler();
+                mPanelLayout = new FramePanelLayout(getActivity(), mPanelConfig, datasetHandler, mUrlOpenListener);
+                break;
+
+            default:
+                throw new IllegalStateException("Unrecognized layout type in DynamicPanel");
         }
 
-        mPanelAuthLayout.setVisibility(visible ? View.VISIBLE : View.GONE);
-        mPanelLayout.setVisibility(visible ? View.GONE : View.VISIBLE);
+        Log.d(LOGTAG, "Created layout of type: " + mPanelConfig.getLayoutType());
+        mView.addView(mPanelLayout);
+    }
+
+    /**
+     * Lazily creates layout for authentication UI.
+     */
+    private void createPanelAuthLayout() {
+        mPanelAuthLayout = new PanelAuthLayout(getActivity(), mPanelConfig);
+        mView.addView(mPanelAuthLayout, 0);
+    }
+
+    private void setUIMode(UIMode mode) {
+        switch(mode) {
+            case PANEL:
+                if (mPanelAuthLayout != null) {
+                    mPanelAuthLayout.setVisibility(View.GONE);
+                }
+                if (mPanelLayout == null) {
+                    createPanelLayout();
+                }
+                mPanelLayout.setVisibility(View.VISIBLE);
+
+                if (canLoad()) {
+                    mPanelLayout.load();
+                }
+                break;
+
+            case AUTH:
+                if (mPanelLayout != null) {
+                    mPanelLayout.setVisibility(View.GONE);
+                }
+                if (mPanelAuthLayout == null) {
+                    createPanelAuthLayout();
+                }
+                mPanelAuthLayout.setVisibility(View.VISIBLE);
+                break;
+
+            default:
+                throw new IllegalStateException("Unrecognized UIMode in DynamicPanel");
+        }
     }
 
     @Override
@@ -348,7 +420,9 @@ public class DynamicPanel extends HomeFragment
             final DatasetRequest request = getRequestFromLoader(loader);
 
             Log.d(LOGTAG, "Finished loader for request: " + request);
-            mPanelLayout.deliverDataset(request, cursor);
+            if (mPanelLayout != null) {
+                mPanelLayout.deliverDataset(request, cursor);
+            }
         }
 
         @Override
@@ -363,6 +437,17 @@ public class DynamicPanel extends HomeFragment
         private DatasetRequest getRequestFromLoader(Loader<Cursor> loader) {
             final PanelDatasetLoader datasetLoader = (PanelDatasetLoader) loader;
             return datasetLoader.getRequest();
+        }
+    }
+
+    private class PanelAuthChangeListener implements PanelAuthCache.OnChangeListener {
+        @Override
+        public void onChange(String panelId, boolean isAuthenticated) {
+            if (!mPanelConfig.getId().equals(panelId)) {
+                return;
+            }
+
+            setUIMode(isAuthenticated ? UIMode.PANEL : UIMode.AUTH);
         }
     }
 }
