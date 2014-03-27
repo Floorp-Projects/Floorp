@@ -298,6 +298,11 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       private boolean didReceiveBackoff = false;
 
       @Override
+      public String getUserAgent() {
+        return FxAccountConstants.USER_AGENT;
+      }
+
+      @Override
       public void handleSuccess(final TokenServerToken token) {
         FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
 

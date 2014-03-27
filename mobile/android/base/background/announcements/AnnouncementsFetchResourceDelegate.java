@@ -47,11 +47,15 @@ public class AnnouncementsFetchResourceDelegate extends BaseResourceDelegate {
   }
 
   @Override
+  public String getUserAgent() {
+    return delegate.getUserAgent();
+  }
+
+  @Override
   public void addHeaders(HttpRequestBase request, DefaultHttpClient client) {
     super.addHeaders(request, client);
 
     // The basics.
-    request.addHeader("User-Agent",      delegate.getUserAgent());
     request.addHeader("Accept-Language", delegate.getLocale().toString());
     request.addHeader("Accept",          ACCEPT_HEADER);
 

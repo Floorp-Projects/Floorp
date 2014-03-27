@@ -205,6 +205,11 @@ public class AndroidSubmissionClient implements SubmissionClient {
     }
 
     @Override
+    public String getUserAgent() {
+      return HealthReportConstants.USER_AGENT;
+    }
+
+    @Override
     public void handleSuccess(int status, String namespace, String id, HttpResponse response) {
       BaseResource.consumeEntity(response);
       if (isUpload) {

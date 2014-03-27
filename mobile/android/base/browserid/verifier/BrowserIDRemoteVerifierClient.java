@@ -37,6 +37,11 @@ public class BrowserIDRemoteVerifierClient implements BrowserIDVerifierClient {
     }
 
     @Override
+    public String getUserAgent() {
+      return null;
+    }
+
+    @Override
     public void handleHttpResponse(HttpResponse response) {
       SyncResponse res = new SyncResponse(response);
       int statusCode = res.getStatusCode();
