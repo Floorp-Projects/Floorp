@@ -296,6 +296,8 @@ WebConsoleActor.prototype =
   hasNativeConsoleAPI: function WCA_hasNativeConsoleAPI(aWindow) {
     let isNative = false;
     try {
+      // We are very explicitly examining the "console" property of
+      // the non-Xrayed object here.
       let console = aWindow.wrappedJSObject.console;
       isNative = console instanceof aWindow.Console;
     }
