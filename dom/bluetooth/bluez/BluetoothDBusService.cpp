@@ -317,6 +317,26 @@ DispatchToDBusThread(Task* task)
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE, task);
 }
 
+static nsresult
+DispatchToBtThread(nsIRunnable* aRunnable)
+{
+  /* Due to the fact that the startup and shutdown of the Bluetooth
+   * system can take an indefinite amount of time, a separate thread
+   * is used for running blocking calls. The thread is not intended
+   * for regular Bluetooth operations though.
+   */
+  static StaticRefPtr<LazyIdleThread> sBluetoothThread;
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!sBluetoothThread) {
+    sBluetoothThread = new LazyIdleThread(BT_LAZY_THREAD_TIMEOUT_MS,
+                                          NS_LITERAL_CSTRING("BluetoothDBusService"),
+                                          LazyIdleThread::ManualShutdown);
+  }
+  return sBluetoothThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
+}
+
 BluetoothDBusService::BluetoothDBusService()
 {
   sGetPropertyMonitor = new Monitor("BluetoothService.sGetPropertyMonitor");
@@ -327,18 +347,6 @@ BluetoothDBusService::~BluetoothDBusService()
 {
   sStopBluetoothMonitor = nullptr;
   sGetPropertyMonitor = nullptr;
-}
-
-nsresult
-BluetoothDBusService::DispatchToBtThread(nsIRunnable* aRunnable)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mBluetoothThread) {
-    mBluetoothThread = new LazyIdleThread(BT_LAZY_THREAD_TIMEOUT_MS,
-                                          NS_LITERAL_CSTRING("BluetoothDBusService"),
-                                          LazyIdleThread::ManualShutdown);
-  }
-  return mBluetoothThread->Dispatch(aRunnable, NS_DISPATCH_NORMAL);
 }
 
 static bool
