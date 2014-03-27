@@ -10,6 +10,13 @@
 #if defined(OS_POSIX)
 #include "chrome/common/file_descriptor_set_posix.h"
 #endif
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+#endif
+
+#ifdef MOZ_TASK_TRACER
+using namespace mozilla::tasktracer;
+#endif
 
 namespace IPC {
 
@@ -23,6 +30,11 @@ Message::Message()
   header()->routing = header()->type = header()->flags = 0;
 #if defined(OS_POSIX)
   header()->num_fds = 0;
+#endif
+#ifdef MOZ_TASK_TRACER
+  header()->source_event_id = 0;
+  header()->parent_task_id = 0;
+  header()->source_event_type = SourceEventType::UNKNOWN;
 #endif
   InitLoggingVariables();
 }
@@ -44,6 +56,11 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
 #if defined(OS_MACOSX)
   header()->cookie = 0;
 #endif
+#ifdef MOZ_TASK_TRACER
+  header()->source_event_id = 0;
+  header()->parent_task_id = 0;
+  header()->source_event_type = SourceEventType::UNKNOWN;
+#endif
   InitLoggingVariables(name);
 }
 
@@ -55,6 +72,11 @@ Message::Message(const Message& other) : Pickle(other) {
   InitLoggingVariables(other.name_);
 #if defined(OS_POSIX)
   file_descriptor_set_ = other.file_descriptor_set_;
+#endif
+#ifdef MOZ_TASK_TRACER
+  header()->source_event_id = other.header()->source_event_id;
+  header()->parent_task_id = other.header()->parent_task_id;
+  header()->source_event_type = other.header()->source_event_type;
 #endif
 }
 
@@ -72,6 +94,11 @@ Message& Message::operator=(const Message& other) {
   InitLoggingVariables(other.name_);
 #if defined(OS_POSIX)
   file_descriptor_set_ = other.file_descriptor_set_;
+#endif
+#ifdef MOZ_TASK_TRACER
+  header()->source_event_id = other.header()->source_event_id;
+  header()->parent_task_id = other.header()->parent_task_id;
+  header()->source_event_type = other.header()->source_event_type;
 #endif
   return *this;
 }
