@@ -10,4 +10,3 @@ JS_MODULES_PATH = 'modules/devtools/shadereditor'
 EXTRA_JS_MODULES += [
     'panel.js'
 ]
-
