@@ -58,6 +58,15 @@ CreateIframe(Element* aOpenerFrameElement, const nsAString& aName, bool aRemote)
                                mozapp, /* aNotify = */ false);
   }
 
+  // Copy the opener frame's parentApp attribute to the popup frame.
+  if (aOpenerFrameElement->HasAttr(kNameSpaceID_None, nsGkAtoms::parentapp)) {
+    nsAutoString parentApp;
+    aOpenerFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::parentapp,
+                                 parentApp);
+    popupFrameElement->SetAttr(kNameSpaceID_None, nsGkAtoms::parentapp,
+                               parentApp, /* aNotify = */ false);
+  }
+
   // Copy the window name onto the iframe.
   popupFrameElement->SetAttr(kNameSpaceID_None, nsGkAtoms::name,
                              aName, /* aNotify = */ false);
