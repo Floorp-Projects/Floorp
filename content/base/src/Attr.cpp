@@ -78,7 +78,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Attr)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Attr)
-  Element* ownerElement = tmp->GetElement();
+  Element* ownerElement = tmp->GetContentInternal();
   if (tmp->IsBlack()) {
     if (ownerElement) {
       // The attribute owns the element via attribute map so we can
@@ -129,13 +129,16 @@ Attr::SetMap(nsDOMAttributeMap *aMap)
   mAttrMap = aMap;
 }
 
+nsIContent*
+Attr::GetContent() const
+{
+  return GetContentInternal();
+}
+
 Element*
 Attr::GetElement() const
 {
-  if (!mAttrMap) {
-    return nullptr;
-  }
-  nsIContent* content = mAttrMap->GetContent();
+  nsIContent* content = GetContent();
   return content ? content->AsElement() : nullptr;
 }
 
@@ -186,7 +189,7 @@ Attr::GetNameAtom(nsIContent* aContent)
 NS_IMETHODIMP
 Attr::GetValue(nsAString& aValue)
 {
-  nsIContent* content = GetElement();
+  nsIContent* content = GetContentInternal();
   if (content) {
     nsCOMPtr<nsIAtom> nameAtom = GetNameAtom(content);
     content->GetAttr(mNodeInfo->NamespaceID(), nameAtom, aValue);
@@ -201,7 +204,7 @@ Attr::GetValue(nsAString& aValue)
 void
 Attr::SetValue(const nsAString& aValue, ErrorResult& aRv)
 {
-  nsIContent* content = GetElement();
+  nsIContent* content = GetContentInternal();
   if (!content) {
     mValue = aValue;
     return;
@@ -274,7 +277,7 @@ Attr::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 already_AddRefed<nsIURI>
 Attr::GetBaseURI() const
 {
-  nsINode *parent = GetElement();
+  nsINode *parent = GetContentInternal();
 
   return parent ? parent->GetBaseURI() : nullptr;
 }
@@ -299,7 +302,7 @@ Attr::SetTextContentInternal(const nsAString& aTextContent,
 NS_IMETHODIMP
 Attr::GetIsId(bool* aReturn)
 {
-  nsIContent* content = GetElement();
+  nsIContent* content = GetContentInternal();
   if (!content)
   {
     *aReturn = false;
@@ -383,6 +386,12 @@ JSObject*
 Attr::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AttrBinding::Wrap(aCx, aScope, this);
+}
+
+Element*
+Attr::GetContentInternal() const
+{
+  return mAttrMap ? mAttrMap->GetContent() : nullptr;
 }
 
 } // namespace dom
