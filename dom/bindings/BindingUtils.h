@@ -285,7 +285,7 @@ IsConvertibleToCallbackInterface(JSContext* cx, JS::Handle<JSObject*> obj)
   return IsNotDateOrRegExp(cx, obj);
 }
 
-// The items in the protoAndIfaceArray are indexed by the prototypes::id::ID and
+// The items in the protoAndIfaceCache are indexed by the prototypes::id::ID and
 // constructors::id::ID enums, in that order. The end of the prototype objects
 // should be the start of the interface objects.
 static_assert((size_t)constructors::id::_ID_Start ==
@@ -293,32 +293,193 @@ static_assert((size_t)constructors::id::_ID_Start ==
               "Overlapping or discontiguous indexes.");
 const size_t kProtoAndIfaceCacheCount = constructors::id::_ID_Count;
 
-class ProtoAndIfaceArray : public Array<JS::Heap<JSObject*>, kProtoAndIfaceCacheCount>
+class ProtoAndIfaceCache
 {
+  // The caching strategy we use depends on what sort of global we're dealing
+  // with.  For a window-like global, we want everything to be as fast as
+  // possible, so we use a flat array, indexed by prototype/constructor ID.
+  // For everything else (e.g. globals for JSMs), space is more important than
+  // speed, so we use a two-level lookup table.
+
+  class ArrayCache : public Array<JS::Heap<JSObject*>, kProtoAndIfaceCacheCount>
+  {
+  public:
+    JSObject* EntrySlotIfExists(size_t i) {
+      return (*this)[i];
+    }
+
+    JS::Heap<JSObject*>& EntrySlotOrCreate(size_t i) {
+      return (*this)[i];
+    }
+
+    JS::Heap<JSObject*>& EntrySlotMustExist(size_t i) {
+      MOZ_ASSERT((*this)[i]);
+      return (*this)[i];
+    }
+
+    void Trace(JSTracer* aTracer) {
+      for (size_t i = 0; i < ArrayLength(*this); ++i) {
+        if ((*this)[i]) {
+          JS_CallHeapObjectTracer(aTracer, &(*this)[i], "protoAndIfaceCache[i]");
+        }
+      }
+    }
+
+    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+      return aMallocSizeOf(this);
+    }
+  };
+
+  class PageTableCache
+  {
+  public:
+    PageTableCache() {
+      memset(&mPages, 0, sizeof(mPages));
+    }
+
+    ~PageTableCache() {
+      for (size_t i = 0; i < ArrayLength(mPages); ++i) {
+        delete mPages[i];
+      }
+    }
+
+    JSObject* EntrySlotIfExists(size_t i) {
+      MOZ_ASSERT(i < kProtoAndIfaceCacheCount);
+      size_t pageIndex = i / kPageSize;
+      size_t leafIndex = i % kPageSize;
+      Page* p = mPages[pageIndex];
+      if (!p) {
+        return nullptr;
+      }
+      return (*p)[leafIndex];
+    }
+
+    JS::Heap<JSObject*>& EntrySlotOrCreate(size_t i) {
+      MOZ_ASSERT(i < kProtoAndIfaceCacheCount);
+      size_t pageIndex = i / kPageSize;
+      size_t leafIndex = i % kPageSize;
+      Page* p = mPages[pageIndex];
+      if (!p) {
+        p = new Page;
+        mPages[pageIndex] = p;
+      }
+      return (*p)[leafIndex];
+    }
+
+    JS::Heap<JSObject*>& EntrySlotMustExist(size_t i) {
+      MOZ_ASSERT(i < kProtoAndIfaceCacheCount);
+      size_t pageIndex = i / kPageSize;
+      size_t leafIndex = i % kPageSize;
+      Page* p = mPages[pageIndex];
+      MOZ_ASSERT(p);
+      return (*p)[leafIndex];
+    }
+
+    void Trace(JSTracer* trc) {
+      for (size_t i = 0; i < ArrayLength(mPages); ++i) {
+        Page* p = mPages[i];
+        if (p) {
+          for (size_t j = 0; j < ArrayLength(*p); ++j) {
+            if ((*p)[j]) {
+              JS_CallHeapObjectTracer(trc, &(*p)[j], "protoAndIfaceCache[i]");
+            }
+          }
+        }
+      }
+    }
+
+    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+      size_t n = aMallocSizeOf(this);
+      for (size_t i = 0; i < ArrayLength(mPages); ++i) {
+        n += aMallocSizeOf(mPages[i]);
+      }
+      return n;
+    }
+
+  private:
+    static const size_t kPageSize = 16;
+    typedef Array<JS::Heap<JSObject*>, kPageSize> Page;
+    static const size_t kNPages = kProtoAndIfaceCacheCount / kPageSize +
+      size_t(bool(kProtoAndIfaceCacheCount % kPageSize));
+    Array<Page*, kNPages> mPages;
+  };
+
 public:
-  ProtoAndIfaceArray() {
-    MOZ_COUNT_CTOR(ProtoAndIfaceArray);
+  enum Kind {
+    WindowLike,
+    NonWindowLike
+  };
+
+  ProtoAndIfaceCache(Kind aKind) : mKind(aKind) {
+    MOZ_COUNT_CTOR(ProtoAndIfaceCache);
+    if (aKind == WindowLike) {
+      mArrayCache = new ArrayCache();
+    } else {
+      mPageTableCache = new PageTableCache();
+    }
   }
 
-  ~ProtoAndIfaceArray() {
-    MOZ_COUNT_DTOR(ProtoAndIfaceArray);
+  ~ProtoAndIfaceCache() {
+    if (mKind == WindowLike) {
+      delete mArrayCache;
+    } else {
+      delete mPageTableCache;
+    }
+    MOZ_COUNT_DTOR(ProtoAndIfaceCache);
+  }
+
+#define FORWARD_OPERATION(opName, args)              \
+  do {                                               \
+    if (mKind == WindowLike) {                       \
+      return mArrayCache->opName args;               \
+    } else {                                         \
+      return mPageTableCache->opName args;           \
+    }                                                \
+  } while(0)
+
+  JSObject* EntrySlotIfExists(size_t i) {
+    FORWARD_OPERATION(EntrySlotIfExists, (i));
+  }
+
+  JS::Heap<JSObject*>& EntrySlotOrCreate(size_t i) {
+    FORWARD_OPERATION(EntrySlotOrCreate, (i));
+  }
+
+  JS::Heap<JSObject*>& EntrySlotMustExist(size_t i) {
+    FORWARD_OPERATION(EntrySlotMustExist, (i));
+  }
+
+  void Trace(JSTracer *aTracer) {
+    FORWARD_OPERATION(Trace, (aTracer));
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
-    return aMallocSizeOf(this);
+    size_t n = aMallocSizeOf(this);
+    n += (mKind == WindowLike
+          ? mArrayCache->SizeOfIncludingThis(aMallocSizeOf)
+          : mPageTableCache->SizeOfIncludingThis(aMallocSizeOf));
+    return n;
   }
+#undef FORWARD_OPERATION
+
+private:
+  union {
+    ArrayCache *mArrayCache;
+    PageTableCache *mPageTableCache;
+  };
+  Kind mKind;
 };
 
 inline void
-AllocateProtoAndIfaceCache(JSObject* obj)
+AllocateProtoAndIfaceCache(JSObject* obj, ProtoAndIfaceCache::Kind aKind)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
   MOZ_ASSERT(js::GetReservedSlot(obj, DOM_PROTOTYPE_SLOT).isUndefined());
 
-  ProtoAndIfaceArray* protoAndIfaceArray = new ProtoAndIfaceArray();
+  ProtoAndIfaceCache* protoAndIfaceCache = new ProtoAndIfaceCache(aKind);
 
   js::SetReservedSlot(obj, DOM_PROTOTYPE_SLOT,
-                      JS::PrivateValue(protoAndIfaceArray));
+                      JS::PrivateValue(protoAndIfaceCache));
 }
 
 inline void
@@ -326,14 +487,10 @@ TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
-  if (!HasProtoAndIfaceArray(obj))
+  if (!HasProtoAndIfaceCache(obj))
     return;
-  ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(obj);
-  for (size_t i = 0; i < ArrayLength(protoAndIfaceArray); ++i) {
-    if (protoAndIfaceArray[i]) {
-      JS_CallHeapObjectTracer(trc, &protoAndIfaceArray[i], "protoAndIfaceArray[i]");
-    }
-  }
+  ProtoAndIfaceCache* protoAndIfaceCache = GetProtoAndIfaceCache(obj);
+  protoAndIfaceCache->Trace(trc);
 }
 
 inline void
@@ -341,9 +498,9 @@ DestroyProtoAndIfaceCache(JSObject* obj)
 {
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
-  ProtoAndIfaceArray* protoAndIfaceArray = GetProtoAndIfaceArray(obj);
+  ProtoAndIfaceCache* protoAndIfaceCache = GetProtoAndIfaceCache(obj);
 
-  delete protoAndIfaceArray;
+  delete protoAndIfaceCache;
 }
 
 /**
@@ -512,12 +669,6 @@ CouldBeDOMBinding(nsWrapperCache* aCache)
   return aCache->IsDOMBinding();
 }
 
-inline bool
-GetSameCompartmentWrapperForDOMBinding(JSObject*& obj)
-{
-  return IsDOMObject(obj);
-}
-
 // Make sure to wrap the given string value into the right compartment, as
 // needed.
 MOZ_ALWAYS_INLINE
@@ -540,15 +691,14 @@ MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
 {
   MOZ_ASSERT(rval.isObject());
 
+  // Cross-compartment always requires wrapping.
   JSObject* obj = &rval.toObject();
   if (js::GetObjectCompartment(obj) != js::GetContextCompartment(cx)) {
     return JS_WrapValue(cx, rval);
   }
 
-  // We're same-compartment, but even then we might need to wrap
-  // objects specially.  Check for that.
-  if (GetSameCompartmentWrapperForDOMBinding(obj)) {
-    // We're a new-binding object, and "obj" now points to the right thing
+  // We're same-compartment. If we're a WebIDL object, we're done.
+  if (IsDOMObject(obj)) {
     rval.set(JS::ObjectValue(*obj));
     return true;
   }
@@ -2130,8 +2280,8 @@ ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj);
 inline JSObject*
 GetUnforgeableHolder(JSObject* aGlobal, prototypes::ID aId)
 {
-  ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(aGlobal);
-  JSObject* interfaceProto = protoAndIfaceArray[aId];
+  ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(aGlobal);
+  JSObject* interfaceProto = protoAndIfaceCache.EntrySlotMustExist(aId);
   return &js::GetReservedSlot(interfaceProto,
                               DOM_INTERFACE_PROTO_SLOTS_BASE).toObject();
 }
@@ -2389,7 +2539,7 @@ CreateGlobal(JSContext* aCx, T* aObject, nsWrapperCache* aCache,
 
   JSAutoCompartment ac(aCx, global);
 
-  dom::AllocateProtoAndIfaceCache(global);
+  dom::AllocateProtoAndIfaceCache(global, ProtoAndIfaceCache::WindowLike);
 
   js::SetReservedSlot(global, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
   NS_ADDREF(aObject);

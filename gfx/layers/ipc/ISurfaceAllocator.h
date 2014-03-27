@@ -160,6 +160,11 @@ public:
     return nullptr;
   }
 
+  virtual void DeallocGrallocBuffer(PGrallocBufferChild* aChild)
+  {
+    NS_RUNTIMEABORT("should not be called");
+  }
+
   virtual bool IPCOpen() const { return true; }
   virtual bool IsSameProcess() const = 0;
 
@@ -170,7 +175,7 @@ protected:
   // this method is needed for a temporary fix, will be removed after
   // DeprecatedTextureClient/Host rework.
   virtual bool IsOnCompositorSide() const = 0;
-  static bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
+  bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
   virtual bool PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                               gfxContentType aContent,
                                               uint32_t aCaps,

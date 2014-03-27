@@ -201,7 +201,35 @@ LIRGenerator::visitNewCallObject(MNewCallObject *ins)
     else
         slots = LConstantIndex::Bogus();
 
-    LNewCallObject *lir = new(alloc()) LNewCallObject(slots, temp());
+    LInstruction *lir;
+    if (ins->templateObject()->hasSingletonType()) {
+        LNewSingletonCallObject *singletonLir = new(alloc()) LNewSingletonCallObject(slots);
+        if (!define(singletonLir, ins))
+            return false;
+        lir = singletonLir;
+    } else {
+        LNewCallObject *normalLir = new(alloc()) LNewCallObject(slots, temp());
+        if (!define(normalLir, ins))
+            return false;
+        lir = normalLir;
+    }
+
+    if (!assignSafepoint(lir, ins))
+        return false;
+
+    return true;
+}
+
+bool
+LIRGenerator::visitNewRunOnceCallObject(MNewRunOnceCallObject *ins)
+{
+    LAllocation slots;
+    if (ins->slots()->type() == MIRType_Slots)
+        slots = useRegister(ins->slots());
+    else
+        slots = LConstantIndex::Bogus();
+
+    LNewSingletonCallObject *lir = new(alloc()) LNewSingletonCallObject(slots);
     if (!define(lir, ins))
         return false;
 

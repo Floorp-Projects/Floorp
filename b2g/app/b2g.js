@@ -69,6 +69,7 @@ pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
 
 // predictive actions
+pref("network.seer.enable", false); // disabled on b2g
 pref("network.seer.max-db-size", 2097152); // bytes
 pref("network.seer.preserve", 50); // percentage of seer data to keep when cleaning up
 
@@ -702,6 +703,8 @@ pref("dom.ipc.processPrelaunch.enabled", true);
 // Wait this long before pre-launching a new subprocess.
 pref("dom.ipc.processPrelaunch.delayMs", 5000);
 #endif
+
+pref("dom.ipc.reuse_parent_app", false);
 
 // When a process receives a system message, we hold a CPU wake lock on its
 // behalf for this many seconds, or until it handles the system message,

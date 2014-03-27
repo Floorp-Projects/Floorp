@@ -790,6 +790,17 @@ nsXULAppInfo::GetProcessType(uint32_t* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULAppInfo::GetProcessID(uint32_t* aResult)
+{
+#ifdef XP_WIN
+  *aResult = GetCurrentProcessId();
+#else
+  *aResult = getpid();
+#endif
+  return NS_OK;
+}
+
 static bool gBrowserTabsRemote = false;
 static bool gBrowserTabsRemoteInitialized = false;
 

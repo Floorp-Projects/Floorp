@@ -23,6 +23,7 @@
 #include "SpdySession3.h"
 #include "SpdyStream3.h"
 #include "PSpdyPush.h"
+#include "SpdyZlibReporter.h"
 
 #include <algorithm>
 
@@ -586,14 +587,14 @@ SpdySession3::DecrementConcurrent(SpdyStream3 *aStream)
 void
 SpdySession3::zlibInit()
 {
-  mDownstreamZlib.zalloc = SpdyStream3::zlib_allocator;
-  mDownstreamZlib.zfree = SpdyStream3::zlib_destructor;
+  mDownstreamZlib.zalloc = SpdyZlibReporter::Alloc;
+  mDownstreamZlib.zfree = SpdyZlibReporter::Free;
   mDownstreamZlib.opaque = Z_NULL;
 
   inflateInit(&mDownstreamZlib);
 
-  mUpstreamZlib.zalloc = SpdyStream3::zlib_allocator;
-  mUpstreamZlib.zfree = SpdyStream3::zlib_destructor;
+  mUpstreamZlib.zalloc = SpdyZlibReporter::Alloc;
+  mUpstreamZlib.zfree = SpdyZlibReporter::Free;
   mUpstreamZlib.opaque = Z_NULL;
 
   // mixing carte blanche compression with tls subjects us to traffic
