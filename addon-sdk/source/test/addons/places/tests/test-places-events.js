@@ -18,6 +18,13 @@ const { setTimeout } = require('sdk/timers');
 const { before, after } = require('sdk/test/utils');
 const bmsrv = Cc['@mozilla.org/browser/nav-bookmarks-service;1'].
                 getService(Ci.nsINavBookmarksService);
+const { release, platform } = require('node/os');
+
+const isOSX10_6 = (() => {
+  let vString = release();
+  return vString && /darwin/.test(platform()) && /10\.6/.test(vString);
+})();
+
 const {
   search
 } = require('sdk/places/history');
@@ -51,6 +58,14 @@ exports['test bookmark-item-added'] = function (assert, done) {
 exports['test bookmark-item-changed'] = function (assert, done) {
   let id;
   let complete = makeCompleted(done);
+
+  // Due to bug 969616 and bug 971964, disabling tests in 10.6 (happens only
+  // in debug builds) to prevent intermittent failures
+  if (isOSX10_6) {
+    assert.ok(true, 'skipping test in OSX 10.6'); 
+    return done();
+  }
+
   function handler ({type, data}) {
     if (type !== 'bookmark-item-changed') return;
     if (data.id !== id) return;
@@ -86,6 +101,13 @@ exports['test bookmark-item-moved'] = function (assert, done) {
   let id;
   let complete = makeCompleted(done);
   let previousIndex, previousParentId;
+
+  // Due to bug 969616 and bug 971964, disabling tests in 10.6 (happens only
+  // in debug builds) to prevent intermittent failures
+  if (isOSX10_6) {
+    assert.ok(true, 'skipping test in OSX 10.6'); 
+    return done();
+  }
 
   function handler ({type, data}) {
     if (type !== 'bookmark-item-moved') return;
@@ -213,7 +235,7 @@ exports['test history-start-batch, history-end-batch, history-start-clear'] = fu
     off(clearEvent, 'data', clearHandler);
     complete();
   }
- 
+
   on(startEvent, 'data', startHandler);
   on(clearEvent, 'data', clearHandler);
 
