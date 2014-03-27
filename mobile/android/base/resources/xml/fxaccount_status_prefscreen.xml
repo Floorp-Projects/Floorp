@@ -35,6 +35,20 @@
             android:layout="@layout/fxaccount_status_error_preference"
             android:persistent="false"
             android:title="@string/fxaccount_status_needs_verification" />
+        <Preference
+            android:editable="false"
+            android:icon="@drawable/fxaccount_sync_error"
+            android:key="needs_master_sync_automatically_enabled"
+            android:layout="@layout/fxaccount_status_error_preference"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_needs_master_sync_automatically_enabled" />
+        <Preference
+            android:editable="false"
+            android:icon="@drawable/fxaccount_sync_error"
+            android:key="needs_account_enabled"
+            android:layout="@layout/fxaccount_status_error_preference"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_needs_account_enabled" />
 
         <CheckBoxPreference
             android:key="bookmarks"
