@@ -646,14 +646,17 @@ protected:
   // CSS Grid
   bool ParseGridAutoFlow();
 
-  // Parse an optional <line-names> expression.
-  // If successful, leave aValue untouched,
+  // Parse a <line-names> expression.
+  // If successful, either leave aValue untouched,
   // to indicate that we parsed the empty list,
   // or set it to a eCSSUnit_List of eCSSUnit_Ident.
-  // Not finding an open paren is considered the same as an empty list.
+  //
+  // To parse an optional <line-names> (ie. if not finding an open paren
+  // is considered the same as an empty list),
+  // treat CSSParseResult::NotFound the same as CSSParseResult::Ok.
   //
   // If aValue is already a eCSSUnit_List, append to that list.
-  bool ParseGridLineNames(nsCSSValue& aValue);
+  CSSParseResult ParseGridLineNames(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
   CSSParseResult ParseGridTrackSize(nsCSSValue& aValue);
   bool ParseGridAutoColumnsRows(nsCSSProperty aPropID);
@@ -6958,16 +6961,16 @@ CSSParserImpl::ParseGridAutoFlow()
   return true;
 }
 
-bool
+CSSParseResult
 CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
 {
   if (!ExpectSymbol('(', true)) {
-    return true;
+    return CSSParseResult::NotFound;
   }
   if (!GetToken(true) || mToken.IsSymbol(')')) {
-    return true;
+    return CSSParseResult::Ok;
   }
-  // 'return true' so far keeps eCSSUnit_Null, to represent an empty list.
+  // 'return' so far leaves aValue untouched, to represent an empty list.
 
   nsCSSValueList* item;
   if (aValue.GetUnit() == eCSSUnit_List) {
@@ -6992,10 +6995,10 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
           ParseCustomIdent(item->mValue, mToken.mIdent))) {
       UngetToken();
       SkipUntil(')');
-      return false;
+      return CSSParseResult::Error;
     }
     if (!GetToken(true) || mToken.IsSymbol(')')) {
-      return true;
+      return CSSParseResult::Ok;
     }
     item->mNext = new nsCSSValueList;
     item = item->mNext;
@@ -7085,7 +7088,7 @@ CSSParserImpl::ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
   for (;;) {
     item->mNext = new nsCSSValueList;
     item = item->mNext;
-    if (!ParseGridLineNames(item->mValue)) {
+    if (ParseGridLineNames(item->mValue) == CSSParseResult::Error) {
       return false;
     }
 
@@ -7126,8 +7129,8 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
   // FIXME (bug 983175): add subgrid parsing
 
   nsCSSValue firstLineNames;
-  if (!(ParseGridLineNames(firstLineNames) &&
-        ParseGridTrackListWithFirstLineNames(value, firstLineNames))) {
+  if (ParseGridLineNames(firstLineNames) == CSSParseResult::Error ||
+      !ParseGridTrackListWithFirstLineNames(value, firstLineNames)) {
     return false;
   }
   AppendValue(aPropID, value);
@@ -7284,8 +7287,8 @@ CSSParserImpl::ParseGridTemplate()
   // it can be either the start of a <track-list>,
   // or the start of [ <line-names>? <string> <track-size>? <line-names>? ]+
   nsCSSValue firstLineNames;
-  if (!(ParseGridLineNames(firstLineNames) &&
-        GetToken(true))) {
+  if (ParseGridLineNames(firstLineNames) == CSSParseResult::Error ||
+      !GetToken(true)) {
     return false;
   }
   if (mToken.mType == eCSSToken_String) {
@@ -7315,8 +7318,8 @@ CSSParserImpl::ParseGridTemplateAfterSlash(bool aColumnsIsTrackList)
     // as part of <'grid-template-rows'>
 
     nsCSSValue firstLineNames;
-    if (!(ParseGridLineNames(firstLineNames) &&
-          GetToken(true))) {
+    if (ParseGridLineNames(firstLineNames) == CSSParseResult::Error ||
+        !GetToken(true)) {
       return false;
     }
     if (aColumnsIsTrackList && mToken.mType == eCSSToken_String) {
@@ -7372,7 +7375,7 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
 
     rowsItem->mNext = new nsCSSValueList;
     rowsItem = rowsItem->mNext;
-    if (!ParseGridLineNames(rowsItem->mValue)) {
+    if (ParseGridLineNames(rowsItem->mValue) == CSSParseResult::Error) {
       return false;
     }
 
@@ -7381,8 +7384,8 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
     }
 
     // Append to the same list as the previous call to ParseGridLineNames.
-    if (!(ParseGridLineNames(rowsItem->mValue) &&
-          GetToken(true))) {
+    if (ParseGridLineNames(rowsItem->mValue) == CSSParseResult::Error ||
+        !GetToken(true)) {
       return false;
     }
     if (eCSSToken_String != mToken.mType) {
