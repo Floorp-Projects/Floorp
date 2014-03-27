@@ -2493,9 +2493,6 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
           case IonFrame_Unwound_Rectifier:
             IonSpew(IonSpew_Invalidate, "#%d unwound rectifier frame @ %p", frameno, it.fp());
             break;
-          case IonFrame_Osr:
-            IonSpew(IonSpew_Invalidate, "#%d osr frame @ %p", frameno, it.fp());
-            break;
           case IonFrame_Entry:
             IonSpew(IonSpew_Invalidate, "#%d entry frame @ %p", frameno, it.fp());
             break;

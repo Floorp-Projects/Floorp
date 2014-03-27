@@ -3934,18 +3934,6 @@ MacroAssemblerARMCompat::testStringTruthy(bool truthy, const ValueOperand &value
 }
 
 void
-MacroAssemblerARMCompat::enterOsr(Register calleeToken, Register code)
-{
-    push(Imm32(0)); // num actual arguments.
-    push(calleeToken);
-    push(Imm32(MakeFrameDescriptor(0, IonFrame_Osr)));
-    ma_add(sp, Imm32(sizeof(uintptr_t)), sp);   // padding
-    ma_callIonHalfPush(code);
-    ma_sub(sp, Imm32(sizeof(uintptr_t) * 3), sp);
-}
-
-
-void
 MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail)
 {
     Label handleZero;

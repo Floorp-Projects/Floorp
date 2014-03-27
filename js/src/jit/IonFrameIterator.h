@@ -59,12 +59,7 @@ enum FrameType
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any
     // JitActivation.
-    IonFrame_Exit,
-
-    // An OSR frame is added when performing OSR from within a bailout. It
-    // looks like a JS frame, but does not push scripted arguments, as OSR
-    // reads arguments from a BaselineFrame.
-    IonFrame_Osr
+    IonFrame_Exit
 };
 
 enum ReadFrameArgsBehavior {
