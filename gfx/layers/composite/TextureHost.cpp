@@ -14,6 +14,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
+#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #ifdef MOZ_X11
 #include "mozilla/layers/X11TextureHost.h"
 #endif
@@ -257,6 +258,15 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
     }
   }
   return result;
+}
+
+void
+TextureHost::CompositorRecycle()
+{
+  if (!mActor) {
+    return;
+  }
+  static_cast<TextureParent*>(mActor)->CompositorRecycle();
 }
 
 void
@@ -745,7 +755,20 @@ void
 TextureParent::CompositorRecycle()
 {
   mTextureHost->ClearRecycleCallback();
-  mozilla::unused << SendCompositorRecycle();
+
+  MaybeFenceHandle handle = null_t();
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  if (mTextureHost) {
+    TextureHostOGL* hostOGL = mTextureHost->AsHostOGL();
+    android::sp<android::Fence> fence = hostOGL->GetAndResetReleaseFence();
+    if (fence.get() && fence->isValid()) {
+      handle = FenceHandle(fence);
+      // HWC might not provide Fence.
+      // In this case, HWC implicitly handles buffer's fence.
+    }
+  }
+#endif
+  mozilla::unused << SendCompositorRecycle(handle);
 
   // Don't forget to prepare for the next reycle
   mWaitForClientRecycle = mTextureHost;

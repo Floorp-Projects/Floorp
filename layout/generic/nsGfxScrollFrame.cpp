@@ -2458,10 +2458,21 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsRect dirtyRect = aDirtyRect.Intersect(mScrollPort);
 
   // Override the dirty rectangle if the displayport has been set.
-  nsRect displayPort;
   bool usingDisplayport =
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort) &&
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent()) &&
     !aBuilder->IsForEventDelivery();
+
+  // don't set the display port base rect for root scroll frames,
+  // nsLayoutUtils::PaintFrame or nsSubDocumentFrame::BuildDisplayList
+  // does that for root scroll frames before it expands the dirty rect
+  // to the display port.
+  if (usingDisplayport && !mIsRoot) {
+    nsLayoutUtils::SetDisplayPortBase(mOuter->GetContent(), dirtyRect);
+  }
+
+  // now that we have an updated base rect we can get the display port
+  nsRect displayPort;
+  nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
   if (usingDisplayport && DisplayportExceedsMaxTextureSize(mOuter->PresContext(), displayPort)) {
     usingDisplayport = false;
   }
