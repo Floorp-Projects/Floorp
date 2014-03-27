@@ -594,6 +594,18 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
     }
     break;
   }
+  default: NS_WARNING("Unhandled input event"); break;
+  }
+
+  mLastEventTime = aEvent.mTime;
+  return rv;
+}
+
+nsEventStatus AsyncPanZoomController::HandleGestureEvent(const InputData& aEvent)
+{
+  nsEventStatus rv = nsEventStatus_eIgnore;
+
+  switch (aEvent.mInputType) {
   case PINCHGESTURE_INPUT: {
     const PinchGestureInput& pinchGestureInput = aEvent.AsPinchGestureInput();
     switch (pinchGestureInput.mType) {
