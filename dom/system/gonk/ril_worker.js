@@ -3452,7 +3452,10 @@ RilObject.prototype = {
       }
     };
 
-    if (!this._isGsmTechGroup(this.voiceRegistrationState.radioTech)) {
+    // During startup, |radioTech| is not yet defined, so we need to
+    // check it separately.
+    if (("radioTech" in this.voiceRegistrationState) &&
+        !this._isGsmTechGroup(this.voiceRegistrationState.radioTech)) {
       // CDMA RSSI.
       // Valid values are positive integers. This value is the actual RSSI value
       // multiplied by -1. Example: If the actual RSSI is -75, then this
