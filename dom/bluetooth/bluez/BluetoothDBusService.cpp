@@ -195,15 +195,29 @@ private:
   int (* m_bt_is_enabled)(void);
 };
 
+//
+// BT-thread-only variables
+//
+// The variables below must only be accessed from within the BT thread.
+//
+
 static class Bluedroid sBluedroid;
 #endif
+
+//
+// Read-only constants
+//
+// The constants below are read-only and may be accessed from any
+// thread. Most of the contain DBus state or settings, so keep them
+// on the I/O thread if somehow possible.
+//
 
 typedef struct {
   const char* name;
   int type;
 } Properties;
 
-static Properties sDeviceProperties[] = {
+static const Properties sDeviceProperties[] = {
   {"Address", DBUS_TYPE_STRING},
   {"Name", DBUS_TYPE_STRING},
   {"Icon", DBUS_TYPE_STRING},
@@ -224,7 +238,7 @@ static Properties sDeviceProperties[] = {
   {"Services", DBUS_TYPE_ARRAY}
 };
 
-static Properties sAdapterProperties[] = {
+static const Properties sAdapterProperties[] = {
   {"Address", DBUS_TYPE_STRING},
   {"Name", DBUS_TYPE_STRING},
   {"Class", DBUS_TYPE_UINT32},
@@ -239,33 +253,31 @@ static Properties sAdapterProperties[] = {
   {"Type", DBUS_TYPE_STRING}
 };
 
-static Properties sManagerProperties[] = {
+static const Properties sManagerProperties[] = {
   {"Adapters", DBUS_TYPE_ARRAY},
 };
 
-static Properties sSinkProperties[] = {
+static const Properties sSinkProperties[] = {
   {"State", DBUS_TYPE_STRING},
   {"Connected", DBUS_TYPE_BOOLEAN},
   {"Playing", DBUS_TYPE_BOOLEAN}
 };
 
-static Properties sControlProperties[] = {
+static const Properties sControlProperties[] = {
   {"Connected", DBUS_TYPE_BOOLEAN}
 };
 
-static Properties sInputProperties[] = {
+static const Properties sInputProperties[] = {
   {"Connected", DBUS_TYPE_BOOLEAN}
 };
 
-static const char* sBluetoothDBusIfaces[] =
-{
+static const char* const sBluetoothDBusIfaces[] = {
   DBUS_MANAGER_IFACE,
   DBUS_ADAPTER_IFACE,
   DBUS_DEVICE_IFACE
 };
 
-static const char* sBluetoothDBusSignals[] =
-{
+static const char* const sBluetoothDBusSignals[] = {
   "type='signal',interface='org.freedesktop.DBus'",
   "type='signal',interface='org.bluez.Adapter'",
   "type='signal',interface='org.bluez.Manager'",
@@ -278,8 +290,32 @@ static const char* sBluetoothDBusSignals[] =
   "type='signal',interface='org.bluez.Control'"
 };
 
+/**
+ * The adapter name may not be ready whenever event 'AdapterAdded' is received,
+ * so we'd like to wait for a bit. Only used on main thread.
+ */
+static const int sWaitingForAdapterNameInterval = 1000; // unit: ms
+
+//
+// I/O-thread-only variables
+//
+// The variables below must be accessed from within the I/O thread.
+//
+
 // The DBus connection to the BlueZ daemon
 static StaticAutoPtr<RawDBusConnection> sDBusConnection;
+
+// Keep the pairing requests.
+static Atomic<int32_t> sIsPairing(0);
+
+static nsDataHashtable<nsStringHashKey, DBusMessage* >* sPairingReqTable;
+
+//
+// The variables below are currently accessed from within multiple
+// threads and should be moved to one specific thread soon.
+//
+// TODO: cleanup access to variables below.
+//
 
 // Only A2DP and HID are authorized.
 static nsTArray<BluetoothServiceClass> sAuthorizedServiceClass;
@@ -288,24 +324,17 @@ static nsTArray<BluetoothServiceClass> sAuthorizedServiceClass;
 static nsString sAdapterPath;
 
 /**
- * The adapter name may not be ready whenever event 'AdapterAdded' is received,
- * so we'd like to wait for a bit.
- */
-static int sWaitingForAdapterNameInterval = 1000; //unit: ms
-
-// Keep the pairing requests.
-static Atomic<int32_t> sIsPairing(0);
-static nsDataHashtable<nsStringHashKey, DBusMessage* >* sPairingReqTable;
-
-/**
  * Disconnect all profiles before turning off Bluetooth. Please see Bug 891257
- * for more details.
+ * for more details. TODO: should be replaced or implemented with Atomic<>.
  */
 static int sConnectedDeviceCount = 0;
+
+// sStopBluetoothMonitor protects sGetPropertyMonitor. TODO: should be reviewed
+// and replaced or implemented with Atomic<>.
 static StaticAutoPtr<Monitor> sGetPropertyMonitor;
 static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
 
-// A quene for connect/disconnect request. See Bug 913372 for details.
+// A queue for connect/disconnect request. See Bug 913372 for details.
 static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
@@ -782,7 +811,7 @@ ContainsIcon(const InfallibleTArray<BluetoothNamedValue>& aProperties)
 }
 
 static bool
-GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
+GetProperty(DBusMessageIter aIter, const Properties* aPropertyTypes,
             int aPropertyTypeLen, int* aPropIndex,
             InfallibleTArray<BluetoothNamedValue>& aProperties)
 {
@@ -926,7 +955,7 @@ static void
 ParseProperties(DBusMessageIter* aIter,
                 BluetoothValue& aValue,
                 nsAString& aErrorStr,
-                Properties* aPropertyTypes,
+                const Properties* aPropertyTypes,
                 const int aPropertyTypeLen)
 {
   DBusMessageIter dict_entry, dict;
@@ -959,7 +988,7 @@ UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
 {
   MOZ_ASSERT(aMsg);
 
-  Properties* propertyTypes;
+  const Properties* propertyTypes;
   int propertyTypesLength;
 
   nsAutoString errorStr;
@@ -995,7 +1024,7 @@ UnpackPropertiesMessage(DBusMessage* aMsg, DBusError* aErr,
 
 static void
 ParsePropertyChange(DBusMessage* aMsg, BluetoothValue& aValue,
-                    nsAString& aErrorStr, Properties* aPropertyTypes,
+                    nsAString& aErrorStr, const Properties* aPropertyTypes,
                     const int aPropertyTypeLen)
 {
   DBusMessageIter iter;
