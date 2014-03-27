@@ -1257,7 +1257,7 @@ nsStylePosition::nsStylePosition(void)
   // Other members get their default constructors
   // which initialize them to representations of their respective initial value.
   // mGridTemplateAreas: nullptr for 'none'
-  // mGridTemplate{Rows,Columns}: empty arrays for 'none'
+  // mGridTemplate{Rows,Columns}: false and empty arrays for 'none'
   // mGrid{Column,Row}{Start,End}: false/0/empty values for 'auto'
 }
 
