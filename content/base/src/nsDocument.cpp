@@ -5464,7 +5464,7 @@ nsDocument::CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* 
   }
 
   nsCOMPtr<nsIAtom> typeAtom(do_GetAtom(elemName));
-  CustomElementHashKey key(kNameSpaceID_None, typeAtom);
+  CustomElementHashKey key(kNameSpaceID_Unknown, typeAtom);
   CustomElementDefinition* definition;
   if (!document->mRegistry ||
       !document->mRegistry->mCustomDefinitions.Get(&key, &definition)) {
@@ -5791,7 +5791,7 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
   // If there already exists a definition with the same TYPE, set ERROR to
   // DuplicateDefinition and stop.
   // Note that we need to find existing custom elements from either namespace.
-  CustomElementHashKey duplicateFinder(kNameSpaceID_None, typeAtom);
+  CustomElementHashKey duplicateFinder(kNameSpaceID_Unknown, typeAtom);
   if (definitions.Get(&duplicateFinder)) {
     rv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;

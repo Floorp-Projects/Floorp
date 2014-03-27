@@ -264,11 +264,11 @@ public:
   KeyType GetKey() const { return const_cast<KeyType>(this); }
   bool KeyEquals(const KeyTypePointer aKey) const
   {
-    MOZ_ASSERT(mNamespaceID != kNameSpaceID_None,
+    MOZ_ASSERT(mNamespaceID != kNameSpaceID_Unknown,
                "This equals method is not transitive, nor symmetric. "
-               "A key with a namespace of kNamespaceID_None should "
+               "A key with a namespace of kNamespaceID_Unknown should "
                "not be stored in a hashtable.");
-    return (kNameSpaceID_None == aKey->mNamespaceID ||
+    return (kNameSpaceID_Unknown == aKey->mNamespaceID ||
             mNamespaceID == aKey->mNamespaceID) &&
            aKey->mAtom == mAtom;
   }
