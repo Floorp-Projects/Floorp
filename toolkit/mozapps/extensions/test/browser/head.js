@@ -68,6 +68,8 @@ var gRestorePrefs = [{name: PREF_LOGGING_ENABLED},
                      {name: "extensions.getAddons.search.browseURL"},
                      {name: "extensions.getAddons.search.url"},
                      {name: "extensions.getAddons.cache.enabled"},
+                     {name: "devtools.debugger.addon-enabled"},
+                     {name: "devtools.debugger.remote-enabled"},
                      {name: PREF_SEARCH_MAXRESULTS},
                      {name: PREF_STRICT_COMPAT},
                      {name: PREF_CHECK_COMPATIBILITY}];
@@ -950,6 +952,7 @@ function MockAddon(aId, aName, aType, aOperationsRequiringRestart) {
   this.type = aType || "extension";
   this.version = "";
   this.isCompatible = true;
+  this.isDebuggable = false;
   this.providesUpdatesSecurely = true;
   this.blocklistState = 0;
   this._appDisabled = false;

@@ -2287,8 +2287,13 @@ public class GeckoAppShell
     }
 
     @WrapElementForJNI(stubName = "HandleGeckoMessageWrapper")
-    public static void handleGeckoMessage(String message) {
-        sEventDispatcher.dispatchEvent(message);
+    public static void handleGeckoMessage(final String message) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                sEventDispatcher.dispatchEvent(message);
+            }
+        });
     }
 
     @WrapElementForJNI
