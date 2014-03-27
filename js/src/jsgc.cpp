@@ -4361,6 +4361,9 @@ AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
     JS_ASSERT(!rt->noGCOrAllocationCheck);
     JS_ASSERT(!rt->isHeapBusy());
     JS_ASSERT(heapState != Idle);
+#ifdef JSGC_GENERATIONAL
+    JS_ASSERT_IF(heapState == MajorCollecting, rt->gcNursery.isEmpty());
+#endif
 
     // Threads with an exclusive context can hit refillFreeList while holding
     // the exclusive access lock. To avoid deadlocking when we try to acquire
@@ -4822,9 +4825,6 @@ static MOZ_NEVER_INLINE bool
 GCCycle(JSRuntime *rt, bool incremental, int64_t budget,
         JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
-    /* If we attempt to invoke the GC while we are running in the GC, assert. */
-    JS_ASSERT(!rt->isHeapBusy());
-
     AutoGCSession gcsession(rt);
 
     /*
@@ -4923,6 +4923,9 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 
     JS_AbortIfWrongThread(rt);
 
+    /* If we attempt to invoke the GC while we are running in the GC, assert. */
+    JS_ASSERT(!rt->isHeapBusy());
+
     if (rt->mainThread.suppressGC)
         return;
 
@@ -4945,14 +4948,6 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 
     AutoStopVerifyingBarriers av(rt, reason == JS::gcreason::SHUTDOWN_CC ||
                                      reason == JS::gcreason::DESTROY_RUNTIME);
-
-    MinorGC(rt, reason);
-
-    /*
-     * Marking can trigger many incidental post barriers, some of them for
-     * objects which are not going to be live after the GC.
-     */
-    AutoDisableStoreBuffer adsb(rt);
 
     RecordNativeStackTopForGC(rt);
 
@@ -4977,11 +4972,18 @@ Collect(JSRuntime *rt, bool incremental, int64_t budget,
 
     rt->gcShouldCleanUpEverything = ShouldCleanUpEverything(rt, reason, gckind);
 
-    gcstats::AutoGCSlice agc(rt->gcStats, collectedCount, zoneCount, compartmentCount, reason);
-
     bool repeat = false;
-
     do {
+        MinorGC(rt, reason);
+
+        /*
+         * Marking can trigger many incidental post barriers, some of them for
+         * objects which are not going to be live after the GC.
+         */
+        AutoDisableStoreBuffer adsb(rt);
+
+        gcstats::AutoGCSlice agc(rt->gcStats, collectedCount, zoneCount, compartmentCount, reason);
+
         /*
          * Let the API user decide to defer a GC if it wants to (unless this
          * is the last context). Invoke the callback regardless.
@@ -5100,6 +5102,7 @@ js::MinorGC(JSRuntime *rt, JS::gcreason::Reason reason)
                         TraceLogging::MINOR_GC_STOP);
 #endif
     rt->gcNursery.collect(rt, reason, nullptr);
+    JS_ASSERT_IF(!rt->mainThread.suppressGC, rt->gcNursery.isEmpty());
 #endif
 }
 
@@ -5115,11 +5118,13 @@ js::MinorGC(JSContext *cx, JS::gcreason::Reason reason)
                         TraceLogging::MINOR_GC_STOP);
 #endif
     Nursery::TypeObjectList pretenureTypes;
-    cx->runtime()->gcNursery.collect(cx->runtime(), reason, &pretenureTypes);
+    JSRuntime *rt = cx->runtime();
+    rt->gcNursery.collect(cx->runtime(), reason, &pretenureTypes);
     for (size_t i = 0; i < pretenureTypes.length(); i++) {
         if (pretenureTypes[i]->canPreTenure())
             pretenureTypes[i]->setShouldPreTenure(cx);
     }
+    JS_ASSERT_IF(!rt->mainThread.suppressGC, rt->gcNursery.isEmpty());
 #endif
 }
 
