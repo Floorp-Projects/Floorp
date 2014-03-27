@@ -2033,6 +2033,29 @@ public:
   static void
   UpdateImageVisibilityForFrame(nsIFrame* aImageFrame);
 
+ /**
+  * Calculate the compostion size for a frame. See FrameMetrics.h for
+  * defintion of composition size (or bounds).
+  */
+  static nsSize
+  CalculateCompositionSizeForFrame(nsIFrame* aFrame);
+
+ /**
+  * Calculate the scrollable rect for a frame. See FrameMetrics.h for
+  * defintion of scrollable rect. aScrollableFrame is the scroll frame to calculate
+  * the scrollable rect for. If it's null then we calculate the scrollable rect
+  * as the rect of the root frame.
+  */
+  static nsRect
+  CalculateScrollableRectForFrame(nsIScrollableFrame* aScrollableFrame, nsIFrame* aRootFrame);
+
+ /**
+  * Calculate the expanded scrollable rect for a frame. See FrameMetrics.h for
+  * defintion of expanded scrollable rect.
+  */
+  static nsRect
+  CalculateExpandedScrollableRect(nsIFrame* aFrame);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
