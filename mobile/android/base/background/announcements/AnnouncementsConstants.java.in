@@ -45,6 +45,6 @@ public class AnnouncementsConstants {
   public static long LATEST_ACCEPTED_LAUNCH_TIMESTAMP_MSEC = GlobalConstants.BUILD_TIMESTAMP_MSEC +
                                                              4 * 365 * MILLISECONDS_PER_DAY;
 
-  public static String ANNOUNCE_USER_AGENT = "Firefox Announcements " + GlobalConstants.MOZ_APP_VERSION;
+  public static String USER_AGENT = "Firefox Announcements " + GlobalConstants.MOZ_APP_VERSION;
   public static String ANNOUNCE_CHANNEL = GlobalConstants.MOZ_UPDATE_CHANNEL.replace("default", GlobalConstants.MOZ_OFFICIAL_BRANDING ? "release" : "dev");
 }
