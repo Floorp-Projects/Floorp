@@ -966,7 +966,7 @@ Toolbox.prototype = {
       toolName = toolboxStrings("toolbox.defaultTitle");
     }
     let title = toolboxStrings("toolbox.titleTemplate",
-                               toolName, this.target.url);
+                               toolName, this.target.url || this.target.name);
     this._host.setTitle(title);
   },
 
