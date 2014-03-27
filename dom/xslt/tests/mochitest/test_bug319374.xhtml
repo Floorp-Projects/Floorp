@@ -58,10 +58,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
 
     // Test 2: If the context node is in anonymous content, changing some
     //         other anonymous tree shouldn't cause XPath result to throw.
-    var anonElem1 =
+    var anonAttr1 =
       getAnonymousNodes(document.getElementById('content').
-        firstChild)[0];
-    var anonAttr1 = anonElem1.getAttributeNode('attr');
+        firstChild)[0].getAttributeNode('attr');
     var anonAttr2 =
       getAnonymousNodes(document.getElementById('content').
         lastChild)[0].getAttributeNode('attr');
@@ -92,7 +91,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
                               UNORDERED_NODE_ITERATOR_TYPE,
                             null);
       // Attribute changing in the same anonymous tree.
-      anonElem1.setAttribute("foo", "bar");
+      anonAttr1.ownerElement.setAttribute("foo", "bar");
       resultAttr = xp3.iterateNext();
       ok(resultAttr == anonAttr1,
          "XPathEvaluator should have thrown an exception!")
