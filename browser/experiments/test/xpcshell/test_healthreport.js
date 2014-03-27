@@ -20,11 +20,15 @@ function getStorageAndProvider(name) {
 }
 
 function run_test() {
+  run_next_test();
+}
+
+add_test(function setup() {
   do_get_profile();
   initTestLogging();
 
   run_next_test();
-}
+});
 
 add_task(function test_constructor() {
   let provider = new ExperimentsProvider();

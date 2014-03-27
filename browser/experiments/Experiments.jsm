@@ -853,6 +853,30 @@ Experiments.Experiments.prototype = {
 
     this._checkForShutdown();
 
+    // The first thing we do is reconcile our state against what's in the
+    // Addon Manager. It's possible that the Addon Manager knows of experiment
+    // add-ons that we don't. This could happen if an experiment gets installed
+    // when we're not listening or if there is a bug in our synchronization
+    // code.
+    //
+    // We have a few options of what to do with unknown experiment add-ons
+    // coming from the Addon Manager. Ideally, we'd convert these to
+    // ExperimentEntry instances and stuff them inside this._experiments.
+    // However, since ExperimentEntry contain lots of metadata from the
+    // manifest and trying to make up data could be error prone, it's safer
+    // to not try. Furthermore, if an experiment really did come from us, we
+    // should have some record of it. In the end, we decide to discard all
+    // knowledge for these unknown experiment add-ons.
+    let installedExperiments = yield installedExperimentAddons();
+    let expectedAddonIds = new Set([e._addonId for ([,e] of this._experiments)]);
+    let unknownAddons = [a for (a of installedExperiments) if (!expectedAddonIds.has(a.id))];
+    if (unknownAddons.length) {
+      gLogger.warn("Experiments::_evaluateExperiments() - unknown add-ons in AddonManager: " +
+                   [a.id for (a of unknownAddons)].join(", "));
+
+      yield uninstallAddons(unknownAddons);
+    }
+
     let activeExperiment = this._getActiveExperiment();
     let activeChanged = false;
     let now = this._policy.now();
