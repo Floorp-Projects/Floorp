@@ -160,11 +160,11 @@ function uninstallAddon(id) {
   return deferred.promise;
 }
 
-function createAppInfo(options) {
+function createAppInfo(optionsIn) {
   const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
   const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 
-  let options = options || {};
+  let options = optionsIn || {};
   let id = options.id || "xpcshell@tests.mozilla.org";
   let name = options.name || "XPCShell";
   let version = options.version || "1.0";
