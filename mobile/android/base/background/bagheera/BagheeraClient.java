@@ -167,6 +167,11 @@ public class BagheeraClient {
     }
 
     @Override
+    public String getUserAgent() {
+      return delegate.getUserAgent();
+    }
+
+    @Override
     public int socketTimeout() {
       return DEFAULT_SOCKET_TIMEOUT_MSEC;
     }

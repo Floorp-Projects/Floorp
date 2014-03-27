@@ -12,6 +12,7 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
@@ -78,6 +79,10 @@ public class FetchUserNodeStage implements AuthenticatorStage {
     // Fetch node containing user.
     final BaseResource httpResource = new BaseResource(fetchNodeUrl);
     httpResource.delegate = new BaseResourceDelegate(httpResource) {
+      @Override
+      public String getUserAgent() {
+        return SyncConstants.USER_AGENT;
+      }
 
       @Override
       public void handleHttpResponse(HttpResponse response) {
