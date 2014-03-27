@@ -77,7 +77,7 @@ endif
 
 # Subtier delimiter rules
 $(addprefix subtiers/,$(addsuffix _start/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_start/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_start))
-	$(call BUILDSTATUS,SUBTIER_START $(CURRENT_TIER) $* $(if $(BUG_915535_FIXED),$($(CURRENT_TIER)_subtier_$*)))
+	$(call BUILDSTATUS,SUBTIER_START $(CURRENT_TIER) $*)
 	@$(STAMP_TOUCH)
 
 $(addprefix subtiers/,$(addsuffix _finish/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_finish/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_finish))
@@ -94,15 +94,9 @@ GARBAGE_DIRS += subtiers
 # root.mk defines subtier_of_* variables, that map a normalized subdir path to
 # a subtier name (e.g. subtier_of_memory_jemalloc = base)
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
-ifdef BUG_915535_FIXED
-	$(call BUILDSTATUS,TIERDIR_START $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
-endif
 	+@$(MAKE) -C $* $(if $(filter $*,$(tier_$(subtier_of_$(subst /,_,$*))_staticdirs)),,$(CURRENT_TIER))
 # Ensure existing stamps are up-to-date, but don't create one if submake didn't create one.
 	$(if $(wildcard $@),@$(STAMP_TOUCH))
-ifdef BUG_915535_FIXED
-	$(call BUILDSTATUS,TIERDIR_FINISH $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
-endif
 
 # Dummy rules for possibly inexisting dependencies for the above tier targets
 $(addsuffix /Makefile,$(CURRENT_DIRS)) $(addsuffix /backend.mk,$(CURRENT_DIRS)):
@@ -160,7 +154,7 @@ ifdef TIERS
 libs export tools::
 	$(call BUILDSTATUS,TIER_START $@ $(filter-out $(if $(filter export,$@),,precompile),$(TIERS)))
 	$(foreach tier,$(TIERS), $(if $(filter-out libs_precompile tools_precompile,$@_$(tier)), \
-		$(call BUILDSTATUS,SUBTIER_START $@ $(tier) $(if $(filter libs,$@),$(tier_$(tier)_staticdirs)) $(tier_$(tier)_dirs)) \
+		$(call BUILDSTATUS,SUBTIER_START $@ $(tier)) \
 		$(if $(filter libs,$@),$(foreach dir, $(tier_$(tier)_staticdirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),,1))) \
 		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@)) \
 		$(call BUILDSTATUS,SUBTIER_FINISH $@ $(tier))))
