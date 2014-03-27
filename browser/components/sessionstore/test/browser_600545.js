@@ -20,11 +20,12 @@ function testBug600545() {
     Services.prefs.clearUserPref("browser.sessionstore.interval");
   });
 
-  // This tests the following use case:
-  // When multiple windows are open and browser.sessionstore.resume_from_crash
-  // preference is false, tab session data for non-active window is stripped for
-  // non-pinned tabs.  This occurs after "sessionstore-state-write" fires which
-  // will only fire in this case if there is at least one pinned tab.
+  // This tests the following use case: When multiple windows are open
+  // and browser.sessionstore.resume_from_crash preference is false,
+  // tab session data for non-active window is stripped for non-pinned
+  // tabs.  This occurs after "sessionstore-state-write-complete"
+  // fires which will only fire in this case if there is at least one
+  // pinned tab.
   let state = { windows: [
     {
       tabs: [
