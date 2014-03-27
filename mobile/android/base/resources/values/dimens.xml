@@ -48,7 +48,10 @@
     <dimen name="menu_item_icon">21dp</dimen>
     <dimen name="menu_item_textsize">16sp</dimen>
     <dimen name="menu_item_state_icon">18dp</dimen>
-    <dimen name="menu_item_row_height">44dp</dimen>
+    <!-- This is chosen to match Android's listPreferredItemHeight.
+         TODO: We should inherit these from the system.
+         http://androidxref.com/4.2.2_r1/xref/frameworks/base/core/res/res/values/themes.xml#123 -->
+    <dimen name="menu_item_row_height">64dip</dimen>
     <dimen name="menu_item_row_width">240dp</dimen>
     <dimen name="menu_item_more_offset">5dp</dimen>
     <dimen name="menu_popup_arrow_offset">8dp</dimen>
@@ -63,7 +66,6 @@
     <dimen name="prompt_service_inputs_padding">16dp</dimen>
     <dimen name="prompt_service_left_right_text_with_icon_padding">10dp</dimen>
     <dimen name="prompt_service_top_bottom_text_with_icon_padding">8dp</dimen>
-    <dimen name="prompt_service_min_list_item_height">48dp</dimen>
     <dimen name="remote_tab_child_row_height">64dp</dimen>
     <dimen name="remote_tab_group_row_height">26dp</dimen>
     <dimen name="searchpreferences_icon_size">32dp</dimen>

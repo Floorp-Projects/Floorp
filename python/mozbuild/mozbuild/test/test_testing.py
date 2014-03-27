@@ -142,7 +142,7 @@ class TestTestMetadata(Base):
 
     def test_resolve_by_dir(self):
         t = self._get_test_metadata()
-        self.assertEqual(len(list(t.resolve_tests('services/common'))), 2)
+        self.assertEqual(len(list(t.resolve_tests(paths=['services/common']))), 2)
 
     def test_resolve_under_path(self):
         t = self._get_test_metadata()
@@ -150,6 +150,11 @@ class TestTestMetadata(Base):
 
         self.assertEqual(len(list(t.resolve_tests(flavor='xpcshell',
             under_path='services'))), 2)
+
+    def test_resolve_multiple_paths(self):
+        t = self._get_test_metadata()
+        result = list(t.resolve_tests(paths=['services', 'toolkit']))
+        self.assertEqual(len(result), 4)
 
 
 class TestTestResolver(Base):
@@ -183,7 +188,7 @@ class TestTestResolver(Base):
 
         # Pretend we're under '/services' and ask for 'common'. This should
         # pick up all tests from '/services/common'
-        tests = list(r.resolve_tests(path='common', cwd=os.path.join(r.topsrcdir,
+        tests = list(r.resolve_tests(paths=['common'], cwd=os.path.join(r.topsrcdir,
             'services')))
 
         self.assertEqual(len(tests), 2)
@@ -198,14 +203,14 @@ class TestTestResolver(Base):
 
         r = self._get_resolver()
 
-        expected = list(r.resolve_tests(path='services'))
-        actual = list(r.resolve_tests(path='services', cwd='/'))
+        expected = list(r.resolve_tests(paths=['services']))
+        actual = list(r.resolve_tests(paths=['services'], cwd='/'))
         self.assertEqual(actual, expected)
 
-        actual = list(r.resolve_tests(path='services', cwd=r.topsrcdir))
+        actual = list(r.resolve_tests(paths=['services'], cwd=r.topsrcdir))
         self.assertEqual(actual, expected)
 
-        actual = list(r.resolve_tests(path='services', cwd=r.topobjdir))
+        actual = list(r.resolve_tests(paths=['services'], cwd=r.topobjdir))
         self.assertEqual(actual, expected)
 
 

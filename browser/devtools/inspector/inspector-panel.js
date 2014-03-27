@@ -625,13 +625,10 @@ InspectorPanel.prototype = {
     this._markupFrame.setAttribute("context", "inspector-node-popup");
 
     // This is needed to enable tooltips inside the iframe document.
-    this._boundMarkupFrameLoad = function InspectorPanel_initMarkupPanel_onload() {
-      this._markupFrame.contentWindow.focus();
-      this._onMarkupFrameLoad();
-    }.bind(this);
+    this._boundMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
     this._markupFrame.addEventListener("load", this._boundMarkupFrameLoad, true);
 
-    this._markupBox.setAttribute("hidden", true);
+    this._markupBox.setAttribute("collapsed", true);
     this._markupBox.appendChild(this._markupFrame);
     this._markupFrame.setAttribute("src", "chrome://browser/content/devtools/markup-view.xhtml");
   },
@@ -640,7 +637,9 @@ InspectorPanel.prototype = {
     this._markupFrame.removeEventListener("load", this._boundMarkupFrameLoad, true);
     delete this._boundMarkupFrameLoad;
 
-    this._markupBox.removeAttribute("hidden");
+    this._markupFrame.contentWindow.focus();
+
+    this._markupBox.removeAttribute("collapsed");
 
     let controllerWindow = this._toolbox.doc.defaultView;
     this.markup = new MarkupView(this, this._markupFrame, controllerWindow);

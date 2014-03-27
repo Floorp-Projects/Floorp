@@ -27,18 +27,18 @@ public class PanelGridView extends GridView
                            implements DatasetBacked, PanelView {
     private static final String LOGTAG = "GeckoPanelGridView";
 
-    private final ViewConfig mViewConfig;
-    private final PanelViewAdapter mAdapter;
-    private PanelViewItemHandler mItemHandler;
+    private final ViewConfig viewConfig;
+    private final PanelViewAdapter adapter;
+    private PanelViewItemHandler itemHandler;
 
     public PanelGridView(Context context, ViewConfig viewConfig) {
         super(context, null, R.attr.panelGridViewStyle);
 
-        mViewConfig = viewConfig;
-        mItemHandler = new PanelViewItemHandler(viewConfig);
+        this.viewConfig = viewConfig;
+        itemHandler = new PanelViewItemHandler(viewConfig);
 
-        mAdapter = new PanelViewAdapter(context, viewConfig);
-        setAdapter(mAdapter);
+        adapter = new PanelViewAdapter(context, viewConfig);
+        setAdapter(adapter);
 
         setOnItemClickListener(new PanelGridItemClickListener());
     }
@@ -46,29 +46,29 @@ public class PanelGridView extends GridView
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        mItemHandler.setOnItemOpenListener(null);
+        itemHandler.setOnItemOpenListener(null);
     }
 
     @Override
     public void setDataset(Cursor cursor) {
-        mAdapter.swapCursor(cursor);
+        adapter.swapCursor(cursor);
     }
 
     @Override
     public void setOnItemOpenListener(OnItemOpenListener listener) {
-        mItemHandler.setOnItemOpenListener(listener);
+        itemHandler.setOnItemOpenListener(listener);
     }
 
     @Override
     public void setFilterManager(FilterManager filterManager) {
-        mAdapter.setFilterManager(filterManager);
-        mItemHandler.setFilterManager(filterManager);
+        adapter.setFilterManager(filterManager);
+        itemHandler.setFilterManager(filterManager);
     }
 
     private class PanelGridItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            mItemHandler.openItemAtPosition(mAdapter.getCursor(), position);
+            itemHandler.openItemAtPosition(adapter.getCursor(), position);
         }
     }
 }

@@ -178,6 +178,9 @@ size. -->
 
 <!ENTITY pref_panels_show "Show">
 <!ENTITY pref_panels_hide "Hide">
+<!ENTITY pref_panels_reorder "Change order">
+<!ENTITY pref_panels_move_up "Move up">
+<!ENTITY pref_panels_move_down "Move down">
 
 <!ENTITY datareporting_notification_title "&brandShortName; stats &amp; data">
 <!ENTITY datareporting_notification_action_long "Choose what information to share">

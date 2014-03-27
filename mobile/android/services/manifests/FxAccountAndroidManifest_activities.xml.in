@@ -66,3 +66,11 @@
             android:noHistory="true"
             android:windowSoftInputMode="adjustResize">
         </activity>
+
+        <receiver
+            android:name="org.mozilla.gecko.fxa.receivers.FxAccountDeletedReceiver"
+            android:permission="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE">
+            <intent-filter>
+                <action android:name="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.accounts.ACCOUNT_DELETED_ACTION"/>
+            </intent-filter>
+        </receiver>
