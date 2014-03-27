@@ -191,7 +191,6 @@ static uint32_t sPreviousSuspectedCount = 0;
 static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
 static bool sNeedsGCAfterCC = false;
-static nsJSContext *sContextList = nullptr;
 static bool sIncrementalCC = false;
 
 static nsScriptNameSpaceManager *gNameSpaceManager;
@@ -767,13 +766,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 {
   EnsureStatics();
 
-  mNext = sContextList;
-  mPrev = &sContextList;
-  if (sContextList) {
-    sContextList->mPrev = &mNext;
-  }
-  sContextList = this;
-
   ++sContextCount;
 
   mContext = ::JS_NewContext(sRuntime, gStackSize);
@@ -795,11 +787,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 
 nsJSContext::~nsJSContext()
 {
-  *mPrev = mNext;
-  if (mNext) {
-    mNext->mPrev = mPrev;
-  }
-
   mGlobalObjectRef = nullptr;
 
   DestroyJSContext();
