@@ -104,6 +104,12 @@ function testSources() {
 
     is(gTitle, "Debugger - browser_dbg_addon3", "Saw the right toolbox title.");
 
+    let groups = gDebugger.document.querySelectorAll(".side-menu-widget-group-title .name");
+    is(groups[0].value, "jar:", "Add-on bootstrap should be the first group");
+    is(groups[1].value, "resource://jid1-ami3akps3baaeg-at-jetpack", "Add-on code should be the second group");
+    is(groups[2].value, "Add-on SDK", "Add-on SDK should be the third group");
+    is(groups.length, 3, "Should be only three groups.");
+
     deferred.resolve();
   });
 
