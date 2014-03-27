@@ -393,6 +393,8 @@ var DebuggerServer = {
     this.addActors("resource://gre/modules/devtools/server/actors/script.js");
     this.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
     this.registerModule("devtools/server/actors/inspector");
+    this.registerModule("devtools/server/actors/call-watcher");
+    this.registerModule("devtools/server/actors/canvas");
     this.registerModule("devtools/server/actors/webgl");
     this.registerModule("devtools/server/actors/stylesheets");
     this.registerModule("devtools/server/actors/styleeditor");
@@ -401,8 +403,9 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/tracer");
     this.registerModule("devtools/server/actors/memory");
     this.registerModule("devtools/server/actors/eventlooplag");
-    if ("nsIProfiler" in Ci)
+    if ("nsIProfiler" in Ci) {
       this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
+    }
   },
 
   /**
