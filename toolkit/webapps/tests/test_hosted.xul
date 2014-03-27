@@ -249,6 +249,7 @@ Task.spawn(function() {
   }
   ok(true, "App launchable");
   ok((yield checkFiles(installedFiles)), "Files correctly written");
+  is(WebappOSUtils.getInstallPath(app), installPath, "getInstallPath == installPath");
 
   let stat = yield OS.File.stat(installPath);
   let installTime = stat.lastModificationDate;

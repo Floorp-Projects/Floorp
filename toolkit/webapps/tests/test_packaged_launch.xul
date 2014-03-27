@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=981249
+-->
+<window title="Mozilla Bug 981249"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=981249"
+     target="_blank">Mozilla Bug 981249</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 981249 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+
+const PR_RDWR        = 0x04;
+const PR_CREATE_FILE = 0x08;
+const PR_TRUNCATE    = 0x20;
+
+let manifest = {
+  name: "test_desktop_packaged_launch",
+  version: "0.1a",
+  size: 777,
+  package_path: "/data/app.zip",
+  launch_path: "/index.html",
+};
+
+let app = {
+  name: "test_desktop_packaged_launch",
+  manifestURL: "http://127.0.0.1:8888/sample.manifest",
+  manifest: manifest,
+  updateManifest: manifest,
+  origin: "app://test_desktop_packaged_launch/",
+  categories: [],
+  installOrigin: "http://127.0.0.1:8888/",
+  receipts: [],
+  installTime: Date.now(),
+};
+
+let profileDir;
+let installPath;
+let exePath;
+let appProcess = Cc["@mozilla.org/process/util;1"].
+                 createInstance(Ci.nsIProcess);
+
+let cleanup;
+
+if (navigator.platform.startsWith("Linux")) {
+  installPath = OS.Path.join(OS.Constants.Path.homeDir, "." + WebappOSUtils.getUniqueName(app));
+  exePath = OS.Path.join(installPath, "webapprt-stub");
+
+  let xdg_data_home = Cc["@mozilla.org/process/environment;1"].
+                      getService(Ci.nsIEnvironment).
+                      get("XDG_DATA_HOME");
+  if (!xdg_data_home) {
+    xdg_data_home = OS.Path.join(OS.Constants.Path.homeDir, ".local", "share");
+  }
+
+  let desktopINI = OS.Path.join(xdg_data_home, "applications",
+                                "owa-" + WebappOSUtils.getUniqueName(app) + ".desktop");
+
+  cleanup = function() {
+    return Task.spawn(function*() {
+      if (appProcess.isRunning) {
+        appProcess.kill();
+      }
+
+      if (profileDir) {
+        yield OS.File.removeDir(profileDir.parent.path, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
+
+      yield OS.File.remove(desktopINI, { ignoreAbsent: true });
+    });
+  };
+} else if (navigator.platform.startsWith("Win")) {
+  installPath = OS.Path.join(OS.Constants.Path.winAppDataDir, WebappOSUtils.getUniqueName(app));
+  exePath = OS.Path.join(installPath, "test_desktop_packaged_launch.exe");
+
+  let desktopShortcut = OS.Path.join(OS.Constants.Path.desktopDir, "test_desktop_packaged_launch.lnk");
+  let startMenuShortcut = OS.Path.join(OS.Constants.Path.winStartMenuProgsDir, "test_desktop_packaged_launch.lnk");
+
+  cleanup = function() {
+    return Task.spawn(function*() {
+      if (appProcess.isRunning) {
+        appProcess.kill();
+      }
+
+      let uninstallKey;
+      try {
+        uninstallKey = Cc["@mozilla.org/windows-registry-key;1"].
+                       createInstance(Ci.nsIWindowsRegKey);
+        uninstallKey.open(uninstallKey.ROOT_KEY_CURRENT_USER,
+                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+                          uninstallKey.ACCESS_WRITE);
+        if (uninstallKey.hasChild(WebappOSUtils.getUniqueName(app))) {
+          uninstallKey.removeChild(WebappOSUtils.getUniqueName(app));
+        }
+      } catch (e) {
+      } finally {
+        if (uninstallKey) {
+          uninstallKey.close();
+        }
+      }
+
+      if (profileDir) {
+        yield OS.File.removeDir(profileDir.parent.parent.path, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
+
+      yield OS.File.remove(desktopShortcut, { ignoreAbsent: true });
+      yield OS.File.remove(startMenuShortcut, { ignoreAbsent: true });
+    });
+  };
+} else if (navigator.platform.startsWith("Mac")) {
+  installPath = OS.Path.join(OS.Constants.Path.macLocalApplicationsDir, "test_desktop_packaged_launch.app");
+  exePath = OS.Path.join(installPath, "Contents", "MacOS", "webapprt");
+
+  let appProfileDir = OS.Path.join(OS.Constants.Path.macUserLibDir, "Application Support",
+                                   WebappOSUtils.getUniqueName(app));
+
+  cleanup = function() {
+    return Task.spawn(function*() {
+      if (appProcess.isRunning) {
+        appProcess.kill();
+      }
+
+      if (profileDir) {
+        yield OS.File.removeDir(profileDir.parent.path, { ignoreAbsent: true });
+      }
+
+      yield OS.File.removeDir(installPath, { ignoreAbsent: true });
+
+      yield OS.File.removeDir(appProfileDir, { ignoreAbsent: true });
+    });
+  };
+}
+
+let old_dry_run;
+try {
+  old_dry_run = Services.prefs.getBoolPref("browser.mozApps.installer.dry_run");
+} catch (ex) {}
+
+Services.prefs.setBoolPref("browser.mozApps.installer.dry_run", false);
+
+SimpleTest.registerCleanupFunction(function() {
+  if (old_dry_run === undefined) {
+    Services.prefs.clearUserPref("browser.mozApps.installer.dry_run");
+  } else {
+    Services.prefs.setBoolPref("browser.mozApps.installer.dry_run", old_dry_run);
+  }
+
+  cleanup();
+});
+
+function buildAppPackage() {
+  let zipFile = getFile(OS.Constants.Path.profileDir, "sample.zip");
+
+  let zipWriter = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
+  zipWriter.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
+  zipWriter.addEntryFile("index.html",
+                         Ci.nsIZipWriter.COMPRESSION_NONE,
+                         getFile(getTestFilePath("data/app/index.html")),
+                         false);
+  zipWriter.addEntryFile("manifest.webapp",
+                         Ci.nsIZipWriter.COMPRESSION_NONE,
+                         getFile(getTestFilePath("data/app/manifest.webapp")),
+                         false);
+  zipWriter.close();
+
+  return zipFile.path;
+}
+
+function wasAppSJSAccessed() {
+  let deferred = Promise.defer();
+
+  var xhr = new XMLHttpRequest();
+
+  xhr.addEventListener("load", function() {
+    let ret = (xhr.responseText == "done") ? true : false;
+    deferred.resolve(ret);
+  });
+
+  xhr.addEventListener("error", aError => deferred.reject(aError));
+  xhr.addEventListener("abort", aError => deferred.reject(aError));
+
+  xhr.open('GET', 'http://test/chrome/toolkit/webapps/tests/app.sjs?testreq', true);
+  xhr.send();
+
+  return deferred.promise;
+}
+
+Task.spawn(function() {
+  // Get to a clean state before the test
+  yield cleanup();
+
+  let zipPath = buildAppPackage();
+
+  let nativeApp = new NativeApp(app, manifest, app.categories);
+  ok(nativeApp, "NativeApp object created");
+
+  profileDir = nativeApp.createProfile();
+  ok(profileDir && profileDir.exists(), "Profile directory created");
+
+  // Install application
+  info("Test installation");
+  yield nativeApp.install(manifest, zipPath);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+
+  let exeFile = getFile(exePath);
+
+  ok(exeFile.isExecutable(), "webapprt executable is executable");
+
+  let appClosed = false;
+
+  appProcess.init(exeFile)
+  appProcess.runAsync([], 0, () => appClosed = true);
+
+  while (!(yield wasAppSJSAccessed()) && !appClosed) {
+    yield wait(1000);
+  }
+  ok(!appClosed, "App was launched and is still running");
+
+  SimpleTest.finish();
+}).then(null, function(e) {
+  ok(false, "Error during test: " + e);
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</window>
