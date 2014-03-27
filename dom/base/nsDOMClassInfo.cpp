@@ -3506,9 +3506,6 @@ nsLocationSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_FAILURE;
   }
 
-  nsLocation* location = static_cast<nsLocation*>(GetNative(wrapper, obj));
-  location->PreserveWrapper(location);
-
   return NS_OK;
 }
 
