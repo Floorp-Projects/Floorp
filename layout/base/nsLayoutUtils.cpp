@@ -685,14 +685,15 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
       }
 
       nsIFrame* frame = aContent->GetPrimaryFrame();
-      bool isRoot = false;
-      if (aContent->OwnerDoc()->GetRootElement() == aContent) {
-        // We want the scroll frame, the root scroll frame differs from all
-        // others in that the primary frame is not the scroll frame.
-        frame = frame->PresContext()->PresShell()->GetRootScrollFrame();
-        isRoot = true;
-      }
       if (frame) {
+        bool isRoot = false;
+        if (aContent->OwnerDoc()->GetRootElement() == aContent) {
+          // We want the scroll frame, the root scroll frame differs from all
+          // others in that the primary frame is not the scroll frame.
+          frame = frame->PresContext()->PresShell()->GetRootScrollFrame();
+          isRoot = true;
+        }
+
         // first convert the base rect to layer pixels
         nsPresContext* presContext = frame->PresContext();
         int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
