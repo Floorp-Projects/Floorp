@@ -1543,7 +1543,7 @@ pref("browser.cache.frecency_experiment", 0);
 pref("browser.translation.detectLanguage", false);
 
 // Telemetry experiments settings.
-pref("experiments.enabled", false);
+pref("experiments.enabled", true);
 pref("experiments.manifest.fetchIntervalSeconds", 86400);
 pref("experiments.manifest.uri", "https://telemetry-experiment.cdn.mozilla.net/manifest/v1/firefox/%VERSION%/%CHANNEL%");
 pref("experiments.manifest.certs.1.commonName", "*.cdn.mozilla.net");
