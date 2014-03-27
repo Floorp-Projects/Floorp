@@ -1,0 +1,8 @@
+{ "name": "Simple App"
+, "description": "A Simple Open Web App"
+, "launch_path": "tests/dom/apps/tests/signed_app.sjs"
+, "icons": { "128" : "icon-128.png" }
+, "installs_allowed_from": [ "https://marketplace.mozilla.com", "http://mochi.test:8888" ]
+, "version": 1
+, "default_locale": "en-US"
+}
