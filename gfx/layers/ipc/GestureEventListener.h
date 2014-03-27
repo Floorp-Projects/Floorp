@@ -7,10 +7,8 @@
 #ifndef mozilla_layers_GestureEventListener_h
 #define mozilla_layers_GestureEventListener_h
 
-#include <stdint.h>                     // for uint64_t
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "Units.h"                      // for ScreenIntPoint
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/EventForwards.h"      // for nsEventStatus
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"
@@ -56,118 +54,95 @@ public:
    */
   nsEventStatus HandleInputEvent(const MultiTouchInput& aEvent);
 
-  /**
-   * Cancels any currently active gesture. May not properly handle situations
-   * that require extra work at the gesture's end, like a pinch which only
-   * requests a repaint once it has ended.
-   */
-  void CancelGesture();
-
-  /**
-   * Returns the AsyncPanZoomController stored on this class and used for
-   * callbacks.
-   */
-  AsyncPanZoomController* GetAsyncPanZoomController();
-
 protected:
+
+  /**
+   * States of GEL finite-state machine.
+   */
   enum GestureState {
-    // There's no gesture going on, and we don't think we're about to enter one.
+    // This is the initial and final state of any gesture.
+    // In this state there's no gesture going on, and we don't think we're
+    // about to enter one.
+    // Allowed next states: GESTURE_FIRST_SINGLE_TOUCH_DOWN, GESTURE_MULTI_TOUCH_DOWN.
     GESTURE_NONE,
+
+    // A touch start with a single touch point has just happened.
+    // After having gotten into this state we start timers for MAX_TAP_TIME and
+    // gfxPrefs::UiClickHoldContextMenusDelay().
+    // Allowed next states: GESTURE_MULTI_TOUCH_DOWN, GESTURE_NONE,
+    //                      GESTURE_FIRST_SINGLE_TOUCH_UP, GESTURE_LONG_TOUCH_DOWN,
+    //                      GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN.
+    GESTURE_FIRST_SINGLE_TOUCH_DOWN,
+
+    // While in GESTURE_FIRST_SINGLE_TOUCH_DOWN state a MAX_TAP_TIME timer got
+    // triggered. Now we'll trigger either a single tap if a user lifts her
+    // finger or a long tap if gfxPrefs::UiClickHoldContextMenusDelay() happens
+    // first.
+    // Allowed next states: GESTURE_MULTI_TOUCH_DOWN, GESTURE_NONE,
+    //                      GESTURE_LONG_TOUCH_DOWN.
+    GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN,
+
+    // A user put her finger down and lifted it up quickly enough.
+    // After having gotten into this state we clear the timer for MAX_TAP_TIME.
+    // Allowed next states: GESTURE_SECOND_SINGLE_TOUCH_DOWN, GESTURE_NONE,
+    //                      GESTURE_MULTI_TOUCH_DOWN.
+    GESTURE_FIRST_SINGLE_TOUCH_UP,
+
+    // A user put down her finger again right after a single tap thus the
+    // gesture can't be a single tap, but rather a double tap. But we're
+    // still not sure about that until the user lifts her finger again.
+    // Allowed next states: GESTURE_MULTI_TOUCH_DOWN, GESTURE_NONE.
+    GESTURE_SECOND_SINGLE_TOUCH_DOWN,
+
+    // A long touch has happened, but the user still keeps her finger down.
+    // We'll trigger a "long tap up" event when the finger is up.
+    // Allowed next states: GESTURE_NONE, GESTURE_MULTI_TOUCH_DOWN.
+    GESTURE_LONG_TOUCH_DOWN,
+
     // We have detected that two or more fingers are on the screen, but there
     // hasn't been enough movement yet to make us start actually zooming the
     // screen.
-    GESTURE_WAITING_PINCH,
+    // Allowed next states: GESTURE_PINCH, GESTURE_NONE
+    GESTURE_MULTI_TOUCH_DOWN,
+
     // There are two or more fingers on the screen, and the user has already
     // pinched enough for us to start zooming the screen.
-    GESTURE_PINCH,
-    // A touch start has happened and it may turn into a tap. We use this
-    // because, if we put down two fingers and then lift them very quickly, this
-    // may be mistaken for a tap.
-    GESTURE_WAITING_SINGLE_TAP,
-    // A single tap has happened for sure, and we're waiting for a second tap.
-    GESTURE_WAITING_DOUBLE_TAP,
-    // A long tap has happened, wait for the tap to be released in case we need
-    // to fire a click event in the case the long tap was not handled.
-    GESTURE_LONG_TAP_UP
+    // Allowed next states: GESTURE_NONE
+    GESTURE_PINCH
   };
 
   /**
-   * Attempts to handle the event as a pinch event. If it is not a pinch event,
-   * then we simply tell the next consumer to consume the event instead.
+   * These HandleInput* functions comprise input alphabet of the GEL
+   * finite-state machine triggering state transitions.
    */
-  nsEventStatus HandlePinchGestureEvent(const MultiTouchInput& aEvent);
+  nsEventStatus HandleInputTouchSingleStart();
+  nsEventStatus HandleInputTouchMultiStart();
+  nsEventStatus HandleInputTouchEnd();
+  nsEventStatus HandleInputTouchMove();
+  nsEventStatus HandleInputTouchCancel();
+  void HandleInputTimeoutLongTap();
+  void HandleInputTimeoutMaxTap();
+
+  void TriggerSingleTapConfirmedEvent();
 
   /**
-   * Attempts to handle the event as a single tap event, which highlights links
-   * before opening them. In general, this will not attempt to block the touch
-   * event from being passed along to AsyncPanZoomController since APZC needs to
-   * know about touches ending (and we only know if a touch was a tap once it
-   * ends).
+   * Do actual state transition and reset substates.
    */
-  nsEventStatus HandleSingleTapUpEvent(const MultiTouchInput& aEvent);
-
-  /**
-   * Attempts to handle a single tap confirmation. This is what will actually
-   * open links, etc. In general, this will not attempt to block the touch event
-   * from being passed along to AsyncPanZoomController since APZC needs to know
-   * about touches ending (and we only know if a touch was a tap once it ends).
-   */
-  nsEventStatus HandleSingleTapConfirmedEvent(const MultiTouchInput& aEvent);
-
-  /**
-   * Attempts to handle a long tap confirmation. This is what will use
-   * for context menu.
-   */
-  nsEventStatus HandleLongTapEvent(const MultiTouchInput& aEvent);
-
-  /**
-   * Attempts to handle release of long tap. This is used to fire click
-   * events in the case the context menu was not invoked.
-   */
-  nsEventStatus HandleLongTapUpEvent(const MultiTouchInput& aEvent);
-
-  /**
-   * Attempts to handle a tap event cancellation. This happens when we think
-   * something was a tap but it actually wasn't. In general, this will not
-   * attempt to block the touch event from being passed along to
-   * AsyncPanZoomController since APZC needs to know about touches ending (and
-   * we only know if a touch was a tap once it ends).
-   */
-  nsEventStatus HandleTapCancel(const MultiTouchInput& aEvent);
-
-  /**
-   * Attempts to handle a double tap. This happens when we get two single taps
-   * within a short time. In general, this will not attempt to block the touch
-   * event from being passed along to AsyncPanZoomController since APZC needs to
-   * know about touches ending (and we only know if a touch was a double tap
-   * once it ends).
-   */
-  nsEventStatus HandleDoubleTap(const MultiTouchInput& aEvent);
-
-  /**
-   * Times out a single tap we think may be turned into a double tap. This will
-   * also send a single tap if we're still in the "GESTURE_WAITING_DOUBLE_TAP"
-   * state when this is called. This should be called a short time after a
-   * single tap is detected, and the delay on it should be enough that the user
-   * has time to tap again (to make a double tap).
-   */
-  void TimeoutDoubleTap();
-  /**
-   * Times out a long tap. This should be called a 'long' time after a single
-   * tap is detected.
-   */
-  void TimeoutLongTap();
+  void SetState(GestureState aState);
 
   nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
 
   /**
    * Array containing all active touches. When a touch happens it, gets added to
    * this array, even if we choose not to handle it. When it ends, we remove it.
+   * We need to maintain this array in order to detect the end of the
+   * "multitouch" states because touch start events contain all current touches,
+   * but touch end events contain only those touches that have gone.
    */
   nsTArray<SingleTouchData> mTouches;
 
   /**
-   * Current gesture we're dealing with.
+   * Current state we're dealing with.
    */
   GestureState mState;
 
@@ -186,56 +161,49 @@ protected:
   float mPreviousSpan;
 
   /**
-   * Stores the time a touch started, used for detecting a tap gesture. Only
-   * valid when there's exactly one touch in mTouches. This is the time that the
-   * first touch was inserted into the array. This is a uint64_t because it is
-   * initialized from interactions with InputData, which stores its timestamps as
-   * a uint64_t.
-   */
-  uint64_t mTapStartTime;
-
-  /**
-   * Stores the time the last tap ends (finger leaves the screen). This is used
-   * when mDoubleTapTimeoutTask cannot be scheduled in time and consecutive
-   * taps are falsely regarded as double taps.
-   */
-  uint64_t mLastTapEndTime;
-
-  /**
-   * Cached copy of the last touch input, only valid when in the
-   * "GESTURE_WAITING_DOUBLE_TAP" state. This is used to forward along to
-   * AsyncPanZoomController if a single tap needs to be sent (since it is sent
-   * shortly after the user actually taps, since we need to wait for a double
-   * tap).
+   * Cached copy of the last touch input.
    */
   MultiTouchInput mLastTouchInput;
 
   /**
-   * Task used to timeout a double tap. This gets posted to the UI thread such
-   * that it runs a short time after a single tap happens. We cache it so that
-   * we can cancel it if a double tap actually comes in.
-   * CancelDoubleTapTimeoutTask: Cancel the mDoubleTapTimeoutTask and also set
-   * it to null.
+   * Position of the last touch starting. This is only valid during an attempt
+   * to determine if a touch is a tap. If a touch point moves away from
+   * mTouchStartPosition to the distance greater than
+   * AsyncPanZoomController::GetTouchStartTolerance() while in
+   * GESTURE_FIRST_SINGLE_TOUCH_DOWN, GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN
+   * or GESTURE_SECOND_SINGLE_TOUCH_DOWN then we're certain the gesture is
+   * not tap.
    */
-  CancelableTask *mDoubleTapTimeoutTask;
-  inline void CancelDoubleTapTimeoutTask();
+  ScreenIntPoint mTouchStartPosition;
 
   /**
    * Task used to timeout a long tap. This gets posted to the UI thread such
    * that it runs a time when a single tap happens. We cache it so that
    * we can cancel it if any other touch event happens.
+   *
+   * The task is supposed to be non-null if in GESTURE_FIRST_SINGLE_TOUCH_DOWN
+   * and GESTURE_FIRST_SINGLE_TOUCH_MAX_TAP_DOWN states.
+   *
    * CancelLongTapTimeoutTask: Cancel the mLongTapTimeoutTask and also set
    * it to null.
    */
   CancelableTask *mLongTapTimeoutTask;
-  inline void CancelLongTapTimeoutTask();
+  void CancelLongTapTimeoutTask();
+  void CreateLongTapTimeoutTask();
 
   /**
-   * Position of the last touch starting. This is only valid during an attempt
-   * to determine if a touch is a tap. This means that it is used in both the
-   * "GESTURE_WAITING_SINGLE_TAP" and "GESTURE_WAITING_DOUBLE_TAP" states.
+   * Task used to timeout a single tap or a double tap.
+   *
+   * The task is supposed to be non-null if in GESTURE_FIRST_SINGLE_TOUCH_DOWN,
+   * GESTURE_FIRST_SINGLE_TOUCH_UP and GESTURE_SECOND_SINGLE_TOUCH_DOWN states.
+   *
+   * CancelMaxTapTimeoutTask: Cancel the mMaxTapTimeoutTask and also set
+   * it to null.
    */
-  ScreenIntPoint mTouchStartPosition;
+  CancelableTask *mMaxTapTimeoutTask;
+  void CancelMaxTapTimeoutTask();
+  void CreateMaxTapTimeoutTask();
+
 };
 
 }
