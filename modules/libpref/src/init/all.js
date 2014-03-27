@@ -565,6 +565,9 @@ pref("devtools.debugger.prompt-connection", true);
 // Block tools from seeing / interacting with certified apps
 pref("devtools.debugger.forbid-certified-apps", true);
 
+// Disable add-on debugging
+pref("devtools.debugger.addon-enabled", false);
+
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "hex");
 

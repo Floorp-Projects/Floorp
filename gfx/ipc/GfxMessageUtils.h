@@ -563,10 +563,10 @@ struct ParamTraits< mozilla::gfx::IntPointTyped<T> >
   }
 };
 
-template<>
-struct ParamTraits<mozilla::gfx::Size>
+template<class T>
+struct ParamTraits< mozilla::gfx::SizeTyped<T> >
 {
-  typedef mozilla::gfx::Size paramType;
+  typedef mozilla::gfx::SizeTyped<T> paramType;
 
   static void Write(Message* msg, const paramType& param)
   {
@@ -707,8 +707,11 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mViewport);
     WriteParam(aMsg, aParam.mScrollOffset);
     WriteParam(aMsg, aParam.mDisplayPort);
+    WriteParam(aMsg, aParam.mDisplayPortMargins);
+    WriteParam(aMsg, aParam.mUseDisplayPortMargins);
     WriteParam(aMsg, aParam.mCriticalDisplayPort);
     WriteParam(aMsg, aParam.mCompositionBounds);
+    WriteParam(aMsg, aParam.mRootCompositionSize);
     WriteParam(aMsg, aParam.mScrollId);
     WriteParam(aMsg, aParam.mResolution);
     WriteParam(aMsg, aParam.mCumulativeResolution);
@@ -730,8 +733,11 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mViewport) &&
             ReadParam(aMsg, aIter, &aResult->mScrollOffset) &&
             ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
+            ReadParam(aMsg, aIter, &aResult->mDisplayPortMargins) &&
+            ReadParam(aMsg, aIter, &aResult->mUseDisplayPortMargins) &&
             ReadParam(aMsg, aIter, &aResult->mCriticalDisplayPort) &&
             ReadParam(aMsg, aIter, &aResult->mCompositionBounds) &&
+            ReadParam(aMsg, aIter, &aResult->mRootCompositionSize) &&
             ReadParam(aMsg, aIter, &aResult->mScrollId) &&
             ReadParam(aMsg, aIter, &aResult->mResolution) &&
             ReadParam(aMsg, aIter, &aResult->mCumulativeResolution) &&
