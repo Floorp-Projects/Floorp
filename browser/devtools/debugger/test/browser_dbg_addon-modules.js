@@ -103,6 +103,11 @@ function testSources(expectSecondModule) {
 
     is(gTitle, "Debugger - Test add-on with JS Modules", "Saw the right toolbox title.");
 
+    let groups = gDebugger.document.querySelectorAll(".side-menu-widget-group-title .name");
+    is(groups[0].value, "jar:", "Add-on bootstrap should be the first group");
+    is(groups[1].value, "resource://browser_dbg_addon4", "Add-on code should be the second group");
+    is(groups.length, 2, "Should be only two groups.");
+
     deferred.resolve();
   });
 
