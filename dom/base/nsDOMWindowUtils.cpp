@@ -313,6 +313,14 @@ static void DestroyDisplayPortPropertyData(void* aObject, nsIAtom* aPropertyName
   delete data;
 }
 
+static void DestroyDisplayPortMarginsPropertyData(void* aObject, nsIAtom* aPropertyName,
+                                                  void* aPropertyValue, void* aData)
+{
+  DisplayPortMarginsPropertyData* data =
+    static_cast<DisplayPortMarginsPropertyData*>(aPropertyValue);
+  delete data;
+}
+
 static void DestroyNsRect(void* aObject, nsIAtom* aPropertyName,
                           void* aPropertyValue, void* aData)
 {
@@ -446,6 +454,109 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
       }
     }
   }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
+                                                  float aTopMargin,
+                                                  float aRightMargin,
+                                                  float aBottomMargin,
+                                                  uint32_t aAlignment,
+                                                  nsIDOMElement* aElement,
+                                                  uint32_t aPriority)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Note order change of arguments between our function signature and
+  // LayerMargin constructor.
+  LayerMargin displayportMargins(aTopMargin,
+                                 aRightMargin,
+                                 aBottomMargin,
+                                 aLeftMargin);
+
+  if (!aElement) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+
+  if (!content) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (content->GetCurrentDoc() != presShell->GetDocument()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  DisplayPortMarginsPropertyData* currentData =
+    static_cast<DisplayPortMarginsPropertyData*>(content->GetProperty(nsGkAtoms::DisplayPortMargins));
+  if (currentData && currentData->mPriority > aPriority) {
+    return NS_OK;
+  }
+
+  content->SetProperty(nsGkAtoms::DisplayPortMargins,
+                       new DisplayPortMarginsPropertyData(displayportMargins, aAlignment, aPriority),
+                       DestroyDisplayPortMarginsPropertyData);
+
+  nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+  if (rootScrollFrame) {
+    if (content == rootScrollFrame->GetContent()) {
+      // We are setting a root displayport for a document.
+      // The pres shell needs a special flag set.
+      presShell->SetIgnoreViewportScrolling(true);
+    }
+  }
+
+  nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
+  if (rootFrame) {
+    rootFrame->SchedulePaint();
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX,
+                                               int32_t aY,
+                                               int32_t aWidth,
+                                               int32_t aHeight,
+                                               nsIDOMElement* aElement)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!aElement) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+
+  if (!content) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (content->GetCurrentDoc() != presShell->GetDocument()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  content->SetProperty(nsGkAtoms::DisplayPortBase, new nsRect(aX, aY, aWidth, aHeight),
+                       DestroyNsRect);
 
   return NS_OK;
 }

@@ -83,6 +83,18 @@ struct DisplayPortPropertyData {
   uint32_t mPriority;
 };
 
+struct DisplayPortMarginsPropertyData {
+  DisplayPortMarginsPropertyData(const LayerMargin& aMargins,
+                                 uint32_t aAlignment, uint32_t aPriority)
+    : mMargins(aMargins)
+    , mAlignment(aAlignment)
+    , mPriority(aPriority)
+  {}
+  LayerMargin mMargins;
+  uint32_t mAlignment;
+  uint32_t mPriority;
+};
+
 template <class AnimationsOrTransitions>
 extern AnimationsOrTransitions* HasAnimationOrTransition(nsIContent* aContent,
                                                          nsIAtom* aAnimationProperty,

@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(ef70a299-033c-4adc-b214-6649aed9d828)]
+[scriptable, uuid(f3148b3e-6db8-4a49-aa5c-de726449054d)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -152,6 +152,38 @@ interface nsIDOMWindowUtils : nsISupports {
                                 in float aWidthPx, in float aHeightPx,
                                 in nsIDOMElement aElement,
                                 in uint32_t aPriority);
+  /**
+   * An alternate way to represent a displayport rect as a set of margins and a
+   * base rect to apply those margins to. A consumer of pixels may ask for as
+   * many extra pixels as it would like in each direction. Layout then sets
+   * the base rect to the "visible rect" of the element, which is just the
+   * subrect of the element that is drawn (it does not take in account content
+   * covering the element).
+   *
+   * If both a displayport rect and displayport margins with corresponding base
+   * rect are set with the same priority then the margins will take precendence.
+   *
+   * Specifying an alignment value will ensure that after the base rect has
+   * been expanded by the displayport margins, it will be further expanded so
+   * that each edge is located at a multiple of the "alignment" value.
+   *
+   * Note that both the margin values and alignment are treated as values in
+   * LayerPixels. Refer to layout/base/Units.h for a description of this unit.
+   * The base rect values are in app units.
+   */
+  void setDisplayPortMarginsForElement(in float aLeftMargin,
+                                       in float aTopMargin,
+                                       in float aRightMargin,
+                                       in float aBottomMargin,
+                                       in uint32_t aAlignment,
+                                       in nsIDOMElement aElement,
+                                       in uint32_t aPriority);
+
+  void setDisplayPortBaseForElement(in int32_t aX,
+                                    in int32_t aY,
+                                    in int32_t aWidth,
+                                    in int32_t aHeight,
+                                    in nsIDOMElement aElement);
 
   /**
    * When a display port is set, this allows a sub-section of that
