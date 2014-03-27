@@ -157,6 +157,7 @@ let HomeBanner = (function () {
 // We need this function to have access to the HomePanels
 // private members without leaking it outside Home.jsm.
 let handlePanelsGet;
+let handlePanelsAuthenticate;
 
 let HomePanels = (function () {
   // Holds the current set of registered panels that can be
@@ -284,6 +285,18 @@ let HomePanels = (function () {
     });
   };
 
+  handlePanelsAuthenticate = function(id) {
+    // Generate panel options to get auth handler.
+    let options = _registeredPanels[id]();
+    if (!options.authHandler) {
+      throw "Home.panels: Invalid authHandler for panel.id = " + id;
+    }
+    if (!options.authHandler.authenticate || typeof options.authHandler.authenticate !== "function") {
+      throw "Home.panels: Invalid authHandler authenticate function: panel.id = " + this.id;
+    }
+    options.authHandler.authenticate();
+  };
+
   // Helper function used to see if a value is in an object.
   let _valueExists = function(obj, value) {
     for (let key in obj) {
@@ -364,6 +377,9 @@ this.Home = Object.freeze({
     switch(topic) {
       case "HomePanels:Get":
         handlePanelsGet(JSON.parse(data));
+        break;
+      case "HomePanels:Authenticate":
+        handlePanelsAuthenticate(data);
         break;
     }
   }
