@@ -376,9 +376,7 @@ define SUBMAKE # $(call SUBMAKE,target,directory,static)
 endef # The extra line is important here! don't delete it
 
 define TIER_DIR_SUBMAKE
-$(call BUILDSTATUS,TIERDIR_START  $(1) $(2) $(3))
 $(call SUBMAKE,$(4),$(3),$(5))
-$(call BUILDSTATUS,TIERDIR_FINISH $(1) $(2) $(3))
 
 endef # Ths empty line is important.
 

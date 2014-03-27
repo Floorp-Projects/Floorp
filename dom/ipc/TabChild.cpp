@@ -244,6 +244,8 @@ TabChildBase::HandlePossibleViewportChange()
   metrics.mCompositionBounds = ParentLayerIntRect(
       ParentLayerIntPoint(),
       ViewAs<ParentLayerPixel>(mInnerSize, PixelCastJustification::ScreenToParentLayerForRoot));
+  metrics.SetRootCompositionSize(
+      ScreenSize(mInnerSize) * ScreenToLayoutDeviceScale(1.0f) / metrics.mDevPixelsPerCSSPixel);
 
   // This change to the zoom accounts for all types of changes I can conceive:
   // 1. screen size changes, CSS viewport does not (pages with no meta viewport
@@ -302,11 +304,12 @@ TabChildBase::HandlePossibleViewportChange()
 
   // Calculate a display port _after_ having a scrollable rect because the
   // display port is clamped to the scrollable rect.
-  metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
+  metrics.SetDisplayPortMargins(AsyncPanZoomController::CalculatePendingDisplayPort(
     // The page must have been refreshed in some way such as a new document or
     // new CSS viewport, so we know that there's no velocity, acceleration, and
     // we have no idea how long painting will take.
-    metrics, ScreenPoint(0.0f, 0.0f), 0.0);
+    metrics, ScreenPoint(0.0f, 0.0f), 0.0));
+  metrics.SetUseDisplayPortMargins();
 
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.

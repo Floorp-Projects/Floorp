@@ -36,7 +36,7 @@ endif
 # Main rules (export, compile, binaries, libs and tools) call recurse_* rules.
 # This wrapping is only really useful for build status.
 compile binaries libs export tools::
-	$(call BUILDSTATUS,TIER_START $@ $($@_subtiers))
+	$(call BUILDSTATUS,TIER_START $@)
 	+$(MAKE) recurse_$@
 	$(call BUILDSTATUS,TIER_FINISH $@)
 
@@ -77,11 +77,9 @@ endif
 
 # Subtier delimiter rules
 $(addprefix subtiers/,$(addsuffix _start/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_start/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_start))
-	$(call BUILDSTATUS,SUBTIER_START $(CURRENT_TIER) $* $(if $(BUG_915535_FIXED),$($(CURRENT_TIER)_subtier_$*)))
 	@$(STAMP_TOUCH)
 
 $(addprefix subtiers/,$(addsuffix _finish/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_finish/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_finish))
-	$(call BUILDSTATUS,SUBTIER_FINISH $(CURRENT_TIER) $*)
 	@$(STAMP_TOUCH)
 
 $(addprefix subtiers/,$(addsuffix /$(CURRENT_TIER),$(CURRENT_SUBTIERS))): %/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,%))
@@ -94,15 +92,9 @@ GARBAGE_DIRS += subtiers
 # root.mk defines subtier_of_* variables, that map a normalized subdir path to
 # a subtier name (e.g. subtier_of_memory_jemalloc = base)
 $(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
-ifdef BUG_915535_FIXED
-	$(call BUILDSTATUS,TIERDIR_START $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
-endif
 	+@$(MAKE) -C $* $(if $(filter $*,$(tier_$(subtier_of_$(subst /,_,$*))_staticdirs)),,$(CURRENT_TIER))
 # Ensure existing stamps are up-to-date, but don't create one if submake didn't create one.
 	$(if $(wildcard $@),@$(STAMP_TOUCH))
-ifdef BUG_915535_FIXED
-	$(call BUILDSTATUS,TIERDIR_FINISH $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
-endif
 
 # Dummy rules for possibly inexisting dependencies for the above tier targets
 $(addsuffix /Makefile,$(CURRENT_DIRS)) $(addsuffix /backend.mk,$(CURRENT_DIRS)):
@@ -158,12 +150,10 @@ else
 ifdef TIERS
 
 libs export tools::
-	$(call BUILDSTATUS,TIER_START $@ $(filter-out $(if $(filter export,$@),,precompile),$(TIERS)))
+	$(call BUILDSTATUS,TIER_START $@)
 	$(foreach tier,$(TIERS), $(if $(filter-out libs_precompile tools_precompile,$@_$(tier)), \
-		$(call BUILDSTATUS,SUBTIER_START $@ $(tier) $(if $(filter libs,$@),$(tier_$(tier)_staticdirs)) $(tier_$(tier)_dirs)) \
 		$(if $(filter libs,$@),$(foreach dir, $(tier_$(tier)_staticdirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),,1))) \
-		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@)) \
-		$(call BUILDSTATUS,SUBTIER_FINISH $@ $(tier))))
+		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@))))
 	$(call BUILDSTATUS,TIER_FINISH $@)
 
 else
@@ -198,34 +188,24 @@ endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 endif # ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
 
 ifdef MOZ_PSEUDO_DERECURSE
-ifeq (.,$(DEPTH))
-# top-level directories
-ifndef JS_STANDALONE
-# Only define recurse_targets for js, when it is built as part of gecko.
-recurse_targets := $(addsuffix /binaries,$(call TIER_DIRS,binaries))
-# we want to adjust paths for js/src.
-want_abspaths = 1
-endif
-endif
 
 ifdef COMPILE_ENVIRONMENT
 
 # Aggregate all dependency files relevant to a binaries build except in
 # the mozilla top-level directory.
-ifneq (_.,$(recurse_targets)_$(DEPTH))
+ifneq (.,$(DEPTH))
 ALL_DEP_FILES := \
   $(BINARIES_PP) \
   $(addsuffix .pp,$(addprefix $(MDDEPDIR)/,$(sort \
     $(TARGETS) \
     $(filter-out $(SOBJS) $(ASOBJS) $(EXCLUDED_OBJS),$(OBJ_TARGETS)) \
   ))) \
-  $(recurse_targets) \
   $(NULL)
 endif
 
 binaries libs:: $(TARGETS) $(BINARIES_PP)
-ifneq (_.,$(recurse_targets)_$(DEPTH))
-	@$(if $(or $(recurse_targets),$^),$(call py_action,link_deps,-o binaries --group-all $(if $(want_abspaths),--abspaths )--topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
+ifneq (.,$(DEPTH))
+	@$(if $^,$(call py_action,link_deps,-o binaries --group-all --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(ALL_DEP_FILES)))
 endif
 
 endif
