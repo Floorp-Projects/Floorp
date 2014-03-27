@@ -61,6 +61,7 @@ add_task(function* test_setup() {
   gReporter = yield getReporter("json_payload_simple");
   yield gReporter.collectMeasurements();
   let payload = yield gReporter.getJSONPayload(true);
+  do_register_cleanup(() => gReporter._shutdown());
 
   patchPolicy(gPolicy, {
     updatechannel: () => "nightly",
@@ -313,9 +314,4 @@ add_task(function* test_times() {
       Assert.equal(reason, entry[1], "Experiment rejection reason should match for test " + i);
     }
   }
-});
-
-add_task(function* shutdown() {
-  yield gReporter._shutdown();
-  yield removeCacheFile();
 });
