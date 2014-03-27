@@ -28,7 +28,7 @@ var ConsoleObserver = {
         try {
         let tab = gBrowser.selectedTab;
         let browser = gBrowser.selectedBrowser;
-        let win = XPCNativeWrapper.unwrap(browser.contentWindow);
+        let win = browser.contentWindow;
         let windowID = getWindowId(win);
         let messages = ConsoleAPIStorage.getEvents(windowID);
         ok(messages.length >= 4, "Some messages found in the storage service");
@@ -56,6 +56,7 @@ var ConsoleObserver = {
         } catch (ex) {
           dump(ex + "\n\n\n");
           dump(ex.stack + "\n\n\n");
+          ok(false, "We got an unexpected exception");
         }
       }
     }
@@ -88,7 +89,7 @@ function test()
   browser.addEventListener("DOMContentLoaded", function onLoad(event) {
     browser.removeEventListener("DOMContentLoaded", onLoad, false);
     executeSoon(function test_executeSoon() {
-      let win = XPCNativeWrapper.unwrap(browser.contentWindow);
+      let win = browser.contentWindow;
       win.console.log("this", "is", "a", "log message");
       win.console.info("this", "is", "a", "info message");
       win.console.warn("this", "is", "a", "warn message");
