@@ -1322,11 +1322,12 @@ Experiments.ExperimentEntry.prototype = {
 
         onInstallStarted: install => {
           gLogger.trace("ExperimentEntry::start() - onInstallStarted for " + this.id);
-          // TODO: this check still needs changes in the addon manager
-          //if (install.addon.type !== "experiment") {
-          //  gLogger.error("ExperimentEntry::start() - wrong addon type");
-          //  failureHandler({state: -1, error: -1}, "onInstallStarted");
-          //}
+          if (install.addon.type !== "experiment") {
+            gLogger.error("ExperimentEntry::start() - wrong addon type");
+            failureHandler({state: -1, error: -1}, "onInstallStarted");
+            install.cancel();
+            return;
+          }
 
           let addon = install.addon;
           this._name = addon.name;
