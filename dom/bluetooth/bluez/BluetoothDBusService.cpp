@@ -652,7 +652,7 @@ RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
   // being gtk based, sometimes we'll get signals/reply coming in on the main
   // thread. There's not a lot we can do about that for the time being and it
   // (technically) shouldn't hurt anything. However, on gonk, die.
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 #endif
   nsRefPtr<BluetoothReplyRunnable> replyRunnable =
     dont_AddRef(static_cast< BluetoothReplyRunnable* >(aBluetoothReplyRunnable));
@@ -717,7 +717,7 @@ public:
     , mConnect(aConnect)
     , mErrorString(aErrorString)
   {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
   }
 
   nsresult Run()
@@ -752,7 +752,7 @@ private:
 static void
 CheckDBusReply(DBusMessage* aMsg, void* aServiceClass, bool aConnect)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
   NS_ENSURE_TRUE_VOID(aMsg);
 
@@ -1063,7 +1063,7 @@ public:
 
   void Handle(DBusMessage* aReply) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
     if (!aReply || (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
       return;
@@ -1373,7 +1373,7 @@ public:
 
   void Handle(DBusMessage* aReply)
   {
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
     MOZ_ASSERT(sDBusConnection);
 
     if (!aReply || (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
@@ -1408,7 +1408,7 @@ public:
       nullptr, AgentEventFilter, nullptr, nullptr, nullptr, nullptr
     };
 
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
     if (!aReply || (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
       return;
@@ -1568,7 +1568,7 @@ class RequestPlayStatusTask : public nsRunnable
 public:
   RequestPlayStatusTask()
   {
-    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
   }
 
   nsresult Run()
@@ -1592,6 +1592,7 @@ public:
 static DBusHandlerResult
 EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
 {
+  // I/O thread
   MOZ_ASSERT(!NS_IsMainThread(), "Shouldn't be called from Main Thread!");
 
   if (dbus_message_get_type(aMsg) != DBUS_MESSAGE_TYPE_SIGNAL) {
@@ -1853,7 +1854,7 @@ EventFilter(DBusConnection* aConn, DBusMessage* aMsg, void* aData)
 static void
 OnDefaultAdapterReply(DBusMessage* aReply, void* aData)
 {
-  MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+  MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
   if (!aReply || dbus_message_is_error(aReply, DBUS_ERROR_TIMEOUT)) {
     return;
@@ -2166,7 +2167,7 @@ public:
 
   void Handle(DBusMessage* aReply) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
     if (!aReply || (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
       const char* errStr = "Timeout in DefaultAdapterPathReplyHandler";
@@ -2203,7 +2204,7 @@ protected:
     DBusError error;
     dbus_error_init(&error);
 
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
     MOZ_ASSERT(sDBusConnection);
 
     UnpackObjectPathMessage(aReply, &error, value, aReplyError);
@@ -2239,7 +2240,7 @@ protected:
     DBusError error;
     dbus_error_init(&error);
 
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
     bool success = UnpackPropertiesMessage(aReply, &error, value,
                                            DBUS_ADAPTER_IFACE);
@@ -2315,7 +2316,7 @@ BluetoothDBusService::GetDefaultAdapterPathInternal(
 static void
 OnSendDiscoveryMessageReply(DBusMessage *aReply, void *aData)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
   nsAutoString errorStr;
 
@@ -2530,7 +2531,7 @@ public:
 
   void Handle(DBusMessage* aReply) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
     MOZ_ASSERT(!mObjectPath.IsEmpty());
     MOZ_ASSERT(mProcessedDeviceAddresses < mDeviceAddresses.Length());
 
@@ -3473,7 +3474,7 @@ public:
 
   void Handle(DBusMessage* aReply)
   {
-    MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
 
     // The default channel is an invalid value of -1. We
     // update it if we have received a correct reply. Both
