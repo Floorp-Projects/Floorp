@@ -245,7 +245,8 @@ function waitForSourceShown(aPanel, aUrl) {
 }
 
 function waitForEditorLocationSet(aPanel) {
-  return waitForDebuggerEvents(aPanel, aPanel.panelWin.EVENTS.EDITOR_LOCATION_SET);
+  return waitForDebuggerEvents(aPanel,
+                               aPanel.panelWin.EVENTS.EDITOR_LOCATION_SET);
 }
 
 function ensureSourceIs(aPanel, aUrl, aWaitFlag = false) {
