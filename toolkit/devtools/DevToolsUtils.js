@@ -8,7 +8,6 @@
 const { Ci, Cu } = require("chrome");
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { setTimeout, clearTimeout } = Cu.import("resource://gre/modules/Timer.jsm", {});
 
 /**
  * Turn the error |aError| into a string, without fail.
@@ -28,8 +27,6 @@ exports.safeErrorString = function safeErrorString(aError) {
         }
       } catch (ee) { }
 
-      // Append additional line and column number information to the output,
-      // since it might not be part of the stringified error.
       if (typeof aError.lineNumber == "number" && typeof aError.columnNumber == "number") {
         errorString += "Line: " + aError.lineNumber + ", column: " + aError.columnNumber;
       }
@@ -116,39 +113,10 @@ exports.zip = function zip(a, b) {
   return pairs;
 };
 
-/**
- * Waits for the next tick in the event loop to execute a callback.
- */
-exports.executeSoon = function executeSoon(aFn) {
+const executeSoon = aFn => {
   Services.tm.mainThread.dispatch({
     run: exports.makeInfallible(aFn)
   }, Ci.nsIThread.DISPATCH_NORMAL);
-};
-
-/**
- * Waits for the next tick in the event loop.
- *
- * @return Promise
- *         A promise that is resolved after the next tick in the event loop.
- */
-exports.waitForTick = function waitForTick() {
-  let deferred = promise.defer();
-  exports.executeSoon(deferred.resolve);
-  return deferred.promise;
-};
-
-/**
- * Waits for the specified amount of time to pass.
- *
- * @param number aDelay
- *        The amount of time to wait, in milliseconds.
- * @return Promise
- *         A promise that is resolved after the specified amount of time passes.
- */
-exports.waitForTime = function waitForTime(aDelay) {
-  let deferred = promise.defer();
-  setTimeout(deferred.resolve, aDelay);
-  return deferred.promise;
 };
 
 /**
@@ -159,19 +127,16 @@ exports.waitForTime = function waitForTime(aDelay) {
  * @param Array aArray
  *        The array being iterated over.
  * @param Function aFn
- *        The function called on each item in the array. If a promise is
- *        returned by this function, iterating over the array will be paused
- *        until the respective promise is resolved.
+ *        The function called on each item in the array.
  * @returns Promise
  *          A promise that is resolved once the whole array has been iterated
- *          over, and all promises returned by the aFn callback are resolved.
+ *          over.
  */
 exports.yieldingEach = function yieldingEach(aArray, aFn) {
   const deferred = promise.defer();
 
   let i = 0;
   let len = aArray.length;
-  let outstanding = [deferred.promise];
 
   (function loop() {
     const start = Date.now();
@@ -182,12 +147,12 @@ exports.yieldingEach = function yieldingEach(aArray, aFn) {
       // aren't including time spent in non-JS here, but this is Good
       // Enough(tm).
       if (Date.now() - start > 16) {
-        exports.executeSoon(loop);
+        executeSoon(loop);
         return;
       }
 
       try {
-        outstanding.push(aFn(aArray[i], i++));
+        aFn(aArray[i++]);
       } catch (e) {
         deferred.reject(e);
         return;
@@ -197,8 +162,9 @@ exports.yieldingEach = function yieldingEach(aArray, aFn) {
     deferred.resolve();
   }());
 
-  return promise.all(outstanding);
+  return deferred.promise;
 }
+
 
 /**
  * Like XPCOMUtils.defineLazyGetter, but with a |this| sensitive getter that
@@ -300,3 +266,4 @@ exports.isSafeJSObject = function isSafeJSObject(aObj) {
 
   return Cu.isXrayWrapper(aObj);
 };
+
