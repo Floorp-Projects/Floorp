@@ -112,14 +112,14 @@ function testVariablesAndPropertiesFiltering() {
         "The this reference in localScope should not be expanded.");
 
       is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[1].getAttribute("value"),
-        "one", "The one variable should be visible.");
-      is(localScope.get("one").expanded, false,
-        "The one variable in localScope should not be expanded.");
+        "alpha", "The alpha variable should be visible.");
+      is(localScope.get("alpha").expanded, false,
+        "The alpha variable in localScope should not be expanded.");
 
       is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[2].getAttribute("value"),
-        "two", "The two variable should be visible.");
-      is(localScope.get("two").expanded, false,
-        "The two variable in localScope should not be expanded.");
+        "beta", "The beta variable should be visible.");
+      is(localScope.get("beta").expanded, false,
+        "The beta variable in localScope should not be expanded.");
 
       is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[3].getAttribute("value"),
         "__proto__", "The __proto__ reference should be visible.");

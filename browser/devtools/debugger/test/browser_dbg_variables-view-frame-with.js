@@ -63,19 +63,19 @@ function testFirstWithScope() {
   ok(withEnums[0].querySelector(".value").className.contains("token-other"),
     "Should have the right token class for 'this'.");
 
-  is(withEnums[1].querySelector(".name").getAttribute("value"), "one",
-    "Should have the right property name for 'one'.");
+  is(withEnums[1].querySelector(".name").getAttribute("value"), "alpha",
+    "Should have the right property name for 'alpha'.");
   is(withEnums[1].querySelector(".value").getAttribute("value"), "1",
-    "Should have the right property value for 'one'.");
+    "Should have the right property value for 'alpha'.");
   ok(withEnums[1].querySelector(".value").className.contains("token-number"),
-    "Should have the right token class for 'one'.");
+    "Should have the right token class for 'alpha'.");
 
-  is(withEnums[2].querySelector(".name").getAttribute("value"), "two",
-    "Should have the right property name for 'two'.");
+  is(withEnums[2].querySelector(".name").getAttribute("value"), "beta",
+    "Should have the right property name for 'beta'.");
   is(withEnums[2].querySelector(".value").getAttribute("value"), "2",
-    "Should have the right property value for 'two'.");
+    "Should have the right property value for 'beta'.");
   ok(withEnums[2].querySelector(".value").className.contains("token-number"),
-    "Should have the right token class for 'two'.");
+    "Should have the right token class for 'beta'.");
 
   is(withNonEnums[0].querySelector(".name").getAttribute("value"), "__proto__",
    "Should have the right property name for '__proto__'.");
