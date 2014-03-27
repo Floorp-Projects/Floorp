@@ -147,6 +147,12 @@ public:
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
+ /**
+  * Set the display port base rect for given element to be used with display
+  * port margins.
+  */
+ static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
+
   /**
    * Get the critical display port for the given element.
    */
