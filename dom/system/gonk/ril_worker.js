@@ -6189,7 +6189,7 @@ RilObject.prototype[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = function REQUEST_EXI
 RilObject.prototype[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
   this.SMSC = options.rilRequestError ? null : this.context.Buf.readString();
 
-  if (!options || options.rilMessageType !== "getSmscAddress") {
+  if (!options.rilMessageType || options.rilMessageType !== "getSmscAddress") {
     return;
   }
 
