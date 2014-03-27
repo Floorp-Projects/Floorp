@@ -201,22 +201,6 @@ BuildResources.prototype = Object.freeze({
       }
     }
   },
-
-  getSubtier: function (tier, subtier) {
-    var t = this.getTier(tier);
-
-    if (!t) {
-      return;
-    }
-
-    for (var i = 0; i < t.subtiers.length; i++) {
-      var entry = t.subtiers[i];
-
-      if (entry.name == subtier) {
-        return entry;
-      }
-    }
-  },
 });
 
 function updateResourcesGraph() {
@@ -375,8 +359,8 @@ function renderResources(id, resources, what) {
     .call(yAxis)
     ;
 
-  // Now we render a timeline of sorts of the tiers, subtiers.
-  // There are 2 rows of rectangles that visualize divisions between the
+  // Now we render a timeline of sorts of the tiers
+  // There is a row of rectangles that visualize divisions between the
   // different items. We use the same x scale as the resource graph so times
   // line up properly.
   svg = d3.select("#" + id).append("svg")
@@ -402,41 +386,13 @@ function renderResources(id, resources, what) {
       .attr("class", "timeline tier")
       .attr("tier", t)
       ;
-
-    tier.subtiers.forEach(function (subtier) {
-      var x_start = x(subtier.start - resources.offset);
-      var x_end = x(subtier.end - resources.offset);
-      var draw_width = x_end - x_start;
-
-      var classes = "timeline subtier";
-      if (draw_width < 6) {
-        classes += " short";
-      }
-
-      svg.append("rect")
-        .attr("x", x_start)
-        .attr("y", 60)
-        .attr("height", 30)
-        .attr("width", draw_width)
-        .attr("class", classes)
-        .attr("tier", t)
-        .attr("subtier", subtier.name)
-        ;
-    });
   });
 
   function getEntry(element) {
     var tier = element.getAttribute("tier");
-    var subtier = element.getAttribute("subtier");
 
     var entry = resources.getTier(tier);
     entry.tier = tier;
-
-    if (subtier) {
-      entry = resources.getSubtier(tier, subtier);
-      entry.tier = tier;
-      entry.subtier = subtier;
-    }
 
     return entry;
   }
@@ -446,7 +402,6 @@ function renderResources(id, resources, what) {
       var entry = getEntry(this);
 
       d3.select("#tt_tier").html(entry.tier);
-      d3.select("#tt_subtier").html(entry.subtier || "n/a");
       d3.select("#tt_duration").html(entry.duration || "n/a");
       d3.select("#tt_cpu_percent").html(entry.cpu_percent || "n/a");
 
@@ -488,7 +443,6 @@ document.addEventListener("DOMContentLoaded", function() {
     <div id="tooltip" style="display: none;">
       <table border="0">
         <tr><td>Tier</td><td id="tt_tier"></td></tr>
-        <tr><td>Subtier</td><td id="tt_subtier"></td></tr>
         <tr><td>Duration</td><td id="tt_duration"></td></tr>
         <tr><td>CPU %</td><td id="tt_cpu_percent"></td></tr>
       </table>

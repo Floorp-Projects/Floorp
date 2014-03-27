@@ -36,7 +36,7 @@ endif
 # Main rules (export, compile, binaries, libs and tools) call recurse_* rules.
 # This wrapping is only really useful for build status.
 compile binaries libs export tools::
-	$(call BUILDSTATUS,TIER_START $@ $($@_subtiers))
+	$(call BUILDSTATUS,TIER_START $@)
 	+$(MAKE) recurse_$@
 	$(call BUILDSTATUS,TIER_FINISH $@)
 
@@ -77,11 +77,9 @@ endif
 
 # Subtier delimiter rules
 $(addprefix subtiers/,$(addsuffix _start/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_start/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_start))
-	$(call BUILDSTATUS,SUBTIER_START $(CURRENT_TIER) $*)
 	@$(STAMP_TOUCH)
 
 $(addprefix subtiers/,$(addsuffix _finish/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_finish/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_finish))
-	$(call BUILDSTATUS,SUBTIER_FINISH $(CURRENT_TIER) $*)
 	@$(STAMP_TOUCH)
 
 $(addprefix subtiers/,$(addsuffix /$(CURRENT_TIER),$(CURRENT_SUBTIERS))): %/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,%))
@@ -152,12 +150,10 @@ else
 ifdef TIERS
 
 libs export tools::
-	$(call BUILDSTATUS,TIER_START $@ $(filter-out $(if $(filter export,$@),,precompile),$(TIERS)))
+	$(call BUILDSTATUS,TIER_START $@)
 	$(foreach tier,$(TIERS), $(if $(filter-out libs_precompile tools_precompile,$@_$(tier)), \
-		$(call BUILDSTATUS,SUBTIER_START $@ $(tier)) \
 		$(if $(filter libs,$@),$(foreach dir, $(tier_$(tier)_staticdirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),,1))) \
 		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@)) \
-		$(call BUILDSTATUS,SUBTIER_FINISH $@ $(tier))))
 	$(call BUILDSTATUS,TIER_FINISH $@)
 
 else
