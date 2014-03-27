@@ -1949,7 +1949,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         args = [Argument('JSContext*', 'aCx'),
                 Argument('JS::Handle<JSObject*>', 'aGlobal'),
-                Argument('ProtoAndIfaceArray&', 'aProtoAndIfaceArray'),
+                Argument('ProtoAndIfaceCache&', 'aProtoAndIfaceCache'),
                 Argument('bool', 'aDefineOnGlobal')]
         CGAbstractMethod.__init__(self, descriptor, 'CreateInterfaceObjects', 'void', args)
         self.properties = properties
@@ -2074,13 +2074,13 @@ if (!unforgeableHolder) {
 
         if needInterfacePrototypeObject:
             protoClass = "&PrototypeClass.mBase"
-            protoCache = "&aProtoAndIfaceArray[prototypes::id::%s]" % self.descriptor.name
+            protoCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s)" % self.descriptor.name
         else:
             protoClass = "nullptr"
             protoCache = "nullptr"
         if needInterfaceObject:
             interfaceClass = "&InterfaceObjectClass.mBase"
-            interfaceCache = "&aProtoAndIfaceArray[constructors::id::%s]" % self.descriptor.name
+            interfaceCache = "&aProtoAndIfaceCache.EntrySlotOrCreate(constructors::id::%s)" % self.descriptor.name
         else:
             # We don't have slots to store the named constructors.
             assert len(self.descriptor.interface.namedConstructors) == 0
@@ -2120,7 +2120,7 @@ if (!unforgeableHolder) {
         if UseHolderForUnforgeable(self.descriptor):
             assert needInterfacePrototypeObject
             setUnforgeableHolder = CGGeneric(
-                "JSObject* proto = aProtoAndIfaceArray[prototypes::id::%s];\n"
+                "JSObject* proto = aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s);\n"
                 "if (proto) {\n"
                 "  js::SetReservedSlot(proto, DOM_INTERFACE_PROTO_SLOTS_BASE,\n"
                 "                      JS::ObjectValue(*unforgeableHolder));\n"
@@ -2152,20 +2152,19 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
     return JS::NullPtr();
   }
   /* Check to see whether the interface objects are already installed */
-  ProtoAndIfaceArray& protoAndIfaceArray = *GetProtoAndIfaceArray(aGlobal);
-  if (!protoAndIfaceArray[%s]) {
-    CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceArray, aDefineOnGlobal);
+  ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(aGlobal);
+  if (!protoAndIfaceCache.EntrySlotIfExists(%s)) {
+    CreateInterfaceObjects(aCx, aGlobal, protoAndIfaceCache, aDefineOnGlobal);
   }
 
   /*
    * The object might _still_ be null, but that's OK.
    *
-   * Calling fromMarkedLocation() is safe because protoAndIfaceArray is
+   * Calling fromMarkedLocation() is safe because protoAndIfaceCache is
    * traced by TraceProtoAndIfaceCache() and its contents are never
    * changed after they have been set.
    */
-  return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceArray[%s].address());""" %
-                (self.id, self.id))
+  return JS::Handle<JSObject*>::fromMarkedLocation(protoAndIfaceCache.EntrySlotMustExist(%s).address());""" % (self.id, self.id))
 
 class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
     """
@@ -9347,7 +9346,8 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
     def initIdsMethod(self):
         assert self.needToInitIds
         idinit = [CGGeneric('!atomsCache->%s.init(cx, "%s")' %
-                            (m.identifier.name + "_id", m.identifier.name))
+                            (CGDictionary.makeIdName(m.identifier.name),
+                             m.identifier.name))
                   for m in self.dictionary.members]
         idinit.reverse();
         idinit = CGList(idinit, " ||\n")
@@ -9567,6 +9567,21 @@ if (""",
         else:
             # The data is inside the Optional<>
             memberData = "%s.InternalValue()" % memberLoc
+
+        # If you have to change this list (which you shouldn't!), make sure it
+        # continues to match the list in test_Object.prototype_props.html
+        if (member.identifier.name in
+            ["constructor", "toSource", "toString", "toLocaleString", "valueOf",
+             "watch", "unwatch", "hasOwnProperty", "isPrototypeOf",
+             "propertyIsEnumerable", "__defineGetter__", "__defineSetter__",
+             "__lookupGetter__", "__lookupSetter__", "__proto__"]):
+            raise TypeError("'%s' member of %s dictionary shadows "
+                            "a property of Object.prototype, and Xrays to "
+                            "Object can't handle that.\n"
+                            "%s" %
+                            (member.identifier.name,
+                             self.dictionary.identifier.name,
+                             member.location))
 
         propDef = (
             'JS_DefinePropertyById(cx, obj, atomsCache->%s, temp, nullptr, nullptr, JSPROP_ENUMERATE)' %
@@ -9879,7 +9894,7 @@ class CGForwardDeclarations(CGWrapper):
 
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks")
-        builder.addInMozillaDom("ProtoAndIfaceArray")
+        builder.addInMozillaDom("ProtoAndIfaceCache")
 
         for callback in mainCallbacks:
             forwardDeclareForType(callback)
@@ -11748,7 +11763,7 @@ class GlobalGenRoots():
             if len(dictMembers) == 0:
                 continue
 
-            classMembers = [ClassMember(m.identifier.name + "_id",
+            classMembers = [ClassMember(CGDictionary.makeIdName(m.identifier.name),
                                         "InternedStringId",
                                         visibility="public") for m in dictMembers]
 
