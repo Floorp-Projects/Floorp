@@ -1,0 +1,37 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Canvas inspector test page</title>
+  </head>
+
+  <body>
+    <canvas width="128" height="128"></canvas>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      var ctx = document.querySelector("canvas").getContext("2d");
+
+      function drawRect(fill, size) {
+        ctx.fillStyle = fill;
+        ctx.fillRect(size[0], size[1], size[2], size[3]);
+      }
+
+      function drawScene() {
+        ctx.clearRect(0, 0, 128, 128);
+        drawRect("rgb(192, 192, 192)", [0, 0, 128, 128]);
+        drawRect("rgba(0, 0, 192, 0.5)", [30, 30, 55, 50]);
+        drawRect("rgba(192, 0, 0, 0.5)", [10, 10, 55, 50]);
+
+        window.requestAnimationFrame(drawScene);
+      }
+
+      drawScene();
+    </script>
+  </body>
+
+</html>
