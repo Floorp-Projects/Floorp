@@ -394,7 +394,7 @@ public class AndroidFxAccount {
   }
 
   public void enableSyncing() {
-    Logger.info(LOG_TAG, "Disabling sync for account named like " + Utils.obfuscateEmail(getEmail()));
+    Logger.info(LOG_TAG, "Enabling sync for account named like " + Utils.obfuscateEmail(getEmail()));
     for (String authority : new String[] { BrowserContract.AUTHORITY }) {
       ContentResolver.setSyncAutomatically(account, authority, true);
       ContentResolver.setIsSyncable(account, authority, 1);
