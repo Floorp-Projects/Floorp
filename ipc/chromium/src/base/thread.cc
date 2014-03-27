@@ -11,6 +11,10 @@
 #include "GeckoProfiler.h"
 #include "mozilla/IOInterposer.h"
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+#endif
+
 namespace base {
 
 // This task is used to trigger the message loop to exit.
@@ -171,6 +175,10 @@ void Thread::ThreadMain() {
 
   mozilla::IOInterposer::UnregisterCurrentThread();
   profiler_unregister_thread();
+
+#ifdef MOZ_TASK_TRACER
+  mozilla::tasktracer::FreeTraceInfo();
+#endif
 
   // We can't receive messages anymore.
   message_loop_ = NULL;
