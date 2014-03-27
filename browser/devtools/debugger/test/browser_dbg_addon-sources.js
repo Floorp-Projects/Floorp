@@ -56,7 +56,7 @@ function testSources() {
   gThreadClient.getSources(({sources}) => {
     ok(sources.length, "retrieved sources");
 
-    sources.forEach(source => {
+    for (let source of sources) {
       let url = source.url.split(" -> ").pop();
       info(source.url + "\n\n\n" + url);
       let { label, group } = gSources.getItemByValue(source.url).attachment;
@@ -80,7 +80,7 @@ function testSources() {
       } else {
         ok(false, "Saw an unexpected source: " + url);
       }
-    });
+    }
 
     ok(foundAddonModule, "found code for the addon in the list");
     ok(foundAddonBootstrap, "found bootstrap for the addon in the list");
