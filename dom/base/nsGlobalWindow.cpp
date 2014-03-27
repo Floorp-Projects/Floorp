@@ -2135,27 +2135,6 @@ WindowStateHolder::~WindowStateHolder()
 
 NS_IMPL_ISUPPORTS1(WindowStateHolder, WindowStateHolder)
 
-nsresult
-nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
-{
-  AutoPushJSContext cx(mContext->GetNativeContext());
-
-  JS::Rooted<JSObject*> global(cx, aNewInner->FastGetGlobalJSObject());
-  JS::Rooted<JSObject*> outer(cx, NewOuterWindowProxy(cx, global, IsChromeWindow()));
-  if (!outer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  js::SetProxyExtra(outer, 0, js::PrivateValue(ToSupports(this)));
-
-  JSAutoCompartment ac(cx, outer);
-
-  // Inform the nsJSContext, which is the canonical holder of the outer.
-  MOZ_ASSERT(IsOuterWindow());
-  mContext->SetWindowProxy(outer);
-  return NS_OK;
-}
-
 // We need certain special behavior for remote XUL whitelisted domains, but we
 // don't want that behavior to take effect in automation, because we whitelist
 // all the mochitest domains. So we need to check a pref here.
@@ -2462,7 +2441,14 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     mInnerWindow = newInnerWindow;
 
     if (!mJSObject) {
-      CreateOuterObject(newInnerWindow);
+      JS::Rooted<JSObject*> global(cx, newInnerWindow->FastGetGlobalJSObject());
+      JS::Rooted<JSObject*> outer(cx, NewOuterWindowProxy(cx, global, thisChrome));
+      NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
+
+      js::SetProxyExtra(outer, 0, js::PrivateValue(ToSupports(this)));
+
+      // Inform the nsJSContext, which is the canonical holder of the outer.
+      mContext->SetWindowProxy(outer);
       mContext->DidInitializeContext();
 
       mJSObject = mContext->GetWindowProxy();
