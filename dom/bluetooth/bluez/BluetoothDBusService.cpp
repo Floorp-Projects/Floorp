@@ -1091,6 +1091,9 @@ private:
 static void
 AppendDeviceName(BluetoothSignal& aSignal)
 {
+  MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
+  MOZ_ASSERT(sDBusConnection);
+
   BluetoothValue v = aSignal.value();
   if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue ||
       v.get_ArrayOfBluetoothNamedValue().Length() == 0) {
@@ -1108,11 +1111,6 @@ AppendDeviceName(BluetoothSignal& aSignal)
   }
 
   nsString devicePath = arr[0].value().get_nsString();
-
-  if (!sDBusConnection) {
-    BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
-    return;
-  }
 
   nsRefPtr<AppendDeviceNameReplyHandler> handler =
     new AppendDeviceNameReplyHandler(nsCString(DBUS_DEVICE_IFACE),
@@ -1347,13 +1345,9 @@ public:
   void Handle(DBusMessage* aReply)
   {
     MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(sDBusConnection);
 
     if (!aReply || (dbus_message_get_type(aReply) == DBUS_MESSAGE_TYPE_ERROR)) {
-      return;
-    }
-
-    if (!sDBusConnection) {
-      BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
       return;
     }
 
@@ -1436,10 +1430,7 @@ private:
     const char* agentPath = KEY_LOCAL_AGENT;
     const char* capabilities = B2G_AGENT_CAPABILITIES;
 
-    if (!sDBusConnection) {
-      BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
-      return false;
-    }
+    MOZ_ASSERT(sDBusConnection);
 
     // Local agent means agent for Adapter, not agent for Device. Some signals
     // will be passed to local agent, some will be passed to device agent.
@@ -1494,11 +1485,7 @@ public:
     };
 
     MOZ_ASSERT(!NS_IsMainThread()); // I/O thread
-
-    if (!sDBusConnection) {
-      BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
-      return;
-    }
+    MOZ_ASSERT(sDBusConnection);
 
     nsRefPtr<DBusReplyHandler> handler =
       new AddReservedServiceRecordsReplyHandler();
@@ -2188,6 +2175,7 @@ protected:
     dbus_error_init(&error);
 
     MOZ_ASSERT(!NS_IsMainThread()); // DBus thread
+    MOZ_ASSERT(sDBusConnection);
 
     UnpackObjectPathMessage(aReply, &error, value, aReplyError);
 
@@ -2199,11 +2187,6 @@ protected:
 
     // Acquire another reference to this reply handler
     nsRefPtr<DefaultAdapterPathReplyHandler> handler = this;
-
-    if (!sDBusConnection) {
-      aReplyError = NS_LITERAL_STRING("DBus connection has been closed.");
-      return false;
-    }
 
     bool success = sDBusConnection->SendWithReply(
       DefaultAdapterPathReplyHandler::Callback, handler.get(), 1000,
@@ -2599,15 +2582,11 @@ protected:
   {
     MOZ_ASSERT(mProcessedDeviceAddresses < mDeviceAddresses.Length());
     MOZ_ASSERT(!mAdapterPath.IsEmpty());
+    MOZ_ASSERT(sDBusConnection);
 
     // cache object path for reply
     mObjectPath = GetObjectPathFromAddress(mAdapterPath,
       mDeviceAddresses[mProcessedDeviceAddresses]);
-
-    if (!sDBusConnection) {
-      BT_WARNING("%s: DBus connection has been closed.", __FUNCTION__);
-      return false;
-    }
 
     nsRefPtr<BluetoothArrayOfDevicePropertiesReplyHandler> handler = this;
 
