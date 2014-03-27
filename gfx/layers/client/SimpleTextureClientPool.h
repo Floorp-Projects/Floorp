@@ -79,6 +79,9 @@ private:
   //   when we shrink this list, we use pop(), but should use pop_back() to
   //   nuke the oldest.
   // We may need to switch to a std::deque
+  // On b2g gonk, std::queue might be a better choice.
+  // On ICS, fence wait happens implicitly before drawing.
+  // Since JB, fence wait happens explicitly when fetching a client from the pool.
   std::stack<RefPtr<TextureClient> > mAvailableTextureClients;
   std::list<RefPtr<TextureClient> > mOutstandingTextureClients;
 
