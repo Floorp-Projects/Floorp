@@ -699,6 +699,8 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
         gfxSize res = presContext->PresShell()->GetCumulativeResolution();
         gfxSize parentRes = res;
         if (isRoot) {
+          // the base rect for root scroll frames is specified in the parent document
+          // coordinate space, so it doesn't include the local resolution.
           gfxSize localRes = presContext->PresShell()->GetResolution();
           parentRes.width /= localRes.width;
           parentRes.height /= localRes.height;
