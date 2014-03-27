@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for bug 987110</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  var props = Object.getOwnPropertyNames(Object.prototype);
+  // getOwnPropertyNames doesn't include "__proto__" yet for some reason
+  props.push("__proto__");
+  // If you change this list, make sure it continues to match the list in
+  // Codegen.py's CGDictionary.getMemberDefinition method.
+  var expected = [
+      "constructor", "toSource", "toString", "toLocaleString", "valueOf",
+      "watch", "unwatch", "hasOwnProperty", "isPrototypeOf",
+      "propertyIsEnumerable", "__defineGetter__", "__defineSetter__",
+      "__lookupGetter__", "__lookupSetter__", "__proto__"
+    ];
+  assert_array_equals(props, expected);
+}, "Own properties of Object.prototype");
+</script>

@@ -112,6 +112,17 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
     mOtherDirection->mShutDown = true;
     mVoiceEngine = nullptr;
   } else {
+    // We shouldn't delete the VoiceEngine until all these are released!
+    // And we can't use a Scoped ptr, since the order is arbitrary
+    mPtrVoENetwork = nullptr;
+    mPtrVoEBase = nullptr;
+    mPtrVoECodec = nullptr;
+    mPtrVoEXmedia = nullptr;
+    mPtrVoEProcessing = nullptr;
+    mPtrVoEVideoSync = nullptr;
+    mPtrVoERTP_RTCP = nullptr;
+    mPtrRTP = nullptr;
+
     // only one opener can call Delete.  Have it be the last to close.
     if(mVoiceEngine)
     {

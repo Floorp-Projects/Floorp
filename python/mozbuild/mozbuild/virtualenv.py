@@ -343,7 +343,7 @@ class VirtualenvManager(object):
         """Calls setup.py in a directory."""
         setup = os.path.join(directory, 'setup.py')
 
-        program = [sys.executable, setup]
+        program = [self.python_path, setup]
         program.extend(arguments)
 
         # We probably could call the contents of this file inside the context

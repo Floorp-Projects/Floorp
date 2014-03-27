@@ -37,17 +37,18 @@ public class PromptListItem {
         id = aObject.optInt("id");
         mSelected = aObject.optBoolean("selected");
 
-        JSONObject obj = aObject.optJSONObject("shareData");
+        JSONObject obj = aObject.optJSONObject("showAsActions");
         if (obj != null) {
             showAsActions = true;
             String uri = obj.isNull("uri") ? "" : obj.optString("uri");
-            String type = obj.isNull("type") ? "" : obj.optString("type");
+            String type = obj.isNull("type") ? "text/html" : obj.optString("type", "text/html");
             mIntent = GeckoAppShell.getShareIntent(GeckoAppShell.getContext(), uri, type, "");
             isParent = true;
         } else {
             mIntent = null;
             showAsActions = false;
-            isParent = aObject.optBoolean("isParent");
+            // Support both "isParent" (backwards compat for older consumers), and "menu" for the new Tabbed prompt ui.
+            isParent = aObject.optBoolean("isParent") || aObject.optBoolean("menu");
         }
 
         BitmapUtils.getDrawable(GeckoAppShell.getContext(), aObject.optString("icon"), new BitmapUtils.BitmapLoader() {

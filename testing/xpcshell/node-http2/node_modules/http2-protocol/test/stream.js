@@ -7,7 +7,6 @@ var Stream = stream.Stream;
 function createStream() {
   var stream = new Stream(util.log);
   stream.upstream._window = Infinity;
-  stream.upstream._remoteFlowControlDisabled = true;
   return stream;
 }
 

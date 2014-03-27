@@ -715,8 +715,8 @@ XPCWrappedNativeScope::AddSizeOfIncludingThis(ScopeSizeInfo* scopeSizeInfo)
     scopeSizeInfo->mScopeAndMapSize +=
         mWrappedNativeProtoMap->SizeOfIncludingThis(scopeSizeInfo->mMallocSizeOf);
 
-    if (dom::HasProtoAndIfaceArray(mGlobalJSObject)) {
-        dom::ProtoAndIfaceArray* cache = dom::GetProtoAndIfaceArray(mGlobalJSObject);
+    if (dom::HasProtoAndIfaceCache(mGlobalJSObject)) {
+        dom::ProtoAndIfaceCache* cache = dom::GetProtoAndIfaceCache(mGlobalJSObject);
         scopeSizeInfo->mProtoAndIfaceCacheSize +=
             cache->SizeOfIncludingThis(scopeSizeInfo->mMallocSizeOf);
     }

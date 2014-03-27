@@ -7,3 +7,12 @@
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.READ_SYNC_STATS" />
     <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+
+    <!-- A signature level permission granted only to the Firefox
+         channels sharing an Android Account type. -->
+    <permission
+        android:name="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE"
+        android:protectionLevel="signature">
+    </permission>
+
+    <uses-permission android:name="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE" />
