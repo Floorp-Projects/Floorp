@@ -2302,14 +2302,15 @@ nsComputedDOMStyle::GetGridLineNames(const nsTArray<nsString>& aLineNames)
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
   nsAutoString lineNamesString;
   uint32_t i_end = aLineNames.Length();
-  MOZ_ASSERT(i_end > 0, "GetGridLineNames called with an empty array");
   lineNamesString.AssignLiteral("(");
-  for (uint32_t i = 0;;) {
-    nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], lineNamesString);
-    if (++i == i_end) {
-      break;
+  if (i_end > 0) {
+    for (uint32_t i = 0;;) {
+      nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], lineNamesString);
+      if (++i == i_end) {
+        break;
+      }
+      lineNamesString.AppendLiteral(" ");
     }
-    lineNamesString.AppendLiteral(" ");
   }
   lineNamesString.AppendLiteral(")");
   val->SetString(lineNamesString);
@@ -2353,8 +2354,24 @@ nsComputedDOMStyle::GetGridTrackSize(const nsStyleCoord& aMinValue,
 }
 
 CSSValue*
-nsComputedDOMStyle::GetGridTrackList(const nsStyleGridTrackList& aTrackList)
+nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrackList)
 {
+  if (aTrackList.mIsSubgrid) {
+    NS_ASSERTION(aTrackList.mMinTrackSizingFunctions.IsEmpty() &&
+                 aTrackList.mMaxTrackSizingFunctions.IsEmpty(),
+                 "Unexpected sizing functions with subgrid");
+    nsDOMCSSValueList* valueList = GetROCSSValueList(false);
+
+    nsROCSSPrimitiveValue* subgridKeyword = new nsROCSSPrimitiveValue;
+    subgridKeyword->SetIdent(eCSSKeyword_subgrid);
+    valueList->AppendCSSValue(subgridKeyword);
+
+    for (uint32_t i = 0; i < aTrackList.mLineNameLists.Length(); i++) {
+      valueList->AppendCSSValue(GetGridLineNames(aTrackList.mLineNameLists[i]));
+    }
+    return valueList;
+  }
+
   uint32_t numSizes = aTrackList.mMinTrackSizingFunctions.Length();
   MOZ_ASSERT(aTrackList.mMaxTrackSizingFunctions.Length() == numSizes,
              "Different number of min and max track sizing functions");
@@ -2373,7 +2390,7 @@ nsComputedDOMStyle::GetGridTrackList(const nsStyleGridTrackList& aTrackList)
   for (uint32_t i = 0;; i++) {
     const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
     if (!lineNames.IsEmpty()) {
-      valueList->AppendCSSValue(GetGridLineNames(aTrackList.mLineNameLists[i]));
+      valueList->AppendCSSValue(GetGridLineNames(lineNames));
     }
     if (i == numSizes) {
       break;
@@ -2416,13 +2433,13 @@ nsComputedDOMStyle::DoGetGridAutoRows()
 CSSValue*
 nsComputedDOMStyle::DoGetGridTemplateColumns()
 {
-  return GetGridTrackList(StylePosition()->mGridTemplateColumns);
+  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateColumns);
 }
 
 CSSValue*
 nsComputedDOMStyle::DoGetGridTemplateRows()
 {
-  return GetGridTrackList(StylePosition()->mGridTemplateRows);
+  return GetGridTemplateColumnsRows(StylePosition()->mGridTemplateRows);
 }
 
 CSSValue*

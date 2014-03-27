@@ -4880,6 +4880,9 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 
 			// See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
 			"(none auto subgrid min-content max-content foo) 40px",
+
+			"subgrid",
+			"subgrid () (foo bar)",
 		],
 		invalid_values: [
 			"",
@@ -4908,6 +4911,9 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"maxmin(100px, 20px)",
 			"minmax(min-content, auto)",
 			"minmax(min-content, minmax(30px, max-content))",
+			"subgrid (foo) 40px",
+			"subgrid (foo 40px)",
+			"(foo) subgrid",
 		]
 	};
 	gCSSProperties["grid-template-rows"] = {
@@ -4954,11 +4960,18 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"none / none",
 		],
 		other_values: [
+			"subgrid",
 			// <'grid-template-columns'> / <'grid-template-rows'>
 			"40px / 100px",
 			"(foo) 40px (bar) / (baz) 100px (fizz)",
 			" none/100px",
 			"40px/none",
+			"subgrid/40px 20px",
+			"subgrid (foo) () (bar baz) / 40px 20px",
+			"40px 20px/subgrid",
+			"40px 20px/subgrid  (foo) () (bar baz)",
+			"subgrid/subgrid",
+			"subgrid (foo) () (bar baz)/subgrid (foo) () (bar baz)",
 			// [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
 			"'fizz'",
 			"(bar) 'fizz'",
@@ -4970,7 +4983,9 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"(foo) 40px / (bar) 'fizz' 100px (buzz) \n (a) '.' 200px (b)",
 		],
 		invalid_values: [
-			"subgrid", // TODO
+			"subgrid ()",
+			"subgrid () / 'fizz'",
+			"subgrid / 'fizz'",
 			"(foo) (bar) 40px / 100px",
 			"40px / (fizz) (buzz) 100px",
 			"40px / (fizz) (buzz) 'foo'",
