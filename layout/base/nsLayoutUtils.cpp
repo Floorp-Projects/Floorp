@@ -656,14 +656,110 @@ nsLayoutUtils::FindScrollableFrameFor(ViewID aId)
 bool
 nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
 {
-  void* property = aContent->GetProperty(nsGkAtoms::DisplayPort);
-  if (!property) {
+  DisplayPortPropertyData* rectData =
+    static_cast<DisplayPortPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPort));
+  DisplayPortMarginsPropertyData* marginsData =
+    static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
+  if (!rectData && !marginsData) {
     return false;
   }
 
   if (aResult) {
-    *aResult = (static_cast<DisplayPortPropertyData*>(property))->mRect;
+    if (rectData && marginsData) {
+      // choose margins if equal priority
+      if (rectData->mPriority > marginsData->mPriority) {
+        marginsData = nullptr;
+      } else {
+        rectData = nullptr;
+      }
+    }
+
+    if (rectData) {
+      *aResult = rectData->mRect;
+    } else {
+      nsRect* baseData =
+        static_cast<nsRect*>(aContent->GetProperty(nsGkAtoms::DisplayPortBase));
+      nsRect base;
+      if (baseData) {
+        base = *baseData;
+      }
+
+      nsIFrame* frame = aContent->GetPrimaryFrame();
+      if (frame) {
+        bool isRoot = false;
+        if (aContent->OwnerDoc()->GetRootElement() == aContent) {
+          // We want the scroll frame, the root scroll frame differs from all
+          // others in that the primary frame is not the scroll frame.
+          frame = frame->PresContext()->PresShell()->GetRootScrollFrame();
+          isRoot = true;
+        }
+
+        // first convert the base rect to layer pixels
+        nsPresContext* presContext = frame->PresContext();
+        int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
+        gfxSize res = presContext->PresShell()->GetCumulativeResolution();
+        gfxSize parentRes = res;
+        if (isRoot) {
+          // the base rect for root scroll frames is specified in the parent document
+          // coordinate space, so it doesn't include the local resolution.
+          gfxSize localRes = presContext->PresShell()->GetResolution();
+          parentRes.width /= localRes.width;
+          parentRes.height /= localRes.height;
+        }
+        LayerRect rect;
+        rect.x = parentRes.width * NSAppUnitsToFloatPixels(base.x, auPerDevPixel);
+        rect.y = parentRes.height * NSAppUnitsToFloatPixels(base.y, auPerDevPixel);
+        rect.width =
+          parentRes.width * NSAppUnitsToFloatPixels(base.width, auPerDevPixel);
+        rect.height =
+          parentRes.height * NSAppUnitsToFloatPixels(base.height, auPerDevPixel);
+
+        rect.Inflate(marginsData->mMargins);
+
+        nsIScrollableFrame* scrollableFrame = frame->GetScrollTargetFrame();
+        nsPoint scrollPos(
+          scrollableFrame ? scrollableFrame->GetScrollPosition() : nsPoint(0,0));
+        if (marginsData->mAlignment > 0) {
+          LayerPoint scrollPosLayer(
+            res.width * NSAppUnitsToFloatPixels(scrollPos.x, auPerDevPixel),
+            res.height * NSAppUnitsToFloatPixels(scrollPos.y, auPerDevPixel));
+          rect += scrollPosLayer;
+
+          // Inflate the rectangle by 1 so that we always push to the next tile
+          // boundary. This is desirable to stop from having a rectangle with a
+          // moving origin occasionally being smaller when it coincidentally lines
+          // up to tile boundaries.
+          rect.Inflate(1);
+
+          float left =
+            marginsData->mAlignment * floor(rect.x / marginsData->mAlignment);
+          float top =
+            marginsData->mAlignment * floor(rect.y / marginsData->mAlignment);
+          float right =
+            marginsData->mAlignment * ceil(rect.XMost() / marginsData->mAlignment);
+          float bottom =
+            marginsData->mAlignment * ceil(rect.YMost() / marginsData->mAlignment);
+          rect = LayerRect(left, top, right - left, bottom - top);
+          rect -= scrollPosLayer;
+        }
+
+        nsRect result;
+        result.x = NSFloatPixelsToAppUnits(rect.x / res.width, auPerDevPixel);
+        result.y = NSFloatPixelsToAppUnits(rect.y / res.height, auPerDevPixel);
+        result.width =
+          NSFloatPixelsToAppUnits(rect.width / res.width, auPerDevPixel);
+        result.height =
+          NSFloatPixelsToAppUnits(rect.height / res.height, auPerDevPixel);
+
+        // Finally, clamp the display port to the expanded scrollable rect.
+        nsRect expandedScrollableRect = CalculateExpandedScrollableRect(frame);
+        result = expandedScrollableRect.Intersect(result + scrollPos) - scrollPos;
+
+        *aResult = result;
+      }
+    }
   }
+
   return true;
 }
 
