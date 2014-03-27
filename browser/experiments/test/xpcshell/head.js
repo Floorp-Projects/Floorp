@@ -13,16 +13,16 @@ Cu.import("resource://testing-common/services/healthreport/utils.jsm", this);
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 
 const EXPERIMENT1_ID       = "test-experiment-1@tests.mozilla.org";
-const EXPERIMENT1_XPI_SHA1 = "sha1:08c4d3ef1d0fc74faa455e85106ef0bc8cf8ca90";
+const EXPERIMENT1_XPI_SHA1 = "sha1:0f15ee3677ffbf1e82367069fe4e8fe8e2ad838f";
 const EXPERIMENT1_XPI_NAME = "experiment-1.xpi";
 const EXPERIMENT1_NAME     = "Test experiment 1";
 
-const EXPERIMENT1A_XPI_SHA1 = "sha1:2b8d14e3e06a54d5ce628fe3598cbb364cff9e6b";
+const EXPERIMENT1A_XPI_SHA1 = "sha1:b938f1b4f0bf466a67257aff26d4305ac24231eb";
 const EXPERIMENT1A_XPI_NAME = "experiment-1a.xpi";
 const EXPERIMENT1A_NAME     = "Test experiment 1.1";
 
 const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org"
-const EXPERIMENT2_XPI_SHA1 = "sha1:81877991ec70360fb48db84c34a9b2da7aa41d6a";
+const EXPERIMENT2_XPI_SHA1 = "sha1:9d23425421941e1d1e2037232cf5aeae82dbd4e4";
 const EXPERIMENT2_XPI_NAME = "experiment-2.xpi";
 
 const EXPERIMENT3_ID       = "test-experiment-3@tests.mozilla.org";
