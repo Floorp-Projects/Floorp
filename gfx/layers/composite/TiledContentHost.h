@@ -269,13 +269,11 @@ public:
 
 private:
   void RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
-                         const nsIntRegion& aValidRegion,
                          EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Filter& aFilter,
                          const gfx::Rect& aClipRect,
-                         const nsIntRegion& aMaskRegion,
-                         nsIntRect aVisibleRect,
+                         nsIntRegion aMaskRegion,
                          gfx::Matrix4x4 aTransform);
 
   void EnsureTileStore() {}
