@@ -58,7 +58,7 @@ CacheFileHandle::DispatchRelease()
     return false;
   }
 
-  nsRefPtr<nsRunnableMethod<CacheFileHandle, nsrefcnt, false> > event =
+  nsRefPtr<nsRunnableMethod<CacheFileHandle, MozExternalRefCountType, false> > event =
     NS_NewNonOwningRunnableMethod(this, &CacheFileHandle::Release);
   nsresult rv = ioTarget->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
@@ -69,7 +69,7 @@ CacheFileHandle::DispatchRelease()
 }
 
 NS_IMPL_ADDREF(CacheFileHandle)
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 CacheFileHandle::Release()
 {
   nsrefcnt count = mRefCnt - 1;

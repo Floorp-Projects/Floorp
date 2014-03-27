@@ -682,14 +682,14 @@ nsPipeInputStream::OnInputException(nsresult reason, nsPipeEvents &events)
     return result;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsPipeInputStream::AddRef(void)
 {
     ++mReaderRefCnt;
     return mPipe->AddRef();
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsPipeInputStream::Release(void)
 {
     if (--mReaderRefCnt == 0)
@@ -1037,14 +1037,14 @@ nsPipeOutputStream::OnOutputException(nsresult reason, nsPipeEvents &events)
 }
 
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsPipeOutputStream::AddRef()
 {
     ++mWriterRefCnt;
     return mPipe->AddRef();
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsPipeOutputStream::Release()
 {
     if (--mWriterRefCnt == 0)

@@ -18,6 +18,7 @@
 #include "mozilla/dom/DocumentFragmentBinding.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 namespace mozilla {
 namespace dom {
@@ -72,7 +73,7 @@ DocumentFragment::List(FILE* out, int32_t aIndent) const
   fprintf(out, "DocumentFragment@%p", (void *)this);
 
   fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
-  fprintf(out, " refcount=%d<", mRefCnt.get());
+  fprintf(out, " refcount=%" PRIuPTR "<", mRefCnt.get());
 
   nsIContent* child = GetFirstChild();
   if (child) {

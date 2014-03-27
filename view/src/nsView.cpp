@@ -8,6 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Poison.h"
 #include "nsIWidget.h"
@@ -787,7 +788,7 @@ void nsView::List(FILE* out, int32_t aIndent) const
     nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
     mWindow->Release();
     int32_t Z = mWindow->GetZIndex();
-    fprintf(out, "(widget=%p[%d] z=%d pos={%d,%d,%d,%d}) ",
+    fprintf(out, "(widget=%p[%" PRIuPTR "] z=%d pos={%d,%d,%d,%d}) ",
             (void*)mWindow, widgetRefCnt, Z,
             nonclientBounds.x, nonclientBounds.y,
             windowBounds.width, windowBounds.height);
