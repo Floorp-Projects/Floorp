@@ -63,9 +63,6 @@ class TierStatus(object):
 
     Tiers can have subtiers. Subtiers can execute in any order. Some subtiers
     execute sequentially. Others are concurrent.
-
-    Subtiers can have directories. Directories can execute in any order, just
-    like subtiers.
     """
 
     def __init__(self, resources):
@@ -73,7 +70,6 @@ class TierStatus(object):
         self.tiers = OrderedDict()
         self.active_tier = None
         self.active_subtiers = set()
-        self.active_dirs = {}
         self.resources = resources
 
     def set_tiers(self, tiers):
@@ -99,13 +95,10 @@ class TierStatus(object):
                 finish_time=None,
                 duration=None,
                 concurrent=False,
-                dirs=OrderedDict(),
-                dirs_complete=0,
             )
 
         self.active_tier = tier
         self.active_subtiers = set()
-        self.active_dirs = {}
 
     def finish_tier(self, tier):
         """Record that execution of a tier has finished."""
@@ -113,20 +106,12 @@ class TierStatus(object):
         t['finish_time'] = time.time()
         t['duration'] = self.resources.finish_phase(self._phase(tier))
 
-    def begin_subtier(self, tier, subtier, dirs):
+    def begin_subtier(self, tier, subtier):
         """Record that execution of a subtier has begun."""
         self.resources.begin_phase(self._phase(tier, subtier))
 
         st = self.tiers[tier]['subtiers'][subtier]
         st['begin_time'] = time.time()
-
-        for d in dirs:
-            st['dirs'][d] = dict(
-                begin_time=None,
-                finish_time=None,
-                duration=None,
-                concurrent=False,
-            )
 
         if self.active_subtiers:
             st['concurrent'] = True
@@ -142,39 +127,7 @@ class TierStatus(object):
         if self.active_subtiers:
             st['concurrent'] = True
 
-        # A subtier may not have directories.
-        try:
-            del self.active_dirs[subtier]
-        except KeyError:
-            pass
-
         st['duration'] = self.resources.finish_phase(self._phase(tier, subtier))
-
-    def begin_dir(self, tier, subtier, d):
-        """Record that execution of a directory has begun."""
-        self.resources.begin_phase(self._phase(tier, subtier, d))
-        entry = self.tiers[tier]['subtiers'][subtier]['dirs'][d]
-        entry['begin_time'] = time.time()
-
-        self.active_dirs.setdefault(subtier, set()).add(d)
-
-        if len(self.active_dirs[subtier]) > 1:
-            entry['concurrent'] = True
-
-    def finish_dir(self, tier, subtier, d):
-        """Record that execution of a directory has finished."""
-        st = self.tiers[tier]['subtiers'][subtier]
-        st['dirs_complete'] += 1
-
-        entry = st['dirs'][d]
-        entry['finish_time'] = time.time()
-
-        self.active_dirs[subtier].remove(d)
-        if self.active_dirs[subtier]:
-            entry['concurrent'] = True
-
-        entry['duration'] = self.resources.finish_phase(self._phase(tier,
-            subtier, d))
 
     def tier_status(self):
         for tier, state in self.tiers.items():
@@ -192,11 +145,6 @@ class TierStatus(object):
             finished = state['finish_time'] is not None
 
             yield subtier, active, finished
-
-    def current_dirs_status(self):
-        for subtier, dirs in self.active_dirs.items():
-            st = self.tiers[self.active_tier]['subtiers'][subtier]
-            yield subtier, st['dirs'].keys(), dirs, st['dirs_complete']
 
     def tiered_resource_usage(self):
         """Obtains an object containing resource usage for tiers.
@@ -223,24 +171,10 @@ class TierStatus(object):
                     end=state['finish_time'],
                     duration=state['duration'],
                     concurrent=state['concurrent'],
-                    dirs=[],
                 )
 
                 self.add_resources_to_dict(st_entry, phase=self._phase(tier,
                     subtier))
-
-                for d, state in state['dirs'].items():
-                    d_entry = dict(
-                        name=d,
-                        start=state['begin_time'],
-                        end=state['finish_time'],
-                        duration=state['duration'],
-                    )
-
-                    self.add_resources_to_dict(d_entry, phase=self._phase(tier,
-                        subtier, d))
-
-                    st_entry['dirs'].append(d_entry)
 
                 t_entry['subtiers'].append(st_entry)
 
@@ -276,12 +210,10 @@ class TierStatus(object):
 
             return d
 
-    def _phase(self, tier, subtier=None, d=None):
+    def _phase(self, tier, subtier=None):
         parts = [tier]
         if subtier:
             parts.append(subtier)
-        if d:
-            parts.append(d)
 
         return '_'.join(parts)
 
@@ -363,17 +295,10 @@ class BuildMonitor(MozbuildObject):
                 self.tiers.finish_tier(tier)
             elif action == 'SUBTIER_START':
                 tier, subtier = args[0:2]
-                dirs = args[2:]
-                self.tiers.begin_subtier(tier, subtier, dirs)
+                self.tiers.begin_subtier(tier, subtier)
             elif action == 'SUBTIER_FINISH':
                 tier, subtier = args
                 self.tiers.finish_subtier(tier, subtier)
-            elif action == 'TIERDIR_START':
-                tier, subtier, d = args
-                self.tiers.begin_dir(tier, subtier, d)
-            elif action == 'TIERDIR_FINISH':
-                tier, subtier, d = args
-                self.tiers.finish_dir(tier, subtier, d)
             else:
                 raise Exception('Unknown build status: %s' % action)
 

@@ -217,22 +217,6 @@ BuildResources.prototype = Object.freeze({
       }
     }
   },
-
-  getDirectory: function (tier, subtier, directory) {
-    var st = this.getSubtier(tier, subtier);
-
-    if (!st) {
-      return;
-    }
-
-    for (var i = 0; i < st.dirs.length; i++) {
-      var entry = st.dirs[i];
-
-      if (entry.name == directory) {
-        return entry;
-      }
-    }
-  },
 });
 
 function updateResourcesGraph() {
@@ -391,8 +375,8 @@ function renderResources(id, resources, what) {
     .call(yAxis)
     ;
 
-  // Now we render a timeline of sorts of the tiers, subtiers, and directories.
-  // There are 3 rows of rectangles that visualize divisions between the
+  // Now we render a timeline of sorts of the tiers, subtiers.
+  // There are 2 rows of rectangles that visualize divisions between the
   // different items. We use the same x scale as the resource graph so times
   // line up properly.
   svg = d3.select("#" + id).append("svg")
@@ -438,36 +422,12 @@ function renderResources(id, resources, what) {
         .attr("tier", t)
         .attr("subtier", subtier.name)
         ;
-
-      subtier.dirs.forEach(function (dir) {
-        var x_start = x(dir.start - resources.offset);
-        var x_end = x(dir.end - resources.offset);
-        var draw_width = x_end - x_start;
-
-        var classes = "timeline directory";
-
-        if (draw_width < 6) {
-          classes += " short";
-        }
-
-        svg.append("rect")
-          .attr("x", x_start)
-          .attr("y", 100)
-          .attr("height", 30)
-          .attr("width", draw_width)
-          .attr("class", classes)
-          .attr("tier", t)
-          .attr("subtier", subtier.name)
-          .attr("directory", dir.name)
-          ;
-      });
     });
   });
 
   function getEntry(element) {
     var tier = element.getAttribute("tier");
     var subtier = element.getAttribute("subtier");
-    var directory = element.getAttribute("directory");
 
     var entry = resources.getTier(tier);
     entry.tier = tier;
@@ -476,13 +436,6 @@ function renderResources(id, resources, what) {
       entry = resources.getSubtier(tier, subtier);
       entry.tier = tier;
       entry.subtier = subtier;
-    }
-
-    if (directory) {
-      entry = resources.getDirectory(tier, subtier, directory);
-      entry.tier = tier;
-      entry.subtier = subtier;
-      entry.directory = directory;
     }
 
     return entry;
@@ -494,7 +447,6 @@ function renderResources(id, resources, what) {
 
       d3.select("#tt_tier").html(entry.tier);
       d3.select("#tt_subtier").html(entry.subtier || "n/a");
-      d3.select("#tt_directory").html(entry.directory || "n/a");
       d3.select("#tt_duration").html(entry.duration || "n/a");
       d3.select("#tt_cpu_percent").html(entry.cpu_percent || "n/a");
 
@@ -537,7 +489,6 @@ document.addEventListener("DOMContentLoaded", function() {
       <table border="0">
         <tr><td>Tier</td><td id="tt_tier"></td></tr>
         <tr><td>Subtier</td><td id="tt_subtier"></td></tr>
-        <tr><td>Directory</td><td id="tt_directory"></td></tr>
         <tr><td>Duration</td><td id="tt_duration"></td></tr>
         <tr><td>CPU %</td><td id="tt_cpu_percent"></td></tr>
       </table>
