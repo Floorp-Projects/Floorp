@@ -86,6 +86,8 @@ public:
     , mUpdateScrollOffset(false)
     , mScrollGeneration(0)
     , mRootCompositionSize(0, 0)
+    , mDisplayPortMargins(0, 0, 0, 0)
+    , mUseDisplayPortMargins(false)
   {}
 
   // Default copy ctor and operator= are fine
@@ -97,6 +99,8 @@ public:
     return mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
            mRootCompositionSize == aOther.mRootCompositionSize &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
+           mDisplayPortMargins == aOther.mDisplayPortMargins &&
+           mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
            mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
            mViewport.IsEqualEdges(aOther.mViewport) &&
            mScrollId == aOther.mScrollId &&
@@ -382,6 +386,26 @@ public:
     return mRootCompositionSize;
   }
 
+  void SetDisplayPortMargins(const LayerMargin& aDisplayPortMargins)
+  {
+    mDisplayPortMargins = aDisplayPortMargins;
+  }
+
+  const LayerMargin& GetDisplayPortMargins() const
+  {
+    return mDisplayPortMargins;
+  }
+
+  void SetUseDisplayPortMargins()
+  {
+    mUseDisplayPortMargins = true;
+  }
+
+  bool GetUseDisplayPortMargins() const
+  {
+    return mUseDisplayPortMargins;
+  }
+
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
@@ -421,6 +445,14 @@ private:
 
   // The size of the root scrollable's composition bounds, but in local CSS pixels.
   CSSSize mRootCompositionSize;
+
+  // A display port expressed as layer margins that apply to the rect of what
+  // is drawn of the scrollable element.
+  LayerMargin mDisplayPortMargins;
+
+  // If this is true then we use the display port margins on this metrics,
+  // otherwise use the display port rect.
+  bool mUseDisplayPortMargins;
 };
 
 /**
