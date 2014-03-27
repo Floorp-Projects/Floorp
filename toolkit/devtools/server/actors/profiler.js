@@ -165,11 +165,12 @@ ProfilerActor.prototype = {
     }
 
     /*
-     * If these values are objects with a non-null 'wrappedJSObject'
-     * property, use its value. Otherwise, use the value unchanged.
+     * If these values are objects with a non-null 'wrappedJSObject' property
+     * and aren't Xrays, use their .wrappedJSObject. Otherwise, use the value
+     * unchanged.
      */
-    aSubject = (aSubject && aSubject.wrappedJSObject) || aSubject;
-    aData    = (aData    && aData.wrappedJSObject)    || aData;
+    aSubject = (aSubject && !Cu.isXrayWrapper(aSubject) && aSubject.wrappedJSObject) || aSubject;
+    aData    = (aData && !Cu.isXrayWrapper(aData) && aData.wrappedJSObject) || aData;
 
     let subj = JSON.parse(JSON.stringify(aSubject, cycleBreaker));
     let data = JSON.parse(JSON.stringify(aData,    cycleBreaker));
