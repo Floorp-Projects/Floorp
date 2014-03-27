@@ -1125,6 +1125,7 @@ BrowserAddonActor.prototype = {
     return {
       actor: this.actorID,
       id: this.id,
+      name: this._addon.name,
       url: this.url
     };
   },

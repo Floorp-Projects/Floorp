@@ -6,7 +6,18 @@
 
 const ADDON3_URL = EXAMPLE_URL + "addon3.xpi";
 
-let gAddon, gClient, gThreadClient, gDebugger, gSources;
+let gAddon, gClient, gThreadClient, gDebugger, gSources, gTitle;
+
+function onMessage(event) {
+  try {
+    let json = JSON.parse(event.data);
+    switch (json.name) {
+      case "toolbox-title":
+        gTitle = json.data.value;
+        break;
+    }
+  } catch(e) { Cu.reportError(e); }
+}
 
 function test() {
   Task.spawn(function () {
@@ -18,6 +29,8 @@ function test() {
     gBrowser.selectedTab = gBrowser.addTab();
     let iframe = document.createElement("iframe");
     document.documentElement.appendChild(iframe);
+
+    window.addEventListener("message", onMessage);
 
     let transport = DebuggerServer.connectPipe();
     gClient = new DebuggerClient(transport);
@@ -37,6 +50,7 @@ function test() {
     yield closeConnection();
     yield debuggerPanel._toolbox.destroy();
     iframe.remove();
+    window.removeEventListener("message", onMessage);
     finish();
   });
 }
@@ -87,6 +101,8 @@ function testSources() {
     // Be flexible in this number, as SDK changes could change the exact number of
     // built-in browser SDK modules
     ok(foundSDKModule > 10, "SDK modules are listed");
+
+    is(gTitle, "Debugger - browser_dbg_addon3", "Saw the right toolbox title.");
 
     deferred.resolve();
   });

@@ -503,9 +503,9 @@ function initDebugger(aTarget, aWindow) {
 function initAddonDebugger(aClient, aUrl, aFrame) {
   info("Initializing an addon debugger panel.");
 
-  return getAddonActorForUrl(aClient, aUrl).then(({actor}) => {
+  return getAddonActorForUrl(aClient, aUrl).then((addonActor) => {
     let targetOptions = {
-      form: { addonActor: actor },
+      form: { addonActor: addonActor.actor, title: addonActor.name },
       client: aClient,
       chrome: true
     };

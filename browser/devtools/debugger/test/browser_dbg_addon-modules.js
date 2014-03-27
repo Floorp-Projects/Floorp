@@ -5,7 +5,18 @@
 
 const ADDON4_URL = EXAMPLE_URL + "addon4.xpi";
 
-let gAddon, gClient, gThreadClient, gDebugger, gSources;
+let gAddon, gClient, gThreadClient, gDebugger, gSources, gTitle;
+
+function onMessage(event) {
+  try {
+    let json = JSON.parse(event.data);
+    switch (json.name) {
+      case "toolbox-title":
+        gTitle = json.data.value;
+        break;
+    }
+  } catch(e) { Cu.reportError(e); }
+}
 
 function test() {
   Task.spawn(function () {
@@ -17,6 +28,8 @@ function test() {
     gBrowser.selectedTab = gBrowser.addTab();
     let iframe = document.createElement("iframe");
     document.documentElement.appendChild(iframe);
+
+    window.addEventListener("message", onMessage);
 
     let transport = DebuggerServer.connectPipe();
     gClient = new DebuggerClient(transport);
@@ -43,6 +56,7 @@ function test() {
     yield closeConnection();
     yield debuggerPanel._toolbox.destroy();
     iframe.remove();
+    window.removeEventListener("message", onMessage);
     finish();
   });
 }
@@ -86,6 +100,8 @@ function testSources(expectSecondModule) {
     ok(foundAddonModule, "found JS module for the addon in the list");
     is(foundAddonModule2, expectSecondModule, "saw the second addon module");
     ok(foundAddonBootstrap, "found bootstrap script for the addon in the list");
+
+    is(gTitle, "Debugger - Test add-on with JS Modules", "Saw the right toolbox title.");
 
     deferred.resolve();
   });
