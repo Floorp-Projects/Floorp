@@ -1344,7 +1344,7 @@ TabChild::SetProcessNameToAppName()
     return;
   }
 
-  ContentChild::GetSingleton()->SetProcessName(appName);
+  ContentChild::GetSingleton()->SetProcessName(appName, true);
 }
 
 bool
