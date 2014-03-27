@@ -799,7 +799,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
     border-color: hsla(210,54%,20%,.3) hsla(210,54%,20%,.35) hsla(210,54%,20%,.4);
     box-shadow: 0 1px 1px hsla(210,54%,20%,.1) inset,
                 0 0 1px hsla(210,54%,20%,.2) inset,
-                /* allows windows-keyhole-forward-clip-path to be used for non-hover as well as hover: */
+                /* allows keyhole-forward-clip-path to be used for non-hover as well as hover: */
                 0 1px 0 hsla(210,54%,20%,0),
                 0 0 2px hsla(210,54%,20%,0);
     text-shadow: none;
@@ -853,7 +853,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #forward-button > .toolbarbutton-icon {
   background-clip: padding-box !important;
   /*mask: url(keyhole-forward-mask.svg#mask); XXX: this regresses twinopen */
-  clip-path: url(chrome://browser/content/browser.xul#windows-keyhole-forward-clip-path) !important;
+  clip-path: url(chrome://browser/content/browser.xul#keyhole-forward-clip-path) !important;
   margin-left: -6px !important;
   border-left-style: none !important;
   border-radius: 0 !important;
@@ -1156,7 +1156,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper {
-  clip-path: url("chrome://browser/content/browser.xul#windows-urlbar-back-button-clip-path");
+  clip-path: url("chrome://browser/content/browser.xul#urlbar-back-button-clip-path");
 }
 
 @conditionalForwardWithUrlbar@[forwarddisabled] > #urlbar-wrapper > #urlbar {
