@@ -51,15 +51,4 @@
         <item name="android:paddingTop">30dp</item>
     </style>
 
-    <!--
-         The content of the banner should align with the Grid/List views
-         in BookmarksPanel. BookmarksListView has a 120dp padding and
-         the TwoLinePageRows have a 50dp padding. Hence HomeBanner should
-         have 170dp padding.
-    -->
-    <style name="Widget.HomeBanner">
-        <item name="android:paddingLeft">170dp</item>
-        <item name="android:paddingRight">170dp</item>
-    </style>
-
 </resources>
