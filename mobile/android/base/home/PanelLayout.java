@@ -401,9 +401,9 @@ abstract class PanelLayout extends FrameLayout {
             if (mFilterStack == null) {
                 mFilterStack = new LinkedList<FilterDetail>();
 
-                // Initialize with a null filter.
-                // TODO: use initial filter from ViewConfig
-                mFilterStack.push(new FilterDetail(null, mPanelConfig.getTitle()));
+                // Initialize with the initial filter.
+                mFilterStack.push(new FilterDetail(mViewConfig.getFilter(),
+                                                   mPanelConfig.getTitle()));
             }
 
             mFilterStack.push(filter);
