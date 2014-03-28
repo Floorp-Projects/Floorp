@@ -90,7 +90,6 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/registry_interception.cc',
         'win/src/registry_policy.cc',
         'win/src/resolver.cc',
-        'win/src/resolver_32.cc',
         'win/src/restricted_token.cc',
         'win/src/restricted_token_utils.cc',
         'win/src/sandbox.cc',
@@ -98,16 +97,10 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/sandbox_policy_base.cc',
         'win/src/sandbox_utils.cc',
         'win/src/service_resolver.cc',
-        'win/src/service_resolver_32.cc',
         'win/src/shared_handles.cc',
         'win/src/sharedmem_ipc_client.cc',
         'win/src/sharedmem_ipc_server.cc',
         'win/src/sid.cc',
-        'win/src/sidestep/ia32_modrm_map.cpp',
-        'win/src/sidestep/ia32_opcode_map.cpp',
-        'win/src/sidestep/mini_disassembler.cpp',
-        'win/src/sidestep/preamble_patcher_with_stub.cpp',
-        'win/src/sidestep_resolver.cc',
         'win/src/sync_dispatcher.cc',
         'win/src/sync_interception.cc',
         'win/src/sync_policy.cc',
@@ -117,8 +110,26 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'win/src/win2k_threadpool.cc',
         'win/src/win_utils.cc',
         'win/src/window.cc',
-        'win/src/Wow64.cc',
     ]
+
+    if CONFIG['CPU_ARCH'] == 'x86_64':
+        SOURCES += [
+            'win/src/interceptors_64.cc',
+            'win/src/resolver_64.cc',
+            'win/src/service_resolver_64.cc',
+            'win/src/Wow64_64.cc',
+        ]
+    else:
+        SOURCES += [
+            'win/src/resolver_32.cc',
+            'win/src/service_resolver_32.cc',
+            'win/src/sidestep/ia32_modrm_map.cpp',
+            'win/src/sidestep/ia32_opcode_map.cpp',
+            'win/src/sidestep/mini_disassembler.cpp',
+            'win/src/sidestep/preamble_patcher_with_stub.cpp',
+            'win/src/sidestep_resolver.cc',
+            'win/src/Wow64.cc',
+        ]
 
     for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',
                 'NOMINMAX', '_CRT_RAND_S', 'CHROMIUM_SANDBOX_BUILD'):

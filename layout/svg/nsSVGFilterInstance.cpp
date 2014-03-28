@@ -26,10 +26,14 @@ using namespace mozilla::gfx;
 
 nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
                                          nsIFrame *aTargetFrame,
-                                         const gfxRect& aTargetBBox) :
+                                         const gfxRect& aTargetBBox,
+                                         const gfxSize& aUserSpaceToFilterSpaceScale,
+                                         const gfxSize& aFilterSpaceToUserSpaceScale) :
   mFilter(aFilter),
   mTargetFrame(aTargetFrame),
   mTargetBBox(aTargetBBox),
+  mUserSpaceToFilterSpaceScale(aUserSpaceToFilterSpaceScale),
+  mFilterSpaceToUserSpaceScale(aFilterSpaceToUserSpaceScale),
   mInitialized(false) {
 
   // Get the filter frame.
@@ -48,32 +52,12 @@ nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
   mPrimitiveUnits =
     mFilterFrame->GetEnumValue(SVGFilterElement::PRIMITIVEUNITS);
 
-  nsresult rv = ComputeUserSpaceToIntermediateSpaceScale();
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  rv = ComputeBounds();
+  nsresult rv = ComputeBounds();
   if (NS_FAILED(rv)) {
     return;
   }
 
   mInitialized = true;
-}
-
-nsresult
-nsSVGFilterInstance::ComputeUserSpaceToIntermediateSpaceScale()
-{
-  gfxMatrix canvasTransform =
-    nsSVGUtils::GetCanvasTM(mTargetFrame, nsISVGChildFrame::FOR_OUTERSVG_TM);
-  if (canvasTransform.IsSingular()) {
-    // Nothing should be rendered.
-    return NS_ERROR_FAILURE;
-  }
-  mUserSpaceToIntermediateSpaceScale = canvasTransform.ScaleFactors(true);
-  mIntermediateSpaceToUserSpaceScale = gfxSize(1.0 / mUserSpaceToIntermediateSpaceScale.width,
-                                               1.0 / mUserSpaceToIntermediateSpaceScale.height);
-  return NS_OK;
 }
 
 nsresult
@@ -104,10 +88,10 @@ nsSVGFilterInstance::ComputeBounds()
   mUserSpaceBounds = nsSVGUtils::GetRelativeRect(filterUnits,
     XYWH, mTargetBBox, mTargetFrame);
 
-  // Temporarily transform the user space bounds to intermediate space, so we
+  // Temporarily transform the user space bounds to filter space, so we
   // can align them with the pixel boundries of the offscreen surface.
-  // The offscreen surface has the same scale as intermediate space.
-  mUserSpaceBounds = UserSpaceToIntermediateSpace(mUserSpaceBounds);
+  // The offscreen surface has the same scale as filter space.
+  mUserSpaceBounds = UserSpaceToFilterSpace(mUserSpaceBounds);
   mUserSpaceBounds.RoundOut();
   if (mUserSpaceBounds.Width() <= 0 || mUserSpaceBounds.Height() <= 0) {
     // 0 disables rendering, < 0 is error. dispatch error console warning
@@ -115,18 +99,14 @@ nsSVGFilterInstance::ComputeBounds()
     return NS_ERROR_FAILURE;
   }
 
-  // Set the intermediate space bounds.
-  if (!gfxUtils::GfxRectToIntRect(mUserSpaceBounds, &mIntermediateSpaceBounds)) {
+  // Set the filter space bounds.
+  if (!gfxUtils::GfxRectToIntRect(mUserSpaceBounds, &mFilterSpaceBounds)) {
     // The filter region is way too big if there is float -> int overflow.
     return NS_ERROR_FAILURE;
   }
 
-  // Set the filter space bounds.
-  mFilterSpaceBounds = mIntermediateSpaceBounds;
-  mFilterSpaceBounds.MoveTo(0, 0);
-
   // Undo the temporary transformation of the user space bounds.
-  mUserSpaceBounds = IntermediateSpaceToUserSpace(mUserSpaceBounds);
+  mUserSpaceBounds = FilterSpaceToUserSpace(mUserSpaceBounds);
 
   return NS_OK;
 }
@@ -189,14 +169,14 @@ nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType, float aValue) const
 
   switch (aCtxType) {
   case SVGContentUtils::X:
-    return value * mUserSpaceToIntermediateSpaceScale.width;
+    return value * mUserSpaceToFilterSpaceScale.width;
   case SVGContentUtils::Y:
-    return value * mUserSpaceToIntermediateSpaceScale.height;
+    return value * mUserSpaceToFilterSpaceScale.height;
   case SVGContentUtils::XY:
   default:
     return value * SVGContentUtils::ComputeNormalizedHypotenuse(
-                     mUserSpaceToIntermediateSpaceScale.width,
-                     mUserSpaceToIntermediateSpaceScale.height);
+                     mUserSpaceToFilterSpaceScale.width,
+                     mUserSpaceToFilterSpaceScale.height);
   }
 }
 
@@ -223,24 +203,18 @@ nsSVGFilterInstance::ConvertLocation(const Point3D& aPoint) const
 gfxRect
 nsSVGFilterInstance::UserSpaceToFilterSpace(const gfxRect& aUserSpaceRect) const
 {
-  return UserSpaceToIntermediateSpace(aUserSpaceRect - mUserSpaceBounds.TopLeft());
+  gfxRect filterSpaceRect = aUserSpaceRect;
+  filterSpaceRect.Scale(mUserSpaceToFilterSpaceScale.width,
+                        mUserSpaceToFilterSpaceScale.height);
+  return filterSpaceRect;
 }
 
 gfxRect
-nsSVGFilterInstance::UserSpaceToIntermediateSpace(const gfxRect& aUserSpaceRect) const
+nsSVGFilterInstance::FilterSpaceToUserSpace(const gfxRect& aFilterSpaceRect) const
 {
-  gfxRect intermediateSpaceRect = aUserSpaceRect;
-  intermediateSpaceRect.Scale(mUserSpaceToIntermediateSpaceScale.width,
-                              mUserSpaceToIntermediateSpaceScale.height);
-  return intermediateSpaceRect;
-}
-
-gfxRect
-nsSVGFilterInstance::IntermediateSpaceToUserSpace(const gfxRect& aIntermediateSpaceRect) const
-{
-  gfxRect userSpaceRect = aIntermediateSpaceRect;
-  userSpaceRect.Scale(mIntermediateSpaceToUserSpaceScale.width,
-                      mIntermediateSpaceToUserSpaceScale.height);
+  gfxRect userSpaceRect = aFilterSpaceRect;
+  userSpaceRect.Scale(mFilterSpaceToUserSpaceScale.width,
+                      mFilterSpaceToUserSpaceScale.height);
   return userSpaceRect;
 }
 

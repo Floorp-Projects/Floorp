@@ -77,6 +77,8 @@ protected:
   static EnumInfo sEnumInfo[1];
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGComponentTransferFunctionElement, NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
+
 } // namespace dom
 } // namespace mozilla
 

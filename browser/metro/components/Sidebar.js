@@ -69,7 +69,6 @@ Sidebar.prototype = {
     return true;
   },
 
-  // =========================== nsISidebar ===========================
   // The suggestedTitle and suggestedCategory parameters are ignored, but remain
   // for backward compatibility.
   addSearchEngine: function addSearchEngine(engineURL, iconURL, suggestedTitle,
@@ -92,7 +91,6 @@ Sidebar.prototype = {
     Services.search.addEngine(engineURL, dataType, iconURL, true);
   },
 
-  // =========================== nsISidebarExternal ===========================
   // This function exists to implement window.external.AddSearchProvider(),
   // to match other browsers' APIs.  The capitalization, although nonstandard here,
   // is therefore important.
@@ -122,17 +120,8 @@ Sidebar.prototype = {
     return 0;
   },
 
-  // =========================== nsIClassInfo ===========================
-  classInfo: XPCOMUtils.generateCI({classID: SIDEBAR_CID,
-                                    contractID: SIDEBAR_CONTRACTID,
-                                    interfaces: [Ci.nsISidebar,
-                                                 Ci.nsISidebarExternal],
-                                    flags: Ci.nsIClassInfo.DOM_OBJECT,
-                                    classDescription: "Sidebar"}),
-
   // =========================== nsISupports ===========================
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISidebar,
-                                         Ci.nsISidebarExternal]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   // XPCOMUtils stuff
   classID: SIDEBAR_CID,

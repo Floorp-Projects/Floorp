@@ -733,7 +733,7 @@ JSVAL_IS_PRIMITIVE_IMPL(jsval_layout l)
 static inline bool
 JSVAL_IS_OBJECT_IMPL(jsval_layout l)
 {
-    MOZ_ASSERT((l.asBits >> JSVAL_TAG_SHIFT) <= JSVAL_SHIFTED_TAG_OBJECT);
+    MOZ_ASSERT((l.asBits >> JSVAL_TAG_SHIFT) <= JSVAL_TAG_OBJECT);
     return l.asBits >= JSVAL_SHIFTED_TAG_OBJECT;
 }
 

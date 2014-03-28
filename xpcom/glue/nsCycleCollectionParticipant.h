@@ -9,7 +9,7 @@
 #include "nsCycleCollectionNoteChild.h"
 #include "js/RootingAPI.h"
 
-#define NS_CYCLECOLLECTIONPARTICIPANT_IID                                      \
+#define NS_XPCOMCYCLECOLLECTIONPARTICIPANT_IID                                 \
 {                                                                              \
     0x9674489b,                                                                \
     0x1f6f,                                                                    \
@@ -95,8 +95,6 @@ public:
     MOZ_CONSTEXPR nsCycleCollectionParticipant() : mMightSkip(false) {}
     MOZ_CONSTEXPR nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {}
 
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
-
     NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
 
     NS_IMETHOD_(void) Root(void *p) = 0;
@@ -153,9 +151,6 @@ private:
     const bool mMightSkip;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant,
-                              NS_CYCLECOLLECTIONPARTICIPANT_IID)
-
 class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
 {
 public:
@@ -174,6 +169,8 @@ public:
     MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant() : nsScriptObjectTracer(false) {}
     MOZ_CONSTEXPR nsXPCOMCycleCollectionParticipant(bool aSkip) : nsScriptObjectTracer(aSkip) {}
 
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCOMCYCLECOLLECTIONPARTICIPANT_IID)
+
     NS_IMETHOD_(void) Root(void *p);
     NS_IMETHOD_(void) Unroot(void *p);
 
@@ -181,6 +178,9 @@ public:
 
     static bool CheckForRightISupports(nsISupports *s);
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant,
+                              NS_XPCOMCYCLECOLLECTIONPARTICIPANT_IID)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers for implementing a QI to nsXPCOMCycleCollectionParticipant

@@ -95,7 +95,7 @@ skip-if(B2G) == dynamic-pattern-02.svg pass.svg
 skip-if(B2G) == dynamic-pattern-contents-01.svg pass.svg
 skip-if(B2G) == dynamic-pattern-contents-02.svg pass.svg
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
-== dynamic-rect-02.svg dynamic-rect-02-ref.svg
+fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-02-ref.svg # bug 776038 for Win7, Win8
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
 == dynamic-rect-04.xhtml pass.svg
 == dynamic-rect-05.svg pass.svg
@@ -107,7 +107,7 @@ skip-if(B2G) == dynamic-pattern-contents-02.svg pass.svg
 == dynamic-stroke-width-01.svg pass.svg
 == dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
-fuzzy-if(d2d&&layersGPUAccelerated,2,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7
+fuzzy-if(d2d&&layersGPUAccelerated,3,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
 fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP, bug 776038 for Win7
 skip-if(B2G) == dynamic-text-05.svg pass.svg

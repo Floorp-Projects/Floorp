@@ -71,25 +71,6 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFragmentContentSink,
                               NS_I_FRAGMENT_CONTENT_SINK_IID)
 
-/**
- * This interface is implemented by paranoid content sinks, and allows consumers
- * to add tags and attributes to the default white-list set.
- */
-class nsIParanoidFragmentContentSink : public nsISupports {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_I_PARANOID_FRAGMENT_CONTENT_SINK_IID)
-
-  /**
-   * Allow the content sink to accept style elements and attributes.
-   */
-  virtual void AllowStyles() = 0;
-
-  /**
-   * Allow the content sink to accept comments.
-   */
-  virtual void AllowComments() = 0;
-};
-
 nsresult
 NS_NewXMLFragmentContentSink(nsIFragmentContentSink** aInstancePtrResult);
 

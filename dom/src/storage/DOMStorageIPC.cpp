@@ -22,7 +22,7 @@ namespace dom {
 
 NS_IMPL_ADDREF(DOMStorageDBChild)
 
-NS_IMETHODIMP_(nsrefcnt) DOMStorageDBChild::Release(void)
+NS_IMETHODIMP_(MozExternalRefCountType) DOMStorageDBChild::Release(void)
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");
   nsrefcnt count = --mRefCnt;

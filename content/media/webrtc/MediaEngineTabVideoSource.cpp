@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "nsGlobalWindow.h"
 #include "nsDOMWindowUtils.h"
 #include "nsIDOMClientRect.h"
@@ -16,24 +20,16 @@
 #include "VideoUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPrefService.h"
+
 namespace mozilla {
 
 using namespace mozilla::gfx;
 
-NS_IMPL_ISUPPORTS1(MediaEngineTabVideoSource, MediaEngineVideoSource)
+NS_IMPL_ISUPPORTS2(MediaEngineTabVideoSource, nsIDOMEventListener, nsITimerCallback)
 
 MediaEngineTabVideoSource::MediaEngineTabVideoSource()
-: mName(NS_LITERAL_STRING("&getUserMedia.videoDevice.tabShare;")),
-  mUuid(NS_LITERAL_STRING("uuid")),
-  mData(0),
-  mMonitor("MediaEngineTabVideoSource")
+: mMonitor("MediaEngineTabVideoSource")
 {
-}
-
-MediaEngineTabVideoSource::~MediaEngineTabVideoSource()
-{
-  if (mData)
-      free(mData);
 }
 
 nsresult
@@ -111,14 +107,13 @@ MediaEngineTabVideoSource::InitRunnable::Run()
 void
 MediaEngineTabVideoSource::GetName(nsAString_internal& aName)
 {
-  aName.Assign(mName);
-
+  aName.Assign(NS_LITERAL_STRING("&getUserMedia.videoDevice.tabShare;"));
 }
 
 void
 MediaEngineTabVideoSource::GetUUID(nsAString_internal& aUuid)
 {
-  aUuid.Assign(mUuid);
+  aUuid.Assign(NS_LITERAL_STRING("uuid"));
 }
 
 nsresult
@@ -250,7 +245,7 @@ MediaEngineTabVideoSource::Draw() {
 
   nsRefPtr<layers::ImageContainer> container = layers::LayerManager::CreateImageContainer();
   nsRefPtr<gfxASurface> surf;
-  surf = new gfxImageSurface(static_cast<unsigned char*>(mData),
+  surf = new gfxImageSurface(mData.rwget(),
                              ThebesIntSize(size), stride, format);
   if (surf->CairoStatus() != 0) {
     return;

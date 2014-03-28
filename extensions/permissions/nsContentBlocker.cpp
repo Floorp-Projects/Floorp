@@ -47,7 +47,7 @@ uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
 NS_IMPL_ISUPPORTS3(nsContentBlocker, 
                    nsIContentPolicy,
                    nsIObserver,
-                   nsSupportsWeakReference)
+                   nsISupportsWeakReference)
 
 nsContentBlocker::nsContentBlocker()
 {

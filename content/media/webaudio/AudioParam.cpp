@@ -29,7 +29,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(AudioParam)
 
 NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(AudioParam)
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 AudioParam::Release()
 {
   if (mRefCnt.get() == 1) {

@@ -125,8 +125,19 @@ class Nursery
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot **pSlotsElems);
 
-    size_t sizeOfHeapCommitted() { return numActiveChunks_ * gc::ChunkSize; }
-    size_t sizeOfHeapDecommitted() { return (NumNurseryChunks - numActiveChunks_) * gc::ChunkSize; }
+    size_t sizeOfHeapCommitted() const {
+        return numActiveChunks_ * gc::ChunkSize;
+    }
+    size_t sizeOfHeapDecommitted() const {
+        return (NumNurseryChunks - numActiveChunks_) * gc::ChunkSize;
+    }
+    size_t sizeOfHugeSlots(mozilla::MallocSizeOf mallocSizeOf) const {
+        size_t total = 0;
+        for (HugeSlotsSet::Range r = hugeSlots.all(); !r.empty(); r.popFront())
+            total += mallocSizeOf(r.front());
+        total += hugeSlots.sizeOfExcludingThis(mallocSizeOf);
+        return total;
+    }
 
   private:
     /*

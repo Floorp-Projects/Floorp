@@ -15,8 +15,6 @@
 USING_INDEXEDDB_NAMESPACE
 using namespace mozilla::dom;
 
-NS_DEFINE_STATIC_IID_ACCESSOR(IDBVersionChangeEvent, IDBVERSIONCHANGEEVENT_IID)
-
 namespace {
 
 class EventFiringRunnable : public nsRunnable

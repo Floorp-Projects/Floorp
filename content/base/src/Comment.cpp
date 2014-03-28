@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/CommentBinding.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 using namespace mozilla;
 using namespace dom;
@@ -49,7 +50,7 @@ Comment::List(FILE* out, int32_t aIndent) const
   int32_t indx;
   for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Comment@%p refcount=%d<!--", (void*)this, mRefCnt.get());
+  fprintf(out, "Comment@%p refcount=%" PRIuPTR "<!--", (void*)this, mRefCnt.get());
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());

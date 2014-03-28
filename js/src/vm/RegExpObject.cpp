@@ -520,9 +520,6 @@ RegExpRunStatus
 RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
                       size_t *lastIndex, MatchPairs &matches)
 {
-    /* Protect inlined chars from root analysis poisoning. */
-    SkipRoot skip(cx, &chars);
-
     /* Compile the code at point-of-use. */
     if (!compileIfNecessary(cx))
         return RegExpRunStatus_Error;
@@ -576,9 +573,6 @@ RegExpRunStatus
 RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length,
                                size_t *lastIndex, MatchPair &match)
 {
-    /* These chars may be inline in a string. See bug 846011. */
-    SkipRoot skipChars(cx, &chars);
-
     /* Compile the code at point-of-use. */
     if (!compileMatchOnlyIfNecessary(cx))
         return RegExpRunStatus_Error;
