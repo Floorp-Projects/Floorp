@@ -12,16 +12,17 @@ interface nsIEventTarget;
  * nsIThreadRetargetableRequest
  *
  * Should be implemented by requests that support retargeting delivery of
- * OnDataAvailable off the main thread. Note, OnStopRequest will be delivered
- * back on the main thread.
+ * data off the main thread.
  */
 [uuid(27b84c48-5a73-4ba4-a8a4-8b5e649a145e)]
 interface nsIThreadRetargetableRequest : nsISupports
 {
   /**
    * Called to retarget delivery of OnDataAvailable to another thread. Should
-   * only be called within the context of OnStartRequest on the main thread.
-   * OnStopRequest will be delivered back on the main thread.
+   * only be called before AsyncOpen for nsIWebsocketChannels, or during
+   * OnStartRequest for nsIHttpChannels.
+   * Note: For nsIHttpChannels, OnStartRequest and OnStopRequest will still be
+   * delivered on the main thread.
    *
    * @param aNewTarget New event target, e.g. thread or threadpool.
    *
