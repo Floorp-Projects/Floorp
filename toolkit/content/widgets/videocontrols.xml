@@ -795,11 +795,7 @@
                 seekToPosition : function(newPosition) {
                     newPosition /= 1000; // convert from ms
                     this.log("+++ seeking to " + newPosition);
-                    if (isTouchControl) {
-                        this.video.fastSeek(newPosition);
-                    } else {
-                        this.video.currentTime = newPosition;
-                    }
+                    this.video.currentTime = newPosition;
                 },
 
                 setVolume : function(newVolume) {
