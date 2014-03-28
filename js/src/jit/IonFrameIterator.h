@@ -246,8 +246,9 @@ class IonBailoutIterator;
 
 // Reads frame information in snapshot-encoding order (that is, outermost frame
 // to innermost frame).
-class SnapshotIterator : public SnapshotReader
+class SnapshotIterator
 {
+    SnapshotReader snapshot_;
     IonJSFrameLayout *fp_;
     MachineState machine_;
     IonScript *ionScript_;
@@ -279,16 +280,56 @@ class SnapshotIterator : public SnapshotReader
     void warnUnreadableAllocation();
 
   public:
+    // Handle iterating over RValueAllocations of the snapshots.
+    inline RValueAllocation readAllocation() {
+        return snapshot_.readAllocation();
+    }
+    Value skip() {
+        readAllocation();
+        return UndefinedValue();
+    }
+
+    inline uint32_t allocations() const {
+        return snapshot_.allocations();
+    }
+    inline bool moreAllocations() const {
+        return snapshot_.moreAllocations();
+    }
+
+  public:
+    // Exhibits frame properties contained in the snapshot.
+    inline uint32_t pcOffset() const {
+        return snapshot_.pcOffset();
+    }
+    inline bool resumeAfter() const {
+        return snapshot_.resumeAfter();
+    }
+    inline BailoutKind bailoutKind() const {
+        return snapshot_.bailoutKind();
+    }
+
+  public:
+    // Handle iterating over frames of the snapshots.
+    inline void nextFrame() {
+        snapshot_.nextFrame();
+    }
+    inline bool moreFrames() const {
+        return snapshot_.moreFrames();
+    }
+    inline uint32_t frameCount() const {
+        return snapshot_.frameCount();
+    }
+
+  public:
+    // Connect all informations about the current script in order to recover the
+    // content of baseline frames.
+
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                      IonJSFrameLayout *fp, const MachineState &machine);
     SnapshotIterator(const IonFrameIterator &iter);
     SnapshotIterator(const IonBailoutIterator &iter);
     SnapshotIterator();
 
-    Value skip() {
-        readAllocation();
-        return UndefinedValue();
-    }
     Value read() {
         return allocationValue(readAllocation());
     }
