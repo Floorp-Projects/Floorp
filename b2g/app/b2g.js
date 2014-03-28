@@ -852,6 +852,9 @@ pref("gfx.canvas.azure.accelerated", true);
 // Turn on dynamic cache size for Skia
 pref("gfx.canvas.skiagl.dynamic-cache", true);
 
+// Limit skia to canvases the size of the device screen or smaller
+pref("gfx.canvas.max-size-for-skia-gl", -1);
+
 // enable fence with readpixels for SurfaceStream
 pref("gfx.gralloc.fence-with-readpixels", true);
 
