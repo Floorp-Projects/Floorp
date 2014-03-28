@@ -46,12 +46,13 @@ public class AndroidBrowserBookmarksServerSyncStage extends ServerSyncStage {
     final JSONRecordFetcher countsFetcher = new JSONRecordFetcher(session.config.infoCollectionCountsURL(), authHeaderProvider);
     String collection = getCollection();
     return new SafeConstrainedServer11Repository(
-                                                 collection,
-                                                 session.config.storageURL(),
-                                                 session.getAuthHeaderProvider(),
-                                                 BOOKMARKS_REQUEST_LIMIT,
-                                                 BOOKMARKS_SORT,
-                                                 countsFetcher);
+        collection,
+        session.config.storageURL(),
+        session.getAuthHeaderProvider(),
+        session.config.infoCollections,
+        BOOKMARKS_REQUEST_LIMIT,
+        BOOKMARKS_SORT,
+        countsFetcher);
   }
 
   @Override

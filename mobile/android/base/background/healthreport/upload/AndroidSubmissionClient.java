@@ -401,7 +401,7 @@ public class AndroidSubmissionClient implements SubmissionClient {
           String generationProfilePath) throws JSONException {
         final JSONObject document;
         // If the given profilePath matches the one we cached for the tracker, use the cached env.
-        if (generationProfilePath == profilePath) {
+        if (profilePath != null && profilePath.equals(generationProfilePath)) {
           final Environment environment = getCurrentEnvironment();
           document = super.generateDocument(since, lastPingTime, environment);
         } else {

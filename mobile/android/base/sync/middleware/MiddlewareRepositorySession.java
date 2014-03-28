@@ -161,4 +161,24 @@ public abstract class MiddlewareRepositorySession extends RepositorySession {
   public void storeDone(long storeEnd) {
     inner.storeDone(storeEnd);
   }
+
+  @Override
+  public boolean shouldSkip() {
+    return inner.shouldSkip();
+  }
+
+  @Override
+  public boolean dataAvailable() {
+    return inner.dataAvailable();
+  }
+
+  @Override
+  public void unbundle(RepositorySessionBundle bundle) {
+    inner.unbundle(bundle);
+  }
+
+  @Override
+  public long getLastSyncTimestamp() {
+    return inner.getLastSyncTimestamp();
+  }
 }
