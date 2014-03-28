@@ -155,10 +155,12 @@ public:
   AudioData* DecodeToFirstAudioData();
   VideoData* DecodeToFirstVideoData();
 
-protected:
-  // Pumps the decode until we reach frames required to play at time aTarget
-  // (usecs).
+  // Decodes samples until we reach frames required to play at time aTarget
+  // (usecs). This also trims the samples to start exactly at aTarget,
+  // by discarding audio samples and adjusting start times of video frames.
   nsresult DecodeToTarget(int64_t aTarget);
+
+protected:
 
   // Reference to the owning decoder object.
   AbstractMediaDecoder* mDecoder;

@@ -1008,7 +1008,7 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   if (r != 0) {
     return NS_ERROR_FAILURE;
   }
-  return DecodeToTarget(aTarget);
+  return NS_OK;
 }
 
 nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
