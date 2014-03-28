@@ -19,6 +19,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class EventDispatcher {
     private static final String LOGTAG = "GeckoEventDispatcher";
     private static final String GUID = "__guid__";
+    private static final String SUFFIX_RETURN = "Return";
+    private static final String SUFFIX_ERROR = "Error";
 
     private final Map<String, CopyOnWriteArrayList<GeckoEventListener>> mEventListeners
                   = new HashMap<String, CopyOnWriteArrayList<GeckoEventListener>>();
@@ -102,21 +104,22 @@ public final class EventDispatcher {
 
     }
 
-    public static void sendResponse(JSONObject message, JSONObject response) {
-        try {
-            response.put(GUID, message.getString(GUID));
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(message.getString("type") + ":Return", response.toString()));
-        } catch (Exception ex) {
-            Log.e(LOGTAG, "Unable to send response", ex);
-        }
+    public static void sendResponse(JSONObject message, Object response) {
+        sendResponseHelper(SUFFIX_RETURN, message, response);
     }
 
-    public static void sendError(JSONObject message, JSONObject error) {
+    public static void sendError(JSONObject message, Object response) {
+        sendResponseHelper(SUFFIX_ERROR, message, response);
+    }
+
+    private static void sendResponseHelper(String suffix, JSONObject message, Object response) {
         try {
-            error.put(GUID, message.getString(GUID));
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(message.getString("type") + ":Error", error.toString()));
-        } catch (Exception ex) {
-            Log.e(LOGTAG, "Unable to send error", ex);
+            final JSONObject wrapper = new JSONObject();
+            wrapper.put(GUID, message.getString(GUID));
+            wrapper.put("response", response);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(message.getString("type") + ":" + suffix, wrapper.toString()));
+        } catch (Exception e) {
+            Log.e(LOGTAG, "Unable to send " + suffix, e);
         }
     }
 }
