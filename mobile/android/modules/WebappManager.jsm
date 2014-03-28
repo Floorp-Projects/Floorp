@@ -338,7 +338,7 @@ this.WebappManager = {
     sendMessageToJava({
       type: "Webapps:GetApkVersions",
       packageNames: packageNames 
-    }, data => deferred.resolve(JSON.parse(data).versions));
+    }, data => deferred.resolve(data.versions));
 
     return deferred.promise;
   },

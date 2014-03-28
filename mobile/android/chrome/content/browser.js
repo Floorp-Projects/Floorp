@@ -7254,7 +7254,7 @@ var WebappsUI = {
          manifestURL: aData.app.manifestURL,
          origin: origin
       }, (data) => {
-        let profilePath = JSON.parse(data).profile;
+        let profilePath = data.profile;
         if (!profilePath)
           return;
 
