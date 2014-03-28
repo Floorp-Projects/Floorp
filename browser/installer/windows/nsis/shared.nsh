@@ -645,15 +645,15 @@ FunctionEnd
     ${WriteRegStr2} $1 "$0" "Publisher" "Mozilla" 0
     ${WriteRegStr2} $1 "$0" "UninstallString" "$\"$8\uninstall\helper.exe$\"" 0
     DeleteRegValue SHCTX "$0" "URLInfoAbout"
-; Don't add URLInfoAbout which is the release notes url except for the release
+; Don't add URLUpdateInfo which is the release notes url except for the release
 ; and esr channels since nightly, aurora, and beta do not have release notes.
-; Note: URLInfoAbout is only defined in the official branding.nsi.
-!ifdef URLInfoAbout
+; Note: URLUpdateInfo is only defined in the official branding.nsi.
+!ifdef URLUpdateInfo
 !ifndef BETA_UPDATE_CHANNEL
-    ${WriteRegStr2} $1 "$0" "URLInfoAbout" "${URLInfoAbout}" 0
-!endif
-!endif
     ${WriteRegStr2} $1 "$0" "URLUpdateInfo" "${URLUpdateInfo}" 0
+!endif
+!endif
+    ${WriteRegStr2} $1 "$0" "URLInfoAbout" "${URLInfoAbout}" 0
     ${WriteRegDWORD2} $1 "$0" "NoModify" 1 0
     ${WriteRegDWORD2} $1 "$0" "NoRepair" 1 0
 
