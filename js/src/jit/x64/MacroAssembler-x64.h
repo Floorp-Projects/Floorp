@@ -78,6 +78,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::Pop;
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
+    using MacroAssemblerX86Shared::load32;
+    using MacroAssemblerX86Shared::store32;
 
     MacroAssemblerX64()
       : inCall_(false),
@@ -662,7 +664,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             movq(Operand(address), dest);
         } else {
             mov(ImmPtr(address.addr), ScratchReg);
-            movq(Operand(ScratchReg, 0x0), dest);
+            loadPtr(Address(ScratchReg, 0x0), dest);
         }
     }
     void loadPtr(const Address &address, Register dest) {
@@ -677,6 +679,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadPrivate(const Address &src, Register dest) {
         loadPtr(src, dest);
         shlq(Imm32(1), dest);
+    }
+    void load32(const AbsoluteAddress &address, Register dest) {
+        if (JSC::X86Assembler::isAddressImmediate(address.addr)) {
+            movl(Operand(address), dest);
+        } else {
+            mov(ImmPtr(address.addr), ScratchReg);
+            load32(Address(ScratchReg, 0x0), dest);
+        }
     }
     void storePtr(ImmWord imm, const Address &address) {
         if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
@@ -704,7 +714,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             movq(src, Operand(address));
         } else {
             mov(ImmPtr(address.addr), ScratchReg);
-            movq(src, Operand(ScratchReg, 0x0));
+            storePtr(src, Address(ScratchReg, 0x0));
+        }
+    }
+    void store32(const Register &src, const AbsoluteAddress &address) {
+        if (JSC::X86Assembler::isAddressImmediate(address.addr)) {
+            movl(src, Operand(address));
+        } else {
+            mov(ImmPtr(address.addr), ScratchReg);
+            store32(src, Address(ScratchReg, 0x0));
         }
     }
     void rshiftPtr(Imm32 imm, Register dest) {
