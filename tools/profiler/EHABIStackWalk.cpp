@@ -163,6 +163,9 @@ private:
 
 class EHInterp {
 public:
+  // Note that stackLimit is exclusive and stackBase is inclusive
+  // (i.e, stackLimit < SP <= stackBase), following the convention
+  // set by the AAPCS spec.
   EHInterp(EHState &aState, const EHEntry *aEntry,
            uint32_t aStackLimit, uint32_t aStackBase)
     : mState(aState),
@@ -294,10 +297,11 @@ private:
 };
 
 
-bool EHState::unwind(const EHEntry *aEntry, const void *stackLimit) {
-  EHInterp interp(*this, aEntry, mRegs[R_SP] - 4,
-                  reinterpret_cast<uint32_t>(stackLimit));
-
+bool EHState::unwind(const EHEntry *aEntry, const void *stackBasePtr) {
+  // The unwinding program cannot set SP to less than the initial value.
+  uint32_t stackLimit = mRegs[R_SP] - 4;
+  uint32_t stackBase = reinterpret_cast<uint32_t>(stackBasePtr);
+  EHInterp interp(*this, aEntry, stackLimit, stackBase);
   return interp.unwind();
 }
 
