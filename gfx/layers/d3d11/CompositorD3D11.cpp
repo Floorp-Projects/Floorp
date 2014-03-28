@@ -58,6 +58,7 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11BlendState> mPremulBlendState;
   RefPtr<ID3D11BlendState> mNonPremulBlendState;
   RefPtr<ID3D11BlendState> mComponentBlendState;
+  RefPtr<ID3D11BlendState> mDisabledBlendState;
 };
 
 CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
@@ -242,6 +243,18 @@ CompositorD3D11::Initialize()
       if (FAILED(hr)) {
         return false;
       }
+    }
+
+    D3D11_RENDER_TARGET_BLEND_DESC rtBlendDisabled = {
+      FALSE,
+      D3D11_BLEND_SRC_ALPHA, D3D11_BLEND_INV_SRC_ALPHA, D3D11_BLEND_OP_ADD,
+      D3D11_BLEND_ONE, D3D11_BLEND_INV_SRC_ALPHA, D3D11_BLEND_OP_ADD,
+      D3D11_COLOR_WRITE_ENABLE_ALL
+    };
+    blendDesc.RenderTarget[0] = rtBlendDisabled;
+    hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mDisabledBlendState));
+    if (FAILED(hr)) {
+      return false;
     }
   }
 
@@ -486,6 +499,41 @@ CompositorD3D11::SetPSForEffect(Effect* aEffect, MaskType aMaskType, gfx::Surfac
     NS_WARNING("No shader to load");
     return;
   }
+}
+
+void
+CompositorD3D11::ClearRect(const gfx::Rect& aRect)
+{
+  mContext->OMSetBlendState(mAttachments->mDisabledBlendState, sBlendFactor, 0xFFFFFFFF);
+
+  Matrix4x4 identity;
+  memcpy(&mVSConstants.layerTransform, &identity._11, 64);
+
+  mVSConstants.layerQuad = aRect;
+  mVSConstants.renderTargetOffset[0] = 0;
+  mVSConstants.renderTargetOffset[1] = 0;
+  mPSConstants.layerOpacity[0] = 1.0f;
+
+  D3D11_RECT scissor;
+  scissor.left = aRect.x;
+  scissor.right = aRect.XMost();
+  scissor.top = aRect.y;
+  scissor.bottom = aRect.YMost();
+  mContext->RSSetScissorRects(1, &scissor);
+  mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+  mContext->VSSetShader(mAttachments->mVSQuadShader[MaskNone], nullptr, 0);
+
+  mContext->PSSetShader(mAttachments->mSolidColorShader[MaskNone], nullptr, 0);
+  mPSConstants.layerColor[0] = 0;
+  mPSConstants.layerColor[1] = 0;
+  mPSConstants.layerColor[2] = 0;
+  mPSConstants.layerColor[3] = 0;
+
+  UpdateConstantBuffers();
+
+  mContext->Draw(4, 0);
+
+  mContext->OMSetBlendState(mAttachments->mPremulBlendState, sBlendFactor, 0xFFFFFFFF);
 }
 
 void
