@@ -53,6 +53,7 @@ function runSelectionTests(aInspector) {
   inspector.toolbox.once("picker-started", () => {
     info("Picker mode started, now clicking on H1 to select that node");
     executeSoon(() => {
+      h1.scrollIntoView();
       EventUtils.synthesizeMouseAtCenter(h1, {}, content);
       inspector.toolbox.once("picker-stopped", () => {
         info("Picker mode stopped, H1 selected, now switching to the console");

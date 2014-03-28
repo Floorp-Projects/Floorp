@@ -6,7 +6,7 @@ const {Cc, Ci, Cu, CC} = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/server/protocol");
 const {method, RetVal} = protocol;
-const promise = require("sdk/core/promise");
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {LongStringActor} = require("devtools/server/actors/string");
 
 Cu.import("resource://gre/modules/PermissionsTable.jsm")
