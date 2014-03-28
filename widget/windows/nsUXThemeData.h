@@ -92,6 +92,7 @@ public:
   static SIZE sCommandButtons[4];
   static mozilla::LookAndFeel::WindowsTheme sThemeId;
   static bool sIsDefaultWindowsTheme;
+  static bool sIsHighContrastOn;
 
   static void Initialize();
   static void Teardown();
@@ -106,6 +107,7 @@ public:
   static void UpdateNativeThemeInfo();
   static mozilla::LookAndFeel::WindowsTheme GetNativeThemeId();
   static bool IsDefaultWindowTheme();
+  static bool IsHighContrastOn();
 
   // This method returns the cached compositor state. Most
   // callers should call without the argument. The cache
