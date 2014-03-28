@@ -304,9 +304,6 @@ partial interface Window {
    */
   [Throws] readonly attribute unsigned long long mozPaintCount;
 
-  [Pure]
-           attribute EventHandler onwheel;
-
            attribute EventHandler ondevicemotion;
            attribute EventHandler ondeviceorientation;
            attribute EventHandler ondeviceproximity;
