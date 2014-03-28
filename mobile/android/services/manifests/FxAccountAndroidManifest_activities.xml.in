@@ -74,3 +74,11 @@
                 <action android:name="@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@.accounts.ACCOUNT_DELETED_ACTION"/>
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name="org.mozilla.gecko.fxa.receivers.FxAccountUpgradeReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package"/>
+            </intent-filter>
+        </receiver>
