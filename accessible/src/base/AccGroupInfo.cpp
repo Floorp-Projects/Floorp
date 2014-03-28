@@ -11,14 +11,20 @@
 using namespace mozilla::a11y;
 
 AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
-  mPosInSet(0), mSetSize(0), mParent(nullptr)
+  mPosInSet(0), mSetSize(0), mParent(nullptr), mItem(aItem), mRole(aRole)
 {
   MOZ_COUNT_CTOR(AccGroupInfo);
-  Accessible* parent = aItem->Parent();
+  Update();
+}
+
+void
+AccGroupInfo::Update()
+{
+  Accessible* parent = mItem->Parent();
   if (!parent)
     return;
 
-  int32_t indexInParent = aItem->IndexInParent();
+  int32_t indexInParent = mItem->IndexInParent();
   uint32_t siblingCount = parent->ChildCount();
   if (indexInParent == -1 ||
       indexInParent >= static_cast<int32_t>(siblingCount)) {
@@ -26,7 +32,7 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
     return;
   }
 
-  int32_t level = nsAccUtils::GetARIAOrDefaultLevel(aItem);
+  int32_t level = nsAccUtils::GetARIAOrDefaultLevel(mItem);
 
   // Compute position in set.
   mPosInSet = 1;
@@ -39,7 +45,7 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
       break;
 
     // If sibling is not visible and hasn't the same base role.
-    if (BaseRole(siblingRole) != aRole || sibling->State() & states::INVISIBLE)
+    if (BaseRole(siblingRole) != mRole || sibling->State() & states::INVISIBLE)
       continue;
 
     // Check if it's hierarchical flatten structure, i.e. if the sibling
@@ -81,7 +87,7 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
       break;
 
     // If sibling is visible and has the same base role
-    if (BaseRole(siblingRole) != aRole || sibling->State() & states::INVISIBLE)
+    if (BaseRole(siblingRole) != mRole || sibling->State() & states::INVISIBLE)
       continue;
 
     // and check if it's hierarchical flatten structure.
@@ -108,7 +114,7 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
     return;
 
   roles::Role parentRole = parent->Role();
-  if (ShouldReportRelations(aRole, parentRole))
+  if (ShouldReportRelations(mRole, parentRole))
     mParent = parent;
 
   // ARIA tree and list can be arranged by using ARIA groups to organize levels.
@@ -119,9 +125,9 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
   // parent. In other words the parent of the tree item will be a group and
   // the previous tree item of the group is a conceptual parent of the tree
   // item.
-  if (aRole == roles::OUTLINEITEM) {
+  if (mRole == roles::OUTLINEITEM) {
     Accessible* parentPrevSibling = parent->PrevSibling();
-    if (parentPrevSibling && parentPrevSibling->Role() == aRole) {
+    if (parentPrevSibling && parentPrevSibling->Role() == mRole) {
       mParent = parentPrevSibling;
       return;
     }
@@ -130,9 +136,9 @@ AccGroupInfo::AccGroupInfo(Accessible* aItem, role aRole) :
   // Way #2 for ARIA list and tree: group is a child of an item. In other words
   // the parent of the item will be a group and containing item of the group is
   // a conceptual parent of the item.
-  if (aRole == roles::LISTITEM || aRole == roles::OUTLINEITEM) {
+  if (mRole == roles::LISTITEM || mRole == roles::OUTLINEITEM) {
     Accessible* grandParent = parent->Parent();
-    if (grandParent && grandParent->Role() == aRole)
+    if (grandParent && grandParent->Role() == mRole)
       mParent = grandParent;
   }
 }
