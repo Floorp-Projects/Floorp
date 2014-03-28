@@ -1382,10 +1382,6 @@ let BookmarkingUI = {
       dropmarkerAnimationNode.style.listStyleImage = dropmarkerStyle.listStyleImage;
     }
 
-    let isInBookmarksToolbar = this.button.classList.contains("bookmark-item");
-    if (isInBookmarksToolbar)
-      this.notifier.setAttribute("in-bookmarks-toolbar", true);
-
     let isInOverflowPanel = this.button.getAttribute("overflowedItem") == "true";
     if (!isInOverflowPanel) {
       this.notifier.setAttribute("notification", "finish");
@@ -1394,7 +1390,6 @@ let BookmarkingUI = {
     }
 
     this._notificationTimeout = setTimeout( () => {
-      this.notifier.removeAttribute("in-bookmarks-toolbar");
       this.notifier.removeAttribute("notification");
       this.dropmarkerNotifier.removeAttribute("notification");
       this.button.removeAttribute("notification");
