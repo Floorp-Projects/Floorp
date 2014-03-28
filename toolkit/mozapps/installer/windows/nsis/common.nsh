@@ -4337,6 +4337,15 @@
  *
  * When modifying this macro be aware that LineFind uses all registers except
  * $R0-$R3 so be cautious. Callers of this macro are not affected.
+ *
+ * @param   _PROGRESSBAR
+ *          The progress bar to update using PBM_STEPIT.
+ * @param   _INSTALL_STEP_COUNTER
+ *          The install step counter to increment. The variable specified in
+ *          this parameter is also updated.
+ *
+ * $R2 = _INSTALL_STEP_COUNTER
+ * $R3 = _PROGRESSBAR
  */
 !macro OnStubInstallUninstall
 
@@ -4350,14 +4359,15 @@
     !define OnStubInstallUninstall "!insertmacro OnStubInstallUninstallCall"
 
     Function OnStubInstallUninstall
+      Exch $R2
+      Exch 1
+      Exch $R3
       Push $R9
       Push $R8
       Push $R7
       Push $R6
       Push $R5
       Push $R4
-      Push $R3
-      Push $R2
       Push $R1
       Push $R0
       Push $TmpVal
@@ -4384,14 +4394,15 @@
       Pop $TmpVal
       Pop $R0
       Pop $R1
-      Pop $R2
-      Pop $R3
       Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7
       Pop $R8
       Pop $R9
+      Exch $R3
+      Exch 1
+      Exch $R2
     FunctionEnd
 
     Function StubRemoveFilesCallback
@@ -4409,16 +4420,20 @@
       StrCpy $R1 "$INSTDIR$R9" ; Copy the install dir path and suffix it with the string
       IfFileExists "$R1" +1 end
 
+      IntOp $R2 $R2 + 2
+      SendMessage $R3 ${PBM_STEPIT} 0 0
+      SendMessage $R3 ${PBM_STEPIT} 0 0
+
       ClearErrors
       Delete "$R1"
       ${Unless} ${Errors}
         Goto end
       ${EndUnless}
 
-      GetTempFileName $R2 "$INSTDIR\${TO_BE_DELETED}"
-      Delete "$R2"
+      GetTempFileName $R0 "$INSTDIR\${TO_BE_DELETED}"
+      Delete "$R0"
       ClearErrors
-      Rename "$R1" "$R2"
+      Rename "$R1" "$R0"
       ${If} ${Errors}
         Delete /REBOOTOK "$R1"
       ${EndUnless}
@@ -4433,10 +4448,13 @@
   !endif
 !macroend
 
-!macro OnStubInstallUninstallCall
+!macro OnStubInstallUninstallCall _PROGRESSBAR _INSTALL_STEP_COUNTER
   !verbose push
+  Push "${_PROGRESSBAR}"
+  Push "${_INSTALL_STEP_COUNTER}"
   !verbose ${_MOZFUNC_VERBOSE}
   Call OnStubInstallUninstall
+  Pop ${_INSTALL_STEP_COUNTER}
   !verbose pop
 !macroend
 
