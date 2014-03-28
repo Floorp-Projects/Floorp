@@ -15,14 +15,6 @@
         "{objdir}/dist/b2g-*.tar.gz",
         "{workdir}/sources.xml"
     ],
-    "zip_files": [
-        ["{workdir}/out/target/product/hamachi/*.img", "out/target/product/hamachi/"],
-        ["{workdir}/boot.img", "out/target/product/hamachi/"],
-        "{workdir}/flash.sh",
-        "{workdir}/load-config.sh",
-        "{workdir}/.config",
-        "{workdir}/sources.xml"
-    ],
     "env": {
         "VARIANT": "user",
         "MOZILLA_OFFICIAL": "1"
