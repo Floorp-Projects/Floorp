@@ -621,3 +621,8 @@ if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner']:
     WEBIDL_FILES += [
         'BrowserFeedWriter.webidl',
     ]
+
+if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
+    WEBIDL_FILES += [
+        'External.webidl',
+    ]

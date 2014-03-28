@@ -216,6 +216,9 @@
 #include "nsITabChild.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/ScriptSettings.h"
+#ifdef HAVE_SIDEBAR
+#include "mozilla/dom/ExternalBinding.h"
+#endif
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesis.h"
@@ -1446,6 +1449,8 @@ nsGlobalWindow::CleanUp()
 
   mConsole = nullptr;
 
+  mExternal = nullptr;
+
   mPerformance = nullptr;
 
 #ifdef MOZ_WEBSPEECH
@@ -1761,6 +1766,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScrollbars)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -1819,6 +1825,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mScrollbars)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExternal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 #ifdef DEBUG
@@ -13495,6 +13502,54 @@ nsGlobalWindow::GetConsole(ErrorResult& aRv)
   }
 
   return mConsole;
+}
+
+already_AddRefed<External>
+nsGlobalWindow::GetExternal(ErrorResult& aRv)
+{
+  FORWARD_TO_INNER_OR_THROW(GetExternal, (aRv), aRv, nullptr);
+
+#ifdef HAVE_SIDEBAR
+  if (!mExternal) {
+    AutoJSContext cx;
+    JS::Rooted<JSObject*> jsImplObj(cx);
+    ConstructJSImplementation(cx, "@mozilla.org/sidebar;1",
+                              this, &jsImplObj, aRv);
+    if (aRv.Failed()) {
+      return nullptr;
+    }
+    mExternal = new External(jsImplObj, this);
+  }
+
+  nsRefPtr<External> external = static_cast<External*>(mExternal.get());
+  return external.forget();
+#else
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  return nullptr;
+#endif
+}
+
+void
+nsGlobalWindow::GetSidebar(OwningExternalOrWindowProxy& aResult,
+                           ErrorResult& aRv)
+{
+  FORWARD_TO_INNER_OR_THROW(GetSidebar, (aResult, aRv), aRv, );
+
+#ifdef HAVE_SIDEBAR
+  // First check for a named frame named "sidebar"
+  nsCOMPtr<nsIDOMWindow> domWindow = GetChildWindow(NS_LITERAL_STRING("sidebar"));
+  if (domWindow) {
+    aResult.SetAsWindowProxy() = domWindow.forget();
+    return;
+  }
+
+  nsRefPtr<External> external = GetExternal(aRv);
+  if (external) {
+    aResult.SetAsExternal() = external;
+  }
+#else
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+#endif
 }
 
 #ifdef MOZ_B2G

@@ -174,3 +174,6 @@ LOCAL_INCLUDES += [
 for var in ('MOZ_JSDEBUGGER', 'MOZ_B2G_RIL', 'MOZ_B2G_FM'):
     if CONFIG[var]:
         DEFINES[var] = True
+
+if CONFIG['MOZ_BUILD_APP'] in ['browser', 'mobile/android', 'xulrunner']:
+    DEFINES['HAVE_SIDEBAR'] = True
