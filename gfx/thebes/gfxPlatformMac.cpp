@@ -337,13 +337,6 @@ gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
     aFontList.AppendElement(kFontArialUnicodeMS);
 }
 
-
-int32_t 
-gfxPlatformMac::OSXVersion()
-{
-    return nsCocoaFeatures::OSXVersion();
-}
-
 uint32_t
 gfxPlatformMac::ReadAntiAliasingThreshold()
 {
@@ -423,7 +416,7 @@ bool
 gfxPlatformMac::UseAcceleratedCanvas()
 {
   // Lion or later is required
-  return OSXVersion() >= 0x1070 && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
+  return nsCocoaFeatures::OnLionOrLater() && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
 }
 
 bool
