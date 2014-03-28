@@ -352,7 +352,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
-  if (HasShadowManager() && mForwarder->EndTransaction(&replies, aScheduleComposite, &sent)) {
+  if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear, aScheduleComposite, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 

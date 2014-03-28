@@ -465,7 +465,10 @@ ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
 }
 
 bool
-ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool aScheduleComposite, bool* aSent)
+ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
+                                     const nsIntRegion& aRegionToClear,
+                                     bool aScheduleComposite,
+                                     bool* aSent)
 {
   *aSent = false;
 
@@ -561,7 +564,11 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool
 
   mWindowOverlayChanged = false;
 
-  TargetConfig targetConfig(mTxn->mTargetBounds, mTxn->mTargetRotation, mTxn->mClientBounds, mTxn->mTargetOrientation);
+  TargetConfig targetConfig(mTxn->mTargetBounds,
+                            mTxn->mTargetRotation,
+                            mTxn->mClientBounds,
+                            mTxn->mTargetOrientation,
+                            aRegionToClear);
 
   MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
   PlatformSyncBeforeUpdate();
