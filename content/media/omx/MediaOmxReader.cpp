@@ -352,7 +352,7 @@ nsresult MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndT
 
   mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
 
-  return DecodeToTarget(aTarget);
+  return NS_OK;
 }
 
 static uint64_t BytesToTime(int64_t offset, uint64_t length, uint64_t durationUs) {
