@@ -116,9 +116,7 @@ protected:
   nsresult SetupRecording(int aFd, int aRotation, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs);
   nsresult SetupVideoMode(const nsAString& aProfile);
   nsresult SetPreviewSize(const Size& aSize);
-  nsresult SetVideoSize(const Size& aSize);
   nsresult PausePreview();
-  nsresult GetSupportedSize(const Size& aSize, const nsTArray<Size>& supportedSizes, Size& best);
 
   friend class SetPictureSize;
   friend class SetThumbnailSize;
