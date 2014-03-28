@@ -211,6 +211,19 @@ ShaderModeForEffectType(EffectTypes aEffectType, gfx::SurfaceFormat aFormat)
 }
 
 void
+CompositorD3D9::ClearRect(const gfx::Rect& aRect)
+{
+  D3DRECT rect;
+  rect.x1 = aRect.X();
+  rect.y1 = aRect.Y();
+  rect.x2 = aRect.XMost();
+  rect.y2 = aRect.YMost();
+
+  device()->Clear(1, &rect, D3DCLEAR_TARGET,
+                  0x00000000, 0, 0);
+}
+
+void
 CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
                          const gfx::Rect &aClipRect,
                          const EffectChain &aEffectChain,
