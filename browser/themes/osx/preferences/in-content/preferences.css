@@ -2,182 +2,134 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%include ../../shared.inc
+%include ../../../shared/in-content/preferences.css
 
-@import url("chrome://global/skin/inContentUI.css");
-
-@namespace html "http://www.w3.org/1999/xhtml";
-
-#header {
-  margin-bottom: 18px;
+menulist:not([editable="true"]) > .menulist-dropmarker {
+  display: -moz-box;
+  margin-top: 1px;
+  margin-bottom: 1px;
 }
 
-caption {
-  font-size: 1.667rem;
+checkbox:hover::before,
+checkbox[checked]::before {
+  margin-bottom: -2px;
+  -moz-margin-end: -20px;
+  -moz-margin-start: 5px;
 }
 
-.main-content {
-  max-width: 800px;
+radio:hover::before,
+radio[selected]::before {
+  -moz-margin-end: -18px;
+  -moz-margin-start: 7px;
 }
 
-prefpane > .content-box {
-  overflow: auto;
-}
-
-/* Category List */
-
-#categories {
+.numberbox-input-box {
   -moz-appearance: none;
-  border: none;
-  -moz-margin-end: -1px;
-  background-color: transparent;
-  position: relative;
-  margin-top: 31px;
+  border-width: 0;
 }
 
-.category {
+spinbuttons {
   -moz-appearance: none;
-  color: #252F3B;
-  border-width: 1px;
-  border-style: solid;
-  border-color: transparent;
-  padding: 10px 4px;
-  -moz-padding-end: 8px;
-  -moz-box-align: center;
-  overflow: hidden;
-  min-height: 0;
-  height: 52px;
 }
 
-.category:-moz-locale-dir(ltr) {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
+.spinbuttons-up {
+  margin-top: 0 !important;
+  border-radius: 4px 4px 0 0;
 }
 
-.category:-moz-locale-dir(rtl) {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
+.spinbuttons-down  {
+  margin-bottom: 0 !important;
+  border-radius: 0 0 4px 4px;
 }
 
-.category[selected] {
-  background-color: rgba(255, 255, 255, 0.35);
-  color: -moz-dialogtext;
-  border-color: rgba(50, 65, 92, 0.4);
-  -moz-border-end-color: #C9CFD7;
+.spinbuttons-button > .button-box {
+  -moz-padding-start: 2px !important;
+  -moz-padding-end: 3px !important;
 }
 
-.category-name {
-  font-size: 1.5rem;
-  -moz-padding-end: 24px;
-}
-
-/* Maximize the size of the viewport when the window is small */
-@media (max-width: 800px) {
-  .category-name {
-    display: none;
-  }
-}
-
-.category-icon {
-  width: 32px;
-  height: 32px;
-  -moz-margin-start: 6px;
-  list-style-image: url("chrome://browser/skin/preferences/Options.png");
-}
-
-#category-general > .category-icon {
-  -moz-image-region: rect(0, 32px, 32px, 0);
-}
-
-#category-content > .category-icon {
-  -moz-image-region: rect(0, 96px,  32px, 64px)
-}
-
-#category-application > .category-icon {
-  -moz-image-region: rect(0, 128px,  32px, 96px)
-}
-
-#category-privacy > .category-icon {
-  -moz-image-region: rect(0, 160px,  32px, 128px)
-}
-
-#category-security > .category-icon {
-  -moz-image-region: rect(0, 192px,  32px, 160px)
-}
-
-#category-advanced > .category-icon {
-  -moz-image-region: rect(0, 224px, 32px, 192px)
-}
-
-%ifdef MOZ_SERVICES_SYNC
-#category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png");
-}
-%endif
-
-/* Applications Pane Styles */
-
-#applications-content {
-  padding: 15px;
-}
-
-#handlersView {
-  -moz-appearance: none;
-  border: 1px solid rgba(60,73,97,0.5);
-  overflow-y: auto;
-}
-
-/* XXX This style is for bug 740213 and should be removed once that
-   bug has a solution. */
-description > html|a {
-  cursor: pointer;
-}
-
-/* XXX Styles Below can be removed once bug 660726 lands */
-.nav-button {
-  list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
-}
-
-#back-btn:-moz-locale-dir(ltr),
-#forward-btn:-moz-locale-dir(rtl) {
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  border-right: none;
-  -moz-image-region: rect(0, 20px, 20px, 0);
-  padding-right: 3px;
-}
-
-#back-btn:-moz-locale-dir(rtl),
-#forward-btn:-moz-locale-dir(ltr) {
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  -moz-image-region: rect(0, 40px, 20px, 20px);
-  padding-left: 3px;
-}
-
-.header-button {
-  -moz-appearance: none;
-  padding: 0 4px;
-  margin: 0;
-  height: 22px;
-  border: 1px solid rgba(60,73,97,0.5);
-  border-radius: @toolbarbuttonCornerRadius@;
-  box-shadow: inset 0 1px rgba(255,255,255,0.25), 0 1px rgba(255,255,255,0.25);
-  background: linear-gradient(rgba(255,255,255,0.45), rgba(255,255,255,0));
-  background-clip: padding-box;
-}
-
-.header-button .toolbarbutton-text {
+.spinbuttons-button > .button-box > .button-text {
   display: none;
 }
 
-.header-button[disabled="true"] .toolbarbutton-icon {
-  opacity: 0.4;
+.actionsMenu > .menulist-label-box > .menulist-icon {
+  margin-top: 2px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 8px !important;
 }
 
-.header-button:not([disabled="true"]):active:hover,
-.header-button[open="true"] {
-  border-color: rgba(45,54,71,0.7);
-  box-shadow: inset 0 0 4px rgb(45,54,71), 0 1px rgba(255,255,255,0.25);
-  background-image: linear-gradient(rgba(45,54,71,0.6), rgba(45,54,71,0));
+description {
+  font-size: 1.25rem;
+  line-height: 22px;
+}
+
+@media (min-resolution: 2dppx) {
+  checkbox:hover::before,
+  checkbox[checked]::before {
+    background-size: cover;
+    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 30, 30, 0);
+  }
+
+  checkbox[checked]::before {
+    background-image: -moz-image-rect(url("chrome://browser/skin/preferences/in-content/check@2x.png"), 0, 60, 30, 30);
+  }
+
+  .category-icon {
+    list-style-image: url("chrome://browser/skin/preferences/in-content/icons@2x.png");
+  }
+
+  #category-general > .category-icon {
+    -moz-image-region: rect(0, 48px, 48px, 0);
+  }
+
+  #category-general[selected] > .category-icon {
+    -moz-image-region: rect(48px, 48px, 96px, 0);
+  }
+
+  #category-content > .category-icon {
+    -moz-image-region: rect(0, 96px, 48px, 48px);
+  }
+
+  #category-content[selected] > .category-icon {
+    -moz-image-region: rect(48px, 96px, 96px, 48px);
+  }
+
+  #category-application > .category-icon {
+    -moz-image-region: rect(0, 144px, 48px, 96px);
+  }
+
+  #category-application[selected] > .category-icon {
+    -moz-image-region: rect(48px, 144px, 96px, 96px);
+  }
+
+  #category-privacy > .category-icon {
+    -moz-image-region: rect(0, 192px, 48px, 144px);
+  }
+
+  #category-privacy[selected] > .category-icon {
+    -moz-image-region: rect(48px, 192px, 96px, 144px);
+  }
+
+  #category-security > .category-icon {
+    -moz-image-region: rect(0, 240px, 48px, 192px);
+  }
+
+  #category-security[selected] > .category-icon {
+    -moz-image-region: rect(48px, 240px, 96px, 192px);
+  }
+
+  #category-sync > .category-icon {
+    -moz-image-region: rect(0, 288px, 48px, 240px);
+  }
+
+  #category-sync[selected] > .category-icon {
+    -moz-image-region: rect(48px, 288px, 96px, 240px);
+  }
+
+  #category-advanced > .category-icon {
+    -moz-image-region: rect(0, 336px, 48px, 288px);
+  }
+
+  #category-advanced[selected] > .category-icon {
+    -moz-image-region: rect(48px, 336px, 96px, 288px);
+  }
 }

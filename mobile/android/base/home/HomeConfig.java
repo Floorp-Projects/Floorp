@@ -100,6 +100,7 @@ public final class HomeConfig {
         private final String mId;
         private final LayoutType mLayoutType;
         private final List<ViewConfig> mViews;
+        private final AuthConfig mAuthConfig;
         private final EnumSet<Flags> mFlags;
 
         private static final String JSON_KEY_TYPE = "type";
@@ -107,6 +108,7 @@ public final class HomeConfig {
         private static final String JSON_KEY_ID = "id";
         private static final String JSON_KEY_LAYOUT = "layout";
         private static final String JSON_KEY_VIEWS = "views";
+        private static final String JSON_KEY_AUTH_CONFIG = "authConfig";
         private static final String JSON_KEY_DEFAULT = "default";
         private static final String JSON_KEY_DISABLED = "disabled";
 
@@ -147,6 +149,13 @@ public final class HomeConfig {
                 mViews = null;
             }
 
+            final JSONObject jsonAuthConfig = json.optJSONObject(JSON_KEY_AUTH_CONFIG);
+            if (jsonAuthConfig != null) {
+                mAuthConfig = new AuthConfig(jsonAuthConfig);
+            } else {
+                mAuthConfig = null;
+            }
+
             mFlags = EnumSet.noneOf(Flags.class);
 
             if (json.optBoolean(JSON_KEY_DEFAULT, false)) {
@@ -170,6 +179,8 @@ public final class HomeConfig {
             mViews = new ArrayList<ViewConfig>();
             in.readTypedList(mViews, ViewConfig.CREATOR);
 
+            mAuthConfig = (AuthConfig) in.readParcelable(getClass().getClassLoader());
+
             mFlags = (EnumSet<Flags>) in.readSerializable();
 
             validate();
@@ -188,6 +199,8 @@ public final class HomeConfig {
                     mViews.add(new ViewConfig(viewConfig));
                 }
             }
+
+            mAuthConfig = panelConfig.mAuthConfig;
             mFlags = panelConfig.mFlags.clone();
 
             validate();
@@ -198,16 +211,17 @@ public final class HomeConfig {
         }
 
         public PanelConfig(PanelType type, String title, String id, EnumSet<Flags> flags) {
-            this(type, title, id, null, null, flags);
+            this(type, title, id, null, null, null, flags);
         }
 
         public PanelConfig(PanelType type, String title, String id, LayoutType layoutType,
-                List<ViewConfig> views, EnumSet<Flags> flags) {
+                List<ViewConfig> views, AuthConfig authConfig, EnumSet<Flags> flags) {
             mType = type;
             mTitle = title;
             mId = id;
             mLayoutType = layoutType;
             mViews = views;
+            mAuthConfig = authConfig;
             mFlags = flags;
 
             validate();
@@ -291,6 +305,10 @@ public final class HomeConfig {
             }
         }
 
+        public AuthConfig getAuthConfig() {
+            return mAuthConfig;
+        }
+
         public JSONObject toJSON() throws JSONException {
             final JSONObject json = new JSONObject();
 
@@ -313,6 +331,10 @@ public final class HomeConfig {
                 }
 
                 json.put(JSON_KEY_VIEWS, jsonViews);
+            }
+
+            if (mAuthConfig != null) {
+                json.put(JSON_KEY_AUTH_CONFIG, mAuthConfig.toJSON());
             }
 
             if (mFlags.contains(Flags.DEFAULT_PANEL)) {
@@ -356,6 +378,7 @@ public final class HomeConfig {
             dest.writeString(mId);
             dest.writeParcelable(mLayoutType, 0);
             dest.writeTypedList(mViews);
+            dest.writeParcelable(mAuthConfig, 0);
             dest.writeSerializable(mFlags);
         }
 
@@ -714,7 +737,103 @@ public final class HomeConfig {
         };
     }
 
-    /**
+    public static class AuthConfig implements Parcelable {
+        private final String mMessageText;
+        private final String mButtonText;
+        private final String mImageUrl;
+
+        private static final String JSON_KEY_MESSAGE_TEXT = "messageText";
+        private static final String JSON_KEY_BUTTON_TEXT = "buttonText";
+        private static final String JSON_KEY_IMAGE_URL = "imageUrl";
+
+        public AuthConfig(JSONObject json) throws JSONException, IllegalArgumentException {
+            mMessageText = json.optString(JSON_KEY_MESSAGE_TEXT);
+            mButtonText = json.optString(JSON_KEY_BUTTON_TEXT);
+            mImageUrl = json.optString(JSON_KEY_IMAGE_URL, null);
+        }
+
+        @SuppressWarnings("unchecked")
+        public AuthConfig(Parcel in) {
+            mMessageText = in.readString();
+            mButtonText = in.readString();
+            mImageUrl = in.readString();
+
+            validate();
+        }
+
+        public AuthConfig(AuthConfig authConfig) {
+            mMessageText = authConfig.mMessageText;
+            mButtonText = authConfig.mButtonText;
+            mImageUrl = authConfig.mImageUrl;
+
+            validate();
+        }
+
+        public AuthConfig(String messageText, String buttonText, String imageUrl) {
+            mMessageText = messageText;
+            mButtonText = buttonText;
+            mImageUrl = imageUrl;
+
+            validate();
+        }
+
+        private void validate() {
+            if (mMessageText == null) {
+                throw new IllegalArgumentException("Can't create AuthConfig with null message text");
+            }
+
+            if (mButtonText == null) {
+                throw new IllegalArgumentException("Can't create AuthConfig with null button text");
+            }
+        }
+
+        public String getMessageText() {
+            return mMessageText;
+        }
+
+        public String getButtonText() {
+            return mButtonText;
+        }
+
+        public String getImageUrl() {
+            return mImageUrl;
+        }
+
+        public JSONObject toJSON() throws JSONException {
+            final JSONObject json = new JSONObject();
+
+            json.put(JSON_KEY_MESSAGE_TEXT, mMessageText);
+            json.put(JSON_KEY_BUTTON_TEXT, mButtonText);
+            json.put(JSON_KEY_IMAGE_URL, mImageUrl);
+
+            return json;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(mMessageText);
+            dest.writeString(mButtonText);
+            dest.writeString(mImageUrl);
+        }
+
+        public static final Creator<AuthConfig> CREATOR = new Creator<AuthConfig>() {
+            @Override
+            public AuthConfig createFromParcel(final Parcel in) {
+                return new AuthConfig(in);
+            }
+
+            @Override
+            public AuthConfig[] newArray(final int size) {
+                return new AuthConfig[size];
+            }
+        };
+    }
+   /**
      * Immutable representation of the current state of {@code HomeConfig}.
      * This is what HomeConfig returns from a load() call and takes as
      * input to save a new state.

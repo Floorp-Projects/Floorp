@@ -37,7 +37,7 @@ function connect() {
     if (addonID) {
       gClient.listAddons(({addons}) => {
         let addonActor = addons.filter(addon => addon.id === addonID).pop();
-        openToolbox({ addonActor: addonActor.actor });
+        openToolbox({ addonActor: addonActor.actor, title: addonActor.name });
       });
     } else {
       gClient.listTabs(openToolbox);

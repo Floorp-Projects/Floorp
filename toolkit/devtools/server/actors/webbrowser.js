@@ -6,7 +6,8 @@
 
 "use strict";
 
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
+let {Cu} = require("chrome");
+let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 /**
@@ -1125,6 +1126,7 @@ BrowserAddonActor.prototype = {
     return {
       actor: this.actorID,
       id: this.id,
+      name: this._addon.name,
       url: this.url
     };
   },

@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIDOMSmsSegmentInfo.idl"
 
-[scriptable, uuid(46cf221e-9886-11e3-8039-171af7a2299e)]
+[scriptable, uuid(41db87b0-b0a1-11e3-a04f-cf487d837ee3)]
 interface nsIMobileMessageCallback : nsISupports
 {
   /**
@@ -24,6 +24,7 @@ interface nsIMobileMessageCallback : nsISupports
   const unsigned short FDN_CHECK_ERROR           = 8;
   const unsigned short NON_ACTIVE_SIM_CARD_ERROR = 9;
   const unsigned short STORAGE_FULL_ERROR        = 10;
+  const unsigned short SIM_NOT_MATCHED_ERROR     = 11;
 
   /**
    * |message| can be nsIDOMMoz{Mms,Sms}Message.

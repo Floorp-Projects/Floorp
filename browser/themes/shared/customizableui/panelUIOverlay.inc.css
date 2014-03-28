@@ -163,9 +163,13 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  -moz-hyphens: auto;
   line-height: 1.1;
   max-height: 2.2em;
+}
+
+.panelUI-grid .toolbarbutton-1:not([auto-hyphens="off"]) > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
+.panelUI-grid .toolbarbutton-1:not([auto-hyphens="off"]) > .toolbarbutton-multiline-text {
+  -moz-hyphens: auto;
 }
 
 .panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,

@@ -174,10 +174,11 @@ function state(contract) {
     state: function state(target, state) {
       let nativeTarget = target === 'window' ? getFocusedBrowser()
                           : target === 'tab' ? getMostRecentTab()
+                          : target === this ? null
                           : viewFor(target);
 
       if (!nativeTarget && target !== this && !isNil(target))
-        throw new Error('target not allowed.');
+        throw new Error(ERR_INVALID_TARGET);
 
       target = nativeTarget || target;
 

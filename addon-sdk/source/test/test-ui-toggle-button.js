@@ -298,6 +298,43 @@ exports['test button global state updated'] = function(assert) {
   loader.unload();
 }
 
+exports['test button global state set and get with state method'] = function(assert) {
+  let loader = Loader(module);
+  let { ToggleButton } = loader.require('sdk/ui');
+
+  let button = ToggleButton({
+    id: 'my-button-16',
+    label: 'my button',
+    icon: './icon.png'
+  });
+
+  // read the button's state
+  let state = button.state(button);
+
+  assert.equal(state.label, 'my button',
+    'label is correct');
+  assert.equal(state.icon, './icon.png',
+    'icon is correct');
+  assert.equal(state.disabled, false,
+    'disabled is correct');
+
+  // set the new button's state
+  button.state(button, {
+    label: 'New label',
+    icon: './new-icon.png',
+    disabled: true
+  });
+
+  assert.equal(button.label, 'New label',
+    'label is updated');
+  assert.equal(button.icon, './new-icon.png',
+    'icon is updated');
+  assert.equal(button.disabled, true,
+    'disabled is updated');
+
+  loader.unload();
+};
+
 exports['test button global state updated on multiple windows'] = function(assert, done) {
   let loader = Loader(module);
   let { ToggleButton } = loader.require('sdk/ui');
@@ -1027,35 +1064,62 @@ exports['test buttons can have anchored panels'] = function(assert, done) {
   let { identify } = loader.require('sdk/ui/id');
   let { getActiveView } = loader.require('sdk/view/core');
 
-  let button = ToggleButton({
+  let b1 = ToggleButton({
     id: 'my-button-22',
     label: 'my button',
     icon: './icon.png',
-    onChange: ({checked}) => checked && panel.show({position: button})
+    onChange: ({checked}) => checked && panel.show()
   });
 
-  let panel = Panel();
+  let b2 = ToggleButton({
+    id: 'my-button-23',
+    label: 'my button',
+    icon: './icon.png',
+    onChange: ({checked}) => checked && panel.show({position: b2})
+  });
+
+  let panel = Panel({
+    position: b1
+  });
+
+  let { document } = getMostRecentBrowserWindow();
+  let b1Node = document.getElementById(identify(b1));
+  let b2Node = document.getElementById(identify(b2));
+  let panelNode = getActiveView(panel);
 
   panel.once('show', () => {
-    let { document } = getMostRecentBrowserWindow();
-    let buttonNode = document.getElementById(identify(button));
-    let panelNode = getActiveView(panel);
-
-    assert.ok(button.state('window').checked,
+    assert.ok(b1.state('window').checked,
       'button is checked');
 
     assert.equal(panelNode.getAttribute('type'), 'arrow',
       'the panel is a arrow type');
 
-    assert.strictEqual(buttonNode, panelNode.anchorNode,
-      'the panel is anchored properly to the button');
+    assert.strictEqual(b1Node, panelNode.anchorNode,
+      'the panel is anchored properly to the button given in costructor');
 
-    loader.unload();
+    panel.hide();
 
-    done();
+    panel.once('show', () => {
+      assert.ok(b2.state('window').checked,
+        'button is checked');
+
+      assert.equal(panelNode.getAttribute('type'), 'arrow',
+        'the panel is a arrow type');
+
+      // test also that the button passed in `show` method, takes the precedence
+      // over the button set in panel's constructor.
+      assert.strictEqual(b2Node, panelNode.anchorNode,
+        'the panel is anchored properly to the button passed to show method');
+
+      loader.unload();
+
+      done();
+    });
+
+    b2.click();
   });
 
-  button.click();
+  b1.click();
 }
 
 require('sdk/test').run(exports);
