@@ -237,16 +237,16 @@ class ArrayBufferViewObject : public JSObject
 {
   protected:
     /* Offset of view in underlying ArrayBufferObject */
-    static const size_t BYTEOFFSET_SLOT  = JS_TYPEDOBJ_SLOT_BYTEOFFSET;
+    static const size_t BYTEOFFSET_SLOT  = JS_BUFVIEW_SLOT_BYTEOFFSET;
 
     /* Byte length of view */
-    static const size_t LENGTH_SLOT      = JS_TYPEDOBJ_SLOT_LENGTH;
+    static const size_t LENGTH_SLOT      = JS_BUFVIEW_SLOT_LENGTH;
 
     /* Underlying ArrayBufferObject */
-    static const size_t BUFFER_SLOT      = JS_TYPEDOBJ_SLOT_OWNER;
+    static const size_t BUFFER_SLOT      = JS_BUFVIEW_SLOT_OWNER;
 
     /* ArrayBufferObjects point to a linked list of views, chained through this slot */
-    static const size_t NEXT_VIEW_SLOT   = JS_TYPEDOBJ_SLOT_NEXT_VIEW;
+    static const size_t NEXT_VIEW_SLOT   = JS_BUFVIEW_SLOT_NEXT_VIEW;
 
   public:
     static ArrayBufferObject *bufferObject(JSContext *cx, Handle<ArrayBufferViewObject *> obj);
