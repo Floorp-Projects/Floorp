@@ -89,8 +89,6 @@ Var EndPreInstallPhaseTickCount
 Var EndInstallPhaseTickCount
 Var EndFinishPhaseTickCount
 
-Var IntroPageShownCount
-Var OptionsPageShownCount
 Var InitialInstallRequirementsCode
 Var ExistingProfile
 Var ExistingVersion
@@ -107,7 +105,7 @@ Var ControlRightPX
 ; the stub installer
 ;!define STUB_DEBUG
 
-!define StubURLVersion "v5"
+!define StubURLVersion "v6"
 
 ; Successful install exit code
 !define ERR_SUCCESS 0
@@ -195,12 +193,18 @@ Var ControlRightPX
 
 !define CONFIG_INI "config.ini"
 
-!define MAX_PATH 260
-
-!define FILE_SHARE_READ 1
-!define GENERIC_READ 0x80000000
-!define OPEN_EXISTING 3
-!define INVALID_HANDLE_VALUE -1
+!ifndef FILE_SHARE_READ
+  !define FILE_SHARE_READ 1
+!endif
+!ifndef GENERIC_READ
+  !define GENERIC_READ 0x80000000
+!endif
+!ifndef OPEN_EXISTING
+  !define OPEN_EXISTING 3
+!endif
+!ifndef INVALID_HANDLE_VALUE
+  !define INVALID_HANDLE_VALUE -1
+!endif
 
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
@@ -236,6 +240,7 @@ Var ControlRightPX
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
 !insertmacro GetPathFromString
+!insertmacro GetParent
 !insertmacro GetSingleInstallPath
 !insertmacro GetTextWidthHeight
 !insertmacro IsUserAdmin
@@ -346,39 +351,6 @@ Function .onInit
     System::Call 'user32::SetProcessDPIAware()'
   ${EndIf}
 
-  ; Create a mutex to prevent multiple launches of the same stub installer in
-  ; the same location on the file system. This intentionally won't handle the
-  ; case where someone runs multiple copies of the stub on the file system but
-  ; it does handle the important case which is a user launching the same stub
-  ; multiple times.
-  StrCpy $1 "$EXEPATH"
-  ; Backslashes are illegal in a mutex name so replace all occurences of a
-  ; backslash with a forward slash.
-  ${WordReplace} "$1" "\" "/" "+" $1
-  StrLen $2 "$1"
-
-  ; The lpName parameter for CreateMutexW is limited to MAX_PATH characters so
-  ; use the characters at the end since they are more likely to be unique.
-  ${If} $2 > ${MAX_PATH}
-    StrCpy $1 "$1" ${MAX_PATH} -${MAX_PATH}
-  ${EndIf}
-  System::Call "kernel32::CreateMutexW(i 0, i 0, w '$1') i .r0 ?e"
-  Pop $0
-
-  ${Unless} $0 == 0
-    ; The mutex is specific to this executable's path so we should be able to
-    ; find the Window with the same caption as this executable's and bring that
-    ; window to the front. This could find another instance of the same
-    ; executable but that is an uninteresting edge case.
-    FindWindow $1 "#32770" "$(WIN_CAPTION)" 0
-    ${If} $1 != 0
-      ; Restore the window if it is minimized and make it the foreground window
-      System::Call "user32::ShowWindow(i r1, i ${SW_RESTORE}) i."
-      System::Call "user32::SetForegroundWindow(i r1) i."
-    ${EndIf}
-    Abort
-  ${EndUnless}
-
   SetShellVarContext all ; Set SHCTX to HKLM
   ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
 
@@ -398,6 +370,8 @@ Function .onInit
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
                    "Write Test"
 
+  ; Only display set as default when there is write access to HKLM and on Win7
+  ; and below.
   ${If} ${Errors}
   ${OrIf} ${AtLeastWin8}
     StrCpy $CanSetAsDefault "false"
@@ -413,8 +387,6 @@ Function .onInit
   StrCpy $OptionsPhaseSeconds "0"
   StrCpy $EndPreInstallPhaseTickCount "0"
   StrCpy $EndInstallPhaseTickCount "0"
-  StrCpy $IntroPageShownCount "0"
-  StrCpy $OptionsPageShownCount "0"
   StrCpy $InitialInstallRequirementsCode ""
   StrCpy $IsDownloadFinished ""
   StrCpy $FirefoxLaunchCode "0"
@@ -566,9 +538,17 @@ Function SendPing
       StrCpy $R1 "0"
     ${EndIf}
 
-    ${WinVerGetMajor} $R2
-    ${WinVerGetMinor} $R3
-    ${WinVerGetBuild} $R4
+    ; Though these values are sometimes incorrect due to bug 444664 it happens
+    ; so rarely it isn't worth working around it by reading the registry values.
+    ${WinVerGetMajor} $5
+    ${WinVerGetMinor} $6
+    ${WinVerGetBuild} $7
+    ${WinVerGetServicePackLevel} $8
+    ${If} ${IsServerOS}
+      StrCpy $9 "1"
+    ${Else}
+      StrCpy $9 "0"
+    ${EndIf}
 
     ${If} "$ExitCode" == "${ERR_SUCCESS}"
       ReadINIStr $R5 "$INSTDIR\application.ini" "App" "Version"
@@ -601,6 +581,74 @@ Function SendPing
       StrCpy $DownloadServerIP "Unknown"
     ${EndIf}
 
+    StrCpy $R2 ""
+    SetShellVarContext current ; Set SHCTX to the current user
+    ReadRegStr $R2 HKCU "Software\Classes\http\shell\open\command" ""
+    ${If} $R2 != ""
+      ${GetPathFromString} "$R2" $R2
+      ${GetParent} "$R2" $R3
+      ${GetLongPath} "$R3" $R3
+      ${If} $R3 == $INSTDIR
+        StrCpy $R2 "1" ; This Firefox install is set as default.
+      ${Else}
+        StrCpy $R2 "$R2" "" -11 # length of firefox.exe
+        ${If} "$R2" == "${FileMainEXE}"
+          StrCpy $R2 "2" ; Another Firefox install is set as default.
+        ${Else}
+          StrCpy $R2 "0"
+        ${EndIf}
+      ${EndIf}
+    ${Else}
+      StrCpy $R2 "0" ; Firefox is not set as default.
+    ${EndIf}
+
+    ${If} "$R2" == "0"
+    ${AndIf} ${AtLeastWinVista}
+      ; Check to see if this install location is currently set as the default
+      ; browser by Default Programs which is only available on Vista and above.
+      ClearErrors
+      ReadRegStr $R3 HKLM "Software\RegisteredApplications" "${AppRegName}"
+      ${Unless} ${Errors}
+        AppAssocReg::QueryAppIsDefaultAll "${AppRegName}" "effective"
+        Pop $R3
+        ${If} $R3 == "1"
+          StrCpy $R3 ""
+          ReadRegStr $R2 HKLM "Software\Classes\http\shell\open\command" ""
+          ${If} $R2 != ""
+            ${GetPathFromString} "$R2" $R2
+            ${GetParent} "$R2" $R3
+            ${GetLongPath} "$R3" $R3
+            ${If} $R3 == $INSTDIR
+              StrCpy $R2 "1" ; This Firefox install is set as default.
+            ${Else}
+              StrCpy $R2 "$R2" "" -11 # length of firefox.exe
+              ${If} "$R2" == "${FileMainEXE}"
+                StrCpy $R2 "2" ; Another Firefox install is set as default.
+              ${Else}
+                StrCpy $R2 "0"
+              ${EndIf}
+            ${EndIf}
+          ${Else}
+            StrCpy $R2 "0" ; Firefox is not set as default.
+          ${EndIf}
+        ${EndIf}
+      ${EndUnless}
+    ${EndIf}
+
+    ${If} $CanSetAsDefault == "true"
+      ${If} $CheckboxSetAsDefault == "1"
+        StrCpy $R3 "2"
+      ${Else}
+        StrCpy $R3 "3"
+      ${EndIf}
+    ${Else}
+      ${If} ${AtLeastWin8}
+        StrCpy $R3 "1"
+      ${Else}
+        StrCpy $R3 "0"
+      ${EndIf}
+    ${EndIf}
+
 !ifdef STUB_DEBUG
     MessageBox MB_OK "${BaseURLStubPing} \
                       $\nStub URL Version = ${StubURLVersion}${StubURLVersionAppend} \
@@ -609,13 +657,16 @@ Function SendPing
                       $\nLocale = ${AB_CD} \
                       $\nFirefox x64 = $R0 \
                       $\nRunning x64 Windows = $R1 \
-                      $\nMajor = $R2 \
-                      $\nMinor = $R3 \
-                      $\nBuild = $R4 \
+                      $\nMajor = $5 \
+                      $\nMinor = $6 \
+                      $\nBuild = $7 \
+                      $\nServicePack = $8 \
+                      $\nIsServer = $9 \
                       $\nExit Code = $ExitCode \
                       $\nFirefox Launch Code = $FirefoxLaunchCode \
                       $\nDownload Retry Count = $DownloadRetryCount \
                       $\nDownloaded Bytes = $DownloadedBytes \
+                      $\nDownload Size Bytes = $DownloadSizeBytes \
                       $\nIntroduction Phase Seconds = $IntroPhaseSeconds \
                       $\nOptions Phase Seconds = $OptionsPhaseSeconds \
                       $\nDownload Phase Seconds = $0 \
@@ -624,8 +675,6 @@ Function SendPing
                       $\nPreinstall Phase Seconds = $2 \
                       $\nInstall Phase Seconds = $3 \
                       $\nFinish Phase Seconds = $4 \
-                      $\nIntro Page Shown Count = $IntroPageShownCount \
-                      $\nOptions Page Shown Count = $OptionsPageShownCount \
                       $\nInitial Install Requirements Code = $InitialInstallRequirementsCode \
                       $\nOpened Download Page = $OpenedDownloadPage \
                       $\nExisting Profile = $ExistingProfile \
@@ -635,6 +684,8 @@ Function SendPing
                       $\nNew Build ID = $R6 \
                       $\nDefault Install Dir = $R7 \
                       $\nHas Admin = $R8 \
+                      $\nDefault Status = $R2 \
+                      $\nSet As Sefault Status = $R3 \
                       $\nDownload Server IP = $DownloadServerIP"
     ; The following will exit the installer
     SetAutoClose true
@@ -642,7 +693,7 @@ Function SendPing
     Call RelativeGotoPage
 !else
     ${NSD_CreateTimer} OnPing ${DownloadIntervalMS}
-    InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}${StubURLVersionAppend}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$R2/$R3/$R4/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$IntroPageShownCount/$OptionsPageShownCount/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$DownloadServerIP" \
+    InetBgDL::Get "${BaseURLStubPing}/${StubURLVersion}/${Channel}/${UpdateChannel}/${AB_CD}/$R0/$R1/$5/$6/$7/$8/$9/$ExitCode/$FirefoxLaunchCode/$DownloadRetryCount/$DownloadedBytes/$DownloadSizeBytes/$IntroPhaseSeconds/$OptionsPhaseSeconds/$0/$1/$DownloadFirstTransferSeconds/$2/$3/$4/$InitialInstallRequirementsCode/$OpenedDownloadPage/$ExistingProfile/$ExistingVersion/$ExistingBuildID/$R5/$R6/$R7/$R8/$R2/$R3/$DownloadServerIP" \
                   "$PLUGINSDIR\_temp" /END
 !endif
   ${Else}
@@ -681,8 +732,6 @@ Function createIntro
 
   SetCtlColors $HWNDPARENT ${FOOTER_CONTROL_TEXT_COLOR_NORMAL} ${FOOTER_BKGRD_COLOR}
   GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
-  ; Set as default is not supported in the installer for Win8 and above so
-  ; only display it on Windows 7 and below
   ${If} "$CanSetAsDefault" == "true"
     ; The uxtheme must be disabled on checkboxes in order to override the
     ; system font color.
@@ -720,8 +769,6 @@ Function createIntro
   GetDlgItem $0 $HWNDPARENT 3 ; Back button used for Options
   SendMessage $0 ${WM_SETTEXT} 0 "STR:$(OPTIONS_BUTTON)"
 
-  IntOp $IntroPageShownCount $IntroPageShownCount + 1
-
   System::Call "kernel32::GetTickCount()l .s"
   Pop $StartIntroPhaseTickCount
 
@@ -737,10 +784,12 @@ Function leaveIntro
 
   System::Call "kernel32::GetTickCount()l .s"
   Pop $0
-  ${GetSecondsElapsed} "$StartIntroPhaseTickCount" "$0" $1
-  ; This is added to the previous value of $IntroPhaseSeconds because the
-  ; introduction page can be displayed multiple times.
-  IntOp $IntroPhaseSeconds $IntroPhaseSeconds + $1
+  ${GetSecondsElapsed} "$StartIntroPhaseTickCount" "$0" $IntroPhaseSeconds
+  ; It is possible for this value to be 0 if the user clicks fast enough so
+  ; increment the value by 1 if it is 0.
+  ${If} $IntroPhaseSeconds == 0
+    IntOp $IntroPhaseSeconds $IntroPhaseSeconds + 1
+  ${EndIf}
 
   SetShellVarContext all ; Set SHCTX to All Users
   ; If the user doesn't have write access to the installation directory set
@@ -986,8 +1035,6 @@ Function createOptions
     ${EndIf}
   ${EndIf}
 
-  StrCpy $OptionsPageShownCount "1"
-
   System::Call "kernel32::GetTickCount()l .s"
   Pop $StartOptionsPhaseTickCount
 
@@ -1023,10 +1070,12 @@ Function leaveOptions
 
   System::Call "kernel32::GetTickCount()l .s"
   Pop $0
-  ${GetSecondsElapsed} "$StartOptionsPhaseTickCount" "$0" $1
-  ; This is added to the previous value of $OptionsPhaseSeconds because the
-  ; options page can be displayed multiple times.
-  IntOp $OptionsPhaseSeconds $OptionsPhaseSeconds + $1
+  ${GetSecondsElapsed} "$StartOptionsPhaseTickCount" "$0" $OptionsPhaseSeconds
+  ; It is possible for this value to be 0 if the user clicks fast enough so
+  ; increment the value by 1 if it is 0.
+  ${If} $OptionsPhaseSeconds == 0
+    IntOp $OptionsPhaseSeconds $OptionsPhaseSeconds + 1
+  ${EndIf}
 
   ${NSD_GetState} $CheckboxShortcutOnBar $CheckboxShortcutOnBar
   ${NSD_GetState} $CheckboxShortcutInStartMenu $CheckboxShortcutInStartMenu
@@ -1149,7 +1198,6 @@ Function createInstall
   ; Kill the Cancel button's focus so pressing enter won't cancel the install.
   SendMessage $0 ${WM_KILLFOCUS} 0 0
 
-  ; Set as default is not supported in the installer for Win8 and above
   ${If} "$CanSetAsDefault" == "true"
     GetDlgItem $0 $HWNDPARENT 10 ; Default browser checkbox
     SendMessage $0 ${BM_GETCHECK} 0 0 $CheckboxSetAsDefault

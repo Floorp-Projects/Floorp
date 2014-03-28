@@ -24,13 +24,28 @@
 
 !macro __MOZ__WinVer_DefineOSTests WinVer
   !insertmacro __WinVer_DefineOSTest AtLeast ${WinVer} ""
-  !insertmacro __WinVer_DefineOSTest AtMost ${WinVer} ""
   !insertmacro __WinVer_DefineOSTest Is ${WinVer} ""
+  !insertmacro __WinVer_DefineOSTest AtMost ${WinVer} ""
 !macroend
 
 !ifndef WINVER_8
-  !define WINVER_8    0x06020000 ;6.02.????
+  !define WINVER_8         0x06020000 ;6.02.9200
   !insertmacro __MOZ__WinVer_DefineOSTests 8
+!endif
+
+!ifndef WINVER_8.1
+  !define WINVER_8.1       0x06030000 ;6.03.9600
+  !insertmacro __MOZ__WinVer_DefineOSTests 8.1
+!endif
+
+!ifndef WINVER_2012
+  !define WINVER_2012      0x06020001 ;6.02.9200
+  !insertmacro __MOZ__WinVer_DefineOSTests 2012
+!endif
+
+!ifndef WINVER_2012R2
+  !define WINVER_2012R2    0x06030001 ;6.03.9600
+  !insertmacro __MOZ__WinVer_DefineOSTests 2012R2
 !endif
 
 !verbose push
