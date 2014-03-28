@@ -30,6 +30,15 @@
 
 </preferences>
 
+<hbox id="header-security"
+      class="header"
+      hidden="true"
+      data-category="paneSecurity">
+  <image class="header-icon"/>
+  <label class="header-name"
+         value="&paneSecurity.title;"/>
+</hbox>
+
 <!-- addons, forgery (phishing) UI -->
 <groupbox id="addonsPhishingGroup" data-category="paneSecurity" hidden="true">
   <caption label="&general.label;"/>

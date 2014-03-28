@@ -8,23 +8,23 @@ function test() {
   let newState = {
     windows: [{
       tabs: [{
-        entries: [{ url: "about:blank" }],
+        entries: [{ url: "about:robots" }],
         hidden: true,
         attributes: {},
         extData: {
           "tabview-tab":
             '{"bounds":{"left":21,"top":29,"width":204,"height":153},' +
-            '"userSize":null,"url":"about:blank","groupID":1,' +
+            '"userSize":null,"url":"about:robots","groupID":1,' +
             '"imageData":null,"title":null}'
         }
       },{
-        entries: [{ url: "about:blank" }],
+        entries: [{ url: "about:robots" }],
         hidden: false,
         attributes: {},
         extData: {
           "tabview-tab":
             '{"bounds":{"left":315,"top":29,"width":111,"height":84},' +
-            '"userSize":null,"url":"about:blank","groupID":2,' +
+            '"userSize":null,"url":"about:robots","groupID":2,' +
             '"imageData":null,"title":null}'
         },
       }],

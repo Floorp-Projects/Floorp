@@ -63,6 +63,13 @@
 #define MOZSETTINGS_CHANGED_ID               "mozsettings-changed"
 #define AUDIO_VOLUME_BT_SCO_ID               "audio.volume.bt_sco"
 
+#define RESPONSE_CIEV      "+CIEV: "
+#define RESPONSE_CIND      "+CIND: "
+#define RESPONSE_CLCC      "+CLCC: "
+#define RESPONSE_BRSF      "+BRSF: "
+#define RESPONSE_VGS       "+VGS: "
+#define RESPONSE_CME_ERROR "+CME ERROR: "
+
 using namespace mozilla;
 using namespace mozilla::ipc;
 USING_BLUETOOTH_NAMESPACE
@@ -216,7 +223,7 @@ BluetoothHfpManager::Notify(const hal::BatteryInformation& aBatteryInfo)
   int level = ceil(aBatteryInfo.level() * 5.0);
   if (level != sCINDItems[CINDType::BATTCHG].value) {
     sCINDItems[CINDType::BATTCHG].value = level;
-    SendCommand("+CIEV: ", CINDType::BATTCHG);
+    SendCommand(RESPONSE_CIEV, CINDType::BATTCHG);
   }
 }
 
@@ -586,7 +593,7 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
 
   // Only send volume back when there's a connected headset
   if (IsConnected()) {
-    SendCommand("+VGS: ", mCurrentVgs);
+    SendCommand(RESPONSE_VGS, mCurrentVgs);
   }
 }
 
@@ -720,13 +727,13 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     uint32_t brsf = 0;
 #endif // MOZ_B2G_RIL
 
-    SendCommand("+BRSF: ", brsf);
+    SendCommand(RESPONSE_BRSF, brsf);
   } else if (msg.Find("AT+CIND=?") != -1) {
     // Asking for CIND range
-    SendCommand("+CIND: ", 0);
+    SendCommand(RESPONSE_CIND, 0);
   } else if (msg.Find("AT+CIND?") != -1) {
     // Asking for CIND value
-    SendCommand("+CIND: ", 1);
+    SendCommand(RESPONSE_CIND, 1);
   } else if (msg.Find("AT+CMER=") != -1) {
     /**
      * SLC establishment is done when AT+CMER has been received.
@@ -780,7 +787,7 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
     if (!atCommandValues[0].EqualsLiteral("3") ||
         !atCommandValues[1].EqualsLiteral("0")) {
       if (mCMEE) {
-        SendCommand("+CME ERROR: ", BluetoothCmeError::OPERATION_NOT_SUPPORTED);
+        SendCommand(RESPONSE_CME_ERROR, BluetoothCmeError::OPERATION_NOT_SUPPORTED);
       } else {
         SendLine("ERROR");
       }
@@ -943,7 +950,7 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
   } else if (msg.Find("AT+CHUP") != -1) {
     NotifyDialer(NS_LITERAL_STRING("CHUP"));
   } else if (msg.Find("AT+CLCC") != -1) {
-    SendCommand("+CLCC: ");
+    SendCommand(RESPONSE_CLCC);
   } else if (msg.Find("ATD") != -1) {
     nsAutoCString message(msg), newMsg;
     int end = message.FindChar(';');
@@ -1189,7 +1196,7 @@ BluetoothHfpManager::SendCLCC(const Call& aCall, int aIndex)
     return true;
   }
 
-  nsAutoCString message("+CLCC: ");
+  nsAutoCString message(RESPONSE_CLCC);
   message.AppendInt(aIndex);
   message.AppendLiteral(",");
   message.AppendInt(aCall.mDirection);
@@ -1258,7 +1265,7 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint32_t aValue)
   nsAutoCString message;
   message += aCommand;
 
-  if (!strcmp(aCommand, "+CIEV: ")) {
+  if (!strcmp(aCommand, RESPONSE_CIEV)) {
     if (!mCMER || !sCINDItems[aValue].activated) {
       // Indicator status update is disabled
       return true;
@@ -1272,7 +1279,7 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint32_t aValue)
     message.AppendInt(aValue);
     message.AppendLiteral(",");
     message.AppendInt(sCINDItems[aValue].value);
-  } else if (!strcmp(aCommand, "+CIND: ")) {
+  } else if (!strcmp(aCommand, RESPONSE_CIND)) {
     if (!aValue) {
       // Query for range
       for (uint8_t i = 1; i < ArrayLength(sCINDItems); i++) {
@@ -1298,7 +1305,7 @@ BluetoothHfpManager::SendCommand(const char* aCommand, uint32_t aValue)
       }
     }
 #ifdef MOZ_B2G_RIL
-  } else if (!strcmp(aCommand, "+CLCC: ")) {
+  } else if (!strcmp(aCommand, RESPONSE_CLCC)) {
     bool rv = true;
     uint32_t callNumbers = mCurrentCallArray.Length();
     uint32_t i;
@@ -1329,7 +1336,7 @@ BluetoothHfpManager::UpdateCIND(uint8_t aType, uint8_t aValue, bool aSend)
   if (sCINDItems[aType].value != aValue) {
     sCINDItems[aType].value = aValue;
     if (aSend) {
-      SendCommand("+CIEV: ", aType);
+      SendCommand(RESPONSE_CIEV, aType);
     }
   }
 }
@@ -1408,7 +1415,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           // Releases all active calls and accepts the other (+CIEV, callheld=1)
           sCINDItems[CINDType::CALLHELD].value = CallHeldState::ONHOLD_ACTIVE;
         }
-        SendCommand("+CIEV: ", CINDType::CALLHELD);
+        SendCommand(RESPONSE_CIEV, CINDType::CALLHELD);
       }
       break;
     case nsITelephonyProvider::CALL_STATE_INCOMING:
@@ -1590,7 +1597,7 @@ BluetoothHfpManager::AnswerWaitingCall()
   UpdateCIND(CINDType::CALLSETUP, CallSetupState::NO_CALLSETUP, true);
 
   sCINDItems[CINDType::CALLHELD].value = CallHeldState::ONHOLD_ACTIVE;
-  SendCommand("+CIEV: ", CINDType::CALLHELD);
+  SendCommand(RESPONSE_CIEV, CINDType::CALLHELD);
 }
 
 void

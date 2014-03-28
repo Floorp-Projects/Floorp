@@ -85,6 +85,14 @@
 #endif
 </preferences>
 
+<hbox id="header-general"
+      class="header"
+      data-category="paneGeneral">
+  <image class="header-icon"/>
+  <label class="header-name"
+         value="&paneGeneral.title;"/>
+</hbox>
+
 <!-- Startup -->
 <groupbox id="startupGroup" data-category="paneGeneral">
   <caption label="&startup.label;"/>

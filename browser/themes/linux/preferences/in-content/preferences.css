@@ -2,174 +2,89 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/inContentUI.css");
+%include ../../../shared/in-content/preferences.css
 
-@namespace html "http://www.w3.org/1999/xhtml";
-
-#header {
-  margin-bottom: 18px;
-}
-
-caption {
-  font-size: 1.667rem;
-}
-
-.main-content {
-  max-width: 800px;
-}
-
-prefpane > .content-box {
-  overflow: auto;
-}
-
-/* Category List */
-
-#categories {
+button > .button-box,
+menulist > .menulist-label-box {
   -moz-appearance: none;
-  border: none;
-  -moz-margin-end: -1px;
-  background-color: transparent;
-  position: relative;
-  margin-top: 41px;
 }
 
-.category {
+button[type="menu"] > .button-box > .button-menu-dropmarker {
+  -moz-appearance: none !important;
+}
+
+menulist:not([editable="true"]) > .menulist-dropmarker {
+  display: -moz-box;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+checkbox {
+  -moz-binding: url("chrome://global/content/bindings/checkbox.xml#checkbox");
+}
+
+.checkbox-check {
+  max-height: 23px;
+}
+
+checkbox:hover::before,
+checkbox[checked]::before {
+  max-height: 10px;
+  margin-top: 7px;
+  margin-bottom: 6px;
+  -moz-margin-end: -19px;
+  -moz-margin-start: 4px;
+  background-repeat: no-repeat;
+}
+
+radio {
+  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
+  margin: 7px 0;
+}
+
+.radio-check {
+  max-height: 23px;
+}
+
+.radio-label-box {
   -moz-appearance: none;
-  border-width: 1px;
-  -moz-border-end-width: 0;
-  border-style: solid;
-  border-color: transparent;
-  padding: 9px 4px 10px;
-  -moz-padding-end: 8px;
-  -moz-box-align: center;
-  overflow: hidden;
-  min-height: 0;
-  color: WindowText;
-  height: 52px;
 }
 
-.category:-moz-locale-dir(ltr) {
-  border-top-left-radius: 5px;
-  border-bottom-left-radius: 5px;
-}
-
-.category:-moz-locale-dir(rtl) {
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-}
-
-.category[selected] {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  border-color: ThreeDShadow;
-}
-
-.category-name {
-  font-size: 1.5rem;
-  -moz-padding-end: 24px;
-}
-
-/* Maximize the size of the viewport when the window is small */
-@media (max-width: 800px) {
-  .category-name {
-    display: none;
-  }
-}
-
-.category-icon {
-  width: 32px;
-  height: 32px;
-  margin: 0 6px;
+radio:hover::before,
+radio[selected]::before {
+  max-height: 11px;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  -moz-margin-end: -17px;
   -moz-margin-start: 6px;
-  -moz-margin-end: 5px;
-  list-style-image: url("chrome://browser/skin/preferences/Options.png");
 }
 
-#category-general > .category-icon {
-  -moz-image-region: rect(0, 32px, 32px, 0);
-}
-
-#category-content > .category-icon {
-  -moz-image-region: rect(0, 96px,  32px, 64px)
-}
-
-#category-application > .category-icon {
-  -moz-image-region: rect(0, 128px,  32px, 96px)
-}
-
-#category-privacy > .category-icon {
-  -moz-image-region: rect(0, 160px,  32px, 128px)
-}
-
-#category-security > .category-icon {
-  -moz-image-region: rect(0, 192px,  32px, 160px)
-}
-
-#category-advanced > .category-icon {
-  -moz-image-region: rect(0, 224px, 32px, 192px)
-}
-
-%ifdef MOZ_SERVICES_SYNC
-#category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/Options-sync.png");
-}
-%endif
-
-/* Applications Pane Styles */
-
-#applications-content {
-  padding: 15px;
-}
-
-#handlersView {
+.numberbox-input-box {
   -moz-appearance: none;
-  border: 1px solid ThreeDShadow;
-  overflow-y: auto;
+  border-width: 0;
 }
 
-/* XXX This style is for bug 740213 and should be removed once that
-   bug has a solution. */
-description > html|a {
-  cursor: pointer;
+spinbuttons {
+  -moz-appearance: none;
 }
 
-/* XXX Styles Below can be removed once bug 660726 lands */
-.nav-button {
-  min-width: 0;
+.actionsMenu {
+  font-family: "Clear Sans", sans-serif;
+  font-size: 1.25rem;
+  line-height: 22px;
 }
 
-#back-btn:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
+.actionsMenu > .menulist-label-box > .menulist-icon {
+  margin-top: 1px;
+  -moz-margin-start: 1px;
+  -moz-margin-end: 6px;
 }
 
-#forward-btn:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
+.actionsMenu > .menulist-label-box > .menulist-label {
+  margin-top: 2px !important;
 }
 
-#back-btn:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
-}
-
-#forward-btn:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
-}
-
-#back-btn[disabled="true"]:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
-}
-
-#forward-btn[disabled="true"]:-moz-locale-dir(ltr) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
-}
-
-#back-btn[disabled="true"]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
-}
-
-#forward-btn[disabled="true"]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
-}
-
-.header-button .toolbarbutton-text {
-  display: none;
+menulist.actionsMenu > .menulist-dropmarker {
+  margin-top: 11px;
+  margin-bottom: 11px;
 }
