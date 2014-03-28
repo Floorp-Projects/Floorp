@@ -61,7 +61,8 @@
         <receiver
             android:name="org.mozilla.gecko.sync.receivers.UpgradeReceiver">
             <intent-filter>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package"/>
             </intent-filter>
         </receiver>
 

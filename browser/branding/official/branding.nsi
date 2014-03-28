@@ -10,8 +10,9 @@
 # instead of BrandFullName and typically should not be modified.
 !define BrandFullNameInternal "Mozilla Firefox"
 !define CompanyName           "Mozilla Corporation"
-!define URLInfoAbout          "https://www.mozilla.org/${AB_CD}/"
-!define URLUpdateInfo         "https://www.mozilla.org/${AB_CD}/firefox/"
+!define URLInfoAbout          "https://www.mozilla.org"
+!define URLUpdateInfo         "https://www.mozilla.org/firefox/${AppVersion}/releasenotes"
+!define HelpLink              "https://support.mozilla.org"
 
 ; The OFFICIAL define is a workaround to support different urls for Release and
 ; Beta since they share the same branding when building with other branches that
