@@ -2338,17 +2338,18 @@ DataChannelConnection::ReadBlob(already_AddRefed<DataChannelConnection> aThis,
   // be deferred until buffer space is available.
   nsCString temp;
   uint64_t len;
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-
-  if (NS_FAILED(aBlob->Available(&len)) ||
-      NS_FAILED(NS_ReadInputStreamToString(aBlob, temp, len))) {
+  aBlob->Available(&len);
+  nsresult rv = NS_ReadInputStreamToString(aBlob, temp, len);
+  if (NS_FAILED(rv)) {
     // Bug 966602:  Doesn't return an error to the caller via onerror.
-    // We must release DataChannelConnection on MainThread to avoid issues (bug 876167)
-    NS_ProxyRelease(mainThread, aThis.take());
+    // Let aThis (aka this) be released when we exit out of paranoia
+    // instead of calling Release()
+    nsRefPtr<DataChannelConnection> self(aThis);
     return;
   }
   aBlob->Close();
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
   RUN_ON_THREAD(mainThread, WrapRunnable(nsRefPtr<DataChannelConnection>(aThis),
                                &DataChannelConnection::SendBinaryMsg,
                                aStream, temp),
