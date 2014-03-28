@@ -49,13 +49,11 @@
 }
 
 #newtab-undo-close-button {
+  -moz-appearance: none;
   padding: 0;
   border: none;
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-}
-
-#newtab-undo-close-button > .toolbarbutton-icon {
-  margin: -4px;
+  height: 16px;
+  width: 16px;
 }
 
 #newtab-undo-close-button > .toolbarbutton-text {
