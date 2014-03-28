@@ -28,6 +28,15 @@
 <script type="application/javascript"
         src="chrome://browser/content/sync/utils.js"/>
 
+<hbox id="header-sync"
+      class="header"
+      hidden="true"
+      data-category="paneSync">
+  <image class="header-icon"/>
+  <label class="header-name"
+         value="&paneSync.title;"/>
+</hbox>
+
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
   <vbox id="noAccount" align="center">
     <spacer flex="1"/>

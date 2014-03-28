@@ -74,15 +74,6 @@
                   src="chrome://browser/locale/preferences/applicationManager.properties"/>
   </stringbundleset>
 
-  <hbox id="header">
-    <toolbarbutton id="back-btn" class="nav-button header-button"
-                   oncommand="cmd_back()" tooltiptext="&buttonBack.tooltip;"
-                   disabled="true"/>
-    <toolbarbutton id="forward-btn" class="nav-button header-button"
-                   oncommand="cmd_forward()" tooltiptext="&buttonForward.tooltip;"
-                   disabled="true"/>
-  </hbox>
-
   <hbox flex="1">
 
     <!-- category list -->
