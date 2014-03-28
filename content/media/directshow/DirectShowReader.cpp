@@ -390,7 +390,7 @@ DirectShowReader::Seek(int64_t aTargetUs,
   hr = mControl->Run();
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  return NS_OK;
+  return DecodeToTarget(aTargetUs);
 }
 
 void

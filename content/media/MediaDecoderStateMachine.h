@@ -190,8 +190,8 @@ public:
   // that the state has changed.
   void Play();
 
-  // Seeks to the decoder to aTarget asynchronously.
-  void Seek(const SeekTarget& aTarget);
+  // Seeks to aTime in seconds.
+  void Seek(double aTime);
 
   // Returns the current playback position in seconds.
   // Called from the main thread to get the current frame time. The decoder
@@ -725,7 +725,7 @@ private:
   // Position to seek to in microseconds when the seek state transition occurs.
   // The decoder monitor lock must be obtained before reading or writing
   // this value. Accessed on main and decode thread.
-  SeekTarget mSeekTarget;
+  int64_t mSeekTime;
 
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
