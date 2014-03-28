@@ -66,8 +66,12 @@
   -moz-image-region: rect(-5px, 12px, 11px, -4px);
 }
 
+/* This only has an effect when this element is placed on the bookmarks toolbar.
+ * It's 30px to make sure buttons with 18px icons fit along with the default 16px
+ * icons, without changing the size of the toolbar.
+ */
 #personal-bookmarks {
-  min-height: 29px;
+  min-height: 30px;
 }
 
 #browser-bottombox {
@@ -134,13 +138,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   to   { transform: rotate(180deg) translateX(-16px) rotate(-180deg) scale(1); opacity: 0; }
 }
 
-@keyframes animation-bookmarkAddedToBookmarksBar {
-  from { transform: rotate(0deg) translateX(-10px) rotate(0deg) scale(1); opacity: 0; }
-  60%  { transform: rotate(180deg) translateX(-10px) rotate(-180deg) scale(2.2); opacity: 1; }
-  80%  { opacity: 1; }
-  to   { transform: rotate(180deg) translateX(-10px) rotate(-180deg) scale(1); opacity: 0; }
-}
-
 @keyframes animation-bookmarkPulse {
   from { transform: scale(1); }
   50%  { transform: scale(1.3); }
@@ -180,10 +177,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   background-image: url("chrome://browser/skin/places/bookmarks-notification-finish.png");
   animation: animation-bookmarkAdded 800ms;
   animation-timing-function: ease, ease, ease;
-}
-
-#bookmarked-notification-anchor[notification="finish"][in-bookmarks-toolbar=true] > #bookmarked-notification {
-  animation: animation-bookmarkAddedToBookmarksBar 800ms;
 }
 
 #bookmarks-menu-button[notification="finish"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
@@ -1632,28 +1625,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none !important;
+  -moz-box-align: center;
 }
 
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   margin-top: 3px;
   margin-bottom: 3px;
-}
-
-#bookmarks-menu-button[cui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
-#bookmarks-menu-button.bookmark-item {
-  list-style-image: url("chrome://browser/skin/Toolbar-small.png");
-}
-
-#bookmarks-menu-button.bookmark-item {
-  -moz-image-region: rect(0px 144px 16px 128px);
-}
-
-#bookmarks-menu-button.bookmark-item[starred] {
-  -moz-image-region: rect(16px 144px 32px 128px);
-}
-
-#bookmarks-menu-button[cui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  -moz-image-region: rect(0px 160px 16px 144px);
 }
 
 #bookmarks-menu-button[disabled][cui-areatype="toolbar"] > .toolbarbutton-icon,
