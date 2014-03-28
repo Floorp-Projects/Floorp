@@ -95,7 +95,7 @@ NS_IMPL_QUERY_INTERFACE1(nsJAR, nsIZipReader)
 NS_IMPL_ADDREF(nsJAR)
 
 // Custom Release method works with nsZipReaderCache...
-nsrefcnt nsJAR::Release(void)
+MozExternalRefCountType nsJAR::Release(void)
 {
   nsrefcnt count;
   NS_PRECONDITION(0 != mRefCnt, "dup release");

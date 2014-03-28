@@ -22,4 +22,6 @@ else
     mk_add_options "export SCCACHE_BUCKET=$bucket"
     mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
     ac_add_options "--with-compiler-wrapper=python2.7 $topsrcdir/sccache/sccache.py"
+    mk_add_options MOZ_PREFLIGHT+=build/sccache.mk
+    mk_add_options MOZ_POSTFLIGHT+=build/sccache.mk
 fi

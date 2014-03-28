@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(JSGC_ROOT_ANALYSIS) && !defined(JSGC_USE_EXACT_ROOTING)
+#if !defined(JSGC_USE_EXACT_ROOTING)
 
 #include "jsobj.h"
 
@@ -85,4 +85,4 @@ BEGIN_TEST(testDerivedValues)
 }
 END_TEST(testDerivedValues)
 
-#endif /* !defined(JSGC_ROOT_ANALYSIS) && !defined(JSGC_USE_EXACT_ROOTING) */
+#endif /* !defined(JSGC_USE_EXACT_ROOTING) */

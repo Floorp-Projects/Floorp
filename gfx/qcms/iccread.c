@@ -540,7 +540,7 @@ static struct lutmABType *read_tag_lutmABType(struct mem_source *src, struct tag
 	uint32_t type = read_u32(src, offset);
 	uint8_t num_in_channels, num_out_channels;
 	struct lutmABType *lut;
-	int i;
+	uint32_t i;
 
 	if (type != LUT_MAB_TYPE && type != LUT_MBA_TYPE) {
 		return NULL;
@@ -675,7 +675,7 @@ static struct lutType *read_tag_lutType(struct mem_source *src, struct tag_index
 	uint32_t clut_size;
 	size_t entry_size;
 	struct lutType *lut;
-	int i;
+	uint32_t i;
 
 	/* I'm not sure why the spec specifies a fixed number of entries for LUT8 tables even though
 	 * they have room for the num_entries fields */
@@ -1205,7 +1205,7 @@ static void qcms_data_from_file(FILE *file, void **mem, size_t *size)
 
 qcms_profile* qcms_profile_from_file(FILE *file)
 {
-	uint32_t length;
+	size_t length;
 	qcms_profile *profile;
 	void *data;
 

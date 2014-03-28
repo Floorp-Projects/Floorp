@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIStreamingProtocolController.h"
+#include "nsProxyRelease.h"
 
 namespace android {
 
@@ -140,7 +141,7 @@ private:
 
     void onTrackDataAvailable(size_t trackIndex);
 
-    nsCOMPtr <nsIStreamingProtocolListener> mListener;
+    nsMainThreadPtrHandle<nsIStreamingProtocolListener> mListener;
     int mPrintCount;
 
     DISALLOW_EVIL_CONSTRUCTORS(RTSPSource);

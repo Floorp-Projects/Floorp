@@ -278,10 +278,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
     tokenbuf(cx),
     cx(cx),
     originPrincipals(options.originPrincipals(cx)),
-    strictModeGetter(smg),
-    tokenSkip(cx, &tokens),
-    linebaseSkip(cx, &linebase),
-    prevLinebaseSkip(cx, &prevLinebase)
+    strictModeGetter(smg)
 {
     // The caller must ensure that a reference is held on the supplied principals
     // throughout compilation.

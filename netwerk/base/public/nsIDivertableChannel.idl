@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 %{C++
-//#include "mozilla/net/ChannelDiverterChild.h"
 namespace mozilla {
 namespace net {
 class ChannelDiverterChild;

@@ -1021,7 +1021,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
   public:
-
     // These functions are needed by the IonInstrumentation interface defined in
     // vm/SPSProfiler.h.  They will modify the pseudostack provided to SPS to
     // perform the actual instrumentation.
@@ -1091,6 +1090,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         loadPtr(AbsoluteAddress(p->addressOfSizePointer()), temp);
         add32(Imm32(-1), Address(temp, 0));
     }
+
+    static const char enterJitLabel[];
+    void spsMarkJit(SPSProfiler *p, Register framePtr, Register temp);
+    void spsUnmarkJit(SPSProfiler *p, Register temp);
 
     void loadBaselineOrIonRaw(Register script, Register dest, ExecutionMode mode, Label *failure);
     void loadBaselineOrIonNoArgCheck(Register callee, Register dest, ExecutionMode mode, Label *failure);

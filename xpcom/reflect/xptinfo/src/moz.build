@@ -13,9 +13,4 @@ UNIFIED_SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
-# For nsManifestLineReader class.
-LOCAL_INCLUDES += [
-    '/xpcom/ds',
-]
-
 FINAL_LIBRARY = 'xpcom_core'

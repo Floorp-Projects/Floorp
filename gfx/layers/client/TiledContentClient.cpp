@@ -241,7 +241,7 @@ bool
 SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetrics,
                                               const FrameMetrics& aCompositorMetrics)
 {
-  return !aContentMetrics.mDisplayPort.Contains(CSSRect(aCompositorMetrics.CalculateCompositedRectInCssPixels()) - aCompositorMetrics.GetScrollOffset());
+  return !aContentMetrics.mDisplayPort.Contains(aCompositorMetrics.CalculateCompositedRectInCssPixels() - aCompositorMetrics.GetScrollOffset());
 }
 
 ClientTiledLayerBuffer::ClientTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,

@@ -714,6 +714,17 @@ HttpChannelParent::OnStatus(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+HttpChannelParent::SetParentListener(HttpChannelParentListener* aListener)
+{
+  MOZ_ASSERT(aListener);
+  MOZ_ASSERT(!mParentListener, "SetParentListener should only be called for "
+                               "new HttpChannelParents after a redirect, when "
+                               "mParentListener is null.");
+  mParentListener = aListener;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelParent::Delete()
 {
   if (!mIPCClosed)

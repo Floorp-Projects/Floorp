@@ -126,12 +126,10 @@ public:
   already_AddRefed<Promise>
   Catch(AnyCallback* aRejectCallback);
 
-  // FIXME(nsm): Bug 956197
   static already_AddRefed<Promise>
   All(const GlobalObject& aGlobal, JSContext* aCx,
       const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 
-  // FIXME(nsm): Bug 956197
   static already_AddRefed<Promise>
   Race(const GlobalObject& aGlobal, JSContext* aCx,
        const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
