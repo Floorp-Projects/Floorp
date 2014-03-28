@@ -1,3 +1,5 @@
+/* Note that this file isn't used for HiDPI on OS X. */
+
 :-moz-any(@primaryToolbarButtons@),
 #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
