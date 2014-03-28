@@ -378,7 +378,7 @@ DataStoreService.prototype = {
   },
 
   observe: function observe(aSubject, aTopic, aData) {
-    debug('getDataStores - aTopic: ' + aTopic);
+    debug('observe - aTopic: ' + aTopic);
     if (aTopic != 'webapps-clear-data') {
       return;
     }
@@ -391,14 +391,33 @@ DataStoreService.prototype = {
       return;
     }
 
+    function isEmpty(aMap) {
+      for (var key in aMap) {
+        if (aMap.hasOwnProperty(key)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     for (let key in this.stores) {
       if (params.appId in this.stores[key]) {
         this.deleteDatabase(key, this.stores[key][params.appId].owner);
         delete this.stores[key][params.appId];
       }
 
-      if (!this.stores[key].length) {
+      if (isEmpty(this.stores[key])) {
         delete this.stores[key];
+      }
+    }
+
+    for (let key in this.accessStores) {
+      if (params.appId in this.accessStores[key]) {
+        delete this.accessStores[key][params.appId];
+      }
+
+      if (isEmpty(this.accessStores[key])) {
+        delete this.accessStores[key];
       }
     }
   },
