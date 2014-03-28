@@ -77,6 +77,9 @@ void mozilla_sampler_unlock();
 bool mozilla_sampler_register_thread(const char* name, void* stackTop);
 void mozilla_sampler_unregister_thread();
 
+void mozilla_sampler_sleep_start();
+void mozilla_sampler_sleep_end();
+
 double mozilla_sampler_time();
 double mozilla_sampler_time(const mozilla::TimeStamp& aTime);
 

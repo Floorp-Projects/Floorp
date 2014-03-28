@@ -95,7 +95,7 @@ void ProfileEntry::log()
   //   mTagPtr    (void*)        d,l,L,B (immediate backtrace), S(start-of-stack)
   //   mTagLine   (int)          n,f
   //   mTagChar   (char)         h
-  //   mTagFloat  (double)       r,t
+  //   mTagFloat  (double)       r,t,p
   switch (mTagName) {
     case 'm':
       LOGF("%c \"%s\"", mTagName, mTagMarker->GetMarkerName()); break;
@@ -107,7 +107,7 @@ void ProfileEntry::log()
       LOGF("%c %d", mTagName, mTagLine); break;
     case 'h':
       LOGF("%c \'%c\'", mTagName, mTagChar); break;
-    case 'r': case 't':
+    case 'r': case 't': case 'p':
       LOGF("%c %f", mTagName, mTagFloat); break;
     default:
       LOGF("'%c' unknown_tag", mTagName); break;
@@ -458,6 +458,36 @@ void ThreadProfile::EndUnwind()
 mozilla::Mutex* ThreadProfile::GetMutex()
 {
   return &mMutex;
+}
+
+void ThreadProfile::DuplicateLastSample() {
+  // Scan the whole buffer (even unflushed parts)
+  // we add mEntrySize to mReadPos to make sure that when
+  // we wrap around the result is mEntrySize-1 and not -1
+  for (int readPos = mWritePos; readPos != (mReadPos + mEntrySize - 1) % mEntrySize; readPos = (readPos + mEntrySize - 1) % mEntrySize) {
+    // Found the start of the last entry at position i
+    if (mEntries[readPos].mTagName == 's') {
+      int copyEndIdx = mWritePos;
+      // Go through the whole entry and duplicate it using a simple state machine
+      for (;readPos != copyEndIdx; readPos = (readPos + 1) % mEntrySize) {
+        switch (mEntries[readPos].mTagName) {
+          // Copy with new time
+          case 't':
+            addTag(ProfileEntry('t', (mozilla::TimeStamp::Now() - sStartTime).ToMilliseconds()));
+            break;
+          // Don't copy markers
+          case 'm':
+            break;
+          // Copy anything else we don't know about
+          // L, B, S, m, c, s, d, l, f, h, r, t, p
+          default:
+            addTag(mEntries[readPos]);
+            break;
+        }
+      }
+      break;
+    }
+  }
 }
 
 std::ostream& operator<<(std::ostream& stream, const ThreadProfile& profile)
