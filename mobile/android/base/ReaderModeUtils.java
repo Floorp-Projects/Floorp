@@ -4,12 +4,9 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.util.StringUtils;
 
 import android.net.Uri;
-import android.util.Log;
 
 public class ReaderModeUtils {
     private static final String LOGTAG = "ReaderModeUtils";
@@ -47,31 +44,5 @@ public class ReaderModeUtils {
         }
 
         return aboutReaderUrl;
-    }
-
-    public static void addToReadingList(Tab tab) {
-        if (!tab.getReaderEnabled()) {
-            return;
-        }
-
-        JSONObject json = new JSONObject();
-        try {
-            json.put("tabID", String.valueOf(tab.getId()));
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error - failing to add to reading list", e);
-            return;
-        }
-
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", json.toString());
-        GeckoAppShell.sendEventToGecko(e);
-    }
-
-    public static void removeFromReadingList(String url) {
-        if (url == null) {
-            return;
-        }
-
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", url);
-        GeckoAppShell.sendEventToGecko(e);
     }
 }
