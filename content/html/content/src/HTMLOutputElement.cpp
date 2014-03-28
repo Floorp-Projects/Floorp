@@ -30,9 +30,6 @@ HTMLOutputElement::HTMLOutputElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
 
 HTMLOutputElement::~HTMLOutputElement()
 {
-  if (mTokenList) {
-    mTokenList->DropReference();
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLOutputElement)
@@ -40,10 +37,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLOutputElement)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLOutputElement,
                                                 nsGenericHTMLFormElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mValidity)
-  if (tmp->mTokenList) {
-    tmp->mTokenList->DropReference();
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mTokenList)
-  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTokenList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLOutputElement,
                                                   nsGenericHTMLFormElement)
