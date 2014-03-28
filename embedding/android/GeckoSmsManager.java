@@ -298,7 +298,7 @@ public class GeckoSmsManager
 
   /*
    * Make sure that the following error codes are in sync with the ones
-   * defined in dom/mobilemessage/interfaces/nsISmsRequestManager.idl. They are owned
+   * defined in dom/mobilemessage/interfaces/nsIMobileMessageCallback.idl. They are owned
    * owned by the interface.
    */
   public final static int kNoError               = 0;
@@ -312,6 +312,7 @@ public class GeckoSmsManager
   public final static int kFdnCheckError         = 8;
   public final static int kNonActiveSimCardError = 9;
   public final static int kStorageFullError      = 10;
+  public final static int kSimNotMatchedError    = 11;
 
   private final static int kMaxMessageSize    = 160;
 

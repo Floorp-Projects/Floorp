@@ -306,6 +306,7 @@ public class GeckoSmsManager
   public final static int kFdnCheckError         = 8;
   public final static int kNonActiveSimCardError = 9;
   public final static int kStorageFullError      = 10;
+  public final static int kSimNotMatchedError    = 11;
 
   private final static int kMaxMessageSize    = 160;
 
