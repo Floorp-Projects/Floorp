@@ -2552,12 +2552,13 @@ RilObject.prototype = {
    */
   queryCallForwardStatus: function(options) {
     let Buf = this.context.Buf;
+    let number = options.number || "";
     Buf.newParcel(REQUEST_QUERY_CALL_FORWARD_STATUS, options);
     Buf.writeInt32(CALL_FORWARD_ACTION_QUERY_STATUS);
     Buf.writeInt32(options.reason);
     Buf.writeInt32(options.serviceClass || ICC_SERVICE_CLASS_NONE);
-    Buf.writeInt32(this._toaFromString(options.number));
-    Buf.writeString(options.number);
+    Buf.writeInt32(this._toaFromString(number));
+    Buf.writeString(number);
     Buf.writeInt32(0);
     Buf.sendParcel();
   },
@@ -3414,7 +3415,7 @@ RilObject.prototype = {
     if (signal.lteSignalStrength === undefined ||
         signal.lteSignalStrength < 0 ||
         signal.lteSignalStrength > 63) {
-      return;
+      return null;
     }
 
     let info = {
@@ -3452,7 +3453,10 @@ RilObject.prototype = {
       }
     };
 
-    if (!this._isGsmTechGroup(this.voiceRegistrationState.radioTech)) {
+    // During startup, |radioTech| is not yet defined, so we need to
+    // check it separately.
+    if (("radioTech" in this.voiceRegistrationState) &&
+        !this._isGsmTechGroup(this.voiceRegistrationState.radioTech)) {
       // CDMA RSSI.
       // Valid values are positive integers. This value is the actual RSSI value
       // multiplied by -1. Example: If the actual RSSI is -75, then this
@@ -6189,7 +6193,7 @@ RilObject.prototype[REQUEST_EXIT_EMERGENCY_CALLBACK_MODE] = function REQUEST_EXI
 RilObject.prototype[REQUEST_GET_SMSC_ADDRESS] = function REQUEST_GET_SMSC_ADDRESS(length, options) {
   this.SMSC = options.rilRequestError ? null : this.context.Buf.readString();
 
-  if (!options || options.rilMessageType !== "getSmscAddress") {
+  if (!options.rilMessageType || options.rilMessageType !== "getSmscAddress") {
     return;
   }
 

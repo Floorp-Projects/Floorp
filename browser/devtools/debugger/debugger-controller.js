@@ -2176,22 +2176,6 @@ Object.defineProperties(window, {
 });
 
 /**
- * Helper method for parsing a resource URI, like
- * `resource://gre/modules/commonjs/sdk/tabs.js`, and pulling out `sdk/tabs.js`
- * if it's in the SDK, or `null` otherwise.
- *
- * @param string url
- * @return string|null
- */
-function getSDKModuleName(url) {
-  let match = (url || "").match(/^resource:\/\/gre\/modules\/commonjs\/(.*)/);
-  if (match) {
-    return match[1];
-  }
-  return null;
-}
-
-/**
  * Helper method for debugging.
  * @param string
  */

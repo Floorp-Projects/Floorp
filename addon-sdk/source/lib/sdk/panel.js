@@ -21,6 +21,7 @@ const { merge } = require("./util/object");
 const { WorkerHost, detach, attach, destroy } = require("./content/utils");
 const { Worker } = require("./content/worker");
 const { Disposable } = require("./core/disposable");
+const { WeakReference } = require('./core/reference');
 const { contract: loaderContract } = require("./content/loader");
 const { contract } = require("./util/contract");
 const { on, off, emit, setListeners } = require("./event/core");
@@ -111,7 +112,8 @@ const Panel = Class({
     // set and return values from model on get.
     panelContract.properties(modelFor),
     EventTarget,
-    Disposable
+    Disposable,
+    WeakReference
   ],
   extends: WorkerHost(workerFor),
   setup: function setup(options) {
@@ -197,7 +199,7 @@ const Panel = Class({
 
     let model = modelFor(this);
     let view = viewFor(this);
-    let anchorView = getNodeView(anchor || options.position);
+    let anchorView = getNodeView(anchor || options.position || model.position);
 
     options = merge({
       position: model.position,

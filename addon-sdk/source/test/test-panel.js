@@ -859,6 +859,8 @@ exports['test passing DOM node as first argument'] = function (assert, done) {
   let shown = defer();
 
   function onMessage(type, message) {
+    if (type != 'warn') return;
+
     let warning = 'Passing a DOM node to Panel.show() method is an unsupported ' +
                   'feature that will be soon replaced. ' +
                   'See: https://bugzilla.mozilla.org/show_bug.cgi?id=878877';

@@ -132,17 +132,12 @@ interface nsIRadioInterface : nsISupports
   void getSmscAddress(in nsIMobileMessageCallback request);
 };
 
-[scriptable, uuid(86a5c280-5641-11e3-949a-0800200c9a66)]
+[scriptable, uuid(d035c32e-b491-11e3-9f9d-c716fab88bd6)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   readonly attribute unsigned long numRadioInterfaces;
 
   nsIRadioInterface getRadioInterface(in unsigned long clientId);
-
-  /**
-   * If not available, throws exception; otherwise, a valid number.
-   */
-  unsigned long getClientIdByIccId(in DOMString iccId);
 
   void setMicrophoneMuted(in boolean muted);
 };

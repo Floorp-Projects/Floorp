@@ -6,13 +6,13 @@ const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionSto
 let state = {
   windows: [{
     tabs: [{
-      entries: [{ url: "about:blank" }],
+      entries: [{ url: "about:robots" }],
       hidden: true,
-      extData: {"tabview-tab": '{"url":"about:blank","groupID":1,"bounds":{"left":20,"top":20,"width":20,"height":20}}'}
+      extData: {"tabview-tab": '{"url":"about:robots","groupID":1,"bounds":{"left":20,"top":20,"width":20,"height":20}}'}
     },{
-      entries: [{ url: "about:blank" }],
+      entries: [{ url: "about:robots" }],
       hidden: false,
-      extData: {"tabview-tab": '{"url":"about:blank","groupID":2,"bounds":{"left":20,"top":20,"width":20,"height":20}}'},
+      extData: {"tabview-tab": '{"url":"about:robots","groupID":2,"bounds":{"left":20,"top":20,"width":20,"height":20}}'},
     }],
     selected: 2,
     extData: {

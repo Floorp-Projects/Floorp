@@ -45,8 +45,6 @@ public:
   BluetoothDBusService();
   ~BluetoothDBusService();
 
-  nsresult DispatchToBtThread(nsIRunnable* aRunnable);
-
   bool IsReady();
 
   virtual nsresult StartInternal() MOZ_OVERRIDE;
@@ -200,14 +198,6 @@ private:
                                 const char* aInterface,
                                 const nsAString& aMessage,
                                 mozilla::ipc::DBusReplyCallback aCallback);
-
-  /**
-   * Due to the fact that the startup and shutdown of the Bluetooth system
-   * can take an indefinite amount of time, a separate thread is used for
-   * running blocking blocking calls. The thread is not intended for regular
-   * Bluetooth operations though.
-   */
-  nsCOMPtr<nsIThread> mBluetoothThread;
 };
 
 END_BLUETOOTH_NAMESPACE

@@ -2029,7 +2029,7 @@ function WifiWorker() {
               flags = match[4];
 
           // Skip ad-hoc networks which aren't supported (bug 811635).
-          if (flags.indexOf("[IBSS]") >= 0)
+          if (flags && flags.indexOf("[IBSS]") >= 0)
             continue;
 
           // If this is the first time that we've seen this SSID in the scan

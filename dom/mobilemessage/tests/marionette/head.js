@@ -373,6 +373,33 @@ function sendRawSmsToEmulator(aPdu) {
 }
 
 /**
+ * Send multiple raw SMS TPDU to emulator and wait
+ *
+ * @param: aPdus
+ *         A array of hex strings. Each represents a SMS T-PDU.
+ *
+ * Fulfill params:
+ *   result -- array of resolved Promise, where
+ *             result[0].message representing the received message.
+ *             result[1-n] represents the response of sent emulator command.
+ *
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function sendMultipleRawSmsToEmulatorAndWait(aPdus) {
+  let promises = [];
+
+  promises.push(waitForManagerEvent("received"));
+  for (let pdu of aPdus) {
+    promises.push(sendRawSmsToEmulator(pdu));
+  }
+
+  return Promise.all(promises);
+}
+
+/**
  * Create a new array of id attribute of input messages.
  *
  * @param aMessages an array of {Sms,Mms}Message instances.
