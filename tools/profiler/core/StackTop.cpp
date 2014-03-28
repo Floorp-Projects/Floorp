@@ -38,7 +38,7 @@ void *GetStackTop(void *guess) {
   return static_cast<void*>(pTib->StackBase);
 #elif defined(_M_X64) || defined(__x86_64)
   PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
-  return static_cast<void*>(pTib->StackBase);
+  return reinterpret_cast<void*>(pTib->StackBase);
 #else
 #error Need a way to get the stack bounds on this platform (Windows)
 #endif
