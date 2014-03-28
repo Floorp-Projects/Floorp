@@ -1480,10 +1480,9 @@ TypedObject::createUnattachedWithClass(JSContext *cx,
 
     obj->setPrivate(nullptr);
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(0));
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH, Int32Value(0));
+    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(length));
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_OWNER, NullValue());
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_NEXT_VIEW, PrivateValue(nullptr));
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(length));
     obj->initReservedSlot(JS_TYPEDOBJ_SLOT_TYPE_DESCR, ObjectValue(*type));
 
     // Tag the type object for this instance with the type
@@ -2166,7 +2165,7 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
             break;
 
           case JSENUMERATE_NEXT:
-            index = static_cast<int32_t>(statep.toInt32());
+            index = statep.toInt32();
 
             if (index < typedObj->length()) {
                 idp.set(INT_TO_JSID(index));
@@ -2237,7 +2236,6 @@ void
 TypedObject::neuter(void *newData)
 {
     setSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(0));
-    setSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH, Int32Value(0));
     setSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(0));
     setPrivate(newData);
 }
