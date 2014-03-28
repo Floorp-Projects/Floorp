@@ -47,8 +47,7 @@ interface HTMLMediaElement : HTMLElement {
   // playback state
   [SetterThrows]
            attribute double currentTime;
-  [Throws]
-  void fastSeek(double time);
+  // TODO: Bug 847375 - void fastSeek(double time);
   readonly attribute unrestricted double duration;
   // TODO: Bug 847376 - readonly attribute any startDate;
   readonly attribute boolean paused;

@@ -226,39 +226,6 @@ static const uint32_t FRAMEBUFFER_LENGTH_MAX = 16384;
 #undef GetCurrentTime
 #endif
 
-// Stores the seek target; the time to seek to, and whether an Accurate,
-// or "Fast" (nearest keyframe) seek was requested.
-struct SeekTarget {
-  enum Type {
-    Invalid,
-    PrevSyncPoint,
-    Accurate
-  };
-  SeekTarget()
-    : mTime(-1.0)
-    , mType(SeekTarget::Invalid)
-  {
-  }
-  SeekTarget(int64_t aTimeUsecs, Type aType)
-    : mTime(aTimeUsecs)
-    , mType(aType)
-  {
-  }
-  bool IsValid() const {
-    return mType != SeekTarget::Invalid;
-  }
-  void Reset() {
-    mTime = -1;
-    mType = SeekTarget::Invalid;
-  }
-  // Seek target time in microseconds.
-  int64_t mTime;
-  // Whether we should seek "Fast", or "Accurate".
-  // "Fast" seeks to the seek point preceeding mTime, whereas
-  // "Accurate" seeks as close as possible to mTime.
-  Type mType;
-};
-
 class MediaDecoder : public nsIObserver,
                      public AbstractMediaDecoder
 {
@@ -343,9 +310,7 @@ public:
   virtual double GetCurrentTime();
 
   // Seek to the time position in (seconds) from the start of the video.
-  // If aDoFastSeek is true, we'll seek to the sync point/keyframe preceeding
-  // the seek target.
-  virtual nsresult Seek(double aTime, SeekTarget::Type aSeekType);
+  virtual nsresult Seek(double aTime);
 
   // Enables decoders to supply an enclosing byte range for a seek offset.
   // E.g. used by ChannelMediaResource to download a whole cluster for
@@ -1139,9 +1104,9 @@ protected:
   // This can only be changed on the main thread while holding the decoder
   // monitor. Thus, it can be safely read while holding the decoder monitor
   // OR on the main thread.
-  // If the SeekTarget's IsValid() accessor returns false, then no seek has
-  // been requested. When a seek is started this is reset to invalid.
-  SeekTarget mRequestedSeekTarget;
+  // If the value is negative then no seek has been requested. When a seek is
+  // started this is reset to negative.
+  double mRequestedSeekTime;
 
   // True when we have fully loaded the resource and reported that
   // to the element (i.e. reached NETWORK_LOADED state).
