@@ -89,10 +89,6 @@
 #include "nsIGfxInfo.h"
 #include "nsIXULRuntime.h"
 
-#ifdef MOZ_WIDGET_GONK
-void mozilla::layers::InitGralloc();
-#endif
-
 using namespace mozilla;
 using namespace mozilla::layers;
 
@@ -420,10 +416,6 @@ gfxPlatform::Init()
 #ifdef MOZ_WIDGET_ANDROID
     // Texture pool init
     mozilla::gl::TexturePoolOGL::Init();
-#endif
-
-#ifdef MOZ_WIDGET_GONK
-    mozilla::layers::InitGralloc();
 #endif
 
     // Force registration of the gfx component, thus arranging for
