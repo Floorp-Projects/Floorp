@@ -10,6 +10,7 @@
 #include "nsITimer.h"
 #include "mozilla/Monitor.h"
 #include "ProfileEntry.h"
+#include "ThreadProfile.h"
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoLock;
