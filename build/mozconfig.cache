@@ -4,23 +4,35 @@
 
 # Setup for build cache
 
+read branch platform master <<EOF
+$(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.json").read())["properties"]; print p["branch"], p["platform"], p["master"]' 2> /dev/null)
+EOF
+
 bucket=
 if test -z "$SCCACHE_DISABLE" -a -f "$topsrcdir/sccache/sccache.py"; then
-    case `hostname` in
-    try*spot*.use1.mozilla.com|try*ec2*.use1.mozilla.com)
+    case "${branch}_${master}" in
+    try_*use1.mozilla.com*)
         bucket=mozilla-releng-s3-cache-us-east-1-try
         ;;
-    try*spot*.usw2.mozilla.com|try*ec2*.usw2.mozilla.com)
+    try_*usw2.mozilla.com*)
         bucket=mozilla-releng-s3-cache-us-west-2-try
         ;;
     esac
 fi
 
 if test -z "$bucket"; then
-    ac_add_options --with-ccache
+    case "$platform" in
+    win*) : ;;
+    *)
+        ac_add_options --with-ccache
+    esac
 else
     mk_add_options "export SCCACHE_BUCKET=$bucket"
-    mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
+    case "$master" in
+    *use1.mozilla.com*|*usw2.mozilla.com*)
+        mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
+        ;;
+    esac
     ac_add_options "--with-compiler-wrapper=python2.7 $topsrcdir/sccache/sccache.py"
     mk_add_options MOZ_PREFLIGHT+=build/sccache.mk
     mk_add_options MOZ_POSTFLIGHT+=build/sccache.mk
