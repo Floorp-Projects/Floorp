@@ -1,8 +1,6 @@
 PP_TARGETS = properties manifest
 
 manifest = AndroidManifest.xml.in
-manifest_PATH = .
-manifest_deps := $(patsubst %.in,%,$(manifest))
 
 include $(topsrcdir)/config/rules.mk
 
@@ -47,7 +45,7 @@ src/org/mozilla/geckoviewexample/GeckoViewExample.java: $(srcdir)/GeckoViewExamp
 assets/libxul.so: $(DIST)/geckoview_library/geckoview_assets.zip FORCE
 	$(UNZIP) -o $(DIST)/geckoview_library/geckoview_assets.zip
 
-build.xml: AndroidManifest.xml
+build.xml: $(CURDIR)/AndroidManifest.xml
 	mv AndroidManifest.xml AndroidManifest.xml.save
 	$(ANDROID) create project --name GeckoViewExample --target $(TARGET) --path $(CURDIR) --activity GeckoViewExample --package org.mozilla.geckoviewexample
 	$(ANDROID) update project --target $(TARGET) --path $(CURDIR) --library $(DEPTH)/mobile/android/geckoview_library
