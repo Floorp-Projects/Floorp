@@ -69,10 +69,6 @@ public:
                                         int32_t aRunScript,
                                         nsTArray<const char*>& aFontList);
 
-    // Returns the OS X version as returned from Gestalt(gestaltSystemVersion, ...)
-    // Ex: Mac OS X 10.4.x ==> 0x104x
-    int32_t OSXVersion();
-
     bool UseAcceleratedCanvas();
 
     // lower threshold on font anti-aliasing
