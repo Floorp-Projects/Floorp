@@ -145,9 +145,6 @@ ClassicVerifyCert(CERTCertificate* cert,
       case certificateUsageObjectSigner:
         enumUsage = certUsageObjectSigner;
         break;
-      case certificateUsageVerifyCA:
-        enumUsage = certUsageVerifyCA;
-        break;
       case certificateUsageStatusResponder:
         enumUsage = certUsageStatusResponder;
         break;
@@ -478,7 +475,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     case certificateUsageEmailSigner:
     case certificateUsageEmailRecipient:
     case certificateUsageObjectSigner:
-    case certificateUsageVerifyCA:
     case certificateUsageStatusResponder:
       break;
     default:
