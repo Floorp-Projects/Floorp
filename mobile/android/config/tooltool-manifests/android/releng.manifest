@@ -12,8 +12,8 @@
 "filename": "android-sdk.tar.xz"
 },
 {
-"size": 295,
-"digest": "328c22219212ce00fdb2d533507f0132b2062390293eaea1f4ade29eda4e3e7bcc35853f0b9c87fc8fcc1dbf42447bcaf65ff728b9adee76d0f726deb79db844",
+"size": 335,
+"digest": "2f0e2f345b39789e24de032a156c53d1895c69b525d661c57d208fd528e22694841213a06f52e70fac17b9161e107c581260d95dacda0a5710b90d57668dc895",
 "algorithm": "sha512",
 "filename": "setup.sh"
 },
