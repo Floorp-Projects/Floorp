@@ -12,37 +12,25 @@
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Network API **/
-function checkInterface(aInterface) {
-  ok(!(aInterface in window), aInterface + " should not exist");
-  ok(!(("Moz" + aInterface) in window), aInterface + " should not exist");
-}
-
+/** Test for Network Information API **/
 function test() {
-  ok('mozConnection' in navigator, "navigator.mozConnection should exist");
+  ok('connection' in navigator, "navigator.connection should exist");
 
-  ok(navigator.mozConnection, "navigator.mozConnection returns an object");
+  ok(navigator.connection, "navigator.connection returns an object");
 
-  ok(navigator.mozConnection instanceof EventTarget,
-     "navigator.mozConnection is a EventTarget object");
+  ok(navigator.connection instanceof EventTarget,
+     "navigator.connection is a EventTarget object");
 
-  checkInterface("Connection");
-
-  ok('bandwidth' in navigator.mozConnection,
-     "bandwidth should be a Connection attribute");
-  is(navigator.mozConnection.bandwidth, Infinity,
-     "By default connection.bandwidth is equals to Infinity");
-
-  ok('metered' in navigator.mozConnection,
-     "metered should be a Connection attribute");
-  is(navigator.mozConnection.metered, false,
-     "By default the connection is not metered");
+  ok('type' in navigator.connection,
+     "type should be a Connection attribute");
+  is(navigator.connection.type, "none",
+     "By default connection.type equals to none");
 
   SimpleTest.finish();
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({'set': [["dom.network.enabled", true]]}, test);
+SpecialPowers.pushPrefEnv({'set': [["dom.netinfo.enabled", true]]}, test);
 
 </script>
 </pre>

@@ -1587,18 +1587,21 @@ Navigator::GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads,
 //*****************************************************************************
 
 NS_IMETHODIMP
-Navigator::GetMozConnection(nsISupports** aConnection)
+Navigator::GetProperties(nsINetworkProperties** aProperties)
 {
-  nsCOMPtr<nsINetworkProperties> properties = GetMozConnection();
-  properties.forget(aConnection);
+  ErrorResult rv;
+  NS_IF_ADDREF(*aProperties = GetConnection(rv));
   return NS_OK;
 }
 
 network::Connection*
-Navigator::GetMozConnection()
+Navigator::GetConnection(ErrorResult& aRv)
 {
   if (!mConnection) {
-    NS_ENSURE_TRUE(mWindow, nullptr);
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
     mConnection = new network::Connection();

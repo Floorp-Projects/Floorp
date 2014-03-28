@@ -835,7 +835,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 static bool
 OOMAfterAllocations(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -1512,7 +1512,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  then you can provide an extra argument with some specific traceable\n"
 "  thing to count.\n"),
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     JS_FN_HELP("oomAfterAllocations", OOMAfterAllocations, 1, 0,
 "oomAfterAllocations(count)",
 "  After 'count' js_malloc memory allocations, fail every following allocation\n"

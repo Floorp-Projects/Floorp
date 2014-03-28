@@ -338,7 +338,7 @@ FrameIter::unaliasedForEachActual(JSContext *cx, Op op)
         return;
       case JIT:
 #ifdef JS_ION
-        if (data_.ionFrames_.isOptimizedJS()) {
+        if (data_.ionFrames_.isIonJS()) {
             ionInlineFrames_.unaliasedForEachActual(cx, op, jit::ReadFrame_Actuals);
         } else {
             JS_ASSERT(data_.ionFrames_.isBaselineJS());

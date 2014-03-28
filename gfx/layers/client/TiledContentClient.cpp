@@ -732,10 +732,12 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   }
 
   bool createdTextureClient = false;
-  nsIntRegion offsetDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
+  nsIntRegion offsetScaledDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
+  offsetScaledDirtyRegion.ScaleRoundOut(mResolution, mResolution);
+
   bool usingSinglePaintBuffer = !!mSinglePaintDrawTarget;
   RefPtr<TextureClient> backBuffer =
-    aTile.GetBackBuffer(offsetDirtyRegion,
+    aTile.GetBackBuffer(offsetScaledDirtyRegion,
                         mManager->GetTexturePool(gfxPlatform::GetPlatform()->Optimal2DFormatForContent(GetContentType())),
                         &createdTextureClient, !usingSinglePaintBuffer);
 
@@ -781,33 +783,40 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
     // The new buffer is now validated, remove the dirty region from it.
     aTile.mInvalidBack.Sub(nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE),
-                           offsetDirtyRegion);
+                           offsetScaledDirtyRegion);
   } else {
     // Area of the full tile...
-    nsIntRegion tileRegion = nsIntRect(aTileOrigin.x, aTileOrigin.y, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
+    nsIntRegion tileRegion =
+      nsIntRect(aTileOrigin.x, aTileOrigin.y,
+                GetScaledTileLength(), GetScaledTileLength());
 
     // Intersect this area with the portion that's dirty.
     tileRegion = tileRegion.Intersect(aDirtyRegion);
 
-    // Move invalid areas into layer space.
-    aTile.mInvalidFront.MoveBy(aTileOrigin);
-    aTile.mInvalidBack.MoveBy(aTileOrigin);
+    // Add the resolution scale to store the dirty region.
+    nsIntPoint unscaledTileOrigin = nsIntPoint(aTileOrigin.x * mResolution,
+                                               aTileOrigin.y * mResolution);
+    nsIntRegion unscaledTileRegion(tileRegion);
+    unscaledTileRegion.ScaleRoundOut(mResolution, mResolution);
+
+    // Move invalid areas into scaled layer space.
+    aTile.mInvalidFront.MoveBy(unscaledTileOrigin);
+    aTile.mInvalidBack.MoveBy(unscaledTileOrigin);
 
     // Add the area that's going to be redrawn to the invalid area of the
     // front region.
-    aTile.mInvalidFront.Or(aTile.mInvalidFront, tileRegion);
+    aTile.mInvalidFront.Or(aTile.mInvalidFront, unscaledTileRegion);
 
     // Add invalid areas of the backbuffer to the area to redraw.
     tileRegion.Or(tileRegion, aTile.mInvalidBack);
 
     // Move invalid areas back into tile space.
-    aTile.mInvalidFront.MoveBy(-aTileOrigin);
+    aTile.mInvalidFront.MoveBy(-unscaledTileOrigin);
 
     // This will be validated now.
     aTile.mInvalidBack.SetEmpty();
 
     nsIntRect bounds = tileRegion.GetBounds();
-    bounds.ScaleRoundOut(mResolution, mResolution);
     bounds.MoveBy(-aTileOrigin);
 
     if (GetContentType() != gfxContentType::COLOR) {
@@ -816,8 +825,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
     ctxt->NewPath();
     ctxt->Clip(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
+    ctxt->Translate(gfxPoint(-unscaledTileOrigin.x, -unscaledTileOrigin.y));
     ctxt->Scale(mResolution, mResolution);
-    ctxt->Translate(gfxPoint(-aTileOrigin.x, -aTileOrigin.y));
     mCallback(mThebesLayer, ctxt,
               tileRegion.GetBounds(),
               DrawRegionClip::CLIP_NONE,

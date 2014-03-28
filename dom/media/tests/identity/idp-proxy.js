@@ -86,9 +86,7 @@
         type : "SUCCESS",
         id : message.id,
         message : {
-          identity : {
-            name : payload.username
-          },
+          identity : payload.username,
           contents : payload.contents
         }
       });
