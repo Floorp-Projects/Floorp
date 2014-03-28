@@ -43,6 +43,7 @@ toolkit.jar:
 +  skin/classic/global/icons/autoscroll.png                    (icons/autoscroll.png)
 +  skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
 +  skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
++  skin/classic/global/icons/close.svg                         (icons/close.svg)
 +  skin/classic/global/icons/find.png                          (icons/find.png)
 +  skin/classic/global/icons/loading_16.png                    (icons/loading_16.png)
 +  skin/classic/global/icons/panelarrow-horizontal.svg         (icons/panelarrow-horizontal.svg)
