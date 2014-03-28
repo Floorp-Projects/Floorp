@@ -276,7 +276,7 @@ case "$target" in
             AC_MSG_ERROR([Unexpected error: no AndroidVersion.ApiLevel field has been found in source.properties.])
         fi
 
-	AC_DEFINE(ANDROID_TARGET_SDK,$ANDROID_TARGET_SDK)
+	AC_DEFINE_UNQUOTED(ANDROID_TARGET_SDK,$ANDROID_TARGET_SDK)
 	AC_SUBST(ANDROID_TARGET_SDK)
 
         if ! test "$ANDROID_TARGET_SDK" -eq "$ANDROID_TARGET_SDK" ; then
