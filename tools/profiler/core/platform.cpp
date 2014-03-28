@@ -950,7 +950,7 @@ void mozilla_sampler_unlock()
 #endif
 }
 
-bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
+bool mozilla_sampler_register_thread(const char* aName, void* aGuessStackTop)
 {
   if (sInitCount == 0) {
     return false;
@@ -969,6 +969,7 @@ bool mozilla_sampler_register_thread(const char* aName, void* stackTop)
   PseudoStack* stack = PseudoStack::create();
   tlsPseudoStack.set(stack);
   bool isMainThread = is_main_thread_name(aName);
+  void* stackTop = GetStackTop(aGuessStackTop);
   return Sampler::RegisterCurrentThread(aName, stack, isMainThread, stackTop);
 }
 
