@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.tests;
 
 import android.content.ContentProvider;
@@ -208,7 +212,7 @@ abstract class ContentProviderTest extends BaseTest {
         mResolver.addProvider(mProviderAuthority, mProvider);
     }
 
-    public Uri appendUriParam(Uri uri, String param, String value) {
+    public static Uri appendUriParam(Uri uri, String param, String value) {
         return uri.buildUpon().appendQueryParameter(param, value).build();
     }
 
