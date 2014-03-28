@@ -33,6 +33,7 @@ public class WebViewActivity extends SyncActivity {
     if (uri == null) {
       Logger.debug(LOG_TAG, "No URI passed to display.");
       finish();
+      return;
     }
 
     WebView wv = (WebView) findViewById(R.id.web_engine);
