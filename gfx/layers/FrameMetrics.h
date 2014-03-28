@@ -162,17 +162,17 @@ public:
   CSSRect GetExpandedScrollableRect() const
   {
     CSSRect scrollableRect = mScrollableRect;
-    CSSRect compBounds = CSSRect(CalculateCompositedRectInCssPixels());
-    if (scrollableRect.width < compBounds.width) {
+    CSSSize compSize = CalculateCompositedSizeInCssPixels();
+    if (scrollableRect.width < compSize.width) {
       scrollableRect.x = std::max(0.f,
-                                  scrollableRect.x - (compBounds.width - scrollableRect.width));
-      scrollableRect.width = compBounds.width;
+                                  scrollableRect.x - (compSize.width - scrollableRect.width));
+      scrollableRect.width = compSize.width;
     }
 
-    if (scrollableRect.height < compBounds.height) {
+    if (scrollableRect.height < compSize.height) {
       scrollableRect.y = std::max(0.f,
-                                  scrollableRect.y - (compBounds.height - scrollableRect.height));
-      scrollableRect.height = compBounds.height;
+                                  scrollableRect.y - (compSize.height - scrollableRect.height));
+      scrollableRect.height = compSize.height;
     }
 
     return scrollableRect;
@@ -195,9 +195,14 @@ public:
     return mZoom * mTransformScale;
   }
 
-  CSSIntRect CalculateCompositedRectInCssPixels() const
+  CSSSize CalculateCompositedSizeInCssPixels() const
   {
-    return gfx::RoundedIn(mCompositionBounds / GetZoomToParent());
+    return mCompositionBounds.Size() / GetZoomToParent();
+  }
+
+  CSSRect CalculateCompositedRectInCssPixels() const
+  {
+    return mCompositionBounds / GetZoomToParent();
   }
 
   void ScrollBy(const CSSPoint& aPoint)
