@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - bug 986056 app</title>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript;version=1.7">
+
+  function cbError() {
+    alert('KO error');
+  }
+
+  navigator.getDataStores('foo').then(function(stores) {
+    alert("OK " + stores.length);
+  }, cbError);
+  </script>
+</pre>
+</body>
+</html>
+
