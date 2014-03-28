@@ -373,7 +373,7 @@ ContainerRender(ContainerT* aContainer,
       if (!clearRect.IsEmpty()) {
         // Clear layer's visible rect on FrameBuffer with transparent pixels
         gfx::Rect fbRect(clearRect.x, clearRect.y, clearRect.width, clearRect.height);
-        compositor->clearFBRect(&fbRect);
+        compositor->ClearRect(fbRect);
         layerToRender->SetClearRect(nsIntRect(0, 0, 0, 0));
       }
     } else {
