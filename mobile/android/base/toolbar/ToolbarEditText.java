@@ -110,6 +110,7 @@ public class ToolbarEditText extends CustomEditText
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 
         if (gainFocus) {
+            resetAutocompleteState();
             return;
         }
 
@@ -150,6 +151,11 @@ public class ToolbarEditText extends CustomEditText
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         updateTextTypeFromText(getText().toString());
+    }
+
+    private void resetAutocompleteState() {
+        mAutoCompleteResult = "";
+        mAutoCompletePrefix = null;
     }
 
     private void updateKeyboardInputType() {
