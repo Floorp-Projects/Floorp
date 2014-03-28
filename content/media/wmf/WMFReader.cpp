@@ -886,7 +886,7 @@ WMFReader::Seek(int64_t aTargetUs,
   hr = mSourceReader->SetCurrentPosition(GUID_NULL, var);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
 
-  return DecodeToTarget(aTargetUs);
+  return NS_OK;
 }
 
 } // namespace mozilla
