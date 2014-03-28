@@ -234,7 +234,7 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
     mList->retireFenceFd = -1;
     mList->numHwLayers = 2;
     mList->flags = HWC_GEOMETRY_CHANGED;
-    mList->hwLayers[0].compositionType = HWC_BACKGROUND;
+    mList->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
     mList->hwLayers[0].hints = 0;
     /* Skip this layer so the hwc module doesn't complain about null handles */
     mList->hwLayers[0].flags = HWC_SKIP_LAYER;
