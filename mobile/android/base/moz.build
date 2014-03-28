@@ -347,6 +347,7 @@ gbjar.sources += [
     'TabsPanel.java',
     'TabsTray.java',
     'Telemetry.java',
+    'TelemetryContract.java',
     'TextSelection.java',
     'TextSelectionHandle.java',
     'ThumbnailHelper.java',
