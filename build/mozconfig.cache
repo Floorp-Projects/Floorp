@@ -9,7 +9,7 @@ $(python2.7 -c 'import json; p = json.loads(open("'"$topsrcdir"'/../buildprops.j
 EOF
 
 bucket=
-if test -z "$SCCACHE_DISABLE" -a -f "$topsrcdir/sccache/sccache.py"; then
+if test -z "$SCCACHE_DISABLE" -a -z "$no_tooltool"; then
     case "${branch}_${master}" in
     try_*use1.mozilla.com*)
         bucket=mozilla-releng-s3-cache-us-east-1-try
