@@ -302,10 +302,13 @@ class RValueAllocation
     };
 };
 
+class RecoverWriter;
+
 // Collects snapshots in a contiguous buffer, which is copied into IonScript
 // memory after code generation.
 class SnapshotWriter
 {
+    friend class RecoverWriter;
     CompactBufferWriter writer_;
     CompactBufferWriter allocWriter_;
 
@@ -315,11 +318,10 @@ class SnapshotWriter
     typedef HashMap<RVA, uint32_t, RVA::Hasher, SystemAllocPolicy> RValueAllocMap;
     RValueAllocMap allocMap_;
 
-    // These are only used to assert sanity.
-    uint32_t nallocs_;
+    // This is only used to assert sanity.
     uint32_t allocWritten_;
-    uint32_t nframes_;
-    uint32_t framesWritten_;
+
+    // Used to report size of the snapshot in the spew messages.
     SnapshotOffset lastStart_;
 
   public:
@@ -330,9 +332,6 @@ class SnapshotWriter
     void trackSnapshot(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId,
                        uint32_t lirOpcode, uint32_t lirId);
 #endif
-    void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
-    void endFrame();
-
     bool add(const RValueAllocation &slot);
 
     void endSnapshot();
@@ -354,6 +353,26 @@ class SnapshotWriter
     const uint8_t *RVATableBuffer() const {
         return allocWriter_.buffer();
     }
+};
+
+class RecoverWriter
+{
+    SnapshotWriter &snapshot_;
+
+    uint32_t nallocs_;
+
+    uint32_t nframes_;
+    uint32_t framesWritten_;
+
+  public:
+    RecoverWriter(SnapshotWriter &snapshot);
+
+    SnapshotOffset startRecover(uint32_t frameCount, BailoutKind kind, bool resumeAfter);
+
+    void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
+    void endFrame();
+
+    void endRecover();
 };
 
 class RecoverReader;

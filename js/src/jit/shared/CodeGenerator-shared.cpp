@@ -41,6 +41,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     gen(gen),
     graph(*graph),
     current(nullptr),
+    snapshots_(),
+    recovers_(snapshots_),
     deoptTable_(nullptr),
 #ifdef DEBUG
     pushedArgs_(0),
@@ -247,8 +249,8 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     JS_ASSERT(mode != MResumePoint::Outer);
     bool resumeAfter = (mode == MResumePoint::ResumeAfter);
 
-    SnapshotOffset offset = snapshots_.startSnapshot(frameCount, snapshot->bailoutKind(),
-                                                     resumeAfter);
+    SnapshotOffset offset = recovers_.startRecover(frameCount, snapshot->bailoutKind(),
+                                                   resumeAfter);
 
 #ifdef TRACK_SNAPSHOTS
     uint32_t pcOpcode = 0;
@@ -285,7 +287,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         JSScript *script = block->info().script();
         jsbytecode *pc = mir->pc();
         uint32_t exprStack = mir->stackDepth() - block->info().ninvoke();
-        snapshots_.startFrame(fun, script, pc, exprStack);
+        recovers_.startFrame(fun, script, pc, exprStack);
 
         // Ensure that all snapshot which are encoded can safely be used for
         // bailouts.
@@ -327,11 +329,10 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
 
         if (!encodeAllocations(snapshot, mir, &startIndex))
             return false;
-        snapshots_.endFrame();
+        recovers_.endFrame();
     }
 
-    snapshots_.endSnapshot();
-
+    recovers_.endRecover();
     snapshot->setSnapshotOffset(offset);
 
     return !snapshots_.oom();
