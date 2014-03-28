@@ -32,8 +32,6 @@
 
 #define TYPEDOBJ_BYTEOFFSET(obj) \
     TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEDOBJ_SLOT_BYTEOFFSET))
-#define TYPEDOBJ_BYTELENGTH(obj) \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEDOBJ_SLOT_BYTELENGTH))
 #define TYPEDOBJ_TYPE_DESCR(obj) \
     UnsafeGetReservedSlot(obj, JS_TYPEDOBJ_SLOT_TYPE_DESCR)
 #define TYPEDOBJ_OWNER(obj) \
@@ -571,10 +569,18 @@ function StorageOfTypedObject(obj) {
     if (ObjectIsOpaqueTypedObject(obj))
       return null;
 
-    if (ObjectIsTransparentTypedObject(obj))
+    if (ObjectIsTransparentTypedObject(obj)) {
+      var descr = TYPEDOBJ_TYPE_DESCR(obj);
+      var byteLength;
+      if (DESCR_KIND(descr) == JS_TYPEREPR_UNSIZED_ARRAY_KIND)
+        byteLength = DESCR_SIZE(descr.elementType) * obj.length;
+      else
+        byteLength = DESCR_SIZE(descr);
+
       return { buffer: TYPEDOBJ_OWNER(obj),
-               byteLength: TYPEDOBJ_BYTELENGTH(obj),
+               byteLength: byteLength,
                byteOffset: TYPEDOBJ_BYTEOFFSET(obj) };
+    }
   }
 
   ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);

@@ -240,7 +240,7 @@ class ArrayBufferViewObject : public JSObject
     static const size_t BYTEOFFSET_SLOT  = JS_TYPEDOBJ_SLOT_BYTEOFFSET;
 
     /* Byte length of view */
-    static const size_t BYTELENGTH_SLOT  = JS_TYPEDOBJ_SLOT_BYTELENGTH;
+    static const size_t LENGTH_SLOT      = JS_TYPEDOBJ_SLOT_LENGTH;
 
     /* Underlying ArrayBufferObject */
     static const size_t BUFFER_SLOT      = JS_TYPEDOBJ_SLOT_OWNER;
