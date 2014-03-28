@@ -482,6 +482,14 @@ SnapshotReader::readSnapshotHeader()
     resumeAfter_ = !!(bits & (1 << BAILOUT_RESUME_SHIFT));
     framesRead_ = 0;
 
+#ifdef TRACK_SNAPSHOTS
+    pcOpcode_  = reader_.readUnsigned();
+    mirOpcode_ = reader_.readUnsigned();
+    mirId_     = reader_.readUnsigned();
+    lirOpcode_ = reader_.readUnsigned();
+    lirId_     = reader_.readUnsigned();
+#endif
+
     IonSpew(IonSpew_Snapshots, "Read snapshot header with frameCount %u, bailout kind %u (ra: %d)",
             frameCount_, bailoutKind_, resumeAfter_);
 }
@@ -494,13 +502,6 @@ SnapshotReader::readFrameHeader()
 
     pcOffset_ = reader_.readUnsigned();
     allocCount_ = reader_.readUnsigned();
-#ifdef TRACK_SNAPSHOTS
-    pcOpcode_  = reader_.readUnsigned();
-    mirOpcode_ = reader_.readUnsigned();
-    mirId_     = reader_.readUnsigned();
-    lirOpcode_ = reader_.readUnsigned();
-    lirId_     = reader_.readUnsigned();
-#endif
     IonSpew(IonSpew_Snapshots, "Read pc offset %u, nslots %u", pcOffset_, allocCount_);
 
     framesRead_++;
@@ -592,8 +593,8 @@ SnapshotWriter::startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, ui
 
 #ifdef TRACK_SNAPSHOTS
 void
-SnapshotWriter::trackFrame(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId,
-                                            uint32_t lirOpcode, uint32_t lirId)
+SnapshotWriter::trackSnapshot(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId,
+                              uint32_t lirOpcode, uint32_t lirId)
 {
     writer_.writeUnsigned(pcOpcode);
     writer_.writeUnsigned(mirOpcode);
