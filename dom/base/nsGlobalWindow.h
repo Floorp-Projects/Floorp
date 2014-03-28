@@ -107,10 +107,12 @@ class Selection;
 namespace dom {
 class BarProp;
 class Console;
+class External;
 class Function;
 class Gamepad;
 class MediaQueryList;
 class Navigator;
+class OwningExternalOrWindowProxy;
 class SpeechSynthesis;
 class WakeLock;
 namespace indexedDB {
@@ -823,6 +825,10 @@ public:
 
   mozilla::dom::Console* GetConsole(mozilla::ErrorResult& aRv);
 
+  void GetSidebar(mozilla::dom::OwningExternalOrWindowProxy& aResult,
+                  mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::External> GetExternal(mozilla::ErrorResult& aRv);
+
 protected:
   bool AlertOrConfirm(bool aAlert, const nsAString& aMessage,
                       mozilla::ErrorResult& aError);
@@ -1455,6 +1461,11 @@ protected:
   nsGlobalWindowObserver*       mObserver; // Inner windows only.
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsRefPtr<mozilla::dom::Console> mConsole;
+  // We need to store an nsISupports pointer to this object because the
+  // mozilla::dom::External class doesn't exist on b2g and using the type
+  // forward declared here means that ~nsGlobalWindow wouldn't compile because
+  // it wouldn't see the ~External function's declaration.
+  nsCOMPtr<nsISupports>         mExternal;
 
   nsCOMPtr<nsIDOMStorage>      mLocalStorage;
   nsCOMPtr<nsIDOMStorage>      mSessionStorage;
