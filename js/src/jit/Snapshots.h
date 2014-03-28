@@ -356,21 +356,22 @@ class SnapshotWriter
     }
 };
 
+class RecoverReader;
+
 // A snapshot reader reads the entries out of the compressed snapshot buffer in
 // a script. These entries describe the equivalent interpreter frames at a given
 // position in JIT code. Each entry is an Ion's value allocations, used to
 // recover the corresponding Value from an Ion frame.
 class SnapshotReader
 {
+    friend class RecoverReader;
+
     CompactBufferReader reader_;
     CompactBufferReader allocReader_;
     const uint8_t* allocTable_;
 
-    uint32_t pcOffset_;           // Offset from script->code.
-    uint32_t allocCount_;         // Number of slots.
     uint32_t frameCount_;
     BailoutKind bailoutKind_;
-    uint32_t framesRead_;         // Number of frame headers that have been read.
     uint32_t allocRead_;          // Number of slots that have been read.
     bool resumeAfter_;
 
@@ -394,35 +395,48 @@ class SnapshotReader
     SnapshotReader(const uint8_t *snapshots, uint32_t offset,
                    uint32_t RVATableSize, uint32_t listSize);
 
-    uint32_t allocations() const {
-        return allocCount_;
-    }
     RValueAllocation readAllocation();
 
-    bool moreAllocations() const {
-        return allocRead_ < allocCount_;
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
+    bool resumeAfter() const {
+        return resumeAfter_;
+    }
+};
+
+class RecoverReader
+{
+    uint32_t frameCount_;
+    uint32_t framesRead_;         // Number of frame headers that have been read.
+    uint32_t pcOffset_;           // Offset from script->code.
+    uint32_t allocCount_;         // Number of slots.
+
+  private:
+    void readFrame(SnapshotReader &snapshot);
+
+  public:
+    RecoverReader(SnapshotReader &snapshot);
+
+    bool moreFrames() const {
+        return framesRead_ < frameCount_;
+    }
+    void nextFrame(SnapshotReader &snapshot) {
+        readFrame(snapshot);
+    }
+    uint32_t frameCount() const {
+        return frameCount_;
     }
 
     uint32_t pcOffset() const {
         return pcOffset_;
     }
-    BailoutKind bailoutKind() const {
-        return bailoutKind_;
-    }
-    bool resumeAfter() const {
-        if (moreFrames())
-            return false;
-        return resumeAfter_;
-    }
 
-    bool moreFrames() const {
-        return framesRead_ < frameCount_;
+    uint32_t allocations() const {
+        return allocCount_;
     }
-    void nextFrame() {
-        readFrameHeader();
-    }
-    uint32_t frameCount() const {
-        return frameCount_;
+    bool moreAllocations(const SnapshotReader &snapshot) const {
+        return snapshot.allocRead_ < allocCount_;
     }
 };
 
