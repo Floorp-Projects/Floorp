@@ -124,7 +124,7 @@ void MediaDecoder::SetDormantIfNecessary(bool aDormant)
     DestroyDecodedStream();
     mDecoderStateMachine->SetDormant(true);
 
-    mRequestedSeekTarget = SeekTarget(mCurrentTime, SeekTarget::Accurate);
+    mRequestedSeekTime = mCurrentTime;
     if (mPlayState == PLAY_STATE_PLAYING){
       mNextState = PLAY_STATE_PLAYING;
     } else {
@@ -420,6 +420,7 @@ MediaDecoder::MediaDecoder() :
   mIsExitingDormant(false),
   mPlayState(PLAY_STATE_PAUSED),
   mNextState(PLAY_STATE_PAUSED),
+  mRequestedSeekTime(-1.0),
   mCalledResourceLoaded(false),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
@@ -604,27 +605,99 @@ nsresult MediaDecoder::Play()
     return NS_OK;
   }
   if (mPlayState == PLAY_STATE_ENDED)
-    return Seek(0, SeekTarget::PrevSyncPoint);
+    return Seek(0);
 
   ChangeState(PLAY_STATE_PLAYING);
   return NS_OK;
 }
 
-nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
+/**
+ * Returns true if aValue is inside a range of aRanges, and put the range
+ * index in aIntervalIndex if it is not null.
+ * If aValue is not inside a range, false is returned, and aIntervalIndex, if
+ * not null, is set to the index of the range which ends immediately before aValue
+ * (and can be -1 if aValue is before aRanges.Start(0)).
+ */
+static bool
+IsInRanges(dom::TimeRanges& aRanges, double aValue, int32_t& aIntervalIndex)
+{
+  uint32_t length;
+  aRanges.GetLength(&length);
+  for (uint32_t i = 0; i < length; i++) {
+    double start, end;
+    aRanges.Start(i, &start);
+    if (start > aValue) {
+      aIntervalIndex = i - 1;
+      return false;
+    }
+    aRanges.End(i, &end);
+    if (aValue <= end) {
+      aIntervalIndex = i;
+      return true;
+    }
+  }
+  aIntervalIndex = length - 1;
+  return false;
+}
+
+nsresult MediaDecoder::Seek(double aTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
   NS_ABORT_IF_FALSE(aTime >= 0.0, "Cannot seek to a negative value.");
 
-  int64_t timeUsecs = 0;
-  nsresult rv = SecondsToUsecs(aTime, timeUsecs);
-  NS_ENSURE_SUCCESS(rv, rv);
+  dom::TimeRanges seekable;
+  nsresult res;
+  uint32_t length = 0;
+  res = GetSeekable(&seekable);
+  NS_ENSURE_SUCCESS(res, NS_OK);
 
-  mRequestedSeekTarget = SeekTarget(timeUsecs, aSeekType);
+  seekable.GetLength(&length);
+  if (!length) {
+    return NS_OK;
+  }
+
+  // If the position we want to seek to is not in a seekable range, we seek
+  // to the closest position in the seekable ranges instead. If two positions
+  // are equally close, we seek to the closest position from the currentTime.
+  // See seeking spec, point 7 :
+  // http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#seeking
+  int32_t range = 0;
+  if (!IsInRanges(seekable, aTime, range)) {
+    if (range != -1) {
+      // |range + 1| can't be negative, because the only possible negative value
+      // for |range| is -1.
+      if (uint32_t(range + 1) < length) {
+        double leftBound, rightBound;
+        res = seekable.End(range, &leftBound);
+        NS_ENSURE_SUCCESS(res, NS_OK);
+        res = seekable.Start(range + 1, &rightBound);
+        NS_ENSURE_SUCCESS(res, NS_OK);
+        double distanceLeft = Abs(leftBound - aTime);
+        double distanceRight = Abs(rightBound - aTime);
+        if (distanceLeft == distanceRight) {
+          distanceLeft = Abs(leftBound - mCurrentTime);
+          distanceRight = Abs(rightBound - mCurrentTime);
+        }
+        aTime = (distanceLeft < distanceRight) ? leftBound : rightBound;
+      } else {
+        // Seek target is after the end last range in seekable data.
+        // Clamp the seek target to the end of the last seekable range.
+        res = seekable.End(length - 1, &aTime);
+        NS_ENSURE_SUCCESS(res, NS_OK);
+      }
+    } else {
+      // aTime is before the first range in |seekable|, the closest point we can
+      // seek to is the start of the first range.
+      seekable.Start(0, &aTime);
+    }
+  }
+
+  mRequestedSeekTime = aTime;
   mCurrentTime = aTime;
 
-  // If we are already in the seeking state, then setting mRequestedSeekTarget
+  // If we are already in the seeking state, then setting mRequestedSeekTime
   // above will result in the new seek occurring when the current seek
   // completes.
   if ((mPlayState != PLAY_STATE_LOADING || !mIsDormant) && mPlayState != PLAY_STATE_SEEKING) {
@@ -743,7 +816,7 @@ void MediaDecoder::MetadataLoaded(int aChannels, int aRate, bool aHasAudio, bool
   // state if we're still set to the original
   // loading state.
   if (mPlayState == PLAY_STATE_LOADING) {
-    if (mRequestedSeekTarget.IsValid()) {
+    if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
     }
     else {
@@ -1070,7 +1143,7 @@ void MediaDecoder::SeekingStopped()
 
     // An additional seek was requested while the current seek was
     // in operation.
-    if (mRequestedSeekTarget.IsValid()) {
+    if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
       seekWasAborted = true;
     } else {
@@ -1078,8 +1151,6 @@ void MediaDecoder::SeekingStopped()
       ChangeState(mNextState);
     }
   }
-
-  PlaybackPositionChanged();
 
   if (mOwner) {
     UpdateReadyStateForData();
@@ -1105,7 +1176,7 @@ void MediaDecoder::SeekingStoppedAtEnd()
 
     // An additional seek was requested while the current seek was
     // in operation.
-    if (mRequestedSeekTarget.IsValid()) {
+    if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
       seekWasAborted = true;
     } else {
@@ -1114,8 +1185,6 @@ void MediaDecoder::SeekingStoppedAtEnd()
       ChangeState(PLAY_STATE_ENDED);
     }
   }
-
-  PlaybackPositionChanged();
 
   if (mOwner) {
     UpdateReadyStateForData();
@@ -1185,8 +1254,8 @@ void MediaDecoder::ApplyStateToStateMachine(PlayState aState)
         mDecoderStateMachine->Play();
         break;
       case PLAY_STATE_SEEKING:
-        mDecoderStateMachine->Seek(mRequestedSeekTarget);
-        mRequestedSeekTarget.Reset();
+        mDecoderStateMachine->Seek(mRequestedSeekTime);
+        mRequestedSeekTime = -1.0;
         break;
       default:
         /* No action needed */
