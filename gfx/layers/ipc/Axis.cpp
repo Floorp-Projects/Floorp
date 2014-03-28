@@ -274,8 +274,7 @@ float Axis::GetOrigin() {
 
 float Axis::GetCompositionLength() {
   const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
-  CSSRect cssCompositedRect = CSSRect(metrics.CalculateCompositedRectInCssPixels());
-  return GetRectLength(cssCompositedRect);
+  return GetRectLength(metrics.CalculateCompositedRectInCssPixels());
 }
 
 float Axis::GetPageStart() {

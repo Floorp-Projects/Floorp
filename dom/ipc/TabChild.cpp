@@ -288,7 +288,7 @@ TabChildBase::HandlePossibleViewportChange()
   metrics.mResolution = metrics.mCumulativeResolution / LayoutDeviceToParentLayerScale(1);
   utils->SetResolution(metrics.mResolution.scale, metrics.mResolution.scale);
 
-  CSSSize scrollPort = CSSSize(metrics.CalculateCompositedRectInCssPixels().Size());
+  CSSSize scrollPort = metrics.CalculateCompositedSizeInCssPixels();
   utils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
 
   // The call to GetPageSize forces a resize event to content, so we need to
@@ -424,7 +424,7 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     FrameMetrics newMetrics = aFrameMetrics;
     APZCCallbackHelper::UpdateRootFrame(utils, newMetrics);
 
-    CSSRect cssCompositedRect = CSSRect(newMetrics.CalculateCompositedRectInCssPixels());
+    CSSSize cssCompositedSize = newMetrics.CalculateCompositedSizeInCssPixels();
     // The BrowserElementScrolling helper must know about these updated metrics
     // for other functions it performs, such as double tap handling.
     // Note, %f must not be used because it is locale specific!
@@ -453,9 +453,9 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
         data.AppendPrintf(" }");
     data.AppendLiteral(", \"cssCompositedRect\" : ");
         data.AppendLiteral("{ \"width\" : ");
-        data.AppendFloat(cssCompositedRect.width);
+        data.AppendFloat(cssCompositedSize.width);
         data.AppendLiteral(", \"height\" : ");
-        data.AppendFloat(cssCompositedRect.height);
+        data.AppendFloat(cssCompositedSize.height);
         data.AppendLiteral(" }");
     data.AppendLiteral(" }");
 
