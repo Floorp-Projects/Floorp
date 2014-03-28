@@ -115,7 +115,14 @@ public class FxAccountUpdateCredentialsActivity extends FxAccountAbstractSetupAc
 
     @Override
     public void handleFailure(FxAccountClientRemoteException e) {
-      // TODO On isUpgradeRequired, transition to Doghouse state.
+      if (e.isUpgradeRequired()) {
+        Logger.error(LOG_TAG, "Got upgrade required from remote server; transitioning Firefox Account to Doghouse state.");
+        final State state = fxAccount.getState();
+        fxAccount.setState(state.makeDoghouseState());
+        // The status activity will say that the user needs to upgrade.
+        redirectToActivity(FxAccountStatusActivity.class);
+        return;
+      }
       showRemoteError(e, R.string.fxaccount_update_credentials_unknown_error);
     }
 
