@@ -553,7 +553,7 @@ MediaDecoderStateMachine::NeedToDecodeVideo()
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
-  return mIsVideoDecoding && !HaveEnoughDecodedVideo();
+  return mIsVideoDecoding && IsPlaying() && !HaveEnoughDecodedVideo();
 }
 
 void
@@ -644,6 +644,7 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
   return mIsAudioDecoding &&
+         IsPlaying() &&
          !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate);
 }
 
@@ -1508,6 +1509,15 @@ MediaDecoderStateMachine::SetReaderIdle()
 {
   DECODER_LOG(PR_LOG_DEBUG, ("%p SetReaderIdle()", mDecoder.get()));
   MOZ_ASSERT(OnDecodeThread());
+#ifdef PR_LOGGING
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    DECODER_LOG(PR_LOG_DEBUG, ("%p SetReaderIdle() audioQueue=%lld videoQueue=%lld",
+                               mDecoder.get(),
+                               GetDecodedAudioDuration(),
+                               mReader->VideoQueue().Duration()));
+  }
+#endif
   mReader->SetIdle();
 }
 
@@ -1544,10 +1554,9 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
   MOZ_ASSERT(mState != DECODER_STATE_COMPLETED ||
              (!needToDecodeAudio && !needToDecodeVideo));
 
-  bool needIdle = mDecoder->GetState() == MediaDecoder::PLAY_STATE_PAUSED &&
+  bool needIdle = mDecoder->GetState() != MediaDecoder::PLAY_STATE_PLAYING &&
                   !needToDecodeAudio &&
-                  !needToDecodeVideo &&
-                  !IsPlaying();
+                  !needToDecodeVideo;
 
   if (needToDecodeAudio) {
     EnsureAudioDecodeTaskQueued();
