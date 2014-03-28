@@ -394,11 +394,17 @@ class SnapshotReader
     SnapshotReader(const uint8_t *snapshots, uint32_t offset,
                    uint32_t RVATableSize, uint32_t listSize);
 
-    uint32_t pcOffset() const {
-        return pcOffset_;
-    }
     uint32_t allocations() const {
         return allocCount_;
+    }
+    RValueAllocation readAllocation();
+
+    bool moreAllocations() const {
+        return allocRead_ < allocCount_;
+    }
+
+    uint32_t pcOffset() const {
+        return pcOffset_;
     }
     BailoutKind bailoutKind() const {
         return bailoutKind_;
@@ -408,16 +414,12 @@ class SnapshotReader
             return false;
         return resumeAfter_;
     }
+
     bool moreFrames() const {
         return framesRead_ < frameCount_;
     }
     void nextFrame() {
         readFrameHeader();
-    }
-    RValueAllocation readAllocation();
-
-    bool moreAllocations() const {
-        return allocRead_ < allocCount_;
     }
     uint32_t frameCount() const {
         return frameCount_;

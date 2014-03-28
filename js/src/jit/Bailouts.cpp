@@ -37,10 +37,10 @@ using namespace js::jit;
 // bailed out frame.
 
 SnapshotIterator::SnapshotIterator(const IonBailoutIterator &iter)
-  : SnapshotReader(iter.ionScript()->snapshots(),
-                   iter.snapshotOffset(),
-                   iter.ionScript()->snapshotsRVATableSize(),
-                   iter.ionScript()->snapshotsListSize()),
+  : snapshot_(iter.ionScript()->snapshots(),
+              iter.snapshotOffset(),
+              iter.ionScript()->snapshotsRVATableSize(),
+              iter.ionScript()->snapshotsListSize()),
     fp_(iter.jsFrame()),
     machine_(iter.machineState()),
     ionScript_(iter.ionScript())
