@@ -36,7 +36,7 @@ public:
 
 class nsSecurityHeaderParser {
 public:
-  nsSecurityHeaderParser(const char *aHeader);
+  explicit nsSecurityHeaderParser(const char *aHeader);
   ~nsSecurityHeaderParser();
 
   // Only call Parse once.

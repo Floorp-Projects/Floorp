@@ -54,6 +54,7 @@ OptimizationInfo::initAsmjsOptimizationInfo()
     level_ = Optimization_AsmJS;
     edgeCaseAnalysis_ = false;
     eliminateRedundantChecks_ = false;
+    registerAllocator_ = RegisterAllocator_Backtracking;
 }
 
 uint32_t

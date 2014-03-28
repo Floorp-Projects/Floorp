@@ -1466,7 +1466,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(handleNotAnInt, Above);
     }
 
-    void enterOsr(Register calleeToken, Register code);
     void memIntToValue(Address Source, Address Dest) {
         load32(Source, lr);
         storeValue(JSVAL_TYPE_INT32, lr, Dest);

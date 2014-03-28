@@ -361,6 +361,8 @@ class MochitestUtilsMixin(object):
         self.urlOpts.append("dumpAboutMemoryAfterTest=true")
       if options.dumpDMDAfterTest:
         self.urlOpts.append("dumpDMDAfterTest=true")
+      if options.quiet:
+        self.urlOpts.append("quiet=true")
 
   def getTestFlavor(self, options):
     if options.browserChrome:

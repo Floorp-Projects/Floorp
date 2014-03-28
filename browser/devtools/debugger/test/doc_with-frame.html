@@ -13,12 +13,12 @@
 
     <script type="text/javascript">
       function test(aNumber) {
-        var a, obj = { one: 1, two: 2 };
+        var a, obj = { alpha: 1, beta: 2 };
         var r = aNumber;
         with (Math) {
           a = PI * r * r;
           with (obj) {
-            var foo = two * PI;
+            var foo = beta * PI;
             debugger;
           }
         }

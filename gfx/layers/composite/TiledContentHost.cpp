@@ -286,9 +286,6 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
 {
   MOZ_ASSERT(aLayerProperties, "aLayerProperties required for TiledContentHost");
 
-  // Render valid tiles.
-  nsIntRect visibleRect = aVisibleRegion->GetBounds();
-
   if (mPendingUpload) {
     mTiledBuffer.SetCompositor(mCompositor);
     mTiledBuffer.Upload();
@@ -308,11 +305,10 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
     }
   }
 
-  RenderLayerBuffer(mLowPrecisionTiledBuffer,
-                    mLowPrecisionTiledBuffer.GetValidRegion(), aEffectChain, aOpacity,
-                    aFilter, aClipRect, aLayerProperties->mValidRegion, visibleRect, aTransform);
-  RenderLayerBuffer(mTiledBuffer, aLayerProperties->mValidRegion, aEffectChain, aOpacity,
-                    aFilter, aClipRect, nsIntRegion(), visibleRect, aTransform);
+  RenderLayerBuffer(mLowPrecisionTiledBuffer, aEffectChain, aOpacity, aFilter,
+                    aClipRect, aLayerProperties->mVisibleRegion, aTransform);
+  RenderLayerBuffer(mTiledBuffer, aEffectChain, aOpacity, aFilter,
+                    aClipRect, aLayerProperties->mVisibleRegion, aTransform);
 
   // Now release the old buffer if it had double-buffered tiles, as we can
   // guarantee that they're no longer on the screen (and so any locks that may
@@ -390,13 +386,11 @@ TiledContentHost::RenderTile(const TileHost& aTile,
 
 void
 TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
-                                    const nsIntRegion& aValidRegion,
                                     EffectChain& aEffectChain,
                                     float aOpacity,
                                     const gfx::Filter& aFilter,
                                     const gfx::Rect& aClipRect,
-                                    const nsIntRegion& aMaskRegion,
-                                    nsIntRect aVisibleRect,
+                                    nsIntRegion aVisibleRegion,
                                     gfx::Matrix4x4 aTransform)
 {
   if (!mCompositor) {
@@ -405,32 +399,49 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
   }
   float resolution = aLayerBuffer.GetResolution();
   gfx::Size layerScale(1, 1);
-  // We assume that the current frame resolution is the one used in our primary
-  // layer buffer. Compensate for a changing frame resolution.
+
+  // We assume that the current frame resolution is the one used in our high
+  // precision layer buffer. Compensate for a changing frame resolution when
+  // rendering the low precision buffer.
   if (aLayerBuffer.GetFrameResolution() != mTiledBuffer.GetFrameResolution()) {
     const CSSToParentLayerScale& layerResolution = aLayerBuffer.GetFrameResolution();
     const CSSToParentLayerScale& localResolution = mTiledBuffer.GetFrameResolution();
     layerScale.width = layerScale.height = layerResolution.scale / localResolution.scale;
-    aVisibleRect.ScaleRoundOut(layerScale.width, layerScale.height);
+    aVisibleRegion.ScaleRoundOut(layerScale.width, layerScale.height);
   }
+
+  // If we're drawing the low precision buffer, make sure the high precision
+  // buffer is masked out to avoid overdraw and rendering artifacts with
+  // non-opaque layers.
+  nsIntRegion maskRegion;
+  if (resolution != mTiledBuffer.GetResolution()) {
+    maskRegion = mTiledBuffer.GetValidRegion();
+    // XXX This should be ScaleRoundIn, but there is no such function on
+    //     nsIntRegion.
+    maskRegion.ScaleRoundOut(layerScale.width, layerScale.height);
+  }
+
+  // Make sure the resolution and difference in frame resolution are accounted
+  // for in the layer transform.
   aTransform.Scale(1/(resolution * layerScale.width),
                    1/(resolution * layerScale.height), 1);
 
   uint32_t rowCount = 0;
   uint32_t tileX = 0;
-  for (int32_t x = aVisibleRect.x; x < aVisibleRect.x + aVisibleRect.width;) {
+  nsIntRect visibleRect = aVisibleRegion.GetBounds();
+  for (int32_t x = visibleRect.x; x < visibleRect.x + visibleRect.width;) {
     rowCount++;
     int32_t tileStartX = aLayerBuffer.GetTileStart(x);
     int32_t w = aLayerBuffer.GetScaledTileLength() - tileStartX;
-    if (x + w > aVisibleRect.x + aVisibleRect.width) {
-      w = aVisibleRect.x + aVisibleRect.width - x;
+    if (x + w > visibleRect.x + visibleRect.width) {
+      w = visibleRect.x + visibleRect.width - x;
     }
     int tileY = 0;
-    for (int32_t y = aVisibleRect.y; y < aVisibleRect.y + aVisibleRect.height;) {
+    for (int32_t y = visibleRect.y; y < visibleRect.y + visibleRect.height;) {
       int32_t tileStartY = aLayerBuffer.GetTileStart(y);
       int32_t h = aLayerBuffer.GetScaledTileLength() - tileStartY;
-      if (y + h > aVisibleRect.y + aVisibleRect.height) {
-        h = aVisibleRect.y + aVisibleRect.height - y;
+      if (y + h > visibleRect.y + visibleRect.height) {
+        h = visibleRect.y + visibleRect.height - y;
       }
 
       TileHost tileTexture = aLayerBuffer.
@@ -438,17 +449,12 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
                            aLayerBuffer.RoundDownToTileEdge(y)));
       if (tileTexture != aLayerBuffer.GetPlaceholderTile()) {
         nsIntRegion tileDrawRegion;
-        tileDrawRegion.And(aValidRegion,
-                           nsIntRect(x * layerScale.width,
-                                     y * layerScale.height,
-                                     w * layerScale.width,
-                                     h * layerScale.height));
-        tileDrawRegion.Sub(tileDrawRegion, aMaskRegion);
+        tileDrawRegion.And(nsIntRect(x, y, w, h), aLayerBuffer.GetValidRegion());
+        tileDrawRegion.And(tileDrawRegion, aVisibleRegion);
+        tileDrawRegion.Sub(tileDrawRegion, maskRegion);
 
         if (!tileDrawRegion.IsEmpty()) {
-          tileDrawRegion.ScaleRoundOut(resolution / layerScale.width,
-                                       resolution / layerScale.height);
-
+          tileDrawRegion.ScaleRoundOut(resolution, resolution);
           nsIntPoint tileOffset((x - tileStartX) * resolution,
                                 (y - tileStartY) * resolution);
           uint32_t tileSize = aLayerBuffer.GetTileLength();
@@ -462,8 +468,8 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     tileX++;
     x += w;
   }
-  gfx::Rect rect(aVisibleRect.x, aVisibleRect.y,
-                 aVisibleRect.width, aVisibleRect.height);
+  gfx::Rect rect(visibleRect.x, visibleRect.y,
+                 visibleRect.width, visibleRect.height);
   GetCompositor()->DrawDiagnostics(DIAGNOSTIC_CONTENT,
                                    rect, aClipRect, aTransform, mFlashCounter);
 }

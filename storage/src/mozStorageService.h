@@ -151,6 +151,12 @@ private:
   nsTArray<nsRefPtr<Connection> > mConnections;
 
   /**
+   * Frees as much heap memory as possible from all of the known open
+   * connections.
+   */
+  void minimizeMemory();
+
+  /**
    * Shuts down the storage service, freeing all of the acquired resources.
    */
   void shutdown();

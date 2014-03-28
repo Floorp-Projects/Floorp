@@ -24,43 +24,9 @@ let gDecoder = new TextDecoder();
 let gSSData;
 let gSSBakData;
 
-// Wait for a state write to complete and then execute a callback.
-function waitForSaveStateComplete(aSaveStateCallback) {
-  let topic = "sessionstore-state-write-complete";
 
-  function observer() {
-    Services.prefs.clearUserPref(PREF_SS_INTERVAL);
-    Services.obs.removeObserver(observer, topic);
-    executeSoon(function taskCallback() {
-      Task.spawn(aSaveStateCallback);
-    });
-  }
 
-  Services.obs.addObserver(observer, topic, false);
-}
-
-// Register next test callback and trigger state saving change.
-function nextTest(testFunc) {
-  waitForSaveStateComplete(testFunc);
-
-  // We set the interval for session store state saves to be zero
-  // to cause a save ASAP.
-  Services.prefs.setIntPref(PREF_SS_INTERVAL, 0);
-}
-
-registerCleanupFunction(function() {
-  // Cleaning up after the test: removing the sessionstore.bak file.
-  Task.spawn(function cleanupTask() {
-    yield OS.File.remove(backupPath);
-  });
-});
-
-function test() {
-  waitForExplicitFinish();
-  nextTest(testAfterFirstWrite);
-}
-
-function testAfterFirstWrite() {
+add_task(function* testAfterFirstWrite() {
   // Ensure sessionstore.bak is not created. We start with a clean
   // profile so there was nothing to move to sessionstore.bak before
   // initially writing sessionstore.js
@@ -78,10 +44,10 @@ function testAfterFirstWrite() {
   // and a backup would not be triggered again.
   yield OS.File.move(path, backupPath);
 
-  nextTest(testReadBackup);
-}
+  yield forceSaveState();
+});
 
-function testReadBackup() {
+add_task(function* testReadBackup() {
   // Ensure sessionstore.bak is finally created.
   let ssExists = yield OS.File.exists(path);
   let ssBackupExists = yield OS.File.exists(backupPath);
@@ -114,10 +80,10 @@ function testReadBackup() {
   is(ssDataRead, gSSBakData,
     "SessionFile.read read sessionstore.bak correctly.");
 
-  nextTest(testBackupUnchanged);
-}
+  yield forceSaveState();
+});
 
-function testBackupUnchanged() {
+add_task(function* testBackupUnchanged() {
   // Ensure sessionstore.bak is backed up only once.
 
   // Read sessionstore.bak data.
@@ -125,6 +91,9 @@ function testBackupUnchanged() {
   let ssBakData = gDecoder.decode(array);
   // Ensure the sessionstore.bak did not change.
   is(ssBakData, gSSBakData, "sessionstore.bak is unchanged.");
+});
 
-  executeSoon(finish);
-}
+add_task(function* cleanup() {
+  // Cleaning up after the test: removing the sessionstore.bak file.
+  yield OS.File.remove(backupPath);
+});

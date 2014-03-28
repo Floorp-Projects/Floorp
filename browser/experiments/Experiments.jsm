@@ -104,7 +104,7 @@ function configureLogging() {
     gLogger = Log.repository.getLogger("Browser.Experiments");
     gLogger.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
   }
-  gLogger.level = gPrefs.get(PREF_LOGGING_LEVEL, 50);
+  gLogger.level = gPrefs.get(PREF_LOGGING_LEVEL, Log.Level.Warn);
 
   let logDumping = gPrefs.get(PREF_LOGGING_DUMP, false);
   if (logDumping != gLogDumping) {
@@ -226,6 +226,11 @@ Experiments.Policy.prototype = {
     return UpdateChannel.get();
   },
 
+  locale: function () {
+    let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+    return chrome.getSelectedLocale("global");
+  },
+
   /*
    * @return Promise<> Resolved with the payload data.
    */
@@ -304,8 +309,10 @@ Experiments.Experiments.prototype = {
 
     AddonManager.addAddonListener(this);
 
-    this._loadTask = Task.spawn(this._loadFromCache.bind(this)).then(
+    this._loadTask = Task.spawn(this._loadFromCache.bind(this));
+    this._loadTask.then(
       () => {
+        gLogger.trace("Experiments::_loadTask finished ok");
         this._loadTask = null;
         this._run();
       },
@@ -386,7 +393,7 @@ Experiments.Experiments.prototype = {
   },
 
   _telemetryStatusChanged: function () {
-    _toggleExperimentsEnabled(gExperimentsEnabled);
+    this._toggleExperimentsEnabled(gExperimentsEnabled);
   },
 
   /**
@@ -473,10 +480,16 @@ Experiments.Experiments.prototype = {
   },
 
   _run: function() {
+    gLogger.trace("Experiments::_run");
     this._checkForShutdown();
     if (!this._mainTask) {
-      this._mainTask = Task.spawn(this._main.bind(this)).then(
-        null,
+      this._mainTask = Task.spawn(this._main.bind(this));
+      this._mainTask.then(
+        () => {
+          gLogger.trace("Experiments::_main finished, scheduling next run");
+          this._mainTask = null;
+          this._scheduleNextRun();
+        },
         (e) => {
           gLogger.error("Experiments::_main caught error: " + e);
           this._mainTask = null;
@@ -488,6 +501,7 @@ Experiments.Experiments.prototype = {
 
   _main: function*() {
     do {
+      gLogger.trace("Experiments::_main iteration");
       yield this._loadTask;
       if (this._refresh) {
         yield this._loadManifest();
@@ -500,11 +514,10 @@ Experiments.Experiments.prototype = {
       // while we were running, go again right now.
     }
     while (this._refresh || this._terminateReason);
-    this._mainTask = null;
-    this._scheduleNextRun();
   },
 
   _loadManifest: function*() {
+    gLogger.trace("Experiments::_loadManifest");
     let uri = Services.urlFormatter.formatURLPref(PREF_BRANCH + PREF_MANIFEST_URI);
 
     this._checkForShutdown();
@@ -652,6 +665,7 @@ Experiments.Experiments.prototype = {
    * Part of the main task to save the cache to disk, called from _main.
    */
   _saveToCache: function* () {
+    gLogger.trace("Experiments::_saveToCache");
     let path = this._cacheFilePath;
     let textData = JSON.stringify({
       version: CACHE_VERSION,
@@ -670,6 +684,7 @@ Experiments.Experiments.prototype = {
    * Task function, load the cached experiments manifest file from disk.
    */
   _loadFromCache: function*() {
+    gLogger.trace("Experiments::_loadFromCache");
     let path = this._cacheFilePath;
     try {
       let result = yield loadJSONAsync(path, { compression: "lz4" });
@@ -706,7 +721,7 @@ Experiments.Experiments.prototype = {
    * array in the manifest
    */
   _updateExperiments: function (manifestObject) {
-    gLogger.trace("Experiments::updateExperiments() - experiments: " + JSON.stringify(manifestObject));
+    gLogger.trace("Experiments::_updateExperiments() - experiments: " + JSON.stringify(manifestObject));
 
     if (manifestObject.version !== MANIFEST_VERSION) {
       gLogger.warning("Experiments::updateExperiments() - unsupported version " + manifestObject.version);
@@ -1149,9 +1164,8 @@ Experiments.ExperimentEntry.prototype = {
     let app = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
     let runtime = Cc["@mozilla.org/xre/app-info;1"]
                     .getService(Ci.nsIXULRuntime);
-    let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
 
-    let locale = chrome.getSelectedLocale("global");
+    let locale = this._policy.locale();
     let channel = this._policy.updatechannel();
     let data = this._manifestData;
 
@@ -1161,6 +1175,7 @@ Experiments.ExperimentEntry.prototype = {
     let startSec = (this.startDate || 0) / 1000;
 
     gLogger.trace("ExperimentEntry::isApplicable() - now=" + now
+                  + ", randomValue=" + this._randomValue
                   + ", data=" + JSON.stringify(this._manifestData));
 
     // Not applicable if it already ran.
@@ -1183,11 +1198,11 @@ Experiments.ExperimentEntry.prototype = {
       { name: "endTime",
         condition: () => now < data.endTime },
       { name: "maxStartTime",
-        condition: () => !data.maxStartTime || now <= (data.maxStartTime - minActive) },
+        condition: () => !data.maxStartTime || now <= data.maxStartTime },
       { name: "maxActiveSeconds",
         condition: () => !this._startDate || now <= (startSec + maxActive) },
       { name: "appName",
-        condition: () => !data.name || data.appName.indexOf(app.name) != -1 },
+        condition: () => !data.appName || data.appName.indexOf(app.name) != -1 },
       { name: "minBuildID",
         condition: () => !data.minBuildID || app.platformBuildID >= data.minBuildID },
       { name: "maxBuildID",
@@ -1201,9 +1216,9 @@ Experiments.ExperimentEntry.prototype = {
       { name: "locale",
         condition: () => !data.locale || data.locale.indexOf(locale) != -1 },
       { name: "sample",
-        condition: () => !data.sample || this._randomValue <= data.sample },
+        condition: () => data.sample === undefined || this._randomValue <= data.sample },
       { name: "version",
-        condition: () => !data.version || data.appVersion.indexOf(app.version) != -1 },
+        condition: () => !data.version || data.version.indexOf(app.version) != -1 },
       { name: "minVersion",
         condition: () => !data.minVersion || versionCmp.compare(app.version, data.minVersion) >= 0 },
       { name: "maxVersion",
