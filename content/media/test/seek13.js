@@ -14,14 +14,16 @@ function seekStarted() {
   if (completed)
     return;
   //is(v.currentTime, v.duration, "seeking: currentTime must be duration");
-  ok(Math.abs(v.currentTime - v.duration) < 0.01, "seeking: currentTime must be duration");
+  ok(Math.abs(v.currentTime - v.duration) < 0.01,
+     "seeking: currentTime (" + v.currentTime + ") must be duration (" + v.duration + ")");
 }
 
 function seekEnded() {
   if (completed)
     return;
   //is(v.currentTime, v.duration, "seeked: currentTime must be duration");
-  ok(Math.abs(v.currentTime - v.duration) < 0.01, "seeked: currentTime must be duration");
+  ok(Math.abs(v.currentTime - v.duration) < 0.01,
+     "seeked: currentTime (" + v.currentTime + ") must be duration (" + v.duration + ")");
   is(v.seeking, false, "seeking flag on end should be false");
 }
 
@@ -30,7 +32,8 @@ function playbackEnded() {
     return;
   completed = true;
   //is(v.currentTime, v.duration, "ended: currentTime must be duration");
-  ok(Math.abs(v.currentTime - v.duration) < 0.01, "ended: currentTime must be duration");
+  ok(Math.abs(v.currentTime - v.duration) < 0.01,
+     "ended: currentTime (" + v.currentTime + ") must be duration (" + v.duration + ")");
   is(v.seeking, false, "seeking flag on end should be false");
   is(v.ended, true, "ended must be true");
   finish();
