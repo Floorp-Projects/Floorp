@@ -1008,7 +1008,7 @@ private:
     nsCString mPACURL;
     bool      mCompleted;
 };
-NS_IMPL_ISUPPORTS1(nsAsyncBridgeRequest, nsPACManCallback)
+NS_IMPL_ISUPPORTS0(nsAsyncBridgeRequest)
 
 // nsIProtocolProxyService2
 NS_IMETHODIMP
