@@ -306,3 +306,19 @@ notification > button {
 .autoscroller[scrolldir="EW"] {
   background-position: right bottom;
 }
+
+/* :::::: Close button icons ::::: */
+
+.close-icon {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 16, 16, 0);
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.close-icon:hover {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 32, 16, 16);
+}
+
+.close-icon:hover:active {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 48, 16, 32);
+}

@@ -29,8 +29,10 @@ findbar[hidden] {
 }
 
 .findbar-closebutton {
-  -moz-margin-start: 4px;
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0 8px;
 }
 
 /* Search field */
