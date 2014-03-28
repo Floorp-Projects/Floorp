@@ -1376,8 +1376,9 @@ Experiments.ExperimentEntry.prototype = {
       deferred.reject(new Error(message));
     };
 
+    let entry = this;
     let listener = {
-      onDownloadEnded: install => {
+      onDownloadEnded: function (install) {
         gLogger.trace("ExperimentEntry::_installAddon() - onDownloadEnded for " + this.id);
 
         if (install.existingAddon) {
@@ -1388,9 +1389,9 @@ Experiments.ExperimentEntry.prototype = {
           gLogger.error("ExperimentEntry::_installAddon() - onDownloadEnded, wrong addon type");
           install.cancel();
         }
-      },
+      }.bind(entry),
 
-      onInstallStarted: install => {
+      onInstallStarted: function (install) {
         gLogger.trace("ExperimentEntry::_installAddon() - onInstallStarted for " + this.id);
 
         if (install.existingAddon) {
@@ -1401,9 +1402,9 @@ Experiments.ExperimentEntry.prototype = {
           gLogger.error("ExperimentEntry::_installAddon() - onInstallStarted, wrong addon type");
           return false;
         }
-      },
+      }.bind(entry),
 
-      onInstallEnded: install => {
+      onInstallEnded: function (install) {
         gLogger.trace("ExperimentEntry::_installAddon() - install ended for " + this.id);
         this._lastChangedDate = this._policy.now();
         this._startDate = this._policy.now();
@@ -1419,13 +1420,13 @@ Experiments.ExperimentEntry.prototype = {
         this._homepageURL = addon.homepageURL || "";
 
         deferred.resolve();
-      },
-    };
+      }.bind(entry),
 
-    ["onDownloadCancelled", "onDownloadFailed", "onInstallCancelled", "onInstallFailed"]
-      .forEach(what => {
-        listener[what] = install => failureHandler(install, what)
-      });
+      onDownloadCancelled: failureHandler.bind(entry),
+      onDownloadFailed: failureHandler.bind(entry),
+      onInstallCancelled: failureHandler.bind(entry),
+      onInstallFailed: failureHandler.bind(entry),
+    };
 
     install.addListener(listener);
     install.install();
