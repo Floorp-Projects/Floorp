@@ -1753,11 +1753,13 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
     CacheIndex::RemoveEntry(aHandle->Hash());
   }
 
-  // Remove the handle from hashtable
-  if (aHandle->IsSpecialFile()) {
-    mSpecialHandles.RemoveElement(aHandle);
-  } else if (!mShuttingDown) { // Don't touch after shutdown
-    mHandles.RemoveHandle(aHandle);
+  // Don't remove handles after shutdown
+  if (!mShuttingDown) {
+    if (aHandle->IsSpecialFile()) {
+      mSpecialHandles.RemoveElement(aHandle);
+    } else {
+      mHandles.RemoveHandle(aHandle);
+    }
   }
 
   return NS_OK;
@@ -3293,7 +3295,7 @@ class SizeOfHandlesRunnable : public nsRunnable
 public:
   SizeOfHandlesRunnable(mozilla::MallocSizeOf mallocSizeOf,
                         CacheFileHandles const &handles,
-                        nsTArray<nsRefPtr<CacheFileHandle> > const &specialHandles)
+                        nsTArray<CacheFileHandle *> const &specialHandles)
     : mMonitor("SizeOfHandlesRunnable.mMonitor")
     , mMallocSizeOf(mallocSizeOf)
     , mHandles(handles)
@@ -3338,7 +3340,7 @@ private:
   mozilla::Monitor mMonitor;
   mozilla::MallocSizeOf mMallocSizeOf;
   CacheFileHandles const &mHandles;
-  nsTArray<nsRefPtr<CacheFileHandle> > const &mSpecialHandles;
+  nsTArray<CacheFileHandle *> const &mSpecialHandles;
   size_t mSize;
 };
 
