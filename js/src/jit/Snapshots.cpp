@@ -455,15 +455,12 @@ SnapshotReader::SnapshotReader(const uint8_t *snapshots, uint32_t offset,
   : reader_(snapshots + offset, snapshots + listSize),
     allocReader_(snapshots + listSize, snapshots + listSize + RVATableSize),
     allocTable_(snapshots + listSize),
-    allocCount_(0),
-    frameCount_(0),
     allocRead_(0)
 {
     if (!snapshots)
         return;
     IonSpew(IonSpew_Snapshots, "Creating snapshot reader");
     readSnapshotHeader();
-    nextFrame();
 }
 
 static const uint32_t BAILOUT_KIND_SHIFT = 0;
@@ -480,7 +477,6 @@ SnapshotReader::readSnapshotHeader()
     JS_ASSERT(frameCount_ > 0);
     bailoutKind_ = BailoutKind((bits >> BAILOUT_KIND_SHIFT) & BAILOUT_KIND_MASK);
     resumeAfter_ = !!(bits & (1 << BAILOUT_RESUME_SHIFT));
-    framesRead_ = 0;
 
 #ifdef TRACK_SNAPSHOTS
     pcOpcode_  = reader_.readUnsigned();
@@ -492,20 +488,6 @@ SnapshotReader::readSnapshotHeader()
 
     IonSpew(IonSpew_Snapshots, "Read snapshot header with frameCount %u, bailout kind %u (ra: %d)",
             frameCount_, bailoutKind_, resumeAfter_);
-}
-
-void
-SnapshotReader::readFrameHeader()
-{
-    JS_ASSERT(moreFrames());
-    JS_ASSERT(allocRead_ == allocCount_);
-
-    pcOffset_ = reader_.readUnsigned();
-    allocCount_ = reader_.readUnsigned();
-    IonSpew(IonSpew_Snapshots, "Read pc offset %u, nslots %u", pcOffset_, allocCount_);
-
-    framesRead_++;
-    allocRead_ = 0;
 }
 
 #ifdef TRACK_SNAPSHOTS
@@ -527,7 +509,6 @@ SnapshotReader::spewBailingFrom() const
 RValueAllocation
 SnapshotReader::readAllocation()
 {
-    JS_ASSERT(allocRead_ < allocCount_);
     IonSpew(IonSpew_Snapshots, "Reading slot %u", allocRead_);
     allocRead_++;
 
@@ -543,6 +524,31 @@ SnapshotWriter::init()
     // enough to prevent the reallocation of the hash table for at least half of
     // the compilations.
     return allocMap_.init(32);
+}
+
+RecoverReader::RecoverReader(SnapshotReader &snapshot)
+  : frameCount_(0),
+    framesRead_(0),
+    allocCount_(0)
+{
+    if (!snapshot.reader_.more())
+        return;
+    frameCount_ = snapshot.frameCount_;
+    readFrame(snapshot);
+}
+
+void
+RecoverReader::readFrame(SnapshotReader &snapshot)
+{
+    JS_ASSERT(moreFrames());
+    JS_ASSERT(snapshot.allocRead_ == allocCount_);
+
+    pcOffset_ = snapshot.reader_.readUnsigned();
+    allocCount_ = snapshot.reader_.readUnsigned();
+    IonSpew(IonSpew_Snapshots, "Read pc offset %u, nslots %u", pcOffset_, allocCount_);
+
+    framesRead_++;
+    snapshot.allocRead_ = 0;
 }
 
 SnapshotOffset
