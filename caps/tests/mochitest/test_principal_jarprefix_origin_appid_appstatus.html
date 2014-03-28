@@ -22,6 +22,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
 
 var Ci = Components.interfaces;
 
+if (navigator.platform.startsWith("Mac")) {
+  SimpleTest.expectAssertions(2);
+}
+
 SimpleTest.waitForExplicitFinish();
 
 /*
