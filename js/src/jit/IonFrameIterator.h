@@ -249,6 +249,7 @@ class IonBailoutIterator;
 class SnapshotIterator
 {
     SnapshotReader snapshot_;
+    RecoverReader recover_;
     IonJSFrameLayout *fp_;
     MachineState machine_;
     IonScript *ionScript_;
@@ -282,6 +283,7 @@ class SnapshotIterator
   public:
     // Handle iterating over RValueAllocations of the snapshots.
     inline RValueAllocation readAllocation() {
+        MOZ_ASSERT(moreAllocations());
         return snapshot_.readAllocation();
     }
     Value skip() {
@@ -290,18 +292,23 @@ class SnapshotIterator
     }
 
     inline uint32_t allocations() const {
-        return snapshot_.allocations();
+        return recover_.allocations();
     }
     inline bool moreAllocations() const {
-        return snapshot_.moreAllocations();
+        return recover_.moreAllocations(snapshot_);
     }
 
   public:
     // Exhibits frame properties contained in the snapshot.
     inline uint32_t pcOffset() const {
-        return snapshot_.pcOffset();
+        return recover_.pcOffset();
     }
     inline bool resumeAfter() const {
+        // Inline frames are inlined on calls, which are considered as being
+        // resumed on the Call as baseline will push the pc once we return from
+        // the call.
+        if (moreFrames())
+            return false;
         return snapshot_.resumeAfter();
     }
     inline BailoutKind bailoutKind() const {
@@ -311,13 +318,14 @@ class SnapshotIterator
   public:
     // Handle iterating over frames of the snapshots.
     inline void nextFrame() {
-        snapshot_.nextFrame();
+        // Reuse the Snapshot buffer.
+        recover_.nextFrame(snapshot_);
     }
     inline bool moreFrames() const {
-        return snapshot_.moreFrames();
+        return recover_.moreFrames();
     }
     inline uint32_t frameCount() const {
-        return snapshot_.frameCount();
+        return recover_.frameCount();
     }
 
   public:
