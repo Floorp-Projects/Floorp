@@ -250,6 +250,26 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     SnapshotOffset offset = snapshots_.startSnapshot(frameCount, snapshot->bailoutKind(),
                                                      resumeAfter);
 
+#ifdef TRACK_SNAPSHOTS
+    uint32_t pcOpcode = 0;
+    uint32_t lirOpcode = 0;
+    uint32_t lirId = 0;
+    uint32_t mirOpcode = 0;
+    uint32_t mirId = 0;
+
+    if (LInstruction *ins = instruction()) {
+        lirOpcode = ins->op();
+        lirId = ins->id();
+        if (ins->mirRaw()) {
+            mirOpcode = ins->mirRaw()->op();
+            mirId = ins->mirRaw()->id();
+            if (ins->mirRaw()->trackedPc())
+                pcOpcode = *ins->mirRaw()->trackedPc();
+        }
+    }
+    snapshots_.trackSnapshot(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
+#endif
+
     FlattenedMResumePointIter mirOperandIter(snapshot->mir());
     if (!mirOperandIter.init())
         return false;
@@ -303,28 +323,6 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
                 }
             }
         }
-#endif
-
-#ifdef TRACK_SNAPSHOTS
-        LInstruction *ins = instruction();
-
-        uint32_t pcOpcode = 0;
-        uint32_t lirOpcode = 0;
-        uint32_t lirId = 0;
-        uint32_t mirOpcode = 0;
-        uint32_t mirId = 0;
-
-        if (ins) {
-            lirOpcode = ins->op();
-            lirId = ins->id();
-            if (ins->mirRaw()) {
-                mirOpcode = ins->mirRaw()->op();
-                mirId = ins->mirRaw()->id();
-                if (ins->mirRaw()->trackedPc())
-                    pcOpcode = *ins->mirRaw()->trackedPc();
-            }
-        }
-        snapshots_.trackFrame(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
 #endif
 
         if (!encodeAllocations(snapshot, mir, &startIndex))
