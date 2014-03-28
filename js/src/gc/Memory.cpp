@@ -31,8 +31,8 @@ gc::InitMemorySubsystem(JSRuntime *rt)
     rt->gcSystemAllocGranularity = sysinfo.dwAllocationGranularity;
 }
 
-static void *
-VirtualAllocAligned(JSRuntime *rt, size_t size, size_t alignment, int type)
+void *
+gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
 {
     JS_ASSERT(size >= alignment);
     JS_ASSERT(size % alignment == 0);
@@ -41,7 +41,7 @@ VirtualAllocAligned(JSRuntime *rt, size_t size, size_t alignment, int type)
 
     /* Special case: If we want allocation alignment, no further work is needed. */
     if (alignment == rt->gcSystemAllocGranularity) {
-        return VirtualAlloc(nullptr, size, type, PAGE_READWRITE);
+        return VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     }
 
     /*
@@ -66,32 +66,13 @@ VirtualAllocAligned(JSRuntime *rt, size_t size, size_t alignment, int type)
             return nullptr;
         void *chunkStart = (void *)AlignBytes(uintptr_t(p), alignment);
         UnmapPages(rt, p, reserveSize);
-        p = VirtualAlloc(chunkStart, size, type, PAGE_READWRITE);
+        p = VirtualAlloc(chunkStart, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
         /* Failure here indicates a race with another thread, so try again. */
     }
 
     JS_ASSERT(uintptr_t(p) % alignment == 0);
     return p;
-}
-
-void *
-gc::AllocateAlignedAddressRange(JSRuntime *rt, size_t size, size_t alignment)
-{
-    return VirtualAllocAligned(rt, size, alignment, MEM_RESERVE);
-}
-
-bool
-gc::CommitAddressRange(void *addr, size_t size)
-{
-    void *start = VirtualAlloc(addr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    return addr == start;
-}
-
-void *
-gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
-{
-    return VirtualAllocAligned(rt, size, alignment, MEM_COMMIT | MEM_RESERVE);
 }
 
 void
@@ -198,7 +179,7 @@ gc::InitMemorySubsystem(JSRuntime *rt)
 }
 
 static inline void *
-MapMemory(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
+MapMemory(size_t length, int prot, int flags, int fd, off_t offset)
 {
 #if defined(__ia64__)
     /*
@@ -214,9 +195,7 @@ MapMemory(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
      *
      * See Bug 589735 for more information.
      */
-    if (!addr)
-        addr = (void*)0x0000070000000000;
-    void *region = mmap(addr, length, prot, flags, fd, offset);
+    void *region = mmap((void*)0x0000070000000000, length, prot, flags, fd, offset);
     if (region == MAP_FAILED)
         return MAP_FAILED;
     /*
@@ -229,21 +208,24 @@ MapMemory(void *addr, size_t length, int prot, int flags, int fd, off_t offset)
     }
     return region;
 #else
-    return mmap(addr, length, prot, flags, fd, offset);
+    return mmap(nullptr, length, prot, flags, fd, offset);
 #endif
 }
 
-static void *
-MmapAligned(JSRuntime *rt, size_t size, size_t alignment, int prot, int flags)
+void *
+gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
 {
     JS_ASSERT(size >= alignment);
     JS_ASSERT(size % alignment == 0);
     JS_ASSERT(size % rt->gcSystemPageSize == 0);
     JS_ASSERT(alignment % rt->gcSystemAllocGranularity == 0);
 
+    int prot = PROT_READ | PROT_WRITE;
+    int flags = MAP_PRIVATE | MAP_ANON;
+
     /* Special case: If we want page alignment, no further work is needed. */
     if (alignment == rt->gcSystemAllocGranularity) {
-        void *region = MapMemory(nullptr, size, prot, flags, -1, 0);
+        void *region = MapMemory(size, prot, flags, -1, 0);
         if (region == MAP_FAILED)
             return nullptr;
         return region;
@@ -251,7 +233,7 @@ MmapAligned(JSRuntime *rt, size_t size, size_t alignment, int prot, int flags)
 
     /* Overallocate and unmap the region's edges. */
     size_t reqSize = Min(size + 2 * alignment, 2 * size);
-    void *region = MapMemory(nullptr, reqSize, prot, flags, -1, 0);
+    void *region = MapMemory(reqSize, prot, flags, -1, 0);
     if (region == MAP_FAILED)
         return nullptr;
 
@@ -268,31 +250,6 @@ MmapAligned(JSRuntime *rt, size_t size, size_t alignment, int prot, int flags)
 
     JS_ASSERT(uintptr_t(front) % alignment == 0);
     return front;
-}
-
-void *
-gc::AllocateAlignedAddressRange(JSRuntime *rt, size_t size, size_t alignment)
-{
-    int prot = PROT_NONE;
-    int flags = MAP_PRIVATE | MAP_ANON | MAP_NORESERVE;
-    return MmapAligned(rt, size, alignment, prot, flags);
-}
-
-bool
-gc::CommitAddressRange(void *addr, size_t size)
-{
-    int prot = PROT_READ | PROT_WRITE;
-    int flags = MAP_PRIVATE | MAP_ANON | MAP_FIXED;
-    void *start = MapMemory(addr, size, prot, flags, -1, 0);
-    return addr == start;
-}
-
-void *
-gc::MapAlignedPages(JSRuntime *rt, size_t size, size_t alignment)
-{
-    int prot = PROT_READ | PROT_WRITE;
-    int flags = MAP_PRIVATE | MAP_ANON;
-    return MmapAligned(rt, size, alignment, prot, flags);
 }
 
 void
