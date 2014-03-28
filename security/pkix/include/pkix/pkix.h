@@ -34,11 +34,13 @@ namespace mozilla { namespace pkix {
 //
 //    * user-initial-policy-set = { requiredPolicy }.
 //    * initial-explicit-policy = true
-//    * initial-any-policy-inhibit = true
+//    * initial-any-policy-inhibit = false
 //
+// We allow intermediate cerificates to use this extension but since
+// we do not process the inhibit anyPolicy extesion we will fail if this
+// extension is present. TODO(bug 989051)
 // Because we force explicit policy and because we prohibit policy mapping, we
-// do not bother processing the policy mapping, policy constraint, or inhibit
-// anyPolicy extensions.
+// do not bother processing the policy mapping, or policy constraint.
 //
 // ----------------------------------------------------------------------------
 // ERROR RANKING
