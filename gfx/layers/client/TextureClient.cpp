@@ -251,11 +251,20 @@ TextureClient::GetIPDLActor()
 
 #ifdef MOZ_WIDGET_GONK
 static bool
-DisableGralloc(SurfaceFormat aFormat)
+DisableGralloc(SurfaceFormat aFormat, const gfx::IntSize& aSizeHint)
 {
   if (aFormat == gfx::SurfaceFormat::A8) {
     return true;
   }
+
+#if ANDROID_VERSION <= 15
+  // Adreno 200 has a problem of drawing gralloc buffer width less than 64 and
+  // drawing gralloc buffer with a height 9px-16px.
+  // See Bug 983971.
+  if (aSizeHint.width < 64 || aSizeHint.height < 32) {
+    return true;
+  }
+#endif
 
   return false;
 }
@@ -325,7 +334,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-  if (!DisableGralloc(aFormat)) {
+  if (!DisableGralloc(aFormat, aSizeHint)) {
     // Don't allow Gralloc texture clients to exceed the maximum texture size.
     // BufferTextureClients have code to handle tiling the surface client-side.
     int32_t maxTextureSize = aAllocator->GetMaxTextureSize();
