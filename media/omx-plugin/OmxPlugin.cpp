@@ -277,7 +277,7 @@ enum ColorFormatSupport {
 static ColorFormatSupport
 IsColorFormatSupported(OMX_COLOR_FORMATTYPE aColorFormat)
 {
-  switch (aColorFormat) {
+  switch (static_cast<int>(aColorFormat)) {
     case OMX_COLOR_FormatCbYCrY:
     case OMX_COLOR_FormatYUV420Planar:
     case OMX_COLOR_FormatYUV420SemiPlanar:
@@ -346,7 +346,7 @@ FindPreferredDecoderAndColorFormat(const sp<IOMX>& aOmx,
 
       if (supported) {
         strncpy(aDecoderName, caps.mComponentName.string(), aDecoderLen);
-        *aColorFormat = (OMX_COLOR_FORMATTYPE)color;
+        *aColorFormat = color;
         found = true;
       }
 
@@ -727,7 +727,7 @@ void OmxDecoder::ToVideoFrame_YUV420SemiPlanar(VideoFrame *aFrame, int64_t aTime
   // to see if the video size patches the raw width and height. If so we can
   // use those figures instead.
 
-  if (aSize == mVideoWidth * mVideoHeight * 3 / 2) {
+  if (static_cast<int>(aSize) == mVideoWidth * mVideoHeight * 3 / 2) {
     videoStride = mVideoWidth;
     videoSliceHeight = mVideoHeight;
   }
