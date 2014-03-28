@@ -52,9 +52,11 @@ notification[type="critical"] {
 }
 
 .messageCloseButton {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  margin-top: 0;
-  margin-bottom: 0;
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  padding-left: 11px;
+  padding-right: 11px;
 }
 
 /* Popup notification */
@@ -73,8 +75,4 @@ notification[type="critical"] {
 
 .popup-notification-button-container {
   margin-top: 17px;
-}
-
-.popup-notification-closeitem {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }

@@ -91,7 +91,17 @@ html[dir=rtl] .favicon {
   width: 16px;
   height: 16px;
   opacity: 0.2;
-  background: url("moz-icon://stock/gtk-close?size=menu") no-repeat;
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 16, 16, 0);
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.close:hover {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 32, 16, 16);
+}
+
+.close:hover:active {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 48, 16, 32);
 }
 
 html[dir=rtl] .close {
