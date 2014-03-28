@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.FilenameFilter;
 
+import org.mozilla.gecko.mozglue.RobocopTarget;
+
 public class FileUtils {
     private static final String LOGTAG= "GeckoFileUtils";
     /*
@@ -38,6 +40,7 @@ public class FileUtils {
         }
     }
 
+    @RobocopTarget
     public static void delTree(File dir, FilenameFilter filter, boolean recurse) {
         String[] files = null;
 
