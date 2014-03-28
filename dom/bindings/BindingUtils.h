@@ -669,22 +669,6 @@ CouldBeDOMBinding(nsWrapperCache* aCache)
   return aCache->IsDOMBinding();
 }
 
-inline bool
-TryToOuterize(JSContext* cx, JS::MutableHandle<JS::Value> rval)
-{
-  if (js::IsInnerObject(&rval.toObject())) {
-    JS::Rooted<JSObject*> obj(cx, &rval.toObject());
-    obj = JS_ObjectToOuterObject(cx, obj);
-    if (!obj) {
-      return false;
-    }
-
-    rval.set(JS::ObjectValue(*obj));
-  }
-
-  return true;
-}
-
 // Make sure to wrap the given string value into the right compartment, as
 // needed.
 MOZ_ALWAYS_INLINE
@@ -713,10 +697,10 @@ MaybeWrapObjectValue(JSContext* cx, JS::MutableHandle<JS::Value> rval)
     return JS_WrapValue(cx, rval);
   }
 
-  // We're same-compartment, but even then we might need to wrap
-  // objects specially.  Check for that.
+  // We're same-compartment. If we're a WebIDL object, we're done.
   if (IsDOMObject(obj)) {
-    return TryToOuterize(cx, rval);
+    rval.set(JS::ObjectValue(*obj));
+    return true;
   }
 
   // It's not a WebIDL object.  But it might be an XPConnect one, in which case
@@ -837,17 +821,14 @@ WrapNewBindingObject(JSContext* cx, JS::Handle<JSObject*> scope, T* value,
   MOZ_ASSERT(js::IsObjectInContextCompartment(scope, cx));
 #endif
 
-  rval.set(JS::ObjectValue(*obj));
-
   bool sameCompartment =
     js::GetObjectCompartment(obj) == js::GetContextCompartment(cx);
   if (sameCompartment && couldBeDOMBinding) {
-    // We only need to outerize Window objects, so anything inheriting from
-    // nsGlobalWindow (which inherits from EventTarget itself).
-    return IsBaseOf<nsGlobalWindow, T>::value || IsSame<EventTarget, T>::value ?
-           TryToOuterize(cx, rval) : true;
+    rval.set(JS::ObjectValue(*obj));
+    return true;
   }
 
+  rval.set(JS::ObjectValue(*obj));
   return JS_WrapValue(cx, rval);
 }
 
