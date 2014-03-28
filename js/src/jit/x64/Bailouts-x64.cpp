@@ -54,7 +54,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     uint8_t *fp = sp + bailout->frameSize();
 
     current_ = fp;
-    type_ = IonFrame_OptimizedJS;
+    type_ = JitFrame_IonJS;
     topFrameSize_ = current_ - sp;
     topIonScript_ = script()->ionScript();
     snapshotOffset_ = bailout->snapshotOffset();
@@ -70,7 +70,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     const OsiIndex *osiIndex = topIonScript_->getOsiIndex(returnAddressToFp_);
 
     current_ = (uint8_t*) bailout->fp();
-    type_ = IonFrame_OptimizedJS;
+    type_ = JitFrame_IonJS;
     topFrameSize_ = current_ - bailout->sp();
     snapshotOffset_ = osiIndex->snapshotOffset();
 }

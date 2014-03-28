@@ -322,6 +322,13 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
       SetSentFin(true);
       AdjustPushedPriority();
 
+      // This stream has been activated (and thus counts against the concurrency
+      // limit intentionally), but will not be registered via
+      // RegisterStreamID (below) because of the push match.
+      // Release that semaphore count immediately (instead of waiting for
+      // cleanup stream) so we can initiate more pull streams.
+      mSession->MaybeDecrementConcurrent(this);
+
       // There is probably pushed data buffered so trigger a read manually
       // as we can't rely on future network events to do it
       mSession->ConnectPushedStream(this);

@@ -1020,7 +1020,7 @@ Recompile(JSContext *cx)
     JitActivationIterator activations(cx->runtime());
     IonFrameIterator iter(activations);
 
-    JS_ASSERT(iter.type() == IonFrame_Exit);
+    JS_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
 
     bool isConstructing = iter.isConstructing();

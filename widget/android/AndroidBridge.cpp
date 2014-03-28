@@ -1141,19 +1141,18 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
     AutoLocalJNIFrame jniFrame(env, 1);
 
     // To prevent calling too many methods through JNI, the Java method returns
-    // an array of double even if we actually want a double, two booleans, and an integer.
+    // an array of double even if we actually want an integer, a boolean, and an integer.
 
     jdoubleArray arr = GeckoAppShell::GetCurrentNetworkInformationWrapper();
-    if (!arr || env->GetArrayLength(arr) != 4) {
+    if (!arr || env->GetArrayLength(arr) != 3) {
         return;
     }
 
     jdouble* info = env->GetDoubleArrayElements(arr, 0);
 
-    aNetworkInfo->bandwidth() = info[0];
-    aNetworkInfo->canBeMetered() = info[1] == 1.0f;
-    aNetworkInfo->isWifi() = info[2] == 1.0f;
-    aNetworkInfo->dhcpGateway() = info[3];
+    aNetworkInfo->type() = info[0];
+    aNetworkInfo->isWifi() = info[1] == 1.0f;
+    aNetworkInfo->dhcpGateway() = info[2];
 
     env->ReleaseDoubleArrayElements(arr, info, 0);
 }

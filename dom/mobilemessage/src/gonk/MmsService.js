@@ -62,6 +62,7 @@ const _MMS_ERROR_NO_SIM_CARD                   = -3;
 const _MMS_ERROR_SIM_CARD_CHANGED              = -4;
 const _MMS_ERROR_SHUTDOWN                      = -5;
 const _MMS_ERROR_USER_CANCELLED_NO_REASON      = -6;
+const _MMS_ERROR_SIM_NOT_MATCHED               = -7;
 
 const CONFIG_SEND_REPORT_NEVER       = 0;
 const CONFIG_SEND_REPORT_DEFAULT_NO  = 1;
@@ -151,6 +152,40 @@ XPCOMUtils.defineLazyGetter(this, "MMS", function() {
   return MMS;
 });
 
+// Internal Utilities
+
+/**
+ * Return default service Id for MMS.
+ */
+function getDefaultServiceId() {
+  let id = Services.prefs.getIntPref(kPrefDefaultServiceId);
+  let numRil = Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
+
+  if (id >= numRil || id < 0) {
+    id = 0;
+  }
+
+  return id;
+}
+
+/**
+ * Return Radio disabled state.
+ */
+function getRadioDisabledState() {
+  let state;
+  try {
+    state = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
+  } catch (e) {
+    if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
+    state = false;
+  }
+
+  return state;
+}
+
+/**
+ * Helper Class to control MMS Data Connection.
+ */
 function MmsConnection(aServiceId) {
   this.serviceId = aServiceId;
   this.radioInterface = gRil.getRadioInterface(aServiceId);
@@ -192,9 +227,6 @@ MmsConnection.prototype = {
     return proxyInfo;
   },
 
-  // For keeping track of the radio status.
-  radioDisabled: false,
-  settings: [kPrefRilRadioDisabled],
   connected: false,
 
   //A queue to buffer the MMS HTTP requests when the MMS network
@@ -236,16 +268,6 @@ MmsConnection.prototype = {
     Services.obs.addObserver(this, kNetworkConnStateChangedTopic,
                              false);
     Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-    this.settings.forEach(function(name) {
-      Services.prefs.addObserver(name, this, false);
-    }, this);
-
-    try {
-      this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-    } catch (e) {
-      if (DEBUG) debug("Getting preference 'ril.radio.disabled' fails.");
-      this.radioDisabled = false;
-    }
 
     this.connected = this.radioInterface.getDataCallStateByType("mms") ==
       Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
@@ -353,7 +375,7 @@ MmsConnection.prototype = {
       this.pendingCallbacks.push(callback);
 
       let errorStatus;
-      if (this.radioDisabled) {
+      if (getRadioDisabledState()) {
         if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
         errorStatus = _HTTP_STATUS_RADIO_DISABLED;
       } else if (this.radioInterface.rilContext.cardState != "ready") {
@@ -457,18 +479,6 @@ MmsConnection.prototype = {
         this.flushPendingCallbacks(_HTTP_STATUS_ACQUIRE_CONNECTION_SUCCESS)
         break;
       }
-      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
-        if (data == kPrefRilRadioDisabled) {
-          try {
-            this.radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-          } catch (e) {
-            if (DEBUG) debug("Updating preference 'ril.radio.disabled' fails.");
-            this.radioDisabled = false;
-          }
-          return;
-        }
-        break;
-      }
       case NS_XPCOM_SHUTDOWN_OBSERVER_ID: {
         this.shutdown();
       }
@@ -493,9 +503,41 @@ XPCOMUtils.defineLazyGetter(this, "gMmsConnections", function() {
       conn.init();
       return conn;
     },
+    getConnByIccId: function(aIccId) {
+      if (!aIccId) {
+        // If the ICC ID isn't available, it means the MMS has been received
+        // during the previous version that didn't take the DSDS scenario
+        // into consideration. Tentatively, get connection from serviceId(0) by
+        // default is better than nothing. Although it might use the wrong
+        // SIM to download the desired MMS, eventually it would still fail to
+        // download due to the wrong MMSC and proxy settings.
+        return this.getConnByServiceId(0);
+      }
+
+      let numCardAbsent = 0;
+      let numRadioInterfaces = gRil.numRadioInterfaces;
+      for (let clientId = 0; clientId < numRadioInterfaces; clientId++) {
+        let mmsConnection = this.getConnByServiceId(clientId);
+        let iccId = mmsConnection.getIccId();
+        if (iccId === null) {
+          numCardAbsent++;
+          continue;
+        }
+
+        if (iccId === aIccId) {
+          return mmsConnection;
+        }
+      }
+
+      throw ((numCardAbsent === numRadioInterfaces)?
+               _MMS_ERROR_NO_SIM_CARD: _MMS_ERROR_SIM_NOT_MATCHED);
+    },
   };
 });
 
+/**
+ * Implementation of nsIProtocolProxyFilter for MMS Proxy
+ */
 function MmsProxyFilter(mmsConnection, url) {
   this.mmsConnection = mmsConnection;
   this.uri = Services.io.newURI(url, null, null);
@@ -940,13 +982,8 @@ CancellableTransaction.prototype = {
       }
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID: {
         if (data == kPrefRilRadioDisabled) {
-          try {
-            let radioDisabled = Services.prefs.getBoolPref(kPrefRilRadioDisabled);
-            if (radioDisabled) {
-              this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
-            }
-          } catch (e) {
-            if (DEBUG) debug("Failed to get preference of 'ril.radio.disabled'.");
+          if (getRadioDisabledState()) {
+            this.cancelRunning(_MMS_ERROR_RADIO_DISABLED);
           }
         } else if (data === kPrefDefaultServiceId &&
                    this.serviceId != getDefaultServiceId()) {
@@ -1349,17 +1386,6 @@ AcknowledgeTransaction.prototype = {
                                       requestCallback);
   }
 };
-
-function getDefaultServiceId() {
-  let id = Services.prefs.getIntPref(kPrefDefaultServiceId);
-  let numRil = Services.prefs.getIntPref(kPrefRilNumRadioInterfaces);
-
-  if (id >= numRil || id < 0) {
-    id = 0;
-  }
-
-  return id;
-}
 
 /**
  * Return M-Read-Rec.ind back to MMSC
@@ -2272,37 +2298,40 @@ MmsService.prototype = {
         }
       }
 
-      // Get the RIL service ID based on the saved MMS message record's ICC ID,
+      // IccInfo in RadioInterface is not available when radio is off and
+      // NO_SIM_CARD_ERROR will be replied instead of RADIO_DISABLED_ERROR.
+      // Hence, for manual retrieving, instead of checking radio state later
+      // in MmsConnection.acquire(), We have to check radio state in prior to
+      // iccId to return the error correctly.
+      if (getRadioDisabledState()) {
+        if (DEBUG) debug("Error! Radio is disabled when retrieving MMS.");
+        aRequest.notifyGetMessageFailed(
+          Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR);
+        return;
+      }
+
+      // Get MmsConnection based on the saved MMS message record's ICC ID,
       // which could fail when the corresponding SIM card isn't installed.
-      let serviceId;
+      let mmsConnection;
       try {
-        if (aMessageRecord.iccId == null) {
-          // If the ICC ID isn't available, it means the MMS has been received
-          // during the previous version that didn't take the DSDS scenario
-          // into consideration. Tentatively, setting the service ID to be 0 by
-          // default is better than nothing. Although it might use the wrong
-          // SIM to download the desired MMS, eventually it would still fail to
-          // download due to the wrong MMSC and proxy settings.
-          serviceId = 0;
-        } else {
-          serviceId = gRil.getClientIdByIccId(aMessageRecord.iccId);
-        }
+        mmsConnection = gMmsConnections.getConnByIccId(aMessageRecord.iccId);
       } catch (e) {
-        if (DEBUG) debug("RIL service is not available for ICC ID.");
-        aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR);
+        if (DEBUG) debug("Failed to get connection by IccId. e= " + e);
+        let error = (e === _MMS_ERROR_SIM_NOT_MATCHED) ?
+                      Ci.nsIMobileMessageCallback.SIM_NOT_MATCHED_ERROR :
+                      Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR;
+        aRequest.notifyGetMessageFailed(error);
         return;
       }
 
       // To support DSDS, we have to stop users retrieving MMS when the needed
       // SIM is not active, thus avoiding the data disconnection of the current
       // SIM. Users have to manually swith the default SIM before retrieving.
-      if (serviceId != this.mmsDefaultServiceId) {
+      if (mmsConnection.serviceId != this.mmsDefaultServiceId) {
         if (DEBUG) debug("RIL service is not active to retrieve MMS.");
         aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.NON_ACTIVE_SIM_CARD_ERROR);
         return;
       }
-
-      let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
 
       let url =  aMessageRecord.headers["x-mms-content-location"].uri;
       // For X-Mms-Report-Allowed
@@ -2422,27 +2451,16 @@ MmsService.prototype = {
             JSON.stringify(toAddress));
     }
 
-    // Get the RIL service ID based on the saved MMS message record's ICC ID,
+    // Get MmsConnection based on the saved MMS message record's ICC ID,
     // which could fail when the corresponding SIM card isn't installed.
-    let serviceId;
+    let mmsConnection;
     try {
-      if (iccId == null) {
-        // If the ICC ID isn't available, it means the MMS has been received
-        // during the previous version that didn't take the DSDS scenario
-        // into consideration. Tentatively, setting the service ID to be 0 by
-        // default is better than nothing. Although it might use the wrong
-        // SIM to send the read report for the desired MMS, eventually it
-        // would still fail to send due to the wrong MMSC and proxy settings.
-        serviceId = 0;
-      } else {
-        serviceId = gRil.getClientIdByIccId(iccId);
-      }
+      mmsConnection = gMmsConnections.getConnByIccId(iccId);
     } catch (e) {
-      if (DEBUG) debug("RIL service is not available for ICC ID.");
+      if (DEBUG) debug("Failed to get connection by IccId. e = " + e);
       return;
     }
 
-    let mmsConnection = gMmsConnections.getConnByServiceId(serviceId);
     try {
       let transaction =
         new ReadRecTransaction(mmsConnection, messageID, toAddress);

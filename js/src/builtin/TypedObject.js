@@ -1489,13 +1489,13 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
         }
         inOffset += inGrainTypeSize;
         outOffset += outGrainTypeSize;
-      }
 
-      // A transparent result type cannot contain references, and
-      // hence there is no way for a pointer to a thread-local object
-      // to escape.
-      if (outGrainTypeIsTransparent)
-        ClearThreadLocalArenas();
+        // A transparent result type cannot contain references, and
+        // hence there is no way for a pointer to a thread-local object
+        // to escape.
+        if (outGrainTypeIsTransparent)
+          ClearThreadLocalArenas();
+      }
     }
 
     return sliceId;

@@ -82,6 +82,26 @@ var grid_template_test_cases = [
         gridTemplateColumns: "(foo) 40px",
         gridTemplateRows: "(bar) 100px (buzz a) 200px (b)",
     },
+    {
+        specified: "subgrid",
+        gridTemplateColumns: "subgrid",
+        gridTemplateRows: "subgrid",
+    },
+    {
+        specified: "subgrid / subgrid",
+        gridTemplateColumns: "subgrid",
+        gridTemplateRows: "subgrid",
+    },
+    {
+        specified: "subgrid / subgrid (foo)",
+        gridTemplateColumns: "subgrid",
+        gridTemplateRows: "subgrid (foo)",
+    },
+    {
+        specified: "subgrid () (foo)/ subgrid (bar",
+        gridTemplateColumns: "subgrid () (foo)",
+        gridTemplateRows: "subgrid (bar)",
+    },
 ];
 
 grid_test_cases = grid_template_test_cases.concat([

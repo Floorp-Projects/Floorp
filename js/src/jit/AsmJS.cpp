@@ -6521,7 +6521,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     masm.reserveStack(stackDec - extraBytes);
 
     // 1. Descriptor
-    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed() + extraBytes, IonFrame_Entry);
+    uint32_t descriptor = MakeFrameDescriptor(masm.framePushed() + extraBytes, JitFrame_Entry);
     masm.storePtr(ImmWord(uintptr_t(descriptor)), Address(StackPointer, 0));
 
     // 2. Callee

@@ -264,11 +264,11 @@ public:
   KeyType GetKey() const { return const_cast<KeyType>(this); }
   bool KeyEquals(const KeyTypePointer aKey) const
   {
-    MOZ_ASSERT(mNamespaceID != kNameSpaceID_None,
+    MOZ_ASSERT(mNamespaceID != kNameSpaceID_Unknown,
                "This equals method is not transitive, nor symmetric. "
-               "A key with a namespace of kNamespaceID_None should "
+               "A key with a namespace of kNamespaceID_Unknown should "
                "not be stored in a hashtable.");
-    return (kNameSpaceID_None == aKey->mNamespaceID ||
+    return (kNameSpaceID_Unknown == aKey->mNamespaceID ||
             mNamespaceID == aKey->mNamespaceID) &&
            aKey->mAtom == mAtom;
   }
@@ -383,6 +383,35 @@ struct CustomElementDefinition
 
   // The document custom element order.
   uint32_t mDocOrder;
+};
+
+class Registry : public nsISupports
+{
+public:
+  friend class ::nsDocument;
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Registry)
+
+  Registry();
+  virtual ~Registry();
+
+protected:
+  typedef nsClassHashtable<mozilla::dom::CustomElementHashKey,
+                           mozilla::dom::CustomElementDefinition>
+    DefinitionMap;
+  typedef nsClassHashtable<mozilla::dom::CustomElementHashKey,
+                           nsTArray<nsRefPtr<mozilla::dom::Element>>>
+    CandidateMap;
+
+  // Hashtable for custom element definitions in web components.
+  // Custom prototypes are in the document's compartment.
+  DefinitionMap mCustomDefinitions;
+
+  // The "upgrade candidates map" from the web components spec. Maps from a
+  // namespace id and local name to a list of elements to upgrade if that
+  // element is registered as a custom element.
+  CandidateMap mCandidatesMap;
 };
 
 } // namespace dom
@@ -1210,6 +1239,7 @@ public:
                                                     const nsAString& aQualifiedName,
                                                     const nsAString& aTypeExtension,
                                                     mozilla::ErrorResult& rv) MOZ_OVERRIDE;
+  virtual void UseRegistryFromDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
 protected:
   friend class nsNodeUtils;
@@ -1371,33 +1401,6 @@ protected:
   nsWeakPtr mFullscreenRoot;
 
 private:
-  struct Registry
-  {
-    NS_INLINE_DECL_REFCOUNTING(Registry)
-
-    typedef nsClassHashtable<mozilla::dom::CustomElementHashKey,
-                             mozilla::dom::CustomElementDefinition>
-      DefinitionMap;
-    typedef nsClassHashtable<mozilla::dom::CustomElementHashKey,
-                             nsTArray<nsRefPtr<mozilla::dom::Element>>>
-      CandidateMap;
-
-    // Hashtable for custom element definitions in web components.
-    // Custom prototypes are in the document's compartment.
-    DefinitionMap mCustomDefinitions;
-
-    // The "upgrade candidates map" from the web components spec. Maps from a
-    // namespace id and local name to a list of elements to upgrade if that
-    // element is registered as a custom element.
-    CandidateMap mCandidatesMap;
-
-    void Clear()
-    {
-      mCustomDefinitions.Clear();
-      mCandidatesMap.Clear();
-    }
-  };
-
   // Array representing the processing stack in the custom elements
   // specification. The processing stack is conceptually a stack of
   // element queues. Each queue is represented by a sequence of
@@ -1424,7 +1427,7 @@ public:
   static bool IsRegisterElementEnabled(JSContext* aCx, JSObject* aObject);
 
   // The "registry" from the web components spec.
-  nsRefPtr<Registry> mRegistry;
+  nsRefPtr<mozilla::dom::Registry> mRegistry;
 
   nsRefPtr<mozilla::EventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
