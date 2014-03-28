@@ -100,19 +100,6 @@ function getXPCOMStatusFromNSS(statusNSS) {
   return nssErrorsService.getXPCOMFromNSSError(statusNSS);
 }
 
-function checkCertErrorGeneric(certdb, cert, expectedError, usage) {
-  let hasEVPolicy = {};
-  let verifiedChain = {};
-  let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, verifiedChain,
-                                   hasEVPolicy);
-  // expected error == -1 is a special marker for any error is OK
-  if (expectedError != -1 ) {
-    do_check_eq(error, expectedError);
-  } else {
-    do_check_neq (error, 0);
-  }
-}
-
 function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
   // Open the NSS library. copied from services/crypto/modules/WeaveCrypto.js
   let path = ctypes.libraryName(libraryName);
