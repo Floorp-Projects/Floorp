@@ -751,10 +751,10 @@ IsTopFrameConstructing(JSContext *cx)
     JS_ASSERT(cx->currentlyRunningInJit());
     JitActivationIterator activations(cx->runtime());
     IonFrameIterator iter(activations);
-    JS_ASSERT(iter.type() == IonFrame_Exit);
+    JS_ASSERT(iter.type() == JitFrame_Exit);
 
     ++iter;
-    JS_ASSERT(iter.type() == IonFrame_BaselineStub);
+    JS_ASSERT(iter.type() == JitFrame_BaselineStub);
 
     ++iter;
     JS_ASSERT(iter.isBaselineJS());

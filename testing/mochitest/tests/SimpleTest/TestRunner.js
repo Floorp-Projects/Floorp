@@ -91,6 +91,7 @@ TestRunner.runSlower = false;
 TestRunner.dumpOutputDirectory = "";
 TestRunner.dumpAboutMemoryAfterTest = false;
 TestRunner.dumpDMDAfterTest = false;
+TestRunner.quiet = false;
 TestRunner.slowestTestTime = 0;
 TestRunner.slowestTestURL = "";
 

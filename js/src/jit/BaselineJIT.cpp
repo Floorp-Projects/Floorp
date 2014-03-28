@@ -932,10 +932,10 @@ MarkActiveBaselineScripts(JSRuntime *rt, const JitActivationIterator &activation
 {
     for (jit::IonFrameIterator iter(activation); !iter.done(); ++iter) {
         switch (iter.type()) {
-          case IonFrame_BaselineJS:
+          case JitFrame_BaselineJS:
             iter.script()->baselineScript()->setActive();
             break;
-          case IonFrame_OptimizedJS: {
+          case JitFrame_IonJS: {
             // Keep the baseline script around, since bailouts from the ion
             // jitcode might need to re-enter into the baseline jitcode.
             iter.script()->baselineScript()->setActive();

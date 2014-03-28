@@ -313,7 +313,7 @@ SimpleTest._getCurrentTestURL = function() {
            "unknown test url";
 };
 
-SimpleTest._forceLogMessageOutput = false;
+SimpleTest._forceLogMessageOutput = parentRunner && !parentRunner.quiet;
 
 /**
  * Force all test messages to be displayed.  Only applies for the current test.

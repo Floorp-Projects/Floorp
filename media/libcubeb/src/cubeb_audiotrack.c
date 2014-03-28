@@ -298,7 +298,7 @@ audiotrack_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * l
    * audiotrack_stream_init), so this value is not going to be used. */
   int rv;
 
-  rv = audiotrack_get_min_frame_count(ctx, &params, latency_ms);
+  rv = audiotrack_get_min_frame_count(ctx, &params, (int *)latency_ms);
   if (rv != CUBEB_OK) {
     return CUBEB_ERROR;
   }
@@ -347,7 +347,7 @@ audiotrack_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
-  if (audiotrack_get_min_frame_count(ctx, &stream_params, &min_frame_count)) {
+  if (audiotrack_get_min_frame_count(ctx, &stream_params, (int *)&min_frame_count)) {
     return CUBEB_ERROR;
   }
 

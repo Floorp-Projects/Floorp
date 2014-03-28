@@ -55,8 +55,7 @@ jfieldID AndroidGeckoEvent::jRangeForeColorField = 0;
 jfieldID AndroidGeckoEvent::jRangeBackColorField = 0;
 jfieldID AndroidGeckoEvent::jRangeLineColorField = 0;
 jfieldID AndroidGeckoEvent::jLocationField = 0;
-jfieldID AndroidGeckoEvent::jBandwidthField = 0;
-jfieldID AndroidGeckoEvent::jCanBeMeteredField = 0;
+jfieldID AndroidGeckoEvent::jConnectionTypeField = 0;
 jfieldID AndroidGeckoEvent::jIsWifiField = 0;
 jfieldID AndroidGeckoEvent::jDHCPGatewayField = 0;
 jfieldID AndroidGeckoEvent::jScreenOrientationField = 0;
@@ -161,8 +160,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jRangeBackColorField = getField("mRangeBackColor", "I");
     jRangeLineColorField = getField("mRangeLineColor", "I");
     jLocationField = getField("mLocation", "Landroid/location/Location;");
-    jBandwidthField = getField("mBandwidth", "D");
-    jCanBeMeteredField = getField("mCanBeMetered", "Z");
+    jConnectionTypeField = getField("mConnectionType", "I");
     jIsWifiField = getField("mIsWifi", "Z");
     jDHCPGatewayField = getField("mDHCPGateway", "I");
     jScreenOrientationField = getField("mScreenOrientation", "S");
@@ -510,8 +508,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
         }
 
         case NETWORK_CHANGED: {
-            mBandwidth = jenv->GetDoubleField(jobj, jBandwidthField);
-            mCanBeMetered = jenv->GetBooleanField(jobj, jCanBeMeteredField);
+            mConnectionType = jenv->GetIntField(jobj, jConnectionTypeField);
             mIsWifi = jenv->GetBooleanField(jobj, jIsWifiField);
             mDHCPGateway = jenv->GetIntField(jobj, jDHCPGatewayField);
             break;

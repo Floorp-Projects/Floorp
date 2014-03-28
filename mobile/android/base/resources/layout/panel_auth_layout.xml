@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Empty spacer view -->
+    <View android:layout_width="fill_parent"
+          android:layout_height="0dip"
+          android:layout_weight="1"/>
+
+    <ImageView android:id="@+id/image"
+               android:layout_width="fill_parent"
+               android:layout_height="wrap_content"
+               android:gravity="top|center"
+               android:scaleType="center"
+               android:paddingBottom="10dp"/>
+
+    <TextView android:id="@+id/message"
+              android:layout_width="fill_parent"
+              android:layout_height="0dip"
+              android:gravity="top|center"
+              android:textAppearance="@style/TextAppearance.EmptyMessage"
+              android:paddingLeft="50dp"
+              android:paddingRight="50dp"
+              android:layout_weight="3"/>
+
+    <Button android:id="@+id/button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="25dp"
+            android:layout_marginRight="25dp"
+            android:layout_marginBottom="25dp"
+            android:gravity="bottom|center"
+            android:textAppearance="@style/TextAppearance.EmptyMessage"
+            android:background="@drawable/panel_auth_button"
+            android:padding="20dp"/>
+
+</merge>

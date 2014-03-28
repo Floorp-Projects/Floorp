@@ -28,6 +28,8 @@ const EXPERIMENT2_XPI_NAME = "experiment-2.xpi";
 const EXPERIMENT3_ID       = "test-experiment-3@tests.mozilla.org";
 const EXPERIMENT4_ID       = "test-experiment-4@tests.mozilla.org";
 
+const DEFAULT_BUILDID      = "2014060601";
+
 const FAKE_EXPERIMENTS_1 = [
   {
     id: "id1",
@@ -169,7 +171,7 @@ function createAppInfo(options) {
   let platformVersion = options.platformVersion || "1.0";
   let date = options.date || new Date();
 
-  let buildID = "" + date.getYear() + date.getMonth() + date.getDate() + "01";
+  let buildID = options.buildID || DEFAULT_BUILDID;
 
   gAppInfo = {
     // nsIXULAppInfo

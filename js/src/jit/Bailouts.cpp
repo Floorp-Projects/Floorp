@@ -50,7 +50,7 @@ SnapshotIterator::SnapshotIterator(const IonBailoutIterator &iter)
 void
 IonBailoutIterator::dump() const
 {
-    if (type_ == IonFrame_OptimizedJS) {
+    if (type_ == JitFrame_IonJS) {
         InlineFrameIterator frames(GetJSContextFromJitCode(), this);
         for (;;) {
             frames.dump();
@@ -150,7 +150,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     const OsiIndex *osiIndex = frame.osiIndex();
 
     current_ = (uint8_t *) frame.fp();
-    type_ = IonFrame_OptimizedJS;
+    type_ = JitFrame_IonJS;
     topFrameSize_ = frame.frameSize();
     snapshotOffset_ = osiIndex->snapshotOffset();
 }

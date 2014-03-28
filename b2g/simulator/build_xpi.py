@@ -131,7 +131,7 @@ def main(platform):
     ])
 
     # Ship b2g-desktop, but prevent its gaia profile to be shipped in the xpi
-    add_dir_to_zip(xpi_path, os.path.join(distdir, "b2g"), "b2g", ("gaia"))
+    add_dir_to_zip(xpi_path, os.path.join(distdir, "b2g"), "b2g", ("gaia", "B2G.app/Contents/MacOS/gaia"))
     # Then ship our own gaia profile
     add_dir_to_zip(xpi_path, os.path.join(gaia_path, "profile"), "profile")
 

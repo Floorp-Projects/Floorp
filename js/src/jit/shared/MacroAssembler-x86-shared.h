@@ -664,7 +664,7 @@ class MacroAssemblerX86Shared : public Assembler
         CodeLabel cl;
         mov(cl.dest(), scratch);
 
-        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
         Push(Imm32(descriptor));
         Push(scratch);
 
@@ -676,7 +676,7 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void callWithExitFrame(JitCode *target) {
-        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
         Push(Imm32(descriptor));
         call(target);
     }
@@ -698,7 +698,7 @@ class MacroAssemblerX86Shared : public Assembler
 
   protected:
     bool buildOOLFakeExitFrame(void *fakeReturnAddr) {
-        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
         Push(Imm32(descriptor));
         Push(ImmPtr(fakeReturnAddr));
         return true;

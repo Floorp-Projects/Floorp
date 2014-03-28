@@ -545,7 +545,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_GRID_AUTO_FLOW_ROW             (1 << 2)
 #define NS_STYLE_GRID_AUTO_FLOW_DENSE           (1 << 3)
 
+// 'subgrid' keyword in grid-template-{columns,rows}
+#define NS_STYLE_GRID_TEMPLATE_SUBGRID          0
+
 // CSS Grid <track-breadth> keywords
+// Should not overlap with NS_STYLE_GRID_TEMPLATE_SUBGRID
 #define NS_STYLE_GRID_TRACK_BREADTH_MAX_CONTENT 1
 #define NS_STYLE_GRID_TRACK_BREADTH_MIN_CONTENT 2
 

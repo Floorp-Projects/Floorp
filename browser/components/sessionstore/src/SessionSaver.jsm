@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 // Minimal interval between two save operations (in milliseconds).
 XPCOMUtils.defineLazyGetter(this, "gInterval", function () {
@@ -40,14 +42,6 @@ XPCOMUtils.defineLazyGetter(this, "gInterval", function () {
 
   return Services.prefs.getIntPref(PREF);
 });
-
-// Wrap a string as a nsISupports.
-function createSupportsString(data) {
-  let string = Cc["@mozilla.org/supports-string;1"]
-                 .createInstance(Ci.nsISupportsString);
-  string.data = data;
-  return string;
-}
 
 // Notify observers about a given topic with a given subject.
 function notify(subject, topic) {
@@ -192,6 +186,14 @@ let SessionSaverInternal = {
     // Cancel any pending timeouts.
     this.cancel();
 
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      // Don't save (or even collect) anything in permanent private
+      // browsing mode
+
+      this.updateLastSaveTime();
+      return Promise.resolve();
+    }
+
     stopWatchStart("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
     let state = SessionStore.getCurrentState(forceUpdateAllWindows);
     PrivacyFilter.filterPrivateWindowsAndTabs(state);
@@ -242,18 +244,12 @@ let SessionSaverInternal = {
    * Write the given state object to disk.
    */
   _writeState: function (state) {
+    // Inform observers
+    notify(null, "sessionstore-state-write");
+
     stopWatchStart("SERIALIZE_DATA_MS", "SERIALIZE_DATA_LONGEST_OP_MS", "WRITE_STATE_LONGEST_OP_MS");
     let data = JSON.stringify(state);
     stopWatchFinish("SERIALIZE_DATA_MS", "SERIALIZE_DATA_LONGEST_OP_MS");
-
-    // Give observers a chance to modify session data.
-    data = this._notifyObserversBeforeStateWrite(data);
-
-    // Don't touch the file if an observer has deleted all state data.
-    if (!data) {
-      stopWatchCancel("WRITE_STATE_LONGEST_OP_MS");
-      return Promise.resolve();
-    }
 
     // We update the time stamp before writing so that we don't write again
     // too soon, if saving is requested before the write completes. Without
@@ -275,14 +271,4 @@ let SessionSaverInternal = {
 
     return promise;
   },
-
-  /**
-   * Notify sessionstore-state-write observer and give them a
-   * chance to modify session data before we'll write it to disk.
-   */
-  _notifyObserversBeforeStateWrite: function (data) {
-    let stateString = createSupportsString(data);
-    notify(stateString, "sessionstore-state-write");
-    return stateString.data;
-  }
 };

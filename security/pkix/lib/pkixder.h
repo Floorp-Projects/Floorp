@@ -475,6 +475,8 @@ AlgorithmIdentifier(Input& input, SECAlgorithmID& algorithmID)
   if (Skip(input, OIDTag, algorithmID.algorithm) != Success) {
     return Failure;
   }
+  algorithmID.parameters.data = nullptr;
+  algorithmID.parameters.len = 0;
   if (input.AtEnd()) {
     return Success;
   }

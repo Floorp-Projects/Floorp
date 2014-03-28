@@ -283,7 +283,7 @@ inline JSScript *
 GetTopIonJSScript(uint8_t *ionTop, void **returnAddrOut, ExecutionMode mode)
 {
     IonFrameIterator iter(ionTop, mode);
-    JS_ASSERT(iter.type() == IonFrame_Exit);
+    JS_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
 
     JS_ASSERT(iter.returnAddressToFp() != nullptr);
@@ -780,14 +780,6 @@ struct IonDOMMethodExitFrameLayoutTraits {
     static const size_t offsetOfArgcFromArgv =
         offsetof(IonDOMMethodExitFrameLayout, argc_) -
         offsetof(IonDOMMethodExitFrameLayout, argv_);
-};
-
-class IonOsrFrameLayout : public IonJSFrameLayout
-{
-  public:
-    static inline size_t Size() {
-        return sizeof(IonOsrFrameLayout);
-    }
 };
 
 class ICStub;

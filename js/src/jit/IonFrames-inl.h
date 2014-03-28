@@ -54,17 +54,17 @@ IonFrameIterator::prevType() const
 inline bool
 IonFrameIterator::isFakeExitFrame() const
 {
-    bool res = (prevType() == IonFrame_Unwound_Rectifier ||
-                prevType() == IonFrame_Unwound_OptimizedJS ||
-                prevType() == IonFrame_Unwound_BaselineStub);
-    JS_ASSERT_IF(res, type() == IonFrame_Exit || type() == IonFrame_BaselineJS);
+    bool res = (prevType() == JitFrame_Unwound_Rectifier ||
+                prevType() == JitFrame_Unwound_IonJS ||
+                prevType() == JitFrame_Unwound_BaselineStub);
+    JS_ASSERT_IF(res, type() == JitFrame_Exit || type() == JitFrame_BaselineJS);
     return res;
 }
 
 inline IonExitFrameLayout *
 IonFrameIterator::exitFrame() const
 {
-    JS_ASSERT(type() == IonFrame_Exit);
+    JS_ASSERT(type() == JitFrame_Exit);
     JS_ASSERT(!isFakeExitFrame());
     return (IonExitFrameLayout *) fp();
 }
@@ -73,7 +73,7 @@ inline BaselineFrame *
 GetTopBaselineFrame(JSContext *cx)
 {
     IonFrameIterator iter(cx);
-    JS_ASSERT(iter.type() == IonFrame_Exit);
+    JS_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
     if (iter.isBaselineStub())
         ++iter;

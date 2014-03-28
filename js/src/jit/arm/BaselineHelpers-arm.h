@@ -100,7 +100,7 @@ EmitTailCallVM(JitCode *target, MacroAssembler &masm, uint32_t argSize)
     // the stub calls), but the VMWrapper code being called expects the return address to also
     // be pushed on the stack.
     JS_ASSERT(BaselineTailCallReg == lr);
-    masm.makeFrameDescriptor(r0, IonFrame_BaselineJS);
+    masm.makeFrameDescriptor(r0, JitFrame_BaselineJS);
     masm.push(r0);
     masm.push(lr);
     masm.branch(target);
@@ -115,7 +115,7 @@ EmitCreateStubFrameDescriptor(MacroAssembler &masm, Register reg)
     masm.ma_add(Imm32(sizeof(void *) * 2), reg);
     masm.ma_sub(BaselineStackReg, reg);
 
-    masm.makeFrameDescriptor(reg, IonFrame_BaselineStub);
+    masm.makeFrameDescriptor(reg, JitFrame_BaselineStub);
 }
 
 inline void
@@ -146,7 +146,7 @@ EmitEnterStubFrame(MacroAssembler &masm, Register scratch)
     // if needed.
 
     // Push frame descriptor and return address.
-    masm.makeFrameDescriptor(scratch, IonFrame_BaselineJS);
+    masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
     masm.push(scratch);
     masm.push(BaselineTailCallReg);
 
