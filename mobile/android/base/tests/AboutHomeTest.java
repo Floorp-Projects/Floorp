@@ -1,24 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.tests;
 
-import com.jayway.android.robotium.solo.Condition;
-import org.mozilla.gecko.*;
+import java.util.ArrayList;
 
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.net.Uri;
+import org.mozilla.gecko.Actions;
+
 import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridView;
-import android.widget.LinearLayout;
-import android.widget.TabWidget;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TabWidget;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.jayway.android.robotium.solo.Condition;
 
 /**
  * This class is an extension of BaseTest that helps with interaction with about:home
@@ -36,7 +35,7 @@ abstract class AboutHomeTest extends PixelTest {
 
 
     @Override
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
 
         if (aboutHomeTabs.size() < 4) {
