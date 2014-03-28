@@ -23,7 +23,7 @@ interface nsIFile;
  * database from the main thread, including creating prepared
  * statements, executing SQL, and examining database errors.
  */
-[scriptable, uuid(0e661a1d-27ff-4e6b-ac5a-126314cef61a)]
+[scriptable, uuid(8bfd34d5-4ddf-4e4b-89dd-9b14f33534c6)]
 interface mozIStorageAsyncConnection : nsISupports {
   /**
    * Close this database connection, allowing all pending statements
@@ -128,6 +128,20 @@ interface mozIStorageAsyncConnection : nsISupports {
     in unsigned long aNumStatements,
     [optional] in mozIStorageStatementCallback aCallback
   );
+
+  /**
+   * Execute asynchronously an SQL expression, expecting no arguments.
+   *
+   * @param aSQLStatement
+   *        The SQL statement to execute
+   * @param aCallback [optional]
+   *        The callback object that will be notified of progress, errors, and
+   *        completion.
+   * @return an object that can be used to cancel the statement execution.
+   */
+  mozIStoragePendingStatement executeSimpleSQLAsync(
+    in AUTF8String aSQLStatement,
+    [optional] in mozIStorageStatementCallback aCallback);
 
   //////////////////////////////////////////////////////////////////////////////
   //// Functions

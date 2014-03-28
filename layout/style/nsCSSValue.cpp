@@ -1679,13 +1679,24 @@ AppendGridTemplateToString(const nsCSSValueList* val,
                            nsCSSValue::Serialization aSerialization)
 {
   // This is called for the "list" that's the top-level value of the property.
+  bool isSubgrid = false;
   for (;;) {
     bool addSpaceSeparator = true;
     nsCSSUnit unit = val->mValue.GetUnit();
 
-    if (unit == eCSSUnit_Null) {
-      // Empty or omitted <line-names>. Serializes to nothing.
-      addSpaceSeparator = false;  // Avoid a double space.
+    if (unit == eCSSUnit_Enumerated &&
+        val->mValue.GetIntValue() == NS_STYLE_GRID_TEMPLATE_SUBGRID) {
+      isSubgrid = true;
+      aResult.AppendLiteral("subgrid");
+
+    } else if (unit == eCSSUnit_Null) {
+      // Empty or omitted <line-names>.
+      if (isSubgrid) {
+        aResult.AppendLiteral("()");
+      } else {
+        // Serializes to nothing.
+        addSpaceSeparator = false;  // Avoid a double space.
+      }
 
     } else if (unit == eCSSUnit_List || unit == eCSSUnit_ListDep) {
       // Non-empty <line-names>

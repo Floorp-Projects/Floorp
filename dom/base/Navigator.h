@@ -22,7 +22,6 @@
 class nsPluginArray;
 class nsMimeTypeArray;
 class nsPIDOMWindow;
-class nsIDOMMozConnection;
 class nsIDOMMozMobileMessageManager;
 class nsIDOMNavigatorSystemMessages;
 class nsDOMCameraManager;
@@ -199,7 +198,7 @@ public:
                              ErrorResult& aRv);
   nsIDOMMozMobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
-  network::Connection* GetMozConnection();
+  network::Connection* GetConnection(ErrorResult& aRv);
   nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
   void MozSetMessageHandler(const nsAString& aType,
                             systemMessageCallback* aCallback,

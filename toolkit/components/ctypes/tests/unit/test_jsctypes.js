@@ -2234,7 +2234,7 @@ function run_void_tests(library) {
 
     // Check that WINAPI symbol lookup for a regular stdcall function fails on
     // Win32 (it's all the same on Win64 though).
-    if (ctypes.voidptr_t.size == 8) {
+    if (ctypes.voidptr_t.size == 4) {
       do_check_throws(function() {
         let test_winapi_t = library.declare("test_void_t_stdcall", ctypes.winapi_abi, ctypes.void_t);
       }, Error);

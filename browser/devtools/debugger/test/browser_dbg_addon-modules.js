@@ -5,7 +5,18 @@
 
 const ADDON4_URL = EXAMPLE_URL + "addon4.xpi";
 
-let gAddon, gClient, gThreadClient, gDebugger, gSources;
+let gAddon, gClient, gThreadClient, gDebugger, gSources, gTitle;
+
+function onMessage(event) {
+  try {
+    let json = JSON.parse(event.data);
+    switch (json.name) {
+      case "toolbox-title":
+        gTitle = json.data.value;
+        break;
+    }
+  } catch(e) { Cu.reportError(e); }
+}
 
 function test() {
   Task.spawn(function () {
@@ -17,6 +28,8 @@ function test() {
     gBrowser.selectedTab = gBrowser.addTab();
     let iframe = document.createElement("iframe");
     document.documentElement.appendChild(iframe);
+
+    window.addEventListener("message", onMessage);
 
     let transport = DebuggerServer.connectPipe();
     gClient = new DebuggerClient(transport);
@@ -43,6 +56,7 @@ function test() {
     yield closeConnection();
     yield debuggerPanel._toolbox.destroy();
     iframe.remove();
+    window.removeEventListener("message", onMessage);
     finish();
   });
 }
@@ -62,7 +76,7 @@ function testSources(expectSecondModule) {
   gThreadClient.getSources(({sources}) => {
     ok(sources.length, "retrieved sources");
 
-    sources.forEach(source => {
+    for (let source of sources) {
       let url = source.url.split(" -> ").pop();
       let { label, group } = gSources.getItemByValue(source.url).attachment;
 
@@ -81,11 +95,18 @@ function testSources(expectSecondModule) {
       } else {
         ok(false, "Saw an unexpected source: " + url);
       }
-    });
+    }
 
     ok(foundAddonModule, "found JS module for the addon in the list");
     is(foundAddonModule2, expectSecondModule, "saw the second addon module");
     ok(foundAddonBootstrap, "found bootstrap script for the addon in the list");
+
+    is(gTitle, "Debugger - Test add-on with JS Modules", "Saw the right toolbox title.");
+
+    let groups = gDebugger.document.querySelectorAll(".side-menu-widget-group-title .name");
+    is(groups[0].value, "jar:", "Add-on bootstrap should be the first group");
+    is(groups[1].value, "resource://browser_dbg_addon4", "Add-on code should be the second group");
+    is(groups.length, 2, "Should be only two groups.");
 
     deferred.resolve();
   });

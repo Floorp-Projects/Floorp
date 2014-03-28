@@ -9,6 +9,7 @@ config = {
         "--profile=%(gaia_profile)s", "--app=%(application)s", "--desktop",
         "--utility-path=%(utility_path)s", "--certificate-path=%(cert_path)s",
         "--symbols-path=%(symbols_path)s",
+        "--quiet"
     ],
 
     "reftest_options": [

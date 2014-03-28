@@ -1748,7 +1748,7 @@ FrameIter::script() const
         return interpFrame()->script();
 #ifdef JS_ION
     JS_ASSERT(data_.state_ == JIT);
-    if (data_.ionFrames_.isOptimizedJS())
+    if (data_.ionFrames_.isIonJS())
         return ionInlineFrames_.script();
     return data_.ionFrames_.script();
 #else
@@ -1760,7 +1760,7 @@ inline bool
 FrameIter::isIon() const
 {
 #ifdef JS_ION
-    return isJit() && data_.ionFrames_.isOptimizedJS();
+    return isJit() && data_.ionFrames_.isIonJS();
 #else
     return false;
 #endif

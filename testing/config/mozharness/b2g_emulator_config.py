@@ -19,6 +19,7 @@ config = {
         "--remote-webserver=%(remote_webserver)s", "%(test_manifest)s",
         "--xre-path=%(xre_path)s", "--symbols-path=%(symbols_path)s", "--busybox=%(busybox)s",
         "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s",
+        "--quiet",
     ],
 
     "reftest_options": [

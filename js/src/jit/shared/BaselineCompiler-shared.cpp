@@ -57,12 +57,12 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
     uint32_t frameFullSize = frameBaseSize + (frameVals * sizeof(Value));
     if (phase == POST_INITIALIZE) {
         masm.store32(Imm32(frameFullSize), frameSizeAddress);
-        uint32_t descriptor = MakeFrameDescriptor(frameFullSize + argSize, IonFrame_BaselineJS);
+        uint32_t descriptor = MakeFrameDescriptor(frameFullSize + argSize, JitFrame_BaselineJS);
         masm.push(Imm32(descriptor));
 
     } else if (phase == PRE_INITIALIZE) {
         masm.store32(Imm32(frameBaseSize), frameSizeAddress);
-        uint32_t descriptor = MakeFrameDescriptor(frameBaseSize + argSize, IonFrame_BaselineJS);
+        uint32_t descriptor = MakeFrameDescriptor(frameBaseSize + argSize, JitFrame_BaselineJS);
         masm.push(Imm32(descriptor));
 
     } else {
@@ -85,7 +85,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
         masm.bind(&afterWrite);
         masm.store32(BaselineTailCallReg, frameSizeAddress);
         masm.add32(Imm32(argSize), BaselineTailCallReg);
-        masm.makeFrameDescriptor(BaselineTailCallReg, IonFrame_BaselineJS);
+        masm.makeFrameDescriptor(BaselineTailCallReg, JitFrame_BaselineJS);
         masm.push(BaselineTailCallReg);
     }
 

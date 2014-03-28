@@ -1157,32 +1157,48 @@ public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
 };
 
-struct nsStyleGridTrackList {
-  // http://dev.w3.org/csswg/css-grid/#track-sizing
-  // This represents either:
-  // * 'none': all three arrays are empty
-  // * A <track-list>: mMinTrackSizingFunctions and mMaxTrackSizingFunctions
-  //   are of identical non-zero size,
-  //   and mLineNameLists is one element longer than that.
-  //   (Delimiting N columns requires N+1 lines:
-  //   one before each track, plus one at the very end.)
-  //
-  //   An omitted <line-names> is still represented in mLineNameLists,
-  //   as an empty sub-array.
-  //
-  //   A <track-size> specified as a single <track-breadth> is represented
-  //   as identical min and max sizing functions.
-  //
-  //   The units for nsStyleCoord are:
-  //   * eStyleUnit_Percent represents a <percentage>
-  //   * eStyleUnit_FlexFraction represents a <flex> flexible fraction
-  //   * eStyleUnit_Coord represents a <length>
-  //   * eStyleUnit_Enumerated represents min-content or max-content
+// Computed value of the grid-template-columns or grid-columns-rows property
+// (but *not* grid-template-areas.)
+// http://dev.w3.org/csswg/css-grid/#track-sizing
+//
+// This represents either:
+// * none:
+//   mIsSubgrid is false, all three arrays are empty
+// * <track-list>:
+//   mIsSubgrid is false,
+//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions
+//   are of identical non-zero size,
+//   and mLineNameLists is one element longer than that.
+//   (Delimiting N columns requires N+1 lines:
+//   one before each track, plus one at the very end.)
+//
+//   An omitted <line-names> is still represented in mLineNameLists,
+//   as an empty sub-array.
+//
+//   A <track-size> specified as a single <track-breadth> is represented
+//   as identical min and max sizing functions.
+//
+//   The units for nsStyleCoord are:
+//   * eStyleUnit_Percent represents a <percentage>
+//   * eStyleUnit_FlexFraction represents a <flex> flexible fraction
+//   * eStyleUnit_Coord represents a <length>
+//   * eStyleUnit_Enumerated represents min-content or max-content
+// * subgrid <line-name-list>?:
+//   mIsSubgrid is true,
+//   mLineNameLists may or may not be empty,
+//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions are empty.
+struct nsStyleGridTemplate {
+  bool mIsSubgrid;
   nsTArray<nsTArray<nsString>> mLineNameLists;
   nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
   nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
 
-  inline bool operator!=(const nsStyleGridTrackList& aOther) const {
+  nsStyleGridTemplate()
+    : mIsSubgrid(false)
+  {
+  }
+
+  inline bool operator!=(const nsStyleGridTemplate& aOther) const {
     return mLineNameLists != aOther.mLineNameLists ||
            mMinTrackSizingFunctions != aOther.mMinTrackSizingFunctions ||
            mMaxTrackSizingFunctions != aOther.mMaxTrackSizingFunctions;
@@ -1298,8 +1314,8 @@ struct nsStylePosition {
   // need to have their copy constructor called when we're being copied.
   // See nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   // in nsStyleStruct.cpp
-  nsStyleGridTrackList mGridTemplateColumns;
-  nsStyleGridTrackList mGridTemplateRows;
+  nsStyleGridTemplate mGridTemplateColumns;
+  nsStyleGridTemplate mGridTemplateRows;
 
   // nullptr for 'none'
   nsRefPtr<mozilla::css::GridTemplateAreasValue> mGridTemplateAreas;

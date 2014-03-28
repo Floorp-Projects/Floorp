@@ -338,6 +338,8 @@ public:
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
     // This event isn't an internal event of any DOM event.
+    NS_ASSERTION(!IsAllowedToDispatchDOMEvent(),
+      "WidgetQueryContentEvent needs to support Duplicate()");
     MOZ_CRASH("WidgetQueryContentEvent doesn't support Duplicate()");
     return nullptr;
   }
@@ -469,6 +471,8 @@ public:
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
     // This event isn't an internal event of any DOM event.
+    NS_ASSERTION(!IsAllowedToDispatchDOMEvent(),
+      "WidgetSelectionEvent needs to support Duplicate()");
     MOZ_CRASH("WidgetSelectionEvent doesn't support Duplicate()");
     return nullptr;
   }

@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783129
+-->
+<head>
+  <title>Test shared registry for associated HTML documents.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="container"></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
+<script>
+var container = document.getElementById("container");
+
+function createdCallbackFromMainDoc() {
+  var createdCallbackCalled = false;
+  var assocDoc = document.implementation.createHTMLDocument();
+
+  var proto = Object.create(HTMLElement.prototype);
+  proto.createdCallback = function() {
+    is(createdCallbackCalled, false, "created callback should only be called once in this tests.");
+    createdCallbackCalled = true;
+    runNextTest();
+  };
+
+  assocDoc.registerElement("x-associated-doc-callback-elem", { prototype: proto });
+  document.createElement("x-associated-doc-callback-elem");
+}
+
+function createdCallbackFromAssociatedDoc() {
+  var createdCallbackCalled = false;
+  var assocDoc = document.implementation.createHTMLDocument();
+
+  var proto = Object.create(HTMLElement.prototype);
+  proto.createdCallback = function() {
+    is(createdCallbackCalled, false, "created callback should only be called once in this tests.");
+    createdCallbackCalled = true;
+    runNextTest();
+  };
+
+  assocDoc.registerElement("x-main-doc-callback-elem", { prototype: proto });
+  assocDoc.createElement("x-main-doc-callback-elem");
+}
+
+function createdCallbackFromDocHTMLNamespace() {
+  var createdCallbackCalled = false;
+  var assocDoc = document.implementation.createDocument("http://www.w3.org/1999/xhtml", "html", null);
+  var somediv = assocDoc.createElement("div");
+
+  var proto = Object.create(HTMLElement.prototype);
+  proto.createdCallback = function() {
+    is(createdCallbackCalled, false, "created callback should only be called once in this tests.");
+    createdCallbackCalled = true;
+    runNextTest();
+  };
+
+  assocDoc.registerElement("x-assoc-doc-with-ns-callback-elem", { prototype: proto });
+  document.createElement("x-assoc-doc-with-ns-callback-elem");
+}
+
+function registerNoRegistryDoc() {
+  var assocDoc = document.implementation.createDocument(null, "html");
+  try {
+    assocDoc.registerElement("x-dummy", { prototype: Object.create(HTMLElement.prototype) });
+    ok(false, "Registring element in document without registry should throw.");
+  } catch (ex) {
+    ok(true, "Registring element in document without registry should throw.");
+  }
+
+  runNextTest();
+}
+
+function runNextTest() {
+  if (testFunctions.length > 0) {
+    var nextTestFunction = testFunctions.shift();
+    nextTestFunction();
+  }
+}
+
+var testFunctions = [
+  createdCallbackFromAssociatedDoc,
+  createdCallbackFromMainDoc,
+  createdCallbackFromDocHTMLNamespace,
+  registerNoRegistryDoc,
+  SimpleTest.finish
+];
+
+SimpleTest.waitForExplicitFinish();
+
+runNextTest();
+</script>
+</body>
+</html>

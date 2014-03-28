@@ -11,7 +11,8 @@ config = {
         "--appname=%(binary_path)s", "--utility-path=tests/bin",
         "--extra-profile-file=tests/bin/plugins", "--symbols-path=%(symbols_path)s",
         "--certificate-path=tests/certs", "--autorun", "--close-when-done",
-        "--console-level=INFO", "--setpref=webgl.force-enabled=true"
+        "--console-level=INFO", "--setpref=webgl.force-enabled=true",
+        "--quiet"
     ],
     "xpcshell_options": [
         "--symbols-path=%(symbols_path)s",

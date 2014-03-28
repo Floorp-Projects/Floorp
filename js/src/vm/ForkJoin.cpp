@@ -517,7 +517,7 @@ js::ForkJoin(JSContext *cx, CallArgs &args)
 
     MOZ_ASSERT(sliceStart == args[1].toInt32());
     MOZ_ASSERT(sliceEnd == args[2].toInt32());
-    MOZ_ASSERT(sliceStart < sliceEnd);
+    MOZ_ASSERT(sliceStart <= sliceEnd);
 
     ForkJoinOperation op(cx, fun, sliceStart, sliceEnd, mode);
     ExecutionStatus status = op.apply();
@@ -1991,7 +1991,8 @@ class ParallelSpewer
             filename = script->filename();
         }
 
-        spew(SpewOps, "%s%sBAILOUT %d%s: %d at %s:%d:%d", bold(), yellow(), count, reset(), cause, filename, line, column);
+        spew(SpewOps, "%s%sBAILOUT %d%s: %s (%d) at %s:%d:%d", bold(), yellow(), count, reset(),
+             BailoutExplanation(cause), cause, filename, line, column);
     }
 
     void beginCompile(HandleScript script) {
