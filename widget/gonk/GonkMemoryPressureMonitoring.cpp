@@ -9,6 +9,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ProcessPriorityManager.h"
 #include "mozilla/Services.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -169,7 +170,7 @@ public:
 
       // We use low-memory-no-forward because each process has its own watcher
       // and thus there is no need for the main process to forward this event.
-      rv = NS_DispatchMemoryPressure(MemPressure_New);
+      rv = DispatchMemoryPressure(MemPressure_New);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Manually check lowMemFd until we observe that memory pressure is over.
@@ -202,7 +203,7 @@ public:
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (memoryPressure) {
-          rv = NS_DispatchMemoryPressure(MemPressure_Ongoing);
+          rv = DispatchMemoryPressure(MemPressure_Ongoing);
           NS_ENSURE_SUCCESS(rv, rv);
           continue;
         }
@@ -243,6 +244,21 @@ private:
       *aOut = buf[0] == '1' && buf[1] == '\n';
     }
     return NS_OK;
+  }
+
+  /**
+   * Dispatch the specified memory pressure event unless a high-priority
+   * process is present. If a high-priority process is present then it's likely
+   * responding to an urgent event (an incoming call or message for example) so
+   * avoid wasting CPU time responding to low-memory events.
+   */
+  nsresult DispatchMemoryPressure(MemoryPressureState state)
+  {
+    if (ProcessPriorityManager::AnyProcessHasHighPriority()) {
+      return NS_OK;
+    }
+
+    return NS_DispatchMemoryPressure(state);
   }
 
   Monitor mMonitor;

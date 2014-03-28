@@ -155,11 +155,6 @@ public:
    */
   nsresult ComputeSourceNeededRect(nsRect* aDirty);
 
-  /**
-   * Returns the transform from the filtered element's user space to filter
-   * space. This will be a simple translation and/or scale.
-   */
-  gfxMatrix GetUserSpaceToFilterSpaceTransform() const;
 
   /**
    * Returns the transform from filter space to outer-<svg> device space.
@@ -227,7 +222,16 @@ private:
    */
   void ComputeNeededBoxes();
 
+  /**
+   * Compute the scale factors between user space and filter space.
+   */
+  nsresult ComputeUserSpaceToFilterSpaceScale();
+
+  /**
+   * Transform a rect between user space and filter space.
+   */
   gfxRect UserSpaceToFilterSpace(const gfxRect& aUserSpace) const;
+  gfxRect FilterSpaceToUserSpace(const gfxRect& aFilterSpaceRect) const;
 
   /**
    * Converts an nsRect that is relative to a filtered frame's origin (i.e. the
@@ -271,8 +275,14 @@ private:
   /**
    * The "filter region", in the filtered element's user space.
    */
-  gfxRect                 mFilterRegion;
+  gfxRect                 mUserSpaceBounds;
   nsIntRect               mFilterSpaceBounds;
+
+  /**
+   * The scale factors between user space and filter space.
+   */
+  gfxSize                 mUserSpaceToFilterSpaceScale;
+  gfxSize                 mFilterSpaceToUserSpaceScale;
 
   /**
    * Pre-filter paint bounds of the element that is being filtered, in filter

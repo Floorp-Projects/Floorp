@@ -10,9 +10,6 @@ const DEBUG = false; /* set to false to suppress debug messages */
 
 const SIDEBAR_CONTRACTID        = "@mozilla.org/sidebar;1";
 const SIDEBAR_CID               = Components.ID("{22117140-9c6e-11d3-aaf1-00805f8a4905}");
-const nsISidebar                = Components.interfaces.nsISidebar;
-const nsISidebarExternal        = Components.interfaces.nsISidebarExternal;
-const nsIClassInfo              = Components.interfaces.nsIClassInfo;
 
 // File extension for Sherlock search plugin description files
 const SHERLOCK_FILE_EXT_REGEXP = /\.src$/i;
@@ -119,13 +116,7 @@ function (aSearchURL)
   return 0;
 }
 
-nsSidebar.prototype.classInfo = XPCOMUtils.generateCI({classID: SIDEBAR_CID,
-                                                       contractID: SIDEBAR_CONTRACTID,
-                                                       classDescription: "Sidebar",
-                                                       interfaces: [nsISidebar, nsISidebarExternal],
-                                                       flags: nsIClassInfo.DOM_OBJECT});
-
-nsSidebar.prototype.QueryInterface = XPCOMUtils.generateQI([nsISidebar, nsISidebarExternal]);
+nsSidebar.prototype.QueryInterface = XPCOMUtils.generateQI([Components.interfaces.nsISupports]);
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsSidebar]);
 

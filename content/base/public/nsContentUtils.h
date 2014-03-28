@@ -1634,8 +1634,8 @@ public:
    *
    * @return the document associated with the script context
    */
-  static already_AddRefed<nsIDocument>
-  GetDocumentFromScriptContext(nsIScriptContext *aScriptContext);
+  static nsIDocument*
+  GetDocumentFromScriptContext(nsIScriptContext* aScriptContext);
 
   static bool CheckMayLoad(nsIPrincipal* aPrincipal, nsIChannel* aChannel, bool aAllowIfInheritsPrincipal);
 

@@ -50,7 +50,6 @@ LOCAL_INCLUDES += [
     '../../base/src',
     '/content/base/src',
     '/dom/events',
-    '/xpcom/ds',
 ]
 
 for var in ('SCTP_SIMPLE_ALLOCATOR',

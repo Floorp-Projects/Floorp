@@ -16,7 +16,7 @@
     </application></compatible_applications>
   <all_compatible_os><os>ALL</os></all_compatible_os>
 
-  <install os="ALL" size="452">http://127.0.0.1:4567/unsigned.xpi</install>
+  <install os="ALL" size="452">http://127.0.0.1:4567/addons/unsigned.xpi</install>
     <created epoch="1252903662">
       2009-09-14T04:47:42Z
     </created>

@@ -8,7 +8,6 @@ ac_add_options --disable-unified-compilation
 ac_add_options --target=arm-linux-androideabi
 ac_add_options --with-arch=armv6
 
-export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 export MOZ_PKG_SPECIAL=armv6

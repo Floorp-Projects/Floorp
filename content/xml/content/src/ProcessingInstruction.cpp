@@ -8,6 +8,7 @@
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ProcessingInstructionBinding.h"
 #include "mozilla/dom/XMLStylesheetProcessingInstruction.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "nsContentUtils.h"
 
 already_AddRefed<mozilla::dom::ProcessingInstruction>
@@ -111,7 +112,7 @@ ProcessingInstruction::List(FILE* out, int32_t aIndent) const
   int32_t index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Processing instruction refcount=%d<", mRefCnt.get());
+  fprintf(out, "Processing instruction refcount=%" PRIuPTR "<", mRefCnt.get());
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());

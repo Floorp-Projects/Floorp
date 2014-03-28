@@ -5,13 +5,13 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIProgrammingLanguage.h"
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 GenericClassInfo::AddRef()
 {
   return 2;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 GenericClassInfo::Release()
 {
   return 1;
