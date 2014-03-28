@@ -13398,15 +13398,11 @@ nsGlobalWindow::GetMessageManager(ErrorResult& aError)
   nsGlobalChromeWindow* myself = static_cast<nsGlobalChromeWindow*>(this);
   if (!myself->mMessageManager) {
     nsIScriptContext* scx = GetContextInternal();
-    if (NS_WARN_IF(!scx)) {
+    if (NS_WARN_IF(!scx || !(scx->GetNativeContext()))) {
       aError.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
-    AutoPushJSContext cx(scx->GetNativeContext());
-    if (NS_WARN_IF(!cx)) {
-      aError.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
+
     nsCOMPtr<nsIMessageBroadcaster> globalMM =
       do_GetService("@mozilla.org/globalmessagemanager;1");
     myself->mMessageManager =
