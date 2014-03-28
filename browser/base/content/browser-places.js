@@ -1370,10 +1370,6 @@ let BookmarkingUI = {
       this.notifier.style.transform = transform;
     }
 
-    let isInBookmarksToolbar = this.button.classList.contains("bookmark-item");
-    if (isInBookmarksToolbar)
-      this.notifier.setAttribute("in-bookmarks-toolbar", true);
-
     let isInOverflowPanel = this.button.getAttribute("overflowedItem") == "true";
     if (!isInOverflowPanel) {
       this.notifier.setAttribute("notification", "finish");
@@ -1384,7 +1380,6 @@ let BookmarkingUI = {
 
     this._notificationTimeout = setTimeout( () => {
       this.notifier.removeAttribute("notification");
-      this.notifier.removeAttribute("in-bookmarks-toolbar");
       this.button.removeAttribute("notification");
       this.notifier.style.transform = '';
       this.button.style.removeProperty("pointer-events");
