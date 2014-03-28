@@ -60,6 +60,10 @@ class TypedArrayObject : public ArrayBufferViewObject
         return gc::GetGCObjectKind(FIXED_DATA_START + dataSlots);
     }
 
+    ScalarTypeDescr::Type type() const {
+        return (ScalarTypeDescr::Type) getFixedSlot(TYPE_SLOT).toInt32();
+    }
+
     static Value bufferValue(TypedArrayObject *tarr) {
         return tarr->getFixedSlot(BUFFER_SLOT);
     }
@@ -67,7 +71,8 @@ class TypedArrayObject : public ArrayBufferViewObject
         return tarr->getFixedSlot(BYTEOFFSET_SLOT);
     }
     static Value byteLengthValue(TypedArrayObject *tarr) {
-        return tarr->getFixedSlot(BYTELENGTH_SLOT);
+        int32_t size = ScalarTypeDescr::size(tarr->type());
+        return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * size);
     }
     static Value lengthValue(TypedArrayObject *tarr) {
         return tarr->getFixedSlot(LENGTH_SLOT);
@@ -95,9 +100,6 @@ class TypedArrayObject : public ArrayBufferViewObject
         return lengthValue(const_cast<TypedArrayObject*>(this)).toInt32();
     }
 
-    uint32_t type() const {
-        return getFixedSlot(TYPE_SLOT).toInt32();
-    }
     void *viewData() const {
         // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
         return static_cast<void*>(getPrivate(DATA_SLOT));
@@ -255,7 +257,7 @@ class DataViewObject : public ArrayBufferViewObject
     }
 
     static Value byteLengthValue(DataViewObject *view) {
-        Value v = view->getReservedSlot(BYTELENGTH_SLOT);
+        Value v = view->getReservedSlot(LENGTH_SLOT);
         JS_ASSERT(v.toInt32() >= 0);
         return v;
     }

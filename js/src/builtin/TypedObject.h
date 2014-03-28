@@ -663,10 +663,6 @@ class TypedObject : public ArrayBufferViewObject
         return (uint8_t*) getPrivate();
     }
 
-    int32_t byteLength() const {
-        return getReservedSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH).toInt32();
-    }
-
     int32_t length() const {
         return getReservedSlot(JS_TYPEDOBJ_SLOT_LENGTH).toInt32();
     }
