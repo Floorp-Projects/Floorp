@@ -40,6 +40,7 @@ public class WebViewActivity extends SyncActivity {
     // Add a progress bar.
     final Activity activity = this;
     wv.setWebChromeClient(new WebChromeClient() {
+      @Override
       public void onProgressChanged(WebView view, int progress) {
         // Activities and WebViews measure progress with different scales.
         // The progress meter will automatically disappear when we reach 100%
