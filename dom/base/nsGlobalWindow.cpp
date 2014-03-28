@@ -3278,11 +3278,10 @@ nsGlobalWindow::DefineArgumentsProperty(nsIArray *aArguments)
   MOZ_ASSERT(!mIsModalContentWindow); // Handled separately.
   nsIScriptContext *ctx = GetOuterWindowInternal()->mContext;
   NS_ENSURE_TRUE(aArguments && ctx, NS_ERROR_NOT_INITIALIZED);
-  AutoPushJSContext cx(ctx->GetNativeContext());
-  NS_ENSURE_TRUE(cx, NS_ERROR_NOT_INITIALIZED);
+  AutoJSContext cx;
 
   JS::Rooted<JSObject*> obj(cx, GetWrapperPreserveColor());
-  return GetContextInternal()->SetProperty(obj, "arguments", aArguments);
+  return ctx->SetProperty(obj, "arguments", aArguments);
 }
 
 //*****************************************************************************
