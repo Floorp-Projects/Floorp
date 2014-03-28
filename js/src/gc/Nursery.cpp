@@ -697,6 +697,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     if (isEmpty())
         return;
 
+    rt->gcStats.count(gcstats::STAT_MINOR_GC);
+
     TIME_START(total);
 
     AutoStopVerifyingBarriers av(rt, false);

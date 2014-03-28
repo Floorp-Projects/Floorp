@@ -365,6 +365,7 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.appendNumber("Zones Collected", "%d", "", collectedCount);
     ss.appendNumber("Total Zones", "%d", "", zoneCount);
     ss.appendNumber("Total Compartments", "%d", "", compartmentCount);
+    ss.appendNumber("Minor GCs", "%d", "", counts[STAT_MINOR_GC]);
     ss.appendNumber("MMU (20ms)", "%d", "%", int(mmu20 * 100));
     ss.appendNumber("MMU (50ms)", "%d", "%", int(mmu50 * 100));
     ss.appendDecimal("SCC Sweep Total", "ms", t(sccTotal));
