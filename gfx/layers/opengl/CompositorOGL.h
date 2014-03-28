@@ -336,9 +336,9 @@ private:
   bool mFrameInProgress;
 
   /*
-   * Clear aRect on FrameBuffer.
+   * Clear aRect on current render target.
    */
-  virtual void clearFBRect(const gfx::Rect* aRect);
+  virtual void ClearRect(const gfx::Rect& aRect) MOZ_OVERRIDE;
 
   /* Start a new frame. If aClipRectIn is null and aClipRectOut is non-null,
    * sets *aClipRectOut to the screen dimensions.
