@@ -508,12 +508,7 @@ function AddonWrapper(aTheme) {
   };
 
   this.findUpdates = function AddonWrapper_findUpdates(listener, reason, appVersion, platformVersion) {
-    if ("onNoCompatibilityUpdateAvailable" in listener)
-      listener.onNoCompatibilityUpdateAvailable(this);
-    if ("onNoUpdateAvailable" in listener)
-      listener.onNoUpdateAvailable(this);
-    if ("onUpdateFinished" in listener)
-      listener.onUpdateFinished(this);
+    AddonManagerPrivate.callNoUpdateListeners(this, listener, reason, appVersion, platformVersion);
   };
 }
 
