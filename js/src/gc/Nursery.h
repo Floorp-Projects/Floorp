@@ -209,30 +209,14 @@ class Nursery
         chunk(chunkno).trailer.runtime = runtime();
     }
 
-    MOZ_ALWAYS_INLINE bool setNumActiveChunks(int nchunks) {
-        if (numActiveChunks_ == nchunks)
-            return true;
-
-        // Ensure our usable range is committed.
-        if (numActiveChunks_ > 0) {
-            bool result = gc::CommitAddressRange((void *)start(), gc::ChunkSize * nchunks);
-            if (!result)
-                return false;
-            JS_POISON((void *)start(), FreshNursery, gc::ChunkSize * nchunks);
-            for (int i = 0; i < numActiveChunks_; ++i)
-                chunk(i).trailer.runtime = runtime();
-        }
-
-        numActiveChunks_ = nchunks;
-
-        // Decommit unusage range.
+    void updateDecommittedRegion() {
+#ifndef JS_GC_ZEAL
         if (numActiveChunks_ < NumNurseryChunks) {
             uintptr_t decommitStart = chunk(numActiveChunks_).start();
             JS_ASSERT(decommitStart == AlignBytes(decommitStart, 1 << 20));
             gc::MarkPagesUnused(runtime(), (void *)decommitStart, heapEnd() - decommitStart);
         }
-
-        return true;
+#endif
     }
 
     MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
@@ -304,19 +288,25 @@ class Nursery
 
     static void MinorGCCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
-#ifdef JS_CRASH_DIAGNOSTICS
-    static const uint8_t FreshNursery = 0x2a;
-    static const uint8_t SweptNursery = 0x2b;
-    static const uint8_t AllocatedThing = 0x2c;
-#endif
-
 #ifdef JS_GC_ZEAL
     /*
      * In debug and zeal builds, these bytes indicate the state of an unused
      * segment of nursery-allocated memory.
      */
-    bool enterZealMode();
-    void leaveZealMode();
+    static const uint8_t FreshNursery = 0x2a;
+    static const uint8_t SweptNursery = 0x2b;
+    static const uint8_t AllocatedThing = 0x2c;
+    void enterZealMode() {
+        if (isEnabled())
+            numActiveChunks_ = NumNurseryChunks;
+    }
+    void leaveZealMode() {
+        if (isEnabled()) {
+            JS_ASSERT(isEmpty());
+            setCurrentChunk(0);
+            currentStart_ = start();
+        }
+    }
 #else
     void enterZealMode() {}
     void leaveZealMode() {}
