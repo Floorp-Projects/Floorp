@@ -37,8 +37,6 @@ public:
 
   nsDOMTokenList(Element* aElement, nsIAtom* aAttrAtom);
 
-  void DropReference();
-
   virtual JSObject* WrapObject(JSContext *cx,
                                JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
 
@@ -80,7 +78,7 @@ protected:
                       const nsTArray<nsString>& aTokens);
   inline const nsAttrValue* GetParsedAttr();
 
-  Element* mElement;
+  nsCOMPtr<Element> mElement;
   nsCOMPtr<nsIAtom> mAttrAtom;
 };
 
