@@ -69,6 +69,7 @@ this.Log = {
 
   Formatter: Formatter,
   BasicFormatter: BasicFormatter,
+  MessageOnlyFormatter: MessageOnlyFormatter,
   StructuredFormatter: StructuredFormatter,
 
   Appender: Appender,
@@ -359,13 +360,58 @@ LoggerRepository.prototype = {
     }
   },
 
-  getLogger: function LogRep_getLogger(name) {
+  /**
+   * Obtain a named Logger.
+   *
+   * The returned Logger instance for a particular name is shared among
+   * all callers. In other words, if two consumers call getLogger("foo"),
+   * they will both have a reference to the same object.
+   *
+   * @return Logger
+   */
+  getLogger: function (name) {
     if (name in this._loggers)
       return this._loggers[name];
     this._loggers[name] = new Logger(name, this);
     this._updateParents(name);
     return this._loggers[name];
-  }
+  },
+
+  /**
+   * Obtain a Logger that logs all string messages with a prefix.
+   *
+   * A common pattern is to have separate Logger instances for each instance
+   * of an object. But, you still want to distinguish between each instance.
+   * Since Log.repository.getLogger() returns shared Logger objects,
+   * monkeypatching one Logger modifies them all.
+   *
+   * This function returns a new object with a prototype chain that chains
+   * up to the original Logger instance. The new prototype has log functions
+   * that prefix content to each message.
+   *
+   * @param name
+   *        (string) The Logger to retrieve.
+   * @param prefix
+   *        (string) The string to prefix each logged message with.
+   */
+  getLoggerWithMessagePrefix: function (name, prefix) {
+    let log = this.getLogger(name);
+
+    let proxy = {__proto__: log};
+
+    for (let level in Log.Level) {
+      if (level == "Desc") {
+        continue;
+      }
+
+      let lc = level.toLowerCase();
+      proxy[lc] = function (msg, ...args) {
+        return log[lc].apply(log, [prefix + msg, ...args]);
+      };
+    }
+
+    return proxy;
+  },
 };
 
 /*
@@ -395,6 +441,19 @@ BasicFormatter.prototype = {
       message.message + "\n";
   }
 };
+
+/**
+ * A formatter that only formats the string message component.
+ */
+function MessageOnlyFormatter() {
+}
+MessageOnlyFormatter.prototype = Object.freeze({
+  __proto__: Formatter.prototype,
+
+  format: function (message) {
+    return message.message + "\n";
+  },
+});
 
 // Structured formatter that outputs JSON based on message data.
 // This formatter will format unstructured messages by supplying
