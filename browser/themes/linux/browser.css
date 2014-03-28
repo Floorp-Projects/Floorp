@@ -1720,9 +1720,9 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 .panel-promo-closebutton {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  margin-top: 0;
-  margin-bottom: 0;
+  -moz-appearance: none;
+  height: 16px;
+  width: 16px;
 }
 
 .panel-promo-closebutton > .toolbarbutton-text {
@@ -1817,11 +1817,27 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin: -4px;
 }
 
+/* Tabstrip close button */
+.tabs-closebutton,
 .tab-close-button {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  margin-top: 0;
-  margin-bottom: -1px;
-  -moz-margin-end: -4px;
+  -moz-appearance: none;
+  height: 16px;
+  width: 16px;
+}
+
+.tabs-closebutton:not([selected]):not(:hover),
+.tab-close-button:not([selected]):not(:hover) {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 64, 16, 48);
+}
+
+.tabs-closebutton:not([selected]):not(:hover):-moz-lwtheme-brighttext,
+.tab-close-button:not([selected]):not(:hover):-moz-lwtheme-brighttext {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
+}
+
+.tabs-closebutton:not([selected]):not(:hover):-moz-lwtheme-darktext,
+.tab-close-button:not([selected]):not(:hover):-moz-lwtheme-darktext {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 96, 16, 80);
 }
 
 /* Tabstrip new tab button */
@@ -1832,10 +1848,15 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-image-region: auto;
 }
 
-/* Tabstrip close button */
-.tabs-closebutton,
 .customization-tipPanel-closeBox > .close-icon {
-  list-style-image: url("moz-icon://stock/gtk-close?size=menu");
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* The :hover:active style from toolkit doesn't seem to work in this panel so just use :active. */
+.customization-tipPanel-closeBox > .close-icon:active {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 48, 16, 32);
 }
 
 .tabs-closebutton > .toolbarbutton-icon {
