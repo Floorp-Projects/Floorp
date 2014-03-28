@@ -109,19 +109,15 @@ function testReload() {
   let onStoresUpdate = data => {
     info("in stores update of testReload");
     // This might be second time stores update is happening, in which case,
-    // data.deleted will be null
+    // data.deleted will be null.
+    // OR.. This might be the first time on a super slow machine where both
+    // data.deleted and data.added is missing in the first update.
     if (data.deleted) {
       markOutMatched(shouldBeEmptyFirst, data.deleted, true);
     }
 
     if (!Object.keys(shouldBeEmptyFirst).length) {
       info("shouldBeEmptyFirst is empty now");
-    }
-    else if (!data.added || !Object.keys(data.added).length) {
-      info(JSON.stringify(data));
-      ok(false, "deleted object should have something if an added object " +
-         "does not have anything");
-      endTestReloaded();
     }
 
     // stores-update call might not have data.added for the first time on slow
@@ -164,7 +160,6 @@ function testAddIframe() {
   };
 
   let onStoresUpdate = data => {
-    info(JSON.stringify(data));
     info("checking if the hosts list is correct for this iframe addition");
 
     markOutMatched(shouldBeEmpty, data.added);
