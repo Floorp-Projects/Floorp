@@ -39,11 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=348233
   <script class="testbody" type="application/javascript">
     <![CDATA[
 
-      if (navigator.platform.startsWith("Linux")) {
-        SimpleTest.expectAssertions(5, 6);
-      } else {
-        SimpleTest.expectAssertions(4);
-      }
+      SimpleTest.expectAssertions(20);
 
       /** Test for Bug 437844 and Bug 348233 **/
       SimpleTest.waitForExplicitFinish();
