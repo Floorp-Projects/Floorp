@@ -31,10 +31,9 @@ class TypedArrayObject : public ArrayBufferViewObject
   protected:
     // Typed array properties stored in slots, beyond those shared by all
     // ArrayBufferViews.
-    static const size_t LENGTH_SLOT    = JS_TYPEDOBJ_SLOT_LENGTH;
-    static const size_t TYPE_SLOT      = JS_TYPEDOBJ_SLOT_TYPE_DESCR;
-    static const size_t RESERVED_SLOTS = JS_TYPEDOBJ_SLOTS;
-    static const size_t DATA_SLOT      = JS_TYPEDOBJ_SLOT_DATA;
+    static const size_t TYPE_SLOT      = JS_TYPEDARR_SLOT_TYPE;
+    static const size_t RESERVED_SLOTS = JS_TYPEDARR_SLOTS;
+    static const size_t DATA_SLOT      = JS_TYPEDARR_SLOT_DATA;
 
     static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                   "bad inlined constant in jsfriendapi.h");
@@ -222,7 +221,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
 class DataViewObject : public ArrayBufferViewObject
 {
     static const size_t RESERVED_SLOTS = JS_DATAVIEW_SLOTS;
-    static const size_t DATA_SLOT      = JS_TYPEDOBJ_SLOT_DATA;
+    static const size_t DATA_SLOT      = JS_DATAVIEW_SLOT_DATA;
 
   private:
     static const Class protoClass;
