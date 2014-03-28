@@ -30,6 +30,7 @@ RequestExecutionLevel user
 
 Var Dialog
 Var Progressbar
+Var ProgressbarMarqueeIntervalMS
 Var LabelDownloading
 Var LabelInstalling
 Var LabelFreeSpace
@@ -84,14 +85,13 @@ Var StartDownloadPhaseTickCount
 ; seconds spent on each of these pages is reported.
 Var IntroPhaseSeconds
 Var OptionsPhaseSeconds
-; The tick count for the last download
+; The tick count for the last download.
 Var StartLastDownloadTickCount
 ; The number of seconds from the start of the download phase until the first
 ; bytes are received. This is only recorded for first request so it is possible
 ; to determine connection issues for the first request.
 Var DownloadFirstTransferSeconds
 ; The last four tick counts are for the end of a phase in the installation page.
-; the options phase when it isn't entered.
 Var EndDownloadPhaseTickCount
 Var EndPreInstallPhaseTickCount
 Var EndInstallPhaseTickCount
@@ -177,6 +177,10 @@ Var ControlRightPX
 ; immediate feedback is given to the user.
 !define InstallProgressFirstStep 20
 
+; The finish step size to quickly increment the progress bar after the
+; installation has finished.
+!define InstallProgressFinishStep 40
+
 ; Number of steps for the install progress.
 ; This might not be enough when installing on a slow network drive so it will
 ; fallback to downloading the full installer if it reaches this number. The size
@@ -191,9 +195,6 @@ Var ControlRightPX
 ; with a 100 millisecond timer and a first step of 20 as defined by
 ; InstallProgressFirstStep .
 !define /math InstallPaveOverTotalSteps ${InstallProgressFirstStep} + 1800
-
-; The interval in MS used for the progress bars set as marquee.
-!define ProgressbarMarqueeIntervalMS 10
 
 ; On Vista and above attempt to elevate Standard Users in addition to users that
 ; are a member of the Administrators group.
@@ -388,6 +389,13 @@ Function .onInit
     StrCpy $CanSetAsDefault "true"
   ${EndIf}
 
+  ; The interval in MS used for the progress bars set as marquee.
+  ${If} ${AtLeastWinVista}
+    StrCpy $ProgressbarMarqueeIntervalMS "10"
+  ${Else}
+    StrCpy $ProgressbarMarqueeIntervalMS "50"
+  ${EndIf}
+
   ; Initialize the majority of variables except those that need to be reset
   ; when a page is displayed.
   StrCpy $IntroPhaseSeconds "0"
@@ -448,9 +456,9 @@ FunctionEnd
 Function .onUserAbort
   ${NSD_KillTimer} StartDownload
   ${NSD_KillTimer} OnDownload
-  ${NSD_KillTimer} StartInstall
   ${NSD_KillTimer} CheckInstall
   ${NSD_KillTimer} FinishInstall
+  ${NSD_KillTimer} FinishProgressBar
   ${NSD_KillTimer} DisplayDownloadError
 
   ${If} "$IsDownloadFinished" != ""
@@ -458,7 +466,7 @@ Function .onUserAbort
     ; Aborting the abort will allow SendPing which is called by
     ; DisplayDownloadError to hide the installer window and close the installer
     ; after it sends the metrics ping.
-    Abort 
+    Abort
   ${EndIf}
 FunctionEnd
 
@@ -1167,7 +1175,7 @@ Function createInstall
   Pop $Progressbar
   ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
   SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
-              ${ProgressbarMarqueeIntervalMS} ; start=1|stop=0 interval(ms)=+N
+              $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
 
   ${NSD_CreateLabelCenter} 103u 180u 241u 20u "$(DOWNLOADING_LABEL)"
   Pop $LabelDownloading
@@ -1306,7 +1314,7 @@ Function OnDownload
       StrCpy $DownloadedBytes "0"
       ${NSD_AddStyle} $Progressbar ${PBS_MARQUEE}
       SendMessage $Progressbar ${PBM_SETMARQUEE} 1 \
-                  ${ProgressbarMarqueeIntervalMS} ; start=1|stop=0 interval(ms)=+N
+                  $ProgressbarMarqueeIntervalMS ; start=1|stop=0 interval(ms)=+N
     ${EndIf}
     InetBgDL::Get /RESET /END
     StrCpy $DownloadSizeBytes ""
@@ -1524,9 +1532,11 @@ Function OnDownload
       ; require an OS restart for the full installer.
       Delete "$INSTDIR\${FileMainEXE}.moz-upgrade"
 
-      ; Flicker happens less often if a timer is used between updates of the
-      ; progress bar.
-      ${NSD_CreateTimer} StartInstall ${InstallIntervalMS}
+      System::Call "kernel32::GetTickCount()l .s"
+      Pop $EndPreInstallPhaseTickCount
+
+      Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
+      ${NSD_CreateTimer} CheckInstall ${InstallIntervalMS}
     ${Else}
       ${If} $HalfOfDownload != "true"
       ${AndIf} $3 > $HalfOfDownload
@@ -1566,21 +1576,6 @@ Function OnPing
   ${EndIf}
 FunctionEnd
 
-Function StartInstall
-  ${NSD_KillTimer} StartInstall
-
-  System::Call "kernel32::GetTickCount()l .s"
-  Pop $EndPreInstallPhaseTickCount
-
-  IntOp $InstallCounterStep $InstallCounterStep + 1
-  LockWindow on
-  SendMessage $Progressbar ${PBM_STEPIT} 0 0
-  LockWindow off
-
-  Exec "$\"$PLUGINSDIR\download.exe$\" /INI=$PLUGINSDIR\${CONFIG_INI}"
-  ${NSD_CreateTimer} CheckInstall ${InstallIntervalMS}
-FunctionEnd
-
 Function CheckInstall
   IntOp $InstallCounterStep $InstallCounterStep + 1
   ${If} $InstallCounterStep >= $InstallTotalSteps
@@ -1599,6 +1594,9 @@ Function CheckInstall
     Delete "$INSTDIR\install.tmp"
     CopyFiles /SILENT "$INSTDIR\install.log" "$INSTDIR\install.tmp"
 
+    ; The unfocus and refocus that happens approximately here is caused by the
+    ; installer calling SHChangeNotify to refresh the shortcut icons.
+
     ; When the full installer completes the installation the install.log will no
     ; longer be in use.
     ClearErrors
@@ -1612,7 +1610,7 @@ Function CheckInstall
       Delete "$PLUGINSDIR\${CONFIG_INI}"
       System::Call "kernel32::GetTickCount()l .s"
       Pop $EndInstallPhaseTickCount
-      System::Int64Op $InstallStepSize * 20
+      System::Int64Op $InstallStepSize * ${InstallProgressFinishStep}
       Pop $InstallStepSize
       SendMessage $Progressbar ${PBM_SETSTEP} $InstallStepSize 0
       ${NSD_CreateTimer} FinishInstall ${InstallIntervalMS}
@@ -1623,7 +1621,7 @@ FunctionEnd
 Function FinishInstall
   ; The full installer has completed but the progress bar still needs to finish
   ; so increase the size of the step.
-  IntOp $InstallCounterStep $InstallCounterStep + 40
+  IntOp $InstallCounterStep $InstallCounterStep + ${InstallProgressFinishStep}
   ${If} $InstallTotalSteps < $InstallCounterStep
     StrCpy $InstallCounterStep "$InstallTotalSteps"
   ${EndIf}
@@ -1831,10 +1829,9 @@ Function CheckSpace
 
   ${GetLongPath} "$ExistingTopDir" $ExistingTopDir
 
-  ; GetDiskFreeSpaceExW can require a backslash
+  ; GetDiskFreeSpaceExW requires a backslash.
   StrCpy $0 "$ExistingTopDir" "" -1 ; the last character
   ${If} "$0" != "\"
-    ; A backslash is required for 
     StrCpy $0 "\"
   ${Else}
     StrCpy $0 ""

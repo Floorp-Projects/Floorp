@@ -13,60 +13,71 @@ const {CSSProperties, CSSValues} = getCSSKeywords();
 // Test cases to test that autocompletion works correctly when enabled.
 // Format:
 // [
-//   -1 for pressing Ctrl + Space or the particular key to press,
-//   Number of suggestions in the popup (-1 if popup is closed),
-//   Index of selected suggestion,
-//   1 to check whether the selected suggestion is inserted into the editor or not
+//   key,
+//   {
+//     total: Number of suggestions in the popup (-1 if popup is closed),
+//     current: Index of selected suggestion,
+//     inserted: 1 to check whether the selected suggestion is inserted into the editor or not,
+//     entered: 1 if the suggestion is inserted and finalized
+//   }
 // ]
 let TEST_CASES = [
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  [-1, 1, 0],
-  ['VK_LEFT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_DOWN', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  [-1, getSuggestionNumberFor("font"), 0],
-  ['VK_END', -1],
-  ['VK_RETURN', -1],
-  ['b', getSuggestionNumberFor("b"), 0],
-  ['a', getSuggestionNumberFor("ba"), 0],
-  ['VK_DOWN', getSuggestionNumberFor("ba"), 0, 1],
-  ['VK_TAB', getSuggestionNumberFor("ba"), 1, 1],
-  [':', getSuggestionNumberFor("background", ""), 0],
-  ['b', getSuggestionNumberFor("background", "b"), 0],
-  ['l', getSuggestionNumberFor("background", "bl"), 0],
-  ['VK_TAB', getSuggestionNumberFor("background", "bl"), 0, 1],
-  ['VK_DOWN', getSuggestionNumberFor("background", "bl"), 1, 1],
-  ['VK_UP', getSuggestionNumberFor("background", "bl"), 0, 1],
-  ['VK_TAB', getSuggestionNumberFor("background", "bl"), 1, 1],
-  ['VK_TAB', getSuggestionNumberFor("background", "bl"), 2, 1],
-  ['VK_LEFT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_DOWN', -1],
-  ['VK_RETURN', -1],
-  ['b', 2, 0],
-  ['u', 1, 0],
-  ['VK_RETURN', -1, 0, 1],
-  ['{', -1],
-  ['VK_HOME', -1],
-  ['VK_DOWN', -1],
-  ['VK_DOWN', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  ['VK_RIGHT', -1],
-  [-1, 1, 0],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['Ctrl+Space', {total: 1, current: 0}],
+  ['VK_LEFT'],
+  ['VK_RIGHT'],
+  ['VK_DOWN'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['Ctrl+Space', { total: getSuggestionNumberFor("font"), current: 0}],
+  ['VK_END'],
+  ['VK_RETURN'],
+  ['b', {total: getSuggestionNumberFor("b"), current: 0}],
+  ['a', {total: getSuggestionNumberFor("ba"), current: 0}],
+  ['VK_DOWN', {total: getSuggestionNumberFor("ba"), current: 0, inserted: 1}],
+  ['VK_TAB', {total: getSuggestionNumberFor("ba"), current: 1, inserted: 1}],
+  ['VK_RETURN', {current: 1, inserted: 1, entered: 1}],
+  ['b', {total: getSuggestionNumberFor("background", "b"), current: 0}],
+  ['l', {total: getSuggestionNumberFor("background", "bl"), current: 0}],
+  ['VK_TAB', {total: getSuggestionNumberFor("background", "bl"), current: 0, inserted: 1}],
+  ['VK_DOWN', {total: getSuggestionNumberFor("background", "bl"), current: 1, inserted: 1}],
+  ['VK_UP', {total: getSuggestionNumberFor("background", "bl"), current: 0, inserted: 1}],
+  ['VK_TAB', {total: getSuggestionNumberFor("background", "bl"), current: 1, inserted: 1}],
+  ['VK_TAB', {total: getSuggestionNumberFor("background", "bl"), current: 2, inserted: 1}],
+  [';'],
+  ['VK_RETURN'],
+  ['c', {total: getSuggestionNumberFor("c"), current: 0}],
+  ['o', {total: getSuggestionNumberFor("co"), current: 0}],
+  ['VK_RETURN', {current: 0, inserted: 1}],
+  ['r', {total: getSuggestionNumberFor("color", "r"), current: 0}],
+  ['VK_RETURN', {current: 0, inserted: 1}],
+  [';'],
+  ['VK_LEFT'],
+  ['VK_RIGHT'],
+  ['VK_DOWN'],
+  ['VK_RETURN'],
+  ['b', {total: 2, current: 0}],
+  ['u', {total: 1, current: 0}],
+  ['VK_RETURN', {current: 0, inserted: 1}],
+  ['{'],
+  ['VK_HOME'],
+  ['VK_DOWN'],
+  ['VK_DOWN'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['VK_RIGHT'],
+  ['Ctrl+Space', {total: 1, current: 0}],
 ];
 
 let gEditor;
@@ -100,60 +111,64 @@ function testState() {
     return;
   }
 
-  let [key] = TEST_CASES[index];
+  let [key, details] = TEST_CASES[index];
+  let entered;
+  if (details) {
+    entered = details.entered;
+  }
   let mods = {};
 
-  if (key == -1) {
-    info("pressing Ctrl + Space to get result: [" + TEST_CASES[index] +
-         "] for index " + index);
-    gEditor.once("after-suggest", checkState);
+  info("pressing key " + key + " to get result: " +
+                JSON.stringify(TEST_CASES[index]) + " for index " + index);
+
+  let evt = "after-suggest";
+
+  if (key == 'Ctrl+Space') {
     key = " ";
     mods.accelKey = true;
   }
+  else if (key == "VK_RETURN" && entered) {
+    evt = "popup-hidden";
+  }
   else if (/(left|right|return|home|end)/ig.test(key) ||
            (key == "VK_DOWN" && !gPopup.isOpen)) {
-    info("pressing key " + key + " to get result: [" + TEST_CASES[index] +
-         "] for index " + index);
-    gEditor.once("cursorActivity", checkState);
+    evt = "cursorActivity";
   }
   else if (key == "VK_TAB" || key == "VK_UP" || key == "VK_DOWN") {
-    info("pressing key " + key + " to get result: [" + TEST_CASES[index] +
-         "] for index " + index);
-    gEditor.once("suggestion-entered", checkState);
+    evt = "suggestion-entered";
   }
-  else {
-    info("pressing key " + key + " to get result: [" + TEST_CASES[index] +
-         "] for index " + index);
-    gEditor.once("after-suggest", checkState);
-  }
+
+  gEditor.once(evt, checkState);
   EventUtils.synthesizeKey(key, mods, gPanelWindow);
 }
 
 function checkState() {
   executeSoon(() => {
-    info("After keypress for index " + index);
-    let [key, total, current, inserted] = TEST_CASES[index];
-    if (total != -1) {
+    let [key, details] = TEST_CASES[index];
+    details = details || {};
+    let {total, current, inserted} = details;
+
+    if (total != undefined) {
       ok(gPopup.isOpen, "Popup is open for index " + index);
       is(total, gPopup.itemCount,
          "Correct total suggestions for index " + index);
       is(current, gPopup.selectedIndex,
          "Correct index is selected for index " + index);
       if (inserted) {
-        let { preLabel, label } = gPopup.getItemAtIndex(current);
+        let { preLabel, label, text } = gPopup.getItemAtIndex(current);
         let { line, ch } = gEditor.getCursor();
         let lineText = gEditor.getText(line);
-        is(lineText.substring(ch - label.length, ch), label,
+        is(lineText.substring(ch - text.length, ch), text,
            "Current suggestion from the popup is inserted into the editor.");
       }
     }
     else {
       ok(!gPopup.isOpen, "Popup is closed for index " + index);
       if (inserted) {
-        let { preLabel, label } = gPopup.getItemAtIndex(current);
+        let { preLabel, label, text } = gPopup.getItemAtIndex(current);
         let { line, ch } = gEditor.getCursor();
         let lineText = gEditor.getText(line);
-        is(lineText.substring(ch - label.length, ch), label,
+        is(lineText.substring(ch - text.length, ch), text,
            "Current suggestion from the popup is inserted into the editor.");
       }
     }
