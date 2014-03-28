@@ -615,7 +615,7 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
     } else {
         mList->numHwLayers = 2;
         mList->hwLayers[0].hints = 0;
-        mList->hwLayers[0].compositionType = HWC_BACKGROUND;
+        mList->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
         mList->hwLayers[0].flags = HWC_SKIP_LAYER;
         mList->hwLayers[0].backgroundColor = {0};
         mList->hwLayers[0].acquireFenceFd = -1;
