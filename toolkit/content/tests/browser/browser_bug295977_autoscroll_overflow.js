@@ -75,10 +75,7 @@ function test()
       ok((scrollHori && elem.scrollLeft > 0) ||
          (!scrollHori && elem.scrollLeft == 0),
          test.elem+' should'+(scrollHori ? '' : ' not')+' have scrolled horizontally');
-
-      // Before continuing the test, we need to ensure that the IPC
-      // message that stops autoscrolling has had time to arrive.
-      executeSoon(nextTest);
+      nextTest();
     };
     EventUtils.synthesizeMouse(elem, 50, 50, { button: 1 },
                                gBrowser.contentWindow);
