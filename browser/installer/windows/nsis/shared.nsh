@@ -640,10 +640,19 @@ FunctionEnd
     ${WriteRegStr2} $1 "$0" "DisplayIcon" "$8\${FileMainEXE},0" 0
     ${WriteRegStr2} $1 "$0" "DisplayName" "${BrandFullNameInternal} ${AppVersion}$3 (${ARCH} ${AB_CD})" 0
     ${WriteRegStr2} $1 "$0" "DisplayVersion" "${AppVersion}" 0
+    ${WriteRegStr2} $1 "$0" "HelpLink" "${HelpLink}" 0
     ${WriteRegStr2} $1 "$0" "InstallLocation" "$8" 0
     ${WriteRegStr2} $1 "$0" "Publisher" "Mozilla" 0
     ${WriteRegStr2} $1 "$0" "UninstallString" "$\"$8\uninstall\helper.exe$\"" 0
+    DeleteRegValue SHCTX "$0" "URLInfoAbout"
+; Don't add URLInfoAbout which is the release notes url except for the release
+; and esr channels since nightly, aurora, and beta do not have release notes.
+; Note: URLInfoAbout is only defined in the official branding.nsi.
+!ifdef URLInfoAbout
+!ifndef BETA_UPDATE_CHANNEL
     ${WriteRegStr2} $1 "$0" "URLInfoAbout" "${URLInfoAbout}" 0
+!endif
+!endif
     ${WriteRegStr2} $1 "$0" "URLUpdateInfo" "${URLUpdateInfo}" 0
     ${WriteRegDWORD2} $1 "$0" "NoModify" 1 0
     ${WriteRegDWORD2} $1 "$0" "NoRepair" 1 0
