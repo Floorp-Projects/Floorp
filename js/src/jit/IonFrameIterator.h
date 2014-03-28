@@ -26,45 +26,40 @@ namespace jit {
 enum FrameType
 {
     // A JS frame is analagous to a js::InterpreterFrame, representing one scripted
-    // functon activation. OptimizedJS frames are used by the optimizing compiler.
-    IonFrame_OptimizedJS,
+    // functon activation. IonJS frames are used by the optimizing compiler.
+    JitFrame_IonJS,
 
     // JS frame used by the baseline JIT.
-    IonFrame_BaselineJS,
+    JitFrame_BaselineJS,
 
     // Frame pushed for baseline JIT stubs that make non-tail calls, so that the
     // return address -> ICEntry mapping works.
-    IonFrame_BaselineStub,
+    JitFrame_BaselineStub,
 
     // The entry frame is the initial prologue block transitioning from the VM
     // into the Ion world.
-    IonFrame_Entry,
+    JitFrame_Entry,
 
     // A rectifier frame sits in between two JS frames, adapting argc != nargs
     // mismatches in calls.
-    IonFrame_Rectifier,
+    JitFrame_Rectifier,
 
     // An unwound JS frame is a JS frame signalling that its callee frame has been
     // turned into an exit frame (see EnsureExitFrame). Used by Ion bailouts and
     // Baseline exception unwinding.
-    IonFrame_Unwound_OptimizedJS,
+    JitFrame_Unwound_IonJS,
 
-    // Like Unwound_OptimizedJS, but the caller is a baseline stub frame.
-    IonFrame_Unwound_BaselineStub,
+    // Like Unwound_IonJS, but the caller is a baseline stub frame.
+    JitFrame_Unwound_BaselineStub,
 
     // An unwound rectifier frame is a rectifier frame signalling that its callee
     // frame has been turned into an exit frame (see EnsureExitFrame).
-    IonFrame_Unwound_Rectifier,
+    JitFrame_Unwound_Rectifier,
 
     // An exit frame is necessary for transitioning from a JS frame into C++.
     // From within C++, an exit frame is always the last frame in any
     // JitActivation.
-    IonFrame_Exit,
-
-    // An OSR frame is added when performing OSR from within a bailout. It
-    // looks like a JS frame, but does not push scripted arguments, as OSR
-    // reads arguments from a BaselineFrame.
-    IonFrame_Osr
+    JitFrame_Exit
 };
 
 enum ReadFrameArgsBehavior {
@@ -104,7 +99,7 @@ class IonFrameIterator
   public:
     explicit IonFrameIterator(uint8_t *top, ExecutionMode mode)
       : current_(top),
-        type_(IonFrame_Exit),
+        type_(JitFrame_Exit),
         returnAddressToFp_(nullptr),
         frameSize_(0),
         cachedSafepointIndex_(nullptr),
@@ -146,16 +141,16 @@ class IonFrameIterator
     bool checkInvalidation() const;
 
     bool isScripted() const {
-        return type_ == IonFrame_BaselineJS || type_ == IonFrame_OptimizedJS;
+        return type_ == JitFrame_BaselineJS || type_ == JitFrame_IonJS;
     }
     bool isBaselineJS() const {
-        return type_ == IonFrame_BaselineJS;
+        return type_ == JitFrame_BaselineJS;
     }
-    bool isOptimizedJS() const {
-        return type_ == IonFrame_OptimizedJS;
+    bool isIonJS() const {
+        return type_ == JitFrame_IonJS;
     }
     bool isBaselineStub() const {
-        return type_ == IonFrame_BaselineStub;
+        return type_ == JitFrame_BaselineStub;
     }
     bool isNative() const;
     bool isOOLNative() const;
@@ -163,7 +158,7 @@ class IonFrameIterator
     bool isOOLProxy() const;
     bool isDOMExit() const;
     bool isEntry() const {
-        return type_ == IonFrame_Entry;
+        return type_ == JitFrame_Entry;
     }
     bool isFunctionFrame() const;
 
@@ -191,14 +186,14 @@ class IonFrameIterator
     // Returns the stack space used by the current frame, in bytes. This does
     // not include the size of its fixed header.
     size_t frameSize() const {
-        JS_ASSERT(type_ != IonFrame_Exit);
+        JS_ASSERT(type_ != JitFrame_Exit);
         return frameSize_;
     }
 
-    // Functions used to iterate on frames. When prevType is IonFrame_Entry,
+    // Functions used to iterate on frames. When prevType is JitFrame_Entry,
     // the current frame is the last frame.
     inline bool done() const {
-        return type_ == IonFrame_Entry;
+        return type_ == JitFrame_Entry;
     }
     IonFrameIterator &operator++();
 

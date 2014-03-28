@@ -659,7 +659,7 @@ FrameIter::Data::Data(const FrameIter::Data &other)
 FrameIter::FrameIter(JSContext *cx, SavedOption savedOption)
   : data_(cx, savedOption, CURRENT_CONTEXT, nullptr)
 #ifdef JS_ION
-    , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
+  , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
 #endif
 {
     settleOnActivation();
@@ -669,7 +669,7 @@ FrameIter::FrameIter(JSContext *cx, ContextOption contextOption,
                      SavedOption savedOption, JSPrincipals *principals)
   : data_(cx, savedOption, contextOption, principals)
 #ifdef JS_ION
-    , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
+  , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
 #endif
 {
     settleOnActivation();
@@ -678,8 +678,8 @@ FrameIter::FrameIter(JSContext *cx, ContextOption contextOption,
 FrameIter::FrameIter(const FrameIter &other)
   : data_(other.data_)
 #ifdef JS_ION
-    , ionInlineFrames_(other.data_.cx_,
-                       data_.ionFrames_.isScripted() ? &other.ionInlineFrames_ : nullptr)
+  , ionInlineFrames_(other.data_.cx_,
+                     data_.ionFrames_.isScripted() ? &other.ionInlineFrames_ : nullptr)
 #endif
 {
 }
@@ -687,7 +687,7 @@ FrameIter::FrameIter(const FrameIter &other)
 FrameIter::FrameIter(const Data &data)
   : data_(data)
 #ifdef JS_ION
-    , ionInlineFrames_(data.cx_, data_.ionFrames_.isOptimizedJS() ? &data_.ionFrames_ : nullptr)
+  , ionInlineFrames_(data.cx_, data_.ionFrames_.isIonJS() ? &data_.ionFrames_ : nullptr)
 #endif
 {
     JS_ASSERT(data.cx_);
@@ -697,7 +697,7 @@ FrameIter::FrameIter(const Data &data)
 void
 FrameIter::nextJitFrame()
 {
-    if (data_.ionFrames_.isOptimizedJS()) {
+    if (data_.ionFrames_.isIonJS()) {
         ionInlineFrames_.resetOn(&data_.ionFrames_);
         data_.pc_ = ionInlineFrames_.pc();
     } else {
@@ -711,7 +711,7 @@ FrameIter::popJitFrame()
 {
     JS_ASSERT(data_.state_ == JIT);
 
-    if (data_.ionFrames_.isOptimizedJS() && ionInlineFrames_.more()) {
+    if (data_.ionFrames_.isIonJS() && ionInlineFrames_.more()) {
         ++ionInlineFrames_;
         data_.pc_ = ionInlineFrames_.pc();
         return;
@@ -795,7 +795,7 @@ FrameIter::copyData() const
      * not copied.
      */
     JS_ASSERT(data_.state_ != ASMJS);
-    JS_ASSERT(data_.ionFrames_.type() != jit::IonFrame_OptimizedJS);
+    JS_ASSERT(data_.ionFrames_.type() != jit::JitFrame_IonJS);
 #endif
     return data_.cx_->new_<Data>(data_);
 }
@@ -1044,7 +1044,7 @@ FrameIter::isConstructing() const
         break;
       case JIT:
 #ifdef JS_ION
-        if (data_.ionFrames_.isOptimizedJS())
+        if (data_.ionFrames_.isIonJS())
             return ionInlineFrames_.isConstructing();
         JS_ASSERT(data_.ionFrames_.isBaselineJS());
         return data_.ionFrames_.isConstructing();
@@ -1140,7 +1140,7 @@ FrameIter::callee() const
 #ifdef JS_ION
         if (data_.ionFrames_.isBaselineJS())
             return data_.ionFrames_.callee();
-        JS_ASSERT(data_.ionFrames_.isOptimizedJS());
+        JS_ASSERT(data_.ionFrames_.isIonJS());
         return ionInlineFrames_.callee();
 #else
         break;
@@ -1181,7 +1181,7 @@ FrameIter::numActualArgs() const
         return interpFrame()->numActualArgs();
       case JIT:
 #ifdef JS_ION
-        if (data_.ionFrames_.isOptimizedJS())
+        if (data_.ionFrames_.isIonJS())
             return ionInlineFrames_.numActualArgs();
 
         JS_ASSERT(data_.ionFrames_.isBaselineJS());
@@ -1228,7 +1228,7 @@ FrameIter::scopeChain() const
         break;
       case JIT:
 #ifdef JS_ION
-        if (data_.ionFrames_.isOptimizedJS())
+        if (data_.ionFrames_.isIonJS())
             return ionInlineFrames_.scopeChain();
         return data_.ionFrames_.baselineFrame()->scopeChain();
 #else
@@ -1313,7 +1313,7 @@ FrameIter::thisv() const
         break;
       case JIT:
 #ifdef JS_ION
-        if (data_.ionFrames_.isOptimizedJS())
+        if (data_.ionFrames_.isIonJS())
             return ObjectValue(*ionInlineFrames_.thisObject());
         return data_.ionFrames_.baselineFrame()->thisValue();
 #else
@@ -1375,7 +1375,7 @@ FrameIter::numFrameSlots() const
         break;
       case JIT: {
 #ifdef JS_ION
-        if (data_.ionFrames_.isOptimizedJS()) {
+        if (data_.ionFrames_.isIonJS()) {
             return ionInlineFrames_.snapshotIterator().allocations() -
                 ionInlineFrames_.script()->nfixed();
         }
@@ -1401,7 +1401,7 @@ FrameIter::frameSlotValue(size_t index) const
         break;
       case JIT:
 #ifdef JS_ION
-        if (data_.ionFrames_.isOptimizedJS()) {
+        if (data_.ionFrames_.isIonJS()) {
             jit::SnapshotIterator si(ionInlineFrames_.snapshotIterator());
             index += ionInlineFrames_.script()->nfixed();
             return si.maybeReadAllocByIndex(index);

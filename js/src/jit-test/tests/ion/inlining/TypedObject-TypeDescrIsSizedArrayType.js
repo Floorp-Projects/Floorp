@@ -32,7 +32,7 @@ function check(v) {
 
 function test() {
     var w = AT.build(100, x => x);
-    for ( var i=0 ; i < 777 ; i++ )
+    for ( var i=0 ; i < 77 ; i++ )
 	w = check(w);
     return w;
 }
