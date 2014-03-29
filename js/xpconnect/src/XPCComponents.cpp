@@ -2756,7 +2756,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
 {
     RootedObject global(cx, CurrentGlobalOrNull(cx));
     MOZ_ASSERT(global);
-    GlobalProperties options;
+    GlobalProperties options(false);
     NS_ENSURE_TRUE(aPropertyList.isObject(), NS_ERROR_INVALID_ARG);
     RootedObject propertyList(cx, &aPropertyList.toObject());
     NS_ENSURE_TRUE(JS_IsArrayObject(cx, propertyList), NS_ERROR_INVALID_ARG);

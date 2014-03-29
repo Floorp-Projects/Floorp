@@ -12,6 +12,10 @@
 #include "mozilla/BlockingResourceBase.h"
 #include "mozilla/Mutex.h"
 
+#ifdef MOZILLA_INTERNAL_API
+#include "GeckoProfiler.h"
+#endif //MOZILLA_INTERNAL_API
+
 namespace mozilla {
 
 
@@ -66,6 +70,10 @@ public:
      **/      
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
     {
+
+#ifdef MOZILLA_INTERNAL_API
+        GeckoProfilerSleepRAII profiler_sleep;
+#endif //MOZILLA_INTERNAL_API
         // NSPR checks for lock ownership
         return PR_WaitCondVar(mCvar, interval) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;

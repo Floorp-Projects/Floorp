@@ -3,54 +3,90 @@
      Any copyright is dedicated to the Public Domain.
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
-<!-- Testcase for behavior of the 'baseline' value for align-items (and
-     align-self, implicitly), in a wrap-reverse multi-line flex container.
-     This test baseline-aligns variously-sized flex items, and the container's
-     vertical size depends on the aggregate post-alignment height of its items.
+<!-- Testcase for how a baseline-aligned flex item's position is impacted by
+     cross-axis margins, in a fixed-size flex container with the cross axis
+     reversed via "flex-wrap: wrap-reverse".
   -->
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>CSS Test: Baseline alignment of block flex items with 'baseline' value for 'align-items' / 'align-self' in a multi-line flex container</title>
+    <title>CSS Test: Baseline alignment of flex items in fixed-size single-line flex container, with cross axis reversed</title>
     <link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com"/>
     <link rel="help" href="http://www.w3.org/TR/css3-flexbox/#baseline-participation"/>
     <link rel="match" href="flexbox-align-self-baseline-horiz-3-ref.xhtml"/>
     <style>
       .flexbox {
         display: flex;
-        flex-wrap: wrap-reverse;
         align-items: baseline;
-        width: 90px;
+        flex-wrap: wrap-reverse; /* Just to flip cross-axis */
+        width: 40px;
+        height: 40px;
+        border: 1px solid gray;
+        margin: 5px; /* just for visual separation */
+        float: left;
       }
 
       .flexbox > * {
-        width: 28px; /* 3 items per Flex Line */
         background: yellow;
         border: 1px solid black;
+        height: 20px;
+        flex: 1;
       }
-
-      .big    { font: 24px sans-serif; }
-      .medium { font: 14px sans-serif; }
-      .small  { font: 8px sans-serif;  }
-
    </style>
   </head>
   <body>
+    <!-- ZEROTH ROW: NO MARGINS -->
+    <!-- No margins on flex item: -->
     <div class="flexbox">
-      <!-- First flex line: Just 3 different sizes of text -->
-      <div class="big">a</div>
-      <div class="small">b</div>
-      <div class="medium">c</div>
-
-      <!-- Second flex line: different margin/padding amounts on each item,
-           and one non-baseline-aligned item.-->
-      <div class="medium" style="padding-top: 10px">d</div>
-      <div class="medium" style="margin-bottom: 8px">e</div>
-      <div class="medium" style="align-self: stretch">f</div>
-
-      <!-- Third flex line: other margin/padding amounts on each item -->
-      <div class="small" style="margin-top: 20px">g</div>
-      <div class="big">h</div>
-      <div class="medium" style="padding-bottom: 6px">i</div>
+      <div>a</div>
     </div>
+
+
+    <!-- FIRST ROW: SETTING MARGIN-TOP: -->
+    <br style="clear: both"/>
+
+    <!-- auto: -->
+    <div class="flexbox">
+      <div style="margin-top: auto">a</div>
+    </div>
+
+    <!-- Negative: -->
+    <div class="flexbox">
+      <div style="margin-top: -4px">a</div>
+    </div>
+
+    <!-- Small: -->
+    <div class="flexbox">
+      <div style="margin-top: 4px">a</div>
+    </div>
+
+    <!-- Large (pushing us out of container): -->
+    <div class="flexbox">
+      <div style="margin-top: 25px">a</div>
+    </div>
+
+
+    <!-- SECOND ROW: SETTING MARGIN-BOTTOM: -->
+    <br style="clear: both"/>
+
+    <!-- auto: -->
+    <div class="flexbox">
+      <div style="margin-bottom: auto">a</div>
+    </div>
+
+    <!-- Negative: -->
+    <div class="flexbox">
+      <div style="margin-bottom: -4px">a</div>
+    </div>
+
+    <!-- Small: -->
+    <div class="flexbox">
+      <div style="margin-bottom: 4px">a</div>
+    </div>
+
+    <!-- Large: -->
+    <div class="flexbox">
+      <div style="margin-bottom: 25px">a</div>
+    </div>
+
   </body>
 </html>

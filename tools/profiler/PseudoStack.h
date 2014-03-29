@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include "js/ProfilingStack.h"
 #include <stdlib.h>
-#include <algorithm>
+#include "mozilla/Atomics.h"
 
 /* we duplicate this code here to avoid header dependencies
  * which make it more difficult to include in other places */
@@ -68,6 +68,12 @@ LinuxKernelMemoryBarrierFunc pLinuxKernelMemoryBarrier __attribute__((weak)) =
 #else
 # error "Memory clobber not supported for your platform."
 #endif
+
+// We can't include <algorithm> because it causes issues on OS X, so we use
+// our own min function.
+static inline uint32_t sMin(uint32_t l, uint32_t r) {
+  return l < r ? l : r;
+}
 
 // A stack entry exists to allow the JS engine to inform SPS of the current
 // backtrace, but also to instrument particular points in C++ in case stack
@@ -302,6 +308,9 @@ struct PseudoStack
 public:
   PseudoStack()
     : mStackPointer(0)
+    , mSleepId(0)
+    , mSleepIdObserved(0)
+    , mSleeping(false)
     , mRuntime(nullptr)
     , mStartJSSampling(false)
     , mPrivacyMode(false)
@@ -315,6 +324,13 @@ public:
       // get a use-after-free so better to crash now.
       abort();
     }
+  }
+
+  // This is called on every profiler restart. Put things that should happen at that time here.
+  void reinitializeOnResume() {
+    // This is needed to cause an initial sample to be taken from sleeping threads. Otherwise sleeping
+    // threads would not have any samples to copy forward while sleeping.
+    mSleepId++;
   }
 
   void addLinkedUWTBuffer(LinkedUWTBuffer* aBuff)
@@ -379,7 +395,7 @@ public:
   }
   uint32_t stackSize() const
   {
-    return std::min<uint32_t>(mStackPointer, mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
+    return sMin(mStackPointer, mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
   }
 
   void sampleRuntime(JSRuntime *runtime) {
@@ -428,12 +444,44 @@ public:
   // This may exceed the length of mStack, so instead use the stackSize() method
   // to determine the number of valid samples in mStack
   mozilla::sig_safe_t mStackPointer;
+  // Incremented at every sleep/wake up of the thread
+  int mSleepId;
+  // Previous id observed. If this is not the same as mSleepId, this thread is not sleeping in the same place any more
+  mozilla::Atomic<int> mSleepIdObserved;
+  // Keeps tack of whether the thread is sleeping or not (1 when sleeping 0 when awake)
+  mozilla::Atomic<int> mSleeping;
  public:
   // The runtime which is being sampled
   JSRuntime *mRuntime;
   // Start JS Profiling when possible
   bool mStartJSSampling;
   bool mPrivacyMode;
+
+  enum SleepState {NOT_SLEEPING, SLEEPING_FIRST, SLEEPING_AGAIN};
+
+  // The first time this is called per sleep cycle we return SLEEPING_FIRST
+  // and any other subsequent call within the same sleep cycle we return SLEEPING_AGAIN
+  SleepState observeSleeping() {
+    if (mSleeping != 0) {
+      if (mSleepIdObserved == mSleepId) {
+        return SLEEPING_AGAIN;
+      } else {
+        mSleepIdObserved = mSleepId;
+        return SLEEPING_FIRST;
+      }
+    } else {
+      return NOT_SLEEPING;
+    }
+  }
+
+
+  // Call this whenever the current thread sleeps or wakes up
+  // Calling setSleeping with the same value twice in a row is an error
+  void setSleeping(int sleeping) {
+    MOZ_ASSERT(mSleeping != sleeping);
+    mSleepId++;
+    mSleeping = sleeping;
+  }
 };
 
 #endif

@@ -583,7 +583,7 @@ Notification::ShowInternal()
         ops.mLang = mLang;
         ops.mTag = mTag;
 
-        if (!ops.ToObject(cx, JS::NullPtr(), &val)) {
+        if (!ops.ToObject(cx, &val)) {
           NS_WARNING("Converting dict to object failed!");
           return;
         }

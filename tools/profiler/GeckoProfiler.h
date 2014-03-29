@@ -171,6 +171,12 @@ static inline void profiler_unlock() {}
 static inline void profiler_register_thread(const char* name, void* stackTop) {}
 static inline void profiler_unregister_thread() {}
 
+// These functions tell the profiler that a thread went to sleep so that we can avoid
+// sampling it while it's sleeping. Calling profiler_sleep_start() twice without
+// profiler_sleep_end() is an error.
+static inline void profiler_sleep_start() {}
+static inline void profiler_sleep_end() {}
+
 // Call by the JSRuntime's operation callback. This is used to enable
 // profiling on auxilerary threads.
 static inline void profiler_js_operation_callback() {}
@@ -193,6 +199,16 @@ public:
   }
   ~GeckoProfilerInitRAII() {
     profiler_shutdown();
+  }
+};
+
+class GeckoProfilerSleepRAII {
+public:
+  GeckoProfilerSleepRAII() {
+    profiler_sleep_start();
+  }
+  ~GeckoProfilerSleepRAII() {
+    profiler_sleep_end();
   }
 };
 
