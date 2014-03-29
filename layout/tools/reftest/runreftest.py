@@ -163,6 +163,9 @@ class RefTest(object):
       prefs['reftest.filter'] = options.filter
     prefs['reftest.focusFilterMode'] = options.focusFilterMode
 
+    if options.e10s:
+      prefs['browser.tabs.remote.autostart'] = True
+
     for v in options.extraPrefs:
       thispref = v.split('=')
       if len(thispref) < 2:
@@ -444,6 +447,12 @@ class ReftestOptions(OptionParser):
                            "Valid values are `all', `needs-focus', or `non-needs-focus'. "
                            "Defaults to `all'.")
     defaults["focusFilterMode"] = "all"
+
+    self.add_option("--e10s",
+                    action = "store_true",
+                    dest = "e10s",
+                    help = "enables content processes")
+    defaults["e10s"] = False
 
     self.set_defaults(**defaults)
 

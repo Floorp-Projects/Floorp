@@ -563,6 +563,9 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   nsIntRegion invalidRegionSafe;
   invalidRegionSafe.And(aInvalidRegion, intRect);
 
+  // FIXME: Redraw the whole screen in every frame to work around bug 972728.
+  invalidRegionSafe = intRect;
+
   nsIntRect invalidRect = invalidRegionSafe.GetBounds();
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
   mInvalidRegion = invalidRegionSafe;

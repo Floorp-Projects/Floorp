@@ -169,6 +169,7 @@ static struct sock_filter seccomp_filter[] = {
   ALLOW_SYSCALL(sched_yield),
   ALLOW_SYSCALL(sched_getscheduler),
   ALLOW_SYSCALL(sched_setscheduler),
+  ALLOW_SYSCALL(sigaltstack),
 #endif
 
   /* Always last and always OK calls */

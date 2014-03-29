@@ -71,3 +71,15 @@
    fun:gdk_display_open
    ...
 }
+
+###################################
+#  Leaks in short lived precesses #
+###################################
+
+{
+   Bug 984196
+   Memcheck:Leak
+   ...
+   fun:glxtest
+   ...
+}
