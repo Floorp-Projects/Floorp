@@ -61,43 +61,4 @@ enum {
 #define DOM_CAMERA_LOGW( ... )      DOM_CAMERA_LOG( DOM_CAMERA_LOG_WARNING, __VA_ARGS__ )
 #define DOM_CAMERA_LOGE( ... )      DOM_CAMERA_LOG( DOM_CAMERA_LOG_ERROR, __VA_ARGS__ )
 
-#ifdef PR_LOGGING
-
-static inline void nsLogAddRefCamera(const char *file, uint32_t line, void* p, uint32_t count, const char *clazz, uint32_t size)
-{
-  if (count == 1) {
-    DOM_CAMERA_LOGR("++++++++++++++++++++++++++++++++++++++++");
-  }
-  DOM_CAMERA_LOGR("%s:%d : CAMREF-ADD(%s): this=%p, mRefCnt=%d\n", file, line, clazz, p, count);
-}
-
-static inline void nsLogReleaseCamera(const char *file, uint32_t line, void* p, uint32_t count, const char *clazz, bool abortOnDelete)
-{
-  DOM_CAMERA_LOGR("%s:%d : CAMREF-REL(%s): this=%p, mRefCnt=%d\n", file, line, clazz, p, count);
-  if (count == 0) {
-    if (!abortOnDelete) {
-      DOM_CAMERA_LOGR("----------------------------------------");
-    } else {
-      DOM_CAMERA_LOGR("---------- ABORTING ON DELETE ----------");
-      *((uint32_t *)0xdeadbeef) = 0x266230;
-    }
-  }
-}
-
-#ifdef NS_LOG_ADDREF
-#undef NS_LOG_ADDREF
-#endif
-#ifdef NS_LOG_RELEASE
-#undef NS_LOG_RELEASE
-#endif
-
-#define NS_LOG_ADDREF( p, n, c, s ) nsLogAddRefCamera(__FILE__, __LINE__, (p), (n), (c), (s))
-#ifdef DOM_CAMERA_DEBUG_REFS_ABORT_ON_DELETE
-#define NS_LOG_RELEASE( p, n, c )   nsLogReleaseCamera(__FILE__, __LINE__, (p), (n), (c), DOM_CAMERA_DEBUG_REFS_ABORT_ON_DELETE)
-#else
-#define NS_LOG_RELEASE( p, n, c )   nsLogReleaseCamera(__FILE__, __LINE__, (p), (n), (c), false)
-#endif
-
-#endif // PR_LOGGING
-
 #endif // DOM_CAMERA_CAMERACOMMON_H
