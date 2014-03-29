@@ -4,9 +4,9 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
-const Services = require("Services");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
+const { ContentObserver } = require("devtools/content-observer");
 
 const { on, once, off, emit } = events;
 const { method, Arg, Option, RetVal } = protocol;
@@ -293,7 +293,7 @@ let WebGLActor = exports.WebGLActor = protocol.ActorClass({
    * This is useful for dealing with bfcache, when no new programs are linked.
    */
   getPrograms: method(function() {
-    let id = getInnerWindowID(this.tabActor.window);
+    let id = ContentObserver.GetInnerWindowID(this.tabActor.window);
     return this._programActorsCache.filter(e => e.ownerWindow == id);
   }, {
     response: { programs: RetVal("array:gl-program") }
@@ -347,58 +347,6 @@ let WebGLFront = exports.WebGLFront = protocol.FrontClass(WebGLActor, {
 });
 
 /**
- * Handles adding an observer for the creation of content document globals,
- * event sent immediately after a web content document window has been set up,
- * but before any script code has been executed. This will allow us to
- * instrument the HTMLCanvasElement with the appropriate inspection methods.
- */
-function ContentObserver(tabActor) {
-  this._contentWindow = tabActor.window;
-  this._onContentGlobalCreated = this._onContentGlobalCreated.bind(this);
-  this._onInnerWindowDestroyed = this._onInnerWindowDestroyed.bind(this);
-  this.startListening();
-}
-
-ContentObserver.prototype = {
-  /**
-   * Starts listening for the required observer messages.
-   */
-  startListening: function() {
-    Services.obs.addObserver(
-      this._onContentGlobalCreated, "content-document-global-created", false);
-    Services.obs.addObserver(
-      this._onInnerWindowDestroyed, "inner-window-destroyed", false);
-  },
-
-  /**
-   * Stops listening for the required observer messages.
-   */
-  stopListening: function() {
-    Services.obs.removeObserver(
-      this._onContentGlobalCreated, "content-document-global-created", false);
-    Services.obs.removeObserver(
-      this._onInnerWindowDestroyed, "inner-window-destroyed", false);
-  },
-
-  /**
-   * Fired immediately after a web content document window has been set up.
-   */
-  _onContentGlobalCreated: function(subject, topic, data) {
-    if (subject == this._contentWindow) {
-      emit(this, "global-created", subject);
-    }
-  },
-
-  /**
-   * Fired when an inner window is removed from the backward/forward cache.
-   */
-  _onInnerWindowDestroyed: function(subject, topic, data) {
-    let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    emit(this, "global-destroyed", id);
-  }
-};
-
-/**
  * Instruments a HTMLCanvasElement with the appropriate inspection methods.
  */
 let WebGLInstrumenter = {
@@ -413,7 +361,7 @@ let WebGLInstrumenter = {
   handle: function(window, observer) {
     let self = this;
 
-    let id = getInnerWindowID(window);
+    let id = ContentObserver.GetInnerWindowID(window);
     let canvasElem = XPCNativeWrapper.unwrap(window.HTMLCanvasElement);
     let canvasPrototype = canvasElem.prototype;
     let originalGetContext = canvasPrototype.getContext;
@@ -1353,13 +1301,6 @@ WebGLProxy.prototype = {
 };
 
 // Utility functions.
-
-function getInnerWindowID(window) {
-  return window
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindowUtils)
-    .currentInnerWindowID;
-}
 
 function removeFromMap(map, predicate) {
   for (let [key, value] of map) {
