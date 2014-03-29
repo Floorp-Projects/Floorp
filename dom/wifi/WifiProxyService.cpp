@@ -94,7 +94,6 @@ public:
     COPY_FIELD(mValue)
     COPY_FIELD(mIpaddr_str)
     COPY_FIELD(mGateway_str)
-    COPY_FIELD(mBroadcast_str)
     COPY_FIELD(mDns1_str)
     COPY_FIELD(mDns2_str)
     COPY_FIELD(mMask_str)

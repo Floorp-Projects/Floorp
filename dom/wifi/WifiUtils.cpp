@@ -411,11 +411,6 @@ bool WpaSupplicant::ExecuteCommand(CommandOptions aOptions,
     if (inet_ntop(AF_INET, &aResult.mMask, inet_str, sizeof(inet_str))) {
       aResult.mMask_str = NS_ConvertUTF8toUTF16(inet_str);
     }
-
-    uint32_t broadcast = (aResult.mIpaddr & aResult.mMask) + ~aResult.mMask;
-    if (inet_ntop(AF_INET, &broadcast, inet_str, sizeof(inet_str))) {
-      aResult.mBroadcast_str = NS_ConvertUTF8toUTF16(inet_str);
-    }
   } else {
     NS_WARNING("WpaSupplicant::ExecuteCommand : Unknown command");
     printf_stderr("WpaSupplicant::ExecuteCommand : Unknown command: %s",

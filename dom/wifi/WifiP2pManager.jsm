@@ -93,7 +93,6 @@ const DEFAULT_P2P_DEVICE_TYPE = "10-0050F204-5"; // For wpa_supplicant.
 const GO_NETWORK_INTERFACE = {
   ip:         "192.168.2.1",
   maskLength: 24,
-  broadcast:  "192.168.2.255",
   gateway:    "192.168.2.1",
   dns1:       "0.0.0.0",
   dns2:       "0.0.0.0",
@@ -494,7 +493,6 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
     name: P2P_INTERFACE_NAME,
     ip: null,
     prefixLength: 0,
-    broadcast: null,
     dns1: null,
     dns2: null,
     gateway: null,
@@ -1412,7 +1410,6 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
       _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
       _p2pNetworkInterface.ip = dhcpData.info.ipaddr_str;
       _p2pNetworkInterface.prefixLength = maskLength;
-      _p2pNetworkInterface.broadcast = dhcpData.info.broadcast_str;
       _p2pNetworkInterface.dns1 = dhcpData.info.dns1_str;
       _p2pNetworkInterface.dns2 = dhcpData.info.dns2_str;
       _p2pNetworkInterface.gateway = dhcpData.info.gateway_str;
@@ -1429,7 +1426,6 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
     _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
     _p2pNetworkInterface.ip = null;
     _p2pNetworkInterface.prefixLength = 0;
-    _p2pNetworkInterface.broadcast = null;
     _p2pNetworkInterface.dns1 = null;
     _p2pNetworkInterface.dns2 = null;
     _p2pNetworkInterface.gateway = null;
