@@ -411,6 +411,7 @@ public class Server11RepositorySession extends RepositorySession {
    */
   protected volatile boolean recordUploadFailed;
 
+  @Override
   public void begin(RepositorySessionBeginDelegate delegate) throws InvalidSessionTransitionException {
     recordUploadFailed = false;
     super.begin(delegate);
@@ -607,5 +608,10 @@ public class Server11RepositorySession extends RepositorySession {
       ByteArraysEntity body = getBodyEntity();
       request.post(body);
     }
+  }
+
+  @Override
+  public boolean dataAvailable() {
+    return serverRepository.updateNeeded(getLastSyncTimestamp());
   }
 }

@@ -7,18 +7,16 @@ GECKOVIEW_LIBRARY_DEST = $(CURDIR)
 GECKOVIEW_LIBRARY_FILES := \
   .classpath \
   .project \
-  AndroidManifest.xml \
-  project.properties \
   build.xml \
   $(NULL)
 
-PP_TARGETS = properties
+PP_TARGETS = properties manifest project
 
 properties = local.properties.in
-properties_PATH = .
-properties_deps := $(patsubst %.in,%,$(properties))
+project = project.properties.in
+manifest = AndroidManifest.xml.in
 
-GARBAGE = $(GECKOVIEW_LIBRARY_FILES) $(properties_deps)
+GARBAGE = $(GECKOVIEW_LIBRARY_FILES) local.properties project.properties AndroidManifest.xml
 
 GARBAGE_DIRS = \
   bin \
@@ -33,7 +31,7 @@ include $(topsrcdir)/config/rules.mk
 
 _ABS_DIST = $(abspath $(DIST))
 
-package: $(properties_deps) FORCE
+package: local.properties project.properties AndroidManifest.xml FORCE
 	# Make directory for the zips
 	$(MKDIR) -p $(_ABS_DIST)/geckoview_library
 

@@ -31,10 +31,8 @@ public:
     mIp = aOther.mIp;
     mCmd = aOther.mCmd;
     mDomain = aOther.mDomain;
-    mDns1_str = aOther.mDns1_str;
-    mDns2_str = aOther.mDns2_str;
     mGateway = aOther.mGateway;
-    mGateway_str = aOther.mGateway_str;
+    mGateways = aOther.mGateways;
     mHostnames = aOther.mHostnames;
     mId = aOther.mId;
     mIfname = aOther.mIfname;
@@ -60,6 +58,7 @@ public:
     mUsbEndIp = aOther.mUsbEndIp;
     mDns1 = aOther.mDns1;
     mDns2 = aOther.mDns2;
+    mDnses = aOther.mDnses;
     mRxBytes = aOther.mRxBytes;
     mTxBytes = aOther.mTxBytes;
     mDate = aOther.mDate;
@@ -108,10 +107,8 @@ public:
     COPY_FIELD(mId)
     COPY_FIELD(mCmd)
     COPY_OPT_STRING_FIELD(mDomain, EmptyString())
-    COPY_OPT_STRING_FIELD(mDns1_str, EmptyString())
-    COPY_OPT_STRING_FIELD(mDns2_str, EmptyString())
     COPY_OPT_STRING_FIELD(mGateway, EmptyString())
-    COPY_OPT_STRING_FIELD(mGateway_str, EmptyString())
+    COPY_SEQUENCE_FIELD(mGateways, nsString)
     COPY_SEQUENCE_FIELD(mHostnames, nsString)
     COPY_OPT_STRING_FIELD(mIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mIp, EmptyString())
@@ -137,6 +134,7 @@ public:
     COPY_OPT_STRING_FIELD(mUsbEndIp, EmptyString())
     COPY_OPT_STRING_FIELD(mDns1, EmptyString())
     COPY_OPT_STRING_FIELD(mDns2, EmptyString())
+    COPY_SEQUENCE_FIELD(mDnses, nsString)
     COPY_OPT_FIELD(mRxBytes, -1)
     COPY_OPT_FIELD(mTxBytes, -1)
     COPY_OPT_STRING_FIELD(mDate, EmptyString())
@@ -159,10 +157,8 @@ public:
   int32_t mId;
   nsString mCmd;
   nsString mDomain;
-  nsString mDns1_str;
-  nsString mDns2_str;
   nsString mGateway;
-  nsString mGateway_str;
+  nsTArray<nsString> mGateways;
   nsTArray<nsString> mHostnames;
   nsString mIfname;
   nsString mIp;
@@ -188,6 +184,7 @@ public:
   nsString mUsbEndIp;
   nsString mDns1;
   nsString mDns2;
+  nsTArray<nsString> mDnses;
   float mRxBytes;
   float mTxBytes;
   nsString mDate;
