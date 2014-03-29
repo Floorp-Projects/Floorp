@@ -168,8 +168,15 @@ const TYPES = {
   theme: 4,
   locale: 8,
   multipackage: 32,
-  dictionary: 64
+  dictionary: 64,
+  experiment: 128,
 };
+
+const RESTARTLESS_TYPES = new Set([
+  "dictionary",
+  "experiment",
+  "locale",
+]);
 
 // Keep track of where we are in startup for telemetry
 // event happened during XPIDatabase.startup()
@@ -819,9 +826,10 @@ function loadManifestFromRDF(aUri, aStream) {
     }
   }
   else {
-    // spell check dictionaries and language packs never require a restart
-    if (addon.type == "dictionary" || addon.type == "locale")
+    // Some add-on types are always restartless.
+    if (RESTARTLESS_TYPES.has(addon.type)) {
       addon.bootstrap = true;
+    }
 
     // Only extensions are allowed to provide an optionsURL, optionsType or aboutURL. For
     // all other types they are silently ignored
@@ -7270,7 +7278,7 @@ WinRegInstallLocation.prototype = {
 };
 #endif
 
-AddonManagerPrivate.registerProvider(XPIProvider, [
+let addonTypes = [
   new AddonManagerPrivate.AddonType("extension", URI_EXTENSION_STRINGS,
                                     STRING_TYPE_NAME,
                                     AddonManager.VIEW_TYPE_LIST, 4000),
@@ -7284,5 +7292,20 @@ AddonManagerPrivate.registerProvider(XPIProvider, [
   new AddonManagerPrivate.AddonType("locale", URI_EXTENSION_STRINGS,
                                     STRING_TYPE_NAME,
                                     AddonManager.VIEW_TYPE_LIST, 8000,
-                                    AddonManager.TYPE_UI_HIDE_EMPTY)
-]);
+                                    AddonManager.TYPE_UI_HIDE_EMPTY),
+];
+
+// We only register experiments support if the application supports them.
+// Ideally, we would install an observer to watch the pref. Installing
+// an observer for this pref is not necessary here and may be buggy with
+// regards to registering this XPIProvider twice.
+if (Prefs.getBoolPref("experiments.supported", false)) {
+  addonTypes.push(
+    new AddonManagerPrivate.AddonType("experiment",
+                                      URI_EXTENSION_STRINGS,
+                                      STRING_TYPE_NAME,
+                                      AddonManager.VIEW_TYPE_LIST, 11000,
+                                      AddonManager.TYPE_UI_HIDE_EMPTY));
+}
+
+AddonManagerPrivate.registerProvider(XPIProvider, addonTypes);

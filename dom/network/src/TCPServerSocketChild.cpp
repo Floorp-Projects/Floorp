@@ -34,7 +34,7 @@ TCPServerSocketChildBase::~TCPServerSocketChildBase()
 {
 }
 
-NS_IMETHODIMP_(nsrefcnt) TCPServerSocketChild::Release(void)
+NS_IMETHODIMP_(MozExternalRefCountType) TCPServerSocketChild::Release(void)
 {
   nsrefcnt refcnt = TCPServerSocketChildBase::Release();
   if (refcnt == 1 && mIPCOpen) {

@@ -747,8 +747,7 @@ class MOZ_STACK_CLASS TokenStream
     class TokenBuf {
       public:
         TokenBuf(ExclusiveContext *cx, const jschar *buf, size_t length)
-          : base_(buf), limit_(buf + length), ptr(buf),
-            skipBase(cx, &base_), skipLimit(cx, &limit_), skipPtr(cx, &ptr)
+          : base_(buf), limit_(buf + length), ptr(buf)
         { }
 
         bool hasRawChars() const {
@@ -827,9 +826,6 @@ class MOZ_STACK_CLASS TokenStream
         const jschar *base_;            // base of buffer
         const jschar *limit_;           // limit for quick bounds check
         const jschar *ptr;              // next char to get
-
-        // We are not yet moving strings
-        SkipRoot skipBase, skipLimit, skipPtr;
     };
 
     TokenKind getTokenInternal(Modifier modifier);
@@ -898,15 +894,6 @@ class MOZ_STACK_CLASS TokenStream
     ExclusiveContext    *const cx;
     JSPrincipals        *const originPrincipals;
     StrictModeGetter    *strictModeGetter;  // used to test for strict mode
-
-    // The tokens array stores pointers to JSAtoms. These are rooted by the
-    // atoms table using AutoKeepAtoms in the Parser. This SkipRoot tells the
-    // exact rooting analysis to ignore the atoms in the tokens array.
-    SkipRoot            tokenSkip;
-
-    // Bug 846011
-    SkipRoot            linebaseSkip;
-    SkipRoot            prevLinebaseSkip;
 };
 
 // Steal one JSREPORT_* bit (see jsapi.h) to tell that arguments to the error

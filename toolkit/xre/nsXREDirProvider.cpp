@@ -164,13 +164,13 @@ NS_IMPL_QUERY_INTERFACE3(nsXREDirProvider,
                          nsIDirectoryServiceProvider2,
                          nsIProfileStartup)
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsXREDirProvider::AddRef()
 {
   return 1;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsXREDirProvider::Release()
 {
   return 0;

@@ -1011,7 +1011,7 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
       else {
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
-                  "\n<%s> 0x%08X %" PRIdPTR " AddRef %d\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+                  "\n<%s> 0x%08X %" PRIuPTR " AddRef %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
           nsTraceRefcnt::WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }
@@ -1059,7 +1059,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClazz)
       else {
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
-                  "\n<%s> 0x%08X %" PRIdPTR " Release %d\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
+                  "\n<%s> 0x%08X %" PRIuPTR " Release %" PRIuPTR "\n", aClazz, NS_PTR_TO_INT32(aPtr), serialno, aRefcnt);
           nsTraceRefcnt::WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
       }

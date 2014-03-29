@@ -686,8 +686,16 @@ class LiveRangeAllocator : protected RegisterAllocator
 
         // Don't add output registers to the safepoint.
         CodePosition start = interval->start();
-        if (interval->index() == 0 && !reg->isTemp())
+        if (interval->index() == 0 && !reg->isTemp()) {
+#ifdef CHECK_OSIPOINT_REGISTERS
+            // We don't add the output register to the safepoint,
+            // but it still might get added as one of the inputs.
+            // So eagerly add this reg to the safepoint clobbered registers.
+            if (LSafepoint *safepoint = reg->ins()->safepoint())
+                safepoint->addClobberedRegister(a->toRegister());
+#endif
             start = start.next();
+        }
 
         size_t i = findFirstNonCallSafepoint(start);
         for (; i < graph.numNonCallSafepoints(); i++) {
@@ -707,7 +715,7 @@ class LiveRangeAllocator : protected RegisterAllocator
 
 #ifdef CHECK_OSIPOINT_REGISTERS
             if (reg->isTemp())
-                safepoint->addTempRegister(a->toRegister());
+                safepoint->addClobberedRegister(a->toRegister());
 #endif
         }
     }

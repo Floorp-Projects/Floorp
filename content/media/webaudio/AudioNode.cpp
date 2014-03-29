@@ -32,7 +32,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(AudioNode, nsDOMEventTargetHelper)
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 AudioNode::Release()
 {
   if (mRefCnt.get() == 1) {

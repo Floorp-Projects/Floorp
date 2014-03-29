@@ -920,7 +920,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 #endif
 
         NativeType *dest = static_cast<NativeType*>(thisTypedArray->viewData()) + offset;
-        SkipRoot skipDest(cx, &dest);
 
         if (ar->is<ArrayObject>() && !ar->isIndexed() && ar->getDenseInitializedLength() >= len) {
             JS_ASSERT(ar->as<ArrayObject>().length() == len);
@@ -931,7 +930,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
              * to root |src| and |dest|.
              */
             const Value *src = ar->getDenseElements();
-            SkipRoot skipSrc(cx, &src);
             uint32_t i = 0;
             do {
                 NativeType n;
@@ -1594,7 +1592,6 @@ DataViewObject::write(JSContext *cx, Handle<DataViewObject*> obj,
     }
 
     uint8_t *data;
-    SkipRoot skipData(cx, &data);
     if (!getDataPointer(cx, obj, args, sizeof(NativeType), &data))
         return false;
 

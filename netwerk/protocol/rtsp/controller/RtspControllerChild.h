@@ -47,9 +47,15 @@ class RtspControllerChild : public nsIStreamingProtocolController
   void ReleaseIPDLReference();
   void AddMetaData(already_AddRefed<nsIStreamingProtocolMetaData>&& meta);
   int  GetMetaDataLength();
+  bool OKToSendIPC();
+  void AllowIPC();
+  void DisallowIPC();
 
  private:
   bool mIPCOpen;
+  // The intention of this variable is just to avoid any IPC message to be sent
+  // when this flag is set as false. Nothing more.
+  bool mIPCAllowed;
   // Dummy channel used to aid MediaResource creation in HTMLMediaElement.
   nsCOMPtr<nsIChannel> mChannel;
   // The nsIStreamingProtocolListener implementation.

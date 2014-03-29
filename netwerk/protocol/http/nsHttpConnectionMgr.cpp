@@ -346,8 +346,8 @@ public:
 
     // Added manually so we can use nsRefPtr without inheriting from
     // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef(void);
-    NS_IMETHOD_(nsrefcnt) Release(void);
+    NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
+    NS_IMETHOD_(MozExternalRefCountType) Release(void);
 
 public: // intentional!
     nsRefPtr<NullHttpTransaction> mTrans;
