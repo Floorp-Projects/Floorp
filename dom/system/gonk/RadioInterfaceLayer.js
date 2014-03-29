@@ -1557,8 +1557,6 @@ DataConnectionHandler.prototype = {
    * Handle data call list.
    */
   handleDataCallList: function(message) {
-    this._deliverDataCallCallback("receiveDataCallList",
-                                  [message.datacalls, message.datacalls.length]);
   },
 };
 
@@ -4612,9 +4610,6 @@ RILNetworkInterface.prototype = {
         (apnSettings.byType.default.apn == this.apnSetting.apn)) {
       this.dataConnectionHandler.updateRILNetworkInterface();
     }
-  },
-
-  receiveDataCallList: function(dataCalls, length) {
   },
 
   // Helpers
