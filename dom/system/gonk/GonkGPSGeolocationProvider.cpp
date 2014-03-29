@@ -791,13 +791,6 @@ GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GonkGPSGeolocationProvider::ReceiveDataCallList(nsIRILDataCallInfo** aDataCalls,
-                                                uint32_t aLength)
-{
-  return NS_OK;
-}
-
 /** nsISettingsServiceCallback **/
 
 NS_IMETHODIMP

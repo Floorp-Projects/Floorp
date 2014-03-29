@@ -38,7 +38,7 @@ interface nsIRILDataCallInfo : nsISupports
   readonly attribute jsval dns;
 };
 
-[scriptable, uuid(5bcac053-c245-46f0-bb45-d0039bfb89f5)]
+[scriptable, uuid(485d9dcb-a6b3-4870-ae44-49700bc68eef)]
 interface nsIRILDataCallback : nsISupports
 {
   /**
@@ -48,18 +48,6 @@ interface nsIRILDataCallback : nsISupports
    *        A nsIRILDataCallInfo object.
    */
   void dataCallStateChanged(in nsIRILDataCallInfo dataCall);
-
-  /**
-   * Called when nsIRadioInterfaceLayer is asked to enumerate the current
-   * data call state.
-   *
-   * @param datacalls
-   *        Array of nsIRILDataCallInfo objects.
-   * @param length
-   *        Lenght of the aforementioned array.
-   */
-  void receiveDataCallList([array,size_is(length)] in nsIRILDataCallInfo dataCalls,
-                           in unsigned long length);
 };
 
 [scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
