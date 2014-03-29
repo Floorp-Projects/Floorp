@@ -60,12 +60,6 @@ const PREF_DIRECTORY_SOURCE = "browser.newtabpage.directorySource";
 // The frecency of a directory link
 const DIRECTORY_FRECENCY = 1000;
 
-const LINK_TYPES = Object.freeze([
-  "sponsored",
-  "affiliate",
-  "organic",
-]);
-
 /**
  * Singleton that serves as the provider of directory links.
  * Directory links are a hard-coded set of links shown if a user's link
@@ -94,8 +88,6 @@ let DirectoryLinksProvider = {
     }
     return this.__linksURL;
   },
-
-  get linkTypes() LINK_TYPES,
 
   observe: function DirectoryLinksProvider_observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed") {
