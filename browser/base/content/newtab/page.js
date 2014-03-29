@@ -65,13 +65,10 @@ let gPage = {
 
   /**
    * Updates the whole page and the grid when the storage has changed.
-   * @param aOnlyIfHidden If true, the page is updated only if it's hidden in
-   *                      the preloader.
    */
-  update: function Page_update(aOnlyIfHidden=false) {
-    let skipUpdate = aOnlyIfHidden && this.allowBackgroundCaptures;
+  update: function Page_update() {
     // The grid might not be ready yet as we initialize it asynchronously.
-    if (gGrid.ready && !skipUpdate) {
+    if (gGrid.ready) {
       gGrid.refresh();
     }
   },
