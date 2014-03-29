@@ -1185,10 +1185,7 @@ private:
       if (aPlace.placeId) {
         stmt = mHistory->GetStatement(
           "UPDATE moz_places "
-          "SET frecency = NOTIFY_FRECENCY("
-            "CALCULATE_FRECENCY(:page_id), "
-            "url, guid, hidden, last_visit_date"
-          ") "
+          "SET frecency = CALCULATE_FRECENCY(:page_id) "
           "WHERE id = :page_id"
         );
         NS_ENSURE_STATE(stmt);
@@ -1198,9 +1195,7 @@ private:
       else {
         stmt = mHistory->GetStatement(
           "UPDATE moz_places "
-          "SET frecency = NOTIFY_FRECENCY("
-            "CALCULATE_FRECENCY(id), url, guid, hidden, last_visit_date"
-          ") "
+          "SET frecency = CALCULATE_FRECENCY(id) "
           "WHERE url = :page_url"
         );
         NS_ENSURE_STATE(stmt);
@@ -2042,14 +2037,13 @@ History::InsertPlace(const VisitData& aPlace)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("url"), aPlace.spec);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsString title = aPlace.title;
   // Empty strings should have no title, just like nsNavHistory::SetPageTitle.
-  if (title.IsEmpty()) {
+  if (aPlace.title.IsEmpty()) {
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("title"));
   }
   else {
-    title.Assign(StringHead(aPlace.title, TITLE_LENGTH_MAX));
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"), title);
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("title"),
+                                StringHead(aPlace.title, TITLE_LENGTH_MAX));
   }
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("typed"), aPlace.typed);
@@ -2070,13 +2064,6 @@ History::InsertPlace(const VisitData& aPlace)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Post an onFrecencyChanged observer notification.
-  const nsNavHistory* navHistory = nsNavHistory::GetConstHistoryService();
-  NS_ENSURE_STATE(navHistory);
-  navHistory->DispatchFrecencyChangedNotification(aPlace.spec, frecency, guid,
-                                                  aPlace.hidden,
-                                                  aPlace.visitTime);
 
   return NS_OK;
 }
