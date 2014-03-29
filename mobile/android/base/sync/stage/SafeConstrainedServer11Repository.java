@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.stage;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.InfoCounts;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -35,11 +36,15 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
   public SafeConstrainedServer11Repository(String collection,
                                            String storageURL,
                                            AuthHeaderProvider authHeaderProvider,
+                                           InfoCollections infoCollections,
                                            long limit,
                                            String sort,
                                            JSONRecordFetcher countFetcher)
     throws URISyntaxException {
-    super(collection, storageURL, authHeaderProvider, limit, sort);
+    super(collection, storageURL, authHeaderProvider, infoCollections, limit, sort);
+    if (countFetcher == null) {
+      throw new IllegalArgumentException("countFetcher must not be null");
+    }
     this.countFetcher = countFetcher;
   }
 
@@ -50,6 +55,8 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
   }
 
   public class CountCheckingServer11RepositorySession extends Server11RepositorySession {
+    private static final String LOG_TAG = "CountCheckingServer11RepositorySession";
+
     /**
      * The session will report no data available if this is a first sync
      * and the server has more data available than this limit.
@@ -64,7 +71,13 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
     @Override
     public boolean shouldSkip() {
       // If this is a first sync, verify that we aren't going to blow through our limit.
-      if (this.lastSyncTimestamp <= 0) {
+      final long lastSyncTimestamp = getLastSyncTimestamp();
+      if (lastSyncTimestamp > 0) {
+        Logger.info(LOG_TAG, "Collection " + collection + " has already had a first sync: " +
+            "timestamp is " + lastSyncTimestamp  + "; " +
+            "ignoring any updated counts and syncing as usual.");
+      } else {
+        Logger.info(LOG_TAG, "Collection " + collection + " is starting a first sync; checking counts.");
 
         final InfoCounts counts;
         try {
@@ -77,6 +90,7 @@ public class SafeConstrainedServer11Repository extends ConstrainedServer11Reposi
 
         Integer c = counts.getCount(collection);
         if (c == null) {
+          Logger.info(LOG_TAG, "Fetched counts does not include collection " + collection + "; syncing as usual.");
           return false;
         }
 

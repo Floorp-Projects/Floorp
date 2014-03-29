@@ -1,3 +1,4 @@
+#filter substitution
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.mozilla.gecko"
     android:versionCode="1"
@@ -7,6 +8,6 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-sdk
         android:minSdkVersion="8"
-        android:targetSdkVersion="17" />
+        android:targetSdkVersion="@ANDROID_TARGET_SDK@" />
 
 </manifest>
