@@ -16,6 +16,7 @@
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
 #include "nsStubMutationObserver.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #ifdef DEBUG
 #include "nsRange.h"
 #endif
@@ -169,7 +170,7 @@ nsTextNode::List(FILE* out, int32_t aIndent) const
     fprintf(out, " ranges:%d", ranges ? ranges->Count() : 0);
   }
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
-  fprintf(out, " refcount=%d<", mRefCnt.get());
+  fprintf(out, " refcount=%" PRIuPTR "<", mRefCnt.get());
 
   nsAutoString tmp;
   ToCString(tmp, 0, mText.GetLength());

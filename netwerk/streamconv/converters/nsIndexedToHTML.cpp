@@ -31,7 +31,7 @@ NS_IMPL_ISUPPORTS4(nsIndexedToHTML,
                    nsIRequestObserver,
                    nsIStreamListener)
 
-static void AppendNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
+static void AppendNonAsciiToNCR(const nsAString& in, nsCString& out)
 {
   nsAString::const_iterator start, end;
 
@@ -43,10 +43,8 @@ static void AppendNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
       out.Append(*start++);
     } else {
       out.AppendLiteral("&#x");
-      nsAutoString hex;
-      hex.AppendInt(*start++, 16);
-      out.Append(hex);
-      out.Append((char16_t)';');
+      out.AppendInt(*start++, 16);
+      out.Append(';');
     }
   }
 }
@@ -67,22 +65,6 @@ nsIndexedToHTML::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
 
 nsresult
 nsIndexedToHTML::Init(nsIStreamListener* aListener) {
-
-    nsXPIDLString ellipsis;
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefs) {
-      nsCOMPtr<nsIPrefLocalizedString> prefVal;
-      prefs->GetComplexValue("intl.ellipsis",
-                           NS_GET_IID(nsIPrefLocalizedString),
-                           getter_AddRefs(prefVal));
-      if (prefVal)
-        prefVal->ToString(getter_Copies(ellipsis));
-    }
-    if (ellipsis.IsEmpty())
-      mEscapedEllipsis.AppendLiteral("&#8230;");
-    else
-      mEscapedEllipsis.Adopt(nsEscapeHTML2(ellipsis.get(), ellipsis.Length()));
-
     nsresult rv = NS_OK;
 
     mListener = aListener;
@@ -120,7 +102,7 @@ nsIndexedToHTML::AsyncConvertData(const char *aFromType,
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
-    nsString buffer;
+    nsCString buffer;
     nsresult rv = DoOnStartRequest(request, aContext, buffer);
     if (NS_FAILED(rv)) {
         request->Cancel(rv);
@@ -136,13 +118,13 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     // Push our buffer to the listener.
 
-    rv = FormatInputStream(request, aContext, buffer);
+    rv = SendToListener(request, aContext, buffer);
     return rv;
 }
 
 nsresult
 nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
-                                  nsString& aBuffer) {
+                                  nsCString& aBuffer) {
     nsresult rv;
 
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
@@ -167,6 +149,9 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
     titleUri = baseUri;
 
     nsCString parentStr;
+
+    nsCString buffer;
+    buffer.AppendLiteral("<!DOCTYPE html>\n<html>\n<head>\n");
 
     // XXX - should be using the 300: line from the parser.
     // We can't guarantee that that comes before any entry, so we'd have to
@@ -227,8 +212,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         }
 
         // Directory index will be always encoded in UTF-8 if this is file url
-        rv = mParser->SetEncoding("UTF-8");
-        NS_ENSURE_SUCCESS(rv, rv);
+        buffer.AppendLiteral("<meta charset=\"UTF-8\">\n");
 
     } else if (NS_SUCCEEDED(uri->SchemeIs("jar", &isScheme)) && isScheme) {
         nsAutoCString path;
@@ -263,23 +247,11 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         }
     }
 
-    nsString buffer;
-    buffer.AppendLiteral("<!DOCTYPE html>\n"
-                         "<html>\n<head>\n"
-                         "<meta http-equiv=\"content-type\" content=\"text/html; charset=");
-    
-    // Get the encoding from the parser
-    // XXX - this won't work for any encoding set via a 301: line in the
-    // format - this output stuff would need to move to OnDataAvailable
-    // for that.
-
     nsXPIDLCString encoding;
-    rv = mParser->GetEncoding(getter_Copies(encoding));
+    rv = uri->GetOriginCharset(encoding);
     if (NS_FAILED(rv)) return rv;
 
-    AppendASCIItoUTF16(encoding, buffer);
-    buffer.AppendLiteral("\">\n"
-                         "<style type=\"text/css\">\n"
+    buffer.AppendLiteral("<style type=\"text/css\">\n"
                          ":root {\n"
                          "  font-family: sans-serif;\n"
                          "}\n"
@@ -321,9 +293,20 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
                          "table.remove-hidden > tbody > tr.hidden-object {\n"
                          "  display: none;\n"
                          "}\n"
-                         "td > a {\n"
-                         "  display: inline-block;\n"
+                         "td {\n"
+                         "  white-space: nowrap;\n"
                          "}\n"
+                         "table.ellipsis {\n"
+                         "  width: 100%;\n"
+                         "  table-layout: fixed;\n"
+                         "  border-spacing: 0;\n"
+                         "}\n"
+                         "table.ellipsis > tbody > tr > td {\n"
+                         "  padding: 0;\n"
+                         "  overflow: hidden;\n"
+                         "  text-overflow: ellipsis;\n"
+                         "}\n"
+                         "/* name */\n"
                          "/* name */\n"
                          "th:first-child {\n"
                          "  -moz-padding-end: 2em;\n"
@@ -335,18 +318,15 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
                          "td:first-child + td {\n"
                          "  text-align: end;\n"
                          "  -moz-padding-end: 1em;\n"
-                         "  white-space: nowrap;\n"
                          "}\n"
                          "/* date */\n"
                          "td:first-child + td + td {\n"
                          "  -moz-padding-start: 1em;\n"
                          "  -moz-padding-end: .5em;\n"
-                         "  white-space: nowrap;\n"
                          "}\n"
                          "/* time */\n"
-                         "td:last-child {\n"
+                         "td:first-child + td + td + td {\n"
                          "  -moz-padding-start: .5em;\n"
-                         "  white-space: nowrap;\n"
                          "}\n"
                          ".symlink {\n"
                          "  font-style: italic;\n"
@@ -564,9 +544,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         // will prematurely close the string.  Go ahead an
         // add a base href.
         buffer.AppendLiteral("<base href=\"");
-        NS_ConvertUTF8toUTF16 utf16BaseURI(baseUri);
-        nsString htmlEscapedUri;
-        htmlEscapedUri.Adopt(nsEscapeHTML2(utf16BaseURI.get(), utf16BaseURI.Length()));
+        nsAdoptingCString htmlEscapedUri(nsEscapeHTML(baseUri.get()));
         buffer.Append(htmlEscapedUri);
         buffer.AppendLiteral("\" />\n");
     }
@@ -575,7 +553,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
         NS_ERROR("broken protocol handler didn't escape double-quote.");
     }
 
-    nsAutoString direction(NS_LITERAL_STRING("ltr"));
+    nsCString direction(NS_LITERAL_CSTRING("ltr"));
     nsCOMPtr<nsIXULChromeRegistry> reg =
       mozilla::services::GetXULChromeRegistryService();
     if (reg) {
@@ -611,9 +589,7 @@ nsIndexedToHTML::DoOnStartRequest(nsIRequest* request, nsISupports *aContext,
 
         buffer.AppendLiteral("<p id=\"UI_goUp\"><a class=\"up\" href=\"");
 
-        NS_ConvertUTF8toUTF16 utf16ParentStr(parentStr);
-        nsString htmlParentStr;
-        htmlParentStr.Adopt(nsEscapeHTML2(utf16ParentStr.get(), utf16ParentStr.Length()));
+        nsAdoptingCString htmlParentStr(nsEscapeHTML(parentStr.get()));
         buffer.Append(htmlParentStr);
         buffer.AppendLiteral("\">");
         AppendNonAsciiToNCR(parentText, buffer);
@@ -670,10 +646,10 @@ NS_IMETHODIMP
 nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus) {
     if (NS_SUCCEEDED(aStatus)) {
-        nsString buffer;
+        nsCString buffer;
         buffer.AssignLiteral("</tbody></table></body></html>\n");
 
-        aStatus = FormatInputStream(request, aContext, buffer);
+        aStatus = SendToListener(request, aContext, buffer);
     }
 
     mParser->OnStopRequest(request, aContext, aStatus);
@@ -683,72 +659,13 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
 }
 
 nsresult
-nsIndexedToHTML::FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, const nsAString &aBuffer) 
+nsIndexedToHTML::SendToListener(nsIRequest* aRequest, nsISupports *aContext, const nsACString &aBuffer)
 {
-    nsresult rv = NS_OK;
-
-    // set up unicode encoder
-    if (!mUnicodeEncoder) {
-      nsXPIDLCString encoding;
-      rv = mParser->GetEncoding(getter_Copies(encoding));
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICharsetConverterManager> charsetConverterManager;
-        charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-        rv = charsetConverterManager->GetUnicodeEncoder(encoding.get(), 
-                                                          getter_AddRefs(mUnicodeEncoder));
-        if (NS_SUCCEEDED(rv))
-            rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, 
-                                                       nullptr, (char16_t)'?');
-      }
-    }
-
-    // convert the data with unicode encoder
-    char *buffer = nullptr;
-    int32_t dstLength;
-    if (NS_SUCCEEDED(rv)) {
-      int32_t unicharLength = aBuffer.Length();
-      rv = mUnicodeEncoder->GetMaxLength(PromiseFlatString(aBuffer).get(), 
-                                         unicharLength, &dstLength);
-      if (NS_SUCCEEDED(rv)) {
-        buffer = (char *) moz_malloc(dstLength);
-        NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
-
-        rv = mUnicodeEncoder->Convert(PromiseFlatString(aBuffer).get(), &unicharLength, 
-                                      buffer, &dstLength);
-        if (NS_SUCCEEDED(rv)) {
-          int32_t finLen = 0;
-          rv = mUnicodeEncoder->Finish(buffer + dstLength, &finLen);
-          if (NS_SUCCEEDED(rv))
-            dstLength += finLen;
-        }
-      }
-    }
-
-    // if conversion error then fallback to UTF-8
-    if (NS_FAILED(rv)) {
-      rv = NS_OK;
-      if (buffer) {
-        nsMemory::Free(buffer);
-        buffer = nullptr;
-      }
-    }
-
     nsCOMPtr<nsIInputStream> inputData;
-    if (buffer) {
-      rv = NS_NewCStringInputStream(getter_AddRefs(inputData), Substring(buffer, dstLength));
-      nsMemory::Free(buffer);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mListener->OnDataAvailable(aRequest, aContext,
-                                      inputData, 0, dstLength);
-    }
-    else {
-      NS_ConvertUTF16toUTF8 utf8Buffer(aBuffer);
-      rv = NS_NewCStringInputStream(getter_AddRefs(inputData), utf8Buffer);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = mListener->OnDataAvailable(aRequest, aContext,
-                                      inputData, 0, utf8Buffer.Length());
-    }
-    return (rv);
+    nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputData), aBuffer);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return mListener->OnDataAvailable(aRequest, aContext,
+                                      inputData, 0, aBuffer.Length());
 }
 
 NS_IMETHODIMP
@@ -768,12 +685,17 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     if (!aIndex)
         return NS_ERROR_NULL_POINTER;
 
-    nsString pushBuffer;
+    nsCString pushBuffer;
     pushBuffer.AppendLiteral("<tr");
 
-    nsXPIDLString description;
-    aIndex->GetDescription(getter_Copies(description));
-    if (description.First() == char16_t('.'))
+    // We don't know the file's character set yet, so retrieve the raw bytes
+    // which will be decoded by the HTML parser.
+    nsXPIDLCString loc;
+    aIndex->GetLocation(getter_Copies(loc));
+
+    // Adjust the length in case unescaping shortened the string.
+    loc.Truncate(nsUnescapeCount(loc.BeginWriting()));
+    if (loc.First() == PRUnichar('.'))
         pushBuffer.AppendLiteral(" class=\"hidden-object\"");
 
     pushBuffer.AppendLiteral(">\n <td sortable-data=\"");
@@ -784,20 +706,19 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     aIndex->GetType(&type);
     switch (type) {
         case nsIDirIndex::TYPE_SYMLINK:
-            pushBuffer.AppendInt(0);
+            pushBuffer.Append('0');
             break;
         case nsIDirIndex::TYPE_DIRECTORY:
-            pushBuffer.AppendInt(1);
+            pushBuffer.Append('1');
             break;
-        case nsIDirIndex::TYPE_FILE:
-        case nsIDirIndex::TYPE_UNKNOWN:
-            pushBuffer.AppendInt(2);
+        default:
+            pushBuffer.Append('2');
             break;
     }
-    char16_t* escaped = nsEscapeHTML2(description.get(), description.Length());
+    nsAdoptingCString escaped(nsEscapeHTML(loc));
     pushBuffer.Append(escaped);
 
-    pushBuffer.AppendLiteral("\"><a class=\"");
+    pushBuffer.AppendLiteral("\"><table class=\"ellipsis\"><tbody><tr><td><a class=\"");
     switch (type) {
         case nsIDirIndex::TYPE_DIRECTORY:
             pushBuffer.AppendLiteral("dir");
@@ -805,59 +726,12 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         case nsIDirIndex::TYPE_SYMLINK:
             pushBuffer.AppendLiteral("symlink");
             break;
-        case nsIDirIndex::TYPE_FILE:
-        case nsIDirIndex::TYPE_UNKNOWN:
+        default:
             pushBuffer.AppendLiteral("file");
             break;
     }
-    pushBuffer.AppendLiteral("\"");
 
-    // Truncate long names to not stretch the table
-    //XXX this should be left to the stylesheet (bug 391471)
-    nsString escapedShort;
-    if (description.Length() > 71) {
-        nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-        nsCOMPtr<nsIURI> uri;
-        rv = channel->GetURI(getter_AddRefs(uri));
-        if (NS_FAILED(rv)) return rv;
-
-        //XXX this potentially truncates after a combining char (bug 391472)
-        nsXPIDLString descriptionAffix;
-        descriptionAffix.Assign(description);
-        descriptionAffix.Cut(0, descriptionAffix.Length() - 25);
-        if (NS_IS_LOW_SURROGATE(descriptionAffix.First()))
-            descriptionAffix.Cut(0, 1);
-        description.Truncate(std::min<uint32_t>(71, description.Length() - 28));
-        if (NS_IS_HIGH_SURROGATE(description.Last()))
-            description.Truncate(description.Length() - 1);
-
-        escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
-
-        escapedShort.Append(mEscapedEllipsis);
-        // add ZERO WIDTH SPACE (U+200B) for wrapping
-        escapedShort.AppendLiteral("&#8203;");
-        nsString tmp;
-        tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
-        escapedShort.Append(tmp);
-
-        pushBuffer.AppendLiteral(" title=\"");
-        pushBuffer.Append(escaped);
-        pushBuffer.AppendLiteral("\"");
-    }
-    if (escapedShort.IsEmpty())
-        escapedShort.Assign(escaped);
-    nsMemory::Free(escaped);
-
-    pushBuffer.AppendLiteral(" href=\"");
-    nsXPIDLCString loc;
-    aIndex->GetLocation(getter_Copies(loc));
-
-    nsXPIDLCString encoding;
-    rv = mParser->GetEncoding(getter_Copies(encoding));
-    if (NS_FAILED(rv)) return rv;
-
-    // Don't byte-to-Unicode conversion here, it is lossy.
-    loc.SetLength(nsUnescapeCount(loc.BeginWriting()));
+    pushBuffer.AppendLiteral("\" href=\"");
 
     // need to escape links
     nsAutoCString locEscaped;
@@ -890,34 +764,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // contains semicolons we need to manually escape them.
     // This replacement should be removed in bug #473280
     locEscaped.ReplaceSubstring(";", "%3b");
-    nsAutoString utf16URI;
-    if (encoding.EqualsLiteral("UTF-8")) {
-        // Try to convert non-ASCII bytes to Unicode using UTF-8 decoder.
-        nsCOMPtr<nsIUnicodeDecoder> decoder =
-            mozilla::dom::EncodingUtils::DecoderForEncoding("UTF-8");
-        decoder->SetInputErrorBehavior(nsIUnicodeDecoder::kOnError_Signal);
-
-        int32_t len = locEscaped.Length();
-        int32_t outlen = 0;
-        rv = decoder->GetMaxLength(locEscaped.get(), len, &outlen);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-        nsAutoArrayPtr<char16_t> outbuf(new char16_t[outlen]);
-        rv = decoder->Convert(locEscaped.get(), &len, outbuf, &outlen);
-        // Use the result only if the sequence is valid as UTF-8.
-        if (rv == NS_OK) {
-            utf16URI.Append(outbuf, outlen);
-        }
-    }
-    if (utf16URI.IsEmpty()) {
-        // Escape all non-ASCII bytes to preserve the raw value.
-        nsAutoCString outstr;
-        NS_EscapeURL(locEscaped, esc_AlwaysCopy | esc_OnlyNonASCII, outstr);
-        CopyASCIItoUTF16(outstr, utf16URI);
-    }
-    nsString htmlEscapedURL;
-    htmlEscapedURL.Adopt(nsEscapeHTML2(utf16URI.get(), utf16URI.Length()));
+    nsAdoptingCString htmlEscapedURL(nsEscapeHTML(locEscaped.get()));
     pushBuffer.Append(htmlEscapedURL);
 
     pushBuffer.AppendLiteral("\">");
@@ -927,9 +774,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         int32_t lastDot = locEscaped.RFindChar('.');
         if (lastDot != kNotFound) {
             locEscaped.Cut(0, lastDot);
-            NS_ConvertUTF8toUTF16 utf16LocEscaped(locEscaped);
-            nsString htmlFileExt;
-            htmlFileExt.Adopt(nsEscapeHTML2(utf16LocEscaped.get(), utf16LocEscaped.Length()));
+            nsAdoptingCString htmlFileExt(nsEscapeHTML(locEscaped.get()));
             pushBuffer.Append(htmlFileExt);
         } else {
             pushBuffer.AppendLiteral("unknown");
@@ -944,8 +789,8 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.AppendLiteral("\">");
     }
 
-    pushBuffer.Append(escapedShort);
-    pushBuffer.AppendLiteral("</a></td>\n <td");
+    pushBuffer.Append(escaped);
+    pushBuffer.AppendLiteral("</a></td></tr></tbody></table></td>\n <td");
 
     if (type == nsIDirIndex::TYPE_DIRECTORY || type == nsIDirIndex::TYPE_SYMLINK) {
         pushBuffer.AppendLiteral(">");
@@ -957,7 +802,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
             pushBuffer.AppendLiteral(" sortable-data=\"");
             pushBuffer.AppendInt(size);
             pushBuffer.AppendLiteral("\">");
-            nsAutoString  sizeString;
+            nsAutoCString sizeString;
             FormatSizeString(size, sizeString);
             pushBuffer.Append(sizeString);
         } else {
@@ -994,26 +839,27 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     pushBuffer.AppendLiteral("</td>\n</tr>");
 
-    return FormatInputStream(aRequest, aCtxt, pushBuffer);
+    return SendToListener(aRequest, aCtxt, pushBuffer);
 }
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnInformationAvailable(nsIRequest *aRequest,
                                         nsISupports *aCtxt,
                                         const nsAString& aInfo) {
-    nsAutoString pushBuffer;
-    char16_t* escaped = nsEscapeHTML2(PromiseFlatString(aInfo).get());
+    nsAutoCString pushBuffer;
+    nsAdoptingString escaped(nsEscapeHTML2(PromiseFlatString(aInfo).get()));
     if (!escaped)
         return NS_ERROR_OUT_OF_MEMORY;
     pushBuffer.AppendLiteral("<tr>\n <td>");
-    pushBuffer.Append(escaped);
-    nsMemory::Free(escaped);
+    // escaped is provided in Unicode, so write hex NCRs as necessary
+    // to prevent the HTML parser from applying a character set.
+    AppendNonAsciiToNCR(escaped, pushBuffer);
     pushBuffer.AppendLiteral("</td>\n <td></td>\n <td></td>\n <td></td>\n</tr>\n");
     
-    return FormatInputStream(aRequest, aCtxt, pushBuffer);
+    return SendToListener(aRequest, aCtxt, pushBuffer);
 }
 
-void nsIndexedToHTML::FormatSizeString(int64_t inSize, nsString& outSizeString)
+void nsIndexedToHTML::FormatSizeString(int64_t inSize, nsCString& outSizeString)
 {
     outSizeString.Truncate();
     if (inSize > int64_t(0)) {

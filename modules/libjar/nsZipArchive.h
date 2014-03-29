@@ -196,8 +196,8 @@ public:
   /*
    * Refcounting
    */
-  NS_METHOD_(nsrefcnt) AddRef(void);
-  NS_METHOD_(nsrefcnt) Release(void);
+  NS_METHOD_(MozExternalRefCountType) AddRef(void);
+  NS_METHOD_(MozExternalRefCountType) Release(void);
 
 private:
   //--- private members ---
@@ -378,8 +378,8 @@ public:
   static nsresult Init(nsZipArchive *zip, const char *entry,
                        nsZipHandle **ret);
 
-  NS_METHOD_(nsrefcnt) AddRef(void);
-  NS_METHOD_(nsrefcnt) Release(void);
+  NS_METHOD_(MozExternalRefCountType) AddRef(void);
+  NS_METHOD_(MozExternalRefCountType) Release(void);
 
   int64_t SizeOfMapping();
 

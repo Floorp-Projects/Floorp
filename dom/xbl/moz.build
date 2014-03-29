@@ -50,7 +50,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/events',
     '/layout/style',
-    '/xpcom/ds',
 ]
 
 FINAL_LIBRARY = 'gklayout'

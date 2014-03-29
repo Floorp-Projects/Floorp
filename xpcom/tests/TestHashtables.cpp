@@ -199,8 +199,8 @@ class IFoo MOZ_FINAL : public nsISupports
 
       IFoo();
 
-      NS_IMETHOD_(nsrefcnt) AddRef();
-      NS_IMETHOD_(nsrefcnt) Release();
+      NS_IMETHOD_(MozExternalRefCountType) AddRef();
+      NS_IMETHOD_(MozExternalRefCountType) Release();
       NS_IMETHOD QueryInterface( const nsIID&, void** );
 
       NS_IMETHOD SetString(const nsACString& /*in*/ aString);
@@ -245,7 +245,7 @@ IFoo::~IFoo()
            static_cast<void*>(this), total_destructions_);
   }
 
-nsrefcnt
+MozExternalRefCountType
 IFoo::AddRef()
   {
     ++refcount_;
@@ -254,7 +254,7 @@ IFoo::AddRef()
     return refcount_;
   }
 
-nsrefcnt
+MozExternalRefCountType
 IFoo::Release()
   {
     int newcount = --refcount_;

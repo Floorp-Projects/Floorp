@@ -1841,7 +1841,7 @@ nsHttpTransaction::CancelPacing(nsresult reason)
 
 NS_IMPL_ADDREF(nsHttpTransaction)
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsHttpTransaction::Release()
 {
     nsrefcnt count;

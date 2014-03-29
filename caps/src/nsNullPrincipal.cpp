@@ -35,7 +35,7 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsNullPrincipal,
                              nsIPrincipal,
                              nsISerializable)
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsNullPrincipal::AddRef()
 {
   NS_PRECONDITION(int32_t(refcount) >= 0, "illegal refcnt");
@@ -44,7 +44,7 @@ nsNullPrincipal::AddRef()
   return count;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsNullPrincipal::Release()
 {
   NS_PRECONDITION(0 != refcount, "dup release");

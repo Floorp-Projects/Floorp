@@ -629,6 +629,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 #ifdef JSGC_GENERATIONAL
     rtSizes->gc.nurseryCommitted += gcNursery.sizeOfHeapCommitted();
     rtSizes->gc.nurseryDecommitted += gcNursery.sizeOfHeapDecommitted();
+    rtSizes->gc.nurseryHugeSlots += gcNursery.sizeOfHugeSlots(mallocSizeOf);
     gcStoreBuffer.addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
 #endif
 }

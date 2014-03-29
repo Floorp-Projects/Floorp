@@ -14,6 +14,8 @@
  * the WeakPtrs to it and allows the WeakReference to live beyond the lifetime
  * of 'Foo'.
  *
+ * PLEASE NOTE: This weak pointer implementation is not thread-safe.
+ *
  * Note that when deriving from SupportsWeakPtr you should add
  * MOZ_DECLARE_REFCOUNTED_TYPENAME(ClassName) to the public section of your
  * class, where ClassName is the name of your class.

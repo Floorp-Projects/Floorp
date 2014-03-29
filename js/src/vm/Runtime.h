@@ -141,18 +141,6 @@ struct ConservativeGCData
      */
     uintptr_t           *nativeStackTop;
 
-#if defined(JSGC_ROOT_ANALYSIS) && (JS_STACK_GROWTH_DIRECTION < 0)
-    /*
-     * Record old contents of the native stack from the last time there was a
-     * scan, to reduce the overhead involved in repeatedly rescanning the
-     * native stack during root analysis. oldStackData stores words in reverse
-     * order starting at oldStackEnd.
-     */
-    uintptr_t           *oldStackMin, *oldStackEnd;
-    uintptr_t           *oldStackData;
-    size_t              oldStackCapacity; // in sizeof(uintptr_t)
-#endif
-
     union {
         jmp_buf         jmpbuf;
         uintptr_t       words[JS_HOWMANY(sizeof(jmp_buf), sizeof(uintptr_t))];

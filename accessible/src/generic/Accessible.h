@@ -766,6 +766,11 @@ public:
     { return HasOwnContent() && !(mStateFlags & eNotNodeMapEntry); }
 
   /**
+   * Return true if the accessible's group info needs to be updated.
+   */
+  inline bool HasDirtyGroupInfo() const { return mStateFlags & eGroupInfoDirty; }
+
+  /**
    * Return true if the accessible has associated DOM content.
    */
   bool HasOwnContent() const
@@ -856,9 +861,10 @@ protected:
     eSharedNode = 1 << 2, // accessible shares DOM node from another accessible
     eNotNodeMapEntry = 1 << 3, // accessible shouldn't be in document node map
     eHasNumericValue = 1 << 4, // accessible has a numeric value
-    eIgnoreDOMUIEvent = 1 << 5, // don't process DOM UI events for a11y events
+    eGroupInfoDirty = 1 << 5, // accessible needs to update group info
+    eIgnoreDOMUIEvent = 1 << 6, // don't process DOM UI events for a11y events
 
-    eLastStateFlag = eHasNumericValue
+    eLastStateFlag = eGroupInfoDirty
   };
 
 protected:
@@ -938,6 +944,22 @@ protected:
    */
   AccGroupInfo* GetGroupInfo();
 
+  /**
+   * Set dirty state of the accessible's group info.
+   */
+  inline void SetDirtyGroupInfo(bool aIsDirty)
+  {
+    if (aIsDirty)
+      mStateFlags |= eGroupInfoDirty;
+    else
+      mStateFlags &= ~eGroupInfoDirty;
+  }
+
+  /**
+   * Flag all children group info as needing to be updated.
+   */
+  void InvalidateChildrenGroupInfo();
+
   // Data Members
   nsCOMPtr<nsIContent> mContent;
   DocAccessible* mDoc;
@@ -947,7 +969,7 @@ protected:
   int32_t mIndexInParent;
 
   static const uint8_t kChildrenFlagsBits = 2;
-  static const uint8_t kStateFlagsBits = 5;
+  static const uint8_t kStateFlagsBits = 6;
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 12;
 

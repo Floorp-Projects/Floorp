@@ -43,7 +43,7 @@ class TCPSocketParent : public mozilla::net::PTCPSocketParent
 {
 public:
   NS_DECL_NSITCPSOCKETPARENT
-  NS_IMETHOD_(nsrefcnt) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
 
   TCPSocketParent() : mIntermediaryObj(nullptr) {}
 

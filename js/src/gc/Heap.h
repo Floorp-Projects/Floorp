@@ -18,6 +18,7 @@
 #include "jsutil.h"
 
 #include "ds/BitArray.h"
+#include "gc/Memory.h"
 #include "js/HeapAPI.h"
 
 struct JSCompartment;
@@ -807,6 +808,16 @@ struct Chunk
     void recycleArena(ArenaHeader *aheader, ArenaList &dest, AllocKind thingKind);
 
     static Chunk *allocate(JSRuntime *rt);
+
+    void decommitAllArenas(JSRuntime *rt) {
+        decommittedArenas.clear(true);
+        MarkPagesUnused(rt, &arenas[0], ArenasPerChunk * ArenaSize);
+
+        info.freeArenasHead = nullptr;
+        info.lastDecommittedArenaOffset = 0;
+        info.numArenasFree = ArenasPerChunk;
+        info.numArenasFreeCommitted = 0;
+    }
 
     /* Must be called with the GC lock taken. */
     static inline void release(JSRuntime *rt, Chunk *chunk);

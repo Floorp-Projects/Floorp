@@ -64,9 +64,9 @@ private:
   nsString          mURLSpec;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(NameSpaceRule, NS_CSS_NAMESPACE_RULE_IMPL_CID)
+
 } // namespace css
 } // namespace mozilla
-
-NS_DEFINE_STATIC_IID_ACCESSOR(mozilla::css::NameSpaceRule, NS_CSS_NAMESPACE_RULE_IMPL_CID)
 
 #endif /* mozilla_css_NameSpaceRule_h__ */

@@ -116,8 +116,8 @@ public:
   }
 };
 
-NS_IMETHODIMP_(nsrefcnt) StatementClassInfo::AddRef() { return 2; }
-NS_IMETHODIMP_(nsrefcnt) StatementClassInfo::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) StatementClassInfo::AddRef() { return 2; }
+NS_IMETHODIMP_(MozExternalRefCountType) StatementClassInfo::Release() { return 1; }
 NS_IMPL_QUERY_INTERFACE1(StatementClassInfo, nsIClassInfo)
 
 static StatementClassInfo sStatementClassInfo;

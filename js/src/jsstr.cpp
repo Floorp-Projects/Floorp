@@ -1860,7 +1860,8 @@ DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearSt
         return true;
     }
 
-    res->updateFromMatchPairs(cx, input, matches);
+    if (!res->updateFromMatchPairs(cx, input, matches))
+        return false;
 
     RootedValue rval(cx);
     if (!CreateRegExpMatchResult(cx, input, matches, &rval))
@@ -2117,7 +2118,6 @@ struct ReplaceData
 {
     ReplaceData(JSContext *cx)
       : str(cx), g(cx), lambda(cx), elembase(cx), repstr(cx),
-        dollarRoot(cx, &dollar), dollarEndRoot(cx, &dollarEnd),
         fig(cx, NullValue()), sb(cx)
     {}
 
@@ -2147,8 +2147,6 @@ struct ReplaceData
     Rooted<JSLinearString*> repstr; /* replacement string */
     const jschar       *dollar;        /* null or pointer to first $ in repstr */
     const jschar       *dollarEnd;     /* limit pointer for js_strchr_limit */
-    SkipRoot           dollarRoot;     /* XXX prevent dollar from being relocated */
-    SkipRoot           dollarEndRoot;  /* ditto */
     int                leftIndex;      /* left context index in str->chars */
     JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
     bool               calledBack;     /* record whether callback has been called */
@@ -2175,7 +2173,9 @@ DoMatchForReplaceLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*
     if (status == RegExpRunStatus_Success_NotFound)
         return true;
 
-    res->updateFromMatchPairs(cx, linearStr, matches);
+    if (!res->updateFromMatchPairs(cx, linearStr, matches))
+        return false;
+
     return ReplaceRegExp(cx, res, rdata);
 }
 
@@ -2196,7 +2196,8 @@ DoMatchForReplaceGlobal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString
         if (status == RegExpRunStatus_Success_NotFound)
             break;
 
-        res->updateFromMatchPairs(cx, linearStr, matches);
+        if (!res->updateFromMatchPairs(cx, linearStr, matches))
+            return false;
 
         if (!ReplaceRegExp(cx, res, rdata))
             return false;
@@ -3293,7 +3294,8 @@ class SplitRegExpMatcher
             return true;
         }
 
-        res->updateFromMatchPairs(cx, str, matches);
+        if (!res->updateFromMatchPairs(cx, str, matches))
+            return false;
 
         JSSubString sep;
         res->getLastMatch(&sep);

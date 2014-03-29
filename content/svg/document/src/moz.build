@@ -21,7 +21,6 @@ LOCAL_INCLUDES += [
     '/content/xml/document/src',
     '/dom/events',
     '/layout/style',
-    '/xpcom/ds',
 ]
 
 FINAL_LIBRARY = 'gklayout'

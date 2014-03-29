@@ -23,8 +23,8 @@ class Foo : public nsISupports
       // virtual dtor because Bar uses our Release()
       virtual ~Foo();
 
-      NS_IMETHOD_(nsrefcnt) AddRef();
-      NS_IMETHOD_(nsrefcnt) Release();
+      NS_IMETHOD_(MozExternalRefCountType) AddRef();
+      NS_IMETHOD_(MozExternalRefCountType) Release();
       NS_IMETHOD QueryInterface( const nsIID&, void** );
 
       static void print_totals();
@@ -102,7 +102,7 @@ Foo::~Foo()
            static_cast<void*>(this), total_destructions_);
   }
 
-nsrefcnt
+MozExternalRefCountType
 Foo::AddRef()
   {
     ++refcount_;
@@ -111,7 +111,7 @@ Foo::AddRef()
     return refcount_;
   }
 
-nsrefcnt
+MozExternalRefCountType
 Foo::Release()
   {
     int newcount = --refcount_;

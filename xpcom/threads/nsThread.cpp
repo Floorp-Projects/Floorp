@@ -91,8 +91,8 @@ public:
   nsThreadClassInfo() {}
 };
 
-NS_IMETHODIMP_(nsrefcnt) nsThreadClassInfo::AddRef() { return 2; }
-NS_IMETHODIMP_(nsrefcnt) nsThreadClassInfo::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) nsThreadClassInfo::AddRef() { return 2; }
+NS_IMETHODIMP_(MozExternalRefCountType) nsThreadClassInfo::Release() { return 1; }
 NS_IMPL_QUERY_INTERFACE1(nsThreadClassInfo, nsIClassInfo)
 
 NS_IMETHODIMP

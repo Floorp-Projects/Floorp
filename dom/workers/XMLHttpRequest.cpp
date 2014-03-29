@@ -427,13 +427,12 @@ public:
   class StateDataAutoRooter : private JS::CustomAutoRooter
   {
     XMLHttpRequest::StateData* mStateData;
-    js::SkipRoot mSkip;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
   public:
     explicit StateDataAutoRooter(JSContext* aCx, XMLHttpRequest::StateData* aData
                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : CustomAutoRooter(aCx), mStateData(aData), mSkip(aCx, mStateData)
+    : CustomAutoRooter(aCx), mStateData(aData)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }

@@ -114,8 +114,8 @@ public:
   }
 };
 
-NS_IMETHODIMP_(nsrefcnt) AsyncStatementClassInfo::AddRef() { return 2; }
-NS_IMETHODIMP_(nsrefcnt) AsyncStatementClassInfo::Release() { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementClassInfo::AddRef() { return 2; }
+NS_IMETHODIMP_(MozExternalRefCountType) AsyncStatementClassInfo::Release() { return 1; }
 NS_IMPL_QUERY_INTERFACE1(AsyncStatementClassInfo, nsIClassInfo)
 
 static AsyncStatementClassInfo sAsyncStatementClassInfo;

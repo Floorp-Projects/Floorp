@@ -325,9 +325,9 @@ public:
   { /* Should turn into pure virtual once implemented in D3D */ }
 
   /*
-   * Clear aRect on FrameBuffer.
+   * Clear aRect on current render target.
    */
-  virtual void clearFBRect(const gfx::Rect* aRect) { }
+  virtual void ClearRect(const gfx::Rect& aRect) { }
 
   /**
    * Start a new frame.

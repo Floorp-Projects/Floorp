@@ -246,8 +246,10 @@ class IonBailoutIterator;
 
 // Reads frame information in snapshot-encoding order (that is, outermost frame
 // to innermost frame).
-class SnapshotIterator : public SnapshotReader
+class SnapshotIterator
 {
+    SnapshotReader snapshot_;
+    RecoverReader recover_;
     IonJSFrameLayout *fp_;
     MachineState machine_;
     IonScript *ionScript_;
@@ -279,16 +281,63 @@ class SnapshotIterator : public SnapshotReader
     void warnUnreadableAllocation();
 
   public:
+    // Handle iterating over RValueAllocations of the snapshots.
+    inline RValueAllocation readAllocation() {
+        MOZ_ASSERT(moreAllocations());
+        return snapshot_.readAllocation();
+    }
+    Value skip() {
+        readAllocation();
+        return UndefinedValue();
+    }
+
+    inline uint32_t allocations() const {
+        return recover_.allocations();
+    }
+    inline bool moreAllocations() const {
+        return recover_.moreAllocations(snapshot_);
+    }
+
+  public:
+    // Exhibits frame properties contained in the snapshot.
+    inline uint32_t pcOffset() const {
+        return recover_.pcOffset();
+    }
+    inline bool resumeAfter() const {
+        // Inline frames are inlined on calls, which are considered as being
+        // resumed on the Call as baseline will push the pc once we return from
+        // the call.
+        if (moreFrames())
+            return false;
+        return snapshot_.resumeAfter();
+    }
+    inline BailoutKind bailoutKind() const {
+        return snapshot_.bailoutKind();
+    }
+
+  public:
+    // Handle iterating over frames of the snapshots.
+    inline void nextFrame() {
+        // Reuse the Snapshot buffer.
+        recover_.nextFrame(snapshot_);
+    }
+    inline bool moreFrames() const {
+        return recover_.moreFrames();
+    }
+    inline uint32_t frameCount() const {
+        return recover_.frameCount();
+    }
+
+  public:
+    // Connect all informations about the current script in order to recover the
+    // content of baseline frames.
+
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                      IonJSFrameLayout *fp, const MachineState &machine);
     SnapshotIterator(const IonFrameIterator &iter);
     SnapshotIterator(const IonBailoutIterator &iter);
     SnapshotIterator();
 
-    Value skip() {
-        readAllocation();
-        return UndefinedValue();
-    }
     Value read() {
         return allocationValue(readAllocation());
     }

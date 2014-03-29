@@ -341,7 +341,7 @@ nsExpirationTracker<T, K>::ExpirationTrackerObserver::Observe(nsISupports     *a
 }
 
 template <class T, uint32_t K>
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsExpirationTracker<T,K>::ExpirationTrackerObserver::AddRef(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
@@ -352,7 +352,7 @@ nsExpirationTracker<T,K>::ExpirationTrackerObserver::AddRef(void)
 }
 
 template <class T, uint32_t K>
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsExpirationTracker<T,K>::ExpirationTrackerObserver::Release(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
