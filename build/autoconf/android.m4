@@ -270,18 +270,21 @@ case "$target" in
         fi
 
         # Get the api level from "$android_sdk"/source.properties.
-        android_api_level=`$AWK -F = changequote(<<, >>)'<<$>>1 == "AndroidVersion.ApiLevel" {print <<$>>2}'changequote([, ]) "$android_sdk"/source.properties`
+        ANDROID_TARGET_SDK=`$AWK -F = changequote(<<, >>)'<<$>>1 == "AndroidVersion.ApiLevel" {print <<$>>2}'changequote([, ]) "$android_sdk"/source.properties`
 
-        if test -z "$android_api_level" ; then
+        if test -z "$ANDROID_TARGET_SDK" ; then
             AC_MSG_ERROR([Unexpected error: no AndroidVersion.ApiLevel field has been found in source.properties.])
         fi
 
-        if ! test "$android_api_level" -eq "$android_api_level" ; then
-            AC_MSG_ERROR([Unexpected error: the found android api value isn't a number! (found $android_api_level)])
+	AC_DEFINE_UNQUOTED(ANDROID_TARGET_SDK,$ANDROID_TARGET_SDK)
+	AC_SUBST(ANDROID_TARGET_SDK)
+
+        if ! test "$ANDROID_TARGET_SDK" -eq "$ANDROID_TARGET_SDK" ; then
+            AC_MSG_ERROR([Unexpected error: the found android api value isn't a number! (found $ANDROID_TARGET_SDK)])
         fi
 
-        if test $android_api_level -lt $1 ; then
-            AC_MSG_ERROR([The given Android SDK provides API level $android_api_level ($1 or higher required).])
+        if test $ANDROID_TARGET_SDK -lt $1 ; then
+            AC_MSG_ERROR([The given Android SDK provides API level $ANDROID_TARGET_SDK ($1 or higher required).])
         fi
     fi
 
