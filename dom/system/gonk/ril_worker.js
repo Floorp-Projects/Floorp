@@ -5942,6 +5942,23 @@ RilObject.prototype[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, op
 };
 RilObject.prototype[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
 
+/**
+ * V3:
+ *  # address   - A space-delimited list of addresses.
+ *
+ * V4:
+ *  # address   - An address.
+ *
+ * V5:
+ *  # addresses - A space-delimited list of addresses.
+ *  # dnses     - A space-delimited list of DNS server addresses.
+ *
+ * V6:
+ *  # addresses - A space-delimited list of addresses with optional "/" prefix
+ *                length.
+ *  # dnses     - A space-delimited list of DNS server addresses.
+ *  # gateways  - A space-delimited list of default gateway addresses.
+ */
 RilObject.prototype.readDataCall_v5 = function(options) {
   if (!options) {
     options = {};
@@ -5951,7 +5968,15 @@ RilObject.prototype.readDataCall_v5 = function(options) {
   options.active = Buf.readInt32(); // DATACALL_ACTIVE_*
   options.type = Buf.readString();
   options.apn = Buf.readString();
-  options.address = Buf.readString();
+  options.ipaddr = Buf.readString();
+  options.dns = Buf.readString();
+  //TODO for now we only support one address and gateway
+  if (options.ipaddr) {
+    options.ipaddr = options.ipaddr.split(" ")[0];
+  }
+  if (options.dns) {
+    options.dns = options.dns.split(" ");
+  }
   return options;
 };
 
