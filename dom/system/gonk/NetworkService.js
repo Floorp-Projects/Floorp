@@ -265,76 +265,87 @@ NetworkService.prototype = {
   },
 
   resetRoutingTable: function(network) {
-    if (!network.ip || !network.prefixLength) {
-      if(DEBUG) debug("Either ip or prefixLength is null. Cannot reset routing table.");
-      return;
+    let ips = {};
+    let prefixLengths = {};
+    let length = network.getAddresses(ips, prefixLengths);
+
+    for (let i = 0; i < length; i++) {
+      let ip = ips.value[i];
+      let prefixLength = prefixLengths.value[i];
+
+      let options = {
+        cmd: "removeNetworkRoute",
+        ifname: network.name,
+        ip: ip,
+        prefixLength: prefixLength
+      };
+      this.controlMessage(options);
     }
-    let options = {
-      cmd: "removeNetworkRoute",
-      ifname: network.name,
-      ip: network.ip,
-      prefixLength: network.prefixLength
-    };
-    this.controlMessage(options, function() {});
   },
 
   setDNS: function(networkInterface) {
     if(DEBUG) debug("Going DNS to " + networkInterface.name);
+    let dnses = networkInterface.getDnses();
     let options = {
       cmd: "setDNS",
       ifname: networkInterface.name,
       domain: "mozilla." + networkInterface.name + ".doman",
-      dns1_str: networkInterface.dns1,
-      dns2_str: networkInterface.dns2
+      dnses: dnses
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   setDefaultRouteAndDNS: function(network, oldInterface) {
     if(DEBUG) debug("Going to change route and DNS to " + network.name);
+    let gateways = network.getGateways();
+    let dnses = network.getDnses();
     let options = {
       cmd: "setDefaultRouteAndDNS",
       ifname: network.name,
       oldIfname: (oldInterface && oldInterface !== network) ? oldInterface.name : null,
-      gateway_str: network.gateway,
+      gateways: gateways,
       domain: "mozilla." + network.name + ".doman",
-      dns1_str: network.dns1,
-      dns2_str: network.dns2
+      dnses: dnses
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
     this.setNetworkProxy(network);
   },
 
   removeDefaultRoute: function(network) {
     if(DEBUG) debug("Remove default route for " + network.name);
+    let gateways = network.getGateways();
     let options = {
       cmd: "removeDefaultRoute",
       ifname: network.name,
-      gateway: network.gateway
+      gateways: gateways
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   addHostRoute: function(network) {
     if(DEBUG) debug("Going to add host route on " + network.name);
+    let gateways = network.getGateways();
+    let dnses = network.getDnses();
     let options = {
       cmd: "addHostRoute",
       ifname: network.name,
-      gateway: network.gateway,
-      hostnames: [network.dns1, network.dns2, network.httpProxyHost]
+      gateways: gateways,
+      hostnames: dnses.concat(network.httpProxyHost)
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   removeHostRoute: function(network) {
     if(DEBUG) debug("Going to remove host route on " + network.name);
+    let gateways = network.getGateways();
+    let dnses = network.getDnses();
     let options = {
       cmd: "removeHostRoute",
       ifname: network.name,
-      gateway: network.gateway,
-      hostnames: [network.dns1, network.dns2, network.httpProxyHost]
+      gateways: gateways,
+      hostnames: dnses.concat(network.httpProxyHost)
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   removeHostRoutes: function(ifname) {
@@ -343,29 +354,31 @@ NetworkService.prototype = {
       cmd: "removeHostRoutes",
       ifname: ifname,
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   addHostRouteWithResolve: function(network, hosts) {
     if(DEBUG) debug("Going to add host route after dns resolution on " + network.name);
+    let gateways = network.getGateways();
     let options = {
       cmd: "addHostRoute",
       ifname: network.name,
-      gateway: network.gateway,
+      gateways: gateways,
       hostnames: hosts
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   removeHostRouteWithResolve: function(network, hosts) {
     if(DEBUG) debug("Going to remove host route after dns resolution on " + network.name);
+    let gateways = network.getGateways();
     let options = {
       cmd: "removeHostRoute",
       ifname: network.name,
-      gateway: network.gateway,
+      gateways: gateways,
       hostnames: hosts
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   addSecondaryRoute: function(ifname, route) {
@@ -377,7 +390,7 @@ NetworkService.prototype = {
       prefix: route.prefix,
       gateway: route.gateway
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   removeSecondaryRoute: function(ifname, route) {
@@ -389,7 +402,7 @@ NetworkService.prototype = {
       prefix: route.prefix,
       gateway: route.gateway
     };
-    this.controlMessage(options, function() {});
+    this.controlMessage(options);
   },
 
   setNetworkProxy: function(network) {

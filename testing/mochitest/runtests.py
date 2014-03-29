@@ -384,8 +384,11 @@ class MochitestUtilsMixin(object):
       testPattern = re.compile(r"browser_.+\.js")
     elif options.chrome or options.a11y:
       testPattern = re.compile(r"(browser|test)_.+\.(xul|html|js|xhtml)")
-    elif options.webapprtChrome:
+    elif options.webapprtContent:
       testPattern = re.compile(r"webapprt_")
+    elif options.webapprtChrome:
+      allow_js_css = True
+      testPattern = re.compile(r"browser_")
     else:
       testPattern = re.compile(r"test_")
 
