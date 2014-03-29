@@ -21,35 +21,6 @@ interface nsIRilNetworkInterface : nsINetworkInterface
   readonly attribute long      mmsPort;  // -1 if not set.
 };
 
-[scriptable, uuid(44322269-ac2a-4641-aaf9-b5ccee0d429e)]
-interface nsIRILDataCallInfo : nsISupports
-{
-  /**
-   * Current data call state, one of the
-   * nsINetworkInterface::NETWORK_STATE_* constants.
-   */
-  readonly attribute unsigned long state;
-  readonly attribute AString cid;
-  readonly attribute AString apn;
-  readonly attribute AString ifname;
-  readonly attribute AString ip;
-  readonly attribute unsigned long prefixLength;
-  readonly attribute AString gw;
-  readonly attribute jsval dns;
-};
-
-[scriptable, uuid(485d9dcb-a6b3-4870-ae44-49700bc68eef)]
-interface nsIRILDataCallback : nsISupports
-{
-  /**
-   * Notified when a data call changes state.
-   *
-   * @param dataCall
-   *        A nsIRILDataCallInfo object.
-   */
-  void dataCallStateChanged(in nsIRILDataCallInfo dataCall);
-};
-
 [scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
 interface nsIVoicemailInfo : nsISupports
 {
@@ -84,7 +55,7 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(5b14cf79-2846-4226-b07f-9b9977b525fe)]
+[scriptable, uuid(181d460e-220e-4274-8ba4-43f122eb518d)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -95,9 +66,6 @@ interface nsIRadioInterface : nsISupports
   void setupDataCallByType(in DOMString apntype);
   void deactivateDataCallByType(in DOMString apntype);
   long getDataCallStateByType(in DOMString apntype);
-
-  void registerDataCallCallback(in nsIRILDataCallback callback);
-  void unregisterDataCallCallback(in nsIRILDataCallback callback);
 
   void updateRILNetworkInterface();
 

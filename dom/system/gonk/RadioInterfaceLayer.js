@@ -4290,20 +4290,6 @@ RadioInterface.prototype = {
 
   // TODO: Bug 928861 - B2G NetworkManager: Provide a more generic function
   //                    for connecting
-  registerDataCallCallback: function(callback) {
-    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
-    connHandler.registerDataCallCallback(callback);
-  },
-
-  // TODO: Bug 928861 - B2G NetworkManager: Provide a more generic function
-  //                    for connecting
-  unregisterDataCallCallback: function(callback) {
-    let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
-    connHandler.unregisterDataCallCallback(callback);
-  },
-
-  // TODO: Bug 928861 - B2G NetworkManager: Provide a more generic function
-  //                    for connecting
   setupDataCallByType: function(apntype) {
     let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
     connHandler.setupDataCallByType(apntype);
@@ -4358,11 +4344,9 @@ RILNetworkInterface.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: RILNETWORKINTERFACE_CID,
                                     classDescription: "RILNetworkInterface",
                                     interfaces: [Ci.nsINetworkInterface,
-                                                 Ci.nsIRilNetworkInterface,
-                                                 Ci.nsIRILDataCallback]}),
+                                                 Ci.nsIRilNetworkInterface]}),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface,
-                                         Ci.nsIRilNetworkInterface,
-                                         Ci.nsIRILDataCallback]),
+                                         Ci.nsIRilNetworkInterface]),
 
   // nsINetworkInterface
 
@@ -4509,8 +4493,6 @@ RILNetworkInterface.prototype = {
     dump("-*- RILNetworkInterface[" + this.dataConnectionHandler.clientId + ":" +
          this.type + "]: " + s + "\n");
   },
-
-  // nsIRILDataCallback
 
   dataCallError: function(message) {
     if (message.apn != this.apnSetting.apn) {
