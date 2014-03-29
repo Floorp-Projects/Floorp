@@ -60,7 +60,7 @@ class TPSTestRunner(object):
                             'browser.warnOnQuit': False,
                             # Allow installing extensions dropped into the profile folder
                             'extensions.autoDisableScopes': 10,
-                            'extensions.getAddons.get.url': 'http://127.0.0.1:4567/en-US/firefox/api/%API_VERSION%/search/guid:%IDS%',
+                            'extensions.getAddons.get.url': 'http://127.0.0.1:4567/addons/api/%IDS%.xml',
                             'extensions.update.enabled'    : False,
                             # Don't open a dialog to show available add-on updates
                             'extensions.update.notifyUser' : False,

@@ -1654,13 +1654,13 @@ XPCShellDirProvider::SetPluginDir(nsIFile* pluginDir)
     mPluginDir = pluginDir;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 XPCShellDirProvider::AddRef()
 {
     return 2;
 }
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 XPCShellDirProvider::Release()
 {
     return 1;

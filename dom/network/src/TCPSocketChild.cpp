@@ -61,7 +61,7 @@ TCPSocketChildBase::~TCPSocketChildBase()
 {
 }
 
-NS_IMETHODIMP_(nsrefcnt) TCPSocketChild::Release(void)
+NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketChild::Release(void)
 {
   nsrefcnt refcnt = TCPSocketChildBase::Release();
   if (refcnt == 1 && mIPCOpen) {

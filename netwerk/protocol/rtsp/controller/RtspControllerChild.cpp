@@ -55,8 +55,12 @@ NS_INTERFACE_MAP_BEGIN(RtspControllerChild)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamingProtocolController)
 NS_INTERFACE_MAP_END
 
+//-----------------------------------------------------------------------------
+// RtspControllerChild methods
+//-----------------------------------------------------------------------------
 RtspControllerChild::RtspControllerChild(nsIChannel *channel)
   : mIPCOpen(false)
+  , mIPCAllowed(false)
   , mChannel(channel)
   , mTotalTracks(0)
   , mSuspendCount(0)
@@ -74,6 +78,33 @@ RtspControllerChild::~RtspControllerChild()
   LOG(("RtspControllerChild::~RtspControllerChild()"));
 }
 
+bool
+RtspControllerChild::OKToSendIPC()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mIPCOpen == false) {
+    return false;
+  }
+  return mIPCAllowed;
+}
+
+void
+RtspControllerChild::AllowIPC()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mIPCAllowed = true;
+}
+
+void
+RtspControllerChild::DisallowIPC()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mIPCAllowed = false;
+}
+
+//-----------------------------------------------------------------------------
+// RtspControllerChild::PRtspControllerChild
+//-----------------------------------------------------------------------------
 bool
 RtspControllerChild::RecvOnMediaDataAvailable(
                        const uint8_t& index,
@@ -138,6 +169,7 @@ RtspControllerChild::RecvOnDisconnected(
                        const uint8_t& index,
                        const nsresult& reason)
 {
+  DisallowIPC();
   LOG(("RtspControllerChild::RecvOnDisconnected for track %d reason = 0x%x", index, reason));
   if (mListener) {
     mListener->OnDisconnected(index, reason);
@@ -148,6 +180,7 @@ RtspControllerChild::RecvOnDisconnected(
 bool
 RtspControllerChild::RecvAsyncOpenFailed(const nsresult& reason)
 {
+  DisallowIPC();
   LOG(("RtspControllerChild::RecvAsyncOpenFailed reason = 0x%x", reason));
   if (mListener) {
     mListener->OnDisconnected(0, NS_ERROR_CONNECTION_REFUSED);
@@ -161,6 +194,7 @@ RtspControllerChild::AddIPDLReference()
   NS_ABORT_IF_FALSE(!mIPCOpen,
                     "Attempt to retain more than one IPDL reference");
   mIPCOpen = true;
+  AllowIPC();
   AddRef();
 }
 
@@ -169,6 +203,7 @@ RtspControllerChild::ReleaseIPDLReference()
 {
   NS_ABORT_IF_FALSE(mIPCOpen, "Attempt to release nonexistent IPDL reference");
   mIPCOpen = false;
+  DisallowIPC();
   Release();
 }
 
@@ -219,21 +254,30 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
+    if (mController->OKToSendIPC() == false) {
+      // Don't send any more IPC events; no guarantee that parent objects are
+      // still alive.
+      return NS_ERROR_FAILURE;
+    }
+    bool rv = true;
 
     if (mEvent == SendPlayEvent) {
-      mController->SendPlay();
+      rv = mController->SendPlay();
     } else if (mEvent == SendPauseEvent) {
-      mController->SendPause();
+      rv = mController->SendPause();
     } else if (mEvent == SendSeekEvent) {
-      mController->SendSeek(mSeekTime);
+      rv = mController->SendSeek(mSeekTime);
     } else if (mEvent == SendResumeEvent) {
-      mController->SendResume();
+      rv = mController->SendResume();
     } else if (mEvent == SendSuspendEvent) {
-      mController->SendSuspend();
+      rv = mController->SendSuspend();
     } else if (mEvent == SendStopEvent) {
-      mController->SendStop();
+      rv = mController->SendStop();
     } else {
       LOG(("RtspControllerChild::SendIPCEvent"));
+    }
+    if (!rv) {
+      return NS_ERROR_FAILURE;
     }
     return NS_OK;
   }
@@ -243,15 +287,18 @@ private:
   uint64_t mSeekTime;
 };
 
+//-----------------------------------------------------------------------------
+// RtspControllerChild::nsIStreamingProtocolController
+//-----------------------------------------------------------------------------
 NS_IMETHODIMP
 RtspControllerChild::Play(void)
 {
   LOG(("RtspControllerChild::Play()"));
-  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
-    if (!SendPlay())
+    if (!OKToSendIPC() || !SendPlay()) {
       return NS_ERROR_FAILURE;
+    }
   } else {
     nsresult rv = NS_DispatchToMainThread(
                     new SendIPCEvent(this, SendPlayEvent));
@@ -265,11 +312,11 @@ NS_IMETHODIMP
 RtspControllerChild::Pause(void)
 {
   LOG(("RtspControllerChild::Pause()"));
-  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
-    if (!SendPause())
+    if (!OKToSendIPC() || !SendPause()) {
       return NS_ERROR_FAILURE;
+    }
   } else {
     nsresult rv = NS_DispatchToMainThread(
                     new SendIPCEvent(this, SendPauseEvent));
@@ -283,13 +330,13 @@ NS_IMETHODIMP
 RtspControllerChild::Resume(void)
 {
   LOG(("RtspControllerChild::Resume()"));
-  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
 
   if (!--mSuspendCount) {
     if (NS_IsMainThread()) {
-      if (!SendResume())
+      if (!OKToSendIPC() || !SendResume()) {
         return NS_ERROR_FAILURE;
+      }
     } else {
       nsresult rv = NS_DispatchToMainThread(
                       new SendIPCEvent(this, SendResumeEvent));
@@ -304,12 +351,12 @@ NS_IMETHODIMP
 RtspControllerChild::Suspend(void)
 {
   LOG(("RtspControllerChild::Suspend()"));
-  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (!mSuspendCount++) {
     if (NS_IsMainThread()) {
-      if (!SendSuspend())
+      if (!OKToSendIPC() || !SendSuspend()) {
         return NS_ERROR_FAILURE;
+      }
     } else {
       nsresult rv = NS_DispatchToMainThread(
                       new SendIPCEvent(this, SendSuspendEvent));
@@ -324,11 +371,11 @@ NS_IMETHODIMP
 RtspControllerChild::Seek(uint64_t seekTimeUs)
 {
   LOG(("RtspControllerChild::Seek() %llu", seekTimeUs));
-  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
-    if (!SendSeek(seekTimeUs))
+    if (!OKToSendIPC() || !SendSeek(seekTimeUs)) {
       return NS_ERROR_FAILURE;
+    }
   } else {
     nsresult rv = NS_DispatchToMainThread(
                     new SendIPCEvent(this, SendSeekEvent, seekTimeUs));
@@ -342,11 +389,12 @@ NS_IMETHODIMP
 RtspControllerChild::Stop()
 {
   LOG(("RtspControllerChild::Stop()"));
-  NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_FAILURE);
 
   if (NS_IsMainThread()) {
-    if (!SendStop())
+    if (!OKToSendIPC() || !SendStop()) {
       return NS_ERROR_FAILURE;
+    }
+    DisallowIPC();
   } else {
     nsresult rv = NS_DispatchToMainThread(
                     new SendIPCEvent(this, SendStopEvent));
@@ -368,6 +416,9 @@ RtspControllerChild::GetTotalTracks(uint8_t *aTracks)
   return NS_OK;
 }
 
+//-----------------------------------------------------------------------------
+// RtspControllerChild::nsIStreamingProtocolListener
+//-----------------------------------------------------------------------------
 NS_IMETHODIMP
 RtspControllerChild::OnMediaDataAvailable(uint8_t index,
                                           const nsACString & data,
@@ -396,6 +447,9 @@ RtspControllerChild::OnDisconnected(uint8_t index,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//-----------------------------------------------------------------------------
+// RtspControllerChild::nsIStreamingProtocoController
+//-----------------------------------------------------------------------------
 NS_IMETHODIMP
 RtspControllerChild::Init(nsIURI *aURI)
 {
@@ -454,7 +508,7 @@ RtspControllerChild::AsyncOpen(nsIStreamingProtocolListener *aListener)
   }
   SerializeURI(uri, uriParams);
 
-  if (!mIPCOpen || !SendAsyncOpen(uriParams)) {
+  if (!OKToSendIPC() || !SendAsyncOpen(uriParams)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

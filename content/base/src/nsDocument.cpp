@@ -1783,7 +1783,7 @@ NS_INTERFACE_MAP_END
 
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocument)
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 nsDocument::Release()
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");

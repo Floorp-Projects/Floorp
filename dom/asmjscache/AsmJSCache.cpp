@@ -1726,10 +1726,10 @@ GetBuildId(JS::BuildIdCharVector* aBuildID)
 class Client : public quota::Client
 {
 public:
-  NS_IMETHOD_(nsrefcnt)
+  NS_IMETHOD_(MozExternalRefCountType)
   AddRef() MOZ_OVERRIDE;
 
-  NS_IMETHOD_(nsrefcnt)
+  NS_IMETHOD_(MozExternalRefCountType)
   Release() MOZ_OVERRIDE;
 
   virtual Type

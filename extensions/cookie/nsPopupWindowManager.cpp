@@ -34,7 +34,7 @@ nsPopupWindowManager::~nsPopupWindowManager()
 NS_IMPL_ISUPPORTS3(nsPopupWindowManager, 
                    nsIPopupWindowManager,
                    nsIObserver,
-                   nsSupportsWeakReference)
+                   nsISupportsWeakReference)
 
 nsresult
 nsPopupWindowManager::Init()

@@ -581,6 +581,7 @@ sync_java_files = [
     'fxa/login/TokensAndKeysState.java',
     'fxa/receivers/FxAccountDeletedReceiver.java',
     'fxa/receivers/FxAccountDeletedService.java',
+    'fxa/receivers/FxAccountUpgradeReceiver.java',
     'fxa/sync/FxAccountGlobalSession.java',
     'fxa/sync/FxAccountNotificationManager.java',
     'fxa/sync/FxAccountSchedulePolicy.java',

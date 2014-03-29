@@ -69,10 +69,10 @@ private:
     friend class FileService;
 
   public:
-    NS_IMETHOD_(nsrefcnt)
+    NS_IMETHOD_(MozExternalRefCountType)
     AddRef() MOZ_OVERRIDE;
 
-    NS_IMETHOD_(nsrefcnt)
+    NS_IMETHOD_(MozExternalRefCountType)
     Release() MOZ_OVERRIDE;
 
     inline nsresult

@@ -168,17 +168,11 @@ enum nsRectVisibility {
  * frame.
  */
 
-// hack to make egcs / gcc 2.95.2 happy
-class nsIPresShell_base : public nsISupports
+class nsIPresShell : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
-};
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell_base, NS_IPRESSHELL_IID)
-
-class nsIPresShell : public nsIPresShell_base
-{
 protected:
   typedef mozilla::layers::LayerManager LayerManager;
   typedef mozilla::gfx::SourceSurface SourceSurface;
@@ -1645,5 +1639,7 @@ protected:
   // presshell.
   bool mIsNeverPainting;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell, NS_IPRESSHELL_IID)
 
 #endif /* nsIPresShell_h___ */

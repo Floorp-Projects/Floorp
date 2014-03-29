@@ -37,7 +37,7 @@ private:
   // RTSP URL refer to a stream or an aggregate of streams.
   nsCOMPtr<nsIURI> mURI;
   // The nsIStreamingProtocolListener implementation.
-  nsCOMPtr<nsIStreamingProtocolListener> mListener;
+  nsMainThreadPtrHandle<nsIStreamingProtocolListener> mListener;
   // ASCII encoded URL spec.
   nsCString mSpec;
   // Indicate the connection state between the

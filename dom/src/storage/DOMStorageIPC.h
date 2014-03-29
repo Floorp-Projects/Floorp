@@ -29,8 +29,8 @@ public:
   DOMStorageDBChild(DOMLocalStorageManager* aManager);
   virtual ~DOMStorageDBChild();
 
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
+  NS_IMETHOD_(MozExternalRefCountType) Release(void);
 
   void AddIPDLReference();
   void ReleaseIPDLReference();
@@ -116,8 +116,8 @@ public:
   CloneProtocol(Channel* aChannel,
                 mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
 
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
+  NS_IMETHOD_(MozExternalRefCountType) Release(void);
 
   void AddIPDLReference();
   void ReleaseIPDLReference();
