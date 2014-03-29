@@ -909,6 +909,9 @@
             const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             var popup = document.createElementNS(XUL_NS, "panel");
             popup.className = "autoscroller";
+            // We set this attribute on the element so that mousemove
+            // events can be handled by browser-content.js.
+            popup.setAttribute("mousethrough", "always");
             return popup;
           ]]>
         </body>
