@@ -1731,6 +1731,24 @@ BaselineCompiler::emit_JSOP_ENDINIT()
     return true;
 }
 
+typedef bool (*NewbornArrayPushFn)(JSContext *, HandleObject, const Value &);
+static const VMFunction NewbornArrayPushInfo = FunctionInfo<NewbornArrayPushFn>(NewbornArrayPush);
+
+bool
+BaselineCompiler::emit_JSOP_ARRAYPUSH()
+{
+    // Keep value in R0, object in R1.
+    frame.popRegsAndSync(2);
+    masm.unboxObject(R1, R1.scratchReg());
+
+    prepareVMCall();
+
+    pushArg(R0);
+    pushArg(R1.scratchReg());
+
+    return callVM(NewbornArrayPushInfo);
+}
+
 bool
 BaselineCompiler::emit_JSOP_GETELEM()
 {
