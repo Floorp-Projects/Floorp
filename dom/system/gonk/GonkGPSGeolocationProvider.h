@@ -20,6 +20,7 @@
 #include <hardware/gps.h> // for GpsInterface
 #include "nsCOMPtr.h"
 #include "nsIGeolocationProvider.h"
+#include "nsIObserver.h"
 #ifdef MOZ_B2G_RIL
 #include "nsIRadioInterfaceLayer.h"
 #include "nsISettingsService.h"
@@ -34,16 +35,16 @@ class nsIThread;
 "@mozilla.org/gonk-gps-geolocation-provider;1"
 
 class GonkGPSGeolocationProvider : public nsIGeolocationProvider
+                                 , public nsIObserver
 #ifdef MOZ_B2G_RIL
-                                 , public nsIRILDataCallback
                                  , public nsISettingsServiceCallback
 #endif
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIGEOLOCATIONPROVIDER
+  NS_DECL_NSIOBSERVER
 #ifdef MOZ_B2G_RIL
-  NS_DECL_NSIRILDATACALLBACK
   NS_DECL_NSISETTINGSSERVICECALLBACK
 #endif
 
