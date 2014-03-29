@@ -357,7 +357,7 @@ include ../../editor/reftests/reftest.list
 include box-sizing/reftest.list
 
 # invalidation - only run on B2G
-skip-if(!B2G) include invalidation/reftest.list
+include invalidation/reftest.list
 
 # encodings
 include ../../dom/encoding/test/reftest/reftest.list
