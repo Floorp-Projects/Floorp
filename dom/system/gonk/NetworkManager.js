@@ -357,15 +357,18 @@ NetworkManager.prototype = {
             continue;
           }
 #endif
+          let ips = {};
+          let prefixLengths = {};
+          i.getAddresses(ips, prefixLengths);
+
           interfaces.push({
             state: i.state,
             type: i.type,
             name: i.name,
-            ip: i.ip,
-            prefixLength: i.prefixLength,
-            gateway: i.gateway,
-            dns1: i.dns1,
-            dns2: i.dns2,
+            ips: ips.value,
+            prefixLengths: prefixLengths.value,
+            gateways: i.getGateways(),
+            dnses: i.getDnses(),
             httpProxyHost: i.httpProxyHost,
             httpProxyPort: i.httpProxyPort
           });
