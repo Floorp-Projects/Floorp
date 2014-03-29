@@ -2137,12 +2137,17 @@ RadioInterface.prototype = {
         connHandler.handleDataCallError(message);
         break;
       case "datacallstatechange":
-        message.ip = null;
-        message.prefixLength = 0;
-        if (message.ipaddr) {
-          message.ip = message.ipaddr.split("/")[0];
-          message.prefixLength = parseInt(message.ipaddr.split("/")[1], 10);
+        let addresses = [];
+        for (let i = 0; i < message.addresses.length; i++) {
+          let [address, prefixLength] = message.addresses[i].split("/");
+          // From AOSP hardware/ril/include/telephony/ril.h, that address prefix
+          // is said to be OPTIONAL, but we never met such case before.
+          addresses.push({
+            address: address,
+            prefixLength: prefixLength ? parseInt(prefixLength, 10) : 0
+          });
         }
+        message.addresses = addresses;
         connHandler.handleDataCallState(message);
         break;
       case "emergencyCbModeChange":
@@ -4515,12 +4520,12 @@ RILNetworkInterface.prototype = {
       this.connecting = false;
       this.cid = datacall.cid;
       this.name = datacall.ifname;
-      this.ip = datacall.ip;
-      this.prefixLength = datacall.prefixLength;
-      this.gateway = datacall.gw;
-      if (datacall.dns) {
-        this.dns1 = datacall.dns[0];
-        this.dns2 = datacall.dns[1];
+      this.ip = datacall.addresses[0].address;
+      this.prefixLength = datacall.addresses[0].prefixLength;
+      this.gateway = datacall.gateways[0];
+      if (datacall.dnses.length) {
+        this.dns1 = datacall.dnses[0];
+        this.dns2 = datacall.dnses[1];
       }
       if (!this.registeredAsNetworkInterface) {
         gNetworkManager.registerNetworkInterface(this);
@@ -4540,15 +4545,14 @@ RILNetworkInterface.prototype = {
       }
       // State remains connected, check for minor changes.
       let changed = false;
-      if (this.gateway != datacall.gw) {
-        this.gateway = datacall.gw;
+      if (this.gateway != datacall.gateways[0]) {
+        this.gateway = datacall.gateways[0];
         changed = true;
       }
-      if (datacall.dns &&
-          (this.dns1 != datacall.dns[0] ||
-           this.dns2 != datacall.dns[1])) {
-        this.dns1 = datacall.dns[0];
-        this.dns2 = datacall.dns[1];
+      if (this.dns1 != datacall.dnses[0] ||
+          this.dns2 != datacall.dnses[1]) {
+        this.dns1 = datacall.dnses[0];
+        this.dns2 = datacall.dnses[1];
         changed = true;
       }
       if (changed) {
