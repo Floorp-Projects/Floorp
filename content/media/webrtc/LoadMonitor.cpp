@@ -23,7 +23,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Services.h"
 
-#if defined(ANDROID) || defined(LINUX) || defined(XP_MACOSX)
+#if defined(ANDROID) || defined(LINUX)
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -180,7 +180,7 @@ private:
 LoadInfo::LoadInfo(int aLoadUpdateInterval)
   : mLoadUpdateInterval(aLoadUpdateInterval)
 {
-#if defined(ANDROID) || defined(LINUX) || defined(XP_MACOSX)
+#if defined(ANDROID) || defined(LINUX)
   mTicksPerInterval = (sysconf(_SC_CLK_TCK) * mLoadUpdateInterval) / 1000;
 #endif
 }
