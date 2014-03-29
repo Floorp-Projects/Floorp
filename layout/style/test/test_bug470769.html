@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=470769
 var e = document.getElementById("display");
 e.setAttribute("style", "z-index: 2147483647"); // maximum signed 32-bit
 is(e.style.zIndex, "2147483647", "element.style should roundtrip correctly");
-todo_is(window.getComputedStyle(e, "").zIndex, "2147483647",
+is(window.getComputedStyle(e, "").zIndex, "2147483647",
    "getComputedStyle should roundtrip correctly");
 
 </script>

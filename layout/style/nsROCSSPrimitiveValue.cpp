@@ -17,13 +17,6 @@
 
 using namespace mozilla;
 
-// There is no CSS_TURN constant on the CSSPrimitiveValue interface,
-// since that unit is newer than DOM Level 2 Style, and CSS OM will
-// probably expose CSS values in some other way in the future.  We
-// use this value in mType for "turn"-unit angles, but we define it
-// here to avoid exposing it to content.
-#define CSS_TURN 30U
-
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue()
   : CSSValue(), mType(CSS_PX)
 {
@@ -140,6 +133,16 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
     case CSS_NUMBER :
       {
         nsStyleUtil::AppendCSSNumber(mValue.mFloat, tmpStr);
+        break;
+      }
+    case CSS_NUMBER_INT32 :
+      {
+        tmpStr.AppendInt(mValue.mInt32);
+        break;
+      }
+    case CSS_NUMBER_UINT32 :
+      {
+        tmpStr.AppendInt(mValue.mUint32);
         break;
       }
     case CSS_DEG :
@@ -317,7 +320,7 @@ NS_IMETHODIMP
 nsROCSSPrimitiveValue::GetPrimitiveType(uint16_t* aPrimitiveType)
 {
   NS_ENSURE_ARG_POINTER(aPrimitiveType);
-  *aPrimitiveType = mType;
+  *aPrimitiveType = PrimitiveType();
 
   return NS_OK;
 }
@@ -389,6 +392,12 @@ nsROCSSPrimitiveValue::GetFloatValue(uint16_t aUnitType, ErrorResult& aRv)
     case CSS_NUMBER :
       if (mType == CSS_NUMBER) {
         return mValue.mFloat;
+      }
+      if (mType == CSS_NUMBER_INT32) {
+        return mValue.mInt32;
+      }
+      if (mType == CSS_NUMBER_UINT32) {
+        return mValue.mUint32;
       }
 
       break;
@@ -529,16 +538,16 @@ void
 nsROCSSPrimitiveValue::SetNumber(int32_t aValue)
 {
   Reset();
-  mValue.mFloat = float(aValue);
-  mType = CSS_NUMBER;
+  mValue.mInt32 = aValue;
+  mType = CSS_NUMBER_INT32;
 }
 
 void
 nsROCSSPrimitiveValue::SetNumber(uint32_t aValue)
 {
   Reset();
-  mValue.mFloat = float(aValue);
-  mType = CSS_NUMBER;
+  mValue.mUint32 = aValue;
+  mType = CSS_NUMBER_UINT32;
 }
 
 void
