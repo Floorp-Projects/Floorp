@@ -107,7 +107,7 @@ browser.jar:
   skin/classic/browser/feeds/subscribe-ui.css         (feeds/subscribe-ui.css)
   skin/classic/browser/fonts/ClearSans-Regular.ttf    (../shared/ClearSans-Regular.ttf)
   skin/classic/browser/newtab/newTab.css              (newtab/newTab.css)
-  skin/classic/browser/newtab/controls.png            (newtab/controls.png)
+  skin/classic/browser/newtab/controls.png            (../shared/newtab/controls.png)
   skin/classic/browser/places/bookmarksMenu.png       (places/bookmarksMenu.png)
   skin/classic/browser/places/bookmarksToolbar.png    (places/bookmarksToolbar.png)
   skin/classic/browser/places/bookmarksToolbar-menuPanel.png (places/bookmarksToolbar-menuPanel.png)
