@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1406369283264000);
+const PRTime gPreloadListExpirationTime = INT64_C(1406973944885000);
 
 class nsSTSPreload
 {
@@ -20,6 +20,7 @@ class nsSTSPreload
 static const nsSTSPreload kSTSPreloadList[] = {
   { "accounts.google.com", true },
   { "aclu.org", false },
+  { "admin.google.com", true },
   { "aladdinschools.appspot.com", false },
   { "alpha.irccloud.com", false },
   { "api.intercom.io", false },
@@ -91,13 +92,16 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "getcloak.com", false },
   { "getlantern.org", false },
   { "glass.google.com", true },
+  { "gmail.com", false },
   { "go.xero.com", false },
+  { "googlemail.com", false },
   { "googleplex.com", true },
   { "goto.google.com", true },
   { "grc.com", false },
   { "grepular.com", true },
   { "groups.google.com", true },
   { "haste.ch", true },
+  { "heha.co", true },
   { "history.google.com", true },
   { "hostedtalkgadget.google.com", true },
   { "howrandom.org", true },
@@ -205,6 +209,8 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.entropia.de", false },
   { "www.evernote.com", false },
   { "www.getcloak.com", false },
+  { "www.gmail.com", false },
+  { "www.googlemail.com", false },
   { "www.gov.uk", false },
   { "www.grc.com", false },
   { "www.heliosnet.com", true },
@@ -217,7 +223,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.mylookout.com", false },
   { "www.noisebridge.net", false },
   { "www.opsmate.com", true },
-  { "www.roddis.net", false },
   { "www.simbolo.co.uk", false },
   { "www.simple.com", false },
   { "www.therapynotes.com", false },

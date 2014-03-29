@@ -844,6 +844,11 @@ class IonBuilder : public MIRGenerator
     }
     IonBuilder *callerBuilder_;
 
+    bool oom() {
+        abortReason_ = AbortReason_Alloc;
+        return false;
+    }
+
     struct LoopHeader {
         jsbytecode *pc;
         MBasicBlock *header;

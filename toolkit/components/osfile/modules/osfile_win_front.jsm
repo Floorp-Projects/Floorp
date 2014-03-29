@@ -433,7 +433,7 @@
      };
 
      /**
-      * Create a directory.
+      * Create a directory and, optionally, its parent directories.
       *
       * @param {string} path The name of the directory.
       * @param {*=} options Additional options. This
@@ -445,8 +445,15 @@
       * parent directory.
       * - {bool} ignoreExisting If |false|, throw an error if the directory
       * already exists. |true| by default
-      */
-     File.makeDir = function makeDir(path, options = {}) {
+      * - {string} from If specified, the call to |makeDir| creates all the
+      * ancestors of |path| that are descendants of |from|. Note that |from|
+      * and its existing descendants must be user-writeable and that |path|
+      * must be a descendant of |from|.
+      * Example:
+      *   makeDir(Path.join(profileDir, "foo", "bar"), { from: profileDir });
+      *  creates directories profileDir/foo, profileDir/foo/bar
+       */
+     File._makeDir = function makeDir(path, options = {}) {
        let security = options.winSecurity || null;
        let result = WinFile.CreateDirectory(path, security);
 
@@ -974,6 +981,7 @@
      File.read = exports.OS.Shared.AbstractFile.read;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
      File.openUnique = exports.OS.Shared.AbstractFile.openUnique;
+     File.makeDir = exports.OS.Shared.AbstractFile.makeDir;
 
      /**
       * Remove an existing directory and its contents.

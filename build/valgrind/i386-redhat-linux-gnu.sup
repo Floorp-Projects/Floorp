@@ -49,3 +49,15 @@
    obj:/lib/libgobject-2.0.so.0.2200.5
    ...
 }
+
+###################################
+#  Leaks in short lived precesses #
+###################################
+
+{
+   Bug 984196
+   Memcheck:Leak
+   ...
+   fun:glxtest
+   ...
+}

@@ -16,12 +16,11 @@ dictionary NetworkCommandOptions
   DOMString ip;                       // for "removeNetworkRoute", "setWifiTethering".
   unsigned long prefixLength;         // for "removeNetworkRoute".
   DOMString domain;                   // for "setDNS"
-  DOMString dns1_str;                 // for "setDNS", "setDefaultRouteAndDNS".
-  DOMString dns2_str;                 // for "setDNS", "setDefaultRouteAndDNS".
+  sequence<DOMString> dnses;          // for "setDNS", "setDefaultRouteAndDNS".
   DOMString oldIfname;                // for "setDefaultRouteAndDNS".
-  DOMString gateway_str;              // for "setDefaultRouteAndDNS".
-  DOMString gateway;                  // for "addHostRoute", "removeHostRoute",
-                                      //     "removeDefaultRoute".
+  DOMString gateway;                  // for "addSecondaryRoute", "removeSecondaryRoute".
+  sequence<DOMString> gateways;       // for "setDefaultRouteAndDNS", "removeDefaultRoute",
+                                      //     "addHostRoute", "removeHostRoute".
   sequence<DOMString> hostnames;      // for "addHostRoute", "removeHostRoute".
   DOMString mode;                     // for "setWifiOperationMode".
   boolean report;                     // for "setWifiOperationMode".

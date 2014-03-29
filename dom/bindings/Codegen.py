@@ -4672,7 +4672,7 @@ if (!returnArray) {
                 False)
 
     if type.isDictionary():
-        return (wrapAndSetPtr("%s.ToObject(cx, ${obj}, ${jsvalHandle})" % result),
+        return (wrapAndSetPtr("%s.ToObject(cx, ${jsvalHandle})" % result),
                 False)
 
     if type.isDate():
@@ -9319,7 +9319,7 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
         if self.dictionary.parent:
             body += (
                 "// Per spec, we define the parent's members first\n"
-                "if (!%s::ToObject(cx, parentObject, rval)) {\n"
+                "if (!%s::ToObject(cx, rval)) {\n"
                 "  return false;\n"
                 "}\n"
                 "JS::Rooted<JSObject*> obj(cx, &rval.toObject());\n"
@@ -9339,7 +9339,6 @@ if (!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) {
 
         return ClassMethod("ToObject", "bool", [
             Argument('JSContext*', 'cx'),
-            Argument('JS::Handle<JSObject*>', 'parentObject'),
             Argument('JS::MutableHandle<JS::Value>', 'rval'),
         ], const=True, body=body)
 
@@ -9598,7 +9597,9 @@ if (""",
                 'jsvalRef': "temp",
                 'jsvalHandle': "&temp",
                 'returnsNewObject': False,
-                'obj': "parentObject",
+                # 'obj' can just be allowed to be the string "obj", since that
+                # will be our dictionary object, which is presumably itself in
+                # the right scope.
                 'typedArraysAreStructs': True
             })
         conversion = CGGeneric(innerTemplate)

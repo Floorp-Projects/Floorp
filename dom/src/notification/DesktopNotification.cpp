@@ -101,7 +101,7 @@ DesktopNotification::PostDesktopNotification()
       ops.mTextClickable = true;
       ops.mManifestURL = manifestUrl;
 
-      if (!ops.ToObject(cx, JS::NullPtr(), &val)) {
+      if (!ops.ToObject(cx, &val)) {
         return NS_ERROR_FAILURE;
       }
 

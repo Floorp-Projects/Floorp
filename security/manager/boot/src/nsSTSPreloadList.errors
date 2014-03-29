@@ -1,3 +1,4 @@
+admin.google.com: did not receive HSTS header (error ignored - included regardless)
 alpha.irccloud.com: could not connect to host
 api.mega.co.nz: could not connect to host
 api.recurly.com: did not receive HSTS header
@@ -38,9 +39,9 @@ fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
 get.zenpayroll.com: did not receive HSTS header
 glass.google.com: did not receive HSTS header (error ignored - included regardless)
-gmail.com: did not receive HSTS header
+gmail.com: did not receive HSTS header (error ignored - included regardless)
 gocardless.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
-googlemail.com: did not receive HSTS header
+googlemail.com: did not receive HSTS header (error ignored - included regardless)
 googleplex.com: could not connect to host
 googleplex.com: could not connect to host (error ignored - included regardless)
 goto.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -85,7 +86,6 @@ play.google.com: did not receive HSTS header (error ignored - included regardles
 prodpad.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header (error ignored - included regardless)
 rapidresearch.me: did not receive HSTS header
-riseup.net: could not connect to host
 sah3.net: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -117,8 +117,8 @@ www.cueup.com: did not receive HSTS header
 www.developer.mydigipass.com: could not connect to host
 www.dropcam.com: max-age too low: 2592000
 www.elanex.biz: did not receive HSTS header
-www.gmail.com: did not receive HSTS header
-www.googlemail.com: did not receive HSTS header
+www.gmail.com: did not receive HSTS header (error ignored - included regardless)
+www.googlemail.com: did not receive HSTS header (error ignored - included regardless)
 www.gov.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 www.greplin.com: could not connect to host
 www.jitsi.org: did not receive HSTS header
@@ -129,6 +129,7 @@ www.moneybookers.com: did not receive HSTS header
 www.neonisi.com: could not connect to host
 www.paycheckrecords.com: max-age too low: 86400
 www.paypal.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
+www.roddis.net: did not receive HSTS header
 www.sandbox.mydigipass.com: could not connect to host
 www.surfeasy.com: did not receive HSTS header
-zoo24.de: did not receive HSTS header
+zoo24.de: max-age too low: 2592000

@@ -49,9 +49,6 @@ enum BailoutKind
     Bailout_BaselineInfo
 };
 
-static const uint32_t BAILOUT_KIND_BITS = 3;
-static const uint32_t BAILOUT_RESUME_BITS = 1;
-
 inline const char *
 BailoutKindString(BailoutKind kind)
 {

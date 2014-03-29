@@ -341,9 +341,17 @@ function isNetworkReady() {
           SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_DUN_INTERFACES);
     var num = itfList.getNumberOfInterface();
     for (var i = 0; i < num; i++) {
-      if (itfList.getInterface(i).ip) {
-        info("Network interface is ready with address: " + itfList.getInterface(i).ip);
-        return true;
+      var ips = {};
+      var prefixLengths = {};
+      var length = itfList.getInterface(i).getAddresses(ips, prefixLengths);
+
+      for (var j = 0; j < length; j++) {
+        var ip = ips.value[j];
+        // skip IPv6 address
+        if (ip.indexOf(":") < 0) {
+          info("Network interface is ready with address: " + ip);
+          return true;
+        }
       }
     }
     // ip address is not available

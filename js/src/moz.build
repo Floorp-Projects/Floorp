@@ -163,6 +163,7 @@ UNIFIED_SOURCES += [
     'vm/Compression.cpp',
     'vm/DateTime.cpp',
     'vm/Debugger.cpp',
+    'vm/DebuggerMemory.cpp',
     'vm/ErrorObject.cpp',
     'vm/ForkJoin.cpp',
     'vm/GlobalObject.cpp',
