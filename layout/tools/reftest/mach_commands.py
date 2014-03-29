@@ -206,7 +206,7 @@ class ReftestRunner(MozbuildObject):
         return reftest.run_remote_reftests(parser, options, args)
 
     def run_desktop_test(self, test_file=None, filter=None, suite=None,
-            debugger=None, parallel=False):
+            debugger=None, parallel=False, e10s=False):
         """Runs a reftest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -248,6 +248,9 @@ class ReftestRunner(MozbuildObject):
         if parallel:
             extra_args.append('--run-tests-in-parallel')
 
+        if e10s:
+            extra_args.append('--e10s')
+
         if extra_args:
             args = [os.environ.get(b'EXTRA_TEST_ARGS', '')]
             args.extend(extra_args)
@@ -278,6 +281,10 @@ def ReftestCommand(func):
     parallel = CommandArgument('--parallel', action='store_true',
         help='Run tests in parallel.')
     func = parallel(func)
+
+    e10s = CommandArgument('--e10s', action='store_true',
+                           help='Use content processes.')
+    func = e10s(func)
 
     return func
 

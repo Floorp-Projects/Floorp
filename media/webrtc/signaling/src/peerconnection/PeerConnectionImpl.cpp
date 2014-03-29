@@ -134,7 +134,6 @@ namespace mozilla {
 
 class nsIDOMDataChannel;
 
-static const int DTLS_FINGERPRINT_LENGTH = 64;
 static const int MEDIA_STREAM_MUTE = 0x80;
 
 PRLogModuleInfo *signalingLogInfo() {

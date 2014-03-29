@@ -240,9 +240,11 @@ FocusManager::ProcessDOMFocus(nsINode* aTarget)
 
   DocAccessible* document =
     GetAccService()->GetDocAccessible(aTarget->OwnerDoc());
+  if (!document)
+    return;
 
   Accessible* target = document->GetAccessibleEvenIfNotInMapOrContainer(aTarget);
-  if (target && document) {
+  if (target) {
     // Check if still focused. Otherwise we can end up with storing the active
     // item for control that isn't focused anymore.
     nsINode* focusedNode = FocusedDOMNode();

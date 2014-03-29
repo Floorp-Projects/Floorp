@@ -20,8 +20,9 @@ using namespace js::jit;
 
 // Snapshot header:
 //
-//   [vwu] bits (n-31]: frame count
-//         bits [0,n):  bailout kind (n = BAILOUT_KIND_BITS)
+//   [vwu] bits ((n+1)-31]: frame count
+//         bit n+1: resume after
+//         bits [0,n): bailout kind (n = SNAPSHOT_BAILOUTKIND_BITS)
 //
 // Snapshot body, repeated "frame count" times, from oldest frame to newest frame.
 // Note that the first frame doesn't have the "parent PC" field.
@@ -463,20 +464,32 @@ SnapshotReader::SnapshotReader(const uint8_t *snapshots, uint32_t offset,
     readSnapshotHeader();
 }
 
-static const uint32_t BAILOUT_KIND_SHIFT = 0;
-static const uint32_t BAILOUT_KIND_MASK = (1 << BAILOUT_KIND_BITS) - 1;
-static const uint32_t BAILOUT_RESUME_SHIFT = BAILOUT_KIND_SHIFT + BAILOUT_KIND_BITS;
-static const uint32_t BAILOUT_FRAMECOUNT_SHIFT = BAILOUT_KIND_BITS + BAILOUT_RESUME_BITS;
-static const uint32_t BAILOUT_FRAMECOUNT_BITS = (8 * sizeof(uint32_t)) - BAILOUT_FRAMECOUNT_SHIFT;
+#define COMPUTE_SHIFT_AFTER_(name) (name ## _BITS + name ##_SHIFT)
+#define COMPUTE_MASK_(name) (((1 << name ## _BITS) - 1) << name ##_SHIFT)
+
+static const uint32_t SNAPSHOT_BAILOUTKIND_SHIFT = 0;
+static const uint32_t SNAPSHOT_BAILOUTKIND_BITS = 3;
+static const uint32_t SNAPSHOT_BAILOUTKIND_MASK = COMPUTE_MASK_(SNAPSHOT_BAILOUTKIND);
+
+static const uint32_t SNAPSHOT_RESUMEAFTER_SHIFT = COMPUTE_SHIFT_AFTER_(SNAPSHOT_BAILOUTKIND);
+static const uint32_t SNAPSHOT_RESUMEAFTER_BITS = 1;
+static const uint32_t SNAPSHOT_RESUMEAFTER_MASK = COMPUTE_MASK_(SNAPSHOT_RESUMEAFTER);
+
+static const uint32_t SNAPSHOT_FRAMECOUNT_SHIFT = COMPUTE_SHIFT_AFTER_(SNAPSHOT_RESUMEAFTER);
+static const uint32_t SNAPSHOT_FRAMECOUNT_BITS = 32 - 4;
+static const uint32_t SNAPSHOT_FRAMECOUNT_MASK = COMPUTE_MASK_(SNAPSHOT_FRAMECOUNT);
+
+#undef COMPUTE_MASK_
+#undef COMPUTE_SHIFT_AFTER_
 
 void
 SnapshotReader::readSnapshotHeader()
 {
     uint32_t bits = reader_.readUnsigned();
-    frameCount_ = bits >> BAILOUT_FRAMECOUNT_SHIFT;
+    frameCount_ = bits >> SNAPSHOT_FRAMECOUNT_SHIFT;
     JS_ASSERT(frameCount_ > 0);
-    bailoutKind_ = BailoutKind((bits >> BAILOUT_KIND_SHIFT) & BAILOUT_KIND_MASK);
-    resumeAfter_ = !!(bits & (1 << BAILOUT_RESUME_SHIFT));
+    bailoutKind_ = BailoutKind((bits & SNAPSHOT_BAILOUTKIND_MASK) >> SNAPSHOT_BAILOUTKIND_SHIFT);
+    resumeAfter_ = !!(bits & (1 << SNAPSHOT_RESUMEAFTER_SHIFT));
 
 #ifdef TRACK_SNAPSHOTS
     pcOpcode_  = reader_.readUnsigned();
@@ -559,13 +572,13 @@ SnapshotWriter::startSnapshot(uint32_t frameCount, BailoutKind kind, bool resume
     IonSpew(IonSpew_Snapshots, "starting snapshot with frameCount %u, bailout kind %u",
             frameCount, kind);
     JS_ASSERT(frameCount > 0);
-    JS_ASSERT(frameCount < (1 << BAILOUT_FRAMECOUNT_BITS));
-    JS_ASSERT(uint32_t(kind) < (1 << BAILOUT_KIND_BITS));
+    JS_ASSERT(frameCount < (1 << SNAPSHOT_FRAMECOUNT_BITS));
+    JS_ASSERT(uint32_t(kind) < (1 << SNAPSHOT_BAILOUTKIND_BITS));
 
-    uint32_t bits = (uint32_t(kind) << BAILOUT_KIND_SHIFT) |
-                    (frameCount << BAILOUT_FRAMECOUNT_SHIFT);
+    uint32_t bits = (uint32_t(kind) << SNAPSHOT_BAILOUTKIND_SHIFT) |
+                    (frameCount << SNAPSHOT_FRAMECOUNT_SHIFT);
     if (resumeAfter)
-        bits |= (1 << BAILOUT_RESUME_SHIFT);
+        bits |= (1 << SNAPSHOT_RESUMEAFTER_SHIFT);
 
     writer_.writeUnsigned(bits);
     return lastStart_;
