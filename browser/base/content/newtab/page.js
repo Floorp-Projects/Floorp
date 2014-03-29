@@ -90,10 +90,28 @@ let gPage = {
       if (this.allowBackgroundCaptures) {
         Services.telemetry.getHistogramById("NEWTAB_PAGE_SHOWN").add(true);
 
+        // Initialize type counting with the types we want to count
+        let directoryCount = {};
+        for (let type of DirectoryLinksProvider.linkTypes) {
+          directoryCount[type] = 0;
+        }
+
         for (let site of gGrid.sites) {
           if (site) {
             site.captureIfMissing();
+            let {type} = site.link;
+            if (type in directoryCount) {
+              directoryCount[type]++;
+            }
           }
+        }
+
+        // Record how many directory sites were shown, but place counts over the
+        // default 9 in the same bucket
+        for (let [type, count] of Iterator(directoryCount)) {
+          let shownId = "NEWTAB_PAGE_DIRECTORY_" + type.toUpperCase() + "_SHOWN";
+          let shownCount = Math.min(10, count);
+          Services.telemetry.getHistogramById(shownId).add(shownCount);
         }
       }
     });
