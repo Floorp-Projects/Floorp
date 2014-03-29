@@ -4333,6 +4333,11 @@ function RILNetworkInterface(dataConnectionHandler, apnSetting) {
   this.dataConnectionHandler = dataConnectionHandler;
   this.apnSetting = apnSetting;
   this.connectedTypes = [];
+
+  this.ips = [];
+  this.prefixLengths = [];
+  this.dnses = [];
+  this.gateways = [];
 }
 
 RILNetworkInterface.prototype = {
@@ -4402,13 +4407,13 @@ RILNetworkInterface.prototype = {
 
   name: null,
 
-  ip: null,
+  ips: null,
 
-  prefixLength: 0,
+  prefixLengths: null,
 
-  dns1: null,
+  gateways: null,
 
-  dns2: null,
+  dnses: null,
 
   get httpProxyHost() {
     return this.apnSetting.proxy || "";
@@ -4485,6 +4490,27 @@ RILNetworkInterface.prototype = {
     return port;
   },
 
+  getAddresses: function (ips, prefixLengths) {
+    ips.value = this.ips.slice();
+    prefixLengths.value = this.prefixLengths.slice();
+
+    return this.ips.length;
+  },
+
+  getGateways: function (count) {
+    if (count) {
+      count.value = this.gateways.length;
+    }
+    return this.gateways.slice();
+  },
+
+  getDnses: function (count) {
+    if (count) {
+      count.value = this.dnses.length;
+    }
+    return this.dnses.slice();
+  },
+
   debug: function(s) {
     dump("-*- RILNetworkInterface[" + this.dataConnectionHandler.clientId + ":" +
          this.type + "]: " + s + "\n");
@@ -4520,13 +4546,12 @@ RILNetworkInterface.prototype = {
       this.connecting = false;
       this.cid = datacall.cid;
       this.name = datacall.ifname;
-      this.ip = datacall.addresses[0].address;
-      this.prefixLength = datacall.addresses[0].prefixLength;
-      this.gateway = datacall.gateways[0];
-      if (datacall.dnses.length) {
-        this.dns1 = datacall.dnses[0];
-        this.dns2 = datacall.dnses[1];
+      for (let entry of datacall.addresses) {
+        this.ips.push(entry.address);
+        this.prefixLengths.push(entry.prefixLength);
       }
+      this.gateways = datacall.gateways.slice();
+      this.dnses = datacall.dnses.slice();
       if (!this.registeredAsNetworkInterface) {
         gNetworkManager.registerNetworkInterface(this);
         this.registeredAsNetworkInterface = true;
@@ -4545,16 +4570,28 @@ RILNetworkInterface.prototype = {
       }
       // State remains connected, check for minor changes.
       let changed = false;
-      if (this.gateway != datacall.gateways[0]) {
-        this.gateway = datacall.gateways[0];
+      if (this.ips.length != datacall.addresses.length) {
         changed = true;
+        this.ips = [];
+        this.prefixLengths = [];
+        for (let entry of datacall.addresses) {
+          this.ips.push(entry.address);
+          this.prefixLengths.push(entry.prefixLength);
+        }
       }
-      if (this.dns1 != datacall.dnses[0] ||
-          this.dns2 != datacall.dnses[1]) {
-        this.dns1 = datacall.dnses[0];
-        this.dns2 = datacall.dnses[1];
-        changed = true;
+
+      let reduceFunc = function(aRhs, aChanged, aElement, aIndex) {
+        return aChanged || (aElement != aRhs[aIndex]);
+      };
+      for (let field of ["gateways", "dnses"]) {
+        let lhs = this[field], rhs = datacall[field];
+        if (lhs.length != rhs.length ||
+            lhs.reduce(reduceFunc.bind(null, rhs), false)) {
+          changed = true;
+          this[field] = rhs.slice();
+        }
       }
+
       if (changed) {
         if (DEBUG) this.debug("Notify for data call minor changes.");
         Services.obs.notifyObservers(this,
@@ -4577,6 +4614,11 @@ RILNetworkInterface.prototype = {
       this.registeredAsNetworkInterface = false;
       this.cid = null;
       this.connectedTypes = [];
+
+      this.ips = [];
+      this.prefixLengths = [];
+      this.dnses = [];
+      this.gateways = [];
     }
 
     // In case the data setting changed while the datacall was being started or
