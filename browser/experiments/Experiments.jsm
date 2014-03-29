@@ -611,8 +611,6 @@ Experiments.Experiments.prototype = {
     return this._run();
   },
 
-  // START OF ADD-ON LISTENERS
-
   onDisabled: function (addon) {
     gLogger.trace("Experiments::onDisabled() - addon id: " + addon.id);
     if (addon.id == this._pendingUninstall) {
@@ -637,8 +635,6 @@ Experiments.Experiments.prototype = {
     }
     this.disableExperiment();
   },
-
-  // END OF ADD-ON LISTENERS.
 
   _getExperimentByAddonId: function (addonId) {
     for (let [, entry] of this._experiments) {
@@ -1380,9 +1376,8 @@ Experiments.ExperimentEntry.prototype = {
       deferred.reject(new Error(message));
     };
 
-    let entry = this;
     let listener = {
-      onDownloadEnded: function (install) {
+      onDownloadEnded: install => {
         gLogger.trace("ExperimentEntry::_installAddon() - onDownloadEnded for " + this.id);
 
         if (install.existingAddon) {
@@ -1393,9 +1388,9 @@ Experiments.ExperimentEntry.prototype = {
           gLogger.error("ExperimentEntry::_installAddon() - onDownloadEnded, wrong addon type");
           install.cancel();
         }
-      }.bind(entry),
+      },
 
-      onInstallStarted: function (install) {
+      onInstallStarted: install => {
         gLogger.trace("ExperimentEntry::_installAddon() - onInstallStarted for " + this.id);
 
         if (install.existingAddon) {
@@ -1406,12 +1401,9 @@ Experiments.ExperimentEntry.prototype = {
           gLogger.error("ExperimentEntry::_installAddon() - onInstallStarted, wrong addon type");
           return false;
         }
+      },
 
-        // Experiment add-ons default to userDisabled = true.
-        install.addon.userDisabled = false;
-      }.bind(entry),
-
-      onInstallEnded: function (install) {
+      onInstallEnded: install => {
         gLogger.trace("ExperimentEntry::_installAddon() - install ended for " + this.id);
         this._lastChangedDate = this._policy.now();
         this._startDate = this._policy.now();
@@ -1427,13 +1419,13 @@ Experiments.ExperimentEntry.prototype = {
         this._homepageURL = addon.homepageURL || "";
 
         deferred.resolve();
-      }.bind(entry),
-
-      onDownloadCancelled: failureHandler.bind(entry),
-      onDownloadFailed: failureHandler.bind(entry),
-      onInstallCancelled: failureHandler.bind(entry),
-      onInstallFailed: failureHandler.bind(entry),
+      },
     };
+
+    ["onDownloadCancelled", "onDownloadFailed", "onInstallCancelled", "onInstallFailed"]
+      .forEach(what => {
+        listener[what] = install => failureHandler(install, what)
+      });
 
     install.addListener(listener);
     install.install();

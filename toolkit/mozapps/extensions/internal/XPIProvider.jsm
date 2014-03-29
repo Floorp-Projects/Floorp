@@ -908,28 +908,12 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.userDisabled = !!LightweightThemeManager.currentTheme ||
                          addon.internalName != XPIProvider.selectedSkin;
   }
-  // Experiments are disabled by default. It is up to the Experiments Manager
-  // to enable them (it drives installation).
-  else if (addon.type == "experiment") {
-    addon.userDisabled = true;
-  }
   else {
     addon.userDisabled = false;
     addon.softDisabled = addon.blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
   }
 
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
-
-  // Experiments are managed and updated through an external "experiments
-  // manager." So disable some built-in mechanisms.
-  if (addon.type == "experiment") {
-    addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
-    addon.updateURL = null;
-    addon.updateKey = null;
-
-    addon.targetApplications = [];
-    addon.targetPlatforms = [];
-  }
 
   // Load the storage service before NSS (nsIRandomGenerator),
   // to avoid a SQLite initialization error (bug 717904).
@@ -2087,19 +2071,8 @@ var XPIProvider = {
    * Persists changes to XPIProvider.bootstrappedAddons to its store (a pref).
    */
   persistBootstrappedAddons: function XPI_persistBootstrappedAddons() {
-    // Experiments are disabled upon app load, so don't persist references.
-    let filtered = {};
-    for (let id in this.bootstrappedAddons) {
-      let entry = this.bootstrappedAddons[id];
-      if (entry.type == "experiment") {
-        continue;
-      }
-
-      filtered[id] = entry;
-    }
-
     Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                               JSON.stringify(filtered));
+                               JSON.stringify(this.bootstrappedAddons));
   },
 
   /**
@@ -4254,16 +4227,12 @@ var XPIProvider = {
     // no onDisabling/onEnabling is sent - so send a onPropertyChanged.
     let appDisabledChanged = aAddon.appDisabled != appDisabled;
 
-    // Update the properties in the database.
-    // We never persist this for experiments because the disabled flags
-    // are controlled by the Experiments Manager.
-    if (aAddon.type != "experiment") {
-      XPIDatabase.setAddonProperties(aAddon, {
-        userDisabled: aUserDisabled,
-        appDisabled: appDisabled,
-        softDisabled: aSoftDisabled
-      });
-    }
+    // Update the properties in the database
+    XPIDatabase.setAddonProperties(aAddon, {
+      userDisabled: aUserDisabled,
+      appDisabled: appDisabled,
+      softDisabled: aSoftDisabled
+    });
 
     if (appDisabledChanged) {
       AddonManagerPrivate.callAddonListeners("onPropertyChanged",
@@ -6045,17 +6014,6 @@ AddonInternal.prototype = {
   },
 
   isCompatibleWith: function AddonInternal_isCompatibleWith(aAppVersion, aPlatformVersion) {
-    // Experiments are installed through an external mechanism that
-    // limits target audience to compatible clients. We trust it knows what
-    // it's doing and skip compatibility checks.
-    //
-    // This decision does forfeit defense in depth. If the experiments system
-    // is ever wrong about targeting an add-on to a specific application
-    // or platform, the client will likely see errors.
-    if (this.type == "experiment") {
-      return true;
-    }
-
     let app = this.matchingTargetApplication;
     if (!app)
       return false;
@@ -6440,11 +6398,6 @@ function AddonWrapper(aAddon) {
     return aAddon.applyBackgroundUpdates;
   });
   this.__defineSetter__("applyBackgroundUpdates", function AddonWrapper_applyBackgroundUpdatesSetter(val) {
-    if (this.type == "experiment") {
-      logger.warn("Setting applyBackgroundUpdates on an experiment is not supported.");
-      return;
-    }
-
     if (val != AddonManager.AUTOUPDATE_DEFAULT &&
         val != AddonManager.AUTOUPDATE_DISABLE &&
         val != AddonManager.AUTOUPDATE_ENABLE) {
@@ -6545,33 +6498,22 @@ function AddonWrapper(aAddon) {
     if (!(aAddon.inDatabase))
       return permissions;
 
-    // Experiments can only be uninstalled. An uninstall reflects the user
-    // intent of "disable this experiment." This is partially managed by the
-    // experiments manager.
-    if (aAddon.type == "experiment") {
-      return AddonManager.PERM_CAN_UNINSTALL;
-    }
-
     if (!aAddon.appDisabled) {
-      if (this.userDisabled) {
+      if (this.userDisabled)
         permissions |= AddonManager.PERM_CAN_ENABLE;
-      }
-      else if (aAddon.type != "theme") {
+      else if (aAddon.type != "theme")
         permissions |= AddonManager.PERM_CAN_DISABLE;
-      }
     }
 
     // Add-ons that are in locked install locations, or are pending uninstall
     // cannot be upgraded or uninstalled
     if (!aAddon._installLocation.locked && !aAddon.pendingUninstall) {
       // Add-ons that are installed by a file link cannot be upgraded
-      if (!aAddon._installLocation.isLinkedAddon(aAddon.id)) {
+      if (!aAddon._installLocation.isLinkedAddon(aAddon.id))
         permissions |= AddonManager.PERM_CAN_UPGRADE;
-      }
 
       permissions |= AddonManager.PERM_CAN_UNINSTALL;
     }
-
     return permissions;
   });
 
@@ -6653,14 +6595,6 @@ function AddonWrapper(aAddon) {
   };
 
   this.findUpdates = function AddonWrapper_findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
-    // Short-circuit updates for experiments because updates are handled
-    // through the Experiments Manager.
-    if (this.type == "experiment") {
-      AddonManagerPrivate.callNoUpdateListeners(this, aListener, aReason,
-                                                aAppVersion, aPlatformVersion);
-      return;
-    }
-
     new UpdateChecker(aAddon, aListener, aReason, aAppVersion, aPlatformVersion);
   };
 
