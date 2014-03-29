@@ -861,6 +861,7 @@ TEST_F(AsyncPanZoomControllerTester, LongPressPreventDefault) {
   status = apzc->ReceiveInputEvent(mti);
   EXPECT_EQ(status, nsEventStatus_eIgnore);
 
+  EXPECT_CALL(*mcc, HandleLongTapUp(CSSPoint(touchX, touchEndY), 0, apzc->GetGuid())).Times(1);
   status = ApzcUp(apzc, touchX, touchEndY, time);
   EXPECT_EQ(nsEventStatus_eIgnore, status);
 

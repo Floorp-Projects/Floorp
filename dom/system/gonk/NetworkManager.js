@@ -357,16 +357,18 @@ NetworkManager.prototype = {
             continue;
           }
 #endif
+          let ips = {};
+          let prefixLengths = {};
+          i.getAddresses(ips, prefixLengths);
+
           interfaces.push({
             state: i.state,
             type: i.type,
             name: i.name,
-            ip: i.ip,
-            prefixLength: i.prefixLength,
-            broadcast: i.broadcast,
-            gateway: i.gateway,
-            dns1: i.dns1,
-            dns2: i.dns2,
+            ips: ips.value,
+            prefixLengths: prefixLengths.value,
+            gateways: i.getGateways(),
+            dnses: i.getDnses(),
             httpProxyHost: i.httpProxyHost,
             httpProxyPort: i.httpProxyPort
           });
@@ -514,36 +516,44 @@ NetworkManager.prototype = {
   },
 
   setSecondaryDefaultRoute: function(network) {
-    // First, we need to add a host route to the gateway in the secondary
-    // routing table to make the gateway reachable. Host route takes the max
-    // prefix and gateway address 'any'.
-    let route = {
-      ip: network.gateway,
-      prefix: IPV4_MAX_PREFIX_LENGTH,
-      gateway: IPV4_ADDRESS_ANY
-    };
-    gNetworkService.addSecondaryRoute(network.name, route);
-    // Now we can add the default route through gateway. Default route takes the
-    // min prefix and destination ip 'any'.
-    route.ip = IPV4_ADDRESS_ANY;
-    route.prefix = 0;
-    route.gateway = network.gateway;
-    gNetworkService.addSecondaryRoute(network.name, route);
+    let gateways = network.getGateways();
+    for (let i = 0; i < gateways.length; i++) {
+      let isIPv6 = (gateways[i].indexOf(":") != -1) ? true : false;
+      // First, we need to add a host route to the gateway in the secondary
+      // routing table to make the gateway reachable. Host route takes the max
+      // prefix and gateway address 'any'.
+      let route = {
+        ip: gateways[i],
+        prefix: isIPv6 ? IPV6_MAX_PREFIX_LENGTH : IPV4_MAX_PREFIX_LENGTH,
+        gateway: isIPv6 ? IPV6_ADDRESS_ANY : IPV4_ADDRESS_ANY
+      };
+      gNetworkService.addSecondaryRoute(network.name, route);
+      // Now we can add the default route through gateway. Default route takes the
+      // min prefix and destination ip 'any'.
+      route.ip = isIPv6 ? IPV6_ADDRESS_ANY : IPV4_ADDRESS_ANY;
+      route.prefix = 0;
+      route.gateway = gateways[i];
+      gNetworkService.addSecondaryRoute(network.name, route);
+    }
   },
 
   removeSecondaryDefaultRoute: function(network) {
-    // Remove both host route and default route.
-    let route = {
-      ip: network.gateway,
-      prefix: IPV4_MAX_PREFIX_LENGTH,
-      gateway: IPV4_ADDRESS_ANY
-    };
-    gNetworkService.removeSecondaryRoute(network.name, route);
+    let gateways = network.getGateways();
+    for (let i = 0; i < gateways.length; i++) {
+      let isIPv6 = (gateways[i].indexOf(":") != -1) ? true : false;
+      // Remove both default route and host route.
+      let route = {
+        ip: isIPv6 ? IPV6_ADDRESS_ANY : IPV4_ADDRESS_ANY,
+        prefix: 0,
+        gateway: gateways[i]
+      };
+      gNetworkService.removeSecondaryRoute(network.name, route);
 
-    route.ip = IPV4_ADDRESS_ANY;
-    route.prefix = "0";
-    route.gateway = network.gateway;
-    gNetworkService.removeSecondaryRoute(network.name, route);
+      route.ip = gateways[i];
+      route.prefix = isIPv6 ? IPV6_MAX_PREFIX_LENGTH : IPV4_MAX_PREFIX_LENGTH;
+      route.gateway = isIPv6 ? IPV6_ADDRESS_ANY : IPV4_ADDRESS_ANY;
+      gNetworkService.removeSecondaryRoute(network.name, route);
+    }
   },
 #endif // MOZ_B2G_RIL
 

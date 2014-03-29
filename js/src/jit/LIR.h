@@ -1539,21 +1539,6 @@ LAllocation::toRegister() const
         return visitor->visit##opcode(this);                                \
     }
 
-#if defined(JS_NUNBOX32)
-# define BOX_OUTPUT_ACCESSORS()                                             \
-    const LDefinition *outputType() {                                       \
-        return getDef(TYPE_INDEX);                                          \
-    }                                                                       \
-    const LDefinition *outputPayload() {                                    \
-        return getDef(PAYLOAD_INDEX);                                       \
-    }
-#elif defined(JS_PUNBOX64)
-# define BOX_OUTPUT_ACCESSORS()                                             \
-    const LDefinition *outputValue() {                                      \
-        return getDef(0);                                                   \
-    }
-#endif
-
 #include "jit/LIR-Common.h"
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 # if defined(JS_CODEGEN_X86)

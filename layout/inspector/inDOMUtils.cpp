@@ -641,7 +641,7 @@ inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
   triple.mG = NS_GET_G(color);
   triple.mB = NS_GET_B(color);
 
-  if (!triple.ToObject(aCx, JS::NullPtr(), aValue)) {
+  if (!triple.ToObject(aCx, aValue)) {
     return NS_ERROR_FAILURE;
   }
 

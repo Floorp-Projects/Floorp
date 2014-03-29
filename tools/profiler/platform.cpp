@@ -651,6 +651,7 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
         if (!thread_profile) {
           continue;
         }
+        thread_profile->GetPseudoStack()->reinitializeOnResume();
         if (t->ProfileJS()) {
           thread_profile->GetPseudoStack()->enableJSSampling();
         }
@@ -834,6 +835,22 @@ void mozilla_sampler_unregister_thread()
   }
   delete stack;
   tlsPseudoStack.set(nullptr);
+}
+
+void mozilla_sampler_sleep_start() {
+    PseudoStack *stack = tlsPseudoStack.get();
+    if (stack == nullptr) {
+      return;
+    }
+    stack->setSleeping(1);
+}
+
+void mozilla_sampler_sleep_end() {
+    PseudoStack *stack = tlsPseudoStack.get();
+    if (stack == nullptr) {
+      return;
+    }
+    stack->setSleeping(0);
 }
 
 double mozilla_sampler_time(const TimeStamp& aTime)

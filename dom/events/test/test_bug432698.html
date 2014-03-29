@@ -131,6 +131,7 @@ function runTests() {
   sendMouseEvent("mousemove", outside);
   is(mouseleavecount, 7, "Unexpected mouseleave event count!");
 
+  checkRelatedTarget = false;
   SimpleTest.finish();
 }
 

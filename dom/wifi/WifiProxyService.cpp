@@ -94,7 +94,6 @@ public:
     COPY_FIELD(mValue)
     COPY_FIELD(mIpaddr_str)
     COPY_FIELD(mGateway_str)
-    COPY_FIELD(mBroadcast_str)
     COPY_FIELD(mDns1_str)
     COPY_FIELD(mDns2_str)
     COPY_FIELD(mMask_str)
@@ -281,7 +280,7 @@ WifiProxyService::DispatchWifiResult(const WifiResultOptions& aOptions, const ns
   mozilla::AutoSafeJSContext cx;
   JS::Rooted<JS::Value> val(cx);
 
-  if (!aOptions.ToObject(cx, JS::NullPtr(), &val)) {
+  if (!aOptions.ToObject(cx, &val)) {
     return;
   }
 

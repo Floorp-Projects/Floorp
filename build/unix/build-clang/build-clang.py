@@ -38,7 +38,7 @@ def build_package(package_source_dir, package_build_dir, configure_args,
         os.mkdir(package_build_dir)
     run_in(package_build_dir,
            ["%s/configure" % package_source_dir] + configure_args)
-    run_in(package_build_dir, ["make", "-j8"] + make_args)
+    run_in(package_build_dir, ["make", "-j4"] + make_args)
     run_in(package_build_dir, ["make", "install"])
 
 
@@ -59,9 +59,9 @@ def svn_co(url, directory, revision):
     check_run(["svn", "co", "-r", revision, url, directory])
 
 
-def build_one_stage(env, stage_dir, llvm_source_dir):
+def build_one_stage(env, stage_dir, llvm_source_dir, gcc_toolchain_dir):
     def f():
-        build_one_stage_aux(stage_dir, llvm_source_dir)
+        build_one_stage_aux(stage_dir, llvm_source_dir, gcc_toolchain_dir)
     with_env(env, f)
 
 
@@ -99,7 +99,7 @@ def is_darwin():
     return platform.system() == "Darwin"
 
 
-def build_one_stage_aux(stage_dir, llvm_source_dir):
+def build_one_stage_aux(stage_dir, llvm_source_dir, gcc_toolchain_dir):
     os.mkdir(stage_dir)
 
     build_dir = stage_dir + "/build"
@@ -117,7 +117,8 @@ def build_one_stage_aux(stage_dir, llvm_source_dir):
                       "--enable-targets=" + ",".join(targets),
                       "--disable-assertions",
                       "--prefix=%s" % inst_dir,
-                      "--with-gcc-toolchain=/tools/gcc-4.7.3-0moz1"]
+                      "--with-gcc-toolchain=%s" % gcc_toolchain_dir,
+                      "--disable-compiler-version-checks"]
     build_package(llvm_source_dir, build_dir, configure_opts, [])
 
 if __name__ == "__main__":
@@ -133,6 +134,8 @@ if __name__ == "__main__":
     llvm_source_dir = source_dir + "/llvm"
     clang_source_dir = source_dir + "/clang"
     compiler_rt_source_dir = source_dir + "/compiler-rt"
+
+    gcc_dir = "/tools/gcc-4.7.3-0moz1"
 
     if is_darwin():
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
@@ -175,16 +178,21 @@ if __name__ == "__main__":
     else:
         extra_cflags = "-static-libgcc"
         extra_cxxflags = "-static-libgcc -static-libstdc++"
-        cc = "/usr/bin/gcc"
-        cxx = "/usr/bin/g++"
+        cc = gcc_dir + "/bin/gcc"
+        cxx = gcc_dir + "/bin/g++"
 
-    build_one_stage({"CC": cc, "CXX": cxx}, stage1_dir, llvm_source_dir)
+    if os.environ.has_key('LD_LIBRARY_PATH'):
+        os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
+    else:
+        os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
+
+    build_one_stage({"CC": cc, "CXX": cxx}, stage1_dir, llvm_source_dir, gcc_dir)
 
     stage2_dir = build_dir + '/stage2'
     build_one_stage(
         {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags,
          "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags},
-        stage2_dir, llvm_source_dir)
+        stage2_dir, llvm_source_dir, gcc_dir)
 
     build_tar_package("tar", "clang.tar.bz2", stage2_dir, "clang")
     build_tooltool_manifest(llvm_revision)

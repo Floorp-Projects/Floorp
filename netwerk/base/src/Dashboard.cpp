@@ -317,7 +317,7 @@ LookupHelper::ConstructAnswer(LookupArgument *aArgument)
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    if (!dict.ToObject(cx, &val)) {
         return NS_ERROR_FAILURE;
     }
 
@@ -400,7 +400,7 @@ Dashboard::GetSockets(SocketData *aSocketData)
     dict.mSent += socketData->mTotalSent;
     dict.mReceived += socketData->mTotalRecv;
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val))
+    if (!dict.ToObject(cx, &val))
         return NS_ERROR_FAILURE;
     socketData->mCallback->OnDashboardDataAvailable(val);
 
@@ -503,7 +503,7 @@ Dashboard::GetHttpConnections(HttpData *aHttpData)
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    if (!dict.ToObject(cx, &val)) {
         return NS_ERROR_FAILURE;
     }
 
@@ -630,7 +630,7 @@ Dashboard::GetWebSocketConnections(WebSocketRequest *aWsRequest)
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    if (!dict.ToObject(cx, &val)) {
         return NS_ERROR_FAILURE;
     }
     wsRequest->mCallback->OnDashboardDataAvailable(val);
@@ -717,7 +717,7 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
     }
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val)) {
+    if (!dict.ToObject(cx, &val)) {
         return NS_ERROR_FAILURE;
     }
     dnsData->mCallback->OnDashboardDataAvailable(val);
@@ -819,7 +819,7 @@ Dashboard::GetConnectionStatus(ConnectionData *aConnectionData)
     dict.mStatus = connectionData->mStatus;
 
     JS::RootedValue val(cx);
-    if (!dict.ToObject(cx, JS::NullPtr(), &val))
+    if (!dict.ToObject(cx, &val))
         return NS_ERROR_FAILURE;
 
     connectionData->mCallback->OnDashboardDataAvailable(val);

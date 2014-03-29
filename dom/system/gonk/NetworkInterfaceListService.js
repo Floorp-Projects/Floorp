@@ -47,12 +47,52 @@ NetworkInterfaceListService.prototype = {
   }
 };
 
-function NetworkInterfaceList (aInterfaces) {
-  this._interfaces = aInterfaces;
+function FakeNetworkInterface(aAttributes) {
+  this.state = aAttributes.state;
+  this.type = aAttributes.type;
+  this.name = aAttributes.name;
+  this.ips = aAttributes.ips;
+  this.prefixLengths = aAttributes.prefixLengths;
+  this.gateways = aAttributes.gateways;
+  this.dnses = aAttributes.dnses;
+  this.httpProxyHost = aAttributes.httpProxyHost;
+  this.httpProxyPort = aAttributes.httpProxyPort;
+}
+FakeNetworkInterface.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterface]),
+
+  getAddresses: function (ips, prefixLengths) {
+    ips.value = this.ips.slice();
+    prefixLengths.value = this.prefixLengths.slice();
+
+    return this.ips.length;
+  },
+
+  getGateways: function (count) {
+    if (count) {
+      count.value = this.gateways.length;
+    }
+    return this.gateways.slice();
+  },
+
+  getDnses: function (count) {
+    if (count) {
+      count.value = this.dnses.length;
+    }
+    return this.dnses.slice();
+  }
+};
+
+function NetworkInterfaceList (aInterfaceLiterals) {
+  this._interfaces = [];
+  for (let entry of aInterfaceLiterals) {
+    this._interfaces.push(new FakeNetworkInterface(entry));
+  }
 }
 
 NetworkInterfaceList.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINetworkInterfaceList]),
+
   getNumberOfInterface: function() {
     return this._interfaces.length;
   },
