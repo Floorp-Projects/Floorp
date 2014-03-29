@@ -96,11 +96,6 @@ class IncrementalSafety
 IncrementalSafety
 IsIncrementalGCSafe(JSRuntime *rt);
 
-#ifdef JSGC_ROOT_ANALYSIS
-void *
-GetAddressableGCThing(JSRuntime *rt, uintptr_t w);
-#endif
-
 #ifdef JS_GC_ZEAL
 void
 StartVerifyPreBarriers(JSRuntime *rt);

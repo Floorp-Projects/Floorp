@@ -1562,25 +1562,6 @@ js::NonObjectToNumberSlow(ThreadSafeContext *cx, Value v, double *out)
 bool
 js::ToNumberSlow(ExclusiveContext *cx, Value v, double *out)
 {
-#ifdef DEBUG
-    /*
-     * MSVC bizarrely miscompiles this, complaining about the first brace below
-     * being unmatched (!).  The error message points at both this opening brace
-     * and at the corresponding SkipRoot constructor.  The error seems to derive
-     * from the presence guard-object macros on the SkipRoot class/constructor,
-     * which seems well in the weeds for an unmatched-brace syntax error.
-     * Otherwise the problem is inscrutable, and I haven't found a workaround.
-     * So for now just disable it when compiling with MSVC -- not ideal, but at
-     * least Windows debug shell builds complete again.
-     */
-#ifndef _MSC_VER
-    {
-        SkipRoot skip(cx, &v);
-        MaybeCheckStackRoots(cx);
-    }
-#endif
-#endif
-
     JS_ASSERT(!v.isNumber());
     goto skip_int_double;
     for (;;) {

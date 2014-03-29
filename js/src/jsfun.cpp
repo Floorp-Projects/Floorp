@@ -1589,9 +1589,6 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     const jschar *chars = linear->chars();
     size_t length = linear->length();
 
-    /* Protect inlined chars from root analysis poisoning. */
-    SkipRoot skip(cx, &chars);
-
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
      * anonymous function in the top-level scope that its constructor inhabits.

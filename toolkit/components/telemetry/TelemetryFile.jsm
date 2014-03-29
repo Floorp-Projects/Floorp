@@ -13,10 +13,13 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Deprecated.jsm", this);
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
+
+XPCOMUtils.defineLazyModuleGetter(this, 'Deprecated',
+  'resource://gre/modules/Deprecated.jsm');
 
 const Telemetry = Services.telemetry;
 

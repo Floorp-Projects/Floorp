@@ -146,5 +146,5 @@ this.startup = function(window) {
     }
 
     WebappRT.startUpdateService();
-  }).then(null, Cu.reportError.bind(Cu));
+  });
 }

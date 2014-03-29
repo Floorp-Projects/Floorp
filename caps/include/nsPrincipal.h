@@ -28,8 +28,8 @@ protected:
   virtual ~nsBasePrincipal();
 
 public:
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
+  NS_IMETHOD_(MozExternalRefCountType) Release(void);
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
 public:

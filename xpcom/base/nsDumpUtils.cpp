@@ -16,6 +16,7 @@
 #if defined(XP_LINUX) || defined(__FreeBSD__) // {
 #include "mozilla/Preferences.h"
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 

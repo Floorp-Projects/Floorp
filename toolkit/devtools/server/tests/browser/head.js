@@ -15,8 +15,7 @@ const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
 /**
  * Open a new tab at a URL and call a callback on load
  */
-function addTab(aURL, aCallback)
-{
+function addTab(aURL, aCallback) {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
@@ -34,6 +33,16 @@ function addTab(aURL, aCallback)
   }
 
   browser.addEventListener("load", onTabLoad, true);
+}
+
+/**
+ * Forces GC, CC and Shrinking GC to get rid of disconnected docshells and
+ * windows.
+ */
+function forceCollections() {
+  Cu.forceGC();
+  Cu.forceCC();
+  Cu.forceShrinkingGC();
 }
 
 registerCleanupFunction(function tearDown() {

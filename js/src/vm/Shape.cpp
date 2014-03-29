@@ -1710,7 +1710,6 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
     if (p)
         return p->shape;
 
-    SkipRoot skip(cx, &p); /* The hash may look like a GC pointer and get poisoned. */
     Rooted<TaggedProto> protoRoot(cx, proto);
     RootedObject parentRoot(cx, parent);
     RootedObject metadataRoot(cx, metadata);

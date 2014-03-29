@@ -18,7 +18,7 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
-  NS_IMETHOD_(nsrefcnt) RefCnt() = 0;
+  NS_IMETHOD_(MozExternalRefCountType) RefCnt() = 0;
   NS_IMETHOD_(int32_t) ID() = 0;
 };
 
@@ -34,7 +34,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // IFoo implementation
-  NS_IMETHOD_(nsrefcnt) RefCnt() { return mRefCnt; }
+  NS_IMETHOD_(MozExternalRefCountType) RefCnt() { return mRefCnt; }
   NS_IMETHOD_(int32_t) ID() { return mID; }
 
   static int32_t gCount;
@@ -108,7 +108,7 @@ Bar::~Bar()
 NS_IMPL_ADDREF(Bar)
 NS_IMPL_QUERY_INTERFACE1(Bar, IBar)
 
-NS_IMETHODIMP_(nsrefcnt)
+NS_IMETHODIMP_(MozExternalRefCountType)
 Bar::Release(void)
 {
   ++Bar::sReleaseCalled;

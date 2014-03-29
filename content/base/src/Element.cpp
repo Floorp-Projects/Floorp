@@ -128,6 +128,7 @@
 #include "nsITextControlElement.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2199,7 +2200,7 @@ Element::List(FILE* out, int32_t aIndent,
     fprintf(out, " ranges:%d", ranges ? ranges->Count() : 0);
   }
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
-  fprintf(out, " refcount=%d<", mRefCnt.get());
+  fprintf(out, " refcount=%" PRIuPTR "<", mRefCnt.get());
 
   nsIContent* child = GetFirstChild();
   if (child) {

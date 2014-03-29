@@ -35,6 +35,11 @@ public:
   Accessible* ConceptualParent() const { return mParent; }
 
   /**
+   * Update group information.
+   */
+  void Update();
+
+  /**
    * Create group info.
    */
   static AccGroupInfo* CreateGroupInfo(Accessible* aAccessible)
@@ -99,6 +104,8 @@ private:
   uint32_t mPosInSet;
   uint32_t mSetSize;
   Accessible* mParent;
+  Accessible* mItem;
+  a11y::role mRole;
 };
 
 } // namespace mozilla

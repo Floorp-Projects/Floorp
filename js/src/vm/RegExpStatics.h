@@ -171,7 +171,7 @@ class AutoRegExpStaticsBuffer : private JS::CustomAutoRooter
   public:
     explicit AutoRegExpStaticsBuffer(JSContext *cx
                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : CustomAutoRooter(cx), statics(RegExpStatics::InitBuffer()), skip(cx, &statics)
+      : CustomAutoRooter(cx), statics(RegExpStatics::InitBuffer())
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -195,7 +195,6 @@ class AutoRegExpStaticsBuffer : private JS::CustomAutoRooter
     }
 
     RegExpStatics statics;
-    SkipRoot skip;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

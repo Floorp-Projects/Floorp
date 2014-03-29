@@ -4012,6 +4012,7 @@ NSS_NO_LIBPKIX=
 MOZ_CONTENT_SANDBOX=
 MOZ_CONTENT_SANDBOX_REPORTER=1
 JSGC_USE_EXACT_ROOTING=
+JSGC_GENERATIONAL=
 
 case "$target_os" in
     mingw*)
@@ -7220,10 +7221,10 @@ fi
 dnl ========================================================
 dnl = Use generational GC
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(gcgenerational,
-[  --enable-gcgenerational Enable generational GC],
-    JSGC_GENERATIONAL=1,
-    JSGC_GENERATIONAL= )
+MOZ_ARG_DISABLE_BOOL(gcgenerational,
+[  --disable-gcgenerational Disable generational GC],
+    JSGC_GENERATIONAL= ,
+    JSGC_GENERATIONAL=1 )
 if test -n "$JSGC_GENERATIONAL"; then
     AC_DEFINE(JSGC_GENERATIONAL)
 fi
@@ -9237,6 +9238,9 @@ if test -z "$JS_SHARED_LIBRARY" ; then
 fi
 if test -z "$JSGC_USE_EXACT_ROOTING" ; then
     ac_configure_args="$ac_configure_args --disable-exact-rooting"
+fi
+if test -z "$JSGC_GENERATIONAL" ; then
+    ac_configure_args="$ac_configure_args --disable-gcgenerational"
 fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"

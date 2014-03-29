@@ -30,3 +30,7 @@ LOCAL_INCLUDES += [
 RESOURCE_FILES.dtd += [
     'htmlmathml-f.ent',
 ]
+
+if CONFIG['GNU_CC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    # Work around bug 986928
+    CXXFLAGS += ['-Wno-error=format']

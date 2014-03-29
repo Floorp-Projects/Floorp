@@ -101,8 +101,8 @@ public:
   virtual int cancel(int how);
 
   // nsISupport reference counted interface
-  NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
-  NS_IMETHOD_(nsrefcnt) Release(void) = 0;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
 
   uint32_t poll_flags() {
     return poll_flags_;

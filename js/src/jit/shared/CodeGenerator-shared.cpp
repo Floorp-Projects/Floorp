@@ -41,6 +41,8 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     gen(gen),
     graph(*graph),
     current(nullptr),
+    snapshots_(),
+    recovers_(snapshots_),
     deoptTable_(nullptr),
 #ifdef DEBUG
     pushedArgs_(0),
@@ -247,8 +249,28 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     JS_ASSERT(mode != MResumePoint::Outer);
     bool resumeAfter = (mode == MResumePoint::ResumeAfter);
 
-    SnapshotOffset offset = snapshots_.startSnapshot(frameCount, snapshot->bailoutKind(),
-                                                     resumeAfter);
+    SnapshotOffset offset = recovers_.startRecover(frameCount, snapshot->bailoutKind(),
+                                                   resumeAfter);
+
+#ifdef TRACK_SNAPSHOTS
+    uint32_t pcOpcode = 0;
+    uint32_t lirOpcode = 0;
+    uint32_t lirId = 0;
+    uint32_t mirOpcode = 0;
+    uint32_t mirId = 0;
+
+    if (LInstruction *ins = instruction()) {
+        lirOpcode = ins->op();
+        lirId = ins->id();
+        if (ins->mirRaw()) {
+            mirOpcode = ins->mirRaw()->op();
+            mirId = ins->mirRaw()->id();
+            if (ins->mirRaw()->trackedPc())
+                pcOpcode = *ins->mirRaw()->trackedPc();
+        }
+    }
+    snapshots_.trackSnapshot(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
+#endif
 
     FlattenedMResumePointIter mirOperandIter(snapshot->mir());
     if (!mirOperandIter.init())
@@ -265,7 +287,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         JSScript *script = block->info().script();
         jsbytecode *pc = mir->pc();
         uint32_t exprStack = mir->stackDepth() - block->info().ninvoke();
-        snapshots_.startFrame(fun, script, pc, exprStack);
+        recovers_.startFrame(fun, script, pc, exprStack);
 
         // Ensure that all snapshot which are encoded can safely be used for
         // bailouts.
@@ -305,35 +327,12 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         }
 #endif
 
-#ifdef TRACK_SNAPSHOTS
-        LInstruction *ins = instruction();
-
-        uint32_t pcOpcode = 0;
-        uint32_t lirOpcode = 0;
-        uint32_t lirId = 0;
-        uint32_t mirOpcode = 0;
-        uint32_t mirId = 0;
-
-        if (ins) {
-            lirOpcode = ins->op();
-            lirId = ins->id();
-            if (ins->mirRaw()) {
-                mirOpcode = ins->mirRaw()->op();
-                mirId = ins->mirRaw()->id();
-                if (ins->mirRaw()->trackedPc())
-                    pcOpcode = *ins->mirRaw()->trackedPc();
-            }
-        }
-        snapshots_.trackFrame(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
-#endif
-
         if (!encodeAllocations(snapshot, mir, &startIndex))
             return false;
-        snapshots_.endFrame();
+        recovers_.endFrame();
     }
 
-    snapshots_.endSnapshot();
-
+    recovers_.endRecover();
     snapshot->setSnapshotOffset(offset);
 
     return !snapshots_.oom();
@@ -560,11 +559,13 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
     // before the return address.
     masm.branch32(Assembler::NotEqual, checkRegs, Imm32(1), &failure);
 
-    // Ignore temp registers. Some instructions (like LValueToInt32) modify
+    // Ignore clobbered registers. Some instructions (like LValueToInt32) modify
     // temps after calling into the VM. This is fine because no other
-    // instructions (including this OsiPoint) will depend on them.
+    // instructions (including this OsiPoint) will depend on them. Also
+    // backtracking can also use the same register for an input and an output.
+    // These are marked as clobbered and shouldn't get checked.
     RegisterSet liveRegs = safepoint->liveRegs();
-    liveRegs = RegisterSet::Intersect(liveRegs, RegisterSet::Not(safepoint->tempRegs()));
+    liveRegs = RegisterSet::Intersect(liveRegs, RegisterSet::Not(safepoint->clobberedRegs()));
 
     VerifyOp op(masm, &failure);
     HandleRegisterDump<VerifyOp>(op, masm, liveRegs, scratch, allRegs.getAny());

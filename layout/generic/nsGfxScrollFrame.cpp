@@ -1545,6 +1545,14 @@ public:
 
 static ScrollFrameActivityTracker *gScrollFrameActivityTracker = nullptr;
 
+// There are situations when a scroll frame is destroyed and then re-created
+// for the same content element. In this case we want to increment the scroll
+// generation between the old and new scrollframes. If the new one knew about
+// the old one then it could steal the old generation counter and increment it
+// but it doesn't have that reference so instead we use a static global to
+// ensure the new one gets a fresh value.
+static uint32_t sScrollGenerationCounter = 0;
+
 ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
                                              bool aIsRoot)
   : mHScrollbarBox(nullptr)
@@ -1555,7 +1563,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mOuter(aOuter)
   , mAsyncScroll(nullptr)
   , mOriginOfLastScroll(nsGkAtoms::other)
-  , mScrollGeneration(0)
+  , mScrollGeneration(++sScrollGenerationCounter)
   , mDestination(0, 0)
   , mScrollPosAtLastPaint(0, 0)
   , mRestorePos(-1, -1)
@@ -2071,7 +2079,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   // Update frame position for scrolling
   mScrolledFrame->SetPosition(mScrollPort.TopLeft() - pt);
   mOriginOfLastScroll = aOrigin;
-  mScrollGeneration++;
+  mScrollGeneration = ++sScrollGenerationCounter;
 
   // We pass in the amount to move visually
   ScrollVisual(oldScrollFramePos);

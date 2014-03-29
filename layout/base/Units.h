@@ -262,6 +262,18 @@ gfx::SizeTyped<dst> operator/(const gfx::SizeTyped<src>& aSize, const gfx::Scale
 }
 
 template<class src, class dst>
+gfx::SizeTyped<dst> operator*(const gfx::IntSizeTyped<src>& aSize, const gfx::ScaleFactor<src, dst>& aScale) {
+  return gfx::SizeTyped<dst>(float(aSize.width) * aScale.scale,
+                             float(aSize.height) * aScale.scale);
+}
+
+template<class src, class dst>
+gfx::SizeTyped<dst> operator/(const gfx::IntSizeTyped<src>& aSize, const gfx::ScaleFactor<dst, src>& aScale) {
+  return gfx::SizeTyped<dst>(float(aSize.width) / aScale.scale,
+                             float(aSize.height) / aScale.scale);
+}
+
+template<class src, class dst>
 gfx::MarginTyped<dst> operator*(const gfx::MarginTyped<src>& aMargin, const gfx::ScaleFactor<src, dst>& aScale) {
   return gfx::MarginTyped<dst>(aMargin.top * aScale.scale,
                                aMargin.right * aScale.scale,

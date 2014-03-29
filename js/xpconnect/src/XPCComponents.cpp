@@ -3789,8 +3789,8 @@ private:
 ComponentsSH ComponentsSH::singleton(0);
 
 // Singleton refcounting.
-NS_IMETHODIMP_(nsrefcnt) ComponentsSH::AddRef(void) { return 1; }
-NS_IMETHODIMP_(nsrefcnt) ComponentsSH::Release(void) { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) ComponentsSH::AddRef(void) { return 1; }
+NS_IMETHODIMP_(MozExternalRefCountType) ComponentsSH::Release(void) { return 1; }
 
 NS_INTERFACE_MAP_BEGIN(ComponentsSH)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)

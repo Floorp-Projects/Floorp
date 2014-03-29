@@ -104,7 +104,7 @@ DownloadLastDir.prototype = {
   // This function is now deprecated as it uses the sync nsIContentPrefService
   // interface. New consumers should use the getFileAsync function.
   getFile: function (aURI) {
-    Components.utils.import("resource://gre/modules/Deprecated.jsm");
+    let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     Deprecated.warning("DownloadLastDir.getFile is deprecated. Please use getFileAsync instead.",
                        "https://developer.mozilla.org/en-US/docs/Mozilla/JavaScript_code_modules/DownloadLastDir.jsm",
                        Components.stack.caller);
