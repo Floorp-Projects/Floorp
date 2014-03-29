@@ -1109,11 +1109,11 @@ DataConnectionHandler.prototype = {
       if (this._dataCallbacks.indexOf(callback) == -1) {
         continue;
       }
-      let handler = callback[name];
-      if (typeof handler !== "function") {
-        throw new Error("No handler for " + name);
-      }
       try {
+        let handler = callback[name];
+        if (typeof handler !== "function") {
+          throw new Error("No handler for " + name);
+        }
         handler.apply(callback, args);
       } catch (e) {
         if (DEBUG) {
