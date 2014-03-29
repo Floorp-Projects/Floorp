@@ -689,7 +689,7 @@ Console::ProfileMethod(JSContext* aCx, const nsAString& aAction,
   }
 
   JS::Rooted<JS::Value> eventValue(aCx);
-  if (!event.ToObject(aCx, JS::NullPtr(), &eventValue)) {
+  if (!event.ToObject(aCx, &eventValue)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -1001,7 +1001,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
   }
 
   JS::Rooted<JS::Value> eventValue(cx);
-  if (!event.ToObject(cx, JS::NullPtr(), &eventValue)) {
+  if (!event.ToObject(cx, &eventValue)) {
     Throw(cx, NS_ERROR_FAILURE);
     return;
   }
@@ -1300,7 +1300,7 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
     RootedDictionary<ConsoleTimerError> error(aCx);
 
     JS::Rooted<JS::Value> value(aCx);
-    if (!error.ToObject(aCx, JS::NullPtr(), &value)) {
+    if (!error.ToObject(aCx, &value)) {
       return JS::UndefinedValue();
     }
 
@@ -1332,7 +1332,7 @@ Console::StartTimer(JSContext* aCx, const JS::Value& aName,
   timer.mStarted = aTimestamp;
 
   JS::Rooted<JS::Value> value(aCx);
-  if (!timer.ToObject(aCx, JS::NullPtr(), &value)) {
+  if (!timer.ToObject(aCx, &value)) {
     return JS::UndefinedValue();
   }
 
@@ -1366,7 +1366,7 @@ Console::StopTimer(JSContext* aCx, const JS::Value& aName,
   timer.mDuration = aTimestamp - entry;
 
   JS::Rooted<JS::Value> value(aCx);
-  if (!timer.ToObject(aCx, JS::NullPtr(), &value)) {
+  if (!timer.ToObject(aCx, &value)) {
     return JS::UndefinedValue();
   }
 
@@ -1414,7 +1414,7 @@ Console::IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
       RootedDictionary<ConsoleCounterError> error(aCx);
 
       JS::Rooted<JS::Value> value(aCx);
-      if (!error.ToObject(aCx, JS::NullPtr(), &value)) {
+      if (!error.ToObject(aCx, &value)) {
         return JS::UndefinedValue();
       }
 
@@ -1430,7 +1430,7 @@ Console::IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
   data.mCount = count;
 
   JS::Rooted<JS::Value> value(aCx);
-  if (!data.ToObject(aCx, JS::NullPtr(), &value)) {
+  if (!data.ToObject(aCx, &value)) {
     return JS::UndefinedValue();
   }
 
