@@ -188,7 +188,11 @@ setting[type="menulist"] {
   display: none;
 }
 
-#addons-page .view-pane:not([type="plugin"]) .global-info-container {
+#addons-page .view-pane:not([type="plugin"]) .plugin-info-container {
+  display: none;
+}
+
+#addons-page .view-pane:not([type="experiment"]) .experiment-info-container {
   display: none;
 }
 
@@ -219,5 +223,13 @@ richlistitem:not([selected]) * {
 }
 
 .discover-button[disabled="true"] {
+  display: none;
+}
+
+#experiments-learn-more[disabled="true"] {
+  display: none;
+}
+
+#experiments-change-telemetry[disabled="true"] {
   display: none;
 }

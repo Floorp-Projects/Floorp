@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+<svg version="1.1"
+     id="icon-close"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px"
+     y="0px"
+     width="96px"
+     height="16px"
+     viewBox="0 0 96 16">
+
+  <defs>
+    <style type="text/css"><![CDATA[
+      /* X Glyph Styles */
+
+      .glyphShape-style-foreground {
+        fill: ButtonText;
+        fill-opacity: .8;
+      }
+
+      .glyphShape-style-background {
+        fill: -moz-MenuBarText;
+        fill-opacity: .8;
+      }
+
+      .glyphShape-style-hover {
+        fill: #fff;
+      }
+
+      .glyphShape-style-hover-shadow {
+        fill: #b32c12;
+      }
+
+      .glyphShape-style-hover-active {
+        fill: #fff;
+        fill-opacity: .8;
+      }
+
+      .glyphShape-style-hover-active-shadow {
+        fill: #99260f;
+      }
+
+      .glyphShape-style-LWT-bright {
+        fill: #fff;
+        fill-opacity: .8;
+      }
+
+      .glyphShape-style-LWT-dark {
+        fill: #000;
+        fill-opacity: .8;
+      }
+
+
+      /* Close Button Background Styles */
+
+      .icon-background-hover {
+        fill: #d93616;
+      }
+
+      .icon-background-hover-active {
+        fill: #b32c12;
+      }
+      ]]></style>
+
+    <polygon id="glyphShape-close" points="4,5.5 5.5,4 8,6.5 10.5,4 12,5.5 9.5,8 12,10.5 10.5,12 8,9.5 5.5,12 4,10.5 6.5,8"/>
+    <polygon id="glyphShape-close-topHighlight" points="4,5.5 5.5,4 8,6.5 10.5,4 12,5.5 9.5,8 11.5,6 10.5,5 8,7.5 5.5,5 4.5,6"/>
+    <rect    id="glyphShape-background" x="2" y="2" rx="2" width="12" height="12"/>
+
+  </defs>
+
+  <g id="icon-closeForeground-default">
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-foreground" />
+    <use xlink:href="#glyphShape-close-topHighlight" class="glyphShape-style-foreground" />
+  </g>
+
+  <g id="icon-close-hover" transform="translate(16)">
+    <use xlink:href="#glyphShape-background" class="icon-background-hover" />
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-hover-shadow" transform="translate(0,1)" />
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-hover" />
+  </g>
+
+  <g id="icon-close-hover-active" transform="translate(32)">
+    <use xlink:href="#glyphShape-background" class="icon-background-hover-active" />
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-hover-active-shadow" transform="translate(0,1)" />
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-hover-active" />
+  </g>
+
+  <g id="icon-closeBackground-default" transform="translate(48)">
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-background" />
+    <use xlink:href="#glyphShape-close-topHighlight" class="glyphShape-style-background" />
+  </g>
+
+  <g id="icon-close-LWT-bright" transform="translate(64)">
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-LWT-bright" />
+    <use xlink:href="#glyphShape-close-topHighlight" class="glyphShape-style-LWT-bright" />
+  </g>
+
+  <g id="icon-close-LWT-dark" transform="translate(80)">
+    <use xlink:href="#glyphShape-close" class="glyphShape-style-LWT-dark" />
+    <use xlink:href="#glyphShape-close-topHighlight" class="glyphShape-style-LWT-dark" />
+  </g>
+
+</svg>

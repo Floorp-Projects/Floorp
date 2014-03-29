@@ -95,6 +95,7 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "SVGContentUtils.h"
+#include "nsIScreenManager.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -822,8 +823,48 @@ CanvasRenderingContext2D::RemoveDemotableContext(CanvasRenderingContext2D* conte
 
 bool
 CheckSizeForSkiaGL(IntSize size) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   int minsize = Preferences::GetInt("gfx.canvas.min-size-for-skia-gl", 128);
-  return size.width >= minsize && size.height >= minsize;
+  if (size.width < minsize || size.height < minsize) {
+    return false;
+  }
+
+  // Maximum pref allows 3 different options:
+  //  0   means unlimited size
+  //  > 0 means use value as an absolute threshold
+  //  < 0 means use the number of screen pixels as a threshold
+  int maxsize = Preferences::GetInt("gfx.canvas.max-size-for-skia-gl", 0);
+
+  // unlimited max size
+  if (!maxsize) {
+    return true;
+  }
+
+  // absolute max size threshold
+  if (maxsize > 0) {
+    return size.width <= maxsize && size.height <= maxsize;
+  }
+
+  // Cache the number of pixels on the primary screen
+  static int32_t gScreenPixels = -1;
+  if (gScreenPixels < 0) {
+    nsCOMPtr<nsIScreenManager> screenManager =
+      do_GetService("@mozilla.org/gfx/screenmanager;1");
+    if (screenManager) {
+      nsCOMPtr<nsIScreen> primaryScreen;
+      screenManager->GetPrimaryScreen(getter_AddRefs(primaryScreen));
+      if (primaryScreen) {
+        int32_t x, y, width, height;
+        primaryScreen->GetRect(&x, &y, &width, &height);
+
+        gScreenPixels = width * height;
+      }
+    }
+  }
+
+  // screen size acts as max threshold
+  return gScreenPixels < 0 || (size.width * size.height) <= gScreenPixels;
 }
 
 void

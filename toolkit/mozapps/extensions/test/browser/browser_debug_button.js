@@ -12,7 +12,7 @@ let { Task } = Components.utils.import("resource://gre/modules/Task.jsm", {});
 const getDebugButton = node =>
     node.ownerDocument.getAnonymousElementByAttribute(node, "anonid", "debug-btn");
 const addonDebuggingEnabled = bool =>
-  Services.prefs.setBoolPref("devtools.debugger.addon-enabled", !!bool);
+  Services.prefs.setBoolPref("devtools.chrome.enabled", !!bool);
 const remoteDebuggingEnabled = bool =>
   Services.prefs.setBoolPref("devtools.debugger.remote-enabled", !!bool);
 

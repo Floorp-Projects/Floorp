@@ -68,7 +68,7 @@ var gRestorePrefs = [{name: PREF_LOGGING_ENABLED},
                      {name: "extensions.getAddons.search.browseURL"},
                      {name: "extensions.getAddons.search.url"},
                      {name: "extensions.getAddons.cache.enabled"},
-                     {name: "devtools.debugger.addon-enabled"},
+                     {name: "devtools.chrome.enabled"},
                      {name: "devtools.debugger.remote-enabled"},
                      {name: PREF_SEARCH_MAXRESULTS},
                      {name: PREF_STRICT_COMPAT},
@@ -416,6 +416,25 @@ function is_element_visible(aElement, aMsg) {
 function is_element_hidden(aElement, aMsg) {
   isnot(aElement, null, "Element should not be null, when checking visibility");
   ok(is_hidden(aElement), aMsg);
+}
+
+/**
+ * Install an add-on and call a callback when complete.
+ *
+ * The callback will receive the Addon for the installed add-on.
+ */
+function install_addon(path, cb, pathPrefix=TESTROOT) {
+  AddonManager.getInstallForURL(pathPrefix + path, (install) => {
+    install.addListener({
+      onInstallEnded: () => {
+        executeSoon(() => {
+          cb(install.addon);
+        });
+      },
+    });
+
+    install.install();
+  }, "application/x-xpinstall");
 }
 
 function CategoryUtilities(aManagerWindow) {
