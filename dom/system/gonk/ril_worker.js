@@ -3924,25 +3924,48 @@ RilObject.prototype = {
     this.sendChromeMessage(message);
   },
 
-  _compareDataCallLink: function(source, target) {
-    if (source.ifname != target.ifname ||
-        source.ipaddr != target.ipaddr ||
-        source.gw != target.gw) {
-      return false;
+  /**
+   * @return "deactivate" if <ifname> changes or one of the currentDataCall
+   *         addresses is missing in updatedDataCall, or "identical" if no
+   *         changes found, or "changed" otherwise.
+   */
+  _compareDataCallLink: function(updatedDataCall, currentDataCall) {
+    // If network interface is changed, report as "deactivate".
+    if (updatedDataCall.ifname != currentDataCall.ifname) {
+      return "deactivate";
     }
 
-    // Compare <datacall>.dns.
-    let sdns = source.dns, tdns = target.dns;
-    if (sdns.length != tdns.length) {
-      return false;
-    }
-    for (let i = 0; i < sdns.length; i++) {
-      if (sdns[i] != tdns[i]) {
-        return false;
+    // If any existing address is missing, report as "deactivate".
+    for (let i = 0; i < currentDataCall.addresses.length; i++) {
+      let address = currentDataCall.addresses[i];
+      if (updatedDataCall.addresses.indexOf(address) < 0) {
+        return "deactivate";
       }
     }
 
-    return true;
+    if (currentDataCall.addresses.length != updatedDataCall.addresses.length) {
+      // Since now all |currentDataCall.addresses| are found in
+      // |updatedDataCall.addresses|, this means one or more new addresses are
+      // reported.
+      return "changed";
+    }
+
+    let fields = ["gateways", "dnses"];
+    for (let i = 0; i < fields.length; i++) {
+      // Compare <datacall>.<field>.
+      let field = fields[i];
+      let lhs = updatedDataCall[field], rhs = currentDataCall[field];
+      if (lhs.length != rhs.length) {
+        return "changed";
+      }
+      for (let i = 0; i < lhs.length; i++) {
+        if (lhs[i] != rhs[i]) {
+          return "changed";
+        }
+      }
+    }
+
+    return "identical";
   },
 
   _processDataCallList: function(datacalls, newDataCallOptions) {
@@ -3998,12 +4021,13 @@ RilObject.prototype = {
       }
 
       // State not changed, now check links.
-      if (this._compareDataCallLink(updatedDataCall, currentDataCall)) {
+      let result =
+        this._compareDataCallLink(updatedDataCall, currentDataCall);
+      if (result == "identical") {
         if (DEBUG) this.context.debug("No changes in data call.");
         continue;
       }
-      if ((updatedDataCall.ifname != currentDataCall.ifname) ||
-          (updatedDataCall.ipaddr != currentDataCall.ipaddr)) {
+      if (result == "deactivate") {
         if (DEBUG) this.context.debug("Data link changed, cleanup.");
         this.deactivateDataCall(currentDataCall);
         continue;
@@ -4012,12 +4036,9 @@ RilObject.prototype = {
       if (DEBUG) {
         this.context.debug("Data link minor change, just update and notify.");
       }
-      currentDataCall.gw = updatedDataCall.gw;
-      if (updatedDataCall.dns) {
-        currentDataCall.dns = updatedDataCall.dns.slice();
-      } else {
-        currentDataCall.dns = [];
-      }
+      currentDataCall.addresses = updatedDataCall.addresses.slice();
+      currentDataCall.dnses = updatedDataCall.dnses.slice();
+      currentDataCall.gateways = updatedDataCall.gateways.slice();
       currentDataCall.rilMessageType = "datacallstatechange";
       this.sendChromeMessage(currentDataCall);
     }
@@ -5043,18 +5064,6 @@ RilObject.prototype = {
   },
 
   /**
-   * Get a list of current data calls.
-   */
-  enumerateDataCalls: function() {
-    let datacall_list = [];
-    for each (let datacall in this.currentDataCalls) {
-      datacall_list.push(datacall);
-    }
-    this.sendChromeMessage({rilMessageType: "datacalllist",
-                            datacalls: datacall_list});
-  },
-
-  /**
    * Process STK Proactive Command.
    */
   processStkProactiveCommand: function() {
@@ -5423,12 +5432,12 @@ RilObject.prototype.readSetupDataCall_v5 = function readSetupDataCall_v5(options
   if (!options) {
     options = {};
   }
-  let [cid, ifname, ipaddr, dns, gw] = this.context.Buf.readStringList();
+  let [cid, ifname, addresses, dnses, gateways] = this.context.Buf.readStringList();
   options.cid = cid;
   options.ifname = ifname;
-  options.ipaddr = ipaddr;
-  options.dns = dns;
-  options.gw = gw;
+  options.addresses = addresses ? [addresses] : [];
+  options.dnses = dnses ? [dnses] : [];
+  options.gateways = gateways ? [gateways] : [];
   options.active = DATACALL_ACTIVE_UNKNOWN;
   options.state = GECKO_NETWORK_STATE_CONNECTING;
   return options;
@@ -5954,6 +5963,23 @@ RilObject.prototype[REQUEST_QUERY_CLIP] = function REQUEST_QUERY_CLIP(length, op
 };
 RilObject.prototype[REQUEST_LAST_DATA_CALL_FAIL_CAUSE] = null;
 
+/**
+ * V3:
+ *  # address   - A space-delimited list of addresses.
+ *
+ * V4:
+ *  # address   - An address.
+ *
+ * V5:
+ *  # addresses - A space-delimited list of addresses.
+ *  # dnses     - A space-delimited list of DNS server addresses.
+ *
+ * V6:
+ *  # addresses - A space-delimited list of addresses with optional "/" prefix
+ *                length.
+ *  # dnses     - A space-delimited list of DNS server addresses.
+ *  # gateways  - A space-delimited list of default gateway addresses.
+ */
 RilObject.prototype.readDataCall_v5 = function(options) {
   if (!options) {
     options = {};
@@ -5963,7 +5989,11 @@ RilObject.prototype.readDataCall_v5 = function(options) {
   options.active = Buf.readInt32(); // DATACALL_ACTIVE_*
   options.type = Buf.readString();
   options.apn = Buf.readString();
-  options.address = Buf.readString();
+  let addresses = Buf.readString();
+  let dnses = Buf.readString();
+  options.addresses = addresses ? addresses.split(" ") : [];
+  options.dnses = dnses ? dnses.split(" ") : [];
+  options.gateways = [];
   return options;
 };
 
@@ -5978,19 +6008,12 @@ RilObject.prototype.readDataCall_v6 = function(options) {
   options.active = Buf.readInt32();  // DATACALL_ACTIVE_*
   options.type = Buf.readString();
   options.ifname = Buf.readString();
-  options.ipaddr = Buf.readString();
-  options.dns = Buf.readString();
-  options.gw = Buf.readString();
-  if (options.dns) {
-    options.dns = options.dns.split(" ");
-  }
-  //TODO for now we only support one address and gateway
-  if (options.ipaddr) {
-    options.ipaddr = options.ipaddr.split(" ")[0];
-  }
-  if (options.gw) {
-    options.gw = options.gw.split(" ")[0];
-  }
+  let addresses = Buf.readString();
+  let dnses = Buf.readString();
+  let gateways = Buf.readString();
+  options.addresses = addresses ? addresses.split(" ") : [];
+  options.dnses = dnses ? dnses.split(" ") : [];
+  options.gateways = gateways ? gateways.split(" ") : [];
   return options;
 };
 

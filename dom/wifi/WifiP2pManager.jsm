@@ -93,7 +93,6 @@ const DEFAULT_P2P_DEVICE_TYPE = "10-0050F204-5"; // For wpa_supplicant.
 const GO_NETWORK_INTERFACE = {
   ip:         "192.168.2.1",
   maskLength: 24,
-  broadcast:  "192.168.2.255",
   gateway:    "192.168.2.1",
   dns1:       "0.0.0.0",
   dns2:       "0.0.0.0",
@@ -492,17 +491,36 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
     state: Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED,
     type: Ci.nsINetworkInterface.NETWORK_TYPE_WIFI_P2P,
     name: P2P_INTERFACE_NAME,
-    ip: null,
-    prefixLength: 0,
-    broadcast: null,
-    dns1: null,
-    dns2: null,
-    gateway: null,
+    ips: [],
+    prefixLengths: [],
+    dnses: [],
+    gateways: [],
     httpProxyHost: null,
     httpProxyPort: null,
 
     // help
     registered: false,
+
+    getAddresses: function (ips, prefixLengths) {
+      ips.value = this.ips.slice();
+      prefixLengths.value = this.prefixLengths.slice();
+
+      return this.ips.length;
+    },
+
+    getGateways: function (count) {
+      if (count) {
+        count.value = this.gateways.length;
+      }
+      return this.gateways.slice();
+    },
+
+    getDnses: function (count) {
+      if (count) {
+        count.value = this.dnses.length;
+      }
+      return this.dnses.slice();
+    }
   };
 
   //---------------------------------------------------------
@@ -1378,9 +1396,9 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
 
         // Update p2p network interface.
         _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-        _p2pNetworkInterface.ip = GO_NETWORK_INTERFACE.ip;
-        _p2pNetworkInterface.prefixLength = GO_NETWORK_INTERFACE.maskLength;
-        _p2pNetworkInterface.gateway = GO_NETWORK_INTERFACE.ip;
+        _p2pNetworkInterface.ips = [GO_NETWORK_INTERFACE.ip];
+        _p2pNetworkInterface.prefixLengths = [GO_NETWORK_INTERFACE.maskLength];
+        _p2pNetworkInterface.gateways = [GO_NETWORK_INTERFACE.ip];
         handleP2pNetworkInterfaceStateChanged();
 
         _groupInfo.networkInterface = _p2pNetworkInterface;
@@ -1409,13 +1427,21 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
       // Update p2p network interface.
       let maskLength =
         netHelpers.getMaskLength(netHelpers.stringToIP(dhcpData.info.mask_str));
+      if (!maskLength) {
+        maskLength = 32; // max prefix for IPv4.
+      }
       _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-      _p2pNetworkInterface.ip = dhcpData.info.ipaddr_str;
-      _p2pNetworkInterface.prefixLength = maskLength;
-      _p2pNetworkInterface.broadcast = dhcpData.info.broadcast_str;
-      _p2pNetworkInterface.dns1 = dhcpData.info.dns1_str;
-      _p2pNetworkInterface.dns2 = dhcpData.info.dns2_str;
-      _p2pNetworkInterface.gateway = dhcpData.info.gateway_str;
+      _p2pNetworkInterface.ips = [dhcpData.info.ipaddr_str];
+      _p2pNetworkInterface.prefixLengths = [maskLength];
+      if (typeof dhcpData.info.dns1_str == "string" &&
+          dhcpData.info.dns1_str.length) {
+        _p2pNetworkInterface.dnses.push(dhcpData.info.dns1_str);
+      }
+      if (typeof dhcpData.info.dns2_str == "string" &&
+          dhcpData.info.dns2_str.length) {
+        _p2pNetworkInterface.dnses.push(dhcpData.info.dns2_str);
+      }
+      _p2pNetworkInterface.gateways = [dhcpData.info.gateway_str];
       handleP2pNetworkInterfaceStateChanged();
 
       _groupInfo.networkInterface = _p2pNetworkInterface;
@@ -1427,12 +1453,10 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
 
   function resetP2pNetworkInterface() {
     _p2pNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
-    _p2pNetworkInterface.ip = null;
-    _p2pNetworkInterface.prefixLength = 0;
-    _p2pNetworkInterface.broadcast = null;
-    _p2pNetworkInterface.dns1 = null;
-    _p2pNetworkInterface.dns2 = null;
-    _p2pNetworkInterface.gateway = null;
+    _p2pNetworkInterface.ips = [];
+    _p2pNetworkInterface.prefixLengths = [];
+    _p2pNetworkInterface.dnses = [];
+    _p2pNetworkInterface.gateways = [];
   }
 
   function registerP2pNetworkInteface() {

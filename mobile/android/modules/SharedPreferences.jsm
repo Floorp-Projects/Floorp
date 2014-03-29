@@ -66,7 +66,7 @@ SharedPreferences.prototype = Object.freeze({
       preferences: prefs,
       branch: this._branch,
     }, (data) => {
-      result = JSON.parse(data).values;
+      result = data.values;
     });
 
     let thread = Services.tm.currentThread;
