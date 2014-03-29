@@ -85,6 +85,7 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 
 # Tests for flex-flow shorthand property
 == flexbox-flex-flow-1.html flexbox-flex-flow-1-ref.html
+== flexbox-flex-flow-2.html flexbox-flex-flow-2-ref.html
 
 # Tests for flex-wrap property
 == flexbox-flex-wrap-horiz-1.html flexbox-flex-wrap-horiz-1-ref.html
