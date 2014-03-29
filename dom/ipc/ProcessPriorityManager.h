@@ -69,6 +69,12 @@ public:
   static bool CurrentProcessIsForeground();
 
   /**
+   * Returns true if one or more processes with FOREGROUND_HIGH priority are
+   * present, false otherwise.
+   */
+  static bool AnyProcessHasHighPriority();
+
+  /**
    * Used to remove a ContentParent from background LRU pool when
    * it is destroyed or its priority changed from BACKGROUND to others.
    */

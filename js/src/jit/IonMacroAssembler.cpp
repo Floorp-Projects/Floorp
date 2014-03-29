@@ -1904,3 +1904,54 @@ MacroAssembler::branchEqualTypeIfNeeded(MIRType type, MDefinition *maybeDef, Reg
         }
     }
 }
+
+
+// If a pseudostack frame has this as its label, its stack pointer
+// field points to the registers saved on entry to JIT code.  A native
+// stack unwinder could use that information to continue unwinding
+// past that point.
+const char MacroAssembler::enterJitLabel[] = "EnterJIT";
+
+// Creates an enterJIT pseudostack frame, as described above.  Pushes
+// a word to the stack to indicate whether this was done.  |framePtr| is
+// the pointer to the machine-dependent saved state.
+void
+MacroAssembler::spsMarkJit(SPSProfiler *p, Register framePtr, Register temp)
+{
+    Label spsNotEnabled;
+    uint32_t *enabledAddr = p->addressOfEnabled();
+    load32(AbsoluteAddress(enabledAddr), temp);
+    push(temp); // +4: Did we push an sps frame.
+    branchTest32(Assembler::Equal, temp, temp, &spsNotEnabled);
+
+    Label stackFull;
+    // We always need the "safe" versions, because these are used in trampolines
+    // and won't be regenerated when SPS state changes.
+    spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
+
+    storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfString()));
+    storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfStackAddress()));
+    storePtr(ImmWord(uintptr_t(0)), Address(temp, ProfileEntry::offsetOfScript()));
+    store32(Imm32(ProfileEntry::NullPCIndex), Address(temp, ProfileEntry::offsetOfPCIdx()));
+
+    /* Always increment the stack size, whether or not we actually pushed. */
+    bind(&stackFull);
+    loadPtr(AbsoluteAddress(p->addressOfSizePointer()), temp);
+    add32(Imm32(1), Address(temp, 0));
+
+    bind(&spsNotEnabled);
+}
+
+// Pops the word pushed by spsMarkJit and, if spsMarkJit pushed an SPS
+// frame, pops it.
+void
+MacroAssembler::spsUnmarkJit(SPSProfiler *p, Register temp)
+{
+    Label spsNotEnabled;
+    pop(temp); // -4: Was the profiler enabled.
+    branchTest32(Assembler::Equal, temp, temp, &spsNotEnabled);
+
+    spsPopFrameSafe(p, temp);
+
+    bind(&spsNotEnabled);
+}

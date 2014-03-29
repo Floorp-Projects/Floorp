@@ -1290,7 +1290,6 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
     bool uUseGrouping = true;
 
     // Sprinkle appropriate rooting flavor over things the GC might care about.
-    SkipRoot skip(cx, &uCurrency);
     RootedString currency(cx);
 
     // We don't need to look at numberingSystem - it can only be set via
@@ -1783,7 +1782,6 @@ js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
     const jschar *skeleton = JS_GetStringCharsZ(cx, jsskeleton);
     if (!skeleton)
         return false;
-    SkipRoot skip(cx, &skeleton);
     uint32_t skeletonLen = u_strlen(JSCharToUChar(skeleton));
 
     UErrorCode status = U_ZERO_ERROR;
@@ -1844,9 +1842,6 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
     uint32_t uTimeZoneLength = 0;
     const UChar *uPattern = nullptr;
     uint32_t uPatternLength = 0;
-
-    SkipRoot skipTimeZone(cx, &uTimeZone);
-    SkipRoot skipPattern(cx, &uPattern);
 
     // We don't need to look at calendar and numberingSystem - they can only be
     // set via the Unicode locale extension and are therefore already set on

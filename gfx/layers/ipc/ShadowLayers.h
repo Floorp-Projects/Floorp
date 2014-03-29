@@ -329,7 +329,10 @@ public:
    * |aReplies| are directions from the LayerManagerComposite to the
    * caller of EndTransaction().
    */
-  bool EndTransaction(InfallibleTArray<EditReply>* aReplies, bool aScheduleComposite, bool* aSent);
+  bool EndTransaction(InfallibleTArray<EditReply>* aReplies,
+                      const nsIntRegion& aRegionToClear,
+                      bool aScheduleComposite,
+                      bool* aSent);
 
   /**
    * Set an actor through which layer updates will be pushed.

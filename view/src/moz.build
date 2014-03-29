@@ -19,3 +19,7 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/dom/events/',
 ]
+
+if CONFIG['GNU_CC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    # Work around bug 986928
+    CXXFLAGS += ['-Wno-error=format']

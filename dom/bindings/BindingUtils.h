@@ -2293,6 +2293,12 @@ bool
 GetWindowForJSImplementedObject(JSContext* cx, JS::Handle<JSObject*> obj,
                                 nsPIDOMWindow** window);
 
+void
+ConstructJSImplementation(JSContext* aCx, const char* aContractId,
+                          nsPIDOMWindow* aWindow,
+                          JS::MutableHandle<JSObject*> aObject,
+                          ErrorResult& aRv);
+
 already_AddRefed<nsPIDOMWindow>
 ConstructJSImplementation(JSContext* aCx, const char* aContractId,
                           const GlobalObject& aGlobal,

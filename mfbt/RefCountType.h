@@ -7,26 +7,31 @@
 #ifndef mozilla_RefCountType_h
 #define mozilla_RefCountType_h
 
+#include <stdint.h>
+
 /**
  * MozRefCountType is Mozilla's reference count type.
- *
- * This is the return type for AddRef() and Release() in nsISupports.
- * IUnknown of COM returns an unsigned long from equivalent functions.
  *
  * We use the same type to represent the refcount of RefCounted objects
  * as well, in order to be able to use the leak detection facilities
  * that are implemented by XPCOM.
  *
- * The following ifdef exists to maintain binary compatibility with
- * IUnknown, the base interface in Microsoft COM.
- *
  * Note that this type is not in the mozilla namespace so that it is
  * usable for both C and C++ code.
  */
+typedef uintptr_t MozRefCountType;
+
+/*
+ * This is the return type for AddRef() and Release() in nsISupports.
+ * IUnknown of COM returns an unsigned long from equivalent functions.
+ *
+ * The following ifdef exists to maintain binary compatibility with
+ * IUnknown, the base interface in Microsoft COM.
+ */
 #ifdef XP_WIN
-typedef unsigned long MozRefCountType;
+typedef unsigned long MozExternalRefCountType;
 #else
-typedef uint32_t MozRefCountType;
+typedef uint32_t MozExternalRefCountType;
 #endif
 
 #endif

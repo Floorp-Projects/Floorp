@@ -35,7 +35,7 @@ class UDPSocketChild : public mozilla::net::PUDPSocketChild
 {
 public:
   NS_DECL_NSIUDPSOCKETCHILD
-  NS_IMETHOD_(nsrefcnt) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
 
   UDPSocketChild();
   virtual ~UDPSocketChild();

@@ -242,6 +242,10 @@ TabTarget.prototype = {
     return !this.isLocalTab;
   },
 
+  get isAddon() {
+    return !!(this._form && this._form.addonActor);
+  },
+
   get isLocalTab() {
     return !!this._tab;
   },
