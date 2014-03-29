@@ -261,8 +261,3 @@ OS_LIBS += $(LIBICONV)
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 oleaut32)
 endif
-
-ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
-# Wrap linker to measure peak virtual memory usage.
-LD := $(PYTHON) $(topsrcdir)/build/link.py $(CURDIR)/linker-vsize $(LD)
-endif
