@@ -19,9 +19,11 @@
 
 #include "GonkGPSGeolocationProvider.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "nsGeoPosition.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsINetworkManager.h"
+#include "nsIObserverService.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -44,17 +46,20 @@ using namespace mozilla;
 
 static const int kDefaultPeriod = 1000; // ms
 
+static const char* kNetworkConnStateChangedTopic = "network-connection-state-changed";
+
 // While most methods of GonkGPSGeolocationProvider should only be
 // called from main thread, we deliberately put the Init and ShutdownGPS
 // methods off main thread to avoid blocking.
 #ifdef MOZ_B2G_RIL
 NS_IMPL_ISUPPORTS3(GonkGPSGeolocationProvider,
                    nsIGeolocationProvider,
-                   nsIRILDataCallback,
+                   nsIObserver,
                    nsISettingsServiceCallback)
 #else
-NS_IMPL_ISUPPORTS1(GonkGPSGeolocationProvider,
-                   nsIGeolocationProvider)
+NS_IMPL_ISUPPORTS2(GonkGPSGeolocationProvider,
+                   nsIGeolocationProvider,
+                   nsIObserver)
 #endif
 
 /* static */ GonkGPSGeolocationProvider* GonkGPSGeolocationProvider::sSingleton = nullptr;
@@ -636,15 +641,16 @@ GonkGPSGeolocationProvider::SetupAGPS()
     return;
   }
 
-  // Setup network state listener
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, kNetworkConnStateChangedTopic, false);
+  }
+
   nsCOMPtr<nsIRadioInterfaceLayer> ril = do_GetService("@mozilla.org/ril;1");
   if (ril) {
     // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
     // MultiSIM configuration
     ril->GetRadioInterface(0 /* clientId */, getter_AddRefs(mRadioInterface));
-    if (mRadioInterface) {
-      mRadioInterface->RegisterDataCallCallback(this);
-    }
   }
 }
 #endif // MOZ_B2G_RIL
@@ -746,8 +752,9 @@ GonkGPSGeolocationProvider::Shutdown()
     mNetworkLocationProvider = nullptr;
   }
 #ifdef MOZ_B2G_RIL
-  if (mRadioInterface) {
-    mRadioInterface->UnregisterDataCallCallback(this);
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, kNetworkConnStateChangedTopic);
   }
 #endif
 
@@ -774,30 +781,27 @@ GonkGPSGeolocationProvider::SetHighAccuracy(bool)
   return NS_OK;
 }
 
-#ifdef MOZ_B2G_RIL
-/** nsIRILDataCallback interface **/
-
 NS_IMETHODIMP
-GonkGPSGeolocationProvider::DataCallStateChanged(nsIRILDataCallInfo* aDataCall)
+GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
+                                    const char* aTopic,
+                                    const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aDataCall);
 
-  // We call Setting Service before we get the state of supl data connection
-  // since it is possible that state of supl data connection haven't been
-  // updated and will be updated after we finished this function (code that
-  // updates the state is in another dataCallStateChanged callback).
+  if (strcmp(aTopic, kNetworkConnStateChangedTopic)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIRilNetworkInterface> iface = do_QueryInterface(aSubject);
+  if (!iface) {
+    return NS_OK;
+  }
+
   RequestSettingValue("ril.supl.apn");
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GonkGPSGeolocationProvider::ReceiveDataCallList(nsIRILDataCallInfo** aDataCalls,
-                                                uint32_t aLength)
-{
-  return NS_OK;
-}
-
+#ifdef MOZ_B2G_RIL
 /** nsISettingsServiceCallback **/
 
 NS_IMETHODIMP

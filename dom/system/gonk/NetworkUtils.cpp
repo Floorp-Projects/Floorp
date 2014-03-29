@@ -325,6 +325,24 @@ static int getIpType(const char *aIp) {
   return type;
 }
 
+/**
+ * Helper function to find the best match gateway. For now, return
+ * the gateway that matches the address family passed.
+ */
+static uint32_t selectGateway(nsTArray<nsString>& gateways, int addrFamily)
+{
+  uint32_t length = gateways.Length();
+
+  for (uint32_t i = 0; i < length; i++) {
+    NS_ConvertUTF16toUTF8 autoGateway(gateways[i]);
+    if ((getIpType(autoGateway.get()) == AF_INET && addrFamily == AF_INET) ||
+        (getIpType(autoGateway.get()) == AF_INET6 && addrFamily == AF_INET6)) {
+      return i;
+    }
+  }
+  return length; // invalid index.
+}
+
 static void postMessage(NetworkResultOptions& aResult)
 {
   MOZ_ASSERT(gNetworkUtils);
@@ -836,7 +854,28 @@ void NetworkUtils::setInterfaceDns(CommandChain* aChain,
                                    NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  snprintf(command, MAX_COMMAND_SIZE - 1, "resolver setifdns %s %s %s %s", GET_CHAR(mIfname), GET_CHAR(mDomain), GET_CHAR(mDns1_str), GET_CHAR(mDns2_str));
+  int written = snprintf(command, sizeof command, "resolver setifdns %s %s",
+                         GET_CHAR(mIfname), GET_CHAR(mDomain));
+
+  nsTArray<nsString>& dnses = GET_FIELD(mDnses);
+  uint32_t length = dnses.Length();
+
+  for (uint32_t i = 0; i < length; i++) {
+    NS_ConvertUTF16toUTF8 autoDns(dnses[i]);
+
+    int ret = snprintf(command + written, sizeof(command) - written, " %s", autoDns.get());
+    if (ret <= 1) {
+      command[written] = '\0';
+      continue;
+    }
+
+    if ((ret + written) >= sizeof(command)) {
+      command[written] = '\0';
+      break;
+    }
+
+    written += ret;
+  }
 
   doCommand(command, aChain, aCallback);
 }
@@ -1139,19 +1178,23 @@ bool NetworkUtils::setDhcpServer(NetworkParams& aOptions)
  */
 bool NetworkUtils::setDNS(NetworkParams& aOptions)
 {
-  IFProperties interfaceProperties;
-  getIFProperties(GET_CHAR(mIfname), interfaceProperties);
+  uint32_t length = aOptions.mDnses.Length();
 
-  if (aOptions.mDns1_str.IsEmpty()) {
+  if (length > 0) {
+    for (uint32_t i = 0; i < length; i++) {
+      NS_ConvertUTF16toUTF8 autoDns(aOptions.mDnses[i]);
+
+      char dns_prop_key[PROPERTY_VALUE_MAX];
+      snprintf(dns_prop_key, sizeof dns_prop_key, "net.dns%d", i+1);
+      property_set(dns_prop_key, autoDns.get());
+    }
+  } else {
+    // Set dnses from system properties.
+    IFProperties interfaceProperties;
+    getIFProperties(GET_CHAR(mIfname), interfaceProperties);
+
     property_set("net.dns1", interfaceProperties.dns1);
-  } else {
-    property_set("net.dns1", GET_CHAR(mDns1_str));
-  }
-
-  if (aOptions.mDns2_str.IsEmpty()) {
     property_set("net.dns2", interfaceProperties.dns2);
-  } else {
-    property_set("net.dns2", GET_CHAR(mDns2_str));
   }
 
   // Bump the DNS change property.
@@ -1176,39 +1219,49 @@ bool NetworkUtils::setDNS(NetworkParams& aOptions)
 bool NetworkUtils::setDefaultRouteAndDNS(NetworkParams& aOptions)
 {
   NS_ConvertUTF16toUTF8 autoIfname(aOptions.mIfname);
-  char gateway[128];
 
-  if (aOptions.mGateway_str.IsEmpty()) {
+  if (!aOptions.mOldIfname.IsEmpty()) {
+    // Remove IPv4's default route.
+    mNetUtils->do_ifc_remove_default_route(GET_CHAR(mOldIfname));
+    // Remove IPv6's default route.
+    mNetUtils->do_ifc_remove_route(GET_CHAR(mOldIfname), "::", 0, NULL);
+  }
+
+  uint32_t length = aOptions.mGateways.Length();
+  if (length > 0) {
+    for (uint32_t i = 0; i < length; i++) {
+      NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateways[i]);
+
+      int type = getIpType(autoGateway.get());
+      if (type != AF_INET && type != AF_INET6) {
+        continue;
+      }
+
+      if (type == AF_INET6) {
+        mNetUtils->do_ifc_add_route(autoIfname.get(), "::", 0, autoGateway.get());
+      } else { /* type == AF_INET */
+        mNetUtils->do_ifc_set_default_route(autoIfname.get(), inet_addr(autoGateway.get()));
+      }
+    }
+  } else {
+    // Set default froute from system properties.
     char key[PROPERTY_KEY_MAX];
+    char gateway[PROPERTY_KEY_MAX];
+
     snprintf(key, sizeof key - 1, "net.%s.gw", autoIfname.get());
     property_get(key, gateway, "");
-  } else {
-    MOZ_ASSERT(strlen(GET_CHAR(mGateway_str)) < sizeof gateway);
-    strncpy(gateway, GET_CHAR(mGateway_str), sizeof(gateway) - 1);
-  }
 
-  int type = getIpType(gateway);
-  if (type != AF_INET && type != AF_INET6) {
-    return false;
-  }
-
-  if (type == AF_INET6) {
-    if (!aOptions.mOldIfname.IsEmpty()) {
-      mNetUtils->do_ifc_remove_route(GET_CHAR(mOldIfname), "::", 0, NULL);
+    int type = getIpType(gateway);
+    if (type != AF_INET && type != AF_INET6) {
+      return false;
     }
 
-    mNetUtils->do_ifc_add_route(autoIfname.get(), "::", 0, gateway);
-
-    setDNS(aOptions);
-    return true;
+    if (type == AF_INET6) {
+      mNetUtils->do_ifc_add_route(autoIfname.get(), "::", 0, gateway);
+    } else { /* type == AF_INET */
+      mNetUtils->do_ifc_set_default_route(autoIfname.get(), inet_addr(gateway));
+    }
   }
-
-  /* type == AF_INET */
-  if (!aOptions.mOldIfname.IsEmpty()) {
-    mNetUtils->do_ifc_remove_default_route(GET_CHAR(mOldIfname));
-  }
-
-  mNetUtils->do_ifc_set_default_route(autoIfname.get(), inet_addr(gateway));
 
   setDNS(aOptions);
   return true;
@@ -1219,16 +1272,19 @@ bool NetworkUtils::setDefaultRouteAndDNS(NetworkParams& aOptions)
  */
 bool NetworkUtils::removeDefaultRoute(NetworkParams& aOptions)
 {
-  NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateway);
+  uint32_t length = aOptions.mGateways.Length();
+  for (uint32_t i = 0; i < length; i++) {
+    NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateways[i]);
 
-  int type = getIpType(autoGateway.get());
-  if (type != AF_INET && type != AF_INET6) {
-    return false;
+    int type = getIpType(autoGateway.get());
+    if (type != AF_INET && type != AF_INET6) {
+      return false;
+    }
+
+    mNetUtils->do_ifc_remove_route(GET_CHAR(mIfname),
+                                   type == AF_INET ? "0.0.0.0" : "::",
+                                   0, autoGateway.get());
   }
-
-  mNetUtils->do_ifc_remove_route(GET_CHAR(mIfname),
-                                 type == AF_INET ? "0.0.0.0" : "::",
-                                 0, autoGateway.get());
 
   return true;
 }
@@ -1239,7 +1295,6 @@ bool NetworkUtils::removeDefaultRoute(NetworkParams& aOptions)
 bool NetworkUtils::addHostRoute(NetworkParams& aOptions)
 {
   NS_ConvertUTF16toUTF8 autoIfname(aOptions.mIfname);
-  NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateway);
   int type, prefix;
 
   uint32_t length = aOptions.mHostnames.Length();
@@ -1251,6 +1306,12 @@ bool NetworkUtils::addHostRoute(NetworkParams& aOptions)
       continue;
     }
 
+    uint32_t index = selectGateway(aOptions.mGateways, type);
+    if (index >= aOptions.mGateways.Length()) {
+      continue;
+    }
+
+    NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateways[index]);
     prefix = type == AF_INET ? 32 : 128;
     mNetUtils->do_ifc_add_route(autoIfname.get(), autoHostname.get(), prefix,
                                 autoGateway.get());
@@ -1264,7 +1325,6 @@ bool NetworkUtils::addHostRoute(NetworkParams& aOptions)
 bool NetworkUtils::removeHostRoute(NetworkParams& aOptions)
 {
   NS_ConvertUTF16toUTF8 autoIfname(aOptions.mIfname);
-  NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateway);
   int type, prefix;
 
   uint32_t length = aOptions.mHostnames.Length();
@@ -1276,6 +1336,12 @@ bool NetworkUtils::removeHostRoute(NetworkParams& aOptions)
       continue;
     }
 
+    uint32_t index = selectGateway(aOptions.mGateways, type);
+    if (index >= aOptions.mGateways.Length()) {
+      continue;
+    }
+
+    NS_ConvertUTF16toUTF8 autoGateway(aOptions.mGateways[index]);
     prefix = type == AF_INET ? 32 : 128;
     mNetUtils->do_ifc_remove_route(autoIfname.get(), autoHostname.get(), prefix,
                                    autoGateway.get());
