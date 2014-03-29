@@ -4,6 +4,11 @@
 
 include $(topsrcdir)/toolkit/library/libxul.mk
 
+ifeq (WINNT_1,$(OS_TARGET)_$(MOZ_PROFILE_USE))
+# Wrap linker to measure peak virtual memory usage.
+LD := $(PYTHON) $(topsrcdir)/build/link.py $(DEPTH)/toolkit/library/linker-vsize $(LD)
+endif
+
 ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
