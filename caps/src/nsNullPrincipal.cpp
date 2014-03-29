@@ -21,6 +21,7 @@
 #include "nsNetCID.h"
 #include "nsError.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsPrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "pratom.h"
 
