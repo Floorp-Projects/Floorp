@@ -14,6 +14,8 @@
 # Tests for cross-axis alignment (align-self / align-items properties)
 == flexbox-align-self-baseline-horiz-1a.xhtml flexbox-align-self-baseline-horiz-1-ref.xhtml
 == flexbox-align-self-baseline-horiz-1b.xhtml flexbox-align-self-baseline-horiz-1-ref.xhtml
+== flexbox-align-self-baseline-horiz-2.xhtml flexbox-align-self-baseline-horiz-2-ref.xhtml
+== flexbox-align-self-baseline-horiz-3.xhtml flexbox-align-self-baseline-horiz-3-ref.xhtml
 == flexbox-align-self-baseline-horiz-4.xhtml flexbox-align-self-baseline-horiz-4-ref.xhtml
 == flexbox-align-self-baseline-horiz-5.xhtml flexbox-align-self-baseline-horiz-5-ref.xhtml
 
