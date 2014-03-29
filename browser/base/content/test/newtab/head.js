@@ -159,34 +159,20 @@ function clearHistory(aCallback) {
 
 function fillHistory(aLinks, aCallback) {
   let numLinks = aLinks.length;
-  if (!numLinks) {
-    if (aCallback)
-      executeSoon(aCallback);
-    return;
-  }
-
   let transitionLink = Ci.nsINavHistoryService.TRANSITION_LINK;
 
-  // Important: To avoid test failures due to clock jitter on Windows XP, call
-  // Date.now() once here, not each time through the loop.
-  let now = Date.now() * 1000;
-
-  for (let i = 0; i < aLinks.length; i++) {
-    let link = aLinks[i];
+  for (let link of aLinks.reverse()) {
     let place = {
       uri: makeURI(link.url),
       title: link.title,
-      // Links are secondarily sorted by visit date descending, so decrease the
-      // visit date as we progress through the array so that links appear in the
-      // grid in the order they're present in the array.
-      visits: [{visitDate: now - i, transitionType: transitionLink}]
+      visits: [{visitDate: Date.now() * 1000, transitionType: transitionLink}]
     };
 
     PlacesUtils.asyncHistory.updatePlaces(place, {
       handleError: function () ok(false, "couldn't add visit to history"),
       handleResult: function () {},
       handleCompletion: function () {
-        if (--numLinks == 0 && aCallback)
+        if (--numLinks == 0)
           aCallback();
       }
     });
@@ -517,18 +503,12 @@ function createDragEvent(aEventType, aData) {
 
 /**
  * Resumes testing when all pages have been updated.
- * @param aCallback Called when done. If not specified, TestRunner.next is used.
- * @param aOnlyIfHidden If true, this resumes testing only when an update that
- *                      applies to pre-loaded, hidden pages is observed.  If
- *                      false, this resumes testing when any update is observed.
  */
-function whenPagesUpdated(aCallback, aOnlyIfHidden=false) {
+function whenPagesUpdated(aCallback) {
   let page = {
-    update: function (onlyIfHidden=false) {
-      if (onlyIfHidden == aOnlyIfHidden) {
-        NewTabUtils.allPages.unregister(this);
-        executeSoon(aCallback || TestRunner.next);
-      }
+    update: function () {
+      NewTabUtils.allPages.unregister(this);
+      executeSoon(aCallback || TestRunner.next);
     }
   };
 
