@@ -49,6 +49,7 @@ struct TargetConfig {
   ScreenRotation rotation;
   nsIntRect clientBounds;
   ScreenOrientation orientation;
+  nsIntRegion clearRegion;
 };
 
 // Create a shadow layer for |layer|

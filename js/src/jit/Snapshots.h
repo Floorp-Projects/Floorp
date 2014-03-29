@@ -302,10 +302,13 @@ class RValueAllocation
     };
 };
 
+class RecoverWriter;
+
 // Collects snapshots in a contiguous buffer, which is copied into IonScript
 // memory after code generation.
 class SnapshotWriter
 {
+    friend class RecoverWriter;
     CompactBufferWriter writer_;
     CompactBufferWriter allocWriter_;
 
@@ -315,24 +318,20 @@ class SnapshotWriter
     typedef HashMap<RVA, uint32_t, RVA::Hasher, SystemAllocPolicy> RValueAllocMap;
     RValueAllocMap allocMap_;
 
-    // These are only used to assert sanity.
-    uint32_t nallocs_;
+    // This is only used to assert sanity.
     uint32_t allocWritten_;
-    uint32_t nframes_;
-    uint32_t framesWritten_;
+
+    // Used to report size of the snapshot in the spew messages.
     SnapshotOffset lastStart_;
 
   public:
     bool init();
 
     SnapshotOffset startSnapshot(uint32_t frameCount, BailoutKind kind, bool resumeAfter);
-    void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
 #ifdef TRACK_SNAPSHOTS
-    void trackFrame(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId,
-                    uint32_t lirOpcode, uint32_t lirId);
+    void trackSnapshot(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId,
+                       uint32_t lirOpcode, uint32_t lirId);
 #endif
-    void endFrame();
-
     bool add(const RValueAllocation &slot);
 
     void endSnapshot();
@@ -356,21 +355,42 @@ class SnapshotWriter
     }
 };
 
+class RecoverWriter
+{
+    SnapshotWriter &snapshot_;
+
+    uint32_t nallocs_;
+
+    uint32_t nframes_;
+    uint32_t framesWritten_;
+
+  public:
+    RecoverWriter(SnapshotWriter &snapshot);
+
+    SnapshotOffset startRecover(uint32_t frameCount, BailoutKind kind, bool resumeAfter);
+
+    void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
+    void endFrame();
+
+    void endRecover();
+};
+
+class RecoverReader;
+
 // A snapshot reader reads the entries out of the compressed snapshot buffer in
 // a script. These entries describe the equivalent interpreter frames at a given
 // position in JIT code. Each entry is an Ion's value allocations, used to
 // recover the corresponding Value from an Ion frame.
 class SnapshotReader
 {
+    friend class RecoverReader;
+
     CompactBufferReader reader_;
     CompactBufferReader allocReader_;
     const uint8_t* allocTable_;
 
-    uint32_t pcOffset_;           // Offset from script->code.
-    uint32_t allocCount_;         // Number of slots.
     uint32_t frameCount_;
     BailoutKind bailoutKind_;
-    uint32_t framesRead_;         // Number of frame headers that have been read.
     uint32_t allocRead_;          // Number of slots that have been read.
     bool resumeAfter_;
 
@@ -394,33 +414,48 @@ class SnapshotReader
     SnapshotReader(const uint8_t *snapshots, uint32_t offset,
                    uint32_t RVATableSize, uint32_t listSize);
 
-    uint32_t pcOffset() const {
-        return pcOffset_;
-    }
-    uint32_t allocations() const {
-        return allocCount_;
-    }
+    RValueAllocation readAllocation();
+
     BailoutKind bailoutKind() const {
         return bailoutKind_;
     }
     bool resumeAfter() const {
-        if (moreFrames())
-            return false;
         return resumeAfter_;
     }
+};
+
+class RecoverReader
+{
+    uint32_t frameCount_;
+    uint32_t framesRead_;         // Number of frame headers that have been read.
+    uint32_t pcOffset_;           // Offset from script->code.
+    uint32_t allocCount_;         // Number of slots.
+
+  private:
+    void readFrame(SnapshotReader &snapshot);
+
+  public:
+    RecoverReader(SnapshotReader &snapshot);
+
     bool moreFrames() const {
         return framesRead_ < frameCount_;
     }
-    void nextFrame() {
-        readFrameHeader();
-    }
-    RValueAllocation readAllocation();
-
-    bool moreAllocations() const {
-        return allocRead_ < allocCount_;
+    void nextFrame(SnapshotReader &snapshot) {
+        readFrame(snapshot);
     }
     uint32_t frameCount() const {
         return frameCount_;
+    }
+
+    uint32_t pcOffset() const {
+        return pcOffset_;
+    }
+
+    uint32_t allocations() const {
+        return allocCount_;
+    }
+    bool moreAllocations(const SnapshotReader &snapshot) const {
+        return snapshot.allocRead_ < allocCount_;
     }
 };
 

@@ -72,7 +72,7 @@ TCPSocketParentBase::AddIPDLReference()
   this->AddRef();
 }
 
-NS_IMETHODIMP_(nsrefcnt) TCPSocketParent::Release(void)
+NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void)
 {
   nsrefcnt refcnt = TCPSocketParentBase::Release();
   if (refcnt == 1 && mIPCOpen) {

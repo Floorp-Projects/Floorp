@@ -31,8 +31,8 @@
 #include "nsProxyRelease.h"
 #include "nsNetUtil.h"
 #include "mozilla/Attributes.h"
-#include "TimeStamp.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 #include "prlog.h"
 
 #include "plbase64.h"
@@ -188,7 +188,9 @@ RtspController::AsyncOpen(nsIStreamingProtocolListener *aListener)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  mListener = aListener;
+  // Use main thread pointer, but allow access off main thread.
+  mListener =
+    new nsMainThreadPtrHolder<nsIStreamingProtocolListener>(aListener, false);
 
   if (!mURI) {
     LOG(("RtspController::AsyncOpen() illegal URI"));
@@ -330,6 +332,9 @@ RtspController::OnDisconnected(uint8_t index,
   if (mListener) {
     nsRefPtr<SendOnDisconnectedTask> task =
       new SendOnDisconnectedTask(mListener, index, reason);
+    // Break the cycle reference between the Listener (RtspControllerParent) and
+    // us.
+    mListener = nullptr;
     return NS_DispatchToMainThread(task);
   }
   return NS_ERROR_NOT_AVAILABLE;

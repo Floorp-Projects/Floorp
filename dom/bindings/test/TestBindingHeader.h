@@ -48,6 +48,8 @@ public:
   virtual nsISupports* GetParentObject();
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsRenamedInterface, NS_RENAMED_INTERFACE_IID)
+
 // IID for the IndirectlyImplementedInterface
 #define NS_INDIRECTLY_IMPLEMENTED_INTERFACE_IID \
 { 0xfed55b69, 0x7012, 0x4849, \
@@ -68,6 +70,8 @@ public:
   void IndirectlyImplementedMethod();
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(IndirectlyImplementedInterface, NS_INDIRECTLY_IMPLEMENTED_INTERFACE_IID)
+
 // IID for the TestExternalInterface
 #define NS_TEST_EXTERNAL_INTERFACE_IID \
 { 0xd5ba0c99, 0x9b1d, 0x4e71, \
@@ -78,6 +82,8 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TEST_EXTERNAL_INTERFACE_IID)
   NS_DECL_ISUPPORTS
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(TestExternalInterface, NS_TEST_EXTERNAL_INTERFACE_IID)
 
 class TestNonWrapperCacheInterface : public nsISupports
 {

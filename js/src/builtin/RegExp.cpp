@@ -102,8 +102,10 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re,
     } else {
         /* Vector of MatchPairs provided: execute full regexp. */
         status = re.execute(cx, chars, length, lastIndex, *matches.u.pairs);
-        if (status == RegExpRunStatus_Success && res)
-            res->updateFromMatchPairs(cx, input, *matches.u.pairs);
+        if (status == RegExpRunStatus_Success && res) {
+            if (!res->updateFromMatchPairs(cx, input, *matches.u.pairs))
+                return RegExpRunStatus_Error;
+        }
     }
 
     return status;

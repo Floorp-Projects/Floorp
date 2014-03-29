@@ -24,5 +24,4 @@ FINAL_LIBRARY = 'necko'
 
 LOCAL_INCLUDES += [
     '../../base/src',
-    '/xpcom/ds',
 ]

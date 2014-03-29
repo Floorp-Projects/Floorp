@@ -36,7 +36,7 @@ class TCPServerSocketChild : public mozilla::net::PTCPServerSocketChild
 {
 public:
   NS_DECL_NSITCPSERVERSOCKETCHILD
-  NS_IMETHOD_(nsrefcnt) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
 
   TCPServerSocketChild();
   ~TCPServerSocketChild();

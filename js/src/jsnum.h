@@ -151,10 +151,6 @@ StringToNumber(ThreadSafeContext *cx, JSString *str, double *result);
 MOZ_ALWAYS_INLINE bool
 ToNumber(JSContext *cx, JS::MutableHandleValue vp)
 {
-#ifdef DEBUG
-    MaybeCheckStackRoots(cx);
-#endif
-
     if (vp.isNumber())
         return true;
     double d;
@@ -233,13 +229,6 @@ IsDefinitelyIndex(const Value &v, uint32_t *indexp)
 static inline bool
 ToInteger(JSContext *cx, HandleValue v, double *dp)
 {
-#ifdef DEBUG
-    {
-        SkipRoot skip(cx, &v);
-        MaybeCheckStackRoots(cx);
-    }
-#endif
-
     if (v.isInt32()) {
         *dp = v.toInt32();
         return true;

@@ -232,7 +232,7 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         MOZ_CRASH();
 #endif
 
-#if (defined(JSGC_ROOT_ANALYSIS) || defined(JSGC_USE_EXACT_ROOTING)) && defined(DEBUG)
+#if defined(JSGC_USE_EXACT_ROOTING) && defined(DEBUG)
     for (int i = 0; i < THING_ROOT_LIMIT; ++i)
         JS_ASSERT(cx->thingGCRooters[i] == nullptr);
 #endif

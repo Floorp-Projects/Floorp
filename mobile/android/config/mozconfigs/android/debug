@@ -6,7 +6,6 @@ ac_add_options --enable-debug
 # Android
 ac_add_options --target=arm-linux-androideabi
 
-export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 

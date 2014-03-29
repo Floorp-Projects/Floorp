@@ -132,7 +132,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/events',
     '/dom/xbl',
-    '/xpcom/ds',
 ]
 
 FINAL_LIBRARY = 'gklayout'

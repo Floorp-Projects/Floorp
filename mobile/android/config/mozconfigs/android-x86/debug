@@ -7,7 +7,6 @@ ac_add_options --disable-unified-compilation
 # Android
 ac_add_options --target=i386-linux-android
 
-export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 

@@ -194,7 +194,7 @@ void TimerEventAllocator::Free(void* aPtr)
 NS_IMPL_QUERY_INTERFACE1(nsTimerImpl, nsITimer)
 NS_IMPL_ADDREF(nsTimerImpl)
 
-NS_IMETHODIMP_(nsrefcnt) nsTimerImpl::Release(void)
+NS_IMETHODIMP_(MozExternalRefCountType) nsTimerImpl::Release(void)
 {
   nsrefcnt count;
 

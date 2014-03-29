@@ -52,7 +52,6 @@ NS_IMPL_CYCLE_COLLECTION_3(nsAccessiblePivot, mRoot, mPosition, mObservers)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsAccessiblePivot)
   NS_INTERFACE_MAP_ENTRY(nsIAccessiblePivot)
-  NS_INTERFACE_MAP_ENTRY(nsAccessiblePivot)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAccessiblePivot)
 NS_INTERFACE_MAP_END
 

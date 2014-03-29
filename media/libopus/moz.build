@@ -67,3 +67,9 @@ else:
         'silk/fixed',
     ]
     SOURCES += silk_sources_fixed
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wno-declaration-after-statement']
+    if CONFIG['CLANG_CXX']:
+        CFLAGS += ['-Wno-\#pragma-messages']

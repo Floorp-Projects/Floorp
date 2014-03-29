@@ -101,6 +101,8 @@ fuzzy(2,2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.
 
 == fePointLight-zoomed-page.svg fePointLight-zoomed-page-ref.svg
 
+== feTurbulence-offset.svg feTurbulence-offset-ref.svg
+
 pref(layout.css.filters.enabled,true) == multiple-svg-filters.svg multiple-svg-filters-ref.svg
 pref(layout.css.filters.enabled,true) == multiple-svg-filters-long-chain.svg multiple-svg-filters-ref.svg
 pref(layout.css.filters.enabled,true) == multiple-svg-filters-second-uses-SourceGraphic.svg multiple-svg-filters-ref.svg

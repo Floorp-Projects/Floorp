@@ -51,6 +51,30 @@ function promiseAllArray() {
   });
 }
 
+function promiseAllIterable() {
+  function* promiseGen() {
+    var i = 3;
+    while (--i) {
+      yield Promise.resolve(i);
+    }
+
+    yield new Promise(function(resolve) {
+      setTimeout(resolve, 10);
+    });
+  }
+
+  Promise.all(promiseGen()).then(function(values) {
+    is(values.length, 3, "Resolved array length should match iterable's length.");
+    is(values[0], 2, "Array values should match.");
+    is(values[1], 1, "Array values should match.");
+    is(values[2], undefined, "Array values should match.");
+    runTest();
+  }, function(e) {
+    ok(false, "Promise.all shouldn't fail when an iterable is passed.");
+    runTest();
+  });
+}
+
 function promiseAllWaitsForAllPromises() {
   var arr = [
     new Promise(function(resolve) {
@@ -191,6 +215,25 @@ function promiseRacePromiseArray() {
   });
 }
 
+function promiseRaceIterable() {
+  function* participants() {
+    yield new Promise(function(resolve) {
+      setTimeout(resolve, 10, 10);
+    });
+    yield new Promise(function(resolve) {
+      setTimeout(resolve, 20, 20);
+    });
+  }
+
+  Promise.race(participants()).then(function(winner) {
+    is(winner, 10, "Winner should be the one that finished earlier.");
+    runTest();
+  }, function(e) {
+    ok(false, "Promise.race shouldn't throw when an iterable is passed!");
+    runTest();
+  });
+}
+
 function promiseRaceReject() {
   var p = Promise.race([
     Promise.reject(new Error("Fail bad!")),
@@ -234,6 +277,7 @@ var tests = [
               promiseUtilitiesDefined,
               promiseAllEmptyArray,
               promiseAllArray,
+              promiseAllIterable,
               promiseAllWaitsForAllPromises,
               promiseAllRejectFails,
               promiseAllCastError,
@@ -242,6 +286,7 @@ var tests = [
               promiseRaceEmpty,
               promiseRaceValuesArray,
               promiseRacePromiseArray,
+              promiseRaceIterable,
               promiseRaceReject,
               promiseRaceThrow,
             ];

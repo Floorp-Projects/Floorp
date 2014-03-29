@@ -197,7 +197,7 @@ public:
   // mMediaStreamController's callback function.
   // It holds RtspMediaResource reference to notify the connection status and
   // data arrival. The Revoke function releases the reference when
-  // RtspMediaResource is destroyed.
+  // RtspMediaResource::OnDisconnected is called.
   class Listener MOZ_FINAL : public nsIInterfaceRequestor,
                              public nsIStreamingProtocolListener
   {
@@ -209,7 +209,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSISTREAMINGPROTOCOLLISTENER
 
-    void Revoke() { mResource = nullptr; }
+    void Revoke();
 
   private:
     nsRefPtr<RtspMediaResource> mResource;

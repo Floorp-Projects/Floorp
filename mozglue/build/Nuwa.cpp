@@ -143,7 +143,7 @@ TLSInfoList;
  */
 #ifndef NUWA_STACK_SIZE
 #ifndef PAGE_SIZE
-#warning "Hard-coding page size to 4096 byte
+#warning "Hard-coding page size to 4096 byte"
 #define PAGE_SIZE 4096ul
 #endif
 #define PAGE_ALIGN_MASK (~(PAGE_SIZE-1))

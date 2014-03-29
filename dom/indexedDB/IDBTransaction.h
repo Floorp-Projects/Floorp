@@ -49,8 +49,8 @@ class UpdateRefcountFunction;
 class IDBTransactionListener
 {
 public:
-  NS_IMETHOD_(nsrefcnt) AddRef() = 0;
-  NS_IMETHOD_(nsrefcnt) Release() = 0;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
 
   // Called just before dispatching the final events on the transaction.
   virtual nsresult NotifyTransactionPreComplete(IDBTransaction* aTransaction) = 0;

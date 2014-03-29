@@ -12,6 +12,8 @@
           src="../common.js"></script>
   <script type="application/javascript"
           src="../attributes.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -184,6 +186,15 @@
       testGroupAttrs("combo1_opt3", 3, 4);
       testGroupAttrs("combo1_opt4", 4, 4);
 
+      // Test that group position information updates after deleting node.
+      testGroupAttrs("tree4_ti1", 1, 2, 1);
+      testGroupAttrs("tree4_ti2", 2, 2, 1);
+      var tree4element = document.getElementById("tree4_ti1");
+      var tree4acc = getAccessible("tree4");
+      tree4element.parentNode.removeChild(tree4element);
+      waitForEvent(EVENT_REORDER, tree4acc, function() {
+        testGroupAttrs("tree4_ti2", 1, 1, 1); });
+
       SimpleTest.finish();
     }
 
@@ -197,6 +208,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=468418"
      title="Expose level for nested lists in HTML">
     Mozilla Bug 468418
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=844023"
+     title="group info might not be properly updated when flat trees mutate">
+    Bug 844023
   </a>
   <a target="_blank"
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=864224"
@@ -376,6 +392,11 @@
       <div role="treeitem" id="tree3_ti2b">Item 2B</div>
     </div>
   </div>
+
+  <!-- IMPORTANT: Need to have no whitespace between elements in this tree. -->
+  <div role="tree" id="tree4"><div role="treeitem"
+    id="tree4_ti1">Item 1</div><div role="treeitem"
+    id="tree4_ti2">Item 2</div></div>
 
   <table role="grid">
     <tr role="row" id="grid_row1">

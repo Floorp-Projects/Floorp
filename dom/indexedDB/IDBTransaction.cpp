@@ -75,12 +75,12 @@ public:
 };
 
 // Could really use those NS_REFCOUNTING_HAHA_YEAH_RIGHT macros here.
-NS_IMETHODIMP_(nsrefcnt) StartTransactionRunnable::AddRef()
+NS_IMETHODIMP_(MozExternalRefCountType) StartTransactionRunnable::AddRef()
 {
   return 2;
 }
 
-NS_IMETHODIMP_(nsrefcnt) StartTransactionRunnable::Release()
+NS_IMETHODIMP_(MozExternalRefCountType) StartTransactionRunnable::Release()
 {
   return 1;
 }

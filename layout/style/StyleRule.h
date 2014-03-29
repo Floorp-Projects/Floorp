@@ -382,9 +382,9 @@ private:
   StyleRule& operator=(const StyleRule& aCopy) MOZ_DELETE;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(StyleRule, NS_CSS_STYLE_RULE_IMPL_CID)
+
 } // namespace css
 } // namespace mozilla
-
-NS_DEFINE_STATIC_IID_ACCESSOR(mozilla::css::StyleRule, NS_CSS_STYLE_RULE_IMPL_CID)
 
 #endif /* mozilla_css_StyleRule_h__ */

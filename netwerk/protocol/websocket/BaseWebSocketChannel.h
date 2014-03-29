@@ -10,6 +10,8 @@
 #include "nsIWebSocketChannel.h"
 #include "nsIWebSocketListener.h"
 #include "nsIProtocolHandler.h"
+#include "nsIThread.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -20,16 +22,18 @@ const static int32_t kDefaultWSPort     = 80;
 const static int32_t kDefaultWSSPort    = 443;
 
 class BaseWebSocketChannel : public nsIWebSocketChannel,
-                             public nsIProtocolHandler
+                             public nsIProtocolHandler,
+                             public nsIThreadRetargetableRequest
 {
  public:
   BaseWebSocketChannel();
 
   NS_DECL_NSIPROTOCOLHANDLER
+  NS_DECL_NSITHREADRETARGETABLEREQUEST
 
   NS_IMETHOD QueryInterface(const nsIID & uuid, void **result) = 0;
-  NS_IMETHOD_(nsrefcnt ) AddRef(void) = 0;
-  NS_IMETHOD_(nsrefcnt ) Release(void) = 0;
+  NS_IMETHOD_(MozExternalRefCountType ) AddRef(void) = 0;
+  NS_IMETHOD_(MozExternalRefCountType ) Release(void) = 0;
 
   // Partial implementation of nsIWebSocketChannel
   //
@@ -54,6 +58,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   nsCOMPtr<nsISupports>           mContext;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsILoadGroup>          mLoadGroup;
+  nsCOMPtr<nsIThread>             mTargetThread;
 
   nsCString                       mProtocol;
   nsCString                       mOrigin;

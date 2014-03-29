@@ -48,3 +48,10 @@ function wait(time) {
 
   return deferred.promise;
 }
+
+// Helper to create a nsIFile from a set of path components
+function getFile() {
+  let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  file.initWithPath(OS.Path.join.apply(OS.Path, arguments));
+  return file;
+}
