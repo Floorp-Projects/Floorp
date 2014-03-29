@@ -224,6 +224,8 @@ Site.prototype = {
     aEvent.preventDefault();
     if (aEvent.target.classList.contains("newtab-control-block"))
       this.block();
+    else if (target.classList.contains("newtab-control-sponsored"))
+      gPage.showSponsoredPanel(target);
     else if (this.isPinned())
       this.unpin();
     else

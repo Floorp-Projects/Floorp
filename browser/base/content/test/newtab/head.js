@@ -453,6 +453,15 @@ function synthesizeNativeMouseLUp(aElement) {
 }
 
 /**
+ * Fires a synthetic 'click' event on the current about:newtab page.
+ * @param aElement The element used to determine the cursor position.
+ */
+function synthesizeNativeMouseClick(aElement) {
+  synthesizeNativeMouseLDown(aElement);
+  synthesizeNativeMouseLUp(aElement);
+}
+
+/**
  * Fires a synthetic mouse drag event on the current about:newtab page.
  * @param aElement The element used to determine the cursor position.
  * @param aOffsetX The left offset that is added to the position.
