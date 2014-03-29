@@ -6,6 +6,8 @@
 
 LIBRARY_NAME = 'ssltest'
 
+LIBXUL_LIBRARY = True
+
 SOURCES += [
     'OCSPCacheTest.cpp',
     'TLSIntoleranceTest.cpp',
@@ -18,5 +20,3 @@ LOCAL_INCLUDES += [
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
-
-FINAL_LIBRARY = 'xul-gtest'
