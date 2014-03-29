@@ -123,10 +123,10 @@ var HelperApps =  {
       let data = this._sendMessageSync(msg);
       if (!data)
         return [];
-      return parseData(JSON.parse(data));
+      return parseData(data);
     } else {
       sendMessageToJava(msg, function(data) {
-        callback(parseData(JSON.parse(data)));
+        callback(parseData(data));
       });
     }
   },
@@ -175,7 +175,7 @@ var HelperApps =  {
         });
 
         sendMessageToJava(msg, function(data) {
-            callback(JSON.parse(data));
+            callback(data);
         });
     } else {
         let msg = this._getMessage("Intent:Open", uri, {

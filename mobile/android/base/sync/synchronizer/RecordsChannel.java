@@ -70,7 +70,6 @@ public class RecordsChannel implements
   public RepositorySession source;
   public RepositorySession sink;
   private RecordsChannelDelegate delegate;
-  private long timestamp;
   private long fetchEnd = -1;
 
   protected final AtomicInteger numFetched = new AtomicInteger();
@@ -82,7 +81,6 @@ public class RecordsChannel implements
     this.source    = source;
     this.sink      = sink;
     this.delegate  = delegate;
-    this.timestamp = source.lastSyncTimestamp;
   }
 
   /*
@@ -155,6 +153,14 @@ public class RecordsChannel implements
       this.delegate.onFlowBeginFailed(this, new SessionNotBegunException(failed));
       return;
     }
+
+    if (!source.dataAvailable()) {
+      Logger.info(LOG_TAG, "No data available: short-circuiting flow from source " + source);
+      long now = System.currentTimeMillis();
+      this.delegate.onFlowCompleted(this, now, now);
+      return;
+    }
+
     sink.setStoreDelegate(this);
     numFetched.set(0);
     numFetchFailed.set(0);
@@ -164,12 +170,12 @@ public class RecordsChannel implements
     this.consumer = new ConcurrentRecordConsumer(this);
     ThreadPool.run(this.consumer);
     waitingForQueueDone = true;
-    source.fetchSince(timestamp, this);
+    source.fetchSince(source.getLastSyncTimestamp(), this);
   }
 
   /**
    * Begin both sessions, invoking flow() when done.
-   * @throws InvalidSessionTransitionException 
+   * @throws InvalidSessionTransitionException
    */
   public void beginAndFlow() throws InvalidSessionTransitionException {
     Logger.trace(LOG_TAG, "Beginning source.");
