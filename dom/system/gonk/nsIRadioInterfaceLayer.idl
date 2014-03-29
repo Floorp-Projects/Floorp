@@ -21,48 +21,6 @@ interface nsIRilNetworkInterface : nsINetworkInterface
   readonly attribute long      mmsPort;  // -1 if not set.
 };
 
-[scriptable, uuid(83dd3394-5de0-4485-a0b9-c1ed537507a3)]
-interface nsIRILDataCallInfo : nsISupports
-{
-  /**
-   * Current data call state, one of the
-   * nsINetworkInterface::NETWORK_STATE_* constants.
-   */
-  readonly attribute unsigned long state;
-  readonly attribute AString cid;
-  readonly attribute AString apn;
-  readonly attribute AString ifname;
-  readonly attribute AString ip;
-  readonly attribute unsigned long prefixLength;
-  readonly attribute AString broadcast;
-  readonly attribute AString gw;
-  readonly attribute jsval dns;
-};
-
-[scriptable, uuid(5bcac053-c245-46f0-bb45-d0039bfb89f5)]
-interface nsIRILDataCallback : nsISupports
-{
-  /**
-   * Notified when a data call changes state.
-   *
-   * @param dataCall
-   *        A nsIRILDataCallInfo object.
-   */
-  void dataCallStateChanged(in nsIRILDataCallInfo dataCall);
-
-  /**
-   * Called when nsIRadioInterfaceLayer is asked to enumerate the current
-   * data call state.
-   *
-   * @param datacalls
-   *        Array of nsIRILDataCallInfo objects.
-   * @param length
-   *        Lenght of the aforementioned array.
-   */
-  void receiveDataCallList([array,size_is(length)] in nsIRILDataCallInfo dataCalls,
-                           in unsigned long length);
-};
-
 [scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
 interface nsIVoicemailInfo : nsISupports
 {
@@ -97,7 +55,7 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(5b14cf79-2846-4226-b07f-9b9977b525fe)]
+[scriptable, uuid(181d460e-220e-4274-8ba4-43f122eb518d)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -108,9 +66,6 @@ interface nsIRadioInterface : nsISupports
   void setupDataCallByType(in DOMString apntype);
   void deactivateDataCallByType(in DOMString apntype);
   long getDataCallStateByType(in DOMString apntype);
-
-  void registerDataCallCallback(in nsIRILDataCallback callback);
-  void unregisterDataCallCallback(in nsIRILDataCallback callback);
 
   void updateRILNetworkInterface();
 

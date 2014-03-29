@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
+import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
@@ -24,19 +25,31 @@ public class Server11Repository extends Repository {
   protected String collection;
   protected URI collectionURI;
   protected final AuthHeaderProvider authHeaderProvider;
+  protected final InfoCollections infoCollections;
 
   /**
    * Construct a new repository that fetches and stores against the Sync 1.1. API.
    *
    * @param collection name.
    * @param storageURL full URL to storage endpoint.
-   * @param authHeaderProvider to use in requests.
+   * @param authHeaderProvider to use in requests; may be null.
+   * @param infoCollections instance; must not be null.
    * @throws URISyntaxException
    */
-  public Server11Repository(String collection, String storageURL, AuthHeaderProvider authHeaderProvider) throws URISyntaxException {
+  public Server11Repository(String collection, String storageURL, AuthHeaderProvider authHeaderProvider, InfoCollections infoCollections) throws URISyntaxException {
+    if (collection == null) {
+      throw new IllegalArgumentException("collection must not be null");
+    }
+    if (storageURL == null) {
+      throw new IllegalArgumentException("storageURL must not be null");
+    }
+    if (infoCollections == null) {
+      throw new IllegalArgumentException("infoCollections must not be null");
+    }
     this.collection = collection;
     this.collectionURI = new URI(storageURL + (storageURL.endsWith("/") ? collection : "/" + collection));
     this.authHeaderProvider = authHeaderProvider;
+    this.infoCollections = infoCollections;
   }
 
   @Override
@@ -101,5 +114,9 @@ public class Server11Repository extends Repository {
 
   public AuthHeaderProvider getAuthHeaderProvider() {
     return authHeaderProvider;
+  }
+
+  public boolean updateNeeded(long lastSyncTimestamp) {
+    return infoCollections.updateNeeded(collection, lastSyncTimestamp);
   }
 }
