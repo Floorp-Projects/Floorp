@@ -9,7 +9,7 @@ interface nsIWifiTetheringCallback;
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(0e5e8fca-0f46-416c-8bee-b3fea4bbdfd3)]
+[scriptable, uuid(23eb5e3d-ed15-41e0-93c9-b9b3c022b1ac)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -54,11 +54,6 @@ interface nsINetworkInterface : nsISupports
    * Network prefix length
    */
   readonly attribute unsigned long prefixLength;
-
-  /**
-   * Broadcast
-   */
-  readonly attribute DOMString broadcast;
 
   /**
    * Default gateway

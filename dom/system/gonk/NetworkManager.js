@@ -363,7 +363,6 @@ NetworkManager.prototype = {
             name: i.name,
             ip: i.ip,
             prefixLength: i.prefixLength,
-            broadcast: i.broadcast,
             gateway: i.gateway,
             dns1: i.dns1,
             dns2: i.dns2,

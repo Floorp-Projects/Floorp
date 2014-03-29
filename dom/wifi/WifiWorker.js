@@ -896,7 +896,6 @@ var WifiManager = (function() {
       WifiNetworkInterface.state = Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
       WifiNetworkInterface.ip = null;
       WifiNetworkInterface.netmask = null;
-      WifiNetworkInterface.broadcast = null;
       WifiNetworkInterface.gateway = null;
       WifiNetworkInterface.dns1 = null;
       WifiNetworkInterface.dns2 = null;
@@ -1523,8 +1522,6 @@ let WifiNetworkInterface = {
 
   prefixLength: 0,
 
-  broadcast: null,
-
   dns1: null,
 
   dns2: null,
@@ -1933,7 +1930,6 @@ function WifiWorker() {
           Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
         WifiNetworkInterface.ip = null;
         WifiNetworkInterface.prefixLength = 0;
-        WifiNetworkInterface.broadcast = null;
         WifiNetworkInterface.gateway = null;
         WifiNetworkInterface.dns1 = null;
         WifiNetworkInterface.dns2 = null;
@@ -1972,7 +1968,6 @@ function WifiWorker() {
       Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
     WifiNetworkInterface.ip = this.info.ipaddr_str;
     WifiNetworkInterface.prefixLength = maskLength;
-    WifiNetworkInterface.broadcast = this.info.broadcast_str;
     WifiNetworkInterface.gateway = this.info.gateway_str;
     WifiNetworkInterface.dns1 = this.info.dns1_str;
     WifiNetworkInterface.dns2 = this.info.dns2_str;

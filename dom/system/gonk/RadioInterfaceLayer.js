@@ -2147,13 +2147,9 @@ RadioInterface.prototype = {
       case "datacallstatechange":
         message.ip = null;
         message.prefixLength = 0;
-        message.broadcast = null;
         if (message.ipaddr) {
           message.ip = message.ipaddr.split("/")[0];
           message.prefixLength = parseInt(message.ipaddr.split("/")[1], 10);
-          let ip_value = netHelpers.stringToIP(message.ip);
-          let mask_value = netHelpers.makeMask(message.prefixLength);
-          message.broadcast = netHelpers.ipToString((ip_value & mask_value) + ~mask_value);
         }
         connHandler.handleDataCallState(message);
         break;
@@ -4432,8 +4428,6 @@ RILNetworkInterface.prototype = {
 
   prefixLength: 0,
 
-  broadcast: null,
-
   dns1: null,
 
   dns2: null,
@@ -4552,7 +4546,6 @@ RILNetworkInterface.prototype = {
       this.name = datacall.ifname;
       this.ip = datacall.ip;
       this.prefixLength = datacall.prefixLength;
-      this.broadcast = datacall.broadcast;
       this.gateway = datacall.gw;
       if (datacall.dns) {
         this.dns1 = datacall.dns[0];
