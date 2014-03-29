@@ -11,7 +11,6 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
 EXTRA_JS_MODULES += [
     'AsyncShutdown.jsm',
-    'BinarySearch.jsm',
     'BrowserUtils.jsm',
     'CharsetMenu.jsm',
     'debug.js',
