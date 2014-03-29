@@ -9,7 +9,7 @@ interface nsIWifiTetheringCallback;
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(23eb5e3d-ed15-41e0-93c9-b9b3c022b1ac)]
+[scriptable, uuid(cb62ae03-6bda-43ff-9560-916d60203d33)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -46,31 +46,6 @@ interface nsINetworkInterface : nsISupports
   readonly attribute DOMString name;
 
   /**
-   * IP Address
-   */
-  readonly attribute DOMString ip;
-
-  /**
-   * Network prefix length
-   */
-  readonly attribute unsigned long prefixLength;
-
-  /**
-   * Default gateway
-   */
-  readonly attribute DOMString gateway;
-
-  /**
-   * Primary DNS address
-   */
-  readonly attribute DOMString dns1;
-
-  /**
-   * Secondary DNS address
-   */
-  readonly attribute DOMString dns2;
-
-  /**
    * The host name of the http proxy server.
    */
   readonly attribute DOMString httpProxyHost;
@@ -80,6 +55,43 @@ interface nsINetworkInterface : nsISupports
    */
   readonly attribute long httpProxyPort;
 
+  /**
+   * Get the list of ip addresses and prefix lengths, ip address could be IPv4
+   * or IPv6, typically 1 IPv4 or 1 IPv6 or one of each.
+   *
+   * @param ips
+   *        The list of ip addresses retrieved.
+   * @param prefixLengths
+   *        The list of prefix lengths retrieved.
+   *
+   * @returns the length of the lists.
+   */
+  void getAddresses([array, size_is(count)] out wstring ips,
+                    [array, size_is(count)] out unsigned long prefixLengths,
+                    [retval] out unsigned long count);
+
+  /**
+   * Get the list of gateways, could be IPv4 or IPv6, typically 1 IPv4 or 1
+   * IPv6 or one of each.
+   *
+   * @param count
+   *        The length of the list of gateways
+   *
+   * @returns the list of gateways.
+   */
+  void getGateways([optional] out unsigned long count,
+                   [array, size_is(count), retval] out wstring gateways);
+
+  /**
+   * Get the list of dnses, could be IPv4 or IPv6.
+   *
+   * @param count
+   *        The length of the list of dnses.
+   *
+   * @returns the list of dnses.
+   */
+  void getDnses([optional] out unsigned long count,
+                [array, size_is(count), retval] out wstring dnses);
 };
 
 /**
