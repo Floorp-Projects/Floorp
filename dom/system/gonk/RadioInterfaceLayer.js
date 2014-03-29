@@ -1552,12 +1552,6 @@ DataConnectionHandler.prototype = {
       }
     }
   },
-
-  /**
-   * Handle data call list.
-   */
-  handleDataCallList: function(message) {
-  },
 };
 
 function RadioInterfaceLayer() {
@@ -2150,9 +2144,6 @@ RadioInterface.prototype = {
           message.prefixLength = parseInt(message.ipaddr.split("/")[1], 10);
         }
         connHandler.handleDataCallState(message);
-        break;
-      case "datacalllist":
-        connHandler.handleDataCallList(message);
         break;
       case "emergencyCbModeChange":
         this.handleEmergencyCbModeChange(message);

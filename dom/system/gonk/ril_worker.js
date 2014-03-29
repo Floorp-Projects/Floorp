@@ -5043,18 +5043,6 @@ RilObject.prototype = {
   },
 
   /**
-   * Get a list of current data calls.
-   */
-  enumerateDataCalls: function() {
-    let datacall_list = [];
-    for each (let datacall in this.currentDataCalls) {
-      datacall_list.push(datacall);
-    }
-    this.sendChromeMessage({rilMessageType: "datacalllist",
-                            datacalls: datacall_list});
-  },
-
-  /**
    * Process STK Proactive Command.
    */
   processStkProactiveCommand: function() {
