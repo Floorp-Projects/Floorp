@@ -120,6 +120,13 @@
   background-size: cover;
 }
 
+.newtab-site[type=affiliate] .newtab-thumbnail,
+.newtab-site[type=organic] .newtab-thumbnail,
+.newtab-site[type=sponsored] .newtab-thumbnail {
+  background-position: top center;
+  background-size: auto;
+}
+
 /* TITLES */
 .newtab-title {
   color: #525c66;
