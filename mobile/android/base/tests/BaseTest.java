@@ -1,63 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.gecko.tests;
 
-import com.jayway.android.robotium.solo.Condition;
-import com.jayway.android.robotium.solo.Solo;
-
-import org.mozilla.gecko.*;
-import org.mozilla.gecko.GeckoThread.LaunchState;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.Driver;
+import org.mozilla.gecko.Element;
+import org.mozilla.gecko.FennecNativeActions;
+import org.mozilla.gecko.FennecNativeDriver;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.GeckoThread.LaunchState;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.RobocopUtils;
+import org.mozilla.gecko.Tabs;
 
 import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
 import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.text.InputType;
 import android.text.TextUtils;
-import android.test.ActivityInstrumentationTestCase2;
 import android.util.DisplayMetrics;
-import android.view.inputmethod.InputMethodManager;
-import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  *  A convenient base class suitable for most Robocop tests.
  */
-abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
-    public static final int TEST_MOCHITEST = 0;
-    public static final int TEST_TALOS = 1;
-
-    private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
+@SuppressWarnings("unchecked")
+abstract class BaseTest extends BaseRobocopTest {
     private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME = TestConstants.ANDROID_PACKAGE_NAME + ".App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
-    private static final int MAX_LIST_ATTEMPTS = 3;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
     private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 15000;
     public static final int MAX_WAIT_MS = 4500;
@@ -70,11 +69,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private int mPreferenceRequestID = 0;
     protected Solo mSolo;
     protected Driver mDriver;
-    protected Assert mAsserter;
     protected Actions mActions;
     protected String mBaseUrl;
     protected String mRawBaseUrl;
-    private String mLogFile;
     protected String mProfile;
     public Device mDevice;
     protected DatabaseHelper mDatabaseHelper;
@@ -104,30 +101,17 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         super(TARGET_PACKAGE_ID, mLauncherActivityClass);
     }
 
-    protected abstract int getTestType();
-
     @Override
-    protected void setUp() throws Exception {
-        // Load config file from root path (setup by python script)
-        String rootPath = FennecInstrumentationTestRunner.getFennecArguments().getString("deviceroot");
-        String configFile = FennecNativeDriver.getFile(rootPath + "/robotium.config");
-        HashMap config = FennecNativeDriver.convertTextToTable(configFile);
-        mLogFile = (String)config.get("logfile");
-        mBaseUrl = ((String)config.get("host")).replaceAll("(/$)", "");
-        mRawBaseUrl = ((String)config.get("rawhost")).replaceAll("(/$)", "");
-        // Initialize the asserter
-        if (getTestType() == TEST_TALOS) {
-            mAsserter = new FennecTalosAssert();
-        } else {
-            mAsserter = new FennecMochitestAssert();
-        }
-        mAsserter.setLogFile(mLogFile);
-        mAsserter.setTestName(this.getClass().getName());
+    public void setUp() throws Exception {
+        super.setUp();
+
         // Create the intent to be used with all the important arguments.
+        mBaseUrl = ((String) mConfig.get("host")).replaceAll("(/$)", "");
+        mRawBaseUrl = ((String) mConfig.get("rawhost")).replaceAll("(/$)", "");
         Intent i = new Intent(Intent.ACTION_MAIN);
-        mProfile = (String)config.get("profile");
+        mProfile = (String) mConfig.get("profile");
         i.putExtra("args", "-no-remote -profile " + mProfile);
-        String envString = (String)config.get("envvars");
+        String envString = (String) mConfig.get("envvars");
         if (envString != "") {
             String[] envStrings = envString.split(",");
             for (int iter = 0; iter < envStrings.length; iter++) {
@@ -139,7 +123,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         mActivity = getActivity();
         // Set up Robotium.solo and Driver objects
         mSolo = new Solo(getInstrumentation(), mActivity);
-        mDriver = new FennecNativeDriver(mActivity, mSolo, rootPath);
+        mDriver = new FennecNativeDriver(mActivity, mSolo, mRootPath);
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
         mDevice = new Device();
         mDatabaseHelper = new DatabaseHelper(mActivity, mAsserter);
@@ -331,7 +315,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         public boolean test();
     }
 
-    @SuppressWarnings({"unchecked", "non-varargs"})
     public void SqliteCompare(String dbName, String sqlCommand, ContentValues[] cvs) {
         File profile = new File(mProfile);
         String dbPath = new File(profile, dbName).getPath();
@@ -340,27 +323,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         SqliteCompare(c, cvs);
     }
 
-    private boolean CursorMatches(Cursor c, String[] columns, ContentValues cv) {
-        for (int i = 0; i < columns.length; i++) {
-            String column = columns[i];
-            if (cv.containsKey(column)) {
-                mAsserter.info("Comparing", "Column values for: " + column);
-                Object value = cv.get(column);
-                if (value == null) {
-                    if (!c.isNull(i)) {
-                        return false;
-                    }
-                } else {
-                    if (c.isNull(i) || !value.toString().equals(c.getString(i))) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    @SuppressWarnings({"unchecked", "non-varargs"})
     public void SqliteCompare(Cursor c, ContentValues[] cvs) {
         mAsserter.is(c.getCount(), cvs.length, "List is correct length");
         if (c.moveToFirst()) {
@@ -372,7 +334,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                     }
                 }
                 mAsserter.is(found, true, "Password was found");
-            } while(c.moveToNext());
+            } while (c.moveToNext());
         }
     }
 

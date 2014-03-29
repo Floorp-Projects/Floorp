@@ -89,6 +89,8 @@
     <command id="cmd_enableUpdateSecurity"/>
     <command id="cmd_toggleAutoUpdateDefault"/>
     <command id="cmd_resetAddonAutoUpdate"/>
+    <command id="cmd_experimentsLearnMore"/>
+    <command id="cmd_experimentsOpenTelemetryPreferences"/>
   </commandset>
 
   <!-- view commands - these act on the selected addon -->
@@ -347,13 +349,29 @@
               <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
             </hbox>
           </hbox>
-          <hbox class="view-header global-info-container">
+          <hbox class="view-header global-info-container plugin-info-container">
             <hbox class="global-info" flex="1" align="center">
               <button class="button-link global-info-plugincheck"
                       label="&info.plugincheck.label;"
                       tooltiptext="&info.plugincheck.tooltip;"
                       command="cmd_pluginCheck"/>
               <spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
+            </hbox>
+          </hbox>
+          <hbox class="view-header global-info-container experiment-info-container">
+            <hbox class="global-info" flex="1" align="center">
+              <label value="&experiment.info.label;"/>
+              <button id="experiments-learn-more"
+                      label="&experiment.info.learnmore;"
+                      tooltiptext="&experiment.info.learnmore;"
+                      accesskey="&experiment.info.learnmore.accesskey;"
+                      command="cmd_experimentsLearnMore"/>
+              <button id="experiments-change-telemetry"
+                      label="&experiment.info.changetelemetry;"
+                      tooltiptext="&experiment.info.changetelemetry;"
+                      accesskey="&experiment.info.changetelemetry.accesskey;"
+                      command="cmd_experimentsOpenTelemetryPreferences"/>
+              <spacer flex="5000"/> <!-- Necessary to allow the message to wrap. -->
             </hbox>
           </hbox>
           <vbox id="addon-list-empty" class="alert-container"
