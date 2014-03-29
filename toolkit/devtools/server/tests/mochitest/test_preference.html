@@ -49,7 +49,7 @@ function runTests() {
         is(prefs.intPref, localPref.intPref, "read/write int pref");
         is(prefs.charPref, localPref.charPref, "read/write string pref");
 
-        for (var key in prefs.allPrefs) {
+        ["test.all.bool", "test.all.int", "test.all.string"].forEach(function(key) {
           var expectedValue;
           switch(Services.prefs.getPrefType(key)) {
             case Ci.nsIPrefBranch.PREF_STRING:
@@ -68,9 +68,10 @@ function runTests() {
 
           is(prefs.allPrefs[key].value, expectedValue, "valid preference value (" + key + ")");
           is(prefs.allPrefs[key].hasUserValue, Services.prefs.prefHasUserValue(key), "valid hasUserValue (" + key + ")");
-        }
+        });
 
         ["test.bool", "test.int", "test.string"].forEach(function(key) {
+          ok(!prefs.allPrefs.hasOwnProperty(key), "expect no pref (" + key + ")");
           is(Services.prefs.getPrefType(key), Ci.nsIPrefBranch.PREF_INVALID, "pref (" + key + ") is clear");
         });
 
@@ -102,6 +103,9 @@ window.onload = function () {
   SpecialPowers.pushPrefEnv({
     "set": [
       ["devtools.debugger.forbid-certified-apps", false],
+      ["test.all.bool", true],
+      ["test.all.int", 0x4321],
+      ["test.all.string", "allizom"],
     ]
   }, runTests);
 }
