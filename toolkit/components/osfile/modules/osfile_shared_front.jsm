@@ -16,6 +16,7 @@ if (typeof Components != "undefined") {
 
 let SharedAll =
   require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+let Path = require("resource://gre/modules/osfile/ospath.jsm");
 let Lz4 =
   require("resource://gre/modules/workers/lz4.js");
 let LOG = SharedAll.LOG.bind(SharedAll, "Shared front-end");
@@ -154,8 +155,8 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
     create : true
   };
 
-  let dirName = OS.Path.dirname(path);
-  let leafName = OS.Path.basename(path);
+  let dirName = Path.dirname(path);
+  let leafName = Path.basename(path);
   let lastDotCharacter = leafName.lastIndexOf('.');
   let fileName = leafName.substring(0, lastDotCharacter != -1 ? lastDotCharacter : leafName.length);
   let suffix = (lastDotCharacter != -1 ? leafName.substring(lastDotCharacter) : "");
@@ -175,10 +176,10 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
     for (let i = 0; i < maxAttempts; ++i) {
       try {
         if (humanReadable) {
-          uniquePath = OS.Path.join(dirName, fileName + "-" + (i + 1) + suffix);
+          uniquePath = Path.join(dirName, fileName + "-" + (i + 1) + suffix);
         } else {
           let hexNumber = Math.floor(Math.random() * MAX_HEX_NUMBER).toString(HEX_RADIX);
-          uniquePath = OS.Path.join(dirName, fileName + "-" + hexNumber + suffix);
+          uniquePath = Path.join(dirName, fileName + "-" + hexNumber + suffix);
         }
         return {
           path: uniquePath,
@@ -519,6 +520,53 @@ AbstractFile.removeRecursive = function(path, options = {}) {
   }
 
   OS.File.removeEmptyDir(path);
+};
+
+/**
+ * Create a directory and, optionally, its parent directories.
+ *
+ * @param {string} path The name of the directory.
+ * @param {*=} options Additional options.
+ *
+ * - {string} from If specified, the call to |makeDir| creates all the
+ * ancestors of |path| that are descendants of |from|. Note that |path|
+ * must be a descendant of |from|, and that |from| and its existing
+ * subdirectories present in |path|  must be user-writeable.
+ * Example:
+ *   makeDir(Path.join(profileDir, "foo", "bar"), { from: profileDir });
+ *  creates directories profileDir/foo, profileDir/foo/bar
+ * - {bool} ignoreExisting If |false|, throw an error if the directory
+ * already exists. |true| by default. Ignored if |from| is specified.
+ * - {number} unixMode Under Unix, if specified, a file creation mode,
+ * as per libc function |mkdir|. If unspecified, dirs are
+ * created with a default mode of 0700 (dir is private to
+ * the user, the user can read, write and execute). Ignored under Windows
+ * or if the file system does not support file creation modes.
+ * - {C pointer} winSecurity Under Windows, if specified, security
+ * attributes as per winapi function |CreateDirectory|. If
+ * unspecified, use the default security descriptor, inherited from
+ * the parent directory. Ignored under Unix or if the file system
+ * does not support security descriptors.
+ */
+AbstractFile.makeDir = function(path, options = {}) {
+  if (!options.from) {
+    return OS.File._makeDir(path, options);
+  }
+  if (!path.startsWith(options.from)) {
+    throw new Error("Incorrect use of option |from|: " + path + " is not a descendant of " + options.from);
+  }
+  let innerOptions = Object.create(options, {
+    ignoreExisting: {
+      value: true
+    }
+  });
+  // Compute the elements that appear in |path| but not in |options.from|.
+  let items = Path.split(path).components.slice(Path.split(options.from).components.length);
+  let current = options.from;
+  for (let item of items) {
+    current = Path.join(current, item);
+    OS.File._makeDir(current, innerOptions);
+  }
 };
 
 if (!exports.OS.Shared) {

@@ -396,8 +396,15 @@
       * the user, the user can read, write and execute).
       * - {bool} ignoreExisting If |false|, throw error if the directory
       * already exists. |true| by default
-      */
-     File.makeDir = function makeDir(path, options = {}) {
+      * - {string} from If specified, the call to |makeDir| creates all the
+      * ancestors of |path| that are descendants of |from|. Note that |from|
+      * and its existing descendants must be user-writeable and that |path|
+      * must be a descendant of |from|.
+      * Example:
+      *   makeDir(Path.join(profileDir, "foo", "bar"), { from: profileDir });
+      *  creates directories profileDir/foo, profileDir/foo/bar
+       */
+     File._makeDir = function makeDir(path, options = {}) {
        let omode = options.unixMode !== undefined ? options.unixMode : DEFAULT_UNIX_MODE_DIR;
        let result = UnixFile.mkdir(path, omode);
        if (result == -1) {
@@ -935,6 +942,7 @@
      File.read = exports.OS.Shared.AbstractFile.read;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
      File.openUnique = exports.OS.Shared.AbstractFile.openUnique;
+     File.makeDir = exports.OS.Shared.AbstractFile.makeDir;
 
      /**
       * Remove an existing directory and its contents.
