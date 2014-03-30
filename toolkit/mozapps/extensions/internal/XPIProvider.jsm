@@ -1586,6 +1586,8 @@ var XPIProvider = {
   _mostRecentlyModifiedFile: {},
   // Per-addon telemetry information
   _telemetryDetails: {},
+  // Experiments are disabled by default. Track ones that are locally enabled.
+  _enabledExperiments: null,
 
   /*
    * Set a value in the telemetry hash for a given ID
@@ -1765,6 +1767,8 @@ var XPIProvider = {
     this._shutdownError = null;
     // Clear this at startup for xpcshell test restarts
     this._telemetryDetails = {};
+    // Clear the set of enabled experiments (experiments disabled by default).
+    this._enabledExperiments = new Set();
     // Register our details structure with AddonManager
     AddonManagerPrivate.setTelemetryDetails("XPI", this._telemetryDetails);
 
@@ -6582,11 +6586,24 @@ function AddonWrapper(aAddon) {
   });
 
   this.__defineGetter__("userDisabled", function AddonWrapper_userDisabledGetter() {
+    if (XPIProvider._enabledExperiments.has(aAddon.id)) {
+      return false;
+    }
+
     return aAddon.softDisabled || aAddon.userDisabled;
   });
   this.__defineSetter__("userDisabled", function AddonWrapper_userDisabledSetter(val) {
-    if (val == this.userDisabled)
+    if (val == this.userDisabled) {
       return val;
+    }
+
+    if (aAddon.type == "experiment") {
+      if (val) {
+        XPIProvider._enabledExperiments.delete(aAddon.id);
+      } else {
+        XPIProvider._enabledExperiments.add(aAddon.id);
+      }
+    }
 
     if (aAddon.inDatabase) {
       if (aAddon.type == "theme" && val) {
