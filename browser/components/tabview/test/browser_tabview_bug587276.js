@@ -4,6 +4,7 @@
 let contentWindow;
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   showTabView(test1);
