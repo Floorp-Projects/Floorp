@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>test-experiment-1@tests.mozilla.org</em:id>
+    <em:version>1</em:version>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>toolkit@mozilla.org</em:id>
+        <em:minVersion>0</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <!-- Front End MetaData -->
+    <em:name>Test experiment 1</em:name>
+    <em:description>Yet another experiment that experiments experimentally.</em:description>
+    <em:bootstrap>true</em:bootstrap>
+    <em:type>128</em:type>
+
+  </Description>
+</RDF>
