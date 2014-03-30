@@ -10,11 +10,11 @@ const TEST_URL = "http://www.example.com/";
 [
 
   function test_no_bookmark() {
-    PlacesUtils.asyncGetBookmarkIds(TEST_URL, function (aItemIds, aURI) {
+    PlacesUtils.asyncGetBookmarkIds(TEST_URL, (aItemIds, aURI) => {
       do_check_eq(aItemIds.length, 0);
       do_check_eq(aURI, TEST_URL);
       run_next_test();
-    }, this);
+    });
   },
 
   function test_one_bookmark_nsIURI() {
@@ -23,13 +23,13 @@ const TEST_URL = "http://www.example.com/";
       PlacesUtils.unfiledBookmarksFolderId, uri, "test",
       PlacesUtils.bookmarks.DEFAULT_INDEX
     );
-    PlacesUtils.asyncGetBookmarkIds(uri, function (aItemIds, aURI) {
+    PlacesUtils.asyncGetBookmarkIds(uri, (aItemIds, aURI) => {
       do_check_eq(aItemIds.length, 1);
       do_check_eq(aItemIds[0], itemId);
       do_check_true(aURI.equals(uri));
       PlacesUtils.bookmarks.removeItem(itemId);
       run_next_test();
-    }, this);
+    });
   },
 
   function test_one_bookmark_spec() {
@@ -38,13 +38,13 @@ const TEST_URL = "http://www.example.com/";
       PlacesUtils.unfiledBookmarksFolderId, uri, "test",
       PlacesUtils.bookmarks.DEFAULT_INDEX
     );
-    PlacesUtils.asyncGetBookmarkIds(TEST_URL, function (aItemIds, aURI) {
+    PlacesUtils.asyncGetBookmarkIds(TEST_URL, (aItemIds, aURI) => {
       do_check_eq(aItemIds.length, 1);
       do_check_eq(aItemIds[0], itemId);
       do_check_eq(aURI, TEST_URL);
       PlacesUtils.bookmarks.removeItem(itemId);
       run_next_test();
-    }, this);
+    });
   },
 
   function test_multiple_bookmarks() {
@@ -58,25 +58,25 @@ const TEST_URL = "http://www.example.com/";
       PlacesUtils.unfiledBookmarksFolderId, uri, "test",
       PlacesUtils.bookmarks.DEFAULT_INDEX
     ));
-    PlacesUtils.asyncGetBookmarkIds(uri, function (aItemIds, aURI) {
+    PlacesUtils.asyncGetBookmarkIds(uri, (aItemIds, aURI) => {
       do_check_eq(aItemIds.length, 2);
       do_check_true(do_compare_arrays(itemIds, aItemIds));
       do_check_true(aURI.equals(uri));
       itemIds.forEach(PlacesUtils.bookmarks.removeItem);
       run_next_test();
-    }, this);
+    });
   },
 
   function test_cancel() {
-    let pending = PlacesUtils.asyncGetBookmarkIds(TEST_URL, function (aItemIds, aURI) {
+    let pending = PlacesUtils.asyncGetBookmarkIds(TEST_URL, (aItemIds, aURI) => {
       do_throw("A canceled pending statement should not be invoked");
-    }, this);
+    });
     pending.cancel();
-    PlacesUtils.asyncGetBookmarkIds(TEST_URL, function (aItemIds, aURI) {
+    PlacesUtils.asyncGetBookmarkIds(TEST_URL, (aItemIds, aURI) => {
       do_check_eq(aItemIds.length, 0);
       do_check_eq(aURI, TEST_URL);
       run_next_test();
-    }, this);
+    });
   },
 
 ].forEach(add_test);
