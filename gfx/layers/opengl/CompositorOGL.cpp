@@ -98,7 +98,7 @@ DrawQuads(GLContext *aGLContext,
     aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
   bool texCoords = (texCoordAttribIndex != GLuint(-1));
 
-  GLsizei bytes = aRects.elements() * 2 * sizeof(GLfloat);
+  GLsizei bytes = aRects.vertCoords().Length() * 2 * sizeof(GLfloat);
 
   GLsizei total = bytes;
   if (texCoords) {
@@ -136,7 +136,7 @@ DrawQuads(GLContext *aGLContext,
     aGLContext->fDisableVertexAttribArray(texCoordAttribIndex);
   }
 
-  aGLContext->fDrawArrays(aMode, 0, aRects.elements());
+  aGLContext->fDrawArrays(aMode, 0, aRects.vertCoords().Length());
 
   aGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
