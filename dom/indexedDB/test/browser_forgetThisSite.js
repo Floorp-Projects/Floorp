@@ -20,6 +20,7 @@ const testPageURL4 = "http://" + domains[1] + getPath;
 
 function test()
 {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
   // Avoids the prompt
   setPermission(testPageURL1, "indexedDB", "unknown");
