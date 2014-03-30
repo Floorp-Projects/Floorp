@@ -72,6 +72,26 @@ add_test(function test_Logger_parent() {
   run_next_test();
 });
 
+add_test(function test_LoggerWithMessagePrefix() {
+  let log = Log.repository.getLogger("test.logger.prefix");
+  let appender = new MockAppender(new Log.MessageOnlyFormatter());
+  log.addAppender(appender);
+
+  let prefixed = Log.repository.getLoggerWithMessagePrefix(
+    "test.logger.prefix", "prefix: ");
+
+  log.warn("no prefix");
+  prefixed.warn("with prefix");
+
+  Assert.equal(appender.messages.length, 2, "2 messages were logged.");
+  Assert.deepEqual(appender.messages, [
+    "no prefix\n",
+    "prefix: with prefix\n",
+  ], "Prefix logger works.");
+
+  run_next_test();
+});
+
 // A utility method for checking object equivalence.
 // Fields with a reqular expression value in expected will be tested
 // against the corresponding value in actual. Otherwise objects
