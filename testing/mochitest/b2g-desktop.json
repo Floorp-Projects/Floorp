@@ -524,6 +524,7 @@
     "docshell/test/test_bug637644.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_bug640387_1.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_bug660404.html": "Bug 931116, b2g desktop specific, initial triage",
+    "docshell/test/test_bug668513.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_bug669671.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_bug680257.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_bug728939.html": "Bug 931116, b2g desktop specific, initial triage",

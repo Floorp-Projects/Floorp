@@ -225,6 +225,7 @@
     "docshell/test/navigation/test_bug270414.html":"",
     "docshell/test/navigation/test_not-opener.html":"",
     "docshell/test/test_bug413310.html":"",
+    "docshell/test/test_bug668513.html":"",
 
     "dom/imptests/html/webgl":"",
 

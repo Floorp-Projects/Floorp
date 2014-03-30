@@ -7,110 +7,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668513
   <title>Test for Bug 668513</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-<script>
-if (navigator.platform.startsWith("Linux")) {
-  SimpleTest.expectAssertions(0, 1);
-}
-
-  function onload_test()
-  {
-    var win = frames[0];
-    ok(win.performance, 'Window.performance should be defined');
-    ok(win.performance.navigation, 'Window.performance.navigation should be defined');
-    var navigation = win.performance && win.performance.navigation;
-    if (navigation === undefined)
-    {
-      // avoid script errors
-      SimpleTest.finish();
-      return;
-    }
-
-    // do this with a timeout to see the visuals of the navigations.
-    setTimeout("nav_frame();", 100);
-  }
-
-  var step = 1;
-  function nav_frame()
-  {
-    var navigation_frame = frames[0];
-    var navigation = navigation_frame.performance.navigation;
-    switch (step)
-    {
-      case 1:
-      {
-        navigation_frame.location.href = 'bug570341_recordevents.html';
-        step++;
-        break;
-      }
-      case 2:
-      {
-        is(navigation.type, navigation.TYPE_NAVIGATE,
-           'Expected window.performance.navigation.type == TYPE_NAVIGATE');
-        navigation_frame.history.back();
-        step++;
-        break;
-      }
-      case 3:
-      {
-        is(navigation.type, navigation.TYPE_BACK_FORWARD,
-           'Expected window.performance.navigation.type == TYPE_BACK_FORWARD');
-        step++;
-        navigation_frame.history.forward();
-        break;
-      }
-      case 4:
-      {
-        is(navigation.type, navigation.TYPE_BACK_FORWARD,
-           'Expected window.performance.navigation.type == TYPE_BACK_FORWARD');
-        navigation_frame.location.href = 'bug668513_redirect.html';
-        step++;
-        break;
-      }
-      case 5:
-      {
-        is(navigation.type, navigation.TYPE_NAVIGATE,
-           'Expected timing.navigation.type as TYPE_NAVIGATE');
-        is(navigation.redirectCount, 1, 
-           'Expected navigation.redirectCount == 1 on an server redirected navigation');
-
-        var timing = navigation_frame.performance && navigation_frame.performance.timing;
-        if (timing === undefined)
-        {
-          // avoid script errors
-          SimpleTest.finish();
-          break;
-        }
-        ok(timing.navigationStart > 0, 'navigationStart should be > 0');
-        sequence = ['navigationStart', 'redirectStart', 'redirectEnd', 'fetchStart'];
-        for (var j = 1; j < sequence.length; ++j) {
-          var prop = sequence[j];
-          var prevProp = sequence[j-1];
-          ok(timing[prevProp] <= timing[prop],
-             ['Expected ', prevProp, ' to happen before ', prop,
-              ', got ', prevProp, ' = ', timing[prevProp],
-              ', ', prop, ' = ', timing[prop]].join(''));
-        }
-        step++;
-        SimpleTest.finish();
-      }
-      default:
-        break;
-    }
-  }
-</script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=668513">Mozilla Bug 668513</a>
-<div id="frames">
-<iframe name="child0" onload="onload_test();" src="navigation/blank.html"></iframe>
-</div>
 <p id="display"></p>
 <div id="content" style="display: none">
 
 </div>
 <pre id="test">
 <script type="application/javascript">
+if (navigator.platform.startsWith("Linux")) {
+  SimpleTest.expectAssertions(0, 1);
+}
+
 SimpleTest.waitForExplicitFinish();
+window.open("file_bug668513.html");
 </script>
 </pre>
 </body>
