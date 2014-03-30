@@ -9,6 +9,7 @@
 
 function test() {
   /** Tests selected options **/
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   let testTabCount = 0;
