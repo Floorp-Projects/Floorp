@@ -683,20 +683,20 @@ this.UITour = {
 
     let targetQuery = targetObject.query;
     aWindow.PanelUI.ensureReady().then(() => {
+      let node;
       if (typeof targetQuery == "function") {
-        deferred.resolve({
-          addTargetListener: targetObject.addTargetListener,
-          node: targetQuery(aWindow.document),
-          removeTargetListener: targetObject.removeTargetListener,
-          targetName: aTargetName,
-          widgetName: targetObject.widgetName,
-        });
-        return;
+        try {
+          node = targetQuery(aWindow.document);
+        } catch (ex) {
+          node = null;
+        }
+      } else {
+        node = aWindow.document.querySelector(targetQuery);
       }
 
       deferred.resolve({
         addTargetListener: targetObject.addTargetListener,
-        node: aWindow.document.querySelector(targetQuery),
+        node: node,
         removeTargetListener: targetObject.removeTargetListener,
         targetName: aTargetName,
         widgetName: targetObject.widgetName,
