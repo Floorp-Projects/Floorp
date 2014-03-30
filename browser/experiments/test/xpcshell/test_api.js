@@ -29,18 +29,6 @@ let gManifestObject      = null;
 let gManifestHandlerURI  = null;
 let gTimerScheduleOffset = -1;
 
-let gGlobalScope = this;
-function loadAddonManager() {
-  let ns = {};
-  Cu.import("resource://gre/modules/Services.jsm", ns);
-  let head = "../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js";
-  let file = do_get_file(head);
-  let uri = ns.Services.io.newFileURI(file);
-  ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
-  startupManager();
-}
-
 function run_test() {
   run_next_test();
 }
@@ -1349,6 +1337,35 @@ add_task(function* test_unexpectedUninstall() {
   // Cleanup.
 
   Services.obs.removeObserver(observer, OBSERVER_TOPIC);
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
+
+// If the Addon Manager knows of an experiment that we don't, it should get
+// uninstalled.
+add_task(function* testUnknownExperimentsUninstalled() {
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  let addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "Precondition: No experiment add-ons are present.");
+  yield installAddon(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 1, "Experiment 1 installed via AddonManager");
+
+  // Simulate no known experiments.
+  gManifestObject = {
+    "version": 1,
+    experiments: [],
+  };
+
+  yield experiments.updateManifest();
+  let fromManifest = yield experiments.getExperiments();
+  Assert.equal(fromManifest.length, 0, "No experiments known in manifest.");
+
+  // And the unknown add-on should be gone.
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "Experiment 1 was uninstalled.");
+
   yield experiments.uninit();
   yield removeCacheFile();
 });

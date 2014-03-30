@@ -774,6 +774,7 @@
 .theme-light .scrollbutton-up > .toolbarbutton-icon,
 .theme-light .scrollbutton-down > .toolbarbutton-icon,
 .theme-light #black-boxed-message-button .button-icon,
+.theme-light #canvas-debugging-empty-notice-button .button-icon,
 .theme-light #requests-menu-perf-notice-button .button-icon,
 .theme-light #requests-menu-network-summary-button .button-icon {
   filter: url(filters.svg#invert);
