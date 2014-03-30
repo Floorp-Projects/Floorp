@@ -11,6 +11,7 @@ let gTab, gDebuggee, gPanel, gDebugger;
 let gFrames, gVariables, gPrefs, gOptions;
 
 function test() {
+  requestLongerTimeout(2);
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
