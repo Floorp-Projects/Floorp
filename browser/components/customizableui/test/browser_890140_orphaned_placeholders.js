@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // One orphaned item should have two placeholders next to it.
 add_task(function() {
   yield startCustomizing();
