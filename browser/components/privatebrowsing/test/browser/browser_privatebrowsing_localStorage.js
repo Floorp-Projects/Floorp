@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   const page1 = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/' +
