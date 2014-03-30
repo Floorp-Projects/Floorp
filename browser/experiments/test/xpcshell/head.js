@@ -12,18 +12,48 @@ Cu.import("resource://services-sync/healthreport.jsm", this);
 Cu.import("resource://testing-common/services/healthreport/utils.jsm", this);
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 
+function getExperimentPath(base) {
+  let p = do_get_cwd();
+  p.append(base);
+  return p.path;
+}
+
+function sha1File(path) {
+  let f = Cc["@mozilla.org/file/local;1"]
+            .createInstance(Ci.nsILocalFile);
+  f.initWithPath(path);
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+                 .createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA1);
+
+  let is = Cc["@mozilla.org/network/file-input-stream;1"]
+             .createInstance(Ci.nsIFileInputStream);
+  is.init(f, -1, 0, 0);
+  hasher.updateFromStream(is, Math.pow(2, 32) - 1);
+  is.close();
+  let bytes = hasher.finish(false);
+
+  return [("0" + bytes.charCodeAt(byte).toString(16)).slice(-2)
+          for (byte in bytes)]
+         .join("");
+}
+
 const EXPERIMENT1_ID       = "test-experiment-1@tests.mozilla.org";
-const EXPERIMENT1_XPI_SHA1 = "sha1:0f15ee3677ffbf1e82367069fe4e8fe8e2ad838f";
 const EXPERIMENT1_XPI_NAME = "experiment-1.xpi";
 const EXPERIMENT1_NAME     = "Test experiment 1";
+const EXPERIMENT1_PATH     = getExperimentPath(EXPERIMENT1_XPI_NAME);
+const EXPERIMENT1_XPI_SHA1 = "sha1:" + sha1File(EXPERIMENT1_PATH);
 
-const EXPERIMENT1A_XPI_SHA1 = "sha1:b938f1b4f0bf466a67257aff26d4305ac24231eb";
+
 const EXPERIMENT1A_XPI_NAME = "experiment-1a.xpi";
 const EXPERIMENT1A_NAME     = "Test experiment 1.1";
+const EXPERIMENT1A_PATH     = getExperimentPath(EXPERIMENT1A_XPI_NAME);
+const EXPERIMENT1A_XPI_SHA1 = "sha1:" + sha1File(EXPERIMENT1A_PATH);
 
 const EXPERIMENT2_ID       = "test-experiment-2@tests.mozilla.org"
-const EXPERIMENT2_XPI_SHA1 = "sha1:9d23425421941e1d1e2037232cf5aeae82dbd4e4";
 const EXPERIMENT2_XPI_NAME = "experiment-2.xpi";
+const EXPERIMENT2_PATH     = getExperimentPath(EXPERIMENT2_XPI_NAME);
+const EXPERIMENT2_XPI_SHA1 = "sha1:" + sha1File(EXPERIMENT2_PATH);
 
 const EXPERIMENT3_ID       = "test-experiment-3@tests.mozilla.org";
 const EXPERIMENT4_ID       = "test-experiment-4@tests.mozilla.org";
