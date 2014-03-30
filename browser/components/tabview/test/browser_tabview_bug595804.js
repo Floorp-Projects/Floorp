@@ -15,6 +15,7 @@ registerCleanupFunction(function() {
 });
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
   
   ok(!TabView.isVisible(), "Tab View is not visible");
