@@ -8,6 +8,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const EventEmitter = require("devtools/toolkit/event-emitter");
+const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -49,8 +50,7 @@ NetMonitorPanel.prototype = {
         return this;
       })
       .then(null, function onError(aReason) {
-        Cu.reportError("NetMonitorPanel open failed. " +
-                       aReason.error + ": " + aReason.message);
+        DevToolsUtils.reportException("NetMonitorPanel.prototype.open", aReason);
       });
   },
 
