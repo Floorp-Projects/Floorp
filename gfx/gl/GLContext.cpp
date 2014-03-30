@@ -13,6 +13,7 @@
 #include "GLBlitHelper.h"
 #include "GLBlitTextureImageHelper.h"
 #include "GLReadTexImageHelper.h"
+#include "GLDrawRectHelper.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxUtils.h"
@@ -1685,6 +1686,7 @@ GLContext::MarkDestroyed()
         mBlitHelper = nullptr;
         mBlitTextureImageHelper = nullptr;
         mReadTexImageHelper = nullptr;
+        mDrawRectHelper = nullptr;
 
         mTexGarbageBin->GLContextTeardown();
     } else {
@@ -2008,6 +2010,16 @@ GLContext::ReadTexImageHelper()
     }
 
     return mReadTexImageHelper;
+}
+
+GLDrawRectHelper*
+GLContext::DrawRectHelper()
+{
+    if (!mDrawRectHelper) {
+        mDrawRectHelper = new GLDrawRectHelper(this);
+    }
+
+    return mDrawRectHelper;
 }
 
 bool
