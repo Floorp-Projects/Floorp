@@ -6,6 +6,7 @@
  */
 
 function test() {
+  requestLongerTimeout(2);
   let monitor, debuggee, requestsContainer, scrollTop;
 
   initNetMonitor(INFINITE_GET_URL).then(([aTab, aDebuggee, aMonitor]) => {
