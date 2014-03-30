@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
+  requestLongerTimeout(2);
   waitForExplicitFinish();
 
   newWindowWithTabView(function (win) {
