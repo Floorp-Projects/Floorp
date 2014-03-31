@@ -5,10 +5,17 @@
 
     <link href="./browser_styleinspector_bug_677930_urls_clickable/browser_styleinspector_bug_677930_urls_clickable.css" rel="stylesheet" type="text/css">
 
+    <style>
+    .relative2 {
+        background-image: url(test-image.png);
+    }
+    </style>
   </head>
   <body>
 
-    <div class="relative">Background image with relative path (loaded from external css)</div>
+    <div class="relative1">Background image #1 with relative path (loaded from external css)</div>
+
+    <div class="relative2">Background image #2 with relative path (loaded from style tag)</div>
 
     <div class="absolute">Background image with absolute path (loaded from external css)</div>
 
