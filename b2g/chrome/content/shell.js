@@ -597,7 +597,7 @@ var shell = {
 
   openAppForSystemMessage: function shell_openAppForSystemMessage(msg) {
     let payload = {
-      url: msg.uri,
+      url: msg.pageURL,
       manifestURL: msg.manifestURL,
       isActivity: (msg.type == 'activity'),
       onlyShowApp: msg.onlyShowApp,
