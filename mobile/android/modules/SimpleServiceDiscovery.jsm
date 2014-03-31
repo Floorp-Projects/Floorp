@@ -50,6 +50,15 @@ var SimpleServiceDiscovery = {
   _searchTimeout: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   _searchRepeat: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
 
+  _forceTrailingSlash: function(aURL) {
+    // Some devices add the trailing '/' and some don't. Let's make sure
+    // it's there for consistency.
+    if (!aURL.endsWith("/")) {
+      aURL += "/";
+    }
+    return aURL;
+  },
+
   // nsIUDPSocketListener implementation
   onPacketReceived: function(aSocket, aMessage) {
     // Listen for responses from specific targets. There could be more than one
@@ -70,13 +79,19 @@ var SimpleServiceDiscovery = {
       }
 
       if (location && valid) {
+        location = this._forceTrailingSlash(location);
+
         // When we find a valid response, package up the service information
         // and pass it on.
         let service = {
           location: location,
           target: target
         };
-        this._found(service);
+
+        try {
+          this._processService(service);
+        } catch (e) {}
+
         return true;
       }
       return false;
@@ -119,6 +134,14 @@ var SimpleServiceDiscovery = {
       return;
     }
 
+    // Update the timestamp so we can use it to clean out stale services the
+    // next time we search.
+    this._searchTimestamp = Date.now();
+
+    // Look for any fixed IP targets. Some routers might be configured to block
+    // UDP broadcasts, so this is a way to skip discovery.
+    this._searchFixedTargets();
+
     // Perform a UDP broadcast to search for SSDP devices
     let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
     try {
@@ -130,10 +153,6 @@ var SimpleServiceDiscovery = {
       log("failed to start socket: " + e);
       return;
     }
-
-    // Update the timestamp so we can use it to clean out stale services the
-    // next time we search.
-    this._searchTimestamp = Date.now();
 
     this._searchSocket = socket;
     this._searchTimeout.initWithCallback(this._searchShutdown.bind(this), SSDP_DISCOVER_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -147,6 +166,37 @@ var SimpleServiceDiscovery = {
       } catch (e) {
         log("failed to convert to byte array: " + e);
       }
+    }
+  },
+
+  _searchFixedTargets: function _searchFixedTargets() {
+    let fixedTargets = null;
+    try {
+      fixedTargets = Services.prefs.getCharPref("browser.casting.fixedTargets");
+    } catch (e) {}
+
+    if (!fixedTargets) {
+      return;
+    }
+
+    fixedTargets = JSON.parse(fixedTargets);
+    for (let fixedTarget of fixedTargets) {
+      // Verify we have the right data
+      if (!"location" in fixedTarget || !"target" in fixedTarget) {
+        continue;
+      }
+
+      fixedTarget.location = this._forceTrailingSlash(fixedTarget.location);
+
+      let service = {
+        location: fixedTarget.location,
+        target: fixedTarget.target
+      };
+
+      // We don't assume the fixed target is ready. We still need to ping it.
+      try {
+        this._processService(service);
+      } catch (e) {}
     }
   },
 
@@ -202,7 +252,7 @@ var SimpleServiceDiscovery = {
     return array;
   },
 
-  _found: function _found(aService) {
+  _processService: function _processService(aService) {
     // Use the REST api to request more information about this service
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", aService.location, true);
