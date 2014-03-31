@@ -225,7 +225,7 @@ TexSubImage2DHelper(GLContext *gl,
                     GLint pixelsize, GLenum format,
                     GLenum type, const GLvoid* pixels)
 {
-    if (gl->IsGLES2()) {
+    if (gl->IsGLES()) {
         if (stride == width * pixelsize) {
             gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
                              std::min(GetAddressAlignment((ptrdiff_t)pixels),
@@ -278,7 +278,7 @@ TexImage2DHelper(GLContext *gl,
                  GLint pixelsize, GLint border, GLenum format,
                  GLenum type, const GLvoid *pixels)
 {
-    if (gl->IsGLES2()) {
+    if (gl->IsGLES()) {
 
         NS_ASSERTION(format == (GLenum)internalformat,
                     "format and internalformat not the same for glTexImage2D on GLES2");

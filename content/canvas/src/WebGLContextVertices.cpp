@@ -35,7 +35,7 @@ WebGLContext::VertexAttrib1f(GLuint index, GLfloat x0)
         mVertexAttrib0Vector[1] = 0;
         mVertexAttrib0Vector[2] = 0;
         mVertexAttrib0Vector[3] = 1;
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib1f(index, x0);
     }
 }
@@ -55,7 +55,7 @@ WebGLContext::VertexAttrib2f(GLuint index, GLfloat x0, GLfloat x1)
         mVertexAttrib0Vector[1] = x1;
         mVertexAttrib0Vector[2] = 0;
         mVertexAttrib0Vector[3] = 1;
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib2f(index, x0, x1);
     }
 }
@@ -75,7 +75,7 @@ WebGLContext::VertexAttrib3f(GLuint index, GLfloat x0, GLfloat x1, GLfloat x2)
         mVertexAttrib0Vector[1] = x1;
         mVertexAttrib0Vector[2] = x2;
         mVertexAttrib0Vector[3] = 1;
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib3f(index, x0, x1, x2);
     }
 }
@@ -96,7 +96,7 @@ WebGLContext::VertexAttrib4f(GLuint index, GLfloat x0, GLfloat x1,
         mVertexAttrib0Vector[1] = x1;
         mVertexAttrib0Vector[2] = x2;
         mVertexAttrib0Vector[3] = x3;
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib4f(index, x0, x1, x2, x3);
     }
 }
@@ -117,7 +117,7 @@ WebGLContext::VertexAttrib1fv_base(GLuint idx, uint32_t arrayLength,
         mVertexAttrib0Vector[1] = GLfloat(0);
         mVertexAttrib0Vector[2] = GLfloat(0);
         mVertexAttrib0Vector[3] = GLfloat(1);
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib1fv(idx, ptr);
     }
 }
@@ -137,7 +137,7 @@ WebGLContext::VertexAttrib2fv_base(GLuint idx, uint32_t arrayLength,
         mVertexAttrib0Vector[1] = ptr[1];
         mVertexAttrib0Vector[2] = GLfloat(0);
         mVertexAttrib0Vector[3] = GLfloat(1);
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib2fv(idx, ptr);
     }
 }
@@ -157,7 +157,7 @@ WebGLContext::VertexAttrib3fv_base(GLuint idx, uint32_t arrayLength,
         mVertexAttrib0Vector[1] = ptr[1];
         mVertexAttrib0Vector[2] = ptr[2];
         mVertexAttrib0Vector[3] = GLfloat(1);
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib3fv(idx, ptr);
     }
 }
@@ -177,7 +177,7 @@ WebGLContext::VertexAttrib4fv_base(GLuint idx, uint32_t arrayLength,
         mVertexAttrib0Vector[1] = ptr[1];
         mVertexAttrib0Vector[2] = ptr[2];
         mVertexAttrib0Vector[3] = ptr[3];
-        if (gl->IsGLES2())
+        if (gl->IsGLES())
             gl->fVertexAttrib4fv(idx, ptr);
     }
 }
@@ -211,7 +211,7 @@ WebGLContext::DisableVertexAttribArray(GLuint index)
     MakeContextCurrent();
     InvalidateBufferFetching();
 
-    if (index || gl->IsGLES2())
+    if (index || gl->IsGLES())
         gl->fDisableVertexAttribArray(index);
 
     MOZ_ASSERT(mBoundVertexArray->HasAttrib(index)); // should have been validated earlier
