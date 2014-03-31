@@ -230,7 +230,7 @@ nsXULPopupManager::Rollup(uint32_t aCount, const nsIntPoint* pos, nsIContent** a
       }
     }
 
-    HidePopup(item->Content(), true, true, false, true, lastPopup);
+    HidePopup(item->Content(), true, true, false, lastPopup);
   }
 
   return consume;
@@ -822,7 +822,6 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
                              bool aHideChain,
                              bool aDeselectMenu,
                              bool aAsynchronous,
-                             bool aIsRollup,
                              nsIContent* aLastPopup)
 {
   // if the popup is on the nohide panels list, remove it but don't close any
@@ -915,50 +914,15 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
     if (aAsynchronous) {
       nsCOMPtr<nsIRunnable> event =
         new nsXULPopupHidingEvent(popupToHide, nextPopup, lastPopup,
-                                  type, deselectMenu, aIsRollup);
+                                  type, deselectMenu);
         NS_DispatchToCurrentThread(event);
     }
     else {
       FirePopupHidingEvent(popupToHide, nextPopup, lastPopup,
-                           popupFrame->PresContext(), type, deselectMenu, aIsRollup);
+                           popupFrame->PresContext(), type, deselectMenu);
     }
   }
 }
-
-// This is used to hide the popup after a transition finishes.
-class TransitionEnder : public nsIDOMEventListener
-{
-public:
-
-  nsCOMPtr<nsIContent> mContent;
-  bool mDeselectMenu;
-
-  NS_DECL_ISUPPORTS
-
-  TransitionEnder(nsIContent* aContent, bool aDeselectMenu)
-    : mContent(aContent), mDeselectMenu(aDeselectMenu)
-  {
-  }
-
-  virtual ~TransitionEnder() { }
-
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
-  {
-    mContent->RemoveSystemEventListener(NS_LITERAL_STRING("transitionend"), this, false);
-
-    // Now hide the popup. There could be other properties transitioning, but
-    // we'll assume they all end at the same time and just hide the popup upon
-    // the first one ending.
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm) {
-      pm->HidePopupFrame(mContent, mDeselectMenu);
-    }
-
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS1(TransitionEnder, nsIDOMEventListener)
 
 void
 nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
@@ -966,8 +930,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
                                      nsIContent* aNextPopup,
                                      nsIContent* aLastPopup,
                                      nsPopupType aPopupType,
-                                     bool aDeselectMenu,
-                                     bool aIsRollup)
+                                     bool aDeselectMenu)
 {
   if (mCloseTimer && mTimerMenu == aPopupFrame) {
     mCloseTimer->Cancel();
@@ -1003,31 +966,18 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 
   delete item;
 
-  // If the popup has an animate attribute and it is not set to false, assume
-  // that it has a closing transition and wait for it to finish. The transition
-  // may still occur either way, but the view will be hidden and you won't be
-  // able to see it. If there is a next popup, indicating that mutliple popups
-  // are rolling up, don't wait and hide the popup right away since the effect
-  // would likely be undesirable. This also does a quick check to see if the
-  // popup has a transition defined, and skips the wait if not.
-  if (!aNextPopup && aPopup->HasAttr(kNameSpaceID_None, nsGkAtoms::animate) &&
-       aPopupFrame->StyleDisplay()->mTransitionPropertyCount > 0) {
-    nsAutoString animate;
-    aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
+  nsWeakFrame weakFrame(aPopupFrame);
+  aPopupFrame->HidePopup(aDeselectMenu, ePopupClosed);
+  ENSURE_TRUE(weakFrame.IsAlive());
 
-    // If animate="false" then don't transition at all. If animate="cancel",
-    // only show the transition if cancelling the popup or rolling up.
-    // Otherwise, always show the transition.
-    if (!animate.EqualsLiteral("false") &&
-        (!animate.EqualsLiteral("cancel") || aIsRollup)) {
-      nsCOMPtr<TransitionEnder> ender = new TransitionEnder(aPopup, aDeselectMenu);
-      aPopup->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
-                                     ender, false, false);
-      return;
-    }
-  }
-
-  HidePopupFrame(aPopup, aDeselectMenu);
+  // send the popuphidden event synchronously. This event has no default
+  // behaviour.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nullptr,
+                         WidgetMouseEvent::eReal);
+  EventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(),
+                            &event, nullptr, &status);
+  ENSURE_TRUE(weakFrame.IsAlive());
 
   // if there are more popups to close, look for the next one
   if (aNextPopup && aPopup != aLastPopup) {
@@ -1064,29 +1014,9 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 
       FirePopupHidingEvent(popupToHide, nextPopup, aLastPopup,
                            popupFrame->PresContext(),
-                           foundMenu->PopupType(), aDeselectMenu, false);
+                           foundMenu->PopupType(), aDeselectMenu);
     }
   }
-}
-
-void
-nsXULPopupManager::HidePopupFrame(nsIContent* aPopup, bool aDeselectMenu)
-{
-  nsMenuPopupFrame* popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
-  if (!popupFrame)
-    return;
-
-  nsWeakFrame weakFrame(popupFrame);
-  popupFrame->HidePopup(aDeselectMenu, ePopupClosed);
-  ENSURE_TRUE(weakFrame.IsAlive());
-
-  // send the popuphidden event synchronously. This event has no default
-  // behaviour.
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nullptr,
-                         WidgetMouseEvent::eReal);
-  EventDispatcher::Dispatch(aPopup, popupFrame->PresContext(),
-                            &event, nullptr, &status);
 }
 
 void
@@ -1094,7 +1024,7 @@ nsXULPopupManager::HidePopup(nsIFrame* aFrame)
 {
   nsMenuPopupFrame* popup = do_QueryFrame(aFrame);
   if (popup)
-    HidePopup(aFrame->GetContent(), false, true, false, false);
+    HidePopup(aFrame->GetContent(), false, true, false);
 }
 
 void
@@ -1353,8 +1283,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
                                         nsIContent* aLastPopup,
                                         nsPresContext *aPresContext,
                                         nsPopupType aPopupType,
-                                        bool aDeselectMenu,
-                                        bool aIsRollup)
+                                        bool aDeselectMenu)
 {
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
 
@@ -1394,7 +1323,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
     }
     else {
       HidePopupCallback(aPopup, popupFrame, aNextPopup, aLastPopup,
-                        aPopupType, aDeselectMenu, aIsRollup);
+                        aPopupType, aDeselectMenu);
     }
   }
 }
@@ -1647,7 +1576,7 @@ nsXULPopupManager::PopupDestroyed(nsMenuPopupFrame* aPopup)
           else {
             // HidePopup will take care of hiding any of its children, so
             // break out afterwards
-            HidePopup(child->Content(), false, false, true, false);
+            HidePopup(child->Content(), false, false, true);
             break;
           }
 
@@ -1847,7 +1776,7 @@ nsXULPopupManager::KillMenuTimer()
     mCloseTimer = nullptr;
 
     if (mTimerMenu->IsOpen())
-      HidePopup(mTimerMenu->GetContent(), false, false, true, false);
+      HidePopup(mTimerMenu->GetContent(), false, false, true);
   }
 
   mTimerMenu = nullptr;
@@ -2043,7 +1972,7 @@ nsXULPopupManager::HandleKeyboardNavigationInPopup(nsMenuChainItem* item,
       // close a submenu when Left is pressed
       nsMenuPopupFrame* popupFrame = currentMenu->GetPopup();
       if (popupFrame)
-        HidePopup(popupFrame->GetContent(), false, false, false, false);
+        HidePopup(popupFrame->GetContent(), false, false, false);
       return true;
     }
   }
@@ -2063,7 +1992,7 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
   if (aTopVisibleMenuItem &&
       aTopVisibleMenuItem->PopupType() != ePopupTypeMenu) {
     if (keyCode == nsIDOMKeyEvent::DOM_VK_ESCAPE) {
-      HidePopup(aTopVisibleMenuItem->Content(), false, false, false, true);
+      HidePopup(aTopVisibleMenuItem->Content(), false, false, false);
       aKeyEvent->StopPropagation();
       aKeyEvent->PreventDefault();
     }
@@ -2087,7 +2016,7 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
       // though in this latter case, a menu didn't actually close, the effect
       // ends up being the same. Similar for the tab key below.
       if (aTopVisibleMenuItem) {
-        HidePopup(aTopVisibleMenuItem->Content(), false, false, false, true);
+        HidePopup(aTopVisibleMenuItem->Content(), false, false, false);
       } else if (mActiveMenuBar) {
         mActiveMenuBar->MenuClosed();
       }
@@ -2394,7 +2323,7 @@ nsXULPopupHidingEvent::Run()
       nsPresContext* context = presShell->GetPresContext();
       if (context) {
         pm->FirePopupHidingEvent(mPopup, mNextPopup, mLastPopup,
-                                 context, mPopupType, mDeselectMenu, mIsRollup);
+                                 context, mPopupType, mDeselectMenu);
       }
     }
   }
@@ -2455,7 +2384,7 @@ nsXULMenuCommandEvent::Run()
   }
 
   if (popup && mCloseMenuMode != CloseMenuMode_None)
-    pm->HidePopup(popup, mCloseMenuMode == CloseMenuMode_Auto, true, false, false);
+    pm->HidePopup(popup, mCloseMenuMode == CloseMenuMode_Auto, true, false);
 
   return NS_OK;
 }
