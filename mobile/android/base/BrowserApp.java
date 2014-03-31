@@ -2078,7 +2078,7 @@ abstract public class BrowserApp extends GeckoApp
         // Action providers are available only ICS+.
         if (Build.VERSION.SDK_INT >= 14) {
             GeckoMenuItem share = (GeckoMenuItem) mMenu.findItem(R.id.share);
-            GeckoActionProvider provider = new GeckoActionProvider(this);
+            GeckoActionProvider provider = GeckoActionProvider.getForType(GeckoActionProvider.DEFAULT_MIME_TYPE, this);
             share.setActionProvider(provider);
         }
 
