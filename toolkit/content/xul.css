@@ -427,11 +427,11 @@ panel[type="arrow"] {
 }
 
 panel[type="arrow"]:not([animate="false"]) {
-  transform: scale(.8);
+  transform: scale(.1);
   opacity: 0;
   transition-property: transform, opacity;
-  transition-duration: 0.15s;
-  transition-timing-function: ease;
+  transition-duration: 0.25s;
+  transition-timing-function: cubic-bezier(.6, 1.0, .65, 1.0), ease;
 }
 
 panel[type="arrow"][animate="open"] {
@@ -475,14 +475,14 @@ panel[arrowposition="after_start"][animate="cancel"],
 panel[arrowposition="before_end"][animate="cancel"],
 panel[arrowposition="end_before"][animate="cancel"],
 panel[arrowposition="start_after"][animate="cancel"] {
-  transform: scale(.6) skew(10deg, 10deg);
+  transform: scale(.1) skew(30deg, 20deg);
 }
 
 panel[arrowposition="after_end"][animate="cancel"],
 panel[arrowposition="before_start"][animate="cancel"],
 panel[arrowposition="start_before"][animate="cancel"],
 panel[arrowposition="end_after"][animate="cancel"] {
-  transform: scale(.6) skew(-10deg, -10deg);
+  transform: scale(.1) skew(-30deg, -20deg);
 }
 
 %ifdef XP_MACOSX
