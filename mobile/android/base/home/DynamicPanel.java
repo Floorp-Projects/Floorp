@@ -85,6 +85,9 @@ public class DynamicPanel extends HomeFragment
     // On URL open listener
     private OnUrlOpenListener mUrlOpenListener;
 
+    // The current UI mode in the fragment
+    private UIMode mUIMode;
+
     /*
      * Different UI modes to display depending on the authentication state.
      *
@@ -140,6 +143,12 @@ public class DynamicPanel extends HomeFragment
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        // Restore whatever the UI mode the fragment had before
+        // a device rotation.
+        if (mUIMode != null) {
+            setUIMode(mUIMode);
+        }
 
         mPanelAuthCache.setOnChangeListener(new PanelAuthChangeListener());
         GeckoAppShell.registerEventListener("HomePanels:RefreshDataset", this);
@@ -250,7 +259,12 @@ public class DynamicPanel extends HomeFragment
                 }
                 mPanelLayout.setVisibility(View.VISIBLE);
 
-                if (canLoad()) {
+                // Only trigger a reload if the UI mode has changed
+                // (e.g. auth cache changes) and the fragment is allowed
+                // to load its contents. Any loaders associated with the
+                // panel layout will be automatically re-bound after a
+                // device rotation, no need to explicitly load it again.
+                if (mUIMode != mode && canLoad()) {
                     mPanelLayout.load();
                 }
                 break;
@@ -268,6 +282,8 @@ public class DynamicPanel extends HomeFragment
             default:
                 throw new IllegalStateException("Unrecognized UIMode in DynamicPanel");
         }
+
+        mUIMode = mode;
     }
 
     @Override
