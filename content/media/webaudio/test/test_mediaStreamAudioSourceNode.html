@@ -15,7 +15,7 @@ function createBuffer(context, delay) {
   var buffer = context.createBuffer(2, 2048, context.sampleRate);
   for (var i = 0; i < 2048 - delay; ++i) {
     buffer.getChannelData(0)[i + delay] = Math.sin(440 * 2 * Math.PI * i / context.sampleRate);
-    buffer.getChannelData(1)[i + delay] = buffer.getChannelData(0)[i + delay];
+    buffer.getChannelData(1)[i + delay] = -buffer.getChannelData(0)[i + delay];
   }
   return buffer;
 }
@@ -32,6 +32,9 @@ var gTest = {
     source.start(0);
 
     var mediaStreamSource = context.createMediaStreamSource(dest.stream);
+    // channelCount and channelCountMode should have no effect
+    mediaStreamSource.channelCount = 1;
+    mediaStreamSource.channelCountMode = "explicit";
     return mediaStreamSource;
   },
   createExpectedBuffers: function(context) {
