@@ -1208,9 +1208,6 @@ pref("devtools.shadereditor.enabled", false);
 // Enable the Canvas Debugger.
 pref("devtools.canvasdebugger.enabled", false);
 
-// Enable tools for Chrome development.
-pref("devtools.chrome.enabled", false);
-
 // Default theme ("dark" or "light")
 pref("devtools.theme", "light");
 

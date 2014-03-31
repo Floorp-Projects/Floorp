@@ -553,6 +553,9 @@ pref("toolkit.asyncshutdown.timeout.crash", 60000);
 // Enable deprecation warnings.
 pref("devtools.errorconsole.deprecation_warnings", true);
 
+// Disable debugging chrome
+pref("devtools.chrome.enabled", false);
+
 // Disable remote debugging protocol logging
 pref("devtools.debugger.log", false);
 // Disable remote debugging connections
