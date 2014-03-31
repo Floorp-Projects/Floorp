@@ -54,6 +54,7 @@
                             oncommand="document.getBindingParent(this).translate()">
                 <xul:menupopup/>
               </xul:menulist>
+              <xul:label value="&translation.translatedToSuffix.label;"/>
               <xul:button anonid="showOriginal"
                           label="&translation.showOriginal.button;"
                           oncommand="document.getBindingParent(this).showOriginal();"/>
