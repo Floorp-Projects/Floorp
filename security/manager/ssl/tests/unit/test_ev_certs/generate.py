@@ -40,6 +40,13 @@ mozilla_testing_ev_policy = ("certificatePolicies = @v3_ca_ev_cp\n\n" +
                                "1.3.6.1.4.1.13769.666.666.666.1.500.9.1\n\n" +
                              "CPS.1 = \"http://mytestdomain.local/cps\"")
 
+anypolicy_policy = ("certificatePolicies = @v3_ca_ev_cp\n\n" +
+                    "[ v3_ca_ev_cp ]\n" +
+                    "policyIdentifier = " +
+                    "2.5.29.32.0\n\n" +
+                    "CPS.1 = \"http://mytestdomain.local/cps\"")
+
+
 def import_untrusted_cert(certfile, nickname):
     os.system("certutil -A -d . -n " + nickname + " -i " + certfile +
               " -t ',,'")
@@ -107,6 +114,30 @@ def generate_certs():
                                       mozilla_testing_ev_policy,
                                       int_key, int_cert);
     import_untrusted_cert(no_ocsp_cert, 'no-ocsp-url-cert');
+
+    # add an ev cert whose intermediate has a anypolicy oid
+    prefix = "ev-valid-anypolicy-int"
+    ee_ext_text = (EE_basic_constraints + EE_full_ku + Server_eku +
+                   authority_key_ident + aia_prefix + prefix + aia_suffix +
+                   endentity_crl + mozilla_testing_ev_policy)
+    int_ext_text = (CA_basic_constraints + EE_full_ku + CA_eku +
+                    authority_key_ident + subject_key_ident +
+                    aia_prefix + "int-" + prefix + aia_suffix +
+                    intermediate_crl + anypolicy_policy)
+
+    [int_key, int_cert, ee_key, ee_cert] = CertUtils.generate_int_and_ee(db,
+                                             srcdir,
+                                             ca_key,
+                                             ca_cert,
+                                             prefix,
+                                             int_ext_text,
+                                             ee_ext_text,
+                                             key_type)
+    pk12file = CertUtils.generate_pkcs12(db, srcdir, int_cert, int_key,
+                                         "int-" + prefix)
+    import_cert_and_pkcs12(int_cert, pk12file, "int-" + prefix, ",,")
+    import_untrusted_cert(ee_cert, prefix)
+
 
     [bad_ca_key, bad_ca_cert] = CertUtils.generate_cert_generic( db,
                                       srcdir,
