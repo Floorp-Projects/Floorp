@@ -4405,24 +4405,32 @@ CanvasPath::Constructor(const GlobalObject& aGlobal, const nsAString& aPathStrin
 void
 CanvasPath::ClosePath()
 {
+  EnsurePathBuilder();
+
   mPathBuilder->Close();
 }
 
 void
 CanvasPath::MoveTo(double x, double y)
 {
+  EnsurePathBuilder();
+
   mPathBuilder->MoveTo(Point(ToFloat(x), ToFloat(y)));
 }
 
 void
 CanvasPath::LineTo(double x, double y)
 {
+  EnsurePathBuilder();
+
   mPathBuilder->LineTo(Point(ToFloat(x), ToFloat(y)));
 }
 
 void
 CanvasPath::QuadraticCurveTo(double cpx, double cpy, double x, double y)
 {
+  EnsurePathBuilder();
+
   mPathBuilder->QuadraticBezierTo(gfx::Point(ToFloat(cpx), ToFloat(cpy)),
                                   gfx::Point(ToFloat(x), ToFloat(y)));
 }
@@ -4527,6 +4535,8 @@ CanvasPath::Arc(double x, double y, double radius,
 void
 CanvasPath::LineTo(const gfx::Point& aPoint)
 {
+  EnsurePathBuilder();
+
   mPathBuilder->LineTo(aPoint);
 }
 
@@ -4535,6 +4545,8 @@ CanvasPath::BezierTo(const gfx::Point& aCP1,
                      const gfx::Point& aCP2,
                      const gfx::Point& aCP3)
 {
+  EnsurePathBuilder();
+
   mPathBuilder->BezierTo(aCP1, aCP2, aCP3);
 }
 
@@ -4546,23 +4558,46 @@ CanvasPath::GetPath(const CanvasWindingRule& winding, const mozilla::RefPtr<mozi
     fillRule = FillRule::FILL_EVEN_ODD;
   }
 
-  RefPtr<Path> mTempPath = mPathBuilder->Finish();
-  if (!mTempPath)
-    return mTempPath;
-
-  // retarget our backend if we're used with a different backend
-  if (mTempPath->GetBackendType() != mTarget->GetType()) {
-    mPathBuilder = mTarget->CreatePathBuilder(fillRule);
-    mTempPath->StreamToSink(mPathBuilder);
-    mTempPath = mPathBuilder->Finish();
-  } else if (mTempPath->GetFillRule() != fillRule) {
-    mPathBuilder = mTempPath->CopyToBuilder(fillRule);
-    mTempPath = mPathBuilder->Finish();
+  if (mPath &&
+      (mPath->GetBackendType() == mTarget->GetType()) &&
+      (mPath->GetFillRule() == fillRule)) {
+    return mPath;
   }
 
-  mPathBuilder = mTempPath->CopyToBuilder();
+  if (!mPath) {
+    // if there is no path, there must be a pathbuilder
+    MOZ_ASSERT(mPathBuilder);
+    mPath = mPathBuilder->Finish();
+    if (!mPath)
+      return mPath;
 
-  return mTempPath;
+    mPathBuilder = nullptr;
+  }
+
+  // retarget our backend if we're used with a different backend
+  if (mPath->GetBackendType() != mTarget->GetType()) {
+    RefPtr<PathBuilder> tmpPathBuilder = mTarget->CreatePathBuilder(fillRule);
+    mPath->StreamToSink(tmpPathBuilder);
+    mPath = tmpPathBuilder->Finish();
+  } else if (mPath->GetFillRule() != fillRule) {
+    RefPtr<PathBuilder> tmpPathBuilder = mPath->CopyToBuilder(fillRule);
+    mPath = tmpPathBuilder->Finish();
+  }
+
+  return mPath;
+}
+
+void
+CanvasPath::EnsurePathBuilder() const
+{
+  if (mPathBuilder) {
+    return;
+  }
+
+  // if there is not pathbuilder, there must be a path
+  MOZ_ASSERT(mPath);
+  mPathBuilder = mPath->CopyToBuilder();
+  mPath = nullptr;
 }
 
 }
