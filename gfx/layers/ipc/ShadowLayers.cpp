@@ -449,10 +449,6 @@ void
 ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                                     TextureClient* aTexture)
 {
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aTexture->GetIPDLActor());
   mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
                                 nullptr, aTexture->GetIPDLActor()));
   if (aTexture->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {

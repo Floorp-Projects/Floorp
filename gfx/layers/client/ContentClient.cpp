@@ -67,7 +67,12 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 
   bool useDoubleBuffering = false;
   bool useDeprecatedTextures = true;
+  // XXX We need support for gralloc with non-deprecated textures content before
+  // we can use them with FirefoxOS (bug 946720). We need the same locking for
+  // Windows.
+#if !defined(XP_WIN)
   useDeprecatedTextures = gfxPlatform::GetPlatform()->UseDeprecatedTextures();
+#endif
 
 #ifdef XP_WIN
   if (backend == LayersBackend::LAYERS_D3D11) {
