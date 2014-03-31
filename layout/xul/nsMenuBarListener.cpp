@@ -106,7 +106,7 @@ nsMenuBarListener::ToggleMenuActiveState()
   if (pm && closemenu) {
     nsMenuPopupFrame* popupFrame = closemenu->GetPopup();
     if (popupFrame)
-      pm->HidePopup(popupFrame->GetContent(), false, false, true, false);
+      pm->HidePopup(popupFrame->GetContent(), false, false, true);
   }
 }
 
