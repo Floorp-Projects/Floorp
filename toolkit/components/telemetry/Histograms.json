@@ -3255,11 +3255,6 @@
     "extended_statistics_ok": true,
     "description": "Firefox: Time taken to load a page (ms)"
   },
-  "FX_TOTAL_TOP_VISITS": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Count the number of times a new top page was starting to load"
-  },
   "FX_THUMBNAILS_CAPTURE_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
