@@ -252,19 +252,15 @@ NS_IMPL_ISUPPORTS1(GrallocReporter, nsIMemoryReporter)
 
 int64_t GrallocReporter::sAmount = 0;
 
+void InitGralloc() {
+  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  RegisterStrongMemoryReporter(new GrallocReporter());
+}
+
 GrallocBufferActor::GrallocBufferActor()
 : mAllocBytes(0)
 , mTextureHost(nullptr)
 {
-  static bool registered;
-  if (!registered) {
-    // We want to be sure that the first call here will always run on
-    // the main thread.
-    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-
-    RegisterStrongMemoryReporter(new GrallocReporter());
-    registered = true;
-  }
 }
 
 GrallocBufferActor::~GrallocBufferActor()
@@ -410,13 +406,16 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                                   SurfaceDescriptor* aBuffer)
 {
 
-  // Some GL implementations fail to render gralloc textures with
-  // width < 64.  There's not much point in gralloc'ing buffers that
-  // small anyway, so fall back on shared memory plus a texture
-  // upload.
-  if (aSize.width < 64) {
+  if (aSize.width <= 0 || aSize.height <= 0) {
     return false;
   }
+#if ANDROID_VERSION <= 15
+  // Adreno 200 fails to render gralloc textures with width < 64
+  // or with height < 32.
+  if (aSize.width < 64 || aSize.height < 32) {
+    return false;
+  }
+#endif
   PROFILER_LABEL("ShadowLayerForwarder", "PlatformAllocSurfaceDescriptor");
   // Gralloc buffers are efficiently mappable as gfxImageSurface, so
   // no need to check |aCaps & MAP_AS_IMAGE_SURFACE|.
