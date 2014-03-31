@@ -58,7 +58,8 @@ AudioNodeExternalInputStream::GetTrackMapEntry(const StreamBuffer::Track& aTrack
   // Create a speex resampler with the same sample rate and number of channels
   // as the track.
   SpeexResamplerState* resampler = nullptr;
-  uint32_t channelCount = (*ci).mChannelData.Length();
+  uint32_t channelCount = std::min((*ci).mChannelData.Length(),
+                                   WebAudioUtils::MaxChannelCount);
   if (aTrack.GetRate() != mSampleRate) {
     resampler = speex_resampler_init(channelCount,
       aTrack.GetRate(), mSampleRate, SPEEX_RESAMPLER_QUALITY_DEFAULT, nullptr);
@@ -436,10 +437,8 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     }
   }
 
-  uint32_t outputChannels = ComputeFinalOuputChannelCount(inputChannels);
-
-  if (outputChannels) {
-    AllocateAudioBlock(outputChannels, &mLastChunks[0]);
+  if (inputChannels) {
+    AllocateAudioBlock(inputChannels, &mLastChunks[0]);
     nsAutoTArray<float,GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
     for (uint32_t i = 0; i < audioSegments.Length(); ++i) {
       AudioChunk tmpChunk;
