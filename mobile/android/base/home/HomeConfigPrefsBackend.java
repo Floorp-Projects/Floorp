@@ -16,15 +16,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.home.HomeConfig.HomeConfigBackend;
-import org.mozilla.gecko.home.HomeConfig.OnChangeListener;
+import org.mozilla.gecko.home.HomeConfig.OnReloadListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
+import org.mozilla.gecko.home.HomeConfig.State;
 import org.mozilla.gecko.util.HardwareUtils;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.preference.PreferenceManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -34,9 +39,11 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String PREFS_CONFIG_KEY = "home_panels";
     private static final String PREFS_LOCALE_KEY = "home_locale";
 
+    private static final String RELOAD_BROADCAST = "HomeConfigPrefsBackend:Reload";
+
     private final Context mContext;
-    private PrefsListener mPrefsListener;
-    private OnChangeListener mChangeListener;
+    private ReloadBroadcastReceiver mReloadBroadcastReceiver;
+    private OnReloadListener mReloadListener;
 
     public HomeConfigPrefsBackend(Context context) {
         mContext = context;
@@ -46,7 +53,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         return PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
-    private List<PanelConfig> loadDefaultConfig() {
+    private State loadDefaultConfig() {
         final ArrayList<PanelConfig> panelConfigs = new ArrayList<PanelConfig>();
 
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.TOP_SITES,
@@ -70,10 +77,10 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
             panelConfigs.add(0, historyEntry);
         }
 
-        return panelConfigs;
+        return new State(panelConfigs, true);
     }
 
-    private List<PanelConfig> loadConfigFromString(String jsonString) {
+    private State loadConfigFromString(String jsonString) {
         final JSONArray jsonPanelConfigs;
         try {
             jsonPanelConfigs = new JSONArray(jsonString);
@@ -97,46 +104,52 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
             }
         }
 
-        return panelConfigs;
+        return new State(panelConfigs, false);
     }
 
     @Override
-    public List<PanelConfig> load() {
+    public State load() {
         final SharedPreferences prefs = getSharedPreferences();
         final String jsonString = prefs.getString(PREFS_CONFIG_KEY, null);
 
-        final List<PanelConfig> panelConfigs;
+        final State configState;
         if (TextUtils.isEmpty(jsonString)) {
-            panelConfigs = loadDefaultConfig();
+            configState = loadDefaultConfig();
         } else {
-            panelConfigs = loadConfigFromString(jsonString);
+            configState = loadConfigFromString(jsonString);
         }
 
-        return panelConfigs;
+        return configState;
     }
 
     @Override
-    public void save(List<PanelConfig> panelConfigs) {
-        final JSONArray jsonPanelConfigs = new JSONArray();
-
-        final int count = panelConfigs.size();
-        for (int i = 0; i < count; i++) {
-            try {
-                final PanelConfig panelConfig = panelConfigs.get(i);
-                final JSONObject jsonPanelConfig = panelConfig.toJSON();
-                jsonPanelConfigs.put(jsonPanelConfig);
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Exception converting PanelConfig to JSON", e);
-            }
-        }
-
+    public void save(State configState) {
         final SharedPreferences prefs = getSharedPreferences();
         final SharedPreferences.Editor editor = prefs.edit();
 
-        final String jsonString = jsonPanelConfigs.toString();
-        editor.putString(PREFS_CONFIG_KEY, jsonString);
+        // No need to save the state to disk if it represents the default
+        // HomeConfig configuration. Simply force all existing HomeConfigLoader
+        // instances to refresh their contents.
+        if (!configState.isDefault()) {
+            final JSONArray jsonPanelConfigs = new JSONArray();
+
+            for (PanelConfig panelConfig : configState) {
+                try {
+                    final JSONObject jsonPanelConfig = panelConfig.toJSON();
+                    jsonPanelConfigs.put(jsonPanelConfig);
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Exception converting PanelConfig to JSON", e);
+                }
+            }
+
+            editor.putString(PREFS_CONFIG_KEY, jsonPanelConfigs.toString());
+        }
+
         editor.putString(PREFS_LOCALE_KEY, Locale.getDefault().toString());
         editor.commit();
+
+        // Trigger reload listeners on all live backend instances
+        sendReloadBroadcast();
     }
 
     @Override
@@ -165,28 +178,40 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     }
 
     @Override
-    public void setOnChangeListener(OnChangeListener listener) {
-        final SharedPreferences prefs = getSharedPreferences();
-
-        if (mChangeListener != null) {
-            prefs.unregisterOnSharedPreferenceChangeListener(mPrefsListener);
-            mPrefsListener = null;
+    public void setOnReloadListener(OnReloadListener listener) {
+        if (mReloadListener != null) {
+            unregisterReloadReceiver();
+            mReloadBroadcastReceiver = null;
         }
 
-        mChangeListener = listener;
+        mReloadListener = listener;
 
-        if (mChangeListener != null) {
-            mPrefsListener = new PrefsListener();
-            prefs.registerOnSharedPreferenceChangeListener(mPrefsListener);
+        if (mReloadListener != null) {
+            mReloadBroadcastReceiver = new ReloadBroadcastReceiver();
+            registerReloadReceiver();
         }
     }
 
-    private class PrefsListener implements OnSharedPreferenceChangeListener {
+    private void sendReloadBroadcast() {
+        final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(mContext);
+        final Intent reloadIntent = new Intent(RELOAD_BROADCAST);
+        lbm.sendBroadcast(reloadIntent);
+    }
+
+    private void registerReloadReceiver() {
+        final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(mContext);
+        lbm.registerReceiver(mReloadBroadcastReceiver, new IntentFilter(RELOAD_BROADCAST));
+    }
+
+    private void unregisterReloadReceiver() {
+        final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(mContext);
+        lbm.unregisterReceiver(mReloadBroadcastReceiver);
+    }
+
+    private class ReloadBroadcastReceiver extends BroadcastReceiver {
         @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if (TextUtils.equals(key, PREFS_CONFIG_KEY)) {
-                mChangeListener.onChange();
-            }
+        public void onReceive(Context context, Intent intent) {
+            mReloadListener.onReload();
         }
     }
 }
