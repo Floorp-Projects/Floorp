@@ -120,6 +120,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Chart",
 XPCOMUtils.defineLazyModuleGetter(this, "Curl",
   "resource:///modules/devtools/Curl.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "CurlUtils",
+  "resource:///modules/devtools/Curl.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
