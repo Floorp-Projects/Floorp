@@ -100,7 +100,7 @@ SystemMessageManager.prototype = {
     cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
                           { type: aType,
                             manifestURL: this._manifestURL,
-                            uri: this._uri,
+                            pageURL: this._pageURL,
                             handledCount: 1 });
 
     aDispatcher.isHandling = false;
@@ -137,7 +137,7 @@ SystemMessageManager.prototype = {
     // Ask for the list of currently pending messages.
     cpmm.sendAsyncMessage("SystemMessageManager:GetPendingMessages",
                           { type: aType,
-                            uri: this._uri,
+                            pageURL: this._pageURL,
                             manifestURL: this._manifestURL });
   },
 
@@ -157,7 +157,7 @@ SystemMessageManager.prototype = {
 
     return cpmm.sendSyncMessage("SystemMessageManager:HasPendingMessages",
                                 { type: aType,
-                                  uri: this._uri,
+                                  pageURL: this._pageURL,
                                   manifestURL: this._manifestURL })[0];
   },
 
@@ -177,7 +177,7 @@ SystemMessageManager.prototype = {
 
     cpmm.sendAsyncMessage("SystemMessageManager:Unregister",
                           { manifestURL: this._manifestURL,
-                            uri: this._uri,
+                            pageURL: this._pageURL,
                             innerWindowID: this.innerWindowID });
   },
 
@@ -194,14 +194,14 @@ SystemMessageManager.prototype = {
   receiveMessage: function(aMessage) {
     let msg = aMessage.data;
     debug("receiveMessage " + aMessage.name + " for [" + msg.type + "] " +
-          "with manifest URL = " + msg.manifestURL + " and uri = " + msg.uri);
+          "with manifest URL = " + msg.manifestURL + " and page URL = " + msg.pageURL);
 
     // Multiple windows can share the same target (process), the content
     // window needs to check if the manifest/page URL is matched. Only
     // *one* window should handle the system message.
-    if (msg.manifestURL !== this._manifestURL || msg.uri !== this._uri) {
+    if (msg.manifestURL !== this._manifestURL || msg.pageURL !== this._pageURL) {
       debug("This page shouldn't handle the messages because its " +
-            "manifest URL = " + this._manifestURL + " and uri = " + this._uri);
+            "manifest URL = " + this._manifestURL + " and page URL = " + this._pageURL);
       return;
     }
 
@@ -211,7 +211,7 @@ SystemMessageManager.prototype = {
       cpmm.sendAsyncMessage("SystemMessageManager:Message:Return:OK",
                             { type: msg.type,
                               manifestURL: this._manifestURL,
-                              uri: this._uri,
+                              pageURL: this._pageURL,
                               msgID: msg.msgID });
     }
 
@@ -232,7 +232,7 @@ SystemMessageManager.prototype = {
       cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
                             { type: msg.type,
                               manifestURL: this._manifestURL,
-                              uri: this._uri,
+                              pageURL: this._pageURL,
                               handledCount: messages.length });
     }
 
@@ -252,7 +252,7 @@ SystemMessageManager.prototype = {
 
     let principal = aWindow.document.nodePrincipal;
     this._isInBrowserElement = principal.isInBrowserElement;
-    this._uri = principal.URI.spec;
+    this._pageURL = principal.URI.spec;
 
     let appsService = Cc["@mozilla.org/AppsService;1"]
                         .getService(Ci.nsIAppsService);
@@ -296,7 +296,7 @@ SystemMessageManager.prototype = {
     if (!this._registerManifestURLReady) {
       cpmm.sendAsyncMessage("SystemMessageManager:Register",
                             { manifestURL: this._manifestURL,
-                              uri: this._uri,
+                              pageURL: this._pageURL,
                               innerWindowID: this.innerWindowID });
 
       this._registerManifestURLReady = true;
