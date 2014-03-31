@@ -91,7 +91,7 @@ function SystemMessageInternal() {
 
 SystemMessageInternal.prototype = {
 
-  _getMessageConfigurator: function _getMessageConfigurator(aType) {
+  _getMessageConfigurator: function(aType) {
     debug("_getMessageConfigurator for type: " + aType);
     if (this._configurators[aType] === undefined) {
       let contractID = "@mozilla.org/dom/system-messages/configurator/" + aType + ";1";
@@ -107,7 +107,7 @@ SystemMessageInternal.prototype = {
     return this._configurators[aType] || defaultMessageConfigurator;
   },
 
-  _cancelCpuWakeLock: function _cancelCpuWakeLock(aPageKey) {
+  _cancelCpuWakeLock: function(aPageKey) {
     let cpuWakeLock = this._cpuWakeLocks[aPageKey];
     if (cpuWakeLock) {
       debug("Releasing the CPU wake lock for page key = " + aPageKey);
@@ -117,7 +117,7 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  _acquireCpuWakeLock: function _acquireCpuWakeLock(aPageKey) {
+  _acquireCpuWakeLock: function(aPageKey) {
     let cpuWakeLock = this._cpuWakeLocks[aPageKey];
     if (!cpuWakeLock) {
       // We have to ensure the CPU doesn't sleep during the process of the page
@@ -157,7 +157,7 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  _findPage: function _findPage(aType, aPageURL, aManifestURL) {
+  _findPage: function(aType, aPageURL, aManifestURL) {
     let page = null;
     this._pages.some(function(aPage) {
       if (this._isPageMatched(aPage, aType, aPageURL, aManifestURL)) {
@@ -168,7 +168,7 @@ SystemMessageInternal.prototype = {
     return page;
   },
 
-  sendMessage: function sendMessage(aType, aMessage, aPageURI, aManifestURI, aExtra) {
+  sendMessage: function(aType, aMessage, aPageURI, aManifestURI, aExtra) {
     // Buffer system messages until the webapps' registration is ready,
     // so that we can know the correct pages registered to be sent.
     if (!this._webappsRegistryReady) {
@@ -212,7 +212,7 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  broadcastMessage: function broadcastMessage(aType, aMessage, aExtra) {
+  broadcastMessage: function(aType, aMessage, aExtra) {
     // Buffer system messages until the webapps' registration is ready,
     // so that we can know the correct pages registered to be broadcasted.
     if (!this._webappsRegistryReady) {
@@ -255,7 +255,7 @@ SystemMessageInternal.prototype = {
     }, this);
   },
 
-  registerPage: function registerPage(aType, aPageURI, aManifestURI) {
+  registerPage: function(aType, aPageURI, aManifestURI) {
     if (!aPageURI || !aManifestURI) {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
@@ -277,7 +277,7 @@ SystemMessageInternal.prototype = {
                        pendingMessages: [] });
   },
 
-  _findTargetIndex: function _findTargetIndex(aTargets, aTarget) {
+  _findTargetIndex: function(aTargets, aTarget) {
     if (!aTargets || !aTarget) {
       return -1;
     }
@@ -290,17 +290,14 @@ SystemMessageInternal.prototype = {
     return -1;
   },
 
-  _isEmptyObject: function _isEmptyObject(aObj) {
+  _isEmptyObject: function(aObj) {
     for (let name in aObj) {
       return false;
     }
     return true;
   },
 
-  _removeTargetFromListener: function _removeTargetFromListener(aTarget,
-                                                                aManifest,
-                                                                aRemoveListener,
-                                                                aUri) {
+  _removeTargetFromListener: function(aTarget, aManifest, aRemoveListener, aUri) {
     let targets = this._listeners[aManifest];
     if (!targets) {
       return false;
@@ -336,7 +333,7 @@ SystemMessageInternal.prototype = {
     return true;
   },
 
-  receiveMessage: function receiveMessage(aMessage) {
+  receiveMessage: function(aMessage) {
     let msg = aMessage.json;
 
     // To prevent the hacked child process from sending commands to parent
@@ -480,7 +477,7 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  observe: function observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "xpcom-shutdown":
         kMessages.forEach(function(aMsg) {
@@ -516,7 +513,7 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  _queueMessage: function _queueMessage(aPage, aMessage, aMessageID) {
+  _queueMessage: function(aPage, aMessage, aMessageID) {
     // Queue the message for this page because we've never known if an app is
     // opened or not. We'll clean it up when the app has already received it.
     aPage.pendingMessages.push({ msg: aMessage, msgID: aMessageID });
@@ -525,7 +522,7 @@ SystemMessageInternal.prototype = {
     }
   },
 
-  _openAppPage: function _openAppPage(aPage, aMessage, aExtra, aMsgSentStatus) {
+  _openAppPage: function(aPage, aMessage, aExtra, aMsgSentStatus) {
     // This means the app must be brought to the foreground.
     let showApp = this._getMessageConfigurator(aPage.type).mustShowRunningApp;
 
@@ -551,7 +548,7 @@ SystemMessageInternal.prototype = {
     Services.obs.notifyObservers(this, "system-messages-open-app", JSON.stringify(page));
   },
 
-  _isPageMatched: function _isPageMatched(aPage, aType, aPageURI, aManifestURI) {
+  _isPageMatched: function(aPage, aType, aPageURI, aManifestURI) {
     return (aPage.type === aType &&
             aPage.manifest === aManifestURI &&
             aPage.uri === aPageURI)
@@ -575,8 +572,8 @@ SystemMessageInternal.prototype = {
     return hasher.finish(true);
   },
 
-  _sendMessageCommon:
-    function _sendMessageCommon(aType, aMessage, aMessageID, aPageURI, aManifestURI, aExtra) {
+  _sendMessageCommon: function(aType, aMessage, aMessageID,
+                               aPageURI, aManifestURI, aExtra) {
     // Don't send the system message not granted by the app's permissions.
     if (!SystemMessagePermissionsChecker
           .isSystemMessagePermittedToSend(aType,
