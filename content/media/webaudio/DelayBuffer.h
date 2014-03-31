@@ -19,25 +19,34 @@ class DelayBuffer {
 public:
   // See WebAudioUtils::ComputeSmoothingRate() for frame to frame exponential
   // |smoothingRate| multiplier.
-  DelayBuffer(int aMaxDelayTicks, double aSmoothingRate)
+  DelayBuffer(double aMaxDelayTicks, double aSmoothingRate)
     : mSmoothingRate(aSmoothingRate)
     , mCurrentDelay(-1.0)
-    , mMaxDelayTicks(aMaxDelayTicks)
+    // Round the maximum delay up to the next tick.
+    , mMaxDelayTicks(ceil(aMaxDelayTicks))
     , mCurrentChunk(0)
     // mLastReadChunk is initialized in EnsureBuffer
+#ifdef DEBUG
+    , mHaveWrittenBlock(false)
+#endif
   {
+    // The 180 second limit in AudioContext::CreateDelay() and the
+    // 1 << MEDIA_TIME_FRAC_BITS limit on sample rate provide a limit on the
+    // maximum delay.
+    MOZ_ASSERT(aMaxDelayTicks <=
+               std::numeric_limits<decltype(mMaxDelayTicks)>::max());
   }
 
   // Write a WEBAUDIO_BLOCK_SIZE block for aChannelCount channels.
   void Write(const AudioChunk& aInputChunk);
 
   // Read a block with an array of delays, in ticks, for each sample frame.
-  // Each delay must be > 0 and < MaxDelayTicks().
+  // Each delay should be >= 0 and <= MaxDelayTicks().
   void Read(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
             AudioChunk* aOutputChunk,
             ChannelInterpretation aChannelInterpretation);
   // Read a block with a constant delay, which will be smoothed with the
-  // previous delay.  The delay must be > 0 and < MaxDelayTicks().
+  // previous delay.  The delay should be >= 0 and <= MaxDelayTicks().
   void Read(double aDelayTicks, AudioChunk* aOutputChunk,
             ChannelInterpretation aChannelInterpretation);
 
@@ -53,6 +62,10 @@ public:
   void NextBlock()
   {
     mCurrentChunk = (mCurrentChunk + 1) % mChunks.Length();
+#ifdef DEBUG
+    MOZ_ASSERT(mHaveWrittenBlock);
+    mHaveWrittenBlock = false;
+#endif
   }
 
   void Reset() {
@@ -89,6 +102,9 @@ private:
   int mCurrentChunk;
   // The chunk owning the pointers in mUpmixChannels
   int mLastReadChunk;
+#ifdef DEBUG
+  bool mHaveWrittenBlock;
+#endif
 };
 
 } // mozilla
