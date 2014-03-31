@@ -160,6 +160,7 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
         return tmp;
     }
 
+    LRecoverInfo *buildRecover(MResumePoint *rp);
     LSnapshot *buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKind kind);
     bool assignPostSnapshot(MInstruction *mir, LInstruction *ins);
 
