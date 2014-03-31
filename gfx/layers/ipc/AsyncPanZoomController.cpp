@@ -20,7 +20,7 @@
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "base/tracked.h"               // for FROM_HERE
-#include "gfxPrefs.h"                   // for gfxPrefs::UseProgressiveTilePainting
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "gfxTypes.h"                   // for gfxFloat
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/BasicEvents.h"        // for Modifiers, MODIFIER_*
@@ -133,18 +133,100 @@ namespace layers {
 
 typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
 
-/**
- * Specifies whether touch-action property is in force.
- */
-static bool gTouchActionPropertyEnabled = false;
-
-/**
+/*
+ * The following prefs are used to control the behaviour of the APZC.
+ * The default values are provided in gfxPrefs.h.
+ *
+ * "apz.allow-checkerboarding"
+ * Pref that allows or disallows checkerboarding
+ *
+ * "apz.asyncscroll.throttle"
+ * The time period in ms that throttles mozbrowserasyncscroll event.
+ *
+ * "apz.asyncscroll.timeout"
+ * The timeout in ms for mAsyncScrollTimeoutTask delay task.
+ *
+ * "apz.axis_lock_mode"
+ * The preferred axis locking style. See AxisLockMode for possible values.
+ *
+ * "apz.content_response_timeout"
+ * Amount of time before we timeout response from content. For example, if
+ * content is being unruly/slow and we don't get a response back within this
+ * time, we will just pretend that content did not preventDefault any touch
+ * events we dispatched to it.
+ *
+ * "apz.cross_slide_enabled"
+ * Pref that enables integration with the Metro "cross-slide" gesture.
+ *
+ * "apz.enlarge_displayport_when_clipped"
+ * Pref that enables enlarging of the displayport along one axis when the
+ * generated displayport's size is beyond that of the scrollable rect on the
+ * opposite axis.
+ *
+ * "apz.fling_friction"
+ * Amount of friction applied during flings.
+ *
+ * "apz.fling_repaint_interval"
+ * Maximum amount of time flinging before sending a viewport change. This will
+ * asynchronously repaint the page.
+ *
+ * "apz.fling_stopped_threshold"
+ * When flinging, if the velocity goes below this number, we just stop the
+ * animation completely. This is to prevent asymptotically approaching 0
+ * velocity and rerendering unnecessarily.
+ *
+ * "apz.max_velocity_inches_per_ms"
+ * Maximum velocity in inches per millisecond.  Velocity will be capped at this
+ * value if a faster fling occurs.  Negative values indicate unlimited velocity.
+ *
+ * "apz.max_velocity_queue_size"
+ * Maximum size of velocity queue. The queue contains last N velocity records.
+ * On touch end we calculate the average velocity in order to compensate
+ * touch/mouse drivers misbehaviour.
+ *
+ * "apz.min_skate_speed"
+ * Minimum amount of speed along an axis before we switch to "skate" multipliers
+ * rather than using the "stationary" multipliers.
+ *
+ * "apz.num_paint_duration_samples"
+ * Number of samples to store of how long it took to paint after the previous
+ * requests.
+ *
+ * "apz.pan_repaint_interval"
+ * Maximum amount of time while panning before sending a viewport change. This
+ * will asynchronously repaint the page. It is also forced when panning stops.
+ *
+ * "apz.touch_start_tolerance"
  * Constant describing the tolerance in distance we use, multiplied by the
  * device DPI, before we start panning the screen. This is to prevent us from
  * accidentally processing taps as touch moves, and from very short/accidental
  * touches moving the screen.
+ *
+ * "apz.use_paint_duration"
+ * Whether or not to use the estimated paint duration as a factor when projecting
+ * the displayport in the direction of scrolling. If this value is set to false,
+ * a constant 50ms paint time is used; the projection can be scaled as desired
+ * using the apz.velocity_bias pref below.
+ *
+ * "apz.velocity_bias"
+ * How much to adjust the displayport in the direction of scrolling. This value
+ * is multiplied by the velocity and added to the displayport offset.
+ *
+ * "apz.x_skate_size_multiplier", "apz.y_skate_size_multiplier"
+ * The multiplier we apply to the displayport size if it is skating (current
+ * velocity is above apz.min_skate_speed). We prefer to increase the size of the
+ * Y axis because it is more natural in the case that a user is reading a page
+ * that scrolls up/down. Note that one, both or neither of these may be used
+ * at any instant.
+ * In general we want apz.[xy]_skate_size_multiplier to be smaller than the corresponding
+ * stationary size multiplier because when panning fast we would like to paint
+ * less and get faster, more predictable paint times. When panning slowly we
+ * can afford to paint more even though it's slower.
+ *
+ * "apz.x_stationary_size_multiplier", "apz.y_stationary_size_multiplier"
+ * The multiplier we apply to the displayport size if it is not skating (see
+ * documentation for the skate size multipliers above).
  */
-static float gTouchStartTolerance = 1.0f/4.5f;
 
 /**
  * Default touch behavior (is used when not touch behavior is set).
@@ -178,43 +260,6 @@ static const double AXIS_BREAKOUT_ANGLE = M_PI / 8.0; // 22.5 degrees
 static const double ALLOWED_DIRECT_PAN_ANGLE = M_PI / 3.0; // 60 degrees
 
 /**
- * The preferred axis locking style. See AxisLockMode for possible values.
- */
-static int32_t gAxisLockMode = 0;
-
-/**
- * Maximum amount of time while panning before sending a viewport change. This
- * will asynchronously repaint the page. It is also forced when panning stops.
- */
-static int32_t gPanRepaintInterval = 250;
-
-/**
- * Maximum amount of time flinging before sending a viewport change. This will
- * asynchronously repaint the page.
- */
-static int32_t gFlingRepaintInterval = 75;
-
-/**
- * Minimum amount of speed along an axis before we switch to "skate" multipliers
- * rather than using the "stationary" multipliers.
- */
-static float gMinSkateSpeed = 1.0f;
-
-/**
- * Whether or not to use the estimated paint duration as a factor when projecting
- * the displayport in the direction of scrolling. If this value is set to false,
- * a constant 50ms paint time is used; the projection can be scaled as desired
- * using the gVelocityBias pref below.
- */
-static bool gUsePaintDuration = true;
-
-/**
- * How much to adjust the displayport in the direction of scrolling. This value
- * is multiplied by the velocity and added to the displayport offset.
- */
-static float gVelocityBias = 1.0f;
-
-/**
  * Duration of a zoom to animation.
  */
 static const TimeDuration ZOOM_TO_DURATION = TimeDuration::FromSeconds(0.25);
@@ -233,71 +278,6 @@ static const CSSToScreenScale MAX_ZOOM(8.0f);
  * Minimum zoom amount, always used, even if a page asks for lower.
  */
 static const CSSToScreenScale MIN_ZOOM(0.125f);
-
-/**
- * Amount of time before we timeout response from content. For example, if
- * content is being unruly/slow and we don't get a response back within this
- * time, we will just pretend that content did not preventDefault any touch
- * events we dispatched to it.
- */
-static int gContentResponseTimeout = 300;
-
-/**
- * Number of samples to store of how long it took to paint after the previous
- * requests.
- */
-static int gNumPaintDurationSamples = 3;
-
-/**
- * The multiplier we apply to the displayport size if it is skating (current
- * velocity is above gMinSkateSpeed). We prefer to increase the size of the
- * Y axis because it is more natural in the case that a user is reading a page
- * that scrolls up/down. Note that one, both or neither of these may be used
- * at any instant.
- * In general we want g[XY]SkateSizeMultiplier to be smaller than the corresponding
- * stationary size multiplier because when panning fast we would like to paint
- * less and get faster, more predictable paint times. When panning slowly we
- * can afford to paint more even though it's slower.
- */
-static float gXSkateSizeMultiplier = 1.5f;
-static float gYSkateSizeMultiplier = 2.5f;
-
-/**
- * The multiplier we apply to the displayport size if it is not skating (see
- * documentation for gXSkateSizeMultiplier).
- */
-static float gXStationarySizeMultiplier = 3.0f;
-static float gYStationarySizeMultiplier = 3.5f;
-
-/**
- * The time period in ms that throttles mozbrowserasyncscroll event.
- * Default is 100ms if there is no "apz.asyncscroll.throttle" in preference.
- */
-
-static int gAsyncScrollThrottleTime = 100;
-
-/**
- * The timeout in ms for mAsyncScrollTimeoutTask delay task.
- * Default is 300ms if there is no "apz.asyncscroll.timeout" in preference.
- */
-static int gAsyncScrollTimeout = 300;
-
-/**
- * Pref that enables integration with the Metro "cross-slide" gesture.
- */
-static bool gCrossSlideEnabled = false;
-
-/** 
- * Pref that allows or disallows checkerboarding
- */
-static bool gAllowCheckerboarding = true;
-
-/**
- * Pref that enables enlarging of the displayport along one axis when the
- * generated displayport's size is beyond that of the scrollable rect on the
- * opposite axis.
- */
-static bool gEnlargeDisplayPortWhenClipped = false;
 
 /**
  * Is aAngle within the given threshold of the horizontal axis?
@@ -350,7 +330,7 @@ GetFrameTime() {
 class FlingAnimation: public AsyncPanZoomAnimation {
 public:
   FlingAnimation(AsyncPanZoomController& aApzc)
-    : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gFlingRepaintInterval))
+    : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZFlingRepaintInterval()))
     , mApzc(aApzc)
   {}
   /**
@@ -411,27 +391,6 @@ AsyncPanZoomController::InitializeGlobalState()
     return;
   sInitialized = true;
 
-  Preferences::AddBoolVarCache(&gTouchActionPropertyEnabled, "layout.css.touch_action.enabled", gTouchActionPropertyEnabled);
-  Preferences::AddIntVarCache(&gPanRepaintInterval, "apz.pan_repaint_interval", gPanRepaintInterval);
-  Preferences::AddIntVarCache(&gFlingRepaintInterval, "apz.fling_repaint_interval", gFlingRepaintInterval);
-  Preferences::AddFloatVarCache(&gMinSkateSpeed, "apz.min_skate_speed", gMinSkateSpeed);
-  Preferences::AddBoolVarCache(&gUsePaintDuration, "apz.use_paint_duration", gUsePaintDuration);
-  Preferences::AddFloatVarCache(&gVelocityBias, "apz.velocity_bias", gVelocityBias);
-  Preferences::AddIntVarCache(&gContentResponseTimeout, "apz.content_response_timeout", gContentResponseTimeout);
-  Preferences::AddIntVarCache(&gNumPaintDurationSamples, "apz.num_paint_duration_samples", gNumPaintDurationSamples);
-  Preferences::AddFloatVarCache(&gTouchStartTolerance, "apz.touch_start_tolerance", gTouchStartTolerance);
-  Preferences::AddFloatVarCache(&gXSkateSizeMultiplier, "apz.x_skate_size_multiplier", gXSkateSizeMultiplier);
-  Preferences::AddFloatVarCache(&gYSkateSizeMultiplier, "apz.y_skate_size_multiplier", gYSkateSizeMultiplier);
-  Preferences::AddFloatVarCache(&gXStationarySizeMultiplier, "apz.x_stationary_size_multiplier", gXStationarySizeMultiplier);
-  Preferences::AddFloatVarCache(&gYStationarySizeMultiplier, "apz.y_stationary_size_multiplier", gYStationarySizeMultiplier);
-  Preferences::AddIntVarCache(&gAsyncScrollThrottleTime, "apz.asyncscroll.throttle", gAsyncScrollThrottleTime);
-  Preferences::AddIntVarCache(&gAsyncScrollTimeout, "apz.asyncscroll.timeout", gAsyncScrollTimeout);
-  Preferences::AddBoolVarCache(&gCrossSlideEnabled, "apz.cross_slide.enabled", gCrossSlideEnabled);
-  Preferences::AddIntVarCache(&gAxisLockMode, "apz.axis_lock_mode", gAxisLockMode);
-  Preferences::AddBoolVarCache(&gAllowCheckerboarding, "apz.allow-checkerboarding", gAllowCheckerboarding);
-  Preferences::AddBoolVarCache(&gEnlargeDisplayPortWhenClipped, "apz.enlarge_displayport_when_clipped",
-    gEnlargeDisplayPortWhenClipped);
-
   gComputedTimingFunction = new ComputedTimingFunction();
   gComputedTimingFunction->Init(
     nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
@@ -448,7 +407,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mGeckoContentController(aGeckoContentController),
      mRefPtrMonitor("RefPtrMonitor"),
      mMonitor("AsyncPanZoomController"),
-     mTouchActionPropertyEnabled(gTouchActionPropertyEnabled),
+     mTouchActionPropertyEnabled(gfxPrefs::TouchActionEnabled()),
      mContentResponseTimeoutTask(nullptr),
      mX(MOZ_THIS_IN_INITIALIZER_LIST()),
      mY(MOZ_THIS_IN_INITIALIZER_LIST()),
@@ -529,12 +488,12 @@ AsyncPanZoomController::IsDestroyed()
 /* static */float
 AsyncPanZoomController::GetTouchStartTolerance()
 {
-  return (gTouchStartTolerance * APZCTreeManager::GetDPI());
+  return (gfxPrefs::APZTouchStartTolerance() * APZCTreeManager::GetDPI());
 }
 
 /* static */AsyncPanZoomController::AxisLockMode AsyncPanZoomController::GetAxisLockMode()
 {
-  return static_cast<AxisLockMode>(gAxisLockMode);
+  return static_cast<AxisLockMode>(gfxPrefs::APZAxisLockMode());
 }
 
 nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent) {
@@ -1088,7 +1047,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle, TouchBe
 }
 
 void AsyncPanZoomController::HandlePanning(double aAngle) {
-  if (!gCrossSlideEnabled && (!mX.Scrollable() || !mY.Scrollable())) {
+  if (!gfxPrefs::APZCrossSlideEnabled() && (!mX.Scrollable() || !mY.Scrollable())) {
     SetState(PANNING);
   } else if (IsCloseToHorizontal(aAngle, AXIS_LOCK_ANGLE)) {
     mY.SetAxisLocked(true);
@@ -1187,7 +1146,7 @@ void AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
       ScheduleComposite();
 
       TimeDuration timePaintDelta = mPaintThrottler.TimeSinceLastRequest(GetFrameTime());
-      if (timePaintDelta.ToMilliseconds() > gPanRepaintInterval) {
+      if (timePaintDelta.ToMilliseconds() > gfxPrefs::APZPanRepaintInterval()) {
         RequestContentRepaint();
       }
       UpdateSharedCompositorFrameMetrics();
@@ -1386,12 +1345,12 @@ static CSSSize
 CalculateDisplayPortSize(const CSSSize& aCompositionSize,
                          const CSSPoint& aVelocity)
 {
-  float xMultiplier = fabsf(aVelocity.x) < gMinSkateSpeed
-                        ? gXStationarySizeMultiplier
-                        : gXSkateSizeMultiplier;
-  float yMultiplier = fabsf(aVelocity.y) < gMinSkateSpeed
-                        ? gYStationarySizeMultiplier
-                        : gYSkateSizeMultiplier;
+  float xMultiplier = fabsf(aVelocity.x) < gfxPrefs::APZMinSkateSpeed()
+                        ? gfxPrefs::APZXStationarySizeMultiplier()
+                        : gfxPrefs::APZXSkateSizeMultiplier();
+  float yMultiplier = fabsf(aVelocity.y) < gfxPrefs::APZMinSkateSpeed()
+                        ? gfxPrefs::APZYStationarySizeMultiplier()
+                        : gfxPrefs::APZYSkateSizeMultiplier();
   return CSSSize(aCompositionSize.width * xMultiplier,
                  aCompositionSize.height * yMultiplier);
 }
@@ -1439,15 +1398,15 @@ const LayerMargin AsyncPanZoomController::CalculatePendingDisplayPort(
   // Calculate the displayport size based on how fast we're moving along each axis.
   CSSSize displayPortSize = CalculateDisplayPortSize(compositionSize, velocity);
 
-  if (gEnlargeDisplayPortWhenClipped) {
+  if (gfxPrefs::APZEnlargeDisplayPortWhenClipped()) {
     RedistributeDisplayPortExcess(displayPortSize, scrollableRect);
   }
 
   // Offset the displayport, depending on how fast we're moving and the
   // estimated time it takes to paint, to try to minimise checkerboarding.
   float estimatedPaintDurationMillis = (float)(aEstimatedPaintDuration * 1000.0);
-  float paintFactor = (gUsePaintDuration ? estimatedPaintDurationMillis : 50.0f);
-  CSSRect displayPort = CSSRect(scrollOffset + (velocity * paintFactor * gVelocityBias),
+  float paintFactor = (gfxPrefs::APZUsePaintDuration() ? estimatedPaintDurationMillis : 50.0f);
+  CSSRect displayPort = CSSRect(scrollOffset + (velocity * paintFactor * gfxPrefs::APZVelocityBias()),
                                 displayPortSize);
 
   // Re-center the displayport based on its expansion over the composition size.
@@ -1646,7 +1605,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
   // with the last event.
   // Otherwise, start a timer to fire the event sAsyncScrollTimeout ms from now.
   TimeDuration delta = aSampleTime - mLastAsyncScrollTime;
-  if (delta.ToMilliseconds() > gAsyncScrollThrottleTime &&
+  if (delta.ToMilliseconds() > gfxPrefs::APZAsyncScrollThrottleTime() &&
       mCurrentAsyncScrollOffset != mLastAsyncScrollOffset) {
     ReentrantMonitorAutoEnter lock(mMonitor);
     mLastAsyncScrollTime = aSampleTime;
@@ -1658,7 +1617,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
       NewRunnableMethod(this, &AsyncPanZoomController::FireAsyncScrollOnTimeout);
     MessageLoop::current()->PostDelayedTask(FROM_HERE,
                                             mAsyncScrollTimeoutTask,
-                                            gAsyncScrollTimeout);
+                                            gfxPrefs::APZAsyncScrollTimeout());
   }
 
   return requestAnimationFrame;
@@ -1677,7 +1636,7 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
 
   // If checkerboarding has been disallowed, clamp the scroll position to stay
   // within rendered content.
-  if (!gAllowCheckerboarding &&
+  if (!gfxPrefs::APZAllowCheckerboarding() &&
       !mLastContentPaintMetrics.mDisplayPort.IsEmpty()) {
     CSSSize compositedSize = mLastContentPaintMetrics.CalculateCompositedSizeInCssPixels();
     CSSPoint maxScrollOffset = lastPaintScrollOffset +
@@ -1756,7 +1715,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // Initialize our internal state to something sane when the content
     // that was just painted is something we knew nothing about previously
     mPaintThrottler.ClearHistory();
-    mPaintThrottler.SetMaxDurations(gNumPaintDurationSamples);
+    mPaintThrottler.SetMaxDurations(gfxPrefs::APZNumPaintDurationSamples());
 
     mX.CancelTouch();
     mY.CancelTouch();
@@ -2045,7 +2004,7 @@ void AsyncPanZoomController::SetContentResponseTimer() {
     mContentResponseTimeoutTask =
       NewRunnableMethod(this, &AsyncPanZoomController::TimeoutContentResponse);
 
-    PostDelayedTask(mContentResponseTimeoutTask, gContentResponseTimeout);
+    PostDelayedTask(mContentResponseTimeoutTask, gfxPrefs::APZContentResponseTimeout());
   }
 }
 
