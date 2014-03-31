@@ -116,17 +116,13 @@ exports["test nested frames"] = function(assert, done) {
     });
 };
 
-// ignore about:blank pages and *-document-global-created
-// events that are not very consistent.
-// ignore http:// requests, as Fennec's `about:home` page
-// displays add-ons a user could install
-// ignore local `searchplugins` files loaded
+// ignore *-document-global-created events that are not very consistent.
+// only allow data uris that we create to ignore unwanted events, e.g.,
+// about:blank, http:// requests from Fennec's `about:`home page that displays
+// add-ons a user could install, local `searchplugins`, other chrome uris
 // Calls callback if passes filter
 function eventFilter (type, target, callback) {
-  if (target.URL !== "about:blank" &&
-    target.URL !== "about:home" &&
-    !target.URL.match(/^https?:\/\//i) &&
-    !target.URL.match(/searchplugins/) &&
+  if (target.URL.startsWith("data:text/html,") &&
     type !== "chrome-document-global-created" &&
     type !== "content-document-global-created")
   
