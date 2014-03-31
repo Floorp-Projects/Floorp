@@ -26,7 +26,7 @@ BEGIN
             VALUE "CompanyName", "mozilla.org"
             VALUE "FileDescription", L"Plug-in for testing purposes.\x2122 (\x0939\x093f\x0928\x094d\x0926\x0940 \x4e2d\x6587 \x0627\x0644\x0639\x0631\x0628\x064a\x0629)"
             VALUE "FileExtents", "tst"
-            VALUE "FileOpenName", "Test mimetype"
+            VALUE "FileOpenName", L"Test \x2122 mimetype"
             VALUE "FileVersion", "1.0"
             VALUE "InternalName", "nptest"
             VALUE "MIMEType", "application/x-test"
