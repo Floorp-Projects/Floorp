@@ -4878,13 +4878,17 @@ gfxFontGroup::MakeHyphenTextRun(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit)
 }
 
 gfxFloat
-gfxFontGroup::GetHyphenWidth(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit)
+gfxFontGroup::GetHyphenWidth(gfxTextRun::PropertyProvider *aProvider)
 {
     if (mHyphenWidth < 0) {
-        nsAutoPtr<gfxTextRun> hyphRun(MakeHyphenTextRun(aCtx,
-                                                        aAppUnitsPerDevUnit));
-        mHyphenWidth = hyphRun.get() ?
-            hyphRun->GetAdvanceWidth(0, hyphRun->GetLength(), nullptr) : 0;
+        nsRefPtr<gfxContext> ctx(aProvider->GetContext());
+        if (ctx) {
+            nsAutoPtr<gfxTextRun>
+                hyphRun(MakeHyphenTextRun(ctx,
+                                          aProvider->GetAppUnitsPerDevUnit()));
+            mHyphenWidth = hyphRun.get() ?
+                hyphRun->GetAdvanceWidth(0, hyphRun->GetLength(), nullptr) : 0;
+        }
     }
     return mHyphenWidth;
 }
