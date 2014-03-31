@@ -226,6 +226,7 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'CJKCompatSVS.cpp',
     'gfx3DMatrix.cpp',
     'gfxAlphaRecovery.cpp',
     'gfxBaseSharedMemorySurface.cpp',

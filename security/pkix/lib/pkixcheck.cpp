@@ -118,6 +118,14 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
     return FatalError;
   }
 
+  // Bug 989051. Until we handle inhibitAnyPolicy we will fail close when
+  // inhibitAnyPolicy extension is present and we need to evaluate certificate
+  // policies.
+  if (cert.encodedInhibitAnyPolicy) {
+    PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
+    return RecoverableError;
+  }
+
   // The root CA certificate may omit the policies that it has been
   // trusted for, so we cannot require the policies to be present in those
   // certificates. Instead, the determination of which roots are trusted for
@@ -141,6 +149,11 @@ CheckCertificatePolicies(BackCert& cert, EndEntityOrCA endEntityOrCA,
   for (const CERTPolicyInfo* const* policyInfos = policies->policyInfos;
        *policyInfos; ++policyInfos) {
     if ((*policyInfos)->oid == requiredPolicy) {
+      return Success;
+    }
+    // Intermediate certs are allowed to have the anyPolicy OID
+    if (endEntityOrCA == MustBeCA &&
+        (*policyInfos)->oid == SEC_OID_X509_ANY_POLICY) {
       return Success;
     }
   }

@@ -13,6 +13,7 @@
 #include "GLBlitHelper.h"
 #include "GLBlitTextureImageHelper.h"
 #include "GLReadTexImageHelper.h"
+#include "GLDrawRectHelper.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxUtils.h"
@@ -483,7 +484,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
     // Load OpenGL ES 2.0 symbols, or desktop if we aren't using ES 2.
     if (mInitialized) {
-        if (IsGLES2()) {
+        if (IsGLES()) {
             SymLoadStruct symbols_ES2[] = {
                 { (PRFuncPtr*) &mSymbols.fGetShaderPrecisionFormat, { "GetShaderPrecisionFormat", nullptr } },
                 { (PRFuncPtr*) &mSymbols.fClearDepthf, { "ClearDepthf", nullptr } },
@@ -1337,7 +1338,7 @@ GLContext::ChooseGLFormats(const SurfaceCaps& caps) const
     // If we're on ES2 hardware and we have an explicit request for 16 bits of color or less
     // OR we don't support full 8-bit color, return a 4444 or 565 format.
     bool bpp16 = caps.bpp16;
-    if (IsGLES2()) {
+    if (IsGLES()) {
         if (!IsExtensionSupported(OES_rgb8_rgba8))
             bpp16 = true;
     } else {
@@ -1347,7 +1348,7 @@ GLContext::ChooseGLFormats(const SurfaceCaps& caps) const
     }
 
     if (bpp16) {
-        MOZ_ASSERT(IsGLES2());
+        MOZ_ASSERT(IsGLES());
         if (caps.alpha) {
             formats.color_texInternalFormat = LOCAL_GL_RGBA;
             formats.color_texFormat = LOCAL_GL_RGBA;
@@ -1363,11 +1364,11 @@ GLContext::ChooseGLFormats(const SurfaceCaps& caps) const
         formats.color_texType = LOCAL_GL_UNSIGNED_BYTE;
 
         if (caps.alpha) {
-            formats.color_texInternalFormat = IsGLES2() ? LOCAL_GL_RGBA : LOCAL_GL_RGBA8;
+            formats.color_texInternalFormat = IsGLES() ? LOCAL_GL_RGBA : LOCAL_GL_RGBA8;
             formats.color_texFormat = LOCAL_GL_RGBA;
             formats.color_rbFormat  = LOCAL_GL_RGBA8;
         } else {
-            formats.color_texInternalFormat = IsGLES2() ? LOCAL_GL_RGB : LOCAL_GL_RGB8;
+            formats.color_texInternalFormat = IsGLES() ? LOCAL_GL_RGB : LOCAL_GL_RGB8;
             formats.color_texFormat = LOCAL_GL_RGB;
             formats.color_rbFormat  = LOCAL_GL_RGB8;
         }
@@ -1386,12 +1387,12 @@ GLContext::ChooseGLFormats(const SurfaceCaps& caps) const
 
     // Be clear that these are 0 if unavailable.
     formats.depthStencil = 0;
-    if (!IsGLES2() || IsExtensionSupported(OES_packed_depth_stencil)) {
+    if (!IsGLES() || IsExtensionSupported(OES_packed_depth_stencil)) {
         formats.depthStencil = LOCAL_GL_DEPTH24_STENCIL8;
     }
 
     formats.depth = 0;
-    if (IsGLES2()) {
+    if (IsGLES()) {
         if (IsExtensionSupported(OES_depth24)) {
             formats.depth = LOCAL_GL_DEPTH_COMPONENT24;
         } else {
@@ -1685,6 +1686,7 @@ GLContext::MarkDestroyed()
         mBlitHelper = nullptr;
         mBlitTextureImageHelper = nullptr;
         mReadTexImageHelper = nullptr;
+        mDrawRectHelper = nullptr;
 
         mTexGarbageBin->GLContextTeardown();
     } else {
@@ -2008,6 +2010,16 @@ GLContext::ReadTexImageHelper()
     }
 
     return mReadTexImageHelper;
+}
+
+GLDrawRectHelper*
+GLContext::DrawRectHelper()
+{
+    if (!mDrawRectHelper) {
+        mDrawRectHelper = new GLDrawRectHelper(this);
+    }
+
+    return mDrawRectHelper;
 }
 
 bool

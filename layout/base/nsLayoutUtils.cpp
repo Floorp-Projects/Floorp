@@ -1801,6 +1801,34 @@ nsLayoutUtils::ChangeMatrixBasis(const gfxPoint3D &aOrigin,
   return result; 
 }
 
+static void ConstrainToCoordValues(float& aStart, float& aSize)
+{
+  MOZ_ASSERT(aSize > 0);
+
+  // Here we try to make sure that the resulting nsRect will continue to cover
+  // as much of the area that was covered by the original gfx Rect as possible.
+
+  // We clamp the bounds of the rect to {nscoord_MIN,nscoord_MAX} since
+  // nsRect::X/Y() and nsRect::XMost/YMost() can't return values outwith this
+  // range:
+  float end = aStart + aSize;
+  aStart = clamped(aStart, float(nscoord_MIN), float(nscoord_MAX));
+  end = clamped(end, float(nscoord_MIN), float(nscoord_MAX));
+
+  aSize = end - aStart;
+
+  // We must also clamp aSize to {0,nscoord_MAX} since nsRect::Width/Height()
+  // can't return a value greater than nscoord_MAX. If aSize is greater than
+  // nscoord_MAX then we reduce it to nscoord_MAX while keeping the rect
+  // centered:
+  if (aSize > nscoord_MAX) {
+    float excess = aSize - nscoord_MAX;
+    excess /= 2;
+    aStart += excess;
+    aSize = nscoord_MAX;
+  }
+}
+
 /**
  * Given a gfxFloat, constrains its value to be between nscoord_MIN and nscoord_MAX.
  *
@@ -1838,6 +1866,22 @@ static void ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize)
     aStart -= excess;
     aSize = nscoord_MIN;
   }
+}
+
+nsRect
+nsLayoutUtils::RoundGfxRectToAppRect(const Rect &aRect, float aFactor)
+{
+  /* Get a new Rect whose units are app units by scaling by the specified factor. */
+  Rect scaledRect = aRect;
+  scaledRect.ScaleRoundOut(aFactor);
+
+  /* We now need to constrain our results to the max and min values for coords. */
+  ConstrainToCoordValues(scaledRect.x, scaledRect.width);
+  ConstrainToCoordValues(scaledRect.y, scaledRect.height);
+
+  /* Now typecast everything back.  This is guaranteed to be safe. */
+  return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
+                nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
 }
 
 nsRect
