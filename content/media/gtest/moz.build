@@ -11,8 +11,6 @@ UNIFIED_SOURCES += [
     'TestTrackEncoder.cpp',
 ]
 
-LIBXUL_LIBRARY = True
-
 EXPORT_LIBRARY = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -21,3 +19,4 @@ LOCAL_INCLUDES += [
     '/content/media/encoder',
 ]
 
+FINAL_LIBRARY = 'xul-gtest'
