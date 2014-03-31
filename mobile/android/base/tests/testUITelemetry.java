@@ -7,6 +7,10 @@ import org.mozilla.gecko.Telemetry;
 import android.util.Log;
 
 public class testUITelemetry extends JavascriptTest {
+    // Prefix used to distinguish test events and sessions from
+    // real ones. Used by the javascript part of the test.
+    static final String TEST_PREFIX = "TEST-";
+
     public testUITelemetry() {
         super("testUITelemetry.js");
     }
@@ -22,18 +26,18 @@ public class testUITelemetry extends JavascriptTest {
 
         Log.i("GeckoTest", "Adding telemetry events.");
         try {
-            Telemetry.sendUIEvent("enone", "method0");
-            Telemetry.startUISession("foo");
-            Telemetry.sendUIEvent("efoo", "method1");
-            Telemetry.startUISession("foo");
-            Telemetry.sendUIEvent("efoo", "method2");
-            Telemetry.startUISession("bar");
-            Telemetry.sendUIEvent("efoobar", "method3", "foobarextras");
-            Telemetry.stopUISession("foo", "reasonfoo");
-            Telemetry.sendUIEvent("ebar", "method4", "barextras");
-            Telemetry.stopUISession("bar", "reasonbar");
-            Telemetry.stopUISession("bar", "reasonbar2");
-            Telemetry.sendUIEvent("enone", "method5");
+            Telemetry.sendUIEvent(TEST_PREFIX + "enone", "method0");
+            Telemetry.startUISession(TEST_PREFIX + "foo");
+            Telemetry.sendUIEvent(TEST_PREFIX + "efoo", "method1");
+            Telemetry.startUISession(TEST_PREFIX + "foo");
+            Telemetry.sendUIEvent(TEST_PREFIX + "efoo", "method2");
+            Telemetry.startUISession(TEST_PREFIX + "bar");
+            Telemetry.sendUIEvent(TEST_PREFIX + "efoobar", "method3", "foobarextras");
+            Telemetry.stopUISession(TEST_PREFIX + "foo", "reasonfoo");
+            Telemetry.sendUIEvent(TEST_PREFIX + "ebar", "method4", "barextras");
+            Telemetry.stopUISession(TEST_PREFIX + "bar", "reasonbar");
+            Telemetry.stopUISession(TEST_PREFIX + "bar", "reasonbar2");
+            Telemetry.sendUIEvent(TEST_PREFIX + "enone", "method5");
         } catch (Exception e) {
             Log.e("GeckoTest", "Oops.", e);
         }
