@@ -14,29 +14,6 @@ from tps import TPSTestRunner
 
 def main():
     parser = optparse.OptionParser()
-    parser.add_option('--mobile',
-                      action='store_true',
-                      dest='mobile',
-                      default=False,
-                      help='run with mobile settings')
-    parser.add_option('--testfile',
-                      action='store',
-                      type='string',
-                      dest='testfile',
-                      default='../../services/sync/tests/tps/all_tests.json',
-                      help='path to the test file to run [default: %default]')
-    parser.add_option('--logfile',
-                      action='store',
-                      type='string',
-                      dest='logfile',
-                      default='tps.log',
-                      help='path to the log file [default: %default]')
-    parser.add_option('--resultfile',
-                      action='store',
-                      type='string',
-                      dest='resultfile',
-                      default='tps_result.json',
-                      help='path to the result file [default: %default]')
     parser.add_option('--binary',
                       action='store',
                       type='string',
@@ -51,6 +28,28 @@ def main():
                       dest='configfile',
                       default=None,
                       help='path to the config file to use default: %default]')
+    parser.add_option('--debug',
+                      action='store_true',
+                      dest='debug',
+                      default=False,
+                      help='run in debug mode')
+    parser.add_option('--ignore-unused-engines',
+                       default=False,
+                       action='store_true',
+                       dest='ignore_unused_engines',
+                       help='If defined, do not load unused engines in individual tests.'
+                            ' Has no effect for pulse monitor.')
+    parser.add_option('--logfile',
+                      action='store',
+                      type='string',
+                      dest='logfile',
+                      default='tps.log',
+                      help='path to the log file [default: %default]')
+    parser.add_option('--mobile',
+                      action='store_true',
+                      dest='mobile',
+                      default=False,
+                      help='run with mobile settings')
     parser.add_option('--pulsefile',
                       action='store',
                       type='string',
@@ -58,12 +57,18 @@ def main():
                       default=None,
                       help='path to file containing a pulse message in '
                            'json format that you want to inject into the monitor')
-    parser.add_option('--ignore-unused-engines',
-                       default=False,
-                       action='store_true',
-                       dest='ignore_unused_engines',
-                       help='If defined, do not load unused engines in individual tests.'
-                            ' Has no effect for pulse monitor.')
+    parser.add_option('--resultfile',
+                      action='store',
+                      type='string',
+                      dest='resultfile',
+                      default='tps_result.json',
+                      help='path to the result file [default: %default]')
+    parser.add_option('--testfile',
+                      action='store',
+                      type='string',
+                      dest='testfile',
+                      default='../../services/sync/tests/tps/all_tests.json',
+                      help='path to the test file to run [default: %default]')
     (options, args) = parser.parse_args()
 
     configfile = options.configfile
@@ -97,14 +102,16 @@ def main():
                 extensionDir = extensionDir.replace('/', '\\')
 
     TPS = TPSTestRunner(extensionDir,
-                        testfile=options.testfile,
-                        logfile=options.logfile,
                         binary=options.binary,
                         config=config,
-                        rlock=rlock,
+                        debug=options.debug,
+                        ignore_unused_engines=options.ignore_unused_engines,
+                        logfile=options.logfile,
                         mobile=options.mobile,
                         resultfile=options.resultfile,
-                        ignore_unused_engines=options.ignore_unused_engines)
+                        rlock=rlock,
+                        testfile=options.testfile,
+                      )
     TPS.run_tests()
 
 if __name__ == '__main__':
