@@ -13,6 +13,7 @@ const EventEmitter = require("devtools/toolkit/event-emitter");
 const {colorUtils} = require("devtools/css-color");
 const Heritage = require("sdk/core/heritage");
 const {CSSTransformPreviewer} = require("devtools/shared/widgets/CSSTransformPreviewer");
+const {Eyedropper} = require("devtools/eyedropper/eyedropper");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -692,7 +693,7 @@ Tooltip.prototype = {
     let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
     iframe.setAttribute("transparent", true);
     iframe.setAttribute("width", "210");
-    iframe.setAttribute("height", "195");
+    iframe.setAttribute("height", "220");
     iframe.setAttribute("flex", "1");
     iframe.setAttribute("class", "devtools-tooltip-iframe");
 
@@ -707,12 +708,21 @@ Tooltip.prototype = {
       let container = win.document.getElementById("spectrum");
       let spectrum = new Spectrum(container, color);
 
-      // Finalize spectrum's init when the tooltip becomes visible
-      panel.addEventListener("popupshown", function shown() {
-        panel.removeEventListener("popupshown", shown, true);
+      function finalizeSpectrum() {
         spectrum.show();
         def.resolve(spectrum);
-      }, true);
+      }
+
+      // Finalize spectrum's init when the tooltip becomes visible
+      if (panel.state == "open") {
+        finalizeSpectrum();
+      }
+      else {
+        panel.addEventListener("popupshown", function shown() {
+          panel.removeEventListener("popupshown", shown, true);
+          finalizeSpectrum();
+        }, true);
+      }
     }
     iframe.addEventListener("load", onLoad, true);
     iframe.setAttribute("src", SPECTRUM_FRAME);
@@ -832,7 +842,11 @@ SwatchBasedEditorTooltip.prototype = {
   show: function() {
     if (this.activeSwatch) {
       this.tooltip.show(this.activeSwatch, "topcenter bottomleft");
-      this.tooltip.once("hidden", () => this.activeSwatch = null);
+      this.tooltip.once("hidden", () => {
+        if (!this.eyedropperOpen) {
+          this.activeSwatch = null;
+        }
+      });
     }
   },
 
@@ -951,6 +965,7 @@ function SwatchColorPickerTooltip(doc) {
   // resolves to the spectrum instance
   this.spectrum = this.tooltip.setColorPickerContent([0, 0, 0, 1]);
   this._onSpectrumColorChange = this._onSpectrumColorChange.bind(this);
+  this._openEyeDropper = this._openEyeDropper.bind(this);
 }
 
 module.exports.SwatchColorPickerTooltip = SwatchColorPickerTooltip;
@@ -975,14 +990,57 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
         spectrum.updateUI();
       });
     }
+
+    let tooltipDoc = this.tooltip.content.contentDocument;
+    let eyeButton = tooltipDoc.querySelector("#eyedropper-button");
+    eyeButton.addEventListener("click", this._openEyeDropper);
   },
 
   _onSpectrumColorChange: function(event, rgba, cssColor) {
+    this._selectColor(cssColor);
+  },
+
+  _selectColor: function(color) {
     if (this.activeSwatch) {
-      this.activeSwatch.style.backgroundColor = cssColor;
-      this.currentSwatchColor.textContent = cssColor;
-      this.preview(cssColor);
+      this.activeSwatch.style.backgroundColor = color;
+      this.currentSwatchColor.textContent = color;
+      this.preview(color);
     }
+  },
+
+ _openEyeDropper: function() {
+    let chromeWindow = this.tooltip.doc.defaultView.top;
+    let windowType = chromeWindow.document.documentElement
+                     .getAttribute("windowtype");
+    let toolboxWindow;
+    if (windowType != "navigator:browser") {
+      // this means the toolbox is in a seperate window. We need to make
+      // sure we'll be inspecting the browser window instead
+      toolboxWindow = chromeWindow;
+      chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      chromeWindow.focus();
+    }
+    let dropper = new Eyedropper(chromeWindow, { copyOnSelect: false });
+
+    dropper.once("select", (event, color) => {
+      if (toolboxWindow) {
+        toolboxWindow.focus();
+      }
+      this._selectColor(color);
+    });
+
+    dropper.once("destroy", () => {
+      this.eyedropperOpen = false;
+      this.activeSwatch = null;
+    })
+
+    dropper.open();
+    this.eyedropperOpen = true;
+
+    // close the colorpicker tooltip so that only the eyedropper is open.
+    this.hide();
+
+    this.tooltip.emit("eyedropper-opened", dropper);
   },
 
   _colorToRgba: function(color) {

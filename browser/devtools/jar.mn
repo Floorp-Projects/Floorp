@@ -108,3 +108,7 @@ browser.jar:
     content/browser/devtools/app-manager/manifest-editor.js            (app-manager/content/manifest-editor.js)
     content/browser/devtools/spectrum-frame.xhtml                      (shared/widgets/spectrum-frame.xhtml)
     content/browser/devtools/spectrum.css                              (shared/widgets/spectrum.css)
+    content/browser/devtools/eyedropper.xul                            (eyedropper/eyedropper.xul)
+    content/browser/devtools/eyedropper/crosshairs.css                 (eyedropper/crosshairs.css)
+    content/browser/devtools/eyedropper/nocursor.css                   (eyedropper/nocursor.css)
+
