@@ -194,7 +194,3 @@
 .newtab-control-sponsored:hover {
   background-position: -265px -1px;
 }
-
-.newtab-control-sponsored[panelShown] {
-  background-position: -281px -1px;
-}
