@@ -356,6 +356,12 @@ protected:
    */
   nsresult CreateTransfer();
 
+  /**
+   * If we fail to create the necessary temporary file to initiate a transfer
+   * we will report the failure by creating a failed nsITransfer.
+   */
+  nsresult CreateFailedTransfer(bool aIsPrivateBrowsing);
+
   /*
    * The following two functions are part of the split of SaveToDisk
    * to make it async, and works as following:
