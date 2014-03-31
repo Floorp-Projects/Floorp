@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 989137 - /experiments needed clobber to build on OSX
+Bug 988168 requires a clobber because of the location change for the linked libxul.
