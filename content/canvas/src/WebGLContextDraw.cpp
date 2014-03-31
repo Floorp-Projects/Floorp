@@ -460,7 +460,7 @@ WebGLContext::WhatDoesVertexAttrib0Need()
     }
 #endif
 
-    if (MOZ_LIKELY(gl->IsGLES2() ||
+    if (MOZ_LIKELY(gl->IsGLES() ||
                    mBoundVertexArray->IsAttribArrayEnabled(0)))
     {
         return WebGLVertexAttrib0Status::Default;
