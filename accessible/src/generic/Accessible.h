@@ -579,6 +579,8 @@ public:
   bool IsXULLabel() const { return mType == eXULLabelType; }
   XULLabelAccessible* AsXULLabel();
 
+  bool IsXULListItem() const { return mType == eXULListItemType; }
+
   bool IsXULTabpanels() const { return mType == eXULTabpanelsType; }
 
   bool IsXULTree() const { return mType == eXULTreeType; }
@@ -790,6 +792,13 @@ public:
   bool NeedsDOMUIEvent() const
     { return !(mStateFlags & eIgnoreDOMUIEvent); }
 
+  /**
+   * Return true if this accessible has a parent whose name depends on this
+   * accessible.
+   */
+  bool HasNameDependentParent() const
+    { return mContextFlags & eHasNameDependentParent; }
+
 protected:
 
   /**
@@ -865,6 +874,15 @@ protected:
     eIgnoreDOMUIEvent = 1 << 6, // don't process DOM UI events for a11y events
 
     eLastStateFlag = eGroupInfoDirty
+  };
+
+  /**
+   * Flags used for contextual information about the accessible.
+   */
+  enum ContextFlags {
+    eHasNameDependentParent = 1 << 0, // Parent's name depends on this accessible.
+
+    eLastContextFlag = eHasNameDependentParent
   };
 
 protected:
@@ -970,14 +988,16 @@ protected:
 
   static const uint8_t kChildrenFlagsBits = 2;
   static const uint8_t kStateFlagsBits = 6;
+  static const uint8_t kContextFlagsBits = 1;
   static const uint8_t kTypeBits = 6;
   static const uint8_t kGenericTypesBits = 12;
 
   /**
-   * Keep in sync with ChildrenFlags, StateFlags and AccTypes.
+   * Keep in sync with ChildrenFlags, StateFlags, ContextFlags, and AccTypes.
    */
   uint32_t mChildrenFlags : kChildrenFlagsBits;
   uint32_t mStateFlags : kStateFlagsBits;
+  uint32_t mContextFlags : kContextFlagsBits;
   uint32_t mType : kTypeBits;
   uint32_t mGenericTypes : kGenericTypesBits;
 

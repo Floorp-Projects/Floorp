@@ -55,6 +55,7 @@ enum AccType {
   eProgressType,
   eRootType,
   eXULLabelType,
+  eXULListItemType,
   eXULTabpanelsType,
   eXULTreeType,
 
