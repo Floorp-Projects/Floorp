@@ -63,40 +63,4 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
 
 FAIL_ON_WARNINGS = True
 
-MSVC_ENABLE_PGO = True
-
-FORCE_SHARED_LIB = True
-
-DELAYLOAD_DLLS += [
-    'comdlg32.dll',
-    'dbghelp.dll',
-    'psapi.dll',
-    'rasapi32.dll',
-    'rasdlg.dll',
-    'secur32.dll',
-    'wininet.dll',
-    'winspool.drv'
-]
-
-if CONFIG['MOZ_METRO']:
-    DELAYLOAD_DLLS += [
-        'API-MS-WIN-CORE-WINRT-L' + CONFIG['CRTEXPDLLVERSION'] + '.DLL',
-        'API-MS-WIN-CORE-WINRT-STRING-L' + CONFIG['CRTEXPDLLVERSION'] + '.DLL',
-        'uiautomationcore.dll'
-    ]
-
-if CONFIG['ACCESSIBILITY']:
-    DELAYLOAD_DLLS += ['oleacc.dll']
-
-if CONFIG['MOZ_WEBRTC']:
-    DELAYLOAD_DLLS += ['msdmo.dll']
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    LDFLAGS += [
-        '-framework OpenGL',
-        '-framework SystemConfiguration',
-        '-framework QTKit',
-        '-framework IOKit',
-        '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
-        '-framework CoreUI',
-    ]
+DIRS += ['build', 'gtest']
