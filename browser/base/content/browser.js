@@ -3995,12 +3995,10 @@ var TabsProgressListener = {
     // Collect telemetry data about tab load times.
     if (aWebProgress.isTopLevel) {
       if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
-        if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_START)
           TelemetryStopwatch.start("FX_PAGE_LOAD_MS", aBrowser);
-          Services.telemetry.getHistogramById("FX_TOTAL_TOP_VISITS").add(true);
-        } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
           TelemetryStopwatch.finish("FX_PAGE_LOAD_MS", aBrowser);
-        }
       } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                  aStatus == Cr.NS_BINDING_ABORTED) {
         TelemetryStopwatch.cancel("FX_PAGE_LOAD_MS", aBrowser);
