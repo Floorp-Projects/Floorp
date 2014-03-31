@@ -7,7 +7,6 @@
 #include "mozilla/dom/Directory.h"
 
 #include "CreateDirectoryTask.h"
-#include "CreateFileTask.h"
 #include "FileSystemPermissionRequest.h"
 #include "GetFileOrDirectoryTask.h"
 #include "RemoveTask.h"
@@ -24,11 +23,6 @@
 // Directory#CreateDirectory being replaced by Directory#CreateDirectoryW.
 #ifdef CreateDirectory
 #undef CreateDirectory
-#endif
-// Undefine the macro of CreateFile to avoid Directory#CreateFile being replaced
-// by Directory#CreateFileW.
-#ifdef CreateFile
-#undef CreateFile
 #endif
 
 namespace mozilla {
@@ -92,44 +86,6 @@ Directory::GetName(nsString& aRetval) const
 
   aRetval = Substring(mPath,
                       mPath.RFindChar(FileSystemUtils::kSeparatorChar) + 1);
-}
-
-already_AddRefed<Promise>
-Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions)
-{
-  nsresult error = NS_OK;
-  nsString realPath;
-  nsRefPtr<nsIDOMBlob> blobData;
-  InfallibleTArray<uint8_t> arrayData;
-  bool replace = (aOptions.mIfExists == CreateIfExistsMode::Replace);
-
-  // Get the file content.
-  if (aOptions.mData.WasPassed()) {
-    auto& data = aOptions.mData.Value();
-    if (data.IsString()) {
-      NS_ConvertUTF16toUTF8 str(data.GetAsString());
-      arrayData.AppendElements(reinterpret_cast<const uint8_t *>(str.get()),
-                               str.Length());
-    } else if (data.IsArrayBuffer()) {
-      ArrayBuffer& buffer = data.GetAsArrayBuffer();
-      arrayData.AppendElements(buffer.Data(), buffer.Length());
-    } else if (data.IsArrayBufferView()){
-      ArrayBufferView& view = data.GetAsArrayBufferView();
-      arrayData.AppendElements(view.Data(), view.Length());
-    } else {
-      blobData = data.GetAsBlob();
-    }
-  }
-
-  if (!DOMPathToRealPath(aPath, realPath)) {
-    error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
-  }
-
-  nsRefPtr<CreateFileTask> task = new CreateFileTask(mFileSystem, realPath,
-    blobData, arrayData, replace);
-  task->SetError(error);
-  FileSystemPermissionRequest::RequestForTask(task);
-  return task->GetPromise();
 }
 
 already_AddRefed<Promise>
