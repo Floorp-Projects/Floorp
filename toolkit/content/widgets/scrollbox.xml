@@ -193,9 +193,9 @@
 
       <method name="_canScrollToElement">
         <parameter name="element"/>
-        <body>
-          return !element.hidden;
-        </body>
+        <body><![CDATA[
+          return window.getComputedStyle(element).display != "none";
+        ]]></body>
       </method>
 
       <method name="ensureElementIsVisible">
