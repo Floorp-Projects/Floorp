@@ -73,8 +73,7 @@ SystemMessageManager.prototype = {
     aDispatcher.isHandling = true;
 
     // We get a json blob, but in some cases we want another kind of object
-    // to be dispatched.
-    // To do so, we check if we have a with a contract ID of
+    // to be dispatched. To do so, we check if we have a valid contract ID of
     // "@mozilla.org/dom/system-messages/wrapper/TYPE;1" component implementing
     // nsISystemMessageWrapper.
     debug("Dispatching " + JSON.stringify(aMessage) + "\n");
@@ -104,8 +103,18 @@ SystemMessageManager.prototype = {
                             handledCount: 1 });
 
     aDispatcher.isHandling = false;
+
     if (aDispatcher.messages.length > 0) {
       this._dispatchMessage(aType, aDispatcher, aDispatcher.messages.shift());
+    } else {
+      // No more messages that need to be handled, we can notify the
+      // ContentChild to release the CPU wake lock grabbed by the ContentParent
+      // (i.e. NewWakeLockOnBehalfOfProcess()) and reset the process's priority.
+      //
+      // TODO: Bug 874353 - Remove SystemMessageHandledListener in ContentParent
+      Services.obs.notifyObservers(/* aSubject */ null,
+                                   "handle-system-messages-done",
+                                   /* aData */ null);
     }
   },
 
@@ -229,17 +238,20 @@ SystemMessageManager.prototype = {
         this._dispatchMessage(msg.type, dispatcher, aMsg);
       }, this);
     } else {
-      // We need to notify the parent that all the queued system messages have
-      // been handled (notice |handledCount: messages.length|), so the parent
-      // can release the CPU wake lock it took on our behalf.
+      // Since no handlers are registered, we need to notify the parent as if
+      // all the queued system messages have been handled (notice |handledCount:
+      // messages.length|), so the parent can release the CPU wake lock it took
+      // on our behalf.
       cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
                             { type: msg.type,
                               manifestURL: this._manifestURL,
                               pageURL: this._pageURL,
                               handledCount: messages.length });
-    }
 
-    if (!dispatcher || !dispatcher.isHandling) {
+      // We also need to notify the ContentChild to release the CPU wake lock
+      // grabbed by the ContentParent (i.e. NewWakeLockOnBehalfOfProcess()) and
+      // reset the process's priority.
+      //
       // TODO: Bug 874353 - Remove SystemMessageHandledListener in ContentParent
       Services.obs.notifyObservers(/* aSubject */ null,
                                    "handle-system-messages-done",
