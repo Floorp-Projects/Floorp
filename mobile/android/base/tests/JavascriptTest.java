@@ -5,15 +5,14 @@ import org.mozilla.gecko.tests.helpers.JavascriptMessageParser;
 
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 
 public class JavascriptTest extends BaseTest {
-    public static final String LOGTAG = "JavascriptTest";
+    private static final String LOGTAG = "JavascriptTest";
+    private static final String EVENT_TYPE = "Robocop:JS";
 
-    public final String javascriptUrl;
+    private final String javascriptUrl;
 
     public JavascriptTest(String javascriptUrl) {
         super();
@@ -31,37 +30,36 @@ public class JavascriptTest extends BaseTest {
         // We want to be waiting for Robocop messages before the page is loaded
         // because the test harness runs each test in the suite (and possibly
         // completes testing) before the page load event is fired.
-        final Actions.EventExpecter expecter = mActions.expectGeckoEvent("Robocop:Status");
-        mAsserter.dumpLog("Registered listener for Robocop:Status");
+        final Actions.EventExpecter expecter =
+            mActions.expectGeckoEvent(EVENT_TYPE);
+        mAsserter.dumpLog("Registered listener for " + EVENT_TYPE);
 
-        final String url = getAbsoluteUrl("/robocop/robocop_javascript.html?path=" + javascriptUrl);
+        final String url = getAbsoluteUrl(StringHelper.ROBOCOP_JS_HARNESS_URL +
+                                          "?path=" + javascriptUrl);
         mAsserter.dumpLog("Loading JavaScript test from " + url);
-
         loadUrl(url);
 
         final JavascriptMessageParser testMessageParser = new JavascriptMessageParser(mAsserter);
         try {
             while (!testMessageParser.isTestFinished()) {
                 if (Log.isLoggable(LOGTAG, Log.VERBOSE)) {
-                    Log.v(LOGTAG, "Waiting for Robocop:Status");
+                    Log.v(LOGTAG, "Waiting for " + EVENT_TYPE);
                 }
                 String data = expecter.blockForEventData();
                 if (Log.isLoggable(LOGTAG, Log.VERBOSE)) {
-                    Log.v(LOGTAG, "Got Robocop:Status with data '" + data + "'");
+                    Log.v(LOGTAG, "Got event with data '" + data + "'");
                 }
 
                 JSONObject o = new JSONObject(data);
                 String innerType = o.getString("innerType");
-
                 if (!"progress".equals(innerType)) {
-                    throw new Exception("Unexpected Robocop:Status innerType " + innerType);
+                    throw new Exception("Unexpected event innerType " + innerType);
                 }
 
                 String message = o.getString("message");
                 if (message == null) {
-                    throw new Exception("Robocop:Status progress message must not be null");
+                    throw new Exception("Progress message must not be null");
                 }
-
                 testMessageParser.logMessage(message);
             }
 
@@ -70,7 +68,7 @@ public class JavascriptTest extends BaseTest {
             }
         } finally {
             expecter.unregisterListener();
-            mAsserter.dumpLog("Unregistered listener for Robocop:Status");
+            mAsserter.dumpLog("Unregistered listener for " + EVENT_TYPE);
         }
     }
 }
