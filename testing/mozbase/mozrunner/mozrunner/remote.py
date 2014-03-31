@@ -45,7 +45,8 @@ class RemoteRunner(Runner):
         self.remote_test_root = remote_test_root or self.dm.getDeviceRoot()
         self.remote_profile = posixpath.join(self.remote_test_root, 'profile')
         self.restore = restore
-        self.backup_files = set([])
+        self.added_files = set()
+        self.backup_files = set()
 
     def backup_file(self, remote_path):
         if not self.restore:
@@ -54,7 +55,8 @@ class RemoteRunner(Runner):
         if self.dm.fileExists(remote_path):
             self.dm.shellCheckOutput(['dd', 'if=%s' % remote_path, 'of=%s.orig' % remote_path])
             self.backup_files.add(remote_path)
-
+        else:
+            self.added_files.add(remote_path)
 
     def check_for_crashes(self, last_test=None):
         last_test = last_test or self.last_test
@@ -80,7 +82,10 @@ class RemoteRunner(Runner):
         Runner.cleanup(self)
 
         self.dm.remount()
-        # Restore the original profiles.ini
+        # Restore the original profile
+        for added_file in self.added_files:
+            self.dm.removeFile(added_file)
+
         for backup_file in self.backup_files:
             if self.dm.fileExists('%s.orig' % backup_file):
                 self.dm.shellCheckOutput(['dd', 'if=%s.orig' % backup_file, 'of=%s' % backup_file])
