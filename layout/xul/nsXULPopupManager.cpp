@@ -946,15 +946,12 @@ public:
   {
     mContent->RemoveSystemEventListener(NS_LITERAL_STRING("transitionend"), this, false);
 
-    nsMenuPopupFrame* popupFrame = do_QueryFrame(mContent->GetPrimaryFrame());
-
     // Now hide the popup. There could be other properties transitioning, but
     // we'll assume they all end at the same time and just hide the popup upon
     // the first one ending.
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm && popupFrame) {
-      pm->HidePopupCallback(mContent, popupFrame, nullptr, nullptr,
-                            popupFrame->PopupType(), mDeselectMenu);
+    if (pm) {
+      pm->HidePopupFrame(mContent, mDeselectMenu);
     }
 
     return NS_OK;
@@ -969,7 +966,8 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
                                      nsIContent* aNextPopup,
                                      nsIContent* aLastPopup,
                                      nsPopupType aPopupType,
-                                     bool aDeselectMenu)
+                                     bool aDeselectMenu,
+                                     bool aIsRollup)
 {
   if (mCloseTimer && mTimerMenu == aPopupFrame) {
     mCloseTimer->Cancel();
@@ -1005,18 +1003,31 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
 
   delete item;
 
-  nsWeakFrame weakFrame(aPopupFrame);
-  aPopupFrame->HidePopup(aDeselectMenu, ePopupClosed);
-  ENSURE_TRUE(weakFrame.IsAlive());
+  // If the popup has an animate attribute and it is not set to false, assume
+  // that it has a closing transition and wait for it to finish. The transition
+  // may still occur either way, but the view will be hidden and you won't be
+  // able to see it. If there is a next popup, indicating that mutliple popups
+  // are rolling up, don't wait and hide the popup right away since the effect
+  // would likely be undesirable. This also does a quick check to see if the
+  // popup has a transition defined, and skips the wait if not.
+  if (!aNextPopup && aPopup->HasAttr(kNameSpaceID_None, nsGkAtoms::animate) &&
+       aPopupFrame->StyleDisplay()->mTransitionPropertyCount > 0) {
+    nsAutoString animate;
+    aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
 
-  // send the popuphidden event synchronously. This event has no default
-  // behaviour.
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nullptr,
-                         WidgetMouseEvent::eReal);
-  EventDispatcher::Dispatch(aPopup, aPopupFrame->PresContext(),
-                            &event, nullptr, &status);
-  ENSURE_TRUE(weakFrame.IsAlive());
+    // If animate="false" then don't transition at all. If animate="cancel",
+    // only show the transition if cancelling the popup or rolling up.
+    // Otherwise, always show the transition.
+    if (!animate.EqualsLiteral("false") &&
+        (!animate.EqualsLiteral("cancel") || aIsRollup)) {
+      nsCOMPtr<TransitionEnder> ender = new TransitionEnder(aPopup, aDeselectMenu);
+      aPopup->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
+                                     ender, false, false);
+      return;
+    }
+  }
+
+  HidePopupFrame(aPopup, aDeselectMenu);
 
   // if there are more popups to close, look for the next one
   if (aNextPopup && aPopup != aLastPopup) {
@@ -1056,6 +1067,26 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
                            foundMenu->PopupType(), aDeselectMenu, false);
     }
   }
+}
+
+void
+nsXULPopupManager::HidePopupFrame(nsIContent* aPopup, bool aDeselectMenu)
+{
+  nsMenuPopupFrame* popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
+  if (!popupFrame)
+    return;
+
+  nsWeakFrame weakFrame(popupFrame);
+  popupFrame->HidePopup(aDeselectMenu, ePopupClosed);
+  ENSURE_TRUE(weakFrame.IsAlive());
+
+  // send the popuphidden event synchronously. This event has no default
+  // behaviour.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetMouseEvent event(true, NS_XUL_POPUP_HIDDEN, nullptr,
+                         WidgetMouseEvent::eReal);
+  EventDispatcher::Dispatch(aPopup, popupFrame->PresContext(),
+                            &event, nullptr, &status);
 }
 
 void
@@ -1362,32 +1393,8 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
       popupFrame->SetPopupState(ePopupOpenAndVisible);
     }
     else {
-      // If the popup has an animate attribute and it is not set to false, assume
-      // that it has a closing transition and wait for it to finish. The transition
-      // may still occur either way, but the view will be hidden and you won't be
-      // able to see it. If there is a next popup, indicating that mutliple popups
-      // are rolling up, don't wait and hide the popup right away since the effect
-      // would likely be undesirable. This also does a quick check to see if the
-      // popup has a transition defined, and skips the wait if not.
-      if (!aNextPopup && aPopup->HasAttr(kNameSpaceID_None, nsGkAtoms::animate) &&
-          popupFrame->StyleDisplay()->mTransitionPropertyCount > 0) {
-        nsAutoString animate;
-        aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
-
-        // If animate="false" then don't transition at all. If animate="cancel",
-        // only show the transition if cancelling the popup or rolling up.
-        // Otherwise, always show the transition.
-        if (!animate.EqualsLiteral("false") &&
-            (!animate.EqualsLiteral("cancel") || aIsRollup)) {
-          nsCOMPtr<TransitionEnder> ender = new TransitionEnder(aPopup, aDeselectMenu);
-          aPopup->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
-                                         ender, false, false);
-          return;
-        }
-      }
-
       HidePopupCallback(aPopup, popupFrame, aNextPopup, aLastPopup,
-                        aPopupType, aDeselectMenu);
+                        aPopupType, aDeselectMenu, aIsRollup);
     }
   }
 }
