@@ -337,7 +337,8 @@ class SnapshotWriter
     void endSnapshot();
 
     bool oom() const {
-        return writer_.oom() || writer_.length() >= MAX_BUFFER_SIZE;
+        return writer_.oom() || writer_.length() >= MAX_BUFFER_SIZE ||
+            allocWriter_.oom() || allocWriter_.length() >= MAX_BUFFER_SIZE;
     }
 
     size_t listSize() const {
