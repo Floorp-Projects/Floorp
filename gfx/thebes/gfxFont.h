@@ -2834,6 +2834,14 @@ public:
          */
         virtual void GetSpacing(uint32_t aStart, uint32_t aLength,
                                 Spacing *aSpacing) = 0;
+
+        // Returns a gfxContext that can be used to measure the hyphen glyph.
+        // Only called if the hyphen width is requested.
+        virtual already_AddRefed<gfxContext> GetContext() = 0;
+
+        // Return the appUnitsPerDevUnit value to be used when measuring.
+        // Only called if the hyphen width is requested.
+        virtual uint32_t GetAppUnitsPerDevUnit() = 0;
     };
 
     class ClusterIterator {
@@ -3433,7 +3441,7 @@ public:
      * needed to initialize the cached hyphen width; otherwise they are
      * ignored.
      */
-    gfxFloat GetHyphenWidth(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit);
+    gfxFloat GetHyphenWidth(gfxTextRun::PropertyProvider* aProvider);
 
     /**
      * Make a text run representing a single hyphen character.

@@ -1392,33 +1392,77 @@ JSScript::sourceData(JSContext *cx)
     return scriptSource()->substring(cx, sourceStart(), sourceEnd());
 }
 
-SourceDataCache::AutoSuppressPurge::AutoSuppressPurge(JSContext *cx)
- : cache_(cx->runtime()->sourceDataCache)
+SourceDataCache::AutoHoldEntry::AutoHoldEntry()
+  : cache_(nullptr), source_(nullptr), charsToFree_(nullptr)
 {
-    oldValue_ = cache_.numSuppressPurges_++;
 }
 
-SourceDataCache::AutoSuppressPurge::~AutoSuppressPurge()
+void
+SourceDataCache::AutoHoldEntry::holdEntry(SourceDataCache *cache, ScriptSource *source)
 {
-    cache_.numSuppressPurges_--;
-    JS_ASSERT(cache_.numSuppressPurges_ == oldValue_);
+    // Initialise the holder for a specific cache and script source. This will
+    // hold on to the cached source chars in the event that the cache is purged.
+    JS_ASSERT(!cache_ && !source_ && !charsToFree_);
+    cache_ = cache;
+    source_ = source;
+}
+
+void
+SourceDataCache::AutoHoldEntry::deferDelete(const jschar *chars)
+{
+    // Take ownership of source chars now the cache is being purged. Remove our
+    // reference to the ScriptSource which might soon be destroyed.
+    JS_ASSERT(cache_ && source_ && !charsToFree_);
+    cache_ = nullptr;
+    source_ = nullptr;
+    charsToFree_ = chars;
+}
+
+SourceDataCache::AutoHoldEntry::~AutoHoldEntry()
+{
+    // The holder is going out of scope. If it has taken ownership of cached
+    // chars then delete them, otherwise unregister ourself with the cache.
+    if (charsToFree_) {
+        JS_ASSERT(!cache_ && !source_);
+        js_free(const_cast<jschar *>(charsToFree_));
+    } else if (cache_) {
+        JS_ASSERT(source_);
+        cache_->releaseEntry(*this);
+    }
+}
+
+void
+SourceDataCache::holdEntry(AutoHoldEntry &holder, ScriptSource *ss)
+{
+    JS_ASSERT(!holder_);
+    holder.holdEntry(this, ss);
+    holder_ = &holder;
+}
+
+void
+SourceDataCache::releaseEntry(AutoHoldEntry &holder)
+{
+    JS_ASSERT(holder_ == &holder);
+    holder_ = nullptr;
 }
 
 const jschar *
-SourceDataCache::lookup(ScriptSource *ss, const AutoSuppressPurge &asp)
+SourceDataCache::lookup(ScriptSource *ss, AutoHoldEntry &holder)
 {
-    JS_ASSERT(this == &asp.cache());
+    JS_ASSERT(!holder_);
     if (!map_)
         return nullptr;
-    if (Map::Ptr p = map_->lookup(ss))
+    if (Map::Ptr p = map_->lookup(ss)) {
+        holdEntry(holder, ss);
         return p->value();
+    }
     return nullptr;
 }
 
 bool
-SourceDataCache::put(ScriptSource *ss, const jschar *str, const AutoSuppressPurge &asp)
+SourceDataCache::put(ScriptSource *ss, const jschar *str, AutoHoldEntry &holder)
 {
-    JS_ASSERT(this == &asp.cache());
+    JS_ASSERT(!holder_);
 
     if (!map_) {
         map_ = js_new<Map>();
@@ -1432,17 +1476,28 @@ SourceDataCache::put(ScriptSource *ss, const jschar *str, const AutoSuppressPurg
         }
     }
 
-    return map_->put(ss, str);
+    if (!map_->put(ss, str))
+        return false;
+
+    holdEntry(holder, ss);
+    return true;
 }
 
 void
 SourceDataCache::purge()
 {
-    if (!map_ || numSuppressPurges_ > 0)
+    if (!map_)
         return;
 
-    for (Map::Range r = map_->all(); !r.empty(); r.popFront())
-        js_delete(const_cast<jschar*>(r.front().value()));
+    for (Map::Range r = map_->all(); !r.empty(); r.popFront()) {
+        const jschar *chars = r.front().value();
+        if (holder_ && r.front().key() == holder_->source()) {
+            holder_->deferDelete(chars);
+            holder_ = nullptr;
+        } else {
+            js_free(const_cast<jschar*>(chars));
+        }
+    }
 
     js_delete(map_);
     map_ = nullptr;
@@ -1463,7 +1518,7 @@ SourceDataCache::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 }
 
 const jschar *
-ScriptSource::chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp)
+ScriptSource::chars(JSContext *cx, SourceDataCache::AutoHoldEntry &holder)
 {
     if (const jschar *chars = getOffThreadCompressionChars(cx))
         return chars;
@@ -1471,9 +1526,9 @@ ScriptSource::chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp
 
 #ifdef USE_ZLIB
     if (compressed()) {
-        if (const jschar *decompressed = cx->runtime()->sourceDataCache.lookup(this, asp))
+        if (const jschar *decompressed = cx->runtime()->sourceDataCache.lookup(this, holder))
             return decompressed;
-      
+
         const size_t nbytes = sizeof(jschar) * (length_ + 1);
         jschar *decompressed = static_cast<jschar *>(js_malloc(nbytes));
         if (!decompressed)
@@ -1488,7 +1543,7 @@ ScriptSource::chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp
 
         decompressed[length_] = 0;
 
-        if (!cx->runtime()->sourceDataCache.put(this, decompressed, asp)) {
+        if (!cx->runtime()->sourceDataCache.put(this, decompressed, holder)) {
             JS_ReportOutOfMemory(cx);
             js_free(decompressed);
             return nullptr;
@@ -1504,8 +1559,8 @@ JSFlatString *
 ScriptSource::substring(JSContext *cx, uint32_t start, uint32_t stop)
 {
     JS_ASSERT(start <= stop);
-    SourceDataCache::AutoSuppressPurge asp(cx);
-    const jschar *chars = this->chars(cx, asp);
+    SourceDataCache::AutoHoldEntry holder;
+    const jschar *chars = this->chars(cx, holder);
     if (!chars)
         return nullptr;
     return js_NewStringCopyN<CanGC>(cx, chars + start, stop - start);
@@ -3784,13 +3839,13 @@ LazyScriptHashPolicy::match(JSScript *script, const Lookup &lookup)
         return false;
     }
 
-    SourceDataCache::AutoSuppressPurge asp(cx);
+    SourceDataCache::AutoHoldEntry holder;
 
-    const jschar *scriptChars = script->scriptSource()->chars(cx, asp);
+    const jschar *scriptChars = script->scriptSource()->chars(cx, holder);
     if (!scriptChars)
         return false;
 
-    const jschar *lazyChars = lazy->source()->chars(cx, asp);
+    const jschar *lazyChars = lazy->source()->chars(cx, holder);
     if (!lazyChars)
         return false;
 
