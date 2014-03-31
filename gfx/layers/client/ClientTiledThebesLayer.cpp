@@ -216,13 +216,17 @@ ClientTiledThebesLayer::RenderLayer()
     ToClientLayer(GetMaskLayer())->RenderLayer();
   }
 
+  bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
+
   // Fast path for no progressive updates, no low-precision updates and no
-  // critical display-port set, or no display-port set.
+  // critical display-port set, or no display-port set, or this is a fixed
+  // position layer/contained in a fixed position layer
   const FrameMetrics& parentMetrics = GetParent()->GetFrameMetrics();
   if ((!gfxPrefs::UseProgressiveTilePainting() &&
        !gfxPrefs::UseLowPrecisionBuffer() &&
        parentMetrics.mCriticalDisplayPort.IsEmpty()) ||
-       parentMetrics.mDisplayPort.IsEmpty()) {
+       parentMetrics.mDisplayPort.IsEmpty() ||
+       isFixed) {
     mValidRegion = mVisibleRegion;
 
     NS_ASSERTION(!ClientManager()->IsRepeatTransaction(), "Didn't paint our mask layer");
