@@ -2348,14 +2348,14 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
     case LOCAL_GL_RGBA4:
     case LOCAL_GL_RGB5_A1:
         // 16-bit RGBA formats are not supported on desktop GL
-        if (!gl->IsGLES2()) internalformatForGL = LOCAL_GL_RGBA8;
+        if (!gl->IsGLES()) internalformatForGL = LOCAL_GL_RGBA8;
         break;
     case LOCAL_GL_RGB565:
         // the RGB565 format is not supported on desktop GL
-        if (!gl->IsGLES2()) internalformatForGL = LOCAL_GL_RGB8;
+        if (!gl->IsGLES()) internalformatForGL = LOCAL_GL_RGB8;
         break;
     case LOCAL_GL_DEPTH_COMPONENT16:
-        if (!gl->IsGLES2() || gl->IsExtensionSupported(gl::GLContext::OES_depth24))
+        if (!gl->IsGLES() || gl->IsExtensionSupported(gl::GLContext::OES_depth24))
             internalformatForGL = LOCAL_GL_DEPTH_COMPONENT24;
         else if (gl->IsExtensionSupported(gl::GLContext::OES_packed_depth_stencil))
             internalformatForGL = LOCAL_GL_DEPTH24_STENCIL8;
@@ -2956,7 +2956,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
     MakeContextCurrent();
 
-    ShShaderOutput targetShaderSourceLanguage = gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
+    ShShaderOutput targetShaderSourceLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
     bool useShaderSourceTranslation = true;
 
     if (shader->NeedsTranslation() && mShaderValidation) {
@@ -3526,7 +3526,7 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
 
     // convert type for half float if not on GLES2
     GLenum realType = type;
-    if (realType == LOCAL_GL_HALF_FLOAT_OES && !gl->IsGLES2()) {
+    if (realType == LOCAL_GL_HALF_FLOAT_OES && !gl->IsGLES()) {
         realType = LOCAL_GL_HALF_FLOAT;
     }
 
@@ -3608,7 +3608,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
 
     // Handle ES2 and GL differences in floating point internal formats.  Note that
     // format == internalformat, as checked above and as required by ES.
-    internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES2());
+    internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES());
 
     // Handle ES2 and GL differences when supporting sRGB internal formats. GL ES
     // requires that format == internalformat, but GL will fail in this case.
@@ -3616,7 +3616,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     //      format  ->  internalformat
     //      GL_RGB      GL_SRGB_EXT
     //      GL_RGBA     GL_SRGB_ALPHA_EXT
-    if (!gl->IsGLES2()) {
+    if (!gl->IsGLES()) {
         switch (internalformat) {
             case LOCAL_GL_SRGB_EXT:
                 format = LOCAL_GL_RGB;

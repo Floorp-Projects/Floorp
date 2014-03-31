@@ -282,7 +282,7 @@ CompositorOGL::Initialize()
       LOCAL_GL_NONE
     };
 
-    if (!mGLContext->IsGLES2()) {
+    if (!mGLContext->IsGLES()) {
       // No TEXTURE_RECTANGLE_ARB available on ES2
       textureTargets[1] = LOCAL_GL_TEXTURE_RECTANGLE_ARB;
     }
@@ -734,7 +734,7 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
       GetFrameBufferInternalFormat(gl(), aSourceFrameBuffer, mWidget);
 
     bool isFormatCompatibleWithRGBA
-        = gl()->IsGLES2() ? (format == LOCAL_GL_RGBA)
+        = gl()->IsGLES() ? (format == LOCAL_GL_RGBA)
                           : true;
 
     if (isFormatCompatibleWithRGBA) {
@@ -1193,19 +1193,19 @@ CompositorOGL::EndFrame()
   // Unbind all textures
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
   mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
-  if (!mGLContext->IsGLES2()) {
+  if (!mGLContext->IsGLES()) {
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
   }
 
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE1);
   mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
-  if (!mGLContext->IsGLES2()) {
+  if (!mGLContext->IsGLES()) {
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
   }
 
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE2);
   mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, 0);
-  if (!mGLContext->IsGLES2()) {
+  if (!mGLContext->IsGLES()) {
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, 0);
   }
 }
@@ -1320,7 +1320,7 @@ CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfx::Matrix& aTransform)
 
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
-  if (!mGLContext->IsGLES2()) {
+  if (!mGLContext->IsGLES()) {
     // GLES2 promises that binding to any custom FBO will attach
     // to GL_COLOR_ATTACHMENT0 attachment point.
     mGLContext->fReadBuffer(LOCAL_GL_BACK);

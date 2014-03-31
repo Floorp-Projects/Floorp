@@ -125,7 +125,7 @@ WebGLTexture::Bind(GLenum aTarget) {
         // thanks to the WebKit people for finding this out: GL_TEXTURE_WRAP_R is not
         // present in GLES 2, but is present in GL and it seems as if for cube maps
         // we need to set it to GL_CLAMP_TO_EDGE to get the expected GLES behavior.
-        if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP && !mContext->gl->IsGLES2())
+        if (mTarget == LOCAL_GL_TEXTURE_CUBE_MAP && !mContext->gl->IsGLES())
             mContext->gl->fTexParameteri(mTarget, LOCAL_GL_TEXTURE_WRAP_R, LOCAL_GL_CLAMP_TO_EDGE);
     }
 
