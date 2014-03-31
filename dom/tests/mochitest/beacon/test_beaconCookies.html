@@ -5,8 +5,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936340
 -->
 <head>
   <title>Test whether sendBeacon sets cookies</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936340">Mozilla Bug 936340</a>
@@ -17,39 +17,70 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936340
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var beaconUrl = "http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-set-cookie.sjs";
-
 // not enabled by default yet.
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 
-const Cc = SpecialPowers.Cc;
-const Ci = SpecialPowers.Ci;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
 
-function examiner() {
-  SpecialPowers.addObserver(this, "cookie-changed", false);
-}
-examiner.prototype = {
-  finished: false,
-  observe: function examiner_observe(subject, topic, data) {
-    if (!this.finished) {
-      ok(true, "cookie set by beacon request");
-      SimpleTest.finish();
+var baseURL = "http://mochi.test:8888/chrome/dom/tests/mochitest/beacon/";
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
     }
-  }
+  }, "browser-delayed-startup-finished", false);
 }
 
-window.examiner = new examiner();
+function testOnWindow(options, callback) {
+  var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShellTreeItem)
+                         .rootTreeItem
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindow);
 
-function fail() {
-  examiner.finished = true;
-  ok(false, "cookie event never arrived");
-  SimpleTest.finish();
-}
+  var win = mainWindow.OpenBrowserWindow(options);
+  windowsToClose.push(win);
+  whenDelayedStartupFinished(win, function() {
+    callback(win);
+  });
+};
+
+var windowsToClose = [];
+var next;
 
 function beginTest() {
-  navigator.sendBeacon(beaconUrl, "ceci n'est pas une demande");
-  setTimeout(2000, fail);
+  testOnWindow({}, function(aNormalWindow) {
+    Services.obs.addObserver(function waitCookie() {
+      Services.obs.removeObserver(waitCookie, "cookie-changed");
+      ok(true, "cookie set by beacon request in normal window");
+      testOnPrivateWindow();
+    }, "cookie-changed", false);
+    aNormalWindow.gBrowser.selectedBrowser.loadURI(baseURL + "file_beaconCookies.html");
+  });
+}
+
+function testOnPrivateWindow() {
+  testOnWindow({private: true}, function(aPrivateWindow) {
+    Services.obs.addObserver(function waitCookie() {
+      Services.obs.removeObserver(waitCookie, "private-cookie-changed");
+      ok(true, "private cookie set by beacon request in private window");
+      cleanup();
+    }, "private-cookie-changed", false);
+    aPrivateWindow.gBrowser.selectedBrowser.loadURI(baseURL + "file_beaconCookies.html");
+  });
+}
+
+function cleanup() {
+  for (var i = 0; i < windowsToClose.length; ++i) {
+    windowsToClose[i].close();
+  }
+  SimpleTest.finish();
 }
 
 </script>
