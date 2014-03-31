@@ -111,11 +111,17 @@ var WifiManager = (function() {
       schedScanRecovery: libcutils.property_get("ro.moz.wifi.sched_scan_recover") === "false" ? false : true,
       driverDelay: libcutils.property_get("ro.moz.wifi.driverDelay"),
       p2pSupported: libcutils.property_get("ro.moz.wifi.p2p_supported") === "1",
+      eapSimSupported: libcutils.property_get("ro.moz.wifi.eapsim_supported") === "1",
       ifname: libcutils.property_get("wifi.interface")
     };
   }
 
-  let {sdkVersion, unloadDriverEnabled, schedScanRecovery, driverDelay, p2pSupported, ifname} = getStartupPrefs();
+  let {sdkVersion, unloadDriverEnabled, schedScanRecovery,
+       driverDelay, p2pSupported, eapSimSupported, ifname} = getStartupPrefs();
+
+  let capabilities = {
+    eapSim: eapSimSupported
+  };
 
   let wifiListener = {
     onWaitEvent: function(event, iface) {
@@ -1303,6 +1309,10 @@ var WifiManager = (function() {
     });
   };
 
+  manager.getCapabilities = function() {
+    return capabilities;
+  }
+
   return manager;
 })();
 
@@ -1767,7 +1777,7 @@ function WifiWorker() {
     });
 
     try {
-      self._allowWpaEap = Services.prefs.getBoolPref("b2g.wifi.allow_unsafe_wpa_eap");
+      self._allowWpaEap = WifiManager.getCapabilities().eapSim;
     } catch (e) {
       self._allowWpaEap = false;
     }
