@@ -80,7 +80,8 @@ function CssColor(colorValue) {
 
 module.exports.colorUtils = {
   CssColor: CssColor,
-  processCSSString: processCSSString
+  processCSSString: processCSSString,
+  rgbToHsl: rgbToHsl
 };
 
 /**
@@ -330,41 +331,9 @@ CssColor.prototype = {
       return "hsl(" + h + ", " + s + ", " + l + ")";
     }
 
-    r = r / 255;
-    g = g / 255;
-    b = b / 255;
+    let [h,s,l] = rgbToHsl([r,g,b]);
 
-    let max = Math.max(r, g, b);
-    let min = Math.min(r, g, b);
-    let h;
-    let s;
-    let l = (max + min) / 2;
-
-    if(max == min){
-      h = s = 0;
-    } else {
-      let d = max - min;
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-
-      switch(max) {
-          case r:
-            h = ((g - b) / d) % 6;
-            break;
-          case g:
-            h = (b - r) / d + 2;
-            break;
-          case b:
-            h = (r - g) / d + 4;
-            break;
-      }
-      h *= 60;
-      if (h < 0) {
-        h += 360;
-      }
-    }
-    return "hsl(" + (Math.round(h * 1000)) / 1000 +
-           ", " + Math.round(s * 100) +
-           "%, " + Math.round(l * 100) + "%)";
+    return "hsl(" + h + ", " + s + "%, " + l + "%)";
   },
 
   /**
@@ -425,6 +394,51 @@ function processCSSString(value) {
     return match;
   });
   return value;
+}
+
+/**
+ * Convert rgb value to hsl
+ *
+ * @param {array} rgb
+ *         Array of rgb values
+ * @return {array}
+ *         Array of hsl values.
+ */
+function rgbToHsl([r,g,b]) {
+  r = r / 255;
+  g = g / 255;
+  b = b / 255;
+
+  let max = Math.max(r, g, b);
+  let min = Math.min(r, g, b);
+  let h;
+  let s;
+  let l = (max + min) / 2;
+
+  if(max == min){
+    h = s = 0;
+  } else {
+    let d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+    switch(max) {
+      case r:
+        h = ((g - b) / d) % 6;
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h *= 60;
+    if (h < 0) {
+      h += 360;
+    }
+  }
+
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
 }
 
 loader.lazyGetter(this, "DOMUtils", function () {
