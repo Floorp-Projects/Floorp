@@ -39,8 +39,8 @@ function SystemMessageManager() {
   // Pending messages for this page, keyed by message type.
   this._pendings = {};
 
-  // Flag to specify if this process has already registered manifest.
-  this._registerManifestReady = false;
+  // Flag to specify if this process has already registered the manifest URL.
+  this._registerManifestURLReady = false;
 
   // Flag to determine this process is a parent or child process.
   let appInfo = Cc["@mozilla.org/xre/app-info;1"];
@@ -99,7 +99,7 @@ SystemMessageManager.prototype = {
     // so the parent can release the CPU wake lock it took on our behalf.
     cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
                           { type: aType,
-                            manifest: this._manifest,
+                            manifestURL: this._manifestURL,
                             uri: this._uri,
                             handledCount: 1 });
 
@@ -138,7 +138,7 @@ SystemMessageManager.prototype = {
     cpmm.sendAsyncMessage("SystemMessageManager:GetPendingMessages",
                           { type: aType,
                             uri: this._uri,
-                            manifest: this._manifest });
+                            manifestURL: this._manifestURL });
   },
 
   mozHasPendingMessage: function(aType) {
@@ -158,7 +158,7 @@ SystemMessageManager.prototype = {
     return cpmm.sendSyncMessage("SystemMessageManager:HasPendingMessages",
                                 { type: aType,
                                   uri: this._uri,
-                                  manifest: this._manifest })[0];
+                                  manifestURL: this._manifestURL })[0];
   },
 
   uninit: function()  {
@@ -171,12 +171,12 @@ SystemMessageManager.prototype = {
 
     if (this._isInBrowserElement) {
       debug("the app loaded in the browser doesn't need to unregister " +
-            "the manifest for listening to the system messages");
+            "the manifest URL for listening to the system messages");
       return;
     }
 
     cpmm.sendAsyncMessage("SystemMessageManager:Unregister",
-                          { manifest: this._manifest,
+                          { manifestURL: this._manifestURL,
                             uri: this._uri,
                             innerWindowID: this.innerWindowID });
   },
@@ -194,14 +194,14 @@ SystemMessageManager.prototype = {
   receiveMessage: function(aMessage) {
     let msg = aMessage.data;
     debug("receiveMessage " + aMessage.name + " for [" + msg.type + "] " +
-          "with manifest = " + msg.manifest + " and uri = " + msg.uri);
+          "with manifest URL = " + msg.manifestURL + " and uri = " + msg.uri);
 
     // Multiple windows can share the same target (process), the content
     // window needs to check if the manifest/page URL is matched. Only
     // *one* window should handle the system message.
-    if (msg.manifest !== this._manifest || msg.uri !== this._uri) {
+    if (msg.manifestURL !== this._manifestURL || msg.uri !== this._uri) {
       debug("This page shouldn't handle the messages because its " +
-            "manifest = " + this._manifest + " and uri = " + this._uri);
+            "manifest URL = " + this._manifestURL + " and uri = " + this._uri);
       return;
     }
 
@@ -210,7 +210,7 @@ SystemMessageManager.prototype = {
       // so a re-launched app won't handle it again, which is redundant.
       cpmm.sendAsyncMessage("SystemMessageManager:Message:Return:OK",
                             { type: msg.type,
-                              manifest: this._manifest,
+                              manifestURL: this._manifestURL,
                               uri: this._uri,
                               msgID: msg.msgID });
     }
@@ -231,7 +231,7 @@ SystemMessageManager.prototype = {
       // can release the CPU wake lock it took on our behalf.
       cpmm.sendAsyncMessage("SystemMessageManager:HandleMessagesDone",
                             { type: msg.type,
-                              manifest: this._manifest,
+                              manifestURL: this._manifestURL,
                               uri: this._uri,
                               handledCount: messages.length });
     }
@@ -256,9 +256,9 @@ SystemMessageManager.prototype = {
 
     let appsService = Cc["@mozilla.org/AppsService;1"]
                         .getService(Ci.nsIAppsService);
-    this._manifest = appsService.getManifestURLByLocalId(principal.appId);
+    this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
 
-    // Two cases are valid to register the manifest for the current process:
+    // Two cases are valid to register the manifest URL for the current process:
     // 1. This is asked by a child process (parent process must be ready).
     // 2. Parent process has already constructed the |SystemMessageInternal|.
     // Otherwise, delay to do it when the |SystemMessageInternal| is ready.
@@ -271,7 +271,7 @@ SystemMessageManager.prototype = {
       }
     }
     if (readyToRegister) {
-      this._registerManifest();
+      this._registerManifestURL();
     }
 
     debug("done");
@@ -279,27 +279,27 @@ SystemMessageManager.prototype = {
 
   observe: function(aSubject, aTopic, aData) {
     if (aTopic === kSystemMessageInternalReady) {
-      this._registerManifest();
+      this._registerManifestURL();
     }
 
     // Call the DOMRequestIpcHelper.observe method.
     this.__proto__.__proto__.observe.call(this, aSubject, aTopic, aData);
   },
 
-  _registerManifest: function() {
+  _registerManifestURL: function() {
     if (this._isInBrowserElement) {
       debug("the app loaded in the browser doesn't need to register " +
-            "the manifest for listening to the system messages");
+            "the manifest URL for listening to the system messages");
       return;
     }
 
-    if (!this._registerManifestReady) {
+    if (!this._registerManifestURLReady) {
       cpmm.sendAsyncMessage("SystemMessageManager:Register",
-                            { manifest: this._manifest,
+                            { manifestURL: this._manifestURL,
                               uri: this._uri,
                               innerWindowID: this.innerWindowID });
 
-      this._registerManifestReady = true;
+      this._registerManifestURLReady = true;
     }
   },
 
