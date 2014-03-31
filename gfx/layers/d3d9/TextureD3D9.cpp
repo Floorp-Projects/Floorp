@@ -1061,10 +1061,10 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
                               nsIntRegion* aDestRegion,
                               gfx::IntPoint* aSrcOffset)
 {
-  // Right now we only support null aDestRegion and aSrcOffset (which means
-  // full surface update). Incremental update is only used on Mac so it is
-  // not clear that we ever will need to support it for D3D.
-  MOZ_ASSERT(!aDestRegion && !aSrcOffset);
+  // Right now we only support full surface update. If aDestRegion is provided,
+  // It will be ignered. Incremental update with a source offset is only used
+  // on Mac so it is not clear that we ever will need to support it for D3D.
+  MOZ_ASSERT(!aSrcOffset);
 
   if (!mCompositor || !mCompositor->device()) {
     NS_WARNING("No D3D device to update the texture.");

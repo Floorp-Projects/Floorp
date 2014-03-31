@@ -6,9 +6,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=368835
   <head>
     <title>Test for Bug 368835</title>
 
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+    <link rel="stylesheet" type="text/css" href="http://mochi.test:8888/tests/SimpleTest/test.css" />
 
-    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="http://mochi.test:8888/tests/SimpleTest/SimpleTest.js"></script>
   </head>
 
   <body>
@@ -89,11 +89,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=368835
         document.body.addEventListener("dataContainerEvent",
                                        dataContainerEventHandler, true);
         document.body.dispatchEvent(event);
+        SimpleTest.finish();
       }
 
       SimpleTest.waitForExplicitFinish();
       addLoadEvent(doTest);
-      addLoadEvent(SimpleTest.finish);
     </script>
     </pre>
   </body>
