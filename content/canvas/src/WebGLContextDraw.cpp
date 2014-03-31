@@ -448,7 +448,7 @@ WebGLContext::ValidateBufferFetching(const char *info)
 WebGLVertexAttrib0Status
 WebGLContext::WhatDoesVertexAttrib0Need()
 {
-  // here we may assume that mCurrentProgram != null
+    MOZ_ASSERT(mCurrentProgram);
 
     // work around Mac OSX crash, see bug 631420
 #ifdef XP_MACOSX
@@ -460,9 +460,15 @@ WebGLContext::WhatDoesVertexAttrib0Need()
     }
 #endif
 
-    return (gl->IsGLES2() || mBoundVertexArray->IsAttribArrayEnabled(0)) ? WebGLVertexAttrib0Status::Default
-         : mCurrentProgram->IsAttribInUse(0) ? WebGLVertexAttrib0Status::EmulatedInitializedArray
-                                             : WebGLVertexAttrib0Status::EmulatedUninitializedArray;
+    if (MOZ_LIKELY(gl->IsGLES2() ||
+                   mBoundVertexArray->IsAttribArrayEnabled(0)))
+    {
+        return WebGLVertexAttrib0Status::Default;
+    }
+
+    return mCurrentProgram->IsAttribInUse(0)
+           ? WebGLVertexAttrib0Status::EmulatedInitializedArray
+           : WebGLVertexAttrib0Status::EmulatedUninitializedArray;
 }
 
 bool
@@ -470,7 +476,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
 {
     WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
 
-    if (whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default)
+    if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
         return true;
 
     if (!mAlreadyWarnedAboutFakeVertexAttrib0) {
@@ -556,7 +562,7 @@ WebGLContext::UndoFakeVertexAttrib0()
 {
     WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
 
-    if (whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default)
+    if (MOZ_LIKELY(whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default))
         return;
 
     if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].buf) {
