@@ -322,7 +322,7 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
     // on the GL implementation and change them to match what GLContext actually exposes.
 
     if (name == LOCAL_GL_VERSION) {
-        if (sGLContext.get()->IsGLES2()) {
+        if (sGLContext.get()->IsGLES()) {
             return reinterpret_cast<const GLubyte*>("OpenGL ES 2.0");
         } else {
             return reinterpret_cast<const GLubyte*>("2.0");
@@ -336,7 +336,7 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
         if (!extensionsStringBuilt) {
             extensionsString[0] = '\0';
 
-            if (sGLContext.get()->IsGLES2()) {
+            if (sGLContext.get()->IsGLES()) {
                 // OES is only applicable to GLES2
                 if (sGLContext.get()->IsExtensionSupported(GLContext::OES_packed_depth_stencil)) {
                     strcat(extensionsString, "GL_OES_packed_depth_stencil ");
@@ -384,7 +384,7 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
         return reinterpret_cast<const GLubyte*>(extensionsString);
 
     } else if (name == LOCAL_GL_SHADING_LANGUAGE_VERSION) {
-        if (sGLContext.get()->IsGLES2()) {
+        if (sGLContext.get()->IsGLES()) {
             return reinterpret_cast<const GLubyte*>("OpenGL ES GLSL ES 1.0");
         } else {
             return reinterpret_cast<const GLubyte*>("1.10");
@@ -770,7 +770,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     context->MakeCurrent();
 
     // We support both desktop GL and GLES2
-    if (context->IsGLES2()) {
+    if (context->IsGLES()) {
         i->fStandard = kGLES_GrGLStandard;
     } else {
         i->fStandard = kGL_GrGLStandard;

@@ -273,7 +273,7 @@ gfxPlatform::gfxPlatform()
 #ifdef XP_WIN
     // XXX - When 957560 is fixed, the pref can go away entirely
     mLayersUseDeprecated =
-        Preferences::GetBool("layers.use-deprecated-textures", false)
+        Preferences::GetBool("layers.use-deprecated-textures", true)
         && !gfxPrefs::LayersPreferOpenGL();
 #else
     mLayersUseDeprecated = false;
@@ -632,6 +632,18 @@ void SourceBufferDestroy(void *srcSurfUD)
   delete static_cast<SourceSurfaceUserData*>(srcSurfUD);
 }
 
+UserDataKey kThebesSurface;
+
+struct DependentSourceSurfaceUserData
+{
+  nsRefPtr<gfxASurface> mSurface;
+};
+
+void SourceSurfaceDestroyed(void *aData)
+{
+  delete static_cast<DependentSourceSurfaceUserData*>(aData);
+}
+
 #if MOZ_TREE_CAIRO
 void SourceSnapshotDetached(cairo_surface_t *nullSurf)
 {
@@ -652,6 +664,34 @@ void
 gfxPlatform::ClearSourceSurfaceForSurface(gfxASurface *aSurface)
 {
   aSurface->SetData(&kSourceSurface, nullptr, nullptr);
+}
+
+static TemporaryRef<DataSourceSurface>
+CopySurface(gfxASurface* aSurface)
+{
+  const nsIntSize size = aSurface->GetSize();
+  gfxImageFormat format = gfxPlatform::GetPlatform()->OptimalFormatForContent(aSurface->GetContentType());
+  RefPtr<DataSourceSurface> data =
+    Factory::CreateDataSourceSurface(ToIntSize(size),
+                                     ImageFormatToSurfaceFormat(format));
+  if (!data) {
+    return nullptr;
+  }
+
+  DataSourceSurface::MappedSurface map;
+  DebugOnly<bool> result = data->Map(DataSourceSurface::WRITE, &map);
+  MOZ_ASSERT(result, "Should always succeed mapping raw data surfaces!");
+
+  nsRefPtr<gfxImageSurface> image = new gfxImageSurface(map.mData, size, map.mStride, format);
+  nsRefPtr<gfxContext> ctx = new gfxContext(image);
+
+  ctx->SetSource(aSurface);
+  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+  ctx->Paint();
+
+  data->Unmap();
+
+  return data;
 }
 
 RefPtr<SourceSurface>
@@ -722,18 +762,24 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     }
   }
 
+  bool dependsOnData = false;
   if (!srcBuffer) {
     nsRefPtr<gfxImageSurface> imgSurface = aSurface->GetAsImageSurface();
 
-    bool isWin32ImageSurf = imgSurface &&
-                            aSurface->GetType() == gfxSurfaceType::Win32;
-
+    RefPtr<DataSourceSurface> copy;
     if (!imgSurface) {
-      imgSurface = new gfxImageSurface(aSurface->GetSize(), OptimalFormatForContent(aSurface->GetContentType()));
-      nsRefPtr<gfxContext> ctx = new gfxContext(imgSurface);
-      ctx->SetSource(aSurface);
-      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-      ctx->Paint();
+      copy = CopySurface(aSurface);
+
+      if (!copy) {
+        return nullptr;
+      }
+
+      DataSourceSurface::MappedSurface map;
+      DebugOnly<bool> result = copy->Map(DataSourceSurface::WRITE, &map);
+      MOZ_ASSERT(result, "Should always succeed mapping raw data surfaces!");
+
+      imgSurface = new gfxImageSurface(map.mData, aSurface->GetSize(), map.mStride,
+                                       SurfaceFormatToImageFormat(copy->GetFormat()));
     }
 
     gfxImageFormat cairoFormat = imgSurface->Format();
@@ -760,38 +806,56 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
                                                      imgSurface->Stride(),
                                                      format);
 
-    if (!srcBuffer) {
-      // We need to check if our gfxASurface will keep the underlying data
-      // alive. This is true if gfxASurface actually -is- an ImageSurface or
-      // if it is a gfxWindowsSurface which supports GetAsImageSurface.
-      if (imgSurface != aSurface && !isWin32ImageSurf) {
-        return nullptr;
-      }
-
-      srcBuffer = Factory::CreateWrappingDataSourceSurface(imgSurface->Data(),
-                                                           imgSurface->Stride(),
-                                                           size, format);
-
+    if (copy) {
+      copy->Unmap();
     }
 
+    if (!srcBuffer) {
+      // If we had to make a copy, then just return that. Otherwise aSurface
+      // must have supported GetAsImageSurface, so we can just wrap that data.
+      if (copy) {
+        srcBuffer = copy;
+      } else {
+        srcBuffer = Factory::CreateWrappingDataSourceSurface(imgSurface->Data(),
+                                                             imgSurface->Stride(),
+                                                             size, format);
+        dependsOnData = true;
+      }
+    }
+
+    if (!srcBuffer) {
+      return nullptr;
+    }
+
+    if (!dependsOnData) {
 #if MOZ_TREE_CAIRO
-    cairo_surface_t *nullSurf =
-	cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
-    cairo_surface_set_user_data(nullSurf,
-                                &kSourceSurface,
-                                imgSurface,
-                                nullptr);
-    cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
-    cairo_surface_destroy(nullSurf);
+      cairo_surface_t *nullSurf =
+      cairo_null_surface_create(CAIRO_CONTENT_COLOR_ALPHA);
+      cairo_surface_set_user_data(nullSurf,
+                                  &kSourceSurface,
+                                  imgSurface,
+                                  nullptr);
+      cairo_surface_attach_snapshot(imgSurface->CairoSurface(), nullSurf, SourceSnapshotDetached);
+      cairo_surface_destroy(nullSurf);
 #else
-    cairo_surface_set_mime_data(imgSurface->CairoSurface(), "mozilla/magic", (const unsigned char*) "data", 4, SourceSnapshotDetached, imgSurface.get());
+      cairo_surface_set_mime_data(imgSurface->CairoSurface(), "mozilla/magic", (const unsigned char*) "data", 4, SourceSnapshotDetached, imgSurface.get());
 #endif
+    }
   }
 
-  SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;
-  srcSurfUD->mBackendType = aTarget->GetType();
-  srcSurfUD->mSrcSurface = srcBuffer;
-  aSurface->SetData(&kSourceSurface, srcSurfUD, SourceBufferDestroy);
+  if (dependsOnData) {
+    // If we wrapped the underlying data of aSurface, then we need to add user data
+    // to make sure aSurface stays alive until we are done with the data.
+    DependentSourceSurfaceUserData *srcSurfUD = new DependentSourceSurfaceUserData;
+    srcSurfUD->mSurface = aSurface;
+    srcBuffer->AddUserData(&kThebesSurface, srcSurfUD, SourceSurfaceDestroyed);
+  } else {
+    // Otherwise add user data to aSurface so we can cache lookups in the future.
+    SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;
+    srcSurfUD->mBackendType = aTarget->GetType();
+    srcSurfUD->mSrcSurface = srcBuffer;
+    aSurface->SetData(&kSourceSurface, srcSurfUD, SourceBufferDestroy);
+  }
 
   return srcBuffer;
 }

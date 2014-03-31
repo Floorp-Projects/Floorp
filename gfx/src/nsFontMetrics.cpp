@@ -74,6 +74,14 @@ public:
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 0;
     }
+    virtual already_AddRefed<gfxContext> GetContext() {
+        NS_ERROR("This shouldn't be called because we never enable hyphens");
+        return nullptr;
+    }
+    virtual uint32_t GetAppUnitsPerDevUnit() {
+        NS_ERROR("This shouldn't be called because we never enable hyphens");
+        return 60;
+    }
     virtual void GetSpacing(uint32_t aStart, uint32_t aLength,
                             Spacing* aSpacing) {
         NS_ERROR("This shouldn't be called because we never enable spacing");

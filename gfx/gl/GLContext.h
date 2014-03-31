@@ -71,6 +71,7 @@ namespace mozilla {
         class GLBlitTextureImageHelper;
         class GLReadTexImageHelper;
         class SharedSurface_GL;
+        class GLDrawRectHelper;
     }
 
     namespace layers {
@@ -286,16 +287,6 @@ public:
     virtual GLContextType GetContextType() const = 0;
 
     virtual bool IsCurrent() = 0;
-
-    /**
-     * If this context is the GLES2 API, returns TRUE.
-     * This means that various GLES2 restrictions might be in effect (modulo
-     * extensions).
-     */
-    inline bool IsGLES2() const {
-        return IsAtLeast(ContextProfile::OpenGLES, 200);
-    }
-
 
 protected:
 
@@ -1779,7 +1770,7 @@ public:
 
 private:
     void raw_fGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
-        MOZ_ASSERT(IsGLES2());
+        MOZ_ASSERT(IsGLES());
 
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fGetShaderPrecisionFormat);
@@ -1789,7 +1780,7 @@ private:
 
 public:
     void fGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision) {
-        if (IsGLES2()) {
+        if (IsGLES()) {
             raw_fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
         } else {
             // Fall back to automatic values because almost all desktop hardware supports the OpenGL standard precisions.
@@ -1877,7 +1868,7 @@ public:
 
 private:
     void raw_fDepthRange(GLclampf a, GLclampf b) {
-        MOZ_ASSERT(!IsGLES2());
+        MOZ_ASSERT(!IsGLES());
 
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDepthRange);
@@ -1886,7 +1877,7 @@ private:
     }
 
     void raw_fDepthRangef(GLclampf a, GLclampf b) {
-        MOZ_ASSERT(IsGLES2());
+        MOZ_ASSERT(IsGLES());
 
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fDepthRangef);
@@ -1895,7 +1886,7 @@ private:
     }
 
     void raw_fClearDepth(GLclampf v) {
-        MOZ_ASSERT(!IsGLES2());
+        MOZ_ASSERT(!IsGLES());
 
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fClearDepth);
@@ -1904,7 +1895,7 @@ private:
     }
 
     void raw_fClearDepthf(GLclampf v) {
-        MOZ_ASSERT(IsGLES2());
+        MOZ_ASSERT(IsGLES());
 
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fClearDepthf);
@@ -1914,7 +1905,7 @@ private:
 
 public:
     void fDepthRange(GLclampf a, GLclampf b) {
-        if (IsGLES2()) {
+        if (IsGLES()) {
             raw_fDepthRangef(a, b);
         } else {
             raw_fDepthRange(a, b);
@@ -1922,7 +1913,7 @@ public:
     }
 
     void fClearDepth(GLclampf v) {
-        if (IsGLES2()) {
+        if (IsGLES()) {
             raw_fClearDepthf(v);
         } else {
             raw_fClearDepth(v);
@@ -2735,11 +2726,13 @@ protected:
     ScopedDeletePtr<GLBlitHelper> mBlitHelper;
     ScopedDeletePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
     ScopedDeletePtr<GLReadTexImageHelper> mReadTexImageHelper;
+    ScopedDeletePtr<GLDrawRectHelper> mDrawRectHelper;
 
 public:
     GLBlitHelper* BlitHelper();
     GLBlitTextureImageHelper* BlitTextureImageHelper();
     GLReadTexImageHelper* ReadTexImageHelper();
+    GLDrawRectHelper* DrawRectHelper();
 
     // Assumes shares are created by all sharing with the same global context.
     bool SharesWith(const GLContext* other) const {

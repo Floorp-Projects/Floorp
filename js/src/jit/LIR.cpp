@@ -119,10 +119,28 @@ TotalOperandCount(MResumePoint *mir)
     return accum;
 }
 
-LSnapshot::LSnapshot(MResumePoint *mir, BailoutKind kind)
-  : numSlots_(TotalOperandCount(mir) * BOX_PIECES),
+LRecoverInfo::LRecoverInfo(MResumePoint *mir)
+  : mir_(mir),
+    recoverOffset_(INVALID_RECOVER_OFFSET)
+{ }
+
+LRecoverInfo *
+LRecoverInfo::New(MIRGenerator *gen, MResumePoint *mir)
+{
+    LRecoverInfo *recover = new(gen->alloc()) LRecoverInfo(mir);
+    if (!recover)
+        return nullptr;
+
+    IonSpew(IonSpew_Snapshots, "Generating LIR recover %p from MIR (%p)",
+            (void *)recover, (void *)mir);
+
+    return recover;
+}
+
+LSnapshot::LSnapshot(LRecoverInfo *recover, BailoutKind kind)
+  : numSlots_(TotalOperandCount(recover->mir()) * BOX_PIECES),
     slots_(nullptr),
-    mir_(mir),
+    recoverInfo_(recover),
     snapshotOffset_(INVALID_SNAPSHOT_OFFSET),
     bailoutId_(INVALID_BAILOUT_ID),
     bailoutKind_(kind)
@@ -136,14 +154,14 @@ LSnapshot::init(MIRGenerator *gen)
 }
 
 LSnapshot *
-LSnapshot::New(MIRGenerator *gen, MResumePoint *mir, BailoutKind kind)
+LSnapshot::New(MIRGenerator *gen, LRecoverInfo *recover, BailoutKind kind)
 {
-    LSnapshot *snapshot = new(gen->alloc()) LSnapshot(mir, kind);
-    if (!snapshot->init(gen))
+    LSnapshot *snapshot = new(gen->alloc()) LSnapshot(recover, kind);
+    if (!snapshot || !snapshot->init(gen))
         return nullptr;
 
-    IonSpew(IonSpew_Snapshots, "Generating LIR snapshot %p from MIR (%p)",
-            (void *)snapshot, (void *)mir);
+    IonSpew(IonSpew_Snapshots, "Generating LIR snapshot %p from recover (%p)",
+            (void *)snapshot, (void *)recover);
 
     return snapshot;
 }
