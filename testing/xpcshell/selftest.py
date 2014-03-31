@@ -178,6 +178,49 @@ function run_test() {
 };
 '''
 
+# A test for asynchronous cleanup functions
+ASYNC_CLEANUP = '''
+function run_test() {
+  Components.utils.import("resource://gre/modules/Promise.jsm", this);
+
+  // The list of checkpoints in the order we encounter them.
+  let checkpoints = [];
+
+  // Cleanup tasks, in reverse order
+  do_register_cleanup(function cleanup_checkout() {
+    do_check_eq(checkpoints.join(""), "1234");
+    do_print("At this stage, the test has succeeded");
+    do_throw("Throwing an error to force displaying the log");
+  });
+
+  do_register_cleanup(function sync_cleanup_2() {
+    checkpoints.push(4);
+  });
+
+  do_register_cleanup(function async_cleanup_2() {
+    let deferred = Promise.defer();
+    do_execute_soon(deferred.resolve);
+    return deferred.promise.then(function() {
+      checkpoints.push(3);
+    });
+  });
+
+  do_register_cleanup(function sync_cleanup() {
+    checkpoints.push(2);
+  });
+
+  do_register_cleanup(function async_cleanup() {
+    let deferred = Promise.defer();
+    do_execute_soon(deferred.resolve);
+    return deferred.promise.then(function() {
+      checkpoints.push(1);
+    });
+  });
+
+}
+'''
+
+
 class XPCShellTestsTests(unittest.TestCase):
     """
     Yes, these are unit tests for a unit test harness.
@@ -722,6 +765,18 @@ tail =
         self.assertInLog("Diagnostic: TypeError: generator function run_test returns a value at")
         self.assertInLog("test_error.js:4")
         self.assertNotInLog("TEST-PASS")
+
+    def testAsyncCleanup(self):
+        """
+        Check that do_register_cleanup handles nicely cleanup tasks that
+        return a promise
+        """
+        self.writeFile("test_asyncCleanup.js", ASYNC_CLEANUP)
+        self.writeManifest(["test_asyncCleanup.js"])
+        self.assertTestResult(False)
+        self.assertInLog("\"1234\" == \"1234\"")
+        self.assertInLog("At this stage, the test has succeeded")
+        self.assertInLog("Throwing an error to force displaying the log")
 
 if __name__ == "__main__":
     unittest.main()
