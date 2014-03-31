@@ -36,7 +36,7 @@ namespace android {
 namespace mozilla {
 
 namespace layers {
-  class GraphicBufferLocked;
+  class TextureClient;
   class ImageContainer;
 }
 
@@ -51,7 +51,7 @@ public:
   void OnAutoFocusComplete(bool aSuccess);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength);
   void OnTakePictureError();
-  void OnNewPreviewFrame(layers::GraphicBufferLocked* aBuffer);
+  void OnNewPreviewFrame(layers::TextureClient* aBuffer);
   void OnRecorderEvent(int msg, int ext1, int ext2);
   void OnError(CameraControlListener::CameraErrorContext aWhere,
                CameraControlListener::CameraError aError);
@@ -163,7 +163,7 @@ private:
 void OnTakePictureComplete(nsGonkCameraControl* gc, uint8_t* aData, uint32_t aLength);
 void OnTakePictureError(nsGonkCameraControl* gc);
 void OnAutoFocusComplete(nsGonkCameraControl* gc, bool aSuccess);
-void OnNewPreviewFrame(nsGonkCameraControl* gc, layers::GraphicBufferLocked* aBuffer);
+void OnNewPreviewFrame(nsGonkCameraControl* gc, layers::TextureClient* aBuffer);
 void OnShutter(nsGonkCameraControl* gc);
 void OnClosed(nsGonkCameraControl* gc);
 void OnError(nsGonkCameraControl* gc, CameraControlListener::CameraError aError,
