@@ -204,14 +204,12 @@ public:
                         nsIContent* aNextPopup,
                         nsIContent* aLastPopup,
                         nsPopupType aPopupType,
-                        bool aDeselectMenu,
-                        bool aIsRollup)
+                        bool aDeselectMenu)
     : mPopup(aPopup),
       mNextPopup(aNextPopup),
       mLastPopup(aLastPopup),
       mPopupType(aPopupType),
-      mDeselectMenu(aDeselectMenu),
-      mIsRollup(aIsRollup)
+      mDeselectMenu(aDeselectMenu)
   {
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupHidingEvent constructor");
     // aNextPopup and aLastPopup may be null
@@ -225,7 +223,6 @@ private:
   nsCOMPtr<nsIContent> mLastPopup;
   nsPopupType mPopupType;
   bool mDeselectMenu;
-  bool mIsRollup;
 };
 
 // this class is used for dispatching menu command events asynchronously.
@@ -279,7 +276,6 @@ public:
   friend class nsXULPopupShowingEvent;
   friend class nsXULPopupHidingEvent;
   friend class nsXULMenuCommandEvent;
-  friend class TransitionEnder;
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -437,7 +433,6 @@ public:
    * aAsynchronous - true if the first popuphiding event should be sent
    *                 asynchrously. This should be true if HidePopup is called
    *                 from a frame.
-   * aIsRollup - true if this popup is hiding due to a rollup or escape keypress.
    * aLastPopup - optional popup to close last when hiding a chain of menus.
    *              If null, then all popups will be closed.
    */
@@ -445,7 +440,6 @@ public:
                  bool aHideChain,
                  bool aDeselectMenu,
                  bool aAsynchronous,
-                 bool aIsRollup,
                  nsIContent* aLastPopup = nullptr);
 
   /**
@@ -640,9 +634,7 @@ protected:
                          nsIContent* aNextPopup,
                          nsIContent* aLastPopup,
                          nsPopupType aPopupType,
-                         bool aDeselectMenu,
-                         bool aIsRollup);
-  void HidePopupFrame(nsIContent* aPopup, bool aDeselectMenu);
+                         bool aDeselectMenu);
 
   /**
    * Fire a popupshowing event on the popup and then open the popup.
@@ -672,15 +664,13 @@ protected:
    * aPresContext - nsPresContext for the popup's frame
    * aPopupType - the PopupType of the frame. 
    * aDeselectMenu - true to unhighlight the menu when hiding it
-   * aIsRollup - true if this popup is hiding due to a rollup or escape keypress
    */
   void FirePopupHidingEvent(nsIContent* aPopup,
                             nsIContent* aNextPopup,
                             nsIContent* aLastPopup,
                             nsPresContext *aPresContext,
                             nsPopupType aPopupType,
-                            bool aDeselectMenu,
-                            bool aIsRollup);
+                            bool aDeselectMenu);
 
   /**
    * Handle keyboard navigation within a menu popup specified by aItem.

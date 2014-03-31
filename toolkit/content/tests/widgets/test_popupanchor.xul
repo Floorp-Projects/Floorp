@@ -10,7 +10,6 @@
 
   <panel id="testPanel"
          type="arrow"
-         animate="false"
          noautohide="true">
   </panel>
 

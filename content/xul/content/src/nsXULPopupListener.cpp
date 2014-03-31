@@ -296,7 +296,7 @@ nsXULPopupListener::ClosePopup()
     // fire events during destruction.  
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm)
-      pm->HidePopup(mPopupContent, false, true, true, false);
+      pm->HidePopup(mPopupContent, false, true, true);
     mPopupContent = nullptr;  // release the popup
   }
 } // ClosePopup

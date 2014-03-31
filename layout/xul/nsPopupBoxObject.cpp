@@ -50,7 +50,7 @@ nsPopupBoxObject::HidePopup()
 {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mContent)
-    pm->HidePopup(mContent, false, true, false, false);
+    pm->HidePopup(mContent, false, true, false);
 
   return NS_OK;
 }

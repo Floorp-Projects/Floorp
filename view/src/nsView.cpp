@@ -1024,7 +1024,7 @@ nsView::RequestWindowClose(nsIWidget* aWidget)
       mFrame->GetType() == nsGkAtoms::menuPopupFrame) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      pm->HidePopup(mFrame->GetContent(), false, true, false, false);
+      pm->HidePopup(mFrame->GetContent(), false, true, false);
       return true;
     }
   }
