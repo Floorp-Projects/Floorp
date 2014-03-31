@@ -15,7 +15,6 @@ EXPORTS.mozilla.dom += [
 
 SOURCES += [
     'CreateDirectoryTask.cpp',
-    'CreateFileTask.cpp',
     'DeviceStorageFileSystem.cpp',
     'Directory.cpp',
     'FileSystemBase.cpp',
