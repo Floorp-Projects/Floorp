@@ -1147,8 +1147,8 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         JS_ASSERT(lazy->source()->hasSourceData());
 
         // Parse and compile the script from source.
-        SourceDataCache::AutoSuppressPurge asp(cx);
-        const jschar *chars = lazy->source()->chars(cx, asp);
+        SourceDataCache::AutoHoldEntry holder;
+        const jschar *chars = lazy->source()->chars(cx, holder);
         if (!chars)
             return false;
 
