@@ -5840,6 +5840,10 @@ if test "$OS_TARGET" = "WINNT" -a -z "$CROSS_COMPILE"; then
   fi
 fi
 
+# On mingw, check if headers are provided by toolchain.
+if test "$OS_TARGET" = "WINNT" -a -n "$GNU_CC"; then
+  MOZ_CHECK_HEADER(d3d10.h, MOZ_HAS_WINSDK_WITH_D3D=1)
+fi
 
 dnl ========================================================
 dnl D3D compiler DLL
@@ -5914,7 +5918,7 @@ if test -n "$MOZ_ANGLE_RENDERER"; then
     fi
   fi
 
-  if test -z "$MOZ_D3DCOMPILER_DLL_PATH" -a -z "$MOZ_D3DCOMPILER_CAB"; then
+  if test -z "$MOZ_D3DCOMPILER_DLL_PATH" -a -z "$MOZ_D3DCOMPILER_CAB" -a -z "$CROSS_COMPILE"; then
     AC_MSG_ERROR([Couldn't find an acceptable D3D compiler DLL. Either install Windows SDK 8.0+ and reconfigure with --enable-winsdk-directx, install DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
   fi
 fi
