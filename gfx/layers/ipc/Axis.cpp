@@ -22,6 +22,58 @@
 namespace mozilla {
 namespace layers {
 
+/**
+ * These are the preferences that control the behavior of APZ
+ */
+
+/**
+ * "apz.max_event_acceleration"
+ *
+ * Maximum acceleration that can happen between two frames. Velocity is
+ * throttled if it's above this. This may happen if a time delta is very low,
+ * or we get a touch point very far away from the previous position for some
+ * reason.
+ *
+ * The default value is 999.0f, set in gfxPrefs.h
+ */
+
+/**
+ * "apz.fling_friction"
+ *
+ * Amount of friction applied during flings.
+ *
+ * The default value is 0.002f, set in gfxPrefs.h
+ */
+
+/**
+ * "apz.fling_stopped_threshold"
+ *
+ * When flinging, if the velocity goes below this number, we just stop the
+ * animation completely. This is to prevent asymptotically approaching 0
+ * velocity and rerendering unnecessarily.
+ *
+ * The default value is 0.01f, set in gfxPrefs.h.
+ */
+
+/**
+ * "apz.max_velocity_queue_size"
+ *
+ * Maximum size of velocity queue. The queue contains last N velocity records.
+ * On touch end we calculate the average velocity in order to compensate
+ * touch/mouse drivers misbehaviour.
+ *
+ * The default value is 5, set in gfxPrefs.h
+ */
+
+/**
+ * "apz.max_velocity_inches_per_ms"
+ *
+ * Maximum velocity in inches per millisecond.  Velocity will be capped at this
+ * value if a faster fling occurs.  Negative values indicate unlimited velocity.
+ *
+ * The default value is -1.0f, set in gfxPrefs.h
+ */
+
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
     mVelocity(0.0f),
