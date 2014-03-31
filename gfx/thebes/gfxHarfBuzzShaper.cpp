@@ -95,6 +95,24 @@ gfxHarfBuzzShaper::GetGlyph(hb_codepoint_t unicode,
                                                         unicode,
                                                         variation_selector);
             }
+            if (!gid) {
+                uint32_t compat =
+                    gfxFontUtils::GetUVSFallback(unicode, variation_selector);
+                if (compat) {
+                    switch (mCmapFormat) {
+                    case 4:
+                        if (compat < UNICODE_BMP_LIMIT) {
+                            gid = gfxFontUtils::MapCharToGlyphFormat4(data + mSubtableOffset,
+                                                                      compat);
+                        }
+                        break;
+                    case 12:
+                        gid = gfxFontUtils::MapCharToGlyphFormat12(data + mSubtableOffset,
+                                                                   compat);
+                        break;
+                    }
+                }
+            }
             // If the variation sequence was not supported, return zero here;
             // harfbuzz will call us again for the base character alone
             return gid;
