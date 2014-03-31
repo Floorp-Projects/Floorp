@@ -17,6 +17,12 @@ import java.util.regex.Pattern;
  */
 public final class JavascriptMessageParser {
 
+    /**
+    * The Javascript test harness sends test events to Java.
+    * Each such test event is wrapped in a Robocop:JS event.
+    */
+    public static final String EVENT_TYPE = "Robocop:JS";
+
     // Messages matching this pattern are handled specially.  Messages not
     // matching this pattern are still printed.
     private static final Pattern testMessagePattern =
