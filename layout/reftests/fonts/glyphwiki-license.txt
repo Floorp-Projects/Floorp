@@ -1,3 +1,5 @@
+gw432047.ttf, gw1270797.ttf
+
 <http://en.glyphwiki.org/wiki/GlyphWiki:License>
 '''This document is a direct translation of the October 8th, 2008 revision of the Japanese original at ([[GlyphWiki:データ・記事のライセンス]]). This translation is provided as a service, and should not be taken to be a definitive statement. Please be aware that in case the Japanese original and the English version differ, the Japanese original takes precedence.'''
 
