@@ -594,6 +594,10 @@ SnapshotOffset
 SnapshotWriter::startSnapshot(RecoverOffset recoverOffset, BailoutKind kind)
 {
     lastStart_ = writer_.length();
+    allocWritten_ = 0;
+
+    IonSpew(IonSpew_Snapshots, "starting snapshot with recover offset %u, bailout kind %u",
+            recoverOffset, kind);
 
     JS_ASSERT(uint32_t(kind) < (1 << SNAPSHOT_BAILOUTKIND_BITS));
     JS_ASSERT(recoverOffset < (1 << SNAPSHOT_ROFFSET_BITS));
@@ -658,20 +662,15 @@ SnapshotWriter::endSnapshot()
             uint32_t(writer_.length() - lastStart_), lastStart_);
 }
 
-RecoverWriter::RecoverWriter(SnapshotWriter &snapshot)
-  : snapshot_(snapshot)
-{
-}
-
-SnapshotOffset
-RecoverWriter::startRecover(uint32_t frameCount, BailoutKind kind, bool resumeAfter)
+RecoverOffset
+RecoverWriter::startRecover(uint32_t frameCount, bool resumeAfter)
 {
     MOZ_ASSERT(frameCount);
     nframes_ = frameCount;
     framesWritten_ = 0;
 
-    IonSpew(IonSpew_Snapshots, "starting snapshot with frameCount %u, bailout kind %u",
-            frameCount, kind);
+    IonSpew(IonSpew_Snapshots, "starting recover with frameCount %u",
+            frameCount);
 
     MOZ_ASSERT(!(uint32_t(resumeAfter) &~ RECOVER_RESUMEAFTER_MASK));
     MOZ_ASSERT(frameCount < uint32_t(1 << RECOVER_FRAMECOUNT_BITS));
@@ -680,13 +679,12 @@ RecoverWriter::startRecover(uint32_t frameCount, BailoutKind kind, bool resumeAf
         (frameCount << RECOVER_FRAMECOUNT_SHIFT);
 
     RecoverOffset recoverOffset = writer_.length();
-    SnapshotOffset snapshotOffset = snapshot_.startSnapshot(recoverOffset, kind);
     writer_.writeUnsigned(bits);
-    return snapshotOffset;
+    return recoverOffset;
 }
 
 void
-RecoverWriter::startFrame(JSFunction *fun, JSScript *script,
+RecoverWriter::writeFrame(JSFunction *fun, JSScript *script,
                           jsbytecode *pc, uint32_t exprStack)
 {
     // Test if we honor the maximum of arguments at all times.
@@ -696,30 +694,20 @@ RecoverWriter::startFrame(JSFunction *fun, JSScript *script,
 
     uint32_t implicit = StartArgSlot(script);
     uint32_t formalArgs = CountArgSlots(script, fun);
-
-    nallocs_ = formalArgs + script->nfixed() + exprStack;
-    snapshot_.allocWritten_ = 0;
+    uint32_t nallocs = formalArgs + script->nfixed() + exprStack;
 
     IonSpew(IonSpew_Snapshots, "Starting frame; implicit %u, formals %u, fixed %u, exprs %u",
             implicit, formalArgs - implicit, script->nfixed(), exprStack);
 
     uint32_t pcoff = script->pcToOffset(pc);
-    IonSpew(IonSpew_Snapshots, "Writing pc offset %u, nslots %u", pcoff, nallocs_);
+    IonSpew(IonSpew_Snapshots, "Writing pc offset %u, nslots %u", pcoff, nallocs);
     writer_.writeUnsigned(pcoff);
-    writer_.writeUnsigned(nallocs_);
-}
-
-void
-RecoverWriter::endFrame()
-{
-    MOZ_ASSERT(snapshot_.allocWritten_ == nallocs_);
-    nallocs_ = snapshot_.allocWritten_ = 0;
+    writer_.writeUnsigned(nallocs);
     framesWritten_++;
 }
 
 void
 RecoverWriter::endRecover()
 {
-    snapshot_.endSnapshot();
     JS_ASSERT(nframes_ == framesWritten_);
 }

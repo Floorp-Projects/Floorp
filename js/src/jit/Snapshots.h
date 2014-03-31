@@ -302,8 +302,6 @@ class RValueAllocation
     };
 };
 
-typedef uint32_t RecoverOffset;
-
 class RecoverWriter;
 
 // Collects snapshots in a contiguous buffer, which is copied into IonScript
@@ -336,6 +334,9 @@ class SnapshotWriter
 #endif
     bool add(const RValueAllocation &slot);
 
+    uint32_t allocWritten() const {
+        return allocWritten_;
+    }
     void endSnapshot();
 
     bool oom() const {
@@ -361,20 +362,14 @@ class SnapshotWriter
 class RecoverWriter
 {
     CompactBufferWriter writer_;
-    SnapshotWriter &snapshot_;
-
-    uint32_t nallocs_;
 
     uint32_t nframes_;
     uint32_t framesWritten_;
 
   public:
-    RecoverWriter(SnapshotWriter &snapshot);
+    SnapshotOffset startRecover(uint32_t frameCount, bool resumeAfter);
 
-    SnapshotOffset startRecover(uint32_t frameCount, BailoutKind kind, bool resumeAfter);
-
-    void startFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
-    void endFrame();
+    void writeFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
 
     void endRecover();
 
