@@ -319,7 +319,8 @@ DOMDownloadImpl.prototype = {
     });
 
     if (aDownload.error) {
-      this.error = new this._window.DOMError("DownloadError", aDownload.error);
+      this.error =
+        new this._window.DOMError("DownloadError", aDownload.error.result);
     } else {
       this.error = null;
     }
