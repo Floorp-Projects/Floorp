@@ -273,7 +273,7 @@ gfxPlatform::gfxPlatform()
 #ifdef XP_WIN
     // XXX - When 957560 is fixed, the pref can go away entirely
     mLayersUseDeprecated =
-        Preferences::GetBool("layers.use-deprecated-textures", true)
+        Preferences::GetBool("layers.use-deprecated-textures", false)
         && !gfxPrefs::LayersPreferOpenGL();
 #else
     mLayersUseDeprecated = false;
