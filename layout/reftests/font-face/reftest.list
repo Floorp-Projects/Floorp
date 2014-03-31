@@ -142,6 +142,7 @@ HTTP(..) == font-familiy-whitespace-1.html font-familiy-whitespace-1-ref.html
 HTTP(..) != font-familiy-whitespace-1.html font-familiy-whitespace-1-notref.html
 
 skip-if(B2G) HTTP(..) == ivs-1.html ivs-1-ref.html # bug 773482
+skip-if(B2G) HTTP(..) == cjkcisvs-1.html cjkcisvs-1-ref.html
 
 skip-if(B2G) HTTP(..) == missing-names.html missing-names-ref.html # bug 773482
 

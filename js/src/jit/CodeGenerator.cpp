@@ -6110,6 +6110,7 @@ CodeGenerator::generateAsmJS()
     // every step in CodeGenerator::link must be a nop, as asserted here:
     JS_ASSERT(snapshots_.listSize() == 0);
     JS_ASSERT(snapshots_.RVATableSize() == 0);
+    JS_ASSERT(recovers_.size() == 0);
     JS_ASSERT(bailouts_.empty());
     JS_ASSERT(graph.numConstants() == 0);
     JS_ASSERT(safepointIndices_.empty());
@@ -6233,7 +6234,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
       IonScript::New(cx, recompileInfo,
                      graph.totalSlotCount(), scriptFrameSize,
                      snapshots_.listSize(), snapshots_.RVATableSize(),
-                     bailouts_.length(), graph.numConstants(),
+                     recovers_.size(), bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), callTargets.length(),
@@ -6343,6 +6344,9 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         ionScript->copyOsiIndices(&osiIndices_[0], masm);
     if (snapshots_.listSize())
         ionScript->copySnapshots(&snapshots_);
+    MOZ_ASSERT_IF(snapshots_.listSize(), recovers_.size());
+    if (recovers_.size())
+        ionScript->copyRecovers(&recovers_);
     if (graph.numConstants())
         ionScript->copyConstants(graph.constantPool());
     if (callTargets.length() > 0)

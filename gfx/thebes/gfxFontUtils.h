@@ -639,6 +639,8 @@ enum gfxUserFontType {
     GFX_USERFONT_WOFF = 3
 };
 
+extern const uint8_t sCJKCompatSVSTable[];
+
 class gfxFontUtils {
 
 public:
@@ -783,6 +785,15 @@ public:
 
     static uint16_t
     MapUVSToGlyphFormat14(const uint8_t *aBuf, uint32_t aCh, uint32_t aVS);
+
+    // sCJKCompatSVSTable is a 'cmap' format 14 subtable that maps
+    // <char + var-selector> pairs to the corresponding Unicode
+    // compatibility ideograph codepoints.
+    static MOZ_ALWAYS_INLINE uint32_t
+    GetUVSFallback(uint32_t aCh, uint32_t aVS) {
+        aCh = MapUVSToGlyphFormat14(sCJKCompatSVSTable, aCh, aVS);
+        return aCh >= 0xFB00 ? aCh + (0x2F800 - 0xFB00) : aCh;
+    }
 
     static uint32_t
     MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
