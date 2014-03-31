@@ -38,6 +38,22 @@ using namespace gfx;
 
 namespace layers {
 
+static TextureFlags TextureFlagsForRotatedContentBufferFlags(uint32_t aBufferFlags)
+{
+  TextureFlags result = 0;
+
+  if (aBufferFlags & RotatedContentBuffer::BUFFER_COMPONENT_ALPHA) {
+    result |= TEXTURE_COMPONENT_ALPHA;
+  }
+
+  if (aBufferFlags & RotatedContentBuffer::ALLOW_REPEAT) {
+    result |= TEXTURE_ALLOW_REPEAT;
+  }
+
+  return result;
+}
+
+
 /* static */ TemporaryRef<ContentClient>
 ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 {
@@ -51,7 +67,12 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
 
   bool useDoubleBuffering = false;
   bool useDeprecatedTextures = true;
+  // XXX We need support for gralloc with non-deprecated textures content before
+  // we can use them with FirefoxOS (bug 946720). We need the same locking for
+  // Windows.
+#if !defined(XP_WIN)
   useDeprecatedTextures = gfxPlatform::GetPlatform()->UseDeprecatedTextures();
+#endif
 
 #ifdef XP_WIN
   if (backend == LayersBackend::LAYERS_D3D11) {
@@ -210,7 +231,7 @@ ContentClientRemoteBuffer::BuildTextureClients(SurfaceFormat aFormat,
 
   mSurfaceFormat = aFormat;
   mSize = gfx::IntSize(aRect.width, aRect.height);
-  mTextureInfo.mTextureFlags = aFlags & ~TEXTURE_DEALLOCATE_CLIENT;
+  mTextureInfo.mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
   if (!CreateAndAllocateTextureClient(mTextureClient, TEXTURE_ON_BLACK) ||
       !AddTextureClient(mTextureClient)) {
@@ -396,19 +417,18 @@ DeprecatedContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType a
 
   mContentType = aType;
   mSize = gfx::IntSize(aRect.width, aRect.height);
-  mTextureInfo.mTextureFlags = aFlags & ~TEXTURE_DEALLOCATE_CLIENT;
+  mTextureInfo.mTextureFlags = TextureFlagsForRotatedContentBufferFlags(aFlags);
 
   if (!CreateAndAllocateDeprecatedTextureClient(mDeprecatedTextureClient)) {
     return;
   }
-  
+
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
     if (!CreateAndAllocateDeprecatedTextureClient(mDeprecatedTextureClientOnWhite)) {
       mDeprecatedTextureClient->SetFlags(0);
       mDeprecatedTextureClient = nullptr;
       return;
     }
-    mTextureInfo.mTextureFlags |= TEXTURE_COMPONENT_ALPHA;
   }
 
   CreateFrontBufferAndNotify(aRect);

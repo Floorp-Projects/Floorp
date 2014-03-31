@@ -9,7 +9,6 @@
 
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
-#include "GrallocImages.h"
 #include "mozilla/layers/FenceUtils.h"
 #include "MP3FrameParser.h"
 #include "MPAPI.h"
@@ -20,26 +19,6 @@
 namespace android {
 class OmxDecoder;
 };
-
-namespace mozilla {
-namespace layers {
-
-class VideoGraphicBuffer : public GraphicBufferLocked {
-  // XXX change this to an actual smart pointer at some point
-  android::MediaBuffer *mMediaBuffer;
-  android::wp<android::OmxDecoder> mOmxDecoder;
-  public:
-    VideoGraphicBuffer(const android::wp<android::OmxDecoder> aOmxDecoder,
-                       android::MediaBuffer *aBuffer,
-                       SurfaceDescriptor& aDescriptor);
-    ~VideoGraphicBuffer();
-
-  protected:
-    void Unlock();
-};
-
-}
-}
 
 namespace android {
 
@@ -85,6 +64,7 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::AbstractMediaDecoder AbstractMediaDecoder;
   typedef mozilla::layers::FenceHandle FenceHandle;
+  typedef mozilla::layers::TextureClient TextureClient;
 
   enum {
     kPreferSoftwareCodecs = 1,
@@ -263,6 +243,8 @@ public:
   void onMessageReceived(const sp<AMessage> &msg);
 
   int64_t ProcessCachedData(int64_t aOffset, bool aWaitForCompletion);
+
+  static void RecycleCallback(TextureClient* aClient, void* aClosure);
 };
 
 }
