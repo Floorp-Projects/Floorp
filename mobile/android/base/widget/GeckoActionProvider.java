@@ -36,6 +36,8 @@ public class GeckoActionProvider {
 
     private final Context mContext;
 
+    public final static String DEFAULT_MIME_TYPE = "text/plain";
+
     public static final String DEFAULT_HISTORY_FILE_NAME = "history.xml";
 
     //  History file.
