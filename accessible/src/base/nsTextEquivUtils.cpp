@@ -344,7 +344,7 @@ nsTextEquivUtils::AppendString(nsAString *aString,
   return true;
 }
 
-uint32_t 
+uint32_t
 nsTextEquivUtils::GetRoleRule(role aRole)
 {
 #define ROLE(geckoRole, stringRole, atkRole, \
@@ -360,4 +360,3 @@ nsTextEquivUtils::GetRoleRule(role aRole)
 
 #undef ROLE
 }
-

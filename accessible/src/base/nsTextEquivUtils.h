@@ -44,6 +44,18 @@ public:
   typedef mozilla::a11y::Accessible Accessible;
 
   /**
+   * Determines if the accessible has a given name rule.
+   *
+   * @param aAccessible [in] the given accessible
+   * @param aRule       [in] a given name rule
+   * @return true if the accessible has the rule
+   */
+  static inline bool HasNameRule(Accessible* aAccessible, ETextEquivRule aRule)
+  {
+    return (GetRoleRule(aAccessible->Role()) & aRule) == aRule;
+  }
+
+  /**
    * Calculates the name from accessible subtree if allowed.
    *
    * @param aAccessible [in] the given accessible

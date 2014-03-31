@@ -9,6 +9,7 @@
 #include "nsEventShell.h"
 #include "DocAccessible.h"
 #include "nsAccessibilityService.h"
+#include "nsTextEquivUtils.h"
 #ifdef A11Y_LOG
 #include "Logging.h"
 #endif
@@ -36,6 +37,38 @@ EventQueue::PushEvent(AccEvent* aEvent)
 
   // Filter events.
   CoalesceEvents();
+
+  // Fire name change event on parent given that this event hasn't been
+  // coalesced, the parent's name was calculated from its subtree, and the
+  // subtree was changed.
+  Accessible* target = aEvent->mAccessible;
+  if (aEvent->mEventRule != AccEvent::eDoNotEmit &&
+      target->HasNameDependentParent() &&
+      (aEvent->mEventType == nsIAccessibleEvent::EVENT_NAME_CHANGE ||
+       aEvent->mEventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
+       aEvent->mEventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED ||
+       aEvent->mEventType == nsIAccessibleEvent::EVENT_SHOW ||
+       aEvent->mEventType == nsIAccessibleEvent::EVENT_HIDE)) {
+    // Only continue traversing up the tree if it's possible that the parent
+    // accessible's name can depend on this accessible's name.
+    Accessible* parent = target->Parent();
+    while (parent &&
+           nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeIfReqRule)) {
+      // Test possible name dependent parent.
+      if (nsTextEquivUtils::HasNameRule(parent, eNameFromSubtreeRule)) {
+        nsAutoString name;
+        ENameValueFlag nameFlag = parent->Name(name);
+        // If name is obtained from subtree, fire name change event.
+        if (nameFlag == eNameFromSubtree) {
+          nsRefPtr<AccEvent> nameChangeEvent =
+            new AccEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, parent);
+          PushEvent(nameChangeEvent);
+        }
+        break;
+      }
+      parent = parent->Parent();
+    }
+  }
 
   // Associate text change with hide event if it wasn't stolen from hiding
   // siblings during coalescence.
