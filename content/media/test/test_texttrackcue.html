@@ -79,10 +79,52 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
       cue.pauseOnExit = true;
       is(cue.pauseOnExit, true, "Cue's pause on exit flag should be true.");
 
+      var exceptionHappened;
+      function checkPercentageValue(prop) {
+        ok(prop in cue, prop + " should be a property on VTTCue.");
+        cue[prop] = 20;
+        is(cue[prop], 20, "Cue's " + prop + " should now be 20.");
+        [ 101, -1 ].forEach(function(val) {
+          exceptionHappened = false;
+          try {
+            cue[prop] = val;
+          } catch(e) {
+            exceptionHappened = true;
+            is(e.name, "IndexSizeError", "Should have thrown IndexSizeError.");
+          }
+          ok(exceptionHappened, "Exception should have happened.");
+        });
+      }
+
+      checkPercentageValue("size");
+      checkPercentageValue("position");
+
+      ok(cue.snapToLines, "Cue's snapToLines should be set by set.");
+      cue.snapToLines = false;
+      ok(!cue.snapToLines, "Cue's snapToLines should not be set.");
+
+      function checkEnumValue(prop, initialVal, acceptedValues) {
+        ok(prop in cue, prop + " should be a property on VTTCue.");
+        is(cue[prop], initialVal, "Cue's " + prop + " should be " + initialVal);
+        cue[prop] = "bogus";
+        is(cue[prop], initialVal, "Cue's " + prop + " should be " + initialVal);
+        acceptedValues.forEach(function(val) {
+          cue[prop] = val;
+          is(cue[prop], val, "Cue's " + prop + " should be " + val);
+          if (typeof val === "string") {
+            cue[prop] = val.toUpperCase();
+            is(cue[prop], val, "Cue's " + prop + " should be " + val);
+          }
+        });
+      }
+
+      checkEnumValue("align", "middle", [ "start", "left", "middle", "right", "end" ]);
+      checkEnumValue("vertical", "", [ "", "lr", "rl" ]);
+
       // Check that cue line align works properly
       is(cue.lineAlign, "start", "Cue's default line alignment should be start.");
 
-      var exceptionHappened = false;
+      exceptionHappened = false;
       try {
         cue.lineAlign = "left";
       } catch(e) {
