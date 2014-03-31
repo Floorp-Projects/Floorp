@@ -111,8 +111,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(Accessible, LastRelease())
 Accessible::Accessible(nsIContent* aContent, DocAccessible* aDoc) :
   mContent(aContent), mDoc(aDoc),
   mParent(nullptr), mIndexInParent(-1), mChildrenFlags(eChildrenUninitialized),
-  mStateFlags(0), mType(0), mGenericTypes(0), mIndexOfEmbeddedChild(-1),
-  mRoleMapEntry(nullptr)
+  mStateFlags(0), mContextFlags(0), mType(0), mGenericTypes(0),
+  mIndexOfEmbeddedChild(-1), mRoleMapEntry(nullptr)
 {
 #ifdef NS_DEBUG_X
    {
@@ -2533,6 +2533,12 @@ Accessible::BindToParent(Accessible* aParent, uint32_t aIndexInParent)
   mIndexInParent = aIndexInParent;
 
   mParent->InvalidateChildrenGroupInfo();
+
+  // Note: this is currently only used for richlistitems and their children.
+  if (mParent->HasNameDependentParent() || mParent->IsXULListItem())
+    mContextFlags |= eHasNameDependentParent;
+  else
+    mContextFlags &= ~eHasNameDependentParent;
 }
 
 // Accessible protected
@@ -2544,6 +2550,7 @@ Accessible::UnbindFromParent()
   mIndexInParent = -1;
   mIndexOfEmbeddedChild = -1;
   mGroupInfo = nullptr;
+  mContextFlags &= ~eHasNameDependentParent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3241,6 +3248,8 @@ Accessible::StaticAsserts() const
                 "Accessible::mStateFlags was oversized by eLastStateFlag!");
   static_assert(eLastAccType <= (1 << kTypeBits) - 1,
                 "Accessible::mType was oversized by eLastAccType!");
+  static_assert(eLastContextFlag <= (1 << kContextFlagsBits) - 1,
+                "Accessible::mContextFlags was oversized by eLastContextFlag!");
   static_assert(eLastAccGenericType <= (1 << kGenericTypesBits) - 1,
                 "Accessible::mGenericType was oversized by eLastAccGenericType!");
 }

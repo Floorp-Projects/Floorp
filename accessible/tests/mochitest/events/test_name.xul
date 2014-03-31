@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"/>
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    /**
+     * Check name changed a11y event.
+     */
+    function nameChangeChecker(aMsg, aID)
+    {
+      this.type = EVENT_NAME_CHANGE;
+
+      function targetGetter()
+      {
+        return getAccessible(aID);
+      }
+      Object.defineProperty(this, "target", { get: targetGetter });
+
+      this.getID = function getID()
+      {
+        return aMsg + " name changed";
+      }
+    }
+
+    function changeRichListItemChild()
+    {
+      this.invoke = function changeRichListItemChild_invoke()
+      {
+        getNode('childcontent').setAttribute('value', 'Changed.');
+      }
+
+      this.eventSeq =
+      [
+        new nameChangeChecker("changeRichListItemChild: ", "listitem")
+      ];
+
+      this.getID = function changeRichListItemChild_getID()
+      {
+        return "changeRichListItemChild";
+      }
+    }
+
+    function doTest()
+    {
+      var queue = new eventQueue();
+      queue.push(new changeRichListItemChild());
+      queue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+        href="https://bugzilla.mozilla.org/show_bug.cgi?id=986054"
+        title="Propagate name change events">
+       Mozilla Bug 986054
+      </a>
+
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <richlistbox>
+      <richlistitem id="listitem">
+        <description id="childcontent" value="This will be changed."/>
+      </richlistitem>
+    </richlistbox>
+  </vbox>
+</window>
