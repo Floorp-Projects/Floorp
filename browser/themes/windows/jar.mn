@@ -252,6 +252,7 @@ browser.jar:
 *       skin/classic/browser/devtools/profiler.css                  (devtools/profiler.css)
 *       skin/classic/browser/devtools/netmonitor.css                (devtools/netmonitor.css)
 *       skin/classic/browser/devtools/scratchpad.css                (devtools/scratchpad.css)
+        skin/classic/browser/devtools/eyedropper.css                (../shared/devtools/eyedropper.css)
         skin/classic/browser/devtools/magnifying-glass.png          (../shared/devtools/images/magnifying-glass.png)
         skin/classic/browser/devtools/magnifying-glass@2x.png       (../shared/devtools/images/magnifying-glass@2x.png)
         skin/classic/browser/devtools/magnifying-glass-light.png    (../shared/devtools/images/magnifying-glass-light.png)
@@ -326,6 +327,8 @@ browser.jar:
         skin/classic/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
         skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
         skin/classic/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
+        skin/classic/browser/devtools/eyedropper-black.png                  (../shared/devtools/images/eyedropper-black.png)
+
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/browser/sync-16.png
         skin/classic/browser/sync-32.png
@@ -606,6 +609,7 @@ browser.jar:
 *       skin/classic/aero/browser/devtools/profiler.css              (devtools/profiler.css)
 *       skin/classic/aero/browser/devtools/netmonitor.css            (devtools/netmonitor.css)
 *       skin/classic/aero/browser/devtools/scratchpad.css            (devtools/scratchpad.css)
+        skin/classic/aero/browser/devtools/eyedropper.css            (../shared/devtools/eyedropper.css)
         skin/classic/aero/browser/devtools/magnifying-glass.png      (../shared/devtools/images/magnifying-glass.png)
         skin/classic/aero/browser/devtools/magnifying-glass@2x.png   (../shared/devtools/images/magnifying-glass@2x.png)
         skin/classic/aero/browser/devtools/magnifying-glass-light.png (../shared/devtools/images/magnifying-glass-light.png)
@@ -680,6 +684,7 @@ browser.jar:
         skin/classic/aero/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
         skin/classic/aero/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
         skin/classic/aero/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
+        skin/classic/aero/browser/devtools/eyedropper-black.png        (../shared/devtools/images/eyedropper-black.png)
 
 #ifdef MOZ_SERVICES_SYNC
         skin/classic/aero/browser/sync-16.png
