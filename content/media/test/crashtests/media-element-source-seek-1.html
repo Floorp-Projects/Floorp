@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+var audioElement = document.createElement("audio");
+audioElement.autoplay = true;
+audioElement.src = "sound.ogg";
+audioElement.onplaying =
+  function() {
+    audioElement.onseeked =
+      function() {
+        setTimeout(
+          function() {
+            document.documentElement.removeAttribute("class");
+          }, 100);
+      };
+    audioElement.currentTime = 0;
+  };
+
+var context = new window.AudioContext();
+var source = context.createMediaElementSource(audioElement);
+source.connect(context.destination);
+</script>
+</html>
