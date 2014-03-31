@@ -288,16 +288,6 @@ public:
 
     virtual bool IsCurrent() = 0;
 
-    /**
-     * If this context is the GLES2 API, returns TRUE.
-     * This means that various GLES2 restrictions might be in effect (modulo
-     * extensions).
-     */
-    inline bool IsGLES2() const {
-        return IsAtLeast(ContextProfile::OpenGLES, 200);
-    }
-
-
 protected:
 
     bool mInitialized;
