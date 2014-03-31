@@ -1,10 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Ensure that the sources listed when debugging an addon are either from the 
-// addon itself, or the SDK, with proper groups and labels.
+// Make sure the add-on actor can see loaded JS Modules from an add-on
 
-const ADDON3_URL = EXAMPLE_URL + "addon3.xpi";
+const ADDON5_URL = EXAMPLE_URL + "addon5.xpi";
 
 let gAddon, gClient, gThreadClient, gDebugger, gSources, gTitle;
 
@@ -42,12 +41,19 @@ function test() {
     yield connected.promise;
 
     yield installAddon();
-    let debuggerPanel = yield initAddonDebugger(gClient, ADDON3_URL, iframe);
+    let debuggerPanel = yield initAddonDebugger(gClient, ADDON5_URL, iframe);
     gDebugger = debuggerPanel.panelWin;
     gThreadClient = gDebugger.gThreadClient;
     gSources = gDebugger.DebuggerView.Sources;
 
-    yield testSources();
+    yield testSources(false);
+
+    Cu.import("resource://browser_dbg_addon5/test2.jsm", {});
+
+    yield testSources(true);
+
+    Cu.unload("resource://browser_dbg_addon5/test2.jsm");
+
     yield uninstallAddon();
     yield closeConnection();
     yield debuggerPanel._toolbox.destroy();
@@ -58,15 +64,15 @@ function test() {
 }
 
 function installAddon () {
-  return addAddon(ADDON3_URL).then(aAddon => {
+  return addAddon(ADDON5_URL).then(aAddon => {
     gAddon = aAddon;
   });
 }
 
-function testSources() {
+function testSources(expectSecondModule) {
   let deferred = promise.defer();
   let foundAddonModule = false;
-  let foundSDKModule = 0;
+  let foundAddonModule2 = false;
   let foundAddonBootstrap = false;
 
   gThreadClient.getSources(({sources}) => {
@@ -74,42 +80,34 @@ function testSources() {
 
     for (let source of sources) {
       let url = source.url.split(" -> ").pop();
-      info(source.url + "\n\n\n" + url);
       let { label, group } = gSources.getItemByValue(source.url).attachment;
 
-      if (url.indexOf("resource://gre/modules/commonjs/") === 0) {
-        is(label, url.substring(32), "correct truncated label");
-        is(group, "Add-on SDK", "correct SDK group");
-        foundSDKModule++;
-      } else if (url.indexOf("resource://gre/modules/commonjs/method") === 0) {
-        is(label.indexOf("method/"), 0, "correct truncated label");
-        is(group, "Add-on SDK", "correct SDK group");
-        foundSDKModule++;
-      } else if (url.indexOf("resource://jid1-ami3akps3baaeg-at-jetpack") === 0) {
-        is(label, "resources/browser_dbg_addon3/lib/main.js", "correct label for addon code");
-        is(group, "jid1-ami3akps3baaeg@jetpack", "addon code is in the add-on's group");
+      if (url.indexOf("resource://browser_dbg_addon5/test.jsm") === 0) {
+        is(label, "test.jsm", "correct label for addon code");
+        is(group, "browser_dbg_addon5@tests.mozilla.org", "addon module is in the add-on's group");
         foundAddonModule = true;
-      } else if (url.endsWith("/jid1-ami3akps3baaeg@jetpack.xpi!/bootstrap.js")) {
-        is(label, "bootstrap.js", "correct label for bootstrap script");
-        is(group, "jid1-ami3akps3baaeg@jetpack", "addon code is in the add-on's group");
+      } else if (url.indexOf("resource://browser_dbg_addon5/test2.jsm") === 0) {
+        is(label, "test2.jsm", "correct label for addon code");
+        is(group, "browser_dbg_addon5@tests.mozilla.org", "addon module is in the add-on's group");
+        foundAddonModule2 = true;
+      } else if (url.endsWith("/browser_dbg_addon5@tests.mozilla.org/bootstrap.js")) {
+        is(label, "bootstrap.js", "correct label for bootstrap code");
+        is(group, "browser_dbg_addon5@tests.mozilla.org", "addon bootstrap script is in the add-on's group");
         foundAddonBootstrap = true;
       } else {
         ok(false, "Saw an unexpected source: " + url);
       }
     }
 
-    ok(foundAddonModule, "found code for the addon in the list");
-    ok(foundAddonBootstrap, "found bootstrap for the addon in the list");
-    // Be flexible in this number, as SDK changes could change the exact number of
-    // built-in browser SDK modules
-    ok(foundSDKModule > 10, "SDK modules are listed");
+    ok(foundAddonModule, "found JS module for the addon in the list");
+    is(foundAddonModule2, expectSecondModule, "saw the second addon module");
+    ok(foundAddonBootstrap, "found bootstrap script for the addon in the list");
 
-    is(gTitle, "Debugger - browser_dbg_addon3", "Saw the right toolbox title.");
+    is(gTitle, "Debugger - Test unpacked add-on with JS Modules", "Saw the right toolbox title.");
 
     let groups = gDebugger.document.querySelectorAll(".side-menu-widget-group-title .name");
-    is(groups[0].value, "jid1-ami3akps3baaeg@jetpack", "Add-on code should be the first group");
-    is(groups[1].value, "Add-on SDK", "Add-on SDK should be the second group");
-    is(groups.length, 2, "Should be only two groups.");
+    is(groups[0].value, "browser_dbg_addon5@tests.mozilla.org", "Add-on code should be the first group");
+    is(groups.length, 1, "Should be only one group.");
 
     deferred.resolve();
   });
