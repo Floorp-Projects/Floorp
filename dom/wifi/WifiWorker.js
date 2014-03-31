@@ -2552,7 +2552,7 @@ WifiWorker.prototype = {
 
           if (count++ >= 3) {
             timer = null;
-            this.wantScanResults.splice(this.wantScanResults.indexOf(waitForScanCallback), 1);
+            self.wantScanResults.splice(self.wantScanResults.indexOf(waitForScanCallback), 1);
             callback.onfailure();
             return;
           }
