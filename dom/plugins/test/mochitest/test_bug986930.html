@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>Test for Bug 986930</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="utils.js"></script>
+</head>
+<body>
+  <script class="testbody" type="application/javascript">
+    var testPlugin = getTestPlugin("Test Plug-in");
+
+    var mimeDescriptions = testPlugin.getMimeDescriptions({});
+
+    is(mimeDescriptions[0], "Test \u2122 mimetype",
+       "Plugin should handle non-ascii mime description");
+  </script>
+</body>
+</html>

@@ -258,6 +258,7 @@ class CodeGeneratorShared : public LInstructionVisitor
   protected:
     // Encodes an LSnapshot into the compressed snapshot buffer, returning
     // false on failure.
+    bool encode(LRecoverInfo *recover);
     bool encode(LSnapshot *snapshot);
     bool encodeAllocations(LSnapshot *snapshot, MResumePoint *resumePoint, uint32_t *startIndex);
 

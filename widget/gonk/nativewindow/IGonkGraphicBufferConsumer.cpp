@@ -44,8 +44,7 @@ IGonkGraphicBufferConsumer::BufferItem::BufferItem() :
     mBuf(INVALID_BUFFER_SLOT),
     mIsDroppable(false),
     mAcquireCalled(false),
-    mTransformToDisplayInverse(false),
-    mSurfaceDescriptor(SurfaceDescriptor()) {
+    mTransformToDisplayInverse(false) {
     mCrop.makeInvalid();
 }
 

@@ -19,6 +19,8 @@
 #include <ui/Fence.h>
 #endif
 
+#include "mozilla/layers/GrallocTextureClient.h"
+#include "mozilla/layers/TextureClient.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Types.h"
 #include "mozilla/Monitor.h"
@@ -42,6 +44,7 @@ PRLogModuleInfo *gOmxDecoderLog;
 using namespace MPAPI;
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::layers;
 
 namespace mozilla {
 
@@ -190,43 +193,6 @@ private:
   bool    mCompleted;
 };
 
-namespace layers {
-
-VideoGraphicBuffer::VideoGraphicBuffer(const android::wp<android::OmxDecoder> aOmxDecoder,
-                                       android::MediaBuffer *aBuffer,
-                                       SurfaceDescriptor& aDescriptor)
-  : GraphicBufferLocked(aDescriptor),
-    mMediaBuffer(aBuffer),
-    mOmxDecoder(aOmxDecoder)
-{
-  mMediaBuffer->add_ref();
-}
-
-VideoGraphicBuffer::~VideoGraphicBuffer()
-{
-  MOZ_ASSERT(!mMediaBuffer);
-}
-
-void
-VideoGraphicBuffer::Unlock()
-{
-  android::sp<android::OmxDecoder> omxDecoder = mOmxDecoder.promote();
-  if (omxDecoder.get()) {
-    // Post kNotifyPostReleaseVideoBuffer message to OmxDecoder via ALooper.
-    // The message is delivered to OmxDecoder on ALooper thread.
-    // MediaBuffer::release() could take a very long time.
-    // PostReleaseVideoBuffer() prevents long time locking.
-    omxDecoder->PostReleaseVideoBuffer(mMediaBuffer, mReleaseFenceHandle);
-  } else {
-    NS_WARNING("OmxDecoder is not present");
-    if (mMediaBuffer) {
-      mMediaBuffer->release();
-    }
-  }
-  mMediaBuffer = nullptr;
-}
-
-}
 }
 
 namespace android {
@@ -837,20 +803,21 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       unreadable = 0;
     }
 
-    mozilla::layers::SurfaceDescriptor *descriptor = nullptr;
+    RefPtr<mozilla::layers::TextureClient> textureClient;
     if ((mVideoBuffer->graphicBuffer().get())) {
-      descriptor = mNativeWindow->getSurfaceDescriptorFromBuffer(mVideoBuffer->graphicBuffer().get());
+      textureClient = mNativeWindow->getTextureClientFromBuffer(mVideoBuffer->graphicBuffer().get());
     }
 
-    if (descriptor) {
-      // Change the descriptor's size to video's size. There are cases that
-      // GraphicBuffer's size and actual video size is different.
-      // See Bug 850566.
-      mozilla::layers::SurfaceDescriptorGralloc newDescriptor = descriptor->get_SurfaceDescriptorGralloc();
-      newDescriptor.size() = IntSize(mVideoWidth, mVideoHeight);
+    if (textureClient) {
+      // Manually increment reference count to keep MediaBuffer alive
+      // during TextureClient is in use.
+      mVideoBuffer->add_ref();
+      GrallocTextureClientOGL* grallocClient = static_cast<GrallocTextureClientOGL*>(textureClient.get());
+      grallocClient->SetMediaBuffer(mVideoBuffer);
+      // Set recycle callback for TextureClient
+      textureClient->SetRecycleCallback(OmxDecoder::RecycleCallback, this);
 
-      mozilla::layers::SurfaceDescriptor descWrapper(newDescriptor);
-      aFrame->mGraphicBuffer = new mozilla::layers::VideoGraphicBuffer(this, mVideoBuffer, descWrapper);
+      aFrame->mGraphicBuffer = textureClient;
       aFrame->mRotation = mVideoRotation;
       aFrame->mTimeUs = timeUs;
       aFrame->mKeyFrame = keyFrame;
@@ -1097,6 +1064,16 @@ void OmxDecoder::ReleaseAllPendingVideoBuffersLocked()
     buffer->release();
   }
   releasingVideoBuffers.clear();
+}
+
+/* static */ void
+OmxDecoder::RecycleCallback(TextureClient* aClient, void* aClosure)
+{
+  OmxDecoder* decoder = static_cast<OmxDecoder*>(aClosure);
+  GrallocTextureClientOGL* client = static_cast<GrallocTextureClientOGL*>(aClient);
+
+  aClient->ClearRecycleCallback();
+  decoder->PostReleaseVideoBuffer(client->GetMediaBuffer(), client->GetReleaseFenceHandle());
 }
 
 int64_t OmxDecoder::ProcessCachedData(int64_t aOffset, bool aWaitForCompletion)

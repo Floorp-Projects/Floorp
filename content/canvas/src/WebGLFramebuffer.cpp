@@ -890,7 +890,7 @@ FinalizeDrawAndReadBuffers(GLContext* aGL, bool aColorBufferDefined)
     //
     // Note that this test is not performed if OpenGL 4.2 or ARB_ES2_compatibility is
     // available.
-    if (aGL->IsGLES2() ||
+    if (aGL->IsGLES() ||
         aGL->IsSupported(GLFeature::ES2_compatibility) ||
         aGL->IsAtLeast(ContextProfile::OpenGL, 420))
     {

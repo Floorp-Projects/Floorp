@@ -8,6 +8,7 @@
 #include "harfbuzz/hb.h"
 #include "mozilla/Likely.h"
 #include "gfxFontConstants.h"
+#include "gfxFontUtils.h"
 
 using namespace mozilla::gfx;
 
@@ -155,6 +156,10 @@ gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
             gfxFT2LockedFace(this).GetUVSGlyph(unicode, variation_selector);
         if (id)
             return id;
+        id = gfxFontUtils::GetUVSFallback(unicode, variation_selector);
+        if (id) {
+            unicode = id;
+        }
     }
 
     return GetGlyph(unicode);

@@ -16,7 +16,7 @@ using namespace mozilla::gl;
 static GLenum
 DepthStencilDepthFormat(GLContext* gl) {
     // We might not be able to get 24-bit, so let's pretend!
-    if (gl->IsGLES2() && !gl->IsExtensionSupported(gl::GLContext::OES_depth24))
+    if (gl->IsGLES() && !gl->IsExtensionSupported(gl::GLContext::OES_depth24))
         return LOCAL_GL_DEPTH_COMPONENT16;
 
     return LOCAL_GL_DEPTH_COMPONENT24;

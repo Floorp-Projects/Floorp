@@ -168,7 +168,7 @@ GetActualReadFormats(GLContext* gl,
     }
 
     bool fallback = true;
-    if (gl->IsGLES2()) {
+    if (gl->IsGLES()) {
         GLenum auxFormat = 0;
         GLenum auxType = 0;
 
@@ -209,6 +209,10 @@ GetActualReadFormats(GLContext* gl,
 static void SwapRAndBComponents(DataSourceSurface* surf)
 {
   uint8_t *row = surf->GetData();
+  if (!row) {
+      MOZ_ASSERT(false, "SwapRAndBComponents: Failed to get data from DataSourceSurface.");
+      return;
+  }
 
   size_t rowBytes = surf->GetSize().width*4;
   size_t rowHole = surf->Stride() - rowBytes;
@@ -764,7 +768,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         mGL->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, rb);
 
         GLenum rbInternalFormat =
-            mGL->IsGLES2()
+            mGL->IsGLES()
                 ? (mGL->IsExtensionSupported(GLContext::OES_rgb8_rgba8) ? LOCAL_GL_RGBA8 : LOCAL_GL_RGBA4)
                 : LOCAL_GL_RGBA;
         mGL->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, rbInternalFormat, aSize.width, aSize.height);

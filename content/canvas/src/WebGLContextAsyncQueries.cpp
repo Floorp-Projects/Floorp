@@ -60,7 +60,7 @@ WebGLContext::CreateQuery()
     if (IsContextLost())
         return nullptr;
 
-    if (mActiveOcclusionQuery && !gl->IsGLES2()) {
+    if (mActiveOcclusionQuery && !gl->IsGLES()) {
         /* http://www.opengl.org/registry/specs/ARB/occlusion_query.txt
          * Calling either GenQueriesARB or DeleteQueriesARB while any query of
          * any target is active causes an INVALID_OPERATION error to be
@@ -95,7 +95,7 @@ WebGLContext::DeleteQuery(WebGLQuery *query)
         EndQuery(query->mType);
     }
 
-    if (mActiveOcclusionQuery && !gl->IsGLES2()) {
+    if (mActiveOcclusionQuery && !gl->IsGLES()) {
         /* http://www.opengl.org/registry/specs/ARB/occlusion_query.txt
          * Calling either GenQueriesARB or DeleteQueriesARB while any query of
          * any target is active causes an INVALID_OPERATION error to be

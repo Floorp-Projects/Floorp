@@ -101,7 +101,7 @@ public:
 };
 
 namespace layers {
-class GraphicBufferLocked;
+class TextureClient;
 class PlanarYCbCrImage;
 }
 
@@ -179,7 +179,7 @@ public:
                            int64_t aOffset,
                            int64_t aTime,
                            int64_t aDuration,
-                           layers::GraphicBufferLocked* aBuffer,
+                           layers::TextureClient* aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
                            const IntRect& aPicture);
