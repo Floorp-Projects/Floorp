@@ -200,6 +200,9 @@ CompositableHost::DumpTextureHost(FILE* aFile, TextureHost* aTexture)
     return;
   }
   RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
+  if (!dSurf) {
+    return;
+  }
   gfxPlatform *platform = gfxPlatform::GetPlatform();
   RefPtr<gfx::DrawTarget> dt = platform->CreateDrawTargetForData(dSurf->GetData(),
                                                                  dSurf->GetSize(),
