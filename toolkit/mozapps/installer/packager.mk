@@ -358,6 +358,7 @@ UPLOAD_EXTRA_FILES += robocop.apk
 UPLOAD_EXTRA_FILES += fennec_ids.txt
 UPLOAD_EXTRA_FILES += geckoview_library/geckoview_library.zip
 UPLOAD_EXTRA_FILES += geckoview_library/geckoview_assets.zip
+UPLOAD_EXTRA_FILES += ../embedding/android/geckoview_example/geckoview_example.apk
 
 # Robocop/Robotium tests, Android Background tests, and Fennec need to
 # be signed with the same key, which means release signing them all.
@@ -397,11 +398,15 @@ ifdef NIGHTLY_BUILD
 ifndef MOZ_DISABLE_GECKOVIEW
 INNER_MAKE_GECKOVIEW_LIBRARY= \
   $(MAKE) -C ../mobile/android/geckoview_library package
+INNER_MAKE_GECKOVIEW_EXAMPLE= \
+	$(MAKE) -C ../embedding/android/geckoview_example package
 else
 INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is disabled'
+INNER_MAKE_GECKOVIEW_EXAMPLE=echo 'GeckoView example packaging is disabled'
 endif
 else
 INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is only enabled on Nightly'
+INNER_MAKE_GECKOVIEW_EXAMPLE=echo 'GeckoView example packaging is only enabled on Nightly'
 endif
 
 ifdef MOZ_OMX_PLUGIN
@@ -483,7 +488,8 @@ INNER_MAKE_PACKAGE	= \
   $(INNER_ROBOCOP_PACKAGE) && \
   $(INNER_BACKGROUND_TESTS_PACKAGE) && \
   $(INNER_BROWSER_TESTS_PACKAGE) && \
-  $(INNER_MAKE_GECKOVIEW_LIBRARY)
+  $(INNER_MAKE_GECKOVIEW_LIBRARY) && \
+  $(INNER_MAKE_GECKOVIEW_EXAMPLE)
 
 # Language repacks root the resources contained in assets/omni.ja
 # under assets/, but the repacks expect them to be rooted at /.
