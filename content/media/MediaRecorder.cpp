@@ -426,6 +426,10 @@ private:
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
       // Force stop Session to terminate Read Thread.
       mEncoder->Cancel();
+      if (mReadThread) {
+        mReadThread->Shutdown();
+        mReadThread = nullptr;
+      }
       if (mRecorder) {
         mRecorder->RemoveSession(this);
         mRecorder = nullptr;
