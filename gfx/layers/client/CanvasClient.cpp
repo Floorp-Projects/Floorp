@@ -65,12 +65,21 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                                 : gfxContentType::COLOR_ALPHA;
     gfxImageFormat format
       = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
-    mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
-                                        TEXTURE_FLAGS_DEFAULT,
-                                        gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
-    MOZ_ASSERT(mBuffer->AsTextureClientSurface());
-    mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
-
+    mBuffer = CreateTextureClientForDrawing(gfx::ImageFormatToSurfaceFormat(format),
+                                            TEXTURE_FLAGS_DEFAULT,
+                                            gfxPlatform::GetPlatform()->GetPreferredCanvasBackend(),
+                                            aSize);
+    bool allocSuccess = false;
+    if (mBuffer->AsTextureClientSurface()) {
+      allocSuccess = mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
+    } else {
+      MOZ_ASSERT(mBuffer->AsTextureClientDrawTarget());
+      allocSuccess = mBuffer->AsTextureClientDrawTarget()->AllocateForSurface(aSize);
+    }
+    if (!allocSuccess) {
+      mBuffer = nullptr;
+      return;
+    }
     bufferCreated = true;
   }
 
@@ -81,8 +90,18 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   bool updated = false;
   {
     // Restrict drawTarget to a scope so that terminates before Unlock.
-    nsRefPtr<gfxASurface> surface =
-      mBuffer->AsTextureClientSurface()->GetAsSurface();
+    nsRefPtr<gfxASurface> surface;
+    if (mBuffer->AsTextureClientSurface()) {
+      surface = mBuffer->AsTextureClientSurface()->GetAsSurface();
+    } else {
+      RefPtr<gfx::DrawTarget> dt
+        = mBuffer->AsTextureClientDrawTarget()->GetAsDrawTarget();
+      if (dt) {
+        surface = gfxPlatform::GetPlatform()->CreateThebesSurfaceAliasForDrawTarget_hack(dt);
+      }
+      // the DrawTarget will be kept alive until mBuffer->Unlock() so it's
+      // OK to let go of dt before we destroy surface.
+    }
     if (surface) {
       aLayer->DeprecatedUpdateSurface(surface);
       updated = true;
