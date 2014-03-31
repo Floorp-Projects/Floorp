@@ -335,7 +335,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     recovers_.endRecover();
     snapshot->setSnapshotOffset(offset);
 
-    return !snapshots_.oom();
+    return !recovers_.oom() || !snapshots_.oom();
 }
 
 bool
