@@ -238,7 +238,7 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
   if (pm) {
     nsIFrame* popup = pm->GetTopPopup(ePopupTypeAny);
     if (popup)
-      pm->HidePopup(popup->GetContent(), true, true, true);
+      pm->HidePopup(popup->GetContent(), true, true, true, false);
   }
 
   SetCurrentMenuItem(nullptr);
@@ -308,7 +308,7 @@ public:
 
     if (mOldMenu) {
       nsWeakFrame weakMenuBar(menubar);
-      pm->HidePopup(mOldMenu, false, false, false);
+      pm->HidePopup(mOldMenu, false, false, false, false);
       // clear the flag again
       if (mNewMenu && weakMenuBar.IsAlive())
         menubar->SetStayActive(false);
