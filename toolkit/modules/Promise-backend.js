@@ -340,6 +340,21 @@ Promise.prototype.then = function (aOnResolve, aOnReject)
   return handler.nextPromise;
 };
 
+/**
+ * Invokes `promise.then` with undefined for the resolve handler and a given
+ * reject handler.
+ *
+ * @param aOnReject
+ *        The rejection handler.
+ *
+ * @return A new pending promise returned.
+ *
+ * @see Promise.prototype.then
+ */
+Promise.prototype.catch = function (aOnReject)
+{
+  return this.then(undefined, aOnReject);
+};
 
 /**
  * Creates a new pending promise and provides methods to resolve or reject it.
@@ -373,6 +388,10 @@ Promise.resolve = function (aValue)
       "You should either invoke the async function first " +
       "or use 'Task.spawn' instead of 'Task.async' to start " +
       "the Task and return its promise.");
+  }
+
+  if (aValue instanceof Promise) {
+    return aValue;
   }
 
   return new Promise((aResolve) => aResolve(aValue));
@@ -419,40 +438,62 @@ Promise.all = function (aValues)
     throw new Error("Promise.all() expects an iterable.");
   }
 
-  if (!Array.isArray(aValues)) {
-    aValues = [...aValues];
-  }
+  return new Promise((resolve, reject) => {
+    let values = Array.isArray(aValues) ? aValues : [...aValues];
+    let countdown = values.length;
+    let resolutionValues = new Array(countdown);
 
-  if (!aValues.length) {
-    return Promise.resolve([]);
-  }
-
-  let countdown = aValues.length;
-  let deferred = Promise.defer();
-  let resolutionValues = new Array(countdown);
-
-  function checkForCompletion(aValue, aIndex) {
-    resolutionValues[aIndex] = aValue;
-
-    if (--countdown === 0) {
-      deferred.resolve(resolutionValues);
+    if (!countdown) {
+      resolve(resolutionValues);
+      return;
     }
-  }
 
-  for (let i = 0; i < aValues.length; i++) {
-    let index = i;
-    let value = aValues[i];
-    let resolve = val => checkForCompletion(val, index);
-
-    if (value && typeof(value.then) == "function") {
-      value.then(resolve, deferred.reject);
-    } else {
-      // Given value is not a promise, forward it as a resolution value.
-      resolve(value);
+    function checkForCompletion(aValue, aIndex) {
+      resolutionValues[aIndex] = aValue;
+      if (--countdown === 0) {
+        resolve(resolutionValues);
+      }
     }
+
+    for (let i = 0; i < values.length; i++) {
+      let index = i;
+      let value = values[i];
+      let resolver = val => checkForCompletion(val, index);
+
+      if (value && typeof(value.then) == "function") {
+        value.then(resolver, reject);
+      } else {
+        // Given value is not a promise, forward it as a resolution value.
+        resolver(value);
+      }
+    }
+  });
+};
+
+/**
+ * Returns a promise that is resolved or rejected when the first value is
+ * resolved or rejected, taking on the value or reason of that promise.
+ *
+ * @param aValues
+ *        Iterable of values or promises that may be pending, resolved, or
+ *        rejected. When any is resolved or rejected, the returned promise will
+ *        be resolved or rejected as to the given value or reason.
+ *
+ * @return A new promise that is fulfilled when any values are resolved or
+ *         rejected. Its resolution value will be forwarded from the resolution
+ *         value or rejection reason.
+ */
+Promise.race = function (aValues)
+{
+  if (aValues == null || typeof(aValues["@@iterator"]) != "function") {
+    throw new Error("Promise.race() expects an iterable.");
   }
 
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    for (let value of aValues) {
+      Promise.resolve(value).then(resolve, reject);
+    }
+  });
 };
 
 Object.freeze(Promise);
