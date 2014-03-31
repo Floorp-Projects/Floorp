@@ -15,6 +15,8 @@
 
 class ThreadProfile;
 
+#pragma pack(push, 1)
+
 class ProfileEntry
 {
 public:
@@ -57,6 +59,8 @@ private:
   };
   char mTagName;
 };
+
+#pragma pack(pop)
 
 typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagStringData);
 
