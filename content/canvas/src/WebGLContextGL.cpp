@@ -72,49 +72,6 @@ WebGLContext::CurValidFBRectObject() const
     return rect;
 }
 
-WebGLContext::FakeBlackTexture::FakeBlackTexture(GLContext *gl, GLenum target, GLenum format)
-    : mGL(gl)
-    , mGLName(0)
-{
-  MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D || target == LOCAL_GL_TEXTURE_CUBE_MAP);
-  MOZ_ASSERT(format == LOCAL_GL_RGB || format == LOCAL_GL_RGBA);
-
-  mGL->MakeCurrent();
-  GLuint formerBinding = 0;
-  gl->GetUIntegerv(target == LOCAL_GL_TEXTURE_2D
-                   ? LOCAL_GL_TEXTURE_BINDING_2D
-                   : LOCAL_GL_TEXTURE_BINDING_CUBE_MAP,
-                   &formerBinding);
-  gl->fGenTextures(1, &mGLName);
-  gl->fBindTexture(target, mGLName);
-
-  // we allocate our zeros on the heap, and we overallocate (16 bytes instead of 4)
-  // to minimize the risk of running into a driver bug in texImage2D, as it is
-  // a bit unusual maybe to create 1x1 textures, and the stack may not have the alignment
-  // that texImage2D expects.
-  void* zeros = calloc(1, 16);
-  if (target == LOCAL_GL_TEXTURE_2D) {
-      gl->fTexImage2D(target, 0, format, 1, 1,
-                      0, format, LOCAL_GL_UNSIGNED_BYTE, zeros);
-  } else {
-      for (GLuint i = 0; i < 6; ++i) {
-          gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, 1, 1,
-                          0, format, LOCAL_GL_UNSIGNED_BYTE, zeros);
-      }
-  }
-  free(zeros);
-
-  gl->fBindTexture(target, formerBinding);
-}
-
-WebGLContext::FakeBlackTexture::~FakeBlackTexture()
-{
-  if (mGL) {
-      mGL->MakeCurrent();
-      mGL->fDeleteTextures(1, &mGLName);
-  }
-}
-
 //
 //  WebGL API
 //
@@ -832,237 +789,6 @@ WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar)
 
     MakeContextCurrent();
     gl->fDepthRange(zNear, zFar);
-}
-
-WebGLVertexAttrib0Status
-WebGLContext::WhatDoesVertexAttrib0Need()
-{
-  // here we may assume that mCurrentProgram != null
-
-    // work around Mac OSX crash, see bug 631420
-#ifdef XP_MACOSX
-    if (gl->WorkAroundDriverBugs() &&
-        mBoundVertexArray->IsAttribArrayEnabled(0) &&
-        !mCurrentProgram->IsAttribInUse(0))
-    {
-        return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
-    }
-#endif
-
-    return (gl->IsGLES2() || mBoundVertexArray->IsAttribArrayEnabled(0)) ? WebGLVertexAttrib0Status::Default
-         : mCurrentProgram->IsAttribInUse(0) ? WebGLVertexAttrib0Status::EmulatedInitializedArray
-                                             : WebGLVertexAttrib0Status::EmulatedUninitializedArray;
-}
-
-bool
-WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
-{
-    WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
-
-    if (whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default)
-        return true;
-
-    if (!mAlreadyWarnedAboutFakeVertexAttrib0) {
-        GenerateWarning("Drawing without vertex attrib 0 array enabled forces the browser "
-                        "to do expensive emulation work when running on desktop OpenGL "
-                        "platforms, for example on Mac. It is preferable to always draw "
-                        "with vertex attrib 0 array enabled, by using bindAttribLocation "
-                        "to bind some always-used attribute to location 0.");
-        mAlreadyWarnedAboutFakeVertexAttrib0 = true;
-    }
-
-    CheckedUint32 checked_dataSize = CheckedUint32(vertexCount) * 4 * sizeof(GLfloat);
-
-    if (!checked_dataSize.isValid()) {
-        ErrorOutOfMemory("Integer overflow trying to construct a fake vertex attrib 0 array for a draw-operation "
-                         "with %d vertices. Try reducing the number of vertices.", vertexCount);
-        return false;
-    }
-
-    GLuint dataSize = checked_dataSize.value();
-
-    if (!mFakeVertexAttrib0BufferObject) {
-        gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);
-    }
-
-    // if the VBO status is already exactly what we need, or if the only difference is that it's initialized and
-    // we don't need it to be, then consider it OK
-    bool vertexAttrib0BufferStatusOK =
-        mFakeVertexAttrib0BufferStatus == whatDoesAttrib0Need ||
-        (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray &&
-         whatDoesAttrib0Need == WebGLVertexAttrib0Status::EmulatedUninitializedArray);
-
-    if (!vertexAttrib0BufferStatusOK ||
-        mFakeVertexAttrib0BufferObjectSize < dataSize ||
-        mFakeVertexAttrib0BufferObjectVector[0] != mVertexAttrib0Vector[0] ||
-        mFakeVertexAttrib0BufferObjectVector[1] != mVertexAttrib0Vector[1] ||
-        mFakeVertexAttrib0BufferObjectVector[2] != mVertexAttrib0Vector[2] ||
-        mFakeVertexAttrib0BufferObjectVector[3] != mVertexAttrib0Vector[3])
-    {
-        mFakeVertexAttrib0BufferStatus = whatDoesAttrib0Need;
-        mFakeVertexAttrib0BufferObjectSize = dataSize;
-        mFakeVertexAttrib0BufferObjectVector[0] = mVertexAttrib0Vector[0];
-        mFakeVertexAttrib0BufferObjectVector[1] = mVertexAttrib0Vector[1];
-        mFakeVertexAttrib0BufferObjectVector[2] = mVertexAttrib0Vector[2];
-        mFakeVertexAttrib0BufferObjectVector[3] = mVertexAttrib0Vector[3];
-
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
-
-        GetAndFlushUnderlyingGLErrors();
-
-        if (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray) {
-            nsAutoArrayPtr<GLfloat> array(new GLfloat[4 * vertexCount]);
-            for(size_t i = 0; i < vertexCount; ++i) {
-                array[4 * i + 0] = mVertexAttrib0Vector[0];
-                array[4 * i + 1] = mVertexAttrib0Vector[1];
-                array[4 * i + 2] = mVertexAttrib0Vector[2];
-                array[4 * i + 3] = mVertexAttrib0Vector[3];
-            }
-            gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, array, LOCAL_GL_DYNAMIC_DRAW);
-        } else {
-            gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nullptr, LOCAL_GL_DYNAMIC_DRAW);
-        }
-        GLenum error = GetAndFlushUnderlyingGLErrors();
-
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
-
-        // note that we do this error checking and early return AFTER having restored the buffer binding above
-        if (error) {
-            ErrorOutOfMemory("Ran out of memory trying to construct a fake vertex attrib 0 array for a draw-operation "
-                             "with %d vertices. Try reducing the number of vertices.", vertexCount);
-            return false;
-        }
-    }
-
-    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
-    gl->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, 0);
-
-    return true;
-}
-
-void
-WebGLContext::UndoFakeVertexAttrib0()
-{
-    WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
-
-    if (whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default)
-        return;
-
-    if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].buf) {
-        const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.buf->GLName());
-        gl->fVertexAttribPointer(0,
-                                 attrib0.size,
-                                 attrib0.type,
-                                 attrib0.normalized,
-                                 attrib0.stride,
-                                 reinterpret_cast<const GLvoid *>(attrib0.byteOffset));
-    } else {
-        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-    }
-
-    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
-}
-
-WebGLContextFakeBlackStatus
-WebGLContext::ResolvedFakeBlackStatus()
-{
-    // handle this case first, it's the generic case
-    if (MOZ_LIKELY(mFakeBlackStatus == WebGLContextFakeBlackStatus::NotNeeded))
-        return mFakeBlackStatus;
-
-    if (mFakeBlackStatus == WebGLContextFakeBlackStatus::Needed)
-        return mFakeBlackStatus;
-
-    for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
-        if ((mBound2DTextures[i] && mBound2DTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) ||
-            (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded))
-        {
-            mFakeBlackStatus = WebGLContextFakeBlackStatus::Needed;
-            return mFakeBlackStatus;
-        }
-    }
-
-    // we have exhausted all cases where we do need fakeblack, so if the status is still unknown,
-    // that means that we do NOT need it.
-    mFakeBlackStatus = WebGLContextFakeBlackStatus::NotNeeded;
-    return mFakeBlackStatus;
-}
-
-void
-WebGLContext::BindFakeBlackTexturesHelper(
-    GLenum target,
-    const nsTArray<WebGLRefPtr<WebGLTexture> > & boundTexturesArray,
-    ScopedDeletePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
-    ScopedDeletePtr<FakeBlackTexture> & transparentTextureScopedPtr)
-{
-    for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
-        if (!boundTexturesArray[i]) {
-            continue;
-        }
-
-        WebGLTextureFakeBlackStatus s = boundTexturesArray[i]->ResolvedFakeBlackStatus();
-        MOZ_ASSERT(s != WebGLTextureFakeBlackStatus::Unknown);
-
-        if (MOZ_LIKELY(s == WebGLTextureFakeBlackStatus::NotNeeded)) {
-            continue;
-        }
-
-        bool alpha = s == WebGLTextureFakeBlackStatus::UninitializedImageData &&
-                     FormatHasAlpha(boundTexturesArray[i]->ImageInfoBase().InternalFormat());
-        ScopedDeletePtr<FakeBlackTexture>&
-            blackTexturePtr = alpha
-                              ? transparentTextureScopedPtr
-                              : opaqueTextureScopedPtr;
-
-        if (!blackTexturePtr) {
-            GLenum format = alpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB;
-            blackTexturePtr
-                = new FakeBlackTexture(gl, target, format);
-        }
-
-        gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-        gl->fBindTexture(target,
-                         blackTexturePtr->GLName());
-    }
-}
-
-void
-WebGLContext::BindFakeBlackTextures()
-{
-    // this is the generic case: try to return early
-    if (MOZ_LIKELY(ResolvedFakeBlackStatus() == WebGLContextFakeBlackStatus::NotNeeded))
-        return;
-
-    BindFakeBlackTexturesHelper(LOCAL_GL_TEXTURE_2D,
-                                mBound2DTextures,
-                                mBlackOpaqueTexture2D,
-                                mBlackTransparentTexture2D);
-    BindFakeBlackTexturesHelper(LOCAL_GL_TEXTURE_CUBE_MAP,
-                                mBoundCubeMapTextures,
-                                mBlackOpaqueTextureCubeMap,
-                                mBlackTransparentTextureCubeMap);
-}
-
-void
-WebGLContext::UnbindFakeBlackTextures()
-{
-    // this is the generic case: try to return early
-    if (MOZ_LIKELY(ResolvedFakeBlackStatus() == WebGLContextFakeBlackStatus::NotNeeded))
-        return;
-
-    for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
-        if (mBound2DTextures[i] && mBound2DTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) {
-            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBound2DTextures[i]->GLName());
-        }
-        if (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) {
-            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBoundCubeMapTextures[i]->GLName());
-        }
-    }
-
-    gl->fActiveTexture(LOCAL_GL_TEXTURE0 + mActiveTexture);
 }
 
 void
@@ -2622,14 +2348,14 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
     case LOCAL_GL_RGBA4:
     case LOCAL_GL_RGB5_A1:
         // 16-bit RGBA formats are not supported on desktop GL
-        if (!gl->IsGLES2()) internalformatForGL = LOCAL_GL_RGBA8;
+        if (!gl->IsGLES()) internalformatForGL = LOCAL_GL_RGBA8;
         break;
     case LOCAL_GL_RGB565:
         // the RGB565 format is not supported on desktop GL
-        if (!gl->IsGLES2()) internalformatForGL = LOCAL_GL_RGB8;
+        if (!gl->IsGLES()) internalformatForGL = LOCAL_GL_RGB8;
         break;
     case LOCAL_GL_DEPTH_COMPONENT16:
-        if (!gl->IsGLES2() || gl->IsExtensionSupported(gl::GLContext::OES_depth24))
+        if (!gl->IsGLES() || gl->IsExtensionSupported(gl::GLContext::OES_depth24))
             internalformatForGL = LOCAL_GL_DEPTH_COMPONENT24;
         else if (gl->IsExtensionSupported(gl::GLContext::OES_packed_depth_stencil))
             internalformatForGL = LOCAL_GL_DEPTH24_STENCIL8;
@@ -3230,7 +2956,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
     MakeContextCurrent();
 
-    ShShaderOutput targetShaderSourceLanguage = gl->IsGLES2() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
+    ShShaderOutput targetShaderSourceLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT : SH_GLSL_OUTPUT;
     bool useShaderSourceTranslation = true;
 
     if (shader->NeedsTranslation() && mShaderValidation) {
@@ -3800,7 +3526,7 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
 
     // convert type for half float if not on GLES2
     GLenum realType = type;
-    if (realType == LOCAL_GL_HALF_FLOAT_OES && !gl->IsGLES2()) {
+    if (realType == LOCAL_GL_HALF_FLOAT_OES && !gl->IsGLES()) {
         realType = LOCAL_GL_HALF_FLOAT;
     }
 
@@ -3882,7 +3608,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
 
     // Handle ES2 and GL differences in floating point internal formats.  Note that
     // format == internalformat, as checked above and as required by ES.
-    internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES2());
+    internalformat = InternalFormatForFormatAndType(format, type, gl->IsGLES());
 
     // Handle ES2 and GL differences when supporting sRGB internal formats. GL ES
     // requires that format == internalformat, but GL will fail in this case.
@@ -3890,7 +3616,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     //      format  ->  internalformat
     //      GL_RGB      GL_SRGB_EXT
     //      GL_RGBA     GL_SRGB_ALPHA_EXT
-    if (!gl->IsGLES2()) {
+    if (!gl->IsGLES()) {
         switch (internalformat) {
             case LOCAL_GL_SRGB_EXT:
                 format = LOCAL_GL_RGB;

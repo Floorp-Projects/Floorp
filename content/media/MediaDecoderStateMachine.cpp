@@ -1505,7 +1505,10 @@ MediaDecoderStateMachine::EnsureActive()
     return;
   }
   mIsReaderIdle = false;
-  SetReaderActive();
+  {
+    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+    SetReaderActive();
+  }
 }
 
 void

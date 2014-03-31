@@ -228,42 +228,34 @@ struct GrallocParam {
   IntSize size;
   uint32_t format;
   uint32_t usage;
-  SurfaceDescriptor* buffer;
+  MaybeMagicGrallocBufferHandle* handle;
+  PGrallocBufferChild** child;
 
   GrallocParam(const IntSize& aSize,
                const uint32_t& aFormat,
                const uint32_t& aUsage,
-               SurfaceDescriptor* aBuffer)
+               MaybeMagicGrallocBufferHandle* aHandle,
+               PGrallocBufferChild** aChild)
     : size(aSize)
     , format(aFormat)
     , usage(aUsage)
-    , buffer(aBuffer)
+    , handle(aHandle)
+    , child(aChild)
   {}
 };
 
 // dispatched function
-static void AllocSurfaceDescriptorGrallocSync(const GrallocParam& aParam,
-                                              Monitor* aBarrier,
-                                              bool* aDone)
+static void AllocGrallocBufferSync(const GrallocParam& aParam,
+                                   Monitor* aBarrier,
+                                   bool* aDone)
 {
   MonitorAutoLock autoMon(*aBarrier);
 
-  sImageBridgeChildSingleton->AllocSurfaceDescriptorGrallocNow(aParam.size,
-                                                               aParam.format,
-                                                               aParam.usage,
-                                                               aParam.buffer);
-  *aDone = true;
-  aBarrier->NotifyAll();
-}
-
-// dispatched function
-static void DeallocSurfaceDescriptorGrallocSync(const SurfaceDescriptor& aBuffer,
-                                                Monitor* aBarrier,
-                                                bool* aDone)
-{
-  MonitorAutoLock autoMon(*aBarrier);
-
-  sImageBridgeChildSingleton->DeallocSurfaceDescriptorGrallocNow(aBuffer);
+  sImageBridgeChildSingleton->AllocGrallocBufferNow(aParam.size,
+                                                    aParam.format,
+                                                    aParam.usage,
+                                                    aParam.handle,
+                                                    aParam.child);
   *aDone = true;
   aBarrier->NotifyAll();
 }
@@ -713,92 +705,6 @@ ImageBridgeChild::DeallocPGrallocBufferChild(PGrallocBufferChild* actor)
 }
 
 bool
-ImageBridgeChild::AllocSurfaceDescriptorGralloc(const IntSize& aSize,
-                                                const uint32_t& aFormat,
-                                                const uint32_t& aUsage,
-                                                SurfaceDescriptor* aBuffer)
-{
-  if (InImageBridgeChildThread()) {
-    return ImageBridgeChild::AllocSurfaceDescriptorGrallocNow(aSize, aFormat, aUsage, aBuffer);
-  }
-
-  Monitor barrier("AllocSurfaceDescriptorGralloc Lock");
-  MonitorAutoLock autoMon(barrier);
-  bool done = false;
-
-  GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&AllocSurfaceDescriptorGrallocSync,
-                        GrallocParam(aSize, aFormat, aUsage, aBuffer), &barrier, &done));
-
-  while (!done) {
-    barrier.Wait();
-  }
-  return true;
-}
-
-bool
-ImageBridgeChild::AllocSurfaceDescriptorGrallocNow(const IntSize& aSize,
-                                                   const uint32_t& aFormat,
-                                                   const uint32_t& aUsage,
-                                                   SurfaceDescriptor* aBuffer)
-{
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  MaybeMagicGrallocBufferHandle handle;
-  PGrallocBufferChild* gc = SendPGrallocBufferConstructor(aSize, aFormat, aUsage, &handle);
-  if (handle.Tnull_t == handle.type()) {
-    PGrallocBufferChild::Send__delete__(gc);
-    return false;
-  }
-
-  GrallocBufferActor* gba = static_cast<GrallocBufferActor*>(gc);
-  gba->InitFromHandle(handle.get_MagicGrallocBufferHandle());
-
-  *aBuffer = SurfaceDescriptorGralloc(nullptr, gc, aSize, /* external */ false, /* swapRB */ false);
-  return true;
-#else
-  NS_RUNTIMEABORT("No gralloc buffers for you");
-  return false;
-#endif
-}
-
-bool
-ImageBridgeChild::DeallocSurfaceDescriptorGralloc(const SurfaceDescriptor& aBuffer)
-{
-  if (InImageBridgeChildThread()) {
-    return ImageBridgeChild::DeallocSurfaceDescriptorGrallocNow(aBuffer);
-  }
-
-  Monitor barrier("DeallocSurfaceDescriptor Lock");
-  MonitorAutoLock autoMon(barrier);
-  bool done = false;
-
-  GetMessageLoop()->PostTask(FROM_HERE, NewRunnableFunction(&DeallocSurfaceDescriptorGrallocSync,
-                                                            aBuffer, &barrier, &done));
-
-  while (!done) {
-    barrier.Wait();
-  }
-
-  return true;
-}
-
-bool
-ImageBridgeChild::DeallocSurfaceDescriptorGrallocNow(const SurfaceDescriptor& aBuffer)
-{
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  PGrallocBufferChild* gbp =
-    aBuffer.get_SurfaceDescriptorGralloc().bufferChild();
-  PGrallocBufferChild::Send__delete__(gbp);
-
-  return true;
-#else
-  NS_RUNTIMEABORT("Um, how did we get here?");
-  return false;
-#endif
-}
-
-bool
 ImageBridgeChild::AllocUnsafeShmem(size_t aSize,
                                    ipc::SharedMemory::SharedMemoryType aType,
                                    ipc::Shmem* aShmem)
@@ -925,14 +831,43 @@ ImageBridgeChild::AllocGrallocBuffer(const IntSize& aSize,
                                      uint32_t aUsage,
                                      MaybeMagicGrallocBufferHandle* aHandle)
 {
+  if (InImageBridgeChildThread()) {
+    PGrallocBufferChild* child = nullptr;
+    ImageBridgeChild::AllocGrallocBufferNow(aSize, aFormat, aUsage, aHandle, &child);
+    return child;
+  }
+
+  Monitor barrier("AllocGrallocBuffer Lock");
+  MonitorAutoLock autoMon(barrier);
+  bool done = false;
+  PGrallocBufferChild* child = nullptr;
+
+  GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(&AllocGrallocBufferSync,
+                        GrallocParam(aSize, aFormat, aUsage, aHandle, &child), &barrier, &done));
+
+  while (!done) {
+    barrier.Wait();
+  }
+
+  return child;
+}
+
+void
+ImageBridgeChild::AllocGrallocBufferNow(const gfx::IntSize& aSize,
+                                        uint32_t aFormat, uint32_t aUsage,
+                                        MaybeMagicGrallocBufferHandle* aHandle,
+                                        PGrallocBufferChild** aChild)
+{
 #ifdef MOZ_WIDGET_GONK
-  return SendPGrallocBufferConstructor(aSize,
-                                       aFormat,
-                                       aUsage,
-                                       aHandle);
+  *aChild = SendPGrallocBufferConstructor(aSize,
+                                          aFormat,
+                                          aUsage,
+                                          aHandle);
 #else
   NS_RUNTIMEABORT("not implemented");
-  return nullptr;
+  aChild = nullptr;
 #endif
 }
 

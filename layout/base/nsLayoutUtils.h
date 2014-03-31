@@ -117,6 +117,7 @@ class nsLayoutUtils
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::gfx::SourceSurface SourceSurface;
   typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Rect Rect;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -789,6 +790,16 @@ public:
    */
   static nsPoint MatrixTransformPoint(const nsPoint &aPoint,
                                       const gfx3DMatrix &aMatrix, float aFactor);
+
+  /**
+   * Given a graphics rectangle in graphics space, return a rectangle in
+   * app space that contains the graphics rectangle, rounding out as necessary.
+   *
+   * @param aRect The graphics rect to round outward.
+   * @param aFactor The number of app units per graphics unit.
+   * @return The smallest rectangle in app space that contains aRect.
+   */
+  static nsRect RoundGfxRectToAppRect(const Rect &aRect, float aFactor);
 
   /**
    * Given a graphics rectangle in graphics space, return a rectangle in
