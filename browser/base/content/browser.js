@@ -7120,6 +7120,20 @@ XPCOMUtils.defineLazyGetter(ResponsiveUI, "ResponsiveUIManager", function() {
   return tmp.ResponsiveUIManager;
 });
 
+function openEyedropper() {
+  var eyedropper = new this.Eyedropper(this);
+  eyedropper.open();
+}
+
+Object.defineProperty(this, "Eyedropper", {
+  get: function() {
+    let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+    return devtools.require("devtools/eyedropper/eyedropper").Eyedropper;
+  },
+  configurable: true,
+  enumerable: true
+});
+
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
 #ifdef XP_WIN
   // Only show resizers on Windows 2000 and XP

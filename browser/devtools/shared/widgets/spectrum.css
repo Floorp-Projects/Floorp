@@ -2,6 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#eyedropper-button {
+  background: url("chrome://browser/skin/devtools/eyedropper-black.png") no-repeat center;
+  width: 20px;
+  height: 20px;
+  -moz-margin-start: 6px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.theme-dark #eyedropper-button {
+  filter: url(chrome://browser/skin/devtools/filters.svg#colorpicker-invert);
+}
+
 /* Mix-in classes */
 
 .spectrum-checker {
