@@ -165,7 +165,7 @@ protected:
                          nsTArray<const void*>& aOutputChannels,
                          nsTArray<float>& aDownmixBuffer);
 
-  uint32_t ComputeFinalOuputChannelCount(uint32_t aInputChannelCount);
+  uint32_t ComputedNumberOfChannels(uint32_t aInputChannelCount);
   void ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex);
 
   // The engine that will generate output for this node.
