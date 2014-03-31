@@ -28,7 +28,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "powerManagerService",
 // Limit the number of pending messages for a given page.
 let kMaxPendingMessages;
 try {
-  kMaxPendingMessages = Services.prefs.getIntPref("dom.messages.maxPendingMessages");
+  kMaxPendingMessages =
+    Services.prefs.getIntPref("dom.messages.maxPendingMessages");
 } catch(e) {
   // getIntPref throws when the pref is not set.
   kMaxPendingMessages = 5;
@@ -94,7 +95,8 @@ SystemMessageInternal.prototype = {
   _getMessageConfigurator: function(aType) {
     debug("_getMessageConfigurator for type: " + aType);
     if (this._configurators[aType] === undefined) {
-      let contractID = "@mozilla.org/dom/system-messages/configurator/" + aType + ";1";
+      let contractID =
+        "@mozilla.org/dom/system-messages/configurator/" + aType + ";1";
       if (contractID in Cc) {
         debug(contractID + " is registered, creating an instance");
         this._configurators[aType] =
@@ -297,7 +299,10 @@ SystemMessageInternal.prototype = {
     return true;
   },
 
-  _removeTargetFromListener: function(aTarget, aManifestURL, aRemoveListener, aPageURL) {
+  _removeTargetFromListener: function(aTarget,
+                                      aManifestURL,
+                                      aRemoveListener,
+                                      aPageURL) {
     let targets = this._listeners[aManifestURL];
     if (!targets) {
       return false;
@@ -364,8 +369,9 @@ SystemMessageInternal.prototype = {
           let winCounts = {};
           winCounts[pageURL] = 1;
           this._listeners[msg.manifestURL] = [{ target: aMessage.target,
-                                             winCounts: winCounts }];
-        } else if ((index = this._findTargetIndex(targets, aMessage.target)) === -1) {
+                                                winCounts: winCounts }];
+        } else if ((index = this._findTargetIndex(targets,
+                                                  aMessage.target)) === -1) {
           let winCounts = {};
           winCounts[pageURL] = 1;
           targets.push({ target: aMessage.target,
@@ -379,7 +385,8 @@ SystemMessageInternal.prototype = {
           }
         }
 
-        debug("listeners for " + msg.manifestURL + " innerWinID " + msg.innerWindowID);
+        debug("listeners for " + msg.manifestURL +
+              " innerWinID " + msg.innerWindowID);
         break;
       }
       case "child-process-shutdown":
@@ -387,7 +394,10 @@ SystemMessageInternal.prototype = {
         debug("Got child-process-shutdown from " + aMessage.target);
         for (let manifestURL in this._listeners) {
           // See if any processes in this manifest URL have this target.
-          if (this._removeTargetFromListener(aMessage.target, manifestURL, true, null)) {
+          if (this._removeTargetFromListener(aMessage.target,
+                                             manifestURL,
+                                             true,
+                                             null)) {
             break;
           }
         }
@@ -395,8 +405,12 @@ SystemMessageInternal.prototype = {
       }
       case "SystemMessageManager:Unregister":
       {
-        debug("Got Unregister from " + aMessage.target + "innerWinID " + msg.innerWindowID);
-        this._removeTargetFromListener(aMessage.target, msg.manifestURL, false, msg.pageURL);
+        debug("Got Unregister from " + aMessage.target +
+              " innerWinID " + msg.innerWindowID);
+        this._removeTargetFromListener(aMessage.target,
+                                       msg.manifestURL,
+                                       false,
+                                       msg.pageURL);
         break;
       }
       case "SystemMessageManager:GetPendingMessages":
@@ -467,7 +481,8 @@ SystemMessageInternal.prototype = {
       case "SystemMessageManager:HandleMessagesDone":
       {
         debug("received SystemMessageManager:HandleMessagesDone " + msg.type +
-          " with " + msg.handledCount + " for " + msg.pageURL + " @ " + msg.manifestURL);
+          " with " + msg.handledCount + " for " + msg.pageURL +
+          " @ " + msg.manifestURL);
 
         // A page has finished handling some of its system messages, so we try
         // to release the CPU wake lock we acquired on behalf of that page.
@@ -546,7 +561,9 @@ SystemMessageInternal.prototype = {
                  onlyShowApp: onlyShowApp,
                  showApp: showApp };
     debug("Asking to open " + JSON.stringify(page));
-    Services.obs.notifyObservers(this, "system-messages-open-app", JSON.stringify(page));
+    Services.obs.notifyObservers(this,
+                                 "system-messages-open-app",
+                                 JSON.stringify(page));
   },
 
   _isPageMatched: function(aPage, aType, aPageURL, aManifestURL) {
@@ -635,7 +652,8 @@ SystemMessageInternal.prototype = {
 
   classID: Components.ID("{70589ca5-91ac-4b9e-b839-d6a88167d714}"),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesInternal, Ci.nsIObserver])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemMessagesInternal,
+                                         Ci.nsIObserver])
 }
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SystemMessageInternal]);
