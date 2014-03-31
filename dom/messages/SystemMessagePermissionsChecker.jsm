@@ -249,18 +249,18 @@ this.SystemMessagePermissionsChecker = {
    * app's page at run-time based on the current app's permissions.
    * @param string aSysMsgName
    *        The system messsage name.
-   * @param string aPageURI
-   *        The app's page URI.
+   * @param string aPageURL
+   *        The app's page URL.
    * @param string aManifestURL
    *        The app's manifest URL.
    * @returns bool
    *        Is permitted or not.
    **/
   isSystemMessagePermittedToSend:
-    function isSystemMessagePermittedToSend(aSysMsgName, aPageURI, aManifestURL) {
+    function isSystemMessagePermittedToSend(aSysMsgName, aPageURL, aManifestURL) {
     debug("isSystemMessagePermittedToSend(): " +
           "aSysMsgName: " + aSysMsgName + ", " +
-          "aPageURI: " + aPageURI + ", " +
+          "aPageURL: " + aPageURL + ", " +
           "aManifestURL: " + aManifestURL);
 
     let permNames = this.getSystemMessagePermissions(aSysMsgName);
@@ -268,7 +268,7 @@ this.SystemMessagePermissionsChecker = {
       return false;
     }
 
-    let pageURI = Services.io.newURI(aPageURI, null, null);
+    let pageURI = Services.io.newURI(aPageURL, null, null);
     for (let permName in permNames) {
       let permNamesWithAccess = permNames[permName];
 
