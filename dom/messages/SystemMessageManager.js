@@ -57,7 +57,7 @@ function SystemMessageManager() {
 SystemMessageManager.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
-  _dispatchMessage: function sysMessMgr_dispatchMessage(aType, aDispatcher, aMessage) {
+  _dispatchMessage: function(aType, aDispatcher, aMessage) {
     if (aDispatcher.isHandling) {
       // Queue up the incomming message if we're currently dispatching a
       // message; we'll send the message once we finish with the current one.
@@ -109,7 +109,7 @@ SystemMessageManager.prototype = {
     }
   },
 
-  mozSetMessageHandler: function sysMessMgr_setMessageHandler(aType, aHandler) {
+  mozSetMessageHandler: function(aType, aHandler) {
     debug("set message handler for [" + aType + "] " + aHandler);
 
     if (this._isInBrowserElement) {
@@ -141,7 +141,7 @@ SystemMessageManager.prototype = {
                             manifest: this._manifest });
   },
 
-  mozHasPendingMessage: function sysMessMgr_hasPendingMessage(aType) {
+  mozHasPendingMessage: function(aType) {
     debug("asking pending message for [" + aType + "]");
 
     if (this._isInBrowserElement) {
@@ -161,7 +161,7 @@ SystemMessageManager.prototype = {
                                   manifest: this._manifest })[0];
   },
 
-  uninit: function sysMessMgr_uninit()  {
+  uninit: function()  {
     this._dispatchers = null;
     this._pendings = null;
 
@@ -191,7 +191,7 @@ SystemMessageManager.prototype = {
   //     This one will be received when the starting child process wants to
   //     retrieve the pending system messages from the parent (i.e. after
   //     sending SystemMessageManager:GetPendingMessages).
-  receiveMessage: function sysMessMgr_receiveMessage(aMessage) {
+  receiveMessage: function(aMessage) {
     let msg = aMessage.data;
     debug("receiveMessage " + aMessage.name + " for [" + msg.type + "] " +
           "with manifest = " + msg.manifest + " and uri = " + msg.uri);
@@ -245,7 +245,7 @@ SystemMessageManager.prototype = {
   },
 
   // nsIDOMGlobalPropertyInitializer implementation.
-  init: function sysMessMgr_init(aWindow) {
+  init: function(aWindow) {
     debug("init");
     this.initDOMRequestHelper(aWindow, ["SystemMessageManager:Message",
                               "SystemMessageManager:GetPendingMessages:Return"]);
@@ -277,7 +277,7 @@ SystemMessageManager.prototype = {
     debug("done");
   },
 
-  observe: function sysMessMgr_observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic === kSystemMessageInternalReady) {
       this._registerManifest();
     }
@@ -286,7 +286,7 @@ SystemMessageManager.prototype = {
     this.__proto__.__proto__.observe.call(this, aSubject, aTopic, aData);
   },
 
-  _registerManifest: function sysMessMgr_registerManifest() {
+  _registerManifest: function() {
     if (this._isInBrowserElement) {
       debug("the app loaded in the browser doesn't need to register " +
             "the manifest for listening to the system messages");
