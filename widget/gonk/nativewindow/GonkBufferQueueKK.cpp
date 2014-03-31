@@ -26,6 +26,8 @@
 #include <utils/Trace.h>
 #include <utils/CallStack.h>
 #include <cutils/compiler.h>
+
+#include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "GonkBufferQueueKK.h"
 
@@ -59,6 +61,22 @@ static const char* scalingModeName(int scalingMode) {
     }
 }
 
+class nsProxyReleaseTask : public Task
+{
+public:
+    nsProxyReleaseTask(TextureClient* aClient)
+        : mTextureClient(aClient) {
+    }
+
+    virtual void Run() MOZ_OVERRIDE
+    {
+        mTextureClient = nullptr;
+    }
+
+private:
+    mozilla::RefPtr<TextureClient> mTextureClient;
+};
+
 GonkBufferQueue::GonkBufferQueue(bool allowSynchronousMode,
         const sp<IGraphicBufferAlloc>& allocator) :
     mDefaultWidth(1),
@@ -76,8 +94,7 @@ GonkBufferQueue::GonkBufferQueue(bool allowSynchronousMode,
     mBufferHasBeenQueued(false),
     mDefaultBufferFormat(PIXEL_FORMAT_RGBA_8888),
     mConsumerUsageBits(0),
-    mTransformHint(0),
-    mGeneration(0)
+    mTransformHint(0)
 {
     // Choose a name using the PID and a process-unique ID.
     mConsumerName = String8::format("unnamed-%d-%d", getpid(), createProcessUniqueId());
@@ -123,12 +140,8 @@ status_t GonkBufferQueue::setTransformHint(uint32_t hint) {
     return NO_ERROR;
 }
 
-int GonkBufferQueue::getGeneration() {
-    return mGeneration;
-}
-
-mozilla::layers::SurfaceDescriptor*
-GonkBufferQueue::getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer)
+TemporaryRef<TextureClient>
+GonkBufferQueue::getTextureClientFromBuffer(ANativeWindowBuffer* buffer)
 {
     Mutex::Autolock _l(mMutex);
     if (buffer == NULL) {
@@ -138,18 +151,34 @@ GonkBufferQueue::getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer)
 
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
         if (mSlots[i].mGraphicBuffer != NULL && mSlots[i].mGraphicBuffer->handle == buffer->handle) {
-            return &mSlots[i].mSurfaceDescriptor;
+            return mSlots[i].mTextureClient;
         }
     }
     ST_LOGE("getSlotFromBufferLocked: unknown buffer: %p", buffer->handle);
     return nullptr;
 }
 
+int GonkBufferQueue::getSlotFromTextureClientLocked(
+        TextureClient* client) const
+{
+    if (client == NULL) {
+        ST_LOGE("getSlotFromBufferLocked: encountered NULL buffer");
+        return BAD_VALUE;
+    }
+
+    for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
+        if (mSlots[i].mTextureClient == client) {
+            return i;
+        }
+    }
+    ST_LOGE("getSlotFromBufferLocked: unknown TextureClient: %p", client);
+    return BAD_VALUE;
+}
+
 status_t GonkBufferQueue::setBufferCount(int bufferCount) {
     ST_LOGV("setBufferCount: count=%d", bufferCount);
 
     sp<IConsumerListener> listener;
-    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
     {
         Mutex::Autolock lock(mMutex);
 
@@ -189,12 +218,11 @@ status_t GonkBufferQueue::setBufferCount(int bufferCount) {
         // and will release all of its buffer references.  We don't clear the
         // queue, however, so currently queued buffers still get displayed.
         // XXX: Should this use drainQueueAndFreeBuffersLocked instead?
-        freeAllBuffersLocked(freeList);
+        freeAllBuffersLocked();
         mOverrideMaxBufferCount = bufferCount;
         mDequeueCondition.broadcast();
         listener = mConsumerListener;
     } // scope for lock
-    releaseBufferFreeListUnlocked(freeList);
 
     if (listener != NULL) {
         listener->onBuffersReleased();
@@ -274,12 +302,9 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
 
     status_t returnFlags(OK);
     int buf = INVALID_BUFFER_SLOT;
-    uint32_t generation;
-    SurfaceDescriptor descOld;
 
     { // Scope for the lock
         Mutex::Autolock lock(mMutex);
-        generation = mGeneration;
 
         if (format == 0) {
             format = mDefaultBufferFormat;
@@ -416,9 +441,13 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
             mSlots[buf].mGraphicBuffer = NULL;
             mSlots[buf].mRequestBufferCalled = false;
             mSlots[buf].mFence = Fence::NO_FENCE;
-            descOld = mSlots[buf].mSurfaceDescriptor;
-            mSlots[buf].mSurfaceDescriptor = SurfaceDescriptor();
-
+            if (mSlots[buf].mTextureClient) {
+              mSlots[buf].mTextureClient->ClearRecycleCallback();
+              // release TextureClient in ImageBridge thread
+              nsProxyReleaseTask* task = new nsProxyReleaseTask(mSlots[buf].mTextureClient);
+              mSlots[buf].mTextureClient = NULL;
+              ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+            }
             returnFlags |= IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION;
         }
 
@@ -432,34 +461,21 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
         mSlots[buf].mFence = Fence::NO_FENCE;
     }  // end lock scope
 
-    SurfaceDescriptor desc;
-    ImageBridgeChild* ibc;
     sp<GraphicBuffer> graphicBuffer;
     if (returnFlags & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) {
+        RefPtr<GrallocTextureClientOGL> textureClient =
+            new GrallocTextureClientOGL(ImageBridgeChild::GetSingleton(),
+                                        gfx::SurfaceFormat::UNKNOWN,
+                                        gfx::BackendType::NONE,
+                                        TEXTURE_DEALLOCATE_CLIENT);
         usage |= GraphicBuffer::USAGE_HW_TEXTURE;
-        status_t error;
-        ibc = ImageBridgeChild::GetSingleton();
-        ST_LOGD("dequeueBuffer: about to alloc surface descriptor");
-        ibc->AllocSurfaceDescriptorGralloc(IntSize(w, h),
-                                           format,
-                                           usage,
-                                           &desc);
-        // We can only use a gralloc buffer here.  If we didn't get
-        // one back, something went wrong.
-        ST_LOGD("dequeueBuffer: got surface descriptor");
-        if (SurfaceDescriptor::TSurfaceDescriptorGralloc != desc.type()) {
-            MOZ_ASSERT(SurfaceDescriptor::T__None == desc.type());
+        bool result = textureClient->AllocateGralloc(IntSize(w, h), format, usage);
+        sp<GraphicBuffer> graphicBuffer = textureClient->GetGraphicBuffer();
+        if (!result || !graphicBuffer.get()) {
             ST_LOGE("dequeueBuffer: failed to alloc gralloc buffer");
             return -ENOMEM;
         }
-        graphicBuffer = GrallocBufferActor::GetFrom(desc.get_SurfaceDescriptorGralloc());
-        error = graphicBuffer->initCheck();
-        if (error != NO_ERROR) {
-            ST_LOGE("dequeueBuffer: createGraphicBuffer failed with error %d", error);
-            return error;
-        }
 
-        bool tooOld = false;
         { // Scope for the lock
             Mutex::Autolock lock(mMutex);
 
@@ -468,24 +484,13 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
                 return NO_INIT;
             }
 
-            if (generation == mGeneration) {
-                mSlots[buf].mGraphicBuffer = graphicBuffer;
-                mSlots[buf].mSurfaceDescriptor = desc;
-                mSlots[buf].mSurfaceDescriptor.get_SurfaceDescriptorGralloc().external() = true;
-                ST_LOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
-                        mSlots[buf].mGraphicBuffer->handle);
-            } else {
-                tooOld = true;
-            }
+            mSlots[buf].mGraphicBuffer = graphicBuffer;
+            mSlots[buf].mTextureClient = textureClient;
+            ST_LOGD("dequeueBuffer: returning slot=%d buf=%p ", buf,
+                    mSlots[buf].mGraphicBuffer->handle);
+
         }
 
-        if (IsSurfaceDescriptorValid(descOld)) {
-            ibc->DeallocSurfaceDescriptorGralloc(descOld);
-        }
-
-        if (tooOld) {
-            ibc->DeallocSurfaceDescriptorGralloc(desc);
-        }
     }
 
     ST_LOGV("dequeueBuffer: returning slot=%d/%llu buf=%p flags=%#x", *outBuf,
@@ -752,7 +757,6 @@ status_t GonkBufferQueue::disconnect(int api) {
 
     int err = NO_ERROR;
     sp<IConsumerListener> listener;
-    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
 
     { // Scope for the lock
         Mutex::Autolock lock(mMutex);
@@ -769,7 +773,7 @@ status_t GonkBufferQueue::disconnect(int api) {
             case NATIVE_WINDOW_API_MEDIA:
             case NATIVE_WINDOW_API_CAMERA:
                 if (mConnectedApi == api) {
-                    freeAllBuffersLocked(freeList);
+                    freeAllBuffersLocked();
                     mConnectedApi = NO_CONNECTED_API;
                     mDequeueCondition.broadcast();
                     listener = mConsumerListener;
@@ -785,7 +789,6 @@ status_t GonkBufferQueue::disconnect(int api) {
                 break;
         }
     }
-    releaseBufferFreeListUnlocked(freeList);
 
     if (listener != NULL) {
         listener->onBuffersReleased();
@@ -861,36 +864,21 @@ void GonkBufferQueue::dump(String8& result, const char* prefix) const {
     }
 }
 
-void GonkBufferQueue::releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>& freeList)
-{
-    // This function MUST ONLY be called with mMutex unlocked; else there
-    // is a risk of deadlock with the ImageBridge thread.
-
-    ST_LOGD("releaseBufferFreeListUnlocked: E");
-    ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-
-    for (uint32_t i = 0; i < freeList.Length(); ++i) {
-        ibc->DeallocSurfaceDescriptorGralloc(freeList[i]);
-    }
-
-    freeList.Clear();
-    ST_LOGD("releaseBufferFreeListUnlocked: X");
-}
-
-void GonkBufferQueue::freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList)
+void GonkBufferQueue::freeAllBuffersLocked()
 {
     ALOGW_IF(!mQueue.isEmpty(),
             "freeAllBuffersLocked called but mQueue is not empty");
-    ++mGeneration;
     mQueue.clear();
     mBufferHasBeenQueued = false;
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
-        if (mSlots[i].mGraphicBuffer.get() && mSlots[i].mBufferState != BufferSlot::ACQUIRED) {
-            SurfaceDescriptor* desc = freeList.AppendElement();
-            *desc = mSlots[i].mSurfaceDescriptor;
-        }
         mSlots[i].mGraphicBuffer = 0;
-        mSlots[i].mSurfaceDescriptor = SurfaceDescriptor();
+        if (mSlots[i].mTextureClient) {
+          mSlots[i].mTextureClient->ClearRecycleCallback();
+          // release TextureClient in ImageBridge thread
+          nsProxyReleaseTask* task = new nsProxyReleaseTask(mSlots[i].mTextureClient);
+          mSlots[i].mTextureClient = NULL;
+          ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
+        }
         if (mSlots[i].mBufferState == BufferSlot::ACQUIRED) {
             mSlots[i].mNeedsCleanupOnRelease = true;
         }
@@ -1007,7 +995,6 @@ status_t GonkBufferQueue::acquireBuffer(BufferItem *buffer, nsecs_t expectedPres
 
     int buf = front->mBuf;
     buffer->mGraphicBuffer = mSlots[buf].mGraphicBuffer;
-    buffer->mSurfaceDescriptor = mSlots[buf].mSurfaceDescriptor;
     buffer->mFrameNumber = mSlots[buf].mFrameNumber;
     buffer->mBuf = buf;
     buffer->mFence = mSlots[buf].mFence;
@@ -1106,23 +1093,18 @@ status_t GonkBufferQueue::consumerConnect(const sp<IConsumerListener>& consumerL
 
 status_t GonkBufferQueue::consumerDisconnect() {
     ST_LOGV("consumerDisconnect");
-    nsAutoTArray<SurfaceDescriptor, NUM_BUFFER_SLOTS> freeList;
-    {
-        Mutex::Autolock lock(mMutex);
+    Mutex::Autolock lock(mMutex);
 
-        if (mConsumerListener == NULL) {
-            ST_LOGE("consumerDisconnect: No consumer is connected!");
-            return -EINVAL;
-        }
-
-        mAbandoned = true;
-        mConsumerListener = NULL;
-        mQueue.clear();
-        freeAllBuffersLocked(freeList);
+    if (mConsumerListener == NULL) {
+        ST_LOGE("consumerDisconnect: No consumer is connected!");
+        return -EINVAL;
     }
-    releaseBufferFreeListUnlocked(freeList);
-    mDequeueCondition.broadcast();
 
+    mAbandoned = true;
+    mConsumerListener = NULL;
+    mQueue.clear();
+    freeAllBuffersLocked();
+    mDequeueCondition.broadcast();
     return NO_ERROR;
 }
 

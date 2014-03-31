@@ -31,6 +31,7 @@
 #include <utils/threads.h>
 
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/TextureClient.h"
 
 namespace android {
 // ----------------------------------------------------------------------------
@@ -38,7 +39,7 @@ namespace android {
 class GonkBufferQueue : public BnGraphicBufferProducer,
                     public BnGonkGraphicBufferConsumer,
                     private IBinder::DeathRecipient {
-    typedef mozilla::layers::SurfaceDescriptor SurfaceDescriptor;
+    typedef mozilla::layers::TextureClient TextureClient;
 
 public:
     enum { MIN_UNDEQUEUED_BUFFERS = 2 };
@@ -312,14 +313,11 @@ public:
     // dump our state in a String
     virtual void dump(String8& result, const char* prefix) const;
 
-    int getGeneration();
-    SurfaceDescriptor *getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer);
+     mozilla::TemporaryRef<TextureClient> getTextureClientFromBuffer(ANativeWindowBuffer* buffer);
+
+    int getSlotFromTextureClientLocked(TextureClient* client) const;
 
 private:
-    // releaseBufferFreeListUnlocked releases the resources in the freeList;
-    // this must be called with mMutex unlocked.
-    void releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>& freeList);
-
     // freeBufferLocked frees the GraphicBuffer and sync resources for the
     // given slot.
     //void freeBufferLocked(int index);
@@ -327,7 +325,7 @@ private:
     // freeAllBuffersLocked frees the GraphicBuffer and sync resources for
     // all slots.
     //void freeAllBuffersLocked();
-    void freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList);
+    void freeAllBuffersLocked();
 
     // setDefaultMaxBufferCountLocked sets the maximum number of buffer slots
     // that will be used if the producer does not override the buffer slot
@@ -366,8 +364,7 @@ private:
     struct BufferSlot {
 
         BufferSlot()
-        : mSurfaceDescriptor(SurfaceDescriptor()),
-          mBufferState(BufferSlot::FREE),
+        : mBufferState(BufferSlot::FREE),
           mRequestBufferCalled(false),
           mFrameNumber(0),
           mAcquireCalled(false),
@@ -378,8 +375,8 @@ private:
         // if no buffer has been allocated.
         sp<GraphicBuffer> mGraphicBuffer;
 
-        // mSurfaceDescriptor is the token to remotely allocated GraphicBuffer.
-        SurfaceDescriptor mSurfaceDescriptor;
+        // mTextureClient is a thin abstraction over remotely allocated GraphicBuffer.
+        mozilla::RefPtr<TextureClient> mTextureClient;
 
         // BufferState represents the different states in which a buffer slot
         // can be.  All slots are initially FREE.
@@ -565,9 +562,6 @@ private:
 
     // mConnectedProducerToken is used to set a binder death notification on the producer
     sp<IBinder> mConnectedProducerToken;
-
-    // mGeneration is the current generation of buffer slots
-    uint32_t mGeneration;
 };
 
 // ----------------------------------------------------------------------------
