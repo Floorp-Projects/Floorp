@@ -2910,7 +2910,7 @@ const BrowserSearch = {
 #endif
     let openSearchPageIfFieldIsNotActive = function(aSearchBar) {
       if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField)
-        openUILinkIn("about:home", "current");
+        openUILinkIn(Services.search.defaultEngine.searchForm, "current");
     };
 
     let searchBar = this.searchBar;
