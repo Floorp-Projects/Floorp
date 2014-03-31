@@ -1927,12 +1927,6 @@ function TextPropertyEditor(aRuleEditor, aProperty) {
   this.browserWindow = this.doc.defaultView.top;
   this.removeOnRevert = this.prop.value === "";
 
-  let domRule = this.prop.rule.domRule;
-  let href = domRule ? domRule.href : null;
-  if (href) {
-    this.sheetURI = IOService.newURI(href, null, null);
-  }
-
   this._onEnableClicked = this._onEnableClicked.bind(this);
   this._onExpandClicked = this._onExpandClicked.bind(this);
   this._onStartEditing = this._onStartEditing.bind(this);
@@ -2077,6 +2071,35 @@ TextPropertyEditor.prototype = {
       property: this.prop,
       popup: this.popup
     });
+  },
+
+  /**
+   * Get the path from which to resolve requests for this
+   * rule's stylesheet.
+   * @return {string} the stylesheet's href.
+   */
+  get sheetHref() {
+    let domRule = this.prop.rule.domRule;
+    if (domRule) {
+      return domRule.href || domRule.nodeHref;
+    }
+  },
+
+  /**
+   * Get the URI from which to resolve relative requests for
+   * this rule's stylesheet.
+   * @return {nsIURI} A URI based on the the stylesheet's href.
+   */
+  get sheetURI() {
+    if (this._sheetURI === undefined) {
+      if (this.sheetHref) {
+        this._sheetURI = IOService.newURI(this.sheetHref, null, null);
+      } else {
+        this._sheetURI = null;
+      }
+    }
+
+    return this._sheetURI;
   },
 
   /**
