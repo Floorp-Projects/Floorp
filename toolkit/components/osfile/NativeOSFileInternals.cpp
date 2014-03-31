@@ -46,7 +46,7 @@
 #endif // defined (XP_UNIX)
 
 #if defined(XP_WIN)
-#include <Windows.h>
+#include <windows.h>
 #endif // defined (XP_WIN)
 
 namespace mozilla {
