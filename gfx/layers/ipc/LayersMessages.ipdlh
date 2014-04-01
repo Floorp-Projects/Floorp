@@ -308,10 +308,6 @@ struct OpCreatedIncrementalTexture {
   nsIntRect bufferRect;
 };
 
-struct OpDestroyThebesBuffer {
-  PCompositable compositable;
-};
-
 struct OpPaintTexture {
   PCompositable compositable;
   uint32_t textureId;
@@ -377,7 +373,6 @@ union CompositableOperation {
 
   OpCreatedTexture;
   OpCreatedIncrementalTexture;
-  OpDestroyThebesBuffer;
 
   OpPaintTexture;
   OpPaintTextureRegion;

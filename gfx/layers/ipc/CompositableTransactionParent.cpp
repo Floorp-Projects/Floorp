@@ -96,21 +96,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
                                                  op.bufferRect());
       break;
     }
-    case CompositableOperation::TOpDestroyThebesBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] Created double buffer"));
-      const OpDestroyThebesBuffer& op = aEdit.get_OpDestroyThebesBuffer();
-      CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
-      CompositableHost* compositableHost = compositableParent->GetCompositableHost();
-      if (compositableHost->GetType() != BUFFER_CONTENT &&
-          compositableHost->GetType() != BUFFER_CONTENT_DIRECT)
-      {
-        return false;
-      }
-      DeprecatedContentHostBase* content = static_cast<DeprecatedContentHostBase*>(compositableHost);
-      content->DestroyTextures();
-
-      break;
-    }
     case CompositableOperation::TOpPaintTexture: {
       MOZ_LAYERS_LOG(("[ParentSide] Paint Texture X"));
       const OpPaintTexture& op = aEdit.get_OpPaintTexture();

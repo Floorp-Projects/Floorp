@@ -165,8 +165,6 @@ enum CompositableType
   BUFFER_IMAGE_SINGLE,    // image/canvas with a single texture, single buffered
   BUFFER_IMAGE_BUFFERED,  // canvas, double buffered
   BUFFER_BRIDGE,          // image bridge protocol
-  BUFFER_CONTENT,         // thebes layer interface, single buffering
-  BUFFER_CONTENT_DIRECT,  // thebes layer interface, double buffering
   BUFFER_CONTENT_INC,     // thebes layer interface, only sends incremental
                           // updates to a texture on the compositor side.
   // somewhere in the middle
