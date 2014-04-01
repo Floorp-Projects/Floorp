@@ -6,8 +6,8 @@
 const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/styleinspector/test/";
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleinspector/test/";
 
-//Services.prefs.setBoolPref("devtools.dump.emit", true);
-Services.prefs.setBoolPref("devtools.debugger.log", true);
+// Services.prefs.setBoolPref("devtools.dump.emit", true);
+// Services.prefs.setBoolPref("devtools.debugger.log", true);
 
 let tempScope = {};
 
@@ -31,7 +31,7 @@ SimpleTest.registerCleanupFunction(() => {
 });
 
 SimpleTest.registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.debugger.log");
+  // Services.prefs.clearUserPref("devtools.debugger.log");
   Services.prefs.clearUserPref("devtools.dump.emit");
 });
 
@@ -74,7 +74,7 @@ function openView(name, callback)
       callback(inspector, view);
     }
 
-    if (inspector.sidebar.getTab(name)) {
+    if (inspector.sidebar.getWindowForTab(name)) {
       onReady();
     } else {
       inspector.sidebar.once(name + "-ready", onReady);

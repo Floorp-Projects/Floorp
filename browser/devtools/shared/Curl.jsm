@@ -184,7 +184,7 @@ this.CurlUtils = {
 
     let contentType = this.findHeader(aData.headers, "content-type");
 
-    return (contentType && 
+    return (contentType &&
       contentType.toLowerCase().contains("multipart/form-data;"));
   },
 
@@ -228,7 +228,7 @@ this.CurlUtils = {
 
   /**
    * Returns the boundary string for a multipart request.
-   * 
+   *
    * @param string aData
    *        The data source. See the description in the Curl object.
    * @return string
@@ -243,7 +243,7 @@ this.CurlUtils = {
       return contentType.match(boundaryRe)[1];
     }
     // Temporary workaround. As of 2014-03-11 the requestHeaders array does not
-    // always contain the Content-Type header for mulitpart requests. See bug 978144. 
+    // always contain the Content-Type header for mulitpart requests. See bug 978144.
     // Find the header from the request payload.
     let boundaryString = aData.postDataText.match(boundaryRe)[1];
     if (boundaryString) {
