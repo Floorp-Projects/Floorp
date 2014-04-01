@@ -273,3 +273,27 @@ fuzzy-if(OSX,1,100) == menclose-5-circle.html menclose-5-circle-ref.html
 != op-dict-11.html op-dict-11-ref.html
 == op-dict-12.html op-dict-12-ref.html
 != op-dict-13.html op-dict-13-ref.html
+== mfrac-A-1.html mfrac-A-1-ref.html
+== mfrac-A-2.html mfrac-A-2-ref.html
+== mfrac-A-3.html mfrac-A-3-ref.html
+== mfrac-A-4.html mfrac-A-4-ref.html
+== mfrac-A-5.html mfrac-A-5-ref.html
+== mfrac-A-6.html mfrac-A-6-ref.html
+== mfrac-A-7.html mfrac-A-7-ref.html
+== mfrac-A-8.html mfrac-A-8-ref.html
+== mfrac-B-1.html mfrac-B-1-ref.html
+== mfrac-B-2.html mfrac-B-2-3-ref.html
+== mfrac-B-3.html mfrac-B-2-3-ref.html
+== mfrac-B-4.html mfrac-B-4-5-ref.html
+== mfrac-B-5.html mfrac-B-4-5-ref.html
+== mfrac-B-6.html mfrac-B-6-7-ref.html
+== mfrac-B-7.html mfrac-B-6-7-ref.html
+fuzzy-if(OSX,1,100) == mfrac-C-1.html mfrac-C-1-ref.html
+== mfrac-C-2.html mfrac-C-2-ref.html
+== mfrac-C-3.html mfrac-C-3-ref.html
+== mfrac-C-4.html mfrac-C-4-ref.html
+fuzzy-if(OSX,1,100) == mfrac-D-1.html mfrac-D-1-ref.html
+== mfrac-D-2.html mfrac-D-2-ref.html
+== mfrac-D-3.html mfrac-D-3-ref.html
+== mfrac-D-4.html mfrac-D-4-ref.html
+== mfrac-E-1.html mfrac-E-1-ref.html
