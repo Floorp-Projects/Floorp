@@ -784,6 +784,10 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/HelperAppDialog.js
 @BINPATH@/components/DownloadsUI.js
 
+#ifndef MOZ_WIDGET_GONK
+@BINPATH@/components/SimulatorScreen.js
+#endif
+
 #ifdef MOZ_SERVICES_FXACCOUNTS
 @BINPATH@/components/FxAccountsUIGlue.js
 @BINPATH@/components/services_fxaccounts.xpt
