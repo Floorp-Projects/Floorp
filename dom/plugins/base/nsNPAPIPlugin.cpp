@@ -1558,7 +1558,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   JS::Rooted<JS::Value> rval(cx);
   nsJSUtils::EvaluateOptions evalOptions;
   nsresult rv = nsJSUtils::EvaluateString(cx, utf16script, obj, options,
-                                          evalOptions, rval.address());
+                                          evalOptions, &rval);
 
   return NS_SUCCEEDED(rv) &&
          (!result || JSValToNPVariant(npp, cx, rval, result));
