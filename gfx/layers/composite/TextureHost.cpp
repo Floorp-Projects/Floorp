@@ -119,10 +119,6 @@ TextureHost::GetIPDLActor()
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
                                                            uint32_t aDeprecatedTextureHostFlags,
                                                            uint32_t aTextureFlags);
-// implemented in BasicCompositor.cpp
-TemporaryRef<DeprecatedTextureHost> CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
-                                                             uint32_t aDeprecatedTextureHostFlags,
-                                                             uint32_t aTextureFlags);
 
 /* static */ TemporaryRef<DeprecatedTextureHost>
 DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
@@ -142,10 +138,6 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
       }
       return result;
       }
-    case LayersBackend::LAYERS_BASIC:
-      return CreateBasicDeprecatedTextureHost(aDescriptorType,
-                                          aDeprecatedTextureHostFlags,
-                                          aTextureFlags);
     default:
       MOZ_CRASH("Couldn't create texture host");
   }
