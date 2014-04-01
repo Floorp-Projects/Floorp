@@ -17,7 +17,7 @@ const Runtime = require("sdk/system/runtime");
 const Self = require("sdk/self");
 const URL = require("sdk/url");
 const Subprocess = require("subprocess");
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const { rootURI: ROOT_URI } = require('@loader/options');
 const PROFILE_URL = ROOT_URI + "profile/";
@@ -112,7 +112,7 @@ exports.SimulatorProcess = Class({
 
   // request a b2g instance kill
   kill: function() {
-    let deferred = promise.defer();
+    let deferred = Promise.defer();
     if (this.process) {
       this.once("exit", (exitCode) => {
         this.shuttingDown = false;
@@ -125,7 +125,7 @@ exports.SimulatorProcess = Class({
       }
       return deferred.promise;
     } else {
-      return promise.resolve(undefined);
+      return Promise.resolve(undefined);
     }
   },
 
