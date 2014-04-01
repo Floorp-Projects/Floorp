@@ -79,7 +79,7 @@
   const StylesheetUtils = devtools.require("sdk/stylesheet/utils");
 
   let theme = Services.prefs.getCharPref("devtools.theme");
-  switchTheme(theme);
+  switchTheme("light");
 
   gDevTools.on("pref-changed", handlePrefChange);
   window.addEventListener("unload", function() {

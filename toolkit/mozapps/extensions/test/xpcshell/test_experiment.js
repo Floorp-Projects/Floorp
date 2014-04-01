@@ -54,20 +54,26 @@ add_test(function test_experiment() {
 // Changes to userDisabled should not be persisted to the database.
 add_test(function test_userDisabledNotPersisted() {
   AddonManager.getAddonByID("experiment1@tests.mozilla.org", (addon) => {
-    Assert.ok(addon, "Addon is found.");
+    Assert.ok(addon, "Add-on is found.");
+    Assert.ok(addon.userDisabled, "Add-on is user disabled.");
 
     let listener = {
       onEnabled: (addon2) => {
+        AddonManager.removeAddonListener(listener);
+
         Assert.equal(addon2.id, addon.id, "Changed add-on matches expected.");
-        Assert.ok(addon2.isActive, "Add-on is no longer disabled.");
+        Assert.equal(addon2.userDisabled, false, "Add-on is no longer user disabled.");
+        Assert.ok(addon2.isActive, "Add-on is active.");
 
         Assert.ok("experiment1@tests.mozilla.org" in XPIProvider.bootstrappedAddons,
                   "Experiment add-on listed in XPIProvider bootstrapped list.");
 
         AddonManager.getAddonByID("experiment1@tests.mozilla.org", (addon) => {
           Assert.ok(addon, "Add-on retrieved.");
-          Assert.ok(addon.userDisabled, "Add-on is disabled according to database.");
+          Assert.equal(addon.userDisabled, false, "Add-on is still enabled after API retrieve.");
+          Assert.ok(addon.isActive, "Add-on is still active.");
 
+          // Now when we restart the manager the add-on should revert state.
           restartManager();
           let persisted = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
           Assert.ok(!("experiment1@tests.mozilla.org" in persisted),
@@ -76,6 +82,7 @@ add_test(function test_userDisabledNotPersisted() {
           AddonManager.getAddonByID("experiment1@tests.mozilla.org", (addon) => {
             Assert.ok(addon, "Add-on retrieved.");
             Assert.ok(addon.userDisabled, "Add-on is disabled after restart.");
+            Assert.equal(addon.isActive, false, "Add-on is not active after restart.");
 
             run_next_test();
           });

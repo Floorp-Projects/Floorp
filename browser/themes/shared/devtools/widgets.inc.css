@@ -161,7 +161,7 @@
 
 .theme-light #breadcrumb-separator-after,
 .theme-light #breadcrumb-separator-before:after {
-  background: #f0f1f2; /* Toolbars */
+  background: url("chrome://browser/skin/devtools/metal.jpg"); /* Toolbars */
 }
 
 /* This chevron arrow cannot be replicated easily in CSS, so we are using

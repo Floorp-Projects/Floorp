@@ -11,6 +11,7 @@ GARBAGE = \
 	ant.properties \
 	build.xml \
 	local.properties \
+	geckoview_example.apk \
 	$(NULL)
 
 GARBAGE_DIRS = \
@@ -55,5 +56,10 @@ build.xml: $(CURDIR)/AndroidManifest.xml
 	mv AndroidManifest.xml.save AndroidManifest.xml
 	echo jar.libs.dir=libs >> project.properties
 
-package: $(PACKAGE_DEPS) FORCE
+bin/GeckoViewExample-debug.apk: $(PACKAGE_DEPS)
 	ant debug
+
+geckoview_example.apk: bin/GeckoViewExample-debug.apk
+	cp $< $@
+
+package: geckoview_example.apk FORCE

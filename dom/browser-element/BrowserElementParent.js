@@ -4,17 +4,17 @@
 
 "use strict";
 
-let Cu = Components.utils;
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-let Cr = Components.results;
+const {utils: Cu, interfaces: Ci} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/BrowserElementParent.jsm");
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 const BROWSER_FRAMES_ENABLED_PREF = "dom.mozBrowserFramesEnabled";
+
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserElementParentBuilder",
+                                  "resource://gre/modules/BrowserElementParent.jsm",
+                                  "BrowserElementParentBuilder");
 
 function debug(msg) {
   //dump("BrowserElementParent.js - " + msg + "\n");
