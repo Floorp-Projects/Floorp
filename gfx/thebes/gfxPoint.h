@@ -29,15 +29,6 @@ struct gfxPoint : public mozilla::gfx::BasePoint<gfxFloat, gfxPoint> {
     gfxPoint(gfxFloat aX, gfxFloat aY) : Super(aX, aY) {}
     gfxPoint(const nsIntPoint& aPoint) : Super(aPoint.x, aPoint.y) {}
 
-    // Round() is *not* rounding to nearest integer if the values are negative.
-    // They are always rounding as floor(n + 0.5).
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
-    gfxPoint& Round() {
-        x = floor(x + 0.5);
-        y = floor(y + 0.5);
-        return *this;
-    }
-
     bool WithinEpsilonOf(const gfxPoint& aPoint, gfxFloat aEpsilon) {
         return fabs(aPoint.x - x) < aEpsilon && fabs(aPoint.y - y) < aEpsilon;
     }
