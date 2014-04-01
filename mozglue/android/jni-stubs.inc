@@ -628,6 +628,25 @@ Java_org_mozilla_gecko_util_NativeJSObject_getBoolean(JNIEnv * arg0, jobject arg
 
 #ifdef JNI_STUBS
 
+typedef jboolean (*Java_org_mozilla_gecko_util_NativeJSObject_optBoolean_t)(JNIEnv *, jobject, jstring, jboolean);
+static Java_org_mozilla_gecko_util_NativeJSObject_optBoolean_t f_Java_org_mozilla_gecko_util_NativeJSObject_optBoolean;
+extern "C" NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optBoolean(JNIEnv * arg0, jobject arg1, jstring arg2, jboolean arg3) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSObject_optBoolean) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return false;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSObject_optBoolean(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_optBoolean", &f_Java_org_mozilla_gecko_util_NativeJSObject_optBoolean);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef jdouble (*Java_org_mozilla_gecko_util_NativeJSObject_getDouble_t)(JNIEnv *, jobject, jstring);
 static Java_org_mozilla_gecko_util_NativeJSObject_getDouble_t f_Java_org_mozilla_gecko_util_NativeJSObject_getDouble;
 extern "C" NS_EXPORT jdouble JNICALL
@@ -643,6 +662,25 @@ Java_org_mozilla_gecko_util_NativeJSObject_getDouble(JNIEnv * arg0, jobject arg1
 
 #ifdef JNI_BINDINGS
   xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_getDouble", &f_Java_org_mozilla_gecko_util_NativeJSObject_getDouble);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef jdouble (*Java_org_mozilla_gecko_util_NativeJSObject_optDouble_t)(JNIEnv *, jobject, jstring, jdouble);
+static Java_org_mozilla_gecko_util_NativeJSObject_optDouble_t f_Java_org_mozilla_gecko_util_NativeJSObject_optDouble;
+extern "C" NS_EXPORT jdouble JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optDouble(JNIEnv * arg0, jobject arg1, jstring arg2, jdouble arg3) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSObject_optDouble) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return 0;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSObject_optDouble(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_optDouble", &f_Java_org_mozilla_gecko_util_NativeJSObject_optDouble);
 #endif
 
 #ifdef JNI_STUBS
@@ -666,6 +704,25 @@ Java_org_mozilla_gecko_util_NativeJSObject_getInt(JNIEnv * arg0, jobject arg1, j
 
 #ifdef JNI_STUBS
 
+typedef jint (*Java_org_mozilla_gecko_util_NativeJSObject_optInt_t)(JNIEnv *, jobject, jstring, jint);
+static Java_org_mozilla_gecko_util_NativeJSObject_optInt_t f_Java_org_mozilla_gecko_util_NativeJSObject_optInt;
+extern "C" NS_EXPORT jint JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optInt(JNIEnv * arg0, jobject arg1, jstring arg2, jint arg3) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSObject_optInt) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return 0;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSObject_optInt(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_optInt", &f_Java_org_mozilla_gecko_util_NativeJSObject_optInt);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef jobject (*Java_org_mozilla_gecko_util_NativeJSObject_getObject_t)(JNIEnv *, jobject, jstring);
 static Java_org_mozilla_gecko_util_NativeJSObject_getObject_t f_Java_org_mozilla_gecko_util_NativeJSObject_getObject;
 extern "C" NS_EXPORT jobject JNICALL
@@ -685,6 +742,25 @@ Java_org_mozilla_gecko_util_NativeJSObject_getObject(JNIEnv * arg0, jobject arg1
 
 #ifdef JNI_STUBS
 
+typedef jobject (*Java_org_mozilla_gecko_util_NativeJSObject_optObject_t)(JNIEnv *, jobject, jstring, jobject);
+static Java_org_mozilla_gecko_util_NativeJSObject_optObject_t f_Java_org_mozilla_gecko_util_NativeJSObject_optObject;
+extern "C" NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optObject(JNIEnv * arg0, jobject arg1, jstring arg2, jobject arg3) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSObject_optObject) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return nullptr;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSObject_optObject(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_optObject", &f_Java_org_mozilla_gecko_util_NativeJSObject_optObject);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef jstring (*Java_org_mozilla_gecko_util_NativeJSObject_getString_t)(JNIEnv *, jobject, jstring);
 static Java_org_mozilla_gecko_util_NativeJSObject_getString_t f_Java_org_mozilla_gecko_util_NativeJSObject_getString;
 extern "C" NS_EXPORT jstring JNICALL
@@ -700,6 +776,25 @@ Java_org_mozilla_gecko_util_NativeJSObject_getString(JNIEnv * arg0, jobject arg1
 
 #ifdef JNI_BINDINGS
   xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_getString", &f_Java_org_mozilla_gecko_util_NativeJSObject_getString);
+#endif
+
+#ifdef JNI_STUBS
+
+typedef jstring (*Java_org_mozilla_gecko_util_NativeJSObject_optString_t)(JNIEnv *, jobject, jstring, jstring);
+static Java_org_mozilla_gecko_util_NativeJSObject_optString_t f_Java_org_mozilla_gecko_util_NativeJSObject_optString;
+extern "C" NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optString(JNIEnv * arg0, jobject arg1, jstring arg2, jstring arg3) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSObject_optString) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return nullptr;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSObject_optString(arg0, arg1, arg2, arg3);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_optString", &f_Java_org_mozilla_gecko_util_NativeJSObject_optString);
 #endif
 
 #ifdef JNI_STUBS

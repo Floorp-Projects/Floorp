@@ -44,6 +44,24 @@ public class NativeJSObject
     public native boolean getBoolean(String name);
 
     /**
+     * Returns the value of a boolean property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native boolean optBoolean(String name, boolean fallback);
+
+    /**
      * Returns the value of a double property.
      *
      * @param name
@@ -58,6 +76,24 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native double getDouble(String name);
+
+    /**
+     * Returns the value of a double property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native double optDouble(String name, double fallback);
 
     /**
      * Returns the value of an int property.
@@ -76,6 +112,24 @@ public class NativeJSObject
     public native int getInt(String name);
 
     /**
+     * Returns the value of an int property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native int optInt(String name, int fallback);
+
+    /**
      * Returns the value of an object property.
      *
      * @param name
@@ -92,6 +146,24 @@ public class NativeJSObject
     public native NativeJSObject getObject(String name);
 
     /**
+     * Returns the value of an object property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native NativeJSObject optObject(String name, NativeJSObject fallback);
+
+    /**
      * Returns the value of a string property.
      *
      * @param name
@@ -106,6 +178,24 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native String getString(String name);
+
+    /**
+     * Returns the value of a string property.
+     *
+     * @param name
+     *        Property name
+     * @param fallback
+     *        Value to return if property does not exist
+     * @throws IllegalArgumentException
+     *         If the property exists and its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native String optString(String name, String fallback);
 
     /**
      * Returns whether a property exists in this object
