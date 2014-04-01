@@ -666,6 +666,25 @@ Java_org_mozilla_gecko_util_NativeJSObject_getInt(JNIEnv * arg0, jobject arg1, j
 
 #ifdef JNI_STUBS
 
+typedef jobject (*Java_org_mozilla_gecko_util_NativeJSObject_getObject_t)(JNIEnv *, jobject, jstring);
+static Java_org_mozilla_gecko_util_NativeJSObject_getObject_t f_Java_org_mozilla_gecko_util_NativeJSObject_getObject;
+extern "C" NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getObject(JNIEnv * arg0, jobject arg1, jstring arg2) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSObject_getObject) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return nullptr;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSObject_getObject(arg0, arg1, arg2);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_getObject", &f_Java_org_mozilla_gecko_util_NativeJSObject_getObject);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef jstring (*Java_org_mozilla_gecko_util_NativeJSObject_getString_t)(JNIEnv *, jobject, jstring);
 static Java_org_mozilla_gecko_util_NativeJSObject_getString_t f_Java_org_mozilla_gecko_util_NativeJSObject_getString;
 extern "C" NS_EXPORT jstring JNICALL
