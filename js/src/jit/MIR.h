@@ -8956,6 +8956,10 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>
         return getOperand(1);
     }
 
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
 #ifdef DEBUG
     bool isConsistentFloat32Use(MUse *use) const {
         // During lowering, values that neither have object nor value MIR type
