@@ -1780,7 +1780,7 @@ public:
   void SetOn##name_(mozilla::dom::EventHandlerNonNull* listener);
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT
