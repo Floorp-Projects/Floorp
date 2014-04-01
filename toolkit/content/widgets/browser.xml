@@ -759,8 +759,12 @@
           }
 
           // Listen for first load for lazy attachment to form fill controller
-          this.addEventListener("pageshow", this.onPageShow, true);
-          this.addEventListener("pagehide", this.onPageHide, true);
+          // (But we don't want to do this for remote browsers - the test infra
+          // might fire these events when they normally wouldn't.)
+          if (!this.isRemoteBrowser) {
+            this.addEventListener("pageshow", this.onPageShow, true);
+            this.addEventListener("pagehide", this.onPageHide, true);
+          }
 
           if (this.messageManager) {
             this.messageManager.addMessageListener("PopupBlocking:UpdateBlockedPopups", this);
@@ -806,8 +810,10 @@
 
           this.lastURI = null;
 
-          this.removeEventListener("pageshow", this.onPageShow, true);
-          this.removeEventListener("pagehide", this.onPageHide, true);
+          if (!this.isRemoteBrowser) {
+            this.removeEventListener("pageshow", this.onPageShow, true);
+            this.removeEventListener("pagehide", this.onPageHide, true);
+          }
 
           if (this._autoScrollNeedsCleanup) {
             // we polluted the global scope, so clean it up
