@@ -11138,7 +11138,11 @@ CSSParserImpl::ParseCounterData(nsCSSProperty aPropID)
   };
   nsCSSValue value;
   if (!ParseVariant(value, VARIANT_INHERIT | VARIANT_NONE, nullptr)) {
-    if (!GetToken(true) || mToken.mType != eCSSToken_Ident) {
+    if (!GetToken(true)) {
+      return false;
+    }
+    if (mToken.mType != eCSSToken_Ident) {
+      UngetToken();
       return false;
     }
 
@@ -11155,11 +11159,12 @@ CSSParserImpl::ParseCounterData(nsCSSProperty aPropID)
       } else {
         UngetToken();
       }
-      if (CheckEndProperty()) {
+      if (!GetToken(true)) {
         break;
       }
-      if (!GetToken(true) || mToken.mType != eCSSToken_Ident) {
-        return false;
+      if (mToken.mType != eCSSToken_Ident) {
+        UngetToken();
+        break;
       }
       cur->mNext = new nsCSSValuePairList;
       cur = cur->mNext;
