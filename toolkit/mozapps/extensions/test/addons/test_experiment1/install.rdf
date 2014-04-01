@@ -7,7 +7,6 @@
     <em:id>experiment1@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
     <em:type>128</em:type>
-    <em:bootstrap>true</em:bootstrap>
 
     <!-- Front End MetaData -->
     <em:name>Test Experiment 1</em:name>

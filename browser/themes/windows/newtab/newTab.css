@@ -92,7 +92,7 @@
   border-color: rgba(8,22,37,.15) rgba(8,22,37,.17) rgba(8,22,37,.19);
 }
 
-.newtab-cell:hover:not(:empty):not([dragged]) {
+.newtab-cell:hover:not(:empty):not([dragged]):not([ignorehover]) {
   border-color: rgba(8,22,37,.25) rgba(8,22,37,.27) rgba(8,22,37,.3);
 }
 
@@ -102,7 +102,7 @@
   transition-property: top, left, opacity, box-shadow, background-color;
 }
 
-.newtab-site:hover,
+.newtab-cell:not([ignorehover]) > .newtab-site:hover,
 .newtab-site[dragged] {
   box-shadow: 0 0 10px rgba(8,22,37,.3);
 }
@@ -120,11 +120,22 @@
   background-size: cover;
 }
 
+.newtab-site[type=affiliate] .newtab-thumbnail,
+.newtab-site[type=organic] .newtab-thumbnail,
+.newtab-site[type=sponsored] .newtab-thumbnail {
+  background-position: top center;
+  background-size: auto;
+}
+
 /* TITLES */
 .newtab-title {
   color: #525c66;
   font-family: Segoe UI;
   font-size: 13px;
+}
+
+.newtab-site[type=sponsored] .newtab-title {
+  -moz-padding-end: 24px;
 }
 
 /* CONTROLS */
@@ -166,4 +177,12 @@
 
 .newtab-control-block:active {
   background-position: -192px 0;
+}
+
+.newtab-control-sponsored {
+  background-position: -249px -1px;
+}
+
+.newtab-control-sponsored:hover {
+  background-position: -265px -1px;
 }

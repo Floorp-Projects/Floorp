@@ -96,7 +96,8 @@ public:
   void FlushedForDiversion();
 
 protected:
-  bool RecvOnStartRequest(const nsHttpResponseHead& responseHead,
+  bool RecvOnStartRequest(const nsresult& channelStatus,
+                          const nsHttpResponseHead& responseHead,
                           const bool& useResponseHead,
                           const nsHttpHeaderArray& requestHeaders,
                           const bool& isFromCache,
@@ -106,7 +107,8 @@ protected:
                           const nsCString& securityInfoSerialization,
                           const NetAddr& selfAddr,
                           const NetAddr& peerAddr) MOZ_OVERRIDE;
-  bool RecvOnTransportAndData(const nsresult& status,
+  bool RecvOnTransportAndData(const nsresult& channelStatus,
+                              const nsresult& status,
                               const uint64_t& progress,
                               const uint64_t& progressMax,
                               const nsCString& data,
@@ -161,7 +163,8 @@ private:
 
   void AssociateApplicationCache(const nsCString &groupID,
                                  const nsCString &clientID);
-  void OnStartRequest(const nsHttpResponseHead& responseHead,
+  void OnStartRequest(const nsresult& channelStatus,
+                      const nsHttpResponseHead& responseHead,
                       const bool& useResponseHead,
                       const nsHttpHeaderArray& requestHeaders,
                       const bool& isFromCache,
@@ -171,13 +174,14 @@ private:
                       const nsCString& securityInfoSerialization,
                       const NetAddr& selfAddr,
                       const NetAddr& peerAddr);
-  void OnTransportAndData(const nsresult& status,
+  void OnTransportAndData(const nsresult& channelStatus,
+                          const nsresult& status,
                           const uint64_t progress,
                           const uint64_t& progressMax,
                           const nsCString& data,
                           const uint64_t& offset,
                           const uint32_t& count);
-  void OnStopRequest(const nsresult& statusCode);
+  void OnStopRequest(const nsresult& channelStatus);
   void OnProgress(const uint64_t& progress, const uint64_t& progressMax);
   void OnStatus(const nsresult& status);
   void FailedAsyncOpen(const nsresult& status);

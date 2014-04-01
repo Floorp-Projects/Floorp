@@ -610,7 +610,7 @@ interface nsINavHistoryResult : nsISupports
  * DANGER! If you are in the middle of a batch transaction, there may be a
  * database transaction active. You can still access the DB, but be careful.
  */
-[scriptable, uuid(45e2970b-9b00-4473-9938-39d6beaf4248)]
+[scriptable, uuid(0f0f45b0-13a1-44ae-a0ab-c6046ec6d4da)]
 interface nsINavHistoryObserver : nsISupports
 {
   /**
@@ -674,6 +674,37 @@ interface nsINavHistoryObserver : nsISupports
   void onTitleChanged(in nsIURI aURI,
                       in AString aPageTitle,
                       in ACString aGUID);
+
+  /**
+   * Called when an individual page's frecency has changed.
+   *
+   * This is not called for pages whose frecencies change as the result of some
+   * large operation where some large or unknown number of frecencies change at
+   * once.  Use onManyFrecenciesChanged to detect such changes.
+   *
+   * @param aURI
+   *        The page's URI.
+   * @param aNewFrecency
+   *        The page's new frecency.
+   * @param aGUID
+   *        The page's GUID.
+   * @param aHidden
+   *        True if the page is marked as hidden.
+   * @param aVisitDate
+   *        The page's last visit date.
+   */
+  void onFrecencyChanged(in nsIURI aURI,
+                         in long aNewFrecency,
+                         in ACString aGUID,
+                         in boolean aHidden,
+                         in PRTime aVisitDate);
+
+  /**
+   * Called when the frecencies of many pages have changed at once.
+   *
+   * onFrecencyChanged is not called for each of those pages.
+   */
+  void onManyFrecenciesChanged();
 
   /**
    * Removed by the user.

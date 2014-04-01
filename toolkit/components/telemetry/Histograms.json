@@ -4041,6 +4041,30 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket."
   },
+  "NEWTAB_PAGE_DIRECTORY_AFFILIATE_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 11,
+    "description": "Number of affiliate directory links shown on about:newtab. For non-default row or column configurations, extra links fall into the '10' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_ORGANIC_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 11,
+    "description": "Number of organic directory links shown on about:newtab. For non-default row or column configurations, extra links fall into the '10' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_SPONSORED_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 11,
+    "description": "Number of sponsored directory links shown on about:newtab. For non-default row or column configurations, extra links fall into the '10' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_TYPE_CLICKED": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "Track click count on about:newtab directory links per type (sponsored, affiliate, organic)."
+  },
   "PANORAMA_INITIALIZATION_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
