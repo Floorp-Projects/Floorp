@@ -3468,9 +3468,8 @@ while (true) {
             if tag in numericSuffixes or tag is IDLType.Tags.bool:
                 defaultStr = getHandleDefault(defaultValue)
                 value = declLoc + (".Value()" if nullable else "")
-                default = CGGeneric("%s.SetAs%s() = %s;" % (value,
-                                                            defaultValue.type,
-                                                            defaultStr))
+                default = CGGeneric("%s.RawSetAs%s() = %s;" %
+                                    (value, defaultValue.type, defaultStr))
             else:
                 default = CGGeneric(
                     handleDefaultStringValue(
@@ -3501,7 +3500,7 @@ while (true) {
                 ctorArgs = ""
             initDictionaryWithNull = CGIfWrapper(
                 CGGeneric("return false;"),
-                ('!%s.SetAs%s(%s).Init(cx, JS::NullHandleValue, "Member of %s")'
+                ('!%s.RawSetAs%s(%s).Init(cx, JS::NullHandleValue, "Member of %s")'
                  % (declLoc, getUnionMemberName(defaultValue.type),
                     ctorArgs, type)))
             templateBody = CGIfElseWrapper("!(${haveValue})",
@@ -7067,7 +7066,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
         jsConversion = CGWrapper(CGIndenter(CGGeneric(jsConversion)),
                                  pre=("tryNext = false;\n"
                                       "{ // scope for memberSlot\n"
-                                      "  %s& memberSlot = SetAs%s(%s);\n"
+                                      "  %s& memberSlot = RawSetAs%s(%s);\n"
                                       % (structType, name, ctorArgs)),
                                  post=("\n"
                                        "}\n"
@@ -7132,7 +7131,7 @@ class CGUnionStruct(CGThing):
                                        body="return mType == eNull;",
                                        bodyInHeader=True))
             methods.append(ClassMethod("SetNull", "void", [], inline=True,
-                                       body=("MOZ_ASSERT(mType == eUninitialized);\n"
+                                       body=("Uninit();\n"
                                              "mType = eNull;"),
                                        bodyInHeader=True))
             destructorCases.append(CGCase("eNull", None))
@@ -7142,6 +7141,7 @@ class CGUnionStruct(CGThing):
             toJSValCases.append(CGCase("eNull", CGGeneric("rval.setNull();\n"
                                                           "return true;")))
 
+        hasObjectType = any(t.isObject() for t in self.type.flatMemberTypes)
         for t in self.type.flatMemberTypes:
             vars = getUnionTypeTemplateVars(self.type,
                                             t, self.descriptorProvider,
@@ -7150,17 +7150,27 @@ class CGUnionStruct(CGThing):
                 body=string.Template("if (mType == e${name}) {\n"
                                      "  return mValue.m${name}.Value();\n"
                                      "}\n"
-                                     "MOZ_ASSERT(mType == eUninitialized);\n"
+                                     "%s\n"
                                      "mType = e${name};\n"
                                      "return mValue.m${name}.SetValue(${ctorArgs});").substitute(vars)
                 # bodyInHeader must be false for return values because they own
                 # their union members and we don't want include headers in
                 # UnionTypes.h just to call Addref/Release
-                methods.append(ClassMethod("SetAs" + vars["name"],
-                                           vars["structType"] + "&",
-                                           vars["ctorArgList"],
-                                           bodyInHeader=not self.ownsMembers,
-                                           body=body))
+                methods.append(ClassMethod(
+                    "RawSetAs" + vars["name"],
+                    vars["structType"] + "&",
+                    vars["ctorArgList"],
+                    bodyInHeader=not self.ownsMembers,
+                    body=body % "MOZ_ASSERT(mType == eUninitialized);"))
+                uninit = "Uninit();"
+                if hasObjectType and not self.ownsMembers:
+                    uninit = 'MOZ_ASSERT(mType != eObject, "This will not play well with Rooted");\n' + uninit
+                methods.append(ClassMethod(
+                    "SetAs" + vars["name"],
+                    vars["structType"] + "&",
+                    vars["ctorArgList"],
+                    bodyInHeader=not self.ownsMembers,
+                    body=body % uninit))
                 if self.ownsMembers:
                     methods.append(vars["setter"])
                     if t.isString():
@@ -7169,7 +7179,7 @@ class CGUnionStruct(CGThing):
                                 [Argument("const nsString::char_type*", "aData"),
                                  Argument("nsString::size_type", "aLength")],
                                 inline=True, bodyInHeader=True,
-                                body="SetAsString().Assign(aData, aLength);"))
+                                body="RawSetAsString().Assign(aData, aLength);"))
 
             body = string.Template('MOZ_ASSERT(Is${name}(), "Wrong type!");\n'
                                    'mValue.m${name}.Destroy();\n'
@@ -7212,7 +7222,7 @@ class CGUnionStruct(CGThing):
                                                      % vars["name"])))
             assignmentCases.append(
                 CGCase("e" + vars["name"],
-                       CGGeneric("SetAs%s() = aOther.GetAs%s();" %
+                       CGGeneric("RawSetAs%s() = aOther.GetAs%s();" %
                                  (vars["name"], vars["name"]))))
             if self.ownsMembers and typeNeedsRooting(t):
                 if t.isObject():
@@ -7364,7 +7374,7 @@ class CGUnionConversionStruct(CGThing):
                 body=string.Template("MOZ_ASSERT(mUnion.mType == mUnion.eUninitialized);\n"
                                      "mUnion.mType = mUnion.e${name};\n"
                                      "return mUnion.mValue.m${name}.SetValue(${ctorArgs});").substitute(vars)
-                methods.append(ClassMethod("SetAs" + vars["name"],
+                methods.append(ClassMethod("RawSetAs" + vars["name"],
                                            vars["structType"] + "&",
                                            vars["ctorArgList"],
                                            bodyInHeader=True,
@@ -7375,7 +7385,7 @@ class CGUnionConversionStruct(CGThing):
                                      [Argument("const nsDependentString::char_type*", "aData"),
                                       Argument("nsDependentString::size_type", "aLength")],
                                      inline=True, bodyInHeader=True,
-                                     body="SetAsString().SetData(aData, aLength);"))
+                                     body="RawSetAsString().SetData(aData, aLength);"))
 
             if vars["holderType"] is not None:
                 members.append(ClassMember("m%sHolder" % vars["name"],
