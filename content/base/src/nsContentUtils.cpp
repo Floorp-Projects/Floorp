@@ -574,7 +574,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::on##name_, _id, _type, _struct },
 #define WINDOW_ONLY_EVENT EVENT
 #define NON_IDL_EVENT EVENT
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef WINDOW_ONLY_EVENT
 #undef EVENT
     { nullptr }
@@ -606,7 +606,7 @@ nsContentUtils::InitializeTouchEventTable()
 #define EVENT(name_,  _id, _type, _struct)
 #define TOUCH_EVENT(name_,  _id, _type, _struct)      \
       { nsGkAtoms::on##name_, _id, _type, _struct },
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef TOUCH_EVENT
 #undef EVENT
       { nullptr }
