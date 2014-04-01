@@ -47,6 +47,10 @@ public:
     InfallibleTArray<coord>& texCoords() {
         return mTexCoords;
     }
+
+    unsigned int elements() {
+        return mVertexCoords.Length();
+    }
 private:
     // Reserve inline storage for one quad (2 triangles, 3 coords).
     nsAutoTArray<coord, 6> mVertexCoords;
