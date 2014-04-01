@@ -1668,7 +1668,7 @@ nsContextMenu.prototype = {
   // Formats the 'Search <engine> for "<selection or link text>"' context menu.
   formatSearchContextItem: function() {
     var menuItem = document.getElementById("context-searchselect");
-    var selectedText = this.onLink ? this.linkText() : this.textSelected;
+    var selectedText = this.isTextSelected ? this.textSelected : this.linkText();
 
     // Store searchTerms in context menu item so we know what to search onclick
     menuItem.searchTerms = selectedText;
