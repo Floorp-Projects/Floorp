@@ -367,8 +367,6 @@ CopyableCanvasLayer::GetTempSurface(const IntSize& aSize,
     mCachedFormat = aFormat;
   }
 
-  MOZ_ASSERT(mCachedTempSurface->Stride() ==
-             mCachedTempSurface->GetSize().width * 4);
   return mCachedTempSurface;
 }
 
