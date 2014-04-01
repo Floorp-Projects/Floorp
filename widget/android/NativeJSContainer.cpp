@@ -5,6 +5,7 @@
 
 #include "NativeJSContainer.h"
 #include "AndroidBridge.h"
+#include "mozilla/Vector.h"
 #include "prthread.h"
 
 using namespace mozilla;
@@ -37,13 +38,6 @@ public:
             env, jNativeJSObject, "mContainer",
             "Lorg/mozilla/gecko/util/NativeJSContainer;");
         MOZ_ASSERT(jObjectContainer);
-        jObjectJSObject = AndroidBridge::GetFieldID(
-            env, jNativeJSObject, "mJSObject", "J");
-        MOZ_ASSERT(jObjectJSObject);
-        jObjectConstructor = AndroidBridge::GetMethodID(
-            env, jNativeJSObject, "<init>",
-            "(Lorg/mozilla/gecko/util/NativeJSObject;J)V");
-        MOZ_ASSERT(jContainerConstructor);
     }
 
     static jobject CreateInstance(JNIEnv* env, JSContext* cx,
@@ -97,15 +91,16 @@ public:
 
     static jobject GetInstanceFromObject(JNIEnv* env, jobject object) {
         MOZ_ASSERT(object);
-        AutoLocalJNIFrame frame(env, 1);
 
         const jobject instance = env->GetObjectField(object, jObjectContainer);
         MOZ_ASSERT(instance);
-        return frame.Pop(instance);
+        return instance;
     }
 
     static JSContext* GetContextFromObject(JNIEnv* env, jobject object) {
         MOZ_ASSERT(object);
+        AutoLocalJNIFrame frame(env, 1);
+
         NativeJSContainer* const container =
             FromInstance(env, GetInstanceFromObject(env, object));
         if (!container) {
@@ -116,18 +111,15 @@ public:
 
     static JSObject* GetObjectFromObject(JNIEnv* env, jobject object) {
         MOZ_ASSERT(object);
+        AutoLocalJNIFrame frame(env, 1);
+
         NativeJSContainer* const container =
             FromInstance(env, GetInstanceFromObject(env, object));
         if (!container ||
             !container->EnsureObject(env)) { // Do thread check
             return nullptr;
         }
-        const jlong jsObject = env->GetLongField(object, jObjectJSObject);
-        if (!jsObject) {
-            // 0 for mJSObject field means it's the root object of the container
-            return static_cast<JSObject*>(container->mJSObject);
-        }
-        return reinterpret_cast<JSObject*>(static_cast<uintptr_t>(jsObject));
+        return container->mJSObject;
     }
 
     // Make sure we have a JSObject and deserialize if necessary/possible
@@ -169,8 +161,6 @@ private:
     static jmethodID jContainerConstructor;
     static jclass jNativeJSObject;
     static jfieldID jObjectContainer;
-    static jfieldID jObjectJSObject;
-    static jmethodID jObjectConstructor;
 
     static jobject CreateInstance(JNIEnv* env,
                                   NativeJSContainer* nativeObject) {
@@ -223,8 +213,6 @@ jfieldID NativeJSContainer::jContainerNativeObject = 0;
 jmethodID NativeJSContainer::jContainerConstructor = 0;
 jclass NativeJSContainer::jNativeJSObject = 0;
 jfieldID NativeJSContainer::jObjectContainer = 0;
-jfieldID NativeJSContainer::jObjectJSObject = 0;
-jmethodID NativeJSContainer::jObjectConstructor = 0;
 
 jobject
 CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
@@ -291,6 +279,104 @@ AppendJSON(const jschar* buf, uint32_t len, void* data)
     return true;
 }
 
+template <typename U, typename V,
+          bool (JS::Value::*IsMethod)() const,
+          V (JS::Value::*ToMethod)() const>
+struct PrimitiveProperty
+{
+    typedef U Type; // JNI type
+    typedef V NativeType; // JSAPI type
+
+    static bool InValue(JS::HandleValue val) {
+        return (static_cast<const JS::Value&>(val).*IsMethod)();
+    }
+
+    static Type FromValue(JNIEnv* env, jobject instance,
+                          JSContext* cx, JS::HandleValue val) {
+        return static_cast<Type>(
+            (static_cast<const JS::Value&>(val).*ToMethod)());
+    }
+};
+
+// Statically cast from bool to jboolean (unsigned char); it works
+// since false and JNI_FALSE have the same value (0), and true and
+// JNI_TRUE have the same value (1).
+typedef PrimitiveProperty<jboolean, bool,
+    &JS::Value::isBoolean, &JS::Value::toBoolean> BooleanProperty;
+
+typedef PrimitiveProperty<jdouble, double,
+    &JS::Value::isNumber, &JS::Value::toNumber> DoubleProperty;
+
+typedef PrimitiveProperty<jint, int32_t,
+    &JS::Value::isInt32, &JS::Value::toInt32> IntProperty;
+
+struct StringProperty
+{
+    typedef jstring Type;
+
+    static bool InValue(JS::HandleValue val) {
+        return val.isString();
+    }
+
+    static Type FromValue(JNIEnv* env, jobject instance,
+                          JSContext* cx, JS::HandleValue val) {
+        JS::RootedString str(cx, val.toString());
+        size_t strLen = 0;
+        const jschar* const strChars =
+            JS_GetStringCharsAndLength(cx, str, &strLen);
+        if (!CheckJSCall(env, !!strChars)) {
+            return nullptr;
+        }
+        jstring ret = env->NewString(
+            reinterpret_cast<const jchar*>(strChars), strLen);
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSERT(ret);
+        return ret;
+    }
+};
+
+struct HasProperty
+{
+    typedef jboolean Type;
+
+    static bool InValue(JS::HandleValue val) {
+        return true;
+    }
+
+    static Type FromValue(JNIEnv* env, jobject instance,
+                          JSContext* cx, JS::HandleValue val) {
+        return JSVAL_IS_VOID(val) ? JNI_TRUE : JNI_FALSE;
+    }
+};
+
+template <class Property>
+typename Property::Type
+GetProperty(JNIEnv* env, jobject instance, jstring name) {
+    MOZ_ASSERT(env);
+    MOZ_ASSERT(instance);
+
+    JSContext* const cx =
+        NativeJSContainer::GetContextFromObject(env, instance);
+    const JS::RootedObject object(cx,
+        NativeJSContainer::GetObjectFromObject(env, instance));
+    const JSJNIString strName(env, name);
+    JS::RootedValue val(cx);
+
+    if (!object ||
+        !CheckJNIArgument(env, name) ||
+        !CheckJSCall(env,
+            JS_GetUCProperty(cx, object, strName, strName.Length(), &val))) {
+        return typename Property::Type();
+    }
+    if (!Property::InValue(val)) {
+        AndroidBridge::ThrowException(env,
+            "java/lang/IllegalArgumentException",
+            "Property does not exist or type mismatch");
+        return typename Property::Type();
+    }
+    return Property::FromValue(env, instance, cx, val);
+}
+
 } // namespace
 
 extern "C" {
@@ -307,6 +393,36 @@ Java_org_mozilla_gecko_util_NativeJSContainer_clone(JNIEnv* env, jobject instanc
 {
     MOZ_ASSERT(env);
     return NativeJSContainer::CloneInstance(env, instance);
+}
+
+NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getBoolean(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<BooleanProperty>(env, instance, name);
+}
+
+NS_EXPORT jdouble JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getDouble(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<DoubleProperty>(env, instance, name);
+}
+
+NS_EXPORT jint JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getInt(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<IntProperty>(env, instance, name);
+}
+
+NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getString(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<StringProperty>(env, instance, name);
+}
+
+NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_has(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<HasProperty>(env, instance, name);
 }
 
 NS_EXPORT jstring JNICALL
