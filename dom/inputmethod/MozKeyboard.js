@@ -287,12 +287,14 @@ MozInputMethod.prototype = {
   _inputcontext: null,
   _layouts: {},
   _window: null,
+  _isSystem: false,
 
   classID: Components.ID("{4607330d-e7d2-40a4-9eb8-43967eae0142}"),
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIDOMGlobalPropertyInitializer,
-    Ci.nsIObserver
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference
   ]),
 
   init: function mozInputMethodInit(win) {
@@ -302,20 +304,27 @@ MozInputMethod.prototype = {
                             .getInterface(Ci.nsIDOMWindowUtils)
                             .currentInnerWindowID;
 
+    let principal = win.document.nodePrincipal;
+    let perm = Services.perms.testExactPermissionFromPrincipal(principal,
+                                                               "input-manage");
+    if (perm === Ci.nsIPermissionManager.ALLOW_ACTION) {
+      this._isSystem = true;
+    }
+
     Services.obs.addObserver(this, "inner-window-destroyed", false);
-    cpmm.addMessageListener('Keyboard:FocusChange', this);
-    cpmm.addMessageListener('Keyboard:SelectionChange', this);
-    cpmm.addMessageListener('Keyboard:GetContext:Result:OK', this);
-    cpmm.addMessageListener('Keyboard:LayoutsChange', this);
+    cpmm.addWeakMessageListener('Keyboard:FocusChange', this);
+    cpmm.addWeakMessageListener('Keyboard:SelectionChange', this);
+    cpmm.addWeakMessageListener('Keyboard:GetContext:Result:OK', this);
+    cpmm.addWeakMessageListener('Keyboard:LayoutsChange', this);
   },
 
   uninit: function mozInputMethodUninit() {
     this.setActive(false);
     Services.obs.removeObserver(this, "inner-window-destroyed");
-    cpmm.removeMessageListener('Keyboard:FocusChange', this);
-    cpmm.removeMessageListener('Keyboard:SelectionChange', this);
-    cpmm.removeMessageListener('Keyboard:GetContext:Result:OK', this);
-    cpmm.removeMessageListener('Keyboard:LayoutsChange', this);
+    cpmm.removeWeakMessageListener('Keyboard:FocusChange', this);
+    cpmm.removeWeakMessageListener('Keyboard:SelectionChange', this);
+    cpmm.removeWeakMessageListener('Keyboard:GetContext:Result:OK', this);
+    cpmm.removeWeakMessageListener('Keyboard:LayoutsChange', this);
 
     this._window = null;
     this._mgmt = null;
@@ -418,6 +427,39 @@ MozInputMethod.prototype = {
       if (this._inputcontext) {
         this.setInputContext(null);
       }
+    }
+  },
+
+  setValue: function(value) {
+    this._ensureIsSystem();
+    cpmm.sendAsyncMessage('System:SetValue', {
+      'value': value
+    });
+  },
+
+  setSelectedOption: function(index) {
+    this._ensureIsSystem();
+    cpmm.sendAsyncMessage('System:SetSelectedOption', {
+      'index': index
+    });
+  },
+
+  setSelectedOptions: function(indexes) {
+    this._ensureIsSystem();
+    cpmm.sendAsyncMessage('System:SetSelectedOptions', {
+      'indexes': indexes
+    });
+  },
+
+  removeFocus: function() {
+    this._ensureIsSystem();
+    cpmm.sendAsyncMessage('System:RemoveFocus', {});
+  },
+
+  _ensureIsSystem: function() {
+    if (!this._isSystem) {
+      throw new this._window.DOMError("Security",
+                                      "Should have 'input-manage' permssion.");
     }
   }
 };

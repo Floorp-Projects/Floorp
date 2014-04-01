@@ -764,7 +764,7 @@ BluetoothA2dpManager::HandleSinkPropertyChanged(const BluetoothSignal& aSignal)
     case SinkState::SINK_DISCONNECTED:
       // case 2: Connection attempt failed
       if (prevState == SinkState::SINK_CONNECTING) {
-        OnConnect(NS_LITERAL_STRING("A2dpConnectionError"));
+        OnConnect(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
         break;
       }
 

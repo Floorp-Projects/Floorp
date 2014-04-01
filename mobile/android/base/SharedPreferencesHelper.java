@@ -14,7 +14,6 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.Map;
@@ -63,7 +62,7 @@ public final class SharedPreferencesHelper
 
     private SharedPreferences getSharedPreferences(String branch) {
         if (branch == null) {
-            return PreferenceManager.getDefaultSharedPreferences(mContext);
+            return GeckoSharedPrefs.forApp(mContext);
         } else {
             return mContext.getSharedPreferences(branch, Context.MODE_PRIVATE);
         }

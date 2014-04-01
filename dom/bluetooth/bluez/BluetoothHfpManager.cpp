@@ -1690,7 +1690,7 @@ BluetoothHfpManager::OnSocketConnectError(BluetoothSocket* aSocket)
   mHandsfreeSocket = nullptr;
   mHeadsetSocket = nullptr;
 
-  OnConnect(NS_LITERAL_STRING("SocketConnectionError"));
+  OnConnect(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
 }
 
 void
@@ -1758,7 +1758,7 @@ BluetoothHfpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
   MOZ_ASSERT(mSocket);
 
   if (!mSocket->Connect(NS_ConvertUTF16toUTF8(aDeviceAddress), aChannel)) {
-    OnConnect(NS_LITERAL_STRING("SocketConnectionError"));
+    OnConnect(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
   }
 }
 
