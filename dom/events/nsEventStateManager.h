@@ -28,6 +28,8 @@ class EnterLeaveDispatcher;
 class nsIMarkupDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
+class nsMouseWheelTransaction;
+class nsScrollbarsForWheel;
 
 namespace mozilla {
 namespace dom {
