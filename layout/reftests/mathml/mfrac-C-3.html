@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>mfrac numalign</title>
+    <script type="text/javascript">
+      function doTest() {
+        document.getElementById("testMfrac").setAttribute("numalign","left");
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate",doTest, false);
+    </script>
+  </head>
+  <body>
+    <math>
+      <mfrac id="testMfrac" style="font-size: 300%">
+        <mi>x</mi>
+        <mrow><mn>a</mn><mo>+</mo><mn>b</mn><mo>+</mo><mn>c</mn><mo>+</mo><mn>d</mn><mo>+</mo><mn>e</mn></mrow>
+      </mfrac>
+    </math>
+  </body>
+</html>
