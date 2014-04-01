@@ -176,24 +176,24 @@ nsJSUtils::EvaluateString(JSContext* aCx,
                           const nsAString& aScript,
                           JS::Handle<JSObject*> aScopeObject,
                           JS::CompileOptions& aCompileOptions,
-                          EvaluateOptions& aEvaluateOptions,
-                          JS::Value* aRetValue,
+                          const EvaluateOptions& aEvaluateOptions,
+                          JS::MutableHandle<JS::Value> aRetValue,
                           void **aOffThreadToken)
 {
   PROFILER_LABEL("JS", "EvaluateString");
   MOZ_ASSERT_IF(aCompileOptions.versionSet,
                 aCompileOptions.version != JSVERSION_UNKNOWN);
-  MOZ_ASSERT_IF(aEvaluateOptions.coerceToString, aRetValue);
-  MOZ_ASSERT_IF(!aEvaluateOptions.reportUncaught, aRetValue);
+  MOZ_ASSERT_IF(aEvaluateOptions.coerceToString, aEvaluateOptions.needResult);
+  MOZ_ASSERT_IF(!aEvaluateOptions.reportUncaught, aEvaluateOptions.needResult);
   MOZ_ASSERT(aCx == nsContentUtils::GetCurrentJSContext());
 
   // Unfortunately, the JS engine actually compiles scripts with a return value
   // in a different, less efficient way.  Furthermore, it can't JIT them in many
   // cases.  So we need to be explicitly told whether the caller cares about the
-  // return value.  Callers use null to indicate they don't care.
-  if (aRetValue) {
-    *aRetValue = JSVAL_VOID;
-  }
+  // return value.  Callers can do this by calling the other overload of
+  // EvaluateString() which calls this function with aEvaluateOptions.needResult
+  // set to false.
+  aRetValue.setUndefined();
 
   JS::ExposeObjectToActiveJS(aScopeObject);
   nsAutoMicroTask mt;
@@ -221,51 +221,75 @@ nsJSUtils::EvaluateString(JSContext* aCx,
         script(aCx, JS::FinishOffThreadScript(aCx, JS_GetRuntime(aCx), *aOffThreadToken));
       *aOffThreadToken = nullptr; // Mark the token as having been finished.
       if (script) {
-        ok = JS_ExecuteScript(aCx, rootedScope, script, aRetValue);
+        if (aEvaluateOptions.needResult) {
+          ok = JS_ExecuteScript(aCx, rootedScope, script, aRetValue);
+        } else {
+          ok = JS_ExecuteScript(aCx, rootedScope, script);
+        }
       } else {
         ok = false;
       }
     } else {
-      ok = JS::Evaluate(aCx, rootedScope, aCompileOptions,
-                        PromiseFlatString(aScript).get(),
-                        aScript.Length(), aRetValue);
+      if (aEvaluateOptions.needResult) {
+        ok = JS::Evaluate(aCx, rootedScope, aCompileOptions,
+                          PromiseFlatString(aScript).get(),
+                          aScript.Length(), aRetValue);
+      } else {
+        ok = JS::Evaluate(aCx, rootedScope, aCompileOptions,
+                          PromiseFlatString(aScript).get(),
+                          aScript.Length());
+      }
     }
 
-    if (ok && aEvaluateOptions.coerceToString && !aRetValue->isUndefined()) {
-      JS::Rooted<JS::Value> value(aCx, *aRetValue);
+    if (ok && aEvaluateOptions.coerceToString && !aRetValue.isUndefined()) {
+      JS::Rooted<JS::Value> value(aCx, aRetValue);
       JSString* str = JS::ToString(aCx, value);
       ok = !!str;
-      *aRetValue = ok ? JS::StringValue(str) : JS::UndefinedValue();
+      aRetValue.set(ok ? JS::StringValue(str) : JS::UndefinedValue());
     }
   }
 
   if (!ok) {
     if (aEvaluateOptions.reportUncaught) {
       ReportPendingException(aCx);
-      if (aRetValue) {
-        *aRetValue = JS::UndefinedValue();
+      if (aEvaluateOptions.needResult) {
+        aRetValue.setUndefined();
       }
     } else {
       rv = JS_IsExceptionPending(aCx) ? NS_ERROR_FAILURE
                                       : NS_ERROR_OUT_OF_MEMORY;
       JS::Rooted<JS::Value> exn(aCx);
       JS_GetPendingException(aCx, &exn);
-      if (aRetValue) {
-        *aRetValue = exn;
+      if (aEvaluateOptions.needResult) {
+        aRetValue.set(exn);
       }
       JS_ClearPendingException(aCx);
     }
   }
 
   // Wrap the return value into whatever compartment aCx was in.
-  if (aRetValue) {
-    JS::Rooted<JS::Value> v(aCx, *aRetValue);
+  if (aEvaluateOptions.needResult) {
+    JS::Rooted<JS::Value> v(aCx, aRetValue);
     if (!JS_WrapValue(aCx, &v)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    *aRetValue = v;
+    aRetValue.set(v);
   }
   return rv;
+}
+
+nsresult
+nsJSUtils::EvaluateString(JSContext* aCx,
+                          const nsAString& aScript,
+                          JS::Handle<JSObject*> aScopeObject,
+                          JS::CompileOptions& aCompileOptions,
+                          void **aOffThreadToken)
+{
+  EvaluateOptions options;
+  options.setNeedResult(false);
+  JS::RootedValue unused(aCx);
+  return EvaluateString(aCx, aScript, aScopeObject, aCompileOptions,
+                        options, &unused, aOffThreadToken);
 }
 
 //

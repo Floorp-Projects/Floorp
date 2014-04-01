@@ -27,7 +27,6 @@ class TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
 class ThebesBufferData;
-class DeprecatedTextureClient;
 class ClientTiledLayerBuffer;
 class PTextureChild;
 
@@ -44,7 +43,6 @@ class PTextureChild;
 class CompositableForwarder : public ISurfaceAllocator
 {
   friend class AutoOpenSurface;
-  friend class DeprecatedTextureClientShmem;
 public:
 
   CompositableForwarder()
@@ -58,38 +56,12 @@ public:
   virtual void Connect(CompositableClient* aCompositable) = 0;
 
   /**
-   * When using the Thebes layer pattern of swapping or updating
-   * TextureClient/Host pairs without sending SurfaceDescriptors,
-   * use these messages to assign the single or double buffer
-   * (TextureClient/Host pairs) to the CompositableHost.
-   * We expect the textures to already have been created.
-   * With these messages, the ownership of the SurfaceDescriptor(s)
-   * moves to the compositor.
-   */
-  virtual void CreatedSingleBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptor& aDescriptor,
-                                   const TextureInfo& aTextureInfo,
-                                   const SurfaceDescriptor* aDescriptorOnWhite = nullptr) = 0;
-  virtual void CreatedDoubleBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptor& aFrontDescriptor,
-                                   const SurfaceDescriptor& aBackDescriptor,
-                                   const TextureInfo& aTextureInfo,
-                                   const SurfaceDescriptor* aFrontDescriptorOnWhite = nullptr,
-                                   const SurfaceDescriptor* aBackDescriptorOnWhite = nullptr) = 0;
-
-  /**
    * Notify the CompositableHost that it should create host-side-only
    * texture(s), that we will update incrementally using UpdateTextureIncremental.
    */
   virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
                                         const TextureInfo& aTextureInfo,
                                         const nsIntRect& aBufferRect) = 0;
-
-  /**
-   * Tell the compositor that a Compositable is killing its buffer(s),
-   * that is TextureClient/Hosts.
-   */
-  virtual void DestroyThebesBuffer(CompositableClient* aCompositable) = 0;
 
   /**
    * Tell the CompositableHost on the compositor side what TiledLayerBuffer to
@@ -102,21 +74,6 @@ public:
    * Create a TextureChild/Parent pair as as well as the TextureHost on the parent side.
    */
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData, TextureFlags aFlags) = 0;
-
-  /**
-   * Communicate to the compositor that the texture identified by aCompositable
-   * and aTextureId has been updated to aImage.
-   */
-  virtual void UpdateTexture(CompositableClient* aCompositable,
-                             TextureIdentifier aTextureId,
-                             SurfaceDescriptor* aDescriptor) = 0;
-
-  /**
-   * Same as UpdateTexture, but performs an asynchronous layer transaction (if possible)
-   */
-  virtual void UpdateTextureNoSwap(CompositableClient* aCompositable,
-                                   TextureIdentifier aTextureId,
-                                   SurfaceDescriptor* aDescriptor) = 0;
 
   /**
    * Communicate to the compositor that aRegion in the texture identified by

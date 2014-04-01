@@ -7,7 +7,7 @@
 #define mozilla_dom_workerscope_h__
 
 #include "Workers.h"
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,7 +24,7 @@ class WorkerPrivate;
 class WorkerLocation;
 class WorkerNavigator;
 
-class WorkerGlobalScope : public nsDOMEventTargetHelper,
+class WorkerGlobalScope : public DOMEventTargetHelper,
                           public nsIGlobalObject
 {
   nsRefPtr<Console> mConsole;
@@ -52,7 +52,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerGlobalScope,
-                                                         nsDOMEventTargetHelper)
+                                                         DOMEventTargetHelper)
 
   already_AddRefed<WorkerGlobalScope>
   Self()

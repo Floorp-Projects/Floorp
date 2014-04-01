@@ -55,14 +55,14 @@ private:
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(FileHandle, nsDOMEventTargetHelper,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(FileHandle, DOMEventTargetHelper,
                                      mFileStorage)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileHandle)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(FileHandle, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(FileHandle, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(FileHandle, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(FileHandle, DOMEventTargetHelper)
 
 // static
 already_AddRefed<FileHandle>

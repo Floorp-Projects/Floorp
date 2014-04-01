@@ -20,13 +20,13 @@ namespace mozilla {
 namespace dom {
 namespace network {
 
-NS_IMPL_QUERY_INTERFACE_INHERITED1(Connection, nsDOMEventTargetHelper,
+NS_IMPL_QUERY_INTERFACE_INHERITED1(Connection, DOMEventTargetHelper,
                                    nsINetworkProperties)
 
 // Don't use |Connection| alone, since that confuses nsTraceRefcnt since
 // we're not the only class with that name.
-NS_IMPL_ADDREF_INHERITED(dom::network::Connection, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(dom::network::Connection, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(dom::network::Connection, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(dom::network::Connection, DOMEventTargetHelper)
 
 Connection::Connection()
   : mType(static_cast<ConnectionType>(kDefaultType))

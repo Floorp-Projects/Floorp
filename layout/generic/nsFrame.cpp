@@ -34,7 +34,6 @@
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMNode.h"
-#include "nsEventStateManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsFrameSelection.h"
@@ -79,6 +78,7 @@
 
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"

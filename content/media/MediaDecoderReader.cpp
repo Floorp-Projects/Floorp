@@ -179,8 +179,10 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
 
   // Decode forward to the target frame. Start with video, if we have it.
   if (HasVideo()) {
+    // Note: when decoding hits the end of stream we must keep the last frame
+    // in the video queue so that we'll have something to display after the
+    // seek completes. This makes our logic a bit messy.
     bool eof = false;
-    int64_t startTime = -1;
     nsAutoPtr<VideoData> video;
     while (HasVideo() && !eof) {
       while (VideoQueue().GetSize() == 0 && !eof) {
@@ -196,6 +198,9 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
       if (eof) {
         // Hit end of file, we want to display the last frame of the video.
         if (video) {
+          DECODER_LOG(PR_LOG_DEBUG,
+            ("MediaDecoderReader::DecodeToTarget(%lld) repushing video frame [%lld, %lld] at EOF",
+            aTarget, video->mTime, video->GetEndTime()));
           VideoQueue().PushFront(video.forget());
         }
         VideoQueue().Finish();
@@ -205,11 +210,25 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
       // If the frame end time is less than the seek target, we won't want
       // to display this frame after the seek, so discard it.
       if (video && video->GetEndTime() <= aTarget) {
-        if (startTime == -1) {
-          startTime = video->mTime;
-        }
+        DECODER_LOG(PR_LOG_DEBUG,
+                    ("MediaDecoderReader::DecodeToTarget(%lld) pop video frame [%lld, %lld]",
+                     aTarget, video->mTime, video->GetEndTime()));
         VideoQueue().PopFront();
       } else {
+        // Found a frame after or encompasing the seek target.
+        if (aTarget >= video->mTime && video->GetEndTime() >= aTarget) {
+          // The seek target lies inside this frame's time slice. Adjust the frame's
+          // start time to match the seek target. We do this by replacing the
+          // first frame with a shallow copy which has the new timestamp.
+          VideoQueue().PopFront();
+          VideoData* temp = VideoData::ShallowCopyUpdateTimestamp(video, aTarget);
+          video = temp;
+          VideoQueue().PushFront(video);
+        }
+        DECODER_LOG(PR_LOG_DEBUG,
+                    ("MediaDecoderReader::DecodeToTarget(%lld) found target video frame [%lld,%lld]",
+                     aTarget, video->mTime, video->GetEndTime()));
+
         video.forget();
         break;
       }
@@ -220,7 +239,11 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
         return NS_ERROR_FAILURE;
       }
     }
-    DECODER_LOG(PR_LOG_DEBUG, ("First video frame after decode is %lld", startTime));
+#ifdef PR_LOGGING
+    const VideoData* front =  VideoQueue().PeekFront();
+    DECODER_LOG(PR_LOG_DEBUG, ("First video frame after decode is %lld",
+                front ? front->mTime : -1));
+#endif
   }
 
   if (HasAudio()) {
@@ -302,7 +325,13 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
     }
   }
 
-  DECODER_LOG(PR_LOG_DEBUG, ("MediaDecoderReader::DecodeToTarget(%lld) End", aTarget));
+#ifdef PR_LOGGING
+  const VideoData* v = VideoQueue().PeekFront();
+  const AudioData* a = AudioQueue().PeekFront();
+  DECODER_LOG(PR_LOG_DEBUG,
+              ("MediaDecoderReader::DecodeToTarget(%lld) finished v=%lld a=%lld",
+              aTarget, v ? v->mTime : -1, a ? a->mTime : -1));
+#endif
 
   return NS_OK;
 }

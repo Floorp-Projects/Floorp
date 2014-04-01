@@ -795,7 +795,11 @@
                 seekToPosition : function(newPosition) {
                     newPosition /= 1000; // convert from ms
                     this.log("+++ seeking to " + newPosition);
-                    this.video.currentTime = newPosition;
+                    if (isTouchControl) {
+                      this.video.fastSeek(newPosition);
+                    } else {
+                      this.video.currentTime = newPosition;
+                    }
                 },
 
                 setVolume : function(newVolume) {
@@ -1386,8 +1390,10 @@
                     let videoHeight = isAudioOnly ? minHeightForControlBar : this.video.clientHeight;
                     let videoWidth = isAudioOnly ? minWidthAllControls : this.video.clientWidth;
 
-                    if (this._overlayPlayButtonHeight > videoHeight || this._overlayPlayButtonWidth > videoWidth)
+                    if ((this._overlayPlayButtonHeight + this._controlBarHeight) > videoHeight || this._overlayPlayButtonWidth > videoWidth)
                         this.clickToPlay.hidden = true;
+                    else if (this.clickToPlay.hidden && !this.video.played.length)
+                        this.clickToPlay.hidden = false;
 
                     let size = "normal";
                     if (videoHeight < minHeightForControlBar)

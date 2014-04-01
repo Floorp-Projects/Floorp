@@ -69,7 +69,7 @@ eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrinc
     options.setOriginPrincipals(originPrincipals)
            .setFileAndLine("", 0);
 
-    bool ok = JS::Evaluate(cx, global, options, chars, len, rval.address());
+    bool ok = JS::Evaluate(cx, global, options, chars, len, rval);
 
     delete[] chars;
     return ok;

@@ -47,9 +47,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
   if (!tmp->mIsStarted) {
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveNodes)
   }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext, nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext,
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDestination)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
   if (!tmp->mIsStarted) {
@@ -59,10 +60,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext, nsDOMEventTarget
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(AudioContext, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(AudioContext, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(AudioContext, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(AudioContext, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioContext)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 static float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
 {
@@ -79,7 +80,7 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
                            uint32_t aNumberOfChannels,
                            uint32_t aLength,
                            float aSampleRate)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mSampleRate(GetSampleRateForAudioContext(aIsOffline, aSampleRate))
   , mNumberOfChannels(aNumberOfChannels)
   , mNodeCount(0)

@@ -72,7 +72,7 @@ BEGIN_TEST(testCustomIterator_bug612523)
     EVAL("var o = new HasCustomIter(); \n"
          "var j = 0; \n"
          "for (var i in o) { ++j; }; \n"
-         "j;", result.address());
+         "j;", &result);
 
     CHECK(JSVAL_IS_INT(result));
     CHECK_EQUAL(JSVAL_TO_INT(result), 100);

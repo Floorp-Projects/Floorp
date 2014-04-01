@@ -218,7 +218,7 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
     case NS_MOUSE_EVENT:
     case NS_POINTER_EVENT:
       // We want synthesized mouse moves to cause mouseover and mouseout
-      // DOM events (nsEventStateManager::PreHandleEvent), but not mousemove
+      // DOM events (EventStateManager::PreHandleEvent), but not mousemove
       // DOM events.
       // Synthesized button up events also do not cause DOM events because they
       // do not have a reliable refPoint.
@@ -265,27 +265,27 @@ WidgetKeyboardEvent::GetDOMKeyName(KeyNameIndex aKeyNameIndex,
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName)                      \
   static_assert(sizeof(aDOMKeyName) == MOZ_ARRAY_LENGTH(aDOMKeyName), \
                 "Invalid DOM key name");
-#include "nsDOMKeyNameList.h"
+#include "mozilla/KeyNameList.h"
 #undef NS_DEFINE_KEYNAME
 
   struct KeyNameTable
   {
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName)          \
     char16_t KEY_STR_NUM(__LINE__)[sizeof(aDOMKeyName)];
-#include "nsDOMKeyNameList.h"
+#include "mozilla/KeyNameList.h"
 #undef NS_DEFINE_KEYNAME
   };
 
   static const KeyNameTable kKeyNameTable = {
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) MOZ_UTF16(aDOMKeyName),
-#include "nsDOMKeyNameList.h"
+#include "mozilla/KeyNameList.h"
 #undef NS_DEFINE_KEYNAME
   };
 
   static const uint16_t kKeyNameOffsets[] = {
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName)          \
     offsetof(struct KeyNameTable, KEY_STR_NUM(__LINE__)) / sizeof(char16_t),
-#include "nsDOMKeyNameList.h"
+#include "mozilla/KeyNameList.h"
 #undef NS_DEFINE_KEYNAME
     // Include this entry so we can compute lengths easily.
     sizeof(kKeyNameTable)

@@ -368,7 +368,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 
         case eIntID_SelectTextfieldsOnKeyFocus:
             // Select textfield content when focused by kbd
-            // used by nsEventStateManager::sTextfieldSelectModel
+            // used by EventStateManager::sTextfieldSelectModel
             aResult = 1;
             break;
 
@@ -470,7 +470,7 @@ nsLookAndFeel::GetEchoPasswordImpl()
 {
     if (!mInitializedShowPassword) {
         if (XRE_GetProcessType() == GeckoProcessType_Default) {
-            mShowPassword = GeckoAppShell::GetShowPasswordSetting();
+            mShowPassword = mozilla::widget::android::GeckoAppShell::GetShowPasswordSetting();
         } else {
             ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
         }

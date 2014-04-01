@@ -603,65 +603,6 @@ protected:
   bool mIterating;
 };
 
-class TiledDeprecatedTextureHostOGL : public DeprecatedTextureHost
-                          , public TextureSourceOGL
-{
-public:
-  TiledDeprecatedTextureHostOGL()
-    : mTextureHandle(0)
-    , mGL(nullptr)
-  {}
-  ~TiledDeprecatedTextureHostOGL();
-
-  virtual void SetCompositor(Compositor* aCompositor);
-
-  // have to pass the size in here (every time) because of DrawQuad API :-(
-  virtual void Update(gfxReusableSurfaceWrapper* aReusableSurface, TextureFlags aFlags, const gfx::IntSize& aSize) MOZ_OVERRIDE;
-  virtual bool Lock() MOZ_OVERRIDE;
-  virtual void Unlock() MOZ_OVERRIDE {}
-
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
-  {
-    return DeprecatedTextureHost::GetFormat();
-  }
-
-  virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
-  virtual bool IsValid() const MOZ_OVERRIDE { return true; }
-  virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
-  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter);
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE
-  {
-    return mSize;
-  }
-
-  virtual void SwapTexturesImpl(const SurfaceDescriptor& aImage,
-                                nsIntRegion* aRegion = nullptr)
-  { MOZ_ASSERT(false, "Tiles should not use this path"); }
-
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
-
-  virtual const char* Name() { return "TiledDeprecatedTextureHostOGL"; }
-
-protected:
-  void DeleteTextures();
-
-  virtual uint64_t GetIdentifier() const MOZ_OVERRIDE {
-    return static_cast<uint64_t>(mTextureHandle);
-  }
-
-private:
-  GLenum GetTileType()
-  {
-    // Deduce the type that was assigned in GetFormatAndTileForImageFormat
-    return mGLFormat == LOCAL_GL_RGB ? LOCAL_GL_UNSIGNED_SHORT_5_6_5 : LOCAL_GL_UNSIGNED_BYTE;
-  }
-
-  gfx::IntSize mSize;
-  GLuint mTextureHandle;
-  GLenum mGLFormat;
-  nsRefPtr<gl::GLContext> mGL;
-};
-
 } // namespace
 } // namespace
 

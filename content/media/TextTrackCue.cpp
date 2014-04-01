@@ -13,17 +13,17 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_5(TextTrackCue,
-                                     nsDOMEventTargetHelper,
+                                     DOMEventTargetHelper,
                                      mDocument,
                                      mTrack,
                                      mTrackElement,
                                      mDisplayState,
                                      mRegion)
 
-NS_IMPL_ADDREF_INHERITED(TextTrackCue, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(TextTrackCue, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(TextTrackCue, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(TextTrackCue, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrackCue)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 StaticRefPtr<nsIWebVTTParserWrapper> TextTrackCue::sParserWrapper;
 
