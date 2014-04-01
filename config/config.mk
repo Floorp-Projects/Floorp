@@ -340,7 +340,7 @@ _ENABLE_PIC=1
 # Determine if module being compiled is destined
 # to be merged into libxul
 
-ifneq (,$(filter xul xul-%,$(FINAL_LIBRARY) $(LIBRARY_NAME)))
+ifneq (,$(filter xul,$(FINAL_LIBRARY) $(LIBRARY_NAME)))
   ifdef LIBXUL_LIBRARY
     $(error LIBRARY_NAME or FINAL_LIBRARY is "xul", LIBXUL_LIBRARY is implied)
   endif
@@ -351,7 +351,7 @@ ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
 $(error IS_COMPONENT is set, but is not compatible with LIBXUL_LIBRARY)
 endif
-ifeq (,$(filter xul xul-%,$(LIBRARY_NAME)))
+ifneq (xul,$(LIBRARY_NAME))
 FORCE_STATIC_LIB=1
 endif
 endif
