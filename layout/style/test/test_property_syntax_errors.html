@@ -41,6 +41,30 @@ function check_not_accepted(decl, property, info, badval)
   decl.removeProperty(property);
 }
 
+function check_value_balanced(decl, property, badval)
+{
+  var goodProp =
+    (property == "background-color") ? "color" : "background-color";
+  decl.cssText = goodProp + ": red; " + property + ": " + badval + "; " +
+                 goodProp + ": green";
+  is(decl.getPropertyValue(goodProp), "green",
+     "invalid value '" + property + ": " + badval +
+     "' is balanced and does not lead to parsing errors afterwards");
+  decl.cssText = "";
+}
+
+function check_value_unbalanced(decl, property, badval)
+{
+  var goodProp =
+    (property == "background-color") ? "color" : "background-color";
+  decl.cssText = goodProp + ": green; " + property + ": " + badval + "; " +
+                 goodProp + ": red";
+  is(decl.getPropertyValue(goodProp), "green",
+     "invalid value '" + property + ": " + badval +
+     "' is unbalanced and absorbs what follows it");
+  decl.cssText = "";
+}
+
 function run()
 {
   var gDeclaration = document.getElementById("testnode").style;
@@ -54,12 +78,15 @@ function run()
                          info.invalid_values[idx]);
       check_not_accepted(gQuirksDeclaration, property, info,
                          info.invalid_values[idx]);
+      check_value_balanced(gDeclaration, property,
+                           info.invalid_values[idx]);
     }
 
     if ("quirks_values" in info) {
       for (var quirkval in info.quirks_values) {
         var standardval = info.quirks_values[quirkval];
         check_not_accepted(gDeclaration, property, info, quirkval);
+        check_value_balanced(gDeclaration, property, quirkval);
 
         gQuirksDeclaration.setProperty(property, quirkval, "");
         gDeclaration.setProperty(property, standardval, "");
@@ -85,6 +112,15 @@ function run()
         gQuirksDeclaration.removeProperty(property);
         gDeclaration.removeProperty(property);
       }
+    }
+
+    for (var idx in info.unbalanced_values) {
+      check_not_accepted(gDeclaration, property, info,
+                         info.invalid_values[idx]);
+      check_not_accepted(gQuirksDeclaration, property, info,
+                         info.invalid_values[idx]);
+      check_value_unbalanced(gDeclaration, property,
+                             info.unbalanced_values[idx]);
     }
   }
 
