@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=952365
        // Test that we don't try to actually call the non-callable object
        window.dispatchEvent(new Event("volumechange"));
        onvolumechange = 5;
-       ise(onvolumechange, null,
+       ise(onvolumechange, 5,
            "Non-object values should become null when assigning to event handler");
     })();
   </script>
