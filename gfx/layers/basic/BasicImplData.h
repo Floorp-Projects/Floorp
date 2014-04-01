@@ -61,7 +61,7 @@ public:
    * set up to account for all the properties of the layer (transform,
    * opacity, etc).
    */
-  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer) {}
+  virtual void Paint(gfx::DrawTarget* aDT, Layer* aMaskLayer) {}
 
   /**
    * Like Paint() but called for ThebesLayers with the additional parameters
