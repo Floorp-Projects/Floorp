@@ -406,13 +406,20 @@ struct HasProperty
 
     static Type FromValue(JNIEnv* env, jobject instance,
                           JSContext* cx, JS::HandleValue val) {
-        return JSVAL_IS_VOID(val) ? JNI_TRUE : JNI_FALSE;
+        return JNI_TRUE;
     }
 };
 
+MOZ_BEGIN_ENUM_CLASS(FallbackOption)
+    THROW,
+    RETURN,
+MOZ_END_ENUM_CLASS(FallbackOption)
+
 template <class Property>
 typename Property::Type
-GetProperty(JNIEnv* env, jobject instance, jstring name) {
+GetProperty(JNIEnv* env, jobject instance, jstring name,
+            FallbackOption option = FallbackOption::THROW,
+            typename Property::Type fallback = typename Property::Type()) {
     MOZ_ASSERT(env);
     MOZ_ASSERT(instance);
 
@@ -429,11 +436,19 @@ GetProperty(JNIEnv* env, jobject instance, jstring name) {
             JS_GetUCProperty(cx, object, strName, strName.Length(), &val))) {
         return typename Property::Type();
     }
+    if (val.isUndefined()) {
+        if (option == FallbackOption::THROW) {
+            AndroidBridge::ThrowException(env,
+                "java/lang/IllegalArgumentException",
+                "Property does not exist");
+        }
+        return fallback;
+    }
     if (!Property::InValue(val)) {
         AndroidBridge::ThrowException(env,
             "java/lang/IllegalArgumentException",
-            "Property does not exist or type mismatch");
-        return typename Property::Type();
+            "Property type mismatch");
+        return fallback;
     }
     return Property::FromValue(env, instance, cx, val);
 }
@@ -462,10 +477,24 @@ Java_org_mozilla_gecko_util_NativeJSObject_getBoolean(JNIEnv* env, jobject insta
     return GetProperty<BooleanProperty>(env, instance, name);
 }
 
+NS_EXPORT jboolean JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optBoolean(JNIEnv* env, jobject instance,
+                                                      jstring name, jboolean fallback)
+{
+    return GetProperty<BooleanProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
 NS_EXPORT jdouble JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getDouble(JNIEnv* env, jobject instance, jstring name)
 {
     return GetProperty<DoubleProperty>(env, instance, name);
+}
+
+NS_EXPORT jdouble JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optDouble(JNIEnv* env, jobject instance,
+                                                     jstring name, jdouble fallback)
+{
+    return GetProperty<DoubleProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jint JNICALL
@@ -474,10 +503,24 @@ Java_org_mozilla_gecko_util_NativeJSObject_getInt(JNIEnv* env, jobject instance,
     return GetProperty<IntProperty>(env, instance, name);
 }
 
+NS_EXPORT jint JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optInt(JNIEnv* env, jobject instance,
+                                                  jstring name, jint fallback)
+{
+    return GetProperty<IntProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
 NS_EXPORT jobject JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getObject(JNIEnv* env, jobject instance, jstring name)
 {
     return GetProperty<ObjectProperty>(env, instance, name);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optObject(JNIEnv* env, jobject instance,
+                                                     jstring name, jobject fallback)
+{
+    return GetProperty<ObjectProperty>(env, instance, name, FallbackOption::RETURN, fallback);
 }
 
 NS_EXPORT jstring JNICALL
@@ -486,10 +529,17 @@ Java_org_mozilla_gecko_util_NativeJSObject_getString(JNIEnv* env, jobject instan
     return GetProperty<StringProperty>(env, instance, name);
 }
 
+NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_optString(JNIEnv* env, jobject instance,
+                                                     jstring name, jstring fallback)
+{
+    return GetProperty<StringProperty>(env, instance, name, FallbackOption::RETURN, fallback);
+}
+
 NS_EXPORT jboolean JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_has(JNIEnv* env, jobject instance, jstring name)
 {
-    return GetProperty<HasProperty>(env, instance, name);
+    return GetProperty<HasProperty>(env, instance, name, FallbackOption::RETURN, JNI_FALSE);
 }
 
 NS_EXPORT jstring JNICALL
