@@ -852,6 +852,10 @@ TextureParent::ActorDestroy(ActorDestroyReason why)
     mTextureHost->ForgetSharedData();
   }
 
+  // Clear recycle callback.
+  mTextureHost->ClearRecycleCallback();
+  mWaitForClientRecycle = nullptr;
+
   mTextureHost->mActor = nullptr;
   mTextureHost = nullptr;
 }
