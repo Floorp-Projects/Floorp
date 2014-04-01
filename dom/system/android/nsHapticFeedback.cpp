@@ -14,6 +14,6 @@ NS_IMPL_ISUPPORTS1(nsHapticFeedback, nsIHapticFeedback)
 NS_IMETHODIMP
 nsHapticFeedback::PerformSimpleAction(int32_t aType)
 {
-    GeckoAppShell::PerformHapticFeedback(aType == LongPress);
+    mozilla::widget::android::GeckoAppShell::PerformHapticFeedback(aType == LongPress);
     return NS_OK;
 }

@@ -10,7 +10,6 @@
 #include "mozwrlbase.h"
 #include "nsString.h"
 
-using namespace Microsoft::WRL;
 
 class ToastNotificationHandler {
     typedef ABI::Windows::UI::Notifications::IToastNotification IToastNotification;
@@ -20,7 +19,8 @@ class ToastNotificationHandler {
     typedef ABI::Windows::Data::Xml::Dom::IXmlNode IXmlNode;
     typedef ABI::Windows::Data::Xml::Dom::IXmlDocument IXmlDocument;
 
-    void SetNodeValueString(HSTRING inputString, ComPtr<IXmlNode> node, ComPtr<IXmlDocument> xml);
+    void SetNodeValueString(HSTRING inputString,Microsoft::WRL::ComPtr<IXmlNode> node,
+                                            Microsoft::WRL::ComPtr<IXmlDocument> xml);
   public:
     ToastNotificationHandler() {};
     ~ToastNotificationHandler() {};
@@ -36,9 +36,9 @@ class ToastNotificationHandler {
 
   private:
     nsString mCookie;
-    ComPtr<IToastNotificationManagerStatics> mToastNotificationManagerStatics;
+    Microsoft::WRL::ComPtr<IToastNotificationManagerStatics> mToastNotificationManagerStatics;
 
     bool CreateWindowsNotificationFromXml(IXmlDocument *toastXml,
                                           const nsAString& aAppId);
-    ComPtr<IXmlDocument> InitializeXmlForTemplate(ToastTemplateType templateType);
+    Microsoft::WRL::ComPtr<IXmlDocument> InitializeXmlForTemplate(ToastTemplateType templateType);
 };
