@@ -270,15 +270,6 @@ gfxPlatform::gfxPlatform()
 
     mLayersPreferMemoryOverShmem = XRE_GetProcessType() == GeckoProcessType_Default;
 
-#ifdef XP_WIN
-    // XXX - When 957560 is fixed, the pref can go away entirely
-    mLayersUseDeprecated =
-        Preferences::GetBool("layers.use-deprecated-textures", true)
-        && !gfxPrefs::LayersPreferOpenGL();
-#else
-    mLayersUseDeprecated = false;
-#endif
-
     mSkiaGlue = nullptr;
 
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
