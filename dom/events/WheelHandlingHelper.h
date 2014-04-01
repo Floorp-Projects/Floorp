@@ -20,6 +20,11 @@ struct nsIntPoint;
 
 namespace mozilla {
 
+/**
+ * DeltaValues stores two delta values which are along X and Y axis.  This is
+ * useful for arguments and results of some methods.
+ */
+
 struct DeltaValues
 {
   DeltaValues()
@@ -40,6 +45,11 @@ struct DeltaValues
   double deltaY;
 };
 
+/**
+ * WheelHandlingUtils provides some static methods which are useful at handling
+ * wheel events.
+ */
+
 class WheelHandlingUtils
 {
 public:
@@ -54,6 +64,13 @@ private:
   static bool CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax,
                                double aDirection);
 };
+
+/**
+ * ScrollbarsForWheel manages scrollbars state during wheel operation.
+ * E.g., on some platforms, scrollbars should show only while user attempts to
+ * scroll.  At that time, scrollbars which may be possible to scroll by
+ * operation of wheel at the point should show temporarily.
+ */
 
 class ScrollbarsForWheel
 {
@@ -87,6 +104,14 @@ protected:
                 WidgetWheelEvent* aEvent);
   static void DeactivateAllTemporarilyActivatedScrollTargets();
 };
+
+/**
+ * WheelTransaction manages a series of wheel events as a transaction.
+ * While in a transaction, every wheel event should scroll the same scrollable
+ * element even if a different scrollable element is under the mouse cursor.
+ *
+ * Additionally, this class also manages wheel scroll speed acceleration.
+ */
 
 class WheelTransaction
 {
