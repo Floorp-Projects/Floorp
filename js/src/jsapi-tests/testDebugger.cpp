@@ -126,7 +126,7 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
 
     char text[] = "new Error()";
     JS::RootedValue _(cx);
-    JS_EvaluateScript(cx, global, text, strlen(text), "", 0, _.address());
+    JS_EvaluateScript(cx, global, text, strlen(text), "", 0, &_);
 
     return JSTRAP_CONTINUE;
 }
