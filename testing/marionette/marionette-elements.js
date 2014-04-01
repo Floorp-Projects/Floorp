@@ -120,7 +120,8 @@ ElementManager.prototype = {
         !(XPCNativeWrapper(el).ownerDocument == wrappedWin.document) ||
         (XPCNativeWrapper(el).compareDocumentPosition(wrappedWin.document.documentElement) &
          DOCUMENT_POSITION_DISCONNECTED)) {
-      throw new ElementException("Stale element reference", 10, null);
+      throw new ElementException("The element reference is stale. Either the element " +
+                                 "is no longer attached to the DOM or the page has been refreshed.", 10, null);
     }
     return el;
   },

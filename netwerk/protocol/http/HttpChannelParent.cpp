@@ -588,6 +588,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   chan->GetCacheToken(getter_AddRefs(cacheEntry));
   mCacheEntry = do_QueryInterface(cacheEntry);
 
+  nsresult channelStatus = NS_OK;
+  chan->GetStatus(&channelStatus);
 
   nsCString secInfoSerialization;
   nsCOMPtr<nsISupports> secInfoSupp;
@@ -600,7 +602,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   }
 
   if (mIPCClosed ||
-      !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(),
+      !SendOnStartRequest(channelStatus,
+                          responseHead ? *responseHead : nsHttpResponseHead(),
                           !!responseHead,
                           requestHead->Headers(),
                           isFromCache,
@@ -650,13 +653,16 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
   if (NS_FAILED(rv))
     return rv;
 
+  nsresult channelStatus = NS_OK;
+  mChannel->GetStatus(&channelStatus);
+
   // OnDataAvailable is always preceded by OnStatus/OnProgress calls that set
   // mStoredStatus/mStoredProgress(Max) to appropriate values, unless
   // LOAD_BACKGROUND set.  In that case, they'll have garbage values, but
   // child doesn't use them.
-  if (mIPCClosed || !SendOnTransportAndData(mStoredStatus, mStoredProgress,
-                                            mStoredProgressMax, data, aOffset,
-                                            aCount)) {
+  if (mIPCClosed || !SendOnTransportAndData(channelStatus, mStoredStatus,
+                                            mStoredProgress, mStoredProgressMax,
+                                            data, aOffset, aCount)) {
     return NS_ERROR_UNEXPECTED;
   }
   return NS_OK;
