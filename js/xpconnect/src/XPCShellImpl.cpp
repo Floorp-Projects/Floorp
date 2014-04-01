@@ -344,8 +344,7 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
         if (!script)
             return false;
 
-        JS::Rooted<JS::Value> result(cx);
-        if (!compileOnly && !JS_ExecuteScript(cx, obj, script, result.address()))
+        if (!compileOnly && !JS_ExecuteScript(cx, obj, script))
             return false;
     }
     args.rval().setUndefined();
@@ -928,7 +927,7 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
                .setFileAndLine(filename, 1);
         script = JS::Compile(cx, obj, options, file);
         if (script && !compileOnly)
-            (void)JS_ExecuteScript(cx, obj, script, result.address());
+            (void)JS_ExecuteScript(cx, obj, script, &result);
         DoEndRequest(cx);
 
         return;
@@ -967,7 +966,7 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
             JSErrorReporter older;
 
             if (!compileOnly) {
-                ok = JS_ExecuteScript(cx, obj, script, result.address());
+                ok = JS_ExecuteScript(cx, obj, script, &result);
                 if (ok && result != JSVAL_VOID) {
                     /* Suppress error reports from JS::ToString(). */
                     older = JS_SetErrorReporter(cx, nullptr);
@@ -1154,8 +1153,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
                 return usage();
             }
 
-            JS_EvaluateScript(cx, obj, argv[i], strlen(argv[i]), "-e", 1,
-                              rval.address());
+            JS_EvaluateScript(cx, obj, argv[i], strlen(argv[i]), "-e", 1, &rval);
 
             isInteractive = false;
             break;

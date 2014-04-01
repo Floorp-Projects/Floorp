@@ -1433,7 +1433,7 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL,
       ok = JS_CallFunctionValue(cx, global, methodVal,
                                 JS::HandleValueArray::empty(), &rval);
     } else if (script) {
-      ok = JS_ExecuteScript(cx, global, script, nullptr);
+      ok = JS_ExecuteScript(cx, global, script);
     }
 
     if (!ok) {

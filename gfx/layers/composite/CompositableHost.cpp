@@ -142,20 +142,8 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
-  case BUFFER_IMAGE_SINGLE:
-    result = new DeprecatedImageHostSingle(aTextureInfo);
-    break;
-  case BUFFER_IMAGE_BUFFERED:
-    result = new DeprecatedImageHostBuffered(aTextureInfo);
-    break;
   case BUFFER_BRIDGE:
     MOZ_CRASH("Cannot create an image bridge compositable this way");
-    break;
-  case BUFFER_CONTENT:
-    result = new DeprecatedContentHostSingleBuffered(aTextureInfo);
-    break;
-  case BUFFER_CONTENT_DIRECT:
-    result = new DeprecatedContentHostDoubleBuffered(aTextureInfo);
     break;
   case BUFFER_CONTENT_INC:
     result = new ContentHostIncremental(aTextureInfo);
@@ -212,6 +200,9 @@ CompositableHost::DumpTextureHost(FILE* aFile, TextureHost* aTexture)
     return;
   }
   RefPtr<gfx::DataSourceSurface> dSurf = aTexture->GetAsSurface();
+  if (!dSurf) {
+    return;
+  }
   gfxPlatform *platform = gfxPlatform::GetPlatform();
   RefPtr<gfx::DrawTarget> dt = platform->CreateDrawTargetForData(dSurf->GetData(),
                                                                  dSurf->GetSize(),

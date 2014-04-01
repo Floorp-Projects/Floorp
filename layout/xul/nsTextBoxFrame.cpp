@@ -19,7 +19,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULLabelElement.h"
-#include "nsEventStateManager.h"
+#include "mozilla/EventStateManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
@@ -1131,7 +1131,7 @@ nsTextBoxFrame::RegUnregAccessKey(bool aDoReg)
 
     // With a valid PresContext we can get the ESM 
     // and (un)register the access key
-    nsEventStateManager *esm = PresContext()->EventStateManager();
+    EventStateManager* esm = PresContext()->EventStateManager();
 
     uint32_t key = accessKey.First();
     if (aDoReg)

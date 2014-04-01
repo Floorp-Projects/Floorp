@@ -4,10 +4,127 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// https://github.com/mozilla-b2g/platform_external_qemu/blob/master/vl-android.c#L765
+// static int bt_hci_parse(const char *str) {
+//   ...
+//   bdaddr.b[0] = 0x52;
+//   bdaddr.b[1] = 0x54;
+//   bdaddr.b[2] = 0x00;
+//   bdaddr.b[3] = 0x12;
+//   bdaddr.b[4] = 0x34;
+//   bdaddr.b[5] = 0x56 + nb_hcis;
+const EMULATOR_ADDRESS = "56:34:12:00:54:52";
+
+// $ adb shell hciconfig /dev/ttyS2 name
+// hci0:  Type: BR/EDR  Bus: UART
+//        BD Address: 56:34:12:00:54:52  ACL MTU: 512:1  SCO MTU: 0:0
+//        Name: 'Full Android on Emulator'
+const EMULATOR_NAME = "Full Android on Emulator";
+
+// $ adb shell hciconfig /dev/ttyS2 class
+// hci0:  Type: BR/EDR  Bus: UART
+//        BD Address: 56:34:12:00:54:52  ACL MTU: 512:1  SCO MTU: 0:0
+//        Class: 0x58020c
+//        Service Classes: Capturing, Object Transfer, Telephony
+//        Device Class: Phone, Smart phone
+const EMULATOR_CLASS = 0x58020c;
+
+// Use same definition in QEMU for special bluetooth address,
+// which were defined at external/qemu/hw/bt.h:
+const BDADDR_ANY   = "00:00:00:00:00:00";
+const BDADDR_ALL   = "ff:ff:ff:ff:ff:ff";
+const BDADDR_LOCAL = "ff:ff:ff:00:00:00";
+
 let Promise =
   SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
 let bluetoothManager;
+
+let pendingEmulatorCmdCount = 0;
+
+/**
+ * Send emulator command with safe guard.
+ *
+ * We should only call |finish()| after all emulator command transactions
+ * end, so here comes with the pending counter.  Resolve when the emulator
+ * gives positive response, and reject otherwise.
+ *
+ * Fulfill params:
+ *   result -- an array of emulator response lines.
+ *
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @return A deferred promise.
+ */
+function runEmulatorCmdSafe(aCommand) {
+  let deferred = Promise.defer();
+
+  ++pendingEmulatorCmdCount;
+  runEmulatorCmd(aCommand, function(aResult) {
+    --pendingEmulatorCmdCount;
+
+    ok(true, "Emulator response: " + JSON.stringify(aResult));
+    if (Array.isArray(aResult) && aResult[aResult.length - 1] === "OK") {
+      deferred.resolve(aResult);
+    } else {
+      ok(false, "Got an abnormal response from emulator.");
+      log("Fail to execute emulator command: [" + aCommand + "]");
+      deferred.reject(aResult);
+    }
+  });
+
+  return deferred.promise;
+}
+
+/**
+ * Set a property for a Bluetooth device.
+ *
+ * Use QEMU command 'bt property <bd_addr> <prop_name> <value>' to set property.
+ *
+ * Fulfill params:
+ *   result -- an array of emulator response lines.
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @param aAddress
+ *        The string of Bluetooth address with format xx:xx:xx:xx:xx:xx.
+ * @param aPropertyName
+ *        The property name of Bluetooth device.
+ * @param aValue
+ *        The new value of the specifc property.
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorDeviceProperty(aAddress, aPropertyName, aValue) {
+  let cmd = "bt property " + aAddress + " " + aPropertyName + " " + aValue;
+  return runEmulatorCmdSafe(cmd);
+}
+
+/**
+ * Get a property from a Bluetooth device.
+ *
+ * Use QEMU command 'bt property <bd_addr> <prop_name>' to get properties.
+ *
+ * Fulfill params:
+ *   result -- a string with format <prop_name>: <value_of_prop>
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @param aAddress
+ *        The string of Bluetooth address with format xx:xx:xx:xx:xx:xx.
+ * @param aPropertyName
+ *        The property name of Bluetooth device.
+ *
+ * @return A deferred promise.
+ */
+function getEmulatorDeviceProperty(aAddress, aPropertyName) {
+  let cmd = "bt property " + aAddress + " " + aPropertyName;
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      return aResults[0];
+    });
+}
 
 /**
  * Get mozSettings value specified by @aKey.
@@ -163,6 +280,9 @@ function ensureBluetoothManager(aPermissions) {
  *
  * Fulfill params: the DOMEvent passed.
  *
+ * @param aEventName
+ *        The name of the EventHandler.
+ *
  * @return A deferred promise.
  */
 function waitForManagerEvent(aEventName) {
@@ -172,6 +292,33 @@ function waitForManagerEvent(aEventName) {
     bluetoothManager.removeEventListener(aEventName, onevent);
 
     ok(true, "BluetoothManager event '" + aEventName + "' got.");
+    deferred.resolve(aEvent);
+  });
+
+  return deferred.promise;
+}
+
+/**
+ * Wait for one named BluetoothAdapter event.
+ *
+ * Resolve if that named event occurs.  Never reject.
+ *
+ * Fulfill params: the DOMEvent passed.
+ *
+ * @param aAdapter
+ *        The BluetoothAdapter you want to use.
+ * @param aEventName
+ *        The name of the EventHandler.
+ *
+ * @return A deferred promise.
+ */
+function waitForAdapterEvent(aAdapter, aEventName) {
+  let deferred = Promise.defer();
+
+  aAdapter.addEventListener(aEventName, function onevent(aEvent) {
+    aAdapter.removeEventListener(aEventName, onevent);
+
+    ok(true, "BluetoothAdapter event '" + aEventName + "' got.");
     deferred.resolve(aEvent);
   });
 
@@ -249,11 +396,15 @@ function getDefaultAdapter() {
  * Flush permission settings and call |finish()|.
  */
 function cleanUp() {
-  SpecialPowers.flushPermissions(function() {
-    // Use ok here so that we have at least one test run.
-    ok(true, "permissions flushed");
+  waitFor(function() {
+    SpecialPowers.flushPermissions(function() {
+      // Use ok here so that we have at least one test run.
+      ok(true, "permissions flushed");
 
-    finish();
+      finish();
+    });
+  }, function() {
+    return pendingEmulatorCmdCount === 0;
   });
 }
 

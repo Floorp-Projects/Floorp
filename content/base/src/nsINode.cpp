@@ -40,7 +40,6 @@
 #include "nsDOMMutationObserver.h"
 #include "nsDOMString.h"
 #include "nsDOMTokenList.h"
-#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsFrameManager.h"
 #include "nsFrameSelection.h"
@@ -2260,7 +2259,7 @@ nsINode::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   }
 #define TOUCH_EVENT EVENT
 #define DOCUMENT_ONLY_EVENT EVENT
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef DOCUMENT_ONLY_EVENT
 #undef TOUCH_EVENT
 #undef EVENT

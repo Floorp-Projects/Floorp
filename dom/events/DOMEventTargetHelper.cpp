@@ -3,49 +3,50 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMEventTargetHelper.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "prprf.h"
 #include "nsGlobalWindow.h"
 #include "ScriptSettings.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/Likely.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEventTargetHelper)
+using namespace dom;
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_CLASS(DOMEventTargetHelper)
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(DOMEventTargetHelper)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[512];
     nsAutoString uri;
     if (tmp->mOwnerWindow && tmp->mOwnerWindow->GetExtantDoc()) {
       tmp->mOwnerWindow->GetExtantDoc()->GetDocumentURI(uri);
     }
-    PR_snprintf(name, sizeof(name), "nsDOMEventTargetHelper %s",
+    PR_snprintf(name, sizeof(name), "DOMEventTargetHelper %s",
                 NS_ConvertUTF16toUTF8(uri).get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   } else {
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsDOMEventTargetHelper, tmp->mRefCnt.get())
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(DOMEventTargetHelper, tmp->mRefCnt.get())
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(DOMEventTargetHelper)
   if (tmp->IsBlack()) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->MarkForCC();
@@ -54,29 +55,29 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMEventTargetHelper)
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(DOMEventTargetHelper)
   return tmp->IsBlackAndDoesNotNeedTracing(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(DOMEventTargetHelper)
   return tmp->IsBlack();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMEventTargetHelper)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
-  NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsDOMEventTargetHelper)
+  NS_INTERFACE_MAP_ENTRY(dom::EventTarget)
+  NS_INTERFACE_MAP_ENTRY(DOMEventTargetHelper)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsDOMEventTargetHelper,
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(DOMEventTargetHelper,
                                                    LastRelease())
 
-NS_IMPL_DOMTARGET_DEFAULTS(nsDOMEventTargetHelper)
+NS_IMPL_DOMTARGET_DEFAULTS(DOMEventTargetHelper)
 
-nsDOMEventTargetHelper::~nsDOMEventTargetHelper()
+DOMEventTargetHelper::~DOMEventTargetHelper()
 {
   if (nsPIDOMWindow* owner = GetOwner()) {
     static_cast<nsGlobalWindow*>(owner)->RemoveEventTargetObject(this);
@@ -88,7 +89,7 @@ nsDOMEventTargetHelper::~nsDOMEventTargetHelper()
 }
 
 void
-nsDOMEventTargetHelper::BindToOwner(nsPIDOMWindow* aOwner)
+DOMEventTargetHelper::BindToOwner(nsPIDOMWindow* aOwner)
 {
   MOZ_ASSERT(!aOwner || aOwner->IsInnerWindow());
   nsCOMPtr<nsIGlobalObject> glob = do_QueryInterface(aOwner);
@@ -96,7 +97,7 @@ nsDOMEventTargetHelper::BindToOwner(nsPIDOMWindow* aOwner)
 }
 
 void
-nsDOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
+DOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
 {
   if (mParentObject) {
     if (mOwnerWindow) {
@@ -118,7 +119,7 @@ nsDOMEventTargetHelper::BindToOwner(nsIGlobalObject* aOwner)
 }
 
 void
-nsDOMEventTargetHelper::BindToOwner(nsDOMEventTargetHelper* aOther)
+DOMEventTargetHelper::BindToOwner(DOMEventTargetHelper* aOther)
 {
   if (mOwnerWindow) {
     static_cast<nsGlobalWindow*>(mOwnerWindow)->RemoveEventTargetObject(this);
@@ -141,7 +142,7 @@ nsDOMEventTargetHelper::BindToOwner(nsDOMEventTargetHelper* aOther)
 }
 
 void
-nsDOMEventTargetHelper::DisconnectFromOwner()
+DOMEventTargetHelper::DisconnectFromOwner()
 {
   mOwnerWindow = nullptr;
   mParentObject = nullptr;
@@ -153,9 +154,9 @@ nsDOMEventTargetHelper::DisconnectFromOwner()
 }
 
 NS_IMETHODIMP
-nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
-                                            nsIDOMEventListener* aListener,
-                                            bool aUseCapture)
+DOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
+                                          nsIDOMEventListener* aListener,
+                                          bool aUseCapture)
 {
   EventListenerManager* elm = GetExistingListenerManager();
   if (elm) {
@@ -165,14 +166,14 @@ nsDOMEventTargetHelper::RemoveEventListener(const nsAString& aType,
   return NS_OK;
 }
 
-NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsDOMEventTargetHelper)
+NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(DOMEventTargetHelper)
 
 NS_IMETHODIMP
-nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
-                                         nsIDOMEventListener *aListener,
-                                         bool aUseCapture,
-                                         bool aWantsUntrusted,
-                                         uint8_t aOptionalArgc)
+DOMEventTargetHelper::AddEventListener(const nsAString& aType,
+                                       nsIDOMEventListener* aListener,
+                                       bool aUseCapture,
+                                       bool aWantsUntrusted,
+                                       uint8_t aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
@@ -191,11 +192,11 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
 }
 
 void
-nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
-                                         EventListener* aListener,
-                                         bool aUseCapture,
-                                         const Nullable<bool>& aWantsUntrusted,
-                                         ErrorResult& aRv)
+DOMEventTargetHelper::AddEventListener(const nsAString& aType,
+                                       EventListener* aListener,
+                                       bool aUseCapture,
+                                       const Nullable<bool>& aWantsUntrusted,
+                                       ErrorResult& aRv)
 {
   bool wantsUntrusted;
   if (aWantsUntrusted.IsNull()) {
@@ -217,11 +218,11 @@ nsDOMEventTargetHelper::AddEventListener(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsDOMEventTargetHelper::AddSystemEventListener(const nsAString& aType,
-                                               nsIDOMEventListener *aListener,
-                                               bool aUseCapture,
-                                               bool aWantsUntrusted,
-                                               uint8_t aOptionalArgc)
+DOMEventTargetHelper::AddSystemEventListener(const nsAString& aType,
+                                             nsIDOMEventListener* aListener,
+                                             bool aUseCapture,
+                                             bool aWantsUntrusted,
+                                             uint8_t aOptionalArgc)
 {
   NS_ASSERTION(!aWantsUntrusted || aOptionalArgc > 1,
                "Won't check if this is chrome, you want to set "
@@ -238,7 +239,7 @@ nsDOMEventTargetHelper::AddSystemEventListener(const nsAString& aType,
 }
 
 NS_IMETHODIMP
-nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
+DOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsresult rv =
@@ -249,7 +250,7 @@ nsDOMEventTargetHelper::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 }
 
 nsresult
-nsDOMEventTargetHelper::DispatchTrustedEvent(const nsAString& aEventName)
+DOMEventTargetHelper::DispatchTrustedEvent(const nsAString& aEventName)
 {
   nsCOMPtr<nsIDOMEvent> event;
   NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
@@ -260,7 +261,7 @@ nsDOMEventTargetHelper::DispatchTrustedEvent(const nsAString& aEventName)
 }
 
 nsresult
-nsDOMEventTargetHelper::DispatchTrustedEvent(nsIDOMEvent* event)
+DOMEventTargetHelper::DispatchTrustedEvent(nsIDOMEvent* event)
 {
   event->SetTrusted(true);
 
@@ -269,24 +270,24 @@ nsDOMEventTargetHelper::DispatchTrustedEvent(nsIDOMEvent* event)
 }
 
 nsresult
-nsDOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
-                                        JSContext* aCx,
-                                        const JS::Value& aValue)
+DOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
+                                      JSContext* aCx,
+                                      const JS::Value& aValue)
 {
   nsRefPtr<EventHandlerNonNull> handler;
   JS::Rooted<JSObject*> callable(aCx);
   if (aValue.isObject() &&
       JS_ObjectIsCallable(aCx, callable = &aValue.toObject())) {
-    handler = new EventHandlerNonNull(callable, mozilla::dom::GetIncumbentGlobal());
+    handler = new EventHandlerNonNull(callable, dom::GetIncumbentGlobal());
   }
   SetEventHandler(aType, EmptyString(), handler);
   return NS_OK;
 }
 
 void
-nsDOMEventTargetHelper::GetEventHandler(nsIAtom* aType,
-                                        JSContext* aCx,
-                                        JS::Value* aValue)
+DOMEventTargetHelper::GetEventHandler(nsIAtom* aType,
+                                      JSContext* aCx,
+                                      JS::Value* aValue)
 {
   EventHandlerNonNull* handler = GetEventHandler(aType, EmptyString());
   if (handler) {
@@ -297,7 +298,7 @@ nsDOMEventTargetHelper::GetEventHandler(nsIAtom* aType,
 }
 
 nsresult
-nsDOMEventTargetHelper::PreHandleEvent(EventChainPreVisitor& aVisitor)
+DOMEventTargetHelper::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.mCanHandle = true;
   aVisitor.mParentTarget = nullptr;
@@ -305,23 +306,23 @@ nsDOMEventTargetHelper::PreHandleEvent(EventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsDOMEventTargetHelper::PostHandleEvent(EventChainPostVisitor& aVisitor)
+DOMEventTargetHelper::PostHandleEvent(EventChainPostVisitor& aVisitor)
 {
   return NS_OK;
 }
 
 nsresult
-nsDOMEventTargetHelper::DispatchDOMEvent(WidgetEvent* aEvent,
-                                         nsIDOMEvent* aDOMEvent,
-                                         nsPresContext* aPresContext,
-                                         nsEventStatus* aEventStatus)
+DOMEventTargetHelper::DispatchDOMEvent(WidgetEvent* aEvent,
+                                       nsIDOMEvent* aDOMEvent,
+                                       nsPresContext* aPresContext,
+                                       nsEventStatus* aEventStatus)
 {
   return EventDispatcher::DispatchDOMEvent(this, aEvent, aDOMEvent,
                                            aPresContext, aEventStatus);
 }
 
 EventListenerManager*
-nsDOMEventTargetHelper::GetOrCreateListenerManager()
+DOMEventTargetHelper::GetOrCreateListenerManager()
 {
   if (!mListenerManager) {
     mListenerManager = new EventListenerManager(this);
@@ -331,13 +332,13 @@ nsDOMEventTargetHelper::GetOrCreateListenerManager()
 }
 
 EventListenerManager*
-nsDOMEventTargetHelper::GetExistingListenerManager() const
+DOMEventTargetHelper::GetExistingListenerManager() const
 {
   return mListenerManager;
 }
 
 nsIScriptContext*
-nsDOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
+DOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
 {
   *aRv = CheckInnerWindowCorrectness();
   if (NS_FAILED(*aRv)) {
@@ -349,7 +350,7 @@ nsDOMEventTargetHelper::GetContextForEventHandlers(nsresult* aRv)
 }
 
 nsresult
-nsDOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
+DOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 {
   nsresult rv;
   nsIScriptContext* context = GetContextForEventHandlers(&rv);
@@ -362,15 +363,17 @@ nsDOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
 }
 
 void
-nsDOMEventTargetHelper::EventListenerAdded(nsIAtom* aType)
+DOMEventTargetHelper::EventListenerAdded(nsIAtom* aType)
 {
-  mozilla::ErrorResult rv;
+  ErrorResult rv;
   EventListenerWasAdded(Substring(nsDependentAtomString(aType), 2), rv);
 }
 
 void
-nsDOMEventTargetHelper::EventListenerRemoved(nsIAtom* aType)
+DOMEventTargetHelper::EventListenerRemoved(nsIAtom* aType)
 {
-  mozilla::ErrorResult rv;
+  ErrorResult rv;
   EventListenerWasRemoved(Substring(nsDependentAtomString(aType), 2), rv);
 }
+
+} // namespace mozilla

@@ -636,8 +636,7 @@ public:
 
     BluetoothA2dpManager* a2dp = BluetoothA2dpManager::Get();
     NS_ENSURE_TRUE(a2dp, NS_ERROR_FAILURE);
-    a2dp->ResetA2dp();
-    a2dp->ResetAvrcp();
+    a2dp->Reset();
 
     return NS_OK;
   }

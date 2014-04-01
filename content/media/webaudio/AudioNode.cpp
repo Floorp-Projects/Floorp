@@ -17,20 +17,21 @@ static const uint32_t INVALID_PORT = 0xffffffff;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(AudioNode)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AudioNode, nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AudioNode, DOMEventTargetHelper)
   tmp->DisconnectFromGraph();
   tmp->mContext->UpdateNodeCount(-1);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputNodes)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputParams)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioNode, nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioNode,
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputNodes)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOutputParams)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_ADDREF_INHERITED(AudioNode, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(AudioNode, DOMEventTargetHelper)
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 AudioNode::Release()
@@ -40,26 +41,26 @@ AudioNode::Release()
     // the derived type is destroyed.
     DisconnectFromGraph();
   }
-  nsrefcnt r = nsDOMEventTargetHelper::Release();
+  nsrefcnt r = DOMEventTargetHelper::Release();
   NS_LOG_RELEASE(this, r, "AudioNode");
   return r;
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioNode)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 AudioNode::AudioNode(AudioContext* aContext,
                      uint32_t aChannelCount,
                      ChannelCountMode aChannelCountMode,
                      ChannelInterpretation aChannelInterpretation)
-  : nsDOMEventTargetHelper(aContext->GetParentObject())
+  : DOMEventTargetHelper(aContext->GetParentObject())
   , mContext(aContext)
   , mChannelCount(aChannelCount)
   , mChannelCountMode(aChannelCountMode)
   , mChannelInterpretation(aChannelInterpretation)
 {
   MOZ_ASSERT(aContext);
-  nsDOMEventTargetHelper::BindToOwner(aContext->GetParentObject());
+  DOMEventTargetHelper::BindToOwner(aContext->GetParentObject());
   SetIsDOMBinding();
   aContext->UpdateNodeCount(1);
 }

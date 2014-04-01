@@ -32,11 +32,12 @@ bool JSAPITest::exec(const char *bytes, const char *filename, int lineno)
 {
     JS::RootedValue v(cx);
     JS::HandleObject global = JS::HandleObject::fromMarkedLocation(&this->global);
-    return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, v.address()) ||
+    return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, &v) ||
         fail(bytes, filename, lineno);
 }
 
-bool JSAPITest::evaluate(const char *bytes, const char *filename, int lineno, jsval *vp)
+bool JSAPITest::evaluate(const char *bytes, const char *filename, int lineno,
+                         JS::MutableHandleValue vp)
 {
     JS::HandleObject global = JS::HandleObject::fromMarkedLocation(&this->global);
     return JS_EvaluateScript(cx, global, bytes, strlen(bytes), filename, lineno, vp) ||

@@ -8,8 +8,8 @@
 #define mozilla_dom_SpeechRecognition_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
 #include "nsTArray.h"
@@ -53,7 +53,7 @@ PRLogModuleInfo* GetSpeechRecognitionLog();
 #define SR_LOG(...)
 #endif
 
-class SpeechRecognition MOZ_FINAL : public nsDOMEventTargetHelper,
+class SpeechRecognition MOZ_FINAL : public DOMEventTargetHelper,
                                     public nsIObserver,
                                     public SupportsWeakPtr<SpeechRecognition>
 {
@@ -293,7 +293,7 @@ private:
 inline nsISupports*
 ToSupports(dom::SpeechRecognition* aRec)
 {
-  return ToSupports(static_cast<nsDOMEventTargetHelper*>(aRec));
+  return ToSupports(static_cast<DOMEventTargetHelper*>(aRec));
 }
 } // namespace mozilla
 

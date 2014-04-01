@@ -138,24 +138,6 @@ enum EffectTypes
 };
 
 /**
- * The kind of memory held by the texture client/host pair. This will
- * determine how the texture client is drawn into and how the memory
- * is shared between client and host.
- */
-enum DeprecatedTextureClientType
-{
-  TEXTURE_CONTENT,            // dynamically drawn content
-  TEXTURE_SHMEM,              // shared memory
-  TEXTURE_YCBCR,              // Deprecated YCbCr texture
-  TEXTURE_SHARED_GL,          // GLContext::SharedTextureHandle
-  TEXTURE_SHARED_GL_EXTERNAL, // GLContext::SharedTextureHandle, the ownership of
-                              // the SurfaceDescriptor passed to the texture
-                              // remains with whoever passed it.
-  TEXTURE_STREAM_GL,          // WebGL streaming buffer
-  TEXTURE_FALLBACK            // A fallback path appropriate for the platform
-};
-
-/**
  * How the Compositable should manage textures.
  */
 enum CompositableType
@@ -165,8 +147,6 @@ enum CompositableType
   BUFFER_IMAGE_SINGLE,    // image/canvas with a single texture, single buffered
   BUFFER_IMAGE_BUFFERED,  // canvas, double buffered
   BUFFER_BRIDGE,          // image bridge protocol
-  BUFFER_CONTENT,         // thebes layer interface, single buffering
-  BUFFER_CONTENT_DIRECT,  // thebes layer interface, double buffering
   BUFFER_CONTENT_INC,     // thebes layer interface, only sends incremental
                           // updates to a texture on the compositor side.
   // somewhere in the middle

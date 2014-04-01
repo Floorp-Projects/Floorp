@@ -14,10 +14,10 @@
 #include "nsIOfflineStorage.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/IDBTransactionBinding.h"
 #include "mozilla/dom/quota/PersistenceType.h"
-#include "nsDOMEventTargetHelper.h"
 
 #include "mozilla/dom/indexedDB/FileManager.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"

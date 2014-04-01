@@ -295,27 +295,10 @@ struct OpUseTiledLayerBuffer {
   SurfaceDescriptorTiles tileLayerDescriptor;
 };
 
-struct OpCreatedTexture {
-  PCompositable compositable;
-  uint32_t textureId;
-  SurfaceDescriptor descriptor;
-  TextureInfo textureInfo;
-};
-
 struct OpCreatedIncrementalTexture {
   PCompositable compositable;
   TextureInfo textureInfo;
   nsIntRect bufferRect;
-};
-
-struct OpDestroyThebesBuffer {
-  PCompositable compositable;
-};
-
-struct OpPaintTexture {
-  PCompositable compositable;
-  uint32_t textureId;
-  SurfaceDescriptor image;
 };
 
 struct OpPaintTextureRegion {
@@ -375,11 +358,8 @@ struct OpUpdateTexture {
 union CompositableOperation {
   OpUpdatePictureRect;
 
-  OpCreatedTexture;
   OpCreatedIncrementalTexture;
-  OpDestroyThebesBuffer;
 
-  OpPaintTexture;
   OpPaintTextureRegion;
   OpPaintTextureIncremental;
 
