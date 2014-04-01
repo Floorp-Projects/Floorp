@@ -46,7 +46,7 @@ BEGIN_TEST(testResolveRecursion)
 
     /* Start the essence of the test via invoking the first resolve hook. */
     JS::RootedValue v(cx);
-    EVAL("obj1.x", v.address());
+    EVAL("obj1.x", &v);
     CHECK_SAME(v, JSVAL_FALSE);
     CHECK_EQUAL(resolveEntryCount, 4);
     CHECK_EQUAL(resolveExitCount, 4);
@@ -90,7 +90,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, unsigned flags, JS::MutableHand
         if (obj == obj1) {
             /* First resolve hook invocation. */
             CHECK_EQUAL(resolveEntryCount, 1);
-            EVAL("obj2.y = true", v.address());
+            EVAL("obj2.y = true", &v);
             CHECK_SAME(v, JSVAL_TRUE);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_FALSE, nullptr, nullptr, 0));
             objp.set(obj);
@@ -105,24 +105,24 @@ doResolve(JS::HandleObject obj, JS::HandleId id, unsigned flags, JS::MutableHand
         if (obj == obj2) {
             CHECK_EQUAL(resolveEntryCount, 2);
             CHECK(JS_DefinePropertyById(cx, obj, id, JSVAL_NULL, nullptr, nullptr, 0));
-            EVAL("obj1.x", v.address());
+            EVAL("obj1.x", &v);
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj1.y", v.address());
+            EVAL("obj1.y", &v);
             CHECK_SAME(v, JSVAL_ZERO);
             objp.set(obj);
             return true;
         }
         if (obj == obj1) {
             CHECK_EQUAL(resolveEntryCount, 3);
-            EVAL("obj1.x", v.address());
+            EVAL("obj1.x", &v);
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj1.y", v.address());
+            EVAL("obj1.y", &v);
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj2.y", v.address());
+            EVAL("obj2.y", &v);
             CHECK(JSVAL_IS_NULL(v));
-            EVAL("obj2.x", v.address());
+            EVAL("obj2.x", &v);
             CHECK(JSVAL_IS_VOID(v));
-            EVAL("obj1.y = 0", v.address());
+            EVAL("obj1.y = 0", &v);
             CHECK_SAME(v, JSVAL_ZERO);
             objp.set(obj);
             return true;

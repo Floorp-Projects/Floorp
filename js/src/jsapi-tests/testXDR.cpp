@@ -178,7 +178,7 @@ BEGIN_TEST(testXDR_bug506491)
     JS_GC(rt);
 
     // confirm
-    EVAL("f() === 'ok';\n", v2.address());
+    EVAL("f() === 'ok';\n", &v2);
     JS::RootedValue trueval(cx, JSVAL_TRUE);
     CHECK_SAME(v2, trueval);
     return true;

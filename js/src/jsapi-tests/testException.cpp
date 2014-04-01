@@ -11,7 +11,7 @@ BEGIN_TEST(testException_bug860435)
 {
     JS::RootedValue fun(cx);
 
-    EVAL("ReferenceError", fun.address());
+    EVAL("ReferenceError", &fun);
     CHECK(fun.isObject());
 
     JS::RootedValue v(cx);
