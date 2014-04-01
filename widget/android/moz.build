@@ -26,6 +26,7 @@ SOURCES += [
     'AndroidJNIWrapper.cpp',
     'GeneratedJNIWrappers.cpp',
     'GfxInfo.cpp',
+    'NativeJSContainer.cpp',
     'nsAppShell.cpp',
     'nsClipboard.cpp',
     'nsDeviceContextAndroid.cpp',
