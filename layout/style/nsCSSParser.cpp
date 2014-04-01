@@ -8866,6 +8866,24 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     }
   }
 
+  if (result) {
+    // We need to call ExpectEndProperty() to decide whether to reparse
+    // with variables.  This is needed because the property parsing may
+    // have stopped upon finding a variable (e.g., 'margin: 1px var(a)')
+    // in a way that future variable substitutions will be valid, or
+    // because it parsed everything that's possible but we still want to
+    // act as though the property contains variables even though we know
+    // the substitution will never work (e.g., for 'margin: 1px 2px 3px
+    // 4px 5px var(a)').
+    //
+    // It would be nice to find a better solution here
+    // (and for the SkipUntilOneOf below), though, that doesn't depend
+    // on using what we don't accept for doing parsing correctly.
+    if (!ExpectEndProperty()) {
+      result = false;
+    }
+  }
+
   bool seenVariable = mScanner->SeenVariableReference() ||
     (stateBeforeProperty.mHavePushBack &&
      stateBeforeProperty.mToken.mType == eCSSToken_Function &&
