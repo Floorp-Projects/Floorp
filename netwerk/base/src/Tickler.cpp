@@ -81,7 +81,7 @@ Tickler::Init()
   MOZ_ASSERT(!mFD);
 
   if (AndroidBridge::HasEnv()) {
-      GeckoAppShell::EnableNetworkNotifications();
+      mozilla::widget::android::GeckoAppShell::EnableNetworkNotifications();
   }
 
   mFD = PR_OpenUDPSocket(PR_AF_INET);

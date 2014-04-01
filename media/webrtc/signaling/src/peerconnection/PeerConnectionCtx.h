@@ -43,8 +43,6 @@ protected:
 
 namespace sipcc {
 
-using namespace mozilla;
-
 class OnCallEventArgs {
 public:
   OnCallEventArgs(ccapi_call_event_e aCallEvent, CSF::CC_CallInfoPtr aInfo)
@@ -111,7 +109,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   static PeerConnectionCtx *gInstance;
 public:
   static nsIThread *gMainThread;
-  static StaticRefPtr<mozilla::PeerConnectionCtxShutdown> gPeerConnectionCtxShutdown;
+  static mozilla::StaticRefPtr<mozilla::PeerConnectionCtxShutdown> gPeerConnectionCtxShutdown;
 };
 
 }  // namespace sipcc
