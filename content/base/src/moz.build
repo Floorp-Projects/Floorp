@@ -110,6 +110,7 @@ UNIFIED_SOURCES += [
     'nsContentSink.cpp',
     'nsCopySupport.cpp',
     'nsCrossSiteListenerProxy.cpp',
+    'nsCSPContext.cpp',
     'nsCSPParser.cpp',
     'nsCSPService.cpp',
     'nsCSPUtils.cpp',
