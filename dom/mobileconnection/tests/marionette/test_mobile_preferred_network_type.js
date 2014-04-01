@@ -50,17 +50,32 @@ function doFailToSetPreferredNetworkType(preferredNetworkType, expectedError, ca
   };
 }
 
+function getSupportedNetworkTypesFromSystemProperties(clientId, callback) {
+  let key = "ro.moz.ril." + clientId + ".network_types";
+
+  runEmulatorShell(["getprop", key], function(results) {
+    let result = results[0];
+    if (!result || result === "") {
+      // Copied from GECKO_SUPPORTED_NETWORK_TYPES_DEFAULT in dom/system/gonk/ril_consts.js.
+      result = "wcdma,gsm";
+    }
+    callback(result.split(","));
+  });
+}
+
 /* Test supportedNetworkTypes */
 taskHelper.push(function testSupportedNetworkTypes() {
   let supportedNetworkTypes = mobileConnection.supportedNetworkTypes;
-
   ok(Array.isArray(supportedNetworkTypes), "supportedNetworkTypes should be an array");
-  ok(supportedNetworkTypes.indexOf("gsm") >= 0, "Should support 'gsm'");
-  ok(supportedNetworkTypes.indexOf("wcdma") >= 0, "Should support 'wcdma'");
-  ok(supportedNetworkTypes.indexOf("cdma") >= 0, "Should support 'cdma'");
-  ok(supportedNetworkTypes.indexOf("evdo") >= 0, "Should support 'evdo'");
 
-  taskHelper.runNext();
+  getSupportedNetworkTypesFromSystemProperties(0, function(testData) {
+    is(testData.length, supportedNetworkTypes.length);
+    for (let i = 0; i < testData.length; i++) {
+      ok(supportedNetworkTypes.indexOf(testData[i]) >= 0, "Should support '" + testData[i] + "'");
+    }
+
+    taskHelper.runNext();
+  });
 });
 
 /* Test switching to supported preferred types */
