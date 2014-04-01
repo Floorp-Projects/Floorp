@@ -362,6 +362,13 @@ public:
   // appropriate. The decoder monitor must be held while calling this.
   void NotifyWaitingForResourcesStatusChanged();
 
+  // Notifies the state machine that should minimize the number of samples
+  // decoded we preroll, until playback starts. The first time playback starts
+  // the state machine is free to return to prerolling normally. Note
+  // "prerolling" in this context refers to when we decode and buffer decoded
+  // samples in advance of when they're needed for playback.
+  void SetMinimizePrerollUntilPlaybackStarts();
+
 protected:
 
   void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
@@ -920,6 +927,18 @@ private:
   // True if we should run the state machine again once the current
   // state machine run has finished.
   bool mRunAgain;
+
+  // True if we should not decode/preroll unnecessary samples, unless we're
+  // played. "Prerolling" in this context refers to when we decode and
+  // buffer decoded samples in advance of when they're needed for playback.
+  // This flag is set for preload=metadata media, and means we won't
+  // decode more than the first video frame and first block of audio samples
+  // for that media when we startup, or after a seek. When Play() is called,
+  // we reset this flag, as we assume the user is playing the media, so
+  // prerolling is appropriate then. This flag is used to reduce the overhead
+  // of prerolling samples for media elements that may not play, both
+  // memory and CPU overhead.
+  bool mMinimizePreroll;
 
   // True if we've dispatched an event to run the state machine. It's
   // imperative that we don't dispatch multiple events to run the state

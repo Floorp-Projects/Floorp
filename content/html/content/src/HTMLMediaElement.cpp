@@ -2747,14 +2747,19 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // here and Load(), they work.
   mDecoder = aDecoder;
 
-  // Tell aDecoder about its MediaResource now so things like principals are
+  // Tell the decoder about its MediaResource now so things like principals are
   // available immediately.
-  aDecoder->SetResource(aStream);
-  aDecoder->SetAudioChannelType(mAudioChannelType);
-  aDecoder->SetAudioCaptured(mAudioCaptured);
-  aDecoder->SetVolume(mMuted ? 0.0 : mVolume);
-  aDecoder->SetPreservesPitch(mPreservesPitch);
-  aDecoder->SetPlaybackRate(mPlaybackRate);
+  mDecoder->SetResource(aStream);
+  mDecoder->SetAudioChannelType(mAudioChannelType);
+  mDecoder->SetAudioCaptured(mAudioCaptured);
+  mDecoder->SetVolume(mMuted ? 0.0 : mVolume);
+  mDecoder->SetPreservesPitch(mPreservesPitch);
+  mDecoder->SetPlaybackRate(mPlaybackRate);
+
+  if (mPreloadAction == HTMLMediaElement::PRELOAD_METADATA) {
+    mDecoder->SetMinimizePrerollUntilPlaybackStarts();
+  }
+
   // Update decoder principal before we start decoding, since it
   // can affect how we feed data to MediaStreams
   NotifyDecoderPrincipalChanged();
