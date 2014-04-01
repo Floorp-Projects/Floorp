@@ -18,7 +18,6 @@
 #include "nsXULPopupManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsEventStateManager.h"
 #include "mozilla/StartupTimeline.h"
 #include "GeckoProfiler.h"
 #include "nsRefreshDriver.h"

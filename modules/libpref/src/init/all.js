@@ -4120,7 +4120,7 @@ pref("full-screen-api.pointer-lock.enabled", true);
 // DOM idle observers API
 pref("dom.idle-observers-api.enabled", true);
 
-// Time limit, in milliseconds, for nsEventStateManager::IsHandlingUserInput().
+// Time limit, in milliseconds, for EventStateManager::IsHandlingUserInput().
 // Used to detect long running handlers of user-generated events.
 pref("dom.event.handling-user-input-time-limit", 1000);
 

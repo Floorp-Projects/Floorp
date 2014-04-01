@@ -547,7 +547,7 @@ pref("app.update.channel", "@MOZ_UPDATE_CHANNEL@");
 pref("editor.singleLine.pasteNewlines", 2);
 
 // threshold where a tap becomes a drag, in 1/240" reference pixels
-// The names of the preferences are to be in sync with nsEventStateManager.cpp
+// The names of the preferences are to be in sync with EventStateManager.cpp
 pref("ui.dragThresholdX", 25);
 pref("ui.dragThresholdY", 25);
 

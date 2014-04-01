@@ -16,6 +16,7 @@
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -29,7 +30,6 @@
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
-#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsIContent.h"
@@ -683,7 +683,8 @@ TabParent::MapEventCoordinatesForChildProcess(WidgetEvent* aEvent)
   if (!frameLoader) {
     return false;
   }
-  LayoutDeviceIntPoint offset = nsEventStateManager::GetChildProcessOffset(frameLoader, *aEvent);
+  LayoutDeviceIntPoint offset =
+    EventStateManager::GetChildProcessOffset(frameLoader, *aEvent);
   MapEventCoordinatesForChildProcess(offset, aEvent);
   return true;
 }
@@ -844,8 +845,7 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
     }
 
     mChildProcessOffsetAtTouchStart =
-        nsEventStateManager::GetChildProcessOffset(frameLoader,
-                                                   event);
+      EventStateManager::GetChildProcessOffset(frameLoader, event);
 
     MOZ_ASSERT((!sEventCapturer && mEventCaptureDepth == 0) ||
                (sEventCapturer == this && mEventCaptureDepth > 0));

@@ -22,12 +22,12 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
+#include "mozilla/EventStateManager.h"
 #include "nsISelectionController.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
-#include "nsEventStateManager.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
 #include "nsIDOMDocument.h"
@@ -331,7 +331,7 @@ nsXBLWindowKeyHandler::HandleEventOnCapture(nsIDOMKeyEvent* aEvent)
 
   nsCOMPtr<mozilla::dom::Element> originalTarget =
     do_QueryInterface(aEvent->GetInternalNSEvent()->originalTarget);
-  if (!nsEventStateManager::IsRemoteTarget(originalTarget)) {
+  if (!EventStateManager::IsRemoteTarget(originalTarget)) {
     return;
   }
 
