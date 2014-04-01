@@ -46,6 +46,8 @@ public:
   void Unroot();
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
 
+  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+
   void GetAddress(nsString& aAddress) const
   {
     aAddress = mAddress;
