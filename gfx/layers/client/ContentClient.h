@@ -303,111 +303,6 @@ protected:
   gfx::SurfaceFormat mSurfaceFormat;
 };
 
-class DeprecatedContentClientRemoteBuffer : public ContentClientRemote
-                                          , protected RotatedContentBuffer
-{
-  using RotatedContentBuffer::BufferRect;
-  using RotatedContentBuffer::BufferRotation;
-public:
-  DeprecatedContentClientRemoteBuffer(CompositableForwarder* aForwarder)
-    : ContentClientRemote(aForwarder)
-    , RotatedContentBuffer(ContainsVisibleBounds)
-    , mDeprecatedTextureClient(nullptr)
-    , mIsNewBuffer(false)
-    , mFrontAndBackBufferDiffer(false)
-    , mContentType(gfxContentType::COLOR_ALPHA)
-  {}
-
-  typedef RotatedContentBuffer::PaintState PaintState;
-  typedef RotatedContentBuffer::ContentType ContentType;
-
-  virtual void Clear() { RotatedContentBuffer::Clear(); }
-
-  virtual PaintState BeginPaintBuffer(ThebesLayer* aLayer,
-                                      uint32_t aFlags) MOZ_OVERRIDE
-  {
-    return RotatedContentBuffer::BeginPaint(aLayer, aFlags);
-  }
-  virtual gfx::DrawTarget* BorrowDrawTargetForPainting(ThebesLayer* aLayer,
-                                                       const PaintState& aPaintState) MOZ_OVERRIDE
-  {
-    return RotatedContentBuffer::BorrowDrawTargetForPainting(aLayer, aPaintState);
-  }
-  virtual void ReturnDrawTargetToBuffer(gfx::DrawTarget*& aReturned) MOZ_OVERRIDE
-  {
-    BorrowDrawTarget::ReturnDrawTarget(aReturned);
-  }
-
-  /**
-   * Begin/End Paint map a gfxASurface from the texture client
-   * into the buffer of RotatedContentBuffer. The surface is only
-   * valid when the texture client is locked, so is mapped out
-   * of RotatedContentBuffer when we are done painting.
-   * None of the underlying buffer attributes (rect, rotation)
-   * are affected by mapping/unmapping.
-   */
-  virtual void BeginPaint() MOZ_OVERRIDE;
-  virtual void EndPaint() MOZ_OVERRIDE;
-
-  virtual void Updated(const nsIntRegion& aRegionToDraw,
-                       const nsIntRegion& aVisibleRegion,
-                       bool aDidSelfCopy);
-
-  virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
-
-  // Expose these protected methods from the superclass.
-  virtual const nsIntRect& BufferRect() const
-  {
-    return RotatedContentBuffer::BufferRect();
-  }
-  virtual const nsIntPoint& BufferRotation() const
-  {
-    return RotatedContentBuffer::BufferRotation();
-  }
-
-  virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
-                            RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE;
-
-  virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
-  {
-    return mTextureInfo;
-  }
-
-protected:
-  void DestroyBuffers();
-
-  virtual nsIntRegion GetUpdatedRegion(const nsIntRegion& aRegionToDraw,
-                                       const nsIntRegion& aVisibleRegion,
-                                       bool aDidSelfCopy);
-
-  // create and configure mDeprecatedTextureClient
-  void BuildDeprecatedTextureClients(ContentType aType,
-                                     const nsIntRect& aRect,
-                                     uint32_t aFlags);
-
-  // Create the front buffer for the ContentClient/Host pair if necessary
-  // and notify the compositor that we have created the buffer(s).
-  virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) = 0;
-  virtual void DestroyFrontBuffer() {}
-  // We're about to hand off to the compositor, if you've got a back buffer,
-  // lock it now.
-  virtual void LockFrontBuffer() {}
-
-  bool CreateAndAllocateDeprecatedTextureClient(RefPtr<DeprecatedTextureClient>& aClient);
-
-  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
-  RefPtr<DeprecatedTextureClient> mDeprecatedTextureClientOnWhite;
-  // keep a record of texture clients we have created and need to keep
-  // around, then unlock when we are done painting
-  nsTArray<RefPtr<DeprecatedTextureClient> > mOldTextures;
-
-  TextureInfo mTextureInfo;
-  bool mIsNewBuffer;
-  bool mFrontAndBackBufferDiffer;
-  gfx::IntSize mSize;
-  ContentType mContentType;
-};
-
 /**
  * A double buffered ContentClient. mDeprecatedTextureClient is the back buffer, which
  * we draw into. mFrontClient is the front buffer which we may read from, but
@@ -465,38 +360,6 @@ private:
   nsIntPoint mFrontBufferRotation;
 };
 
-class DeprecatedContentClientDoubleBuffered : public DeprecatedContentClientRemoteBuffer
-{
-public:
-  DeprecatedContentClientDoubleBuffered(CompositableForwarder* aFwd)
-    : DeprecatedContentClientRemoteBuffer(aFwd)
-  {
-    mTextureInfo.mCompositableType = BUFFER_CONTENT_DIRECT;
-  }
-  ~DeprecatedContentClientDoubleBuffered();
-
-  virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
-
-  virtual void PrepareFrame() MOZ_OVERRIDE;
-
-  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) MOZ_OVERRIDE;
-
-protected:
-  virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
-  virtual void DestroyFrontBuffer() MOZ_OVERRIDE;
-  virtual void LockFrontBuffer() MOZ_OVERRIDE;
-
-private:
-  void UpdateDestinationFrom(const RotatedBuffer& aSource,
-                             const nsIntRegion& aUpdateRegion);
-
-  RefPtr<DeprecatedTextureClient> mFrontClient;
-  RefPtr<DeprecatedTextureClient> mFrontClientOnWhite;
-  nsIntRegion mFrontUpdatedRegion;
-  nsIntRect mFrontBufferRect;
-  nsIntPoint mFrontBufferRotation;
-};
-
 /**
  * A single buffered ContentClient. We have a single TextureClient/Host
  * which we update and then send a message to the compositor that we are
@@ -521,24 +384,8 @@ protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE {}
 };
 
-class DeprecatedContentClientSingleBuffered : public DeprecatedContentClientRemoteBuffer
-{
-public:
-  DeprecatedContentClientSingleBuffered(CompositableForwarder* aFwd)
-    : DeprecatedContentClientRemoteBuffer(aFwd)
-  {
-    mTextureInfo.mCompositableType = BUFFER_CONTENT;    
-  }
-  ~DeprecatedContentClientSingleBuffered();
-
-  virtual void PrepareFrame() MOZ_OVERRIDE;
-
-protected:
-  virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
-};
-
 /**
- * A single buffered ContentClient that creates temporary buffers which are 
+ * A single buffered ContentClient that creates temporary buffers which are
  * used to update the host-side texture. The ownership of the buffers is
  * passed to the host side during the transaction, and we need to create
  * new ones each frame.

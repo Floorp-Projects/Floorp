@@ -145,12 +145,6 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
   case BUFFER_BRIDGE:
     MOZ_CRASH("Cannot create an image bridge compositable this way");
     break;
-  case BUFFER_CONTENT:
-    result = new DeprecatedContentHostSingleBuffered(aTextureInfo);
-    break;
-  case BUFFER_CONTENT_DIRECT:
-    result = new DeprecatedContentHostDoubleBuffered(aTextureInfo);
-    break;
   case BUFFER_CONTENT_INC:
     result = new ContentHostIncremental(aTextureInfo);
     break;

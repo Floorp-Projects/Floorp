@@ -164,7 +164,6 @@ public:
                                    const TextureInfo& aTextureInfo,
                                    const SurfaceDescriptor* aFrontDescriptorOnWhite = nullptr,
                                    const SurfaceDescriptor* aBackDescriptorOnWhite = nullptr) MOZ_OVERRIDE;
-  virtual void DestroyThebesBuffer(CompositableClient* aCompositable) MOZ_OVERRIDE;
 
   /**
    * Adds an edit in the layers transaction in order to attach

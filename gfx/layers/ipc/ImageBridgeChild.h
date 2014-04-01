@@ -298,9 +298,6 @@ public:
                                    const SurfaceDescriptor* aBackDescriptorOnWhite = nullptr) MOZ_OVERRIDE {
     NS_RUNTIMEABORT("should not be called");
   }
-  virtual void DestroyThebesBuffer(CompositableClient* aCompositable) MOZ_OVERRIDE {
-    NS_RUNTIMEABORT("should not be called");
-  }
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
                                    const nsIntRegion& aUpdatedRegion) MOZ_OVERRIDE {

@@ -151,8 +151,8 @@ ClientThebesLayer::PaintBuffer(gfxContext* aContext,
   mValidRegion.Or(mValidRegion, tmp);
 
   // Hold(this) ensures this layer is kept alive through the current transaction
-  // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer,
-  // DestroyThebesBuffer), so deleting this Hold for whatever reason will break things.
+  // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer),
+  // so deleting this Hold for whatever reason will break things.
   ClientManager()->Hold(this);
   contentClientRemote->Updated(aRegionToDraw,
                                mVisibleRegion,
