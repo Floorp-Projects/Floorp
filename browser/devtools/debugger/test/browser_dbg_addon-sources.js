@@ -16,7 +16,9 @@ function onMessage(event) {
         gTitle = json.data.value;
         break;
     }
-  } catch(e) { Cu.reportError(e); }
+  } catch(e) {
+    DevToolsUtils.reportException("onMessage", e);
+  }
 }
 
 function test() {
@@ -84,12 +86,12 @@ function testSources() {
         is(group, "Add-on SDK", "correct SDK group");
         foundSDKModule++;
       } else if (url.indexOf("resource://jid1-ami3akps3baaeg-at-jetpack") === 0) {
-        is(label, "main.js", "correct label for addon code");
-        is(group, "resource://jid1-ami3akps3baaeg-at-jetpack", "addon code is in its own group");
+        is(label, "resources/browser_dbg_addon3/lib/main.js", "correct label for addon code");
+        is(group, "jid1-ami3akps3baaeg@jetpack", "addon code is in the add-on's group");
         foundAddonModule = true;
       } else if (url.endsWith("/jid1-ami3akps3baaeg@jetpack.xpi!/bootstrap.js")) {
         is(label, "bootstrap.js", "correct label for bootstrap script");
-        is(group, "jar:", "bootstrap script is in its own group");
+        is(group, "jid1-ami3akps3baaeg@jetpack", "addon code is in the add-on's group");
         foundAddonBootstrap = true;
       } else {
         ok(false, "Saw an unexpected source: " + url);
@@ -105,10 +107,9 @@ function testSources() {
     is(gTitle, "Debugger - browser_dbg_addon3", "Saw the right toolbox title.");
 
     let groups = gDebugger.document.querySelectorAll(".side-menu-widget-group-title .name");
-    is(groups[0].value, "jar:", "Add-on bootstrap should be the first group");
-    is(groups[1].value, "resource://jid1-ami3akps3baaeg-at-jetpack", "Add-on code should be the second group");
-    is(groups[2].value, "Add-on SDK", "Add-on SDK should be the third group");
-    is(groups.length, 3, "Should be only three groups.");
+    is(groups[0].value, "jid1-ami3akps3baaeg@jetpack", "Add-on code should be the first group");
+    is(groups[1].value, "Add-on SDK", "Add-on SDK should be the second group");
+    is(groups.length, 2, "Should be only two groups.");
 
     deferred.resolve();
   });
@@ -132,6 +133,7 @@ registerCleanupFunction(function() {
   gThreadClient = null;
   gDebugger = null;
   gSources = null;
-  while (gBrowser.tabs.length > 1)
+  while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
+  }
 });

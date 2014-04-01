@@ -113,13 +113,6 @@
   -  heading of the group of Web Console preferences in the options panel. -->
 <!ENTITY options.webconsole.label            "Web Console">
 
-<!-- LOCALIZATION NOTE (options.enablePersistentLogging.label): This is the
-  -  label for the checkbox that toggles persistent logs in the Web Console,
-  -  i.e. devtools.webconsole.persistlog a boolean preference in about:config,
-  -  in the options panel. -->
-<!ENTITY options.enablePersistentLogging.label    "Enable persistent logs">
-<!ENTITY options.enablePersistentLogging.tooltip  "If you enable this option the Web Console will not clear the output each time you navigate to a new page">
-
 <!-- LOCALIZATION NOTE (options.timestampMessages.label): This is the
    - label for the checkbox that toggles timestamps in the Web Console -->
 <!ENTITY options.timestampMessages.label      "Enable timestamps">
@@ -144,6 +137,18 @@
   -  heading of the group of JavaScript Profiler preferences in the options
   -  panel. -->
 <!ENTITY options.profiler.label            "JavaScript Profiler">
+
+<!-- LOCALICATION NOTE (options.commonprefs): This is the label for the heading
+      of all preferences that affect both the Web Console and the Network
+      Monitor -->
+<!ENTITY options.commonPrefs.label           "Common Preferences">
+
+<!-- LOCALIZATION NOTE (options.enablePersistentLogging.label): This is the
+  -  label for the checkbox that toggles persistent logs in the Web Console and
+  -  network monitor,  i.e. devtools.webconsole.persistlog a boolean preference in
+  -  about:config, in the options panel. -->
+<!ENTITY options.enablePersistentLogging.label    "Enable persistent logs">
+<!ENTITY options.enablePersistentLogging.tooltip  "If you enable this option the Web Console and Network Monitor will not clear the output each time you navigate to a new page">
 
 <!-- LOCALIZATION NOTE (options.showPlatformData.label): This is the
   -  label for the checkbox that toggles the display of the platform data in the,

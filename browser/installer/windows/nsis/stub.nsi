@@ -1770,6 +1770,15 @@ FunctionEnd
 Function OnChange_DirRequest
   Pop $0
   System::Call 'user32::GetWindowTextW(i $DirRequest, w .r0, i ${NSIS_MAX_STRLEN})'
+  StrCpy $1 "$0" 1 ; the first character
+  ${If} "$1" == "$\""
+    StrCpy $1 "$0" "" -1 ; the last character
+    ${If} "$1" == "$\""
+      StrCpy $0 "$0" "" 1 ; all but the first character
+      StrCpy $0 "$0" -1 ; all but the last character
+    ${EndIf}
+  ${EndIf}
+
   StrCpy $INSTDIR "$0"
   Call UpdateFreeSpaceLabel
 
@@ -1782,17 +1791,7 @@ Function OnChange_DirRequest
 FunctionEnd
 
 Function OnClick_ButtonBrowse
-  ; The call to GetLongPath returns a long path without a trailing
-  ; back-slash. Append a \ to the path to prevent the directory
-  ; name from being appended when using the NSIS create new folder.
-  ; http://www.nullsoft.com/free/nsis/makensis.htm#InstallDir
-  StrCpy $0 "$INSTDIR" "" -1 ; the last character
-  ${If} "$0" == "\"
-    StrCpy $0 "$INSTDIR"
-  ${Else}
-    StrCpy $0 "$INSTDIR"
-  ${EndIf}
-
+  StrCpy $0 "$INSTDIR"
   nsDialogs::SelectFolderDialog /NOUNLOAD "$(SELECT_FOLDER_TEXT)" $0
   Pop $0
   ${If} $0 == "error" ; returns 'error' if 'cancel' was pressed?
@@ -1801,7 +1800,7 @@ Function OnClick_ButtonBrowse
 
   ${If} $0 != ""
     StrCpy $INSTDIR "$0"
-    system::Call 'user32::SetWindowTextW(i $DirRequest, w "$INSTDIR")'
+    System::Call 'user32::SetWindowTextW(i $DirRequest, w "$INSTDIR")'
   ${EndIf}
 FunctionEnd
 

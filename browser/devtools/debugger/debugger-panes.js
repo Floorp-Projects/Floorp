@@ -142,8 +142,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   addSource: function(aSource, aOptions = {}) {
     let fullUrl = aSource.url;
     let url = fullUrl.split(" -> ").pop();
-    let label = SourceUtils.getSourceLabel(url);
-    let group = SourceUtils.getSourceGroup(url);
+    let label = aSource.addonPath ? aSource.addonPath : SourceUtils.getSourceLabel(url);
+    let group = aSource.addonID ? aSource.addonID : SourceUtils.getSourceGroup(url);
     let unicodeUrl = NetworkHelper.convertToUnicode(unescape(fullUrl));
 
     let contents = document.createElement("label");

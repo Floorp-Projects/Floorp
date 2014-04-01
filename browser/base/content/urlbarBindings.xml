@@ -260,29 +260,35 @@
 
           var action = this._parseActionUrl(url);
           let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
-          Task.spawn(function() {
-            let matchLastLocationChange = true;
-            if (action) {
-              url = action.param;
-              if (this.hasAttribute("actiontype")) {
-                if (action.type == "switchtab") {
-                  this.handleRevert();
-                  let prevTab = gBrowser.selectedTab;
-                  if (switchToTabHavingURI(url) &&
-                      isTabEmpty(prevTab))
-                    gBrowser.removeTab(prevTab);
-                }
-                return;
-              }
-            }
-            else {
-              [url, postData, mayInheritPrincipal] = yield this._canonizeURL(aTriggeringEvent);
-              matchLastLocationChange = (lastLocationChange ==
-                                         gBrowser.selectedBrowser.lastLocationChange);
-              if (!url)
-                return;
-            }
 
+          let matchLastLocationChange = true;
+          if (action) {
+            url = action.param;
+            if (this.hasAttribute("actiontype")) {
+              if (action.type == "switchtab") {
+                this.handleRevert();
+                let prevTab = gBrowser.selectedTab;
+                if (switchToTabHavingURI(url) &&
+                    isTabEmpty(prevTab))
+                  gBrowser.removeTab(prevTab);
+              }
+              return;
+            }
+            continueOperation.call(this);
+          }
+          else {
+            this._canonizeURL(aTriggeringEvent, response => {
+              [url, postData, mayInheritPrincipal] = response;
+              if (url) {
+                matchLastLocationChange = (lastLocationChange ==
+                                           gBrowser.selectedBrowser.lastLocationChange);
+                continueOperation.call(this);
+              }
+            });
+          }
+
+          function continueOperation()
+          {
             this.value = url;
             gBrowser.userTypedValue = url;
             try {
@@ -347,73 +353,74 @@
                 loadCurrent();
               }
             }
-          }.bind(this));
+          }
         ]]></body>
       </method>
 
       <method name="_canonizeURL">
         <parameter name="aTriggeringEvent"/>
+        <parameter name="aCallback"/>
         <body><![CDATA[
-          return Task.spawn(function() {
-            var url = this.value;
-            if (!url)
-              throw new Task.Result(["", null, false]);
+          var url = this.value;
+          if (!url) {
+            aCallback(["", null, false]);
+            return;
+          }
 
-            // Only add the suffix when the URL bar value isn't already "URL-like",
-            // and only if we get a keyboard event, to match user expectations.
-            if (/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(url) &&
-                (aTriggeringEvent instanceof KeyEvent)) {
+          // Only add the suffix when the URL bar value isn't already "URL-like",
+          // and only if we get a keyboard event, to match user expectations.
+          if (/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(url) &&
+              (aTriggeringEvent instanceof KeyEvent)) {
 #ifdef XP_MACOSX
-              let accel = aTriggeringEvent.metaKey;
+            let accel = aTriggeringEvent.metaKey;
 #else
-              let accel = aTriggeringEvent.ctrlKey;
+            let accel = aTriggeringEvent.ctrlKey;
 #endif
-              let shift = aTriggeringEvent.shiftKey;
+            let shift = aTriggeringEvent.shiftKey;
 
-              let suffix = "";
+            let suffix = "";
 
-              switch (true) {
-                case (accel && shift):
-                  suffix = ".org/";
-                  break;
-                case (shift):
-                  suffix = ".net/";
-                  break;
-                case (accel):
-                  try {
-                    suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
-                    if (suffix.charAt(suffix.length - 1) != "/")
-                      suffix += "/";
-                  } catch(e) {
-                    suffix = ".com/";
-                  }
-                  break;
-              }
-
-              if (suffix) {
-                // trim leading/trailing spaces (bug 233205)
-                url = url.trim();
-
-                // Tack www. and suffix on.  If user has appended directories, insert
-                // suffix before them (bug 279035).  Be careful not to get two slashes.
-
-                let firstSlash = url.indexOf("/");
-
-                if (firstSlash >= 0) {
-                  url = url.substring(0, firstSlash) + suffix +
-                        url.substring(firstSlash + 1);
-                } else {
-                  url = url + suffix;
+            switch (true) {
+              case (accel && shift):
+                suffix = ".org/";
+                break;
+              case (shift):
+                suffix = ".net/";
+                break;
+              case (accel):
+                try {
+                  suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
+                  if (suffix.charAt(suffix.length - 1) != "/")
+                    suffix += "/";
+                } catch(e) {
+                  suffix = ".com/";
                 }
-
-                url = "http://www." + url;
-              }
+                break;
             }
 
-            let data = yield getShortcutOrURIAndPostData(url);
+            if (suffix) {
+              // trim leading/trailing spaces (bug 233205)
+              url = url.trim();
 
-            throw new Task.Result([data.url, data.postData, data.mayInheritPrincipal]);
-          }.bind(this));
+              // Tack www. and suffix on.  If user has appended directories, insert
+              // suffix before them (bug 279035).  Be careful not to get two slashes.
+
+              let firstSlash = url.indexOf("/");
+
+              if (firstSlash >= 0) {
+                url = url.substring(0, firstSlash) + suffix +
+                      url.substring(firstSlash + 1);
+              } else {
+                url = url + suffix;
+              }
+
+              url = "http://www." + url;
+            }
+          }
+
+          getShortcutOrURIAndPostData(url, data => {
+            aCallback([data.url, data.postData, data.mayInheritPrincipal]);
+          });
         ]]></body>
       </method>
 

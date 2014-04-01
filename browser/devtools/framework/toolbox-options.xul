@@ -31,11 +31,17 @@
         <label value="&options.selectDevToolsTheme.label;"/>
         <radiogroup id="devtools-theme-box"
                     class="options-groupbox"
-                    data-pref="devtools.theme"
                     orient="horizontal">
-          <radio value="light" label="&options.lightTheme.label;"/>
-          <radio value="dark" label="&options.darkTheme.label;"/>
+          <radio checked="true" value="light" label="Metal"/>
+          <radio checked="false" disabled="true" value="light" label="&options.lightTheme.label;"/>
+          <radio checked="false" disabled="true" value="dark" label="&options.darkTheme.label;"/>
         </radiogroup>
+        <label value="&options.commonPrefs.label;"/>
+        <vbox id="commonprefs-options" class="options-groupbox">
+          <checkbox label="&options.enablePersistentLogging.label;"
+                    tooltiptext="&options.enablePersistentLogging.tooltip;"
+                    data-pref="devtools.webconsole.persistlog"/>
+        </vbox>
         <label value="&options.context.inspector;"/>
         <vbox id="inspector-options" class="options-groupbox">
           <hbox align="center">
@@ -56,9 +62,6 @@
         </vbox>
         <label value="&options.webconsole.label;"/>
         <vbox id="webconsole-options" class="options-groupbox">
-          <checkbox label="&options.enablePersistentLogging.label;"
-                    tooltiptext="&options.enablePersistentLogging.tooltip;"
-                    data-pref="devtools.webconsole.persistlog"/>
           <checkbox id="webconsole-timestamp-messages"
                     label="&options.timestampMessages.label;"
                     tooltiptext="&options.timestampMessages.tooltip;"
