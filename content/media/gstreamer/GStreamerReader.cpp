@@ -758,8 +758,11 @@ nsresult GStreamerReader::Seek(int64_t aTarget,
   LOG(PR_LOG_DEBUG, "%p About to seek to %" GST_TIME_FORMAT,
         mDecoder, GST_TIME_ARGS(seekPos));
 
-  if (!gst_element_seek_simple(mPlayBin, GST_FORMAT_TIME,
-    static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE), seekPos)) {
+  int flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT;
+  if (!gst_element_seek_simple(mPlayBin,
+                               GST_FORMAT_TIME,
+                               static_cast<GstSeekFlags>(flags),
+                               seekPos)) {
     LOG(PR_LOG_ERROR, "seek failed");
     return NS_ERROR_FAILURE;
   }
@@ -769,7 +772,7 @@ nsresult GStreamerReader::Seek(int64_t aTarget,
   gst_message_unref(message);
   LOG(PR_LOG_DEBUG, "seek completed");
 
-  return DecodeToTarget(aTarget);
+  return NS_OK;
 }
 
 nsresult GStreamerReader::GetBuffered(dom::TimeRanges* aBuffered,

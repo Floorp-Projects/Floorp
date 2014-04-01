@@ -204,6 +204,12 @@ public:
   static VideoData* ShallowCopyUpdateDuration(VideoData* aOther,
                                               int64_t aDuration);
 
+  // Creates a new VideoData identical to aOther, but with a different
+  // specified timestamp. All data from aOther is copied into the new
+  // VideoData, as ShallowCopyUpdateDuration() does.
+  static VideoData* ShallowCopyUpdateTimestamp(VideoData* aOther,
+                                               int64_t aTimestamp);
+
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
   static void SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
