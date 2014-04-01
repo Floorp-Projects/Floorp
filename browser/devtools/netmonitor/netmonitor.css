@@ -34,7 +34,8 @@
   #details-pane-toggle,
   #details-pane[pane-collapsed],
   .requests-menu-waterfall,
-  .requests-menu-footer-label {
+  .requests-menu-footer-label,
+  .requests-menu-status-code {
     display: none;
   }
 }
