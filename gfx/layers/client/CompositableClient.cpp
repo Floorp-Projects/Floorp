@@ -104,15 +104,8 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
   case TEXTURE_SHARED_GL:
   case TEXTURE_SHARED_GL_EXTERNAL:
   case TEXTURE_STREAM_GL:
-    MOZ_CRASH("Unsupported. this should not be reached");
   case TEXTURE_YCBCR:
-    if (parentBackend == LayersBackend::LAYERS_D3D9 ||
-        parentBackend == LayersBackend::LAYERS_D3D11 ||
-        parentBackend == LayersBackend::LAYERS_BASIC) {
-      result = new DeprecatedTextureClientShmemYCbCr(GetForwarder(), GetTextureInfo());
-    } else {
-      MOZ_CRASH("Unsupported. this should not be reached");
-    }
+    MOZ_CRASH("Unsupported. this should not be reached");
     break;
   case TEXTURE_CONTENT:
 #ifdef XP_WIN

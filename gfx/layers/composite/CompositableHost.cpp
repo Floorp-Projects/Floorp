@@ -142,12 +142,6 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
-  case BUFFER_IMAGE_SINGLE:
-    result = new DeprecatedImageHostSingle(aTextureInfo);
-    break;
-  case BUFFER_IMAGE_BUFFERED:
-    result = new DeprecatedImageHostBuffered(aTextureInfo);
-    break;
   case BUFFER_BRIDGE:
     MOZ_CRASH("Cannot create an image bridge compositable this way");
     break;
