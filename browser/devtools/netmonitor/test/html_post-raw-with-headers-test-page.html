@@ -26,9 +26,10 @@
 
       function performRequests() {
         var rawData = [
-          "content-type: application/x-www-form-urlencoded",
-          "custom-header: hello world!",
-          "",
+          "content-type: application/x-www-form-urlencoded\r",
+          "custom-header: hello world!\r",
+          "\r",
+          "\r",
           "foo=bar&baz=123"
         ];
         post("sjs_simple-test-server.sjs", rawData.join("\n"), function() {

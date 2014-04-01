@@ -170,7 +170,7 @@ browser.jar:
   skin/classic/browser/feeds/audioFeedIcon16.png            (feeds/feedIcon16.png)
   skin/classic/browser/fonts/ClearSans-Regular.ttf          (../shared/ClearSans-Regular.ttf)
   skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
-  skin/classic/browser/newtab/controls.png                  (newtab/controls.png)
+  skin/classic/browser/newtab/controls.png                  (../shared/newtab/controls.png)
   skin/classic/browser/newtab/controls@2x.png               (newtab/controls@2x.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
@@ -297,6 +297,7 @@ browser.jar:
 * skin/classic/browser/devtools/common.css                  (../shared/devtools/common.css)
 * skin/classic/browser/devtools/dark-theme.css              (../shared/devtools/dark-theme.css)
 * skin/classic/browser/devtools/light-theme.css             (../shared/devtools/light-theme.css)
+  skin/classic/browser/devtools/metal.jpg                   (../shared/devtools/images/metal.jpg)
   skin/classic/browser/devtools/filters.svg                 (../shared/devtools/filters.svg)
   skin/classic/browser/devtools/controls.png                (../shared/devtools/images/controls.png)
   skin/classic/browser/devtools/controls@2x.png             (../shared/devtools/images/controls@2x.png)

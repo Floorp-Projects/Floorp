@@ -2339,6 +2339,22 @@ nsDownloadManager::OnTitleChanged(nsIURI *aURI,
 }
 
 NS_IMETHODIMP
+nsDownloadManager::OnFrecencyChanged(nsIURI* aURI,
+                                     int32_t aNewFrecency,
+                                     const nsACString& aGUID,
+                                     bool aHidden,
+                                     PRTime aLastVisitDate)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::OnManyFrecenciesChanged()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDownloadManager::OnDeleteURI(nsIURI *aURI,
                                const nsACString& aGUID,
                                uint16_t aReason)

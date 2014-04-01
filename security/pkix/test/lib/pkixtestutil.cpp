@@ -129,6 +129,7 @@ OCSPResponseContext::OCSPResponseContext(PLArenaPool* arena,
   , revocationTime(0)
   , badSignature(false)
   , responderIDType(ByKeyHash)
+  , extensions(nullptr)
 {
 }
 
@@ -399,6 +400,68 @@ BasicOCSPResponse(OCSPResponseContext& context)
   return output.Squash(context.arena, der::SEQUENCE);
 }
 
+// Extension ::= SEQUENCE {
+//   id               OBJECT IDENTIFIER,
+//   critical         BOOLEAN DEFAULT FALSE
+//   value            OCTET STRING
+// }
+static SECItem*
+OCSPExtension(OCSPResponseContext& context, OCSPResponseExtension* extension)
+{
+  Output output;
+  if (output.Add(&extension->id) != der::Success) {
+    return nullptr;
+  }
+  if (extension->critical) {
+    static const uint8_t trueEncoded[3] = { 0x01, 0x01, 0xFF };
+    SECItem critical = {
+      siBuffer,
+      const_cast<uint8_t*>(trueEncoded),
+      PR_ARRAY_SIZE(trueEncoded)
+    };
+    if (output.Add(&critical) != der::Success) {
+      return nullptr;
+    }
+  }
+  SECItem* value = EncodeNested(context.arena, der::OCTET_STRING,
+                                &extension->value);
+  if (!value) {
+    return nullptr;
+  }
+  if (output.Add(value) != der::Success) {
+    return nullptr;
+  }
+  return output.Squash(context.arena, der::SEQUENCE);
+}
+
+// Extensions ::= [1] {
+//   SEQUENCE OF Extension
+// }
+static SECItem*
+Extensions(OCSPResponseContext& context)
+{
+  Output output;
+  for (OCSPResponseExtension* extension = context.extensions;
+       extension; extension = extension->next) {
+    SECItem* extensionEncoded = OCSPExtension(context, extension);
+    if (!extensionEncoded) {
+      return nullptr;
+    }
+    if (output.Add(extensionEncoded) != der::Success) {
+      return nullptr;
+    }
+  }
+  SECItem* extensionsEncoded = output.Squash(context.arena, der::SEQUENCE);
+  if (!extensionsEncoded) {
+    return nullptr;
+  }
+  return EncodeNested(context.arena,
+                      der::CONSTRUCTED |
+                      der::CONTEXT_SPECIFIC |
+                      1,
+                      extensionsEncoded);
+}
+
 // ResponseData ::= SEQUENCE {
 //    version             [0] EXPLICIT Version DEFAULT v1,
 //    responderID             ResponderID,
@@ -426,6 +489,10 @@ ResponseData(OCSPResponseContext& context)
   if (!responsesNested) {
     return nullptr;
   }
+  SECItem* responseExtensions = nullptr;
+  if (context.extensions) {
+    responseExtensions = Extensions(context);
+  }
 
   Output output;
   if (output.Add(responderID) != der::Success) {
@@ -436,6 +503,11 @@ ResponseData(OCSPResponseContext& context)
   }
   if (output.Add(responsesNested) != der::Success) {
     return nullptr;
+  }
+  if (responseExtensions) {
+    if (output.Add(responseExtensions) != der::Success) {
+      return nullptr;
+    }
   }
   return output.Squash(context.arena, der::SEQUENCE);
 }
