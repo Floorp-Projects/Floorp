@@ -356,7 +356,7 @@ include ../../editor/reftests/reftest.list
 # box-sizing
 include box-sizing/reftest.list
 
-# invalidation - only run on B2G
+# invalidation
 include invalidation/reftest.list
 
 # encodings
