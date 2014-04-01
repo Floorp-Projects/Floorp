@@ -223,14 +223,14 @@ NativeApp.prototype = {
    * This function retrieves the icon for an app.
    * If the retrieving fails, it uses the default chrome icon.
    */
-  getIcon: function() {
+  getIcon: function(aZipPath) {
     try {
       // If the icon is in the zip package, we should modify the url
       // to point to the zip file (we can't use the app protocol yet
       // because the app isn't installed yet).
       if (this.iconURI.scheme == "app") {
         let zipUrl = OS.Path.toFileURI(OS.Path.join(this.tmpInstallDir,
-                                                    "application.zip"));
+                                                    aZipPath));
 
         let filePath = this.iconURI.QueryInterface(Ci.nsIURL).filePath;
 
@@ -352,7 +352,7 @@ WinNativeApp.prototype = {
                                                     "application.zip"));
         }
 
-        yield this.getIcon();
+        yield this.getIcon("application.zip");
 
         // Remove previously installed app
         this._removeInstallation(true);
@@ -663,6 +663,7 @@ function MacNativeApp(aData) {
   this.macOSDir = OS.Path.join(this.contentsDir, "MacOS");
   this.resourcesDir = OS.Path.join(this.contentsDir, "Resources");
   this.iconFile = OS.Path.join(this.resourcesDir, "appicon.icns");
+  this.zipFile = OS.Path.join(this.resourcesDir, "application.zip");
 }
 
 MacNativeApp.prototype = {
@@ -679,10 +680,10 @@ MacNativeApp.prototype = {
 
         if (aZipPath) {
           yield OS.File.move(aZipPath, OS.Path.join(this.tmpInstallDir,
-                                                    "application.zip"));
+                                                    this.zipFile));
         }
 
-        yield this.getIcon();
+        yield this.getIcon(this.zipFile);
 
         // Remove previously installed app
         this._removeInstallation(true);
@@ -886,7 +887,7 @@ LinuxNativeApp.prototype = {
                                                     "application.zip"));
         }
 
-        yield this.getIcon();
+        yield this.getIcon("application.zip");
 
         // Remove previously installed app
         this._removeInstallation(true);
