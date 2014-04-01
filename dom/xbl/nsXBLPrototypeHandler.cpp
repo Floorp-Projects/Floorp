@@ -667,7 +667,7 @@ static const keyCodeData gKeyCodes[] = {
 
 #define NS_DEFINE_VK(aDOMKeyName, aDOMKeyCode) \
   { #aDOMKeyName, sizeof(#aDOMKeyName) - 1, aDOMKeyCode }
-#include "nsVKList.h"
+#include "mozilla/VirtualKeyCodeList.h"
 #undef NS_DEFINE_VK
 };
 

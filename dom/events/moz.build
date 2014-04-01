@@ -16,7 +16,6 @@ XPIDL_MODULE = 'content_events'
 EXPORTS += [
     'nsEventStates.h',
     'nsIJSEventListener.h',
-    'nsVKList.h',
 ]
 
 EXPORTS.mozilla += [
@@ -29,6 +28,7 @@ EXPORTS.mozilla += [
     'IMEStateManager.h',
     'InternalMutationEvent.h',
     'KeyNameList.h',
+    'VirtualKeyCodeList.h',
 ]
 
 EXPORTS.mozilla.dom += [
