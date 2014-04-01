@@ -207,3 +207,16 @@ input[type=button] {
   background-color: #fff;
   opacity: 0.01;
 }
+
+/* PANEL */
+#sponsored-panel {
+  width: 330px;
+}
+
+#sponsored-panel description {
+  margin: 0;
+}
+
+#sponsored-panel .text-link {
+  margin: 12px 0 0;
+}

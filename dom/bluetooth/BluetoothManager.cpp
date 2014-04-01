@@ -52,6 +52,15 @@ public:
       return false;
     }
 
+    if (!mManagerPtr->GetOwner()) {
+      BT_WARNING("Bluetooth manager was disconnected from owner window.");
+
+      // Stop to create adapter since owner window of Bluetooth manager was
+      // gone. These is no need to create a DOMEvent target which has no owner
+      // to reply to.
+      return false;
+    }
+
     const InfallibleTArray<BluetoothNamedValue>& values =
       v.get_ArrayOfBluetoothNamedValue();
     nsRefPtr<BluetoothAdapter> adapter =
@@ -96,7 +105,6 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
 
-  BindToOwner(aWindow);
   mPath.AssignLiteral("/");
 
   BluetoothService* bs = BluetoothService::Get();
@@ -106,6 +114,16 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
 
 BluetoothManager::~BluetoothManager()
 {
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);
+}
+
+void
+BluetoothManager::DisconnectFromOwner()
+{
+  nsDOMEventTargetHelper::DisconnectFromOwner();
+
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
   bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);

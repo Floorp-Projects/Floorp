@@ -36,23 +36,24 @@ allows us to figure out how much time users are spending in the bookmarks
 panel.
 
 To start a session, call ``Telemetry.startUISession(String sessionName)``.
-Session names should be brief, lowercase, and should describe which UI
-component the user is interacting with. In certain cases where the UI component
-is dynamic, they could include an ID, essential to identifying that component.
-An example of this is dynamic home panels: we use session names of the format
-``homepanel:<panel_id>`` to identify home panel sessions.
 
-To stop a session call ``Telemetry.stopUISession(String sessionName, String
-reason)``. ``sessionName`` is the name of the open session and ``reason`` is a
-descriptive cause for the ending of the session. It should be brief, lowercase,
-and generic so it can be reused in different places. Examples reasons are:
+``sessionName``
+  The name of the session. Session names should be brief, lowercase, and should describe which UI
+  component the user is interacting with. In certain cases where the UI component is dynamic, they could include an ID, essential to identifying that component. An example of this is dynamic home panels: we use session names of the format ``homepanel:<panel_id>`` to identify home panel sessions.
 
-``switched``
-  The user transitioned to a UI element of equal level.
+To stop a session, call ``Telemetry.stopUISession(String sessionName, String reason)``.
 
-``exit``
-  The user left for an entirely different element. 
+``sessionName``
+  The name of the open session
 
+``reason`` (Optional)
+  A descriptive cause for ending the session. It should be brief, lowercase, and generic so it can be reused in different places. Examples reasons are:
+
+    ``switched``
+      The user transitioned to a UI element of equal level.
+
+    ``exit``
+      The user left for an entirely different element.
 
 Events
 ------
@@ -70,7 +71,12 @@ Events capture key occurrences. They should be brief and simple, and should not 
 
 ``timestamp`` (Optional)
   The time at which the event occurred. If not specified, this field defaults to the current value of the realtime clock. 
-  
+
+Versioning
+----------
+
+As a we improve on our Telemetry methods, it is foreseeable that our probes will change over time. Different versions of a probe could carry different data or have different interpretations on the server-side. To make it easier for the server to handle these changes, you should add version numbers to your event and session names. An example of a versioned session is ``homepanel.1``; this is version 1 of the ``homepanel`` session. This approach should also be applied to event names, an example being: ``panel.enable.1`` and ``panel.enable.2``.
+
 
 Clock
 -----
