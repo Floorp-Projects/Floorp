@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>mfrac linethickness</title>
+    <script type="text/javascript">
+      function doTest() {
+        document.getElementById("testMfrac").setAttribute("linethickness","thick");
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate",doTest, false);
+    </script>
+  </head>
+  <body>
+    <math>
+      <mfrac id="testMfrac" style="font-size: 300%" linethickness="thin">
+        <mi> a </mi>
+        <mi> b </mi>
+      </mfrac>
+    </math>
+  </body>
+</html>
