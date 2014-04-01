@@ -86,12 +86,6 @@ public:
                                         const nsIntRect& aBufferRect) = 0;
 
   /**
-   * Tell the compositor that a Compositable is killing its buffer(s),
-   * that is TextureClient/Hosts.
-   */
-  virtual void DestroyThebesBuffer(CompositableClient* aCompositable) = 0;
-
-  /**
    * Tell the CompositableHost on the compositor side what TiledLayerBuffer to
    * use for the next composition.
    */

@@ -973,12 +973,6 @@ ShadowLayerForwarder::CreatedDoubleBuffer(CompositableClient* aCompositable,
   }
 }
 
-void
-ShadowLayerForwarder::DestroyThebesBuffer(CompositableClient* aCompositable)
-{
-  mTxn->AddEdit(OpDestroyThebesBuffer(nullptr, aCompositable->GetIPDLActor()));
-}
-
 void ShadowLayerForwarder::Attach(CompositableClient* aCompositable,
                                   ShadowableLayer* aLayer)
 {
