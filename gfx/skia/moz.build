@@ -890,3 +890,11 @@ elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 DEFINES['GR_IMPLEMENTATION'] = 1
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += [
+        '-Wno-overloaded-virtual',
+        '-Wno-unused-function',
+    ]
+    if not CONFIG['CLANG_CXX']:
+        CXXFLAGS += ['-Wno-logical-op']
