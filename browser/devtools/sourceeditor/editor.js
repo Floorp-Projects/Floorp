@@ -404,6 +404,14 @@ Editor.prototype = {
   },
 
   /**
+   * Returns true if there is more than one selection in the editor.
+   */
+  hasMultipleSelections: function () {
+    let cm = editors.get(this);
+    return cm.listSelections().length > 1;
+  },
+
+  /**
    * Gets the first visible line number in the editor.
    */
   getFirstVisibleLine: function () {
