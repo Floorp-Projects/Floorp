@@ -222,8 +222,10 @@ GetDocumentFromWindow(nsIDOMWindow *aWindow)
 }
 
 /******************************************************************/
-/* OverOutElementsWrapper                                         */
+/* mozilla::OverOutElementsWrapper                                */
 /******************************************************************/
+
+namespace mozilla {
 
 OverOutElementsWrapper::OverOutElementsWrapper()
   : mLastOverFrame(nullptr)
@@ -248,8 +250,6 @@ NS_INTERFACE_MAP_END
 /******************************************************************/
 /* mozilla::EventStateManager                                     */
 /******************************************************************/
-
-namespace mozilla {
 
 static uint32_t sESMInstanceCount = 0;
 

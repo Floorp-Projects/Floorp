@@ -31,14 +31,15 @@ class nsITimer;
 class nsPresContext;
 
 namespace mozilla {
+
 class EnterLeaveDispatcher;
 class ScrollbarsForWheel;
 class WheelTransaction;
+
 namespace dom {
 class DataTransfer;
 class TabParent;
-}
-}
+} // namespace dom
 
 class OverOutElementsWrapper MOZ_FINAL : public nsISupports
 {
@@ -61,8 +62,6 @@ public:
   // the last out event we fired has finished processing.
   nsCOMPtr<nsIContent> mFirstOutEventElement;
 };
-
-namespace mozilla {
 
 class EventStateManager : public nsSupportsWeakReference,
                           public nsIObserver
