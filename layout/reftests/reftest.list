@@ -318,7 +318,7 @@ include transform-3d/reftest.list
 # unicode/ (verify that we don't do expend effort doing unicode-aware case checks)
 include unicode/reftest.list
 
-# webcomonents/
+# webcomponents/
 include webcomponents/reftest.list
 
 # widget/
@@ -332,9 +332,6 @@ include xul-document-load/reftest.list
 
 # xul/
 include xul/reftest.list
-
-# webcomonents/
-include webcomponents/reftest.list
 
 # xul
 include ../xul/reftest/reftest.list
