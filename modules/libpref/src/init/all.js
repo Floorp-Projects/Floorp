@@ -4404,3 +4404,9 @@ pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
 
 // disable mozsample size for now
 pref("image.mozsamplesize.enabled", false);
+
+// Enable navigator.sendBeacon on all platforms except b2g because it doesn't
+// play nicely with Firefox OS apps yet.
+#ifndef MOZ_WIDGET_GONK
+pref("beacon.enabled", true);
+#endif
