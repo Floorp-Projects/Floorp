@@ -14,9 +14,6 @@ const DB_VERSION = 5; // The database schema version
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
-
 /**
  * Object that manages a database transaction properly so consumers don't have
  * to worry about it throwing.
@@ -56,11 +53,6 @@ LoginManagerStorage_mozStorage.prototype = {
     QueryInterface : XPCOMUtils.generateQI([Ci.nsILoginManagerStorage,
                                             Ci.nsIInterfaceRequestor]),
     getInterface : function(aIID) {
-        if (aIID.equals(Ci.nsIVariant)) {
-            // Allows unwrapping the JavaScript object for regression tests.
-            return this;
-        }
-
         if (aIID.equals(Ci.mozIStorageConnection)) {
             return this._dbConnection;
         }
@@ -172,22 +164,24 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
     /*
-     * Internal method used by regression tests only.  It overrides the default
-     * database location.
+     * initWithFile
+     *
+     * Initialize the component, but override the default filename locations.
+     * This is primarily used to the unit tests and profile migration.
      */
     initWithFile : function(aDBFile) {
         if (aDBFile)
             this._signonsFile = aDBFile;
 
-        this.initialize();
+        this.init();
     },
 
 
     /*
-     * initialize
+     * init
      *
      */
-    initialize : function () {
+    init : function () {
         this._dbStmts = {};
 
         // Connect to the correct preferences branch.
@@ -212,8 +206,6 @@ LoginManagerStorage_mozStorage.prototype = {
             isFirstRun = this._dbInit();
 
             this._initialized = true;
-
-            return Promise.resolve();
         } catch (e) {
             this.log("Initialization failed: " + e);
             // If the import fails on first run, we want to delete the db
@@ -221,17 +213,6 @@ LoginManagerStorage_mozStorage.prototype = {
                 this._dbCleanup(false);
             throw "Initialization failed";
         }
-    },
-
-
-    /*
-     * terminate
-     *
-     * Internal method used by regression tests only.  It is called before
-     * replacing this storage module with a new instance.
-     */
-    terminate : function () {
-        return Promise.resolve();
     },
 
 
@@ -503,6 +484,19 @@ LoginManagerStorage_mozStorage.prototype = {
         if (count)
             count.value = logins.length; // needed for XPCOM
         return logins;
+    },
+
+
+    /*
+     * getAllEncryptedLogins
+     *
+     * Not implemented. This interface was added to extract logins from the
+     * legacy storage module without decrypting them. Now that logins are in
+     * mozStorage, if the encrypted data is really needed it can be easily
+     * obtained with SQL and the mozStorage APIs.
+     */
+    getAllEncryptedLogins : function (count) {
+        throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
 
 
