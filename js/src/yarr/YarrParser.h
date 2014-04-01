@@ -612,23 +612,12 @@ private:
                     unsigned min;
                     if (!consumeNumber(min))
                         break;
-                    // Clamping to INT_MAX is technically a spec deviation. In practice, it's
-                    // undetectable, because we can't even allocate strings large enough for
-                    // quantifiers this large to ever create different results than smaller ones.
-                    if (min > INT_MAX)
-                        min = INT_MAX;
 
                     unsigned max = min;
                     if (tryConsume(',')) {
                         if (peekIsDigit()) {
                             if (!consumeNumber(max))
                                 break;
-                            // Clamping to INT_MAX is technically a spec deviation. In practice,
-                            // it's undetectable, because we can't even allocate strings large
-                            // enough for quantifiers this large to ever create different results
-                            // than smaller ones.
-                            if (max > INT_MAX)
-                                max = INT_MAX;
                         } else {
                             max = quantifyInfinite;
                         }
