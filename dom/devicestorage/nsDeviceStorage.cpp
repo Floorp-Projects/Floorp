@@ -3361,7 +3361,12 @@ nsDOMDeviceStorage::GetDefaultStorageName(const nsAString& aStorageType,
   GetOrderedVolumeNames(volNames);
   if (volNames.Length() > 0) {
     aStorageName = volNames[0];
+    return;
   }
+
+  // No volumes available, return the empty string. This is normal for
+  // b2g-desktop.
+  aStorageName.Truncate();
 }
 
 bool
