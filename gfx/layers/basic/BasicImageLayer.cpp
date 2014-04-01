@@ -51,7 +51,7 @@ public:
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer) MOZ_OVERRIDE;
+  virtual void Paint(DrawTarget* aDT, Layer* aMaskLayer) MOZ_OVERRIDE;
 
   virtual bool GetAsSurface(gfxASurface** aSurface,
                             SurfaceDescriptor* aDescriptor);
@@ -73,7 +73,7 @@ protected:
 };
 
 void
-BasicImageLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
+BasicImageLayer::Paint(DrawTarget* aDT, Layer* aMaskLayer)
 {
   if (IsHidden() || !mContainer) {
     return;
@@ -90,9 +90,7 @@ BasicImageLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
     return;
   }
 
-  FillRectWithMask(aContext->GetDrawTarget(),
-                   Rect(0, 0, size.width, size.height),
-                   surface, ToFilter(mFilter),
+  FillRectWithMask(aDT, Rect(0, 0, size.width, size.height), surface, ToFilter(mFilter),
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);
 

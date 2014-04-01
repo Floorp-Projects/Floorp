@@ -17,6 +17,7 @@
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
+#include "mozilla/gfx/PathHelpers.h"
 
 using namespace mozilla::gfx;
 
@@ -43,22 +44,20 @@ public:
     ColorLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer) MOZ_OVERRIDE
+  virtual void Paint(DrawTarget* aDT, Layer* aMaskLayer) MOZ_OVERRIDE
   {
     if (IsHidden()) {
       return;
     }
 
-    gfxRect snapped(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
-    if (aContext->UserToDevicePixelSnapped(snapped, true)) {
-      gfxMatrix mat = aContext->CurrentMatrix();
+    Rect snapped(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+    if (UserToDevicePixelSnapped(snapped, aDT->GetTransform())) {
+      Matrix mat = aDT->GetTransform();
       mat.Invert();
       snapped = mat.TransformBounds(snapped);
     }
 
-    FillRectWithMask(aContext->GetDrawTarget(),
-                     Rect(snapped.x, snapped.y, snapped.width, snapped.height),
-                     ToColor(mColor),
+    FillRectWithMask(aDT, snapped, ToColor(mColor),
                      DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                      aMaskLayer);
   }

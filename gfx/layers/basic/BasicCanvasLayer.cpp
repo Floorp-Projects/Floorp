@@ -21,7 +21,7 @@ namespace mozilla {
 namespace layers {
 
 void
-BasicCanvasLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
+BasicCanvasLayer::Paint(DrawTarget* aDT, Layer* aMaskLayer)
 {
   if (IsHidden())
     return;
@@ -30,21 +30,23 @@ BasicCanvasLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
   UpdateTarget();
   FireDidTransactionCallback();
 
-  gfxMatrix m;
+  Matrix m;
   if (mNeedsYFlip) {
-    m = aContext->CurrentMatrix();
-    aContext->Translate(gfxPoint(0.0, mBounds.height));
-    aContext->Scale(1.0, -1.0);
+    m = aDT->GetTransform();
+    Matrix newTransform = m;
+    newTransform.Translate(0.0f, mBounds.height);
+    newTransform.Scale(1.0f, -1.0f);
+    aDT->SetTransform(newTransform);
   }
 
-  FillRectWithMask(aContext->GetDrawTarget(),
+  FillRectWithMask(aDT,
                    Rect(0, 0, mBounds.width, mBounds.height),
                    mSurface, ToFilter(mFilter),
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);
 
   if (mNeedsYFlip) {
-    aContext->SetMatrix(m);
+    aDT->SetTransform(m);
   }
 }
 
