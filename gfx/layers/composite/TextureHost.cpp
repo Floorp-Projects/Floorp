@@ -124,16 +124,6 @@ TemporaryRef<DeprecatedTextureHost> CreateBasicDeprecatedTextureHost(SurfaceDesc
                                                              uint32_t aDeprecatedTextureHostFlags,
                                                              uint32_t aTextureFlags);
 
-#ifdef XP_WIN
-TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostD3D9(SurfaceDescriptorType aDescriptorType,
-                                                            uint32_t aDeprecatedTextureHostFlags,
-                                                            uint32_t aTextureFlags);
-
-TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostD3D11(SurfaceDescriptorType aDescriptorType,
-                                                             uint32_t aDeprecatedTextureHostFlags,
-                                                             uint32_t aTextureFlags);
-#endif
-
 /* static */ TemporaryRef<DeprecatedTextureHost>
 DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
                                            uint32_t aDeprecatedTextureHostFlags,
@@ -152,16 +142,6 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
       }
       return result;
       }
-#ifdef XP_WIN
-    case LayersBackend::LAYERS_D3D9:
-      return CreateDeprecatedTextureHostD3D9(aDescriptorType,
-                                         aDeprecatedTextureHostFlags,
-                                         aTextureFlags);
-    case LayersBackend::LAYERS_D3D11:
-      return CreateDeprecatedTextureHostD3D11(aDescriptorType,
-                                          aDeprecatedTextureHostFlags,
-                                          aTextureFlags);
-#endif
     case LayersBackend::LAYERS_BASIC:
       return CreateBasicDeprecatedTextureHost(aDescriptorType,
                                           aDeprecatedTextureHostFlags,
