@@ -52,6 +52,15 @@ public:
       return false;
     }
 
+    if (!mManagerPtr->GetOwner()) {
+      BT_WARNING("Bluetooth manager was disconnected from owner window.");
+
+      // Stop to create adapter since owner window of Bluetooth manager was
+      // gone. These is no need to create a DOMEvent target which has no owner
+      // to reply to.
+      return false;
+    }
+
     const InfallibleTArray<BluetoothNamedValue>& values =
       v.get_ArrayOfBluetoothNamedValue();
     nsRefPtr<BluetoothAdapter> adapter =
