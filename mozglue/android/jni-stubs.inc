@@ -571,6 +571,25 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv * ar
 
 #ifdef JNI_STUBS
 
+typedef jobject (*Java_org_mozilla_gecko_util_NativeJSContainer_clone_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_util_NativeJSContainer_clone_t f_Java_org_mozilla_gecko_util_NativeJSContainer_clone;
+extern "C" NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSContainer_clone(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSContainer_clone) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return nullptr;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSContainer_clone(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSContainer_clone", &f_Java_org_mozilla_gecko_util_NativeJSContainer_clone);
+#endif
+
+#ifdef JNI_STUBS
+
 typedef void (*Java_org_mozilla_gecko_util_NativeJSContainer_dispose_t)(JNIEnv *, jobject);
 static Java_org_mozilla_gecko_util_NativeJSContainer_dispose_t f_Java_org_mozilla_gecko_util_NativeJSContainer_dispose;
 extern "C" NS_EXPORT void JNICALL

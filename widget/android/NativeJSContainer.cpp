@@ -5,6 +5,7 @@
 
 #include "NativeJSContainer.h"
 #include "AndroidBridge.h"
+#include "prthread.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -60,6 +61,58 @@ public:
         }
     }
 
+    static jobject CloneInstance(JNIEnv* env, jobject instance) {
+        NativeJSContainer* const container = FromInstance(env, instance);
+        if (!container || !container->EnsureObject(env)) {
+            return nullptr;
+        }
+        JSContext* const cx = container->mThreadContext;
+        JS::RootedObject object(cx, container->mJSObject);
+        MOZ_ASSERT(object);
+
+        JSAutoStructuredCloneBuffer buffer;
+        if (!buffer.write(cx, JS::RootedValue(cx, JS::ObjectValue(*object)))) {
+            AndroidBridge::ThrowException(env,
+                "java/lang/UnsupportedOperationException",
+                "Cannot serialize object");
+            return nullptr;
+        }
+        return CreateInstance(env, new NativeJSContainer(cx, Move(buffer)));
+    }
+
+    // Make sure we have a JSObject and deserialize if necessary/possible
+    bool EnsureObject(JNIEnv* env) {
+        if (mJSObject) {
+            if (PR_GetCurrentThread() != mThread) {
+                AndroidBridge::ThrowException(env,
+                    "java/lang/IllegalThreadStateException",
+                    "Using NativeJSObject off its thread");
+                return false;
+            }
+            return true;
+        }
+        if (!SwitchContextToCurrentThread()) {
+            AndroidBridge::ThrowException(env,
+                "java/lang/IllegalThreadStateException",
+                "Not available for this thread");
+            return false;
+        }
+
+        JS::RootedValue value(mThreadContext);
+        MOZ_ASSERT(mBuffer.data());
+        MOZ_ALWAYS_TRUE(mBuffer.read(mThreadContext, &value));
+        if (value.isObject()) {
+            mJSObject = &value.toObject();
+        }
+        if (!mJSObject) {
+            AndroidBridge::ThrowException(env,
+                "java/lang/IllegalStateException", "Cannot deserialize data");
+            return false;
+        }
+        mBuffer.clear();
+        return true;
+    }
+
 private:
     static jclass jNativeJSContainer;
     static jfieldID jContainerNativeObject;
@@ -77,15 +130,37 @@ private:
         return newObject;
     }
 
-    JSContext* const mContext;
-    // Root JS object
-    const JS::Heap<JSObject*> mJSObject;
+    // Thread that the object is valid on
+    PRThread* mThread;
+    // Context that the object is valid in
+    JSContext* mThreadContext;
+    // Deserialized object, or nullptr if object is in serialized form
+    JS::Heap<JSObject*> mJSObject;
+    // Serialized object, or empty if object is in deserialized form
+    JSAutoStructuredCloneBuffer mBuffer;
 
-    // Create a new container containing the given object
+    // Create a new container containing the given deserialized object
     NativeJSContainer(JSContext* cx, JS::HandleObject object)
-            : mContext(cx)
+            : mThread(PR_GetCurrentThread())
+            , mThreadContext(cx)
             , mJSObject(object)
     {
+    }
+
+    // Create a new container containing the given serialized object
+    NativeJSContainer(JSContext* cx, JSAutoStructuredCloneBuffer&& buffer)
+            : mThread(PR_GetCurrentThread())
+            , mThreadContext(cx)
+            , mBuffer(Forward<JSAutoStructuredCloneBuffer>(buffer))
+    {
+    }
+
+    bool SwitchContextToCurrentThread() {
+        PRThread* const currentThread = PR_GetCurrentThread();
+        if (currentThread == mThread) {
+            return true;
+        }
+        return false;
     }
 };
 
@@ -109,6 +184,13 @@ Java_org_mozilla_gecko_util_NativeJSContainer_dispose(JNIEnv* env, jobject insta
 {
     MOZ_ASSERT(env);
     NativeJSContainer::DisposeInstance(env, instance);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSContainer_clone(JNIEnv* env, jobject instance)
+{
+    MOZ_ASSERT(env);
+    return NativeJSContainer::CloneInstance(env, instance);
 }
 
 } // extern "C"

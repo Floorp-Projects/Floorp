@@ -10,6 +10,10 @@ import org.mozilla.gecko.mozglue.JNITarget;
 /**
  * NativeJSContainer is a wrapper around the SpiderMonkey JSAPI to make it possible to
  * access Javascript objects in Java.
+ *
+ * A container must only be used on the thread it is attached to. To use it on another
+ * thread, call {@link #clone()} to make a copy, and use the copy on the other thread.
+ * When a copy is first used, it becomes attached to the thread using it.
  */
 @JNITarget
 public final class NativeJSContainer extends NativeJSObject
@@ -19,6 +23,13 @@ public final class NativeJSContainer extends NativeJSObject
     private NativeJSContainer(long nativeObject) {
         mNativeObject = nativeObject;
     }
+
+    /**
+     * Make a copy of this container for use by another thread. When the copy is first used,
+     * it becomes attached to the thread using it.
+     */
+    @Override
+    public native NativeJSContainer clone();
 
     /**
      * Dispose all associated native objects. Subsequent use of any objects derived from
