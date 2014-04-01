@@ -1,5 +1,5 @@
 function test() {
-  let {Promise} = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+  let {Promise} = Components.utils.import("resource://gre/modules/Promise.jsm");
   Components.utils.import("resource://gre/modules/osfile.jsm");
   let decoder = new TextDecoder();
 
