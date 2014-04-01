@@ -55,14 +55,12 @@ private:
                                double aDirection);
 };
 
-} // namespace mozilla
-
-class nsScrollbarsForWheel
+class ScrollbarsForWheel
 {
 public:
   static void PrepareToScrollText(nsEventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
-                                  mozilla::WidgetWheelEvent* aEvent);
+                                  WidgetWheelEvent* aEvent);
   static void SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget);
   // Hide all scrollbars (both mActiveOwner's and mActivatedScrollTargets')
   static void MayInactivate();
@@ -72,7 +70,7 @@ public:
 
 protected:
   static const size_t kNumberOfTargets = 4;
-  static const mozilla::DeltaValues directions[kNumberOfTargets];
+  static const DeltaValues directions[kNumberOfTargets];
   static nsWeakFrame sActiveOwner;
   static nsWeakFrame sActivatedScrollTargets[kNumberOfTargets];
   static bool sHadWheelStart;
@@ -86,9 +84,11 @@ protected:
   static void TemporarilyActivateAllPossibleScrollTargets(
                 nsEventStateManager* aESM,
                 nsIFrame* aTargetFrame,
-                mozilla::WidgetWheelEvent* aEvent);
+                WidgetWheelEvent* aEvent);
   static void DeactivateAllTemporarilyActivatedScrollTargets();
 };
+
+} // namespace mozilla
 
 class nsMouseWheelTransaction
 {
