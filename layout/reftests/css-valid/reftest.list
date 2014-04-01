@@ -7,5 +7,3 @@ include input/reftest.list
 include select/reftest.list
 include textarea/reftest.list
 include output/reftest.list
-include output/reftest.list
-include output/reftest.list
