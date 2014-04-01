@@ -8,8 +8,9 @@ package org.mozilla.gecko.home;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.preference.PreferenceManager;
 import android.util.Log;
+
+import org.mozilla.gecko.GeckoSharedPrefs;
 
 /**
  * Cache used to store authentication state of dynamic panels. The values
@@ -38,7 +39,7 @@ class PanelAuthCache {
     }
 
     private SharedPreferences getSharedPreferences() {
-        return PreferenceManager.getDefaultSharedPreferences(mContext);
+        return GeckoSharedPrefs.forProfile(mContext);
     }
 
     private String getPanelAuthKey(String panelId) {

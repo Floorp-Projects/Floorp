@@ -4,7 +4,7 @@ function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  
+
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
@@ -16,7 +16,7 @@ function test() {
     // given query string of an element. Tests to make sure label includes the proper search terms.
     //
     // Options:
-    // 
+    //
     //   id: The id of the element to test.
     //   isSelected: Flag to enable selection (text hilight) the contents of the element
     //   shouldBeShown: The display state of the menu item
@@ -92,6 +92,20 @@ function test() {
       id: "mixedContent",
       isSelected: false,
       shouldBeShown: false,
+    });
+
+    testElement({
+      id: "partialLink",
+      isSelected: true,
+      shouldBeShown: true,
+      expectedLabelContents: "link selection",
+    });
+
+    testElement({
+      id: "partialLink",
+      isSelected: false,
+      shouldBeShown: true,
+      expectedLabelContents: "A partial link " + ellipsis,
     });
 
     // cleanup

@@ -11,6 +11,7 @@ jar.sources += [
     'src/harness/BrowserInstrumentationTestRunner.java',
     'src/harness/BrowserTestListener.java',
     'src/tests/BrowserTestCase.java',
+    'src/tests/TestGeckoSharedPrefs.java',
     'src/tests/TestJarReader.java',
 ]
 jar.generated_sources = [] # None yet -- try to keep it this way.

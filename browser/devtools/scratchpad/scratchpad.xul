@@ -114,6 +114,11 @@
   <key id="key_openHelp"
        keycode="VK_F1"
        command="sp-cmd-documentationLink"/>
+  <key id="key_gotoLine"
+       key="&gotoLineCmd.key;"
+       command="key_gotoLine"
+       modifiers="accel"/>
+
 </keyset>
 
 <menubar id="sp-menubar">
