@@ -7222,7 +7222,7 @@ class CGUnionStruct(CGThing):
                                                      % vars["name"])))
             assignmentCases.append(
                 CGCase("e" + vars["name"],
-                       CGGeneric("RawSetAs%s() = aOther.GetAs%s();" %
+                       CGGeneric("SetAs%s() = aOther.GetAs%s();" %
                                  (vars["name"], vars["name"]))))
             if self.ownsMembers and typeNeedsRooting(t):
                 if t.isObject():
