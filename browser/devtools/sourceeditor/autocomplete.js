@@ -103,10 +103,12 @@ function autoComplete({ ed, cm }) {
     // "backgr|" but we need to open the popup at the beginning of the character
     // "b". Thus we need to calculate the width of the entered part of the token
     // ("backgr" here). 4 comes from the popup's left padding.
+
+    let cursorElement = cm.display.cursorDiv.querySelector(".CodeMirror-cursor");
     let left = suggestions[0].preLabel.length * cm.defaultCharWidth() + 4;
     popup.hidePopup();
     popup.setItems(suggestions);
-    popup.openPopup(cm.display.cursor, -1 * left, 0);
+    popup.openPopup(cursorElement, -1 * left, 0);
     private.suggestionInsertedOnce = false;
     // This event is used in tests.
     ed.emit("after-suggest");
@@ -159,6 +161,14 @@ function cycleSuggestions(ed, reverse) {
  */
 function onEditorKeypress({ ed, Editor }, event) {
   let private = privates.get(ed);
+
+  // Do not try to autocomplete with multiple selections.
+  if (ed.hasMultipleSelections()) {
+    private.doNotAutocomplete = true;
+    private.popup.hidePopup();
+    return;
+  }
+
   switch (event.keyCode) {
     case event.DOM_VK_ESCAPE:
       if (private.popup.isOpen)
