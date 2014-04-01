@@ -56,7 +56,7 @@
 #include "nsIDOMElement.h"
 #include "nsITheme.h"
 #include "nsTransform2D.h"
-#include "nsEventStateManager.h"
+#include "mozilla/EventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
@@ -1887,7 +1887,7 @@ nsBoxFrame::RegUnregAccessKey(bool aDoReg)
 
   // With a valid PresContext we can get the ESM 
   // and register the access key
-  nsEventStateManager *esm = PresContext()->EventStateManager();
+  EventStateManager* esm = PresContext()->EventStateManager();
 
   uint32_t key = accessKey.First();
   if (aDoReg)
