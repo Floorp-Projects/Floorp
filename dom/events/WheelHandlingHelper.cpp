@@ -65,37 +65,33 @@ WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
                            scrollRange.YMost(), aDirectionY));
 }
 
-} // namespace mozilla
-
-using namespace mozilla;
-
 /******************************************************************/
-/* nsMouseWheelTransaction                                        */
+/* mozilla::WheelTransaction                                      */
 /******************************************************************/
 
-nsWeakFrame nsMouseWheelTransaction::sTargetFrame(nullptr);
-uint32_t nsMouseWheelTransaction::sTime = 0;
-uint32_t nsMouseWheelTransaction::sMouseMoved = 0;
-nsITimer* nsMouseWheelTransaction::sTimer = nullptr;
-int32_t nsMouseWheelTransaction::sScrollSeriesCounter = 0;
-bool nsMouseWheelTransaction::sOwnScrollbars = false;
+nsWeakFrame WheelTransaction::sTargetFrame(nullptr);
+uint32_t WheelTransaction::sTime = 0;
+uint32_t WheelTransaction::sMouseMoved = 0;
+nsITimer* WheelTransaction::sTimer = nullptr;
+int32_t WheelTransaction::sScrollSeriesCounter = 0;
+bool WheelTransaction::sOwnScrollbars = false;
 
 bool
-nsMouseWheelTransaction::OutOfTime(uint32_t aBaseTime, uint32_t aThreshold)
+WheelTransaction::OutOfTime(uint32_t aBaseTime, uint32_t aThreshold)
 {
   uint32_t now = PR_IntervalToMilliseconds(PR_IntervalNow());
   return (now - aBaseTime > aThreshold);
 }
 
 void
-nsMouseWheelTransaction::OwnScrollbars(bool aOwn)
+WheelTransaction::OwnScrollbars(bool aOwn)
 {
   sOwnScrollbars = aOwn;
 }
 
 void
-nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
-                                          WidgetWheelEvent* aEvent)
+WheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
+                                   WidgetWheelEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
   MOZ_ASSERT(aEvent->message == NS_WHEEL_WHEEL,
@@ -110,7 +106,7 @@ nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
 }
 
 bool
-nsMouseWheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
+WheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
 {
   nsIScrollableFrame* sf = GetTargetFrame()->GetScrollTargetFrame();
   NS_ENSURE_TRUE(sf, false);
@@ -138,7 +134,7 @@ nsMouseWheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
 }
 
 void
-nsMouseWheelTransaction::MayEndTransaction()
+WheelTransaction::MayEndTransaction()
 {
   if (!sOwnScrollbars && ScrollbarsForWheel::IsActive()) {
     ScrollbarsForWheel::OwnWheelTransaction(true);
@@ -148,7 +144,7 @@ nsMouseWheelTransaction::MayEndTransaction()
 }
 
 void
-nsMouseWheelTransaction::EndTransaction()
+WheelTransaction::EndTransaction()
 {
   if (sTimer)
     sTimer->Cancel();
@@ -162,7 +158,7 @@ nsMouseWheelTransaction::EndTransaction()
 }
 
 void
-nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
+WheelTransaction::OnEvent(WidgetEvent* aEvent)
 {
   if (!sTargetFrame)
     return;
@@ -224,13 +220,13 @@ nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
 }
 
 void
-nsMouseWheelTransaction::Shutdown()
+WheelTransaction::Shutdown()
 {
   NS_IF_RELEASE(sTimer);
 }
 
 void
-nsMouseWheelTransaction::OnFailToScrollTarget()
+WheelTransaction::OnFailToScrollTarget()
 {
   NS_PRECONDITION(sTargetFrame, "We don't have mouse scrolling transaction");
 
@@ -250,7 +246,7 @@ nsMouseWheelTransaction::OnFailToScrollTarget()
 }
 
 void
-nsMouseWheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
+WheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
 {
   if (!sTargetFrame) {
     // The transaction target was destroyed already
@@ -274,7 +270,7 @@ nsMouseWheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
 }
 
 void
-nsMouseWheelTransaction::SetTimeout()
+WheelTransaction::SetTimeout()
 {
   if (!sTimer) {
     nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
@@ -292,7 +288,7 @@ nsMouseWheelTransaction::SetTimeout()
 }
 
 nsIntPoint
-nsMouseWheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent)
+WheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent)
 {
   NS_ASSERTION(aEvent, "aEvent is null");
   NS_ASSERTION(aEvent->widget, "aEvent-widget is null");
@@ -301,20 +297,20 @@ nsMouseWheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent)
 }
 
 uint32_t
-nsMouseWheelTransaction::GetTimeoutTime()
+WheelTransaction::GetTimeoutTime()
 {
   return Preferences::GetUint("mousewheel.transaction.timeout", 1500);
 }
 
 uint32_t
-nsMouseWheelTransaction::GetIgnoreMoveDelayTime()
+WheelTransaction::GetIgnoreMoveDelayTime()
 {
   return Preferences::GetUint("mousewheel.transaction.ignoremovedelay", 100);
 }
 
 DeltaValues
-nsMouseWheelTransaction::AccelerateWheelDelta(WidgetWheelEvent* aEvent,
-                                              bool aAllowScrollSpeedOverride)
+WheelTransaction::AccelerateWheelDelta(WidgetWheelEvent* aEvent,
+                                       bool aAllowScrollSpeedOverride)
 {
   DeltaValues result(aEvent);
 
@@ -341,8 +337,8 @@ nsMouseWheelTransaction::AccelerateWheelDelta(WidgetWheelEvent* aEvent,
 }
 
 double
-nsMouseWheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
-                                                      int32_t aFactor)
+WheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
+                                               int32_t aFactor)
 {
   if (aDelta == 0.0) {
     return 0;
@@ -352,19 +348,19 @@ nsMouseWheelTransaction::ComputeAcceleratedWheelDelta(double aDelta,
 }
 
 int32_t
-nsMouseWheelTransaction::GetAccelerationStart()
+WheelTransaction::GetAccelerationStart()
 {
   return Preferences::GetInt("mousewheel.acceleration.start", -1);
 }
 
 int32_t
-nsMouseWheelTransaction::GetAccelerationFactor()
+WheelTransaction::GetAccelerationFactor()
 {
   return Preferences::GetInt("mousewheel.acceleration.factor", -1);
 }
 
 DeltaValues
-nsMouseWheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
+WheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
 {
   MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
   MOZ_ASSERT(aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE);
@@ -395,8 +391,6 @@ nsMouseWheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
   return NS_FAILED(rv) ? DeltaValues(aEvent) : overriddenDeltaValues;
 }
 
-namespace mozilla {
-
 /******************************************************************/
 /* mozilla::ScrollbarsForWheel                                    */
 /******************************************************************/
@@ -419,7 +413,7 @@ ScrollbarsForWheel::PrepareToScrollText(nsEventStateManager* aESM,
                                         WidgetWheelEvent* aEvent)
 {
   if (aEvent->message == NS_WHEEL_START) {
-    nsMouseWheelTransaction::OwnScrollbars(false);
+    WheelTransaction::OwnScrollbars(false);
     if (!IsActive()) {
       TemporarilyActivateAllPossibleScrollTargets(aESM, aTargetFrame, aEvent);
       sHadWheelStart = true;
@@ -447,8 +441,8 @@ ScrollbarsForWheel::SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget)
 void
 ScrollbarsForWheel::MayInactivate()
 {
-  if (!sOwnWheelTransaction && nsMouseWheelTransaction::GetTargetFrame()) {
-    nsMouseWheelTransaction::OwnScrollbars(true);
+  if (!sOwnWheelTransaction && WheelTransaction::GetTargetFrame()) {
+    WheelTransaction::OwnScrollbars(true);
   } else {
     Inactivate();
   }
@@ -465,8 +459,8 @@ ScrollbarsForWheel::Inactivate()
   DeactivateAllTemporarilyActivatedScrollTargets();
   if (sOwnWheelTransaction) {
     sOwnWheelTransaction = false;
-    nsMouseWheelTransaction::OwnScrollbars(false);
-    nsMouseWheelTransaction::EndTransaction();
+    WheelTransaction::OwnScrollbars(false);
+    WheelTransaction::EndTransaction();
   }
 }
 
