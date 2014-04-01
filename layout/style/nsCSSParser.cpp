@@ -11517,6 +11517,11 @@ CSSParserImpl::ParseFontVariantAlternates(nsCSSValue& aValue)
     }
   }
 
+  if (featureFlags == 0) {
+    // ParseSingleAlternate failed the first time through the loop.
+    return false;
+  }
+
   nsCSSValue featureValue;
   featureValue.SetIntValue(featureFlags, eCSSUnit_Enumerated);
   aValue.SetPairValue(featureValue, listValue);
