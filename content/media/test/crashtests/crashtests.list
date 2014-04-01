@@ -63,8 +63,10 @@ load 926619.html
 load 933151.html
 load 933156.html
 load 952756.html
+load 986901.html
 load buffer-source-ended-1.html
 load offline-buffer-source-ended-1.html
+HTTP load media-element-source-seek-1.html
 skip-if(B2G) load oscillator-ended-1.html # intermittent B2G timeouts, bug 920338
 skip-if(B2G) load oscillator-ended-2.html # intermittent B2G timeouts, bug 920338
 test-pref(media.mediasource.enabled,true) load 926665.html

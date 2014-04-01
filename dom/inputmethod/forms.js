@@ -224,7 +224,6 @@ let FormAssistant = {
   _documentEncoder: null,
   _editor: null,
   _editing: false,
-  _ignoreEditActionOnce: false,
 
   get focusedElement() {
     if (this._focusedElement && Cu.isDeadWrapper(this._focusedElement))
@@ -319,9 +318,6 @@ let FormAssistant = {
   // current input field has changed.
   EditAction: function fa_editAction() {
     if (this._editing) {
-      return;
-    } else if (this._ignoreEditActionOnce) {
-      this._ignoreEditActionOnce = false;
       return;
     }
     this.sendKeyboardState(this.focusedElement);
@@ -441,9 +437,6 @@ let FormAssistant = {
 
         CompositionManager.endComposition('');
 
-        // Don't monitor the text change resulting from key event.
-        this._ignoreEditActionOnce = true;
-
         // We use 'setTimeout' to wait until the input element accomplishes the
         // change in selection range.
         content.setTimeout(function() {
@@ -458,7 +451,6 @@ let FormAssistant = {
 
         CompositionManager.endComposition('');
 
-        this._ignoreEditActionOnce = false;
         break;
 
       case "compositionend":

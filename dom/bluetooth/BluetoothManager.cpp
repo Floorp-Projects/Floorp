@@ -25,10 +25,10 @@ USING_BLUETOOTH_NAMESPACE
 
 // QueryInterface implementation for BluetoothManager
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothManager)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(BluetoothManager, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(BluetoothManager, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(BluetoothManager, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(BluetoothManager, DOMEventTargetHelper)
 
 class GetAdapterTask : public BluetoothReplyRunnable
 {
@@ -49,6 +49,15 @@ public:
     if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
       BT_WARNING("Not a BluetoothNamedValue array!");
       SetError(NS_LITERAL_STRING("BluetoothReplyTypeError"));
+      return false;
+    }
+
+    if (!mManagerPtr->GetOwner()) {
+      BT_WARNING("Bluetooth manager was disconnected from owner window.");
+
+      // Stop to create adapter since owner window of Bluetooth manager was
+      // gone. These is no need to create a DOMEvent target which has no owner
+      // to reply to.
       return false;
     }
 
@@ -90,13 +99,12 @@ private:
 };
 
 BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , BluetoothPropertyContainer(BluetoothObjectType::TYPE_MANAGER)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
 
-  BindToOwner(aWindow);
   mPath.AssignLiteral("/");
 
   BluetoothService* bs = BluetoothService::Get();
@@ -106,6 +114,16 @@ BluetoothManager::BluetoothManager(nsPIDOMWindow *aWindow)
 
 BluetoothManager::~BluetoothManager()
 {
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+  bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);
+}
+
+void
+BluetoothManager::DisconnectFromOwner()
+{
+  nsDOMEventTargetHelper::DisconnectFromOwner();
+
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
   bs->UnregisterBluetoothSignalHandler(NS_LITERAL_STRING(KEY_MANAGER), this);

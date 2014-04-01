@@ -225,7 +225,7 @@ interface nsIFrameLoader : nsISupports
 
   /**
    * The default event mode automatically forwards the events
-   * handled in nsEventStateManager::HandleCrossProcessEvent to
+   * handled in EventStateManager::HandleCrossProcessEvent to
    * the child content process when these events are targeted to
    * the remote browser element.
    *

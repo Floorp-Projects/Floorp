@@ -6,9 +6,9 @@
 #ifndef mozilla_dom_mobilemessage_MobileMessageManager_h
 #define mozilla_dom_mobilemessage_MobileMessageManager_h
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsIDOMMobileMessageManager.h"
 #include "nsIObserver.h"
-#include "nsDOMEventTargetHelper.h"
 
 class nsIDOMMozSmsMessage;
 class nsIDOMMozMmsMessage;
@@ -16,7 +16,7 @@ class nsIDOMMozMmsMessage;
 namespace mozilla {
 namespace dom {
 
-class MobileMessageManager : public nsDOMEventTargetHelper
+class MobileMessageManager : public DOMEventTargetHelper
                            , public nsIDOMMozMobileMessageManager
                            , public nsIObserver
 {
@@ -25,7 +25,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMMOZMOBILEMESSAGEMANAGER
 
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();

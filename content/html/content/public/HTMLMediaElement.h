@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/dom/TextTrackManager.h"
+#include "MediaDecoder.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -392,6 +393,8 @@ public:
   double CurrentTime() const;
 
   void SetCurrentTime(double aCurrentTime, ErrorResult& aRv);
+
+  void FastSeek(double aTime, ErrorResult& aRv);
 
   double Duration() const;
 
@@ -861,6 +864,12 @@ protected:
   // This method does the check for muting/fading/unmuting the audio channel.
   nsresult UpdateChannelMuteState(mozilla::dom::AudioChannelState aCanPlay);
 
+  // Seeks to aTime seconds. aSeekType can be Exact to seek to exactly the
+  // seek target, or PrevSyncPoint if a quicker but less precise seek is
+  // desired, and we'll seek to the sync point (keyframe and/or start of the
+  // next block of audio samples) preceeding seek target.
+  void Seek(double aTime, SeekTarget::Type aSeekType, ErrorResult& aRv);
+  
   // Update the audio channel playing state
   virtual void UpdateAudioChannelPlayingState();
 

@@ -1088,9 +1088,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 
   JS::CompileOptions options(entryScript.cx());
   FillCompileOptionsForRequest(aRequest, global, &options);
-  nsJSUtils::EvaluateOptions evalOptions;
-  nsresult rv = nsJSUtils::EvaluateString(entryScript.cx(), aScript, global,
-                                          options, evalOptions, nullptr,
+  nsresult rv = nsJSUtils::EvaluateString(entryScript.cx(), aScript, global, options,
                                           aOffThreadToken);
 
   // Put the old script back in case it wants to do anything else.

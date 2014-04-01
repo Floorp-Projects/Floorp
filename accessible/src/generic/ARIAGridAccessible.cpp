@@ -356,7 +356,7 @@ ARIAGridAccessible::SelectRow(uint32_t aRowIdx)
   AccIterator rowIter(this, filters::GetRow);
 
   Accessible* row = nullptr;
-  for (int32_t rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
+  for (uint32_t rowIdx = 0; (row = rowIter.Next()); rowIdx++) {
     DebugOnly<nsresult> rv = SetARIASelected(row, rowIdx == aRowIdx);
     NS_ASSERTION(NS_SUCCEEDED(rv), "SetARIASelected() Shouldn't fail!");
   }

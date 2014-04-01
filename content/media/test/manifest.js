@@ -352,6 +352,13 @@ var gSeekTests = [
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 
+var gFastSeekTests = [
+  { name:"gizmo.mp4", type:"video/mp4", keyframes:[0, 1.0, 2.0, 3.0, 4.0, 5.0 ] },
+  // Note: Not all keyframes in the file are actually referenced in the Cues in this file.
+  { name:"seek.webm", type:"video/webm", keyframes:[0, 0.8, 1.6, 2.4, 3.2]},
+  // Note: omitting Ogg from this test, as I'm not sure our Ogg seek code is optimal/correct - cpearce
+];
+
 function IsWindows8OrLater() {
   var re = /Windows NT (\d.\d)/;
   var winver = navigator.userAgent.match(re);
