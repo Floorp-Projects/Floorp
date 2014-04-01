@@ -265,7 +265,7 @@ pref("ui.highlight", "#b2f2ff");
 pref("editor.singleLine.pasteNewlines", 2);
 
 // threshold where a tap becomes a drag, in 1/240" reference pixels
-// The names of the preferences are to be in sync with nsEventStateManager.cpp
+// The names of the preferences are to be in sync with EventStateManager.cpp
 pref("ui.dragThresholdX", 25);
 pref("ui.dragThresholdY", 25);
 

@@ -8,10 +8,10 @@
 #define nsInProcessTabChildGlobal_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsIClassInfo.h"
@@ -27,7 +27,7 @@ namespace mozilla {
 class EventChainPreVisitor;
 } // namespace mozilla
 
-class nsInProcessTabChildGlobal : public nsDOMEventTargetHelper,
+class nsInProcessTabChildGlobal : public mozilla::DOMEventTargetHelper,
                                   public nsFrameScriptExecutor,
                                   public nsIInProcessContentFrameMessageManager,
                                   public nsIGlobalObject,
@@ -41,7 +41,7 @@ public:
   virtual ~nsInProcessTabChildGlobal();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsInProcessTabChildGlobal,
-                                           nsDOMEventTargetHelper)
+                                           mozilla::DOMEventTargetHelper)
   NS_FORWARD_SAFE_NSIMESSAGELISTENERMANAGER(mMessageManager)
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
   NS_IMETHOD SendSyncMessage(const nsAString& aMessageName,
@@ -107,20 +107,21 @@ public:
                               bool aUseCapture)
   {
     // By default add listeners only for trusted events!
-    return nsDOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                    aUseCapture, false, 2);
+    return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
+                                                           aUseCapture, false,
+                                                           2);
   }
   NS_IMETHOD AddEventListener(const nsAString& aType,
                               nsIDOMEventListener* aListener,
                               bool aUseCapture, bool aWantsUntrusted,
                               uint8_t optional_argc) MOZ_OVERRIDE
   {
-    return nsDOMEventTargetHelper::AddEventListener(aType, aListener,
-                                                    aUseCapture,
-                                                    aWantsUntrusted,
-                                                    optional_argc);
+    return mozilla::DOMEventTargetHelper::AddEventListener(aType, aListener,
+                                                           aUseCapture,
+                                                           aWantsUntrusted,
+                                                           optional_argc);
   }
-  using nsDOMEventTargetHelper::AddEventListener;
+  using mozilla::DOMEventTargetHelper::AddEventListener;
 
   virtual JSContext* GetJSContextForEventHandlers() MOZ_OVERRIDE { return nsContentUtils::GetSafeJSContext(); }
   virtual nsIPrincipal* GetPrincipal() MOZ_OVERRIDE { return mPrincipal; }

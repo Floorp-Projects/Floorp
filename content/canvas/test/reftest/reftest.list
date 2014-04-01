@@ -17,21 +17,21 @@ pref(webgl.disabled,true)  == webgl-disable-test.html       wrapper.html?green.p
 # Test: {aa, alpha, preserve, readback} = 16
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&_____&________  wrapper.html?green.png
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&_____&________  wrapper.html?green.png
-fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&________  wrapper.html?green.png
-fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&________  wrapper.html?green.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&________  wrapper.html?green.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&________  wrapper.html?green.png
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&_____&preserve  wrapper.html?green.png
                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&_____&preserve  wrapper.html?green.png
-fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&preserve  wrapper.html?green.png
-fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&preserve  wrapper.html?green.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?__&alpha&preserve  wrapper.html?green.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?aa&alpha&preserve  wrapper.html?green.png
 
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&_____&________  wrapper.html?green.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&_____&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&________  wrapper.html?green.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&________  wrapper.html?green.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&_____&preserve  wrapper.html?green.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&_____&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&__&alpha&preserve  wrapper.html?green.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,91) random-if(Android&&AndroidVersion<15)  == webgl-clear-test.html?readback&aa&alpha&preserve  wrapper.html?green.png
 
 # Check that resize works:
 random-if(Android&&AndroidVersion<15)  == webgl-resize-test.html  wrapper.html?green.png
@@ -39,102 +39,102 @@ random-if(Android&&AndroidVersion<15)  == webgl-resize-test.html  wrapper.html?g
 # Check orientation:
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&_____&________  wrapper.html?white-top-left.png
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&_____&________  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&________  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&________  wrapper.html?white-top-left.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&________  wrapper.html?white-top-left.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&________  wrapper.html?white-top-left.png
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&_____&preserve  wrapper.html?white-top-left.png
                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&_____&preserve  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&preserve  wrapper.html?white-top-left.png
-fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&preserve  wrapper.html?white-top-left.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?__&alpha&preserve  wrapper.html?white-top-left.png
+random-if(gtk2Widget) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?aa&alpha&preserve  wrapper.html?white-top-left.png
 
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&_____&________  wrapper.html?white-top-left.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&_____&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&________  wrapper.html?white-top-left.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&________  wrapper.html?white-top-left.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&_____&preserve  wrapper.html?white-top-left.png
 pref(webgl.force-layers-readback,true)                      random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&_____&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
-pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&__&alpha&preserve  wrapper.html?white-top-left.png
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) fuzzy-if(B2G,256,90) random-if(Android&&AndroidVersion<15)  == webgl-orientation-test.html?readback&aa&alpha&preserve  wrapper.html?white-top-left.png
 
 # Does we draw the correct color in the correct places with all context creation options?
 # (Note that our context creation option matrix is 2^6 = 64)
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&________&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&________&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&________&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&________&_______  wrapper.html?colors.png # Bug 844439
 
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&preserve&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&preserve&_______  wrapper.html?colors.png # Bug 844439
 
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
                                              
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&_____&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
-random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&preserve&stencil  wrapper.html?colors.png # Bug 844439
 
 
 # Check a smaller selection for readback:
 pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&__&_____&________  wrapper.html?colors.png # Bug 844439
 pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&aa&_____&________  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&__&alpha&________  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&aa&alpha&________  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&__&alpha&________  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&aa&alpha&________  wrapper.html?colors.png # Bug 844439
 pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&__&_____&preserve  wrapper.html?colors.png # Bug 844439
 pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&aa&_____&preserve  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&__&alpha&preserve  wrapper.html?colors.png # Bug 844439
-pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&aa&alpha&preserve  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&__&alpha&preserve  wrapper.html?colors.png # Bug 844439
+random-if(gtk2Widget) pref(webgl.force-layers-readback,true) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?readback&aa&alpha&preserve  wrapper.html?colors.png # Bug 844439
 
 
 # Check alpha behavior:
@@ -149,8 +149,8 @@ fuzzy(1,65536) fuzzy-if(B2G,256,83) fuzzy-if(Android||B2G,9,65536) random-if(And
 
 # Test premult:
 # random-if(B2G) from bug 983650
-fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
+fuzzy(1,65536) random-if(gtk2Widget) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) random-if(gtk2Widget) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
 # random-if(B2G) from bug 983650
 fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 

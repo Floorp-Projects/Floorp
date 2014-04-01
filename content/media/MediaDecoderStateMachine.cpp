@@ -166,7 +166,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mPlayDuration(0),
   mStartTime(-1),
   mEndTime(-1),
-  mSeekTime(0),
   mFragmentEndTime(-1),
   mReader(aReader),
   mCurrentFrameTime(0),
@@ -194,6 +193,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mQuickBuffering(false),
   mIsRunning(false),
   mRunAgain(false),
+  mMinimizePreroll(false),
   mDispatchedRunEvent(false),
   mDecodeThreadWaiting(false),
   mRealTime(aRealTime),
@@ -554,7 +554,9 @@ MediaDecoderStateMachine::NeedToDecodeVideo()
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
-  return mIsVideoDecoding && !HaveEnoughDecodedVideo();
+  return mIsVideoDecoding &&
+         !mMinimizePreroll &&
+         !HaveEnoughDecodedVideo();
 }
 
 void
@@ -648,6 +650,7 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
   return mIsAudioDecoding &&
+         !mMinimizePreroll &&
          !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate);
 }
 
@@ -1379,6 +1382,9 @@ void MediaDecoderStateMachine::Play()
     mState = DECODER_STATE_DECODING;
     mDecodeStartTime = TimeStamp::Now();
   }
+  // Once we start playing, we don't want to minimize our prerolling, as we
+  // assume the user is likely to want to keep playing in future.
+  mMinimizePreroll = false;
   ScheduleStateMachine();
 }
 
@@ -1418,7 +1424,7 @@ void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
   }
 }
 
-void MediaDecoderStateMachine::Seek(double aTime)
+void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -1434,26 +1440,22 @@ void MediaDecoderStateMachine::Seek(double aTime)
                "We shouldn't already be seeking");
   NS_ASSERTION(mState >= DECODER_STATE_DECODING,
                "We should have loaded metadata");
-  double t = aTime * static_cast<double>(USECS_PER_S);
-  if (t > INT64_MAX) {
-    // Prevent integer overflow.
-    return;
-  }
-
-  mSeekTime = static_cast<int64_t>(t) + mStartTime;
-  NS_ASSERTION(mSeekTime >= mStartTime && mSeekTime <= mEndTime,
-               "Can only seek in range [0,duration]");
 
   // Bound the seek time to be inside the media range.
   NS_ASSERTION(mStartTime != -1, "Should know start time by now");
   NS_ASSERTION(mEndTime != -1, "Should know end time by now");
-  mSeekTime = std::min(mSeekTime, mEndTime);
-  mSeekTime = std::max(mStartTime, mSeekTime);
-  mBasePosition = mSeekTime - mStartTime;
-  DECODER_LOG(PR_LOG_DEBUG, ("%p Changed state to SEEKING (to %f)", mDecoder.get(), aTime));
+  int64_t seekTime = aTarget.mTime + mStartTime;
+  seekTime = std::min(seekTime, mEndTime);
+  seekTime = std::max(mStartTime, seekTime);
+  NS_ASSERTION(seekTime >= mStartTime && seekTime <= mEndTime,
+               "Can only seek in range [0,duration]");
+  mSeekTarget = SeekTarget(seekTime, aTarget.mType);
+
+  mBasePosition = seekTime - mStartTime;
+  DECODER_LOG(PR_LOG_DEBUG, ("%p Changed state to SEEKING (to %ld)", mDecoder.get(), mSeekTarget.mTime));
   mState = DECODER_STATE_SEEKING;
   if (mDecoder->GetDecodedStream()) {
-    mDecoder->RecreateDecodedStream(mSeekTime - mStartTime);
+    mDecoder->RecreateDecodedStream(seekTime - mStartTime);
   }
   ScheduleStateMachine();
 }
@@ -1517,7 +1519,15 @@ MediaDecoderStateMachine::EnsureActive()
 void
 MediaDecoderStateMachine::SetReaderIdle()
 {
-  DECODER_LOG(PR_LOG_DEBUG, ("%p SetReaderIdle()", mDecoder.get()));
+#ifdef PR_LOGGING
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    DECODER_LOG(PR_LOG_DEBUG, ("%p SetReaderIdle() audioQueue=%lld videoQueue=%lld",
+                               mDecoder.get(),
+                               GetDecodedAudioDuration(),
+                               mReader->VideoQueue().Duration()));
+  }
+#endif
   MOZ_ASSERT(OnDecodeThread());
   mReader->SetIdle();
 }
@@ -1555,7 +1565,7 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
   MOZ_ASSERT(mState != DECODER_STATE_COMPLETED ||
              (!needToDecodeAudio && !needToDecodeVideo));
 
-  bool needIdle = mDecoder->GetState() == MediaDecoder::PLAY_STATE_PAUSED &&
+  bool needIdle = !mDecoder->IsLogicallyPlaying() &&
                   !needToDecodeAudio &&
                   !needToDecodeVideo &&
                   !IsPlaying();
@@ -1947,11 +1957,11 @@ void MediaDecoderStateMachine::DecodeSeek()
   // the lock since it won't deadlock. We check the state when
   // acquiring the lock again in case shutdown has occurred
   // during the time when we didn't have the lock.
-  int64_t seekTime = mSeekTime;
+  int64_t seekTime = mSeekTarget.mTime;
   mDecoder->StopProgressUpdates();
 
   bool currentTimeChanged = false;
-  int64_t mediaTime = GetMediaTime();
+  const int64_t mediaTime = GetMediaTime();
   if (mediaTime != seekTime) {
     currentTimeChanged = true;
     // Stop playback now to ensure that while we're outside the monitor
@@ -1971,6 +1981,7 @@ void MediaDecoderStateMachine::DecodeSeek()
     NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
   }
 
+  int64_t newCurrentTime = seekTime;
   if (currentTimeChanged) {
     // The seek target is different than the current playback position,
     // we'll need to seek the playback position, so shutdown our decode
@@ -1986,23 +1997,33 @@ void MediaDecoderStateMachine::DecodeSeek()
                           mStartTime,
                           mEndTime,
                           mediaTime);
+
+      if (NS_SUCCEEDED(res) && mSeekTarget.mType == SeekTarget::Accurate) {
+        res = mReader->DecodeToTarget(seekTime);
+      }
     }
+
     if (NS_SUCCEEDED(res)) {
-      AudioData* audio = HasAudio() ? mReader->AudioQueue().PeekFront() : nullptr;
-      MOZ_ASSERT(!audio ||
-                 (audio->mTime <= seekTime &&
-                  seekTime <= audio->mTime + audio->mDuration) ||
-                 mReader->AudioQueue().IsFinished(),
-                 "Seek target should lie inside the first audio block after seek");
-      int64_t startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
-      mAudioStartTime = startTime;
-      mPlayDuration = startTime - mStartTime;
+      int64_t nextSampleStartTime = 0;
+      VideoData* video = nullptr;
+      {
+        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+        video = mReader->FindStartTime(nextSampleStartTime);
+      }
+
+      // Setup timestamp state.
+      if (seekTime == mEndTime) {
+        newCurrentTime = mAudioStartTime = seekTime;
+      } else if (HasAudio()) {
+        AudioData* audio = mReader->AudioQueue().PeekFront();
+        newCurrentTime = mAudioStartTime = audio ? audio->mTime : seekTime;
+      } else {
+        newCurrentTime = video ? video->mTime : seekTime;
+      }
+      mPlayDuration = newCurrentTime - mStartTime;
+
       if (HasVideo()) {
-        VideoData* video = mReader->VideoQueue().PeekFront();
         if (video) {
-          MOZ_ASSERT((video->mTime <= seekTime && seekTime <= video->GetEndTime()) ||
-                     mReader->VideoQueue().IsFinished(),
-            "Seek target should lie inside the first frame after seek, unless it's the last frame.");
           {
             ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
             RenderVideoFrame(video, TimeStamp::Now());
@@ -2022,10 +2043,6 @@ void MediaDecoderStateMachine::DecodeSeek()
       mState == DECODER_STATE_SHUTDOWN) {
     return;
   }
-
-  // Try to decode another frame to detect if we're at the end...
-  DECODER_LOG(PR_LOG_DEBUG, ("%p Seek completed, mCurrentFrameTime=%lld\n",
-              mDecoder.get(), mCurrentFrameTime));
 
   // Change state to DECODING or COMPLETED now. SeekingStopped will
   // call MediaDecoderStateMachine::Seek to reset our state to SEEKING
@@ -2052,6 +2069,18 @@ void MediaDecoderStateMachine::DecodeSeek()
     stopEvent = NS_NewRunnableMethod(mDecoder, &MediaDecoder::SeekingStopped);
     StartDecoding();
   }
+
+  if (newCurrentTime != mediaTime) {
+    UpdatePlaybackPositionInternal(newCurrentTime);
+    if (mDecoder->GetDecodedStream()) {
+      SetSyncPointForMediaStream();
+    }
+  }
+
+  // Try to decode another frame to detect if we're at the end...
+  DECODER_LOG(PR_LOG_DEBUG, ("%p Seek completed, mCurrentFrameTime=%lld\n",
+              mDecoder.get(), mCurrentFrameTime));
+
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     NS_DispatchToMainThread(stopEvent, NS_DISPATCH_SYNC);
@@ -2850,7 +2879,7 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
   if (!HasAudio()) {
     // mBasePosition is a position in the video stream, not an absolute time.
     if (mState == DECODER_STATE_SEEKING) {
-      mBasePosition = mSeekTime - mStartTime;
+      mBasePosition = mSeekTarget.mTime - mStartTime;
     } else {
       mBasePosition = GetVideoStreamPosition();
     }
@@ -2868,8 +2897,13 @@ void MediaDecoderStateMachine::SetPreservesPitch(bool aPreservesPitch)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   mPreservesPitch = aPreservesPitch;
+}
 
-  return;
+void
+MediaDecoderStateMachine::SetMinimizePrerollUntilPlaybackStarts()
+{
+  AssertCurrentThreadInMonitor();
+  mMinimizePreroll = true;
 }
 
 bool MediaDecoderStateMachine::IsShutdown()

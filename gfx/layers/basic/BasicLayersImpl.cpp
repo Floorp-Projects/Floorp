@@ -59,7 +59,6 @@ AutoMaskData::IsConstructed()
   return !!mSurface || !mSurfaceOpener.empty();
 }
 
-
 bool
 GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
 {
@@ -78,6 +77,24 @@ GetMaskData(Layer* aMaskLayer, AutoMaskData* aMaskData)
       } else {
         aMaskData->Construct(transform, descriptor);
       }
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+GetMaskData(Layer* aMaskLayer, AutoMoz2DMaskData* aMaskData)
+{
+  if (aMaskLayer) {
+    RefPtr<SourceSurface> surface =
+      static_cast<BasicImplData*>(aMaskLayer->ImplData())->GetAsSourceSurface();
+    if (surface) {
+      Matrix transform;
+      Matrix4x4 effectiveTransform = aMaskLayer->GetEffectiveTransform();
+      DebugOnly<bool> maskIs2D = effectiveTransform.CanDraw2D(&transform);
+      NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
+      aMaskData->Construct(transform, surface);
       return true;
     }
   }
@@ -104,29 +121,57 @@ PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
 }
 
 void
-FillWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
+FillRectWithMask(DrawTarget* aDT,
+                 const Rect& aRect,
+                 const Color& aColor,
+                 const DrawOptions& aOptions,
+                 Layer* aMaskLayer)
 {
-  AutoMaskData mask;
+  AutoMoz2DMaskData mask;
   if (GetMaskData(aMaskLayer, &mask)) {
-    if (aOpacity < 1.0) {
-      aContext->PushGroup(gfxContentType::COLOR_ALPHA);
-      aContext->FillWithOpacity(aOpacity);
-      aContext->PopGroupToSource();
-      aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
-      aContext->Mask(mask.GetSurface());
-    } else {
-      aContext->Save();
-      aContext->Clip();
-      aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
-      aContext->Mask(mask.GetSurface());
-      aContext->NewPath();
-      aContext->Restore();
-    }
+    aDT->PushClipRect(aRect);
+    Matrix oldTransform = aDT->GetTransform();
+
+    aDT->SetTransform(mask.GetTransform());
+    aDT->MaskSurface(ColorPattern(aColor), mask.GetSurface(),
+                     Point(0, 0), aOptions);
+    aDT->SetTransform(oldTransform);
+    aDT->PopClip();
     return;
   }
 
-  // if there is no mask, just fill normally
-  aContext->FillWithOpacity(aOpacity);
+  aDT->FillRect(aRect, ColorPattern(aColor), aOptions);
+}
+
+void
+FillRectWithMask(DrawTarget* aDT,
+                 const Rect& aRect,
+                 SourceSurface* aSurface,
+                 Filter aFilter,
+                 const DrawOptions& aOptions,
+                 Layer* aMaskLayer)
+{
+  AutoMoz2DMaskData mask;
+  if (GetMaskData(aMaskLayer, &mask)) {
+    aDT->PushClipRect(aRect);
+    Matrix oldTransform = aDT->GetTransform();
+    Matrix transform = oldTransform;
+
+    Matrix inverseMask = mask.GetTransform();
+    inverseMask.Invert();
+
+    transform *= inverseMask;
+
+    SurfacePattern source(aSurface, ExtendMode::CLAMP, transform, aFilter);
+
+    aDT->SetTransform(mask.GetTransform());
+    aDT->MaskSurface(source, mask.GetSurface(), Point(0, 0), aOptions);
+    aDT->SetTransform(oldTransform);
+    aDT->PopClip();
+    return;
+  }
+
+  aDT->FillRect(aRect, SurfacePattern(aSurface, ExtendMode::CLAMP, Matrix(), aFilter), aOptions);
 }
 
 BasicImplData*

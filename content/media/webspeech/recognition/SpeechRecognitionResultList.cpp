@@ -34,7 +34,7 @@ SpeechRecognitionResultList::~SpeechRecognitionResultList()
 nsISupports*
 SpeechRecognitionResultList::GetParentObject() const
 {
-  return static_cast<nsDOMEventTargetHelper*>(mParent.get());
+  return static_cast<DOMEventTargetHelper*>(mParent.get());
 }
 
 JSObject*

@@ -297,7 +297,6 @@ browser.jar:
 * skin/classic/browser/devtools/common.css                  (../shared/devtools/common.css)
 * skin/classic/browser/devtools/dark-theme.css              (../shared/devtools/dark-theme.css)
 * skin/classic/browser/devtools/light-theme.css             (../shared/devtools/light-theme.css)
-  skin/classic/browser/devtools/metal.jpg                   (../shared/devtools/images/metal.jpg)
   skin/classic/browser/devtools/filters.svg                 (../shared/devtools/filters.svg)
   skin/classic/browser/devtools/controls.png                (../shared/devtools/images/controls.png)
   skin/classic/browser/devtools/controls@2x.png             (../shared/devtools/images/controls@2x.png)

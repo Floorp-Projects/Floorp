@@ -14,21 +14,21 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'content_events'
 
 EXPORTS += [
-    'nsDOMEventTargetHelper.h',
-    'nsDOMKeyNameList.h',
-    'nsEventNameList.h',
-    'nsEventStateManager.h',
     'nsEventStates.h',
     'nsIJSEventListener.h',
-    'nsVKList.h',
 ]
 
 EXPORTS.mozilla += [
     'AsyncEventDispatcher.h',
+    'DOMEventTargetHelper.h',
     'EventDispatcher.h',
     'EventListenerManager.h',
+    'EventNameList.h',
+    'EventStateManager.h',
     'IMEStateManager.h',
     'InternalMutationEvent.h',
+    'KeyNameList.h',
+    'VirtualKeyCodeList.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -76,6 +76,7 @@ UNIFIED_SOURCES += [
     'DataContainerEvent.cpp',
     'DataTransfer.cpp',
     'DeviceMotionEvent.cpp',
+    'DOMEventTargetHelper.cpp',
     'DragEvent.cpp',
     'Event.cpp',
     'EventDispatcher.cpp',
@@ -92,7 +93,6 @@ UNIFIED_SOURCES += [
     'MutationEvent.cpp',
     'NotifyAudioAvailableEvent.cpp',
     'NotifyPaintEvent.cpp',
-    'nsDOMEventTargetHelper.cpp',
     'nsJSEventListener.cpp',
     'nsPaintRequest.cpp',
     'PointerEvent.cpp',
@@ -104,12 +104,13 @@ UNIFIED_SOURCES += [
     'TransitionEvent.cpp',
     'UIEvent.cpp',
     'WheelEvent.cpp',
+    'WheelHandlingHelper.cpp',
     'XULCommandEvent.cpp',
 ]
 
 # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
-    'nsEventStateManager.cpp',
+    'EventStateManager.cpp',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:

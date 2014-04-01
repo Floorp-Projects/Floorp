@@ -16,11 +16,11 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptObjectPrincipal.h"
 
-#include "nsDOMEventTargetHelper.h"
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
 #include "nsWrapperCache.h"
 
@@ -84,7 +84,7 @@ private:
 
 class DesktopNotificationRequest;
 
-class DesktopNotification MOZ_FINAL : public nsDOMEventTargetHelper
+class DesktopNotification MOZ_FINAL : public DOMEventTargetHelper
 {
   friend class DesktopNotificationRequest;
 

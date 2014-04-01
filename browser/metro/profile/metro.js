@@ -551,7 +551,7 @@ pref("services.sync.prefs.sync.signon.rememberSignons", true);
 #endif
 
 // threshold where a tap becomes a drag, in 1/240" reference pixels
-// The names of the preferences are to be in sync with nsEventStateManager.cpp
+// The names of the preferences are to be in sync with EventStateManager.cpp
 pref("ui.dragThresholdX", 50);
 pref("ui.dragThresholdY", 50);
 

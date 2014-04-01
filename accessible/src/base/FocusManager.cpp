@@ -12,12 +12,12 @@
 #include "nsEventShell.h"
 #include "Role.h"
 
-#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/dom/Element.h"
 
-namespace dom = mozilla::dom;
-using namespace mozilla::a11y;
+namespace mozilla {
+namespace a11y {
 
 FocusManager::FocusManager()
 {
@@ -394,8 +394,9 @@ FocusManager::FocusedDOMNode() const
   // residing in chrome process because it means an element in content process
   // keeps the focus.
   if (focusedElm) {
-    if (nsEventStateManager::IsRemoteTarget(focusedElm))
+    if (EventStateManager::IsRemoteTarget(focusedElm)) {
       return nullptr;
+    }
     return focusedElm;
   }
 
@@ -410,3 +411,6 @@ FocusManager::FocusedDOMDocument() const
   nsINode* focusedNode = FocusedDOMNode();
   return focusedNode ? focusedNode->OwnerDoc() : nullptr;
 }
+
+} // namespace a11y
+} // namespace mozilla

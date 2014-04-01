@@ -28,6 +28,14 @@ CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate) {
   return (CheckedInt64(aUsecs) * aRate) / USECS_PER_S;
 }
 
+nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs) {
+  if (aSeconds * double(USECS_PER_S) > INT64_MAX) {
+    return NS_ERROR_FAILURE;
+  }
+  aOutUsecs = int64_t(aSeconds * double(USECS_PER_S));
+  return NS_OK;
+}
+
 static int32_t ConditionDimension(float aValue)
 {
   // This will exclude NaNs and too-big values.

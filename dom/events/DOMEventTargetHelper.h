@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMEventTargetHelper_h_
-#define nsDOMEventTargetHelper_h_
+#ifndef mozilla_DOMEventTargetHelper_h_
+#define mozilla_DOMEventTargetHelper_h_
 
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
@@ -18,23 +18,25 @@
 #include "mozilla/dom/EventTarget.h"
 
 class JSCompartment;
+
 namespace mozilla {
+
 class ErrorResult;
-}
 
 #define NS_DOMEVENTTARGETHELPER_IID \
 { 0xa28385c6, 0x9451, 0x4d7e, \
   { 0xa3, 0xdd, 0xf4, 0xb6, 0x87, 0x2f, 0xa4, 0x76 } }
 
-class nsDOMEventTargetHelper : public mozilla::dom::EventTarget
+class DOMEventTargetHelper : public dom::EventTarget
 {
 public:
-  nsDOMEventTargetHelper()
+  DOMEventTargetHelper()
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
-  {}
-  nsDOMEventTargetHelper(nsPIDOMWindow* aWindow)
+  {
+  }
+  DOMEventTargetHelper(nsPIDOMWindow* aWindow)
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
@@ -43,7 +45,7 @@ public:
     // All objects coming through here are WebIDL objects
     SetIsDOMBinding();
   }
-  nsDOMEventTargetHelper(nsDOMEventTargetHelper* aOther)
+  DOMEventTargetHelper(DOMEventTargetHelper* aOther)
     : mParentObject(nullptr)
     , mOwnerWindow(nullptr)
     , mHasOrHasHadOwnerWindow(false)
@@ -53,23 +55,21 @@ public:
     SetIsDOMBinding();
   }
 
-  virtual ~nsDOMEventTargetHelper();
+  virtual ~DOMEventTargetHelper();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(DOMEventTargetHelper)
 
   NS_DECL_NSIDOMEVENTTARGET
 
-  virtual mozilla::EventListenerManager*
-    GetExistingListenerManager() const MOZ_OVERRIDE;
-  virtual mozilla::EventListenerManager*
-    GetOrCreateListenerManager() MOZ_OVERRIDE;
+  virtual EventListenerManager* GetExistingListenerManager() const MOZ_OVERRIDE;
+  virtual EventListenerManager* GetOrCreateListenerManager() MOZ_OVERRIDE;
 
-  using mozilla::dom::EventTarget::RemoveEventListener;
+  using dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
-                                mozilla::dom::EventListener* aListener,
+                                dom::EventListener* aListener,
                                 bool aCapture,
-                                const mozilla::dom::Nullable<bool>& aWantsUntrusted,
-                                mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+                                const dom::Nullable<bool>& aWantsUntrusted,
+                                ErrorResult& aRv) MOZ_OVERRIDE;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMEVENTTARGETHELPER_IID)
 
@@ -82,14 +82,12 @@ public:
     }
   }
 
-  static nsDOMEventTargetHelper* FromSupports(nsISupports* aSupports)
+  static DOMEventTargetHelper* FromSupports(nsISupports* aSupports)
   {
-    mozilla::dom::EventTarget* target =
-      static_cast<mozilla::dom::EventTarget*>(aSupports);
+    dom::EventTarget* target = static_cast<dom::EventTarget*>(aSupports);
 #ifdef DEBUG
     {
-      nsCOMPtr<mozilla::dom::EventTarget> target_qi =
-        do_QueryInterface(aSupports);
+      nsCOMPtr<dom::EventTarget> target_qi = do_QueryInterface(aSupports);
 
       // If this assertion fires the QI implementation for the object in
       // question doesn't use the EventTarget pointer as the
@@ -98,7 +96,7 @@ public:
     }
 #endif
 
-    return static_cast<nsDOMEventTargetHelper*>(target);
+    return static_cast<DOMEventTargetHelper*>(target);
   }
 
   bool HasListenersFor(nsIAtom* aTypeWithOn)
@@ -109,11 +107,11 @@ public:
   nsresult SetEventHandler(nsIAtom* aType,
                            JSContext* aCx,
                            const JS::Value& aValue);
-  using mozilla::dom::EventTarget::SetEventHandler;
+  using dom::EventTarget::SetEventHandler;
   void GetEventHandler(nsIAtom* aType,
                        JSContext* aCx,
                        JS::Value* aValue);
-  using mozilla::dom::EventTarget::GetEventHandler;
+  using dom::EventTarget::GetEventHandler;
   virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE
   {
     return nsPIDOMWindow::GetOuterFromCurrentInner(GetOwner());
@@ -135,7 +133,7 @@ public:
   nsPIDOMWindow* GetOwner() const { return mOwnerWindow; }
   void BindToOwner(nsIGlobalObject* aOwner);
   void BindToOwner(nsPIDOMWindow* aOwner);
-  void BindToOwner(nsDOMEventTargetHelper* aOther);
+  void BindToOwner(DOMEventTargetHelper* aOther);
   virtual void DisconnectFromOwner();                   
   nsIGlobalObject* GetParentObject() const { return mParentObject; }
   bool HasOrHasHadOwner() { return mHasOrHasHadOwnerWindow; }
@@ -143,15 +141,15 @@ public:
   virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
   virtual void EventListenerRemoved(nsIAtom* aType) MOZ_OVERRIDE;
   virtual void EventListenerWasAdded(const nsAString& aType,
-                                     mozilla::ErrorResult& aRv,
+                                     ErrorResult& aRv,
                                      JSCompartment* aCompartment = nullptr) {}
   virtual void EventListenerWasRemoved(const nsAString& aType,
-                                       mozilla::ErrorResult& aRv,
+                                       ErrorResult& aRv,
                                        JSCompartment* aCompartment = nullptr) {}
 protected:
   nsresult WantsUntrusted(bool* aRetVal);
 
-  nsRefPtr<mozilla::EventListenerManager> mListenerManager;
+  nsRefPtr<EventListenerManager> mListenerManager;
   // Dispatch a trusted, non-cancellable and non-bubbling event to |this|.
   nsresult DispatchTrustedEvent(const nsAString& aEventName);
   // Make |event| trusted and dispatch |aEvent| to |this|.
@@ -167,8 +165,10 @@ private:
   bool                       mHasOrHasHadOwnerWindow;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
+NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
                               NS_DOMEVENTTARGETHELPER_IID)
+
+} // namespace mozilla
 
 // XPIDL event handlers
 #define NS_IMPL_EVENT_HANDLER(_class, _event)                                 \
@@ -278,4 +278,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
     return _class::GetExistingListenerManager();    \
   }
 
-#endif // nsDOMEventTargetHelper_h_
+#endif // mozilla_DOMEventTargetHelper_h_

@@ -245,11 +245,14 @@ class UnboundnessFixer
   public:
     UnboundnessFixer() : mCg(nullptr) {}
 
-    CGContextRef Check(CGContextRef baseCg, CompositionOp blend)
+    CGContextRef Check(CGContextRef baseCg, CompositionOp blend, const Rect* maskBounds = nullptr)
     {
       if (!IsOperatorBoundByMask(blend)) {
         mClipBounds = CGContextGetClipBoundingBox(baseCg);
-        if (CGRectIsEmpty(mClipBounds)) {
+        // If we're entirely clipped out or if the drawing operation covers the entire clip then
+        // we don't need to create a temporary surface.
+        if (CGRectIsEmpty(mClipBounds) ||
+            (maskBounds && maskBounds->Contains(CGRectToRect(mClipBounds)))) {
           return baseCg;
         }
 
@@ -297,7 +300,7 @@ DrawTargetCG::DrawSurface(SourceSurface *aSurface,
 
   CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));
   UnboundnessFixer fixer;
-  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
+  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp, &aDest);
   CGContextSetAlpha(cg, aDrawOptions.mAlpha);
   CGContextSetShouldAntialias(cg, aDrawOptions.mAntialiasMode != AntialiasMode::NONE);
 
@@ -860,7 +863,7 @@ DrawTargetCG::FillRect(const Rect &aRect,
   CGContextSaveGState(mCg);
 
   UnboundnessFixer fixer;
-  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp);
+  CGContextRef cg = fixer.Check(mCg, aDrawOptions.mCompositionOp, &aRect);
   CGContextSetAlpha(mCg, aDrawOptions.mAlpha);
   CGContextSetShouldAntialias(cg, aDrawOptions.mAntialiasMode != AntialiasMode::NONE);
   CGContextSetBlendMode(mCg, ToBlendMode(aDrawOptions.mCompositionOp));

@@ -602,7 +602,7 @@ void SkScan::FillPath(const SkPath& path, const SkRegion& origClip,
         // don't reference "origClip" any more, just use clipPtr
 
     SkIRect ir;
-    path.getBounds().round(&ir);
+    path.getBounds().roundOut(&ir);
     if (ir.isEmpty()) {
         if (path.isInverseFillType()) {
             blitter->blitRegion(*clipPtr);
