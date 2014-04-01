@@ -725,23 +725,6 @@ private:
   friend class CompositingFactory;
 };
 
-// XXX - this class can be removed as soon as we remove DeprecatedImageClientSingle
-class DeprecatedTextureClientShmemYCbCr : public DeprecatedTextureClient
-{
-public:
-  DeprecatedTextureClientShmemYCbCr(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo)
-    : DeprecatedTextureClient(aForwarder, aTextureInfo)
-  { }
-  ~DeprecatedTextureClientShmemYCbCr() { ReleaseResources(); }
-
-  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_YCBCR; }
-  bool EnsureAllocated(gfx::IntSize aSize, gfxContentType aType) MOZ_OVERRIDE;
-  virtual void SetDescriptorFromReply(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
-  virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
-  virtual void ReleaseResources();
-  virtual gfxContentType GetContentType() MOZ_OVERRIDE { return gfxContentType::COLOR_ALPHA; }
-};
-
 class DeprecatedTextureClientTile : public DeprecatedTextureClient
 {
 public:

@@ -1043,46 +1043,6 @@ DeprecatedTextureClientTile::DeprecatedTextureClientTile(const DeprecatedTexture
 DeprecatedTextureClientTile::~DeprecatedTextureClientTile()
 {}
 
-void
-DeprecatedTextureClientShmemYCbCr::ReleaseResources()
-{
-  GetForwarder()->DestroySharedSurface(&mDescriptor);
-}
-
-void
-DeprecatedTextureClientShmemYCbCr::SetDescriptor(const SurfaceDescriptor& aDescriptor)
-{
-  MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TYCbCrImage ||
-             aDescriptor.type() == SurfaceDescriptor::T__None);
-
-  if (IsSurfaceDescriptorValid(mDescriptor)) {
-    GetForwarder()->DestroySharedSurface(&mDescriptor);
-  }
-  mDescriptor = aDescriptor;
-}
-
-void
-DeprecatedTextureClientShmemYCbCr::SetDescriptorFromReply(const SurfaceDescriptor& aDescriptor)
-{
-  MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TYCbCrImage);
-  DeprecatedSharedPlanarYCbCrImage* shYCbCr = DeprecatedSharedPlanarYCbCrImage::FromSurfaceDescriptor(aDescriptor);
-  if (shYCbCr) {
-    shYCbCr->Release();
-    mDescriptor = SurfaceDescriptor();
-  } else {
-    SetDescriptor(aDescriptor);
-  }
-}
-
-bool
-DeprecatedTextureClientShmemYCbCr::EnsureAllocated(gfx::IntSize aSize,
-                                         gfxContentType aType)
-{
-  NS_RUNTIMEABORT("not enough arguments to do this (need both Y and CbCr sizes)");
-  return false;
-}
-
-
 DeprecatedTextureClientTile::DeprecatedTextureClientTile(CompositableForwarder* aForwarder,
                                                          const TextureInfo& aTextureInfo,
                                                          gfxReusableSurfaceWrapper* aSurface)

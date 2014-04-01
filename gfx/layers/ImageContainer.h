@@ -146,7 +146,6 @@ namespace layers {
 
 class ImageClient;
 class SharedPlanarYCbCrImage;
-class DeprecatedSharedPlanarYCbCrImage;
 class TextureClient;
 class CompositableClient;
 class CompositableForwarder;
@@ -861,7 +860,6 @@ public:
   PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
 
   virtual SharedPlanarYCbCrImage *AsSharedPlanarYCbCrImage() { return nullptr; }
-  virtual DeprecatedSharedPlanarYCbCrImage *AsDeprecatedSharedPlanarYCbCrImage() { return nullptr; }
 
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
