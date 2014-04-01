@@ -19,44 +19,33 @@ using namespace js;
 using namespace js::gc;
 using mozilla::ReentrancyGuard;
 
-/*** SlotEdge ***/
+/*** Edges ***/
 
-MOZ_ALWAYS_INLINE HeapSlot *
-StoreBuffer::SlotEdge::slotLocation() const
+void
+StoreBuffer::SlotsEdge::mark(JSTracer *trc)
 {
-    if (kind == HeapSlot::Element) {
-        if (offset >= object->getDenseInitializedLength())
-            return nullptr;
-        return (HeapSlot *)&object->getDenseElement(offset);
+    if (trc->runtime->gcNursery.isInside(object_))
+        return;
+
+    if (!object_->isNative()) {
+        const Class *clasp = object_->getClass();
+        if (clasp)
+            clasp->trace(trc, object_);
+        return;
     }
-    if (offset >= object->slotSpan())
-        return nullptr;
-    return &object->getSlotRef(offset);
-}
 
-MOZ_ALWAYS_INLINE void *
-StoreBuffer::SlotEdge::deref() const
-{
-    HeapSlot *loc = slotLocation();
-    return (loc && loc->isGCThing()) ? loc->toGCThing() : nullptr;
-}
-
-MOZ_ALWAYS_INLINE void *
-StoreBuffer::SlotEdge::location() const
-{
-    return (void *)slotLocation();
-}
-
-bool
-StoreBuffer::SlotEdge::inRememberedSet(const Nursery &nursery) const
-{
-    return !nursery.isInside(object) && nursery.isInside(deref());
-}
-
-MOZ_ALWAYS_INLINE bool
-StoreBuffer::SlotEdge::isNullEdge() const
-{
-    return !deref();
+    if (count_ > 0) {
+        int32_t initLen = object_->getDenseInitializedLength();
+        int32_t clampedStart = Min(start_, initLen);
+        int32_t clampedEnd = Min(start_ + count_, initLen);
+        gc::MarkArraySlots(trc, clampedEnd - clampedStart,
+                           object_->getDenseElements() + clampedStart, "element");
+    } else {
+        int32_t start = Min(uint32_t(start_), object_->slotSpan());
+        int32_t end = Min(uint32_t(start_) + (-count_), object_->slotSpan());
+        MOZ_ASSERT(end >= start);
+        MarkObjectSlots(trc, object_, start, end - start);
+    }
 }
 
 void
@@ -77,6 +66,25 @@ StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
 #else
     MOZ_ASSUME_UNREACHABLE("Only objects can be in the wholeCellBuffer if IonMonkey is disabled.");
 #endif
+}
+
+void
+StoreBuffer::CellPtrEdge::mark(JSTracer *trc)
+{
+    if (!*edge)
+        return;
+
+    JS_ASSERT(GetGCThingTraceKind(*edge) == JSTRACE_OBJECT);
+    MarkObjectRoot(trc, reinterpret_cast<JSObject**>(edge), "store buffer edge");
+}
+
+void
+StoreBuffer::ValueEdge::mark(JSTracer *trc)
+{
+    if (!deref())
+        return;
+
+    MarkValueRoot(trc, edge, "store buffer edge");
 }
 
 /*** MonoTypeBuffer ***/
@@ -107,6 +115,9 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates(StoreBuffer *owner)
 {
+    if (!T::supportsDeduplication())
+        return;
+
     EdgeSet duplicates;
     if (!duplicates.init())
         return; /* Failure to de-dup is acceptable. */
@@ -114,12 +125,13 @@ StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates(StoreBuffer *owner)
     LifoAlloc::Enum insert(*storage_);
     for (LifoAlloc::Enum e(*storage_); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
-        if (!duplicates.has(edge->location())) {
+        void *key = edge->deduplicationKey();
+        if (!duplicates.has(key)) {
             insert.updateFront<T>(*edge);
             insert.popFront<T>();
 
             /* Failure to insert will leave the set with duplicates. Oh well. */
-            duplicates.put(edge->location());
+            duplicates.put(key);
         }
     }
     storage_->release(insert.mark());
@@ -157,10 +169,7 @@ StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer *owner, JSTracer *trc)
     maybeCompact(owner);
     for (LifoAlloc::Enum e(*storage_); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
-        if (edge->isNullEdge())
-            continue;
         edge->mark(trc);
-
     }
 }
 
@@ -179,10 +188,10 @@ StoreBuffer::RelocatableMonoTypeBuffer<T>::compactMoved(StoreBuffer *owner)
     for (LifoAlloc::Enum e(storage); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
         if (edge->isTagged()) {
-            if (!invalidated.put(edge->location()))
+            if (!invalidated.put(edge->deduplicationKey()))
                 CrashAtUnhandlableOOM("RelocatableMonoTypeBuffer::compactMoved: Failed to put removal.");
         } else {
-            invalidated.remove(edge->location());
+            invalidated.remove(edge->deduplicationKey());
         }
     }
 
@@ -190,7 +199,7 @@ StoreBuffer::RelocatableMonoTypeBuffer<T>::compactMoved(StoreBuffer *owner)
     LifoAlloc::Enum insert(storage);
     for (LifoAlloc::Enum e(storage); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
-        if (!edge->isTagged() && !invalidated.has(edge->location())) {
+        if (!edge->isTagged() && !invalidated.has(edge->deduplicationKey())) {
             insert.updateFront<T>(*edge);
             insert.popFront<T>();
         }
@@ -230,30 +239,6 @@ StoreBuffer::GenericBuffer::mark(StoreBuffer *owner, JSTracer *trc)
         edge->mark(trc);
         e.popFront(size);
     }
-}
-
-/*** Edges ***/
-
-void
-StoreBuffer::CellPtrEdge::mark(JSTracer *trc)
-{
-    JS_ASSERT(GetGCThingTraceKind(*edge) == JSTRACE_OBJECT);
-    MarkObjectRoot(trc, reinterpret_cast<JSObject**>(edge), "store buffer edge");
-}
-
-void
-StoreBuffer::ValueEdge::mark(JSTracer *trc)
-{
-    MarkValueRoot(trc, edge, "store buffer edge");
-}
-
-void
-StoreBuffer::SlotEdge::mark(JSTracer *trc)
-{
-    if (kind == HeapSlot::Element)
-        MarkSlot(trc, (HeapSlot*)&object->getDenseElement(offset), "store buffer edge");
-    else
-        MarkSlot(trc, &object->getSlotRef(offset), "store buffer edge");
 }
 
 /*** StoreBuffer ***/
@@ -387,7 +372,7 @@ JS::HeapValueRelocate(JS::Value *valuep)
 
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>;
-template class StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotEdge>;
+template class StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>;
 template class StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>;
 template class StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::ValueEdge>;
 template class StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::CellPtrEdge>;

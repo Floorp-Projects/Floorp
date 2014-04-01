@@ -172,24 +172,6 @@ class NormalArgumentsObject;
 class SetObject;
 class StrictArgumentsObject;
 
-#ifdef JSGC_GENERATIONAL
-class DenseRangeRef : public gc::BufferableRef
-{
-    JSObject *owner;
-    uint32_t start;
-    uint32_t end;
-
-  public:
-    DenseRangeRef(JSObject *obj, uint32_t start, uint32_t end)
-      : owner(obj), start(start), end(end)
-    {
-        JS_ASSERT(start < end);
-    }
-
-    inline void mark(JSTracer *trc);
-};
-#endif
-
 /*
  * NOTE: This is a placeholder for bug 619558.
  *
@@ -202,7 +184,7 @@ DenseRangeWriteBarrierPost(JSRuntime *rt, JSObject *obj, uint32_t start, uint32_
 #ifdef JSGC_GENERATIONAL
     if (count > 0) {
         JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-        shadowRuntime->gcStoreBufferPtr()->putGeneric(DenseRangeRef(obj, start, start + count));
+        shadowRuntime->gcStoreBufferPtr()->putSlot(obj, HeapSlot::Element, start, count);
     }
 #endif
 }
@@ -1248,19 +1230,6 @@ class ValueArray {
 };
 
 namespace js {
-
-#ifdef JSGC_GENERATIONAL
-inline void
-DenseRangeRef::mark(JSTracer *trc)
-{
-    /* Apply forwarding, if we have already visited owner. */
-    js::gc::IsObjectMarked(&owner);
-    uint32_t initLen = owner->getDenseInitializedLength();
-    uint32_t clampedStart = Min(start, initLen);
-    gc::MarkArraySlots(trc, Min(end, initLen) - clampedStart,
-                       owner->getDenseElements() + clampedStart, "element");
-}
-#endif
 
 /* Set *resultp to tell whether obj has an own property with the given id. */
 bool
