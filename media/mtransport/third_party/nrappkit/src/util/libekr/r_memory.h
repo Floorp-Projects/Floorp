@@ -42,6 +42,8 @@
 
 #define R_MALLOC_X 2
 
+#include "r_types.h"
+
 void *r_malloc(int type, size_t size);
 void *r_malloc_compat(size_t size);
 void *r_calloc(int type,size_t number,size_t size);
