@@ -193,6 +193,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mQuickBuffering(false),
   mIsRunning(false),
   mRunAgain(false),
+  mMinimizePreroll(false),
   mDispatchedRunEvent(false),
   mDecodeThreadWaiting(false),
   mRealTime(aRealTime),
@@ -553,7 +554,9 @@ MediaDecoderStateMachine::NeedToDecodeVideo()
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
-  return mIsVideoDecoding && !HaveEnoughDecodedVideo();
+  return mIsVideoDecoding &&
+         !mMinimizePreroll &&
+         !HaveEnoughDecodedVideo();
 }
 
 void
@@ -644,6 +647,7 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
   NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
                "Should be on state machine or decode thread.");
   return mIsAudioDecoding &&
+         !mMinimizePreroll &&
          !HaveEnoughDecodedAudio(mAmpleAudioThresholdUsecs * mPlaybackRate);
 }
 
@@ -1375,6 +1379,9 @@ void MediaDecoderStateMachine::Play()
     mState = DECODER_STATE_DECODING;
     mDecodeStartTime = TimeStamp::Now();
   }
+  // Once we start playing, we don't want to minimize our prerolling, as we
+  // assume the user is likely to want to keep playing in future.
+  mMinimizePreroll = false;
   ScheduleStateMachine();
 }
 
@@ -1509,7 +1516,15 @@ MediaDecoderStateMachine::EnsureActive()
 void
 MediaDecoderStateMachine::SetReaderIdle()
 {
-  DECODER_LOG(PR_LOG_DEBUG, ("%p SetReaderIdle()", mDecoder.get()));
+#ifdef PR_LOGGING
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    DECODER_LOG(PR_LOG_DEBUG, ("%p SetReaderIdle() audioQueue=%lld videoQueue=%lld",
+                               mDecoder.get(),
+                               GetDecodedAudioDuration(),
+                               mReader->VideoQueue().Duration()));
+  }
+#endif
   MOZ_ASSERT(OnDecodeThread());
   mReader->SetIdle();
 }
@@ -1547,7 +1562,7 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
   MOZ_ASSERT(mState != DECODER_STATE_COMPLETED ||
              (!needToDecodeAudio && !needToDecodeVideo));
 
-  bool needIdle = mDecoder->GetState() == MediaDecoder::PLAY_STATE_PAUSED &&
+  bool needIdle = !mDecoder->IsLogicallyPlaying() &&
                   !needToDecodeAudio &&
                   !needToDecodeVideo &&
                   !IsPlaying();
@@ -2879,8 +2894,13 @@ void MediaDecoderStateMachine::SetPreservesPitch(bool aPreservesPitch)
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
   mPreservesPitch = aPreservesPitch;
+}
 
-  return;
+void
+MediaDecoderStateMachine::SetMinimizePrerollUntilPlaybackStarts()
+{
+  AssertCurrentThreadInMonitor();
+  mMinimizePreroll = true;
 }
 
 bool MediaDecoderStateMachine::IsShutdown()

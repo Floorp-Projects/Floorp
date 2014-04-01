@@ -381,6 +381,11 @@ public:
   void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
 
+  // Directs the decoder to not preroll extra samples until the media is
+  // played. This reduces the memory overhead of media elements that may
+  // not be played. Note that seeking also doesn't cause us start prerolling.
+  void SetMinimizePrerollUntilPlaybackStarts();
+
   // All MediaStream-related data is protected by mReentrantMonitor.
   // We have at most one DecodedStreamData per MediaDecoder. Its stream
   // is used as the input for each ProcessedMediaStream created by calls to
@@ -849,6 +854,13 @@ public:
 
   MediaDecoderOwner* GetOwner() MOZ_OVERRIDE;
 
+  // Returns true if we're logically playing, that is, if the Play() has
+  // been called and Pause() has not or we have not yet reached the end
+  // of media. This is irrespective of the seeking state; if the owner
+  // calls Play() and then Seek(), we still count as logically playing.
+  // The decoder monitor must be held.
+  bool IsLogicallyPlaying();
+
 #ifdef MOZ_RAW
   static bool IsRawEnabled();
 #endif
@@ -1218,6 +1230,12 @@ protected:
   // Be assigned from media element during the initialization and pass to
   // AudioStream Class.
   dom::AudioChannelType mAudioChannelType;
+
+  // True if the decoder has been directed to minimize its preroll before
+  // playback starts. After the first time playback starts, we don't attempt
+  // to minimize preroll, as we assume the user is likely to keep playing,
+  // or play the media again.
+  bool mMinimizePreroll;
 };
 
 } // namespace mozilla

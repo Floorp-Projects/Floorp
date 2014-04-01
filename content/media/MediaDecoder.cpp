@@ -428,7 +428,8 @@ MediaDecoder::MediaDecoder() :
   mPinnedForSeek(false),
   mShuttingDown(false),
   mPausedForPlaybackRateNull(false),
-  mAudioChannelType(AUDIO_CHANNEL_NORMAL)
+  mAudioChannelType(AUDIO_CHANNEL_NORMAL),
+  mMinimizePreroll(false)
 {
   MOZ_COUNT_CTOR(MediaDecoder);
   MOZ_ASSERT(NS_IsMainThread());
@@ -551,7 +552,9 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
     mDecoderStateMachine->SetAudioCaptured(mInitialAudioCaptured);
     SetPlaybackRate(mInitialPlaybackRate);
     mDecoderStateMachine->SetPreservesPitch(mInitialPreservesPitch);
-
+    if (mMinimizePreroll) {
+      mDecoderStateMachine->SetMinimizePrerollUntilPlaybackStarts();
+    }
     if (mFrameBufferLength > 0) {
       // The valid mFrameBufferLength value was specified earlier
       mDecoderStateMachine->SetFrameBufferLength(mFrameBufferLength);
@@ -561,6 +564,12 @@ nsresult MediaDecoder::InitializeStateMachine(MediaDecoder* aCloneDonor)
   ChangeState(PLAY_STATE_LOADING);
 
   return ScheduleStateMachineThread();
+}
+
+void MediaDecoder::SetMinimizePrerollUntilPlaybackStarts()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mMinimizePreroll = true;
 }
 
 nsresult MediaDecoder::RequestFrameBufferLength(uint32_t aLength)
@@ -638,6 +647,13 @@ nsresult MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   }
 
   return ScheduleStateMachineThread();
+}
+
+bool MediaDecoder::IsLogicallyPlaying()
+{
+  GetReentrantMonitor().AssertCurrentThreadIn();
+  return mPlayState == PLAY_STATE_PLAYING ||
+         mNextState == PLAY_STATE_PLAYING;
 }
 
 double MediaDecoder::GetCurrentTime()
