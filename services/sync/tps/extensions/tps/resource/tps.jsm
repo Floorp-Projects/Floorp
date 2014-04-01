@@ -98,6 +98,10 @@ let TPS = {
                   .wrappedJSObject;
     this.fxaccounts_enabled = service.fxAccountsEnabled;
 
+    OBSERVER_TOPICS.forEach(function (aTopic) {
+      Services.obs.addObserver(this, aTopic, true);
+    }, this);
+
     // Import the appropriate authentication module
     if (this.fxaccounts_enabled) {
       Cu.import("resource://tps/auth/fxaccounts.jsm", module);
@@ -593,10 +597,6 @@ let TPS = {
    */
   _executeTestPhase: function _executeTestPhase(file, phase, settings) {
     try {
-      OBSERVER_TOPICS.forEach(function(topic) {
-        Services.obs.addObserver(this, topic, true);
-      }, this);
-
       // parse the test file
       Services.scriptloader.loadSubScript(file, this);
       this._currentPhase = phase;
