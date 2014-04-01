@@ -827,6 +827,8 @@ public:
                                   uint32_t aLineNumber = 0,
                                   uint32_t aColumnNumber = 0);
 
+  static void LogMessageToConsole(const char* aMsg, ...);
+  
   /**
    * Get the localized string named |aKey| in properties file |aFile|.
    */
