@@ -927,7 +927,7 @@ Event::GetEventName(uint32_t aEventType)
   switch(aEventType) {
 #define ID_TO_EVENT(name_, _id, _type, _struct) \
   case _id: return #name_;
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef ID_TO_EVENT
   default:
     break;
