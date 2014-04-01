@@ -311,6 +311,8 @@ include text-transform/reftest.list
 # theme (osx)
 include ../../toolkit/themes/osx/reftests/reftest.list
 
+include ../../toolkit/content/tests/reftests/reftest.list
+
 # -moz-transform/
 include transform/reftest.list
 

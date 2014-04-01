@@ -1,2 +1,2 @@
-== bug-442419-progressmeter-max.xul bug-442419-progressmeter-max-ref.xul
+random-if(cocoaWidget) == bug-442419-progressmeter-max.xul bug-442419-progressmeter-max-ref.xul # fails most of the time on Mac because progress meter animates
 != textbox-multiline-default-value.xul textbox-multiline-empty.xul
