@@ -437,17 +437,22 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
     }
   }
 
+  uint32_t accumulateIndex = 0;
   if (inputChannels) {
-    AllocateAudioBlock(inputChannels, &mLastChunks[0]);
     nsAutoTArray<float,GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE> downmixBuffer;
     for (uint32_t i = 0; i < audioSegments.Length(); ++i) {
       AudioChunk tmpChunk;
       ConvertSegmentToAudioBlock(&audioSegments[i], &tmpChunk);
       if (!tmpChunk.IsNull()) {
-        AccumulateInputChunk(i, tmpChunk, &mLastChunks[0], &downmixBuffer);
+        if (accumulateIndex == 0) {
+          AllocateAudioBlock(inputChannels, &mLastChunks[0]);
+        }
+        AccumulateInputChunk(accumulateIndex, tmpChunk, &mLastChunks[0], &downmixBuffer);
+        accumulateIndex++;
       }
     }
-  } else {
+  }
+  if (accumulateIndex == 0) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   }
   mCurrentOutputPosition += WEBAUDIO_BLOCK_SIZE;
