@@ -21,6 +21,84 @@ public class NativeJSObject
     }
 
     /**
+     * Returns the value of a boolean property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native boolean getBoolean(String name);
+
+    /**
+     * Returns the value of a double property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native double getDouble(String name);
+
+    /**
+     * Returns the value of an int property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native int getInt(String name);
+
+    /**
+     * Returns the value of a string property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native String getString(String name);
+
+    /**
+     * Returns whether a property exists in this object
+     *
+     * @param name
+     *        Property name
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native boolean has(String name);
+
+    /**
      * Returns the JSON representation of this object.
      *
      * @throws NullPointerException
