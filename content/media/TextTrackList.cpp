@@ -14,15 +14,15 @@ namespace mozilla {
 namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_3(TextTrackList,
-                                     nsDOMEventTargetHelper,
+                                     DOMEventTargetHelper,
                                      mGlobal,
                                      mTextTracks,
                                      mTextTrackManager)
 
-NS_IMPL_ADDREF_INHERITED(TextTrackList, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(TextTrackList, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(TextTrackList, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(TextTrackList, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrackList)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 TextTrackList::TextTrackList(nsISupports* aGlobal) : mGlobal(aGlobal)
 {

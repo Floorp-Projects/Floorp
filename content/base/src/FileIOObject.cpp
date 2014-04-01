@@ -20,26 +20,26 @@ namespace dom {
 
 const uint64_t kUnknownSize = uint64_t(-1);
 
-NS_IMPL_ADDREF_INHERITED(FileIOObject, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(FileIOObject, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(FileIOObject, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(FileIOObject, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileIOObject)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FileIOObject)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileIOObject,
-                                                  nsDOMEventTargetHelper)
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
   // Can't traverse mChannel because it's a multithreaded object.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileIOObject,
-                                                nsDOMEventTargetHelper)
+                                                DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannel)

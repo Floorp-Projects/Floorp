@@ -18,10 +18,10 @@ namespace mozilla {
 namespace dom {
 namespace system {
 
-NS_IMPL_QUERY_INTERFACE_INHERITED1(AudioChannelManager, nsDOMEventTargetHelper,
+NS_IMPL_QUERY_INTERFACE_INHERITED1(AudioChannelManager, DOMEventTargetHelper,
                                    nsIDOMEventListener)
-NS_IMPL_ADDREF_INHERITED(AudioChannelManager, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(AudioChannelManager, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(AudioChannelManager, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(AudioChannelManager, DOMEventTargetHelper)
 
 AudioChannelManager::AudioChannelManager()
   : mState(SWITCH_STATE_UNKNOWN)

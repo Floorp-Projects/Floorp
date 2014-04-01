@@ -10,11 +10,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/WebSocketBinding.h" // for BinaryType
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserver.h"
 #include "nsIRequest.h"
@@ -32,7 +32,7 @@
 namespace mozilla {
 namespace dom {
 
-class WebSocket : public nsDOMEventTargetHelper,
+class WebSocket : public DOMEventTargetHelper,
                   public nsIInterfaceRequestor,
                   public nsIWebSocketListener,
                   public nsIObserver,
@@ -52,8 +52,8 @@ public:
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(WebSocket,
-                                                                   nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
+    WebSocket, DOMEventTargetHelper)
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWEBSOCKETLISTENER
   NS_DECL_NSIOBSERVER

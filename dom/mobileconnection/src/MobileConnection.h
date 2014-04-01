@@ -5,16 +5,16 @@
 #ifndef mozilla_dom_network_MobileConnection_h
 #define mozilla_dom_network_MobileConnection_h
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsIDOMMobileConnection.h"
 #include "nsIMobileConnectionProvider.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakPtr.h"
 
 namespace mozilla {
 namespace dom {
 
-class MobileConnection : public nsDOMEventTargetHelper
+class MobileConnection : public DOMEventTargetHelper
                        , public nsIDOMMozMobileConnection
 {
   /**
@@ -32,7 +32,7 @@ public:
   NS_DECL_NSIDOMMOZMOBILECONNECTION
   NS_DECL_NSIMOBILECONNECTIONLISTENER
 
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   MobileConnection(uint32_t aClientId);
 
@@ -40,7 +40,7 @@ public:
   void Shutdown();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MobileConnection,
-                                           nsDOMEventTargetHelper)
+                                           DOMEventTargetHelper)
 
 private:
   nsCOMPtr<nsIMobileConnectionProvider> mProvider;

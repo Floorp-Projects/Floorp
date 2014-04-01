@@ -52,10 +52,10 @@ NS_INTERFACE_MAP_BEGIN(MobileMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozMobileMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozMobileMessageManager)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(MobileMessageManager, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(MobileMessageManager, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(MobileMessageManager, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(MobileMessageManager, DOMEventTargetHelper)
 
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, received)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, retrieving)
