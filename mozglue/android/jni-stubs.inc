@@ -607,3 +607,22 @@ Java_org_mozilla_gecko_util_NativeJSContainer_dispose(JNIEnv * arg0, jobject arg
   xul_dlsym("Java_org_mozilla_gecko_util_NativeJSContainer_dispose", &f_Java_org_mozilla_gecko_util_NativeJSContainer_dispose);
 #endif
 
+#ifdef JNI_STUBS
+
+typedef jstring (*Java_org_mozilla_gecko_util_NativeJSObject_toString_t)(JNIEnv *, jobject);
+static Java_org_mozilla_gecko_util_NativeJSObject_toString_t f_Java_org_mozilla_gecko_util_NativeJSObject_toString;
+extern "C" NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv * arg0, jobject arg1) {
+    if (!f_Java_org_mozilla_gecko_util_NativeJSObject_toString) {
+        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
+                       "JNI Function called before it was loaded");
+        return nullptr;
+    }
+    return f_Java_org_mozilla_gecko_util_NativeJSObject_toString(arg0, arg1);
+}
+#endif
+
+#ifdef JNI_BINDINGS
+  xul_dlsym("Java_org_mozilla_gecko_util_NativeJSObject_toString", &f_Java_org_mozilla_gecko_util_NativeJSObject_toString);
+#endif
+

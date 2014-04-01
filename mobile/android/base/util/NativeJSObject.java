@@ -14,4 +14,22 @@ import org.mozilla.gecko.mozglue.JNITarget;
 @JNITarget
 public class NativeJSObject
 {
+    private final NativeJSContainer mContainer;
+
+    protected NativeJSObject() {
+        mContainer = (NativeJSContainer)this;
+    }
+
+    /**
+     * Returns the JSON representation of this object.
+     *
+     * @throws NullPointerException
+     *         If this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    @Override
+    public native String toString();
 }
