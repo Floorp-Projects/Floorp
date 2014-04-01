@@ -96,7 +96,7 @@ class JSAPITest
 
 #define EVAL(s, vp) do { if (!evaluate(s, __FILE__, __LINE__, vp)) return false; } while (false)
 
-    bool evaluate(const char *bytes, const char *filename, int lineno, jsval *vp);
+    bool evaluate(const char *bytes, const char *filename, int lineno, JS::MutableHandleValue vp);
 
     JSAPITestString jsvalToSource(JS::HandleValue v) {
         JSString *str = JS_ValueToSource(cx, v);
