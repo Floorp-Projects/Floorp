@@ -3047,10 +3047,9 @@ GetFileOrBlob(const nsAString& aName, JS::Handle<JS::Value> aBlobParts,
   nsDOMMultipartFile* domFile =
     static_cast<nsDOMMultipartFile*>(static_cast<nsIDOMFile*>(file.get()));
 
-  JS::AutoValueVector args(aCx);
-  MOZ_ALWAYS_TRUE(args.resize(2));
-  args[0] = aBlobParts;
-  args[1] = aParameters;
+  JS::AutoValueArray<2> args(aCx);
+  args[0].set(aBlobParts);
+  args[1].set(aParameters);
 
   rv = domFile->InitBlob(aCx, aOptionalArgCount, args.begin(), GetXPConnectNative);
   NS_ENSURE_SUCCESS(rv, rv);
