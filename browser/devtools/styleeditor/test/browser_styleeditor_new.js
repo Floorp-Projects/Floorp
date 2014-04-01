@@ -13,10 +13,7 @@ function test()
 {
   waitForExplicitFinish();
 
-  addTabAndOpenStyleEditor(function(panel) {
-    gUI = panel.UI;
-    gUI.on("editor-added", testEditorAdded);
-  });
+  addTabAndCheckOnStyleEditorAdded(panel => gUI = panel.UI, testEditorAdded);
 
   content.location = TESTCASE_URI;
 }
@@ -27,10 +24,10 @@ let gOriginalHref;
 
 let checksCompleted = 0;
 
-function testEditorAdded(aEvent, aEditor)
+function testEditorAdded(aEditor)
 {
-  gAddedCount++;
-  if (gAddedCount == 2) {
+  info("added " + gAddedCount + " editors");
+  if (++gAddedCount == 2) {
     waitForFocus(function () {// create a new style sheet
       let newButton = gPanelWindow.document.querySelector(".style-editor-newButton");
       ok(newButton, "'new' button exists");

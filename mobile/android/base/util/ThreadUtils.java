@@ -23,8 +23,8 @@ public final class ThreadUtils {
         THROW,
     }
 
-    private static Thread sUiThread;
-    private static Thread sBackgroundThread;
+    private static volatile Thread sUiThread;
+    private static volatile Thread sBackgroundThread;
 
     private static Handler sUiHandler;
 
@@ -158,6 +158,10 @@ public final class ThreadUtils {
     }
 
     public static boolean isOnBackgroundThread() {
+        if (sBackgroundThread == null) {
+            return false;
+        }
+
         return isOnThread(sBackgroundThread);
     }
 
