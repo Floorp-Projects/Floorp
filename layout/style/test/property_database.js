@@ -4883,6 +4883,8 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 
 			"subgrid",
 			"subgrid () (foo bar)",
+			"subgrid repeat(1, ())",
+			"subgrid Repeat(4, (a) (b c) () (d))",
 		],
 		invalid_values: [
 			"",
@@ -4914,6 +4916,16 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"subgrid (foo) 40px",
 			"subgrid (foo 40px)",
 			"(foo) subgrid",
+			"subgrid rêpeat(1, ())",
+			"subgrid repeat(0, ())",
+			"subgrid repeat(-3, ())",
+			"subgrid repeat(2.0, ())",
+			"subgrid repeat(2.5, ())",
+			"subgrid repeat(3px, ())",
+			"subgrid repeat(1)",
+			"subgrid repeat(1, )",
+			"subgrid repeat(2, (40px))",
+			"subgrid repeat(2, foo)",
 		]
 	};
 	gCSSProperties["grid-template-rows"] = {
@@ -4969,7 +4981,7 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"subgrid/40px 20px",
 			"subgrid (foo) () (bar baz) / 40px 20px",
 			"40px 20px/subgrid",
-			"40px 20px/subgrid  (foo) () (bar baz)",
+			"40px 20px/subgrid  (foo) () repeat(3, (a) (b)) (bar baz)",
 			"subgrid/subgrid",
 			"subgrid (foo) () (bar baz)/subgrid (foo) () (bar baz)",
 			// [ <track-list> / ]? [ <line-names>? <string> <track-size>? <line-names>? ]+
