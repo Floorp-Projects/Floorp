@@ -2843,7 +2843,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_WHEEL_STOP:
     {
       MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
-      nsScrollbarsForWheel::MayInactivate();
+      ScrollbarsForWheel::MayInactivate();
     }
     break;
   case NS_WHEEL_WHEEL:
@@ -2852,7 +2852,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
 
       if (*aStatus == nsEventStatus_eConsumeNoDefault) {
-        nsScrollbarsForWheel::Inactivate();
+        ScrollbarsForWheel::Inactivate();
         break;
       }
 
@@ -2862,7 +2862,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // For scrolling of default action, we should honor the mouse wheel
           // transaction.
 
-          nsScrollbarsForWheel::PrepareToScrollText(this, aTargetFrame, wheelEvent);
+          ScrollbarsForWheel::PrepareToScrollText(this, aTargetFrame, wheelEvent);
 
           if (aEvent->message != NS_WHEEL_WHEEL ||
               (!wheelEvent->deltaX && !wheelEvent->deltaY)) {
@@ -2873,7 +2873,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             ComputeScrollTarget(aTargetFrame, wheelEvent,
                                 COMPUTE_DEFAULT_ACTION_TARGET);
 
-          nsScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
+          ScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
 
           nsIFrame* rootScrollFrame = !aTargetFrame ? nullptr :
             aTargetFrame->PresContext()->PresShell()->GetRootScrollFrame();
@@ -2892,7 +2892,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             DoScrollText(scrollTarget, wheelEvent);
           } else {
             nsMouseWheelTransaction::EndTransaction();
-            nsScrollbarsForWheel::Inactivate();
+            ScrollbarsForWheel::Inactivate();
           }
           break;
         }

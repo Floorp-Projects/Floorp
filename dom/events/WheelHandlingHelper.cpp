@@ -100,7 +100,7 @@ nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
   MOZ_ASSERT(aEvent->message == NS_WHEEL_WHEEL,
              "Transaction must be started with a wheel event");
-  nsScrollbarsForWheel::OwnWheelTransaction(false);
+  ScrollbarsForWheel::OwnWheelTransaction(false);
   sTargetFrame = aTargetFrame;
   sScrollSeriesCounter = 0;
   if (!UpdateTransaction(aEvent)) {
@@ -140,8 +140,8 @@ nsMouseWheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
 void
 nsMouseWheelTransaction::MayEndTransaction()
 {
-  if (!sOwnScrollbars && nsScrollbarsForWheel::IsActive()) {
-    nsScrollbarsForWheel::OwnWheelTransaction(true);
+  if (!sOwnScrollbars && ScrollbarsForWheel::IsActive()) {
+    ScrollbarsForWheel::OwnWheelTransaction(true);
   } else {
     EndTransaction();
   }
@@ -156,8 +156,8 @@ nsMouseWheelTransaction::EndTransaction()
   sScrollSeriesCounter = 0;
   if (sOwnScrollbars) {
     sOwnScrollbars = false;
-    nsScrollbarsForWheel::OwnWheelTransaction(false);
-    nsScrollbarsForWheel::Inactivate();
+    ScrollbarsForWheel::OwnWheelTransaction(false);
+    ScrollbarsForWheel::Inactivate();
   }
 }
 
@@ -395,26 +395,28 @@ nsMouseWheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
   return NS_FAILED(rv) ? DeltaValues(aEvent) : overriddenDeltaValues;
 }
 
+namespace mozilla {
+
 /******************************************************************/
-/* nsScrollbarsForWheel                                           */
+/* mozilla::ScrollbarsForWheel                                    */
 /******************************************************************/
 
-const DeltaValues nsScrollbarsForWheel::directions[kNumberOfTargets] = {
+const DeltaValues ScrollbarsForWheel::directions[kNumberOfTargets] = {
   DeltaValues(-1, 0), DeltaValues(+1, 0), DeltaValues(0, -1), DeltaValues(0, +1)
 };
 
-nsWeakFrame nsScrollbarsForWheel::sActiveOwner = nullptr;
-nsWeakFrame nsScrollbarsForWheel::sActivatedScrollTargets[kNumberOfTargets] = {
+nsWeakFrame ScrollbarsForWheel::sActiveOwner = nullptr;
+nsWeakFrame ScrollbarsForWheel::sActivatedScrollTargets[kNumberOfTargets] = {
   nullptr, nullptr, nullptr, nullptr
 };
 
-bool nsScrollbarsForWheel::sHadWheelStart = false;
-bool nsScrollbarsForWheel::sOwnWheelTransaction = false;
+bool ScrollbarsForWheel::sHadWheelStart = false;
+bool ScrollbarsForWheel::sOwnWheelTransaction = false;
 
 void
-nsScrollbarsForWheel::PrepareToScrollText(nsEventStateManager* aESM,
-                                          nsIFrame* aTargetFrame,
-                                          WidgetWheelEvent* aEvent)
+ScrollbarsForWheel::PrepareToScrollText(nsEventStateManager* aESM,
+                                        nsIFrame* aTargetFrame,
+                                        WidgetWheelEvent* aEvent)
 {
   if (aEvent->message == NS_WHEEL_START) {
     nsMouseWheelTransaction::OwnScrollbars(false);
@@ -428,7 +430,7 @@ nsScrollbarsForWheel::PrepareToScrollText(nsEventStateManager* aESM,
 }
 
 void
-nsScrollbarsForWheel::SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget)
+ScrollbarsForWheel::SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget)
 {
   if (!sHadWheelStart) {
     return;
@@ -443,7 +445,7 @@ nsScrollbarsForWheel::SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget)
 }
 
 void
-nsScrollbarsForWheel::MayInactivate()
+ScrollbarsForWheel::MayInactivate()
 {
   if (!sOwnWheelTransaction && nsMouseWheelTransaction::GetTargetFrame()) {
     nsMouseWheelTransaction::OwnScrollbars(true);
@@ -453,7 +455,7 @@ nsScrollbarsForWheel::MayInactivate()
 }
 
 void
-nsScrollbarsForWheel::Inactivate()
+ScrollbarsForWheel::Inactivate()
 {
   nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sActiveOwner);
   if (scrollbarOwner) {
@@ -469,7 +471,7 @@ nsScrollbarsForWheel::Inactivate()
 }
 
 bool
-nsScrollbarsForWheel::IsActive()
+ScrollbarsForWheel::IsActive()
 {
   if (sActiveOwner) {
     return true;
@@ -483,16 +485,16 @@ nsScrollbarsForWheel::IsActive()
 }
 
 void
-nsScrollbarsForWheel::OwnWheelTransaction(bool aOwn)
+ScrollbarsForWheel::OwnWheelTransaction(bool aOwn)
 {
   sOwnWheelTransaction = aOwn;
 }
 
 void
-nsScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
-                        nsEventStateManager* aESM,
-                        nsIFrame* aTargetFrame,
-                        WidgetWheelEvent* aEvent)
+ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
+                      nsEventStateManager* aESM,
+                      nsIFrame* aTargetFrame,
+                      WidgetWheelEvent* aEvent)
 {
   for (size_t i = 0; i < kNumberOfTargets; i++) {
     const DeltaValues *dir = &directions[i];
@@ -511,7 +513,7 @@ nsScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
 }
 
 void
-nsScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets()
+ScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets()
 {
   for (size_t i = 0; i < kNumberOfTargets; i++) {
     nsWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
@@ -524,3 +526,5 @@ nsScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets()
     }
   }
 }
+
+} // namespace mozilla
