@@ -35,13 +35,13 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "mozilla/Base64.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "xpcpublic.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsDOMJSUtils.h"
-#include "nsDOMEventTargetHelper.h"
 
 #include "jsfriendapi.h"
 
@@ -69,7 +69,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsDOMFileReader,
-                                               nsDOMEventTargetHelper)
+                                               DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultArrayBuffer)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 

@@ -56,25 +56,6 @@ private:
   nsRefPtr<AnyCallback> mCallback;
 };
 
-// SimpleWrapperPromiseCallback execs a JS Callback with a value.
-class SimpleWrapperPromiseCallback MOZ_FINAL : public PromiseCallback
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SimpleWrapperPromiseCallback,
-                                           PromiseCallback)
-
-  void Call(JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
-
-  SimpleWrapperPromiseCallback(Promise* aPromise,
-                               AnyCallback* aCallback);
-  ~SimpleWrapperPromiseCallback();
-
-private:
-  nsRefPtr<Promise> mPromise;
-  nsRefPtr<AnyCallback> mCallback;
-};
-
 // ResolvePromiseCallback calls aPromise->ResolveFunction() with the value
 // received by Call().
 class ResolvePromiseCallback MOZ_FINAL : public PromiseCallback

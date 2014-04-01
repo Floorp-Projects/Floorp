@@ -34,7 +34,6 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
@@ -52,6 +51,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -2430,7 +2430,7 @@ Element::PostHandleEventForLinks(EventChainPostVisitor& aVisitor)
                                nsIFocusManager::FLAG_NOSCROLL);
           }
 
-          nsEventStateManager::SetActiveManager(
+          EventStateManager::SetActiveManager(
             aVisitor.mPresContext->EventStateManager(), this);
         }
       }

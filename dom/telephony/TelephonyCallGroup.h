@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class TelephonyCallGroup MOZ_FINAL : public nsDOMEventTargetHelper
+class TelephonyCallGroup MOZ_FINAL : public DOMEventTargetHelper
 {
   nsRefPtr<Telephony> mTelephony;
 
@@ -27,7 +27,7 @@ class TelephonyCallGroup MOZ_FINAL : public nsDOMEventTargetHelper
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TelephonyCallGroup,
-                                           nsDOMEventTargetHelper)
+                                           DOMEventTargetHelper)
 
   nsPIDOMWindow*
   GetParentObject() const

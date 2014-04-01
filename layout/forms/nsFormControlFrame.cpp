@@ -7,7 +7,7 @@
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsEventStateManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsDeviceContext.h"
 
@@ -116,7 +116,7 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, bool aDoReg)
   nsIContent* content = aFrame->GetContent();
   content->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
   if (!accessKey.IsEmpty()) {
-    nsEventStateManager *stateManager = presContext->EventStateManager();
+    EventStateManager* stateManager = presContext->EventStateManager();
     if (aDoReg) {
       stateManager->RegisterAccessKey(content, (uint32_t)accessKey.First());
     } else {

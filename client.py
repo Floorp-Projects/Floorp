@@ -5,10 +5,7 @@
 
 
 LIBFFI_DIRS = (('js/ctypes/libffi', 'libffi'),)
-WEBIDLPARSER_DIR = 'dom/bindings/parser'
-WEBIDLPARSER_REPO = 'https://hg.mozilla.org/users/khuey_mozilla.com/webidl-parser'
 HG_EXCLUSIONS = ['.hg', '.hgignore', '.hgtags']
-WEBIDLPARSER_EXCLUSIONS = HG_EXCLUSIONS + ['.gitignore', 'ply']
 
 CVSROOT_LIBFFI = ':pserver:anoncvs@sources.redhat.com:/cvs/libffi'
 
@@ -120,7 +117,7 @@ def update_nspr_or_nss(tag, depfile, destination, hgpath):
   tag_file = destination + "/TAG-INFO"
   print >>file(tag_file, "w"), tag
 
-o = OptionParser(usage="client.py [options] update_nspr tagname | update_nss tagname | update_libffi tagname | update_webidlparser tagname")
+o = OptionParser(usage="client.py [options] update_nspr tagname | update_nss tagname | update_libffi tagname")
 o.add_option("--skip-mozilla", dest="skip_mozilla",
              action="store_true", default=False,
              help="Obsolete")
@@ -161,9 +158,6 @@ elif action in ('update_libffi'):
     if not options.cvsroot:
         options.cvsroot = CVSROOT_LIBFFI
     do_cvs_export(LIBFFI_DIRS, tag, options.cvsroot, options.cvs)
-elif action in ('update_webidlparser'):
-    tag, = args[1:]
-    do_hg_replace(WEBIDLPARSER_DIR, WEBIDLPARSER_REPO, tag, WEBIDLPARSER_EXCLUSIONS, options.hg)
 else:
     o.print_help()
     sys.exit(2)

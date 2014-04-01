@@ -47,6 +47,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::layers;
+using namespace mozilla::widget::android;
 
 /* Forward declare all the JNI methods as extern "C" */
 

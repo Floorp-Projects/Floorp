@@ -150,6 +150,7 @@ using namespace mozilla::system;
 #endif
 
 #ifdef ENABLE_TESTS
+#include "BackgroundChildImpl.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #endif
@@ -240,6 +241,10 @@ private:
                 // Callback 1.
                 bool ok = BackgroundChild::GetOrCreateForCurrentThread(this);
                 MOZ_RELEASE_ASSERT(ok);
+
+                BackgroundChildImpl::ThreadLocal* threadLocal =
+                  BackgroundChildImpl::GetThreadLocalForCurrentThread();
+                MOZ_RELEASE_ASSERT(threadLocal);
 
                 // Callback 2.
                 ok = BackgroundChild::GetOrCreateForCurrentThread(this);
@@ -1877,7 +1882,7 @@ ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
 #ifdef MOZ_WIDGET_ANDROID
     NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
 
-    *showPassword = GeckoAppShell::GetShowPasswordSetting();
+    *showPassword = mozilla::widget::android::GeckoAppShell::GetShowPasswordSetting();
 #endif
     return true;
 }

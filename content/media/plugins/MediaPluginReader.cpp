@@ -328,7 +328,7 @@ nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aE
 
   mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget;
 
-  return DecodeToTarget(aTarget);
+  return NS_OK;
 }
 
 MediaPluginReader::ImageBufferCallback::ImageBufferCallback(mozilla::layers::ImageContainer *aImageContainer) :

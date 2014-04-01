@@ -53,7 +53,6 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     objectMetadataCallback(nullptr),
     lastAnimationTime(0),
     regExps(runtime_),
-    typeReprs(runtime_),
     globalWriteBarriered(false),
     propertyTree(thisForCtor()),
     selfHostingScriptSource(nullptr),
@@ -108,9 +107,6 @@ JSCompartment::init(JSContext *cx)
         return false;
 
     if (!regExps.init(cx))
-        return false;
-
-    if (!typeReprs.init())
         return false;
 
     enumerators = NativeIterator::allocateSentinel(cx);

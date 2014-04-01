@@ -17,6 +17,10 @@ DelayBuffer::Write(const AudioChunk& aInputChunk)
 {
   // We must have a reference to the buffer if there are channels
   MOZ_ASSERT(aInputChunk.IsNull() == !aInputChunk.mChannelData.Length());
+#ifdef DEBUG
+  MOZ_ASSERT(!mHaveWrittenBlock);
+  mHaveWrittenBlock = true;
+#endif
 
   if (!EnsureBuffer()) {
     return;
@@ -118,7 +122,7 @@ DelayBuffer::ReadChannels(const double aPerFrameDelays[WEBAUDIO_BLOCK_SIZE],
   for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
     double currentDelay = aPerFrameDelays[i];
     MOZ_ASSERT(currentDelay >= 0.0);
-    MOZ_ASSERT(currentDelay <= static_cast<double>(mMaxDelayTicks));
+    MOZ_ASSERT(currentDelay <= (mChunks.Length() - 1) * WEBAUDIO_BLOCK_SIZE);
 
     // Interpolate two input frames in case the read position does not match
     // an integer index.
@@ -225,6 +229,9 @@ DelayBuffer::UpdateUpmixChannels(int aNewReadChunk, uint32_t aChannelCount,
   }
 
   static const float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {};
+
+  NS_WARN_IF_FALSE(mHaveWrittenBlock || aNewReadChunk != mCurrentChunk,
+                   "Smoothing is making feedback delay too small.");
 
   mLastReadChunk = aNewReadChunk;
   // Missing assignment operator is bug 976927

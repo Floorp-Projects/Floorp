@@ -8,7 +8,7 @@
 
 #include "Workers.h"
 
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/MessagePort.h"
 
@@ -62,7 +62,7 @@ public:
   QueueEvent(nsIDOMEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort, nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort, DOMEventTargetHelper)
 
   virtual EventHandlerNonNull*
   GetOnmessage() MOZ_OVERRIDE;

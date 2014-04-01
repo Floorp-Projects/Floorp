@@ -111,6 +111,32 @@ GFX2D_API void AppendEllipseToPath(PathBuilder* aPathBuilder,
                                    const Point& aCenter,
                                    const Size& aDimensions);
 
+static inline bool
+UserToDevicePixelSnapped(Rect& aRect, const Matrix& aTransform)
+{
+  Point p1 = aTransform * aRect.TopLeft();
+  Point p2 = aTransform * aRect.TopRight();
+  Point p3 = aTransform * aRect.BottomRight();
+
+  // Check that the rectangle is axis-aligned. For an axis-aligned rectangle,
+  // two opposite corners define the entire rectangle. So check if
+  // the axis-aligned rectangle with opposite corners p1 and p3
+  // define an axis-aligned rectangle whose other corners are p2 and p4.
+  // We actually only need to check one of p2 and p4, since an affine
+  // transform maps parallelograms to parallelograms.
+  if (p2 == Point(p1.x, p3.y) || p2 == Point(p3.x, p1.y)) {
+      p1.Round();
+      p3.Round();
+
+      aRect.MoveTo(Point(std::min(p1.x, p3.x), std::min(p1.y, p3.y)));
+      aRect.SizeTo(Size(std::max(p1.x, p3.x) - aRect.X(),
+                        std::max(p1.y, p3.y) - aRect.Y()));
+      return true;
+  }
+
+  return false;
+}
+
 } // namespace gfx
 } // namespace mozilla
 

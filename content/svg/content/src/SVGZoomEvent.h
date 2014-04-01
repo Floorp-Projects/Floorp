@@ -23,6 +23,10 @@ namespace dom {
 class SVGZoomEvent MOZ_FINAL : public UIEvent
 {
 public:
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SVGZoomEvent, UIEvent)
+  NS_DECL_ISUPPORTS_INHERITED
+
   SVGZoomEvent(EventTarget* aOwner, nsPresContext* aPresContext,
                WidgetGUIEvent* aEvent);
 

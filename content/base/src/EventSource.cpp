@@ -7,6 +7,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/EventSourceBinding.h"
 #include "mozilla/dom/MessageEvent.h"
 
@@ -33,7 +34,6 @@
 #include "xpcpublic.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsWrapperCacheInlines.h"
-#include "nsDOMEventTargetHelper.h"
 #include "mozilla/Attributes.h"
 #include "nsError.h"
 
@@ -56,7 +56,7 @@ namespace dom {
 #define MAX_RECONNECTION_TIME_VALUE       PR_IntervalToMilliseconds(DELAY_INTERVAL_LIMIT)
 
 EventSource::EventSource(nsPIDOMWindow* aOwnerWindow) :
-  nsDOMEventTargetHelper(aOwnerWindow),
+  DOMEventTargetHelper(aOwnerWindow),
   mStatus(PARSE_STATE_OFF),
   mFrozen(false),
   mErrorLoadOnRedirect(false),
@@ -105,11 +105,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(EventSource)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(EventSource,
-                                               nsDOMEventTargetHelper)
+                                               DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EventSource,
-                                                  nsDOMEventTargetHelper)
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSrc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationCallbacks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoadGroup)
@@ -119,7 +119,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(EventSource,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUnicodeDecoder)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EventSource, nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(EventSource,
+                                                DOMEventTargetHelper)
   tmp->Close();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -130,15 +131,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(EventSource)
   NS_INTERFACE_MAP_ENTRY(nsIChannelEventSink)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(EventSource, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(EventSource, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(EventSource, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(EventSource, DOMEventTargetHelper)
 
 void
 EventSource::DisconnectFromOwner()
 {
-  nsDOMEventTargetHelper::DisconnectFromOwner();
+  DOMEventTargetHelper::DisconnectFromOwner();
   Close();
 }
 

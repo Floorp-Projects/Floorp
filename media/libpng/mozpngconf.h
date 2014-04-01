@@ -7,7 +7,9 @@
 #define PNGLCONF_H /* So we don't try to use libpng's pnglibconf.h */
 
 /* limit image dimensions (bug #251381, #591822, and #967656) */
-#define MOZ_PNG_MAX_DIMENSION 32767
+#ifndef MOZ_PNG_MAX_DIMENSION
+# define MOZ_PNG_MAX_DIMENSION 32767
+#endif
 
 #define PNG_API_RULE 0
 #define PNG_COST_SHIFT 3
