@@ -7,7 +7,6 @@
 == form-dynamic-invalid-not-barred.html form-invalid-ref.html
 == form-remove-invalid-element.html form-invalid-ref.html
 == form-dynamic-invalid-barred.html form-invalid-barred-ref.html
-== form-dynamic-not-invalid-barred.html form-invalid-ref.html
 == form-static-invalid-barred.html form-invalid-barred-ref.html
 == form-add-invalid-element.html form-invalid-ref.html
 == form-add-valid-with-invalid-element.html form-invalid-ref.html

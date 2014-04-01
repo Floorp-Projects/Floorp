@@ -10,3 +10,5 @@ include output/reftest.list
 
 # default :invalid style
 include default-style/reftest.list
+
+include form/reftest.list
