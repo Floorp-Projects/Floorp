@@ -63,6 +63,12 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 // Length of the "var-" prefix of custom property names.
 #define VAR_PREFIX_LENGTH 4
 
+// Maximum number of repetitions for the repeat() function
+// in the grid-template-columns and grid-template-rows properties,
+// to limit high memory usage from small stylesheets.
+// Must be a positive integer. Should be large-ish.
+#define GRID_TEMPLATE_MAX_REPETITIONS 10000
+
 // End-of-array marker for mask arguments to ParseBitmaskValues
 #define MASK_END_VALUE  (-1)
 
@@ -657,6 +663,7 @@ protected:
   //
   // If aValue is already a eCSSUnit_List, append to that list.
   CSSParseResult ParseGridLineNames(nsCSSValue& aValue);
+  bool ParseGridLineNameListRepeat(nsCSSValueList** aTailPtr);
   bool ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
   CSSParseResult ParseGridTrackSize(nsCSSValue& aValue);
@@ -7006,6 +7013,59 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
   }
 }
 
+// Assuming the 'repeat(' function token has already been consumed,
+// parse the rest of repeat(<positive-integer>, <line-names>+)
+// Append to the linked list whose end is given by |aTailPtr|,
+// and updated |aTailPtr| to point to the new end of the list.
+bool
+CSSParserImpl::ParseGridLineNameListRepeat(nsCSSValueList** aTailPtr)
+{
+  if (!(GetToken(true) &&
+        mToken.mType == eCSSToken_Number &&
+        mToken.mIntegerValid &&
+        mToken.mInteger > 0)) {
+    SkipUntil(')');
+    return false;
+  }
+  int32_t repetitions = std::min(mToken.mInteger,
+                                 GRID_TEMPLATE_MAX_REPETITIONS);
+  if (!ExpectSymbol(',', true)) {
+    SkipUntil(')');
+    return false;
+  }
+
+  // Parse at least one <line-names>
+  nsCSSValueList* tail = *aTailPtr;
+  do {
+    tail->mNext = new nsCSSValueList;
+    tail = tail->mNext;
+    if (ParseGridLineNames(tail->mValue) != CSSParseResult::Ok) {
+      SkipUntil(')');
+      return false;
+    }
+  } while (!ExpectSymbol(')', true));
+  nsCSSValueList* firstRepeatedItem = (*aTailPtr)->mNext;
+  nsCSSValueList* lastRepeatedItem = tail;
+
+  // Our repeated items are already in the target list once,
+  // so they need to be repeated |repetitions - 1| more times.
+  MOZ_ASSERT(repetitions > 0, "Should have only accepted positive integers");
+  while (--repetitions) {
+    nsCSSValueList* repeatedItem = firstRepeatedItem;
+    for (;;) {
+      tail->mNext = new nsCSSValueList;
+      tail = tail->mNext;
+      tail->mValue = repeatedItem->mValue;
+      if (repeatedItem == lastRepeatedItem) {
+        break;
+      }
+      repeatedItem = repeatedItem->mNext;
+    }
+  }
+  *aTailPtr = tail;
+  return true;
+}
+
 // Assuming a 'subgrid' keyword was already consumed, parse <line-name-list>?
 bool
 CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
@@ -7015,17 +7075,31 @@ CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
   item->mValue.SetIntValue(NS_STYLE_GRID_TEMPLATE_SUBGRID,
                            eCSSUnit_Enumerated);
   for (;;) {
-    nsCSSValue lineNames;
-    CSSParseResult result = ParseGridLineNames(lineNames);
-    if (result == CSSParseResult::NotFound) {
+    // First try to parse repeat(<positive-integer>, <line-names>+)
+    if (!GetToken(true)) {
       return true;
     }
-    if (result == CSSParseResult::Error) {
-      return false;
+    if (mToken.mType == eCSSToken_Function &&
+        mToken.mIdent.LowerCaseEqualsLiteral("repeat")) {
+      if (!ParseGridLineNameListRepeat(&item)) {
+        return false;
+      }
+    } else {
+      UngetToken();
+
+      // This was not a repeat() function. Try to parse <line-names>.
+      nsCSSValue lineNames;
+      CSSParseResult result = ParseGridLineNames(lineNames);
+      if (result == CSSParseResult::NotFound) {
+        return true;
+      }
+      if (result == CSSParseResult::Error) {
+        return false;
+      }
+      item->mNext = new nsCSSValueList;
+      item = item->mNext;
+      item->mValue = lineNames;
     }
-    item->mNext = new nsCSSValueList;
-    item = item->mNext;
-    item->mValue = lineNames;
   }
 }
 
