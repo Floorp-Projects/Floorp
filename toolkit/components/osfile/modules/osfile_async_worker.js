@@ -124,7 +124,7 @@ const EXCEPTION_NAMES = {
    } else if (exn.constructor.name in EXCEPTION_NAMES) {
      LOG("Sending back exception", exn.constructor.name);
      post({fail: {exn: exn.constructor.name, message: exn.message,
-                  fileName: exn.fileName, lineNumber: exn.lineNumber},
+                  fileName: exn.moduleName || exn.fileName, lineNumber: exn.lineNumber},
            id: id, durationMs: durationMs});
    } else {
      // Other exceptions do not, and should be propagated through DOM's
