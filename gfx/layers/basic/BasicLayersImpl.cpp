@@ -174,32 +174,6 @@ FillRectWithMask(DrawTarget* aDT,
   aDT->FillRect(aRect, SurfacePattern(aSurface, ExtendMode::CLAMP, Matrix(), aFilter), aOptions);
 }
 
-void
-FillWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
-{
-  AutoMaskData mask;
-  if (GetMaskData(aMaskLayer, &mask)) {
-    if (aOpacity < 1.0) {
-      aContext->PushGroup(gfxContentType::COLOR_ALPHA);
-      aContext->FillWithOpacity(aOpacity);
-      aContext->PopGroupToSource();
-      aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
-      aContext->Mask(mask.GetSurface());
-    } else {
-      aContext->Save();
-      aContext->Clip();
-      aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
-      aContext->Mask(mask.GetSurface());
-      aContext->NewPath();
-      aContext->Restore();
-    }
-    return;
-  }
-
-  // if there is no mask, just fill normally
-  aContext->FillWithOpacity(aOpacity);
-}
-
 BasicImplData*
 ToData(Layer* aLayer)
 {
