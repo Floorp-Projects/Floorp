@@ -87,6 +87,8 @@ public:
   virtual JSObject*
     WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
+  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+
 private:
   BluetoothDevice(nsPIDOMWindow* aOwner, const nsAString& aAdapterPath,
                   const BluetoothValue& aValue);
