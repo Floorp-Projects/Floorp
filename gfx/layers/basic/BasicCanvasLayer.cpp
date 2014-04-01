@@ -21,22 +21,6 @@ namespace mozilla {
 namespace layers {
 
 void
-BasicCanvasLayer::Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
-{
-  if (IsHidden())
-    return;
-
-  FirePreTransactionCallback();
-  UpdateTarget();
-  FireDidTransactionCallback();
-
-  PaintWithOpacity(aTarget,
-                   GetEffectiveOpacity(),
-                   aMaskSurface,
-                   GetEffectiveOperator(this));
-}
-
-void
 BasicCanvasLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
 {
   if (IsHidden())
