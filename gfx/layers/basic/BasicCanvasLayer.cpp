@@ -43,16 +43,25 @@ BasicCanvasLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
     return;
 
   FirePreTransactionCallback();
-  DeprecatedUpdateSurface();
+  UpdateTarget();
   FireDidTransactionCallback();
 
-  gfxContext::GraphicsOperator mixBlendMode = DeprecatedGetEffectiveMixBlendMode();
-  DeprecatedPaintWithOpacity(aContext,
-                             GetEffectiveOpacity(),
-                             aMaskLayer,
-                             mixBlendMode != gfxContext::OPERATOR_OVER ?
-                               mixBlendMode :
-                               DeprecatedGetOperator());
+  gfxMatrix m;
+  if (mNeedsYFlip) {
+    m = aContext->CurrentMatrix();
+    aContext->Translate(gfxPoint(0.0, mBounds.height));
+    aContext->Scale(1.0, -1.0);
+  }
+
+  FillRectWithMask(aContext->GetDrawTarget(),
+                   Rect(0, 0, mBounds.width, mBounds.height),
+                   mSurface, ToFilter(mFilter),
+                   DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
+                   aMaskLayer);
+
+  if (mNeedsYFlip) {
+    aContext->SetMatrix(m);
+  }
 }
 
 already_AddRefed<CanvasLayer>
