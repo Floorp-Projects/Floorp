@@ -2000,8 +2000,8 @@ nsLineLayout::BlockDirAlignFrames(PerSpanData* psd)
     // Update minBCoord/maxBCoord for frames that we just placed. Do not factor
     // text into the equation.
     if (pfd->mBlockDirAlign == VALIGN_OTHER) {
-      // Text frames and bullets do not contribute to the min/max Y values for
-      // the line (instead their parent frame's font-size contributes).
+      // Text frames do not contribute to the min/max Y values for the
+      // line (instead their parent frame's font-size contributes).
       // XXXrbs -- relax this restriction because it causes text frames
       //           to jam together when 'font-size-adjust' is enabled
       //           and layout is using dynamic font heights (bug 20394)
@@ -2012,15 +2012,17 @@ nsLineLayout::BlockDirAlignFrames(PerSpanData* psd)
       //           For example in quirks mode, avoiding empty text frames prevents
       //           "tall" lines around elements like <hr> since the rules of <hr>
       //           in quirks.css have pseudo text contents with LF in them.
+#if 0
+      if (!pfd->GetFlag(PFD_ISTEXTFRAME)) {
+#else
+      // Only consider non empty text frames when line-height=normal
       bool canUpdate = !pfd->GetFlag(PFD_ISTEXTFRAME);
-      if ((!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) ||
-          (canUpdate && (pfd->GetFlag(PFD_ISBULLET) ||
-                         nsGkAtoms::bulletFrame == frame->GetType()))) {
-        // Only consider bullet / non-empty text frames when line-height:normal.
+      if (!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
         canUpdate =
           frame->StyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal;
       }
       if (canUpdate) {
+#endif
         nscoord blockStart, blockEnd;
         if (frameSpan) {
           // For spans that were are now placing, use their position
