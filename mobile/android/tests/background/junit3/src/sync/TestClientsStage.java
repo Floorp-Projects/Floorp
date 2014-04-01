@@ -27,6 +27,7 @@ public class TestClientsStage extends AndroidSyncTestCase {
   private static final String TEST_PASSWORD    = "password";
   private static final String TEST_SYNC_KEY    = "abcdeabcdeabcdeabcdeabcdea";
 
+  @Override
   public void setUp() {
     ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(getApplicationContext());
     db.wipeDB();
@@ -49,7 +50,7 @@ public class TestClientsStage extends AndroidSyncTestCase {
     final SharedPreferences prefs = new MockSharedPreferences();
     final SyncConfiguration config = new SyncConfiguration(TEST_USERNAME, authHeaderProvider, prefs);
     config.syncKeyBundle = keyBundle;
-    GlobalSession session = new GlobalSession(config, callback, context, null, delegate, callback);
+    GlobalSession session = new GlobalSession(config, callback, context, delegate, callback);
 
     SyncClientsEngineStage stage = new SyncClientsEngineStage() {
 

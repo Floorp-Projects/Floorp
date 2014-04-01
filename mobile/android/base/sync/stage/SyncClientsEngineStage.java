@@ -317,9 +317,8 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   @Override
   public void execute() throws NoSuchStageException {
     // We can be disabled just for this sync.
-    boolean disabledThisSync = session.config.stagesToSync != null &&
-                               !session.config.stagesToSync.contains(STAGE_NAME);
-    if (disabledThisSync) {
+    boolean enabledThisSync = session.isEngineLocallyEnabled(STAGE_NAME);
+    if (!enabledThisSync) {
       Logger.debug(LOG_TAG, "Stage " + STAGE_NAME + " disabled just for this sync.");
       session.advance();
       return;
@@ -352,6 +351,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     this.resetLocal();
   }
 
+  @Override
   public Integer getStorageVersion() {
     return VersionConstants.CLIENTS_ENGINE_VERSION;
   }
