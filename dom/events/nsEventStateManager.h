@@ -28,10 +28,10 @@ class EnterLeaveDispatcher;
 class nsIMarkupDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
-class nsMouseWheelTransaction;
 
 namespace mozilla {
 class ScrollbarsForWheel;
+class WheelTransaction;
 namespace dom {
 class DataTransfer;
 class TabParent;
@@ -67,8 +67,9 @@ public:
 class nsEventStateManager : public nsSupportsWeakReference,
                             public nsIObserver
 {
-  friend class nsMouseWheelTransaction;
   friend class mozilla::ScrollbarsForWheel;
+  friend class mozilla::WheelTransaction;
+
 public:
 
   typedef mozilla::TimeStamp TimeStamp;
