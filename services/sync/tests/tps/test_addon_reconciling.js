@@ -19,10 +19,13 @@ const id = "restartless-xpi@tests.mozilla.org";
 
 // Install the add-on in 2 profiles.
 Phase("phase01", [
+  [Addons.verifyNot, [id]],
   [Addons.install, [id]],
+  [Addons.verify, [id], STATE_ENABLED],
   [Sync]
 ]);
 Phase("phase02", [
+  [Addons.verifyNot, [id]],
   [Sync],
   [Addons.verify, [id], STATE_ENABLED]
 ]);
@@ -33,7 +36,9 @@ Phase("phase03", [
   [Addons.setEnabled, [id], STATE_DISABLED],
 ]);
 Phase("phase04", [
+  [EnsureTracking],
   [Addons.uninstall, [id]],
+  [Sync]
 ]);
 
 // When we sync, the uninstall should take precedence because it was newer.
