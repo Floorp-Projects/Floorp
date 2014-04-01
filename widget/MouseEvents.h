@@ -277,6 +277,15 @@ public:
   {
     return message == NS_CONTEXTMENU && context == eContextMenuKey;
   }
+
+  /**
+   * Returns true if the event is a real mouse event.  Otherwise, i.e., it's
+   * a synthesized event by scroll or something, returns false.
+   */
+  bool IsReal() const
+  {
+    return reason == eReal;
+  }
 };
 
 /******************************************************************************

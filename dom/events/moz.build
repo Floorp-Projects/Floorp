@@ -104,6 +104,7 @@ UNIFIED_SOURCES += [
     'TransitionEvent.cpp',
     'UIEvent.cpp',
     'WheelEvent.cpp',
+    'WheelHandlingHelper.cpp',
     'XULCommandEvent.cpp',
 ]
 
