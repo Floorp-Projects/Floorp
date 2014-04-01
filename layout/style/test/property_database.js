@@ -1925,11 +1925,6 @@ var gCSSProperties = {
 		"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
 		].concat(validGradientAndElementValues),
 		invalid_values: [
-			"-moz-element(#a:1)",
-			"-moz-element(a#a)",
-			"-moz-element(#a a)",
-			"-moz-element(#a+a)",
-			"-moz-element(#a()",
 		].concat(invalidGradientAndElementValues)
 	},
 	"background-origin": {
