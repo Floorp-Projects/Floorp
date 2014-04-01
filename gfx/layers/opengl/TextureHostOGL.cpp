@@ -63,13 +63,7 @@ CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
 {
   RefPtr<DeprecatedTextureHost> result = nullptr;
 
-  if (aDeprecatedTextureHostFlags & TEXTURE_HOST_TILED) {
-    result = new TiledDeprecatedTextureHostOGL();
-  } else {
-    result = new TextureImageDeprecatedTextureHostOGL();
-  }
-
-  NS_ASSERTION(result, "Result should have been created.");
+  result = new TextureImageDeprecatedTextureHostOGL();
 
   result->SetFlags(aTextureFlags);
   return result.forget();
@@ -807,138 +801,11 @@ TextureImageDeprecatedTextureHostOGL::Lock()
   return true;
 }
 
-TiledDeprecatedTextureHostOGL::~TiledDeprecatedTextureHostOGL()
-{
-  DeleteTextures();
-}
-
-void
-TiledDeprecatedTextureHostOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
-{
-  mGL->fActiveTexture(aTextureUnit);
-  mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
-  SetFilter(mGL, aFilter);
-}
-
-static void
-GetFormatAndTileForImageFormat(gfxImageFormat aFormat,
-                               GLenum& aOutFormat,
-                               GLenum& aOutType)
-{
-  if (aFormat == gfxImageFormat::RGB16_565) {
-    aOutFormat = LOCAL_GL_RGB;
-    aOutType = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-  } else {
-    aOutFormat = LOCAL_GL_RGBA;
-    aOutType = LOCAL_GL_UNSIGNED_BYTE;
-  }
-}
-
-void
-TiledDeprecatedTextureHostOGL::SetCompositor(Compositor* aCompositor)
-{
-  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
-  if (mGL && !glCompositor) {
-    DeleteTextures();
-  }
-  mGL = glCompositor ? glCompositor->gl() : nullptr;
-}
-
-void
-TiledDeprecatedTextureHostOGL::DeleteTextures()
-{
-  if (mTextureHandle) {
-    if (mGL->MakeCurrent()) {
-      mGL->fDeleteTextures(1, &mTextureHandle);
-
-      gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
-                                            mGLFormat, GetTileType(),
-                                            TILEDLAYERBUFFER_TILE_SIZE);
-    } else if (mGL->IsDestroyed()) {
-      // if MakeCurrent failed because the context was already destoyed, it means
-      // the driver already freed the texture memory underneith us, so it should
-      // not count as a leak.
-      gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
-                                            mGLFormat, GetTileType(),
-                                            TILEDLAYERBUFFER_TILE_SIZE);
-    }
-
-    mTextureHandle = 0;
-  }
-}
-
-void
-TiledDeprecatedTextureHostOGL::Update(gfxReusableSurfaceWrapper* aReusableSurface, TextureFlags aFlags, const gfx::IntSize& aSize)
-{
-  mSize = aSize;
-  if (!mGL->MakeCurrent()) {
-    return;
-  }
-
-  if (aFlags & TEXTURE_NEW_TILE) {
-    SetFlags(aFlags);
-    mGL->fGenTextures(1, &mTextureHandle);
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
-    mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-    mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-    ClearCachedFilter();
-  } else {
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextureHandle);
-    // We're re-using a texture, but the format may change. Update the memory
-    // reporter with a free and alloc (below) using the old and new formats.
-    gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryFreed,
-                                          mGLFormat, GetTileType(),
-                                          TILEDLAYERBUFFER_TILE_SIZE);
-  }
-
-  GLenum type;
-  GetFormatAndTileForImageFormat(aReusableSurface->Format(), mGLFormat, type);
-
-  const unsigned char* buf = aReusableSurface->GetReadOnlyData();
-  mGL->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, mGLFormat,
-                   TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE, 0,
-                   mGLFormat, type, buf);
-
-  gl::GfxTexturesReporter::UpdateAmount(gl::GfxTexturesReporter::MemoryAllocated,
-                                        mGLFormat, type,
-                                        TILEDLAYERBUFFER_TILE_SIZE);
-
-  if (mGLFormat == LOCAL_GL_RGB) {
-    mFormat = SurfaceFormat::R8G8B8X8;
-  } else {
-    mFormat = SurfaceFormat::B8G8R8A8;
-  }
-}
-
-bool
-TiledDeprecatedTextureHostOGL::Lock()
-{
-  if (!mTextureHandle) {
-    NS_WARNING("TiledDeprecatedTextureHostOGL not ready to be composited");
-    return false;
-  }
-
-  if (!mGL->MakeCurrent()) {
-    return false;
-  }
-  mGL->fActiveTexture(LOCAL_GL_TEXTURE0);
-
-  return true;
-}
-
 TemporaryRef<gfx::DataSourceSurface>
 TextureImageDeprecatedTextureHostOGL::GetAsSurface() {
   RefPtr<gfx::DataSourceSurface> surf =
     IsValid() ? ReadBackSurface(mGL, mTexture->GetTextureID(),
                                 false, mTexture->GetTextureFormat())
-              : nullptr;
-  return surf.forget();
-}
-
-TemporaryRef<gfx::DataSourceSurface>
-TiledDeprecatedTextureHostOGL::GetAsSurface() {
-  RefPtr<DataSourceSurface> surf =
-    IsValid() ? ReadBackSurface(mGL, mTextureHandle, false, GetFormat())
               : nullptr;
   return surf.forget();
 }
