@@ -29,6 +29,21 @@ public:
         jContainerConstructor = AndroidBridge::GetMethodID(
             env, jNativeJSContainer, "<init>", "(J)V");
         MOZ_ASSERT(jContainerConstructor);
+
+        jNativeJSObject = AndroidBridge::GetClassGlobalRef(
+            env, "org/mozilla/gecko/util/NativeJSObject");
+        MOZ_ASSERT(jNativeJSObject);
+        jObjectContainer = AndroidBridge::GetFieldID(
+            env, jNativeJSObject, "mContainer",
+            "Lorg/mozilla/gecko/util/NativeJSContainer;");
+        MOZ_ASSERT(jObjectContainer);
+        jObjectJSObject = AndroidBridge::GetFieldID(
+            env, jNativeJSObject, "mJSObject", "J");
+        MOZ_ASSERT(jObjectJSObject);
+        jObjectConstructor = AndroidBridge::GetMethodID(
+            env, jNativeJSObject, "<init>",
+            "(Lorg/mozilla/gecko/util/NativeJSObject;J)V");
+        MOZ_ASSERT(jContainerConstructor);
     }
 
     static jobject CreateInstance(JNIEnv* env, JSContext* cx,
@@ -80,6 +95,41 @@ public:
         return CreateInstance(env, new NativeJSContainer(cx, Move(buffer)));
     }
 
+    static jobject GetInstanceFromObject(JNIEnv* env, jobject object) {
+        MOZ_ASSERT(object);
+        AutoLocalJNIFrame frame(env, 1);
+
+        const jobject instance = env->GetObjectField(object, jObjectContainer);
+        MOZ_ASSERT(instance);
+        return frame.Pop(instance);
+    }
+
+    static JSContext* GetContextFromObject(JNIEnv* env, jobject object) {
+        MOZ_ASSERT(object);
+        NativeJSContainer* const container =
+            FromInstance(env, GetInstanceFromObject(env, object));
+        if (!container) {
+            return nullptr;
+        }
+        return container->mThreadContext;
+    }
+
+    static JSObject* GetObjectFromObject(JNIEnv* env, jobject object) {
+        MOZ_ASSERT(object);
+        NativeJSContainer* const container =
+            FromInstance(env, GetInstanceFromObject(env, object));
+        if (!container ||
+            !container->EnsureObject(env)) { // Do thread check
+            return nullptr;
+        }
+        const jlong jsObject = env->GetLongField(object, jObjectJSObject);
+        if (!jsObject) {
+            // 0 for mJSObject field means it's the root object of the container
+            return static_cast<JSObject*>(container->mJSObject);
+        }
+        return reinterpret_cast<JSObject*>(static_cast<uintptr_t>(jsObject));
+    }
+
     // Make sure we have a JSObject and deserialize if necessary/possible
     bool EnsureObject(JNIEnv* env) {
         if (mJSObject) {
@@ -117,6 +167,10 @@ private:
     static jclass jNativeJSContainer;
     static jfieldID jContainerNativeObject;
     static jmethodID jContainerConstructor;
+    static jclass jNativeJSObject;
+    static jfieldID jObjectContainer;
+    static jfieldID jObjectJSObject;
+    static jmethodID jObjectConstructor;
 
     static jobject CreateInstance(JNIEnv* env,
                                   NativeJSContainer* nativeObject) {
@@ -167,6 +221,10 @@ private:
 jclass NativeJSContainer::jNativeJSContainer = 0;
 jfieldID NativeJSContainer::jContainerNativeObject = 0;
 jmethodID NativeJSContainer::jContainerConstructor = 0;
+jclass NativeJSContainer::jNativeJSObject = 0;
+jfieldID NativeJSContainer::jObjectContainer = 0;
+jfieldID NativeJSContainer::jObjectJSObject = 0;
+jmethodID NativeJSContainer::jObjectConstructor = 0;
 
 jobject
 CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
@@ -176,6 +234,64 @@ CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
 
 } // namespace widget
 } // namespace mozilla
+
+namespace {
+
+class JSJNIString
+{
+public:
+    JSJNIString(JNIEnv* env, jstring str)
+        : mEnv(env)
+        , mJNIString(str)
+        , mJSString(!str ? nullptr :
+            reinterpret_cast<const jschar*>(env->GetStringChars(str, nullptr)))
+    {
+    }
+    ~JSJNIString() {
+        if (mJNIString) {
+            mEnv->ReleaseStringChars(mJNIString,
+                reinterpret_cast<const jchar*>(mJSString));
+        }
+    }
+    operator const jschar*() const {
+        return mJSString;
+    }
+    size_t Length() const {
+        return static_cast<size_t>(mEnv->GetStringLength(mJNIString));
+    }
+private:
+    JNIEnv* const mEnv;
+    const jstring mJNIString;
+    const jschar* const mJSString;
+};
+
+bool
+CheckJSCall(JNIEnv* env, bool result) {
+    if (!result) {
+        AndroidBridge::ThrowException(env,
+            "java/lang/UnsupportedOperationException", "JSAPI call failed");
+    }
+    return result;
+}
+
+bool
+CheckJNIArgument(JNIEnv* env, jobject arg) {
+    if (!arg) {
+        AndroidBridge::ThrowException(env,
+            "java/lang/IllegalArgumentException", "Null argument");
+        return false;
+    }
+    return true;
+}
+
+bool
+AppendJSON(const jschar* buf, uint32_t len, void* data)
+{
+    static_cast<nsAutoString*>(data)->Append(buf, len);
+    return true;
+}
+
+} // namespace
 
 extern "C" {
 
@@ -191,6 +307,28 @@ Java_org_mozilla_gecko_util_NativeJSContainer_clone(JNIEnv* env, jobject instanc
 {
     MOZ_ASSERT(env);
     return NativeJSContainer::CloneInstance(env, instance);
+}
+
+NS_EXPORT jstring JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_toString(JNIEnv* env, jobject instance)
+{
+    MOZ_ASSERT(env);
+    MOZ_ASSERT(instance);
+
+    JSContext* const cx = NativeJSContainer::GetContextFromObject(env, instance);
+    const JS::RootedObject object(cx, NativeJSContainer::GetObjectFromObject(env, instance));
+    JS::RootedValue value(cx, JS::ObjectValue(*object));
+    nsAutoString json;
+
+    if (!object ||
+        !CheckJSCall(env,
+            JS_Stringify(cx, &value, JS::NullPtr(), JS::NullHandleValue, AppendJSON, &json))) {
+        return nullptr;
+    }
+    jstring ret = env->NewString(reinterpret_cast<const jchar*>(json.get()), json.Length());
+    AndroidBridge::HandleUncaughtException(env);
+    MOZ_ASSERT(ret);
+    return ret;
 }
 
 } // extern "C"
