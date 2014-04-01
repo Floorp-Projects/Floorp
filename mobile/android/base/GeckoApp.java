@@ -719,7 +719,7 @@ public abstract class GeckoApp
                 setLocale(message.getString("locale"));
             } else if (event.equals("NativeApp:IsDebuggable")) {
                 JSONObject ret = new JSONObject();
-                ret.put("isDebuggable", getIsDebuggable() ? "true" : "false");
+                ret.put("isDebuggable", getIsDebuggable());
                 EventDispatcher.sendResponse(message, ret);
             } else if (event.equals("SystemUI:Visibility")) {
                 setSystemUiVisible(message.getBoolean("visible"));
