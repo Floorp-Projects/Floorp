@@ -170,7 +170,7 @@ BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
          "dbg.onDebuggerStatement = function () { hits++; };\n"
          "debuggee.eval('debugger;');\n"
          "hits;\n",
-         v.address());
+         &v);
     CHECK_SAME(v, JSVAL_ONE);
 
     {
@@ -180,7 +180,7 @@ BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 
     EVAL("debuggee.eval('debugger; debugger; debugger;');\n"
          "hits;\n",
-         v.address());
+         &v);
     CHECK_SAME(v, INT_TO_JSVAL(4));
 
     return true;
@@ -232,7 +232,7 @@ bool testIndirectEval(JS::HandleObject scope, const char *code)
     }
 
     JS::RootedValue hitsv(cx);
-    EVAL("hits", hitsv.address());
+    EVAL("hits", &hitsv);
     CHECK_SAME(hitsv, INT_TO_JSVAL(1));
     return true;
 }

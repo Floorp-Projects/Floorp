@@ -47,7 +47,7 @@ BEGIN_TEST(testGCOutOfMemory)
          "        --i;"
          "        array.push({});"
          "    }"
-         "})();", root.address());
+         "})();", &root);
     CHECK_EQUAL(errorCount, 1);
     return true;
 }
