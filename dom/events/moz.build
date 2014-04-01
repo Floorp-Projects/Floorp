@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'content_events'
 
 EXPORTS += [
-    'nsDOMEventTargetHelper.h',
     'nsDOMKeyNameList.h',
     'nsEventNameList.h',
     'nsEventStates.h',
@@ -24,6 +23,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'AsyncEventDispatcher.h',
+    'DOMEventTargetHelper.h',
     'EventDispatcher.h',
     'EventListenerManager.h',
     'EventStateManager.h',
@@ -76,6 +76,7 @@ UNIFIED_SOURCES += [
     'DataContainerEvent.cpp',
     'DataTransfer.cpp',
     'DeviceMotionEvent.cpp',
+    'DOMEventTargetHelper.cpp',
     'DragEvent.cpp',
     'Event.cpp',
     'EventDispatcher.cpp',
@@ -92,7 +93,6 @@ UNIFIED_SOURCES += [
     'MutationEvent.cpp',
     'NotifyAudioAvailableEvent.cpp',
     'NotifyPaintEvent.cpp',
-    'nsDOMEventTargetHelper.cpp',
     'nsJSEventListener.cpp',
     'nsPaintRequest.cpp',
     'PointerEvent.cpp',

@@ -234,24 +234,24 @@ XMLHttpRequestAuthPrompt::PromptPassword(const char16_t* aDialogTitle,
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
-                                                  nsDOMEventTargetHelper)
+                                                  DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
-                                                nsDOMEventTargetHelper)
+                                                DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, DOMEventTargetHelper)
 
 void
 nsXHREventTarget::DisconnectFromOwner()
 {
-  nsDOMEventTargetHelper::DisconnectFromOwner();
+  DOMEventTargetHelper::DisconnectFromOwner();
 }
 
 /////////////////////////////////////////////
@@ -450,7 +450,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsXMLHttpRequest)
   return tmp->
-    IsBlackAndDoesNotNeedTracing(static_cast<nsDOMEventTargetHelper*>(tmp));
+    IsBlackAndDoesNotNeedTracing(static_cast<DOMEventTargetHelper*>(tmp));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsXMLHttpRequest)
@@ -1410,7 +1410,7 @@ nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 }
 
 void
-nsXMLHttpRequest::DispatchProgressEvent(nsDOMEventTargetHelper* aTarget,
+nsXMLHttpRequest::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
                                         const nsAString& aType,
                                         bool aLengthComputable,
                                         uint64_t aLoaded, uint64_t aTotal)
@@ -2020,7 +2020,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     // principal.
     const nsAString& emptyStr = EmptyString();
     nsCOMPtr<nsIDOMDocument> responseDoc;
-    nsIGlobalObject* global = nsDOMEventTargetHelper::GetParentObject();
+    nsIGlobalObject* global = DOMEventTargetHelper::GetParentObject();
     rv = NS_NewDOMDocument(getter_AddRefs(responseDoc),
                            emptyStr, emptyStr, nullptr, docURI,
                            baseURI, mPrincipal, true, global,

@@ -94,7 +94,6 @@ class nsScreen;
 class nsHistory;
 class nsGlobalWindowObserver;
 class nsGlobalWindow;
-class nsDOMEventTargetHelper;
 class nsDOMWindowUtils;
 class nsIIdleService;
 struct nsIntSize;
@@ -103,6 +102,7 @@ struct nsRect;
 class nsWindowSizes;
 
 namespace mozilla {
+class DOMEventTargetHelper;
 class Selection;
 namespace dom {
 class BarProp;
@@ -684,8 +684,8 @@ public:
 
   void UnmarkGrayTimers();
 
-  void AddEventTargetObject(nsDOMEventTargetHelper* aObject);
-  void RemoveEventTargetObject(nsDOMEventTargetHelper* aObject);
+  void AddEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
+  void RemoveEventTargetObject(mozilla::DOMEventTargetHelper* aObject);
 
   void NotifyIdleObserver(IdleObserverHolder* aIdleObserverHolder,
                           bool aCallOnidle);
@@ -1546,7 +1546,7 @@ protected:
   // currently enabled on this window.
   bool                          mAreDialogsEnabled;
 
-  nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
+  nsTHashtable<nsPtrHashKey<mozilla::DOMEventTargetHelper> > mEventTargetObjects;
 
   nsTArray<uint32_t> mEnabledSensors;
 

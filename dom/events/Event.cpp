@@ -8,6 +8,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MiscEvents.h"
@@ -18,7 +19,6 @@
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsError.h"
 #include "nsGlobalWindow.h"
 #include "nsIFrame.h"
@@ -1056,7 +1056,7 @@ Event::SetOwner(mozilla::dom::EventTarget* aOwner)
     return;
   }
 
-  nsCOMPtr<nsDOMEventTargetHelper> eth = do_QueryInterface(aOwner);
+  nsCOMPtr<DOMEventTargetHelper> eth = do_QueryInterface(aOwner);
   if (eth) {
     mOwner = eth->GetOwner();
     return;

@@ -10,16 +10,16 @@
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "MediaBufferDecoder.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TypedArray.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 #include "js/TypeDecls.h"
 #include "nsIMemoryReporter.h"
-#include "mozilla/MemoryReporting.h"
 
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See content/media/DOMMediaStream.h for more fun!
@@ -62,7 +62,7 @@ class ScriptProcessorNode;
 class WaveShaperNode;
 class PeriodicWave;
 
-class AudioContext MOZ_FINAL : public nsDOMEventTargetHelper,
+class AudioContext MOZ_FINAL : public DOMEventTargetHelper,
                                public nsIMemoryReporter
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
@@ -75,7 +75,7 @@ class AudioContext MOZ_FINAL : public nsDOMEventTargetHelper,
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioContext,
-                                           nsDOMEventTargetHelper)
+                                           DOMEventTargetHelper)
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
   nsPIDOMWindow* GetParentObject() const
@@ -90,7 +90,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  using nsDOMEventTargetHelper::DispatchTrustedEvent;
+  using DOMEventTargetHelper::DispatchTrustedEvent;
 
   // Constructor for regular AudioContext
   static already_AddRefed<AudioContext>

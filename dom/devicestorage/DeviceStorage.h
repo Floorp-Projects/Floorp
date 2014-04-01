@@ -11,7 +11,7 @@
 #include "nsIFile.h"
 #include "nsIPrincipal.h"
 #include "nsIObserver.h"
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/DOMRequest.h"
@@ -151,7 +151,7 @@ class FileUpdateDispatcher MOZ_FINAL
 };
 
 class nsDOMDeviceStorage MOZ_FINAL
-  : public nsDOMEventTargetHelper
+  : public mozilla::DOMEventTargetHelper
   , public nsIDOMDeviceStorage
   , public nsIObserver
 {

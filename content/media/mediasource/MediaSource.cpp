@@ -271,7 +271,7 @@ MediaSource::Detach()
 }
 
 MediaSource::MediaSource(nsPIDOMWindow* aWindow)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mDuration(UnspecifiedNaN<double>())
   , mDecoder(nullptr)
   , mReadyState(MediaSourceReadyState::Closed)
@@ -370,15 +370,15 @@ MediaSource::NotifyEvicted(double aStart, double aEnd)
   mSourceBuffers->Evict(aStart, aEnd);
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(MediaSource, nsDOMEventTargetHelper,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_2(MediaSource, DOMEventTargetHelper,
                                      mSourceBuffers, mActiveSourceBuffers)
 
-NS_IMPL_ADDREF_INHERITED(MediaSource, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(MediaSource, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(MediaSource, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(MediaSource, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaSource)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::MediaSource)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 } // namespace dom
 

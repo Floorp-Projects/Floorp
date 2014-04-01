@@ -44,7 +44,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
 }
 
 nsScreen::nsScreen(nsPIDOMWindow* aWindow)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mEventListener(nullptr)
 {
 }
@@ -59,10 +59,10 @@ nsScreen::~nsScreen()
 // QueryInterface implementation for nsScreen
 NS_INTERFACE_MAP_BEGIN(nsScreen)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScreen)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(nsScreen, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(nsScreen, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(nsScreen, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(nsScreen, DOMEventTargetHelper)
 
 int32_t
 nsScreen::GetPixelDepth(ErrorResult& aRv)

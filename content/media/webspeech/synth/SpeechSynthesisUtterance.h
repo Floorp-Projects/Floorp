@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_SpeechSynthesisUtterance_h
 #define mozilla_dom_SpeechSynthesisUtterance_h
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsCOMPtr.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsString.h"
 #include "js/TypeDecls.h"
 
@@ -21,7 +21,7 @@ class SpeechSynthesisVoice;
 class SpeechSynthesis;
 class nsSynthVoiceRegistry;
 
-class SpeechSynthesisUtterance MOZ_FINAL : public nsDOMEventTargetHelper
+class SpeechSynthesisUtterance MOZ_FINAL : public DOMEventTargetHelper
 {
   friend class SpeechSynthesis;
   friend class nsSpeechTask;
@@ -33,8 +33,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SpeechSynthesisUtterance,
-                                           nsDOMEventTargetHelper)
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
+                                           DOMEventTargetHelper)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   nsISupports* GetParentObject() const;
 

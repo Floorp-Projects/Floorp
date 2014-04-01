@@ -46,7 +46,7 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
 }
 
 TelephonyCall::TelephonyCall(nsPIDOMWindow* aOwner)
-  : nsDOMEventTargetHelper(aOwner),
+  : DOMEventTargetHelper(aOwner),
     mCallIndex(kOutgoingPlaceholderCallIndex),
     mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN),
     mLive(false)
@@ -181,16 +181,16 @@ TelephonyCall::ChangeGroup(TelephonyCallGroup* aGroup)
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_3(TelephonyCall,
-                                     nsDOMEventTargetHelper,
+                                     DOMEventTargetHelper,
                                      mTelephony,
                                      mError,
                                      mGroup);
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TelephonyCall)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(TelephonyCall, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(TelephonyCall, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(TelephonyCall, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(TelephonyCall, DOMEventTargetHelper)
 
 // TelephonyCall WebIDL
 

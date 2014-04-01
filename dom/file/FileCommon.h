@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_file_filecommon_h__
 #define mozilla_dom_file_filecommon_h__
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsDebug.h"
 #include "nsString.h"
 #include "nsTArray.h"

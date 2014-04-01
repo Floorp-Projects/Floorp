@@ -31,13 +31,13 @@ MediaStreamTrack::~MediaStreamTrack()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaStreamTrack, nsDOMEventTargetHelper,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaStreamTrack, DOMEventTargetHelper,
                                      mStream)
 
-NS_IMPL_ADDREF_INHERITED(MediaStreamTrack, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(MediaStreamTrack, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaStreamTrack)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 void
 MediaStreamTrack::GetId(nsAString& aID)

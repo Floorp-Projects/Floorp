@@ -138,7 +138,7 @@ DesktopNotification::DesktopNotification(const nsAString & title,
                                          const nsAString & iconURL,
                                          nsPIDOMWindow *aWindow,
                                          nsIPrincipal* principal)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mTitle(title)
   , mDescription(description)
   , mIconURL(iconURL)

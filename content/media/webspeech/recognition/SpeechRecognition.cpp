@@ -60,15 +60,15 @@ GetSpeechRecognitionLog()
 
 NS_INTERFACE_MAP_BEGIN(SpeechRecognition)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(SpeechRecognition, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(SpeechRecognition, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(SpeechRecognition, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(SpeechRecognition, DOMEventTargetHelper)
 
 struct SpeechRecognition::TestConfig SpeechRecognition::mTestConfig;
 
 SpeechRecognition::SpeechRecognition(nsPIDOMWindow* aOwnerWindow)
-  : nsDOMEventTargetHelper(aOwnerWindow)
+  : DOMEventTargetHelper(aOwnerWindow)
   , mEndpointer(kSAMPLE_RATE)
   , mAudioSamplesPerChunk(mEndpointer.FrameSize())
   , mSpeechDetectionTimer(do_CreateInstance(NS_TIMER_CONTRACTID))
