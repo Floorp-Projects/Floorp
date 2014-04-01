@@ -134,6 +134,8 @@ static int nr_crypto_nss_hmac(UCHAR *key, int keyl, UCHAR *buf, int bufl,
 
   hmac_ctx = PK11_CreateContextBySymKey(mech, CKA_SIGN,
                                         skey, &param);
+  if (!hmac_ctx)
+    goto abort;
 
   status = PK11_DigestBegin(hmac_ctx);
   if (status != SECSuccess)
