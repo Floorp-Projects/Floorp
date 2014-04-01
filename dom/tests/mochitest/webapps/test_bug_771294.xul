@@ -29,14 +29,17 @@ Cu.import("resource://gre/modules/PopupNotifications.jsm");
 
 let blocked = true;
 
-window.top.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIWebNavigation)
-          .QueryInterface(Ci.nsIDocShell)
-          .chromeEventHandler.ownerDocument.defaultView
-          .PopupNotifications.panel
-          .addEventListener("popupshowing", function() {
+function blockedListener() {
   blocked = false;
-}, false);
+}
+
+let panel = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
+                  .getInterface(Ci.nsIWebNavigation)
+                  .QueryInterface(Ci.nsIDocShell)
+                  .chromeEventHandler.ownerDocument.defaultView
+                  .PopupNotifications.panel;
+
+panel.addEventListener("popupshowing", blockedListener, false);
 
 Services.obs.addObserver(
   function observeInstalling() {
@@ -45,6 +48,7 @@ Services.obs.addObserver(
     // to process the install request and (hopefully not) show the doorhanger.
     setTimeout(function verify() {
       ok(blocked, "Install panel was blocked after immediate redirect");
+      panel.removeEventListener("popupshowing", blockedListener);
       SimpleTest.finish();
     }, 0);
   },

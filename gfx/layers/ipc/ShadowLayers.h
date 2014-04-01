@@ -135,7 +135,6 @@ class Transaction;
 class ShadowLayerForwarder : public CompositableForwarder
 {
   friend class AutoOpenSurface;
-  friend class DeprecatedTextureClientShmem;
   friend class ContentClientIncremental;
   friend class ClientLayerManager;
 
@@ -151,20 +150,9 @@ public:
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        TextureFlags aFlags) MOZ_OVERRIDE;
 
-  virtual void CreatedSingleBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptor& aDescriptor,
-                                   const TextureInfo& aTextureInfo,
-                                   const SurfaceDescriptor* aDescriptorOnWhite = nullptr) MOZ_OVERRIDE;
   virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
                                         const TextureInfo& aTextureInfo,
                                         const nsIntRect& aBufferRect) MOZ_OVERRIDE;
-  virtual void CreatedDoubleBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptor& aFrontDescriptor,
-                                   const SurfaceDescriptor& aBackDescriptor,
-                                   const TextureInfo& aTextureInfo,
-                                   const SurfaceDescriptor* aFrontDescriptorOnWhite = nullptr,
-                                   const SurfaceDescriptor* aBackDescriptorOnWhite = nullptr) MOZ_OVERRIDE;
-  virtual void DestroyThebesBuffer(CompositableClient* aCompositable) MOZ_OVERRIDE;
 
   /**
    * Adds an edit in the layers transaction in order to attach
@@ -267,25 +255,10 @@ public:
    */
   void AttachAsyncCompositable(PLayerTransactionChild* aLayer, uint64_t aID);
 
-  /**
-   * Communicate to the compositor that the texture identified by aLayer
-   * and aIdentifier has been updated to aImage.
-   */
-  virtual void UpdateTexture(CompositableClient* aCompositable,
-                             TextureIdentifier aTextureId,
-                             SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
-
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) MOZ_OVERRIDE;
 
   virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
-
-  /**
-   * Same as above, but performs an asynchronous layer transaction
-   */
-  virtual void UpdateTextureNoSwap(CompositableClient* aCompositable,
-                                   TextureIdentifier aTextureId,
-                                   SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
 
   /**
    * Communicate to the compositor that aRegion in the texture identified by aLayer

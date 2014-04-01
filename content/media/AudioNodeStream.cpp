@@ -239,7 +239,7 @@ AudioNodeStream::SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
 }
 
 uint32_t
-AudioNodeStream::ComputeFinalOuputChannelCount(uint32_t aInputChannelCount)
+AudioNodeStream::ComputedNumberOfChannels(uint32_t aInputChannelCount)
 {
   switch (mChannelCountMode) {
   case ChannelCountMode::Explicit:
@@ -298,7 +298,7 @@ AudioNodeStream::ObtainInputBlock(AudioChunk& aTmpChunk, uint32_t aPortIndex)
       GetAudioChannelsSuperset(outputChannelCount, chunk->mChannelData.Length());
   }
 
-  outputChannelCount = ComputeFinalOuputChannelCount(outputChannelCount);
+  outputChannelCount = ComputedNumberOfChannels(outputChannelCount);
 
   uint32_t inputChunkCount = inputChunks.Length();
   if (inputChunkCount == 0 ||

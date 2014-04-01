@@ -311,10 +311,9 @@ private:
   CompositingRenderTargetOGL* mWindowRenderTarget;
 #endif
 
-  /**
-   * VBO that has some basics in it for a textured quad, including vertex
-   * coords and texcoords.
-   */
+  /** VBO that has some basics in it for a textured quad,
+   *  including vertex coords and texcoords for both
+   *  flipped and unflipped textures */
   GLuint mQuadVBO;
 
   /**
@@ -367,14 +366,18 @@ private:
 
   GLintptr QuadVBOVertexOffset() { return 0; }
   GLintptr QuadVBOTexCoordOffset() { return sizeof(float)*4*2; }
+  GLintptr QuadVBOFlippedTexCoordOffset() { return sizeof(float)*8*2; }
 
   void BindQuadVBO();
   void QuadVBOVerticesAttrib(GLuint aAttribIndex);
   void QuadVBOTexCoordsAttrib(GLuint aAttribIndex);
+  void QuadVBOFlippedTexCoordsAttrib(GLuint aAttribIndex);
   void BindAndDrawQuad(GLuint aVertAttribIndex,
                        GLuint aTexCoordAttribIndex,
+                       bool aFlipped = false,
                        GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuad(ShaderProgramOGL *aProg,
+                       bool aFlipped = false,
                        GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                       const gfx3DMatrix& aTextureTransform,

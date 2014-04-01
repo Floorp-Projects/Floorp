@@ -7,8 +7,8 @@
 #define mozilla_dom_CellBroadcast_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsICellBroadcastProvider.h"
 #include "js/TypeDecls.h"
 
@@ -17,7 +17,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
-class CellBroadcast MOZ_FINAL : public nsDOMEventTargetHelper
+class CellBroadcast MOZ_FINAL : public DOMEventTargetHelper
 {
   /**
    * Class CellBroadcast doesn't actually inherit nsICellBroadcastListener.
@@ -31,7 +31,7 @@ class CellBroadcast MOZ_FINAL : public nsDOMEventTargetHelper
 public:
   NS_DECL_NSICELLBROADCASTLISTENER
 
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
   static already_AddRefed<CellBroadcast>
   Create(nsPIDOMWindow* aOwner, ErrorResult& aRv);

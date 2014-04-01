@@ -242,39 +242,6 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
   mNextPromise->ResolveInternal(cx, value, Promise::SyncTask);
 }
 
-// SimpleWrapperPromiseCallback
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(SimpleWrapperPromiseCallback,
-                                     PromiseCallback,
-                                     mPromise, mCallback)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SimpleWrapperPromiseCallback)
-NS_INTERFACE_MAP_END_INHERITING(PromiseCallback)
-
-NS_IMPL_ADDREF_INHERITED(SimpleWrapperPromiseCallback, PromiseCallback)
-NS_IMPL_RELEASE_INHERITED(SimpleWrapperPromiseCallback, PromiseCallback)
-
-SimpleWrapperPromiseCallback::SimpleWrapperPromiseCallback(Promise* aPromise,
-                                                           AnyCallback* aCallback)
-  : mPromise(aPromise)
-  , mCallback(aCallback)
-{
-  MOZ_ASSERT(aPromise);
-  MOZ_COUNT_CTOR(SimpleWrapperPromiseCallback);
-}
-
-SimpleWrapperPromiseCallback::~SimpleWrapperPromiseCallback()
-{
-  MOZ_COUNT_DTOR(SimpleWrapperPromiseCallback);
-}
-
-void
-SimpleWrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
-{
-  ErrorResult rv;
-  mCallback->Call(mPromise, aValue, rv);
-}
-
 // NativePromiseCallback
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_1(NativePromiseCallback,

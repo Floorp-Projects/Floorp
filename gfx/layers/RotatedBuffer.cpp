@@ -23,7 +23,7 @@
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
 #include "mozilla/gfx/Types.h"          // for ExtendMode::ExtendMode::CLAMP, etc
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowableLayer
-#include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient
+#include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "nsSize.h"                     // for nsIntSize
 #include "gfx2DGlue.h"
 
@@ -289,9 +289,6 @@ BorrowDrawTarget::ReturnDrawTarget(gfx::DrawTarget*& aReturned)
 gfxContentType
 RotatedContentBuffer::BufferContentType()
 {
-  if (mDeprecatedBufferProvider) {
-    return mDeprecatedBufferProvider->GetContentType();
-  }
   if (mBufferProvider || mDTBuffer) {
     SurfaceFormat format;
 
@@ -319,9 +316,7 @@ RotatedContentBuffer::EnsureBuffer()
 {
   NS_ASSERTION(!mLoanedDrawTarget, "Loaned draw target must be returned");
   if (!mDTBuffer) {
-    if (mDeprecatedBufferProvider) {
-      mDTBuffer = mDeprecatedBufferProvider->LockDrawTarget();
-    } else if (mBufferProvider) {
+    if (mBufferProvider) {
       mDTBuffer = mBufferProvider->AsTextureClientDrawTarget()->GetAsDrawTarget();
     }
   }
@@ -335,9 +330,7 @@ RotatedContentBuffer::EnsureBufferOnWhite()
 {
   NS_ASSERTION(!mLoanedDrawTarget, "Loaned draw target must be returned");
   if (!mDTBufferOnWhite) {
-    if (mDeprecatedBufferProviderOnWhite) {
-      mDTBufferOnWhite = mDeprecatedBufferProviderOnWhite->LockDrawTarget();
-    } else if (mBufferProviderOnWhite) {
+    if (mBufferProviderOnWhite) {
       mDTBufferOnWhite =
         mBufferProviderOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
     }
@@ -350,13 +343,13 @@ RotatedContentBuffer::EnsureBufferOnWhite()
 bool
 RotatedContentBuffer::HaveBuffer() const
 {
-  return mDTBuffer || mDeprecatedBufferProvider || mBufferProvider;
+  return mDTBuffer || mBufferProvider;
 }
 
 bool
 RotatedContentBuffer::HaveBufferOnWhite() const
 {
-  return mDTBufferOnWhite || mDeprecatedBufferProviderOnWhite || mBufferProviderOnWhite;
+  return mDTBufferOnWhite || mBufferProviderOnWhite;
 }
 
 static void

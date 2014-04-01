@@ -20,7 +20,7 @@ var FullZoom = {
   updateBackgroundTabs: undefined,
 
   // One of the possible values for the mousewheel.* preferences.
-  // From nsEventStateManager.h.
+  // From EventStateManager.h.
   ACTION_ZOOM: 3,
 
   // This maps the browser to monotonically increasing integer
@@ -84,7 +84,7 @@ var FullZoom = {
 
   _handleMouseScrolled: function FullZoom__handleMouseScrolled(event) {
     // Construct the "mousewheel action" pref key corresponding to this event.
-    // Based on nsEventStateManager::WheelPrefs::GetBasePrefName().
+    // Based on EventStateManager::WheelPrefs::GetBasePrefName().
     var pref = "mousewheel.";
 
     var pressedModifierCount = event.shiftKey + event.ctrlKey + event.altKey +
@@ -119,7 +119,7 @@ var FullZoom = {
 
     // We have to call _applyZoomToPref in a timeout because we handle the
     // event before the event state manager has a chance to apply the zoom
-    // during nsEventStateManager::PostHandleEvent.
+    // during EventStateManager::PostHandleEvent.
     let browser = gBrowser.selectedBrowser;
     let token = this._getBrowserToken(browser);
     window.setTimeout(function () {

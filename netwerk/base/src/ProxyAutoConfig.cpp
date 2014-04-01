@@ -634,7 +634,7 @@ ProxyAutoConfig::SetupJS()
   options.setFileAndLine(mPACURI.get(), 1);
   JS::Rooted<JSScript*> script(cx, JS_CompileScript(cx, global, mPACScript.get(),
                                                     mPACScript.Length(), options));
-  if (!script || !JS_ExecuteScript(cx, global, script, nullptr)) {
+  if (!script || !JS_ExecuteScript(cx, global, script)) {
     nsString alertMessage(NS_LITERAL_STRING("PAC file failed to install from "));
     if (isDataURI) {
       alertMessage += NS_LITERAL_STRING("data: URI");

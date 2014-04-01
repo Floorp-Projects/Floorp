@@ -63,6 +63,12 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 // Length of the "var-" prefix of custom property names.
 #define VAR_PREFIX_LENGTH 4
 
+// Maximum number of repetitions for the repeat() function
+// in the grid-template-columns and grid-template-rows properties,
+// to limit high memory usage from small stylesheets.
+// Must be a positive integer. Should be large-ish.
+#define GRID_TEMPLATE_MAX_REPETITIONS 10000
+
 // End-of-array marker for mask arguments to ParseBitmaskValues
 #define MASK_END_VALUE  (-1)
 
@@ -657,10 +663,12 @@ protected:
   //
   // If aValue is already a eCSSUnit_List, append to that list.
   CSSParseResult ParseGridLineNames(nsCSSValue& aValue);
+  bool ParseGridLineNameListRepeat(nsCSSValueList** aTailPtr);
   bool ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue);
   bool ParseGridTrackBreadth(nsCSSValue& aValue);
   CSSParseResult ParseGridTrackSize(nsCSSValue& aValue);
   bool ParseGridAutoColumnsRows(nsCSSProperty aPropID);
+  bool ParseGridTrackListRepeat(nsCSSValueList** aTailPtr);
 
   // Assuming a [ <line-names>? ] has already been parsed,
   // parse the rest of a <track-list>.
@@ -7006,6 +7014,59 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
   }
 }
 
+// Assuming the 'repeat(' function token has already been consumed,
+// parse the rest of repeat(<positive-integer>, <line-names>+)
+// Append to the linked list whose end is given by |aTailPtr|,
+// and updated |aTailPtr| to point to the new end of the list.
+bool
+CSSParserImpl::ParseGridLineNameListRepeat(nsCSSValueList** aTailPtr)
+{
+  if (!(GetToken(true) &&
+        mToken.mType == eCSSToken_Number &&
+        mToken.mIntegerValid &&
+        mToken.mInteger > 0)) {
+    SkipUntil(')');
+    return false;
+  }
+  int32_t repetitions = std::min(mToken.mInteger,
+                                 GRID_TEMPLATE_MAX_REPETITIONS);
+  if (!ExpectSymbol(',', true)) {
+    SkipUntil(')');
+    return false;
+  }
+
+  // Parse at least one <line-names>
+  nsCSSValueList* tail = *aTailPtr;
+  do {
+    tail->mNext = new nsCSSValueList;
+    tail = tail->mNext;
+    if (ParseGridLineNames(tail->mValue) != CSSParseResult::Ok) {
+      SkipUntil(')');
+      return false;
+    }
+  } while (!ExpectSymbol(')', true));
+  nsCSSValueList* firstRepeatedItem = (*aTailPtr)->mNext;
+  nsCSSValueList* lastRepeatedItem = tail;
+
+  // Our repeated items are already in the target list once,
+  // so they need to be repeated |repetitions - 1| more times.
+  MOZ_ASSERT(repetitions > 0, "Expected positive repetitions");
+  while (--repetitions) {
+    nsCSSValueList* repeatedItem = firstRepeatedItem;
+    for (;;) {
+      tail->mNext = new nsCSSValueList;
+      tail = tail->mNext;
+      tail->mValue = repeatedItem->mValue;
+      if (repeatedItem == lastRepeatedItem) {
+        break;
+      }
+      repeatedItem = repeatedItem->mNext;
+    }
+  }
+  *aTailPtr = tail;
+  return true;
+}
+
 // Assuming a 'subgrid' keyword was already consumed, parse <line-name-list>?
 bool
 CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
@@ -7015,17 +7076,31 @@ CSSParserImpl::ParseOptionalLineNameListAfterSubgrid(nsCSSValue& aValue)
   item->mValue.SetIntValue(NS_STYLE_GRID_TEMPLATE_SUBGRID,
                            eCSSUnit_Enumerated);
   for (;;) {
-    nsCSSValue lineNames;
-    CSSParseResult result = ParseGridLineNames(lineNames);
-    if (result == CSSParseResult::NotFound) {
+    // First try to parse repeat(<positive-integer>, <line-names>+)
+    if (!GetToken(true)) {
       return true;
     }
-    if (result == CSSParseResult::Error) {
-      return false;
+    if (mToken.mType == eCSSToken_Function &&
+        mToken.mIdent.LowerCaseEqualsLiteral("repeat")) {
+      if (!ParseGridLineNameListRepeat(&item)) {
+        return false;
+      }
+    } else {
+      UngetToken();
+
+      // This was not a repeat() function. Try to parse <line-names>.
+      nsCSSValue lineNames;
+      CSSParseResult result = ParseGridLineNames(lineNames);
+      if (result == CSSParseResult::NotFound) {
+        return true;
+      }
+      if (result == CSSParseResult::Error) {
+        return false;
+      }
+      item->mNext = new nsCSSValueList;
+      item = item->mNext;
+      item->mValue = lineNames;
     }
-    item->mNext = new nsCSSValueList;
-    item = item->mNext;
-    item->mValue = lineNames;
   }
 }
 
@@ -7099,46 +7174,268 @@ bool
 CSSParserImpl::ParseGridTrackListWithFirstLineNames(nsCSSValue& aValue,
                                                     const nsCSSValue& aFirstLineNames)
 {
-  nsAutoPtr<nsCSSValueList> firstTrackSizeItem(new nsCSSValueList);
+  nsCSSValueList* firstLineNamesItem = aValue.SetListValue();
+  firstLineNamesItem->mValue = aFirstLineNames;
 
-  // FIXME: add repeat()
-  if (ParseGridTrackSize(firstTrackSizeItem->mValue) != CSSParseResult::Ok) {
-    // We need at least one <track-size>,
-    // so even CSSParseResult::NotFound is an error here.
-    return false;
-  }
-
-  nsCSSValueList* item = firstTrackSizeItem;
+  // This function is trying to parse <track-list>, which is
+  //   [ <line-names>? [ <track-size> | <repeat()> ] ]+ <line-names>?
+  // and we're already past the first "<line-names>?".
+  //
+  // Each iteration of the following loop attempts to parse either a
+  // repeat() or a <track-size> expression, and then an (optional)
+  // <line-names> expression.
+  //
+  // The only successful exit point from this loop is the ::NotFound
+  // case after ParseGridTrackSize(); i.e. we'll greedily parse
+  // repeat()/<track-size> until we can't find one.
+  nsCSSValueList* item = firstLineNamesItem;
   for (;;) {
-    item->mNext = new nsCSSValueList;
-    item = item->mNext;
+    // First try to parse repeat()
+    if (!GetToken(true)) {
+      break;
+    }
+    if (mToken.mType == eCSSToken_Function &&
+        mToken.mIdent.LowerCaseEqualsLiteral("repeat")) {
+      if (!ParseGridTrackListRepeat(&item)) {
+        return false;
+      }
+    } else {
+      UngetToken();
+
+      // This was not a repeat() function. Try to parse <track-size>.
+      nsCSSValue trackSize;
+      CSSParseResult result = ParseGridTrackSize(trackSize);
+      if (result == CSSParseResult::Error) {
+        return false;
+      }
+      if (result == CSSParseResult::NotFound) {
+        // What we've parsed so far is a valid <track-list>
+        // (modulo the "at least one <track-size>" check below.)
+        // Stop here.
+        break;
+      }
+      item->mNext = new nsCSSValueList;
+      item = item->mNext;
+      item->mValue = trackSize;
+
+      item->mNext = new nsCSSValueList;
+      item = item->mNext;
+    }
     if (ParseGridLineNames(item->mValue) == CSSParseResult::Error) {
       return false;
     }
+  }
 
-    // FIXME: add repeat()
-    nsCSSValue trackSize;
-    CSSParseResult result = ParseGridTrackSize(trackSize);
-    if (result == CSSParseResult::Error) {
+  // Require at least one <track-size>.
+  if (item == firstLineNamesItem) {
+    return false;
+  }
+
+  MOZ_ASSERT(aValue.GetListValue() &&
+             aValue.GetListValue()->mNext &&
+             aValue.GetListValue()->mNext->mNext,
+             "<track-list> should have a minimum length of 3");
+  return true;
+}
+
+// Takes ownership of |aSecond|
+static void
+ConcatLineNames(nsCSSValue& aFirst, nsCSSValue& aSecond)
+{
+  if (aSecond.GetUnit() == eCSSUnit_Null) {
+    // Nothing to do.
+    return;
+  }
+  if (aFirst.GetUnit() == eCSSUnit_Null) {
+    // Empty or omitted <line-names>. Replace it.
+    aFirst = aSecond;
+    return;
+  }
+
+  // Join the two <line-names> lists.
+  nsCSSValueList* source = aSecond.GetListValue();
+  nsCSSValueList* target = aFirst.GetListValue();
+  // Find the end:
+  while (target->mNext) {
+    target = target->mNext;
+  }
+  // Copy the first name. We can't take ownership of it
+  // as it'll be destroyed when |aSecond| goes out of scope.
+  target->mNext = new nsCSSValueList;
+  target = target->mNext;
+  target->mValue = source->mValue;
+  // Move the rest of the linked list.
+  target->mNext = source->mNext;
+  source->mNext = nullptr;
+}
+
+// Assuming the 'repeat(' function token has already been consumed,
+// parse the rest of
+// repeat( <positive-integer> ,
+//         [ <line-names>? <track-size> ]+ <line-names>? )
+// Append to the linked list whose end is given by |aTailPtr|,
+// and updated |aTailPtr| to point to the new end of the list.
+bool
+CSSParserImpl::ParseGridTrackListRepeat(nsCSSValueList** aTailPtr)
+{
+  if (!(GetToken(true) &&
+        mToken.mType == eCSSToken_Number &&
+        mToken.mIntegerValid &&
+        mToken.mInteger > 0)) {
+    SkipUntil(')');
+    return false;
+  }
+  int32_t repetitions = std::min(mToken.mInteger,
+                                 GRID_TEMPLATE_MAX_REPETITIONS);
+  if (!ExpectSymbol(',', true)) {
+    SkipUntil(')');
+    return false;
+  }
+
+  // Parse [ <line-names>? <track-size> ]+ <line-names>?
+  // but keep the first and last <line-names> separate
+  // because they'll need to be joined.
+  // http://dev.w3.org/csswg/css-grid/#repeat-notation
+  nsCSSValue firstLineNames;
+  nsCSSValue trackSize;
+  nsCSSValue lastLineNames;
+  // Optional
+  if (ParseGridLineNames(firstLineNames) == CSSParseResult::Error) {
+    SkipUntil(')');
+    return false;
+  }
+  // Required
+  if (ParseGridTrackSize(trackSize) != CSSParseResult::Ok) {
+    SkipUntil(')');
+    return false;
+  }
+  // Use nsAutoPtr to free the list in case of early return.
+  nsAutoPtr<nsCSSValueList> firstTrackSizeItemAuto(new nsCSSValueList);
+  firstTrackSizeItemAuto->mValue = trackSize;
+
+  nsCSSValueList* item = firstTrackSizeItemAuto;
+  for (;;) {
+    // Optional
+    if (ParseGridLineNames(lastLineNames) == CSSParseResult::Error) {
+      SkipUntil(')');
       return false;
     }
-    if (result == CSSParseResult::NotFound) {
-      // What we've parsed so far is a valid <track-list>. Stop here.
+
+    if (ExpectSymbol(')', true)) {
       break;
     }
+
+    // Required
+    if (ParseGridTrackSize(trackSize) != CSSParseResult::Ok) {
+      SkipUntil(')');
+      return false;
+    }
+
+    item->mNext = new nsCSSValueList;
+    item = item->mNext;
+    item->mValue = lastLineNames;
+    // Do not append to this list at the next iteration.
+    lastLineNames.Reset();
+
     item->mNext = new nsCSSValueList;
     item = item->mNext;
     item->mValue = trackSize;
   }
+  nsCSSValueList* lastTrackSizeItem = item;
 
-  // Set up our outparam as a list, with aFirstLineNames as the first entry,
-  // followed by the rest of the <track-list> that we just finished parsing.
-  item = aValue.SetListValue();
-  item->mValue = aFirstLineNames;
-  item->mNext = firstTrackSizeItem.forget();
-  MOZ_ASSERT(aValue.GetListValue() && aValue.GetListValue()->mNext &&
-             aValue.GetListValue()->mNext->mNext,
-             "<track-list> should have a minimum length of 3");
+  // [ <line-names>? <track-size> ]+ <line-names>?  is now parsed into:
+  // * firstLineNames: the first <line-names>
+  // * a linked list of odd length >= 1, from firstTrackSizeItem
+  //   (the first <track-size>) to lastTrackSizeItem (the last),
+  //   with the <line-names> sublists in between
+  // * lastLineNames: the last <line-names>
+
+
+  // Join the last and first <line-names> (in that order.)
+  // For example, repeat(3, (a) 100px (b) 200px (c)) results in
+  // (a) 100px (b) 200px (c a) 100px (b) 200px (c a) 100px (b) 200px (c)
+  // This is (c a).
+  // Make deep copies: the originals will be moved.
+  nsCSSValue joinerLineNames;
+  {
+    nsCSSValueList* target = nullptr;
+    if (lastLineNames.GetUnit() != eCSSUnit_Null) {
+      target = joinerLineNames.SetListValue();
+      nsCSSValueList* source = lastLineNames.GetListValue();
+      for (;;) {
+        target->mValue = source->mValue;
+        source = source->mNext;
+        if (!source) {
+          break;
+        }
+        target->mNext = new nsCSSValueList;
+        target = target->mNext;
+      }
+    }
+
+    if (firstLineNames.GetUnit() != eCSSUnit_Null) {
+      if (target) {
+        target->mNext = new nsCSSValueList;
+        target = target->mNext;
+      } else {
+        target = joinerLineNames.SetListValue();
+      }
+      nsCSSValueList* source = firstLineNames.GetListValue();
+      for (;;) {
+        target->mValue = source->mValue;
+        source = source->mNext;
+        if (!source) {
+          break;
+        }
+        target->mNext = new nsCSSValueList;
+        target = target->mNext;
+      }
+    }
+  }
+
+  // Join our first <line-names> with the one before repeat().
+  // (a) repeat(1, (b) 20px) expands to (a b) 20px
+  nsCSSValueList* previousItemBeforeRepeat = *aTailPtr;
+  ConcatLineNames(previousItemBeforeRepeat->mValue, firstLineNames);
+
+  // Move our linked list
+  // (first to last <track-size>, with the <line-names> sublists in between).
+  // This is the first repetition.
+  NS_ASSERTION(previousItemBeforeRepeat->mNext == nullptr,
+               "Expected the end of a linked list");
+  previousItemBeforeRepeat->mNext = firstTrackSizeItemAuto.forget();
+  nsCSSValueList* firstTrackSizeItem = previousItemBeforeRepeat->mNext;
+  nsCSSValueList* tail = lastTrackSizeItem;
+
+  // Repeat |repetitions - 1| more times:
+  // * the joiner <line-names>
+  // * the linked list
+  //   (first to last <track-size>, with the <line-names> sublists in between)
+  MOZ_ASSERT(repetitions > 0, "Expected positive repetitions");
+  while (--repetitions) {
+    tail->mNext = new nsCSSValueList;
+    tail = tail->mNext;
+    tail->mValue = joinerLineNames;
+
+    nsCSSValueList* repeatedItem = firstTrackSizeItem;
+    for (;;) {
+      tail->mNext = new nsCSSValueList;
+      tail = tail->mNext;
+      tail->mValue = repeatedItem->mValue;
+      if (repeatedItem == lastTrackSizeItem) {
+        break;
+      }
+      repeatedItem = repeatedItem->mNext;
+    }
+  }
+
+  // Finally, move our last <line-names>.
+  // Any <line-names> immediately after repeat() will append to it.
+  tail->mNext = new nsCSSValueList;
+  tail = tail->mNext;
+  tail->mValue = lastLineNames;
+
+  *aTailPtr = tail;
   return true;
 }
 
@@ -7453,7 +7750,6 @@ CSSParserImpl::ParseGridTemplateAfterString(const nsCSSValue& aFirstLineNames)
 
     rowsItem->mNext = new nsCSSValueList;
     rowsItem = rowsItem->mNext;
-    // TODO: add repeat()
     CSSParseResult result = ParseGridTrackSize(rowsItem->mValue);
     if (result == CSSParseResult::Error) {
       return false;

@@ -8,10 +8,10 @@
 #define mozilla_dom_bluetooth_bluetoothadapter_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "BluetoothCommon.h"
 #include "BluetoothPropertyContainer.h"
 #include "nsCOMPtr.h"
-#include "nsDOMEventTargetHelper.h"
 
 namespace mozilla {
 namespace dom {
@@ -28,7 +28,7 @@ class BluetoothSignal;
 class BluetoothNamedValue;
 class BluetoothValue;
 
-class BluetoothAdapter : public nsDOMEventTargetHelper
+class BluetoothAdapter : public DOMEventTargetHelper
                        , public BluetoothSignalObserver
                        , public BluetoothPropertyContainer
 {
@@ -36,7 +36,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(BluetoothAdapter,
-                                                         nsDOMEventTargetHelper)
+                                                         DOMEventTargetHelper)
 
   static already_AddRefed<BluetoothAdapter>
   Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
@@ -45,6 +45,8 @@ public:
 
   void Unroot();
   virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
+
+  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
 
   void GetAddress(nsString& aAddress) const
   {

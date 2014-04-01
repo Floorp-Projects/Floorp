@@ -98,7 +98,7 @@ DrawQuads(GLContext *aGLContext,
     aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
   bool texCoords = (texCoordAttribIndex != GLuint(-1));
 
-  GLsizei bytes = aRects.vertCoords().Length() * 2 * sizeof(GLfloat);
+  GLsizei bytes = aRects.elements() * 2 * sizeof(GLfloat);
 
   GLsizei total = bytes;
   if (texCoords) {
@@ -136,7 +136,7 @@ DrawQuads(GLContext *aGLContext,
     aGLContext->fDisableVertexAttribArray(texCoordAttribIndex);
   }
 
-  aGLContext->fDrawArrays(aMode, 0, aRects.vertCoords().Length());
+  aGLContext->fDrawArrays(aMode, 0, aRects.elements());
 
   aGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
@@ -372,6 +372,8 @@ CompositorOGL::Initialize()
     0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
     /* Then quad texcoords */
     0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    /* Then flipped quad texcoords */
+    0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
   };
   mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
@@ -477,7 +479,7 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
     Matrix4x4 transform;
     ToMatrix4x4(aTextureTransform * textureTransform, transform);
     aProg->SetTextureTransform(transform);
-    BindAndDrawQuad(aProg);
+    BindAndDrawQuad(aProg, false);
   } else {
     Matrix4x4 transform;
     ToMatrix4x4(aTextureTransform, transform);
@@ -986,7 +988,7 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE0, maskQuadTransform);
       }
 
-      BindAndDrawQuad(program, aDrawMode);
+      BindAndDrawQuad(program, false, aDrawMode);
     }
     break;
 
@@ -1070,12 +1072,7 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
 
       surface->BindTexture(LOCAL_GL_TEXTURE0, mFBOTextureTarget);
 
-      // Drawing is always flipped, but when copying between surfaces we want to avoid
-      // this, so apply a flip here to cancel the other one out.
-      Matrix transform;
-      transform.Translate(0.0, 1.0);
-      transform.Scale(1.0f, -1.0f);
-      program->SetTextureTransform(Matrix4x4::From2D(transform));
+      program->SetTextureTransform(Matrix4x4());
       program->SetTextureUnit(0);
 
       if (maskType != MaskNone) {
@@ -1092,7 +1089,7 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       // Drawing is always flipped, but when copying between surfaces we want to avoid
       // this. Pass true for the flip parameter to introduce a second flip
       // that cancels the other one out.
-      BindAndDrawQuad(program);
+      BindAndDrawQuad(program, true);
     }
     break;
   case EFFECT_COMPONENT_ALPHA: {
@@ -1433,15 +1430,27 @@ CompositorOGL::QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
 }
 
 void
+CompositorOGL::QuadVBOFlippedTexCoordsAttrib(GLuint aAttribIndex) {
+  mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                    LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                    (GLvoid*) QuadVBOFlippedTexCoordOffset());
+}
+
+void
 CompositorOGL::BindAndDrawQuad(GLuint aVertAttribIndex,
                                GLuint aTexCoordAttribIndex,
+                               bool aFlipped,
                                GLuint aDrawMode)
 {
   BindQuadVBO();
   QuadVBOVerticesAttrib(aVertAttribIndex);
 
   if (aTexCoordAttribIndex != GLuint(-1)) {
-    QuadVBOTexCoordsAttrib(aTexCoordAttribIndex);
+    if (aFlipped)
+      QuadVBOFlippedTexCoordsAttrib(aTexCoordAttribIndex);
+    else
+      QuadVBOTexCoordsAttrib(aTexCoordAttribIndex);
+
     mGLContext->fEnableVertexAttribArray(aTexCoordAttribIndex);
   }
 
@@ -1455,12 +1464,13 @@ CompositorOGL::BindAndDrawQuad(GLuint aVertAttribIndex,
 
 void
 CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg,
+                               bool aFlipped,
                                GLuint aDrawMode)
 {
   NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
   BindAndDrawQuad(aProg->AttribLocation(ShaderProgramOGL::VertexCoordAttrib),
                   aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib),
-                  aDrawMode);
+                  aFlipped, aDrawMode);
 }
 
 GLuint

@@ -16,7 +16,6 @@
 #include "nsIDOMXULElement.h"
 #include "nsIXULDocument.h"
 #include "nsIXULTemplateBuilder.h"
-#include "nsEventStateManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
@@ -37,6 +36,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Services.h"
