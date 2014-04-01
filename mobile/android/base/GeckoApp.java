@@ -86,7 +86,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.StrictMode;
-import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
 import android.telephony.CellLocation;
@@ -156,7 +155,6 @@ public abstract class GeckoApp
 
     public static final String PREFS_ALLOW_STATE_BUNDLE    = "allowStateBundle";
     public static final String PREFS_CRASHED               = "crashed";
-    public static final String PREFS_NAME                  = "GeckoApp";
     public static final String PREFS_OOM_EXCEPTION         = "OOMException";
     public static final String PREFS_VERSION_CODE          = "versionCode";
     public static final String PREFS_WAS_STOPPED           = "wasStopped";
@@ -177,7 +175,7 @@ public abstract class GeckoApp
     private View mCameraView;
     private OrientationEventListener mCameraOrientationEventListener;
     public List<GeckoAppShell.AppStateListener> mAppStateListeners;
-    private static GeckoApp sAppContext;
+    private static volatile GeckoApp sAppContext;
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     protected GeckoProfile mProfile;
@@ -245,7 +243,11 @@ public abstract class GeckoApp
     }
 
     public static SharedPreferences getAppSharedPreferences() {
-        return GeckoApp.sAppContext.getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+        if (sAppContext == null) {
+            return null;
+        }
+
+        return GeckoSharedPrefs.forApp(sAppContext);
     }
 
     public Activity getActivity() {
@@ -1282,7 +1284,7 @@ public abstract class GeckoApp
             // only intended to be used internally via Robocop, so a boolean
             // is read from a private shared pref to prevent other apps from
             // injecting states.
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            SharedPreferences prefs = getAppSharedPreferences();
             if (prefs.getBoolean(PREFS_ALLOW_STATE_BUNDLE, false)) {
                 Log.i(LOGTAG, "Restoring state from intent bundle");
                 prefs.edit().remove(PREFS_ALLOW_STATE_BUNDLE).commit();
@@ -1768,8 +1770,7 @@ public abstract class GeckoApp
     }
 
     private String getSessionRestorePreference() {
-        return PreferenceManager.getDefaultSharedPreferences(this)
-                                .getString(GeckoPreferences.PREFS_RESTORE_SESSION, "quit");
+        return getAppSharedPreferences().getString(GeckoPreferences.PREFS_RESTORE_SESSION, "quit");
     }
 
     private boolean getRestartFromIntent() {

@@ -17,6 +17,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
@@ -45,7 +46,6 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
-import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
 import android.text.Editable;
@@ -502,7 +502,7 @@ public class GeckoPreferences
                                            final boolean value) {
         final Intent intent = new Intent(action)
                 .putExtra("pref", pref)
-                .putExtra("branch", GeckoApp.PREFS_NAME)
+                .putExtra("branch", GeckoSharedPrefs.APP_PREFS_NAME)
                 .putExtra("enabled", value);
         broadcastAction(context, intent);
     }
@@ -577,7 +577,7 @@ public class GeckoPreferences
      * @return        the value of the preference, or the default.
      */
     public static boolean getBooleanPref(final Context context, final String name, boolean def) {
-        final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
         return prefs.getBoolean(name, def);
     }
 
