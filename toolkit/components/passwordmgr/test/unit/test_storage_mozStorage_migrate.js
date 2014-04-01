@@ -1,6 +1,10 @@
 /*
+ * Test suite for storage-mozStorage.js -- exercises schema version migration.
+ *
  * This test interfaces directly with the mozStorage password storage module,
  * bypassing the normal password manager usage.
+ *
+ * (Tests for importing from the legacy storage module are in test_storage_mozStorage_1.js)
  */
 
 
@@ -11,63 +15,7 @@ const ENCTYPE_SDR = 1;
 // kept in sync with the version there (or else the tests fail).
 const CURRENT_SCHEMA = 5;
 
-LoginTest.copyFile = function (aLeafName)
-{
-  yield OS.File.copy(OS.Path.join(do_get_file("data").path, aLeafName),
-                     OS.Path.join(OS.Constants.Path.profileDir, aLeafName));
-};
-
-LoginTest.openDB = function (aLeafName)
-{
-  var dbFile = new FileUtils.File(OS.Constants.Path.profileDir);
-  dbFile.append(aLeafName);
-
-  return Services.storage.openDatabase(dbFile);
-};
-
-LoginTest.deleteFile = function (pathname, filename)
-{
-  var file = new FileUtils.File(pathname);
-  file.append(filename);
-
-  // Suppress failures, this happens in the mozstorage tests on Windows
-  // because the module may still be holding onto the DB. (We don't
-  // have a way to explicitly shutdown/GC the module).
-  try {
-    if (file.exists())
-      file.remove(false);
-  } catch (e) {}
-};
-
-LoginTest.reloadStorage = function (aInputPathName, aInputFileName)
-{
-  var inputFile = null;
-  if (aInputFileName) {
-      var inputFile  = Cc["@mozilla.org/file/local;1"].
-                       createInstance(Ci.nsILocalFile);
-      inputFile.initWithPath(aInputPathName);
-      inputFile.append(aInputFileName);
-  }
-
-  let storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"]
-                  .createInstance(Ci.nsILoginManagerStorage);
-  storage.QueryInterface(Ci.nsIInterfaceRequestor)
-         .getInterface(Ci.nsIVariant)
-         .initWithFile(inputFile);
-
-  return storage;
-};
-
-LoginTest.checkStorageData = function (storage, ref_disabledHosts, ref_logins)
-{
-  LoginTest.assertLoginListsEqual(storage.getAllLogins(), ref_logins);
-  LoginTest.assertDisabledHostsEqual(storage.getAllDisabledHosts(), ref_disabledHosts);
-};
-
-add_task(function test_execute()
-{
-
-const OUTDIR = OS.Constants.Path.profileDir;
+function run_test() {
 
 try {
 
@@ -121,7 +69,7 @@ testuser5.init("http://test.gov", "http://test.gov", null,
 testnum++;
 testdesc = "Test downgrade from v999 storage"
 
-yield LoginTest.copyFile("signons-v999.sqlite");
+LoginTest.copyFile("signons-v999.sqlite");
 // Verify the schema version in the test file.
 dbConnection = LoginTest.openDB("signons-v999.sqlite");
 do_check_eq(999, dbConnection.schemaVersion);
@@ -142,27 +90,34 @@ testnum++;
 testdesc = "Test downgrade from incompat v999 storage"
 // This file has a testuser999/testpass999, but is missing an expected column
 
-var origFile = OS.Path.join(OUTDIR, "signons-v999-2.sqlite");
-var failFile = OS.Path.join(OUTDIR, "signons-v999-2.sqlite.corrupt");
+var origFile = PROFDIR.clone();
+origFile.append("signons-v999-2.sqlite");
+var failFile = PROFDIR.clone();
+failFile.append("signons-v999-2.sqlite.corrupt");
 
 // Make sure we always start clean in a clean state.
-yield LoginTest.copyFile("signons-v999-2.sqlite");
-yield OS.File.remove(failFile);
+LoginTest.deleteFile(OUTDIR, "signons-v999-2.sqlite");
+LoginTest.deleteFile(OUTDIR, "signons-v999-2.sqlite.corrupt");
+do_check_false(origFile.exists());
+do_check_false(failFile.exists());
 
-Assert.throws(() => LoginTest.reloadStorage(OUTDIR, "signons-v999-2.sqlite"),
-              /Initialization failed/);
+LoginTest.copyFile("signons-v999-2.sqlite");
+do_check_true(origFile.exists());
+
+storage = LoginTest.reloadStorage(OUTDIR, "signons-v999-2.sqlite", /Initialization failed/);
 
 // Check to ensure the DB file was renamed to .corrupt.
-do_check_false(yield OS.File.exists(origFile));
-do_check_true(yield OS.File.exists(failFile));
+do_check_false(origFile.exists());
+do_check_true(failFile.exists());
 
-yield OS.File.remove(failFile);
+LoginTest.deleteFile(OUTDIR, "signons-v999-2.sqlite");
+LoginTest.deleteFile(OUTDIR, "signons-v999-2.sqlite.corrupt");
 
 /* ========== 3 ========== */
 testnum++;
 testdesc = "Test upgrade from v1->v2 storage"
 
-yield LoginTest.copyFile("signons-v1.sqlite");
+LoginTest.copyFile("signons-v1.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v1.sqlite");
 do_check_eq(1, dbConnection.schemaVersion);
@@ -189,7 +144,7 @@ testdesc = "Test upgrade v2->v1 storage";
 // are upgrading it again. Any logins added by the v1 code must be properly
 // upgraded.
 
-yield LoginTest.copyFile("signons-v1v2.sqlite");
+LoginTest.copyFile("signons-v1v2.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v1v2.sqlite");
 do_check_eq(1, dbConnection.schemaVersion);
@@ -221,7 +176,7 @@ LoginTest.deleteFile(OUTDIR, "signons-v1v2.sqlite");
 testnum++;
 testdesc = "Test upgrade from v2->v3 storage"
 
-yield LoginTest.copyFile("signons-v2.sqlite");
+LoginTest.copyFile("signons-v2.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v2.sqlite");
 do_check_eq(2, dbConnection.schemaVersion);
@@ -249,7 +204,7 @@ testdesc = "Test upgrade v3->v2 storage";
 // are upgrading it again. Any logins added by the v2 code must be properly
 // upgraded.
 
-yield LoginTest.copyFile("signons-v2v3.sqlite");
+LoginTest.copyFile("signons-v2v3.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v2v3.sqlite");
 do_check_eq(2, dbConnection.schemaVersion);
@@ -281,7 +236,7 @@ LoginTest.deleteFile(OUTDIR, "signons-v2v3.sqlite");
 testnum++;
 testdesc = "Test upgrade from v3->v4 storage"
 
-yield LoginTest.copyFile("signons-v3.sqlite");
+LoginTest.copyFile("signons-v3.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v3.sqlite");
 do_check_eq(3, dbConnection.schemaVersion);
@@ -296,16 +251,16 @@ var logins = storage.getAllLogins();
 for (var i = 0; i < 2; i++) {
     do_check_true(logins[i] instanceof Ci.nsILoginMetaInfo);
     do_check_eq(1, logins[i].timesUsed);
-    LoginTest.assertTimeIsAboutNow(logins[i].timeCreated);
-    LoginTest.assertTimeIsAboutNow(logins[i].timeLastUsed);
-    LoginTest.assertTimeIsAboutNow(logins[i].timePasswordChanged);
+    do_check_true(LoginTest.is_about_now(logins[i].timeCreated));
+    do_check_true(LoginTest.is_about_now(logins[i].timeLastUsed));
+    do_check_true(LoginTest.is_about_now(logins[i].timePasswordChanged));
 }
 
 /* ========== 8 ========== */
 testnum++;
 testdesc = "Test upgrade from v3->v4->v3 storage"
 
-yield LoginTest.copyFile("signons-v3v4.sqlite");
+LoginTest.copyFile("signons-v3v4.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v3v4.sqlite");
 do_check_eq(3, dbConnection.schemaVersion);
@@ -336,16 +291,16 @@ do_check_eq(1262049951275, t1.timeLastUsed);
 do_check_eq(1262049951275, t1.timePasswordChanged);
 
 do_check_eq(1, t2.timesUsed);
-LoginTest.assertTimeIsAboutNow(t2.timeCreated);
-LoginTest.assertTimeIsAboutNow(t2.timeLastUsed);
-LoginTest.assertTimeIsAboutNow(t2.timePasswordChanged);
+do_check_true(LoginTest.is_about_now(t2.timeCreated));
+do_check_true(LoginTest.is_about_now(t2.timeLastUsed));
+do_check_true(LoginTest.is_about_now(t2.timePasswordChanged));
 
 
 /* ========== 9 ========== */
 testnum++;
 testdesc = "Test upgrade from v4 storage"
 
-yield LoginTest.copyFile("signons-v4.sqlite");
+LoginTest.copyFile("signons-v4.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v4.sqlite");
 do_check_eq(4, dbConnection.schemaVersion);
@@ -360,7 +315,7 @@ do_check_true(dbConnection.tableExists("moz_deleted_logins"));
 testnum++;
 testdesc = "Test upgrade from v4->v5->v4 storage"
 
-yield LoginTest.copyFile("signons-v4v5.sqlite");
+LoginTest.copyFile("signons-v4v5.sqlite");
 // Sanity check the test file.
 dbConnection = LoginTest.openDB("signons-v4v5.sqlite");
 do_check_eq(4, dbConnection.schemaVersion);
@@ -371,59 +326,7 @@ do_check_eq(CURRENT_SCHEMA, dbConnection.schemaVersion);
 do_check_true(dbConnection.tableExists("moz_deleted_logins"));
 
 
-/* ========== 11 ========== */
-testnum++;
-testdesc = "Create nsILoginInfo instances for testing with"
-
-testuser1 = new nsLoginInfo;
-testuser1.init("http://dummyhost.mozilla.org", "", null,
-    "dummydude", "itsasecret", "put_user_here", "put_pw_here");
-
-
-/*
- * ---------------------- DB Corruption ----------------------
- * Try to initialize with a corrupt database file. This should create a backup
- * file, then upon next use create a new database file.
- */
-
-/* ========== 12 ========== */
-testnum++;
-testdesc = "Corrupt database and backup"
-
-const filename = "signons-c.sqlite";
-const filepath = OS.Path.join(OS.Constants.Path.profileDir, filename);
-
-yield OS.File.copy(do_get_file("data/corruptDB.sqlite").path, filepath);
-
-// will init mozStorage module with corrupt database, init should fail
-Assert.throws(
-  () => LoginTest.reloadStorage(OS.Constants.Path.profileDir, filename),
-  /Initialization failed/);
-
-// check that the backup file exists
-do_check_true(yield OS.File.exists(filepath + ".corrupt"));
-
-// check that the original corrupt file has been deleted
-do_check_false(yield OS.File.exists(filepath));
-
-// initialize the storage module again
-storage = LoginTest.reloadStorage(OS.Constants.Path.profileDir, filename);
-
-// use the storage module again, should work now
-storage.addLogin(testuser1);
-LoginTest.checkStorageData(storage, [], [testuser1]);
-
-// check the file exists
-var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-file.initWithPath(OS.Constants.Path.profileDir);
-file.append(filename);
-do_check_true(file.exists());
-
-LoginTest.deleteFile(OS.Constants.Path.profileDir, filename + ".corrupt");
-LoginTest.deleteFile(OS.Constants.Path.profileDir, filename);
-
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;
 }
-
-});
+};
