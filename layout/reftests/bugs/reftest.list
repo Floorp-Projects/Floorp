@@ -1789,7 +1789,7 @@ fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
 == 931853-quirks.html 931853-quirks-ref.html
 fuzzy-if(OSX==10.6,2,30) == 933264-1.html 933264-1-ref.html
 == 936670-1.svg 936670-1-ref.svg
-== 942017.html 942017-ref.html
+fails == 942017.html 942017-ref.html # bug 942017
 == 942672-1.html 942672-1-ref.html
 == 953334-win32-clipping.html 953334-win32-clipping-ref.html
 == 956513-1.svg 956513-1-ref.svg
