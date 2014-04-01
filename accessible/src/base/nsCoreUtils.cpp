@@ -19,11 +19,11 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableFrame.h"
-#include "nsEventStateManager.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "nsView.h"
@@ -162,7 +162,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent* aContent)
 {
   // Accesskeys are registered by @accesskey attribute only. At first check
   // whether it is presented on the given element to avoid the slow
-  // nsEventStateManager::GetRegisteredAccessKey() method.
+  // EventStateManager::GetRegisteredAccessKey() method.
   if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
@@ -174,7 +174,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent* aContent)
   if (!presContext)
     return 0;
 
-  nsEventStateManager *esm = presContext->EventStateManager();
+  EventStateManager *esm = presContext->EventStateManager();
   if (!esm)
     return 0;
 

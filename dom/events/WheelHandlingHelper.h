@@ -12,13 +12,14 @@
 #include "nsCoord.h"
 #include "nsIFrame.h"
 
-class nsEventStateManager;
 class nsIScrollableFrame;
 class nsITimer;
 
 struct nsIntPoint;
 
 namespace mozilla {
+
+class EventStateManager;
 
 /**
  * DeltaValues stores two delta values which are along X and Y axis.  This is
@@ -75,7 +76,7 @@ private:
 class ScrollbarsForWheel
 {
 public:
-  static void PrepareToScrollText(nsEventStateManager* aESM,
+  static void PrepareToScrollText(EventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
                                   WidgetWheelEvent* aEvent);
   static void SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget);
@@ -99,7 +100,7 @@ protected:
    * to show/hide the right scrollbars.
    */
   static void TemporarilyActivateAllPossibleScrollTargets(
-                nsEventStateManager* aESM,
+                EventStateManager* aESM,
                 nsIFrame* aTargetFrame,
                 WidgetWheelEvent* aEvent);
   static void DeactivateAllTemporarilyActivatedScrollTargets();

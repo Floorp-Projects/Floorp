@@ -17,7 +17,6 @@ EXPORTS += [
     'nsDOMEventTargetHelper.h',
     'nsDOMKeyNameList.h',
     'nsEventNameList.h',
-    'nsEventStateManager.h',
     'nsEventStates.h',
     'nsIJSEventListener.h',
     'nsVKList.h',
@@ -27,6 +26,7 @@ EXPORTS.mozilla += [
     'AsyncEventDispatcher.h',
     'EventDispatcher.h',
     'EventListenerManager.h',
+    'EventStateManager.h',
     'IMEStateManager.h',
     'InternalMutationEvent.h',
 ]
@@ -110,7 +110,7 @@ UNIFIED_SOURCES += [
 
 # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
-    'nsEventStateManager.cpp',
+    'EventStateManager.cpp',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:

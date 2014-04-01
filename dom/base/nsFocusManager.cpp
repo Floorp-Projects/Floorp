@@ -22,7 +22,6 @@
 #include "nsLayoutUtils.h"
 #include "nsIPresShell.h"
 #include "nsFrameTraversal.h"
-#include "nsEventStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"
 #include "nsIBaseWindow.h"
@@ -40,6 +39,7 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
@@ -3414,7 +3414,7 @@ public:
     nsPIDOMWindow* focused =
       nsFocusManager::GetFocusManager()->GetFocusedWindow();
     nsCOMPtr<nsIDocument> pointerLockedDoc =
-      do_QueryReferent(nsEventStateManager::sPointerLockedDoc);
+      do_QueryReferent(EventStateManager::sPointerLockedDoc);
     if (pointerLockedDoc &&
         !nsContentUtils::IsInPointerLockContext(focused)) {
       nsIDocument::UnlockPointer();

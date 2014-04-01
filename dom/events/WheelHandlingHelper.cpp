@@ -7,11 +7,11 @@
 #include "WheelHandlingHelper.h"
 
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsEventStateManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
@@ -409,7 +409,7 @@ bool ScrollbarsForWheel::sHadWheelStart = false;
 bool ScrollbarsForWheel::sOwnWheelTransaction = false;
 
 /* static */ void
-ScrollbarsForWheel::PrepareToScrollText(nsEventStateManager* aESM,
+ScrollbarsForWheel::PrepareToScrollText(EventStateManager* aESM,
                                         nsIFrame* aTargetFrame,
                                         WidgetWheelEvent* aEvent)
 {
@@ -487,7 +487,7 @@ ScrollbarsForWheel::OwnWheelTransaction(bool aOwn)
 
 /* static */ void
 ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
-                      nsEventStateManager* aESM,
+                      EventStateManager* aESM,
                       nsIFrame* aTargetFrame,
                       WidgetWheelEvent* aEvent)
 {
@@ -497,7 +497,7 @@ ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
     MOZ_ASSERT(!*scrollTarget, "scroll target still temporarily activated!");
     nsIScrollableFrame* target =
       aESM->ComputeScrollTarget(aTargetFrame, dir->deltaX, dir->deltaY, aEvent,
-              nsEventStateManager::COMPUTE_DEFAULT_ACTION_TARGET);
+              EventStateManager::COMPUTE_DEFAULT_ACTION_TARGET);
     nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(target);
     if (scrollbarOwner) {
       nsIFrame* targetFrame = do_QueryFrame(target);

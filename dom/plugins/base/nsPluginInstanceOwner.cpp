@@ -1897,7 +1897,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
 #ifdef XP_WIN
   // this code supports windowless plugins
   NPEvent *pPluginEvent = (NPEvent*)anEvent.pluginEvent;
-  // we can get synthetic events from the nsEventStateManager... these
+  // we can get synthetic events from the EventStateManager... these
   // have no pluginEvent
   NPEvent pluginEvent;
   if (anEvent.eventStructType == NS_MOUSE_EVENT) {

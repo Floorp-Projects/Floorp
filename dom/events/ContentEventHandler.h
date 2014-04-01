@@ -19,7 +19,7 @@ namespace mozilla {
 
 /*
  * Query Content Event Handler
- *   ContentEventHandler is a helper class for nsEventStateManager.
+ *   ContentEventHandler is a helper class for EventStateManager.
  *   The platforms request some content informations, e.g., the selected text,
  *   the offset of the selected text and the text for specified range.
  *   This class answers to NS_QUERY_* events from actual contents.

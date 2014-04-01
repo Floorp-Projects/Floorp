@@ -131,10 +131,10 @@
 #endif
 #include "nsCDefaultURIFixup.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"
 #include "nsIXULWindow.h"
-#include "nsEventStateManager.h"
 #include "nsITimedChannel.h"
 #include "nsServiceManagerUtils.h"
 #ifdef MOZ_XUL
@@ -8340,14 +8340,15 @@ nsGlobalWindow::EnterModalState()
 
   // If there is an active ESM in this window, clear it. Otherwise, this can
   // cause a problem if a modal state is entered during a mouseup event.
-  nsEventStateManager* activeESM =
-    static_cast<nsEventStateManager*>(nsEventStateManager::GetActiveEventStateManager());
+  EventStateManager* activeESM =
+    static_cast<EventStateManager*>(
+      EventStateManager::GetActiveEventStateManager());
   if (activeESM && activeESM->GetPresContext()) {
     nsIPresShell* activeShell = activeESM->GetPresContext()->GetPresShell();
     if (activeShell && (
         nsContentUtils::ContentIsCrossDocDescendantOf(activeShell->GetDocument(), mDoc) ||
         nsContentUtils::ContentIsCrossDocDescendantOf(mDoc, activeShell->GetDocument()))) {
-      nsEventStateManager::ClearGlobalActiveContent(activeESM);
+      EventStateManager::ClearGlobalActiveContent(activeESM);
 
       activeShell->SetCapturingContent(nullptr, 0);
 

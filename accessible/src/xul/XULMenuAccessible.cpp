@@ -154,7 +154,7 @@ XULMenuitemAccessible::AccessKey() const
   static int32_t gMenuAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
 
   // We do not use nsCoreUtils::GetAccesskeyFor() because accesskeys for
-  // menu are't registered by nsEventStateManager.
+  // menu are't registered by EventStateManager.
   nsAutoString accesskey;
   mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
                     accesskey);

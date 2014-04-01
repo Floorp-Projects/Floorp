@@ -16,7 +16,6 @@
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsFocusManager.h"
-#include "nsEventStateManager.h"
 #include "nsFrameManager.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/Touch.h"
@@ -34,6 +33,7 @@
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 
+#include "mozilla/EventStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -2776,7 +2776,7 @@ nsDOMWindowUtils::GetCursorType(int16_t *aCursor)
 
   bool isSameDoc = false;
   do {
-    if (nsEventStateManager::sMouseOverDocument == doc) {
+    if (EventStateManager::sMouseOverDocument == doc) {
       isSameDoc = true;
       break;
     }
@@ -3592,7 +3592,7 @@ nsDOMWindowUtils::GetIsHandlingUserInput(bool* aHandlingUserInput)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  *aHandlingUserInput = nsEventStateManager::IsHandlingUserInput();
+  *aHandlingUserInput = EventStateManager::IsHandlingUserInput();
 
   return NS_OK;
 }
