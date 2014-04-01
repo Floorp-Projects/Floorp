@@ -34,8 +34,6 @@ import java.util.zip.ZipFile;
 public final class Distribution {
     private static final String LOGTAG = "GeckoDistribution";
 
-    private static final String DEFAULT_PREFS = GeckoApp.PREFS_NAME;
-
     private static final int STATE_UNKNOWN = 0;
     private static final int STATE_NONE = 1;
     private static final int STATE_SET = 2;
@@ -108,7 +106,7 @@ public final class Distribution {
      * package path.
      */
     public static void init(final Context context) {
-        Distribution.init(context, context.getPackageResourcePath(), DEFAULT_PREFS);
+        Distribution.init(context, context.getPackageResourcePath(), null);
     }
 
     /**
@@ -137,7 +135,7 @@ public final class Distribution {
     }
 
     public Distribution(final Context context) {
-        this(context, context.getPackageResourcePath(), DEFAULT_PREFS);
+        this(context, context.getPackageResourcePath(), null);
     }
 
     /**
@@ -148,7 +146,13 @@ public final class Distribution {
     private boolean doInit() {
         // Bail if we've already tried to initialize the distribution, and
         // there wasn't one.
-        SharedPreferences settings = context.getSharedPreferences(prefsBranch, Activity.MODE_PRIVATE);
+        final SharedPreferences settings;
+        if (prefsBranch == null) {
+            settings = GeckoSharedPrefs.forApp(context);
+        } else {
+            settings = context.getSharedPreferences(prefsBranch, Activity.MODE_PRIVATE);
+        }
+
         String keyName = context.getPackageName() + ".distribution_state";
         this.state = settings.getInt(keyName, STATE_UNKNOWN);
         if (this.state == STATE_NONE) {
