@@ -134,6 +134,21 @@ VideoData* VideoData::ShallowCopyUpdateDuration(VideoData* aOther,
 }
 
 /* static */
+VideoData* VideoData::ShallowCopyUpdateTimestamp(VideoData* aOther,
+                                                 int64_t aTimestamp)
+{
+  NS_ENSURE_TRUE(aOther, nullptr);
+  VideoData* v = new VideoData(aOther->mOffset,
+                               aTimestamp,
+                               aOther->GetEndTime() - aTimestamp,
+                               aOther->mKeyframe,
+                               aOther->mTimecode,
+                               aOther->mDisplay);
+  v->mImage = aOther->mImage;
+  return v;
+}
+
+/* static */
 void VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
                                     VideoInfo& aInfo,
                                     const YCbCrBuffer &aBuffer,
