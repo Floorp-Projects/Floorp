@@ -188,7 +188,13 @@ DecodeBasicConstraints(const SECItem* encodedBasicConstraints,
   }
 
   bool isCA = false;
-  if (der::OptionalBoolean(input, isCA) != der::Success) {
+  // TODO(bug 989518): cA is by default false. According to DER, default
+  // values must not be explicitly encoded in a SEQUENCE. So, if this
+  // value is present and false, it is an encoding error. However, Go Daddy
+  // has issued many certificates with this improper encoding, so we can't
+  // enforce this yet (hence passing true for allowInvalidExplicitEncoding
+  // to der::OptionalBoolean).
+  if (der::OptionalBoolean(input, true, isCA) != der::Success) {
     return der::Fail(SEC_ERROR_EXTENSION_VALUE_INVALID);
   }
   basicConstraints.isCA = isCA;

@@ -43,6 +43,8 @@ function add_tests_in_mode(useMozillaPKIX, certDB, otherTestCA) {
   add_ocsp_test("ocsp-stapling-expired.example.com", Cr.NS_OK, false);
   add_ocsp_test("ocsp-stapling-expired-fresh-ca.example.com", Cr.NS_OK, false);
   add_ocsp_test("ocsp-stapling-skip-responseBytes.example.com", Cr.NS_OK, false);
+  add_ocsp_test("ocsp-stapling-critical-extension.example.com", Cr.NS_OK, false);
+  add_ocsp_test("ocsp-stapling-noncritical-extension.example.com", Cr.NS_OK, false);
 
   // Now test OCSP stapling
   // The following error codes are defined in security/nss/lib/util/SECerrs.h
@@ -118,6 +120,13 @@ function add_tests_in_mode(useMozillaPKIX, certDB, otherTestCA) {
                   getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_RESPONSE), true);
   }
 
+  add_ocsp_test("ocsp-stapling-critical-extension.example.com",
+                useMozillaPKIX
+                  ? getXPCOMStatusFromNSS(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION)
+                  : Cr.NS_OK, // TODO(bug 987426): NSS doesn't handle unknown critical extensions
+                true);
+  add_ocsp_test("ocsp-stapling-noncritical-extension.example.com", Cr.NS_OK, true);
+
   // ocsp-stapling-expired.example.com and
   // ocsp-stapling-expired-fresh-ca.example.com are handled in
   // test_ocsp_stapling_expired.js
@@ -129,10 +138,10 @@ function check_ocsp_stapling_telemetry() {
                     .getHistogramById("SSL_OCSP_STAPLING")
                     .snapshot();
   do_check_eq(histogram.counts[0], 2 * 0); // histogram bucket 0 is unused
-  do_check_eq(histogram.counts[1], 2 * 1); // 1 connection with a good response
-  do_check_eq(histogram.counts[2], 2 * 15); // 15 connections with no stapled resp.
+  do_check_eq(histogram.counts[1], 2 + 3); // 2 or 3 connections with a good response (bug 987426)
+  do_check_eq(histogram.counts[2], 2 * 17); // 17 connections with no stapled resp.
   do_check_eq(histogram.counts[3], 2 * 0); // 0 connections with an expired response
-  do_check_eq(histogram.counts[4], 12 + 11); // 12 or 11 connections with bad responses (bug 979070)
+  do_check_eq(histogram.counts[4], 13 + 11); // 13 or 11 connections with bad responses (bug 979070, bug 987426)
   run_next_test();
 }
 
