@@ -593,6 +593,9 @@ MediaDecoderStateMachine::DecodeVideo()
       ((!mIsAudioPrerolling && mIsAudioDecoding &&
         GetDecodedAudioDuration() < mLowAudioThresholdUsecs * mPlaybackRate) ||
         (!mIsVideoPrerolling && mIsVideoDecoding &&
+         // don't skip frame when |clock time| <= |mVideoFrameEndTime| for
+         // we are still in the safe range without underrunning video frames
+         GetClock() > mVideoFrameEndTime &&
         (static_cast<uint32_t>(mReader->VideoQueue().GetSize())
           < LOW_VIDEO_FRAMES * mPlaybackRate))) &&
       !HasLowUndecodedData())

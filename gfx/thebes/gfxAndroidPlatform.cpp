@@ -26,6 +26,10 @@
 #include "AndroidBridge.h"
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+#include <cutils/properties.h>
+#endif
+
 #include "ft2build.h"
 #include FT_FREETYPE_H
 #include FT_MODULE_H
@@ -129,6 +133,11 @@ gfxAndroidPlatform::gfxAndroidPlatform()
         mOffscreenFormat = gfxImageFormat::RGB16_565;
     }
 
+#ifdef MOZ_WIDGET_GONK
+    char propQemu[PROPERTY_VALUE_MAX];
+    property_get("ro.kernel.qemu", propQemu, "");
+    mIsInGonkEmulator = !strncmp(propQemu, "1", 1);
+#endif
 }
 
 gfxAndroidPlatform::~gfxAndroidPlatform()

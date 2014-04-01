@@ -15,7 +15,6 @@
   padding: 4px 3px;
   border-bottom-width: 1px;
   border-bottom-style: solid;
-  font: 3mm "comic sans ms", Purisa, message-box !important;
 }
 
 .devtools-menulist,
@@ -616,13 +615,11 @@
   border: 0px solid;
   border-bottom-width: 1px;
   padding: 0;
-  font: 3mm "comic sans ms", Purisa, message-box !important;
 }
 
 .theme-light .devtools-tabbar {
   box-shadow: 0 -2px 0 rgba(170,170,170,.1) inset;
   background: #ebeced;
-  background-image: url("chrome://browser/skin/devtools/metal.jpg");
   border-bottom-color: #aaa;
 }
 

@@ -760,7 +760,7 @@ BluetoothHfpManager::NotifyConnectionStateChanged(const nsAString& aType)
         // When the outgoing hfp connection fails, state changes to disconnected
         // state. Since bluedroid would not report connecting state, but only
         // report connected/disconnected.
-        OnConnect(NS_LITERAL_STRING("SocketConnectionError"));
+        OnConnect(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
       } else {
         OnDisconnect(EmptyString());
       }

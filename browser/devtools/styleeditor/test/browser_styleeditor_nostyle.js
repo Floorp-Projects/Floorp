@@ -14,11 +14,11 @@ function test()
   // *while* the page is still loading. The Style Editor should not signal that
   // it is loaded until the accompanying content page is loaded.
 
-  addTabAndOpenStyleEditor(function(panel) {
+  addTabAndCheckOnStyleEditorAdded(function(panel) {
     panel.UI.once("stylesheets-reset", testDocumentLoad);
 
     content.location = TESTCASE_URI;
-  });
+  }, () => {});
 }
 
 function testDocumentLoad(event)
