@@ -61,8 +61,6 @@ public:
    * set up to account for all the properties of the layer (transform,
    * opacity, etc).
    */
-  virtual void Paint(gfx::DrawTarget* aTarget,
-                     gfx::SourceSurface* aMaskSurface) {}
   virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer) {}
 
   /**

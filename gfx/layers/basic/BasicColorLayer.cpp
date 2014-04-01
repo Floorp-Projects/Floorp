@@ -43,24 +43,7 @@ public:
     ColorLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
-  {
-    if (IsHidden()) {
-      return;
-    }
-
-    CompositionOp op = GetEffectiveOperator(this);
-
-    DrawOptions opts = DrawOptions();
-    opts.mCompositionOp = op;
-    ColorPattern pattern(ToColor(mColor));
-    aTarget->MaskSurface(pattern,
-                         aMaskSurface,
-                         ToIntRect(GetBounds()).TopLeft(),
-                         opts);
-  }
-
-  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
+  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer) MOZ_OVERRIDE
   {
     if (IsHidden()) {
       return;
