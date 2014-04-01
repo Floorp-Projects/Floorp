@@ -128,6 +128,10 @@ function adjustRange(aMessage) {
 addMessageListener(
   'AccessFu:Start',
   function(m) {
+    if (m.json.logLevel) {
+      Logger.logLevel = Logger[m.json.logLevel];
+    }
+
     Logger.debug('AccessFu:Start');
     if (m.json.buildApp)
       Utils.MozBuildApp = m.json.buildApp;

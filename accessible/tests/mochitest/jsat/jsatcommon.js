@@ -164,6 +164,7 @@ AccessFuContentTest.prototype = {
   currentPair: null,
 
   start: function(aFinishedCallback) {
+    Logger.logLevel = Logger.DEBUG;
     this.finishedCallback = aFinishedCallback;
     var self = this;
 
@@ -194,6 +195,16 @@ AccessFuContentTest.prototype = {
     });
   },
 
+  finish: function() {
+    Logger.logLevel = Logger.INFO;
+    for (var mm of this.mms) {
+        mm.sendAsyncMessage('AccessFu:Stop');
+      }
+    if (this.finishedCallback) {
+      this.finishedCallback();
+    }
+  },
+
   setupMessageManager:  function (aMessageManager, aCallback) {
     function contentScript() {
       addMessageListener('AccessFuTest:Focus', function (aMessage) {
@@ -213,7 +224,9 @@ AccessFuContentTest.prototype = {
     aMessageManager.addMessageListener('AccessFu:Ready', function () {
       aMessageManager.addMessageListener('AccessFu:ContentStarted', aCallback);
       aMessageManager.sendAsyncMessage('AccessFu:Start',
-        { buildApp: 'browser', androidSdkVersion: Utils.AndroidSdkVersion});
+        { buildApp: 'browser',
+          androidSdkVersion: Utils.AndroidSdkVersion,
+          logLevel: 'DEBUG' });
     });
 
     aMessageManager.loadFrameScript(
@@ -236,11 +249,8 @@ AccessFuContentTest.prototype = {
       if (!this.currentPair[1]) {
        this.pump();
      }
-    } else if (this.finishedCallback) {
-      for (var mm of this.mms) {
-        mm.sendAsyncMessage('AccessFu:Stop');
-      }
-      this.finishedCallback();
+    } else {
+      this.finish();
     }
   },
 
@@ -301,6 +311,10 @@ AccessFuContentTest.prototype = {
   },
 
   extractUtterance: function(aData) {
+    if (!aData) {
+      return null;
+    }
+
     for (var output of aData) {
       if (output && output.type === 'Speech') {
         for (var action of output.details.actions) {
