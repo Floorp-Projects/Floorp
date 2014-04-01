@@ -56,6 +56,7 @@ public:
 
   virtual bool GetAsSurface(gfxASurface** aSurface,
                             SurfaceDescriptor* aDescriptor);
+  virtual TemporaryRef<SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
 protected:
   BasicLayerManager* BasicManager()
@@ -229,6 +230,17 @@ BasicImageLayer::GetAsSurface(gfxASurface** aSurface,
   nsRefPtr<gfxASurface> surface = mContainer->DeprecatedGetCurrentAsSurface(&dontCare);
   surface.forget(aSurface);
   return true;
+}
+
+TemporaryRef<SourceSurface>
+BasicImageLayer::GetAsSourceSurface()
+{
+  if (!mContainer) {
+    return nullptr;
+  }
+
+  gfx::IntSize dontCare;
+  return mContainer->GetCurrentAsSourceSurface(&dontCare);
 }
 
 already_AddRefed<ImageLayer>
