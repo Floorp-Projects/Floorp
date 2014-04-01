@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISerializable.idl"
+#include "nsIContentPolicy.idl"
 
 interface nsIURI;
 interface nsIChannel;
@@ -16,7 +17,7 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(8b91f829-b1bf-4327-8ece-4000aa823394)]
+[scriptable, uuid(1ae83090-e1e1-4272-b0c4-0fbd751c1e27)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
 
@@ -25,7 +26,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    * enforce.  This is a barrier for the nsDocument so it doesn't load any
    * sub-content until either it knows that a CSP is ready or will not be used.
    */
-  attribute boolean isInitialized;
+  readonly attribute boolean isInitialized;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -37,7 +38,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    * Returns the number of policies attached to this CSP instance.  Useful with
    * getPolicy().
    */
-  attribute long policyCount;
+  readonly attribute unsigned long policyCount;
 
   /**
    * Remove a policy associated with this CSP context.
@@ -217,7 +218,7 @@ interface nsIContentSecurityPolicy : nsISerializable
    * Calls to this may trigger violation reports when queried, so
    * this value should not be cached.
    */
-  short shouldLoad(in unsigned long   aContentType,
+  short shouldLoad(in nsContentPolicyType aContentType,
                    in nsIURI          aContentLocation,
                    in nsIURI          aRequestOrigin,
                    in nsISupports     aContext,
@@ -229,11 +230,16 @@ interface nsIContentSecurityPolicy : nsISerializable
    * document are being processed.  Given a bit of information about the request,
    * decides whether or not the policy is satisfied.
    */
-  short shouldProcess(in unsigned long   aContentType,
+  short shouldProcess(in nsContentPolicyType   aContentType,
                       in nsIURI          aContentLocation,
                       in nsIURI          aRequestOrigin,
                       in nsISupports     aContext,
                       in ACString        aMimeType,
                       in nsISupports     aExtra);
+
+%{ C++
+// nsIObserver topic to fire when the policy encounters a violation.
+#define CSP_VIOLATION_TOPIC "csp-on-violate-policy"
+%}
 
 };

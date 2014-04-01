@@ -28,6 +28,7 @@ using namespace mozilla;
 
 /* Keeps track of whether or not CSP is enabled */
 bool CSPService::sCSPEnabled = true;
+bool CSPService::sNewBackendEnabled = true;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
@@ -36,6 +37,7 @@ static PRLogModuleInfo* gCspPRLog;
 CSPService::CSPService()
 {
   Preferences::AddBoolVarCache(&sCSPEnabled, "security.csp.enable");
+  Preferences::AddBoolVarCache(&sNewBackendEnabled, "security.csp.newbackend.enable");
 
 #ifdef PR_LOGGING
   if (!gCspPRLog)
@@ -167,10 +169,10 @@ CSPService::ShouldLoad(uint32_t aContentType,
     if (csp) {
 #ifdef PR_LOGGING
       {
-        int numPolicies = 0;
+        uint32_t numPolicies = 0;
         nsresult rv = csp->GetPolicyCount(&numPolicies);
         if (NS_SUCCEEDED(rv)) {
-          for (int i=0; i<numPolicies; i++) {
+          for (uint32_t i=0; i<numPolicies; i++) {
             nsAutoString policy;
             csp->GetPolicy(i, policy);
             PR_LOG(gCspPRLog, PR_LOG_DEBUG,
@@ -235,10 +237,10 @@ CSPService::ShouldProcess(uint32_t         aContentType,
     if (csp) {
 #ifdef PR_LOGGING
       {
-        int numPolicies = 0;
+        uint32_t numPolicies = 0;
         nsresult rv = csp->GetPolicyCount(&numPolicies);
         if (NS_SUCCEEDED(rv)) {
-          for (int i=0; i<numPolicies; i++) {
+          for (uint32_t i=0; i<numPolicies; i++) {
             nsAutoString policy;
             csp->GetPolicy(i, policy);
             PR_LOG(gCspPRLog, PR_LOG_DEBUG,

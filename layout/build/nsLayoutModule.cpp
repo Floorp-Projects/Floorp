@@ -215,6 +215,7 @@ static void Shutdown();
 #include "mozilla/dom/GamepadService.h"
 #endif
 #include "nsCSPService.h"
+#include "nsCSPContext.h"
 #include "nsISmsService.h"
 #include "nsIMmsService.h"
 #include "nsIMobileMessageService.h"
@@ -588,6 +589,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AudioChannelService, AudioChannelServic
 NS_GENERIC_FACTORY_CONSTRUCTOR(FakeSpeechRecognitionService)
 #endif
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCSPContext)
 NS_GENERIC_FACTORY_CONSTRUCTOR(CSPService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMixedContentBlocker)
 
@@ -732,6 +734,7 @@ NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_AUDIOCHANNEL_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
 NS_DEFINE_NAMED_CID(CSPSERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_CSPCONTEXT_CID);
 NS_DEFINE_NAMED_CID(NS_MIXEDCONTENTBLOCKER_CID);
 NS_DEFINE_NAMED_CID(NS_EVENTLISTENERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GLOBALMESSAGEMANAGER_CID);
@@ -1021,6 +1024,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_SYNTHVOICEREGISTRY_CID, true, nullptr, nsSynthVoiceRegistryConstructor },
 #endif
   { &kCSPSERVICE_CID, false, nullptr, CSPServiceConstructor },
+  { &kNS_CSPCONTEXT_CID, false, nullptr, nsCSPContextConstructor },
   { &kNS_MIXEDCONTENTBLOCKER_CID, false, nullptr, nsMixedContentBlockerConstructor },
   { &kNS_EVENTLISTENERSERVICE_CID, false, nullptr, CreateEventListenerService },
   { &kNS_GLOBALMESSAGEMANAGER_CID, false, nullptr, CreateGlobalMessageManager },
@@ -1174,6 +1178,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_SYNTHVOICEREGISTRY_CONTRACTID, &kNS_SYNTHVOICEREGISTRY_CID },
 #endif
   { CSPSERVICE_CONTRACTID, &kCSPSERVICE_CID },
+  { NS_CSPCONTEXT_CONTRACTID, &kNS_CSPCONTEXT_CID },
   { NS_MIXEDCONTENTBLOCKER_CONTRACTID, &kNS_MIXEDCONTENTBLOCKER_CID },
   { NS_EVENTLISTENERSERVICE_CONTRACTID, &kNS_EVENTLISTENERSERVICE_CID },
   { NS_GLOBALMESSAGEMANAGER_CONTRACTID, &kNS_GLOBALMESSAGEMANAGER_CID },
