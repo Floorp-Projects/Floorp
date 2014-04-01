@@ -88,9 +88,9 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   if (!mGLContext && aDestTarget) {
     NS_ASSERTION(mSurface, "Must have surface to draw!");
     if (mSurface) {
-      SurfacePattern source(mSurface, ExtendMode::CLAMP, Matrix(), ToFilter(mFilter));
-      aDestTarget->FillRect(Rect(0, 0, mBounds.width, mBounds.height),
-                            source, DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+      aDestTarget->CopySurface(mSurface,
+                               IntRect(0, 0, mBounds.width, mBounds.height),
+                               IntPoint(0, 0));
     }
     return;
   }
@@ -155,9 +155,9 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
                                          resultDataSurface->Stride(),
                                          resultDataSurface->GetFormat());
       IntSize readSize = readSurf->GetSize();
-      Rect r(0, 0, readSize.width, readSize.height);
-      DrawOptions opts(1.0f, CompositionOp::OP_SOURCE, AntialiasMode::DEFAULT);
-      dt->DrawSurface(readSurf, r, r, DrawSurfaceOptions(), opts);
+      dt->CopySurface(readSurf,
+                      IntRect(0, 0, readSize.width, readSize.height),
+                      IntPoint(0, 0));
     }
 
     // If !aDestSurface then we will end up painting using mSurface, so
