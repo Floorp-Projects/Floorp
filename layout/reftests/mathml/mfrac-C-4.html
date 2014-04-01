@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <title>mfrac denomalign</title>
+    <script type="text/javascript">
+      function doTest() {
+        document.getElementById("testMfrac").setAttribute("denomalign","left");
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate",doTest, false);
+    </script>
+  </head>
+  <body>
+    <math>
+      <mfrac id="testMfrac" style="font-size: 300%">
+        <mrow><mn>a</mn><mo>+</mo><mn>b</mn><mo>+</mo><mn>c</mn><mo>+</mo><mn>d</mn><mo>+</mo><mn>e</mn></mrow>
+        <mi>x</mi>
+      </mfrac>
+    </math>
+  </body>
+</html>

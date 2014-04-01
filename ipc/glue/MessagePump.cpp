@@ -106,7 +106,7 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     // get here if the normal Gecko event loop has been awoken above.
     // Bug 750713
     if (MOZ_LIKELY(AndroidBridge::HasEnv())) {
-        did_work |= GeckoAppShell::PumpMessageLoop();
+        did_work |= mozilla::widget::android::GeckoAppShell::PumpMessageLoop();
     }
 #endif
 

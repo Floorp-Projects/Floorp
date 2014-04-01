@@ -128,6 +128,10 @@ static const int64_t USECS_PER_MS = 1000;
 // Converts seconds to milliseconds.
 #define MS_TO_SECONDS(s) ((double)(s) / (PR_MSEC_PER_SEC))
 
+// Converts from seconds to microseconds. Returns failure if the resulting
+// integer is too big to fit in an int64_t.
+nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs);
+
 // The maximum height and width of the video. Used for
 // sanitizing the memory allocation of the RGB buffer.
 // The maximum resolution we anticipate encountering in the

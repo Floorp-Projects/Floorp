@@ -13,7 +13,7 @@ BEGIN_TEST(testDefineProperty_bug564344)
     EVAL("function f() {}\n"
          "var x = {p: f};\n"
          "x.p();  // brand x's scope\n"
-         "x;", x.address());
+         "x;", &x);
 
     JS::RootedObject obj(cx, JSVAL_TO_OBJECT(x));
     for (int i = 0; i < 2; i++)

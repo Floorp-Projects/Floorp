@@ -5,9 +5,9 @@
 #ifndef mozilla_dom_system_AudioChannelManager_h
 #define mozilla_dom_system_AudioChannelManager_h
 
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalTypes.h"
-#include "nsDOMEventTargetHelper.h"
 #include "AudioChannelService.h"
 
 namespace mozilla {
@@ -20,7 +20,7 @@ namespace dom {
 namespace system {
 
 class AudioChannelManager MOZ_FINAL
-  : public nsDOMEventTargetHelper
+  : public DOMEventTargetHelper
   , public hal::SwitchObserver
   , public nsIDOMEventListener
 {

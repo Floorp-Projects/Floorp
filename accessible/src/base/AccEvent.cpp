@@ -11,7 +11,7 @@
 #include "xpcAccEvents.h"
 #include "States.h"
 
-#include "nsEventStateManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/Selection.h"
 
 using namespace mozilla;
@@ -33,7 +33,7 @@ AccEvent::AccEvent(uint32_t aEventType, Accessible* aAccessible,
   mEventType(aEventType), mEventRule(aEventRule), mAccessible(aAccessible)
 {
   if (aIsFromUserInput == eAutoDetect)
-    mIsFromUserInput = nsEventStateManager::IsHandlingUserInput();
+    mIsFromUserInput = EventStateManager::IsHandlingUserInput();
   else
     mIsFromUserInput = aIsFromUserInput == eFromUserInput ? true : false;
 }

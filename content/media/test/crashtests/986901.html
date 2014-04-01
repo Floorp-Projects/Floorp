@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+    var ac = new window.AudioContext();
+    var delay1 = ac.createDelay(0.02);
+    var delay2 = ac.createDelay(0.002);
+    var source = ac.createOscillator();
+    source.start(0);
+    source.connect(delay1, 0, 0);
+    delay2.connect(delay1, 0, 0);
+    delay1.connect(delay2, 0, 0);
+</script>
+</head>
+</html>

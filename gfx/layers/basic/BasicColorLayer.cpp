@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BasicLayersImpl.h"            // for FillWithMask, etc
+#include "BasicLayersImpl.h"            // for FillRectWithMask, etc
 #include "Layers.h"                     // for ColorLayer, etc
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayers.h"                // for BasicLayerManager
@@ -17,6 +17,7 @@
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
+#include "mozilla/gfx/PathHelpers.h"
 
 using namespace mozilla::gfx;
 
@@ -43,42 +44,22 @@ public:
     ColorLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
+  virtual void Paint(DrawTarget* aDT, Layer* aMaskLayer) MOZ_OVERRIDE
   {
     if (IsHidden()) {
       return;
     }
 
-    CompositionOp op = GetEffectiveOperator(this);
-
-    DrawOptions opts = DrawOptions();
-    opts.mCompositionOp = op;
-    ColorPattern pattern(ToColor(mColor));
-    aTarget->MaskSurface(pattern,
-                         aMaskSurface,
-                         ToIntRect(GetBounds()).TopLeft(),
-                         opts);
-  }
-
-  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
-  {
-    if (IsHidden()) {
-      return;
+    Rect snapped(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+    if (UserToDevicePixelSnapped(snapped, aDT->GetTransform())) {
+      Matrix mat = aDT->GetTransform();
+      mat.Invert();
+      snapped = mat.TransformBounds(snapped);
     }
-    gfxContextAutoSaveRestore contextSR(aContext);
-    gfxContext::GraphicsOperator mixBlendMode = DeprecatedGetEffectiveMixBlendMode();
-    AutoSetOperator setOptimizedOperator(aContext,
-                                         mixBlendMode != gfxContext::OPERATOR_OVER ?
-                                           mixBlendMode :
-                                           DeprecatedGetOperator());
 
-    aContext->SetColor(mColor);
-
-    nsIntRect bounds = GetBounds();
-    aContext->NewPath();
-    aContext->SnappedRectangle(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
-
-    FillWithMask(aContext, GetEffectiveOpacity(), aMaskLayer);
+    FillRectWithMask(aDT, snapped, ToColor(mColor),
+                     DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
+                     aMaskLayer);
   }
 
 protected:

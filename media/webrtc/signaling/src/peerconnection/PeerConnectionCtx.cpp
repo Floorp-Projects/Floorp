@@ -113,7 +113,7 @@ public:
   void Init()
     {
       nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
+        services::GetObserverService();
       if (!observerService)
         return;
 
@@ -131,7 +131,7 @@ public:
   virtual ~PeerConnectionCtxShutdown()
     {
       nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
+        services::GetObserverService();
       if (observerService)
         observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
@@ -143,7 +143,7 @@ public:
       sipcc::PeerConnectionCtx::Destroy();
 
       nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
+        services::GetObserverService();
       if (!observerService)
         return NS_ERROR_FAILURE;
 
@@ -162,11 +162,12 @@ public:
 NS_IMPL_ISUPPORTS1(PeerConnectionCtxShutdown, nsIObserver);
 }
 
+using namespace mozilla;
 namespace sipcc {
 
 PeerConnectionCtx* PeerConnectionCtx::gInstance;
 nsIThread* PeerConnectionCtx::gMainThread;
-StaticRefPtr<mozilla::PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
+StaticRefPtr<PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
 
 // Since we have a pointer to main-thread, help make it safe for lower-level
 // SIPCC threads to use SyncRunnable without deadlocking, by exposing main's
@@ -293,7 +294,7 @@ nsresult PeerConnectionCtx::Initialize() {
   mDevice = mCCM->getActiveDevice();
   mCCM->addCCObserver(this);
   NS_ENSURE_TRUE(mDevice.get(), NS_ERROR_FAILURE);
-  ChangeSipccState(mozilla::dom::PCImplSipccState::Starting);
+  ChangeSipccState(dom::PCImplSipccState::Starting);
 
   // Now that everything is set up, we let the CCApp thread
   // know that it's okay to start processing messages.
@@ -328,7 +329,7 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
   cc_service_state_t state = aInfo->getServiceState();
   // We are keeping this in a local var to avoid a data race
   // with ChangeSipccState in the debug message and compound if below
-  mozilla::dom::PCImplSipccState currentSipccState = mSipccState;
+  dom::PCImplSipccState currentSipccState = mSipccState;
 
   switch (aDeviceEvent) {
     case CCAPI_DEVICE_EV_STATE:
@@ -337,9 +338,9 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
 
       if (CC_STATE_INS == state) {
         // SIPCC is up
-        if (mozilla::dom::PCImplSipccState::Starting == currentSipccState ||
-            mozilla::dom::PCImplSipccState::Idle == currentSipccState) {
-          ChangeSipccState(mozilla::dom::PCImplSipccState::Started);
+        if (dom::PCImplSipccState::Starting == currentSipccState ||
+            dom::PCImplSipccState::Idle == currentSipccState) {
+          ChangeSipccState(dom::PCImplSipccState::Started);
         } else {
           CSFLogError(logTag, "%s PeerConnection already started", __FUNCTION__);
         }

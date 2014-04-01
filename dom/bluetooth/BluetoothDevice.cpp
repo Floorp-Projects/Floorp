@@ -23,31 +23,31 @@ DOMCI_DATA(BluetoothDevice, BluetoothDevice)
 NS_IMPL_CYCLE_COLLECTION_CLASS(BluetoothDevice)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(BluetoothDevice,
-                                               nsDOMEventTargetHelper)
+                                               DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsUuids)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsServices)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(BluetoothDevice,
-                                                  nsDOMEventTargetHelper)
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(BluetoothDevice,
-                                                nsDOMEventTargetHelper)
+                                                DOMEventTargetHelper)
   tmp->Unroot();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(BluetoothDevice)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(BluetoothDevice, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(BluetoothDevice, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(BluetoothDevice, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(BluetoothDevice, DOMEventTargetHelper)
 
 BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
                                  const nsAString& aAdapterPath,
                                  const BluetoothValue& aValue)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , BluetoothPropertyContainer(BluetoothObjectType::TYPE_DEVICE)
   , mJsUuids(nullptr)
   , mJsServices(nullptr)

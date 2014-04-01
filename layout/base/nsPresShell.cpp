@@ -25,6 +25,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TabChild.h"
@@ -74,7 +75,6 @@
 #include "nsCaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsFrameManager.h"
-#include "nsEventStateManager.h"
 #include "nsXPCOM.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILineIterator.h" // for ScrollContentIntoView
@@ -468,7 +468,7 @@ public:
           // handles both D3E "wheel" event and legacy mouse scroll events.
           // We should dispatch legacy mouse events before dispatching the
           // "wheel" event into system group.
-          nsRefPtr<nsEventStateManager> esm =
+          nsRefPtr<EventStateManager> esm =
             aVisitor.mPresContext->EventStateManager();
           esm->DispatchLegacyMouseScrollEvents(frame,
                                                aVisitor.mEvent->AsWheelEvent(),
@@ -2924,7 +2924,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll)
   }
 
   // Hold a reference to the ESM in case event dispatch tears us down.
-  nsRefPtr<nsEventStateManager> esm = mPresContext->EventStateManager();
+  nsRefPtr<EventStateManager> esm = mPresContext->EventStateManager();
 
   if (aAnchorName.IsEmpty()) {
     NS_ASSERTION(!aScroll, "can't scroll to empty anchor name");
@@ -6745,13 +6745,14 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     //
     // Note, currently for backwards compatibility we don't forward mouse events
     // to the active document when mouse is over some subdocument.
-    nsEventStateManager* activeESM =
-      nsEventStateManager::GetActiveEventStateManager();
+    EventStateManager* activeESM =
+      EventStateManager::GetActiveEventStateManager();
     if (activeESM && aEvent->HasMouseEventMessage() &&
         activeESM != shell->GetPresContext()->EventStateManager() &&
-        static_cast<nsEventStateManager*>(activeESM)->GetPresContext()) {
+        static_cast<EventStateManager*>(activeESM)->GetPresContext()) {
       nsIPresShell* activeShell =
-        static_cast<nsEventStateManager*>(activeESM)->GetPresContext()->GetPresShell();
+        static_cast<EventStateManager*>(activeESM)->GetPresContext()->
+          GetPresShell();
       if (activeShell &&
           nsContentUtils::ContentIsCrossDocDescendantOf(activeShell->GetDocument(),
                                                         shell->GetDocument())) {
@@ -7002,7 +7003,7 @@ PresShell::HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
 nsresult
 PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
 {
-  nsRefPtr<nsEventStateManager> manager = mPresContext->EventStateManager();
+  nsRefPtr<EventStateManager> manager = mPresContext->EventStateManager();
   nsresult rv = NS_OK;
 
   if (!NS_EVENT_NEEDS_FRAME(aEvent) || GetCurrentEventFrame()) {
@@ -7042,7 +7043,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
             }
           }
           nsCOMPtr<nsIDocument> pointerLockedDoc =
-            do_QueryReferent(nsEventStateManager::sPointerLockedDoc);
+            do_QueryReferent(EventStateManager::sPointerLockedDoc);
           if (pointerLockedDoc) {
             aEvent->mFlags.mDefaultPrevented = true;
             aEvent->mFlags.mOnlyChromeDispatch = true;
@@ -7189,7 +7190,7 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
 
     if (aEvent->mFlags.mIsTrusted && aEvent->message == NS_MOUSE_MOVE) {
       nsIPresShell::AllowMouseCapture(
-        nsEventStateManager::GetActiveEventStateManager() == manager);
+        EventStateManager::GetActiveEventStateManager() == manager);
     }
 
     nsAutoPopupStatePusher popupStatePusher(
@@ -8491,7 +8492,7 @@ void
 PresShell::WindowSizeMoveDone()
 {
   if (mPresContext) {
-    nsEventStateManager::ClearGlobalActiveContent(nullptr);
+    EventStateManager::ClearGlobalActiveContent(nullptr);
     ClearMouseCapture(nullptr);
   }
 }

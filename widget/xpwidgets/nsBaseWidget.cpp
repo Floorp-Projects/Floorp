@@ -28,7 +28,6 @@
 #include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsXULPopupManager.h"
-#include "nsEventStateManager.h"
 #include "nsIWidgetListener.h"
 #include "nsIGfxInfo.h"
 #include "npapi.h"

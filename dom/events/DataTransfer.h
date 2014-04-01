@@ -19,13 +19,15 @@
 #include "nsDOMFile.h"
 #include "mozilla/Attributes.h"
 
-class nsEventStateManager;
 class nsINode;
 class nsITransferable;
 class nsISupportsArray;
 class nsILoadContext;
 
 namespace mozilla {
+
+class EventStateManager;
+
 namespace dom {
 
 class DOMStringList;
@@ -60,7 +62,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DataTransfer)
 
-  friend class ::nsEventStateManager;
+  friend class mozilla::EventStateManager;
 
 protected:
 

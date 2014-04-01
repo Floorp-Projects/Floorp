@@ -78,7 +78,7 @@ public:
 
   /**
    * Return an accesskey registered on the given element by
-   * nsEventStateManager or 0 if there is no registered accesskey.
+   * EventStateManager or 0 if there is no registered accesskey.
    *
    * @param aContent - the given element.
    */

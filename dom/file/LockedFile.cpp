@@ -310,15 +310,15 @@ LockedFile::~LockedFile()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(LockedFile, nsDOMEventTargetHelper,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(LockedFile, DOMEventTargetHelper,
                                      mFileHandle)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(LockedFile)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(LockedFile, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(LockedFile, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(LockedFile, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(LockedFile, DOMEventTargetHelper)
 
 nsresult
 LockedFile::PreHandleEvent(EventChainPreVisitor& aVisitor)

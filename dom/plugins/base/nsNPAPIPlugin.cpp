@@ -541,7 +541,7 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   // Set aCallNotify here to false.  If pluginHost->GetURL or PostURL fail,
   // the listener's destructor will do the notification while we are about to
   // return a failure code.
-  // Call SetCallNotify(true) below after we are sure we cannot return a failure 
+  // Call SetCallNotify(true) below after we are sure we cannot return a failure
   // code.
   if (!target) {
     inst->NewStreamListener(relativeURL, notifyData,
@@ -612,7 +612,7 @@ public:
     return (mFunc != nullptr);
   }
 
-private:  
+private:
   NPP mInstance;
   PluginThreadCallback mFunc;
   void *mUserData;
@@ -1064,10 +1064,10 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
     // This type of stream (NPStream) was created via NPN_NewStream. The plugin holds
     // the reference until it is to be deleted here. Deleting the wrapper will
     // release the wrapped nsIOutputStream.
-    // 
+    //
     // The NPStream the plugin references should always be a sub-object of it's own
     // 'ndata', which is our nsNPAPIStramWrapper. See bug 548441.
-    NS_ASSERTION((char*)streamWrapper <= (char*)pstream && 
+    NS_ASSERTION((char*)streamWrapper <= (char*)pstream &&
                  ((char*)pstream) + sizeof(*pstream)
                      <= ((char*)streamWrapper) + sizeof(*streamWrapper),
                  "pstream is not a subobject of wrapper");
@@ -1558,7 +1558,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
   JS::Rooted<JS::Value> rval(cx);
   nsJSUtils::EvaluateOptions evalOptions;
   nsresult rv = nsJSUtils::EvaluateString(cx, utf16script, obj, options,
-                                          evalOptions, rval.address());
+                                          evalOptions, &rval);
 
   return NS_SUCCEEDED(rv) &&
          (!result || JSValToNPVariant(npp, cx, rval, result));
@@ -2250,10 +2250,10 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
       uint32_t* bits = reinterpret_cast<uint32_t*>(result);
       *bits = kBitmap_ANPDrawingModel && kSurface_ANPDrawingModel;
       return NPERR_NO_ERROR;
-    }  
+    }
 
     case kJavaContext_ANPGetValue: {
-      jobject ret = GeckoAppShell::GetContext();
+      jobject ret = mozilla::widget::android::GeckoAppShell::GetContext();
       if (!ret)
         return NPERR_GENERIC_ERROR;
 

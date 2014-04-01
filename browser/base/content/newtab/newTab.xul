@@ -17,6 +17,14 @@
             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&newtab.pageTitle;">
 
+  <xul:panel id="sponsored-panel" orient="vertical" type="arrow">
+    <xul:description>&newtab.panel.message;</xul:description>
+    <xul:label class="text-link"
+               href="&newtab.panel.link.url;"
+               onclick="this.parentNode.hidePopup();"
+               value="&newtab.panel.link.text;" />
+  </xul:panel>
+
   <div id="newtab-scrollbox">
 
     <div id="newtab-vertical-margin">

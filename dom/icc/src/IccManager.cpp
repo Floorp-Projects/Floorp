@@ -20,7 +20,7 @@ DOMCI_DATA(MozIccManager, IccManager)
 NS_IMPL_CYCLE_COLLECTION_CLASS(IccManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IccManager,
-                                               nsDOMEventTargetHelper)
+                                               DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsIccIds)
   // We did not setup 'mIccListeners' being a participant of cycle collection is
   // because in Navigator->Invalidate() it will call mIccManager->Shutdown(),
@@ -29,21 +29,21 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(IccManager,
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IccManager,
-                                                  nsDOMEventTargetHelper)
+                                                  DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IccManager,
-                                                nsDOMEventTargetHelper)
+                                                DOMEventTargetHelper)
   tmp->Unroot();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IccManager)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozIccManager)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozIccManager)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(IccManager, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(IccManager, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(IccManager, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IccManager, DOMEventTargetHelper)
 
 IccManager::IccManager(nsPIDOMWindow* aWindow)
   : mJsIccIds(nullptr)

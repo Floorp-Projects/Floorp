@@ -86,7 +86,7 @@ function Tester(aTests, aDumper, aCallback) {
   this.SimpleTest = simpleTestScope.SimpleTest;
   this.MemoryStats = simpleTestScope.MemoryStats;
   this.Task = Components.utils.import("resource://gre/modules/Task.jsm", null).Task;
-  this.Promise = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", null).Promise;
+  this.Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
   this.Assert = Components.utils.import("resource://testing-common/Assert.jsm", null).Assert;
 }
 Tester.prototype = {

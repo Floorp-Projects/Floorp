@@ -43,6 +43,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
@@ -75,7 +76,6 @@
 #include "nsDOMJSUtils.h"
 #include "nsDOMMutationObserver.h"
 #include "nsError.h"
-#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGenericHTMLFrameElement.h"
@@ -574,7 +574,7 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::on##name_, _id, _type, _struct },
 #define WINDOW_ONLY_EVENT EVENT
 #define NON_IDL_EVENT EVENT
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef WINDOW_ONLY_EVENT
 #undef EVENT
     { nullptr }
@@ -606,7 +606,7 @@ nsContentUtils::InitializeTouchEventTable()
 #define EVENT(name_,  _id, _type, _struct)
 #define TOUCH_EVENT(name_,  _id, _type, _struct)      \
       { nsGkAtoms::on##name_, _id, _type, _struct },
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef TOUCH_EVENT
 #undef EVENT
       { nullptr }
@@ -5031,7 +5031,7 @@ nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
            aDragEvent->message == NS_DRAGDROP_END) {
     // For the drop and dragend events, set the drop effect based on the
     // last value that the dropEffect had. This will have been set in
-    // nsEventStateManager::PostHandleEvent for the last dragenter or
+    // EventStateManager::PostHandleEvent for the last dragenter or
     // dragover event.
     uint32_t dropEffect;
     initialDataTransfer->GetDropEffectInt(&dropEffect);
@@ -5844,7 +5844,7 @@ nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent)
 
   // If the subdocument lives in another process, the frame is
   // tabbable.
-  if (nsEventStateManager::IsRemoteTarget(aContent)) {
+  if (EventStateManager::IsRemoteTarget(aContent)) {
     return true;
   }
 
@@ -6278,7 +6278,7 @@ bool
 nsContentUtils::IsRequestFullScreenAllowed()
 {
   return !sTrustedFullScreenOnly ||
-         nsEventStateManager::IsHandlingUserInput() ||
+         EventStateManager::IsHandlingUserInput() ||
          IsCallerChrome();
 }
 
@@ -6419,7 +6419,7 @@ nsContentUtils::IsInPointerLockContext(nsIDOMWindow* aWin)
   }
 
   nsCOMPtr<nsIDocument> pointerLockedDoc =
-    do_QueryReferent(nsEventStateManager::sPointerLockedDoc);
+    do_QueryReferent(EventStateManager::sPointerLockedDoc);
   if (!pointerLockedDoc || !pointerLockedDoc->GetWindow()) {
     return false;
   }
