@@ -8,6 +8,8 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
@@ -17,9 +19,7 @@
 #include "nsContentUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsError.h"
-#include "nsEventStateManager.h"
 #include "nsGlobalWindow.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
@@ -653,7 +653,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
     // For these following events only allow popups if they're
     // triggered while handling user input. See
     // nsPresShell::HandleEventInternal() for details.
-    if (nsEventStateManager::IsHandlingUserInput()) {
+    if (EventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_SELECTED :
         if (PopupAllowedForEvent("select")) {
@@ -672,7 +672,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
     // For this following event only allow popups if it's triggered
     // while handling user input. See
     // nsPresShell::HandleEventInternal() for details.
-    if (nsEventStateManager::IsHandlingUserInput()) {
+    if (EventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_INPUT :
         if (PopupAllowedForEvent("input")) {
@@ -686,7 +686,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
     // For this following event only allow popups if it's triggered
     // while handling user input. See
     // nsPresShell::HandleEventInternal() for details.
-    if (nsEventStateManager::IsHandlingUserInput()) {
+    if (EventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_CHANGE :
         if (PopupAllowedForEvent("change")) {
@@ -778,7 +778,7 @@ Event::GetEventPopupControlState(WidgetEvent* aEvent)
     // For these following events only allow popups if they're
     // triggered while handling user input. See
     // nsPresShell::HandleEventInternal() for details.
-    if (nsEventStateManager::IsHandlingUserInput()) {
+    if (EventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_SUBMIT :
         if (PopupAllowedForEvent("submit")) {
@@ -829,8 +829,8 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
                        WidgetEvent* aEvent,
                        LayoutDeviceIntPoint aPoint)
 {
-  if (nsEventStateManager::sIsPointerLocked) {
-    return nsEventStateManager::sLastScreenPoint;
+  if (EventStateManager::sIsPointerLocked) {
+    return EventStateManager::sLastScreenPoint;
   }
 
   if (!aEvent || 
@@ -885,8 +885,8 @@ Event::GetClientCoords(nsPresContext* aPresContext,
                        LayoutDeviceIntPoint aPoint,
                        CSSIntPoint aDefaultPoint)
 {
-  if (nsEventStateManager::sIsPointerLocked) {
-    return nsEventStateManager::sLastClientPoint;
+  if (EventStateManager::sIsPointerLocked) {
+    return EventStateManager::sLastClientPoint;
   }
 
   if (!aEvent ||
@@ -927,7 +927,7 @@ Event::GetEventName(uint32_t aEventType)
   switch(aEventType) {
 #define ID_TO_EVENT(name_, _id, _type, _struct) \
   case _id: return #name_;
-#include "nsEventNameList.h"
+#include "mozilla/EventNameList.h"
 #undef ID_TO_EVENT
   default:
     break;
@@ -1056,7 +1056,7 @@ Event::SetOwner(mozilla::dom::EventTarget* aOwner)
     return;
   }
 
-  nsCOMPtr<nsDOMEventTargetHelper> eth = do_QueryInterface(aOwner);
+  nsCOMPtr<DOMEventTargetHelper> eth = do_QueryInterface(aOwner);
   if (eth) {
     mOwner = eth->GetOwner();
     return;

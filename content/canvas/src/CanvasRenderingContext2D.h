@@ -96,7 +96,10 @@ private:
   nsCOMPtr<nsISupports> mParent;
   static gfx::Float ToFloat(double aValue) { return gfx::Float(aValue); }
 
+  mutable RefPtr<gfx::Path> mPath;
   mutable RefPtr<gfx::PathBuilder> mPathBuilder;
+
+  void EnsurePathBuilder() const;
 };
 
 struct CanvasBidiProcessor;

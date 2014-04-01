@@ -5,7 +5,7 @@
 #ifndef mozilla_dom_SpeakerManager_h
 #define mozilla_dom_SpeakerManager_h
 
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MozSpeakerManagerBinding.h"
 
 namespace mozilla {
@@ -16,7 +16,7 @@ namespace dom {
  * The device's speaker status would set back to normal when UA close the application.
  */
 class SpeakerManager MOZ_FINAL
-  : public nsDOMEventTargetHelper
+  : public DOMEventTargetHelper
   , public nsIDOMEventListener
 {
   friend class SpeakerManagerService;

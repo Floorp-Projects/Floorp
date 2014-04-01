@@ -406,9 +406,44 @@ function _execute_test() {
   _load_files(_TAIL_FILES);
 
   // Execute all of our cleanup functions.
-  var func;
-  while ((func = _cleanupFunctions.pop()))
-    func();
+  let reportCleanupError = function(ex) {
+    let stack, filename;
+    if (ex && typeof ex == "object" && "stack" in ex) {
+      stack = ex.stack;
+    } else {
+      stack = Components.stack.caller;
+    }
+    if (stack instanceof Components.interfaces.nsIStackFrame) {
+      filename = stack.filename;
+    } else if (ex.fileName) {
+      filename = ex.fileName;
+    }
+    _log_message_with_stack("test_unexpected_fail",
+                            ex, stack, filename);
+  };
+
+  let func;
+  while ((func = _cleanupFunctions.pop())) {
+    let result;
+    try {
+      result = func();
+    } catch (ex) {
+      reportCleanupError(ex);
+      continue;
+    }
+    if (result && typeof result == "object"
+        && "then" in result && typeof result.then == "function") {
+      // This is a promise, wait until it is satisfied before proceeding
+      let complete = false;
+      let promise = result.then(null, reportCleanupError);
+      promise = promise.then(() => complete = true);
+      let thr = Components.classes["@mozilla.org/thread-manager;1"]
+                  .getService().currentThread;
+      while (!complete) {
+        thr.processNextEvent(true);
+      }
+    }
+  }
 
   // Restore idle service to avoid leaks.
   _fakeIdleService.deactivate();

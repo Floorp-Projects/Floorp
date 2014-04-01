@@ -7,7 +7,7 @@
 #define mozilla_dom_MessagePort_h
 
 #include "mozilla/Attributes.h"
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 
 class nsPIDOMWindow;
 
@@ -17,7 +17,7 @@ namespace dom {
 class DispatchEventRunnable;
 class PostMessageRunnable;
 
-class MessagePortBase : public nsDOMEventTargetHelper
+class MessagePortBase : public DOMEventTargetHelper
 {
 protected:
   MessagePortBase(nsPIDOMWindow* aWindow);
@@ -59,7 +59,7 @@ class MessagePort MOZ_FINAL : public MessagePortBase
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MessagePort,
-                                           nsDOMEventTargetHelper)
+                                           DOMEventTargetHelper)
 
   MessagePort(nsPIDOMWindow* aWindow);
   ~MessagePort();

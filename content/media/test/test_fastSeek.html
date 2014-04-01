@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=778077
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 778077</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="application/javascript">
+
+    /** Test for Bug 778077 - HTMLMediaElement.fastSeek() **/
+    // Iterate through a list of keyframe timestamps, and seek to
+    // halfway between the keyframe and the keyframe after it.
+    var manager = new MediaTestManager;
+
+    function doSeek(v) {
+      // fastSeek to half way between this keyframe and the next, or if this is the last
+      // keyframe seek to halfway between this keyframe and the end of media.
+      var nextKeyFrame = (v.keyframeIndex + 1) < v.keyframes.length ? v.keyframes[v.keyframeIndex + 1] : v.duration;
+      v.target = (v.keyframes[v.keyframeIndex] + nextKeyFrame) / 2;
+      v.fastSeek(v.target);
+      ok(Math.abs(v.currentTime - v.target) < 0.01,
+         v.name + " seekTo=" + v.target + " currentTime (" + v.currentTime + ") should be close to seek target initially");
+    }
+
+    function onloadedmetadata(event) {
+      var v = event.target;
+      doSeek(v);
+    }
+
+    function onseeked(event) {
+      var v = event.target;
+      var keyframe = v.keyframes[v.keyframeIndex];
+
+      // Check that the current time ended up roughly after the keyframe.
+      // We must be a bit fuzzy here, as the decoder backend may actually
+      // seek to the audio sample prior to the keyframe.
+      ok(v.currentTime >= keyframe - 0.05,
+         v.name + " seekTo=" + v.target + " currentTime (" + v.currentTime +
+         ") should be end up roughly after keyframe (" + keyframe + ") after fastSeek");
+
+      ok(v.currentTime <= v.target,
+         v.name + " seekTo=" + v.target + " currentTime (" + v.currentTime +
+         ") should be end up less than target after fastSeek");
+
+      v.keyframeIndex++
+      if (v.keyframeIndex == v.keyframes.length) {
+        manager.finished(v.token);
+        v.src = "";
+        v.parentNode.removeChild(v);
+      } else {
+        doSeek(v);
+      }
+    }
+
+    function startTest(test, token) {
+      manager.started(token);
+      v = document.createElement("video");
+      v.src = test.name;
+      v.name = test.name;
+      v.preload = "metadata";
+      v.token = token;
+      v.target = 0;
+      v.keyframes = test.keyframes;
+      v.keyframeIndex = 0;
+      ok(v.keyframes.length > 0, v.name + " - video should have at least one sync point");
+      v.addEventListener("loadedmetadata", onloadedmetadata);
+      v.addEventListener("seeked", onseeked);
+      document.body.appendChild(v);
+    }
+
+    manager.runTests(gFastSeekTests, startTest);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=778077">Mozilla Bug 778077</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
