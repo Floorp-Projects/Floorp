@@ -88,40 +88,36 @@ protected:
   static void DeactivateAllTemporarilyActivatedScrollTargets();
 };
 
-} // namespace mozilla
-
-class nsMouseWheelTransaction
+class WheelTransaction
 {
 public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
   static void BeginTransaction(nsIFrame* aTargetFrame,
-                               mozilla::WidgetWheelEvent* aEvent);
+                               WidgetWheelEvent* aEvent);
   // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
   // frame might be destroyed in the event handler.
-  static bool UpdateTransaction(mozilla::WidgetWheelEvent* aEvent);
+  static bool UpdateTransaction(WidgetWheelEvent* aEvent);
   static void MayEndTransaction();
   static void EndTransaction();
-  static void OnEvent(mozilla::WidgetEvent* aEvent);
+  static void OnEvent(WidgetEvent* aEvent);
   static void Shutdown();
   static uint32_t GetTimeoutTime();
 
   static void OwnScrollbars(bool aOwn);
 
-  static mozilla::DeltaValues
-    AccelerateWheelDelta(mozilla::WidgetWheelEvent* aEvent,
-                         bool aAllowScrollSpeedOverride);
+  static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent,
+                                          bool aAllowScrollSpeedOverride);
 
 protected:
   static const uint32_t kScrollSeriesTimeout = 80; // in milliseconds
-  static nsIntPoint GetScreenPoint(mozilla::WidgetGUIEvent* aEvent);
+  static nsIntPoint GetScreenPoint(WidgetGUIEvent* aEvent);
   static void OnFailToScrollTarget();
   static void OnTimeout(nsITimer* aTimer, void* aClosure);
   static void SetTimeout();
   static uint32_t GetIgnoreMoveDelayTime();
   static int32_t GetAccelerationStart();
   static int32_t GetAccelerationFactor();
-  static mozilla::DeltaValues
-    OverrideSystemScrollSpeed(mozilla::WidgetWheelEvent* aEvent);
+  static DeltaValues OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent);
   static double ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor);
   static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
 
@@ -132,5 +128,7 @@ protected:
   static int32_t sScrollSeriesCounter;
   static bool sOwnScrollbars;
 };
+
+} // namespace mozilla
 
 #endif // mozilla_WheelHandlingHelper_h_
