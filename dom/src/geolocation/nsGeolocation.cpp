@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsISettingsService.h"
 
@@ -1143,6 +1144,16 @@ Geolocation::Update(nsIDOMGeoPosition *aSomewhere)
     return NS_OK;
   }
 
+  if (aSomewhere) {
+    nsCOMPtr<nsIDOMGeoPositionCoords> coords;
+    aSomewhere->GetCoords(getter_AddRefs(coords));
+    if (coords) {
+      double accuracy = -1;
+      coords->GetAccuracy(&accuracy);
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::GEOLOCATION_ACCURACY, accuracy);
+    }
+  }
+
   for (uint32_t i = mPendingCallbacks.Length(); i > 0; i--) {
     mPendingCallbacks[i-1]->Update(aSomewhere);
     RemoveRequest(mPendingCallbacks[i-1]);
@@ -1174,6 +1185,8 @@ Geolocation::NotifyError(uint16_t aErrorCode)
     Shutdown();
     return NS_OK;
   }
+
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::GEOLOCATION_ERROR, true);
 
   for (uint32_t i = mPendingCallbacks.Length(); i > 0; i--) {
     mPendingCallbacks[i-1]->NotifyErrorAndShutdown(aErrorCode);
