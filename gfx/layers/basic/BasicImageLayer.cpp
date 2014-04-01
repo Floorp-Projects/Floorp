@@ -51,8 +51,7 @@ public:
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface);
-  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer);
+  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer) MOZ_OVERRIDE;
 
   virtual bool GetAsSurface(gfxASurface** aSurface,
                             SurfaceDescriptor* aDescriptor);
@@ -72,15 +71,6 @@ protected:
 
   gfx::IntSize mSize;
 };
-
-void
-BasicImageLayer::Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
-{
-  if (IsHidden()) {
-    return;
-  }
-  GetAndPaintCurrentImage(aTarget, GetEffectiveOpacity(), aMaskSurface);
-}
 
 void
 BasicImageLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
