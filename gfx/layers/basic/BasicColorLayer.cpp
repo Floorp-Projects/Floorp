@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BasicLayersImpl.h"            // for FillWithMask, etc
+#include "BasicLayersImpl.h"            // for FillRectWithMask, etc
 #include "Layers.h"                     // for ColorLayer, etc
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayers.h"                // for BasicLayerManager
@@ -65,20 +65,19 @@ public:
     if (IsHidden()) {
       return;
     }
-    gfxContextAutoSaveRestore contextSR(aContext);
-    gfxContext::GraphicsOperator mixBlendMode = DeprecatedGetEffectiveMixBlendMode();
-    AutoSetOperator setOptimizedOperator(aContext,
-                                         mixBlendMode != gfxContext::OPERATOR_OVER ?
-                                           mixBlendMode :
-                                           DeprecatedGetOperator());
 
-    aContext->SetColor(mColor);
+    gfxRect snapped(mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+    if (aContext->UserToDevicePixelSnapped(snapped, true)) {
+      gfxMatrix mat = aContext->CurrentMatrix();
+      mat.Invert();
+      snapped = mat.TransformBounds(snapped);
+    }
 
-    nsIntRect bounds = GetBounds();
-    aContext->NewPath();
-    aContext->SnappedRectangle(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
-
-    FillWithMask(aContext, GetEffectiveOpacity(), aMaskLayer);
+    FillRectWithMask(aContext->GetDrawTarget(),
+                     Rect(snapped.x, snapped.y, snapped.width, snapped.height),
+                     ToColor(mColor),
+                     DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
+                     aMaskLayer);
   }
 
 protected:
