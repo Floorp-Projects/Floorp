@@ -274,14 +274,6 @@ public:
                                             const TextureInfo& aTextureInfo,
                                             const nsIntRect& aBufferRect) MOZ_OVERRIDE;
 
-  virtual void EnsureDeprecatedTextureHost(TextureIdentifier aTextureId,
-                                 const SurfaceDescriptor& aSurface,
-                                 ISurfaceAllocator* aAllocator,
-                                 const TextureInfo& aTextureInfo)
-  {
-    NS_RUNTIMEABORT("Shouldn't call this");
-  }
-
   virtual void UpdateIncremental(TextureIdentifier aTextureId,
                                  SurfaceDescriptor& aSurface,
                                  const nsIntRegion& aUpdated,

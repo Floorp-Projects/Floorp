@@ -26,7 +26,6 @@ namespace layers {
 class MaybeMagicGrallocBufferHandle;
 class SurfaceDescriptorGralloc;
 class TextureHost;
-class DeprecatedTextureHost;
 
 /**
  * This class exists to share the underlying GraphicBuffer resources
@@ -100,10 +99,6 @@ private:
   // This value stores the number of bytes allocated in this
   // BufferActor. This will be used for the memory reporter.
   size_t mAllocBytes;
-
-  // used only for hacky fix in gecko 23 for bug 862324
-  // see bug 865908 about fixing this.
-  nsAutoTArray<DeprecatedTextureHost*, 2> mDeprecatedTextureHosts;
 
   // Used only for hacky fix for bug 966446.
   TextureHost* mTextureHost;

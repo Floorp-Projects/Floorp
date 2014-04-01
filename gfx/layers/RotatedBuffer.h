@@ -30,7 +30,6 @@ class Matrix;
 
 namespace layers {
 
-class DeprecatedTextureClient;
 class TextureClient;
 class ThebesLayer;
 
@@ -174,9 +173,7 @@ public:
   };
 
   RotatedContentBuffer(BufferSizePolicy aBufferSizePolicy)
-    : mDeprecatedBufferProvider(nullptr)
-    , mDeprecatedBufferProviderOnWhite(nullptr)
-    , mBufferProvider(nullptr)
+    : mBufferProvider(nullptr)
     , mBufferProviderOnWhite(nullptr)
     , mBufferSizePolicy(aBufferSizePolicy)
   {
@@ -195,8 +192,6 @@ public:
   {
     mDTBuffer = nullptr;
     mDTBufferOnWhite = nullptr;
-    mDeprecatedBufferProvider = nullptr;
-    mDeprecatedBufferProviderOnWhite = nullptr;
     mBufferProvider = nullptr;
     mBufferProviderOnWhite = nullptr;
     mBufferRect.SetEmpty();
@@ -316,47 +311,12 @@ protected:
     return tmp.forget();
   }
 
-  /**
-   * Set the texture client only.  This is used with surfaces that
-   * require explicit lock/unlock, which |aClient| is used to do on
-   * demand in this code.
-   *
-   * It's the caller's responsibility to ensure |aClient| is valid
-   * for the duration of operations it requests of this
-   * RotatedContentBuffer.  It's also the caller's responsibility to
-   * unset the provider when inactive, by calling
-   * SetBufferProvider(nullptr).
-   */
-  void SetDeprecatedBufferProvider(DeprecatedTextureClient* aClient)
-  {
-    // Only this buffer provider can give us a buffer.  If we
-    // already have one, something has gone wrong.
-    MOZ_ASSERT((!aClient || !mDTBuffer) && !mBufferProvider);
-
-    mDeprecatedBufferProvider = aClient;
-    if (!mDeprecatedBufferProvider) {
-      mDTBuffer = nullptr;
-    } 
-  }
-  
-  void SetDeprecatedBufferProviderOnWhite(DeprecatedTextureClient* aClient)
-  {
-    // Only this buffer provider can give us a buffer.  If we
-    // already have one, something has gone wrong.
-    MOZ_ASSERT((!aClient || !mDTBufferOnWhite) && !mBufferProviderOnWhite);
-
-    mDeprecatedBufferProviderOnWhite = aClient;
-    if (!mDeprecatedBufferProviderOnWhite) {
-      mDTBufferOnWhite = nullptr;
-    }
-  }
-
   // new texture client versions
   void SetBufferProvider(TextureClient* aClient)
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT((!aClient || !mDTBuffer) && !mDeprecatedBufferProvider);
+    MOZ_ASSERT(!aClient || !mDTBuffer);
 
     mBufferProvider = aClient;
     if (!mBufferProvider) {
@@ -368,12 +328,12 @@ protected:
   {
     // Only this buffer provider can give us a buffer.  If we
     // already have one, something has gone wrong.
-    MOZ_ASSERT((!aClient || !mDTBufferOnWhite) && !mDeprecatedBufferProviderOnWhite);
+    MOZ_ASSERT(!aClient || !mDTBufferOnWhite);
 
     mBufferProviderOnWhite = aClient;
     if (!mBufferProviderOnWhite) {
       mDTBufferOnWhite = nullptr;
-    } 
+    }
   }
 
   /**
@@ -432,8 +392,6 @@ protected:
    * when we're using surfaces that require explicit map/unmap. Only one
    * may be used at a time.
    */
-  DeprecatedTextureClient* mDeprecatedBufferProvider;
-  DeprecatedTextureClient* mDeprecatedBufferProviderOnWhite;
   TextureClient* mBufferProvider;
   TextureClient* mBufferProviderOnWhite;
 
