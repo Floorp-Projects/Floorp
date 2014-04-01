@@ -25,7 +25,7 @@ SpeechStreamListener::~SpeechStreamListener()
   SpeechRecognition* forgottenRecognition = nullptr;
   mRecognition.swap(forgottenRecognition);
   NS_ProxyRelease(mainThread,
-                  static_cast<nsDOMEventTargetHelper*>(forgottenRecognition));
+                  static_cast<DOMEventTargetHelper*>(forgottenRecognition));
 }
 
 void

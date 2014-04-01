@@ -8,12 +8,12 @@
 #define mozilla_dom_telephony_telephonycommon_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsString.h"
 #include "nsTArray.h"
 

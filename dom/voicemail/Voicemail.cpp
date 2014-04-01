@@ -46,7 +46,7 @@ NS_IMPL_ISUPPORTS1(Voicemail::Listener, nsIVoicemailListener)
 
 Voicemail::Voicemail(nsPIDOMWindow* aWindow,
                      nsIVoicemailProvider* aProvider)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mProvider(aProvider)
 {
   mListener = new Listener(this);

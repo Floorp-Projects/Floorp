@@ -12,9 +12,8 @@
 #include "nsIFile.h"
 #include "nsIFileStorage.h"
 
-#include "nsDOMEventTargetHelper.h"
-
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/FileModeBinding.h"
 
 class nsIDOMFile;
@@ -44,7 +43,7 @@ class FileHelper;
  * GetFileInfo, CreateStream and CreateFileObject.
  * (for example IDBFileHandle provides IndexedDB specific implementation).
  */
-class FileHandle : public nsDOMEventTargetHelper
+class FileHandle : public DOMEventTargetHelper
 {
   friend class FileService;
   friend class LockedFile;
@@ -53,7 +52,7 @@ class FileHandle : public nsDOMEventTargetHelper
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileHandle, nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileHandle, DOMEventTargetHelper)
 
   static already_AddRefed<FileHandle>
   Create(nsPIDOMWindow* aWindow,
@@ -124,12 +123,12 @@ public:
 
 protected:
   FileHandle(nsPIDOMWindow* aWindow)
-    : nsDOMEventTargetHelper(aWindow)
+    : DOMEventTargetHelper(aWindow)
   {
   }
 
-  FileHandle(nsDOMEventTargetHelper* aOwner)
-    : nsDOMEventTargetHelper(aOwner)
+  FileHandle(DOMEventTargetHelper* aOwner)
+    : DOMEventTargetHelper(aOwner)
   {
   }
 

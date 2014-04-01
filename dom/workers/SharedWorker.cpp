@@ -26,7 +26,7 @@ USING_WORKERS_NAMESPACE
 
 SharedWorker::SharedWorker(nsPIDOMWindow* aWindow,
                            WorkerPrivate* aWorkerPrivate)
-: nsDOMEventTargetHelper(aWindow), mWorkerPrivate(aWorkerPrivate),
+: DOMEventTargetHelper(aWindow), mWorkerPrivate(aWorkerPrivate),
   mSuspended(false)
 {
   AssertIsOnMainThread();
@@ -169,22 +169,22 @@ SharedWorker::NoteDeadWorker(JSContext* aCx)
   mWorkerPrivate = nullptr;
 }
 
-NS_IMPL_ADDREF_INHERITED(SharedWorker, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(SharedWorker, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(SharedWorker, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(SharedWorker, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SharedWorker)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(SharedWorker)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SharedWorker,
-                                                  nsDOMEventTargetHelper)
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessagePort)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedEvents)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SharedWorker,
-                                                nsDOMEventTargetHelper)
+                                                DOMEventTargetHelper)
   tmp->Close();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessagePort)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedEvents)
@@ -213,5 +213,5 @@ SharedWorker::PreHandleEvent(EventChainPreVisitor& aVisitor)
     return NS_OK;
   }
 
-  return nsDOMEventTargetHelper::PreHandleEvent(aVisitor);
+  return DOMEventTargetHelper::PreHandleEvent(aVisitor);
 }

@@ -4,13 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <limits>
-#include "mozilla/Hal.h"
 #include "BatteryManager.h"
-#include "nsIDOMClassInfo.h"
 #include "Constants.h"
+#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
-#include "nsDOMEventTargetHelper.h"
 #include "mozilla/dom/BatteryManagerBinding.h"
+#include "nsIDOMClassInfo.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -26,7 +26,7 @@ namespace dom {
 namespace battery {
 
 BatteryManager::BatteryManager(nsPIDOMWindow* aWindow)
-  : nsDOMEventTargetHelper(aWindow)
+  : DOMEventTargetHelper(aWindow)
   , mLevel(kDefaultLevel)
   , mCharging(kDefaultCharging)
   , mRemainingTime(kDefaultRemainingTime)

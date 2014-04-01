@@ -8,10 +8,10 @@
 #define mozilla_dom_bluetooth_bluetoothmanager_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/Observer.h"
 #include "BluetoothCommon.h"
 #include "BluetoothPropertyContainer.h"
-#include "nsDOMEventTargetHelper.h"
-#include "mozilla/Observer.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {
@@ -24,7 +24,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothNamedValue;
 
-class BluetoothManager : public nsDOMEventTargetHelper
+class BluetoothManager : public DOMEventTargetHelper
                        , public BluetoothSignalObserver
                        , public BluetoothPropertyContainer
 {

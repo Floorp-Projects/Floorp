@@ -6,7 +6,7 @@
 #ifndef FileIOObject_h__
 #define FileIOObject_h__
 
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"
 #include "nsIDOMFile.h"
@@ -28,7 +28,7 @@ extern const uint64_t kUnknownSize;
 
 // A common base class for FileReader and FileSaver
 
-class FileIOObject : public nsDOMEventTargetHelper,
+class FileIOObject : public DOMEventTargetHelper,
                      public nsIStreamListener,
                      public nsITimerCallback
 {
@@ -65,8 +65,7 @@ public:
 
   NS_DECL_NSIREQUESTOBSERVER
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileIOObject,
-                                           nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileIOObject, DOMEventTargetHelper)
 
 protected:
   // Implemented by the derived class to do whatever it needs to do for abort
