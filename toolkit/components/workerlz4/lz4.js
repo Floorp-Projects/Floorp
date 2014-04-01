@@ -93,7 +93,7 @@ function compressFileContent(array, options = {}) {
 exports.compressFileContent = compressFileContent;
 
 function decompressFileContent(array, options = {}) {
-  let {ptr, bytes} = SharedAll.normalizeToPointer(array, options.bytes);
+  let {ptr, bytes} = SharedAll.normalizeToPointer(array, options.bytes || null);
   if (bytes < HEADER_SIZE) {
     throw new LZError("decompress", "becauseLZNoHeader", "Buffer is too short (no header)");
   }

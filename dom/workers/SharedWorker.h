@@ -10,7 +10,7 @@
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/workers/bindings/MessagePort.h"
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 
 class nsIDOMEvent;
 class nsPIDOMWindow;
@@ -25,7 +25,7 @@ class MessagePort;
 class RuntimeService;
 class WorkerPrivate;
 
-class SharedWorker MOZ_FINAL : public nsDOMEventTargetHelper
+class SharedWorker MOZ_FINAL : public DOMEventTargetHelper
 {
   friend class MessagePort;
   friend class RuntimeService;
@@ -73,7 +73,7 @@ public:
   Close();
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SharedWorker, nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SharedWorker, DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(error)
 

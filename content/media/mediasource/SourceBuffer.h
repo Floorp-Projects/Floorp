@@ -14,12 +14,12 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SourceBufferBinding.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/mozalloc.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsISupports.h"
 #include "nsStringGlue.h"
 #include "nscore.h"
@@ -38,7 +38,7 @@ namespace dom {
 
 class TimeRanges;
 
-class SourceBuffer MOZ_FINAL : public nsDOMEventTargetHelper
+class SourceBuffer MOZ_FINAL : public DOMEventTargetHelper
 {
 public:
   /** WebIDL Methods. */
@@ -86,7 +86,7 @@ public:
   /** End WebIDL Methods. */
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SourceBuffer, nsDOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SourceBuffer, DOMEventTargetHelper)
 
   explicit SourceBuffer(MediaSource* aMediaSource, const nsACString& aType);
   ~SourceBuffer();

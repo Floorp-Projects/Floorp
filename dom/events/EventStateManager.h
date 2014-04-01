@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsEventStateManager_h__
-#define nsEventStateManager_h__
+#ifndef mozilla_EventStateManager_h_
+#define mozilla_EventStateManager_h_
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/TypedEnum.h"
@@ -28,19 +28,24 @@ class EnterLeaveDispatcher;
 class nsIMarkupDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
+class nsPresContext;
 
 namespace mozilla {
+
+class EnterLeaveDispatcher;
+class ScrollbarsForWheel;
+class WheelTransaction;
+
 namespace dom {
 class DataTransfer;
 class TabParent;
-}
-}
+} // namespace dom
 
 class OverOutElementsWrapper MOZ_FINAL : public nsISupports
 {
 public:
-  OverOutElementsWrapper() : mLastOverFrame(nullptr) {}
-  ~OverOutElementsWrapper() {}
+  OverOutElementsWrapper();
+  ~OverOutElementsWrapper();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
@@ -58,23 +63,16 @@ public:
   nsCOMPtr<nsIContent> mFirstOutEventElement;
 };
 
-/*
- * Event listener manager
- */
-
-class nsEventStateManager : public nsSupportsWeakReference,
-                            public nsIObserver
+class EventStateManager : public nsSupportsWeakReference,
+                          public nsIObserver
 {
-  friend class nsMouseWheelTransaction;
-  friend class nsScrollbarsForWheel;
+  friend class mozilla::EnterLeaveDispatcher;
+  friend class mozilla::ScrollbarsForWheel;
+  friend class mozilla::WheelTransaction;
+
 public:
-
-  typedef mozilla::TimeStamp TimeStamp;
-  typedef mozilla::TimeDuration TimeDuration;
-  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
-
-  nsEventStateManager();
-  virtual ~nsEventStateManager();
+  EventStateManager();
+  virtual ~EventStateManager();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -90,7 +88,7 @@ public:
    * DOM or frame event handling should occur here as well.
    */
   nsresult PreHandleEvent(nsPresContext* aPresContext,
-                          mozilla::WidgetEvent* aEvent,
+                          WidgetEvent* aEvent,
                           nsIFrame* aTargetFrame,
                           nsEventStatus* aStatus);
 
@@ -100,7 +98,7 @@ public:
    * DOM and frame processing.
    */
   nsresult PostHandleEvent(nsPresContext* aPresContext,
-                           mozilla::WidgetEvent* aEvent,
+                           WidgetEvent* aEvent,
                            nsIFrame* aTargetFrame,
                            nsEventStatus* aStatus);
 
@@ -109,7 +107,7 @@ public:
    * NS_MOUSE_PIXEL_SCROLL event for compatiblity with old Gecko.
    */
   void DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
-                                       mozilla::WidgetWheelEvent* aEvent,
+                                       WidgetWheelEvent* aEvent,
                                        nsEventStatus* aStatus);
 
   void NotifyDestroyPresContext(nsPresContext* aPresContext);
@@ -117,8 +115,7 @@ public:
   void ClearFrameRefs(nsIFrame* aFrame);
 
   nsIFrame* GetEventTarget();
-  already_AddRefed<nsIContent> GetEventTargetContent(
-                                 mozilla::WidgetEvent* aEvent);
+  already_AddRefed<nsIContent> GetEventTargetContent(WidgetEvent* aEvent);
 
   /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
@@ -133,7 +130,7 @@ public:
    */
   bool SetContentState(nsIContent *aContent, nsEventStates aState);
   void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
-  bool EventStatusOK(mozilla::WidgetGUIEvent* aEvent);
+  bool EventStatusOK(WidgetGUIEvent* aEvent);
 
   /**
    * Register accesskey on the given element. When accesskey is activated then
@@ -196,25 +193,24 @@ public:
 
   nsPresContext* GetPresContext() { return mPresContext; }
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EventStateManager,
                                            nsIObserver)
 
   static nsIDocument* sMouseOverDocument;
 
-  static nsEventStateManager* GetActiveEventStateManager() { return sActiveESM; }
+  static EventStateManager* GetActiveEventStateManager() { return sActiveESM; }
 
   // Sets aNewESM to be the active event state manager, and
   // if aContent is non-null, marks the object as active.
-  static void SetActiveManager(nsEventStateManager* aNewESM,
+  static void SetActiveManager(EventStateManager* aNewESM,
                                nsIContent* aContent);
 
   // Sets the full-screen event state on aElement to aIsFullScreen.
-  static void SetFullScreenState(mozilla::dom::Element* aElement, bool aIsFullScreen);
+  static void SetFullScreenState(dom::Element* aElement, bool aIsFullScreen);
 
   static bool IsRemoteTarget(nsIContent* aTarget);
-  static LayoutDeviceIntPoint GetChildProcessOffset(
-                                nsFrameLoader* aFrameLoader,
-                                const mozilla::WidgetEvent& aEvent);
+  static LayoutDeviceIntPoint GetChildProcessOffset(nsFrameLoader* aFrameLoader,
+                                                    const WidgetEvent& aEvent);
 
   // Holds the point in screen coords that a mouse event was dispatched to,
   // before we went into pointer lock mode. This is constantly updated while
@@ -227,15 +223,13 @@ public:
   // Holds the point in client coords of the last mouse event. Used by
   // dom::Event::GetClientCoords() to make mouse events' client coords appear
   // frozen at the last mouse position while the pointer is locked.
-  static mozilla::CSSIntPoint sLastClientPoint;
+  static CSSIntPoint sLastClientPoint;
 
   static bool sIsPointerLocked;
   static nsWeakPtr sPointerLockedElement;
   static nsWeakPtr sPointerLockedDoc;
 
 protected:
-  friend class EnterLeaveDispatcher;
-
   /**
    * Prefs class capsules preference management.
    */
@@ -268,7 +262,7 @@ protected:
   static int32_t GetAccessModifierMaskFor(nsISupports* aDocShell);
 
   void UpdateCursor(nsPresContext* aPresContext,
-                    mozilla::WidgetEvent* aEvent,
+                    WidgetEvent* aEvent,
                     nsIFrame* aTargetFrame,
                     nsEventStatus* aStatus);
   /**
@@ -276,7 +270,7 @@ protected:
    * content.  This returns the primary frame for the content (or null
    * if it goes away during the event).
    */
-  nsIFrame* DispatchMouseOrPointerEvent(mozilla::WidgetMouseEvent* aMouseEvent,
+  nsIFrame* DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
                                         uint32_t aMessage,
                                         nsIContent* aTargetContent,
                                         nsIContent* aRelatedContent);
@@ -284,12 +278,12 @@ protected:
    * Synthesize DOM and frame mouseover and mouseout events from this
    * MOUSE_MOVE or MOUSE_EXIT event.
    */
-  void GenerateMouseEnterExit(mozilla::WidgetMouseEvent* aMouseEvent);
+  void GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent);
   /**
    * Tell this ESM and ESMs in parent documents that the mouse is
    * over some content in this document.
    */
-  void NotifyMouseOver(mozilla::WidgetMouseEvent* aMouseEvent,
+  void NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
                        nsIContent* aContent);
   /**
    * Tell this ESM and ESMs in affected child documents that the mouse
@@ -300,17 +294,16 @@ protected:
    *        NotifyMouseOut will NOT change the current hover content to null;
    *        in that case the caller is responsible for updating hover state.
    */
-  void NotifyMouseOut(mozilla::WidgetMouseEvent* aMouseEvent,
+  void NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
                       nsIContent* aMovingInto);
   void GenerateDragDropEnterExit(nsPresContext* aPresContext,
-                                 mozilla::WidgetDragEvent* aDragEvent);
+                                 WidgetDragEvent* aDragEvent);
 
   /**
    * Return mMouseEnterLeaveHelper or relevant mPointersEnterLeaveHelper elements wrapper.
    * If mPointersEnterLeaveHelper does not contain wrapper for pointerId it create new one
    */
-  OverOutElementsWrapper*
-  GetWrapperByEventID(mozilla::WidgetMouseEvent* aMouseEvent);
+  OverOutElementsWrapper* GetWrapperByEventID(WidgetMouseEvent* aMouseEvent);
 
   /**
    * Fire the dragenter and dragexit/dragleave events when the mouse moves to a
@@ -321,7 +314,7 @@ protected:
    * @param aTargetFrame target frame for the event
    */
   void FireDragEnterOrExit(nsPresContext* aPresContext,
-                           mozilla::WidgetDragEvent* aDragEvent,
+                           WidgetDragEvent* aDragEvent,
                            uint32_t aMsg,
                            nsIContent* aRelatedTarget,
                            nsIContent* aTargetContent,
@@ -330,13 +323,13 @@ protected:
    * Update the initial drag session data transfer with any changes that occur
    * on cloned data transfer objects used for events.
    */
-  void UpdateDragDataTransfer(mozilla::WidgetDragEvent* dragEvent);
+  void UpdateDragDataTransfer(WidgetDragEvent* dragEvent);
 
   nsresult SetClickCount(nsPresContext* aPresContext,
-                         mozilla::WidgetMouseEvent* aEvent,
+                         WidgetMouseEvent* aEvent,
                          nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsPresContext* aPresContext,
-                                    mozilla::WidgetMouseEvent* aEvent,
+                                    WidgetMouseEvent* aEvent,
                                     nsEventStatus* aStatus);
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);
@@ -370,7 +363,7 @@ protected:
    * @param aModifierMask modifier mask for the key event
    */
   void HandleAccessKey(nsPresContext* aPresContext,
-                       mozilla::WidgetKeyboardEvent* aEvent,
+                       WidgetKeyboardEvent* aEvent,
                        nsEventStatus* aStatus,
                        nsIDocShellTreeItem* aBubbledFrom,
                        ProcessingAccessKeyState aAccessKeyState,
@@ -398,15 +391,14 @@ protected:
      * ApplyUserPrefsToDelta() overrides the wheel event's delta values with
      * user prefs.
      */
-    void ApplyUserPrefsToDelta(mozilla::WidgetWheelEvent* aEvent);
+    void ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent);
 
     /**
      * If ApplyUserPrefsToDelta() changed the delta values with customized
      * prefs, the overflowDelta values would be inflated.
      * CancelApplyingUserPrefsFromOverflowDelta() cancels the inflation.
      */
-    void CancelApplyingUserPrefsFromOverflowDelta(
-                                    mozilla::WidgetWheelEvent* aEvent);
+    void CancelApplyingUserPrefsFromOverflowDelta(WidgetWheelEvent* aEvent);
 
     /**
      * Computes the default action for the aEvent with the prefs.
@@ -419,20 +411,20 @@ protected:
       ACTION_ZOOM,
       ACTION_LAST = ACTION_ZOOM
     };
-    Action ComputeActionFor(mozilla::WidgetWheelEvent* aEvent);
+    Action ComputeActionFor(WidgetWheelEvent* aEvent);
 
     /**
      * NeedToComputeLineOrPageDelta() returns if the aEvent needs to be
      * computed the lineOrPageDelta values.
      */
-    bool NeedToComputeLineOrPageDelta(mozilla::WidgetWheelEvent* aEvent);
+    bool NeedToComputeLineOrPageDelta(WidgetWheelEvent* aEvent);
 
     /**
      * IsOverOnePageScrollAllowed*() checks whether wheel scroll amount should
      * be rounded down to the page width/height (false) or not (true).
      */
-    bool IsOverOnePageScrollAllowedX(mozilla::WidgetWheelEvent* aEvent);
-    bool IsOverOnePageScrollAllowedY(mozilla::WidgetWheelEvent* aEvent);
+    bool IsOverOnePageScrollAllowedX(WidgetWheelEvent* aEvent);
+    bool IsOverOnePageScrollAllowedY(WidgetWheelEvent* aEvent);
 
   private:
     WheelPrefs();
@@ -459,7 +451,7 @@ protected:
      * default index which is used at either no modifier key is pressed or
      * two or modifier keys are pressed.
      */
-    Index GetIndexFor(mozilla::WidgetWheelEvent* aEvent);
+    Index GetIndexFor(WidgetWheelEvent* aEvent);
 
     /**
      * GetPrefNameBase() returns the base pref name for aEvent.
@@ -535,7 +527,7 @@ protected:
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
   void SendLineScrollEvent(nsIFrame* aTargetFrame,
-                           mozilla::WidgetWheelEvent* aEvent,
+                           WidgetWheelEvent* aEvent,
                            EventState& aState,
                            int32_t aDelta,
                            DeltaDirection aDeltaDirection);
@@ -554,7 +546,7 @@ protected:
    * @param aDeltaDirection     The X/Y direction of dispatching event.
    */
   void SendPixelScrollEvent(nsIFrame* aTargetFrame,
-                            mozilla::WidgetWheelEvent* aEvent,
+                            WidgetWheelEvent* aEvent,
                             EventState& aState,
                             int32_t aPixelDelta,
                             DeltaDirection aDeltaDirection);
@@ -598,13 +590,13 @@ protected:
       (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS | START_FROM_PARENT)
   };
   nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                          mozilla::WidgetWheelEvent* aEvent,
+                                          WidgetWheelEvent* aEvent,
                                           ComputeScrollTargetOptions aOptions);
 
   nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
                                           double aDirectionX,
                                           double aDirectionY,
-                                          mozilla::WidgetWheelEvent* aEvent,
+                                          WidgetWheelEvent* aEvent,
                                           ComputeScrollTargetOptions aOptions);
 
   /**
@@ -620,14 +612,14 @@ protected:
    *                            line height or visible area's width and height.
    */
   nsSize GetScrollAmount(nsPresContext* aPresContext,
-                         mozilla::WidgetWheelEvent* aEvent,
+                         WidgetWheelEvent* aEvent,
                          nsIScrollableFrame* aScrollableFrame);
 
   /**
    * DoScrollText() scrolls the scrollable frame for aEvent.
    */
   void DoScrollText(nsIScrollableFrame* aScrollableFrame,
-                    mozilla::WidgetWheelEvent* aEvent);
+                    WidgetWheelEvent* aEvent);
 
   void DoScrollHistory(int32_t direction);
   void DoScrollZoom(nsIFrame *aTargetFrame, int32_t adjustment);
@@ -666,8 +658,8 @@ protected:
      * line height, sets lineOrPageDeltaX and lineOrPageDeltaY automatically.
      */
     void InitLineOrPageDelta(nsIFrame* aTargetFrame,
-                             nsEventStateManager* aESM,
-                             mozilla::WidgetWheelEvent* aEvent);
+                             EventStateManager* aESM,
+                             WidgetWheelEvent* aEvent);
 
     /**
      * Reset() resets all members.
@@ -679,7 +671,7 @@ protected:
      * scroll amount in device pixels with mPendingScrollAmount*.
      */
     nsIntPoint ComputeScrollAmountForDefaultAction(
-                 mozilla::WidgetWheelEvent* aEvent,
+                 WidgetWheelEvent* aEvent,
                  const nsIntSize& aScrollAmountInDevPixels);
 
   private:
@@ -716,16 +708,16 @@ protected:
    * the target element, as well as the orientation to trigger panning and
    * display visual boundary feedback. The decision is stored back in aEvent.
    */
-  void DecideGestureEvent(mozilla::WidgetGestureNotifyEvent* aEvent,
+  void DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
                           nsIFrame* targetFrame);
 
   // routines for the d&d gesture tracking state machine
   void BeginTrackingDragGesture(nsPresContext* aPresContext,
-                                mozilla::WidgetMouseEvent* aDownEvent,
+                                WidgetMouseEvent* aDownEvent,
                                 nsIFrame* aDownFrame);
   void StopTrackingDragGesture();
   void GenerateDragGesture(nsPresContext* aPresContext,
-                           mozilla::WidgetMouseEvent* aEvent);
+                           WidgetMouseEvent* aEvent);
 
   /**
    * Determine which node the drag should be targeted at.
@@ -739,7 +731,7 @@ protected:
    */
   void DetermineDragTarget(nsPIDOMWindow* aWindow,
                            nsIContent* aSelectionTarget,
-                           mozilla::dom::DataTransfer* aDataTransfer,
+                           dom::DataTransfer* aDataTransfer,
                            nsISelection** aSelection,
                            nsIContent** aTargetNode);
 
@@ -754,8 +746,8 @@ protected:
    * aSelection - the selection to be dragged
    */
   bool DoDefaultDragStart(nsPresContext* aPresContext,
-                          mozilla::WidgetDragEvent* aDragEvent,
-                          mozilla::dom::DataTransfer* aDataTransfer,
+                          WidgetDragEvent* aDragEvent,
+                          dom::DataTransfer* aDataTransfer,
                           nsIContent* aDragTarget,
                           nsISelection* aSelection);
 
@@ -766,27 +758,26 @@ protected:
    * BeginTrackingDragGesture). aEvent->widget must be
    * mCurrentTarget->GetNearestWidget().
    */
-  void FillInEventFromGestureDown(mozilla::WidgetMouseEvent* aEvent);
+  void FillInEventFromGestureDown(WidgetMouseEvent* aEvent);
 
-  nsresult DoContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent);
-  nsresult DoContentCommandScrollEvent(
-             mozilla::WidgetContentCommandEvent* aEvent);
+  nsresult DoContentCommandEvent(WidgetContentCommandEvent* aEvent);
+  nsresult DoContentCommandScrollEvent(WidgetContentCommandEvent* aEvent);
 
-  void DoQuerySelectedText(mozilla::WidgetQueryContentEvent* aEvent);
+  void DoQuerySelectedText(WidgetQueryContentEvent* aEvent);
 
-  bool RemoteQueryContentEvent(mozilla::WidgetEvent* aEvent);
-  mozilla::dom::TabParent *GetCrossProcessTarget();
-  bool IsTargetCrossProcess(mozilla::WidgetGUIEvent* aEvent);
+  bool RemoteQueryContentEvent(WidgetEvent* aEvent);
+  dom::TabParent *GetCrossProcessTarget();
+  bool IsTargetCrossProcess(WidgetGUIEvent* aEvent);
 
-  bool DispatchCrossProcessEvent(mozilla::WidgetEvent* aEvent,
+  bool DispatchCrossProcessEvent(WidgetEvent* aEvent,
                                  nsFrameLoader* aRemote,
                                  nsEventStatus *aStatus);
-  bool HandleCrossProcessEvent(mozilla::WidgetEvent* aEvent,
+  bool HandleCrossProcessEvent(WidgetEvent* aEvent,
                                nsIFrame* aTargetFrame,
                                nsEventStatus* aStatus);
 
 private:
-  static inline void DoStateChange(mozilla::dom::Element* aElement,
+  static inline void DoStateChange(dom::Element* aElement,
                                    nsEventStates aState, bool aAddState);
   static inline void DoStateChange(nsIContent* aContent, nsEventStates aState,
                                    bool aAddState);
@@ -803,14 +794,14 @@ private:
   // Last mouse event refPoint (the offset from the widget's origin in
   // device pixels) when mouse was locked, used to restore mouse position
   // after unlocking.
-  mozilla::LayoutDeviceIntPoint mPreLockPoint;
+  LayoutDeviceIntPoint mPreLockPoint;
 
   // Stores the refPoint of the last synthetic mouse move we dispatched
   // to re-center the mouse when we were pointer locked. If this is (-1,-1) it
   // means we've not recently dispatched a centering event. We use this to
   // detect when we receive the synth event, so we can cancel and not send it
   // to content.
-  static mozilla::LayoutDeviceIntPoint sSynthCenteringPoint;
+  static LayoutDeviceIntPoint sSynthCenteringPoint;
 
   nsWeakFrame mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
@@ -818,10 +809,10 @@ private:
 
   // Stores the refPoint (the offset from the widget's origin in device
   // pixels) of the last mouse event.
-  static mozilla::LayoutDeviceIntPoint sLastRefPoint;
+  static LayoutDeviceIntPoint sLastRefPoint;
 
   // member variables for the d&d gesture state machine
-  mozilla::LayoutDeviceIntPoint mGestureDownPoint; // screen coordinates
+  LayoutDeviceIntPoint mGestureDownPoint; // screen coordinates
   // The content to use as target if we start a d&d (what we drag).
   nsCOMPtr<nsIContent> mGestureDownContent;
   // The content of the frame where the mouse-down event occurred. It's the same
@@ -829,7 +820,7 @@ private:
   // an <area> of an image map this is the image. (bug 289667)
   nsCOMPtr<nsIContent> mGestureDownFrameOwner;
   // State of keys when the original gesture-down happened
-  mozilla::Modifiers mGestureModifiers;
+  Modifiers mGestureModifiers;
   uint16_t mGestureDownButtons;
 
   nsCOMPtr<nsIContent> mLastLeftMouseDownContent;
@@ -868,23 +859,21 @@ public:
   
   static bool sNormalLMouseEventInProcess;
 
-  static nsEventStateManager* sActiveESM;
+  static EventStateManager* sActiveESM;
   
-  static void ClearGlobalActiveContent(nsEventStateManager* aClearer);
+  static void ClearGlobalActiveContent(EventStateManager* aClearer);
 
   // Functions used for click hold context menus
   nsCOMPtr<nsITimer> mClickHoldTimer;
   void CreateClickHoldTimer(nsPresContext* aPresContext,
                             nsIFrame* aDownFrame,
-                            mozilla::WidgetGUIEvent* aMouseDownEvent);
+                            WidgetGUIEvent* aMouseDownEvent);
   void KillClickHoldTimer();
   void FireContextClick();
 
   void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
 };
-
-namespace mozilla {
 
 /**
  * This class is used while processing real user input. During this time, popups
@@ -918,4 +907,4 @@ private:
      (event)->message != NS_MOUSE_CLICK && \
      (event)->message != NS_MOUSE_DOUBLECLICK)
 
-#endif // nsEventStateManager_h__
+#endif // mozilla_EventStateManager_h_

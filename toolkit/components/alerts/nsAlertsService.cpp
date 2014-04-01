@@ -128,7 +128,7 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  GeckoAppShell::CloseNotification(aAlertName);
+  mozilla::widget::android::GeckoAppShell::CloseNotification(aAlertName);
   return NS_OK;
 #else
 
@@ -149,7 +149,9 @@ NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
                                           const nsAString & aAlertText)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  GeckoAppShell::AlertsProgressListener_OnProgress(aAlertName, aProgress, aProgressMax, aAlertText);
+  mozilla::widget::android::GeckoAppShell::AlertsProgressListener_OnProgress(aAlertName,
+                                                                             aProgress, aProgressMax,
+                                                                             aAlertText);
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -159,7 +161,7 @@ NS_IMETHODIMP nsAlertsService::OnProgress(const nsAString & aAlertName,
 NS_IMETHODIMP nsAlertsService::OnCancel(const nsAString & aAlertName)
 {
 #ifdef MOZ_WIDGET_ANDROID
-  GeckoAppShell::CloseNotification(aAlertName);
+  mozilla::widget::android::GeckoAppShell::CloseNotification(aAlertName);
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;

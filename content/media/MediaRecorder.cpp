@@ -7,7 +7,7 @@
 #include "MediaRecorder.h"
 #include "GeneratedEvents.h"
 #include "MediaEncoder.h"
-#include "nsDOMEventTargetHelper.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIDOMRecordErrorEvent.h"
@@ -33,14 +33,14 @@ namespace mozilla {
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaRecorder, nsDOMEventTargetHelper,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(MediaRecorder, DOMEventTargetHelper,
                                      mStream)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaRecorder)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(MediaRecorder, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(MediaRecorder, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(MediaRecorder, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(MediaRecorder, DOMEventTargetHelper)
 
 /**
  * Session is an object to represent a single recording event.
@@ -482,7 +482,7 @@ MediaRecorder::~MediaRecorder()
 }
 
 MediaRecorder::MediaRecorder(DOMMediaStream& aStream, nsPIDOMWindow* aOwnerWindow)
-  : nsDOMEventTargetHelper(aOwnerWindow),
+  : DOMEventTargetHelper(aOwnerWindow),
     mState(RecordingState::Inactive),
     mMutex("Session.Data.Mutex")
 {

@@ -275,6 +275,13 @@ SkPointToPoint(const SkPoint &aPoint)
   return Point(SkScalarToFloat(aPoint.x()), SkScalarToFloat(aPoint.y()));
 }
 
+static inline Rect
+SkRectToRect(const SkRect &aRect)
+{
+  return Rect(SkScalarToFloat(aRect.x()), SkScalarToFloat(aRect.y()),
+              SkScalarToFloat(aRect.width()), SkScalarToFloat(aRect.height()));
+}
+
 static inline SkShader::TileMode
 ExtendModeToTileMode(ExtendMode aMode)
 {

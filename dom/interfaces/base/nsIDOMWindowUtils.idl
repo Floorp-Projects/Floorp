@@ -456,11 +456,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aModifiers         modifiers pressed, using constants defined as
    *                           MODIFIER_*
    * @param aLineOrPageDeltaX  If you set this value non-zero for
-   *                           DOM_DELTA_PIXEL event, nsEventStateManager will
+   *                           DOM_DELTA_PIXEL event, EventStateManager will
    *                           dispatch NS_MOUSE_SCROLL event for horizontal
    *                           scroll.
    * @param aLineOrPageDeltaY  If you set this value non-zero for
-   *                           DOM_DELTA_PIXEL event, nsEventStateManager will
+   *                           DOM_DELTA_PIXEL event, EventStateManager will
    *                           dispatch NS_MOUSE_SCROLL event for vertical
    *                           scroll.
    * @param aOptions           Set following flags.
@@ -1543,7 +1543,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Returns true if a user input is being handled.
    *
-   * This calls nsEventStateManager::IsHandlingUserInput().
+   * This calls EventStateManager::IsHandlingUserInput().
    */
   readonly attribute boolean isHandlingUserInput;
 

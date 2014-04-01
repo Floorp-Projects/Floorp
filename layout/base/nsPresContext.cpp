@@ -8,6 +8,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 
 #include "base/basictypes.h"
 
@@ -27,7 +28,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsAutoPtr.h"
-#include "nsEventStateManager.h"
 #include "nsThreadUtils.h"
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
@@ -1017,7 +1017,7 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
     mDeviceContext->FlushFontCache();
   mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 
-  mEventManager = new nsEventStateManager();
+  mEventManager = new mozilla::EventStateManager();
 
   mTransitionManager = new nsTransitionManager(this);
 

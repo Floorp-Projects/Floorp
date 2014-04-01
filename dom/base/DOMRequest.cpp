@@ -18,8 +18,8 @@ using mozilla::dom::DOMCursor;
 using mozilla::AutoSafeJSContext;
 
 DOMRequest::DOMRequest(nsPIDOMWindow* aWindow)
-  : nsDOMEventTargetHelper(aWindow->IsInnerWindow() ?
-                             aWindow : aWindow->GetCurrentInnerWindow())
+  : DOMEventTargetHelper(aWindow->IsInnerWindow() ?
+                           aWindow : aWindow->GetCurrentInnerWindow())
   , mResult(JSVAL_VOID)
   , mDone(false)
 {
@@ -28,29 +28,29 @@ DOMRequest::DOMRequest(nsPIDOMWindow* aWindow)
 NS_IMPL_CYCLE_COLLECTION_CLASS(DOMRequest)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DOMRequest,
-                                                  nsDOMEventTargetHelper)
+                                                  DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DOMRequest,
-                                                nsDOMEventTargetHelper)
+                                                DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
   tmp->mResult = JSVAL_VOID;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DOMRequest,
-                                               nsDOMEventTargetHelper)
+                                               DOMEventTargetHelper)
   // Don't need NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER because
-  // nsDOMEventTargetHelper does it for us.
+  // DOMEventTargetHelper does it for us.
   NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mResult)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMRequest)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDOMRequest)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(DOMRequest, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(DOMRequest, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(DOMRequest, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(DOMRequest, DOMEventTargetHelper)
 
 /* virtual */ JSObject*
 DOMRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)

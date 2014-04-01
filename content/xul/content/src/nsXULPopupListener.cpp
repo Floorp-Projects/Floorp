@@ -19,7 +19,6 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 #include "nsXULPopupManager.h"
-#include "nsEventStateManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMXULDocument.h"
@@ -31,6 +30,7 @@
 #include "nsFrameManager.h"
 #include "nsHTMLReflowState.h"
 #include "nsIObjectLoadingContent.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/EventTarget.h"
@@ -142,7 +142,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
   }
   if (targetContent->Tag() == nsGkAtoms::browser &&
       targetContent->IsXUL() &&
-      nsEventStateManager::IsRemoteTarget(targetContent)) {
+      EventStateManager::IsRemoteTarget(targetContent)) {
     return NS_OK;
   }
 
@@ -273,7 +273,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
       }
     }
 
-    nsEventStateManager *esm = context->EventStateManager();
+    EventStateManager* esm = context->EventStateManager();
     nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
     esm->SetContentState(focusableContent, NS_EVENT_STATE_ACTIVE);
   }

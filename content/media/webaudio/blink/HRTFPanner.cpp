@@ -54,7 +54,7 @@ HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoade
     , m_convolverR1(m_convolverL1.fftSize())
     , m_convolverL2(m_convolverL1.fftSize())
     , m_convolverR2(m_convolverL1.fftSize())
-    , m_delayLine(ceilf(MaxDelayTimeSeconds * sampleRate), 1.0)
+    , m_delayLine(MaxDelayTimeSeconds * sampleRate, 1.0)
 {
     MOZ_ASSERT(m_databaseLoader);
     MOZ_COUNT_CTOR(HRTFPanner);

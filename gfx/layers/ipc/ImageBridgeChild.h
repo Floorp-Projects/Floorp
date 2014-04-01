@@ -248,17 +248,6 @@ public:
     NS_RUNTIMEABORT("should not be called");
   }
 
-  /**
-   * Communicate to the compositor that the texture identified by aCompositable
-   * and aTextureId has been updated to aDescriptor.
-   */
-  virtual void UpdateTexture(CompositableClient* aCompositable,
-                             TextureIdentifier aTextureId,
-                             SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
-
-  virtual void UpdateTextureNoSwap(CompositableClient* aCompositable,
-                                   TextureIdentifier aTextureId,
-                                   SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
   virtual void UpdateTextureIncremental(CompositableClient* aCompositable,
                                         TextureIdentifier aTextureId,
                                         SurfaceDescriptor& aDescriptor,
@@ -276,29 +265,10 @@ public:
                                  const nsIntRect& aRect) MOZ_OVERRIDE;
 
 
-  // at the moment we don't need to implement these. They are only used for
-  // thebes layers which don't support async updates.
-  virtual void CreatedSingleBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptor& aDescriptor,
-                                   const TextureInfo& aTextureInfo,
-                                   const SurfaceDescriptor* aDescriptorOnWhite = nullptr) MOZ_OVERRIDE {
-    NS_RUNTIMEABORT("should not be called");
-  }
   virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
                                         const TextureInfo& aTextureInfo,
                                         const nsIntRect& aBufferRect) MOZ_OVERRIDE
   {
-    NS_RUNTIMEABORT("should not be called");
-  }
-  virtual void CreatedDoubleBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptor& aFrontDescriptor,
-                                   const SurfaceDescriptor& aBackDescriptor,
-                                   const TextureInfo& aTextureInfo,
-                                   const SurfaceDescriptor* aFrontDescriptorOnWhite = nullptr,
-                                   const SurfaceDescriptor* aBackDescriptorOnWhite = nullptr) MOZ_OVERRIDE {
-    NS_RUNTIMEABORT("should not be called");
-  }
-  virtual void DestroyThebesBuffer(CompositableClient* aCompositable) MOZ_OVERRIDE {
     NS_RUNTIMEABORT("should not be called");
   }
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,

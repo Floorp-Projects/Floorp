@@ -70,19 +70,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
                                                      EditReplyVector& replyv)
 {
   switch (aEdit.type()) {
-    case CompositableOperation::TOpCreatedTexture: {
-      MOZ_LAYERS_LOG(("[ParentSide] Created texture"));
-      const OpCreatedTexture& op = aEdit.get_OpCreatedTexture();
-      CompositableParent* compositableParent =
-        static_cast<CompositableParent*>(op.compositableParent());
-      CompositableHost* compositable = compositableParent->GetCompositableHost();
-
-      compositable->EnsureDeprecatedTextureHost(op.textureId(), op.descriptor(),
-                                      compositableParent->GetCompositableManager(),
-                                      op.textureInfo());
-
-      break;
-    }
     case CompositableOperation::TOpCreatedIncrementalTexture: {
       MOZ_LAYERS_LOG(("[ParentSide] Created texture"));
       const OpCreatedIncrementalTexture& op = aEdit.get_OpCreatedIncrementalTexture();
@@ -94,75 +81,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       compositable->EnsureDeprecatedTextureHostIncremental(compositableParent->GetCompositableManager(),
                                                  op.textureInfo(),
                                                  op.bufferRect());
-      break;
-    }
-    case CompositableOperation::TOpDestroyThebesBuffer: {
-      MOZ_LAYERS_LOG(("[ParentSide] Created double buffer"));
-      const OpDestroyThebesBuffer& op = aEdit.get_OpDestroyThebesBuffer();
-      CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
-      CompositableHost* compositableHost = compositableParent->GetCompositableHost();
-      if (compositableHost->GetType() != BUFFER_CONTENT &&
-          compositableHost->GetType() != BUFFER_CONTENT_DIRECT)
-      {
-        return false;
-      }
-      DeprecatedContentHostBase* content = static_cast<DeprecatedContentHostBase*>(compositableHost);
-      content->DestroyTextures();
-
-      break;
-    }
-    case CompositableOperation::TOpPaintTexture: {
-      MOZ_LAYERS_LOG(("[ParentSide] Paint Texture X"));
-      const OpPaintTexture& op = aEdit.get_OpPaintTexture();
-
-      CompositableParent* compositableParent =
-        static_cast<CompositableParent*>(op.compositableParent());
-      CompositableHost* compositable =
-        compositableParent->GetCompositableHost();
-
-      Layer* layer = compositable ? compositable->GetLayer() : nullptr;
-      LayerComposite* shadowLayer = layer ? layer->AsLayerComposite() : nullptr;
-      if (shadowLayer) {
-        Compositor* compositor = static_cast<LayerManagerComposite*>(layer->Manager())->GetCompositor();
-        compositable->SetCompositor(compositor);
-        compositable->SetLayer(layer);
-      } else {
-        // if we reach this branch, it most likely means that async textures
-        // are coming in before we had time to attach the compositable to a
-        // layer. Don't panic, it is okay in this case. it should not be
-        // happening continuously, though.
-      }
-
-      if (layer) {
-        RenderTraceInvalidateStart(layer, "FF00FF", layer->GetVisibleRegion().GetBounds());
-      }
-
-      if (compositable) {
-        const SurfaceDescriptor& descriptor = op.image();
-        compositable->EnsureDeprecatedTextureHost(op.textureId(),
-                                        descriptor,
-                                        compositableParent->GetCompositableManager(),
-                                        TextureInfo());
-        MOZ_ASSERT(compositable->GetDeprecatedTextureHost());
-
-        SurfaceDescriptor newBack;
-        bool shouldRecomposite = compositable->Update(descriptor, &newBack);
-        if (IsSurfaceDescriptorValid(newBack)) {
-          replyv.push_back(OpTextureSwap(compositableParent, nullptr,
-                                         op.textureId(), newBack));
-        }
-
-        if (IsAsync() && shouldRecomposite) {
-          ScheduleComposition(op);
-        }
-      }
-
-      if (layer) {
-        RenderTraceInvalidateEnd(layer, "FF00FF");
-      }
-
-      // return texure data to client if necessary
-      ReturnTextureDataIfNecessary(compositable, replyv, op.compositableParent());
       break;
     }
     case CompositableOperation::TOpPaintTextureRegion: {
