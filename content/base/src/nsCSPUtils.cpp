@@ -715,6 +715,13 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
     }
   }
 
+  // If [frame-ancestors] is not listed explicitly then default to true
+  // without consulting [default-src]
+  // TODO: currently [frame-ancestors] is mapped to TYPE_DOCUMENT (needs to be fixed)
+  if (aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
+    return true;
+  }
+
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
   if (defaultDir) {
