@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=975681
+-->
+  <head>
+    <meta charset="utf-8">
+    <title> Test for Bug 975681 </title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"> </script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"> </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=975681"> Mozilla Bug 975681 </a>
+  <p id="display"></p>
+    
+  <p>
+    <math>
+      <mfrac id="test_mfrac">
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+      </mfrac>
+    </math>
+  </p>
+  
+  <p>
+    <math>
+      <mfrac linethickness="30px" id="mfrac_linethickness">
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+      </mfrac>
+    </math>
+  </p>
+  
+  <p>
+    <math>
+      <mfrac numalign="left" id="mfrac_numalign">
+        <mspace width="50px" height="20px" mathbackground="red"></mspace>
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+      </mfrac>
+    </math>
+  </p>
+  
+  <p>
+    <math>
+      <mfrac denomalign="right" id="mfrac_denomalign">
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+        <mspace width="50px" height="20px" mathbackground="red"></mspace>
+      </mfrac>
+    </math>
+  </p>
+  
+  <p>
+    <math>
+      <mfrac bevelled="true" id="mfrac_bevelled">
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+        <mspace width="100px" height="20px" mathbackground="red"></mspace>
+      </mfrac>
+    </math>
+  </p>
+  
+  <pre id="test">
+  <script type="application/javascript">
+      
+    /** Test for Bug 975681 **/
+    SimpleTest.waitForExplicitFinish();
+     
+    var epsilon = 1; // allow a small relative error
+    var delta = .25;  // used to indicate a small shift
+    
+    function almostEqualAbs(x, y) {
+      var e = Math.abs(x - y);
+      return (e <= epsilon);
+    }
+    
+    function almostLessThanAbs(x, y) {
+      var e = x - y;
+      return (e <= epsilon);
+    }
+    
+    // test: mfrac
+    var mfracNum = document.getElementById("test_mfrac").firstElementChild.getBoundingClientRect();
+    var mfracDenom = document.getElementById("test_mfrac").lastElementChild.getBoundingClientRect();
+    
+    ok(almostEqualAbs(mfracNum.left, mfracDenom.left) && 
+      almostEqualAbs(mfracNum.right, mfracDenom.right), "Numerator and denominator should be vertical aligned");
+    
+    ok(almostLessThanAbs(mfracNum.bottom, mfracDenom.top), "Numerator should be above denominator");
+    
+    // test: mfrac attributes
+    var mfrac = document.getElementById("mfrac_linethickness").getBoundingClientRect();
+    var num = document.getElementById("mfrac_linethickness").firstElementChild.getBoundingClientRect();
+    var denom = document.getElementById("mfrac_linethickness").lastElementChild.getBoundingClientRect();
+    
+    ok(almostLessThanAbs(num.height + 30 + denom.height, mfrac.height) && 
+      almostLessThanAbs(num.bottom + 30, denom.top), "numerator and denominator should be separated by linethickness");
+    
+    num = document.getElementById("mfrac_numalign").firstElementChild.getBoundingClientRect();
+    mfrac = document.getElementById("mfrac_numalign").getBoundingClientRect();
+    
+    ok(almostEqualAbs(num.left, mfrac.left), "numerator should be aligned left");
+      
+    mfrac = document.getElementById("mfrac_denomalign").getBoundingClientRect();
+    denom = document.getElementById("mfrac_denomalign").lastElementChild.getBoundingClientRect();
+    
+    ok(almostEqualAbs(mfrac.right, denom.right), "denominator should be aligned right");
+      
+    num = document.getElementById("mfrac_bevelled").firstElementChild.getBoundingClientRect();
+    denom = document.getElementById("mfrac_bevelled").lastElementChild.getBoundingClientRect();
+    
+    ok(almostLessThanAbs(num.right, denom.left) && 
+      almostLessThanAbs(num.top*(1-delta)+num.bottom*delta, denom.top), "incorrect position of mfrac children");
+    
+    SimpleTest.finish();
+    
+  </script>
+  </body>
+</html>
