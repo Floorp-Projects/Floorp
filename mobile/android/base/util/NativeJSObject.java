@@ -15,9 +15,16 @@ import org.mozilla.gecko.mozglue.JNITarget;
 public class NativeJSObject
 {
     private final NativeJSContainer mContainer;
+    private final int mObjectIndex;
 
     protected NativeJSObject() {
         mContainer = (NativeJSContainer)this;
+        mObjectIndex = -1;
+    }
+
+    private NativeJSObject(NativeJSContainer container, int index) {
+        mContainer = container;
+        mObjectIndex = index;
     }
 
     /**
@@ -67,6 +74,22 @@ public class NativeJSObject
      *         If an internal JSAPI call failed
      */
     public native int getInt(String name);
+
+    /**
+     * Returns the value of an object property.
+     *
+     * @param name
+     *        Property name
+     * @throws IllegalArgumentException
+     *         If the property does not exist or if its type does not match the return type
+     * @throws NullPointerException
+     *         If name is null or if this JS object has been disposed
+     * @throws IllegalThreadStateException
+     *         If not called on the thread this object is attached to
+     * @throws UnsupportedOperationException
+     *         If an internal JSAPI call failed
+     */
+    public native NativeJSObject getObject(String name);
 
     /**
      * Returns the value of a string property.

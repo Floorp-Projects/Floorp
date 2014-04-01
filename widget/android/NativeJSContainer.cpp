@@ -38,6 +38,13 @@ public:
             env, jNativeJSObject, "mContainer",
             "Lorg/mozilla/gecko/util/NativeJSContainer;");
         MOZ_ASSERT(jObjectContainer);
+        jObjectIndex = AndroidBridge::GetFieldID(
+            env, jNativeJSObject, "mObjectIndex", "I");
+        MOZ_ASSERT(jObjectIndex);
+        jObjectConstructor = AndroidBridge::GetMethodID(
+            env, jNativeJSObject, "<init>",
+            "(Lorg/mozilla/gecko/util/NativeJSContainer;I)V");
+        MOZ_ASSERT(jContainerConstructor);
     }
 
     static jobject CreateInstance(JNIEnv* env, JSContext* cx,
@@ -119,7 +126,37 @@ public:
             !container->EnsureObject(env)) { // Do thread check
             return nullptr;
         }
-        return container->mJSObject;
+        const jint index = env->GetIntField(object, jObjectIndex);
+        if (index < 0) {
+            // -1 for index field means it's the root object of the container
+            return container->mJSObject;
+        }
+        return container->mRootedObjects[index];
+    }
+
+    static jobject CreateObjectInstance(JNIEnv* env, jobject object,
+                                        JS::HandleObject jsObject) {
+        MOZ_ASSERT(object);
+        MOZ_ASSERT(jsObject);
+        AutoLocalJNIFrame frame(env, 2);
+
+        jobject instance = GetInstanceFromObject(env, object);
+        NativeJSContainer* const container = FromInstance(env, instance);
+        if (!container) {
+            return nullptr;
+        }
+        size_t newIndex = container->mRootedObjects.length();
+        if (!container->mRootedObjects.append(jsObject)) {
+            AndroidBridge::ThrowException(env,
+                "java/lang/OutOfMemoryError", "Cannot allocate object");
+            return nullptr;
+        }
+        const jobject newObject =
+            env->NewObject(jNativeJSObject, jObjectConstructor,
+                           instance, newIndex);
+        AndroidBridge::HandleUncaughtException(env);
+        MOZ_ASSERT(newObject);
+        return frame.Pop(newObject);
     }
 
     // Make sure we have a JSObject and deserialize if necessary/possible
@@ -161,6 +198,8 @@ private:
     static jmethodID jContainerConstructor;
     static jclass jNativeJSObject;
     static jfieldID jObjectContainer;
+    static jfieldID jObjectIndex;
+    static jmethodID jObjectConstructor;
 
     static jobject CreateInstance(JNIEnv* env,
                                   NativeJSContainer* nativeObject) {
@@ -182,6 +221,8 @@ private:
     JS::Heap<JSObject*> mJSObject;
     // Serialized object, or empty if object is in deserialized form
     JSAutoStructuredCloneBuffer mBuffer;
+    // Objects derived from mJSObject
+    Vector<JS::Heap<JSObject*>, 4> mRootedObjects;
 
     // Create a new container containing the given deserialized object
     NativeJSContainer(JSContext* cx, JS::HandleObject object)
@@ -213,6 +254,8 @@ jfieldID NativeJSContainer::jContainerNativeObject = 0;
 jmethodID NativeJSContainer::jContainerConstructor = 0;
 jclass NativeJSContainer::jNativeJSObject = 0;
 jfieldID NativeJSContainer::jObjectContainer = 0;
+jfieldID NativeJSContainer::jObjectIndex = 0;
+jmethodID NativeJSContainer::jObjectConstructor = 0;
 
 jobject
 CreateNativeJSContainer(JNIEnv* env, JSContext* cx, JS::HandleObject object)
@@ -335,6 +378,24 @@ struct StringProperty
     }
 };
 
+struct ObjectProperty
+{
+    typedef jobject Type;
+
+    static bool InValue(JS::HandleValue val) {
+        return val.isObjectOrNull();
+    }
+
+    static Type FromValue(JNIEnv* env, jobject instance,
+                          JSContext* cx, JS::HandleValue val) {
+        if (val.isNull()) {
+            return nullptr;
+        }
+        JS::RootedObject object(cx, &val.toObject());
+        return NativeJSContainer::CreateObjectInstance(env, instance, object);
+    }
+};
+
 struct HasProperty
 {
     typedef jboolean Type;
@@ -411,6 +472,12 @@ NS_EXPORT jint JNICALL
 Java_org_mozilla_gecko_util_NativeJSObject_getInt(JNIEnv* env, jobject instance, jstring name)
 {
     return GetProperty<IntProperty>(env, instance, name);
+}
+
+NS_EXPORT jobject JNICALL
+Java_org_mozilla_gecko_util_NativeJSObject_getObject(JNIEnv* env, jobject instance, jstring name)
+{
+    return GetProperty<ObjectProperty>(env, instance, name);
 }
 
 NS_EXPORT jstring JNICALL
