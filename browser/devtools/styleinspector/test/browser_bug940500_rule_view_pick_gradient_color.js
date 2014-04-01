@@ -91,7 +91,9 @@ function testPickingNewColor() {
   let cPicker = ruleView.colorPicker;
 
   cPicker.tooltip.once("shown", () => {
-    simulateColorChange(cPicker, [1, 1, 1, 1]).then(() => {
+    simulateColorChange(cPicker, [1, 1, 1, 1]);
+
+    executeSoon(() => {
       is(swatchEl.style.backgroundColor, "rgb(1, 1, 1)",
         "The color swatch's background was updated");
       is(colorEl.textContent, "rgba(1, 1, 1, 1)",
@@ -112,7 +114,7 @@ function simulateColorChange(colorPicker, newRgba) {
   // spectrum color picker reacts, see browser_spectrum.js for this.
   // This test only cares about the color swatch <-> color picker <-> rule view
   // interactions. That's why there's no event simulations here
-  return colorPicker.spectrum.then(spectrum => {
+  colorPicker.spectrum.then(spectrum => {
     spectrum.rgb = newRgba;
     spectrum.updateUI();
     spectrum.onChange();
