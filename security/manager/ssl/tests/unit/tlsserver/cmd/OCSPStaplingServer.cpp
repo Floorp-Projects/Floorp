@@ -38,6 +38,8 @@ const OCSPHost sOCSPHosts[] =
   { "ocsp-stapling-with-intermediate.example.com", ORTGood, "ocspEEWithIntermediate" },
   { "ocsp-stapling-bad-signature.example.com", ORTBadSignature, nullptr },
   { "ocsp-stapling-skip-responseBytes.example.com", ORTSkipResponseBytes, nullptr },
+  { "ocsp-stapling-critical-extension.example.com", ORTCriticalExtension, nullptr },
+  { "ocsp-stapling-noncritical-extension.example.com", ORTNoncriticalExtension, nullptr },
   { nullptr, ORTNull, nullptr }
 };
 

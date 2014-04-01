@@ -586,7 +586,8 @@ ResponseData(der::Input& input, Context& context,
   }
 
   if (!input.AtEnd()) {
-    if (CheckExtensionsForCriticality(input) != der::Success) {
+    if (der::Nested(input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
+                    CheckExtensionsForCriticality) != der::Success) {
       return der::Failure;
     }
   }
@@ -708,9 +709,9 @@ SingleResponse(der::Input& input, Context& context)
     return der::Fail(SEC_ERROR_OCSP_OLD_RESPONSE);
   }
 
-
   if (!input.AtEnd()) {
-    if (CheckExtensionsForCriticality(input) != der::Success) {
+    if (der::Nested(input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
+                    CheckExtensionsForCriticality) != der::Success) {
       return der::Failure;
     }
   }
@@ -860,7 +861,7 @@ CheckExtensionForCriticality(der::Input& input)
 static der::Result
 CheckExtensionsForCriticality(der::Input& input)
 {
-  return der::NestedOf(input, der::SEQUENCE | 1, der::SEQUENCE,
+  return der::NestedOf(input, der::SEQUENCE, der::SEQUENCE,
                        der::MustNotBeEmpty, CheckExtensionForCriticality);
 }
 
