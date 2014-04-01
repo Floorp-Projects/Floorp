@@ -7235,6 +7235,11 @@ class CGUnionStruct(CGThing):
 
         dtor = CGSwitch("mType", destructorCases).define()
 
+        methods.append(ClassMethod("Uninit", "void", [],
+                                   visibility="private", body=dtor,
+                                   bodyInHeader=not self.ownsMembers,
+                                   inline=not self.ownsMembers))
+
         methods.append(ClassMethod("ToJSVal", "bool", [
                                    Argument("JSContext*", "cx"),
                                    Argument("JS::Handle<JSObject*>", "scopeObj"),
@@ -7281,8 +7286,8 @@ class CGUnionStruct(CGThing):
                        disallowCopyConstruction=disallowCopyConstruction,
                        extradeclarations=friend,
                        destructor=ClassDestructor(visibility="public",
-                                                  body=dtor,
-                                                  bodyInHeader=not self.ownsMembers),
+                                                  body="Uninit();",
+                                                  bodyInHeader=True),
                        enums=[ClassEnum("Type", enumValues, visibility="private")],
                        unions=[ClassUnion("Value", unionValues, visibility="private")])
 
