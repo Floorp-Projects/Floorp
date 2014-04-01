@@ -60,6 +60,8 @@ gujar.sources += [
     'util/INISection.java',
     'util/JSONUtils.java',
     'util/MenuUtils.java',
+    'util/NativeJSContainer.java',
+    'util/NativeJSObject.java',
     'util/NonEvictingLruCache.java',
     'util/ProxySelector.java',
     'util/StringUtils.java',
