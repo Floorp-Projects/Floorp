@@ -272,6 +272,12 @@ IonBuilder::inlineArray(CallInfo &callInfo)
         if (initLength >= JSObject::NELEMENTS_LIMIT)
             return InliningStatus_NotInlined;
 
+        // Make sure initLength matches the template object's length. This is
+        // not guaranteed to be the case, for instance if we're inlining the
+        // MConstant may come from an outer script.
+        if (initLength != templateObject->as<ArrayObject>().length())
+            return InliningStatus_NotInlined;
+
         if (initLength <= ArrayObject::EagerAllocationMaxLength)
             allocating = MNewArray::NewArray_Allocating;
     }
