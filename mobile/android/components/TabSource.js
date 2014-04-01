@@ -1,3 +1,9 @@
+/* -*- Mode: js; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict"
+
 const { classes: Cc, interfaces: Ci, manager: Cm, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -38,7 +44,8 @@ TabSource.prototype = {
         label = tab.browser.contentURI.spec;
       else
         label = tab.originalURI;
-      return { label: label }
+      return { label: label,
+               icon: "thumbnail:" + tab.id }
     }));
 
     let result = null;
