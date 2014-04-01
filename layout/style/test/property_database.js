@@ -31,9 +31,13 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //	 XXX Should have a third field for values whose computed value may or
 //	   may not be the same as for the property's initial value.
 //	 invalid_values: Things that are not values for the property and
-//	   should be rejected.
+//	   should be rejected, but which are balanced and should not absorb
+//	   what follows
 //	 quirks_values: Values that should be accepted in quirks mode only,
 //	   mapped to the values they are equivalent to.
+//	 unbalanced_values: Things that are not values for the property and
+//	   should be rejected, and which also contain unbalanced constructs
+//	   that should absorb what follows
 
 // Helper functions used to construct gCSSProperties.
 
@@ -318,13 +322,13 @@ var validGradientAndElementValues = [
 	"-moz-radial-gradient(left calc(100px + -25%), red, blue)",
 	"-moz-radial-gradient(calc(100px + -25px) top, red, blue)",
 	"-moz-radial-gradient(left calc(100px + -25px), red, blue)"
-]
+];
 var invalidGradientAndElementValues = [
 	"-moz-element(#a:1)",
 	"-moz-element(a#a)",
 	"-moz-element(#a a)",
 	"-moz-element(#a+a)",
-	"-moz-element(#a()",
+	"-moz-element(#a())",
 	/* no quirks mode colors */
 	"linear-gradient(red, ff00ff)",
 	/* no quirks mode colors */
@@ -555,7 +559,10 @@ var invalidGradientAndElementValues = [
 	"-moz-radial-gradient(30% 40% at top left, red, blue)",
 	"-moz-radial-gradient(50px 60px at 15% 20%, red, blue)",
 	"-moz-radial-gradient(7em 8em at 45px, red, blue)"
-]
+];
+var unbalancedGradientAndElementValues = [
+	"-moz-element(#a()",
+];
 
 var gCSSProperties = {
 	"animation": {
@@ -758,7 +765,9 @@ var gCSSProperties = {
 		].concat(validGradientAndElementValues),
 		invalid_values: [
 			"url('border.png') url('border.png')",
-		].concat(invalidGradientAndElementValues)
+		].concat(invalidGradientAndElementValues),
+		unbalanced_values: [
+		].concat(unbalancedGradientAndElementValues)
 	},
 	"border-image-slice": {
 		domProp: "borderImageSlice",
@@ -1925,7 +1934,9 @@ var gCSSProperties = {
 		"url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==), url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)",
 		].concat(validGradientAndElementValues),
 		invalid_values: [
-		].concat(invalidGradientAndElementValues)
+		].concat(invalidGradientAndElementValues),
+		unbalanced_values: [
+		].concat(unbalancedGradientAndElementValues)
 	},
 	"background-origin": {
 		domProp: "backgroundOrigin",
@@ -4905,7 +4916,6 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"(5th) 40px",
 			"(foo() bar) 40px",
 			"(foo)) 40px",
-			"(foo] 40px",
 			"[foo] 40px",
 			"(foo) (bar) 40px",
 			"40px (foo) (bar)",
@@ -4939,6 +4949,9 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
 			"subgrid repeat(1, )",
 			"subgrid repeat(2, (40px))",
 			"subgrid repeat(2, foo)",
+		],
+		unbalanced_values: [
+			"(foo] 40px",
 		]
 	};
 	gCSSProperties["grid-template-rows"] = {
