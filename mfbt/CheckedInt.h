@@ -9,21 +9,9 @@
 #ifndef mozilla_CheckedInt_h
 #define mozilla_CheckedInt_h
 
-// Enable relying of Mozilla's MFBT for possibly-available C++11 features
-#define MOZ_CHECKEDINT_USE_MFBT
-
 #include <stdint.h>
-
-#ifdef MOZ_CHECKEDINT_USE_MFBT
-#  include "mozilla/Assertions.h"
-#else
-#  include <cassert>
-#  define MOZ_ASSERT(cond, reason) assert((cond) && reason)
-#  define MOZ_DELETE
-#endif
-
-#include <climits>
-#include <cstddef>
+#include "mozilla/Assertions.h"
+#include "mozilla/IntegerTypeTraits.h"
 
 namespace mozilla {
 
@@ -134,62 +122,15 @@ struct IsSupportedPass2<unsigned long long>
 { static const bool value = true; };
 
 /*
- * Step 2: some integer-traits kind of stuff.
+ * Step 2: Implement the actual validity checks.
+ *
+ * Ideas taken from IntegerLib, code different.
  */
-
-template<size_t Size, bool Signedness>
-struct StdintTypeForSizeAndSignedness
-{};
-
-template<>
-struct StdintTypeForSizeAndSignedness<1, true>
-{ typedef int8_t   Type; };
-
-template<>
-struct StdintTypeForSizeAndSignedness<1, false>
-{ typedef uint8_t  Type; };
-
-template<>
-struct StdintTypeForSizeAndSignedness<2, true>
-{ typedef int16_t  Type; };
-
-template<>
-struct StdintTypeForSizeAndSignedness<2, false>
-{ typedef uint16_t Type; };
-
-template<>
-struct StdintTypeForSizeAndSignedness<4, true>
-{ typedef int32_t  Type; };
-
-template<>
-struct StdintTypeForSizeAndSignedness<4, false>
-{ typedef uint32_t Type; };
-
-template<>
-struct StdintTypeForSizeAndSignedness<8, true>
-{ typedef int64_t  Type; };
-
-template<>
-struct StdintTypeForSizeAndSignedness<8, false>
-{ typedef uint64_t Type; };
-
-template<typename IntegerType>
-struct UnsignedType
-{
-    typedef typename StdintTypeForSizeAndSignedness<sizeof(IntegerType),
-                                                    false>::Type Type;
-};
-
-template<typename IntegerType>
-struct IsSigned
-{
-    static const bool value = IntegerType(-1) <= IntegerType(0);
-};
 
 template<typename IntegerType, size_t Size = sizeof(IntegerType)>
 struct TwiceBiggerType
 {
-    typedef typename StdintTypeForSizeAndSignedness<
+    typedef typename detail::StdintTypeForSizeAndSignedness<
                        sizeof(IntegerType) * 2,
                        IsSigned<IntegerType>::value
                      >::Type Type;
@@ -201,47 +142,6 @@ struct TwiceBiggerType<IntegerType, 8>
     typedef UnsupportedType Type;
 };
 
-template<typename IntegerType>
-struct PositionOfSignBit
-{
-    static const size_t value = CHAR_BIT * sizeof(IntegerType) - 1;
-};
-
-template<typename IntegerType>
-struct MinValue
-{
-  private:
-    typedef typename UnsignedType<IntegerType>::Type UnsignedIntegerType;
-    static const size_t PosOfSignBit = PositionOfSignBit<IntegerType>::value;
-
-  public:
-    // Bitwise ops may return a larger type, that's why we cast explicitly.
-    // In C++, left bit shifts on signed values is undefined by the standard
-    // unless the shifted value is representable.
-    // Notice that signed-to-unsigned conversions are always well-defined in
-    // the standard as the value congruent to 2**n, as expected. By contrast,
-    // unsigned-to-signed is only well-defined if the value is representable.
-    static const IntegerType value =
-        IsSigned<IntegerType>::value
-        ? IntegerType(UnsignedIntegerType(1) << PosOfSignBit)
-        : IntegerType(0);
-};
-
-template<typename IntegerType>
-struct MaxValue
-{
-    // Tricksy, but covered by the unit test.
-    // Relies heavily on the type of MinValue<IntegerType>::value
-    // being IntegerType.
-    static const IntegerType value = ~MinValue<IntegerType>::value;
-};
-
-/*
- * Step 3: Implement the actual validity checks.
- *
- * Ideas taken from IntegerLib, code different.
- */
-
 template<typename T>
 inline bool
 HasSignBit(T x)
@@ -250,8 +150,7 @@ HasSignBit(T x)
   // Notice that signed-to-unsigned conversions are always well-defined in the
   // standard, as the value congruent modulo 2**n as expected. By contrast,
   // unsigned-to-signed is only well-defined if the value is representable.
-  return bool(typename UnsignedType<T>::Type(x)
-                >> PositionOfSignBit<T>::value);
+  return bool(typename MakeUnsigned<T>::Type(x) >> PositionOfSignBit<T>::value);
 }
 
 // Bitwise ops may return a larger type, so it's good to use this inline
@@ -360,9 +259,9 @@ IsAddValid(T x, T y)
   // Beware! These bitwise operations can return a larger integer type,
   // if T was a small type like int8_t, so we explicitly cast to T.
 
-  typename UnsignedType<T>::Type ux = x;
-  typename UnsignedType<T>::Type uy = y;
-  typename UnsignedType<T>::Type result = ux + uy;
+  typename MakeUnsigned<T>::Type ux = x;
+  typename MakeUnsigned<T>::Type uy = y;
+  typename MakeUnsigned<T>::Type result = ux + uy;
   return IsSigned<T>::value
          ? HasSignBit(BinaryComplement(T((result ^ x) & (result ^ y))))
          : BinaryComplement(x) >= y;
@@ -375,9 +274,9 @@ IsSubValid(T x, T y)
   // Subtraction is valid if either x and y have same sign, or x-y and x have
   // same sign. Since the value of x-y is undefined if we have a signed type,
   // we compute it using the unsigned type of the same size.
-  typename UnsignedType<T>::Type ux = x;
-  typename UnsignedType<T>::Type uy = y;
-  typename UnsignedType<T>::Type result = ux - uy;
+  typename MakeUnsigned<T>::Type ux = x;
+  typename MakeUnsigned<T>::Type uy = y;
+  typename MakeUnsigned<T>::Type result = ux - uy;
 
   return IsSigned<T>::value
          ? HasSignBit(BinaryComplement(T((result ^ x) & (x ^ y))))
@@ -519,7 +418,7 @@ struct NegateImpl<T, true>
 
 
 /*
- * Step 4: Now define the CheckedInt class.
+ * Step 3: Now define the CheckedInt class.
  */
 
 /**
