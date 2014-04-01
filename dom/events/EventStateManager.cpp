@@ -91,8 +91,9 @@
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+
+using namespace dom;
 
 //#define DEBUG_DOCSHELL_FOCUS
 
@@ -171,22 +172,40 @@ PrintDocTreeAll(nsIDocShellTreeItem* aItem)
 }
 #endif
 
-class nsUITimerCallback MOZ_FINAL : public nsITimerCallback
+// mask values for ui.key.chromeAccess and ui.key.contentAccess
+#define NS_MODIFIER_SHIFT    1
+#define NS_MODIFIER_CONTROL  2
+#define NS_MODIFIER_ALT      4
+#define NS_MODIFIER_META     8
+#define NS_MODIFIER_OS       16
+
+static nsIDocument *
+GetDocumentFromWindow(nsIDOMWindow *aWindow)
+{
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
+  return win ? win->GetExtantDoc() : nullptr;
+}
+
+/******************************************************************/
+/* mozilla::UITimerCallback                                       */
+/******************************************************************/
+
+class UITimerCallback MOZ_FINAL : public nsITimerCallback
 {
 public:
-  nsUITimerCallback() : mPreviousCount(0) {}
+  UITimerCallback() : mPreviousCount(0) {}
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
 private:
   uint32_t mPreviousCount;
 };
 
-NS_IMPL_ISUPPORTS1(nsUITimerCallback, nsITimerCallback)
+NS_IMPL_ISUPPORTS1(UITimerCallback, nsITimerCallback)
 
 // If aTimer is nullptr, this method always sends "user-interaction-inactive"
 // notification.
 NS_IMETHODIMP
-nsUITimerCallback::Notify(nsITimer* aTimer)
+UITimerCallback::Notify(nsITimer* aTimer)
 {
   nsCOMPtr<nsIObserverService> obs =
     mozilla::services::GetObserverService();
@@ -207,25 +226,9 @@ nsUITimerCallback::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-// mask values for ui.key.chromeAccess and ui.key.contentAccess
-#define NS_MODIFIER_SHIFT    1
-#define NS_MODIFIER_CONTROL  2
-#define NS_MODIFIER_ALT      4
-#define NS_MODIFIER_META     8
-#define NS_MODIFIER_OS       16
-
-static nsIDocument *
-GetDocumentFromWindow(nsIDOMWindow *aWindow)
-{
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
-  return win ? win->GetExtantDoc() : nullptr;
-}
-
 /******************************************************************/
 /* mozilla::OverOutElementsWrapper                                */
 /******************************************************************/
-
-namespace mozilla {
 
 OverOutElementsWrapper::OverOutElementsWrapper()
   : mLastOverFrame(nullptr)
@@ -288,7 +291,7 @@ EventStateManager::EventStateManager()
   , m_haveShutdown(false)
 {
   if (sESMInstanceCount == 0) {
-    gUserInteractionTimerCallback = new nsUITimerCallback();
+    gUserInteractionTimerCallback = new UITimerCallback();
     if (gUserInteractionTimerCallback)
       NS_ADDREF(gUserInteractionTimerCallback);
     UpdateUserActivityTimer();
