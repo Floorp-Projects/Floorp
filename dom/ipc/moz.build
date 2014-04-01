@@ -132,6 +132,9 @@ for var in ('MOZ_PERMISSIONS', 'MOZ_CHILD_PERMISSIONS'):
 
 if CONFIG['ENABLE_TESTS']:
     DEFINES['ENABLE_TESTS'] = 1
+    LOCAL_INCLUDES += [
+      'ipc/glue',
+    ]
 
 JAR_MANIFESTS += ['jar.mn']
 
