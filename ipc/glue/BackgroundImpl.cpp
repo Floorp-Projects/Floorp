@@ -302,6 +302,7 @@ private:
 class ChildImpl MOZ_FINAL : public BackgroundChildImpl
 {
   friend class mozilla::ipc::BackgroundChild;
+  friend class mozilla::ipc::BackgroundChildImpl;
 
   typedef base::ProcessId ProcessId;
   typedef mozilla::ipc::Transport Transport;
@@ -330,6 +331,7 @@ class ChildImpl MOZ_FINAL : public BackgroundChildImpl
 
     nsRefPtr<ChildImpl> mActor;
     nsTArray<nsCOMPtr<nsIIPCBackgroundChildCreateCallback>> mCallbacks;
+    nsAutoPtr<BackgroundChildImpl::ThreadLocal> mConsumerThreadLocal;
   };
 
   // This is only modified on the main thread. It is a FIFO queue for actors
@@ -392,6 +394,10 @@ private:
   // Forwarded from BackgroundChild.
   static bool
   GetOrCreateForCurrentThread(nsIIPCBackgroundChildCreateCallback* aCallback);
+
+  // Forwarded from BackgroundChildImpl.
+  static BackgroundChildImpl::ThreadLocal*
+  GetThreadLocalForCurrentThread();
 
   static void
   ThreadLocalDestructor(void* aThreadLocal)
@@ -825,6 +831,17 @@ BackgroundChild::GetOrCreateForCurrentThread(
                                  nsIIPCBackgroundChildCreateCallback* aCallback)
 {
   return ChildImpl::GetOrCreateForCurrentThread(aCallback);
+}
+
+// -----------------------------------------------------------------------------
+// BackgroundChildImpl Public Methods
+// -----------------------------------------------------------------------------
+
+// static
+BackgroundChildImpl::ThreadLocal*
+BackgroundChildImpl::GetThreadLocalForCurrentThread()
+{
+  return ChildImpl::GetThreadLocalForCurrentThread();
 }
 
 // -----------------------------------------------------------------------------
@@ -1621,6 +1638,28 @@ ChildImpl::GetOrCreateForCurrentThread(
   }
 
   return true;
+}
+
+// static
+BackgroundChildImpl::ThreadLocal*
+ChildImpl::GetThreadLocalForCurrentThread()
+{
+  MOZ_ASSERT(sThreadLocalIndex != kBadThreadLocalIndex,
+             "BackgroundChild::Startup() was never called!");
+
+  auto threadLocalInfo =
+    static_cast<ThreadLocalInfo*>(PR_GetThreadPrivate(sThreadLocalIndex));
+
+  if (!threadLocalInfo) {
+    return nullptr;
+  }
+
+  if (!threadLocalInfo->mConsumerThreadLocal) {
+    threadLocalInfo->mConsumerThreadLocal =
+      new BackgroundChildImpl::ThreadLocal();
+  }
+
+  return threadLocalInfo->mConsumerThreadLocal;
 }
 
 ChildImpl::CreateCallbackRunnable::~CreateCallbackRunnable()
