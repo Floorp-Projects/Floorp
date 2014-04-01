@@ -170,8 +170,7 @@ Load(JSContext *cx,
         if (!script)
             return false;
 
-        JS::Rooted<JS::Value> result(cx);
-        if (!JS_ExecuteScript(cx, obj, script, result.address())) {
+        if (!JS_ExecuteScript(cx, obj, script)) {
             return false;
         }
     }
@@ -337,7 +336,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
                .setFileAndLine(filename, 1);
         JS::Rooted<JSScript*> script(cx, JS::Compile(cx, obj, options, file));
         if (script)
-            (void)JS_ExecuteScript(cx, obj, script, result.address());
+            (void)JS_ExecuteScript(cx, obj, script, &result);
 
         return;
     }
@@ -377,7 +376,7 @@ XPCShellEnvironment::ProcessFile(JSContext *cx,
         if (script) {
             JSErrorReporter older;
 
-            ok = JS_ExecuteScript(cx, obj, script, result.address());
+            ok = JS_ExecuteScript(cx, obj, script, &result);
             if (ok && result != JSVAL_VOID) {
                 /* Suppress error reports from JS::ToString(). */
                 older = JS_SetErrorReporter(cx, nullptr);
@@ -592,7 +591,7 @@ XPCShellEnvironment::EvaluateString(const nsString& aString,
   }
 
   JS::Rooted<JS::Value> result(cx);
-  bool ok = JS_ExecuteScript(cx, global, script, result.address());
+  bool ok = JS_ExecuteScript(cx, global, script, &result);
   if (ok && result != JSVAL_VOID) {
       JSErrorReporter old = JS_SetErrorReporter(cx, nullptr);
       JSString* str = JS::ToString(cx, result);

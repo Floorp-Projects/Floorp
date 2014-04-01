@@ -536,7 +536,7 @@ EvalInWindow(JSContext *cx, const nsAString &source, HandleObject scope, Mutable
                                                 targetScope,
                                                 compileOptions,
                                                 evaluateOptions,
-                                                rval.address());
+                                                rval);
 
         if (NS_FAILED(rv)) {
             // If there was an exception we get it as a return value, if
@@ -1721,8 +1721,7 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
                options.setVersion(jsVersion);
         JS::RootedObject rootedSandbox(sandcx, sandbox);
         ok = JS::Evaluate(sandcx, rootedSandbox, options,
-                          PromiseFlatString(source).get(), source.Length(),
-                          v.address());
+                          PromiseFlatString(source).get(), source.Length(), &v);
         if (ok && returnStringOnly && !v.isUndefined()) {
             JSString *str = ToString(sandcx, v);
             ok = !!str;
