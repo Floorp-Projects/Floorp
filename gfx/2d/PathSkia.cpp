@@ -153,14 +153,6 @@ PathSkia::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   return pathRegion.setPath(mPath, pointRect);
 }
 
-static Rect SkRectToRect(const SkRect& aBounds)
-{
-  return Rect(SkScalarToFloat(aBounds.fLeft),
-              SkScalarToFloat(aBounds.fTop),
-              SkScalarToFloat(aBounds.fRight - aBounds.fLeft),
-              SkScalarToFloat(aBounds.fBottom - aBounds.fTop));
-}
-
 bool
 PathSkia::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
                               const Point &aPoint,
