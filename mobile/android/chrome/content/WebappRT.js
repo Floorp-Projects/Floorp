@@ -67,11 +67,11 @@ let WebappRT = {
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
     // If the app is in debug mode, configure and enable the remote debugger.
-    // sendMessageToJava can only return string values, so it returns the string
-    // "true" rather than boolean true if the app is in debug mode.
-    if (sendMessageToJava({ type: "NativeApp:IsDebuggable" }) === "true") {
-      this._enableRemoteDebugger(aUrl);
-    }
+    sendMessageToJava({ type: "NativeApp:IsDebuggable" }, (response) => {
+      if (response.isDebuggable) {
+        this._enableRemoteDebugger(aUrl);
+      }
+    });
 #endif
 
     this.findManifestUrlFor(aUrl, aCallback);
