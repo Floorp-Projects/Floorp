@@ -63,7 +63,7 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   list->AppendElement(aContent);
 
   if (AndroidBridge::HasEnv()) {
-    GeckoAppShell::CheckURIVisited(uriString);
+    mozilla::widget::android::GeckoAppShell::CheckURIVisited(uriString);
   }
 
   return NS_OK;
@@ -180,7 +180,7 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
     rv = aURI->GetSpec(uri);
     if (NS_FAILED(rv)) return rv;
     NS_ConvertUTF8toUTF16 uriString(uri);
-    GeckoAppShell::MarkURIVisited(uriString);
+    mozilla::widget::android::GeckoAppShell::MarkURIVisited(uriString);
   }
 
   AppendToRecentlyVisitedURIs(aURI);
@@ -215,7 +215,7 @@ nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
     nsresult rv = aURI->GetSpec(uri);
     if (NS_FAILED(rv)) return rv;
     NS_ConvertUTF8toUTF16 uriString(uri);
-    GeckoAppShell::SetURITitle(uriString, aTitle);
+    mozilla::widget::android::GeckoAppShell::SetURITitle(uriString, aTitle);
   }
   return NS_OK;
 }

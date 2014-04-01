@@ -27,9 +27,10 @@ ToastNotificationHandler::DisplayNotification(HSTRING title,
 {
   mCookie = aCookie;
 
-  ComPtr<IXmlDocument> toastXml = InitializeXmlForTemplate(ToastTemplateType::ToastTemplateType_ToastImageAndText03);
-  ComPtr<IXmlNodeList> toastTextElements, toastImageElements;
-  ComPtr<IXmlNode> titleTextNodeRoot, msgTextNodeRoot, imageNodeRoot, srcAttribute;
+  Microsoft::WRL::ComPtr<IXmlDocument> toastXml =
+    InitializeXmlForTemplate(ToastTemplateType::ToastTemplateType_ToastImageAndText03);
+  Microsoft::WRL::ComPtr<IXmlNodeList> toastTextElements, toastImageElements;
+  Microsoft::WRL::ComPtr<IXmlNode> titleTextNodeRoot, msgTextNodeRoot, imageNodeRoot, srcAttribute;
 
   HSTRING textNodeStr, imageNodeStr, srcNodeStr;
   HSTRING_HEADER textHeader, imageHeader, srcHeader;
@@ -43,7 +44,7 @@ ToastNotificationHandler::DisplayNotification(HSTRING title,
   AssertRetHRESULT(toastTextElements->Item(1, &msgTextNodeRoot), false);
   AssertRetHRESULT(toastImageElements->Item(0, &imageNodeRoot), false);
 
-  ComPtr<IXmlNamedNodeMap> attributes;
+  Microsoft::WRL::ComPtr<IXmlNamedNodeMap> attributes;
   AssertRetHRESULT(imageNodeRoot->get_Attributes(&attributes), false);
   AssertRetHRESULT(attributes->GetNamedItem(srcNodeStr, &srcAttribute), false);
 
@@ -62,9 +63,10 @@ ToastNotificationHandler::DisplayTextNotification(HSTRING title,
 {
   mCookie = aCookie;
 
-  ComPtr<IXmlDocument> toastXml = InitializeXmlForTemplate(ToastTemplateType::ToastTemplateType_ToastText03);
-  ComPtr<IXmlNodeList> toastTextElements;
-  ComPtr<IXmlNode> titleTextNodeRoot, msgTextNodeRoot;
+  Microsoft::WRL::ComPtr<IXmlDocument> toastXml =
+    InitializeXmlForTemplate(ToastTemplateType::ToastTemplateType_ToastText03);
+  Microsoft::WRL::ComPtr<IXmlNodeList> toastTextElements;
+  Microsoft::WRL::ComPtr<IXmlNode> titleTextNodeRoot, msgTextNodeRoot;
 
   HSTRING textNodeStr;
   HSTRING_HEADER textHeader;
@@ -80,9 +82,9 @@ ToastNotificationHandler::DisplayTextNotification(HSTRING title,
   return CreateWindowsNotificationFromXml(toastXml.Get(), aAppId);
 }
 
-ComPtr<IXmlDocument>
+Microsoft::WRL::ComPtr<IXmlDocument>
 ToastNotificationHandler::InitializeXmlForTemplate(ToastTemplateType templateType) {
-  ComPtr<IXmlDocument> toastXml;
+  Microsoft::WRL::ComPtr<IXmlDocument> toastXml;
 
   AssertRetHRESULT(GetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotificationManager).Get(),
     mToastNotificationManagerStatics.GetAddressOf()), nullptr);
@@ -96,8 +98,8 @@ bool
 ToastNotificationHandler::CreateWindowsNotificationFromXml(IXmlDocument *toastXml,
                                                            const nsAString& aAppId)
 {
-  ComPtr<IToastNotification> notification;
-  ComPtr<IToastNotificationFactory> factory;
+  Microsoft::WRL::ComPtr<IToastNotification> notification;
+  Microsoft::WRL::ComPtr<IToastNotificationFactory> factory;
   AssertRetHRESULT(GetActivationFactory(HStringReference(RuntimeClass_Windows_UI_Notifications_ToastNotification).Get(),
     factory.GetAddressOf()), false);
   AssertRetHRESULT(factory->CreateToastNotification(toastXml, &notification),
@@ -110,7 +112,7 @@ ToastNotificationHandler::CreateWindowsNotificationFromXml(IXmlDocument *toastXm
   AssertRetHRESULT(notification->add_Dismissed(Callback<ToastDismissHandler>(this,
     &ToastNotificationHandler::OnDismiss).Get(), &dismissedToken), false);
 
-  ComPtr<IToastNotifier> notifier;
+  Microsoft::WRL::ComPtr<IToastNotifier> notifier;
   if (aAppId.IsEmpty()) {
     AssertRetHRESULT(mToastNotificationManagerStatics->CreateToastNotifier(
                        &notifier), false);
@@ -126,9 +128,10 @@ ToastNotificationHandler::CreateWindowsNotificationFromXml(IXmlDocument *toastXm
   return true;
 }
 
-void ToastNotificationHandler::SetNodeValueString(HSTRING inputString, ComPtr<IXmlNode> node, ComPtr<IXmlDocument> xml) {
-  ComPtr<IXmlText> inputText;
-  ComPtr<IXmlNode> inputTextNode, pAppendedChild;
+void ToastNotificationHandler::SetNodeValueString(HSTRING inputString,
+  Microsoft::WRL::ComPtr<IXmlNode> node, Microsoft::WRL::ComPtr<IXmlDocument> xml) {
+  Microsoft::WRL::ComPtr<IXmlText> inputText;
+  Microsoft::WRL::ComPtr<IXmlNode> inputTextNode, pAppendedChild;
 
   AssertHRESULT(xml->CreateTextNode(inputString, &inputText));
   AssertHRESULT(inputText.As(&inputTextNode));

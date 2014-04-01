@@ -470,7 +470,7 @@ nsLookAndFeel::GetEchoPasswordImpl()
 {
     if (!mInitializedShowPassword) {
         if (XRE_GetProcessType() == GeckoProcessType_Default) {
-            mShowPassword = GeckoAppShell::GetShowPasswordSetting();
+            mShowPassword = mozilla::widget::android::GeckoAppShell::GetShowPasswordSetting();
         } else {
             ContentChild::GetSingleton()->SendGetShowPasswordSetting(&mShowPassword);
         }

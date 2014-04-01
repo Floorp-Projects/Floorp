@@ -55,19 +55,19 @@ CancelVibrate(const WindowIdentifier &)
 {
   // Ignore WindowIdentifier parameter.
 
-  GeckoAppShell::CancelVibrate();
+  mozilla::widget::android::GeckoAppShell::CancelVibrate();
 }
 
 void
 EnableBatteryNotifications()
 {
-  GeckoAppShell::EnableBatteryNotifications();
+  mozilla::widget::android::GeckoAppShell::EnableBatteryNotifications();
 }
 
 void
 DisableBatteryNotifications()
 {
-  GeckoAppShell::DisableBatteryNotifications();
+  mozilla::widget::android::GeckoAppShell::DisableBatteryNotifications();
 }
 
 void
@@ -79,13 +79,13 @@ GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInfo)
 void
 EnableNetworkNotifications()
 {
-  GeckoAppShell::EnableNetworkNotifications();
+  mozilla::widget::android::GeckoAppShell::EnableNetworkNotifications();
 }
 
 void
 DisableNetworkNotifications()
 {
-  GeckoAppShell::DisableNetworkNotifications();
+  mozilla::widget::android::GeckoAppShell::DisableNetworkNotifications();
 }
 
 void
@@ -97,13 +97,13 @@ GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInfo)
 void
 EnableScreenConfigurationNotifications()
 {
-  GeckoAppShell::EnableScreenOrientationNotifications();
+  mozilla::widget::android::GeckoAppShell::EnableScreenOrientationNotifications();
 }
 
 void
 DisableScreenConfigurationNotifications()
 {
-  GeckoAppShell::DisableScreenOrientationNotifications();
+  mozilla::widget::android::GeckoAppShell::DisableScreenOrientationNotifications();
 }
 
 void
@@ -149,7 +149,7 @@ LockScreenOrientation(const ScreenOrientation& aOrientation)
     case eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_Default:
-      GeckoAppShell::LockScreenOrientation(aOrientation);
+      mozilla::widget::android::GeckoAppShell::LockScreenOrientation(aOrientation);
       return true;
     default:
       return false;
@@ -159,7 +159,7 @@ LockScreenOrientation(const ScreenOrientation& aOrientation)
 void
 UnlockScreenOrientation()
 {
-  GeckoAppShell::UnlockScreenOrientation();
+  mozilla::widget::android::GeckoAppShell::UnlockScreenOrientation();
 }
 
 } // hal_impl

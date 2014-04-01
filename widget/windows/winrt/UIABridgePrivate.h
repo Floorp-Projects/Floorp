@@ -24,11 +24,10 @@ namespace mozilla {
 namespace widget {
 namespace winrt {
 
-using namespace Microsoft::WRL;
-
 // represents the root window to UIA
 [uuid("D3EDD951-0715-4501-A8E5-25D97EF35D5A")]
-class UIABridge : public RuntimeClass<RuntimeClassFlags<RuntimeClassType::WinRtClassicComMix>,
+class UIABridge : public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags
+  <Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
   IUIABridge,
   IUIAElement,
   IRawElementProviderSimple,
@@ -81,7 +80,8 @@ private:
 };
 
 [uuid("4438135F-F624-43DE-A417-275CE7A1A0CD")]
-class UIATextElement : public RuntimeClass<RuntimeClassFlags<RuntimeClassType::WinRtClassicComMix>,
+class UIATextElement : public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags
+  <Microsoft::WRL::RuntimeClassType::WinRtClassicComMix>,
   IUIAElement,
   IRawElementProviderSimple,
   IRawElementProviderFragment,
