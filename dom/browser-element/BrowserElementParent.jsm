@@ -366,8 +366,10 @@ BrowserElementParent.prototype = {
     return true;
   },
 
-  _recvHello: function(data) {
+  _recvHello: function() {
     debug("recvHello");
+
+    this._ready = true;
 
     // Inform our child if our owner element's document is invisible.  Note
     // that we must do so here, rather than in the BrowserElementParent
@@ -382,7 +384,7 @@ BrowserElementParent.prototype = {
       fullscreenAllowed:
         this._frameElement.hasAttribute('allowfullscreen') ||
         this._frameElement.hasAttribute('mozallowfullscreen')
-    }
+    };
   },
 
   _fireCtxMenuEvent: function(data) {
@@ -724,15 +726,31 @@ BrowserElementParent.prototype = {
       } else {
         let reqOld = XPCNativeWrapper.unwrap(activeInputFrame)
                                      .setInputMethodActive(false);
-        reqOld.onsuccess = function() {
-          activeInputFrame = null;
-          this._sendSetInputMethodActiveDOMRequest(req, isActive);
+
+        // We wan't to continue regardless whether this req succeeded
+        reqOld.onsuccess = reqOld.onerror = function() {
+          let setActive = function() {
+            activeInputFrame = null;
+            this._sendSetInputMethodActiveDOMRequest(req, isActive);
+          }.bind(this);
+
+          if (this._ready) {
+            setActive();
+            return;
+          }
+
+          // Wait for the hello event from BrowserElementChild
+          let onReady = function(aMsg) {
+            if (this._isAlive() && (aMsg.data.msg_name === 'hello')) {
+              setActive();
+
+              this._mm.removeMessageListener('browser-element-api:call',
+                onReady);
+            }
+          }.bind(this);
+
+          this._mm.addMessageListener('browser-element-api:call', onReady);
         }.bind(this);
-        reqOld.onerror = function() {
-          Services.DOMRequest.fireErrorAsync(req,
-            'Failed to deactivate the old input method: ' +
-            reqOld.error + '.');
-        };
       }
     } else {
       this._sendSetInputMethodActiveDOMRequest(req, isActive);
