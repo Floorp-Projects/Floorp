@@ -23,29 +23,13 @@
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/UnionTypes.h"
 
-#ifdef DEBUG
+namespace mozilla {
 
-#include "nspr.h" // PR_fprintf
+using namespace dom;
 
-class EventListenerCounter
-{
-public:
-  ~EventListenerCounter() {
-  }
-};
-
-static EventListenerCounter sEventListenerCounter;
-#endif
-
-using namespace mozilla;
-using namespace mozilla::dom;
-
-/*
- * nsJSEventListener implementation
- */
-nsJSEventListener::nsJSEventListener(nsISupports *aTarget,
-                                     nsIAtom* aType,
-                                     const TypedEventHandler& aTypedHandler)
+JSEventHandler::JSEventHandler(nsISupports* aTarget,
+                               nsIAtom* aType,
+                               const TypedEventHandler& aTypedHandler)
   : mEventName(aType)
   , mTypedHandler(aTypedHandler)
 {
@@ -53,26 +37,26 @@ nsJSEventListener::nsJSEventListener(nsISupports *aTarget,
   mTarget = base.get();
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_CLASS(JSEventHandler)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(JSEventHandler)
   tmp->mTypedHandler.ForgetHandler();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(JSEventHandler)
   if (MOZ_UNLIKELY(cb.WantDebugInfo()) && tmp->mEventName) {
     nsAutoCString name;
-    name.AppendLiteral("nsJSEventListener handlerName=");
+    name.AppendLiteral("JSEventHandler handlerName=");
     name.Append(
       NS_ConvertUTF16toUTF8(nsDependentAtomString(tmp->mEventName)).get());
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name.get());
   } else {
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSEventListener, tmp->mRefCnt.get())
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(JSEventHandler, tmp->mRefCnt.get())
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mTypedHandler.Ptr())
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(JSEventHandler)
   if (tmp->IsBlackForCC()) {
     return true;
   }
@@ -91,25 +75,25 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsJSEventListener)
   }
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(JSEventHandler)
   return tmp->IsBlackForCC();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(JSEventHandler)
   return tmp->IsBlackForCC();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSEventListener)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSEventHandler)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsJSEventListener)
+  NS_INTERFACE_MAP_ENTRY(JSEventHandler)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSEventListener)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(JSEventHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(JSEventHandler)
 
 bool
-nsJSEventListener::IsBlackForCC()
+JSEventHandler::IsBlackForCC()
 {
   // We can claim to be black if all the things we reference are
   // effectively black already.
@@ -118,7 +102,7 @@ nsJSEventListener::IsBlackForCC()
 }
 
 nsresult
-nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
+JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<EventTarget> target = do_QueryInterface(mTarget);
   if (!target || !mTypedHandler.HasEventHandler() ||
@@ -235,6 +219,10 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+} // namespace mozilla
+
+using namespace mozilla;
+
 /*
  * Factory functions
  */
@@ -243,11 +231,11 @@ nsresult
 NS_NewJSEventHandler(nsISupports* aTarget,
                      nsIAtom* aEventType,
                      const TypedEventHandler& aTypedHandler,
-                     nsJSEventListener** aReturn)
+                     JSEventHandler** aReturn)
 {
   NS_ENSURE_ARG(aEventType || !NS_IsMainThread());
-  nsJSEventListener* it =
-    new nsJSEventListener(aTarget, aEventType, aTypedHandler);
+  JSEventHandler* it =
+    new JSEventHandler(aTarget, aEventType, aTypedHandler);
   NS_ADDREF(*aReturn = it);
 
   return NS_OK;

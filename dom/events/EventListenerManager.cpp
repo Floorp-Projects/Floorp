@@ -613,22 +613,22 @@ EventListenerManager::SetEventHandlerInternal(
     EventListenerFlags flags;
     flags.mListenerIsJSListener = true;
 
-    nsCOMPtr<nsJSEventListener> jsListener;
+    nsCOMPtr<JSEventHandler> jsEventHandler;
     NS_NewJSEventHandler(mTarget, aName,
-                         aTypedHandler, getter_AddRefs(jsListener));
-    EventListenerHolder listenerHolder(jsListener);
+                         aTypedHandler, getter_AddRefs(jsEventHandler));
+    EventListenerHolder listenerHolder(jsEventHandler);
     AddEventListenerInternal(listenerHolder, eventType, aName, aTypeString,
                              flags, true);
 
     listener = FindEventHandler(eventType, aName, aTypeString);
   } else {
-    nsJSEventListener* jsListener = listener->GetJSListener();
-    MOZ_ASSERT(jsListener,
-               "How can we have an event handler with no nsJSEventListener?");
+    JSEventHandler* jsEventHandler = listener->GetJSEventHandler();
+    MOZ_ASSERT(jsEventHandler,
+               "How can we have an event handler with no JSEventHandler?");
 
-    bool same = jsListener->GetTypedEventHandler() == aTypedHandler;
+    bool same = jsEventHandler->GetTypedEventHandler() == aTypedHandler;
     // Possibly the same listener, but update still the context and scope.
-    jsListener->SetHandler(aTypedHandler);
+    jsEventHandler->SetHandler(aTypedHandler);
     if (mTarget && !same && aName) {
       mTarget->EventListenerRemoved(aName);
       mTarget->EventListenerAdded(aName);
@@ -783,10 +783,10 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
                                                   const nsAString* aBody,
                                                   Element* aElement)
 {
-  MOZ_ASSERT(aListener->GetJSListener());
+  MOZ_ASSERT(aListener->GetJSEventHandler());
   MOZ_ASSERT(aListener->mHandlerIsString, "Why are we compiling a non-string JS listener?");
-  nsJSEventListener* jsListener = aListener->GetJSListener();
-  MOZ_ASSERT(!jsListener->GetTypedEventHandler().HasEventHandler(),
+  JSEventHandler* jsEventHandler = aListener->GetJSEventHandler();
+  MOZ_ASSERT(!jsEventHandler->GetTypedEventHandler().HasEventHandler(),
              "What is there to compile?");
 
   nsresult result = NS_OK;
@@ -813,7 +813,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   // <html:frameset> or <xul:window> or the like.
   // XXX I don't like that we have to reference content from
   // here. The alternative is to store the event handler string on
-  // the nsJSEventListener itself, and that still doesn't address
+  // the JSEventHandler itself, and that still doesn't address
   // the arg names issue.
   nsCOMPtr<Element> element = do_QueryInterface(mTarget);
   MOZ_ASSERT(element || aBody, "Where will we get our body?");
@@ -908,18 +908,18 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mTarget);
-  if (jsListener->EventName() == nsGkAtoms::onerror && win) {
+  if (jsEventHandler->EventName() == nsGkAtoms::onerror && win) {
     nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
       new OnErrorEventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
-    jsListener->SetHandler(handlerCallback);
-  } else if (jsListener->EventName() == nsGkAtoms::onbeforeunload && win) {
+    jsEventHandler->SetHandler(handlerCallback);
+  } else if (jsEventHandler->EventName() == nsGkAtoms::onbeforeunload && win) {
     nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
       new OnBeforeUnloadEventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
-    jsListener->SetHandler(handlerCallback);
+    jsEventHandler->SetHandler(handlerCallback);
   } else {
     nsRefPtr<EventHandlerNonNull> handlerCallback =
       new EventHandlerNonNull(handler, /* aIncumbentGlobal = */ nullptr);
-    jsListener->SetHandler(handlerCallback);
+    jsEventHandler->SetHandler(handlerCallback);
   }
 
   return result;
@@ -1282,13 +1282,14 @@ EventListenerManager::GetTypedEventHandler(nsIAtom* aEventName,
     return nullptr;
   }
 
-  nsJSEventListener* jsListener = listener->GetJSListener();
+  JSEventHandler* jsEventHandler = listener->GetJSEventHandler();
 
   if (listener->mHandlerIsString) {
     CompileEventHandlerInternal(listener, nullptr, nullptr);
   }
 
-  const TypedEventHandler& typedHandler = jsListener->GetTypedEventHandler();
+  const TypedEventHandler& typedHandler =
+    jsEventHandler->GetTypedEventHandler();
   return typedHandler.HasEventHandler() ? &typedHandler : nullptr;
 }
 
@@ -1299,9 +1300,10 @@ EventListenerManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   n += mListeners.SizeOfExcludingThis(aMallocSizeOf);
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    nsJSEventListener* jsl = mListeners.ElementAt(i).GetJSListener();
-    if (jsl) {
-      n += jsl->SizeOfIncludingThis(aMallocSizeOf);
+    JSEventHandler* jsEventHandler =
+      mListeners.ElementAt(i).GetJSEventHandler();
+    if (jsEventHandler) {
+      n += jsEventHandler->SizeOfIncludingThis(aMallocSizeOf);
     }
   }
   return n;
@@ -1313,10 +1315,10 @@ EventListenerManager::MarkForCC()
   uint32_t count = mListeners.Length();
   for (uint32_t i = 0; i < count; ++i) {
     const Listener& listener = mListeners.ElementAt(i);
-    nsJSEventListener* jsListener = listener.GetJSListener();
-    if (jsListener) {
+    JSEventHandler* jsEventHandler = listener.GetJSEventHandler();
+    if (jsEventHandler) {
       const TypedEventHandler& typedHandler =
-        jsListener->GetTypedEventHandler();
+        jsEventHandler->GetTypedEventHandler();
       if (typedHandler.HasEventHandler()) {
         JS::ExposeObjectToActiveJS(typedHandler.Ptr()->Callable());
       }

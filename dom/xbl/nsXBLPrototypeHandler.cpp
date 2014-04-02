@@ -273,7 +273,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
     scriptTarget = aTarget;
   }
 
-  // We're about to create a new nsJSEventListener, which means that we're
+  // We're about to create a new JSEventHandler, which means that we're
   // responsible for pushing the context of the event target. See the similar
   // comment in nsEventManagerListener.cpp.
   nsCxPusher pusher;
@@ -325,15 +325,15 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   TypedEventHandler typedHandler(handlerCallback);
 
   // Execute it.
-  nsCOMPtr<nsJSEventListener> eventListener;
+  nsCOMPtr<JSEventHandler> jsEventHandler;
   rv = NS_NewJSEventHandler(scriptTarget, onEventAtom,
                             typedHandler,
-                            getter_AddRefs(eventListener));
+                            getter_AddRefs(jsEventHandler));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Handle the event.
-  eventListener->HandleEvent(aEvent);
-  eventListener->Disconnect();
+  jsEventHandler->HandleEvent(aEvent);
+  jsEventHandler->Disconnect();
   return NS_OK;
 }
 

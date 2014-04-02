@@ -2968,7 +2968,7 @@ nsContentUtils::GetEventArgNames(int32_t aNameSpaceID,
     *aArgCount = sizeof(names)/sizeof(names[0]); \
     *aArgArray = names;
 
-  // nsJSEventListener is what does the arg magic for onerror, and it does
+  // JSEventHandler is what does the arg magic for onerror, and it does
   // not seem to take the namespace into account.  So we let onerror in all
   // namespaces get the 3 arg names.
   if (aEventName == nsGkAtoms::onerror) {
