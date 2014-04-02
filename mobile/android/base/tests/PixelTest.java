@@ -1,6 +1,7 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.PaintedSurface;
 
 abstract class PixelTest extends BaseTest {
     private static final long PAINT_CLEAR_DELAY = 10000; // milliseconds

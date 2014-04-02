@@ -4,18 +4,19 @@
 
 package org.mozilla.gecko.tests.helpers;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
+
+import java.util.regex.Pattern;
 
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Actions.EventExpecter;
-import org.mozilla.gecko.tests.components.ToolbarComponent;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.UITestContext.ComponentType;
+import org.mozilla.gecko.tests.components.ToolbarComponent;
 
 import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.Solo;
-
-import java.util.regex.Pattern;
 
 /**
  * Provides functionality related to waiting on certain events to happen.

@@ -4,25 +4,6 @@
 
 package org.mozilla.gecko.tests;
 
-import android.content.ContentProvider;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.ContentProviderResult;
-import android.content.ContentProviderOperation;
-import android.content.OperationApplicationException;
-import android.content.res.AssetManager;
-import android.content.res.Resources;
-import android.content.pm.ApplicationInfo;
-import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.ContentObserver;
-import android.os.Build;
-import android.net.Uri;
-import android.test.IsolatedContext;
-import android.test.RenamingDelegatingContext;
-import android.test.mock.MockContentResolver;
-import android.test.mock.MockContext;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -30,6 +11,25 @@ import java.util.concurrent.Callable;
 
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserProvider;
+
+import android.content.ContentProvider;
+import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.OperationApplicationException;
+import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
+import android.content.res.AssetManager;
+import android.content.res.Resources;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
+import android.test.IsolatedContext;
+import android.test.RenamingDelegatingContext;
+import android.test.mock.MockContentResolver;
+import android.test.mock.MockContext;
 
 /*
  * ContentProviderTest provides the infrastructure to run content provider

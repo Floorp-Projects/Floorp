@@ -1,13 +1,14 @@
 package org.mozilla.gecko.tests;
 
+import java.io.File;
+
 import org.mozilla.gecko.db.BrowserContract.Passwords;
 
-import android.content.ContentValues;
 import android.content.ContentResolver;
-import android.database.Cursor;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
-import java.io.File;
 
 /**
  * A basic password contentprovider test.

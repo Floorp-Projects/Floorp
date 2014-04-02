@@ -1,12 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
-
 import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.tests.helpers.*;
-
-import android.view.View;
+import org.mozilla.gecko.tests.helpers.GeckoHelper;
+import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
 public class testHomeBanner extends UITest {
 

@@ -1,14 +1,15 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.app.Activity;
-import android.provider.Browser;
-import android.content.ContentValues;
+import java.util.ArrayList;
+
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.GeckoProfile;
+
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import java.util.ArrayList;
-import java.util.Arrays;
+import android.provider.Browser;
 
 /**
   * This test covers the Import from Android feature

@@ -1,6 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Element;
+import org.mozilla.gecko.R;
+
 import android.app.Activity;
 import android.view.View;
 

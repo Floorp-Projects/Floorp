@@ -1,6 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.tests.BaseRobocopTest.Type;
 
 public class testCheck2 extends PixelTest {
     @Override

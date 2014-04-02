@@ -1,17 +1,6 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
-import android.graphics.drawable.Drawable;
-import android.widget.EditText;
-import android.widget.CheckedTextView;
-import android.widget.TextView;
-import android.text.InputType;
-import android.util.DisplayMetrics;
-import android.view.View;
-import android.util.Log;
-
-import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
 
 public class testPromptGridInput extends BaseTest {
     protected int index = 1;

@@ -1,9 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
-
 import org.mozilla.gecko.tests.components.AboutHomeComponent.PanelType;
-import org.mozilla.gecko.tests.helpers.*;
+import org.mozilla.gecko.tests.helpers.GeckoHelper;
+import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
 /**
  * Tests the visibility of about:home after various interactions with the browser.

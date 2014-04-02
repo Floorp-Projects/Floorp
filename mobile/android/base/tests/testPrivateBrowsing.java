@@ -1,11 +1,10 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
 import java.util.ArrayList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
 
 /**
  * The test loads a new private tab and loads a page with a big link on it

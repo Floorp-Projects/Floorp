@@ -4,16 +4,15 @@
 
 package org.mozilla.gecko;
 
-import android.graphics.Bitmap;
-import android.util.Base64;
-import android.util.Base64OutputStream;
-
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+
+import android.graphics.Bitmap;
+import android.util.Base64;
+import android.util.Base64OutputStream;
 
 public class PaintedSurface {
     private String mFileName;

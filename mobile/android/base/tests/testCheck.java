@@ -1,6 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.tests.BaseRobocopTest.Type;
 
 public class testCheck extends PixelTest {
     private void pause(int length) {
