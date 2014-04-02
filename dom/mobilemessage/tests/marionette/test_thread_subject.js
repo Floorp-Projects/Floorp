@@ -38,9 +38,9 @@ function testMms(aProgressStr, aSubject) {
 
   // We use a long long message subject so it will always fail.
   return sendMmsWithFailure(mmsParameters)
-    .then(function(message) {
-      log("  MMS sent, retrieving thread of id " + message.threadId);
-      return getThreadById(message.threadId);
+    .then(function(result) {
+      log("  MMS sent, retrieving thread of id " + result.message.threadId);
+      return getThreadById(result.message.threadId);
     })
     .then(function(thread) {
       log("  Got thread.lastMessageSubject = '" + thread.lastMessageSubject + "'");
