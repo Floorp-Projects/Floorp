@@ -672,7 +672,7 @@ class ABIArgIter
 typedef js::Vector<MIRType, 8> MIRTypeVector;
 typedef ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
 
-typedef js::Vector<VarType, 8> VarTypeVector;
+typedef js::Vector<VarType, 8, LifoAllocPolicy> VarTypeVector;
 typedef ABIArgIter<VarTypeVector> ABIArgTypeIter;
 
 class Signature
@@ -681,10 +681,10 @@ class Signature
     RetType retType_;
 
   public:
-    Signature(ExclusiveContext *cx)
-      : argTypes_(cx) {}
-    Signature(ExclusiveContext *cx, RetType retType)
-      : argTypes_(cx), retType_(retType) {}
+    Signature(LifoAlloc &alloc)
+      : argTypes_(alloc) {}
+    Signature(LifoAlloc &alloc, RetType retType)
+      : argTypes_(alloc), retType_(retType) {}
     Signature(VarTypeVector &&argTypes, RetType retType)
       : argTypes_(Move(argTypes)), retType_(Move(retType)) {}
     Signature(Signature &&rhs)
@@ -1415,6 +1415,9 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
     uint32_t minHeapLength() const {
         return module_->minHeapLength();
+    }
+    LifoAlloc &lifo() {
+        return moduleLifo_;
     }
 
     bool collectAccesses(MIRGenerator &gen) {
@@ -2281,7 +2284,7 @@ class FunctionCompiler
           : prevMaxStackBytes_(0),
             maxChildStackBytes_(0),
             spIncrement_(0),
-            sig_(f.cx(), retType),
+            sig_(f.m().lifo(), retType),
             regArgs_(f.cx()),
             stackArgs_(f.cx()),
             childClobbers_(false)
@@ -5384,7 +5387,7 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
 
     ParseNode *stmtIter = ListHead(FunctionStatementList(fn));
 
-    VarTypeVector argTypes(m.cx());
+    VarTypeVector argTypes(m.lifo());
     if (!CheckArguments(f, &stmtIter, &argTypes))
         return false;
 
@@ -5841,7 +5844,7 @@ CheckFuncPtrTable(ModuleCompiler &m, ParseNode *var)
             return false;
     }
 
-    Signature sig(m.cx());
+    Signature sig(m.lifo());
     if (!sig.copy(*firstSig))
         return false;
 
