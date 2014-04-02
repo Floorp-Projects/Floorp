@@ -43,6 +43,9 @@ public interface TelemetryContract {
         // Stop holding a resource (reader, bookmark, etc) for viewing later.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String UNSAVE = "unsave.1";
+
+        // Loading a URL.
+        public static final String LOAD_URL = "loadurl.1";
     }
 
     /**
@@ -58,6 +61,9 @@ public interface TelemetryContract {
 
         // Action triggered from a dialog.
         public static final String DIALOG = "dialog";
+
+        // Action occurred via an intent.
+        public static final String INTENT = "intent";
     }
 
     /**
