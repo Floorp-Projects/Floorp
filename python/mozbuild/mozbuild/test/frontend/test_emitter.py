@@ -164,7 +164,6 @@ class TestEmitterBasic(unittest.TestCase):
             HOST_LIBRARY_NAME='host_fans',
             IS_COMPONENT=True,
             LIBS=['fans.lib', 'tans.lib'],
-            LIBXUL_LIBRARY=True,
             MSVC_ENABLE_PGO=True,
             NO_DIST_INSTALL=True,
             OS_LIBS=['foo.so', '-l123', 'aaa.a'],
