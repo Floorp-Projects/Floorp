@@ -220,7 +220,7 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
 
   IntSize size = aSurface->GetSize();
   if (!mTexImage ||
-      mTexImage->GetSize() != size ||
+      (mTexImage->GetSize() != size && !aSrcOffset) ||
       mTexImage->GetContentType() != gfx::ContentForFormat(aSurface->GetFormat())) {
     if (mFlags & TEXTURE_DISALLOW_BIGIMAGE) {
       mTexImage = CreateBasicTextureImage(mGL, size,
@@ -249,6 +249,37 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
     mTexImage->EndUpdate();
   }
   return true;
+}
+
+void
+TextureImageTextureSourceOGL::EnsureBuffer(const nsIntSize& aSize,
+                                           gfxContentType aContentType)
+{
+  if (!mTexImage ||
+      mTexImage->GetSize() != aSize.ToIntSize() ||
+      mTexImage->GetContentType() != aContentType) {
+    mTexImage = CreateTextureImage(mGL,
+                                   aSize.ToIntSize(),
+                                   aContentType,
+                                   WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                   FlagsToGLFlags(mFlags));
+  }
+  mTexImage->Resize(aSize.ToIntSize());
+}
+
+void
+TextureImageTextureSourceOGL::CopyTo(const nsIntRect& aSourceRect,
+                                     DataTextureSource *aDest,
+                                     const nsIntRect& aDestRect)
+{
+  MOZ_ASSERT(aDest->AsSourceOGL(), "Incompatible destination type!");
+  TextureImageTextureSourceOGL *dest =
+    aDest->AsSourceOGL()->AsTextureImageTextureSource();
+  MOZ_ASSERT(dest, "Incompatible destination type!");
+
+  mGL->BlitTextureImageHelper()->BlitTextureImage(mTexImage, aSourceRect,
+                                                  dest->mTexImage, aDestRect);
+  dest->mTexImage->MarkValid();
 }
 
 void

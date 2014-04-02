@@ -42,6 +42,7 @@ class Compositor;
 class ThebesBufferData;
 class TiledLayerComposer;
 struct EffectChain;
+class TextureImageTextureSourceOGL;
 
 struct TexturedEffect;
 
@@ -314,15 +315,18 @@ public:
  * Delays texture uploads until the next composite to
  * avoid blocking the main thread.
  */
-class ContentHostIncremental : public DeprecatedContentHostBase
+class ContentHostIncremental : public ContentHostBase
 {
 public:
   ContentHostIncremental(const TextureInfo& aTextureInfo)
-    : DeprecatedContentHostBase(aTextureInfo)
+    : ContentHostBase(aTextureInfo)
     , mDeAllocator(nullptr)
+    , mLocked(false)
   {}
 
   virtual CompositableType GetType() { return BUFFER_CONTENT_INC; }
+
+  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE { return LayerRenderState(); }
 
   virtual void CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
                                          const TextureInfo& aTextureInfo,
@@ -343,28 +347,27 @@ public:
     return false;
   }
 
-  virtual void Composite(EffectChain& aEffectChain,
-                         float aOpacity,
-                         const gfx::Matrix4x4& aTransform,
-                         const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr,
-                         TiledLayerProperties* aLayerProperties = nullptr)
-  {
-    ProcessTextureUpdates();
-
-    DeprecatedContentHostBase::Composite(aEffectChain, aOpacity,
-                               aTransform, aFilter,
-                               aClipRect, aVisibleRegion,
-                               aLayerProperties);
-  }
-
   virtual void DestroyTextures()
   {
-    mDeprecatedTextureHost = nullptr;
-    mDeprecatedTextureHostOnWhite = nullptr;
+    mSource = nullptr;
+    mSourceOnWhite = nullptr;
     mUpdateList.Clear();
   }
+
+  virtual bool Lock() {
+    MOZ_ASSERT(!mLocked);
+    ProcessTextureUpdates();
+    mLocked = true;
+    return true;
+  }
+
+  virtual void Unlock() {
+    MOZ_ASSERT(mLocked);
+    mLocked = false;
+  }
+
+  virtual NewTextureSource* GetTextureSource();
+  virtual NewTextureSource* GetTextureSourceOnWhite();
 
 private:
 
@@ -448,7 +451,13 @@ private:
 
   nsTArray<nsAutoPtr<Request> > mUpdateList;
 
+  // Specific to OGL to avoid exposing methods on TextureSource that only
+  // have one implementation.
+  RefPtr<TextureImageTextureSourceOGL> mSource;
+  RefPtr<TextureImageTextureSourceOGL> mSourceOnWhite;
+
   RefPtr<ISurfaceAllocator> mDeAllocator;
+  bool mLocked;
 };
 
 }
