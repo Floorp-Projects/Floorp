@@ -646,7 +646,7 @@ private:
 
   bool IsStateMachineScheduled() const {
     AssertCurrentThreadInMonitor();
-    return !mTimeout.IsNull() || mRunAgain;
+    return !mTimeout.IsNull();
   }
 
   // Returns true if we're not playing and the decode thread has filled its
@@ -682,14 +682,16 @@ private:
 
   RefPtr<SharedThreadPool> mStateMachineThreadPool;
 
-  // Timer to call the state machine Run() method. Used by
+  // Timer to run the state machine cycles. Used by
   // ScheduleStateMachine(). Access protected by decoder monitor.
   nsCOMPtr<nsITimer> mTimer;
 
-  // Timestamp at which the next state machine Run() method will be called.
-  // If this is non-null, a call to Run() is scheduled, either by a timer,
-  // or via an event. Access protected by decoder monitor.
+  // Timestamp at which the next state machine cycle will run.
+  // Access protected by decoder monitor.
   TimeStamp mTimeout;
+
+  // Used to check if there are state machine cycles are running in sequence.
+  DebugOnly<bool> mInRunningStateMachine;
 
   // The time that playback started from the system clock. This is used for
   // timing the presentation of video frames when there's no audio.
@@ -920,14 +922,6 @@ private:
   // Synchronised via decoder monitor.
   bool mQuickBuffering;
 
-  // True if the shared state machine thread is currently running this
-  // state machine.
-  bool mIsRunning;
-
-  // True if we should run the state machine again once the current
-  // state machine run has finished.
-  bool mRunAgain;
-
   // True if we should not decode/preroll unnecessary samples, unless we're
   // played. "Prerolling" in this context refers to when we decode and
   // buffer decoded samples in advance of when they're needed for playback.
@@ -939,13 +933,6 @@ private:
   // of prerolling samples for media elements that may not play, both
   // memory and CPU overhead.
   bool mMinimizePreroll;
-
-  // True if we've dispatched an event to run the state machine. It's
-  // imperative that we don't dispatch multiple events to run the state
-  // machine at the same time, as our code assume all events are synchronous.
-  // If we dispatch multiple events, the second event can run while the
-  // first is shutting down a thread, causing inconsistent state.
-  bool mDispatchedRunEvent;
 
   // True if the decode thread has gone filled its buffers and is now
   // waiting to be awakened before it continues decoding. Synchronized
