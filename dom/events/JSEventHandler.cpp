@@ -46,8 +46,11 @@ using namespace mozilla::dom;
 nsJSEventListener::nsJSEventListener(nsISupports *aTarget,
                                      nsIAtom* aType,
                                      const nsEventHandler& aHandler)
-  : nsIJSEventListener(aTarget, aType, aHandler)
+  : mEventName(aType)
+  , mHandler(aHandler)
 {
+  nsCOMPtr<nsISupports> base = do_QueryInterface(aTarget);
+  mTarget = base.get();
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
@@ -98,8 +101,8 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
-  NS_INTERFACE_MAP_ENTRY(nsIJSEventListener)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsJSEventListener)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSEventListener)
@@ -236,9 +239,10 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
  */
 
 nsresult
-NS_NewJSEventListener(nsISupports*aTarget, nsIAtom* aEventType,
-                      const nsEventHandler& aHandler,
-                      nsIJSEventListener** aReturn)
+NS_NewJSEventHandler(nsISupports* aTarget,
+                     nsIAtom* aEventType,
+                     const nsEventHandler& aHandler,
+                     nsJSEventListener** aReturn)
 {
   NS_ENSURE_ARG(aEventType || !NS_IsMainThread());
   nsJSEventListener* it =

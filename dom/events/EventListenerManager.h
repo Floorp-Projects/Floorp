@@ -8,12 +8,12 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/EventListenerBinding.h"
+#include "mozilla/JSEventHandler.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMEventListener.h"
-#include "nsIJSEventListener.h"
 #include "nsTObserverArray.h"
 
 class nsIDOMEvent;
@@ -174,10 +174,10 @@ public:
 
     EventListenerFlags mFlags;
 
-    nsIJSEventListener* GetJSListener() const
+    nsJSEventListener* GetJSListener() const
     {
       return (mListenerType == eJSEventListener) ?
-        static_cast<nsIJSEventListener *>(mListener.GetXPCOMCallback()) :
+        static_cast<nsJSEventListener*>(mListener.GetXPCOMCallback()) :
         nullptr;
     }
 
@@ -190,7 +190,7 @@ public:
     ~Listener()
     {
       if ((mListenerType == eJSEventListener) && mListener) {
-        static_cast<nsIJSEventListener*>(
+        static_cast<nsJSEventListener*>(
           mListener.GetXPCOMCallback())->Disconnect();
       }
     }
