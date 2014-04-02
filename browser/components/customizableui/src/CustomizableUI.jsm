@@ -1594,6 +1594,12 @@ let CustomizableUIInternal = {
       aPosition = placements.length;
     }
 
+    let widget = gPalette.get(aWidgetId);
+    if (widget) {
+      widget.currentPosition = aPosition;
+      widget.currentArea = oldPlacement.area;
+    }
+
     if (aPosition == oldPlacement.position) {
       return;
     }
@@ -1605,11 +1611,6 @@ let CustomizableUIInternal = {
       aPosition--;
     }
     placements.splice(aPosition, 0, aWidgetId);
-
-    let widget = gPalette.get(aWidgetId);
-    if (widget) {
-      widget.currentPosition = aPosition;
-    }
 
     gDirty = true;
     gDirtyAreaCache.add(oldPlacement.area);
@@ -1656,19 +1657,25 @@ let CustomizableUIInternal = {
   },
 
   restoreStateForArea: function(aArea, aLegacyState) {
-    if (gPlacements.has(aArea)) {
-      // Already restored.
-      return;
-    }
+    let placementsPreexisted = gPlacements.has(aArea);
 
     this.beginBatchUpdate();
     try {
       gRestoring = true;
 
       let restored = false;
-      gPlacements.set(aArea, []);
+      if (placementsPreexisted) {
+        LOG("Restoring " + aArea + " from pre-existing placements");
+        for (let [position, id] in Iterator(gPlacements.get(aArea))) {
+          this.moveWidgetWithinArea(id, position);
+        }
+        gDirty = false;
+        restored = true;
+      } else {
+        gPlacements.set(aArea, []);
+      }
 
-      if (gSavedState && aArea in gSavedState.placements) {
+      if (!restored && gSavedState && aArea in gSavedState.placements) {
         LOG("Restoring " + aArea + " from saved state");
         let placements = gSavedState.placements[aArea];
         for (let id of placements)
