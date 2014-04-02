@@ -12,7 +12,9 @@ Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 
+#ifdef MOZ_ANDROID_SYNTHAPKS
 XPCOMUtils.defineLazyModuleGetter(this, "WebappManager", "resource://gre/modules/WebappManager.jsm");
+#endif
 
 const DEFAULT_ICON = "chrome://browser/skin/images/default-app-icon.png";
 
@@ -43,9 +45,11 @@ function openLink(aEvent) {
   } catch (ex) {}
 }
 
+#ifdef MOZ_ANDROID_SYNTHAPKS
 function checkForUpdates(aEvent) {
   WebappManager.checkForUpdates(true);
 }
+#endif
 
 #ifndef MOZ_ANDROID_SYNTHAPKS
 var ContextMenus = {
@@ -93,7 +97,9 @@ function onLoad(aEvent) {
     elmts[i].addEventListener("click",  openLink,  false);
   }
 
+#ifdef MOZ_ANDROID_SYNTHAPKS
   document.getElementById("update-item").addEventListener("click", checkForUpdates, false);
+#endif
 
   navigator.mozApps.mgmt.oninstall = onInstall;
   navigator.mozApps.mgmt.onuninstall = onUninstall;
