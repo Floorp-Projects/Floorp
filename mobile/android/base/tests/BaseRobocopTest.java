@@ -25,7 +25,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
     protected Assert mAsserter;
     protected String mLogFile;
 
-    protected Map<?, ?> mConfig;
+    protected Map<String, String> mConfig;
     protected String mRootPath;
 
     /**
