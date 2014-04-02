@@ -1101,6 +1101,22 @@
               this._tabAttrModified(oldTab);
               this._tabAttrModified(this.mCurrentTab);
 
+              if (oldBrowser != newBrowser &&
+                  oldBrowser.docShell &&
+                  oldBrowser.docShell.contentViewer.inPermitUnload) {
+                // Since the user is switching away from a tab that has
+                // a beforeunload prompt active, we remove the prompt.
+                // This prevents confusing user flows like the following:
+                //   1. User attempts to close Firefox
+                //   2. User switches tabs (ingoring a beforeunload prompt)
+                //   3. User returns to tab, presses "Leave page"
+                let promptBox = this.getTabModalPromptBox(oldBrowser);
+                let prompts = promptBox.listPrompts();
+                // NB: This code assumes that the beforeunload prompt
+                //     is the top-most prompt on the tab.
+                promptBox.removePrompt(prompts[prompts.length - 1]);
+              }
+
               // Adjust focus
               oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
               do {
@@ -1879,7 +1895,6 @@
         <body>
           <![CDATA[
             if (aTab.closing ||
-                aTab._pendingPermitUnload ||
                 this._windowIsClosing)
               return false;
 
@@ -1887,16 +1902,10 @@
 
             if (!aTabWillBeMoved) {
               let ds = browser.docShell;
-              if (ds && ds.contentViewer) {
-                // We need to block while calling permitUnload() because it
-                // processes the event queue and may lead to another removeTab()
-                // call before permitUnload() even returned.
-                aTab._pendingPermitUnload = true;
-                let permitUnload = ds.contentViewer.permitUnload();
-                delete aTab._pendingPermitUnload;
-
-                if (!permitUnload)
-                  return false;
+              if (ds &&
+                  ds.contentViewer &&
+                  !ds.contentViewer.permitUnload()) {
+                return false;
               }
             }
 

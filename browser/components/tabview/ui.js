@@ -527,11 +527,15 @@ let UI = {
     if (!this.isTabViewVisible() || this._isChangingVisibility)
       return;
 
-    this._isChangingVisibility = true;
-
     // another tab might be select if user decides to stay on a page when
     // a onclose confirmation prompts.
     GroupItems.removeHiddenGroups();
+
+    // We need to set this after removing the hidden groups because doing so
+    // might show prompts which will cause us to be called again, and we'd get
+    // stuck if we prevent re-entrancy before doing that.
+    this._isChangingVisibility = true;
+
     TabItems.pausePainting();
 
     this._reorderTabsOnHide.forEach(function(groupItem) {
