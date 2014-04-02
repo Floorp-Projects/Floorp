@@ -42,8 +42,52 @@
 12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678
  */
 
+/*
+ * SpiderMonkey bytecode categorization (as used in generated documentation):
+ *
+ * [Index]
+ *   [Statements]
+ *     Jumps
+ *     Switch Statement
+ *     For-In Statement
+ *     With Statement
+ *     Exception Handling
+ *     Function
+ *     Generator
+ *     Debugger
+ *   [Variables and Scopes]
+ *     Variables
+ *     Free Variables
+ *     Local Variables
+ *     Aliased Variables
+ *     Intrinsics
+ *     Block-local Scope
+ *     This
+ *     Arguments
+ *   [Operator]
+ *     Comparison Operators
+ *     Arithmetic Operators
+ *     Bitwise Logical Operators
+ *     Bitwise Shift Operators
+ *     Logical Operators
+ *     Special Operators
+ *     Stack Operations
+ *   [Literals]
+ *     Constants
+ *     Object
+ *     Array
+ *     RegExp
+ *   [Other]
+ */
+
 #define FOR_EACH_OPCODE(macro) \
     /* legend:  op      val   name          image       len use def  format */ \
+    /*
+     * No operation is performed.
+     *   Category: Other
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_NOP,       0,  "nop",        NULL,         1,  0,  0, JOF_BYTE) \
     \
     /* Long-standing JavaScript bytecodes. */ \
