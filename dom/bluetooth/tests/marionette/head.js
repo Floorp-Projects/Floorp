@@ -35,6 +35,9 @@ const BDADDR_ANY   = "00:00:00:00:00:00";
 const BDADDR_ALL   = "ff:ff:ff:ff:ff:ff";
 const BDADDR_LOCAL = "ff:ff:ff:00:00:00";
 
+// A user friendly name for remote BT device.
+const REMOTE_DEVICE_NAME = "Remote BT Device";
+
 let Promise =
   SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
@@ -75,6 +78,70 @@ function runEmulatorCmdSafe(aCommand) {
   });
 
   return deferred.promise;
+}
+
+/**
+ * Add a Bluetooth remote device to scatternet and set its properties.
+ *
+ * Use QEMU command 'bt remote add' to add a virtual Bluetooth remote
+ * and set its properties by setEmulatorDeviceProperty().
+ *
+ * Fulfill params:
+ *   result -- bluetooth address of the remote device.
+ * Reject params: (none)
+ *
+ * @param aProperies
+ *        A javascript object with zero or several properties for initializing
+ *        the remote device. By now, the properies could be 'name' or
+ *        'discoverable'. It valid to put a null object or a javascript object
+ *        which don't have any properies.
+ *
+ * @return A promise object.
+ */
+function addEmulatorRemoteDevice(aProperties) {
+  let address;
+  let promise = runEmulatorCmdSafe("bt remote add")
+    .then(function(aResults) {
+      address = aResults[0].toUpperCase();
+    });
+
+  for (let key in aProperties) {
+    let value = aProperties[key];
+    let propertyName = key;
+    promise = promise.then(function() {
+      return setEmulatorDeviceProperty(address, propertyName, value);
+    });
+  }
+
+  return promise.then(function() {
+    return address;
+  });
+}
+
+/**
+ * Remove Bluetooth remote devices in scatternet.
+ *
+ * Use QEMU command 'bt remote remove <addr>' to remove a specific virtual
+ * Bluetooth remote device in scatternet or remove them all by  QEMU command
+ * 'bt remote remove BDADDR_ALL'.
+ *
+ * @param aAddress
+ *        The string of Bluetooth address with format xx:xx:xx:xx:xx:xx.
+ *
+ * Fulfill params:
+ *   result -- an array of emulator response lines.
+ * Reject params: (none)
+ *
+ * @return A promise object.
+ */
+function removeEmulatorRemoteDevice(aAddress) {
+  let cmd = "bt remote remove " + aAddress;
+  return runEmulatorCmdSafe(cmd)
+    .then(function(aResults) {
+      // 'bt remote remove <bd_addr>' returns a list of removed device one at a line.
+      // The last item is "OK".
+      return aResults.slice(0, -1);
+    });
 }
 
 /**
@@ -124,6 +191,71 @@ function getEmulatorDeviceProperty(aAddress, aPropertyName) {
     .then(function(aResults) {
       return aResults[0];
     });
+}
+
+/**
+ * Start dicovering Bluetooth devices.
+ *
+ * Allows the device's adapter to start seeking for remote devices.
+ *
+ * Fulfill params: (none)
+ * Reject params: a DOMError
+ *
+ * @param aAdapter
+ *        A BluetoothAdapter which is used to interact with local BT dev
+ *
+ * @return A deferred promise.
+ */
+function startDiscovery(aAdapter) {
+  let deferred = Promise.defer();
+
+  let request = aAdapter.startDiscovery();
+  request.onsuccess = function () {
+    log("  Start discovery - Success");
+    // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
+    //     Currently, discovering state wouldn't change immediately here.
+    //     We would turn on this check when the redesigned API are landed.
+    // is(aAdapter.discovering, true, "BluetoothAdapter.discovering");
+    deferred.resolve();
+  }
+  request.onerror = function (aEvent) {
+    ok(false, "Start discovery - Fail");
+    deferred.reject(aEvent.target.error);
+  }
+
+  return deferred.promise;
+}
+
+/**
+ * Stop dicovering Bluetooth devices.
+ *
+ * Allows the device's adapter to stop seeking for remote devices.
+ *
+ * Fulfill params: (none)
+ * Reject params: a DOMError
+ *
+ * @param aAdapter
+ *        A BluetoothAdapter which is used to interact with local BT device.
+ *
+ * @return A deferred promise.
+ */
+function stopDiscovery(aAdapter) {
+  let deferred = Promise.defer();
+
+  let request = aAdapter.stopDiscovery();
+  request.onsuccess = function () {
+    log("  Stop discovery - Success");
+    // TODO (bug 892207): Make Bluetooth APIs available for 3rd party apps.
+    //     Currently, discovering state wouldn't change immediately here.
+    //     We would turn on this check when the redesigned API are landed.
+    // is(aAdapter.discovering, false, "BluetoothAdapter.discovering");
+    deferred.resolve();
+  }
+  request.onerror = function (aEvent) {
+    ok(false, "Stop discovery - Fail");
+    deferred.reject(aEvent.target.error);
+  }
+  return deferred.promise;
 }
 
 /**
