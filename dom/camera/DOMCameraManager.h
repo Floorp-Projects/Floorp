@@ -32,6 +32,8 @@ namespace mozilla {
 
 typedef nsTArray<nsRefPtr<mozilla::nsDOMCameraControl> > CameraControls;
 typedef nsClassHashtable<nsUint64HashKey, CameraControls> WindowTable;
+typedef mozilla::dom::Optional<mozilla::dom::OwningNonNull<mozilla::dom::CameraErrorCallback>>
+          OptionalNonNullCameraErrorCallback;
 
 class nsDOMCameraManager MOZ_FINAL
   : public nsIObserver
@@ -52,11 +54,21 @@ public:
   void Register(mozilla::nsDOMCameraControl* aDOMCameraControl);
   void OnNavigation(uint64_t aWindowId);
 
+  void PermissionAllowed(uint32_t aCameraId,
+                         const mozilla::dom::CameraConfiguration& aOptions,
+                         mozilla::dom::GetCameraCallback* aOnSuccess,
+                         mozilla::dom::CameraErrorCallback* aOnError);
+
+  void PermissionCancelled(uint32_t aCameraId,
+                           const mozilla::dom::CameraConfiguration& aOptions,
+                           mozilla::dom::GetCameraCallback* aOnSuccess,
+                           mozilla::dom::CameraErrorCallback* aOnError);
+
   // WebIDL
   void GetCamera(const nsAString& aCamera,
                  const mozilla::dom::CameraConfiguration& aOptions,
                  mozilla::dom::GetCameraCallback& aOnSuccess,
-                 const mozilla::dom::Optional<mozilla::dom::OwningNonNull<mozilla::dom::CameraErrorCallback> >& aOnError,
+                 const OptionalNonNullCameraErrorCallback& aOnError,
                  mozilla::ErrorResult& aRv);
   void GetListOfCameras(nsTArray<nsString>& aList, mozilla::ErrorResult& aRv);
 
@@ -77,6 +89,7 @@ private:
 
 protected:
   uint64_t mWindowId;
+  uint32_t mPermission;
   nsCOMPtr<nsPIDOMWindow> mWindow;
   /**
    * 'sActiveWindows' is only ever accessed while in the Main Thread,

@@ -35,7 +35,7 @@ random-if(d2d) == dynamic-2.html dynamic-2-ref.html
 != 229764-1.html 229764-ref.html
 == 229764-2.html 229764-ref.html
 == 329069-1.html 329069-1-ref.html
-fails-if(B2G) == 329069-2.html 329069-2-ref.html
+== 329069-2.html 329069-2-ref.html
 == 329069-3.html 329069-3-ref.html
 == 329069-4.html 329069-4-ref.html
 fails-if(!cocoaWidget) == 329069-5.html 329069-5-ref.html # bug 603710
