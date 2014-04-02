@@ -753,7 +753,6 @@ void MediaDecoder::QueueMetadata(int64_t aPublishTime,
 bool
 MediaDecoder::IsDataCachedToEndOfResource()
 {
-  NS_ASSERTION(!mShuttingDown, "Don't call during shutdown!");
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   return (mResource &&
           mResource->IsDataCachedToEndOfResource(mDecoderPosition));
