@@ -389,9 +389,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor)
         aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
         break;
     case eColorID__moz_buttonhovertext:
-        gtk_style_context_get_color(mButtonStyle, 
-                                    GTK_STATE_FLAG_PRELIGHT, &gdk_color);
-        aColor = GDK_RGBA_TO_NS_RGBA(gdk_color);
+        aColor = sButtonHoverText;
         break;
     case eColorID__moz_cellhighlight:
     case eColorID__moz_html_cellhighlight:
@@ -1129,6 +1127,8 @@ nsLookAndFeel::Init()
     style = gtk_widget_get_style_context(label);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sButtonText = GDK_RGBA_TO_NS_RGBA(color);
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
+    sButtonHoverText = GDK_RGBA_TO_NS_RGBA(color);
 
     // Combobox label and background colors
     style = gtk_widget_get_style_context(comboboxLabel);
