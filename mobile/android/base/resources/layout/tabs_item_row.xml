@@ -14,7 +14,9 @@
                                  android:paddingBottom="6dip"
                                  android:background="@drawable/tab_row">
 
-    <LinearLayout android:layout_width="wrap_content"
+    <org.mozilla.gecko.widget.TabThumbnailWrapper 
+                  android:id="@+id/wrapper"
+	          android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   android:padding="4dip"
                   android:background="@drawable/tab_thumbnail"
@@ -25,7 +27,7 @@
                                                 android:layout_height="@dimen/tab_thumbnail_height"
                                                 android:src="@drawable/tab_thumbnail_default"/>
 
-    </LinearLayout>
+    </org.mozilla.gecko.widget.TabThumbnailWrapper>
 
     <TextView android:id="@+id/title"
               android:layout_width="0dip"
