@@ -7,6 +7,7 @@ package org.mozilla.gecko.sync.syncadapter;
 import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.simple.parser.ParseException;
@@ -502,8 +503,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
     final AuthHeaderProvider authHeaderProvider = new BasicAuthHeaderProvider(username, password);
     final SharedPreferences prefs = getContext().getSharedPreferences(prefsPath, Utils.SHARED_PREFERENCES_MODE);
     final SyncConfiguration config = new Sync11Configuration(username, authHeaderProvider, prefs, keyBundle);
-    GlobalSession globalSession = new GlobalSession(config, this, this.mContext, extras, clientsDataDelegate, nodeAssignmentDelegate);
 
+    Collection<String> knownStageNames = SyncConfiguration.validEngineNames();
+    config.stagesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
+
+    GlobalSession globalSession = new GlobalSession(config, this, this.mContext, clientsDataDelegate, nodeAssignmentDelegate);
     globalSession.start();
   }
 

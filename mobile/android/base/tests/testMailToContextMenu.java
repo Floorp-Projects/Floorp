@@ -1,6 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
 
 public class testMailToContextMenu extends ContentContextMenuTest {
 
@@ -8,11 +7,6 @@ public class testMailToContextMenu extends ContentContextMenuTest {
     private static String MAILTO_PAGE_URL;
     private static final String MAILTO_PAGE_TITLE = "Big Mailto";
     private static final String mailtoMenuItems [] = {"Copy Email Address", "Share Email Address"};
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testMailToContextMenu() {
         blockForGeckoReady();

@@ -1,17 +1,11 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
+
 import android.util.DisplayMetrics;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 public class testAddonManager extends PixelTest  {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     /* This test will check the behavior of the Addons Manager:
     First the test will open the Addons Manager from the Menu and then close it
     Then the test will open the Addons Manager by visiting about:addons

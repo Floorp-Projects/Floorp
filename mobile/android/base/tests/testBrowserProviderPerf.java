@@ -13,7 +13,6 @@ import org.mozilla.gecko.db.BrowserProvider;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.util.FileUtils;
 
-import android.app.Activity;
 import android.content.ContentProvider;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
@@ -36,12 +35,7 @@ import android.util.Log;
  * Instead, we directly use the existing ContentProvider, accessing a new
  * profile directory that we initialize via BrowserDB.
  */
-@SuppressWarnings("unchecked")
 public class testBrowserProviderPerf extends BaseRobocopTest {
-    private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME = TestConstants.ANDROID_PACKAGE_NAME + ".App";
-
-    private static Class<Activity> mLauncherActivityClass;
-
     private final int NUMBER_OF_BASIC_HISTORY_URLS = 10000;
     private final int NUMBER_OF_BASIC_BOOKMARK_URLS = 500;
     private final int NUMBER_OF_COMBINED_URLS = 500;
@@ -63,21 +57,9 @@ public class testBrowserProviderPerf extends BaseRobocopTest {
     private Uri mBookmarksURI;
     private Uri mFaviconsURI;
 
-    static {
-        try {
-            mLauncherActivityClass = (Class<Activity>) Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public testBrowserProviderPerf() {
-        super(TARGET_PACKAGE_ID, mLauncherActivityClass);
-    }
-
     @Override
-    protected int getTestType() {
-        return TEST_TALOS;
+    protected Type getTestType() {
+        return Type.TALOS;
     }
 
     private void loadMobileFolderId() throws Exception {

@@ -790,11 +790,6 @@ FunctionEnd
   DeleteRegKey HKLM "Software\Classes\Firefox.URL"
   DeleteRegKey HKCU "Software\Classes\Firefox.URL"
 
-  ; Remove the app compatibility registry key
-  StrCpy $0 "Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers"
-  DeleteRegValue HKLM "$0" "$INSTDIR\${FileMainEXE}"
-  DeleteRegValue HKCU "$0" "$INSTDIR\${FileMainEXE}"
-
   ; Delete gopher from Capabilities\URLAssociations if it is present.
   ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
   StrCpy $0 "Software\Clients\StartMenuInternet\$R9"

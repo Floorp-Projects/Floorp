@@ -1,16 +1,13 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
-import android.widget.CheckBox;
 import java.util.ArrayList;
 
-public class testPermissions extends PixelTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.PaintedSurface;
 
+import android.widget.CheckBox;
+
+public class testPermissions extends PixelTest {
     public void testPermissions() {
         blockForGeckoReady();
 

@@ -1,17 +1,14 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.Element;
+import org.mozilla.gecko.R;
 
 /* Tests related to the about: page:
  *  - check that about: loads from the URL bar
  *  - check that about: loads from Settings/About...
  */
 public class testAboutPage extends PixelTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     private void ensureTitleMatches(final String regex) {
         Element urlBarTitle = mDriver.findElement(getActivity(), R.id.url_bar_title);
         mAsserter.isnot(urlBarTitle, null, "Got the URL bar title");

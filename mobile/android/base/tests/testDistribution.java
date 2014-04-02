@@ -1,13 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.db.BrowserProvider;
-import org.mozilla.gecko.util.ThreadUtils;
-
-import android.app.Activity;
-import android.content.SharedPreferences;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -16,6 +8,13 @@ import java.io.OutputStream;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.Distribution;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import android.app.Activity;
+import android.content.SharedPreferences;
 
 /**
  * Tests distribution customization.
@@ -33,11 +32,6 @@ public class testDistribution extends ContentProviderTest {
     private static final int PREF_REQUEST_ID = 0x7357;
 
     private Activity mActivity;
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     /**
      * This is a hack.

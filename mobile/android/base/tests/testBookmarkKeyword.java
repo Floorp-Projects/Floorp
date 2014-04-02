@@ -1,14 +1,7 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
 
 public class testBookmarkKeyword extends AboutHomeTest {
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testBookmarkKeyword() {
         blockForGeckoReady();
 

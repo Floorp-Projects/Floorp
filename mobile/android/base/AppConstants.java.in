@@ -6,7 +6,10 @@
 
 package org.mozilla.gecko;
 
+import android.app.Activity;
+
 import org.mozilla.gecko.mozglue.RobocopTarget;
+
 /**
  * A collection of constants that pertain to the build and runtime state of the
  * application. Typically these are sourced from build-time definitions (see
@@ -19,8 +22,18 @@ import org.mozilla.gecko.mozglue.RobocopTarget;
 @RobocopTarget
 public class AppConstants {
     public static final String ANDROID_PACKAGE_NAME = "@ANDROID_PACKAGE_NAME@";
-    public static final String BROWSER_INTENT_CLASS = ANDROID_PACKAGE_NAME + ".App";
     public static final String MANGLED_ANDROID_PACKAGE_NAME = "@MANGLED_ANDROID_PACKAGE_NAME@";
+
+    /**
+     * The Java Class instance that launches the browser.
+     * <p>
+     * This should always agree with <code>BROWSER_INTENT_CLASS_NAME</code>.
+     */
+    public static final Class<? extends Activity> BROWSER_INTENT_CLASS = @ANDROID_PACKAGE_NAME@.App.class;
+    /**
+     * The name of the Java class that launches the browser.
+     */
+    public static final String BROWSER_INTENT_CLASS_NAME = BROWSER_INTENT_CLASS.getName();
 
     public static final String GRE_MILESTONE = "@GRE_MILESTONE@";
 

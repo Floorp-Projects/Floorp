@@ -1,7 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;

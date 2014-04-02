@@ -27,11 +27,11 @@ public class MockGlobalSession extends MockPrefsGlobalSession {
 
   public MockGlobalSession(SyncConfiguration config, GlobalSessionCallback callback)
           throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
-    super(config, callback, null, null, null);
+    super(config, callback, null, null);
   }
 
   @Override
-  public boolean engineIsEnabled(String engine, EngineSettings engineSettings) {
+  public boolean isEngineRemotelyEnabled(String engine, EngineSettings engineSettings) {
     return false;
   }
 

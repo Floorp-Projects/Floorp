@@ -1,18 +1,18 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.SuggestClient;
 
 import android.app.Activity;
-import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import java.lang.RuntimeException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Test for search suggestions.
@@ -24,11 +24,6 @@ public class testSearchSuggestions extends BaseTest {
     private static final int SUGGESTION_TIMEOUT = 5000;
     private static final String TEST_QUERY = "foo barz";
     private static final String SUGGESTION_TEMPLATE = "/robocop/robocop_suggestions.sjs?query=__searchTerms__";
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testSearchSuggestions() {
         blockForGeckoReady();
