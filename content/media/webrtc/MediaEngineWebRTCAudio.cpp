@@ -221,8 +221,13 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
     if (update_echo &&
       0 != (error = mVoEProcessing->SetEcStatus(mEchoOn, (webrtc::EcModes) aEcho))) {
       LOG(("%s Error setting Echo Status: %d ",__FUNCTION__, error));
+      // Overhead of capturing all the time is very low (<0.1% of an audio only call)
+      if (mEchoOn) {
+        if (0 != (error = mVoEProcessing->SetEcMetricsStatus(true))) {
+          LOG(("%s Error setting Echo Metrics: %d ",__FUNCTION__, error));
+        }
+      }
     }
-
     if (update_agc &&
       0 != (error = mVoEProcessing->SetAgcStatus(mAgcOn, (webrtc::AgcModes) aAGC))) {
       LOG(("%s Error setting AGC Status: %d ",__FUNCTION__, error));
@@ -405,6 +410,11 @@ MediaEngineWebRTCAudioSource::Init()
     return;
   }
 
+  mVoECallReport = webrtc::VoECallReport::GetInterface(mVoiceEngine);
+  if (!mVoECallReport) {
+    return;
+  }
+
   mChannel = mVoEBase->CreateChannel();
   if (mChannel < 0) {
     return;
@@ -526,6 +536,24 @@ MediaEngineWebRTCAudioSource::Process(int channel,
     }
     free(buffer);
   }
+
+#ifdef PR_LOGGING
+  mSamples += length;
+  if (mSamples > samplingFreq) {
+    mSamples %= samplingFreq; // just in case mSamples >> samplingFreq
+    if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
+      webrtc::EchoStatistics echo;
+
+      mVoECallReport->GetEchoMetricSummary(echo);
+#define DUMP_STATVAL(x) (x).min, (x).max, (x).average
+      LOG(("Echo: ERL: %d/%d/%d, ERLE: %d/%d/%d, RERL: %d/%d/%d, NLP: %d/%d/%d",
+           DUMP_STATVAL(echo.erl),
+           DUMP_STATVAL(echo.erle),
+           DUMP_STATVAL(echo.rerl),
+           DUMP_STATVAL(echo.a_nlp)));
+    }
+  }
+#endif
 
   MonitorAutoLock lock(mMonitor);
   if (mState != kStarted)
