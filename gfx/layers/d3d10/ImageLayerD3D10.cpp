@@ -219,8 +219,8 @@ ImageLayerD3D10::RenderLayer()
       image->GetFormat() == ImageFormat::REMOTE_IMAGE_DXGI_TEXTURE ||
       image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE) {
     NS_ASSERTION(image->GetFormat() != ImageFormat::CAIRO_SURFACE ||
-                 !static_cast<CairoImage*>(image)->mDeprecatedSurface ||
-                 static_cast<CairoImage*>(image)->mDeprecatedSurface->GetContentType() != gfxContentType::ALPHA,
+                 !static_cast<CairoImage*>(image)->mSourceSurface ||
+                 static_cast<CairoImage*>(image)->mSourceSurface->GetFormat() != SurfaceFormat::A8,
                  "Image layer has alpha image");
     bool hasAlpha = false;
 
