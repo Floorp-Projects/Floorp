@@ -9,6 +9,8 @@ import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.home.HomePager.OnNewTabsListener;
 
@@ -110,6 +112,8 @@ public class LastTabsPanel extends HomeFragment {
                     return;
                 }
 
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL);
+
                 final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
                 mNewTabsListener.onNewTabs(new String[] { url });
             }
@@ -205,6 +209,8 @@ public class LastTabsPanel extends HomeFragment {
         do {
             urls[c.getPosition()] = c.getString(c.getColumnIndexOrThrow(Combined.URL));
         } while (c.moveToNext());
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.BUTTON);
 
         mNewTabsListener.onNewTabs(urls);
     }

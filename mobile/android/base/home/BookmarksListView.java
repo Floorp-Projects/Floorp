@@ -8,6 +8,8 @@ package org.mozilla.gecko.home;
 import java.util.EnumSet;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -90,6 +92,8 @@ public class BookmarksListView extends HomeListView
         } else {
             // Otherwise, just open the URL
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL);
 
             // This item is a TwoLinePageRow, so we allow switch-to-tab.
             getOnUrlOpenListener().onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
