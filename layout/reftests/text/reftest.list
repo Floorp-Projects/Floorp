@@ -270,6 +270,7 @@ pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-g
 == auto-hyphenation-nb-1.html auto-hyphenation-nb-1-ref.html
 == auto-hyphenation-nl-1.html auto-hyphenation-nl-1-ref.html
 == auto-hyphenation-nn-1.html auto-hyphenation-nn-1-ref.html
+== auto-hyphenation-pl-1.html auto-hyphenation-pl-1-ref.html
 == auto-hyphenation-pt-1.html auto-hyphenation-pt-1-ref.html
 == auto-hyphenation-ru-1.html auto-hyphenation-ru-1-ref.html
 == auto-hyphenation-sh-1.html auto-hyphenation-sh-1-ref.html
