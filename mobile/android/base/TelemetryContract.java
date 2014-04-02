@@ -90,6 +90,9 @@ public interface TelemetryContract {
         // Started when a Reader viewer becomes active in the foreground.
         // Note: Only used in JavaScript for now, but here for completeness.
         public static final String READER = "reader.1";
+
+        // URL bar focused.
+        public static final String URLBAR_FOCUSED = "urlbar.1:";
     }
 
     /**
