@@ -829,19 +829,29 @@ class MOZ_STACK_CLASS ModuleCompiler
         PropertyName *name_;
         bool defined_;
         uint32_t srcOffset_;
+        uint32_t endOffset_;
         Signature sig_;
         Label *code_;
         unsigned compileTime_;
 
       public:
         Func(PropertyName *name, Signature &&sig, Label *code)
-          : name_(name), defined_(false), srcOffset_(0), sig_(Move(sig)), code_(code), compileTime_(0)
+          : name_(name), defined_(false), srcOffset_(0), endOffset_(0), sig_(Move(sig)),
+            code_(code), compileTime_(0)
         {}
 
         PropertyName *name() const { return name_; }
+
         bool defined() const { return defined_; }
-        void define(uint32_t so) { JS_ASSERT(!defined_); defined_ = true; srcOffset_ = so; }
+        void finish(uint32_t start, uint32_t end) {
+            JS_ASSERT(!defined_);
+            defined_ = true;
+            srcOffset_ = start;
+            endOffset_ = end;
+        }
+
         uint32_t srcOffset() const { JS_ASSERT(defined_); return srcOffset_; }
+        uint32_t endOffset() const { JS_ASSERT(defined_); return endOffset_; }
         Signature &sig() { return sig_; }
         const Signature &sig() const { return sig_; }
         Label *code() const { return code_; }
@@ -1223,6 +1233,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     Label &interruptLabel() { return interruptLabel_; }
     bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
+    uint32_t moduleStart() const { return module_->funcStart(); }
 
     ParseNode *moduleFunctionNode() const { return moduleFunctionNode_; }
     PropertyName *moduleFunctionName() const { return moduleFunctionName_; }
@@ -1392,7 +1403,8 @@ class MOZ_STACK_CLASS ModuleCompiler
         AsmJSModule::ReturnType retType = func->sig().retType().toModuleReturnType();
         uint32_t line, column;
         parser_.tokenStream.srcCoords.lineNumAndColumnIndex(func->srcOffset(), &line, &column);
-        return module_->addExportedFunction(func->name(), line, column, maybeFieldName,
+        return module_->addExportedFunction(func->name(), line, column,
+                                            func->srcOffset(), func->endOffset(), maybeFieldName,
                                             Move(argCoercions), retType);
     }
     bool addExit(unsigned ffiIndex, PropertyName *name, Signature &&sig, unsigned *exitIndex) {
@@ -5423,7 +5435,16 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     if (func->defined())
         return m.failName(fn, "function '%s' already defined", FunctionName(fn));
 
-    func->define(fn->pn_pos.begin);
+    uint32_t funcBegin = fn->pn_pos.begin;
+    uint32_t funcEnd = fn->pn_pos.end;
+    // The begin/end char range is relative to the beginning of the module,
+    // hence the assertions.
+    JS_ASSERT(funcBegin > m.moduleStart());
+    JS_ASSERT(funcEnd > m.moduleStart());
+    funcBegin -= m.moduleStart();
+    funcEnd -= m.moduleStart();
+    func->finish(funcBegin, funcEnd);
+
     func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
     m.parser().release(mark);

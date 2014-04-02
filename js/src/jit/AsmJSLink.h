@@ -41,6 +41,11 @@ IsAsmJSModuleLoadedFromCache(JSContext *cx, unsigned argc, Value *vp);
 // has been both compile- and link-time validated.
 extern bool
 IsAsmJSFunction(JSContext *cx, unsigned argc, JS::Value *vp);
+extern bool
+IsAsmJSFunction(HandleFunction fun);
+
+extern JSString *
+AsmJSFunctionToString(JSContext *cx, HandleFunction fun);
 
 #else // JS_ION
 
