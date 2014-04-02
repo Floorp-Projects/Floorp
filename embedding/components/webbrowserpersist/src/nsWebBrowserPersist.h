@@ -24,7 +24,6 @@
 #include "nsIWebProgressListener2.h"
 
 #include "nsClassHashtable.h"
-#include "nsHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 
@@ -158,14 +157,10 @@ private:
     void SetApplyConversionIfNeeded(nsIChannel *aChannel);
 
     // Hash table enumerators
-    static bool EnumPersistURIs(
-        nsHashKey *aKey, void *aData, void* closure);
-    static bool EnumCleanupURIMap(
-        nsHashKey *aKey, void *aData, void* closure);
+    static PLDHashOperator EnumPersistURIs(
+        const nsACString &aKey, URIData *aData, void* aClosure);
     static PLDHashOperator EnumCleanupOutputMap(
         nsISupports *aKey, OutputData *aData, void* aClosure);
-    static bool EnumCleanupUploadList(
-        nsHashKey *aKey, void *aData, void* closure);
     static PLDHashOperator EnumCleanupUploadList(
         nsISupports *aKey, UploadData *aData, void* aClosure);
     static PLDHashOperator EnumCalcProgress(
@@ -174,8 +169,8 @@ private:
         nsISupports *aKey, UploadData *aData, void* aClosure);
     static PLDHashOperator EnumFixRedirect(
         nsISupports *aKey, OutputData *aData, void* aClosure);
-    static bool EnumCountURIsToPersist(
-        nsHashKey *aKey, void *aData, void* closure);
+    static PLDHashOperator EnumCountURIsToPersist(
+        const nsACString &aKey, URIData *aData, void* aClosure);
 
     nsCOMPtr<nsIURI>          mCurrentDataPath;
     bool                      mCurrentDataPathIsRelative;
@@ -197,7 +192,7 @@ private:
     nsCOMPtr<nsIProgressEventSink> mEventSink;
     nsClassHashtable<nsISupportsHashKey, OutputData> mOutputMap;
     nsClassHashtable<nsISupportsHashKey, UploadData> mUploadList;
-    nsHashtable               mURIMap;
+    nsClassHashtable<nsCStringHashKey, URIData> mURIMap;
     nsTArray<DocData*>        mDocList;
     nsTArray<CleanupData*>    mCleanupList;
     nsTArray<nsCString>       mFilenameList;
