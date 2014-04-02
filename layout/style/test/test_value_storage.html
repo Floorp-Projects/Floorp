@@ -257,9 +257,9 @@ function test_property(property)
   }
 
   function test_value_with_variable(value) {
-    gPrereqDeclaration.setProperty("var-a", value, "");
-    test_value("var(a)", value);
-    gPrereqDeclaration.removeProperty("var-a");
+    gPrereqDeclaration.setProperty("--a", value, "");
+    test_value("var(--a)", value);
+    gPrereqDeclaration.removeProperty("--a");
   }
 
   if ("prerequisites" in info) {

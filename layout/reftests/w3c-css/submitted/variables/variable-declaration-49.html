@@ -13,14 +13,14 @@ body {
 }
 p {
   color: crimson;
-  var-a: red var(b) var(g);
-  var-b: var(c);
-  var-c: var(d);
-  var-d: var(e);
-  var-e: var(a);
-  var-f: var(e);
-  var-g: green;
-  color: var(g);
+  --a: red var(--b) var(--g);
+  --b: var(--c);
+  --c: var(--d);
+  --d: var(--e);
+  --e: var(--a);
+  --f: var(--e);
+  --g: green;
+  color: var(--g);
 }
 </style>
 <p>This text must be green.</p>

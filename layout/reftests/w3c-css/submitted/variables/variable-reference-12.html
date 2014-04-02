@@ -9,11 +9,11 @@
 <link rel="match" href="variable-reference-12-ref.html">
 <style>
 :root {
-  var-a: "hello";
-  var-b: "there";
+  --a: "hello";
+  --b: "there";
 }
 #a:before {
-  content: var(a) " " var(b);
+  content: var(--a) " " var(--b);
 }
 </style>
 <p>The words "hello there" must appear below:</p>

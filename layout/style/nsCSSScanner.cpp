@@ -1277,7 +1277,7 @@ nsCSSScanner::Next(nsCSSToken& aToken, bool aSkipWS)
   if (ch == '-') {
     int32_t c2 = Peek(1);
     int32_t c3 = Peek(2);
-    if (IsIdentStart(c2)) {
+    if (IsIdentStart(c2) || (c2 == '-' && c3 != '>')) {
       return ScanIdent(aToken);
     }
     if (IsDigit(c2) || (c2 == '.' && IsDigit(c3))) {

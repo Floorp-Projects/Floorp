@@ -5596,7 +5596,8 @@ nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
   const nsStyleVariables* variables = StyleVariables();
 
   nsString variableValue;
-  const nsAString& name = Substring(aPropertyName, 4);
+  const nsAString& name = Substring(aPropertyName,
+                                    CSS_CUSTOM_NAME_PREFIX_LENGTH);
   if (!variables->mVariables.Get(name, variableValue)) {
     return nullptr;
   }

@@ -10,50 +10,51 @@
 <script>
 // Values that should be serialized back to the same string.
 var values_with_unchanged_specified_value_serialization = [
-  "var(a)",
-  "var(a)",
-  "var(a) ",
-  "var( a ) ",
-  "var(a, )",
-  "var(a,/**/a)",
-  "1px var(a)",
-  "var(a) 1px",
-  "something 3px url(whereever) calc(var(a) + 1px)",
-  "var(a)",
-  "var(a)var(b)",
-  "var(a, var(b, var(c, black)))",
-  "var(a) <!--",
-  "--> var(a)",
-  "{ [ var(a) ] }",
-  "[;] var(a)",
-  "var(a,(;))",
-  "VAR(a)",
-  "var(\\30)",
-  "var(\\d800)",
-  "var(\\ffffff)",
+  "var(--a)",
+  "var(--a)",
+  "var(--a) ",
+  "var( --a ) ",
+  "var(--a, )",
+  "var(--a,/**/a)",
+  "1px var(--a)",
+  "var(--a) 1px",
+  "something 3px url(whereever) calc(var(--a) + 1px)",
+  "var(--a)",
+  "var(--a)var(--b)",
+  "var(--a, var(--b, var(--c, black)))",
+  "var(--a) <!--",
+  "--> var(--a)",
+  "{ [ var(--a) ] }",
+  "[;] var(--a)",
+  "var(--a,(;))",
+  "VAR(--a)",
+  "var(--0)",
+  "var(--\\30)",
+  "var(--\\d800)",
+  "var(--\\ffffff)",
 ];
 
 // Values that serialize differently, due to additional implied closing
 // characters at EOF.
 var values_with_changed_specified_value_serialization = [
-  ["var(a",                       "var(a)"],
-  ["var(a , ",                    "var(a , )"],
-  ["var(a, ",                     "var(a, )"],
-  ["var(a, var(b",                "var(a, var(b))"],
-  ["var(a /* unclosed comment",   "var(a /* unclosed comment*/)"],
-  ["var(a /* unclosed comment *", "var(a /* unclosed comment */)"],
-  ["[{(((var(a",                  "[{(((var(a))))}]"],
-  ["var(a, \"unclosed string",    "var(a, \"unclosed string\")"],
-  ["var(a, 'unclosed string",     "var(a, 'unclosed string')"],
-  ["var(a) \"unclosed string\\",  "var(a) \"unclosed string\""],
-  ["var(a) 'unclosed string\\",   "var(a) 'unclosed string'"],
-  ["var(a) \\",                   "var(a) \\\ufffd"],
-  ["var(a) url(unclosedurl",      "var(a) url(unclosedurl)"],
-  ["var(a) url('unclosedurl",     "var(a) url('unclosedurl')"],
-  ["var(a) url(\"unclosedurl",    "var(a) url(\"unclosedurl\")"],
-  ["var(a) url(unclosedurl\\",    "var(a) url(unclosedurl\\\ufffd)"],
-  ["var(a) url('unclosedurl\\",   "var(a) url('unclosedurl')"],
-  ["var(a) url(\"unclosedurl\\",  "var(a) url(\"unclosedurl\")"],
+  ["var(--a",                       "var(--a)"],
+  ["var(--a , ",                    "var(--a , )"],
+  ["var(--a, ",                     "var(--a, )"],
+  ["var(--a, var(--b",              "var(--a, var(--b))"],
+  ["var(--a /* unclosed comment",   "var(--a /* unclosed comment*/)"],
+  ["var(--a /* unclosed comment *", "var(--a /* unclosed comment */)"],
+  ["[{(((var(--a",                  "[{(((var(--a))))}]"],
+  ["var(--a, \"unclosed string",    "var(--a, \"unclosed string\")"],
+  ["var(--a, 'unclosed string",     "var(--a, 'unclosed string')"],
+  ["var(--a) \"unclosed string\\",  "var(--a) \"unclosed string\""],
+  ["var(--a) 'unclosed string\\",   "var(--a) 'unclosed string'"],
+  ["var(--a) \\",                   "var(--a) \\\ufffd"],
+  ["var(--a) url(unclosedurl",      "var(--a) url(unclosedurl)"],
+  ["var(--a) url('unclosedurl",     "var(--a) url('unclosedurl')"],
+  ["var(--a) url(\"unclosedurl",    "var(--a) url(\"unclosedurl\")"],
+  ["var(--a) url(unclosedurl\\",    "var(--a) url(unclosedurl\\\ufffd)"],
+  ["var(--a) url('unclosedurl\\",   "var(--a) url('unclosedurl')"],
+  ["var(--a) url(\"unclosedurl\\",  "var(--a) url(\"unclosedurl\")"],
 ];
 
 var style1 = document.getElementById("style1");
@@ -63,13 +64,13 @@ var decl = style1.sheet.cssRules[0].style;
 
 function test_specified_value_serialization(value, expected) {
   // Test setting value on a custom property with setProperty.
-  decl.setProperty("var-test", value, "");
-  is(decl.getPropertyValue("var-test"), expected,
+  decl.setProperty("--test", value, "");
+  is(decl.getPropertyValue("--test"), expected,
      "value with identical serialization set on custom property with setProperty");
 
   // Test setting value on a custom property via style sheet parsing.
-  style2.textContent = "#test { var-test:" + value;
-  is(style2.sheet.cssRules[0].style.getPropertyValue("var-test"), expected,
+  style2.textContent = "#test { --test:" + value;
+  is(style2.sheet.cssRules[0].style.getPropertyValue("--test"), expected,
      "value with identical serialization set on custom property via parsing");
 
   // Test setting value on a non-custom longhand property with setProperty.
@@ -93,7 +94,7 @@ function test_specified_value_serialization(value, expected) {
      "value with identical serialization set on non-custom shorthand property via parsing");
 
   // Clean up.
-  decl.removeProperty("var-test");
+  decl.removeProperty("--test");
   decl.removeProperty("color");
   decl.removeProperty("margin");
 }
