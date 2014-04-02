@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+<title>WebGL test: Basic drawing</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+
+
+<script id="vs" type="x-shader/x-vertex">
+
+attribute vec2 aVertCoord;
+
+void main(void) {
+  gl_Position = vec4(aVertCoord, 0.0, 1.0);
+}
+
+</script>
+<script id="fs" type="x-shader/x-fragment">
+
+precision mediump float;
+
+void main(void) {
+  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+}
+
+</script>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<script>
+
+// Give ourselves a scope to return early from:
+(function() {
+  var gl = WebGLUtil.getWebGL('c');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  function errorFunc(str) {
+    ok(false, 'Error: ' + str);
+  }
+  WebGLUtil.setErrorFunc(errorFunc);
+  WebGLUtil.setWarningFunc(errorFunc);
+
+  gl.disable(gl.DEPTH_TEST);
+
+  var prog   = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+  if (!prog) {
+    ok(false, 'Program linking should succeed.');
+    return;
+  }
+
+  prog.aVertCoord = gl.getAttribLocation(prog, "aVertCoord");
+  ok(prog.aVertCoord >= 0, '`aVertCoord` should be valid.');
+
+  function checkGLError(func, info, refValue) {
+    if (!refValue)
+      refValue = 0;
+
+    var error = gl.getError();
+    func(error == refValue,
+         '[' + info + '] gl.getError should be 0x' + refValue.toString(16) +
+                                        ', was 0x' + error.toString(16) + '.');
+  }
+
+  var vertCoordArr = new Float32Array([
+    -1, -1,
+     1, -1,
+    -1,  1,
+     1,  1,
+  ]);
+  var vertCoordBuff = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertCoordBuff);
+  gl.bufferData(gl.ARRAY_BUFFER, vertCoordArr, gl.STATIC_DRAW);
+
+  var indexArr = new Uint16Array([
+    0, 1, 2,
+    3,
+  ]);
+  var indexBuff = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuff);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArr, gl.STATIC_DRAW);
+
+
+  function testPixel(x, y, refData, func, infoString) {
+    var pixel = new Uint8Array(4);
+    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+
+    var pixelMatches = pixel[0] == refData[0] &&
+                       pixel[1] == refData[1] &&
+                       pixel[2] == refData[2] &&
+                       pixel[3] == refData[3];
+    func(pixelMatches, infoString);
+  }
+
+  function preDraw(info) {
+    gl.clearColor(1.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    testPixel(0, 0, [255, 0, 0, 255], ok, '[' + info + '] Should be red before drawing.');
+  }
+
+  function postDraw(info) {
+    testPixel(0, 0, [0, 255, 0, 255], ok, '[' + info + '] Should be green before drawing.');
+  }
+
+  gl.useProgram(prog);
+  gl.enableVertexAttribArray(prog.aVertCoord);
+  gl.vertexAttribPointer(prog.aVertCoord, 2, gl.FLOAT, false, 0, 0);
+
+  // Start drawing
+  checkGLError(ok, 'after setup');
+
+  preDraw('DrawArrays');
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  postDraw('DrawArrays');
+  checkGLError(ok, 'after DrawArrays');
+
+  preDraw('DrawElements');
+  gl.drawElements(gl.TRIANGLE_STRIP, 4, gl.UNSIGNED_SHORT, 0);
+  postDraw('DrawElements');
+  checkGLError(ok, 'after DrawElements');
+
+  ok(true, 'Test complete.');
+})();
+
+</script>
+
