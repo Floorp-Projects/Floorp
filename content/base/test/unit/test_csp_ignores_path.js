@@ -12,6 +12,32 @@ var ioService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
 var self = ioService.newURI("http://test1.example.com:80", null, null);
 
+function testValidSRCsHostSourceWithSchemeAndPath() {
+  var csps = [
+    "http://test1.example.com",
+    "http://test1.example.com/",
+    "http://test1.example.com/path-1",
+    "http://test1.example.com/path-1/",
+    "http://test1.example.com/path-1/path_2/",
+    "http://test1.example.com/path-1/path_2/file.js",
+    "http://test1.example.com/path-1/path_2/file_1.js",
+    "http://test1.example.com/path-1/path_2/file-2.js",
+    "http://test1.example.com/path-1/path_2/f.js",
+    "http://test1.example.com/path-1/path_2/f.oo.js"
+  ]
+
+  var obj;
+  var expected = "http://test1.example.com:80";
+  for (let i in csps) {
+    var src = csps[i];
+    obj = CSPSourceList.fromString(src, undefined, self);
+    dump("expected: " + expected + "\n");
+    dump("got:      " + obj._sources[0] + "\n");
+    do_check_eq(1, obj._sources.length);
+    do_check_eq(obj._sources[0], expected);
+  }
+}
+
 function testValidSRCsRegularHost() {
   var csps = [
     "test1.example.com",
@@ -22,7 +48,8 @@ function testValidSRCsRegularHost() {
     "test1.example.com/path-1/path_2/file.js",
     "test1.example.com/path-1/path_2/file_1.js",
     "test1.example.com/path-1/path_2/file-2.js",
-    "test1.example.com/path-1/path_2/f.js"
+    "test1.example.com/path-1/path_2/f.js",
+    "test1.example.com/path-1/path_2/f.oo.js"
   ]
 
   var obj;
@@ -46,6 +73,7 @@ function testValidSRCsWildCardHost() {
     "*.example.com/path-1/path_2/file_1.js",
     "*.example.com/path-1/path_2/file-2.js",
     "*.example.com/path-1/path_2/f.js",
+    "*.example.com/path-1/path_2/f.oo.js"
   ]
 
   var obj;
@@ -66,7 +94,8 @@ function testValidSRCsRegularPort() {
     "test1.example.com:80/path-1/",
     "test1.example.com:80/path-1/path_2",
     "test1.example.com:80/path-1/path_2/",
-    "test1.example.com:80/path-1/path_2/file.js"
+    "test1.example.com:80/path-1/path_2/file.js",
+    "test1.example.com:80/path-1/path_2/f.ile.js"
   ]
 
   var obj;
@@ -87,7 +116,8 @@ function testValidSRCsWildCardPort() {
     "test1.example.com:*/path-1/",
     "test1.example.com:*/path-1/path_2",
     "test1.example.com:*/path-1/path_2/",
-    "test1.example.com:*/path-1/path_2/file.js"
+    "test1.example.com:*/path-1/path_2/file.js",
+    "test1.example.com:*/path-1/path_2/f.ile.js"
   ]
 
   var obj;
@@ -103,12 +133,7 @@ function testValidSRCsWildCardPort() {
 
 function testInvalidSRCs() {
   var csps = [
-    "test1.example.com/path-1//path_2",
-    "test1.example.com/path-1/file.js.cpp",
     "test1.example.com:88path-1/",
-    "test1.example.com:80//",
-    "test1.example.com:80//path-1",
-    "test1.example.com:80/.js",
     "test1.example.com:80.js",
     "test1.example.com:*.js",
     "test1.example.com:*."
@@ -124,6 +149,7 @@ function testInvalidSRCs() {
 }
 
 function run_test() {
+  testValidSRCsHostSourceWithSchemeAndPath();
   testValidSRCsRegularHost();
   testValidSRCsWildCardHost();
   testValidSRCsRegularPort();
