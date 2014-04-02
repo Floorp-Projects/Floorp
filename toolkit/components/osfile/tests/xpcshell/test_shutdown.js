@@ -89,7 +89,7 @@ add_task(function system_shutdown() {
   do_check_true((yield testLeaksOf(TEST_FILE, "test.shutdown.file.leak")));
   yield openedFile.close();
   do_print("At this stage, we don't leak the file anymore");
-  do_check_false((yield testLeaksOf(TEST_FILE, "test.shutdown.file.leak")));
+  do_check_false((yield testLeaksOf(TEST_FILE, "test.shutdown.file.leak.2")));
 });
 
 
