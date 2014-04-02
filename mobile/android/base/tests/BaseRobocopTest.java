@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests;
 
 import java.util.Map;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
 import org.mozilla.gecko.FennecMochitestAssert;
@@ -21,20 +22,35 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         TALOS
     }
 
-    protected static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     protected Assert mAsserter;
     protected String mLogFile;
 
     protected Map<?, ?> mConfig;
     protected String mRootPath;
 
-    public BaseRobocopTest(Class<Activity> activityClass) {
-        super(activityClass);
+    /**
+     * The browser is started at the beginning of this test. A single test is a
+     * class inheriting from <code>BaseRobocopTest</code> that contains test
+     * methods.
+     * <p>
+     * If a test should not start the browser at the beginning of a test,
+     * specify a different activity class to the one-argument constructor. To do
+     * as little as possible, specify <code>Activity.class</code>.
+     */
+    @SuppressWarnings("unchecked")
+    public BaseRobocopTest() {
+        this((Class<Activity>) AppConstants.BROWSER_INTENT_CLASS);
     }
 
-    @SuppressWarnings("deprecation")
-    public BaseRobocopTest(String targetPackageId, Class<Activity> activityClass) {
-        super(targetPackageId, activityClass);
+    /**
+     * Start the given activity class at the beginning of this test.
+     * <p>
+     * <b>You should use the no-argument constructor in almost all cases.</b>
+     *
+     * @param activityClass to start before this test.
+     */
+    protected BaseRobocopTest(Class<Activity> activityClass) {
+        super(activityClass);
     }
 
     /**
