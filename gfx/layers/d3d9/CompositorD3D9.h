@@ -48,7 +48,7 @@ public:
                                  const gfx::IntPoint &aSourcePoint) MOZ_OVERRIDE;
 
   virtual void SetRenderTarget(CompositingRenderTarget *aSurface);
-  virtual CompositingRenderTarget* GetCurrentRenderTarget() MOZ_OVERRIDE
+  virtual CompositingRenderTarget* GetCurrentRenderTarget() const MOZ_OVERRIDE
   {
     return mCurrentRT;
   }
