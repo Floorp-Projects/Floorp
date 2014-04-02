@@ -680,8 +680,11 @@ JSFunction *
 js::NewAsmJSModuleFunction(ExclusiveContext *cx, JSFunction *origFun, HandleObject moduleObj)
 {
     RootedPropertyName name(cx, origFun->name());
+
+    JSFunction::Flags flags = origFun->isLambda() ? JSFunction::NATIVE_LAMBDA_FUN
+                                                  : JSFunction::NATIVE_FUN;
     JSFunction *moduleFun = NewFunction(cx, NullPtr(), LinkAsmJS, origFun->nargs(),
-                                        JSFunction::NATIVE_FUN, NullPtr(), name,
+                                        flags, NullPtr(), name,
                                         JSFunction::ExtendedFinalizeKind, TenuredObject);
     if (!moduleFun)
         return nullptr;
@@ -743,7 +746,7 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
     // Whether the function has been created with a Function ctor
     bool funCtor = begin == 0 && end == source->length() && source->argumentsNotIncluded();
 
-    if (funCtor && addParenToLambda && !out.append("("))
+    if (addParenToLambda && fun->isLambda() && !out.append("("))
         return nullptr;
 
     if (!out.append("function "))
@@ -784,7 +787,7 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
     if (funCtor && !out.append("\n}"))
         return nullptr;
 
-    if (funCtor && addParenToLambda && !out.append(")"))
+    if (addParenToLambda && fun->isLambda() && !out.append(")"))
         return nullptr;
 
     return out.finishString();
