@@ -504,17 +504,9 @@ public:
   // on the other hand, depends on the screen orientation.
   // This only applies to b2g as with other platforms, orientation is handled
   // at the OS level rather than in Gecko.
-  gfx::Rect ClipRectInLayersCoordinates(gfx::Rect aClip) const {
-    switch (mScreenRotation) {
-      case ROTATION_90:
-      case ROTATION_270:
-        return gfx::Rect(aClip.y, aClip.x, aClip.height, aClip.width);
-      case ROTATION_0:
-      case ROTATION_180:
-      default:
-        return aClip;
-    }
-  }
+  // In addition, the clip rect needs to be offset by the rendering origin.
+  // This becomes important if intermediate surfaces are used.
+  gfx::Rect ClipRectInLayersCoordinates(gfx::Rect aClip) const;
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
