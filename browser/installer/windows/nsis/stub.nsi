@@ -422,7 +422,6 @@ Function .onInit
 
   InitPluginsDir
   File /oname=$PLUGINSDIR\bgintro.bmp "bgintro.bmp"
-  File /oname=$PLUGINSDIR\bgplain.bmp "bgplain.bmp"
   File /oname=$PLUGINSDIR\appname.bmp "appname.bmp"
   File /oname=$PLUGINSDIR\clock.bmp "clock.bmp"
   File /oname=$PLUGINSDIR\particles.bmp "particles.bmp"
@@ -866,12 +865,12 @@ Function createOptions
   Pop $Dialog
   ; Since the text color for controls is set in this Dialog the foreground and
   ; background colors of the Dialog must also be hardcoded.
-  SetCtlColors $Dialog ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $Dialog ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
 
   ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 18u ${OPTIONS_ITEM_WIDTH_DU} \
                      12u "$(CREATE_SHORTCUTS)"
   Pop $0
-  SetCtlColors $0 ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $0 ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $0 ${WM_SETFONT} $FontNormal 0
 
   ${If} ${AtLeastWin7}
@@ -885,7 +884,7 @@ Function createOptions
   ; The uxtheme must be disabled on checkboxes in order to override the system
   ; font color.
   System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutOnBar, w " ", w " ")'
-  SetCtlColors $CheckboxShortcutOnBar ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $CheckboxShortcutOnBar ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $CheckboxShortcutOnBar ${WM_SETFONT} $FontNormal 0
   ${NSD_Check} $CheckboxShortcutOnBar
 
@@ -895,7 +894,7 @@ Function createOptions
   ; The uxtheme must be disabled on checkboxes in order to override the system
   ; font color.
   System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutInStartMenu, w " ", w " ")'
-  SetCtlColors $CheckboxShortcutInStartMenu ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $CheckboxShortcutInStartMenu ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $CheckboxShortcutInStartMenu ${WM_SETFONT} $FontNormal 0
   ${NSD_Check} $CheckboxShortcutInStartMenu
 
@@ -905,19 +904,19 @@ Function createOptions
   ; The uxtheme must be disabled on checkboxes in order to override the system
   ; font color.
   System::Call 'uxtheme::SetWindowTheme(i $CheckboxShortcutOnDesktop, w " ", w " ")'
-  SetCtlColors $CheckboxShortcutOnDesktop ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $CheckboxShortcutOnDesktop ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $CheckboxShortcutOnDesktop ${WM_SETFONT} $FontNormal 0
   ${NSD_Check} $CheckboxShortcutOnDesktop
 
   ${NSD_CreateLabel} ${OPTIONS_ITEM_EDGE_DU} 100u ${OPTIONS_ITEM_WIDTH_DU} \
                      12u "$(DEST_FOLDER)"
   Pop $0
-  SetCtlColors $0 ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $0 ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $0 ${WM_SETFONT} $FontNormal 0
 
   ${NSD_CreateDirRequest} ${OPTIONS_SUBITEM_EDGE_DU} 116u 159u 14u "$INSTDIR"
   Pop $DirRequest
-  SetCtlColors $DirRequest ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $DirRequest ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $DirRequest ${WM_SETFONT} $FontNormal 0
   System::Call shlwapi::SHAutoComplete(i $DirRequest, i ${SHACF_FILESYSTEM})
   ${NSD_OnChange} $DirRequest OnChange_DirRequest
@@ -933,7 +932,7 @@ Function createOptions
 
   ${NSD_CreateBrowseButton} 280u 116u 50u 14u "$(BROWSE_BUTTON)"
   Pop $ButtonBrowse
-  SetCtlColors $ButtonBrowse "" ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $ButtonBrowse "" ${COMMON_BKGRD_COLOR}
   ${NSD_OnClick} $ButtonBrowse OnClick_ButtonBrowse
 
   ; Get the number of pixels from the left of the Dialog to the right side of
@@ -954,13 +953,13 @@ Function createOptions
   ; Make both controls the same width as the widest control
   ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 134u $0 $ControlHeightPX "$(SPACE_REQUIRED)"
   Pop $5
-  SetCtlColors $5 ${OPTIONS_TEXT_COLOR_FADED} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $5 ${COMMON_TEXT_COLOR_FADED} ${COMMON_BKGRD_COLOR}
   SendMessage $5 ${WM_SETFONT} $FontItalic 0
 
   IntOp $2 $2 + 8 ; Add padding to the control's width
   ${NSD_CreateLabelCenter} ${OPTIONS_SUBITEM_EDGE_DU} 145u $2 $ControlHeightPX "$(SPACE_AVAILABLE)"
   Pop $6
-  SetCtlColors $6 ${OPTIONS_TEXT_COLOR_FADED} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $6 ${COMMON_TEXT_COLOR_FADED} ${COMMON_BKGRD_COLOR}
   SendMessage $6 ${WM_SETFONT} $FontItalic 0
 
   ; Use the widest label for aligning the labels next to them
@@ -975,14 +974,14 @@ Function createOptions
   ${NSD_CreateLabel} $ControlRightPX 134u 100% $ControlHeightPX \
                      "${APPROXIMATE_REQUIRED_SPACE_MB} $(MEGA)$(BYTE)"
   Pop $7
-  SetCtlColors $7 ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $7 ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $7 ${WM_SETFONT} $FontNormal 0
 
   ; Create the free space label with an empty string and update it by calling
   ; UpdateFreeSpaceLabel
   ${NSD_CreateLabel} $ControlRightPX 145u 100% $ControlHeightPX " "
   Pop $LabelFreeSpace
-  SetCtlColors $LabelFreeSpace ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $LabelFreeSpace ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $LabelFreeSpace ${WM_SETFONT} $FontNormal 0
 
   Call UpdateFreeSpaceLabel
@@ -993,7 +992,7 @@ Function createOptions
   ; The uxtheme must be disabled on checkboxes in order to override the system
   ; font color.
   System::Call 'uxtheme::SetWindowTheme(i $CheckboxSendPing, w " ", w " ")'
-  SetCtlColors $CheckboxSendPing ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+  SetCtlColors $CheckboxSendPing ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
   SendMessage $CheckboxSendPing ${WM_SETFONT} $FontNormal 0
   ${NSD_Check} $CheckboxSendPing
 
@@ -1018,7 +1017,7 @@ Function createOptions
                             12u "$(INSTALL_MAINT_SERVICE)"
       Pop $CheckboxInstallMaintSvc
       System::Call 'uxtheme::SetWindowTheme(i $CheckboxInstallMaintSvc, w " ", w " ")'
-      SetCtlColors $CheckboxInstallMaintSvc ${OPTIONS_TEXT_COLOR_NORMAL} ${OPTIONS_BKGRD_COLOR}
+      SetCtlColors $CheckboxInstallMaintSvc ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
       SendMessage $CheckboxInstallMaintSvc ${WM_SETFONT} $FontNormal 0
       ${NSD_Check} $CheckboxInstallMaintSvc
     ${EndIf}
@@ -1105,6 +1104,9 @@ FunctionEnd
 Function createInstall
   nsDialogs::Create /NOUNLOAD 1018
   Pop $Dialog
+  ; Since the text color for controls is set in this Dialog the foreground and
+  ; background colors of the Dialog must also be hardcoded.
+  SetCtlColors $Dialog ${COMMON_TEXT_COLOR_NORMAL} ${COMMON_BKGRD_COLOR}
 
   ${NSD_CreateLabel} 0 0 49u 64u ""
   Pop $0
@@ -1197,10 +1199,6 @@ Function createInstall
   Pop $2
   ${SetStretchedTransparentImage} $2 $PLUGINSDIR\appname.bmp $0
 
-  ${NSD_CreateBitmap} 0 0 100% 100% ""
-  Pop $3
-  ${NSD_SetStretchedImage} $3 $PLUGINSDIR\bgplain.bmp $1
-
   GetDlgItem $0 $HWNDPARENT 1 ; Install button
   EnableWindow $0 0
   ShowWindow $0 ${SW_HIDE}
@@ -1280,7 +1278,6 @@ Function createInstall
   nsDialogs::Show
 
   ${NSD_FreeImage} $0
-  ${NSD_FreeImage} $1
   ${NSD_FreeImage} $HwndBitmapBlurb1
   ${NSD_FreeImage} $HwndBitmapBlurb2
   ${NSD_FreeImage} $HWndBitmapBlurb3
