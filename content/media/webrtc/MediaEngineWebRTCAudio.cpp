@@ -3,15 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaEngineWebRTC.h"
-#include <stdio.h>
-#include <algorithm>
-#include "mozilla/Assertions.h"
-
-// scoped_ptr.h uses FF
-#ifdef FF
-#undef FF
-#endif
-#include "webrtc/modules/audio_device/opensl/single_rw_fifo.h"
 
 #define CHANNELS 1
 #define ENCODING "L16"
@@ -20,13 +11,6 @@
 #define SAMPLE_RATE 256000
 #define SAMPLE_FREQUENCY 16000
 #define SAMPLE_LENGTH ((SAMPLE_FREQUENCY*10)/1000)
-
-// These are restrictions from the webrtc.org code
-#define MAX_CHANNELS 2
-#define MAX_SAMPLING_FREQ 48000 // Hz - multiple of 100
-
-#define MAX_AEC_FIFO_DEPTH 200 // ms - multiple of 10
-static_assert(!(MAX_AEC_FIFO_DEPTH % 10), "Invalid MAX_AEC_FIFO_DEPTH");
 
 namespace mozilla {
 
@@ -45,117 +29,6 @@ extern PRLogModuleInfo* GetMediaManagerLog();
  * Webrtc audio source.
  */
 NS_IMPL_ISUPPORTS0(MediaEngineWebRTCAudioSource)
-
-// XXX temp until MSG supports registration
-StaticAutoPtr<AudioOutputObserver> gFarendObserver;
-
-AudioOutputObserver::AudioOutputObserver()
-  : mPlayoutFreq(0)
-  , mPlayoutChannels(0)
-  , mChunkSize(0)
-  , mSamplesSaved(0)
-{
-  // Buffers of 10ms chunks
-  mPlayoutFifo = new webrtc::SingleRwFifo(MAX_AEC_FIFO_DEPTH/10);
-}
-
-AudioOutputObserver::~AudioOutputObserver()
-{
-}
-
-void
-AudioOutputObserver::Clear()
-{
-  while (mPlayoutFifo->size() > 0) {
-    (void) mPlayoutFifo->Pop();
-  }
-}
-
-FarEndAudioChunk *
-AudioOutputObserver::Pop()
-{
-  return (FarEndAudioChunk *) mPlayoutFifo->Pop();
-}
-
-uint32_t
-AudioOutputObserver::Size()
-{
-  return mPlayoutFifo->size();
-}
-
-// static
-void
-AudioOutputObserver::InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aSamples, bool aOverran,
-                                  int aFreq, int aChannels, AudioSampleFormat aFormat)
-{
-  if (mPlayoutChannels != 0) {
-    if (mPlayoutChannels != static_cast<uint32_t>(aChannels)) {
-      MOZ_CRASH();
-    }
-  } else {
-    MOZ_ASSERT(aChannels <= MAX_CHANNELS);
-    mPlayoutChannels = static_cast<uint32_t>(aChannels);
-  }
-  if (mPlayoutFreq != 0) {
-    if (mPlayoutFreq != static_cast<uint32_t>(aFreq)) {
-      MOZ_CRASH();
-    }
-  } else {
-    MOZ_ASSERT(aFreq <= MAX_SAMPLING_FREQ);
-    MOZ_ASSERT(!(aFreq % 100), "Sampling rate for far end data should be multiple of 100.");
-    mPlayoutFreq = aFreq;
-    mChunkSize = aFreq/100; // 10ms
-  }
-
-#ifdef LOG_FAREND_INSERTION
-  static FILE *fp = fopen("insertfarend.pcm","wb");
-#endif
-
-  if (mSaved) {
-    // flag overrun as soon as possible, and only once
-    mSaved->mOverrun = aOverran;
-    aOverran = false;
-  }
-  // Rechunk to 10ms.
-  // The AnalyzeReverseStream() and WebRtcAec_BufferFarend() functions insist on 10ms
-  // samples per call.  Annoying...
-  while (aSamples) {
-    if (!mSaved) {
-      mSaved = (FarEndAudioChunk *) moz_xmalloc(sizeof(FarEndAudioChunk) +
-                                                (mChunkSize * aChannels - 1)*sizeof(int16_t));
-      mSaved->mSamples = mChunkSize;
-      mSaved->mOverrun = aOverran;
-      aOverran = false;
-    }
-    uint32_t to_copy = mChunkSize - mSamplesSaved;
-    if (to_copy > aSamples) {
-      to_copy = aSamples;
-    }
-
-    int16_t *dest = &(mSaved->mData[mSamplesSaved * aChannels]);
-    ConvertAudioSamples(aBuffer, dest, to_copy * aChannels);
-
-#ifdef LOG_FAREND_INSERTION
-    if (fp) {
-      fwrite(&(mSaved->mData[mSamplesSaved * aChannels]), to_copy * aChannels, sizeof(int16_t), fp);
-    }
-#endif
-    aSamples -= to_copy;
-    mSamplesSaved += to_copy;
-
-    if (mSamplesSaved >= mChunkSize) {
-      int free_slots = mPlayoutFifo->capacity() - mPlayoutFifo->size();
-      if (free_slots <= 0) {
-        // XXX We should flag an overrun for the reader.  We can't drop data from it due to
-        // thread safety issues.
-        break;
-      } else {
-        mPlayoutFifo->Push((int8_t *) mSaved.forget()); // takes ownership
-        mSamplesSaved = 0;
-      }
-    }
-  }
-}
 
 void
 MediaEngineWebRTCAudioSource::GetName(nsAString& aName)
@@ -180,27 +53,18 @@ MediaEngineWebRTCAudioSource::GetUUID(nsAString& aUUID)
 nsresult
 MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
                                      bool aAgcOn, uint32_t aAGC,
-                                     bool aNoiseOn, uint32_t aNoise,
-                                     int32_t aPlayoutDelay)
+                                     bool aNoiseOn, uint32_t aNoise)
 {
   LOG(("Audio config: aec: %d, agc: %d, noise: %d",
        aEchoOn ? aEcho : -1,
        aAgcOn ? aAGC : -1,
        aNoiseOn ? aNoise : -1));
 
-  bool update_echo = (mEchoOn != aEchoOn);
-  bool update_agc = (mAgcOn != aAgcOn);
-  bool update_noise = (mNoiseOn != aNoiseOn);
-  mEchoOn = aEchoOn;
+  bool update_agc = (mAgcOn == aAgcOn);
+  bool update_noise = (mNoiseOn == aNoiseOn);
   mAgcOn = aAgcOn;
   mNoiseOn = aNoiseOn;
 
-  if ((webrtc::EcModes) aEcho != webrtc::kEcUnchanged) {
-    if (mEchoCancel != (webrtc::EcModes) aEcho) {
-      update_echo = true;
-      mEchoCancel = (webrtc::EcModes) aEcho;
-    }
-  }
   if ((webrtc::AgcModes) aAGC != webrtc::kAgcUnchanged) {
     if (mAGC != (webrtc::AgcModes) aAGC) {
       update_agc = true;
@@ -213,21 +77,21 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
       mNoiseSuppress = (webrtc::NsModes) aNoise;
     }
   }
-  mPlayoutDelay = aPlayoutDelay;
 
   if (mInitDone) {
     int error;
+#if 0
+    // Until we can support feeding our full output audio from the browser
+    // through the MediaStream, this won't work.  Or we need to move AEC to
+    // below audio input and output, perhaps invoked from here.
+    mEchoOn = aEchoOn;
+    if ((webrtc::EcModes) aEcho != webrtc::kEcUnchanged)
+      mEchoCancel = (webrtc::EcModes) aEcho;
+    mVoEProcessing->SetEcStatus(mEchoOn, aEcho);
+#else
+    (void) aEcho; (void) aEchoOn; (void) mEchoCancel; // suppress warnings
+#endif
 
-    if (update_echo &&
-      0 != (error = mVoEProcessing->SetEcStatus(mEchoOn, (webrtc::EcModes) aEcho))) {
-      LOG(("%s Error setting Echo Status: %d ",__FUNCTION__, error));
-      // Overhead of capturing all the time is very low (<0.1% of an audio only call)
-      if (mEchoOn) {
-        if (0 != (error = mVoEProcessing->SetEcMetricsStatus(true))) {
-          LOG(("%s Error setting Echo Metrics: %d ",__FUNCTION__, error));
-        }
-      }
-    }
     if (update_agc &&
       0 != (error = mVoEProcessing->SetAgcStatus(mAgcOn, (webrtc::AgcModes) aAGC))) {
       LOG(("%s Error setting AGC Status: %d ",__FUNCTION__, error));
@@ -294,8 +158,6 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   AudioSegment* segment = new AudioSegment();
   aStream->AddTrack(aID, SAMPLE_FREQUENCY, 0, segment);
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
-  // XXX Make this based on the pref.
-  aStream->RegisterForAudioMixing();
   LOG(("Start audio for stream %p", aStream));
 
   if (mState == kStarted) {
@@ -308,16 +170,10 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   // Make sure logger starts before capture
   AsyncLatencyLogger::Get(true);
 
-  // Register output observer
-  // XXX
-  MOZ_ASSERT(gFarendObserver);
-  gFarendObserver->Clear();
-
   // Configure audio processing in webrtc code
   Config(mEchoOn, webrtc::kEcUnchanged,
          mAgcOn, webrtc::kAgcUnchanged,
-         mNoiseOn, webrtc::kNsUnchanged,
-         mPlayoutDelay);
+         mNoiseOn, webrtc::kNsUnchanged);
 
   if (mVoEBase->StartReceive(mChannel)) {
     return NS_ERROR_FAILURE;
@@ -407,11 +263,6 @@ MediaEngineWebRTCAudioSource::Init()
 
   mVoEProcessing = webrtc::VoEAudioProcessing::GetInterface(mVoiceEngine);
   if (!mVoEProcessing) {
-    return;
-  }
-
-  mVoECallReport = webrtc::VoECallReport::GetInterface(mVoiceEngine);
-  if (!mVoECallReport) {
     return;
   }
 
@@ -511,50 +362,6 @@ MediaEngineWebRTCAudioSource::Process(int channel,
   webrtc::ProcessingTypes type, sample* audio10ms,
   int length, int samplingFreq, bool isStereo)
 {
-  // On initial capture, throw away all far-end data except the most recent sample
-  // since it's already irrelevant and we want to keep avoid confusing the AEC far-end
-  // input code with "old" audio.
-  if (!mStarted) {
-    mStarted  = true;
-    while (gFarendObserver->Size() > 1) {
-      FarEndAudioChunk *buffer = gFarendObserver->Pop(); // only call if size() > 0
-      free(buffer);
-    }
-  }
-
-  while (gFarendObserver->Size() > 0) {
-    FarEndAudioChunk *buffer = gFarendObserver->Pop(); // only call if size() > 0
-    if (buffer) {
-      int length = buffer->mSamples;
-      if (mVoERender->ExternalPlayoutData(buffer->mData,
-                                          gFarendObserver->PlayoutFrequency(),
-                                          gFarendObserver->PlayoutChannels(),
-                                          mPlayoutDelay,
-                                          length) == -1) {
-        return;
-      }
-    }
-    free(buffer);
-  }
-
-#ifdef PR_LOGGING
-  mSamples += length;
-  if (mSamples > samplingFreq) {
-    mSamples %= samplingFreq; // just in case mSamples >> samplingFreq
-    if (PR_LOG_TEST(GetMediaManagerLog(), PR_LOG_DEBUG)) {
-      webrtc::EchoStatistics echo;
-
-      mVoECallReport->GetEchoMetricSummary(echo);
-#define DUMP_STATVAL(x) (x).min, (x).max, (x).average
-      LOG(("Echo: ERL: %d/%d/%d, ERLE: %d/%d/%d, RERL: %d/%d/%d, NLP: %d/%d/%d",
-           DUMP_STATVAL(echo.erl),
-           DUMP_STATVAL(echo.erle),
-           DUMP_STATVAL(echo.rerl),
-           DUMP_STATVAL(echo.a_nlp)));
-    }
-  }
-#endif
-
   MonitorAutoLock lock(mMonitor);
   if (mState != kStarted)
     return;

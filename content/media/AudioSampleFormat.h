@@ -49,19 +49,8 @@ public:
 
 typedef AudioSampleTraits<AUDIO_OUTPUT_FORMAT>::Type AudioDataValue;
 
-template<typename T> class AudioSampleTypeToFormat;
-
-template <> class AudioSampleTypeToFormat<float> {
-public:
-  static const AudioSampleFormat Format = AUDIO_FORMAT_FLOAT32;
-};
-
-template <> class AudioSampleTypeToFormat<short> {
-public:
-  static const AudioSampleFormat Format = AUDIO_FORMAT_S16;
-};
-
 // Single-sample conversion
+
 /*
  * Use "2^N" conversion since it's simple, fast, "bit transparent", used by
  * many other libraries and apparently behaves reasonably.
