@@ -5,6 +5,7 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.Driver;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
@@ -37,13 +38,8 @@ import java.util.HashMap;
 abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
                       implements UITestContext {
 
-    private static final String LAUNCHER_ACTIVITY = TestConstants.ANDROID_PACKAGE_NAME + ".App";
-    private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
-
     private static final String JUNIT_FAILURE_MSG = "A JUnit method was called. Make sure " +
         "you are using AssertionHelper to make assertions. Try `fAssert*(...);`";
-
-    private final static Class<Activity> sLauncherActivityClass;
 
     private Solo mSolo;
     private Driver mDriver;
@@ -60,16 +56,9 @@ abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
     protected GeckoViewComponent mGeckoView;
     protected ToolbarComponent mToolbar;
 
-    static {
-        try {
-            sLauncherActivityClass = (Class<Activity>) Class.forName(LAUNCHER_ACTIVITY);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    @SuppressWarnings("unchecked")
     public UITest() {
-        super(sLauncherActivityClass);
+        super((Class<Activity>) AppConstants.BROWSER_INTENT_CLASS);
     }
 
     @Override
