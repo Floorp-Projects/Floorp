@@ -42,11 +42,6 @@ public:
                   nsINode* aNode,
                   WidgetGUIEvent* aEvent);
 
-  ~TextComposition()
-  {
-    // WARNING: mPresContext may be destroying, so, be careful if you touch it.
-  }
-
   bool Destroyed() const { return !mPresContext; }
   nsPresContext* GetPresContext() const { return mPresContext; }
   nsINode* GetEventTargetNode() const { return mNode; }
@@ -144,6 +139,12 @@ public:
   };
 
 private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~TextComposition()
+  {
+    // WARNING: mPresContext may be destroying, so, be careful if you touch it.
+  }
+
   // This class holds nsPresContext weak.  This instance shouldn't block
   // destroying it.  When the presContext is being destroyed, it's notified to
   // IMEStateManager::OnDestroyPresContext(), and then, it destroy

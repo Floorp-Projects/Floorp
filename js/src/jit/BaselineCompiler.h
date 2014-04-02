@@ -60,6 +60,7 @@ namespace jit {
     _(JSOP_OBJECT)             \
     _(JSOP_REGEXP)             \
     _(JSOP_LAMBDA)             \
+    _(JSOP_LAMBDA_ARROW)       \
     _(JSOP_BITOR)              \
     _(JSOP_BITXOR)             \
     _(JSOP_BITAND)             \

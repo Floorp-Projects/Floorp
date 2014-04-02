@@ -86,6 +86,7 @@ public:
   }
 
   uint16_t ReadyState() const;
+  void SetReadyState(uint16_t aReadyState);
 
   TextTrack* Track();
 
@@ -121,6 +122,8 @@ public:
   // Check enabling preference.
   static bool IsWebVTTEnabled();
 
+  void DispatchTrackRunnable(const nsString& aEventName);
+  void DispatchTrustedEvent(const nsAString& aName);
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
