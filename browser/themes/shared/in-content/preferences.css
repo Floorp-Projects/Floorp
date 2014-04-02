@@ -585,11 +585,6 @@ filefield {
   -moz-padding-start: 36px;
 }
 
-#chooseFolder {
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
 /* Applications Pane Styles */
 
 #applications-content {
@@ -697,17 +692,6 @@ description > html|a {
 
 #defaultFontSize {
   min-width: 5.5em;
-}
-
-/* Security Pane */
-
-/* Add margins to this buttons to unsqueeze the checkboxed in same hbox */
-#addonExceptions,
-#cookieExceptions,
-#passwordExceptions,
-#changeMasterPassword {
-  margin-top: 4px;
-  margin-bottom: 5px;
 }
 
 /* Sync Pane */
