@@ -157,6 +157,8 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   mAudioTrack(0),
   mAudioStartUsec(-1),
   mAudioFrames(0),
+  mAudioCodec(-1),
+  mVideoCodec(-1),
   mHasVideo(false),
   mHasAudio(false)
 {
