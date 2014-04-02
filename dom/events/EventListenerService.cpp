@@ -10,11 +10,11 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/JSEventHandler.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMArray.h"
 #include "nsCxPusher.h"
 #include "nsDOMClassInfoID.h"
-#include "nsIJSEventListener.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
 #include "nsMemory.h"
@@ -101,7 +101,7 @@ EventListenerInfo::GetJSVal(JSContext* aCx,
     return true;
   }
 
-  nsCOMPtr<nsIJSEventListener> jsl = do_QueryInterface(mListener);
+  nsCOMPtr<nsJSEventListener> jsl = do_QueryInterface(mListener);
   if (jsl && jsl->GetHandler().HasEventHandler()) {
     JS::Handle<JSObject*> handler(jsl->GetHandler().Ptr()->Callable());
     if (handler) {

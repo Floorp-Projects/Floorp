@@ -17,7 +17,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDocument.h"
-#include "nsIJSEventListener.h"
 #include "nsIController.h"
 #include "nsIControllers.h"
 #include "nsIDOMXULElement.h"
@@ -43,6 +42,7 @@
 #include "nsXBLSerialize.h"
 #include "nsJSUtils.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/JSEventHandler.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 
@@ -325,10 +325,10 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   nsEventHandler eventHandler(handlerCallback);
 
   // Execute it.
-  nsCOMPtr<nsIJSEventListener> eventListener;
-  rv = NS_NewJSEventListener(scriptTarget, onEventAtom,
-                             eventHandler,
-                             getter_AddRefs(eventListener));
+  nsCOMPtr<nsJSEventListener> eventListener;
+  rv = NS_NewJSEventHandler(scriptTarget, onEventAtom,
+                            eventHandler,
+                            getter_AddRefs(eventListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Handle the event.
