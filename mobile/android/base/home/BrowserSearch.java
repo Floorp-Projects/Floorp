@@ -83,7 +83,7 @@ public class BrowserSearch extends HomeFragment
     private static final int ANIMATION_DURATION = 250;
 
     // Holds the current search term to use in the query
-    private String mSearchTerm;
+    private volatile String mSearchTerm;
 
     // Adapter for the list of search results
     private SearchAdapter mAdapter;
