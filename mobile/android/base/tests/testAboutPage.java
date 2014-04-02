@@ -7,11 +7,6 @@ import org.mozilla.gecko.*;
  *  - check that about: loads from Settings/About...
  */
 public class testAboutPage extends PixelTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     private void ensureTitleMatches(final String regex) {
         Element urlBarTitle = mDriver.findElement(getActivity(), R.id.url_bar_title);
         mAsserter.isnot(urlBarTitle, null, "Got the URL bar title");

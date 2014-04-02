@@ -14,11 +14,6 @@ import android.graphics.Color;
  * - finally, test that BrowserDB.removeThumbnails drops the thumbnails
  */
 public class testThumbnails extends BaseTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testThumbnails() {
         final String site1Url = getAbsoluteUrl("/robocop/robocop_404.sjs?type=changeColor");
         final String site2Url = getAbsoluteUrl("/robocop/robocop_404.sjs?type=do404");

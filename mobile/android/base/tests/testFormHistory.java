@@ -18,11 +18,6 @@ import java.io.File;
 public class testFormHistory extends BaseTest {
     private static final String DB_NAME = "formhistory.sqlite";
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testFormHistory() {
         Context context = (Context)getActivity();
         ContentResolver cr = context.getContentResolver();

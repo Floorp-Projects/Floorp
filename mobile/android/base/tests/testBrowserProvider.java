@@ -24,11 +24,6 @@ import org.mozilla.gecko.db.BrowserContract;
 public class testBrowserProvider extends ContentProviderTest {
     private long mMobileFolderId;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     private void loadMobileFolderId() throws Exception {
         Cursor c = null;
         try {

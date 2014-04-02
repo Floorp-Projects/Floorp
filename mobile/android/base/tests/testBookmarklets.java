@@ -7,11 +7,6 @@ import android.widget.ListView;
 
 
 public class testBookmarklets extends AboutHomeTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testBookmarklets() {
         final String url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         final String title = "alertBookmarklet";

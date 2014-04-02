@@ -9,11 +9,6 @@ public class testFindInPage extends PixelTest {
     protected Element next, close;
     int height,width;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testFindInPage() {
         blockForGeckoReady();
         String url = getAbsoluteUrl("/robocop/robocop_text_page.html");

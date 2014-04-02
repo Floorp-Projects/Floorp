@@ -19,11 +19,6 @@ public class JavascriptTest extends BaseTest {
         this.javascriptUrl = javascriptUrl;
     }
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testJavascript() throws Exception {
         blockForGeckoReady();
 

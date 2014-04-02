@@ -76,8 +76,8 @@ public class testBrowserProviderPerf extends BaseRobocopTest {
     }
 
     @Override
-    protected int getTestType() {
-        return TEST_TALOS;
+    protected Type getTestType() {
+        return Type.TALOS;
     }
 
     private void loadMobileFolderId() throws Exception {

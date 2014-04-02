@@ -3,11 +3,6 @@ package org.mozilla.gecko.tests;
 import org.mozilla.gecko.*;
 
 public class test_bug720538 extends PixelTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void test_bug720538() {
         String url = getAbsoluteUrl("/robocop/test_bug720538.html");
 

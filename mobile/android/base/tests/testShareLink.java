@@ -27,11 +27,6 @@ public class testShareLink extends AboutHomeTest {
     String url;
     String urlTitle = "Big Link";
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testShareLink() {
         url = getAbsoluteUrl("/robocop/robocop_big_link.html");
         ArrayList<String> shareOptions;

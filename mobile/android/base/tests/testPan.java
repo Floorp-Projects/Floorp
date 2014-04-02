@@ -1,5 +1,7 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.tests.BaseRobocopTest.Type;
+
 /**
  * A panning performance test.
  * Drags the page a bunch of times and measures the frames per second
@@ -7,8 +9,8 @@ package org.mozilla.gecko.tests;
  */
 public class testPan extends PixelTest {
     @Override
-    protected int getTestType() {
-        return TEST_TALOS;
+    protected Type getTestType() {
+        return Type.TALOS;
     }
 
     public void testPan() {

@@ -7,11 +7,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class testAddonManager extends PixelTest  {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     /* This test will check the behavior of the Addons Manager:
     First the test will open the Addons Manager from the Menu and then close it
     Then the test will open the Addons Manager by visiting about:addons

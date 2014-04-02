@@ -15,11 +15,6 @@ import java.util.ArrayList;
 public class testClearPrivateData extends PixelTest {
     private final int TEST_WAIT_MS = 10000;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testClearPrivateData() {
         blockForGeckoReady();
         clearHistory();

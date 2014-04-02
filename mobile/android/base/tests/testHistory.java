@@ -10,11 +10,6 @@ import android.view.ViewGroup;
 public class testHistory extends AboutHomeTest {
     private View mFirstChild;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testHistory() {
         blockForGeckoReady();
 

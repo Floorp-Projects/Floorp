@@ -15,11 +15,6 @@ public abstract class SessionTest extends BaseTest {
     protected Navigation mNavigation;
 
     @Override
-    final protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
-    @Override
     public void setUp() throws Exception {
         super.setUp();
 

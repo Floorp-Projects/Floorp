@@ -10,11 +10,6 @@ public class testLinkContextMenu extends ContentContextMenuTest {
     private static final String LINK_PAGE_TITLE = "Big Link";
     private static final String linkMenuItems [] = { "Open Link in New Tab", "Open Link in Private Tab", "Copy Link", "Share Link", "Bookmark Link"};
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testLinkContextMenu() {
         blockForGeckoReady();
 
