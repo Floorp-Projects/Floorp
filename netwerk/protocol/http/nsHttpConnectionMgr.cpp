@@ -2725,11 +2725,13 @@ nsHttpConnectionMgr::
 nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
                                    nsAHttpTransaction *trans,
                                    uint32_t caps)
-    : mEnt(ent),
-      mTransaction(trans),
-      mCaps(caps),
-      mSpeculative(false),
-      mHasConnected(false)
+    : mEnt(ent)
+    , mTransaction(trans)
+    , mCaps(caps)
+    , mSpeculative(false)
+    , mHasConnected(false)
+    , mPrimaryConnectedOK(false)
+    , mBackupConnectedOK(false)
 {
     MOZ_ASSERT(ent && trans, "constructor with null arguments");
     LOG(("Creating nsHalfOpenSocket [this=%p trans=%p ent=%s]\n",
@@ -3021,7 +3023,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         rv = conn->Init(mEnt->mConnInfo,
                         gHttpHandler->ConnMgr()->mMaxRequestDelay,
                         mSocketTransport, mStreamIn, mStreamOut,
-                        callbacks,
+                        mPrimaryConnectedOK, callbacks,
                         PR_MillisecondsToInterval(
                           static_cast<uint32_t>(rtt.ToMilliseconds())));
 
@@ -3038,7 +3040,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         rv = conn->Init(mEnt->mConnInfo,
                         gHttpHandler->ConnMgr()->mMaxRequestDelay,
                         mBackupTransport, mBackupStreamIn, mBackupStreamOut,
-                        callbacks,
+                        mBackupConnectedOK, callbacks,
                         PR_MillisecondsToInterval(
                           static_cast<uint32_t>(rtt.ToMilliseconds())));
 
@@ -3125,8 +3127,19 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
     if (mTransaction)
         mTransaction->OnTransportStatus(trans, status, progress);
 
-    if (trans != mSocketTransport)
+    MOZ_ASSERT(trans == mSocketTransport || trans == mBackupTransport);
+    if (status == NS_NET_STATUS_CONNECTED_TO) {
+        if (trans == mSocketTransport) {
+            mPrimaryConnectedOK = true;
+        } else {
+            mBackupConnectedOK = true;
+        }
+    }
+
+    // The rest of this method only applies to the primary transport
+    if (trans != mSocketTransport) {
         return NS_OK;
+    }
 
     // if we are doing spdy coalescing and haven't recorded the ip address
     // for this entry before then make the hash key if our dns lookup
