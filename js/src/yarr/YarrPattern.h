@@ -23,7 +23,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef yarr_YarrPattern_h
@@ -186,7 +186,7 @@ struct PatternTerm {
         quantityType = QuantifierFixedCount;
         quantityCount = 1;
     }
-    
+
     PatternTerm(Type type, bool invert = false)
         : type(type)
         , m_capture(false)
@@ -227,7 +227,7 @@ struct PatternTerm {
         quantityType = QuantifierFixedCount;
         quantityCount = 1;
     }
-    
+
     static PatternTerm ForwardReference()
     {
         return PatternTerm(TypeForwardReference);
@@ -247,7 +247,7 @@ struct PatternTerm {
     {
         return PatternTerm(TypeAssertionWordBoundary, invert);
     }
-    
+
     bool invert()
     {
         return m_invert;
@@ -257,7 +257,7 @@ struct PatternTerm {
     {
         return m_capture;
     }
-    
+
     void quantify(unsigned count, QuantifierType type)
     {
         quantityCount = count;
@@ -282,18 +282,18 @@ public:
         ASSERT(m_terms.size());
         return m_terms[m_terms.size() - 1];
     }
-    
+
     void removeLastTerm()
     {
         ASSERT(m_terms.size());
         m_terms.shrink(m_terms.size() - 1);
     }
-    
+
     void setOnceThrough()
     {
         m_onceThrough = true;
     }
-    
+
     bool onceThrough()
     {
         return m_onceThrough;

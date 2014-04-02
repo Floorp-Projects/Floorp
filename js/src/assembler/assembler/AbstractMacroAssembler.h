@@ -23,8 +23,8 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- * 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef assembler_assembler_AbstractMacroAssembler_h
@@ -98,7 +98,7 @@ public:
             , offset(offset)
         {
         }
-        
+
         RegisterID base;
         intptr_t offset;
     };
@@ -190,7 +190,7 @@ public:
         {
         }
     };
- 
+
     // TrustedImm32:
     //
     // A 32bit immediate operand to an instruction - this is wrapped in a
@@ -289,7 +289,7 @@ public:
             : m_label(masm->m_assembler.label())
         {
         }
-        
+
         bool isUsed() const { return m_label.isUsed(); }
         void used() { m_label.used(); }
         bool isSet() const { return m_label.isValid(); }
@@ -314,7 +314,7 @@ public:
             : m_label(masm->m_assembler.label())
         {
         }
-        
+
         bool isSet() const { return m_label.isValid(); }
 
     private:
@@ -365,7 +365,7 @@ public:
             : m_flags(None)
         {
         }
-        
+
         Call(JmpSrc jmp, Flags flags)
             : m_jmp(jmp)
             , m_flags(flags)
@@ -402,17 +402,17 @@ public:
         Jump()
         {
         }
-        
-        Jump(JmpSrc jmp)    
+
+        Jump(JmpSrc jmp)
             : m_jmp(jmp)
         {
         }
-        
+
         void link(AbstractMacroAssembler<AssemblerType>* masm) const
         {
             masm->m_assembler.linkJump(m_jmp, masm->m_assembler.label());
         }
-        
+
         void linkTo(Label label, AbstractMacroAssembler<AssemblerType>* masm) const
         {
             masm->m_assembler.linkJump(m_jmp, label.m_label);
@@ -455,7 +455,7 @@ public:
                 m_jumps[i].link(masm);
             m_jumps.clear();
         }
-        
+
         void linkTo(Label label, AbstractMacroAssembler<AssemblerType>* masm)
         {
             size_t size = m_jumps.length();
@@ -463,12 +463,12 @@ public:
                 m_jumps[i].linkTo(label, masm);
             m_jumps.clear();
         }
-        
+
         void append(Jump jump)
         {
             m_jumps.append(jump);
         }
-        
+
         void append(const JumpList& other)
         {
             m_jumps.append(other.m_jumps.begin(), other.m_jumps.length());
@@ -483,7 +483,7 @@ public:
         {
             return !m_jumps.length();
         }
-        
+
         const JumpVector& jumps() const { return m_jumps; }
 
     private:
@@ -528,7 +528,7 @@ public:
     {
         return DataLabel32(this);
     }
-    
+
     Label align()
     {
         m_assembler.align(16);

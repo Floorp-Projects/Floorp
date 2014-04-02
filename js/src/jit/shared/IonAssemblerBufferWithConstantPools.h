@@ -187,7 +187,7 @@ struct Pool
     int getAlignment() {
         return alignment;
     }
-    
+
     uint32_t addPoolSize(uint32_t start) {
         start = align(start);
         start += immSize * numEntries;
