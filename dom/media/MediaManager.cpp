@@ -616,6 +616,7 @@ public:
         int32_t agc = (int32_t) webrtc::kAgcUnchanged;
         int32_t noise = (int32_t) webrtc::kNsUnchanged;
         bool aec_on = false, agc_on = false, noise_on = false;
+        int32_t playout_delay = 0;
 
         branch->GetBoolPref("media.peerconnection.aec_enabled", &aec_on);
         branch->GetIntPref("media.peerconnection.aec", &aec);
@@ -623,10 +624,12 @@ public:
         branch->GetIntPref("media.peerconnection.agc", &agc);
         branch->GetBoolPref("media.peerconnection.noise_enabled", &noise_on);
         branch->GetIntPref("media.peerconnection.noise", &noise);
+        branch->GetIntPref("media.peerconnection.playout_delay", &playout_delay);
 
         mListener->AudioConfig(aec_on, (uint32_t) aec,
                                agc_on, (uint32_t) agc,
-                               noise_on, (uint32_t) noise);
+                               noise_on, (uint32_t) noise,
+                               playout_delay);
       }
     }
 #endif
