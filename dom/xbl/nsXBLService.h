@@ -161,6 +161,8 @@ public:
   nsrefcnt AddRef() { return Hold(); }
   nsrefcnt Release() { return Drop(); }
 
+  static bool IsXBLJSClass(const JSClass* aClass);
+
   // Downcast from a pointer to const JSClass to a pointer to non-const
   // nsXBLJSClass.
   //
@@ -173,6 +175,7 @@ public:
   static nsXBLJSClass*
   fromJSClass(const JSClass* c)
   {
+    MOZ_ASSERT(IsXBLJSClass(c));
     nsXBLJSClass* x = const_cast<nsXBLJSClass*>(static_cast<const nsXBLJSClass*>(c));
     MOZ_ASSERT(nsXBLService::getClass(x->mKey) == x);
     return x;
