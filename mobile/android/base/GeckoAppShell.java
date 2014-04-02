@@ -833,7 +833,7 @@ public class GeckoAppShell
             shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
             shortcutIntent.setData(Uri.parse(aURI));
             shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                        AppConstants.BROWSER_INTENT_CLASS);
+                                        AppConstants.BROWSER_INTENT_CLASS_NAME);
         }
 
         Intent intent = new Intent();
@@ -871,7 +871,7 @@ public class GeckoAppShell
                     shortcutIntent = new Intent();
                     shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
                     shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                                AppConstants.BROWSER_INTENT_CLASS);
+                                                AppConstants.BROWSER_INTENT_CLASS_NAME);
                     shortcutIntent.setData(Uri.parse(aURI));
                 }
         

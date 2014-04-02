@@ -39,7 +39,7 @@ public class DataReportingNotification {
 
             // Launch main App to launch Data choices when notification is clicked.
             Intent prefIntent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
-            prefIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS);
+            prefIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
 
             GeckoPreferences.setResourceToOpen(prefIntent, "preferences_vendor");
             prefIntent.putExtra(ALERT_NAME_DATAREPORTING_NOTIFICATION, true);
