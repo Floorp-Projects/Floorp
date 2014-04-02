@@ -37,7 +37,7 @@ add_task(function file_open_cannot_reset() {
   let thrown = false;
   try {
     yield OS.File.resetWorker();
-  } catch (ex if ex.message.indexOf(TEST_FILE) != -1 ) {
+  } catch (ex if ex.message.indexOf(OS.Path.basename(TEST_FILE)) != -1 ) {
     thrown = true;
   }
   do_check_true(thrown);
@@ -47,14 +47,14 @@ add_task(function file_open_cannot_reset() {
   yield OS.File.resetWorker();
 });
 
-add_task(function file_open_cannot_reset() {
+add_task(function dir_open_cannot_reset() {
   let TEST_DIR = yield OS.File.getCurrentDirectory();
   do_print("Leaking directory " + TEST_DIR + ", we shouldn't be able to reset");
   let iterator = new OS.File.DirectoryIterator(TEST_DIR);
   let thrown = false;
   try {
     yield OS.File.resetWorker();
-  } catch (ex if ex.message.indexOf(TEST_DIR) != -1 ) {
+  } catch (ex if ex.message.indexOf(OS.Path.basename(TEST_DIR)) != -1 ) {
     thrown = true;
   }
   do_check_true(thrown);
