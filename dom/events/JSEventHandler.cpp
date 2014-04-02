@@ -2,7 +2,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsJSEventListener.h"
 #include "nsJSUtils.h"
 #include "nsString.h"
 #include "nsIServiceManager.h"
@@ -19,6 +18,7 @@
 #include "nsDOMJSUtils.h"
 #include "WorkerPrivate.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/JSEventHandler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/UnionTypes.h"

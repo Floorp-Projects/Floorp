@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsJSEventListener_h__
-#define nsJSEventListener_h__
+#ifndef mozilla_JSEventHandler_h_
+#define mozilla_JSEventHandler_h_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -41,5 +41,5 @@ public:
   bool IsBlackForCC();
 };
 
-#endif //nsJSEventListener_h__
+#endif // mozilla_JSEventHandler_h_
 

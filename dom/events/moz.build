@@ -27,6 +27,7 @@ EXPORTS.mozilla += [
     'EventStateManager.h',
     'IMEStateManager.h',
     'InternalMutationEvent.h',
+    'JSEventHandler.h',
     'KeyNameList.h',
     'VirtualKeyCodeList.h',
 ]
@@ -86,6 +87,7 @@ UNIFIED_SOURCES += [
     'FocusEvent.cpp',
     'IMEContentObserver.cpp',
     'IMEStateManager.cpp',
+    'JSEventHandler.cpp',
     'KeyboardEvent.cpp',
     'MessageEvent.cpp',
     'MouseEvent.cpp',
@@ -93,7 +95,6 @@ UNIFIED_SOURCES += [
     'MutationEvent.cpp',
     'NotifyAudioAvailableEvent.cpp',
     'NotifyPaintEvent.cpp',
-    'nsJSEventListener.cpp',
     'nsPaintRequest.cpp',
     'PointerEvent.cpp',
     'ScrollAreaEvent.cpp',
