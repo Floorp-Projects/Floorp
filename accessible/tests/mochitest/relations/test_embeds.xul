@@ -52,6 +52,24 @@
       }
     }
 
+    function browserReorderChecker()
+    {
+      this.type = EVENT_REORDER;
+
+      this.match = function browserReorderChecker_match(aEvent)
+      {
+        // Reorder event might be duped because of temporary document creation.
+        if (aEvent.accessible == getAccessible(currentBrowser())) {
+          this.cnt++;
+          return this.cnt != 2;
+        }
+
+        return false;
+      }
+
+      this.cnt = 0;
+    }
+
     function loadOneTab(aURI)
     {
       this.invoke = function loadOneTab_invoke()
@@ -60,7 +78,7 @@
       }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, currentBrowser)
+        new browserReorderChecker()
       ];
 
       this.finalCheck = function loadURI_finalCheck()
