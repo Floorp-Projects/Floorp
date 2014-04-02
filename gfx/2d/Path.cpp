@@ -351,7 +351,7 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
  * I haven't looked into whether the formulation of the quadratic formula in
  * hain has any numerical advantages over the one used below.
  */
-static inline bool
+static inline void
 FindInflectionPoints(const BezierControlPoints &aControlPoints,
                      Float *aT1, Float *aT2, uint32_t *aCount)
 {
@@ -369,12 +369,17 @@ FindInflectionPoints(const BezierControlPoints &aControlPoints,
   if (a == 0) {
     // Not a quadratic equation.
     if (b == 0) {
-      // Instead of a linear equation we have a constant.
-      return false;
+      // Instead of a linear acceleration change we have a constant
+      // acceleration change. This means the equation has no solution
+      // and there are no inflection points, unless the constant is 0.
+      // In that case the curve is a straight line, but we'll let
+      // FlattenBezierCurveSegment deal with this.
+      *aCount = 0;
+      return;
     }
     *aT1 = -c / b;
     *aCount = 1;
-    return true;
+    return;
   } else {
     Float discriminant = b * b - 4 * a * c;
 
@@ -408,7 +413,7 @@ FindInflectionPoints(const BezierControlPoints &aControlPoints,
     }
   }
 
-  return true;
+  return;
 }
 
 void
@@ -419,10 +424,7 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
   Float t2;
   uint32_t count;
 
-  if (!FindInflectionPoints(aControlPoints, &t1, &t2, &count)) {
-    aSink->LineTo(aControlPoints.mCP4);
-    return;
-  }
+  FindInflectionPoints(aControlPoints, &t1, &t2, &count);
 
   // Check that at least one of the inflection points is inside [0..1]
   if (count == 0 || ((t1 < 0 || t1 > 1.0) && ((t2 < 0 || t2 > 1.0) || count == 1)) ) {
