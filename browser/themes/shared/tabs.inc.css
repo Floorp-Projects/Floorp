@@ -273,7 +273,7 @@
 
 .tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
   background-image: radial-gradient(farthest-corner at center bottom, rgb(255,255,255) 3%, rgba(186,221,251,0.75) 20%, rgba(127,179,255,0.25) 40%, rgba(127,179,255,0) 70%);
-  background-position: center bottom 1px;
+  background-position: center bottom @tabToolbarNavbarOverlap@;
   background-repeat: no-repeat;
   background-size: 85% 100%;
 }
@@ -286,12 +286,11 @@
   -moz-margin-start: -1.5px;
   -moz-margin-end: -1.5px;
   background-image: url(chrome://browser/skin/tabbrowser/tab-separator.png);
-  background-position: left bottom;
+  background-position: left bottom @tabToolbarNavbarOverlap@;
   background-repeat: no-repeat;
   background-size: 3px 100%;
   content: "";
   display: -moz-box;
-  margin-bottom: 1px;
   width: 3px;
 }
 
