@@ -1050,7 +1050,7 @@ FrameIter::isConstructing() const
         return data_.ionFrames_.isConstructing();
 #else
         break;
-#endif        
+#endif
       case INTERP:
         return interpFrame()->isConstructing();
     }
