@@ -318,11 +318,8 @@ public:
 class ContentHostIncremental : public ContentHostBase
 {
 public:
-  ContentHostIncremental(const TextureInfo& aTextureInfo)
-    : ContentHostBase(aTextureInfo)
-    , mDeAllocator(nullptr)
-    , mLocked(false)
-  {}
+  ContentHostIncremental(const TextureInfo& aTextureInfo);
+  ~ContentHostIncremental();
 
   virtual CompositableType GetType() { return BUFFER_CONTENT_INC; }
 
@@ -347,12 +344,7 @@ public:
     return false;
   }
 
-  virtual void DestroyTextures()
-  {
-    mSource = nullptr;
-    mSourceOnWhite = nullptr;
-    mUpdateList.Clear();
-  }
+  virtual void DestroyTextures();
 
   virtual bool Lock() {
     MOZ_ASSERT(!mLocked);
