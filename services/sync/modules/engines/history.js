@@ -11,6 +11,7 @@ const Cr = Components.results;
 
 const HISTORY_TTL = 5184000; // 60 days
 
+Cu.import("resource://gre/modules/PlacesUtils.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Log.jsm");
