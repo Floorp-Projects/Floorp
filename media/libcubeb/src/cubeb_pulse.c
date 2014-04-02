@@ -69,6 +69,7 @@ struct cubeb {
   pa_threaded_mainloop * mainloop;
   pa_context * context;
   pa_sink_info * default_sink_info;
+  char * context_name;
   int error;
 };
 
@@ -270,7 +271,37 @@ stream_cork(cubeb_stream * stm, enum cork_state state)
   }
 }
 
+static void pulse_context_destroy(cubeb * ctx);
 static void pulse_destroy(cubeb * ctx);
+
+static int
+pulse_context_init(cubeb * ctx)
+{
+  if (ctx->context) {
+    assert(ctx->error == 1);
+    pulse_context_destroy(ctx);
+  }
+
+  ctx->context = WRAP(pa_context_new)(WRAP(pa_threaded_mainloop_get_api)(ctx->mainloop),
+                                ctx->context_name);
+  WRAP(pa_context_set_state_callback)(ctx->context, context_state_callback, ctx);
+
+  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
+  WRAP(pa_context_connect)(ctx->context, NULL, 0, NULL);
+
+  if (wait_until_context_ready(ctx) != 0) {
+    WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+    pulse_context_destroy(ctx);
+    ctx->context = NULL;
+    return -1;
+  }
+
+  WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+
+  ctx->error = 0;
+
+  return 0;
+}
 
 /*static*/ int
 pulse_init(cubeb ** context, char const * context_name)
@@ -343,20 +374,17 @@ pulse_init(cubeb ** context, char const * context_name)
   ctx->libpulse = libpulse;
 
   ctx->mainloop = WRAP(pa_threaded_mainloop_new)();
-  ctx->context = WRAP(pa_context_new)(WRAP(pa_threaded_mainloop_get_api)(ctx->mainloop), context_name);
   ctx->default_sink_info = NULL;
 
-  WRAP(pa_context_set_state_callback)(ctx->context, context_state_callback, ctx);
   WRAP(pa_threaded_mainloop_start)(ctx->mainloop);
 
-  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-  WRAP(pa_context_connect)(ctx->context, NULL, 0, NULL);
-
-  if (wait_until_context_ready(ctx) != 0) {
-    WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+  ctx->context_name = context_name ? strdup(context_name) : NULL;
+  if (pulse_context_init(ctx) != 0) {
     pulse_destroy(ctx);
     return CUBEB_ERROR;
   }
+
+  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
   WRAP(pa_context_get_server_info)(ctx->context, server_info_callback, ctx);
   WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
 
@@ -409,21 +437,32 @@ pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latenc
 }
 
 static void
+pulse_context_destroy(cubeb * ctx)
+{
+  pa_operation * o;
+
+  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
+  o = WRAP(pa_context_drain)(ctx->context, context_notify_callback, ctx);
+  if (o) {
+    operation_wait(ctx, NULL, o);
+    WRAP(pa_operation_unref)(o);
+  }
+  WRAP(pa_context_set_state_callback)(ctx->context, NULL, NULL);
+  WRAP(pa_context_disconnect)(ctx->context);
+  WRAP(pa_context_unref)(ctx->context);
+  WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+}
+
+static void
 pulse_destroy(cubeb * ctx)
 {
   pa_operation * o;
 
+  if (ctx->context_name) {
+    free(ctx->context_name);
+  }
   if (ctx->context) {
-    WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
-    o = WRAP(pa_context_drain)(ctx->context, context_notify_callback, ctx);
-    if (o) {
-      operation_wait(ctx, NULL, o);
-      WRAP(pa_operation_unref)(o);
-    }
-    WRAP(pa_context_set_state_callback)(ctx->context, NULL, NULL);
-    WRAP(pa_context_disconnect)(ctx->context);
-    WRAP(pa_context_unref)(ctx->context);
-    WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+    pulse_context_destroy(ctx);
   }
 
   if (ctx->mainloop) {
@@ -473,6 +512,11 @@ pulse_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     break;
   default:
     return CUBEB_ERROR_INVALID_FORMAT;
+  }
+
+  // If the connection failed for some reason, try to reconnect
+  if (context->error == 1 && pulse_context_init(context) != 0) {
+    return CUBEB_ERROR;
   }
 
   ss.rate = stream_params.rate;
