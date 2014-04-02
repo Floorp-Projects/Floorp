@@ -184,7 +184,9 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
 
     @Override
     protected void loadStartupTab(String uri) {
-        // NOP
+        // Load a tab so it's available for any code that assumes a tab
+        // before the app tab itself is loaded in BrowserApp._loadWebapp.
+        super.loadStartupTab("about:blank");
     }
 
     private void showSplash() {
@@ -261,6 +263,15 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
             case LOCATION_CHANGE:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     final String urlString = tab.getURL();
+
+                    // Don't show the titlebar for about:blank, which we load
+                    // into the initial tab we create while waiting for the app
+                    // to load.
+                    if (urlString != null && urlString.equals("about:blank")) {
+                        mTitlebar.setVisibility(View.GONE);
+                        return;
+                    }
+
                     final URL url;
 
                     try {
