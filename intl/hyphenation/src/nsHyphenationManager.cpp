@@ -66,6 +66,7 @@ void
 nsHyphenationManager::Shutdown()
 {
   delete sInstance;
+  sInstance = nullptr;
 }
 
 nsHyphenationManager::nsHyphenationManager()
