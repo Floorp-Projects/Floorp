@@ -46,12 +46,6 @@ public:
   // Return true if decoding should be paused
   virtual bool GetPaused() = 0;
 
-  /**
-   * Called when data has been written to the underlying audio stream.
-   */
-  virtual void NotifyAudioAvailable(float* aFrameBuffer, uint32_t aFrameBufferLength,
-                                    float aTime) = 0;
-
   // Called by the video decoder object, on the main thread,
   // when it has read the metadata containing video dimensions,
   // etc.

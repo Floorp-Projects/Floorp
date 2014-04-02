@@ -9866,23 +9866,6 @@ nsDocument::AddImage(imgIRequest* aImage)
   return rv;
 }
 
-static void
-NotifyAudioAvailableListener(nsIContent *aContent, void *aUnused)
-{
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
-  if (domMediaElem) {
-    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(aContent);
-    mediaElem->NotifyAudioAvailableListener();
-  }
-}
-
-void
-nsDocument::NotifyAudioAvailableListener()
-{
-  mHasAudioAvailableListener = true;
-  EnumerateFreezableElements(::NotifyAudioAvailableListener, nullptr);
-}
-
 nsresult
 nsDocument::RemoveImage(imgIRequest* aImage, uint32_t aFlags)
 {
