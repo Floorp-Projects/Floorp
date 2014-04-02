@@ -8,6 +8,8 @@ package org.mozilla.gecko.home;
 import java.util.EnumSet;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.ThumbnailHelper;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.TopSitesCursorWrapper;
@@ -110,6 +112,8 @@ public class TopSitesGridView extends GridView {
                 // If not, navigate to the page given by the url.
                 if (!TextUtils.isEmpty(url)) {
                     if (mUrlOpenListener != null) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.GRID_ITEM);
+
                         mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else {

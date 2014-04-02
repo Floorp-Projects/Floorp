@@ -64,6 +64,15 @@ public interface TelemetryContract {
 
         // Action occurred via an intent.
         public static final String INTENT = "intent";
+
+        // Action occurred via a context menu.
+        public static final String CONTEXT_MENU = "contextmenu";
+
+        // Action triggered from a view grid item, like a thumbnail.
+        public static final String GRID_ITEM = "griditem";
+
+        // Action triggered from a view list item, like a row of a list.
+        public static final String LIST_ITEM = "listitem";
     }
 
     /**
