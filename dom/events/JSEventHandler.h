@@ -16,15 +16,11 @@
 #include "nsIDOMEventListener.h"
 #include "nsIScriptContext.h"
 
-class nsEventHandler
+namespace mozilla {
+
+class TypedEventHandler
 {
 public:
-  typedef mozilla::dom::EventHandlerNonNull EventHandlerNonNull;
-  typedef mozilla::dom::OnBeforeUnloadEventHandlerNonNull
-    OnBeforeUnloadEventHandlerNonNull;
-  typedef mozilla::dom::OnErrorEventHandlerNonNull OnErrorEventHandlerNonNull;
-  typedef mozilla::dom::CallbackFunction CallbackFunction;
-
   enum HandlerType
   {
     eUnset = 0,
@@ -34,27 +30,27 @@ public:
     eTypeBits = 0x3
   };
 
-  nsEventHandler()
+  TypedEventHandler()
     : mBits(0)
   {
   }
 
-  nsEventHandler(EventHandlerNonNull* aHandler)
+  TypedEventHandler(dom::EventHandlerNonNull* aHandler)
   {
     Assign(aHandler, eNormal);
   }
 
-  nsEventHandler(OnErrorEventHandlerNonNull* aHandler)
+  TypedEventHandler(dom::OnErrorEventHandlerNonNull* aHandler)
   {
     Assign(aHandler, eOnError);
   }
 
-  nsEventHandler(OnBeforeUnloadEventHandlerNonNull* aHandler)
+  TypedEventHandler(dom::OnBeforeUnloadEventHandlerNonNull* aHandler)
   {
     Assign(aHandler, eOnBeforeUnload);
   }
 
-  nsEventHandler(const nsEventHandler& aOther)
+  TypedEventHandler(const TypedEventHandler& aOther)
   {
     if (aOther.HasEventHandler()) {
       // Have to make sure we take our own ref
@@ -64,7 +60,7 @@ public:
     }
   }
 
-  ~nsEventHandler()
+  ~TypedEventHandler()
   {
     ReleaseHandler();
   }
@@ -79,7 +75,7 @@ public:
     return !!Ptr();
   }
 
-  void SetHandler(const nsEventHandler& aHandler)
+  void SetHandler(const TypedEventHandler& aHandler)
   {
     if (aHandler.HasEventHandler()) {
       ReleaseHandler();
@@ -89,47 +85,48 @@ public:
     }
   }
 
-  EventHandlerNonNull* EventHandler() const
+  dom::EventHandlerNonNull* NormalEventHandler() const
   {
     MOZ_ASSERT(Type() == eNormal && Ptr());
-    return reinterpret_cast<EventHandlerNonNull*>(Ptr());
+    return reinterpret_cast<dom::EventHandlerNonNull*>(Ptr());
   }
 
-  void SetHandler(EventHandlerNonNull* aHandler)
+  void SetHandler(dom::EventHandlerNonNull* aHandler)
   {
     ReleaseHandler();
     Assign(aHandler, eNormal);
   }
 
-  OnBeforeUnloadEventHandlerNonNull* OnBeforeUnloadEventHandler() const
+  dom::OnBeforeUnloadEventHandlerNonNull* OnBeforeUnloadEventHandler() const
   {
     MOZ_ASSERT(Type() == eOnBeforeUnload);
-    return reinterpret_cast<OnBeforeUnloadEventHandlerNonNull*>(Ptr());
+    return reinterpret_cast<dom::OnBeforeUnloadEventHandlerNonNull*>(Ptr());
   }
 
-  void SetHandler(OnBeforeUnloadEventHandlerNonNull* aHandler)
+  void SetHandler(dom::OnBeforeUnloadEventHandlerNonNull* aHandler)
   {
     ReleaseHandler();
     Assign(aHandler, eOnBeforeUnload);
   }
 
-  OnErrorEventHandlerNonNull* OnErrorEventHandler() const
+  dom::OnErrorEventHandlerNonNull* OnErrorEventHandler() const
   {
     MOZ_ASSERT(Type() == eOnError);
-    return reinterpret_cast<OnErrorEventHandlerNonNull*>(Ptr());
+    return reinterpret_cast<dom::OnErrorEventHandlerNonNull*>(Ptr());
   }
 
-  void SetHandler(OnErrorEventHandlerNonNull* aHandler)
+  void SetHandler(dom::OnErrorEventHandlerNonNull* aHandler)
   {
     ReleaseHandler();
     Assign(aHandler, eOnError);
   }
 
-  CallbackFunction* Ptr() const
+  dom::CallbackFunction* Ptr() const
   {
     // Have to cast eTypeBits so we don't have to worry about
     // promotion issues after the bitflip.
-    return reinterpret_cast<CallbackFunction*>(mBits & ~uintptr_t(eTypeBits));
+    return reinterpret_cast<dom::CallbackFunction*>(mBits &
+                                                      ~uintptr_t(eTypeBits));
   }
 
   void ForgetHandler()
@@ -138,7 +135,7 @@ public:
     mBits = 0;
   }
 
-  bool operator==(const nsEventHandler& aOther) const
+  bool operator==(const TypedEventHandler& aOther) const
   {
     return
       Ptr() && aOther.Ptr() &&
@@ -146,7 +143,7 @@ public:
   }
 
 private:
-  void operator=(const nsEventHandler&) MOZ_DELETE;
+  void operator=(const TypedEventHandler&) MOZ_DELETE;
 
   void ReleaseHandler()
   {
@@ -163,6 +160,8 @@ private:
 
   uintptr_t mBits;
 };
+
+} // namespace mozilla
 
 /**
  * Implemented by script event listeners. Used to retrieve the script object
@@ -182,7 +181,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_JSEVENTLISTENER_IID)
 
   nsJSEventListener(nsISupports* aTarget, nsIAtom* aType,
-                    const nsEventHandler& aHandler);
+                    const mozilla::TypedEventHandler& aTypedHandler);
 
   virtual ~nsJSEventListener()
   {
@@ -204,14 +203,14 @@ public:
     mTarget = nullptr;
   }
 
-  const nsEventHandler& GetHandler() const
+  const mozilla::TypedEventHandler& GetTypedEventHandler() const
   {
-    return mHandler;
+    return mTypedHandler;
   }
 
   void ForgetHandler()
   {
-    mHandler.ForgetHandler();
+    mTypedHandler.ForgetHandler();
   }
 
   nsIAtom* EventName() const
@@ -221,21 +220,21 @@ public:
 
   // Set a handler for this event listener.  The handler must already
   // be bound to the right target.
-  void SetHandler(const nsEventHandler& aHandler)
+  void SetHandler(const mozilla::TypedEventHandler& aTypedHandler)
   {
-    mHandler.SetHandler(aHandler);
+    mTypedHandler.SetHandler(aTypedHandler);
   }
   void SetHandler(mozilla::dom::EventHandlerNonNull* aHandler)
   {
-    mHandler.SetHandler(aHandler);
+    mTypedHandler.SetHandler(aHandler);
   }
   void SetHandler(mozilla::dom::OnBeforeUnloadEventHandlerNonNull* aHandler)
   {
-    mHandler.SetHandler(aHandler);
+    mTypedHandler.SetHandler(aHandler);
   }
   void SetHandler(mozilla::dom::OnErrorEventHandlerNonNull* aHandler)
   {
-    mHandler.SetHandler(aHandler);
+    mTypedHandler.SetHandler(aHandler);
   }
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
@@ -247,7 +246,7 @@ public:
     // - mTarget
     //
     // The following members are not measured:
-    // - mHandler: may be shared with others
+    // - mTypedHandler: may be shared with others
     // - mEventName: shared with others
   }
 
@@ -263,7 +262,7 @@ public:
 protected:
   nsISupports* mTarget;
   nsCOMPtr<nsIAtom> mEventName;
-  nsEventHandler mHandler;
+  mozilla::TypedEventHandler mTypedHandler;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsJSEventListener, NS_JSEVENTLISTENER_IID)
@@ -274,7 +273,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsJSEventListener, NS_JSEVENTLISTENER_IID)
  */
 nsresult NS_NewJSEventHandler(nsISupports* aTarget,
                               nsIAtom* aType,
-                              const nsEventHandler& aHandler,
+                              const mozilla::TypedEventHandler& aTypedHandler,
                               nsJSEventListener** aReturn);
 
 #endif // mozilla_JSEventHandler_h_

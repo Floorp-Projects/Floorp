@@ -322,12 +322,12 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   nsRefPtr<EventHandlerNonNull> handlerCallback =
     new EventHandlerNonNull(bound, /* aIncumbentGlobal = */ nullptr);
 
-  nsEventHandler eventHandler(handlerCallback);
+  TypedEventHandler typedHandler(handlerCallback);
 
   // Execute it.
   nsCOMPtr<nsJSEventListener> eventListener;
   rv = NS_NewJSEventHandler(scriptTarget, onEventAtom,
-                            eventHandler,
+                            typedHandler,
                             getter_AddRefs(eventListener));
   NS_ENSURE_SUCCESS(rv, rv);
 
