@@ -63,22 +63,21 @@ const R_HOST       = new RegExp ("\\*|(((\\*\\.)?" + R_HOSTCHAR.source +
 // port            = ":" ( 1*DIGIT / "*" )
 const R_PORT       = new RegExp ("(\\:([0-9]+|\\*))", 'i');
 
-// path
-const R_PATH       = new RegExp("(\\/(([a-zA-Z0-9\\-\\_]+)\\/?)*)", 'i');
-
-// file
-const R_FILE       = new RegExp("(\\/([a-zA-Z0-9\\-\\_]+)\\.([a-zA-Z]+))", 'i');
-
 // host-source     = [ scheme "://" ] host [ port path file ]
-const R_HOSTSRC    = new RegExp ("^((((" + R_SCHEME.source + "\\:\\/\\/)?("
+const R_HOSTSRC    = new RegExp ("^((" + R_SCHEME.source + "\\:\\/\\/)?("
                                          + R_HOST.source + ")"
-                                         + R_PORT.source + "?)"
-                                         + R_PATH.source + "?)"
-                                         + R_FILE.source + "?)$", 'i');
+                                         + R_PORT.source + "?)$", 'i');
+
+function STRIP_INPUTDELIM(re) {
+  return re.replace(/(^\^)|(\$$)/g, "");
+}
 
 // ext-host-source = host-source "/" *( <VCHAR except ";" and ","> )
 //                 ; ext-host-source is reserved for future use.
-const R_EXTHOSTSRC = new RegExp ("^" + R_HOSTSRC.source + "\\/[:print:]+$", 'i');
+const R_VCHAR_EXCEPT = new RegExp("[!-+--:<-~]"); // ranges exclude , and ;
+const R_EXTHOSTSRC   = new RegExp ("^" + STRIP_INPUTDELIM(R_HOSTSRC.source)
+                                       + "\\/"
+                                       + R_VCHAR_EXCEPT.source + "*$", 'i');
 
 // keyword-source  = "'self'" / "'unsafe-inline'" / "'unsafe-eval'"
 const R_KEYWORDSRC = new RegExp ("^('self'|'unsafe-inline'|'unsafe-eval')$", 'i');
@@ -99,6 +98,7 @@ const R_HASHSRC    = new RegExp ("^'" + R_HASH_ALGOS.source + "-" + R_BASE64.sou
 // source-exp      = scheme-source / host-source / keyword-source
 const R_SOURCEEXP  = new RegExp (R_SCHEMESRC.source + "|" +
                                    R_HOSTSRC.source + "|" +
+                                R_EXTHOSTSRC.source + "|" +
                                 R_KEYWORDSRC.source + "|" +
                                   R_NONCESRC.source + "|" +
                                    R_HASHSRC.source,  'i');
@@ -1392,7 +1392,13 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
       sObj._scheme = schemeMatch[0];
     }
 
-    // get array of matches to the R_HOST regular expression
+    // Bug 916054: in CSP 1.0, source-expressions that are paths should have
+    // the path after the origin ignored and only the origin enforced.
+    if (R_EXTHOSTSRC.test(aStr)) {
+      var extHostMatch = R_EXTHOSTSRC.exec(aStr);
+      aStr = extHostMatch[1];
+    }
+
     var hostMatch = R_HOSTSRC.exec(aStr);
     if (!hostMatch) {
       cspError(aCSPRep, CSPLocalizer.getFormatStr("couldntParseInvalidSource",
@@ -1400,24 +1406,20 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
       return null;
     }
     // Host regex gets scheme, so remove scheme from aStr. Add 3 for '://'
-    if (schemeMatch)
+    if (schemeMatch) {
       hostMatch = R_HOSTSRC.exec(aStr.substring(schemeMatch[0].length + 3));
-
-    // Bug 916054: in CSP 1.0, source-expressions that are paths should have
-    // the path after the origin ignored and only the origin enforced.
-    hostMatch[0] = hostMatch[0].replace(R_FILE, "");
-    hostMatch[0] = hostMatch[0].replace(R_PATH, "");
+    }
 
     var portMatch = R_PORT.exec(hostMatch);
-
     // Host regex also gets port, so remove the port here.
-    if (portMatch)
+    if (portMatch) {
       hostMatch = R_HOSTSRC.exec(hostMatch[0].substring(0, hostMatch[0].length - portMatch[0].length));
+    }
 
     sObj._host = CSPHost.fromString(hostMatch[0]);
     if (!portMatch) {
       // gets the default port for the given scheme
-      defPort = Services.io.getProtocolHandler(sObj._scheme).defaultPort;
+      var defPort = Services.io.getProtocolHandler(sObj._scheme).defaultPort;
       if (!defPort) {
         cspError(aCSPRep,
                  CSPLocalizer.getFormatStr("couldntParseInvalidSource",
@@ -1440,12 +1442,14 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
   }
 
   // check for a nonce-source match
-  if (R_NONCESRC.test(aStr))
+  if (R_NONCESRC.test(aStr)) {
     return CSPNonceSource.fromString(aStr, aCSPRep);
+  }
 
   // check for a hash-source match
-  if (R_HASHSRC.test(aStr))
+  if (R_HASHSRC.test(aStr)) {
     return CSPHashSource.fromString(aStr, aCSPRep);
+  }
 
   // check for 'self' (case insensitive)
   if (aStr.toLowerCase() === "'self'") {
