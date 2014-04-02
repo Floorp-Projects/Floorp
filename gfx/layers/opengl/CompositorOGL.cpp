@@ -573,7 +573,7 @@ CompositorOGL::SetRenderTarget(CompositingRenderTarget *aSurface)
 }
 
 CompositingRenderTarget*
-CompositorOGL::GetCurrentRenderTarget()
+CompositorOGL::GetCurrentRenderTarget() const
 {
   return mCurrentRenderTarget;
 }
