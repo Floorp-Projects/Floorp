@@ -66,6 +66,11 @@ inline Point ToPoint(const gfxPoint &aPoint)
   return Point(Float(aPoint.x), Float(aPoint.y));
 }
 
+inline IntPoint ToIntPoint(const nsIntPoint &aPoint)
+{
+  return IntPoint(aPoint.x, aPoint.y);
+}
+
 inline Size ToSize(const gfxSize &aSize)
 {
   return Size(Float(aSize.width), Float(aSize.height));

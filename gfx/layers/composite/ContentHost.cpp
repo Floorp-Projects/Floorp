@@ -15,6 +15,8 @@
 #include "nsAString.h"
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsString.h"                   // for nsAutoCString
+#include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface
+#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 
 namespace mozilla {
 namespace gfx {
@@ -39,20 +41,20 @@ struct AutoLockContentHost
   AutoLockContentHost(ContentHostBase* aHost)
     : mHost(aHost)
   {
-    mFailed = mHost->Lock();
+    mSucceeded = mHost->Lock();
   }
 
   ~AutoLockContentHost()
   {
-    if (!mFailed) {
+    if (mSucceeded) {
       mHost->Unlock();
     }
   }
 
-  bool Failed() { return mFailed; }
+  bool Failed() { return !mSucceeded; }
 
   ContentHostBase* mHost;
-  bool mFailed;
+  bool mSucceeded;
 };
 
 void
@@ -653,29 +655,40 @@ ContentHostIncremental::ProcessTextureUpdates()
   mUpdateList.Clear();
 }
 
+NewTextureSource*
+ContentHostIncremental::GetTextureSource()
+{
+  MOZ_ASSERT(mLocked);
+  return mSource;
+}
+
+NewTextureSource*
+ContentHostIncremental::GetTextureSourceOnWhite()
+{
+  MOZ_ASSERT(mLocked);
+  return mSourceOnWhite;
+}
+
 void
 ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* aHost)
 {
-  RefPtr<DeprecatedTextureHost> newHost =
-    DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptor::TShmem,
-                                   mTextureInfo.mDeprecatedTextureHostFlags,
-                                   mTextureInfo.mTextureFlags,
-                                   nullptr);
   Compositor* compositor = aHost->GetCompositor();
-  if (compositor) {
-    newHost->SetCompositor(compositor);
-  }
-  RefPtr<DeprecatedTextureHost> newHostOnWhite;
+  MOZ_ASSERT(compositor);
+
+  RefPtr<DataTextureSource> temp =
+    compositor->CreateDataTextureSource(mTextureInfo.mTextureFlags);
+  MOZ_ASSERT(temp->AsSourceOGL() &&
+             temp->AsSourceOGL()->AsTextureImageTextureSource());
+  RefPtr<TextureImageTextureSourceOGL> newSource =
+    temp->AsSourceOGL()->AsTextureImageTextureSource();
+
+  RefPtr<TextureImageTextureSourceOGL> newSourceOnWhite;
   if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
-    newHostOnWhite =
-      DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptor::TShmem,
-                                     mTextureInfo.mDeprecatedTextureHostFlags,
-                                     mTextureInfo.mTextureFlags,
-                                     nullptr);
-    Compositor* compositor = aHost->GetCompositor();
-    if (compositor) {
-      newHostOnWhite->SetCompositor(compositor);
-    }
+    temp =
+      compositor->CreateDataTextureSource(mTextureInfo.mTextureFlags);
+    MOZ_ASSERT(temp->AsSourceOGL() &&
+               temp->AsSourceOGL()->AsTextureImageTextureSource());
+    newSourceOnWhite = temp->AsSourceOGL()->AsTextureImageTextureSource();
   }
 
   if (mTextureInfo.mDeprecatedTextureHostFlags & TEXTURE_HOST_COPY_PREVIOUS) {
@@ -748,47 +761,47 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
     dstRectDrawTopLeft   .MoveBy(-mBufferRect.TopLeft());
     dstRectDrawBottomLeft.MoveBy(-mBufferRect.TopLeft());
 
-    newHost->EnsureBuffer(mBufferRect.Size(),
-                          ContentForFormat(aHost->mDeprecatedTextureHost->GetFormat()));
+    newSource->EnsureBuffer(mBufferRect.Size(),
+                           ContentForFormat(aHost->mSource->GetFormat()));
 
-    aHost->mDeprecatedTextureHost->CopyTo(srcRect, newHost, dstRect);
+    aHost->mSource->CopyTo(srcRect, newSource, dstRect);
     if (bufferRotation != nsIntPoint(0, 0)) {
       // Draw the remaining quadrants. We call BlitTextureImage 3 extra
       // times instead of doing a single draw call because supporting that
       // with a tiled source is quite tricky.
 
       if (!srcRectDrawTopRight.IsEmpty())
-        aHost->mDeprecatedTextureHost->CopyTo(srcRectDrawTopRight,
-                                          newHost, dstRectDrawTopRight);
+        aHost->mSource->CopyTo(srcRectDrawTopRight,
+                               newSource, dstRectDrawTopRight);
       if (!srcRectDrawTopLeft.IsEmpty())
-        aHost->mDeprecatedTextureHost->CopyTo(srcRectDrawTopLeft,
-                                          newHost, dstRectDrawTopLeft);
+        aHost->mSource->CopyTo(srcRectDrawTopLeft,
+                               newSource, dstRectDrawTopLeft);
       if (!srcRectDrawBottomLeft.IsEmpty())
-        aHost->mDeprecatedTextureHost->CopyTo(srcRectDrawBottomLeft,
-                                          newHost, dstRectDrawBottomLeft);
+        aHost->mSource->CopyTo(srcRectDrawBottomLeft,
+                               newSource, dstRectDrawBottomLeft);
     }
 
-    if (newHostOnWhite) {
-      newHostOnWhite->EnsureBuffer(mBufferRect.Size(),
-                                   ContentForFormat(aHost->mDeprecatedTextureHostOnWhite->GetFormat()));
-      aHost->mDeprecatedTextureHostOnWhite->CopyTo(srcRect, newHostOnWhite, dstRect);
+    if (newSourceOnWhite) {
+      newSourceOnWhite->EnsureBuffer(mBufferRect.Size(),
+                                    ContentForFormat(aHost->mSourceOnWhite->GetFormat()));
+      aHost->mSourceOnWhite->CopyTo(srcRect, newSourceOnWhite, dstRect);
       if (bufferRotation != nsIntPoint(0, 0)) {
         // draw the remaining quadrants
         if (!srcRectDrawTopRight.IsEmpty())
-          aHost->mDeprecatedTextureHostOnWhite->CopyTo(srcRectDrawTopRight,
-                                                   newHostOnWhite, dstRectDrawTopRight);
+          aHost->mSourceOnWhite->CopyTo(srcRectDrawTopRight,
+                                        newSourceOnWhite, dstRectDrawTopRight);
         if (!srcRectDrawTopLeft.IsEmpty())
-          aHost->mDeprecatedTextureHostOnWhite->CopyTo(srcRectDrawTopLeft,
-                                                   newHostOnWhite, dstRectDrawTopLeft);
+          aHost->mSourceOnWhite->CopyTo(srcRectDrawTopLeft,
+                                        newSourceOnWhite, dstRectDrawTopLeft);
         if (!srcRectDrawBottomLeft.IsEmpty())
-          aHost->mDeprecatedTextureHostOnWhite->CopyTo(srcRectDrawBottomLeft,
-                                                   newHostOnWhite, dstRectDrawBottomLeft);
+          aHost->mSourceOnWhite->CopyTo(srcRectDrawBottomLeft,
+                                        newSourceOnWhite, dstRectDrawBottomLeft);
       }
     }
   }
 
-  aHost->mDeprecatedTextureHost = newHost;
-  aHost->mDeprecatedTextureHostOnWhite = newHostOnWhite;
+  aHost->mSource = newSource;
+  aHost->mSourceOnWhite = newSourceOnWhite;
 
   aHost->mBufferRect = mBufferRect;
   aHost->mBufferRotation = nsIntPoint();
@@ -824,12 +837,21 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
 
   mUpdated.MoveBy(-nsIntPoint(quadrantRect.x, quadrantRect.y));
 
-  nsIntPoint offset = -mUpdated.GetBounds().TopLeft();
+  IntPoint offset = ToIntPoint(-mUpdated.GetBounds().TopLeft());
+
+  AutoOpenSurface surf(OPEN_READ_ONLY, mDescriptor);
+
+  nsRefPtr<gfxImageSurface> thebesSurf = surf.GetAsImage();
+  RefPtr<DataSourceSurface> sourceSurf =
+    gfx::Factory::CreateWrappingDataSourceSurface(thebesSurf->Data(),
+                                                  thebesSurf->Stride(),
+                                                  ToIntSize(thebesSurf->GetSize()),
+                                                  ImageFormatToSurfaceFormat(thebesSurf->Format()));
 
   if (mTextureId == TextureFront) {
-    aHost->mDeprecatedTextureHost->Update(mDescriptor, &mUpdated, &offset);
+    aHost->mSource->Update(sourceSurf, &mUpdated, &offset);
   } else {
-    aHost->mDeprecatedTextureHostOnWhite->Update(mDescriptor, &mUpdated, &offset);
+    aHost->mSourceOnWhite->Update(sourceSurf, &mUpdated, &offset);
   }
 }
 
