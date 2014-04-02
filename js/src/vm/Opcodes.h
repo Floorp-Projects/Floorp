@@ -286,7 +286,24 @@
      *   Stack: => succeeded
      */ \
     macro(JSOP_DELNAME,   36, "delname",    NULL,         5,  0,  1, JOF_ATOM|JOF_NAME) \
+    /*
+     * Pops the top of stack value, deletes property from it, pushes 'true' onto
+     * the stack if succeeded, 'false' if not.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => succeeded
+     */ \
     macro(JSOP_DELPROP,   37, "delprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP) \
+    /*
+     * Pops the top two values on the stack as 'propval' and 'obj',
+     * deletes 'propval' property from 'obj', pushes 'true'  onto the stack if
+     * succeeded, 'false' if not.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval => succeeded
+     */ \
     macro(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM) \
     /*
      * Pops the value 'val' from the stack, then pushes 'typeof val'.
@@ -362,9 +379,41 @@
     macro(JSOP_UNUSED51,  51, "unused51",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED52,  52, "unused52",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
+    /*
+     * Pops the top of stack value, pushes property of it onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj[name]
+     */ \
     macro(JSOP_GETPROP,   53, "getprop",    NULL,         5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3) \
+    /*
+     * Pops the top two values on the stack as 'val' and 'obj', sets property of
+     * 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => val
+     */ \
     macro(JSOP_SETPROP,   54, "setprop",    NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Pops the top two values on the stack as 'propval' and 'obj', pushes
+     * 'propval' property of 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval => obj[propval]
+     */ \
     macro(JSOP_GETELEM,   55, "getelem",    NULL,         1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC) \
+    /*
+     * Pops the top three values on the stack as 'val', 'propval' and 'obj',
+     * sets 'propval' property of 'obj' as 'val', pushes 'obj' onto the
+     * stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval, val => val
+     */ \
     macro(JSOP_SETELEM,   56, "setelem",    NULL,         1,  3,  1, JOF_BYTE |JOF_ELEM|JOF_SET|JOF_DETECTING) \
     macro(JSOP_UNUSED57,  57, "unused57",   NULL,         1,  0,  0, JOF_BYTE) \
     /*
@@ -511,7 +560,13 @@
      */ \
     macro(JSOP_FUNAPPLY,  79, "funapply",   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
     \
-    /* Push object initializer literal. */ \
+    /*
+     * Pushes deep-cloned object literal or singleton onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t objectIndex
+     *   Stack: => obj
+     */ \
     macro(JSOP_OBJECT,    80, "object",     NULL,         5,  0,  1,  JOF_OBJECT) \
     \
     /*
@@ -533,7 +588,19 @@
      *   nuses: (argc+2)
      */ \
     macro(JSOP_NEW,       82, js_new_str,   NULL,         3, -1,  1,  JOF_UINT16|JOF_INVOKE|JOF_TYPESET) \
-    \
+    /*
+     * Pops the top three values on the stack as 'iterable', 'index' and 'obj',
+     * iterates over 'iterable' and stores the iteration values as 'index + i'
+     * elements of 'obj', pushes 'obj' and 'index + iteration count' onto the
+     * stack.
+     *
+     * This opcode is used in Array literals with spread and spreadcall
+     * arguments.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: obj, index, iterable => obj, (index + iteration count)
+     */ \
     macro(JSOP_SPREAD,    83, "spread",     NULL,         1,  3,  2,  JOF_BYTE|JOF_ELEM|JOF_SET) \
     \
     /*
@@ -582,36 +649,148 @@
      */ \
     macro(JSOP_UINT16,    88, "uint16",     NULL,         3,  0,  1,  JOF_UINT16) \
     \
+    /* Object and array literal support. */ \
     /*
-     * Object and array literal support.  NEWINIT takes the kind of initializer
-     * (JSProto_Array or JSProto_Object).  NEWARRAY is an array initializer
-     * taking the final length, which can be filled in at the start and initialized
-     * directly.  NEWOBJECT is an object initializer taking an object with the final
-     * shape, which can be set at the start and slots then filled in directly.
-     * NEWINIT has an extra byte so it can be exchanged with NEWOBJECT during emit.
+     * Pushes newly created object onto the stack.
+     *
+     * This opcode takes the kind of initializer (JSProto_Array or
+     * JSProto_Object).
+     *
+     * This opcode has an extra byte so it can be exchanged with JSOP_NEWOBJECT
+     * during emit.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint8_t kind (, uint24_t extra)
+     *   Stack: => obj
      */ \
     macro(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, JOF_UINT8) \
+    /*
+     * Pushes newly created array onto the stack.
+     *
+     * This opcode takes the final length, which is preallocated.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands: uint24_t length
+     *   Stack: => obj
+     */ \
     macro(JSOP_NEWARRAY,  90, "newarray",   NULL,         4,  0,  1, JOF_UINT24) \
+    /*
+     * Pushes newly created object onto the stack.
+     *
+     * This opcode takes an object with the final shape, which can be set at
+     * the start and slots then filled in directly.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t baseobjIndex
+     *   Stack: => obj
+     */ \
     macro(JSOP_NEWOBJECT, 91, "newobject",  NULL,         5,  0,  1, JOF_OBJECT) \
+    /*
+     * A no-operation bytecode.
+     *
+     * Indicates the end of object/array initialization, and used for
+     * Type-Inference, decompile, etc.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: =>
+     */ \
     macro(JSOP_ENDINIT,   92, "endinit",    NULL,         1,  0,  0, JOF_BYTE) \
+    /*
+     * Initialize a named property in an object literal, like '{a: x}'.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines
+     * 'nameIndex' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
     macro(JSOP_INITPROP,  93, "initprop",   NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
     \
-    /* Initialize a numeric property in an object literal, like {1: x}. */ \
+    /*
+     * Initialize a numeric property in an object literal, like '{1: x}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
     macro(JSOP_INITELEM,  94, "initelem",   NULL,         1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     \
-    /* Used in array literals with spread. */ \
+    /*
+     * Pops the top three values on the stack as 'val', 'index' and 'obj', sets
+     * 'index' property of 'obj' as 'val', pushes 'obj' and 'index + 1' onto
+     * the stack.
+     *
+     * This opcode is used in Array literals with spread and spreadcall
+     * arguments.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: obj, index, val => obj, (index + 1)
+     */ \
     macro(JSOP_INITELEM_INC,95, "initelem_inc", NULL,     1,  3,  2, JOF_BYTE|JOF_ELEM|JOF_SET) \
     \
-    /* Initialize an array element. */ \
+    /*
+     * Initialize an array element.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', sets 'index'
+     * property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands: uint24_t index
+     *   Stack: obj, val => obj
+     */ \
     macro(JSOP_INITELEM_ARRAY,96, "initelem_array", NULL, 4,  2,  1,  JOF_UINT24|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     \
     /*
-     * Initialize a getter/setter in an object literal. The INITELEM* ops are used
-     * for numeric properties like {get 2() {}}.
+     * Initialize a getter in an object literal.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines getter
+     * of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
      */ \
     macro(JSOP_INITPROP_GETTER,  97, "initprop_getter",   NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a setter in an object literal.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines setter
+     * of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
     macro(JSOP_INITPROP_SETTER,  98, "initprop_setter",   NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a numeric getter in an object literal like
+     * '{get 2() {}}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' getter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
     macro(JSOP_INITELEM_GETTER,  99, "initelem_getter",   NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a numeric setter in an object literal like
+     * '{set 2(v) {}}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' setter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
     macro(JSOP_INITELEM_SETTER, 100, "initelem_setter",   NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     \
     macro(JSOP_UNUSED101,  101, "unused101",   NULL,         1,  0,  0,  JOF_BYTE) \
@@ -958,7 +1137,14 @@
     macro(JSOP_UNUSED158,  158, "unused158",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED159,  159, "unused159",   NULL,         1,  0,  0,  JOF_BYTE) \
     \
-    /* Regular expression literal requiring special "fork on exec" handling. */ \
+    /*
+     * Pushes a regular expression literal onto the stack.
+     * It requires special "clone on exec" handling.
+     *   Category: Literals
+     *   Type: RegExp
+     *   Operands: uint32_t regexpIndex
+     *   Stack: => regexp
+     */ \
     macro(JSOP_REGEXP,        160,"regexp",   NULL,       5,  0,  1, JOF_REGEXP) \
     \
     macro(JSOP_UNUSED161,     161,"unused161",  NULL,     1,  0,  0,  JOF_BYTE) \
@@ -985,6 +1171,15 @@
     macro(JSOP_UNUSED182,     182,"unused182",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED183,     183,"unused183",  NULL,     1,  0,  0,  JOF_BYTE) \
     \
+    /*
+     * Pops the top of stack value, pushes property of it onto the stack.
+     *
+     * Like JSOP_GETPROP but for call context.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj[name]
+     */ \
     macro(JSOP_CALLPROP,      184,"callprop",   NULL,     5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3) \
     \
     macro(JSOP_UNUSED185,     185,"unused185",  NULL,     1,  0,  0,  JOF_BYTE) \
@@ -1005,14 +1200,38 @@
     macro(JSOP_UNUSED191,     191,"unused191",   NULL,    1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED192,     192,"unused192",   NULL,    1,  0,  0,  JOF_BYTE) \
     \
+    /*
+     * Pops the top two values on the stack as 'propval' and 'obj', pushes
+     * 'propval' property of 'obj' onto the stack.
+     *
+     * Like JSOP_GETELEM but for call context.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, propval => obj[propval]
+     */ \
     macro(JSOP_CALLELEM,      193, "callelem",   NULL,    1,  2,  1, JOF_BYTE |JOF_ELEM|JOF_TYPESET|JOF_LEFTASSOC) \
     \
-    /* __proto__: v inside an object initializer. */ \
+    /*
+     * '__proto__: v' inside an object initializer.
+     *
+     * Pops the top two values on the stack as 'newProto' and 'obj', sets
+     * prototype of 'obj' as 'newProto', pushes 'true' onto the stack if
+     * succeeded, 'false' if not.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, newProto => succeeded
+     */ \
     macro(JSOP_MUTATEPROTO,   194, "mutateproto",NULL,    1,  2,  1, JOF_BYTE) \
     \
     /*
-     * Get an extant property value, throwing ReferenceError if the identified
-     * property does not exist.
+     * Pops the top of stack value, gets an extant property value of it,
+     * throwing ReferenceError if the identified property does not exist.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj[name]
      */ \
     macro(JSOP_GETXPROP,      195,"getxprop",    NULL,    5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET) \
     \
@@ -1077,6 +1296,16 @@
      *   Stack: rval1 => rval2
      */ \
     macro(JSOP_YIELD,         203,"yield",       NULL,    1,  1,  1,  JOF_BYTE) \
+    /*
+     * Pops the top two values on the stack as 'obj' and 'v', pushes 'v' to
+     * 'obj'.
+     *
+     * This opcode is used for Array Comprehension.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: v, obj =>
+     */ \
     macro(JSOP_ARRAYPUSH,     204,"arraypush",   NULL,    1,  2,  0,  JOF_BYTE) \
     \
     macro(JSOP_UNUSED205,     205, "unused205",    NULL,  1,  0,  0,  JOF_BYTE) \
@@ -1117,13 +1346,25 @@
      */ \
     macro(JSOP_INT32,         216, "int32",        NULL,  5,  0,  1, JOF_INT32) \
     \
-    /* Get the value of the 'length' property from a stacked value. */ \
+    /*
+     * Pops the top of stack value, pushes the 'length' property of it onto the
+     * stack.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj => obj['length']
+     */ \
     macro(JSOP_LENGTH,        217, "length",       NULL,  5,  1,  1, JOF_ATOM|JOF_PROP|JOF_TYPESET|JOF_TMPSLOT3) \
     \
     /*
-     * Push a JSVAL_HOLE value onto the stack, representing an omitted property in
-     * an array literal (e.g. property 0 in the array [, 1]).  This opcode is used
-     * with the JSOP_NEWARRAY opcode.
+     * Pushes a JS_ELEMENTS_HOLE value onto the stack, representing an omitted
+     * property in an array literal (e.g. property 0 in the array '[, 1]').
+     *
+     * This opcode is used with the JSOP_NEWARRAY opcode.
+     *   Category: Literals
+     *   Type: Array
+     *   Operands:
+     *   Stack: => hole
      */ \
     macro(JSOP_HOLE,          218, "hole",         NULL,  1,  0,  1,  JOF_BYTE) \
     \
@@ -1143,7 +1384,14 @@
      */ \
     macro(JSOP_REST,          224, "rest",         NULL,  1,  0,  1,  JOF_BYTE|JOF_TYPESET) \
     \
-    /* Pop the stack, convert to a jsid (int or string), and push back. */ \
+    /*
+     * Pops the top of stack value, converts it into a jsid (int or string), and
+     * pushes it onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id => obj, (jsid of id)
+     */ \
     macro(JSOP_TOID,          225, "toid",         NULL,  1,  1,  1,  JOF_BYTE) \
     \
     /*
