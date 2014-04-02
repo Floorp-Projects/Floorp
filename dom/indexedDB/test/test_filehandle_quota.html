@@ -41,7 +41,8 @@
     let blob = getNullBlob(DEFAULT_QUOTA);
 
     request = lockedFile.write(blob);
-    request.addEventListener("error", new ExpectError("UnknownError", true));
+    request.addEventListener("error",
+                             new ExpectError("QuotaExceededError", true));
     request.onsuccess = unexpectedSuccessHandler;
     event = yield undefined;
 
