@@ -644,15 +644,6 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     bool asmJS(Node list);
 
-  public:
-    // This function may only be called from within Parser::asmJS before
-    // parsing any tokens. It returns the canonical offset to be used as the
-    // start of the asm.js module. We use the offset in the char buffer
-    // immediately after the "use asm" processing directive statement (which
-    // includes any semicolons or newlines that end the statement).
-    uint32_t offsetOfCurrentAsmJSModule() const { return tokenStream.currentToken().pos.end; }
-  private:
-
     friend class LegacyCompExprTransplanter;
     friend struct BindData<ParseHandler>;
 };

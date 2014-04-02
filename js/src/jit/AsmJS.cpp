@@ -1141,7 +1141,9 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         }
 
-        module_ = cx_->new_<AsmJSModule>(parser_.ss, parser_.offsetOfCurrentAsmJSModule());
+        uint32_t funcStart = parser_.pc->maybeFunction->pn_body->pn_pos.begin;
+        uint32_t offsetToEndOfUseAsm = parser_.tokenStream.currentToken().pos.end;
+        module_ = cx_->new_<AsmJSModule>(parser_.ss, funcStart, offsetToEndOfUseAsm);
         if (!module_)
             return false;
 
@@ -1508,7 +1510,8 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     bool finish(ScopedJSDeletePtr<AsmJSModule> *module)
     {
-        module_->initCharsEnd(parser_.tokenStream.currentToken().pos.end);
+        module_->initFuncEnd(parser_.tokenStream.currentToken().pos.end,
+                             parser_.tokenStream.peekTokenPos().end);
 
         masm_.finish();
         if (masm_.oom())

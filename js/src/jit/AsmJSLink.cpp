@@ -22,6 +22,7 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
+#include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
 
@@ -435,8 +436,8 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (cx->isExceptionPending())
         return false;
 
-    uint32_t begin = module.charsBegin();
-    uint32_t end = module.charsEnd();
+    uint32_t begin = module.offsetToEndOfUseAsm();
+    uint32_t end = module.funcEndBeforeCurly();
     Rooted<JSFlatString*> src(cx, module.scriptSource()->substring(cx, begin, end));
     if (!src)
         return false;
@@ -623,6 +624,12 @@ CreateExportObject(JSContext *cx, Handle<AsmJSModuleObject*> moduleObj)
 
 static const unsigned MODULE_FUN_SLOT = 0;
 
+static AsmJSModuleObject &
+ModuleFunctionToModuleObject(JSFunction *fun)
+{
+    return fun->getExtendedSlot(MODULE_FUN_SLOT).toObject().as<AsmJSModuleObject>();
+}
+
 // Implements the semantics of an asm.js module function that has been successfully validated.
 static bool
 LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
@@ -632,8 +639,7 @@ LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
     // The LinkAsmJS builtin (created by NewAsmJSModuleFunction) is an extended
     // function and stores its module in an extended slot.
     RootedFunction fun(cx, &args.callee().as<JSFunction>());
-    Rooted<AsmJSModuleObject*> moduleObj(cx,
-        &fun->getExtendedSlot(MODULE_FUN_SLOT).toObject().as<AsmJSModuleObject>());
+    Rooted<AsmJSModuleObject*> moduleObj(cx, &ModuleFunctionToModuleObject(fun));
 
     // When a module is linked, it is dynamically specialized to the given
     // arguments (buffer, ffis). Thus, if the module is linked again (it is just
@@ -713,9 +719,75 @@ bool
 js::IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args[0], LinkAsmJS);
+    bool rval = args.hasDefined(0) && IsMaybeWrappedNativeFunction(args.get(0), LinkAsmJS);
     args.rval().set(BooleanValue(rval));
     return true;
+}
+
+bool
+js::IsAsmJSModule(HandleFunction fun)
+{
+    return fun->isNative() && fun->maybeNative() == LinkAsmJS;
+}
+
+JSString *
+js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda)
+{
+    AsmJSModule &module = ModuleFunctionToModuleObject(fun).module();
+
+    uint32_t begin = module.funcStart();
+    uint32_t end = module.funcEndAfterCurly();
+    ScriptSource *source = module.scriptSource();
+    StringBuffer out(cx);
+
+    // Whether the function has been created with a Function ctor
+    bool funCtor = begin == 0 && end == source->length() && source->argumentsNotIncluded();
+
+    if (funCtor && addParenToLambda && !out.append("("))
+        return nullptr;
+
+    if (!out.append("function "))
+        return nullptr;
+
+    if (fun->atom() && !out.append(fun->atom()))
+        return nullptr;
+
+    if (funCtor) {
+        // Functions created with the function constructor don't have arguments in their source.
+        if (!out.append("("))
+            return nullptr;
+
+        if (PropertyName *argName = module.globalArgumentName()) {
+            if (!out.append(argName->chars(), argName->length()))
+                return nullptr;
+        }
+        if (PropertyName *argName = module.importArgumentName()) {
+            if (!out.append(", ") || !out.append(argName->chars(), argName->length()))
+                return nullptr;
+        }
+        if (PropertyName *argName = module.bufferArgumentName()) {
+            if (!out.append(", ") || !out.append(argName->chars(), argName->length()))
+                return nullptr;
+        }
+
+        if (!out.append(") {\n"))
+            return nullptr;
+    }
+
+    Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
+    if (!src)
+        return nullptr;
+
+    if (!out.append(src->chars(), src->length()))
+        return nullptr;
+
+    if (funCtor && !out.append("\n}"))
+        return nullptr;
+
+    if (funCtor && addParenToLambda && !out.append(")"))
+        return nullptr;
+
+    return out.finishString();
 }
 
 bool
@@ -731,8 +803,7 @@ js::IsAsmJSModuleLoadedFromCache(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    JSObject &moduleObj = fun->getExtendedSlot(MODULE_FUN_SLOT).toObject();
-    bool loadedFromCache = moduleObj.as<AsmJSModuleObject>().module().loadedFromCache();
+    bool loadedFromCache = ModuleFunctionToModuleObject(fun).module().loadedFromCache();
 
     args.rval().set(BooleanValue(loadedFromCache));
     return true;
