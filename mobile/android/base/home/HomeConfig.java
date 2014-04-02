@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -23,6 +25,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 public final class HomeConfig {
@@ -752,6 +755,7 @@ public final class HomeConfig {
     public static class Editor implements Iterable<PanelConfig> {
         private final HomeConfig mHomeConfig;
         private final HashMap<String, PanelConfig> mConfigMap;
+        private final List<GeckoEvent> mEventQueue;
         private final Thread mOriginalThread;
 
         private PanelConfig mDefaultPanel;
@@ -761,6 +765,7 @@ public final class HomeConfig {
             mHomeConfig = homeConfig;
             mOriginalThread = Thread.currentThread();
             mConfigMap = new LinkedHashMap<String, PanelConfig>();
+            mEventQueue = new LinkedList<GeckoEvent>();
             mEnabledCount = 0;
 
             initFromState(configState);
@@ -946,6 +951,9 @@ public final class HomeConfig {
                 }
 
                 installed = true;
+
+                // Add an event to the queue if a new panel is sucessfully installed.
+                mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Installed", panelConfig.getId()));
             }
 
             return installed;
@@ -977,6 +985,9 @@ public final class HomeConfig {
             if (isCurrentDefaultPanel(panelConfig)) {
                 findNewDefault();
             }
+
+            // Add an event to the queue if a panel is succesfully uninstalled.
+            mEventQueue.add(GeckoEvent.createBroadcastEvent("HomePanels:Uninstalled", panelId));
 
             return true;
         }
@@ -1024,10 +1035,18 @@ public final class HomeConfig {
             // avoid saving corrupted state.
             final State newConfigState = new State(mHomeConfig, makeDeepCopy());
 
+            // Copy the event queue to a new list, so that we only modify mEventQueue on
+            // the original thread where it was created.
+            final LinkedList<GeckoEvent> eventQueueCopy = new LinkedList<GeckoEvent>(mEventQueue);
+            mEventQueue.clear();
+
             ThreadUtils.getBackgroundHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     mHomeConfig.save(newConfigState);
+
+                    // Send pending events after the new config is saved.
+                    sendEventsToGecko(eventQueueCopy);
                 }
             });
 
@@ -1050,11 +1069,21 @@ public final class HomeConfig {
             // need to deep copy the current PanelConfig instances.
             mHomeConfig.save(newConfigState);
 
+            // Send pending events after the new config is saved.
+            sendEventsToGecko(mEventQueue);
+            mEventQueue.clear();
+
             return newConfigState;
         }
 
         public boolean isEmpty() {
             return mConfigMap.isEmpty();
+        }
+
+        private void sendEventsToGecko(List<GeckoEvent> events) {
+            for (GeckoEvent e : events) {
+                GeckoAppShell.sendEventToGecko(e);
+            }
         }
 
         @Override
