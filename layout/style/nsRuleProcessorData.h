@@ -491,11 +491,6 @@ struct MOZ_STACK_CLASS PseudoElementRuleProcessorData :
                     "invalid aPseudoType value");
     NS_PRECONDITION(aTreeMatchContext.mForStyling, "Styling here!");
     NS_PRECONDITION(aRuleWalker, "Must have rule walker");
-    NS_PRECONDITION(!(!aPseudoElement &&
-                      nsCSSPseudoElements::PseudoElementSupportsUserActionState
-                                                                 (aPseudoType)),
-                    "aPseudoElement must be specified if the pseudo supports "
-                    ":hover and :active");
   }
 
   nsCSSPseudoElements::Type mPseudoType;
