@@ -1,8 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
-import android.app.Activity;
 import android.hardware.Camera;
 import android.os.Build;
 

@@ -1,14 +1,15 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.view.View;
-import android.widget.ListAdapter;
-import android.widget.ListView;
-import android.widget.ImageView;
 import java.util.ArrayList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
+
+import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 
 /**
  * Test adding a search engine from an input field context menu.

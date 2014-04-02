@@ -1,7 +1,8 @@
 package org.mozilla.gecko.tests;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.R;
+
 import android.view.View;
-import org.mozilla.gecko.*;
-import java.util.ArrayList;
 
 /**
  * This patch tests the clear private data options:

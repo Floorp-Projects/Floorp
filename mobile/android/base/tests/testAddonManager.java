@@ -1,10 +1,9 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.util.DisplayMetrics;
-
-import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
+
+import android.util.DisplayMetrics;
 
 public class testAddonManager extends PixelTest  {
     /* This test will check the behavior of the Addons Manager:

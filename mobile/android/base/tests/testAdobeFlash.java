@@ -1,11 +1,9 @@
 package org.mozilla.gecko.tests;
 
-import android.os.Build;
-
-import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mozilla.gecko.PaintedSurface;
 
-import org.mozilla.gecko.*;
+import android.os.Build;
 
 /**
  * Tests that Flash is working

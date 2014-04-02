@@ -1,12 +1,13 @@
 package org.mozilla.gecko.tests;
 
+import java.io.File;
+
 import org.mozilla.gecko.db.BrowserContract.FormHistory;
 
-import android.content.ContentValues;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
-import java.io.File;
 
 /**
  * A basic form history contentprovider test.

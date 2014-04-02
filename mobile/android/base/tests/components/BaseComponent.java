@@ -7,9 +7,9 @@ package org.mozilla.gecko.tests.components;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.tests.UITestContext;
 
-import com.jayway.android.robotium.solo.Solo;
-
 import android.app.Activity;
+
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * A base class for constructing components - an abstraction over small bits of Firefox

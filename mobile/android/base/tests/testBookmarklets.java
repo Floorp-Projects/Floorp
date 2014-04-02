@@ -1,8 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.database.Cursor;
+import org.mozilla.gecko.Actions;
 
+import android.database.Cursor;
 import android.widget.ListView;
 
 

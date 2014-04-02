@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko;
 
-import java.util.List;
 import android.app.Activity;
 
 public interface Driver {

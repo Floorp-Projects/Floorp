@@ -1,22 +1,16 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
 import org.mozilla.gecko.sync.Utils;
-
-import com.jayway.android.robotium.solo.Condition;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.ContentUris;
-import android.database.Cursor;
 import android.net.Uri;
 import android.view.View;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.jayway.android.robotium.solo.Condition;
 
 public class testBookmarkFolders extends AboutHomeTest {
     private static String DESKTOP_BOOKMARK_URL;

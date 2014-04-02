@@ -1,8 +1,7 @@
 package org.mozilla.gecko.tests;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
-
-import org.mozilla.gecko.tests.helpers.*;
+import org.mozilla.gecko.tests.helpers.GeckoHelper;
+import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
 /**
  * Tests that navigating through session history (ex: forward, back) sets the correct UI state.
