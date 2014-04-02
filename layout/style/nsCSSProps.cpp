@@ -93,6 +93,28 @@ static nsCSSProperty gAliases[eCSSAliasCount != 0 ? eCSSAliasCount : 1] = {
 #undef CSS_PROP_ALIAS
 };
 
+nsStaticCaseInsensitiveNameTable*
+CreateStaticTable(const char* const aRawTable[], int32_t aSize)
+{
+  auto table = new nsStaticCaseInsensitiveNameTable();
+  if (table) {
+#ifdef DEBUG
+    // let's verify the table...
+    for (int32_t index = 0; index < aSize; ++index) {
+      nsAutoCString temp1(aRawTable[index]);
+      nsAutoCString temp2(aRawTable[index]);
+      ToLowerCase(temp1);
+      NS_ABORT_IF_FALSE(temp1.Equals(temp2),
+                        "upper case char in case insensitive name table");
+      NS_ABORT_IF_FALSE(-1 == temp1.FindChar('_'),
+                        "underscore char in case insensitive name table");
+    }
+#endif
+    table->Init(aRawTable, aSize);
+  }
+  return table;
+}
+
 void
 nsCSSProps::AddRefTable(void)
 {
@@ -100,41 +122,9 @@ nsCSSProps::AddRefTable(void)
     NS_ABORT_IF_FALSE(!gPropertyTable, "pre existing array!");
     NS_ABORT_IF_FALSE(!gFontDescTable, "pre existing array!");
 
-    gPropertyTable = new nsStaticCaseInsensitiveNameTable();
-    if (gPropertyTable) {
-#ifdef DEBUG
-    {
-      // let's verify the table...
-      for (int32_t index = 0; index < eCSSProperty_COUNT_with_aliases; ++index) {
-        nsAutoCString temp1(kCSSRawProperties[index]);
-        nsAutoCString temp2(kCSSRawProperties[index]);
-        ToLowerCase(temp1);
-        NS_ABORT_IF_FALSE(temp1.Equals(temp2), "upper case char in prop table");
-        NS_ABORT_IF_FALSE(-1 == temp1.FindChar('_'),
-                          "underscore char in prop table");
-      }
-    }
-#endif
-      gPropertyTable->Init(kCSSRawProperties, eCSSProperty_COUNT_with_aliases);
-    }
-
-    gFontDescTable = new nsStaticCaseInsensitiveNameTable();
-    if (gFontDescTable) {
-#ifdef DEBUG
-    {
-      // let's verify the table...
-      for (int32_t index = 0; index < eCSSFontDesc_COUNT; ++index) {
-        nsAutoCString temp1(kCSSRawFontDescs[index]);
-        nsAutoCString temp2(kCSSRawFontDescs[index]);
-        ToLowerCase(temp1);
-        NS_ABORT_IF_FALSE(temp1.Equals(temp2), "upper case char in desc table");
-        NS_ABORT_IF_FALSE(-1 == temp1.FindChar('_'),
-                          "underscore char in desc table");
-      }
-    }
-#endif
-      gFontDescTable->Init(kCSSRawFontDescs, eCSSFontDesc_COUNT);
-    }
+    gPropertyTable = CreateStaticTable(
+        kCSSRawProperties, eCSSProperty_COUNT_with_aliases);
+    gFontDescTable = CreateStaticTable(kCSSRawFontDescs, eCSSFontDesc_COUNT);
 
     BuildShorthandsContainingTable();
 

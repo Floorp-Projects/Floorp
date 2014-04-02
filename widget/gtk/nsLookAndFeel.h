@@ -64,6 +64,7 @@ protected:
     nscolor sMenuHoverText;
     nscolor sButtonBackground;
     nscolor sButtonText;
+    nscolor sButtonHoverText;
     nscolor sButtonOuterLightBorder;
     nscolor sButtonInnerDarkBorder;
     nscolor sOddCellBackground;

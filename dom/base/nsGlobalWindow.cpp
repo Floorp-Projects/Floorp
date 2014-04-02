@@ -2487,18 +2487,18 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       {
         JSAutoCompartment ac(cx, mJSObject);
 
-        JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
-
         JS::Rooted<JSObject*> obj(cx, mJSObject);
+        JS::Rooted<JSObject*> newParent(cx, newInnerWindow->mJSObject);
+        JS_SetParent(cx, obj, newParent);
 
         // Inform the nsJSContext, which is the canonical holder of the outer.
         mContext->SetWindowProxy(obj);
 
         NS_ASSERTION(!JS_IsExceptionPending(cx),
                      "We might overwrite a pending exception!");
-        XPCWrappedNativeScope* scope = xpc::GetObjectScope(mJSObject);
+        XPCWrappedNativeScope* scope = xpc::GetObjectScope(obj);
         if (scope->mWaiverWrapperMap) {
-          scope->mWaiverWrapperMap->Reparent(cx, newInnerWindow->mJSObject);
+          scope->mWaiverWrapperMap->Reparent(cx, newParent);
         }
       }
     }

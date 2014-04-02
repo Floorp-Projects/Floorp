@@ -700,12 +700,13 @@ class ParseNode
 
     bool functionIsHoisted() const {
         JS_ASSERT(pn_arity == PN_CODE && getKind() == PNK_FUNCTION);
-        JS_ASSERT(isOp(JSOP_LAMBDA) ||    // lambda, genexpr
-                  isOp(JSOP_DEFFUN) ||    // non-body-level function statement
-                  isOp(JSOP_NOP) ||       // body-level function stmt in global code
-                  isOp(JSOP_GETLOCAL) ||  // body-level function stmt in function code
-                  isOp(JSOP_GETARG));     // body-level function redeclaring formal
-        return !(isOp(JSOP_LAMBDA) || isOp(JSOP_DEFFUN));
+        JS_ASSERT(isOp(JSOP_LAMBDA) ||        // lambda, genexpr
+                  isOp(JSOP_LAMBDA_ARROW) ||  // arrow function
+                  isOp(JSOP_DEFFUN) ||        // non-body-level function statement
+                  isOp(JSOP_NOP) ||           // body-level function stmt in global code
+                  isOp(JSOP_GETLOCAL) ||      // body-level function stmt in function code
+                  isOp(JSOP_GETARG));         // body-level function redeclaring formal
+        return !isOp(JSOP_LAMBDA) && !isOp(JSOP_LAMBDA_ARROW) && !isOp(JSOP_DEFFUN);
     }
 
     /*

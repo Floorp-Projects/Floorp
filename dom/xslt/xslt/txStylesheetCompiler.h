@@ -181,8 +181,8 @@ struct txStylesheetAttr
     nsString mValue;
 };
 
-class txStylesheetCompiler : private txStylesheetCompilerState,
-                             public txACompileObserver
+class txStylesheetCompiler MOZ_FINAL : private txStylesheetCompilerState,
+                                       public txACompileObserver
 {
 public:
     friend class txStylesheetCompilerState;
@@ -216,6 +216,11 @@ public:
     NS_INLINE_DECL_REFCOUNTING(txStylesheetCompiler)
 
 private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~txStylesheetCompiler()
+    {
+    }
+
     nsresult startElementInternal(int32_t aNamespaceID, nsIAtom* aLocalName,
                                   nsIAtom* aPrefix,
                                   txStylesheetAttr* aAttributes,
