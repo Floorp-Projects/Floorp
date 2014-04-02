@@ -109,19 +109,6 @@ partial interface HTMLMediaElement {
   MediaStream mozCaptureStreamUntilEnded();
   readonly attribute boolean mozAudioCaptured;
 
-  // Mozilla extension: extra stream metadata information, used as part
-  // of MozAudioAvailable events and the mozWriteAudio() method.  The
-  // mozFrameBufferLength method allows for the size of the framebuffer
-  // used within MozAudioAvailable events to be changed.  The new size must
-  // be between 512 and 16384.  The default size, for a  media element with
-  // audio is (mozChannels * 1024).
-  [Pref="media.audio_data.enabled", GetterThrows]
-  readonly attribute unsigned long mozChannels;
-  [Pref="media.audio_data.enabled", GetterThrows]
-  readonly attribute unsigned long mozSampleRate;
-  [Pref="media.audio_data.enabled", Throws]
-           attribute unsigned long mozFrameBufferLength;
-
   // Mozilla extension: return embedded metadata from the stream as a
   // JSObject with key:value pairs for each tag. This can be used by
   // player interfaces to display the song title, artist, etc.

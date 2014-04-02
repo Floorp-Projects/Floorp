@@ -13441,16 +13441,6 @@ nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
   return NS_OK;
 }
 
-void
-nsGlobalWindow::SetHasAudioAvailableEventListeners()
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  if (mDoc) {
-    mDoc->NotifyAudioAvailableListener();
-  }
-}
-
 NS_IMETHODIMP
 nsGlobalWindow::GetConsole(JSContext* aCx,
                            JS::MutableHandle<JS::Value> aConsole)

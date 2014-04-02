@@ -210,16 +210,6 @@ class VideoFrameContainer;
 class MediaDecoderStateMachine;
 class MediaDecoderOwner;
 
-// The size to use for audio data frames in MozAudioAvailable events.
-// This value is per channel, and is chosen to give ~43 fps of events,
-// for example, 44100 with 2 channels, 2*1024 = 2048.
-static const uint32_t FRAMEBUFFER_LENGTH_PER_CHANNEL = 1024;
-
-// The total size of the framebuffer used for MozAudioAvailable events
-// has to be within the following range.
-static const uint32_t FRAMEBUFFER_LENGTH_MIN = 512;
-static const uint32_t FRAMEBUFFER_LENGTH_MAX = 16384;
-
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount() and conflicts with MediaDecoder::GetCurrentTime implementation.
 #ifdef GetCurrentTime
@@ -659,12 +649,6 @@ public:
   // Returns a weak reference to the media decoder owner.
   MediaDecoderOwner* GetMediaOwner() const;
 
-  // Returns the current size of the framebuffer used in
-  // MozAudioAvailable events.
-  uint32_t GetFrameBufferLength() { return mFrameBufferLength; }
-
-  void AudioAvailable(float* aFrameBuffer, uint32_t aFrameBufferLength, float aTime);
-
   // Called by the state machine to notify the decoder that the duration
   // has changed.
   void DurationChanged();
@@ -694,10 +678,6 @@ public:
     return mVideoFrameContainer;
   }
   layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
-
-  // Sets the length of the framebuffer used in MozAudioAvailable events.
-  // The new size must be between 512 and 16384.
-  virtual nsresult RequestFrameBufferLength(uint32_t aLength);
 
   // Return the current state. Can be called on any thread. If called from
   // a non-main thread, the decoder monitor must be held.
@@ -840,11 +820,6 @@ public:
 
   // Drop reference to state machine.  Only called during shutdown dance.
   virtual void ReleaseStateMachine();
-
-  // Called when a "MozAudioAvailable" event listener is added. This enables
-  // the decoder to only dispatch "MozAudioAvailable" events when a
-  // handler exists, reducing overhead. Called on the main thread.
-  virtual void NotifyAudioAvailableListener();
 
   // Notifies the element that decoding has failed.
   virtual void DecodeError();
@@ -1210,9 +1185,6 @@ protected:
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
   MediaChannelStatistics mPlaybackStatistics;
-
-  // The framebuffer size to use for audioavailable events.
-  uint32_t mFrameBufferLength;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.

@@ -495,9 +495,6 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, bool aClone, bool aDeep,
           if (elm->MayHavePaintEventListener()) {
             window->SetHasPaintEventListeners();
           }
-          if (elm->MayHaveAudioAvailableEventListener()) {
-            window->SetHasAudioAvailableEventListeners();
-          }
           if (elm->MayHaveTouchEventListener()) {
             window->SetHasTouchEventListeners();
           }
