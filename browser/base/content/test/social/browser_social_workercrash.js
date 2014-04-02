@@ -9,12 +9,16 @@
 const TEST_CONTENT_HELPER = "chrome://mochitests/content/browser/browser/base/content/test/social/social_crash_content_helper.js";
 
 let {getFrameWorkerHandle} = Cu.import("resource://gre/modules/FrameWorker.jsm", {});
+let {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
 function test() {
   waitForExplicitFinish();
 
   // We need to ensure all our workers are in the same content process.
   Services.prefs.setIntPref("dom.ipc.processCount", 1);
+
+  // This test generates many uncaught promises that should not cause failures.
+  Promise.Debugging.clearUncaughtErrorObservers();
 
   runSocialTestWithProvider(gProviders, function (finishcb) {
     runSocialTests(tests, undefined, undefined, function() {
