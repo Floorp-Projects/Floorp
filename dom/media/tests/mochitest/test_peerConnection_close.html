@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "834153",
+    title: "Basic RTCPeerConnection.close() tests"
+  });
+
+
+  runTest(function () {
+    var pc = new mozRTCPeerConnection();
+
+    // everything should be in initial state
+    is(pc.signalingState, "stable", "Initial signalingState is 'stable'");
+    is(pc.iceConnectionState, "new", "Initial iceConnectionState is 'new'");
+    is(pc.iceGatheringState, "new", "Initial iceGatheringState is 'new'");
+
+
+    setTimeout(function() {
+      var exception = null;
+      var signalstatechanged = false;
+
+      // we did not send or receive and offer or answer
+      is(pc.signalingState, "stable", "Middle signalingState is 'stable'");
+      // we have not established a connection
+      is(pc.iceConnectionState, "new", "Middle iceConnectionState is 'new'");
+      // apparently there is no callback for iceGatheringState
+      // we could only run a poll loop, so for now we just hope... it is complete
+      is(pc.iceGatheringState, "complete", "Final iceGatheringState is 'complete'");
+
+      pc.onsignalingstatechange = function() {
+        signalstatechanged = true;
+        info(self + ": onsignalingstatechange fired, new state is: " + pc.signalingState);
+      };
+
+      try {
+        pc.close();
+      } catch (e) {
+        exception = e;
+      }
+      is(pc.signalingState, "closed", "Final signalingState is 'closed'");
+      is(pc.iceConnectionState, "closed", "Final iceConnectionState is 'closed'");
+      is(pc.iceGatheringState, "complete", "Final iceGatheringState is 'complete'");
+      is(exception, null, "closing the connection raises no exception");
+      exception = null;
+
+      // wait some time if we receive the signalstate callback
+      setTimeout(function() {
+        todo(signalstatechanged, "Closing the connection should create a callback");
+        pc.onsignalingstatechange = null;
+
+        try {
+          pc.close();
+        } catch (e) {
+          exception = e;
+        }
+        todo(!exception, "A second close() should not raise an exception");
+        is(pc.signalingState, "closed", "Final signalingState stays at 'closed'");
+        is(pc.iceConnectionState, "closed", "Final iceConnectionState stays at 'closed'");
+        is(pc.iceGatheringState, "complete", "Final iceGatheringState stays at 'complete'");
+
+        // destroy the PC object to be safe
+        pc = null;
+
+        SimpleTest.finish();
+      }, 1000);
+    }, 1000);
+
+  });
+</script>
+</pre>
+</body>
+</html>
