@@ -51,6 +51,7 @@
 #include "ActiveLayerTracker.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
+#include "UnitTransforms.h"
 
 #include <stdint.h>
 #include <algorithm>
@@ -645,11 +646,11 @@ CalculateRootCompositionSize(FrameMetrics& aMetrics,
 {
 
   if (aIsRootContentDocRootScrollFrame) {
-    // convert from parent layer pixels to layer pixels to css pixels
-    return ParentLayerSize(aMetrics.mCompositionBounds.Size())
-                           * aMetrics.mResolution / aMetrics.LayersPixelsPerCSSPixel();
+    return ViewAs<LayerPixel>(ParentLayerSize(aMetrics.mCompositionBounds.Size()),
+                              PixelCastJustification::ParentLayerToLayerForRootComposition)
+           / aMetrics.LayersPixelsPerCSSPixel();
   }
-  ParentLayerIntSize rootCompositionSize;
+  LayerSize rootCompositionSize;
   nsPresContext* rootPresContext =
     aPresContext->GetToplevelContentDocumentPresContext();
   if (!rootPresContext) {
@@ -671,16 +672,16 @@ CalculateRootCompositionSize(FrameMetrics& aMetrics,
         if (widget) {
           nsIntRect bounds;
           widget->GetBounds(bounds);
-          rootCompositionSize = ParentLayerIntSize::FromUnknownSize(mozilla::gfx::IntSize(
-            bounds.width, bounds.height));
+          rootCompositionSize = LayerSize(ViewAs<LayerPixel>(bounds.Size()));
         } else {
-          gfxSize res = rootPresShell->GetCumulativeResolution();
-          LayoutDeviceToParentLayerScale parentResolution(res.width);
+          LayoutDeviceToParentLayerScale parentResolution(
+            rootPresShell->GetCumulativeResolution().width
+            / rootPresShell->GetResolution().width);
           int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
           nsRect viewBounds = view->GetBounds();
-          rootCompositionSize =
-            RoundedToInt(LayoutDeviceRect::FromAppUnits(viewBounds, rootAUPerDevPixel)
-            * parentResolution).Size();
+          rootCompositionSize = ViewAs<LayerPixel>(
+            (LayoutDeviceRect::FromAppUnits(viewBounds, rootAUPerDevPixel)
+             * parentResolution).Size(), PixelCastJustification::ParentLayerToLayerForRootComposition);
         }
       }
     }
@@ -688,18 +689,8 @@ CalculateRootCompositionSize(FrameMetrics& aMetrics,
     nsIWidget* widget = (aScrollFrame ? aScrollFrame : aForFrame)->GetNearestWidget();
     nsIntRect bounds;
     widget->GetBounds(bounds);
-    rootCompositionSize = ParentLayerIntSize::FromUnknownSize(mozilla::gfx::IntSize(
-      bounds.width, bounds.height));
+    rootCompositionSize = LayerSize(ViewAs<LayerPixel>(bounds.Size()));
   }
-
-  LayoutDeviceToParentLayerScale parentResolution(1.0f);
-  if (rootPresShell) {
-    parentResolution.scale =
-      rootPresShell->GetCumulativeResolution().width / rootPresShell->GetResolution().width;
-  }
-
-  CSSSize size =
-    ParentLayerSize(rootCompositionSize) / (parentResolution * aMetrics.mDevPixelsPerCSSPixel);
 
   // Adjust composition size for the size of scroll bars.
   nsIFrame* rootRootScrollFrame = rootPresShell ? rootPresShell->GetRootScrollFrame() : nullptr;
@@ -709,11 +700,12 @@ CalculateRootCompositionSize(FrameMetrics& aMetrics,
   }
   if (rootScrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
     CSSMargin margins = CSSMargin::FromAppUnits(rootScrollableFrame->GetActualScrollbarSizes());
-    size.width -= margins.LeftRight();
-    size.height -= margins.TopBottom();
+    // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+    rootCompositionSize.width -= margins.LeftRight();
+    rootCompositionSize.height -= margins.TopBottom();
   }
 
-  return size;
+  return rootCompositionSize / aMetrics.LayersPixelsPerCSSPixel();
 }
 
 static void RecordFrameMetrics(nsIFrame* aForFrame,
