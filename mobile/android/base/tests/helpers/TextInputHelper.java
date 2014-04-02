@@ -4,10 +4,7 @@
 
 package org.mozilla.gecko.tests.helpers;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
-
-import org.mozilla.gecko.tests.UITestContext;
-
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
 import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;

@@ -1,12 +1,13 @@
 package org.mozilla.gecko.tests;
 
+import java.io.File;
+
 import org.mozilla.gecko.db.BrowserContract.FormHistory;
 
-import android.content.ContentValues;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
-import java.io.File;
 
 /**
  * A basic form history contentprovider test.
@@ -17,11 +18,6 @@ import java.io.File;
  */
 public class testFormHistory extends BaseTest {
     private static final String DB_NAME = "formhistory.sqlite";
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testFormHistory() {
         Context context = (Context)getActivity();

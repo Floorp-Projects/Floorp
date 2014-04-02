@@ -833,7 +833,7 @@ public class GeckoAppShell
             shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
             shortcutIntent.setData(Uri.parse(aURI));
             shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                        AppConstants.BROWSER_INTENT_CLASS);
+                                        AppConstants.BROWSER_INTENT_CLASS_NAME);
         }
 
         Intent intent = new Intent();
@@ -871,7 +871,7 @@ public class GeckoAppShell
                     shortcutIntent = new Intent();
                     shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
                     shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                                AppConstants.BROWSER_INTENT_CLASS);
+                                                AppConstants.BROWSER_INTENT_CLASS_NAME);
                     shortcutIntent.setData(Uri.parse(aURI));
                 }
         
@@ -2287,13 +2287,8 @@ public class GeckoAppShell
     }
 
     @WrapElementForJNI(stubName = "HandleGeckoMessageWrapper")
-    public static void handleGeckoMessage(final String message) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                sEventDispatcher.dispatchEvent(message);
-            }
-        });
+    public static void handleGeckoMessage(String message) {
+        sEventDispatcher.dispatchEvent(message);
     }
 
     @WrapElementForJNI

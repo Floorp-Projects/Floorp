@@ -1,17 +1,9 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
-import android.app.Activity;
 import android.hardware.Camera;
 import android.os.Build;
 
 public class testGetUserMedia extends BaseTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testGetUserMedia() {
         String GUM_URL = getAbsoluteUrl("/robocop/robocop_getusermedia.html");
 

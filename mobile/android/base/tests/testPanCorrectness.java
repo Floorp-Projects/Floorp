@@ -1,6 +1,7 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.PaintedSurface;
 
 /**
  * A basic panning correctness test.
@@ -9,11 +10,6 @@ import org.mozilla.gecko.*;
  * - drags page leftwards by 100 pixels and verifies it draws
  */
 public class testPanCorrectness extends PixelTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testPanCorrectness() {
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 

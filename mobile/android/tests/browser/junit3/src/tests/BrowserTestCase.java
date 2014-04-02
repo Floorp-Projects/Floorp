@@ -13,22 +13,12 @@ import android.test.ActivityInstrumentationTestCase2;
  * BrowserTestCase provides helper methods for testing.
  */
 public class BrowserTestCase extends ActivityInstrumentationTestCase2<Activity> {
+    @SuppressWarnings("unused")
     private static String LOG_TAG = "BrowserTestCase";
 
-    private static final String LAUNCHER_ACTIVITY = AppConstants.ANDROID_PACKAGE_NAME + ".App";
-
-    private final static Class<Activity> sLauncherActivityClass;
-
-    static {
-        try {
-            sLauncherActivityClass = (Class<Activity>) Class.forName(LAUNCHER_ACTIVITY);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    @SuppressWarnings("unchecked")
     public BrowserTestCase() {
-        super(sLauncherActivityClass);
+        super((Class<Activity>) AppConstants.BROWSER_INTENT_CLASS);
     }
 
     public Context getApplicationContext() {

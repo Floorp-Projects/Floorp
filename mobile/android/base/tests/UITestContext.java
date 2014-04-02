@@ -9,10 +9,10 @@ import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.Driver;
 import org.mozilla.gecko.tests.components.BaseComponent;
 
-import com.jayway.android.robotium.solo.Solo;
-
 import android.app.Activity;
 import android.app.Instrumentation;
+
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * Interface to the global information about a UITest environment.

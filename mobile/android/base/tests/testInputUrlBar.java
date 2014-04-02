@@ -1,9 +1,9 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.Element;
+import org.mozilla.gecko.R;
 
-import android.app.Activity;
-import android.view.View;
 import android.widget.EditText;
 
 /**
@@ -103,11 +103,6 @@ public final class testInputUrlBar extends BaseTest {
 
         String yz = getUrlBarText();
         mAsserter.ok("yz".equals(yz), "Is the URL bar text \"yz\"?", yz);
-    }
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
     }
 
     private void startEditingMode() {

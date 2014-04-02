@@ -4,21 +4,24 @@
 
 package org.mozilla.gecko.tests.components;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertFalse;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
+import java.util.List;
+
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.menu.MenuItemActionBar;
 import org.mozilla.gecko.menu.MenuItemDefault;
-import org.mozilla.gecko.tests.helpers.*;
 import org.mozilla.gecko.tests.UITestContext;
+import org.mozilla.gecko.tests.helpers.WaitHelper;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.R;
+
+import android.view.View;
 
 import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.RobotiumUtils;
 import com.jayway.android.robotium.solo.Solo;
-
-import android.view.View;
-import java.util.List;
 
 /**
  * A class representing any interactions that take place on the app menu.

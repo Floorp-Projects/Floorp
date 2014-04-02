@@ -1,23 +1,19 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
-import java.io.IOException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.Assert;
+import org.mozilla.gecko.FennecMochitestAssert;
 
 public abstract class SessionTest extends BaseTest {
     protected Navigation mNavigation;
-
-    @Override
-    final protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     @Override
     public void setUp() throws Exception {

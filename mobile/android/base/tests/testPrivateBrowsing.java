@@ -1,11 +1,10 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
 import java.util.ArrayList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
 
 /**
  * The test loads a new private tab and loads a page with a big link on it
@@ -14,11 +13,6 @@ import org.json.JSONObject;
  * Checks that the bigLinkUrl loaded in the normal tab is present in the browsing history but the 2 urls opened in private tabs are not
  */
 public class testPrivateBrowsing extends ContentContextMenuTest {
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testPrivateBrowsing() {
         String bigLinkUrl = getAbsoluteUrl(StringHelper.ROBOCOP_BIG_LINK_URL);

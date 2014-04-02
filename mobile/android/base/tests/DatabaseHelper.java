@@ -1,14 +1,15 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import java.util.ArrayList;
+
+import org.mozilla.gecko.Assert;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
 
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
-import android.test.ActivityInstrumentationTestCase2;
-import java.util.ArrayList;
 
 class DatabaseHelper {
     protected enum BrowserDataType {BOOKMARKS, HISTORY};

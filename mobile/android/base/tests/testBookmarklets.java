@@ -1,17 +1,12 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.database.Cursor;
+import org.mozilla.gecko.Actions;
 
+import android.database.Cursor;
 import android.widget.ListView;
 
 
 public class testBookmarklets extends AboutHomeTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testBookmarklets() {
         final String url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         final String title = "alertBookmarklet";
