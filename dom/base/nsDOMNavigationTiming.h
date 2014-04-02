@@ -27,7 +27,7 @@ static const nsDOMPerformanceNavigationType TYPE_RESERVED = 255;
 }
 }
 
-class nsDOMNavigationTiming
+class nsDOMNavigationTiming MOZ_FINAL
 {
 public:
   nsDOMNavigationTiming();
