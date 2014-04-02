@@ -592,18 +592,6 @@ public:
     TracksAvailableCallback* tracksAvailableCallback =
       new TracksAvailableCallback(mManager, mSuccess, mWindowID, trackunion);
 
-    // Dispatch to the media thread to ask it to start the sources,
-    // because that can take a while.
-    // Pass ownership of trackunion to the MediaOperationRunnable
-    // to ensure it's kept alive until the MediaOperationRunnable runs (at least).
-    nsIThread *mediaThread = MediaManager::GetThread();
-    nsRefPtr<MediaOperationRunnable> runnable(
-      new MediaOperationRunnable(MEDIA_START, mListener, trackunion,
-                                 tracksAvailableCallback,
-                                 mAudioSource, mVideoSource, false, mWindowID,
-                                 mError.forget()));
-    mediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-
 #ifdef MOZ_WEBRTC
     // Right now these configs are only of use if webrtc is available
     nsresult rv;
@@ -633,6 +621,18 @@ public:
       }
     }
 #endif
+
+    // Dispatch to the media thread to ask it to start the sources,
+    // because that can take a while.
+    // Pass ownership of trackunion to the MediaOperationRunnable
+    // to ensure it's kept alive until the MediaOperationRunnable runs (at least).
+    nsIThread *mediaThread = MediaManager::GetThread();
+    nsRefPtr<MediaOperationRunnable> runnable(
+      new MediaOperationRunnable(MEDIA_START, mListener, trackunion,
+                                 tracksAvailableCallback,
+                                 mAudioSource, mVideoSource, false, mWindowID,
+                                 mError.forget()));
+    mediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
     // We won't need mError now.
     mError = nullptr;
