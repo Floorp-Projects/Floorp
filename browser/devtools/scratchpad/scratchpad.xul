@@ -47,6 +47,12 @@
   <command id="sp-cmd-saveas" oncommand=";"/>
   <command id="sp-cmd-revert" oncommand=";" disabled="true"/>
   <command id="sp-cmd-close" oncommand=";"/>
+  <command id="sp-cmd-line-numbers" oncommand=";"/>
+  <command id="sp-cmd-wrap-text" oncommand=";"/>
+  <command id="sp-cmd-highlight-trailing-space" oncommand=";"/>
+  <command id="sp-cmd-larger-font" oncommand=";"/>
+  <command id="sp-cmd-smaller-font" oncommand=";"/>
+  <command id="sp-cmd-normal-font" oncommand=";"/>
   <command id="sp-cmd-run" oncommand=";"/>
   <command id="sp-cmd-inspect" oncommand=";"/>
   <command id="sp-cmd-display" oncommand=";"/>
@@ -79,6 +85,18 @@
   <key id="sp-key-close"
        key="&closeCmd.key;"
        command="sp-cmd-close"
+       modifiers="accel"/>
+  <key id="sp-key-larger-font"
+       key="&largerFont.commandkey;"
+       command="sp-cmd-larger-font"
+       modifiers="accel"/>
+  <key id="sp-key-smaller-font"
+       key="&smallerFont.commandkey;"
+       command="sp-cmd-smaller-font"
+       modifiers="accel"/>
+  <key id="sp-key-normal-size-font"
+       key="&normalSize.commandkey;"
+       command="sp-cmd-normal-font"
        modifiers="accel"/>
   <key id="sp-key-run"
        key="&run.key;"
@@ -163,6 +181,43 @@
                 key="sp-key-close"
                 accesskey="&closeCmd.accesskey;"
                 command="sp-cmd-close"/>
+    </menupopup>
+  </menu>
+
+  <menu id="sp-view-menu" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
+    <menupopup id="sp-menu-viewpopup">
+      <menuitem id="sp-menu-line-numbers"
+                label="&lineNumbers.label;"
+                accesskey="&lineNumbers.accesskey;"
+                type="checkbox"
+                checked="true"
+                command="sp-cmd-line-numbers"/>
+      <menuitem id="sp-menu-word-wrap"
+                label="&wordWrap.label;"
+                accesskey="&wordWrap.accesskey;"
+                type="checkbox"
+                command="sp-cmd-wrap-text"/>
+      <menuitem id="sp-menu-highlight-trailing-space"
+                label="&highlightTrailingSpace.label;"
+                accesskey="&highlightTrailingSpace.accesskey;"
+                type="checkbox"
+                command="sp-cmd-highlight-trailing-space"/>
+      <menuseparator/>
+      <menuitem id="sp-menu-larger-font"
+                label="&largerFont.label;"
+                key="sp-key-larger-font"
+                accesskey="&largerFont.accesskey;"
+                command="sp-cmd-larger-font"/>
+      <menuitem id="sp-menu-smaller-font"
+                label="&smallerFont.label;"
+                key="sp-key-smaller-font"
+                accesskey="&smallerFont.accesskey;"
+                command="sp-cmd-smaller-font"/>
+      <menuitem id="sp-menu-normal-size-font"
+                label="&normalSize.label;"
+                key="sp-menu-normal-font"
+                accesskey="&normalSize.accesskey;"
+                command="sp-cmd-normal-font"/>
     </menupopup>
   </menu>
 
