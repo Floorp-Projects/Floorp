@@ -413,10 +413,26 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
 
     if (branch) {
+      int32_t aec = 0; // 0 == unchanged
+      bool aec_on = false;
+
+      branch->GetBoolPref("media.peerconnection.aec_enabled", &aec_on);
+      branch->GetIntPref("media.peerconnection.aec", &aec);
+
+      CSFLogDebug(logTag,"Audio config: aec: %d", aec_on ? aec : -1);
+      mEchoOn = aec_on;
+      if (static_cast<webrtc::EcModes>(aec) != webrtc::kEcUnchanged)
+        mEchoCancel = static_cast<webrtc::EcModes>(aec);
+
       branch->GetIntPref("media.peerconnection.capture_delay", &mCaptureDelay);
     }
   }
 #endif
+
+  if (0 != (error = mPtrVoEProcessing->SetEcStatus(mEchoOn, mEchoCancel))) {
+    CSFLogError(logTag,"%s Error setting EVStatus: %d ",__FUNCTION__, error);
+    return kMediaConduitUnknownError;
+  }
 
   //Let's Send Transport State-machine on the Engine
   if(mPtrVoEBase->StartSend(mChannel) == -1)
@@ -911,7 +927,7 @@ WebrtcAudioConduit::GetNum10msSamplesForFrequency(int samplingFreqHz) const
   {
     case 16000: return 160; //160 samples
     case 32000: return 320; //320 samples
-    case 44100: return 441; //441 samples
+    case 44000: return 440; //440 samples
     case 48000: return 480; //480 samples
     default:    return 0; // invalid or unsupported
   }

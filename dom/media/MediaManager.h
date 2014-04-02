@@ -127,8 +127,7 @@ public:
   void
   AudioConfig(bool aEchoOn, uint32_t aEcho,
               bool aAgcOn, uint32_t aAGC,
-              bool aNoiseOn, uint32_t aNoise,
-              int32_t aPlayoutDelay)
+              bool aNoiseOn, uint32_t aNoise)
   {
     if (mAudioSource) {
 #ifdef MOZ_WEBRTC
@@ -136,7 +135,7 @@ public:
       RUN_ON_THREAD(mMediaThread,
                     WrapRunnable(nsRefPtr<MediaEngineSource>(mAudioSource), // threadsafe
                                  &MediaEngineSource::Config,
-                                 aEchoOn, aEcho, aAgcOn, aAGC, aNoiseOn, aNoise, aPlayoutDelay),
+                                 aEchoOn, aEcho, aAgcOn, aAGC, aNoiseOn, aNoise),
                     NS_DISPATCH_NORMAL);
 #endif
     }
