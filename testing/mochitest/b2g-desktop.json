@@ -528,6 +528,7 @@
     "docshell/test/test_bug669671.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_bug680257.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_bug728939.html": "Bug 931116, b2g desktop specific, initial triage",
+    "docshell/test/test_framedhistoryframes.html": "Bug 931116, b2g desktop specific, initial triage",
     "docshell/test/test_windowedhistoryframes.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/alarm/test/test_alarm_add_data.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/alarm/test/test_alarm_add_date.html": "Bug 931116, b2g desktop specific, initial triage",
