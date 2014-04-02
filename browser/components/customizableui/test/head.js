@@ -428,36 +428,49 @@ function promiseTabHistoryNavigation(aDirection = -1, aConditionFn) {
   return deferred.promise;
 }
 
-function contextMenuShown(aContextMenu) {
-  let deferred = Promise.defer();
-  let win = aContextMenu.ownerDocument.defaultView;
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Context menu (" + aContextMenu.id + ") did not show within 20 seconds.");
-  }, 20000);
-  function onPopupShown(e) {
-    aContextMenu.removeEventListener("popupshown", onPopupShown);
-    win.clearTimeout(timeoutId);
-    deferred.resolve();
-  };
-  aContextMenu.addEventListener("popupshown", onPopupShown);
-  return deferred.promise;
+function popupShown(aPopup) {
+  return promisePopupEvent(aPopup, "shown");
 }
 
-function contextMenuHidden(aContextMenu) {
-  let deferred = Promise.defer();
-  let win = aContextMenu.ownerDocument.defaultView;
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Context menu (" + aContextMenu.id + ") did not hide within 20 seconds.");
-  }, 20000);
-  function onPopupHidden(e) {
-    win.clearTimeout(timeoutId);
-    aContextMenu.removeEventListener("popuphidden", onPopupHidden);
-    deferred.resolve();
-  };
-  aContextMenu.addEventListener("popuphidden", onPopupHidden);
-  return deferred.promise;
+function popupHidden(aPopup) {
+  return promisePopupEvent(aPopup, "hidden");
 }
 
+/**
+ * Returns a Promise that resolves when aPopup fires an event of type
+ * aEventType. Times out and rejects after 20 seconds.
+ *
+ * @param aPopup the popup to monitor for events.
+ * @param aEventSuffix the _suffix_ for the popup event type to watch for.
+ *
+ * Example usage:
+ *   let popupShownPromise = promisePopupEvent(somePopup, "shown");
+ *   // ... something that opens a popup
+ *   yield popupShownPromise;
+ *
+ *  let popupHiddenPromise = promisePopupEvent(somePopup, "hidden");
+ *  // ... something that hides a popup
+ *  yield popupHiddenPromise;
+ */
+function promisePopupEvent(aPopup, aEventSuffix) {
+  let deferred = Promise.defer();
+  let win = aPopup.ownerDocument.defaultView;
+  let eventType = "popup" + aEventSuffix;
+
+  let timeoutId = win.setTimeout(() => {
+    deferred.reject("Context menu (" + aPopup.id + ") did not fire "
+                    + eventType + " within 20 seconds.");
+  }, 20000);
+
+  function onPopupEvent(e) {
+    win.clearTimeout(timeoutId);
+    aPopup.removeEventListener(eventType, onPopupEvent);
+    deferred.resolve();
+  };
+
+  aPopup.addEventListener(eventType, onPopupEvent);
+  return deferred.promise;
+}
 
 // This is a simpler version of the context menu check that
 // exists in contextmenu_common.js.

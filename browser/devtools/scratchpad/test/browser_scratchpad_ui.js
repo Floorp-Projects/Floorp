@@ -29,10 +29,16 @@ function runTests()
     "sp-text-run": "run",
     "sp-text-inspect": "inspect",
     "sp-text-display": "display",
-    "sp-text-reloadAndRun" : "reloadAndRun",
+    "sp-text-reloadAndRun": "reloadAndRun",
     "sp-menu-content": "setContentContext",
     "sp-menu-browser": "setBrowserContext",
-    "sp-menu-pprint":"prettyPrint",
+    "sp-menu-pprint": "prettyPrint",
+    "sp-menu-line-numbers": "toggleEditorOption",
+    "sp-menu-word-wrap": "toggleEditorOption",
+    "sp-menu-highlight-trailing-space": "toggleEditorOption",
+    "sp-menu-larger-font": "increaseFontSize",
+    "sp-menu-smaller-font": "decreaseFontSize",
+    "sp-menu-normal-size-font": "normalFontSize",
   };
 
   let lastMethodCalled = null;
