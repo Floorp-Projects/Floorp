@@ -229,15 +229,14 @@ private:
   // Picture region, as relative to the initial frame size.
   nsIntRect mPicture;
 
-  // Booleans to indicate if we have audio and/or video data
-  bool mHasVideo;
-  bool mHasAudio;
-
   // Codec ID of audio track
   int mAudioCodec;
   // Codec ID of video track
   int mVideoCodec;
 
+  // Booleans to indicate if we have audio and/or video data
+  bool mHasVideo;
+  bool mHasAudio;
 };
 
 } // namespace mozilla
