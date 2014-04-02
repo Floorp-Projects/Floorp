@@ -871,9 +871,10 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
   nsCxPusher pusher;
   pusher.Push(cx);
   AutoJSExceptionReporter reporter(cx);
-  JSAutoCompartment ac(cx, npjsobj->mJSObj);
+  JS::Rooted<JSObject*> jsobj(cx, npjsobj->mJSObj);
+  JSAutoCompartment ac(cx, jsobj);
 
-  JS::AutoIdArray ida(cx, JS_Enumerate(cx, npjsobj->mJSObj));
+  JS::AutoIdArray ida(cx, JS_Enumerate(cx, jsobj));
   if (!ida) {
     return false;
   }

@@ -300,7 +300,7 @@ struct JSStructuredCloneWriter {
     JS::RootedValue transferable;
     JS::AutoObjectVector transferableObjects;
 
-    friend bool JS_WriteTypedArray(JSStructuredCloneWriter *w, JS::Value v);
+    friend bool JS_WriteTypedArray(JSStructuredCloneWriter *w, JS::HandleValue v);
 };
 
 JS_FRIEND_API(uint64_t)
@@ -1840,7 +1840,7 @@ JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len)
 }
 
 JS_PUBLIC_API(bool)
-JS_WriteTypedArray(JSStructuredCloneWriter *w, JS::Value v)
+JS_WriteTypedArray(JSStructuredCloneWriter *w, JS::HandleValue v)
 {
     JS_ASSERT(v.isObject());
     assertSameCompartment(w->context(), v);
@@ -1856,4 +1856,3 @@ JS_WriteTypedArray(JSStructuredCloneWriter *w, JS::Value v)
     }
     return w->writeTypedArray(obj);
 }
-
