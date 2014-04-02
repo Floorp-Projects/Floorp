@@ -606,6 +606,25 @@ ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
   return true;
 }
 
+ContentHostIncremental::ContentHostIncremental(const TextureInfo& aTextureInfo)
+  : ContentHostBase(aTextureInfo)
+  , mDeAllocator(nullptr)
+  , mLocked(false)
+{
+}
+
+ContentHostIncremental::~ContentHostIncremental()
+{
+}
+
+void
+ContentHostIncremental::DestroyTextures()
+{
+  mSource = nullptr;
+  mSourceOnWhite = nullptr;
+  mUpdateList.Clear();
+}
+
 void
 ContentHostIncremental::CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
                                                   const TextureInfo& aTextureInfo,
