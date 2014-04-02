@@ -31,7 +31,14 @@ TabSource.prototype = {
       title: title,
       window: null
     }).setSingleChoiceItems(tabs.map(function(tab) {
-      return { label: tab.browser.contentTitle || tab.browser.contentURI.spec }
+      let label;
+      if (tab.browser.contentTitle)
+        label = tab.browser.contentTitle;
+      else if (tab.browser.contentURI && tab.browser.contentURI.spec)
+        label = tab.browser.contentURI.spec;
+      else
+        label = tab.originalURI;
+      return { label: label }
     }));
 
     let result = null;
@@ -56,7 +63,7 @@ TabSource.prototype = {
     let tabs = app.tabs;
     for (var i in tabs) {
       if (tabs[i].browser.contentWindow == window) {
-        sendMessageToJava({ type: "Tab:Streaming", tabID: tabs[i].id });
+        sendMessageToJava({ type: "Tab:StreamStart", tabID: tabs[i].id });
       }
     }
   },
@@ -66,7 +73,7 @@ TabSource.prototype = {
     let tabs = app.tabs;
     for (let i in tabs) {
       if (tabs[i].browser.contentWindow == window) {
-        sendMessageToJava({ type: "Tab:NotStreaming", tabID: tabs[i].id });
+        sendMessageToJava({ type: "Tab:StreamStop", tabID: tabs[i].id });
       }
     }
   }
