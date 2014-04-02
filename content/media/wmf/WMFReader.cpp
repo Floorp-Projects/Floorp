@@ -438,21 +438,17 @@ WMFReader::ConfigureAudioDecoder()
   return S_OK;
 }
 
-nsresult
-WMFReader::ReadMetadata(MediaInfo* aInfo,
-                        MetadataTags** aTags)
+HRESULT
+WMFReader::CreateSourceReader()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
-
-  DECODER_LOG("WMFReader::ReadMetadata()");
   HRESULT hr;
 
   RefPtr<IMFAttributes> attr;
   hr = wmf::MFCreateAttributes(byRef(attr), 1);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = attr->SetUnknown(MF_SOURCE_READER_ASYNC_CALLBACK, mSourceReaderCallback);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   if (mUseHwAccel) {
     hr = attr->SetUnknown(MF_SOURCE_READER_D3D_MANAGER,
@@ -464,13 +460,13 @@ WMFReader::ReadMetadata(MediaInfo* aInfo,
   }
 
   hr = wmf::MFCreateSourceReaderFromByteStream(mByteStream, attr, byRef(mSourceReader));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = ConfigureVideoDecoder();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   hr = ConfigureAudioDecoder();
-  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   if (mUseHwAccel && mInfo.mVideo.mHasVideo) {
     RefPtr<IMFTransform> videoDecoder;
@@ -494,14 +490,40 @@ WMFReader::ReadMetadata(MediaInfo* aInfo,
     if (FAILED(hr)) {
       DECODER_LOG("Failed to set DXVA2 D3D Device manager on decoder hr=0x%x", hr);
       mUseHwAccel = false;
-      // Re-run the configuration process, so that the output video format
-      // is set correctly to reflect that hardware acceleration is disabled.
-      // Without this, we'd be running with !mUseHwAccel and the output format
-      // set to NV12, which is the format we expect when using hardware
-      // acceleration. This would cause us to misinterpret the frame contents.
-      hr = ConfigureVideoDecoder();
     }
   }
+  return hr;
+}
+
+nsresult
+WMFReader::ReadMetadata(MediaInfo* aInfo,
+                        MetadataTags** aTags)
+{
+  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+
+  DECODER_LOG("WMFReader::ReadMetadata()");
+  HRESULT hr;
+
+  const bool triedToInitDXVA = mUseHwAccel;
+  hr = CreateSourceReader();
+  if (FAILED(hr)) {
+    mSourceReader = nullptr;
+    if (triedToInitDXVA && !mUseHwAccel) {
+      // We tried to initialize DXVA and failed. Try again to create the
+      // IMFSourceReader but this time we won't use DXVA. Note that we
+      // must recreate the IMFSourceReader from scratch, as on some systems
+      // (AMD Radeon 3000) we cannot successfully reconfigure an existing
+      // reader to not use DXVA after we've failed to configure DXVA.
+      // See bug 987127.
+      hr = CreateSourceReader();
+      if (FAILED(hr)) {
+        NS_WARNING("Failed to create IMFSourceReader");
+        mSourceReader = nullptr;
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+
   if (mInfo.HasVideo()) {
     DECODER_LOG("Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
   }
