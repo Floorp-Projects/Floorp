@@ -104,6 +104,23 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
                           aFlashCounter);
 }
 
+gfx::Rect
+Compositor::ClipRectInLayersCoordinates(gfx::Rect aClip) const {
+  gfx::Rect result;
+  switch (mScreenRotation) {
+    case ROTATION_90:
+    case ROTATION_270:
+      result = gfx::Rect(aClip.y, aClip.x, aClip.height, aClip.width);
+      break;
+    case ROTATION_0:
+    case ROTATION_180:
+    default:
+      result = aClip;
+      break;
+  }
+  return result + GetCurrentRenderTarget()->GetOrigin();
+}
+
 void
 Compositor::DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                     const gfx::Rect& aVisibleRect,
