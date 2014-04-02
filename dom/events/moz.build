@@ -15,7 +15,6 @@ XPIDL_MODULE = 'content_events'
 
 EXPORTS += [
     'nsEventStates.h',
-    'nsIJSEventListener.h',
 ]
 
 EXPORTS.mozilla += [
