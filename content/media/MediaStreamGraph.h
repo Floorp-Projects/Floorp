@@ -16,18 +16,8 @@
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
 #include "MainThreadUtils.h"
-#include "nsAutoRef.h"
-#include "speex/speex_resampler.h"
-#include "AudioMixer.h"
 
 class nsIRunnable;
-
-template <>
-class nsAutoRefTraits<SpeexResamplerState> : public nsPointerRefTraits<SpeexResamplerState>
-{
-  public:
-  static void Release(SpeexResamplerState* aState) { speex_resampler_destroy(aState); }
-};
 
 namespace mozilla {
 
@@ -573,8 +563,6 @@ protected:
     // Amount of time that we've wanted to play silence because of the stream
     // blocking.
     MediaTime mBlockedAudioTime;
-    // Last tick written to the audio output.
-    TrackTicks mLastTickWritten;
     nsAutoPtr<AudioStream> mStream;
     TrackID mTrackID;
   };
@@ -674,9 +662,6 @@ public:
    */
   void AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
                 MediaSegment* aSegment);
-
-  struct TrackData;
-  void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
    * but aSegment is emptied.
@@ -767,13 +752,7 @@ public:
    */
   struct TrackData {
     TrackID mID;
-    // Sample rate of the input data.
-    TrackRate mInputRate;
-    // Sample rate of the output data, always equal to IdealAudioRate()
-    TrackRate mOutputRate;
-    // Resampler if the rate of the input track does not match the
-    // MediaStreamGraph's.
-    nsAutoRef<SpeexResamplerState> mResampler;
+    TrackRate mRate;
     TrackTicks mStart;
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
@@ -784,9 +763,6 @@ public:
     nsTArray<ThreadAndRunnable> mDispatchWhenNotEnough;
     bool mHaveEnough;
   };
-
-  void RegisterForAudioMixing();
-  bool NeedsMixing();
 
 protected:
   TrackData* FindDataForTrack(TrackID aID)
@@ -821,7 +797,6 @@ protected:
   bool mPullEnabled;
   bool mUpdateFinished;
   bool mDestroyed;
-  bool mNeedsMixing;
 };
 
 /**
@@ -1028,7 +1003,7 @@ protected:
   bool mInCycle;
 };
 
-// Returns ideal audio rate for processing.
+// Returns ideal audio rate for processing
 inline TrackRate IdealAudioRate() { return AudioStream::PreferredSampleRate(); }
 
 /**

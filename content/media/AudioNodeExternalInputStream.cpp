@@ -107,6 +107,15 @@ ResampleChannelBuffer(SpeexResamplerState* aResampler, uint32_t aChannel,
   }
 }
 
+class SharedChannelArrayBuffer : public ThreadSharedObject {
+public:
+  SharedChannelArrayBuffer(nsTArray<nsTArray<float> >* aBuffers)
+  {
+    mBuffers.SwapElements(*aBuffers);
+  }
+  nsTArray<nsTArray<float> > mBuffers;
+};
+
 void
 AudioNodeExternalInputStream::TrackMapEntry::ResampleChannels(const nsTArray<const void*>& aBuffers,
                                                               uint32_t aInputDuration,
@@ -169,7 +178,7 @@ AudioNodeExternalInputStream::TrackMapEntry::ResampleChannels(const nsTArray<con
   }
 
   uint32_t length = resampledBuffers[0].Length();
-  nsRefPtr<ThreadSharedObject> buf = new SharedChannelArrayBuffer<float>(&resampledBuffers);
+  nsRefPtr<ThreadSharedObject> buf = new SharedChannelArrayBuffer(&resampledBuffers);
   mResampledData.AppendFrames(buf.forget(), bufferPtrs, length);
 }
 
