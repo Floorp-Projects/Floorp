@@ -274,8 +274,9 @@ public class TabsTray extends TwoWayView
             } else {
                 row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
             }
-
-            row.thumbnailWrapper.setRecording(tab.isRecording());
+            if (row.thumbnailWrapper != null) {
+                row.thumbnailWrapper.setRecording(tab.isRecording());
+            }
             row.title.setText(tab.getDisplayTitle());
             row.close.setTag(row);
         }
