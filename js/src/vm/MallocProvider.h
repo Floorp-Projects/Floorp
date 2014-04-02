@@ -25,7 +25,7 @@
  *
  *   - MallocProvider. A mixin base class that handles automatically updating
  *     the GC's state in response to allocations that are tied to a GC lifetime
- *     or are for a particular GC purpose. These allocators must ony be used
+ *     or are for a particular GC purpose. These allocators must only be used
  *     for memory that will be freed when a GC thing is swept.
  *
  *       - gc::Zone:  Automatically triggers zone GC.
