@@ -19,11 +19,6 @@ public class testHomeListsProvider extends ContentProviderTest {
         public static final String URL = null;
     }
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     @SuppressWarnings("unused")
   private void ensureEmptyDatabase() throws Exception {
         // Delete all the list entries.

@@ -17,12 +17,6 @@ import org.json.JSONObject;
    * Password Manager doorhangers - Remember and Not Now options dismiss the doorhanger
 */
 public class testDoorHanger extends BaseTest {
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testDoorHanger() {
         String GEO_URL = getAbsoluteUrl("/robocop/robocop_geolocation.html");
         String BLANK_URL = getAbsoluteUrl("/robocop/robocop_blank_01.html");

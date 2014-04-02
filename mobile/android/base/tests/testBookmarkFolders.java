@@ -21,11 +21,6 @@ import java.util.Arrays;
 public class testBookmarkFolders extends AboutHomeTest {
     private static String DESKTOP_BOOKMARK_URL;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testBookmarkFolders() {
         DESKTOP_BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
 

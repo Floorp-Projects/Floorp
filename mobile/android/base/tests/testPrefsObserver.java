@@ -20,11 +20,6 @@ public class testPrefsObserver extends BaseTest {
 
     private Actions.RepeatedEventExpecter mExpecter;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void setPref(boolean value) throws JSONException {
         mAsserter.dumpLog("Setting pref");
 

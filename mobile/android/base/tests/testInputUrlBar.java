@@ -105,11 +105,6 @@ public final class testInputUrlBar extends BaseTest {
         mAsserter.ok("yz".equals(yz), "Is the URL bar text \"yz\"?", yz);
     }
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     private void startEditingMode() {
         focusUrlBar();
 

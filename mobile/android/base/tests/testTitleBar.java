@@ -8,11 +8,6 @@ import java.util.ArrayList;
  */
 
 public class testTitleBar extends PixelTest {
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
     public void testTitleBar() {
         blockForGeckoReady();
         checkOption();

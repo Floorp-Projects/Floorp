@@ -97,11 +97,6 @@ public class testSettingsMenuItems extends PixelTest {
         settingsMap.put(PATH_MOZILLA, new ArrayList<String[]>(Arrays.asList(OPTIONS_MOZILLA)));
     }
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testSettingsMenuItems() {
         blockForGeckoReady();
         mMidWidth = mDriver.getGeckoWidth()/2;

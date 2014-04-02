@@ -19,11 +19,6 @@ import java.io.File;
 public class testPasswordProvider extends BaseTest {
     private static final String DB_NAME = "signons.sqlite";
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testPasswordProvider() {
         Context context = (Context)getActivity();
         ContentResolver cr = context.getContentResolver();

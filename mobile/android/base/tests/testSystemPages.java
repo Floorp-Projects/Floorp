@@ -9,11 +9,6 @@ public class testSystemPages extends PixelTest {
     final int mExpectedTabCount = 1;
     private static final int AFTER_BACK_SLEEP_MS = 500;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testSystemPages() {
         blockForGeckoReady();
 
