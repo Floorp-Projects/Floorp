@@ -44,7 +44,7 @@ public class Restarter extends Activity {
         try {
             Intent intent = new Intent(Intent.ACTION_MAIN);
             intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                AppConstants.BROWSER_INTENT_CLASS);
+                                AppConstants.BROWSER_INTENT_CLASS_NAME);
             Bundle b = getIntent().getExtras();
             if (b != null)
                 intent.putExtras(b);
