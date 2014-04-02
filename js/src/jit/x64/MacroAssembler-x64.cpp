@@ -110,7 +110,7 @@ MacroAssemblerX64::setupABICall(uint32_t args)
     inCall_ = true;
 
     args_ = args;
-    passedIntArgs_ = 0; 
+    passedIntArgs_ = 0;
     passedFloatArgs_ = 0;
     stackForCall_ = ShadowStackSpace;
 }

@@ -23,8 +23,8 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- * 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef assembler_assembler_MacroAssemblerX86_h
@@ -77,17 +77,17 @@ public:
     {
         m_assembler.addl_im(imm.m_value, address.m_ptr);
     }
-    
+
     void addWithCarry32(Imm32 imm, AbsoluteAddress address)
     {
         m_assembler.adcl_im(imm.m_value, address.m_ptr);
     }
-    
+
     void and32(Imm32 imm, AbsoluteAddress address)
     {
         m_assembler.andl_im(imm.m_value, address.m_ptr);
     }
-    
+
     void or32(TrustedImm32 imm, AbsoluteAddress address)
     {
         m_assembler.orl_im(imm.m_value, address.m_ptr);

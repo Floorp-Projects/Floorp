@@ -1380,7 +1380,7 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
 void
 LinearScanAllocator::UnhandledQueue::enqueueBackward(LiveInterval *interval)
 {
-    IntervalReverseIterator i(rbegin()); 
+    IntervalReverseIterator i(rbegin());
 
     for (; i != rend(); i++) {
         if (i->start() > interval->start())
