@@ -113,8 +113,9 @@ class SharedThreadPool;
 
   See MediaDecoder.h for more details.
 */
-class MediaDecoderStateMachine : public nsRunnable
+class MediaDecoderStateMachine
 {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderStateMachine)
 public:
   typedef MediaDecoder::DecodedStreamData DecodedStreamData;
   MediaDecoderStateMachine(MediaDecoder* aDecoder,
@@ -226,9 +227,6 @@ public:
   // with the decode monitor held. Called on the state machine thread and
   // the main thread.
   void StartBuffering();
-
-  // State machine thread run function. Defers to RunStateMachine().
-  NS_IMETHOD Run() MOZ_OVERRIDE;
 
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
