@@ -603,6 +603,12 @@ abstract public class BrowserApp extends GeckoApp
                 if (isHomePagerVisible()) {
                     mHomePager.onToolbarFocusChange(hasFocus);
                 }
+
+                if (hasFocus) {
+                    Telemetry.startUISession(TelemetryContract.Session.URLBAR_FOCUSED);
+                } else {
+                    Telemetry.stopUISession(TelemetryContract.Session.URLBAR_FOCUSED);
+                }
             }
         });
 
@@ -711,6 +717,7 @@ abstract public class BrowserApp extends GeckoApp
             String text = Clipboard.getText();
             if (!TextUtils.isEmpty(text)) {
                 Tabs.getInstance().loadUrl(text);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.CONTEXT_MENU);
             }
             return true;
         }
@@ -1568,6 +1575,8 @@ abstract public class BrowserApp extends GeckoApp
         // If the URL doesn't look like a search query, just load it.
         if (!StringUtils.isSearchQuery(url, true)) {
             Tabs.getInstance().loadUrl(url, Tabs.LOADURL_USER_ENTERED);
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL);
             return;
         }
 
@@ -1593,6 +1602,7 @@ abstract public class BrowserApp extends GeckoApp
                 // using the default search engine.
                 if (TextUtils.isEmpty(keywordUrl)) {
                     Tabs.getInstance().loadUrl(url, Tabs.LOADURL_USER_ENTERED);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL);
                     return;
                 }
 
@@ -1601,6 +1611,7 @@ abstract public class BrowserApp extends GeckoApp
                 // Otherwise, construct a search query from the bookmark keyword.
                 final String searchUrl = keywordUrl.replace("%s", URLEncoder.encode(keywordSearch));
                 Tabs.getInstance().loadUrl(searchUrl, Tabs.LOADURL_USER_ENTERED);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, "", "keyword");
             }
         });
     }
