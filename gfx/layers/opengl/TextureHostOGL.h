@@ -72,12 +72,9 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
   virtual void ClearData() MOZ_OVERRIDE;
-  GLuint GetTexture();
-  void DeleteTextureIfPresent();
   gl::GLContext* gl() const;
 protected:
   RefPtr<CompositorOGL> mCompositor;
-  GLuint mTexture;
 };
 
 inline void ApplyFilterToBoundTexture(gl::GLContext* aGL,
