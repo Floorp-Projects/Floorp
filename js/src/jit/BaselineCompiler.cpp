@@ -1274,6 +1274,33 @@ BaselineCompiler::emit_JSOP_LAMBDA()
     return true;
 }
 
+typedef JSObject *(*LambdaArrowFn)(JSContext *, HandleFunction, HandleObject, HandleValue);
+static const VMFunction LambdaArrowInfo = FunctionInfo<LambdaArrowFn>(js::LambdaArrow);
+
+bool
+BaselineCompiler::emit_JSOP_LAMBDA_ARROW()
+{
+    // Keep pushed |this| in R0.
+    frame.popRegsAndSync(1);
+
+    RootedFunction fun(cx, script->getFunction(GET_UINT32_INDEX(pc)));
+
+    prepareVMCall();
+    masm.loadPtr(frame.addressOfScopeChain(), R1.scratchReg());
+
+    pushArg(R0);
+    pushArg(R1.scratchReg());
+    pushArg(ImmGCPtr(fun));
+
+    if (!callVM(LambdaArrowInfo))
+        return false;
+
+    // Box and push return value.
+    masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+    frame.push(R0);
+    return true;
+}
+
 void
 BaselineCompiler::storeValue(const StackValue *source, const Address &dest,
                              const ValueOperand &scratch)
