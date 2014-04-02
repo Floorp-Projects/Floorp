@@ -12,7 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602256
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=602256">Mozilla Bug 602256</a>
 <p id="display"></p>
 <div id="content">
-  <iframe id="iframe" src="historyframes.html"></iframe>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -20,8 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602256
 /** Test for Bug 602256 **/
 
 SimpleTest.waitForExplicitFinish();
+var win = window.open("file_framedhistoryframes.html");
 
 function done() {
+  win.close();
   SimpleTest.finish();
 }
 
