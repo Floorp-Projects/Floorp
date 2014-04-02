@@ -1,6 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
 
 public class testPictureLinkContextMenu extends ContentContextMenuTest {
 
@@ -12,11 +11,6 @@ public class testPictureLinkContextMenu extends ContentContextMenuTest {
     private static final String photoMenuItems [] = { "Copy Image Location", "Share Image", "Set Image As", "Save Image" };
     private static final String linkMenuItems [] = { "Open Link in New Tab", "Open Link in Private Tab", "Copy Link", "Share Link", "Bookmark Link"};
     private static final String linkTitle = "^Link$";
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testPictureLinkContextMenu() {
         blockForGeckoReady();

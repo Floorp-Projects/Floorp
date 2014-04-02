@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests;
 
 import java.util.Map;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
 import org.mozilla.gecko.FennecMochitestAssert;
@@ -16,26 +17,51 @@ import android.app.Activity;
 import android.test.ActivityInstrumentationTestCase2;
 
 public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<Activity> {
-    public static final int TEST_MOCHITEST = 0;
-    public static final int TEST_TALOS = 1;
+    public enum Type {
+        MOCHITEST,
+        TALOS
+    }
 
-    protected static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
     protected Assert mAsserter;
     protected String mLogFile;
 
-    protected Map<?, ?> mConfig;
+    protected Map<String, String> mConfig;
     protected String mRootPath;
 
-    public BaseRobocopTest(Class<Activity> activityClass) {
+    /**
+     * The browser is started at the beginning of this test. A single test is a
+     * class inheriting from <code>BaseRobocopTest</code> that contains test
+     * methods.
+     * <p>
+     * If a test should not start the browser at the beginning of a test,
+     * specify a different activity class to the one-argument constructor. To do
+     * as little as possible, specify <code>Activity.class</code>.
+     */
+    @SuppressWarnings("unchecked")
+    public BaseRobocopTest() {
+        this((Class<Activity>) AppConstants.BROWSER_INTENT_CLASS);
+    }
+
+    /**
+     * Start the given activity class at the beginning of this test.
+     * <p>
+     * <b>You should use the no-argument constructor in almost all cases.</b>
+     *
+     * @param activityClass to start before this test.
+     */
+    protected BaseRobocopTest(Class<Activity> activityClass) {
         super(activityClass);
     }
 
-    @SuppressWarnings("deprecation")
-    public BaseRobocopTest(String targetPackageId, Class<Activity> activityClass) {
-        super(targetPackageId, activityClass);
+    /**
+     * Returns the test type: mochitest or talos.
+     * <p>
+     * By default tests are mochitests, but a test can override this method in
+     * order to change its type. Most Robocop tests are mochitests.
+     */
+    protected Type getTestType() {
+        return Type.MOCHITEST;
     }
-
-    protected abstract int getTestType();
 
     @Override
     protected void setUp() throws Exception {
@@ -46,7 +72,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         mLogFile = (String) mConfig.get("logfile");
 
         // Initialize the asserter.
-        if (getTestType() == TEST_TALOS) {
+        if (getTestType() == Type.TALOS) {
             mAsserter = new FennecTalosAssert();
         } else {
             mAsserter = new FennecMochitestAssert();

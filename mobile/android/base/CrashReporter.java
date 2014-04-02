@@ -450,7 +450,7 @@ public class CrashReporter extends Activity
             String action = "android.intent.action.MAIN";
             Intent intent = new Intent(action);
             intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                                AppConstants.BROWSER_INTENT_CLASS);
+                                AppConstants.BROWSER_INTENT_CLASS_NAME);
             intent.putExtra("didRestart", true);
             Log.i(LOGTAG, intent.toString());
             startActivity(intent);

@@ -1,24 +1,18 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import org.mozilla.gecko.db.BrowserContract;
-
-import android.content.ContentValues;
-import android.content.ContentResolver;
-import android.database.Cursor;
-import android.content.Context;
-import android.net.Uri;
 import java.io.File;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
+import org.mozilla.gecko.NSSBridge;
+import org.mozilla.gecko.db.BrowserContract;
+
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 
 public class testPasswordEncrypt extends BaseTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testPasswordEncrypt() {
         Context context = (Context)getActivity();
         ContentResolver cr = context.getContentResolver();

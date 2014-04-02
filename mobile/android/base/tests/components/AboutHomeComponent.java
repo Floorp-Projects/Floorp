@@ -4,20 +4,20 @@
 
 package org.mozilla.gecko.tests.components;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
-import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.tests.helpers.*;
 import org.mozilla.gecko.tests.UITestContext;
+import org.mozilla.gecko.tests.helpers.DeviceHelper;
+import org.mozilla.gecko.tests.helpers.WaitHelper;
 
-import com.jayway.android.robotium.solo.Condition;
-import com.jayway.android.robotium.solo.Solo;
-
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.widget.TextView;
+
+import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * A class representing any interactions that take place on the Awesomescreen.

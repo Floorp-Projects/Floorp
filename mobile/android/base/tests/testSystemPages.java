@@ -1,6 +1,6 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
 
 /** This patch tests the System Pages first by loading system pages from
  *  the awesome bar and then from Firefox menu 
@@ -8,11 +8,6 @@ import org.mozilla.gecko.*;
 public class testSystemPages extends PixelTest {
     final int mExpectedTabCount = 1;
     private static final int AFTER_BACK_SLEEP_MS = 500;
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testSystemPages() {
         blockForGeckoReady();

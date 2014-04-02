@@ -1,23 +1,23 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.jayway.android.robotium.solo.Condition;
+import org.mozilla.gecko.Actions;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.TextView;
-import java.util.ArrayList;
-import java.util.List;
+
+import com.jayway.android.robotium.solo.Condition;
 
 /**
  * This test covers the opening and content of the Share Link pop-up list
@@ -26,11 +26,6 @@ import java.util.List;
 public class testShareLink extends AboutHomeTest {
     String url;
     String urlTitle = "Big Link";
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testShareLink() {
         url = getAbsoluteUrl("/robocop/robocop_big_link.html");

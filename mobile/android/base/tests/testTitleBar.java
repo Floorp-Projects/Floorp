@@ -1,18 +1,11 @@
 package org.mozilla.gecko.tests;
-import android.view.View;
-import org.mozilla.gecko.*;
-import java.util.ArrayList;
+import org.mozilla.gecko.Actions;
 
 /**
  * This patch tests the option that shows the full URL and title in the URL Bar
  */
 
 public class testTitleBar extends PixelTest {
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
     public void testTitleBar() {
         blockForGeckoReady();
         checkOption();

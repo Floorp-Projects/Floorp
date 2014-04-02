@@ -59,11 +59,6 @@ public class testReadingListProvider extends ContentProviderTest {
     };
 
     @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
-    @Override
     public void setUp() throws Exception {
         super.setUp(sProviderFactory, BrowserContract.READING_LIST_AUTHORITY, DB_NAME);
         for (TestCase test: TESTS_TO_RUN) {

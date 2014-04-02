@@ -1,6 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Element;
+import org.mozilla.gecko.R;
+
 import android.app.Activity;
 import android.view.View;
 
@@ -11,11 +13,6 @@ public class testNewTab extends BaseTest {
     private Element addTab = null;
     private Element closeTab = null;
     private int tabCountInt = 0;
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testNewTab() {
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");

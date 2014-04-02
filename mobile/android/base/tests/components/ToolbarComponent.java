@@ -4,20 +4,22 @@
 
 package org.mozilla.gecko.tests.components;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertFalse;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
-import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.tests.helpers.*;
-import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.R;
-
-import com.jayway.android.robotium.solo.Condition;
-import com.jayway.android.robotium.solo.Solo;
+import org.mozilla.gecko.tests.UITestContext;
+import org.mozilla.gecko.tests.helpers.DeviceHelper;
+import org.mozilla.gecko.tests.helpers.WaitHelper;
 
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
+import com.jayway.android.robotium.solo.Condition;
 
 /**
  * A class representing any interactions that take place on the Toolbar.

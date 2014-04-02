@@ -1,13 +1,10 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.Element;
+import org.mozilla.gecko.R;
 
 public class testBookmarksPanel extends AboutHomeTest {
-
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testBookmarksPanel() {
         final String BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
 

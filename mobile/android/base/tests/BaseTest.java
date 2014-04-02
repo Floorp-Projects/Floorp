@@ -55,7 +55,6 @@ import com.jayway.android.robotium.solo.Solo;
  */
 @SuppressWarnings("unchecked")
 abstract class BaseTest extends BaseRobocopTest {
-    private static final String LAUNCH_ACTIVITY_FULL_CLASSNAME = TestConstants.ANDROID_PACKAGE_NAME + ".App";
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
     private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 15000;
@@ -64,7 +63,6 @@ abstract class BaseTest extends BaseRobocopTest {
     private static final int GECKO_READY_WAIT_MS = 180000;
     public static final int MAX_WAIT_BLOCK_FOR_EVENT_DATA_MS = 90000;
 
-    private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
     private int mPreferenceRequestID = 0;
     protected Solo mSolo;
@@ -87,18 +85,6 @@ abstract class BaseTest extends BaseRobocopTest {
         } catch (Exception e) {
             mAsserter.dumpLog("Exception in blockForGeckoReady", e);
         }
-    }
-
-    static {
-        try {
-            mLauncherActivityClass = (Class<Activity>)Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public BaseTest() {
-        super(TARGET_PACKAGE_ID, mLauncherActivityClass);
     }
 
     @Override

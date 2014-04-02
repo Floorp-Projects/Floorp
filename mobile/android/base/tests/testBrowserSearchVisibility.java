@@ -1,16 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.app.Activity;
-import android.content.Context;
 import android.support.v4.app.Fragment;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.KeyEvent;
-import android.widget.TextView;
-import java.lang.RuntimeException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import android.view.View;
 
 /**
  * Test for browser search visibility.
@@ -18,11 +10,6 @@ import java.util.HashMap;
  * visibility is correct.
  */
 public class testBrowserSearchVisibility extends BaseTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testSearchSuggestions() {
         blockForGeckoReady();
 

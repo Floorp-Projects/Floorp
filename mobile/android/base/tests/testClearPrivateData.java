@@ -1,7 +1,8 @@
 package org.mozilla.gecko.tests;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.R;
+
 import android.view.View;
-import org.mozilla.gecko.*;
-import java.util.ArrayList;
 
 /**
  * This patch tests the clear private data options:
@@ -14,11 +15,6 @@ import java.util.ArrayList;
 
 public class testClearPrivateData extends PixelTest {
     private final int TEST_WAIT_MS = 10000;
-
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
 
     public void testClearPrivateData() {
         blockForGeckoReady();
