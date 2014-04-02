@@ -314,13 +314,6 @@ VARIABLES = {
         A list of libraries and flags to include when linking.
         """, None),
 
-    'LIBXUL_LIBRARY': (bool, bool,
-        """Whether the library in this directory is linked into libxul.
-
-        Implies ``FORCE_STATIC_LIB`` and the ``MOZILLA_INTERNAL_API``
-        preprocessor macro.
-        """, None),
-
     'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list,
         """Additional directories to be searched for include files by the compiler.
         """, None),

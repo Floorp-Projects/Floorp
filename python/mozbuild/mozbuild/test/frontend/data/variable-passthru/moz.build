@@ -30,7 +30,6 @@ SOURCES += ['fans.mm', 'tans.mm']
 SOURCES += ['bans.S', 'fans.S']
 
 FAIL_ON_WARNINGS = True
-LIBXUL_LIBRARY = True
 MSVC_ENABLE_PGO = True
 
 NO_DIST_INSTALL = True
