@@ -752,7 +752,7 @@ nsBinaryInputStream::ReadArrayBuffer(uint32_t aLength, JS::Handle<JS::Value> aBu
         JS_GetArrayBufferByteLength(buffer) < aLength) {
         return NS_ERROR_FAILURE;
     }
-    uint8_t* data = JS_GetStableArrayBufferData(cx, &aBuffer.toObject());
+    uint8_t* data = JS_GetStableArrayBufferData(cx, buffer);
     if (!data) {
         return NS_ERROR_FAILURE;
     }
