@@ -15,6 +15,8 @@
 
   function croak(msg) {
     ok(0, msg);
+    pc1.close();
+    pc2.close();
     SimpleTest.finish();
   }
 
@@ -30,6 +32,8 @@
       pc2.setRemoteDescription(d, function (x) {}, function (x) {});
       pc2.createAnswer(function (d) {
         is(d.type,"answer","CreateAnswer created an answer");
+        pc1.close();
+        pc2.close();
         SimpleTest.finish();
       }, function (err) {
         croak("createAnswer failed: " + err);
