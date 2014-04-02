@@ -1891,14 +1891,6 @@ public:
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
 
-  // Called to notify the document that a listener on the "mozaudioavailable"
-  // event has been added. Media elements in the document need to ensure they
-  // fire the event.
-  virtual void NotifyAudioAvailableListener() = 0;
-
-  // Returns true if the document has "mozaudioavailable" event listeners.
-  virtual bool HasAudioAvailableListeners() = 0;
-
   // Add aLink to the set of links that need their status resolved. 
   void RegisterPendingLinkUpdate(mozilla::dom::Link* aLink);
   
