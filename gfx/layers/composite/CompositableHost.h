@@ -210,9 +210,9 @@ public:
    * don't have a single surface for the texture contents, and we
    * need to allocate our own one to be updated later.
    */
-  virtual void EnsureDeprecatedTextureHostIncremental(ISurfaceAllocator* aAllocator,
-                                            const TextureInfo& aTextureInfo,
-                                            const nsIntRect& aBufferRect)
+  virtual void CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
+                                         const TextureInfo& aTextureInfo,
+                                         const nsIntRect& aBufferRect)
   {
     MOZ_ASSERT(false, "should be implemented or not used");
   }

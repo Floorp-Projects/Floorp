@@ -270,9 +270,9 @@ public:
 
   virtual CompositableType GetType() { return BUFFER_CONTENT_INC; }
 
-  virtual void EnsureDeprecatedTextureHostIncremental(ISurfaceAllocator* aAllocator,
-                                            const TextureInfo& aTextureInfo,
-                                            const nsIntRect& aBufferRect) MOZ_OVERRIDE;
+  virtual void CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
+                                         const TextureInfo& aTextureInfo,
+                                         const nsIntRect& aBufferRect) MOZ_OVERRIDE;
 
   virtual void UpdateIncremental(TextureIdentifier aTextureId,
                                  SurfaceDescriptor& aSurface,
