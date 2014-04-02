@@ -566,7 +566,7 @@ OutputMixer::DoOperationsOnCombinedSignal()
 
     // --- Far-end Voice Quality Enhancement (AudioProcessing Module)
 
-    APMAnalyzeReverseStream(_audioFrame);
+    APMAnalyzeReverseStream();
 
     // --- External media processing
 
@@ -592,13 +592,17 @@ OutputMixer::DoOperationsOnCombinedSignal()
     return 0;
 }
 
-void OutputMixer::APMAnalyzeReverseStream(AudioFrame &audioFrame) {
+// ----------------------------------------------------------------------------
+//                             Private methods
+// ----------------------------------------------------------------------------
+
+void OutputMixer::APMAnalyzeReverseStream() {
   // Convert from mixing to AudioProcessing sample rate, determined by the send
   // side. Downmix to mono.
   AudioFrame frame;
   frame.num_channels_ = 1;
   frame.sample_rate_hz_ = _audioProcessingModulePtr->sample_rate_hz();
-  if (RemixAndResample(audioFrame, &audioproc_resampler_, &frame) == -1)
+  if (RemixAndResample(_audioFrame, &audioproc_resampler_, &frame) == -1)
     return;
 
   if (_audioProcessingModulePtr->AnalyzeReverseStream(&frame) == -1) {
@@ -606,10 +610,6 @@ void OutputMixer::APMAnalyzeReverseStream(AudioFrame &audioFrame) {
                  "AudioProcessingModule::AnalyzeReverseStream() => error");
   }
 }
-
-// ----------------------------------------------------------------------------
-//                             Private methods
-// ----------------------------------------------------------------------------
 
 int
 OutputMixer::InsertInbandDtmfTone()
