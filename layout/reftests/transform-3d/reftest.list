@@ -51,3 +51,5 @@ random-if(Android&&!browserIsRemote) == perspective-origin-2a.html perspective-o
 == rotatex-transformorigin-1a.html rotatex-transformorigin-1-ref.html
 == overflow-hidden-1a.html overflow-hidden-1-ref.html
 == transform-style-flat-1a.html transform-style-flat-1-ref.html
+pref(layout.css.will-change.enabled,true) == willchange-containing-block.html?willchange willchange-containing-block.html?ref
+pref(layout.css.will-change.enabled,true) != willchange-containing-block.html?willchange willchange-containing-block.html?noblock
