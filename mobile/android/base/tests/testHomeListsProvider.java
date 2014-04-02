@@ -1,7 +1,7 @@
 package org.mozilla.gecko.tests;
 
-import android.content.ContentValues;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 

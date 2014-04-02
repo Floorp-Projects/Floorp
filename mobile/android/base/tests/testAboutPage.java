@@ -1,6 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.Element;
+import org.mozilla.gecko.R;
 
 /* Tests related to the about: page:
  *  - check that about: loads from the URL bar

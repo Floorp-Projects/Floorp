@@ -1,6 +1,7 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.PaintedSurface;
 
 /**
  * Basic test to check bounce-back from overscroll.

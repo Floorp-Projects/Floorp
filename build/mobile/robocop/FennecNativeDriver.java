@@ -4,17 +4,13 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.gfx.PanningPerfAPI;
-import org.mozilla.gecko.util.GeckoEventListener;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.IntBuffer;
@@ -22,11 +18,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import android.app.Activity;
-import android.view.View;
-import android.util.Log;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.gfx.LayerView;
+import org.mozilla.gecko.gfx.PanningPerfAPI;
+import org.mozilla.gecko.util.GeckoEventListener;
 
-import org.json.*;
+import android.app.Activity;
+import android.util.Log;
+import android.view.View;
 
 import com.jayway.android.robotium.solo.Solo;
 

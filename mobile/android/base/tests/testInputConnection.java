@@ -1,10 +1,15 @@
 package org.mozilla.gecko.tests;
 
-import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
-import static org.mozilla.gecko.tests.helpers.TextInputHelper.*;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertEquals;
+import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertSelection;
+import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertSelectionAt;
+import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertText;
+import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelection;
+import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelectionAt;
 
 import org.mozilla.gecko.tests.components.GeckoViewComponent.InputConnectionTest;
-import org.mozilla.gecko.tests.helpers.*;
+import org.mozilla.gecko.tests.helpers.GeckoHelper;
+import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;

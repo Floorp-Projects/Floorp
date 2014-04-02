@@ -1,11 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.widget.ListView;
-import android.app.Activity;
-import java.util.ArrayList;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 
 public class testHistory extends AboutHomeTest {
     private View mFirstChild;

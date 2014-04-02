@@ -4,10 +4,10 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
-
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
+
+import android.app.Activity;
 
 public final class RobocopUtils {
     private static final int MAX_WAIT_MS = 20000;

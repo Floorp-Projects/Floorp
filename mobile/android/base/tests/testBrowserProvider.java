@@ -1,19 +1,19 @@
 package org.mozilla.gecko.tests;
 
-import android.content.ContentValues;
-import android.content.ContentUris;
-import android.content.ContentProviderResult;
+import java.util.ArrayList;
+import java.util.Random;
+
+import org.mozilla.gecko.db.BrowserContract;
+
 import android.content.ContentProviderOperation;
+import android.content.ContentProviderResult;
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.OperationApplicationException;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
-
-import java.util.ArrayList;
-import java.util.Random;
-
-import org.mozilla.gecko.db.BrowserContract;
 
 /*
  * This test is meant to exercise all operations exposed by Fennec's

@@ -1,6 +1,6 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
 
 /* This patch tests the Master Password feature first by enabling the password,
 then testing it on a login page and finally disabling the password */

@@ -1,11 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import android.app.Instrumentation;
-
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
 
 /**
  * Basic test to check bounce-back from overscroll.

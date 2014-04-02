@@ -1,12 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
-import android.view.View;
-import android.widget.ListView;
-
-import java.util.Arrays;
-import java.util.ArrayList;
 
 public class testBookmark extends AboutHomeTest {
     private static String BOOKMARK_URL;

@@ -1,6 +1,8 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.PaintedSurface;
+
 import android.net.Uri;
 
 /**

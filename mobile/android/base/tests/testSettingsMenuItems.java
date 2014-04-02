@@ -1,13 +1,14 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.HashMap;
+
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.AppConstants;
 
 /** This patch tests the Sections present in the Settings Menu and the
  *  default values for them

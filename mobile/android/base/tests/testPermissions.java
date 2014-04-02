@@ -1,9 +1,11 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
+import java.util.ArrayList;
+
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.PaintedSurface;
 
 import android.widget.CheckBox;
-import java.util.ArrayList;
 
 public class testPermissions extends PixelTest {
     public void testPermissions() {

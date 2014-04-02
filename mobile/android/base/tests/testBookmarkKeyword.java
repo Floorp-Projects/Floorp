@@ -1,6 +1,5 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
 
 public class testBookmarkKeyword extends AboutHomeTest {
     public void testBookmarkKeyword() {

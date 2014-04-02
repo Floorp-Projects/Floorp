@@ -4,28 +4,25 @@
 
 package org.mozilla.gecko.tests;
 
+import java.util.Map;
+
 import org.mozilla.gecko.Actions;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.Driver;
-import org.mozilla.gecko.FennecInstrumentationTestRunner;
-import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
-import org.mozilla.gecko.FennecTalosAssert;
-import org.mozilla.gecko.tests.BaseRobocopTest.Type;
-import org.mozilla.gecko.tests.components.*;
+import org.mozilla.gecko.tests.components.AboutHomeComponent;
+import org.mozilla.gecko.tests.components.AppMenuComponent;
+import org.mozilla.gecko.tests.components.BaseComponent;
+import org.mozilla.gecko.tests.components.GeckoViewComponent;
+import org.mozilla.gecko.tests.components.ToolbarComponent;
 import org.mozilla.gecko.tests.helpers.HelperInitializer;
-
-import com.jayway.android.robotium.solo.Solo;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.test.ActivityInstrumentationTestCase2;
 import android.text.TextUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * A base test class for Robocop (UI-centric) tests. This and the related classes attempt to
