@@ -11,3 +11,4 @@
 %endif
 
 %define inAnyPanel :-moz-any(:not([cui-areatype="toolbar"]), [overflowedItem=true])
+%define tabToolbarNavbarOverlap 1px
