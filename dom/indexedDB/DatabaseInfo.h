@@ -54,14 +54,17 @@ struct DatabaseInfoGuts
   int64_t nextIndexId;
 };
 
-struct DatabaseInfo : public DatabaseInfoGuts
+struct DatabaseInfo MOZ_FINAL : public DatabaseInfoGuts
 {
   DatabaseInfo()
   : cloned(false)
   { }
 
+private:
+  // Private destructor, to discourage deletion outside of Release():
   ~DatabaseInfo();
 
+public:
   static bool Get(const nsACString& aId,
                   DatabaseInfo** aInfo);
 
@@ -142,7 +145,7 @@ struct ObjectStoreInfoGuts
   nsTArray<IndexInfo> indexes;
 };
 
-struct ObjectStoreInfo : public ObjectStoreInfoGuts
+struct ObjectStoreInfo MOZ_FINAL : public ObjectStoreInfoGuts
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   ObjectStoreInfo();
@@ -154,6 +157,7 @@ struct ObjectStoreInfo : public ObjectStoreInfoGuts
   ObjectStoreInfo(ObjectStoreInfo& aOther);
 
 private:
+  // Private destructor, to discourage deletion outside of Release():
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~ObjectStoreInfo();
 #else

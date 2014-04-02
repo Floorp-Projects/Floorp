@@ -124,7 +124,9 @@ function run_test_in_mode(useMozillaPKIX) {
     cert.getUsagesString(true, verified, usages);
     do_print("usages.value=" + usages.value);
     do_check_eq(ca_usages[i], usages.value);
-
+    if (ca_usages[i].indexOf('SSL CA') != -1) {
+      checkCertErrorGeneric(certdb, cert, 0, certificateUsageVerifyCA);
+    }
     //now the ee, names also one based
     for (var j = 0; j < ee_usages[i].length; j++) {
       var ee_name = "ee-" + (j + 1) + "-" + ca_name;
