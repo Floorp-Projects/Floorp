@@ -68,10 +68,18 @@ html|html {
   background-image: linear-gradient(rgba(255, 255, 255, 0),
                                     rgba(255, 255, 255, 0.75));
   border: 1px solid #C3CEDF;
-  border-radius: 5px;
 }
 
 %ifdef WINDOWS_AERO
+@media (-moz-os-version: windows-vista),
+       (-moz-os-version: windows-win7) {
+%endif
+  *|*.main-content {
+    border-radius: 5px;
+  }
+%ifdef WINDOWS_AERO
+}
+
 @media (-moz-windows-glass) {
   /* Buttons */
   *|button,
