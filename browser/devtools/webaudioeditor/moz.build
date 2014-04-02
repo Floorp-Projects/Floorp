@@ -6,6 +6,7 @@
 JS_MODULES_PATH = 'modules/devtools/webaudioeditor'
 
 EXTRA_JS_MODULES += [
+    'panel.js'
 ]
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
