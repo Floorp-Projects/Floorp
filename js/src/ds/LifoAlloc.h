@@ -521,6 +521,36 @@ class LifoAllocScope
     }
 };
 
+class LifoAllocPolicy
+{
+    LifoAlloc &alloc_;
+
+  public:
+    LifoAllocPolicy(LifoAlloc &alloc)
+      : alloc_(alloc)
+    {}
+    void *malloc_(size_t bytes) {
+        return alloc_.alloc(bytes);
+    }
+    void *calloc_(size_t bytes) {
+        void *p = malloc_(bytes);
+        if (p)
+            memset(p, 0, bytes);
+        return p;
+    }
+    void *realloc_(void *p, size_t oldBytes, size_t bytes) {
+        void *n = malloc_(bytes);
+        if (!n)
+            return n;
+        memcpy(n, p, Min(oldBytes, bytes));
+        return n;
+    }
+    void free_(void *p) {
+    }
+    void reportAllocOverflow() const {
+    }
+};
+
 } // namespace js
 
 #endif /* ds_LifoAlloc_h */
