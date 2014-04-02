@@ -34,11 +34,26 @@ ContentHostBase::~ContentHostBase()
 {
 }
 
-TextureHost*
-ContentHostBase::GetAsTextureHost()
+struct AutoLockContentHost
 {
-  return mTextureHost;
-}
+  AutoLockContentHost(ContentHostBase* aHost)
+    : mHost(aHost)
+  {
+    mFailed = mHost->Lock();
+  }
+
+  ~AutoLockContentHost()
+  {
+    if (!mFailed) {
+      mHost->Unlock();
+    }
+  }
+
+  bool Failed() { return mFailed; }
+
+  ContentHostBase* mHost;
+  bool mFailed;
+};
 
 void
 ContentHostBase::Composite(EffectChain& aEffectChain,
@@ -51,22 +66,14 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 {
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");
 
-  if (!mTextureHost) {
-    NS_WARNING("Missing TextureHost");
+  AutoLockContentHost lock(this);
+  if (lock.Failed()) {
     return;
   }
 
-  AutoLockTextureHost lock(mTextureHost);
-  AutoLockTextureHost lockOnWhite(mTextureHostOnWhite);
+  RefPtr<NewTextureSource> source = GetTextureSource();
+  RefPtr<NewTextureSource> sourceOnWhite = GetTextureSourceOnWhite();
 
-  if (lock.Failed() || lockOnWhite.Failed()) {
-    return;
-  }
-
-  RefPtr<NewTextureSource> source = mTextureHost->GetTextureSources();
-  RefPtr<NewTextureSource> sourceOnWhite = mTextureHostOnWhite
-                                             ? mTextureHostOnWhite->GetTextureSources()
-                                             : nullptr;
   if (!source) {
     return;
   }
@@ -219,26 +226,26 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 
 
 void
-ContentHostBase::UseTextureHost(TextureHost* aTexture)
+ContentHostTexture::UseTextureHost(TextureHost* aTexture)
 {
-  CompositableHost::UseTextureHost(aTexture);
+  ContentHostBase::UseTextureHost(aTexture);
   mTextureHost = aTexture;
   mTextureHostOnWhite = nullptr;
 }
 
 void
-ContentHostBase::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
-                                           TextureHost* aTextureOnWhite)
+ContentHostTexture::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
+                                              TextureHost* aTextureOnWhite)
 {
-  CompositableHost::UseComponentAlphaTextures(aTextureOnBlack, aTextureOnWhite);
+  ContentHostBase::UseComponentAlphaTextures(aTextureOnBlack, aTextureOnWhite);
   mTextureHost = aTextureOnBlack;
   mTextureHostOnWhite = aTextureOnWhite;
 }
 
 void
-ContentHostBase::SetCompositor(Compositor* aCompositor)
+ContentHostTexture::SetCompositor(Compositor* aCompositor)
 {
-  CompositableHost::SetCompositor(aCompositor);
+  ContentHostBase::SetCompositor(aCompositor);
   if (mTextureHost) {
     mTextureHost->SetCompositor(aCompositor);
   }
@@ -249,9 +256,9 @@ ContentHostBase::SetCompositor(Compositor* aCompositor)
 
 #ifdef MOZ_DUMP_PAINTING
 void
-ContentHostBase::Dump(FILE* aFile,
-                      const char* aPrefix,
-                      bool aDumpHtml)
+ContentHostTexture::Dump(FILE* aFile,
+                         const char* aPrefix,
+                         bool aDumpHtml)
 {
   if (!aDumpHtml) {
     return;
@@ -827,7 +834,7 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
 }
 
 void
-ContentHostBase::PrintInfo(nsACString& aTo, const char* aPrefix)
+ContentHostTexture::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   aTo += aPrefix;
   aTo += nsPrintfCString("ContentHost (0x%p)", this);
@@ -849,7 +856,7 @@ ContentHostBase::PrintInfo(nsACString& aTo, const char* aPrefix)
 
 
 LayerRenderState
-ContentHostBase::GetRenderState()
+ContentHostTexture::GetRenderState()
 {
   if (!mTextureHost) {
     return LayerRenderState();
@@ -878,7 +885,7 @@ DeprecatedContentHostBase::GetRenderState()
 
 #ifdef MOZ_DUMP_PAINTING
 TemporaryRef<gfx::DataSourceSurface>
-ContentHostBase::GetAsSurface()
+ContentHostTexture::GetAsSurface()
 {
   if (!mTextureHost) {
     return nullptr;
