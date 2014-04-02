@@ -1047,6 +1047,12 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
 
   mStateMachineThreadPool = stateMachinePool;
 
+  nsresult rv;
+  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mTimer->SetTarget(GetStateMachineThread());
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return mReader->Init(cloneReader);
 }
 
@@ -2785,11 +2791,9 @@ nsresult MediaDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
       // or have an event dispatched to run the state machine.
       return NS_OK;
     }
-    if (mTimer) {
-      // We've been asked to schedule a timer to run before an existing timer.
-      // Cancel the existing timer.
-      mTimer->Cancel();
-    }
+    // We've been asked to schedule a timer to run before an existing timer.
+    // Cancel the existing timer.
+    mTimer->Cancel();
   }
 
   uint32_t ms = static_cast<uint32_t>((aUsecs / USECS_PER_MS) & 0xFFFFFFFF);
@@ -2821,18 +2825,12 @@ nsresult MediaDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
 
   mTimeout = timeout;
 
-  nsresult res;
-  if (!mTimer) {
-    mTimer = do_CreateInstance("@mozilla.org/timer;1", &res);
-    if (NS_FAILED(res)) return res;
-    mTimer->SetTarget(GetStateMachineThread());
-  }
-
-  res = mTimer->InitWithFuncCallback(mozilla::TimeoutExpired,
-                                     this,
-                                     ms,
-                                     nsITimer::TYPE_ONE_SHOT);
-  return res;
+  nsresult rv = mTimer->InitWithFuncCallback(mozilla::TimeoutExpired,
+                                             this,
+                                             ms,
+                                             nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }
 
 bool MediaDecoderStateMachine::OnDecodeThread() const
