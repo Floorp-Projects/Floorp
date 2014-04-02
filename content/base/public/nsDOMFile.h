@@ -400,7 +400,7 @@ protected:
   friend class DataOwnerAdapter;
   friend class nsDOMMemoryFileDataOwnerMemoryReporter;
 
-  class DataOwner : public mozilla::LinkedListElement<DataOwner> {
+  class DataOwner MOZ_FINAL : public mozilla::LinkedListElement<DataOwner> {
   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOwner)
     DataOwner(void* aMemoryBuffer, uint64_t aLength)
@@ -416,6 +416,8 @@ protected:
       sDataOwners->insertBack(this);
     }
 
+  private:
+    // Private destructor, to discourage deletion outside of Release():
     ~DataOwner() {
       mozilla::StaticMutexAutoLock lock(sDataOwnerMutex);
 
@@ -428,6 +430,7 @@ protected:
       moz_free(mData);
     }
 
+  public:
     static void EnsureMemoryReporterRegistered();
 
     // sDataOwners and sMemoryReporterRegistered may only be accessed while
