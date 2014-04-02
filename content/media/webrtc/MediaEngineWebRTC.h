@@ -148,7 +148,8 @@ public:
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
   virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
                           bool aAgcOn, uint32_t aAGC,
-                          bool aNoiseOn, uint32_t aNoise) { return NS_OK; };
+                          bool aNoiseOn, uint32_t aNoise,
+                          int32_t aPlayoutDelay) { return NS_OK; };
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
                           TrackID aId,
@@ -264,6 +265,7 @@ public:
     , mEchoCancel(webrtc::kEcDefault)
     , mAGC(webrtc::kAgcDefault)
     , mNoiseSuppress(webrtc::kNsDefault)
+    , mPlayoutDelay(0)
     , mNullTransport(nullptr) {
     MOZ_ASSERT(aVoiceEnginePtr);
     mState = kReleased;
@@ -283,7 +285,8 @@ public:
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
   virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
                           bool aAgcOn, uint32_t aAGC,
-                          bool aNoiseOn, uint32_t aNoise);
+                          bool aNoiseOn, uint32_t aNoise,
+                          int32_t aPlayoutDelay);
 
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
@@ -334,6 +337,7 @@ private:
   webrtc::EcModes  mEchoCancel;
   webrtc::AgcModes mAGC;
   webrtc::NsModes  mNoiseSuppress;
+  int32_t mPlayoutDelay;
 
   NullTransport *mNullTransport;
 };

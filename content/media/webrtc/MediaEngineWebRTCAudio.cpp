@@ -180,7 +180,8 @@ MediaEngineWebRTCAudioSource::GetUUID(nsAString& aUUID)
 nsresult
 MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
                                      bool aAgcOn, uint32_t aAGC,
-                                     bool aNoiseOn, uint32_t aNoise)
+                                     bool aNoiseOn, uint32_t aNoise,
+                                     int32_t aPlayoutDelay)
 {
   LOG(("Audio config: aec: %d, agc: %d, noise: %d",
        aEchoOn ? aEcho : -1,
@@ -204,6 +205,7 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
       mNoiseSuppress = (webrtc::NsModes) aNoise;
     }
   }
+  mPlayoutDelay = aPlayoutDelay;
 
   if (mInitDone) {
     int error;
