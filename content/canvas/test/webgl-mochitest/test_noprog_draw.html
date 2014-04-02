@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+<title>WebGL test: Drawing with a null program</title>
+
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+
+
+<script id="vs" type="x-shader/x-vertex">
+
+void main(void) {
+  gl_PointSize = 16.0;
+  gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+}
+
+</script>
+<script id="fs" type="x-shader/x-fragment">
+
+precision mediump float;
+
+void main(void) {
+  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+}
+
+</script>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<script>
+
+// Give ourselves a scope to return early from:
+(function() {
+  var gl = WebGLUtil.getWebGL('c');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  function errorFunc(str) {
+    ok(false, 'Error: ' + str);
+  }
+  WebGLUtil.setErrorFunc(errorFunc);
+  WebGLUtil.setWarningFunc(errorFunc);
+
+  gl.disable(gl.DEPTH_TEST);
+
+  var prog   = WebGLUtil.createProgramByIds(gl, 'vs', 'fs');
+  if (!prog) {
+    ok(false, 'Program linking should succeed.');
+    return;
+  }
+
+  function checkGLError(func, info, refValue) {
+    if (!refValue)
+      refValue = 0;
+
+    var error = gl.getError();
+    func(error == refValue,
+         '[' + info + '] gl.getError should be 0x' + refValue.toString(16) +
+                                        ', was 0x' + error.toString(16) + '.');
+  }
+
+  // Start drawing
+  checkGLError(ok, 'after setup');
+
+  gl.useProgram(prog);
+  gl.drawArrays(gl.POINTS, 0, 1);
+  checkGLError(ok, 'after non-null-program DrawArrays');
+
+  gl.useProgram(null);
+  gl.drawArrays(gl.POINTS, 0, 1);
+  checkGLError(ok, 'after null-program DrawArrays', gl.INVALID_OPERATION);
+
+  ok(true, 'Test complete.');
+})();
+
+</script>
+
