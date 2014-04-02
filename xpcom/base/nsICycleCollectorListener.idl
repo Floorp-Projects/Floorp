@@ -4,6 +4,33 @@
 
 #include "nsISupports.idl"
 
+/**
+ * Interfaces for observing the cycle collector's work, both from C++ and
+ * from JavaScript.
+ *
+ * If given an object implementing nsICycleCollectorListener, the cycle
+ * collector calls that object's methods as it works, describing the
+ * objects it visits, the edges it finds, and the conclusions it reaches
+ * about which objects are live.
+ *
+ * Analyzing cycle collection from JS is harder: an nsICycleCollectorListener
+ * mustn't mess with the object graph while the cycle collector is trying to
+ * figure it out, which means it can't be implemented by JS code: JS can't do
+ * much of anything useful within those constraints. Instead, JS code can
+ * instantiate @mozilla.org/cycle-collector-logger;1, a C++ class implementing
+ * nsICycleCollectorListener that logs the cycle collector's mumblings and then
+ * replays them later to an nsICycleCollectorHandler --- which *can* be
+ * implemented in JS.
+ */
+
+/**
+ * The interface JS code should implement to receive annotations logged by an
+ * @mozilla.org/cycle-collector-logger;1 instance. Pass an instance of this to
+ * the logger's 'processNext' method.
+ *
+ * The methods are a subset of those in nsICycleCollectorListener; see the
+ * descriptions there.
+ */
 [scriptable, uuid(39a8f80e-7eee-4141-b9ef-6e2a7d6e466d)]
 interface nsICycleCollectorHandler : nsISupports
 {
@@ -22,34 +49,91 @@ interface nsICycleCollectorHandler : nsISupports
     void describeGarbage(in ACString aAddress);
 };
 
-/** Interface to pass to the cycle collector to get information about
- * the CC graph while it's being built. The order of calls will be a
- * call to begin(); then for every node in the graph a call to either
- * noteRefCountedObject() or noteGCedObject(), followed by calls to
- * noteEdge() for every edge starting at that node. Then, there may
- * be calls to noteIncrementalRoot(). After that, beginResults() will
- * be called, followed by a mixture of describeRoot() for ref counted
- * nodes the CC has identified as roots and describeGarbage() for
- * nodes the CC has identified as garbage.  Ref counted nodes that are
- * not identified as either roots or garbage are neither, and have a
- * known edges count equal to their ref count.  Finally, there will be
- * a call to end().  If begin() returns an error none of the other
- * functions will be called.
+/**
+ * Given an instance of this interface, the cycle collector calls the instance's
+ * methods to report the objects it visits, the edges between them, and its
+ * conclusions about which objects are roots and which are garbage.
+ *
+ * For a single cycle collection pass, the cycle collector calls this
+ * interface's methods in the following order:
+ *
+ * - First, |begin|. If |begin| returns an error, none of the listener's other
+ *   methods will be called.
+ *
+ * - Then, for each node in the graph:
+ *   - a call to either |noteRefCountedObject| or |noteGCedObject|, to describe
+ *     the node itself; and
+ *   - for each edge starting at that node, a call to |noteEdge|.
+ *
+ * - Then, zero or more calls to |noteIncrementalRoot|; an "incremental
+ *   root" is an object that may have had a new reference to it created
+ *   during an incremental collection, and must therefore be treated as
+ *   live for safety.
+ *
+ * - After all the nodes have been described, a call to |beginResults|.
+ *
+ * - A series of calls to:
+ *   - |describeRoot|, for reference-counted nodes that the CC has identified as
+ *     roots of collection. (The cycle collector didn't find enough incoming
+ *     edges to account for these nodes' reference counts, so there must be code
+ *     holding on to them that the cycle collector doesn't know about.)
+ *   - |describeGarbage|, for nodes the cycle collector has identified as garbage.
+ *
+ *   Any node not mentioned in a call to |describeRoot| or |describeGarbage| is
+ *   neither a root nor garbage. (The cycle collector was able to find all the
+ *   edges implied by the node's reference count.)
+ *
+ * - Finally, a call to |end|.
+ *
+ *
+ * This interface cannot be implemented by JavaScript code, as it is called
+ * while the cycle collector works. To analyze cycle collection data in JS:
+ *
+ * - Create an instance of @mozilla.org/cycle-collector-logger;1, which
+ *   implements this interface.
+ *
+ * - Set its |disableLog| property to true. This prevents the logger from
+ *   printing messages about each method call to a temporary log file.
+ *
+ * - Set its |wantAfterProcessing| property to true. This tells the logger
+ *   to record calls to its methods in memory. The |processNext| method
+ *   returns events from this record.
+ *
+ * - Perform a collection using the logger. For example, call
+ *   |nsIDOMWindowUtils|'s |garbageCollect| method, passing the logger as
+ *   the |aListener| argument.
+ *
+ * - When the collection is complete, loop calling the logger's
+ *   |processNext| method, passing a JavaScript object that implements
+ *   nsICycleCollectorHandler. This JS code is free to allocate and operate
+ *   on objects however it pleases: the cycle collector has finished its
+ *   work, and the JS code is simply consuming recorded data.
  */
-[scriptable, builtinclass, uuid(2d04dd00-abc4-11e3-a5e2-0800200c9a66)]
+[scriptable, builtinclass, uuid(c46e6947-9076-4a0e-bb27-d4aa3706c54d)]
 interface nsICycleCollectorListener : nsISupports
 {
+    // Return a listener that directs the cycle collector to traverse objects
+    // that it knows won't be collectable. If your purpose is to build a picture
+    // of the heap, and not simply find garbage, then you should use the
+    // listener this returns.
+    //
+    // Note that this does not necessarily return a new listener; rather, it may
+    // simply set a flag on this listener (a side effect!) and return it.
     nsICycleCollectorListener allTraces();
-    // false if allTraces() has not been called.
+
+    // True if this listener will behave like one returned by allTraces().
     readonly attribute boolean wantAllTraces;
 
-    // The default implementation of this interface will print out
-    // a log to a file unless disableLog is set to true.
+    // If true, do not log each method call to a temporary file.
+    // Initially false.
     attribute boolean disableLog;
-    attribute boolean wantAfterProcessing;
 
     // This string will appear somewhere in the log's filename.
     attribute AString filenameIdentifier;
+
+    // If true, record all method calls in memory, to be retrieved later
+    // using |processNext|. Initially false.
+    attribute boolean wantAfterProcessing;
 
     // This string will indicate the full path of the GC log if enabled.
     readonly attribute AString gcLogPath;
@@ -71,9 +155,6 @@ interface nsICycleCollectorListener : nsISupports
                           in unsigned long long aKey,
                           in unsigned long long aKeyDelegate,
                           in unsigned long long aValue);
-    // An "incremental root" is an object that may have had a new
-    // reference to it created during an incremental collection,
-    // and must therefore be treated as live for safety.
     void noteIncrementalRoot(in unsigned long long aAddress);
 
     void beginResults();
@@ -82,6 +163,10 @@ interface nsICycleCollectorListener : nsISupports
     void describeGarbage(in unsigned long long aAddress);
     void end();
 
-    // Returns false if there isn't anything more to process.
+    // Report the next recorded event to |aHandler|, and remove it from the
+    // record. Return false if there isn't anything more to process.
+    //
+    // Note that we only record events to report here if our
+    // |wantAfterProcessing| property is true.
     boolean processNext(in nsICycleCollectorHandler aHandler);
 };
