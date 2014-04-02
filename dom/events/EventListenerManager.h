@@ -174,10 +174,10 @@ public:
 
     EventListenerFlags mFlags;
 
-    nsJSEventListener* GetJSListener() const
+    JSEventHandler* GetJSEventHandler() const
     {
       return (mListenerType == eJSEventListener) ?
-        static_cast<nsJSEventListener*>(mListener.GetXPCOMCallback()) :
+        static_cast<JSEventHandler*>(mListener.GetXPCOMCallback()) :
         nullptr;
     }
 
@@ -190,7 +190,7 @@ public:
     ~Listener()
     {
       if ((mListenerType == eJSEventListener) && mListener) {
-        static_cast<nsJSEventListener*>(
+        static_cast<JSEventHandler*>(
           mListener.GetXPCOMCallback())->Disconnect();
       }
     }

@@ -161,29 +161,27 @@ private:
   uintptr_t mBits;
 };
 
-} // namespace mozilla
-
 /**
  * Implemented by script event listeners. Used to retrieve the script object
  * corresponding to the event target and the handler itself.
  *
- * Note, mTarget is a raw pointer and the owner of the nsJSEventListener object
+ * Note, mTarget is a raw pointer and the owner of the JSEventHandler object
  * is expected to call Disconnect()!
  */
 
-#define NS_JSEVENTLISTENER_IID \
+#define NS_JSEVENTHANDLER_IID \
 { 0x4f486881, 0x1956, 0x4079, \
   { 0x8c, 0xa0, 0xf3, 0xbd, 0x60, 0x5c, 0xc2, 0x79 } }
 
-class nsJSEventListener : public nsIDOMEventListener
+class JSEventHandler : public nsIDOMEventListener
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_JSEVENTLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_JSEVENTHANDLER_IID)
 
-  nsJSEventListener(nsISupports* aTarget, nsIAtom* aType,
-                    const mozilla::TypedEventHandler& aTypedHandler);
+  JSEventHandler(nsISupports* aTarget, nsIAtom* aType,
+                 const TypedEventHandler& aTypedHandler);
 
-  virtual ~nsJSEventListener()
+  virtual ~JSEventHandler()
   {
     NS_ASSERTION(!mTarget, "Should have called Disconnect()!");
   }
@@ -203,7 +201,7 @@ public:
     mTarget = nullptr;
   }
 
-  const mozilla::TypedEventHandler& GetTypedEventHandler() const
+  const TypedEventHandler& GetTypedEventHandler() const
   {
     return mTypedHandler;
   }
@@ -220,24 +218,24 @@ public:
 
   // Set a handler for this event listener.  The handler must already
   // be bound to the right target.
-  void SetHandler(const mozilla::TypedEventHandler& aTypedHandler)
+  void SetHandler(const TypedEventHandler& aTypedHandler)
   {
     mTypedHandler.SetHandler(aTypedHandler);
   }
-  void SetHandler(mozilla::dom::EventHandlerNonNull* aHandler)
+  void SetHandler(dom::EventHandlerNonNull* aHandler)
   {
     mTypedHandler.SetHandler(aHandler);
   }
-  void SetHandler(mozilla::dom::OnBeforeUnloadEventHandlerNonNull* aHandler)
+  void SetHandler(dom::OnBeforeUnloadEventHandlerNonNull* aHandler)
   {
     mTypedHandler.SetHandler(aHandler);
   }
-  void SetHandler(mozilla::dom::OnErrorEventHandlerNonNull* aHandler)
+  void SetHandler(dom::OnErrorEventHandlerNonNull* aHandler)
   {
     mTypedHandler.SetHandler(aHandler);
   }
 
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     return 0;
 
@@ -250,22 +248,24 @@ public:
     // - mEventName: shared with others
   }
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS(nsJSEventListener)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS(JSEventHandler)
 
   bool IsBlackForCC();
 
 protected:
   nsISupports* mTarget;
   nsCOMPtr<nsIAtom> mEventName;
-  mozilla::TypedEventHandler mTypedHandler;
+  TypedEventHandler mTypedHandler;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsJSEventListener, NS_JSEVENTLISTENER_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(JSEventHandler, NS_JSEVENTHANDLER_IID)
+
+} // namespace mozilla
 
 /**
  * Factory function.  aHandler must already be bound to aTarget.
@@ -274,7 +274,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsJSEventListener, NS_JSEVENTLISTENER_IID)
 nsresult NS_NewJSEventHandler(nsISupports* aTarget,
                               nsIAtom* aType,
                               const mozilla::TypedEventHandler& aTypedHandler,
-                              nsJSEventListener** aReturn);
+                              mozilla::JSEventHandler** aReturn);
 
 #endif // mozilla_JSEventHandler_h_
 
