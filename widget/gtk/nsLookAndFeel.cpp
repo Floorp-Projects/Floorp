@@ -1030,8 +1030,14 @@ nsLookAndFeel::Init()
     GtkWidget *parent = gtk_fixed_new();
     GtkWidget *button = gtk_button_new();
     GtkWidget *label = gtk_label_new("M");
+#if (MOZ_WIDGET_GTK == 2)
     GtkWidget *combobox = gtk_combo_box_new();
     GtkWidget *comboboxLabel = gtk_label_new("M");
+    gtk_container_add(GTK_CONTAINER(combobox), comboboxLabel);
+#else
+    GtkWidget *combobox = gtk_combo_box_new_with_entry();
+    GtkWidget *comboboxLabel = gtk_bin_get_child(GTK_BIN(combobox));
+#endif
     GtkWidget *window = gtk_window_new(GTK_WINDOW_POPUP);
     GtkWidget *treeView = gtk_tree_view_new();
     GtkWidget *linkButton = gtk_link_button_new("http://example.com/");
@@ -1039,7 +1045,6 @@ nsLookAndFeel::Init()
     GtkWidget *entry = gtk_entry_new();
 
     gtk_container_add(GTK_CONTAINER(button), label);
-    gtk_container_add(GTK_CONTAINER(combobox), comboboxLabel);
     gtk_container_add(GTK_CONTAINER(parent), button);
     gtk_container_add(GTK_CONTAINER(parent), treeView);
     gtk_container_add(GTK_CONTAINER(parent), linkButton);
