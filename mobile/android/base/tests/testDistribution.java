@@ -34,11 +34,6 @@ public class testDistribution extends ContentProviderTest {
 
     private Activity mActivity;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     /**
      * This is a hack.
      *

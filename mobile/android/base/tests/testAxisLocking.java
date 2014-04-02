@@ -11,11 +11,6 @@ import org.mozilla.gecko.*;
  * - Verify that the 45-degree angle was not thrown out and it dragged diagonally
  */
 public class testAxisLocking extends PixelTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testAxisLocking() {
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 

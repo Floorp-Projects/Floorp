@@ -1,5 +1,7 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.tests.BaseRobocopTest.Type;
+
 public class testCheck extends PixelTest {
     private void pause(int length) {
         try {
@@ -10,8 +12,8 @@ public class testCheck extends PixelTest {
     }
 
     @Override
-    protected int getTestType() {
-        return TEST_TALOS;
+    protected Type getTestType() {
+        return Type.TALOS;
     }
 
     public void testCheck() {

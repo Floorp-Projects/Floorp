@@ -3,11 +3,6 @@ package org.mozilla.gecko.tests;
 import org.mozilla.gecko.*;
 
 public class testBookmarksPanel extends AboutHomeTest {
-
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testBookmarksPanel() {
         final String BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
 

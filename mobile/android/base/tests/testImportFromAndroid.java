@@ -23,11 +23,6 @@ public class testImportFromAndroid extends AboutHomeTest {
     ArrayList<String> androidData = new ArrayList<String>();
     ArrayList<String> firefoxHistory = new ArrayList<String>();
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testImportFromAndroid() {
         ArrayList<String> firefoxBookmarks = new ArrayList<String>();
         ArrayList<String> oldFirefoxHistory = new ArrayList<String>();

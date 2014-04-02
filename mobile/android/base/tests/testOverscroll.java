@@ -9,11 +9,6 @@ import org.mozilla.gecko.*;
  * - Drag page rightwards by 100 pixels into overscroll, verify it snaps back.
  */
 public class testOverscroll extends PixelTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testOverscroll() {
         String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
 

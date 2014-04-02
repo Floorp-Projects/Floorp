@@ -15,11 +15,6 @@ public class testVkbOverlap extends PixelTest {
     private static final int LESS_THAN_CURSOR_BLINK_PERIOD = CURSOR_BLINK_PERIOD - 50;
     private static final int PAGE_SETTLE_TIME = 5000;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testVkbOverlap() {
         blockForGeckoReady();
         testSetup("initial-scale=1.0, user-scalable=no", false);

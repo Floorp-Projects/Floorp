@@ -15,11 +15,6 @@ import org.json.JSONObject;
  */
 public class testPrivateBrowsing extends ContentContextMenuTest {
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testPrivateBrowsing() {
         String bigLinkUrl = getAbsoluteUrl(StringHelper.ROBOCOP_BIG_LINK_URL);
         String blank1Url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);

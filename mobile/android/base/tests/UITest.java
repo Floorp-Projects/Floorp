@@ -12,6 +12,7 @@ import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
+import org.mozilla.gecko.tests.BaseRobocopTest.Type;
 import org.mozilla.gecko.tests.components.*;
 import org.mozilla.gecko.tests.helpers.HelperInitializer;
 
@@ -35,11 +36,6 @@ import java.util.HashMap;
  */
 abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
                       implements UITestContext {
-
-    protected enum Type {
-        MOCHITEST,
-        TALOS
-    }
 
     private static final String LAUNCHER_ACTIVITY = TestConstants.ANDROID_PACKAGE_NAME + ".App";
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";

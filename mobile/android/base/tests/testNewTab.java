@@ -12,11 +12,6 @@ public class testNewTab extends BaseTest {
     private Element closeTab = null;
     private int tabCountInt = 0;
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testNewTab() {
         String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
         String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");

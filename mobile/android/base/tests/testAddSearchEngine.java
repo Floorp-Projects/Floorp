@@ -21,11 +21,6 @@ public class testAddSearchEngine extends AboutHomeTest {
     private final String SEARCH_TEXT = "Firefox for Android";
     private final String ADD_SEARCHENGINE_OPTION_TEXT = "Add Search Engine";
 
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testAddSearchEngine() {
         String blankPageURL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         String searchEngineURL = getAbsoluteUrl(StringHelper.ROBOCOP_SEARCH_URL);

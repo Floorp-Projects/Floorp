@@ -14,11 +14,6 @@ import android.util.Log;
 import org.json.JSONObject;
 
 public class testPromptGridInput extends BaseTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     protected int index = 1;
     public void testPromptGridInput() {
         blockForGeckoReady();

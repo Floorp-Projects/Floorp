@@ -14,11 +14,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class testPasswordEncrypt extends BaseTest {
-    @Override
-    protected int getTestType() {
-        return TEST_MOCHITEST;
-    }
-
     public void testPasswordEncrypt() {
         Context context = (Context)getActivity();
         ContentResolver cr = context.getContentResolver();
