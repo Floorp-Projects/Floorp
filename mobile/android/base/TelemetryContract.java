@@ -26,6 +26,9 @@ public interface TelemetryContract {
 
         // Top site edited.
         public static final String TOP_SITES_EDIT = "edit.1";
+
+        // Set default panel.
+        public static final String PANEL_SET_DEFAULT = "setdefault.1";
     }
 
     /**
