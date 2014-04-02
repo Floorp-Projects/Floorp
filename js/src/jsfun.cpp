@@ -693,6 +693,8 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
 
     if (IsAsmJSModule(fun))
         return AsmJSModuleToString(cx, fun, !lambdaParen);
+    if (IsAsmJSFunction(fun))
+        return AsmJSFunctionToString(cx, fun);
 
     StringBuffer out(cx);
     RootedScript script(cx);

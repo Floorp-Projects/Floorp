@@ -236,3 +236,76 @@ if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
 }
 
 })();
+
+/* Functions */
+(function() {
+
+var noSrc = "function noArgument() {\n\
+    return 42;\n\
+}"
+var oneSrc = "function oneArgument(x) {\n\
+    x = x | 0;\n\
+    return x + 1 | 0;\n\
+}";
+var twoSrc = "function twoArguments(x, y) {\n\
+    x = x | 0;\n\
+    y = y | 0;\n\
+    return x + y | 0;\n\
+}";
+var threeSrc = "function threeArguments(a, b, c) {\n\
+    a = +a;\n\
+    b = +b;\n\
+    c = +c;\n\
+    return +(+(a * b) + c);\n\
+}";
+
+var funcBody = '\n\
+    "use asm";\n'
+    + noSrc + '\n'
+    + oneSrc + '\n'
+    + twoSrc + '\n'
+    + threeSrc + '\n'
+    + 'return {\n\
+    no: noArgument,\n\
+    one: oneArgument,\n\
+    two: twoArguments,\n\
+    three: threeArguments\n\
+    }';
+
+var g = new Function(funcBody);
+var moduleG = g();
+
+function checkFuncSrc(m) {
+    assertEq(m.no.toString(), noSrc);
+    assertEq(m.no.toSource(), noSrc);
+
+    assertEq(m.one.toString(), oneSrc);
+    assertEq(m.one.toSource(), oneSrc);
+
+    assertEq(m.two.toString(), twoSrc);
+    assertEq(m.two.toSource(), twoSrc);
+
+    assertEq(m.three.toString(), threeSrc);
+    assertEq(m.three.toSource(), threeSrc);
+}
+checkFuncSrc(moduleG);
+
+if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
+    var g2 = new Function(funcBody);
+    assertEq(isAsmJSModuleLoadedFromCache(g2), true);
+    m = g2();
+    checkFuncSrc(m);
+
+    var moduleDecl = 'function g3() {' + funcBody + '}';
+    eval(moduleDecl);
+    m = g3();
+    assertEq(isAsmJSModuleLoadedFromCache(g3), false);
+    checkFuncSrc(m);
+
+    eval('var x = 42;' + moduleDecl);
+    m = g3();
+    assertEq(isAsmJSModuleLoadedFromCache(g3), true);
+    checkFuncSrc(m);
+}
+
+})();
