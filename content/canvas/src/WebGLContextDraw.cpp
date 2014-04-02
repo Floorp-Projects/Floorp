@@ -69,9 +69,9 @@ bool WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcoun
         return false;
     }
 
-    // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
     if (!mCurrentProgram) {
+        ErrorInvalidOperation("%s: null CURRENT_PROGRAM", info);
         return false;
     }
 
@@ -210,9 +210,9 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
         return false;
     }
 
-    // If there is no current program, this is silently ignored.
     // Any checks below this depend on a program being available.
     if (!mCurrentProgram) {
+        ErrorInvalidOperation("%s: null CURRENT_PROGRAM", info);
         return false;
     }
 
