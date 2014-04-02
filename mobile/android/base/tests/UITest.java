@@ -49,7 +49,6 @@ abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
 
     private final static Class<Activity> sLauncherActivityClass;
 
-    private Activity mActivity;
     private Solo mSolo;
     private Driver mDriver;
     private Actions mActions;
@@ -83,11 +82,11 @@ abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
 
         final String rootPath = FennecInstrumentationTestRunner.getFennecArguments().getString("deviceroot");
         final HashMap config = loadConfigTable(rootPath);
-        final Intent intent = createActivityIntent(config);
-        setActivityIntent(intent);
 
         // Start the activity.
-        mActivity = getActivity();
+        final Intent intent = createActivityIntent(config);
+        setActivityIntent(intent);
+        final Activity activity = getActivity();
 
         if (getTestType() == Type.TALOS) {
             mAsserter = new FennecTalosAssert();
@@ -99,9 +98,9 @@ abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
         mAsserter.setLogFile(logFile);
         mAsserter.setTestName(this.getClass().getName());
 
-        mSolo = new Solo(getInstrumentation(), mActivity);
-        mDriver = new FennecNativeDriver(mActivity, mSolo, rootPath);
-        mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
+        mSolo = new Solo(getInstrumentation(), activity);
+        mDriver = new FennecNativeDriver(activity, mSolo, rootPath);
+        mActions = new FennecNativeActions(activity, mSolo, getInstrumentation(), mAsserter);
 
         mBaseHostnameUrl = ((String) config.get("host")).replaceAll("(/$)", "");
         mBaseIpUrl = ((String) config.get("rawhost")).replaceAll("(/$)", "");
