@@ -263,6 +263,7 @@
     "docshell/test/navigation/test_reserved.html":"",
     "docshell/test/test_bug413310.html":"",
     "docshell/test/test_bug668513.html":"",
+    "docshell/test/test_framedhistoryframes.html":"",
 
     "dom/imptests/html/webgl":"",        
     "dom/battery/test/test_battery_basics.html":"",
