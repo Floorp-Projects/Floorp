@@ -112,10 +112,16 @@ interface nsICycleCollectorHandler : nsISupports
 [scriptable, builtinclass, uuid(c46e6947-9076-4a0e-bb27-d4aa3706c54d)]
 interface nsICycleCollectorListener : nsISupports
 {
-    // Return a listener that directs the cycle collector to traverse objects
-    // that it knows won't be collectable. If your purpose is to build a picture
-    // of the heap, and not simply find garbage, then you should use the
-    // listener this returns.
+    // Return a listener that directs the cycle collector to traverse
+    // objects that it knows won't be collectable.
+    //
+    // Note that even this listener will not visit every node in the heap;
+    // the cycle collector can't see the entire heap. But while this
+    // listener is in use, the collector disables some optimizations it
+    // normally uses to avoid certain classes of objects that are certainly
+    // alive. So, if your purpose is to get a view of the portion of the
+    // heap that is of interest to the cycle collector, and not simply find
+    // garbage, then you should use the listener this returns.
     //
     // Note that this does not necessarily return a new listener; rather, it may
     // simply set a flag on this listener (a side effect!) and return it.
