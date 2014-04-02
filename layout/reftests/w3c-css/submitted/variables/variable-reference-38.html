@@ -9,8 +9,8 @@
 <link rel="match" href="variable-declaration-59-ref.html">
 <style>
 p { padding-left: 1em; }
-#a { var-style: solid; var-left: black dotted; border-style: var(style); border-left: var(left); border-top: none; border-right: none; border-bottom: none; }
-#b { var-style: solid; var-left: black dotted; border-left: var(left); border-style: var(style); border-top: none; border-right: none; border-bottom: none; }
+#a { --style: solid; --left: black dotted; border-style: var(--style); border-left: var(--left); border-top: none; border-right: none; border-bottom: none; }
+#b { --style: solid; --left: black dotted; border-left: var(--left); border-style: var(--style); border-top: none; border-right: none; border-bottom: none; }
 </style>
 <p id=a>The left border must be dotted.</p>
 <p id=b>The left border must be solid.</p>

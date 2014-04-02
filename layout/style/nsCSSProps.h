@@ -16,6 +16,10 @@
 #include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"
 
+// Length of the "--" prefix on custom names (such as custom property names,
+// and, in the future, custom media query names).
+#define CSS_CUSTOM_NAME_PREFIX_LENGTH 2
+
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
 #define VARIANT_LENGTH          0x000002  // L
@@ -289,8 +293,7 @@ public:
   static nsCSSProperty LookupProperty(const nsACString& aProperty,
                                       EnabledState aEnabled);
   // Returns whether aProperty is a custom property name, i.e. begins with
-  // "var-" and has at least one more character.  This assumes that
-  // the CSS Variables pref has been enabled.
+  // "--".  This assumes that the CSS Variables pref has been enabled.
   static bool IsCustomPropertyName(const nsAString& aProperty);
   static bool IsCustomPropertyName(const nsACString& aProperty);
 

@@ -15,9 +15,9 @@ body {
 }
 p {
   font-family: monospace;
-  var-a: var(b), sans-serif;
-  var-b: Ahem;
-  font-family: var(a);
+  --a: var(--b), sans-serif;
+  --b: Ahem;
+  font-family: var(--a);
 }
 </style>
 <p>This text must be in Ahem.</p>

@@ -10,15 +10,15 @@
 <style>
 body {
   color: orange;
-  var-c: var(a,green);
+  --c: var(--a,green);
 }
 p {
-  var-a: var(b);
+  --a: var(--b);
 }
 p {
   color: red;
-  var-b: var(c,crimson);
-  color: var(a);
+  --b: var(--c,crimson);
+  color: var(--a);
 }
 </style>
 <p>This text must be green.</p>

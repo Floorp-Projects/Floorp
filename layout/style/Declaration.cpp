@@ -1120,9 +1120,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
   }
 }
 
-// Length of the "var-" prefix of custom property names.
-#define VAR_PREFIX_LENGTH 4
-
 bool
 Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
@@ -1132,7 +1129,9 @@ Declaration::GetValueIsImportant(const nsAString& aProperty) const
     return false;
   }
   if (propID == eCSSPropertyExtra_variable) {
-    return GetVariableValueIsImportant(Substring(aProperty, VAR_PREFIX_LENGTH));
+    const nsSubstring& variableName =
+      Substring(aProperty, CSS_CUSTOM_NAME_PREFIX_LENGTH);
+    return GetVariableValueIsImportant(variableName);
   }
   return GetValueIsImportant(propID);
 }
@@ -1187,7 +1186,7 @@ void
 Declaration::AppendVariableAndValueToString(const nsAString& aName,
                                             nsAString& aResult) const
 {
-  aResult.AppendLiteral("var-");
+  aResult.AppendLiteral("--");
   aResult.Append(aName);
   CSSVariableDeclarations::Type type;
   nsString value;

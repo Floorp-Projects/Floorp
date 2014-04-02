@@ -40,8 +40,8 @@ function runTest() {
   }
 
   // also test a custom property
-  span.setAttribute("style", "var-color: rgb(10%,25%,99%)");
-  is(span.style.getAuthoredPropertyValue("var-color"), " rgb(10%,25%,99%)", "specified var-color");
+  span.setAttribute("style", "--color: rgb(10%,25%,99%)");
+  is(span.style.getAuthoredPropertyValue("--color"), " rgb(10%,25%,99%)", "specified --color");
 
   SimpleTest.finish();
 }

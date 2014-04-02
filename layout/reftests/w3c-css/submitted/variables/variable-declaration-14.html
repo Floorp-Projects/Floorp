@@ -13,9 +13,9 @@ p {
 }
 span {
   color: red;
-  var-a:var(b)red;
-  var-b:orange;
-  color: var(a);
+  --a:var(--b)red;
+  --b:orange;
+  color: var(--a);
 }
 </style>
 <p><span>This text must be green.</span></p>

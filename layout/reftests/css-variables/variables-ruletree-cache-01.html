@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <style>
-  p { var-foo: purple; background-color: var(foo) }
-  p#myid { var-foo: blue }
+  p { --foo: purple; background-color: var(--foo) }
+  p#myid { --foo: blue }
 </style>
 <p>This should be purple, and might cache background in the rule tree.</p>
 <p id="myid">This should be blue, and can't used that cached struct,

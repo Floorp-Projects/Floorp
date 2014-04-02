@@ -31,7 +31,7 @@ public:
    * Returns whether this set of variable declarations includes a variable
    * with a given name.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name).
    */
   bool Has(const nsAString& aName) const;
@@ -49,7 +49,7 @@ public:
   /**
    * Gets the value of a variable in this set of variable declarations.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name).
    * @param aType Out parameter into which the type of the variable value will
    *   be stored.
@@ -65,7 +65,7 @@ public:
    * Adds or modifies an existing entry in this set of variable declarations
    * to have the value 'initial'.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name) whose value is to be set.
    */
   void PutInitial(const nsAString& aName);
@@ -74,7 +74,7 @@ public:
    * Adds or modifies an existing entry in this set of variable declarations
    * to have the value 'inherit'.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name) whose value is to be set.
    */
   void PutInherit(const nsAString& aName);
@@ -83,7 +83,7 @@ public:
    * Adds or modifies an existing entry in this set of variable declarations
    * to have the value 'unset'.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name) whose value is to be set.
    */
   void PutUnset(const nsAString& aName);
@@ -92,7 +92,7 @@ public:
    * Adds or modifies an existing entry in this set of variable declarations
    * to have a token stream value.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name) whose value is to be set.
    * @param aTokenStream The CSS token stream.
    */
@@ -101,7 +101,7 @@ public:
   /**
    * Removes an entry in this set of variable declarations.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name) whose entry is to be removed.
    */
   void Remove(const nsAString& aName);
