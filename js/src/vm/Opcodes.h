@@ -287,11 +287,10 @@
     \
     /* Push a closure for a named or anonymous function expression. */ \
     macro(JSOP_LAMBDA,    130, "lambda",    NULL,         5,  0,  1, JOF_OBJECT) \
+    macro(JSOP_LAMBDA_ARROW, 131, "lambda_arrow", NULL,   5,  1,  1, JOF_OBJECT) \
     \
     /* Used for named function expression self-naming, if lightweight. */ \
-    macro(JSOP_CALLEE,    131, "callee",    NULL,         1,  0,  1, JOF_BYTE) \
-    \
-    macro(JSOP_UNUSED132, 132, "unused132", NULL,         1,  0,  0,  JOF_BYTE) \
+    macro(JSOP_CALLEE,    132, "callee",    NULL,         1,  0,  1, JOF_BYTE) \
     \
     /* Pick an element from the stack. */ \
     macro(JSOP_PICK,        133, "pick",      NULL,       2,  0,  0,  JOF_UINT8|JOF_TMPSLOT2) \

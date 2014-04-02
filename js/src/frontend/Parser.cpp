@@ -1821,7 +1821,7 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
         pn->pn_dflags |= PND_BOUND;
     } else {
         /* A function expression does not introduce any binding. */
-        pn->setOp(JSOP_LAMBDA);
+        pn->setOp(kind == Arrow ? JSOP_LAMBDA_ARROW : JSOP_LAMBDA);
     }
 
     // When a lazily-parsed function is called, we only fully parse (and emit)

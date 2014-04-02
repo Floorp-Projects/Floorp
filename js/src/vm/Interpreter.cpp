@@ -1633,7 +1633,6 @@ CASE(JSOP_UNUSED107)
 CASE(JSOP_UNUSED124)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
-CASE(JSOP_UNUSED132)
 CASE(JSOP_UNUSED139)
 CASE(JSOP_UNUSED140)
 CASE(JSOP_UNUSED141)
@@ -3018,6 +3017,21 @@ CASE(JSOP_LAMBDA)
 }
 END_CASE(JSOP_LAMBDA)
 
+CASE(JSOP_LAMBDA_ARROW)
+{
+    /* Load the specified function object literal. */
+    RootedFunction &fun = rootFunction0;
+    fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
+    RootedValue &thisv = rootValue0;
+    thisv = REGS.sp[-1];
+    JSObject *obj = LambdaArrow(cx, fun, REGS.fp()->scopeChain(), thisv);
+    if (!obj)
+        goto error;
+    JS_ASSERT(obj->getProto());
+    REGS.sp[-1].setObject(*obj);
+}
+END_CASE(JSOP_LAMBDA_ARROW)
+
 CASE(JSOP_CALLEE)
     JS_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
     PUSH_COPY(REGS.fp()->calleev());
@@ -3594,34 +3608,31 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
 JSObject *
 js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
 {
+    MOZ_ASSERT(!fun->isArrow());
+
     RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent, TenuredObject));
     if (!clone)
         return nullptr;
 
-    if (fun->isArrow()) {
-        // Note that this will assert if called from Ion code. Ion can't yet
-        // emit code for a bound arrow function (bug 851913).
-        AbstractFramePtr frame;
-        if (cx->currentlyRunningInInterpreter()) {
-            frame = cx->interpreterFrame();
-        } else {
-#ifdef JS_ION
-            JS_ASSERT(cx->currentlyRunningInJit());
-            frame = jit::GetTopBaselineFrame(cx);
-#endif
-        }
+    MOZ_ASSERT(clone->global() == clone->global());
+    return clone;
+}
 
-        if (!ComputeThis(cx, frame))
-            return nullptr;
+JSObject *
+js::LambdaArrow(JSContext *cx, HandleFunction fun, HandleObject parent, HandleValue thisv)
+{
+    MOZ_ASSERT(fun->isArrow());
 
-        RootedValue thisval(cx, frame.thisValue());
-        clone = js_fun_bind(cx, clone, thisval, nullptr, 0);
-        if (!clone)
-            return nullptr;
-        clone->as<JSFunction>().setArrow();
-    }
+    RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent, TenuredObject));
+    if (!clone)
+        return nullptr;
 
-    JS_ASSERT(clone->global() == clone->global());
+    clone = js_fun_bind(cx, clone, thisv, nullptr, 0);
+    if (!clone)
+        return nullptr;
+    clone->as<JSFunction>().setArrow();
+
+    MOZ_ASSERT(clone->global() == clone->global());
     return clone;
 }
 
