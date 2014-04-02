@@ -3189,13 +3189,16 @@ pref("print.print_paper_size", 0);
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 0); // twips
 
+# ANDROID
+#endif
+
+#if defined(ANDROID) || defined(FXOS_SIMULATOR)
 // font names
 
 pref("font.alias-list", "sans,sans-serif,serif,monospace");
 
-// Gonk and Android ship different sets of fonts
-
-#ifdef MOZ_WIDGET_GONK
+// Gonk (along with FxOS Simulator) and Android ship different sets of fonts
+#if defined(MOZ_WIDGET_GONK) || defined(FXOS_SIMULATOR)
 
 // TODO: some entries could probably be cleaned up.
 
@@ -3263,7 +3266,8 @@ pref("font.name.monospace.zh-TW", "Fira Mono OT");
 
 #else
 
-// not MOZ_WIDGET_GONK (i.e. this is Firefox for Android) - here, we use the bundled fonts
+// not MOZ_WIDGET_GONK / FXOS_SIMULATOR
+// (i.e. this is Firefox for Android) - here, we use the bundled fonts
 
 // ar
 
@@ -3353,7 +3357,7 @@ pref("font.name-list.serif.zh-TW", "Droid Serif, Droid Sans Fallback");
 pref("font.name-list.sans-serif.zh-TW", "Roboto, Droid Sans, Droid Sans Fallback");
 pref("font.name-list.monospace.zh-TW", "Droid Sans Fallback");
 
-// end ! MOZ_WIDGET_GONK
+// end ! (MOZ_WIDGET_GONK || FXOS_SIMULATOR)
 
 #endif
 
@@ -3482,6 +3486,10 @@ pref("font.default.x-tibt", "serif");
 pref("font.size.variable.x-tibt", 16);
 pref("font.size.fixed.x-tibt", 13);
 
+# ANDROID || FXOS_SIMUALTOR
+#endif
+
+#ifdef ANDROID
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
 pref("print.postscript.paper_size",    "letter");
