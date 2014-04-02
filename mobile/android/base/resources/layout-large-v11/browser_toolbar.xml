@@ -82,21 +82,21 @@
                   android:layout_toLeftOf="@id/menu"
                   android:layout_alignWithParentIfMissing="true"/>
 
-    <org.mozilla.gecko.widget.GeckoImageButton android:id="@+id/menu"
-                                               style="@style/UrlBar.ImageButton"
-                                               android:layout_width="56dip"
-                                               android:layout_alignParentRight="true"
-                                               android:contentDescription="@string/menu"
-                                               android:background="@drawable/action_bar_button"
-                                               android:visibility="gone"/>
+    <org.mozilla.gecko.widget.ThemedImageButton android:id="@+id/menu"
+                                                style="@style/UrlBar.ImageButton"
+                                                android:layout_width="56dip"
+                                                android:layout_alignParentRight="true"
+                                                android:contentDescription="@string/menu"
+                                                android:background="@drawable/action_bar_button"
+                                                android:visibility="gone"/>
 
-    <org.mozilla.gecko.widget.GeckoImageView android:id="@+id/menu_icon"
-                                             style="@style/UrlBar.ImageButton"
-                                             android:layout_alignLeft="@id/menu"
-                                             android:layout_alignRight="@id/menu"
-                                             android:gravity="center_vertical"
-                                             android:src="@drawable/menu_level"
-                                             android:visibility="gone"/>
+    <org.mozilla.gecko.widget.ThemedImageView android:id="@+id/menu_icon"
+                                              style="@style/UrlBar.ImageButton"
+                                              android:layout_alignLeft="@id/menu"
+                                              android:layout_alignRight="@id/menu"
+                                              android:gravity="center_vertical"
+                                              android:src="@drawable/menu_level"
+                                              android:visibility="gone"/>
 
     <ImageView android:id="@+id/shadow"
                android:layout_width="fill_parent"
