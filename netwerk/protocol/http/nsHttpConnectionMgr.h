@@ -458,7 +458,12 @@ private:
         nsCOMPtr<nsIAsyncOutputStream> mBackupStreamOut;
         nsCOMPtr<nsIAsyncInputStream>  mBackupStreamIn;
 
+        // mHasConnected tracks whether one of the sockets has completed the
+        // connection process. It may have completed unsuccessfully.
         bool                           mHasConnected;
+
+        bool                           mPrimaryConnectedOK;
+        bool                           mBackupConnectedOK;
     };
     friend class nsHalfOpenSocket;
 

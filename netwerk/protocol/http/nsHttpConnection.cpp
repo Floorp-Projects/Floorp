@@ -24,6 +24,7 @@
 #include "sslt.h"
 #include "nsStringStream.h"
 #include "nsProxyRelease.h"
+#include "nsSocketTransport2.h"
 #include "nsPreloadedStream.h"
 #include "ASpdySession.h"
 #include "mozilla/Telemetry.h"
@@ -54,6 +55,7 @@ nsHttpConnection::nsHttpConnection()
     , mMaxBytesRead(0)
     , mTotalBytesRead(0)
     , mTotalBytesWritten(0)
+    , mConnectedTransport(false)
     , mKeepAlive(true) // assume to keep-alive by default
     , mKeepAliveMask(true)
     , mDontReuse(false)
@@ -115,6 +117,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
                        nsISocketTransport *transport,
                        nsIAsyncInputStream *instream,
                        nsIAsyncOutputStream *outstream,
+                       bool connectedTransport,
                        nsIInterfaceRequestor *callbacks,
                        PRIntervalTime rtt)
 {
@@ -128,6 +131,7 @@ nsHttpConnection::Init(nsHttpConnectionInfo *info,
     NS_ENSURE_ARG_POINTER(info);
     NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 
+    mConnectedTransport = connectedTransport;
     mConnInfo = info;
     mLastWriteTime = mLastReadTime = PR_IntervalNow();
     mSupportsPipelining =
@@ -330,6 +334,26 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
 
     // reset the read timers to wash away any idle time
     mLastWriteTime = mLastReadTime = PR_IntervalNow();
+
+    // Connection failures are Activated() just like regular transacions.
+    // If we don't have a confirmation of a connected socket then test it
+    // with a write() to get relevant error code.
+    if (!mConnectedTransport) {
+        uint32_t count;
+        mSocketOutCondition = NS_ERROR_FAILURE;
+        if (mSocketOut) {
+            mSocketOutCondition = mSocketOut->Write("", 0, &count);
+        }
+        if (NS_FAILED(mSocketOutCondition) &&
+            mSocketOutCondition != NS_BASE_STREAM_WOULD_BLOCK) {
+            LOG(("nsHttpConnection::Activate [this=%p] Bad Socket %x\n",
+                 this, mSocketOutCondition));
+            mSocketOut->AsyncWait(nullptr, 0, 0, nullptr);
+            mTransaction = trans;
+            CloseTransaction(mTransaction, mSocketOutCondition);
+            return mSocketOutCondition;
+        }
+    }
 
     // Update security callbacks
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
@@ -629,7 +653,7 @@ nsHttpConnection::TimeToLive()
 bool
 nsHttpConnection::IsAlive()
 {
-    if (!mSocketTransport)
+    if (!mSocketTransport || !mConnectedTransport)
         return false;
 
     // SocketTransport::IsAlive can run the SSL state machine, so make sure
