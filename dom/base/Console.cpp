@@ -74,7 +74,7 @@ ConsoleStructuredCloneCallbacksRead(JSContext* aCx,
   }
 
   nsTArray<nsString>* strings = static_cast<nsTArray<nsString>*>(aClosure);
-  MOZ_ASSERT(strings->Length() <= aData);
+  MOZ_ASSERT(strings->Length() > aData);
 
   JS::Rooted<JS::Value> value(aCx);
   if (!xpc::StringToJsval(aCx, strings->ElementAt(aData), &value)) {
