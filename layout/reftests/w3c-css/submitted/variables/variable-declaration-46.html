@@ -9,15 +9,15 @@
 <link rel="match" href="support/color-green-ref.html">
 <style>
 body {
-  var-a: crimson;
+  --a: crimson;
 }
 p {
   color: red;
 }
 p {
   color: orange;
-  var-a: initial;
-  color: var(a,green);
+  --a: initial;
+  color: var(--a,green);
 }
 </style>
 <p>This text must be green.</p>

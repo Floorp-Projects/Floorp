@@ -3,7 +3,7 @@
      http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <!DOCTYPE html>
-<title>CSS Test: Test declaring a variable where the 'a' in the "var-" prefix of the custom property name is escaped.</title>
+<title>CSS Test: Test declaring a variable where the second '-' in the "--" prefix of the custom property name is escaped.</title>
 <link rel="author" title="Cameron McCormack" href="mailto:cam@mcc.id.au">
 <link rel="help" href="http://www.w3.org/TR/css-variables-1/#defining-variables">
 <link rel="match" href="support/color-green-ref.html">
@@ -13,8 +13,8 @@ p {
 }
 p {
   color: orange;
-  v\61r-a: green;
-  color: var(a);
+  -\2d a: green;
+  color: var(--a);
 }
 </style>
 <p>This text must be green.</p>

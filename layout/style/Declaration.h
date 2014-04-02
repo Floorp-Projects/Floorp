@@ -74,7 +74,7 @@ public:
   /**
    * Adds a custom property declaration to this object.
    *
-   * @param aName The variable name (i.e., without the "var-" prefix).
+   * @param aName The variable name (i.e., without the "--" prefix).
    * @param aType The type of value the variable has.
    * @param aValue The value of the variable, if aType is
    *   CSSVariableDeclarations::eTokenStream.
@@ -91,7 +91,7 @@ public:
   /**
    * Removes a custom property declaration from this object.
    *
-   * @param aName The variable name (i.e., without the "var-" prefix).
+   * @param aName The variable name (i.e., without the "--" prefix).
    */
   void RemoveVariableDeclaration(const nsAString& aName);
 
@@ -99,7 +99,7 @@ public:
    * Returns whether a custom property declaration for a variable with
    * a given name exists on this object.
    *
-   * @param aName The variable name (i.e., without the "var-" prefix).
+   * @param aName The variable name (i.e., without the "--" prefix).
    */
   bool HasVariableDeclaration(const nsAString& aName) const;
 
@@ -107,7 +107,7 @@ public:
    * Gets the string value for a custom property declaration of a variable
    * with a given name.
    *
-   * @param aName The variable name (i.e., without the "var-" prefix).
+   * @param aName The variable name (i.e., without the "--" prefix).
    * @param aValue Out parameter into which the variable's value will be
    *   stored.  If the value is 'initial' or 'inherit', that exact string
    *   will be stored in aValue.
@@ -318,7 +318,7 @@ public:
     MOZ_ASSERT(mOrder[aIndex] >= eCSSProperty_COUNT);
     uint32_t variableIndex = mOrder[aIndex] - eCSSProperty_COUNT;
     aResult.Truncate();
-    aResult.AppendLiteral("var-");
+    aResult.AppendLiteral("--");
     aResult.Append(mVariableOrder[variableIndex]);
   }
 
@@ -326,7 +326,7 @@ public:
 
 private:
   // The order of properties in this declaration.  Longhand properties are
-  // represented by their nsCSSProperty value, and each custom property (var-*)
+  // represented by their nsCSSProperty value, and each custom property (--*)
   // is represented by a value that begins at eCSSProperty_COUNT.
   //
   // Subtracting eCSSProperty_COUNT from those values that represent custom

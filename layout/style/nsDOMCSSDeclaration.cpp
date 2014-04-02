@@ -54,15 +54,12 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSProperty aPropID,
   return NS_OK;
 }
 
-// Length of the "var-" prefix of custom property names.
-#define VAR_PREFIX_LENGTH 4
-
 void
 nsDOMCSSDeclaration::GetCustomPropertyValue(const nsAString& aPropertyName,
                                             nsAString& aValue)
 {
-  MOZ_ASSERT(Substring(aPropertyName,
-                       0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
+  MOZ_ASSERT(Substring(aPropertyName, 0,
+                       CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
 
   css::Declaration* decl = GetCSSDeclaration(false);
   if (!decl) {
@@ -70,7 +67,8 @@ nsDOMCSSDeclaration::GetCustomPropertyValue(const nsAString& aPropertyName,
     return;
   }
 
-  decl->GetVariableDeclaration(Substring(aPropertyName, VAR_PREFIX_LENGTH),
+  decl->GetVariableDeclaration(Substring(aPropertyName,
+                                         CSS_CUSTOM_NAME_PREFIX_LENGTH),
                                aValue);
 }
 
@@ -374,11 +372,12 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
-  nsresult result = cssParser.ParseVariable(Substring(aPropertyName,
-                                                      VAR_PREFIX_LENGTH),
-                                            aPropValue, env.mSheetURI,
-                                            env.mBaseURI, env.mPrincipal, decl,
-                                            &changed, aIsImportant);
+  nsresult result =
+    cssParser.ParseVariable(Substring(aPropertyName,
+                                      CSS_CUSTOM_NAME_PREFIX_LENGTH),
+                            aPropValue, env.mSheetURI,
+                            env.mBaseURI, env.mPrincipal, decl,
+                            &changed, aIsImportant);
   if (NS_FAILED(result) || !changed) {
     if (decl != olddecl) {
       delete decl;
@@ -412,8 +411,8 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 nsresult
 nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
 {
-  MOZ_ASSERT(Substring(aPropertyName,
-                       0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
+  MOZ_ASSERT(Substring(aPropertyName, 0,
+                       CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
 
   css::Declaration* decl = GetCSSDeclaration(false);
   if (!decl) {
@@ -428,7 +427,8 @@ nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
   decl = decl->EnsureMutable();
-  decl->RemoveVariableDeclaration(Substring(aPropertyName, VAR_PREFIX_LENGTH));
+  decl->RemoveVariableDeclaration(Substring(aPropertyName,
+                                            CSS_CUSTOM_NAME_PREFIX_LENGTH));
   return SetCSSDeclaration(decl);
 }
 

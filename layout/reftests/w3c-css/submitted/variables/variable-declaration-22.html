@@ -13,8 +13,8 @@ p {
 }
 p {
   color: orange;
-  var-a: var(b, var(c, var(d, green)));
-  color: var(a);
+  --a: var(--b, var(--c, var(--d, green)));
+  color: var(--a);
 }
 </style>
 <p>This text must be green.</p>

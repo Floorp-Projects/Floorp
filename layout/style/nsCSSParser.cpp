@@ -60,9 +60,6 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 #undef CSS_PROP
 };
 
-// Length of the "var-" prefix of custom property names.
-#define VAR_PREFIX_LENGTH 4
-
 // Maximum number of repetitions for the repeat() function
 // in the grid-template-columns and grid-template-rows properties,
 // to limit high memory usage from small stylesheets.
@@ -1511,7 +1508,7 @@ CSSParserImpl::ParseVariable(const nsAString& aVariableName,
   }
 
   if (!parsedOK) {
-    REPORT_UNEXPECTED_P(PEValueParsingError, NS_LITERAL_STRING("var-") +
+    REPORT_UNEXPECTED_P(PEValueParsingError, NS_LITERAL_STRING("--") +
                                              aVariableName);
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
@@ -1693,10 +1690,10 @@ CSSParserImpl::EvaluateSupportsDeclaration(const nsAString& aProperty,
   bool parsedOK;
 
   if (propID == eCSSPropertyExtra_variable) {
-    MOZ_ASSERT(Substring(aProperty,
-                         0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
+    MOZ_ASSERT(Substring(aProperty, 0,
+                         CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
     const nsDependentSubstring varName =
-      Substring(aProperty, VAR_PREFIX_LENGTH);  // remove 'var-'
+      Substring(aProperty, CSS_CUSTOM_NAME_PREFIX_LENGTH);  // remove '--'
     CSSVariableDeclarations::Type variableType;
     nsString variableValue;
     parsedOK = ParseVariableDeclaration(&variableType, variableValue) &&
@@ -2029,16 +2026,25 @@ CSSParserImpl::ResolveValueWithVariableReferencesRec(
           recLastToken = eCSSTokenSerialization_Nothing;
 
           if (!GetToken(true) ||
-              mToken.mType != eCSSToken_Ident) {
-            // "var(" must be followed by an identifier.
+              mToken.mType != eCSSToken_Ident ||
+              !nsCSSProps::IsCustomPropertyName(mToken.mIdent)) {
+            // "var(" must be followed by an identifier, and it must be a
+            // custom property name.
             return false;
           }
+
+          // Turn the custom property name into a variable name by removing the
+          // '--' prefix.
+          MOZ_ASSERT(Substring(mToken.mIdent, 0,
+                               CSS_CUSTOM_NAME_PREFIX_LENGTH).
+                       EqualsLiteral("--"));
+          nsDependentString variableName(mToken.mIdent,
+                                         CSS_CUSTOM_NAME_PREFIX_LENGTH);
 
           // Get the value of the identified variable.  Note that we
           // check if the variable value is the empty string, as that means
           // that the variable was invalid at computed value time due to
           // unresolveable variable references or cycles.
-          const nsString& variableName = mToken.mIdent;
           nsString variableValue;
           nsCSSTokenSerializationType varFirstToken, varLastToken;
           bool valid = aVariables->Get(variableName, variableValue,
@@ -5929,9 +5935,10 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   }
 
   if (customProperty) {
-    MOZ_ASSERT(Substring(propertyName,
-                         0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
-    nsDependentString varName(propertyName, VAR_PREFIX_LENGTH); // remove 'var-'
+    MOZ_ASSERT(Substring(propertyName, 0,
+                         CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
+    // remove '--'
+    nsDependentString varName(propertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
     aDeclaration->AddVariableDeclaration(varName, variableType, variableValue,
                                          status == ePriority_Important, false);
   } else {
@@ -13823,12 +13830,12 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
   // If the property is a custom property (i.e. a variable declaration), then
   // it is also invalid if it consists of no tokens, such as:
   //
-  //   var-invalid:;
+  //   --invalid:;
   //
   // Note that is valid for a custom property to have a value that consists
   // solely of white space, such as:
   //
-  //   var-valid: ;
+  //   --valid: ;
 
   // Stack of closing characters for currently open constructs.
   StopSymbolCharStack stack;
@@ -13959,8 +13966,10 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
             REPORT_UNEXPECTED_EOF(PEExpectedVariableNameEOF);
             return false;
           }
-          if (mToken.mType != eCSSToken_Ident) {
-            // There must be an identifier directly after the "var(".
+          if (mToken.mType != eCSSToken_Ident ||
+              !nsCSSProps::IsCustomPropertyName(mToken.mIdent)) {
+            // There must be an identifier directly after the "var(" and
+            // it must be a custom property name.
             UngetToken();
             REPORT_UNEXPECTED_TOKEN(PEExpectedVariableName);
             SkipUntil(')');
@@ -13968,7 +13977,13 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
             return false;
           }
           if (aFunc) {
-            aFunc(mToken.mIdent, aData);
+            MOZ_ASSERT(Substring(mToken.mIdent, 0,
+                                 CSS_CUSTOM_NAME_PREFIX_LENGTH).
+                         EqualsLiteral("--"));
+            // remove '--'
+            const nsDependentSubstring varName =
+              Substring(mToken.mIdent, CSS_CUSTOM_NAME_PREFIX_LENGTH);
+            aFunc(varName, aData);
           }
           if (!GetToken(true)) {
             // EOF right after "var(<ident>".

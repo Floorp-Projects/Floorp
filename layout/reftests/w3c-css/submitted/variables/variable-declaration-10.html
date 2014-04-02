@@ -10,10 +10,10 @@
 <style>
 p {
   color: red;
-  var-a: orange;
-  var-b: green;
-  var-a: var(b,/**/a);
-  color: var(a);
+  --a: orange;
+  --b: green;
+  --a: var(--b,/**/a);
+  color: var(--a);
 }
 </style>
 <p>This text must be green.</p>

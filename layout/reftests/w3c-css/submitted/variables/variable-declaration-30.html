@@ -13,9 +13,9 @@ p {
 }
 p {
   color: orange;
-  var-a: crimson;
-  var-a: var(a);
-  color: var(a,green);
+  --a: crimson;
+  --a: var(--a);
+  color: var(--a,green);
 }
 </style>
 <p>This text must be green.</p>

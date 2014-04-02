@@ -92,7 +92,7 @@ private:
    * the CSSVariableDeclarations and CSSVariableValues objects passed in to
    * Resolve.
    *
-   * @param aName The variable name (not including any "var-" prefix that would
+   * @param aName The variable name (not including any "--" prefix that would
    *   be part of the custom property name) whose value is to be set.
    * @param aValue The variable value.
    * @param aFirstToken The type of token at the start of the variable value.

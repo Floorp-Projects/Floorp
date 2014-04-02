@@ -9,13 +9,13 @@
 <link rel="match" href="support/color-green-ref.html">
 <style>
 :root {
-  var-a: green;
-  var-b: ;
+  --a: green;
+  --b: ;
   color: red;
 }
 p {
   color: crimson;
-  color: var(a) var(b);
+  color: var(--a) var(--b);
 }
 </style>
 <p>This text must be green.</p>
