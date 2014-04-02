@@ -73,7 +73,7 @@ public:
   {
     mRenderTarget = static_cast<BasicCompositingRenderTarget*>(aSource);
   }
-  virtual CompositingRenderTarget* GetCurrentRenderTarget() MOZ_OVERRIDE
+  virtual CompositingRenderTarget* GetCurrentRenderTarget() const MOZ_OVERRIDE
   {
     return mRenderTarget;
   }
