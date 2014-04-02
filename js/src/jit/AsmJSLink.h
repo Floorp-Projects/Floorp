@@ -26,6 +26,11 @@ IsAsmJSModuleNative(JSNative native);
 // been validated according to the asm.js spec.
 extern bool
 IsAsmJSModule(JSContext *cx, unsigned argc, JS::Value *vp);
+extern bool
+IsAsmJSModule(HandleFunction fun);
+
+extern JSString*
+AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda);
 
 // Return whether the given value is a function containing "use asm" that was
 // loaded directly from the cache (and hence was validated previously).
@@ -43,6 +48,18 @@ inline bool
 IsAsmJSModuleNative(JSNative native)
 {
     return false;
+}
+
+inline bool
+IsAsmJSModuleNative(HandleFunction fun)
+{
+    return false;
+}
+
+inline JSString*
+AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda)
+{
+    return nullptr;
 }
 
 inline bool

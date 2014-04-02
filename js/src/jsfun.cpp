@@ -32,6 +32,7 @@
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
+#include "jit/AsmJSModule.h"
 #include "jit/Ion.h"
 #include "jit/IonFrameIterator.h"
 #endif
@@ -689,6 +690,9 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
         JS_ASSERT(targetFun->isArrow());
         return FunctionToString(cx, targetFun, bodyOnly, lambdaParen);
     }
+
+    if (IsAsmJSModule(fun))
+        return AsmJSModuleToString(cx, fun, !lambdaParen);
 
     StringBuffer out(cx);
     RootedScript script(cx);
