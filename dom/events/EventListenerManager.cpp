@@ -599,7 +599,7 @@ EventListenerManager::Listener*
 EventListenerManager::SetEventHandlerInternal(
                         nsIAtom* aName,
                         const nsAString& aTypeString,
-                        const nsEventHandler& aHandler,
+                        const TypedEventHandler& aTypedHandler,
                         bool aPermitUntrustedEvents)
 {
   MOZ_ASSERT(aName || !aTypeString.IsEmpty());
@@ -615,7 +615,7 @@ EventListenerManager::SetEventHandlerInternal(
 
     nsCOMPtr<nsJSEventListener> jsListener;
     NS_NewJSEventHandler(mTarget, aName,
-                         aHandler, getter_AddRefs(jsListener));
+                         aTypedHandler, getter_AddRefs(jsListener));
     EventListenerHolder listenerHolder(jsListener);
     AddEventListenerInternal(listenerHolder, eventType, aName, aTypeString,
                              flags, true);
@@ -626,9 +626,9 @@ EventListenerManager::SetEventHandlerInternal(
     MOZ_ASSERT(jsListener,
                "How can we have an event handler with no nsJSEventListener?");
 
-    bool same = jsListener->GetHandler() == aHandler;
+    bool same = jsListener->GetTypedEventHandler() == aTypedHandler;
     // Possibly the same listener, but update still the context and scope.
-    jsListener->SetHandler(aHandler);
+    jsListener->SetHandler(aTypedHandler);
     if (mTarget && !same && aName) {
       mTarget->EventListenerRemoved(aName);
       mTarget->EventListenerAdded(aName);
@@ -636,7 +636,7 @@ EventListenerManager::SetEventHandlerInternal(
   }
 
   // Set flag to indicate possible need for compilation later
-  listener->mHandlerIsString = !aHandler.HasEventHandler();
+  listener->mHandlerIsString = !aTypedHandler.HasEventHandler();
   if (aPermitUntrustedEvents) {
     listener->mFlags.mAllowUntrustedEvents = true;
   }
@@ -747,7 +747,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aName,
 
   Listener* listener = SetEventHandlerInternal(aName,
                                                EmptyString(),
-                                               nsEventHandler(),
+                                               TypedEventHandler(),
                                                aPermitUntrustedEvents);
 
   if (!aDeferCompilation) {
@@ -786,7 +786,8 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   MOZ_ASSERT(aListener->GetJSListener());
   MOZ_ASSERT(aListener->mHandlerIsString, "Why are we compiling a non-string JS listener?");
   nsJSEventListener* jsListener = aListener->GetJSListener();
-  MOZ_ASSERT(!jsListener->GetHandler().HasEventHandler(), "What is there to compile?");
+  MOZ_ASSERT(!jsListener->GetTypedEventHandler().HasEventHandler(),
+             "What is there to compile?");
 
   nsresult result = NS_OK;
   nsCOMPtr<nsIDocument> doc;
@@ -1222,7 +1223,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aEventName,
 
   // Untrusted events are always permitted for non-chrome script
   // handlers.
-  SetEventHandlerInternal(aEventName, aTypeString, nsEventHandler(aHandler),
+  SetEventHandlerInternal(aEventName, aTypeString, TypedEventHandler(aHandler),
                           !mIsMainThreadELM ||
                           !nsContentUtils::IsCallerChrome());
 }
@@ -1239,7 +1240,7 @@ EventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
     // Untrusted events are always permitted for non-chrome script
     // handlers.
     SetEventHandlerInternal(nsGkAtoms::onerror, EmptyString(),
-                            nsEventHandler(aHandler),
+                            TypedEventHandler(aHandler),
                             !nsContentUtils::IsCallerChrome());
   } else {
     if (!aHandler) {
@@ -1249,7 +1250,7 @@ EventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
 
     // Untrusted events are always permitted.
     SetEventHandlerInternal(nullptr, NS_LITERAL_STRING("error"),
-                            nsEventHandler(aHandler), true);
+                            TypedEventHandler(aHandler), true);
   }
 }
 
@@ -1265,14 +1266,14 @@ EventListenerManager::SetEventHandler(
   // Untrusted events are always permitted for non-chrome script
   // handlers.
   SetEventHandlerInternal(nsGkAtoms::onbeforeunload, EmptyString(),
-                          nsEventHandler(aHandler),
+                          TypedEventHandler(aHandler),
                           !mIsMainThreadELM ||
                           !nsContentUtils::IsCallerChrome());
 }
 
-const nsEventHandler*
-EventListenerManager::GetEventHandlerInternal(nsIAtom* aEventName,
-                                              const nsAString& aTypeString)
+const TypedEventHandler*
+EventListenerManager::GetTypedEventHandler(nsIAtom* aEventName,
+                                           const nsAString& aTypeString)
 {
   uint32_t eventType = nsContentUtils::GetEventId(aEventName);
   Listener* listener = FindEventHandler(eventType, aEventName, aTypeString);
@@ -1287,12 +1288,8 @@ EventListenerManager::GetEventHandlerInternal(nsIAtom* aEventName,
     CompileEventHandlerInternal(listener, nullptr, nullptr);
   }
 
-  const nsEventHandler& handler = jsListener->GetHandler();
-  if (handler.HasEventHandler()) {
-    return &handler;
-  }
-
-  return nullptr;
+  const TypedEventHandler& typedHandler = jsListener->GetTypedEventHandler();
+  return typedHandler.HasEventHandler() ? &typedHandler : nullptr;
 }
 
 size_t
@@ -1318,8 +1315,10 @@ EventListenerManager::MarkForCC()
     const Listener& listener = mListeners.ElementAt(i);
     nsJSEventListener* jsListener = listener.GetJSListener();
     if (jsListener) {
-      if (jsListener->GetHandler().HasEventHandler()) {
-        JS::ExposeObjectToActiveJS(jsListener->GetHandler().Ptr()->Callable());
+      const TypedEventHandler& typedHandler =
+        jsListener->GetTypedEventHandler();
+      if (typedHandler.HasEventHandler()) {
+        JS::ExposeObjectToActiveJS(typedHandler.Ptr()->Callable());
       }
     } else if (listener.mListenerType == Listener::eWrappedJSListener) {
       xpc_TryUnmarkWrappedGrayObject(listener.mListener.GetXPCOMCallback());

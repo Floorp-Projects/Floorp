@@ -449,7 +449,7 @@ protected:
    */
   Listener* SetEventHandlerInternal(nsIAtom* aName,
                                     const nsAString& aTypeString,
-                                    const nsEventHandler& aHandler,
+                                    const TypedEventHandler& aHandler,
                                     bool aPermitUntrustedEvents);
 
   bool IsDeviceType(uint32_t aType);
@@ -479,27 +479,24 @@ public:
   dom::EventHandlerNonNull* GetEventHandler(nsIAtom* aEventName,
                                             const nsAString& aTypeString)
   {
-    const nsEventHandler* handler =
-      GetEventHandlerInternal(aEventName, aTypeString);
-    return handler ? handler->EventHandler() : nullptr;
+    const TypedEventHandler* typedHandler =
+      GetTypedEventHandler(aEventName, aTypeString);
+    return typedHandler ? typedHandler->NormalEventHandler() : nullptr;
   }
 
   dom::OnErrorEventHandlerNonNull* GetOnErrorEventHandler()
   {
-    const nsEventHandler* handler;
-    if (mIsMainThreadELM) {
-      handler = GetEventHandlerInternal(nsGkAtoms::onerror, EmptyString());
-    } else {
-      handler = GetEventHandlerInternal(nullptr, NS_LITERAL_STRING("error"));
-    }
-    return handler ? handler->OnErrorEventHandler() : nullptr;
+    const TypedEventHandler* typedHandler = mIsMainThreadELM ?
+      GetTypedEventHandler(nsGkAtoms::onerror, EmptyString()) :
+      GetTypedEventHandler(nullptr, NS_LITERAL_STRING("error"));
+    return typedHandler ? typedHandler->OnErrorEventHandler() : nullptr;
   }
 
   dom::OnBeforeUnloadEventHandlerNonNull* GetOnBeforeUnloadEventHandler()
   {
-    const nsEventHandler* handler =
-      GetEventHandlerInternal(nsGkAtoms::onbeforeunload, EmptyString());
-    return handler ? handler->OnBeforeUnloadEventHandler() : nullptr;
+    const TypedEventHandler* typedHandler =
+      GetTypedEventHandler(nsGkAtoms::onbeforeunload, EmptyString());
+    return typedHandler ? typedHandler->OnBeforeUnloadEventHandler() : nullptr;
   }
 
 protected:
@@ -507,7 +504,7 @@ protected:
    * Helper method for implementing the various Get*EventHandler above.  Will
    * return null if we don't have an event handler for this event name.
    */
-  const nsEventHandler* GetEventHandlerInternal(nsIAtom* aEventName,
+  const TypedEventHandler* GetTypedEventHandler(nsIAtom* aEventName,
                                                 const nsAString& aTypeString);
 
   void AddEventListener(const nsAString& aType,
