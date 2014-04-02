@@ -165,11 +165,62 @@ function Panel(id, options) {
     this.views = options.views;
 }
 
-// We need this function to have access to the HomePanels
+// We need this object to have access to the HomePanels
 // private members without leaking it outside Home.jsm.
-let handlePanelsGet;
+let HomePanelsMessageHandlers;
 
 let HomePanels = (function () {
+  // Functions used to handle messages sent from Java.
+  HomePanelsMessageHandlers = {
+
+    "HomePanels:Get": function handlePanelsGet(data) {
+      data = JSON.parse(data);
+
+      let requestId = data.requestId;
+      let ids = data.ids || null;
+
+      let panels = [];
+      for (let id in _registeredPanels) {
+        // Null ids means we want to fetch all available panels
+        if (ids == null || ids.indexOf(id) >= 0) {
+          try {
+            panels.push(_generatePanel(id));
+          } catch(e) {
+            Cu.reportError("Home.panels: Invalid options, panel.id = " + id + ": " + e);
+          }
+        }
+      }
+
+      sendMessageToJava({
+        type: "HomePanels:Data",
+        panels: panels,
+        requestId: requestId
+      });
+    },
+
+    "HomePanels:Installed": function handlePanelsInstalled(id) {
+      let options = _registeredPanels[id]();
+      if (!options.oninstall) {
+        return;
+      }
+      if (typeof options.oninstall !== "function") {
+        throw "Home.panels: Invalid oninstall function: panel.id = " + this.id;
+      }
+      options.oninstall();
+    },
+
+    "HomePanels:Uninstalled": function handlePanelsUninstalled(id) {
+      let options = _registeredPanels[id]();
+      if (!options.onuninstall) {
+        return;
+      }
+      if (typeof options.onuninstall !== "function") {
+        throw "Home.panels: Invalid onuninstall function: panel.id = " + this.id;
+      }
+      options.onuninstall();
+    }
+  };
+
   // Holds the current set of registered panels that can be
   // installed, updated, uninstalled, or unregistered. It maps
   // panel ids with the functions that dynamically generate
@@ -245,29 +296,6 @@ let HomePanels = (function () {
     }
 
     return panel;
-  };
-
-  handlePanelsGet = function(data) {
-    let requestId = data.requestId;
-    let ids = data.ids || null;
-
-    let panels = [];
-    for (let id in _registeredPanels) {
-      // Null ids means we want to fetch all available panels
-      if (ids == null || ids.indexOf(id) >= 0) {
-        try {
-          panels.push(_generatePanel(id));
-        } catch(e) {
-          Cu.reportError("Home.panels: Invalid options, panel.id = " + id + ": " + e);
-        }
-      }
-    }
-
-    sendMessageToJava({
-      type: "HomePanels:Data",
-      panels: panels,
-      requestId: requestId
-    });
   };
 
   // Helper function used to see if a value is in an object.
@@ -347,10 +375,10 @@ this.Home = Object.freeze({
 
   // Lazy notification observer registered in browser.js
   observe: function(subject, topic, data) {
-    switch(topic) {
-      case "HomePanels:Get":
-        handlePanelsGet(JSON.parse(data));
-        break;
+    if (topic in HomePanelsMessageHandlers) {
+      HomePanelsMessageHandlers[topic](data);
+    } else {
+      Cu.reportError("Home.observe: message handler not found for topic: " + topic);
     }
   }
 });
