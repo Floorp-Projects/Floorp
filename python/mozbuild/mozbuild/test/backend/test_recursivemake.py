@@ -302,9 +302,6 @@ class TestRecursiveMakeBackend(BackendTester):
             'HOST_LIBRARY_NAME': [
                 'HOST_LIBRARY_NAME := host_bar',
             ],
-            'LIBXUL_LIBRARY': [
-                'LIBXUL_LIBRARY := 1',
-            ],
             'MSVC_ENABLE_PGO': [
                 'MSVC_ENABLE_PGO := 1',
             ],
