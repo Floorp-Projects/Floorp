@@ -160,6 +160,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    bool aRealTime) :
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
+  mInRunningStateMachine(false),
   mSyncPointInMediaStream(-1),
   mSyncPointInDecodedStream(-1),
   mResetPlayStartTime(false),
@@ -191,10 +192,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mDispatchedEventToDecode(false),
   mStopAudioThread(true),
   mQuickBuffering(false),
-  mIsRunning(false),
-  mRunAgain(false),
   mMinimizePreroll(false),
-  mDispatchedRunEvent(false),
   mDecodeThreadWaiting(false),
   mRealTime(aRealTime),
   mEventManager(aDecoder),
@@ -2708,40 +2706,26 @@ nsresult MediaDecoderStateMachine::GetBuffered(dom::TimeRanges* aBuffered) {
 
 nsresult MediaDecoderStateMachine::Run()
 {
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
-
-  return CallRunStateMachine();
+  // only allowing scheduling with timer task
+  MOZ_ASSERT(false);
+  return NS_ERROR_FAILURE;
 }
 
 nsresult MediaDecoderStateMachine::CallRunStateMachine()
 {
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
-  // This will be set to true by ScheduleStateMachine() if it's called
-  // while we're in RunStateMachine().
-  mRunAgain = false;
-
-  // Set to true whenever we dispatch an event to run this state machine.
-  // This flag prevents us from dispatching
-  mDispatchedRunEvent = false;
 
   // If audio is being captured, stop the audio thread if it's running
   if (mAudioCaptured) {
     StopAudioThread();
   }
 
+  MOZ_ASSERT(!mInRunningStateMachine, "State machine cycles must run in sequence!");
   mTimeout = TimeStamp();
-
-  mIsRunning = true;
+  mInRunningStateMachine = true;
   nsresult res = RunStateMachine();
-  mIsRunning = false;
-
-  if (mRunAgain && !mDispatchedRunEvent) {
-    mDispatchedRunEvent = true;
-    return GetStateMachineThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-  }
-
+  mInRunningStateMachine = false;
   return res;
 }
 
@@ -2756,16 +2740,7 @@ void MediaDecoderStateMachine::TimeoutExpired()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   NS_ASSERTION(OnStateMachineThread(), "Must be on state machine thread");
-  if (mIsRunning) {
-    mRunAgain = true;
-  } else if (!mDispatchedRunEvent) {
-    // We don't have an event dispatched to run the state machine, so we
-    // can just run it from here.
-    CallRunStateMachine();
-  }
-  // Otherwise, an event has already been dispatched to run the state machine
-  // as soon as possible. Nothing else needed to do, the state machine is
-  // going to run anyway.
+  CallRunStateMachine();
 }
 
 void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder() {
@@ -2785,46 +2760,19 @@ nsresult MediaDecoderStateMachine::ScheduleStateMachine(int64_t aUsecs) {
   aUsecs = std::max<int64_t>(aUsecs, 0);
 
   TimeStamp timeout = TimeStamp::Now() + UsecsToDuration(aUsecs);
-  if (!mTimeout.IsNull()) {
-    if (timeout >= mTimeout) {
-      // We've already scheduled a timer set to expire at or before this time,
-      // or have an event dispatched to run the state machine.
-      return NS_OK;
-    }
-    // We've been asked to schedule a timer to run before an existing timer.
-    // Cancel the existing timer.
-    mTimer->Cancel();
+  if (!mTimeout.IsNull() && timeout >= mTimeout) {
+    // We've already scheduled a timer set to expire at or before this time,
+    // or have an event dispatched to run the state machine.
+    return NS_OK;
   }
 
   uint32_t ms = static_cast<uint32_t>((aUsecs / USECS_PER_MS) & 0xFFFFFFFF);
-  if (mRealTime && ms > 40)
+  if (mRealTime && ms > 40) {
     ms = 40;
-  if (ms == 0) {
-    if (mIsRunning) {
-      // We're currently running this state machine on the state machine
-      // thread. Signal it to run again once it finishes its current cycle.
-      mRunAgain = true;
-      return NS_OK;
-    } else if (!mDispatchedRunEvent) {
-      // We're not currently running this state machine on the state machine
-      // thread. Dispatch an event to run one cycle of the state machine.
-      mDispatchedRunEvent = true;
-      return GetStateMachineThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-    }
-    // We're not currently running this state machine on the state machine
-    // thread, but something has already dispatched an event to run it again,
-    // so just exit; it's going to run real soon.
-    return NS_OK;
   }
-
-  // Since there is already a pending task that will run immediately,
-  // we don't need to schedule a timer task.
-  if (mRunAgain) {
-    return NS_OK;
-  }
-
   mTimeout = timeout;
-
+  // Cancel existing timer if any since we are going to schedule a new one.
+  mTimer->Cancel();
   nsresult rv = mTimer->InitWithFuncCallback(mozilla::TimeoutExpired,
                                              this,
                                              ms,
