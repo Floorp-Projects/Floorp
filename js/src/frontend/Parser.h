@@ -205,7 +205,7 @@ struct ParseContext : public GenericParseContext
                                        |this|'s descendents */
 
     // Value for parserPC to restore at the end. Use 'parent' instead for
-    // information about the parse chain, this may be nullptr if 
+    // information about the parse chain, this may be nullptr if
     // parent != nullptr.
     ParseContext<ParseHandler> *oldpc;
 

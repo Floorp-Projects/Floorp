@@ -843,10 +843,13 @@ js::FunctionToString(JSContext *cx, HandleFunction fun, bool bodyOnly, bool lamb
             return nullptr;
     } else {
         JS_ASSERT(!fun->isExprClosure());
-        if ((!bodyOnly && !out.append("() {\n    ")) ||
-            !out.append("[native code]") ||
-            (!bodyOnly && !out.append("\n}")))
+
+        if ((!bodyOnly && !out.append("() {\n    "))
+            || !out.append("[native code]")
+            || (!bodyOnly && !out.append("\n}")))
+        {
             return nullptr;
+        }
     }
     return out.finishString();
 }
