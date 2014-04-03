@@ -14,11 +14,8 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c',   # Because of name clash in the kDampFilter variable
     'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c', # Because of name clash in the kDampFilter variable
     'trunk/webrtc/modules/audio_coding/neteq4/audio_vector.cc',                  # Because of explicit template specializations
-    'trunk/webrtc/modules/audio_device/linux/audio_device_pulse_linux.cc',       # Because of LATE()
-    'trunk/webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc',# Because of LATE()
     'trunk/webrtc/modules/audio_device/opensl/opensles_input.cc',                # Because of name clash in the kOption variable
     'trunk/webrtc/modules/audio_device/opensl/opensles_output.cc',               # Because of name clash in the kOption variable
-    'trunk/webrtc/modules/audio_device/opensl/single_rw_fifo.cc',                # Because of name clash with #define FF
     'trunk/webrtc/modules/audio_device/win/audio_device_core_win.cc',            # Because of ordering assumptions in strsafe.h
     'trunk/webrtc/modules/audio_processing/aec/aec_core.c',                      # Because of name clash in the ComfortNoise function
     'trunk/webrtc/modules/audio_processing/aecm/aecm_core.c',                    # Because of name clash in the ComfortNoise function
