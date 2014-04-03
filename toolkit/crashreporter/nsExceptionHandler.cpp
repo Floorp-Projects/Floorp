@@ -10,7 +10,6 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/unused.h"
-#include "mozilla/FileUtils.h"
 
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -81,7 +80,6 @@ using mozilla::InjectCrashRunnable;
 #include "prprf.h"
 #include <map>
 #include <vector>
-#include <linux/fb.h>
 
 #include "mozilla/IOInterposer.h"
 #include "mozilla/mozalloc_oom.h"
@@ -2259,38 +2257,6 @@ GetExtraFileForMinidump(nsIFile* minidump, nsIFile** extraFile)
 
   *extraFile = nullptr;
   extraF.swap(*extraFile);
-  return true;
-}
-
-bool
-WriteScreenShotToFile(const nsAString& id)
-{
-  const char *envvar = PR_GetEnv("MOZ_CRASHREPORTER_DUMP_FB");
-  if (!envvar || !*envvar || !pendingDirectory)
-    return false;
-
-  ScopedClose fb(open("/dev/graphics/fb0", O_RDONLY));
-  if (fb.get() < 0)
-    return false;
-
-  struct fb_fix_screeninfo fi;
-  if (ioctl(fb.get(), FBIOGET_FSCREENINFO, &fi) < 0)
-    return false;
-
-  void* bits = mmap(0, fi.smem_len, PROT_READ, MAP_SHARED, fb.get(), 0);
-  if (MAP_FAILED == bits)
-    return false;
-
-  char path[PATH_MAX];
-  sprintf(path, "%s/%s.raw", pendingDirectory, NS_ConvertUTF16toUTF8(id).get());
-  ScopedClose fd(open(path, O_WRONLY | O_CREAT | O_TRUNC));
-  if (fd.get() < 0) {
-    munmap(bits, fi.smem_len);
-    return false;
-  }
-
-  write(fd.get(), bits, fi.smem_len);
-  munmap(bits, fi.smem_len);
   return true;
 }
 
