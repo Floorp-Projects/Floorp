@@ -19,7 +19,7 @@ WebVTTParserWrapper.prototype =
 {
   loadParser: function(window)
   {
-    this.parser = new WebVTTParser(window,  new TextDecoder("utf8"));
+    this.parser = new WebVTT.Parser(window,  new TextDecoder("utf8"));
   },
 
   parse: function(data)
@@ -43,19 +43,23 @@ WebVTTParserWrapper.prototype =
   {
     this.parser.oncue = callback.onCue;
     this.parser.onregion = callback.onRegion;
+    this.parser.onparsingerror = function(e) {
+      // Passing the just the error code back is enough for our needs.
+      callback.onParsingError(("code" in e) ? e.code : -1);
+    };
   },
 
   convertCueToDOMTree: function(window, cue)
   {
-    return WebVTTParser.convertCueToDOMTree(window, cue.text);
+    return WebVTT.convertCueToDOMTree(window, cue.text);
   },
 
   processCues: function(window, cues, overlay)
   {
-    WebVTTParser.processCues(window, cues, overlay);
+    WebVTT.processCues(window, cues, overlay);
   },
 
-  classDescription: "Wrapper for the JS WebVTTParser (vtt.js)",
+  classDescription: "Wrapper for the JS WebVTT implementation (vtt.js)",
   classID: Components.ID(WEBVTTPARSERWRAPPER_CID),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebVTTParserWrapper]),
   classInfo: XPCOMUtils.generateCI({

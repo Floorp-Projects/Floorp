@@ -85,7 +85,7 @@ public:
   // Represents a change yet to be made to a block in the file. The change
   // is either a write (and the data to be written is stored in this struct)
   // or a move (and the index of the source block is stored instead).
-  struct BlockChange {
+  struct BlockChange MOZ_FINAL {
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BlockChange)
 
@@ -112,6 +112,12 @@ public:
     bool IsWrite() const {
       return mSourceBlockIndex == -1 &&
              mData.get() != nullptr;
+    }
+
+  private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~BlockChange()
+    {
     }
   };
 

@@ -27,6 +27,12 @@ class FileReaderSync MOZ_FINAL
 {
   NS_INLINE_DECL_REFCOUNTING(FileReaderSync)
 
+private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~FileReaderSync()
+  {
+  }
+
   nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
                          nsAString &aResult);
 

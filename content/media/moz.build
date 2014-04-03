@@ -12,6 +12,8 @@ PARALLEL_DIRS += [
   'webvtt'
 ]
 
+TEST_TOOL_DIRS += ['compiledtest']
+
 if CONFIG['MOZ_RAW']:
     PARALLEL_DIRS += ['raw']
 
@@ -58,6 +60,7 @@ EXPORTS += [
     'AudioChannelFormat.h',
     'AudioCompactor.h',
     'AudioEventTimeline.h',
+    'AudioMixer.h',
     'AudioNodeEngine.h',
     'AudioNodeExternalInputStream.h',
     'AudioNodeStream.h',

@@ -40,6 +40,7 @@
 #include "webrtc/voice_engine/include/voe_volume_control.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
+#include "webrtc/voice_engine/include/voe_call_report.h"
 
 // Video Engine
 #include "webrtc/video_engine/include/vie_base.h"
@@ -56,6 +57,7 @@
 #endif
 
 #include "NullTransport.h"
+#include "AudioOutputObserver.h"
 
 namespace mozilla {
 
@@ -147,7 +149,8 @@ public:
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
   virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
                           bool aAgcOn, uint32_t aAGC,
-                          bool aNoiseOn, uint32_t aNoise) { return NS_OK; };
+                          bool aNoiseOn, uint32_t aNoise,
+                          int32_t aPlayoutDelay) { return NS_OK; };
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
                           TrackID aId,
@@ -258,10 +261,13 @@ public:
     , mCapIndex(aIndex)
     , mChannel(-1)
     , mInitDone(false)
+    , mStarted(false)
+    , mSamples(0)
     , mEchoOn(false), mAgcOn(false), mNoiseOn(false)
     , mEchoCancel(webrtc::kEcDefault)
     , mAGC(webrtc::kAgcDefault)
     , mNoiseSuppress(webrtc::kNsDefault)
+    , mPlayoutDelay(0)
     , mNullTransport(nullptr) {
     MOZ_ASSERT(aVoiceEnginePtr);
     mState = kReleased;
@@ -281,7 +287,8 @@ public:
   virtual nsresult Snapshot(uint32_t aDuration, nsIDOMFile** aFile);
   virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
                           bool aAgcOn, uint32_t aAGC,
-                          bool aNoiseOn, uint32_t aNoise);
+                          bool aNoiseOn, uint32_t aNoise,
+                          int32_t aPlayoutDelay);
 
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream *aSource,
@@ -312,6 +319,7 @@ private:
   ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERender;
   ScopedCustomReleasePtr<webrtc::VoENetwork> mVoENetwork;
   ScopedCustomReleasePtr<webrtc::VoEAudioProcessing> mVoEProcessing;
+  ScopedCustomReleasePtr<webrtc::VoECallReport> mVoECallReport;
 
   // mMonitor protects mSources[] access/changes, and transitions of mState
   // from kStarted to kStopped (which are combined with EndTrack()).
@@ -323,6 +331,8 @@ private:
   int mChannel;
   TrackID mTrackID;
   bool mInitDone;
+  bool mStarted;
+  int mSamples; // int to avoid conversions when comparing/etc to samplingFreq & length
 
   nsString mDeviceName;
   nsString mDeviceUUID;
@@ -331,6 +341,7 @@ private:
   webrtc::EcModes  mEchoCancel;
   webrtc::AgcModes mAGC;
   webrtc::NsModes  mNoiseSuppress;
+  int32_t mPlayoutDelay;
 
   NullTransport *mNullTransport;
 };
@@ -344,6 +355,8 @@ public:
 #ifdef MOZ_B2G_CAMERA
     AsyncLatencyLogger::Get()->Release();
 #endif
+    // XXX
+    gFarendObserver = nullptr;
   }
 
   // Clients should ensure to clean-up sources video/audio sources

@@ -199,7 +199,7 @@ JS_SetDebugMode(JSContext *cx, bool debug);
 
 /* Turn on single step mode. */
 extern JS_PUBLIC_API(bool)
-JS_SetSingleStepMode(JSContext *cx, JSScript *script, bool singleStep);
+JS_SetSingleStepMode(JSContext *cx, JS::HandleScript script, bool singleStep);
 
 /* The closure argument will be marked. */
 extern JS_PUBLIC_API(bool)
@@ -532,7 +532,7 @@ extern JS_PUBLIC_API(bool)
 JS_DefineDebuggerObject(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(void)
-JS_DumpPCCounts(JSContext *cx, JSScript *script);
+JS_DumpPCCounts(JSContext *cx, JS::HandleScript script);
 
 extern JS_PUBLIC_API(void)
 JS_DumpCompartmentPCCounts(JSContext *cx);

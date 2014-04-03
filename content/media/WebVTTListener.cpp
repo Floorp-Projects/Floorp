@@ -78,7 +78,7 @@ WebVTTListener::LoadResource()
   rv = mParserWrapper->Watch(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mElement->mTrack->SetReadyState(TextTrackReadyState::Loading);
+  mElement->SetReadyState(TextTrackReadyState::Loading);
   return NS_OK;
 }
 
@@ -106,13 +106,15 @@ WebVTTListener::OnStopRequest(nsIRequest* aRequest,
                               nsISupports* aContext,
                               nsresult aStatus)
 {
-  if (mElement->ReadyState() != TextTrackReadyState::FailedToLoad) {
-    TextTrack* track = mElement->Track();
-    track->SetReadyState(TextTrackReadyState::Loaded);
+  if (NS_FAILED(aStatus)) {
+    mElement->SetReadyState(TextTrackReadyState::FailedToLoad);
   }
   // Attempt to parse any final data the parser might still have.
   mParserWrapper->Flush();
-  return NS_OK;
+  if (mElement->ReadyState() != TextTrackReadyState::FailedToLoad) {
+    mElement->SetReadyState(TextTrackReadyState::Loaded);
+  }
+  return aStatus;
 }
 
 NS_METHOD
@@ -176,6 +178,17 @@ NS_IMETHODIMP
 WebVTTListener::OnRegion(JS::Handle<JS::Value> aRegion, JSContext* aCx)
 {
   // Nothing for this callback to do.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebVTTListener::OnParsingError(int32_t errorCode, JSContext* cx)
+{
+  // We only care about files that have a bad WebVTT file signature right now
+  // as that means the file failed to load.
+  if (errorCode == ErrorCodes::BadSignature) {
+    mElement->SetReadyState(TextTrackReadyState::FailedToLoad);
+  }
   return NS_OK;
 }
 

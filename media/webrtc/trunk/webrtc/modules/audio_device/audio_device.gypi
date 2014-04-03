@@ -123,16 +123,19 @@
             'win/audio_device_utility_win.h',
             'win/audio_mixer_manager_win.cc',
             'win/audio_mixer_manager_win.h',
+            # used externally for getUserMedia
+            'opensl/single_rw_fifo.cc',
+            'opensl/single_rw_fifo.h',
           ],
           'conditions': [
             ['OS=="android"', {
-	      'sources': [
+              'sources': [
                 'opensl/audio_manager_jni.cc',
                 'opensl/audio_manager_jni.h',
-		'android/audio_device_jni_android.cc',
-		'android/audio_device_jni_android.h',
+                'android/audio_device_jni_android.cc',
+                'android/audio_device_jni_android.h',
                ],
-	    }],
+            }],
             ['OS=="android" or moz_widget_toolkit_gonk==1', {
               'link_settings': {
                 'libraries': [
@@ -154,17 +157,15 @@
                     'opensl/opensles_input.cc',
                     'opensl/opensles_input.h',
                     'opensl/opensles_output.h',
-                    'opensl/single_rw_fifo.cc',
-                    'opensl/single_rw_fifo.h',
-		    'shared/audio_device_utility_shared.cc',
-		    'shared/audio_device_utility_shared.h',
+                    'shared/audio_device_utility_shared.cc',
+                    'shared/audio_device_utility_shared.h',
                   ],
                 }, {
                   'sources': [
-		    'shared/audio_device_utility_shared.cc',
-		    'shared/audio_device_utility_shared.h',
-		    'android/audio_device_jni_android.cc',
-		    'android/audio_device_jni_android.h',
+                    'shared/audio_device_utility_shared.cc',
+                    'shared/audio_device_utility_shared.h',
+                    'android/audio_device_jni_android.cc',
+                    'android/audio_device_jni_android.h',
                   ],
                 }],
                 ['enable_android_opensl_output==1', {

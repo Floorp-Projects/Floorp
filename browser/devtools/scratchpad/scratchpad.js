@@ -26,6 +26,10 @@ const BUTTON_POSITION_DONT_SAVE  = 2;
 const BUTTON_POSITION_REVERT     = 0;
 const EVAL_FUNCTION_TIMEOUT      = 1000; // milliseconds
 
+const MAXIMUM_FONT_SIZE = 96;
+const MINIMUM_FONT_SIZE = 6;
+const NORMAL_FONT_SIZE = 12;
+
 const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties";
 const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
@@ -212,7 +216,25 @@ var Scratchpad = {
       },
       "sp-cmd-hideSidebar": () => {
         Scratchpad.sidebar.hide();
-      }
+      },
+      "sp-cmd-line-numbers": () => {
+        Scratchpad.toggleEditorOption('lineNumbers');
+      },
+      "sp-cmd-wrap-text": () => {
+        Scratchpad.toggleEditorOption('lineWrapping');
+      },
+      "sp-cmd-highlight-trailing-space": () => {
+        Scratchpad.toggleEditorOption('showTrailingSpace');
+      },
+      "sp-cmd-larger-font": () => {
+        Scratchpad.increaseFontSize();
+      },
+      "sp-cmd-smaller-font": () => {
+        Scratchpad.decreaseFontSize();
+      },
+      "sp-cmd-normal-font": () => {
+        Scratchpad.normalFontSize();
+      },
     }
 
     for (let command in commands) {
@@ -1777,6 +1799,47 @@ var Scratchpad = {
     });
 
     return shouldClose;
+  },
+
+  /**
+   * Toggle a editor's boolean option.
+   */
+  toggleEditorOption: function SP_toggleEditorOption(optionName)
+  {
+    let newOptionValue = !this.editor.getOption(optionName);
+    this.editor.setOption(optionName, newOptionValue);
+  },
+
+  /**
+   * Increase the editor's font size by 1 px.
+   */
+  increaseFontSize: function SP_increaseFontSize()
+  {
+    let size = this.editor.getFontSize();
+
+    if (size < MAXIMUM_FONT_SIZE) {
+      this.editor.setFontSize(size + 1);
+    }
+  },
+
+  /**
+   * Decrease the editor's font size by 1 px.
+   */
+  decreaseFontSize: function SP_decreaseFontSize()
+  {
+    let size = this.editor.getFontSize();
+
+    if (size > MINIMUM_FONT_SIZE) {
+      this.editor.setFontSize(size - 1);
+    }
+  },
+
+  /**
+   * Restore the editor's original font size.
+   */
+  normalFontSize: function SP_normalFontSize()
+  {
+    this.editor.setFontSize(NORMAL_FONT_SIZE);
   },
 
   _observers: [],

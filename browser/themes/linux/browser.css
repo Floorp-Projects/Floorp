@@ -54,7 +54,7 @@
 #nav-bar {
   background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   box-shadow: 0 1px 0 @toolbarHighlight@ inset;
-  margin-top: -1px; /* Move up 1px into the TabsToolbar */
+  margin-top: -@tabToolbarNavbarOverlap@; /* Move up into the TabsToolbar */
   padding-top: 2px;
   padding-bottom: 2px;
   /* Position the toolbar above the bottom of background tabs */
@@ -1730,7 +1730,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 #TabsToolbar::after {
   content: "";
   position: absolute;
-  bottom: 1px;
+  bottom: @tabToolbarNavbarOverlap@;
   left: 0;
   right: 0;
   z-index: 0;

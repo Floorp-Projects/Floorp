@@ -16,8 +16,18 @@
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
 #include "MainThreadUtils.h"
+#include "nsAutoRef.h"
+#include "speex/speex_resampler.h"
+#include "AudioMixer.h"
 
 class nsIRunnable;
+
+template <>
+class nsAutoRefTraits<SpeexResamplerState> : public nsPointerRefTraits<SpeexResamplerState>
+{
+  public:
+  static void Release(SpeexResamplerState* aState) { speex_resampler_destroy(aState); }
+};
 
 namespace mozilla {
 
@@ -89,9 +99,11 @@ class MediaStreamGraph;
  * attached to a stream that has already finished, we'll call NotifyFinished.
  */
 class MediaStreamListener {
-public:
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
   virtual ~MediaStreamListener() {}
 
+public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStreamListener)
 
   enum Consumption {
@@ -291,6 +303,9 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaStream)
 
   MediaStream(DOMMediaStream* aWrapper);
+
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
   virtual ~MediaStream()
   {
     MOZ_COUNT_DTOR(MediaStream);
@@ -299,6 +314,7 @@ public:
                  "All main thread listeners should have been removed");
   }
 
+public:
   /**
    * Returns the graph that owns this stream.
    */
@@ -557,6 +573,8 @@ protected:
     // Amount of time that we've wanted to play silence because of the stream
     // blocking.
     MediaTime mBlockedAudioTime;
+    // Last tick written to the audio output.
+    TrackTicks mLastTickWritten;
     nsAutoPtr<AudioStream> mStream;
     TrackID mTrackID;
   };
@@ -656,6 +674,9 @@ public:
    */
   void AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
                 MediaSegment* aSegment);
+
+  struct TrackData;
+  void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
    * but aSegment is emptied.
@@ -746,7 +767,13 @@ public:
    */
   struct TrackData {
     TrackID mID;
-    TrackRate mRate;
+    // Sample rate of the input data.
+    TrackRate mInputRate;
+    // Sample rate of the output data, always equal to IdealAudioRate()
+    TrackRate mOutputRate;
+    // Resampler if the rate of the input track does not match the
+    // MediaStreamGraph's.
+    nsAutoRef<SpeexResamplerState> mResampler;
     TrackTicks mStart;
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
@@ -757,6 +784,9 @@ public:
     nsTArray<ThreadAndRunnable> mDispatchWhenNotEnough;
     bool mHaveEnough;
   };
+
+  void RegisterForAudioMixing();
+  bool NeedsMixing();
 
 protected:
   TrackData* FindDataForTrack(TrackID aID)
@@ -791,6 +821,7 @@ protected:
   bool mPullEnabled;
   bool mUpdateFinished;
   bool mDestroyed;
+  bool mNeedsMixing;
 };
 
 /**
@@ -810,7 +841,8 @@ protected:
  * the Destroy message is processed on the graph manager thread we disconnect
  * the port and drop the graph's reference, destroying the object.
  */
-class MediaInputPort {
+class MediaInputPort MOZ_FINAL {
+private:
   // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
   MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
                  uint32_t aFlags, uint16_t aInputNumber,
@@ -823,6 +855,12 @@ class MediaInputPort {
     , mGraph(nullptr)
   {
     MOZ_COUNT_CTOR(MediaInputPort);
+  }
+
+  // Private destructor, to discourage deletion outside of Release():
+  ~MediaInputPort()
+  {
+    MOZ_COUNT_DTOR(MediaInputPort);
   }
 
 public:
@@ -841,10 +879,6 @@ public:
     // stream.
     FLAG_BLOCK_OUTPUT = 0x02
   };
-  ~MediaInputPort()
-  {
-    MOZ_COUNT_DTOR(MediaInputPort);
-  }
 
   // Called on graph manager thread
   // Do not call these from outside MediaStreamGraph.cpp!
@@ -886,7 +920,7 @@ public:
    */
   void SetGraphImpl(MediaStreamGraphImpl* aGraph);
 
-protected:
+private:
   friend class MediaStreamGraphImpl;
   friend class MediaStream;
   friend class ProcessedMediaStream;
@@ -994,7 +1028,7 @@ protected:
   bool mInCycle;
 };
 
-// Returns ideal audio rate for processing
+// Returns ideal audio rate for processing.
 inline TrackRate IdealAudioRate() { return AudioStream::PreferredSampleRate(); }
 
 /**
