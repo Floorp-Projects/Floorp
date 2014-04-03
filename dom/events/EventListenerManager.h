@@ -387,12 +387,6 @@ public:
   bool MayHavePaintEventListener() { return mMayHavePaintEventListener; }
 
   /**
-   * Returns true if there may be a MozAudioAvailable event listener registered,
-   * false if there definitely isn't.
-   */
-  bool MayHaveAudioAvailableEventListener() { return mMayHaveAudioAvailableEventListener; }
-
-  /**
    * Returns true if there may be a touch event listener registered,
    * false if there definitely isn't.
    */
@@ -543,13 +537,12 @@ protected:
   uint32_t mMayHaveMutationListeners : 1;
   uint32_t mMayHaveCapturingListeners : 1;
   uint32_t mMayHaveSystemGroupListeners : 1;
-  uint32_t mMayHaveAudioAvailableEventListener : 1;
   uint32_t mMayHaveTouchEventListener : 1;
   uint32_t mMayHaveMouseEnterLeaveEventListener : 1;
   uint32_t mMayHavePointerEnterLeaveEventListener : 1;
   uint32_t mClearingListeners : 1;
   uint32_t mIsMainThreadELM : 1;
-  uint32_t mNoListenerForEvent : 22;
+  uint32_t mNoListenerForEvent : 23;
 
   nsAutoTObserverArray<Listener, 2> mListeners;
   dom::EventTarget* mTarget;  // WEAK

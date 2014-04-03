@@ -271,11 +271,6 @@ DocManager::HandleEvent(nsIDOMEvent* aEvent)
       logging::DocDestroy("received 'pagehide' event", document);
 #endif
 
-    // Ignore 'pagehide' on temporary documents since we ignore them entirely in
-    // accessibility.
-    if (document->IsInitialDocument())
-      return NS_OK;
-
     // Shutdown this one and sub document accessibles.
 
     // We're allowed to not remove listeners when accessible document is
@@ -370,10 +365,8 @@ DocManager::RemoveListeners(nsIDocument* aDocument)
 DocAccessible*
 DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
 {
-  // Ignore temporary, hiding, resource documents and documents without
-  // docshell.
-  if (aDocument->IsInitialDocument() ||
-      !aDocument->IsVisibleConsideringAncestors() ||
+  // Ignore hiding, resource documents and documents without docshell.
+  if (!aDocument->IsVisibleConsideringAncestors() ||
       aDocument->IsResourceDoc() || !aDocument->IsActive())
     return nullptr;
 

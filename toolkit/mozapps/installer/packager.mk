@@ -705,6 +705,16 @@ endif
 
 export NO_PKG_FILES USE_ELF_HACK ELF_HACK_FLAGS
 
+# A js binary is needed to perform verification of JavaScript minification.
+# We can only use the built binary when not cross-compiling. Environments
+# (such as release automation) can provide their own js binary to enable
+# verification when cross-compiling.
+ifndef JS_BINARY
+ifndef CROSS_COMPILE
+JS_BINARY = $(wildcard $(DIST)/bin/js)
+endif
+endif
+
 # Override the value of OMNIJAR_NAME from config.status with the value
 # set earlier in this file.
 
@@ -716,6 +726,9 @@ stage-package: $(MOZ_PKG_MANIFEST)
 		$(addprefix --removals ,$(MOZ_PKG_REMOVALS)) \
 		$(if $(filter-out 0,$(MOZ_PKG_FATAL_WARNINGS)),,--ignore-errors) \
 		$(if $(MOZ_PACKAGER_MINIFY),--minify) \
+		$(if $(MOZ_PACKAGER_MINIFY_JS),--minify-js \
+		  $(addprefix --js-binary ,$(JS_BINARY)) \
+		) \
 		$(if $(JARLOG_DIR),$(addprefix --jarlog ,$(wildcard $(JARLOG_FILE_AB_CD)))) \
 		$(if $(OPTIMIZEJARS),--optimizejars) \
 		$(addprefix --unify ,$(UNIFY_DIST)) \

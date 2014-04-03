@@ -17,7 +17,6 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIAtom.h"
-#include "nsEventStates.h"
 #include "nsNameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
@@ -25,6 +24,7 @@
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMeterElement.h"
 #include "nsLookAndFeel.h"
@@ -34,6 +34,7 @@
 #include "gfxQuartzNativeDrawing.h"
 #include <algorithm>
 
+using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::dom::HTMLMeterElement;
 
@@ -893,7 +894,7 @@ static const CellRenderSettings checkboxSettings = {
 void
 nsNativeThemeCocoa::DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox,
                                         const HIRect& inBoxRect, bool inSelected,
-                                        nsEventStates inState, nsIFrame* aFrame)
+                                        EventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -945,7 +946,7 @@ static const CellRenderSettings searchFieldSettings = {
 
 void
 nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
-                                    nsIFrame* aFrame, nsEventStates inState)
+                                    nsIFrame* aFrame, EventStates inState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -993,7 +994,7 @@ static const CellRenderSettings pushButtonSettings = {
 
 void
 nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
-                                   nsEventStates inState, uint8_t aWidgetType,
+                                   EventStates inState, uint8_t aWidgetType,
                                    nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1122,7 +1123,7 @@ void
 nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
                                const HIRect& inBoxRect, bool inIsDefault,
                                ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
-                               nsEventStates inState, nsIFrame* aFrame)
+                               EventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1241,7 +1242,7 @@ static const CellRenderSettings editableMenulistSettings = {
 
 void
 nsNativeThemeCocoa::DrawDropdown(CGContextRef cgContext, const HIRect& inBoxRect,
-                                 nsEventStates inState, uint8_t aWidgetType,
+                                 EventStates inState, uint8_t aWidgetType,
                                  nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1287,7 +1288,7 @@ void
 nsNativeThemeCocoa::DrawSpinButtons(CGContextRef cgContext, ThemeButtonKind inKind,
                                     const HIRect& inBoxRect, ThemeDrawState inDrawState,
                                     ThemeButtonAdornment inAdornment,
-                                    nsEventStates inState, nsIFrame* aFrame)
+                                    EventStates inState, nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1313,7 +1314,7 @@ nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
                                    const HIRect& inBoxRect,
                                    ThemeDrawState inDrawState,
                                    ThemeButtonAdornment inAdornment,
-                                   nsEventStates inState,
+                                   EventStates inState,
                                    nsIFrame* aFrame,
                                    uint8_t aWidgetType)
 {
@@ -1360,7 +1361,7 @@ nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext,
 void
 nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
                               const HIRect& inBoxRect, bool inDisabled,
-                              nsEventStates inState)
+                              EventStates inState)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1569,7 +1570,7 @@ nsNativeThemeCocoa::DrawMeter(CGContextRef cgContext, const HIRect& inBoxRect,
    * value when we want to have the widget to be in the warning or critical
    * state.
    */
-  nsEventStates states = aFrame->GetContent()->AsElement()->State();
+  EventStates states = aFrame->GetContent()->AsElement()->State();
 
   // Reset previously set warning and critical values.
   [cell setWarningValue:max+1];
@@ -1638,7 +1639,7 @@ nsNativeThemeCocoa::DrawTabPanel(CGContextRef cgContext, const HIRect& inBoxRect
 
 void
 nsNativeThemeCocoa::DrawScale(CGContextRef cgContext, const HIRect& inBoxRect,
-                              nsEventStates inState, bool inIsVertical,
+                              EventStates inState, bool inIsVertical,
                               bool inIsReverse, int32_t inCurrentValue,
                               int32_t inMinValue, int32_t inMaxValue,
                               nsIFrame* aFrame)
@@ -1740,7 +1741,7 @@ static const SegmentedControlRenderSettings toolbarButtonRenderSettings = {
 
 void
 nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
-                                nsEventStates inState, nsIFrame* aFrame,
+                                EventStates inState, nsIFrame* aFrame,
                                 const SegmentedControlRenderSettings& aSettings)
 {
   BOOL isActive = IsActive(aFrame, aSettings.isToolbarControl);
@@ -1779,14 +1780,15 @@ nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
 }
 
 static inline UInt8
-ConvertToPressState(nsEventStates aButtonState, UInt8 aPressState)
+ConvertToPressState(EventStates aButtonState, UInt8 aPressState)
 {
   // If the button is pressed, return the press state passed in. Otherwise, return 0.
   return aButtonState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER) ? aPressState : 0;
 }
 
 void 
-nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame *aFrame, nsEventStates aButtonStates[])
+nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame* aFrame,
+                                            EventStates aButtonStates[])
 {
   static nsIContent::AttrValuesArray attributeValues[] = {
     &nsGkAtoms::scrollbarUpTop,
@@ -1874,7 +1876,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   // also no reason to do this on Lion or later, whose scrollbars have no
   // arrow buttons.
   if (aShouldGetButtonStates && !nsCocoaFeatures::OnLionOrLater()) {
-    nsEventStates buttonStates[4];
+    EventStates buttonStates[4];
     GetScrollbarPressStates(aFrame, buttonStates);
     NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
     // It seems that unless all four buttons are showing, kThemeTopOutsideArrowPressed is the correct constant for
@@ -2148,7 +2150,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
   //CGContextFillRect(cgContext, bounds);
 #endif
 
-  nsEventStates eventState = GetContentState(aFrame, aWidgetType);
+  EventStates eventState = GetContentState(aFrame, aWidgetType);
 
   switch (aWidgetType) {
     case NS_THEME_DIALOG: {

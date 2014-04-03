@@ -23,8 +23,8 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- * 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef assembler_assembler_RepatchBuffer_h
@@ -129,7 +129,7 @@ public:
     {
         relink(CodeLocationCall(CodePtr(returnAddress)), label);
     }
-    
+
     void relinkCallerToTrampoline(ReturnAddressPtr returnAddress, CodePtr newCalleeFunction)
     {
         relinkCallerToTrampoline(returnAddress, CodeLocationLabel(newCalleeFunction));
@@ -139,12 +139,12 @@ public:
     {
         relink(CodeLocationCall(CodePtr(returnAddress)), function);
     }
-    
+
     void relinkNearCallerToTrampoline(ReturnAddressPtr returnAddress, CodeLocationLabel label)
     {
         relink(CodeLocationNearCall(CodePtr(returnAddress)), label);
     }
-    
+
     void relinkNearCallerToTrampoline(ReturnAddressPtr returnAddress, CodePtr newCalleeFunction)
     {
         relinkNearCallerToTrampoline(returnAddress, CodeLocationLabel(newCalleeFunction));

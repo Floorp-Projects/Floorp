@@ -452,7 +452,16 @@ JSObject::setProto(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto, 
     }
 
     /*
-     * Explicityly disallow mutating the [[Prototype]] of Location objects
+     * Disallow mutating the [[Prototype]] on Typed Objects, per the spec.
+     */
+    if (obj->is<js::TypedObject>()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL,
+                             "incompatible TypedObject");
+        return false;
+    }
+
+    /*
+     * Explicitly disallow mutating the [[Prototype]] of Location objects
      * for flash-related security reasons.
      */
     if (!strcmp(obj->getClass()->name, "Location")) {

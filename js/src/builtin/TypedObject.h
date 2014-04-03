@@ -126,6 +126,23 @@ static T ConvertScalar(double d)
     }
 }
 
+/*
+ * The prototype for a typed object. Currently, carries a link to the
+ * type descriptor. Eventually will carry most of the type information
+ * we want.
+ */
+class TypedProto : public JSObject
+{
+  public:
+    static const Class class_;
+
+    inline void initTypeDescrSlot(TypeDescr &descr);
+
+    TypeDescr &typeDescr() const {
+        return getReservedSlot(JS_TYPROTO_SLOT_DESCR).toObject().as<TypeDescr>();
+    }
+};
+
 class TypeDescr : public JSObject
 {
   public:
@@ -295,8 +312,8 @@ class ComplexTypeDescr : public SizedTypeDescr
   public:
     // Returns the prototype that instances of this type descriptor
     // will have.
-    JSObject &instancePrototype() const {
-        return getReservedSlot(JS_DESCR_SLOT_PROTO).toObject();
+    TypedProto &instancePrototype() const {
+        return getReservedSlot(JS_DESCR_SLOT_TYPROTO).toObject().as<TypedProto>();
     }
 };
 
@@ -1006,6 +1023,12 @@ inline bool
 JSObject::is<js::UnsizedArrayTypeDescr>() const
 {
     return getClass() == &js::UnsizedArrayTypeDescr::class_;
+}
+
+inline void
+js::TypedProto::initTypeDescrSlot(TypeDescr &descr)
+{
+    initReservedSlot(JS_TYPROTO_SLOT_DESCR, ObjectValue(descr));
 }
 
 #endif /* builtin_TypedObject_h */

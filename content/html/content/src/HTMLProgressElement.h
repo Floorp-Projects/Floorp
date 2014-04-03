@@ -21,7 +21,7 @@ public:
   HTMLProgressElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   virtual ~HTMLProgressElement();
 
-  nsEventStates IntrinsicState() const MOZ_OVERRIDE;
+  EventStates IntrinsicState() const MOZ_OVERRIDE;
 
   nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
