@@ -54,11 +54,7 @@
 
 #ifdef MOZ_TELEMETRY_REPORTING
       <preference id="toolkit.telemetry.enabled"
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-                  name="toolkit.telemetry.enabledPreRelease"
-#else
                   name="toolkit.telemetry.enabled"
-#endif
                   type="bool"/>
 #endif
 

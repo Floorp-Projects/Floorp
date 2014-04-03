@@ -82,7 +82,7 @@ public class GeckoPreferences
     private static final String PREFS_HOME_ADD_PANEL = NON_PREF_PREFIX + "home.add_panel";
     private static final String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
     private static final String PREFS_DATA_REPORTING_PREFERENCES = NON_PREF_PREFIX + "datareporting.preferences";
-    private static final String PREFS_TELEMETRY_ENABLED = "datareporting.telemetry.enabled";
+    private static final String PREFS_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
     private static final String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
     private static final String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static final String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
