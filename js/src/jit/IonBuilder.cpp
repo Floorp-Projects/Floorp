@@ -3032,7 +3032,7 @@ IonBuilder::filterTypesAtTest(MTest *test)
         return true;
 
     // There is no TypeSet that can get filtered.
-    if (!subject->resultTypeSet())
+    if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
         return true;
 
     // Only do this optimization if the typeset does contains null or undefined.
