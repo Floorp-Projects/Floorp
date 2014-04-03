@@ -16,12 +16,12 @@
 #include "nsIDocument.h"
 #include "mozilla/dom/HTMLDivElement.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/TextTrack.h"
 
 namespace mozilla {
 namespace dom {
 
 class HTMLTrackElement;
-class TextTrack;
 class TextTrackRegion;
 
 class TextTrackCue MOZ_FINAL : public DOMEventTargetHelper
@@ -315,6 +315,11 @@ public:
   const nsAString& Id() const
   {
     return mId;
+  }
+
+  void SetTrack(TextTrack* aTextTrack)
+  {
+    mTrack = aTextTrack;
   }
 
   /**
