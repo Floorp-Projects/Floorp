@@ -4,11 +4,12 @@ dnl This Source Code Form is subject to the terms of the Mozilla Public
 dnl License, v. 2.0. If a copy of the MPL was not distributed with this
 dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-AC_PREREQ(2.56)
-AC_INIT(config/libc_r.h)
+AC_PREREQ(2.61)
+AC_INIT
+AC_CONFIG_SRCDIR([pr/include/nspr.h])
 
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 
 dnl ========================================================
 dnl = Defaults
@@ -673,7 +674,6 @@ else
             AC_PROG_CXX
         fi
     fi
-    AC_PROG_CPP
     AC_PROG_RANLIB
     AC_PATH_PROGS(AS, as, $CC)
     AC_PATH_PROGS(AR, ar, echo not_ar)
@@ -687,6 +687,8 @@ else
         HOST_CFLAGS="$CFLAGS"
     fi
 fi
+
+AC_PROG_CPP
 
 if test "$GCC" = "yes"; then
     GNU_CC=1
@@ -2530,29 +2532,6 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl ========================================================
 dnl Check for system libraries
 dnl ========================================================
-dnl AC_CHECK_LIB(C, main)
-dnl AC_CHECK_LIB(C_r, main)
-dnl AC_CHECK_LIB(c, main)
-dnl AC_CHECK_LIB(c_r, main)
-dnl AC_CHECK_LIB(dce, main)
-dnl AC_CHECK_LIB(dl, main)
-dnl AC_CHECK_LIB(dld, main)
-dnl AC_CHECK_LIB(gen, main)
-dnl AC_CHECK_LIB(ip6, main)
-dnl AC_CHECK_LIB(l, main)
-dnl AC_CHECK_LIB(m, main)
-dnl AC_CHECK_LIB(nsl, main)
-dnl AC_CHECK_LIB(posix4, main)
-dnl AC_CHECK_LIB(prstrms, main)
-dnl AC_CHECK_LIB(prstrms_shr, main)
-dnl AC_CHECK_LIB(pthread, main)
-dnl AC_CHECK_LIB(pthreads, main)
-dnl AC_CHECK_LIB(resolv, main)
-dnl AC_CHECK_LIB(rt, main)
-dnl AC_CHECK_LIB(socket, main)
-dnl AC_CHECK_LIB(svld, main)
-dnl AC_CHECK_LIB(thread, main)
-dnl AC_CHECK_LIB(vms_jackets, main)
 
 
 dnl We don't want anything to link with libdl even if it's present on OS X, 
@@ -2574,25 +2553,10 @@ esac
 dnl ========================================================
 dnl Check for system header files.
 dnl ========================================================
-dnl AC_HEADER_DIRENT
-dnl AC_HEADER_STDC
-dnl AC_HEADER_SYS_WAIT
-dnl AC_CHECK_HEADERS(fcntl.h limits.h sys/file.h sys/ioctl.h sys/time.h unistd.h)
 
 dnl ========================================================
 dnl Check for typedefs and structs
 dnl ========================================================
-dnl AC_C_CONST
-dnl AC_TYPE_UID_T
-dnl AC_TYPE_MODE_T
-dnl AC_TYPE_OFF_T
-dnl AC_TYPE_PID_T
-dnl AC_TYPE_SIZE_T
-dnl AC_STRUCT_ST_BLKSIZE
-dnl AC_STRUCT_ST_BLOCKS
-dnl AC_STRUCT_ST_RDEV
-dnl AC_HEADER_TIME
-dnl AC_STRUCT_TM
 
 dnl ========================================================
 dnl Checks for library functions.
@@ -2602,15 +2566,6 @@ _SAVE_LIBS="$LIBS"
 LIBS="$LIBS $OS_LIBS"
 AC_CHECK_FUNCS(dladdr gettid lchown setpriority strerror syscall)
 LIBS="$_SAVE_LIBS"
-
-dnl AC_FUNC_MEMCMP
-dnl AC_FUNC_MMAP
-dnl AC_FUNC_SETVBUF_REVERSED
-dnl AC_FUNC_STRCOLL
-dnl AC_FUNC_STRFTIME
-dnl AC_FUNC_UTIME_NULL
-dnl AC_FUNC_VPRINTF
-dnl AC_CHECK_FUNCS(ftime getcwd gethostname gettimeofday getwd mkdir mktime putenv rmdir select socket strdup strerror strstr strtol strtoul uname)
 
 dnl ========================================================
 dnl Check options
@@ -3272,4 +3227,6 @@ fi
 
 echo $MAKEFILES > unallmakefiles
 
-AC_OUTPUT([$MAKEFILES], [chmod +x config/nspr-config])
+AC_CONFIG_FILES([$MAKEFILES])
+AC_CONFIG_COMMANDS([default], [chmod +x config/nspr-config])
+AC_OUTPUT

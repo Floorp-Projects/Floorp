@@ -142,17 +142,7 @@ class JSFunction : public JSObject
         return nonLazyScript()->hasBaselineScript() || nonLazyScript()->hasIonScript();
     }
 
-    // Arrow functions are a little weird.
-    //
-    // Like all functions, (1) when the compiler parses an arrow function, it
-    // creates a function object that gets stored with the enclosing script;
-    // and (2) at run time the script's function object is cloned.
-    //
-    // But then, unlike other functions, (3) a bound function is created with
-    // the clone as its target.
-    //
-    // isArrow() is true for all three of these Function objects.
-    // isBoundFunction() is true only for the last one.
+    // Arrow functions store their lexical |this| in the first extended slot.
     bool isArrow()                  const { return flags() & ARROW; }
 
     /* Compound attributes: */
@@ -162,7 +152,7 @@ class JSFunction : public JSObject
     bool isInterpretedConstructor() const {
         // Note: the JITs inline this check, so be careful when making changes
         // here. See IonMacroAssembler::branchIfNotInterpretedConstructor.
-        return isInterpreted() && !isFunctionPrototype() &&
+        return isInterpreted() && !isFunctionPrototype() && !isArrow() &&
                (!isSelfHostedBuiltin() || isSelfHostedConstructor());
     }
     bool isNamedLambda() const {
@@ -547,6 +537,10 @@ class FunctionExtended : public JSFunction
 {
   public:
     static const unsigned NUM_EXTENDED_SLOTS = 2;
+
+    static inline size_t offsetOfArrowThisSlot() {
+        return offsetof(FunctionExtended, extendedSlots) + 0 * sizeof(HeapValue);
+    }
 
   private:
     friend class JSFunction;

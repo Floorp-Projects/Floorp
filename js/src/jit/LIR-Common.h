@@ -1056,6 +1056,20 @@ class LComputeThis : public LInstructionHelper<1, BOX_PIECES, 0>
     }
 };
 
+class LLoadArrowThis : public LInstructionHelper<BOX_PIECES, 1, 0>
+{
+  public:
+    LLoadArrowThis(const LAllocation &callee) {
+        setOperand(0, callee);
+    }
+
+    LIR_HEADER(LoadArrowThis)
+
+    const LAllocation *callee() {
+        return getOperand(0);
+    }
+};
+
 // Writes a typed argument for a function call to the frame's argument vector.
 class LStackArgT : public LInstructionHelper<0, 1, 0>
 {

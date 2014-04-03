@@ -1657,18 +1657,10 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_THIS:
         return jsop_this();
 
-      case JSOP_CALLEE:
-      {
-        MDefinition *callee;
-        if (inliningDepth_ == 0) {
-            MInstruction *calleeIns = MCallee::New(alloc());
-            current->add(calleeIns);
-            callee = calleeIns;
-        } else {
-            callee = inlineCallInfo_->fun();
-        }
-        current->push(callee);
-        return true;
+      case JSOP_CALLEE: {
+         MDefinition *callee = getCallee();
+         current->push(callee);
+         return true;
       }
 
       case JSOP_GETPROP:
@@ -3032,7 +3024,7 @@ IonBuilder::filterTypesAtTest(MTest *test)
         return true;
 
     // There is no TypeSet that can get filtered.
-    if (!subject->resultTypeSet())
+    if (!subject->resultTypeSet() || subject->resultTypeSet()->unknown())
         return true;
 
     // Only do this optimization if the typeset does contains null or undefined.
@@ -9534,6 +9526,14 @@ IonBuilder::jsop_this()
     if (!info().funMaybeLazy())
         return abort("JSOP_THIS outside of a JSFunction.");
 
+    if (info().funMaybeLazy()->isArrow()) {
+        // Arrow functions store their lexical |this| in an extended slot.
+        MLoadArrowThis *thisObj = MLoadArrowThis::New(alloc(), getCallee());
+        current->add(thisObj);
+        current->push(thisObj);
+        return true;
+    }
+
     if (script()->strict() || info().funMaybeLazy()->isSelfHostedBuiltin()) {
         // No need to wrap primitive |this| in strict mode or self-hosted code.
         current->pushSlot(info().thisSlot());
@@ -10229,4 +10229,16 @@ MConstant *
 IonBuilder::constantInt(int32_t i)
 {
     return constant(Int32Value(i));
+}
+
+MDefinition *
+IonBuilder::getCallee()
+{
+    if (inliningDepth_ == 0) {
+        MInstruction *callee = MCallee::New(alloc());
+        current->add(callee);
+        return callee;
+    }
+
+    return inlineCallInfo_->fun();
 }

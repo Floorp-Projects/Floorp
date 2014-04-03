@@ -53,9 +53,10 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
       is(cue.endTime, 0.7, "Cue's end time should be 0.7.");
       is(cue.pauseOnExit, false, "Cue's pause on exit flag should be false.");
       is(cue.text, "This", "Cue's text should be set correctly.");
-      // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=879431
-      // GetTrack() isn't implemented so this *is* returning undefined currently.
-      todo_isnot(cue.track, undefined, "Cue's track should be defined.");
+      is(cue.track, trackElement.track, "Cue's track should be defined.");
+
+      cue.track = null;
+      isnot(cue.track, null, "Cue's track should not be able to be set.");
 
       // Check that all cue times were not rounded
       is(cueList[1].startTime, 1.2, "Second cue's start time should be 1.2.");
@@ -184,7 +185,9 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
 
       // Check that we can create and add new VTTCues
       var vttCue = new VTTCue(3.999, 4, "foo");
+      is(vttCue.track, undefined, "Cue's track should be undefined.");
       trackElement.track.addCue(vttCue);
+      is(cue.track, trackElement.track, "Cue's track should be defined.");
       is(cueList.length, 7, "Cue list length should now be 7.");
 
       // Check that new VTTCue was added correctly

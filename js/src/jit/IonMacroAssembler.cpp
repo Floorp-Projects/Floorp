@@ -1846,7 +1846,7 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
     // Emit code for the following test:
     //
     // bool isInterpretedConstructor() const {
-    //     return isInterpreted() && !isFunctionPrototype() &&
+    //     return isInterpreted() && !isFunctionPrototype() && !isArrow() &&
     //         (!isSelfHostedBuiltin() || isSelfHostedConstructor());
     // }
 
@@ -1854,16 +1854,15 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
     load32(Address(fun, JSFunction::offsetOfNargs()), scratch);
     branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::INTERPRETED << 16), label);
 
-    // Common case: if both IS_FUN_PROTO and SELF_HOSTED are not set,
-    // we're done.
+    // Common case: if IS_FUN_PROTO, ARROW and SELF_HOSTED are not set,
+    // the function is an interpreted constructor and we're done.
     Label done;
-    uint32_t bits = (JSFunction::IS_FUN_PROTO | JSFunction::SELF_HOSTED) << 16;
+    uint32_t bits = (JSFunction::IS_FUN_PROTO | JSFunction::ARROW | JSFunction::SELF_HOSTED) << 16;
     branchTest32(Assembler::Zero, scratch, Imm32(bits), &done);
     {
-        // The callee is either Function.prototype or self-hosted. Fail if
-        // SELF_HOSTED_CTOR is not set. This means the callee must be
-        // Function.prototype or a self-hosted function that's not a
-        // constructor.
+        // The callee is either Function.prototype, an arrow function or
+        // self-hosted. None of these are constructible, except self-hosted
+        // constructors, so branch to |label| if SELF_HOSTED_CTOR is not set.
         branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::SELF_HOSTED_CTOR << 16), label);
 
 #ifdef DEBUG

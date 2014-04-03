@@ -415,6 +415,16 @@ LIRGenerator::visitComputeThis(MComputeThis *ins)
 }
 
 bool
+LIRGenerator::visitLoadArrowThis(MLoadArrowThis *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Value);
+    JS_ASSERT(ins->callee()->type() == MIRType_Object);
+
+    LLoadArrowThis *lir = new(alloc()) LLoadArrowThis(useRegister(ins->callee()));
+    return defineBox(lir, ins);
+}
+
+bool
 LIRGenerator::lowerCallArguments(MCall *call)
 {
     uint32_t argc = call->numStackArgs();
