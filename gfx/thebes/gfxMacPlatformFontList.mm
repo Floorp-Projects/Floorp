@@ -612,7 +612,9 @@ class gfxSingleFaceMacFontFamily : public gfxFontFamily
 public:
     gfxSingleFaceMacFontFamily(nsAString& aName) :
         gfxFontFamily(aName)
-    {}
+    {
+        mFaceNamesInitialized = true; // omit from face name lists
+    }
 
     virtual ~gfxSingleFaceMacFontFamily() {}
 
@@ -1060,8 +1062,8 @@ public:
 
     virtual void Load() {
         nsAutoreleasePool localPool;
-        // bug 975460 - to disable async font loader on 10.6, bump version
-        if (nsCocoaFeatures::OSXVersion() >= 0x1060) {
+        // bug 975460 - async font loader crashes sometimes under 10.6, disable
+        if (nsCocoaFeatures::OnLionOrLater()) {
             FontInfoData::Load();
         }
     }
