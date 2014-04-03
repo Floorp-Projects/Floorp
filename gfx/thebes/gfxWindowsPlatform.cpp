@@ -477,6 +477,10 @@ gfxWindowsPlatform::CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1,
   nsRefPtr<ID3D10Device1> device;
   HRESULT hr =
     createD3DDevice(adapter1, D3D10_DRIVER_TYPE_HARDWARE, nullptr,
+#ifdef DEBUG
+                    // This isn't set because of bug 1078411
+                    // D3D10_CREATE_DEVICE_DEBUG |
+#endif
                     D3D10_CREATE_DEVICE_BGRA_SUPPORT |
                     D3D10_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
                     static_cast<D3D10_FEATURE_LEVEL1>(kSupportedFeatureLevels[featureLevelIndex]),

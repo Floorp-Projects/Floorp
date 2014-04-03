@@ -232,7 +232,29 @@ GLLibraryEGL::EnsureInitialized()
                        "Couldn't find eglQueryStringImplementationANDROID");
 #endif
 
-    mEGLDisplay = fGetDisplay(EGL_DEFAULT_DISPLAY);
+    mEGLDisplay = nullptr;
+
+#ifdef XP_WIN
+    // XXX we have no way of knowing if this is ANGLE, or if we're just using
+    // a native EGL on windows.  We don't really do the latter right now, so
+    // let's assume it is ANGLE, and try our special types.
+
+    // D3D11 ANGLE only works with OMTC; there's a bug in the non-OMTC layer
+    // manager, and it's pointless to try to fix it.  We also don't try D3D11
+    // ANGLE if the layer manager is prefering D3D9 (hrm, do we care?)
+    if (gfxPrefs::LayersOffMainThreadCompositionEnabled() &&
+        !gfxPrefs::LayersPreferD3D9())
+    {
+        if (gfxPrefs::WebGLANGLEForceD3D11()) {
+            mEGLDisplay = fGetDisplay(LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
+        } else if (gfxPrefs::WebGLANGLETryD3D11()) {
+            mEGLDisplay = fGetDisplay(LOCAL_EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE);
+        }
+    }
+#endif
+
+    if (!mEGLDisplay)
+        mEGLDisplay = fGetDisplay(EGL_DEFAULT_DISPLAY);
     if (!fInitialize(mEGLDisplay, nullptr, nullptr))
         return false;
 
