@@ -577,11 +577,12 @@ nsLayoutUtils::IsTextAlignTrueValueEnabled()
 
 void
 nsLayoutUtils::UnionChildOverflow(nsIFrame* aFrame,
-                                  nsOverflowAreas& aOverflowAreas)
+                                  nsOverflowAreas& aOverflowAreas,
+                                  FrameChildListIDs aSkipChildLists)
 {
   // Iterate over all children except pop-ups.
-  const nsIFrame::ChildListIDs skip(nsIFrame::kPopupList |
-                                    nsIFrame::kSelectPopupList);
+  FrameChildListIDs skip = aSkipChildLists |
+      nsIFrame::kSelectPopupList | nsIFrame::kPopupList;
   for (nsIFrame::ChildListIterator childLists(aFrame);
        !childLists.IsDone(); childLists.Next()) {
     if (skip.Contains(childLists.CurrentID())) {
