@@ -2703,6 +2703,7 @@ abstract public class BrowserApp extends GeckoApp
                                                   final String appLocale,
                                                   final SessionInformation previousSession) {
         return new BrowserHealthRecorder(context,
+                                         GeckoSharedPrefs.forApp(context),
                                          profilePath,
                                          dispatcher,
                                          osLocale,
