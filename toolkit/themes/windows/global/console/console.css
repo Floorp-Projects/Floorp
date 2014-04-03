@@ -102,7 +102,7 @@
 }
 
 .console-row[type="message"] {
-  list-style-image: url("chrome://global/skin/icons/question-16.png");
+  list-style-image: url("chrome://global/skin/icons/information-16.png");
 }
 
 /* ::::: toolbars ::::: */
