@@ -3627,10 +3627,8 @@ js::LambdaArrow(JSContext *cx, HandleFunction fun, HandleObject parent, HandleVa
     if (!clone)
         return nullptr;
 
-    clone = js_fun_bind(cx, clone, thisv, nullptr, 0);
-    if (!clone)
-        return nullptr;
-    clone->as<JSFunction>().setArrow();
+    MOZ_ASSERT(clone->as<JSFunction>().isArrow());
+    clone->as<JSFunction>().setExtendedSlot(0, thisv);
 
     MOZ_ASSERT(clone->global() == clone->global());
     return clone;
