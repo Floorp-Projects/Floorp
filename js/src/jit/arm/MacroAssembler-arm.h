@@ -927,9 +927,20 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         branch32(cond, val.payloadReg(), Imm32(static_cast<int32_t>(why)), label);
         bind(&notmagic);
     }
-    template<typename T>
-    void branchTestBooleanTruthy(bool b, const T & t, Label *label) {
-        Condition c = testBooleanTruthy(b, t);
+    void branchTestInt32Truthy(bool truthy, const ValueOperand &operand, Label *label) {
+        Condition c = testInt32Truthy(truthy, operand);
+        ma_b(label, c);
+    }
+    void branchTestBooleanTruthy(bool truthy, const ValueOperand &operand, Label *label) {
+        Condition c = testBooleanTruthy(truthy, operand);
+        ma_b(label, c);
+    }
+    void branchTestDoubleTruthy(bool truthy, const FloatRegister &reg, Label *label) {
+        Condition c = testDoubleTruthy(truthy, reg);
+        ma_b(label, c);
+    }
+    void branchTestStringTruthy(bool truthy, const ValueOperand &value, Label *label) {
+        Condition c = testStringTruthy(truthy, value);
         ma_b(label, c);
     }
     void branchTest32(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
@@ -1232,6 +1243,16 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void add32(Imm32 imm, const Address &dest);
     void sub32(Imm32 imm, Register dest);
     void sub32(Register src, Register dest);
+    template <typename T>
+    void branchAdd32(Condition cond, T src, Register dest, Label *label) {
+        add32(src, dest);
+        j(cond, label);
+    }
+    template <typename T>
+    void branchSub32(Condition cond, T src, Register dest, Label *label) {
+        sub32(src, dest);
+        j(cond, label);
+    }
     void xor32(Imm32 imm, Register dest);
 
     void and32(Imm32 imm, Register dest);
@@ -1399,6 +1420,28 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     {
         ma_mov(Imm32(0), dest);
         ma_mov(Imm32(1), dest, NoSetCond, cond);
+    }
+
+    template <typename T1, typename T2>
+    void cmpPtrSet(Assembler::Condition cond, T1 lhs, T2 rhs, const Register &dest)
+    {
+        cmpPtr(lhs, rhs);
+        emitSet(cond, dest);
+    }
+    template <typename T1, typename T2>
+    void cmp32Set(Assembler::Condition cond, T1 lhs, T2 rhs, const Register &dest)
+    {
+        cmp32(lhs, rhs);
+        emitSet(cond, dest);
+    }
+
+    void testNullSet(Condition cond, const ValueOperand &value, Register dest) {
+        cond = testNull(cond, value);
+        emitSet(cond, dest);
+    }
+    void testUndefinedSet(Condition cond, const ValueOperand &value, Register dest) {
+        cond = testUndefined(cond, value);
+        emitSet(cond, dest);
     }
 
     // Setup a call to C/C++ code, given the number of general arguments it
