@@ -2751,8 +2751,10 @@ GetTextFrameForContent(nsIContent* aContent)
 {
   nsIPresShell* presShell = aContent->OwnerDoc()->GetShell();
   if (presShell) {
-    nsIFrame* frame = presShell->FrameConstructor()->EnsureFrameForTextNode(
+    presShell->FrameConstructor()->EnsureFrameForTextNode(
         static_cast<nsGenericDOMDataNode*>(aContent));
+    aContent->OwnerDoc()->FlushPendingNotifications(Flush_Layout);
+    nsIFrame* frame = aContent->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::textFrame) {
       return static_cast<nsTextFrame*>(frame);
     }
@@ -2804,7 +2806,7 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
     return;
   }
 
-  aStartParent->GetCurrentDoc()->FlushPendingNotifications(Flush_Layout);
+  aStartParent->OwnerDoc()->FlushPendingNotifications(Flush_Layout);
 
   // Recheck whether we're still in the document
   if (!aStartParent->IsInDoc()) {

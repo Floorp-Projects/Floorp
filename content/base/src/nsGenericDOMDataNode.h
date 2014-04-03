@@ -51,10 +51,6 @@ enum {
   // bit is set, and if so it indicates whether we're only whitespace or
   // not.
   NS_TEXT_IS_ONLY_WHITESPACE =            DATA_NODE_FLAG_BIT(3),
-
-  // This bit is set to indicate that we must create frames for this text node
-  // even if it's only whitespace next to a block boundary.
-  NS_CREATE_FRAME_FOR_IGNORABLE_WHITESPACE = DATA_NODE_FLAG_BIT(4)
 };
 
 // Make sure we have enough space for those bits
