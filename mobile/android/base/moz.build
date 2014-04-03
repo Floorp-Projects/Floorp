@@ -403,6 +403,7 @@ gbjar.sources += [
     'widget/IconTabWidget.java',
     'widget/SquaredImageView.java',
     'widget/TabRow.java',
+    'widget/TabThumbnailWrapper.java',
     'widget/ThumbnailView.java',
     'widget/TwoWayView.java',
     'ZoomConstraints.java',
@@ -423,13 +424,13 @@ gbjar.generated_sources += [ android_package_dir + f for f in [
 gbjar.generated_sources += [
     'org/mozilla/gecko/AppConstants.java',
     'org/mozilla/gecko/SysInfo.java',
-    'org/mozilla/gecko/widget/GeckoEditText.java',
-    'org/mozilla/gecko/widget/GeckoImageButton.java',
-    'org/mozilla/gecko/widget/GeckoImageView.java',
-    'org/mozilla/gecko/widget/GeckoLinearLayout.java',
-    'org/mozilla/gecko/widget/GeckoRelativeLayout.java',
-    'org/mozilla/gecko/widget/GeckoTextSwitcher.java',
-    'org/mozilla/gecko/widget/GeckoTextView.java',
+    'org/mozilla/gecko/widget/ThemedEditText.java',
+    'org/mozilla/gecko/widget/ThemedImageButton.java',
+    'org/mozilla/gecko/widget/ThemedImageView.java',
+    'org/mozilla/gecko/widget/ThemedLinearLayout.java',
+    'org/mozilla/gecko/widget/ThemedRelativeLayout.java',
+    'org/mozilla/gecko/widget/ThemedTextSwitcher.java',
+    'org/mozilla/gecko/widget/ThemedTextView.java',
 ]
 if CONFIG['MOZ_CRASHREPORTER']:
     gbjar.sources += [ 'CrashReporter.java' ]

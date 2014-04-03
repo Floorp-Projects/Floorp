@@ -1512,6 +1512,8 @@ DeviceStorageFile::DoUnmount(nsAString& aStatus)
 void
 DeviceStorageFile::GetStatus(nsAString& aStatus)
 {
+  aStatus.AssignLiteral("unavailable");
+
   DeviceStorageTypeChecker* typeChecker
     = DeviceStorageTypeChecker::CreateOrGet();
   if (!typeChecker) {
@@ -1522,7 +1524,6 @@ DeviceStorageFile::GetStatus(nsAString& aStatus)
     return;
   }
 
-  aStatus.AssignLiteral("unavailable");
 #ifdef MOZ_WIDGET_GONK
   nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
   NS_ENSURE_TRUE_VOID(vs);
@@ -1565,6 +1566,8 @@ DeviceStorageFile::GetStatus(nsAString& aStatus)
 void
 DeviceStorageFile::GetStorageStatus(nsAString& aStatus)
 {
+  aStatus.AssignLiteral("undefined");
+
   DeviceStorageTypeChecker* typeChecker
     = DeviceStorageTypeChecker::CreateOrGet();
   if (!typeChecker) {
@@ -1575,7 +1578,6 @@ DeviceStorageFile::GetStorageStatus(nsAString& aStatus)
     return;
   }
 
-  aStatus.AssignLiteral("undefined");
 #ifdef MOZ_WIDGET_GONK
   nsCOMPtr<nsIVolumeService> vs = do_GetService(NS_VOLUMESERVICE_CONTRACTID);
   NS_ENSURE_TRUE_VOID(vs);
@@ -3361,7 +3363,12 @@ nsDOMDeviceStorage::GetDefaultStorageName(const nsAString& aStorageType,
   GetOrderedVolumeNames(volNames);
   if (volNames.Length() > 0) {
     aStorageName = volNames[0];
+    return;
   }
+
+  // No volumes available, return the empty string. This is normal for
+  // b2g-desktop.
+  aStorageName.Truncate();
 }
 
 bool

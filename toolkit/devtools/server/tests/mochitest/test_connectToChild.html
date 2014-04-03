@@ -1,0 +1,127 @@
+<SDOCTYPv HTM.>
+<html>
+<!--
+Bug 966991 - Test DebuggerServer.connectToChild
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+let Cu = Components.utils;
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+
+Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  // Always log packets when running tests.
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["devtools.debugger.log", true]
+    ]
+  }, runTests);
+}
+
+function runTests() {
+  // Create a minimal iframe with a message manager
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
+  document.body.appendChild(iframe);
+
+  let mm = iframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+
+  // Register a test actor in the child process so that we can know if and when
+  // this fake actor is disconnected.
+  mm.loadFrameScript("data:text/javascript,new " + function FrameScriptScope() {
+    const {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+
+    if (!DebuggerServer.initialized) {
+      DebuggerServer.init();
+    }
+
+    function TestActor() {dump("instanciate test actor");}
+    TestActor.prototype = {
+      actorPrefix: "test",
+
+      disconnect: function () {
+        sendAsyncMessage("test-actor-disconnected", null);
+      },
+      hello: function () {
+        return {msg:"world"};
+      }
+    };
+    TestActor.prototype.requestTypes = {
+      "hello": TestActor.prototype.hello
+    };
+    DebuggerServer.addTabActor(TestActor, "testActor");
+  }, false);
+
+  // Instantiate a minimal server
+  DebuggerServer.init(function () { return true; });
+  DebuggerServer.addBrowserActors();
+
+  function firstClient() {
+    // Fake a first connection to an iframe
+    let transport = DebuggerServer.connectPipe();
+    let conn = transport._serverConnection;
+    let client = new DebuggerClient(transport);
+    DebuggerServer.connectToChild(conn, mm).then(actor => {
+      ok(actor.testActor, "Got the test actor");
+
+      // Ensure sending at least one request to our actor,
+      // otherwise it won't be instanciated, nor be disconnected...
+      client.request({
+        to: actor.testActor,
+        type: "hello",
+      }, function (response) {
+
+        // Then close the client. That should end up cleaning our test actor
+        client.close();
+
+        // Ensure that our test actor got cleaned up;
+        // its disconnect method should be called
+        mm.addMessageListener("test-actor-disconnected", function listener() {
+          mm.removeMessageListener("test-actor-disconnected", listener);
+          ok(true, "Actor is cleaned  up");
+
+          secondClient(actor.testActor);
+        });
+      });
+    });
+  }
+
+  function secondClient(firstActor) {
+    // Then fake a second one, that should spawn a new set of tab actors
+    let transport = DebuggerServer.connectPipe();
+    let conn = transport._serverConnection;
+    let client = new DebuggerClient(transport);
+    DebuggerServer.connectToChild(conn, mm).then(actor => {
+      ok(actor.testActor, "Got a test actor for the second connection");
+      isnot(actor.testActor, firstActor, "We get different actor instances between two connections");
+
+      client.close(cleanup);
+    });
+  }
+
+  function cleanup() {
+    DebuggerServer.destroy();
+    iframe.remove();
+    SimpleTest.finish()
+  }
+
+  firstClient();
+}
+
+</script>
+</pre>
+</body>
+</html>
