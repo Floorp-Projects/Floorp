@@ -356,7 +356,10 @@ var gFastSeekTests = [
   { name:"gizmo.mp4", type:"video/mp4", keyframes:[0, 1.0, 2.0, 3.0, 4.0, 5.0 ] },
   // Note: Not all keyframes in the file are actually referenced in the Cues in this file.
   { name:"seek.webm", type:"video/webm", keyframes:[0, 0.8, 1.6, 2.4, 3.2]},
-  // Note: omitting Ogg from this test, as I'm not sure our Ogg seek code is optimal/correct - cpearce
+  // Note: the sync points are the points on both the audio and video streams
+  // before the keyframes. You can't just assume that the keyframes are the sync
+  // points, as the audio required for that sync point may be before the keyframe.
+  { name:"bug516323.indexed.ogv", type:"video/ogg", keyframes:[0, 0.46, 3.06] },
 ];
 
 function IsWindows8OrLater() {
