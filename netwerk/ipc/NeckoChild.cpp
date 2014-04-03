@@ -22,6 +22,7 @@
 #include "mozilla/dom/network/UDPSocketChild.h"
 #ifdef NECKO_PROTOCOL_rtsp
 #include "mozilla/net/RtspControllerChild.h"
+#include "mozilla/net/RtspChannelChild.h"
 #endif
 #include "SerializedLoadContext.h"
 
@@ -176,6 +177,23 @@ NeckoChild::DeallocPRtspControllerChild(PRtspControllerChild* child)
 {
 #ifdef NECKO_PROTOCOL_rtsp
   RtspControllerChild* p = static_cast<RtspControllerChild*>(child);
+  p->ReleaseIPDLReference();
+#endif
+  return true;
+}
+
+PRtspChannelChild*
+NeckoChild::AllocPRtspChannelChild(const RtspChannelConnectArgs& aArgs)
+{
+  NS_NOTREACHED("AllocPRtspController should not be called");
+  return nullptr;
+}
+
+bool
+NeckoChild::DeallocPRtspChannelChild(PRtspChannelChild* child)
+{
+#ifdef NECKO_PROTOCOL_rtsp
+  RtspChannelChild* p = static_cast<RtspChannelChild*>(child);
   p->ReleaseIPDLReference();
 #endif
   return true;

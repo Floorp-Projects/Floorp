@@ -10,6 +10,7 @@ EXPORTS.mozilla.net += [
     'controller/RtspMetaData.h',
     'rtsp/RTSPSource.h',
     'RtspChannelChild.h',
+    'RtspChannelParent.h',
     'RtspHandler.h',
 ]
 
@@ -20,6 +21,7 @@ SOURCES += [
     'controller/RtspControllerParent.cpp',
     'controller/RtspMetaData.cpp',
     'RtspChannelChild.cpp',
+    'RtspChannelParent.cpp',
     'RtspHandler.cpp',
 ]
 
