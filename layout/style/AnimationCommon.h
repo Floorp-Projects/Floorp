@@ -358,13 +358,14 @@ struct CommonElementAnimationData : public PRCList
   // null, but mStyleRuleRefreshTime will still be valid.
   nsRefPtr<mozilla::css::AnimValuesStyleRule> mStyleRule;
 
-  // nsCSSFrameConstructor keeps track of the number of animation 'mini-flushes'
-  // (see nsTransitionManager::UpdateAllThrottledStyles()). mFlushCount is
-  // the last flush where a transition/animation changed. We keep a similar
-  // count on the corresponding layer so we can check that the layer is up to
-  // date with the animation manager.
+  // RestyleManager keeps track of the number of animation
+  // 'mini-flushes' (see nsTransitionManager::UpdateAllThrottledStyles()).
+  // mAnimationGeneration is the sequence number of the last flush where a
+  // transition/animation changed.  We keep a similar count on the
+  // corresponding layer so we can check that the layer is up to date with
+  // the animation manager.
   uint64_t mAnimationGeneration;
-  // Update mFlushCount to nsCSSFrameConstructor's count
+  // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateAnimationGeneration(nsPresContext* aPresContext);
 
   // The refresh time associated with mStyleRule.
