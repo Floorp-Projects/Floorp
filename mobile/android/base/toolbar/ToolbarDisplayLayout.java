@@ -16,8 +16,8 @@ import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.toolbar.BrowserToolbar.ForwardButtonAnimation;
 import org.mozilla.gecko.util.StringUtils;
-import org.mozilla.gecko.widget.GeckoLinearLayout;
-import org.mozilla.gecko.widget.GeckoTextView;
+import org.mozilla.gecko.widget.ThemedLinearLayout;
+import org.mozilla.gecko.widget.ThemedTextView;
 
 import org.json.JSONObject;
 
@@ -62,7 +62,7 @@ import java.util.List;
 * {@code ToolbarDisplayLayout} is meant to be owned by {@code BrowserToolbar}
 * which is the main event bus for the toolbar subsystem.
 */
-public class ToolbarDisplayLayout extends GeckoLinearLayout
+public class ToolbarDisplayLayout extends ThemedLinearLayout
                                   implements Animation.AnimationListener {
 
     private static final String LOGTAG = "GeckoToolbarDisplayLayout";
@@ -99,7 +99,7 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
 
     private UIMode mUiMode;
 
-    private GeckoTextView mTitle;
+    private ThemedTextView mTitle;
     private int mTitlePadding;
     private ToolbarTitlePrefs mTitlePrefs;
     private OnTitleChangeListener mTitleChangeListener;
@@ -139,7 +139,7 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
 
         LayoutInflater.from(context).inflate(R.layout.toolbar_display_layout, this);
 
-        mTitle = (GeckoTextView) findViewById(R.id.url_bar_title);
+        mTitle = (ThemedTextView) findViewById(R.id.url_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
 
         final Resources res = getResources();

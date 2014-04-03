@@ -92,8 +92,7 @@ public class EnvironmentBuilder {
     // Corresponds to Gecko pref "extensions.blocklist.enabled".
     e.isBlocklistEnabled = (info.isBlocklistEnabled() ? 1 : 0);
 
-    // Corresponds to one of two Gecko telemetry prefs. We reflect these into
-    // GeckoPreferences as "datareporting.telemetry.enabled".
+    // Corresponds to Gecko pref "toolkit.telemetry.enabled".
     e.isTelemetryEnabled = (info.isTelemetryEnabled() ? 1 : 0);
 
     e.extensionCount = 0;

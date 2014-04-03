@@ -1208,6 +1208,9 @@ pref("devtools.shadereditor.enabled", false);
 // Enable the Canvas Debugger.
 pref("devtools.canvasdebugger.enabled", false);
 
+// Enable the Web Audio Editor
+pref("devtools.webaudioeditor.enabled", false);
+
 // Default theme ("dark" or "light")
 pref("devtools.theme", "light");
 
