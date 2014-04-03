@@ -539,7 +539,7 @@ class FunctionExtended : public JSFunction
     static const unsigned NUM_EXTENDED_SLOTS = 2;
 
     static inline size_t offsetOfArrowThisSlot() {
-        return offsetof(FunctionExtended, extendedSlots) + 0 * sizeof(extendedSlots[0]);
+        return offsetof(FunctionExtended, extendedSlots) + 0 * sizeof(HeapValue);
     }
 
   private:
