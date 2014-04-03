@@ -1078,12 +1078,3 @@ gfxFontconfigUtils::GetFontsForLang(const FcChar8 *aLang)
 
     return entry->mFonts;
 }
-
-bool
-gfxFontNameList::Exists(nsAString& aName) {
-    for (uint32_t i = 0; i < Length(); i++) {
-        if (aName.Equals(ElementAt(i)))
-            return true;
-    }
-    return false;
-}

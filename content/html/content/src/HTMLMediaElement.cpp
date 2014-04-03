@@ -59,7 +59,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIAppShell.h"
 #include "nsWidgetsCID.h"
-#include "nsIDOMNotifyAudioAvailableEvent.h"
 #include "nsMediaFragmentURIParser.h"
 #include "nsURIHashKey.h"
 #include "nsJSUtils.h"
@@ -624,10 +623,6 @@ void HTMLMediaElement::AbortExistingLoads()
     mMediaSource->Detach();
     mMediaSource = nullptr;
   }
-  if (mAudioStream) {
-    mAudioStream->Shutdown();
-    mAudioStream = nullptr;
-  }
 
   mLoadingSrc = nullptr;
 
@@ -648,8 +643,6 @@ void HTMLMediaElement::AbortExistingLoads()
   mDownloadSuspendedByCache = false;
   mSourcePointer = nullptr;
 
-  mChannels = 0;
-  mRate = 0;
   mTags = nullptr;
 
   if (mNetworkState != nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
@@ -864,27 +857,6 @@ void HTMLMediaElement::NotifyLoadError()
   }
 }
 
-void HTMLMediaElement::NotifyAudioAvailable(float* aFrameBuffer,
-                                            uint32_t aFrameBufferLength,
-                                            float aTime)
-{
-  // Auto manage the memory for the frame buffer, so that if we add an early
-  // return-on-error here in future, we won't forget to release the memory.
-  // Otherwise we hand ownership of the memory over to the event created by
-  // DispatchAudioAvailableEvent().
-  nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
-  // Do same-origin check on element and media before allowing MozAudioAvailable events.
-  if (!mMediaSecurityVerified) {
-    nsCOMPtr<nsIPrincipal> principal = GetCurrentPrincipal();
-    nsresult rv = NodePrincipal()->Subsumes(principal, &mAllowAudioData);
-    if (NS_FAILED(rv)) {
-      mAllowAudioData = false;
-    }
-  }
-
-  DispatchAudioAvailableEvent(frameBuffer.forget(), aFrameBufferLength, aTime);
-}
-
 void HTMLMediaElement::LoadFromSourceChildren()
 {
   NS_ASSERTION(mDelayingLoadEvent,
@@ -1011,12 +983,6 @@ static bool IsAutoplayEnabled()
 static bool UseAudioChannelService()
 {
   return Preferences::GetBool("media.useAudioChannelService");
-}
-
-// Not static because it's used in HTMLAudioElement.
-bool IsAudioAPIEnabled()
-{
-  return mozilla::Preferences::GetBool("media.audio_data.enabled", false);
 }
 
 void HTMLMediaElement::UpdatePreloadAction()
@@ -1673,54 +1639,6 @@ NS_IMETHODIMP HTMLMediaElement::SetVolume(double aVolume)
   return rv.ErrorCode();
 }
 
-uint32_t
-HTMLMediaElement::GetMozChannels(ErrorResult& aRv) const
-{
-  if (!IsAudioAPIEnabled()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return 0;
-  }
-
-  if (!mDecoder && !mAudioStream) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return 0;
-  }
-
-  return mChannels;
-}
-
-NS_IMETHODIMP
-HTMLMediaElement::GetMozChannels(uint32_t* aMozChannels)
-{
-  ErrorResult rv;
-  *aMozChannels = GetMozChannels(rv);
- return rv.ErrorCode();
-}
-
-uint32_t
-HTMLMediaElement::GetMozSampleRate(ErrorResult& aRv) const
-{
-  if (!IsAudioAPIEnabled()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return 0;
-  }
-
-  if (!mDecoder && !mAudioStream) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return 0;
-  }
-
-  return mRate;
-}
-
-NS_IMETHODIMP
-HTMLMediaElement::GetMozSampleRate(uint32_t* aMozSampleRate)
-{
-  ErrorResult rv;
-  *aMozSampleRate = GetMozSampleRate(rv);
-  return rv.ErrorCode();
-}
-
 // Helper struct with arguments for our hash iterator.
 typedef struct MOZ_STACK_CLASS {
   JSContext* cx;
@@ -1793,56 +1711,6 @@ HTMLMediaElement::MozGetMetadata(JSContext* cx, JS::MutableHandle<JS::Value> aVa
   return rv.ErrorCode();
 }
 
-uint32_t
-HTMLMediaElement::GetMozFrameBufferLength(ErrorResult& aRv) const
-{
-  if (!IsAudioAPIEnabled()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return 0;
-  }
-
-  // The framebuffer (via MozAudioAvailable events) is only available
-  // when reading vs. writing audio directly.
-  if (!mDecoder) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return 0;
-  }
-
-  return mDecoder->GetFrameBufferLength();
-}
-
-NS_IMETHODIMP
-HTMLMediaElement::GetMozFrameBufferLength(uint32_t* aMozFrameBufferLength)
-{
-  ErrorResult rv;
-  *aMozFrameBufferLength = GetMozFrameBufferLength(rv);
-  return rv.ErrorCode();
-}
-
-void
-HTMLMediaElement::SetMozFrameBufferLength(uint32_t aMozFrameBufferLength, ErrorResult& aRv)
-{
-  if (!IsAudioAPIEnabled()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
-  if (!mDecoder) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  aRv = mDecoder->RequestFrameBufferLength(aMozFrameBufferLength);
-}
-
-NS_IMETHODIMP
-HTMLMediaElement::SetMozFrameBufferLength(uint32_t aMozFrameBufferLength)
-{
-  ErrorResult rv;
-  SetMozFrameBufferLength(aMozFrameBufferLength, rv);
-  return rv.ErrorCode();
-}
-
 /* attribute boolean muted; */
 NS_IMETHODIMP HTMLMediaElement::GetMuted(bool* aMuted)
 {
@@ -1877,8 +1745,6 @@ void HTMLMediaElement::SetVolumeInternal()
 
   if (mDecoder) {
     mDecoder->SetVolume(effectiveVolume);
-  } else if (mAudioStream) {
-    mAudioStream->SetVolume(effectiveVolume);
   } else if (mSrcStream) {
     GetSrcMediaStream()->SetAudioOutputVolume(this, effectiveVolume);
   }
@@ -2105,8 +1971,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING),
     mLoadWaitStatus(NOT_WAITING),
     mVolume(1.0),
-    mChannels(0),
-    mRate(0),
     mPreloadAction(PRELOAD_UNDEFINED),
     mMediaSize(-1,-1),
     mLastCurrentTime(0.0),
@@ -2117,7 +1981,6 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     mPreservesPitch(true),
     mPlayed(new TimeRanges),
     mCurrentPlayRangeStart(-1.0),
-    mAllowAudioData(false),
     mBegun(false),
     mLoadedFirstFrame(false),
     mAutoplaying(true),
@@ -2188,9 +2051,6 @@ HTMLMediaElement::~HTMLMediaElement()
 
   if (mChannel) {
     mChannel->Cancel(NS_BINDING_ABORTED);
-  }
-  if (mAudioStream) {
-    mAudioStream->Shutdown();
   }
 
   WakeLockRelease();
@@ -2591,13 +2451,6 @@ nsresult HTMLMediaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParen
     // The preload action depends on the value of the autoplay attribute.
     // It's value may have changed, so update it.
     UpdatePreloadAction();
-
-    if (aDocument->HasAudioAvailableListeners()) {
-      // The document already has listeners for the "MozAudioAvailable"
-      // event, so the decoder must be notified so it initiates
-      // "MozAudioAvailable" event dispatch.
-      NotifyAudioAvailableListener();
-    }
   }
 
   return rv;
@@ -2796,10 +2649,6 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
     if (!mPausedForInactiveDocumentOrChannel) {
       rv = mDecoder->Play();
     }
-  }
-
-  if (OwnerDoc()->HasAudioAvailableListeners()) {
-    NotifyAudioAvailableListener();
   }
 
   if (NS_FAILED(rv)) {
@@ -3001,8 +2850,6 @@ void HTMLMediaElement::MetadataLoaded(int aChannels,
                                       bool aHasVideo,
                                       const MetadataTags* aTags)
 {
-  mChannels = aChannels;
-  mRate = aRate;
   mHasAudio = aHasAudio;
   mTags = aTags;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
@@ -3399,39 +3246,6 @@ VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer()
     new VideoFrameContainer(this, LayerManager::CreateAsynchronousImageContainer());
 
   return mVideoFrameContainer;
-}
-
-nsresult HTMLMediaElement::DispatchAudioAvailableEvent(float* aFrameBuffer,
-                                                       uint32_t aFrameBufferLength,
-                                                       float aTime)
-{
-  // Auto manage the memory for the frame buffer. If we fail and return
-  // an error, this ensures we free the memory in the frame buffer. Otherwise
-  // we hand off ownership of the frame buffer to the audioavailable event,
-  // which frees the memory when it's destroyed.
-  nsAutoArrayPtr<float> frameBuffer(aFrameBuffer);
-
-  if (!IsAudioAPIEnabled()) {
-    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-  }
-
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(OwnerDoc());
-  nsRefPtr<HTMLMediaElement> kungFuDeathGrip = this;
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_INVALID_ARG);
-
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = domDoc->CreateEvent(NS_LITERAL_STRING("MozAudioAvailableEvent"),
-                                    getter_AddRefs(event));
-  nsCOMPtr<nsIDOMNotifyAudioAvailableEvent> audioavailableEvent(do_QueryInterface(event));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = audioavailableEvent->InitAudioAvailableEvent(NS_LITERAL_STRING("MozAudioAvailable"),
-                                                    false, false, frameBuffer.forget(), aFrameBufferLength,
-                                                    aTime, mAllowAudioData);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool dummy;
-  return DispatchEvent(event, &dummy);
 }
 
 nsresult HTMLMediaElement::DispatchEvent(const nsAString& aName)
@@ -3884,14 +3698,6 @@ NS_IMETHODIMP HTMLMediaElement::GetMozFragmentEnd(double* aTime)
   return NS_OK;
 }
 
-void HTMLMediaElement::NotifyAudioAvailableListener()
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eMozAudioData);
-  if (mDecoder) {
-    mDecoder->NotifyAudioAvailableListener();
-  }
-}
-
 static double ClampPlaybackRate(double aPlaybackRate)
 {
   if (aPlaybackRate == 0.0) {
@@ -3944,7 +3750,7 @@ HTMLMediaElement::SetPlaybackRate(double aPlaybackRate, ErrorResult& aRv)
 {
   // Changing the playback rate of a media that has more than two channels is
   // not supported.
-  if (aPlaybackRate < 0 || (mChannels > 2 && aPlaybackRate != 1.0)) {
+  if (aPlaybackRate < 0) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
   }
