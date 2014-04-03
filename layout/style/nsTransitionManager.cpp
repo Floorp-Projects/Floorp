@@ -133,13 +133,6 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 }
 
 bool
-ElementPropertyTransition::IsRunningAt(TimeStamp aTime) const {
-  return !IsRemovedSentinel() &&
-         mStartTime + mDelay <= aTime &&
-         aTime < mStartTime + mDelay + mIterationDuration;
-}
-
-bool
 ElementTransitions::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t tranIdx = mPropertyTransitions.Length(); tranIdx-- != 0; ) {
