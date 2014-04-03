@@ -3912,12 +3912,11 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   if (enum_op == JSENUMERATE_NEXT && keys->Length() != 0) {
     nsString& key = keys->ElementAt(0);
-    JSString *str =
-      JS_NewUCStringCopyN(cx, key.get(), key.Length());
+    JS::Rooted<JSString*> str(cx, JS_NewUCStringCopyN(cx, key.get(), key.Length()));
     NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
     JS::Rooted<jsid> id(cx);
-    JS_ValueToId(cx, JS::StringValue(str), &id);
+    JS_StringToId(cx, str, &id);
     *idp = id;
 
     keys->RemoveElementAt(0);
