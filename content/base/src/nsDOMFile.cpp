@@ -797,7 +797,7 @@ nsDOMTemporaryFileBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
 NS_IMETHODIMP
 nsDOMTemporaryFileBlob::GetInternalStream(nsIInputStream **aStream)
 {
-  nsCOMPtr<nsTemporaryFileInputStream> stream =
+  nsCOMPtr<nsIInputStream> stream =
     new nsTemporaryFileInputStream(mFileDescOwner, mStartPos, mStartPos + mLength);
   stream.forget(aStream);
   return NS_OK;

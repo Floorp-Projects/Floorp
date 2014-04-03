@@ -256,7 +256,7 @@ protected:
   Microsoft::WRL::ComPtr<FrameworkView> mView;
   nsTransparencyMode mTransparencyMode;
   nsIntRegion mInvalidatedRegion;
-  nsCOMPtr<nsIdleService> mIdleService;
+  nsCOMPtr<nsIIdleServiceInternal> mIdleService;
   HWND mWnd;
   static HWND sICoreHwnd;
   WNDPROC mMetroWndProc;
