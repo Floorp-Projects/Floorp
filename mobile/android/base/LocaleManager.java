@@ -33,22 +33,24 @@ import java.util.Locale;
  */
 public class LocaleManager {
     private static final String LOG_TAG = "GeckoLocales";
+    private static final String PREF_LOCALE = "locale";
 
-    // These are both volatile because we don't impose restrictions
+    // This is volatile because we don't impose restrictions
     // over which thread calls our methods.
-    private static volatile ContextGetter getter = null;
     private static volatile Locale currentLocale = null;
 
     private static volatile boolean inited = false;
     private static boolean systemLocaleDidChange = false;
     private static BroadcastReceiver receiver;
 
-    public static void setContextGetter(ContextGetter getter) {
-        Log.d(LOG_TAG, "Calling setContextGetter: " + getter);
-        LocaleManager.getter = getter;
-    }
-
-    public static void initialize() {
+    /**
+     * Ensure that you call this early in your application startup,
+     * and with a context that's sufficiently long-lived (typically
+     * the application context).
+     *
+     * Calling multiple times is harmless.
+     */
+    public static void initialize(final Context context) {
         if (inited) {
             return;
         }
@@ -59,7 +61,7 @@ public class LocaleManager {
                 systemLocaleDidChange = true;
             }
         };
-        getContext().registerReceiver(receiver, new IntentFilter(Intent.ACTION_LOCALE_CHANGED));
+        context.registerReceiver(receiver, new IntentFilter(Intent.ACTION_LOCALE_CHANGED));
         inited = true;
     }
 
@@ -67,26 +69,12 @@ public class LocaleManager {
         return systemLocaleDidChange;
     }
 
-    private static Context getContext() {
-        if (getter == null) {
-            throw new IllegalStateException("No ContextGetter; cannot fetch context.");
-        }
-        return getter.getContext();
-    }
-
-    private static SharedPreferences getSharedPreferences() {
-        if (getter == null) {
-            throw new IllegalStateException("No ContextGetter; cannot fetch prefs.", new RuntimeException("No prefs."));
-        }
-        return getter.getSharedPreferences();
-    }
-
     /**
      * Every time the system gives us a new configuration, it
      * carries the external locale. Fix it.
      */
-    public static void correctLocale(Resources res, Configuration config) {
-        Locale current = getCurrentLocale();
+    public static void correctLocale(Context context, Resources res, Configuration config) {
+        final Locale current = getCurrentLocale(context);
         if (current == null) {
             return;
         }
@@ -152,12 +140,12 @@ public class LocaleManager {
         return language + "-" + country;
     }
 
-    public static Locale getCurrentLocale() {
+    public static Locale getCurrentLocale(Context context) {
         if (currentLocale != null) {
             return currentLocale;
         }
 
-        final String current = getPersistedLocale();
+        final String current = getPersistedLocale(context);
         if (current == null) {
             return null;
         }
@@ -171,7 +159,7 @@ public class LocaleManager {
      *
      * Does not notify Gecko.
      */
-    private static String updateLocale(String localeCode) {
+    private static String updateLocale(Context context, String localeCode) {
         // Fast path.
         final Locale defaultLocale = Locale.getDefault();
         if (defaultLocale.toString().equals(localeCode)) {
@@ -189,7 +177,7 @@ public class LocaleManager {
         currentLocale = locale;
 
         // Update resources.
-        Resources res = getContext().getResources();
+        Resources res = context.getResources();
         Configuration config = res.getConfiguration();
         config.locale = locale;
         res.updateConfiguration(config, res.getDisplayMetrics());
@@ -203,17 +191,9 @@ public class LocaleManager {
         GeckoAppShell.sendEventToGecko(ev);
     }
 
-    private static String getPrefName() {
-        return getContext().getPackageName() + ".locale";
-    }
-
-    public static String getPersistedLocale() {
-        final SharedPreferences settings = getSharedPreferences();
-
-        // N.B., it is expected that any per-profile settings will be
-        // implemented via SharedPreferences multiplexing in ContextGetter, not
-        // via profile-annotated preference names.
-        final String locale = settings.getString(getPrefName(), "");
+    public static String getPersistedLocale(Context context) {
+        final SharedPreferences settings = getSharedPreferences(context);
+        final String locale = settings.getString(PREF_LOCALE, "");
 
         if ("".equals(locale)) {
             return null;
@@ -221,21 +201,26 @@ public class LocaleManager {
         return locale;
     }
 
-    private static void persistLocale(String localeCode) {
-        final SharedPreferences settings = getSharedPreferences();
-        settings.edit().putString(getPrefName(), localeCode).commit();
+    private static void persistLocale(Context context, String localeCode) {
+        final SharedPreferences settings = getSharedPreferences(context);
+        settings.edit().putString(PREF_LOCALE, localeCode).commit();
     }
 
-    public static String getAndApplyPersistedLocale() {
+    private static SharedPreferences getSharedPreferences(Context context) {
+        // TODO: this should be per-profile, but we don't want to pay the price.
+        return GeckoSharedPrefs.forApp(context);
+    }
+
+    public static String getAndApplyPersistedLocale(Context context) {
         final long t1 = android.os.SystemClock.uptimeMillis();
-        final String localeCode = getPersistedLocale();
+        final String localeCode = getPersistedLocale(context);
         if (localeCode == null) {
             return null;
         }
 
         // Note that we don't tell Gecko about this. We notify Gecko when the
         // locale is set, not when we update Java.
-        final String resultant = updateLocale(localeCode);
+        final String resultant = updateLocale(context, localeCode);
 
         final long t2 = android.os.SystemClock.uptimeMillis();
         Log.i(LOG_TAG, "Locale read and update took: " + (t2 - t1) + "ms.");
@@ -247,16 +232,16 @@ public class LocaleManager {
      *
      * Always persists and notifies Gecko.
      */
-    public static String setSelectedLocale(String localeCode) {
-        final String resultant = updateLocale(localeCode);
+    public static String setSelectedLocale(Context context, String localeCode) {
+        final String resultant = updateLocale(context, localeCode);
 
         // We always persist and notify Gecko, even if nothing seemed to
         // change. This might happen if you're picking a locale that's the same
         // as the current OS locale. The OS locale might change next time we
         // launch, and we need the Gecko pref and persisted locale to have been
         // set by the time that happens.
-        persistLocale(localeCode);
-        notifyGeckoOfLocaleChange(getCurrentLocale());
+        persistLocale(context, localeCode);
+        notifyGeckoOfLocaleChange(getCurrentLocale(context));
         return resultant;
     }
 }

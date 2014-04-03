@@ -14,16 +14,39 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.util.Log;
 
-public class GeckoApplication extends Application {
+public class GeckoApplication extends Application 
+    implements ContextGetter {
     private static final String LOG_TAG = "GeckoApplication";
+
+    private static volatile GeckoApplication instance;
 
     private boolean mInBackground;
     private boolean mPausedGecko;
 
     private LightweightTheme mLightweightTheme;
+
+    public GeckoApplication() {
+        super();
+        instance = this;
+    }
+
+    public static GeckoApplication get() {
+        return instance;
+    }
+
+    @Override
+    public Context getContext() {
+        return this;
+    }
+
+    @Override
+    public SharedPreferences getSharedPreferences() {
+        return GeckoSharedPrefs.forApp(this);
+    }
 
     /**
      * We need to do locale work here, because we need to intercept
@@ -44,7 +67,7 @@ public class GeckoApplication extends Application {
         // Otherwise, correct the locale. This catches some cases that GeckoApp
         // doesn't get a chance to.
         try {
-            LocaleManager.correctLocale(getResources(), config);
+            LocaleManager.correctLocale(this, getResources(), config);
         } catch (IllegalStateException ex) {
             // GeckoApp hasn't started, so we have no ContextGetter in LocaleManager.
             Log.w(LOG_TAG, "Couldn't correct locale.", ex);

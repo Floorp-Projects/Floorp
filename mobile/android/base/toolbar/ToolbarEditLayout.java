@@ -14,7 +14,7 @@ import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
 import org.mozilla.gecko.toolbar.ToolbarEditText.OnTextTypeChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarEditText.TextType;
-import org.mozilla.gecko.widget.GeckoLinearLayout;
+import org.mozilla.gecko.widget.ThemedLinearLayout;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -31,7 +31,7 @@ import android.widget.ImageButton;
 * and its matching 'go' button which changes depending on the
 * current type of text in the entry.
 */
-public class ToolbarEditLayout extends GeckoLinearLayout {
+public class ToolbarEditLayout extends ThemedLinearLayout {
 
     private final ToolbarEditText mEditText;
     private final ImageButton mGo;

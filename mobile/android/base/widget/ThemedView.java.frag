@@ -14,8 +14,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
 import android.widget.@VIEWTYPE@;
 
-public class Gecko@VIEWTYPE@ extends @VIEWTYPE@
-                             implements LightweightTheme.OnChangeListener { 
+public class Themed@VIEWTYPE@ extends @VIEWTYPE@
+                              implements LightweightTheme.OnChangeListener {
     private final LightweightTheme mTheme;
 
     private static final int[] STATE_PRIVATE_MODE = { R.attr.state_private };
@@ -31,7 +31,7 @@ public class Gecko@VIEWTYPE@ extends @VIEWTYPE@
     private boolean mIsDark = false;
     private boolean mAutoUpdateTheme = true;
 
-    public Gecko@VIEWTYPE@(Context context, AttributeSet attrs) {
+    public Themed@VIEWTYPE@(Context context, AttributeSet attrs) {
         super(context, attrs);
         mTheme = ((GeckoApplication) context.getApplicationContext()).getLightweightTheme();
 
