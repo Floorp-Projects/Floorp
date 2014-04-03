@@ -14,10 +14,12 @@
 #include "mozilla/IHistory.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/URLSearchParams.h"
-#include "nsEventStates.h"
 #include "nsIContent.h"
 
 namespace mozilla {
+
+class EventStates;
+
 namespace dom {
 
 class Element;
@@ -42,7 +44,7 @@ public:
    *         NS_EVENT_STATE_UNVISTED if this link is not visited, or 0 if this
    *         link is not actually a link.
    */
-  nsEventStates LinkState() const;
+  EventStates LinkState() const;
 
   /**
    * @return the URI this link is for, if available.

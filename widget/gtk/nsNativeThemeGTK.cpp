@@ -21,6 +21,8 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
+
+#include "mozilla/EventStates.h"
 #include "mozilla/Services.h"
 
 #include <gdk/gdkprivate.h>
@@ -30,6 +32,8 @@
 #include "gfxPlatformGtk.h"
 #include "gfxGdkNativeRenderer.h"
 #include <algorithm>
+
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNativeThemeGTK, nsNativeTheme, nsITheme,
                                                               nsIObserver)
@@ -218,7 +222,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
         stateFrame = aFrame = aFrame->GetParent();
       }
 
-      nsEventStates eventState = GetContentState(stateFrame, aWidgetType);
+      EventStates eventState = GetContentState(stateFrame, aWidgetType);
 
       aState->disabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
       aState->active  = eventState.HasState(NS_EVENT_STATE_ACTIVE);
@@ -551,7 +555,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
   case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
     {
       nsIFrame* stateFrame = aFrame->GetParent();
-      nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
+      EventStates eventStates = GetContentState(stateFrame, aWidgetType);
 
       aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
                          ? (stateFrame->StyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL)

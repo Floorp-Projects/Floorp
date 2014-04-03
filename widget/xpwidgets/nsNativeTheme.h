@@ -12,7 +12,6 @@
 #include "nsString.h"
 #include "nsMargin.h"
 #include "nsGkAtoms.h"
-#include "nsEventStates.h"
 #include "nsTArray.h"
 #include "nsITimer.h"
 #include "nsIContent.h"
@@ -20,6 +19,10 @@
 class nsIFrame;
 class nsIPresShell;
 class nsPresContext;
+
+namespace mozilla {
+class EventStates;
+} // namespace mozilla
 
 class nsNativeTheme : public nsITimerCallback
 {
@@ -44,7 +47,7 @@ class nsNativeTheme : public nsITimerCallback
   virtual ~nsNativeTheme() {}
 
   // Returns the content state (hover, focus, etc), see EventStateManager.h
-  nsEventStates GetContentState(nsIFrame* aFrame, uint8_t aWidgetType);
+  mozilla::EventStates GetContentState(nsIFrame* aFrame, uint8_t aWidgetType);
 
   // Returns whether the widget is already styled by content
   // Normally called from ThemeSupportsWidget to turn off native theming
@@ -54,7 +57,7 @@ class nsNativeTheme : public nsITimerCallback
 
   // Accessors to widget-specific state information
 
-  bool IsDisabled(nsIFrame* aFrame, nsEventStates aEventStates);
+  bool IsDisabled(nsIFrame* aFrame, mozilla::EventStates aEventStates);
 
   // RTL chrome direction
   bool IsFrameRTL(nsIFrame* aFrame);
@@ -135,7 +138,8 @@ class nsNativeTheme : public nsITimerCallback
   bool IsHorizontal(nsIFrame* aFrame);
 
   // progressbar:
-  bool IsIndeterminateProgress(nsIFrame* aFrame, nsEventStates aEventStates);
+  bool IsIndeterminateProgress(nsIFrame* aFrame,
+                               mozilla::EventStates aEventStates);
   bool IsVerticalProgress(nsIFrame* aFrame);
 
   // meter:
