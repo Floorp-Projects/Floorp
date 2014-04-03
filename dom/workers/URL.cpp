@@ -37,11 +37,6 @@ public:
     AssertIsOnMainThread();
   }
 
-  ~URLProxy()
-  {
-     MOZ_ASSERT(!mURL);
-  }
-
   mozilla::dom::URL* URL()
   {
     return mURL;
@@ -59,6 +54,12 @@ public:
   }
 
 private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~URLProxy()
+  {
+     MOZ_ASSERT(!mURL);
+  }
+
   nsRefPtr<mozilla::dom::URL> mURL;
 };
 

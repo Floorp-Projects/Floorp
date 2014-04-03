@@ -24,9 +24,12 @@ public:
     METADATA_AMR,
     METADATA_UNKNOWN  // Metadata Kind not set
   };
-  virtual ~TrackMetadataBase() {}
   // Return the specific metadata kind
   virtual MetadataKind GetKind() const = 0;
+
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
+  virtual ~TrackMetadataBase() {}
 };
 
 // The base class for audio metadata.

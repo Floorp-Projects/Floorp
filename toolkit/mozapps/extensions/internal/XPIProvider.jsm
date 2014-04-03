@@ -9,7 +9,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = [];
+this.EXPORTED_SYMBOLS = ["XPIProvider"];
 
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -1545,7 +1545,7 @@ function makeSafe(aFunction) {
   }
 }
 
-var XPIProvider = {
+this.XPIProvider = {
   // An array of known install locations
   installLocations: null,
   // A dictionary of known install locations by name
@@ -1758,23 +1758,6 @@ var XPIProvider = {
    *         if it is a new profile or the version is unknown
    */
   startup: function XPI_startup(aAppChanged, aOldAppVersion, aOldPlatformVersion) {
-    logger.debug("startup");
-    this.runPhase = XPI_STARTING;
-    this.installs = [];
-    this.installLocations = [];
-    this.installLocationsByName = {};
-    // Hook for tests to detect when saving database at shutdown time fails
-    this._shutdownError = null;
-    // Clear this at startup for xpcshell test restarts
-    this._telemetryDetails = {};
-    // Clear the set of enabled experiments (experiments disabled by default).
-    this._enabledExperiments = new Set();
-    // Register our details structure with AddonManager
-    AddonManagerPrivate.setTelemetryDetails("XPI", this._telemetryDetails);
-
-
-    AddonManagerPrivate.recordTimestamp("XPI_startup_begin");
-
     function addDirectoryInstallLocation(aName, aKey, aPaths, aScope, aLocked) {
       try {
         var dir = FileUtils.getDir(aKey, aPaths);
@@ -1811,6 +1794,22 @@ var XPIProvider = {
     }
 
     try {
+      AddonManagerPrivate.recordTimestamp("XPI_startup_begin");
+
+      logger.debug("startup");
+      this.runPhase = XPI_STARTING;
+      this.installs = [];
+      this.installLocations = [];
+      this.installLocationsByName = {};
+      // Hook for tests to detect when saving database at shutdown time fails
+      this._shutdownError = null;
+      // Clear this at startup for xpcshell test restarts
+      this._telemetryDetails = {};
+      // Clear the set of enabled experiments (experiments disabled by default).
+      this._enabledExperiments = new Set();
+      // Register our details structure with AddonManager
+      AddonManagerPrivate.setTelemetryDetails("XPI", this._telemetryDetails);
+
       let hasRegistry = ("nsIWindowsRegKey" in Ci);
 
       let enabledScopes = Prefs.getIntPref(PREF_EM_ENABLED_SCOPES,

@@ -872,7 +872,7 @@ ParseCompileOptions(JSContext *cx, CompileOptions &options, HandleObject opts,
     if (!JS_GetProperty(cx, opts, "sourcePolicy", &v))
         return false;
     if (!v.isUndefined()) {
-        JSString *s = ToString(cx, v);
+        RootedString s(cx, ToString(cx, v));
         if (!s)
             return false;
 
