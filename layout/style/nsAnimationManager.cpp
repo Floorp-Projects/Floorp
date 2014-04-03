@@ -325,31 +325,6 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   }
 }
 
-bool
-ElementAnimation::IsRunningAt(TimeStamp aTime) const
-{
-  if (IsPaused() || mIterationDuration.ToMilliseconds() <= 0.0 ||
-      mStartTime.IsNull()) {
-    return false;
-  }
-
-  double iterationsElapsed = ElapsedDurationAt(aTime) / mIterationDuration;
-  return 0.0 <= iterationsElapsed && iterationsElapsed < mIterationCount;
-}
-
-
-bool
-ElementAnimation::HasAnimationOfProperty(nsCSSProperty aProperty) const
-{
-  for (uint32_t propIdx = 0, propEnd = mProperties.Length();
-       propIdx != propEnd; ++propIdx) {
-    if (aProperty == mProperties[propIdx].mProperty) {
-      return true;
-    }
-  }
-  return false;
-}
-
 
 bool
 ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
