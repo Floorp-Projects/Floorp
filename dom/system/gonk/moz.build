@@ -109,7 +109,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/bluetooth',
-    '/dom/events',
     '/dom/nfc',
     '/dom/src/geolocation',
     '/dom/wifi',

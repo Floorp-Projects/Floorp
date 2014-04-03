@@ -18,7 +18,6 @@ FAIL_ON_WARNINGS = True
 LOCAL_INCLUDES += [
     '../base',
     '/content/base/src',
-    '/dom/events',
     '/editor/txmgr/src',
 ]
 
