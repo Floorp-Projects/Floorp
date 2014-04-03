@@ -4478,6 +4478,17 @@ nsIFrame::SetView(nsView* aView)
   if (aView) {
     aView->SetFrame(this);
 
+#ifdef DEBUG
+    nsIAtom* frameType = GetType();
+    NS_ASSERTION(frameType == nsGkAtoms::scrollFrame ||
+                 frameType == nsGkAtoms::subDocumentFrame ||
+                 frameType == nsGkAtoms::listControlFrame ||
+                 frameType == nsGkAtoms::objectFrame ||
+                 frameType == nsGkAtoms::viewportFrame ||
+                 frameType == nsGkAtoms::menuPopupFrame,
+                 "Only specific frame types can have an nsView");
+#endif
+
     // Set a property on the frame
     Properties().Set(ViewProperty(), aView);
 
