@@ -2441,14 +2441,6 @@ MacroAssemblerARMCompat::subPtr(const Register &src, const Register &dest)
 }
 
 void
-MacroAssemblerARMCompat::subPtr(const Register &src, const Address &dest)
-{
-    loadPtr(dest, ScratchRegister);
-    ma_sub(src, ScratchRegister);
-    storePtr(ScratchRegister, dest);
-}
-
-void
 MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
 {
     ma_add(imm, dest);

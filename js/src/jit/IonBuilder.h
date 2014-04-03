@@ -694,7 +694,6 @@ class IonBuilder : public MIRGenerator
 
     // TypedObject intrinsics.
     InliningStatus inlineObjectIsTypeDescr(CallInfo &callInfo);
-    InliningStatus inlineSetTypedObjectOffset(CallInfo &callInfo);
     bool elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefinition* id,
                                                      ScalarTypeDescr::Type *arrayType);
 
