@@ -365,7 +365,8 @@ let DebuggerController = {
   _startTracingTab: function(aTraceActor, aCallback) {
     this.client.attachTracer(aTraceActor, (response, traceClient) => {
       if (!traceClient) {
-        DevToolsUtils.reportError(new Error("Failed to attach to tracing actor."));
+        DevToolsUtils.reportException("DebuggerController._startTracingTab",
+                                      new Error("Failed to attach to tracing actor."));
         return;
       }
 
