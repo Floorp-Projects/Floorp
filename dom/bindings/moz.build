@@ -52,7 +52,6 @@ LOCAL_INCLUDES += [
     '/dom/battery',
     '/dom/bluetooth',
     '/dom/camera',
-    '/dom/events',
     '/dom/file',
     '/dom/indexedDB',
     '/dom/src/geolocation',

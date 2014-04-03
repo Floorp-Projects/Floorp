@@ -23,6 +23,5 @@ FINAL_LIBRARY = 'gklayout'
 
 LOCAL_INCLUDES += [
     '../../system/gonk',
-    '/dom/events',
 ]
 
