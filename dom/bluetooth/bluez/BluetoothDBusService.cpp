@@ -329,8 +329,9 @@ static nsString sAdapterPath;
  */
 static int sConnectedDeviceCount = 0;
 
-// sStopBluetoothMonitor protects sConectedDeviceCount. TODO: should be reviewed
+// sStopBluetoothMonitor protects sGetPropertyMonitor. TODO: should be reviewed
 // and replaced or implemented with Atomic<>.
+static StaticAutoPtr<Monitor> sGetPropertyMonitor;
 static StaticAutoPtr<Monitor> sStopBluetoothMonitor;
 
 // A queue for connect/disconnect request. See Bug 913372 for details.
@@ -367,12 +368,14 @@ DispatchToBtThread(nsIRunnable* aRunnable)
 
 BluetoothDBusService::BluetoothDBusService()
 {
+  sGetPropertyMonitor = new Monitor("BluetoothService.sGetPropertyMonitor");
   sStopBluetoothMonitor = new Monitor("BluetoothService.sStopBluetoothMonitor");
 }
 
 BluetoothDBusService::~BluetoothDBusService()
 {
   sStopBluetoothMonitor = nullptr;
+  sGetPropertyMonitor = nullptr;
 }
 
 static bool
@@ -811,6 +814,14 @@ GetProperty(DBusMessageIter aIter, const Properties* aPropertyTypes,
             int aPropertyTypeLen, int* aPropIndex,
             InfallibleTArray<BluetoothNamedValue>& aProperties)
 {
+  /**
+   * Ensure GetProperty runs in critical section otherwise
+   * crash due to timing issue occurs when BT is enabled.
+   *
+   * TODO: Revise GetProperty to solve the crash
+   */
+  MonitorAutoLock lock(*sGetPropertyMonitor);
+
   DBusMessageIter prop_val, array_val_iter;
   char* property = nullptr;
   uint32_t array_type;
