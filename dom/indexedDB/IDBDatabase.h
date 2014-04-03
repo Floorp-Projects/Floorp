@@ -53,6 +53,7 @@ class IDBDatabase : public IDBWrapperCache,
 {
   friend class AsyncConnectionHelper;
   friend class IndexedDatabaseManager;
+  friend class IndexedDBDatabaseParent;
   friend class IndexedDBDatabaseChild;
 
 public:
@@ -234,6 +235,7 @@ private:
   ~IDBDatabase();
 
   void OnUnlink();
+  void InvalidateInternal(bool aIsDead);
 
   // The factory must be kept alive when IndexedDB is used in multiple
   // processes. If it dies then the entire actor tree will be destroyed with it
