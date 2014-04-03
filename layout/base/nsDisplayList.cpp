@@ -464,10 +464,8 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   if (et) {
     for (uint32_t tranIdx = 0; tranIdx < et->mPropertyTransitions.Length(); tranIdx++) {
       ElementPropertyTransition* pt = &et->mPropertyTransitions[tranIdx];
-      MOZ_ASSERT(pt->mProperties.Length() == 1,
-                 "Should have one animation property for a transition");
-      if (pt->mProperties[0].mProperty != aProperty ||
-          !pt->IsRunningAt(currentTime)) {
+      if (!(pt->HasAnimationOfProperty(aProperty) &&
+            pt->IsRunningAt(currentTime))) {
         continue;
       }
 

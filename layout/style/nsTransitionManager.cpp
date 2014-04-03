@@ -137,9 +137,7 @@ ElementTransitions::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t tranIdx = mPropertyTransitions.Length(); tranIdx-- != 0; ) {
     const ElementPropertyTransition& pt = mPropertyTransitions[tranIdx];
-    MOZ_ASSERT(pt.mProperties.Length() == 1,
-               "Should have one animation property for a transition");
-    if (aProperty == pt.mProperties[0].mProperty && !pt.IsRemovedSentinel()) {
+    if (pt.HasAnimationOfProperty(aProperty) && !pt.IsRemovedSentinel()) {
       return true;
     }
   }
