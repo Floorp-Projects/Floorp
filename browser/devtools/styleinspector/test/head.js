@@ -249,9 +249,9 @@ function getComputedPropertyValue(aName)
  *        milliseconds to check if the result is true. When it is true, succesFn
  *        is called and polling stops. If validatorFn never returns true, then
  *        polling timeouts after several tries and a failure is recorded.
- *        - successFn
+ *        - successFn Optional
  *        A function called when the validator function returns true.
- *        - failureFn
+ *        - failureFn Optional
  *        A function called if the validator function timeouts - fails to return
  *        true in the given time.
  *        - name
@@ -259,9 +259,12 @@ function getComputedPropertyValue(aName)
  *        messages.
  *        - timeout
  *        Timeout for validator function, in milliseconds. Default is 5000.
+ * @return a promise that resolves when the condition is met, or rejects if the
+ * timeout is reached
  */
 function waitForSuccess(aOptions)
 {
+  let def = promise.defer();
   let start = Date.now();
   let timeout = aOptions.timeout || 5000;
 
@@ -270,20 +273,26 @@ function waitForSuccess(aOptions)
     if ((Date.now() - start) > timeout) {
       // Log the failure.
       ok(false, "Timed out while waiting for: " + aOptions.name);
-      failureFn(aOptions);
+      if (failureFn) {
+        failureFn(aOptions);
+      }
+      def.reject(aOptions);
       return;
     }
 
     if (validatorFn(aOptions)) {
       ok(true, aOptions.name);
-      successFn();
-    }
-    else {
+      if (successFn) {
+        successFn();
+      }
+      def.resolve();
+    } else {
       setTimeout(function() wait(validatorFn, successFn, failureFn), 100);
     }
   }
 
   wait(aOptions.validatorFn, aOptions.successFn, aOptions.failureFn);
+  return def.promise;
 }
 
 registerCleanupFunction(tearDown);
@@ -316,4 +325,87 @@ function isHoverTooltipTarget(tooltip, target) {
   // The tooltip delegates to a user defined cb that inserts content in the tooltip
   // when calling isValidHoverTarget
   return tooltip.isValidHoverTarget(target);
+}
+
+function getRuleViewProperty(name, ruleView) {
+  let prop = null;
+  [].forEach.call(ruleView.doc.querySelectorAll(".ruleview-property"), property => {
+    let nameSpan = property.querySelector(".ruleview-propertyname");
+    let valueSpan = property.querySelector(".ruleview-propertyvalue");
+
+    if (nameSpan.textContent === name) {
+      prop = {nameSpan: nameSpan, valueSpan: valueSpan};
+    }
+  });
+  return prop;
+}
+
+/**
+ * Get references to the name and value span nodes corresponding to a given
+ * selector and property name in the rule-view
+ * @return an object {nameSpan, valueSpan}
+ */
+function getRuleViewSelectorProperty(selectorText, propertyName, ruleView) {
+  let rule, property;
+
+  for (let r of ruleView.doc.querySelectorAll(".ruleview-rule")) {
+    let selector = r.querySelector(".ruleview-selector-matched");
+    if (selector && selector.textContent === selectorText) {
+      rule = r;
+      break;
+    }
+  }
+
+  if (rule) {
+    // Look for the propertyName in that rule element
+    for (let p of rule.querySelectorAll(".ruleview-property")) {
+      let nameSpan = p.querySelector(".ruleview-propertyname");
+      let valueSpan = p.querySelector(".ruleview-propertyvalue");
+      if (nameSpan.textContent === propertyName) {
+        property = {nameSpan: nameSpan, valueSpan: valueSpan};
+        break;
+      }
+    }
+  }
+
+  return property;
+}
+
+/**
+ * Simulate a color change in a given color picker tooltip, and optionally wait
+ * for a given element in the page to have its style changed as a result
+ * @param {SwatchColorPickerTooltip} colorPicker
+ * @param {Array} newRgba The new color to be set [r, g, b, a]
+ * @param {Object} expectedChange Optional object that needs the following props:
+ *                 - {DOMNode} element The element in the page that will have its
+ *                   style changed.
+ *                 - {String} name The style name that will be changed
+ *                 - {String} value The expected style value
+ * The style will be checked like so: getComputedStyle(element)[name] === value
+ */
+function simulateColorChange(colorPicker, newRgba, expectedChange) {
+  // Note that this test isn't concerned with simulating events to test how the
+  // spectrum color picker reacts, see browser_spectrum.js for this.
+  // This test only cares about the color swatch <-> color picker <-> rule view
+  // interactions. That's why there's no event simulations here
+  return Task.spawn(function*() {
+    info("Getting the spectrum colorpicker object");
+    let spectrum = yield colorPicker.spectrum;
+    info("Setting the new color");
+    spectrum.rgb = newRgba;
+    info("Applying the change");
+    spectrum.updateUI();
+    spectrum.onChange();
+
+    if (expectedChange) {
+      info("Waiting for the style to be applied on the page");
+      yield waitForSuccess({
+        validatorFn: () => {
+          let {element, name, value} = expectedChange;
+          return content.getComputedStyle(element)[name] === value;
+        },
+        name: "Color picker change applied on the page"
+      });
+    }
+  });
 }
