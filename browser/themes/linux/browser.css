@@ -1837,7 +1837,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: none;
-  margin: 0;
+  margin: 0 0 @tabToolbarNavbarOverlap@;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-up {
@@ -1869,6 +1869,10 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   border-width: 0 0 0 2px;
   border-style: solid;
   border-image: url("chrome://browser/skin/tabbrowser/tab-overflow-border.png") 0 2 0 2 fill;
+}
+
+#TabsToolbar .toolbarbutton-1 {
+  margin-bottom: @tabToolbarNavbarOverlap@;
 }
 
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,

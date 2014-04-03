@@ -834,6 +834,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   padding: 0 3px;
 }
 
+#TabsToolbar .toolbarbutton-1 {
+  margin-bottom: @tabToolbarNavbarOverlap@;
+}
+
 #TabsToolbar .toolbarbutton-1:not([disabled=true]):hover,
 #TabsToolbar .toolbarbutton-1[open],
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button:not([disabled=true]):hover,
@@ -1854,7 +1858,7 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
-  margin: 0;
+  margin: 0 0 @tabToolbarNavbarOverlap@;
   padding-right: 2px;
   border-right: 2px solid transparent;
   background-origin: border-box;
