@@ -1,0 +1,36 @@
+. "$topsrcdir/b2g/config/mozconfigs/common"
+. "$topsrcdir/build/unix/mozconfig.linux"
+
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --enable-signmar
+ac_add_options --enable-debug
+
+# Nightlies only since this has a cost in performance
+#ac_add_options --enable-js-diagnostics
+
+# This will overwrite the default of stripping everything and keep the symbol table.
+# This is useful for profiling and debugging and only increases the package size
+# by 2 MBs.
+STRIP_FLAGS="--strip-debug"
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+export MOZ_TELEMETRY_REPORTING=1
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+# DISABLED WHILE NOT ON TRY ac_add_options --enable-warnings-as-errors
+
+# Use ccache
+. "$topsrcdir/build/mozconfig.cache"
+
+#B2G options
+ac_add_options --enable-application=b2g
+ENABLE_MARIONETTE=1
+ac_add_options --disable-elf-hack
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+GAIADIR=$topsrcdir/gaia
+
+. "$topsrcdir/b2g/config/mozconfigs/common.override"
