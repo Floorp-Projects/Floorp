@@ -203,6 +203,8 @@ private:
   uint32_t mSteps;
 };
 
+} /* end css sub-namespace */
+
 struct AnimationPropertySegment
 {
   float mFromKey, mToKey;
@@ -220,9 +222,9 @@ struct AnimationProperty
  * Data about one animation (i.e., one of the values of
  * 'animation-name') running on an element.
  */
-struct ElementAnimation
+struct StyleAnimation
 {
-  ElementAnimation()
+  StyleAnimation()
     : mIsRunningOnCompositor(false)
     , mLastNotification(LAST_NOTIFICATION_NONE)
   {
@@ -277,6 +279,8 @@ struct ElementAnimation
 
   InfallibleTArray<AnimationProperty> mProperties;
 };
+
+namespace css {
 
 struct CommonElementAnimationData : public PRCList
 {

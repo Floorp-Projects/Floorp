@@ -66,7 +66,7 @@ struct ElementAnimations MOZ_FINAL
   // This way of calling the function can be used from the compositor.  Note
   // that if the animation has not started yet, has already ended, or is paused,
   // it should not be run from the compositor.  When this function is called
-  // from the main thread, we need the actual ElementAnimation* in order to
+  // from the main thread, we need the actual StyleAnimation* in order to
   // get correct animation-fill behavior and to fire animation events.
   // This function returns -1 for the position if the animation should not be
   // run (because it is not currently active and has no fill behavior), but
@@ -78,8 +78,8 @@ struct ElementAnimations MOZ_FINAL
                                        TimeDuration aIterationDuration,
                                        double aIterationCount,
                                        uint32_t aDirection,
-                                       mozilla::css::ElementAnimation*
-                                         aAnimation = nullptr,
+                                       mozilla::StyleAnimation* aAnimation =
+                                         nullptr,
                                        ElementAnimations* aEa = nullptr,
                                        EventArray* aEventsToDispatch = nullptr);
 
@@ -127,7 +127,7 @@ struct ElementAnimations MOZ_FINAL
   // either completed or paused).  May be invalidated by a style change.
   bool mNeedsRefreshes;
 
-  InfallibleTArray<mozilla::css::ElementAnimation> mAnimations;
+  InfallibleTArray<mozilla::StyleAnimation> mAnimations;
 };
 
 class nsAnimationManager MOZ_FINAL
@@ -236,9 +236,8 @@ protected:
 
 private:
   void BuildAnimations(nsStyleContext* aStyleContext,
-                       InfallibleTArray<mozilla::css::ElementAnimation>&
-                         aAnimations);
-  bool BuildSegment(InfallibleTArray<mozilla::css::AnimationPropertySegment>&
+                       InfallibleTArray<mozilla::StyleAnimation>& aAnimations);
+  bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
                       aSegments,
                     nsCSSProperty aProperty, const nsAnimation& aAnimation,
                     float aFromKey, nsStyleContext* aFromContext,

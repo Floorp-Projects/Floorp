@@ -23,7 +23,7 @@ struct ElementDependentRuleProcessorData;
  * Per-Element data                                                          *
  *****************************************************************************/
 
-struct ElementPropertyTransition : public mozilla::css::ElementAnimation
+struct ElementPropertyTransition : public mozilla::StyleAnimation
 {
   // This is the start value to be used for a check for whether a
   // transition is being reversed.  Normally the same as
@@ -49,8 +49,8 @@ struct ElementPropertyTransition : public mozilla::css::ElementAnimation
 
   bool IsRemovedSentinel() const
   {
-    // Note that ElementAnimation::IsRunningAt depends on removed sentinels
-    // being represented by a null mStartTime.
+    // Note that mozilla::StyleAnimation::IsRunningAt depends on removed
+    // sentinels being represented by a null mStartTime.
     return mStartTime.IsNull();
   }
 

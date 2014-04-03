@@ -315,7 +315,7 @@ ToTimingFunction(css::ComputedTimingFunction& aCTF)
 
 static void
 AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                        ElementAnimation* ea, Layer* aLayer,
+                        mozilla::StyleAnimation* ea, Layer* aLayer,
                         AnimationData& aData, bool aPending)
 {
   NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
@@ -325,8 +325,10 @@ AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   // all data passed directly to the compositor should be in css pixels
   float scale = nsDeviceContext::AppUnitsPerCSSPixel();
 
-  Animation* animation = aPending ? aLayer->AddAnimationForNextTransaction()
-                                  : aLayer->AddAnimation();
+  mozilla::layers::Animation* animation =
+    aPending ?
+    aLayer->AddAnimationForNextTransaction() :
+    aLayer->AddAnimation();
 
   animation->startTime() = ea->mStartTime + ea->mDelay;
   animation->duration() = ea->mIterationDuration;
@@ -379,7 +381,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   mozilla::TimeStamp currentTime =
     aFrame->PresContext()->RefreshDriver()->MostRecentRefresh();
   for (uint32_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
-    ElementAnimation* anim = &aAnimations[animIdx];
+    mozilla::StyleAnimation* anim = &aAnimations[animIdx];
     if (!(anim->HasAnimationOfProperty(aProperty) &&
           anim->IsRunningAt(currentTime))) {
       continue;
