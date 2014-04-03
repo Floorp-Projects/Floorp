@@ -1,0 +1,531 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=964646
+-->
+<!--
+
+ ========= PLEASE KEEP THIS IN SYNC WITH test_animations.html =========
+
+ This test mimicks the content of test_animations.html but performs tests
+ specific to animations that run on the compositor thread since they require
+ special (asynchronous) handling. Furthermore, these tests check that
+ animations that are expected to run on the compositor thread, are actually
+ doing so.
+
+ If you are making changes to this file or to test_animations.html, please
+ try to keep them consistent where appropriate.
+
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for css3-animations running on the compositor thread (Bug
+         964646)</title>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+    src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    @keyframes transform-anim {
+      to {
+        transform: translate(100px);
+      }
+    }
+    @keyframes anim1 {
+       0% { transform: translate(0px) }
+       50% { transform: translate(80px) }
+       100% { transform: translate(100px) }
+    }
+    .target {
+      /* The animation target needs geometry in order to qualify for OMTA */
+      width: 100px;
+      height: 100px;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=964646">Mozilla Bug
+  964646</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/** Test for css3-animations running on the compositor thread (Bug 964646) **/
+ 
+// Global state
+var gAsyncTests     = [],
+    gDisplay        = document.getElementById("display"),
+    gDiv            = null,
+    gEventsReceived = [];
+
+SimpleTest.waitForExplicitFinish();
+runOMTATest(function() {
+  // The async test runner returns a Promise that is resolved when the
+  // test is finished so we can chain them together
+  gAsyncTests.reduce(function(sequence, test) {
+    return sequence.then(function() { return runAsyncTest(test); });
+  }, Promise.resolve() /* the start of the sequence */)
+  // Final step in the sequence
+  .then(function() {
+    SimpleTest.finish();
+  });
+}, SimpleTest.finish);
+
+// Takes a generator function that represents a test case. Each point in the
+// test case that waits asynchronously for some result yields a Promise that is
+// resolved when the asychronous action has completed. By chaining these
+// intermediate results together we run the test to completion.
+//
+// This method itself returns a Promise that is resolved when the generator
+// function has completed.
+//
+// This arrangement is based on add_task() which is currently only available
+// in mochitest-chrome (bug 872229). Once add_task is available in
+// mochitest-plain we can remove this function and use add_task instead.
+function runAsyncTest(test) {
+  var generator;
+
+  function step(arg) {
+    var next;
+    try {
+      next = generator.next(arg);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    if (next.done) {
+      return Promise.resolve(next.value);
+    } else {
+      return Promise.resolve(next.value)
+             .then(step, function(err) { throw err; });
+    }
+  }
+
+  // Put refresh driver under test control
+  advance_clock(0);
+
+  // Run test
+  generator = test();
+  return step()
+  .catch(function(err) {
+    ok(false, err.message);
+    // Clear up the test div in case we aborted the test before doing clean-up
+    if (gDiv) {
+      done_div();
+    }
+  }).then(function() {
+    // Restore clock
+    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+  });
+}
+
+function addAsyncTest(generator) {
+  gAsyncTests.push(generator);
+}
+
+//----------------------------------------------------------------------
+//
+// Test cases
+//
+//----------------------------------------------------------------------
+
+// This test is not in test_animations.html but is here to test that
+// transform animations are actually run on the compositor thread as expected.
+addAsyncTest(function *() {
+  new_div("animation: transform-anim linear 300s");
+
+  yield waitForPaints();
+
+  advance_clock(200000);
+  compareTransform(gDiv, { tx: 100 * 2 / 3 }, RunningOn.Compositor,
+                   "OMTA animation is animating as expected");
+  done_div();
+});
+
+function *testFillMode(fillMode, fillsBackwards, fillsForwards)
+{
+  var style = "transform: translate(30px); animation: 10s 3s anim1 linear";
+  var desc;
+  if (fillMode.length > 0) {
+    style += " " + fillMode;
+    desc = "fill mode " + fillMode + ": ";
+  } else {
+    desc = "default fill mode: ";
+  }
+  new_div(style);
+  listen();
+
+  // Currently backwards fill is not performed on the compositor thread but we
+  // should wait for paints so we can test that transform values are *not* being
+  // set on the compositor thread.
+  yield waitForPaints();
+
+  if (fillsBackwards)
+    compareTransform(gDiv, { tx: 0 }, RunningOn.MainThread,
+                     desc + "does affect value during delay (0s)");
+  else
+    compareTransform(gDiv, { tx: 30 }, RunningOn.MainThread,
+                     desc + "doesn't affect value during delay (0s)");
+
+  advance_clock(2000);
+  if (fillsBackwards)
+    compareTransform(gDiv, { tx: 0 }, RunningOn.MainThead,
+                     desc + "does affect value during delay (0s)");
+  else
+    compareTransform(gDiv, { tx: 30 }, RunningOn.MainThread,
+                     desc + "does affect value during delay (0s)");
+
+  check_events([], "before start in testFillMode");
+  advance_clock(1000);
+  check_events([{ type: "animationstart", target: gDiv,
+                  bubbles: true, cancelable: false,
+                  animationName: "anim1", elapsedTime: 0.0,
+                  pseudoElement: "" }],
+               "right after start in testFillMode");
+
+  // If we have a backwards fill then at the start of the animation we will end
+  // up applying the same value as the fill value. Various optimizations in
+  // RestyleManager may filter out this meaning that the animation doesn't get
+  // added to the compositor thread until the first time the value changes.
+  //
+  // As a result we look for this first sample on either the compositor or the
+  // computed style
+  yield waitForPaints();
+  compareTransform(gDiv, { tx: 0 }, RunningOn.Either,
+                   desc + "affects value at start of animation");
+  advance_clock(125);
+  // We might not add the animation to compositor until the second sample (due
+  // to the optimizations mentioned above) so we should wait for paints before
+  // proceeding
+  yield waitForPaints();
+  compareTransform(gDiv, { tx: 2 }, RunningOn.Compositor,
+                   desc + "affects value during animation");
+  advance_clock(2375);
+  compareTransform(gDiv, { tx: 40 }, RunningOn.Compositor,
+                   desc + "affects value during animation");
+  advance_clock(2500);
+  compareTransform(gDiv, { tx: 80 }, RunningOn.Compositor,
+                   desc + "affects value during animation");
+  advance_clock(2500);
+  compareTransform(gDiv, { tx: 90 }, RunningOn.Compositor,
+                   desc + "affects value during animation");
+  advance_clock(2375);
+  compareTransform(gDiv, { tx: 99.5 }, RunningOn.Compositor,
+                   desc + "affects value during animation");
+  check_events([], "before end in testFillMode");
+  advance_clock(125);
+  check_events([{ type: "animationend", target: gDiv,
+                  bubbles: true, cancelable: false,
+                  animationName: "anim1", elapsedTime: 10.0,
+                  pseudoElement: "" }],
+               "right after end in testFillMode");
+  
+  // Currently the compositor will apply a forwards fill until it gets told by
+  // the main thread to clear the animation. As a result we should wait for
+  // paints to be flushed before checking that the animated value does *not*
+  // appear on the compositor thread.
+  yield waitForPaints();
+  if (fillsForwards)
+    compareTransform(gDiv, { tx: 100 }, RunningOn.MainThread,
+                     desc + "affects value at end of animation");
+  advance_clock(10);
+  if (fillsForwards)
+    compareTransform(gDiv, { tx: 100 }, RunningOn.MainThread,
+                     desc + "affects value after animation");
+  else
+    compareTransform(gDiv, { tx: 30 }, RunningOn.MainThread,
+                     desc + "does not affect value after animation");
+
+  done_div();
+}
+
+addAsyncTest(function() { return testFillMode("", false, false); });
+addAsyncTest(function() { return testFillMode("none", false, false); });
+addAsyncTest(function() { return testFillMode("forwards", false, true); });
+addAsyncTest(function() { return testFillMode("backwards", true, false); });
+addAsyncTest(function() { return testFillMode("both", true, true); });
+
+//----------------------------------------------------------------------
+//
+// Helper functions from test_animations.html
+//
+//----------------------------------------------------------------------
+
+function new_div(style) {
+  if (gDiv !== null) {
+    ok(false, "test author forgot to call done_div");
+  }
+  if (typeof(style) != "string") {
+    ok(false, "test author forgot to pass style argument");
+  }
+  gDiv = document.createElement("div");
+  gDiv.classList.add("target");
+  gDiv.setAttribute("style", style);
+  gDisplay.appendChild(gDiv);
+  gDiv.clientTop;
+}
+
+function done_div() {
+  if (gDiv === null) {
+    ok(false, "test author forgot to call new_div");
+  }
+  gDisplay.removeChild(gDiv);
+  gDiv = null;
+}
+
+function listen() {
+  gEventsReceived = [];
+  function listener(event) {
+    gEventsReceived.push(event);
+  }
+  gDiv.addEventListener("animationstart", listener, false);
+  gDiv.addEventListener("animationiteration", listener, false);
+  gDiv.addEventListener("animationend", listener, false);
+}
+
+function check_events(events_expected, desc) {
+  // This function checks that the list of events_expected matches
+  // the received events -- but it only checks the properties that
+  // are present on events_expected.
+  is(gEventsReceived.length, events_expected.length,
+     "number of events received for " + desc);
+  for (var i = 0,
+       i_end = Math.min(events_expected.length, gEventsReceived.length);
+       i != i_end; ++i) {
+    var exp = events_expected[i];
+    var rec = gEventsReceived[i];
+    for (var prop in exp) {
+      if (prop == "elapsedTime") {
+        // Allow floating point error.
+        ok(Math.abs(rec.elapsedTime - exp.elapsedTime) < 0.000002,
+           "events[" + i + "]." + prop + " for " + desc +
+           " received=" + rec.elapsedTime + " expected=" + exp.elapsedTime);
+      } else {
+        is(rec[prop], exp[prop], "events[" + i + "]." + prop + " for " + desc);
+      }
+    }
+  }
+  for (i = events_expected.length; i < gEventsReceived.length; ++i) {
+    ok(false, "unexpected " + gEventsReceived[i].type + " event for " + desc);
+  }
+  gEventsReceived = [];
+}
+
+function advance_clock(milliseconds) {
+  SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
+}
+
+//----------------------------------------------------------------------
+//
+// Helper functions for querying the compositor thread
+//
+//----------------------------------------------------------------------
+
+// Returns a Promise that resolves once all paints have completed
+function waitForPaints() {
+  return new Promise(function(resolve, reject) {
+    waitForAllPaints(resolve);
+  });
+}
+
+//----------------------------------------------------------------------
+//
+// Helper functions for working with transform values
+//
+//----------------------------------------------------------------------
+
+const RunningOn = {
+  MainThread: 0,
+  Compositor: 1,
+  Either: 2
+};
+
+function compareTransform(elem, expected, runningOn, desc) {
+  // Get actual values
+  var compositorTransform =
+    SpecialPowers.DOMWindowUtils.getOMTAStyle(elem, "transform");
+  var computedTransform = window.getComputedStyle(elem).transform;
+
+  // Prepare expected value
+  var expectedMatrix = convertTo3dMatrix(expected);
+  if (!expectedMatrix) {
+    ok(false, desc + ": test author should provide a valid 'expected' value" +
+              " - got " + expected.toString());
+    return;
+  }
+
+  // Check expected value appears in the right place
+  var actualTransform;
+  switch (runningOn) {
+    case RunningOn.Either:
+      runningOn = compositorTransform ?
+                  RunningOn.Compositor :
+                  RunningOn.MainThread;
+      actualTransform = compositorTransform || computedTransform;
+      break;
+
+    case RunningOn.Compositor:
+      if (!compositorTransform) {
+        ok(false, desc + ": should be animating on compositor");
+        return;
+      }
+      actualTransform = compositorTransform;
+      break;
+
+    default:
+      if (compositorTransform) {
+        ok(false, desc + ": should NOT be animating on compositor");
+        return;
+      }
+      actualTransform = computedTransform;
+      break;
+  }
+
+  // Compare animated matrix with expected
+  var actualMatrix = convertTo3dMatrix(actualTransform);
+  if (!actualMatrix) {
+    ok(false, desc + ": should return a valid transform spec"
+       + " - got " + actualTransform);
+    return;
+  }
+  ok(matricesRoughlyEqual(expectedMatrix, actualMatrix),
+     desc + " - got " + actualTransform + ", expected " +
+     convert3dMatrixToString(expectedMatrix));
+
+  // For compositor animations do an additional check that they roughly match
+  // the value calculated on the main thread
+  if (runningOn === RunningOn.Compositor) {
+    var computedMatrix = convertTo3dMatrix(computedTransform);
+    if (!computedMatrix) {
+      ok(false, desc + ": test framework should parse computed style" +
+                " - got " + computedTransform);
+      return;
+    }
+    ok(matricesRoughlyEqual(computedMatrix, actualMatrix),
+       desc + ": OMTA style and computed style should be roughly equal" +
+       " - OMTA " + actualTransform + ", computed " + computedTransform);
+  }
+}
+
+function matricesRoughlyEqual(a, b) {
+  const epsilon = 0.0001;
+  for (var i = 0; i < 4; i++) {
+    for (var j = 0; j < 4; j++) {
+      if (Math.abs(a[i][j] - b[i][j]) > epsilon)
+        return false;
+    }
+  }
+  return true;
+}
+
+// Converts something representing an transform into a 3d matrix in column-major
+// order.
+// The following are supported:
+//  "matrix(...)"
+//  "matrix3d(...)"
+//  [ 1, 0, 0, ... ]
+//  { a: 1, ty: 23 } etc.
+function convertTo3dMatrix(matrixLike) {
+  if (typeof(matrixLike) == "string") {
+    return convertStringTo3dMatrix(matrixLike);
+  } else if (Array.isArray(matrixLike)) {
+    return convertArrayTo3dMatrix(matrixLike);
+  } else if (typeof(matrixLike) == "object") {
+    return convertObjectTo3dMatrix(matrixLike);
+  } else {
+    return null;
+  }
+}
+
+// Converts strings of the format "matrix(...)" and "matrix3d(...)" to a 3d
+// matrix
+function convertStringTo3dMatrix(str) {
+  var result = str.match("^matrix(3d)?\\(");
+  if (result === null)
+    return null;
+
+  return convertArrayTo3dMatrix(
+      str.substring(result[0].length, str.length-1)
+         .split(",")
+         .map(function(component) {
+           return Number(component);
+         })
+    );
+}
+
+// Takes an array of numbers of length 6 (2d matrix) or 16 (3d matrix)
+// representing a matrix specified in column-major order and returns a 3d matrix
+// represented as an array of arrays
+function convertArrayTo3dMatrix(array) {
+  if (array.length == 6) {
+    return convertObjectTo3dMatrix(
+      { a: array[0], b: array[1],
+        c: array[2], d: array[3],
+        e: array[4], f: array[5] } );
+  } else if (array.length == 16) {
+    return [
+      array.slice(0, 3),
+      array.slice(4, 7),
+      array.slice(8, 11),
+      array.slice(12, 15)
+    ];
+  } else {
+    return null;
+  }
+}
+
+// Takes an object of the form { a: 1.1, e: 23 } and builds up a 3d matrix
+// with unspecified values filled in with identity values.
+function convertObjectTo3dMatrix(obj) {
+  return [
+    [
+      obj.a || obj.sx || obj.m11 || 1,
+      obj.b || obj.m12 || 0,
+      obj.m13 || 0,
+      obj.m14 || 0
+    ], [
+      obj.c || obj.m21 || 0,
+      obj.d || obj.sy || obj.m22 || 1,
+      obj.m23 || 0,
+      obj.m24 || 0
+    ], [
+      obj.m31 || 0,
+      obj.m32 || 0,
+      obj.sz || obj.m33 || 1,
+      obj.m34 || 0
+    ], [
+      obj.e || obj.tx || obj.m41 || 0,
+      obj.f || obj.ty || obj.m42 || 0,
+      obj.tz || obj.m43 || 0,
+      obj.m44 || 1
+    ]
+  ];
+}
+
+function convert3dMatrixToString(matrix) {
+  if (is2d(matrix)) {
+    return "matrix(" +
+           [ matrix[0][0], matrix[0][1],
+             matrix[1][0], matrix[1][1],
+             matrix[3][0], matrix[3][1] ].join(", ") + ")";
+  } else {
+    return "matrix3d(" +
+            matrix.reduce(function(outer, inner) {
+                return outer.concat(inner);
+            }).join(", ") + ")";
+  }
+}
+
+function is2d(matrix) {
+  return matrix[0][2] === 0 && matrix[0][3] === 0 &&
+         matrix[1][2] === 0 && matrix[1][3] === 0 &&
+         matrix[2][0] === 0 && matrix[2][1] === 0 &&
+         matrix[2][2] === 1 && matrix[2][3] === 0 &&
+         matrix[3][2] === 0 && matrix[3][3] === 1;
+}
+</script>
+</html>
