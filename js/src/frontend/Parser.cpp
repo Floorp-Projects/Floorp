@@ -1257,8 +1257,11 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
                               : (kind == Arrow)
                                 ? JSFunction::INTERPRETED_LAMBDA_ARROW
                                 : JSFunction::INTERPRETED;
+    gc::AllocKind allocKind = (kind == Arrow)
+                              ? JSFunction::ExtendedFinalizeKind
+                              : JSFunction::FinalizeKind;
     fun = NewFunctionWithProto(context, NullPtr(), nullptr, 0, flags, NullPtr(), atom, proto,
-                               JSFunction::FinalizeKind, MaybeSingletonObject);
+                               allocKind, MaybeSingletonObject);
     if (!fun)
         return nullptr;
     if (options().selfHostingMode)
