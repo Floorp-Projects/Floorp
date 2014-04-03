@@ -222,7 +222,7 @@ function test()
 
     checkToolboxUI();
 
-    testDestroy();
+    toolbox.switchHost(Toolbox.HostType.BOTTOM).then(testDestroy);
   }
 
   function checkHostType(hostType)
