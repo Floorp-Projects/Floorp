@@ -464,29 +464,14 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   if (et) {
     for (uint32_t tranIdx = 0; tranIdx < et->mPropertyTransitions.Length(); tranIdx++) {
       ElementPropertyTransition* pt = &et->mPropertyTransitions[tranIdx];
-      if (pt->mProperty != aProperty || !pt->IsRunningAt(currentTime)) {
+      MOZ_ASSERT(pt->mProperties.Length() == 1,
+                 "Should have one animation property for a transition");
+      if (pt->mProperties[0].mProperty != aProperty ||
+          !pt->IsRunningAt(currentTime)) {
         continue;
       }
 
-      ElementAnimation anim;
-      anim.mIterationCount = 1;
-      anim.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
-      anim.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_NONE;
-      anim.mStartTime = pt->mStartTime;
-      anim.mDelay = pt->mDelay;
-      anim.mIterationDuration = pt->mDuration;
-
-      AnimationProperty& prop = *anim.mProperties.AppendElement();
-      prop.mProperty = pt->mProperty;
-
-      AnimationPropertySegment& segment = *prop.mSegments.AppendElement();
-      segment.mFromKey = 0;
-      segment.mToKey = 1;
-      segment.mFromValue = pt->mStartValue;
-      segment.mToValue = pt->mEndValue;
-      segment.mTimingFunction = pt->mTimingFunction;
-
-      AddAnimationsForProperty(aFrame, aProperty, &anim,
+      AddAnimationsForProperty(aFrame, aProperty, pt,
                                aLayer, data, pending);
 
       pt->mIsRunningOnCompositor = true;

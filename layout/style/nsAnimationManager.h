@@ -103,7 +103,10 @@ struct ElementAnimation
     return (IsPaused() ? mPauseStart : aTime) - mStartTime - mDelay;
   }
 
-  mozilla::TimeStamp mStartTime; // the beginning of the delay period
+  // The beginning of the delay period.  This is also used by
+  // ElementPropertyTransition in its IsRemovedSentinel and
+  // SetRemovedSentinel methods.
+  mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mPauseStart;
   mozilla::TimeDuration mDelay;
   mozilla::TimeDuration mIterationDuration;
@@ -137,8 +140,8 @@ struct ElementAnimations MOZ_FINAL
   // this only works when we know that the animation is currently running.
   // This way of calling the function can be used from the compositor.  Note
   // that if the animation has not started yet, has already ended, or is paused,
-  // it should not be run from the compositor.  When this function is called 
-  // from the main thread, we need the actual ElementAnimation* in order to 
+  // it should not be run from the compositor.  When this function is called
+  // from the main thread, we need the actual ElementAnimation* in order to
   // get correct animation-fill behavior and to fire animation events.
   // This function returns -1 for the position if the animation should not be
   // run (because it is not currently active and has no fill behavior), but
