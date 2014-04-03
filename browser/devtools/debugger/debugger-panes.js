@@ -1812,6 +1812,12 @@ VariableBubbleView.prototype = {
   },
 
   /**
+   * Specifies whether literals can be (redundantly) inspected in a popup.
+   * This behavior is deprecated, but still tested in a few places.
+   */
+  _ignoreLiterals: true,
+
+  /**
    * Searches for an identifier underneath the specified position in the
    * source editor, and if found, opens a VariablesView inspection popup.
    *
@@ -1850,7 +1856,8 @@ VariableBubbleView.prototype = {
     let identifierInfo = parsedSource.getIdentifierAt({
       line: scriptLine + 1,
       column: scriptColumn,
-      scriptIndex: scriptInfo.index
+      scriptIndex: scriptInfo.index,
+      ignoreLiterals: this._ignoreLiterals
     });
 
     // If the info is null, we're not hovering any identifier.
