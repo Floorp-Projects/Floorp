@@ -158,6 +158,6 @@ JS_PUBLIC_API(bool)
 JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len);
 
 JS_PUBLIC_API(bool)
-JS_WriteTypedArray(JSStructuredCloneWriter *w, JS::Value v);
+JS_WriteTypedArray(JSStructuredCloneWriter *w, JS::HandleValue v);
 
 #endif  /* js_StructuredClone_h */

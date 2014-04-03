@@ -223,12 +223,18 @@ class AsmJSModule
             uint32_t codeOffset_;
             uint32_t line_;
             uint32_t column_;
+            // These two fields are offsets to the beginning of the ScriptSource
+            // of the module, and thus invariant under serialization (unlike
+            // absolute offsets into ScriptSource).
+            uint32_t startOffsetInModule_;
+            uint32_t endOffsetInModule_;
         } pod;
 
         friend class AsmJSModule;
 
         ExportedFunction(PropertyName *name,
                          uint32_t line, uint32_t column,
+                         uint32_t startOffsetInModule, uint32_t endOffsetInModule,
                          PropertyName *maybeFieldName,
                          ArgCoercionVector &&argCoercions,
                          ReturnType returnType)
@@ -240,6 +246,8 @@ class AsmJSModule
             pod.codeOffset_ = UINT32_MAX;
             pod.line_ = line;
             pod.column_ = column;
+            pod.startOffsetInModule_ = startOffsetInModule;
+            pod.endOffsetInModule_ = endOffsetInModule;
             JS_ASSERT_IF(maybeFieldName_, name_->isTenured());
         }
 
@@ -271,6 +279,12 @@ class AsmJSModule
         }
         uint32_t column() const {
             return pod.column_;
+        }
+        uint32_t startOffsetInModule() const {
+            return pod.startOffsetInModule_;
+        }
+        uint32_t endOffsetInModule() const {
+            return pod.endOffsetInModule_;
         }
         PropertyName *maybeFieldName() const {
             return maybeFieldName_;
@@ -415,7 +429,8 @@ class AsmJSModule
 #endif
 
     struct Pod {
-        uint32_t                          charsLength_;
+        uint32_t                          funcLength_;
+        uint32_t                          funcLengthWithRightBrace_;
         uint32_t                          numGlobalVars_;
         uint32_t                          numFFIs_;
         size_t                            funcPtrTableAndExitBytes_;
@@ -434,7 +449,12 @@ class AsmJSModule
     bool                                  loadedFromCache_;
     HeapPtr<ArrayBufferObject>            maybeHeap_;
 
-    uint32_t                              charsBegin_;
+    // The next two fields need to be kept out of the Pod as they depend on the
+    // position of the module within the ScriptSource and thus aren't invariant
+    // with caching.
+    uint32_t                              funcStart_;
+    uint32_t                              offsetToEndOfUseAsm_;
+
     ScriptSource *                        scriptSource_;
 
     FunctionCountsVector                  functionCounts_;
@@ -444,7 +464,7 @@ class AsmJSModule
     mutable bool                          codeIsProtected_;
 
   public:
-    explicit AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin);
+    explicit AsmJSModule(ScriptSource *scriptSource, uint32_t functStart, uint32_t offsetToEndOfUseAsm);
     ~AsmJSModule();
 
     void trace(JSTracer *trc) {
@@ -479,15 +499,30 @@ class AsmJSModule
         JS_ASSERT(scriptSource_ != nullptr);
         return scriptSource_;
     }
-    uint32_t charsBegin() const {
-        return charsBegin_;
+
+    /*
+     * funcStart() refers to the offset in the ScriptSource to the beginning
+     * of the function. If the function has been created with the Function
+     * constructor, this will be the first character in the function source.
+     * Otherwise, it will be the opening parenthesis of the arguments list.
+     */
+    uint32_t funcStart() const {
+        return funcStart_;
     }
-    void initCharsEnd(uint32_t charsEnd) {
-        JS_ASSERT(charsEnd >= charsBegin_);
-        pod.charsLength_ = charsEnd - charsBegin_;
+    uint32_t offsetToEndOfUseAsm() const {
+        return offsetToEndOfUseAsm_;
     }
-    uint32_t charsEnd() const {
-        return charsBegin_ + pod.charsLength_;
+    void initFuncEnd(uint32_t endBeforeCurly, uint32_t endAfterCurly) {
+        JS_ASSERT(endBeforeCurly >= offsetToEndOfUseAsm_);
+        JS_ASSERT(endAfterCurly >= offsetToEndOfUseAsm_);
+        pod.funcLength_ = endBeforeCurly - funcStart_;
+        pod.funcLengthWithRightBrace_ = endAfterCurly - funcStart_;
+    }
+    uint32_t funcEndBeforeCurly() const {
+        return funcStart_ + pod.funcLength_;
+    }
+    uint32_t funcEndAfterCurly() const {
+        return funcStart_ + pod.funcLengthWithRightBrace_;
     }
 
     bool addGlobalVarInit(const Value &v, AsmJSCoercion coercion, uint32_t *globalIndex) {
@@ -561,11 +596,15 @@ class AsmJSModule
     }
 
     bool addExportedFunction(PropertyName *name, uint32_t line, uint32_t column,
+                             uint32_t srcStart, uint32_t srcEnd,
                              PropertyName *maybeFieldName,
                              ArgCoercionVector &&argCoercions,
                              ReturnType returnType)
     {
-        ExportedFunction func(name, line, column, maybeFieldName, mozilla::Move(argCoercions), returnType);
+        ExportedFunction func(name, line, column, srcStart, srcEnd, maybeFieldName,
+                              mozilla::Move(argCoercions), returnType);
+        if (exports_.length() >= UINT32_MAX)
+            return false;
         return exports_.append(mozilla::Move(func));
     }
     unsigned numExportedFunctions() const {

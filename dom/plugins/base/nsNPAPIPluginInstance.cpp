@@ -95,15 +95,11 @@ static bool EnsureGLContext()
   return sPluginContext != nullptr;
 }
 
-class SharedPluginTexture {
+class SharedPluginTexture MOZ_FINAL {
 public:
   NS_INLINE_DECL_REFCOUNTING(SharedPluginTexture)
 
   SharedPluginTexture() : mLock("SharedPluginTexture.mLock")
-  {
-  }
-
-  ~SharedPluginTexture()
   {
   }
 
@@ -153,6 +149,11 @@ public:
   }
 
 private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~SharedPluginTexture()
+  {
+  }
+
   nsNPAPIPluginInstance::TextureInfo mTextureInfo;
  
   Mutex mLock;
