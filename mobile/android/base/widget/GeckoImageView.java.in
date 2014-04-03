@@ -1,3 +1,0 @@
-#filter substitution
-#define VIEWTYPE ImageView
-#include GeckoView.java.frag

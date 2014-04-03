@@ -110,5 +110,5 @@ probes::StopExecution(JSScript *script)
 }
 
 } /* namespace js */
- 
+
 #endif /* vm_Probes_inl_h */

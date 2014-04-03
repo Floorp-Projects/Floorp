@@ -55,7 +55,6 @@ DEFINES['FORCE_PR_LOG'] = True
 LOCAL_INCLUDES += [
     '../../base/src',
     '/content/base/src',
-    '/dom/events',
     'controller',
     'rtsp',
 ]

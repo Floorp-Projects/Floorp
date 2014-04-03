@@ -33,6 +33,7 @@ class nsPresContext;
 namespace mozilla {
 
 class EnterLeaveDispatcher;
+class EventStates;
 class ScrollbarsForWheel;
 class WheelTransaction;
 
@@ -128,7 +129,7 @@ public:
    *                  frame reconstructions that may occur, but this does not
    *                  affect the return value.
    */
-  bool SetContentState(nsIContent *aContent, nsEventStates aState);
+  bool SetContentState(nsIContent* aContent, EventStates aState);
   void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
   bool EventStatusOK(WidgetGUIEvent* aEvent);
 
@@ -778,12 +779,12 @@ protected:
 
 private:
   static inline void DoStateChange(dom::Element* aElement,
-                                   nsEventStates aState, bool aAddState);
-  static inline void DoStateChange(nsIContent* aContent, nsEventStates aState,
+                                   EventStates aState, bool aAddState);
+  static inline void DoStateChange(nsIContent* aContent, EventStates aState,
                                    bool aAddState);
   static void UpdateAncestorState(nsIContent* aStartNode,
                                   nsIContent* aStopBefore,
-                                  nsEventStates aState,
+                                  EventStates aState,
                                   bool aAddState);
   static PLDHashOperator ResetLastOverForContent(const uint32_t& aIdx,
                                                  nsRefPtr<OverOutElementsWrapper>& aChunk,

@@ -33,7 +33,6 @@ class nsCSSStyleSheet;
 class nsIDocShell;
 class nsDocShell;
 class nsDOMNavigationTiming;
-class nsEventStates;
 class nsFrameLoader;
 class nsHTMLCSSStyleSheet;
 class nsHTMLDocument;
@@ -85,6 +84,7 @@ class nsCSSSelectorList;
 
 namespace mozilla {
 class ErrorResult;
+class EventStates;
 
 namespace css {
 class Loader;
@@ -1093,12 +1093,12 @@ public:
   // notify that a content node changed state.  This must happen under
   // a scriptblocker but NOT within a begin/end update.
   virtual void ContentStateChanged(nsIContent* aContent,
-                                   nsEventStates aStateMask) = 0;
+                                   mozilla::EventStates aStateMask) = 0;
 
   // Notify that a document state has changed.
   // This should only be called by callers whose state is also reflected in the
   // implementation of nsDocument::GetDocumentState.
-  virtual void DocumentStatesChanged(nsEventStates aStateMask) = 0;
+  virtual void DocumentStatesChanged(mozilla::EventStates aStateMask) = 0;
 
   // Observation hooks for style data to propagate notifications
   // to document observers
@@ -1794,7 +1794,7 @@ public:
    * Document state bits have the form NS_DOCUMENT_STATE_* and are declared in
    * nsIDocument.h.
    */
-  virtual nsEventStates GetDocumentState() = 0;
+  virtual mozilla::EventStates GetDocumentState() = 0;
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
@@ -1890,14 +1890,6 @@ public:
   virtual nsresult SetNavigationTiming(nsDOMNavigationTiming* aTiming) = 0;
 
   virtual Element* FindImageMap(const nsAString& aNormalizedMapName) = 0;
-
-  // Called to notify the document that a listener on the "mozaudioavailable"
-  // event has been added. Media elements in the document need to ensure they
-  // fire the event.
-  virtual void NotifyAudioAvailableListener() = 0;
-
-  // Returns true if the document has "mozaudioavailable" event listeners.
-  virtual bool HasAudioAvailableListeners() = 0;
 
   // Add aLink to the set of links that need their status resolved. 
   void RegisterPendingLinkUpdate(mozilla::dom::Link* aLink);

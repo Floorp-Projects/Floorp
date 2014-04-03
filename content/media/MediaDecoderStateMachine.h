@@ -79,7 +79,6 @@ hardware (via AudioStream).
 #include "mozilla/Attributes.h"
 #include "nsThreadUtils.h"
 #include "MediaDecoder.h"
-#include "AudioAvailableEventManager.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
@@ -295,10 +294,6 @@ public:
     return mMediaSeekable;
   }
 
-  // Sets the current frame buffer length for the MozAudioAvailable event.
-  // Accessed on the main and state machine threads.
-  void SetFrameBufferLength(uint32_t aLength);
-
   // Returns the shared state machine thread.
   nsIEventTarget* GetStateMachineThread();
 
@@ -333,10 +328,6 @@ public:
   // be called on any thread with the decoder monitor held.
   void SetSyncPointForMediaStream();
   int64_t GetCurrentTimeViaMediaStreamSync();
-
-  // Called when a "MozAudioAvailable" event listener is added to the media
-  // element. Called on the main thread.
-  void NotifyAudioAvailableListener();
 
   // Copy queued audio/video data in the reader to any output MediaStreams that
   // need it.
@@ -510,8 +501,7 @@ private:
                        uint64_t aFrameOffset);
 
   // Pops an audio chunk from the front of the audio queue, and pushes its
-  // audio data to the audio hardware. MozAudioAvailable data is also queued
-  // here. Called on the audio thread.
+  // audio data to the audio hardware.
   uint32_t PlayFromAudioQueue(uint64_t aFrameOffset, uint32_t aChannels);
 
   // Stops the audio thread. The decoder monitor must be held with exactly
@@ -939,11 +929,6 @@ private:
 
   // True is we are decoding a realtime stream, like a camera stream
   bool mRealTime;
-
-  // Manager for queuing and dispatching MozAudioAvailable events.  The
-  // event manager is accessed from the state machine and audio threads,
-  // and takes care of synchronizing access to its internal queue.
-  AudioAvailableEventManager mEventManager;
 
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.

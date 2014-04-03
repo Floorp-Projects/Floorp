@@ -37,7 +37,6 @@
 #include <stdio.h> // for FILE definition
 #include "nsChangeHint.h"
 #include "nsRefPtrHashtable.h"
-#include "nsEventStates.h"
 #include "nsPresArena.h"
 #include "nsIImageLoadingContent.h"
 #include "nsMargin.h"
@@ -95,6 +94,7 @@ struct nsArenaMemoryStats;
 typedef short SelectionType;
 
 namespace mozilla {
+class EventStates;
 class Selection;
 
 namespace dom {
@@ -897,7 +897,7 @@ public:
    */
   virtual void ContentStateChanged(nsIDocument* aDocument,
                                    nsIContent* aContent,
-                                   nsEventStates aStateMask) = 0;
+                                   mozilla::EventStates aStateMask) = 0;
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add
