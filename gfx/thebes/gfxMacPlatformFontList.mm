@@ -1072,29 +1072,6 @@ public:
     virtual void LoadFontFamilyData(const nsAString& aFamilyName);
 };
 
-static CFDataRef
-LoadFontTable(CTFontRef aFontRef, CTFontTableTag aTableTag)
-{
-    CFDataRef fontTable = nullptr;
-    if (!aFontRef) {
-        return nullptr;
-    }
-
-    if (nsCocoaFeatures::OnLionOrLater()) {
-        fontTable = CTFontCopyTable(aFontRef, aTableTag,
-                                    kCTFontTableOptionNoOptions);
-    } else {
-        // bug 975460 - special case 10.6 to avoid CTFontCopyTable
-        CGFontRef cgFont = CTFontCopyGraphicsFont(aFontRef, nullptr);
-        if (cgFont) {
-            fontTable = CGFontCopyTableForTag(cgFont, aTableTag);
-            CFRelease(cgFont);
-        }
-    }
-
-    return fontTable;
-}
-
 void
 MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
 {
@@ -1151,7 +1128,9 @@ MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
 
             // load the cmap data
             FontFaceData fontData;
-            CFDataRef cmapTable = LoadFontTable(fontRef, kCTFontTableCmap);
+            CFDataRef cmapTable = CTFontCopyTable(fontRef, kCTFontTableCmap,
+                                                  kCTFontTableOptionNoOptions);
+
             if (cmapTable) {
                 bool unicodeFont = false, symbolFont = false; // ignored
                 const uint8_t *cmapData =
@@ -1177,7 +1156,9 @@ MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
         }
 
         if (mLoadOtherNames && hasOtherFamilyNames) {
-            CFDataRef nameTable = LoadFontTable(fontRef, kCTFontTableName);
+            CFDataRef nameTable = CTFontCopyTable(fontRef, kCTFontTableName,
+                                                  kCTFontTableOptionNoOptions);
+
             if (nameTable) {
                 const char *nameData = (const char*)CFDataGetBytePtr(nameTable);
                 uint32_t nameLen = CFDataGetLength(nameTable);
