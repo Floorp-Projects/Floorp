@@ -1992,6 +1992,9 @@ class MBail : public MNullaryInstruction
         return new(alloc) MBail();
     }
 
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MAssertFloat32 : public MUnaryInstruction
