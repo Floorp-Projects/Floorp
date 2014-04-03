@@ -314,9 +314,9 @@ ToTimingFunction(css::ComputedTimingFunction& aCTF)
 }
 
 static void
-AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
-                         ElementAnimation* ea, Layer* aLayer,
-                         AnimationData& aData, bool aPending)
+AddAnimationForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
+                        ElementAnimation* ea, Layer* aLayer,
+                        AnimationData& aData, bool aPending)
 {
   NS_ASSERTION(aLayer->AsContainerLayer(), "Should only animate ContainerLayer");
   nsStyleContext* styleContext = aFrame->StyleContext();
@@ -367,6 +367,25 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       animSegment->endPortion() = segment->mToKey;
       animSegment->sampleFn() = ToTimingFunction(segment->mTimingFunction);
     }
+  }
+}
+
+template<class T>
+static void
+AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
+                         nsTArray<T>& aAnimations,
+                         Layer* aLayer, AnimationData& aData,
+                         bool aPending) {
+  mozilla::TimeStamp currentTime =
+    aFrame->PresContext()->RefreshDriver()->MostRecentRefresh();
+  for (uint32_t animIdx = 0; animIdx < aAnimations.Length(); animIdx++) {
+    ElementAnimation* anim = &aAnimations[animIdx];
+    if (!(anim->HasAnimationOfProperty(aProperty) &&
+          anim->IsRunningAt(currentTime))) {
+      continue;
+    }
+    AddAnimationForProperty(aFrame, aProperty, anim, aLayer, aData, aPending);
+    anim->mIsRunningOnCompositor = true;
   }
 }
 
@@ -424,8 +443,6 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     return;
   }
 
-  mozilla::TimeStamp currentTime =
-    aFrame->PresContext()->RefreshDriver()->MostRecentRefresh();
   AnimationData data;
   if (aProperty == eCSSProperty_transform) {
     nsRect bounds = nsDisplayTransform::GetFrameBoundsForTransform(aFrame);
@@ -462,32 +479,14 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   }
 
   if (et) {
-    for (uint32_t tranIdx = 0; tranIdx < et->mPropertyTransitions.Length(); tranIdx++) {
-      ElementPropertyTransition* pt = &et->mPropertyTransitions[tranIdx];
-      if (!(pt->HasAnimationOfProperty(aProperty) &&
-            pt->IsRunningAt(currentTime))) {
-        continue;
-      }
-
-      AddAnimationsForProperty(aFrame, aProperty, pt,
-                               aLayer, data, pending);
-
-      pt->mIsRunningOnCompositor = true;
-    }
+    AddAnimationsForProperty(aFrame, aProperty, et->mPropertyTransitions,
+                             aLayer, data, pending);
     aLayer->SetAnimationGeneration(et->mAnimationGeneration);
   }
 
   if (ea) {
-    for (uint32_t animIdx = 0; animIdx < ea->mAnimations.Length(); animIdx++) {
-      ElementAnimation* anim = &ea->mAnimations[animIdx];
-      if (!(anim->HasAnimationOfProperty(aProperty) &&
-            anim->IsRunningAt(currentTime))) {
-        continue;
-      }
-      AddAnimationsForProperty(aFrame, aProperty, anim,
-                               aLayer, data, pending);
-      anim->mIsRunningOnCompositor = true;
-    }
+    AddAnimationsForProperty(aFrame, aProperty, ea->mAnimations,
+                             aLayer, data, pending);
     aLayer->SetAnimationGeneration(ea->mAnimationGeneration);
   }
 }
