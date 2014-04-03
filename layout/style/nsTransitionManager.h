@@ -12,7 +12,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
-#include "nsAnimationManager.h"
 
 class nsStyleContext;
 class nsPresContext;
@@ -24,7 +23,7 @@ struct ElementDependentRuleProcessorData;
  * Per-Element data                                                          *
  *****************************************************************************/
 
-struct ElementPropertyTransition : public ElementAnimation
+struct ElementPropertyTransition : public mozilla::css::ElementAnimation
 {
   // This is the start value to be used for a check for whether a
   // transition is being reversed.  Normally the same as
