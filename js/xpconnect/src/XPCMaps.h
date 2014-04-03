@@ -672,12 +672,13 @@ public:
              * We reparent wrappers that have as their parent an inner window
              * whose outer has the new inner window as its current inner.
              */
-            JS::RootedObject parent(aCx, JS_GetParent(e.front().value()));
+            JS::RootedObject wrapper(aCx, e.front().value());
+            JS::RootedObject parent(aCx, JS_GetParent(wrapper));
             JS::RootedObject outer(aCx, JS_ObjectToOuterObject(aCx, parent));
             if (outer) {
                 JSObject *inner = JS_ObjectToInnerObject(aCx, outer);
                 if (inner == aNewInner && inner != parent)
-                    JS_SetParent(aCx, e.front().value(), aNewInner);
+                    JS_SetParent(aCx, wrapper, aNewInner);
             } else {
                 JS_ClearPendingException(aCx);
             }

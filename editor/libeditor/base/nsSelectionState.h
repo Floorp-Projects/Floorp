@@ -28,10 +28,15 @@ class Selection;
  */
 
 // first a helper struct for saving/setting ranges
-struct nsRangeStore 
+struct nsRangeStore MOZ_FINAL
 {
   nsRangeStore();
+
+private:
+  // Private destructor, to discourage deletion outside of Release():
   ~nsRangeStore();
+
+public:
   nsresult StoreRange(nsIDOMRange *aRange);
   nsresult GetRange(nsRange** outRange);
 
