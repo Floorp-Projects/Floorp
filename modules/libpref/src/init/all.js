@@ -1892,11 +1892,7 @@ pref("layout.css.unset-value.enabled", true);
 pref("layout.css.all-shorthand.enabled", true);
 
 // Is support for CSS variables enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.variables.enabled", false);
-#else
 pref("layout.css.variables.enabled", true);
-#endif
 
 // Is support for CSS overflow-clip-box enabled for non-UA sheets?
 pref("layout.css.overflow-clip-box.enabled", false);
