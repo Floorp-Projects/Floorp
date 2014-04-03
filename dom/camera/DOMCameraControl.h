@@ -121,7 +121,7 @@ public:
 protected:
   virtual ~nsDOMCameraControl();
 
-  class DOMCameraConfiguration : public dom::CameraConfiguration
+  class DOMCameraConfiguration MOZ_FINAL : public dom::CameraConfiguration
   {
   public:
     NS_INLINE_DECL_REFCOUNTING(DOMCameraConfiguration)
@@ -133,7 +133,8 @@ protected:
     uint32_t mMaxFocusAreas;
     uint32_t mMaxMeteringAreas;
 
-  protected:
+  private:
+    // Private destructor, to discourage deletion outside of Release():
     ~DOMCameraConfiguration();
   };
 

@@ -601,7 +601,7 @@ PropertyOpForwarder(JSContext *cx, unsigned argc, jsval *vp)
     if (!obj)
         return false;
 
-    jsval v = js::GetFunctionNativeReserved(callee, 0);
+    JS::RootedValue v(cx, js::GetFunctionNativeReserved(callee, 0));
 
     JSObject *ptrobj = JSVAL_TO_OBJECT(v);
     Op *popp = static_cast<Op *>(JS_GetPrivate(ptrobj));

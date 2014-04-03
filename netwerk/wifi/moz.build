@@ -35,6 +35,10 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'osx_corewlan.mm',
     ]
+elif CONFIG['OS_ARCH'] == 'FreeBSD':
+    UNIFIED_SOURCES += [
+        'nsWifiScannerFreeBSD.cpp',
+    ]
 elif CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'nsWifiScannerWin.cpp',

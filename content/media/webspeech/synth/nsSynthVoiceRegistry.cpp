@@ -67,8 +67,12 @@ namespace dom {
 
 // VoiceData
 
-class VoiceData
+class VoiceData MOZ_FINAL
 {
+private:
+  // Private destructor, to discourage deletion outside of Release():
+  ~VoiceData() {}
+
 public:
   VoiceData(nsISpeechService* aService, const nsAString& aUri,
             const nsAString& aName, const nsAString& aLang, bool aIsLocal)
@@ -77,8 +81,6 @@ public:
     , mName(aName)
     , mLang(aLang)
     , mIsLocal(aIsLocal) {}
-
-  ~VoiceData() {}
 
   NS_INLINE_DECL_REFCOUNTING(VoiceData)
 
