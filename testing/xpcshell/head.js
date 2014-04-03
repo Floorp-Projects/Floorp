@@ -180,7 +180,8 @@ function _do_main() {
 function _do_quit() {
   _log("test_info",
        {_message: "TEST-INFO | (xpcshell/head.js) | exiting test\n"});
-
+  let Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
+  Promise.Debugging.flushUncaughtErrors();
   _quit = true;
 }
 
@@ -347,6 +348,15 @@ function _execute_test() {
   // Override idle service by default.
   // Call do_get_idle() to restore the factory and get the service.
   _fakeIdleService.activate();
+
+  let Promise = Components.utils.import("resource://gre/modules/Promise.jsm", null).Promise;
+  Promise.Debugging.clearUncaughtErrorObservers();
+  Promise.Debugging.addUncaughtErrorObserver(function observer({message, date, fileName, stack, lineNumber}) {
+    let text = "A promise chain failed to handle a rejection: " +
+        message + " - rejection date: " + date;
+    _log_message_with_stack("test_unexpected_fail",
+                            text, stack, fileName);
+  });
 
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
