@@ -2437,8 +2437,12 @@ WifiWorker.prototype = {
   },
 
   _sendMessage: function(message, success, data, msg) {
-    msg.manager.sendAsyncMessage(message + (success ? ":OK" : ":NO"),
-                                 { data: data, rid: msg.rid, mid: msg.mid });
+    try {
+      msg.manager.sendAsyncMessage(message + (success ? ":OK" : ":NO"),
+                                   { data: data, rid: msg.rid, mid: msg.mid });
+    } catch (e) {
+      debug("sendAsyncMessage error : " + e);
+    }
     this._splicePendingRequest(msg);
   },
 
@@ -2481,7 +2485,11 @@ WifiWorker.prototype = {
       if ((i = this._domManagers.indexOf(msg.manager)) != -1) {
         this._domManagers.splice(i, 1);
       }
-
+      for (i = this._domRequest.length - 1; i >= 0; i--) {
+        if (this._domRequest[i].msg.manager === msg.manager) {
+          this._domRequest.splice(i, 1);
+        }
+      }
       return;
     }
 
