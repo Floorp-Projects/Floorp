@@ -326,6 +326,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     }
 
     private RenderContext createContext(RectF viewport, RectF pageRect, float zoomFactor, PointF offset) {
+        if (mCoordBuffer == null) {
+            throw new IllegalStateException();
+        }
         return new RenderContext(viewport, pageRect, zoomFactor, offset, mPositionHandle, mTextureHandle,
                                  mCoordBuffer);
     }
