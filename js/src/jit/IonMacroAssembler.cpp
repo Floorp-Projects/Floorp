@@ -334,8 +334,7 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest
             // Bail out if the value doesn't fit into a signed int32 value. This
             // is what allows MLoadTypedArrayElement to have a type() of
             // MIRType_Int32 for UInt32 array loads.
-            test32(dest.gpr(), dest.gpr());
-            j(Assembler::Signed, fail);
+            branchTest32(Assembler::Signed, dest.gpr(), dest.gpr(), fail);
         }
         break;
       case ScalarTypeDescr::TYPE_FLOAT32:
@@ -379,12 +378,11 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOpera
       case ScalarTypeDescr::TYPE_UINT32:
         // Don't clobber dest when we could fail, instead use temp.
         load32(src, temp);
-        test32(temp, temp);
         if (allowDouble) {
             // If the value fits in an int32, store an int32 type tag.
             // Else, convert the value to double and box it.
             Label done, isDouble;
-            j(Assembler::Signed, &isDouble);
+            branchTest32(Assembler::Signed, temp, temp, &isDouble);
             {
                 tagValue(JSVAL_TYPE_INT32, temp, dest);
                 jump(&done);
@@ -397,7 +395,7 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOpera
             bind(&done);
         } else {
             // Bailout if the value does not fit in an int32.
-            j(Assembler::Signed, fail);
+            branchTest32(Assembler::Signed, temp, temp, fail);
             tagValue(JSVAL_TYPE_INT32, temp, dest);
         }
         break;
@@ -698,8 +696,7 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
     branchTest32(Assembler::Zero, result, atomBit, &notAtom);
     branchTest32(Assembler::Zero, temp, atomBit, &notAtom);
 
-    cmpPtr(left, right);
-    emitSet(JSOpToCondition(MCompare::Compare_String, op), result);
+    cmpPtrSet(JSOpToCondition(MCompare::Compare_String, op), left, right, result);
     jump(&done);
 
     bind(&notAtom);

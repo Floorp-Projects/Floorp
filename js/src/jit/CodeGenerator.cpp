@@ -473,8 +473,7 @@ CodeGenerator::testObjectEmulatesUndefinedKernel(Register objreg,
     // Perform a fast-path check of the object's class flags if the object's
     // not a proxy.  Let out-of-line code handle the slow cases that require
     // saving registers, making a function call, and restoring registers.
-    Assembler::Condition cond = masm.branchTestObjectTruthy(false, objreg, scratch, ool->entry());
-    masm.j(cond, ifEmulatesUndefined);
+    masm.branchTestObjectTruthy(false, objreg, scratch, ool->entry(), ifEmulatesUndefined);
 }
 
 void
