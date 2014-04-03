@@ -14,5 +14,5 @@
   <Param name="ei" value="UTF-8"/>
   <MozParam name="fr" condition="pref" pref="yahoo-fr" />
 </Url>
-<SearchForm>http://search.yahoo.com/</SearchForm>
+<SearchForm>https://search.yahoo.com/</SearchForm>
 </SearchPlugin>
