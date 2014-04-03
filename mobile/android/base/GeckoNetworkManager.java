@@ -59,9 +59,14 @@ public class GeckoNetworkManager extends BroadcastReceiver {
 
     static private final ConnectionType kDefaultConnectionType = ConnectionType.NONE;
 
-    private Context mApplicationContext;
+    private static Context getApplicationContext() {
+        Context context = GeckoAppShell.getContext();
+        if (null == context)
+            return null;
+        return context.getApplicationContext();
+    }
     private ConnectionType mConnectionType = ConnectionType.NONE;
-    private final IntentFilter mNetworkFilter = new IntentFilter();
+    private final IntentFilter mNetworkFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 
     // Whether the manager should be listening to Network Information changes.
     private boolean mShouldBeListening = false;
@@ -81,9 +86,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
 
     public void start(final Context context) {
         // Note that this initialization clause only runs once.
-        if (mApplicationContext == null) {
-            mApplicationContext = context.getApplicationContext();
-            mNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        if (mConnectionType == ConnectionType.NONE) {
             mConnectionType = getConnectionType();
         }
 
@@ -96,7 +99,8 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private void startListening() {
-        mApplicationContext.registerReceiver(sInstance, mNetworkFilter);
+        if (null !=getApplicationContext())
+            getApplicationContext().registerReceiver(sInstance, mNetworkFilter);
     }
 
     public void stop() {
@@ -108,15 +112,21 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private void stopListening() {
-        mApplicationContext.unregisterReceiver(sInstance);
+        if (null != getApplicationContext())
+            getApplicationContext().unregisterReceiver(sInstance);
     }
 
     private int wifiDhcpGatewayAddress() {
         if (mConnectionType != ConnectionType.WIFI) {
             return 0;
         }
+
+        if (null == getApplicationContext()) {
+            return 0;
+        }
+
         try {
-            WifiManager mgr = (WifiManager)sInstance.mApplicationContext.getSystemService(Context.WIFI_SERVICE);
+            WifiManager mgr = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             DhcpInfo d = mgr.getDhcpInfo();
             if (d == null) {
                 return 0;
@@ -173,8 +183,12 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private static ConnectionType getConnectionType() {
+        if (null == getApplicationContext()) {
+            return ConnectionType.NONE;
+        }
+
         ConnectivityManager cm =
-            (ConnectivityManager)sInstance.mApplicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+            (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) {
             Log.e(LOGTAG, "Connectivity service does not exist");
             return ConnectionType.NONE;
@@ -206,7 +220,10 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private static int getNetworkOperator(InfoType type) {
-        TelephonyManager tel = (TelephonyManager)sInstance.mApplicationContext.getSystemService(Context.TELEPHONY_SERVICE);
+        if (null == getApplicationContext())
+            return -1;
+
+        TelephonyManager tel = (TelephonyManager)getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         if (tel == null) {
             Log.e(LOGTAG, "Telephony service does not exist");
             return -1;

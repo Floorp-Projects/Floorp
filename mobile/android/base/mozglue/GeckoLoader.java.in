@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.mozglue;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -21,6 +20,7 @@ import java.util.Locale;
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";
 
+    private static volatile Intent sIntent;
     private static File sCacheFile;
     private static File sGREDir;
 
@@ -119,10 +119,14 @@ public final class GeckoLoader {
         return tmpDir;
     }
 
-    public static void setupGeckoEnvironment(Activity context, String[] pluginDirs, String profilePath) {
+    public static void setLastIntent(Intent intent) {
+        sIntent = intent;
+    }
+
+    public static void setupGeckoEnvironment(Context context, String[] pluginDirs, String profilePath) {
         // if we have an intent (we're being launched by an activity)
         // read in any environmental variables from it here
-        Intent intent = context.getIntent();
+        final Intent intent = sIntent;
         if (intent != null) {
             String env = intent.getStringExtra("env0");
             Log.d(LOGTAG, "Gecko environment env0: " + env);
@@ -181,6 +185,9 @@ public final class GeckoLoader {
         }
 
         setupLocaleEnvironment();
+
+        // We don't need this any more.
+        sIntent = null;
     }
 
     private static void loadLibsSetup(Context context) {
