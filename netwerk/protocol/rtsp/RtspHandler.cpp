@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RtspChannelChild.h"
+#include "RtspChannelParent.h"
 #include "RtspHandler.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
@@ -68,15 +69,19 @@ NS_IMETHODIMP
 RtspHandler::NewChannel(nsIURI *aURI, nsIChannel **aResult)
 {
   bool isRtsp = false;
-  nsRefPtr<RtspChannelChild> rtspChannel;
+  nsRefPtr<nsBaseChannel> rtspChannel;
 
   nsresult rv = aURI->SchemeIs("rtsp", &isRtsp);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(isRtsp, NS_ERROR_UNEXPECTED);
 
-  rtspChannel = new RtspChannelChild();
+  if (IsNeckoChild()) {
+    rtspChannel = new RtspChannelChild(aURI);
+  } else {
+    rtspChannel = new RtspChannelParent(aURI);
+  }
 
-  rv = rtspChannel->Init(aURI);
+  rv = rtspChannel->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rtspChannel.forget(aResult);
