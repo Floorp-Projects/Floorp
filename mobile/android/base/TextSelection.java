@@ -44,6 +44,8 @@ class TextSelection extends Layer implements GeckoEventListener {
     private float mViewTop;
     private float mViewZoom;
 
+    private String mCurrentItems;
+
     private TextSelectionActionModeCallback mCallback;
 
     // These timers are used to avoid flicker caused by selection handles showing/hiding quickly. For isntance
@@ -164,6 +166,12 @@ class TextSelection extends Layer implements GeckoEventListener {
     }
 
     private void showActionMode(final JSONArray items) {
+	String itemsString = items.toString();
+	if (itemsString.equals(mCurrentItems)) {
+	    return;
+	}
+	mCurrentItems = itemsString;
+
         if (mCallback != null) {
             mCallback.updateItems(items);
             return;
@@ -183,6 +191,7 @@ class TextSelection extends Layer implements GeckoEventListener {
             final ActionModeCompat.Presenter presenter = (ActionModeCompat.Presenter) context;
             presenter.endActionModeCompat();
         }
+	mCurrentItems = null;
     }
 
     @Override
