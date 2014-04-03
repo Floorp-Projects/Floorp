@@ -137,3 +137,37 @@ add_test(function test_ril_worker_cellbroadcast_merge_config() {
   run_next_test();
 });
 
+add_test(function test_ril_worker_cellbroadcast_set_search_list() {
+  let worker = newWorker({
+    postRILMessage: function(id, parcel) {
+      // Do nothing
+    },
+    postMessage: function(message) {
+      // Do nothing
+    }
+  });
+
+  let context = worker.ContextPool._contexts[0];
+
+  function test(aIsCdma, aSearchList, aExpected) {
+    context.RIL._isCdma = aIsCdma;
+
+    let options = { searchList: aSearchList };
+    context.RIL.setCellBroadcastSearchList(options);
+    // Enforce the MMI result to string for comparison.
+    do_check_eq("" + context.RIL.cellBroadcastConfigs.MMI, aExpected);
+    do_check_eq(options.success, true);
+  }
+
+  let searchListStr = "1,2,3,4";
+  let searchList = { gsm: "1,2,3,4", cdma: "5,6,7,8" };
+
+  test(false, searchListStr, "1,2,2,3,3,4,4,5");
+  test(true, searchListStr, "1,2,2,3,3,4,4,5");
+  test(false, searchList, "1,2,2,3,3,4,4,5");
+  test(true, searchList, "5,6,6,7,7,8,8,9");
+  test(false, null, "null");
+  test(true, null, "null");
+
+  run_next_test();
+});
