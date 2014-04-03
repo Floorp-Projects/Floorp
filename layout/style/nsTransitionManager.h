@@ -31,7 +31,8 @@ struct ElementPropertyTransition
 
   nsCSSProperty mProperty;
   nsStyleAnimation::Value mStartValue, mEndValue;
-  mozilla::TimeStamp mStartTime; // actual start plus transition delay
+  mozilla::TimeStamp mStartTime;
+  mozilla::TimeDuration mDelay;
 
   // data from the relevant nsTransition
   mozilla::TimeDuration mDuration;
@@ -54,8 +55,8 @@ struct ElementPropertyTransition
   // for the third transition (from 0px/2px to 10px) will be 0.8.
   double mReversePortion;
   // true when the transition is running on the compositor. In particular,
-  // mIsRunningOnCompositor will be false if the transition has a delay and we
-  // are not yet at mStartTime, so there is no animation on the layer.
+  // mIsRunningOnCompositor will be false if the transition has a delay that we
+  // have not yet completed, so there is no animation on the layer.
   bool mIsRunningOnCompositor;
 
   // Compute the portion of the *value* space that we should be through
