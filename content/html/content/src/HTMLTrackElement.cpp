@@ -325,5 +325,43 @@ HTMLTrackElement::ReadyState() const
   return mTrack->ReadyState();
 }
 
+void
+HTMLTrackElement::SetReadyState(uint16_t aReadyState)
+{
+  if (mTrack) {
+    switch (aReadyState) {
+      case TextTrackReadyState::Loaded:
+        DispatchTrackRunnable(NS_LITERAL_STRING("loaded"));
+        break;
+      case TextTrackReadyState::FailedToLoad:
+        DispatchTrackRunnable(NS_LITERAL_STRING("error"));
+        break;
+    }
+    mTrack->SetReadyState(aReadyState);
+  }
+}
+
+void
+HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName)
+{
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArg
+      <const nsString>(this,
+                       &HTMLTrackElement::DispatchTrustedEvent,
+                       aEventName);
+  NS_DispatchToMainThread(runnable);
+}
+
+void
+HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName)
+{
+  nsIDocument* doc = OwnerDoc();
+  if (!doc) {
+    return;
+  }
+  nsContentUtils::DispatchTrustedEvent(doc, static_cast<nsIContent*>(this),
+                                       aName, false, false);
+}
+
 } // namespace dom
 } // namespace mozilla
