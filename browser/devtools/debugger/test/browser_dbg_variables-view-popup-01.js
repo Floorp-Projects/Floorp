@@ -15,8 +15,6 @@ function test() {
     let bubble = win.DebuggerView.VariableBubble;
     let tooltip = bubble._tooltip.panel;
 
-    bubble._ignoreLiterals = false;
-
     function verifyContents(textContent, className) {
       is(tooltip.querySelectorAll(".variables-view-container").length, 0,
         "There should be no variables view containers added to the tooltip.");
