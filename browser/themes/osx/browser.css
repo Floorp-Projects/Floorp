@@ -98,7 +98,7 @@ toolbarseparator {
   background-position: 0 1px, 0 0;
 
   box-shadow: inset 0 1px 0 hsla(0,0%,100%,.4);
-  margin-top: -1px;
+  margin-top: -@tabToolbarNavbarOverlap@;
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
@@ -1617,11 +1617,12 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button {
   min-width: 0;
   margin: 0;
+  -moz-box-orient: horizontal;
+  -moz-box-align: center;
 }
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
-  padding-top: 4px;
-  margin: 2px;
+  margin-top: 0;
 }
 
 /* ----- FULLSCREEN WINDOW CONTROLS ----- */
@@ -2800,7 +2801,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
    * ordinal group value (see bug 853415). */
   -moz-box-ordinal-group: 1001;
   position: absolute;
-  bottom: 1px;
+  bottom: @tabToolbarNavbarOverlap@;
   left: 0;
   right: 0;
   z-index: 0;
