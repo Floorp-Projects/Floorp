@@ -127,8 +127,6 @@ CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
         ret = CrashReporter::AppendExtraData(mChildDumpID, *processNotes);
     if (!ret)
         NS_WARNING("problem appending child data to .extra");
-    if (!CrashReporter::WriteScreenShotToFile(mChildDumpID))
-        NS_WARNING("problem writing screen shot to .raw");
     return ret;
 }
 #endif
