@@ -11,113 +11,10 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 const promise = devtools.require("sdk/core/promise");
-const {InplaceEditor, editableItem} = devtools.require("devtools/shared/inplace-editor");
-const {parseDeclarations} = devtools.require("devtools/styleinspector/css-parsing-utils");
-
-const NUMERIC = /^-?[\d\.]+$/;
-
-/**
- * An instance of EditingSession tracks changes that have been made during the
- * modification of box model values. All of these changes can be reverted by
- * calling revert.
- *
- * @param doc    A DOM document that can be used to test style rules.
- * @param rules  An array of the style rules defined for the node being edited.
- *               These should be in order of priority, least important first.
- */
-function EditingSession(doc, rules) {
-  this._doc = doc;
-  this._rules = rules;
-  this._modifications = new Map();
-}
-
-EditingSession.prototype = {
-  /**
-   * Gets the value of a single property from the CSS rule.
-   *
-   * @param rule      The CSS rule
-   * @param property  The name of the property
-   */
-  getPropertyFromRule: function(rule, property) {
-    let dummyStyle = this._element.style;
-
-    dummyStyle.cssText = rule.cssText;
-    return dummyStyle.getPropertyValue(property);
-  },
-
-  /**
-   * Returns the current value for a property as a string or the empty string if
-   * no style rules affect the property.
-   *
-   * @param property  The name of the property as a string
-   */
-  getProperty: function(property) {
-    // Create a hidden element for getPropertyFromRule to use
-    let div = this._doc.createElement("div");
-    div.setAttribute("style", "display: none");
-    this._doc.body.appendChild(div);
-    this._element = this._doc.createElement("p");
-    div.appendChild(this._element);
-
-    // As the rules are in order of priority we can just iterate until we find
-    // the first that defines a value for the property and return that.
-    for (let rule of this._rules) {
-      let value = this.getPropertyFromRule(rule, property);
-      if (value !== "") {
-        div.remove();
-        return value;
-      }
-    }
-    div.remove();
-    return "";
-  },
-
-  /**
-   * Sets a number of properties on the node. Returns a promise that will be
-   * resolved when the modifications are complete.
-   *
-   * @param properties  An array of properties, each is an object with name and
-   *                    value properties. If the value is "" then the property
-   *                    is removed.
-   */
-  setProperties: function(properties) {
-    let modifications = this._rules[0].startModifyingProperties();
-
-    for (let property of properties) {
-      if (!this._modifications.has(property.name))
-        this._modifications.set(property.name, this.getPropertyFromRule(this._rules[0], property.name));
-
-      if (property.value == "")
-        modifications.removeProperty(property.name);
-      else
-        modifications.setProperty(property.name, property.value, "");
-    }
-
-    return modifications.apply().then(null, console.error);
-  },
-
-  /**
-   * Reverts all of the property changes made by this instance. Returns a
-   * promise that will be resolved when complete.
-   */
-  revert: function() {
-    let modifications = this._rules[0].startModifyingProperties();
-
-    for (let [property, value] of this._modifications) {
-      if (value != "")
-        modifications.setProperty(property, value, "");
-      else
-        modifications.removeProperty(property);
-    }
-
-    return modifications.apply().then(null, console.error);
-  }
-};
 
 function LayoutView(aInspector, aWindow)
 {
@@ -157,17 +54,11 @@ LayoutView.prototype = {
       marginBottom: {selector: ".margin.bottom > span",
                   property: "margin-bottom",
                   value: undefined},
-      // margin-left is a shorthand for some internal properties,
-      // margin-left-ltr-source and margin-left-rtl-source for example. The
-      // real margin value we want is in margin-left-value
       marginLeft: {selector: ".margin.left > span",
                   property: "margin-left",
-                  realProperty: "margin-left-value",
                   value: undefined},
-      // margin-right behaves the same as margin-left
       marginRight: {selector: ".margin.right > span",
                   property: "margin-right",
-                  realProperty: "margin-right-value",
                   value: undefined},
       paddingTop: {selector: ".padding.top > span",
                   property: "padding-top",
@@ -175,15 +66,11 @@ LayoutView.prototype = {
       paddingBottom: {selector: ".padding.bottom > span",
                   property: "padding-bottom",
                   value: undefined},
-      // padding-left behaves the same as margin-left
       paddingLeft: {selector: ".padding.left > span",
                   property: "padding-left",
-                  realProperty: "padding-left-value",
                   value: undefined},
-      // padding-right behaves the same as margin-left
       paddingRight: {selector: ".padding.right > span",
                   property: "padding-right",
-                  realProperty: "padding-right-value",
                   value: undefined},
       borderTop: {selector: ".border.top > span",
                   property: "border-top-width",
@@ -199,56 +86,7 @@ LayoutView.prototype = {
                   value: undefined},
     };
 
-    // Make each element the dimensions editable
-    for (let i in this.map) {
-      if (i == "position")
-        continue;
-
-      let dimension = this.map[i];
-      editableItem({ element: this.doc.querySelector(dimension.selector) }, (element, event) => {
-        this.initEditor(element, event, dimension);
-      });
-    }
-
     this.onNewNode();
-  },
-
-  /**
-   * Called when the user clicks on one of the editable values in the layoutview
-   */
-  initEditor: function LV_initEditor(element, event, dimension) {
-    let { property, realProperty } = dimension;
-    if (!realProperty)
-      realProperty = property;
-    let session = new EditingSession(document, this.elementRules);
-    let initialValue = session.getProperty(realProperty);
-
-    new InplaceEditor({
-      element: element,
-      initial: initialValue,
-
-      change: (value) => {
-        if (NUMERIC.test(value))
-          value += "px";
-        let properties = [
-          { name: property, value: value }
-        ]
-
-        if (property.substring(0, 7) == "border-") {
-          let bprop = property.substring(0, property.length - 5) + "style";
-          let style = session.getProperty(bprop);
-          if (!style || style == "none" || style == "hidden")
-            properties.push({ name: bprop, value: "solid" });
-        }
-
-        session.setProperties(properties);
-      },
-
-      done: (value, commit) => {
-        if (!commit)
-          session.revert();
-      }
-    }, event);
   },
 
   /**
@@ -320,28 +158,23 @@ LayoutView.prototype = {
 
   /**
    * Compute the dimensions of the node and update the values in
-   * the layoutview/view.xhtml document. Returns a promise that will be resolved
-   * when complete.
+   * the layoutview/view.xhtml document.
    */
   update: function LV_update() {
-    let lastRequest = Task.spawn((function*() {
-      if (!this.isActive() ||
-          !this.inspector.selection.isConnected() ||
-          !this.inspector.selection.isElementNode()) {
-        return;
-      }
+    if (!this.isActive() ||
+        !this.inspector.selection.isConnected() ||
+        !this.inspector.selection.isElementNode()) {
+      return promise.resolve(undefined);
+    }
 
-      let node = this.inspector.selection.nodeFront;
-      let layout = yield this.inspector.pageStyle.getLayout(node, {
-        autoMargins: !this.dimmed
-      });
-      let styleEntries = yield this.inspector.pageStyle.getApplied(node, {});
-
+    let node = this.inspector.selection.nodeFront;
+    let lastRequest = this.inspector.pageStyle.getLayout(node, {
+      autoMargins: !this.dimmed
+    }).then(layout => {
       // If a subsequent request has been made, wait for that one instead.
       if (this._lastRequest != lastRequest) {
         return this._lastRequest;
       }
-
       this._lastRequest = null;
       let width = layout.width;
       let height = layout.height;
@@ -400,12 +233,12 @@ LayoutView.prototype = {
         this.sizeLabel.textContent = newValue;
       }
 
-      this.elementRules = [e.rule for (e of styleEntries)];
-
       this.inspector.emit("layoutview-updated");
-    }).bind(this)).then(null, console.error);
+      return null;
+    });
 
-    return this._lastRequest = lastRequest;
+    this._lastRequest = lastRequest;
+    return this._lastRequest;
   },
 
   showBoxModel: function(options={}) {
