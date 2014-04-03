@@ -31,9 +31,9 @@ import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
-import org.mozilla.gecko.widget.GeckoImageButton;
-import org.mozilla.gecko.widget.GeckoImageView;
-import org.mozilla.gecko.widget.GeckoRelativeLayout;
+import org.mozilla.gecko.widget.ThemedImageButton;
+import org.mozilla.gecko.widget.ThemedImageView;
+import org.mozilla.gecko.widget.ThemedRelativeLayout;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -75,7 +75,7 @@ import android.widget.PopupWindow;
 * as a set of listeners to allow {@code BrowserToolbar} users to react
 * to state changes accordingly.
 */
-public class BrowserToolbar extends GeckoRelativeLayout
+public class BrowserToolbar extends ThemedRelativeLayout
                             implements Tabs.OnTabsChangedListener,
                                        GeckoMenu.ActionItemBarPresenter,
                                        GeckoEventListener {
@@ -126,8 +126,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     private ToolbarProgressView mProgressBar;
     private TabCounter mTabsCounter;
-    private GeckoImageButton mMenu;
-    private GeckoImageView mMenuIcon;
+    private ThemedImageButton mMenu;
+    private ThemedImageView mMenuIcon;
     private LinearLayout mActionItemBar;
     private MenuPopup mMenuPopup;
     private List<View> mFocusOrder;
@@ -202,8 +202,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mForward = (ImageButton) findViewById(R.id.forward);
         setButtonEnabled(mForward, false);
 
-        mMenu = (GeckoImageButton) findViewById(R.id.menu);
-        mMenuIcon = (GeckoImageView) findViewById(R.id.menu_icon);
+        mMenu = (ThemedImageButton) findViewById(R.id.menu);
+        mMenuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
         mActionItemBar = (LinearLayout) findViewById(R.id.menu_items);
         mHasSoftMenuButton = !HardwareUtils.hasMenuButton();
 

@@ -1,0 +1,28 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Web Audio Editor test page</title>
+  </head>
+
+  <body>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      let ctx = new AudioContext();
+      let NODE_CREATION_METHODS = [
+          "createBufferSource", "createScriptProcessor", "createAnalyser",
+          "createGain", "createDelay", "createBiquadFilter", "createWaveShaper",
+          "createPanner", "createConvolver", "createChannelSplitter", "createChannelMerger",
+          "createDynamicsCompressor", "createOscillator"
+      ];
+      let nodes = NODE_CREATION_METHODS.map(method => ctx[method]());
+
+    </script>
+  </body>
+
+</html>

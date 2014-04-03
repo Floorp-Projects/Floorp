@@ -8,7 +8,7 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.LightweightThemeDrawable;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.widget.GeckoImageButton;
+import org.mozilla.gecko.widget.ThemedImageButton;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -19,7 +19,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
-public class ShapedButton extends GeckoImageButton
+public class ShapedButton extends ThemedImageButton
                           implements CanvasDelegate.DrawManager {
     protected final LightweightTheme mTheme;
 
