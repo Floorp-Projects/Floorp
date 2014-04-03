@@ -23,8 +23,8 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- * 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef assembler_assembler_MacroAssembler_h
@@ -84,7 +84,7 @@ public:
     {
         addPtr(Imm32(sizeof(void*)), stackPointerRegister);
     }
-    
+
     void peek(RegisterID dest, int index = 0)
     {
         loadPtr(Address(stackPointerRegister, (index * sizeof(void*))), dest);
@@ -131,7 +131,7 @@ public:
     {
         branch16(cond, left, right).linkTo(target, this);
     }
-    
+
     void branchTestPtr(Condition cond, RegisterID reg, Label target)
     {
         branchTestPtr(cond, reg).linkTo(target, this);
@@ -216,12 +216,12 @@ public:
     {
         sub32(src, dest);
     }
-    
+
     void subPtr(Imm32 imm, RegisterID dest)
     {
         sub32(imm, dest);
     }
-    
+
     void subPtr(ImmPtr imm, RegisterID dest)
     {
         sub32(Imm32(imm), dest);

@@ -473,12 +473,6 @@ public:
   virtual nsresult SetFullScreenInternal(bool aIsFullScreen, bool aRequireTrust) = 0;
 
   /**
-   * Call this to indicate that some node (this window, its document,
-   * or content in that document) has a "MozAudioAvailable" event listener.
-   */
-  virtual void SetHasAudioAvailableEventListeners() = 0;
-
-  /**
    * Call this to check whether some node (this window, its document,
    * or content in that document) has a mouseenter/leave event listener.
    */

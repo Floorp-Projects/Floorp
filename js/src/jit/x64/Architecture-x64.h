@@ -139,7 +139,7 @@ class FloatRegisters {
 
     static const uint32_t AllMask = (1 << Total) - 1;
 
-    static const uint32_t VolatileMask = 
+    static const uint32_t VolatileMask =
 #if defined(_WIN64)
         (1 << JSC::X86Registers::xmm0) |
         (1 << JSC::X86Registers::xmm1) |

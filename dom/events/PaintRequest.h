@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NSPAINTREQUEST_H_
-#define NSPAINTREQUEST_H_
+#ifndef mozilla_dom_PaintRequest_h_
+#define mozilla_dom_PaintRequest_h_
 
 #include "nsIDOMPaintRequest.h"
 #include "nsPresContext.h"
@@ -14,17 +14,14 @@
 
 namespace mozilla {
 namespace dom {
+
 class DOMRect;
-}
-}
 
-class nsPaintRequest MOZ_FINAL : public nsIDOMPaintRequest
-                               , public nsWrapperCache
+class PaintRequest MOZ_FINAL : public nsIDOMPaintRequest
+                             , public nsWrapperCache
 {
-  typedef mozilla::dom::DOMRect DOMRect;
-
 public:
-  nsPaintRequest(nsIDOMEvent* aParent)
+  PaintRequest(nsIDOMEvent* aParent)
     : mParent(aParent)
   {
     mRequest.mFlags = 0;
@@ -32,7 +29,7 @@ public:
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequest)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaintRequest)
   NS_DECL_NSIDOMPAINTREQUEST
 
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -53,23 +50,23 @@ public:
   { mRequest = aRequest; }
 
 private:
-  ~nsPaintRequest() {}
+  ~PaintRequest() {}
 
   nsCOMPtr<nsIDOMEvent> mParent;
   nsInvalidateRequestList::Request mRequest;
 };
 
-class nsPaintRequestList MOZ_FINAL : public nsISupports,
-                                     public nsWrapperCache
+class PaintRequestList MOZ_FINAL : public nsISupports,
+                                   public nsWrapperCache
 {
 public:
-  nsPaintRequestList(nsIDOMEvent *aParent) : mParent(aParent)
+  PaintRequestList(nsIDOMEvent *aParent) : mParent(aParent)
   {
     SetIsDOMBinding();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsPaintRequestList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PaintRequestList)
   
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
@@ -78,7 +75,7 @@ public:
     return mParent;
   }
 
-  void Append(nsPaintRequest* aElement)
+  void Append(PaintRequest* aElement)
   {
     mArray.AppendElement(aElement);
   }
@@ -88,21 +85,24 @@ public:
     return mArray.Length();
   }
 
-  nsPaintRequest* Item(uint32_t aIndex)
+  PaintRequest* Item(uint32_t aIndex)
   {
     return mArray.SafeElementAt(aIndex);
   }
-  nsPaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
+  PaintRequest* IndexedGetter(uint32_t aIndex, bool& aFound)
   {
     aFound = aIndex < mArray.Length();
     return aFound ? mArray.ElementAt(aIndex) : nullptr;
   }
 
 private:
-  ~nsPaintRequestList() {}
+  ~PaintRequestList() {}
 
-  nsTArray< nsRefPtr<nsPaintRequest> > mArray;
+  nsTArray< nsRefPtr<PaintRequest> > mArray;
   nsCOMPtr<nsIDOMEvent> mParent;
 };
 
-#endif /*NSPAINTREQUEST_H_*/
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_PaintRequest_h_
