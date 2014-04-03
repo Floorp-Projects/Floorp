@@ -567,7 +567,7 @@ IndexedDBDatabaseParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   if (mDatabase) {
     mDatabase->SetActor(static_cast<IndexedDBDatabaseParent*>(nullptr));
-    mDatabase->Invalidate();
+    mDatabase->InvalidateInternal(/* aIsDead */ true);
   }
 }
 
