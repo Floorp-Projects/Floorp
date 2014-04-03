@@ -44,6 +44,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
     @keyframes anim3 {
       from { opacity: 0 } to { opacity: 1 }
     }
+
+    @keyframes kf1 {
+      50% { transform: translate(50px) }
+      to { transform: translate(150px) }
+    }
+    @keyframes kf2 {
+      from { transform: translate(150px) }
+      50% { transform: translate(50px) }
+    }
+    @keyframes kf3 {
+      25% { transform: translate(100px) }
+    }
+    @keyframes kf4 {
+      to, from { display: inline; transform: translate(37px) }
+    }
+    @keyframes kf_cascade1 {
+      from { transform: translate(50px) }
+      50%, from { transform: translate(30px) }      /* wins: 0% */
+      75%, 85%, 50% { transform: translate(20px) }  /* wins: 75%, 50% */
+      100%, 85% { transform: translate(70px) }      /* wins: 100% */
+      85.1% { transform: translate(60px) }          /* wins: 85.1% */
+      85% { transform: translate(30px) }            /* wins: 85% */
+    }
+    @keyframes kf_cascade2 { from, to { opacity: 0.3 } }
+    @keyframes kf_cascade2 { from, to { transform: translate(50px) } }
+    @keyframes kf_cascade2 { from, to { transform: translate(100px) } }
+
     .target {
       /* The animation target needs geometry in order to qualify for OMTA */
       width: 100px;
@@ -418,6 +445,204 @@ addAsyncTest(function *() {
     // Bug 980769 - We should get 0.9 but instead 
     todo_is(SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, "opacity"), "0.9",
             "anim1 + anim2 + anim3, opacity at 11s");
+  done_div();
+});
+
+/*
+ * css3-animations:  3. Keyframes
+ * http://dev.w3.org/csswg/css3-animations/#keyframes
+ */
+
+// Test the rules on keyframes that lack a 0% or 100% rule:
+// (simultaneously, test that reverse animations have their keyframes
+// run backwards)
+
+addAsyncTest(function *() {
+  // 100px at 0%, 50px at 50%, 150px at 100%
+  new_div("transform: translate(100px); " +
+          "animation: kf1 ease 1s alternate infinite");
+  advance_clock(0);
+  yield waitForPaints();
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor, "no-0% at 0.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.2) },
+                 RunningOn.Compositor, 0.01, "no-0% at 0.1s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.6) },
+                 RunningOn.Compositor, 0.01, "no-0% at 0.3s");
+  advance_clock(200);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor, "no-0% at 0.5s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.4) },
+                 RunningOn.Compositor, 0.01, "no-0% at 0.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.8) },
+                 RunningOn.Compositor, 0.01, "no-0% at 0.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor, "no-0% at 1.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.8) },
+                 RunningOn.Compositor, 0.01, "no-0% at 1.1s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 50 + 100 * gTF.ease(0.2) },
+                 RunningOn.Compositor, 0.01, "no-0% at 1.4s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.6) },
+                 RunningOn.Compositor, 0.01, "no-0% at 1.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.2) },
+                 RunningOn.Compositor, 0.01, "no-0% at 1.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor, "no-0% at 2.0s");
+  done_div();
+
+  // 150px at 0%, 50px at 50%, 100px at 100%
+  new_div("transform: translate(100px); " +
+          "animation: kf2 ease-in 1s alternate infinite");
+  yield waitForPaints();
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor, "no-100% at 0.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01, "no-100% at 0.1s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.6) },
+                 RunningOn.Compositor, 0.01, "no-100% at 0.3s");
+  advance_clock(200);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor, "no-100% at 0.5s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.4) },
+                 RunningOn.Compositor, 0.01, "no-100% at 0.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.8) },
+                 RunningOn.Compositor, 0.01, "no-100% at 0.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor, "no-100% at 1.0s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.8) },
+                 RunningOn.Compositor, 0.01, "no-100% at 1.1s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01, "no-100% at 1.4s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.6) },
+                 RunningOn.Compositor, 0.01, "no-100% at 1.7s");
+  advance_clock(200);
+  omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.2) },
+                 RunningOn.Compositor, 0.01, "no-100% at 1.9s");
+  advance_clock(100);
+  omta_is("transform", { tx: 150 }, RunningOn.Compositor, "no-100% at 2.0s");
+  done_div();
+
+  // 50px at 0%, 100px at 25%, 50px at 100%
+  new_div("transform: translate(50px); " +
+          "animation: kf3 ease-out 1s alternate infinite");
+  yield waitForPaints();
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "no-0%-no-100% at 0.0s");
+  advance_clock(50);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.2) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 0.05s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.6) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 0.15s");
+  advance_clock(100);
+  omta_is("transform", { tx: "100px" }, RunningOn.Compositor,
+          "no-0%-no-100% at 0.25s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.4) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 0.55s");
+  advance_clock(300);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.8) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 0.85s");
+  advance_clock(150);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "no-0%-no-100% at 1.0s");
+  advance_clock(150);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.8) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 1.15s");
+  advance_clock(450);
+  omta_is_approx("transform", { tx: 100 - 50 * gTF.ease_out(0.2) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 1.6s");
+  advance_clock(250);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.6) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 1.85s");
+  advance_clock(100);
+  omta_is_approx("transform", { tx: 50 + 50 * gTF.ease_out(0.2) },
+                 RunningOn.Compositor, 0.01, "no-0%-no-100% at 1.95s");
+  advance_clock(50);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "no-0%-no-100% at 2.0s");
+  done_div();
+
+  // Test that non-animatable properties are ignored.
+  // Simultaneously, test that the block is still honored, and that
+  // we still override the value when two consecutive keyframes have
+  // the same value.
+  new_div("animation: kf4 ease 10s");
+  yield waitForPaints();
+  var cs = window.getComputedStyle(gDiv);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (linear, 0s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (linear, 0s)");
+  advance_clock(1000);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (linear, 1s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (linear, 1s)");
+  done_div();
+  new_div("animation: kf4 step-start 10s");
+  yield waitForPaints();
+  cs = window.getComputedStyle(gDiv);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (step-start, 0s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (step-start, 0s)");
+  advance_clock(1000);
+  is(cs.display, "block",
+     "non-animatable properties should be ignored (step-start, 1s)");
+  omta_is("transform", { tx: 37 }, RunningOn.Compositor,
+          "animatable properties should still apply (step-start, 1s)");
+  done_div();
+
+  // Test cascading of the keyframes within an @keyframes rule.
+  new_div("animation: kf_cascade1 linear 10s");
+  yield waitForPaints();
+  //    0%: 30px
+  //   50%: 20px
+  //   75%: 20px
+  //   85%: 30px
+  // 85.1%: 60px
+  //  100%: 70px
+  omta_is("transform", { tx: 30 }, RunningOn.Compositor, "kf_cascade1 at 0s");
+  advance_clock(2500);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "kf_cascade1 at 2.5s");
+  advance_clock(2500);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor, "kf_cascade1 at 5s");
+  advance_clock(2000);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor, "kf_cascade1 at 7s");
+  advance_clock(500);
+  omta_is("transform", { tx: 20 }, RunningOn.Compositor, "kf_cascade1 at 7.5s");
+  advance_clock(500);
+  omta_is("transform", { tx: 25 }, RunningOn.Compositor, "kf_cascade1 at 8s");
+  advance_clock(500);
+  omta_is("transform", { tx: 30 }, RunningOn.Compositor, "kf_cascade1 at 8.5s");
+  advance_clock(10);
+  // For some reason we get an error of 0.0003 for this test only
+  omta_is_approx("transform", { tx: 60 }, RunningOn.Compositor, 0.001,
+                 "kf_cascade1 at 8.51s");
+  advance_clock(745);
+  omta_is("transform", { tx: 65 }, RunningOn.Compositor,
+          "kf_cascade1 at 9.2505s");
+  done_div();
+
+  // Test cascading of the @keyframes rules themselves.
+  new_div("animation: kf_cascade2 linear 10s");
+  yield waitForPaints();
+  omta_is("opacity", 1, RunningOn.MainThread,
+          "last @keyframes rule with transform should win");
+  omta_is("transform", { tx: 100 }, RunningOn.Compositor,
+          "last @keyframes rule with transform should win");
   done_div();
 });
 
