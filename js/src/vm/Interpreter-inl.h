@@ -31,6 +31,16 @@ inline bool
 ComputeThis(JSContext *cx, AbstractFramePtr frame)
 {
     JS_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
+
+    if (frame.isFunctionFrame() && frame.fun()->isArrow()) {
+        /*
+         * Arrow functions store their (lexical) |this| value in an
+         * extended slot.
+         */
+        frame.thisValue() = frame.fun()->getExtendedSlot(0);
+        return true;
+    }
+
     if (frame.thisValue().isObject())
         return true;
     RootedValue thisv(cx, frame.thisValue());
