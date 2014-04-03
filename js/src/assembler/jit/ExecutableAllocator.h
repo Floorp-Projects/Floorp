@@ -20,7 +20,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef assembler_jit_ExecutableAllocator_h
@@ -298,7 +298,7 @@ private:
 
         if ((std::numeric_limits<size_t>::max() - granularity) <= request)
             return OVERSIZE_ALLOCATION;
-        
+
         // Round up to next page boundary
         size_t size = request + (granularity - 1);
         size = size & ~(granularity - 1);

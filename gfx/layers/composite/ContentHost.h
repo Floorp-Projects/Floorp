@@ -21,7 +21,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for etc
-#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost
+#include "mozilla/layers/TextureHost.h"  // for TextureHost
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsAutoPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -76,8 +76,8 @@ protected:
  * Base class for non-tiled ContentHosts.
  *
  * Ownership of the SurfaceDescriptor and the resources it represents is passed
- * from the ContentClient to the ContentHost when the DeprecatedTextureClient/Hosts are
- * created, that is recevied here by SetDeprecatedTextureHosts which assigns one or two
+ * from the ContentClient to the ContentHost when the TextureClient/Hosts are
+ * created, that is recevied here by SetTextureHosts which assigns one or two
  * texture hosts (for single and double buffering) to the ContentHost.
  *
  * It is the responsibility of the ContentHost to destroy its resources when
@@ -192,74 +192,6 @@ protected:
   bool mLocked;
 };
 
-class DeprecatedContentHostBase : public ContentHost
-{
-public:
-  typedef RotatedContentBuffer::ContentType ContentType;
-  typedef RotatedContentBuffer::PaintState PaintState;
-
-  DeprecatedContentHostBase(const TextureInfo& aTextureInfo);
-  ~DeprecatedContentHostBase();
-
-  virtual void Composite(EffectChain& aEffectChain,
-                         float aOpacity,
-                         const gfx::Matrix4x4& aTransform,
-                         const gfx::Filter& aFilter,
-                         const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr,
-                         TiledLayerProperties* aLayerProperties = nullptr);
-
-  virtual PaintState BeginPaint(ContentType, uint32_t)
-  {
-    NS_RUNTIMEABORT("shouldn't BeginPaint for a shadow layer");
-    return PaintState();
-  }
-
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
-
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
-
-#ifdef MOZ_DUMP_PAINTING
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface();
-
-  virtual void Dump(FILE* aFile=nullptr,
-                    const char* aPrefix="",
-                    bool aDumpHtml=false) MOZ_OVERRIDE;
-#endif
-
-  virtual DeprecatedTextureHost* GetDeprecatedTextureHost() MOZ_OVERRIDE;
-
-  virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
-  // The client has destroyed its texture clients and we should destroy our
-  // texture hosts and SurfaceDescriptors. Note that we don't immediately
-  // destroy our front buffer so that we can continue to composite.
-  virtual void DestroyTextures() = 0;
-
-protected:
-  virtual nsIntPoint GetOriginOffset()
-  {
-    return mBufferRect.TopLeft() - mBufferRotation;
-  }
-
-  bool PaintWillResample() { return mPaintWillResample; }
-
-  // Destroy the front buffer's texture host. This should only happen when
-  // we have a new front buffer to use or the ContentHost is going to die.
-  void DestroyFrontHost();
-
-  nsIntRect mBufferRect;
-  nsIntPoint mBufferRotation;
-  RefPtr<DeprecatedTextureHost> mDeprecatedTextureHost;
-  RefPtr<DeprecatedTextureHost> mDeprecatedTextureHostOnWhite;
-  // When we set a new front buffer DeprecatedTextureHost, we don't want to stomp on
-  // the old one which might still be used for compositing. So we store it
-  // here and move it to mDeprecatedTextureHost once we do the first buffer swap.
-  RefPtr<DeprecatedTextureHost> mNewFrontHost;
-  RefPtr<DeprecatedTextureHost> mNewFrontHostOnWhite;
-  bool mPaintWillResample;
-  bool mInitialised;
-};
-
 /**
  * Double buffering is implemented by swapping the front and back TextureHosts.
  * We assume that whenever we use double buffering, then we have
@@ -287,7 +219,7 @@ protected:
 
 /**
  * Single buffered, therefore we must synchronously upload the image from the
- * DeprecatedTextureHost in the layers transaction (i.e., in UpdateThebes).
+ * TextureHost in the layers transaction (i.e., in UpdateThebes).
  */
 class ContentHostSingleBuffered : public ContentHostTexture
 {

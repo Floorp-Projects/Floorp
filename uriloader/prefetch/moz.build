@@ -45,6 +45,5 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/content/base/src',
-    '/dom/events',
 ]
 

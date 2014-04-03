@@ -14,7 +14,7 @@
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"  // for CompositableType, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient, etc
+#include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsRect.h"                     // for nsIntRect
@@ -127,7 +127,7 @@ protected:
 /**
  * Image class to be used for async image uploads using the image bridge
  * protocol.
- * We store the ImageBridge id in the DeprecatedTextureClientIdentifier.
+ * We store the ImageBridge id in the TextureClientIdentifier.
  */
 class ImageClientBridge : public ImageClient
 {

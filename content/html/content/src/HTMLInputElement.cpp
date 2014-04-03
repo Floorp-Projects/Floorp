@@ -42,7 +42,6 @@
 #include "nsITextControlFrame.h"
 #include "nsIFrame.h"
 #include "nsRangeFrame.h"
-#include "nsEventStates.h"
 #include "nsIServiceManager.h"
 #include "nsError.h"
 #include "nsIEditor.h"
@@ -62,6 +61,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -5727,13 +5727,13 @@ HTMLInputElement::DoneCreatingElement()
   mShouldInitChecked = false;
 }
 
-nsEventStates
+EventStates
 HTMLInputElement::IntrinsicState() const
 {
   // If you add states here, and they're type-dependent, you need to add them
   // to the type case in AfterSetAttr.
 
-  nsEventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
+  EventStates state = nsGenericHTMLFormElementWithState::IntrinsicState();
   if (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO) {
     // Check current checked state (:checked)
     if (mChecked) {
@@ -5805,11 +5805,11 @@ HTMLInputElement::IntrinsicState() const
 }
 
 void
-HTMLInputElement::AddStates(nsEventStates aStates)
+HTMLInputElement::AddStates(EventStates aStates)
 {
   if (mType == NS_FORM_INPUT_TEXT) {
-    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
-                                         NS_EVENT_STATE_FOCUSRING));
+    EventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                       NS_EVENT_STATE_FOCUSRING));
     if (!focusStates.IsEmpty()) {
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {
@@ -5821,11 +5821,11 @@ HTMLInputElement::AddStates(nsEventStates aStates)
 }
 
 void
-HTMLInputElement::RemoveStates(nsEventStates aStates)
+HTMLInputElement::RemoveStates(EventStates aStates)
 {
   if (mType == NS_FORM_INPUT_TEXT) {
-    nsEventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
-                                         NS_EVENT_STATE_FOCUSRING));
+    EventStates focusStates(aStates & (NS_EVENT_STATE_FOCUS |
+                                       NS_EVENT_STATE_FOCUSRING));
     if (!focusStates.IsEmpty()) {
       HTMLInputElement* ownerNumberControl = GetOwnerNumberControl();
       if (ownerNumberControl) {

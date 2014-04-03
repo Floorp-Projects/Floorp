@@ -14,6 +14,7 @@
 #include "UIABridgePrivate.h"
 #include "MetroAppShell.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Preferences.h"  // for Preferences

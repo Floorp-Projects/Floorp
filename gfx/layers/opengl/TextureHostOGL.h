@@ -22,7 +22,7 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost, etc
+#include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -53,7 +53,6 @@ namespace layers {
 
 class Compositor;
 class CompositorOGL;
-class TextureImageDeprecatedTextureHostOGL;
 class TextureImageTextureSourceOGL;
 
 /**
@@ -129,7 +128,6 @@ public:
 
   virtual gfx::Matrix4x4 GetTextureTransform() { return gfx::Matrix4x4(); }
 
-  virtual TextureImageDeprecatedTextureHostOGL* AsTextureImageDeprecatedTextureHost() { return nullptr; }
   virtual TextureImageTextureSourceOGL* AsTextureImageTextureSource() { return nullptr; }
 
   void SetFilter(gl::GLContext* aGL, gfx::Filter aFilter)
@@ -485,130 +483,6 @@ protected:
   CompositorOGL* mCompositor;
   gfx::SurfaceStream* mStream;
   RefPtr<StreamTextureSourceOGL> mTextureSource;
-};
-
-/**
- * DeprecatedTextureHost implementation using a TextureImage as the underlying texture.
- */
-class TextureImageDeprecatedTextureHostOGL : public DeprecatedTextureHost
-                                           , public TextureSourceOGL
-                                           , public TileIterator
-{
-public:
-  TextureImageDeprecatedTextureHostOGL(gl::TextureImage* aTexImage = nullptr)
-    : mTexture(aTexImage)
-    , mGL(nullptr)
-    , mIterating(false)
-  {
-    MOZ_COUNT_CTOR(TextureImageDeprecatedTextureHostOGL);
-  }
-
-  ~TextureImageDeprecatedTextureHostOGL();
-
-  TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE
-  {
-    return this;
-  }
-
-  virtual TextureImageDeprecatedTextureHostOGL* AsTextureImageDeprecatedTextureHost() MOZ_OVERRIDE
-  {
-    return this;
-  }
-
-  // This is a hack that is here to not break on-main-thread ThebesLayerBuffer
-  // please do not use it anywhere else, use SetCompositor instead.
-  void SetGLContext(gl::GLContext* aGL)
-  {
-    mGL = aGL;
-  }
-
-  // DeprecatedTextureHost
-
-  void UpdateImpl(const SurfaceDescriptor& aImage,
-                  nsIntRegion* aRegion = nullptr,
-                  nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
-
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
-
-  virtual void EnsureBuffer(const nsIntSize& aSize, gfxContentType aType) MOZ_OVERRIDE;
-
-  virtual void CopyTo(const nsIntRect& aSourceRect,
-                      DeprecatedTextureHost *aDest,
-                      const nsIntRect& aDestRect) MOZ_OVERRIDE;
-
-  bool IsValid() const MOZ_OVERRIDE
-  {
-    return !!mTexture;
-  }
-
-  virtual bool Lock() MOZ_OVERRIDE;
-
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
-
-  // textureSource
-  void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) MOZ_OVERRIDE
-  {
-    mTexture->BindTexture(aTextureUnit);
-  }
-
-  gfx::IntSize GetSize() const MOZ_OVERRIDE;
-
-  GLenum GetWrapMode() const MOZ_OVERRIDE
-  {
-    return mTexture->GetWrapMode();
-  }
-
-  gl::TextureImage* GetTextureImage()
-  {
-    return mTexture;
-  }
-
-  void SetTextureImage(gl::TextureImage* aImage)
-  {
-    mTexture = aImage;
-  }
-
-  // TileIterator
-
-  TileIterator* AsTileIterator() MOZ_OVERRIDE
-  {
-    return this;
-  }
-
-  void BeginTileIteration() MOZ_OVERRIDE
-  {
-    mTexture->BeginTileIteration();
-    mIterating = true;
-  }
-
-  void EndTileIteration() MOZ_OVERRIDE
-  {
-    mIterating = false;
-  }
-
-  nsIntRect GetTileRect() MOZ_OVERRIDE;
-
-  size_t GetTileCount() MOZ_OVERRIDE
-  {
-    return mTexture->GetTileCount();
-  }
-
-  bool NextTile() MOZ_OVERRIDE
-  {
-    return mTexture->NextTile();
-  }
-
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
-  {
-    return DeprecatedTextureHost::GetFormat();
-  }
-
-  virtual const char* Name() { return "TextureImageDeprecatedTextureHostOGL"; }
-
-protected:
-  nsRefPtr<gl::TextureImage> mTexture;
-  gl::GLContext* mGL;
-  bool mIterating;
 };
 
 } // namespace

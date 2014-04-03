@@ -1,0 +1,3 @@
+#filter substitution
+#define VIEWTYPE TextSwitcher
+#include ThemedView.java.frag

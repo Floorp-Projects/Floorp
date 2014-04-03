@@ -68,6 +68,7 @@ public class Tab {
     private ErrorType mErrorType = ErrorType.NONE;
     private static final int MAX_HISTORY_LIST_SIZE = 50;
     private volatile int mLoadProgress;
+    private volatile int mRecordingCount = 0;
 
     public static final int STATE_DELAYED = 0;
     public static final int STATE_LOADING = 1;
@@ -813,5 +814,17 @@ public class Tab {
      */
     public int getLoadProgress() {
         return mLoadProgress;
+    }
+
+    public void setRecording(boolean isRecording) {
+        if (isRecording) {
+            mRecordingCount++;
+        } else {
+            mRecordingCount--;
+        }
+    }
+
+    public boolean isRecording() {
+        return mRecordingCount > 0;
     }
 }
