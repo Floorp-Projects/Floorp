@@ -25,7 +25,7 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef assembler_assembler_AssemblerBufferWithConstantPool_h
@@ -248,7 +248,7 @@ public:
         } dpun;
 
         dpun.d = constant;
-        
+
         m_pool[m_numConsts] = dpun.s.lo;
         m_pool[m_numConsts+1] = dpun.s.hi;
         m_mask[m_numConsts] = static_cast<char>(isReusable ? ReusableConst : UniqueConst);

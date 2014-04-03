@@ -625,7 +625,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   nsCOMPtr<nsIThreadRetargetableRequest> retargetable =
     do_QueryInterface(aRequest);
   if (httpChannel && retargetable &&
-      !(mIsMultiPartChannel && mImage)) {
+      ImageFactory::CanRetargetOnDataAvailable(mURI, mIsMultiPartChannel)) {
     nsAutoCString mimeType;
     nsresult rv = httpChannel->GetContentType(mimeType);
     if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {

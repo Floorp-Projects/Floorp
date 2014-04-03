@@ -1344,7 +1344,7 @@ class AssemblerX86Shared
     void pcmpeqw(const FloatRegister &lhs, const FloatRegister &rhs) {
         JS_ASSERT(HasSSE2());
         masm.pcmpeqw_rr(rhs.code(), lhs.code());
-    }    
+    }
     void movd(const Register &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.movd_rr(src.code(), dest.code());

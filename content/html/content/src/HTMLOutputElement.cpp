@@ -6,11 +6,11 @@
 #include "mozilla/dom/HTMLOutputElement.h"
 
 #include "mozAutoDocUpdate.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLOutputElementBinding.h"
 #include "nsContentUtils.h"
 #include "nsDOMSettableTokenList.h"
-#include "nsEventStates.h"
 #include "nsFormSubmission.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Output)
@@ -93,10 +93,10 @@ HTMLOutputElement::ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
                                                   aValue, aResult);
 }
 
-nsEventStates
+EventStates
 HTMLOutputElement::IntrinsicState() const
 {
-  nsEventStates states = nsGenericHTMLFormElement::IntrinsicState();
+  EventStates states = nsGenericHTMLFormElement::IntrinsicState();
 
   // We don't have to call IsCandidateForConstraintValidation()
   // because <output> can't be barred from constraint validation.

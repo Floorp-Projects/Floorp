@@ -282,14 +282,6 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
-  NotifyAudioAvailableEvent:                 { create: function (aName, aProps) {
-                                                         var e = document.createEvent("mozaudioavailableevent");
-                                                         e.initAudioAvailableEvent(aName, aProps.bubbles, aProps.cancelable,
-                                                                                   aProps.frameBuffer, aProps.frameBufferLength,
-                                                                                   aProps.time || 0.0, aProps.allowAudioData);
-                                                         return e;
-                                                       },
-                                             },
   NotifyPaintEvent:                          { create: function (aName, aProps) {
                                                          var e = document.createEvent("notifypaintevent");
                                                          e.initEvent(aName, aProps.bubbles, aProps.cancelable);

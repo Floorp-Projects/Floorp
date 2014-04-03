@@ -203,6 +203,85 @@ private:
   uint32_t mSteps;
 };
 
+} /* end css sub-namespace */
+
+struct AnimationPropertySegment
+{
+  float mFromKey, mToKey;
+  nsStyleAnimation::Value mFromValue, mToValue;
+  mozilla::css::ComputedTimingFunction mTimingFunction;
+};
+
+struct AnimationProperty
+{
+  nsCSSProperty mProperty;
+  InfallibleTArray<AnimationPropertySegment> mSegments;
+};
+
+/**
+ * Data about one animation (i.e., one of the values of
+ * 'animation-name') running on an element.
+ */
+struct StyleAnimation
+{
+  StyleAnimation()
+    : mIsRunningOnCompositor(false)
+    , mLastNotification(LAST_NOTIFICATION_NONE)
+  {
+  }
+
+  nsString mName; // empty string for 'none'
+  float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
+  uint8_t mDirection;
+  uint8_t mFillMode;
+  uint8_t mPlayState;
+
+  bool FillsForwards() const {
+    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
+           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_FORWARDS;
+  }
+  bool FillsBackwards() const {
+    return mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BOTH ||
+           mFillMode == NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
+  }
+
+  bool IsPaused() const {
+    return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
+  }
+
+  bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
+  bool IsRunningAt(mozilla::TimeStamp aTime) const;
+
+  // Return the duration, at aTime (or, if paused, mPauseStart), since
+  // the *end* of the delay period.  May be negative.
+  mozilla::TimeDuration ElapsedDurationAt(mozilla::TimeStamp aTime) const {
+    NS_ABORT_IF_FALSE(!IsPaused() || aTime >= mPauseStart,
+                      "if paused, aTime must be at least mPauseStart");
+    return (IsPaused() ? mPauseStart : aTime) - mStartTime - mDelay;
+  }
+
+  // The beginning of the delay period.  This is also used by
+  // ElementPropertyTransition in its IsRemovedSentinel and
+  // SetRemovedSentinel methods.
+  mozilla::TimeStamp mStartTime;
+  mozilla::TimeStamp mPauseStart;
+  mozilla::TimeDuration mDelay;
+  mozilla::TimeDuration mIterationDuration;
+  bool mIsRunningOnCompositor;
+
+  enum {
+    LAST_NOTIFICATION_NONE = uint32_t(-1),
+    LAST_NOTIFICATION_END = uint32_t(-2)
+  };
+  // One of the above constants, or an integer for the iteration
+  // whose start we last notified on.
+  uint32_t mLastNotification;
+
+  InfallibleTArray<AnimationProperty> mProperties;
+};
+
+namespace css {
+
 struct CommonElementAnimationData : public PRCList
 {
   CommonElementAnimationData(dom::Element *aElement, nsIAtom *aElementProperty,
@@ -279,13 +358,14 @@ struct CommonElementAnimationData : public PRCList
   // null, but mStyleRuleRefreshTime will still be valid.
   nsRefPtr<mozilla::css::AnimValuesStyleRule> mStyleRule;
 
-  // nsCSSFrameConstructor keeps track of the number of animation 'mini-flushes'
-  // (see nsTransitionManager::UpdateAllThrottledStyles()). mFlushCount is
-  // the last flush where a transition/animation changed. We keep a similar
-  // count on the corresponding layer so we can check that the layer is up to
-  // date with the animation manager.
+  // RestyleManager keeps track of the number of animation
+  // 'mini-flushes' (see nsTransitionManager::UpdateAllThrottledStyles()).
+  // mAnimationGeneration is the sequence number of the last flush where a
+  // transition/animation changed.  We keep a similar count on the
+  // corresponding layer so we can check that the layer is up to date with
+  // the animation manager.
   uint64_t mAnimationGeneration;
-  // Update mFlushCount to nsCSSFrameConstructor's count
+  // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateAnimationGeneration(nsPresContext* aPresContext);
 
   // The refresh time associated with mStyleRule.

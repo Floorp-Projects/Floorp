@@ -115,34 +115,6 @@ TextureHost::GetIPDLActor()
   return mActor;
 }
 
-// implemented in TextureOGL.cpp
-TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
-                                                           uint32_t aDeprecatedTextureHostFlags,
-                                                           uint32_t aTextureFlags);
-
-/* static */ TemporaryRef<DeprecatedTextureHost>
-DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
-                                           uint32_t aDeprecatedTextureHostFlags,
-                                           uint32_t aTextureFlags,
-                                           CompositableHost* aCompositableHost)
-{
-  switch (Compositor::GetBackend()) {
-    case LayersBackend::LAYERS_OPENGL:
-      {
-      RefPtr<DeprecatedTextureHost> result;
-      result = CreateDeprecatedTextureHostOGL(aDescriptorType,
-                                        aDeprecatedTextureHostFlags,
-                                        aTextureFlags);
-      if (aCompositableHost) {
-        result->SetCompositableBackendSpecificData(aCompositableHost->GetCompositableBackendSpecificData());
-      }
-      return result;
-      }
-    default:
-      MOZ_CRASH("Couldn't create texture host");
-  }
-}
-
 // implemented in TextureHostOGL.cpp
 TemporaryRef<TextureHost> CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                                                ISurfaceAllocator* aDeallocator,
@@ -293,80 +265,6 @@ TextureSource::TextureSource()
 TextureSource::~TextureSource()
 {
     MOZ_COUNT_DTOR(TextureSource);
-}
-
-DeprecatedTextureHost::DeprecatedTextureHost()
-  : mFlags(0)
-  , mBuffer(nullptr)
-  , mDeAllocator(nullptr)
-  , mFormat(gfx::SurfaceFormat::UNKNOWN)
-{
-  MOZ_COUNT_CTOR(DeprecatedTextureHost);
-}
-
-DeprecatedTextureHost::~DeprecatedTextureHost()
-{
-  if (mBuffer) {
-    if (!(mFlags & TEXTURE_DEALLOCATE_CLIENT)) {
-      if (mDeAllocator) {
-        mDeAllocator->DestroySharedSurface(mBuffer);
-      } else {
-        MOZ_ASSERT(mBuffer->type() == SurfaceDescriptor::Tnull_t);
-      }
-    }
-    delete mBuffer;
-  }
-  MOZ_COUNT_DTOR(DeprecatedTextureHost);
-}
-
-void
-DeprecatedTextureHost::Update(const SurfaceDescriptor& aImage,
-                          nsIntRegion* aRegion,
-                          nsIntPoint* aOffset)
-{
-  UpdateImpl(aImage, aRegion, aOffset);
-}
-
-void
-DeprecatedTextureHost::SwapTextures(const SurfaceDescriptor& aImage,
-                                SurfaceDescriptor* aResult,
-                                nsIntRegion* aRegion)
-{
-  SwapTexturesImpl(aImage, aRegion);
-
-  MOZ_ASSERT(mBuffer, "trying to swap a non-buffered texture host?");
-  if (aResult) {
-    *aResult = *mBuffer;
-  }
-  *mBuffer = aImage;
-  SetBuffer(mBuffer, mDeAllocator);
-}
-
-void
-DeprecatedTextureHost::OnShutdown()
-{
-  if (ISurfaceAllocator::IsShmem(mBuffer)) {
-    *mBuffer = SurfaceDescriptor();
-    mBuffer = nullptr;
-  }
-}
-
-void
-DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
-{
-  aTo += aPrefix;
-  aTo += nsPrintfCString("%s (0x%p)", Name(), this);
-  AppendToString(aTo, GetSize(), " [size=", "]");
-  AppendToString(aTo, GetFormat(), " [format=", "]");
-  AppendToString(aTo, mFlags, " [flags=", "]");
-}
-
-void
-DeprecatedTextureHost::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
-{
-  MOZ_ASSERT(!mBuffer || mBuffer == aBuffer, "Will leak the old mBuffer");
-  mBuffer = aBuffer;
-  mDeAllocator = aAllocator;
 }
 
 BufferTextureHost::BufferTextureHost(gfx::SurfaceFormat aFormat,
