@@ -309,6 +309,7 @@ nsresult imgFrame::Optimize()
 #ifdef XP_MACOSX
         mQuartzSurface = nullptr;
 #endif
+        mDrawSurface = nullptr;
 
         // We just dumped most of our allocated memory, so tell the discard
         // tracker that we're not using any at all.
@@ -368,6 +369,7 @@ nsresult imgFrame::Optimize()
     mImageSurface = surf;
     mVBuf = buf;
     mFormat = optFormat;
+    mDrawSurface = nullptr;
   }
 #else
   if (mOptSurface == nullptr)
@@ -383,6 +385,7 @@ nsresult imgFrame::Optimize()
 #ifdef XP_MACOSX
     mQuartzSurface = nullptr;
 #endif
+    mDrawSurface = nullptr;
   }
 
   return NS_OK;
@@ -500,11 +503,28 @@ bool imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
   NS_ASSERTION(!sourceRect.Intersect(subimage).IsEmpty(),
                "We must be allowed to sample *some* source pixels!");
 
-  nsRefPtr<gfxASurface> surf;
-  if (!mSinglePixel) {
-    surf = ThebesSurface();
-    if (!surf)
+  nsRefPtr<gfxASurface> surf = CachedThebesSurface();
+  VolatileBufferPtr<unsigned char> ref(mVBuf);
+  if (!mSinglePixel && !surf) {
+    if (ref.WasBufferPurged()) {
       return false;
+    }
+
+    surf = mDrawSurface;
+    if (!surf) {
+      long stride = gfxImageSurface::ComputeStride(mSize, mFormat);
+      nsRefPtr<gfxImageSurface> imgSurf =
+        new gfxImageSurface(ref, mSize, stride, mFormat);
+#if defined(XP_MACOSX)
+      surf = mDrawSurface = new gfxQuartzImageSurface(imgSurf);
+#else
+      surf = mDrawSurface = imgSurf;
+#endif
+    }
+    if (!surf || surf->CairoStatus()) {
+      mDrawSurface = nullptr;
+      return true;
+    }
   }
 
   bool doTile = !imageRect.Contains(sourceRect) &&
