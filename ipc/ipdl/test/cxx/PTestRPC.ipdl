@@ -15,12 +15,12 @@ parent:
 
 child:
     async Start();
-    urgent Test1_InnerQuery() returns (uint32_t result);
-    urgent Test1_NoReenter() returns (uint32_t result);
-    urgent Test2_FirstUrgent();
-    urgent Test2_SecondUrgent();
-    urgent Test3_WakeUp() returns (uint32_t result);
-    urgent Test4_WakeUp() returns (uint32_t result);
+    rpc Test1_InnerQuery() returns (uint32_t result);
+    rpc Test1_NoReenter() returns (uint32_t result);
+    rpc Test2_FirstUrgent();
+    rpc Test2_SecondUrgent();
+    rpc Test3_WakeUp() returns (uint32_t result);
+    rpc Test4_WakeUp() returns (uint32_t result);
 };
 
 } // namespace _ipdltest
