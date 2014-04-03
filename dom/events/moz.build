@@ -25,6 +25,7 @@ EXPORTS.mozilla += [
     'InternalMutationEvent.h',
     'JSEventHandler.h',
     'KeyNameList.h',
+    'TextComposition.h',
     'VirtualKeyCodeList.h',
 ]
 
