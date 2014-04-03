@@ -13,10 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'content_events'
 
-EXPORTS += [
-    'nsEventStates.h',
-]
-
 EXPORTS.mozilla += [
     'AsyncEventDispatcher.h',
     'DOMEventTargetHelper.h',
@@ -24,6 +20,7 @@ EXPORTS.mozilla += [
     'EventListenerManager.h',
     'EventNameList.h',
     'EventStateManager.h',
+    'EventStates.h',
     'IMEStateManager.h',
     'InternalMutationEvent.h',
     'JSEventHandler.h',

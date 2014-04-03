@@ -46,6 +46,7 @@
 #include "ImageContainer.h"
 #include "nsCanvasFrame.h"
 #include "StickyScrollContainer.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "ActiveLayerTracker.h"
@@ -2556,7 +2557,7 @@ nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
 
 bool nsDisplayThemedBackground::IsWindowActive()
 {
-  nsEventStates docState = mFrame->GetContent()->OwnerDoc()->GetDocumentState();
+  EventStates docState = mFrame->GetContent()->OwnerDoc()->GetDocumentState();
   return !docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
 }
 

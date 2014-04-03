@@ -62,6 +62,7 @@
 #include "nsIChannelEventSink.h"
 #include "imgIRequest.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/DOMImplementation.h"
 #include "nsIDOMTouchEvent.h"
@@ -842,8 +843,10 @@ public:
   virtual void SetReadyStateInternal(ReadyState rs) MOZ_OVERRIDE;
 
   virtual void ContentStateChanged(nsIContent* aContent,
-                                   nsEventStates aStateMask) MOZ_OVERRIDE;
-  virtual void DocumentStatesChanged(nsEventStates aStateMask) MOZ_OVERRIDE;
+                                   mozilla::EventStates aStateMask)
+                                     MOZ_OVERRIDE;
+  virtual void DocumentStatesChanged(
+                 mozilla::EventStates aStateMask) MOZ_OVERRIDE;
 
   virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aOldStyleRule,
@@ -1066,7 +1069,7 @@ public:
 
   virtual nsISupports* GetCurrentContentSink() MOZ_OVERRIDE;
 
-  virtual nsEventStates GetDocumentState() MOZ_OVERRIDE;
+  virtual mozilla::EventStates GetDocumentState() MOZ_OVERRIDE;
 
   virtual void RegisterHostObjectUri(const nsACString& aUri) MOZ_OVERRIDE;
   virtual void UnregisterHostObjectUri(const nsACString& aUri) MOZ_OVERRIDE;
@@ -1523,8 +1526,8 @@ public:
 
   nsCOMPtr<nsIContent> mFirstBaseNodeWithHref;
 
-  nsEventStates mDocumentState;
-  nsEventStates mGotDocumentState;
+  mozilla::EventStates mDocumentState;
+  mozilla::EventStates mGotDocumentState;
 
   nsRefPtr<nsDOMNavigationTiming> mTiming;
 private:
