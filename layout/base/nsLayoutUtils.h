@@ -10,6 +10,7 @@
 #include "nsChangeHint.h"
 #include "nsAutoPtr.h"
 #include "nsFrameList.h"
+#include "mozilla/layout/FrameChildList.h"
 #include "nsThreadUtils.h"
 #include "nsIPrincipal.h"
 #include "GraphicsFilter.h"
@@ -1899,11 +1900,14 @@ public:
   }
 
   /**
-   * Unions the overflow areas of all non-popup children of aFrame with
-   * aOverflowAreas.
+   * Unions the overflow areas of the children of aFrame with aOverflowAreas.
+   * aSkipChildLists specifies any child lists that should be skipped.
+   * kSelectPopupList and kPopupList are always skipped.
    */
   static void UnionChildOverflow(nsIFrame* aFrame,
-                                 nsOverflowAreas& aOverflowAreas);
+                                 nsOverflowAreas& aOverflowAreas,
+                                 mozilla::layout::FrameChildListIDs aSkipChildLists =
+                                     mozilla::layout::FrameChildListIDs());
 
   /**
    * Return the font size inflation *ratio* for a given frame.  This is
