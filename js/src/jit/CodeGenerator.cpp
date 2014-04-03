@@ -1742,14 +1742,11 @@ class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator>
 bool
 CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier *ool)
 {
-    saveLive(ool->lir());
+    saveLiveVolatile(ool->lir());
 
     const LAllocation *obj = ool->object();
 
-    GeneralRegisterSet regs;
-    regs.add(CallTempReg0);
-    regs.add(CallTempReg1);
-    regs.add(CallTempReg2);
+    GeneralRegisterSet regs = GeneralRegisterSet::Volatile();
 
     Register objreg;
     bool isGlobal = false;
@@ -1772,7 +1769,7 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     masm.passABIArg(objreg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun));
 
-    restoreLive(ool->lir());
+    restoreLiveVolatile(ool->lir());
 
     masm.jump(ool->rejoin());
     return true;
