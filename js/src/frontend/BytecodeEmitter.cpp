@@ -4937,8 +4937,13 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     unsigned index = bce->objectList.add(pn->pn_funbox);
 
     /* Non-hoisted functions simply emit their respective op. */
-    if (!pn->functionIsHoisted())
+    if (!pn->functionIsHoisted()) {
+        /* JSOP_LAMBDA_ARROW is always preceded by JSOP_THIS. */
+        MOZ_ASSERT(fun->isArrow() == (pn->getOp() == JSOP_LAMBDA_ARROW));
+        if (fun->isArrow() && Emit1(cx, bce, JSOP_THIS) < 0)
+            return false;
         return EmitIndex32(cx, pn->getOp(), index, bce);
+    }
 
     /*
      * For a script we emit the code as we parse. Thus the bytecode for

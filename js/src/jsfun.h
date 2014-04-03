@@ -52,6 +52,7 @@ class JSFunction : public JSObject
 
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
+        NATIVE_LAMBDA_FUN = NATIVE_FUN | LAMBDA,
         INTERPRETED_LAMBDA = INTERPRETED | LAMBDA,
         INTERPRETED_LAMBDA_ARROW = INTERPRETED | LAMBDA | ARROW
     };

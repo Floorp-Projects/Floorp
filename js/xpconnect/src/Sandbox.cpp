@@ -177,7 +177,7 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedId id(cx);
-    if (!JS_ValueToId(cx, StringValue(funname), &id))
+    if (!JS_StringToId(cx, funname, &id))
         return false;
 
     // We need to resolve the this object, because this function is used
@@ -299,9 +299,7 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
             if (!funName)
                 funName = JS_InternString(cx, "");
 
-            RootedValue vname(cx);
-            vname.setString(funName);
-            if (!JS_ValueToId(cx, vname, &id))
+            if (!JS_StringToId(cx, funName, &id))
                 return false;
         }
         MOZ_ASSERT(JSID_IS_STRING(id));
@@ -1841,7 +1839,8 @@ xpc::NewFunctionForwarder(JSContext *cx, HandleObject callable, bool doclone,
                           MutableHandleValue vp)
 {
     RootedId emptyId(cx);
-    if (!JS_ValueToId(cx, JS_GetEmptyStringValue(cx), &emptyId))
+    RootedValue emptyStringValue(cx, JS_GetEmptyStringValue(cx));
+    if (!JS_ValueToId(cx, emptyStringValue, &emptyId))
         return false;
 
     return NewFunctionForwarder(cx, emptyId, callable, doclone, vp);

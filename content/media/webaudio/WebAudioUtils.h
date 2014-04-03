@@ -19,7 +19,6 @@ typedef struct SpeexResamplerState_ SpeexResamplerState;
 namespace mozilla {
 
 class AudioNodeStream;
-class MediaStream;
 
 namespace dom {
 
@@ -210,7 +209,13 @@ struct WebAudioUtils {
                         uint32_t aChannel,
                         const int16_t* aIn, uint32_t* aInLen,
                         float* aOut, uint32_t* aOutLen);
-};
+
+  static int
+  SpeexResamplerProcess(SpeexResamplerState* aResampler,
+                        uint32_t aChannel,
+                        const int16_t* aIn, uint32_t* aInLen,
+                        int16_t* aOut, uint32_t* aOutLen);
+  };
 
 }
 }
