@@ -78,7 +78,7 @@ public:
   virtual nsresult PostHandleEvent(
                      mozilla::EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
   nsresult Clone(nsINodeInfo*, nsINode**) const MOZ_OVERRIDE;
-  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
+  virtual mozilla::EventStates IntrinsicState() const MOZ_OVERRIDE;
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
 
   // Set during reflow as necessary. Does a style change notification,
