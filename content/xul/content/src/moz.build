@@ -22,7 +22,6 @@ LOCAL_INCLUDES += [
     '/content/html/content/src',
     '/content/xml/content/src',
     '/content/xml/document/src',
-    '/dom/events',
     '/dom/xbl',
     '/layout/generic',
     '/layout/style',
