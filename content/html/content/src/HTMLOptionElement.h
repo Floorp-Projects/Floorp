@@ -61,7 +61,7 @@ public:
                               bool aNullParent = true) MOZ_OVERRIDE;
 
   // nsIContent
-  virtual nsEventStates IntrinsicState() const MOZ_OVERRIDE;
+  virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
 
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 

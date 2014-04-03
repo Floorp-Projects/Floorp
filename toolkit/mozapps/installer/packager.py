@@ -248,6 +248,12 @@ def main():
                         help='Transform errors into warnings.')
     parser.add_argument('--minify', action='store_true', default=False,
                         help='Make some files more compact while packaging')
+    parser.add_argument('--minify-js', action='store_true',
+                        help='Minify JavaScript files while packaging.')
+    parser.add_argument('--js-binary',
+                        help='Path to js binary. This is used to verify '
+                        'minified JavaScript. If this is not defined, '
+                        'minification verification will not be performed.')
     parser.add_argument('--jarlog', default='', help='File containing jar ' +
                         'access logs')
     parser.add_argument('--optimizejars', action='store_true', default=False,
@@ -311,12 +317,22 @@ def main():
         launcher.tooldir = buildconfig.substs['LIBXUL_DIST']
 
     with errors.accumulate():
+        finder_args = dict(
+            minify=args.minify,
+            minify_js=args.minify_js,
+        )
+        if args.js_binary:
+            finder_args['minify_js_verify_command'] = [
+                args.js_binary,
+                os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                    'js-compare-ast.js')
+            ]
         if args.unify:
             finder = UnifiedBuildFinder(FileFinder(args.source),
                                         FileFinder(args.unify),
-                                        minify=args.minify)
+                                        **finder_args)
         else:
-            finder = FileFinder(args.source, minify=args.minify)
+            finder = FileFinder(args.source, **finder_args)
         if 'NO_PKG_FILES' in os.environ:
             sinkformatter = NoPkgFilesRemover(formatter,
                                               args.manifest is not None)

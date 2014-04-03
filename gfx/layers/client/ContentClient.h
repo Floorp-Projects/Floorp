@@ -19,7 +19,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
-#include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient
+#include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsPoint.h"                    // for nsIntPoint
@@ -304,10 +304,10 @@ protected:
 };
 
 /**
- * A double buffered ContentClient. mDeprecatedTextureClient is the back buffer, which
+ * A double buffered ContentClient. mTextureClient is the back buffer, which
  * we draw into. mFrontClient is the front buffer which we may read from, but
  * not write to, when the compositor does not have the 'soft' lock. We can write
- * into mDeprecatedTextureClient at any time.
+ * into mTextureClient at any time.
  *
  * The ContentHost keeps a reference to both corresponding texture hosts, in
  * response to our UpdateTextureRegion message, the compositor swaps its

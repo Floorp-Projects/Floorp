@@ -336,10 +336,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'thebes'
 
-LOCAL_INCLUDES += [
-    '/dom/events',
-]
-
 if CONFIG['MOZ_DEBUG']:
     DEFINES['D3D_DEBUG_INFO'] = True
 

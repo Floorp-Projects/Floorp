@@ -9,8 +9,9 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/dom/HTMLLinkElementBinding.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/HTMLLinkElementBinding.h"
 #include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -418,7 +419,7 @@ HTMLLinkElement::GetCORSMode() const
   return AttrValueToCORSMode(GetParsedAttr(nsGkAtoms::crossorigin)); 
 }
 
-nsEventStates
+EventStates
 HTMLLinkElement::IntrinsicState() const
 {
   return Link::LinkState() | nsGenericHTMLElement::IntrinsicState();

@@ -79,7 +79,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '../shared',
-    '/dom/events',
     '/layout/base',
     '/layout/forms',
     '/layout/generic',
