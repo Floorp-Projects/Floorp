@@ -141,8 +141,8 @@ addAsyncTest(function *() {
   yield waitForPaints();
 
   advance_clock(200000);
-  compareTransform(gDiv, { tx: 100 * 2 / 3 }, RunningOn.Compositor,
-                   "OMTA animation is animating as expected");
+  omta_is("transform", { tx: 100 * 2 / 3 }, RunningOn.Compositor,
+          "OMTA animation is animating as expected");
   done_div();
 });
 
@@ -165,19 +165,19 @@ function *testFillMode(fillMode, fillsBackwards, fillsForwards)
   yield waitForPaints();
 
   if (fillsBackwards)
-    compareTransform(gDiv, { tx: 0 }, RunningOn.MainThread,
-                     desc + "does affect value during delay (0s)");
+    omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+            desc + "does affect value during delay (0s)");
   else
-    compareTransform(gDiv, { tx: 30 }, RunningOn.MainThread,
-                     desc + "doesn't affect value during delay (0s)");
+    omta_is("transform", { tx: 30 }, RunningOn.MainThread,
+            desc + "doesn't affect value during delay (0s)");
 
   advance_clock(2000);
   if (fillsBackwards)
-    compareTransform(gDiv, { tx: 0 }, RunningOn.MainThead,
-                     desc + "does affect value during delay (0s)");
+    omta_is("transform", { tx: 0 }, RunningOn.MainThead,
+            desc + "does affect value during delay (0s)");
   else
-    compareTransform(gDiv, { tx: 30 }, RunningOn.MainThread,
-                     desc + "does affect value during delay (0s)");
+    omta_is("transform", { tx: 30 }, RunningOn.MainThread,
+            desc + "does affect value during delay (0s)");
 
   check_events([], "before start in testFillMode");
   advance_clock(1000);
@@ -195,27 +195,27 @@ function *testFillMode(fillMode, fillsBackwards, fillsForwards)
   // As a result we look for this first sample on either the compositor or the
   // computed style
   yield waitForPaints();
-  compareTransform(gDiv, { tx: 0 }, RunningOn.Either,
-                   desc + "affects value at start of animation");
+  omta_is("transform", { tx: 0 }, RunningOn.Either,
+          desc + "affects value at start of animation");
   advance_clock(125);
   // We might not add the animation to compositor until the second sample (due
   // to the optimizations mentioned above) so we should wait for paints before
   // proceeding
   yield waitForPaints();
-  compareTransform(gDiv, { tx: 2 }, RunningOn.Compositor,
-                   desc + "affects value during animation");
+  omta_is("transform", { tx: 2 }, RunningOn.Compositor,
+          desc + "affects value during animation");
   advance_clock(2375);
-  compareTransform(gDiv, { tx: 40 }, RunningOn.Compositor,
-                   desc + "affects value during animation");
+  omta_is("transform", { tx: 40 }, RunningOn.Compositor,
+          desc + "affects value during animation");
   advance_clock(2500);
-  compareTransform(gDiv, { tx: 80 }, RunningOn.Compositor,
-                   desc + "affects value during animation");
+  omta_is("transform", { tx: 80 }, RunningOn.Compositor,
+          desc + "affects value during animation");
   advance_clock(2500);
-  compareTransform(gDiv, { tx: 90 }, RunningOn.Compositor,
-                   desc + "affects value during animation");
+  omta_is("transform", { tx: 90 }, RunningOn.Compositor,
+          desc + "affects value during animation");
   advance_clock(2375);
-  compareTransform(gDiv, { tx: 99.5 }, RunningOn.Compositor,
-                   desc + "affects value during animation");
+  omta_is("transform", { tx: 99.5 }, RunningOn.Compositor,
+          desc + "affects value during animation");
   check_events([], "before end in testFillMode");
   advance_clock(125);
   check_events([{ type: "animationend", target: gDiv,
@@ -230,15 +230,15 @@ function *testFillMode(fillMode, fillsBackwards, fillsForwards)
   // appear on the compositor thread.
   yield waitForPaints();
   if (fillsForwards)
-    compareTransform(gDiv, { tx: 100 }, RunningOn.MainThread,
-                     desc + "affects value at end of animation");
+    omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+            desc + "affects value at end of animation");
   advance_clock(10);
   if (fillsForwards)
-    compareTransform(gDiv, { tx: 100 }, RunningOn.MainThread,
-                     desc + "affects value after animation");
+    omta_is("transform", { tx: 100 }, RunningOn.MainThread,
+            desc + "affects value after animation");
   else
-    compareTransform(gDiv, { tx: 30 }, RunningOn.MainThread,
-                     desc + "does not affect value after animation");
+    omta_is("transform", { tx: 30 }, RunningOn.MainThread,
+            desc + "does not affect value after animation");
 
   done_div();
 }
@@ -334,7 +334,7 @@ function waitForPaints() {
 
 //----------------------------------------------------------------------
 //
-// Helper functions for working with transform values
+// Helper functions for working with animated values
 //
 //----------------------------------------------------------------------
 
@@ -344,78 +344,95 @@ const RunningOn = {
   Either: 2
 };
 
-function compareTransform(elem, expected, runningOn, desc) {
+function omta_is(property, expected, runningOn, desc) {
+  return omta_is_approx(property, expected, runningOn, 0, desc);
+}
+
+function omta_is_approx(property, expected, runningOn, tolerance, desc) {
+  // Check input
+  const omtaProperties = [ "transform", "opacity" ];
+  if (omtaProperties.indexOf(property) === -1) {
+    ok(false, property + " is not an OMTA property");
+    return;
+  }
+  var isTransform = property == "transform";
+  var normalize = isTransform ? convertTo3dMatrix : parseFloat;
+  var compare = isTransform ?
+                matricesRoughlyEqual :
+                function(a, b, error) { return Math.abs(a - b) <= error; };
+  var normalizedToString = isTransform ?
+                           convert3dMatrixToString :
+                           JSON.stringify;
+
   // Get actual values
-  var compositorTransform =
-    SpecialPowers.DOMWindowUtils.getOMTAStyle(elem, "transform");
-  var computedTransform = window.getComputedStyle(elem).transform;
+  var compositorStr = SpecialPowers.DOMWindowUtils.getOMTAStyle(gDiv, property);
+  var computedStr   = window.getComputedStyle(gDiv)[property];
 
   // Prepare expected value
-  var expectedMatrix = convertTo3dMatrix(expected);
-  if (!expectedMatrix) {
+  var expectedValue = normalize(expected);
+  if (expectedValue === null) {
     ok(false, desc + ": test author should provide a valid 'expected' value" +
               " - got " + expected.toString());
     return;
   }
 
   // Check expected value appears in the right place
-  var actualTransform;
+  var actualStr;
   switch (runningOn) {
     case RunningOn.Either:
-      runningOn = compositorTransform ?
+      runningOn = compositorStr !== "" ?
                   RunningOn.Compositor :
                   RunningOn.MainThread;
-      actualTransform = compositorTransform || computedTransform;
+      actualStr = compositorStr !== "" ? compositorStr : computedStr;
       break;
 
     case RunningOn.Compositor:
-      if (!compositorTransform) {
+      if (compositorStr === "") {
         ok(false, desc + ": should be animating on compositor");
         return;
       }
-      actualTransform = compositorTransform;
+      actualStr = compositorStr;
       break;
 
     default:
-      if (compositorTransform) {
+      if (compositorStr !== "") {
         ok(false, desc + ": should NOT be animating on compositor");
         return;
       }
-      actualTransform = computedTransform;
+      actualStr = computedStr;
       break;
   }
 
-  // Compare animated matrix with expected
-  var actualMatrix = convertTo3dMatrix(actualTransform);
-  if (!actualMatrix) {
-    ok(false, desc + ": should return a valid transform spec"
-       + " - got " + actualTransform);
+  // Compare animated value with expected
+  var actualValue = normalize(actualStr);
+  if (actualValue === null) {
+    ok(false, desc + ": should return a valid result - got " + actualStr);
     return;
   }
-  ok(matricesRoughlyEqual(expectedMatrix, actualMatrix),
-     desc + " - got " + actualTransform + ", expected " +
-     convert3dMatrixToString(expectedMatrix));
+  ok(compare(expectedValue, actualValue, tolerance),
+     desc + " - got " + actualStr + ", expected " +
+     normalizedToString(expectedValue));
 
-  // For compositor animations do an additional check that they roughly match
+  // For compositor animations do an additional check that they match
   // the value calculated on the main thread
   if (runningOn === RunningOn.Compositor) {
-    var computedMatrix = convertTo3dMatrix(computedTransform);
-    if (!computedMatrix) {
+    var computedValue = normalize(computedStr);
+    if (computedValue === null) {
       ok(false, desc + ": test framework should parse computed style" +
-                " - got " + computedTransform);
+                " - got " + computedStr);
       return;
     }
-    ok(matricesRoughlyEqual(computedMatrix, actualMatrix),
-       desc + ": OMTA style and computed style should be roughly equal" +
-       " - OMTA " + actualTransform + ", computed " + computedTransform);
+    ok(compare(computedValue, actualValue, 0),
+       desc + ": OMTA style and computed style should be equal" +
+       " - OMTA " + actualStr + ", computed " + computedStr);
   }
 }
 
-function matricesRoughlyEqual(a, b) {
-  const epsilon = 0.0001;
+function matricesRoughlyEqual(a, b, tolerance) {
+  tolerance = tolerance || 0.0001;
   for (var i = 0; i < 4; i++) {
     for (var j = 0; j < 4; j++) {
-      if (Math.abs(a[i][j] - b[i][j]) > epsilon)
+      if (Math.abs(a[i][j] - b[i][j]) > tolerance)
         return false;
     }
   }
@@ -444,6 +461,8 @@ function convertTo3dMatrix(matrixLike) {
 // Converts strings of the format "matrix(...)" and "matrix3d(...)" to a 3d
 // matrix
 function convertStringTo3dMatrix(str) {
+  if (str == "none")
+    return convertArrayTo3dMatrix([1, 0, 0, 1, 0, 0]);
   var result = str.match("^matrix(3d)?\\(");
   if (result === null)
     return null;
