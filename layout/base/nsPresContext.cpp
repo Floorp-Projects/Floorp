@@ -74,19 +74,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
-// BEGIN temporary diagnostic stuff for bug 946929
-struct PCLink;
-static PCLink* sTopPCLink;
-struct PCLink {
-  PCLink(const char* w, nsPresContext* aPC)
-    : prev(sTopPCLink), pc(aPC), where(w) { sTopPCLink = this; }
-  ~PCLink() { sTopPCLink = prev; }
-  PCLink* prev;
-  nsPresContext* pc;
-  const char* where;
-};
-// END temporary diagnostic stuff for bug 946929
-
 uint8_t gNotifySubDocInvalidationData;
 
 /**
@@ -140,63 +127,11 @@ nsPresContext::MakeColorPref(const nsString& aColor)
     : NS_RGB(0, 0, 0);
 }
 
-static void DumpPresContextState(nsPresContext* aPC)
-{
-  printf_stderr("PresContext(%p) %s", aPC, aPC->IsRoot()?"ROOT ":"");
-  nsIURI* uri = aPC->Document()->GetDocumentURI();
-  if (uri) {
-    nsAutoCString uriSpec;
-    nsresult rv = uri->GetSpec(uriSpec);
-    if (NS_SUCCEEDED(rv)) {
-      printf_stderr("%s ", uriSpec.get());
-    }
-  }
-  nsIPresShell* shell = aPC->GetPresShell();
-  if (shell) {
-    printf_stderr("PresShell - IsDestroying(%i) IsFrozen(%i) IsActive(%i) IsVisible(%i) IsNeverPainting(%i) GetRootFrame(%p)",
-                  shell->IsDestroying(),
-                  shell->IsFrozen(),
-                  shell->IsActive(),
-                  shell->IsVisible(),
-                  shell->IsNeverPainting(),
-                  shell->GetRootFrame());
-  }
-  printf_stderr("\n");
-}
-
 bool
 nsPresContext::IsDOMPaintEventPending()
 {
   if (mFireAfterPaintEvents) {
     return true;
-  }
-  if (!GetDisplayRootPresContext() ||
-      !GetDisplayRootPresContext()->GetRootPresContext()) {
-    printf_stderr("Failed to find root pres context, dumping pres context and ancestors\n");
-    for (PCLink* p = sTopPCLink; p; p = p->prev) {
-      printf_stderr("%s %p ", p->where, p->pc);
-    }
-    if (sTopPCLink) printf_stderr("\n");
-    nsPresContext* pc = this;
-    for (;;) {
-      DumpPresContextState(pc);
-      nsPresContext* parent = pc->GetParentPresContext();
-      if (!parent) {
-        nsIDocument* doc = pc->Document();
-        if (doc) {
-          doc = doc->GetParentDocument();
-          if (doc) {
-            nsIPresShell* shell = doc->GetShell();
-            if (shell) {
-              parent = shell->GetPresContext();
-            }
-          }
-        }
-      }
-      if (!parent || parent == pc)
-        break;
-      pc = parent;
-    }
   }
   if (GetDisplayRootPresContext()->GetRootPresContext()->mRefreshDriver->ViewManagerFlushIsPending()) {
     // Since we're promising that there will be a MozAfterPaint event
@@ -220,7 +155,6 @@ nsPresContext::PrefChangedCallback(const char* aPrefName, void* instance_data)
     presContext->PreferenceChanged(aPrefName);
   }
 }
-
 
 void
 nsPresContext::PrefChangedUpdateTimerCallback(nsITimer *aTimer, void *aClosure)
@@ -314,9 +248,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
 
 nsPresContext::~nsPresContext()
 {
-  if (sTopPCLink) {
-    printf_stderr("~nsPresContext %p %p\n", this, mShell);
-  }
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nullptr);
 
@@ -2463,7 +2394,6 @@ NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
   if (shell) {
     nsPresContext* pc = shell->GetPresContext();
     if (pc) {
-      PCLink pcl("NotifyDidPaintSubdocumentCallback", pc);
       pc->NotifyDidPaintForSubtree(closure->mFlags);
       if (pc->IsDOMPaintEventPending()) {
         closure->mNeedsAnotherDidPaintNotification = true;
@@ -3060,7 +2990,6 @@ NotifyDidPaintForSubtreeCallback(nsITimer *aTimer, void *aClosure)
   nsAutoScriptBlocker blockScripts;
   // This is a fallback if we don't get paint events for some reason
   // so we'll just pretend both layer painting and compositing happened.
-  PCLink pcl("NotifyDidPaintForSubtreeCallback", presContext);
   presContext->NotifyDidPaintForSubtree(
       nsIPresShell::PAINT_LAYERS | nsIPresShell::PAINT_COMPOSITE);
 }
