@@ -22,11 +22,14 @@ public:
     MOZ_COUNT_CTOR(CameraControlListener);
   }
 
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
   virtual ~CameraControlListener()
   {
     MOZ_COUNT_DTOR(CameraControlListener);
   }
 
+public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CameraControlListener);
 
   enum HardwareState

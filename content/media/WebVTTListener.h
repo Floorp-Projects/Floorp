@@ -46,6 +46,10 @@ public:
   nsresult LoadResource();
 
 private:
+  // List of error codes returned from the WebVTT parser that we care about.
+  enum ErrorCodes {
+    BadSignature = 0
+  };
   static NS_METHOD ParseChunk(nsIInputStream* aInStream, void* aClosure,
                               const char* aFromSegment, uint32_t aToOffset,
                               uint32_t aCount, uint32_t* aWriteCount);

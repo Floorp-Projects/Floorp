@@ -39,6 +39,14 @@ public:
         int samplingFreqHz,
         int current_delay_ms);
 
+    // Insertion of far-end data as actually played out to the OS audio driver
+    virtual int ExternalPlayoutData(
+        int16_t speechData10ms[],
+        int samplingFreqHz,
+        int num_channels,
+        int current_delay_ms,
+        int& lengthSamples);
+
     virtual int ExternalPlayoutGetData(int16_t speechData10ms[],
                                        int samplingFreqHz,
                                        int current_delay_ms,

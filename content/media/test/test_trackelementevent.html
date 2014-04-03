@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 882677 - Implement the 'sourcing out of band text tracks' algorithm</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
+                                   ["media.webvtt.regions.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
+    video.src = "seek.webm";
+    video.preload = "auto";
+
+    var trackOne = document.createElement("track");
+    trackOne.src = "basic.vtt";
+    trackOne.kind = "subtitles";
+
+    var trackTwo = document.createElement("track");
+    trackTwo.src = "bad-signature.vtt";
+    trackTwo.kind = "captions";
+
+    var trackThree = document.createElement("track");
+    trackThree.src = "bad.vtt";
+    trackThree.kind = "chapters";
+
+    var events = 0;
+    function countEvent() {
+      ok(true, "A loaded or error event should have happened.");
+      events++ && events == 3 && SimpleTest.finish();
+    }
+
+    function shouldNotBeCalled() {
+      ok(false, "Event should not have been called.");
+    }
+
+    trackOne.addEventListener("loaded", countEvent);
+    trackOne.addEventListener("error", shouldNotBeCalled)
+    trackTwo.addEventListener("loaded", shouldNotBeCalled);
+    trackTwo.addEventListener("error", countEvent);
+    trackThree.addEventListener("loaded", shouldNotBeCalled);
+    trackThree.addEventListener("error", countEvent);
+
+    document.getElementById("content").appendChild(video);
+    video.appendChild(trackOne);
+    video.appendChild(trackTwo);
+    video.appendChild(trackThree);
+  }
+);
+</script>
+</pre>
+</body>
+</html>
+

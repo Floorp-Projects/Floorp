@@ -809,6 +809,7 @@
   ERROR(NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR,  FAILURE(3)),
   ERROR(NS_ERROR_DOM_FILEHANDLE_ABORT_ERR,                FAILURE(4)),
   ERROR(NS_ERROR_DOM_FILEHANDLE_READ_ONLY_ERR,            FAILURE(5)),
+  ERROR(NS_ERROR_DOM_FILEHANDLE_QUOTA_ERR,                FAILURE(6)),
 #undef MODULE
 
   /* ======================================================================= */
