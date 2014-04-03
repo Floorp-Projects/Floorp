@@ -1,0 +1,3 @@
+#filter substitution
+#define VIEWTYPE RelativeLayout
+#include ThemedView.java.frag

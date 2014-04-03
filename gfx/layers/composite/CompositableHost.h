@@ -46,7 +46,6 @@ struct TiledLayerProperties
 };
 
 class Layer;
-class DeprecatedTextureHost;
 class SurfaceDescriptor;
 class Compositor;
 class ISurfaceAllocator;
@@ -160,12 +159,6 @@ public:
                          TiledLayerProperties* aLayerProperties = nullptr) = 0;
 
   /**
-   * @return true if we should schedule a composition.
-   */
-  virtual bool Update(const SurfaceDescriptor& aImage,
-                      SurfaceDescriptor* aResult = nullptr);
-
-  /**
    * Update the content host.
    * aUpdated is the region which should be updated
    * aUpdatedRegionBack is the region in aNewBackResult which has been updated
@@ -216,8 +209,6 @@ public:
   {
     MOZ_ASSERT(false, "should be implemented or not used");
   }
-
-  virtual DeprecatedTextureHost* GetDeprecatedTextureHost() { return nullptr; }
 
   /**
    * Returns the front buffer.
@@ -296,7 +287,6 @@ public:
   virtual void Dump(FILE* aFile=nullptr,
                     const char* aPrefix="",
                     bool aDumpHtml=false) { }
-  static void DumpDeprecatedTextureHost(FILE* aFile, DeprecatedTextureHost* aTexture);
   static void DumpTextureHost(FILE* aFile, TextureHost* aTexture);
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() { return nullptr; }

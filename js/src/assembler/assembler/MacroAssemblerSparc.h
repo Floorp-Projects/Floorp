@@ -187,12 +187,12 @@ namespace JSC {
             // The last 5 bit of imm.m_value will be used anyway.
             m_assembler.sra_imm(dest, imm.m_value, dest);
         }
-    
+
         void urshift32(RegisterID shift_amount, RegisterID dest)
         {
             m_assembler.srl_r(dest, shift_amount, dest);
         }
-    
+
         void urshift32(Imm32 imm, RegisterID dest)
         {
             // No need to check if imm.m_value.
@@ -326,7 +326,7 @@ namespace JSC {
             add32(Imm32(address.offset), SparcRegisters::g2);
             m_assembler.lduh_r(address.base, SparcRegisters::g2, dest);
         }
-    
+
         void load16(ImplicitAddress address, RegisterID dest)
         {
             if (m_assembler.isimm13(address.offset))

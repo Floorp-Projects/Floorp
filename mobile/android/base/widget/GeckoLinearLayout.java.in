@@ -1,3 +1,0 @@
-#filter substitution
-#define VIEWTYPE LinearLayout
-#include GeckoView.java.frag

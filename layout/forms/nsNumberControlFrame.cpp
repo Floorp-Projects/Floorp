@@ -17,6 +17,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsThemeConstants.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/EventStates.h"
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
@@ -210,7 +211,7 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
 void
 nsNumberControlFrame::SyncDisabledState()
 {
-  nsEventStates eventStates = mContent->AsElement()->State();
+  EventStates eventStates = mContent->AsElement()->State();
   if (eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
     mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled, EmptyString(),
                         true);
@@ -246,7 +247,7 @@ nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
 }
 
 void
-nsNumberControlFrame::ContentStatesChanged(nsEventStates aStates)
+nsNumberControlFrame::ContentStatesChanged(EventStates aStates)
 {
   if (aStates.HasState(NS_EVENT_STATE_DISABLED)) {
     nsContentUtils::AddScriptRunner(new SyncDisabledStateEvent(this));

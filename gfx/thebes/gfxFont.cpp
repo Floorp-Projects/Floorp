@@ -40,6 +40,10 @@
 #include "gfxSVGGlyphs.h"
 #include "gfx2DGlue.h"
 
+#if defined(XP_MACOSX)
+#include "nsCocoaFeatures.h"
+#endif
+
 #include "cairo.h"
 #include "gfxFontTest.h"
 
@@ -1302,9 +1306,19 @@ gfxFontFamily::ReadFaceNames(gfxPlatformFontList *aPlatformFontList,
         (mFaceNamesInitialized || !aNeedFullnamePostscriptNames))
         return;
 
+    bool asyncFontLoaderDisabled = false;
+
+#if defined(XP_MACOSX)
+    // bug 975460 - async font loader crashes sometimes under 10.6, disable
+    if (!nsCocoaFeatures::OnLionOrLater()) {
+        asyncFontLoaderDisabled = true;
+    }
+#endif
+
     if (!mOtherFamilyNamesInitialized &&
         aFontInfoData &&
-        aFontInfoData->mLoadOtherNames)
+        aFontInfoData->mLoadOtherNames &&
+        !asyncFontLoaderDisabled)
     {
         nsAutoTArray<nsString,4> otherFamilyNames;
         bool foundOtherNames =
