@@ -30,11 +30,7 @@ const PAYLOAD_VERSION = 1;
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_SERVER = PREF_BRANCH + "server";
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-const PREF_ENABLED = PREF_BRANCH + "enabledPreRelease";
-#else
 const PREF_ENABLED = PREF_BRANCH + "enabled";
-#endif
 const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 
 // Do not gather data more than once a minute
