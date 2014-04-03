@@ -2213,6 +2213,26 @@ MmsService.prototype = {
         return;
       }
 
+      // Check radio state in prior to default service Id.
+      if (getRadioDisabledState()) {
+        if (DEBUG) debug("Error! Radio is disabled when sending MMS.");
+        sendTransactionCb(aDomMessage,
+                          Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR,
+                          null);
+        return;
+      }
+
+      // To support DSDS, we have to stop users sending MMS when the selected
+      // SIM is not active, thus avoiding the data disconnection of the current
+      // SIM. Users have to manually swith the default SIM before sending.
+      if (mmsConnection.serviceId != self.mmsDefaultServiceId) {
+        if (DEBUG) debug("RIL service is not active to send MMS.");
+        sendTransactionCb(aDomMessage,
+                          Ci.nsIMobileMessageCallback.NON_ACTIVE_SIM_CARD_ERROR,
+                          null);
+        return;
+      }
+
       // This is the entry point starting to send MMS.
       let sendTransaction;
       try {

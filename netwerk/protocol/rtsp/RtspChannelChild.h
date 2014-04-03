@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef RtspChannel_h
-#define RtspChannel_h
+#ifndef RtspChannelChild_h
+#define RtspChannelChild_h
 
 #include "nsBaseChannel.h"
 
@@ -13,22 +13,22 @@ namespace mozilla {
 namespace net {
 
 //-----------------------------------------------------------------------------
-// RtspChannel is a dummy channel used to aid MediaResource creation in
+// RtspChannelChild is a dummy channel used to aid MediaResource creation in
 // HTMLMediaElement. Actual network control and data flows are managed by an
 // RtspController object created and owned by RtspMediaResource.
-// Therefore, when RtspChannel::AsyncOpen is called, mListener->OnStartRequest
+// Therefore, when RtspChannelChild::AsyncOpen is called, mListener->OnStartRequest
 // will be called immediately. It is expected that an RtspMediaResource object
 // will be created in that calling context or after; the RtspController object
 // will be created internally by RtspMediaResource."
 
-class RtspChannel : public nsBaseChannel
+class RtspChannelChild : public nsBaseChannel
 {
 public:
   NS_DECL_ISUPPORTS
 
-  RtspChannel() { }
+  RtspChannelChild() { }
 
-  ~RtspChannel() { }
+  ~RtspChannelChild() { }
 
   // Overrides nsBaseChannel::AsyncOpen and call listener's OnStartRequest immediately.
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener,
@@ -72,4 +72,4 @@ public:
 
 }
 } // namespace mozilla::net
-#endif // RtspChannel_h
+#endif // RtspChannelChild_h
