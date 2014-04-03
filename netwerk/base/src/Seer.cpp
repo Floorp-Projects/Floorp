@@ -451,7 +451,7 @@ Seer::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_NUWA_PROCESS
-  nsCOMPtr<NuwaMarkSeerThreadRunner> runner = new NuwaMarkSeerThreadRunner();
+  nsCOMPtr<nsIRunnable> runner = new NuwaMarkSeerThreadRunner();
   mIOThread->Dispatch(runner, NS_DISPATCH_NORMAL);
 #endif
 
