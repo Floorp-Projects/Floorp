@@ -48,7 +48,6 @@ LOCAL_INCLUDES += [
     '/content/xul/content/src',
     '/content/xul/document/src',
     '/dom/base',
-    '/dom/events',
     '/layout/style',
 ]
 

@@ -7,9 +7,9 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/NotifyPaintEvent.h"
+#include "mozilla/dom/PaintRequest.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "nsContentUtils.h"
-#include "nsPaintRequest.h"
 
 namespace mozilla {
 namespace dom {
@@ -97,20 +97,20 @@ NotifyPaintEvent::ClientRects()
 NS_IMETHODIMP
 NotifyPaintEvent::GetPaintRequests(nsISupports** aResult)
 {
-  nsRefPtr<nsPaintRequestList> requests = PaintRequests();
+  nsRefPtr<PaintRequestList> requests = PaintRequests();
   requests.forget(aResult);
   return NS_OK;
 }
 
-already_AddRefed<nsPaintRequestList>
+already_AddRefed<PaintRequestList>
 NotifyPaintEvent::PaintRequests()
 {
   Event* parent = this;
-  nsRefPtr<nsPaintRequestList> requests = new nsPaintRequestList(parent);
+  nsRefPtr<PaintRequestList> requests = new PaintRequestList(parent);
 
   if (nsContentUtils::IsCallerChrome()) {
     for (uint32_t i = 0; i < mInvalidateRequests.Length(); ++i) {
-      nsRefPtr<nsPaintRequest> r = new nsPaintRequest(parent);
+      nsRefPtr<PaintRequest> r = new PaintRequest(parent);
       r->SetRequest(mInvalidateRequests[i]);
       requests->Append(r);
     }

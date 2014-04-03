@@ -16,6 +16,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 
@@ -96,7 +97,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
       if (NS_VK_SPACE == keyEvent->keyCode) {
         // only activate on keyup if we're already in the :hover:active state
         NS_ASSERTION(mContent->IsElement(), "How do we have a non-element?");
-        nsEventStates buttonState = mContent->AsElement()->State();
+        EventStates buttonState = mContent->AsElement()->State();
         if (buttonState.HasAllStates(NS_EVENT_STATE_ACTIVE |
                                      NS_EVENT_STATE_HOVER)) {
           // return to normal state

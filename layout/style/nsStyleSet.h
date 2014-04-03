@@ -34,6 +34,10 @@ class nsRuleWalker;
 struct ElementDependentRuleProcessorData;
 struct TreeMatchContext;
 
+namespace mozilla {
+class EventStates;
+} // namespace mozilla
+
 class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
 {
   NS_DECL_ISUPPORTS
@@ -214,18 +218,18 @@ class nsStyleSet
 
   // Test if style is dependent on a document state.
   bool HasDocumentStateDependentStyle(nsPresContext* aPresContext,
-                                        nsIContent*    aContent,
-                                        nsEventStates  aStateMask);
+                                      nsIContent*    aContent,
+                                      mozilla::EventStates aStateMask);
 
   // Test if style is dependent on content state
   nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        mozilla::dom::Element* aElement,
-                                       nsEventStates aStateMask);
+                                       mozilla::EventStates aStateMask);
   nsRestyleHint HasStateDependentStyle(nsPresContext* aPresContext,
                                        mozilla::dom::Element* aElement,
                                        nsCSSPseudoElements::Type aPseudoType,
                                        mozilla::dom::Element* aPseudoElement,
-                                       nsEventStates aStateMask);
+                                       mozilla::EventStates aStateMask);
 
   // Test if style is dependent on the presence of an attribute.
   nsRestyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,

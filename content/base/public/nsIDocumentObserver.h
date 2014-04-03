@@ -5,9 +5,9 @@
 #ifndef nsIDocumentObserver_h___
 #define nsIDocumentObserver_h___
 
+#include "mozilla/EventStates.h"
 #include "nsISupports.h"
 #include "nsIMutationObserver.h"
-#include "nsEventStates.h"
 
 class nsIAtom;
 class nsIContent;
@@ -75,7 +75,7 @@ public:
    */
   virtual void ContentStateChanged(nsIDocument* aDocument,
                                    nsIContent* aContent,
-                                   nsEventStates aStateMask) = 0;
+                                   mozilla::EventStates aStateMask) = 0;
 
   /**
    * Notification that the state of the document has changed.
@@ -84,7 +84,7 @@ public:
    * @param aStateMask the state that changed
    */
   virtual void DocumentStatesChanged(nsIDocument* aDocument,
-                                     nsEventStates aStateMask) = 0;
+                                     mozilla::EventStates aStateMask) = 0;
 
   /**
    * A StyleSheet has just been added to the document.  This method is
@@ -209,11 +209,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED                      \
     virtual void ContentStateChanged(nsIDocument* aDocument,                 \
                                      nsIContent* aContent,                   \
-                                     nsEventStates aStateMask);
+                                     mozilla::EventStates aStateMask);
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED                    \
     virtual void DocumentStatesChanged(nsIDocument* aDocument,               \
-                                       nsEventStates aStateMask);
+                                       mozilla::EventStates aStateMask);
 
 #define NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED                          \
     virtual void StyleSheetAdded(nsIDocument* aDocument,                     \
@@ -286,14 +286,14 @@ _class::EndLoad(nsIDocument* aDocument)                                   \
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)                    \
 void                                                                      \
 _class::ContentStateChanged(nsIDocument* aDocument,                       \
-                             nsIContent* aContent,                        \
-                             nsEventStates aStateMask)                    \
+                            nsIContent* aContent,                         \
+                            mozilla::EventStates aStateMask)              \
 {                                                                         \
 }                                                                         \
                                                                           \
 void                                                                      \
 _class::DocumentStatesChanged(nsIDocument* aDocument,                     \
-                              nsEventStates aStateMask)                   \
+                              mozilla::EventStates aStateMask)            \
 {                                                                         \
 }
 

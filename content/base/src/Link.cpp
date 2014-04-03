@@ -6,9 +6,9 @@
 
 #include "Link.h"
 
+#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
-#include "nsEventStates.h"
 #include "nsIURL.h"
 #include "nsISizeOf.h"
 
@@ -66,7 +66,7 @@ Link::SetLinkState(nsLinkState aState)
   mElement->UpdateState(true);
 }
 
-nsEventStates
+EventStates
 Link::LinkState() const
 {
   // We are a constant method, but we are just lazily doing things and have to
@@ -108,7 +108,7 @@ Link::LinkState() const
     return NS_EVENT_STATE_UNVISITED;
   }
 
-  return nsEventStates();
+  return EventStates();
 }
 
 nsIURI*
@@ -504,7 +504,7 @@ Link::ResetLinkState(bool aNotify, bool aHasHref)
     if (mLinkState == eLinkState_Unvisited) {
       mElement->UpdateLinkState(NS_EVENT_STATE_UNVISITED);
     } else {
-      mElement->UpdateLinkState(nsEventStates());
+      mElement->UpdateLinkState(EventStates());
     }
   }
 }

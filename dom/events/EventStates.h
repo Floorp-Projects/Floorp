@@ -3,51 +3,59 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsEventStates_h__
-#define nsEventStates_h__
+#ifndef mozilla_EventStates_h_
+#define mozilla_EventStates_h_
 
 #include "mozilla/Attributes.h"
 #include "nsDebug.h"
 
+namespace mozilla {
+
 /**
- * nsEventStates is the class used to represent the event states of nsIContent
+ * EventStates is the class used to represent the event states of nsIContent
  * instances. These states are calculated by IntrinsicState() and
  * ContentStatesChanged() has to be called when one of them changes thus
  * informing the layout/style engine of the change.
  * Event states are associated with pseudo-classes.
  */
-class nsEventStates
+class EventStates
 {
 public:
   typedef uint64_t InternalType;
 
-  MOZ_CONSTEXPR nsEventStates()
+  MOZ_CONSTEXPR EventStates()
     : mStates(0)
-  { }
+  {
+  }
 
   // NOTE: the ideal scenario would be to have the default constructor public
   // setting mStates to 0 and this constructor (without = 0) private.
   // In that case, we could be sure that only macros at the end were creating
-  // nsEventStates instances with mStates set to something else than 0.
+  // EventStates instances with mStates set to something else than 0.
   // Unfortunately, this constructor is needed at at least two places now.
-  explicit MOZ_CONSTEXPR nsEventStates(InternalType aStates)
+  explicit MOZ_CONSTEXPR EventStates(InternalType aStates)
     : mStates(aStates)
-  { }
-
-  MOZ_CONSTEXPR nsEventStates(const nsEventStates& aEventStates)
-    : mStates(aEventStates.mStates) {
+  {
   }
 
-  nsEventStates& operator=(const nsEventStates& aEventStates) {
+  MOZ_CONSTEXPR EventStates(const EventStates& aEventStates)
+    : mStates(aEventStates.mStates)
+  {
+  }
+
+  EventStates& operator=(const EventStates& aEventStates)
+  {
     mStates = aEventStates.mStates;
     return *this;
   }
 
-  nsEventStates MOZ_CONSTEXPR operator|(const nsEventStates& aEventStates) const {
-    return nsEventStates(mStates | aEventStates.mStates);
+  EventStates MOZ_CONSTEXPR operator|(const EventStates& aEventStates) const
+  {
+    return EventStates(mStates | aEventStates.mStates);
   }
 
-  nsEventStates& operator|=(const nsEventStates& aEventStates) {
+  EventStates& operator|=(const EventStates& aEventStates)
+  {
     mStates |= aEventStates.mStates;
     return *this;
   }
@@ -55,48 +63,56 @@ public:
   // NOTE: calling if (eventStates1 & eventStates2) will not build.
   // This might work correctly if operator bool() is defined
   // but using HasState, HasAllStates or HasAtLeastOneOfStates is recommended.
-  nsEventStates MOZ_CONSTEXPR operator&(const nsEventStates& aEventStates) const {
-    return nsEventStates(mStates & aEventStates.mStates);
+  EventStates MOZ_CONSTEXPR operator&(const EventStates& aEventStates) const
+  {
+    return EventStates(mStates & aEventStates.mStates);
   }
 
-  nsEventStates& operator&=(const nsEventStates& aEventStates) {
+  EventStates& operator&=(const EventStates& aEventStates)
+  {
     mStates &= aEventStates.mStates;
     return *this;
   }
 
-  bool operator==(const nsEventStates& aEventStates) const {
+  bool operator==(const EventStates& aEventStates) const
+  {
     return mStates == aEventStates.mStates;
   }
 
-  bool operator!=(const nsEventStates& aEventStates) const {
+  bool operator!=(const EventStates& aEventStates) const
+  {
     return mStates != aEventStates.mStates;
   }
 
-  nsEventStates operator~() const {
-    return nsEventStates(~mStates);
+  EventStates operator~() const
+  {
+    return EventStates(~mStates);
   }
 
-  nsEventStates operator^(const nsEventStates& aEventStates) const {
-    return nsEventStates(mStates ^ aEventStates.mStates);
+  EventStates operator^(const EventStates& aEventStates) const
+  {
+    return EventStates(mStates ^ aEventStates.mStates);
   }
 
-  nsEventStates& operator^=(const nsEventStates& aEventStates) {
+  EventStates& operator^=(const EventStates& aEventStates)
+  {
     mStates ^= aEventStates.mStates;
     return *this;
   }
 
   /**
-   * Returns true if the nsEventStates instance is empty.
-   * A nsEventStates instance is empty if it contains no state.
+   * Returns true if the EventStates instance is empty.
+   * A EventStates instance is empty if it contains no state.
    *
    * @return Whether if the object is empty.
    */
-  bool IsEmpty() const {
+  bool IsEmpty() const
+  {
     return mStates == 0;
   }
 
   /**
-   * Returns true if the nsEventStates instance contains the state
+   * Returns true if the EventStates instance contains the state
    * contained in aEventStates.
    * @note aEventStates should contain only one state.
    *
@@ -104,39 +120,42 @@ public:
    *
    * @return Whether the object has the state from aEventStates
    */
-  bool HasState(nsEventStates aEventStates) const {
+  bool HasState(EventStates aEventStates) const
+  {
 #ifdef DEBUG
     // If aEventStates.mStates is a power of two, it contains only one state
     // (or none, but we don't really care).
     if ((aEventStates.mStates & (aEventStates.mStates - 1))) {
       NS_ERROR("When calling HasState, "
-               "nsEventStates object has to contain only one state!");
+               "EventStates object has to contain only one state!");
     }
 #endif // DEBUG
     return mStates & aEventStates.mStates;
   }
 
   /**
-   * Returns true if the nsEventStates instance contains one of the states
+   * Returns true if the EventStates instance contains one of the states
    * contained in aEventStates.
    *
    * @param aEventStates The states to check.
    *
    * @return Whether the object has at least one state from aEventStates
    */
-  bool HasAtLeastOneOfStates(nsEventStates aEventStates) const {
+  bool HasAtLeastOneOfStates(EventStates aEventStates) const
+  {
     return mStates & aEventStates.mStates;
   }
 
   /**
-   * Returns true if the nsEventStates instance contains all states
+   * Returns true if the EventStates instance contains all states
    * contained in aEventStates.
    *
    * @param aEventStates The states to check.
    *
    * @return Whether the object has all states from aEventStates
    */
-  bool HasAllStates(nsEventStates aEventStates) const {
+  bool HasAllStates(EventStates aEventStates) const
+  {
     return (mStates & aEventStates.mStates) == aEventStates.mStates;
   }
 
@@ -150,16 +169,18 @@ private:
   InternalType mStates;
 };
 
+} // namespace mozilla
+
 /**
- * The following macros are creating nsEventStates instance with different
+ * The following macros are creating EventStates instance with different
  * values depending of their meaning.
- * Ideally, nsEventStates instance with values different than 0 should only be
+ * Ideally, EventStates instance with values different than 0 should only be
  * created that way.
  */
 
-// Helper to define a new nsEventStates macro.
+// Helper to define a new EventStates macro.
 #define NS_DEFINE_EVENT_STATE_MACRO(_val)               \
-  (nsEventStates(nsEventStates::InternalType(1) << _val))
+  (mozilla::EventStates(mozilla::EventStates::InternalType(1) << _val))
 
 // Mouse is down on content.
 #define NS_EVENT_STATE_ACTIVE        NS_DEFINE_EVENT_STATE_MACRO(0)
@@ -260,7 +281,7 @@ private:
 #define NS_EVENT_STATE_IGNORE NS_DEFINE_EVENT_STATE_MACRO(63)
 
 /**
- * NOTE: do not go over 63 without updating nsEventStates::InternalType!
+ * NOTE: do not go over 63 without updating EventStates::InternalType!
  */
 
 #define DIRECTION_STATES (NS_EVENT_STATE_LTR | NS_EVENT_STATE_RTL)
@@ -272,5 +293,5 @@ private:
 
 #define INTRINSIC_STATES (~ESM_MANAGED_STATES)
 
-#endif // nsEventStates_h__
+#endif // mozilla_EventStates_h_
 

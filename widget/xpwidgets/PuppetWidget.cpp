@@ -17,10 +17,10 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "PuppetWidget.h"
 #include "nsIWidgetListener.h"
-#include "TextComposition.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;

@@ -49,6 +49,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsNthIndexCache.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Likely.h"
@@ -972,7 +973,7 @@ struct RuleCascadeData {
   RuleHash*
     mPseudoElementRuleHashes[nsCSSPseudoElements::ePseudo_PseudoElementCount];
   nsTArray<nsCSSRuleProcessor::StateSelector>  mStateSelectors;
-  nsEventStates            mSelectorDocumentStates;
+  EventStates              mSelectorDocumentStates;
   PLDHashTable             mClassSelectors;
   PLDHashTable             mIdSelectors;
   nsTArray<nsCSSSelector*> mPossiblyNegatedClassSelectors;
@@ -1279,10 +1280,10 @@ nsCSSRuleProcessor::GetWindowsThemeIdentifier()
 #endif
 
 /* static */
-nsEventStates
+EventStates
 nsCSSRuleProcessor::GetContentState(Element* aElement, const TreeMatchContext& aTreeMatchContext)
 {
-  nsEventStates state = aElement->StyleState();
+  EventStates state = aElement->StyleState();
 
   // If we are not supposed to mark visited links as such, be sure to
   // flip the bits appropriately.  We want to do this here, rather
@@ -1302,19 +1303,19 @@ nsCSSRuleProcessor::GetContentState(Element* aElement, const TreeMatchContext& a
 bool
 nsCSSRuleProcessor::IsLink(Element* aElement)
 {
-  nsEventStates state = aElement->StyleState();
+  EventStates state = aElement->StyleState();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
 }
 
 /* static */
-nsEventStates
+EventStates
 nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                      Element* aElement,
                      const TreeMatchContext& aTreeMatchContext,
                      nsRuleWalker::VisitedHandlingType aVisitedHandling,
                      bool aIsRelevantLink)
 {
-  nsEventStates contentState = GetContentState(aElement, aTreeMatchContext);
+  EventStates contentState = GetContentState(aElement, aTreeMatchContext);
   if (contentState.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)) {
     NS_ABORT_IF_FALSE(IsLink(aElement), "IsLink() should match state");
     contentState &= ~(NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED);
@@ -1359,7 +1360,7 @@ struct NodeMatchContext {
   // we do separate notifications then we might determine the style is
   // not state-dependent when it really is (e.g., determining that a
   // :hover:active rule no longer matches when both states are unset).
-  const nsEventStates mStateMask;
+  const EventStates mStateMask;
 
   // Is this link the unique link whose visitedness can affect the style
   // of the node being matched?  (That link is the nearest link to the
@@ -1372,7 +1373,7 @@ struct NodeMatchContext {
   // mForStyling is false, we have to assume we don't know.)
   const bool mIsRelevantLink;
 
-  NodeMatchContext(nsEventStates aStateMask, bool aIsRelevantLink)
+  NodeMatchContext(EventStates aStateMask, bool aIsRelevantLink)
     : mStateMask(aStateMask)
     , mIsRelevantLink(aIsRelevantLink)
   {
@@ -1579,9 +1580,9 @@ checkGenericEmptyMatches(Element* aElement,
 }
 
 // Arrays of the states that are relevant for various pseudoclasses.
-static const nsEventStates sPseudoClassStateDependences[] = {
+static const EventStates sPseudoClassStateDependences[] = {
 #define CSS_PSEUDO_CLASS(_name, _value, _pref)  \
-  nsEventStates(),
+  EventStates(),
 #define CSS_STATE_DEPENDENT_PSEUDO_CLASS(_name, _value, _pref, _states)  \
   _states,
 #include "nsCSSPseudoClassList.h"
@@ -1589,13 +1590,13 @@ static const nsEventStates sPseudoClassStateDependences[] = {
 #undef CSS_PSEUDO_CLASS
   // Add more entries for our fake values to make sure we can't
   // index out of bounds into this array no matter what.
-  nsEventStates(),
-  nsEventStates()
+  EventStates(),
+  EventStates()
 };
 
-static const nsEventStates sPseudoClassStates[] = {
+static const EventStates sPseudoClassStates[] = {
 #define CSS_PSEUDO_CLASS(_name, _value, _pref)  \
-  nsEventStates(),
+  EventStates(),
 #define CSS_STATE_PSEUDO_CLASS(_name, _value, _pref, _states) \
   _states,
 #include "nsCSSPseudoClassList.h"
@@ -1603,8 +1604,8 @@ static const nsEventStates sPseudoClassStates[] = {
 #undef CSS_PSEUDO_CLASS
   // Add more entries for our fake values to make sure we can't
   // index out of bounds into this array no matter what.
-  nsEventStates(),
-  nsEventStates()
+  EventStates(),
+  EventStates()
 };
 static_assert(MOZ_ARRAY_LENGTH(sPseudoClassStates) ==
               nsCSSPseudoClasses::ePseudoClass_NotPseudoClass + 1,
@@ -1617,7 +1618,7 @@ StateSelectorMatches(Element* aElement,
                      NodeMatchContext& aNodeMatchContext,
                      TreeMatchContext& aTreeMatchContext,
                      bool* const aDependence,
-                     nsEventStates aStatesToCheck)
+                     EventStates aStatesToCheck)
 {
   NS_PRECONDITION(!aStatesToCheck.IsEmpty(),
                   "should only need to call StateSelectorMatches if "
@@ -1655,7 +1656,7 @@ StateSelectorMatches(Element* aElement,
       *aDependence = true;
     }
   } else {
-    nsEventStates contentState =
+    EventStates contentState =
       nsCSSRuleProcessor::GetContentStateForVisitedHandling(
                                    aElement,
                                    aTreeMatchContext,
@@ -1677,7 +1678,7 @@ StateSelectorMatches(Element* aElement,
 {
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
-    nsEventStates statesToCheck = sPseudoClassStates[pseudoClass->mType];
+    EventStates statesToCheck = sPseudoClassStates[pseudoClass->mType];
     if (!statesToCheck.IsEmpty() &&
         !StateSelectorMatches(aElement, aSelector, aNodeMatchContext,
                               aTreeMatchContext, nullptr, statesToCheck)) {
@@ -1793,7 +1794,7 @@ static bool SelectorMatches(Element* aElement,
   // test for pseudo class match
   for (nsPseudoClassList* pseudoClass = aSelector->mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
-    nsEventStates statesToCheck = sPseudoClassStates[pseudoClass->mType];
+    EventStates statesToCheck = sPseudoClassStates[pseudoClass->mType];
     if (statesToCheck.IsEmpty()) {
       // keep the cases here in the same order as the list in
       // nsCSSPseudoClassList.h
@@ -2112,7 +2113,7 @@ static bool SelectorMatches(Element* aElement,
       case nsCSSPseudoClasses::ePseudoClass_dir:
         {
           if (aDependence) {
-            nsEventStates states
+            EventStates states
               = sPseudoClassStateDependences[pseudoClass->mType];
             if (aNodeMatchContext.mStateMask.HasAtLeastOneOfStates(states)) {
               *aDependence = true;
@@ -2129,7 +2130,7 @@ static bool SelectorMatches(Element* aElement,
           // However, in markup languages where there is no direction attribute
           // we have to consider the possibility that neither -moz-dir(rtl) nor
           // -moz-dir(ltr) matches.
-          nsEventStates state = aElement->StyleState();
+          EventStates state = aElement->StyleState();
           bool elementIsRTL = state.HasState(NS_EVENT_STATE_RTL);
           bool elementIsLTR = state.HasState(NS_EVENT_STATE_LTR);
           nsDependentString dirString(pseudoClass->u.mString);
@@ -2353,7 +2354,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
     if (!element) {
       return false;
     }
-    NodeMatchContext nodeContext(nsEventStates(),
+    NodeMatchContext nodeContext(EventStates(),
                                  aLookForRelevantLink &&
                                    nsCSSRuleProcessor::IsLink(element));
     if (nodeContext.mIsRelevantLink) {
@@ -2474,7 +2475,7 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
-    NodeMatchContext nodeContext(nsEventStates(),
+    NodeMatchContext nodeContext(EventStates(),
                                  nsCSSRuleProcessor::IsLink(aData->mElement));
     cascade->mRuleHash.EnumerateAllRules(aData->mElement, aData, nodeContext);
   }
@@ -2488,7 +2489,7 @@ nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
   if (cascade) {
     RuleHash* ruleHash = cascade->mPseudoElementRuleHashes[aData->mPseudoType];
     if (ruleHash) {
-      NodeMatchContext nodeContext(nsEventStates(),
+      NodeMatchContext nodeContext(EventStates(),
                                    nsCSSRuleProcessor::IsLink(aData->mElement));
       ruleHash->EnumerateAllRules(aData->mElement, aData, nodeContext);
     }
@@ -2526,7 +2527,7 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
       (PL_DHashTableOperate(&cascade->mXULTreeRules, aData->mPseudoTag,
                             PL_DHASH_LOOKUP));
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      NodeMatchContext nodeContext(nsEventStates(),
+      NodeMatchContext nodeContext(EventStates(),
                                    nsCSSRuleProcessor::IsLink(aData->mElement));
       nsTArray<RuleValue>& rules = entry->mRules;
       for (RuleValue *value = rules.Elements(), *end = value + rules.Length();
@@ -2558,7 +2559,7 @@ nsRestyleHint
 nsCSSRuleProcessor::HasStateDependentStyle(ElementDependentRuleProcessorData* aData,
                                            Element* aStatefulElement,
                                            nsCSSPseudoElements::Type aPseudoType,
-                                           nsEventStates aStateMask)
+                                           EventStates aStateMask)
 {
   MOZ_ASSERT(!aData->mTreeMatchContext.mForScopedStyle,
              "mCurrentStyleScope will need to be saved and restored after the "
@@ -2584,7 +2585,7 @@ nsCSSRuleProcessor::HasStateDependentStyle(ElementDependentRuleProcessorData* aD
     NodeMatchContext nodeContext(aStateMask, false);
     for(; iter != end; ++iter) {
       nsCSSSelector* selector = iter->mSelector;
-      nsEventStates states = iter->mStates;
+      EventStates states = iter->mStates;
 
       if (selector->IsPseudoElement() != isPseudoElement) {
         continue;
@@ -2695,7 +2696,7 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
   // If enumData->change already includes all the bits of possibleChange, don't
   // bother calling SelectorMatches, since even if it returns false
   // enumData->change won't change.
-  NodeMatchContext nodeContext(nsEventStates(), false);
+  NodeMatchContext nodeContext(EventStates(), false);
   if ((possibleChange & ~(aData->change)) &&
       SelectorMatches(data->mElement, aSelector, nodeContext,
                       data->mTreeMatchContext) &&
@@ -2919,9 +2920,9 @@ nsCSSRuleProcessor::ClearRuleCascades()
 // depends on; this is used to implement HasStateDependentStyle.  It
 // does NOT recur down into things like :not and :-moz-any.
 inline
-nsEventStates ComputeSelectorStateDependence(nsCSSSelector& aSelector)
+EventStates ComputeSelectorStateDependence(nsCSSSelector& aSelector)
 {
-  nsEventStates states;
+  EventStates states;
   for (nsPseudoClassList* pseudoClass = aSelector.mPseudoClassList;
        pseudoClass; pseudoClass = pseudoClass->mNext) {
     // Tree pseudo-elements overload mPseudoClassList for things that
@@ -2979,7 +2980,7 @@ AddSelector(RuleCascadeData* aCascade,
     }
 
     // Build mStateSelectors.
-    nsEventStates dependentStates = ComputeSelectorStateDependence(*negation);
+    EventStates dependentStates = ComputeSelectorStateDependence(*negation);
     if (!dependentStates.IsEmpty()) {
       aCascade->mStateSelectors.AppendElement(
         nsCSSRuleProcessor::StateSelector(dependentStates,
@@ -3482,7 +3483,7 @@ nsCSSRuleProcessor::SelectorListMatches(Element* aElement,
     nsCSSSelector* sel = aSelectorList->mSelectors;
     NS_ASSERTION(sel, "Should have *some* selectors");
     NS_ASSERTION(!sel->IsPseudoElement(), "Shouldn't have been called");
-    NodeMatchContext nodeContext(nsEventStates(), false);
+    NodeMatchContext nodeContext(EventStates(), false);
     if (SelectorMatches(aElement, sel, nodeContext, aTreeMatchContext)) {
       nsCSSSelector* next = sel->mNext;
       if (!next ||

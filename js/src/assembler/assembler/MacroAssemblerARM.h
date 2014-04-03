@@ -26,7 +26,7 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef assembler_assembler_MacroAssemblerARM_h
@@ -190,16 +190,16 @@ public:
     {
         m_assembler.movs_r(dest, m_assembler.asr(dest, imm.m_value & 0x1f));
     }
-    
+
     void urshift32(RegisterID shift_amount, RegisterID dest)
     {
         ARMWord w = ARMAssembler::getOp2(0x1f);
         ASSERT(w != ARMAssembler::INVALID_IMM);
         m_assembler.and_r(ARMRegisters::S0, shift_amount, w);
-        
+
         m_assembler.movs_r(dest, m_assembler.lsr_r(dest, ARMRegisters::S0));
     }
-    
+
     void urshift32(Imm32 imm, RegisterID dest)
     {
         m_assembler.movs_r(dest, m_assembler.lsr(dest, imm.m_value & 0x1f));
@@ -258,7 +258,7 @@ public:
     void load8SignExtend(ImplicitAddress address, RegisterID dest)
     {
         m_assembler.dataTransferN(true, true, 8, dest, address.base, address.offset);
-    } 
+    }
 
     void load8ZeroExtend(ImplicitAddress address, RegisterID dest)
     {
@@ -287,11 +287,11 @@ public:
     {
         load16(address, dest);
     }
-   
+
     void load16SignExtend(ImplicitAddress address, RegisterID dest)
     {
         m_assembler.dataTransferN(true, true, 16, dest, address.base, address.offset);
-    } 
+    }
 
     void load16ZeroExtend(ImplicitAddress address, RegisterID dest)
     {
@@ -360,7 +360,7 @@ public:
         m_assembler.add_r(ARMRegisters::S1, address.base, m_assembler.lsl(address.index, address.scale));
         load16(Address(ARMRegisters::S1, address.offset), dest);
     }
-    
+
     void load16(ImplicitAddress address, RegisterID dest)
     {
         if (address.offset >= 0)
@@ -1179,7 +1179,7 @@ public:
         m_assembler.vcvt(m_assembler.FloatReg32, m_assembler.FloatReg64, dest_s, dest);
         return label;
     }
- 
+
     void storeDouble(FPRegisterID src, ImplicitAddress address)
     {
         // Store a double at base+offset.

@@ -1208,7 +1208,7 @@ InitTypeClasses(JSContext* cx, HandleObject parent)
 
   // Attach the prototypes just created to each of ctypes.CType.prototype,
   // and the special type constructors, so we can access them when constructing
-  // instances of those types. 
+  // instances of those types.
   AttachProtos(CTypeProto, protos);
   AttachProtos(protos[SLOT_POINTERPROTO], protos);
   AttachProtos(protos[SLOT_ARRAYPROTO], protos);
@@ -2719,7 +2719,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
         // Outer type is pointer, inner type is array. Grouping is required.
         PrependString(result, "(");
         AppendString(result, ")");
-      } 
+      }
 
       // Array types go on the right.
       AppendString(result, "[");
@@ -2805,8 +2805,8 @@ BuildTypeName(JSContext* cx, JSObject* typeObj_)
 // equality is determined by strict JSObject pointer equality.)
 static void
 BuildTypeSource(JSContext* cx,
-                JSObject* typeObj_, 
-                bool makeShort, 
+                JSObject* typeObj_,
+                bool makeShort,
                 AutoString& result)
 {
   RootedObject typeObj(cx, typeObj_);
@@ -2952,9 +2952,9 @@ BuildTypeSource(JSContext* cx,
 // structs and arrays are converted with ImplicitConvert.)
 static bool
 BuildDataSource(JSContext* cx,
-                HandleObject typeObj, 
-                void* data, 
-                bool isImplicit, 
+                HandleObject typeObj,
+                void* data,
+                bool isImplicit,
                 AutoString& result)
 {
   TypeCode type = CType::GetTypeCode(typeObj);

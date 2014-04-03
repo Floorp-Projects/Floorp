@@ -8,6 +8,7 @@
 #include "IMEContentObserver.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/dom/Element.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
@@ -27,7 +28,6 @@
 #include "nsPresContext.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
-#include "TextComposition.h"
 
 namespace mozilla {
 

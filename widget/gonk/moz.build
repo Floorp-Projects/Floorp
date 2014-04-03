@@ -69,7 +69,6 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '/content/media/omx/mediaresourcemanager',
-    '/dom/events',
     '/dom/system/android',
     '/gfx/skia/trunk/include/config',
     '/gfx/skia/trunk/include/core',

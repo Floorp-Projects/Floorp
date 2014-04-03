@@ -7,6 +7,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
@@ -4393,7 +4394,7 @@ EventStateManager::SetFullScreenState(Element* aElement, bool aIsFullScreen)
 
 /* static */
 inline void
-EventStateManager::DoStateChange(Element* aElement, nsEventStates aState,
+EventStateManager::DoStateChange(Element* aElement, EventStates aState,
                                  bool aAddState)
 {
   if (aAddState) {
@@ -4405,7 +4406,7 @@ EventStateManager::DoStateChange(Element* aElement, nsEventStates aState,
 
 /* static */
 inline void
-EventStateManager::DoStateChange(nsIContent* aContent, nsEventStates aState,
+EventStateManager::DoStateChange(nsIContent* aContent, EventStates aState,
                                  bool aStateAdded)
 {
   if (aContent->IsElement()) {
@@ -4417,7 +4418,7 @@ EventStateManager::DoStateChange(nsIContent* aContent, nsEventStates aState,
 void
 EventStateManager::UpdateAncestorState(nsIContent* aStartNode,
                                        nsIContent* aStopBefore,
-                                       nsEventStates aState,
+                                       EventStates aState,
                                        bool aAddState)
 {
   for (; aStartNode && aStartNode != aStopBefore;
@@ -4463,7 +4464,7 @@ EventStateManager::UpdateAncestorState(nsIContent* aStartNode,
 }
 
 bool
-EventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
+EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
 {
   // We manage 4 states here: ACTIVE, HOVER, DRAGOVER, URLTARGET
   // The input must be exactly one of them.

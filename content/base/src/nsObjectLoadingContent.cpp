@@ -19,7 +19,6 @@
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIExternalProtocolHandler.h"
-#include "nsEventStates.h"
 #include "nsIObjectFrame.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
@@ -81,6 +80,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/Telemetry.h"
 
 #ifdef XP_WIN
@@ -1201,7 +1201,7 @@ nsObjectLoadingContent::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 }
 
 // <public>
-nsEventStates
+EventStates
 nsObjectLoadingContent::ObjectState() const
 {
   switch (mType) {
@@ -1214,7 +1214,7 @@ nsObjectLoadingContent::ObjectState() const
       // These are OK. If documents start to load successfully, they display
       // something, and are thus not broken in this sense. The same goes for
       // plugins.
-      return nsEventStates();
+      return EventStates();
     case eType_Null:
       switch (mFallbackType) {
         case eFallbackSuppressed:
@@ -1904,7 +1904,7 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   }
 
   // Save these for NotifyStateChanged();
-  nsEventStates oldState = ObjectState();
+  EventStates oldState = ObjectState();
   ObjectType oldType = mType;
 
   ParameterUpdateFlags stateChange = UpdateObjectParameters();
@@ -2427,7 +2427,7 @@ nsObjectLoadingContent::UnloadObject(bool aResetState)
 
 void
 nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
-                                           nsEventStates aOldState,
+                                           EventStates aOldState,
                                            bool aSync,
                                            bool aNotify)
 {
@@ -2458,12 +2458,12 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     return; // Nothing to do
   }
 
-  nsEventStates newState = ObjectState();
+  EventStates newState = ObjectState();
 
   if (newState != aOldState) {
     // This will trigger frame construction
     NS_ASSERTION(InActiveDocument(thisContent), "Something is confused");
-    nsEventStates changedBits = aOldState ^ newState;
+    EventStates changedBits = aOldState ^ newState;
 
     {
       nsAutoScriptBlocker scriptBlocker;
@@ -2731,7 +2731,7 @@ DoDelayedStop(nsPluginInstanceOwner* aInstanceOwner,
 
 void
 nsObjectLoadingContent::LoadFallback(FallbackType aType, bool aNotify) {
-  nsEventStates oldState = ObjectState();
+  EventStates oldState = ObjectState();
   ObjectType oldType = mType;
 
   NS_ASSERTION(!mInstanceOwner && !mFrameLoader && !mChannel,

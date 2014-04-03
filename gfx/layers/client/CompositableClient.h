@@ -22,7 +22,6 @@ namespace mozilla {
 namespace layers {
 
 class CompositableClient;
-class DeprecatedTextureClient;
 class TextureClient;
 class BufferTextureClient;
 class ImageBridgeChild;

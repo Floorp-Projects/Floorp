@@ -56,6 +56,8 @@
 // a scalar, it will return a JS number, but otherwise the reified
 // result will be a typedObj of the same class as the ptr's typedObj.
 function TypedObjectGet(descr, typedObj, offset) {
+  assert(IsObject(descr) && ObjectIsTypeDescr(descr),
+         "get() called with bad type descr");
   assert(TypedObjectIsAttached(typedObj),
          "get() called with unattached typedObj");
 

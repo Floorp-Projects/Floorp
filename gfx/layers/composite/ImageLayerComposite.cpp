@@ -15,7 +15,7 @@
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/Effects.h"     // for EffectChain
-#include "mozilla/layers/TextureHost.h"  // for DeprecatedTextureHost, etc
+#include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAString.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -120,10 +120,8 @@ ImageLayerComposite::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransform
   gfxRect sourceRect(0, 0, 0, 0);
   if (mImageHost &&
       mImageHost->IsAttached() &&
-      (mImageHost->GetDeprecatedTextureHost() || mImageHost->GetAsTextureHost())) {
-    IntSize size =
-      mImageHost->GetAsTextureHost() ? mImageHost->GetAsTextureHost()->GetSize()
-                                     : mImageHost->GetDeprecatedTextureHost()->GetSize();
+      mImageHost->GetAsTextureHost()) {
+    IntSize size = mImageHost->GetAsTextureHost()->GetSize();
     sourceRect.SizeTo(size.width, size.height);
     if (mScaleMode != ScaleMode::SCALE_NONE &&
         sourceRect.width != 0.0 && sourceRect.height != 0.0) {

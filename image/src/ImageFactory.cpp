@@ -88,6 +88,28 @@ ComputeImageFlags(ImageURL* uri, bool isMultiPart)
   return imageFlags;
 }
 
+/* static */ bool
+ImageFactory::CanRetargetOnDataAvailable(ImageURL* aURI, bool aIsMultiPart)
+{
+  // We can't retarget OnDataAvailable safely in cases where we aren't storing
+  // source data (and thus need to sync decode in ODA) because allocating frames
+  // off-main-thread is currently not possible and we don't have a workaround in
+  // place yet. (See bug 967985.) For now, we detect those cases and refuse to
+  // retarget. When the problem is fixed, this function can be removed.
+
+  if (aIsMultiPart) {
+    return false;
+  }
+
+  uint32_t imageFlags = ComputeImageFlags(aURI, aIsMultiPart);
+  if (!(imageFlags & Image::INIT_FLAG_DISCARDABLE) &&
+      !(imageFlags & Image::INIT_FLAG_DECODE_ON_DRAW)) {
+    return false;
+  }
+
+  return true;
+}
+
 /* static */ already_AddRefed<Image>
 ImageFactory::CreateImage(nsIRequest* aRequest,
                           imgStatusTracker* aStatusTracker,

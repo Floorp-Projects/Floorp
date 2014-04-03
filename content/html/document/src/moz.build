@@ -37,7 +37,6 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/docshell/base',
     '/dom/base',
-    '/dom/events',
     '/layout/style',
 ]
 

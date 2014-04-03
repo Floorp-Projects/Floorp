@@ -22,7 +22,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "yarr/YarrJIT.h"
@@ -751,7 +751,7 @@ class YarrGenerator : private MacroAssembler {
 
         if (op.m_isDeadCode)
             return true;
-        
+
         // m_ops always ends with a OpBodyAlternativeEnd or OpMatchFailed
         // node, so there must always be at least one more node.
         ASSERT(opIndex + 1 < m_ops.size());
@@ -790,7 +790,7 @@ class YarrGenerator : private MacroAssembler {
 
         for (numberCharacters = 1; numberCharacters < maxCharactersAtOnce && nextOp->m_op == OpTerm; ++numberCharacters, nextOp = &m_ops[opIndex + numberCharacters]) {
             PatternTerm* nextTerm = nextOp->m_term;
-            
+
             if (nextTerm->type != PatternTerm::TypePatternCharacter
                 || nextTerm->quantityType != QuantifierFixedCount
                 || nextTerm->quantityCount != 1
@@ -820,7 +820,7 @@ class YarrGenerator : private MacroAssembler {
             allCharacters |= (currentCharacter << shiftAmount);
 
             if ((m_pattern.m_ignoreCase) && (isASCIIAlpha(currentCharacter)))
-                ignoreCaseMask |= 32 << shiftAmount;                    
+                ignoreCaseMask |= 32 << shiftAmount;
         }
 
         if (m_charSize == Char8) {
@@ -1203,7 +1203,7 @@ class YarrGenerator : private MacroAssembler {
 
         move(index, matchPos);
 
-        Label findEOLLoop(this);        
+        Label findEOLLoop(this);
         foundEndingNewLine.append(branch32(Equal, matchPos, length));
         if (m_charSize == Char8)
             load8(BaseIndex(input, matchPos, TimesOne, 0), character);
@@ -1226,7 +1226,7 @@ class YarrGenerator : private MacroAssembler {
     {
         backtrackTermDefault(opIndex);
     }
-    
+
     // Code generation/backtracking for simple terms
     // (pattern characters, character classes, and assertions).
     // These methods farm out work to the set of functions above.
@@ -1417,7 +1417,7 @@ class YarrGenerator : private MacroAssembler {
                 PatternAlternative* alternative = op.m_alternative;
 
                 // If we get here, the prior alternative matched - return success.
-                
+
                 // Adjust the stack pointer to remove the pattern's frame.
 #if !WTF_CPU_SPARC
                 removeCallFrame();
@@ -1425,7 +1425,7 @@ class YarrGenerator : private MacroAssembler {
 
                 // Load appropriate values into the return register and the first output
                 // slot, and return. In the case of pattern with a fixed size, we will
-                // not have yet set the value in the first 
+                // not have yet set the value in the first
                 ASSERT(index != returnRegister);
                 if (m_pattern.m_body->m_hasFixedSize) {
                     move(index, returnRegister);
@@ -1592,7 +1592,7 @@ class YarrGenerator : private MacroAssembler {
             // OpParenthesesSubpatternOnceBegin/End
             //
             // These nodes support (optionally) capturing subpatterns, that have a
-            // quantity count of 1 (this covers fixed once, and ?/?? quantifiers). 
+            // quantity count of 1 (this covers fixed once, and ?/?? quantifiers).
             case OpParenthesesSubpatternOnceBegin: {
                 PatternTerm* term = op.m_term;
                 unsigned parenthesesFrameLocation = term->frameLocation;
@@ -1732,7 +1732,7 @@ class YarrGenerator : private MacroAssembler {
                 unsigned parenthesesFrameLocation = term->frameLocation;
                 storeToFrame(index, parenthesesFrameLocation);
 
-                // Check 
+                // Check
                 op.m_checkAdjust = m_checked - term->inputPosition;
                 if (op.m_checkAdjust)
                     sub32(Imm32(op.m_checkAdjust), index);
@@ -1911,7 +1911,7 @@ class YarrGenerator : private MacroAssembler {
                 // Generate code to handle input check failures from alternatives except the last.
                 // prevOp is the alternative we're handling a bail out from (initially Begin), and
                 // nextOp is the alternative we will be attempting to reenter into.
-                // 
+                //
                 // We will link input check failures from the forwards matching path back to the code
                 // that can handle them.
                 YarrOp* prevOp = beginOp;
@@ -2530,7 +2530,7 @@ class YarrGenerator : private MacroAssembler {
                 lastOp.m_alternative = alternative;
                 lastOp.m_nextOp = thisOpIndex;
                 thisOp.m_previousOp = lastOpIndex;
-                
+
                 ++currentAlternativeIndex;
             } while (currentAlternativeIndex < alternatives.size() && alternatives[currentAlternativeIndex]->onceThrough());
 
@@ -2566,7 +2566,7 @@ class YarrGenerator : private MacroAssembler {
             lastOp.m_alternative = alternative;
             lastOp.m_nextOp = thisOpIndex;
             thisOp.m_previousOp = lastOpIndex;
-            
+
             ++currentAlternativeIndex;
         } while (currentAlternativeIndex < alternatives.size());
         YarrOp& lastOp = m_ops.last();

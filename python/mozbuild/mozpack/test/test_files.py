@@ -15,6 +15,7 @@ from mozpack.files import (
     GeneratedFile,
     JarFinder,
     ManifestFile,
+    MinifiedJavaScript,
     MinifiedProperties,
     PreprocessedFile,
     XPTFile,
@@ -35,6 +36,7 @@ import mozunit
 import os
 import random
 import string
+import sys
 import mozpack.path
 from tempfile import mkdtemp
 from io import BytesIO
@@ -751,6 +753,49 @@ class TestMinifiedProperties(TestWithTmpDir):
             .copy(self.tmppath('prop2'))
         self.assertEqual(open(self.tmppath('prop2')).readlines(),
                          ['foo = bar\n', '\n'])
+
+
+class TestMinifiedJavaScript(TestWithTmpDir):
+    orig_lines = [
+        '// Comment line',
+        'let foo = "bar";',
+        'var bar = true;',
+        '',
+        '// Another comment',
+    ]
+
+    def test_minified_javascript(self):
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
+        min_f = MinifiedJavaScript(orig_f)
+
+        mini_lines = min_f.open().readlines()
+        self.assertTrue(mini_lines)
+        self.assertTrue(len(mini_lines) < len(self.orig_lines))
+
+    def _verify_command(self, code):
+        our_dir = os.path.abspath(os.path.dirname(__file__))
+        return [
+            sys.executable,
+            os.path.join(our_dir, 'support', 'minify_js_verify.py'),
+            code,
+        ]
+
+    def test_minified_verify_success(self):
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
+        min_f = MinifiedJavaScript(orig_f,
+            verify_command=self._verify_command('0'))
+
+        mini_lines = min_f.open().readlines()
+        self.assertTrue(mini_lines)
+        self.assertTrue(len(mini_lines) < len(self.orig_lines))
+
+    def test_minified_verify_failure(self):
+        orig_f = GeneratedFile('\n'.join(self.orig_lines))
+        min_f = MinifiedJavaScript(orig_f,
+            verify_command=self._verify_command('1'))
+
+        mini_lines = min_f.open().readlines()
+        self.assertEqual(mini_lines, orig_f.open().readlines())
 
 
 class MatchTestTemplate(object):

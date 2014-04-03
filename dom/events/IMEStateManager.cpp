@@ -7,14 +7,15 @@
 #include "mozilla/IMEStateManager.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/HTMLFormElement.h"
 
 #include "HTMLInputElement.h"
 #include "IMEContentObserver.h"
-#include "TextComposition.h"
 
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

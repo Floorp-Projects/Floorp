@@ -60,6 +60,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Debug.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "AudioChannelService.h"
 
@@ -13439,16 +13440,6 @@ nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
   mReturnValue = new DialogValueHolder(nsContentUtils::GetSubjectPrincipal(),
                                        aRetVal);
   return NS_OK;
-}
-
-void
-nsGlobalWindow::SetHasAudioAvailableEventListeners()
-{
-  MOZ_ASSERT(IsInnerWindow());
-
-  if (mDoc) {
-    mDoc->NotifyAudioAvailableListener();
-  }
 }
 
 NS_IMETHODIMP

@@ -5,6 +5,7 @@
 #include "PositionedEventTargeting.h"
 
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "nsLayoutUtils.h"
@@ -339,7 +340,8 @@ GetClosest(nsIFrame* aRoot, const nsPoint& aPointRelativeToRootFrame,
     float distance = ComputeDistanceFromRegion(aPointRelativeToRootFrame, region);
     nsIContent* content = f->GetContent();
     if (content && content->IsElement() &&
-        content->AsElement()->State().HasState(nsEventStates(NS_EVENT_STATE_VISITED))) {
+        content->AsElement()->State().HasState(
+                                        EventStates(NS_EVENT_STATE_VISITED))) {
       distance *= aPrefs->mVisitedWeight / 100.0f;
     }
     if (distance < bestDistance) {

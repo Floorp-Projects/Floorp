@@ -121,6 +121,16 @@ GetGREVersion(const char *argv0,
   return NS_OK;
 }
 
+/**
+ * A helper class which calls NS_LogInit/NS_LogTerm in its scope.
+ */
+class ScopedLogging
+{
+public:
+  ScopedLogging() { NS_LogInit(); }
+  ~ScopedLogging() { NS_LogTerm(); }
+};
+
 static void Usage(const char *argv0)
 {
     nsAutoCString milestone;
@@ -199,6 +209,8 @@ int main(int argc, char* argv[])
     Output(true, "Couldn't load XPCOM.\n");
     return 255;
   }
+
+  ScopedLogging log;
 
   if (argc > 1 && (IsArg(argv[1], "h") ||
                    IsArg(argv[1], "help") ||

@@ -15,7 +15,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
-    '/dom/events',
     '/dom/src/geolocation',
 ]
 

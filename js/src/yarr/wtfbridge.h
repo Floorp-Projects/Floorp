@@ -277,7 +277,7 @@ class JSGlobalData {
 } /* namespace Yarr */
 
 /*
- * Replacements for std:: functions used in Yarr. We put them in 
+ * Replacements for std:: functions used in Yarr. We put them in
  * namespace JSC::std so that they can still be called as std::X
  * in Yarr.
  */

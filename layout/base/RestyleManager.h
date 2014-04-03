@@ -21,6 +21,7 @@ class nsIFrame;
 struct TreeMatchContext;
 
 namespace mozilla {
+  class EventStates;
 
 namespace dom {
   class Element;
@@ -63,7 +64,7 @@ public:
   // Forwarded nsIDocumentObserver method, to handle restyling (and
   // passing the notification to the frame).
   nsresult ContentStateChanged(nsIContent*   aContent,
-                               nsEventStates aStateMask);
+                               EventStates aStateMask);
 
   // Forwarded nsIMutationObserver method, to handle restyling.
   void AttributeWillChange(Element* aElement,

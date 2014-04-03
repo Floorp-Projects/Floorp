@@ -55,7 +55,7 @@ __attribute__((noinline))
 void pre_run ( void ) { }
 
 /////////////////////////////////////////////////////////////////
-//// test1 (simple straight line code) 
+//// test1 (simple straight line code)
 #if WTF_COMPILER_GCC
 
 void test1 ( void )
@@ -170,7 +170,7 @@ void test1 ( void )
 #endif /* WTF_COMPILER_GCC */
 
 /////////////////////////////////////////////////////////////////
-//// test2 (a simple counting-down loop) 
+//// test2 (a simple counting-down loop)
 #if WTF_COMPILER_GCC
 
 void test2 ( void )
@@ -326,7 +326,7 @@ void test2 ( void )
 #endif /* WTF_COMPILER_GCC */
 
 /////////////////////////////////////////////////////////////////
-//// test3 (if-then-else) 
+//// test3 (if-then-else)
 #if WTF_COMPILER_GCC
 
 void test3 ( void )
@@ -513,7 +513,7 @@ void test3 ( void )
 #endif /* WTF_COMPILER_GCC */
 
 /////////////////////////////////////////////////////////////////
-//// test4 (callable function) 
+//// test4 (callable function)
 
 void test4 ( void )
 {
@@ -696,7 +696,7 @@ void test4 ( void )
 
 
 /////////////////////////////////////////////////////////////////
-//// test5 (call in, out, repatch) 
+//// test5 (call in, out, repatch)
 
 // a function which we will call from the JIT generated code
 unsigned long cube   ( unsigned long x ) { return x * x * x; }
@@ -909,7 +909,7 @@ void test5 ( void )
   JSC::RepatchBuffer repatchBuffer(&cb);
   repatchBuffer.relink( JSC::CodeLocationCall(cp),
                         JSC::FunctionPtr::FunctionPtr( &square ));
- 
+
   result = fn();
   printf("value computed is %lu (expected 81)\n", result);
   printf("\n\n");

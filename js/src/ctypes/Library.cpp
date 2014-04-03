@@ -119,7 +119,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
   // provided.
   char* pathBytes;
   if (callbacks && callbacks->unicodeToNative) {
-    pathBytes = 
+    pathBytes =
       callbacks->unicodeToNative(cx, pathStr->chars(), pathStr->length());
     if (!pathBytes)
       return nullptr;
@@ -273,7 +273,7 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
   //    back will be of type 'type', and will point into the symbol data.
   //    This data will be both readable and writable via the usual CData
   //    accessors. If 'type' is a PointerType to a FunctionType, the result will
-  //    be a function pointer, as with 1). 
+  //    be a function pointer, as with 1).
   if (args.length() < 2) {
     JS_ReportError(cx, "declare requires at least two arguments");
     return false;

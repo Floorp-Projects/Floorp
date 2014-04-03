@@ -12,7 +12,7 @@ Components.utils.import("resource://gre/modules/Geometry.jsm");
 // maximum drag distance in inches while axis locking can still be reverted
 const kAxisLockRevertThreshold = 0.8;
 
-// Same as NS_EVENT_STATE_ACTIVE from nsIEventStateManager.h
+// Same as NS_EVENT_STATE_ACTIVE from mozilla/EventStates.h
 const kStateActive = 0x00000001;
 
 // After a drag begins, kinetic panning is stopped if the drag doesn't become

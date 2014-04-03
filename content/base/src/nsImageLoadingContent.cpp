@@ -29,7 +29,6 @@
 #include "nsImageFrame.h"
 
 #include "nsIPresShell.h"
-#include "nsEventStates.h"
 
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
@@ -44,6 +43,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -859,21 +859,22 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 }
 
 nsresult
-nsImageLoadingContent::ForceImageState(bool aForce, nsEventStates::InternalType aState)
+nsImageLoadingContent::ForceImageState(bool aForce,
+                                       EventStates::InternalType aState)
 {
   mIsImageStateForced = aForce;
-  mForcedImageState = nsEventStates(aState);
+  mForcedImageState = EventStates(aState);
   return NS_OK;
 }
 
-nsEventStates
+EventStates
 nsImageLoadingContent::ImageState() const
 {
   if (mIsImageStateForced) {
     return mForcedImageState;
   }
 
-  nsEventStates states;
+  EventStates states;
 
   if (mBroken) {
     states |= NS_EVENT_STATE_BROKEN;

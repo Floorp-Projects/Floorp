@@ -6,7 +6,6 @@
 #include "nsRadioVisitor.h"
 #include "nsAutoPtr.h"
 #include "mozilla/dom/HTMLInputElement.h"
-#include "nsEventStates.h"
 #include "nsIConstraintValidation.h"
 
 using namespace mozilla::dom;

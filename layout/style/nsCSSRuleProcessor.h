@@ -13,13 +13,13 @@
 #define nsCSSRuleProcessor_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsCSSStyleSheet.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsRuleWalker.h"
-#include "nsEventStates.h"
 
 struct CascadeEnumData;
 struct nsCSSSelector;
@@ -77,13 +77,14 @@ public:
    * Helper to get the content state for a content node.  This may be
    * slightly adjusted from IntrinsicState().
    */
-  static nsEventStates GetContentState(mozilla::dom::Element* aElement,
-                                       const TreeMatchContext& aTreeMatchContext);
+  static mozilla::EventStates GetContentState(
+                                mozilla::dom::Element* aElement,
+                                const TreeMatchContext& aTreeMatchContext);
 
   /*
    * Helper to get the content state for :visited handling for an element
    */
-  static nsEventStates GetContentStateForVisitedHandling(
+  static mozilla::EventStates GetContentStateForVisitedHandling(
              mozilla::dom::Element* aElement,
              const TreeMatchContext& aTreeMatchContext,
              nsRuleWalker::VisitedHandlingType aVisitedHandling,
@@ -157,12 +158,12 @@ public:
 #endif
 
   struct StateSelector {
-    StateSelector(nsEventStates aStates, nsCSSSelector* aSelector)
+    StateSelector(mozilla::EventStates aStates, nsCSSSelector* aSelector)
       : mStates(aStates),
         mSelector(aSelector)
     {}
 
-    nsEventStates mStates;
+    mozilla::EventStates mStates;
     nsCSSSelector* mSelector;
   };
 
@@ -175,7 +176,7 @@ private:
   nsRestyleHint HasStateDependentStyle(ElementDependentRuleProcessorData* aData,
                                        mozilla::dom::Element* aStatefulElement,
                                        nsCSSPseudoElements::Type aPseudoType,
-                                       nsEventStates aStateMask);
+                                       mozilla::EventStates aStateMask);
 
   // The sheet order here is the same as in nsStyleSet::mSheets
   sheet_array_type mSheets;

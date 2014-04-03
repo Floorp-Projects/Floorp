@@ -103,8 +103,8 @@ class TPSTestRunner(object):
         r'Sync version: (?P<syncversion>.*)\n')
     ffVerRe = re.compile(
         r'Firefox version: (?P<ffver>.*)\n')
-    ffDateRe = re.compile(
-        r'Firefox builddate: (?P<ffdate>.*)\n')
+    ffBuildIDRe = re.compile(
+        r'Firefox buildid: (?P<ffbuildid>.*)\n')
 
     def __init__(self, extensionDir,
                  binary=None,
@@ -277,8 +277,8 @@ class TPSTestRunner(object):
         sync_version = match.group('syncversion') if match else 'unknown'
         match = self.ffVerRe.search(logdata)
         firefox_version = match.group('ffver') if match else 'unknown'
-        match = self.ffDateRe.search(logdata)
-        firefox_builddate = match.group('ffdate') if match else 'unknown'
+        match = self.ffBuildIDRe.search(logdata)
+        firefox_buildid = match.group('ffbuildid') if match else 'unknown'
         f.close()
         if phase.status == 'PASS':
             logdata = ''
@@ -309,8 +309,8 @@ class TPSTestRunner(object):
             self.errorlogs[testname] = tmplogfile
 
         resultdata = ({ 'productversion': { 'version': firefox_version,
-                                            'buildid': firefox_builddate,
-                                            'builddate': firefox_builddate[0:8],
+                                            'buildid': firefox_buildid,
+                                            'builddate': firefox_buildid[0:8],
                                             'product': 'Firefox',
                                             'repository': apprepo,
                                             'changeset': appchangeset,

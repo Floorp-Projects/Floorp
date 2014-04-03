@@ -11,9 +11,10 @@
 #include "States.h"
 
 #include "nsContentUtils.h"
-#include "nsEventStates.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -48,7 +49,7 @@ HTMLLinkAccessible::NativeState()
 uint64_t
 HTMLLinkAccessible::NativeLinkState() const
 {
-  nsEventStates eventState = mContent->AsElement()->State();
+  EventStates eventState = mContent->AsElement()->State();
   if (eventState.HasState(NS_EVENT_STATE_UNVISITED))
     return states::LINKED;
 
@@ -149,7 +150,7 @@ HTMLLinkAccessible::IsLinked()
   if (IsDefunct())
     return false;
 
-  nsEventStates state = mContent->AsElement()->State();
+  EventStates state = mContent->AsElement()->State();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |
                                      NS_EVENT_STATE_UNVISITED);
 }

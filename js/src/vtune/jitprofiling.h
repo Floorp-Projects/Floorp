@@ -584,7 +584,7 @@ iJIT_IsProfilingActiveFlags JITAPI iJIT_IsProfilingActive(void);
  *
  * @param[in] event_type - type of the data sent to the agent
  * @param[in] EventSpecificData - pointer to event-specific data
- * 
+ *
  * @returns 1 on success, otherwise 0.
  */
 int JITAPI iJIT_NotifyEvent(iJIT_JVM_EVENT event_type, void *EventSpecificData);

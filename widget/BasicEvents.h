@@ -318,7 +318,6 @@ enum nsEventStructType
 #define NS_RATECHANGE          (NS_MEDIA_EVENT_START+17)
 #define NS_DURATIONCHANGE      (NS_MEDIA_EVENT_START+18)
 #define NS_VOLUMECHANGE        (NS_MEDIA_EVENT_START+19)
-#define NS_MOZAUDIOAVAILABLE   (NS_MEDIA_EVENT_START+20)
 
 // paint notification events
 #define NS_NOTIFYPAINT_START    3400

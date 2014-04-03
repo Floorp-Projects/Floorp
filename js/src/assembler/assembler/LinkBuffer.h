@@ -23,8 +23,8 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- * 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef assembler_assembler_LinkBuffer_h
@@ -91,7 +91,7 @@ public:
         ASSERT(call.isFlagSet(Call::Linkable));
         MacroAssembler::linkCall(code(), call, function);
     }
-    
+
     void link(Jump jump, CodeLocationLabel label)
     {
         MacroAssembler::linkJump(code(), jump, label);
@@ -180,7 +180,7 @@ public:
     }
 
 protected:
-    // Keep this private! - the underlying code should only be obtained externally via 
+    // Keep this private! - the underlying code should only be obtained externally via
     // finalizeCode() or finalizeCodeAddendum().
     void* code()
     {

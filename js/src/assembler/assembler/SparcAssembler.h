@@ -963,12 +963,12 @@ namespace JSC {
         {
             return dst.m_offset - src.m_offset;
         }
-    
+
         static int getDifferenceBetweenLabels(JmpDst src, JmpSrc dst)
         {
             return dst.m_offset - src.m_offset;
         }
-    
+
         static int getDifferenceBetweenLabels(JmpSrc src, JmpDst dst)
         {
             return dst.m_offset - src.m_offset;
@@ -985,7 +985,7 @@ namespace JSC {
 
             return reinterpret_cast<void*>(reinterpret_cast<ptrdiff_t>(code) + jump.m_offset);
         }
-    
+
         static void* getRelocatedAddress(void* code, JmpDst destination)
         {
             ASSERT(destination.m_offset != -1);
@@ -1035,7 +1035,7 @@ namespace JSC {
                            from, to);
 
             int value = ((int)to - (int)from) / 4;
-            if (isimm22(value)) 
+            if (isimm22(value))
                 patchbranch(from, value);
             else {
                 patchbranch(from, 4);
@@ -1104,7 +1104,7 @@ namespace JSC {
         }
 
         static void repatchPointer(void* where, void* value)
-        { 
+        {
             js::JaegerSpew(js::JSpew_Insns,
                            ISPFX "##repatchPointer ((where = %p)) points to ((%p))\n",
                            where, value);

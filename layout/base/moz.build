@@ -130,7 +130,6 @@ LOCAL_INCLUDES += [
     '../xul/tree/',
     '/docshell/base',
     '/dom/base',
-    '/dom/events',
     '/dom/xbl',
 ]
 

@@ -13,10 +13,6 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'content_events'
 
-EXPORTS += [
-    'nsEventStates.h',
-]
-
 EXPORTS.mozilla += [
     'AsyncEventDispatcher.h',
     'DOMEventTargetHelper.h',
@@ -24,10 +20,12 @@ EXPORTS.mozilla += [
     'EventListenerManager.h',
     'EventNameList.h',
     'EventStateManager.h',
+    'EventStates.h',
     'IMEStateManager.h',
     'InternalMutationEvent.h',
     'JSEventHandler.h',
     'KeyNameList.h',
+    'TextComposition.h',
     'VirtualKeyCodeList.h',
 ]
 
@@ -49,8 +47,8 @@ EXPORTS.mozilla.dom += [
     'MouseEvent.h',
     'MouseScrollEvent.h',
     'MutationEvent.h',
-    'NotifyAudioAvailableEvent.h',
     'NotifyPaintEvent.h',
+    'PaintRequest.h',
     'PointerEvent.h',
     'ScrollAreaEvent.h',
     'SimpleGestureEvent.h',
@@ -92,9 +90,8 @@ UNIFIED_SOURCES += [
     'MouseEvent.cpp',
     'MouseScrollEvent.cpp',
     'MutationEvent.cpp',
-    'NotifyAudioAvailableEvent.cpp',
     'NotifyPaintEvent.cpp',
-    'nsPaintRequest.cpp',
+    'PaintRequest.cpp',
     'PointerEvent.cpp',
     'ScrollAreaEvent.cpp',
     'SimpleGestureEvent.cpp',

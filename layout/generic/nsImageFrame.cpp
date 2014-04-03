@@ -8,6 +8,7 @@
 #include "nsImageFrame.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
 
 #include "nsCOMPtr.h"
@@ -48,7 +49,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMRange.h"
 
-#include "nsEventStates.h"
 #include "nsError.h"
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
@@ -438,7 +438,7 @@ bool
 nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
                                         nsStyleContext* aStyleContext)
 {
-  nsEventStates state = aElement->State();
+  EventStates state = aElement->State();
   if (IMAGE_OK(state,
                HaveFixedSize(aStyleContext->StylePosition()))) {
     // Image is fine; do the image frame thing
@@ -868,7 +868,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();
-  nsEventStates contentState = mContent->AsElement()->State();
+  EventStates contentState = mContent->AsElement()->State();
   bool imageOK = IMAGE_OK(contentState, true);
 
   // Determine if the size is available
@@ -1083,7 +1083,7 @@ public:
                      nsRenderingContext* aCtx) MOZ_OVERRIDE
   {
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
-    nsEventStates state = f->GetContent()->AsElement()->State();
+    EventStates state = f->GetContent()->AsElement()->State();
     f->DisplayAltFeedback(*aCtx,
                           mVisibleRect,
                           IMAGE_OK(state, true)
@@ -1424,7 +1424,7 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               getter_AddRefs(currentRequest));
     }
 
-    nsEventStates contentState = mContent->AsElement()->State();
+    EventStates contentState = mContent->AsElement()->State();
     bool imageOK = IMAGE_OK(contentState, true);
 
     // XXX(seth): The SizeIsAvailable check here should not be necessary - the
