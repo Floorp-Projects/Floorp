@@ -10140,8 +10140,8 @@ IonBuilder::lookupTypedObjectField(MDefinition *typedObj,
     if (fieldDescrs->empty())
         return true;
 
-    *fieldOffset = int32_t(offset);
-    JS_ASSERT(*fieldOffset >= 0);
+    JS_ASSERT(offset >= 0);
+    *fieldOffset = offset;
 
     return true;
 }
