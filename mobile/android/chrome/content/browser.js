@@ -4622,9 +4622,8 @@ var BrowserEventHandler = {
       if (this._scrollableElement != null) {
         // Discard if it's the top-level scrollable, we let Java handle this
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement != doc.documentElement) {
+        if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
           sendMessageToJava({ type: "Panning:Override" });
-        }
       }
     }
 
@@ -4712,6 +4711,7 @@ var BrowserEventHandler = {
 
           let doc = BrowserApp.selectedBrowser.contentDocument;
           if (this._scrollableElement == null ||
+              this._scrollableElement == doc.body ||
               this._scrollableElement == doc.documentElement) {
             sendMessageToJava({ type: "Panning:CancelOverride" });
             return;
@@ -4952,10 +4952,8 @@ var BrowserEventHandler = {
     var computedStyle = win.getComputedStyle(elem);
     if (!computedStyle)
       return false;
-    // We check for overflow:hidden only because all the other cases are scrollable
-    // under various conditions. See https://bugzilla.mozilla.org/show_bug.cgi?id=911574#c24
-    // for some more details.
-    return !(computedStyle.overflowX == 'hidden' && computedStyle.overflowY == 'hidden');
+    return computedStyle.overflowX == 'auto' || computedStyle.overflowX == 'scroll'
+        || computedStyle.overflowY == 'auto' || computedStyle.overflowY == 'scroll';
   },
 
   _findScrollableElement: function(elem, checkElem) {
@@ -4963,15 +4961,16 @@ var BrowserEventHandler = {
     let scrollable = false;
     while (elem) {
       /* Element is scrollable if its scroll-size exceeds its client size, and:
-       * - It has overflow other than 'hidden', or
-       * - It's a textarea or HTML node, or
-       * - It's a text input, or
+       * - It has overflow 'auto' or 'scroll'
+       * - It's a textarea
+       * - It's an HTML/BODY node
+       * - It's a text input
        * - It's a select element showing multiple rows
        */
       if (checkElem) {
         if ((elem.scrollTopMax > 0 || elem.scrollLeftMax > 0) &&
             (this._hasScrollableOverflow(elem) ||
-             elem.mozMatchesSelector("html, textarea")) ||
+             elem.mozMatchesSelector("html, body, textarea")) ||
             (elem instanceof HTMLInputElement && elem.mozIsTextField(false)) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
