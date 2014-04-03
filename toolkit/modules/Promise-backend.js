@@ -78,8 +78,27 @@ XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
                                    "nsIFinalizationWitnessService");
 
 let PendingErrors = {
+  // An internal counter, used to generate unique id.
   _counter: 0,
+  // Functions registered to be notified when a pending error
+  // is reported as uncaught.
+  _observers: new Set(),
   _map: new Map(),
+
+  /**
+   * Initialize PendingErrors
+   */
+  init: function() {
+    Services.obs.addObserver(function observe(aSubject, aTopic, aValue) {
+      PendingErrors.report(aValue);
+    }, "promise-finalization-witness", false);
+  },
+
+  /**
+   * Register an error as tracked.
+   *
+   * @return The unique identifier of the error.
+   */
   register: function(error) {
     let id = "pending-error-" + (this._counter++);
     //
@@ -166,46 +185,102 @@ let PendingErrors = {
     this._map.set(id, value);
     return id;
   },
-  extract: function(id) {
+
+  /**
+   * Notify all observers that a pending error is now uncaught.
+   *
+   * @param id The identifier of the pending error, as returned by
+   * |register|.
+   */
+  report: function(id) {
     let value = this._map.get(id);
+    if (!value) {
+      return; // The error has already been reported
+    }
     this._map.delete(id);
-    return value;
+    for (let obs of this._observers.values()) {
+      obs(value);
+    }
   },
+
+  /**
+   * Mark all pending errors are uncaught, notify the observers.
+   */
+  flush: function() {
+    // Since we are going to modify the map while walking it,
+    // let's copying the keys first.
+    let keys = Array.slice(this._map.keys());
+    for (let key of keys) {
+      this.report(key);
+    }
+  },
+
+  /**
+   * Stop tracking an error, as this error has been caught,
+   * eventually.
+   */
   unregister: function(id) {
     this._map.delete(id);
+  },
+
+  /**
+   * Add an observer notified when an error is reported as uncaught.
+   *
+   * @param {function} observer A function notified when an error is
+   * reported as uncaught. Its arguments are
+   *   {message, date, fileName, stack, lineNumber}
+   * All arguments are optional.
+   */
+  addObserver: function(observer) {
+    this._observers.add(observer);
+  },
+
+  /**
+   * Remove an observer added with addObserver
+   */
+  removeObserver: function(observer) {
+    this._observers.delete(observer);
+  },
+
+  /**
+   * Remove all the observers added with addObserver
+   */
+  removeAllObservers: function() {
+    this._observers.clear();
   }
 };
+PendingErrors.init();
 
-// Actually print the finalization warning.
-Services.obs.addObserver(function observe(aSubject, aTopic, aValue) {
-  let error = PendingErrors.extract(aValue);
-  let {message, date, fileName, stack, lineNumber} = error;
+// Default mechanism for displaying errors
+PendingErrors.addObserver(function(details) {
   let error = Cc['@mozilla.org/scripterror;1'].createInstance(Ci.nsIScriptError);
   if (!error || !Services.console) {
     // Too late during shutdown to use the nsIConsole
     dump("*************************\n");
     dump("A promise chain failed to handle a rejection\n\n");
-    dump("On: " + date + "\n");
-    dump("Full message: " + message + "\n");
+    dump("On: " + details.date + "\n");
+    dump("Full message: " + details.message + "\n");
     dump("See https://developer.mozilla.org/Mozilla/JavaScript_code_modules/Promise.jsm/Promise\n");
-    dump("Full stack: " + (stack||"not available") + "\n");
+    dump("Full stack: " + (details.stack||"not available") + "\n");
     dump("*************************\n");
     return;
   }
-  if (stack) {
-    message += "\nFull Stack: " + stack;
+  let message = details.message;
+  if (details.stack) {
+    message += "\nFull Stack: " + details.stack;
   }
   error.init(
              /*message*/"A promise chain failed to handle a rejection.\n\n" +
-             "Date: " + date + "\nFull Message: " + message,
-             /*sourceName*/ fileName,
-             /*sourceLine*/ lineNumber?("" + lineNumber):0,
-             /*lineNumber*/ lineNumber || 0,
+             "Date: " + details.date + "\nFull Message: " + details.message,
+             /*sourceName*/ details.fileName,
+             /*sourceLine*/ details.lineNumber?("" + details.lineNumber):0,
+             /*lineNumber*/ details.lineNumber || 0,
              /*columnNumber*/ 0,
              /*flags*/ Ci.nsIScriptError.errorFlag,
              /*category*/ "chrome javascript");
   Services.console.logMessage(error);
-}, "promise-finalization-witness", false);
+});
+
 
 ///////// Additional warnings for developers
 //
@@ -496,6 +571,45 @@ Promise.race = function (aValues)
   });
 };
 
+Promise.Debugging = {
+  /**
+   * Add an observer notified when an error is reported as uncaught.
+   *
+   * @param {function} observer A function notified when an error is
+   * reported as uncaught. Its arguments are
+   *   {message, date, fileName, stack, lineNumber}
+   * All arguments are optional.
+   */
+  addUncaughtErrorObserver: function(observer) {
+    PendingErrors.addObserver(observer);
+  },
+
+  /**
+   * Remove an observer added with addUncaughtErrorObserver
+   *
+   * @param {function} An observer registered with
+   * addUncaughtErrorObserver.
+   */
+  removeUncaughtErrorObserver: function(observer) {
+    PendingErrors.removeObserver(observer);
+  },
+
+  /**
+   * Remove all the observers added with addUncaughtErrorObserver
+   */
+  clearUncaughtErrorObservers: function() {
+    PendingErrors.removeAllObservers();
+  },
+
+  /**
+   * Force all pending errors to be reported immediately as uncaught.
+   * Note that this may cause some false positives.
+   */
+  flushUncaughtErrors: function() {
+    PendingErrors.flush();
+  },
+};
+Object.freeze(Promise.Debugging);
 Object.freeze(Promise);
 
 ////////////////////////////////////////////////////////////////////////////////
