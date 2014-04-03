@@ -328,7 +328,8 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
 bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
-  if (IsPaused() || mIterationDuration.ToMilliseconds() <= 0.0) {
+  if (IsPaused() || mIterationDuration.ToMilliseconds() <= 0.0 ||
+      mStartTime.IsNull()) {
     return false;
   }
 

@@ -26,10 +26,6 @@ struct ElementDependentRuleProcessorData;
 
 struct ElementPropertyTransition : public ElementAnimation
 {
-  ElementPropertyTransition() 
-    : mIsRunningOnCompositor(false)
-  {}
-
   // This is the start value to be used for a check for whether a
   // transition is being reversed.  Normally the same as
   // mProperties[0].mSegments[0].mFromValue, except when this transition
@@ -46,10 +42,6 @@ struct ElementPropertyTransition : public ElementAnimation
   // in again when the transition is back to 2px, the mReversePortion
   // for the third transition (from 0px/2px to 10px) will be 0.8.
   double mReversePortion;
-  // true when the transition is running on the compositor. In particular,
-  // mIsRunningOnCompositor will be false if the transition has a delay that we
-  // have not yet completed, so there is no animation on the layer.
-  bool mIsRunningOnCompositor;
 
   // Compute the portion of the *value* space that we should be through
   // at the given time.  (The input to the transition timing function
@@ -58,6 +50,8 @@ struct ElementPropertyTransition : public ElementAnimation
 
   bool IsRemovedSentinel() const
   {
+    // Note that ElementAnimation::IsRunningAt depends on removed sentinels
+    // being represented by a null mStartTime.
     return mStartTime.IsNull();
   }
 
@@ -66,8 +60,6 @@ struct ElementPropertyTransition : public ElementAnimation
     // assign the null time stamp
     mStartTime = mozilla::TimeStamp();
   }
-
-  bool IsRunningAt(mozilla::TimeStamp aTime) const;
 };
 
 struct ElementTransitions MOZ_FINAL
