@@ -585,7 +585,7 @@ class TypedObject : public ArrayBufferViewObject
                               MutableHandleValue statep, MutableHandleId idp);
 
   public:
-    static size_t offsetOfOwnerSlot();
+    static size_t ownerOffset();
 
     // Each typed object contains a void* pointer pointing at the
     // binary data that it represents. (That data may be owned by this
@@ -593,10 +593,7 @@ class TypedObject : public ArrayBufferViewObject
     // This function returns the offset in bytes within the object
     // where the `void*` pointer can be found. It is intended for use
     // by the JIT.
-    static size_t offsetOfDataSlot();
-
-    // Offset of the byte offset slot.
-    static size_t offsetOfByteOffsetSlot();
+    static size_t dataOffset();
 
     // Helper for createUnattached()
     static TypedObject *createUnattachedWithClass(JSContext *cx,
@@ -745,9 +742,8 @@ extern const JSJitInfo AttachTypedObjectJitInfo;
  * Changes the offset for `typedObj` within its buffer to `offset`.
  * `typedObj` must already be attached.
  */
-bool intrinsic_SetTypedObjectOffset(JSContext *cx, unsigned argc, Value *vp);
-bool SetTypedObjectOffset(ThreadSafeContext *, unsigned argc, Value *vp);
-extern const JSJitInfo intrinsic_SetTypedObjectOffsetJitInfo;
+bool SetTypedObjectOffset(ThreadSafeContext *cx, unsigned argc, Value *vp);
+extern const JSJitInfo SetTypedObjectOffsetJitInfo;
 
 /*
  * Usage: ObjectIsTypeDescr(obj)

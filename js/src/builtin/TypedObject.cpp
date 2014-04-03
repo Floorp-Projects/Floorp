@@ -2215,22 +2215,16 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 }
 
 /* static */ size_t
-TypedObject::offsetOfOwnerSlot()
+TypedObject::ownerOffset()
 {
     return JSObject::getFixedSlotOffset(JS_TYPEDOBJ_SLOT_OWNER);
 }
 
 /* static */ size_t
-TypedObject::offsetOfDataSlot()
+TypedObject::dataOffset()
 {
     // the offset of 7 is based on the alloc kind
     return JSObject::getPrivateDataOffset(JS_TYPEDOBJ_SLOT_DATA);
-}
-
-/* static */ size_t
-TypedObject::offsetOfByteOffsetSlot()
-{
-    return JSObject::getFixedSlotOffset(JS_TYPEDOBJ_SLOT_BYTEOFFSET);
 }
 
 void
@@ -2718,21 +2712,12 @@ js::SetTypedObjectOffset(ThreadSafeContext *, unsigned argc, Value *vp)
 
     typedObj.setPrivate(typedObj.owner().dataPointer() + offset);
     typedObj.setReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(offset));
-    args.rval().setUndefined();
     return true;
 }
 
-bool
-js::intrinsic_SetTypedObjectOffset(JSContext *cx, unsigned argc, Value *vp)
-{
-    // Do not use JSNativeThreadSafeWrapper<> so that ion can reference
-    // this function more easily when inlining.
-    return SetTypedObjectOffset(cx, argc, vp);
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::intrinsic_SetTypedObjectOffsetJitInfo,
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::SetTypedObjectOffsetJitInfo,
                                       SetTypedObjectJitInfo,
-                                      SetTypedObjectOffset);
+                                      js::SetTypedObjectOffset);
 
 bool
 js::ObjectIsTypeDescr(ThreadSafeContext *, unsigned argc, Value *vp)
