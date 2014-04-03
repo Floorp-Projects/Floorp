@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
+#include "nsAnimationManager.h"
 
 class nsStyleContext;
 class nsPresContext;
@@ -23,26 +24,17 @@ struct ElementDependentRuleProcessorData;
  * Per-Element data                                                          *
  *****************************************************************************/
 
-struct ElementPropertyTransition
+struct ElementPropertyTransition : public ElementAnimation
 {
   ElementPropertyTransition() 
     : mIsRunningOnCompositor(false)
   {}
 
-  nsCSSProperty mProperty;
-  nsStyleAnimation::Value mStartValue, mEndValue;
-  mozilla::TimeStamp mStartTime;
-  mozilla::TimeDuration mDelay;
-
-  // data from the relevant nsTransition
-  mozilla::TimeDuration mDuration;
-  mozilla::css::ComputedTimingFunction mTimingFunction;
-
   // This is the start value to be used for a check for whether a
-  // transition is being reversed.  Normally the same as mStartValue,
-  // except when this transition started as the reversal of another
-  // in-progress transition.  Needed so we can handle two reverses in a
-  // row.
+  // transition is being reversed.  Normally the same as
+  // mProperties[0].mSegments[0].mFromValue, except when this transition
+  // started as the reversal of another in-progress transition.
+  // Needed so we can handle two reverses in a row.
   nsStyleAnimation::Value mStartForReversingTest;
   // Likewise, the portion (in value space) of the "full" reversed
   // transition that we're actually covering.  For example, if a :hover
