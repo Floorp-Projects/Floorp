@@ -52,13 +52,13 @@
                                             android:background="@drawable/shaped_button"
                                             android:visibility="gone"/>
 
-    <org.mozilla.gecko.widget.GeckoImageView android:id="@+id/menu_icon"
-                                             style="@style/UrlBar.ImageButton"
-                                             android:layout_alignLeft="@id/menu"
-                                             android:layout_alignRight="@id/menu"
-                                             android:gravity="center_vertical"
-                                             android:src="@drawable/menu_level"
-                                             android:visibility="gone"/>
+    <org.mozilla.gecko.widget.ThemedImageView android:id="@+id/menu_icon"
+                                              style="@style/UrlBar.ImageButton"
+                                              android:layout_alignLeft="@id/menu"
+                                              android:layout_alignRight="@id/menu"
+                                              android:gravity="center_vertical"
+                                              android:src="@drawable/menu_level"
+                                              android:visibility="gone"/>
 
     <org.mozilla.gecko.toolbar.ShapedButton android:id="@+id/tabs"
                                             style="@style/UrlBar.ImageButton"

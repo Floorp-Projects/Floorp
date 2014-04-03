@@ -12,6 +12,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.widget.TwoWayView;
+import org.mozilla.gecko.widget.TabThumbnailWrapper;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -31,7 +32,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class TabsTray extends TwoWayView
-                      implements TabsPanel.PanelView {
+    implements TabsPanel.PanelView {
     private static final String LOGTAG = "GeckoTabsTray";
 
     private Context mContext;
@@ -122,12 +123,14 @@ public class TabsTray extends TwoWayView
         ImageView thumbnail;
         ImageButton close;
         ViewGroup info;
+        TabThumbnailWrapper thumbnailWrapper;
 
         public TabRow(View view) {
             info = (ViewGroup) view;
             title = (TextView) view.findViewById(R.id.title);
             thumbnail = (ImageView) view.findViewById(R.id.thumbnail);
             close = (ImageButton) view.findViewById(R.id.close);
+            thumbnailWrapper = (TabThumbnailWrapper) view.findViewById(R.id.wrapper);
         }
     }
 
@@ -173,6 +176,7 @@ public class TabsTray extends TwoWayView
                     // We just need to update the style for the unselected tab...
                 case THUMBNAIL:
                 case TITLE:
+                case RECORDING_CHANGE:
                     View view = TabsTray.this.getChildAt(getPositionForTab(tab) - TabsTray.this.getFirstVisiblePosition());
                     if (view == null)
                         return;
@@ -270,7 +274,9 @@ public class TabsTray extends TwoWayView
             } else {
                 row.thumbnail.setImageResource(R.drawable.tab_thumbnail_default);
             }
-
+            if (row.thumbnailWrapper != null) {
+                row.thumbnailWrapper.setRecording(tab.isRecording());
+            }
             row.title.setText(tab.getDisplayTitle());
             row.close.setTag(row);
         }

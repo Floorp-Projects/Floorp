@@ -19,10 +19,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
-import android.app.Activity;
+
 import java.io.IOException;
-
-
 import java.util.Locale;
 
 public class GeckoThread extends Thread implements GeckoEventListener {
@@ -97,7 +95,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             Locale.setDefault(locale);
         }
 
-        Context app = GeckoAppShell.getContext();
+        Context context = GeckoAppShell.getContext();
         String resourcePath = "";
         Resources res  = null;
         String[] pluginDirs = null;
@@ -106,16 +104,14 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         } catch (Exception e) {
             Log.w(LOGTAG, "Caught exception getting plugin dirs.", e);
         }
-        
-        if (app instanceof Activity) {
-            Activity activity = (Activity)app;
-            resourcePath = activity.getApplication().getPackageResourcePath();
-            res = activity.getBaseContext().getResources();
-            GeckoLoader.setupGeckoEnvironment(activity, pluginDirs, app.getFilesDir().getPath());
-        }
-        GeckoLoader.loadSQLiteLibs(app, resourcePath);
-        GeckoLoader.loadNSSLibs(app, resourcePath);
-        GeckoLoader.loadGeckoLibs(app, resourcePath);
+
+        resourcePath = context.getPackageResourcePath();
+        res = context.getResources();
+        GeckoLoader.setupGeckoEnvironment(context, pluginDirs, context.getFilesDir().getPath());
+
+        GeckoLoader.loadSQLiteLibs(context, resourcePath);
+        GeckoLoader.loadNSSLibs(context, resourcePath);
+        GeckoLoader.loadGeckoLibs(context, resourcePath);
         GeckoJavaSampler.setLibsLoaded();
 
         Locale.setDefault(locale);
