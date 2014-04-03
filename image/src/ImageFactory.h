@@ -29,6 +29,14 @@ public:
   static void Initialize();
 
   /**
+   * Determines whether it's safe to retarget OnDataAvailable for an image.
+   *
+   * @param aURI          The URI of the image.
+   * @param aIsMultipart  Whether the image is part of a multipart request.
+   */
+  static bool CanRetargetOnDataAvailable(ImageURL* aURI, bool aIsMultiPart);
+
+  /**
    * Creates a new image with the given properties.
    * Can be called on or off the main thread.
    *
