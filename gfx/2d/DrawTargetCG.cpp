@@ -30,11 +30,6 @@ static CGRect RectToCGRect(Rect r)
   return CGRectMake(r.x, r.y, r.width, r.height);
 }
 
-static CGRect IntRectToCGRect(IntRect r)
-{
-  return CGRectMake(r.x, r.y, r.width, r.height);
-}
-
 CGBlendMode ToBlendMode(CompositionOp op)
 {
   CGBlendMode mode;
@@ -1229,34 +1224,31 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
       aSurface->GetType() == SurfaceType::DATA) {
     CGImageRef image = GetRetainedImageFromSourceSurface(aSurface);
 
-    /* we have two options here:
-     *  - create a subimage -- this is slower
-     *  - fancy things with clip and different dest rects */
-    CGImageRef subimage = CGImageCreateWithImageInRect(image, IntRectToCGRect(aSourceRect));
-    CGImageRelease(image);
     // XXX: it might be more efficient for us to do the copy directly if we have access to the bits
 
     CGContextSaveGState(mCg);
 
     // CopySurface ignores the clip, so we need to use private API to temporarily reset it
     CGContextResetClip(mCg);
+    CGRect destRect = CGRectMake(aDestination.x, aDestination.y,
+                                 aSourceRect.width, aSourceRect.height);
+    CGContextClipToRect(mCg, destRect);
+
     CGContextSetBlendMode(mCg, kCGBlendModeCopy);
 
     CGContextScaleCTM(mCg, 1, -1);
 
-    CGRect flippedRect = CGRectMake(aDestination.x, -(aDestination.y + aSourceRect.height),
-                                    aSourceRect.width, aSourceRect.height);
+    CGRect flippedRect = CGRectMake(aDestination.x - aSourceRect.x, -(aDestination.y - aSourceRect.y + double(CGImageGetHeight(image))),
+                                    CGImageGetWidth(image), CGImageGetHeight(image));
 
     // Quartz seems to copy A8 surfaces incorrectly if we don't initialize them
     // to transparent first.
     if (mFormat == SurfaceFormat::A8) {
       CGContextClearRect(mCg, flippedRect);
     }
-    CGContextDrawImage(mCg, flippedRect, subimage);
+    CGContextDrawImage(mCg, flippedRect, image);
 
     CGContextRestoreGState(mCg);
-
-    CGImageRelease(subimage);
   }
 }
 
