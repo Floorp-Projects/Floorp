@@ -1103,6 +1103,17 @@ BaselineCompiler::emit_JSOP_NULL()
 bool
 BaselineCompiler::emit_JSOP_THIS()
 {
+    if (function() && function()->isArrow()) {
+        // Arrow functions store their (lexical) |this| value in an
+        // extended slot.
+        frame.syncStack(0);
+        Register scratch = R0.scratchReg();
+        masm.loadPtr(frame.addressOfCallee(), scratch);
+        masm.loadValue(Address(scratch, FunctionExtended::offsetOfArrowThisSlot()), R0);
+        frame.push(R0);
+        return true;
+    }
+
     // Keep this value in R0
     frame.pushThis();
 

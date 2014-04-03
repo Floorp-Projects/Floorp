@@ -733,10 +733,6 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     pushBuffer.AppendLiteral("\" href=\"");
 
-    nsXPIDLCString encoding;
-    rv = mParser->GetEncoding(getter_Copies(encoding));
-    if (NS_FAILED(rv)) return rv;
-
     // need to escape links
     nsAutoCString locEscaped;
 
@@ -754,26 +750,20 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     if (mExpectAbsLoc &&
         NS_SUCCEEDED(net_ExtractURLScheme(loc, nullptr, nullptr, nullptr))) {
         // escape as absolute 
-        escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_Minimal;
+        escFlags = esc_Forced | esc_AlwaysCopy | esc_Minimal;
     }
     else {
         // escape as relative
         // esc_Directory is needed because directories have a trailing slash.
         // Without it, the trailing '/' will be escaped, and links from within
         // that directory will be incorrect
-        escFlags = esc_Forced | esc_OnlyASCII | esc_AlwaysCopy | esc_FileBaseName | esc_Colon | esc_Directory;
+        escFlags = esc_Forced | esc_AlwaysCopy | esc_FileBaseName | esc_Colon | esc_Directory;
     }
     NS_EscapeURL(loc.get(), loc.Length(), escFlags, locEscaped);
     // esc_Directory does not escape the semicolons, so if a filename
     // contains semicolons we need to manually escape them.
     // This replacement should be removed in bug #473280
     locEscaped.ReplaceSubstring(";", "%3b");
-    if (!encoding.EqualsLiteral("UTF-8")) {
-        // Escape all non-ASCII bytes to preserve the raw value.
-        nsAutoCString outstr;
-        NS_EscapeURL(locEscaped, esc_AlwaysCopy | esc_OnlyNonASCII, outstr);
-        locEscaped = outstr;
-    }
     nsAdoptingCString htmlEscapedURL(nsEscapeHTML(locEscaped.get()));
     pushBuffer.Append(htmlEscapedURL);
 

@@ -109,6 +109,7 @@ void
 TextTrack::AddCue(TextTrackCue& aCue)
 {
   mCueList->AddCue(aCue);
+  aCue.SetTrack(this);
   if (mTextTrackList) {
     HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
     if (mediaElement) {

@@ -1992,6 +1992,9 @@ class MBail : public MNullaryInstruction
         return new(alloc) MBail();
     }
 
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
 };
 
 class MAssertFloat32 : public MUnaryInstruction
@@ -4396,6 +4399,39 @@ class MComputeThis
 
     // Note: don't override getAliasSet: the thisObject hook can be
     // effectful.
+};
+
+// Load an arrow function's |this| value.
+class MLoadArrowThis
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+    MLoadArrowThis(MDefinition *callee)
+      : MUnaryInstruction(callee)
+    {
+        setResultType(MIRType_Value);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadArrowThis)
+
+    static MLoadArrowThis *New(TempAllocator &alloc, MDefinition *callee) {
+        return new(alloc) MLoadArrowThis(callee);
+    }
+    MDefinition *callee() const {
+        return getOperand(0);
+    }
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    bool congruentTo(MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        // An arrow function's lexical |this| value is immutable.
+        return AliasSet::None();
+    }
 };
 
 class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
