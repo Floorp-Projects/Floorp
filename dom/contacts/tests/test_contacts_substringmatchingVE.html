@@ -21,14 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=877302
 <script class="testbody" type="text/javascript">
 "use strict";
 
-var substringLength = 7;
-SpecialPowers.setIntPref("dom.phonenumber.substringmatching.VE", substringLength);
-SpecialPowers.setCharPref("ril.lastKnownSimMcc", "734");
-
-var sample_id1;
-var createResult1;
-var findResult1;
-
 var prop = {
   tel: [{value: "7932012345" }, {value: "7704143727591"}]
 };
@@ -124,13 +116,16 @@ var steps = [
   },
   function () {
     ok(true, "all done!\n");
-    SpecialPowers.clearUserPref("dom.phonenumber.substringmatching.BR");
-    SpecialPowers.clearUserPref("ril.lastKnownSimMcc");
     SimpleTest.finish();
   }
 ];
 
-start_tests();
+SpecialPowers.pushPrefEnv({
+  set: [
+    ["dom.phonenumber.substringmatching.VE", 7],
+    ["ril.lastKnownSimMcc", "734"]
+  ]
+}, start_tests);
 </script>
 </pre>
 </body>
