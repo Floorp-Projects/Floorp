@@ -2133,6 +2133,12 @@ public:
   static nsRect
   CalculateExpandedScrollableRect(nsIFrame* aFrame);
 
+  /**
+   * Return whether we want to use APZ for subframes in this process.
+   * Currently we don't support APZ for the parent process on B2G.
+   */
+  static bool WantSubAPZC();
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
