@@ -127,6 +127,7 @@ public:
   typedef FrameMetrics::ViewID ViewID;
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSSize CSSSize;
+  typedef mozilla::LayerMargin LayerMargin;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -155,11 +156,38 @@ public:
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
- /**
-  * Set the display port base rect for given element to be used with display
-  * port margins.
-  */
- static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
+  MOZ_BEGIN_ENUM_CLASS(RepaintMode, uint8_t)
+    Repaint,
+    DoNotRepaint
+  MOZ_END_ENUM_CLASS(RepaintMode)
+
+  /**
+   * Set the display port margins for a content element to be used with a
+   * display port base (see SetDisplayPortBase()).
+   * See also nsIDOMWindowUtils.setDisplayPortMargins.
+   * @param aContent the content element for which to set the margins
+   * @param aPresShell the pres shell for the document containing the element
+   * @param aMargins the margins to set
+   * @param aAlignmentX, alignmentY the amount of pixels to which to align the
+   *                                displayport built by combining the base
+   *                                rect with the margins, in either direction
+   * @param aPriority a priority value to determine which margins take effect
+   *                  when multiple callers specify margins
+   * @param aRepaintMode whether to schedule a paint after setting the margins
+   */
+  static void SetDisplayPortMargins(nsIContent* aContent,
+                                    nsIPresShell* aPresShell,
+                                    const LayerMargin& aMargins,
+                                    uint32_t aAlignmentX,
+                                    uint32_t aAlignmentY,
+                                    uint32_t aPriority = 0,
+                                    RepaintMode aRepaintMode = RepaintMode::Repaint);
+
+  /**
+   * Set the display port base rect for given element to be used with display
+   * port margins.
+   */
+  static void SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase);
 
   /**
    * Get the critical display port for the given element.
