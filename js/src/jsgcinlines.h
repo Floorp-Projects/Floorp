@@ -417,7 +417,7 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
     JS_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
                  kind == FINALIZE_STRING ||
-                 kind == FINALIZE_SHORT_STRING ||
+                 kind == FINALIZE_FAT_INLINE_STRING ||
                  kind == FINALIZE_JITCODE);
     JS_ASSERT(!rt->isHeapBusy());
     JS_ASSERT(!rt->noGCOrAllocationCheck);
@@ -592,10 +592,10 @@ js_NewGCString(js::ThreadSafeContext *cx)
 }
 
 template <js::AllowGC allowGC>
-inline JSShortString *
-js_NewGCShortString(js::ThreadSafeContext *cx)
+inline JSFatInlineString *
+js_NewGCFatInlineString(js::ThreadSafeContext *cx)
 {
-    return js::gc::AllocateNonObject<JSShortString, allowGC>(cx);
+    return js::gc::AllocateNonObject<JSFatInlineString, allowGC>(cx);
 }
 
 inline JSExternalString *

@@ -57,7 +57,7 @@
     <command id="globalSearchCommand"
              oncommand="DebuggerView.Filtering._doGlobalSearch()"/>
     <command id="functionSearchCommand"
-             oncommand="DebuggerView.Filtering._doFunctionSearch()"/>
+             oncommand="DepbuggerView.Filtering._doFunctionSearch()"/>
     <command id="tokenSearchCommand"
              oncommand="DebuggerView.Filtering._doTokenSearch()"/>
     <command id="lineSearchCommand"
@@ -434,7 +434,7 @@
         <tabpanels flex="1">
           <tabpanel id="variables-tabpanel">
             <vbox id="expressions"/>
-            <splitter class="devtools-horizontal-splitter devtools-invisible-splitter"/>
+            <splitter class="devtools-horizontal-splitter"/>
             <vbox id="variables" flex="1"/>
           </tabpanel>
           <tabpanel id="events-tabpanel">
