@@ -7,12 +7,17 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSContainer;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -22,86 +27,168 @@ public final class EventDispatcher {
     private static final String SUFFIX_RETURN = "Return";
     private static final String SUFFIX_ERROR = "Error";
 
-    private final Map<String, CopyOnWriteArrayList<GeckoEventListener>> mEventListeners
-                  = new HashMap<String, CopyOnWriteArrayList<GeckoEventListener>>();
+    /**
+     * The capacity of a HashMap is rounded up to the next power-of-2. Every time the size
+     * of the map goes beyond 75% of the capacity, the map is rehashed. Therefore, to
+     * empirically determine the initial capacity that avoids rehashing, we need to
+     * determine the initial size, divide it by 75%, and round up to the next power-of-2.
+     */
+    private static final int GECKO_NATIVE_EVENTS_COUNT = 0; // Default for HashMap
+    private static final int GECKO_JSON_EVENTS_COUNT = 256; // Empirically measured
 
-    public void registerEventListener(String event, GeckoEventListener listener) {
-        synchronized (mEventListeners) {
-            CopyOnWriteArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
-            if (listeners == null) {
-                // create a CopyOnWriteArrayList so that we can modify it
-                // concurrently with iterating through it in handleGeckoMessage.
-                // Otherwise we could end up throwing a ConcurrentModificationException.
-                listeners = new CopyOnWriteArrayList<GeckoEventListener>();
-            } else if (listeners.contains(listener)) {
-                Log.w(LOGTAG, "EventListener already registered for event '" + event + "'",
-                      new IllegalArgumentException());
+    private final Map<String, List<NativeEventListener>> mGeckoThreadNativeListeners =
+        new HashMap<String, List<NativeEventListener>>(GECKO_NATIVE_EVENTS_COUNT);
+    private final Map<String, List<GeckoEventListener>> mGeckoThreadJSONListeners =
+        new HashMap<String, List<GeckoEventListener>>(GECKO_JSON_EVENTS_COUNT);
+
+    private <T> void registerListener(final Class<? extends List<T>> listType,
+                                      final Map<String, List<T>> listenersMap,
+                                      final T listener,
+                                      final String[] events) {
+        try {
+            synchronized (listenersMap) {
+                for (final String event : events) {
+                    List<T> listeners = listenersMap.get(event);
+                    if (listeners == null) {
+                        listeners = listType.newInstance();
+                        listenersMap.put(event, listeners);
+                    }
+                    listeners.add(listener);
+                }
             }
-            listeners.add(listener);
-            mEventListeners.put(event, listeners);
+        } catch (final IllegalAccessException e) {
+            throw new IllegalArgumentException("Invalid new list type", e);
+        } catch (final InstantiationException e) {
+            throw new IllegalArgumentException("Invalid new list type", e);
         }
     }
 
-    public void unregisterEventListener(String event, GeckoEventListener listener) {
-        synchronized (mEventListeners) {
-            CopyOnWriteArrayList<GeckoEventListener> listeners = mEventListeners.get(event);
-            if (listeners == null) {
-                Log.w(LOGTAG, "unregisterEventListener: event '" + event + "' has no listeners");
+    private <T> void checkNotRegistered(final Map<String, List<T>> listenersMap,
+                                        final String[] events) {
+        synchronized (listenersMap) {
+            for (final String event: events) {
+                if (listenersMap.get(event) != null) {
+                    throw new IllegalStateException(
+                        "Already registered " + event + " under a different type");
+                }
+            }
+        }
+    }
+
+    private <T> void unregisterListener(final Map<String, List<T>> listenersMap,
+                                        final T listener,
+                                        final String[] events) {
+        synchronized (listenersMap) {
+            for (final String event : events) {
+                List<T> listeners = listenersMap.get(event);
+                if (listeners == null ||
+                    !listeners.remove(listener)) {
+                    throw new IllegalArgumentException(event + " was not registered");
+                }
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void registerGeckoThreadListener(final NativeEventListener listener,
+                                            final String... events) {
+        checkNotRegistered(mGeckoThreadJSONListeners, events);
+
+        // For listeners running on the Gecko thread, we want to notify the listeners
+        // outside of our synchronized block, because the listeners may take an
+        // indeterminate amount of time to run. Therefore, to ensure concurrency when
+        // iterating the list outside of the synchronized block, we use a
+        // CopyOnWriteArrayList.
+        registerListener((Class)CopyOnWriteArrayList.class,
+                         mGeckoThreadNativeListeners, listener, events);
+    }
+
+    @Deprecated // Use NativeEventListener instead
+    @SuppressWarnings("unchecked")
+    private void registerGeckoThreadListener(final GeckoEventListener listener,
+                                             final String... events) {
+        checkNotRegistered(mGeckoThreadNativeListeners, events);
+
+        registerListener((Class)CopyOnWriteArrayList.class,
+                         mGeckoThreadJSONListeners, listener, events);
+    }
+
+    public void unregisterGeckoThreadListener(final NativeEventListener listener,
+                                              final String... events) {
+        unregisterListener(mGeckoThreadNativeListeners, listener, events);
+    }
+
+    @Deprecated // Use NativeEventListener instead
+    private void unregisterGeckoThreadListener(final GeckoEventListener listener,
+                                               final String... events) {
+        unregisterListener(mGeckoThreadJSONListeners, listener, events);
+    }
+
+    @Deprecated // Use one of the variants above.
+    public void registerEventListener(final String event, final GeckoEventListener listener) {
+        registerGeckoThreadListener(listener, event);
+    }
+
+    @Deprecated // Use one of the variants above
+    public void unregisterEventListener(final String event, final GeckoEventListener listener) {
+        unregisterGeckoThreadListener(listener, event);
+    }
+
+    public void dispatchEvent(final NativeJSContainer message) {
+        try {
+            // First try native listeners.
+            final String type = message.getString("type");
+
+            final List<NativeEventListener> listeners;
+            synchronized (mGeckoThreadNativeListeners) {
+                listeners = mGeckoThreadNativeListeners.get(type);
+            }
+            if (listeners != null) {
+                if (listeners.size() == 0) {
+                    Log.w(LOGTAG, "No listeners for " + type);
+                }
+                for (final NativeEventListener listener : listeners) {
+                    listener.handleMessage(type, message);
+                }
+                // If we found native listeners, we assume we don't have any JSON listeners
+                // and return early. This assumption is checked when registering listeners.
                 return;
             }
-            if (!listeners.remove(listener)) {
-                Log.w(LOGTAG, "unregisterEventListener: tried to remove an unregistered listener " +
-                              "for event '" + event + "'");
-            }
-            if (listeners.size() == 0) {
-                mEventListeners.remove(event);
-            }
+        } catch (final IllegalArgumentException e) {
+            // Message doesn't have a "type" property, fallback to JSON
         }
-    }
-
-    public void dispatchEvent(String message) {
         try {
-            JSONObject json = new JSONObject(message);
-            dispatchEvent(json);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "dispatchEvent: malformed JSON.", e);
+            // If we didn't find native listeners, try JSON listeners.
+            dispatchEvent(new JSONObject(message.toString()));
+        } catch (final JSONException e) {
+            Log.e(LOGTAG, "Cannot parse JSON");
+        } catch (final UnsupportedOperationException e) {
+            Log.e(LOGTAG, "Cannot convert message to JSON");
         }
     }
 
-    public void dispatchEvent(JSONObject json) {
+    public void dispatchEvent(final JSONObject message) {
         // {
         //   "type": "value",
         //   "event_specific": "value",
         //   ...
         try {
-            JSONObject gecko = json.has("gecko") ? json.getJSONObject("gecko") : null;
-            if (gecko != null) {
-                json = gecko;
+            final String type = message.getString("type");
+
+            List<GeckoEventListener> listeners;
+            synchronized (mGeckoThreadJSONListeners) {
+                listeners = mGeckoThreadJSONListeners.get(type);
             }
-
-            String type = json.getString("type");
-
-            if (gecko != null) {
-                Log.w(LOGTAG, "Message '" + type + "' has deprecated 'gecko' property!");
-            }
-
-            CopyOnWriteArrayList<GeckoEventListener> listeners;
-            synchronized (mEventListeners) {
-                listeners = mEventListeners.get(type);
-            }
-
             if (listeners == null || listeners.size() == 0) {
-                Log.d(LOGTAG, "dispatchEvent: no listeners registered for event '" + type + "'");
+                Log.w(LOGTAG, "No listeners for " + type);
                 return;
             }
-
-            for (GeckoEventListener listener : listeners) {
-                listener.handleMessage(type, json);
+            for (final GeckoEventListener listener : listeners) {
+                listener.handleMessage(type, message);
             }
-        } catch (Exception e) {
+        } catch (final JSONException e) {
             Log.e(LOGTAG, "handleGeckoMessage throws " + e, e);
         }
-
     }
 
     public static void sendResponse(JSONObject message, Object response) {
