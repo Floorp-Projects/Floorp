@@ -89,19 +89,17 @@ SimpleTiledLayerBuffer::ValidateTile(SimpleTiledLayerTile aTile,
     return SimpleTiledLayerTile();
   }
 
-  if (!textureClient->Lock(OPEN_WRITE)) {
+  if (!textureClient->Lock(OPEN_READ_WRITE)) {
     NS_WARNING("TextureClient lock failed");
     return SimpleTiledLayerTile();
   }
 
-  TextureClientSurface *textureClientSurf = textureClient->AsTextureClientSurface();
-  if (!textureClientSurf) {
+  if (!textureClient->CanExposeDrawTarget()) {
     doBufferedDrawing = false;
   }
 
   RefPtr<DrawTarget> drawTarget;
 
-  nsRefPtr<gfxImageSurface> clientAsImageSurface;
   unsigned char *bufferData = nullptr;
 
   // these are set/updated differently based on doBufferedDrawing
@@ -109,23 +107,25 @@ SimpleTiledLayerBuffer::ValidateTile(SimpleTiledLayerTile aTile,
   nsIntRegion drawRegion;
   nsIntRegion invalidateRegion;
 
-  if (doBufferedDrawing) {
-    // try to obtain the TextureClient as an ImageSurface, so that we can
-    // access the pixels directly
-    nsRefPtr<gfxASurface> asurf = textureClientSurf->GetAsSurface();
-    clientAsImageSurface = asurf ? asurf->GetAsImageSurface() : nullptr;
-    if (clientAsImageSurface) {
-      int32_t bufferStride = clientAsImageSurface->Stride();
+  RefPtr<DrawTarget> srcDT;
+  uint8_t* srcData = nullptr;
+  int32_t srcStride = 0;
+  gfx::IntSize srcSize;
+  gfx::SurfaceFormat srcFormat = gfx::SurfaceFormat::UNKNOWN;
 
+  if (doBufferedDrawing) {
+    // try to directly access the pixels of the TextureClient
+    srcDT = textureClient->GetAsDrawTarget();
+    if (srcDT->LockBits(&srcData, &srcSize, &srcStride, &srcFormat)) {
       if (!aTile.mCachedBuffer) {
-        aTile.mCachedBuffer = SharedBuffer::Create(clientAsImageSurface->GetDataSize());
+        aTile.mCachedBuffer = SharedBuffer::Create(srcStride * srcSize.height);
         fullPaint = true;
       }
       bufferData = (unsigned char*) aTile.mCachedBuffer->Data();
 
       drawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForData(bufferData,
                                                                        kTileSize,
-                                                                       bufferStride,
+                                                                       srcStride,
                                                                        tileFormat);
 
       if (fullPaint) {
@@ -169,14 +169,15 @@ SimpleTiledLayerBuffer::ValidateTile(SimpleTiledLayerTile aTile,
             mCallbackData);
 
   ctxt = nullptr;
-  drawTarget = nullptr;
 
   if (doBufferedDrawing) {
-    memcpy(clientAsImageSurface->Data(), bufferData, clientAsImageSurface->GetDataSize());
-    clientAsImageSurface = nullptr;
+    memcpy(srcData, bufferData, srcSize.height * srcStride);
     bufferData = nullptr;
+    srcDT->ReleaseBits(srcData);
+    srcDT = nullptr;
   }
 
+  drawTarget = nullptr;
   textureClient->Unlock();
 
   if (!mCompositableClient->AddTextureClient(textureClient)) {
