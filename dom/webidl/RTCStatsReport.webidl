@@ -150,7 +150,7 @@ dictionary RTCStatsReportInternal {
 interface RTCStatsReport {
   [ChromeOnly]
   readonly attribute DOMString mozPcid;
-  void forEach(RTCStatsReportCallback callbackFn, any thisArg);
+  void forEach(RTCStatsReportCallback callbackFn, optional any thisArg);
   object get(DOMString key);
   boolean has(DOMString key);
 };

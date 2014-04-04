@@ -17,8 +17,8 @@ interface Console {
   void group(any... data);
   void groupCollapsed(any... data);
   void groupEnd(any... data);
-  void time(any time);
-  void timeEnd(any time);
+  void time(optional any time);
+  void timeEnd(optional any time);
 
   [Throws]
   void profile(any... data);
