@@ -133,6 +133,7 @@
       gQueue.push(new busyify("aria_doc", false));
 
       buildQueueForAttrOfMixedType(gQueue, "pressable", setPressed);
+      buildQueueForAttrOfMixedType(gQueue, "pressable_native", setPressed);
       buildQueueForAttrOfMixedType(gQueue, "checkable", setChecked);
 
       gQueue.invoke(); // Will call SimpleTest.finish();
@@ -160,6 +161,11 @@
      title="mixed state change event is fired for focused accessible only"
     Mozilla Bug 467143
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=989958"
+     title="Pressed state is not exposed on a button element with aria-pressed attribute"
+    Mozilla Bug 989958
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -176,6 +182,7 @@
 
   <!-- aria-pressed -->
   <div id="pressable" role="button"></div>
+  <button id="pressable_native"></button>
 
   <!-- aria-checked -->
   <div id="checkable" role="checkbox"></div>

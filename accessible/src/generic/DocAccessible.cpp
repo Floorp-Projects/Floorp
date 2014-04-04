@@ -1066,17 +1066,10 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
                      aAccessible);
 
   nsIContent* elm = aAccessible->GetContent();
-  if (!elm->HasAttr(kNameSpaceID_None, nsGkAtoms::role)) {
-    // We don't care about these other ARIA attribute changes unless there is
-    // an ARIA role set for the element
-    // XXX: we should check the role map to see if the changed property is
-    // relevant for that particular role.
-    return;
-  }
 
-  // The following ARIA attributes only take affect when dynamic content role is present
   if (aAttribute == nsGkAtoms::aria_checked ||
-      aAttribute == nsGkAtoms::aria_pressed) {
+      (aAccessible->IsButton() &&
+       aAttribute == nsGkAtoms::aria_pressed)) {
     const uint64_t kState = (aAttribute == nsGkAtoms::aria_checked) ?
                             states::CHECKED : states::PRESSED;
     nsRefPtr<AccEvent> event = new AccStateChangeEvent(aAccessible, kState);

@@ -28,8 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       testRole("button_pressed_absent", ROLE_PUSHBUTTON);
 
       // test button aria-pressed states
-      testStates("button_pressed_true", STATE_PRESSED | STATE_CHECKABLE);
-      testStates("button_pressed_false", STATE_CHECKABLE, 0, STATE_PRESSED);
+      testStates("button_pressed_true", STATE_PRESSED, 0, STATE_CHECKABLE);
+      testStates("button_pressed_false", 0, 0, STATE_CHECKABLE | STATE_PRESSED);
       testStates("button_pressed_empty", 0, 0, STATE_PRESSED | STATE_CHECKABLE);
       testStates("button_pressed_undefined", 0, 0, STATE_PRESSED | STATE_CHECKABLE);
       testStates("button_pressed_absent", 0, 0, STATE_PRESSED | STATE_CHECKABLE);
@@ -182,6 +182,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=499653"
      title="Unify ARIA state attributes mapping rules">
     Mozilla Bug 499653
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=989958"
+     title="Pressed state is not exposed on a button element with aria-pressed attribute"
+    Mozilla Bug 989958
   </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
