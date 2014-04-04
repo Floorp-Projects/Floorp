@@ -1058,13 +1058,12 @@ CanvasRenderingContext2D::Render(gfxContext *ctx, GraphicsFilter aFilter, uint32
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<gfxASurface> surface;
-
-  if (NS_FAILED(GetThebesSurface(getter_AddRefs(surface)))) {
+  RefPtr<SourceSurface> surface = mTarget->Snapshot();
+  if (!surface) {
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(surface, Matrix());
 
   pat->SetFilter(aFilter);
   pat->SetExtend(gfxPattern::EXTEND_PAD);
@@ -4156,27 +4155,6 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
                        IntPoint(dirtyRect.x, dirtyRect.y));
 
   Redraw(mgfx::Rect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CanvasRenderingContext2D::GetThebesSurface(gfxASurface **surface)
-{
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsRefPtr<gfxASurface> thebesSurface =
-      gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mTarget);
-
-  if (!thebesSurface) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *surface = thebesSurface;
-  NS_ADDREF(*surface);
 
   return NS_OK;
 }
