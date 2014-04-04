@@ -73,6 +73,9 @@ add_task(function* test_setup() {
   });
 });
 
+add_task(function* test_contract() {
+  Cc["@mozilla.org/browser/experiments-service;1"].getService();
+});
 
 // Test basic starting and stopping of experiments.
 
