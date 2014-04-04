@@ -725,7 +725,7 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
         nsIScrollableFrame* scrollableFrame = frame->GetScrollTargetFrame();
         nsPoint scrollPos(
           scrollableFrame ? scrollableFrame->GetScrollPosition() : nsPoint(0,0));
-        if (marginsData->mAlignmentX > 0 || marginsData->mAlignmentY > 0) {
+        if (marginsData->mAlignment > 0) {
           LayerPoint scrollPosLayer(
             res.width * NSAppUnitsToFloatPixels(scrollPos.x, auPerDevPixel),
             res.height * NSAppUnitsToFloatPixels(scrollPos.y, auPerDevPixel));
@@ -738,13 +738,13 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
           rect.Inflate(1);
 
           float left =
-            marginsData->mAlignmentX * floor(rect.x / marginsData->mAlignmentX);
+            marginsData->mAlignment * floor(rect.x / marginsData->mAlignment);
           float top =
-            marginsData->mAlignmentY * floor(rect.y / marginsData->mAlignmentY);
+            marginsData->mAlignment * floor(rect.y / marginsData->mAlignment);
           float right =
-            marginsData->mAlignmentX * ceil(rect.XMost() / marginsData->mAlignmentX);
+            marginsData->mAlignment * ceil(rect.XMost() / marginsData->mAlignment);
           float bottom =
-            marginsData->mAlignmentY * ceil(rect.YMost() / marginsData->mAlignmentY);
+            marginsData->mAlignment * ceil(rect.YMost() / marginsData->mAlignment);
           rect = LayerRect(left, top, right - left, bottom - top);
           rect -= scrollPosLayer;
         }

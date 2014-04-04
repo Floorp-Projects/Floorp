@@ -87,16 +87,13 @@ struct DisplayPortPropertyData {
 
 struct DisplayPortMarginsPropertyData {
   DisplayPortMarginsPropertyData(const LayerMargin& aMargins,
-                                 uint32_t aAlignmentX, uint32_t aAlignmentY,
-                                 uint32_t aPriority)
+                                 uint32_t aAlignment, uint32_t aPriority)
     : mMargins(aMargins)
-    , mAlignmentX(aAlignmentX)
-    , mAlignmentY(aAlignmentY)
+    , mAlignment(aAlignment)
     , mPriority(aPriority)
   {}
   LayerMargin mMargins;
-  uint32_t mAlignmentX;
-  uint32_t mAlignmentY;
+  uint32_t mAlignment;
   uint32_t mPriority;
 };
 
