@@ -9,7 +9,8 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
 #include "gfx2DGlue.h"
-#include "mozilla/gfx/Tools.h"
+#include "gfxImageSurface.h"
+#include "gfxTypes.h"
 #include "ImageContainer.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 
@@ -31,14 +32,13 @@ using namespace mozilla::layers;
 
 
 // fills the surface with values betwee 0 and 100.
-void SetupSurface(gfx::DataSourceSurface* surface) {
-  uint8_t* data = surface->GetData();
-  gfx::IntSize size = surface->GetSize();
-  uint32_t stride = surface->Stride();
-  int bpp = gfx::BytesPerPixel(surface->GetFormat());
+void SetupSurface(gfxImageSurface* surface) {
+  int bpp = gfxASurface::BytePerPixelFromFormat(surface->Format());
+  int stride = surface->Stride();
   uint8_t val = 0;
-  for (int y = 0; y < size.width; ++y) {
-    for (int x = 0; x < size.height; ++x) {
+  uint8_t* data = surface->Data();
+  for (int y = 0; y < surface->Height(); ++y) {
+    for (int x = 0; x < surface->Height(); ++x) {
       for (int b = 0; b < bpp; ++b) {
         data[y*stride + x*bpp + b] = val;
         if (val == 100) {
@@ -52,20 +52,20 @@ void SetupSurface(gfx::DataSourceSurface* surface) {
 }
 
 // return true if two surfaces contain the same data
-void AssertSurfacesEqual(gfx::DataSourceSurface* surface1,
-                         gfx::DataSourceSurface* surface2)
+void AssertSurfacesEqual(gfxImageSurface* surface1,
+                         gfxImageSurface* surface2)
 {
   ASSERT_EQ(surface1->GetSize(), surface2->GetSize());
-  ASSERT_EQ(surface1->GetFormat(), surface2->GetFormat());
+  ASSERT_EQ(surface1->Format(), surface2->Format());
 
-  uint8_t* data1 = surface1->GetData();
-  uint8_t* data2 = surface2->GetData();
+  uint8_t* data1 = surface1->Data();
+  uint8_t* data2 = surface2->Data();
   int stride1 = surface1->Stride();
   int stride2 = surface2->Stride();
-  int bpp = gfx::BytesPerPixel(surface1->GetFormat());
+  int bpp = gfxASurface::BytePerPixelFromFormat(surface1->Format());
 
-  for (int y = 0; y < surface1->GetSize().height; ++y) {
-    for (int x = 0; x < surface1->GetSize().width; ++x) {
+  for (int y = 0; y < surface1->Height(); ++y) {
+    for (int x = 0; x < surface1->Width(); ++x) {
       for (int b = 0; b < bpp; ++b) {
         ASSERT_EQ(data1[y*stride1 + x*bpp + b],
                   data2[y*stride2 + x*bpp + b]);
@@ -100,18 +100,22 @@ void AssertYCbCrSurfacesEqual(PlanarYCbCrData* surface1,
 }
 
 // Run the test for a texture client and a surface
-void TestTextureClientSurface(TextureClient* texture, gfx::DataSourceSurface* surface) {
+void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) {
 
   // client allocation
-  ASSERT_TRUE(texture->CanExposeDrawTarget());
-  texture->AllocateForSurface(surface->GetSize());
+  ASSERT_TRUE(texture->AsTextureClientSurface() != nullptr);
+  TextureClientSurface* client = texture->AsTextureClientSurface();
+  client->AllocateForSurface(ToIntSize(surface->GetSize()));
   ASSERT_TRUE(texture->IsAllocated());
 
   ASSERT_TRUE(texture->Lock(OPEN_READ_WRITE));
   // client painting
-  RefPtr<DrawTarget> dt = texture->GetAsDrawTarget();
-  dt->CopySurface(surface, IntRect(IntPoint(), surface->GetSize()), IntPoint());
-  dt = nullptr;
+  client->UpdateSurface(surface);
+
+  nsRefPtr<gfxASurface> aSurface = client->GetAsSurface();
+  nsRefPtr<gfxImageSurface> clientSurface = aSurface->GetAsImageSurface();
+
+  AssertSurfacesEqual(surface, clientSurface);
   texture->Unlock();
 
   // client serialization
@@ -130,9 +134,14 @@ void TestTextureClientSurface(TextureClient* texture, gfx::DataSourceSurface* su
   // host read
   ASSERT_TRUE(host->Lock());
   RefPtr<mozilla::gfx::DataSourceSurface> hostDataSurface = host->GetAsSurface();
-  AssertSurfacesEqual(surface, hostDataSurface);
-
   host->Unlock();
+
+  nsRefPtr<gfxImageSurface> hostSurface =
+    new gfxImageSurface(hostDataSurface->GetData(),
+                        ThebesIntSize(hostDataSurface->GetSize()),
+                        hostDataSurface->Stride(),
+                        SurfaceFormatToImageFormat(hostDataSurface->GetFormat()));
+  AssertSurfacesEqual(surface, hostSurface.get());
 }
 
 // Same as above, for YCbCr surfaces
@@ -196,21 +205,20 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
 
 TEST(Layers, TextureSerialization) {
   // the test is run on all the following image formats
-  gfx::SurfaceFormat formats[3] = {
-    gfx::SurfaceFormat::B8G8R8A8,
-    gfx::SurfaceFormat::R8G8B8X8,
-    gfx::SurfaceFormat::A8,
+  gfxImageFormat formats[3] = {
+    gfxImageFormat::ARGB32,
+    gfxImageFormat::RGB24,
+    gfxImageFormat::A8,
   };
 
   for (int f = 0; f < 3; ++f) {
-    RefPtr<gfx::DataSourceSurface> surface =
-      gfx::Factory::CreateDataSourceSurface(gfx::IntSize(400,300), formats[f]);
-    SetupSurface(surface);
+    RefPtr<gfxImageSurface> surface = new gfxImageSurface(gfxIntSize(400,300), formats[f]);
+    SetupSurface(surface.get());
     AssertSurfacesEqual(surface, surface);
 
     RefPtr<TextureClient> client
       = new MemoryTextureClient(nullptr,
-                                surface->GetFormat(),
+                                mozilla::gfx::ImageFormatToSurfaceFormat(surface->Format()),
                                 gfx::BackendType::CAIRO,
                                 TEXTURE_DEALLOCATE_CLIENT);
 
@@ -221,24 +229,20 @@ TEST(Layers, TextureSerialization) {
 }
 
 TEST(Layers, TextureYCbCrSerialization) {
-  RefPtr<gfx::DataSourceSurface> ySurface = gfx::Factory::CreateDataSourceSurface(
-    IntSize(400,300), gfx::SurfaceFormat::A8);
-  RefPtr<gfx::DataSourceSurface> cbSurface = gfx::Factory::CreateDataSourceSurface(
-    IntSize(200,150), gfx::SurfaceFormat::A8);
-  RefPtr<gfx::DataSourceSurface> crSurface = gfx::Factory::CreateDataSourceSurface(
-    IntSize(200,150), gfx::SurfaceFormat::A8);
-
+  RefPtr<gfxImageSurface> ySurface = new gfxImageSurface(gfxIntSize(400,300), gfxImageFormat::A8);
+  RefPtr<gfxImageSurface> cbSurface = new gfxImageSurface(gfxIntSize(200,150), gfxImageFormat::A8);
+  RefPtr<gfxImageSurface> crSurface = new gfxImageSurface(gfxIntSize(200,150), gfxImageFormat::A8);
   SetupSurface(ySurface.get());
   SetupSurface(cbSurface.get());
   SetupSurface(crSurface.get());
 
   PlanarYCbCrData clientData;
-  clientData.mYChannel = ySurface->GetData();
-  clientData.mCbChannel = cbSurface->GetData();
-  clientData.mCrChannel = crSurface->GetData();
-  clientData.mYSize = ySurface->GetSize();
-  clientData.mPicSize = ySurface->GetSize();
-  clientData.mCbCrSize = cbSurface->GetSize();
+  clientData.mYChannel = ySurface->Data();
+  clientData.mCbChannel = cbSurface->Data();
+  clientData.mCrChannel = crSurface->Data();
+  clientData.mYSize = ySurface->GetSize().ToIntSize();
+  clientData.mPicSize = ySurface->GetSize().ToIntSize();
+  clientData.mCbCrSize = cbSurface->GetSize().ToIntSize();
   clientData.mYStride = ySurface->Stride();
   clientData.mCbCrStride = cbSurface->Stride();
   clientData.mStereoMode = StereoMode::MONO;

@@ -692,15 +692,15 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
                                                          TEXTURE_FLAGS_DEFAULT,
                                                          gfx::BackendType::NONE,
                                                          surface->GetSize());
-  MOZ_ASSERT(textureClient->CanExposeDrawTarget());
-  if (!textureClient->AllocateForSurface(surface->GetSize()) ||
+  MOZ_ASSERT(textureClient->AsTextureClientDrawTarget());
+  if (!textureClient->AsTextureClientDrawTarget()->AllocateForSurface(surface->GetSize()) ||
       !textureClient->Lock(OPEN_WRITE_ONLY)) {
     return nullptr;
   }
 
   {
     // We must not keep a reference to the DrawTarget after it has been unlocked.
-    RefPtr<DrawTarget> dt = textureClient->GetAsDrawTarget();
+    RefPtr<DrawTarget> dt = textureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
     dt->CopySurface(surface, IntRect(IntPoint(), surface->GetSize()), IntPoint());
   }
 

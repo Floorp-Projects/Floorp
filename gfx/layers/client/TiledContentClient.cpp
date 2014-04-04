@@ -472,7 +472,7 @@ TileClient::DiscardFrontBuffer()
 {
   if (mFrontBuffer) {
     MOZ_ASSERT(mFrontLock);
-    mManager->GetTexturePool(mFrontBuffer->GetFormat())->ReturnTextureClientDeferred(mFrontBuffer);
+    mManager->GetTexturePool(mFrontBuffer->AsTextureClientDrawTarget()->GetFormat())->ReturnTextureClientDeferred(mFrontBuffer);
     mFrontLock->ReadUnlock();
     mFrontBuffer = nullptr;
     mFrontLock = nullptr;
@@ -484,7 +484,7 @@ TileClient::DiscardBackBuffer()
 {
   if (mBackBuffer) {
     MOZ_ASSERT(mBackLock);
-    mManager->GetTexturePool(mBackBuffer->GetFormat())->ReturnTextureClient(mBackBuffer);
+    mManager->GetTexturePool(mBackBuffer->AsTextureClientDrawTarget()->GetFormat())->ReturnTextureClient(mBackBuffer);
     mBackLock->ReadUnlock();
     mBackBuffer = nullptr;
     mBackLock = nullptr;
@@ -750,7 +750,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   // We must not keep a reference to the DrawTarget after it has been unlocked,
   // make sure these are null'd before unlocking as destruction of the context
   // may cause the target to be flushed.
-  RefPtr<DrawTarget> drawTarget = backBuffer->GetAsDrawTarget();
+  RefPtr<DrawTarget> drawTarget = backBuffer->AsTextureClientDrawTarget()->GetAsDrawTarget();
   drawTarget->SetTransform(Matrix());
 
   RefPtr<gfxContext> ctxt = new gfxContext(drawTarget);
