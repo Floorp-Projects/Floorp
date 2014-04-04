@@ -435,9 +435,9 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
                 return false;
         }
 
-        gc::AllocKind allocKind = uint16_t(flagsword) & JSFunction::EXTENDED
-                                  ? JSFunction::ExtendedFinalizeKind
-                                  : JSFunction::FinalizeKind;
+        gc::AllocKind allocKind = JSFunction::FinalizeKind;
+        if (uint16_t(flagsword) & JSFunction::EXTENDED)
+            allocKind = JSFunction::ExtendedFinalizeKind;
         fun = NewFunctionWithProto(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED,
                                    /* parent = */ NullPtr(), NullPtr(), proto,
                                    allocKind, TenuredObject);
@@ -492,9 +492,9 @@ js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFun
             return nullptr;
     }
 
-    gc::AllocKind allocKind = srcFun->isExtended()
-                              ? JSFunction::ExtendedFinalizeKind
-                              : JSFunction::FinalizeKind;
+    gc::AllocKind allocKind = JSFunction::FinalizeKind;
+    if (srcFun->isExtended())
+        allocKind = JSFunction::ExtendedFinalizeKind;
     RootedFunction clone(cx, NewFunctionWithProto(cx, NullPtr(), nullptr, 0,
                                                   JSFunction::INTERPRETED, NullPtr(), NullPtr(),
                                                   cloneProto, allocKind, TenuredObject));
