@@ -188,3 +188,6 @@ let healthReportWrapper = {
     healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PAYLOAD_FAILED);
   },
 };
+
+window.addEventListener("load", healthReportWrapper.init.bind(healthReportWrapper), false);
+window.addEventListener("unload", healthReportWrapper.uninit.bind(healthReportWrapper), false);
