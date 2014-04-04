@@ -78,7 +78,7 @@ DOMStorageDBThread::Init()
   MonitorAutoLock monitor(mMonitor);
 
   mThread = PR_CreateThread(PR_USER_THREAD, &DOMStorageDBThread::ThreadFunc, this,
-                            PR_PRIORITY_LOW, PR_LOCAL_THREAD, PR_JOINABLE_THREAD,
+                            PR_PRIORITY_LOW, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
                             262144);
   if (!mThread) {
     return NS_ERROR_OUT_OF_MEMORY;

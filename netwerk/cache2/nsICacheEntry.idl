@@ -16,9 +16,14 @@ interface nsICacheListener;
 interface nsIFile;
 interface nsICacheMetaDataVisitor;
 
-[scriptable, uuid(d3fbd879-6d3a-4bd0-b12e-7d86ab27ea90)]
+[scriptable, uuid(3058bf1e-5116-41cf-826b-e6981308d414)]
 interface nsICacheEntry : nsISupports
 {
+  /**
+   * Placeholder for the initial value of expiration time.
+   */
+  const unsigned long NO_EXPIRATION_TIME = 0xFFFFFFFF;
+
   /**
    * Get the key identifying the cache entry.
    */
@@ -66,7 +71,7 @@ interface nsICacheEntry : nsISupports
    *        read starting from this offset into the cached data.  an offset
    *        beyond the end of the stream has undefined consequences.
    *
-   * @return blocking, unbuffered input stream.
+   * @return non-blocking, buffered input stream.
    */
   nsIInputStream openInputStream(in long long offset);
 
@@ -81,7 +86,7 @@ interface nsICacheEntry : nsISupports
    *        write starting from this offset into the cached data.  an offset
    *        beyond the end of the stream has undefined consequences.
    *
-   * @return blocking, unbuffered output stream.
+   * @return blocking, buffered output stream.
    */
   nsIOutputStream openOutputStream(in long long offset);
 
@@ -137,7 +142,7 @@ interface nsICacheEntry : nsISupports
 
   /**
    * Doom this entry and open a new, empty, entry for write.  Consumer has
-   * to exchange this entry for the newly created.
+   * to exchange the entry this method is called on for the newly created.
    * Used on 200 responses to conditional requests.
    *
    * @param aMemoryOnly
@@ -158,7 +163,14 @@ interface nsICacheEntry : nsISupports
    */
   readonly attribute long long dataSize;
 
+  /****************************************************************************
+   * The following methods might be added to some nsICacheEntryInternal
+   * interface since we want to remove them as soon as the old cache backend is
+   * completely removed.
+   */
+
   /**
+   * @deprecated
    * FOR BACKWARD COMPATIBILITY ONLY
    * When the old cache backend is eventually removed, this method
    * can be removed too.
@@ -169,39 +181,29 @@ interface nsICacheEntry : nsISupports
   void close();
 
   /**
+   * @deprecated
    * FOR BACKWARD COMPATIBILITY ONLY
    * Marks the entry as valid so that others can use it and get only readonly
    * access when the entry is held by the 1st writer.
    */
   void markValid();
 
-  /****************************************************************************
-   * The following methods might be added to some nsICacheEntryInternal
-   * interface since we want to remove them as soon as the old cache backend is
-   * completely removed.
-   */
-
   /**
+   * @deprecated
    * FOR BACKWARD COMPATIBILITY ONLY
    * Marks the entry as valid when write access is acquired.
    */
   void maybeMarkValid();
 
   /**
+   * @deprecated
    * FOR BACKWARD COMPATIBILITY ONLY / KINDA HACK
    * @param aWriteAllowed
-   *    consumer indicates whether write to the entry is allowed for it
-   *    depends on implementation how the flag is handled
+   *    Consumer indicates whether write to the entry is allowed for it.
+   *    Depends on implementation how the flag is handled.
    * @returns
-   *    true when write access is acquired for this entry
+   *    true when write access is acquired for this entry,
    *    false otherwise
    */
   boolean hasWriteAccess(in boolean aWriteAllowed);
-
-
-  const unsigned long NO_EXPIRATION_TIME = 0xFFFFFFFF;
-
-  // *************** GET RID OF THESE ??? ***************
-  void setDataSize(in unsigned long size);
-  attribute nsCacheStoragePolicy storagePolicy;
 };

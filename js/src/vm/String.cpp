@@ -23,14 +23,14 @@ using mozilla::RangedPtr;
 using mozilla::RoundUpPow2;
 
 bool
-JSString::isShort() const
+JSString::isFatInline() const
 {
-    // It's possible for short strings to be converted to flat strings;  as a
-    // result, checking just for the arena isn't enough to determine if a
-    // string is short.  Hence the isInline() check.
-    bool is_short = (getAllocKind() == gc::FINALIZE_SHORT_STRING) && isInline();
-    JS_ASSERT_IF(is_short, isFlat());
-    return is_short;
+    // It's possible for fat-inline strings to be converted to flat strings;
+    // as a result, checking just for the arena isn't enough to determine if a
+    // string is fat-inline.  Hence the isInline() check.
+    bool is_FatInline = (getAllocKind() == gc::FINALIZE_FAT_INLINE_STRING) && isInline();
+    JS_ASSERT_IF(is_FatInline, isFlat());
+    return is_FatInline;
 }
 
 bool
@@ -66,7 +66,7 @@ JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     if (isExternal())
         return 0;
 
-    // JSInlineString, JSShortString [JSInlineAtom, JSShortAtom]: the chars are inline.
+    // JSInlineString, JSFatInlineString [JSInlineAtom, JSFatInlineAtom]: the chars are inline.
     if (isInline())
         return 0;
 
@@ -395,8 +395,8 @@ js::ConcatStrings(ThreadSafeContext *cx,
     if (!JSString::validateLength(cx, wholeLength))
         return nullptr;
 
-    if (JSShortString::lengthFits(wholeLength) && cx->isJSContext()) {
-        JSShortString *str = js_NewGCShortString<allowGC>(cx);
+    if (JSFatInlineString::lengthFits(wholeLength) && cx->isJSContext()) {
+        JSFatInlineString *str = js_NewGCFatInlineString<allowGC>(cx);
         if (!str)
             return nullptr;
 

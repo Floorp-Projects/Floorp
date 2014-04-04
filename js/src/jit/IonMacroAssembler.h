@@ -791,7 +791,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void newGCThing(Register result, Register temp, JSObject *templateObject, Label *fail,
                     gc::InitialHeap initialHeap);
     void newGCString(Register result, Register temp, Label *fail);
-    void newGCShortString(Register result, Register temp, Label *fail);
+    void newGCFatInlineString(Register result, Register temp, Label *fail);
 
     void newGCThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
                        gc::AllocKind allocKind, Label *fail);
@@ -799,8 +799,8 @@ class MacroAssembler : public MacroAssemblerSpecific
                        JSObject *templateObject, Label *fail);
     void newGCStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
                         Label *fail);
-    void newGCShortStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                             Label *fail);
+    void newGCFatInlineStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
+                                 Label *fail);
 
     void copySlotsFromTemplate(Register obj, Register temp, const JSObject *templateObj,
                                uint32_t start, uint32_t end);

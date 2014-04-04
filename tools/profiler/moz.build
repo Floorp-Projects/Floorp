@@ -7,6 +7,9 @@
 if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
+    if CONFIG['ENABLE_TESTS']:
+        DIRS += ['tests/gtest']
+
     XPIDL_MODULE = 'profiler'
     XPIDL_SOURCES += [
         'nsIProfiler.idl',

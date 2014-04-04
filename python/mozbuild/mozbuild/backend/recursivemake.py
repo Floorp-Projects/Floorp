@@ -379,8 +379,8 @@ class RecursiveMakeBackend(CommonBackend):
                         # On Windows, path names have a maximum length of 255 characters,
                         # so avoid creating extremely long path names.
                         unified_prefix = backend_file.relobjdir
-                        if len(unified_prefix) > 30:
-                            unified_prefix = unified_prefix[-30:].split('/', 1)[-1]
+                        if len(unified_prefix) > 20:
+                            unified_prefix = unified_prefix[-20:].split('/', 1)[-1]
                         unified_prefix = unified_prefix.replace('/', '_')
 
                         self._add_unified_build_rules(backend_file, v,

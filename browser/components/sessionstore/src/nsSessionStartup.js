@@ -81,6 +81,8 @@ SessionStartup.prototype = {
    * Initialize the component
    */
   init: function sss_init() {
+    Services.obs.notifyObservers(null, "sessionstore-init-started", null);
+
     // do not need to initialize anything in auto-started private browsing sessions
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
       this._initialized = true;

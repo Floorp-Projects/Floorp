@@ -23,7 +23,7 @@ class TestLog(MarionetteTestCase):
         self.assertTrue("I am info" in self.marionette.get_logs()[0])
         self.marionette.log("I AM ERROR", "ERROR")
         self.assertTrue("I AM ERROR" in self.marionette.get_logs()[0])
-        
+
         # Check that is empty if we call it again
         self.assertEqual(0, len(self.marionette.get_logs()))
 

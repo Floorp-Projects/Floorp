@@ -136,8 +136,8 @@ SyntaxTreesPool.prototype = {
   /**
    * @see SyntaxTree.prototype.getIdentifierAt
    */
-  getIdentifierAt: function({ line, column, scriptIndex }) {
-    return this._call("getIdentifierAt", scriptIndex, line, column)[0];
+  getIdentifierAt: function({ line, column, scriptIndex, ignoreLiterals }) {
+    return this._call("getIdentifierAt", scriptIndex, line, column, ignoreLiterals)[0];
   },
 
   /**
@@ -256,11 +256,13 @@ SyntaxTree.prototype = {
    *        The line in the source.
    * @param number aColumn
    *        The column in the source.
+   * @param boolean aIgnoreLiterals
+   *        Specifies if alone literals should be ignored.
    * @return object
    *         An object containing identifier information as { name, location,
    *         evalString } properties, or null if nothing is found.
    */
-  getIdentifierAt: function(aLine, aColumn) {
+  getIdentifierAt: function(aLine, aColumn, aIgnoreLiterals) {
     let info = null;
 
     SyntaxTreeVisitor.walk(this.AST, {
@@ -286,7 +288,9 @@ SyntaxTree.prototype = {
        * @param Node aNode
        */
       onLiteral: function(aNode) {
-        this.onIdentifier(aNode);
+        if (!aIgnoreLiterals) {
+          this.onIdentifier(aNode);
+        }
       },
 
       /**
@@ -705,11 +709,7 @@ let ParserHelpers = {
       case "Identifier":
         return aNode.name;
       case "Literal":
-        if (typeof aNode.value == "string") {
-          return "\"" + aNode.value + "\"";
-        } else {
-          return aNode.value + "";
-        }
+        return uneval(aNode.value);
       default:
         return "";
     }

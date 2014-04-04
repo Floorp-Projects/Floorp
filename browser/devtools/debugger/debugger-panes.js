@@ -6,6 +6,9 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
 // Used to detect minification for automatic pretty printing
 const SAMPLE_SIZE = 50; // no of lines
 const INDENT_COUNT_THRESHOLD = 5; // percentage
@@ -37,7 +40,6 @@ function SourcesView() {
   this._onConditionalPopupShowing = this._onConditionalPopupShowing.bind(this);
   this._onConditionalPopupShown = this._onConditionalPopupShown.bind(this);
   this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
-  this._onConditionalTextboxInput = this._onConditionalTextboxInput.bind(this);
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
 
   this.updateToolbarButtonsState = this.updateToolbarButtonsState.bind(this);
@@ -87,7 +89,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cbPanel.addEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.addEventListener("popupshown", this._onConditionalPopupShown, false);
     this._cbPanel.addEventListener("popuphiding", this._onConditionalPopupHiding, false);
-    this._cbTextbox.addEventListener("input", this._onConditionalTextboxInput, false);
     this._cbTextbox.addEventListener("keypress", this._onConditionalTextboxKeyPress, false);
 
     this.autoFocusOnSelection = false;
@@ -112,7 +113,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShowing, false);
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
-    this._cbTextbox.removeEventListener("input", this._onConditionalTextboxInput, false);
     this._cbTextbox.removeEventListener("keypress", this._onConditionalTextboxKeyPress, false);
   },
 
@@ -560,15 +560,14 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   _openConditionalPopup: function() {
     let breakpointItem = this._selectedBreakpointItem;
     let attachment = breakpointItem.attachment;
-
     // Check if this is an enabled conditional breakpoint, and if so,
     // retrieve the current conditional epression.
     let breakpointPromise = DebuggerController.Breakpoints._getAdded(attachment);
     if (breakpointPromise) {
       breakpointPromise.then(aBreakpointClient => {
-        let isConditionalBreakpoint = "conditionalExpression" in aBreakpointClient;
-        let conditionalExpression = aBreakpointClient.conditionalExpression;
-        doOpen.call(this, isConditionalBreakpoint ? conditionalExpression : "")
+        let isConditionalBreakpoint = aBreakpointClient.hasCondition();
+        let condition = aBreakpointClient.getCondition();
+        doOpen.call(this, isConditionalBreakpoint ? condition : "")
       });
     } else {
       doOpen.call(this, "")
@@ -845,7 +844,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let breakpointPromise = DebuggerController.Breakpoints._getAdded(attachment);
     if (breakpointPromise) {
       breakpointPromise.then(aBreakpointClient => {
-        doHighlight.call(this, "conditionalExpression" in aBreakpointClient);
+        doHighlight.call(this, aBreakpointClient.hasCondition());
       });
     } else {
       doHighlight.call(this, false);
@@ -901,15 +900,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * The popup hiding listener for the breakpoints conditional expression panel.
    */
-  _onConditionalPopupHiding: function() {
+  _onConditionalPopupHiding: Task.async(function*() {
     this._conditionalPopupVisible = false; // Used in tests.
-    window.emit(EVENTS.CONDITIONAL_BREAKPOINT_POPUP_HIDING);
-  },
-
-  /**
-   * The input listener for the breakpoints conditional expression textbox.
-   */
-  _onConditionalTextboxInput: function() {
     let breakpointItem = this._selectedBreakpointItem;
     let attachment = breakpointItem.attachment;
 
@@ -917,11 +909,15 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // save the current conditional epression.
     let breakpointPromise = DebuggerController.Breakpoints._getAdded(attachment);
     if (breakpointPromise) {
-      breakpointPromise.then(aBreakpointClient => {
-        aBreakpointClient.conditionalExpression = this._cbTextbox.value;
-      });
+      let breakpointClient = yield breakpointPromise;
+      yield DebuggerController.Breakpoints.updateCondition(
+        breakpointClient.location,
+        this._cbTextbox.value
+      );
     }
-  },
+
+    window.emit(EVENTS.CONDITIONAL_BREAKPOINT_POPUP_HIDING);
+  }),
 
   /**
    * The keypress listener for the breakpoints conditional expression textbox.
@@ -935,7 +931,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   /**
    * Called when the add breakpoint key sequence was pressed.
    */
-  _onCmdAddBreakpoint: function() {
+  _onCmdAddBreakpoint: function(e) {
     let url = DebuggerView.Sources.selectedValue;
     let line = DebuggerView.editor.getCursor().line + 1;
     let location = { url: url, line: line };
@@ -1812,6 +1808,12 @@ VariableBubbleView.prototype = {
   },
 
   /**
+   * Specifies whether literals can be (redundantly) inspected in a popup.
+   * This behavior is deprecated, but still tested in a few places.
+   */
+  _ignoreLiterals: true,
+
+  /**
    * Searches for an identifier underneath the specified position in the
    * source editor, and if found, opens a VariablesView inspection popup.
    *
@@ -1850,7 +1852,8 @@ VariableBubbleView.prototype = {
     let identifierInfo = parsedSource.getIdentifierAt({
       line: scriptLine + 1,
       column: scriptColumn,
-      scriptIndex: scriptInfo.index
+      scriptIndex: scriptInfo.index,
+      ignoreLiterals: this._ignoreLiterals
     });
 
     // If the info is null, we're not hovering any identifier.

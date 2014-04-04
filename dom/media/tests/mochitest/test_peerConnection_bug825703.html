@@ -15,12 +15,17 @@
 
   makePC = function (config, expect_success) {
       var exception = null;
+      var pc = null;
 
       try {
-          var pc = new mozRTCPeerConnection(config);
+          pc = new mozRTCPeerConnection(config);
       } catch (e) {
           exception = e;
       }
+      if (pc !== null) {
+        pc.close();
+      }
+      pc = null
 
       if (expect_success) {
           ok(!exception, "mozRTCPeerConnection(" +
@@ -34,12 +39,19 @@
   // This is a test of the iceServers parsing code + readable errors
 
   runTest(function () {
-    var pc, pcs;
+    var pcs = null;
     var exception = null;
     var config;
 
-    try { pcs = new mozRTCPeerConnection(); } catch (e) { exception = e; }
+    try {
+      pcs = new mozRTCPeerConnection();
+    } catch (e) {
+      exception = e;
+    }
     ok(!exception, "mozRTCPeerConnection() succeeds");
+    if (pcs !== null) {
+      pcs.close();
+    }
     pcs = null;
     exception = null;
 
@@ -68,6 +80,9 @@
     } catch (e) {
         ok(e.message.indexOf("http") > 0,
            "mozRTCPeerConnection() constructor has readable exceptions");
+    }
+    if (pcs !== null) {
+      pcs.close();
     }
     pcs = null;
 

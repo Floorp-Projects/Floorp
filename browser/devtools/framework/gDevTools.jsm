@@ -12,9 +12,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-
-var ProfilerController = devtools.require("devtools/profiler/controller");
+XPCOMUtils.defineLazyModuleGetter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
 
 const FORBIDDEN_IDS = new Set(["toolbox", ""]);
 const MAX_ORDINAL = 99;
@@ -804,6 +802,8 @@ let gDevToolsBrowser = {
    * Connects to the SPS profiler when the developer tools are open.
    */
   _connectToProfiler: function DT_connectToProfiler() {
+    let ProfilerController = devtools.require("devtools/profiler/controller");
+
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
       if (devtools.TargetFactory.isKnownTab(win.gBrowser.selectedTab)) {
         let target = devtools.TargetFactory.forTab(win.gBrowser.selectedTab);

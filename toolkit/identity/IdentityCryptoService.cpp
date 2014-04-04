@@ -139,7 +139,7 @@ private:
   const KeyType mKeyType; // in
   nsMainThreadPtrHandle<nsIIdentityKeyGenCallback> mCallback; // in
   nsresult mRv; // out
-  nsCOMPtr<KeyPair> mKeyPair; // out
+  nsCOMPtr<nsIIdentityKeyPair> mKeyPair; // out
 
   KeyGenRunnable(const KeyGenRunnable &) MOZ_DELETE;
   void operator=(const KeyGenRunnable &) MOZ_DELETE;

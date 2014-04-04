@@ -2019,7 +2019,7 @@ CacheFileIOManager::DoomFileByKey(const nsACString &aKey,
   }
 
   nsRefPtr<DoomFileByKeyEvent> ev = new DoomFileByKeyEvent(aKey, aCallback);
-  rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::OPEN);
+  rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2495,7 +2495,7 @@ CacheFileIOManager::EvictAll()
   nsCOMPtr<nsIRunnable> ev;
   ev = NS_NewRunnableMethod(ioMan, &CacheFileIOManager::EvictAllInternal);
 
-  rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::OPEN_PRIORITY);
+  rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

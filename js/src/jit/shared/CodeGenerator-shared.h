@@ -351,6 +351,10 @@ class CodeGeneratorShared : public LInstructionVisitor
     inline void restoreLive(LInstruction *ins);
     inline void restoreLiveIgnore(LInstruction *ins, RegisterSet reg);
 
+    // Save/restore all registers that are both live and volatile.
+    inline void saveLiveVolatile(LInstruction *ins);
+    inline void restoreLiveVolatile(LInstruction *ins);
+
     template <typename T>
     void pushArg(const T &t) {
         masm.Push(t);

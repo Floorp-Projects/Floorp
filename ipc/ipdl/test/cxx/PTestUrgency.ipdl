@@ -11,9 +11,9 @@ parent:
 
 child:
     async Start();
-    urgent Reply1() returns (uint32_t result);
-    urgent Reply2() returns (uint32_t result);
-    urgent FinalTest_Hang();
+    rpc Reply1() returns (uint32_t result);
+    rpc Reply2() returns (uint32_t result);
+    rpc FinalTest_Hang();
 };
 
 } // namespace _ipdltest

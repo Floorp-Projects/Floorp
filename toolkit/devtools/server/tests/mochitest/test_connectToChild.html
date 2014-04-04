@@ -74,7 +74,7 @@ function runTests() {
     let transport = DebuggerServer.connectPipe();
     let conn = transport._serverConnection;
     let client = new DebuggerClient(transport);
-    DebuggerServer.connectToChild(conn, mm).then(actor => {
+    DebuggerServer.connectToChild(conn, iframe).then(actor => {
       ok(actor.testActor, "Got the test actor");
 
       // Ensure sending at least one request to our actor,
@@ -104,7 +104,7 @@ function runTests() {
     let transport = DebuggerServer.connectPipe();
     let conn = transport._serverConnection;
     let client = new DebuggerClient(transport);
-    DebuggerServer.connectToChild(conn, mm).then(actor => {
+    DebuggerServer.connectToChild(conn, iframe).then(actor => {
       ok(actor.testActor, "Got a test actor for the second connection");
       isnot(actor.testActor, firstActor, "We get different actor instances between two connections");
 

@@ -214,8 +214,6 @@ class INTR(PrettyPrinted):
     pretty = 'intr'
 class SYNC(PrettyPrinted):
     pretty = 'sync'
-class URGENT(PrettyPrinted):
-    pretty = 'urgent'
 class RPC(PrettyPrinted):
     pretty = 'rpc'
 
@@ -223,26 +221,8 @@ class INOUT(PrettyPrinted):
     pretty = 'inout'
 class IN(PrettyPrinted):
     pretty = 'in'
-    @staticmethod
-    def prettySS(cls, ss): return _prettyTable['in'][ss.pretty]
 class OUT(PrettyPrinted):
     pretty = 'out'
-    @staticmethod
-    def prettySS(ss): return _prettyTable['out'][ss.pretty]
-
-_prettyTable = {
-    IN  : { 'async': 'AsyncRecv',
-            'sync': 'SyncRecv',
-            'intr': 'IntrAnswer',
-            'rpc': 'RPCAnswer',
-            'urgent': 'UrgentAnswer' },
-    OUT : { 'async': 'AsyncSend',
-            'sync': 'SyncSend',
-            'intr': 'IntrCall',
-            'rpc': 'RPCCall',
-            'urgent': 'UrgentCall' }
-    # inout doesn't make sense here
-}
 
 
 class Namespace(Node):

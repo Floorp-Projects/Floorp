@@ -3565,7 +3565,7 @@ RasterImage::DecodeDoneWorker::NotifyFinishedSomeDecoding(RasterImage* image, De
 {
   image->mDecodingMonitor.AssertCurrentThreadIn();
 
-  nsCOMPtr<DecodeDoneWorker> worker = new DecodeDoneWorker(image, request);
+  nsCOMPtr<nsIRunnable> worker = new DecodeDoneWorker(image, request);
   NS_DispatchToMainThread(worker);
 }
 
@@ -3588,7 +3588,7 @@ RasterImage::FrameNeededWorker::FrameNeededWorker(RasterImage* image)
 void
 RasterImage::FrameNeededWorker::GetNewFrame(RasterImage* image)
 {
-  nsCOMPtr<FrameNeededWorker> worker = new FrameNeededWorker(image);
+  nsCOMPtr<nsIRunnable> worker = new FrameNeededWorker(image);
   NS_DispatchToMainThread(worker);
 }
 

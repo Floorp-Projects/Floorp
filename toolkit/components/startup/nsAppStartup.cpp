@@ -161,6 +161,7 @@ nsAppStartup::Init()
     return NS_ERROR_FAILURE;
 
   os->AddObserver(this, "quit-application-forced", true);
+  os->AddObserver(this, "sessionstore-init-started", true);
   os->AddObserver(this, "sessionstore-windows-restored", true);
   os->AddObserver(this, "profile-change-teardown", true);
   os->AddObserver(this, "xul-window-registered", true);
@@ -705,6 +706,8 @@ nsAppStartup::Observe(nsISupports *aSubject,
       mPlacesInitCompleteProbe->Trigger();
     }
 #endif //defined(XP_WIN)
+  } else if (!strcmp(aTopic, "sessionstore-init-started")) {
+    StartupTimeline::Record(StartupTimeline::SESSION_RESTORE_INIT);
   } else if (!strcmp(aTopic, "xpcom-shutdown")) {
     Telemetry::EnteringShutdownStage();
 #if defined(XP_WIN)

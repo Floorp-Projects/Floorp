@@ -929,6 +929,7 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 
 /* Customize mode */
 #navigator-toolbox,
+#browser-bottombox,
 #content-deck {
   transition-property: margin-left, margin-right;
   transition-duration: 200ms;

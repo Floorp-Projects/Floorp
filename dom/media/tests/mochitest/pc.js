@@ -568,7 +568,7 @@ function PCT_setLocalDescription(peer, desc, onSuccess) {
   }
 
   peer.onsignalingstatechange = function () {
-    info(peer + ": 'onsignalingstatechange' event registered for async check");
+    info(peer + ": 'onsignalingstatechange' event registered, signalingState: " + peer.signalingState);
 
     eventFired = true;
     check_next_test();
@@ -629,7 +629,7 @@ function PCT_setRemoteDescription(peer, desc, onSuccess) {
   }
 
   peer.onsignalingstatechange = function () {
-    info(peer + ": 'onsignalingstatechange' event registered for async check");
+    info(peer + ": 'onsignalingstatechange' event registered, signalingState: " + peer.signalingState);
 
     eventFired = true;
     check_next_test();

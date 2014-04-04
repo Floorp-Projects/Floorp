@@ -252,7 +252,7 @@ main( int argc, char* argv[] ) {
                                                       TestListener::IOThread,
                                                       argv[threadNo],
                                                       PR_PRIORITY_NORMAL,
-                                                      PR_LOCAL_THREAD,
+                                                      PR_GLOBAL_THREAD,
                                                       PR_JOINABLE_THREAD,
                                                       0 );
                 if ( ioThread ) {

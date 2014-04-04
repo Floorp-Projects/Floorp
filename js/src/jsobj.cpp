@@ -5022,6 +5022,25 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
 
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         uint32_t index = JSID_TO_INT(id);
+
+        if (obj->is<TypedArrayObject>()) {
+            double d;
+            if (mode == ParallelExecution) {
+                // Bail if converting the value might invoke user-defined
+                // conversions.
+                if (vp.isObject())
+                    return false;
+                if (!NonObjectToNumber(cxArg, vp, &d))
+                    return false;
+            } else {
+                if (!ToNumber(cxArg->asJSContext(), vp, &d))
+                    return false;
+            }
+
+            TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+            return true;
+        }
+
         bool definesPast;
         if (!WouldDefinePastNonwritableLength(cxArg, obj, index, strict, &definesPast))
             return false;
@@ -5033,8 +5052,10 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         }
 
         if (mode == ParallelExecution)
-            return obj->setDenseOrTypedArrayElementIfHasType(cxArg, index, vp);
-        return obj->setDenseOrTypedArrayElementWithType(cxArg->asJSContext(), index, vp);
+            return obj->setDenseElementIfHasType(index, vp);
+
+        obj->setDenseElementWithType(cxArg->asJSContext(), index, vp);
+        return true;
     }
 
     if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {

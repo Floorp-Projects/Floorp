@@ -137,7 +137,7 @@ ThreadPoolWorker::start()
 
     if (!PR_CreateThread(PR_USER_THREAD,
                          HelperThreadMain, this,
-                         PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                         PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
                          PR_UNJOINABLE_THREAD,
                          WORKER_THREAD_STACK_SIZE))
     {

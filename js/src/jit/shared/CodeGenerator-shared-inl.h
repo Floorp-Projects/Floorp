@@ -164,6 +164,24 @@ CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, RegisterSet ignore)
     masm.PopRegsInMaskIgnore(safepoint->liveRegs(), ignore);
 }
 
+void
+CodeGeneratorShared::saveLiveVolatile(LInstruction *ins)
+{
+    JS_ASSERT(!ins->isCall());
+    LSafepoint *safepoint = ins->safepoint();
+    RegisterSet regs = RegisterSet::Intersect(safepoint->liveRegs(), RegisterSet::Volatile());
+    masm.PushRegsInMask(regs);
+}
+
+void
+CodeGeneratorShared::restoreLiveVolatile(LInstruction *ins)
+{
+    JS_ASSERT(!ins->isCall());
+    LSafepoint *safepoint = ins->safepoint();
+    RegisterSet regs = RegisterSet::Intersect(safepoint->liveRegs(), RegisterSet::Volatile());
+    masm.PopRegsInMask(regs);
+}
+
 } // ion
 } // js
 
