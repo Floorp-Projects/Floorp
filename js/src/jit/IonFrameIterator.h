@@ -244,8 +244,6 @@ class IonFrameIterator
 class IonJSFrameLayout;
 class IonBailoutIterator;
 
-class RResumePoint;
-
 // Reads frame information in snapshot-encoding order (that is, outermost frame
 // to innermost frame).
 class SnapshotIterator
@@ -293,19 +291,18 @@ class SnapshotIterator
         return UndefinedValue();
     }
 
-    const RResumePoint *resumePoint() const;
-    const RInstruction *instruction() const {
-        return recover_.instruction();
+    inline uint32_t allocations() const {
+        return recover_.allocations();
     }
-
-    uint32_t numAllocations() const;
     inline bool moreAllocations() const {
-        return snapshot_.numAllocationsRead() < numAllocations();
+        return recover_.moreAllocations(snapshot_);
     }
 
   public:
     // Exhibits frame properties contained in the snapshot.
-    uint32_t pcOffset() const;
+    inline uint32_t pcOffset() const {
+        return recover_.pcOffset();
+    }
     inline bool resumeAfter() const {
         // Inline frames are inlined on calls, which are considered as being
         // resumed on the Call as baseline will push the pc once we return from
@@ -321,9 +318,8 @@ class SnapshotIterator
   public:
     // Handle iterating over frames of the snapshots.
     inline void nextFrame() {
-        JS_ASSERT(snapshot_.numAllocationsRead() == numAllocations());
-        recover_.nextFrame();
-        snapshot_.resetNumAllocationsRead();
+        // Reuse the Snapshot buffer.
+        recover_.nextFrame(snapshot_);
     }
     inline bool moreFrames() const {
         return recover_.moreFrames();
@@ -514,8 +510,8 @@ class InlineFrameIteratorMaybeGC
                 // Skip over all slots until we get to the last slots
                 // (= arguments slots of callee) the +3 is for [this], [returnvalue],
                 // [scopechain], and maybe +1 for [argsObj]
-                JS_ASSERT(parent_s.numAllocations() >= nactual + 3 + argsObjAdj);
-                unsigned skip = parent_s.numAllocations() - nactual - 3 - argsObjAdj;
+                JS_ASSERT(parent_s.allocations() >= nactual + 3 + argsObjAdj);
+                unsigned skip = parent_s.allocations() - nactual - 3 - argsObjAdj;
                 for (unsigned j = 0; j < skip; j++)
                     parent_s.skip();
 

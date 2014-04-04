@@ -281,7 +281,6 @@ if CONFIG['ENABLE_ION']:
         'jit/ParallelSafetyAnalysis.cpp',
         'jit/PerfSpewer.cpp',
         'jit/RangeAnalysis.cpp',
-        'jit/Recover.cpp',
         'jit/RegisterAllocator.cpp',
         'jit/Safepoints.cpp',
         'jit/shared/BaselineCompiler-shared.cpp',
