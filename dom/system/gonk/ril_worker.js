@@ -3823,33 +3823,10 @@ RilObject.prototype = {
     // Go through any remaining calls that are new to us.
     for each (let newCall in newCalls) {
       if (newCall.isVoice) {
-        // Format international numbers appropriately.
-        if (newCall.number &&
-            newCall.toa == TOA_INTERNATIONAL &&
-            newCall.number[0] != "+") {
-          newCall.number = "+" + newCall.number;
-        }
-
-        if (newCall.state == CALL_STATE_INCOMING) {
-          newCall.isOutgoing = false;
-        } else if (newCall.state == CALL_STATE_DIALING) {
-          newCall.isOutgoing = true;
-        }
-
-        // Set flag for outgoing emergency call.
-        newCall.isEmergency = newCall.isOutgoing &&
-                              this._isEmergencyNumber(newCall.number);
-
-        // Add to our map.
         if (newCall.isMpty) {
           conferenceChanged = true;
-          newCall.isConference = true;
-          this.currentConference.participants[newCall.callIndex] = newCall;
-        } else {
-          newCall.isConference = false;
         }
-        this._handleChangedCallState(newCall);
-        this.currentCalls[newCall.callIndex] = newCall;
+        this._addNewVoiceCall(newCall);
       }
     }
 
@@ -3859,6 +3836,34 @@ RilObject.prototype = {
     if (conferenceChanged) {
       this._ensureConference();
     }
+  },
+
+  _addNewVoiceCall: function(newCall) {
+    // Format international numbers appropriately.
+    if (newCall.number && newCall.toa == TOA_INTERNATIONAL &&
+        newCall.number[0] != "+") {
+      newCall.number = "+" + newCall.number;
+    }
+
+    if (newCall.state == CALL_STATE_INCOMING) {
+      newCall.isOutgoing = false;
+    } else if (newCall.state == CALL_STATE_DIALING) {
+      newCall.isOutgoing = true;
+    }
+
+    // Set flag for outgoing emergency call.
+    newCall.isEmergency = newCall.isOutgoing &&
+      this._isEmergencyNumber(newCall.number);
+
+    // Set flag for conference.
+    newCall.isConference = newCall.isMpty ? true : false;
+
+    // Add to our map.
+    if (newCall.isMpty) {
+      this.currentConference.participants[newCall.callIndex] = newCall;
+    }
+    this._handleChangedCallState(newCall);
+    this.currentCalls[newCall.callIndex] = newCall;
   },
 
   _ensureConference: function() {
