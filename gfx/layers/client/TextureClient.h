@@ -50,32 +50,13 @@ class BufferTextureClient;
  * TextureClient is the abstraction that allows us to share data between the
  * content and the compositor side.
  * TextureClient can also provide with some more "producer" facing APIs
- * such as TextureClientSurface and TextureClientYCbCr, that can be queried
- * using AsTextureCLientSurface(), etc.
+ * such as TextureClientYCbCr, that can be queried using
+ * AsTextureClientYCbCr(), etc.
  */
 
 enum TextureAllocationFlags {
   ALLOC_DEFAULT = 0,
   ALLOC_CLEAR_BUFFER = 1
-};
-
-/**
- * Interface for TextureClients that can be updated using a gfxASurface.
- */
-class TextureClientSurface
-{
-public:
-  virtual bool UpdateSurface(gfxASurface* aSurface) = 0;
-  virtual already_AddRefed<gfxASurface> GetAsSurface() = 0;
-  /**
-   * Allocates for a given surface size, taking into account the pixel format
-   * which is part of the state of the TextureClient.
-   *
-   * Does not clear the surface by default, clearing the surface can be done
-   * by passing the CLEAR_BUFFER flag.
-   */
-  virtual bool AllocateForSurface(gfx::IntSize aSize,
-                                  TextureAllocationFlags flags = ALLOC_DEFAULT) = 0;
 };
 
 /**
@@ -168,7 +149,6 @@ public:
                                 gfx::BackendType aMoz2dBackend,
                                 const gfx::IntSize& aSizeHint);
 
-  virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
 
   /**
@@ -392,7 +372,6 @@ protected:
  * (see ShmemTextureClient and MemoryTextureClient)
  */
 class BufferTextureClient : public TextureClient
-                          , public TextureClientSurface
                           , public TextureClientYCbCr
 {
 public:
@@ -418,14 +397,6 @@ public:
   virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
   virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
-
-  // TextureClientSurface
-
-  virtual TextureClientSurface* AsTextureClientSurface() MOZ_OVERRIDE { return this; }
-
-  virtual bool UpdateSurface(gfxASurface* aSurface) MOZ_OVERRIDE;
-
-  virtual already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
 
   virtual bool AllocateForSurface(gfx::IntSize aSize,
                                   TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
