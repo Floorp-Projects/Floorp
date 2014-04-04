@@ -29,21 +29,18 @@ bool
 WMFDecoder::IsMP3Supported()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-#ifdef MOZ_DIRECTSHOW
-  if (DirectShowDecoder::IsEnabled()) {
-    // DirectShowDecoder is enabled, we use that in preference to the WMF
-    // backend.
-    return false;
-  }
-#endif
   if (!MediaDecoder::IsWMFEnabled()) {
     return false;
   }
+  // MP3 works fine in WMF on Windows Vista and Windows 8.
   if (!IsWin7OrLater()) {
     return true;
   }
-  // MP3 support is disabled if we're on Windows 7 and no service pack
-  // is installed, as it's crashy on Win7 SP0.
+  // MP3 support is disabled if we're on Windows 7 and no service packs are
+  // installed, since it's crashy. Win7 with service packs is not so crashy,
+  // so we enable it there. Note we prefer DirectShow for MP3 playback, but
+  // we still support MP3 in MP4 via WMF, or MP3 in WMF if DirectShow is
+  // disabled.
   return IsWin7SP1OrLater();
 }
 
@@ -109,9 +106,11 @@ WMFDecoder::CanPlayType(const nsACString& aType,
     return !aCodecs.Length() || aCodecs.EqualsASCII("mp3");
   }
 
-  // AAC-LC in M4A.
+  // AAC-LC or MP3 in M4A.
   if (aType.EqualsASCII("audio/mp4") || aType.EqualsASCII("audio/x-m4a")) {
-    return !aCodecs.Length() || aCodecs.EqualsASCII("mp4a.40.2");
+    return !aCodecs.Length() ||
+           aCodecs.EqualsASCII("mp4a.40.2") ||
+           aCodecs.EqualsASCII("mp3");
   }
 
   if (!aType.EqualsASCII("video/mp4")) {
@@ -126,6 +125,7 @@ WMFDecoder::CanPlayType(const nsACString& aType,
     const nsSubstring& token = tokenizer.nextToken();
     expectMoreTokens = tokenizer.separatorAfterCurrentToken();
     if (token.EqualsASCII("mp4a.40.2") || // AAC-LC
+        token.EqualsASCII("mp3") ||
         IsSupportedH264Codec(token)) {
       continue;
     }

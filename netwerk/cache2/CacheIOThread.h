@@ -46,6 +46,10 @@ public:
 
   nsresult Init();
   nsresult Dispatch(nsIRunnable* aRunnable, uint32_t aLevel);
+  // Makes sure that any previously posted event to OPEN or OPEN_PRIORITY
+  // levels (such as file opennings and dooms) are executed before aRunnable
+  // that is intended to evict stuff from the cache.
+  nsresult DispatchAfterPendingOpens(nsIRunnable* aRunnable);
   bool IsCurrentThread();
 
   /**
@@ -74,6 +78,7 @@ private:
   void ThreadFunc();
   void LoopOneLevel(uint32_t aLevel);
   bool EventsPending(uint32_t aLastLevel = LAST_LEVEL);
+  nsresult DispatchInternal(nsIRunnable* aRunnable, uint32_t aLevel);
   bool YieldInternal();
 
   static CacheIOThread* sSelf;

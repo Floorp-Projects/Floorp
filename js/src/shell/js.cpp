@@ -2916,7 +2916,7 @@ EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
         return false;
 
     PRThread *thread = PR_CreateThread(PR_USER_THREAD, WorkerMain, input,
-                                       PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+                                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (!thread || !workerThreads.append(thread))
         return false;
 
@@ -3217,7 +3217,7 @@ ScheduleWatchdog(JSRuntime *rt, double t)
                                           WatchdogMain,
                                           rt,
                                           PR_PRIORITY_NORMAL,
-                                          PR_LOCAL_THREAD,
+                                          PR_GLOBAL_THREAD,
                                           PR_JOINABLE_THREAD,
                                           0);
         if (!gWatchdogThread) {

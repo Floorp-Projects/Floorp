@@ -404,6 +404,13 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     }
   }
 #endif
+#ifdef MOZ_DIRECTSHOW
+  // Note: DirectShow should come before WMF, so that we prefer DirectShow's
+  // MP3 support over WMF's.
+  if (DirectShowDecoder::GetSupportedCodecs(nsDependentCString(aMIMEType), &codecList)) {
+    result = CANPLAY_MAYBE;
+  }
+#endif
 #ifdef MOZ_WMF
   if (IsWMFSupportedType(nsDependentCString(aMIMEType))) {
     if (!aHaveRequestedCodecs) {
@@ -412,11 +419,6 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     return WMFDecoder::CanPlayType(nsDependentCString(aMIMEType),
                                    aRequestedCodecs)
            ? CANPLAY_YES : CANPLAY_NO;
-  }
-#endif
-#ifdef MOZ_DIRECTSHOW
-  if (DirectShowDecoder::GetSupportedCodecs(nsDependentCString(aMIMEType), &codecList)) {
-    result = CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
@@ -523,8 +525,8 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
   }
 #endif
 #ifdef MOZ_DIRECTSHOW
-  // Note: DirectShow decoder must come before WMFDecoder, else the pref
-  // "media.directshow.preferred" won't be honored.
+  // Note: DirectShow should come before WMF, so that we prefer DirectShow's
+  // MP3 support over WMF's.
   if (IsDirectShowSupportedType(aType)) {
     decoder = new DirectShowDecoder();
     return decoder.forget();

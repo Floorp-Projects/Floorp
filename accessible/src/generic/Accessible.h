@@ -521,6 +521,8 @@ public:
   bool IsAutoCompletePopup() const
     { return HasGenericType(eAutoCompletePopup); }
 
+  bool IsButton() const { return HasGenericType(eButton); }
+
   bool IsCombobox() const { return HasGenericType(eCombobox); }
 
   bool IsDoc() const { return HasGenericType(eDocument); }
@@ -990,7 +992,7 @@ protected:
   static const uint8_t kStateFlagsBits = 7;
   static const uint8_t kContextFlagsBits = 1;
   static const uint8_t kTypeBits = 6;
-  static const uint8_t kGenericTypesBits = 12;
+  static const uint8_t kGenericTypesBits = 13;
 
   /**
    * Keep in sync with ChildrenFlags, StateFlags, ContextFlags, and AccTypes.

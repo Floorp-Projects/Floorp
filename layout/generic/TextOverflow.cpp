@@ -681,6 +681,12 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
     return false;
   }
 
+  // Skip ComboboxControlFrame because it would clip the drop-down arrow.
+  // Its anon block inherits 'text-overflow' and does what is expected.
+  if (aBlockFrame->GetType() == nsGkAtoms::comboboxControlFrame) {
+    return false;
+  }
+
   // Inhibit the markers if a descendant content owns the caret.
   nsRefPtr<nsCaret> caret = aBlockFrame->PresContext()->PresShell()->GetCaret();
   bool visible = false;

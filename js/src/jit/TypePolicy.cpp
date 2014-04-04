@@ -709,12 +709,12 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
         value = MConstant::New(alloc, Int32Value(0));
         ins->block()->insertBefore(ins, value->toInstruction());
         break;
-      case MIRType_Object:
       case MIRType_Undefined:
         value->setImplicitlyUsedUnchecked();
         value = MConstant::New(alloc, DoubleNaNValue());
         ins->block()->insertBefore(ins, value->toInstruction());
         break;
+      case MIRType_Object:
       case MIRType_String:
         value = boxAt(alloc, ins, value);
         break;

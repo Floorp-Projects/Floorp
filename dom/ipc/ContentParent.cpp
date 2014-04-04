@@ -15,7 +15,7 @@
 # include <sys/resource.h>
 #endif
 
-#ifdef XP_UNIX
+#ifdef MOZ_WIDGET_GONK
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
@@ -977,7 +977,7 @@ ContentParent::SetPriorityAndCheckIsAlive(ProcessPriority aPriority)
     // direct child because of Nuwa this will fail with ECHILD, and we
     // need to assume the child is alive in that case rather than
     // assuming it's dead (as is otherwise a reasonable fallback).
-#ifdef XP_UNIX
+#ifdef MOZ_WIDGET_GONK
     siginfo_t info;
     info.si_pid = 0;
     if (waitid(P_PID, Pid(), &info, WNOWAIT | WNOHANG | WEXITED) == 0

@@ -2,6 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Enforce that the clean/distclean rules removes everything that needs
+# to be removed from this directory.
+ifneq (,$(filter clean distclean,$(MAKECMDGOALS)))
+LINK_GTEST = 1
+endif
+
 ifndef LINK_GTEST
 # Force to not include backend.mk unless LINK_GTEST is defined.
 # Not including backend.mk makes traversing this directory do nothing.

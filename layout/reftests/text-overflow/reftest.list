@@ -23,3 +23,4 @@ HTTP(..) == two-value-syntax.html two-value-syntax-ref.html
 skip-if(B2G) HTTP(..) == single-value.html single-value-ref.html 
 skip-if(B2G) HTTP(..) == atomic-under-marker.html atomic-under-marker-ref.html
 fuzzy(1,702) skip-if(Android||B2G) HTTP(..) == xulscroll.html xulscroll-ref.html
+HTTP(..) == combobox-zoom.html combobox-zoom-ref.html

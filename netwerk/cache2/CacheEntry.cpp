@@ -110,6 +110,8 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 
 CacheEntry::Callback::~Callback()
 {
+  ProxyRelease(mCallback, mTargetThread);
+
   --mEntry->mHandlersCount;
   MOZ_COUNT_DTOR(CacheEntry::Callback);
 }
@@ -171,7 +173,6 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 , mRegistration(NEVERREGISTERED)
 , mWriter(nullptr)
 , mPredictedDataSize(0)
-, mDataSize(0)
 , mReleaseThread(NS_GetCurrentThread())
 {
   MOZ_COUNT_CTOR(CacheEntry);
@@ -1216,13 +1217,6 @@ NS_IMETHODIMP CacheEntry::Recreate(bool aMemoryOnly,
   return NS_OK;
 }
 
-NS_IMETHODIMP CacheEntry::SetDataSize(uint32_t size)
-{
-  // ?
-  mDataSize = size;
-  return NS_OK;
-}
-
 NS_IMETHODIMP CacheEntry::GetDataSize(int64_t *aDataSize)
 {
   LOG(("CacheEntry::GetDataSize [this=%p]", this));
@@ -1268,17 +1262,6 @@ NS_IMETHODIMP CacheEntry::HasWriteAccess(bool aWriteAllowed, bool *aWriteAccess)
 }
 
 NS_IMETHODIMP CacheEntry::Close()
-{
-  // NOT IMPLEMENTED ACTUALLY
-  return NS_OK;
-}
-
-NS_IMETHODIMP CacheEntry::GetStoragePolicy(nsCacheStoragePolicy *aStoragePolicy)
-{
-  // NOT IMPLEMENTED ACTUALLY
-  return NS_OK;
-}
-NS_IMETHODIMP CacheEntry::SetStoragePolicy(nsCacheStoragePolicy aStoragePolicy)
 {
   // NOT IMPLEMENTED ACTUALLY
   return NS_OK;

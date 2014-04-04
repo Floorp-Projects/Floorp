@@ -1742,14 +1742,11 @@ class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator>
 bool
 CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier *ool)
 {
-    saveLive(ool->lir());
+    saveLiveVolatile(ool->lir());
 
     const LAllocation *obj = ool->object();
 
-    GeneralRegisterSet regs;
-    regs.add(CallTempReg0);
-    regs.add(CallTempReg1);
-    regs.add(CallTempReg2);
+    GeneralRegisterSet regs = GeneralRegisterSet::Volatile();
 
     Register objreg;
     bool isGlobal = false;
@@ -1772,7 +1769,7 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     masm.passABIArg(objreg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun));
 
-    restoreLive(ool->lir());
+    restoreLiveVolatile(ool->lir());
 
     masm.jump(ool->rejoin());
     return true;
@@ -4905,10 +4902,10 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
 
     masm.add32(temp1, temp2);
 
-    // Check if we can use a JSShortString.
-    Label isShort;
-    masm.branch32(Assembler::BelowOrEqual, temp2, Imm32(JSShortString::MAX_SHORT_LENGTH),
-                  &isShort);
+    // Check if we can use a JSFatInlineString.
+    Label isFatInline;
+    masm.branch32(Assembler::BelowOrEqual, temp2, Imm32(JSFatInlineString::MAX_FAT_INLINE_LENGTH),
+                  &isFatInline);
 
     // Ensure result length <= JSString::MAX_LENGTH.
     masm.branch32(Assembler::Above, temp2, Imm32(JSString::MAX_LENGTH), &failure);
@@ -4947,7 +4944,7 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.mov(lhs, output);
     masm.ret();
 
-    masm.bind(&isShort);
+    masm.bind(&isFatInline);
 
     // State: lhs length in temp1, result length in temp2.
 
@@ -4958,15 +4955,15 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.branchTestPtr(Assembler::Zero, Address(rhs, JSString::offsetOfLengthAndFlags()),
                        Imm32(JSString::FLAGS_MASK), &failure);
 
-    // Allocate a JSShortString.
+    // Allocate a JSFatInlineString.
     switch (mode) {
       case SequentialExecution:
-        masm.newGCShortString(output, temp3, &failure);
+        masm.newGCFatInlineString(output, temp3, &failure);
         break;
       case ParallelExecution:
         masm.push(temp1);
         masm.push(temp2);
-        masm.newGCShortStringPar(output, forkJoinContext, temp1, temp2, &failurePopTemps);
+        masm.newGCFatInlineStringPar(output, forkJoinContext, temp1, temp2, &failurePopTemps);
         masm.pop(temp2);
         masm.pop(temp1);
         break;
@@ -4980,8 +4977,8 @@ JitCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.storePtr(temp2, Address(output, JSString::offsetOfLengthAndFlags()));
 
     // Set chars pointer, keep in temp2 for copy loop below.
-    masm.computeEffectiveAddress(Address(output, JSShortString::offsetOfInlineStorage()), temp2);
-    masm.storePtr(temp2, Address(output, JSShortString::offsetOfChars()));
+    masm.computeEffectiveAddress(Address(output, JSFatInlineString::offsetOfInlineStorage()), temp2);
+    masm.storePtr(temp2, Address(output, JSFatInlineString::offsetOfChars()));
 
     {
         // We use temp3 in this block, which in parallel execution also holds
