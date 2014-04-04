@@ -698,9 +698,9 @@ MacroAssembler::newGCString(Register result, Register temp, Label *fail)
 }
 
 void
-MacroAssembler::newGCShortString(Register result, Register temp, Label *fail)
+MacroAssembler::newGCFatInlineString(Register result, Register temp, Label *fail)
 {
-    newGCThing(result, temp, js::gc::FINALIZE_SHORT_STRING, fail);
+    newGCThing(result, temp, js::gc::FINALIZE_FAT_INLINE_STRING, fail);
 }
 
 void
@@ -768,10 +768,10 @@ MacroAssembler::newGCStringPar(Register result, Register cx, Register tempReg1, 
 }
 
 void
-MacroAssembler::newGCShortStringPar(Register result, Register cx, Register tempReg1,
-                                    Register tempReg2, Label *fail)
+MacroAssembler::newGCFatInlineStringPar(Register result, Register cx, Register tempReg1,
+                                        Register tempReg2, Label *fail)
 {
-    newGCThingPar(result, cx, tempReg1, tempReg2, js::gc::FINALIZE_SHORT_STRING, fail);
+    newGCThingPar(result, cx, tempReg1, tempReg2, js::gc::FINALIZE_FAT_INLINE_STRING, fail);
 }
 
 void
