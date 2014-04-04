@@ -126,6 +126,7 @@ public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef FrameMetrics::ViewID ViewID;
   typedef mozilla::CSSPoint CSSPoint;
+  typedef mozilla::CSSSize CSSSize;
 
   /**
    * Finds previously assigned ViewID for the given content element, if any.
@@ -2099,6 +2100,22 @@ public:
   */
   static nsSize
   CalculateCompositionSizeForFrame(nsIFrame* aFrame);
+
+ /**
+  * Calculate the composition size for the root scroll frame of the root
+  * content document.
+  * @param aFrame A frame in the root content document (or a descendant of it).
+  * @param aIsRootContentDocRootScrollFrame Whether aFrame is already the root
+  *          scroll frame of the root content document. In this case we just
+  *          use aFrame's own composition size.
+  * @param aMetrics A partially populated FrameMetrics for aFrame. Must have at
+  *          least mCompositionBounds, mCumulativeResolution, and
+  *          mDevPixelsPerCSSPixel set.
+  */
+  static CSSSize
+  CalculateRootCompositionSize(nsIFrame* aFrame,
+                               bool aIsRootContentDocRootScrollFrame,
+                               const FrameMetrics& aMetrics);
 
  /**
   * Calculate the scrollable rect for a frame. See FrameMetrics.h for
