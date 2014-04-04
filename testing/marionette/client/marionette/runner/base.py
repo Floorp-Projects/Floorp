@@ -471,6 +471,10 @@ class BaseMarionetteOptions(OptionParser):
                         dest='this_chunk',
                         type=int,
                         help='which chunk to run')
+        self.add_option('--sources',
+                        dest='sources',
+                        action='store',
+                        help='path to sources.xml (Firefox OS only)')
 
     def parse_args(self, args=None, values=None):
         options, tests = OptionParser.parse_args(self, args, values)
@@ -541,7 +545,7 @@ class BaseMarionetteTestRunner(object):
                  logcat_dir=None, xml_output=None, repeat=0, gecko_path=None,
                  testvars=None, tree=None, type=None, device_serial=None,
                  symbols_path=None, timeout=None, es_servers=None, shuffle=False,
-                 sdcard=None, this_chunk=1, total_chunks=1, **kwargs):
+                 sdcard=None, this_chunk=1, total_chunks=1, sources=None, **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulatorBinary = emulatorBinary
@@ -576,6 +580,7 @@ class BaseMarionetteTestRunner(object):
         self.es_servers = es_servers
         self.shuffle = shuffle
         self.sdcard = sdcard
+        self.sources = sources
         self.this_chunk = this_chunk
         self.total_chunks = total_chunks
         self.mixin_run_tests = []

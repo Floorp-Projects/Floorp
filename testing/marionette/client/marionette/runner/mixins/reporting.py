@@ -9,7 +9,9 @@ import json
 import os
 import pkg_resources
 import sys
+import time
 
+import mozversion
 from xmlgen import html
 from xmlgen import raw
 
@@ -131,6 +133,39 @@ class HTMLReportingTestRunnerMixin(object):
             _extract_html_from_skipped_manifest_test(test)
 
         generated = datetime.datetime.now()
+        version = mozversion.get_version(
+            binary=self.bin, sources=self.sources,
+            dm_type=os.environ.get('DM_TRANS', 'adb'))
+        date_format = '%d %b %Y %H:%M:%S'
+
+        configuration = {
+            'Gecko version': version.get('application_version'),
+            'Gecko build': version.get('application_buildid'),
+            'Gecko revision': version.get('application_revision'),
+            'Gaia date': version.get('gaia_date') and
+            time.strftime(date_format, time.localtime(
+                int(version.get('gaia_date')))),
+            'Device identifier': version.get('device_id'),
+            'Device firmware (date)': version.get('device_firmware_date') and
+            time.strftime(date_format, time.localtime(
+                int(version.get('device_firmware_date')))),
+            'Device firmware (incremental)': version.get('device_firmware_version_incremental'),
+            'Device firmware (release)': version.get('device_firmware_version_release'),
+        }
+
+        if version.get('application_changeset') and version.get('application_repository'):
+            configuration['Gecko revision'] = html.a(
+                version.get('application_changeset'),
+                href='/'.join([version.get('application_repository'),
+                               version.get('application_changeset')]),
+                target='_blank')
+
+        if version.get('gaia_changeset'):
+            configuration['Gaia revision'] = html.a(
+                version.get('gaia_changeset')[:12],
+                href='https://github.com/mozilla-b2g/gaia/commit/%s' % version.get('gaia_changeset'),
+                target='_blank')
+
         doc = html.html(
             html.head(
                 html.meta(charset='utf-8'),
@@ -150,6 +185,10 @@ class HTMLReportingTestRunnerMixin(object):
                     generated.strftime('%d-%b-%Y'),
                     generated.strftime('%H:%M:%S'),
                     self.html_name, self.html_version)),
+                html.h2('Configuration'),
+                html.table(
+                    [html.tr(html.td(k), html.td(v)) for k, v in sorted(configuration.items()) if v],
+                    id='configuration'),
                 html.h2('Summary'),
                 html.p('%i tests ran in %i seconds.' % (tests, test_time),
                        html.br(),
