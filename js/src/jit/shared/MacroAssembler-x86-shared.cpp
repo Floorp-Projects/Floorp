@@ -6,6 +6,7 @@
 
 #include "jit/shared/MacroAssembler-x86-shared.h"
 
+#include "jit/IonFrames.h"
 #include "jit/IonMacroAssembler.h"
 
 using namespace js;
@@ -114,4 +115,42 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
     }
 
     bind(&done);
+}
+
+// Builds an exit frame on the stack, with a return address to an internal
+// non-function. Returns offset to be passed to markSafepointAt().
+bool
+MacroAssemblerX86Shared::buildFakeExitFrame(const Register &scratch, uint32_t *offset)
+{
+    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
+
+    CodeLabel cl;
+    mov(cl.dest(), scratch);
+
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    Push(Imm32(descriptor));
+    Push(scratch);
+
+    bind(cl.src());
+    *offset = currentOffset();
+
+    JS_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
+    return addCodeLabel(cl);
+}
+
+void
+MacroAssemblerX86Shared::callWithExitFrame(JitCode *target)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    Push(Imm32(descriptor));
+    call(target);
+}
+
+bool
+MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    Push(Imm32(descriptor));
+    Push(ImmPtr(fakeReturnAddr));
+    return true;
 }
