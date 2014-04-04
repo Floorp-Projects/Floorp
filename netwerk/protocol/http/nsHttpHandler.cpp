@@ -84,11 +84,7 @@ extern PRThread *gSocketThread;
 #define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
 #define DONOTTRACK_HEADER_VALUE   "privacy.donottrackheader.value"
 #define DONOTTRACK_VALUE_UNSET    2
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-#define TELEMETRY_ENABLED        "toolkit.telemetry.enabledPreRelease"
-#else
 #define TELEMETRY_ENABLED        "toolkit.telemetry.enabled"
-#endif
 #define ALLOW_EXPERIMENTS        "network.allow-experiments"
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref

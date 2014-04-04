@@ -1166,20 +1166,6 @@ var BrowserApp = {
 #endif
       }
 
-      // Pref name translation.
-      switch (prefName) {
-#ifdef MOZ_TELEMETRY_REPORTING
-        // Telemetry pref differs based on build.
-        case Telemetry.SHARED_PREF_TELEMETRY_ENABLED:
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-          prefName = "toolkit.telemetry.enabledPreRelease";
-#else
-          prefName = "toolkit.telemetry.enabled";
-#endif
-          break;
-#endif
-      }
-
       try {
         switch (Services.prefs.getPrefType(prefName)) {
           case Ci.nsIPrefBranch.PREF_BOOL:
@@ -1293,20 +1279,6 @@ var BrowserApp = {
         json.type = "int";
         json.value = parseInt(json.value);
         break;
-    }
-
-    // Pref name translation.
-    switch (json.name) {
-#ifdef MOZ_TELEMETRY_REPORTING
-      // Telemetry pref differs based on build.
-      case Telemetry.SHARED_PREF_TELEMETRY_ENABLED:
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-        json.name = "toolkit.telemetry.enabledPreRelease";
-#else
-        json.name = "toolkit.telemetry.enabled";
-#endif
-        break;
-#endif
     }
 
     switch (json.type) {
@@ -5658,12 +5630,7 @@ let HealthReportStatusListener = {
 
   PREF_TELEMETRY_ENABLED:
 #ifdef MOZ_TELEMETRY_REPORTING
-    // Telemetry pref differs based on build.
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-    "toolkit.telemetry.enabledPreRelease",
-#else
     "toolkit.telemetry.enabled",
-#endif
 #else
     null,
 #endif
@@ -7531,8 +7498,6 @@ var RemoteDebugger = {
 };
 
 var Telemetry = {
-  SHARED_PREF_TELEMETRY_ENABLED: "datareporting.telemetry.enabled",
-
   addData: function addData(aHistogramId, aValue) {
     let histogram = Services.telemetry.getHistogramById(aHistogramId);
     histogram.add(aValue);

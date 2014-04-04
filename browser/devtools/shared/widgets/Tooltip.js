@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
   "resource:///modules/devtools/VariablesView.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
   "resource:///modules/devtools/VariablesViewController.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+  "resource://gre/modules/Task.jsm");
 
 const GRADIENT_RE = /\b(repeating-)?(linear|radial)-gradient\(((rgb|hsl)a?\(.+?\)|[^\)])+\)/gi;
 const BORDERCOLOR_RE = /^border-[-a-z]*color$/ig;
@@ -34,6 +36,7 @@ const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
+const FONT_FAMILY_PREVIEW_TEXT = "(ABCabc123&@%)";
 
 /**
  * Tooltip widget.
@@ -419,7 +422,8 @@ Tooltip.prototype = {
         return false;
       });
     } else {
-      return res ? promise.resolve(res) : promise.reject(false);
+      let newTarget = res instanceof Ci.nsIDOMNode ? res : target;
+      return res ? promise.resolve(newTarget) : promise.reject(false);
     }
   },
 
@@ -586,26 +590,24 @@ Tooltip.prototype = {
    * Uses the provided inspectorFront's getImageDataFromURL method to resolve
    * the relative URL on the server-side, in the page context, and then sets the
    * tooltip content with the resulting image just like |setImageContent| does.
-   *
-   * @return a promise that resolves when the image is shown in the tooltip
+   * @return a promise that resolves when the image is shown in the tooltip or
+   * resolves when the broken image tooltip content is ready, but never rejects.
    */
-  setRelativeImageContent: function(imageUrl, inspectorFront, maxDim) {
+  setRelativeImageContent: Task.async(function*(imageUrl, inspectorFront, maxDim) {
     if (imageUrl.startsWith("data:")) {
       // If the imageUrl already is a data-url, save ourselves a round-trip
       this.setImageContent(imageUrl, {maxDim: maxDim});
-      return promise.resolve();
     } else if (inspectorFront) {
-      return inspectorFront.getImageDataFromURL(imageUrl, maxDim).then(res => {
-        res.size.maxDim = maxDim;
-        return res.data.string().then(str => {
-          this.setImageContent(str, res.size);
-        });
-      }, () => {
+      try {
+        let {data, size} = yield inspectorFront.getImageDataFromURL(imageUrl, maxDim);
+        size.maxDim = maxDim;
+        let str = yield data.string();
+        this.setImageContent(str, size);
+      } catch (e) {
         this.setBrokenImageContent();
-      });
+      }
     }
-    return promise.resolve();
-  },
+  }),
 
   /**
    * Fill the tooltip with a message explaining the the image is missing
@@ -732,71 +734,57 @@ Tooltip.prototype = {
    * @param {NodeActor} node
    *        The NodeActor for the currently selected node
    * @return A promise that resolves when the tooltip content is ready, or
-   *         rejects if no transform is provided or is invalid
+   *         rejects if no transform is provided or the transform is invalid
    */
-  setCssTransformContent: function(transform, pageStyle, node) {
-    let def = promise.defer();
-
-    if (transform) {
-      // Look into the computed styles to find the width and height and possibly
-      // the origin if it hadn't been provided
-      pageStyle.getComputed(node, {
-        filter: "user",
-        markMatched: false,
-        onlyMatched: false
-      }).then(styles => {
-        let origin = styles["transform-origin"].value;
-        let width = parseInt(styles["width"].value);
-        let height = parseInt(styles["height"].value);
-
-        let root = this.doc.createElementNS(XHTML_NS, "div");
-        let previewer = new CSSTransformPreviewer(root);
-        this.content = root;
-        if (!previewer.preview(transform, origin, width, height)) {
-          def.reject();
-        } else {
-          def.resolve();
-        }
-      });
-    } else {
-      def.reject();
+  setCssTransformContent: Task.async(function*(transform, pageStyle, node) {
+    if (!transform) {
+      throw "Missing transform";
     }
 
-    return def.promise;
-  },
+    // Look into the computed styles to find the width and height and possibly
+    // the origin if it hadn't been provided
+    let styles = yield pageStyle.getComputed(node, {
+      filter: "user",
+      markMatched: false,
+      onlyMatched: false
+    });
+
+    let origin = styles["transform-origin"].value;
+    let width = parseInt(styles["width"].value);
+    let height = parseInt(styles["height"].value);
+
+    let root = this.doc.createElementNS(XHTML_NS, "div");
+    let previewer = new CSSTransformPreviewer(root);
+    this.content = root;
+    if (!previewer.preview(transform, origin, width, height)) {
+      throw "Invalid transform";
+    }
+  }),
 
   /**
    * Set the content of the tooltip to display a font family preview.
    * This is based on Lea Verou's Dablet. See https://github.com/LeaVerou/dabblet
    * for more info.
-   *
-   * @param {String} font
-   *        The font family value.
+   * @param {String} font The font family value.
    */
   setFontFamilyContent: function(font) {
-    let def = promise.defer();
-
-    if (font) {
-      // Main container
-      let vbox = this.doc.createElement("vbox");
-      vbox.setAttribute("flex", "1");
-
-      // Display the font family previewer
-      let previewer = this.doc.createElement("description");
-      previewer.setAttribute("flex", "1");
-      previewer.style.fontFamily = font;
-      previewer.classList.add("devtools-tooltip-font-previewer-text");
-      previewer.textContent = "(ABCabc123&@%)";
-      vbox.appendChild(previewer);
-
-      this.content = vbox;
-
-      def.resolve();
-    } else {
-      def.reject();
+    if (!font) {
+      return;
     }
 
-    return def.promise;
+    // Main container
+    let vbox = this.doc.createElement("vbox");
+    vbox.setAttribute("flex", "1");
+
+    // Display the font family previewer
+    let previewer = this.doc.createElement("description");
+    previewer.setAttribute("flex", "1");
+    previewer.style.fontFamily = font;
+    previewer.classList.add("devtools-tooltip-font-previewer-text");
+    previewer.textContent = FONT_FAMILY_PREVIEW_TEXT;
+    vbox.appendChild(previewer);
+
+    this.content = vbox;
   }
 };
 
@@ -843,6 +831,7 @@ SwatchBasedEditorTooltip.prototype = {
   show: function() {
     if (this.activeSwatch) {
       this.tooltip.show(this.activeSwatch, "topcenter bottomleft");
+      this.tooltip.once("hidden", () => this.activeSwatch = null);
     }
   },
 
@@ -860,6 +849,13 @@ SwatchBasedEditorTooltip.prototype = {
    * @param {object} callbacks
    *        Callbacks that will be executed when the editor wants to preview a
    *        value change, or revert a change, or commit a change.
+   *        - onPreview: will be called when one of the sub-classes calls preview
+   *        - onRevert: will be called when the user ESCapes out of the tooltip
+   *        - onCommit: will be called when the user presses ENTER or clicks
+   *        outside the tooltip. If the user-defined onCommit returns a value,
+   *        it will be used to replace originalValue, so that the swatch-based
+   *        tooltip always knows what is the current originalValue and can use
+   *        it when reverting
    * @param {object} originalValue
    *        The original value before the editor in the tooltip makes changes
    *        This can be of any type, and will be passed, as is, in the revert
@@ -923,7 +919,10 @@ SwatchBasedEditorTooltip.prototype = {
   commit: function() {
     if (this.activeSwatch) {
       let swatch = this.swatches.get(this.activeSwatch);
-      swatch.callbacks.onCommit();
+      let newValue = swatch.callbacks.onCommit();
+      if (typeof newValue !== "undefined") {
+        swatch.originalValue = newValue;
+      }
     }
   },
 
@@ -965,6 +964,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     SwatchBasedEditorTooltip.prototype.show.call(this);
     // Then set spectrum's color and listen to color changes to preview them
     if (this.activeSwatch) {
+      this.currentSwatchColor = this.activeSwatch.nextSibling;
       let swatch = this.swatches.get(this.activeSwatch);
       let color = this.activeSwatch.style.backgroundColor;
       this.spectrum.then(spectrum => {
@@ -979,7 +979,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
   _onSpectrumColorChange: function(event, rgba, cssColor) {
     if (this.activeSwatch) {
       this.activeSwatch.style.backgroundColor = cssColor;
-      this.activeSwatch.nextSibling.textContent = cssColor;
+      this.currentSwatchColor.textContent = cssColor;
       this.preview(cssColor);
     }
   },
@@ -992,6 +992,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
 
   destroy: function() {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
+    this.currentSwatchColor = null;
     this.spectrum.then(spectrum => {
       spectrum.off("changed", this._onSpectrumColorChange);
       spectrum.destroy();

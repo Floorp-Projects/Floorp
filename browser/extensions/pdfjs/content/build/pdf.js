@@ -21,8 +21,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.1181';
-PDFJS.build = '31ea4e0';
+PDFJS.version = '0.8.1334';
+PDFJS.build = 'b97127a';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -179,7 +179,10 @@ var OPS = PDFJS.OPS = {
   paintImageMaskXObjectGroup: 84,
   paintImageXObject: 85,
   paintInlineImageXObject: 86,
-  paintInlineImageXObjectGroup: 87
+  paintInlineImageXObjectGroup: 87,
+  paintImageXObjectRepeat: 88,
+  paintImageMaskXObjectRepeat: 89,
+  paintSolidColorImageMask: 90,
 };
 
 // A notice for devs. These are good for things that are helpful to devs, such
@@ -436,6 +439,24 @@ function stringToBytes(str) {
   }
   return bytes;
 }
+
+// Lazy test the endianness of the platform
+// NOTE: This will be 'true' for simulated TypedArrays
+function isLittleEndian() {
+  var buffer8 = new Uint8Array(2);
+  buffer8[0] = 1;
+  var buffer16 = new Uint16Array(buffer8.buffer);
+  return (buffer16[0] === 1);
+}
+
+Object.defineProperty(PDFJS, 'isLittleEndian', {
+  configurable: true,
+  get: function PDFJS_isLittleEndian() {
+    return shadow(PDFJS, 'isLittleEndian', isLittleEndian());
+  }
+});
+
+  PDFJS.hasCanvasTypedArrays = true;
 
 var IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 
@@ -3572,24 +3593,38 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
  * above this value will not be drawn. Use -1 for no limit.
  * @var {number}
  */
-PDFJS.maxImageSize = PDFJS.maxImageSize === undefined ? -1 : PDFJS.maxImageSize;
+PDFJS.maxImageSize = (PDFJS.maxImageSize === undefined ?
+                      -1 : PDFJS.maxImageSize);
 
 /**
+ * The url of where the predefined Adobe CMaps are located. Include trailing
+ * slash.
+ * @var {string}
+ */
+PDFJS.cMapUrl = (PDFJS.cMapUrl === undefined ? null : PDFJS.cMapUrl);
+
+/**
+ * Specifies if CMaps are binary packed.
+ * @var {boolean}
+ */
+PDFJS.cMapPacked = PDFJS.cMapPacked === undefined ? false : PDFJS.cMapPacked;
+
+/*
  * By default fonts are converted to OpenType fonts and loaded via font face
  * rules. If disabled, the font will be rendered using a built in font renderer
  * that constructs the glyphs with primitive path commands.
  * @var {boolean}
  */
-PDFJS.disableFontFace = PDFJS.disableFontFace === undefined ?
-                        false : PDFJS.disableFontFace;
+PDFJS.disableFontFace = (PDFJS.disableFontFace === undefined ?
+                         false : PDFJS.disableFontFace);
 
 /**
  * Path for image resources, mainly for annotation icons. Include trailing
  * slash.
  * @var {string}
  */
-PDFJS.imageResourcesPath = PDFJS.imageResourcesPath === undefined ?
-                           '' : PDFJS.imageResourcesPath;
+PDFJS.imageResourcesPath = (PDFJS.imageResourcesPath === undefined ?
+                            '' : PDFJS.imageResourcesPath);
 
 /**
  * Disable the web worker and run all code on the main thread. This will happen
@@ -3597,8 +3632,8 @@ PDFJS.imageResourcesPath = PDFJS.imageResourcesPath === undefined ?
  * to workers.
  * @var {boolean}
  */
-PDFJS.disableWorker = PDFJS.disableWorker === undefined ?
-                      false : PDFJS.disableWorker;
+PDFJS.disableWorker = (PDFJS.disableWorker === undefined ?
+                       false : PDFJS.disableWorker);
 
 /**
  * Path and filename of the worker file. Required when the worker is enabled in
@@ -3606,7 +3641,7 @@ PDFJS.disableWorker = PDFJS.disableWorker === undefined ?
  * loaded based on the location of the pdf.js file.
  * @var {string}
  */
-PDFJS.workerSrc = PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc;
+PDFJS.workerSrc = (PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc);
 
 /**
  * Disable range request loading of PDF files. When enabled and if the server
@@ -3614,8 +3649,8 @@ PDFJS.workerSrc = PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc;
  * Enabled (false) by default.
  * @var {boolean}
  */
-PDFJS.disableRange = PDFJS.disableRange === undefined ?
-                     false : PDFJS.disableRange;
+PDFJS.disableRange = (PDFJS.disableRange === undefined ?
+                      false : PDFJS.disableRange);
 
 /**
  * Disable pre-fetching of PDF file data. When range requests are enabled PDF.js
@@ -3623,28 +3658,28 @@ PDFJS.disableRange = PDFJS.disableRange === undefined ?
  * the current page. This default behavior can be disabled.
  * @var {boolean}
  */
-PDFJS.disableAutoFetch = PDFJS.disableAutoFetch === undefined ?
-                         false : PDFJS.disableAutoFetch;
+PDFJS.disableAutoFetch = (PDFJS.disableAutoFetch === undefined ?
+                          false : PDFJS.disableAutoFetch);
 
 /**
  * Enables special hooks for debugging PDF.js.
  * @var {boolean}
  */
-PDFJS.pdfBug = PDFJS.pdfBug === undefined ? false : PDFJS.pdfBug;
+PDFJS.pdfBug = (PDFJS.pdfBug === undefined ? false : PDFJS.pdfBug);
 
 /**
  * Enables transfer usage in postMessage for ArrayBuffers.
  * @var {boolean}
  */
-PDFJS.postMessageTransfers = PDFJS.postMessageTransfers === undefined ?
-                             true : PDFJS.postMessageTransfers;
+PDFJS.postMessageTransfers = (PDFJS.postMessageTransfers === undefined ?
+                              true : PDFJS.postMessageTransfers);
 
 /**
  * Disables URL.createObjectURL usage.
  * @var {boolean}
  */
-PDFJS.disableCreateObjectURL = PDFJS.disableCreateObjectURL === undefined ?
-                               false : PDFJS.disableCreateObjectURL;
+PDFJS.disableCreateObjectURL = (PDFJS.disableCreateObjectURL === undefined ?
+                                false : PDFJS.disableCreateObjectURL);
 
 /**
  * Controls the logging level.
@@ -3654,8 +3689,8 @@ PDFJS.disableCreateObjectURL = PDFJS.disableCreateObjectURL === undefined ?
  * - infos
  * @var {number}
  */
-PDFJS.verbosity = PDFJS.verbosity === undefined ?
-                  PDFJS.VERBOSITY_LEVELS.warnings : PDFJS.verbosity;
+PDFJS.verbosity = (PDFJS.verbosity === undefined ?
+                   PDFJS.VERBOSITY_LEVELS.warnings : PDFJS.verbosity);
 
 /**
  * Document initialization / loading parameters object.
@@ -3710,8 +3745,9 @@ PDFJS.getDocument = function getDocument(source,
           'string or a parameter object');
   }
 
-  if (!source.url && !source.data)
+  if (!source.url && !source.data) {
     error('Invalid parameter array, need either .data or .url');
+  }
 
   // copy/use all keys as is except 'url' -- full path is required
   var params = {};
@@ -3725,8 +3761,8 @@ PDFJS.getDocument = function getDocument(source,
 
   workerInitializedPromise = new PDFJS.LegacyPromise();
   workerReadyPromise = new PDFJS.LegacyPromise();
-  transport = new WorkerTransport(workerInitializedPromise,
-      workerReadyPromise, pdfDataRangeTransport, progressCallback);
+  transport = new WorkerTransport(workerInitializedPromise, workerReadyPromise,
+                                  pdfDataRangeTransport, progressCallback);
   workerInitializedPromise.then(function transportInitialized() {
     transport.passwordCallback = passwordCallback;
     transport.fetchDocument(params);
@@ -3825,7 +3861,7 @@ var PDFDocumentProxy = (function PDFDocumentProxyClosure() {
       var metadata = this.pdfInfo.metadata;
       promise.resolve({
         info: info,
-        metadata: metadata ? new PDFJS.Metadata(metadata) : null
+        metadata: (metadata ? new PDFJS.Metadata(metadata) : null)
       });
       return promise;
     },
@@ -3925,8 +3961,9 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      * with transforms required for rendering.
      */
     getViewport: function PDFPageProxy_getViewport(scale, rotate) {
-      if (arguments.length < 2)
+      if (arguments.length < 2) {
         rotate = this.rotate;
+      }
       return new PDFJS.PageViewport(this.view, scale, rotate, 0, 0);
     },
     /**
@@ -3934,8 +3971,9 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
      * annotation objects.
      */
     getAnnotations: function PDFPageProxy_getAnnotations() {
-      if (this.annotationsPromise)
+      if (this.annotationsPromise) {
         return this.annotationsPromise;
+      }
 
       var promise = new PDFJS.LegacyPromise();
       this.annotationsPromise = promise;
@@ -3967,9 +4005,8 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       // this call to render.
       this.pendingDestroy = false;
 
-      var renderingIntent = 'intent' in params ?
-        (params.intent == 'print' ? 'print' : 'display') :
-        'display';
+      var renderingIntent = ('intent' in params ?
+        (params.intent == 'print' ? 'print' : 'display') : 'display');
 
       if (!this.intentStates[renderingIntent]) {
         this.intentStates[renderingIntent] = {};
@@ -3995,9 +4032,10 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       }
 
       var internalRenderTask = new InternalRenderTask(complete, params,
-                                       this.objs, this.commonObjs,
-                                       intentState.operatorList,
-                                       this.pageNumber);
+                                                      this.objs,
+                                                      this.commonObjs,
+                                                      intentState.operatorList,
+                                                      this.pageNumber);
       if (!intentState.renderTasks) {
         intentState.renderTasks = [];
       }
@@ -4073,8 +4111,8 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
       if (!this.pendingDestroy ||
           Object.keys(this.intentStates).some(function(intent) {
             var intentState = this.intentStates[intent];
-            return intentState.renderTasks.length !== 0 ||
-                   intentState.receivingOperatorList;
+            return (intentState.renderTasks.length !== 0 ||
+                    intentState.receivingOperatorList);
           }, this)) {
         return;
       }
@@ -4129,7 +4167,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
  */
 var WorkerTransport = (function WorkerTransportClosure() {
   function WorkerTransport(workerInitializedPromise, workerReadyPromise,
-      pdfDataRangeTransport, progressCallback) {
+                           pdfDataRangeTransport, progressCallback) {
     this.pdfDataRangeTransport = pdfDataRangeTransport;
 
     this.workerReadyPromise = workerReadyPromise;
@@ -4343,8 +4381,9 @@ var WorkerTransport = (function WorkerTransportClosure() {
       messageHandler.on('commonobj', function transportObj(data) {
         var id = data[0];
         var type = data[1];
-        if (this.commonObjs.hasData(id))
+        if (this.commonObjs.hasData(id)) {
           return;
+        }
 
         switch (type) {
           case 'Font':
@@ -4421,17 +4460,19 @@ var WorkerTransport = (function WorkerTransportClosure() {
       messageHandler.on('PageError', function transportError(data, intent) {
         var page = this.pageCache[data.pageNum - 1];
         var intentState = page.intentStates[intent];
-        if (intentState.displayReadyPromise)
+        if (intentState.displayReadyPromise) {
           intentState.displayReadyPromise.reject(data.error);
-        else
+        } else {
           error(data.error);
+        }
       }, this);
 
       messageHandler.on('JpegDecode', function(data, deferred) {
         var imageUrl = data[0];
         var components = data[1];
-        if (components != 3 && components != 1)
+        if (components != 3 && components != 1) {
           error('Only 3 component or 1 component can be returned');
+        }
 
         var img = new Image();
         img.onload = (function messageHandler_onloadClosure() {
@@ -4469,6 +4510,8 @@ var WorkerTransport = (function WorkerTransportClosure() {
         source: source,
         disableRange: PDFJS.disableRange,
         maxImageSize: PDFJS.maxImageSize,
+        cMapUrl: PDFJS.cMapUrl,
+        cMapPacked: PDFJS.cMapPacked,
         disableFontFace: PDFJS.disableFontFace,
         disableCreateObjectURL: PDFJS.disableCreateObjectURL,
         verbosity: PDFJS.verbosity
@@ -4490,8 +4533,9 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }
 
       var pageIndex = pageNumber - 1;
-      if (pageIndex in this.pagePromises)
+      if (pageIndex in this.pagePromises) {
         return this.pagePromises[pageIndex];
+      }
       var promise = new PDFJS.LegacyPromise();
       this.pagePromises[pageIndex] = promise;
       this.messageHandler.send('GetPageRequest', { pageIndex: pageIndex });
@@ -4560,8 +4604,9 @@ var PDFObjects = (function PDFObjectsClosure() {
      * Ensures there is an object defined for `objId`.
      */
     ensureObj: function PDFObjects_ensureObj(objId) {
-      if (this.objs[objId])
+      if (this.objs[objId]) {
         return this.objs[objId];
+      }
 
       var obj = {
         promise: new LegacyPromise(),
@@ -4596,8 +4641,9 @@ var PDFObjects = (function PDFObjectsClosure() {
 
       // If there isn't an object yet or the object isn't resolved, then the
       // data isn't ready yet!
-      if (!obj || !obj.resolved)
+      if (!obj || !obj.resolved) {
         error('Requesting object that isn\'t resolved yet ' + objId);
+      }
 
       return obj.data;
     },
@@ -5140,7 +5186,9 @@ function compileType3Glyph(imgData) {
     var type = points[p], p0 = p, pp;
     do {
       var step = steps[type];
-      do { p += step; } while (!points[p]);
+      do {
+        p += step;
+      } while (!points[p]);
 
       pp = points[p];
       if (pp !== 5 && pp !== 10) {
@@ -5304,45 +5352,48 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       // Grayscale, 1 bit per pixel (i.e. black-and-white).
       var destDataLength = dest.length;
       var srcLength = src.byteLength;
-      for (var i = 3; i < destDataLength; i += 4) {
-        dest[i] = 255;
-      }
+      var dest32 = PDFJS.hasCanvasTypedArrays ? new Uint32Array(dest.buffer) :
+        new Uint32ArrayView(dest);
+      var dest32DataLength = dest32.length;
+      var fullSrcDiff = (width + 7) >> 3;
+      var white = 0xFFFFFFFF;
+      var black = (PDFJS.isLittleEndian || !PDFJS.hasCanvasTypedArrays) ?
+        0xFF000000 : 0x000000FF;
       for (var i = 0; i < totalChunks; i++) {
         var thisChunkHeight =
           (i < fullChunks) ? fullChunkHeight : partialChunkHeight;
         var destPos = 0;
         for (var j = 0; j < thisChunkHeight; j++) {
+          var srcDiff = srcLength - srcPos;
+          var k = 0;
+          var kEnd = (srcDiff > fullSrcDiff) ? width : srcDiff * 8 - 7;
+          var kEndUnrolled = kEnd & ~7;
           var mask = 0;
           var srcByte = 0;
-          for (var k = 0; k < width; k++, destPos += 4) {
-            if (mask === 0) {
-              if (srcPos >= srcLength) {
-                break;
-              }
-              srcByte = src[srcPos++];
-              mask = 128;
-            }
+          for (; k < kEndUnrolled; k += 8) {
+            srcByte = src[srcPos++];
+            dest32[destPos++] = (srcByte & 128) ? white : black;
+            dest32[destPos++] = (srcByte & 64) ? white : black;
+            dest32[destPos++] = (srcByte & 32) ? white : black;
+            dest32[destPos++] = (srcByte & 16) ? white : black;
+            dest32[destPos++] = (srcByte & 8) ? white : black;
+            dest32[destPos++] = (srcByte & 4) ? white : black;
+            dest32[destPos++] = (srcByte & 2) ? white : black;
+            dest32[destPos++] = (srcByte & 1) ? white : black;
+          }
+          for (; k < kEnd; k++) {
+             if (mask === 0) {
+               srcByte = src[srcPos++];
+               mask = 128;
+             }
 
-            if ((srcByte & mask)) {
-              dest[destPos] = 255;
-              dest[destPos + 1] = 255;
-              dest[destPos + 2] = 255;
-            } else {
-              dest[destPos] = 0;
-              dest[destPos + 1] = 0;
-              dest[destPos + 2] = 0;
-            }
-
+            dest32[destPos++] = (srcByte & mask) ? white : black;
             mask >>= 1;
           }
         }
-        if (destPos < destDataLength) {
-          // We ran out of input. Make all remaining pixels transparent.
-          destPos += 3;
-          do {
-            dest[destPos] = 0;
-            destPos += 4;
-          } while (destPos < destDataLength);
+        // We ran out of input. Make all remaining pixels transparent.
+        while (destPos < dest32DataLength) {
+          dest32[destPos++] = 0;
         }
 
         ctx.putImageData(chunkImgData, 0, i * fullChunkHeight);
@@ -5813,14 +5864,22 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.ctx.closePath();
     },
     rectangle: function CanvasGraphics_rectangle(x, y, width, height) {
+      if (width === 0) {
+        width = this.getSinglePixelWidth();
+      }
+      if (height === 0) {
+        height = this.getSinglePixelWidth();
+      }
+
       this.ctx.rect(x, y, width, height);
     },
     stroke: function CanvasGraphics_stroke(consumePath) {
       consumePath = typeof consumePath !== 'undefined' ? consumePath : true;
       var ctx = this.ctx;
       var strokeColor = this.current.strokeColor;
-      if (this.current.lineWidth === 0)
+      if (this.current.lineWidth === 0) {
         ctx.lineWidth = this.getSinglePixelWidth();
+      }
       // For stroke we want to temporarily change the global alpha to the
       // stroking alpha.
       ctx.globalAlpha = this.current.strokeAlpha;
@@ -5835,8 +5894,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       } else {
         ctx.stroke();
       }
-      if (consumePath)
+      if (consumePath) {
         this.consumePath();
+      }
       // Restore the global alpha to the fill alpha
       ctx.globalAlpha = this.current.fillAlpha;
     },
@@ -5960,11 +6020,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var fontObj = this.commonObjs.get(fontRefName);
       var current = this.current;
 
-      if (!fontObj)
+      if (!fontObj) {
         error('Can\'t find font for ' + fontRefName);
+      }
 
-      current.fontMatrix = fontObj.fontMatrix ? fontObj.fontMatrix :
-                                                FONT_IDENTITY_MATRIX;
+      current.fontMatrix = (fontObj.fontMatrix ?
+                            fontObj.fontMatrix : FONT_IDENTITY_MATRIX);
 
       // A valid matrix needs all main diagonal elements to be non-zero
       // This also ensures we bypass FF bugzilla bug #719844.
@@ -5985,8 +6046,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.current.font = fontObj;
       this.current.fontSize = size;
 
-      if (fontObj.coded)
+      if (fontObj.coded) {
         return; // we don't need ctx.font for Type3 fonts
+      }
 
       var name = fontObj.loadedName || 'sans-serif';
       var bold = fontObj.black ? (fontObj.bold ? 'bolder' : 'bold') :
@@ -6205,13 +6267,15 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         var lineWidth = current.lineWidth;
         var a1 = current.textMatrix[0], b1 = current.textMatrix[1];
         var scale = Math.sqrt(a1 * a1 + b1 * b1);
-        if (scale === 0 || lineWidth === 0)
+        if (scale === 0 || lineWidth === 0) {
           lineWidth = this.getSinglePixelWidth();
-        else
+        } else {
           lineWidth /= scale;
+        }
 
-        if (textSelection)
+        if (textSelection) {
           geom = this.createTextGeometry();
+        }
 
         if (fontSizeScale != 1.0) {
           ctx.scale(fontSizeScale, fontSizeScale);
@@ -6243,36 +6307,35 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           var accent = glyph.accent;
 
           var scaledX, scaledY, scaledAccentX, scaledAccentY;
-          if (!glyph.disabled) {
-            if (vertical) {
-              scaledX = vx / fontSizeScale;
-              scaledY = (x + vy) / fontSizeScale;
-            } else {
-              scaledX = x / fontSizeScale;
-              scaledY = 0;
-            }
 
-            if (font.remeasure && width > 0 && this.isFontSubpixelAAEnabled) {
-              // some standard fonts may not have the exact width, trying to
-              // rescale per character
-              var measuredWidth = ctx.measureText(character).width * 1000 /
-                current.fontSize * current.fontSizeScale;
-              var characterScaleX = width / measuredWidth;
-              restoreNeeded = true;
-              ctx.save();
-              ctx.scale(characterScaleX, 1);
-              scaledX /= characterScaleX;
-              if (accent) {
-                scaledAccentX /= characterScaleX;
-              }
-            }
+          if (vertical) {
+            scaledX = vx / fontSizeScale;
+            scaledY = (x + vy) / fontSizeScale;
+          } else {
+            scaledX = x / fontSizeScale;
+            scaledY = 0;
+          }
 
-            this.paintChar(character, scaledX, scaledY);
+          if (font.remeasure && width > 0 && this.isFontSubpixelAAEnabled) {
+            // some standard fonts may not have the exact width, trying to
+            // rescale per character
+            var measuredWidth = ctx.measureText(character).width * 1000 /
+              current.fontSize * current.fontSizeScale;
+            var characterScaleX = width / measuredWidth;
+            restoreNeeded = true;
+            ctx.save();
+            ctx.scale(characterScaleX, 1);
+            scaledX /= characterScaleX;
             if (accent) {
-              scaledAccentX = scaledX + accent.offset.x / fontSizeScale;
-              scaledAccentY = scaledY - accent.offset.y / fontSizeScale;
-              this.paintChar(accent.fontChar, scaledAccentX, scaledAccentY);
+              scaledAccentX /= characterScaleX;
             }
+          }
+
+          this.paintChar(character, scaledX, scaledY);
+          if (accent) {
+            scaledAccentX = scaledX + accent.offset.x / fontSizeScale;
+            scaledAccentY = scaledY - accent.offset.y / fontSizeScale;
+            this.paintChar(accent.fontChar, scaledAccentX, scaledAccentY);
           }
 
           x += charWidth;
@@ -6334,8 +6397,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
             current.x += spacingLength;
           }
 
-          if (textSelection)
+          if (textSelection) {
             spacingAccumulator += spacingLength;
+          }
         } else {
           var shownCanvasWidth = this.showText(e, true);
 
@@ -6539,8 +6603,9 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.save();
       this.baseTransformStack.push(this.baseTransform);
 
-      if (matrix && isArray(matrix) && 6 == matrix.length)
+      if (matrix && isArray(matrix) && 6 == matrix.length) {
         this.transform.apply(this, matrix);
+      }
 
       this.baseTransform = this.ctx.mozCurrentTransform;
 
@@ -6768,6 +6833,39 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       this.paintInlineImageXObject(maskCanvas.canvas);
     },
 
+    paintImageMaskXObjectRepeat:
+      function CanvasGraphics_paintImageMaskXObjectRepeat(imgData, scaleX,
+                                                          scaleY, positions) {
+      var width = imgData.width;
+      var height = imgData.height;
+      var ctx = this.ctx;
+
+      var maskCanvas = CachedCanvases.getCanvas('maskCanvas', width, height);
+      var maskCtx = maskCanvas.context;
+      maskCtx.save();
+
+      putBinaryImageMask(maskCtx, imgData);
+
+      maskCtx.globalCompositeOperation = 'source-in';
+
+      var fillColor = this.current.fillColor;
+      maskCtx.fillStyle = (fillColor && fillColor.hasOwnProperty('type') &&
+        fillColor.type === 'Pattern') ?
+        fillColor.getPattern(maskCtx, this) : fillColor;
+      maskCtx.fillRect(0, 0, width, height);
+
+      maskCtx.restore();
+
+      for (var i = 0, ii = positions.length; i < ii; i += 2) {
+        ctx.save();
+        ctx.transform(scaleX, 0, 0, scaleY, positions[i], positions[i + 1]);
+        ctx.scale(1, -1);
+        ctx.drawImage(maskCanvas.canvas, 0, 0, width, height,
+          0, -1, 1, 1);
+        ctx.restore();
+      }
+    },
+
     paintImageMaskXObjectGroup:
       function CanvasGraphics_paintImageMaskXObjectGroup(images) {
       var ctx = this.ctx;
@@ -6803,10 +6901,29 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
     paintImageXObject: function CanvasGraphics_paintImageXObject(objId) {
       var imgData = this.objs.get(objId);
-      if (!imgData)
+      if (!imgData) {
         error('Dependent image isn\'t ready yet');
+      }
 
       this.paintInlineImageXObject(imgData);
+    },
+
+    paintImageXObjectRepeat:
+      function CanvasGraphics_paintImageXObjectRepeat(objId, scaleX, scaleY,
+                                                          positions) {
+      var imgData = this.objs.get(objId);
+      if (!imgData) {
+        error('Dependent image isn\'t ready yet');
+      }
+
+      var width = imgData.width;
+      var height = imgData.height;
+      var map = [];
+      for (var i = 0, ii = positions.length; i < ii; i += 2) {
+        map.push({transform: [scaleX, 0, 0, scaleY, positions[i],
+                 positions[i + 1]], x: 0, y: 0, w: width, h: height});
+      }
+      this.paintInlineImageXObjectGroup(imgData, map);
     },
 
     paintInlineImageXObject:
@@ -6908,6 +7025,11 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         }
         ctx.restore();
       }
+    },
+
+    paintSolidColorImageMask:
+      function CanvasGraphics_paintSolidColorImageMask() {
+        this.ctx.fillRect(0, 0, 1, 1);
     },
 
     // Marked content

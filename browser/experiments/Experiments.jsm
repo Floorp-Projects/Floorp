@@ -67,7 +67,6 @@ const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
 
 const PREF_BRANCH_TELEMETRY     = "toolkit.telemetry.";
 const PREF_TELEMETRY_ENABLED    = "enabled";
-const PREF_TELEMETRY_PRERELEASE = "enabledPreRelease";
 
 const TELEMETRY_LOG = {
   // log(key, [kind, experimentId, details])
@@ -167,8 +166,7 @@ function loadJSONAsync(file, options) {
 }
 
 function telemetryEnabled() {
-  return gPrefsTelemetry.get(PREF_TELEMETRY_ENABLED, false) ||
-         gPrefsTelemetry.get(PREF_TELEMETRY_PRERELEASE, false);
+  return gPrefsTelemetry.get(PREF_TELEMETRY_ENABLED, false);
 }
 
 // Returns a promise that is resolved with the AddonInstall for that URL.
@@ -254,7 +252,7 @@ Experiments.Policy.prototype = {
     if (pref !== undefined) {
       let val = Number.parseFloat(pref);
       this._log.debug("random sample forced: " + val);
-      if (IsNaN(val) || val < 0) {
+      if (isNaN(val) || val < 0) {
         return 0;
       }
       if (val > 1) {
@@ -357,7 +355,6 @@ Experiments.Experiments.prototype = {
     gPrefs.observe(PREF_ENABLED, this._toggleExperimentsEnabled, this);
 
     gPrefsTelemetry.observe(PREF_TELEMETRY_ENABLED, this._telemetryStatusChanged, this);
-    gPrefsTelemetry.observe(PREF_TELEMETRY_PRERELEASE, this._telemetryStatusChanged, this);
 
     AsyncShutdown.profileBeforeChange.addBlocker("Experiments.jsm shutdown",
       this.uninit.bind(this));
@@ -390,7 +387,6 @@ Experiments.Experiments.prototype = {
       gPrefs.ignore(PREF_ENABLED, this._toggleExperimentsEnabled, this);
 
       gPrefsTelemetry.ignore(PREF_TELEMETRY_ENABLED, this._telemetryStatusChanged, this);
-      gPrefsTelemetry.ignore(PREF_TELEMETRY_PRERELEASE, this._telemetryStatusChanged, this);
 
       if (this._timer) {
         this._timer.clear();
