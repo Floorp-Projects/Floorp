@@ -112,7 +112,7 @@ def WebIDLTest(parser, harness):
     checkMethod(methods[11], "::TestMethods::setAny",
                 "setAny",
        [("Void",
-        [("::TestMethods::setAny::arg1", "arg1", "Any", True, False)])])
+        [("::TestMethods::setAny::arg1", "arg1", "Any", False, False)])])
     checkMethod(methods[12], "::TestMethods::doFloats",
                 "doFloats",
        [("Float",

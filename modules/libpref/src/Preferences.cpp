@@ -77,6 +77,10 @@ static nsresult pref_InitInitialObjects(void);
 static nsresult pref_LoadPrefsInDirList(const char *listId);
 static nsresult ReadExtensionPrefs(nsIFile *aFile);
 
+static const char kTelemetryPref[] = "toolkit.telemetry.enabled";
+static const char kOldTelemetryPref[] = "toolkit.telemetry.enabledPreRelease";
+static const char kChannelPref[] = "app.update.channel";
+
 Preferences* Preferences::sPreferences = nullptr;
 nsIPrefBranch* Preferences::sRootBranch = nullptr;
 nsIPrefBranch* Preferences::sDefaultRootBranch = nullptr;
@@ -588,6 +592,12 @@ Preferences::ReadUserPrefs(nsIFile *aFile)
     // A user pref file is optional.
     // Ignore all errors related to it, so we retain 'rv' value :-|
     (void) UseUserPrefFile();
+
+    // Migrate the old prerelease telemetry pref
+    if (!Preferences::GetBool(kOldTelemetryPref, true)) {
+      Preferences::SetBool(kTelemetryPref, false);
+      Preferences::ClearUser(kOldTelemetryPref);
+    }
 
     NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
   } else {
@@ -1297,6 +1307,23 @@ static nsresult pref_InitInitialObjects()
 
   rv = pref_LoadPrefsInDirList(NS_APP_PREFS_DEFAULTS_DIR_LIST);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set up the correct default for toolkit.telemetry.enabled.
+  // If this build has MOZ_TELEMETRY_ON_BY_DEFAULT *or* we're on the beta
+  // channel, telemetry is on by default, otherwise not. This is necessary
+  // so that beta users who are testing final release builds don't flipflop
+  // defaults.
+  if (Preferences::GetDefaultType(kTelemetryPref) == PREF_INVALID) {
+    bool prerelease = false;
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+    prerelease = true;
+#else
+    if (Preferences::GetDefaultCString(kChannelPref).EqualsLiteral("beta")) {
+      prerelease = true;
+    }
+#endif
+    PREF_SetBoolPref(kTelemetryPref, prerelease, true);
+  }
 
   NS_CreateServicesFromCategory(NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID,
                                 nullptr, NS_PREFSERVICE_APPDEFAULTS_TOPIC_ID);

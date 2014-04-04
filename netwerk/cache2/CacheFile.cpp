@@ -1598,6 +1598,7 @@ CacheFile::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
   CacheFileAutoLock lock(const_cast<CacheFile*>(this));
 
   size_t n = 0;
+  n += mKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mChunks.SizeOfExcludingThis(CollectChunkSize, mallocSizeOf);
   n += mCachedChunks.SizeOfExcludingThis(CollectChunkSize, mallocSizeOf);
   if (mMetadata) {

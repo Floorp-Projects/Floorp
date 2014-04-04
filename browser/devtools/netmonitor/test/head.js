@@ -55,9 +55,9 @@ SimpleTest.registerCleanupFunction(() => {
 // All tests are asynchronous.
 waitForExplicitFinish();
 
-// Enable logging for all the relevant tests.
 const gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
-Services.prefs.setBoolPref("devtools.debugger.log", true);
+// To enable logging for try runs, just set the pref to true.
+Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 // Always reset some prefs to their original values after the test finishes.
 const gDefaultFilters = Services.prefs.getCharPref("devtools.netmonitor.filters");

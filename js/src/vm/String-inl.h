@@ -21,13 +21,13 @@ namespace js {
 
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
-NewShortString(ThreadSafeContext *cx, JS::Latin1Chars chars)
+NewFatInlineString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 {
     size_t len = chars.length();
-    JS_ASSERT(JSShortString::lengthFits(len));
+    JS_ASSERT(JSFatInlineString::lengthFits(len));
     JSInlineString *str = JSInlineString::lengthFits(len)
                           ? JSInlineString::new_<allowGC>(cx)
-                          : JSShortString::new_<allowGC>(cx);
+                          : JSFatInlineString::new_<allowGC>(cx);
     if (!str)
         return nullptr;
 
@@ -40,7 +40,7 @@ NewShortString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
-NewShortString(ExclusiveContext *cx, JS::TwoByteChars chars)
+NewFatInlineString(ExclusiveContext *cx, JS::TwoByteChars chars)
 {
     size_t len = chars.length();
 
@@ -48,10 +48,10 @@ NewShortString(ExclusiveContext *cx, JS::TwoByteChars chars)
      * Don't bother trying to find a static atom; measurement shows that not
      * many get here (for one, Atomize is catching them).
      */
-    JS_ASSERT(JSShortString::lengthFits(len));
+    JS_ASSERT(JSFatInlineString::lengthFits(len));
     JSInlineString *str = JSInlineString::lengthFits(len)
                           ? JSInlineString::new_<allowGC>(cx)
-                          : JSShortString::new_<allowGC>(cx);
+                          : JSFatInlineString::new_<allowGC>(cx);
     if (!str)
         return nullptr;
 
@@ -157,8 +157,8 @@ JSDependentString::new_(js::ExclusiveContext *cx,
      * both to avoid the awkward moving-GC hazard this introduces and because it
      * is more efficient to immediately undepend here.
      */
-    if (JSShortString::lengthFits(length))
-        return js::NewShortString<js::CanGC>(cx, JS::TwoByteChars(chars, length));
+    if (JSFatInlineString::lengthFits(length))
+        return js::NewFatInlineString<js::CanGC>(cx, JS::TwoByteChars(chars, length));
 
     JSDependentString *str = (JSDependentString *)js_NewGCString<js::NoGC>(cx);
     if (str) {
@@ -231,7 +231,7 @@ JSInlineString::init(size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
     d.u1.chars = d.inlineStorage;
-    JS_ASSERT(lengthFits(length) || (isShort() && JSShortString::lengthFits(length)));
+    JS_ASSERT(lengthFits(length) || (isFatInline() && JSFatInlineString::lengthFits(length)));
     return d.inlineStorage;
 }
 
@@ -239,14 +239,14 @@ MOZ_ALWAYS_INLINE void
 JSInlineString::resetLength(size_t length)
 {
     d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
-    JS_ASSERT(lengthFits(length) || (isShort() && JSShortString::lengthFits(length)));
+    JS_ASSERT(lengthFits(length) || (isFatInline() && JSFatInlineString::lengthFits(length)));
 }
 
 template <js::AllowGC allowGC>
-MOZ_ALWAYS_INLINE JSShortString *
-JSShortString::new_(js::ThreadSafeContext *cx)
+MOZ_ALWAYS_INLINE JSFatInlineString *
+JSFatInlineString::new_(js::ThreadSafeContext *cx)
 {
-    return js_NewGCShortString<allowGC>(cx);
+    return js_NewGCFatInlineString<allowGC>(cx);
 }
 
 MOZ_ALWAYS_INLINE void
@@ -300,8 +300,8 @@ js::StaticStrings::getLength2(jschar c1, jschar c2)
 MOZ_ALWAYS_INLINE void
 JSString::finalize(js::FreeOp *fop)
 {
-    /* Shorts are in a different arena. */
-    JS_ASSERT(getAllocKind() != js::gc::FINALIZE_SHORT_STRING);
+    /* FatInline strings are in a different arena. */
+    JS_ASSERT(getAllocKind() != js::gc::FINALIZE_FAT_INLINE_STRING);
 
     if (isFlat())
         asFlat().finalize(fop);
@@ -312,16 +312,16 @@ JSString::finalize(js::FreeOp *fop)
 inline void
 JSFlatString::finalize(js::FreeOp *fop)
 {
-    JS_ASSERT(getAllocKind() != js::gc::FINALIZE_SHORT_STRING);
+    JS_ASSERT(getAllocKind() != js::gc::FINALIZE_FAT_INLINE_STRING);
 
     if (chars() != d.inlineStorage)
         fop->free_(const_cast<jschar *>(chars()));
 }
 
 inline void
-JSShortString::finalize(js::FreeOp *fop)
+JSFatInlineString::finalize(js::FreeOp *fop)
 {
-    JS_ASSERT(getAllocKind() == js::gc::FINALIZE_SHORT_STRING);
+    JS_ASSERT(getAllocKind() == js::gc::FINALIZE_FAT_INLINE_STRING);
 
     if (chars() != d.inlineStorage)
         fop->free_(const_cast<jschar *>(chars()));

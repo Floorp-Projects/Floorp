@@ -27,7 +27,7 @@ nsresult nsPSMBackgroundThread::startThread(const nsCSubstring & name)
   mName = name;
 
   mThreadHandle = PR_CreateThread(PR_USER_THREAD, nsThreadRunner, static_cast<void*>(this), 
-    PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+    PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
 
   NS_ASSERTION(mThreadHandle, "Could not create nsPSMBackgroundThread\n");
   

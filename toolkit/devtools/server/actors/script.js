@@ -91,6 +91,7 @@ BreakpointStore.prototype = {
    */
   addBreakpoint: function (aBreakpoint) {
     let { url, line, column } = aBreakpoint;
+    let updating = false;
 
     if (column != null) {
       if (!this._breakpoints[url]) {
@@ -99,16 +100,24 @@ BreakpointStore.prototype = {
       if (!this._breakpoints[url][line]) {
         this._breakpoints[url][line] = [];
       }
+      if(this._breakpoints[url][line][column]) {
+        updating = true;
+      }
       this._breakpoints[url][line][column] = aBreakpoint;
     } else {
       // Add a breakpoint that breaks on the whole line.
       if (!this._wholeLineBreakpoints[url]) {
         this._wholeLineBreakpoints[url] = [];
       }
+      if(this._wholeLineBreakpoints[url][line]) {
+        updating = true;
+      }
       this._wholeLineBreakpoints[url][line] = aBreakpoint;
     }
 
-    this._size++;
+    if (!updating) {
+      this._size++;
+    }
   },
 
   /**
@@ -4377,6 +4386,13 @@ BreakpointActor.prototype = {
     this.scripts = [];
   },
 
+  /**
+   * Check if this breakpoint has a condition that doesn't error and
+   * evaluates to true in aFrame
+   *
+   * @param aFrame Debugger.Frame
+   *        The frame to evaluate the condition in
+   */
   isValidCondition: function(aFrame) {
     if(!this.condition) {
       return true;
