@@ -6,7 +6,6 @@
 #ifndef nsICanvasRenderingContextInternal_h___
 #define nsICanvasRenderingContextInternal_h___
 
-#include "mozilla/gfx/2D.h"
 #include "nsISupports.h"
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
@@ -15,8 +14,8 @@
 #include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-{ 0x3cc9e801, 0x1806, 0x4ff6, \
-  { 0x86, 0x14, 0xf9, 0xd0, 0xf4, 0xfb, 0x3b, 0x08 } }
+{ 0x9a6a5bdf, 0x1261, 0x4057, \
+  { 0x85, 0xcc, 0xaf, 0x97, 0x6c, 0x36, 0x99, 0xa9 } }
 
 class gfxContext;
 class gfxASurface;
@@ -85,6 +84,10 @@ public:
                             const char16_t *aEncoderOptions,
                             nsIInputStream **aStream) = 0;
 
+  // If this canvas context can be represented with a simple Thebes surface,
+  // return the surface.  Otherwise returns an error.
+  NS_IMETHOD GetThebesSurface(gfxASurface **surface) = 0;
+  
   // This gets an Azure SourceSurface for the canvas, this will be a snapshot
   // of the canvas at the time it was called.
   virtual mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() = 0;

@@ -827,6 +827,12 @@ WebGLContext::GetInputStream(const char* aMimeType,
                                         encoder, aEncoderOptions, aStream);
 }
 
+NS_IMETHODIMP
+WebGLContext::GetThebesSurface(gfxASurface **surface)
+{
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
 void WebGLContext::UpdateLastUseIndex()
 {
     static CheckedInt<uint64_t> sIndex = 0;
