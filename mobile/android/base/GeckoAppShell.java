@@ -45,6 +45,7 @@ import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.NativeJSContainer;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapp.Allocator;
@@ -2287,8 +2288,9 @@ public class GeckoAppShell
     }
 
     @WrapElementForJNI(stubName = "HandleGeckoMessageWrapper")
-    public static void handleGeckoMessage(String message) {
-        sEventDispatcher.dispatchEvent(message);
+    public static void handleGeckoMessage(final NativeJSContainer message) {
+        sEventDispatcher.dispatchEvent(message.toString());
+        message.dispose();
     }
 
     @WrapElementForJNI
