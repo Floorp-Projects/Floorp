@@ -3,12 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let bridge = SpecialPowers.Cc["@mozilla.org/android/bridge;1"]
-                          .getService(SpecialPowers.Ci.nsIAndroidBridge);
-
 function sendMessageToJava(message) {
-  let data = JSON.stringify(message);
-  bridge.handleGeckoMessage(data);
+  SpecialPowers.Services.androidBridge.handleGeckoMessage(message);
 }
 
 function _evalURI(uri, sandbox) {
