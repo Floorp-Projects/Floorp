@@ -36,7 +36,7 @@ SetJsObject(JSContext* aContext,
 
 bool
 BroadcastSystemMessage(const nsAString& aType,
-                       const InfallibleTArray<BluetoothNamedValue>& aData);
+                       const BluetoothValue& aData);
 
 void
 DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,

@@ -69,16 +69,17 @@ enum AccType {
 enum AccGenericType {
   eAutoComplete = 1 << 0,
   eAutoCompletePopup = 1 << 1,
-  eCombobox = 1 << 2,
-  eDocument = 1 << 3,
-  eHyperText = 1 << 4,
-  eList = 1 << 5,
-  eListControl = 1 << 6,
-  eMenuButton = 1 << 7,
-  eSelect = 1 << 8,
-  eTable = 1 << 9,
-  eTableCell = 1 << 10,
-  eTableRow = 1 << 11,
+  eButton = 1 << 2,
+  eCombobox = 1 << 3,
+  eDocument = 1 << 4,
+  eHyperText = 1 << 5,
+  eList = 1 << 6,
+  eListControl = 1 << 7,
+  eMenuButton = 1 << 8,
+  eSelect = 1 << 9,
+  eTable = 1 << 10,
+  eTableCell = 1 << 11,
+  eTableRow = 1 << 12,
 
   eLastAccGenericType = eTableRow
 };

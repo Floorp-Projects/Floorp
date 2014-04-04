@@ -1076,12 +1076,12 @@ AssertValidStringPtr(JSContext *cx, JSString *str)
     JS_ASSERT(str->length() <= JSString::MAX_LENGTH);
 
     gc::AllocKind kind = str->tenuredGetAllocKind();
-    if (str->isShort())
-        JS_ASSERT(kind == gc::FINALIZE_SHORT_STRING);
+    if (str->isFatInline())
+        JS_ASSERT(kind == gc::FINALIZE_FAT_INLINE_STRING);
     else if (str->isExternal())
         JS_ASSERT(kind == gc::FINALIZE_EXTERNAL_STRING);
     else if (str->isAtom() || str->isFlat())
-        JS_ASSERT(kind == gc::FINALIZE_STRING || kind == gc::FINALIZE_SHORT_STRING);
+        JS_ASSERT(kind == gc::FINALIZE_STRING || kind == gc::FINALIZE_FAT_INLINE_STRING);
     else
         JS_ASSERT(kind == gc::FINALIZE_STRING);
 }

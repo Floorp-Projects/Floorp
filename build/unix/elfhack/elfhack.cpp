@@ -196,6 +196,11 @@ private:
     void add_code_section(ElfSection *section)
     {
         if (section) {
+            /* Don't add section if it's already been added in the past */
+            for (auto s = code.begin(); s != code.end(); ++s) {
+                if (section == *s)
+                    return;
+            }
             code.push_back(section);
             find_code(section);
         }
@@ -224,13 +229,6 @@ private:
         ElfSymtab_Section *symtab = (ElfSymtab_Section *)rel->getLink();
         for (auto r = rel->rels.begin(); r != rel->rels.end(); r++) {
             ElfSection *section = symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection();
-            if (section) {
-                for (ElfSection *s = elf->getSection(1); s != nullptr; s = s->getNext()) {
-                    if (section == s)
-                        section = nullptr;
-                        break;
-                }
-            }
             add_code_section(section);
         }
     }

@@ -48,7 +48,7 @@ struct Zone;
  * the JS_HAS_* macros in jsversion.h, or use MOZJS_MAJOR_VERSION,
  * MOZJS_MINOR_VERSION, MOZJS_PATCH_VERSION, and MOZJS_ALPHA definitions.
  */
-typedef enum JSVersion {
+enum JSVersion {
     JSVERSION_ECMA_3  = 148,
     JSVERSION_1_6     = 160,
     JSVERSION_1_7     = 170,
@@ -57,10 +57,10 @@ typedef enum JSVersion {
     JSVERSION_DEFAULT = 0,
     JSVERSION_UNKNOWN = -1,
     JSVERSION_LATEST  = JSVERSION_ECMA_5
-} JSVersion;
+};
 
 /* Result of typeof operator enumeration. */
-typedef enum JSType {
+enum JSType {
     JSTYPE_VOID,                /* undefined */
     JSTYPE_OBJECT,              /* object */
     JSTYPE_FUNCTION,            /* function */
@@ -69,21 +69,21 @@ typedef enum JSType {
     JSTYPE_BOOLEAN,             /* boolean */
     JSTYPE_NULL,                /* null */
     JSTYPE_LIMIT
-} JSType;
+};
 
 /* Dense index into cached prototypes and class atoms for standard objects. */
-typedef enum JSProtoKey {
+enum JSProtoKey {
 #define PROTOKEY_AND_INITIALIZER(name,code,init,clasp) JSProto_##name = code,
     JS_FOR_EACH_PROTOTYPE(PROTOKEY_AND_INITIALIZER)
 #undef PROTOKEY_AND_INITIALIZER
     JSProto_LIMIT
-} JSProtoKey;
+};
 
 /*
  * This enum type is used to control the behavior of a JSObject property
  * iterator function that has type JSNewEnumerate.
  */
-typedef enum JSIterateOp {
+enum JSIterateOp {
     /* Create new iterator state over enumerable properties. */
     JSENUMERATE_INIT,
 
@@ -95,10 +95,10 @@ typedef enum JSIterateOp {
 
     /* Destroy iterator state. */
     JSENUMERATE_DESTROY
-} JSIterateOp;
+};
 
 /* See JSVAL_TRACE_KIND and JSTraceCallback in jsapi.h. */
-typedef enum {
+enum JSGCTraceKind {
     JSTRACE_OBJECT,
     JSTRACE_STRING,
     JSTRACE_SCRIPT,
@@ -113,29 +113,29 @@ typedef enum {
     JSTRACE_BASE_SHAPE,
     JSTRACE_TYPE_OBJECT,
     JSTRACE_LAST = JSTRACE_TYPE_OBJECT
-} JSGCTraceKind;
+};
 
-/* Struct typedefs and class forward declarations. */
-typedef struct JSClass                      JSClass;
-typedef struct JSCompartment                JSCompartment;
-typedef struct JSConstDoubleSpec            JSConstDoubleSpec;
-typedef struct JSCrossCompartmentCall       JSCrossCompartmentCall;
-typedef struct JSErrorReport                JSErrorReport;
-typedef struct JSExceptionState             JSExceptionState;
-typedef struct JSFunctionSpec               JSFunctionSpec;
-typedef struct JSIdArray                    JSIdArray;
-typedef struct JSLocaleCallbacks            JSLocaleCallbacks;
-typedef struct JSObjectMap                  JSObjectMap;
-typedef struct JSPrincipals                 JSPrincipals;
-typedef struct JSPropertyDescriptor         JSPropertyDescriptor;
-typedef struct JSPropertyName               JSPropertyName;
-typedef struct JSPropertySpec               JSPropertySpec;
-typedef struct JSRuntime                    JSRuntime;
-typedef struct JSSecurityCallbacks          JSSecurityCallbacks;
-typedef struct JSStructuredCloneCallbacks   JSStructuredCloneCallbacks;
-typedef struct JSStructuredCloneReader      JSStructuredCloneReader;
-typedef struct JSStructuredCloneWriter      JSStructuredCloneWriter;
-typedef struct JSTracer                     JSTracer;
+/* Struct forward declarations. */
+struct JSClass;
+struct JSCompartment;
+struct JSConstDoubleSpec;
+struct JSCrossCompartmentCall;
+struct JSErrorReport;
+struct JSExceptionState;
+struct JSFunctionSpec;
+struct JSIdArray;
+struct JSLocaleCallbacks;
+struct JSObjectMap;
+struct JSPrincipals;
+struct JSPropertyDescriptor;
+struct JSPropertyName;
+struct JSPropertySpec;
+struct JSRuntime;
+struct JSSecurityCallbacks;
+struct JSStructuredCloneCallbacks;
+struct JSStructuredCloneReader;
+struct JSStructuredCloneWriter;
+struct JSTracer;
 
 class                                       JSFlatString;
 
