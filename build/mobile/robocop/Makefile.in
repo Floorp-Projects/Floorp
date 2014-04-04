@@ -47,7 +47,6 @@ testconstants_PATH := $(dir-tests)
 PP_TARGETS        += manifest
 manifest          := $(srcdir)/AndroidManifest.xml.in
 manifest_TARGET   := AndroidManifest.xml
-ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
 
 # Install robocop configs and helper
 INSTALL_TARGETS += robocop
