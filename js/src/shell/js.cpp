@@ -4923,6 +4923,16 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
 }
 
+static void
+my_OOMCallback(JSContext *cx)
+{
+    // If a script is running, the engine is about to throw the string "out of
+    // memory", which may or may not be caught. Otherwise the engine will just
+    // unwind and return null/false, with no exception set.
+    if (!JS_IsRunning(cx))
+        gGotError = true;
+}
+
 static bool
 global_enumerate(JSContext *cx, HandleObject obj)
 {
@@ -6154,6 +6164,7 @@ main(int argc, char **argv, char **envp)
     if (!rt)
         return 1;
 
+    JS::SetOutOfMemoryCallback(rt, my_OOMCallback);
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
