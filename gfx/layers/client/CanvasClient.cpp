@@ -68,8 +68,8 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
                                         flags,
                                         gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
-    MOZ_ASSERT(mBuffer->CanExposeDrawTarget());
-    mBuffer->AllocateForSurface(aSize);
+    MOZ_ASSERT(mBuffer->AsTextureClientSurface());
+    mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
 
     bufferCreated = true;
   }
@@ -82,7 +82,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   {
     // Restrict drawTarget to a scope so that terminates before Unlock.
     RefPtr<DrawTarget> target =
-      mBuffer->GetAsDrawTarget();
+      mBuffer->AsTextureClientDrawTarget()->GetAsDrawTarget();
     if (target) {
       aLayer->UpdateTarget(target);
       updated = true;

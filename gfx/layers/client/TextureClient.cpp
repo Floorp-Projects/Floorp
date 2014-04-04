@@ -350,7 +350,8 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
     result = CreateBufferTextureClient(aAllocator, aFormat, aTextureFlags, aMoz2DBackend);
   }
 
-  MOZ_ASSERT(!result || result->CanExposeDrawTarget(), "texture cannot expose a DrawTarget?");
+  MOZ_ASSERT(!result || result->AsTextureClientDrawTarget(),
+             "Not a TextureClientDrawTarget?");
   return result;
 }
 
@@ -484,12 +485,12 @@ bool TextureClient::CopyToTextureClient(TextureClient* aTarget,
   MOZ_ASSERT(IsLocked());
   MOZ_ASSERT(aTarget->IsLocked());
 
-  if (!aTarget->CanExposeDrawTarget() || !CanExposeDrawTarget()) {
+  if (!aTarget->AsTextureClientDrawTarget() || !AsTextureClientDrawTarget()) {
     return false;
   }
 
-  RefPtr<DrawTarget> destinationTarget = aTarget->GetAsDrawTarget();
-  RefPtr<DrawTarget> sourceTarget = GetAsDrawTarget();
+  RefPtr<DrawTarget> destinationTarget = aTarget->AsTextureClientDrawTarget()->GetAsDrawTarget();
+  RefPtr<DrawTarget> sourceTarget = AsTextureClientDrawTarget()->GetAsDrawTarget();
   RefPtr<gfx::SourceSurface> source = sourceTarget->Snapshot();
   destinationTarget->CopySurface(source,
                                  aRect ? *aRect : gfx::IntRect(gfx::IntPoint(0, 0), GetSize()),
@@ -663,6 +664,51 @@ BufferTextureClient::GetAllocator() const
 }
 
 bool
+BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
+{
+  MOZ_ASSERT(mLocked);
+  MOZ_ASSERT(aSurface);
+  MOZ_ASSERT(!IsImmutable());
+  MOZ_ASSERT(IsValid());
+
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
+  if (!serializer.IsValid()) {
+    return false;
+  }
+
+  RefPtr<DrawTarget> dt = GetAsDrawTarget();
+  RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
+
+  dt->CopySurface(source, IntRect(IntPoint(), serializer.GetSize()), IntPoint());
+  // XXX - if the Moz2D backend is D2D, we would be much better off memcpying
+  // the content of the surface directly because with D2D, GetAsDrawTarget is
+  // very expensive.
+
+  if (TextureRequiresLocking(mFlags) && !ImplementsLocking()) {
+    // We don't have support for proper locking yet, so we'll
+    // have to be immutable instead.
+    MarkImmutable();
+  }
+  return true;
+}
+
+already_AddRefed<gfxASurface>
+BufferTextureClient::GetAsSurface()
+{
+  MOZ_ASSERT(mLocked);
+  MOZ_ASSERT(IsValid());
+
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
+  if (!serializer.IsValid()) {
+    return nullptr;
+  }
+
+  RefPtr<gfxImageSurface> surf = serializer.GetAsThebesSurface();
+  nsRefPtr<gfxASurface> result = surf.get();
+  return result.forget();
+}
+
+bool
 BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags)
 {
   MOZ_ASSERT(IsValid());
@@ -742,7 +788,7 @@ BufferTextureClient::Unlock()
     return;
   }
 
-  // see the comment on TextureClient::GetAsDrawTarget.
+  // see the comment on TextureClientDrawTarget::GetAsDrawTarget.
   // This DrawTarget is internal to the TextureClient and is only exposed to the
   // outside world between Lock() and Unlock(). This assertion checks that no outside
   // reference remains by the time Unlock() is called.
