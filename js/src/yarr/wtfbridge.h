@@ -275,6 +275,57 @@ class JSGlobalData {
   */
 #define UNUSED_PARAM(e)
 
+/*
+ * Like SpiderMonkey's allocation templates, but with more crashing.
+ */
+template <class T>
+T *newOrCrash()
+{
+    T *t = js_new<T>();
+    if (!t)
+        js::CrashAtUnhandlableOOM("Yarr");
+    return t;
+}
+
+template <class T, class P1>
+T *newOrCrash(P1 &&p1)
+{
+    T *t = js_new<T>(mozilla::Forward<P1>(p1));
+    if (!t)
+        js::CrashAtUnhandlableOOM("Yarr");
+    return t;
+}
+
+template <class T, class P1, class P2>
+T *newOrCrash(P1 &&p1, P2 &&p2)
+{
+    T *t = js_new<T>(mozilla::Forward<P1>(p1), mozilla::Forward<P2>(p2));
+    if (!t)
+        js::CrashAtUnhandlableOOM("Yarr");
+    return t;
+}
+
+template <class T, class P1, class P2, class P3>
+T *newOrCrash(P1 &&p1, P2 &&p2, P3 &&p3)
+{
+    T *t = js_new<T>(mozilla::Forward<P1>(p1), mozilla::Forward<P2>(p2), mozilla::Forward<P3>(p3));
+    if (!t)
+        js::CrashAtUnhandlableOOM("Yarr");
+    return t;
+}
+
+template <class T, class P1, class P2, class P3, class P4>
+T *newOrCrash(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4)
+{
+    T *t = js_new<T>(mozilla::Forward<P1>(p1),
+                     mozilla::Forward<P2>(p2),
+                     mozilla::Forward<P3>(p3),
+                     mozilla::Forward<P4>(p4));
+    if (!t)
+        js::CrashAtUnhandlableOOM("Yarr");
+    return t;
+}
+
 } /* namespace Yarr */
 
 /*
