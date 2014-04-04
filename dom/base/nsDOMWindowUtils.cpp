@@ -406,7 +406,8 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
                                                   float aTopMargin,
                                                   float aRightMargin,
                                                   float aBottomMargin,
-                                                  uint32_t aAlignment,
+                                                  uint32_t aAlignmentX,
+                                                  uint32_t aAlignmentY,
                                                   nsIDOMElement* aElement,
                                                   uint32_t aPriority)
 {
@@ -447,7 +448,7 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
                                  aLeftMargin);
 
   content->SetProperty(nsGkAtoms::DisplayPortMargins,
-                       new DisplayPortMarginsPropertyData(displayportMargins, aAlignment, aPriority),
+                       new DisplayPortMarginsPropertyData(displayportMargins, aAlignmentX, aAlignmentY, aPriority),
                        nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
