@@ -86,6 +86,12 @@ add_task(function* test_startStop() {
   });
   let experiment = new Experiments.ExperimentEntry(gPolicy);
   experiment.initFromManifestData(manifestData);
+
+  // We need to associate it with the singleton so the onInstallStarted
+  // Addon Manager listener will know about it.
+  Experiments.instance()._experiments = new Map();
+  Experiments.instance()._experiments.set(experiment.id, experiment);
+
   let result;
 
   defineNow(gPolicy, baseDate);
