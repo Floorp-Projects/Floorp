@@ -45,6 +45,7 @@ browser.jar:
     content/browser/devtools/codemirror/dialog.js                      (sourceeditor/codemirror/dialog/dialog.js)
     content/browser/devtools/codemirror/dialog.css                     (sourceeditor/codemirror/dialog/dialog.css)
     content/browser/devtools/codemirror/emacs.js                       (sourceeditor/codemirror/keymap/emacs.js)
+    content/browser/devtools/codemirror/sublime.js                     (sourceeditor/codemirror/keymap/sublime.js)
     content/browser/devtools/codemirror/vim.js                         (sourceeditor/codemirror/keymap/vim.js)
     content/browser/devtools/codemirror/foldcode.js                    (sourceeditor/codemirror/fold/foldcode.js)
     content/browser/devtools/codemirror/brace-fold.js                  (sourceeditor/codemirror/fold/brace-fold.js)
