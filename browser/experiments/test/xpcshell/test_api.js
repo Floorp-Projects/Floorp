@@ -1417,3 +1417,52 @@ add_task(function* testForeignExperimentInstall() {
   yield experiments.uninit();
   yield removeCacheFile();
 });
+
+// Experiment add-ons will be disabled after Addon Manager restarts. Ensure
+// we enable them automatically.
+add_task(function* testEnabledAfterRestart() {
+  let experiments = new Experiments.Experiments(gPolicy);
+
+  gManifestObject = {
+    "version": 1,
+    experiments: [
+      {
+        id: EXPERIMENT1_ID,
+        xpiURL: gDataRoot + EXPERIMENT1_XPI_NAME,
+        xpiHash: EXPERIMENT1_XPI_SHA1,
+        startTime: gPolicy.now().getTime() / 1000 - 60,
+        endTime: gPolicy.now().getTime() / 1000 + 60,
+        maxActiveSeconds: 10 * SEC_IN_ONE_DAY,
+        appName: ["XPCShell"],
+        channel: ["nightly"],
+      },
+    ],
+  };
+
+  let addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "Precondition: No experimenta add-ons installed.");
+
+  yield experiments.updateManifest();
+  let fromManifest = yield experiments.getExperiments();
+  Assert.equal(fromManifest.length, 1, "A single experiment is known.");
+
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 1, "A single experiment add-on is installed.");
+  Assert.ok(addons[0].isActive, "That experiment is active.");
+
+  dump("Restarting Addon Manager\n");
+  experiments._stopWatchingAddons();
+  restartManager();
+  experiments._startWatchingAddons();
+
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 1, "The experiment is still there after restart.");
+  Assert.ok(addons[0].userDisabled, "But it is disabled.");
+  Assert.equal(addons[0].isActive, false, "And not active.");
+
+  yield experiments.updateManifest();
+  Assert.ok(addons[0].isActive, "It activates when the manifest is evaluated.");
+
+  yield experiments.uninit();
+  yield removeCacheFile();
+});
