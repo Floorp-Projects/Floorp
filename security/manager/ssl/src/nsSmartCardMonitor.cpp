@@ -127,7 +127,7 @@ SmartCardMonitoringThread::Start()
 {
   if (!mThread) {
     mThread = PR_CreateThread(PR_SYSTEM_THREAD, LaunchExecute, this,
-                              PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                              PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
                               PR_JOINABLE_THREAD, 0);
   }
   return mThread ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
