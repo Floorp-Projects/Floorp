@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Bug 740825: Test the debugger conditional breakpoints.
+ * Bug 740825: Test adding conditional breakpoints (with server-side support)
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
@@ -24,11 +24,6 @@ function test() {
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     gBreakpointsAdded = gBreakpoints._added;
     gBreakpointsRemoving = gBreakpoints._removing;
-
-    // This test forces conditional breakpoints to be evaluated on the
-    // client-side
-    var client = gPanel.target.client;
-    client.mainRoot.traits.conditionalBreakpoints = false;
 
     waitForSourceAndCaretAndScopes(gPanel, ".html", 17)
       .then(() => addBreakpoints())
@@ -55,32 +50,58 @@ function test() {
 
   function addBreakpoints() {
     return promise.resolve(null)
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 18 }))
-      .then(aClient => aClient.conditionalExpression = "undefined")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 19 }))
-      .then(aClient => aClient.conditionalExpression = "null")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 20 }))
-      .then(aClient => aClient.conditionalExpression = "42")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 21 }))
-      .then(aClient => aClient.conditionalExpression = "true")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 22 }))
-      .then(aClient => aClient.conditionalExpression = "'nasu'")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 23 }))
-      .then(aClient => aClient.conditionalExpression = "/regexp/")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 24 }))
-      .then(aClient => aClient.conditionalExpression = "({})")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 25 }))
-      .then(aClient => aClient.conditionalExpression = "(function() {})")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 26 }))
-      .then(aClient => aClient.conditionalExpression = "(function() { return false; })()")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 27 }))
-      .then(aClient => aClient.conditionalExpression = "a")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 28 }))
-      .then(aClient => aClient.conditionalExpression = "a !== undefined")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 29 }))
-      .then(aClient => aClient.conditionalExpression = "a !== null")
-      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue, line: 30 }))
-      .then(aClient => aClient.conditionalExpression = "b")
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 18,
+                                         condition: "undefined"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 19,
+                                         condition: "null"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 20,
+                                         condition: "42"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 21,
+                                         condition: "true"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 22,
+                                         condition: "'nasu'"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 23,
+                                         condition: "/regexp/"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 24,
+                                         condition: "({})"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 25,
+                                         condition: "(function() {})"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 26,
+                                         condition: "(function() { return false; })()"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 27,
+                                         condition: "a"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 28,
+                                         condition: "a !== undefined"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 29,
+                                         condition: "a !== null"
+                                       }))
+      .then(() => gPanel.addBreakpoint({ url: gSources.selectedValue,
+                                         line: 30,
+                                         condition: "b"
+                                       }));
   }
 
   function initialChecks() {
@@ -175,7 +196,7 @@ function test() {
         "The breakpoint's client url is correct");
       is(aBreakpointClient.location.line, aLine,
         "The breakpoint's client line is correct");
-      isnot(aBreakpointClient.conditionalExpression, undefined,
+      isnot(aBreakpointClient.condition, undefined,
         "The breakpoint on line " + aLine + " should have a conditional expression.");
 
       ok(isCaretPos(gPanel, aLine),

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Bug 740825: Test the debugger conditional breakpoints.
+ * Bug 812172: Test adding and modifying conditional breakpoints (with server-side support)
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
@@ -21,11 +21,6 @@ function test() {
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
     gBreakpointsAdded = gBreakpoints._added;
     gBreakpointsRemoving = gBreakpoints._removing;
-
-    // This test forces conditional breakpoints to be evaluated on the
-    // client-side
-    var client = gPanel.target.client;
-    client.mainRoot.traits.conditionalBreakpoints = false;
 
     waitForSourceAndCaretAndScopes(gPanel, ".html", 17)
       .then(() => initialChecks())
@@ -162,9 +157,9 @@ function test() {
         "The breakpoint's client url is correct");
       is(aBreakpointClient.location.line, aLine,
         "The breakpoint's client line is correct");
-      is(aBreakpointClient.conditionalExpression, aConditionalExpression,
+      is(aBreakpointClient.condition, aConditionalExpression,
         "The breakpoint on line " + aLine + " should have a correct conditional expression.");
-      is("conditionalExpression" in aBreakpointClient, !!aConditionalExpression,
+      is("condition" in aBreakpointClient, !!aConditionalExpression,
         "The breakpoint on line " + aLine + " should have a correct conditional state.");
 
       ok(isCaretPos(gPanel, aLine),
