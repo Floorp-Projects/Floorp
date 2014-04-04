@@ -9425,6 +9425,8 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
                 operands_[i].producer()->removeUse(&operands_[i]);
         }
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
 };
 
 class MIsCallable
