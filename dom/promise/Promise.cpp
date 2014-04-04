@@ -254,6 +254,8 @@ Promise::GetOrCreateWrapper(JSContext* aCx)
     return nullptr;
   }
 
+  JSAutoCompartment ac(aCx, scope);
+
   JS::Rooted<JS::Value> val(aCx);
   if (!WrapNewBindingObject(aCx, scope, this, &val)) {
     MOZ_ASSERT(JS_IsExceptionPending(aCx));
