@@ -386,6 +386,11 @@ body[narrow] #restorePreviousSession::before {
     transform-origin: 0 0;
   }
 
+  .launchButton:-moz-dir(rtl)::before,
+  #aboutMozilla:-moz-dir(rtl)::before {
+    transform: scale(.5) translateX(32px);
+  }
+
   #downloads::before {
     content: url("chrome://browser/content/abouthome/downloads@2x.png");
   }
@@ -420,6 +425,11 @@ body[narrow] #restorePreviousSession::before {
 
   body[narrow] #restorePreviousSession::before {
     content: url("chrome://browser/content/abouthome/restore@2x.png");
+  }
+
+  #restorePreviousSession:-moz-dir(rtl)::before {
+    transform: scale(-0.5, 0.5) translateX(24px);
+    transform-origin: top center;
   }
 
   #aboutMozilla::before {
