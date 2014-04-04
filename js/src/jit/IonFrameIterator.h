@@ -244,6 +244,8 @@ class IonFrameIterator
 class IonJSFrameLayout;
 class IonBailoutIterator;
 
+class RResumePoint;
+
 // Reads frame information in snapshot-encoding order (that is, outermost frame
 // to innermost frame).
 class SnapshotIterator
@@ -291,8 +293,9 @@ class SnapshotIterator
         return UndefinedValue();
     }
 
-    const RResumePoint *resumePoint() const {
-        return recover_.resumePoint();
+    const RResumePoint *resumePoint() const;
+    const RInstruction *instruction() const {
+        return recover_.instruction();
     }
 
     uint32_t numAllocations() const;
