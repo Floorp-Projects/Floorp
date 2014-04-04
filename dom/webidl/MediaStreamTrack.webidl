@@ -29,30 +29,12 @@ dictionary MediaTrackConstraintSet {
 
 // typedef MediaTrackConstraintSet MediaTrackConstraint; // TODO: Bug 913053
 
-dictionary MediaStreamConstraints {
-    (boolean or object) audio = false; // TODO: Once Bug 767924 fixed change to
-    (boolean or object) video = false; // (boolean or MediaTrackConstraints)
-    boolean picture = false;
-    boolean fake = false;
-};
-
-// Internal dictionary to process the raw objects in (boolean or object)
-// workaround above. Since we cannot yet use unions on non-objects, we process
-// the data into discrete members for internal use until Bug 767924 is fixed:
-
-dictionary MediaStreamConstraintsInternal {
-    boolean audio = false;
-    boolean video = false;
-    boolean picture = false;
-    boolean fake = false;
-    MediaTrackConstraintsInternal audiom;
-    MediaTrackConstraintsInternal videom;
-};
-
 dictionary MediaTrackConstraints {
     object mandatory; // so we can see unknown + unsupported constraints
     sequence<MediaTrackConstraintSet> _optional; // a.k.a. MediaTrackConstraint
 };
+
+// Internal dictionary holds result of processing raw MediaTrackConstraints above
 
 dictionary MediaTrackConstraintsInternal {
     MediaTrackConstraintSet mandatory; // holds only supported constraints
