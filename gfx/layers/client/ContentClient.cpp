@@ -177,7 +177,7 @@ ContentClientRemoteBuffer::CreateAndAllocateTextureClient(RefPtr<TextureClient>&
     return false;
   }
 
-  if (!aClient->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
+  if (!aClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
     aClient = CreateTextureClientForDrawing(mSurfaceFormat,
                 mTextureInfo.mTextureFlags | TEXTURE_ALLOC_FALLBACK | aFlags,
                 gfx::BackendType::NONE,
@@ -185,7 +185,7 @@ ContentClientRemoteBuffer::CreateAndAllocateTextureClient(RefPtr<TextureClient>&
     if (!aClient) {
       return false;
     }
-    if (!aClient->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
+    if (!aClient->AsTextureClientDrawTarget()->AllocateForSurface(mSize, ALLOC_CLEAR_BUFFER)) {
       NS_WARNING("Could not allocate texture client");
       aClient = nullptr;
       return false;
@@ -253,12 +253,12 @@ ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
   DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
   MOZ_ASSERT(locked, "Could not lock the TextureClient");
 
-  *aBlackDT = mTextureClient->GetAsDrawTarget();
+  *aBlackDT = mTextureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
     locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked, "Could not lock the second TextureClient for component alpha");
 
-    *aWhiteDT = mTextureClientOnWhite->GetAsDrawTarget();
+    *aWhiteDT = mTextureClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
 }
 
@@ -457,9 +457,10 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     // Restrict the DrawTargets and frontBuffer to a scope to make
     // sure there is no more external references to the DrawTargets
     // when we Unlock the TextureClients.
-    RefPtr<DrawTarget> dt = mFrontClient->GetAsDrawTarget();
+    RefPtr<DrawTarget> dt =
+      mFrontClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
     RefPtr<DrawTarget> dtOnWhite = mFrontClientOnWhite
-      ? mFrontClientOnWhite->GetAsDrawTarget()
+      ? mFrontClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget()
       : nullptr;
     RotatedBuffer frontBuffer(dt,
                               dtOnWhite,
@@ -539,7 +540,7 @@ ContentClientSingleBuffered::PrepareFrame()
   if (!backBuffer && mTextureClient) {
     DebugOnly<bool> locked = mTextureClient->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
-    backBuffer = mTextureClient->GetAsDrawTarget();
+    backBuffer = mTextureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
 
   RefPtr<DrawTarget> oldBuffer;
@@ -551,7 +552,7 @@ ContentClientSingleBuffered::PrepareFrame()
   if (!backBuffer && mTextureClientOnWhite) {
     DebugOnly<bool> locked = mTextureClientOnWhite->Lock(OPEN_READ_WRITE);
     MOZ_ASSERT(locked);
-    backBuffer = mTextureClientOnWhite->GetAsDrawTarget();
+    backBuffer = mTextureClientOnWhite->AsTextureClientDrawTarget()->GetAsDrawTarget();
   }
 
   oldBuffer = SetDTBufferOnWhite(backBuffer);
