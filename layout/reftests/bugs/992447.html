@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 992447</title>
+    <style type="text/css">
+
+select { border:solid; width:100px; padding:10px; overflow-clip-box:content-box; outline:3px dotted blue; }
+
+    </style>
+</head>
+<body>
+<select size=1><option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG</select>
+<br>
+<br>
+<select size=1 multiple><option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG</select>
+<br>
+<br>
+<select size=2><option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG</select>
+<br>
+<br>
+<select size=2><option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG<option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG<option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG<option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG</select>
+<br>
+<br>
+<select size=2 multiple><option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG<option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG<option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG<option>LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG</select>
+
+
+</body>
+</html>
