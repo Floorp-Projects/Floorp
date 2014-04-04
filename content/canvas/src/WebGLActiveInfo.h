@@ -39,7 +39,12 @@ public:
 
    NS_INLINE_DECL_REFCOUNTING(WebGLActiveInfo)
 
-protected:
+private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~WebGLActiveInfo()
+    {
+    }
+
     GLint mSize;
     GLenum mType;
     nsString mName;

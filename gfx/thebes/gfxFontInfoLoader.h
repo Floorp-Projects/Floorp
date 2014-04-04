@@ -55,14 +55,17 @@ public:
         mLoadOtherNames(aLoadOtherNames),
         mLoadFaceNames(aLoadFaceNames),
         mLoadCmaps(aLoadCmaps)
-   {
+    {
         MOZ_COUNT_CTOR(FontInfoData);
-   }
+    }
 
+protected:
+    // Protected destructor, to discourage deletion outside of Release():
     virtual ~FontInfoData() {
         MOZ_COUNT_DTOR(FontInfoData);
     }
 
+public:
     virtual void Load();
 
     // loads font data for all fonts of a given family

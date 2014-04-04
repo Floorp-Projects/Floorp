@@ -27,12 +27,11 @@ class ClientLayerManager;
 class CompositorParent;
 class FrameMetrics;
 
-class CompositorChild : public PCompositorChild
+class CompositorChild MOZ_FINAL : public PCompositorChild
 {
   NS_INLINE_DECL_REFCOUNTING(CompositorChild)
 public:
   CompositorChild(ClientLayerManager *aLayerManager);
-  virtual ~CompositorChild();
 
   void Destroy();
 
@@ -57,7 +56,10 @@ public:
 
   virtual bool RecvInvalidateAll() MOZ_OVERRIDE;
 
-protected:
+private:
+  // Private destructor, to discourage deletion outside of Release():
+  virtual ~CompositorChild();
+
   virtual PLayerTransactionChild*
     AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBackendHints,
                                 const uint64_t& aId,
@@ -75,7 +77,6 @@ protected:
   virtual bool RecvReleaseSharedCompositorFrameMetrics(const ViewID& aId,
                                                        const uint32_t& aAPZCId) MOZ_OVERRIDE;
 
-private:
   // Class used to store the shared FrameMetrics, mutex, and APZCId  in a hash table
   class SharedFrameMetricsData {
   public:
