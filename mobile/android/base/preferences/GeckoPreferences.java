@@ -122,6 +122,9 @@ public class GeckoPreferences
         // Fragments because of an Android bug in ActionBar (described in bug 866352 and
         // fixed in bug 833625).
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            // Write prefs to our custom GeckoSharedPrefs file.
+            getPreferenceManager().setSharedPreferencesName(GeckoSharedPrefs.APP_PREFS_NAME);
+
             int res = 0;
             if (intentExtras != null && intentExtras.containsKey(INTENT_EXTRA_RESOURCES)) {
                 // Fetch resource id from intent.

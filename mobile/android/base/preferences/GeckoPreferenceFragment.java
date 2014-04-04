@@ -7,6 +7,7 @@ package org.mozilla.gecko.preferences;
 
 import java.lang.reflect.Field;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 
@@ -32,6 +33,9 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Write prefs to our custom GeckoSharedPrefs file.
+        getPreferenceManager().setSharedPreferencesName(GeckoSharedPrefs.APP_PREFS_NAME);
 
         int res = getResource();
 
