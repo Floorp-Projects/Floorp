@@ -365,7 +365,8 @@ let DebuggerController = {
   _startTracingTab: function(aTraceActor, aCallback) {
     this.client.attachTracer(aTraceActor, (response, traceClient) => {
       if (!traceClient) {
-        DevToolsUtils.reportError(new Error("Failed to attach to tracing actor."));
+        DevToolsUtils.reportException("DebuggerController._startTracingTab",
+                                      new Error("Failed to attach to tracing actor."));
         return;
       }
 
@@ -594,36 +595,42 @@ StackFrames.prototype = {
     let waitForNextPause = false;
     let breakLocation = this._currentBreakpointLocation;
     let watchExpressions = this._currentWatchExpressions;
+    let client = DebuggerController.activeThread.client;
 
-    // Conditional breakpoints are { breakpoint, expression } tuples. The
-    // boolean evaluation of the expression decides if the active thread
-    // automatically resumes execution or not.
-    // TODO: handle all of this server-side: Bug 812172.
-    if (breakLocation) {
-      // Make sure a breakpoint actually exists at the specified url and line.
-      let breakpointPromise = DebuggerController.Breakpoints._getAdded(breakLocation);
-      if (breakpointPromise) {
-        breakpointPromise.then(({ conditionalExpression: e }) => { if (e) {
-          // Evaluating the current breakpoint's conditional expression will
-          // cause the stack frames to be cleared and active thread to pause,
-          // sending a 'clientEvaluated' packed and adding the frames again.
-          this.evaluate(e, { depth: 0, meta: FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL });
-          waitForNextPause = true;
-        }});
+    // We moved conditional breakpoint handling to the server, but
+    // need to support it in the client for a while until most of the
+    // server code in production is updated with it. bug 990137 is
+    // filed to mark this code to be removed.
+    if (!client.mainRoot.traits.conditionalBreakpoints) {
+      // Conditional breakpoints are { breakpoint, expression } tuples. The
+      // boolean evaluation of the expression decides if the active thread
+      // automatically resumes execution or not.
+      if (breakLocation) {
+        // Make sure a breakpoint actually exists at the specified url and line.
+        let breakpointPromise = DebuggerController.Breakpoints._getAdded(breakLocation);
+        if (breakpointPromise) {
+          breakpointPromise.then(({ conditionalExpression: e }) => { if (e) {
+            // Evaluating the current breakpoint's conditional expression will
+            // cause the stack frames to be cleared and active thread to pause,
+            // sending a 'clientEvaluated' packed and adding the frames again.
+            this.evaluate(e, { depth: 0, meta: FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL });
+            waitForNextPause = true;
+          }});
+        }
       }
-    }
-    // We'll get our evaluation of the current breakpoint's conditional
-    // expression the next time the thread client pauses...
-    if (waitForNextPause) {
-      return;
-    }
-    if (this._currentFrameDescription == FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL) {
-      this._currentFrameDescription = FRAME_TYPE.NORMAL;
-      // If the breakpoint's conditional expression evaluation is falsy,
-      // automatically resume execution.
-      if (VariablesView.isFalsy({ value: this._currentEvaluation.return })) {
-        this.activeThread.resume(DebuggerController._ensureResumptionOrder);
+      // We'll get our evaluation of the current breakpoint's conditional
+      // expression the next time the thread client pauses...
+      if (waitForNextPause) {
         return;
+      }
+      if (this._currentFrameDescription == FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL) {
+        this._currentFrameDescription = FRAME_TYPE.NORMAL;
+        // If the breakpoint's conditional expression evaluation is falsy,
+        // automatically resume execution.
+        if (VariablesView.isFalsy({ value: this._currentEvaluation.return })) {
+          this.activeThread.resume(DebuggerController._ensureResumptionOrder);
+          return;
+        }
       }
     }
 
@@ -1817,6 +1824,8 @@ Breakpoints.prototype = {
    *        This object must have two properties:
    *          - url: the breakpoint's source location.
    *          - line: the breakpoint's line number.
+   *        It can also have the following optional properties:
+   *          - condition: only pause if this condition evaluates truthy
    * @param object aOptions [optional]
    *        Additional options or flags supported by this operation:
    *          - openPopup: tells if the expression popup should be shown.
@@ -1874,10 +1883,10 @@ Breakpoints.prototype = {
       // so that they may not be forgotten across target navigations.
       let disabledPromise = this._disabled.get(identifier);
       if (disabledPromise) {
-        disabledPromise.then(({ conditionalExpression: previousValue }) => {
-          // Setting a falsy conditional expression is redundant.
-          if (previousValue) {
-            aBreakpointClient.conditionalExpression = previousValue;
+        disabledPromise.then((aPrevBreakpointClient) => {
+          let condition = aPrevBreakpointClient.getCondition();
+          if (condition) {
+            aBreakpointClient.setCondition(gThreadClient, condition);
           }
         });
         this._disabled.delete(identifier);
@@ -2003,6 +2012,31 @@ Breakpoints.prototype = {
     // of all the removed breakpoints promises and wait for their fulfillment.
     return promise.all(getActiveBreakpoints(this._added)).then(aBreakpointClients => {
       return promise.all(getRemovedBreakpoints(aBreakpointClients));
+    });
+  },
+
+  /**
+   * Update the condition of a breakpoint.
+   *
+   * @param object aLocation
+   *        @see DebuggerController.Breakpoints.addBreakpoint
+   * @param string aClients
+   *        The condition to set on the breakpoint
+   * @return object
+   *         A promise that will be resolved with the breakpoint client
+   */
+  updateCondition: function(aLocation, aCondition) {
+    let addedPromise = this._getAdded(aLocation);
+    if (!addedPromise) {
+      return promise.reject(new Error('breakpoint does not exist ' +
+                                      'in specified location'));
+    }
+
+    return addedPromise.then(aBreakpointClient => {
+      return aBreakpointClient.setCondition(gThreadClient, aCondition);
+    }, err => {
+      DevToolsUtils.reportException("Breakpoints.prototype.updateCondition",
+                                    err);
     });
   },
 

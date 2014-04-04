@@ -6,20 +6,15 @@ let doc = null, toolbox = null, panelWin = null, modifiedPrefs = [];
 function test() {
   waitForExplicitFinish();
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    gDevTools.showToolbox(target)
-      .then(testSelectTool)
-      .then(testOptionsShortcut)
-      .then(testOptions)
-      .then(testToggleTools)
-      .then(cleanup, errorHandler);
-  }, true);
-
-  content.location = "data:text/html;charset=utf8,test for dynamically registering and unregistering tools";
+  const URL = "data:text/html;charset=utf8,test for dynamically registering and unregistering tools";
+  Task.spawn(function* () {
+    let { target } = yield addTab(URL);
+    let toolbox = yield gDevTools.showToolbox(target);
+    yield testSelectTool(toolbox);
+    yield testOptionsShortcut();
+    yield testOptions();
+    yield testToggleTools();
+  }).then(cleanup, errorHandler);
 }
 
 function testSelectTool(aToolbox) {
@@ -39,17 +34,18 @@ function testSelectTool(aToolbox) {
 function testOptionsShortcut() {
   let deferred = promise.defer();
 
-  toolbox.once("options-selected", (event, tool) => {
-    ok(true, "Toolbox selected via shortcut key");
-    deferred.resolve(tool);
-  });
   toolbox.selectTool("webconsole")
-         .then(() => synthesizeKeyFromKeyTag("toolbox-options-key", doc));
+         .then(() => synthesizeKeyFromKeyTag("toolbox-options-key", doc))
+         .then(() => {
+           ok(true, "Toolbox selected via shortcut key");
+           deferred.resolve();
+         });
 
   return deferred.promise;
 }
 
-function testOptions(tool) {
+function testOptions() {
+  let tool = toolbox.getPanel("options");
   panelWin = tool.panelWin;
   let prefNodes = tool.panelDoc.querySelectorAll("checkbox[data-pref]");
 
@@ -105,10 +101,10 @@ function testToggleTools() {
   let toolNodes = panelWin.document.querySelectorAll("#default-tools-box > checkbox:not([unsupported])");
   let enabledTools = Array.prototype.filter.call(toolNodes, node => node.checked);
 
-  let toggleableTools = gDevTools.getDefaultTools().filter(tool=>tool.visibilityswitch);
+  let toggleableTools = gDevTools.getDefaultTools().filter(tool => tool.visibilityswitch);
   for (let node of toolNodes) {
     let id = node.getAttribute("id");
-    ok (toggleableTools.some(tool=>tool.id === id),
+    ok (toggleableTools.some(tool => tool.id === id),
       "There should be a toggle checkbox for: " + id);
   }
 
