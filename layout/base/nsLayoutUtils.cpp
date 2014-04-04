@@ -74,6 +74,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
 #include "mozilla/LookAndFeel.h"
+#include "UnitTransforms.h"
 
 #include "mozilla/Preferences.h"
 
@@ -6215,6 +6216,82 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
   }
 
   return size;
+}
+/* static */ CSSSize
+nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
+                                            bool aIsRootContentDocRootScrollFrame,
+                                            const FrameMetrics& aMetrics)
+{
+
+  if (aIsRootContentDocRootScrollFrame) {
+    return ViewAs<LayerPixel>(ParentLayerSize(aMetrics.mCompositionBounds.Size()),
+                              PixelCastJustification::ParentLayerToLayerForRootComposition)
+           / aMetrics.LayersPixelsPerCSSPixel();
+  }
+  nsPresContext* presContext = aFrame->PresContext();
+  LayerSize rootCompositionSize;
+  nsPresContext* rootPresContext =
+    presContext->GetToplevelContentDocumentPresContext();
+  if (!rootPresContext) {
+    rootPresContext = presContext->GetRootPresContext();
+  }
+  nsIPresShell* rootPresShell = nullptr;
+  if (rootPresContext) {
+    // See the comments in the code that calculates the root
+    // composition bounds in RecordFrameMetrics.
+    // TODO: Reuse that code here.
+    nsIPresShell* rootPresShell = rootPresContext->PresShell();
+    if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
+      if (nsView* view = rootFrame->GetView()) {
+        LayoutDeviceToParentLayerScale parentResolution(
+          rootPresShell->GetCumulativeResolution().width
+          / rootPresShell->GetResolution().width);
+        int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
+        nsRect viewBounds = view->GetBounds();
+        LayerSize viewSize = ViewAs<LayerPixel>(
+          (LayoutDeviceRect::FromAppUnits(viewBounds, rootAUPerDevPixel)
+           * parentResolution).Size(), PixelCastJustification::ParentLayerToLayerForRootComposition);
+        nsIWidget* widget =
+#ifdef MOZ_WIDGET_ANDROID
+            rootFrame->GetNearestWidget();
+#else
+            view->GetWidget();
+#endif
+        if (widget) {
+          nsIntRect widgetBounds;
+          widget->GetBounds(widgetBounds);
+          rootCompositionSize = LayerSize(ViewAs<LayerPixel>(widgetBounds.Size()));
+#ifdef MOZ_WIDGET_ANDROID
+          if (viewSize.height < rootCompositionSize.height) {
+            rootCompositionSize.height = viewSize.height;
+          }
+#endif
+        } else {
+          rootCompositionSize = viewSize;
+        }
+      }
+    }
+  } else {
+    nsIWidget* widget = aFrame->GetNearestWidget();
+    nsIntRect widgetBounds;
+    widget->GetBounds(widgetBounds);
+    rootCompositionSize = LayerSize(ViewAs<LayerPixel>(widgetBounds.Size()));
+  }
+
+  // Adjust composition size for the size of scroll bars.
+  nsIFrame* rootRootScrollFrame = rootPresShell ? rootPresShell->GetRootScrollFrame() : nullptr;
+  nsIScrollableFrame* rootScrollableFrame = nullptr;
+  if (rootRootScrollFrame) {
+    rootScrollableFrame = rootRootScrollFrame->GetScrollTargetFrame();
+  }
+  if (rootScrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+    CSSMargin margins = CSSMargin::FromAppUnits(rootScrollableFrame->GetActualScrollbarSizes());
+    // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+    rootCompositionSize.width -= margins.LeftRight();
+    rootCompositionSize.height -= margins.TopBottom();
+  }
+
+  return rootCompositionSize / aMetrics.LayersPixelsPerCSSPixel();
 }
 
 /* static */ nsRect
