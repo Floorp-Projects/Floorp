@@ -193,13 +193,13 @@ let HomePanels = (function () {
     "HomePanels:Authenticate": function handlePanelsAuthenticate(id) {
       // Generate panel options to get auth handler.
       let options = _registeredPanels[id]();
-      if (!options.authHandler) {
-        throw "Home.panels: Invalid authHandler for panel.id = " + id;
+      if (!options.auth) {
+        throw "Home.panels: Invalid auth for panel.id = " + id;
       }
-      if (!options.authHandler.authenticate || typeof options.authHandler.authenticate !== "function") {
-        throw "Home.panels: Invalid authHandler authenticate function: panel.id = " + this.id;
+      if (!options.auth.authenticate || typeof options.auth.authenticate !== "function") {
+        throw "Home.panels: Invalid auth authenticate function: panel.id = " + this.id;
       }
-      options.authHandler.authenticate();
+      options.auth.authenticate();
     },
 
     "HomePanels:Installed": function handlePanelsInstalled(id) {
@@ -302,22 +302,22 @@ let HomePanels = (function () {
       }
     }
 
-    if (options.authHandler) {
-      if (!options.authHandler.messageText) {
-        throw "Home.panels: Invalid authHandler messageText: panel.id = " + this.id;
+    if (options.auth) {
+      if (!options.auth.messageText) {
+        throw "Home.panels: Invalid auth messageText: panel.id = " + this.id;
       }
-      if (!options.authHandler.buttonText) {
-        throw "Home.panels: Invalid authHandler buttonText: panel.id = " + this.id;
+      if (!options.auth.buttonText) {
+        throw "Home.panels: Invalid auth buttonText: panel.id = " + this.id;
       }
 
       this.authConfig = {
-        messageText: options.authHandler.messageText,
-        buttonText: options.authHandler.buttonText
+        messageText: options.auth.messageText,
+        buttonText: options.auth.buttonText
       };
 
       // Include optional image URL if it is specified.
-      if (options.authHandler.imageUrl) {
-        this.authConfig.imageUrl = options.authHandler.imageUrl;
+      if (options.auth.imageUrl) {
+        this.authConfig.imageUrl = options.auth.imageUrl;
       }
     }
   }
