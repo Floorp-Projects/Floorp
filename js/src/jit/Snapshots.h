@@ -359,6 +359,8 @@ class SnapshotWriter
     }
 };
 
+class MResumePoint;
+
 class RecoverWriter
 {
     CompactBufferWriter writer_;
@@ -369,7 +371,7 @@ class RecoverWriter
   public:
     SnapshotOffset startRecover(uint32_t frameCount, bool resumeAfter);
 
-    void writeFrame(JSFunction *fun, JSScript *script, jsbytecode *pc, uint32_t exprStack);
+    bool writeFrame(const MResumePoint *rp);
 
     void endRecover();
 
