@@ -408,6 +408,8 @@ private:
 // Issues: If/when mathml becomes a pluggable component, the separation will be needed.
 class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsMathMLmathBlockFrame)
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
@@ -468,6 +470,12 @@ public:
               ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
+  // See nsIMathMLFrame.h
+  bool IsMrowLike() {
+    return mFrames.FirstChild() != mFrames.LastChild() ||
+           !mFrames.FirstChild();
+  }
+
 protected:
   nsMathMLmathBlockFrame(nsStyleContext* aContext) : nsBlockFrame(aContext) {
     // We should always have a float manager.  Not that things can really try
@@ -479,8 +487,11 @@ protected:
 
 // --------------
 
-class nsMathMLmathInlineFrame : public nsInlineFrame {
+class nsMathMLmathInlineFrame : public nsInlineFrame,
+                                public nsMathMLFrame {
 public:
+  NS_DECL_QUERYFRAME_TARGET(nsMathMLmathInlineFrame)
+  NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   friend nsIFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -536,6 +547,12 @@ public:
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE {
       return nsInlineFrame::IsFrameOfType(aFlags &
                 ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
+  }
+
+  bool
+  IsMrowLike() MOZ_OVERRIDE {
+    return mFrames.FirstChild() != mFrames.LastChild() ||
+           !mFrames.FirstChild();
   }
 
 protected:

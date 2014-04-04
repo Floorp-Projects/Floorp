@@ -200,6 +200,13 @@ public:
   // Returns 0 if the specified frame isn't a child frame.
   virtual uint8_t
   ScriptIncrement(nsIFrame* aFrame) = 0;
+
+  // Returns true if the frame is considered to be an mrow for layout purposes.
+  // This includes inferred mrows, but excludes <mrow> elements with a single
+  // child.  In the latter case, the child is to be treated as if it wasn't
+  // within an mrow, so we pretend the mrow isn't mrow-like.
+  virtual bool
+  IsMrowLike() = 0;
 };
 
 // struct used by a container frame to keep track of its embellishments.
