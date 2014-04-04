@@ -17,16 +17,11 @@ namespace layers {
  * A TextureClient implementation based on Xlib.
  */
 class TextureClientX11
- : public TextureClient,
-   public TextureClientSurface
+ : public TextureClient
 {
  public:
   TextureClientX11(gfx::SurfaceFormat format, TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
   ~TextureClientX11();
-
-  // TextureClient
-
-  TextureClientSurface* AsTextureClientSurface() MOZ_OVERRIDE { return this; }
 
   bool IsAllocated() const MOZ_OVERRIDE;
   bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
@@ -39,10 +34,6 @@ class TextureClientX11
   void Unlock() MOZ_OVERRIDE;
   bool IsLocked() const MOZ_OVERRIDE { return mLocked; }
 
-  // TextureClientSurface
-
-  bool UpdateSurface(gfxASurface* aSurface) MOZ_OVERRIDE;
-  already_AddRefed<gfxASurface> GetAsSurface() MOZ_OVERRIDE;
   bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags flags) MOZ_OVERRIDE;
 
   TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;

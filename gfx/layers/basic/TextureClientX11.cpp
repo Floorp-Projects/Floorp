@@ -78,34 +78,6 @@ TextureClientX11::DropTextureData()
 }
 
 bool
-TextureClientX11::UpdateSurface(gfxASurface* aSurface)
-{
-  MOZ_ASSERT(IsValid());
-
-  RefPtr<DrawTarget> dt = GetAsDrawTarget();
-  if (!dt) {
-    return false;
-  }
-
-  RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
-  dt->CopySurface(source, IntRect(IntPoint(), GetSize()), IntPoint());
-
-  return true;
-}
-
-already_AddRefed<gfxASurface>
-TextureClientX11::GetAsSurface()
-{
-  MOZ_ASSERT(IsValid());
-  if (!mSurface) {
-    return nullptr;
-  }
-
-  nsRefPtr<gfxASurface> temp = mSurface.get();
-  return temp.forget();
-}
-
-bool
 TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aTextureFlags)
 {
   MOZ_ASSERT(IsValid());
