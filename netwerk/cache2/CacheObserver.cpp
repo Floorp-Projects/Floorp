@@ -134,15 +134,26 @@ CacheObserver::AttachToPreferences()
     "browser.cache.disk.parent_directory", NS_GET_IID(nsIFile),
     getter_AddRefs(mCacheParentDirectoryOverride));
 
-  sHalfLifeExperiment = mozilla::Preferences::GetInt(
+  // First check the default value.  If it is at -1, the experient
+  // is turned off.  If it is at 0, then use the user pref value
+  // instead.
+  sHalfLifeExperiment = mozilla::Preferences::GetDefaultInt(
     "browser.cache.frecency_experiment", kDefaultHalfLifeExperiment);
 
   if (sHalfLifeExperiment == 0) {
-    // The experiment has not yet been initialized, do it now
-    // Store the experiemnt value, since we need it not to change between
-    // browser sessions.
+    // Default preferences indicate we want to run the experiment,
+    // hence read the user value.
+    sHalfLifeExperiment = mozilla::Preferences::GetInt(
+      "browser.cache.frecency_experiment", sHalfLifeExperiment);
+  }
+
+  if (sHalfLifeExperiment == 0) {
+    // The experiment has not yet been initialized but is engaged, do
+    // the initialization now.
     srand(time(NULL));
     sHalfLifeExperiment = (rand() % 4) + 1;
+    // Store the experiemnt value, since we need it not to change between
+    // browser sessions.
     mozilla::Preferences::SetInt(
       "browser.cache.frecency_experiment", sHalfLifeExperiment);
   }
