@@ -315,6 +315,10 @@ nsHttpChannel::Connect()
         return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
+    if (!gHttpHandler->UseCache()) {
+        return ContinueConnect();
+    }
+
     // open a cache entry for this channel...
     rv = OpenCacheEntry(usingSSL);
 
