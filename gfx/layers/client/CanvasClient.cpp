@@ -82,7 +82,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   {
     // Restrict drawTarget to a scope so that terminates before Unlock.
     RefPtr<DrawTarget> target =
-      mBuffer->AsTextureClientDrawTarget()->GetAsDrawTarget();
+      mBuffer->GetAsDrawTarget();
     if (target) {
       aLayer->UpdateTarget(target);
       updated = true;

@@ -185,7 +185,6 @@ protected:
  * The corresponding TextureHost is TextureHostD3D9.
  */
 class CairoTextureClientD3D9 : public TextureClient
-                             , public TextureClientDrawTarget
 {
 public:
   CairoTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
@@ -209,10 +208,6 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
-
-  // TextureClientDrawTarget
-
-  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
 
   virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
 
@@ -239,7 +234,6 @@ private:
  * The coresponding TextureHost is DIBTextureHostD3D9.
  */
 class DIBTextureClientD3D9 : public TextureClient
-                           , public TextureClientDrawTarget
 {
 public:
   DIBTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
@@ -264,9 +258,7 @@ public:
 
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
 
-  // TextureClientDrawTarget
-
-  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
+  virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
   virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
 
@@ -321,6 +313,16 @@ public:
   }
 
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
+  {
+    return gfx::SurfaceFormat::UNKNOWN;
+  }
+
+  virtual bool AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags) MOZ_OVERRIDE
+  {
+    return false;
+  }
 
 private:
   RefPtr<IDirect3DTexture9> mTexture;
@@ -392,6 +394,8 @@ public:
   virtual void Unlock() MOZ_OVERRIDE;
 
   virtual void Updated(const nsIntRegion* aRegion = nullptr);
+
+  virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
   {
