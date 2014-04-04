@@ -69,7 +69,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *
  *  - To avoid allocating small char arrays, short strings can be stored inline
  *    in the string header (JSInlineString). To increase the max size of such
- *    inline strings, extra-large string headers can be used (JSShortString).
+ *    inline strings, larger string headers can be used (JSFatInlineString).
  *
  *  - To avoid comparing O(n) string equality comparison, strings can be
  *    canonicalized to "atoms" (JSAtom) such that there is a single atom with a
@@ -103,7 +103,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *  |  |
  *  |  +-- JSInlineString       - / chars stored in header
  *  |         \
- *  |         JSShortString     - / header is fat
+ *  |         JSFatInlineString - / header is fat
  *  |
  * JSAtom                       - / string equality === pointer equality
  *  |
@@ -118,8 +118,8 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * be combined with other string types to create additional most-derived types
  * that satisfy the invariants of more than one of the abovementioned
  * most-derived types:
- *  - InlineAtom = JSInlineString + JSAtom (atom with inline chars)
- *  - ShortAtom  = JSShortString  + JSAtom (atom with (more) inline chars)
+ *  - InlineAtom    = JSInlineString    + JSAtom (atom with inline chars)
+ *  - FatInlineAtom = JSFatInlineString + JSAtom (atom with (more) inline chars)
  *
  * Derived string types can be queried from ancestor types via isX() and
  * retrieved with asX() debug-only-checked casts.
@@ -142,7 +142,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
             JSString               *left;               /* JSRope */
         } u1;
         union {
-            jschar                 inlineStorage[NUM_INLINE_CHARS]; /* JS(Inline|Short)String */
+            jschar                 inlineStorage[NUM_INLINE_CHARS]; /* JS(Inline|FatInline)String */
             struct {
                 union {
                     JSLinearString *base;               /* JS(Dependent|Undepended)String */
@@ -186,12 +186,12 @@ class JSString : public js::gc::BarrieredCell<JSString>
      *   Undepended    0011       0011
      *   Extensible    0010       0010
      *   Inline        0100       isFlat && !isExtensible && (u1.chars == inlineStorage)
-     *   Short         0100       header in FINALIZE_SHORT_STRING arena
+     *   FatInline     0100       isInline && header in FINALIZE_FAT_INLINE_STRING arena
      *   External      0100       header in FINALIZE_EXTERNAL_STRING arena
      *   Atom          -          1xxx
      *   PermanentAtom 1100       1100
-     *   InlineAtom    -          isAtom && is Inline
-     *   ShortAtom     -          isAtom && is Short
+     *   InlineAtom    -          isAtom && isInline
+     *   FatInlineAtom -          isAtom && isFatInline
      *
      *  "HasBase" here refers to the two string types that have a 'base' field:
      *  JSDependentString and JSUndependedString.
@@ -363,7 +363,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
         return *(JSInlineString *)this;
     }
 
-    bool isShort() const;
+    bool isFatInline() const;
 
     /* For hot code, prefer other type queries. */
     bool isExternal() const;
@@ -623,6 +623,7 @@ class JSExtensibleString : public JSFlatString
 
 JS_STATIC_ASSERT(sizeof(JSExtensibleString) == sizeof(JSString));
 
+/* On 32-bit platforms, MAX_INLINE_LENGTH is 4. On 64-bit platforms it is 8. */
 class JSInlineString : public JSFlatString
 {
     static const size_t MAX_INLINE_LENGTH = NUM_INLINE_CHARS - 1;
@@ -646,16 +647,26 @@ class JSInlineString : public JSFlatString
 
 JS_STATIC_ASSERT(sizeof(JSInlineString) == sizeof(JSString));
 
-class JSShortString : public JSInlineString
+/*
+ * On both 32-bit and 64-bit platforms, INLINE_EXTENSION_CHARS is 12. This is
+ * deliberate, in order to minimize potential performance differences between
+ * 32-bit and 64-bit platforms.
+ *
+ * There are still some differences due to NUM_INLINE_CHARS being different.
+ * E.g. strings of length 4--7 will be JSFatInlineStrings on 32-bit platforms
+ * and JSInlineStrings on 64-bit platforms. But the more significant transition
+ * from inline strings to non-inline strings occurs at length 12 on both 32-bit
+ * and 64-bit platforms.
+ */
+class JSFatInlineString : public JSInlineString
 {
-    /* This can be any value that is a multiple of CellSize. */
-    static const size_t INLINE_EXTENSION_CHARS = sizeof(JSString::Data) / sizeof(jschar);
+    static const size_t INLINE_EXTENSION_CHARS = 12 - NUM_INLINE_CHARS;
 
     static void staticAsserts() {
-        JS_STATIC_ASSERT(INLINE_EXTENSION_CHARS % js::gc::CellSize == 0);
-        JS_STATIC_ASSERT(MAX_SHORT_LENGTH + 1 ==
-                         (sizeof(JSShortString) -
-                          offsetof(JSShortString, d.inlineStorage)) / sizeof(jschar));
+        JS_STATIC_ASSERT((INLINE_EXTENSION_CHARS * sizeof(jschar)) % js::gc::CellSize == 0);
+        JS_STATIC_ASSERT(MAX_FAT_INLINE_LENGTH + 1 ==
+                         (sizeof(JSFatInlineString) -
+                          offsetof(JSFatInlineString, d.inlineStorage)) / sizeof(jschar));
     }
 
   protected: /* to fool clang into not warning this is unused */
@@ -663,22 +674,22 @@ class JSShortString : public JSInlineString
 
   public:
     template <js::AllowGC allowGC>
-    static inline JSShortString *new_(js::ThreadSafeContext *cx);
+    static inline JSFatInlineString *new_(js::ThreadSafeContext *cx);
 
-    static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
-                                           INLINE_EXTENSION_CHARS
-                                           -1 /* null terminator */;
+    static const size_t MAX_FAT_INLINE_LENGTH = JSString::NUM_INLINE_CHARS +
+                                                INLINE_EXTENSION_CHARS
+                                                -1 /* null terminator */;
 
     static bool lengthFits(size_t length) {
-        return length <= MAX_SHORT_LENGTH;
+        return length <= MAX_FAT_INLINE_LENGTH;
     }
 
-    /* Only called by the GC for strings with the FINALIZE_SHORT_STRING kind. */
+    /* Only called by the GC for strings with the FINALIZE_FAT_INLINE_STRING kind. */
 
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 };
 
-JS_STATIC_ASSERT(sizeof(JSShortString) == 2 * sizeof(JSString));
+JS_STATIC_ASSERT(sizeof(JSFatInlineString) % js::gc::CellSize == 0);
 
 class JSExternalString : public JSFlatString
 {

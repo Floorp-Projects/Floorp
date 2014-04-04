@@ -105,7 +105,8 @@
                  STATE_MULTISELECTABLE | STATE_EXTSELECTABLE);
 
       // aria-pressed
-      testStates("aria_pressed_button", STATE_PRESSED | STATE_CHECKABLE);
+      testStates("aria_pressed_button", STATE_PRESSED, 0, STATE_CHECKABLE);
+      testStates("aria_pressed_native_button", STATE_PRESSED, 0, STATE_CHECKABLE);
 
       // aria-readonly
       testStates("aria_readonly_textbox", STATE_READONLY);
@@ -313,6 +314,11 @@
      title="ARIA grid should be editable by default">
     Mozilla Bug 835121
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=989958"
+     title="Pressed state is not exposed on a button element with aria-pressed attribute"
+    Mozilla Bug 989958
+  </a>
 
   <p id="display"></p>
   <div id="content" style="display: none"></div>
@@ -349,6 +355,7 @@
   <div id="aria_multiline_textbox" role="textbox" aria-multiline="true"></div>
   <div id="aria_multiselectable_listbox" role="listbox" aria-multiselectable="true"></div>
   <div id="aria_pressed_button" role="button" aria-pressed="true">Button</div>
+  <button id="aria_pressed_native_button" aria-pressed="true">Button</button>
 
   <div id="aria_readonly_textbox"
        role="textbox" aria-readonly="true">This text should be readonly</div>

@@ -6,7 +6,7 @@
 
 [JSImplementation="@mozilla.org/dom/test-interface-js;1",
  Pref="dom.expose_test_interfaces",
- Constructor(any anyArg, optional object objectArg)]
+ Constructor(optional any anyArg, optional object objectArg)]
 interface TestInterfaceJS {
   readonly attribute any anyArg;
   readonly attribute object objectArg;
