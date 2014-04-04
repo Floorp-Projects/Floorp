@@ -6,13 +6,11 @@
 
 DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 
-ANDROID_MANIFEST_FILE = OBJDIR + '/AndroidManifest.xml'
-
-main = add_android_eclipse_project('Robocop', ANDROID_MANIFEST_FILE)
+main = add_android_eclipse_project('Robocop', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.roboexample.test'
 main.res = SRCDIR + '/res'
 main.recursive_make_targets += [
-    ANDROID_MANIFEST_FILE
+    OBJDIR + '/AndroidManifest.xml',
     '../../../mobile/android/base/tests/TestConstants.java']
 main.extra_jars += [SRCDIR + '/robotium-solo-4.3.1.jar']
 main.assets = TOPSRCDIR + '/mobile/android/base/tests/assets'
