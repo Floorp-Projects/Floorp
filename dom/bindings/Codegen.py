@@ -237,7 +237,7 @@ class CGDOMJSClass(CGThing):
         classFlags = "JSCLASS_IS_DOMJSCLASS | "
         if self.descriptor.interface.getExtendedAttribute("Global"):
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
-            traceHook = "mozilla::dom::TraceGlobal"
+            traceHook = "JS_GlobalObjectTraceHook"
         else:
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
         if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):

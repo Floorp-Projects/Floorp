@@ -685,7 +685,7 @@ static const JSClass SandboxClass = {
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
-    nullptr, nullptr, nullptr, TraceXPCGlobal
+    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook
 };
 
 static const JSFunctionSpec SandboxFunctions[] = {
@@ -1081,7 +1081,8 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
     else
         compartmentOptions.setZone(JS::SystemZone);
 
-    compartmentOptions.setInvisibleToDebugger(options.invisibleToDebugger);
+    compartmentOptions.setInvisibleToDebugger(options.invisibleToDebugger)
+                      .setTrace(TraceXPCGlobal);
 
     RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, &SandboxClass,
                                                      principal, compartmentOptions));

@@ -2522,6 +2522,27 @@ JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals
 }
 
 JS_PUBLIC_API(void)
+JS_GlobalObjectTraceHook(JSTracer *trc, JSObject *global)
+{
+    JS_ASSERT(global->is<GlobalObject>());
+
+    // Off thread parsing and compilation tasks create a dummy global which is then
+    // merged back into the host compartment. Since it used to be a global, it will still
+    // have this trace hook, but it does not have a meaning relative to its new compartment.
+    // We can safely skip it.
+    if (!global->isOwnGlobal())
+        return;
+
+    // Trace the compartment for any GC things that should only stick around if we know the
+    // compartment is live.
+    global->compartment()->trace(trc);
+
+    JSTraceOp trace = global->compartment()->options().getTrace();
+    if (trace)
+        trace(trc, global);
+}
+
+JS_PUBLIC_API(void)
 JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global)
 {
     // This hook is infallible, because we don't really want arbitrary script

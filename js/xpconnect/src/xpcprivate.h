@@ -2133,6 +2133,8 @@ public:
         }
     }
 
+    static void Trace(JSTracer *trc, JSObject *obj);
+
     void AutoTrace(JSTracer *trc) {
         TraceSelf(trc);
     }
