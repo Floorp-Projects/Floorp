@@ -11,26 +11,58 @@ const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
 
 function DEBUG(str)
 {
-  // dump("********** " + str);
+  // dump("********** " + str + "\n");
+}
+
+function setOurState(data) {
+  x = { data: data, QueryInterface: function(iid) { return this } };
+  x.wrappedJSObject = x;
+  setObjectState("beacon-handler", x);
+  DEBUG("our state is " + data);
+}
+
+function getOurState() {
+  var data;
+  getObjectState("beacon-handler", function(x) {
+    // x can be null if no one has set any state yet
+    if (x) {
+      data = x.wrappedJSObject.data;
+    }
+  });
+  return data;
 }
 
 function handleRequest(request, response) {
   DEBUG("Entered request handler");
   response.setHeader("Cache-Control", "no-cache", false);
 
+  function finishControlResponse(response) {
+    DEBUG("********* sending out the control GET response");
+    var data = getState("beaconData");
+    var mimetype = getState("beaconMimetype");
+    DEBUG("GET was sending : " + data + "\n");
+    DEBUG("GET was sending : " + mimetype + "\n");
+    var result = {
+      "data": data,
+      "mimetype": mimetype,
+    };
+    response.write(JSON.stringify(result));
+    setOurState(null);
+  }
+
   if (request.method == "GET") {
+    DEBUG(" ------------ GET --------------- ");
     response.setHeader("Content-Type", "application/json", false);
     switch (request.queryString) {
     case "getLastBeacon":
-      var data = getState("beaconData");
-      var mimetype = getState("beaconMimetype");
-      DEBUG("GET was sending : " + data + "\n");
-      DEBUG("GET was sending : " + mimetype + "\n");
-      var result = {
-        "data": data,
-        "mimetype": mimetype,
-      };
-      response.write(JSON.stringify(result));
+      var state = getOurState();
+      if (state === "unblocked") {
+        finishControlResponse(response);
+      } else {
+        DEBUG("GET has  arrived, but POST has not, blocking response!");
+        setOurState(response);
+        response.processAsync();
+      }
       break;
     default:
       response.setStatusLine(request.httpVersion, 400, "Bad Request");
@@ -40,6 +72,7 @@ function handleRequest(request, response) {
   }
 
   if (request.method == "POST") {
+    DEBUG(" ------------ POST --------------- ");
     var body = new BinaryInputStream(request.bodyInputStream);
     var avail;
     var bytes = [];
@@ -76,6 +109,17 @@ function handleRequest(request, response) {
 
     response.setHeader("Content-Type", "text/plain", false);
     response.write('ok');
+
+    var blockedResponse = getOurState();
+    if (typeof(blockedResponse) == "object" && blockedResponse) {
+      DEBUG("GET is already pending, finishing!");
+      finishControlResponse(blockedResponse);
+      blockedResponse.finish();
+    } else {
+      DEBUG("GET has not arrived, marking it as unblocked");
+      setOurState("unblocked");
+    }
+
     return;
   }
 

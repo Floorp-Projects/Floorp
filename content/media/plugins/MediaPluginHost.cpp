@@ -61,7 +61,7 @@ static bool GetIntPref(const char* aPref, int32_t* aResult)
   // can only be called on the main thread. Post a runnable and wait.
   NS_ENSURE_TRUE(aPref, false);
   NS_ENSURE_TRUE(aResult, false);
-  nsCOMPtr<GetIntPrefEvent> event = new GetIntPrefEvent(aPref, aResult);
+  nsCOMPtr<nsIRunnable> event = new GetIntPrefEvent(aPref, aResult);
   return NS_SUCCEEDED(NS_DispatchToMainThread(event, NS_DISPATCH_SYNC));
 }
 

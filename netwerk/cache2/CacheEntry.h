@@ -325,12 +325,8 @@ private:
   } mBackgroundOperations;
 
   nsCOMPtr<nsISupports> mSecurityInfo;
-
   int64_t mPredictedDataSize;
-  uint32_t mDataSize; // ???
-
   mozilla::TimeStamp mLoadStart;
-
   nsCOMPtr<nsIThread> mReleaseThread;
 };
 
