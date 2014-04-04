@@ -2677,7 +2677,9 @@ static const JSClass sandbox_class = {
     JS_PropertyStub,   JS_DeletePropertyStub,
     JS_PropertyStub,   JS_StrictPropertyStub,
     sandbox_enumerate, (JSResolveOp)sandbox_resolve,
-    JS_ConvertStub
+    JS_ConvertStub, nullptr,
+    nullptr, nullptr, nullptr,
+    JS_GlobalObjectTraceHook
 };
 
 static JSObject *
@@ -4954,7 +4956,9 @@ static const JSClass global_class = {
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     global_enumerate, (JSResolveOp) global_resolve,
-    JS_ConvertStub,   nullptr
+    JS_ConvertStub,   nullptr,
+    nullptr, nullptr, nullptr,
+    JS_GlobalObjectTraceHook
 };
 
 static bool
