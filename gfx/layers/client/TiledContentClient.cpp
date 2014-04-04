@@ -29,7 +29,7 @@
 // This is the minimum area that we deem reasonable to copy from the front buffer to the
 // back buffer on tile updates. If the valid region is smaller than this, we just
 // redraw it and save on the copy (and requisite surface-locking involved).
-#define MINIMUM_TILE_COPY_AREA ((TILEDLAYERBUFFER_TILE_SIZE * TILEDLAYERBUFFER_TILE_SIZE)/16)
+#define MINIMUM_TILE_COPY_AREA (1.f/16.f)
 
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
 #include "cairo.h"
@@ -423,7 +423,8 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
                                         bool aCanRerasterizeValidRegion)
 {
   if (mBackBuffer && mFrontBuffer) {
-    const nsIntRect tileRect = nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
+    gfx::IntSize tileSize = mFrontBuffer->GetSize();
+    const nsIntRect tileRect = nsIntRect(0, 0, tileSize.width, tileSize.height);
 
     if (aDirtyRegion.Contains(tileRect)) {
       // The dirty region means that we no longer need the front buffer, so
@@ -437,7 +438,7 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
 
       if (regionToCopy.IsEmpty() ||
           (aCanRerasterizeValidRegion &&
-           regionToCopy.Area() < MINIMUM_TILE_COPY_AREA)) {
+           regionToCopy.Area() < tileSize.width * tileSize.height * MINIMUM_TILE_COPY_AREA)) {
         // Just redraw it all.
         return;
       }
@@ -526,7 +527,7 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion, TextureClientPool *aP
     MOZ_ASSERT(mBackLock->IsValid());
 
     *aCreatedTextureClient = true;
-    mInvalidBack = nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE);
+    mInvalidBack = nsIntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
   }
 
   ValidateBackBufferFromFront(aDirtyRegion, aCanRerasterizeValidRegion);
@@ -782,13 +783,13 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     }
 
     // The new buffer is now validated, remove the dirty region from it.
-    aTile.mInvalidBack.Sub(nsIntRect(0, 0, TILEDLAYERBUFFER_TILE_SIZE, TILEDLAYERBUFFER_TILE_SIZE),
+    aTile.mInvalidBack.Sub(nsIntRect(0, 0, GetTileSize().width, GetTileSize().height),
                            offsetScaledDirtyRegion);
   } else {
     // Area of the full tile...
     nsIntRegion tileRegion =
       nsIntRect(aTileOrigin.x, aTileOrigin.y,
-                GetScaledTileLength(), GetScaledTileLength());
+                GetScaledTileSize().width, GetScaledTileSize().height);
 
     // Intersect this area with the portion that's dirty.
     tileRegion = tileRegion.Intersect(aDirtyRegion);
@@ -997,25 +998,25 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
   nsIntRect paintBounds = aRegionToPaint.GetBounds();
 
   int startX, incX, startY, incY;
-  int tileLength = GetScaledTileLength();
+  gfx::IntSize scaledTileSize = GetScaledTileSize();
   if (aPaintData->mScrollOffset.x >= aPaintData->mLastScrollOffset.x) {
-    startX = RoundDownToTileEdge(paintBounds.x);
-    incX = tileLength;
+    startX = RoundDownToTileEdge(paintBounds.x, scaledTileSize.width);
+    incX = scaledTileSize.width;
   } else {
-    startX = RoundDownToTileEdge(paintBounds.XMost() - 1);
-    incX = -tileLength;
+    startX = RoundDownToTileEdge(paintBounds.XMost() - 1, scaledTileSize.width);
+    incX = -scaledTileSize.width;
   }
 
   if (aPaintData->mScrollOffset.y >= aPaintData->mLastScrollOffset.y) {
-    startY = RoundDownToTileEdge(paintBounds.y);
-    incY = tileLength;
+    startY = RoundDownToTileEdge(paintBounds.y, scaledTileSize.height);
+    incY = scaledTileSize.height;
   } else {
-    startY = RoundDownToTileEdge(paintBounds.YMost() - 1);
-    incY = -tileLength;
+    startY = RoundDownToTileEdge(paintBounds.YMost() - 1, scaledTileSize.height);
+    incY = -scaledTileSize.height;
   }
 
   // Find a tile to draw.
-  nsIntRect tileBounds(startX, startY, tileLength, tileLength);
+  nsIntRect tileBounds(startX, startY, scaledTileSize.width, scaledTileSize.height);
   int32_t scrollDiffX = aPaintData->mScrollOffset.x - aPaintData->mLastScrollOffset.x;
   int32_t scrollDiffY = aPaintData->mScrollOffset.y - aPaintData->mLastScrollOffset.y;
   // This loop will always terminate, as there is at least one tile area
