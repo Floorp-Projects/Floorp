@@ -12,7 +12,7 @@ function ERR(response, responseCode, responseCodeStr, msg)
   setState("expectedRequestType", "");
   // Dump to console log and send to client in response.
   dump("SERVER ERROR: " + msg + "\n");
-  response.write("HTTP/1.1" + responseCode + responseCodeStr + "\r\n");
+  response.write("HTTP/1.1 " + responseCode + " " + responseCodeStr + "\r\n");
   response.write("Content-Type: text/html; charset=UTF-8\r\n");
   response.write("Content-Length: " + msg.length + "\r\n");
   response.write("\r\n");

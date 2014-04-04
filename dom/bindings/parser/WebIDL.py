@@ -2944,16 +2944,8 @@ class IDLArgument(IDLObjectWithIdentifier):
         elif self.type.isAny():
             assert (self.defaultValue is None or
                     isinstance(self.defaultValue, IDLNullValue))
-            if (self.optional and not self.variadic and
-                not self.dictionaryMember and not self.defaultValue):
-                raise WebIDLError("Arguments of type 'any' are always optional "
-                                  "and shouldn't have the 'optional' keyword "
-                                  "unless they're being given a default value "
-                                  "of 'null'",
-                                  [self.location])
-            # 'any' values are always optional.
-            self.optional = True
-            if not self.defaultValue and not self.variadic:
+            # optional 'any' values always have a default value
+            if self.optional and not self.defaultValue and not self.variadic:
                 # Set the default value to undefined, for simplicity, so the
                 # codegen doesn't have to special-case this.
                 self.defaultValue = IDLUndefinedValue(self.location)
@@ -4355,9 +4347,9 @@ class Parser(Tokenizer):
             raise WebIDLError("Mandatory arguments can't have a default value.",
                               [self.getLocation(p, 6)])
 
-        # We can't test t.isAny() here and force optional to true, since at this
-        # point t is not a fully resolved type yet (e.g. it might be a typedef).
-        # We'll handle the 'any' case in IDLArgument.complete.
+        # We can't test t.isAny() here and give it a default value as needed,
+        # since at this point t is not a fully resolved type yet (e.g. it might
+        # be a typedef).  We'll handle the 'any' case in IDLArgument.complete.
 
         if variadic:
             if optional:

@@ -180,6 +180,7 @@ HTMLButtonAccessible::
   HTMLButtonAccessible(nsIContent* aContent, DocAccessible* aDoc) :
   HyperTextAccessibleWrap(aContent, aDoc)
 {
+  mGenericTypes |= eButton;
 }
 
 uint8_t

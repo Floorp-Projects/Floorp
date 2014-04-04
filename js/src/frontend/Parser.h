@@ -119,6 +119,10 @@ struct ParseContext : public GenericParseContext
     bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
     bool isStarGenerator() const { return generatorKind() == StarGenerator; }
 
+    bool isArrowFunction() const {
+        return sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow();
+    }
+
     uint32_t        blockScopeDepth; /* maximum depth of nested block scopes, in slots */
     Node            blockNode;      /* parse node for a block with let declarations
                                        (block with its own lexical scope)  */

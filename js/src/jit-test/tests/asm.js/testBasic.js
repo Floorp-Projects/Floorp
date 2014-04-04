@@ -107,6 +107,7 @@ assertTypeFailInEval('function f({global}) { "use asm"; function g() {} return g
 assertTypeFailInEval('function f(global, {imports}) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function f(g = 2) { "use asm"; function g() {} return g }');
 assertTypeFailInEval('function *f() { "use asm"; function g() {} return g }');
+assertTypeFailInEval('f => { "use asm"; function g() {} return g }');
 
 assertThrowsInstanceOf(function() { new Function(USE_ASM + 'var)') }, SyntaxError);
 assertThrowsInstanceOf(function() { new Function(USE_ASM + 'return)') }, SyntaxError);
