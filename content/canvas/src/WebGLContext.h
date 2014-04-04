@@ -174,6 +174,7 @@ public:
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const char16_t* aEncoderOptions,
                               nsIInputStream **aStream) MOZ_OVERRIDE;
+    NS_IMETHOD GetThebesSurface(gfxASurface **surface) MOZ_OVERRIDE;
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() MOZ_OVERRIDE;
 
     NS_IMETHOD SetIsOpaque(bool b) MOZ_OVERRIDE { return NS_OK; };
