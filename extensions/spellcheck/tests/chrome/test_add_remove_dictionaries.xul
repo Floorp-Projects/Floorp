@@ -4,7 +4,6 @@
 <window title="Add and remove dictionaries test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="RunTest();">
-  <title>Add and remove dictionaries test</title>
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
