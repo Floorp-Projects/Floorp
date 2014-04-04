@@ -16,8 +16,8 @@ class BasicCompositor;
 
 // TextureSource for Xlib-backed surfaces.
 class X11TextureSourceBasic
-  : public TextureSourceBasic,
-    public NewTextureSource
+  : public TextureSourceBasic
+  , public NewTextureSource
 {
 public:
   X11TextureSourceBasic(BasicCompositor* aCompositor, gfxXlibSurface* aSurface);
@@ -25,7 +25,9 @@ public:
   virtual X11TextureSourceBasic* AsSourceBasic() MOZ_OVERRIDE { return this; }
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
+
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+
   virtual gfx::SourceSurface* GetSurface() MOZ_OVERRIDE;
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE { }

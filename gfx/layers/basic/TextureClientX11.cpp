@@ -40,8 +40,7 @@ TextureClientX11::IsAllocated() const
 bool
 TextureClientX11::Lock(OpenMode aMode)
 {
-  // XXX - Turn this into a fatal assertion as soon as Bug 952507 is fixed
-  NS_WARN_IF_FALSE(!mLocked, "The TextureClient is already Locked!");
+  MOZ_ASSERT(!mLocked, "The TextureClient is already Locked!");
   mLocked = IsValid() && IsAllocated();
   return mLocked;
 }
@@ -49,8 +48,7 @@ TextureClientX11::Lock(OpenMode aMode)
 void
 TextureClientX11::Unlock()
 {
-  // XXX - Turn this into a fatal assertion as soon as Bug 952507 is fixed
-  NS_WARN_IF_FALSE(mLocked, "The TextureClient is already Unlocked!");
+  MOZ_ASSERT(mLocked, "The TextureClient is already Unlocked!");
   mLocked = false;
 
   if (mSurface) {
