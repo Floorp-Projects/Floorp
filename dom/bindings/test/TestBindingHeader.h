@@ -472,6 +472,7 @@ public:
   // Any types
   void PassAny(JSContext*, JS::Handle<JS::Value>);
   void PassVariadicAny(JSContext*, const Sequence<JS::Value>&);
+  void PassOptionalAny(JSContext*, JS::Handle<JS::Value>);
   void PassAnyDefaultNull(JSContext*, JS::Handle<JS::Value>);
   void PassSequenceOfAny(JSContext*, const Sequence<JS::Value>&);
   void PassNullableSequenceOfAny(JSContext*, const Nullable<Sequence<JS::Value> >&);
