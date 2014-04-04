@@ -41,3 +41,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         '-F%s' % CONFIG['MACOS_PRIVATE_FRAMEWORKS_DIR'],
         '-framework CoreUI',
     ]
+
+if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
+    LOCAL_INCLUDES += [
+        '/widget/windows',
+        '/xpcom/base',
+    ]
+    # This file is (only) included from subdirectories, and the file is here.
+    RCINCLUDE = '../xulrunner.rc'
