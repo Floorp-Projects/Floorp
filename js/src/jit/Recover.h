@@ -12,6 +12,11 @@
 namespace js {
 namespace jit {
 
+enum RecoverOpcode
+{
+    Recover_ResumePoint = 0
+};
+
 class RResumePoint
 {
   private:
