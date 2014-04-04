@@ -2289,7 +2289,7 @@ public class GeckoAppShell
 
     @WrapElementForJNI(stubName = "HandleGeckoMessageWrapper")
     public static void handleGeckoMessage(final NativeJSContainer message) {
-        sEventDispatcher.dispatchEvent(message.toString());
+        sEventDispatcher.dispatchEvent(message);
         message.dispose();
     }
 
