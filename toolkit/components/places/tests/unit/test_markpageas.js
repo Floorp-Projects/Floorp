@@ -4,19 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Get history service
-try {
-  var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].getService(Ci.nsINavHistoryService);
-} catch(ex) {
-  do_throw("Could not get history service\n");
-} 
-
 var gVisits = [{url: "http://www.mozilla.com/",
-                transition: histsvc.TRANSITION_TYPED},
-               {url: "http://www.google.com/", 
-                transition: histsvc.TRANSITION_BOOKMARK},
+                transition: TRANSITION_TYPED},
+               {url: "http://www.google.com/",
+                transition: TRANSITION_BOOKMARK},
                {url: "http://www.espn.com/",
-                transition: histsvc.TRANSITION_LINK}];
+                transition: TRANSITION_LINK}];
 
 function run_test()
 {
@@ -25,11 +18,32 @@ function run_test()
 
 add_task(function test_execute()
 {
+  let observer;
+  let completionPromise = new Promise(resolveCompletionPromise => {
+    observer = {
+      __proto__: NavHistoryObserver.prototype,
+      _visitCount: 0,
+      onVisit: function (aURI, aVisitID, aTime, aSessionID, aReferringID,
+                         aTransitionType, aAdded)
+      {
+        do_check_eq(aURI.spec, gVisits[this._visitCount].url);
+        do_check_eq(aTransitionType, gVisits[this._visitCount].transition);
+        this._visitCount++;
+
+        if (this._visitCount == gVisits.length) {
+          resolveCompletionPromise();
+        }
+      },
+    };
+  });
+
+  PlacesUtils.history.addObserver(observer, false);
+
   for each (var visit in gVisits) {
-    if (visit.transition == histsvc.TRANSITION_TYPED)
-      histsvc.markPageAsTyped(uri(visit.url));
-    else if (visit.transition == histsvc.TRANSITION_BOOKMARK)
-      histsvc.markPageAsFollowedBookmark(uri(visit.url))
+    if (visit.transition == TRANSITION_TYPED)
+      PlacesUtils.history.markPageAsTyped(uri(visit.url));
+    else if (visit.transition == TRANSITION_BOOKMARK)
+      PlacesUtils.history.markPageAsFollowedBookmark(uri(visit.url))
     else {
      // because it is a top level visit with no referrer,
      // it will result in TRANSITION_LINK
@@ -38,33 +52,8 @@ add_task(function test_execute()
                             transition: visit.transition});
   }
 
-  do_test_pending();
+  yield completionPromise;
+
+  PlacesUtils.history.removeObserver(observer);
 });
 
-// create and add history observer
-var observer = {
-  _visitCount: 0,
-  onBeginUpdateBatch: function() {
-  },
-  onEndUpdateBatch: function() {
-  },
-  onVisit: function(aURI, aVisitID, aTime, aSessionID, 
-                    aReferringID, aTransitionType, aAdded) {
-    do_check_eq(aURI.spec, gVisits[this._visitCount].url);
-    do_check_eq(aTransitionType, gVisits[this._visitCount].transition);
-    this._visitCount++;
-
-    if (this._visitCount == gVisits.length)
-      do_test_finished();
-  },
-  onTitleChanged: function () {},
-  onDeleteURI: function () {},
-  onClearHistory: function () {},
-  onPageChanged: function () {},
-  onDeleteVisits: function () {},
-  QueryInterface: XPCOMUtils.generateQI([
-    Ci.nsINavHistoryObserver
-  ])
-};
-
-histsvc.addObserver(observer, false);
