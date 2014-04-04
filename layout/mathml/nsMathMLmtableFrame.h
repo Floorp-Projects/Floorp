@@ -251,6 +251,12 @@ public:
   virtual const nsStyleText* StyleTextForLineLayout() MOZ_OVERRIDE;
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 
+  bool
+  IsMrowLike() MOZ_OVERRIDE {
+    return mFrames.FirstChild() != mFrames.LastChild() ||
+           !mFrames.FirstChild();
+  }
+
 protected:
   nsMathMLmtdInnerFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmtdInnerFrame();
