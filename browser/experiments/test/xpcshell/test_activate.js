@@ -99,25 +99,43 @@ add_task(function* test_startStop() {
   Assert.equal(result.applicable, false, "Experiment should not be applicable.");
   Assert.equal(experiment.enabled, false, "Experiment should not be enabled.");
 
+  let addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "No experiment add-ons are installed.");
+
   defineNow(gPolicy, futureDate(startDate, 5 * MS_IN_ONE_DAY));
   result = yield isApplicable(experiment);
   Assert.equal(result.applicable, true, "Experiment should now be applicable.");
   Assert.equal(experiment.enabled, false, "Experiment should not be enabled.");
 
   yield experiment.start();
+  addons = yield getExperimentAddons();
   Assert.equal(experiment.enabled, true, "Experiment should now be enabled.");
+  Assert.equal(addons.length, 1, "1 experiment add-on is installed.");
+  Assert.equal(addons[0].id, experiment._addonId, "The add-on is the one we expect.");
+  Assert.equal(addons[0].userDisabled, false, "The add-on is not userDisabled.");
+  Assert.ok(addons[0].isActive, "The add-on is active.");
 
   yield experiment.stop();
+  addons = yield getExperimentAddons();
   Assert.equal(experiment.enabled, false, "Experiment should not be enabled.");
+  Assert.equal(addons.length, 0, "Experiment should be uninstalled from the Addon Manager.");
 
   yield experiment.start();
+  addons = yield getExperimentAddons();
   Assert.equal(experiment.enabled, true, "Experiment should now be enabled.");
+  Assert.equal(addons.length, 1, "1 experiment add-on is installed.");
+  Assert.equal(addons[0].id, experiment._addonId, "The add-on is the one we expect.");
+  Assert.equal(addons[0].userDisabled, false, "The add-on is not userDisabled.");
+  Assert.ok(addons[0].isActive, "The add-on is active.");
 
   let result = yield experiment._shouldStop();
   Assert.equal(result.shouldStop, false, "shouldStop should be false.");
   let maybeStop = yield experiment.maybeStop();
   Assert.equal(maybeStop, false, "Experiment should not have been stopped.");
   Assert.equal(experiment.enabled, true, "Experiment should be enabled.");
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 1, "Experiment still in add-ons manager.");
+  Assert.ok(addons[0].isActive, "The add-on is still active.");
 
   defineNow(gPolicy, futureDate(endDate, MS_IN_ONE_DAY));
   result = yield experiment._shouldStop();
@@ -125,4 +143,6 @@ add_task(function* test_startStop() {
   maybeStop = yield experiment.maybeStop();
   Assert.equal(maybeStop, true, "Experiment should have been stopped.");
   Assert.equal(experiment.enabled, false, "Experiment should be disabled.");
+  addons = yield getExperimentAddons();
+  Assert.equal(addons.length, 0, "Experiment add-on is uninstalled.");
 });
