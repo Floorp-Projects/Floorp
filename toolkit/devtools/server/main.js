@@ -68,7 +68,9 @@ this.promised = promised;
 this.all = all;
 
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+                                  "resource://gre/modules/devtools/Console.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitorManager", () => {
   return require("devtools/toolkit/webconsole/network-monitor").NetworkMonitorManager;
