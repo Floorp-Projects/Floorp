@@ -4106,7 +4106,6 @@ CodeGenerator::visitNeuterCheck(LNeuterCheck *lir)
 
     masm.extractObject(Address(obj, TypedObject::offsetOfOwnerSlot()), temp);
     masm.unboxInt32(Address(temp, ArrayBufferObject::flagsOffset()), temp);
-    masm.and32(Imm32(ArrayBufferObject::neuteredFlag()), temp);
 
     Imm32 flag(ArrayBufferObject::neuteredFlag());
     if (!bailoutTest32(Assembler::NonZero, temp, flag, lir->snapshot()))
