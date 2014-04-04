@@ -14,6 +14,7 @@
 # include "jit/LIR.h"
 #endif
 #include "jit/MIR.h"
+#include "jit/Recover.h"
 
 using namespace js;
 using namespace js::jit;
@@ -553,14 +554,13 @@ SnapshotWriter::init()
 RecoverReader::RecoverReader(SnapshotReader &snapshot, const uint8_t *recovers, uint32_t size)
   : reader_(nullptr, nullptr),
     frameCount_(0),
-    framesRead_(0),
-    allocCount_(0)
+    framesRead_(0)
 {
     if (!recovers)
         return;
     reader_ = CompactBufferReader(recovers + snapshot.recoverOffset(), recovers + size);
     readRecoverHeader();
-    readFrame(snapshot);
+    readFrame();
 }
 
 void
@@ -577,17 +577,11 @@ RecoverReader::readRecoverHeader()
 }
 
 void
-RecoverReader::readFrame(SnapshotReader &snapshot)
+RecoverReader::readFrame()
 {
     JS_ASSERT(moreFrames());
-    JS_ASSERT(snapshot.allocRead_ == allocCount_);
-
-    pcOffset_ = reader_.readUnsigned();
-    allocCount_ = reader_.readUnsigned();
-    IonSpew(IonSpew_Snapshots, "Read pc offset %u, nslots %u", pcOffset_, allocCount_);
-
+    RResumePoint::readRecoverData(reader_, &rawData_);
     framesRead_++;
-    snapshot.allocRead_ = 0;
 }
 
 SnapshotOffset

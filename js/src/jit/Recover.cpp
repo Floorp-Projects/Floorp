@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jit/Recover.h"
+
 #include "jit/IonSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
@@ -79,4 +81,20 @@ MResumePoint::writeRecoverData(CompactBufferWriter &writer) const
     writer.writeUnsigned(pcoff);
     writer.writeUnsigned(nallocs);
     return true;
+}
+
+RResumePoint::RResumePoint(CompactBufferReader &reader)
+{
+    static_assert(sizeof(*this) <= sizeof(RInstructionStorage),
+                  "Storage space is too small to decode this recover instruction.");
+    pcOffset_ = reader.readUnsigned();
+    numOperands_ = reader.readUnsigned();
+    IonSpew(IonSpew_Snapshots, "Read RResumePoint (pc offset %u, nslots %u)",
+            pcOffset_, numOperands_);
+}
+
+void
+RResumePoint::readRecoverData(CompactBufferReader &reader, RInstructionStorage *raw)
+{
+    new (raw->addr()) RResumePoint(reader);
 }
