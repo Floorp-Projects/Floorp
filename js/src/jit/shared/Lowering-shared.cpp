@@ -63,9 +63,6 @@ LIRGeneratorShared::getRecoverInfo(MResumePoint *rp)
         return cachedRecoverInfo_;
 
     LRecoverInfo *recoverInfo = LRecoverInfo::New(gen, rp);
-    if (!recoverInfo)
-        return nullptr;
-
     cachedRecoverInfo_ = recoverInfo;
     return recoverInfo;
 }
@@ -82,8 +79,12 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
     if (!snapshot)
         return nullptr;
 
+    FlattenedMResumePointIter iter(rp);
+    if (!iter.init())
+        return nullptr;
+
     size_t i = 0;
-    for (MResumePoint **it = recover->begin(), **end = recover->end(); it != end; ++it) {
+    for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
         MResumePoint *mir = *it;
         for (size_t j = 0, e = mir->numOperands(); j < e; ++i, ++j) {
             MDefinition *ins = mir->getOperand(j);
@@ -136,8 +137,12 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
     if (!snapshot)
         return nullptr;
 
+    FlattenedMResumePointIter iter(rp);
+    if (!iter.init())
+        return nullptr;
+
     size_t i = 0;
-    for (MResumePoint **it = recover->begin(), **end = recover->end(); it != end; ++it) {
+    for (MResumePoint **it = iter.begin(), **end = iter.end(); it != end; ++it) {
         MResumePoint *mir = *it;
         for (size_t j = 0, e = mir->numOperands(); j < e; ++i, ++j) {
             MDefinition *def = mir->getOperand(j);
