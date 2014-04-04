@@ -61,8 +61,8 @@ TEST(TiledLayerBuffer, TileConstructor) {
 TEST(TiledLayerBuffer, TileStart) {
   TestTiledLayerBuffer buffer;
 
-  ASSERT_EQ(buffer.RoundDownToTileEdge(10), 0);
-  ASSERT_EQ(buffer.RoundDownToTileEdge(-10), -256);
+  ASSERT_EQ(buffer.RoundDownToTileEdge(10, 256), 0);
+  ASSERT_EQ(buffer.RoundDownToTileEdge(-10, 256), -256);
 }
 
 TEST(TiledLayerBuffer, EmptyUpdate) {
