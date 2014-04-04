@@ -242,6 +242,15 @@ add_task(function formdata() {
   }
 });
 
+add_task(function* test_sessionRestoreInit() {
+   let info = Cc["@mozilla.org/toolkit/app-startup;1"].
+     getService(Ci.nsIAppStartup).
+     getStartupInfo();
+  ok(info.sessionRestoreInit > info.process, "sessionRestoreInit is after process creation");
+  ok(info.sessionRestoreInit <
+    Date.now() + 10000 /* Date.now() is non-monotonic, let's play it paranoid*/,
+    "sessionRestoreInit is before now");
+});
 
 /**
  * Get the latest statistics.
