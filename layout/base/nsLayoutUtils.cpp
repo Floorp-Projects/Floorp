@@ -773,6 +773,41 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
 }
 
 void
+nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
+                                     nsIPresShell* aPresShell,
+                                     const LayerMargin& aMargins,
+                                     uint32_t aAlignmentX,
+                                     uint32_t aAlignmentY,
+                                     uint32_t aPriority,
+                                     RepaintMode aRepaintMode)
+{
+  DisplayPortMarginsPropertyData* currentData =
+    static_cast<DisplayPortMarginsPropertyData*>(aContent->GetProperty(nsGkAtoms::DisplayPortMargins));
+  if (currentData && currentData->mPriority > aPriority) {
+    return;
+  }
+
+  aContent->SetProperty(nsGkAtoms::DisplayPortMargins,
+                        new DisplayPortMarginsPropertyData(
+                            aMargins, aAlignmentX, aAlignmentY, aPriority),
+                        nsINode::DeleteProperty<DisplayPortMarginsPropertyData>);
+
+  nsIFrame* rootScrollFrame = aPresShell->GetRootScrollFrame();
+  if (rootScrollFrame && aContent == rootScrollFrame->GetContent()) {
+    // We are setting a root displayport for a document.
+    // The pres shell needs a special flag set.
+    aPresShell->SetIgnoreViewportScrolling(true);
+  }
+
+  if (aRepaintMode == RepaintMode::Repaint) {
+    nsIFrame* rootFrame = aPresShell->FrameManager()->GetRootFrame();
+    if (rootFrame) {
+      rootFrame->SchedulePaint();
+    }
+  }
+}
+
+void
 nsLayoutUtils::SetDisplayPortBase(nsIContent* aContent, const nsRect& aBase)
 {
   aContent->SetProperty(nsGkAtoms::DisplayPortBase, new nsRect(aBase),
