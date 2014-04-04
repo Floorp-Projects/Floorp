@@ -186,12 +186,12 @@ class JSString : public js::gc::BarrieredCell<JSString>
      *   Undepended    0011       0011
      *   Extensible    0010       0010
      *   Inline        0100       isFlat && !isExtensible && (u1.chars == inlineStorage)
-     *   FatInline     0100       header in FINALIZE_FAT_INLINE_STRING arena
+     *   FatInline     0100       isInline && header in FINALIZE_FAT_INLINE_STRING arena
      *   External      0100       header in FINALIZE_EXTERNAL_STRING arena
      *   Atom          -          1xxx
      *   PermanentAtom 1100       1100
-     *   InlineAtom    -          isAtom && is Inline
-     *   FatInlineAtom -          isAtom && is FatInline
+     *   InlineAtom    -          isAtom && isInline
+     *   FatInlineAtom -          isAtom && isFatInline
      *
      *  "HasBase" here refers to the two string types that have a 'base' field:
      *  JSDependentString and JSUndependedString.
@@ -623,6 +623,7 @@ class JSExtensibleString : public JSFlatString
 
 JS_STATIC_ASSERT(sizeof(JSExtensibleString) == sizeof(JSString));
 
+/* On 32-bit platforms, MAX_INLINE_LENGTH is 4. On 64-bit platforms it is 8. */
 class JSInlineString : public JSFlatString
 {
     static const size_t MAX_INLINE_LENGTH = NUM_INLINE_CHARS - 1;
@@ -646,13 +647,23 @@ class JSInlineString : public JSFlatString
 
 JS_STATIC_ASSERT(sizeof(JSInlineString) == sizeof(JSString));
 
+/*
+ * On both 32-bit and 64-bit platforms, INLINE_EXTENSION_CHARS is 12. This is
+ * deliberate, in order to minimize potential performance differences between
+ * 32-bit and 64-bit platforms.
+ *
+ * There are still some differences due to NUM_INLINE_CHARS being different.
+ * E.g. strings of length 4--7 will be JSFatInlineStrings on 32-bit platforms
+ * and JSInlineStrings on 64-bit platforms. But the more significant transition
+ * from inline strings to non-inline strings occurs at length 12 on both 32-bit
+ * and 64-bit platforms.
+ */
 class JSFatInlineString : public JSInlineString
 {
-    /* This can be any value that is a multiple of CellSize. */
-    static const size_t INLINE_EXTENSION_CHARS = sizeof(JSString::Data) / sizeof(jschar);
+    static const size_t INLINE_EXTENSION_CHARS = 12 - NUM_INLINE_CHARS;
 
     static void staticAsserts() {
-        JS_STATIC_ASSERT(INLINE_EXTENSION_CHARS % js::gc::CellSize == 0);
+        JS_STATIC_ASSERT((INLINE_EXTENSION_CHARS * sizeof(jschar)) % js::gc::CellSize == 0);
         JS_STATIC_ASSERT(MAX_FAT_INLINE_LENGTH + 1 ==
                          (sizeof(JSFatInlineString) -
                           offsetof(JSFatInlineString, d.inlineStorage)) / sizeof(jschar));
@@ -678,7 +689,7 @@ class JSFatInlineString : public JSInlineString
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
 };
 
-JS_STATIC_ASSERT(sizeof(JSFatInlineString) == 2 * sizeof(JSString));
+JS_STATIC_ASSERT(sizeof(JSFatInlineString) % js::gc::CellSize == 0);
 
 class JSExternalString : public JSFlatString
 {
