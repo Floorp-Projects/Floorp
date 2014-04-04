@@ -325,7 +325,7 @@ TypeDescrSet::fieldNamed(IonBuilder &builder,
 
     // Initialize `*offset` and `*out` for the case where incompatible
     // or absent fields are found.
-    *offset = SIZE_MAX;
+    *offset = -1;
     *index = SIZE_MAX;
     *out = TypeDescrSet();
 

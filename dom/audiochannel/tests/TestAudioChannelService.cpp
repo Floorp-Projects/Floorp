@@ -126,7 +126,7 @@ public:
     return NS_OK;
   }
 
-  nsRefPtr<AudioChannelAgent> mAgent;
+  nsCOMPtr<nsIAudioChannelAgent> mAgent;
   AudioChannelType mType;
   bool mWaitCallback;
   bool mRegistered;
