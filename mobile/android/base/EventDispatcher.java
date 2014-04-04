@@ -53,6 +53,9 @@ public final class EventDispatcher {
                         listeners = listType.newInstance();
                         listenersMap.put(event, listeners);
                     }
+                    if (!AppConstants.RELEASE_BUILD && listeners.contains(listener)) {
+                        throw new IllegalStateException("Already registered " + event);
+                    }
                     listeners.add(listener);
                 }
             }
@@ -81,8 +84,8 @@ public final class EventDispatcher {
         synchronized (listenersMap) {
             for (final String event : events) {
                 List<T> listeners = listenersMap.get(event);
-                if (listeners == null ||
-                    !listeners.remove(listener)) {
+                if ((listeners == null ||
+                     !listeners.remove(listener)) && !AppConstants.RELEASE_BUILD) {
                     throw new IllegalArgumentException(event + " was not registered");
                 }
             }
