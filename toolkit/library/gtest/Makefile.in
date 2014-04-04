@@ -4,7 +4,7 @@
 
 # Enforce that the clean/distclean rules removes everything that needs
 # to be removed from this directory.
-ifneq (,$(filter clean distclean,$(MAKECMDGOALS))
+ifneq (,$(filter clean distclean,$(MAKECMDGOALS)))
 LINK_GTEST = 1
 endif
 
