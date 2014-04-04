@@ -580,7 +580,7 @@ void
 RecoverReader::readFrame()
 {
     JS_ASSERT(moreFrames());
-    RResumePoint::readRecoverData(reader_, &rawData_);
+    RInstruction::readRecoverData(reader_, &rawData_);
     framesRead_++;
 }
 
