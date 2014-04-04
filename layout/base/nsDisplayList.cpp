@@ -642,37 +642,30 @@ CalculateRootCompositionSize(FrameMetrics& aMetrics,
   }
   nsIPresShell* rootPresShell = nullptr;
   if (rootPresContext) {
-    // See the comments in the code that calculates the root
-    // composition bounds in RecordFrameMetrics.
-    // TODO: Reuse that code here.
     nsIPresShell* rootPresShell = rootPresContext->PresShell();
     if (nsIFrame* rootFrame = rootPresShell->GetRootFrame()) {
       if (nsView* view = rootFrame->GetView()) {
-        LayoutDeviceToParentLayerScale parentResolution(
-          rootPresShell->GetCumulativeResolution().width
-          / rootPresShell->GetResolution().width);
-        int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
-        nsRect viewBounds = view->GetBounds();
-        LayerSize viewSize = ViewAs<LayerPixel>(
-          (LayoutDeviceRect::FromAppUnits(viewBounds, rootAUPerDevPixel)
-           * parentResolution).Size(), PixelCastJustification::ParentLayerToLayerForRootComposition);
-        nsIWidget* widget =
-#ifdef MOZ_WIDGET_ANDROID
-            rootFrame->GetNearestWidget();
-#else
-            view->GetWidget();
-#endif
+        nsIWidget* widget = view->GetWidget();
+  #ifdef MOZ_WIDGET_ANDROID
+        // Android hack - temporary workaround for bug 983208 until we figure
+        // out what a proper fix is.
+        if (!widget) {
+          widget = rootFrame->GetNearestWidget();
+        }
+  #endif
         if (widget) {
-          nsIntRect widgetBounds;
-          widget->GetBounds(widgetBounds);
-          rootCompositionSize = LayerSize(ViewAs<LayerPixel>(widgetBounds.Size()));
-#ifdef MOZ_WIDGET_ANDROID
-          if (viewSize.height < rootCompositionSize.height) {
-            rootCompositionSize.height = viewSize.height;
-          }
-#endif
+          nsIntRect bounds;
+          widget->GetBounds(bounds);
+          rootCompositionSize = LayerSize(ViewAs<LayerPixel>(bounds.Size()));
         } else {
-          rootCompositionSize = viewSize;
+          LayoutDeviceToParentLayerScale parentResolution(
+            rootPresShell->GetCumulativeResolution().width
+            / rootPresShell->GetResolution().width);
+          int32_t rootAUPerDevPixel = rootPresContext->AppUnitsPerDevPixel();
+          nsRect viewBounds = view->GetBounds();
+          rootCompositionSize = ViewAs<LayerPixel>(
+            (LayoutDeviceRect::FromAppUnits(viewBounds, rootAUPerDevPixel)
+             * parentResolution).Size(), PixelCastJustification::ParentLayerToLayerForRootComposition);
         }
       }
     }
@@ -800,7 +793,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   nsRect compositionBounds(frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aReferenceFrame),
                            frameForCompositionBoundsCalculation->GetSize());
   metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
-                                            * metrics.GetParentResolution());
+                             * metrics.GetParentResolution());
 
   // For the root scroll frame of the root content document, the above calculation
   // will yield the size of the viewport frame as the composition bounds, which
@@ -815,35 +808,23 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   if (isRootContentDocRootScrollFrame) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
       if (nsView* view = rootFrame->GetView()) {
-        nsRect viewBoundsAppUnits = view->GetBounds() + rootFrame->GetOffsetToCrossDoc(aReferenceFrame);
-        ParentLayerIntRect viewBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(viewBoundsAppUnits, auPerDevPixel)
-                                                     * metrics.GetParentResolution());
-        // On Android, we need to do things a bit differently to get things
-        // right (see bug 983208, bug 988882). We use the bounds of the nearest
-        // widget, but clamp the height to the view bounds height. This clamping
-        // is done to get correct results for a page where the page is sized to
-        // the screen and thus the dynamic toolbar never disappears. In such a
-        // case, we want the composition bounds to exclude the toolbar height,
-        // but the widget bounds includes it. We don't currently have a good way
-        // of knowing about the toolbar height, but clamping to the view bounds
-        // height gives the correct answer in the cases we care about.
-        nsIWidget* widget =
+        nsIWidget* widget = view->GetWidget();
 #ifdef MOZ_WIDGET_ANDROID
-            rootFrame->GetNearestWidget();
-#else
-            view->GetWidget();
+        // Android hack - temporary workaround for bug 983208 until we figure
+        // out what a proper fix is.
+        if (!widget) {
+          widget = rootFrame->GetNearestWidget();
+        }
 #endif
         if (widget) {
-          nsIntRect widgetBounds;
-          widget->GetBounds(widgetBounds);
-          metrics.mCompositionBounds = ViewAs<ParentLayerPixel>(widgetBounds);
-#ifdef MOZ_WIDGET_ANDROID
-          if (viewBounds.height < metrics.mCompositionBounds.height) {
-            metrics.mCompositionBounds.height = viewBounds.height;
-          }
-#endif
+          nsIntRect bounds;
+          widget->GetBounds(bounds);
+          metrics.mCompositionBounds = ParentLayerIntRect::FromUnknownRect(mozilla::gfx::IntRect(
+              bounds.x, bounds.y, bounds.width, bounds.height));
         } else {
-          metrics.mCompositionBounds = viewBounds;
+          nsRect viewBounds = view->GetBounds() + rootFrame->GetOffsetToCrossDoc(aReferenceFrame);
+          metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(viewBounds, auPerDevPixel)
+                                     * metrics.GetParentResolution());
         }
       }
     }
