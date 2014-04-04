@@ -25,8 +25,7 @@ class CompositorD3D11;
  * A TextureClient to share a D3D10 texture with the compositor thread.
  * The corresponding TextureHost is DXGITextureHostD3D11
  */
-class TextureClientD3D11 : public TextureClient,
-                           public TextureClientDrawTarget
+class TextureClientD3D11 : public TextureClient
 {
 public:
   TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
@@ -53,11 +52,9 @@ public:
 
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE { return nullptr; }
 
-  // TextureClientDrawTarget
-
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
 
-  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
+  virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
   virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
 
