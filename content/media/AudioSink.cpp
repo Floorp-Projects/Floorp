@@ -195,7 +195,6 @@ AudioSink::InitializeAudioStream()
 void
 AudioSink::Drain()
 {
-  MOZ_ASSERT(!mAudioStream->IsPaused());
   AssertCurrentThreadInMonitor();
   // If the media was too short to trigger the start of the audio stream,
   // start it now.
