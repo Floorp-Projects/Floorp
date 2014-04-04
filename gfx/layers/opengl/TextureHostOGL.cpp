@@ -13,7 +13,6 @@
 #include "SharedSurfaceGL.h"            // for SharedSurface_GLTexture, etc
 #include "SurfaceStream.h"              // for SurfaceStream
 #include "SurfaceTypes.h"               // for SharedSurfaceType, etc
-#include "TiledLayerBuffer.h"           // for TILEDLAYERBUFFER_TILE_SIZE
 #include "gfx2DGlue.h"                  // for ContentForFormat, etc
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxReusableSurfaceWrapper.h"  // for gfxReusableSurfaceWrapper

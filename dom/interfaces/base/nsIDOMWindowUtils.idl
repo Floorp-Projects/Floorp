@@ -176,7 +176,8 @@ interface nsIDOMWindowUtils : nsISupports {
                                        in float aTopMargin,
                                        in float aRightMargin,
                                        in float aBottomMargin,
-                                       in uint32_t aAlignment,
+                                       in uint32_t aAlignmentX,
+                                       in uint32_t aAlignmentY,
                                        in nsIDOMElement aElement,
                                        in uint32_t aPriority);
 
