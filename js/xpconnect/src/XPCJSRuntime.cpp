@@ -1058,7 +1058,7 @@ class Watchdog
             AutoLockWatchdog lock(this);
 
             mThread = PR_CreateThread(PR_USER_THREAD, WatchdogMain, this,
-                                      PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
+                                      PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
                                       PR_UNJOINABLE_THREAD, 0);
             if (!mThread)
                 NS_RUNTIMEABORT("PR_CreateThread failed!");
