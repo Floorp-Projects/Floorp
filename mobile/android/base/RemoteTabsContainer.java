@@ -4,24 +4,35 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.GeckoSwipeRefreshLayout;
+
+import android.accounts.Account;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 
 /**
- * Serves as container to wrap the list of synced tabs and provide swipe-to-refresh support. The
+ * Provides a container to wrap the list of synced tabs and provide swipe-to-refresh support. The
  * only child view should be an instance of {@link RemoteTabsList}.
  */
-public class RemoteTabsContainer extends FrameLayout
+public class RemoteTabsContainer extends GeckoSwipeRefreshLayout
                                  implements TabsPanel.PanelView {
+    private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "tabs" };
+
     private final Context context;
+    private final RemoteTabsSyncObserver syncListener;
     private RemoteTabsList list;
 
     public RemoteTabsContainer(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.context = context;
+        this.syncListener = new RemoteTabsSyncObserver();
+
+        setOnRefreshListener(new RemoteTabsRefreshListener());
     }
 
     @Override
@@ -29,6 +40,22 @@ public class RemoteTabsContainer extends FrameLayout
         super.addView(child, index, params);
 
         list = (RemoteTabsList) child;
+
+        // Must be called after the child view has been added.
+        setColorScheme(R.color.swipe_refresh_orange_dark, R.color.background_tabs,
+                       R.color.swipe_refresh_orange_dark, R.color.background_tabs);
+    }
+
+
+    @Override
+    public boolean canChildScrollUp() {
+        // We are not supporting swipe-to-refresh for old sync. This disables the swipe gesture if
+        // no FxA are detected.
+        if (FirefoxAccounts.firefoxAccountsExist(getContext())) {
+            return super.canChildScrollUp();
+        } else {
+            return true;
+        }
     }
 
     @Override
@@ -45,15 +72,51 @@ public class RemoteTabsContainer extends FrameLayout
     public void show() {
         setVisibility(VISIBLE);
         TabsAccessor.getTabs(context, list);
+        FirefoxAccounts.addSyncStatusListener(syncListener);
     }
 
     @Override
     public void hide() {
         setVisibility(GONE);
+        FirefoxAccounts.removeSyncStatusListener(syncListener);
     }
 
     @Override
     public boolean shouldExpand() {
         return true;
+    }
+
+    private class RemoteTabsRefreshListener implements OnRefreshListener {
+        @Override
+        public void onRefresh() {
+            if (FirefoxAccounts.firefoxAccountsExist(getContext())) {
+                final Account account = FirefoxAccounts.getFirefoxAccount(getContext());
+                FirefoxAccounts.requestSync(account, FirefoxAccounts.FORCE, STAGES_TO_SYNC_ON_REFRESH, null);
+            }
+        }
+    }
+
+    private class RemoteTabsSyncObserver implements FirefoxAccounts.SyncStatusListener {
+        @Override
+        public Context getContext() {
+            return RemoteTabsContainer.this.getContext();
+        }
+
+        @Override
+        public Account getAccount() {
+            return FirefoxAccounts.getFirefoxAccount(getContext());
+        }
+
+        public void onSyncFinished() {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    TabsAccessor.getTabs(context, list);
+                    setRefreshing(false);
+                }
+            });
+        }
+
+        public void onSyncStarted() {}
     }
 }
