@@ -4,6 +4,8 @@
 "use strict";
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/AddonManagerTesting.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "Experiments",
   "resource:///modules/experiments/Experiments.jsm");
 
@@ -330,8 +332,7 @@ add_task(function* test_addonAlreadyInstalled() {
 
   // Install conflicting addon.
 
-  let installed = yield installAddon(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
-  Assert.ok(installed, "Addon should have been installed.");
+  yield AddonTestUtils.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 1, "1 add-on is installed.");
   list = yield experiments.getExperiments();
@@ -1345,9 +1346,8 @@ add_task(function* test_unexpectedUninstall() {
   // Uninstall the addon through the addon manager instead of stopping it through
   // the experiments API.
 
-  let success = yield uninstallAddon(EXPERIMENT1_ID);
+  yield AddonTestUtils.uninstallAddonByID(EXPERIMENT1_ID);
   yield experiments._mainTask;
-  Assert.ok(success, "Addon should have been uninstalled.");
 
   yield experiments.notify();
 
@@ -1373,7 +1373,7 @@ add_task(function* testUnknownExperimentsUninstalled() {
 
   // Simulate us not listening.
   experiments._stopWatchingAddons();
-  yield installAddon(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+  yield AddonTestUtils.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
   experiments._startWatchingAddons();
 
   addons = yield getExperimentAddons();
@@ -1410,7 +1410,14 @@ add_task(function* testForeignExperimentInstall() {
 
   let addons = yield getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons present.");
-  yield installAddon(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+
+  let failed;
+  try {
+    yield AddonTestUtils.installXPIFromURL(gDataRoot + EXPERIMENT1_XPI_NAME, EXPERIMENT1_XPI_SHA1);
+  } catch (ex) {
+    failed = true;
+  }
+  Assert.ok(failed, "Add-on install should not have completed successfully");
   addons = yield getExperimentAddons();
   Assert.equal(addons.length, 0, "Add-on install should have been cancelled.");
 
