@@ -26,9 +26,9 @@ interface Promise {
   // Promise object in this scope without having resolved the interface object
   // first.
   [NewObject, Throws]
-  static Promise resolve(any value);
+  static Promise resolve(optional any value);
   [NewObject, Throws]
-  static Promise reject(any value);
+  static Promise reject(optional any value);
 
   // The [TreatNonCallableAsNull] annotation is required since then() should do
   // nothing instead of throwing errors when non-callable arguments are passed.
