@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include "jscntxt.h"
 #include "jsstr.h"
 #include "vm/String.h"
 #include "assembler/wtf/Platform.h"
@@ -164,18 +165,18 @@ class Vector {
     template <typename U>
     void append(const U &u) {
         if (!impl.append(static_cast<T>(u)))
-            MOZ_CRASH();
+            js::CrashAtUnhandlableOOM("Yarr");
     }
 
     template <size_t M>
     void append(const Vector<T,M> &v) {
         if (!impl.appendAll(v.impl))
-            MOZ_CRASH();
+            js::CrashAtUnhandlableOOM("Yarr");
     }
 
     void insert(size_t i, const T& t) {
         if (!impl.insert(&impl[i], t))
-            MOZ_CRASH();
+            js::CrashAtUnhandlableOOM("Yarr");
     }
 
     void remove(size_t i) {
@@ -189,7 +190,7 @@ class Vector {
     void shrink(size_t newLength) {
         JS_ASSERT(newLength <= impl.length());
         if (!impl.resize(newLength))
-            MOZ_CRASH();
+            js::CrashAtUnhandlableOOM("Yarr");
     }
 
     void swap(Vector &other) {
@@ -219,7 +220,7 @@ class Vector<OwnPtr<T> > {
 
     void append(T *t) {
         if (!impl.append(t))
-            MOZ_CRASH();
+            js::CrashAtUnhandlableOOM("Yarr");
     }
 
     PassOwnPtr<T> operator[](size_t i) {
@@ -234,7 +235,7 @@ class Vector<OwnPtr<T> > {
 
     void reserve(size_t capacity) {
         if (!impl.reserve(capacity))
-            MOZ_CRASH();
+            js::CrashAtUnhandlableOOM("Yarr");
     }
 };
 
