@@ -458,7 +458,8 @@ ModalPrompter.prototype = {
     allowTabModal : false,
 
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt,
-Ci.nsIAuthPrompt2, Ci.nsIWritablePropertyBag2]),
+                                            Ci.nsIAuthPrompt2,
+                                            Ci.nsIWritablePropertyBag2]),
 
 
     /* ---------- internal methods ---------- */

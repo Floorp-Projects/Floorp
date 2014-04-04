@@ -2917,21 +2917,6 @@ nsGlobalWindow::UpdateParentTarget()
   mParentTarget = eventTarget;
 }
 
-bool
-nsGlobalWindow::GetIsTabModalPromptAllowed()
-{
-  MOZ_ASSERT(IsOuterWindow());
-
-  bool allowTabModal = true;
-  if (mDocShell) {
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    cv->GetIsTabModalPromptAllowed(&allowTabModal);
-  }
-
-  return allowTabModal;
-}
-
 EventTarget*
 nsGlobalWindow::GetTargetForDOMEvent()
 {
@@ -6166,10 +6151,6 @@ nsGlobalWindow::AlertOrConfirm(bool aAlert,
   nsAutoString final;
   nsContentUtils::StripNullChars(aMessage, final);
 
-  // Check if we're being called at a point where we can't use tab-modal
-  // prompts, because something doesn't want reentrancy.
-  bool allowTabModal = GetIsTabModalPromptAllowed();
-
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
     do_GetService("@mozilla.org/prompter;1", &rv);
@@ -6185,9 +6166,10 @@ nsGlobalWindow::AlertOrConfirm(bool aAlert,
     return false;
   }
 
-  nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
-  if (promptBag)
-    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
+  // Always allow tab modal prompts for alert and confirm.
+  if (nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt)) {
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), true);
+  }
 
   bool result = false;
   nsAutoSyncOperation sync(mDoc);
@@ -6281,10 +6263,6 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   nsContentUtils::StripNullChars(aMessage, fixedMessage);
   nsContentUtils::StripNullChars(aInitial, fixedInitial);
 
-  // Check if we're being called at a point where we can't use tab-modal
-  // prompts, because something doesn't want reentrancy.
-  bool allowTabModal = GetIsTabModalPromptAllowed();
-
   nsresult rv;
   nsCOMPtr<nsIPromptFactory> promptFac =
     do_GetService("@mozilla.org/prompter;1", &rv);
@@ -6300,9 +6278,10 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
     return;
   }
 
-  nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt);
-  if (promptBag)
-    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), allowTabModal);
+  // Always allow tab modal prompts for prompt.
+  if (nsCOMPtr<nsIWritablePropertyBag2> promptBag = do_QueryInterface(prompt)) {
+    promptBag->SetPropertyAsBool(NS_LITERAL_STRING("allowTabModal"), true);
+  }
 
   // Pass in the default value, if any.
   char16_t *inoutValue = ToNewUnicode(fixedInitial);
