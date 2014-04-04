@@ -212,6 +212,10 @@ function uninstallAddons(addons) {
   AddonManager.addAddonListener(listener);
 
   for (let addon of addons) {
+    // Disabling the add-on before uninstalling is necessary to cause tests to
+    // pass. This might be indicative of a bug in XPIProvider.
+    // TODO follow up in bug 992396.
+    addon.userDisabled = true;
     addon.uninstall();
   }
 
@@ -972,6 +976,8 @@ Experiments.Experiments.prototype = {
           }
           this._dirty = true;
           activeChanged = true;
+        } else {
+          yield activeExperiment.ensureActive();
         }
       } finally {
         this._pendingUninstall = null;
@@ -1473,6 +1479,8 @@ Experiments.ExperimentEntry.prototype = {
     };
 
     let listener = {
+      _expectedID: null,
+
       onDownloadEnded: install => {
         this._log.trace("_installAddon() - onDownloadEnded for " + this.id);
 
@@ -1497,9 +1505,6 @@ Experiments.ExperimentEntry.prototype = {
           this._log.error("_installAddon() - onInstallStarted, wrong addon type");
           return false;
         }
-
-        // Experiment add-ons default to userDisabled = true.
-        install.addon.userDisabled = false;
       },
 
       onInstallEnded: install => {
@@ -1519,6 +1524,26 @@ Experiments.ExperimentEntry.prototype = {
         this._description = addon.description || "";
         this._homepageURL = addon.homepageURL || "";
 
+        // Experiment add-ons default to userDisabled=true. Enable if needed.
+        if (addon.userDisabled) {
+          this._log.trace("Add-on is disabled. Enabling.");
+          listener._expectedID = addon.id;
+          AddonManager.addAddonListener(listener);
+          addon.userDisabled = false;
+        } else {
+          this._log.trace("Add-on is enabled. start() completed.");
+          deferred.resolve();
+        }
+      },
+
+      onEnabled: addon => {
+        this._log.info("onEnabled() for " + addon.id);
+
+        if (addon.id != listener._expectedID) {
+          return;
+        }
+
+        AddonManager.removeAddonListener(listener);
         deferred.resolve();
       },
     };
@@ -1556,7 +1581,7 @@ Experiments.ExperimentEntry.prototype = {
       this._endDate = now;
     };
 
-    AddonManager.getAddonByID(this._addonId, addon => {
+    this._getAddon().then((addon) => {
       if (!addon) {
         let message = "could not get Addon for " + this.id;
         this._log.warn("stop() - " + message);
@@ -1569,6 +1594,61 @@ Experiments.ExperimentEntry.prototype = {
       this._logTermination(terminationKind, terminationReason);
       deferred.resolve(uninstallAddons([addon]));
     });
+
+    return deferred.promise;
+  },
+
+  /**
+   * Try to ensure this experiment is active.
+   *
+   * The returned promise will be resolved if the experiment is active
+   * in the Addon Manager or rejected if it isn't.
+   *
+   * @return Promise<>
+   */
+  ensureActive: Task.async(function* () {
+    this._log.trace("ensureActive() for " + this.id);
+
+    let addon = yield this._getAddon();
+    if (!addon) {
+      this._log.warn("Experiment is not installed: " + this._addonId);
+      throw new Error("Experiment is not installed: " + this._addonId);
+    }
+
+    // User disabled likely means the experiment is disabled at startup,
+    // since the permissions don't allow it to be disabled by the user.
+    if (!addon.userDisabled) {
+      return;
+    }
+
+    let deferred = Promise.defer();
+
+    let listener = {
+      onEnabled: enabledAddon => {
+        if (enabledAddon.id != addon.id) {
+          return;
+        }
+
+        AddonManager.removeAddonListener(listener);
+        deferred.resolve();
+      },
+    };
+
+    this._log.info("Activating add-on: " + addon.id);
+    AddonManager.addAddonListener(listener);
+    addon.userDisabled = false;
+    yield deferred.promise;
+  }),
+
+  /**
+   * Obtain the underlying Addon from the Addon Manager.
+   *
+   * @return Promise<Addon|null>
+   */
+  _getAddon: function () {
+    let deferred = Promise.defer();
+
+    AddonManager.getAddonByID(this._addonId, deferred.resolve);
 
     return deferred.promise;
   },
