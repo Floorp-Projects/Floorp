@@ -145,8 +145,10 @@ exports.SimulatorProcess = Class({
       Linux: "b2g-bin",
     };
 
-    console.log("bin url: "+bin+"/"+executables[Runtime.OS]);
-    let path = bin + "/" + executables[Runtime.OS];
+    let path = bin;
+    path += Runtime.OS == "WINNT" ? "\\" : "/";
+    path += executables[Runtime.OS];
+    console.log("simulator path: " + path);
 
     let executable = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     executable.initWithPath(path);
