@@ -98,6 +98,10 @@ let gPolicyCounter = 0;
 let gExperimentsCounter = 0;
 let gExperimentEntryCounter = 0;
 
+// Tracks active AddonInstall we know about so we can deny external
+// installs.
+let gActiveInstallURLs = new Set();
+
 let gLogger;
 let gLogDumping = false;
 
@@ -359,7 +363,7 @@ Experiments.Experiments.prototype = {
     AsyncShutdown.profileBeforeChange.addBlocker("Experiments.jsm shutdown",
       this.uninit.bind(this));
 
-    AddonManager.addAddonListener(this);
+    this._startWatchingAddons();
 
     this._loadTask = Task.spawn(this._loadFromCache.bind(this));
     this._loadTask.then(
@@ -380,7 +384,7 @@ Experiments.Experiments.prototype = {
    */
   uninit: function () {
     if (!this._shutdown) {
-      AddonManager.removeAddonListener(this);
+      this._stopWatchingAddons();
 
       gPrefs.ignore(PREF_LOGGING, configureLogging);
       gPrefs.ignore(PREF_MANIFEST_URI, this.updateManifest, this);
@@ -398,6 +402,16 @@ Experiments.Experiments.prototype = {
       return this._mainTask;
     }
     return Promise.resolve();
+  },
+
+  _startWatchingAddons: function () {
+    AddonManager.addAddonListener(this);
+    AddonManager.addInstallListener(this);
+  },
+
+  _stopWatchingAddons: function () {
+    AddonManager.removeInstallListener(this);
+    AddonManager.removeAddonListener(this);
   },
 
   /**
@@ -644,6 +658,40 @@ Experiments.Experiments.prototype = {
     this.disableExperiment();
   },
 
+  onInstallStarted: function (install) {
+    if (install.addon.type != "experiment") {
+      return;
+    }
+
+    // We want to be in control of all experiment add-ons: reject installs
+    // for add-ons that we don't know about.
+
+    // We have a race condition of sorts to worry about here. We have 2
+    // onInstallStarted listeners. This one (the global one) and the one
+    // created as part of ExperimentEntry._installAddon. Because of the order
+    // they are registered in, this one likely executes first. Unfortunately,
+    // this means that the add-on ID is not yet set on the ExperimentEntry.
+    // So, we can't just look at this._trackedAddonIds because the new experiment
+    // will have its add-on ID set to null. We work around this by storing a
+    // identifying field - the source URL of the install - in a module-level
+    // variable (so multiple Experiments instances doesn't cancel each other
+    // out).
+
+    if (this._trackedAddonIds.has(install.addon.id)) {
+      return;
+    }
+
+    if (gActiveInstallURLs.has(install.sourceURI.spec)) {
+      this._log.info("onInstallStarted allowing install because install " +
+                     "tracked by us.");
+      return;
+    }
+
+    this._log.warn("onInstallStarted cancelling install of unknown " +
+                   "experiment add-on: " + install.addon.id);
+    return false;
+  },
+
   // END OF ADD-ON LISTENERS.
 
   _getExperimentByAddonId: function (addonId) {
@@ -851,6 +899,13 @@ Experiments.Experiments.prototype = {
     return this._run();
   },
 
+  /**
+   * The Set of add-on IDs that we know about from manifests.
+   */
+  get _trackedAddonIds() {
+    return new Set([e._addonId for ([,e] of this._experiments) if (e._addonId)]);
+  },
+
   /*
    * Task function to check applicability of experiments, disable the active
    * experiment if needed and activate the first applicable candidate.
@@ -875,7 +930,7 @@ Experiments.Experiments.prototype = {
     // should have some record of it. In the end, we decide to discard all
     // knowledge for these unknown experiment add-ons.
     let installedExperiments = yield installedExperimentAddons();
-    let expectedAddonIds = new Set([e._addonId for ([,e] of this._experiments)]);
+    let expectedAddonIds = this._trackedAddonIds;
     let unknownAddons = [a for (a of installedExperiments) if (!expectedAddonIds.has(a.id))];
     if (unknownAddons.length) {
       this._log.warn("_evaluateExperiments() - unknown add-ons in AddonManager: " +
@@ -1402,11 +1457,14 @@ Experiments.ExperimentEntry.prototype = {
 
     let install = yield addonInstallForURL(this._manifestData.xpiURL,
                                            this._manifestData.xpiHash);
+    gActiveInstallURLs.add(install.sourceURI.spec);
+
     let failureHandler = (install, handler) => {
       let message = "AddonInstall " + handler + " for " + this.id + ", state=" +
                    (install.state || "?") + ", error=" + install.error;
       this._log.error("_installAddon() - " + message);
       this._failedStart = true;
+      gActiveInstallURLs.delete(install.sourceURI.spec);
 
       TelemetryLog.log(TELEMETRY_LOG.ACTIVATION_KEY,
                       [TELEMETRY_LOG.ACTIVATION.INSTALL_FAILURE, this.id]);
@@ -1446,6 +1504,8 @@ Experiments.ExperimentEntry.prototype = {
 
       onInstallEnded: install => {
         this._log.trace("_installAddon() - install ended for " + this.id);
+        gActiveInstallURLs.delete(install.sourceURI.spec);
+
         this._lastChangedDate = this._policy.now();
         this._startDate = this._policy.now();
         this._enabled = true;
