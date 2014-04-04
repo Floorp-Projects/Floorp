@@ -252,7 +252,7 @@ Experiments.Policy.prototype = {
     if (pref !== undefined) {
       let val = Number.parseFloat(pref);
       this._log.debug("random sample forced: " + val);
-      if (IsNaN(val) || val < 0) {
+      if (isNaN(val) || val < 0) {
         return 0;
       }
       if (val > 1) {
