@@ -118,11 +118,7 @@ let developerHUD = {
     if (this._targets.has(frame))
       return;
 
-    let mm = frame.QueryInterface(Ci.nsIFrameLoaderOwner)
-                  .frameLoader
-                  .messageManager;
-
-    DebuggerServer.connectToChild(this._conn, mm).then(actor => {
+    DebuggerServer.connectToChild(this._conn, frame).then(actor => {
       let target = new Target(frame, actor);
       this._targets.set(frame, target);
 
