@@ -28,6 +28,11 @@
 
 using namespace mozilla;
 USING_BLUETOOTH_NAMESPACE
+// AVRC_ID op code follows bluedroid avrc_defs.h
+#define AVRC_ID_REWIND  0x48
+#define AVRC_ID_FAST_FOR 0x49
+#define AVRC_KEY_PRESS_STATE  1
+#define AVRC_KEY_RELEASE_STATE  0
 
 namespace {
   StaticRefPtr<BluetoothA2dpManager> sBluetoothA2dpManager;
@@ -178,6 +183,29 @@ private:
   uint8_t mNumAttr;
   btrc_media_attr_t* mPlayerAttrs;
 };
+
+class UpdatePassthroughCmdTask : public nsRunnable
+{
+public:
+  UpdatePassthroughCmdTask(const nsAString& aName)
+    : mName(aName)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  nsresult Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    NS_NAMED_LITERAL_STRING(type, "media-button");
+    BroadcastSystemMessage(type, BluetoothValue(mName));
+
+    return NS_OK;
+  }
+private:
+  nsString mName;
+};
+
 #endif
 
 NS_IMETHODIMP
@@ -409,13 +437,38 @@ AvrcpRemoteVolumeChangedCallback(uint8_t aVolume, uint8_t aCType)
 }
 
 /*
- * This callback function is to get notification that volume changed on the
- * remote car kit (if it supports Avrcp 1.4), not notification from phone.
+ * This callback function is to handle passthrough commands.
  */
 static void
-AvrcpPassThroughCallback(int id, int key_state)
+AvrcpPassThroughCallback(int aId, int aKeyState)
 {
-// TODO: Support avrcp 1.4 absolute volume/browse
+  // Fast-forward and rewind key events won't be generated from bluedroid
+  // stack after ANDROID_VERSION > 18, but via passthrough callback.
+  nsAutoString name;
+  NS_ENSURE_TRUE_VOID(aKeyState == AVRC_KEY_PRESS_STATE ||
+                      aKeyState == AVRC_KEY_RELEASE_STATE);
+  switch (aId) {
+    case AVRC_ID_FAST_FOR:
+      if (aKeyState == AVRC_KEY_PRESS_STATE) {
+        name.AssignLiteral("media-fast-forward-button-press");
+      } else {
+        name.AssignLiteral("media-fast-forward-button-release");
+      }
+      break;
+    case AVRC_ID_REWIND:
+      if (aKeyState == AVRC_KEY_PRESS_STATE) {
+        name.AssignLiteral("media-rewind-button-press");
+      } else {
+        name.AssignLiteral("media-rewind-button-release");
+      }
+      break;
+    default:
+      BT_WARNING("Unable to handle the unknown PassThrough command %d", aId);
+      break;
+  }
+  if (!name.IsEmpty()) {
+    NS_DispatchToMainThread(new UpdatePassthroughCmdTask(name));
+  }
 }
 #endif
 

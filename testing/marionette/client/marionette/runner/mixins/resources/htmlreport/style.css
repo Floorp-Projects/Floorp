@@ -29,6 +29,10 @@ table {
  * SUMMARY INFORMATION
  ******************************/
 
+#configuration {
+	font-size: 12px;
+}
+
 #configuration td {
 	padding: 5px;
 	border: 1px solid #E6E6E6;
