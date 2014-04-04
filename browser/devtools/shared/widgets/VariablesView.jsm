@@ -2494,15 +2494,11 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     let valueLabel = this._valueLabel = document.createElement("label");
     valueLabel.className = "plain value";
+    valueLabel.setAttribute("flex", "1");
     valueLabel.setAttribute("crop", "center");
-
-    let spacer = this._spacer = document.createElement("spacer");
-    spacer.setAttribute("optional-visibility", "");
-    spacer.setAttribute("flex", "1");
 
     this._title.appendChild(separatorLabel);
     this._title.appendChild(valueLabel);
-    this._title.appendChild(spacer);
 
     if (VariablesView.isPrimitive(descriptor)) {
       this.hideArrow();
@@ -3867,6 +3863,7 @@ Editable.prototype = {
     let input = this._input = this._variable.document.createElement("textbox");
     input.className = "plain " + this.className;
     input.setAttribute("value", initialString);
+    input.setAttribute("flex", "1");
 
     // Replace the specified label with a textbox input element.
     label.parentNode.replaceChild(input, label);

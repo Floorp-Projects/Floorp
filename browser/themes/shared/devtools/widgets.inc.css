@@ -626,10 +626,6 @@
   color: inherit !important;
 }
 
-.variable-or-property > .title > .value {
-  -moz-box-flex: 1;
-}
-
 .variable-or-property > .title > .arrow {
   -moz-margin-start: 3px;
 }
