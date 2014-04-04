@@ -3,7 +3,8 @@
 
 /**
  * Make sure that conditional breakpoints with undefined expressions
- * are stored as plain breakpoints when re-enabling them.
+ * are stored as plain breakpoints when re-enabling them (with
+ * server-side support)
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_conditional-breakpoints.html";
@@ -19,11 +20,6 @@ function test() {
     gDebugger = gPanel.panelWin;
     gSources = gDebugger.DebuggerView.Sources;
     gBreakpoints = gDebugger.DebuggerController.Breakpoints;
-
-    // This test forces conditional breakpoints to be evaluated on the
-    // client-side
-    var client = gPanel.target.client;
-    client.mainRoot.traits.conditionalBreakpoints = false;
 
     gLocation = { url: gSources.selectedValue, line: 18 };
 
@@ -62,7 +58,7 @@ function test() {
   function setDummyConditional(aClient) {
     // This happens when a conditional expression input popup is shown
     // but the user doesn't type anything into it.
-    aClient.conditionalExpression = "";
+    aClient.condition = "";
   }
 
   function toggleBreakpoint() {
@@ -79,7 +75,7 @@ function test() {
 
   function testConditionalExpressionOnClient() {
     return gBreakpoints._getAdded(gLocation).then(aClient => {
-      if ("conditionalExpression" in aClient) {
+      if ("condition" in aClient) {
         ok(false, "A conditional expression shouldn't have been set.");
       } else {
         ok(true, "The conditional expression wasn't set, as expected.");
