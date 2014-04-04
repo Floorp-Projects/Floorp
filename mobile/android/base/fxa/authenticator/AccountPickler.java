@@ -97,7 +97,7 @@ public class AccountPickler {
     o.put(KEY_PROFILE, account.getProfile());
     o.put(KEY_IDP_SERVER_URI, account.getAccountServerURI());
     o.put(KEY_TOKEN_SERVER_URI, account.getTokenServerURI());
-    o.put(KEY_IS_SYNCING_ENABLED, account.isSyncingEnabled());
+    o.put(KEY_IS_SYNCING_ENABLED, account.isSyncing());
 
     // TODO: If prefs version changes under us, SyncPrefsPath will change, "clearing" prefs.
 

@@ -104,7 +104,7 @@ public class TestAccountPickler extends AndroidSyncTestCase {
     assertEquals(expected.getAudience(), actual.getAudience());
     assertEquals(expected.getTokenServerURI(), actual.getTokenServerURI());
     assertEquals(expected.getSyncPrefsPath(), actual.getSyncPrefsPath());
-    assertEquals(expected.isSyncingEnabled(), actual.isSyncingEnabled());
+    assertEquals(expected.isSyncing(), actual.isSyncing());
     assertEquals(expected.getEmail(), actual.getEmail());
     assertStateEquals(expected.getState(), actual.getState());
   }

@@ -24,6 +24,7 @@ BACKGROUND_TESTS_JAVA_FILES := \
   src/db/TestPasswordsRepository.java \
   src/fxa/authenticator/TestAccountPickler.java \
   src/fxa/TestBrowserIDKeyPairGeneration.java \
+  src/fxa/TestFirefoxAccounts.java \
   src/healthreport/MockDatabaseEnvironment.java \
   src/healthreport/MockHealthReportDatabaseStorage.java \
   src/healthreport/MockHealthReportSQLiteOpenHelper.java \
