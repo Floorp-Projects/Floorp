@@ -177,6 +177,16 @@ HwcComposer2D::setCrop(HwcLayer* layer, hwc_rect_t srcCrop)
 #endif
 }
 
+void
+HwcComposer2D::setHwcGeometry(bool aGeometryChanged)
+{
+#if ANDROID_VERSION >= 19
+    mList->flags = aGeometryChanged ? HWC_GEOMETRY_CHANGED : 0;
+#else
+    mList->flags = HWC_GEOMETRY_CHANGED;
+#endif
+}
+
 bool
 HwcComposer2D::PrepareLayerList(Layer* aLayer,
                                 const nsIntRect& aClip,
@@ -613,6 +623,7 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
         mList->hwLayers[mList->numHwLayers - 1].handle = fbsurface->lastHandle;
         mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = fbsurface->GetPrevFBAcquireFd();
     } else {
+        mList->flags = HWC_GEOMETRY_CHANGED;
         mList->numHwLayers = 2;
         mList->hwLayers[0].hints = 0;
         mList->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
@@ -639,7 +650,6 @@ HwcComposer2D::Prepare(buffer_handle_t fbHandle, int fence)
     hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
 
     displays[HWC_DISPLAY_PRIMARY] = mList;
-    mList->flags = HWC_GEOMETRY_CHANGED;
     mList->outbufAcquireFenceFd = -1;
     mList->outbuf = nullptr;
     mList->retireFenceFd = -1;
@@ -734,7 +744,8 @@ HwcComposer2D::Reset()
 
 bool
 HwcComposer2D::TryRender(Layer* aRoot,
-                         const gfx::Matrix& GLWorldTransform)
+                         const gfx::Matrix& GLWorldTransform,
+                         bool aGeometryChanged)
 {
     gfxMatrix aGLWorldTransform = ThebesMatrix(GLWorldTransform);
     if (!aGLWorldTransform.PreservesAxisAlignedRectangles()) {
@@ -744,6 +755,7 @@ HwcComposer2D::TryRender(Layer* aRoot,
 
     MOZ_ASSERT(Initialized());
     if (mList) {
+        setHwcGeometry(aGeometryChanged);
         mList->numHwLayers = 0;
         mHwcLayerMap.Clear();
     }

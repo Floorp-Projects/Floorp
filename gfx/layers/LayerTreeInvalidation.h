@@ -59,7 +59,8 @@ struct LayerProperties
    * @return Painted area changed by the layer tree changes.
    */
   virtual nsIntRegion ComputeDifferences(Layer* aRoot, 
-                                         NotifySubDocInvalidationFunc aCallback) = 0;
+                                         NotifySubDocInvalidationFunc aCallback,
+                                         bool* aGeometryChanged = nullptr) = 0;
   
   
   virtual void MoveBy(const nsIntPoint& aOffset) = 0;
