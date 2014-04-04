@@ -119,48 +119,28 @@ TotalOperandCount(MResumePoint *mir)
     return accum;
 }
 
-LRecoverInfo::LRecoverInfo(TempAllocator &alloc)
-  : instructions_(alloc),
+LRecoverInfo::LRecoverInfo(MResumePoint *mir)
+  : mir_(mir),
     recoverOffset_(INVALID_RECOVER_OFFSET)
 { }
 
 LRecoverInfo *
 LRecoverInfo::New(MIRGenerator *gen, MResumePoint *mir)
 {
-    LRecoverInfo *recoverInfo = new(gen->alloc()) LRecoverInfo(gen->alloc());
-    if (!recoverInfo || !recoverInfo->init(mir))
+    LRecoverInfo *recover = new(gen->alloc()) LRecoverInfo(mir);
+    if (!recover)
         return nullptr;
 
-    IonSpew(IonSpew_Snapshots, "Generating LIR recover info %p from MIR (%p)",
-            (void *)recoverInfo, (void *)mir);
+    IonSpew(IonSpew_Snapshots, "Generating LIR recover %p from MIR (%p)",
+            (void *)recover, (void *)mir);
 
-    return recoverInfo;
+    return recover;
 }
 
-bool
-LRecoverInfo::init(MResumePoint *rp)
-{
-    MResumePoint *it = rp;
-
-    // Sort operations in the order in which we need to restore the stack. This
-    // implies that outer frames, as well as operations needed to recover the
-    // current frame, are located before the current frame. The inner-most
-    // resume point should be the last element in the list.
-    do {
-        if (!instructions_.append(it))
-            return false;
-        it = it->caller();
-    } while (it);
-
-    Reverse(instructions_.begin(), instructions_.end());
-    MOZ_ASSERT(mir() == rp);
-    return true;
-}
-
-LSnapshot::LSnapshot(LRecoverInfo *recoverInfo, BailoutKind kind)
-  : numSlots_(TotalOperandCount(recoverInfo->mir()) * BOX_PIECES),
+LSnapshot::LSnapshot(LRecoverInfo *recover, BailoutKind kind)
+  : numSlots_(TotalOperandCount(recover->mir()) * BOX_PIECES),
     slots_(nullptr),
-    recoverInfo_(recoverInfo),
+    recoverInfo_(recover),
     snapshotOffset_(INVALID_SNAPSHOT_OFFSET),
     bailoutId_(INVALID_BAILOUT_ID),
     bailoutKind_(kind)
