@@ -104,6 +104,7 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 , mInTransaction(false)
 , mIsCompositorReady(false)
 , mDebugOverlayWantsNextFrame(false)
+, mGeometryChanged(true)
 {
   mTextRenderer = new TextRenderer(aCompositor);
   MOZ_ASSERT(aCompositor);
@@ -155,7 +156,8 @@ LayerManagerComposite::BeginTransaction()
   
   mIsCompositorReady = true;
 
-  if (Compositor::GetBackend() == LayersBackend::LAYERS_BASIC) {
+  if (Compositor::GetBackend() == LayersBackend::LAYERS_OPENGL ||
+      Compositor::GetBackend() == LayersBackend::LAYERS_BASIC) {
     mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
   }
 }
@@ -223,7 +225,8 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
   }
 
   if (mRoot && mClonedLayerTreeProperties) {
-    nsIntRegion invalid = mClonedLayerTreeProperties->ComputeDifferences(mRoot, nullptr);
+    nsIntRegion invalid =
+      mClonedLayerTreeProperties->ComputeDifferences(mRoot, nullptr, &mGeometryChanged);
     mClonedLayerTreeProperties = nullptr;
 
     mInvalidRegion.Or(mInvalidRegion, invalid);
@@ -243,6 +246,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
     mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
 
     Render();
+    mGeometryChanged = false;
   }
 
   mCompositor->SetTargetContext(nullptr);
@@ -448,7 +452,7 @@ LayerManagerComposite::Render()
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> composer2D = mCompositor->GetWidget()->GetComposer2D();
 
-  if (!mTarget && composer2D && composer2D->TryRender(mRoot, mWorldMatrix)) {
+  if (!mTarget && composer2D && composer2D->TryRender(mRoot, mWorldMatrix, mGeometryChanged)) {
     if (mFPS) {
       double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
       if (gfxPrefs::LayersDrawFPS()) {

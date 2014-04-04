@@ -56,7 +56,8 @@ public:
    * Currently, when TryRender() returns true, the entire framebuffer
    * must have been rendered.
    */
-  virtual bool TryRender(Layer* aRoot, const gfx::Matrix& aWorldTransform) = 0;
+  virtual bool TryRender(Layer* aRoot, const gfx::Matrix& aWorldTransform,
+                         bool aGeometryChanged) = 0;
 };
 
 } // namespace layers
