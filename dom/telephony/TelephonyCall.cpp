@@ -109,19 +109,19 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
 
   if (aCallState == nsITelephonyProvider::CALL_STATE_DISCONNECTED) {
     NS_ASSERTION(mLive, "Should be live!");
+    mLive = false;
     if (mGroup) {
       mGroup->RemoveCall(this);
     } else {
       mTelephony->RemoveCall(this);
     }
-    mLive = false;
   } else if (!mLive) {
+    mLive = true;
     if (mGroup) {
       mGroup->AddCall(this);
     } else {
       mTelephony->AddCall(this);
     }
-    mLive = true;
   }
 
   if (aFireEvents) {
