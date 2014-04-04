@@ -690,7 +690,7 @@ private:
  * (fontconfig cache data) and (when needed) fonts.
  */
 
-class gfxFcFontSet {
+class gfxFcFontSet MOZ_FINAL {
 public:
     NS_INLINE_DECL_REFCOUNTING(gfxFcFontSet)
     
@@ -729,6 +729,11 @@ public:
     }
 
 private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~gfxFcFontSet()
+    {
+    }
+
     nsReturnRef<FcFontSet> SortPreferredFonts(bool& aWaitForUserFont);
     nsReturnRef<FcFontSet> SortFallbackFonts();
 

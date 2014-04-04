@@ -79,8 +79,6 @@ public:
                        GLenum aWrapMode,
                        TextureImage::Flags aFlags = TextureImage::NoFlags);
 
-    virtual ~TextureImage() {}
-
     /**
      * Returns a gfxASurface for updating |aRegion| of the client's
      * image if successul, nullptr if not.  |aRegion|'s bounds must fit
@@ -236,6 +234,9 @@ protected:
     TextureImage(const gfx::IntSize& aSize,
                  GLenum aWrapMode, ContentType aContentType,
                  Flags aFlags = NoFlags);
+
+    // Protected destructor, to discourage deletion outside of Release():
+    virtual ~TextureImage() {}
 
     virtual gfx::IntRect GetSrcTileRect();
 
