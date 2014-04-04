@@ -159,15 +159,9 @@ add_task(function test_record_telemetry() {
   let storage = yield Metrics.Storage("record_telemetry");
   let provider;
 
-  // We set both prefs, so we don't have to fight the preprocessor.
-  function setTelemetry(bool) {
-    Services.prefs.setBoolPref("toolkit.telemetry.enabled", bool);
-    Services.prefs.setBoolPref("toolkit.telemetry.enabledPreRelease", bool);
-  }
-
   let now = new Date();
 
-  setTelemetry(true);
+  Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
   provider = new AppInfoProvider();
   yield provider.init(storage);
   yield provider.collectConstantData();
@@ -178,7 +172,7 @@ add_task(function test_record_telemetry() {
   do_check_eq(1, d.isTelemetryEnabled);
   yield provider.shutdown();
 
-  setTelemetry(false);
+  Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
   provider = new AppInfoProvider();
   yield provider.init(storage);
   yield provider.collectConstantData();

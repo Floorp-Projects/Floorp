@@ -7,13 +7,25 @@
 const ADDON3_URL = EXAMPLE_URL + "addon3.xpi";
 
 let gAddon, gClient, gThreadClient, gDebugger, gSources;
-
+let PREFS = [
+  "devtools.canvasdebugger.enabled",
+  "devtools.shadereditor.enabled",
+  "devtools.profiler.enabled",
+  "devtools.netmonitor.enabled"
+];
 function test() {
   Task.spawn(function () {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init(() => true);
       DebuggerServer.addBrowserActors();
     }
+
+    // Store and enable all optional dev tools panels
+    let originalPrefs = PREFS.map(pref => {
+      let original = Services.prefs.getBoolPref(pref);
+      Services.prefs.setBoolPref(pref, true)
+      return original;
+    });
 
     gBrowser.selectedTab = gBrowser.addTab();
     let iframe = document.createElement("iframe");
@@ -37,6 +49,9 @@ function test() {
     yield closeConnection();
     yield debuggerPanel._toolbox.destroy();
     iframe.remove();
+
+    PREFS.forEach((pref, i) => Services.prefs.setBoolPref(pref, originalPrefs[i]));
+
     finish();
   });
 }

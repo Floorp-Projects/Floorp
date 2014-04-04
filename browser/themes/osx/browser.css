@@ -230,7 +230,7 @@ toolbarbutton.bookmark-item > menupopup {
   -moz-margin-start: 3px;
 }
 
-.bookmark-item > .toolbarbutton-icon,
+.bookmark-item:not(#home-button) > .toolbarbutton-icon,
 #personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder > .toolbarbutton-icon {
   width: 16px;
   min-height: 16px;
@@ -1508,12 +1508,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 /* home button */
 
 #home-button.bookmark-item {
-  list-style-image: url("chrome://browser/skin/home.png");
-  -moz-image-region: rect(0, 12px, 12px, 0);
-}
-
-#home-button.bookmark-item:hover {
-  -moz-image-region: rect(0, 24px, 12px, 12px);
+  /* We need to use !important here, because other selectors that apply padding
+     are more specific. */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 #home-button.bookmark-item > .toolbarbutton-icon {
@@ -2625,12 +2623,12 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-.bookmark-item {
+.bookmark-item:not(#home-button) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
 @media (min-resolution: 2dppx) {
-  .bookmark-item {
+  .bookmark-item:not(#home-button) {
     list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
   }
 
@@ -2872,7 +2870,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-image-region: rect(0, 13px, 20px, 0);
-  margin: 0;
+  margin: 0 0 @tabToolbarNavbarOverlap@;
   padding: 0 4px;
   border: none;
 }
@@ -2996,8 +2994,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none;
+  margin: 0;
   /* !important flags needed because of bug 561154: */
-  margin: 0 !important;
+  /* Bug 990390: -moz-any is no longer used in the selector so the !important aren't necessary for that anymore. */
   padding: 0 !important;
   border: none !important;
   border-radius: 0 !important;
@@ -3007,8 +3006,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar .toolbarbutton-1:not([type="menu-button"]),
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  margin: 0;
   padding: 0 1px;
+}
+
+#TabsToolbar .toolbarbutton-1 {
+  margin-bottom: @tabToolbarNavbarOverlap@;
 }
 
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
@@ -4275,6 +4277,7 @@ window > chatbox {
   background-attachment: fixed;
 }
 
+#main-window[customize-entered] #browser-bottombox,
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#TabsToolbar),
 #main-window[customize-entered] #customization-container {
   border: 3px solid hsla(0,0%,0%,.1);
@@ -4286,6 +4289,7 @@ window > chatbox {
   -moz-border-left-colors: hsla(0,0%,0%,.05) hsla(0,0%,0%,.1) hsla(0,0%,0%,.2);
 }
 
+#main-window[customize-entered] #customization-container,
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#TabsToolbar) {
   border-bottom-width: 0;
 }
