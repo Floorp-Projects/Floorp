@@ -2595,15 +2595,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (mShouldBuildScrollableLayer) {
     shouldBuildLayer = true;
   } else {
-    // TODO Turn this on for inprocess OMTC on all platforms
-    bool wantSubAPZC = gfxPrefs::APZSubframeEnabled();
-#ifdef MOZ_WIDGET_GONK
-    if (XRE_GetProcessType() != GeckoProcessType_Content) {
-      wantSubAPZC = false;
-    }
-#endif
     shouldBuildLayer =
-      wantSubAPZC &&
+      nsLayoutUtils::WantSubAPZC() &&
       WantAsyncScroll() &&
       // If we are the root scroll frame for the display root then we don't need a scroll
       // info layer to make a RecordFrameMetrics call for us as

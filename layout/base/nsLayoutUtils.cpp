@@ -41,6 +41,7 @@
 #include "nsIWidget.h"
 #include "gfxMatrix.h"
 #include "gfxPoint3D.h"
+#include "gfxPrefs.h"
 #include "gfxTypes.h"
 #include "nsTArray.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
@@ -6397,6 +6398,19 @@ nsLayoutUtils::CalculateExpandedScrollableRect(nsIFrame* aFrame)
   }
   return scrollableRect;
 }
+
+/* static */ bool
+nsLayoutUtils::WantSubAPZC()
+{
+   // TODO Turn this on for inprocess OMTC on all platforms
+   bool wantSubAPZC = gfxPrefs::APZSubframeEnabled();
+#ifdef MOZ_WIDGET_GONK
+   if (XRE_GetProcessType() != GeckoProcessType_Content) {
+     wantSubAPZC = false;
+   }
+#endif
+   return wantSubAPZC;
+ }
 
 nsLayoutUtils::SurfaceFromElementResult::SurfaceFromElementResult()
   // Use safe default values here
