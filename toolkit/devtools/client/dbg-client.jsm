@@ -28,7 +28,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
 
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 const { defer, resolve, reject } = promise;
@@ -36,6 +35,9 @@ const { defer, resolve, reject } = promise;
 XPCOMUtils.defineLazyServiceGetter(this, "socketTransportService",
                                    "@mozilla.org/network/socket-transport-service;1",
                                    "nsISocketTransportService");
+
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+                                  "resource://gre/modules/devtools/Console.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
                                   "resource://gre/modules/devtools/Loader.jsm");
@@ -1428,9 +1430,13 @@ ThreadClient.prototype = {
         // Ignoring errors, since the user may be setting a breakpoint in a
         // dead script that will reappear on a page reload.
         if (aOnResponse) {
-          let bpClient = new BreakpointClient(this.client,
-                                              aResponse.actor,
-                                              location);
+          let root = this.client.mainRoot;
+          let bpClient = new BreakpointClient(
+            this.client,
+            aResponse.actor,
+            location,
+            root.traits.conditionalBreakpoints ? condition : undefined
+          );
           if (aCallback) {
             aCallback(aOnResponse(aResponse, bpClient));
           } else {
@@ -2181,12 +2187,19 @@ SourceClient.prototype = {
  * @param aLocation object
  *        The location of the breakpoint. This is an object with two properties:
  *        url and line.
+ * @param aCondition string
+ *        The conditional expression of the breakpoint
  */
-function BreakpointClient(aClient, aActor, aLocation) {
+function BreakpointClient(aClient, aActor, aLocation, aCondition) {
   this._client = aClient;
   this._actor = aActor;
   this.location = aLocation;
   this.request = this._client.request;
+
+  // The condition property should only exist if it's a truthy value
+  if (aCondition) {
+    this.condition = aCondition;
+  }
 }
 
 BreakpointClient.prototype = {
@@ -2203,6 +2216,65 @@ BreakpointClient.prototype = {
   }, {
     telemetry: "DELETE"
   }),
+
+  /**
+   * Determines if this breakpoint has a condition
+   */
+  hasCondition: function() {
+    let root = this._client.mainRoot;
+    // XXX bug 990137: We will remove support for client-side handling of
+    // conditional breakpoints
+    if (root.traits.conditionalBreakpoints) {
+      return "condition" in this;
+    } else {
+      return "conditionalExpression" in this;
+    }
+  },
+
+  /**
+   * Get the condition of this breakpoint. Currently we have to
+   * support locally emulated conditional breakpoints until the
+   * debugger servers are updated (see bug 990137). We used a
+   * different property when moving it server-side to ensure that we
+   * are testing the right code.
+   */
+  getCondition: function() {
+    let root = this._client.mainRoot;
+    if (root.traits.conditionalBreakpoints) {
+      return this.condition;
+    } else {
+      return this.conditionalExpression;
+    }
+  },
+
+  /**
+   * Set the condition of this breakpoint
+   */
+  setCondition: function(gThreadClient, aCondition) {
+    let root = this._client.mainRoot;
+    let deferred = promise.defer();
+
+    if (root.traits.conditionalBreakpoints) {
+      let info = {
+        url: this.location.url,
+        line: this.location.line,
+        condition: aCondition
+      };
+      gThreadClient.setBreakpoint(info, (aResponse, ignoredBreakpoint) => {
+        if(aResponse && aResponse.error) {
+          deferred.reject(aResponse);
+        } else {
+          this.condition = aCondition;
+          deferred.resolve(null);
+        }
+      });
+    } else {
+      this.conditionalExpression = aCondition;
+      deferred.resolve(null);
+    }
+
+    return deferred.promise;
+  }
 };
 
 eventSource(BreakpointClient.prototype);

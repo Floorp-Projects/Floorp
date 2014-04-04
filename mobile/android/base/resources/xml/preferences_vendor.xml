@@ -25,7 +25,7 @@
     <PreferenceCategory android:key="android.not_a_preference.datareporting.preferences"
                         android:title="@string/pref_category_datareporting">
 
-        <CheckBoxPreference android:key="datareporting.telemetry.enabled"
+        <CheckBoxPreference android:key="toolkit.telemetry.enabled"
                             android:title="@string/datareporting_telemetry_title"
                             android:summary="@string/datareporting_telemetry_summary" />
 

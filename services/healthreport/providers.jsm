@@ -57,12 +57,7 @@ const DAILY_DISCRETE_NUMERIC_FIELD = {type: Metrics.Storage.FIELD_DAILY_DISCRETE
 const DAILY_LAST_NUMERIC_FIELD = {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC};
 const DAILY_COUNTER_FIELD = {type: Metrics.Storage.FIELD_DAILY_COUNTER};
 
-// Preprocess to use the correct telemetry pref.
-#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
-const TELEMETRY_PREF = "toolkit.telemetry.enabledPreRelease";
-#else
 const TELEMETRY_PREF = "toolkit.telemetry.enabled";
-#endif
 
 /**
  * Represents basic application state.

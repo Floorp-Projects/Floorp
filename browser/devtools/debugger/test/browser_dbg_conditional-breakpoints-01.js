@@ -25,6 +25,11 @@ function test() {
     gBreakpointsAdded = gBreakpoints._added;
     gBreakpointsRemoving = gBreakpoints._removing;
 
+    // This test forces conditional breakpoints to be evaluated on the
+    // client-side
+    var client = gPanel.target.client;
+    client.mainRoot.traits.conditionalBreakpoints = false;
+
     waitForSourceAndCaretAndScopes(gPanel, ".html", 17)
       .then(() => addBreakpoints())
       .then(() => initialChecks())

@@ -281,6 +281,11 @@ function openPrefs() {
 
 function init() {
   fxAccounts.getSignedInUser().then(user => {
+    // tests in particular might cause the window to start closing before
+    // getSignedInUser has returned.
+    if (window.closed) {
+      return;
+    }
     if (window.location.href.contains("action=signin")) {
       if (user) {
         // asking to sign-in when already signed in just shows manage.

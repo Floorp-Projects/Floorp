@@ -12,8 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
 Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+const {Promise: promise} = Components.utils.import("resource://gre/modules/Promise.jsm", {});
 
-const promise = devtools.require("sdk/core/promise");
 const inspector = devtools.require("devtools/server/actors/inspector");
 const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"].
                    getService(Components.interfaces.inIDOMUtils);
