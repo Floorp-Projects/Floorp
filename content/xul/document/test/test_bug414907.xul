@@ -8,20 +8,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414907
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
-  <bindings xmlns="http://www.mozilla.org/xbl"
-              xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <binding id="anon">
-    <implementation>
-      <constructor>
-        <![CDATA[
-          var node = this.firstChild;
-          this.palette = node;
-          this.removeChild(node);
-        ]]>
-      </constructor>
-    </implementation>
-    </binding>
+  <vbox hidden="true">
+    <bindings xmlns="http://www.mozilla.org/xbl" style="display: block;"
+                xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      <binding id="anon">
+        <implementation>
+          <constructor>
+            <![CDATA[
+              var node = this.firstChild;
+              this.palette = node;
+              this.removeChild(node);
+            ]]>
+          </constructor>
+        </implementation>
+      </binding>
     </bindings>
+  </vbox>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
