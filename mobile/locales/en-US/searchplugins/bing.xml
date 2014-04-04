@@ -10,10 +10,15 @@
   <Param name="form" value="OSDJAS"/>
   <Param name="language" value="{moz:locale}"/>
 </Url>
-<Url type="text/html" method="GET" template="http://www.bing.com/search">
+<Url type="application/x-moz-phonesearch" method="GET" template="http://www.bing.com/search">
   <Param name="q" value="{searchTerms}" />
-  <MozParam name="pc" condition="defaultEngine" trueValue="MOZI" falseValue="" />
-  <MozParam name="form" condition="defaultEngine" trueValue="MOZSBR" falseValue="" />
+  <MozParam name="pc" value="MOZB" />
+  <MozParam name="form" value="MOZMBA" />
+</Url>
+<Url type="application/x-moz-tabletsearch" method="GET" template="http://www.bing.com/search">
+  <Param name="q" value="{searchTerms}" />
+  <MozParam name="pc" value="MOZA" />
+  <MozParam name="form" value="MOZAT" />
 </Url>
 <SearchForm>http://www.bing.com</SearchForm>
 </SearchPlugin>
