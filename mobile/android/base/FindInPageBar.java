@@ -85,6 +85,9 @@ public class FindInPageBar extends LinearLayout implements TextWatcher, View.OnC
      }
 
     public void onDestroy() {
+        if (!mInflated) {
+            return;
+        }
         GeckoAppShell.getEventDispatcher().unregisterEventListener("TextSelection:Data", this);
     }
 
