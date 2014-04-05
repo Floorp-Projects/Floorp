@@ -2872,7 +2872,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-image-region: rect(0, 13px, 20px, 0);
-  margin: 0;
+  margin: 0 0 @tabToolbarNavbarOverlap@;
   padding: 0 4px;
   border: none;
 }
@@ -2996,8 +2996,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none;
+  margin: 0;
   /* !important flags needed because of bug 561154: */
-  margin: 0 !important;
+  /* Bug 990390: -moz-any is no longer used in the selector so the !important aren't necessary for that anymore. */
   padding: 0 !important;
   border: none !important;
   border-radius: 0 !important;
@@ -3007,8 +3008,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar .toolbarbutton-1:not([type="menu-button"]),
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
-  margin: 0;
   padding: 0 1px;
+}
+
+#TabsToolbar .toolbarbutton-1 {
+  margin-bottom: @tabToolbarNavbarOverlap@;
 }
 
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
