@@ -28,7 +28,7 @@
       <xul:autorepeatbutton class="autorepeatbutton-up"
                             anonid="scrollbutton-up"
                             collapsed="true"
-                            xbl:inherits="orient"
+                            xbl:inherits="orient,disabled=scrollbutton-up-disabled"
                             oncommand="_autorepeatbuttonScroll(event);"/>
       <xul:scrollbox class="arrowscrollbox-scrollbox"
                      anonid="scrollbox"
@@ -39,7 +39,7 @@
       <xul:autorepeatbutton class="autorepeatbutton-down"
                             anonid="scrollbutton-down"
                             collapsed="true"
-                            xbl:inherits="orient"
+                            xbl:inherits="orient,disabled=scrollbutton-down-disabled"
                             oncommand="_autorepeatbuttonScroll(event);"/>
     </content>
 
@@ -182,6 +182,31 @@
           return this.orient == "vertical" ?
                  ["top", "bottom"] : ["left", "right"];
         ]]></getter>
+      </property>
+
+      <property name="_scrollButtonDownDisabled">
+        <getter><![CDATA[
+          return this.getAttribute("scrollbutton-down-disabled") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("scrollbutton-down-disabled", "true");
+          } else {
+            this.removeAttribute("scrollbutton-down-disabled");
+          }
+        ]]></setter>
+      </property>
+      <property name="_scrollButtonUpDisabled">
+        <getter><![CDATA[
+          return this.getAttribute("scrollbutton-up-disabled") == "true";
+        ]]></getter>
+        <setter><![CDATA[
+          if (val) {
+            this.setAttribute("scrollbutton-up-disabled", "true");
+          } else {
+            this.removeAttribute("scrollbutton-up-disabled");
+          }
+        ]]></setter>
       </property>
 
       <field name="_isRTLScrollbox"><![CDATA[
@@ -474,8 +499,8 @@
               disableDownButton = true;
           }
 
-          this._scrollButtonUp.disabled = disableUpButton;
-          this._scrollButtonDown.disabled = disableDownButton;
+          this._scrollButtonUpDisabled = disableUpButton;
+          this._scrollButtonDownDisabled = disableDownButton;
         ]]></body>
       </method>
     </implementation>
@@ -535,6 +560,8 @@
             return;
         }
 
+        this.removeAttribute("overflow");
+
         this._scrollButtonUp.collapsed = true;
         this._scrollButtonDown.collapsed = true;
         try {
@@ -569,6 +596,8 @@
             return;
         }
 
+        this.setAttribute("overflow", "true");
+
         this._scrollButtonUp.collapsed = false;
         this._scrollButtonDown.collapsed = false;
         try {
@@ -599,7 +628,7 @@
   <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
     <content>
       <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
-                         xbl:inherits="orient"
+                         xbl:inherits="orient,disabled=scrollbutton-up-disabled"
                          anonid="scrollbutton-up"
                          onclick="_distanceScroll(event);"
                          onmousedown="if (event.button == 0) _startScroll(-1);"
@@ -613,7 +642,7 @@
         <children/>
       </xul:scrollbox>
       <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
-                         xbl:inherits="orient"
+                         xbl:inherits="orient,disabled=scrollbutton-down-disabled"
                          anonid="scrollbutton-down"
                          onclick="_distanceScroll(event);"
                          onmousedown="if (event.button == 0) _startScroll(1);"
