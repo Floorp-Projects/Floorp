@@ -547,7 +547,7 @@
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
              collapsed="true">
 
-#ifdef XP_LINUX
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
       <hbox id="private-browsing-indicator"
             skipintoolbarset="true"/>
 #endif
