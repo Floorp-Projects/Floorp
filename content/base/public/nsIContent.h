@@ -39,8 +39,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0xafa52dfb, 0x9d92, 0x4592, \
-  { 0xa1, 0xd2, 0x08, 0xc4, 0x92, 0x89, 0x7f, 0xce } }
+{ 0x1329e5b7, 0x4bcd, 0x450c, \
+  { 0xa2, 0x3a, 0x98, 0xc5, 0x85, 0xcd, 0x73, 0xf9 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -532,6 +532,14 @@ public:
    * NOTE: Always returns false for elements
    */
   virtual bool TextIsOnlyWhitespace() = 0;
+
+  /**
+   * Method to see if the text node contains data that is useful
+   * for a translation: i.e., it consists of more than just whitespace,
+   * digits and punctuation.
+   * NOTE: Always returns false for elements.
+   */
+  virtual bool HasTextForTranslation() = 0;
 
   /**
    * Append the text content to aResult.
