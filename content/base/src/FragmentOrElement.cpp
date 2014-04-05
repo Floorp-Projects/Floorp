@@ -1919,6 +1919,12 @@ FragmentOrElement::TextIsOnlyWhitespace()
   return false;
 }
 
+bool
+FragmentOrElement::HasTextForTranslation()
+{
+  return false;
+}
+
 void
 FragmentOrElement::AppendTextTo(nsAString& aResult)
 {
