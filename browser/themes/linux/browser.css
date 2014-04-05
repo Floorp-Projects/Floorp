@@ -2058,6 +2058,7 @@ chatbox {
   background-attachment: fixed;
 }
 
+#main-window[customize-entered] #browser-bottombox,
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar),
 #main-window[customize-entered] #customization-container {
   border: 3px solid hsla(0,0%,0%,.1);
@@ -2069,6 +2070,7 @@ chatbox {
   -moz-border-left-colors: hsla(0,0%,0%,.05) hsla(0,0%,0%,.1) hsla(0,0%,0%,.2);
 }
 
+#main-window[customize-entered] #customization-container,
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   border-bottom-width: 0;
 }

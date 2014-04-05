@@ -2770,10 +2770,15 @@ chatbox {
   background-attachment: fixed;
 }
 
-#customization-container {
+#main-window[customize-entered] #browser-bottombox,
+#main-window[customize-entered] #customization-container {
   border-left: 1px solid @toolbarShadowColor@;
   border-right: 1px solid @toolbarShadowColor@;
   background-clip: padding-box;
+}
+
+#main-window[customize-entered] #browser-bottombox {
+  border-bottom: 1px solid @toolbarShadowColor@;
 }
 
 #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"] {
