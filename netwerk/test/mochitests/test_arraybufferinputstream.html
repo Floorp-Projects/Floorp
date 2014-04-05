@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>ArrayBuffer stream test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+function neuter(ab)
+{
+  var w = new Worker("data:application/javascript,");
+  w.postMessage(ab, [ab]);
+}
+
+function test()
+{
+  var ab = new ArrayBuffer(4000);
+  var ta = new Uint8Array(ab);
+  ta[0] = 'a'.charCodeAt(0);
+
+  const Cc = SpecialPowers.Cc, Ci = SpecialPowers.Ci, Cr = SpecialPowers.Cr;
+  var abis = Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
+               .createInstance(Ci.nsIArrayBufferInputStream);
+
+  var sis = Cc["@mozilla.org/scriptableinputstream;1"]
+              .createInstance(Ci.nsIScriptableInputStream);
+  sis.init(abis);
+
+  is(sis.read(1), "", "should read no data from an uninitialized ABIS");
+
+  abis.setData(ab, 0, 256 * 1024);
+
+  is(sis.read(1), "a", "should read 'a' after init");
+
+  neuter(ab);
+
+  SpecialPowers.forceGC();
+  SpecialPowers.forceGC();
+
+  try
+  {
+    sis.read(1);
+    ok(false, "reading from stream shouldn't have worked");
+  }
+  catch (e)
+  {
+    ok(e.result === Cr.NS_BASE_STREAM_CLOSED,
+       "neutering underneath an input stream should close it");
+  }
+}
+
+test();
+</script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
