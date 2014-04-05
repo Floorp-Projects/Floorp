@@ -189,7 +189,8 @@ FatalError(const char* aProtocolName, const char* aMsg,
     formattedMessage.AppendLiteral("\". Killing child side as a result.");
     NS_ERROR(formattedMessage.get());
 
-    if (!base::KillProcess(aHandle, base::PROCESS_END_KILLED_BY_USER, false)) {
+    if (aHandle != kInvalidProcessHandle &&
+        !base::KillProcess(aHandle, base::PROCESS_END_KILLED_BY_USER, false)) {
       NS_ERROR("May have failed to kill child!");
     }
   } else {
