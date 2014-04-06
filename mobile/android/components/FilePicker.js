@@ -225,7 +225,7 @@ FilePicker.prototype = {
   },
 
   sendMessageToJava: function(aMsg) {
-    Services.androidBridge.handleGeckoMessage(JSON.stringify(aMsg));
+    Services.androidBridge.handleGeckoMessage(aMsg);
   },
 
   observe: function(aSubject, aTopic, aData) {
