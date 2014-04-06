@@ -4,10 +4,8 @@
 
 <window title="Popup Attribute Tests"
   onload="setTimeout(runTest, 0);"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Popup Attribute Tests</title>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 

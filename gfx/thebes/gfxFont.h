@@ -235,7 +235,6 @@ public:
     NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
 
     gfxFontEntry(const nsAString& aName, bool aIsStandardFace = false);
-    virtual ~gfxFontEntry();
 
     // unique name for the face, *not* the family; not necessarily the
     // "real" or user-friendly name, may be an internal identifier
@@ -471,6 +470,9 @@ protected:
 
     gfxFontEntry();
 
+    // Protected destructor, to discourage deletion outside of Release():
+    virtual ~gfxFontEntry();
+
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold) {
         NS_NOTREACHED("oops, somebody didn't override CreateFontInstance");
         return nullptr;
@@ -681,8 +683,6 @@ public:
         mSkipDefaultFeatureSpaceCheck(false)
         { }
 
-    virtual ~gfxFontFamily() { }
-
     const nsString& Name() { return mName; }
 
     virtual void LocalizedName(nsAString& aLocalizedName);
@@ -806,6 +806,11 @@ public:
     }
 
 protected:
+    // Protected destructor, to discourage deletion outside of Release():
+    virtual ~gfxFontFamily()
+    {
+    }
+
     // fills in an array with weights of faces that match style,
     // returns whether any matching entries found
     virtual bool FindWeightsForStyle(gfxFontEntry* aFontsForWeights[],
@@ -1191,6 +1196,8 @@ public:
         int32_t       mAppUnitsPerDevUnit;
     };
 
+protected:
+    // Protected destructor, to discourage deletion outside of Release():
     virtual ~gfxTextRunFactory() {}
 };
 
