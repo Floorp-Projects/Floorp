@@ -365,6 +365,16 @@ nsINode::CheckNotNativeAnonymous() const
 }
 #endif
 
+bool
+nsINode::IsInAnonymousSubtree() const
+{
+  if (!IsContent()) {
+    return false;
+  }
+
+  return AsContent()->IsInAnonymousSubtree();
+}
+
 nsresult
 nsINode::GetParentNode(nsIDOMNode** aParentNode)
 {
