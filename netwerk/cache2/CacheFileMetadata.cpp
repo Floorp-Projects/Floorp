@@ -848,11 +848,8 @@ CacheFileMetadata::EnsureBuffer(uint32_t aSize)
 nsresult
 CacheFileMetadata::ParseKey(const nsACString &aKey)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsILoadContextInfo> info;
-  rv = CacheFileUtils::ParseKey(aKey, getter_AddRefs(info), nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILoadContextInfo> info = CacheFileUtils::ParseKey(aKey);
+  NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
 
   mAnonymous =  info->IsAnonymous();
   mAppId = info->AppId();

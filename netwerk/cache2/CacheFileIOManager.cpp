@@ -1990,12 +1990,12 @@ CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle)
   if (!aHandle->IsSpecialFile()) {
     nsRefPtr<CacheStorageService> storageService = CacheStorageService::Self();
     if (storageService) {
-      nsAutoCString url;
-      nsCOMPtr<nsILoadContextInfo> info;
-      rv = CacheFileUtils::ParseKey(aHandle->Key(), getter_AddRefs(info), &url);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      if (NS_SUCCEEDED(rv)) {
-        storageService->CacheFileDoomed(info, url);
+      nsAutoCString idExtension, url;
+      nsCOMPtr<nsILoadContextInfo> info =
+        CacheFileUtils::ParseKey(aHandle->Key(), &idExtension, &url);
+      MOZ_ASSERT(info);
+      if (info) {
+        storageService->CacheFileDoomed(info, idExtension, url);
       }
     }
   }

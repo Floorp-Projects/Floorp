@@ -6,6 +6,7 @@
 #include "CacheEntry.h"
 #include "CacheStorageService.h"
 #include "CacheObserver.h"
+#include "CacheFileUtils.h"
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -225,26 +226,33 @@ nsresult CacheEntry::HashingKey(nsCSubstring const& aStorageID,
                                 nsIURI* aURI,
                                 nsACString &aResult)
 {
+  nsAutoCString spec;
+  nsresult rv = aURI->GetAsciiSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return HashingKey(aStorageID, aEnhanceID, spec, aResult);
+}
+
+// static
+nsresult CacheEntry::HashingKey(nsCSubstring const& aStorageID,
+                                nsCSubstring const& aEnhanceID,
+                                nsCSubstring const& aURISpec,
+                                nsACString &aResult)
+{
   /**
    * This key is used to salt hash that is a base for disk file name.
    * Changing it will cause we will not be able to find files on disk.
    */
 
-  if (aStorageID.Length()) {
-    aResult.Append(aStorageID);
-    aResult.Append(':');
+  aResult.Append(aStorageID);
+
+  if (!aEnhanceID.IsEmpty()) {
+    CacheFileUtils::AppendTagWithValue(aResult, '~', aEnhanceID);
   }
 
-  if (aEnhanceID.Length()) {
-    aResult.Append(aEnhanceID);
-    aResult.Append(':');
-  }
-
-  nsAutoCString spec;
-  nsresult rv = aURI->GetAsciiSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aResult.Append(spec);
+  // Appending directly
+  aResult.Append(':');
+  aResult.Append(aURISpec);
 
   return NS_OK;
 }
