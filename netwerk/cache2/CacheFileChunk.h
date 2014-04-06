@@ -100,7 +100,7 @@ public:
   char *       BufForWriting() const;
   const char * BufForReading() const;
   void         EnsureBufSize(uint32_t aBufSize);
-  uint32_t     MemorySize() const { return mRWBufSize + mBufSize; }
+  uint32_t     MemorySize() const { return sizeof(CacheFileChunk) + mRWBufSize + mBufSize; }
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
