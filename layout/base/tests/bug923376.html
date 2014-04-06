@@ -1,0 +1,15 @@
+<!doctype html>
+<html class="reftest-wait"><div contenteditable></div>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+var div = document.body.firstChild;
+div.focus();
+SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm",
+                        window);
+onSpellCheck(div, function() {
+  div.innerHTML = 'something missspelled<br>something elsed#';
+  onSpellCheck(div, function() {
+    document.documentElement.removeAttribute("class");
+  });
+});
+</script>
