@@ -122,6 +122,9 @@ public:
   virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid) {}
 
   GeckoContentController() {}
+
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
   virtual ~GeckoContentController() {}
 };
 

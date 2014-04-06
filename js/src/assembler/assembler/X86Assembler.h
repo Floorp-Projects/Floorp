@@ -942,6 +942,13 @@ public:
         m_formatter.oneByteOp64(OP_SUB_EvGv, src, dst);
     }
 
+    void subq_rm(RegisterID src, int offset, RegisterID base)
+    {
+        spew("subq       %s, %s0x%x(%s)",
+             nameIReg(8,src), PRETTY_PRINT_OFFSET(offset), nameIReg(8,base));
+        m_formatter.oneByteOp64(OP_SUB_EvGv, src, base, offset);
+    }
+
     void subq_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("subq       %s0x%x(%s), %s",
