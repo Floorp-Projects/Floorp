@@ -567,6 +567,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Menu:Update");
         registerEventListener("Accounts:Create");
         registerEventListener("Accounts:Exist");
+        registerEventListener("Prompt:ShowTop");
 
         Distribution.init(this);
         JavaAddonManager.getInstance().init(getApplicationContext());
