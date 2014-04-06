@@ -4,11 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-%ifdef XP_WIN
-%define tabbrowserScrollbuttonWidth 22px
-%else
-%define tabbrowserScrollbuttonWidth 23px
-%endif
 %define tabHeight 31px
 %define tabCurveWidth 30px
 %define tabCurveHalfWidth 15px
@@ -116,62 +111,6 @@
 .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox {
   -moz-padding-end: @tabCurveHalfWidth@;
   -moz-padding-start: @tabCurveHalfWidth@;
-}
-
-/* Tab Overflow */
-.tabbrowser-arrowscrollbox[overflow=true] {
-  position: relative;
-}
-
-.tabbrowser-arrowscrollbox[overflow=true]::before,
-.tabbrowser-arrowscrollbox[overflow=true]::after {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-shadow.png);
-  background-repeat: no-repeat;
-  background-size: auto 100%;
-  content: "";
-  display: -moz-box;
-  height: calc(100% - @tabToolbarNavbarOverlap@);
-  pointer-events: none;
-  position: absolute;
-  width: 12px;
-  /* Make sure the shadow isn't hidden behind the tabs */
-  z-index: 3;
-}
-
-%ifdef XP_MACOSX
-@media (min-resolution: 2dppx) {
-  .tabbrowser-arrowscrollbox[overflow=true]::before,
-  .tabbrowser-arrowscrollbox[overflow=true]::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-shadow@2x.png);
-  }
-}
-%endif
-
-.scrollbutton-up > .toolbarbutton-icon,
-.scrollbutton-down > .toolbarbutton-icon,
-.tabbrowser-arrowscrollbox[overflow=true]::before,
-.tabbrowser-arrowscrollbox[overflow=true]::after {
-  transition: opacity 150ms ease;
-}
-
-.tabbrowser-arrowscrollbox[overflow=true][scrollbutton-up-disabled=true]:-moz-locale-dir(ltr)::before,
-.tabbrowser-arrowscrollbox[overflow=true][scrollbutton-down-disabled=true]:-moz-locale-dir(ltr)::after,
-.tabbrowser-arrowscrollbox[overflow=true][scrollbutton-down-disabled=true]:-moz-locale-dir(rtl)::before,
-.tabbrowser-arrowscrollbox[overflow=true][scrollbutton-up-disabled=true]:-moz-locale-dir(rtl)::after {
-  opacity: 0;
-}
-
-.tabbrowser-arrowscrollbox[overflow=true]::before {
-  left: 0;
-  /* Offset the shadow by the width of the scrollbutton so it's on the inside of the buttons. */
-  margin-left: @tabbrowserScrollbuttonWidth@;
-}
-
-.tabbrowser-arrowscrollbox[overflow=true]::after {
-  right: 0;
-  /* Offset the shadow by the width of the scrollbutton so it's on the inside of the buttons. */
-  margin-right: @tabbrowserScrollbuttonWidth@;
-  transform: scaleX(-1);
 }
 
 .tab-background-start[selected=true]::after,
