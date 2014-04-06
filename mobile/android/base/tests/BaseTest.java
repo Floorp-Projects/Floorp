@@ -20,6 +20,7 @@ import org.mozilla.gecko.Element;
 import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoThread.LaunchState;
 import org.mozilla.gecko.R;
@@ -137,6 +138,10 @@ abstract class BaseTest extends BaseRobocopTest {
     public void tearDown() throws Exception {
         try {
             mAsserter.endTest();
+            // request a force quit of the browser and wait for it to take effect
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Robocop:Quit", null));
+            mSolo.sleep(7000);
+            // if still running, finish activities as recommended by Robotium
             mSolo.finishOpenedActivities();
         } catch (Throwable e) {
             e.printStackTrace();

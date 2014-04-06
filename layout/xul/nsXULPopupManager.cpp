@@ -393,28 +393,32 @@ nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt)
   if (!menuPopupFrame)
     return;
 
-  // Convert desired point to CSS pixels for comparison
-  nsPresContext* presContext = menuPopupFrame->PresContext();
-  aPnt.x = presContext->DevPixelsToIntCSSPixels(aPnt.x);
-  aPnt.y = presContext->DevPixelsToIntCSSPixels(aPnt.y);
+  nsView* view = menuPopupFrame->GetView();
+  if (!view)
+    return;
 
   // Don't do anything if the popup is already at the specified location. This
   // prevents recursive calls when a popup is positioned.
-  nsIntPoint currentPnt = menuPopupFrame->ScreenPosition();
+  nsIntRect curDevSize = view->CalcWidgetBounds(eWindowType_popup);
   nsIWidget* widget = menuPopupFrame->GetWidget();
-  if ((aPnt.x != currentPnt.x || aPnt.y != currentPnt.y) || (widget &&
-      widget->GetClientOffset() != menuPopupFrame->GetLastClientOffset())) {
-    // Update the popup's position using SetPopupPosition if the popup is
-    // anchored and at the parent level as these maintain their position
-    // relative to the parent window. Otherwise, just update the popup to
-    // the specified screen coordinates.
-    if (menuPopupFrame->IsAnchored() &&
-        menuPopupFrame->PopupLevel() == ePopupLevelParent) {
-      menuPopupFrame->SetPopupPosition(nullptr, true, false);
-    }
-    else {
-      menuPopupFrame->MoveTo(aPnt.x, aPnt.y, false);
-    }
+  if (curDevSize.x == aPnt.x && curDevSize.y == aPnt.y &&
+      (!widget || widget->GetClientOffset() == menuPopupFrame->GetLastClientOffset())) {
+    return;
+  }
+
+  // Update the popup's position using SetPopupPosition if the popup is
+  // anchored and at the parent level as these maintain their position
+  // relative to the parent window. Otherwise, just update the popup to
+  // the specified screen coordinates.
+  if (menuPopupFrame->IsAnchored() &&
+      menuPopupFrame->PopupLevel() == ePopupLevelParent) {
+    menuPopupFrame->SetPopupPosition(nullptr, true, false);
+  }
+  else {
+    nsPresContext* presContext = menuPopupFrame->PresContext();
+    aPnt.x = presContext->DevPixelsToIntCSSPixels(aPnt.x);
+    aPnt.y = presContext->DevPixelsToIntCSSPixels(aPnt.y);
+    menuPopupFrame->MoveTo(aPnt.x, aPnt.y, false);
   }
 }
 

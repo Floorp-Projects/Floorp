@@ -9,7 +9,6 @@
 <window title="DOMRequestHelper Test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="start();">
-  <title>DOMRequestHelper Test</title>
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>

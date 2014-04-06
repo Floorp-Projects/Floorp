@@ -324,7 +324,7 @@ public:
 
     PatternAlternative* addNewAlternative()
     {
-        PatternAlternative* alternative = js_new<PatternAlternative>(this);
+        PatternAlternative* alternative = newOrCrash<PatternAlternative>(this);
         m_alternatives.append(alternative);
         return alternative;
     }

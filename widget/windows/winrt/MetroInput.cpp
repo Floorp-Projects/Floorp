@@ -808,6 +808,7 @@ MetroInput::InitGeckoMouseEventFromPointerPoint(
   aPointerPoint->get_PointerDevice(device.GetAddressOf());
   device->get_PointerDeviceType(&deviceType);
   aPointerPoint->get_Properties(props.GetAddressOf());
+  aPointerPoint->get_PointerId(&aEvent->pointerId);
   props->get_Pressure(&pressure);
   props->get_XTilt(&tiltX);
   props->get_YTilt(&tiltY);

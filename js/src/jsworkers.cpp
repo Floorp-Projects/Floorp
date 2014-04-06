@@ -169,7 +169,9 @@ static const JSClass workerGlobalClass = {
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,
-    JS_ConvertStub,   nullptr
+    JS_ConvertStub,   nullptr,
+    nullptr, nullptr, nullptr,
+    JS_GlobalObjectTraceHook
 };
 
 ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSContext *initCx,
@@ -306,6 +308,9 @@ js::StartOffThreadParseScript(JSContext *cx, const ReadOnlyCompileOptions &optio
     compartmentOptions.setZone(JS::FreshZone);
     compartmentOptions.setInvisibleToDebugger(true);
     compartmentOptions.setMergeable(true);
+
+    // Don't falsely inherit the host's global trace hook.
+    compartmentOptions.setTrace(nullptr);
 
     JSObject *global = JS_NewGlobalObject(cx, &workerGlobalClass, nullptr,
                                           JS::FireOnNewGlobalHook, compartmentOptions);

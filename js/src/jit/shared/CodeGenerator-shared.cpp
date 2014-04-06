@@ -1013,6 +1013,8 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock *mir)
     }
 }
 
+// This function is not used for MIPS. MIPS has branchToBlock.
+#ifndef JS_CODEGEN_MIPS
 void
 CodeGeneratorShared::jumpToBlock(MBasicBlock *mir, Assembler::Condition cond)
 {
@@ -1028,6 +1030,7 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock *mir, Assembler::Condition cond)
         masm.j(cond, mir->lir()->label());
     }
 }
+#endif
 
 size_t
 CodeGeneratorShared::addCacheLocations(const CacheLocationList &locs, size_t *numLocs)

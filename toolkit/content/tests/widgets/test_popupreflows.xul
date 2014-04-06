@@ -3,10 +3,7 @@
 <?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Popup Reflow Tests"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-  <title>Popup Reflow Tests</title>
 
   <panel id="testPanel"
          type="arrow"

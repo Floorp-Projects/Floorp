@@ -9,7 +9,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=508115
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Test for Bug 508115</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 <body  xmlns="http://www.w3.org/1999/xhtml">

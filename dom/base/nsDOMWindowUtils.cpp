@@ -67,6 +67,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/file/FileHandle.h"
 #include "mozilla/dom/FileHandleBinding.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/quota/PersistenceType.h"
@@ -3623,6 +3624,12 @@ nsDOMWindowUtils::GetIsParentWindowMainWidgetVisible(bool* aIsVisible)
   nsCOMPtr<nsIWidget> parentWidget;
   nsIDocShell *docShell = window->GetDocShell();
   if (docShell) {
+    if (TabChild *tabChild = TabChild::GetFrom(docShell)) {
+      if (!tabChild->SendIsParentWindowMainWidgetVisible(aIsVisible))
+        return NS_ERROR_FAILURE;
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
     docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
     nsCOMPtr<nsIBaseWindow> parentWindow(do_GetInterface(parentTreeOwner));

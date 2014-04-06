@@ -5,7 +5,6 @@
                  type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Editor currentURI Tests" onload="runTest();">
-  <title>Editor currentURI Tests</title>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
   <script type="application/javascript"

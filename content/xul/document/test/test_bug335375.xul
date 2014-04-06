@@ -9,7 +9,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=335375
 <window title="Mozilla Bug 335375"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="RunTest();">
-  <title>Mozilla Bug 335375</title>
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>      

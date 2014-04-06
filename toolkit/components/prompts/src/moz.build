@@ -11,5 +11,6 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'CommonDialog.jsm',
+    'SharedPromptUtils.jsm',
 ]
 
