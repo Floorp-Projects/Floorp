@@ -137,7 +137,7 @@ const JSClass xpc::SafeJSContextGlobalClass = {
     XPCONNECT_GLOBAL_FLAGS,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
-    nullptr, nullptr, nullptr, TraceXPCGlobal
+    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook
 };
 
 JSContext*
@@ -180,7 +180,8 @@ XPCJSContextStack::InitSafeJSContext()
     JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
 
     JS::CompartmentOptions options;
-    options.setZone(JS::SystemZone);
+    options.setZone(JS::SystemZone)
+           .setTrace(TraceXPCGlobal);
     mSafeJSContextGlobal = CreateGlobalObject(mSafeJSContext,
                                               &SafeJSContextGlobalClass,
                                               principal, options);

@@ -4,7 +4,6 @@
 <window title="Popup Attribute Tests"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Popup Attribute Tests</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
   <script type="application/javascript" src="popup_shared.js"></script>      
   <script type="application/javascript" src="popup_trigger.js"></script>      

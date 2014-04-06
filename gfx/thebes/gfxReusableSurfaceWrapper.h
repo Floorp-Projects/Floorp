@@ -33,7 +33,6 @@
 class gfxReusableSurfaceWrapper {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxReusableSurfaceWrapper)
 public:
-  virtual ~gfxReusableSurfaceWrapper() {}
 
   /**
    * Returns a read-only pointer to the image data.
@@ -81,6 +80,9 @@ public:
   virtual Type GetType() = 0;
 
 protected:
+  // Protected destructor, to discourage deletion outside of Release():
+  virtual ~gfxReusableSurfaceWrapper() {}
+
   NS_DECL_OWNINGTHREAD
 };
 

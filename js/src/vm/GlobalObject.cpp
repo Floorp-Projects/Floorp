@@ -14,6 +14,7 @@
 #include "json.h"
 #include "jsprototypes.h"
 #include "jsweakmap.h"
+#include "jsworkers.h"
 
 #include "builtin/Eval.h"
 #if EXPOSE_INTL_API
@@ -549,6 +550,7 @@ GlobalObject *
 GlobalObject::create(JSContext *cx, const Class *clasp)
 {
     JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
+    JS_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
 
     JSObject *obj = NewObjectWithGivenProto(cx, clasp, nullptr, nullptr, SingletonObject);
     if (!obj)

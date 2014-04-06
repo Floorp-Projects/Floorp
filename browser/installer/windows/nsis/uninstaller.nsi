@@ -99,7 +99,6 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro un.CheckForFilesInUse
 !insertmacro un.CleanUpdateDirectories
 !insertmacro un.CleanVirtualStore
-!insertmacro un.DeleteRelativeProfiles
 !insertmacro un.DeleteShortcuts
 !insertmacro un.GetLongPath
 !insertmacro un.GetSecondInstallPath
@@ -254,15 +253,6 @@ Section "Uninstall"
     Sleep 5000
     ${DeleteFile} "$INSTDIR\${FileMainEXE}"
     ClearErrors
-  ${EndIf}
-
-  ${MUI_INSTALLOPTIONS_READ} $0 "unconfirm.ini" "Field 3" "State"
-  ${If} "$0" == "1"
-    ${un.DeleteRelativeProfiles} "Mozilla\Firefox"
-    ${un.DeleteRelativeProfiles} "Mozilla\MetroFirefox"
-    RmDir "$APPDATA\Mozilla\Extensions\{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-    RmDir "$APPDATA\Mozilla\Extensions"
-    RmDir "$APPDATA\Mozilla"
   ${EndIf}
 
   ; setup the application model id registration value
@@ -551,7 +541,7 @@ Function un.preConfirm
   ${EndIf}
 
   ; Setup the unconfirm.ini file for the Custom Uninstall Confirm Page
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Settings" NumFields "5"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Settings" NumFields "3"
 
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Type   "label"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 1" Text   "$(UN_CONFIRM_UNINSTALLED_FROM)"
@@ -571,44 +561,22 @@ Function un.preConfirm
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" Bottom "30"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 2" flags  "READONLY"
 
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Type   "checkbox"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Text   "$(UN_REMOVE_PROFILES)"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Type   "label"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Text   "$(UN_CONFIRM_CLICK)"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Left   "0"
   WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Right  "-1"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Top    "40"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Bottom "50"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" State  "0"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" flags  "NOTIFY"
-
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Type   "text"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" State   "$(UN_REMOVE_PROFILES_DESC)"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Left   "0"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Right  "-1"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Top    "52"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Bottom "120"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" flags  "MULTILINE|READONLY"
-
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Type   "label"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Text   "$(UN_CONFIRM_CLICK)"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Left   "0"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Right  "-1"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Top    "130"
-  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 5" Bottom "150"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Top    "130"
+  WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Bottom "150"
 
   ${If} "$TmpVal" == "true"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Type   "label"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Text   "$(SUMMARY_REBOOT_REQUIRED_UNINSTALL)"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Left   "0"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Top    "35"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 6" Bottom "45"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Type   "label"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Text   "$(SUMMARY_REBOOT_REQUIRED_UNINSTALL)"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Left   "0"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Right  "-1"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Top    "35"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Bottom "45"
 
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Settings" NumFields "6"
-
-    ; To insert this control reset Top / Bottom for controls below this one
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Top    "55"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 3" Bottom "65"
-    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Field 4" Top    "67"
+    WriteINIStr "$PLUGINSDIR\unconfirm.ini" "Settings" NumFields "4"
   ${EndIf}
 
   !insertmacro MUI_HEADER_TEXT "$(UN_CONFIRM_PAGE_TITLE)" "$(UN_CONFIRM_PAGE_SUBTITLE)"
@@ -616,9 +584,6 @@ Function un.preConfirm
   ; focus. This sets the focus to the Install button instead.
   !insertmacro MUI_INSTALLOPTIONS_INITDIALOG "unconfirm.ini"
   GetDlgItem $0 $HWNDPARENT 1
-  ${MUI_INSTALLOPTIONS_READ} $1 "unconfirm.ini" "Field 4" "HWND"
-  SetCtlColors $1 0x000000 0xFFFFEE
-  ShowWindow $1 ${SW_HIDE}
   System::Call "user32::SetFocus(i r0, i 0x0007, i,i)i"
   ${MUI_INSTALLOPTIONS_READ} $1 "unconfirm.ini" "Field 2" "HWND"
   SendMessage $1 ${WM_SETTEXT} 0 "STR:$INSTDIR"
@@ -626,19 +591,6 @@ Function un.preConfirm
 FunctionEnd
 
 Function un.leaveConfirm
-  ${MUI_INSTALLOPTIONS_READ} $0 "unconfirm.ini" "Settings" "State"
-  StrCmp $0 "3" +1 continue
-  ${MUI_INSTALLOPTIONS_READ} $0 "unconfirm.ini" "Field 3" "State"
-  ${MUI_INSTALLOPTIONS_READ} $1 "unconfirm.ini" "Field 4" "HWND"
-  StrCmp $0 1 +1 +3
-  ShowWindow $1 ${SW_SHOW}
-  Abort
-
-  ShowWindow $1 ${SW_HIDE}
-  Abort
-
-  continue:
-
   ; Try to delete the app executable and if we can't delete it try to find the
   ; app's message window and prompt the user to close the app. This allows
   ; running an instance that is located in another directory. If for whatever

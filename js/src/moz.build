@@ -301,6 +301,7 @@ if CONFIG['ENABLE_ION']:
             'jit/shared/BaselineIC-x86-shared.cpp',
             'jit/shared/CodeGenerator-x86-shared.cpp',
             'jit/shared/Lowering-x86-shared.cpp',
+            'jit/shared/MacroAssembler-x86-shared.cpp',
             'jit/shared/MoveEmitter-x86-shared.cpp',
         ]
         if CONFIG['JS_CODEGEN_X64']:

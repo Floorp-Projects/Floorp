@@ -6,8 +6,6 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Popup Popup Tests</title>
-
   <panel id="testPanel"
          type="arrow"
          noautohide="true">

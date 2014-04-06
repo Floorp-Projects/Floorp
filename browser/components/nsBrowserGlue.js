@@ -81,6 +81,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
+ XPCOMUtils.defineLazyModuleGetter(this, "RemotePrompt",
+                                   "resource:///modules/RemotePrompt.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
 
@@ -495,8 +498,10 @@ BrowserGlue.prototype = {
     SessionStore.init();
     BrowserUITelemetry.init();
 
-    if (Services.appinfo.browserTabsRemote)
+    if (Services.appinfo.browserTabsRemote) {
       ContentClick.init();
+      RemotePrompt.init();
+    }
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },

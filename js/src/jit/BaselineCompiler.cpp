@@ -336,8 +336,8 @@ BaselineCompiler::emitPrologue()
             masm.bind(&pushLoop);
             for (size_t i = 0; i < LOOP_UNROLL_FACTOR; i++)
                 masm.pushValue(R0);
-            masm.sub32(Imm32(LOOP_UNROLL_FACTOR), R1.scratchReg());
-            masm.j(Assembler::NonZero, &pushLoop);
+            masm.branchSub32(Assembler::NonZero,
+                             Imm32(LOOP_UNROLL_FACTOR), R1.scratchReg(), &pushLoop);
         }
     }
 
