@@ -221,8 +221,20 @@ FeedWriter.prototype = {
    */
   __contentSandbox: null,
   get _contentSandbox() {
+    // This whole sandbox setup is totally archaic. It was introduced in bug
+    // 360529, presumably before the existence of a solid security membrane,
+    // since all of the manipulation of content here should be made safe by
+    // Xrays. And now that anonymous content is no longer content-accessible,
+    // manipulating the xml stylesheet content can't be done from content
+    // anymore.
+    //
+    // The right solution would be to rip out all of this sandbox junk and
+    // manipulate the DOM directly. But that's a big yak to shave, so for now,
+    // we just give the sandbox an nsExpandedPrincipal with []. This has the
+    // effect of giving it Xrays, and making it same-origin with the XBL scope,
+    // thereby letting it manipulate anonymous content.
     if (!this.__contentSandbox)
-      this.__contentSandbox = new Cu.Sandbox(this._window, 
+      this.__contentSandbox = new Cu.Sandbox([this._window],
                                              {sandboxName: 'FeedWriter'});
 
     return this.__contentSandbox;
