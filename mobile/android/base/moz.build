@@ -60,6 +60,7 @@ gujar.sources += [
     'util/INISection.java',
     'util/JSONUtils.java',
     'util/MenuUtils.java',
+    'util/NativeEventListener.java',
     'util/NativeJSContainer.java',
     'util/NativeJSObject.java',
     'util/NonEvictingLruCache.java',

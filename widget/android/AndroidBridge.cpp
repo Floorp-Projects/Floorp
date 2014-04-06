@@ -37,6 +37,9 @@
 #include "StrongPointer.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsPrintfCString.h"
+#include "NativeJSContainer.h"
+#include "nsContentUtils.h"
+#include "nsIScriptError.h"
 
 using namespace mozilla;
 using namespace mozilla::widget::android;
@@ -967,14 +970,15 @@ AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInf
 }
 
 void
-AndroidBridge::HandleGeckoMessage(const nsAString &aMessage)
+AndroidBridge::HandleGeckoMessage(JSContext* cx, JS::HandleObject object)
 {
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
 
-    JNIEnv *env = GetJNIEnv();
-
+    JNIEnv* const env = GetJNIEnv();
     AutoLocalJNIFrame jniFrame(env, 1);
-    mozilla::widget::android::GeckoAppShell::HandleGeckoMessageWrapper(aMessage);
+    const jobject message =
+        mozilla::widget::CreateNativeJSContainer(env, cx, object);
+    GeckoAppShell::HandleGeckoMessageWrapper(message);
 }
 
 nsresult
@@ -1494,9 +1498,42 @@ nsAndroidBridge::~nsAndroidBridge()
 }
 
 /* void handleGeckoEvent (in AString message); */
-NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message)
+NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(JS::HandleValue val,
+                                                  JSContext *cx)
 {
-    AndroidBridge::Bridge()->HandleGeckoMessage(message);
+    if (val.isObject()) {
+        JS::RootedObject object(cx, &val.toObject());
+        AndroidBridge::Bridge()->HandleGeckoMessage(cx, object);
+        return NS_OK;
+    }
+
+    // Now handle legacy JSON messages.
+    if (!val.isString()) {
+        return NS_ERROR_INVALID_ARG;
+    }
+    JS::RootedString jsonStr(cx, val.toString());
+
+    size_t strLen = 0;
+    const jschar* strChar = JS_GetStringCharsAndLength(cx, jsonStr, &strLen);
+    if (!strChar) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    JS::RootedValue jsonVal(cx);
+    if (!JS_ParseJSON(cx, strChar, strLen, &jsonVal) || !jsonVal.isObject()) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    // Spit out a warning before sending the message.
+    nsContentUtils::ReportToConsoleNonLocalized(
+        NS_LITERAL_STRING("Use of JSON is deprecated. "
+            "Please pass Javascript objects directly to handleGeckoMessage."),
+        nsIScriptError::warningFlag,
+        NS_LITERAL_CSTRING("nsIAndroidBridge"),
+        nullptr);
+
+    JS::RootedObject object(cx, &jsonVal.toObject());
+    AndroidBridge::Bridge()->HandleGeckoMessage(cx, object);
     return NS_OK;
 }
 

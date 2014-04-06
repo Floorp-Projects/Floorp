@@ -884,6 +884,10 @@ let PlacesToolbarHelper = {
     if (!viewElt || viewElt._placesView)
       return;
 
+    // CustomizableUI.addListener is idempotent, so we can safely
+    // call this multiple times.
+    CustomizableUI.addListener(this);
+
     // If the bookmarks toolbar item is:
     // - not in a toolbar, or;
     // - the toolbar is collapsed, or;
@@ -899,7 +903,11 @@ let PlacesToolbarHelper = {
     if (forceToolbarOverflowCheck) {
       viewElt._placesView.updateOverflowStatus();
     }
-    this.customizeChange();
+    this._setupPlaceholder();
+  },
+
+  uninit: function PTH_uninit() {
+    CustomizableUI.removeListener(this);
   },
 
   customizeStart: function PTH_customizeStart() {
@@ -914,10 +922,15 @@ let PlacesToolbarHelper = {
   },
 
   customizeChange: function PTH_customizeChange() {
+    this._setupPlaceholder();
+  },
+
+  _setupPlaceholder: function PTH_setupPlaceholder() {
     let placeholder = this._placeholder;
     if (!placeholder) {
       return;
     }
+
     let shouldWrapNow = this._getShouldWrap();
     if (this._shouldWrap != shouldWrapNow) {
       if (shouldWrapNow) {
@@ -958,7 +971,40 @@ let PlacesToolbarHelper = {
       element = element.parentNode;
     }
     return null;
-  }
+  },
+
+  onWidgetUnderflow: function(aNode, aContainer) {
+    // The view gets broken by being removed and reinserted by the overflowable
+    // toolbar, so we have to force an uninit and reinit.
+    let win = aNode.ownerDocument.defaultView;
+    if (aNode.id == "personal-bookmarks" && win == window) {
+      this._resetView();
+    }
+  },
+
+  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
+    if (aWidgetId == "personal-bookmarks" && !this._isCustomizing) {
+      // It's possible (with the "Add to Menu", "Add to Toolbar" context
+      // options) that the Places Toolbar Items have been moved without
+      // letting us prepare and handle it with with customizeStart and
+      // customizeDone. If that's the case, we need to reset the views
+      // since they're probably broken from the DOM reparenting.
+      this._resetView();
+    }
+  },
+
+  _resetView: function() {
+    if (this._viewElt) {
+      // It's possible that the placesView might not exist, and we need to
+      // do a full init. This could happen if the Bookmarks Toolbar Items are
+      // moved to the Menu Panel, and then to the toolbar with the "Add to Toolbar"
+      // context menu option, outside of customize mode.
+      if (this._viewElt._placesView) {
+        this._viewElt._placesView.uninit();
+      }
+      this.init(true);
+    }
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1164,6 +1210,16 @@ let BookmarkingUI = {
     // so kill current view and let popupshowing generate a new one.
     if (this.button._placesView)
       this.button._placesView.uninit();
+
+    // We have to do the same thing for the "special" views underneath the
+    // the bookmarks menu.
+    const kSpecialViewNodeIDs = ["BMB_bookmarksToolbar", "BMB_unsortedBookmarks"];
+    for (let viewNodeID of kSpecialViewNodeIDs) {
+      let elem = document.getElementById(viewNodeID);
+      if (elem && elem._placesView) {
+        elem._placesView.uninit();
+      }
+    }
   },
 
   onCustomizeStart: function BUI_customizeStart(aWindow) {

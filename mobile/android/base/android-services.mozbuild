@@ -587,6 +587,7 @@ sync_java_files = [
     'fxa/sync/FxAccountSchedulePolicy.java',
     'fxa/sync/FxAccountSyncAdapter.java',
     'fxa/sync/FxAccountSyncService.java',
+    'fxa/sync/FxAccountSyncStatusHelper.java',
     'fxa/sync/SchedulePolicy.java',
     'sync/AlreadySyncingException.java',
     'sync/BackoffHandler.java',
