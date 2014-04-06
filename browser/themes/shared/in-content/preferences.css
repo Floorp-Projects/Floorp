@@ -132,7 +132,6 @@ button,
 menulist {
   -moz-appearance: none;
   height: 30px;
-  max-height: 30px;
   color: #737980;
   line-height: 20px;
   text-shadow: 0 1px 1px #FEFFFE;

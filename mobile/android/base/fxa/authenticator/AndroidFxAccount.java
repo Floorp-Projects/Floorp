@@ -8,12 +8,16 @@ import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
@@ -57,6 +61,9 @@ public class AndroidFxAccount {
   public static final String BUNDLE_KEY_BUNDLE_VERSION = "version";
   public static final String BUNDLE_KEY_STATE_LABEL = "stateLabel";
   public static final String BUNDLE_KEY_STATE = "state";
+
+  protected static final List<String> ANDROID_AUTHORITIES = Collections.unmodifiableList(Arrays.asList(
+      new String[] { BrowserContract.AUTHORITY }));
 
   protected final Context context;
   protected final AccountManager accountManager;
@@ -380,6 +387,10 @@ public class AndroidFxAccount {
     getSyncPrefs().edit().clear().commit();
   }
 
+  public static Iterable<String> getAndroidAuthorities() {
+    return ANDROID_AUTHORITIES;
+  }
+
   /**
    * Return true if the underlying Android account is currently set to sync automatically.
    * <p>
@@ -391,7 +402,7 @@ public class AndroidFxAccount {
    */
   public boolean isSyncing() {
     boolean isSyncEnabled = true;
-    for (String authority : new String[] { BrowserContract.AUTHORITY }) {
+    for (String authority : getAndroidAuthorities()) {
       isSyncEnabled &= ContentResolver.getSyncAutomatically(account, authority);
     }
     return isSyncEnabled;
@@ -399,7 +410,7 @@ public class AndroidFxAccount {
 
   public void enableSyncing() {
     Logger.info(LOG_TAG, "Enabling sync for account named like " + getObfuscatedEmail());
-    for (String authority : new String[] { BrowserContract.AUTHORITY }) {
+    for (String authority : getAndroidAuthorities()) {
       ContentResolver.setSyncAutomatically(account, authority, true);
       ContentResolver.setIsSyncable(account, authority, 1);
     }
@@ -407,17 +418,49 @@ public class AndroidFxAccount {
 
   public void disableSyncing() {
     Logger.info(LOG_TAG, "Disabling sync for account named like " + getObfuscatedEmail());
-    for (String authority : new String[] { BrowserContract.AUTHORITY }) {
+    for (String authority : getAndroidAuthorities()) {
       ContentResolver.setSyncAutomatically(account, authority, false);
     }
   }
 
-  public void requestSync(Bundle extras) {
-    Logger.info(LOG_TAG, "Requesting sync for account named like " + getObfuscatedEmail() +
-        (extras.isEmpty() ? "." : "; has extras."));
-    for (String authority : new String[] { BrowserContract.AUTHORITY }) {
-      ContentResolver.requestSync(account, authority, extras);
+  /**
+   * Is a sync currently in progress?
+   *
+   * @return true if Android is currently syncing the underlying Android Account.
+   */
+  public boolean isCurrentlySyncing() {
+    boolean active = false;
+    for (String authority : AndroidFxAccount.getAndroidAuthorities()) {
+      active |= ContentResolver.isSyncActive(account, authority);
     }
+    return active;
+  }
+
+  /**
+   * Request a sync.  See {@link FirefoxAccounts#requestSync(Account, EnumSet, String[], String[])}.
+   */
+  public void requestSync() {
+    requestSync(FirefoxAccounts.SOON, null, null);
+  }
+
+  /**
+   * Request a sync.  See {@link FirefoxAccounts#requestSync(Account, EnumSet, String[], String[])}.
+   *
+   * @param syncHints to pass to sync.
+   */
+  public void requestSync(EnumSet<FirefoxAccounts.SyncHint> syncHints) {
+    requestSync(syncHints, null, null);
+  }
+
+  /**
+   * Request a sync.  See {@link FirefoxAccounts#requestSync(Account, EnumSet, String[], String[])}.
+   *
+   * @param syncHints to pass to sync.
+   * @param stagesToSync stage names to sync.
+   * @param stagesToSkip stage names to skip.
+   */
+  public void requestSync(EnumSet<FirefoxAccounts.SyncHint> syncHints, String[] stagesToSync, String[] stagesToSkip) {
+    FirefoxAccounts.requestSync(getAndroidAccount(), syncHints, stagesToSync, stagesToSkip);
   }
 
   public synchronized void setState(State state) {

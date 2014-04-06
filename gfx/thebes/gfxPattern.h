@@ -22,7 +22,7 @@ struct gfxRGBA;
 typedef struct _cairo_pattern cairo_pattern_t;
 
 
-class gfxPattern {
+class gfxPattern MOZ_FINAL{
     NS_INLINE_DECL_REFCOUNTING(gfxPattern)
 
 public:
@@ -35,7 +35,6 @@ public:
                gfxFloat cx1, gfxFloat cy1, gfxFloat radius1); // radial
     gfxPattern(mozilla::gfx::SourceSurface *aSurface,
                const mozilla::gfx::Matrix &aTransform); // Azure
-    virtual ~gfxPattern();
 
     cairo_pattern_t *CairoPattern();
     void AddColorStop(gfxFloat offset, const gfxRGBA& c);
@@ -103,7 +102,10 @@ public:
 
     mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetAzureSurface() { return mSourceSurface; }
 
-protected:
+private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~gfxPattern();
+
     cairo_pattern_t *mPattern;
 
     /**

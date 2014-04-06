@@ -6,7 +6,7 @@
 #include "domstubs.idl"
 interface nsIContentFrameMessageManager;
 
-[uuid( 60146bc6-31d8-450b-a9eb-4000b6403d5c)]
+[scriptable, uuid(2eb3bc54-78bf-40f2-b301-a5b5b70f7da0)]
 interface nsITabChild : nsISupports
 {
   readonly attribute nsIContentFrameMessageManager messageManager;

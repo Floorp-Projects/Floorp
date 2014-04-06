@@ -8,8 +8,6 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-  <title>Panel Focus Tests</title>
-
 <checkbox id="b1" label="Item 1"/>
 
 <!-- Focus should be in this order: 2 6 3 8 1 4 5 7 9 -->

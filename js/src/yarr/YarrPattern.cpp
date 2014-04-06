@@ -187,7 +187,7 @@ public:
 
     CharacterClass* charClass()
     {
-        CharacterClass* characterClass = js_new<CharacterClass>();
+        CharacterClass* characterClass = newOrCrash<CharacterClass>();
 
         characterClass->m_matches.swap(m_matches);
         characterClass->m_ranges.swap(m_ranges);
@@ -285,7 +285,7 @@ public:
         , m_characterClassConstructor(pattern.m_ignoreCase)
         , m_invertParentheticalAssertion(false)
     {
-        m_pattern.m_body = js_new<PatternDisjunction>();
+        m_pattern.m_body = newOrCrash<PatternDisjunction>();
         m_alternative = m_pattern.m_body->addNewAlternative();
         m_pattern.m_disjunctions.append(m_pattern.m_body);
     }
@@ -299,7 +299,7 @@ public:
         m_pattern.reset();
         m_characterClassConstructor.reset();
 
-        m_pattern.m_body = js_new<PatternDisjunction>();
+        m_pattern.m_body = newOrCrash<PatternDisjunction>();
         m_alternative = m_pattern.m_body->addNewAlternative();
         m_pattern.m_disjunctions.append(m_pattern.m_body);
     }
@@ -411,7 +411,7 @@ public:
         if (capture)
             m_pattern.m_numSubpatterns++;
 
-        PatternDisjunction* parenthesesDisjunction = js_new<PatternDisjunction>(m_alternative);
+        PatternDisjunction* parenthesesDisjunction = newOrCrash<PatternDisjunction>(m_alternative);
         m_pattern.m_disjunctions.append(parenthesesDisjunction);
         m_alternative->m_terms.append(PatternTerm(PatternTerm::TypeParenthesesSubpattern, subpatternId, parenthesesDisjunction, capture, false));
         m_alternative = parenthesesDisjunction->addNewAlternative();
@@ -419,7 +419,7 @@ public:
 
     void atomParentheticalAssertionBegin(bool invert = false)
     {
-        PatternDisjunction* parenthesesDisjunction = js_new<PatternDisjunction>(m_alternative);
+        PatternDisjunction* parenthesesDisjunction = newOrCrash<PatternDisjunction>(m_alternative);
         m_pattern.m_disjunctions.append(parenthesesDisjunction);
         m_alternative->m_terms.append(PatternTerm(PatternTerm::TypeParentheticalAssertion, m_pattern.m_numSubpatterns + 1, parenthesesDisjunction, false, invert));
         m_alternative = parenthesesDisjunction->addNewAlternative();
@@ -493,7 +493,7 @@ public:
             PatternAlternative* alternative = disjunction->m_alternatives[alt];
             if (!filterStartsWithBOL || !alternative->m_startsWithBOL) {
                 if (!newDisjunction) {
-                    newDisjunction = js_new<PatternDisjunction>();
+                    newDisjunction = newOrCrash<PatternDisjunction>();
                     newDisjunction->m_parent = disjunction->m_parent;
                 }
                 PatternAlternative* newAlternative = newDisjunction->addNewAlternative();

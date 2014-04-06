@@ -4,8 +4,6 @@
 <window title="Popup Prevent Default Tests"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Popup Prevent Default Tests</title>
-
 <!--
   This tests checks that preventDefault can be called on a popupshowing
   event or popuphiding event to prevent the default behaviour.

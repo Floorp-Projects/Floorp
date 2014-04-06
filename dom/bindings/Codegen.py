@@ -10,6 +10,7 @@ import re
 import string
 import math
 import itertools
+from textwrap import dedent
 
 from WebIDL import BuiltinTypes, IDLBuiltinType, IDLNullValue, IDLSequenceType, IDLType, IDLAttribute, IDLUndefinedValue
 from Configuration import NoSuchDescriptorError, getTypesFromDescriptor, getTypesFromDictionary, getTypesFromCallback, Descriptor
@@ -53,6 +54,93 @@ def wantsAddProperty(desc):
     return (desc.concrete and
             desc.wrapperCache and
             not desc.interface.getExtendedAttribute("Global"))
+
+
+# We'll want to insert the indent at the beginnings of lines, but we
+# don't want to indent empty lines.  So only indent lines that have a
+# non-newline character on them.
+lineStartDetector = re.compile("^(?=[^\n#])", re.MULTILINE)
+
+
+def indent(s, indentLevel=2):
+    """
+    Indent C++ code.
+
+    Weird secret feature: this doesn't indent lines that start with # (such as
+    #include lines).
+    """
+    if s == "":
+        return s
+    return re.sub(lineStartDetector, indentLevel * " ", s)
+
+
+def fill(template, **args):
+    """
+    Convenience function for filling in a multiline template.
+
+    `fill(template, name1=v1, name2=v2)` is a lot like
+    `string.Template(template).substitute({"name1": v1, "name2": v2})`.
+
+    However, it's shorter, and has a few nice features:
+
+      * If `template` is indented, fill() automatically dedents it!
+        This makes code using fill() with Python's multiline strings
+        much nicer to look at.
+
+      * If `template` starts with a blank line, fill() strips it off.
+        (Again, convenient with multiline strings.)
+
+      * fill() recognizes a special kind of substitution
+        of the form `$*{name}`.
+
+        Use this to paste in, and automatically indent, multiple lines.
+        (Mnemonic: The `*` is for "multiple lines").
+
+        A `$*` substitution must appear by itself on a line, with optional
+        preceding indentation (spaces only). The whole line is replaced by the
+        corresponding keyword argument, indented appropriately.  If the
+        argument is an empty string, no output is generated, not even a blank
+        line.
+    """
+
+    # This works by transforming the fill()-template to an equivalent
+    # string.Template.
+    multiline_substitution_re = re.compile(r"( *)\$\*{(\w+)}(\n)?")
+
+    def replace(match):
+        """
+        Replaces a line like '  $*{xyz}\n' with '${xyz_n}',
+        where n is the indent depth, and add a corresponding entry to args.
+        """
+        indentation, name, nl = match.groups()
+        depth = len(indentation)
+
+        # Check that $*{xyz} appears by itself on a line.
+        prev = match.string[:match.start()]
+        if (prev and not prev.endswith("\n")) or nl is None:
+            raise ValueError("Invalid fill() template: $*{%s} must appear by itself on a line" % name)
+
+        # Multiline text without a newline at the end is probably a mistake.
+        if not (args[name] == "" or args[name].endswith("\n")):
+            raise ValueError("Argument %s with value %r is missing a newline" % (name, args[name]))
+
+        # Now replace this whole line of template with the indented equivalent.
+        modified_name = name + "_" + str(depth)
+        indented_value = indent(args[name], depth)
+        if modified_name in args:
+            assert args[modified_name] == indented_value
+        else:
+            args[modified_name] = indented_value
+        return "${" + modified_name + "}"
+
+    t = template
+    if t.startswith("\n"):
+        t = t[1:]
+    t = dedent(t)
+    assert t.endswith("\n") or "\n" not in t
+    t = re.sub(multiline_substitution_re, replace, t)
+    t = string.Template(t)
+    return t.substitute(args)
 
 
 class CGThing():
@@ -109,14 +197,20 @@ class CGStringTable(CGThing):
         for s in self.strings:
             indices.append(currentIndex)
             currentIndex += len(s) + 1  # for the null terminator
-        return """const char *%s(unsigned int aIndex)
-{
-  static const char table[] = %s;
-  static const uint16_t indices[] = { %s };
-  static_assert(%d <= UINT16_MAX, "string table overflow!");
-  return &table[indices[aIndex]];
-}
-""" % (self.accessorName, table, ", ".join("%d" % index for index in indices), currentIndex)
+        return fill(
+            """
+            const char *${name}(unsigned int aIndex)
+            {
+              static const char table[] = ${table};
+              static const uint16_t indices[] = { ${indices} };
+              static_assert(${currentIndex} <= UINT16_MAX, "string table overflow!");
+              return &table[indices[aIndex]];
+            }
+            """,
+            name=self.accessorName,
+            table=table,
+            indices=", ".join("%d" % index for index in indices),
+            currentIndex=currentIndex)
 
 
 class CGNativePropertyHooks(CGThing):
@@ -203,20 +297,21 @@ def DOMClass(descriptor):
     # is never the ID of any prototype, so it's safe to use as
     # padding.
     protoList.extend(['prototypes::id::_ID_Count'] * (descriptor.config.maxProtoChainLength - len(protoList)))
-    prototypeChainString = ', '.join(protoList)
-    participant = "GetCCParticipant<%s>::Get()" % descriptor.nativeType
-    getParentObject = "GetParentObject<%s>::Get" % descriptor.nativeType
-    return """{
-  { %s },
-  IsBaseOf<nsISupports, %s >::value,
-  %s,
-  %s,
-  GetProtoObject,
-  %s
-}""" % (prototypeChainString, descriptor.nativeType,
-        NativePropertyHooks(descriptor),
-        getParentObject,
-        participant)
+
+    return fill(
+        """
+        {
+          { ${protoChain} },
+          IsBaseOf<nsISupports, ${nativeType} >::value,
+          ${hooks},
+          GetParentObject<${nativeType}>::Get,
+          GetProtoObject,
+          GetCCParticipant<${nativeType}>::Get()
+        }
+        """,
+        protoChain=', '.join(protoList),
+        nativeType=descriptor.nativeType,
+        hooks=NativePropertyHooks(descriptor))
 
 
 class CGDOMJSClass(CGThing):
@@ -237,7 +332,7 @@ class CGDOMJSClass(CGThing):
         classFlags = "JSCLASS_IS_DOMJSCLASS | "
         if self.descriptor.interface.getExtendedAttribute("Global"):
             classFlags += "JSCLASS_DOM_GLOBAL | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_IMPLEMENTS_BARRIERS"
-            traceHook = "mozilla::dom::TraceGlobal"
+            traceHook = "JS_GlobalObjectTraceHook"
         else:
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
         if self.descriptor.interface.getExtendedAttribute("NeedNewResolve"):
@@ -251,34 +346,41 @@ class CGDOMJSClass(CGThing):
         else:
             newResolveHook = "JS_ResolveStub"
             enumerateHook = "JS_EnumerateStub"
-        template = """
-static const DOMJSClass Class = {
-  { "%s",
-    %s,
-    %s, /* addProperty */
-    JS_DeletePropertyStub, /* delProperty */
-    JS_PropertyStub,       /* getProperty */
-    JS_StrictPropertyStub, /* setProperty */
-    %s, /* enumerate */
-    %s, /* resolve */
-    JS_ConvertStub,
-    %s, /* finalize */
-    %s, /* call */
-    nullptr,               /* hasInstance */
-    nullptr,               /* construct */
-    %s, /* trace */
-    JS_NULL_CLASS_SPEC,
-    JS_NULL_CLASS_EXT,
-    JS_NULL_OBJECT_OPS
-  },
-%s
-};
-"""
-        return template % (self.descriptor.interface.identifier.name,
-                           classFlags,
-                           ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'JS_PropertyStub',
-                           enumerateHook, newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
-                           CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
+
+        return fill(  # BOGUS extra blank line at the top
+            """
+
+            static const DOMJSClass Class = {
+              { "${name}",
+                ${flags},
+                ${addProperty}, /* addProperty */
+                JS_DeletePropertyStub, /* delProperty */
+                JS_PropertyStub,       /* getProperty */
+                JS_StrictPropertyStub, /* setProperty */
+                ${enumerate}, /* enumerate */
+                ${resolve}, /* resolve */
+                JS_ConvertStub,
+                ${finalize}, /* finalize */
+                ${call}, /* call */
+                nullptr,               /* hasInstance */
+                nullptr,               /* construct */
+                ${trace}, /* trace */
+                JS_NULL_CLASS_SPEC,
+                JS_NULL_CLASS_EXT,
+                JS_NULL_OBJECT_OPS
+              },
+              $*{descriptor}
+            };
+            """,
+            name=self.descriptor.interface.identifier.name,
+            flags=classFlags,
+            addProperty=ADDPROPERTY_HOOK_NAME if wantsAddProperty(self.descriptor) else 'JS_PropertyStub',
+            enumerate=enumerateHook,
+            resolve=newResolveHook,
+            finalize=FINALIZE_HOOK_NAME,
+            call=callHook,
+            trace=traceHook,
+            descriptor=DOMClass(self.descriptor))
 
 
 class CGDOMProxyJSClass(CGThing):
@@ -300,20 +402,22 @@ class CGDOMProxyJSClass(CGThing):
         if self.descriptor.interface.identifier.name == "HTMLAllCollection":
             flags.append("JSCLASS_EMULATES_UNDEFINED")
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
-        template = """
-static const DOMJSClass Class = {
-  PROXY_CLASS_DEF("%s",
-                  0, /* extra slots */
-                  %s,
-                  %s, /* call */
-                  nullptr  /* construct */),
-%s
-};
-"""
-        return template % (self.descriptor.interface.identifier.name,
-                           " | ".join(flags),
-                           callHook,
-                           CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
+        return fill(  # BOGUS extra blank line at the top
+            """
+
+            static const DOMJSClass Class = {
+              PROXY_CLASS_DEF("${name}",
+                              0, /* extra slots */
+                              ${flags},
+                              ${call}, /* call */
+                              nullptr  /* construct */),
+              $*{descriptor}
+            };
+            """,
+            name=self.descriptor.interface.identifier.name,
+            flags=" | ".join(flags),
+            call=callHook,
+            descriptor=DOMClass(self.descriptor))
 
 
 def PrototypeIDAndDepth(descriptor):
@@ -547,36 +651,27 @@ class CGGeneric(CGThing):
         return set()
 
 
-# We'll want to insert the indent at the beginnings of lines, but we
-# don't want to indent empty lines.  So only indent lines that have a
-# non-newline character on them.
-lineStartDetector = re.compile("^(?=[^\n#])", re.MULTILINE)
-
-
 class CGIndenter(CGThing):
     """
     A class that takes another CGThing and generates code that indents that
     CGThing by some number of spaces.  The default indent is two spaces.
     """
     def __init__(self, child, indentLevel=2, declareOnly=False):
+        assert isinstance(child, CGThing)
         CGThing.__init__(self)
         self.child = child
-        self.indent = " " * indentLevel
+        self.indentLevel = indentLevel
         self.declareOnly = declareOnly
 
     def declare(self):
-        decl = self.child.declare()
-        if decl is not "":
-            return re.sub(lineStartDetector, self.indent, decl)
-        else:
-            return ""
+        return indent(self.child.declare(), self.indentLevel)
 
     def define(self):
         defn = self.child.define()
-        if defn is not "" and not self.declareOnly:
-            return re.sub(lineStartDetector, self.indent, defn)
-        else:
+        if self.declareOnly:
             return defn
+        else:
+            return indent(defn, self.indentLevel)
 
 
 class CGWrapper(CGThing):
@@ -1418,26 +1513,32 @@ class CGNamedConstructors(CGThing):
             constructorID += self.descriptor.name
         else:
             constructorID += "_ID_Count"
-        nativePropertyHooks = """const NativePropertyHooks sNamedConstructorNativePropertyHooks = {
-    nullptr,
-    nullptr,
-    { nullptr, nullptr },
-    prototypes::id::%s,
-    %s,
-    nullptr
-};
 
-""" % (self.descriptor.name, constructorID)
-        namedConstructors = CGList([], ",\n")
+        namedConstructors = ""
         for n in self.descriptor.interface.namedConstructors:
-            namedConstructors.append(
-                CGGeneric("{ \"%s\", { %s, &sNamedConstructorNativePropertyHooks }, %i }" %
-                          (n.identifier.name, NamedConstructorName(n), methodLength(n))))
-        namedConstructors.append(CGGeneric("{ nullptr, { nullptr, nullptr }, 0 }"))
-        namedConstructors = CGWrapper(CGIndenter(namedConstructors),
-                                      pre="static const NamedConstructor namedConstructors[] = {\n",
-                                      post="\n};\n")
-        return nativePropertyHooks + namedConstructors.define()
+            namedConstructors += (
+                "{ \"%s\", { %s, &sNamedConstructorNativePropertyHooks }, %i },\n" %
+                (n.identifier.name, NamedConstructorName(n), methodLength(n)))
+
+        return fill(
+            """
+            const NativePropertyHooks sNamedConstructorNativePropertyHooks = {
+                nullptr,
+                nullptr,
+                { nullptr, nullptr },
+                prototypes::id::${name},
+                ${constructorID},
+                nullptr
+            };
+
+            static const NamedConstructor namedConstructors[] = {
+              $*{namedConstructors}
+              { nullptr, { nullptr, nullptr }, 0 }
+            };
+            """,
+            name=self.descriptor.name,
+            constructorID=constructorID,
+            namedConstructors=namedConstructors)
 
 
 class CGClassHasInstanceHook(CGAbstractStaticMethod):

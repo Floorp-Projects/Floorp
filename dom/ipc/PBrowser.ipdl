@@ -208,6 +208,8 @@ parent:
                     int32_t cause,
                     int32_t focusChange);
 
+    sync IsParentWindowMainWidgetVisible() returns (bool visible);
+
     /**
      * Gets the DPI of the screen corresponding to this browser.
      */

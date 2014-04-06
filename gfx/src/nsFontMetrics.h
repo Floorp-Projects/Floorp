@@ -43,11 +43,10 @@ struct nsBoundingMetrics;
  * implementations are expected to select non-Western fonts that "fit"
  * reasonably well with the Western font that is loaded at Init time.
  */
-class nsFontMetrics
+class nsFontMetrics MOZ_FINAL
 {
 public:
     nsFontMetrics();
-    ~nsFontMetrics();
 
     NS_INLINE_DECL_REFCOUNTING(nsFontMetrics)
 
@@ -212,7 +211,10 @@ public:
 
     int32_t AppUnitsPerDevPixel() { return mP2A; }
 
-protected:
+private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~nsFontMetrics();
+
     const gfxFont::Metrics& GetMetrics() const;
 
     nsFont mFont;

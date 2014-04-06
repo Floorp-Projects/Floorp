@@ -39,6 +39,6 @@ LightweightThemeConsumer.prototype = {
 
     let msg = active ? { type: "LightweightTheme:Update", data: aData } :
                        { type: "LightweightTheme:Disable" };
-    Services.androidBridge.handleGeckoMessage(JSON.stringify(msg));
+    Services.androidBridge.handleGeckoMessage(msg);
   }
 }

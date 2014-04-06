@@ -129,7 +129,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jGetScreenOrientationWrapper = getStaticMethod("getScreenOrientation", "()S");
     jGetShowPasswordSetting = getStaticMethod("getShowPasswordSetting", "()Z");
     jGetSystemColoursWrapper = getStaticMethod("getSystemColors", "()[I");
-    jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Ljava/lang/String;)V");
+    jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Lorg/mozilla/gecko/util/NativeJSContainer;)V");
     jHandleUncaughtException = getStaticMethod("handleUncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
     jHideProgressDialog = getStaticMethod("hideProgressDialog", "()V");
     jInitCameraWrapper = getStaticMethod("initCamera", "(Ljava/lang/String;III)[I");
@@ -697,16 +697,14 @@ jintArray GeckoAppShell::GetSystemColoursWrapper() {
     return ret;
 }
 
-void GeckoAppShell::HandleGeckoMessageWrapper(const nsAString& a0) {
+void GeckoAppShell::HandleGeckoMessageWrapper(jobject a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (env->PushLocalFrame(1) != 0) {
         AndroidBridge::HandleUncaughtException(env);
         MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
-    jstring j0 = AndroidBridge::NewJavaString(env, a0);
-
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jHandleGeckoMessageWrapper, j0);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jHandleGeckoMessageWrapper, a0);
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }

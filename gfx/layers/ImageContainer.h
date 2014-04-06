@@ -189,8 +189,6 @@ class Image {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Image)
 
 public:
-  virtual ~Image() {}
-
   virtual ISharedImage* AsSharedImage() { return nullptr; }
 
   ImageFormat GetFormat() { return mFormat; }
@@ -223,6 +221,9 @@ protected:
     mSent(false)
   {}
 
+  // Protected destructor, to discourage deletion outside of Release():
+  virtual ~Image() {}
+
   nsAutoPtr<ImageBackendData> mBackendData[size_t(mozilla::layers::LayersBackend::LAYERS_LAST)];
 
   void* mImplData;
@@ -239,7 +240,7 @@ protected:
  * and we must avoid creating a reference loop between an ImageContainer and
  * its active image.
  */
-class BufferRecycleBin {
+class BufferRecycleBin MOZ_FINAL {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RecycleBin)
 
   //typedef mozilla::gl::GLContext GLContext;
@@ -253,6 +254,11 @@ public:
 
 private:
   typedef mozilla::Mutex Mutex;
+
+  // Private destructor, to discourage deletion outside of Release():
+  ~BufferRecycleBin()
+  {
+  }
 
   // This protects mRecycledBuffers, mRecycledBufferSize, mRecycledTextures
   // and mRecycledTextureSizes
@@ -380,7 +386,7 @@ struct RemoteImageData {
  * updates the shared state to point to the new image and the old image
  * is immediately released (not true in Normal or Asynchronous modes).
  */
-class ImageContainer : public SupportsWeakPtr<ImageContainer> {
+class ImageContainer MOZ_FINAL : public SupportsWeakPtr<ImageContainer> {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainer)
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(ImageContainer)
@@ -388,8 +394,6 @@ public:
   enum { DISABLE_ASYNC = 0x0, ENABLE_ASYNC = 0x01 };
 
   ImageContainer(int flag = 0);
-
-  ~ImageContainer();
 
   /**
    * Create an Image in one of the given formats.
@@ -630,8 +634,11 @@ public:
    */
   RemoteImageData *GetRemoteImageData() { return mRemoteData; }
 
-protected:
+private:
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
+
+  // Private destructor, to discourage deletion outside of Release():
+  ~ImageContainer();
 
   void SetCurrentImageInternal(Image* aImage);
 

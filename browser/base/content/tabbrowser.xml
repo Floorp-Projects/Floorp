@@ -424,7 +424,7 @@
 
                 newPrompt.clientTop; // style flush to assure binding is attached
 
-                let tab = self._getTabForContentWindow(browser.contentWindow);
+                let tab = self._getTabForBrowser(browser);
                 newPrompt.init(args, tab, onCloseCallback);
                 return newPrompt;
               },
@@ -3196,7 +3196,13 @@
 
           // We're about to open a modal dialog, make sure the opening
           // tab is brought to the front.
-          this.selectedTab = this._getTabForContentWindow(event.target.top);
+          // If this is a same-process modal dialog, then we're given its DOM
+          // window as the event's target. For remote dialogs, we're given the
+          // browser, but that's in the originalTarget.
+          // XXX Why originalTarget for the browser?
+          this.selectedTab = (event.target instanceof Window) ?
+                               this._getTabForContentWindow(event.target.top) :
+                               this._getTabForBrowser(event.originalTarget);
         ]]>
       </handler>
       <handler event="DOMTitleChanged">

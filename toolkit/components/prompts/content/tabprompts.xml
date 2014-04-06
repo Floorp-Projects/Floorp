@@ -119,10 +119,9 @@
         <destructor>
         <![CDATA[
             if (this.isLive) {
-                this.Dialog.abortPrompt();
-                this.shutdownPrompt();
+                this.abortPrompt();
             }
-        ]]>  
+        ]]>
         </destructor>
 
         <field name="ui"/>
@@ -156,7 +155,10 @@
                 window.addEventListener("resize", this, false);
                 window.addEventListener("unload", this, false);
                 linkedTab.addEventListener("TabClose", this, false);
-                this.args.domWindow.addEventListener("pagehide", this, false);
+                // Note:
+                // nsPrompter.js or in e10s mode browser-parent.js call abortPrompt,
+                // when the domWindow, for which the prompt was created, generates
+                // a "pagehide" event.
 
                 let tmp = {};
                 Components.utils.import("resource://gre/modules/CommonDialog.jsm", tmp);
@@ -165,10 +167,8 @@
 
                 // Display the tabprompt title that shows the prompt origin when
                 // the prompt origin is not the same as that of the top window.
-                let topPrincipal = this.args.domWindow.top.document.nodePrincipal;
-                let promptPrincipal = this.args.domWindow.document.nodePrincipal;
-                if (!topPrincipal.equals(promptPrincipal))
-                  this.ui.infoTitle.removeAttribute("hidden");
+                if (!args.showAlertOrigin)
+                    this.ui.infoTitle.removeAttribute("hidden");
 
                 // TODO: should unhide buttonSpacer on Windows when there are 4 buttons.
                 //       Better yet, just drop support for 4-button dialogs. (bug 609510)
@@ -186,11 +186,20 @@
                     window.removeEventListener("resize", this, false);
                     window.removeEventListener("unload", this, false);
                     this.linkedTab.removeEventListener("TabClose", this, false);
-                    this.args.domWindow.removeEventListener("pagehide", this, false);
                 } catch(e) { }
                 this.isLive = false;
                 // invoke callback
                 this.onCloseCallback();
+            ]]>
+            </body>
+        </method>
+
+        <method name="abortPrompt">
+            <body>
+            <![CDATA[
+                // Called from other code when the page changes.
+                this.Dialog.abortPrompt();
+                this.shutdownPrompt();
             ]]>
             </body>
         </method>
@@ -205,9 +214,7 @@
                     break;
                   case "unload":
                   case "TabClose":
-                  case "pagehide":
-                    this.Dialog.abortPrompt();
-                    this.shutdownPrompt();
+                    this.abortPrompt();
                     break;
                 }
             ]]>

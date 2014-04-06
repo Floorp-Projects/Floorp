@@ -37,5 +37,5 @@ function sendMessageToJava(aMessage, aCallback) {
     Services.obs.addObserver(obs, aMessage.type + ":Error", false);
   }
 
-  return Services.androidBridge.handleGeckoMessage(JSON.stringify(aMessage));
+  return Services.androidBridge.handleGeckoMessage(aMessage);
 }

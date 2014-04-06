@@ -211,7 +211,8 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
 
 function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
-  info("> Request: " + aRequestItem.attachment.toSource());
+  // This bloats log sizes significantly in automation (bug 992485)
+  //info("> Request: " + aRequestItem.attachment.toSource());
 
   let requestsMenu = aRequestItem.ownerView;
   let widgetIndex = requestsMenu.indexOfItem(aRequestItem);

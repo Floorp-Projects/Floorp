@@ -131,7 +131,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
 
 // Lazily-loaded JS modules that use observer notifications
 [
-  ["Home", ["HomePanels:Get", "HomePanels:Authenticate"], "resource://gre/modules/Home.jsm"],
+  ["Home", ["HomePanels:Get", "HomePanels:Authenticate",
+            "HomePanels:Installed", "HomePanels:Uninstalled"], "resource://gre/modules/Home.jsm"],
 ].forEach(module => {
   let [name, notifications, resource] = module;
   XPCOMUtils.defineLazyModuleGetter(this, name, resource);

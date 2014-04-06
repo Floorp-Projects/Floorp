@@ -91,19 +91,6 @@ ValueIsLength(const Value &v, uint32_t *len)
  * the subclasses.
  */
 
-inline bool
-TypedArrayObject::isArrayIndex(jsid id, uint32_t *ip)
-{
-    uint32_t index;
-    if (js_IdIsIndex(id, &index) && index < length()) {
-        if (ip)
-            *ip = index;
-        return true;
-    }
-
-    return false;
-}
-
 void
 TypedArrayObject::neuter(void *newData)
 {

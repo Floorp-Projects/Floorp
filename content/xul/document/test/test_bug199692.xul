@@ -11,14 +11,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=199692
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <bindings xmlns="http://www.mozilla.org/xbl"
-              xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-    <binding id="anon">
-      <content>
-        <xul:label id="anon-label" value="ANON"/>
-      </content>
-    </binding>
-  </bindings>
+  <vbox hidden="true">
+    <bindings xmlns="http://www.mozilla.org/xbl"
+                xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+      <binding id="anon">
+        <content>
+          <xul:label id="anon-label" value="ANON"/>
+        </content>
+      </binding>
+    </bindings>
+  </vbox>
 
 <body id="body" xmlns="http://www.w3.org/1999/xhtml">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=199692">Mozilla Bug 199692</a>

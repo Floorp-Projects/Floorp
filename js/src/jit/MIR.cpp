@@ -3341,10 +3341,10 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
       case MIRType_String: {
         // The property is a particular primitive type, guard by unboxing the
         // value before the write.
-        if ((*pvalue)->type() != MIRType_Value) {
-            // The value is a different primitive, just do a VM call as it will
-            // always trigger invalidation of the compiled code.
-            JS_ASSERT((*pvalue)->type() != propertyType);
+        if (!(*pvalue)->mightBeType(propertyType)) {
+            // The value's type does not match the property type. Just do a VM
+            // call as it will always trigger invalidation of the compiled code.
+            JS_ASSERT_IF((*pvalue)->type() != MIRType_Value, (*pvalue)->type() != propertyType);
             return false;
         }
         MInstruction *ins = MUnbox::New(alloc, *pvalue, propertyType, MUnbox::Fallible);

@@ -90,7 +90,6 @@ public:
                          APZCTreeManager* aTreeManager,
                          GeckoContentController* aController,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
-  ~AsyncPanZoomController();
 
   // --------------------------------------------------------------------------
   // These methods must only be called on the gecko thread.
@@ -360,6 +359,9 @@ public:
   }
 
 protected:
+  // Protected destructor, to discourage deletion outside of Release():
+  ~AsyncPanZoomController();
+
   /**
    * Helper method for touches beginning. Sets everything up for panning and any
    * multitouch gestures.
@@ -884,9 +886,6 @@ public:
     : mRepaintInterval(aRepaintInterval)
   { }
 
-  virtual ~AsyncPanZoomAnimation()
-  { }
-
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) = 0;
 
@@ -909,6 +908,10 @@ public:
   TimeDuration mRepaintInterval;
 
 protected:
+  // Protected destructor, to discourage deletion outside of Release():
+  virtual ~AsyncPanZoomAnimation()
+  { }
+
   /**
    * Tasks scheduled for execution after the APZC's mMonitor is released.
    * Derived classes can add tasks here in Sample(), and the APZC can call

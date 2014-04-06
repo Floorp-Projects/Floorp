@@ -100,7 +100,8 @@ const JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
     JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(0),
     JS_PropertyStub,  JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, nsXULPDGlobalObject_resolve,  JS_ConvertStub,
-    nsXULPDGlobalObject_finalize, nullptr, nullptr, nullptr, nullptr
+    nsXULPDGlobalObject_finalize, nullptr, nullptr, nullptr,
+    JS_GlobalObjectTraceHook
 };
 
 

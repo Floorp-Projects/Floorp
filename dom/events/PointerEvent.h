@@ -34,6 +34,11 @@ public:
               const PointerEventInit& aParam,
               ErrorResult& aRv);
 
+  static already_AddRefed<PointerEvent>
+  Constructor(EventTarget* aOwner,
+              const nsAString& aType,
+              const PointerEventInit& aParam);
+
   int32_t PointerId();
   int32_t Width();
   int32_t Height();

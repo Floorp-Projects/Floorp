@@ -39,7 +39,12 @@ public:
 
     NS_INLINE_DECL_REFCOUNTING(WebGLShaderPrecisionFormat)
 
-protected:
+private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~WebGLShaderPrecisionFormat()
+    {
+    }
+
     GLint mRangeMin;
     GLint mRangeMax;
     GLint mPrecision;

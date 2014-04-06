@@ -33,11 +33,10 @@ class nsIWidget;
 class nsRect;
 class nsRenderingContext;
 
-class nsDeviceContext
+class nsDeviceContext MOZ_FINAL
 {
 public:
     nsDeviceContext();
-    ~nsDeviceContext();
 
     NS_INLINE_DECL_REFCOUNTING(nsDeviceContext)
 
@@ -249,7 +248,10 @@ public:
      */
     bool IsPrinterSurface();
 
-protected:
+private:
+    // Private destructor, to discourage deletion outside of Release():
+    ~nsDeviceContext();
+
     void SetDPI();
     void ComputeClientRectUsingScreen(nsRect *outRect);
     void ComputeFullAreaUsingScreen(nsRect *outRect);

@@ -17,7 +17,12 @@ static const JSClass global_class = {
     JS_StrictPropertyStub,
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub
+    JS_ConvertStub,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    JS_GlobalObjectTraceHook
 };
 
 static JSObject *trusted_glob = nullptr;
