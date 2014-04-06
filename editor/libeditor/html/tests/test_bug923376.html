@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<!-- https://bugzilla.mozilla.org/show_bug.cgi?id=923376 -->
+<title>Test for Bug 923376</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=923376">Mozilla Bug 923376</a>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+var numFinished = 0;
+
+window.reportFinish = function() {
+  numFinished++;
+  if (numFinished == 2) {
+    doTest();
+  }
+}
+
+function doTest() {
+  var test = document.querySelectorAll("iframe")[0].contentWindow;
+  var ref = document.querySelectorAll("iframe")[1].contentWindow;
+
+  assertSnapshots(snapshotWindow(test, false), snapshotWindow(ref, false),
+                  true, "test", "ref");
+
+  SimpleTest.finish();
+}
+</script>
+<iframe src="923376.html"></iframe>
+<iframe src="923376-ref.html"></iframe>
