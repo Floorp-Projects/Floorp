@@ -101,6 +101,11 @@ public:
                              nsIURI* aURI,
                              nsACString &aResult);
 
+  static nsresult HashingKey(nsCSubstring const& aStorageID,
+                             nsCSubstring const& aEnhanceID,
+                             nsCSubstring const& aURISpec,
+                             nsACString &aResult);
+
   // Accessed only on the service management thread
   double mFrecency;
   uint32_t mSortingExpirationTime;
