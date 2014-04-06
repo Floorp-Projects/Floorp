@@ -678,7 +678,7 @@ function testListing(metadata, response)
 function defaultDirHandler(metadata, response)
 {
   response.setStatusLine("1.1", 200, "OK");
-  response.setHeader("Content-type", "text/html", false);
+  response.setHeader("Content-type", "text/html;charset=utf-8", false);
   try {
     if (metadata.path.indexOf("/tests") != 0) {
       regularListing(metadata, response);
