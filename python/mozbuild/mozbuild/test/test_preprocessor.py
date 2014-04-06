@@ -92,6 +92,15 @@ class TestPreprocessor(unittest.TestCase):
             '#endif',
         ])
 
+    def test_conditional_if_0_or_1(self):
+        self.do_include_pass([
+            '#if 0 || 1',
+            'PASS',
+            '#else',
+            'FAIL',
+            '#endif',
+        ])
+
     def test_conditional_if_1_elif_1_else(self):
         self.do_include_pass([
             '#if 1',
@@ -122,6 +131,15 @@ class TestPreprocessor(unittest.TestCase):
             'PASS',
             '#else',
             'FAIL',
+            '#endif',
+        ])
+
+    def test_conditional_not_0_and_1(self):
+        self.do_include_pass([
+            '#if !0 && !1',
+            'FAIL',
+            '#else',
+            'PASS',
             '#endif',
         ])
 
@@ -361,6 +379,16 @@ class TestPreprocessor(unittest.TestCase):
             '#endif',
         ])
 
+    def test_var_ifdef_1_or_undef(self):
+        self.do_include_pass([
+            '#define FOO 1',
+            '#if defined(FOO) || defined(BAR)',
+            'PASS',
+            '#else',
+            'FAIL',
+            '#endif',
+        ])
+
     def test_var_ifdef_undef(self):
         self.do_include_pass([
             '#define VAR 0',
@@ -376,6 +404,16 @@ class TestPreprocessor(unittest.TestCase):
         self.do_include_pass([
             '#define VAR 0',
             '#ifndef VAR',
+            'FAIL',
+            '#else',
+            'PASS',
+            '#endif',
+        ])
+
+    def test_var_ifndef_0_and_undef(self):
+        self.do_include_pass([
+            '#define FOO 0',
+            '#if !defined(FOO) && !defined(BAR)',
             'FAIL',
             '#else',
             'PASS',
