@@ -63,7 +63,8 @@ public:
 
   CacheFileMetadata(CacheFileHandle *aHandle,
                     const nsACString &aKey);
-  CacheFileMetadata(const nsACString &aKey);
+  CacheFileMetadata(bool aMemoryOnly,
+                    const nsACString &aKey);
   CacheFileMetadata();
 
   void SetHandle(CacheFileHandle *aHandle);
@@ -98,7 +99,7 @@ public:
   uint32_t ElementsSize() { return mElementsSize; }
   void     MarkDirty() { mIsDirty = true; }
   bool     IsDirty() { return mIsDirty; }
-  uint32_t MemoryUsage() { return mHashArraySize + mBufSize; }
+  uint32_t MemoryUsage() { return sizeof(CacheFileMetadata) + mHashArraySize + mBufSize; }
 
   NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult);
   NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
