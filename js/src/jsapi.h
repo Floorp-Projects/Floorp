@@ -2578,6 +2578,7 @@ class JS_PUBLIC_API(CompartmentOptions)
       : version_(JSVERSION_UNKNOWN)
       , invisibleToDebugger_(false)
       , mergeable_(false)
+      , traceGlobal_(nullptr)
       , singletonsAsTemplates_(true)
     {
         zone_.spec = JS::FreshZone;
@@ -2628,6 +2629,14 @@ class JS_PUBLIC_API(CompartmentOptions)
         return singletonsAsTemplates_;
     };
 
+    CompartmentOptions &setTrace(JSTraceOp op) {
+        traceGlobal_ = op;
+        return *this;
+    }
+    JSTraceOp getTrace() const {
+        return traceGlobal_;
+    }
+
   private:
     JSVersion version_;
     bool invisibleToDebugger_;
@@ -2637,6 +2646,7 @@ class JS_PUBLIC_API(CompartmentOptions)
         ZoneSpecifier spec;
         void *pointer; // js::Zone* is not exposed in the API.
     } zone_;
+    JSTraceOp traceGlobal_;
 
     // To XDR singletons, we need to ensure that all singletons are all used as
     // templates, by making JSOP_OBJECT return a clone of the JSScript
@@ -2681,6 +2691,17 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewGlobalObject(JSContext *cx, const JSClass *clasp, JSPrincipals *principals,
                    JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions &options = JS::CompartmentOptions());
+/*
+ * Spidermonkey does not have a good way of keeping track of what compartments should be marked on
+ * their own. We can mark the roots unconditionally, but marking GC things only relevant in live
+ * compartments is hard. To mitigate this, we create a static trace hook, installed on each global
+ * object, from which we can be sure the compartment is relevant, and mark it.
+ *
+ * It is still possible to specify custom trace hooks for global object classes. They can be
+ * provided via the CompartmentOptions passed to JS_NewGlobalObject.
+ */
+extern JS_PUBLIC_API(void)
+JS_GlobalObjectTraceHook(JSTracer *trc, JSObject *global);
 
 extern JS_PUBLIC_API(void)
 JS_FireOnNewGlobalObject(JSContext *cx, JS::HandleObject global);

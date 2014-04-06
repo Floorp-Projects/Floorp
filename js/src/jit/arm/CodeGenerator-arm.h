@@ -49,6 +49,26 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool bailoutFrom(Label *label, LSnapshot *snapshot);
     bool bailout(LSnapshot *snapshot);
 
+    template <typename T1, typename T2>
+    bool bailoutCmpPtr(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot *snapshot) {
+        masm.cmpPtr(lhs, rhs);
+        return bailoutIf(c, snapshot);
+    }
+    bool bailoutTestPtr(Assembler::Condition c, Register lhs, Register rhs, LSnapshot *snapshot) {
+        masm.testPtr(lhs, rhs);
+        return bailoutIf(c, snapshot);
+    }
+    template <typename T1, typename T2>
+    bool bailoutCmp32(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot *snapshot) {
+        masm.cmp32(lhs, rhs);
+        return bailoutIf(c, snapshot);
+    }
+    template <typename T1, typename T2>
+    bool bailoutTest32(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot *snapshot) {
+        masm.test32(lhs, rhs);
+        return bailoutIf(c, snapshot);
+    }
+
   protected:
     bool generatePrologue();
     bool generateEpilogue();
@@ -59,6 +79,19 @@ class CodeGeneratorARM : public CodeGeneratorShared
     // Emits a branch that directs control flow to the true block if |cond| is
     // true, and the false block if |cond| is false.
     void emitBranch(Assembler::Condition cond, MBasicBlock *ifTrue, MBasicBlock *ifFalse);
+
+    void testNullEmitBranch(Assembler::Condition cond, const ValueOperand &value,
+                            MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        cond = masm.testNull(cond, value);
+        emitBranch(cond, ifTrue, ifFalse);
+    }
+    void testUndefinedEmitBranch(Assembler::Condition cond, const ValueOperand &value,
+                                 MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    {
+        cond = masm.testUndefined(cond, value);
+        emitBranch(cond, ifTrue, ifFalse);
+    }
 
     bool emitTableSwitchDispatch(MTableSwitch *mir, const Register &index, const Register &base);
 

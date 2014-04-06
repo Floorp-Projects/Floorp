@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=602962
 <window title="Mozilla Bug 602962" onload="openWindow()"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <title>Test for Bug 602962</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">

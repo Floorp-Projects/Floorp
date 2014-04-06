@@ -154,7 +154,9 @@ Site.prototype = {
    */
   refreshThumbnail: function Site_refreshThumbnail() {
     let thumbnail = this._querySelector(".newtab-thumbnail");
-    thumbnail.style.backgroundColor = this.link.bgColor;
+    if (this.link.bgColor) {
+      thumbnail.style.backgroundColor = this.link.bgColor;
+    }
     let uri = this.link.imageURISpec || PageThumbs.getThumbnailURL(this.url);
     thumbnail.style.backgroundImage = "url(" + uri + ")";
   },

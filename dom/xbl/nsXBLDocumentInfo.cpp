@@ -97,7 +97,7 @@ const JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
     JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, nsXBLDocGlobalObject_resolve,
     JS_ConvertStub, nsXBLDocGlobalObject_finalize,
-    nullptr, nullptr, nullptr, nullptr
+    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook
 };
 
 //----------------------------------------------------------------------

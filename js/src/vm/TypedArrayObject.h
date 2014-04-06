@@ -77,7 +77,6 @@ class TypedArrayObject : public ArrayBufferViewObject
         return static_cast<void*>(getPrivate(DATA_SLOT));
     }
 
-    inline bool isArrayIndex(jsid id, uint32_t *ip = nullptr);
     Value getElement(uint32_t index);
     static void setElement(TypedArrayObject &obj, uint32_t index, double d);
 

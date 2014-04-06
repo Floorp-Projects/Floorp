@@ -3,9 +3,7 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 <window title="NPAPI Private Mode Tests"
-  xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <title>NPAPI Private Mode Tests</title>
 <body xmlns="http://www.w3.org/1999/xhtml">
 <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
 <embed id="plugin2" type="application/x-test" width="200" height="200"></embed>

@@ -57,7 +57,7 @@ public:
     static int16_t GetScreenOrientationWrapper();
     static bool GetShowPasswordSetting();
     static jintArray GetSystemColoursWrapper();
-    static void HandleGeckoMessageWrapper(const nsAString& a0);
+    static void HandleGeckoMessageWrapper(jobject a0);
     static void HandleUncaughtException(jobject a0, jthrowable a1);
     static void HideProgressDialog();
     static jintArray InitCameraWrapper(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3);

@@ -519,6 +519,13 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 }
 
 void
+JSCompartment::trace(JSTracer *trc)
+{
+    // At the moment, this is merely ceremonial, but any live-compartment-only tracing should go
+    // here.
+}
+
+void
 JSCompartment::markRoots(JSTracer *trc)
 {
     JS_ASSERT(!trc->runtime->isHeapMinorCollecting());

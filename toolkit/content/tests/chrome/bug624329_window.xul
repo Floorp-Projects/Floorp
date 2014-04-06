@@ -5,8 +5,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         context="menu">
 
-  <title><label>Test for bug 624329 context menu position</label></title>
-
   <script>
     opener.SimpleTest.waitForFocus(opener.childFocused, window);
   </script>

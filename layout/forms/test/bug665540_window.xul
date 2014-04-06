@@ -5,8 +5,6 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         sizemode="fullscreen">
 
-  <title><label>Test Select Dropdown Positioning in Fullscreen Window</label></title>
-
   <script>
     opener.SimpleTest.waitForFocus(opener.childFocused, window);
   </script>
