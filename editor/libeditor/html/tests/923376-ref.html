@@ -1,0 +1,13 @@
+<!doctype html>
+<div contenteditable>something missspelled<br>something elsed#</div>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script>
+var div = document.body.firstChild;
+div.focus();
+SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm",
+                        window);
+onSpellCheck(div, function() {
+  div.blur();
+  parent.reportFinish();
+});
+</script>
