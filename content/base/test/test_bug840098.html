@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840098
 /** Test for Bug 840098 **/
 
 var mar = document.getElementById("m");
-var anonymousNode = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(mar)[0]);
+var anonymousNode = SpecialPowers.wrap(document).getAnonymousNodes(mar)[0];
 try {
-  document.implementation.createDocument("", "", null).adoptNode(anonymousNode);
+  SpecialPowers.wrap(document).implementation.createDocument("", "", null).adoptNode(anonymousNode);
   ok(false, "shouldn't be able to adopt the root of an anonymous subtree");
 } catch (e) {
   is(e.name, "NotSupportedError", "threw the correct type of error");
