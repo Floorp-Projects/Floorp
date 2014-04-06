@@ -37,6 +37,7 @@ namespace {
 
 void AppendMemoryStorageID(nsAutoCString &key)
 {
+  key.Append('/');
   key.Append('M');
 }
 
@@ -338,7 +339,8 @@ PLDHashOperator CollectPrivateContexts(const nsACString& aKey,
                                        CacheEntryTable* aTable,
                                        void* aClosure)
 {
-  if (aKey[0] == 'P') {
+  nsCOMPtr<nsILoadContextInfo> info = CacheFileUtils::ParseKey(aKey);
+  if (info && info->IsPrivate()) {
     nsTArray<nsCString>* keys = static_cast<nsTArray<nsCString>*>(aClosure);
     keys->AppendElement(aKey);
   }
@@ -939,7 +941,7 @@ CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   return AddStorageEntry(contextKey, aURI, aIdExtension,
                          aStorage->WriteToDisk(), aCreateIfNotExist, aReplace,
@@ -1097,7 +1099,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aURI);
 
   nsAutoCString contextKey;
-  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   nsAutoCString entryKey;
   nsresult rv = CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
@@ -1138,7 +1140,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
 
   if (aStorage->WriteToDisk()) {
     nsAutoCString contextKey;
-    CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
+    CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
 
     rv = CacheEntry::HashingKey(contextKey, aIdExtension, aURI, entryKey);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1169,7 +1171,7 @@ CacheStorageService::DoomStorageEntries(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   mozilla::MutexAutoLock lock(mLock);
 
@@ -1222,37 +1224,47 @@ CacheStorageService::WalkStorageEntries(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
+  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   nsRefPtr<WalkRunnable> event = new WalkRunnable(
     contextKey, aVisitEntries, aStorage->WriteToDisk(), aVisitor);
   return Dispatch(event);
 }
 
-nsresult
+void
 CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
-                                     const nsACString & aURL)
+                                     const nsACString & aIdExtension,
+                                     const nsACString & aURISpec)
 {
-  nsRefPtr<CacheEntry> entry;
   nsAutoCString contextKey;
-  CacheFileUtils::CreateKeyPrefix(aLoadContextInfo, contextKey);
+  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, contextKey);
 
-  {
-    mozilla::MutexAutoLock lock(mLock);
+  nsAutoCString entryKey;
+  CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURISpec, entryKey);
 
-    NS_ENSURE_FALSE(mShutdown, NS_ERROR_NOT_INITIALIZED);
+  mozilla::MutexAutoLock lock(mLock);
 
-    CacheEntryTable* entries;
-    if (sGlobalEntryTables->Get(contextKey, &entries)) {
-      entries->Get(aURL, getter_AddRefs(entry));
-    }
-  }
+  if (mShutdown)
+    return;
 
-  if (entry && entry->IsFileDoomed()) {
-    entry->PurgeAndDoom();
-  }
+  CacheEntryTable* entries;
+  if (!sGlobalEntryTables->Get(contextKey, &entries))
+    return;
 
-  return NS_OK;
+  nsRefPtr<CacheEntry> entry;
+  if (!entries->Get(entryKey, getter_AddRefs(entry)))
+    return;
+
+  if (!entry->IsFileDoomed())
+    return;
+
+  if (entry->IsReferenced())
+    return;
+
+  // Need to remove under the lock to avoid possible race leading
+  // to duplication of the entry per its key.
+  RemoveExactEntry(entries, entryKey, entry, false);
+  entry->DoomAlreadyRemoved();
 }
 
 // nsIMemoryReporter
