@@ -4026,6 +4026,11 @@ pref("layers.async-video.enabled",false);
 pref("layers.async-video.enabled", true);
 #endif
 
+#ifdef MOZ_WIDGET_QT
+pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.async-video.enabled",true);
+#endif
+
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled",true);
