@@ -1,11 +1,10 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let contentDoc;
-let inspector;
-let ruleView;
-let computedView;
+"use strict";
+
+// Test the fontfamily tooltip on shorthand properties
 
 const PAGE_CONTENT = [
   '<style type="text/css">',
@@ -16,106 +15,58 @@ const PAGE_CONTENT = [
   '<div id="testElement">test element</div>'
 ].join("\n");
 
-function test() {
-  waitForExplicitFinish();
+let test = asyncTest(function*() {
+  yield addTab("data:text/html;charset=utf-8,font family shorthand tooltip test");
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee, true);
-    contentDoc = content.document;
-    waitForFocus(createDocument, content);
-  }, true);
+  info("Creating the test document");
+  content.document.body.innerHTML = PAGE_CONTENT;
 
-  content.location = "data:text/html;charset=utf-8,font family shorthand tooltip test";
+  info("Opening the rule view");
+  let {toolbox, inspector, view} = yield openRuleView();
+
+  info("Selecting the test node");
+  yield selectNode("#testElement", inspector);
+
+  yield testRuleView(view);
+
+  info("Opening the computed view");
+  let {toolbox, inspector, view} = yield openComputedView();
+
+  yield testComputedView(view);
+});
+
+function* testRuleView(ruleView) {
+  info("Testing font-family tooltips in the rule view");
+
+  let panel = ruleView.previewTooltip.panel;
+
+  // Check that the rule view has a tooltip and that a XUL panel has been created
+  ok(ruleView.previewTooltip, "Tooltip instance exists");
+  ok(panel, "XUL panel exists");
+
+  // Get the computed font family property inside the font rule view
+  let propertyList = ruleView.element.querySelectorAll(".ruleview-propertylist");
+  let fontExpander = propertyList[1].querySelectorAll(".ruleview-expander")[0];
+  fontExpander.click();
+
+  let rule = getRuleViewRule(ruleView, "#testElement");
+  let valueSpan = rule.querySelector(".ruleview-computed .ruleview-propertyvalue");
+
+  // And verify that the tooltip gets shown on this property
+  yield assertHoverTooltipOn(ruleView.previewTooltip, valueSpan);
+
+  let description = panel.getElementsByTagName("description")[0];
+  is(description.style.fontFamily, "Arial", "Tooltips contains correct font-family style");
 }
 
-function createDocument() {
-  contentDoc.body.innerHTML = PAGE_CONTENT;
+function* testComputedView(computedView) {
+  info("Testing font-family tooltips in the computed view");
 
-  openRuleView((aInspector, aRuleView) => {
-    inspector = aInspector;
-    ruleView = aRuleView;
-    startTests();
-  });
-}
+  let panel = computedView.tooltip.panel;
+  let {valueSpan} = getComputedViewProperty(computedView, "font-family");
 
-function startTests() {
-  inspector.selection.setNode(contentDoc.querySelector("#testElement"));
-  inspector.once("inspector-updated", testRuleView);
-}
+  yield assertHoverTooltipOn(computedView.tooltip, valueSpan);
 
-function endTests() {
-  contentDoc = inspector = ruleView = computedView = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function testRuleView() {
-  Task.spawn(function*() {
-    info("Testing font-family tooltips in the rule view");
-
-    let panel = ruleView.previewTooltip.panel;
-
-    // Check that the rule view has a tooltip and that a XUL panel has been created
-    ok(ruleView.previewTooltip, "Tooltip instance exists");
-    ok(panel, "XUL panel exists");
-
-    // Get the computed font family property inside the font rule view
-    let propertyList = ruleView.element.querySelectorAll(".ruleview-propertylist");
-    let fontExpander = propertyList[1].querySelectorAll(".ruleview-expander")[0];
-    fontExpander.click();
-
-    let {valueSpan} = getRuleViewProperty("font-family");
-
-    // And verify that the tooltip gets shown on this property
-    yield assertTooltipShownOn(ruleView.previewTooltip, valueSpan);
-
-    // And that it has the right content
-    let description = panel.getElementsByTagName("description")[0];
-    is(description.style.fontFamily, "Arial", "Tooltips contains correct font-family style");
-  }).then(testComputedView);
-}
-
-function testComputedView() {
-  Task.spawn(function*() {
-    info("Testing font-family tooltips in the computed view");
-
-    inspector.sidebar.select("computedview");
-    computedView = inspector.sidebar.getWindowForTab("computedview").computedview.view;
-    let doc = computedView.styleDocument;
-
-    let panel = computedView.tooltip.panel;
-    let {valueSpan} = getComputedViewProperty("font-family");
-
-    yield assertTooltipShownOn(computedView.tooltip, valueSpan);
-
-    let description = panel.getElementsByTagName("description")[0];
-    is(description.style.fontFamily, "Arial", "Tooltips contains correct font-family style");
-  }).then(endTests);
-}
-
-function getRuleViewProperty(name) {
-  let prop = null;
-  [].forEach.call(ruleView.doc.querySelectorAll(".ruleview-computedlist"), property => {
-    let nameSpan = property.querySelector(".ruleview-propertyname");
-    let valueSpan = property.querySelector(".ruleview-propertyvalue");
-
-    if (nameSpan.textContent === name) {
-      prop = {nameSpan: nameSpan, valueSpan: valueSpan};
-    }
-  });
-  return prop;
-}
-
-function getComputedViewProperty(name) {
-  let prop = null;
-  [].forEach.call(computedView.styleDocument.querySelectorAll(".property-view"), property => {
-    let nameSpan = property.querySelector(".property-name");
-    let valueSpan = property.querySelector(".property-value");
-
-    if (nameSpan.textContent === name) {
-      prop = {nameSpan: nameSpan, valueSpan: valueSpan};
-    }
-  });
-  return prop;
+  let description = panel.getElementsByTagName("description")[0];
+  is(description.style.fontFamily, "Arial", "Tooltips contains correct font-family style");
 }

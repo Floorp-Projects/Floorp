@@ -1,11 +1,10 @@
-/* Any copyright", " is dedicated to the Public Domain.
-http://creativecommons.org/publicdomain/zero/1.0/ */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
 // Tests that the rule-view displays correctly on MathML elements
-
-waitForExplicitFinish();
 
 const TEST_URL = [
   "data:text/html,",
@@ -26,45 +25,30 @@ const TEST_URL = [
   "</div>"
 ].join("");
 
-function test() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload(evt) {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    waitForFocus(runTests, content);
-  }, true);
-  content.location = TEST_URL;
-}
+let test = asyncTest(function*() {
+  yield addTab(TEST_URL);
+  let {toolbox, inspector, view} = yield openRuleView();
 
-function runTests() {
-  openRuleView((inspector, ruleView) => {
-    Task.spawn(function() {
-      info("Select the DIV node and verify the rule-view shows rules");
-      yield selectNode("div", inspector);
-      ok(ruleView.element.querySelectorAll(".ruleview-rule").length,
-        "The rule-view shows rules for the div element");
+  info("Select the DIV node and verify the rule-view shows rules");
+  yield selectNode("div", inspector);
+  ok(view.element.querySelectorAll(".ruleview-rule").length,
+    "The rule-view shows rules for the div element");
 
-      info("Select various MathML nodes and verify the rule-view is empty");
-      yield selectNode("math", inspector);
-      ok(!ruleView.element.querySelectorAll(".ruleview-rule").length,
-        "The rule-view is empty for the math element");
+  info("Select various MathML nodes and verify the rule-view is empty");
+  yield selectNode("math", inspector);
+  ok(!view.element.querySelectorAll(".ruleview-rule").length,
+    "The rule-view is empty for the math element");
 
-      yield selectNode("msubsup", inspector);
-      ok(!ruleView.element.querySelectorAll(".ruleview-rule").length,
-        "The rule-view is empty for the msubsup element");
+  yield selectNode("msubsup", inspector);
+  ok(!view.element.querySelectorAll(".ruleview-rule").length,
+    "The rule-view is empty for the msubsup element");
 
-      yield selectNode("mn", inspector);
-      ok(!ruleView.element.querySelectorAll(".ruleview-rule").length,
-        "The rule-view is empty for the mn element");
+  yield selectNode("mn", inspector);
+  ok(!view.element.querySelectorAll(".ruleview-rule").length,
+    "The rule-view is empty for the mn element");
 
-      info("Select again the DIV node and verify the rule-view shows rules");
-      yield selectNode("div", inspector);
-      ok(ruleView.element.querySelectorAll(".ruleview-rule").length,
-        "The rule-view shows rules for the div element");
-    }).then(null, ok.bind(null, false)).then(finishUp);
-  });
-}
-
-function finishUp() {
-  gBrowser.removeCurrentTab();
-  finish();
-}
+  info("Select again the DIV node and verify the rule-view shows rules");
+  yield selectNode("div", inspector);
+  ok(view.element.querySelectorAll(".ruleview-rule").length,
+    "The rule-view shows rules for the div element");
+});

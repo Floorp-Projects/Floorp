@@ -1,77 +1,44 @@
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests for selector text errors.
+"use strict";
 
-let doc;
-let computedView;
+// Tests for matched selector texts in the computed view
 
-function createDocument()
-{
-  doc.body.innerHTML = "<div style='color:blue;'></div>";
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,<div style='color:blue;'></div>");
 
-  doc.title = "Style Inspector Selector Text Test";
+  info("Opening the computed view");
+  let {toolbox, inspector, view} = yield openComputedView();
 
-  openComputedView(startTests);
-}
+  info("Selecting the test node");
+  yield selectNode("div", inspector);
 
+  info("Checking the color property view");
+  let propertyView = getPropertyView(view, "color");
+  ok(propertyView, "found PropertyView for color");
+  is(propertyView.hasMatchedSelectors, true, "hasMatchedSelectors is true");
 
-function startTests(aInspector, aComputedView)
-{
-  computedView = aComputedView;
+  info("Expanding the matched selectors");
+  propertyView.matchedExpanded = true;
+  yield propertyView.refreshMatchedSelectors();
 
-  let div = doc.querySelector("div");
-  ok(div, "captain, we have the test div");
+  let span = propertyView.matchedSelectorsContainer.querySelector("span.rule-text");
+  ok(span, "Found the first table row");
 
-  aInspector.selection.setNode(div);
-  aInspector.once("inspector-updated", SI_checkText);
-}
+  let selector = propertyView.matchedSelectorViews[0];
+  ok(selector, "Found the first matched selector view");
+});
 
-function SI_checkText()
-{
+function getPropertyView(computedView, name) {
   let propertyView = null;
-  computedView.propertyViews.some(function(aView) {
-    if (aView.name == "color") {
-      propertyView = aView;
+  computedView.propertyViews.some(function(view) {
+    if (view.name == name) {
+      propertyView = view;
       return true;
     }
     return false;
   });
-
-  ok(propertyView, "found PropertyView for color");
-
-  is(propertyView.hasMatchedSelectors, true, "hasMatchedSelectors is true");
-
-  propertyView.matchedExpanded = true;
-  propertyView.refreshMatchedSelectors().then(() => {
-
-    let span = propertyView.matchedSelectorsContainer.querySelector("span.rule-text");
-    ok(span, "found the first table row");
-
-    let selector = propertyView.matchedSelectorViews[0];
-    ok(selector, "found the first matched selector view");
-
-    finishUp();
-  });
-}
-
-function finishUp()
-{
-  doc = computedView = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function test()
-{
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    doc = content.document;
-    waitForFocus(createDocument, content);
-  }, true);
-
-  content.location = "data:text/html,selector text test, bug 692400";
+  return propertyView;
 }
