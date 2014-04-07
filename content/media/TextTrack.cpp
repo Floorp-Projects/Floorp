@@ -16,9 +16,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_5(TextTrack,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_4(TextTrack,
                                      DOMEventTargetHelper,
-                                     mParent,
                                      mCueList,
                                      mActiveCueList,
                                      mTextTrackList,
@@ -29,14 +28,14 @@ NS_IMPL_RELEASE_INHERITED(TextTrack, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TextTrack)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-TextTrack::TextTrack(nsISupports* aParent,
+TextTrack::TextTrack(nsPIDOMWindow* aOwnerWindow,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
                      const nsAString& aLanguage,
                      TextTrackMode aMode,
                      TextTrackReadyState aReadyState,
                      TextTrackSource aTextTrackSource)
-  : mParent(aParent)
+  : DOMEventTargetHelper(aOwnerWindow)
   , mKind(aKind)
   , mLabel(aLabel)
   , mLanguage(aLanguage)
@@ -45,10 +44,9 @@ TextTrack::TextTrack(nsISupports* aParent,
   , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
-  SetIsDOMBinding();
 }
 
-TextTrack::TextTrack(nsISupports* aParent,
+TextTrack::TextTrack(nsPIDOMWindow* aOwnerWindow,
                      TextTrackList* aTextTrackList,
                      TextTrackKind aKind,
                      const nsAString& aLabel,
@@ -56,7 +54,7 @@ TextTrack::TextTrack(nsISupports* aParent,
                      TextTrackMode aMode,
                      TextTrackReadyState aReadyState,
                      TextTrackSource aTextTrackSource)
-  : mParent(aParent)
+  : DOMEventTargetHelper(aOwnerWindow)
   , mTextTrackList(aTextTrackList)
   , mKind(aKind)
   , mLabel(aLabel)
@@ -66,14 +64,14 @@ TextTrack::TextTrack(nsISupports* aParent,
   , mTextTrackSource(aTextTrackSource)
 {
   SetDefaultSettings();
-  SetIsDOMBinding();
 }
 
 void
 TextTrack::SetDefaultSettings()
 {
-  mCueList = new TextTrackCueList(mParent);
-  mActiveCueList = new TextTrackCueList(mParent);
+  nsPIDOMWindow* ownerWindow = GetOwner();
+  mCueList = new TextTrackCueList(ownerWindow);
+  mActiveCueList = new TextTrackCueList(ownerWindow);
   mCuePos = 0;
   mDirty = false;
 }

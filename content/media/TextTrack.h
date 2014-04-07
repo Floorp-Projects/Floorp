@@ -42,14 +42,14 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextTrack, DOMEventTargetHelper)
 
-  TextTrack(nsISupports* aParent,
+  TextTrack(nsPIDOMWindow* aOwnerWindow,
             TextTrackKind aKind,
             const nsAString& aLabel,
             const nsAString& aLanguage,
             TextTrackMode aMode,
             TextTrackReadyState aReadyState,
             TextTrackSource aTextTrackSource);
-  TextTrack(nsISupports* aParent,
+  TextTrack(nsPIDOMWindow* aOwnerWindow,
             TextTrackList* aTextTrackList,
             TextTrackKind aKind,
             const nsAString& aLabel,
@@ -61,11 +61,6 @@ public:
   void SetDefaultSettings();
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-
-  nsISupports* GetParentObject() const
-  {
-    return mParent;
-  }
 
   TextTrackKind Kind() const
   {
@@ -124,7 +119,6 @@ public:
   }
 
 private:
-  nsCOMPtr<nsISupports> mParent;
   nsRefPtr<TextTrackList> mTextTrackList;
 
   TextTrackKind mKind;
