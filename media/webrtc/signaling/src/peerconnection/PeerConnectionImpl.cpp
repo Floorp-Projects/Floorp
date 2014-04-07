@@ -1993,57 +1993,32 @@ PeerConnectionImpl::BuildStatsQuery_m(
 
   // From the list of MediaPipelines, determine the set of NrIceMediaStreams
   // we are interested in.
-  std::set<size_t> streamsGrabbed;
-  for (size_t p = 0; p < query->pipelines.Length(); ++p) {
-
-    size_t level = query->pipelines[p]->level();
-    MOZ_ASSERT(level);
-
-    // Don't grab the same stream twice, since that causes duplication
-    // of the ICE stats.
-    if (streamsGrabbed.count(level)) {
-      continue;
+  std::set<size_t> levelsToGrab;
+  if (trackId) {
+    for (size_t p = 0; p < query->pipelines.Length(); ++p) {
+      size_t level = query->pipelines[p]->level();
+      MOZ_ASSERT(level);
+      levelsToGrab.insert(level);
     }
+  } else {
+    // We want to grab all streams, so ignore the pipelines (this also ends up
+    // grabbing DataChannel streams, which is what we want)
+    for (size_t s = 0; s < mMedia->num_ice_media_streams(); ++s) {
+      levelsToGrab.insert(s + 1); // mIceStreams is 0-indexed
+    }
+  }
 
-    streamsGrabbed.insert(level);
+  for (auto s = levelsToGrab.begin(); s != levelsToGrab.end(); ++s) {
     // TODO(bcampen@mozilla.com): I may need to revisit this for bundle.
     // (Bug 786234)
-    RefPtr<NrIceMediaStream> temp(mMedia->ice_media_stream(level - 1));
-    if (temp) {
+    RefPtr<NrIceMediaStream> temp(mMedia->ice_media_stream(*s - 1));
+    RefPtr<TransportFlow> flow(mMedia->GetTransportFlow(*s, false));
+    // flow can be null for unused levels, such as unused DataChannels
+    if (temp && flow) {
       query->streams.AppendElement(temp);
-    } else {
-       CSFLogError(logTag, "Failed to get NrIceMediaStream for level %zu "
-                           "in %s:  %s",
-                           static_cast<size_t>(level),
-                           __FUNCTION__,
-                           mHandle.c_str());
-       MOZ_CRASH();
     }
   }
 
-  // If the selector is null, we want to get ICE stats for the DataChannel
-  if (!aSelector && mDataConnection) {
-    std::vector<uint16_t> streamIds;
-    mDataConnection->GetStreamIds(&streamIds);
-
-    for (auto s = streamIds.begin(); s!= streamIds.end(); ++s) {
-      MOZ_ASSERT(*s);
-
-      if (streamsGrabbed.count(*s) || *s == INVALID_STREAM) {
-        continue;
-      }
-
-      streamsGrabbed.insert(*s);
-
-      RefPtr<NrIceMediaStream> temp(mMedia->ice_media_stream(*s - 1));
-
-      // This will be null if DataChannel is not in use
-      RefPtr<TransportFlow> flow(mMedia->GetTransportFlow(*s, false));
-      if (temp && flow) {
-        query->streams.AppendElement(temp);
-      }
-    }
-  }
   return rv;
 }
 
