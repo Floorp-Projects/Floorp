@@ -40,7 +40,8 @@ var steps = [
   function () {
     ok(true, "Calling getAllAlarms() with invalid network.");
 
-    req = navigator.mozNetworkStats.getAllAlarms(mobile);
+    req = navigator.mozNetworkStats
+                   .getAllAlarms(new window.MozNetworkStatsInterface(mobile));
 
     req.onsuccess = function () {
       ok(false, "getAllAlarms() shouldn't succeed!");
@@ -69,13 +70,14 @@ var steps = [
     }
 
     try {
-      navigator.mozNetworkStats.addAlarm(wifi);
+      navigator.mozNetworkStats.addAlarm(new window.MozNetworkStatsInterface(wifi));
     } catch(ex) {
       ok(ex.result == SpecialPowers.Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS,
          "addAlarm() throws NS_ERROR_XPC_NOT_ENOUGH_ARGS exception when no threshold");
     }
 
-    req = navigator.mozNetworkStats.addAlarm(mobile, -100000);
+    req = navigator.mozNetworkStats
+                   .addAlarm(new window.MozNetworkStatsInterface(mobile), -100000);
 
     req.onsuccess = function () {
       ok(false, "addAlarm() shouldn't succeed with negative threshold.");
@@ -89,7 +91,8 @@ var steps = [
   function () {
     ok(true, "Calling addAlarm()");
 
-    req = navigator.mozNetworkStats.addAlarm(wifi, 1000000);
+    req = navigator.mozNetworkStats
+                   .addAlarm(new window.MozNetworkStatsInterface(wifi), 1000000);
 
     req.onsuccess = function () {
       ok(true, "Succeeded to add alarm. AlarmId: " + req.result);
@@ -102,7 +105,8 @@ var steps = [
   function () {
     ok(true, "Calling getAllAlarms()");
 
-    req = navigator.mozNetworkStats.getAllAlarms(wifi);
+    req = navigator.mozNetworkStats
+                   .getAllAlarms(new window.MozNetworkStatsInterface(wifi));
 
     req.onsuccess = function () {
       ok(req.result.length == 1, "Only one alarm");
