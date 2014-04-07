@@ -1,3 +1,5 @@
+SpecialPowers.setBoolPref("media.webspeech.synth.enabled", true);
+
 var gSpeechRegistry = SpecialPowers.Cc["@mozilla.org/synth-voice-registry;1"]
   .getService(SpecialPowers.Ci.nsISynthVoiceRegistry);
 
@@ -168,6 +170,7 @@ function synthCleanup() {
       .getService(SpecialPowers.Ci.nsISyncMessageSender);
     mm.sendSyncMessage('test:SpeechSynthesis:ipcSynthCleanup');
   }
+  SpecialPowers.clearUserPref("media.webspeech.synth.enabled");
 }
 
 function synthTestQueue(aTestArgs, aEndFunc) {
