@@ -3155,6 +3155,14 @@ RilObject.prototype = {
    * Process ICC status.
    */
   _processICCStatus: function(iccStatus) {
+    // If |_waitingRadioTech| is true, we should not get app information because
+    // the |_isCdma| flag is not ready yet. Otherwise we may use wrong index to
+    // get app information, especially for the case that icc card has both cdma
+    // and gsm subscription.
+    if (this._waitingRadioTech) {
+      return;
+    }
+
     this.iccStatus = iccStatus;
     let newCardState;
     let index = this._isCdma ? iccStatus.cdmaSubscriptionAppIndex :
@@ -4295,7 +4303,7 @@ RilObject.prototype = {
         this.getIMEI();
         this.getIMEISV();
       }
-       this.getICCStatus();
+      this.getICCStatus();
     }
   },
 
