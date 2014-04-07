@@ -1038,7 +1038,8 @@ CdmaIccInfo.prototype = {
 
   // nsIDOMMozCdmaIccInfo
 
-  mdn: null
+  mdn: null,
+  prlVersion: 0
 };
 
 function DataConnectionHandler(clientId, radioInterface) {
