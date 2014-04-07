@@ -117,7 +117,8 @@ public:
    * return false if a surface cannot be created.  If true is
    * returned, only one of |aSurface| or |aDescriptor| is valid.
    */
-  virtual bool GetAsSurface(gfxASurface** aSurface)
+  virtual bool GetAsSurface(gfxASurface** aSurface,
+                            SurfaceDescriptor* aDescriptor)
   { return false; }
   virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() { return nullptr; }
 
