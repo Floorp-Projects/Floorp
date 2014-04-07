@@ -43,7 +43,8 @@ var ConsoleObserver = {
         // Close the window.
         gBrowser.removeTab(tab, {animate: false});
         // Ensure actual window destruction is not delayed (too long).
-        SpecialPowers.DOMWindowUtils.garbageCollect();
+        window.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIDOMWindowUtils).garbageCollect();
         // Ensure "inner-window-destroyed" event is processed,
         // so the storage cache is cleared.
         executeSoon(function () {

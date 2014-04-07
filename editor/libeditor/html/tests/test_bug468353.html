@@ -53,8 +53,7 @@ function runTest() {
   editdoc.designMode='on';
 
   // Hold the reference to the editor
-  editor = SpecialPowers.wrap(editframe)
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
+  editor = SpecialPowers.wrap(editframe.QueryInterface(Ci.nsIInterfaceRequestor))
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIEditingSession)
@@ -73,8 +72,7 @@ function runTest() {
   editdoc.body.contentEditable = true;
   
   // Hold the reference to the editor
-  editor = SpecialPowers.wrap(editframe)
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
+  editor = SpecialPowers.wrap(editframe.QueryInterface(Ci.nsIInterfaceRequestor))
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIEditingSession)
@@ -91,8 +89,7 @@ function runTest() {
   editdoc.designMode = "off";
 
   // Hold the reference to the editor
-  editor = SpecialPowers.wrap(editframe)
-                        .QueryInterface(Ci.nsIInterfaceRequestor)
+  editor = SpecialPowers.wrap(editframe.QueryInterface(Ci.nsIInterfaceRequestor))
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIEditingSession)

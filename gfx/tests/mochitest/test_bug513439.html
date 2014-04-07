@@ -25,7 +25,8 @@ var layoutCSSBranch = prefService.getBranch("layout.css.");
 var oldVal = layoutCSSBranch.getCharPref("devPixelsPerPx");
 
 try {
-  var domWindowUtils = SpecialPowers.DOMWindowUtils;
+  var domWindowUtils = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                             .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
   var devPxPerCSSPx = domWindowUtils.screenPixelsPerCSSPixel;
 
   layoutCSSBranch.setCharPref("devPixelsPerPx", "2");
