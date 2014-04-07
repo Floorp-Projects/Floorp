@@ -5,7 +5,6 @@
 
 #include "BasicCompositor.h"
 #include "TextureHostBasic.h"
-#include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "nsIWidget.h"
