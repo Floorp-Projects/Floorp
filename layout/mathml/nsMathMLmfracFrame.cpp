@@ -222,8 +222,12 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   GetRuleThickness(aRenderingContext, fm, defaultRuleThickness);
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 
-  nsEmbellishData coreData;
-  GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
+  bool outermostEmbellished = false;
+  if (mEmbellishData.coreFrame) {
+    nsEmbellishData parentData;
+    GetEmbellishDataFrom(mParent, parentData);
+    outermostEmbellished = parentData.coreFrame != mEmbellishData.coreFrame;
+  }
 
   // see if the linethickness attribute is there 
   nsAutoString value;
@@ -237,16 +241,22 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
   if (!mIsBevelled) {
     mLineRect.height = mLineThickness;
-    
-    // by default, leave at least one-pixel padding at either end, or use
-    // lspace & rspace that may come from <mo> if we are an embellished
-    // container (we fetch values from the core since they may use units that
-    // depend on style data, and style changes could have occurred in the
-    // core since our last visit there)
-    nscoord leftSpace = std::max(onePixel, StyleVisibility()->mDirection ?
-                               coreData.trailingSpace : coreData.leadingSpace);
-    nscoord rightSpace = std::max(onePixel, StyleVisibility()->mDirection ?
-                                coreData.leadingSpace : coreData.trailingSpace);
+
+    // by default, leave at least one-pixel padding at either end, and add
+    // lspace & rspace that may come from <mo> if we are an outermost
+    // embellished container (we fetch values from the core since they may use
+    // units that depend on style data, and style changes could have occurred
+    // in the core since our last visit there)
+    nscoord leftSpace = onePixel;
+    nscoord rightSpace = onePixel;
+    if (outermostEmbellished) {
+      nsEmbellishData coreData;
+      GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
+      leftSpace += StyleVisibility()->mDirection ?
+                     coreData.trailingSpace : coreData.leadingSpace;
+      rightSpace += StyleVisibility()->mDirection ?
+                      coreData.leadingSpace : coreData.trailingSpace;
+    }
 
     //////////////////
     // Get shifts
@@ -393,8 +403,14 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     nscoord slashMinHeight = slashRatio *
       std::min(2 * mLineThickness, slashMaxWidthConstant);
 
-    nscoord leadingSpace = std::max(padding, coreData.leadingSpace);
-    nscoord trailingSpace = std::max(padding, coreData.trailingSpace);
+    nscoord leadingSpace = padding;
+    nscoord trailingSpace = padding;
+    if (outermostEmbellished) {
+      nsEmbellishData coreData;
+      GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);
+      leadingSpace += coreData.leadingSpace;
+      trailingSpace += coreData.trailingSpace;
+    }
     nscoord delta;
     
     //           ___________
