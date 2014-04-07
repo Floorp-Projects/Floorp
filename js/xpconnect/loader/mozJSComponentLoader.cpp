@@ -566,7 +566,9 @@ mozJSComponentLoader::NoteSubScript(HandleScript aScript, HandleObject aThisObje
       MOZ_CRASH();
   }
 
-  mThisObjects.Put(aScript, aThisObject);
+  if (js::GetObjectJSClass(aThisObject) == &kFakeBackstagePassJSClass) {
+    mThisObjects.Put(aScript, aThisObject);
+  }
 }
 
 /* static */ size_t
@@ -1012,10 +1014,13 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
 
     *aTableScript = tableScript;
 
-    // tableScript stays in the table until shutdown. To avoid it being
-    // collected and another script getting the same address, we root
-    // tableScript lower down in this function.
-    mThisObjects.Put(tableScript, obj);
+    if (js::GetObjectJSClass(obj) == &kFakeBackstagePassJSClass) {
+        MOZ_ASSERT(mReuseLoaderGlobal);
+        // tableScript stays in the table until shutdown. To avoid it being
+        // collected and another script getting the same address, we root
+        // tableScript lower down in this function.
+        mThisObjects.Put(tableScript, obj);
+    }
     bool ok = false;
 
     {

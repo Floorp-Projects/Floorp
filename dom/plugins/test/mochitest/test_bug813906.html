@@ -35,10 +35,15 @@ function frameLoaded() {
 }
 </script>
 
+<!-- Note that <svg:use> ends up creating an anonymous subtree, which means that the plugin
+     reflector gets hoisted into the XBL scope, and isn't accessible to content. We pass
+     the 'donttouchelement' parameter to the plugin to prevent it from trying to define the
+     'pluginFoundElement' property on the plugin reflector, since doing so would throw a
+     security exception. -->
 <svg>
   <symbol id="a">
     <foreignObject>
-      <object bugmode="813906" frame="frame1"></object>
+      <object bugmode="813906" frame="frame1"><param name="donttouchelement"></param></object>
     </foreignObject>
   </symbol>
   <use />
