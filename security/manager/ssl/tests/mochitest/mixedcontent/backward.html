@@ -7,8 +7,10 @@
   {
     window.setTimeout(function()
     {
-      SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
-        .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+      window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIWebNavigation)
         .goBack();
     }, 100);
   }

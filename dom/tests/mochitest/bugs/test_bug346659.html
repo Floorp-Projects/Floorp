@@ -135,7 +135,10 @@ function messageReceiver(evt) {
 
 function handleTestEnd() {
   function gc() {
-    SpecialPowers.DOMWindowUtils.garbageCollect();
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+          .getInterface(Components.interfaces.nsIDOMWindowUtils)
+          .garbageCollect();
   }
   if (numTestsSet1) {
     if (!--numTestsSet1) {
