@@ -950,10 +950,7 @@ private:
                                        nsIAtom* aProperty,
                                        const nsAString* aAttribute,
                                        const nsAString* aValue);
-  typedef enum { eInserted, eAppended } InsertedOrAppended;
-  void DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                         nsIContent* aChild, int32_t aIndexInContainer,
-                         InsertedOrAppended aInsertedOrAppended);
+
 };
 #endif //nsHTMLEditor_h__
 
