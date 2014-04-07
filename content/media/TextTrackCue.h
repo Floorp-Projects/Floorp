@@ -39,23 +39,19 @@ public:
               const nsAString& aText,
               ErrorResult& aRv)
   {
-    nsRefPtr<TextTrackCue> ttcue = new TextTrackCue(aGlobal.GetAsSupports(), aStartTime,
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+    nsRefPtr<TextTrackCue> ttcue = new TextTrackCue(window, aStartTime,
                                                     aEndTime, aText, aRv);
     return ttcue.forget();
   }
-  TextTrackCue(nsISupports* aGlobal, double aStartTime, double aEndTime,
+  TextTrackCue(nsPIDOMWindow* aGlobal, double aStartTime, double aEndTime,
                const nsAString& aText, ErrorResult& aRv);
 
-  TextTrackCue(nsISupports* aGlobal, double aStartTime, double aEndTime,
+  TextTrackCue(nsPIDOMWindow* aGlobal, double aStartTime, double aEndTime,
                const nsAString& aText, HTMLTrackElement* aTrackElement,
                ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-
-  nsINode* GetParentObject()
-  {
-    return mDocument;
-  }
 
   TextTrack* GetTrack() const
   {
@@ -334,7 +330,7 @@ public:
 
 private:
   void SetDefaultCueSettings();
-  nsresult StashDocument(nsISupports* aGlobal);
+  nsresult StashDocument();
 
   nsRefPtr<nsIDocument> mDocument;
   nsString mText;
