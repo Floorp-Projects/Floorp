@@ -180,12 +180,6 @@ public:
 protected:
 
   virtual bool IsOnCompositorSide() const = 0;
-  bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-  virtual bool PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
-                                              gfxContentType aContent,
-                                              uint32_t aCaps,
-                                              SurfaceDescriptor* aBuffer);
-
 
   virtual ~ISurfaceAllocator();
 

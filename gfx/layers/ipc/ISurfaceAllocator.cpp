@@ -129,15 +129,6 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
 {
-  bool tryPlatformSurface = true;
-#ifdef DEBUG
-  tryPlatformSurface = !PR_GetEnv("MOZ_LAYERS_FORCE_SHMEM_SURFACES");
-#endif
-  if (tryPlatformSurface &&
-      PlatformAllocSurfaceDescriptor(aSize, aContent, aCaps, aBuffer)) {
-    return true;
-  }
-
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     gfxImageFormat format =
       gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
@@ -186,9 +177,6 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
   if (!IPCOpen()) {
     return;
   }
-  if (PlatformDestroySharedSurface(aSurface)) {
-    return;
-  }
   switch (aSurface->type()) {
     case SurfaceDescriptor::TShmem:
       DeallocShmem(aSurface->get_Shmem());
@@ -215,17 +203,6 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
   }
   *aSurface = SurfaceDescriptor();
 }
-
-#if !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
-bool
-ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize&,
-                                                  gfxContentType,
-                                                  uint32_t,
-                                                  SurfaceDescriptor*)
-{
-  return false;
-}
-#endif
 
 // XXX - We should actually figure out the minimum shmem allocation size on
 // a certain platform and use that.
