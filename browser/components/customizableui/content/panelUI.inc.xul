@@ -33,7 +33,7 @@
           <toolbarbutton id="PanelUI-help" label="&helpMenu.label;"
                          closemenu="none"
                          tooltiptext="&appMenuHelp.tooltip;"
-                         oncommand="PanelUI.showHelpView(this.parentNode);"/>
+                         oncommand="PanelUI.showHelpView(this);"/>
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-quit"
 #ifdef XP_WIN
