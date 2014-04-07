@@ -216,8 +216,6 @@ public:
     return mCompositor;
   }
 
-  bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-
   /**
    * LayerManagerComposite provides sophisticated debug overlays
    * that can request a next frame.
