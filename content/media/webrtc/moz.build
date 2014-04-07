@@ -12,8 +12,7 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WEBRTC']:
-    EXPORTS += ['AudioOutputObserver.h',
-                'LoadManager.h',
+    EXPORTS += ['LoadManager.h',
                 'LoadManagerFactory.h',
                 'LoadMonitor.h',
                 'MediaEngineWebRTC.h']
