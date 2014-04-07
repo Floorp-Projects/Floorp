@@ -160,20 +160,23 @@ TokenStream::SourceCoords::add(uint32_t lineNum, uint32_t lineStartOffset)
     }
 }
 
-MOZ_ALWAYS_INLINE void
+MOZ_ALWAYS_INLINE bool
 TokenStream::SourceCoords::fill(const TokenStream::SourceCoords &other)
 {
     JS_ASSERT(lineStartOffsets_.back() == MAX_PTR);
     JS_ASSERT(other.lineStartOffsets_.back() == MAX_PTR);
 
     if (lineStartOffsets_.length() >= other.lineStartOffsets_.length())
-        return;
+        return true;
 
     uint32_t sentinelIndex = lineStartOffsets_.length() - 1;
     lineStartOffsets_[sentinelIndex] = other.lineStartOffsets_[sentinelIndex];
 
-    for (size_t i = sentinelIndex + 1; i < other.lineStartOffsets_.length(); i++)
-        (void)lineStartOffsets_.append(other.lineStartOffsets_[i]);
+    for (size_t i = sentinelIndex + 1; i < other.lineStartOffsets_.length(); i++) {
+        if (!lineStartOffsets_.append(other.lineStartOffsets_[i]))
+            return false;
+    }
+    return true;
 }
 
 MOZ_ALWAYS_INLINE uint32_t
@@ -540,11 +543,13 @@ TokenStream::seek(const Position &pos)
         tokens[(cursor + 1 + i) & ntokensMask] = pos.lookaheadTokens[i];
 }
 
-void
+bool
 TokenStream::seek(const Position &pos, const TokenStream &other)
 {
-    srcCoords.fill(other.srcCoords);
+    if (!srcCoords.fill(other.srcCoords))
+        return false;
     seek(pos);
+    return true;
 }
 
 bool

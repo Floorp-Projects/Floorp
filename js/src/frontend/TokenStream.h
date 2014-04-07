@@ -614,7 +614,7 @@ class MOZ_STACK_CLASS TokenStream
     void advance(size_t position);
     void tell(Position *);
     void seek(const Position &pos);
-    void seek(const Position &pos, const TokenStream &other);
+    bool seek(const Position &pos, const TokenStream &other);
 
     size_t positionToOffset(const Position &pos) const {
         return pos.buf - userbuf.base();
@@ -710,7 +710,7 @@ class MOZ_STACK_CLASS TokenStream
         SourceCoords(ExclusiveContext *cx, uint32_t ln);
 
         void add(uint32_t lineNum, uint32_t lineStartOffset);
-        void fill(const SourceCoords &other);
+        bool fill(const SourceCoords &other);
 
         bool isOnThisLine(uint32_t offset, uint32_t lineNum) const {
             uint32_t lineIndex = lineNumToIndex(lineNum);
