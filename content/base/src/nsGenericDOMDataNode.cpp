@@ -482,13 +482,13 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // First set the binding parent
   if (aBindingParent) {
     NS_ASSERTION(IsRootOfNativeAnonymousSubtree() ||
-                 !HasFlag(NODE_IS_IN_ANONYMOUS_SUBTREE) ||
+                 !HasFlag(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE) ||
                  (aParent && aParent->IsInNativeAnonymousSubtree()),
                  "Trying to re-bind content from native anonymous subtree to "
                  "non-native anonymous parent!");
     DataSlots()->mBindingParent = aBindingParent; // Weak, so no addref happens.
     if (aParent->IsInNativeAnonymousSubtree()) {
-      SetFlags(NODE_IS_IN_ANONYMOUS_SUBTREE);
+      SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
     }
     if (aParent->HasFlag(NODE_CHROME_ONLY_ACCESS)) {
       SetFlags(NODE_CHROME_ONLY_ACCESS);
