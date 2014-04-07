@@ -5268,9 +5268,9 @@ nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
 gfxSize PresShell::GetCumulativeResolution()
 {
   gfxSize resolution = GetResolution();
-  nsCOMPtr<nsIPresShell> parent = GetParentPresShell();
-  if (parent) {
-    resolution = resolution * parent->GetCumulativeResolution();
+  nsPresContext* parentCtx = GetPresContext()->GetParentPresContext();
+  if (parentCtx) {
+    resolution = resolution * parentCtx->PresShell()->GetCumulativeResolution();
   }
   return resolution;
 }
