@@ -129,7 +129,7 @@ void AudioSegment::ResampleChunks(SpeexResamplerState* aResampler)
       Resample<int16_t>(aResampler, inRate, outRate);
     break;
     default:
-      MOZ_ASSERT(false);
+      // temporary bailout, see bug 991504
     break;
   }
 }
