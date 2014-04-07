@@ -66,6 +66,10 @@ CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
       result = new DIBTextureHostD3D9(aFlags, aDesc);
       break;
     }
+    case SurfaceDescriptor::TSurfaceDescriptorD3D10: {
+      result = new DXGITextureHostD3D9(aFlags, aDesc);
+      break;
+    }
     default: {
       NS_WARNING("Unsupported SurfaceDescriptor type");
     }
@@ -845,7 +849,7 @@ SharedTextureClientD3D9::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
     return false;
   }
 
-  aOutDescriptor = SurfaceDescriptorD3D10((WindowsHandle)(mHandle), mFormat);
+  aOutDescriptor = SurfaceDescriptorD3D10((WindowsHandle)(mHandle), mFormat, GetSize());
   return true;
 }
 
@@ -1055,6 +1059,74 @@ DIBTextureHostD3D9::SetCompositor(Compositor* aCompositor)
 
 void
 DIBTextureHostD3D9::DeallocateDeviceData()
+{
+  mTextureSource = nullptr;
+}
+
+DXGITextureHostD3D9::DXGITextureHostD3D9(TextureFlags aFlags,
+  const SurfaceDescriptorD3D10& aDescriptor)
+  : TextureHost(aFlags)
+  , mHandle(aDescriptor.handle())
+  , mFormat(aDescriptor.format())
+  , mSize(aDescriptor.size())
+  , mIsLocked(false)
+{
+  MOZ_ASSERT(mHandle);
+}
+
+NewTextureSource*
+DXGITextureHostD3D9::GetTextureSources()
+{
+  return mTextureSource;
+}
+
+bool
+DXGITextureHostD3D9::Lock()
+{
+  DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  if (!deviceManager) {
+    NS_WARNING("trying to lock a TextureHost without a D3D device");
+    return false;
+  }
+
+  if (!mTextureSource) {
+    nsRefPtr<IDirect3DTexture9> tex;
+    HRESULT hr = deviceManager->device()->CreateTexture(mSize.width,
+                                                        mSize.height,
+                                                        1,
+                                                        D3DUSAGE_RENDERTARGET,
+                                                        SurfaceFormatToD3D9Format(mFormat),
+                                                        D3DPOOL_DEFAULT,
+                                                        getter_AddRefs(tex),
+                                                        (HANDLE*)&mHandle);
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to open shared texture");
+      return false;
+    }
+
+    mTextureSource = new DataTextureSourceD3D9(mFormat, mSize, mCompositor, tex);
+  }
+
+  MOZ_ASSERT(!mIsLocked);
+  mIsLocked = true;
+  return true;
+}
+
+void
+DXGITextureHostD3D9::Unlock()
+{
+  MOZ_ASSERT(mIsLocked);
+  mIsLocked = false;
+}
+
+void
+DXGITextureHostD3D9::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<CompositorD3D9*>(aCompositor);
+}
+
+void
+DXGITextureHostD3D9::DeallocateDeviceData()
 {
   mTextureSource = nullptr;
 }
