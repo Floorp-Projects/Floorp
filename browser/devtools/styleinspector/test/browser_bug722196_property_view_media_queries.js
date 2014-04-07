@@ -1,49 +1,34 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
 
 // Tests that we correctly display appropriate media query titles in the
 // property view.
 
-let doc;
-let computedView;
-
-const TEST_URI = "http://example.com/browser/browser/devtools/styleinspector/" +
-  "test/browser_bug722196_identify_media_queries.html";
+const TEST_URI = TEST_URL_ROOT + "browser_bug722196_identify_media_queries.html";
 
 let {PropertyView} = devtools.require("devtools/styleinspector/computed-view");
 let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
 
-function test()
-{
-  waitForExplicitFinish();
-  addTab(TEST_URI);
-  browser.addEventListener("load", docLoaded, true);
-}
+let test = asyncTest(function*() {
+  yield addTab(TEST_URI);
+  let {toolbox, inspector, view} = yield openComputedView();
 
-function docLoaded()
-{
-  browser.removeEventListener("load", docLoaded, true);
-  doc = content.document;
+  info("Selecting the test element");
+  yield selectNode("div", inspector);
 
-  openComputedView(selectNode);
-}
+  info("Checking CSSLogic");
+  checkCssLogic();
 
-function selectNode(aInspector, aComputedView)
-{
-  computedView = aComputedView;
+  info("Checking property view");
+  yield checkPropertyView(view);
+});
 
-  var div = doc.querySelector("div");
-  ok(div, "captain, we have the div");
-
-  aInspector.selection.setNode(div);
-  aInspector.once("inspector-updated", checkCssLogic);
-}
-
-function checkCssLogic()
-{
+function checkCssLogic() {
   let cssLogic = new CssLogic();
-  cssLogic.highlight(doc.querySelector("div"));
+  cssLogic.highlight(getNode("div"));
   cssLogic.processMatchedSelectors();
 
   let _strings = Services.strings
@@ -57,16 +42,14 @@ function checkCssLogic()
     "rule.source gives correct output for rule 1");
   is(cssLogic._matchedRules[1][0].source, source2,
     "rule.source gives correct output for rule 2");
-
-  checkPropertyView();
 }
 
-function checkPropertyView()
-{
-  let propertyView = new PropertyView(computedView, "width");
+function checkPropertyView(view) {
+  let propertyView = new PropertyView(view, "width");
   propertyView.buildMain();
   propertyView.buildSelectorContainer();
   propertyView.matchedExpanded = true;
+
   return propertyView.refreshMatchedSelectors().then(() => {
     let numMatchedSelectors = propertyView.matchedSelectors.length;
 
@@ -75,14 +58,5 @@ function checkPropertyView()
 
     is(propertyView.hasMatchedSelectors, true,
         "hasMatchedSelectors returns true");
-
-    finishUp();
-  }).then(null, (err) => console.error(err));
-}
-
-function finishUp()
-{
-  doc = computedView = null;
-  gBrowser.removeCurrentTab();
-  finish();
+  });
 }
