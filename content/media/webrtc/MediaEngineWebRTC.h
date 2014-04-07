@@ -56,7 +56,6 @@
 #endif
 
 #include "NullTransport.h"
-#include "AudioOutputObserver.h"
 
 namespace mozilla {
 
@@ -259,7 +258,6 @@ public:
     , mCapIndex(aIndex)
     , mChannel(-1)
     , mInitDone(false)
-    , mStarted(false)
     , mEchoOn(false), mAgcOn(false), mNoiseOn(false)
     , mEchoCancel(webrtc::kEcDefault)
     , mAGC(webrtc::kAgcDefault)
@@ -325,7 +323,6 @@ private:
   int mChannel;
   TrackID mTrackID;
   bool mInitDone;
-  bool mStarted;
 
   nsString mDeviceName;
   nsString mDeviceUUID;
@@ -347,8 +344,6 @@ public:
 #ifdef MOZ_B2G_CAMERA
     AsyncLatencyLogger::Get()->Release();
 #endif
-    // XXX
-    gFarendObserver = nullptr;
   }
 
   // Clients should ensure to clean-up sources video/audio sources
