@@ -69,7 +69,8 @@ WMFVideoOutputSource::InitializeDXVA()
   // to a halt, and makes playback performance *worse*.
   if (!mDXVAEnabled ||
       (mLayersBackend != LayersBackend::LAYERS_D3D9 &&
-       mLayersBackend != LayersBackend::LAYERS_D3D10)) {
+       mLayersBackend != LayersBackend::LAYERS_D3D10 &&
+       mLayersBackend != LayersBackend::LAYERS_D3D11)) {
     return false;
   }
 
