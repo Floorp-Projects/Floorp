@@ -277,7 +277,7 @@ pref("media.tabstreaming.height", 240);
 pref("media.tabstreaming.time_per_frame", 40);
 
 // TextTrack support
-pref("media.webvtt.enabled", true);
+pref("media.webvtt.enabled", false);
 pref("media.webvtt.regions.enabled", false);
 
 // Whether to enable MediaSource support
