@@ -29,6 +29,7 @@ const CONTACTS_SENDMORE_MINIMUM = 5;
 // Keep in sync with the interfaces.
 const PROPERTIES = [
   "name", "honorificPrefix", "givenName", "additionalName", "familyName",
+  "phoneticGivenName", "phoneticFamilyName",
   "honorificSuffix", "nickname", "photo", "category", "org", "jobTitle",
   "bday", "note", "anniversary", "sex", "genderIdentity", "key", "adr", "email",
   "url", "impp", "tel"
