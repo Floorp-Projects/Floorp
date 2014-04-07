@@ -2,7 +2,7 @@
 <head>
   <title>test</title>
 
-  <link href="./browser_bug705707_is_content_stylesheet_linked.css" rel="stylesheet" type="text/css">
+  <link href="./doc_content_stylesheet_linked.css" rel="stylesheet" type="text/css">
 
   <script>
     // Load script.css
@@ -10,7 +10,7 @@
       var link = document.createElement('link');
       link.rel = 'stylesheet';
       link.type = 'text/css';
-      link.href = "./browser_bug705707_is_content_stylesheet_script.css";
+      link.href = "./doc_content_stylesheet_script.css";
       document.getElementsByTagName('head')[0].appendChild(link);
     }
   </script>

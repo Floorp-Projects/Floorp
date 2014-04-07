@@ -7,7 +7,7 @@
 // Checking selector counts, matched rules and titles in the computed-view
 
 const {PropertyView} = devtools.require("devtools/styleinspector/computed-view");
-const TEST_URI = TEST_URL_ROOT + "browser_bug683672.html";
+const TEST_URI = TEST_URL_ROOT + "doc_matched_selectors.html";
 
 let test = asyncTest(function*() {
   yield addTab(TEST_URI);
