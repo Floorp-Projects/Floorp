@@ -813,10 +813,6 @@ bool
 JSStructuredCloneWriter::writeTypedArray(HandleObject obj)
 {
     Rooted<TypedArrayObject*> tarr(context(), &obj->as<TypedArrayObject>());
-
-    if (!TypedArrayObject::ensureHasBuffer(context(), tarr))
-        return false;
-
     if (!out.writePair(SCTAG_TYPED_ARRAY_OBJECT, tarr->length()))
         return false;
     uint64_t type = tarr->type();

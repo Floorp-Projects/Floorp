@@ -365,15 +365,6 @@ GetObjectAllocKindForCopy(JSRuntime *rt, JSObject *obj)
     if (obj->is<JSFunction>())
         return obj->as<JSFunction>().getAllocKind();
 
-    /*
-     * Typed arrays in the nursery may have a lazily allocated buffer, make
-     * sure there is room for the array's fixed data when moving the array.
-     */
-    if (obj->is<TypedArrayObject>() && !obj->as<TypedArrayObject>().buffer()) {
-        size_t nbytes = obj->as<TypedArrayObject>().byteLength();
-        return GetBackgroundAllocKind(TypedArrayObject::AllocKindForLazyBuffer(nbytes));
-    }
-
     AllocKind kind = GetGCObjectFixedSlotsKind(obj->numFixedSlots());
     JS_ASSERT(!IsBackgroundFinalized(kind));
     JS_ASSERT(CanBeFinalizedInBackground(kind, obj->getClass()));
@@ -569,9 +560,6 @@ js::Nursery::moveObjectToTenured(JSObject *dst, JSObject *src, AllocKind dstKind
     js_memcpy(dst, src, srcSize);
     tenuredSize += moveSlotsToTenured(dst, src, dstKind);
     tenuredSize += moveElementsToTenured(dst, src, dstKind);
-
-    if (src->is<TypedArrayObject>())
-        dst->setPrivate(dst->fixedData(TypedArrayObject::FIXED_DATA_START));
 
     /* The shape's list head may point into the old object. */
     if (&src->shape_ == dst->shape_->listp)
