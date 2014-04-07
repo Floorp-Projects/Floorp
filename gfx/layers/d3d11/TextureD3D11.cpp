@@ -106,7 +106,9 @@ static void LockD3DTexture(T* aTexture)
   MOZ_ASSERT(aTexture);
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-  mutex->AcquireSync(0, INFINITE);
+  if (mutex) {
+    mutex->AcquireSync(0, INFINITE);
+  }
 }
 
 template<typename T> // ID3D10Texture2D or ID3D11Texture2D
@@ -115,7 +117,9 @@ static void UnlockD3DTexture(T* aTexture)
   MOZ_ASSERT(aTexture);
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
-  mutex->ReleaseSync(0);
+  if (mutex) {
+    mutex->ReleaseSync(0);
+  }
 }
 
 TemporaryRef<TextureHost>
