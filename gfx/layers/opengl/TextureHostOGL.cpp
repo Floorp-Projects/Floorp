@@ -130,10 +130,12 @@ WrapMode(gl::GLContext *aGl, bool aAllowRepeat)
 }
 
 CompositableDataGonkOGL::CompositableDataGonkOGL()
+ : mTexture(0)
 {
 }
 CompositableDataGonkOGL::~CompositableDataGonkOGL()
 {
+  DeleteTextureIfPresent();
 }
 
 gl::GLContext*
@@ -150,6 +152,28 @@ void CompositableDataGonkOGL::SetCompositor(Compositor* aCompositor)
 void CompositableDataGonkOGL::ClearData()
 {
   CompositableBackendSpecificData::ClearData();
+  DeleteTextureIfPresent();
+}
+
+GLuint CompositableDataGonkOGL::GetTexture()
+{
+  if (!mTexture) {
+    if (gl()->MakeCurrent()) {
+      gl()->fGenTextures(1, &mTexture);
+    }
+  }
+  return mTexture;
+}
+
+void
+CompositableDataGonkOGL::DeleteTextureIfPresent()
+{
+  if (mTexture) {
+    if (gl()->MakeCurrent()) {
+      gl()->fDeleteTextures(1, &mTexture);
+    }
+    mTexture = 0;
+  }
 }
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
