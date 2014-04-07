@@ -3227,22 +3227,12 @@ nsHTMLEditor::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                               nsIContent* aFirstNewContent,
                               int32_t aIndexInContainer)
 {
-  DoContentInserted(aDocument, aContainer, aFirstNewContent, aIndexInContainer,
-                    eAppended);
+  ContentInserted(aDocument, aContainer, aFirstNewContent, aIndexInContainer);
 }
 
 void
 nsHTMLEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                               nsIContent* aChild, int32_t aIndexInContainer)
-{
-  DoContentInserted(aDocument, aContainer, aChild, aIndexInContainer,
-                    eInserted);
-}
-
-void
-nsHTMLEditor::DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
-                                nsIContent* aChild, int32_t aIndexInContainer,
-                                InsertedOrAppended aInsertedOrAppended)
 {
   if (!aChild) {
     return;
@@ -3267,17 +3257,8 @@ nsHTMLEditor::DoContentInserted(nsIDocument* aDocument, nsIContent* aContainer,
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
       nsRefPtr<nsRange> range = new nsRange(aChild);
-      int32_t endIndex = aIndexInContainer + 1;
-      if (aInsertedOrAppended == eAppended) {
-        // Count all the appended nodes
-        nsIContent* sibling = aChild->GetNextSibling();
-        while (sibling) {
-          endIndex++;
-          sibling = sibling->GetNextSibling();
-        }
-      }
       nsresult res = range->Set(aContainer, aIndexInContainer,
-                                aContainer, endIndex);
+                                aContainer, aIndexInContainer + 1);
       if (NS_SUCCEEDED(res)) {
         mInlineSpellChecker->SpellCheckRange(range);
       }
