@@ -546,7 +546,6 @@ var BrowserApp = {
         return {
           title: title,
           uri: emailAddr,
-          type: "text/mailto",
         };
       },
       icon: "drawable://ic_menu_share",
@@ -564,7 +563,6 @@ var BrowserApp = {
         return {
           title: title,
           uri: phoneNumber,
-          type: "text/tel",
         };
       },
       icon: "drawable://ic_menu_share",
