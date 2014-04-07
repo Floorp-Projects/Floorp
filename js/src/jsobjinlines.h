@@ -475,7 +475,8 @@ JSObject::setProto(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto, 
     return SetClassAndProto(cx, obj, obj->getClass(), proto, succeeded);
 }
 
-inline bool JSObject::isVarObj()
+inline bool
+JSObject::isVarObj()
 {
     if (is<js::DebugScopeObject>())
         return as<js::DebugScopeObject>().scope().isVarObj();
@@ -495,7 +496,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     JS_ASSERT(shape && type);
     JS_ASSERT(type->clasp() == shape->getObjectClass());
     JS_ASSERT(type->clasp() != &js::ArrayObject::class_);
-    JS_ASSERT_IF(type->clasp() != &js::ArrayBufferObject::class_,
+    JS_ASSERT_IF(!ClassCanHaveFixedData(type->clasp()),
                  js::gc::GetGCKindSlots(kind, type->clasp()) == shape->numFixedSlots());
     JS_ASSERT_IF(type->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
     JS_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
