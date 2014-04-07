@@ -17,12 +17,18 @@ function test() {
     // The Experiments Manager will interfere with us by preventing installs
     // of experiments it doesn't know about. We remove it from the equation
     // because here we are only concerned with core Addon Manager operation,
-    // not the super set Experiments Manager has imposed.
+    // not the superset Experiments Manager has imposed.
     if ("@mozilla.org/browser/experiments-service;1" in Components.classes) {
       Components.utils.import("resource:///modules/experiments/Experiments.jsm", gContext);
-      gContext.Experiments.instance()._stopWatchingAddons();
+
+      // There is a race condition between XPCOM service initialization and
+      // this test running. We have to initialize the instance first, then
+      // uninitialize it to prevent this.
+      let instance = gContext.Experiments.instance();
+      instance.uninit().then(run_next_test);
+    } else {
+      run_next_test();
     }
-    run_next_test();
   });
 }
 
@@ -33,10 +39,11 @@ function end_test() {
 
   close_manager(gManagerWindow, () => {
     if ("@mozilla.org/browser/experiments-service;1" in Components.classes) {
-      gContext.Experiments.instance()._startWatchingAddons();
+      gContext.Experiments.instance().init();
+      finish();
+    } else {
+      finish();
     }
-
-    finish();
   });
 }
 
