@@ -183,6 +183,7 @@ private:
     nsCOMPtr<nsITimer>                   mTimer;
     uint32_t                             mNumChildProcesses;
     uint32_t                             mNumChildProcessesCompleted;
+    bool                                 mParentDone;
     nsCOMPtr<nsIHandleReportCallback>    mHandleReport;
     nsCOMPtr<nsISupports>                mHandleReportData;
     nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
@@ -200,6 +201,7 @@ private:
       , mTimer(aTimer)
       , mNumChildProcesses(aNumChildProcesses)
       , mNumChildProcessesCompleted(0)
+      , mParentDone(false)
       , mHandleReport(aHandleReport)
       , mHandleReportData(aHandleReportData)
       , mFinishReporting(aFinishReporting)
