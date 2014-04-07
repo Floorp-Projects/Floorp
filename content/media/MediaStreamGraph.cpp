@@ -26,7 +26,6 @@
 #include "DOMMediaStream.h"
 #include "GeckoProfiler.h"
 #include "mozilla/unused.h"
-#include "speex/speex_resampler.h"
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
@@ -173,16 +172,15 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
         MediaStreamListener* l = aStream->mListeners[j];
         TrackTicks offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
             ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
-        l->NotifyQueuedTrackChanges(this, data->mID, data->mOutputRate,
+        l->NotifyQueuedTrackChanges(this, data->mID, data->mRate,
                                     offset, data->mCommands, *data->mData);
       }
       if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
         MediaSegment* segment = data->mData.forget();
         STREAM_LOG(PR_LOG_DEBUG, ("SourceMediaStream %p creating track %d, rate %d, start %lld, initial end %lld",
-                                  aStream, data->mID, data->mOutputRate, int64_t(data->mStart),
+                                  aStream, data->mID, data->mRate, int64_t(data->mStart),
                                   int64_t(segment->GetDuration())));
-
-        aStream->mBuffer.AddTrack(data->mID, data->mOutputRate, data->mStart, segment);
+        aStream->mBuffer.AddTrack(data->mID, data->mRate, data->mStart, segment);
         // The track has taken ownership of data->mData, so let's replace
         // data->mData with an empty clone.
         data->mData = segment->CreateEmptyClone();
@@ -334,7 +332,7 @@ MediaStreamGraphImpl::GetAudioPosition(MediaStream* aStream)
     return mCurrentTime;
   }
   return aStream->mAudioOutputStreams[0].mAudioPlaybackStartTime +
-      TicksToTimeRoundDown(IdealAudioRate(),
+      TicksToTimeRoundDown(aStream->mAudioOutputStreams[0].mStream->GetRate(),
                            positionInFrames);
 }
 
@@ -813,7 +811,7 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
         audioOutputStream->mStream = new AudioStream();
         // XXX for now, allocate stereo output. But we need to fix this to
         // match the system's ideal channel configuration.
-        audioOutputStream->mStream->Init(2, IdealAudioRate(), AUDIO_CHANNEL_NORMAL, AudioStream::LowLatency);
+        audioOutputStream->mStream->Init(2, tracks->GetRate(), AUDIO_CHANNEL_NORMAL, AudioStream::LowLatency);
         audioOutputStream->mTrackID = tracks->GetID();
 
         LogLatency(AsyncLatencyLogger::AudioStreamCreate,
@@ -870,10 +868,10 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
         // the amount of silent samples we've inserted for blocking never gets
         // more than one sample away from the ideal amount.
         TrackTicks startTicks =
-            TimeToTicksRoundDown(IdealAudioRate(), audioOutput.mBlockedAudioTime);
+            TimeToTicksRoundDown(track->GetRate(), audioOutput.mBlockedAudioTime);
         audioOutput.mBlockedAudioTime += end - t;
         TrackTicks endTicks =
-            TimeToTicksRoundDown(IdealAudioRate(), audioOutput.mBlockedAudioTime);
+            TimeToTicksRoundDown(track->GetRate(), audioOutput.mBlockedAudioTime);
 
         output.InsertNullDataAtStart(endTicks - startTicks);
         STREAM_LOG(PR_LOG_DEBUG+1, ("MediaStream %p writing blocking-silence samples for %f to %f",
@@ -1394,6 +1392,12 @@ MediaStreamGraphImpl::ForceShutDown()
   }
 }
 
+void
+MediaStreamGraphImpl::Init()
+{
+  AudioStream::InitPreferredSampleRate();
+}
+
 namespace {
 
 class MediaStreamGraphInitThreadRunnable : public nsRunnable {
@@ -1406,6 +1410,7 @@ public:
   {
     char aLocal;
     profiler_register_thread("MediaStreamGraph", &aLocal);
+    mGraph->Init();
     mGraph->RunThread();
     return NS_OK;
   }
@@ -1777,7 +1782,7 @@ MediaStream::EnsureTrack(TrackID aTrackId, TrackRate aSampleRate)
     nsAutoPtr<MediaSegment> segment(new AudioSegment());
     for (uint32_t j = 0; j < mListeners.Length(); ++j) {
       MediaStreamListener* l = mListeners[j];
-      l->NotifyQueuedTrackChanges(Graph(), aTrackId, IdealAudioRate(), 0,
+      l->NotifyQueuedTrackChanges(Graph(), aTrackId, aSampleRate, 0,
                                   MediaStreamListener::TRACK_EVENT_CREATED,
                                   *segment);
     }
@@ -2124,10 +2129,7 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   MutexAutoLock lock(mMutex);
   TrackData* data = mUpdateTracks.AppendElement();
   data->mID = aID;
-  data->mInputRate = aRate;
-  // We resample all audio input tracks to the sample rate of the audio mixer.
-  data->mOutputRate = aSegment->GetType() == MediaSegment::AUDIO ?
-                      IdealAudioRate() : aRate;
+  data->mRate = aRate;
   data->mStart = aStart;
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
@@ -2135,28 +2137,6 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   if (!mDestroyed) {
     GraphImpl()->EnsureNextIteration();
   }
-}
-
-void
-SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment)
-{
-  if (aSegment->GetType() != MediaSegment::AUDIO ||
-      aTrackData->mInputRate == IdealAudioRate()) {
-    return;
-  }
-  AudioSegment* segment = static_cast<AudioSegment*>(aSegment);
-  if (!aTrackData->mResampler) {
-    int channels = segment->ChannelCount();
-    SpeexResamplerState* state = speex_resampler_init(channels,
-                                                      aTrackData->mInputRate,
-                                                      IdealAudioRate(),
-                                                      SPEEX_RESAMPLER_QUALITY_DEFAULT,
-                                                      nullptr);
-    if (state) {
-      aTrackData->mResampler.own(state);
-    }
-  }
-  segment->ResampleChunks(aTrackData->mResampler);
 }
 
 bool
@@ -2177,8 +2157,6 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegme
       // Apply track disabling before notifying any consumers directly
       // or inserting into the graph
       ApplyTrackDisabling(aID, aSegment, aRawSegment);
-
-      ResampleAudioToGraphSampleRate(track, aSegment);
 
       // Must notify first, since AppendFrom() will empty out aSegment
       NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
@@ -2204,7 +2182,7 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
   for (uint32_t j = 0; j < mDirectListeners.Length(); ++j) {
     MediaStreamDirectListener* l = mDirectListeners[j];
     TrackTicks offset = 0; // FIX! need a separate TrackTicks.... or the end of the internal buffer
-    l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID, aTrack->mOutputRate,
+    l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID, aTrack->mRate,
                           offset, aTrack->mCommands, *aSegment);
   }
 }
@@ -2543,8 +2521,6 @@ MediaStreamGraph::GetInstance()
 
     gGraph = new MediaStreamGraphImpl(true);
     STREAM_LOG(PR_LOG_DEBUG, ("Starting up MediaStreamGraph %p", gGraph));
-
-    AudioStream::InitPreferredSampleRate();
   }
 
   return gGraph;
