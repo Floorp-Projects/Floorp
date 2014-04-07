@@ -258,6 +258,9 @@ public:
 
   NS_IMETHOD Run() {
     nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
+    if (!gamepadsvc) {
+      return NS_OK;
+    }
 
     switch (mType) {
     case Button:
@@ -320,6 +323,9 @@ public:
 
   NS_IMETHOD Run() {
     nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
+    if (!gamepadsvc) {
+      return NS_OK;
+    }
     if (mType == Added) {
       int globalID = gamepadsvc->AddGamepad(mName.get(),
                                             mozilla::dom::NoMapping,
