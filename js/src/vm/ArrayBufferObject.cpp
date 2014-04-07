@@ -631,7 +631,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, void *data /* = nullpt
     if (data) {
         obj->initialize(nbytes, data, OwnsData);
     } else {
-        void *data = obj->fixedData(reservedSlots);
+        void *data = &obj->fixedSlots()[reservedSlots];
         memset(data, 0, nbytes);
         obj->initialize(nbytes, data, DoesntOwnData);
     }
@@ -929,17 +929,6 @@ ArrayBufferViewObject::neuter(void *newData)
         as<TypedObject>().neuter(newData);
 }
 
-/* static */ ArrayBufferObject *
-ArrayBufferViewObject::bufferObject(JSContext *cx, Handle<ArrayBufferViewObject *> thisObject)
-{
-    if (thisObject->is<TypedArrayObject>()) {
-        Rooted<TypedArrayObject *> typedArray(cx, &thisObject->as<TypedArrayObject>());
-        if (!TypedArrayObject::ensureHasBuffer(cx, typedArray))
-            return nullptr;
-    }
-    return &thisObject->getFixedSlot(BUFFER_SLOT).toObject().as<ArrayBufferObject>();
-}
-
 /* JS Friend API */
 
 JS_FRIEND_API(bool)
@@ -1058,13 +1047,12 @@ JS_GetArrayBufferViewData(JSObject *obj)
 }
 
 JS_FRIEND_API(JSObject *)
-JS_GetArrayBufferViewBuffer(JSContext *cx, JSObject *obj)
+JS_GetArrayBufferViewBuffer(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
-    Rooted<ArrayBufferViewObject *> viewObject(cx, &obj->as<ArrayBufferViewObject>());
-    return ArrayBufferViewObject::bufferObject(cx, viewObject);
+    return obj->as<ArrayBufferViewObject>().bufferObject();
 }
 
 JS_FRIEND_API(uint32_t)
