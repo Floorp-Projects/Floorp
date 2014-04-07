@@ -199,16 +199,6 @@ public:
   void CreatedRefLayer(ShadowableLayer* aRef);
 
   /**
-   * The specified layer is destroying its buffers.
-   * |aBackBufferToDestroy| is deallocated when this transaction is
-   * posted to the parent.  During the parent-side transaction, the
-   * shadow is told to destroy its front buffer.  This can happen when
-   * a new front/back buffer pair have been created because of a layer
-   * resize, e.g.
-   */
-  virtual void DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy) MOZ_OVERRIDE;
-
-  /**
    * At least one attribute of |aMutant| has changed, and |aMutant|
    * needs to sync to its shadow layer.  This initial implementation
    * forwards all attributes when any is mutated.

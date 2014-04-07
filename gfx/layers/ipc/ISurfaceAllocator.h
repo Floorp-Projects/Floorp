@@ -137,9 +137,6 @@ public:
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) = 0;
 
   // was AllocBuffer
-  virtual bool AllocSharedImageSurface(const gfx::IntSize& aSize,
-                                       gfxContentType aContent,
-                                       gfxSharedImageSurface** aBuffer);
   virtual bool AllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                       gfxContentType aContent,
                                       SurfaceDescriptor* aBuffer);

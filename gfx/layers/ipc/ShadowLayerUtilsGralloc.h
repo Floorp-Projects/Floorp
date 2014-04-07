@@ -24,7 +24,6 @@ namespace mozilla {
 namespace layers {
 
 class MaybeMagicGrallocBufferHandle;
-class SurfaceDescriptorGralloc;
 class TextureHost;
 
 /**
@@ -76,9 +75,6 @@ public:
 
   static PGrallocBufferChild*
   Create();
-
-  static android::sp<GraphicBuffer>
-  GetFrom(const SurfaceDescriptorGralloc& aDescriptor);
 
   // used only for hacky fix in gecko 23 for bug 862324
   // see bug 865908 about fixing this.
