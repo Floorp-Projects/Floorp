@@ -7538,17 +7538,13 @@ let Reader = {
   pageAction: {
     readerModeCallback: function(){
       sendMessageToJava({
-        gecko: {
-          type: "Reader:Click",
-        }
+        type: "Reader:Click",
       });
     },
 
     readerModeActiveCallback: function(){
       sendMessageToJava({
-        gecko: {
-          type: "Reader:LongClick",
-        }
+        type: "Reader:LongClick",
       });
     },
   },
