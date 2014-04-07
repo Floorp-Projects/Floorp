@@ -841,8 +841,6 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
                                   bool aDidSelfCopy)
 {
   if (IsSurfaceDescriptorValid(mUpdateDescriptor)) {
-    ShadowLayerForwarder::CloseDescriptor(mUpdateDescriptor);
-
     mForwarder->UpdateTextureIncremental(this,
                                          TextureFront,
                                          mUpdateDescriptor,
@@ -852,8 +850,6 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
     mUpdateDescriptor = SurfaceDescriptor();
   }
   if (IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite)) {
-    ShadowLayerForwarder::CloseDescriptor(mUpdateDescriptorOnWhite);
-
     mForwarder->UpdateTextureIncremental(this,
                                          TextureOnWhiteFront,
                                          mUpdateDescriptorOnWhite,
