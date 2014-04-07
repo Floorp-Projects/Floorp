@@ -188,19 +188,11 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
        aAgcOn ? aAGC : -1,
        aNoiseOn ? aNoise : -1));
 
-  bool update_echo = (mEchoOn != aEchoOn);
-  bool update_agc = (mAgcOn != aAgcOn);
-  bool update_noise = (mNoiseOn != aNoiseOn);
-  mEchoOn = aEchoOn;
+  bool update_agc = (mAgcOn == aAgcOn);
+  bool update_noise = (mNoiseOn == aNoiseOn);
   mAgcOn = aAgcOn;
   mNoiseOn = aNoiseOn;
 
-  if ((webrtc::EcModes) aEcho != webrtc::kEcUnchanged) {
-    if (mEchoCancel != (webrtc::EcModes) aEcho) {
-      update_echo = true;
-      mEchoCancel = (webrtc::EcModes) aEcho;
-    }
-  }
   if ((webrtc::AgcModes) aAGC != webrtc::kAgcUnchanged) {
     if (mAGC != (webrtc::AgcModes) aAGC) {
       update_agc = true;
@@ -217,11 +209,17 @@ MediaEngineWebRTCAudioSource::Config(bool aEchoOn, uint32_t aEcho,
 
   if (mInitDone) {
     int error;
-
-    if (update_echo &&
-      0 != (error = mVoEProcessing->SetEcStatus(mEchoOn, (webrtc::EcModes) aEcho))) {
-      LOG(("%s Error setting Echo Status: %d ",__FUNCTION__, error));
-    }
+#if 0
+    // Until we can support feeding our full output audio from the browser
+    // through the MediaStream, this won't work.  Or we need to move AEC to
+    // below audio input and output, perhaps invoked from here.
+    mEchoOn = aEchoOn;
+    if ((webrtc::EcModes) aEcho != webrtc::kEcUnchanged)
+      mEchoCancel = (webrtc::EcModes) aEcho;
+    mVoEProcessing->SetEcStatus(mEchoOn, aEcho);
+#else
+    (void) aEcho; (void) aEchoOn; (void) mEchoCancel; // suppress warnings
+#endif
 
     if (update_agc &&
       0 != (error = mVoEProcessing->SetAgcStatus(mAgcOn, (webrtc::AgcModes) aAGC))) {
