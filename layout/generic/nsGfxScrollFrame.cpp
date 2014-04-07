@@ -2128,17 +2128,13 @@ AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
                                      aFlags, aScrollTargetId) :
     new (aBuilder) nsDisplayWrapList(aBuilder, aSourceFrame, aSource);
 
-  if (aPositioned) {
+  nsDisplayList* positionedDescendants = aLists.PositionedDescendants();
+  if (aPositioned && !positionedDescendants->IsEmpty()) {
     // We want overlay scrollbars to always be on top of the scrolled content,
     // but we don't want them to unnecessarily cover overlapping elements from
     // outside our scroll frame.
-    nsDisplayList* positionedDescendants = aLists.PositionedDescendants();
-    if (!positionedDescendants->IsEmpty()) {
-      newItem->SetOverrideZIndex(MaxZIndexInList(positionedDescendants, aBuilder));
-      positionedDescendants->AppendNewToTop(newItem);
-    } else {
-      aLists.Outlines()->AppendNewToTop(newItem);
-    }
+    newItem->SetOverrideZIndex(MaxZIndexInList(positionedDescendants, aBuilder));
+    positionedDescendants->AppendNewToTop(newItem);
   } else {
     aLists.BorderBackground()->AppendNewToTop(newItem);
   }
