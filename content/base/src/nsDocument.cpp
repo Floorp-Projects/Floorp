@@ -7750,7 +7750,13 @@ nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
   rv = EventDispatcher::CreateEvent(const_cast<nsIDocument*>(this),
                                     presContext, nullptr, aEventType,
                                     getter_AddRefs(ev));
-  return ev ? dont_AddRef(ev.forget().take()->InternalDOMEvent()) : nullptr;
+  if (!ev) {
+    return nullptr;
+  }
+  WidgetEvent* e = ev->GetInternalNSEvent();
+  e->mFlags.mBubbles = false;
+  e->mFlags.mCancelable = false;
+  return dont_AddRef(ev.forget().take()->InternalDOMEvent());
 }
 
 void
