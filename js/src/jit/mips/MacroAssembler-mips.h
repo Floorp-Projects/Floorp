@@ -234,6 +234,32 @@ class MacroAssemblerMIPS : public Assembler
     void ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label *label, DoubleCondition c,
                  JumpKind jumpKind = LongJump, FPConditionBit fcc = FCC0);
 
+
+    // These fuctions abstract the access to high part of the double precision
+    // float register. It is intended to work on both 32 bit and 64 bit
+    // floating point coprocessor.
+    // :TODO: (Bug 985881) Modify this for N32 ABI to use mthc1 and mfhc1
+    void moveToDoubleHi(Register src, FloatRegister dest) {
+        as_mtc1(src, getOddPair(dest));
+    }
+    void moveFromDoubleHi(FloatRegister src, Register dest) {
+        as_mfc1(dest, getOddPair(src));
+    }
+
+    void moveToDoubleLo(Register src, FloatRegister dest) {
+        as_mtc1(src, dest);
+    }
+    void moveFromDoubleLo(FloatRegister src, Register dest) {
+        as_mfc1(dest, src);
+    }
+
+    void moveToFloat32(Register src, FloatRegister dest) {
+        as_mtc1(src, dest);
+    }
+    void moveFromFloat32(FloatRegister src, Register dest) {
+        as_mfc1(dest, src);
+    }
+
   protected:
     void branchWithCode(InstImm code, Label *label, JumpKind jumpKind);
     Condition ma_cmp(Register rd, Register lhs, Register rhs, Condition c);
@@ -993,8 +1019,8 @@ public:
     }
 
     void zeroDouble(FloatRegister reg) {
-        as_mtc1(zero, reg);
-        as_mtc1_Odd(zero, reg);
+        moveToDoubleLo(zero, reg);
+        moveToDoubleHi(zero, reg);
     }
 
     void clampIntToUint8(Register reg) {
