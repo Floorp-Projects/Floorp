@@ -138,7 +138,7 @@ class MochitestServer(object):
     if options.get('httpdPath'):
         self._httpdPath = options['httpdPath']
     else:
-        self._httpdPath = SCRIPT_DIR
+        self._httpdPath = '.'
     self._httpdPath = os.path.abspath(self._httpdPath)
 
   def start(self):
@@ -159,16 +159,16 @@ class MochitestServer(object):
 
     args = ["-g", self._xrePath,
             "-v", "170",
-            "-f", os.path.join(self._httpdPath, "httpd.js"),
+            "-f", self._httpdPath + "/httpd.js",
             "-e", """const _PROFILE_PATH = '%(profile)s'; const _SERVER_PORT = '%(port)s'; const _SERVER_ADDR = '%(server)s'; const _TEST_PREFIX = %(testPrefix)s; const _DISPLAY_RESULTS = %(displayResults)s;""" %
                    {"profile" : self._profileDir.replace('\\', '\\\\'), "port" : self.httpPort, "server" : self.webServer,
                     "testPrefix" : self.testPrefix, "displayResults" : str(not self._closeWhenDone).lower() },
-            "-f", os.path.join(SCRIPT_DIR, "server.js")]
+            "-f", "./" + "server.js"]
 
     xpcshell = os.path.join(self._utilityPath,
                             "xpcshell" + mozinfo.info['bin_suffix'])
     command = [xpcshell] + args
-    self._process = mozprocess.ProcessHandler(command, cwd=SCRIPT_DIR, env=env)
+    self._process = mozprocess.ProcessHandler(command, env=env)
     self._process.run()
     log.info("%s : launching %s", self.__class__.__name__, command)
     pid = self._process.pid
@@ -233,7 +233,7 @@ class WebSocketServer(object):
            os.path.join(self._scriptdir, "websock.log"),            \
            '--log-level=debug', '--allow-handlers-outside-root-dir']
     # start the process
-    self._process = mozprocess.ProcessHandler(cmd, cwd=SCRIPT_DIR)
+    self._process = mozprocess.ProcessHandler(cmd)
     self._process.run()
     pid = self._process.pid
     log.info("runtests.py | Websocket server pid: %d", pid)
@@ -261,6 +261,7 @@ class MochitestUtilsMixin(object):
   urlOpts = []
 
   def __init__(self):
+    os.chdir(SCRIPT_DIR)
     self.update_mozinfo()
 
   def update_mozinfo(self):
@@ -582,7 +583,7 @@ toolbar#nav-bar {
     manifest = os.path.join(options.profilePath, "tests.manifest")
     with open(manifest, "w") as manifestFile:
       # Register chrome directory.
-      chrometestDir = os.path.join(os.path.abspath("."), SCRIPT_DIR) + "/"
+      chrometestDir = os.path.abspath(".") + "/"
       if mozinfo.isWin:
         chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
       manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
@@ -941,7 +942,7 @@ class Mochitest(MochitestUtilsMixin):
         # start ssltunnel to provide https:// URLs capability
         ssltunnel = os.path.join(utilityPath, "ssltunnel" + bin_suffix)
         ssltunnel_cfg = os.path.join(self.profile.profile, "ssltunnel.cfg")
-        ssltunnelProcess = mozprocess.ProcessHandler([ssltunnel, ssltunnel_cfg], cwd=SCRIPT_DIR,
+        ssltunnelProcess = mozprocess.ProcessHandler([ssltunnel, ssltunnel_cfg],
                                                       env=environment(xrePath=xrePath))
         ssltunnelProcess.run()
         log.info("INFO | runtests.py | SSL tunnel pid: %d", ssltunnelProcess.pid)
@@ -984,7 +985,6 @@ class Mochitest(MochitestUtilsMixin):
         browserProcessId = outputHandler.browserProcessId
         self.handleTimeout(timeout, proc, utilityPath, debuggerInfo, browserProcessId)
       kp_kwargs = {'kill_on_timeout': False,
-                   'cwd': SCRIPT_DIR,
                    'onTimeout': [timeoutHandler]}
       kp_kwargs['processOutputLine'] = [outputHandler]
 
