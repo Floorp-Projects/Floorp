@@ -379,29 +379,12 @@ class nsDOMUserMediaStream : public DOMLocalMediaStream
 {
 public:
   static already_AddRefed<nsDOMUserMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow,
-                         MediaEngineSource *aAudioSource,
-                         MediaEngineSource *aVideoSource)
+  CreateTrackUnionStream(nsIDOMWindow* aWindow, uint32_t aHintContents)
   {
-    DOMMediaStream::TrackTypeHints hints =
-      (aAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
-      (aVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
-
-    nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aAudioSource);
-    stream->InitTrackUnionStream(aWindow, hints);
+    nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream();
+    stream->InitTrackUnionStream(aWindow, aHintContents);
     return stream.forget();
   }
-
-  nsDOMUserMediaStream(MediaEngineSource *aAudioSource) :
-    mAudioSource(aAudioSource),
-    mEchoOn(true),
-    mAgcOn(false),
-    mNoiseOn(true),
-    mEcho(webrtc::kEcDefault),
-    mAgc(webrtc::kAgcDefault),
-    mNoise(webrtc::kNsDefault),
-    mPlayoutDelay(20)
-  {}
 
   virtual ~nsDOMUserMediaStream()
   {
@@ -432,21 +415,6 @@ public:
     return false;
   }
 
-  virtual void
-  AudioConfig(bool aEchoOn, uint32_t aEcho,
-              bool aAgcOn, uint32_t aAgc,
-              bool aNoiseOn, uint32_t aNoise,
-              int32_t aPlayoutDelay)
-  {
-    mEchoOn = aEchoOn;
-    mEcho = aEcho;
-    mAgcOn = aAgcOn;
-    mAgc = aAgc;
-    mNoiseOn = aNoiseOn;
-    mNoise = aNoise;
-    mPlayoutDelay = aPlayoutDelay;
-  }
-
   virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) MOZ_OVERRIDE
   {
     if (mSourceStream) {
@@ -469,14 +437,6 @@ public:
   // explicitly destroyed too.
   nsRefPtr<SourceMediaStream> mSourceStream;
   nsRefPtr<MediaInputPort> mPort;
-  nsRefPtr<MediaEngineSource> mAudioSource; // so we can turn on AEC
-  bool mEchoOn;
-  bool mAgcOn;
-  bool mNoiseOn;
-  uint32_t mEcho;
-  uint32_t mAgc;
-  uint32_t mNoise;
-  uint32_t mPlayoutDelay;
 };
 
 /**
@@ -557,12 +517,6 @@ public:
   NS_IMETHOD
   Run()
   {
-    int32_t aec = (int32_t) webrtc::kEcUnchanged;
-    int32_t agc = (int32_t) webrtc::kAgcUnchanged;
-    int32_t noise = (int32_t) webrtc::kNsUnchanged;
-    bool aec_on = false, agc_on = false, noise_on = false;
-    int32_t playout_delay = 0;
-
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
       (nsGlobalWindow::GetInnerWindowWithId(mWindowID));
@@ -575,39 +529,19 @@ public:
       return NS_OK;
     }
 
-#ifdef MOZ_WEBRTC
-    // Right now these configs are only of use if webrtc is available
-    nsresult rv;
-    nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
-
-      if (branch) {
-        branch->GetBoolPref("media.getusermedia.aec_enabled", &aec_on);
-        branch->GetIntPref("media.getusermedia.aec", &aec);
-        branch->GetBoolPref("media.getusermedia.agc_enabled", &agc_on);
-        branch->GetIntPref("media.getusermedia.agc", &agc);
-        branch->GetBoolPref("media.getusermedia.noise_enabled", &noise_on);
-        branch->GetIntPref("media.getusermedia.noise", &noise);
-        branch->GetIntPref("media.getusermedia.playout_delay", &playout_delay);
-      }
-    }
-#endif
     // Create a media stream.
+    DOMMediaStream::TrackTypeHints hints =
+      (mAudioSource ? DOMMediaStream::HINT_CONTENTS_AUDIO : 0) |
+      (mVideoSource ? DOMMediaStream::HINT_CONTENTS_VIDEO : 0);
+
     nsRefPtr<nsDOMUserMediaStream> trackunion =
-      nsDOMUserMediaStream::CreateTrackUnionStream(window, mAudioSource,
-                                                   mVideoSource);
+      nsDOMUserMediaStream::CreateTrackUnionStream(window, hints);
     if (!trackunion) {
       nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error = mError.forget();
       LOG(("Returning error for getUserMedia() - no stream"));
       error->OnError(NS_LITERAL_STRING("NO_STREAM"));
       return NS_OK;
     }
-    trackunion->AudioConfig(aec_on, (uint32_t) aec,
-                            agc_on, (uint32_t) agc,
-                            noise_on, (uint32_t) noise,
-                            playout_delay);
-
 
     MediaStreamGraph* gm = MediaStreamGraph::GetInstance();
     nsRefPtr<SourceMediaStream> stream = gm->CreateSourceStream(nullptr);
@@ -638,10 +572,33 @@ public:
       new TracksAvailableCallback(mManager, mSuccess, mWindowID, trackunion);
 
 #ifdef MOZ_WEBRTC
-    mListener->AudioConfig(aec_on, (uint32_t) aec,
-                           agc_on, (uint32_t) agc,
-                           noise_on, (uint32_t) noise,
-                           playout_delay);
+    // Right now these configs are only of use if webrtc is available
+    nsresult rv;
+    nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
+
+      if (branch) {
+        int32_t aec = (int32_t) webrtc::kEcUnchanged;
+        int32_t agc = (int32_t) webrtc::kAgcUnchanged;
+        int32_t noise = (int32_t) webrtc::kNsUnchanged;
+        bool aec_on = false, agc_on = false, noise_on = false;
+        int32_t playout_delay = 0;
+
+        branch->GetBoolPref("media.peerconnection.aec_enabled", &aec_on);
+        branch->GetIntPref("media.peerconnection.aec", &aec);
+        branch->GetBoolPref("media.peerconnection.agc_enabled", &agc_on);
+        branch->GetIntPref("media.peerconnection.agc", &agc);
+        branch->GetBoolPref("media.peerconnection.noise_enabled", &noise_on);
+        branch->GetIntPref("media.peerconnection.noise", &noise);
+        branch->GetIntPref("media.peerconnection.playout_delay", &playout_delay);
+
+        mListener->AudioConfig(aec_on, (uint32_t) aec,
+                               agc_on, (uint32_t) agc,
+                               noise_on, (uint32_t) noise,
+                               playout_delay);
+      }
+    }
 #endif
 
     // Dispatch to the media thread to ask it to start the sources,
