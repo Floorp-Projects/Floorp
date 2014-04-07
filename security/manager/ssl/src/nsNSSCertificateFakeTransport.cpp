@@ -231,6 +231,13 @@ nsNSSCertificateFakeTransport::Equals(nsIX509Cert *other, bool *result)
 }
 
 NS_IMETHODIMP
+nsNSSCertificateFakeTransport::GetSha256SubjectPublicKeyInfoDigest(nsACString_internal&)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsNSSCertificateFakeTransport::Write(nsIObjectOutputStream* aStream)
 {
   // On a non-chrome process we don't have mCert because we lack
