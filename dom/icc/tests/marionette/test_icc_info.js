@@ -31,24 +31,39 @@ function setEmulatorMccMnc(mcc, mnc) {
 taskHelper.push(function basicTest() {
   let iccInfo = icc.iccInfo;
 
-  is(iccInfo.iccType, "sim");
   // The emulator's hard coded iccid value.
   // See it here {B2G_HOME}/external/qemu/telephony/sim_card.c#L299.
   is(iccInfo.iccid, 89014103211118510720);
-  // The emulator's hard coded mcc and mnc codes.
-  // See it here {B2G_HOME}/external/qemu/telephony/android_modem.c#L2465.
-  is(iccInfo.mcc, 310);
-  is(iccInfo.mnc, 260);
-  is(iccInfo.spn, "Android");
-  // Phone number is hardcoded in MSISDN
-  // See {B2G_HOME}/external/qemu/telephony/sim_card.c, in asimcard_io()
-  is(iccInfo.msisdn, "15555215554");
+
+  if (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo) {
+    log("Test Gsm IccInfo");
+    is(iccInfo.iccType, "sim");
+    is(iccInfo.spn, "Android");
+    // The emulator's hard coded mcc and mnc codes.
+    // See it here {B2G_HOME}/external/qemu/telephony/android_modem.c#L2465.
+    is(iccInfo.mcc, 310);
+    is(iccInfo.mnc, 260);
+    // Phone number is hardcoded in MSISDN
+    // See {B2G_HOME}/external/qemu/telephony/sim_card.c, in asimcard_io()
+    is(iccInfo.msisdn, "15555215554");
+  } else {
+    log("Test Cdma IccInfo");
+    is(iccInfo.iccType, "ruim");
+    // MDN is hardcoded as "8587777777".
+    // See it here {B2G_HOME}/hardware/ril/reference-ril/reference-ril.c,
+    // in requestCdmaSubscription()
+    is(iccInfo.mdn, "8587777777");
+    // PRL version is hardcoded as 1.
+    // See it here {B2G_HOME}/hardware/ril/reference-ril/reference-ril.c,
+    // in requestCdmaSubscription()
+    is(iccInfo.prlVersion, 1);
+  }
 
   taskHelper.runNext();
 });
 
-/* Test display condition change */
-taskHelper.push(function testDisplayConditionChange() {
+/* Test Gsm display condition change */
+taskHelper.push(function testGsmDisplayConditionChange() {
   function testSPN(mcc, mnc, expectedIsDisplayNetworkNameRequired,
                    expectedIsDisplaySpnRequired, callback) {
     icc.addEventListener("iccinfochange", function handler() {
@@ -73,6 +88,12 @@ taskHelper.push(function testDisplayConditionChange() {
     [123, 456, false, true], // Not in HPLMN. Triggering iccinfochange
     [310, 260,  true, true], // inside HPLMN.
   ];
+
+  // Ignore this test if device is not in gsm mode.
+  if (!(icc.iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
+    taskHelper.runNext();
+    return;
+  }
 
   (function do_call(index) {
     let next = index < (testCases.length - 1) ? do_call.bind(null, index + 1) : taskHelper.runNext.bind(taskHelper);

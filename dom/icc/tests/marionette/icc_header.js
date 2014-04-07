@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const {Cc: Cc, Ci: Ci, Cr: Cr, Cu: Cu} = SpecialPowers;
+
 SpecialPowers.addPermission("mobileconnection", true, document);
 
 let iccManager = navigator.mozIccManager;
