@@ -14,8 +14,12 @@ namespace layers {
 
 /**
  * Drawing with a mask requires a mask surface and a transform.
+ * Sometimes the mask surface is a direct gfxASurface, but other times
+ * it's a SurfaceDescriptor.  For SurfaceDescriptor, we need to use a
+ * scoped AutoOpenSurface to get a gfxASurface for the
+ * SurfaceDescriptor.
  *
- * This helper class manages the gfxASurface
+ * This helper class manages the gfxASurface-or-SurfaceDescriptor
  * logic.
  */
 class MOZ_STACK_CLASS AutoMaskData {
@@ -33,6 +37,9 @@ public:
   void Construct(const gfx::Matrix& aTransform,
                  gfxASurface* aSurface);
 
+  void Construct(const gfx::Matrix& aTransform,
+                 const SurfaceDescriptor& aSurface);
+
   /** The returned surface can't escape the scope of |this|. */
   gfxASurface* GetSurface();
   const gfx::Matrix& GetTransform();
@@ -42,6 +49,7 @@ private:
 
   gfx::Matrix mTransform;
   nsRefPtr<gfxASurface> mSurface;
+  Maybe<AutoOpenSurface> mSurfaceOpener;
 
   AutoMaskData(const AutoMaskData&) MOZ_DELETE;
   AutoMaskData& operator=(const AutoMaskData&) MOZ_DELETE;
