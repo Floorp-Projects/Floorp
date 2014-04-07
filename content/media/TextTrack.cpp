@@ -125,6 +125,14 @@ TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 }
 
 void
+TextTrack::SetCuesDirty()
+{
+  for (uint32_t i = 0; i < mCueList->Length(); i++) {
+    ((*mCueList)[i])->Reset();
+  }
+}
+
+void
 TextTrack::UpdateActiveCueList()
 {
   if (!mTextTrackList) {

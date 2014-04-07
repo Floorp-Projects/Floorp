@@ -295,6 +295,11 @@ public:
     mReset = false;
   }
 
+  void Reset()
+  {
+    mReset = true;
+  }
+
   bool HasBeenReset()
   {
     return mReset;
