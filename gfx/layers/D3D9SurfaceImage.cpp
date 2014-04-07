@@ -6,9 +6,19 @@
 #include "D3D9SurfaceImage.h"
 #include "gfxImageSurface.h"
 #include "gfx2DGlue.h"
+#include "mozilla/layers/TextureD3D9.h"
+#include "mozilla/gfx/Types.h"
 
 namespace mozilla {
 namespace layers {
+
+
+D3D9SurfaceImage::D3D9SurfaceImage()
+  : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE)
+  , mSize(0, 0)
+{}
+
+D3D9SurfaceImage::~D3D9SurfaceImage() {}
 
 HRESULT
 D3D9SurfaceImage::SetData(const Data& aData)
@@ -170,6 +180,19 @@ D3D9SurfaceImage::DeprecatedGetAsSurface()
   systemMemorySurface->UnlockRect();
 
   return surface.forget();
+}
+
+TextureClient*
+D3D9SurfaceImage::GetTextureClient(CompositableClient* aClient)
+{
+  EnsureSynchronized();
+  if (!mTextureClient) {
+    RefPtr<SharedTextureClientD3D9> textureClient =
+      new SharedTextureClientD3D9(gfx::SurfaceFormat::B8G8R8X8, TEXTURE_FLAGS_DEFAULT);
+    textureClient->InitWith(mTexture, mShareHandle, mDesc);
+    mTextureClient = textureClient;
+  }
+  return mTextureClient;
 }
 
 TemporaryRef<gfx::SourceSurface>
