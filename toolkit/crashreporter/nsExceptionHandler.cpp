@@ -872,6 +872,7 @@ static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
                       MDRawAssertionInfo* assertion)
 {
   if (!exinfo) {
+    mozilla::IOInterposer::Disable();
     FreeBreakpadVM();
     return true;
   }
@@ -889,6 +890,7 @@ static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
     case STATUS_FLOAT_MULTIPLE_TRAPS:
       return false; // Don't write minidump, continue exception search
   }
+  mozilla::IOInterposer::Disable();
   FreeBreakpadVM();
   return true;
 }
