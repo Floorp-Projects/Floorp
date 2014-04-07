@@ -26,15 +26,10 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TextTrackList, DOMEventTargetHelper)
 
-  TextTrackList(nsISupports* aGlobal);
-  TextTrackList(nsISupports* aGlobal, TextTrackManager* aTextTrackManager);
+  TextTrackList(nsPIDOMWindow* aOwnerWindow);
+  TextTrackList(nsPIDOMWindow* aOwnerWindow, TextTrackManager* aTextTrackManager);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-
-  nsISupports* GetParentObject() const
-  {
-    return mGlobal;
-  }
 
   uint32_t Length() const
   {
@@ -72,7 +67,6 @@ public:
   IMPL_EVENT_HANDLER(removetrack)
 
 private:
-  nsCOMPtr<nsISupports> mGlobal;
   nsTArray< nsRefPtr<TextTrack> > mTextTracks;
   nsRefPtr<TextTrackManager> mTextTrackManager;
 

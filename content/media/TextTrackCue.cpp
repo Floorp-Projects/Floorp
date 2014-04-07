@@ -43,40 +43,40 @@ TextTrackCue::SetDefaultCueSettings()
   mVertical = DirectionSetting::_empty;
 }
 
-TextTrackCue::TextTrackCue(nsISupports* aGlobal,
+TextTrackCue::TextTrackCue(nsPIDOMWindow* aOwnerWindow,
                            double aStartTime,
                            double aEndTime,
                            const nsAString& aText,
                            ErrorResult& aRv)
-  : mText(aText)
+  : DOMEventTargetHelper(aOwnerWindow)
+  , mText(aText)
   , mStartTime(aStartTime)
   , mEndTime(aEndTime)
   , mReset(false)
 {
   SetDefaultCueSettings();
-  MOZ_ASSERT(aGlobal);
-  SetIsDOMBinding();
-  if (NS_FAILED(StashDocument(aGlobal))) {
+  MOZ_ASSERT(aOwnerWindow);
+  if (NS_FAILED(StashDocument())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 }
 
-TextTrackCue::TextTrackCue(nsISupports* aGlobal,
+TextTrackCue::TextTrackCue(nsPIDOMWindow* aOwnerWindow,
                            double aStartTime,
                            double aEndTime,
                            const nsAString& aText,
                            HTMLTrackElement* aTrackElement,
                            ErrorResult& aRv)
-  : mText(aText)
+  : DOMEventTargetHelper(aOwnerWindow)
+  , mText(aText)
   , mStartTime(aStartTime)
   , mEndTime(aEndTime)
   , mTrackElement(aTrackElement)
   , mReset(false)
 {
   SetDefaultCueSettings();
-  MOZ_ASSERT(aGlobal);
-  SetIsDOMBinding();
-  if (NS_FAILED(StashDocument(aGlobal))) {
+  MOZ_ASSERT(aOwnerWindow);
+  if (NS_FAILED(StashDocument())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 }
@@ -85,9 +85,9 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
  *  keep getting it from our window.
  */
 nsresult
-TextTrackCue::StashDocument(nsISupports* aGlobal)
+TextTrackCue::StashDocument()
 {
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aGlobal));
+  nsPIDOMWindow* window = GetOwner();
   if (!window) {
     return NS_ERROR_NO_INTERFACE;
   }

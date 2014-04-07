@@ -88,7 +88,7 @@ public:
   uint16_t ReadyState() const;
   void SetReadyState(uint16_t aReadyState);
 
-  TextTrack* Track();
+  TextTrack* GetTrack();
 
   virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
