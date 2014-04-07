@@ -22,7 +22,8 @@ export MOZ_TELEMETRY_REPORTING=1
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 # DISABLED WHILE NOT ON TRY ac_add_options --enable-warnings-as-errors
 
-# Use ccache
+# Use sccache
+no_sccache=
 . "$topsrcdir/build/mozconfig.cache"
 
 #B2G options

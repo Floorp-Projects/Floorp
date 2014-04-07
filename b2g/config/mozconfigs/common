@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 no_tooltool=1
+no_sccache=1
 
 # This file is included at the top of all b2g mozconfigs
 
