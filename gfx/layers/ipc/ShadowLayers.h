@@ -48,7 +48,6 @@ class PLayerTransactionParent;
 class LayerTransactionChild;
 class RefLayerComposite;
 class ShadowableLayer;
-class Shmem;
 class ShmemTextureClient;
 class SurfaceDescriptor;
 class TextureClient;
@@ -134,7 +133,6 @@ class Transaction;
 
 class ShadowLayerForwarder : public CompositableForwarder
 {
-  friend class AutoOpenSurface;
   friend class ContentClientIncremental;
   friend class ClientLayerManager;
 

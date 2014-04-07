@@ -8,7 +8,6 @@
 #include "ShadowLayers.h"
 #include <set>                          // for _Rb_tree_const_iterator, etc
 #include <vector>                       // for vector
-#include "AutoOpenSurface.h"            // for AutoOpenSurface, etc
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "ISurfaceAllocator.h"          // for IsSurfaceDescriptorValid
 #include "Layers.h"                     // for Layer
@@ -780,78 +779,6 @@ ISurfaceAllocator::PlatformDestroySharedSurface(SurfaceDescriptor*)
 }
 
 #endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
-
-AutoOpenSurface::AutoOpenSurface(OpenMode aMode,
-                                 const SurfaceDescriptor& aDescriptor)
-  : mDescriptor(aDescriptor)
-  , mMode(aMode)
-{
-  MOZ_ASSERT(IsSurfaceDescriptorValid(mDescriptor));
-}
-
-AutoOpenSurface::~AutoOpenSurface()
-{
-  if (mSurface) {
-    mSurface = nullptr;
-    ShadowLayerForwarder::CloseDescriptor(mDescriptor);
-  }
-}
-
-gfxContentType
-AutoOpenSurface::ContentType()
-{
-  if (mSurface) {
-    return mSurface->GetContentType();
-  }
-  return ShadowLayerForwarder::GetDescriptorSurfaceContentType(
-    mDescriptor, mMode, getter_AddRefs(mSurface));
-}
-
-gfxImageFormat
-AutoOpenSurface::ImageFormat()
-{
-  if (mSurface) {
-    nsRefPtr<gfxImageSurface> img = mSurface->GetAsImageSurface();
-    if (img) {
-      gfxImageFormat format = img->Format();
-      NS_ASSERTION(format != gfxImageFormat::Unknown,
-                   "ImageSurface RGB format should be known");
-
-      return format;
-    }
-  }
-
-  return ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
-    mDescriptor, mMode, getter_AddRefs(mSurface));
-}
-
-gfx::IntSize
-AutoOpenSurface::Size()
-{
-  if (mSurface) {
-    return mSurface->GetSize().ToIntSize();
-  }
-  return ShadowLayerForwarder::GetDescriptorSurfaceSize(
-    mDescriptor, mMode, getter_AddRefs(mSurface));
-}
-
-gfxASurface*
-AutoOpenSurface::Get()
-{
-  if (!mSurface) {
-    mSurface = ShadowLayerForwarder::OpenDescriptor(mMode, mDescriptor);
-  }
-  return mSurface.get();
-}
-
-gfxImageSurface*
-AutoOpenSurface::GetAsImage()
-{
-  if (!mSurfaceAsImage) {
-    mSurfaceAsImage = Get()->GetAsImageSurface();
-  }
-  return mSurfaceAsImage.get();
-}
 
 void
 ShadowLayerForwarder::Connect(CompositableClient* aCompositable)

@@ -42,7 +42,6 @@ class PTextureChild;
  */
 class CompositableForwarder : public ISurfaceAllocator
 {
-  friend class AutoOpenSurface;
 public:
 
   CompositableForwarder()

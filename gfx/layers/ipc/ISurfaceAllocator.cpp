@@ -20,6 +20,8 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
+#include "mozilla/ipc/Shmem.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 #ifdef DEBUG
 #include "prenv.h"
 #endif
@@ -55,6 +57,41 @@ void
 ISurfaceAllocator::Finalize()
 {
   ShrinkShmemSectionHeap();
+}
+
+static inline uint8_t*
+GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor, size_t& aSize)
+{
+  MOZ_ASSERT(IsSurfaceDescriptorValid(aDescriptor));
+  MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TShmem ||
+             aDescriptor.type() == SurfaceDescriptor::TMemoryImage);
+  if (aDescriptor.type() == SurfaceDescriptor::TShmem) {
+    Shmem shmem(aDescriptor.get_Shmem());
+    aSize = shmem.Size<uint8_t>();
+    return shmem.get<uint8_t>();
+  } else {
+    const MemoryImage& image = aDescriptor.get_MemoryImage();
+    aSize = std::numeric_limits<size_t>::max();
+    return reinterpret_cast<uint8_t*>(image.data());
+  }
+}
+
+TemporaryRef<gfx::DrawTarget>
+GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor)
+{
+  size_t size;
+  uint8_t* data = GetAddressFromDescriptor(aDescriptor, size);
+  ImageDataDeserializer image(data, size);
+  return image.GetAsDrawTarget(gfx::BackendType::CAIRO);
+}
+
+TemporaryRef<gfx::DataSourceSurface>
+GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor)
+{
+  size_t size;
+  uint8_t* data = GetAddressFromDescriptor(aDescriptor, size);
+  ImageDataDeserializer image(data, size);
+  return image.GetAsSurface();
 }
 
 bool
