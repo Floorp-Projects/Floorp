@@ -63,17 +63,6 @@ GetXRenderPictFormatFromId(Display* aDisplay, PictFormat aFormatId)
   return XRenderFindFormat(aDisplay, PictFormatID, &tmplate, 0);
 }
 
-static bool
-TakeAndDestroyXlibSurface(SurfaceDescriptor* aSurface)
-{
-  nsRefPtr<gfxXlibSurface> surf =
-    aSurface->get_SurfaceDescriptorX11().OpenForeign();
-  surf->TakePixmap();
-  *aSurface = SurfaceDescriptor();
-  // the Pixmap is destroyed when |surf| goes out of scope
-  return true;
-}
-
 SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf)
   : mId(aSurf->XDrawable())
   , mSize(aSurf->GetSize().ToIntSize())
@@ -115,95 +104,6 @@ SurfaceDescriptorX11::OpenForeign() const
   return surf->CairoStatus() ? nullptr : surf.forget();
 }
 
-bool
-ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
-                                                  gfxContentType aContent,
-                                                  uint32_t aCaps,
-                                                  SurfaceDescriptor* aBuffer)
-{
-  if (!UsingXCompositing()) {
-    // If we're not using X compositing, we're probably compositing on
-    // the client side, in which case X surfaces would just slow
-    // things down.  Use Shmem instead.
-    return false;
-  }
-  if (MAP_AS_IMAGE_SURFACE & aCaps) {
-    // We can't efficiently map pixmaps as gfxImageSurface, in
-    // general.  Fall back on Shmem.
-    return false;
-  }
-
-  gfxPlatform* platform = gfxPlatform::GetPlatform();
-  nsRefPtr<gfxASurface> buffer =
-    platform->CreateOffscreenSurface(aSize, aContent);
-  if (!buffer ||
-      buffer->GetType() != gfxSurfaceType::Xlib) {
-    NS_ERROR("creating Xlib front/back surfaces failed!");
-    return false;
-  }
-
-  gfxXlibSurface* bufferX = static_cast<gfxXlibSurface*>(buffer.get());
-  // Release Pixmap ownership to the layers model
-  bufferX->ReleasePixmap();
-
-  *aBuffer = SurfaceDescriptorX11(bufferX);
-  return true;
-}
-
-/*static*/ already_AddRefed<gfxASurface>
-ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
-                                             const SurfaceDescriptor& aSurface)
-{
-  if (SurfaceDescriptor::TSurfaceDescriptorX11 != aSurface.type()) {
-    return nullptr;
-  }
-  return aSurface.get_SurfaceDescriptorX11().OpenForeign();
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor& aDescriptor)
-{
-  // XIDs don't need to be "closed".
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
-  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
-  gfxContentType* aContent,
-  gfxASurface** aSurface)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
-  const SurfaceDescriptor& aDescriptor, OpenMode aMode,
-  gfx::IntSize* aSize,
-  gfxASurface** aSurface)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceImageFormat(
-  const SurfaceDescriptor&,
-  OpenMode,
-  gfxImageFormat*,
-  gfxASurface**)
-{
-  return false;
-}
-
-bool
-ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
-{
-  if (SurfaceDescriptor::TSurfaceDescriptorX11 != aSurface->type()) {
-    return false;
-  }
-  return TakeAndDestroyXlibSurface(aSurface);
-}
-
 /*static*/ void
 ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 {
@@ -233,15 +133,6 @@ LayerManagerComposite::PlatformSyncBeforeReplyUpdate()
 LayerManagerComposite::SupportsDirectTexturing()
 {
   return false;
-}
-
-bool
-ISurfaceAllocator::PlatformDestroySharedSurface(SurfaceDescriptor* aSurface)
-{
-  if (SurfaceDescriptor::TSurfaceDescriptorX11 != aSurface->type()) {
-    return false;
-  }
-  return TakeAndDestroyXlibSurface(aSurface);
 }
 
 } // namespace layers
