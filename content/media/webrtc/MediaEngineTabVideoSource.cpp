@@ -279,7 +279,7 @@ MediaEngineTabVideoSource::Stop(mozilla::SourceMediaStream*, mozilla::TrackID)
 }
 
 nsresult
-MediaEngineTabVideoSource::Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t)
+MediaEngineTabVideoSource::Config(bool, uint32_t, bool, uint32_t, bool, uint32_t)
 {
   return NS_OK;
 }
