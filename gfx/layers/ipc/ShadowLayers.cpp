@@ -119,21 +119,10 @@ public:
     NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
     mMutants.insert(aLayer);
   }
-  void AddBufferToDestroy(gfxSharedImageSurface* aBuffer)
-  {
-    return AddBufferToDestroy(aBuffer->GetShmem());
-  }
-  void AddBufferToDestroy(const SurfaceDescriptor& aBuffer)
-  {
-    NS_ABORT_IF_FALSE(!Finished(), "forgot BeginTransaction?");
-    mDyingBuffers.AppendElement(aBuffer);
-  }
-
   void End()
   {
     mCset.clear();
     mPaints.clear();
-    mDyingBuffers.Clear();
     mMutants.clear();
     mOpen = false;
     mSwapRequired = false;
@@ -150,7 +139,6 @@ public:
 
   EditVector mCset;
   EditVector mPaints;
-  BufferArray mDyingBuffers;
   ShadowableLayerSet mMutants;
   nsIntRect mTargetBounds;
   ScreenRotation mTargetRotation;
@@ -248,12 +236,6 @@ ShadowLayerForwarder::CreatedRefLayer(ShadowableLayer* aRef)
 }
 
 void
-ShadowLayerForwarder::DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy)
-{
-  mTxn->AddBufferToDestroy(aBackBufferToDestroy);
-}
-
-void
 ShadowLayerForwarder::Mutated(ShadowableLayer* aMutant)
 {
 mTxn->AddMutant(aMutant);
@@ -315,11 +297,11 @@ ShadowLayerForwarder::CheckSurfaceDescriptor(const SurfaceDescriptor* aDescripto
     return;
   }
 
-  if (aDescriptor->type() == SurfaceDescriptor::TShmem) {
-    const mozilla::ipc::Shmem& shmem = aDescriptor->get_Shmem();
-    shmem.AssertInvariants();
+  if (aDescriptor->type() == SurfaceDescriptor::TSurfaceDescriptorShmem) {
+    const SurfaceDescriptorShmem& shmem = aDescriptor->get_SurfaceDescriptorShmem();
+    shmem.data().AssertInvariants();
     MOZ_ASSERT(mShadowManager &&
-               mShadowManager->IsTrackingSharedMemory(shmem.mSegment));
+               mShadowManager->IsTrackingSharedMemory(shmem.data().mSegment));
   }
 }
 #endif
@@ -454,10 +436,6 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] destroying buffers..."));
-
-  for (uint32_t i = 0; i < mTxn->mDyingBuffers.Length(); ++i) {
-    DestroySharedSurface(&mTxn->mDyingBuffers[i]);
-  }
 
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
 
