@@ -22,11 +22,10 @@
            onTestEvent = function(target) {
              ok(true, 'called event handler');
 
-             // First, dispatch an event to the anonymous content. The event
-             // handlers on the AC should run, but they won't until bug 948000
-             // is fixed. So the check here is a todo().
+             // Try calling event handlers on anonymous content.
              var e = new MouseEvent('click');
              document.getAnonymousNodes(target)[1].dispatchEvent(e);
+             ok(window.calledEventHandlerOnAC, "Should invoke event handler on AC");
 
              // Now, dispatch a key event to test key handlers and move the test along.
              var k = document.createEvent('KeyboardEvent');
@@ -50,7 +49,6 @@
         win = XPCNativeWrapper.unwrap(window);
         SpecialPowers = win.SpecialPowers;
         ok = win.ok = SpecialPowers.wrap(window.parent).ok;
-        todo = win.todo = SpecialPowers.wrap(window.parent).todo;
         is = win.is = SpecialPowers.wrap(window.parent).is;
         info = win.info = SpecialPowers.wrap(window.parent).info;
 
@@ -73,6 +71,6 @@
       <handler event="testEvent" action="onTestEvent(this)" allowuntrusted="true"/>
       <handler event="keyup" action="ok(true, 'called key handler'); doFinish();" allowuntrusted="true"/>
     </handlers>
-    <content>Anonymous Content<html:div onclick="todo(true, 'called event handler on ac, this needs bug 948000');"></html:div><html:b style="display:none"><children/></html:b></content>
+    <content>Anonymous Content<html:div onclick="window.calledEventHandlerOnAC = true;"></html:div><html:b style="display:none"><children/></html:b></content>
   </binding>
 </bindings>
