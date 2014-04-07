@@ -379,18 +379,6 @@ ShadowLayerForwarder::DeallocGrallocBuffer(PGrallocBufferChild* aChild)
 //-----------------------------------------------------------------------------
 // Both processes
 
-/*static*/ sp<GraphicBuffer>
-GrallocBufferActor::GetFrom(const SurfaceDescriptorGralloc& aDescriptor)
-{
-  GrallocBufferActor* gba = nullptr;
-  if (PGrallocBufferChild* child = aDescriptor.bufferChild()) {
-    gba = static_cast<GrallocBufferActor*>(child);
-  } else if (PGrallocBufferParent* parent = aDescriptor.bufferParent()) {
-    gba = static_cast<GrallocBufferActor*>(parent);
-  }
-  return gba->mGraphicBuffer;
-}
-
 android::GraphicBuffer*
 GrallocBufferActor::GetGraphicBuffer()
 {

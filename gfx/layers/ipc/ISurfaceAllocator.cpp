@@ -63,14 +63,14 @@ static inline uint8_t*
 GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor, size_t& aSize)
 {
   MOZ_ASSERT(IsSurfaceDescriptorValid(aDescriptor));
-  MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TShmem ||
-             aDescriptor.type() == SurfaceDescriptor::TMemoryImage);
-  if (aDescriptor.type() == SurfaceDescriptor::TShmem) {
-    Shmem shmem(aDescriptor.get_Shmem());
+  MOZ_ASSERT(aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorShmem ||
+             aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorMemory);
+  if (aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorShmem) {
+    Shmem shmem(aDescriptor.get_SurfaceDescriptorShmem().data());
     aSize = shmem.Size<uint8_t>();
     return shmem.get<uint8_t>();
   } else {
-    const MemoryImage& image = aDescriptor.get_MemoryImage();
+    const SurfaceDescriptorMemory& image = aDescriptor.get_SurfaceDescriptorMemory();
     aSize = std::numeric_limits<size_t>::max();
     return reinterpret_cast<uint8_t*>(image.data());
   }
@@ -95,27 +95,6 @@ GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor)
 }
 
 bool
-ISurfaceAllocator::AllocSharedImageSurface(const gfx::IntSize& aSize,
-                               gfxContentType aContent,
-                               gfxSharedImageSurface** aBuffer)
-{
-  mozilla::ipc::SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
-  gfxImageFormat format = gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
-
-  nsRefPtr<gfxSharedImageSurface> back =
-    gfxSharedImageSurface::CreateUnsafe(this,
-                                        gfx::ThebesIntSize(aSize),
-                                        format,
-                                        shmemType);
-  if (!back)
-    return false;
-
-  *aBuffer = nullptr;
-  back.swap(*aBuffer);
-  return true;
-}
-
-bool
 ISurfaceAllocator::AllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                           gfxContentType aContent,
                                           SurfaceDescriptor* aBuffer)
@@ -129,11 +108,11 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    gfxImageFormat format =
-      gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
-    int32_t stride = gfxASurface::FormatStrideForWidth(format, aSize.width);
-    uint8_t *data = new (std::nothrow) uint8_t[stride * aSize.height];
+  gfx::SurfaceFormat format =
+    gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aContent);
+  size_t size = ImageDataSerializer::ComputeMinBufferSize(aSize, format);
+  if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
+    uint8_t *data = new (std::nothrow) uint8_t[size];
     if (!data) {
       return false;
     }
@@ -141,30 +120,32 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
 #ifdef XP_MACOSX
     // Workaround a bug in Quartz where drawing an a8 surface to another a8
     // surface with OPERATOR_SOURCE still requires the destination to be clear.
-    if (format == gfxImageFormat::A8) {
-      memset(data, 0, stride * aSize.height);
+    if (format == SurfaceFormat::A8) {
+      memset(data, 0, size);
     }
 #endif
-    *aBuffer = MemoryImage((uintptr_t)data, aSize, stride, format);
-    return true;
-  }
+    *aBuffer = SurfaceDescriptorMemory((uintptr_t)data, format);
+  } else {
 
-  nsRefPtr<gfxSharedImageSurface> buffer;
-  if (!AllocSharedImageSurface(aSize, aContent,
-                               getter_AddRefs(buffer))) {
-    return false;
-  }
+    mozilla::ipc::SharedMemory::SharedMemoryType shmemType = OptimalShmemType();
+    mozilla::ipc::Shmem shmem;
+    if (!AllocUnsafeShmem(size, shmemType, &shmem)) {
+      return false;
+    }
 
-  *aBuffer = buffer->GetShmem();
+    *aBuffer = SurfaceDescriptorShmem(shmem, format);
+  }
+  
+  uint8_t* data = GetAddressFromDescriptor(*aBuffer, size);
+  ImageDataSerializer serializer(data, size);
+  serializer.InitializeBufferInfo(aSize, format);
   return true;
 }
 
 /* static */ bool
 ISurfaceAllocator::IsShmem(SurfaceDescriptor* aSurface)
 {
-  return aSurface && (aSurface->type() == SurfaceDescriptor::TShmem ||
-                      aSurface->type() == SurfaceDescriptor::TYCbCrImage ||
-                      aSurface->type() == SurfaceDescriptor::TRGBImage);
+  return aSurface && (aSurface->type() == SurfaceDescriptor::TSurfaceDescriptorShmem);
 }
 
 void
@@ -178,22 +159,12 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
     return;
   }
   switch (aSurface->type()) {
-    case SurfaceDescriptor::TShmem:
-      DeallocShmem(aSurface->get_Shmem());
+    case SurfaceDescriptor::TSurfaceDescriptorShmem:
+      DeallocShmem(aSurface->get_SurfaceDescriptorShmem().data());
       break;
-    case SurfaceDescriptor::TYCbCrImage:
-      DeallocShmem(aSurface->get_YCbCrImage().data());
-      break;
-    case SurfaceDescriptor::TRGBImage:
-      DeallocShmem(aSurface->get_RGBImage().data());
-      break;
-    case SurfaceDescriptor::TSurfaceDescriptorD3D9:
-    case SurfaceDescriptor::TSurfaceDescriptorDIB:
-    case SurfaceDescriptor::TSurfaceDescriptorD3D10:
-      break;
-    case SurfaceDescriptor::TMemoryImage:
-      GfxMemoryImageReporter::WillFree((uint8_t*)aSurface->get_MemoryImage().data());
-      delete [] (uint8_t*)aSurface->get_MemoryImage().data();
+    case SurfaceDescriptor::TSurfaceDescriptorMemory:
+      GfxMemoryImageReporter::WillFree((uint8_t*)aSurface->get_SurfaceDescriptorMemory().data());
+      delete [] (uint8_t*)aSurface->get_SurfaceDescriptorMemory().data();
       break;
     case SurfaceDescriptor::Tnull_t:
     case SurfaceDescriptor::T__None:

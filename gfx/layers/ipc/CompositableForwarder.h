@@ -106,16 +106,6 @@ public:
                                  const nsIntRect& aRect) = 0;
 
   /**
-   * The specified layer is destroying its buffers.
-   * |aBackBufferToDestroy| is deallocated when this transaction is
-   * posted to the parent.  During the parent-side transaction, the
-   * shadow is told to destroy its front buffer.  This can happen when
-   * a new front/back buffer pair have been created because of a layer
-   * resize, e.g.
-   */
-  virtual void DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy) = 0;
-
-  /**
    * Tell the CompositableHost on the compositor side to remove the texture.
    * This function does not delete the TextureHost corresponding to the
    * TextureClient passed in parameter.
