@@ -28,7 +28,6 @@
 #include "nsIConsoleService.h"
 
 #include <memory>
-#include "mozilla/Compression.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Base64.h"
 #include "mozilla/SHA1.h"
@@ -42,6 +41,10 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIEventTarget.h"
 #include "nsProxyRelease.h"
+
+// Undo the damage done by mozzconf.h
+#undef compress
+#include "mozilla/Compression.h"
 
 #ifdef __GNUC__
 #define PACKED_STRUCT __attribute__((packed))
