@@ -808,6 +808,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->fileBufSize = 0;
   instanceData->throwOnNextInvoke = false;
   instanceData->runScriptOnPaint = false;
+  instanceData->dontTouchElement = false;
   instanceData->testrange = nullptr;
   instanceData->hasWidget = false;
   instanceData->npnNewStream = false;
@@ -949,6 +950,10 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     if (strcmp(argn[i], "paintscript") == 0) {
       instanceData->runScriptOnPaint = true;
     }
+
+    if (strcmp(argn[i], "donttouchelement") == 0) {
+      instanceData->dontTouchElement = true;
+    }
     // "cleanupwidget" is only used with nptest_gtk, defaulting to true.  It
     // indicates whether the plugin should destroy its window in response to
     // NPP_Destroy (or let the platform destroy the widget when the parent
@@ -1024,15 +1029,18 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 
   NPVariant variantTrue;
   BOOLEAN_TO_NPVARIANT(true, variantTrue);
-
-  // Set a property on NPNVPluginElementNPObject
   NPObject* o = nullptr;
-  err = NPN_GetValue(instance, NPNVPluginElementNPObject, &o);
-  if (err == NPERR_NO_ERROR) {
-    NPN_SetProperty(instance, o,
-                    NPN_GetStringIdentifier("pluginFoundElement"), &variantTrue);
-    NPN_ReleaseObject(o);
-    o = nullptr;
+
+  // Set a property on NPNVPluginElementNPObject, unless the consumer explicitly
+  // opted out of this behavior.
+  if (!instanceData->dontTouchElement) {
+    err = NPN_GetValue(instance, NPNVPluginElementNPObject, &o);
+    if (err == NPERR_NO_ERROR) {
+      NPN_SetProperty(instance, o,
+                      NPN_GetStringIdentifier("pluginFoundElement"), &variantTrue);
+      NPN_ReleaseObject(o);
+      o = nullptr;
+    }
   }
 
   // Set a property on NPNVWindowNPObject

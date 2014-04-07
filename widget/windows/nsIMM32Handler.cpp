@@ -251,7 +251,9 @@ nsIMM32Handler::CancelComposition(nsWindow* aWindow, bool aForce)
 void
 nsIMM32Handler::OnUpdateComposition(nsWindow* aWindow)
 {
-  NS_ENSURE_TRUE_VOID(gIMM32Handler);
+  if (!gIMM32Handler) {
+    return;
+  }
  
   if (aWindow->PluginHasFocus()) {
     return;

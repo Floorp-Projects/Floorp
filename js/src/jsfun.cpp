@@ -32,7 +32,6 @@
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
-#include "jit/AsmJSModule.h"
 #include "jit/Ion.h"
 #include "jit/IonFrameIterator.h"
 #endif

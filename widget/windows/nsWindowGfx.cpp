@@ -690,6 +690,7 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                     IntPoint(0, 0));
   } else {
     dataSurface = surface->GetDataSurface();
+    NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
     mappedOK = dataSurface->Map(DataSourceSurface::MapType::READ, &map);
   }
   NS_ENSURE_TRUE(dataSurface && mappedOK, NS_ERROR_FAILURE);

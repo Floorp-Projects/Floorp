@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
     var counter = 0;
     var error = null;
     function getAnonymousNodes(e) {
-      return SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(e));
+      return SpecialPowers.wrap(document).getAnonymousNodes(e);
     }
     try {
       var xp = new XPathEvaluator();
@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
         lastChild)[0].getAttributeNode('attr');
     var resultAttr = null;
     try {
-      var xp2 = xp.evaluate(".",
+      var xp2 = SpecialPowers.wrap(xp).evaluate(".",
                             anonAttr1,
                             null,
                             SpecialPowers.Ci.nsIDOMXPathResult.
@@ -75,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       // Attribute changing in a different anonymous tree.
       anonAttr2.value = "foo";
       resultAttr = xp2.iterateNext();
-      ok(resultAttr == anonAttr1, "XPathEvaluator returned wrong attribute!")
+      ok(SpecialPowers.compare(resultAttr, anonAttr1), "XPathEvaluator returned wrong attribute!")
     } catch (e) {
       ok(false, e);
     }

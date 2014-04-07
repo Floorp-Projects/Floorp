@@ -28,51 +28,60 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=372086
 
 /** Test for Bug 372086 **/
 
+// Note that we could avoid a lot of SpecialPowers.unwrap calls if the SpecialPowers
+// wrappers could be made to preserve identity. See bug 718543.
+
 function runTest() {
-  var range = document.createRange();
+  var range = SpecialPowers.wrap(document.createRange());
 
   var c = $("d").firstChild;
   var a = $("d").nextSibling;
   
   range.setStart(c, 1);
   range.setEnd(c, 3);
-  is(range.startContainer, c, "Unexpected start container");
+  is(SpecialPowers.unwrap(range.startContainer), c, "Unexpected start container");
   is(range.startOffset, 1, "Unexpected start offset");
-  is(range.endContainer, c, "Unexpected end container");
+  is(SpecialPowers.unwrap(range.endContainer), c, "Unexpected end container");
   is(range.endOffset, 3, "Unexpected end offset");
   is(range.toString(), "bc", "Unexpected range serialization");
 
-  var anon = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes($("d")))[0];
+  var anon = SpecialPowers.wrap(document).getAnonymousNodes($("d"))[0];
   // Should collapse the range, because can't determine order
   range.setEnd(anon, 2);
-  is(range.startContainer, anon, "Unexpected collapsed start container");
+  is(SpecialPowers.unwrap(range.startContainer), SpecialPowers.unwrap(anon),
+     "Unexpected collapsed start container");
   is(range.startOffset, 2, "Unexpected collapsed start offset");
-  is(range.endContainer, anon, "Unexpected collapsed end container");
+  is(SpecialPowers.unwrap(range.endContainer), SpecialPowers.unwrap(anon),
+     "Unexpected collapsed end container");
   is(range.endOffset, 2, "Unexpected collapsed end offset");
   is(range.toString(), "", "Unexpected collapsed range serialization");
 
   range.setEnd(a, 2);
   range.setStart(a, 0);
-  is(range.startContainer, a, "Unexpected start container after");
+  is(SpecialPowers.unwrap(range.startContainer), a, "Unexpected start container after");
   is(range.startOffset, 0, "Unexpected start offset after");
-  is(range.endContainer, a, "Unexpected end container after");
+  is(SpecialPowers.unwrap(range.endContainer), a, "Unexpected end container after");
   is(range.endOffset, 2, "Unexpected end offset after");
   is(range.toString(), "de", "Unexpected range serialization after");
 
-  anon = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes($("d")))[2];
+  anon = SpecialPowers.wrap(document).getAnonymousNodes($("d"))[2];
   // Collapses because one endpoint is anonymous from point of view of
   // the other.  
   range.setStart(anon, 1);
-  is(range.startContainer, anon, "Unexpected newly collapsed start container");
+  is(SpecialPowers.unwrap(range.startContainer),
+     SpecialPowers.unwrap(anon), "Unexpected newly collapsed start container");
   is(range.startOffset, 1, "Unexpected newly collapsed start offset");
-  is(range.endContainer, anon, "Unexpected newly collapsed end container");
+  is(SpecialPowers.unwrap(range.endContainer), SpecialPowers.unwrap(anon),
+     "Unexpected newly collapsed end container");
   is(range.endOffset, 1, "Unexpected newly collapsed end offset");
   is(range.toString(), "", "Unexpected collapsed range serialization");
 
   range.setEnd(anon, 3);
-  is(range.startContainer, anon, "Unexpected anon start container");
+  is(SpecialPowers.unwrap(range.startContainer),
+     SpecialPowers.unwrap(anon), "Unexpected anon start container");
   is(range.startOffset, 1, "Unexpected anon start offset");
-  is(range.endContainer, anon, "Unexpected anon end container");
+  is(SpecialPowers.unwrap(range.endContainer),
+     SpecialPowers.unwrap(anon), "Unexpected anon end container");
   is(range.endOffset, 3, "Unexpected anon end offset");
   is(range.toString(), "kl", "Unexpected anon range serialization");
 }

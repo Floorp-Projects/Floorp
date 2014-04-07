@@ -42,7 +42,7 @@ function run() {
         style_text.data = selector + "{ z-index: " + zi + " }";
 
         var doc_div = document.getElementById("display");
-        var anon_div = SpecialPowers.unwrap(SpecialPowers.wrap(document).getAnonymousNodes(doc_div))[0];
+        var anon_div = SpecialPowers.wrap(document).getAnonymousNodes(doc_div)[0];
         var should_match = [];
         var should_not_match = [];
         (matches_docdiv ? should_match : should_not_match).push(doc_div);
@@ -50,12 +50,12 @@ function run() {
 
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
-            is(getComputedStyle(e, "").zIndex, zi,
+            is(SpecialPowers.wrap(window).getComputedStyle(e, "").zIndex, zi,
                "element matched " + selector);
         }
         for (var i = 0; i < should_not_match.length; ++i) {
             var e = should_not_match[i];
-            is(getComputedStyle(e, "").zIndex, "auto",
+            is(SpecialPowers.wrap(window).getComputedStyle(e, "").zIndex, "auto",
                "element did not match " + selector);
         }
 

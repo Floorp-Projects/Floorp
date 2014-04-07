@@ -511,12 +511,14 @@ TextureClient::Finalize()
   RefPtr<TextureChild> actor = mActor;
 
   if (actor) {
+    // The actor has a raw pointer to us, actor->mTextureClient. 
+    // Null it before RemoveTexture calls to avoid invalid actor->mTextureClient
+    // when calling TextureChild::ActorDestroy()
+    actor->mTextureClient = nullptr;
     // this will call ForceRemove in the right thread, using a sync proxy if needed
     if (actor->GetForwarder()) {
       actor->GetForwarder()->RemoveTexture(this);
     }
-    // The actor has a raw pointer to us, actor->mTextureClient. Null it before we die.
-    actor->mTextureClient = nullptr;
   }
 }
 

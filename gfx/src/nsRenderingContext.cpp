@@ -83,6 +83,13 @@ nsRenderingContext::Init(nsDeviceContext* aContext,
     mP2A = mDeviceContext->AppUnitsPerDevPixel();
 }
 
+void
+nsRenderingContext::Init(nsDeviceContext* aContext,
+                         DrawTarget *aDrawTarget)
+{
+    Init(aContext, new gfxContext(aDrawTarget));
+}
+
 //
 // graphics state
 //
