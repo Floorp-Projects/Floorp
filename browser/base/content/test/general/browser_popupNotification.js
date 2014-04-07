@@ -878,7 +878,7 @@ var tests = [
       let callbackCount = 0;
       this.testNotif1 = new basicNotification();
       this.testNotif1.message += " 1";
-      showNotification(this.testNotif1);
+      this.notification1 = showNotification(this.testNotif1);
       this.testNotif1.options.eventCallback = function (eventName) {
         info("notifyObj1.options.eventCallback: " + eventName);
         if (eventName == "dismissed") {
@@ -901,13 +901,16 @@ var tests = [
           }
         }
       };
-      showNotification(this.testNotif2);
+      this.notification2 = showNotification(this.testNotif2);
     },
     onShown: function (popup) {
       is(popup.childNodes.length, 2, "two notifications are shown");
       dismissNotification(popup);
     },
-    onHidden: function () {}
+    onHidden: function () {
+      this.notification1.remove();
+      this.notification2.remove();
+    }
   },
   { // Test #30 - Popup Notifications main actions should catch exceptions from callbacks
     run: function () {
@@ -1012,10 +1015,10 @@ var tests = [
       gBrowser.selectedTab = gBrowser.addTab("about:blank");
       let notifyObj = new basicNotification();
       let originalCallback = notifyObj.options.eventCallback;
-        notifyObj.options.eventCallback = function (eventName) {
-          originalCallback(eventName);
-          return eventName == "swapping";
-        };
+      notifyObj.options.eventCallback = function (eventName) {
+        originalCallback(eventName);
+        return eventName == "swapping";
+      };
 
       showNotification(notifyObj);
       let win = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
@@ -1035,20 +1038,22 @@ var tests = [
       this.notifyObj = new basicNotification();
       this.notifyObj.options.hideNotNow = true;
       this.notifyObj.mainAction.dismiss = true;
-      showNotification(this.notifyObj);
+      this.notification = showNotification(this.notifyObj);
     },
     onShown: function (popup) {
       // checkPopup verifies that the Not Now item is hidden, and that no separator is added.
       checkPopup(popup, this.notifyObj);
       triggerMainCommand(popup);
     },
-    onHidden: function (popup) { }
+    onHidden: function (popup) {
+      this.notification.remove();
+    }
   },
   { // Test #37 - the main action callback can keep the notification.
     run: function () {
       this.notifyObj = new basicNotification();
       this.notifyObj.mainAction.dismiss = true;
-      showNotification(this.notifyObj);
+      this.notification = showNotification(this.notifyObj);
     },
     onShown: function (popup) {
       checkPopup(popup, this.notifyObj);
@@ -1057,13 +1062,14 @@ var tests = [
     onHidden: function (popup) {
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
       ok(!this.notifyObj.removedCallbackTriggered, "removed callback wasn't triggered");
+      this.notification.remove();
     }
   },
   { // Test #38 - a secondary action callback can keep the notification.
     run: function () {
       this.notifyObj = new basicNotification();
       this.notifyObj.secondaryActions[0].dismiss = true;
-      showNotification(this.notifyObj);
+      this.notification = showNotification(this.notifyObj);
     },
     onShown: function (popup) {
       checkPopup(popup, this.notifyObj);
@@ -1072,6 +1078,23 @@ var tests = [
     onHidden: function (popup) {
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
       ok(!this.notifyObj.removedCallbackTriggered, "removed callback wasn't triggered");
+      this.notification.remove();
+    }
+  },
+  { // Test #39 - returning true in the showing callback should dismiss the notification.
+    run: function() {
+      let notifyObj = new basicNotification();
+      let originalCallback = notifyObj.options.eventCallback;
+      notifyObj.options.eventCallback = function (eventName) {
+        originalCallback(eventName);
+        return eventName == "showing";
+      };
+
+      let notification = showNotification(notifyObj);
+      ok(notifyObj.showingCallbackTriggered, "the showing callback was triggered");
+      ok(!notifyObj.shownCallbackTriggered, "the shown callback wasn't triggered");
+      notification.remove();
+      goNext();
     }
   }
 ];

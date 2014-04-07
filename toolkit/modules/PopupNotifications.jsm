@@ -230,6 +230,8 @@ PopupNotifications.prototype = {
    *                     "showing": notification is about to be shown
    *                                (this can be fired multiple times as
    *                                 notifications are dismissed and re-shown)
+   *                                If the callback returns true, the notification
+   *                                will be dismissed.
    *                     "shown": notification has been shown (this can be fired
    *                              multiple times as notifications are dismissed
    *                              and re-shown)
@@ -589,9 +591,15 @@ PopupNotifications.prototype = {
   _showPanel: function PopupNotifications_showPanel(notificationsToShow, anchorElement) {
     this.panel.hidden = false;
 
-    notificationsToShow.forEach(function (n) {
-      this._fireCallback(n, NOTIFICATION_EVENT_SHOWING);
-    }, this);
+    notificationsToShow = notificationsToShow.filter(n => {
+      let dismiss = this._fireCallback(n, NOTIFICATION_EVENT_SHOWING);
+      if (dismiss)
+        n.dismissed = true;
+      return !dismiss;
+    });
+    if (!notificationsToShow.length)
+      return;
+
     this._refreshPanel(notificationsToShow);
 
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement)
