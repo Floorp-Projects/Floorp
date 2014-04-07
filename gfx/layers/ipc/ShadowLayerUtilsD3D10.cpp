@@ -18,75 +18,10 @@ using namespace mozilla::gl;
 namespace mozilla {
 namespace layers {
 
-// Platform-specific shadow-layers interfaces.  See ShadowLayers.h.
-// D3D10 doesn't need all these yet.
-bool
-ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize&,
-                                                  gfxContentType,
-                                                  uint32_t,
-                                                  SurfaceDescriptor*)
-{
-  return false;
-}
-
-/*static*/ already_AddRefed<gfxASurface>
-ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode,
-                                             const SurfaceDescriptor&)
-{
-  return nullptr;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformCloseDescriptor(const SurfaceDescriptor&)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
-  const SurfaceDescriptor&,
-  OpenMode,
-  gfxContentType*,
-  gfxASurface**)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
-  const SurfaceDescriptor&,
-  OpenMode,
-  gfx::IntSize*,
-  gfxASurface**)
-{
-  return false;
-}
-
-/*static*/ bool
-ShadowLayerForwarder::PlatformGetDescriptorSurfaceImageFormat(
-  const SurfaceDescriptor&,
-  OpenMode,
-  gfxImageFormat*,
-  gfxASurface**)
-{
-  return false;
-}
-
-bool
-ShadowLayerForwarder::PlatformDestroySharedSurface(SurfaceDescriptor*)
-{
-  return false;
-}
 
 /*static*/ void
 ShadowLayerForwarder::PlatformSyncBeforeUpdate()
 {
-}
-
-bool
-ISurfaceAllocator::PlatformDestroySharedSurface(SurfaceDescriptor*)
-{
-  return false;
 }
 
 /*static*/ bool
