@@ -44,10 +44,17 @@ parent:
   DivertComplete();
 
 child:
-  OnStartRequest(int64_t aContentLength, nsCString aContentType,
-                 PRTime aLastModified, nsCString aEntityID, URIParams aURI);
-  OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
-  OnStopRequest(nsresult statusCode);
+  OnStartRequest(nsresult aChannelStatus,
+                 int64_t aContentLength,
+                 nsCString aContentType,
+                 PRTime aLastModified,
+                 nsCString aEntityID,
+                 URIParams aURI);
+  OnDataAvailable(nsresult channelStatus,
+                  nsCString data,
+                  uint64_t offset,
+                  uint32_t count);
+  OnStopRequest(nsresult channelStatus);
   FailedAsyncOpen(nsresult statusCode);
 
   // Parent has been suspended for diversion; no more events to be enqueued.
