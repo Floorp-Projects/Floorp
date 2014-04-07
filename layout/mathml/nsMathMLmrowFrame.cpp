@@ -53,3 +53,17 @@ nsMathMLmrowFrame::AttributeChanged(int32_t  aNameSpaceID,
 
   return nsMathMLContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
+
+/* virtual */ eMathMLFrameType
+nsMathMLmrowFrame::GetMathMLFrameType()
+{
+  if (!IsMrowLike()) {
+    nsIMathMLFrame* child = do_QueryFrame(mFrames.FirstChild());
+    if (child) {
+      // We only have one child, so we return the frame type of that child as if
+      // we didn't exist.
+      return child->GetMathMLFrameType();
+    }
+  }
+  return nsMathMLFrame::GetMathMLFrameType();
+}
