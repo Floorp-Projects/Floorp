@@ -340,7 +340,18 @@ def run_test_remote(test, device, prefix, options):
     # the same buffer to both.
     return TestOutput(test, cmd, out, out, returncode, None, False)
 
-def check_output(out, err, rc, test):
+def check_output(out, err, rc, timed_out, test):
+    if timed_out:
+        # The shell sometimes hangs on shutdown on Windows 7 and Windows
+        # Server 2008. See bug 970063 comment 7 for a description of the
+        # problem. Until bug 956899 is fixed, ignore timeouts on these
+        # platforms (versions 6.0 and 6.1).
+        if sys.platform == 'win32':
+            ver = sys.getwindowsversion()
+            if ver.major == 6 and ver.minor <= 1:
+                return True
+        return False
+
     if test.expect_error:
         # The shell exits with code 3 on uncaught exceptions.
         # Sometimes 0 is returned on Windows for unknown reasons.
@@ -582,7 +593,7 @@ def process_test_results(results, num_tests, options):
             if res.test.valgrind:
                 sys.stdout.write(res.err)
 
-            ok = check_output(res.out, res.err, res.rc, res.test)
+            ok = check_output(res.out, res.err, res.rc, res.timed_out, res.test)
             doing = 'after %s' % res.test.relpath_tests
             if not ok:
                 failures.append(res)
