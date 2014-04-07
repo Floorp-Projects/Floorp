@@ -97,18 +97,10 @@ public:
         int samplingFreqHz, int current_delay_ms) = 0;
 
 
-    // This function inserts audio written to the OS audio drivers for use
-    // as the far-end signal for AEC processing.  The length of the block
-    // must be 160, 320, 441 or 480 samples (for 16000, 32000, 44100 or
-    // 48000 kHz sampling rates respectively).
-    virtual int ExternalPlayoutData(
-        int16_t speechData10ms[], int samplingFreqHz, int num_channels,
-        int current_delay_ms, int& lengthSamples) = 0;
-
     // This function gets audio for an external playout sink.
     // During transmission, this function should be called every ~10 ms
     // to obtain a new 10 ms frame of audio. The length of the block will
-    // be 160, 320, 441 or 480 samples (for 16000, 32000, 44100 or 48000
+    // be 160, 320, 440 or 480 samples (for 16000, 32000, 44100 or 48000
     // kHz sampling rates respectively).
     virtual int ExternalPlayoutGetData(
         int16_t speechData10ms[], int samplingFreqHz,

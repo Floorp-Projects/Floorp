@@ -280,68 +280,6 @@ int VoEExternalMediaImpl::SetExternalPlayoutStatus(bool enable)
 #endif
 }
 
-// This inserts a copy of the raw audio sent to the output drivers to use
-// as the "far end" signal for the AEC.  Currently only 10ms chunks are
-// supported unfortunately.  Since we have to rechunk to 10ms to call this,
-// thre isn't much gained by allowing N*10ms here; external code can loop
-// if needed.
-int VoEExternalMediaImpl::ExternalPlayoutData(
-    int16_t speechData10ms[],
-    int samplingFreqHz,
-    int num_channels,
-    int current_delay_ms,
-    int& lengthSamples)
-{
-    WEBRTC_TRACE(kTraceStream, kTraceVoice, VoEId(shared_->instance_id(), -1),
-                 "ExternalPlayoutData(speechData10ms=0x%x,"
-                 " lengthSamples=%u, samplingFreqHz=%d, current_delay_ms=%d)",
-                 &speechData10ms[0], lengthSamples, samplingFreqHz,
-                 current_delay_ms);
-
-#ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
-    if (!shared_->statistics().Initialized())
-    {
-        shared_->SetLastError(VE_NOT_INITED, kTraceError);
-        return -1;
-    }
-    // FIX(jesup) - check if this is enabled?
-    if (shared_->NumOfSendingChannels() == 0)
-    {
-        shared_->SetLastError(VE_ALREADY_SENDING, kTraceError,
-            "SetExternalRecordingStatus() no channel is sending");
-        return -1;
-    }
-    if ((16000 != samplingFreqHz) && (32000 != samplingFreqHz) &&
-        (48000 != samplingFreqHz) && (44100 != samplingFreqHz))
-    {
-         shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
-             "SetExternalRecordingStatus() invalid sample rate");
-        return -1;
-    }
-    if (current_delay_ms < 0)
-    {
-        shared_->SetLastError(VE_INVALID_ARGUMENT, kTraceError,
-            "SetExternalRecordingStatus() invalid delay)");
-        return -1;
-    }
-
-    // Far-end data is inserted without going through neteq/etc.
-    // Only supports 10ms chunks; AnalyzeReverseStream() enforces that
-    // lower down.
-    AudioFrame audioFrame;
-    audioFrame.UpdateFrame(-1, 0xFFFFFFFF,
-                           speechData10ms,
-                           lengthSamples,
-                           samplingFreqHz,
-                           AudioFrame::kNormalSpeech,
-                           AudioFrame::kVadUnknown,
-                           num_channels);
-
-    shared_->output_mixer()->APMAnalyzeReverseStream(audioFrame);
-#endif
-    return 0;
-}
-
 int VoEExternalMediaImpl::ExternalPlayoutGetData(
     int16_t speechData10ms[],
     int samplingFreqHz,
