@@ -212,7 +212,7 @@ MoveEmitterMIPS::emitFloat32Move(const MoveOperand &from, const MoveOperand &to)
         } else if (to.isGeneralReg()) {
             // This should only be used when passing float parameter in a1,a2,a3
             MOZ_ASSERT(to.reg() == a1 || to.reg() == a2 || to.reg() == a3);
-            masm.as_mfc1(to.reg(), from.floatReg());
+            masm.moveFromFloat32(from.floatReg(), to.reg());
         } else {
             MOZ_ASSERT(to.isMemory());
             masm.storeFloat32(from.floatReg(), getAdjustedAddress(to));
@@ -248,9 +248,9 @@ MoveEmitterMIPS::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
             // Two moves are added for one double parameter by
             // MacroAssemblerMIPSCompat::passABIArg
             if(to.reg() == a2)
-                masm.as_mfc1(a2, from.floatReg());
+                masm.moveFromDoubleLo(from.floatReg(), a2);
             else if(to.reg() == a3)
-                masm.as_mfc1_Odd(a3, from.floatReg());
+                masm.moveFromDoubleHi(from.floatReg(), a3);
             else
                 MOZ_ASSUME_UNREACHABLE("Invalid emitDoubleMove arguments.");
         } else {
