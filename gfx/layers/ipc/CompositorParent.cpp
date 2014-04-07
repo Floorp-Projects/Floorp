@@ -312,7 +312,7 @@ bool
 CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                    SurfaceDescriptor* aOutSnapshot)
 {
-  RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot);
+  RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
   ForceComposeToTarget(target);
   *aOutSnapshot = aInSnapshot;
   return true;
