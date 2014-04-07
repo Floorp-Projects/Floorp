@@ -125,6 +125,10 @@ struct SeerTelemetryAccumulators {
   Telemetry::AutoCounter<Telemetry::SEER_TOTAL_PRECONNECTS> mTotalPreconnects;
   Telemetry::AutoCounter<Telemetry::SEER_TOTAL_PRERESOLVES> mTotalPreresolves;
   Telemetry::AutoCounter<Telemetry::SEER_PREDICTIONS_CALCULATED> mPredictionsCalculated;
+  Telemetry::AutoCounter<Telemetry::SEER_LOAD_COUNT_IS_ZERO> mLoadCountZeroes;
+  Telemetry::AutoCounter<Telemetry::SEER_LOAD_COUNT_OVERFLOWS> mLoadCountOverflows;
+  Telemetry::AutoCounter<Telemetry::SEER_STARTUP_COUNT_IS_ZERO> mStartupCountZeroes;
+  Telemetry::AutoCounter<Telemetry::SEER_STARTUP_COUNT_OVERFLOWS> mStartupCountOverflows;
 };
 
 // Listener for the speculative DNS requests we'll fire off, which just ignores
@@ -653,6 +657,13 @@ Seer::EnsureInitStorage()
                            "last_startup = :startup_time;\n"),
         getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    int32_t newStartupCount = mStartupCount + 1;
+    if (newStartupCount <= 0) {
+      SEER_LOG(("Seer::EnsureInitStorage startup count overflow\n"));
+      newStartupCount = mStartupCount;
+      ++mAccumulators->mStartupCountOverflows;
+    }
 
     rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("startup_count"),
                                mStartupCount + 1);
@@ -1296,10 +1307,18 @@ Seer::UpdateTopLevel(QueryType queryType, const TopLevelInfo &info, PRTime now)
   }
   mozStorageStatementScoper scope(stmt);
 
+  int32_t newLoadCount = info.loadCount + 1;
+  if (newLoadCount <= 0) {
+    SEER_LOG(("Seer::UpdateTopLevel type %d id %d load count overflow\n",
+              queryType, info.id));
+    newLoadCount = info.loadCount;
+    ++mAccumulators->mLoadCountOverflows;
+  }
+
   // First, let's update the page in the database, since loading a page
   // implicitly learns about the page.
   nsresult rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("load_count"),
-                                      info.loadCount + 1);
+                                      newLoadCount);
   RETURN_IF_FAILED(rv);
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("now"), now);
@@ -1321,6 +1340,12 @@ Seer::TryPredict(QueryType queryType, const TopLevelInfo &info, PRTime now,
                  SeerVerifierHandle &verifier, TimeStamp &predictStartTime)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "TryPredict called on main thread.");
+
+  if (!info.loadCount) {
+    SEER_LOG(("Seer::TryPredict info.loadCount is zero!\n"));
+    ++mAccumulators->mLoadCountZeroes;
+    return false;
+  }
 
   int globalDegradation = CalculateGlobalDegradation(now, info.lastLoad);
 
@@ -1401,6 +1426,12 @@ bool
 Seer::WouldRedirect(const TopLevelInfo &info, PRTime now, UriInfo &newUri)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "WouldRedirect called on main thread.");
+
+  if (!info.loadCount) {
+    SEER_LOG(("Seer::WouldRedirect info.loadCount is zero!\n"));
+    ++mAccumulators->mLoadCountZeroes;
+    return false;
+  }
 
   nsCOMPtr<mozIStorageStatement> stmt = mStatements.GetCachedStatement(
       NS_LITERAL_CSTRING("SELECT uri, origin, hits, last_hit "
@@ -1531,6 +1562,12 @@ Seer::PredictForStartup(SeerVerifierHandle &verifier,
                         TimeStamp &predictStartTime)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "PredictForStartup called on main thread");
+
+  if (!mStartupCount) {
+    SEER_LOG(("Seer::PredictForStartup mStartupCount is zero!\n"));
+    ++mAccumulators->mStartupCountZeroes;
+    return;
+  }
 
   if (NS_FAILED(EnsureInitStorage())) {
     return;
