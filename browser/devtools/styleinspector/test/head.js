@@ -556,6 +556,51 @@ function getRuleViewLinkByIndex(view, index) {
   return links[index];
 }
 
+/**
+ * Click on a rule-view's close brace to focus a new property name editor
+ * @param {RuleEditor} ruleEditor An instance of RuleEditor that will receive
+ * the new property
+ * @return a promise that resolves to the newly created editor when ready and
+ * focused
+ */
+let focusNewRuleViewProperty = Task.async(function*(ruleEditor) {
+  info("Clicking on a close ruleEditor brace to start editing a new property");
+  ruleEditor.closeBrace.scrollIntoView();
+  let editor = yield focusEditableField(ruleEditor.closeBrace);
+
+  is(inplaceEditor(ruleEditor.newPropSpan), editor, "Focused editor is the new property editor.");
+  is(ruleEditor.rule.textProps.length,  0, "Starting with one new text property.");
+  is(ruleEditor.propertyList.children.length, 1, "Starting with two property editors.");
+
+  return editor;
+});
+
+/**
+ * Create a new property name in the rule-view, focusing a new property editor
+ * by clicking on the close brace, and then entering the given text.
+ * Keep in mind that the rule-view knows how to handle strings with multiple
+ * properties, so the input text may be like: "p1:v1;p2:v2;p3:v3".
+ * @param {RuleEditor} ruleEditor The instance of RuleEditor that will receive
+ * the new property(ies)
+ * @param {String} inputValue The text to be entered in the new property name
+ * field
+ * @return a promise that resolves when the new property name has been entered
+ * and once the value field is focused
+ */
+let createNewRuleViewProperty = Task.async(function*(ruleEditor, inputValue) {
+  info("Creating a new property editor");
+  let editor = yield focusNewRuleViewProperty(ruleEditor);
+
+  info("Entering the value " + inputValue);
+  editor.input.value = inputValue;
+
+  info("Submitting the new value and waiting for value field focus");
+  let onFocus = once(ruleEditor.element, "focus", true);
+  EventUtils.synthesizeKey("VK_RETURN", {},
+    ruleEditor.element.ownerDocument.defaultView);
+  yield onFocus;
+});
+
 // TO BE UNCOMMENTED WHEN THE EYEDROPPER FINALLY LANDS
 // /**
 //  * Given a color swatch in the ruleview, click on it to open the color picker
