@@ -1498,6 +1498,18 @@ nsMemoryReporterManager::GetResidentFast(int64_t* aAmount)
 #endif
 }
 
+/*static*/
+int64_t nsMemoryReporterManager::ResidentFast()
+{
+#ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
+    int64_t amount;
+    ResidentFastDistinguishedAmount(&amount);
+    return amount;
+#else
+    return 0;
+#endif
+}
+
 NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
 {
