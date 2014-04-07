@@ -13,9 +13,12 @@
 #include "jsproxy.h"
 
 #include "vm/ProxyObject.h"
+#include "vm/TypedArrayObject.h"
+
+namespace js {
 
 /* static */ inline bool
-js::ObjectImpl::isExtensible(ExclusiveContext *cx, js::Handle<ObjectImpl*> obj, bool *extensible)
+ObjectImpl::isExtensible(ExclusiveContext *cx, Handle<ObjectImpl*> obj, bool *extensible)
 {
     if (obj->asObjectPtr()->is<ProxyObject>()) {
         if (!cx->shouldBeJSContext())
@@ -28,5 +31,25 @@ js::ObjectImpl::isExtensible(ExclusiveContext *cx, js::Handle<ObjectImpl*> obj, 
     *extensible = obj->nonProxyIsExtensible();
     return true;
 }
+
+inline bool
+ClassCanHaveFixedData(const Class *clasp)
+{
+    // Normally, the number of fixed slots given an object is the maximum
+    // permitted for its size class. For array buffers and typed arrays we only
+    // use enough to cover the class reserved slots, so that the remaining
+    // space in the object's allocation is available for the buffer's data.
+    return clasp == &ArrayBufferObject::class_ || IsTypedArrayClass(clasp);
+}
+
+inline void *
+ObjectImpl::fixedData(size_t nslots) const
+{
+    JS_ASSERT(ClassCanHaveFixedData(getClass()));
+    JS_ASSERT(nslots == numFixedSlots() + (hasPrivate() ? 1 : 0));
+    return &fixedSlots()[nslots];
+}
+
+} // namespace js
 
 #endif /* vm_ObjectImpl_inl_h */

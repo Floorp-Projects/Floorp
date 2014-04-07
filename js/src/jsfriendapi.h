@@ -1432,7 +1432,7 @@ JS_GetArrayBufferViewData(JSObject *obj);
  * object that would return true for JS_IsArrayBufferViewObject().
  */
 extern JS_FRIEND_API(JSObject *)
-JS_GetArrayBufferViewBuffer(JSObject *obj);
+JS_GetArrayBufferViewBuffer(JSContext *cx, JSObject *obj);
 
 /*
  * Set an ArrayBuffer's length to 0 and neuter all of its views.
