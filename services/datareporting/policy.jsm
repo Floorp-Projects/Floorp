@@ -932,7 +932,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
 
       let deferred = Promise.defer();
 
-      deferred.promise.then(onComplete, function onError(error) {
+      deferred.promise.then(onComplete, (error) => {
         this._log.warn("Data policy notification presentation failed: " +
                        CommonUtils.exceptionStr(error));
       });
@@ -1015,7 +1015,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
 
     let onError = function onError(error) {
       this._log.error("Error when handling data submission result: " +
-                      CommonUtils.exceptionStr(result));
+                      CommonUtils.exceptionStr(error));
       this._inProgressSubmissionRequest = null;
       this._handleSubmissionFailure();
     }.bind(this);
