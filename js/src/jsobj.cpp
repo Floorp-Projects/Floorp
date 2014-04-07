@@ -1253,17 +1253,12 @@ NewObject(ExclusiveContext *cx, types::TypeObject *type_, JSObject *parent, gc::
     if (!NewObjectMetadata(cx, &metadata))
         return nullptr;
 
-    // Normally, the number of fixed slots given an object is the maximum
-    // permitted for its size class. For array buffers we only use enough to
-    // cover the class reservd slots, so that the remaining space in the
-    // object's allocation is available for the buffer's data.
-    size_t nfixed;
-    if (clasp == &ArrayBufferObject::class_) {
-        JS_STATIC_ASSERT(ArrayBufferObject::RESERVED_SLOTS == 4);
-        nfixed = ArrayBufferObject::RESERVED_SLOTS;
-    } else {
-        nfixed = GetGCKindSlots(kind, clasp);
-    }
+    // For objects which can have fixed data following the object, only use
+    // enough fixed slots to cover the number of reserved slots in the object,
+    // regardless of the allocation kind specified.
+    size_t nfixed = ClassCanHaveFixedData(clasp)
+                    ? GetGCKindSlots(gc::GetGCObjectKind(clasp), clasp)
+                    : GetGCKindSlots(kind, clasp);
 
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, type->proto(),
                                                       parent, metadata, nfixed));
