@@ -1,276 +1,233 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let doc;
-let ruleWindow;
-let ruleView;
-let inspector;
-let elementRuleEditor;
+"use strict";
 
-function startTest()
-{
-  doc.body.innerHTML = '<h1>Testing Multiple Properties</h1>';
+// Test that the rule-view behaves correctly when entering mutliple and/or
+// unfinished properties/values in inplace-editors
 
-  openRuleView((aInspector, aRuleView) => {
-    inspector = aInspector;
-    ruleView = aRuleView;
-    ruleWindow = aRuleView.doc.defaultView;
-    selectNewElement().then(testCreateNewMulti);
-  });
-}
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,test rule view user changes");
+  content.document.body.innerHTML = "<h1>Testing Multiple Properties</h1>";
 
-/*
- * Add a new node to the DOM and resolve the promise once it is ready to use
+  let {toolbox, inspector, view} = yield openRuleView();
+
+  yield testCreateNewMulti(inspector, view);
+  yield testCreateNewMultiDuplicates(inspector, view);
+  yield testCreateNewMultiPriority(inspector, view);
+  yield testCreateNewMultiUnfinished(inspector, view);
+  yield testCreateNewMultiPartialUnfinished(inspector, view);
+  yield testMultiValues(inspector, view);
+});
+
+/**
+ * Create a new test element, select it, and return the rule-view ruleEditor
  */
-function selectNewElement()
-{
-  let newElement = doc.createElement("div");
+function* createAndSelectNewElement(inspector, view) {
+  info("Creating a new test element");
+  let newElement = content.document.createElement("div");
   newElement.textContent = "Test Element";
-  doc.body.appendChild(newElement);
+  content.document.body.appendChild(newElement);
 
-  inspector.selection.setNode(newElement, "test");
-  let def = promise.defer();
-  ruleView.element.addEventListener("CssRuleViewRefreshed", function changed() {
-    ruleView.element.removeEventListener("CssRuleViewRefreshed", changed);
-    elementRuleEditor = ruleView.element.children[0]._ruleEditor;
-    def.resolve();
-  });
+  info("Selecting the new element and waiting for the inspector to update");
+  yield selectNode(newElement, inspector);
 
-  return def.promise;
+  info("Getting the rule-view rule editor for that new element");
+  return view.element.children[0]._ruleEditor;
 }
 
-/*
+/**
  * Begin the creation of a new property, resolving after the editor
  * has been created.
  */
-function beginNewProp()
-{
-  let def = promise.defer();
-  waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
+function* focusNewProperty(ruleEditor) {
+  info("Clicking on the close ruleEditor brace to start edition");
+  ruleEditor.closeBrace.scrollIntoView();
+  let editor = yield focusEditableField(ruleEditor.closeBrace);
 
-    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
-    is(elementRuleEditor.rule.textProps.length,  0, "Should be starting with one new text property.");
-    is(elementRuleEditor.propertyList.children.length, 1, "Should be starting with two property editors.");
+  is(inplaceEditor(ruleEditor.newPropSpan), editor, "Focused editor is the new property editor.");
+  is(ruleEditor.rule.textProps.length,  0, "Starting with one new text property.");
+  is(ruleEditor.propertyList.children.length, 1, "Starting with two property editors.");
 
-    def.resolve(aEditor);
-  });
-  elementRuleEditor.closeBrace.scrollIntoView();
-  EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
-                             { },
-                             ruleWindow);
-  return def.promise;
+  return editor;
 }
 
-/*
+/**
  * Fully create a new property, given some text input
  */
-function createNewProp(inputValue)
-{
-  let def = promise.defer();
-  beginNewProp().then((aEditor)=>{
-    aEditor.input.value = inputValue;
+function* createNewProperty(ruleEditor, inputValue) {
+  info("Creating a new property editor");
+  let editor = yield focusNewProperty(ruleEditor);
 
-    waitForEditorFocus(elementRuleEditor.element, function onNewValue(aEditor) {
-      promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
-        def.resolve();
-      }));
-    });
+  info("Entering the value " + inputValue);
+  editor.input.value = inputValue;
 
-    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
-  });
-
-  return def.promise;
+  info("Submitting the new value and waiting for value field focus");
+  let onFocus = once(ruleEditor.element, "focus", true);
+  EventUtils.synthesizeKey("VK_RETURN", {}, ruleEditor.element.ownerDocument.defaultView);
+  yield onFocus;
 }
 
-function testCreateNewMulti()
-{
-  createNewProp(
-    "color:blue;background : orange   ; text-align:center; border-color: green;"
-  ).then(()=>{
-    is(elementRuleEditor.rule.textProps.length, 4, "Should have created a new text property.");
-    is(elementRuleEditor.propertyList.children.length, 5, "Should have created a new property editor.");
+function* testCreateNewMulti(inspector, view) {
+  let ruleEditor = yield createAndSelectNewElement(inspector, view);
+  yield createNewProperty(ruleEditor,
+    "color:blue;background : orange   ; text-align:center; border-color: green;");
 
-    is(elementRuleEditor.rule.textProps[0].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[0].value, "blue", "Should have correct property value");
+  is(ruleEditor.rule.textProps.length, 4, "Should have created a new text property.");
+  is(ruleEditor.propertyList.children.length, 5, "Should have created a new property editor.");
 
-    is(elementRuleEditor.rule.textProps[1].name, "background", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[1].value, "orange", "Should have correct property value");
+  is(ruleEditor.rule.textProps[0].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[0].value, "blue", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[2].name, "text-align", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[2].value, "center", "Should have correct property value");
+  is(ruleEditor.rule.textProps[1].name, "background", "Should have correct property name");
+  is(ruleEditor.rule.textProps[1].value, "orange", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[3].name, "border-color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[3].value, "green", "Should have correct property value");
+  is(ruleEditor.rule.textProps[2].name, "text-align", "Should have correct property name");
+  is(ruleEditor.rule.textProps[2].value, "center", "Should have correct property value");
 
-    selectNewElement().then(testCreateNewMultiDuplicates);
-  });
+  is(ruleEditor.rule.textProps[3].name, "border-color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[3].value, "green", "Should have correct property value");
+
+  yield inspector.once("inspector-updated");
 }
 
-function testCreateNewMultiDuplicates()
-{
-  createNewProp(
-    "color:red;color:orange;color:yellow;color:green;color:blue;color:indigo;color:violet;"
-  ).then(()=>{
-    is(elementRuleEditor.rule.textProps.length, 7, "Should have created new text properties.");
-    is(elementRuleEditor.propertyList.children.length, 8, "Should have created new property editors.");
+function* testCreateNewMultiDuplicates(inspector, view) {
+  let ruleEditor = yield createAndSelectNewElement(inspector, view);
+  yield createNewProperty(ruleEditor,
+    "color:red;color:orange;color:yellow;color:green;color:blue;color:indigo;color:violet;");
 
-    is(elementRuleEditor.rule.textProps[0].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[0].value, "red", "Should have correct property value");
+  is(ruleEditor.rule.textProps.length, 7, "Should have created new text properties.");
+  is(ruleEditor.propertyList.children.length, 8, "Should have created new property editors.");
 
-    is(elementRuleEditor.rule.textProps[1].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[1].value, "orange", "Should have correct property value");
+  is(ruleEditor.rule.textProps[0].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[0].value, "red", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[2].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[2].value, "yellow", "Should have correct property value");
+  is(ruleEditor.rule.textProps[1].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[1].value, "orange", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[3].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[3].value, "green", "Should have correct property value");
+  is(ruleEditor.rule.textProps[2].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[2].value, "yellow", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[4].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[4].value, "blue", "Should have correct property value");
+  is(ruleEditor.rule.textProps[3].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[3].value, "green", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[5].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[5].value, "indigo", "Should have correct property value");
+  is(ruleEditor.rule.textProps[4].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[4].value, "blue", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[6].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[6].value, "violet", "Should have correct property value");
+  is(ruleEditor.rule.textProps[5].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[5].value, "indigo", "Should have correct property value");
 
-    selectNewElement().then(testCreateNewMultiPriority);
-  });
+  is(ruleEditor.rule.textProps[6].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[6].value, "violet", "Should have correct property value");
+
+  yield inspector.once("inspector-updated");
 }
 
-function testCreateNewMultiPriority()
-{
-  createNewProp(
-    "color:red;width:100px;height: 100px;"
-  ).then(()=>{
-    is(elementRuleEditor.rule.textProps.length, 3, "Should have created new text properties.");
-    is(elementRuleEditor.propertyList.children.length, 4, "Should have created new property editors.");
+function* testCreateNewMultiPriority(inspector, view) {
+  let ruleEditor = yield createAndSelectNewElement(inspector, view);
+  yield createNewProperty(ruleEditor,
+    "color:red;width:100px;height: 100px;");
 
-    is(elementRuleEditor.rule.textProps[0].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[0].value, "red", "Should have correct property value");
+  is(ruleEditor.rule.textProps.length, 3, "Should have created new text properties.");
+  is(ruleEditor.propertyList.children.length, 4, "Should have created new property editors.");
 
-    is(elementRuleEditor.rule.textProps[1].name, "width", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[1].value, "100px", "Should have correct property value");
+  is(ruleEditor.rule.textProps[0].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[0].value, "red", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[2].name, "height", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[2].value, "100px", "Should have correct property value");
+  is(ruleEditor.rule.textProps[1].name, "width", "Should have correct property name");
+  is(ruleEditor.rule.textProps[1].value, "100px", "Should have correct property value");
 
-    selectNewElement().then(testCreateNewMultiUnfinished);
-  });
+  is(ruleEditor.rule.textProps[2].name, "height", "Should have correct property name");
+  is(ruleEditor.rule.textProps[2].value, "100px", "Should have correct property value");
+
+  yield inspector.once("inspector-updated");
 }
 
-function testCreateNewMultiUnfinished()
-{
-  createNewProp(
-    "color:blue;background : orange   ; text-align:center; border-color: "
-  ).then(()=>{
-    is(elementRuleEditor.rule.textProps.length, 4, "Should have created new text properties.");
-    is(elementRuleEditor.propertyList.children.length, 4, "Should have created property editors.");
+function* testCreateNewMultiUnfinished(inspector, view) {
+  let ruleEditor = yield createAndSelectNewElement(inspector, view);
+  yield createNewProperty(ruleEditor,
+    "color:blue;background : orange   ; text-align:center; border-color: ");
 
-    for (let ch of "red") {
-      EventUtils.sendChar(ch, ruleWindow);
-    }
-    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
+  is(ruleEditor.rule.textProps.length, 4, "Should have created new text properties.");
+  is(ruleEditor.propertyList.children.length, 4, "Should have created property editors.");
 
-    is(elementRuleEditor.rule.textProps.length, 4, "Should have the same number of text properties.");
-    is(elementRuleEditor.propertyList.children.length, 5, "Should have added the changed value editor.");
+  for (let ch of "red") {
+    EventUtils.sendChar(ch, view.doc.defaultView);
+  }
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-    is(elementRuleEditor.rule.textProps[0].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[0].value, "blue", "Should have correct property value");
+  is(ruleEditor.rule.textProps.length, 4, "Should have the same number of text properties.");
+  is(ruleEditor.propertyList.children.length, 5, "Should have added the changed value editor.");
 
-    is(elementRuleEditor.rule.textProps[1].name, "background", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[1].value, "orange", "Should have correct property value");
+  is(ruleEditor.rule.textProps[0].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[0].value, "blue", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[2].name, "text-align", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[2].value, "center", "Should have correct property value");
+  is(ruleEditor.rule.textProps[1].name, "background", "Should have correct property name");
+  is(ruleEditor.rule.textProps[1].value, "orange", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[3].name, "border-color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[3].value, "red", "Should have correct property value");
+  is(ruleEditor.rule.textProps[2].name, "text-align", "Should have correct property name");
+  is(ruleEditor.rule.textProps[2].value, "center", "Should have correct property value");
 
-    selectNewElement().then(testCreateNewMultiPartialUnfinished);
-  });
+  is(ruleEditor.rule.textProps[3].name, "border-color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[3].value, "red", "Should have correct property value");
+
+  yield inspector.once("inspector-updated");
 }
 
+function* testCreateNewMultiPartialUnfinished(inspector, view) {
+  let ruleEditor = yield createAndSelectNewElement(inspector, view);
+  yield createNewProperty(ruleEditor, "width: 100px; heig");
 
-function testCreateNewMultiPartialUnfinished()
-{
-  createNewProp(
-    "width: 100px; heig"
-  ).then(()=>{
-    is(elementRuleEditor.rule.textProps.length, 2, "Should have created a new text property.");
-    is(elementRuleEditor.propertyList.children.length, 2, "Should have created a property editor.");
+  is(ruleEditor.rule.textProps.length, 2, "Should have created a new text property.");
+  is(ruleEditor.propertyList.children.length, 2, "Should have created a property editor.");
 
-    // Value is focused, lets add multiple rules here and make sure they get added
-    let valueEditor = elementRuleEditor.propertyList.children[1].querySelector("input");
-    valueEditor.value = "10px;background:orangered;color: black;";
-    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
+  // Value is focused, lets add multiple rules here and make sure they get added
+  let valueEditor = ruleEditor.propertyList.children[1].querySelector("input");
+  valueEditor.value = "10px;background:orangered;color: black;";
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-    is(elementRuleEditor.rule.textProps.length, 4, "Should have added the changed value.");
-    is(elementRuleEditor.propertyList.children.length, 5, "Should have added the changed value editor.");
+  is(ruleEditor.rule.textProps.length, 4, "Should have added the changed value.");
+  is(ruleEditor.propertyList.children.length, 5, "Should have added the changed value editor.");
 
-    is(elementRuleEditor.rule.textProps[0].name, "width", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[0].value, "100px", "Should have correct property value");
+  is(ruleEditor.rule.textProps[0].name, "width", "Should have correct property name");
+  is(ruleEditor.rule.textProps[0].value, "100px", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[1].name, "heig", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[1].value, "10px", "Should have correct property value");
+  is(ruleEditor.rule.textProps[1].name, "heig", "Should have correct property name");
+  is(ruleEditor.rule.textProps[1].value, "10px", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[2].name, "background", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[2].value, "orangered", "Should have correct property value");
+  is(ruleEditor.rule.textProps[2].name, "background", "Should have correct property name");
+  is(ruleEditor.rule.textProps[2].value, "orangered", "Should have correct property value");
 
-    is(elementRuleEditor.rule.textProps[3].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[3].value, "black", "Should have correct property value");
+  is(ruleEditor.rule.textProps[3].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[3].value, "black", "Should have correct property value");
 
-    selectNewElement().then(testMultiValues);
-  });
+  yield inspector.once("inspector-updated");
 }
 
-function testMultiValues()
-{
-  createNewProp(
-    "width:"
-  ).then(()=>{
-    is(elementRuleEditor.rule.textProps.length, 1, "Should have created a new text property.");
-    is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
+function* testMultiValues(inspector, view) {
+  let ruleEditor = yield createAndSelectNewElement(inspector, view);
+  yield createNewProperty(ruleEditor, "width:");
 
-    // Value is focused, lets add multiple rules here and make sure they get added
-    let valueEditor = elementRuleEditor.propertyList.children[0].querySelector("input");
-    valueEditor.value = "height: 10px;color:blue"
-    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
+  is(ruleEditor.rule.textProps.length, 1, "Should have created a new text property.");
+  is(ruleEditor.propertyList.children.length, 1, "Should have created a property editor.");
 
-    is(elementRuleEditor.rule.textProps.length, 2, "Should have added the changed value.");
-    is(elementRuleEditor.propertyList.children.length, 3, "Should have added the changed value editor.");
+  // Value is focused, lets add multiple rules here and make sure they get added
+  let valueEditor = ruleEditor.propertyList.children[0].querySelector("input");
+  valueEditor.value = "height: 10px;color:blue"
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
 
-    EventUtils.synthesizeKey("VK_ESCAPE", {}, ruleWindow);
-    is(elementRuleEditor.propertyList.children.length, 2, "Should have removed the value editor.");
+  is(ruleEditor.rule.textProps.length, 2, "Should have added the changed value.");
+  is(ruleEditor.propertyList.children.length, 3, "Should have added the changed value editor.");
 
-    is(elementRuleEditor.rule.textProps[0].name, "width", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[0].value, "height: 10px", "Should have correct property value");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+  is(ruleEditor.propertyList.children.length, 2, "Should have removed the value editor.");
 
-    is(elementRuleEditor.rule.textProps[1].name, "color", "Should have correct property name");
-    is(elementRuleEditor.rule.textProps[1].value, "blue", "Should have correct property value");
+  is(ruleEditor.rule.textProps[0].name, "width", "Should have correct property name");
+  is(ruleEditor.rule.textProps[0].value, "height: 10px", "Should have correct property value");
 
-    finishTest();
-  });
-}
+  is(ruleEditor.rule.textProps[1].name, "color", "Should have correct property name");
+  is(ruleEditor.rule.textProps[1].value, "blue", "Should have correct property value");
 
-function finishTest()
-{
-  inspector = ruleWindow = ruleView = doc = elementRuleEditor = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function test()
-{
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function changedValues_load(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, changedValues_load, true);
-    doc = content.document;
-    waitForFocus(startTest, content);
-  }, true);
-
-  content.location = "data:text/html,test rule view user changes";
+  yield inspector.once("inspector-updated");
 }

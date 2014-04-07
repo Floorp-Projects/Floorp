@@ -2,9 +2,9 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let doc;
-let inspector;
-let computedView;
+"use strict";
+
+// Test the links from the computed view to the style editor
 
 const STYLESHEET_URL = "data:text/css,"+encodeURIComponent(
   [".highlight {",
@@ -40,128 +40,75 @@ const DOCUMENT_URL = "data:text/html,"+encodeURIComponent(
    '</body>',
    '</html>'].join("\n"));
 
+let test = asyncTest(function*() {
+  yield addTab(DOCUMENT_URL);
 
+  info("Opening the computed-view");
+  let {toolbox, inspector, view} = yield openComputedView();
 
-function selectNode(aInspector, aComputedView)
-{
-  inspector = aInspector;
-  computedView = aComputedView;
+  info("Selecting the test node");
+  yield selectNode("span", inspector);
 
-  let span = doc.querySelector("span");
-  ok(span, "captain, we have the span");
+  yield testInlineStyle(view, inspector);
+  yield testInlineStyleSheet(view, toolbox);
+  yield testExternalStyleSheet(view, toolbox);
+});
 
-  inspector.selection.setNode(span);
-  inspector.once("inspector-updated", testInlineStyle);
-}
+function* testInlineStyle(view, inspector) {
+  info("Testing inline style");
 
-function testInlineStyle()
-{
-  expandProperty(0, function propertyExpanded() {
-    Services.ww.registerNotification(function onWindow(aSubject, aTopic) {
-      if (aTopic != "domwindowopened") {
-        return;
-      }
-      info("window opened");
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function windowLoad() {
-        win.removeEventListener("load", windowLoad);
-        info("window load completed");
-        let windowType = win.document.documentElement.getAttribute("windowtype");
-        is(windowType, "navigator:view-source", "view source window is open");
-        info("closing window");
-        win.close();
-        Services.ww.unregisterNotification(onWindow);
-        executeSoon(() => {
-          testInlineStyleSheet();
-        });
-      });
-    });
-    let link = getLinkByIndex(0);
-    link.click();
-  });
-}
+  yield expandComputedViewPropertyByIndex(view, inspector, 0);
 
-function testInlineStyleSheet()
-{
-  info("clicking an inline stylesheet");
-
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
-  toolbox.once("styleeditor-selected", () => {
-    let panel = toolbox.getCurrentPanel();
-
-    panel.UI.once("editor-selected", (event, editor) => {
-      validateStyleEditorSheet(editor, 0);
-      executeSoon(() => {
-        testExternalStyleSheet(toolbox);
-      });
-    });
-  });
-
-  let link = getLinkByIndex(2);
+  let onWindow = waitForWindow();
+  info("Clicking on the first rule-link in the computed-view");
+  let link = getComputedViewLinkByIndex(view, 0);
   link.click();
+
+  let win = yield onWindow;
+
+  let windowType = win.document.documentElement.getAttribute("windowtype");
+  is(windowType, "navigator:view-source", "View source window is open");
+  info("Closing window");
+  win.close();
 }
 
-function testExternalStyleSheet(toolbox) {
-  info ("clicking an external stylesheet");
+function* testInlineStyleSheet(view, toolbox) {
+  info("Testing inline stylesheet");
 
+  info("Listening for toolbox switch to the styleeditor");
+  let onSwitch = waitForStyleEditor(toolbox);
+
+  info("Clicking an inline stylesheet");
+  let link = getComputedViewLinkByIndex(view, 2);
+  link.click();
+  let editor = yield onSwitch;
+
+  ok(true, "Switched to the style-editor panel in the toolbox");
+
+  validateStyleEditorSheet(editor, 0);
+}
+
+function* testExternalStyleSheet(view, toolbox) {
+  info("Testing external stylesheet");
+
+  info("Waiting for the stylesheet editor to be selected");
   let panel = toolbox.getCurrentPanel();
-  panel.UI.once("editor-selected", (event, editor) => {
-    is(toolbox.currentToolId, "styleeditor", "style editor selected");
-    validateStyleEditorSheet(editor, 1);
-    finishUp();
-  });
+  let onSelected = panel.UI.once("editor-selected");
 
-  toolbox.selectTool("inspector").then(function () {
-    info("inspector selected");
-    let link = getLinkByIndex(1);
-    link.click();
-  });
+  info("Switching back to the inspector panel in the toolbox");
+  yield toolbox.selectTool("inspector");
+
+  info("Clicking on an external stylesheet link");
+  let link =  getComputedViewLinkByIndex(view, 1);
+  link.click();
+  let editor = yield onSelected;
+
+  is(toolbox.currentToolId, "styleeditor", "The style editor is selected again");
+  validateStyleEditorSheet(editor, 1);
 }
 
-function validateStyleEditorSheet(aEditor, aExpectedSheetIndex)
-{
-  info("validating style editor stylesheet");
-  let sheet = doc.styleSheets[aExpectedSheetIndex];
-  is(aEditor.styleSheet.href, sheet.href, "loaded stylesheet matches document stylesheet");
-}
-
-function expandProperty(aIndex, aCallback)
-{
-  info("expanding property " + aIndex);
-  let contentDoc = computedView.styleDocument;
-  let expando = contentDoc.querySelectorAll(".expandable")[aIndex];
-
-  expando.click();
-
-  inspector.once("computed-view-property-expanded", aCallback);
-}
-
-function getLinkByIndex(aIndex)
-{
-  let contentDoc = computedView.styleDocument;
-  let links = contentDoc.querySelectorAll(".rule-link .link");
-  return links[aIndex];
-}
-
-function finishUp()
-{
-  doc = inspector = computedView = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function test()
-{
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee,
-      true);
-    doc = content.document;
-    waitForFocus(function () { openComputedView(selectNode); }, content);
-  }, true);
-
-  content.location = DOCUMENT_URL;
+function validateStyleEditorSheet(editor, expectedSheetIndex) {
+  info("Validating style editor stylesheet");
+  let sheet = content.document.styleSheets[expectedSheetIndex];
+  is(editor.styleSheet.href, sheet.href, "loaded stylesheet matches document stylesheet");
 }

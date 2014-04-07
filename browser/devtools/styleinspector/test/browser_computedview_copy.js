@@ -1,20 +1,20 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that the style inspector works properly
+"use strict";
 
-let doc;
-let win;
-let computedView;
+// Tests that properties can be selected and copied from the computed view
 
 XPCOMUtils.defineLazyGetter(this, "osString", function() {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
-function createDocument()
-{
-  doc.body.innerHTML = '<style type="text/css"> ' +
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,computed view copy test");
+
+  info("Creating the test document");
+  content.document.body.innerHTML = '<style type="text/css"> ' +
     'span { font-variant: small-caps; color: #000000; } ' +
     '.nomatches {color: #ff0000;}</style> <div id="first" style="margin: 10em; ' +
     'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">\n' +
@@ -30,132 +30,89 @@ function createDocument()
     '<p id="closing">more text</p>\n' +
     '<p>even more text</p>' +
     '</div>';
-  doc.title = "Computed view context menu test";
+  content.document.title = "Computed view context menu test";
 
-  openComputedView(selectNode);
-}
+  info("Opening the computed view");
+  let {toolbox, inspector, view} = yield openComputedView();
 
-function selectNode(aInspector, aComputedView)
-{
-  computedView = aComputedView;
-  win = aInspector.sidebar.getWindowForTab("computedview");
+  info("Selecting the test node");
+  yield selectNode("span", inspector);
 
-  let span = doc.querySelector("span");
-  ok(span, "captain, we have the span");
+  yield checkCopySelection(view);
+  yield checkSelectAll(view);
+});
 
-  aInspector.selection.setNode(span);
-  aInspector.once("inspector-updated", runStyleInspectorTests);
-}
+function checkCopySelection(view) {
+  info("Testing selection copy");
 
-
-function runStyleInspectorTests()
-{
-  let contentDocument = computedView.styleDocument;
-  let prop = contentDocument.querySelector(".property-view");
-  ok(prop, "captain, we have the property-view node");
-
-  checkCopySelection();
-}
-
-function checkCopySelection()
-{
-  let contentDocument = computedView.styleDocument;
+  let contentDocument = view.styleDocument;
   let props = contentDocument.querySelectorAll(".property-view");
   ok(props, "captain, we have the property-view nodes");
 
-  let range = document.createRange();
+  let range = contentDocument.createRange();
   range.setStart(props[1], 0);
   range.setEnd(props[3], 3);
-  win.getSelection().addRange(range);
+  contentDocument.defaultView.getSelection().addRange(range);
 
-  info("Checking that cssHtmlTree.siBoundCopy() " +
-       " returns the correct clipboard value");
+  info("Checking that cssHtmlTree.siBoundCopy() returns the correct clipboard value");
 
   let expectedPattern = "font-family: helvetica,sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant: small-caps;[\\r\\n]*";
 
-  SimpleTest.waitForClipboard(function CS_boundCopyCheck() {
-    return checkClipboardData(expectedPattern);
-  },
-  function() {
+  return waitForClipboard(() => {
     fireCopyEvent(props[0]);
-  },
-  checkSelectAll,
-  function() {
-    failedClipboard(expectedPattern, checkSelectAll);
+  }, () => {
+    return checkClipboardData(expectedPattern);
+  }).then(() => {}, () => {
+    failedClipboard(expectedPattern);
   });
 }
 
-function checkSelectAll()
-{
-  let contentDoc = computedView.styleDocument;
+function checkSelectAll(view) {
+  info("Testing select-all copy");
+
+  let contentDoc = view.styleDocument;
   let prop = contentDoc.querySelector(".property-view");
 
   info("Checking that _SelectAll() then copy returns the correct clipboard value");
-  computedView._onSelectAll();
+  view._onSelectAll();
   let expectedPattern = "color: #FF0;[\\r\\n]+" +
                         "font-family: helvetica,sans-serif;[\\r\\n]+" +
                         "font-size: 16px;[\\r\\n]+" +
                         "font-variant: small-caps;[\\r\\n]*";
 
-  SimpleTest.waitForClipboard(function() {
-    return checkClipboardData(expectedPattern);
-  },
-  function() {
+  return waitForClipboard(() => {
     fireCopyEvent(prop);
-  },
-  finishUp,
-  function() {
-    failedClipboard(expectedPattern, finishUp);
+  }, () => {
+    return checkClipboardData(expectedPattern);
+  }).then(() => {}, () => {
+    failedClipboard(expectedPattern);
   });
 }
 
-function checkClipboardData(aExpectedPattern)
-{
+function checkClipboardData(expectedPattern) {
   let actual = SpecialPowers.getClipboardData("text/unicode");
-  let expectedRegExp = new RegExp(aExpectedPattern, "g");
+  let expectedRegExp = new RegExp(expectedPattern, "g");
   return expectedRegExp.test(actual);
 }
 
-function failedClipboard(aExpectedPattern, aCallback)
-{
+function failedClipboard(expectedPattern) {
   // Format expected text for comparison
   let terminator = osString == "WINNT" ? "\r\n" : "\n";
-  aExpectedPattern = aExpectedPattern.replace(/\[\\r\\n\][+*]/g, terminator);
-  aExpectedPattern = aExpectedPattern.replace(/\\\(/g, "(");
-  aExpectedPattern = aExpectedPattern.replace(/\\\)/g, ")");
+  expectedPattern = expectedPattern.replace(/\[\\r\\n\][+*]/g, terminator);
+  expectedPattern = expectedPattern.replace(/\\\(/g, "(");
+  expectedPattern = expectedPattern.replace(/\\\)/g, ")");
 
   let actual = SpecialPowers.getClipboardData("text/unicode");
 
   // Trim the right hand side of our strings. This is because expectedPattern
   // accounts for windows sometimes adding a newline to our copied data.
-  aExpectedPattern = aExpectedPattern.trimRight();
+  expectedPattern = expectedPattern.trimRight();
   actual = actual.trimRight();
 
   dump("TEST-UNEXPECTED-FAIL | Clipboard text does not match expected ... " +
     "results (escaped for accurate comparison):\n");
   info("Actual: " + escape(actual));
-  info("Expected: " + escape(aExpectedPattern));
-  aCallback();
-}
-
-function finishUp()
-{
-  computedView = doc = win = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function test()
-{
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee, true);
-    doc = content.document;
-    waitForFocus(createDocument, content);
-  }, true);
-
-  content.location = "data:text/html,computed view context menu test";
+  info("Expected: " + escape(expectedPattern));
 }
