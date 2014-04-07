@@ -55,11 +55,16 @@ interface nsIDOMMozGsmIccInfo : nsIDOMMozIccInfo
   readonly attribute DOMString msisdn;
 };
 
-[scriptable, uuid(10b89660-2988-443a-a6f0-4ed3618fee41)]
+[scriptable, uuid(7e937d09-4d1d-43c5-96d8-c91396022809)]
 interface nsIDOMMozCdmaIccInfo : nsIDOMMozIccInfo
 {
   /**
    * Mobile Directory Number (MDN) of the subscriber, aka his phone number.
    */
   readonly attribute DOMString mdn;
+
+  /**
+   * Preferred Roaming List (PRL) version of the subscriber.
+   */
+  readonly attribute long prlVersion;
 };
