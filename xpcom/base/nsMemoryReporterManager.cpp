@@ -1047,9 +1047,10 @@ nsMemoryReporterManager::StartGettingReports()
   // Get reports for this process.
   GetReportsForThisProcessExtended(s->mHandleReport, s->mHandleReportData,
                                    s->mDMDDumpIdent);
+  s->mParentDone = true;
 
-  // If there are no child processes, we can finish up immediately.
-  return (s->mNumChildProcesses == 0)
+  // If there are no remaining child processes, we can finish up immediately.
+  return (s->mNumChildProcessesCompleted >= s->mNumChildProcesses)
     ? FinishReporting()
     : NS_OK;
 }
@@ -1185,7 +1186,8 @@ nsMemoryReporterManager::HandleChildReports(
   MEMORY_REPORTING_LOG("HandleChildReports (aGen=%u): completed child %d\n",
                        aGeneration, s->mNumChildProcessesCompleted);
 
-  if (s->mNumChildProcessesCompleted == s->mNumChildProcesses) {
+  if (s->mNumChildProcessesCompleted >= s->mNumChildProcesses &&
+      s->mParentDone) {
     s->mTimer->Cancel();
     FinishReporting();
   }
@@ -1195,15 +1197,24 @@ nsMemoryReporterManager::HandleChildReports(
 nsMemoryReporterManager::TimeoutCallback(nsITimer* aTimer, void* aData)
 {
   nsMemoryReporterManager* mgr = static_cast<nsMemoryReporterManager*>(aData);
+  GetReportsState* s = mgr->mGetReportsState;
 
   MOZ_ASSERT(mgr->mGetReportsState);
   MEMORY_REPORTING_LOG("TimeoutCallback (s->gen=%u)\n",
-                       mgr->mGetReportsState->mGeneration);
+                       s->mGeneration);
 
   // We don't bother sending any kind of cancellation message to the child
   // processes that haven't reported back.
 
-  mgr->FinishReporting();
+  if (s->mParentDone) {
+    mgr->FinishReporting();
+  } else {
+    // This is unlikely -- the timeout expired during MinimizeMemoryUsage.
+    MEMORY_REPORTING_LOG("Timeout expired before parent report started!");
+    // Let the parent continue with its report, but ensure that
+    // StartGettingReports gives up immediately after that.
+    s->mNumChildProcesses = s->mNumChildProcessesCompleted;
+  }
 }
 
 nsresult
