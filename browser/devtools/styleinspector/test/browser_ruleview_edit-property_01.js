@@ -8,7 +8,7 @@
 // FIXME: To be split in several test files, and some of the inplace-editor
 // focus/blur/commit/revert stuff should be factored out in head.js
 
-let TEST_URL = 'url("' + TEST_URL_ROOT + 'test-image.png")';
+let TEST_URL = 'url("' + TEST_URL_ROOT + 'doc_test_image.png")';
 let PAGE_CONTENT = [
   '<style type="text/css">',
   '  #testid {',
