@@ -3927,6 +3927,7 @@ HTMLMediaElement::GetOrCreateTextTrackManager()
 {
   if (!mTextTrackManager) {
     mTextTrackManager = new TextTrackManager(this);
+    mTextTrackManager->AddListeners();
   }
   return mTextTrackManager;
 }
