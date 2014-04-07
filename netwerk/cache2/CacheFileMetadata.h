@@ -32,6 +32,7 @@ namespace net {
 
 class CacheFileMetadataHeader {
 public:
+  uint32_t        mVersion;
   uint32_t        mFetchCount;
   uint32_t        mLastFetched;
   uint32_t        mLastModified;
@@ -44,6 +45,7 @@ public:
     EnsureCorrectClassSize();
 
     uint8_t* ptr = static_cast<uint8_t*>(aBuf);
+    NetworkEndian::writeUint32(ptr, mVersion); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mFetchCount); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mLastFetched); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mLastModified); ptr += sizeof(uint32_t);
@@ -57,6 +59,7 @@ public:
     EnsureCorrectClassSize();
 
     const uint8_t* ptr = static_cast<const uint8_t*>(aBuf);
+    mVersion = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
     mFetchCount = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
     mLastFetched = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
     mLastModified = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
@@ -67,9 +70,10 @@ public:
 
   inline void EnsureCorrectClassSize()
   {
-    static_assert((sizeof(mFetchCount) + sizeof(mLastFetched) +
-      sizeof(mLastModified) + sizeof(mFrecency) + sizeof(mExpirationTime) +
-      sizeof(mKeySize)) == sizeof(CacheFileMetadataHeader),
+    static_assert((sizeof(mVersion) + sizeof(mFetchCount) +
+      sizeof(mLastFetched) + sizeof(mLastModified) + sizeof(mFrecency) +
+      sizeof(mExpirationTime) + sizeof(mKeySize)) ==
+      sizeof(CacheFileMetadataHeader),
       "Unexpected sizeof(CacheFileMetadataHeader)!");
   }
 };
