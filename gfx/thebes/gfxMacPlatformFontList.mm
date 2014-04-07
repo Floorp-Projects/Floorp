@@ -61,6 +61,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCharTraits.h"
+#include "nsCocoaFeatures.h"
 #include "gfxFontConstants.h"
 
 #include "mozilla/MemoryReporting.h"
@@ -588,7 +589,9 @@ class gfxSingleFaceMacFontFamily : public gfxFontFamily
 public:
     gfxSingleFaceMacFontFamily(nsAString& aName) :
         gfxFontFamily(aName)
-    {}
+    {
+        mFaceNamesInitialized = true; // omit from face name lists
+    }
 
     virtual ~gfxSingleFaceMacFontFamily() {}
 
@@ -1036,7 +1039,10 @@ public:
 
     virtual void Load() {
         nsAutoreleasePool localPool;
-        FontInfoData::Load();
+        // bug 975460 - async font loader crashes sometimes under 10.6, disable
+        if (nsCocoaFeatures::OnLionOrLater()) {
+            FontInfoData::Load();
+        }
     }
 
     // loads font data for all members of a given family
