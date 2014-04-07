@@ -132,7 +132,12 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   // Start timer for subsequent frames
+#if defined(MOZ_WIDGET_GONK) && defined(DEBUG)
+// B2G emulator debug is very, very slow and has problems dealing with realtime audio inputs
+  mTimer->InitWithCallback(this, (1000 / mOpts.mFPS)*10, nsITimer::TYPE_REPEATING_SLACK);
+#else
   mTimer->InitWithCallback(this, 1000 / mOpts.mFPS, nsITimer::TYPE_REPEATING_SLACK);
+#endif
   mState = kStarted;
 
   return NS_OK;
@@ -400,8 +405,14 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   mTrackID = aID;
 
   // 1 Audio frame per 10ms
+#if defined(MOZ_WIDGET_GONK) && defined(DEBUG)
+// B2G emulator debug is very, very slow and has problems dealing with realtime audio inputs
+  mTimer->InitWithCallback(this, MediaEngine::DEFAULT_AUDIO_TIMER_MS*10,
+                           nsITimer::TYPE_REPEATING_PRECISE);
+#else
   mTimer->InitWithCallback(this, MediaEngine::DEFAULT_AUDIO_TIMER_MS,
                            nsITimer::TYPE_REPEATING_PRECISE);
+#endif
   mState = kStarted;
 
   return NS_OK;
