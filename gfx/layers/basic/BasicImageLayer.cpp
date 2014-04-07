@@ -53,8 +53,7 @@ public:
 
   virtual void Paint(DrawTarget* aDT, Layer* aMaskLayer) MOZ_OVERRIDE;
 
-  virtual bool GetAsSurface(gfxASurface** aSurface,
-                            SurfaceDescriptor* aDescriptor);
+  virtual bool GetAsSurface(gfxASurface** aSurface);
   virtual TemporaryRef<SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
 
 protected:
@@ -134,8 +133,7 @@ BasicImageLayer::GetAndPaintCurrentImage(DrawTarget* aTarget,
 }
 
 bool
-BasicImageLayer::GetAsSurface(gfxASurface** aSurface,
-                              SurfaceDescriptor* aDescriptor)
+BasicImageLayer::GetAsSurface(gfxASurface** aSurface)
 {
   if (!mContainer) {
     return false;

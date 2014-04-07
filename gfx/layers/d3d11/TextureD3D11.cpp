@@ -8,7 +8,6 @@
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "Effects.h"
-#include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
