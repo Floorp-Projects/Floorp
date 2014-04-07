@@ -41,7 +41,7 @@ addLoadEvent(function() {
   is(withoutAnons[1], $("sandwiched"),
      "didn't get sandwiched span - without anons");
 
-  var withAnons = SpecialPowers.unwrap(domUtils.getChildrenForNode($("bound"), true));
+  var withAnons = domUtils.getChildrenForNode($("bound"), true);
 
   is(withAnons.length, 4, "bad withAnons.length");
   is(withAnons[0].getAttribute("anonid"), "box-A",
