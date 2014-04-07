@@ -459,7 +459,7 @@ private:
 
   }
 
-  TemporaryRef<gfx::DrawTarget> GetUpdateSurface(BufferType aType,
+  already_AddRefed<gfxASurface> GetUpdateSurface(BufferType aType,
                                                  const nsIntRegion& aUpdateRegion);
 
   TextureInfo mTextureInfo;

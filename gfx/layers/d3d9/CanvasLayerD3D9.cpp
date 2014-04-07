@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/PLayerTransaction.h"
 
 #include "gfxImageSurface.h"
