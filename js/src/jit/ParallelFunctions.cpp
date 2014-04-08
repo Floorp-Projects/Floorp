@@ -497,9 +497,9 @@ jit::BitNotPar(ForkJoinContext *cx, HandleValue in, int32_t *out)
     JS_BEGIN_MACRO                                                      \
     int32_t left, right;                                                \
     if (lhs.isObject() || rhs.isObject())                               \
-        return TP_RETRY_SEQUENTIALLY;                                   \
-    if (!NonObjectToInt32(cx, lhs, &left) ||                         \
-        !NonObjectToInt32(cx, rhs, &right))                          \
+        return false;                                                   \
+    if (!NonObjectToInt32(cx, lhs, &left) ||                            \
+        !NonObjectToInt32(cx, rhs, &right))                             \
     {                                                                   \
         return false;                                                   \
     }                                                                   \
@@ -528,7 +528,7 @@ jit::BitAndPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *o
 bool
 jit::BitLshPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out)
 {
-    BIT_OP(left << (right & 31));
+    BIT_OP(uint32_t(left) << (right & 31));
 }
 
 bool

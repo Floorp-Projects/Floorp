@@ -8,11 +8,12 @@ interface nsICacheStorage;
 interface nsILoadContextInfo;
 interface nsIApplicationCache;
 interface nsIEventTarget;
+interface nsICacheStorageConsumptionObserver;
 
 /**
  * Provides access to particual cache storages of the network URI cache.
  */
-[scriptable, uuid(d669bf30-b6d9-48e1-a8fb-33cd18b0d752)]
+[scriptable, uuid(44de2fa4-1b0e-4cd3-9e32-211e936f721e)]
 interface nsICacheStorageService : nsISupports
 {
   /**
@@ -79,4 +80,28 @@ interface nsICacheStorageService : nsISupports
    * I/O thread target to use for any operations on disk
    */
   readonly attribute nsIEventTarget ioTarget;
+
+  /**
+   * Asynchronously determine how many bytes of the disk space the cache takes.
+   * @see nsICacheStorageConsumptionObserver
+   * @param aObserver
+   *    A mandatory (weak referred) observer.  Documented at
+   *    nsICacheStorageConsumptionObserver.
+   *    NOTE: the observer MUST implement nsISupportsWeakReference.
+   */
+  void asyncGetDiskConsumption(in nsICacheStorageConsumptionObserver aObserver);
+};
+
+[scriptable, uuid(7728ab5b-4c01-4483-a606-32bf5b8136cb)]
+interface nsICacheStorageConsumptionObserver : nsISupports
+{
+  /**
+   * Callback invoked to answer asyncGetDiskConsumption call. Always triggered
+   * on the main thread.
+   * NOTE: implementers must also implement nsISupportsWeakReference.
+   *
+   * @param aDiskSize
+   *    The disk consumption in bytes.
+   */
+  void onNetworkCacheDiskConsumption(in int64_t aDiskSize);
 };

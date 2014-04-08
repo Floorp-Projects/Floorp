@@ -27,7 +27,7 @@ function test() {
   url = engine.getSubmission("foo").uri.spec;
   is(url, base, "Check search URL for 'foo'");
   url = engine.getSubmission("foo", null, "contextmenu").uri.spec;
-  is(url, base + "&form=MOZSBR", "Check context menu search URL for 'foo'");
+  is(url, base + "&form=MOZCON", "Check context menu search URL for 'foo'");
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
   is(url, base + "&form=MOZLBR", "Check keyword search URL for 'foo'");
   url = engine.getSubmission("foo", null, "searchbar").uri.spec;
@@ -85,7 +85,7 @@ function test() {
             },
             {
               name: "form",
-              value: "MOZSBR",
+              value: "MOZCON",
               purpose: "contextmenu",
             },
             {
