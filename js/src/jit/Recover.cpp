@@ -16,6 +16,8 @@ using namespace js::jit;
 bool
 MResumePoint::writeRecoverData(CompactBufferWriter &writer) const
 {
+    writer.writeUnsigned(uint32_t(Recover_ResumePoint));
+
     MBasicBlock *bb = block();
     JSFunction *fun = bb->info().funMaybeLazy();
     JSScript *script = bb->info().script();
@@ -96,5 +98,7 @@ RResumePoint::RResumePoint(CompactBufferReader &reader)
 void
 RResumePoint::readRecoverData(CompactBufferReader &reader, RInstructionStorage *raw)
 {
+    mozilla::DebugOnly<uint32_t> op = reader.readUnsigned();
+    MOZ_ASSERT(op == uint32_t(Recover_ResumePoint));
     new (raw->addr()) RResumePoint(reader);
 }
