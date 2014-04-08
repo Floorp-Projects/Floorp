@@ -112,7 +112,7 @@ FileRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   if (mWrapAsDOMRequest) {
     return DOMRequest::WrapObject(aCx, aScope);
   }
-  return FileRequestBinding::Wrap(aCx, aScope, this);
+  return FileRequestBinding::Wrap(aCx, this);
 }
 
 LockedFile*

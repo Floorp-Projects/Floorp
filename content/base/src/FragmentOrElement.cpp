@@ -382,7 +382,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 nsChildContentList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-  return NodeListBinding::Wrap(cx, scope, this);
+  return NodeListBinding::Wrap(cx, this);
 }
 
 NS_IMETHODIMP

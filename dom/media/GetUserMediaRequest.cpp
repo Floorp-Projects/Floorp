@@ -36,7 +36,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 GetUserMediaRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return GetUserMediaRequestBinding::Wrap(aCx, aScope, this);
+  return GetUserMediaRequestBinding::Wrap(aCx, this);
 }
 
 nsISupports* GetUserMediaRequest::GetParentObject()

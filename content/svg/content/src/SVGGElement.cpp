@@ -14,7 +14,7 @@ namespace dom {
 JSObject*
 SVGGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGGElementBinding::Wrap(aCx, aScope, this);
+  return SVGGElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

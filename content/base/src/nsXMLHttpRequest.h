@@ -185,7 +185,7 @@ public:
   virtual JSObject* WrapObject(JSContext *cx,
                                JS::Handle<JSObject*> scope) MOZ_OVERRIDE
   {
-    return mozilla::dom::XMLHttpRequestBinding::Wrap(cx, scope, this);
+    return mozilla::dom::XMLHttpRequestBinding::Wrap(cx, this);
   }
   nsISupports* GetParentObject()
   {

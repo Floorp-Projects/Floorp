@@ -32,7 +32,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return CommandEventBinding::Wrap(aCx, aScope, this);
+    return CommandEventBinding::Wrap(aCx, this);
   }
 
   void InitCommandEvent(const nsAString& aType,

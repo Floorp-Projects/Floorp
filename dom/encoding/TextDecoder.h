@@ -49,7 +49,7 @@ public:
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
                        bool* aTookOwnership)
   {
-    return TextDecoderBinding::Wrap(aCx, aScope, this, aTookOwnership);
+    return TextDecoderBinding::Wrap(aCx, this, aTookOwnership);
   }
 
   nsISupports*

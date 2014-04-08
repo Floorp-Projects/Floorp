@@ -235,7 +235,7 @@ Promise::~Promise()
 JSObject*
 Promise::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return PromiseBinding::Wrap(aCx, aScope, this);
+  return PromiseBinding::Wrap(aCx, this);
 }
 
 JSObject*

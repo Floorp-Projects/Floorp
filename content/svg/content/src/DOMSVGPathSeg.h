@@ -62,7 +62,7 @@ namespace mozilla {
   virtual JSObject*                                                           \
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE       \
   {                                                                           \
-    return dom::SVGPathSeg##segName##Binding::Wrap(aCx, aScope, this);        \
+    return dom::SVGPathSeg##segName##Binding::Wrap(aCx, this);        \
   }
 
 

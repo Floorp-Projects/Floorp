@@ -21,7 +21,7 @@ namespace dom {
 JSObject*
 HTMLTableSectionElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLTableSectionElementBinding::Wrap(aCx, aScope, this);
+  return HTMLTableSectionElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableSectionElement)

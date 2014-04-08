@@ -106,7 +106,7 @@ Gamepad::Clone(nsISupports* aParent)
 /* virtual */ JSObject*
 Gamepad::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return GamepadBinding::Wrap(aCx, aScope, this);
+  return GamepadBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

@@ -69,7 +69,7 @@ NS_IMPL_STRING_ATTR(HTMLMapElement, Name, name)
 JSObject*
 HTMLMapElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLMapElementBinding::Wrap(aCx, aScope, this);
+  return HTMLMapElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

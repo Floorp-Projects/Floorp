@@ -17,7 +17,7 @@ namespace dom {
 JSObject*
 SVGFEMorphologyElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGFEMorphologyElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEMorphologyElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberPairInfo SVGFEMorphologyElement::sNumberPairInfo[1] =

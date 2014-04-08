@@ -459,7 +459,7 @@ NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
 JSObject*
 PeerConnectionImpl::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return PeerConnectionImplBinding::Wrap(aCx, aScope, this);
+  return PeerConnectionImplBinding::Wrap(aCx, this);
 }
 #endif
 

@@ -30,7 +30,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return CompositionEventBinding::Wrap(aCx, aScope, this);
+    return CompositionEventBinding::Wrap(aCx, this);
   }
 
   void InitCompositionEvent(const nsAString& aType,

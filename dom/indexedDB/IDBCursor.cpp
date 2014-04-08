@@ -553,11 +553,11 @@ IDBCursor::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   switch (mType) {
     case OBJECTSTORE:
     case INDEXOBJECT:
-      return IDBCursorWithValueBinding::Wrap(aCx, aScope, this);
+      return IDBCursorWithValueBinding::Wrap(aCx, this);
 
     case OBJECTSTOREKEY:
     case INDEXKEY:
-      return IDBCursorBinding::Wrap(aCx, aScope, this);
+      return IDBCursorBinding::Wrap(aCx, this);
 
     default:
       MOZ_ASSUME_UNREACHABLE("Bad type!");

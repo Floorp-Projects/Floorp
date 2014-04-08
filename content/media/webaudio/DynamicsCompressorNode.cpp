@@ -208,7 +208,7 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
 JSObject*
 DynamicsCompressorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return DynamicsCompressorNodeBinding::Wrap(aCx, aScope, this);
+  return DynamicsCompressorNodeBinding::Wrap(aCx, this);
 }
 
 void

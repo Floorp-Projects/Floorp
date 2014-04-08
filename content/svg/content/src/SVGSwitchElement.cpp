@@ -20,7 +20,7 @@ namespace dom {
 JSObject*
 SVGSwitchElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGSwitchElementBinding::Wrap(aCx, aScope, this);
+  return SVGSwitchElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

@@ -18,7 +18,7 @@ namespace dom {
 JSObject*
 SVGFEGaussianBlurElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGFEGaussianBlurElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEGaussianBlurElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberPairInfo SVGFEGaussianBlurElement::sNumberPairInfo[1] =

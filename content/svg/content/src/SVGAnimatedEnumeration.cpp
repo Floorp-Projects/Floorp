@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 SVGAnimatedEnumeration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGAnimatedEnumerationBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedEnumerationBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

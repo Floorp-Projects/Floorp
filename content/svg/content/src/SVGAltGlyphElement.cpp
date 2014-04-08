@@ -14,7 +14,7 @@ namespace dom {
 JSObject*
 SVGAltGlyphElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGAltGlyphElementBinding::Wrap(aCx, aScope, this);
+  return SVGAltGlyphElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::StringInfo SVGAltGlyphElement::sStringInfo[1] =

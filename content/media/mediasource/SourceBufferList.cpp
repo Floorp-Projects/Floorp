@@ -150,7 +150,7 @@ SourceBufferList::GetParentObject() const
 JSObject*
 SourceBufferList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SourceBufferListBinding::Wrap(aCx, aScope, this);
+  return SourceBufferListBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_2(SourceBufferList, DOMEventTargetHelper,

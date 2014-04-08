@@ -66,7 +66,7 @@ Voicemail::~Voicemail()
 JSObject*
 Voicemail::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return MozVoicemailBinding::Wrap(aCx, aScope, this);
+  return MozVoicemailBinding::Wrap(aCx, this);
 }
 
 bool

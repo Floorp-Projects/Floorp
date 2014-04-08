@@ -71,7 +71,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 JSObject*
 HTMLAnchorElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLAnchorElementBinding::Wrap(aCx, aScope, this);
+  return HTMLAnchorElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_STRING_ATTR(HTMLAnchorElement, Charset, charset)

@@ -24,7 +24,7 @@ JSObject*
 DOMRectReadOnly::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   MOZ_ASSERT(mParent);
-  return DOMRectReadOnlyBinding::Wrap(aCx, aScope, this);
+  return DOMRectReadOnlyBinding::Wrap(aCx, this);
 }
 
 // -----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ JSObject*
 DOMRect::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   MOZ_ASSERT(mParent);
-  return DOMRectBinding::Wrap(aCx, aScope, this);
+  return DOMRectBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<DOMRect>
@@ -101,7 +101,7 @@ DOMRectList::Item(uint32_t aIndex, nsIDOMClientRect** aReturn)
 JSObject*
 DOMRectList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-  return mozilla::dom::DOMRectListBinding::Wrap(cx, scope, this);
+  return mozilla::dom::DOMRectListBinding::Wrap(cx, this);
 }
 
 static double

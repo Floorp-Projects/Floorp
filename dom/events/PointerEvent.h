@@ -25,7 +25,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return PointerEventBinding::Wrap(aCx, aScope, this);
+    return PointerEventBinding::Wrap(aCx, this);
   }
 
   static already_AddRefed<PointerEvent>

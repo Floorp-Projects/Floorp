@@ -14,7 +14,7 @@ namespace dom {
 JSObject*
 SVGMetadataElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGMetadataElementBinding::Wrap(aCx, aScope, this);
+  return SVGMetadataElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

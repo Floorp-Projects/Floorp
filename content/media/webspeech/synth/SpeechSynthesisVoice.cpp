@@ -34,7 +34,7 @@ SpeechSynthesisVoice::~SpeechSynthesisVoice()
 JSObject*
 SpeechSynthesisVoice::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SpeechSynthesisVoiceBinding::Wrap(aCx, aScope, this);
+  return SpeechSynthesisVoiceBinding::Wrap(aCx, this);
 }
 
 nsISupports*

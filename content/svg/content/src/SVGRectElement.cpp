@@ -23,7 +23,7 @@ class SVGAnimatedLength;
 JSObject*
 SVGRectElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGRectElementBinding::Wrap(aCx, aScope, this);
+  return SVGRectElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::LengthInfo SVGRectElement::sLengthInfo[6] =

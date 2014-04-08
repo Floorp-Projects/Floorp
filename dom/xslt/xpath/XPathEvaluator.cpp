@@ -141,7 +141,7 @@ XPathEvaluator::CreateExpression(const nsAString & aExpression,
 JSObject*
 XPathEvaluator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-    return dom::XPathEvaluatorBinding::Wrap(aCx, aScope, this);
+    return dom::XPathEvaluatorBinding::Wrap(aCx, this);
 }
 
 /* static */

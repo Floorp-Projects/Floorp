@@ -81,7 +81,7 @@ TextTrack::SetDefaultSettings()
 JSObject*
 TextTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return TextTrackBinding::Wrap(aCx, aScope, this);
+  return TextTrackBinding::Wrap(aCx, this);
 }
 
 void

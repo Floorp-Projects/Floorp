@@ -33,7 +33,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return DragEventBinding::Wrap(aCx, aScope, this);
+    return DragEventBinding::Wrap(aCx, this);
   }
 
   DataTransfer* GetDataTransfer();

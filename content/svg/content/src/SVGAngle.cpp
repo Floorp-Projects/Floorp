@@ -18,7 +18,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAngle, Release)
 JSObject*
 SVGAngle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGAngleBinding::Wrap(aCx, aScope, this);
+  return SVGAngleBinding::Wrap(aCx, this);
 }
 
 uint16_t

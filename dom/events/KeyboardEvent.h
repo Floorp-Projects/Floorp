@@ -33,7 +33,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return KeyboardEventBinding::Wrap(aCx, aScope, this);
+    return KeyboardEventBinding::Wrap(aCx, this);
   }
 
   bool AltKey();

@@ -145,7 +145,7 @@ nsPerformanceTiming::ResponseEnd() const
 JSObject*
 nsPerformanceTiming::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-  return dom::PerformanceTimingBinding::Wrap(cx, scope, this);
+  return dom::PerformanceTimingBinding::Wrap(cx, this);
 }
 
 
@@ -168,7 +168,7 @@ nsPerformanceNavigation::~nsPerformanceNavigation()
 JSObject*
 nsPerformanceNavigation::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-  return dom::PerformanceNavigationBinding::Wrap(cx, scope, this);
+  return dom::PerformanceNavigationBinding::Wrap(cx, this);
 }
 
 
@@ -227,6 +227,6 @@ nsPerformance::Now()
 JSObject*
 nsPerformance::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-  return dom::PerformanceBinding::Wrap(cx, scope, this);
+  return dom::PerformanceBinding::Wrap(cx, this);
 }
 

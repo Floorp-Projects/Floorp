@@ -25,7 +25,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 SVGAnimatedInteger::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGAnimatedIntegerBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedIntegerBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

@@ -146,13 +146,13 @@ JSObject*
 HTMLSharedListElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
   if (mNodeInfo->Equals(nsGkAtoms::ol)) {
-    return HTMLOListElementBinding::Wrap(aCx, aScope, this);
+    return HTMLOListElementBinding::Wrap(aCx, this);
   }
   if (mNodeInfo->Equals(nsGkAtoms::dl)) {
-    return HTMLDListElementBinding::Wrap(aCx, aScope, this);
+    return HTMLDListElementBinding::Wrap(aCx, this);
   }
   MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::ul));
-  return HTMLUListElementBinding::Wrap(aCx, aScope, this);
+  return HTMLUListElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

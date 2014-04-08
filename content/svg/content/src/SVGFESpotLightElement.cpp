@@ -17,7 +17,7 @@ namespace dom {
 JSObject*
 SVGFESpotLightElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGFESpotLightElementBinding::Wrap(aCx, aScope, this);
+  return SVGFESpotLightElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] =

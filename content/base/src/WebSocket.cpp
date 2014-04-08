@@ -473,7 +473,7 @@ WebSocket::~WebSocket()
 JSObject*
 WebSocket::WrapObject(JSContext* cx, JS::Handle<JSObject*> scope)
 {
-  return WebSocketBinding::Wrap(cx, scope, this);
+  return WebSocketBinding::Wrap(cx, this);
 }
 
 //---------------------------------------------------------------------------

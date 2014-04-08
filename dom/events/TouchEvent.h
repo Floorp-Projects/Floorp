@@ -93,7 +93,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return TouchEventBinding::Wrap(aCx, aScope, this);
+    return TouchEventBinding::Wrap(aCx, this);
   }
 
   TouchList* Touches();

@@ -2620,7 +2620,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBObjectStore)
 JSObject*
 IDBObjectStore::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return IDBObjectStoreBinding::Wrap(aCx, aScope, this);
+  return IDBObjectStoreBinding::Wrap(aCx, this);
 }
 
 JS::Value

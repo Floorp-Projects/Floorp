@@ -14,7 +14,7 @@ namespace dom {
 JSObject*
 SVGTitleElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGTitleElementBinding::Wrap(aCx, aScope, this);
+  return SVGTitleElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

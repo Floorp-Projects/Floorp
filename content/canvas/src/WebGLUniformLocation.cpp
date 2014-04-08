@@ -14,7 +14,7 @@ using namespace mozilla;
 JSObject*
 WebGLUniformLocation::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
 {
-    return dom::WebGLUniformLocationBinding::Wrap(cx, scope, this);
+    return dom::WebGLUniformLocationBinding::Wrap(cx, this);
 }
 
 WebGLUniformLocation::WebGLUniformLocation(WebGLContext *context, WebGLProgram *program, GLint location, const WebGLUniformInfo& info)

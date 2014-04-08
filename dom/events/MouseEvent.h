@@ -33,7 +33,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return MouseEventBinding::Wrap(aCx, aScope, this);
+    return MouseEventBinding::Wrap(aCx, this);
   }
 
   // Web IDL binding methods

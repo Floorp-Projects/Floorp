@@ -35,7 +35,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLTitleElement)
 JSObject*
 HTMLTitleElement::WrapNode(JSContext* cx, JS::Handle<JSObject*> scope)
 {
-  return HTMLTitleElementBinding::Wrap(cx, scope, this);
+  return HTMLTitleElementBinding::Wrap(cx, this);
 }
 
 

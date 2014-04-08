@@ -52,7 +52,7 @@ class SVGAnimatedLength;
 JSObject*
 SVGSVGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGSVGElementBinding::Wrap(aCx, aScope, this);
+  return SVGSVGElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_1(DOMSVGTranslatePoint, nsISVGPoint,

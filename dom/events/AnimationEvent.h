@@ -36,7 +36,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return AnimationEventBinding::Wrap(aCx, aScope, this);
+    return AnimationEventBinding::Wrap(aCx, this);
   }
 
   // xpidl implementation

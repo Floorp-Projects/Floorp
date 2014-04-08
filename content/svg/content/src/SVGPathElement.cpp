@@ -32,7 +32,7 @@ namespace dom {
 JSObject*
 SVGPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGPathElementBinding::Wrap(aCx, aScope, this);
+  return SVGPathElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberInfo SVGPathElement::sNumberInfo = 

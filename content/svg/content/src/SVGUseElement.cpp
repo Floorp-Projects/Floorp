@@ -23,7 +23,7 @@ namespace dom {
 JSObject*
 SVGUseElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGUseElementBinding::Wrap(aCx, aScope, this);
+  return SVGUseElementBinding::Wrap(aCx, this);
 }
 
 ////////////////////////////////////////////////////////////////////////

@@ -37,7 +37,7 @@ BarProp::GetParentObject() const
 JSObject*
 BarProp::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return BarPropBinding::Wrap(aCx, aScope, this);
+  return BarPropBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(BarProp, mDOMWindow)
