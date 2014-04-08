@@ -14,6 +14,10 @@
 %endif
 }
 
+#main-window[customize-entered] {
+  min-width: -moz-fit-content;
+}
+
 searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
 }
