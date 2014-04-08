@@ -28,8 +28,6 @@
     Components.utils.import("resource://gre/modules/Task.jsm");
     Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
     XPCOMUtils.defineLazyModuleGetter(window,
-      "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(window,
       "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
     XPCOMUtils.defineLazyModuleGetter(window,
       "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
