@@ -3083,6 +3083,8 @@ js_InitArrayClass(JSContext *cx, HandleObject obj)
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, &ArrayObject::class_, TaggedProto(proto),
                                                       proto->getParent(), metadata,
                                                       gc::FINALIZE_OBJECT0));
+    if (!shape)
+        return nullptr;
 
     RootedObject arrayProto(cx, JSObject::createArray(cx, gc::FINALIZE_OBJECT4, gc::TenuredHeap, shape, type, 0));
     if (!arrayProto || !JSObject::setSingletonType(cx, arrayProto) || !AddLengthProperty(cx, arrayProto))
