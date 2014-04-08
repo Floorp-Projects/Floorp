@@ -244,6 +244,8 @@ class IonFrameIterator
 class IonJSFrameLayout;
 class IonBailoutIterator;
 
+class RResumePoint;
+
 // Reads frame information in snapshot-encoding order (that is, outermost frame
 // to innermost frame).
 class SnapshotIterator
@@ -287,22 +289,23 @@ class SnapshotIterator
         return snapshot_.readAllocation();
     }
     Value skip() {
-        readAllocation();
+        snapshot_.skipAllocation();
         return UndefinedValue();
     }
 
-    inline uint32_t allocations() const {
-        return recover_.allocations();
+    const RResumePoint *resumePoint() const;
+    const RInstruction *instruction() const {
+        return recover_.instruction();
     }
+
+    uint32_t numAllocations() const;
     inline bool moreAllocations() const {
-        return recover_.moreAllocations(snapshot_);
+        return snapshot_.numAllocationsRead() < numAllocations();
     }
 
   public:
     // Exhibits frame properties contained in the snapshot.
-    inline uint32_t pcOffset() const {
-        return recover_.pcOffset();
-    }
+    uint32_t pcOffset() const;
     inline bool resumeAfter() const {
         // Inline frames are inlined on calls, which are considered as being
         // resumed on the Call as baseline will push the pc once we return from
@@ -316,16 +319,30 @@ class SnapshotIterator
     }
 
   public:
+    // Read the next instruction available and get ready to either skip it or
+    // evaluate it.
+    inline void nextInstruction() {
+        MOZ_ASSERT(snapshot_.numAllocationsRead() == numAllocations());
+        recover_.nextInstruction();
+        snapshot_.resetNumAllocationsRead();
+    }
+
+    // Skip an Instruction by walking to the next instruction and by skipping
+    // all the allocations corresponding to this instruction.
+    void skipInstruction();
+
+    inline bool moreInstructions() const {
+        return recover_.moreInstructions();
+    }
+
+  public:
     // Handle iterating over frames of the snapshots.
-    inline void nextFrame() {
-        // Reuse the Snapshot buffer.
-        recover_.nextFrame(snapshot_);
-    }
+    void nextFrame();
+
     inline bool moreFrames() const {
-        return recover_.moreFrames();
-    }
-    inline uint32_t frameCount() const {
-        return recover_.frameCount();
+        // The last instruction is recovering the innermost frame, so as long as
+        // there is more instruction there is necesseray more frames.
+        return moreInstructions();
     }
 
   public:
@@ -409,7 +426,14 @@ class InlineFrameIteratorMaybeGC
     const IonFrameIterator *frame_;
     SnapshotIterator start_;
     SnapshotIterator si_;
-    unsigned framesRead_;
+    uint32_t framesRead_;
+
+    // When the inline-frame-iterator is created, this variable is defined to
+    // UINT32_MAX. Then the first iteration of findNextFrame, which settle on
+    // the innermost frame, is used to update this counter to the number of
+    // frames contained in the recover buffer.
+    uint32_t frameCount_;
+
     typename MaybeRooted<JSFunction*, allowGC>::RootType callee_;
     typename MaybeRooted<JSScript*, allowGC>::RootType script_;
     jsbytecode *pc_;
@@ -442,6 +466,7 @@ class InlineFrameIteratorMaybeGC
     InlineFrameIteratorMaybeGC(JSContext *cx, const InlineFrameIteratorMaybeGC *iter)
       : frame_(iter ? iter->frame_ : nullptr),
         framesRead_(0),
+        frameCount_(iter ? iter->frameCount_ : UINT32_MAX),
         callee_(cx),
         script_(cx)
     {
@@ -455,7 +480,7 @@ class InlineFrameIteratorMaybeGC
     }
 
     bool more() const {
-        return frame_ && framesRead_ < start_.frameCount();
+        return frame_ && framesRead_ < frameCount_;
     }
     JSFunction *callee() const {
         JS_ASSERT(callee_);
@@ -510,8 +535,8 @@ class InlineFrameIteratorMaybeGC
                 // Skip over all slots until we get to the last slots
                 // (= arguments slots of callee) the +3 is for [this], [returnvalue],
                 // [scopechain], and maybe +1 for [argsObj]
-                JS_ASSERT(parent_s.allocations() >= nactual + 3 + argsObjAdj);
-                unsigned skip = parent_s.allocations() - nactual - 3 - argsObjAdj;
+                JS_ASSERT(parent_s.numAllocations() >= nactual + 3 + argsObjAdj);
+                unsigned skip = parent_s.numAllocations() - nactual - 3 - argsObjAdj;
                 for (unsigned j = 0; j < skip; j++)
                     parent_s.skip();
 
@@ -597,7 +622,8 @@ class InlineFrameIteratorMaybeGC
 
     // Inline frame number, 0 for the outermost (non-inlined) frame.
     size_t frameNo() const {
-        return start_.frameCount() - framesRead_;
+        MOZ_ASSERT(frameCount_ != UINT32_MAX);
+        return frameCount_ - framesRead_;
     }
 
   private:

@@ -23,6 +23,7 @@ InlineFrameIteratorMaybeGC<allowGC>::InlineFrameIteratorMaybeGC(
                                                 JSContext *cx, const IonBailoutIterator *iter)
   : frame_(iter),
     framesRead_(0),
+    frameCount_(UINT32_MAX),
     callee_(cx),
     script_(cx)
 {

@@ -4895,7 +4895,7 @@ dnl ========================================================
 dnl = GNOME component (mozgnome)
 dnl ========================================================
 
-if test "$MOZ_ENABLE_GTK2"
+if test "$MOZ_ENABLE_GTK"
 then
     MOZ_ENABLE_GNOME_COMPONENT=1
 fi

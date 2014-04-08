@@ -156,6 +156,20 @@ PopupNotifications.prototype = {
   },
 
   /**
+   * Enable or disable the opening/closing transition.
+   * @param state
+   *        Boolean state
+   */
+  set transitionsEnabled(state) {
+    if (state) {
+      this.panel.removeAttribute("animate");
+    }
+    else {
+      this.panel.setAttribute("animate", "false");
+    }
+  },
+
+  /**
    * Retrieve a Notification object associated with the browser/ID pair.
    * @param id
    *        The Notification ID to search for.
