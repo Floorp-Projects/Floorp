@@ -97,17 +97,36 @@ static void MarkChildren(JSTracer *trc, jit::JitCode *code);
 
 /*** Object Marking ***/
 
-#ifdef DEBUG
+#if defined(DEBUG)
 template<typename T>
 static inline bool
 IsThingPoisoned(T *thing)
 {
-    const uint8_t pb = JS_FREE_PATTERN;
-    const uint32_t pw = pb | (pb << 8) | (pb << 16) | (pb << 24);
-    JS_STATIC_ASSERT(sizeof(T) >= sizeof(FreeSpan) + sizeof(uint32_t));
-    uint32_t *p =
-        reinterpret_cast<uint32_t *>(reinterpret_cast<FreeSpan *>(thing) + 1);
-    return *p == pw;
+    static_assert(sizeof(T) >= sizeof(FreeSpan) + sizeof(uint32_t),
+                  "Ensure it is well defined to look past any free span that "
+                  "may be embedded in the thing's header when freed.");
+    const uint8_t poisonBytes[] = {
+        JS_FRESH_NURSERY_PATTERN,
+        JS_SWEPT_NURSERY_PATTERN,
+        JS_ALLOCATED_NURSERY_PATTERN,
+        JS_FRESH_TENURED_PATTERN,
+        JS_SWEPT_TENURED_PATTERN,
+        JS_ALLOCATED_TENURED_PATTERN,
+        JS_SWEPT_CODE_PATTERN,
+        JS_SWEPT_FRAME_PATTERN
+    };
+    const int numPoisonBytes = sizeof(poisonBytes) / sizeof(poisonBytes[0]);
+    uint32_t *p = reinterpret_cast<uint32_t *>(reinterpret_cast<FreeSpan *>(thing) + 1);
+    // Note: all free patterns are odd to make the common, not-poisoned case a single test.
+    if ((*p & 1) == 0)
+        return false;
+    for (int i = 0; i < numPoisonBytes; ++i) {
+        const uint8_t pb = poisonBytes[i];
+        const uint32_t pw = pb | (pb << 8) | (pb << 16) | (pb << 24);
+        if (*p == pw)
+            return true;
+    }
+    return false;
 }
 #endif
 

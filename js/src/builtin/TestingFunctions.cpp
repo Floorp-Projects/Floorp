@@ -192,6 +192,14 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "binary-data", value))
         return false;
 
+#ifdef EXPOSE_INTL_API
+    value = BooleanValue(true);
+#else
+    value = BooleanValue(false);
+#endif
+    if (!JS_SetProperty(cx, info, "intl-api", value))
+        return false;
+
     args.rval().setObject(*info);
     return true;
 }
@@ -1274,7 +1282,7 @@ class CloneBufferObject : public JSObject {
     // Discard an owned clone buffer.
     void discard() {
         if (data())
-            JS_ClearStructuredClone(data(), nbytes());
+            JS_ClearStructuredClone(data(), nbytes(), nullptr, nullptr);
         setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
     }
 

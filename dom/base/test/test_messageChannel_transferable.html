@@ -38,7 +38,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     div.appendChild(ifr);
 
     function iframeLoaded() {
-      ifr.contentWindow.postMessage({ port: a.port2 }, '*');
+      ifr.contentWindow.postMessage({ port: a.port2 }, '*', [a.port2]);
     }
 
     a.port1.addEventListener('message', receivePortMessage, false);
