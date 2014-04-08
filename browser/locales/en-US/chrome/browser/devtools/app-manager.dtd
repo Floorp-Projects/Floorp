@@ -7,6 +7,8 @@
 <!ENTITY index.device2 "Device">
 <!ENTITY index.help "Help">
 
+<!ENTITY device.debugMainProcess "Debug main process">
+<!ENTITY device.debugMainProcessTooltip "Open the Developer Tools connected to the main process on the device">
 <!ENTITY device.screenshot "Screenshot">
 <!ENTITY device.screenshotTooltip "Open a screenshot of the current state of the device in a new tab">
 <!ENTITY device.title "Device Control Center">
