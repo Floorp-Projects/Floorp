@@ -75,6 +75,7 @@ static const char* USB_CONFIG_DELIMIT = ",";
 static const char* NETD_MESSAGE_DELIMIT = " ";
 
 static const uint32_t BUF_SIZE = 1024;
+static const uint32_t MAX_SSID_SIZE = 33;
 
 static uint32_t SDK_VERSION;
 
@@ -267,9 +268,34 @@ static void split(char* str, const char* sep, nsTArray<nsString>& result)
 }
 
 /**
+ * Helper function to do string search and replace.
+ */
+static void replace(const char* src,
+                    const char* strold,
+                    const char* strnew,
+                    char* dst)
+{
+  const char *p, *q;
+  char *r;
+  uint32_t oldlen = strlen(strold);
+  uint32_t newlen = strlen(strnew);
+
+  for (p = src, r = dst; (q = strstr(p, strold)) != nullptr; p = q + oldlen) {
+    strncpy(r, p, q - p);
+    r +=  q - p;
+    strncpy(r, strnew, newlen);
+    r += newlen;
+  }
+  strcpy(r, p);
+}
+
+/**
  * Helper function that implement join function.
  */
-static void join(nsTArray<nsCString>& array, const char* sep, const uint32_t maxlen, char* result)
+static void join(nsTArray<nsCString>& array,
+                 const char* sep,
+                 const uint32_t maxlen,
+                 char* result)
 {
 #define CHECK_LENGTH(len, add, max)  len += add;          \
                                      if (len > max - 1)   \
@@ -514,25 +540,31 @@ void NetworkUtils::setAccessPoint(CommandChain* aChain,
                                   NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
+  char ssid[MAX_SSID_SIZE];
+  char key[MAX_COMMAND_SIZE];
+
+  escapeQuote(GET_CHAR(mSsid), ssid);
+  escapeQuote(GET_CHAR(mKey), key);
+
   if (SDK_VERSION >= 19) {
     snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s \"%s\" broadcast 6 %s \"%s\"",
                      GET_CHAR(mIfname),
-                     GET_CHAR(mSsid),
+                     ssid,
                      GET_CHAR(mSecurity),
-                     GET_CHAR(mKey));
+                     key);
   } else if (SDK_VERSION >= 16) {
     snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s \"%s\" %s \"%s\"",
                      GET_CHAR(mIfname),
-                     GET_CHAR(mSsid),
+                     ssid,
                      GET_CHAR(mSecurity),
-                     GET_CHAR(mKey));
+                     key);
   } else {
     snprintf(command, MAX_COMMAND_SIZE - 1, "softap set %s %s \"%s\" %s \"%s\" 6 0 8",
                      GET_CHAR(mIfname),
                      GET_CHAR(mWifictrlinterfacename),
-                     GET_CHAR(mSsid),
+                     ssid,
                      GET_CHAR(mSecurity),
-                     GET_CHAR(mKey));
+                     key);
   }
 
   doCommand(command, aChain, aCallback);
@@ -1536,6 +1568,12 @@ bool NetworkUtils::setUSBTethering(NetworkParams& aOptions)
     RUN_CHAIN(aOptions, sUSBDisableChain, usbTetheringFail)
   }
   return true;
+}
+
+void NetworkUtils::escapeQuote(const char* src, char* dst)
+{
+  replace(src, "\\", "\\\\", dst);
+  replace(src, "\"", "\\\"", dst);
 }
 
 void NetworkUtils::checkUsbRndisState(NetworkParams& aOptions)
