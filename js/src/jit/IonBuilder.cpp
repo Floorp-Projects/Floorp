@@ -654,7 +654,7 @@ IonBuilder::build()
     // Emit the start instruction, so we can begin real instructions.
     current->makeStart(MStart::New(alloc(), MStart::StartType_Default));
     if (instrumentedProfiling())
-        current->add(MFunctionBoundary::New(alloc(), script(), MFunctionBoundary::Enter));
+        current->add(MProfilerStackOp::New(alloc(), script(), MProfilerStackOp::Enter));
 
     // Guard against over-recursion. Do this before we start unboxing, since
     // this will create an OSI point that will read the incoming argument
@@ -791,11 +791,11 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
     // All further instructions generated in from this scope should be
     // considered as part of the function that we're inlining. We also need to
     // keep track of the inlining depth because all scripts inlined on the same
-    // level contiguously have only one Inline_Exit node.
+    // level contiguously have only one InlineExit node.
     if (instrumentedProfiling()) {
-        predecessor->add(MFunctionBoundary::New(alloc(), script(),
-                                                MFunctionBoundary::Inline_Enter,
-                                                inliningDepth_));
+        predecessor->add(MProfilerStackOp::New(alloc(), script(),
+                                               MProfilerStackOp::InlineEnter,
+                                               inliningDepth_));
     }
 
     predecessor->end(MGoto::New(alloc(), current));
@@ -3628,8 +3628,8 @@ IonBuilder::processReturn(JSOp op)
     }
 
     if (instrumentedProfiling()) {
-        current->add(MFunctionBoundary::New(alloc(), script(), MFunctionBoundary::Exit,
-                                            inliningDepth_));
+        current->add(MProfilerStackOp::New(alloc(), script(), MProfilerStackOp::Exit,
+                                           inliningDepth_));
     }
     MReturn *ret = MReturn::New(alloc(), def);
     current->end(ret);
@@ -3961,9 +3961,9 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
         return false;
     returnBlock->setCallerResumePoint(callerResumePoint_);
 
-    // When profiling add Inline_Exit instruction to indicate end of inlined function.
+    // When profiling add InlineExit instruction to indicate end of inlined function.
     if (instrumentedProfiling())
-        returnBlock->add(MFunctionBoundary::New(alloc(), nullptr, MFunctionBoundary::Inline_Exit));
+        returnBlock->add(MProfilerStackOp::New(alloc(), nullptr, MProfilerStackOp::InlineExit));
 
     // Inherit the slots from current and pop |fun|.
     returnBlock->inheritSlots(current);

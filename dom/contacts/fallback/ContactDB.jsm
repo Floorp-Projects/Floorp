@@ -22,7 +22,7 @@ Cu.importGlobalProperties(["indexedDB"]);
 
 /* all exported symbols need to be bound to this on B2G - Bug 961777 */
 this.DB_NAME = "contacts";
-this.DB_VERSION = 19;
+this.DB_VERSION = 20;
 this.STORE_NAME = "contacts";
 this.SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
@@ -169,6 +169,10 @@ ContactDB.prototype = {
       objectStore.createIndex("category", "properties.category", { multiEntry: true });
       objectStore.createIndex("email", "search.email", { multiEntry: true });
       objectStore.createIndex("telMatch", "search.parsedTel", {multiEntry: true});
+      objectStore.createIndex("phoneticFamilyName", "properties.phoneticFamilyName", { multiEntry: true });
+      objectStore.createIndex("phoneticGivenName", "properties.phoneticGivenName", { multiEntry: true });
+      objectStore.createIndex("phoneticFamilyNameLowerCase", "search.phoneticFamilyName", { multiEntry: true });
+      objectStore.createIndex("phoneticGivenNameLowerCase",  "search.phoneticGivenName",  { multiEntry: true });
       aDb.createObjectStore(SAVED_GETALL_STORE_NAME);
       aDb.createObjectStore(REVISION_STORE).put(0, REVISION_KEY);
     }
@@ -705,6 +709,17 @@ ContactDB.prototype = {
 
         next();
       },
+      function upgrade19to20() {
+        if (DEBUG) debug("upgrade19to20 create schema(phonetic)");
+        if (!objectStore) {
+          objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        objectStore.createIndex("phoneticFamilyName", "properties.phoneticFamilyName", { multiEntry: true });
+        objectStore.createIndex("phoneticGivenName", "properties.phoneticGivenName", { multiEntry: true });
+        objectStore.createIndex("phoneticFamilyNameLowerCase", "search.phoneticFamilyName", { multiEntry: true });
+        objectStore.createIndex("phoneticGivenNameLowerCase",  "search.phoneticGivenName",  { multiEntry: true });
+        next();
+      },
     ];
 
     let index = aOldVersion;
@@ -824,6 +839,8 @@ ContactDB.prototype = {
       tel:             [],
       exactTel:        [],
       parsedTel:       [],
+      phoneticFamilyName:   [],
+      phoneticGivenName:    [],
     };
 
     for (let field in aContact.properties) {
@@ -1115,6 +1132,21 @@ ContactDB.prototype = {
     }, null, aErrorCb);
   },
 
+  getSortByParam: function CDB_getSortByParam(aFindOptions) {
+    switch (aFindOptions.sortBy) {
+      case "familyName":
+        return [ "familyName", "givenName" ];
+      case "givenName":
+        return [ "givenName" , "familyName" ];
+      case "phoneticFamilyName":
+        return [ "phoneticFamilyName" , "phoneticGivenName" ];
+      case "phoneticGivenName":
+        return [ "phoneticGivenName" , "phoneticFamilyName" ];
+      default:
+        return [ "givenName" , "familyName" ];
+    }
+  },
+
   /*
    * Sorting the contacts by sortBy field. aSortBy can either be familyName or givenName.
    * If 2 entries have the same sortyBy field or no sortBy field is present, we continue
@@ -1125,7 +1157,7 @@ ContactDB.prototype = {
       return;
     if (aFindOptions.sortBy != "undefined") {
       const sortOrder = aFindOptions.sortOrder;
-      const sortBy = aFindOptions.sortBy == "familyName" ? [ "familyName", "givenName" ] : [ "givenName" , "familyName" ];
+      const sortBy = this.getSortByParam(aFindOptions);
 
       aResults.sort(function (a, b) {
         let x, y;
