@@ -78,8 +78,8 @@
         <item>android_import.data.history</item>
     </string-array>
     <string-array name="pref_private_data_entries">
-        <item>@string/pref_private_data_history</item>
-        <item>@string/pref_private_data_downloadFiles</item>
+        <item>@string/pref_private_data_history2</item>
+        <item>@string/pref_private_data_downloadFiles2</item>
         <item>@string/pref_private_data_formdata</item>
         <item>@string/pref_private_data_cookies2</item>
         <item>@string/pref_private_data_passwords</item>
@@ -98,7 +98,7 @@
         <item>true</item>
     </string-array>
     <string-array name="pref_private_data_keys">
-        <item>private.data.history_downloads</item>
+        <item>private.data.history</item>
         <item>private.data.downloadFiles</item>
         <item>private.data.formdata</item>
         <item>private.data.cookies_sessions</item>

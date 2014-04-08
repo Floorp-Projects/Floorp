@@ -167,14 +167,14 @@
   <string name="pref_show_product_announcements">&pref_show_product_announcements;</string>
   <string name="pref_sync">&pref_sync;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
-  <string name="pref_private_data_history">&pref_private_data_history;</string>
+  <string name="pref_private_data_history2">&pref_private_data_history2;</string>
   <string name="pref_private_data_formdata">&pref_private_data_formdata;</string>
   <string name="pref_private_data_cookies2">&pref_private_data_cookies2;</string>
   <string name="pref_private_data_passwords">&pref_private_data_passwords;</string>
   <string name="pref_private_data_cache">&pref_private_data_cache;</string>
   <string name="pref_private_data_offlineApps">&pref_private_data_offlineApps;</string>
   <string name="pref_private_data_siteSettings">&pref_private_data_siteSettings2;</string>
-  <string name="pref_private_data_downloadFiles">&pref_private_data_downloadFiles;</string>
+  <string name="pref_private_data_downloadFiles2">&pref_private_data_downloadFiles2;</string>
   <string name="pref_import_android">&pref_import_android;</string>
   <string name="pref_update_autodownload">&pref_update_autodownload2;</string>
   <string name="pref_update_autodownload_wifi">&pref_update_autodownload_wifi;</string>
