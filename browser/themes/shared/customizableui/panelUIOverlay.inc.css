@@ -441,6 +441,9 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-footer-inner {
   display: flex;
   border-top: 1px solid hsla(210,4%,10%,.14);
+}
+
+#PanelUI-multiView[viewtype="subview"] #PanelUI-footer-inner {
   position: relative;
 }
 
