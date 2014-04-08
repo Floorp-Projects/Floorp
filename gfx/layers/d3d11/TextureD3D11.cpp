@@ -173,6 +173,9 @@ TextureClientD3D11::~TextureClientD3D11()
 bool
 TextureClientD3D11::Lock(OpenMode aMode)
 {
+  if (!mTexture) {
+    return false;
+  }
   MOZ_ASSERT(!mIsLocked, "The Texture is already locked!");
   LockD3DTexture(mTexture.get());
   mIsLocked = true;
@@ -190,6 +193,7 @@ void
 TextureClientD3D11::Unlock()
 {
   MOZ_ASSERT(mIsLocked, "Unlocked called while the texture is not locked!");
+
   if (mDrawTarget) {
     // see the comment on TextureClientDrawTarget::GetAsDrawTarget.
     // This DrawTarget is internal to the TextureClient and is only exposed to the
@@ -209,6 +213,10 @@ TemporaryRef<DrawTarget>
 TextureClientD3D11::GetAsDrawTarget()
 {
   MOZ_ASSERT(mIsLocked, "Calling TextureClient::GetAsDrawTarget without locking :(");
+
+  if (!mTexture) {
+    return nullptr;
+  }
 
   if (mDrawTarget) {
     return mDrawTarget;
