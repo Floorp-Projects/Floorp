@@ -2221,7 +2221,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
 
   if (aNewInner->IsDOMBinding()) {
     aGlobal.set(WindowBinding::Wrap(aCx, aNewInner, aNewInner, options,
-                                    nsJSPrincipals::get(aPrincipal)));
+                                    nsJSPrincipals::get(aPrincipal), false));
     if (!aGlobal || !xpc::InitGlobalObject(aCx, aGlobal, flags)) {
       return NS_ERROR_FAILURE;
     }

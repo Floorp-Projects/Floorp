@@ -2961,7 +2961,8 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                 Argument(descriptor.nativeType + '*', 'aObject'),
                 Argument('nsWrapperCache*', 'aCache'),
                 Argument('JS::CompartmentOptions&', 'aOptions'),
-                Argument('JSPrincipals*', 'aPrincipal')]
+                Argument('JSPrincipals*', 'aPrincipal'),
+                Argument('bool', 'aInitStandardClasses')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
         self.descriptor = descriptor
         self.properties = properties
@@ -2976,6 +2977,13 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         else:
             chromeProperties = "nullptr"
 
+        if self.descriptor.workers:
+            fireOnNewGlobal = """// XXXkhuey can't do this yet until workers can lazy resolve.
+// JS_FireOnNewGlobalObject(aCx, obj);
+"""
+        else:
+            fireOnNewGlobal = ""
+
         return fill(
             """
             ${assertions}
@@ -2983,12 +2991,17 @@ class CGWrapGlobalMethod(CGAbstractMethod):
                          "nsISupports must be on our primary inheritance chain");
 
               JS::Rooted<JSObject*> obj(aCx);
-              obj = CreateGlobal<${nativeType}, GetProtoObject>(aCx,
-                                                     aObject,
-                                                     aCache,
-                                                     Class.ToJSClass(),
-                                                     aOptions,
-                                                     aPrincipal);
+              CreateGlobal<${nativeType}, GetProtoObject>(aCx,
+                                               aObject,
+                                               aCache,
+                                               Class.ToJSClass(),
+                                               aOptions,
+                                               aPrincipal,
+                                               aInitStandardClasses,
+                                               &obj);
+              if (!obj) {
+                return nullptr;
+              }
 
               // obj is a new global, so has a new compartment.  Enter it
               // before doing anything with it.
@@ -3000,9 +3013,7 @@ class CGWrapGlobalMethod(CGAbstractMethod):
               $*{unforgeable}
 
               $*{slots}
-
-              // XXXkhuey can't do this yet until workers can lazy resolve.
-              // JS_FireOnNewGlobalObject(aCx, obj);
+              $*{fireOnNewGlobal}
 
               return obj;
             """,
@@ -3011,7 +3022,8 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             properties=properties,
             chromeProperties=chromeProperties,
             unforgeable=InitUnforgeableProperties(self.descriptor, self.properties),
-            slots=InitMemberSlots(self.descriptor, True))
+            slots=InitMemberSlots(self.descriptor, True),
+            fireOnNewGlobal=fireOnNewGlobal)
 
 
 class CGUpdateMemberSlotsMethod(CGAbstractStaticMethod):
