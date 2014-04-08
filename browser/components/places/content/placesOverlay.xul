@@ -24,13 +24,8 @@
     var Ci = Components.interfaces;
     var Cr = Components.results;
 
-    Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(window,
-      "PlacesUtils", "resource://gre/modules/PlacesUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(window,
-      "PlacesUIUtils", "resource:///modules/PlacesUIUtils.jsm");
-    XPCOMUtils.defineLazyModuleGetter(window,
-      "PlacesTransactions", "resource://gre/modules/PlacesTransactions.jsm");
+    Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
+    Components.utils.import("resource:///modules/PlacesUIUtils.jsm");
   ]]></script>
   <script type="application/javascript"
           src="chrome://browser/content/places/controller.js"/>
