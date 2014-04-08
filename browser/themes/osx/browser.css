@@ -3928,15 +3928,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* Lion Fullscreen window styling */
 @media (-moz-mac-lion-theme) {
-  #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before {
+  #navigator-toolbox[inFullscreen]::before {
     /* Adjust by the full element height of #titlebar, since that element is
      * not displayed in native full-screen.
      * Also add the height of the tabs, since we're calculating the
      * total height of this pseudo-element, not just the top-padding. */
     height: calc(@tabHeight@ + @spaceAboveTabbar@) !important;
   }
-  #main-window[inFullscreen][privatebrowsingmode=temporary],
-  #main-window[inFullscreen]:-moz-lwtheme {
+  #main-window[inFullscreen][privatebrowsingmode=temporary] {
     /* Adjust by the full element height of #titlebar, since that element is
      * not displayed in native full-screen. */
     padding-top: @spaceAboveTabbar@;

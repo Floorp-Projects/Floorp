@@ -281,13 +281,8 @@ NativeApp.prototype = {
   _createDirectoryStructure: Task.async(function*(aDir) {
     yield OS.File.makeDir(OS.Path.join(aDir, this.uninstallDir));
 
-    // Recursively create the icon path's directory structure.
-    let path = aDir;
-    let components = OS.Path.split(OS.Path.dirname(this.iconPath)).components;
-    for (let component of components) {
-      path = OS.Path.join(path, component);
-      yield OS.File.makeDir(path);
-    }
+    yield OS.File.makeDir(OS.Path.join(aDir, OS.Path.dirname(this.iconPath)),
+                          { from: aDir });
   }),
 
   /**
