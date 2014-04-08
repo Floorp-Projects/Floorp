@@ -881,8 +881,7 @@ GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
     return JS::NullValue();
   }
 
-  JS::Rooted<JSObject*> wrapper(aCx, aCache->GetWrapper());
-  JS::Rooted<JSObject*> global(aCx, js::GetGlobalForObjectCrossCompartment(wrapper));
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   JS::Rooted<JS::Value> v(aCx, JSVAL_NULL);
   if (!WrapObject(aCx, global, result, iid, &v)) {
     aError.Throw(NS_ERROR_FAILURE);
