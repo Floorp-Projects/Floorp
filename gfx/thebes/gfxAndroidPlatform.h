@@ -49,6 +49,8 @@ public:
     virtual gfxPlatformFontList* CreatePlatformFontList();
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                            const uint8_t *aFontData, uint32_t aLength);
+    virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
+                                          const nsAString& aFontName);
 
     virtual void GetCommonFallbackFonts(const uint32_t aCh,
                                         int32_t aRunScript,
