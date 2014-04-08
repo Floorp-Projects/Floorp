@@ -79,3 +79,15 @@ endif
 
 GARBAGE += $(MOZ_PKG_MANIFEST)
 endif
+
+ifdef FXOS_SIMULATOR
+.PHONY: simulator
+simulator: make-package
+	@echo 'Building simulator addon...'
+	$(PYTHON) $(topsrcdir)/b2g/simulator/build_xpi.py $(MOZ_PKG_PLATFORM)
+
+default:: simulator
+
+# Ensure copying Simulator xpi to ftp
+UPLOAD_EXTRA_FILES += fxos-simulator-*-*.xpi
+endif
