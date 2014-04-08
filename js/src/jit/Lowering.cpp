@@ -3358,9 +3358,9 @@ LIRGenerator::visitCallInstanceOf(MCallInstanceOf *ins)
 }
 
 bool
-LIRGenerator::visitFunctionBoundary(MFunctionBoundary *ins)
+LIRGenerator::visitProfilerStackOp(MProfilerStackOp *ins)
 {
-    LFunctionBoundary *lir = new(alloc()) LFunctionBoundary(temp());
+    LProfilerStackOp *lir = new(alloc()) LProfilerStackOp(temp());
     if (!add(lir, ins))
         return false;
     // If slow assertions are enabled, then this node will result in a callVM
