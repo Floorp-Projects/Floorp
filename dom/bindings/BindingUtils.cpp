@@ -2197,12 +2197,15 @@ IsInCertifiedApp(JSContext* aCx, JSObject* aObj)
          Preferences::GetBool("dom.ignore_webidl_scope_checks", false);
 }
 
+#ifdef DEBUG
 void
-TraceGlobal(JSTracer* aTrc, JSObject* aObj)
+VerifyTraceProtoAndIfaceCacheCalled(JSTracer *trc, void **thingp,
+                                    JSGCTraceKind kind)
 {
-  MOZ_ASSERT(js::GetObjectClass(aObj)->flags & JSCLASS_DOM_GLOBAL);
-  mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
+    // We don't do anything here, we only want to verify that
+    // TraceProtoAndIfaceCache was called.
 }
+#endif
 
 void
 FinalizeGlobal(JSFreeOp* aFreeOp, JSObject* aObj)
@@ -2408,6 +2411,22 @@ ConvertExceptionToPromise(JSContext* cx,
   }
 
   return WrapNewBindingObject(cx, promise, rval);
+}
+
+/* static */
+void
+CreateGlobalOptions<nsGlobalWindow>::TraceGlobal(JSTracer* aTrc, JSObject* aObj)
+{
+  mozilla::dom::TraceProtoAndIfaceCache(aTrc, aObj);
+  xpc::GetCompartmentPrivate(aObj)->scope->TraceSelf(aTrc);
+}
+
+/* static */
+bool
+CreateGlobalOptions<nsGlobalWindow>::PostCreateGlobal(JSContext* aCx,
+                                                      JS::Handle<JSObject*> aGlobal)
+{
+  return XPCWrappedNativeScope::GetNewOrUsed(aCx, aGlobal);
 }
 
 } // namespace dom
