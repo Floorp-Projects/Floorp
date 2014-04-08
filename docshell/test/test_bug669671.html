@@ -91,7 +91,7 @@ function test()
   // Step 5 - Go back.  This should result in another onload (because the file is
   // not in bfcache) and should be the fourth time we've requested the sjs file.
   checkPopupLoadCount();
-  popup.back();
+  SpecialPowers.wrap(popup).back();
   yield undefined;
 
   // This is the check which was failing before we fixed the bug.
@@ -110,7 +110,7 @@ function test()
   popup.location = 'file_bug669671.sjs?navigated-2';
   yield undefined;
   checkPopupLoadCount();
-  popup.back();
+  SpecialPowers.wrap(popup).back();
   yield undefined;
   checkPopupLoadCount();
   popup.close();
@@ -124,7 +124,7 @@ function test()
   popup.location = 'file_bug669671.sjs?navigated-3';
   yield undefined;
   checkPopupLoadCount();
-  popup.back();
+  SpecialPowers.wrap(popup).back();
   yield undefined;
   is(popup.document.body.innerHTML, initialCount + '',
      'Load count (should be cached)');
