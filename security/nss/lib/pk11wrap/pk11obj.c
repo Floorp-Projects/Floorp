@@ -81,6 +81,9 @@ PK11_DestroyTokenObject(PK11SlotInfo *slot,CK_OBJECT_HANDLE object) {
  * Read in a single attribute into a SECItem. Allocate space for it with 
  * PORT_Alloc unless an arena is supplied. In the latter case use the arena
  * to allocate the space.
+ *
+ * PK11_ReadAttribute sets the 'data' and 'len' fields of the SECItem but
+ * does not modify its 'type' field.
  */
 SECStatus
 PK11_ReadAttribute(PK11SlotInfo *slot, CK_OBJECT_HANDLE id,

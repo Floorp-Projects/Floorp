@@ -559,6 +559,9 @@ SECStatus PK11_ImportEncryptedPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
 		SECItem *nickname, SECItem *publicValue, PRBool isPerm,
 		PRBool isPrivate, KeyType type, 
 		unsigned int usage, SECKEYPrivateKey** privk, void *wincx);
+SECItem *PK11_ExportDERPrivateKeyInfo(SECKEYPrivateKey *pk, void *wincx);
+SECKEYPrivateKeyInfo *PK11_ExportPrivKeyInfo(
+		SECKEYPrivateKey *pk, void *wincx);
 SECKEYPrivateKeyInfo *PK11_ExportPrivateKeyInfo(
 		CERTCertificate *cert, void *wincx);
 SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivKeyInfo(
@@ -585,7 +588,7 @@ SECStatus PK11_WrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
  * The caller of PK11_DEREncodePublicKey should free the returned SECItem with
  * a SECITEM_FreeItem(..., PR_TRUE) call.
  */
-SECItem* PK11_DEREncodePublicKey(const SECKEYPublicKey *pubk);
+SECItem* PK11_DEREncodePublicKey(SECKEYPublicKey *pubk);
 PK11SymKey* PK11_CopySymKeyForSigning(PK11SymKey *originalKey,
 	CK_MECHANISM_TYPE mech);
 SECKEYPrivateKeyList* PK11_ListPrivKeysInSlot(PK11SlotInfo *slot,
