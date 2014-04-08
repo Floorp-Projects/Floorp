@@ -128,7 +128,7 @@
   <project name="platform/external/dbus" path="external/dbus" revision="ea87119c843116340f5df1d94eaf8275e1055ae8"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="320b05a5761eb2a4816f7529c91ea49422979b55"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="1b9b7db3cfbe73ccb2e7d6860048fc9014cc2403"/>
-  <project name="platform/frameworks/base" path="frameworks/base" revision="9b6acb101b9edb0a336247b5efb7af9c4172dd9d"/>
+  <project name="platform/frameworks/base" path="frameworks/base" revision="807d87d5ff66cb5e0664f6924f612fcdb5e2c453"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="33a2b51f78416536e1bfba0c0b7776db307f3a4f"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="484802559ed106bac4811bd01c024ca64f741e60"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="2ff71f0d6af6ae6a15b1c9eaa89f1e4c883115bb"/>
