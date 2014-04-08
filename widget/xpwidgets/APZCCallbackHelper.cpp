@@ -4,13 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "APZCCallbackHelper.h"
-#include "gfxPrefs.h" // For gfxPrefs::LayersTilesEnabled
+#include "gfxPrefs.h" // For gfxPrefs::LayersTilesEnabled, LayersTileWidth/Height
 #include "mozilla/Preferences.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIDOMElement.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "TiledLayerBuffer.h" // For TILEDLAYERBUFFER_TILE_SIZE
 
 namespace mozilla {
 namespace widget {
@@ -46,14 +45,12 @@ static CSSRect ExpandDisplayPortToTileBoundaries(
   displayPortInLayerSpace.Inflate(1);
 
   // Now nudge the rectangle to the nearest equal or larger tile boundary.
-  gfxFloat left = TILEDLAYERBUFFER_TILE_SIZE
-    * floor(displayPortInLayerSpace.x / TILEDLAYERBUFFER_TILE_SIZE);
-  gfxFloat top = TILEDLAYERBUFFER_TILE_SIZE
-    * floor(displayPortInLayerSpace.y / TILEDLAYERBUFFER_TILE_SIZE);
-  gfxFloat right = TILEDLAYERBUFFER_TILE_SIZE
-    * ceil(displayPortInLayerSpace.XMost() / TILEDLAYERBUFFER_TILE_SIZE);
-  gfxFloat bottom = TILEDLAYERBUFFER_TILE_SIZE
-    * ceil(displayPortInLayerSpace.YMost() / TILEDLAYERBUFFER_TILE_SIZE);
+  int32_t tileWidth = gfxPrefs::LayersTileWidth();
+  int32_t tileHeight = gfxPrefs::LayersTileHeight();
+  gfxFloat left = tileWidth * floor(displayPortInLayerSpace.x / tileWidth);
+  gfxFloat right = tileWidth * ceil(displayPortInLayerSpace.XMost() / tileWidth);
+  gfxFloat top = tileHeight * floor(displayPortInLayerSpace.y / tileHeight);
+  gfxFloat bottom = tileHeight * ceil(displayPortInLayerSpace.YMost() / tileHeight);
 
   displayPortInLayerSpace = LayerRect(left, top, right - left, bottom - top);
   CSSRect displayPort = displayPortInLayerSpace / aLayerPixelsPerCSSPixel;
@@ -231,14 +228,16 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
                                          aMetrics.mDisplayPort.height,
                                          element, 0);
     } else {
-        uint32_t alignment = gfxPrefs::LayersTilesEnabled()
-            ? TILEDLAYERBUFFER_TILE_SIZE : 1;
+        gfx::IntSize alignment = gfxPrefs::LayersTilesEnabled()
+            ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
+              gfx::IntSize(1, 1);
         LayerMargin margins = aMetrics.GetDisplayPortMargins();
         aUtils->SetDisplayPortMarginsForElement(margins.left,
                                                 margins.top,
                                                 margins.right,
                                                 margins.bottom,
-                                                alignment,
+                                                alignment.width,
+                                                alignment.height,
                                                 element, 0);
         CSSRect baseCSS = aMetrics.mCompositionBounds / aMetrics.GetZoomToParent();
         nsRect base(baseCSS.x * nsPresContext::AppUnitsPerCSSPixel(),
@@ -284,14 +283,16 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
                                             aMetrics.mDisplayPort.height,
                                             element, 0);
         } else {
-            uint32_t alignment = gfxPrefs::LayersTilesEnabled()
-                ? TILEDLAYERBUFFER_TILE_SIZE : 1;
+            gfx::IntSize alignment = gfxPrefs::LayersTilesEnabled()
+                ? gfx::IntSize(gfxPrefs::LayersTileWidth(), gfxPrefs::LayersTileHeight()) :
+                  gfx::IntSize(1, 1);
             LayerMargin margins = aMetrics.GetDisplayPortMargins();
             utils->SetDisplayPortMarginsForElement(margins.left,
                                                    margins.top,
                                                    margins.right,
                                                    margins.bottom,
-                                                   alignment,
+                                                   alignment.width,
+                                                   alignment.height,
                                                    element, 0);
             CSSRect baseCSS = aMetrics.mCompositionBounds / aMetrics.GetZoomToParent();
             nsRect base(baseCSS.x * nsPresContext::AppUnitsPerCSSPixel(),

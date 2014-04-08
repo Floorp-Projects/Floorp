@@ -572,14 +572,16 @@ WrapRotationAxis(int32_t* aRotationPoint, int32_t aSize)
 }
 
 static void
-FillSurface(gfxASurface* aSurface, const nsIntRegion& aRegion,
+FillSurface(DrawTarget* aDT, const nsIntRegion& aRegion,
             const nsIntPoint& aOffset, const gfxRGBA& aColor)
 {
-  nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-  ctx->Translate(-gfxPoint(aOffset.x, aOffset.y));
-  gfxUtils::ClipToRegion(ctx, aRegion);
-  ctx->SetColor(aColor);
-  ctx->Paint();
+  nsIntRegionRectIterator iter(aRegion);
+  const nsIntRect* r;
+  while ((r = iter.Next()) != nullptr) {
+    aDT->FillRect(Rect(r->x - aOffset.x, r->y - aOffset.y,
+                       r->width, r->height),
+                  ColorPattern(ToColor(aColor)));
+  }
 }
 
 RotatedContentBuffer::PaintState
@@ -799,22 +801,19 @@ ContentClientIncremental::BorrowDrawTargetForPainting(ThebesLayer* aLayer,
   // if it wants more to be repainted than we request.
   if (aPaintState.mMode == SurfaceMode::SURFACE_COMPONENT_ALPHA) {
     nsIntRegion drawRegionCopy = aPaintState.mRegionToDraw;
-    nsRefPtr<gfxASurface> onBlack = GetUpdateSurface(BUFFER_BLACK, drawRegionCopy);
-    nsRefPtr<gfxASurface> onWhite = GetUpdateSurface(BUFFER_WHITE, aPaintState.mRegionToDraw);
+    RefPtr<DrawTarget> onBlack = GetUpdateSurface(BUFFER_BLACK, drawRegionCopy);
+    RefPtr<DrawTarget> onWhite = GetUpdateSurface(BUFFER_WHITE, aPaintState.mRegionToDraw);
     if (onBlack && onWhite) {
       NS_ASSERTION(aPaintState.mRegionToDraw == drawRegionCopy,
                    "BeginUpdate should always modify the draw region in the same way!");
       FillSurface(onBlack, aPaintState.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(0.0, 0.0, 0.0, 1.0));
       FillSurface(onWhite, aPaintState.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(1.0, 1.0, 1.0, 1.0));
-      RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize().ToIntSize());
-      RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize().ToIntSize());
-      mLoanedDrawTarget = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
+      mLoanedDrawTarget = Factory::CreateDualDrawTarget(onBlack, onWhite);
     } else {
       mLoanedDrawTarget = nullptr;
     }
   } else {
-    nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, aPaintState.mRegionToDraw);
-    mLoanedDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize().ToIntSize());
+    mLoanedDrawTarget = GetUpdateSurface(BUFFER_BLACK, aPaintState.mRegionToDraw);
   }
   if (!mLoanedDrawTarget) {
     NS_WARNING("unable to get context for update");
@@ -842,8 +841,6 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
                                   bool aDidSelfCopy)
 {
   if (IsSurfaceDescriptorValid(mUpdateDescriptor)) {
-    ShadowLayerForwarder::CloseDescriptor(mUpdateDescriptor);
-
     mForwarder->UpdateTextureIncremental(this,
                                          TextureFront,
                                          mUpdateDescriptor,
@@ -853,8 +850,6 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
     mUpdateDescriptor = SurfaceDescriptor();
   }
   if (IsSurfaceDescriptorValid(mUpdateDescriptorOnWhite)) {
-    ShadowLayerForwarder::CloseDescriptor(mUpdateDescriptorOnWhite);
-
     mForwarder->UpdateTextureIncremental(this,
                                          TextureOnWhiteFront,
                                          mUpdateDescriptorOnWhite,
@@ -866,7 +861,7 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
 
 }
 
-already_AddRefed<gfxASurface>
+TemporaryRef<DrawTarget>
 ContentClientIncremental::GetUpdateSurface(BufferType aType,
                                            const nsIntRegion& aUpdateRegion)
 {
@@ -883,9 +878,6 @@ ContentClientIncremental::GetUpdateSurface(BufferType aType,
     return nullptr;
   }
 
-  nsRefPtr<gfxASurface> tmpASurface =
-    ShadowLayerForwarder::OpenDescriptor(OPEN_READ_WRITE, desc);
-
   if (aType == BUFFER_BLACK) {
     MOZ_ASSERT(!IsSurfaceDescriptorValid(mUpdateDescriptor));
     mUpdateDescriptor = desc;
@@ -895,7 +887,7 @@ ContentClientIncremental::GetUpdateSurface(BufferType aType,
     mUpdateDescriptorOnWhite = desc;
   }
 
-  return tmpASurface.forget();
+  return GetDrawTargetForDescriptor(desc, gfx::BackendType::COREGRAPHICS);
 }
 
 }

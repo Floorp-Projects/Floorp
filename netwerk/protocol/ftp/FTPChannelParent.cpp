@@ -312,8 +312,8 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   chan->GetURI(getter_AddRefs(uri));
   SerializeURI(uri, uriparam);
 
-  if (mIPCClosed || !SendOnStartRequest(contentLength, contentType,
-                                       lastModified, entityID, uriparam)) {
+  if (mIPCClosed || !SendOnStartRequest(mStatus, contentLength, contentType,
+                                        lastModified, entityID, uriparam)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -366,7 +366,7 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
   if (NS_FAILED(rv))
     return rv;
 
-  if (mIPCClosed || !SendOnDataAvailable(data, aOffset, aCount))
+  if (mIPCClosed || !SendOnDataAvailable(mStatus, data, aOffset, aCount))
     return NS_ERROR_UNEXPECTED;
 
   return NS_OK;

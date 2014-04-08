@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 991256 requires a clobber because it renames generated mobile/android/base/widget files.
+Bug 916012 moves definition from one WEBIDL_FILE to another (Bug 979886)

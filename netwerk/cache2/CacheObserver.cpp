@@ -13,15 +13,14 @@
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
+#include "prsystem.h"
 #include <time.h>
+#include <math.h>
 
 namespace mozilla {
 namespace net {
 
 CacheObserver* CacheObserver::sSelf = nullptr;
-
-static uint32_t const kDefaultMemoryLimit = 50 * 1024; // 50 MB
-uint32_t CacheObserver::sMemoryLimit = kDefaultMemoryLimit;
 
 static uint32_t const kDefaultUseNewCache = 0; // Don't use the new cache by default
 uint32_t CacheObserver::sUseNewCache = kDefaultUseNewCache;
@@ -42,6 +41,14 @@ bool CacheObserver::sUseDiskCache = kDefaultUseDiskCache;
 
 static bool const kDefaultUseMemoryCache = true;
 bool CacheObserver::sUseMemoryCache = kDefaultUseMemoryCache;
+
+static uint32_t const kDefaultMetadataMemoryLimit = 250; // 0.25 MB
+uint32_t CacheObserver::sMetadataMemoryLimit = kDefaultMetadataMemoryLimit;
+
+static int32_t const kDefaultMemoryCacheCapacity = -1; // autodetect
+int32_t CacheObserver::sMemoryCacheCapacity = kDefaultMemoryCacheCapacity;
+// Cache of the calculated memory capacity based on the system memory size
+int32_t CacheObserver::sAutoMemoryCacheCapacity = -1;
 
 static uint32_t const kDefaultDiskCacheCapacity = 250 * 1024; // 250 MB
 uint32_t CacheObserver::sDiskCacheCapacity = kDefaultDiskCacheCapacity;
@@ -116,15 +123,17 @@ CacheObserver::AttachToPreferences()
     &sUseMemoryCache, "browser.cache.memory.enable", kDefaultUseMemoryCache);
 
   mozilla::Preferences::AddUintVarCache(
-    &sMemoryLimit, "browser.cache.memory_limit", kDefaultMemoryLimit);
+    &sMetadataMemoryLimit, "browser.cache.disk.metadata_memory_limit", kDefaultMetadataMemoryLimit);
 
   mozilla::Preferences::AddUintVarCache(
     &sDiskCacheCapacity, "browser.cache.disk.capacity", kDefaultDiskCacheCapacity);
+  mozilla::Preferences::AddIntVarCache(
+    &sMemoryCacheCapacity, "browser.cache.memory.capacity", kDefaultMemoryCacheCapacity);
 
   mozilla::Preferences::AddUintVarCache(
-    &sMaxMemoryEntrySize, "browser.cache.memory.max_entry_size", kDefaultMaxMemoryEntrySize);
-  mozilla::Preferences::AddUintVarCache(
     &sMaxDiskEntrySize, "browser.cache.disk.max_entry_size", kDefaultMaxDiskEntrySize);
+  mozilla::Preferences::AddUintVarCache(
+    &sMaxMemoryEntrySize, "browser.cache.memory.max_entry_size", kDefaultMaxMemoryEntrySize);
 
   // http://mxr.mozilla.org/mozilla-central/source/netwerk/cache/nsCacheEntryDescriptor.cpp#367
   mozilla::Preferences::AddUintVarCache(
@@ -179,6 +188,44 @@ CacheObserver::AttachToPreferences()
       "browser.cache.frecency_half_life_hours", kDefaultHalfLifeHours)));
     break;
   }
+}
+
+// static
+uint32_t const CacheObserver::MemoryCacheCapacity()
+{
+  if (sMemoryCacheCapacity >= 0)
+    return sMemoryCacheCapacity << 10;
+
+  if (sAutoMemoryCacheCapacity != -1)
+    return sAutoMemoryCacheCapacity;
+
+  static uint64_t bytes = PR_GetPhysicalMemorySize();
+  // If getting the physical memory failed, arbitrarily assume
+  // 32 MB of RAM. We use a low default to have a reasonable
+  // size on all the devices we support.
+  if (bytes == 0)
+    bytes = 32 * 1024 * 1024;
+
+  // Conversion from unsigned int64_t to double doesn't work on all platforms.
+  // We need to truncate the value at INT64_MAX to make sure we don't
+  // overflow.
+  if (bytes > INT64_MAX)
+    bytes = INT64_MAX;
+
+  uint64_t kbytes = bytes >> 10;
+  double kBytesD = double(kbytes);
+  double x = log(kBytesD)/log(2.0) - 14;
+
+  int32_t capacity = 0;
+  if (x > 0) {
+    capacity = (int32_t)(x * x / 3.0 + x + 2.0 / 3 + 0.1); // 0.1 for rounding
+    if (capacity > 32)
+      capacity = 32;
+    capacity <<= 20;
+  }
+
+  // Result is in bytes.
+  return sAutoMemoryCacheCapacity = capacity;
 }
 
 void CacheObserver::SchduleAutoDelete()
@@ -319,11 +366,11 @@ bool const CacheObserver::EntryIsTooBig(int64_t aSize, bool aUsingDisk)
   if (preferredLimit != -1 && aSize > preferredLimit)
     return true;
 
-  // Otherwise (or when in the custom limit), check limit
-  // based on the global limit.
+  // Otherwise (or when in the custom limit), check limit based on the global
+  // limit.  It's 1/8 (>> 3) of the respective capacity.
   int64_t derivedLimit = aUsingDisk
-    ? (static_cast<int64_t>(sDiskCacheCapacity) << 7) // << 7 == * 1024 / 8
-    : (static_cast<int64_t>(sMemoryLimit) << 7);
+    ? (static_cast<int64_t>(DiskCacheCapacity() >> 3))
+    : (static_cast<int64_t>(MemoryCacheCapacity() >> 3));
 
   if (aSize > derivedLimit)
     return true;

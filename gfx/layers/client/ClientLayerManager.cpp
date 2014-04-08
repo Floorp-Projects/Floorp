@@ -7,7 +7,7 @@
 #include "CompositorChild.h"            // for CompositorChild
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "gfxASurface.h"                // for gfxASurface, etc
-#include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface
+#include "gfxPrefs.h"                   // for gfxPrefs::LayersTileWidth/Height
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Hal.h"
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
@@ -289,10 +289,10 @@ ClientLayerManager::MakeSnapshotIfRequired()
           // it through |outSnapshot|, but if it doesn't, it's
           // responsible for freeing |snapshot|.
           remoteRenderer->SendMakeSnapshot(inSnapshot, &snapshot)) {
-        AutoOpenSurface opener(OPEN_READ_ONLY, snapshot);
-        gfxASurface* source = opener.Get();
-
-        mShadowTarget->DrawSurface(source, source->GetSize());
+        RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(snapshot);
+        mShadowTarget->GetDrawTarget()->CopySurface(surf,
+                                                    IntRect(0, 0, bounds.Size().width, bounds.Size().height),
+                                                    IntPoint(0, 0));
       }
       if (IsSurfaceDescriptorValid(snapshot)) {
         mForwarder->DestroySharedSurface(&snapshot);
@@ -457,8 +457,8 @@ ClientLayerManager::GetTexturePool(SurfaceFormat aFormat)
   }
 
   mTexturePools.AppendElement(
-      new TextureClientPool(aFormat, IntSize(TILEDLAYERBUFFER_TILE_SIZE,
-                                             TILEDLAYERBUFFER_TILE_SIZE),
+      new TextureClientPool(aFormat, IntSize(gfxPrefs::LayersTileWidth(),
+                                             gfxPrefs::LayersTileHeight()),
                             mForwarder));
 
   return mTexturePools.LastElement();
@@ -471,8 +471,8 @@ ClientLayerManager::GetSimpleTileTexturePool(SurfaceFormat aFormat)
   mSimpleTilePools.EnsureLengthAtLeast(index+1);
 
   if (mSimpleTilePools[index].get() == nullptr) {
-    mSimpleTilePools[index] = new SimpleTextureClientPool(aFormat, IntSize(TILEDLAYERBUFFER_TILE_SIZE,
-                                                                           TILEDLAYERBUFFER_TILE_SIZE),
+    mSimpleTilePools[index] = new SimpleTextureClientPool(aFormat, IntSize(gfxPrefs::LayersTileWidth(),
+                                                                           gfxPrefs::LayersTileHeight()),
                                                           mForwarder);
   }
 

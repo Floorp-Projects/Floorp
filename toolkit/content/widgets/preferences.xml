@@ -572,9 +572,8 @@
           <children includes="prefpane"/>
         </xul:deck>
       </xul:hbox>
-      <xul:hbox anonid="dlg-buttons" class="prefWindow-dlgbuttons"
+      <xul:hbox anonid="dlg-buttons" class="prefWindow-dlgbuttons" pack="end">
 #ifdef XP_UNIX
-                >
         <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
         <xul:button dlgtype="help" class="dialog-button" hidden="true" icon="help"/>
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
@@ -583,7 +582,6 @@
         <xul:button dlgtype="cancel" class="dialog-button" icon="cancel"/>
         <xul:button dlgtype="accept" class="dialog-button" icon="accept"/>
 #else
-                pack="end">
         <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
         <xul:spacer anonid="spacer" flex="1"/>
         <xul:button dlgtype="accept" class="dialog-button" icon="accept"/>
@@ -612,6 +610,8 @@
 #ifdef XP_MACOSX
             // no buttons on Mac except Help
             cancelButton.hidden = true;
+            // Move Help button to the end
+            document.getAnonymousElementByAttribute(this, "anonid", "spacer").hidden = true;         
             // Also, don't fire onDialogAccept on enter
             acceptButton.disabled = true;
 #else

@@ -8,6 +8,7 @@ Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var gAdvancedPane = {
   _inited: false,
@@ -300,48 +301,28 @@ var gAdvancedPane = {
   // Retrieves the amount of space currently used by disk cache
   updateActualCacheSize: function ()
   {
-    var sum = 0;
-    function updateUI(consumption) {
-      var actualSizeLabel = document.getElementById("actualDiskCacheSize");
-      var sizeStrings = DownloadUtils.convertByteUnits(consumption);
-      var prefStrBundle = document.getElementById("bundlePreferences");
-      var sizeStr = prefStrBundle.getFormattedString("actualDiskCacheSize", sizeStrings);
-      actualSizeLabel.value = sizeStr;
-    }
+    var actualSizeLabel = document.getElementById("actualDiskCacheSize");
+    var prefStrBundle = document.getElementById("bundlePreferences");
 
-    Visitor.prototype = {
-      expected: 0,
-      sum: 0,
-      QueryInterface: function listener_qi(iid) {
-        if (iid.equals(Ci.nsISupports) ||
-            iid.equals(Ci.nsICacheStorageVisitor)) {
-          return this;
-        }
-        throw Components.results.NS_ERROR_NO_INTERFACE;
+    // Needs to root the observer since cache service keeps only a weak reference.
+    this.observer = {
+      onNetworkCacheDiskConsumption: function(consumption) {
+        var size = DownloadUtils.convertByteUnits(consumption);
+        actualSizeLabel.value = prefStrBundle.getFormattedString("actualDiskCacheSize", size);
       },
-      onCacheStorageInfo: function(num, consumption)
-      {
-        this.sum += consumption;
-        if (!--this.expected)
-          updateUI(this.sum);
-      }
+
+      QueryInterface: XPCOMUtils.generateQI([
+        Components.interfaces.nsICacheStorageConsumptionObserver,
+        Components.interfaces.nsISupportsWeakReference
+      ])
     };
-    function Visitor(callbacksExpected) {
-      this.expected = callbacksExpected;
-    }
+
+    actualSizeLabel.value = prefStrBundle.getString("actualDiskCacheSizeCalculated");
 
     var cacheService =
       Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
                 .getService(Components.interfaces.nsICacheStorageService);
-    // non-anonymous
-    var storage1 = cacheService.diskCacheStorage(LoadContextInfo.default, false);
-    // anonymous
-    var storage2 = cacheService.diskCacheStorage(LoadContextInfo.anonymous, false);
-
-    // expect 2 callbacks
-    var visitor = new Visitor(2);
-    storage1.asyncVisitStorage(visitor, false /* Do not walk entries */);
-    storage2.asyncVisitStorage(visitor, false /* Do not walk entries */);
+    cacheService.asyncGetDiskConsumption(this.observer);
   },
 
   // Retrieves the amount of space currently used by offline cache

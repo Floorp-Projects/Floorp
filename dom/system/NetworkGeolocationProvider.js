@@ -9,6 +9,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 
 const POSITION_UNAVAILABLE = Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE;
+const SETTING_DEBUG_ENABLED = "geolocation.debugging.enabled";
+const SETTING_CHANGED_TOPIC = "mozsettings-changed";
 
 let gLoggingEnabled = false;
 
@@ -77,13 +79,38 @@ WifiGeoPositionProvider.prototype = {
   classID:          Components.ID("{77DA64D3-7458-4920-9491-86CC9914F904}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIGeolocationProvider,
                                            Ci.nsIWifiListener,
-                                           Ci.nsITimerCallback]),
+                                           Ci.nsITimerCallback,
+                                           Ci.nsIObserver]),
   listener: null,
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != SETTING_CHANGED_TOPIC) {
+      return;
+    }
+
+    try {
+      let setting = JSON.parse(aData);
+      if (setting.key != SETTING_DEBUG_ENABLED) {
+          return;
+      }
+      gLoggingEnabled = setting.value;
+    } catch (e) {
+    }
+  },
 
   startup:  function() {
     if (this.started)
       return;
+
     this.started = true;
+
+    try {
+      Services.obs.addObserver(this, SETTING_CHANGED_TOPIC, false);
+      let settings = Cc["@mozilla.org/settingsService;1"].getService(Ci.nsISettingsService);
+      settings.createLock().get(SETTING_DEBUG_ENABLED, this);
+    } catch(ex) {
+      // This platform doesn't have the settings interface, and that is just peachy
+    }
 
     if (gWifiScanningEnabled) {
       this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
@@ -115,6 +142,9 @@ WifiGeoPositionProvider.prototype = {
       this.wifiService.stopWatching(this);
       this.wifiService = null;
     }
+
+    Services.obs.removeObserver(this, SETTING_CHANGED_TOPIC);
+
     this.listener = null;
     this.started = false;
   },

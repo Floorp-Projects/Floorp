@@ -123,8 +123,6 @@
 /***********************************************************************
 ** MACROS:      JS_HOWMANY
 **              JS_ROUNDUP
-**              JS_MIN
-**              JS_MAX
 ** DESCRIPTION:
 **      Commonly used macros for operations on compatible types.
 ***********************************************************************/

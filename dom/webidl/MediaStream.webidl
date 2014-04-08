@@ -10,6 +10,23 @@
  * liability, trademark and document use rules apply.
  */
 
+// These dictionaries need to be in a separate file from their
+// MediaTrackConstraints* counterparts due to a webidl compiler limitation.
+
+dictionary MediaStreamConstraints {
+    (boolean or MediaTrackConstraints) audio = false;
+    (boolean or MediaTrackConstraints) video = false;
+    boolean picture = false;
+    boolean fake = false;
+};
+
+dictionary MediaStreamConstraintsInternal {
+    (boolean or MediaTrackConstraintsInternal) audio;
+    (boolean or MediaTrackConstraintsInternal) video;
+    boolean picture = false;
+    boolean fake = false;
+};
+
 interface MediaStream {
     // readonly attribute DOMString    id;
     sequence<AudioStreamTrack> getAudioTracks ();

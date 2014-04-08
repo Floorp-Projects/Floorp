@@ -146,7 +146,6 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceDescriptorMemory:
       return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
     case SurfaceDescriptor::TSharedTextureDescriptor:
-    case SurfaceDescriptor::TSurfaceDescriptorGralloc:
     case SurfaceDescriptor::TNewSurfaceDescriptorGralloc:
     case SurfaceDescriptor::TSurfaceStreamDescriptor:
       return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
@@ -168,7 +167,11 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceDescriptorDIB:
       return CreateTextureHostD3D9(aDesc, aDeallocator, aFlags);
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
-      return CreateTextureHostD3D11(aDesc, aDeallocator, aFlags);
+      if (Compositor::GetBackend() == LayersBackend::LAYERS_D3D9) {
+        return CreateTextureHostD3D9(aDesc, aDeallocator, aFlags);
+      } else {
+        return CreateTextureHostD3D11(aDesc, aDeallocator, aFlags);
+      }
 #endif
     default:
       MOZ_CRASH("Unsupported Surface type");

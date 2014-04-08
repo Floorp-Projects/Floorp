@@ -2864,7 +2864,9 @@ SweepZones(FreeOp *fop, bool lastGC)
         Zone *zone = *read++;
 
         if (zone->wasGCStarted()) {
-            if (zone->allocator.arenas.arenaListsAreEmpty() || lastGC) {
+            if ((zone->allocator.arenas.arenaListsAreEmpty() && !zone->hasMarkedCompartments()) ||
+                lastGC)
+            {
                 zone->allocator.arenas.checkEmptyFreeLists();
                 if (callback)
                     callback(zone);

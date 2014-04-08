@@ -6,6 +6,7 @@
 #include "CacheEntry.h"
 #include "CacheStorageService.h"
 #include "CacheObserver.h"
+#include "CacheFileUtils.h"
 
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -49,22 +50,22 @@ CacheEntryHandle::CacheEntryHandle(CacheEntry* aEntry)
   MOZ_COUNT_CTOR(CacheEntryHandle);
 
 #ifdef DEBUG
-  if (!mEntry->mHandlersCount) {
-    // CacheEntry.mHandlersCount must go from zero to one only under
+  if (!mEntry->HandlesCount()) {
+    // CacheEntry.mHandlesCount must go from zero to one only under
     // the service lock. Can access CacheStorageService::Self() w/o a check
     // since CacheEntry hrefs it.
     CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
   }
 #endif
 
-  ++mEntry->mHandlersCount;
+  mEntry->AddHandleRef();
 
   LOG(("New CacheEntryHandle %p for entry %p", this, aEntry));
 }
 
 CacheEntryHandle::~CacheEntryHandle()
 {
-  --mEntry->mHandlersCount;
+  mEntry->ReleaseHandleRef();
   mEntry->OnHandleClosed(this);
 
   MOZ_COUNT_DTOR(CacheEntryHandle);
@@ -87,8 +88,8 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry,
 
   // The counter may go from zero to non-null only under the service lock
   // but here we expect it to be already positive.
-  MOZ_ASSERT(mEntry->mHandlersCount);
-  ++mEntry->mHandlersCount;
+  MOZ_ASSERT(mEntry->HandlesCount());
+  mEntry->AddHandleRef();
 }
 
 CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
@@ -104,15 +105,15 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 
   // The counter may go from zero to non-null only under the service lock
   // but here we expect it to be already positive.
-  MOZ_ASSERT(mEntry->mHandlersCount);
-  ++mEntry->mHandlersCount;
+  MOZ_ASSERT(mEntry->HandlesCount());
+  mEntry->AddHandleRef();
 }
 
 CacheEntry::Callback::~Callback()
 {
   ProxyRelease(mCallback, mTargetThread);
 
-  --mEntry->mHandlersCount;
+  mEntry->ReleaseHandleRef();
   MOZ_COUNT_DTOR(CacheEntry::Callback);
 }
 
@@ -123,9 +124,9 @@ void CacheEntry::Callback::ExchangeEntry(CacheEntry* aEntry)
 
   // The counter may go from zero to non-null only under the service lock
   // but here we expect it to be already positive.
-  MOZ_ASSERT(aEntry->mHandlersCount);
-  ++aEntry->mHandlersCount;
-  --mEntry->mHandlersCount;
+  MOZ_ASSERT(aEntry->HandlesCount());
+  aEntry->AddHandleRef();
+  mEntry->ReleaseHandleRef();
   mEntry = aEntry;
 }
 
@@ -225,26 +226,33 @@ nsresult CacheEntry::HashingKey(nsCSubstring const& aStorageID,
                                 nsIURI* aURI,
                                 nsACString &aResult)
 {
+  nsAutoCString spec;
+  nsresult rv = aURI->GetAsciiSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return HashingKey(aStorageID, aEnhanceID, spec, aResult);
+}
+
+// static
+nsresult CacheEntry::HashingKey(nsCSubstring const& aStorageID,
+                                nsCSubstring const& aEnhanceID,
+                                nsCSubstring const& aURISpec,
+                                nsACString &aResult)
+{
   /**
    * This key is used to salt hash that is a base for disk file name.
    * Changing it will cause we will not be able to find files on disk.
    */
 
-  if (aStorageID.Length()) {
-    aResult.Append(aStorageID);
-    aResult.Append(':');
+  aResult.Append(aStorageID);
+
+  if (!aEnhanceID.IsEmpty()) {
+    CacheFileUtils::AppendTagWithValue(aResult, '~', aEnhanceID);
   }
 
-  if (aEnhanceID.Length()) {
-    aResult.Append(aEnhanceID);
-    aResult.Append(':');
-  }
-
-  nsAutoCString spec;
-  nsresult rv = aURI->GetAsciiSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aResult.Append(spec);
+  // Appending directly
+  aResult.Append(':');
+  aResult.Append(aURISpec);
 
   return NS_OK;
 }
@@ -804,11 +812,11 @@ void CacheEntry::OnOutputClosed()
   InvokeCallbacks();
 }
 
-bool CacheEntry::UsingDisk() const
+bool CacheEntry::IsUsingDiskLocked() const
 {
   CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
 
-  return mUseDisk;
+  return IsUsingDisk();
 }
 
 bool CacheEntry::SetUsingDisk(bool aUsingDisk)
@@ -834,7 +842,7 @@ bool CacheEntry::IsReferenced() const
 
   // Increasing this counter from 0 to non-null and this check both happen only
   // under the service lock.
-  return mHandlersCount > 0;
+  return mHandlesCount > 0;
 }
 
 bool CacheEntry::IsFileDoomed()
@@ -1342,6 +1350,15 @@ bool CacheEntry::Purge(uint32_t aWhat)
     // are actually very fresh and should not go just because frecency had not been set
     // so far.
     LOG(("  state=%s, frecency=%1.10f", StateString(mState), mFrecency));
+    return false;
+  }
+
+  if (NS_SUCCEEDED(mFileStatus) && mFile->IsWriteInProgress()) {
+    // The file is used when there are open streams or chunks/metadata still waiting for
+    // write.  In this case, this entry cannot be purged, otherwise reopenned entry
+    // would may not even find the data on disk - CacheFile is not shared and cannot be
+    // left orphan when its job is not done, hence keep the whole entry.
+    LOG(("  file still under use"));
     return false;
   }
 

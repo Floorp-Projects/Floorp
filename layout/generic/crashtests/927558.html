@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+  var range = document.createRange();
+  range.setStart(document.documentElement, 0);
+  var frame = document.getElementById("f");
+  var frameSel = frame.contentWindow.getSelection();
+  document.body.removeChild(frame);
+  frameSel.addRange(range);
+  frameSel.modify("move", "right", "character");
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<iframe id="f" src="data:text/html,<!doctype html>1"></iframe>
+
+
+</body></html>

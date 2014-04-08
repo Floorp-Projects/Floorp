@@ -40,6 +40,9 @@ namespace mozilla {
 namespace ipc {
 class Shmem;
 }
+namespace gfx {
+class DataSourceSurface;
+}
 
 namespace layers {
 
@@ -68,6 +71,9 @@ mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType();
 bool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
 bool IsSurfaceDescriptorOwned(const SurfaceDescriptor& aDescriptor);
 bool ReleaseOwnedSurfaceDescriptor(const SurfaceDescriptor& aDescriptor);
+
+TemporaryRef<gfx::DrawTarget> GetDrawTargetForDescriptor(const SurfaceDescriptor& aDescriptor, gfx::BackendType aBackend);
+TemporaryRef<gfx::DataSourceSurface> GetSurfaceForDescriptor(const SurfaceDescriptor& aDescriptor);
 /**
  * An interface used to create and destroy surfaces that are shared with the
  * Compositor process (using shmem, or gralloc, or other platform specific memory)
@@ -131,9 +137,6 @@ public:
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) = 0;
 
   // was AllocBuffer
-  virtual bool AllocSharedImageSurface(const gfx::IntSize& aSize,
-                                       gfxContentType aContent,
-                                       gfxSharedImageSurface** aBuffer);
   virtual bool AllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                       gfxContentType aContent,
                                       SurfaceDescriptor* aBuffer);
@@ -174,12 +177,6 @@ public:
 protected:
 
   virtual bool IsOnCompositorSide() const = 0;
-  bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
-  virtual bool PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
-                                              gfxContentType aContent,
-                                              uint32_t aCaps,
-                                              SurfaceDescriptor* aBuffer);
-
 
   virtual ~ISurfaceAllocator();
 
