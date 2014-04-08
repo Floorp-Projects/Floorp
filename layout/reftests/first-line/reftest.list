@@ -33,3 +33,5 @@ load stress-10.html # crash test
 == 469227-3.html 469227-3-ref.html
 
 == restyle-inside-first-line.html restyle-inside-first-line-ref.html
+== font-styles.html font-styles-ref.html
+== font-styles-nooverflow.html font-styles-ref.html

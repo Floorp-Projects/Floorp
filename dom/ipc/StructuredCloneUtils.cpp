@@ -152,7 +152,10 @@ Write(JSContext* aCx, JSStructuredCloneWriter* aWriter,
 JSStructuredCloneCallbacks gCallbacks = {
   Read,
   Write,
-  Error
+  Error,
+  nullptr,
+  nullptr,
+  nullptr
 };
 
 } // anonymous namespace

@@ -3676,6 +3676,51 @@ nsLayoutUtils::ComputeHeightDependentValue(
   return 0;
 }
 
+/* static */ void
+nsLayoutUtils::MarkDescendantsDirty(nsIFrame *aSubtreeRoot)
+{
+  nsAutoTArray<nsIFrame*, 4> subtrees;
+  subtrees.AppendElement(aSubtreeRoot);
+
+  // dirty descendants, iterating over subtrees that may include
+  // additional subtrees associated with placeholders
+  do {
+    nsIFrame *subtreeRoot = subtrees.ElementAt(subtrees.Length() - 1);
+    subtrees.RemoveElementAt(subtrees.Length() - 1);
+
+    // Mark all descendants dirty (using an nsTArray stack rather than
+    // recursion).
+    // Note that nsHTMLReflowState::InitResizeFlags has some similar
+    // code; see comments there for how and why it differs.
+    nsAutoTArray<nsIFrame*, 32> stack;
+    stack.AppendElement(subtreeRoot);
+
+    do {
+      nsIFrame *f = stack.ElementAt(stack.Length() - 1);
+      stack.RemoveElementAt(stack.Length() - 1);
+
+      f->MarkIntrinsicWidthsDirty();
+
+      if (f->GetType() == nsGkAtoms::placeholderFrame) {
+        nsIFrame *oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
+        if (!nsLayoutUtils::IsProperAncestorFrame(subtreeRoot, oof)) {
+          // We have another distinct subtree we need to mark.
+          subtrees.AppendElement(oof);
+        }
+      }
+
+      nsIFrame::ChildListIterator lists(f);
+      for (; !lists.IsDone(); lists.Next()) {
+        nsFrameList::Enumerator childFrames(lists.CurrentList());
+        for (; !childFrames.AtEnd(); childFrames.Next()) {
+          nsIFrame* kid = childFrames.get();
+          stack.AppendElement(kid);
+        }
+      }
+    } while (stack.Length() != 0);
+  } while (subtrees.Length() != 0);
+}
+
 #define MULDIV(a,b,c) (nscoord(int64_t(a) * int64_t(b) / int64_t(c)))
 
 /* static */ nsSize
@@ -6125,36 +6170,34 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
   nsPresContext* presContext = aFrame->PresContext();
   nsIPresShell* presShell = presContext->PresShell();
 
-  // For the root scroll frame of the root content document, the above calculation
-  // will yield the size of the viewport frame as the composition bounds, which
-  // doesn't actually correspond to what is visible when
-  // nsIDOMWindowUtils::setCSSViewport has been called to modify the visible area of
-  // the prescontext that the viewport frame is reflowed into. In that case if our
-  // document has a widget then the widget's bounds will correspond to what is
-  // visible. If we don't have a widget the root view's bounds correspond to what
-  // would be visible because they don't get modified by setCSSViewport.
+  // See the comments in the code that calculates the root
+  // composition bounds in RecordFrameMetrics.
+  // TODO: Reuse that code here.
   bool isRootContentDocRootScrollFrame = presContext->IsRootContentDocument()
                                       && aFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
     if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
       if (nsView* view = rootFrame->GetView()) {
-        nsIWidget* widget = view->GetWidget();
+        nsSize viewSize = view->GetBounds().Size();
+        nsIWidget* widget =
 #ifdef MOZ_WIDGET_ANDROID
-        // Android hack - temporary workaround for bug 983208 until we figure
-        // out what a proper fix is.
-        if (!widget) {
-          widget = rootFrame->GetNearestWidget();
-        }
+            rootFrame->GetNearestWidget();
+#else
+            view->GetWidget();
 #endif
         if (widget) {
-          nsIntRect bounds;
-          widget->GetBounds(bounds);
+          nsIntRect widgetBounds;
+          widget->GetBounds(widgetBounds);
           int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
-          size = nsSize(bounds.width * auPerDevPixel,
-                        bounds.height * auPerDevPixel);
+          size = nsSize(widgetBounds.width * auPerDevPixel,
+                        widgetBounds.height * auPerDevPixel);
+#ifdef MOZ_WIDGET_ANDROID
+          if (viewSize.height < size.height) {
+            size.height = viewSize.height;
+          }
+#endif
         } else {
-          nsRect viewBounds = view->GetBounds();
-          size = nsSize(viewBounds.width, viewBounds.height);
+          size = viewSize;
         }
       }
     }

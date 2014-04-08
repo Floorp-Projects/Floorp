@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/net/RemoteOpenFileChild.h"
+#include "RemoteOpenFileChild.h"
 
+#include "mozilla/unused.h"
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -13,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "nsJARProtocolHandler.h"
 #include "nsIRemoteOpenFileListener.h"
+#include "nsProxyRelease.h"
 
 // needed to alloc/free NSPR file descriptors
 #include "private/pprio.h"
@@ -83,8 +85,40 @@ RemoteOpenFileChild::RemoteOpenFileChild(const RemoteOpenFileChild& other)
 
 RemoteOpenFileChild::~RemoteOpenFileChild()
 {
-  if (mListener) {
-    NotifyListener(NS_ERROR_UNEXPECTED);
+  if (NS_IsMainThread()) {
+    if (mListener) {
+      NotifyListener(NS_ERROR_UNEXPECTED);
+    }
+  } else {
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    if (mainThread) {
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProxyRelease(mainThread, mURI, true)));
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProxyRelease(mainThread, mAppURI, true)));
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_ProxyRelease(mainThread, mListener,
+                                                   true)));
+
+      TabChild* tabChild;
+      mTabChild.forget(&tabChild);
+
+      if (tabChild) {
+        nsCOMPtr<nsIRunnable> runnable =
+          NS_NewNonOwningRunnableMethod(tabChild, &TabChild::Release);
+        MOZ_ASSERT(runnable);
+
+        MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mainThread->Dispatch(runnable,
+                                                          NS_DISPATCH_NORMAL)));
+      }
+    } else {
+      using mozilla::unused;
+
+      NS_WARNING("RemoteOpenFileChild released after thread shutdown, leaking "
+                 "its members!");
+
+      unused << mURI.forget();
+      unused << mAppURI.forget();
+      unused << mListener.forget();
+      unused << mTabChild.forget();
+    }
   }
 
   if (mNSPRFileDesc) {

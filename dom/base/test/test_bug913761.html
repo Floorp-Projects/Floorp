@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=913761
       }
     }
     
-    transportChannel.port2.postMessage({ port: serviceChannel.port2} /* TODO: [serviceChannel.port2] */);
+    transportChannel.port2.postMessage({ port: serviceChannel.port2}, [serviceChannel.port2]);
   }
 
   SimpleTest.waitForExplicitFinish();

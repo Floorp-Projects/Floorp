@@ -11,10 +11,10 @@ class TestSwitchWindow(MarionetteTestCase):
         self.marionette.set_script_timeout(5000)
         self.marionette.execute_async_script("""
 var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                   .getService(Components.interfaces.nsIWindowWatcher); 
+                   .getService(Components.interfaces.nsIWindowWatcher);
 var win = ww.openWindow(null, "chrome://browser/content/browser.xul", "testWin", null, null);
-win.addEventListener("load", function() { 
-  win.removeEventListener("load", arguments.callee, true); 
+win.addEventListener("load", function() {
+  win.removeEventListener("load", arguments.callee, true);
   marionetteScriptFinished();
 }, null);
 """)
@@ -24,7 +24,7 @@ win.addEventListener("load", function() {
         self.marionette.set_context("chrome")
         self.marionette.execute_script("""
 var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                   .getService(Components.interfaces.nsIWindowWatcher); 
+                   .getService(Components.interfaces.nsIWindowWatcher);
 var win = ww.getWindowByName("testWin", null);
 if (win != null)
   win.close();
@@ -39,7 +39,7 @@ if (win != null)
         self.assertEqual(self.marionette.current_window_handle, orig_win)
         now_available = self.marionette.window_handles
         #assert we can find the new window
-        self.assertEqual(len(now_available), len(orig_available) + 1) 
+        self.assertEqual(len(now_available), len(orig_available) + 1)
         #assert that our window is there
         self.assertTrue(orig_win in now_available)
         new_win = None
@@ -59,16 +59,16 @@ if (win != null)
         test_html = self.marionette.absolute_url("test_windows.html")
         self.marionette.navigate(test_html)
         current = self.marionette.current_window_handle
-        
+
         self.marionette.find_element('link text',"Open new window").click()
         window_handles = self.marionette.window_handles
         window_handles.remove(current)
-        
+
         self.marionette.switch_to_window(window_handles[0])
         self.assertEqual(self.marionette.title, "We Arrive Here")
-        
+
         handle = self.marionette.current_window_handle
-        
+
         self.assertEqual(self.marionette.current_window_handle, handle)
         self.assertEqual(2, len(self.marionette.window_handles))
 

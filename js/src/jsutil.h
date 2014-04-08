@@ -278,7 +278,7 @@ ClearAllBitArrayElements(size_t *array, size_t length)
 #ifdef DEBUG
 # define JS_CRASH_DIAGNOSTICS 1
 #endif
-#ifdef JS_CRASH_DIAGNOSTICS
+#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
 # define JS_POISON(p, val, size) memset((p), (val), (size))
 #else
 # define JS_POISON(p, val, size) ((void) 0)
