@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/ForgetAboutSite.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/commonjs/sdk/core/promise.js");
+                                  "resource://gre/modules/Promise.jsm");
 
 const COOKIE_EXPIRY = Math.round(Date.now() / 1000) + 60;
 const COOKIE_NAME = "testcookie";
