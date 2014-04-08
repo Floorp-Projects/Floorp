@@ -2277,7 +2277,7 @@ IonBuilder::processDeferredContinues(CFGState &state)
         if (current) {
             current->end(MGoto::New(alloc(), update));
             if (!update->addPredecessor(alloc(), current))
-                return ControlStatus_Error;
+                return false;
         }
 
         // No need to use addPredecessor for first edge,
@@ -2289,7 +2289,7 @@ IonBuilder::processDeferredContinues(CFGState &state)
         while (edge) {
             edge->block->end(MGoto::New(alloc(), update));
             if (!update->addPredecessor(alloc(), edge->block))
-                return ControlStatus_Error;
+                return false;
             edge = edge->next;
         }
         state.loop.continues = nullptr;
@@ -2345,7 +2345,8 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
     // So flow will continue in this block.
     if (current) {
         current->end(MGoto::New(alloc(), successor));
-        successor->addPredecessor(alloc(), current);
+        if (!successor->addPredecessor(alloc(), current))
+            return ControlStatus_Error;
     }
 
     // Insert successor after the current block, to maintain RPO.
@@ -2398,7 +2399,8 @@ IonBuilder::processLabelEnd(CFGState &state)
 
     if (current) {
         current->end(MGoto::New(alloc(), successor));
-        successor->addPredecessor(alloc(), current);
+        if (!successor->addPredecessor(alloc(), current))
+            return ControlStatus_Error;
     }
 
     pc = state.stopAt;
@@ -2572,8 +2574,10 @@ IonBuilder::processSwitchEnd(DeferredEdge *breaks, jsbytecode *exitpc)
     // So current is also a predecessor to this block
     if (current) {
         current->end(MGoto::New(alloc(), successor));
-        if (breaks)
-            successor->addPredecessor(alloc(), current);
+        if (breaks) {
+            if (!successor->addPredecessor(alloc(), current))
+                return ControlStatus_Error;
+        }
     }
 
     pc = exitpc;
@@ -2959,7 +2963,8 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
         // In that case this block goes to the default case
         if (casepc == pc) {
             caseblock->end(MGoto::New(alloc(), defaultcase));
-            defaultcase->addPredecessor(alloc(), caseblock);
+            if (!defaultcase->addPredecessor(alloc(), caseblock))
+                return ControlStatus_Error;
         }
 
         tableswitch->addCase(tableswitch->addSuccessor(caseblock));
@@ -3373,7 +3378,8 @@ IonBuilder::processCondSwitchBody(CFGState &state)
     // The last body continue into the new one.
     if (current) {
         current->end(MGoto::New(alloc(), nextBody));
-        nextBody->addPredecessor(alloc(), current);
+        if (!nextBody->addPredecessor(alloc(), current))
+            return ControlStatus_Error;
     }
 
     // Continue in the next body.
@@ -5859,7 +5865,8 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
     // Finish the osrBlock.
     osrBlock->end(MGoto::New(alloc(), preheader));
-    preheader->addPredecessor(alloc(), osrBlock);
+    if (!preheader->addPredecessor(alloc(), osrBlock))
+        return nullptr;
     graph().setOsrBlock(osrBlock);
 
     // Wrap |this| with a guaranteed use, to prevent instruction elimination.
