@@ -142,7 +142,7 @@ class BumpChunk
     }
 
     void *peek(size_t n) {
-        if (bumpBase() - bump < ptrdiff_t(n))
+        if (bump - bumpBase() < ptrdiff_t(n))
             return nullptr;
         return bump - n;
     }
