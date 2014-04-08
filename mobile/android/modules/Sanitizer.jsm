@@ -177,20 +177,6 @@ Sanitizer.prototype = {
       }
     },
 
-    downloads: {
-      clear: function ()
-      {
-        downloads.iterate(function (dl) {
-          dl.remove();
-        });
-      },
-
-      get canClear()
-      {
-        return downloads.canClear;
-      }
-    },
-
     downloadFiles: {
       clear: function ()
       {
