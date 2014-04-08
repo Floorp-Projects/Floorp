@@ -289,7 +289,7 @@ class SnapshotIterator
         return snapshot_.readAllocation();
     }
     Value skip() {
-        readAllocation();
+        snapshot_.skipAllocation();
         return UndefinedValue();
     }
 
@@ -319,17 +319,30 @@ class SnapshotIterator
     }
 
   public:
-    // Handle iterating over frames of the snapshots.
-    inline void nextFrame() {
-        JS_ASSERT(snapshot_.numAllocationsRead() == numAllocations());
-        recover_.nextFrame();
+    // Read the next instruction available and get ready to either skip it or
+    // evaluate it.
+    inline void nextInstruction() {
+        MOZ_ASSERT(snapshot_.numAllocationsRead() == numAllocations());
+        recover_.nextInstruction();
         snapshot_.resetNumAllocationsRead();
     }
-    inline bool moreFrames() const {
-        return recover_.moreFrames();
+
+    // Skip an Instruction by walking to the next instruction and by skipping
+    // all the allocations corresponding to this instruction.
+    void skipInstruction();
+
+    inline bool moreInstructions() const {
+        return recover_.moreInstructions();
     }
-    inline uint32_t frameCount() const {
-        return recover_.frameCount();
+
+  public:
+    // Handle iterating over frames of the snapshots.
+    void nextFrame();
+
+    inline bool moreFrames() const {
+        // The last instruction is recovering the innermost frame, so as long as
+        // there is more instruction there is necesseray more frames.
+        return moreInstructions();
     }
 
   public:
