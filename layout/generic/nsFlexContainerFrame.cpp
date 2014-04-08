@@ -274,9 +274,18 @@ public:
       nsSize(aCrossSize, aMainSize);
   }
 
+  // Are my axes reversed with respect to what the author asked for?
+  // (We may reverse the axes in the FlexboxAxisTracker constructor and set
+  // this flag, to avoid reflowing our children in bottom-to-top order.)
+  bool AreAxesInternallyReversed() const
+  {
+    return mAreAxesInternallyReversed;
+  }
+
 private:
   AxisOrientationType mMainAxis;
   AxisOrientationType mCrossAxis;
+  bool mAreAxesInternallyReversed;
 };
 
 /**
@@ -2262,7 +2271,9 @@ SingleLineCrossAxisPositionTracker::
   }
 }
 
-FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame)
+FlexboxAxisTracker::FlexboxAxisTracker(
+  nsFlexContainerFrame* aFlexContainerFrame)
+  : mAreAxesInternallyReversed(false)
 {
   const nsStylePosition* pos = aFlexContainerFrame->StylePosition();
   uint32_t flexDirection = pos->mFlexDirection;
@@ -2322,6 +2333,27 @@ FlexboxAxisTracker::FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame
   // "flex-wrap: wrap-reverse" reverses our cross axis.
   if (pos->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
     mCrossAxis = GetReverseAxis(mCrossAxis);
+  }
+
+  // Master switch to enable/disable bug 983427's code for reversing our axes
+  // and reversing some logic, to avoid reflowing children in bottom-to-top
+  // order. (This switch can be removed eventually, but for now, it allows
+  // this special-case code path to be compared against the normal code path.)
+  //
+  // XXXdholbert Initially, I'm defaulting this switch to *off*, meaning the
+  // new code isn't enabled yet. A subsequent patch will turn it on, once
+  // intermediate patches have made us react to AreAxesInternallyReversed()
+  // correctly in the appropriate places.
+  static bool sPreventBottomToTopChildOrdering = false;
+
+  if (sPreventBottomToTopChildOrdering) {
+    // If either axis is bottom-to-top, we flip both axes (and set a flag
+    // so that we can flip some logic to make the reversal transparent).
+    if (eAxis_BT == mMainAxis || eAxis_BT == mCrossAxis) {
+      mMainAxis = GetReverseAxis(mMainAxis);
+      mCrossAxis = GetReverseAxis(mCrossAxis);
+      mAreAxesInternallyReversed = true;
+    }
   }
 
   MOZ_ASSERT(IsAxisHorizontal(mMainAxis) != IsAxisHorizontal(mCrossAxis),
