@@ -1,16 +1,14 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Test that CSS property names are autocompleted and cycled correctly.
+"use strict";
+
+// Test that CSS property names are autocompleted and cycled correctly when
+// creating a new property in the ruleview
 
 const MAX_ENTRIES = 10;
 
-let doc;
-let inspector;
-let ruleViewWindow;
-let editor;
-let state;
 // format :
 //  [
 //    what key to press,
@@ -39,98 +37,55 @@ let testData = [
   ["VK_ESCAPE", null, -1, 0],
 ];
 
-function openRuleView() {
-  var target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    inspector = toolbox.getCurrentPanel();
-    inspector.sidebar.select("ruleview");
+let TEST_URL = "data:text/html,<h1 style='border: 1px solid red'>Filename:" +
+               "browser_bug893965_css_property_completion_new_property.js</h1>";
 
-    // Highlight a node.
-    let node = content.document.getElementsByTagName("h1")[0];
-    inspector.selection.setNode(node);
+let test = asyncTest(function*() {
+  yield addTab(TEST_URL);
+  let {toolbox, inspector, view} = yield openRuleView();
 
-    inspector.once("inspector-updated", testCompletion);
-  });
-}
+  info("Selecting the test node");
+  yield selectNode("h1", inspector);
 
-function testCompletion() {
-  ruleViewWindow = inspector.sidebar.getWindowForTab("ruleview");
-  let brace = ruleViewWindow.document.querySelector(".ruleview-ruleclose");
+  info("Focusing the css property editable field");
+  let brace = view.doc.querySelector(".ruleview-ruleclose");
+  let editor = yield focusEditableField(brace);
 
-  waitForEditorFocus(brace.parentNode, function onNewElement(aEditor) {
-    editor = aEditor;
-    checkStateAndMoveOn(0);
-  });
+  info("Starting to test for css property completion");
+  for (let i = 0; i < testData.length; i ++) {
+    yield testCompletion(testData[i], editor, view);
+  }
+});
 
-  brace.click();
-}
+function* testCompletion([key, completion, index, total], editor, view) {
+  info("Pressing key " + key);
+  info("Expecting " + completion + ", " + index + ", " + total);
 
-function checkStateAndMoveOn(index) {
-  if (index == testData.length) {
-    finishUp();
-    return;
+  let onSuggest;
+
+  if (/(right|back_space|escape)/ig.test(key)) {
+    info("Adding event listener for right|back_space|escape keys");
+    onSuggest = once(editor.input, "keypress");
+  } else {
+    info("Waiting for after-suggest event on the editor");
+    onSuggest = editor.once("after-suggest");
   }
 
-  let [key] = testData[index];
-  state = index;
+  info("Synthesizing key " + key);
+  EventUtils.synthesizeKey(key, {}, view.doc.defaultView);
 
-  info("pressing key " + key + " to get result: [" + testData[index].slice(1) +
-       "] for state " + state);
-  if (/(return|back_space|escape)/ig.test(key)) {
-    info("added event listener for return|back_space|escape keys");
-    editor.input.addEventListener("keypress", function onKeypress() {
-      if (editor.input) {
-        editor.input.removeEventListener("keypress", onKeypress);
-      }
-      info("inside event listener");
-      checkState();
-    });
+  yield onSuggest;
+  yield wait(1); // Equivalent of executeSoon
+
+  info("Checking the state");
+  if (completion != null) {
+    is(editor.input.value, completion, "Correct value is autocompleted");
   }
-  else {
-    editor.once("after-suggest", checkState);
+  if (total == 0) {
+    ok(!(editor.popup && editor.popup.isOpen), "Popup is closed");
+  } else {
+    ok(editor.popup._panel.state == "open" || editor.popup._panel.state == "showing", "Popup is open");
+    is(editor.popup.getItems().length, total, "Number of suggestions match");
+    is(editor.popup.selectedIndex, index, "Correct item is selected");
   }
-  EventUtils.synthesizeKey(key, {}, ruleViewWindow);
-}
-
-function checkState(event) {
-  executeSoon(() => {
-    info("After keypress for state " + state);
-    let [key, completion, index, total] = testData[state];
-    if (completion != null) {
-      is(editor.input.value, completion,
-         "Correct value is autocompleted for state " + state);
-    }
-    if (total == 0) {
-      ok(!(editor.popup && editor.popup.isOpen), "Popup is closed for state " +
-         state);
-    }
-    else {
-      ok(editor.popup.isOpen, "Popup is open for state " + state);
-      is(editor.popup.getItems().length, total,
-         "Number of suggestions match for state " + state);
-      is(editor.popup.selectedIndex, index,
-         "Correct item is selected for state " + state);
-    }
-    checkStateAndMoveOn(state + 1);
-  });
-}
-
-function finishUp() {
-  doc = inspector = editor = ruleViewWindow = state = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function test() {
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee, true);
-    doc = content.document;
-    doc.title = "Rule View Test";
-    waitForFocus(openRuleView, content);
-  }, true);
-
-  content.location = "data:text/html,<h1 style='border: 1px solid red'>Filename:" +
-                     "browser_bug893965_css_property_completion_new_property.js</h1>";
 }
