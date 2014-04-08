@@ -7,10 +7,10 @@
 // Test that the stylesheet links in the rule view are correct when source maps
 // are involved
 
-const TESTCASE_URI = TEST_URL_ROOT + "sourcemaps.html";
+const TESTCASE_URI = TEST_URL_ROOT + "doc_sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
-const SCSS_LOC = "sourcemaps.scss:4";
-const CSS_LOC = "sourcemaps.css:1";
+const SCSS_LOC = "doc_sourcemaps.scss:4";
+const CSS_LOC = "doc_sourcemaps.css:1";
 
 let test = asyncTest(function*() {
   info("Setting the " + PREF +  " pref to true");
@@ -68,7 +68,7 @@ function checkDisplayedStylesheet(toolbox) {
 
 function editorSelected(editor) {
   let href = editor.styleSheet.href;
-  ok(href.endsWith("sourcemaps.scss"), "selected stylesheet is correct one");
+  ok(href.endsWith("doc_sourcemaps.scss"), "selected stylesheet is correct one");
 
   let {line, col} = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");

@@ -7,7 +7,7 @@
 // Tests that we correctly display appropriate media query titles in the
 // property view.
 
-const TEST_URI = TEST_URL_ROOT + "browser_bug722196_identify_media_queries.html";
+const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
 
 let {PropertyView} = devtools.require("devtools/styleinspector/computed-view");
 let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");

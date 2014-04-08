@@ -6,8 +6,8 @@
 
 // Check stylesheets on HMTL and XUL document
 
-const TEST_URI_HTML = TEST_URL_ROOT + "browser_bug705707_is_content_stylesheet.html";
-const TEST_URI_XUL = TEST_URL_ROOT + "browser_bug705707_is_content_stylesheet.xul";
+const TEST_URI_HTML = TEST_URL_ROOT + "doc_content_stylesheet.html";
+const TEST_URI_XUL = TEST_URL_ROOT + "doc_content_stylesheet.xul";
 const XUL_URI = Cc["@mozilla.org/network/io-service;1"]
                 .getService(Ci.nsIIOService)
                 .newURI(TEST_URI_XUL, null, null);
@@ -63,7 +63,7 @@ function checkSheets(target) {
     let isContentSheet = CssLogic.isContentStylesheet(sheet);
 
     if (!sheet.href ||
-        /browser_bug705707_is_content_stylesheet_/.test(sheet.href)) {
+        /doc_content_stylesheet_/.test(sheet.href)) {
       ok(isContentSheet, sheet.href + " identified as content stylesheet");
     } else {
       ok(!isContentSheet, sheet.href + " identified as non-content stylesheet");

@@ -7,7 +7,7 @@
 // Tests that we correctly display appropriate media query titles in the
 // rule view.
 
-const TEST_URI = TEST_URL_ROOT + "browser_bug722196_identify_media_queries.html";
+const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
 
 let test = asyncTest(function*() {
   yield addTab(TEST_URI);

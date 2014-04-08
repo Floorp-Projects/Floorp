@@ -19,36 +19,31 @@ let test = asyncTest(function*() {
   yield selectNode(newElement, inspector);
   let ruleEditor = view.element.children[0]._ruleEditor;
 
-  yield testCreateNewMultiDuplicates(inspector, ruleEditor);
+  yield testMultiValues(inspector, ruleEditor, view);
 });
 
-function* testCreateNewMultiDuplicates(inspector, ruleEditor) {
-  yield createNewRuleViewProperty(ruleEditor,
-    "color:red;color:orange;color:yellow;color:green;color:blue;color:indigo;color:violet;");
+function* testMultiValues(inspector, ruleEditor, view) {
+  yield createNewRuleViewProperty(ruleEditor, "width:");
 
-  is(ruleEditor.rule.textProps.length, 7, "Should have created new text properties.");
-  is(ruleEditor.propertyList.children.length, 8, "Should have created new property editors.");
+  is(ruleEditor.rule.textProps.length, 1, "Should have created a new text property.");
+  is(ruleEditor.propertyList.children.length, 1, "Should have created a property editor.");
 
-  is(ruleEditor.rule.textProps[0].name, "color", "Should have correct property name");
-  is(ruleEditor.rule.textProps[0].value, "red", "Should have correct property value");
+  // Value is focused, lets add multiple rules here and make sure they get added
+  let valueEditor = ruleEditor.propertyList.children[0].querySelector("input");
+  valueEditor.value = "height: 10px;color:blue"
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+
+  is(ruleEditor.rule.textProps.length, 2, "Should have added the changed value.");
+  is(ruleEditor.propertyList.children.length, 3, "Should have added the changed value editor.");
+
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+  is(ruleEditor.propertyList.children.length, 2, "Should have removed the value editor.");
+
+  is(ruleEditor.rule.textProps[0].name, "width", "Should have correct property name");
+  is(ruleEditor.rule.textProps[0].value, "height: 10px", "Should have correct property value");
 
   is(ruleEditor.rule.textProps[1].name, "color", "Should have correct property name");
-  is(ruleEditor.rule.textProps[1].value, "orange", "Should have correct property value");
-
-  is(ruleEditor.rule.textProps[2].name, "color", "Should have correct property name");
-  is(ruleEditor.rule.textProps[2].value, "yellow", "Should have correct property value");
-
-  is(ruleEditor.rule.textProps[3].name, "color", "Should have correct property name");
-  is(ruleEditor.rule.textProps[3].value, "green", "Should have correct property value");
-
-  is(ruleEditor.rule.textProps[4].name, "color", "Should have correct property name");
-  is(ruleEditor.rule.textProps[4].value, "blue", "Should have correct property value");
-
-  is(ruleEditor.rule.textProps[5].name, "color", "Should have correct property name");
-  is(ruleEditor.rule.textProps[5].value, "indigo", "Should have correct property value");
-
-  is(ruleEditor.rule.textProps[6].name, "color", "Should have correct property name");
-  is(ruleEditor.rule.textProps[6].value, "violet", "Should have correct property value");
+  is(ruleEditor.rule.textProps[1].value, "blue", "Should have correct property value");
 
   yield inspector.once("inspector-updated");
 }
