@@ -64,8 +64,7 @@ public:
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!mShuttingDownOnIOThread);
 
-    RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
-
+    Close(); // will also remove fd from I/O loop
     mShuttingDownOnIOThread = true;
   }
 
@@ -643,7 +642,7 @@ void
 UnixSocketImpl::OnSocketCanReceiveWithoutBlocking()
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
+  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED); // see bug 990984
 
   // Read all of the incoming data.
   while (true) {
@@ -691,7 +690,7 @@ void
 UnixSocketImpl::OnSocketCanSendWithoutBlocking()
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
-  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED);
+  MOZ_ASSERT(GetConnectionStatus() == SOCKET_IS_CONNECTED); // see bug 990984
 
   // Try to write the bytes of mCurrentRilRawData.  If all were written, continue.
   //
@@ -739,6 +738,8 @@ UnixSocketConsumer::UnixSocketConsumer() : mImpl(nullptr)
 
 UnixSocketConsumer::~UnixSocketConsumer()
 {
+  MOZ_ASSERT(mConnectionStatus == SOCKET_DISCONNECTED);
+  MOZ_ASSERT(!mImpl);
 }
 
 bool
