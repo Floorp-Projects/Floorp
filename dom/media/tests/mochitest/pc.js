@@ -820,9 +820,9 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
      */
     value : function DCT_send(data, onSuccess, options) {
       options = options || { };
-      source = options.sourceChannel ||
+      var source = options.sourceChannel ||
                this.pcLocal.dataChannels[this.pcLocal.dataChannels.length - 1];
-      target = options.targetChannel ||
+      var target = options.targetChannel ||
                this.pcRemote.dataChannels[this.pcRemote.dataChannels.length - 1];
 
       // Register event handler for the target channel
@@ -1106,24 +1106,19 @@ function PeerConnectionWrapper(label, configuration) {
   // This enables tests to validate that the next ice state is the one they expect to happen
   this.next_ice_state = ""; // in most cases, the next state will be "checking", but in some tests "closed"
   // This allows test to register their own callbacks for ICE connection state changes
-  this.ice_connection_callbacks = [ ];
+  this.ice_connection_callbacks = {};
 
   this._pc.oniceconnectionstatechange = function() {
-      ok(self._pc.iceConnectionState != undefined, "iceConnectionState should not be undefined");
-      info(self + ": oniceconnectionstatechange fired, new state is: " + self._pc.iceConnectionState);
-      if (Object.keys(self.ice_connection_callbacks).length >= 1) {
-        var it = Iterator(self.ice_connection_callbacks);
-        var name = "";
-        var callback = "";
-        for ([name, callback] in it) {
-          callback();
-        }
-      }
-      if (self.next_ice_state != "") {
-        is(self._pc.iceConnectionState, self.next_ice_state, "iceConnectionState changed to '" +
-           self.next_ice_state + "'");
-        self.next_ice_state = "";
-      }
+    ok(self._pc.iceConnectionState !== undefined, "iceConnectionState should not be undefined");
+    info(self + ": oniceconnectionstatechange fired, new state is: " + self._pc.iceConnectionState);
+    Object.keys(self.ice_connection_callbacks).forEach(function(name) {
+      self.ice_connection_callbacks[name]();
+    });
+    if (self.next_ice_state !== "") {
+      is(self._pc.iceConnectionState, self.next_ice_state, "iceConnectionState changed to '" +
+         self.next_ice_state + "'");
+      self.next_ice_state = "";
+    }
   };
   this.ondatachannel = unexpectedEventAndFinish(this, 'ondatachannel');
   this.onsignalingstatechange = unexpectedEventAndFinish(this, 'onsignalingstatechange');
@@ -1160,7 +1155,7 @@ function PeerConnectionWrapper(label, configuration) {
 
     self.ondatachannel(new DataChannelWrapper(event.channel, self));
     self.ondatachannel = unexpectedEventAndFinish(self, 'ondatachannel');
-  }
+  };
 
   /**
    * Callback for native peer connection 'onsignalingstatechange' events. If no
@@ -1175,7 +1170,7 @@ function PeerConnectionWrapper(label, configuration) {
 
     self.onsignalingstatechange();
     self.onsignalingstatechange = unexpectedEventAndFinish(self, 'onsignalingstatechange');
-  }
+  };
 }
 
 PeerConnectionWrapper.prototype = {
@@ -1329,7 +1324,7 @@ PeerConnectionWrapper.prototype = {
     if (onCreation) {
       wrapper.onopen = function () {
         onCreation(wrapper);
-      }
+      };
     }
 
     this.dataChannels.push(wrapper);
@@ -1532,15 +1527,15 @@ PeerConnectionWrapper.prototype = {
 
     function iceConnectedChanged () {
       if (self.isIceConnected()) {
-        delete self.ice_connection_callbacks["waitForIceConnected"];
+        delete self.ice_connection_callbacks.waitForIceConnected;
         mySuccess();
       } else if (! self.isIceConnectionPending()) {
-        delete self.ice_connection_callbacks["waitForIceConnected"];
+        delete self.ice_connection_callbacks.waitForIceConnected;
         myFailure();
       }
-    };
+    }
 
-    self.ice_connection_callbacks["waitForIceConnected"] = (function() {iceConnectedChanged()});
+    self.ice_connection_callbacks.waitForIceConnected = iceConnectedChanged;
   },
 
   /**
@@ -1704,12 +1699,12 @@ PeerConnectionWrapper.prototype = {
 
     // TODO(Bug 957145): Restore stronger inboundrtp test once Bug 948249 is fixed
     //is(toNum(counters["inboundrtp"]), nin, "Have " + nin + " inboundrtp stat(s)");
-    ok(toNum(counters["inboundrtp"]) >= nin, "Have at least " + nin + " inboundrtp stat(s) *");
+    ok(toNum(counters.inboundrtp) >= nin, "Have at least " + nin + " inboundrtp stat(s) *");
 
-    is(toNum(counters["outboundrtp"]), nout, "Have " + nout + " outboundrtp stat(s)");
+    is(toNum(counters.outboundrtp), nout, "Have " + nout + " outboundrtp stat(s)");
 
-    var numLocalCandidates  = toNum(counters["localcandidate"]);
-    var numRemoteCandidates = toNum(counters["remotecandidate"]);
+    var numLocalCandidates  = toNum(counters.localcandidate);
+    var numRemoteCandidates = toNum(counters.remotecandidate);
     // If there are no tracks, there will be no stats either.
     if (nin + nout > 0) {
       ok(numLocalCandidates, "Have localcandidate stat(s)");
@@ -1750,7 +1745,7 @@ PeerConnectionWrapper.prototype = {
       };
 
       this.dataChannels.push(targetChannel);
-    }
+    };
   },
 
   /**
