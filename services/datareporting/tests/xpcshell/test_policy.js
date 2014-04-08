@@ -85,9 +85,6 @@ add_test(function test_prefs() {
   do_check_false(policyPrefs.get("dataSubmissionPolicyAccepted", true));
   do_check_false(policy.dataSubmissionPolicyAccepted);
 
-  policy.dataSubmissionPolicyAcceptedVersion = 2;
-  do_check_eq(policyPrefs.get("dataSubmissionPolicyAcceptedVersion"), 2);
-
   do_check_false(policy.dataSubmissionPolicyBypassAcceptance);
   policyPrefs.set("dataSubmissionPolicyBypassAcceptance", true);
   do_check_true(policy.dataSubmissionPolicyBypassAcceptance);
@@ -274,7 +271,7 @@ add_test(function test_submission_kill_switch() {
   policy.firstRunDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
   policy.nextDataSubmissionDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
   policy.recordUserAcceptance("accept-old-ack");
-  do_check_eq(policyPrefs.get("dataSubmissionPolicyAcceptedVersion"), 1);
+  do_check_true(policyPrefs.has("dataSubmissionPolicyAcceptedVersion"));
   policy.checkStateAndTrigger();
   do_check_eq(listener.requestDataUploadCount, 1);
 

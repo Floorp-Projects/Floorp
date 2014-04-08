@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+Components.utils.import("resource://gre/modules/Promise.jsm");
 
 const ColorAnalyzer = Components.classes["@mozilla.org/places/colorAnalyzer;1"]
                 .getService(Components.interfaces.mozIColorAnalyzer);
