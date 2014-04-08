@@ -1322,7 +1322,7 @@ let BookmarkingUI = {
       return;
     }
 
-    this._pendingStmt = PlacesUtils.asyncGetBookmarkIds(this._uri, function (aItemIds, aURI) {
+    this._pendingStmt = PlacesUtils.asyncGetBookmarkIds(this._uri, (aItemIds, aURI) => {
       // Safety check that the bookmarked URI equals the tracked one.
       if (!aURI.equals(this._uri)) {
         Components.utils.reportError("BookmarkingUI did not receive current URI");
@@ -1349,7 +1349,7 @@ let BookmarkingUI = {
       }
 
       delete this._pendingStmt;
-    }, this);
+    });
   },
 
   _updateStar: function BUI__updateStar() {

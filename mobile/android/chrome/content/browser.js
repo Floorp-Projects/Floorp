@@ -2042,13 +2042,6 @@ var NativeWindow = {
       }
     },
 
-    textContext: {
-      matches: function textContext(aElement) {
-        return ((aElement instanceof Ci.nsIDOMHTMLInputElement && aElement.mozIsTextField(false))
-                || aElement instanceof Ci.nsIDOMHTMLTextAreaElement);
-      }
-    },
-
     imageLocationCopyableContext: {
       matches: function imageLinkCopyableContextMatches(aElement) {
         return (aElement instanceof Ci.nsIImageLoadingContent && aElement.currentURI);
@@ -6427,119 +6420,6 @@ var IndexedDB = {
     // timeout value. If the user doesn't notice the popup after this amount of
     // time then it is most likely not visible and we want to alert the page.
     timeoutId = setTimeout(timeoutNotification, firstTimeoutDuration);
-  }
-};
-
-var ClipboardHelper = {
-  // Recorded so search with option can be removed/replaced when default engine changed.
-  _searchMenuItem: -1,
-
-  get clipboardHelper() {
-    delete this.clipboardHelper;
-    return this.clipboardHelper = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
-  },
-
-  get clipboard() {
-    delete this.clipboard;
-    return this.clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-  },
-
-  copy: function(aElement, aX, aY) {
-    if (SelectionHandler.isSelectionActive()) {
-      SelectionHandler.copySelection();
-      return;
-    }
-
-    let selectionStart = aElement.selectionStart;
-    let selectionEnd = aElement.selectionEnd;
-    if (selectionStart != selectionEnd) {
-      string = aElement.value.slice(selectionStart, selectionEnd);
-      this.clipboardHelper.copyString(string, aElement.ownerDocument);
-    } else {
-      this.clipboardHelper.copyString(aElement.value, aElement.ownerDocument);
-    }
-  },
-
-  paste: function(aElement) {
-    if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
-      return;
-    let target = aElement.QueryInterface(Ci.nsIDOMNSEditableElement);
-    target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
-    target.focus();  
-  },
-
-  inputMethod: function(aElement) {
-    Cc["@mozilla.org/imepicker;1"].getService(Ci.nsIIMEPicker).show();
-  },
-
-  getCopyContext: function(isCopyAll) {
-    return {
-      matches: function(aElement, aX, aY) {
-        // Do not show "Copy All" for normal non-input text selection.
-        if (!isCopyAll && SelectionHandler.isSelectionActive())
-          return true;
-
-        if (NativeWindow.contextmenus.textContext.matches(aElement)) {
-          // Don't include "copy" for password fields.
-          // mozIsTextField(true) tests for only non-password fields.
-          if (aElement instanceof Ci.nsIDOMHTMLInputElement && !aElement.mozIsTextField(true))
-            return false;
-
-          let selectionStart = aElement.selectionStart;
-          let selectionEnd = aElement.selectionEnd;
-          if (selectionStart != selectionEnd)
-            return true;
-
-          if (isCopyAll && aElement.textLength > 0)
-            return true;
-        }
-        return false;
-      }
-    };
-  },
-
-  selectAllContext: {
-    matches: function selectAllContextMatches(aElement, aX, aY) {
-      if (SelectionHandler.isSelectionActive())
-        return true;
-
-      if (NativeWindow.contextmenus.textContext.matches(aElement))
-        return (aElement.selectionStart > 0 || aElement.selectionEnd < aElement.textLength);
-
-      return false;
-    }
-  },
-
-  shareContext: {
-    matches: function shareContextMatches(aElement, aX, aY) {
-      return SelectionHandler.isSelectionActive();
-    }
-  },
-
-  searchWithContext: {
-    matches: function searchWithContextMatches(aElement, aX, aY) {
-      return SelectionHandler.isSelectionActive();
-    }
-  },
-
-  pasteContext: {
-    matches: function(aElement) {
-      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
-        let flavors = ["text/unicode"];
-        return ClipboardHelper.clipboard.hasDataMatchingFlavors(flavors, flavors.length, Ci.nsIClipboard.kGlobalClipboard);
-      }
-      return false;
-    }
-  },
-
-  cutContext: {
-    matches: function(aElement) {
-      let copyctx = ClipboardHelper.getCopyContext(false);
-      if (NativeWindow.contextmenus.textContext.matches(aElement)) {
-        return copyctx.matches(aElement);
-      }
-      return false;
-    }
   }
 };
 
