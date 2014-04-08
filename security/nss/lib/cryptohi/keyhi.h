@@ -90,17 +90,7 @@ SECKEYPrivateKey *SECKEY_CreateECPrivateKey(SECKEYECParams *param,
 ** Create a subject-public-key-info based on a public key.
 */
 extern CERTSubjectPublicKeyInfo *
-SECKEY_CreateSubjectPublicKeyInfo(const SECKEYPublicKey *k);
-
-/*
-** Decode a DER encoded public key into an SECKEYPublicKey structure.
-*/
-extern SECKEYPublicKey *SECKEY_DecodeDERPublicKey(const SECItem *pubkder);
-
-/*
-** Convert a base64 ascii encoded DER public key to our internal format.
-*/
-extern SECKEYPublicKey *SECKEY_ConvertAndDecodePublicKey(const char *pubkstr);
+SECKEY_CreateSubjectPublicKeyInfo(SECKEYPublicKey *k);
 
 /*
 ** Convert a base64 ascii encoded DER public key and challenge to spki,
@@ -115,7 +105,7 @@ SECKEY_ConvertAndDecodePublicKeyAndChallenge(char *pkacstr, char *challenge,
 ** DER encoded subject public key info. 
 */
 SECItem *
-SECKEY_EncodeDERSubjectPublicKeyInfo(const SECKEYPublicKey *pubk);
+SECKEY_EncodeDERSubjectPublicKeyInfo(SECKEYPublicKey *pubk);
 
 /*
 ** Decode a DER encoded subject public key info into a
@@ -208,7 +198,7 @@ KeyType SECKEY_GetPublicKeyType(const SECKEYPublicKey *pubKey);
 
 /*
  * Creates a PublicKey from its DER encoding.
- * Currently only supports RSA and DSA keys.
+ * Currently only supports RSA, DSA, and DH keys.
  */
 SECKEYPublicKey*
 SECKEY_ImportDERPublicKey(const SECItem *derKey, CK_KEY_TYPE type);

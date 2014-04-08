@@ -1713,7 +1713,13 @@ done:
 SECKEYPrivateKeyInfo *
 PK11_ExportPrivateKeyInfo(CERTCertificate *cert, void *wincx)
 {
-    return NULL;
+    SECKEYPrivateKeyInfo *pki = NULL;
+    SECKEYPrivateKey     *pk  = PK11_FindKeyByAnyCert(cert, wincx);
+    if (pk != NULL) {
+	pki = PK11_ExportPrivKeyInfo(pk, wincx);
+	SECKEY_DestroyPrivateKey(pk);
+    }
+    return pki;
 }
 
 SECKEYEncryptedPrivateKeyInfo * 
@@ -1892,7 +1898,7 @@ PK11_ExportEncryptedPrivateKeyInfo(
 }
 
 SECItem*
-PK11_DEREncodePublicKey(const SECKEYPublicKey *pubk)
+PK11_DEREncodePublicKey(SECKEYPublicKey *pubk)
 {
     return SECKEY_EncodeDERSubjectPublicKeyInfo(pubk);
 }
