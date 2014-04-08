@@ -14,10 +14,11 @@ namespace layers {
 
 class Compositor;
 
-class TextRenderer : public RefCounted<TextRenderer>
+class TextRenderer
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(TextRenderer)
+  NS_INLINE_DECL_REFCOUNTING(TextRenderer)
+
   TextRenderer(Compositor *aCompositor)
     : mCompositor(aCompositor)
   {
