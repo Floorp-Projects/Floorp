@@ -7,6 +7,7 @@
        type="arrow"
        hidden="true"
        flip="slide"
+       animate="false"
        position="bottomcenter topright"
        noautofocus="true">
   <panelmultiview id="PanelUI-multiView" mainViewId="PanelUI-mainView">

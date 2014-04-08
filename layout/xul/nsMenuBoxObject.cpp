@@ -49,7 +49,7 @@ NS_IMETHODIMP nsMenuBoxObject::OpenMenu(bool aOpenFlag)
         if (menu) {
           nsMenuPopupFrame* popupFrame = menu->GetPopup();
           if (popupFrame)
-            pm->HidePopup(popupFrame->GetContent(), false, true, false);
+            pm->HidePopup(popupFrame->GetContent(), false, true, false, false);
         }
       }
     }
