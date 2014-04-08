@@ -526,6 +526,9 @@
 
           var position = this.alignmentPosition;
           var offset = this.alignmentOffset;
+
+          this.setAttribute("arrowposition", position);
+
           // if this panel has a "sliding" arrow, we may have previously set margins...
           arrowbox.style.removeProperty("transform");
           if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
@@ -578,6 +581,7 @@
     <handlers>
       <handler event="popupshowing" phase="target"><![CDATA[
         this.adjustArrowPosition();
+        this.setAttribute("animate", "open");
       ]]></handler>
       <handler event="popupshown" phase="target"><![CDATA[
         this.setAttribute("panelopen", "true");
@@ -604,11 +608,15 @@
           this.style.removeProperty("pointer-events");
         }
       ]]></handler>
+      <handler event="popuphiding" phase="target"><![CDATA[
+        this.setAttribute("animate", "cancel");
+      ]]></handler>
       <handler event="popuphidden" phase="target"><![CDATA[
         this.removeAttribute("panelopen");
         if (this.getAttribute("disablepointereventsfortransition") == "true") {
           this.style.pointerEvents = 'none';
         }
+        this.removeAttribute("animate");
       ]]></handler>
     </handlers>
   </binding>
