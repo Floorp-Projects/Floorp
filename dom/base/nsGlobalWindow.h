@@ -277,7 +277,7 @@ public:
     result.forget(aResult);
     return NS_OK;
   }
-  void Get(JSContext* aCx, JSObject* aScope, nsIPrincipal* aSubject,
+  void Get(JSContext* aCx, JS::Handle<JSObject*> aScope, nsIPrincipal* aSubject,
            JS::MutableHandle<JS::Value> aResult, mozilla::ErrorResult& aError)
   {
     if (aSubject->Subsumes(mOrigin)) {
