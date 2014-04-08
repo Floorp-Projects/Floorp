@@ -30,8 +30,8 @@ SpecialPowers.pushPrefEnv({'set': [["dom.mozNetworkStats.enabled", true]]},
 
     ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should exist");
 
-    ok(navigator.mozNetworkStats instanceof SpecialPowers.Ci.nsIDOMMozNetworkStatsManager,
-       "navigator.mozNetworkStats should be a nsIDOMMozNetworkStatsManager object");
+    ok(navigator.mozNetworkStats instanceof MozNetworkStatsManager,
+       "navigator.mozNetworkStats should be a MozNetworkStatsManager object");
 
     SimpleTest.finish();
   });
