@@ -28,7 +28,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::SpeechRecognitionErrorBinding::Wrap(aCx, aScope, this);
+    return mozilla::dom::SpeechRecognitionErrorBinding::Wrap(aCx, this);
   }
 
   void

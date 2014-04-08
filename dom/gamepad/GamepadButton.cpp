@@ -21,7 +21,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(GamepadButton, mParent)
 /* virtual */ JSObject*
 GamepadButton::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return GamepadButtonBinding::Wrap(aCx, aScope, this);
+  return GamepadButtonBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

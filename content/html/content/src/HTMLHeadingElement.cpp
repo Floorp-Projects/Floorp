@@ -29,7 +29,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 JSObject*
 HTMLHeadingElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLHeadingElementBinding::Wrap(aCx, aScope, this);
+  return HTMLHeadingElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_STRING_ATTR(HTMLHeadingElement, Align, align)

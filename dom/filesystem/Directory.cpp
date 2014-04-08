@@ -71,7 +71,7 @@ Directory::GetParentObject() const
 JSObject*
 Directory::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return DirectoryBinding::Wrap(aCx, aScope, this);
+  return DirectoryBinding::Wrap(aCx, this);
 }
 
 void

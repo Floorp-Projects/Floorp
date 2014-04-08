@@ -34,6 +34,6 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsDOMCSSRGBColor, Release)
 JSObject*
 nsDOMCSSRGBColor::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return dom::RGBColorBinding::Wrap(aCx, aScope, this);
+  return dom::RGBColorBinding::Wrap(aCx, this);
 }
 

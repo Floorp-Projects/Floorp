@@ -60,7 +60,7 @@ TelephonyCall::~TelephonyCall()
 JSObject*
 TelephonyCall::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return TelephonyCallBinding::Wrap(aCx, aScope, this);
+  return TelephonyCallBinding::Wrap(aCx, this);
 }
 
 void

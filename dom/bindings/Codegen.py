@@ -2693,7 +2693,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
     def __init__(self, descriptor, properties):
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject'),
                 Argument('nsWrapperCache*', 'aCache')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args)
@@ -2705,7 +2704,6 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             '             "nsISupports must be on our primary inheritance chain");\n')
         return """%s
 %s
-  MOZ_ASSERT(js::IsObjectInContextCompartment(aScope, aCx));
   JS::Rooted<JSObject*> parent(aCx,
     GetRealParentObject(aObject,
                         WrapNativeParent(aCx, aObject->GetParentObject())));
@@ -2747,13 +2745,12 @@ class CGWrapMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument('T*', 'aObject')]
         CGAbstractMethod.__init__(self, descriptor, 'Wrap', 'JSObject*', args,
                                   inline=True, templateArgs=["class T"])
 
     def definition_body(self):
-        return "  return Wrap(aCx, aScope, aObject, aObject);"
+        return "  return Wrap(aCx, aObject, aObject);"
 
 
 class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
@@ -2767,7 +2764,6 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
         # XXX can we wrap if we don't have an interface prototype object?
         assert descriptor.interface.hasInterfacePrototypeObject()
         args = [Argument('JSContext*', 'aCx'),
-                Argument('JS::Handle<JSObject*>', 'aScope'),
                 Argument(descriptor.nativeType + '*', 'aObject')]
         if descriptor.nativeOwnership == 'owned':
             args.append(Argument('bool*', 'aTookOwnership'))
@@ -2776,7 +2772,6 @@ class CGWrapNonWrapperCacheMethod(CGAbstractMethod):
 
     def definition_body(self):
         return """%s
-  MOZ_ASSERT(js::IsObjectInContextCompartment(aScope, aCx));
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   JS::Handle<JSObject*> proto = GetProtoObject(aCx, global);
   if (!proto) {
@@ -11274,7 +11269,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 ${nativeType}::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return ${ifaceName}Binding::Wrap(aCx, aScope, this);
+  return ${ifaceName}Binding::Wrap(aCx, this);
 }
 
 """ % ctordtor
@@ -11619,7 +11614,7 @@ class CGJSImplClass(CGBindingImplClass):
                          extradefinitions=extradefinitions)
 
     def getWrapObjectBody(self):
-        return ("JS::Rooted<JSObject*> obj(aCx, %sBinding::Wrap(aCx, aScope, this));\n"
+        return ("JS::Rooted<JSObject*> obj(aCx, %sBinding::Wrap(aCx, this));\n"
                 "if (!obj) {\n"
                 "  return nullptr;\n"
                 "}\n"
@@ -12798,7 +12793,7 @@ class CGEventClass(CGBindingImplClass):
                          extradeclarations=baseDeclarations)
 
     def getWrapObjectBody(self):
-        return "return %sBinding::Wrap(aCx, aScope, this);" % self.descriptor.name
+        return "return %sBinding::Wrap(aCx, this);" % self.descriptor.name
 
     def implTraverse(self):
         retVal = ""

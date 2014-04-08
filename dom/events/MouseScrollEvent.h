@@ -32,7 +32,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return MouseScrollEventBinding::Wrap(aCx, aScope, this);
+    return MouseScrollEventBinding::Wrap(aCx, this);
   }
 
   int32_t Axis();

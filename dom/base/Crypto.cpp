@@ -52,7 +52,7 @@ Crypto::Init(nsIDOMWindow* aWindow)
 /* virtual */ JSObject*
 Crypto::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return CryptoBinding::Wrap(aCx, aScope, this);
+  return CryptoBinding::Wrap(aCx, this);
 }
 
 JSObject *

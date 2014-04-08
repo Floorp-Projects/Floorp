@@ -87,7 +87,7 @@ SpeechSynthesis::~SpeechSynthesis()
 JSObject*
 SpeechSynthesis::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SpeechSynthesisBinding::Wrap(aCx, aScope, this);
+  return SpeechSynthesisBinding::Wrap(aCx, this);
 }
 
 nsIDOMWindow*

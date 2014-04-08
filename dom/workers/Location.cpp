@@ -34,7 +34,7 @@ WorkerLocation::Create(WorkerPrivate::LocationInfo& aInfo)
 JSObject*
 WorkerLocation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return WorkerLocationBinding_workers::Wrap(aCx, aScope, this);
+  return WorkerLocationBinding_workers::Wrap(aCx, this);
 }
 
 END_WORKERS_NAMESPACE

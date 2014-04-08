@@ -223,7 +223,7 @@ NS_INTERFACE_TABLE_TAIL_INHERITING(nsDocument)
 JSObject*
 nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLDocumentBinding::Wrap(aCx, aScope, this);
+  return HTMLDocumentBinding::Wrap(aCx, this);
 }
 
 nsresult

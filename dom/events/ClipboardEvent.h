@@ -33,7 +33,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return ClipboardEventBinding::Wrap(aCx, aScope, this);
+    return ClipboardEventBinding::Wrap(aCx, this);
   }
 
   static already_AddRefed<ClipboardEvent>

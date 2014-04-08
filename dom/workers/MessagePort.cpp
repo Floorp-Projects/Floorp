@@ -241,7 +241,7 @@ MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   AssertCorrectThread();
 
-  return MessagePortBinding::Wrap(aCx, aScope, this);
+  return MessagePortBinding::Wrap(aCx, this);
 }
 
 nsresult

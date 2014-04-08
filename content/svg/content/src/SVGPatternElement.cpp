@@ -19,7 +19,7 @@ namespace dom {
 JSObject*
 SVGPatternElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGPatternElementBinding::Wrap(aCx, aScope, this);
+  return SVGPatternElementBinding::Wrap(aCx, this);
 }
 
 //--------------------- Patterns ------------------------

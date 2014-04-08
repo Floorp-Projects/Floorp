@@ -17,7 +17,7 @@ namespace dom {
 JSObject*
 SVGFEDropShadowElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGFEDropShadowElementBinding::Wrap(aCx, aScope, this);
+  return SVGFEDropShadowElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::NumberInfo SVGFEDropShadowElement::sNumberInfo[2] =

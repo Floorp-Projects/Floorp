@@ -26,7 +26,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(TimeManager, mWindow)
 JSObject*
 TimeManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return MozTimeManagerBinding::Wrap(aCx, aScope, this);
+  return MozTimeManagerBinding::Wrap(aCx, this);
 }
 
 void

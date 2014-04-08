@@ -602,7 +602,7 @@ XMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 JSObject*
 XMLDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return XMLDocumentBinding::Wrap(aCx, aScope, this);
+  return XMLDocumentBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

@@ -33,7 +33,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return MutationEventBinding::Wrap(aCx, aScope, this);
+    return MutationEventBinding::Wrap(aCx, this);
   }
 
   // xpidl implementation

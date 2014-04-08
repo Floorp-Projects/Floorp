@@ -24,7 +24,7 @@ namespace dom {
 JSObject*
 SVGMarkerElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGMarkerElementBinding::Wrap(aCx, aScope, this);
+  return SVGMarkerElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::LengthInfo SVGMarkerElement::sLengthInfo[4] =

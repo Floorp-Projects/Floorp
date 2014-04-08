@@ -94,7 +94,7 @@ MediaStreamAudioDestinationNode::DestroyMediaStream()
 JSObject*
 MediaStreamAudioDestinationNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return MediaStreamAudioDestinationNodeBinding::Wrap(aCx, aScope, this);
+  return MediaStreamAudioDestinationNodeBinding::Wrap(aCx, this);
 }
 
 }

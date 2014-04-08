@@ -86,7 +86,7 @@ JSObject*
 TableRowsCollection::WrapObject(JSContext* aCx,
                                 JS::Handle<JSObject*> aScope)
 {
-  return HTMLCollectionBinding::Wrap(aCx, aScope, this);
+  return HTMLCollectionBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(TableRowsCollection, mOrphanRows)
@@ -300,7 +300,7 @@ HTMLTableElement::~HTMLTableElement()
 JSObject*
 HTMLTableElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLTableElementBinding::Wrap(aCx, aScope, this);
+  return HTMLTableElementBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTableElement)

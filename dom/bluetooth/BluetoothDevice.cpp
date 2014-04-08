@@ -235,5 +235,5 @@ BluetoothDevice::GetServices(JSContext* aCx, ErrorResult& aRv)
 JSObject*
 BluetoothDevice::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aScope)
 {
-  return BluetoothDeviceBinding::Wrap(aContext, aScope, this);
+  return BluetoothDeviceBinding::Wrap(aContext, this);
 }

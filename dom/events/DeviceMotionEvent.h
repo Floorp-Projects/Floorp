@@ -35,7 +35,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return DeviceRotationRateBinding::Wrap(aCx, aScope, this);
+    return DeviceRotationRateBinding::Wrap(aCx, this);
   }
 
   Nullable<double> GetAlpha() const { return mAlpha; }
@@ -73,7 +73,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return DeviceAccelerationBinding::Wrap(aCx, aScope, this);
+    return DeviceAccelerationBinding::Wrap(aCx, this);
   }
 
   Nullable<double> GetX() const { return mX; }
@@ -109,7 +109,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return DeviceMotionEventBinding::Wrap(aCx, aScope, this);
+    return DeviceMotionEventBinding::Wrap(aCx, this);
   }
 
   DeviceAcceleration* GetAcceleration() const

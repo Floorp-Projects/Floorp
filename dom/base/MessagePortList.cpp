@@ -22,7 +22,7 @@ NS_INTERFACE_MAP_END
 JSObject*
 MessagePortList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return MessagePortListBinding::Wrap(aCx, aScope, this);
+  return MessagePortListBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

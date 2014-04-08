@@ -324,7 +324,7 @@ nsScreen::IsDeviceSizePageSize()
 JSObject*
 nsScreen::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return ScreenBinding::Wrap(aCx, aScope, this);
+  return ScreenBinding::Wrap(aCx, this);
 }
 
 NS_IMPL_ISUPPORTS1(nsScreen::FullScreenEventListener, nsIDOMEventListener)

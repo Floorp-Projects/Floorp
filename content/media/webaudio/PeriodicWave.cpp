@@ -47,7 +47,7 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
 JSObject*
 PeriodicWave::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return PeriodicWaveBinding::Wrap(aCx, aScope, this);
+  return PeriodicWaveBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

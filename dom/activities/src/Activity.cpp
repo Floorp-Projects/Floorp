@@ -27,7 +27,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 /* virtual */ JSObject*
 Activity::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return MozActivityBinding::Wrap(aCx, aScope, this);
+  return MozActivityBinding::Wrap(aCx, this);
 }
 
 nsresult

@@ -236,7 +236,7 @@ NS_IMETHODIMP HTMLVideoElement::GetMozHasAudio(bool *aHasAudio) {
 JSObject*
 HTMLVideoElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLVideoElementBinding::Wrap(aCx, aScope, this);
+  return HTMLVideoElementBinding::Wrap(aCx, this);
 }
 
 void

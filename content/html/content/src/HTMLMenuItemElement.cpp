@@ -487,7 +487,7 @@ HTMLMenuItemElement::InitChecked()
 JSObject*
 HTMLMenuItemElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLMenuItemElementBinding::Wrap(aCx, aScope, this);
+  return HTMLMenuItemElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

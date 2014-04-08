@@ -19,7 +19,7 @@ namespace dom {
 JSObject*
 SVGCircleElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGCircleElementBinding::Wrap(aCx, aScope, this);
+  return SVGCircleElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::LengthInfo SVGCircleElement::sLengthInfo[3] =

@@ -18,7 +18,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedAngle, Release)
 JSObject*
 SVGAnimatedAngle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGAnimatedAngleBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedAngleBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<SVGAngle>

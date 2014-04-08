@@ -386,7 +386,7 @@ MessagePort::~MessagePort()
 JSObject*
 MessagePort::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return MessagePortBinding::Wrap(aCx, aScope, this);
+  return MessagePortBinding::Wrap(aCx, this);
 }
 
 void

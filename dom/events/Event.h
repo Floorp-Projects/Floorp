@@ -90,7 +90,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return EventBinding::Wrap(aCx, aScope, this);
+    return EventBinding::Wrap(aCx, this);
   }
 
   virtual ErrorEvent* AsErrorEvent()

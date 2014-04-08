@@ -34,7 +34,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return TimeEventBinding::Wrap(aCx, aScope, this);
+    return TimeEventBinding::Wrap(aCx, this);
   }
 
   int32_t Detail() const

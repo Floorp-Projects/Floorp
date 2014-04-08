@@ -401,7 +401,7 @@ Attr::Shutdown()
 JSObject*
 Attr::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return AttrBinding::Wrap(aCx, aScope, this);
+  return AttrBinding::Wrap(aCx, this);
 }
 
 Element*

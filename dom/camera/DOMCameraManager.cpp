@@ -439,5 +439,5 @@ nsDOMCameraManager::IsWindowStillActive(uint64_t aWindowId)
 JSObject*
 nsDOMCameraManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return CameraManagerBinding::Wrap(aCx, aScope, this);
+  return CameraManagerBinding::Wrap(aCx, this);
 }

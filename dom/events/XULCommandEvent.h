@@ -34,7 +34,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return XULCommandEventBinding::Wrap(aCx, aScope, this);
+    return XULCommandEventBinding::Wrap(aCx, this);
   }
 
   bool AltKey();

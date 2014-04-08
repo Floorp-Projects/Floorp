@@ -13,7 +13,7 @@ JSObject*
 SVGAnimatedString::WrapObject(JSContext* aCx,
                               JS::Handle<JSObject*> aScope)
 {
-  return SVGAnimatedStringBinding::Wrap(aCx, aScope, this);
+  return SVGAnimatedStringBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

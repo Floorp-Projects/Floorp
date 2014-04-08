@@ -19,7 +19,7 @@ namespace dom {
 JSObject*
 SVGEllipseElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGEllipseElementBinding::Wrap(aCx, aScope, this);
+  return SVGEllipseElementBinding::Wrap(aCx, this);
 }
 
 nsSVGElement::LengthInfo SVGEllipseElement::sLengthInfo[4] =

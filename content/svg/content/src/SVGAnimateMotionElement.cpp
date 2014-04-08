@@ -14,7 +14,7 @@ namespace dom {
 JSObject*
 SVGAnimateMotionElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return SVGAnimateMotionElementBinding::Wrap(aCx, aScope, this);
+  return SVGAnimateMotionElementBinding::Wrap(aCx, this);
 }
 
 //----------------------------------------------------------------------

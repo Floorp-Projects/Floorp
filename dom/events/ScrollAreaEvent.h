@@ -41,7 +41,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return ScrollAreaEventBinding::Wrap(aCx, aScope, this);
+    return ScrollAreaEventBinding::Wrap(aCx, this);
   }
 
   float X() const

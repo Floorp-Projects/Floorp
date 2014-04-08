@@ -83,7 +83,7 @@ HTMLFrameElement::ParseAttribute(int32_t aNamespaceID,
 JSObject*
 HTMLFrameElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLFrameElementBinding::Wrap(aCx, aScope, this);
+  return HTMLFrameElementBinding::Wrap(aCx, this);
 }
 
 } // namespace mozilla

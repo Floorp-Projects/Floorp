@@ -1563,7 +1563,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 JSObject*
 XMLHttpRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return XMLHttpRequestBinding_workers::Wrap(aCx, aScope, this);
+  return XMLHttpRequestBinding_workers::Wrap(aCx, this);
 }
 
 // static

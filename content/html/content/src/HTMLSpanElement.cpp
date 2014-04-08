@@ -25,7 +25,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLSpanElement)
 JSObject*
 HTMLSpanElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
 {
-  return HTMLSpanElementBinding::Wrap(aCx, aScope, this);
+  return HTMLSpanElementBinding::Wrap(aCx, this);
 }
 
 } // namespace dom

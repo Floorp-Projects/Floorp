@@ -594,7 +594,7 @@ Console::Observe(nsISupports* aSubject, const char* aTopic,
 JSObject*
 Console::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  return ConsoleBinding::Wrap(aCx, aScope, this);
+  return ConsoleBinding::Wrap(aCx, this);
 }
 
 #define METHOD(name, string)                                          \
