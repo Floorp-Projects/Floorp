@@ -142,36 +142,38 @@ function run_test() {
     // Will reference the arguments to use for verification in signmar
     let args = [];
 
-    // The XPCShell test wiki indicates this is the preferred way for 
-    // Windows detection.
+    // The XPCShell test wiki indicates this is the preferred way for
+    // Windows and OSX detection.
     var isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+    var isOSX = ("nsILocalFileMac" in Components.interfaces);
 
     // Setup the command line arguments to create the MAR.
-    // Windows vs. Linux/Mac/... have different command line for verification 
-    // since  on Windows we verify with CryptoAPI and on all other platforms 
-    // we verify with NSS. So on Windows we use an exported DER file and on 
-    // other platforms we use the NSS config db.
-    if (isWindows) {
-      if (certs.length == 1 && useShortHandCmdLine) {
-        args.push("-D", "data/" + certs[0] + ".der");
-      } else {
-        for (i = 0; i < certs.length; i++) {
-          args.push("-D" + i, "data/" + certs[i] + ".der");
-        }
-      }
-      args.push("-v", signedMAR.path);
-    } else {
+    // Windows & Mac vs. Linux/... have different command line for verification
+    // since on Windows we verify with CryptoAPI, on Mac with Security
+    // Transforms or NSS and on all other platforms we verify with NSS. So on
+    // Windows and Mac we use an exported DER file and on other platforms we use
+    // the NSS config db.
+    if (!isWindows) {
       let NSSConfigDir = do_get_file("data");
       args = ["-d", NSSConfigDir.path];
       if (certs.length == 1 && useShortHandCmdLine) {
         args.push("-n", certs[0]);
       } else {
-        for (i = 0; i < certs.length; i++) {
+        for (var i = 0; i < certs.length; i++) {
           args.push("-n" + i, certs[i]);
         }
       }
-      args.push("-v", signedMAR.path);
     }
+    if (isWindows || isOSX) {
+      if (certs.length == 1 && useShortHandCmdLine) {
+        args.push("-D", "data/" + certs[0] + ".der");
+      } else {
+        for (var i = 0; i < certs.length; i++) {
+          args.push("-D" + i, "data/" + certs[i] + ".der");
+        }
+      }
+    }
+    args.push("-v", signedMAR.path);
 
     process.init(signmarBin);
     try {
