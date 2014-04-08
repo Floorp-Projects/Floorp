@@ -10,7 +10,7 @@ const isOSX = (Services.appinfo.OS === "Darwin");
 // show a context menu with options to move it.
 add_task(function() {
   let contextMenu = document.getElementById("toolbar-context-menu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let homeButton = document.getElementById("home-button");
   EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2 });
   yield shownPromise;
@@ -30,7 +30,7 @@ add_task(function() {
   );
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenPromise = contextMenuHidden(contextMenu);
+  let hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenPromise;
 });
@@ -40,7 +40,7 @@ add_task(function() {
 // and a toggle option for the extra toolbar
 add_task(function() {
   let contextMenu = document.getElementById("toolbar-context-menu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let toolbar = createToolbarWithPlacements("880164_empty_toolbar", []);
   toolbar.setAttribute("context", "toolbar-context-menu");
   toolbar.setAttribute("toolbarname", "Fancy Toolbar for Context Menu");
@@ -63,7 +63,7 @@ add_task(function() {
   );
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenPromise = contextMenuHidden(contextMenu);
+  let hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenPromise;
   removeCustomToolbars();
@@ -74,7 +74,7 @@ add_task(function() {
 // show a context menu with disabled options to move it.
 add_task(function() {
   let contextMenu = document.getElementById("toolbar-context-menu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let urlBarContainer = document.getElementById("urlbar-container");
   // Need to make sure not to click within an edit field.
   let urlbarRect = urlBarContainer.getBoundingClientRect();
@@ -96,7 +96,7 @@ add_task(function() {
   );
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenPromise = contextMenuHidden(contextMenu);
+  let hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenPromise;
 });
@@ -135,7 +135,7 @@ add_task(function() {
   yield shownPanelPromise;
 
   let contextMenu = document.getElementById("customizationPanelItemContextMenu");
-  let shownContextPromise = contextMenuShown(contextMenu);
+  let shownContextPromise = popupShown(contextMenu);
   let newWindowButton = document.getElementById("new-window-button");
   ok(newWindowButton, "new-window-button was found");
   EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
@@ -151,7 +151,7 @@ add_task(function() {
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  let hiddenContextPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenContextPromise;
 
@@ -165,7 +165,7 @@ add_task(function() {
 add_task(function() {
   yield startCustomizing();
   let contextMenu = document.getElementById("toolbar-context-menu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let homeButton = document.getElementById("wrapper-home-button");
   EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2});
   yield shownPromise;
@@ -185,7 +185,7 @@ add_task(function() {
   );
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  let hiddenContextPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenContextPromise;
 });
@@ -194,7 +194,7 @@ add_task(function() {
 // show a context menu with options to move it.
 add_task(function() {
   let contextMenu = document.getElementById("customizationPaletteItemContextMenu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let openFileButton = document.getElementById("wrapper-open-file-button");
   EventUtils.synthesizeMouse(openFileButton, 2, 2, {type: "contextmenu", button: 2});
   yield shownPromise;
@@ -205,7 +205,7 @@ add_task(function() {
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  let hiddenContextPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenContextPromise;
 });
@@ -214,7 +214,7 @@ add_task(function() {
 // should show a context menu with options to move it.
 add_task(function() {
   let contextMenu = document.getElementById("customizationPanelItemContextMenu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let newWindowButton = document.getElementById("wrapper-new-window-button");
   EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
   yield shownPromise;
@@ -227,7 +227,7 @@ add_task(function() {
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  let hiddenContextPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenContextPromise;
   yield endCustomizing();
@@ -241,7 +241,7 @@ add_task(function() {
   yield startCustomizing(this.otherWin);
 
   let contextMenu = this.otherWin.document.getElementById("customizationPanelItemContextMenu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let newWindowButton = this.otherWin.document.getElementById("wrapper-new-window-button");
   EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2}, this.otherWin);
   yield shownPromise;
@@ -254,7 +254,7 @@ add_task(function() {
   ];
   checkContextMenu(contextMenu, expectedEntries, this.otherWin);
 
-  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  let hiddenContextPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenContextPromise;
   yield endCustomizing(this.otherWin);
@@ -267,13 +267,13 @@ add_task(function() {
 add_task(function() {
   yield startCustomizing();
   let contextMenu = document.getElementById("customizationPanelItemContextMenu");
-  let shownPromise = contextMenuShown(contextMenu);
+  let shownPromise = popupShown(contextMenu);
   let zoomControls = document.getElementById("wrapper-zoom-controls");
   EventUtils.synthesizeMouse(zoomControls, 2, 2, {type: "contextmenu", button: 2});
   yield shownPromise;
   // Execute the command to move the item from the panel to the toolbar.
   contextMenu.childNodes[0].doCommand();
-  let hiddenPromise = contextMenuHidden(contextMenu);
+  let hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenPromise;
   yield endCustomizing();
@@ -282,7 +282,7 @@ add_task(function() {
   is(zoomControls.parentNode.id, "nav-bar-customization-target", "Zoom-controls should be on the nav-bar");
 
   contextMenu = document.getElementById("toolbar-context-menu");
-  shownPromise = contextMenuShown(contextMenu);
+  shownPromise = popupShown(contextMenu);
   EventUtils.synthesizeMouse(zoomControls, 2, 2, {type: "contextmenu", button: 2});
   yield shownPromise;
 
@@ -301,7 +301,7 @@ add_task(function() {
   );
   checkContextMenu(contextMenu, expectedEntries);
 
-  hiddenPromise = contextMenuHidden(contextMenu);
+  hiddenPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenPromise;
   yield resetCustomization();
@@ -315,7 +315,7 @@ add_task(function() {
   yield PanelUI.show();
 
   let contextMenu = document.getElementById("customizationPanelItemContextMenu");
-  let shownContextPromise = contextMenuShown(contextMenu);
+  let shownContextPromise = popupShown(contextMenu);
   let newWindowButton = document.getElementById("new-window-button");
   ok(newWindowButton, "new-window-button was found");
   EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
@@ -331,7 +331,7 @@ add_task(function() {
   ];
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  let hiddenContextPromise = popupHidden(contextMenu);
   contextMenu.hidePopup();
   yield hiddenContextPromise;
 

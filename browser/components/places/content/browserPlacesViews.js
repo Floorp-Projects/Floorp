@@ -960,6 +960,10 @@ PlacesToolbar.prototype = {
     this._removeEventListeners(window, ["resize", "unload"], false);
     this._removeEventListeners(gBrowser.tabContainer, ["TabOpen", "TabClose"], false);
 
+    if (this._chevron._placesView) {
+      this._chevron._placesView.uninit();
+    }
+
     PlacesViewBase.prototype.uninit.apply(this, arguments);
   },
 

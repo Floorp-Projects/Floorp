@@ -27,7 +27,7 @@ add_task(function() {
   yield shownPanelPromise;
 
   let contextMenu = document.getElementById("toolbar-context-menu");
-  let shownContextPromise = contextMenuShown(contextMenu);
+  let shownContextPromise = popupShown(contextMenu);
   let homeButton = document.getElementById("home-button");
   ok(homeButton, "home-button was found");
   is(homeButton.getAttribute("overflowedItem"), "true", "Home button is overflowing");
@@ -51,7 +51,7 @@ add_task(function() {
   );
   checkContextMenu(contextMenu, expectedEntries);
 
-  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  let hiddenContextPromise = popupHidden(contextMenu);
   let hiddenPromise = promisePanelElementHidden(window, overflowPanel);
   let moveToPanel = contextMenu.querySelector(".customize-context-moveToPanel");
   if (moveToPanel) {

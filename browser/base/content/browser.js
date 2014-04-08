@@ -1301,6 +1301,8 @@ var gBrowserInit = {
     } catch (ex) {
     }
 
+    PlacesToolbarHelper.uninit();
+
     BookmarkingUI.uninit();
 
     TabsInTitlebar.uninit();
