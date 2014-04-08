@@ -68,7 +68,7 @@ public:
   ShadowRoot* GetOlderShadowRoot() { return mProjectedShadow; }
 
 protected:
-  virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   // The ShadowRoot that will be rendered in place of this shadow insertion point.
   nsRefPtr<ShadowRoot> mProjectedShadow;

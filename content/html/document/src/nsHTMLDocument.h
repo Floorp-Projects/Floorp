@@ -166,7 +166,7 @@ public:
   virtual bool WillIgnoreCharsetOverride() MOZ_OVERRIDE;
 
   // WebIDL API
-  virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+  virtual JSObject* WrapNode(JSContext* aCx)
     MOZ_OVERRIDE;
   void GetDomain(nsAString& aDomain, mozilla::ErrorResult& rv);
   void SetDomain(const nsAString& aDomain, mozilla::ErrorResult& rv);

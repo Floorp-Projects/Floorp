@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEFloodElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGFEFloodElement::WrapNode(JSContext *aCx)
 {
   return SVGFEFloodElementBinding::Wrap(aCx, this);
 }

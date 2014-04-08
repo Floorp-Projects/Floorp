@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFESpotLightElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFESpotLightElement::WrapNode(JSContext* aCx)
 {
   return SVGFESpotLightElementBinding::Wrap(aCx, this);
 }

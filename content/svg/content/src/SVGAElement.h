@@ -29,8 +29,7 @@ protected:
   SVGAElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGAElement(nsIContent **aResult,
                                        already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  virtual JSObject* WrapNode(JSContext *cx,
-                             JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED

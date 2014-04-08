@@ -211,8 +211,7 @@ public:
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
 protected:
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
   nsIntSize GetWidthHeight();
 

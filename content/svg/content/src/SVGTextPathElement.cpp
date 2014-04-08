@@ -17,7 +17,7 @@ namespace dom {
 class SVGAnimatedLength;
 
 JSObject*
-SVGTextPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGTextPathElement::WrapNode(JSContext *aCx)
 {
   return SVGTextPathElementBinding::Wrap(aCx, this);
 }

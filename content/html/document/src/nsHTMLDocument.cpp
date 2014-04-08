@@ -221,7 +221,7 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
 NS_INTERFACE_TABLE_TAIL_INHERITING(nsDocument)
 
 JSObject*
-nsHTMLDocument::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+nsHTMLDocument::WrapNode(JSContext* aCx)
 {
   return HTMLDocumentBinding::Wrap(aCx, this);
 }

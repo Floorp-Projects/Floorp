@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-HTMLTableRowElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLTableRowElement::WrapNode(JSContext *aCx)
 {
   return HTMLTableRowElementBinding::Wrap(aCx, this);
 }
