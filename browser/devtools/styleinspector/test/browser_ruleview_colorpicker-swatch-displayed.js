@@ -6,8 +6,6 @@
 
 // Test that color swatches are displayed next to colors in the rule-view
 
-let ruleView;
-
 const PAGE_CONTENT = [
   '<style type="text/css">',
   '  body {',
@@ -16,42 +14,42 @@ const PAGE_CONTENT = [
   '    background-image: url(chrome://global/skin/icons/warning-64.png);',
   '    border: 2em solid rgba(120, 120, 120, .5);',
   '  }',
+  '  * {',
+  '    color: blue;',
+  '    box-shadow: inset 0 0 2px 20px red, inset 0 0 2px 40px blue;',
+  '  }',
   '</style>',
   'Testing the color picker tooltip!'
 ].join("\n");
 
-function test() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function load(evt) {
-    gBrowser.selectedBrowser.removeEventListener("load", load, true);
-    waitForFocus(createDocument, content);
-  }, true);
+// Tests that properties in the rule-view contain color swatches
+// Each entry in the test array should contain:
+// {
+//   selector: the rule-view selector to look for the property in
+//   propertyName: the property to test
+//   nb: the number of color swatches this property should have
+// }
+const TESTS = [
+  {selector: "body", propertyName: "color", nb: 1},
+  {selector: "body", propertyName: "background-color", nb: 1},
+  {selector: "body", propertyName: "border", nb: 1},
+  {selector: "*", propertyName: "color", nb: 1},
+  {selector: "*", propertyName: "box-shadow", nb: 2},
+];
 
-  content.location = "data:text/html,rule view color picker tooltip test";
-}
-
-function createDocument() {
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,rule view color picker tooltip test");
   content.document.body.innerHTML = PAGE_CONTENT;
+  let {toolbox, inspector, view} = yield openRuleView();
 
-  openRuleView((inspector, view) => {
-    ruleView = view;
-    inspector.once("inspector-updated", testColorSwatchesAreDisplayed);
-  });
-}
+  for (let {selector, propertyName, nb} of TESTS) {
+    info("Looking for color swatches in property " + propertyName +
+      " in selector " + selector);
 
-function testColorSwatchesAreDisplayed() {
-  let cSwatch = getRuleViewProperty("color", ruleView).valueSpan
-    .querySelector(".ruleview-colorswatch");
-  ok(cSwatch, "Color swatch is displayed for the color property");
+    let prop = getRuleViewProperty(view, selector, propertyName).valueSpan;
+    let swatches = prop.querySelectorAll(".ruleview-colorswatch");
 
-  let bgSwatch = getRuleViewProperty("background-color", ruleView).valueSpan
-    .querySelector(".ruleview-colorswatch");
-  ok(bgSwatch, "Color swatch is displayed for the bg-color property");
-
-  let bSwatch = getRuleViewProperty("border", ruleView).valueSpan
-    .querySelector(".ruleview-colorswatch");
-  ok(bSwatch, "Color swatch is displayed for the border property");
-
-  ruleView = null;
-  finish();
-}
+    ok(swatches.length, "Swatches found in the property");
+    is(swatches.length, nb, "Correct number of swatches found in the property");
+  }
+});

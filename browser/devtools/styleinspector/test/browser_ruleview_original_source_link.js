@@ -2,90 +2,68 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let win;
-let doc;
-let contentWindow;
-let inspector;
-let toolbox;
+"use strict";
 
-const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps.html";
+// Test that the stylesheet links in the rule view are correct when source maps
+// are involved
+
+const TESTCASE_URI = TEST_URL_ROOT + "sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
-
 const SCSS_LOC = "sourcemaps.scss:4";
 const CSS_LOC = "sourcemaps.css:1";
 
-function test()
-{
-  waitForExplicitFinish();
-
+let test = asyncTest(function*() {
+  info("Setting the " + PREF +  " pref to true");
   Services.prefs.setBoolPref(PREF, true);
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee,
-      true);
-    doc = content.document;
-    waitForFocus(openToolbox, content);
-  }, true);
+  info("Opening the test page and opening the inspector");
+  yield addTab(TESTCASE_URI);
+  let {toolbox, inspector, view} = yield openRuleView();
 
-  content.location = TESTCASE_URI;
-}
+  info("Selecting the test node");
+  yield selectNode("div", inspector);
 
-function openToolbox() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  yield verifyLinkText(SCSS_LOC, view);
 
-  gDevTools.showToolbox(target, "inspector").then(function(aToolbox) {
-    toolbox = aToolbox;
-    inspector = toolbox.getCurrentPanel();
-    inspector.sidebar.select("ruleview");
-    highlightNode();
-  });
-}
-
-function highlightNode()
-{
-  // Highlight a node.
-  let div = content.document.getElementsByTagName("div")[0];
-
-  inspector.selection.setNode(div, "test");
-  inspector.once("inspector-updated", () => {
-    is(inspector.selection.node, div, "selection matches the div element");
-    testRuleViewLink();
-  });
-}
-
-function testRuleViewLink() {
-  verifyLinkText(SCSS_LOC, testTogglePref);
-}
-
-function testTogglePref() {
+  info("Setting the " + PREF + " pref to false");
   Services.prefs.setBoolPref(PREF, false);
+  yield verifyLinkText(CSS_LOC, view);
 
-  verifyLinkText(CSS_LOC, () => {
-    Services.prefs.setBoolPref(PREF, true);
+  info("Setting the " + PREF + " pref to true again");
+  Services.prefs.setBoolPref(PREF, true);
 
-    testClickingLink();
-  })
-}
+  yield testClickingLink(toolbox, view);
+  yield checkDisplayedStylesheet(toolbox);
 
-function testClickingLink() {
-  toolbox.once("styleeditor-ready", function(id, aToolbox) {
-    let panel = toolbox.getCurrentPanel();
-    panel.UI.on("editor-selected", (event, editor) => {
-      // The style editor selects the first sheet at first load before
-      // selecting the desired sheet.
-      if (editor.styleSheet.href.endsWith("scss")) {
-        info("original source editor selected");
-        editor.getSourceEditor().then(editorSelected);
-      }
-    });
-  });
+  info("Clearing the " + PREF + " pref");
+  Services.prefs.clearUserPref(PREF);
+});
 
-  let link = getLinkByIndex(1);
+function* testClickingLink(toolbox, view) {
+  info("Listening for switch to the style editor");
+  let onStyleEditorReady = toolbox.once("styleeditor-ready");
 
-  info("clicking rule view link");
+  info("Finding the stylesheet link and clicking it");
+  let link = getRuleViewLinkByIndex(view, 1);
   link.scrollIntoView();
   link.click();
+  yield onStyleEditorReady;
+}
+
+function checkDisplayedStylesheet(toolbox) {
+  let def = promise.defer();
+
+  let panel = toolbox.getCurrentPanel();
+  panel.UI.on("editor-selected", (event, editor) => {
+    // The style editor selects the first sheet at first load before
+    // selecting the desired sheet.
+    if (editor.styleSheet.href.endsWith("scss")) {
+      info("Original source editor selected");
+      editor.getSourceEditor().then(editorSelected).then(def.resolve, def.reject);
+    }
+  });
+
+  return def.promise;
 }
 
 function editorSelected(editor) {
@@ -94,38 +72,13 @@ function editorSelected(editor) {
 
   let {line, col} = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");
-
-  finishUp();
 }
 
-/* Helpers */
-
-function verifyLinkText(text, callback) {
-  let label = getLinkByIndex(1).querySelector("label");
-
-  waitForSuccess({
-    name: "link text changed to display correct location: " + text,
-    validatorFn: function()
-    {
-      return label.getAttribute("value") == text;
-    },
-    successFn: callback,
-    failureFn: callback,
-  });
-}
-
-function getLinkByIndex(aIndex)
-{
-  let contentDoc = ruleView().doc;
-  contentWindow = contentDoc.defaultView;
-  let links = contentDoc.querySelectorAll(".ruleview-rule-source");
-  return links[aIndex];
-}
-
-function finishUp()
-{
-  gBrowser.removeCurrentTab();
-  contentWindow = doc = inspector = toolbox = win = null;
-  Services.prefs.clearUserPref(PREF);
-  finish();
+function verifyLinkText(text, view) {
+  info("Verifying that the rule-view stylesheet link is " + text);
+  let label = getRuleViewLinkByIndex(view, 1).querySelector("label");
+  return waitForSuccess(
+    () => label.getAttribute("value") == text,
+    "Link text changed to display correct location: " + text
+  );
 }

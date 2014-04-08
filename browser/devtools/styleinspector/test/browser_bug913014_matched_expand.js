@@ -2,12 +2,12 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let doc;
-let inspector;
-let view;
-let viewDoc;
+"use strict";
 
-const DOCUMENT_URL = "data:text/html," + encodeURIComponent([
+// Test that the computed view properties can be expanded and collapsed with
+// either the twisty or by dbl-clicking on the container
+
+const TEST_URL = "data:text/html," + encodeURIComponent([
   '<html>' +
   '<head>' +
   '  <title>Computed view toggling test</title>',
@@ -22,104 +22,87 @@ const DOCUMENT_URL = "data:text/html," + encodeURIComponent([
   '</html>'
 ].join("\n"));
 
-function test()
-{
-  waitForExplicitFinish();
+let test = asyncTest(function*() {
+  yield addTab(TEST_URL);
+  let {toolbox, inspector, view} = yield openComputedView();
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee,
-      true);
-    doc = content.document;
-    waitForFocus(function () { openComputedView(startTests); }, content);
-  }, true);
+  info("Selecting the test node");
+  yield selectNode("h1", inspector);
 
-  content.location = DOCUMENT_URL;
-}
+  yield testExpandOnTwistyClick(view, inspector);
+  yield testCollapseOnTwistyClick(view, inspector);
+  yield testExpandOnDblClick(view, inspector);
+  yield testCollapseOnDblClick(view, inspector);
+});
 
-function startTests(aInspector, aview)
-{
-  inspector = aInspector;
-  view = aview;
-  viewDoc = view.styleDocument;
+function* testExpandOnTwistyClick({styleDocument, styleWindow}, inspector) {
+  info("Testing that a property expands on twisty click");
 
-  testExpandOnTwistyClick();
-}
-
-function endTests()
-{
-  doc = inspector = view = viewDoc = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function testExpandOnTwistyClick()
-{
-  let h1 = doc.querySelector("h1");
-  ok(h1, "H1 exists");
-
-  inspector.selection.setNode(h1);
-  inspector.once("inspector-updated", () => {
-    // Get the first twisty
-    let twisty = viewDoc.querySelector(".expandable");
-    ok(twisty, "Twisty found");
-
-    // Click and check whether it's been expanded
-    inspector.once("computed-view-property-expanded", () => {
-      // Expanded means the matchedselectors div is not empty
-      let div = viewDoc.querySelector(".property-content .matchedselectors");
-      ok(div.childNodes.length > 0, "Matched selectors are expanded on twisty click");
-
-      testCollapseOnTwistyClick();
-    });
-    twisty.click();
-  });
-}
-
-function testCollapseOnTwistyClick() {
-  // Get the same first twisty again
-  let twisty = viewDoc.querySelector(".expandable");
+  info("Getting twisty element");
+  let twisty = styleDocument.querySelector(".expandable");
   ok(twisty, "Twisty found");
 
-  // Click and check whether matched selectors are collapsed now
-  inspector.once("computed-view-property-collapsed", () => {
-    // Collapsed means the matchedselectors div is empty
-    let div = viewDoc.querySelector(".property-content .matchedselectors");
-    ok(div.childNodes.length === 0, "Matched selectors are collapsed on twisty click");
-
-    testExpandOnDblClick();
-  });
+  let onExpand = inspector.once("computed-view-property-expanded");
+  info("Clicking on the twisty element");
   twisty.click();
+
+  yield onExpand;
+
+  // Expanded means the matchedselectors div is not empty
+  let div = styleDocument.querySelector(".property-content .matchedselectors");
+  ok(div.childNodes.length > 0, "Matched selectors are expanded on twisty click");
 }
 
-function testExpandOnDblClick()
-{
-  // Get the computed rule container, not the twisty this time
-  let container = viewDoc.querySelector(".property-view");
+function* testCollapseOnTwistyClick({styleDocument, styleWindow}, inspector) {
+  info("Testing that a property collapses on twisty click");
 
-  // Dblclick on it and check if it expands the matched selectors
-  inspector.once("computed-view-property-expanded", () => {
-    // Expanded means the matchedselectors div is not empty
-    let div = viewDoc.querySelector(".property-content .matchedselectors");
-    ok(div.childNodes.length > 0, "Matched selectors are expanded on dblclick");
+  info("Getting twisty element");
+  let twisty = styleDocument.querySelector(".expandable");
+  ok(twisty, "Twisty found");
 
-    testCollapseOnDblClick();
-  });
-  EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, view.styleWindow);
+  let onCollapse = inspector.once("computed-view-property-collapsed");
+  info("Clicking on the twisty element");
+  twisty.click();
+
+  yield onCollapse;
+
+  // Collapsed means the matchedselectors div is empty
+  let div = styleDocument.querySelector(".property-content .matchedselectors");
+  ok(div.childNodes.length === 0, "Matched selectors are collapsed on twisty click");
 }
 
-function testCollapseOnDblClick()
-{
-  // Get the computed rule container, not the twisty this time
-  let container = viewDoc.querySelector(".property-view");
+function* testExpandOnDblClick({styleDocument, styleWindow}, inspector) {
+  info("Testing that a property expands on container dbl-click");
 
-  // Dblclick on it and check if it expands the matched selectors
-  inspector.once("computed-view-property-collapsed", () => {
-    // Collapsed means the matchedselectors div is empty
-    let div = viewDoc.querySelector(".property-content .matchedselectors");
-    ok(div.childNodes.length === 0, "Matched selectors are collapsed on dblclick");
+  info("Getting computed property container");
+  let container = styleDocument.querySelector(".property-view");
+  ok(container, "Container found");
 
-    endTests();
-  });
-  EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, view.styleWindow);
+  let onExpand = inspector.once("computed-view-property-expanded");
+  info("Dbl-clicking on the container");
+  EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, styleWindow);
+
+  yield onExpand;
+
+  // Expanded means the matchedselectors div is not empty
+  let div = styleDocument.querySelector(".property-content .matchedselectors");
+  ok(div.childNodes.length > 0, "Matched selectors are expanded on dblclick");
+}
+
+function* testCollapseOnDblClick({styleDocument, styleWindow}, inspector) {
+  info("Testing that a property collapses on container dbl-click");
+
+  info("Getting computed property container");
+  let container = styleDocument.querySelector(".property-view");
+  ok(container, "Container found");
+
+  let onCollapse = inspector.once("computed-view-property-collapsed");
+  info("Dbl-clicking on the container");
+  EventUtils.synthesizeMouseAtCenter(container, {clickCount: 2}, styleWindow);
+
+  yield onCollapse;
+
+  // Collapsed means the matchedselectors div is empty
+  let div = styleDocument.querySelector(".property-content .matchedselectors");
+  ok(div.childNodes.length === 0, "Matched selectors are collapsed on dblclick");
 }

@@ -2,15 +2,9 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let win;
-let doc;
-let contentWindow;
-let inspector;
-let toolbox;
+"use strict";
 
-let tempScope = {};
-Cu.import("resource://gre/modules/Services.jsm", tempScope);
-let Services = tempScope.Services;
+// Test the links from the rule-view to the styleeditor
 
 const STYLESHEET_URL = "data:text/css,"+encodeURIComponent(
   ["#first {",
@@ -18,7 +12,7 @@ const STYLESHEET_URL = "data:text/css,"+encodeURIComponent(
    "}"].join("\n"));
 
 const EXTERNAL_STYLESHEET_FILE_NAME = "browser_ruleview_734259_style_editor_link.css"
-const EXTERNAL_STYLESHEET_URL = TEST_BASE_HTTP + EXTERNAL_STYLESHEET_FILE_NAME;
+const EXTERNAL_STYLESHEET_URL = TEST_URL_ROOT + EXTERNAL_STYLESHEET_FILE_NAME;
 
 const DOCUMENT_URL = "data:text/html,"+encodeURIComponent(
   ['<html>' +
@@ -50,97 +44,81 @@ const DOCUMENT_URL = "data:text/html,"+encodeURIComponent(
    '</body>',
    '</html>'].join("\n"));
 
-function openToolbox() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+let test = asyncTest(function*() {
+  yield addTab(DOCUMENT_URL);
+  let {toolbox, inspector, view} = yield openRuleView();
 
-  gDevTools.showToolbox(target, "inspector").then(function(aToolbox) {
-    toolbox = aToolbox;
-    inspector = toolbox.getCurrentPanel();
-    inspector.sidebar.select("ruleview");
-    highlightNode();
-  });
-}
+  info("Select the test node");
+  yield selectNode("div", inspector);
 
-function highlightNode()
-{
-  // Highlight a node.
-  let div = content.document.getElementsByTagName("div")[0];
+  yield testInlineStyle(view, inspector);
+  yield testInlineStyleSheet(view, toolbox);
+  yield testExternalStyleSheet(view, toolbox);
+});
 
-  inspector.selection.setNode(div);
-  inspector.once("inspector-updated", () => {
-    is(inspector.selection.node, div, "selection matches the div element");
-    testInlineStyle();
-  });
-}
+function* testInlineStyle(view, inspector) {
+  info("Testing inline style");
 
-function testInlineStyle()
-{
-  info("clicking an inline style");
-
-  Services.ww.registerNotification(function onWindow(aSubject, aTopic) {
-    if (aTopic != "domwindowopened") {
-      return;
-    }
-
-    win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-    win.addEventListener("load", function windowLoad() {
-      win.removeEventListener("load", windowLoad);
-      let windowType = win.document.documentElement.getAttribute("windowtype");
-      is(windowType, "navigator:view-source", "view source window is open");
-      win.close();
-      Services.ww.unregisterNotification(onWindow);
-      executeSoon(() => {
-        testInlineStyleSheet();
-      });
-    });
-  });
-
-  let link = getLinkByIndex(0);
+  let onWindow = waitForWindow();
+  info("Clicking on the first link in the rule-view");
+  let link = getRuleViewLinkByIndex(view, 0);
   link.scrollIntoView();
   link.click();
+
+  let win = yield onWindow;
+
+  let windowType = win.document.documentElement.getAttribute("windowtype");
+  is(windowType, "navigator:view-source", "View source window is open");
+  info("Closing window");
+  win.close();
 }
 
-function testInlineStyleSheet()
-{
-  info("clicking an inline stylesheet");
+function* testInlineStyleSheet(view, toolbox) {
+  info("Testing inline stylesheet");
 
-  toolbox.once("styleeditor-ready", function(id, aToolbox) {
-    let panel = toolbox.getCurrentPanel();
+  info("Listening for toolbox switch to the styleeditor");
+  let onSwitch = waitForStyleEditor(toolbox);
 
-    panel.UI.once("editor-selected", (event, editor) => {
-      validateStyleEditorSheet(editor, 0);
-      executeSoon(() => {
-        testExternalStyleSheet(toolbox);
-      });
-    });
-  });
-
-  let link = getLinkByIndex(4);
+  info("Clicking an inline stylesheet");
+  let link = getRuleViewLinkByIndex(view, 4);
   link.scrollIntoView();
   link.click();
+  let editor = yield onSwitch;
+
+  ok(true, "Switched to the style-editor panel in the toolbox");
+
+  validateStyleEditorSheet(editor, 0);
 }
 
-function testExternalStyleSheet(toolbox) {
-  info ("clicking an external stylesheet");
+function* testExternalStyleSheet(view, toolbox) {
+  info("Testing external stylesheet");
 
+  info("Waiting for the stylesheet editor to be selected");
   let panel = toolbox.getCurrentPanel();
-  panel.UI.once("editor-selected", (event, editor) => {
-    is(toolbox.currentToolId, "styleeditor", "style editor tool selected");
-    validateStyleEditorSheet(editor, 1);
-    finishUp();
-  });
+  let onSelected = panel.UI.once("editor-selected");
 
-  toolbox.selectTool("inspector").then(function () {
-    testRuleViewLinkLabel();
-    let link = getLinkByIndex(1);
-    link.scrollIntoView();
-    link.click();
-  });
+  info("Switching back to the inspector panel in the toolbox");
+  yield toolbox.selectTool("inspector");
+
+  info("Clicking on an external stylesheet link");
+  testRuleViewLinkLabel(view);
+  let link =  getRuleViewLinkByIndex(view, 1);
+  link.scrollIntoView();
+  link.click();
+  let editor = yield onSelected;
+
+  is(toolbox.currentToolId, "styleeditor", "The style editor is selected again");
+  validateStyleEditorSheet(editor, 1);
 }
 
-function testRuleViewLinkLabel()
-{
-  let link = getLinkByIndex(2);
+function validateStyleEditorSheet(editor, expectedSheetIndex) {
+  info("validating style editor stylesheet");
+  let sheet = content.document.styleSheets[expectedSheetIndex];
+  is(editor.styleSheet.href, sheet.href, "loaded stylesheet matches document stylesheet");
+}
+
+function testRuleViewLinkLabel(view) {
+  let link = getRuleViewLinkByIndex(view, 2);
   let labelElem = link.querySelector(".source-link-label");
   let value = labelElem.getAttribute("value");
   let tooltipText = labelElem.getAttribute("tooltiptext");
@@ -149,41 +127,4 @@ function testRuleViewLinkLabel()
     "rule view stylesheet display value matches filename and line number");
   is(tooltipText, EXTERNAL_STYLESHEET_URL,
     "rule view stylesheet tooltip text matches the full URI path");
-}
-
-function validateStyleEditorSheet(aEditor, aExpectedSheetIndex)
-{
-  info("validating style editor stylesheet");
-  let sheet = doc.styleSheets[aExpectedSheetIndex];
-  is(aEditor.styleSheet.href, sheet.href, "loaded stylesheet matches document stylesheet");
-}
-
-function getLinkByIndex(aIndex)
-{
-  let contentDoc = ruleView().doc;
-  contentWindow = contentDoc.defaultView;
-  let links = contentDoc.querySelectorAll(".ruleview-rule-source");
-  return links[aIndex];
-}
-
-function finishUp()
-{
-  gBrowser.removeCurrentTab();
-  contentWindow = doc = inspector = toolbox = win = null;
-  finish();
-}
-
-function test()
-{
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee,
-      true);
-    doc = content.document;
-    waitForFocus(openToolbox, content);
-  }, true);
-
-  content.location = DOCUMENT_URL;
 }

@@ -2,136 +2,67 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let win;
-let doc;
-let inspector;
-let computedView;
-let toolbox;
+"use strict";
 
-const TESTCASE_URI = TEST_BASE_HTTPS + "sourcemaps.html";
+// Test that the computed view shows the original source link when source maps
+// are enabled
+
+const TESTCASE_URI = TEST_URL_ROOT_SSL + "sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
-
 const SCSS_LOC = "sourcemaps.scss:4";
 const CSS_LOC = "sourcemaps.css:1";
 
-function test()
-{
-  waitForExplicitFinish();
-
+let test = asyncTest(function*() {
+  info("Turning the pref " + PREF + " on");
   Services.prefs.setBoolPref(PREF, true);
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, arguments.callee,
-      true);
-    doc = content.document;
-    waitForFocus(function () { openComputedView(highlightNode); }, content);
-  }, true);
+  yield addTab(TESTCASE_URI);
+  let {toolbox, inspector, view} = yield openComputedView();
 
-  content.location = TESTCASE_URI;
-}
+  info("Select the test node");
+  yield selectNode("div", inspector);
 
-function highlightNode(aInspector, aComputedView)
-{
-  inspector = aInspector;
-  computedView = aComputedView;
+  info("Expanding the first property");
+  yield expandComputedViewPropertyByIndex(view, inspector, 0);
 
-  // Highlight a node.
-  let div = content.document.getElementsByTagName("div")[0];
-  ok(div, "div to select exists")
+  info("Verifying the link text");
+  yield verifyLinkText(view, SCSS_LOC);
 
-  inspector.selection.setNode(div);
-  inspector.once("inspector-updated", () => {
-    is(inspector.selection.node, div, "selection matches the div element");
-
-    expandProperty(0, testComputedViewLink);
-  });
-}
-
-function testComputedViewLink() {
-  verifyLinkText(SCSS_LOC, testTogglePref);
-}
-
-function testTogglePref() {
+  info("Toggling the pref");
   Services.prefs.setBoolPref(PREF, false);
 
-  verifyLinkText(CSS_LOC, () => {
-    Services.prefs.setBoolPref(PREF, true);
+  info("Verifying that the link text has changed after the pref change");
+  yield verifyLinkText(view, CSS_LOC);
 
-    testClickingLink();
-  })
-}
+  info("Toggling the pref again");
+  Services.prefs.setBoolPref(PREF, true);
 
-function testClickingLink() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let toolbox = gDevTools.getToolbox(target);
+  info("Testing that clicking on the link works");
+  yield testClickingLink(toolbox, view);
 
-  toolbox.once("styleeditor-ready", function(id, aToolbox) {
-    let panel = toolbox.getCurrentPanel();
-    panel.UI.on("editor-selected", (event, editor) => {
-      // The style editor selects the first sheet at first load before
-      // selecting the desired sheet.
-      if (editor.styleSheet.href.endsWith("scss")) {
-        info("original source editor selected");
-        editor.getSourceEditor().then(editorSelected);
-      }
-    });
-  });
+  info("Turning the pref " + PREF + " off");
+  Services.prefs.clearUserPref(PREF);
+});
 
-  let link = getLinkByIndex(0);
+function* testClickingLink(toolbox, view) {
+  let onEditor = waitForStyleEditor(toolbox, "sourcemaps.scss");
 
-  info("clicking rule view link");
+  info("Clicking the computedview stylesheet link");
+  let link = getComputedViewLinkByIndex(view, 0);
   link.scrollIntoView();
   link.click();
-}
 
-function editorSelected(editor) {
-  let href = editor.styleSheet.href;
-  ok(href.endsWith("sourcemaps.scss"), "selected stylesheet is correct one");
+  let editor = yield onEditor;
 
   let {line, col} = editor.sourceEditor.getCursor();
   is(line, 3, "cursor is at correct line number in original source");
-
-  finishUp();
 }
 
-/* Helpers */
-function expandProperty(aIndex, aCallback)
-{
-  info("expanding property " + aIndex);
-  let contentDoc = computedView.styleDocument;
-  let expando = contentDoc.querySelectorAll(".expandable")[aIndex];
+function verifyLinkText(view, text) {
+  let link = getComputedViewLinkByIndex(view, 0);
 
-  expando.click();
-
-  inspector.once("computed-view-property-expanded", aCallback);
-}
-
-function getLinkByIndex(aIndex)
-{
-  let contentDoc = computedView.styleDocument;
-  let links = contentDoc.querySelectorAll(".rule-link .link");
-  return links[aIndex];
-}
-
-function verifyLinkText(text, callback) {
-  let link = getLinkByIndex(0);
-
-  waitForSuccess({
-    name: "link text changed to display correct location: " + text,
-    validatorFn: function()
-    {
-      return link.textContent == text;
-    },
-    successFn: callback,
-    failureFn: callback,
-  });
-}
-
-function finishUp()
-{
-  gBrowser.removeCurrentTab();
-  doc = inspector = computedView = toolbox = win = null;
-  Services.prefs.clearUserPref(PREF);
-  finish();
+  return waitForSuccess(
+    () => link.textContent == text,
+    "link text changed to display correct location: " + text
+  );
 }

@@ -1,220 +1,187 @@
-/* vim: set ts=2 et sw=2 tw=80: */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+ http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let doc;
-let ruleWindow;
-let ruleView;
-let inspector;
-let TEST_URL = 'url("http://example.com/browser/browser/devtools/' +
-               'styleinspector/test/test-image.png")';
+"use strict";
 
-function startTest()
-{
-  let style = '' +
-    '#testid {' +
-    '  background-color: blue;' +
-    '} ' +
-    '.testclass {' +
-    '  background-color: green;' +
-    '}';
+// Testing various inplace-editor behaviors in the rule-view
+// FIXME: To be split in several test files, and some of the inplace-editor
+// focus/blur/commit/revert stuff should be factored out in head.js
 
-  let styleNode = addStyle(doc, style);
-  doc.body.innerHTML = '<div id="testid" class="testclass">Styled Node</div>';
-  let testElement = doc.getElementById("testid");
+let TEST_URL = 'url("' + TEST_URL_ROOT + 'test-image.png")';
+let PAGE_CONTENT = [
+  '<style type="text/css">',
+  '  #testid {',
+  '    background-color: blue;',
+  '  }',
+  '  .testclass {',
+  '    background-color: green;',
+  '  }',
+  '</style>',
+  '<div id="testid" class="testclass">Styled Node</div>'
+].join("\n");
 
-  openRuleView((aInspector, aRuleView) => {
-    inspector = aInspector;
-    ruleView = aRuleView;
-    ruleWindow = aRuleView.doc.defaultView;
-    inspector.selection.setNode(testElement);
-    inspector.once("inspector-updated", testCancelNew);
-  });
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,test rule view user changes");
+
+  info("Creating the test document");
+  content.document.body.innerHTML = PAGE_CONTENT;
+
+  info("Opening the rule-view");
+  let {toolbox, inspector, view} = yield openRuleView();
+
+  info("Selecting the test element");
+  yield selectNode("#testid", inspector);
+
+  yield testCancelNew(view);
+  yield testCreateNew(view);
+  yield testCreateNewEscape(view);
+  yield testEditProperty(view, "border-color", "red");
+  yield testEditProperty(view, "background-image", TEST_URL);
+});
+
+function* testCancelNew(view) {
+  info("Test adding a new rule to the element's style declaration and leaving it empty.");
+
+  let elementRuleEditor = view.element.children[0]._ruleEditor;
+
+  info("Focusing a new property name in the rule-view");
+  let editor = yield focusEditableField(elementRuleEditor.closeBrace);
+  is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "The new property editor got focused");
+
+  info("Bluring the editor input");
+  let onBlur = once(editor.input, "blur");
+  editor.input.blur();
+  yield onBlur;
+
+  info("Checking the state of canceling a new property name editor");
+  ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding request after a cancel.");
+  is(elementRuleEditor.rule.textProps.length,  0, "Should have canceled creating a new text property.");
+  ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
 }
 
-function testCancelNew()
-{
-  // Start at the beginning: start to add a rule to the element's style
-  // declaration, but leave it empty.
-  let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
-  waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
-    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
-    let input = aEditor.input;
-    waitForEditorBlur(aEditor, function () {
-      ok(!elementRuleEditor.rule._applyingModifications, "Shouldn't have an outstanding request after a cancel.");
-      is(elementRuleEditor.rule.textProps.length,  0, "Should have canceled creating a new text property.");
-      ok(!elementRuleEditor.propertyList.hasChildNodes(), "Should not have any properties.");
-      testCreateNew();
-    });
-    aEditor.input.blur();
-  });
-  EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
-                             { },
-                             ruleWindow);
+function* testCreateNew(view) {
+  info("Test creating a new property");
+
+  let elementRuleEditor = view.element.children[0]._ruleEditor;
+
+  info("Focusing a new property name in the rule-view");
+  let editor = yield focusEditableField(elementRuleEditor.closeBrace);
+
+  is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "The new property editor got focused");
+  let input = editor.input;
+
+  info("Entering background-color in the property name editor");
+  input.value = "background-color";
+
+  info("Pressing return to commit and focus the new value field");
+  let onValueFocus = once(elementRuleEditor.element, "focus", true);
+  let onModifications = elementRuleEditor.rule._applyingModifications;
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  yield onValueFocus;
+  yield onModifications;
+
+  // Getting the new value editor after focus
+  editor = inplaceEditor(view.doc.activeElement);
+  let textProp = elementRuleEditor.rule.textProps[0];
+
+  is(elementRuleEditor.rule.textProps.length,  1, "Created a new text property.");
+  is(elementRuleEditor.propertyList.children.length, 1, "Created a property editor.");
+  is(editor, inplaceEditor(textProp.editor.valueSpan), "Editing the value span now.");
+
+  info("Entering a value and bluring the field to expect a rule change");
+  editor.input.value = "#XYZ";
+  let onBlur = once(editor.input, "blur");
+  let onModifications = elementRuleEditor.rule._applyingModifications;
+  editor.input.blur();
+  yield onBlur;
+  yield onModifications;
+
+  is(textProp.value, "#XYZ", "Text prop should have been changed.");
+  is(textProp.editor.isValid(), false, "#XYZ should not be a valid entry");
 }
 
-function testCreateNew()
-{
-  // Create a new property.
-  let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
-  waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
-    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
-    let input = aEditor.input;
-    input.value = "background-color";
+function* testCreateNewEscape(view) {
+  info("Test creating a new property and escaping");
 
-    waitForEditorFocus(elementRuleEditor.element, function onNewValue(aEditor) {
-      promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
-        is(elementRuleEditor.rule.textProps.length,  1, "Should have created a new text property.");
-        is(elementRuleEditor.propertyList.children.length, 1, "Should have created a property editor.");
-        let textProp = elementRuleEditor.rule.textProps[0];
-        is(aEditor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
-        aEditor.input.value = "#XYZ";
-        waitForEditorBlur(aEditor, function() {
-          promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
-            is(textProp.value, "#XYZ", "Text prop should have been changed.");
-            is(textProp.editor.isValid(), false, "#XYZ should not be a valid entry");
-            testCreateNewEscape();
-          }));
-        });
-        aEditor.input.blur();
-      }));
-    });
-    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
-  });
+  let elementRuleEditor = view.element.children[0]._ruleEditor;
 
-  EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
-                             { },
-                             ruleWindow);
+  info("Focusing a new property name in the rule-view");
+  let editor = yield focusEditableField(elementRuleEditor.closeBrace);
+
+  is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "The new property editor got focused.");
+  let input = editor.input;
+
+  info("Entering a value in the property name editor");
+  input.value = "color";
+
+  info("Pressing return to commit and focus the new value field");
+  let onValueFocus = once(elementRuleEditor.element, "focus", true);
+  let onModifications = elementRuleEditor.rule._applyingModifications;
+  EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
+  yield onValueFocus;
+  yield onModifications;
+
+  // Getting the new value editor after focus
+  editor = inplaceEditor(view.doc.activeElement);
+  let textProp = elementRuleEditor.rule.textProps[1];
+
+  is(elementRuleEditor.rule.textProps.length,  2, "Created a new text property.");
+  is(elementRuleEditor.propertyList.children.length, 2, "Created a property editor.");
+  is(editor, inplaceEditor(textProp.editor.valueSpan), "Editing the value span now.");
+
+  info("Entering a property value");
+  editor.input.value = "red";
+
+  info("Escaping out of the field");
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+
+  info("Checking that the previous field is focused");
+  let focusedElement = inplaceEditor(elementRuleEditor.rule.textProps[0].editor.valueSpan).input;
+  is(focusedElement, focusedElement.ownerDocument.activeElement, "Correct element has focus");
+
+  EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
+
+  is(elementRuleEditor.rule.textProps.length,  1, "Removed the new text property.");
+  is(elementRuleEditor.propertyList.children.length, 1, "Removed the property editor.");
 }
 
-function testCreateNewEscape()
-{
-  // Create a new property.
-  let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
-  waitForEditorFocus(elementRuleEditor.element, function onNewElement(aEditor) {
-    is(inplaceEditor(elementRuleEditor.newPropSpan), aEditor, "Next focused editor should be the new property editor.");
-    let input = aEditor.input;
-    input.value = "color";
+function* testEditProperty(view, name, value) {
+  info("Test editing existing property name/value fields");
 
-    waitForEditorFocus(elementRuleEditor.element, function onNewValue(aEditor) {
-      promiseDone(expectRuleChange(elementRuleEditor.rule).then(() => {
-        is(elementRuleEditor.rule.textProps.length,  2, "Should have created a new text property.");
-        is(elementRuleEditor.propertyList.children.length, 2, "Should have created a property editor.");
-        let textProp = elementRuleEditor.rule.textProps[1];
-        is(aEditor, inplaceEditor(textProp.editor.valueSpan), "Should be editing the value span now.");
-        aEditor.input.value = "red";
-        EventUtils.synthesizeKey("VK_ESCAPE", {}, ruleWindow);
-
-        // Make sure previous input is focused.
-        let focusedElement = inplaceEditor(elementRuleEditor.rule.textProps[0].editor.valueSpan).input;
-        is(focusedElement, focusedElement.ownerDocument.activeElement, "Correct element has focus");
-
-        EventUtils.synthesizeKey("VK_ESCAPE", {}, ruleWindow);
-
-        is(elementRuleEditor.rule.textProps.length,  1, "Should have removed the new text property.");
-        is(elementRuleEditor.propertyList.children.length, 1, "Should have removed the property editor.");
-
-        testEditProperty();
-      }));
-    });
-    EventUtils.synthesizeKey("VK_RETURN", {}, ruleWindow);
-  });
-
-  EventUtils.synthesizeMouse(elementRuleEditor.closeBrace, 1, 1,
-                             { },
-                             ruleWindow);
-}
-
-function testEditProperty()
-{
-  let idRuleEditor = ruleView.element.children[1]._ruleEditor;
+  let idRuleEditor = view.element.children[1]._ruleEditor;
   let propEditor = idRuleEditor.rule.textProps[0].editor;
-  waitForEditorFocus(propEditor.element, function onNewElement(aEditor) {
-    is(inplaceEditor(propEditor.nameSpan), aEditor, "Next focused editor should be the name editor.");
-    let input = aEditor.input;
-    waitForEditorFocus(propEditor.element, function onNewName(aEditor) {
-      promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
-        input = aEditor.input;
-        is(inplaceEditor(propEditor.valueSpan), aEditor, "Focus should have moved to the value.");
 
-        waitForEditorBlur(aEditor, function() {
-          promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
-            let value = idRuleEditor.rule.domRule._rawStyle().getPropertyValue("border-color");
-            is(value, "red", "border-color should have been set.");
-            is(propEditor.isValid(), true, "red should be a valid entry");
-            testEditPropertyWithColon();
-          }));
-        });
+  info("Focusing an existing property name in the rule-view");
+  let editor = yield focusEditableField(propEditor.nameSpan, 32, 1);
 
-        for (let ch of "red;") {
-          EventUtils.sendChar(ch, ruleWindow);
-        }
-      }));
-    });
-    for (let ch of "border-color:") {
-      EventUtils.sendChar(ch, ruleWindow);
-    }
-  });
+  is(inplaceEditor(propEditor.nameSpan), editor, "The property name editor got focused");
+  let input = editor.input;
 
-  EventUtils.synthesizeMouse(propEditor.nameSpan, 32, 1,
-                             { },
-                             ruleWindow);
-}
+  info("Entering a new property name, including : to commit and focus the value");
+  let onValueFocus = once(idRuleEditor.element, "focus", true);
+  let onModifications = idRuleEditor.rule._applyingModifications;
+  for (let ch of name + ":") {
+    EventUtils.sendChar(ch, view.doc.defaultView);
+  }
+  yield onValueFocus;
+  yield onModifications;
 
-function testEditPropertyWithColon()
-{
-  let idRuleEditor = ruleView.element.children[1]._ruleEditor;
-  let propEditor = idRuleEditor.rule.textProps[0].editor;
-  waitForEditorFocus(propEditor.element, function onNewElement(aEditor) {
-    is(inplaceEditor(propEditor.nameSpan), aEditor, "Next focused editor should be the name editor.");
-    let input = aEditor.input;
-    waitForEditorFocus(propEditor.element, function onNewName(aEditor) {
-      promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
-        input = aEditor.input;
-        is(inplaceEditor(propEditor.valueSpan), aEditor, "Focus should have moved to the value.");
+  // Getting the value editor after focus
+  editor = inplaceEditor(view.doc.activeElement);
+  input = editor.input;
+  is(inplaceEditor(propEditor.valueSpan), editor, "Focus moved to the value.");
 
-        waitForEditorBlur(aEditor, function() {
-          promiseDone(expectRuleChange(idRuleEditor.rule).then(() => {
-            let value = idRuleEditor.rule.domRule._rawStyle().getPropertyValue("background-image");
-            is(value, TEST_URL, "background-image should have been set.");
-            is(propEditor.isValid(), true, "the test URL should be a valid entry");
-            finishTest();
-          }));
-        });
+  info("Entering a new value, including ; to commit and blur the value");
+  let onBlur = once(input, "blur");
+  let onModifications = idRuleEditor.rule._applyingModifications;
+  for (let ch of value + ";") {
+    EventUtils.sendChar(ch, view.doc.defaultView);
+  }
+  yield onBlur;
+  yield onModifications;
 
-
-        for (let ch of (TEST_URL + ";")) {
-          EventUtils.sendChar(ch, ruleWindow);
-        }
-      }));
-    });
-    for (let ch of "background-image:") {
-      EventUtils.sendChar(ch, ruleWindow);
-    }
-  });
-
-  EventUtils.synthesizeMouse(propEditor.nameSpan, 32, 1,
-                             { },
-                             ruleWindow);
-}
-
-function finishTest()
-{
-  inspector = ruleWindow = ruleView = null;
-  doc = null;
-  gBrowser.removeCurrentTab();
-  finish();
-}
-
-function test()
-{
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function changedValues_load(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, changedValues_load, true);
-    doc = content.document;
-    waitForFocus(startTest, content);
-  }, true);
-
-  content.location = "data:text/html,test rule view user changes";
+  let propValue = idRuleEditor.rule.domRule._rawStyle().getPropertyValue(name);
+  is(propValue, value, name + " should have been set.");
+  is(propEditor.isValid(), true, value + " should be a valid entry");
 }

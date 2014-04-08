@@ -15,59 +15,42 @@ const PAGE_CONTENT = [
   'Testing the color picker tooltip!'
 ].join("\n");
 
-function test() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function load(evt) {
-    gBrowser.selectedBrowser.removeEventListener("load", load, true);
-    waitForFocus(createDocument, content);
-  }, true);
-
-  content.location = "data:text/html,rule view color picker tooltip test";
-}
-
-function createDocument() {
+let test = asyncTest(function*() {
+  yield addTab("data:text/html,rule view color picker tooltip test");
   content.document.body.innerHTML = PAGE_CONTENT;
+  let {toolbox, inspector, view} = yield openRuleView();
 
-  openRuleView((inspector, ruleView) => {
-    inspector.once("inspector-updated", () => {
-      let swatch = getRuleViewProperty("background-color", ruleView).valueSpan
-        .querySelector(".ruleview-colorswatch");
-      testPressingEscapeRevertsChanges(swatch, ruleView);
-    });
+  let swatch = getRuleViewProperty(view, "body", "background-color").valueSpan
+    .querySelector(".ruleview-colorswatch");
+  yield testPressingEscapeRevertsChanges(swatch, view);
+});
+
+function* testPressingEscapeRevertsChanges(swatch, ruleView) {
+  let cPicker = ruleView.colorPicker;
+
+  let onShown = cPicker.tooltip.once("shown");
+  swatch.click();
+  yield onShown;
+
+  yield simulateColorPickerChange(cPicker, [0, 0, 0, 1], {
+    element: content.document.body,
+    name: "backgroundColor",
+    value: "rgb(0, 0, 0)"
   });
-}
 
-function testPressingEscapeRevertsChanges(swatch, ruleView) {
-  Task.spawn(function*() {
-    let cPicker = ruleView.colorPicker;
+  is(swatch.style.backgroundColor, "rgb(0, 0, 0)",
+    "The color swatch's background was updated");
+  is(getRuleViewProperty(ruleView, "body", "background-color").valueSpan.textContent,
+    "rgba(0, 0, 0, 1)", "The text of the background-color css property was updated");
 
-    let onShown = cPicker.tooltip.once("shown");
-    swatch.click();
-    yield onShown;
+  let spectrum = yield cPicker.spectrum;
 
-    yield simulateColorChange(cPicker, [0, 0, 0, 1], {
-      element: content.document.body,
-      name: "backgroundColor",
-      value: "rgb(0, 0, 0)"
-    });
+  // ESC out of the color picker
+  let onHidden = cPicker.tooltip.once("hidden");
+  EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
+  yield onHidden;
 
-    is(swatch.style.backgroundColor, "rgb(0, 0, 0)",
-      "The color swatch's background was updated");
-    is(getRuleViewProperty("background-color", ruleView).valueSpan.textContent,
-      "rgba(0, 0, 0, 1)", "The text of the background-color css property was updated");
-
-    let spectrum = yield cPicker.spectrum;
-
-    // ESC out of the color picker
-    let onHidden = cPicker.tooltip.once("hidden");
-    EventUtils.sendKey("ESCAPE", spectrum.element.ownerDocument.defaultView);
-    yield onHidden;
-
-    yield waitForSuccess({
-      validatorFn: () => {
-        return content.getComputedStyle(content.document.body).backgroundColor === "rgb(237, 237, 237)";
-      },
-      name: "The element's background-color was reverted"
-    });
-  }).then(finish);
+  yield waitForSuccess(() => {
+    return content.getComputedStyle(content.document.body).backgroundColor === "rgb(237, 237, 237)";
+  }, "The element's background-color was reverted");
 }
