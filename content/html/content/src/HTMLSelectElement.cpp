@@ -1908,7 +1908,7 @@ HTMLSelectElement::UpdateSelectedOptions()
 }
 
 JSObject*
-HTMLSelectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLSelectElement::WrapNode(JSContext* aCx)
 {
   return HTMLSelectElementBinding::Wrap(aCx, this);
 }

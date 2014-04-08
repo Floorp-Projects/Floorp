@@ -16,7 +16,7 @@ HTMLDataListElement::~HTMLDataListElement()
 }
 
 JSObject*
-HTMLDataListElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLDataListElement::WrapNode(JSContext *aCx)
 {
   return HTMLDataListElementBinding::Wrap(aCx, this);
 }

@@ -20,7 +20,7 @@ HTMLFontElement::~HTMLFontElement()
 }
 
 JSObject*
-HTMLFontElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLFontElement::WrapNode(JSContext *aCx)
 {
   return HTMLFontElementBinding::Wrap(aCx, this);
 }

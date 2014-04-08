@@ -343,7 +343,7 @@ HTMLSharedObjectElement::CopyInnerTo(Element* aDest)
 }
 
 JSObject*
-HTMLSharedObjectElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLSharedObjectElement::WrapNode(JSContext* aCx)
 {
   JSObject* obj;
   if (mNodeInfo->Equals(nsGkAtoms::applet)) {

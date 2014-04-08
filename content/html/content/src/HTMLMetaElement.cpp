@@ -89,7 +89,7 @@ HTMLMetaElement::CreateAndDispatchEvent(nsIDocument* aDoc,
 }
 
 JSObject*
-HTMLMetaElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLMetaElement::WrapNode(JSContext* aCx)
 {
   return HTMLMetaElementBinding::Wrap(aCx, this);
 }

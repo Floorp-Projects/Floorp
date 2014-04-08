@@ -189,7 +189,7 @@ HTMLBodyElement::~HTMLBodyElement()
 }
 
 JSObject*
-HTMLBodyElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLBodyElement::WrapNode(JSContext *aCx)
 {
   return HTMLBodyElementBinding::Wrap(aCx, this);
 }

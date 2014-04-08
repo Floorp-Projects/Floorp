@@ -30,7 +30,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGPathElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGPathElement::WrapNode(JSContext *aCx)
 {
   return SVGPathElementBinding::Wrap(aCx, this);
 }
