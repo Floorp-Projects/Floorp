@@ -685,7 +685,12 @@ nsresult nsGeolocationService::Init()
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-  mProvider = do_CreateInstance(GONK_GPS_GEOLOCATION_PROVIDER_CONTRACTID);
+  // GonkGPSGeolocationProvider can be started at boot up time for initialization reasons.
+  // do_getService gets hold of the already initialized component and starts
+  // processing location requests immediately.
+  // do_Createinstance will create multiple instances of the provider which is not right.
+  // bug 993041
+  mProvider = do_GetService(GONK_GPS_GEOLOCATION_PROVIDER_CONTRACTID);
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
