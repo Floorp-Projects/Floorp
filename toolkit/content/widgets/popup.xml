@@ -379,6 +379,9 @@
 
         var position = this.alignmentPosition;
         var offset = this.alignmentOffset;
+
+        this.setAttribute("arrowposition", position);
+
         // if this panel has a "sliding" arrow, we may have previously set margins...
         arrowbox.style.removeProperty("transform");
         if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
@@ -432,34 +435,39 @@
       <handler event="popupshowing" phase="target">
       <![CDATA[
         this.adjustArrowPosition();
+        if (this.getAttribute("animate") != "false") {
+          this.setAttribute("animate", "open");
+        }
+
         // set fading
         var fade = this.getAttribute("fade");
         var fadeDelay = (fade == "fast") ? 1 : fade == "slow" ? 4000 : 0;
         if (fadeDelay) {
-          this._fadeTimer = setTimeout(function (self) {
-            self.style.opacity = 0.2;
-          }, fadeDelay, this);
+          this._fadeTimer = setTimeout(() => this.hidePopup(), fadeDelay, this);
         }
       ]]>
       </handler>
       <handler event="popuphiding" phase="target">
-        clearTimeout(this._fadeTimer);
-        this.style.removeProperty("opacity");
-      </handler>
-      <handler event="transitionend" phase="target">
-      <![CDATA[
-        if (event.propertyName == "opacity" &&
-            event.originalTarget == this) {
-          this.hidePopup();
-          this.style.removeProperty("opacity");
+        let animate = (this.getAttribute("animate") != "false");
+
+        if (this._fadeTimer) {
+          clearTimeout(this._fadeTimer);
+          if (animate) {
+            this.setAttribute("animate", "fade");
+          }
         }
-      ]]>
+        else if (animate) {
+          this.setAttribute("animate", "cancel");
+        }
       </handler>
       <handler event="popupshown" phase="target">
         this.setAttribute("panelopen", "true");
       </handler>
       <handler event="popuphidden" phase="target">
         this.removeAttribute("panelopen");
+        if (this.getAttribute("animate") != "false") {
+          this.removeAttribute("animate");
+        }
       </handler>
     </handlers>
   </binding>
