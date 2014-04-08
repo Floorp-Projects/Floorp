@@ -122,6 +122,14 @@ let UI = {
               this.setWallpaper(dataURL);
             });
           });
+          if (Services.prefs.getBoolPref("devtools.chrome.enabled")) {
+            let rootButton = document.getElementById("root-actor-debug");
+            if (response.consoleActor) {
+              rootButton.removeAttribute("hidden");
+            } else {
+              rootButton.setAttribute("hidden", "true");
+            }
+          }
         }
       );
     }
@@ -141,6 +149,21 @@ let UI = {
 
     if (tab) tab.classList.add("selected");
     if (panel) panel.classList.add("selected");
+  },
+
+  openToolboxForRootActor: function() {
+    if (!this.connected) {
+      return;
+    }
+
+    let options = {
+      form: this.listTabsResponse,
+      client: this.connection.client,
+      chrome: true
+    };
+    devtools.TargetFactory.forRemoteTab(options).then((target) => {
+      top.UI.openAndShowToolboxForTarget(target, "Main process", null);
+    });
   },
 
   openToolboxForApp: function(manifest) {

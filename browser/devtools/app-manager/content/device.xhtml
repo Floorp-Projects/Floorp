@@ -35,6 +35,7 @@
               <span template='{"type":"textContent","path":"device.description.geckoversion"}'></span>
             </h3>
             <p template='{"type":"localizedContent","property":"device.deviceSize", "paths":["device.description.width","device.description.height","device.description.dpi"]}'></p>
+            <button id="root-actor-debug" hidden="true" onclick="UI.openToolboxForRootActor()" title="&device.debugMainProcessTooltip;">&device.debugMainProcess;</button>
           </header>
           <div id="tabs-headers">
             <div onclick="UI.setTab('apps')" class="tab sidebar-item apps" title="&device.installedAppsTooltip;">&device.installedApps;</div>
