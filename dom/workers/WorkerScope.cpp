@@ -299,7 +299,8 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
 
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
                                                          options,
-                                                         GetWorkerPrincipal());
+                                                         GetWorkerPrincipal(),
+                                                         true);
 }
 
 void
@@ -336,7 +337,8 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx)
   mWorkerPrivate->CopyJSCompartmentOptions(options);
 
   return SharedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this, options,
-                                                      GetWorkerPrincipal());
+                                                      GetWorkerPrincipal(),
+                                                      true);
 }
 
 bool
