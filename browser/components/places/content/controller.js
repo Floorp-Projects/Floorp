@@ -137,7 +137,6 @@ PlacesController.prototype = {
       case "cmd_paste":
       case "placesCmd_paste":
       case "placesCmd_new:folder":
-      case "placesCmd_new:livemark":
       case "placesCmd_new:bookmark":
       case "placesCmd_createBookmark":
         return false;
@@ -189,7 +188,6 @@ PlacesController.prototype = {
       var selectedNode = this._view.selectedNode;
       return selectedNode && PlacesUtils.nodeIsURI(selectedNode);
     case "placesCmd_new:folder":
-    case "placesCmd_new:livemark":
       return this._canInsert();
     case "placesCmd_new:bookmark":
       return this._canInsert();
@@ -279,9 +277,6 @@ PlacesController.prototype = {
       break;
     case "placesCmd_new:bookmark":
       this.newItem("bookmark");
-      break;
-    case "placesCmd_new:livemark":
-      this.newItem("livemark");
       break;
     case "placesCmd_new:separator":
       this.newSeparator().then(null, Cu.reportError);
@@ -1684,7 +1679,6 @@ function goUpdatePlacesCommands() {
   updatePlacesCommand("placesCmd_open:tab");
   updatePlacesCommand("placesCmd_new:folder");
   updatePlacesCommand("placesCmd_new:bookmark");
-  updatePlacesCommand("placesCmd_new:livemark");
   updatePlacesCommand("placesCmd_new:separator");
   updatePlacesCommand("placesCmd_show:info");
   updatePlacesCommand("placesCmd_moveBookmarks");
