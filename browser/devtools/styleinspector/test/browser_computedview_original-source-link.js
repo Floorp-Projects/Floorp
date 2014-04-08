@@ -7,10 +7,10 @@
 // Test that the computed view shows the original source link when source maps
 // are enabled
 
-const TESTCASE_URI = TEST_URL_ROOT_SSL + "sourcemaps.html";
+const TESTCASE_URI = TEST_URL_ROOT_SSL + "doc_sourcemaps.html";
 const PREF = "devtools.styleeditor.source-maps-enabled";
-const SCSS_LOC = "sourcemaps.scss:4";
-const CSS_LOC = "sourcemaps.css:1";
+const SCSS_LOC = "doc_sourcemaps.scss:4";
+const CSS_LOC = "doc_sourcemaps.css:1";
 
 let test = asyncTest(function*() {
   info("Turning the pref " + PREF + " on");
@@ -45,7 +45,7 @@ let test = asyncTest(function*() {
 });
 
 function* testClickingLink(toolbox, view) {
-  let onEditor = waitForStyleEditor(toolbox, "sourcemaps.scss");
+  let onEditor = waitForStyleEditor(toolbox, "doc_sourcemaps.scss");
 
   info("Clicking the computedview stylesheet link");
   let link = getComputedViewLinkByIndex(view, 0);
