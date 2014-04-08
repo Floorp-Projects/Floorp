@@ -1376,7 +1376,7 @@ FrameIter::numFrameSlots() const
       case JIT: {
 #ifdef JS_ION
         if (data_.ionFrames_.isIonJS()) {
-            return ionInlineFrames_.snapshotIterator().allocations() -
+            return ionInlineFrames_.snapshotIterator().numAllocations() -
                 ionInlineFrames_.script()->nfixed();
         }
         jit::BaselineFrame *frame = data_.ionFrames_.baselineFrame();

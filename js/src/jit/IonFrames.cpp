@@ -20,6 +20,7 @@
 #include "jit/JitCompartment.h"
 #include "jit/ParallelFunctions.h"
 #include "jit/PcScriptCache.h"
+#include "jit/Recover.h"
 #include "jit/Safepoints.h"
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
@@ -1498,6 +1499,18 @@ SnapshotIterator::allocationValue(const RValueAllocation &alloc)
     }
 }
 
+uint32_t
+SnapshotIterator::numAllocations() const
+{
+    return resumePoint()->numOperands();
+}
+
+uint32_t
+SnapshotIterator::pcOffset() const
+{
+    return resumePoint()->pcOffset();
+}
+
 IonScript *
 IonFrameIterator::ionScript() const
 {
@@ -1582,7 +1595,7 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         JS_ASSERT(numActualArgs_ != 0xbadbad);
 
         // Skip over non-argument slots, as well as |this|.
-        unsigned skipCount = (si_.allocations() - 1) - numActualArgs_ - 1;
+        unsigned skipCount = (si_.numAllocations() - 1) - numActualArgs_ - 1;
         for (unsigned j = 0; j < skipCount; j++)
             si_.skip();
 
@@ -1804,8 +1817,8 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
     }
 
     SnapshotIterator si = snapshotIterator();
-    fprintf(stderr, "  slots: %u\n", si.allocations() - 1);
-    for (unsigned i = 0; i < si.allocations() - 1; i++) {
+    fprintf(stderr, "  slots: %u\n", si.numAllocations() - 1);
+    for (unsigned i = 0; i < si.numAllocations() - 1; i++) {
         if (isFunction) {
             if (i == 0)
                 fprintf(stderr, "  scope chain: ");
