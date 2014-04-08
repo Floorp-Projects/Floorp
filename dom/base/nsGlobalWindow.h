@@ -372,7 +372,7 @@ public:
 
   virtual bool IsBlackForCC(bool aTracingNeeded = true);
 
-  static JSObject* OuterObject(JSContext* aCx, JS::HandleObject aObj);
+  static JSObject* OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj);
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();
