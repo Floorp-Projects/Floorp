@@ -2705,9 +2705,10 @@ class CGWrapWithCacheMethod(CGAbstractMethod):
             '             "nsISupports must be on our primary inheritance chain");\n')
         return """%s
 %s
+  MOZ_ASSERT(js::IsObjectInContextCompartment(aScope, aCx));
   JS::Rooted<JSObject*> parent(aCx,
     GetRealParentObject(aObject,
-                        WrapNativeParent(aCx, aScope, aObject->GetParentObject())));
+                        WrapNativeParent(aCx, aObject->GetParentObject())));
   if (!parent) {
     return nullptr;
   }
