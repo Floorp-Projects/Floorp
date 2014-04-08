@@ -1405,7 +1405,8 @@ public:
                                      FlexItem& aItem);
 
   void EnterAlignPackingSpace(const FlexLine& aLine,
-                              const FlexItem& aItem);
+                              const FlexItem& aItem,
+                              const FlexboxAxisTracker& aAxisTracker);
 
   // Resets our position to the cross-start edge of this line.
   inline void ResetPosition() { mPosition = 0; }
@@ -1830,6 +1831,16 @@ MainAxisPositionTracker::
     }
   }
 
+  // If our main axis is (internally) reversed, swap the justify-content
+  // "flex-start" and "flex-end" behaviors:
+  if (aAxisTracker.AreAxesInternallyReversed()) {
+    if (mJustifyContent == NS_STYLE_JUSTIFY_CONTENT_FLEX_START) {
+      mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_END;
+    } else if (mJustifyContent == NS_STYLE_JUSTIFY_CONTENT_FLEX_END) {
+      mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
+    }
+  }
+
   // Figure out how much space we'll set aside for auto margins or
   // packing spaces, and advance past any leading packing-space.
   if (mNumAutoMarginsInMainAxis == 0 &&
@@ -1985,6 +1996,16 @@ CrossAxisPositionTracker::
       mAlignContent = NS_STYLE_ALIGN_CONTENT_FLEX_START;
     } else if (mAlignContent == NS_STYLE_ALIGN_CONTENT_SPACE_AROUND) {
       mAlignContent = NS_STYLE_ALIGN_CONTENT_CENTER;
+    }
+  }
+
+  // If our cross axis is (internally) reversed, swap the align-content
+  // "flex-start" and "flex-end" behaviors:
+  if (aAxisTracker.AreAxesInternallyReversed()) {
+    if (mAlignContent == NS_STYLE_ALIGN_CONTENT_FLEX_START) {
+      mAlignContent = NS_STYLE_ALIGN_CONTENT_FLEX_END;
+    } else if (mAlignContent == NS_STYLE_ALIGN_CONTENT_FLEX_END) {
+      mAlignContent = NS_STYLE_ALIGN_CONTENT_FLEX_START;
     }
   }
 
@@ -2234,7 +2255,8 @@ SingleLineCrossAxisPositionTracker::
 void
 SingleLineCrossAxisPositionTracker::
   EnterAlignPackingSpace(const FlexLine& aLine,
-                         const FlexItem& aItem)
+                         const FlexItem& aItem,
+                         const FlexboxAxisTracker& aAxisTracker)
 {
   // We don't do align-self alignment on items that have auto margins
   // in the cross axis.
@@ -2242,12 +2264,26 @@ SingleLineCrossAxisPositionTracker::
     return;
   }
 
-  switch (aItem.GetAlignSelf()) {
+  uint8_t alignSelf = aItem.GetAlignSelf();
+  // NOTE: 'stretch' behaves like 'flex-start' once we've stretched any
+  // auto-sized items (which we've already done).
+  if (alignSelf == NS_STYLE_ALIGN_ITEMS_STRETCH) {
+    alignSelf = NS_STYLE_ALIGN_ITEMS_FLEX_START;
+  }
+
+  // If our cross axis is (internally) reversed, swap the align-self
+  // "flex-start" and "flex-end" behaviors:
+  if (aAxisTracker.AreAxesInternallyReversed()) {
+    if (alignSelf == NS_STYLE_ALIGN_ITEMS_FLEX_START) {
+      alignSelf = NS_STYLE_ALIGN_ITEMS_FLEX_END;
+    } else if (alignSelf == NS_STYLE_ALIGN_ITEMS_FLEX_END) {
+      alignSelf = NS_STYLE_ALIGN_ITEMS_FLEX_START;
+    }
+  }
+
+  switch (alignSelf) {
     case NS_STYLE_ALIGN_ITEMS_FLEX_START:
-    case NS_STYLE_ALIGN_ITEMS_STRETCH:
       // No space to skip over -- we're done.
-      // NOTE: 'stretch' behaves like 'flex-start' once we've stretched any
-      // auto-sized items (which we've already done).
       break;
     case NS_STYLE_ALIGN_ITEMS_FLEX_END:
       mPosition += aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis);
@@ -2788,7 +2824,7 @@ FlexLine::PositionItemsInCrossAxis(nscoord aLineStartPosition,
     nscoord itemCrossBorderBoxSize =
       item->GetCrossSize() +
       item->GetBorderPaddingSizeInAxis(aAxisTracker.GetCrossAxis());
-    lineCrossAxisPosnTracker.EnterAlignPackingSpace(*this, *item);
+    lineCrossAxisPosnTracker.EnterAlignPackingSpace(*this, *item, aAxisTracker);
     lineCrossAxisPosnTracker.EnterMargin(item->GetMargin());
     lineCrossAxisPosnTracker.EnterChildFrame(itemCrossBorderBoxSize);
 
