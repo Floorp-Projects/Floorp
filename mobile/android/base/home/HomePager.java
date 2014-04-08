@@ -16,6 +16,7 @@ import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.home.HomeAdapter.OnAddPanelListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -285,6 +286,12 @@ public class HomePager extends ViewPager {
 
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
 
+        // Disable any fragment loading until we have the initial
+        // panel selection done. Store previous value to restore
+        // it if necessary once the UI is fully updated.
+        final boolean canLoadHint = adapter.getCanLoadHint();
+        adapter.setCanLoadHint(false);
+
         // Destroy any existing panels currently loaded
         // in the pager.
         setAdapter(null);
@@ -341,6 +348,20 @@ public class HomePager extends ViewPager {
             } else {
                 setCurrentItem(mDefaultPageIndex, false);
             }
+        }
+
+        // If the load hint was originally true, this means the pager
+        // is not animating and it's fine to restore the load hint back.
+        if (canLoadHint) {
+            // The selection is updated asynchronously so we need to post to
+            // UI thread to give the pager time to commit the new page selection
+            // internally and load the right initial panel.
+            ThreadUtils.getUiHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    adapter.setCanLoadHint(true);
+                }
+            });
         }
     }
 

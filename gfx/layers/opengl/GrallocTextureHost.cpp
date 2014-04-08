@@ -394,7 +394,6 @@ GrallocTextureHostOGL::GetAsSurface() {
 
 TemporaryRef<gfx::DataSourceSurface>
 GrallocTextureSourceOGL::GetAsSurface() {
-  MOZ_ASSERT(gl());
   if (!IsValid()) {
     return nullptr;
   }

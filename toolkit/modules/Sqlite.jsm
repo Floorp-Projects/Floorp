@@ -111,7 +111,7 @@ function openConnection(options) {
       log.warn("Could not open connection: " + status);
       deferred.reject(new Error("Could not open connection: " + status));
     }
-    log.warn("Connection opened");
+    log.info("Connection opened");
     try {
       deferred.resolve(
         new OpenedConnection(connection.QueryInterface(Ci.mozIStorageAsyncConnection), basename, number,
@@ -124,6 +124,83 @@ function openConnection(options) {
   return deferred.promise;
 }
 
+/**
+ * Creates a clone of an existing and open Storage connection.  The clone has
+ * the same underlying characteristics of the original connection and is
+ * returned in form of on OpenedConnection handle.
+ *
+ * The following parameters can control the cloned connection:
+ *
+ *   connection -- (mozIStorageAsyncConnection) The original Storage connection
+ *       to clone.  It's not possible to clone connections to memory databases.
+ *
+ *   readOnly -- (boolean) - If true the clone will be read-only.  If the
+ *       original connection is already read-only, the clone will be, regardless
+ *       of this option.  If the original connection is using the shared cache,
+ *       this parameter will be ignored and the clone will be as privileged as
+ *       the original connection.
+ *   shrinkMemoryOnConnectionIdleMS -- (integer) If defined, the connection
+ *       will attempt to minimize its memory usage after this many
+ *       milliseconds of connection idle. The connection is idle when no
+ *       statements are executing. There is no default value which means no
+ *       automatic memory minimization will occur. Please note that this is
+ *       *not* a timer on the idle service and this could fire while the
+ *       application is active.
+ *
+ *
+ * @param options
+ *        (Object) Parameters to control connection and clone options.
+ *
+ * @return Promise<OpenedConnection>
+ */
+function cloneStorageConnection(options) {
+  let log = Log.repository.getLogger("Sqlite.ConnectionCloner");
+
+  let source = options && options.connection;
+  if (!source) {
+    throw new TypeError("connection not specified in clone options.");
+  }
+  if (!source instanceof Ci.mozIStorageAsyncConnection) {
+    throw new TypeError("Connection must be a valid Storage connection.")
+  }
+
+  let openedOptions = {};
+
+  if ("shrinkMemoryOnConnectionIdleMS" in options) {
+    if (!Number.isInteger(options.shrinkMemoryOnConnectionIdleMS)) {
+      throw new TypeError("shrinkMemoryOnConnectionIdleMS must be an integer. " +
+                          "Got: " + options.shrinkMemoryOnConnectionIdleMS);
+    }
+    openedOptions.shrinkMemoryOnConnectionIdleMS =
+      options.shrinkMemoryOnConnectionIdleMS;
+  }
+
+  let path = source.databaseFile.path;
+  let basename = OS.Path.basename(path);
+  let number = connectionCounters.get(basename) || 0;
+  connectionCounters.set(basename, number + 1);
+  let identifier = basename + "#" + number;
+
+  log.info("Cloning database: " + path + " (" + identifier + ")");
+  let deferred = Promise.defer();
+
+  source.asyncClone(!!options.readOnly, (status, connection) => {
+    if (!connection) {
+      log.warn("Could not clone connection: " + status);
+      deferred.reject(new Error("Could not clone connection: " + status));
+    }
+    log.info("Connection cloned");
+    try {
+      let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);
+      deferred.resolve(new OpenedConnection(conn, basename, number,
+                                            openedOptions));
+    } catch (ex) {
+      log.warn("Could not clone database: " + CommonUtils.exceptionStr(ex));
+      deferred.reject(ex);
+    }
+  });
+  return deferred.promise;
+}
 
 /**
  * Handle on an opened SQLite database.
@@ -291,6 +368,35 @@ OpenedConnection.prototype = Object.freeze({
     this._inProgressTransaction = null;
 
     return deferred.promise;
+  },
+
+  /**
+   * Clones this connection to a new Sqlite one.
+   *
+   * The following parameters can control the cloned connection:
+   *
+   * @param readOnly
+   *        (boolean) - If true the clone will be read-only.  If the original
+   *        connection is already read-only, the clone will be, regardless of
+   *        this option.  If the original connection is using the shared cache,
+   *        this parameter will be ignored and the clone will be as privileged as
+   *        the original connection.
+   *
+   * @return Promise<OpenedConnection>
+   */
+  clone: function (readOnly=false) {
+    this._ensureOpen();
+
+    this._log.debug("Request to clone connection.");
+
+    let options = {
+      connection: this._connection,
+      readOnly: readOnly,
+    };
+    if (this._idleShrinkMS)
+      options.shrinkMemoryOnConnectionIdleMS = this._idleShrinkMS;
+
+    return cloneStorageConnection(options);
   },
 
   _finalize: function (deferred) {
@@ -834,4 +940,5 @@ OpenedConnection.prototype = Object.freeze({
 
 this.Sqlite = {
   openConnection: openConnection,
+  cloneStorageConnection: cloneStorageConnection
 };

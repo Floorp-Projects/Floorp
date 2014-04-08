@@ -922,10 +922,46 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-popup-arrow");
   background: transparent;
   border: none;
-  transition: opacity 300ms;
+  transform: scale(.7);
+  opacity: 0;
+  transition-property: transform, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
   /* The popup inherits -moz-image-region from the button, must reset it */
   -moz-image-region: auto;
 }
+
+#BMB_bookmarksPopup[animate="open"] {
+  transform: none;
+  opacity: 1.0;
+}
+
+#BMB_bookmarksPopup[arrowposition="after_start"] {
+  transform-origin: 20px top;
+}
+
+#BMB_bookmarksPopup[arrowposition="after_end"] {
+  transform-origin: calc(100% - 20px) top;
+}
+
+#BMB_bookmarksPopup[arrowposition="before_start"] {
+  transform-origin: 20px bottom;
+}
+
+#BMB_bookmarksPopup[arrowposition="before_end"] {
+  transform-origin: calc(100% - 20px) bottom;
+}
+
+#BMB_bookmarksPopup[arrowposition="after_start"][animate="cancel"],
+#BMB_bookmarksPopup[arrowposition="before_end"][animate="cancel"] {
+  transform: scale(.7) skew(30deg, 20deg);
+}
+
+#BMB_bookmarksPopup[arrowposition="after_end"][animate="cancel"],
+#BMB_bookmarksPopup[arrowposition="before_start"][animate="cancel"] {
+  transform: scale(.7) skew(-30deg, -20deg);
+}
+
 
 /* Customize mode */
 #navigator-toolbox,

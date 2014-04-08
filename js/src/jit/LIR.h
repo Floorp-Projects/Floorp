@@ -878,18 +878,26 @@ class LCallInstructionHelper : public LInstructionHelper<Defs, Operands, Temps>
 
 class LRecoverInfo : public TempObject
 {
-    MResumePoint *mir_;
+  public:
+    typedef Vector<MResumePoint *, 2, IonAllocPolicy> Instructions;
+
+  private:
+    // List of instructions needed to recover the stack frames.
+    // Outer frames are stored before inner frames.
+    Instructions instructions_;
 
     // Cached offset where this resume point is encoded.
     RecoverOffset recoverOffset_;
 
-    LRecoverInfo(MResumePoint *mir);
+    LRecoverInfo(TempAllocator &alloc);
+    bool init(MResumePoint *mir);
 
   public:
     static LRecoverInfo *New(MIRGenerator *gen, MResumePoint *mir);
 
+    // Resume point of the inner most function.
     MResumePoint *mir() const {
-        return mir_;
+        return instructions_.back();
     }
     RecoverOffset recoverOffset() const {
         return recoverOffset_;
@@ -897,6 +905,13 @@ class LRecoverInfo : public TempObject
     void setRecoverOffset(RecoverOffset offset) {
         JS_ASSERT(recoverOffset_ == INVALID_RECOVER_OFFSET);
         recoverOffset_ = offset;
+    }
+
+    MResumePoint **begin() {
+        return instructions_.begin();
+    }
+    MResumePoint **end() {
+        return instructions_.end();
     }
 };
 
