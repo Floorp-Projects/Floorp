@@ -562,6 +562,32 @@ private:
                                  was not set yet. we still need to abort animations. */
   };
 
+  // State related to a single touch block. Does not persist across touch blocks.
+  struct TouchBlockState {
+
+    TouchBlockState()
+      :  mAllowedTouchBehaviorSet(false),
+         mPreventDefault(false),
+         mPreventDefaultSet(false)
+    {}
+
+    // Values of allowed touch behavior for touch points of this touch block.
+    // Since there are maybe a few current active touch points per time (multitouch case)
+    // and each touch point should have its own value of allowed touch behavior- we're
+    // keeping an array of allowed touch behavior values, not the single value.
+    nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
+
+    // Specifies whether mAllowedTouchBehaviors is set for this touch events block.
+    bool mAllowedTouchBehaviorSet;
+
+    // Flag used to specify that content prevented the default behavior of this
+    // touch events block.
+    bool mPreventDefault;
+
+    // Specifies whether mPreventDefault property is set for this touch events block.
+    bool mPreventDefaultSet;
+  };
+
   /*
    * Returns whether current touch behavior values allow zooming.
    */
@@ -725,21 +751,8 @@ private:
   // and we don't want to queue the events back up again.
   bool mHandlingTouchQueue;
 
-  // Values of allowed touch behavior for current touch points.
-  // Since there are maybe a few current active touch points per time (multitouch case)
-  // and each touch point should have its own value of allowed touch behavior- we're
-  // keeping an array of allowed touch behavior values, not the single value.
-  nsTArray<TouchBehaviorFlags> mAllowedTouchBehaviors;
-
-  // Specifies whether mAllowedTouchBehaviors is set for current touch events block.
-  bool mAllowedTouchBehaviorSet;
-
-  // Flag used to specify that content prevented the default behavior of the current
-  // touch events block.
-  bool mPreventDefault;
-
-  // Specifies whether mPreventDefault property is set for current touch events block.
-  bool mPreventDefaultSet;
+  // Stores information about the current touch block.
+  TouchBlockState mTouchBlockState;
 
   // Extra offset to add in SampleContentTransformForFrame for testing
   CSSPoint mTestAsyncScrollOffset;
