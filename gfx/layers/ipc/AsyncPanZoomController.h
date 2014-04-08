@@ -648,6 +648,9 @@ private:
   // changes, as it corresponds to the scale portion of those transforms.
   void UpdateTransformScale();
 
+  // Helper function for OnSingleTapUp() and OnSingleTapConfirmed().
+  nsEventStatus GenerateSingleTap(const ScreenIntPoint& aPoint, mozilla::Modifiers aModifiers);
+
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
   PCompositorParent* mCrossProcessCompositorParent;
