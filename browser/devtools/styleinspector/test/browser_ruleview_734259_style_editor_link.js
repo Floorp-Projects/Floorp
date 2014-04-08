@@ -17,6 +17,9 @@ const STYLESHEET_URL = "data:text/css,"+encodeURIComponent(
    "color: blue",
    "}"].join("\n"));
 
+const EXTERNAL_STYLESHEET_FILE_NAME = "browser_ruleview_734259_style_editor_link.css"
+const EXTERNAL_STYLESHEET_URL = TEST_BASE_HTTP + EXTERNAL_STYLESHEET_FILE_NAME;
+
 const DOCUMENT_URL = "data:text/html,"+encodeURIComponent(
   ['<html>' +
    '<head>' +
@@ -28,6 +31,7 @@ const DOCUMENT_URL = "data:text/html,"+encodeURIComponent(
    'font-size: 14pt; font-family: helvetica, sans-serif; color: #AAA">',
    '</style>',
    '<link rel="stylesheet" type="text/css" href="'+STYLESHEET_URL+'">',
+   '<link rel="stylesheet" type="text/css" href="'+EXTERNAL_STYLESHEET_URL+'">',
    '</head>',
    '<body>',
    '<h1>Some header text</h1>',
@@ -111,7 +115,7 @@ function testInlineStyleSheet()
     });
   });
 
-  let link = getLinkByIndex(2);
+  let link = getLinkByIndex(4);
   link.scrollIntoView();
   link.click();
 }
@@ -127,10 +131,24 @@ function testExternalStyleSheet(toolbox) {
   });
 
   toolbox.selectTool("inspector").then(function () {
+    testRuleViewLinkLabel();
     let link = getLinkByIndex(1);
     link.scrollIntoView();
     link.click();
   });
+}
+
+function testRuleViewLinkLabel()
+{
+  let link = getLinkByIndex(2);
+  let labelElem = link.querySelector(".source-link-label");
+  let value = labelElem.getAttribute("value");
+  let tooltipText = labelElem.getAttribute("tooltiptext");
+
+  is(value, EXTERNAL_STYLESHEET_FILE_NAME + ":1",
+    "rule view stylesheet display value matches filename and line number");
+  is(tooltipText, EXTERNAL_STYLESHEET_URL,
+    "rule view stylesheet tooltip text matches the full URI path");
 }
 
 function validateStyleEditorSheet(aEditor, aExpectedSheetIndex)

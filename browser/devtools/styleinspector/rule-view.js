@@ -488,16 +488,21 @@ Rule.prototype = {
    * for this rule's style sheet.
    *
    * @return {Promise}
-   *         Promise which resolves with location as a string.
+   *         Promise which resolves with location as an object containing
+   *         both the full and short version of the source string.
    */
-  getOriginalSourceString: function() {
-    if (this._originalSourceString) {
-      return promise.resolve(this._originalSourceString);
+  getOriginalSourceStrings: function() {
+    if (this._originalSourceStrings) {
+      return promise.resolve(this._originalSourceStrings);
     }
     return this.domRule.getOriginalLocation().then(({href, line}) => {
-      let string = CssLogic.shortSource({href: href}) + ":" + line;
-      this._originalSourceString = string;
-      return string;
+      let sourceStrings = {
+        full: href + ":" + line,
+        short: CssLogic.shortSource({href: href}) + ":" + line
+      };
+
+      this._originalSourceStrings = sourceStrings;
+      return sourceStrings;
     });
   },
 
@@ -1748,13 +1753,17 @@ RuleEditor.prototype = {
   {
     let sourceLabel = this.element.querySelector(".source-link-label");
     sourceLabel.setAttribute("value", this.rule.title);
-    sourceLabel.setAttribute("tooltiptext", this.rule.title);
+
+    let sourceHref = (this.rule.sheet && this.rule.sheet.href) ?
+      this.rule.sheet.href : this.rule.title;
+
+    sourceLabel.setAttribute("tooltiptext", sourceHref);
 
     let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     if (showOrig && this.rule.domRule.type != ELEMENT_STYLE) {
-      this.rule.getOriginalSourceString().then((string) => {
-        sourceLabel.setAttribute("value", string);
-        sourceLabel.setAttribute("tooltiptext", string);
+      this.rule.getOriginalSourceStrings().then((strings) => {
+        sourceLabel.setAttribute("value", strings.short);
+        sourceLabel.setAttribute("tooltiptext", strings.full);
       })
     }
   },

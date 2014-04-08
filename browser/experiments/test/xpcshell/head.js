@@ -147,61 +147,6 @@ function loadAddonManager() {
   startupManager();
 }
 
-// Install addon and return a Promise<boolean> that is
-// resolve with true on success, false otherwise.
-function installAddon(url, hash) {
-  let deferred = Promise.defer();
-  let success = () => deferred.resolve(true);
-  let fail = () => deferred.resolve(false);
-  let listener = {
-    onDownloadCancelled: fail,
-    onDownloadFailed: fail,
-    onInstallCancelled: fail,
-    onInstallFailed: fail,
-    onInstallEnded: success,
-  };
-
-  let installCallback = install => {
-    install.addListener(listener);
-    install.install();
-  };
-
-  AddonManager.getInstallForURL(url, installCallback,
-                     "application/x-xpinstall", hash);
-
-  return deferred.promise;
-}
-
-// Uninstall addon and return a Promise<boolean> that is
-// resolve with true on success, false otherwise.
-function uninstallAddon(id) {
-  let deferred = Promise.defer();
-
-  AddonManager.getAddonByID(id, addon => {
-    if (!addon) {
-      deferred.resolve(false);
-    }
-
-    let listener = {};
-    let handler = addon => {
-      if (addon.id !== id) {
-        return;
-      }
-
-      AddonManager.removeAddonListener(listener);
-      deferred.resolve(true);
-    };
-
-    listener.onUninstalled = handler;
-    listener.onDisabled = handler;
-
-    AddonManager.addAddonListener(listener);
-    addon.uninstall();
-  });
-
-  return deferred.promise;
-}
-
 function getExperimentAddons() {
   let deferred = Promise.defer();
 

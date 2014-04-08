@@ -1,5 +1,6 @@
 package org.mozilla.gecko.tests;
 
+import org.json.JSONObject;
 
 public class testCheck2 extends PixelTest {
     @Override
@@ -9,6 +10,17 @@ public class testCheck2 extends PixelTest {
 
     public void testCheck2() {
         String url = getAbsoluteUrl("/startup_test/fennecmark/cnn/cnn.com/index.html");
+
+        // Enable double-tap zooming
+        JSONObject jsonPref = new JSONObject();
+        try {
+            jsonPref.put("name", "browser.ui.zoom.force-user-scalable");
+            jsonPref.put("type", "bool");
+            jsonPref.put("value", true);
+            setPreferenceAndWaitForChange(jsonPref);
+        } catch (Exception ex) {
+            mAsserter.ok(false, "exception in testCheck2", ex.toString());
+        }
 
         blockForGeckoReady();
         loadAndPaint(url);

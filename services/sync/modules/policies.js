@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Status",
                                   "resource://services-sync/status.js");

@@ -139,20 +139,29 @@ function sanityCheckTransactionHistory() {
     do_check_null(PT.topRedoEntry);
 }
 
+function getTransactionsHistoryState() {
+  let history = [];
+  for (let i = 0; i < PT.length; i++) {
+    history.push(PT.entry(i));
+  }
+  return [history, PT.undoPosition];
+}
+
 function ensureUndoState(aExpectedEntries = [], aExpectedUndoPosition = 0) {
   // ensureUndoState is called in various places during this test, so it's
   // a good places to sanity-check the transaction-history APIs in all
   // cases.
   sanityCheckTransactionHistory();
 
-  do_check_eq(PT.length, aExpectedEntries.length);
-  do_check_eq(PT.undoPosition, aExpectedUndoPosition);
+  let [actualEntries, actualUndoPosition] = getTransactionsHistoryState();
+  do_check_eq(actualEntries.length, aExpectedEntries.length);
+  do_check_eq(actualUndoPosition, aExpectedUndoPosition);
 
   function checkEqualEntries(aExpectedEntry, aActualEntry) {
     do_check_eq(aExpectedEntry.length, aActualEntry.length);
     aExpectedEntry.forEach( (t, i) => do_check_eq(t, aActualEntry[i]) );
   }
-  aExpectedEntries.forEach( (e, i) => checkEqualEntries(e, PT.entry(i)) );
+  aExpectedEntries.forEach( (e, i) => checkEqualEntries(e, actualEntries[i]) );
 }
 
 function ensureItemsAdded(...items) {
@@ -236,6 +245,81 @@ function* createTestFolderInfo(aTitle = "Test Folder") {
          , title: "Test Folder" };
 }
 
+add_task(function* test_invalid_transact_calls() {
+  try {
+    PT.transact({ execute: () => {}, undo: () => {}, redo: () => {}});
+    do_throw("transact shouldn't accept 'external' transactions");
+    PT.transact(null);
+    do_throw("transact should throw for invalid arguments");
+  }
+  catch(ex) { }
+});
+
+add_task(function* test_recycled_transactions() {
+  function ensureTransactThrowsFor(aTransaction) {
+    let [txns, undoPosition] = getTransactionsHistoryState();
+    try {
+      yield PT.transact(aTransaction);
+      do_throw("Shouldn't be able to use the same transaction twice");
+    }
+    catch(ex) { }
+    ensureUndoState(txns, undoPosition);
+  }
+
+  let txn_a = PT.NewFolder(yield createTestFolderInfo());
+  ensureTransactThrowsFor(txn_a);
+  yield PT.transact(txn_a);
+  ensureUndoState([[txn_a]], 0);
+
+  yield PT.undo();
+  ensureUndoState([[txn_a]], 1);
+  ensureTransactThrowsFor(txn_a);
+
+  yield PT.clearTransactionsHistory();
+  ensureUndoState();
+  ensureTransactThrowsFor(txn_a);
+
+  let txn_b = PT.NewFolder(yield createTestFolderInfo());
+  yield PT.transact(function* () {
+    try {
+      yield txn_a;
+      do_throw("Shouldn't be able to use the same transaction twice");
+    }
+    catch(ex) { }
+    ensureUndoState();
+    yield txn_b;
+  });
+  ensureUndoState([[txn_b]], 0);
+
+  yield PT.undo();
+  ensureUndoState([[txn_b]], 1);
+  ensureTransactThrowsFor(txn_a);
+  ensureTransactThrowsFor(txn_b);
+
+  yield PT.clearTransactionsHistory();
+  ensureUndoState();
+  observer.reset();
+});
+
+add_task(function* test_nested_batches() {
+  let txn_a = PT.NewFolder(yield createTestFolderInfo()),
+      txn_b = PT.NewFolder(yield createTestFolderInfo());
+  yield PT.transact(function* () {
+    yield txn_a;
+    yield (function*() {
+      yield txn_b;
+    }());
+  });
+  ensureUndoState([[txn_b, txn_a]], 0);
+
+  yield PT.undo();
+  ensureUndoState([[txn_b, txn_a]], 1);
+
+  yield PT.clearTransactionsHistory();
+  ensureUndoState();
+  observer.reset();
+});
+
 add_task(function* test_new_folder_with_annotation() {
   const ANNO = { name: "TestAnno", value: "TestValue" };
   let folder_info = yield createTestFolderInfo();
@@ -315,7 +399,7 @@ add_task(function* test_merge_create_folder_and_item() {
                 , title: "Test Bookmark"
                 , index: bmStartIndex };
 
-  let { folderTxn, bkmTxn } =  yield PT.transact( function* () {
+  let { folderTxn, bkmTxn } = yield PT.transact( function* () {
     let folderTxn = PT.NewFolder(folder_info);
     folder_info.GUID = bm_info.parentGUID = yield folderTxn;
     let bkmTxn = PT.NewBookmark(bm_info);

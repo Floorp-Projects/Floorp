@@ -86,27 +86,10 @@
       </xul:hbox>
     </content>
     <implementation>
-      <field name="STATE_OFFER" readonly="true">0</field>
-      <field name="STATE_TRANSLATING" readonly="true">1</field>
-      <field name="STATE_TRANSLATED" readonly="true">2</field>
-      <field name="STATE_ERROR" readonly="true">3</field>
-
       <property name="state"
                 onget="return this._getAnonElt('translationStates').selectedIndex;"
                 onset="this._getAnonElt('translationStates').selectedIndex = val;"/>
 
-      <!-- Initialize the infobar with a translation object exposing these
-           properties:
-            - supportedSourceLanguages, array of supported source language codes
-            - supportedTargetLanguages, array of supported target language codes
-            - defaultTargetLanguage, code of the language to use by default for
-              translation.
-            - translate, method starting the translation of the current page.
-              Returns a promise.
-            - showOriginalContent, method showing the original page content.
-            - showTranslatedContent, method showing the translation for an
-              already translated page whose original content is shown.
-      -->
       <method name="init">
         <parameter name="aTranslation"/>
         <body>
@@ -116,6 +99,7 @@
                            .getService(Ci.nsIStringBundleService)
                            .createBundle("chrome://global/locale/languageNames.properties");
 
+            // Fill the lists of supported source languages.
             let detectedLanguage = this._getAnonElt("detectedLanguage");
             let fromLanguage = this._getAnonElt("fromLanguage");
             for (let code of this.translation.supportedSourceLanguages) {
@@ -123,10 +107,24 @@
               detectedLanguage.appendItem(name, code);
               fromLanguage.appendItem(name, code);
             }
+            detectedLanguage.value = this.translation.detectedLanguage;
 
+            // translatedFrom is only set if we have already translated this page.
+            if (aTranslation.translatedFrom)
+              fromLanguage.value = aTranslation.translatedFrom;
+
+            // Fill the list of supporter target languages.
             let toLanguage = this._getAnonElt("toLanguage");
             for (let code of this.translation.supportedTargetLanguages)
               toLanguage.appendItem(bundle.GetStringFromName(code), code);
+
+            if (aTranslation.translatedTo)
+              toLanguage.value = aTranslation.translatedTo;
+
+            if (aTranslation.state)
+              this.state = aTranslation.state;
+
+            this._handleButtonHiding(aTranslation.originalShown);
           ]]>
         </body>
       </method>
@@ -138,34 +136,29 @@
         </body>
       </method>
 
-
-      <field name="_detectedLanguage">""</field>
-      <property name="detectedLanguage" onget="return this._detectedLanguage;">
-        <setter><![CDATA[
-          this._getAnonElt("detectedLanguage").value = val;
-          this._detectedLanguage = val;
-          return val;
-        ]]></setter>
-      </property>
-
       <method name="translate">
         <body>
           <![CDATA[
-            if (this.state == this.STATE_OFFER) {
+            if (this.state == this.translation.STATE_OFFER) {
               this._getAnonElt("fromLanguage").value =
                 this._getAnonElt("detectedLanguage").value;
               this._getAnonElt("toLanguage").value =
                 this.translation.defaultTargetLanguage;
             }
 
-            this._getAnonElt("showOriginal").hidden = false;
-            this._getAnonElt("showTranslation").hidden = true;
-
-            this.state = this.STATE_TRANSLATING;
+            this._handleButtonHiding(false);
             this.translation.translate(this._getAnonElt("fromLanguage").value,
-                                       this._getAnonElt("toLanguage").value)
-                .then(() => { this.state = this.STATE_TRANSLATED; },
-                      () => { this.state = this.STATE_ERROR; });
+                                       this._getAnonElt("toLanguage").value);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_handleButtonHiding">
+        <parameter name="aOriginalShown"/>
+        <body>
+          <![CDATA[
+            this._getAnonElt("showOriginal").hidden = aOriginalShown;
+            this._getAnonElt("showTranslation").hidden = !aOriginalShown;
           ]]>
         </body>
       </method>
@@ -173,9 +166,7 @@
       <method name="showOriginal">
         <body>
           <![CDATA[
-            this._getAnonElt("showOriginal").hidden = true;
-            this._getAnonElt("showTranslation").hidden = false;
-
+            this._handleButtonHiding(true);
             this.translation.showOriginalContent();
           ]]>
         </body>
@@ -184,9 +175,7 @@
       <method name="showTranslation">
         <body>
           <![CDATA[
-            this._getAnonElt("showOriginal").hidden = false;
-            this._getAnonElt("showTranslation").hidden = true;
-
+            this._handleButtonHiding(false);
             this.translation.showTranslatedContent();
           ]]>
         </body>

@@ -280,7 +280,7 @@ public final class Distribution {
      * Returns null if there is no distribution directory or the file
      * doesn't exist. Ensures init first.
      */
-    private File getDistributionFile(String name) {
+    public File getDistributionFile(String name) {
         Log.i(LOGTAG, "Getting file from distribution.");
         if (this.state == STATE_UNKNOWN) {
             if (!this.doInit()) {

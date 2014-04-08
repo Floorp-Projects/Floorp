@@ -183,6 +183,10 @@ this.BrowserIDManager.prototype = {
 
     // Reset the world before we do anything async.
     this.whenReadyToAuthenticate = Promise.defer();
+    this.whenReadyToAuthenticate.promise.then(null, (err) => {
+      this._log.error("Could not authenticate: " + err);
+    });
+
     this._shouldHaveSyncKeyBundle = false;
     this._authFailureReason = null;
 

@@ -10,6 +10,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const FAKE_SERVER_URL = "http://dummy:9000/";
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);

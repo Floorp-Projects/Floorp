@@ -79,24 +79,12 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
  * use it as the input for another transaction.  See |transact| for the details.
  *
  * "Custom" transactions
- * ----------------------
- * While it is technically possible to pass in your own transactions to
- * |transact|, it is highly recommended to avoid that for two reasons:
- * (*) Slippery memory leak - A transaction implemented in the context of a
- *     window reference that window through its prototype (and may also
- *     do so due to js closures, prototypes for non-primitives and so on).
- *     Because this module strongly references all transactions until they
- *     are cleared from the transactions history (if at all), such a transaction
- *     would block the release of the window object (along with a lot of other
- *     stuff) from memory when the window is closed.
- * (*) The Places Bookmarks API is due for a major overhaul - We expect
- *     nsINavBookmarks to be replaced by an asynchronous interface sometime in
- *     the near future.  This API is expected to remain mostly unchanged in
- *     that process.
- *
- * It's almost always possible to avoid a custom transaction by batching the
- * standard transactions.  However, if you must implement a custom transaction,
- * do so in a JS module.
+ * ---------------------
+ * In the legacy transactions API it was possible to pass-in transactions
+ * implemented "externally".  For various reason this isn't allowed anymore:
+ * transact throws right away if one attempts to pass a transaction that was not
+ * created by this module.  However, it's almost always possible to achieve the
+ * same functionality with the batching technique described above.
  *
  * The transactions-history structure
  * ----------------------------------
@@ -164,6 +152,44 @@ TransactionsHistory.__proto__ = {
   get topRedoEntry() this.undoPosition > 0 ?
                      this[this.undoPosition - 1] : null,
 
+  // Outside of this module, the API of transactions is inaccessible, and so
+  // are any internal properties.  To achieve that, transactions are proxified
+  // in their constructors.  This maps the proxies to their respective raw
+  // objects.
+  proxifiedToRaw: new WeakMap(),
+
+  /**
+   * Proxify a transaction object for consumers.
+   * @param aRawTransaction
+   *        the raw transaction object.
+   * @return the proxified transaction object.
+   * @see getRawTransaction for retrieving the raw transaction.
+   */
+  proxifyTransaction: function (aRawTransaction) {
+    let proxy = Object.freeze({});
+    this.proxifiedToRaw.set(proxy, aRawTransaction);
+    return proxy;
+  },
+
+  /**
+   * Check if the given object is a the proxy object for some transaction.
+   * @param aValue
+   *        any JS value.
+   * @return true if aValue is the proxy object for some transaction, false
+   * otherwise.
+   */
+  isProxifiedTransactionObject:
+  function (aValue) this.proxifiedToRaw.has(aValue),
+
+  /**
+   * Get the raw transaction for the given proxy.
+   * @param aProxy
+   *        the proxy object
+   * @return the transaction proxified by aProxy; |undefined| is returned if
+   * aProxy is not a proxified transaction.
+   */
+  getRawTransaction: function (aProxy) this.proxifiedToRaw.get(aProxy),
+
   /**
    * Undo the top undo entry, if any, and update the undo position accordingly.
    */
@@ -174,7 +200,7 @@ TransactionsHistory.__proto__ = {
 
     for (let transaction of entry) {
       try {
-        yield transaction.undo();
+        yield TransactionsHistory.getRawTransaction(transaction).undo();
       }
       catch(ex) {
         // If one transaction is broken, it's not safe to work with any other
@@ -198,7 +224,7 @@ TransactionsHistory.__proto__ = {
       return;
 
     for (let i = entry.length - 1; i >= 0; i--) {
-      let transaction = entry[i];
+      let transaction = TransactionsHistory.getRawTransaction(entry[i]);
       try {
         if (transaction.redo)
           yield transaction.redo();
@@ -222,20 +248,24 @@ TransactionsHistory.__proto__ = {
    * Add a transaction either as a new entry, if forced or if there are no undo
    * entries, or to the top undo entry.
    *
-   * @param aTransaction
-   *        the transaction object to be added to the transaction history.
+   * @param aProxifiedTransaction
+   *        the proxified transaction object to be added to the transaction
+   *        history.
    * @param [optional] aForceNewEntry
    *        Force a new entry for the transaction. Default: false.
    *        If false, an entry will we created only if there's no undo entry
    *        to extend.
    */
-  add: function (aTransaction, aForceNewEntry = false) {
+  add: function (aProxifiedTransaction, aForceNewEntry = false) {
+    if (!this.isProxifiedTransactionObject(aProxifiedTransaction))
+      throw new Error("aProxifiedTransaction is not a proxified transaction");
+
     if (this.length == 0 || aForceNewEntry) {
       this.clearRedoEntries();
-      this.unshift([aTransaction]);
+      this.unshift([aProxifiedTransaction]);
     }
     else {
-      this[this.undoPosition].unshift(aTransaction);
+      this[this.undoPosition].unshift(aProxifiedTransaction);
     }
     updateCommandsOnActiveWindow();
   },
@@ -279,13 +309,19 @@ function Serialize(aTask) {
                                   .then(null, Components.utils.reportError);
 }
 
+// Transactions object should never be recycled (that is, |execute| should
+// only be called once, or not at all, after they're constructed.
+// This keeps track of all transactions which were executed.
+let executedTransactions = new WeakMap(); // TODO: use WeakSet (bug 792439)
+executedTransactions.add = k => executedTransactions.set(k, null);
+
 let PlacesTransactions = {
   /**
    * Asynchronously transact either a single transaction, or a sequence of
    * transactions that would be treated as a single entry in the transactions
    * history.
    *
-   * @param aTransactionOrGeneratorFunction
+   * @param aToTransact
    *        Either a transaction object or a generator function (ES6-style only)
    *        that yields transaction objects.
    *
@@ -302,7 +338,8 @@ let PlacesTransactions = {
    * @rejects either if |execute| threw, in single-transaction mode, or if
    * the generator function threw (or didn't handle) an exception, in generator
    * mode.
-   *
+   * @throws if aTransactionOrGeneratorFunction is neither a transaction object
+   * created by this module or a generator function.
    * @note If no transaction was executed successfully, the transactions history
    * is not affected.
    *
@@ -313,7 +350,19 @@ let PlacesTransactions = {
    * by or on PlacesTransactions until the generator returns.  Keep in mind you
    * are not protected from consumers who use the raw places APIs directly.
    */
-  transact: function (aTransactionOrGeneratorFunction) {
+  transact: function (aToTransact) {
+    let generatorMode = typeof(aToTransact) == "function";
+    if (generatorMode) {
+      if (!aToTransact.isGenerator())
+        throw new Error("aToTransact is not a generator function");
+    }
+    else {
+      if (!TransactionsHistory.isProxifiedTransactionObject(aToTransact))
+        throw new Error("aToTransact is not a valid transaction object");
+      if (executedTransactions.has(aToTransact))
+        throw new Error("Transactions objects may not be recycled.");
+    }
+
     return Serialize(function* () {
       // The entry in the transactions history is created once the first
       // transaction is committed. This means that if |transact| is called
@@ -323,25 +372,37 @@ let PlacesTransactions = {
       // this decision and make it so |transact| always forces a new entry.
       let forceNewEntry = true;
       function* transactOneTransaction(aTransaction) {
-        let retval = yield aTransaction.execute();
+        let retval =
+          yield TransactionsHistory.getRawTransaction(aTransaction).execute();
+        executedTransactions.add(aTransaction);
         TransactionsHistory.add(aTransaction, forceNewEntry);
         forceNewEntry = false;
         return retval;
       }
 
-      function* transactBatch(aGeneratorFunction) {
-        let generator = aGeneratorFunction(), sendValue = undefined;
+      function* transactBatch(aGenerator) {
+        let error = false;
+        let sendValue = undefined;
         while (true) {
-          let next = generator.next(sendValue);
+          let next = error ?
+                     aGenerator.throw(sendValue) : aGenerator.next(sendValue);
           sendValue = next.value;
-          if (typeof(sendValue) == "function") {
+          if (Object.prototype.toString.call(sendValue) == "[object Generator]") {
             sendValue = yield transactBatch(sendValue);
           }
           else if (typeof(sendValue) == "object" && sendValue) {
-            if ("execute" in sendValue)
-              sendValue = yield transactOneTransaction(sendValue);
-            else if ("then" in sendValue)
+            if (TransactionsHistory.isProxifiedTransactionObject(sendValue)) {
+              if (executedTransactions.has(sendValue)) {
+                sendValue = new Error("Transactions may not be recycled.");
+                error = true;
+              }
+              else {
+                sendValue = yield transactOneTransaction(sendValue);
+              }
+            }
+            else if ("then" in sendValue) {
               sendValue = yield sendValue;
+            }
           }
           if (next.done)
             break;
@@ -349,10 +410,10 @@ let PlacesTransactions = {
         return sendValue;
       }
 
-      if (typeof(aTransactionOrGeneratorFunction) == "function")
-        return yield transactBatch(aTransactionOrGeneratorFunction);
+      if (generatorMode)
+        return yield transactBatch(aToTransact());
       else
-        return yield transactOneTransaction(aTransactionOrGeneratorFunction);
+        return yield transactOneTransaction(aToTransact);
     }.bind(this));
   },
 
@@ -414,10 +475,6 @@ let PlacesTransactions = {
   /**
    * Get the transaction history entry at a given index.  Each entry consists
    * of one or more transaction objects.
-   *
-   * THIS METHOD SHOULD BE USED ONLY AS A WAY TO MONITOR THE TRANSACTIONS
-   * HISTORY STATE.  NEVER CALL THE TRANSACTION METHODS (execute, undo, redo)
-   * DIRECTLY.
    *
    * @param aIndex
    *        the index of the entry to retrieve.
@@ -491,7 +548,7 @@ function DefineTransaction(aRequiredProps = [], aOptionalProps = []) {
                          ...[input[prop] for (prop of aOptionalProps)]];
       this.execute = Function.bind.apply(this.execute, executeArgs);
     }
-    return this;
+    return TransactionsHistory.proxifyTransaction(this);
   };
   return ctor;
 }
@@ -1166,9 +1223,8 @@ PT.TagURI.prototype = {
       // Tagging is only allowed for bookmarked URIs.
       let unfileGUID =
         yield PlacesUtils.promiseItemGUID(PlacesUtils.unfiledBookmarksFolderId);
-      let createTxn = PT.NewBookmark({ uri: aURI
-                                     , tags: aTags
-                                     , parentGUID: unfileGUID });
+      let createTxn = TransactionsHistory.getRawTransaction(
+        PT.NewBookmark({ uri: aURI, tags: aTags, parentGUID: unfileGUID }));
       yield createTxn.execute();
       this.undo = createTxn.undo.bind(createTxn);
       this.redo = createTxn.redo.bind(createTxn);

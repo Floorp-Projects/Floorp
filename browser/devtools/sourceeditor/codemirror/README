@@ -5,7 +5,7 @@ code, and optionally help with indentation.
 
 # Upgrade
 
-Currently used version is 3.20. To upgrade, download a new version of
+Currently used version is 4.0.3. To upgrade, download a new version of
 CodeMirror from the project's page [1] and replace all JavaScript and
 CSS files inside the codemirror directory [2].
 
@@ -51,6 +51,7 @@ in the LICENSE file:
  * dialog/dialog.css
  * dialog/dialog.js
  * keymap/emacs.js
+ * keymap/sublime.js
  * keymap/vim.js
  * fold/foldcode.js
  * fold/brace-fold.js
@@ -70,26 +71,34 @@ in the LICENSE file:
  * search/searchcursor.js
  * test/codemirror.html
  * test/cm_comment_test.js
+ * test/cm_doc_test.js
  * test/cm_driver.js
  * test/cm_mode_javascript_test.js
  * test/cm_mode_test.css
  * test/cm_mode_test.js
+ * test/cm_multi_test.js
+ * test/cm_search_test.js
+ * test/cm_test.js
+ * test/cm_sublime_test.js
  * test/cm_vim_test.js
  * test/cm_emacs_test.js
- * test/cm_test.js
 
 # Localization patches
 
-diff --git a/browser/devtools/sourceeditor/codemirror/search/search.js b/browser/devtools/sourceeditor/codemirror/sea
-index 049f72f..df4d95e 100644
+diff --git a/browser/devtools/sourceeditor/codemirror/search/search.js b/browser/devtools/sourceeditor/codemirror/search/search.js
 --- a/browser/devtools/sourceeditor/codemirror/search/search.js
 +++ b/browser/devtools/sourceeditor/codemirror/search/search.js
-@@ -58,9 +58,22 @@
-     var isRE = query.match(/^\/(.*)\/([a-z]*)$/);
-     return isRE ? new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i") : query;
+@@ -62,19 +62,31 @@
+     if (isRE) {
+       query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i");
+       if (query.test("")) query = /x^/;
+     } else if (query == "") {
+       query = /x^/;
+     }
+     return query;
    }
 -  var queryDialog =
--    'Search: <input type="text" style="width: 10em"/> <span style="color: #888">(Use /re/ syntax for regexp search)<
+-    'Search: <input type="text" style="width: 10em"/> <span style="color: #888">(Use /re/ syntax for regexp search)</span>';
 +  var queryDialog;
    function doSearch(cm, rev) {
 +    if (!queryDialog) {
@@ -105,10 +114,14 @@ index 049f72f..df4d95e 100644
 +      queryDialog.appendChild(txt);
 +      queryDialog.appendChild(inp);
 +    }
-+
      var state = getSearchState(cm);
      if (state.query) return findNext(cm, rev);
      dialog(cm, queryDialog, "Search for:", cm.getSelection(), function(query) {
+       cm.operation(function() {
+         if (!query || state.query) return;
+         state.query = parseQuery(query);
+         cm.removeOverlay(state.overlay, queryCaseInsensitive(state.query));
+         state.overlay = searchOverlay(state.query, queryCaseInsensitive(state.query));
 
 # Footnotes
 

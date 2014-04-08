@@ -34,7 +34,7 @@ const THUMBNAIL_BG_COLOR = "#fff";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
-Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", this);
+Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",

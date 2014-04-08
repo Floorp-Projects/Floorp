@@ -703,6 +703,8 @@
                 <image id="webRTC-sharingMicrophone-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="translate-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="translated-notification-icon" class="notification-anchor-icon" role="button"/>
               </box>
               <!-- Use onclick instead of normal popup= syntax since the popup
                    code fires onmousedown, and hence eats our favicon drag events.

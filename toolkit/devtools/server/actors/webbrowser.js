@@ -726,7 +726,7 @@ TabActor.prototype = {
     this.conn.removeActorPool(this._tabPool);
     this._tabPool = null;
     if (this._tabActorPool) {
-      this.conn.removeActorPool(this._tabActorPool, true);
+      this.conn.removeActorPool(this._tabActorPool);
       this._tabActorPool = null;
     }
 
