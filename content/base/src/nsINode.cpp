@@ -1428,6 +1428,7 @@ CheckForOutdatedParent(nsINode* aParent, nsINode* aNode)
 
     if (js::GetGlobalForObjectCrossCompartment(existingObj) !=
         global->GetGlobalJSObject()) {
+      JSAutoCompartment ac(cx, existingObj);
       nsresult rv = ReparentWrapper(cx, existingObj);
       NS_ENSURE_SUCCESS(rv, rv);
     }
