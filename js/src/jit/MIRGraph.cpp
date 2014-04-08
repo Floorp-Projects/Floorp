@@ -1204,13 +1204,15 @@ MBasicBlock::inheritPhis(MBasicBlock *header)
     }
 }
 
-void
+bool
 MBasicBlock::specializePhis()
 {
     for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++) {
         MPhi *phi = *iter;
-        phi->specializeType();
+        if (!phi->specializeType())
+            return false;
     }
+    return true;
 }
 
 void

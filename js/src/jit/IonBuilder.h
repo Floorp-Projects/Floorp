@@ -271,7 +271,7 @@ class IonBuilder : public MIRGenerator
                   jsbytecode *loopHead, jsbytecode *initialPc,
                   jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc,
                   jsbytecode *continuepc = nullptr);
-    void analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecode *end);
+    bool analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecode *end);
 
     MBasicBlock *addBlock(MBasicBlock *block, uint32_t loopDepth);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
@@ -772,10 +772,13 @@ class IonBuilder : public MIRGenerator
     // updating |current| directly. setCurrent() should only be used in cases
     // where the block cannot have phis whose type needs to be computed.
 
-    void setCurrentAndSpecializePhis(MBasicBlock *block) {
-        if (block)
-            block->specializePhis();
+    bool setCurrentAndSpecializePhis(MBasicBlock *block) {
+        if (block) {
+            if (!block->specializePhis())
+                return false;
+        }
         setCurrent(block);
+        return true;
     }
 
     void setCurrent(MBasicBlock *block) {
