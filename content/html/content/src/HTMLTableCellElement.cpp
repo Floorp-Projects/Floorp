@@ -23,7 +23,7 @@ HTMLTableCellElement::~HTMLTableCellElement()
 }
 
 JSObject*
-HTMLTableCellElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLTableCellElement::WrapNode(JSContext *aCx)
 {
   return HTMLTableCellElementBinding::Wrap(aCx, this);
 }

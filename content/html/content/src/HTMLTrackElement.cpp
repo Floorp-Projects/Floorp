@@ -117,7 +117,7 @@ HTMLTrackElement::OnChannelRedirect(nsIChannel* aChannel,
 }
 
 JSObject*
-HTMLTrackElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLTrackElement::WrapNode(JSContext* aCx)
 {
   return HTMLTrackElementBinding::Wrap(aCx, this);
 }

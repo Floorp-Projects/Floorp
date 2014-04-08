@@ -26,7 +26,7 @@ HTMLTimeElement::~HTMLTimeElement()
 NS_IMPL_ELEMENT_CLONE(HTMLTimeElement)
 
 JSObject*
-HTMLTimeElement::WrapNode(JSContext* cx, JS::Handle<JSObject*> scope)
+HTMLTimeElement::WrapNode(JSContext* cx)
 {
   return HTMLTimeElementBinding::Wrap(cx, this);
 }

@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGStopElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGStopElement::WrapNode(JSContext *aCx)
 {
   return SVGStopElementBinding::Wrap(aCx, this);
 }

@@ -116,7 +116,7 @@ SVGGradientElement::IsAttributeMapped(const nsIAtom* name) const
 //---------------------Linear Gradients------------------------
 
 JSObject*
-SVGLinearGradientElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGLinearGradientElement::WrapNode(JSContext* aCx)
 {
   return SVGLinearGradientElementBinding::Wrap(aCx, this);
 }
@@ -190,7 +190,7 @@ SVGLinearGradientElement::GetLengthInfo()
 //-------------------------- Radial Gradients ----------------------------
 
 JSObject*
-SVGRadialGradientElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGRadialGradientElement::WrapNode(JSContext* aCx)
 {
   return SVGRadialGradientElementBinding::Wrap(aCx, this);
 }

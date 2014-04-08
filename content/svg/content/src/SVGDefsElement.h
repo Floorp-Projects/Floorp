@@ -20,8 +20,7 @@ protected:
   friend nsresult (::NS_NewSVGDefsElement(nsIContent **aResult,
                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
   SVGDefsElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 public:
   // nsIContent

@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEOffsetElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFEOffsetElement::WrapNode(JSContext* aCx)
 {
   return SVGFEOffsetElementBinding::Wrap(aCx, this);
 }

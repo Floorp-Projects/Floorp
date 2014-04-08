@@ -257,7 +257,7 @@ HTMLHRElement::GetAttributeMappingFunction() const
 }
 
 JSObject*
-HTMLHRElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLHRElement::WrapNode(JSContext* aCx)
 {
   return HTMLHRElementBinding::Wrap(aCx, this);
 }

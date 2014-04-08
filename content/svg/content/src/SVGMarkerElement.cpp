@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGMarkerElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+SVGMarkerElement::WrapNode(JSContext *aCx)
 {
   return SVGMarkerElementBinding::Wrap(aCx, this);
 }

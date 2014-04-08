@@ -90,7 +90,7 @@ nsSVGElement::nsSVGElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
 }
 
 JSObject*
-nsSVGElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+nsSVGElement::WrapNode(JSContext *aCx)
 {
   return SVGElementBinding::Wrap(aCx, this);
 }

@@ -27,7 +27,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(HTMLHeadingElement, nsGenericHTMLElement,
 NS_IMPL_ELEMENT_CLONE(HTMLHeadingElement)
 
 JSObject*
-HTMLHeadingElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLHeadingElement::WrapNode(JSContext *aCx)
 {
   return HTMLHeadingElementBinding::Wrap(aCx, this);
 }

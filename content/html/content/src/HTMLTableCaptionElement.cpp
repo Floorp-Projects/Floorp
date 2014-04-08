@@ -19,7 +19,7 @@ HTMLTableCaptionElement::~HTMLTableCaptionElement()
 }
 
 JSObject*
-HTMLTableCaptionElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
+HTMLTableCaptionElement::WrapNode(JSContext *aCx)
 {
   return HTMLTableCaptionElementBinding::Wrap(aCx, this);
 }

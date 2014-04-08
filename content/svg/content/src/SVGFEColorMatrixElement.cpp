@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 JSObject*
-SVGFEColorMatrixElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+SVGFEColorMatrixElement::WrapNode(JSContext* aCx)
 {
   return SVGFEColorMatrixElementBinding::Wrap(aCx, this);
 }

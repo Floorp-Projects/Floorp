@@ -2648,7 +2648,8 @@ nsINode::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
     return nullptr;
   }
 
-  JS::Rooted<JSObject*> obj(aCx, WrapNode(aCx, aScope));
+  MOZ_ASSERT(js::IsObjectInContextCompartment(aScope, aCx));
+  JS::Rooted<JSObject*> obj(aCx, WrapNode(aCx));
   MOZ_ASSERT_IF(ChromeOnlyAccess(),
                 xpc::IsInXBLScope(obj) || !xpc::UseXBLScope(js::GetObjectCompartment(obj)));
   return obj;

@@ -540,7 +540,7 @@ HTMLButtonElement::IntrinsicState() const
 }
 
 JSObject*
-HTMLButtonElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
+HTMLButtonElement::WrapNode(JSContext* aCx)
 {
   return HTMLButtonElementBinding::Wrap(aCx, this);
 }

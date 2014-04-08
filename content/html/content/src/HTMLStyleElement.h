@@ -84,8 +84,7 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::scoped, aScoped, aError);
   }
 
-  virtual JSObject* WrapNode(JSContext *aCx,
-                             JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
 protected:
   already_AddRefed<nsIURI> GetStyleSheetURL(bool* aIsInline) MOZ_OVERRIDE;
