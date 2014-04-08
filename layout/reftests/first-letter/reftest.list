@@ -63,3 +63,5 @@ fails-if(winWidget||cocoaWidget) == 617869-1.html 617869-1-ref.html
 == 723509-1.html 723509-1-ref.html
 == 922550-1.html 922550-1-ref.html
 == 958249.html 958249-ref.html
+== font-text-styles.html font-text-styles-ref.html
+fails-if(gtk2Widget) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater-ref.html # bug 992846
