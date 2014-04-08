@@ -13,6 +13,7 @@
 #include "nsCSSProperty.h"
 #include "nsCSSScanner.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
@@ -20,6 +21,7 @@ class nsIPrincipal;
 class nsIURI;
 struct nsCSSSelectorList;
 class nsMediaList;
+class nsMediaQuery;
 class nsCSSKeyframeRule;
 class nsCSSValue;
 struct nsRuleData;
@@ -151,6 +153,25 @@ public:
                       uint32_t           aLineNumber,
                       nsMediaList*       aMediaList,
                       bool               aHTMLMode);
+
+  /*
+   * Parse aBuffer into a list of media queries and their associated values,
+   * according to grammar:
+   *    <source-size-list> = <source-size>#?
+   *    <source-size> = <media-condition>? <length>
+   *
+   * Note that this grammar is top-level: The function expects to consume the
+   * entire input buffer.
+   *
+   * Output arrays overwritten (not appended) and are cleared in case of parse
+   * failure.
+   */
+  bool ParseSourceSizeList(const nsAString& aBuffer,
+                           nsIURI* aURI, // for error reporting
+                           uint32_t aLineNumber, // for error reporting
+                           InfallibleTArray< nsAutoPtr<nsMediaQuery> >& aQueries,
+                           InfallibleTArray<nsCSSValue>& aValues,
+                           bool aHTMLMode);
 
   /**
    * Parse aBuffer into a nsCSSValue |aValue|. Will return false
