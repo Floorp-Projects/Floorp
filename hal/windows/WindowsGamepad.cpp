@@ -20,11 +20,14 @@
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/GamepadService.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
 
 namespace {
 
 using mozilla::dom::GamepadService;
+using mozilla::Mutex;
+using mozilla::MutexAutoLock;
 
 const LONG kMaxAxisValue = 65535;
 const DWORD BUTTON_DOWN_MASK = 0x80;
@@ -34,6 +37,9 @@ const DWORD BUTTON_DOWN_MASK = 0x80;
 // device changes.
 const uint32_t kDevicesChangedStableDelay = 200;
 
+class WindowsGamepadService;
+WindowsGamepadService* gService = nullptr;
+
 typedef struct {
   float x,y;
 } HatState;
@@ -42,7 +48,7 @@ struct Gamepad {
   // From DirectInput, unique to this device+computer combination.
   GUID guidInstance;
   // The ID assigned by the base GamepadService
-  int id;
+  int globalID;
   // A somewhat unique string consisting of the USB vendor/product IDs,
   // and the controller name.
   char idstring[128];
@@ -64,6 +70,9 @@ struct Gamepad {
   HatState hatState[4];
   // Used during rescan to find devices that were disconnected.
   bool present;
+  // Passed back from the main thread to indicate a device can
+  // now be removed.
+  bool remove;
 };
 
 // Given DWORD |hatPos| representing the position of the POV hat per:
@@ -121,105 +130,6 @@ HatPosToAxes(DWORD hatPos, HatState& axes) {
     axes.y = -1.0;
   }
 }
-
-// Used to post events from the background thread to the foreground thread.
-class GamepadEvent : public nsRunnable {
-public:
-  typedef enum {
-    Axis,
-    Button,
-    HatX,
-    HatY,
-    HatXY,
-    Unknown
-  } Type;
-
-  GamepadEvent(const Gamepad& gamepad,
-               Type type,
-               int which,
-               DWORD data) : mGamepad(gamepad),
-                             mType(type),
-                             mWhich(which),
-                             mData(data) {
-  }
-
-  NS_IMETHOD Run() {
-    nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
-
-    switch (mType) {
-    case Button:
-      gamepadsvc->NewButtonEvent(mGamepad.id, mWhich, mData & BUTTON_DOWN_MASK);
-      break;
-    case Axis: {
-      float adjustedData = ((float)mData * 2.0f) / (float)kMaxAxisValue - 1.0f;
-      gamepadsvc->NewAxisMoveEvent(mGamepad.id, mWhich, adjustedData);
-    }
-    case HatX:
-    case HatY:
-    case HatXY: {
-      // Synthesize 2 axes per POV hat for convenience.
-      HatState hatState;
-      HatPosToAxes(mData, hatState);
-      int xAxis = mGamepad.numAxes + 2 * mWhich;
-      int yAxis = mGamepad.numAxes + 2 * mWhich + 1;
-      //TODO: ostensibly we could not fire an event if one axis hasn't
-      // changed, but it's a pain to track that.
-      if (mType == HatX || mType == HatXY) {
-        gamepadsvc->NewAxisMoveEvent(mGamepad.id, xAxis, hatState.x);
-      }
-      if (mType == HatY || mType == HatXY) {
-        gamepadsvc->NewAxisMoveEvent(mGamepad.id, yAxis, hatState.y);
-      }
-      break;
-    }
-    case Unknown:
-      break;
-    }
-    return NS_OK;
-  }
-
-  const Gamepad& mGamepad;
-  // Type of event
-  Type mType;
-  // Which button/axis is involved
-  int mWhich;
-  // Data specific to event
-  DWORD mData;
-};
-
-class GamepadChangeEvent : public nsRunnable {
-public:
-  enum Type {
-    Added,
-    Removed
-  };
-  GamepadChangeEvent(Gamepad& gamepad,
-                     Type type) : mGamepad(gamepad),
-                                  mID(gamepad.id),
-                                  mType(type) {
-  }
-
-  NS_IMETHOD Run() {
-    nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
-    if (mType == Added) {
-      mGamepad.id = gamepadsvc->AddGamepad(mGamepad.idstring,
-                                           mozilla::dom::NoMapping,
-                                           mGamepad.numButtons,
-                                           mGamepad.numAxes +
-                                           mGamepad.numHats*2);
-    } else {
-      gamepadsvc->RemoveGamepad(mID);
-    }
-    return NS_OK;
-  }
-
-private:
-  Gamepad& mGamepad;
-  uint32_t mID;
-  Type mType;
-};
-
-class WindowsGamepadService;
 
 class Observer : public nsIObserver {
 public:
@@ -291,6 +201,8 @@ public:
   void DevicesChanged(DeviceChangeType type);
   void Startup();
   void Shutdown();
+  void SetGamepadID(int localID, int globalID);
+  void RemoveGamepad(int localID);
 
 private:
   void ScanForDevices();
@@ -312,6 +224,8 @@ private:
 
   // List of connected devices.
   nsTArray<Gamepad> mGamepads;
+  // Used to lock mutation of mGamepads.
+  Mutex mMutex;
   // List of event handles used for signaling.
   nsTArray<HANDLE> mEvents;
 
@@ -320,10 +234,133 @@ private:
   nsRefPtr<Observer> mObserver;
 };
 
+// Used to post events from the background thread to the foreground thread.
+class GamepadEvent : public nsRunnable {
+public:
+  typedef enum {
+    Axis,
+    Button,
+    HatX,
+    HatY,
+    HatXY,
+    Unknown
+  } Type;
+
+  GamepadEvent(const Gamepad& gamepad,
+               Type type,
+               int which,
+               DWORD data) : mGlobalID(gamepad.globalID),
+                             mGamepadAxes(gamepad.numAxes),
+                             mType(type),
+                             mWhich(which),
+                             mData(data) {
+  }
+
+  NS_IMETHOD Run() {
+    nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
+    if (!gamepadsvc) {
+      return NS_OK;
+    }
+
+    switch (mType) {
+    case Button:
+      gamepadsvc->NewButtonEvent(mGlobalID, mWhich, mData & BUTTON_DOWN_MASK);
+      break;
+    case Axis: {
+      float adjustedData = ((float)mData * 2.0f) / (float)kMaxAxisValue - 1.0f;
+      gamepadsvc->NewAxisMoveEvent(mGlobalID, mWhich, adjustedData);
+    }
+    case HatX:
+    case HatY:
+    case HatXY: {
+      // Synthesize 2 axes per POV hat for convenience.
+      HatState hatState;
+      HatPosToAxes(mData, hatState);
+      int xAxis = mGamepadAxes + 2 * mWhich;
+      int yAxis = mGamepadAxes + 2 * mWhich + 1;
+      //TODO: ostensibly we could not fire an event if one axis hasn't
+      // changed, but it's a pain to track that.
+      if (mType == HatX || mType == HatXY) {
+        gamepadsvc->NewAxisMoveEvent(mGlobalID, xAxis, hatState.x);
+      }
+      if (mType == HatY || mType == HatXY) {
+        gamepadsvc->NewAxisMoveEvent(mGlobalID, yAxis, hatState.y);
+      }
+      break;
+    }
+    case Unknown:
+      break;
+    }
+    return NS_OK;
+  }
+
+  int mGlobalID;
+  int mGamepadAxes;
+  // Type of event
+  Type mType;
+  // Which button/axis is involved
+  int mWhich;
+  // Data specific to event
+  DWORD mData;
+};
+
+class GamepadChangeEvent : public nsRunnable {
+public:
+  enum Type {
+    Added,
+    Removed
+  };
+  GamepadChangeEvent(Gamepad& gamepad,
+                     int localID,
+                     Type type) : mLocalID(localID),
+                                  mName(gamepad.idstring),
+                                  mGlobalID(gamepad.globalID),
+                                  mGamepadButtons(gamepad.numButtons),
+                                  mGamepadAxes(gamepad.numAxes),
+                                  mGamepadHats(gamepad.numHats),
+                                  mType(type) {
+  }
+
+  NS_IMETHOD Run() {
+    nsRefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
+    if (!gamepadsvc) {
+      return NS_OK;
+    }
+    if (mType == Added) {
+      int globalID = gamepadsvc->AddGamepad(mName.get(),
+                                            mozilla::dom::NoMapping,
+                                            mGamepadButtons,
+                                            mGamepadAxes +
+                                            mGamepadHats*2);
+      if (gService) {
+        gService->SetGamepadID(mLocalID, globalID);
+      }
+    } else {
+      gamepadsvc->RemoveGamepad(mGlobalID);
+      if (gService) {
+        gService->RemoveGamepad(mLocalID);
+      }
+    }
+    return NS_OK;
+  }
+
+private:
+  // ID in WindowsGamepadService::mGamepads
+  int mLocalID;
+  nsCString mName;
+  int mGamepadButtons;
+  int mGamepadAxes;
+  int mGamepadHats;
+  // ID from GamepadService
+  uint32_t mGlobalID;
+  Type mType;
+};
+
 WindowsGamepadService::WindowsGamepadService()
   : mThreadExitEvent(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
     mThreadRescanEvent(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
     mThread(nullptr),
+    mMutex("Windows Gamepad Service"),
     dinput(nullptr) {
   mObserver = new Observer(*this);
   // Initialize DirectInput
@@ -365,11 +402,14 @@ WindowsGamepadService::EnumCallback(LPCDIDEVICEINSTANCE lpddi,
   WindowsGamepadService* self =
     reinterpret_cast<WindowsGamepadService*>(pvRef);
   // See if this device is already present in our list.
-  for (unsigned int i = 0; i < self->mGamepads.Length(); i++) {
-    if (memcmp(&lpddi->guidInstance, &self->mGamepads[i].guidInstance,
-               sizeof(GUID)) == 0) {
-      self->mGamepads[i].present = true;
-      return DIENUM_CONTINUE;
+  {
+    MutexAutoLock lock(self->mMutex);
+    for (unsigned int i = 0; i < self->mGamepads.Length(); i++) {
+      if (memcmp(&lpddi->guidInstance, &self->mGamepads[i].guidInstance,
+                 sizeof(GUID)) == 0) {
+        self->mGamepads[i].present = true;
+        return DIENUM_CONTINUE;
+      }
     }
   }
 
@@ -422,10 +462,13 @@ WindowsGamepadService::EnumCallback(LPCDIDEVICEINSTANCE lpddi,
         gamepad.device->SetProperty(DIPROP_BUFFERSIZE, &dp.diph) == DI_OK &&
         gamepad.device->SetEventNotification(gamepad.event) == DI_OK &&
         gamepad.device->Acquire() == DI_OK) {
+      MutexAutoLock lock(self->mMutex);
       self->mGamepads.AppendElement(gamepad);
       // Inform the GamepadService
+      int localID = self->mGamepads.Length() - 1;
       nsRefPtr<GamepadChangeEvent> event =
-        new GamepadChangeEvent(self->mGamepads[self->mGamepads.Length() - 1],
+        new GamepadChangeEvent(self->mGamepads[localID],
+                               localID,
                                GamepadChangeEvent::Added);
       NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
     }
@@ -441,8 +484,18 @@ WindowsGamepadService::EnumCallback(LPCDIDEVICEINSTANCE lpddi,
 
 void
 WindowsGamepadService::ScanForDevices() {
-  for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    mGamepads[i].present = false;
+  {
+    MutexAutoLock lock(mMutex);
+    for (int i = mGamepads.Length() - 1; i >= 0; i--) {
+      if (mGamepads[i].remove) {
+
+        // Main thread has already handled this, safe to remove.
+        CleanupGamepad(mGamepads[i]);
+        mGamepads.RemoveElementAt(i);
+      } else {
+        mGamepads[i].present = false;
+      }
+    }
   }
 
   dinput->EnumDevices(DI8DEVCLASS_GAMECTRL,
@@ -450,22 +503,25 @@ WindowsGamepadService::ScanForDevices() {
                       this,
                       DIEDFL_ATTACHEDONLY);
 
-  // Look for devices that were removed.
-  for (int i = mGamepads.Length() - 1; i >= 0; i--) {
-    if (!mGamepads[i].present) {
-      nsRefPtr<GamepadChangeEvent> event =
-        new GamepadChangeEvent(mGamepads[i],
-                               GamepadChangeEvent::Removed);
-      NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-      CleanupGamepad(mGamepads[i]);
-      mGamepads.RemoveElementAt(i);
+  // Look for devices that are no longer present and inform the main thread.
+  {
+    MutexAutoLock lock(mMutex);
+    for (int i = mGamepads.Length() - 1; i >= 0; i--) {
+      if (!mGamepads[i].present) {
+        nsRefPtr<GamepadChangeEvent> event =
+          new GamepadChangeEvent(mGamepads[i],
+                                 i,
+                                 GamepadChangeEvent::Removed);
+        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+      }
+    }
+
+    mEvents.Clear();
+    for (unsigned int i = 0; i < mGamepads.Length(); i++) {
+      mEvents.AppendElement(mGamepads[i].event);
     }
   }
 
-  mEvents.Clear();
-  for (unsigned int i = 0; i < mGamepads.Length(); i++) {
-    mEvents.AppendElement(mGamepads[i].event);
-  }
 
   // These events must be the  last elements in the array, so that
   // the other elements match mGamepads in order.
@@ -498,66 +554,69 @@ WindowsGamepadService::DInputThread(LPVOID arg) {
       continue;
     }
 
-    if (i >= self->mGamepads.Length()) {
-      // Something would be terribly wrong here, possibly we got
-      // a WAIT_ABANDONED_x result.
-      continue;
-    }
+    {
+      MutexAutoLock lock(self->mMutex);
+      if (i >= self->mGamepads.Length()) {
+        // Something would be terribly wrong here, possibly we got
+        // a WAIT_ABANDONED_x result.
+        continue;
+      }
 
-    // first query for the number of items in the buffer
-    DWORD items = INFINITE;
-    nsRefPtr<IDirectInputDevice8> device = self->mGamepads[i].device;
-    if (device->GetDeviceData(sizeof(DIDEVICEOBJECTDATA),
-                              nullptr,
-                              &items,
-                              DIGDD_PEEK)== DI_OK) {
-      while (items > 0) {
-        // now read each buffered event
-        //TODO: read more than one event at a time
-        DIDEVICEOBJECTDATA data;
-        DWORD readCount = sizeof(data) / sizeof(DIDEVICEOBJECTDATA);
-        if (device->GetDeviceData(sizeof(DIDEVICEOBJECTDATA),
-                                  &data, &readCount, 0) == DI_OK) {
-          //TODO: data.dwTimeStamp
-          GamepadEvent::Type type = GamepadEvent::Unknown;
-          int which;
-          if (data.dwOfs >= DIJOFS_BUTTON0 && data.dwOfs < DIJOFS_BUTTON(32)) {
-            type = GamepadEvent::Button;
-            which = data.dwOfs - DIJOFS_BUTTON0;
-          }
-          else if(data.dwOfs >= DIJOFS_X  && data.dwOfs < DIJOFS_SLIDER(2)) {
-            // axis/slider
-            type = GamepadEvent::Axis;
-            which = (data.dwOfs - DIJOFS_X) / sizeof(LONG);
-          }
-          else if (data.dwOfs >= DIJOFS_POV(0) && data.dwOfs < DIJOFS_POV(4)) {
-            HatState hatState;
-            HatPosToAxes(data.dwData, hatState);
-            which = (data.dwOfs - DIJOFS_POV(0)) / sizeof(DWORD);
-            // Only send out axis move events for the axes that moved
-            // in this hat move.
-            if (hatState.x != self->mGamepads[i].hatState[which].x) {
-              type = GamepadEvent::HatX;
+      // first query for the number of items in the buffer
+      DWORD items = INFINITE;
+      nsRefPtr<IDirectInputDevice8> device = self->mGamepads[i].device;
+      if (device->GetDeviceData(sizeof(DIDEVICEOBJECTDATA),
+                                nullptr,
+                                &items,
+                                DIGDD_PEEK)== DI_OK) {
+        while (items > 0) {
+          // now read each buffered event
+          //TODO: read more than one event at a time
+          DIDEVICEOBJECTDATA data;
+          DWORD readCount = sizeof(data) / sizeof(DIDEVICEOBJECTDATA);
+          if (device->GetDeviceData(sizeof(DIDEVICEOBJECTDATA),
+                                    &data, &readCount, 0) == DI_OK) {
+            //TODO: data.dwTimeStamp
+            GamepadEvent::Type type = GamepadEvent::Unknown;
+            int which;
+            if (data.dwOfs >= DIJOFS_BUTTON0 && data.dwOfs < DIJOFS_BUTTON(32)) {
+              type = GamepadEvent::Button;
+              which = data.dwOfs - DIJOFS_BUTTON0;
             }
-            if (hatState.y != self->mGamepads[i].hatState[which].y) {
-              if (type == GamepadEvent::HatX) {
-                type = GamepadEvent::HatXY;
-              }
-              else {
-                type = GamepadEvent::HatY;
-              }
+            else if(data.dwOfs >= DIJOFS_X  && data.dwOfs < DIJOFS_SLIDER(2)) {
+              // axis/slider
+              type = GamepadEvent::Axis;
+              which = (data.dwOfs - DIJOFS_X) / sizeof(LONG);
             }
-            self->mGamepads[i].hatState[which].x = hatState.x;
-            self->mGamepads[i].hatState[which].y = hatState.y;
-          }
+            else if (data.dwOfs >= DIJOFS_POV(0) && data.dwOfs < DIJOFS_POV(4)) {
+              HatState hatState;
+              HatPosToAxes(data.dwData, hatState);
+              which = (data.dwOfs - DIJOFS_POV(0)) / sizeof(DWORD);
+              // Only send out axis move events for the axes that moved
+              // in this hat move.
+              if (hatState.x != self->mGamepads[i].hatState[which].x) {
+                type = GamepadEvent::HatX;
+              }
+              if (hatState.y != self->mGamepads[i].hatState[which].y) {
+                if (type == GamepadEvent::HatX) {
+                  type = GamepadEvent::HatXY;
+                }
+                else {
+                  type = GamepadEvent::HatY;
+                }
+              }
+              self->mGamepads[i].hatState[which].x = hatState.x;
+              self->mGamepads[i].hatState[which].y = hatState.y;
+            }
 
-          if (type != GamepadEvent::Unknown) {
-            nsRefPtr<GamepadEvent> event =
-              new GamepadEvent(self->mGamepads[i], type, which, data.dwData);
-            NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+            if (type != GamepadEvent::Unknown) {
+              nsRefPtr<GamepadEvent> event =
+                new GamepadEvent(self->mGamepads[i], type, which, data.dwData);
+              NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+            }
           }
+          items--;
         }
-        items--;
       }
     }
   }
@@ -582,6 +641,21 @@ WindowsGamepadService::Shutdown() {
     CloseHandle(mThread);
   }
   Cleanup();
+}
+
+// This method is called from the main thread.
+void
+WindowsGamepadService::SetGamepadID(int localID, int globalID) {
+  MutexAutoLock lock(mMutex);
+  mGamepads[localID].globalID = globalID;
+}
+
+// This method is called from the main thread.
+void WindowsGamepadService::RemoveGamepad(int localID) {
+  MutexAutoLock lock(mMutex);
+  mGamepads[localID].remove = true;
+  // Signal background thread to remove device.
+  DevicesChanged(DeviceChangeStable);
 }
 
 void
@@ -620,7 +694,6 @@ Observer::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-WindowsGamepadService* gService = nullptr;
 HWND sHWnd = nullptr;
 
 static

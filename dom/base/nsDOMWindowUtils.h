@@ -25,6 +25,32 @@ namespace mozilla {
   }
 }
 
+class nsTranslationNodeList MOZ_FINAL : public nsITranslationNodeList
+{
+public:
+  nsTranslationNodeList()
+  {
+    mNodes.SetCapacity(1000);
+    mNodeIsRoot.SetCapacity(1000);
+    mLength = 0;
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITRANSLATIONNODELIST
+
+  void AppendElement(nsIDOMNode* aElement, bool aIsRoot)
+  {
+    mNodes.AppendElement(aElement);
+    mNodeIsRoot.AppendElement(aIsRoot);
+    mLength++;
+  }
+
+private:
+  nsTArray<nsCOMPtr<nsIDOMNode> > mNodes;
+  nsTArray<bool> mNodeIsRoot;
+  uint32_t mLength;
+};
+
 class nsDOMWindowUtils MOZ_FINAL : public nsIDOMWindowUtils,
                                    public nsSupportsWeakReference
 {

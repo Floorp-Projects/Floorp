@@ -49,8 +49,6 @@
  *
  *  - shift: amount to shift by to compute indices
  *  - count: number of slices
- *  - seqSliceId: the slice id for which slices [0,id] have been run
- *                sequentially and cannot be re-run in parallel.
  */
 function ComputeSlicesInfo(length) {
   var count = length >>> MAX_SLICE_SHIFT;

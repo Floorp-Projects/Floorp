@@ -74,26 +74,30 @@ public:
   void FlushedForDiversion();
 
 protected:
-  bool RecvOnStartRequest(const int64_t& aContentLength,
+  bool RecvOnStartRequest(const nsresult& aChannelStatus,
+                          const int64_t& aContentLength,
                           const nsCString& aContentType,
                           const PRTime& aLastModified,
                           const nsCString& aEntityID,
                           const URIParams& aURI) MOZ_OVERRIDE;
-  bool RecvOnDataAvailable(const nsCString& data,
+  bool RecvOnDataAvailable(const nsresult& channelStatus,
+                           const nsCString& data,
                            const uint64_t& offset,
                            const uint32_t& count) MOZ_OVERRIDE;
-  bool RecvOnStopRequest(const nsresult& statusCode) MOZ_OVERRIDE;
+  bool RecvOnStopRequest(const nsresult& channelStatus) MOZ_OVERRIDE;
   bool RecvFailedAsyncOpen(const nsresult& statusCode) MOZ_OVERRIDE;
   bool RecvFlushedForDiversion() MOZ_OVERRIDE;
   bool RecvDivertMessages() MOZ_OVERRIDE;
   bool RecvDeleteSelf() MOZ_OVERRIDE;
 
-  void DoOnStartRequest(const int64_t& aContentLength,
+  void DoOnStartRequest(const nsresult& aChannelStatus,
+                        const int64_t& aContentLength,
                         const nsCString& aContentType,
                         const PRTime& aLastModified,
                         const nsCString& aEntityID,
                         const URIParams& aURI);
-  void DoOnDataAvailable(const nsCString& data,
+  void DoOnDataAvailable(const nsresult& channelStatus,
+                         const nsCString& data,
                          const uint64_t& offset,
                          const uint32_t& count);
   void DoOnStopRequest(const nsresult& statusCode);

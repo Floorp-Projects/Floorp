@@ -362,14 +362,16 @@ this.OperatorAppsRegistry = {
       return ncode;
     }
 
-    return Task.spawn(function () {
+    return Task.spawn(function*() {
       let key = normalizeCode(aMcc) + "-" + normalizeCode(aMnc);
       let file = Path.join(this.appsDir.path, SINGLE_VARIANT_CONF_FILE);
       let aData = yield AppsUtils.loadJSONAsync(file);
+
       if (!aData || !(key in aData)) {
-        return;
+        return [];
       }
-      throw new Task.Result(aData[key]);
+
+      return aData[key];
     }.bind(this));
   }
 };
