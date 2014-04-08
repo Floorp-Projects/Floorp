@@ -602,7 +602,7 @@ public:
     mTotalInnerHypotheticalMainSize(0),
     mTotalOuterHypotheticalMainSize(0),
     mLineCrossSize(0),
-    mBaselineOffsetFromCrossStart(nscoord_MIN)
+    mBaselineOffset(nscoord_MIN)
   {}
 
   // Returns the sum of our FlexItems' outer hypothetical main sizes.
@@ -673,11 +673,17 @@ public:
     mLineCrossSize = aLineCrossSize;
   }
 
-  // Returns the distance from the cross-start edge of this FlexLine
-  // to its baseline (derived from its baseline-aligned FlexItems).
-  // If there are no baseline-aligned FlexItems, returns nscoord_MIN.
-  nscoord GetBaselineOffsetFromCrossStart() const {
-    return mBaselineOffsetFromCrossStart;
+  /**
+   * Returns the offset within this line where any baseline-aligned FlexItems
+   * should place their baseline. Usually, this represents a distance from the
+   * line's cross-start edge, but if we're internally reversing the axes (see
+   * AreAxesInternallyReversed()), this instead represents the distance from
+   * its cross-end edge.
+   *
+   * If there are no baseline-aligned FlexItems, returns nscoord_MIN.
+   */
+  nscoord GetBaselineOffset() const {
+    return mBaselineOffset;
   }
 
   // Runs the "resolve the flexible lengths" algorithm, distributing
@@ -709,7 +715,7 @@ private:
   nscoord mTotalInnerHypotheticalMainSize;
   nscoord mTotalOuterHypotheticalMainSize;
   nscoord mLineCrossSize;
-  nscoord mBaselineOffsetFromCrossStart;
+  nscoord mBaselineOffset;
 };
 
 // Information about a strut left behind by a FlexItem that's been collapsed
@@ -2172,10 +2178,12 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
     }
   }
 
-  // The line's baseline is the distance from the cross-start edge to the
-  // furthest baseline. (The item(s) with that baseline will be exactly
-  // aligned with the line's cross-start edge.)
-  mBaselineOffsetFromCrossStart = crossStartToFurthestBaseline;
+  // The line's baseline offset is the distance from the line's edge (start or
+  // end, depending on whether we've flipped the axes) to the furthest
+  // item-baseline. The item(s) with that baseline will be exactly aligned with
+  // the line's edge.
+  mBaselineOffset = aAxisTracker.AreAxesInternallyReversed() ?
+    crossEndToFurthestBaseline : crossStartToFurthestBaseline;
 
   // The line's cross-size is the larger of:
   //  (a) [largest cross-start-to-baseline + largest baseline-to-cross-end] of
@@ -2301,17 +2309,33 @@ SingleLineCrossAxisPositionTracker::
         (aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis)) / 2;
       break;
     case NS_STYLE_ALIGN_ITEMS_BASELINE: {
-      nscoord lineBaselineOffset =
-        aLine.GetBaselineOffsetFromCrossStart();
+      // Normally, baseline-aligned items are collectively aligned with the
+      // line's cross-start edge; however, if our cross axis is (internally)
+      // reversed, we instead align them with the cross-end edge.
       nscoord itemBaselineOffset =
         aItem.GetBaselineOffsetFromOuterCrossEdge(mAxis,
-                                                  eAxisEdge_Start);
+          aAxisTracker.AreAxesInternallyReversed() ?
+          eAxisEdge_End : eAxisEdge_Start);
 
-      MOZ_ASSERT(lineBaselineOffset >= itemBaselineOffset,
-                 "failed at finding largest baseline offset");
+      nscoord lineBaselineOffset = aLine.GetBaselineOffset();
 
-      // Advance so that aItem's baseline is aligned with the line's baseline.
-      mPosition += (lineBaselineOffset - itemBaselineOffset);
+      NS_ASSERTION(lineBaselineOffset >= itemBaselineOffset,
+                   "failed at finding largest baseline offset");
+
+      // How much do we need to adjust our position (from the line edge),
+      // to get the item's baseline to hit the line's baseline offset:
+      nscoord baselineDiff = lineBaselineOffset - itemBaselineOffset;
+
+      if (aAxisTracker.AreAxesInternallyReversed()) {
+        // Advance to align item w/ line's flex-end edge (as in FLEX_END case):
+        mPosition += aLine.GetLineCrossSize() - aItem.GetOuterCrossSize(mAxis);
+        // ...and step *back* by the baseline adjustment:
+        mPosition -= baselineDiff;
+      } else {
+        // mPosition is already at line's flex-start edge.
+        // From there, we step *forward* by the baseline adjustment:
+        mPosition += baselineDiff;
+      }
       break;
     }
     default:
@@ -3045,7 +3069,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // of the first line's baseline-aligned items.
   nscoord flexContainerAscent;
   nscoord firstLineBaselineOffset =
-    lines.getFirst()->GetBaselineOffsetFromCrossStart();
+    lines.getFirst()->GetBaselineOffset();
   if (firstLineBaselineOffset == nscoord_MIN) {
     // No baseline-aligned flex items in first line --> just use a sentinel
     // value for now, and we'll update it during final reflow.
