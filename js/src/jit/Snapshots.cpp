@@ -12,8 +12,8 @@
 #include "jit/IonSpewer.h"
 #ifdef TRACK_SNAPSHOTS
 # include "jit/LIR.h"
-# include "jit/MIR.h"
 #endif
+#include "jit/MIR.h"
 
 using namespace js;
 using namespace js::jit;
@@ -683,27 +683,13 @@ RecoverWriter::startRecover(uint32_t frameCount, bool resumeAfter)
     return recoverOffset;
 }
 
-void
-RecoverWriter::writeFrame(JSFunction *fun, JSScript *script,
-                          jsbytecode *pc, uint32_t exprStack)
+bool
+RecoverWriter::writeFrame(const MResumePoint *rp)
 {
-    // Test if we honor the maximum of arguments at all times.
-    // This is a sanity check and not an algorithm limit. So check might be a bit too loose.
-    // +4 to account for scope chain, return value, this value and maybe arguments_object.
-    JS_ASSERT(CountArgSlots(script, fun) < SNAPSHOT_MAX_NARGS + 4);
-
-    uint32_t implicit = StartArgSlot(script);
-    uint32_t formalArgs = CountArgSlots(script, fun);
-    uint32_t nallocs = formalArgs + script->nfixed() + exprStack;
-
-    IonSpew(IonSpew_Snapshots, "Starting frame; implicit %u, formals %u, fixed %u, exprs %u",
-            implicit, formalArgs - implicit, script->nfixed(), exprStack);
-
-    uint32_t pcoff = script->pcToOffset(pc);
-    IonSpew(IonSpew_Snapshots, "Writing pc offset %u, nslots %u", pcoff, nallocs);
-    writer_.writeUnsigned(pcoff);
-    writer_.writeUnsigned(nallocs);
+    if (!rp->writeRecoverData(writer_))
+        return false;
     framesWritten_++;
+    return true;
 }
 
 void
