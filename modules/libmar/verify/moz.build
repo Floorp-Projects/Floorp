@@ -19,6 +19,11 @@ else:
     DEFINES['MAR_NSS'] = True
     LOCAL_INCLUDES += ['../sign']
 
+if CONFIG['OS_ARCH'] == 'Darwin':
+    UNIFIED_SOURCES += [
+      'MacVerifyCrypto.cpp',
+    ]
+
 LOCAL_INCLUDES += [
     '../src',
 ]

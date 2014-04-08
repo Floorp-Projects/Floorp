@@ -1386,7 +1386,7 @@ struct FullFontNameSearch {
     { }
 
     nsString     mFullName;
-    gfxFontEntry *mFontEntry;
+    FT2FontEntry *mFontEntry;
 };
 
 // callback called for each family name, based on the assumption that the 
@@ -1400,17 +1400,22 @@ FindFullName(nsStringHashKey::KeyType aKey,
 
     // does the family name match up to the length of the family name?
     const nsString& family = aFontFamily->Name();
-    
+
     nsString fullNameFamily;
     data->mFullName.Left(fullNameFamily, family.Length());
 
     // if so, iterate over faces in this family to see if there is a match
-    if (family.Equals(fullNameFamily)) {
+    if (family.Equals(fullNameFamily, nsCaseInsensitiveStringComparator())) {
         nsTArray<nsRefPtr<gfxFontEntry> >& fontList = aFontFamily->GetFontList();
         int index, len = fontList.Length();
         for (index = 0; index < len; index++) {
-            if (fontList[index]->Name().Equals(data->mFullName)) {
-                data->mFontEntry = fontList[index];
+            gfxFontEntry* fe = fontList[index];
+            if (!fe) {
+                continue;
+            }
+            if (fe->Name().Equals(data->mFullName,
+                                  nsCaseInsensitiveStringComparator())) {
+                data->mFontEntry = static_cast<FT2FontEntry*>(fe);
                 return PL_DHASH_STOP;
             }
         }
@@ -1428,7 +1433,32 @@ gfxFT2FontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 
     mFontFamilies.Enumerate(FindFullName, &data);
 
-    return data.mFontEntry;
+    if (!data.mFontEntry) {
+        return nullptr;
+    }
+
+    // Clone the font entry so that we can then set its style descriptors
+    // from the proxy rather than the actual font.
+
+    // Ensure existence of mFTFace in the original entry
+    data.mFontEntry->CairoFontFace();
+    if (!data.mFontEntry->mFTFace) {
+        return nullptr;
+    }
+
+    FT2FontEntry* fe =
+        FT2FontEntry::CreateFontEntry(data.mFontEntry->mFTFace,
+                                      data.mFontEntry->mFilename.get(),
+                                      data.mFontEntry->mFTFontIndex,
+                                      data.mFontEntry->Name(), nullptr);
+    if (fe) {
+        fe->mItalic = aProxyEntry->mItalic;
+        fe->mWeight = aProxyEntry->mWeight;
+        fe->mStretch = aProxyEntry->mStretch;
+        fe->mIsUserFont = fe->mIsLocalUserFont = true;
+    }
+
+    return fe;
 }
 
 gfxFontFamily*

@@ -426,6 +426,65 @@ panel[type="arrow"] {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#arrowpanel");
 }
 
+panel[type="arrow"]:not([animate="false"]) {
+  transform: scale(.7);
+  opacity: 0;
+  transition-property: transform, opacity;
+  transition-duration: 0.15s;
+  transition-timing-function: ease;
+}
+
+panel[type="arrow"][animate="open"] {
+  transform: none;
+  opacity: 1.0;
+}
+
+panel[arrowposition="after_start"] {
+  transform-origin: 20px top;
+}
+
+panel[arrowposition="after_end"] {
+  transform-origin: calc(100% - 20px) top;
+}
+
+panel[arrowposition="before_start"] {
+  transform-origin: 20px bottom;
+}
+
+panel[arrowposition="before_end"] {
+  transform-origin: calc(100% - 20px) bottom;
+}
+
+panel[arrowposition="start_before"] {
+  transform-origin: right 20px;
+}
+
+panel[arrowposition="start_after"] {
+  transform-origin: right calc(100% - 20px);
+}
+
+panel[arrowposition="end_before"] {
+  transform-origin: left 20px;
+}
+
+panel[arrowposition="end_after"] {
+  transform-origin: left calc(100% - 20px);
+}
+
+panel[arrowposition="after_start"][animate="cancel"],
+panel[arrowposition="before_end"][animate="cancel"],
+panel[arrowposition="end_before"][animate="cancel"],
+panel[arrowposition="start_after"][animate="cancel"] {
+  transform: scale(.7) skew(10deg, 10deg);
+}
+
+panel[arrowposition="after_end"][animate="cancel"],
+panel[arrowposition="before_start"][animate="cancel"],
+panel[arrowposition="start_before"][animate="cancel"],
+panel[arrowposition="end_after"][animate="cancel"] {
+  transform: scale(.7) skew(-10deg, -10deg);
+}
+
 %ifdef XP_MACOSX
 .statusbar-resizerpanel {
   display: none;

@@ -12,6 +12,9 @@ if CONFIG['MOZ_ENABLE_SIGNMAR']:
 elif CONFIG['OS_ARCH'] == 'WINNT':
     # On Windows we don't verify with NSS and updater needs to link to it
     DIRS += ['verify']
+elif CONFIG['OS_ARCH'] == 'Darwin':
+    # On OSX 10.7+ we don't verify with NSS and updater needs to link to it
+    DIRS += ['verify']
 
 # If we are building ./sign and ./verify then ./tool must come after it
 DIRS += ['tool']

@@ -6,8 +6,6 @@
 #include "nsUnicodeToUTF16.h"
 #include <string.h>
 
-inline static void SwapBytes(char *aDest, const char16_t* aSrc, int32_t aLen);
-
 NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength)
 {
@@ -97,40 +95,12 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::SetOutputErrorBehavior(int32_t aBehavior,
 
 NS_IMETHODIMP nsUnicodeToUTF16BE::CopyData(char* aDest, const char16_t* aSrc, int32_t aLen  )
 {
-#ifdef IS_BIG_ENDIAN
-  //UnicodeToUTF16SameEndian
-  ::memcpy(aDest, (void*) aSrc, aLen * 2);
-#elif defined(IS_LITTLE_ENDIAN)
-  //UnicodeToUTF16DiffEndian
-  SwapBytes(aDest, aSrc, aLen);
-#else
-  #error "Unknown endianness"
-#endif
+  mozilla::NativeEndian::copyAndSwapToBigEndian(aDest, aSrc, aLen);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsUnicodeToUTF16LE::CopyData(char* aDest, const char16_t* aSrc, int32_t aLen  )
 {
-#ifdef IS_LITTLE_ENDIAN
-  //UnicodeToUTF16SameEndian
-  ::memcpy(aDest, (void*) aSrc, aLen * 2);
-#elif defined(IS_BIG_ENDIAN)
-  //UnicodeToUTF16DiffEndian
-  SwapBytes(aDest, aSrc, aLen);
-#else
-  #error "Unknown endianness"
-#endif
+  mozilla::NativeEndian::copyAndSwapToLittleEndian(aDest, aSrc, aLen);
   return NS_OK;
 }
-
-inline void SwapBytes(char *aDest, const char16_t* aSrc, int32_t aLen)
-{
-  char16_t *p = (char16_t*) aDest;
-  // copy the data  by swaping 
-  for(int32_t i = 0; i < aLen; i++)
-  {
-    char16_t aChar = *aSrc++;
-    *p++ = (0x00FF & (aChar >> 8)) | (0xFF00 & (aChar << 8));
-  }
-}
-

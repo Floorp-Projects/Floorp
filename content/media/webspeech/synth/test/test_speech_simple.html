@@ -13,6 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=650295">Mozilla Bug 650295</a>
 <p id="display"></p>
+<iframe id="testFrame"></iframe>
 <div id="content" style="display: none">
   
 </div>
@@ -23,29 +24,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
 
 SimpleTest.waitForExplicitFinish();
 
-synthAddVoice('TestSpeechServiceWithAudio', 'Male 1', 'en-GB', true);
-
-var gotStartEvent = false;
-var gotBoundaryEvent = false;
-var utterance = new SpeechSynthesisUtterance("Hello, world!");
-utterance.addEventListener('start', function(e) {
-  ok(speechSynthesis.speaking, "speechSynthesis is speaking.");
-  ok(!speechSynthesis.pending, "speechSynthesis has no other utterances queued.");
-  gotStartEvent = true;
-});
-
-utterance.addEventListener('end', function(e) {
-  ok(!speechSynthesis.speaking, "speechSynthesis is not speaking.");
-  ok(!speechSynthesis.pending, "speechSynthesis has no other utterances queued.");
-  ok(gotStartEvent, "Got 'start' event.");
-  info('end ' + e.elapsedTime);
-  synthCleanup();
-  SimpleTest.finish();
-});
-
-speechSynthesis.speak(utterance);
-ok(!speechSynthesis.speaking, "speechSynthesis is not speaking yet.");
-ok(speechSynthesis.pending, "speechSynthesis has an utterance queued.");
+SpecialPowers.pushPrefEnv({ set: [['media.webspeech.synth.enabled', true]] },
+                          function() { document.getElementById("testFrame").src = "file_speech_simple.html"; });
 
 </script>
 </pre>
