@@ -705,6 +705,8 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
 nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) {
   APZC_LOG("%p got a touch-end in state %d\n", this, mState);
 
+  OnTouchEndOrCancel();
+
   // In case no touch behavior triggered previously we can avoid sending
   // scroll events or requesting content repaint. This condition is added
   // to make tests consistent - in case touch-action is NONE (and therefore
@@ -771,6 +773,7 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
 
 nsEventStatus AsyncPanZoomController::OnTouchCancel(const MultiTouchInput& aEvent) {
   APZC_LOG("%p got a touch-cancel in state %d\n", this, mState);
+  OnTouchEndOrCancel();
   SetState(NOTHING);
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -951,10 +954,16 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(const ScreenIntPoint& aP
         NewRunnableMethod(controller.get(), &GeckoContentController::HandleSingleTap,
                           geckoScreenPoint, modifiers, GetGuid()),
         0);
+      mTouchBlockState.mSingleTapOccurred = true;
       return nsEventStatus_eConsumeNoDefault;
     }
   }
   return nsEventStatus_eIgnore;
+}
+
+void AsyncPanZoomController::OnTouchEndOrCancel() {
+  mGeckoContentController->NotifyAPZStateChange(
+      GetGuid(), APZStateChange::EndTouch, mTouchBlockState.mSingleTapOccurred);
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEvent) {
