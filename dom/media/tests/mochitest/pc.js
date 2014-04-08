@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 
 /**
  * This class mimics a state machine and handles a list of commands by
@@ -75,8 +73,7 @@ CommandChain.prototype = {
         var step = self._commands[self._current];
         self._current++;
 
-        self.currentStepLabel = step[0];
-        info("Run step: " + self.currentStepLabel);
+        info("Run step: " + step[0]);  // Label
         step[1](self._framework);      // Execute step
       }
       else if (typeof(self.onFinished) === 'function') {
@@ -508,22 +505,7 @@ PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
  * Executes the next command.
  */
 PeerConnectionTest.prototype.next = function PCT_next() {
-  if (this._stepTimeout) {
-    clearTimeout(this._stepTimeout);
-    this._stepTimeout = null;
-  }
   this.chain.executeNext();
-};
-
-/**
- * Set a timeout for the current step.
- * @param {long] ms the number of milliseconds to allow for this step
- */
-PeerConnectionTest.prototype.setStepTimeout = function(ms) {
-  this._stepTimeout = setTimeout(function() {
-    ok(false, "Step timed out: " + this.chain.currentStepLabel);
-    this.next();
-  }.bind(this), ms);
 };
 
 /**
@@ -1507,7 +1489,7 @@ PeerConnectionWrapper.prototype = {
    * Checks if the ICE connection state still waits for a connection to get
    * established.
    *
-   * @returns {boolean} True if the connection state is "checking" or "new",
+   * @returns {boolean} True if the connection state is "checking" or "new", 
    *  otherwise false.
    */
   isIceConnectionPending : function PCW_isIceConnectionPending() {
