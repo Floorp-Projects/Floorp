@@ -2881,7 +2881,10 @@ nsJSContext::EnsureStatics()
   static JSStructuredCloneCallbacks cloneCallbacks = {
     NS_DOMReadStructuredClone,
     NS_DOMWriteStructuredClone,
-    NS_DOMStructuredCloneError
+    NS_DOMStructuredCloneError,
+    nullptr,
+    nullptr,
+    nullptr
   };
   JS_SetStructuredCloneCallbacks(sRuntime, &cloneCallbacks);
 

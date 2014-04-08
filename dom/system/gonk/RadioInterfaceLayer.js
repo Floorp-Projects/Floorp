@@ -2512,20 +2512,23 @@ RadioInterface.prototype = {
     }).bind(this));
   },
 
-  setCellBroadcastSearchList: function(newSearchListStr) {
-    if (newSearchListStr == this._cellBroadcastSearchListStr) {
+  setCellBroadcastSearchList: function(newSearchList) {
+    if ((newSearchList == this._cellBroadcastSearchList) ||
+          (newSearchList && this._cellBroadcastSearchList &&
+            newSearchList.gsm == this._cellBroadcastSearchList.gsm &&
+            newSearchList.cdma == this._cellBroadcastSearchList.cdma)) {
       return;
     }
 
     this.workerMessenger.send("setCellBroadcastSearchList",
-                              { searchListStr: newSearchListStr },
+                              { searchList: newSearchList },
                               (function callback(response) {
       if (!response.success) {
         let lock = gSettingsService.createLock();
         lock.set(kSettingsCellBroadcastSearchList,
-                 this._cellBroadcastSearchListStr, null);
+                 this._cellBroadcastSearchList, null);
       } else {
-        this._cellBroadcastSearchListStr = response.searchListStr;
+        this._cellBroadcastSearchList = response.searchList;
       }
 
       return false;
@@ -3384,7 +3387,7 @@ RadioInterface.prototype = {
   _sntp: null,
 
   // Cell Broadcast settings values.
-  _cellBroadcastSearchListStr: null,
+  _cellBroadcastSearchList: null,
 
   // Operator's mcc-mnc.
   _lastKnownNetwork: null,
@@ -3471,9 +3474,12 @@ RadioInterface.prototype = {
         break;
       case kSettingsCellBroadcastSearchList:
         if (DEBUG) {
-          this.debug("'" + kSettingsCellBroadcastSearchList + "' is now " + aResult);
+          this.debug("'" + kSettingsCellBroadcastSearchList +
+            "' is now " + JSON.stringify(aResult));
         }
-        this.setCellBroadcastSearchList(aResult);
+        // TODO: Set searchlist for Multi-SIM. See Bug 921326.
+        let result = Array.isArray(aResult) ? aResult[0] : aResult;
+        this.setCellBroadcastSearchList(result);
         break;
     }
   },
