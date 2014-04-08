@@ -141,12 +141,6 @@ class BumpChunk
         return aligned;
     }
 
-    void *allocInfallible(size_t n) {
-        void *result = tryAlloc(n);
-        JS_ASSERT(result);
-        return result;
-    }
-
     void *peek(size_t n) {
         if (bumpBase() - bump < ptrdiff_t(n))
             return nullptr;
@@ -275,19 +269,10 @@ class LifoAlloc
         if (!getOrCreateChunk(n))
             return nullptr;
 
-        return latest->allocInfallible(n);
-    }
-
-    MOZ_ALWAYS_INLINE
-    void *allocInfallible(size_t n) {
-        void *result;
-        if (latest && (result = latest->tryAlloc(n)))
-            return result;
-
-        mozilla::DebugOnly<BumpChunk *> chunk = getOrCreateChunk(n);
-        JS_ASSERT(chunk);
-
-        return latest->allocInfallible(n);
+        // Since we just created a large enough chunk, this can't fail.
+        result = latest->tryAlloc(n);
+        MOZ_ASSERT(result);
+        return result;
     }
 
     // Ensures that enough space exists to satisfy N bytes worth of
