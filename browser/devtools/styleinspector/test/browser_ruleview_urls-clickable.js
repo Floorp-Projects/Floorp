@@ -6,9 +6,8 @@
 
 // Tests to make sure that URLs are clickable in the rule view
 
-const TEST_URI = TEST_URL_ROOT +
-                 "browser_styleinspector_bug_677930_urls_clickable.html";
-const TEST_IMAGE = TEST_URL_ROOT + "test-image.png";
+const TEST_URI = TEST_URL_ROOT + "doc_urls_clickable.html";
+const TEST_IMAGE = TEST_URL_ROOT + "doc_test_image.png";
 const BASE_64_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
 
 let test = asyncTest(function*() {
