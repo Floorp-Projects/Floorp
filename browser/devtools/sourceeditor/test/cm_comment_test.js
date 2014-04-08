@@ -29,11 +29,11 @@ namespace = "comment_";
   }, simpleProg, simpleProg);
 
   // test("fallbackToBlock", "css", function(cm) {
-  //  cm.lineComment(Pos(0, 0), Pos(2, 1));
+  //   cm.lineComment(Pos(0, 0), Pos(2, 1));
   // }, "html {\n  border: none;\n}", "/* html {\n  border: none;\n} */");
 
   // test("fallbackToLine", "ruby", function(cm) {
-  //  cm.blockComment(Pos(0, 0), Pos(1));
+  //   cm.blockComment(Pos(0, 0), Pos(1));
   // }, "def blah()\n  return hah\n", "# def blah()\n#   return hah\n");
 
   test("commentRange", "javascript", function(cm) {
