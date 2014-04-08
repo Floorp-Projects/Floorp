@@ -9,6 +9,8 @@
 #include "gfxTypes.h"
 #include "GraphicsFilter.h"
 #include "imgIContainer.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 
 class gfxDrawable;
 class nsIntRegion;
@@ -22,8 +24,12 @@ class PlanarYCbCrData;
 
 class gfxUtils {
 public:
+    typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
     typedef mozilla::gfx::IntPoint IntPoint;
     typedef mozilla::gfx::Matrix Matrix;
+    typedef mozilla::gfx::SourceSurface SourceSurface;
+    typedef mozilla::gfx::SurfaceFormat SurfaceFormat;
+
     /*
      * Premultiply or Unpremultiply aSourceSurface, writing the result
      * to aDestSurface or back into aSourceSurface if aDestSurface is null.
@@ -154,6 +160,51 @@ public:
                       const gfxIntSize& aDestSize,
                       unsigned char* aDestBuffer,
                       int32_t aStride);
+
+    /**
+     * Creates a copy of aSurface, but having the SurfaceFormat aFormat.
+     *
+     * This function always creates a new surface. Do not call it if aSurface's
+     * format is the same as aFormat. Such a non-conversion would just be an
+     * unnecessary and wasteful copy (this function asserts to prevent that).
+     *
+     * This function is intended to be called by code that needs to access the
+     * pixel data of the surface, but doesn't want to have lots of branches
+     * to handle different pixel data formats (code which would become out of
+     * date if and when new formats are added). Callers can use this function
+     * to copy the surface to a specified format so that they only have to
+     * handle pixel data in that one format.
+     *
+     * WARNING: There are format conversions that will not be supported by this
+     * function. It very much depends on what the Moz2D backends support. If
+     * the temporary B8G8R8A8 DrawTarget that this function creates has a
+     * backend that supports DrawSurface() calls passing a surface with
+     * aSurface's format it will work. Otherwise it will not.
+     *
+     *                      *** IMPORTANT PERF NOTE ***
+     *
+     * This function exists partly because format conversion is fraught with
+     * non-obvious performance hazards, so we don't want Moz2D consumers to be
+     * doing their own format conversion. Do not try to do so, or at least read
+     * the comments in this functions implemtation. That said, the copy that
+     * this function carries out has a cost and, although this function tries
+     * to avoid perf hazards such as expensive uploads to/readbacks from the
+     * GPU, it can't guarantee that it always successfully does so. Perf
+     * critical code that can directly handle the common formats that it
+     * encounters in a way that is cheaper than a copy-with-format-conversion
+     * should consider doing so, and only use this function as a fallback to
+     * handle other formats.
+     *
+     * XXXjwatt it would be nice if SourceSurface::GetDataSurface took a
+     * SurfaceFormat argument (with a default argument meaning "use the
+     * existing surface's format") and returned a DataSourceSurface in that
+     * format. (There would then be an issue of callers maybe failing to
+     * realize format conversion may involve expensive copying/uploading/
+     * readback.)
+     */
+    static mozilla::TemporaryRef<DataSourceSurface>
+    CopySurfaceToDataSourceSurfaceWithFormat(SourceSurface* aSurface,
+                                             SurfaceFormat aFormat);
 
     static const uint8_t sUnpremultiplyTable[256*256];
     static const uint8_t sPremultiplyTable[256*256];
