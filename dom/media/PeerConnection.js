@@ -1117,6 +1117,7 @@ PeerConnectionObserver.prototype = {
 
     if (iceConnectionState === 'failed') {
       histogram.add(false);
+      this._dompc.reportError("ICE failed, see about:webrtc for more details", null, 0);
     }
     if (this._dompc.iceConnectionState === 'checking' &&
         (iceConnectionState === 'completed' ||
