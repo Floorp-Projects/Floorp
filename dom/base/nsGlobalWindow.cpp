@@ -13445,7 +13445,7 @@ nsGlobalWindow::GetDialogArguments(JSContext* aCx, ErrorResult& aError)
 
   // This does an internal origin check, and returns undefined if the subject
   // does not subsumes the origin of the arguments.
-  JSObject* wrapper = GetWrapper();
+  JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
   JSAutoCompartment ac(aCx, wrapper);
   JS::Rooted<JS::Value> args(aCx);
   mDialogArguments->Get(aCx, wrapper, nsContentUtils::GetSubjectPrincipal(),
@@ -13475,7 +13475,7 @@ nsGlobalWindow::GetReturnValue(JSContext* aCx, ErrorResult& aError)
 
   JS::Rooted<JS::Value> returnValue(aCx);
   if (mReturnValue) {
-    JSObject* wrapper = GetWrapper();
+    JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
     JSAutoCompartment ac(aCx, wrapper);
     mReturnValue->Get(aCx, wrapper, nsContentUtils::GetSubjectPrincipal(),
                       &returnValue, aError);
