@@ -340,10 +340,11 @@ public:
 
   // Returns the distance between this FlexItem's baseline and the cross-start
   // edge of its margin-box. Used in baseline alignment.
-  // (This function needs to be told what the cross axis is so that it can
-  // look up the appropriate component from mMargin.)
-  nscoord GetBaselineOffsetFromOuterCrossStart(
-            AxisOrientationType aCrossAxis) const;
+  // (This function needs to be told what cross axis is & which edge we're
+  // measuring the baseline from, so that it can look up the appropriate
+  // components from mMargin.)
+  nscoord GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
+                                              AxisEdgeType aEdge) const;
 
   float GetShareOfFlexWeightSoFar() const { return mShareOfFlexWeightSoFar; }
 
@@ -1218,8 +1219,8 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize)
 }
 
 nscoord
-FlexItem::GetBaselineOffsetFromOuterCrossStart(
-  AxisOrientationType aCrossAxis) const
+FlexItem::GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
+                                              AxisEdgeType aEdge) const
 {
   // NOTE: Currently, 'mAscent' (taken from reflow) is an inherently vertical
   // measurement -- it's the distance from the border-top edge of this FlexItem
@@ -1230,18 +1231,23 @@ FlexItem::GetBaselineOffsetFromOuterCrossStart(
              "Only expecting to be doing baseline computations when the "
              "cross axis is vertical");
 
+  Side sideToMeasureFrom = kAxisOrientationToSidesMap[aCrossAxis][aEdge];
+
   nscoord marginTopToBaseline = mAscent + mMargin.top;
 
-  if (aCrossAxis == eAxis_TB) {
-    // Top-to-bottom (normal case): the distance from the cross-start margin-box
-    // edge (i.e. the margin-top edge) to the baseline is ascent + margin-top.
+  if (sideToMeasureFrom == eSideTop) {
+    // Measuring from top (normal case): the distance from the margin-box top
+    // edge to the baseline is just ascent + margin-top.
     return marginTopToBaseline;
   }
 
-  // Bottom-to-top: The distance from the cross-start margin-box edge (i.e. the
-  // margin-bottom edge) to the baseline is just the margin-box cross size
-  // (i.e. outer cross size), minus the distance from margin-top to baseline
-  // (already computed above).
+  MOZ_ASSERT(sideToMeasureFrom == eSideBottom,
+             "We already checked that we're dealing with a vertical axis, and "
+             "we're not using the top side, so that only leaves the bottom...");
+
+  // Measuring from bottom: The distance from the margin-box bottom edge to the
+  // baseline is just the margin-box cross size (i.e. outer cross size), minus
+  // the already-computed distance from margin-top to baseline.
   return GetOuterCrossSize(aCrossAxis) - marginTopToBaseline;
 }
 
@@ -2150,7 +2156,8 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
       //   crossEndToBaseline.
 
       nscoord crossStartToBaseline =
-        item->GetBaselineOffsetFromOuterCrossStart(aAxisTracker.GetCrossAxis());
+        item->GetBaselineOffsetFromOuterCrossEdge(aAxisTracker.GetCrossAxis(),
+                                                  eAxisEdge_Start);
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
@@ -2297,7 +2304,9 @@ SingleLineCrossAxisPositionTracker::
       nscoord lineBaselineOffset =
         aLine.GetBaselineOffsetFromCrossStart();
       nscoord itemBaselineOffset =
-        aItem.GetBaselineOffsetFromOuterCrossStart(mAxis);
+        aItem.GetBaselineOffsetFromOuterCrossEdge(mAxis,
+                                                  eAxisEdge_Start);
+
       MOZ_ASSERT(lineBaselineOffset >= itemBaselineOffset,
                  "failed at finding largest baseline offset");
 
