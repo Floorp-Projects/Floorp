@@ -14,15 +14,15 @@ dictionary NetworkStatsGetOptions
    * Note that, these two options cannot be specified at the same time for now;
    * others, an NS_ERROR_NOT_IMPLMENTED exception will be thrown.
    */
-  DOMString appManifestURL;
-  DOMString serviceType;
+  DOMString appManifestURL? = null;
+  DOMString serviceType = "";
   /**
    * If it is set as true, only the browsing traffic, which is generated from
    * the mozbrowser iframe element within an app, is returned in result.
    * If it is set as false or not set, the total traffic, which is generated
    * from both the mozapp and mozbrowser iframe elements, is returned.
    */
-  boolean browsingTrafficOnly;
+  boolean browsingTrafficOnly = false;
 };
 
 dictionary NetworkStatsAlarmOptions
