@@ -11763,7 +11763,7 @@ class CGCallback(CGClass):
         bodyWithThis = string.Template(
             setupCall +
             "JS::Rooted<JSObject*> thisObjJS(s.GetContext(),\n"
-            "  WrapCallThisObject(s.GetContext(), CallbackPreserveColor(), thisObjPtr));\n"
+            "  WrapCallThisObject(s.GetContext(), thisObjPtr));\n"
             "if (!thisObjJS) {\n"
             "  aRv.Throw(NS_ERROR_FAILURE);\n"
             "  return${errorReturn};\n"
