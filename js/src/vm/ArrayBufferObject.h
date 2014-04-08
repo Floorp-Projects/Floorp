@@ -240,9 +240,7 @@ class ArrayBufferViewObject : public JSObject
     static const size_t NEXT_VIEW_SLOT   = JS_TYPEDOBJ_SLOT_NEXT_VIEW;
 
   public:
-    JSObject *bufferObject() const {
-        return &getFixedSlot(BUFFER_SLOT).toObject();
-    }
+    static ArrayBufferObject *bufferObject(JSContext *cx, Handle<ArrayBufferViewObject *> obj);
 
     ArrayBufferViewObject *nextView() const {
         return static_cast<ArrayBufferViewObject*>(getFixedSlot(NEXT_VIEW_SLOT).toPrivate());

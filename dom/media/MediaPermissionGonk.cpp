@@ -179,8 +179,8 @@ MediaPermissionRequest::MediaPermissionRequest(nsRefPtr<dom::GetUserMediaRequest
   dom::MediaStreamConstraintsInternal constraints;
   mRequest->GetConstraints(constraints);
 
-  mAudio = constraints.mAudio;
-  mVideo = constraints.mVideo;
+  mAudio = !constraints.mAudio.IsBoolean() || constraints.mAudio.GetAsBoolean();
+  mVideo = !constraints.mVideo.IsBoolean() || constraints.mVideo.GetAsBoolean();
 
   for (uint32_t i = 0; i < aDevices.Length(); ++i) {
     nsCOMPtr<nsIMediaDevice> device(aDevices[i]);

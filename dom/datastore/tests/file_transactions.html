@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - transactional semantics</title>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  var gStore;
+
+  function is(a, b, msg) {
+    alert((a === b ? 'OK' : 'KO') + ' ' + msg)
+  }
+
+  function ok(a, msg) {
+    alert((a ? 'OK' : 'KO')+ ' ' + msg)
+  }
+
+  function cbError() {
+    alert('KO error');
+  }
+
+  function finish() {
+    alert('DONE');
+  }
+
+  function testGetDataStores() {
+    navigator.getDataStores('foo').then(function(stores) {
+      is(stores.length, 1, "getDataStores('foo') returns 1 element");
+      is(stores[0].name, 'foo', 'The dataStore.name is foo');
+      is(stores[0].readOnly, false, 'The dataStore foo is not in readonly');
+
+      gStore = stores[0];
+
+      runTest();
+    }, cbError);
+  }
+
+  function checkError(e) {
+    ok(e instanceof DOMError, "Expecting a DOMError");
+    is(e.name, "ConstraintError", "DOMError.name must be ConstraintError");
+  }
+
+  var tests = [
+    // Test for GetDataStore
+    testGetDataStores,
+
+    // Add
+    function() { gStore.add("data", null, 'foobar').catch(function(e) {
+                   ok(true, "Add rejects when the revision is wrong");
+                   checkError(e); runTest(); }); },
+
+    function() { gStore.add("data").then(function() {
+                   ok(true, "Add succeeded without revisionId");
+                   runTest(); }, cbError); },
+
+    function() { gStore.add("data", null, gStore.revisionId).then(function() {
+                   ok(true, "Add succeeded with the correct revisionId");
+                   runTest(); }, cbError); },
+
+    function() { gStore.add("data", 42, 'foobar').catch(function(e) {
+                   ok(true, "Add rejects when the revision is wrong");
+                   checkError(e); runTest(); }); },
+
+    function() { gStore.add("data", 42).then(function() {
+                   ok(true, "Add succeeded without revisionId");
+                   runTest(); }, cbError); },
+
+    function() { gStore.add("data", 43, gStore.revisionId).then(function() {
+                   ok(true, "Add succeeded with the correct revisionId");
+                   runTest(); }, cbError); },
+
+    // Put
+    function() { gStore.put("data", 42, 'foobar').catch(function(e) {
+                   ok(true, "Put rejects when the revision is wrong");
+                   checkError(e); runTest(); }); },
+
+    function() { gStore.put("data", 42).then(function() {
+                   ok(true, "Put succeeded without revisionId");
+                   runTest(); }, cbError); },
+
+    function() { gStore.put("data", 42, gStore.revisionId).then(function() {
+                   ok(true, "Put succeeded with the correct revisionId");
+                   runTest(); }, cbError); },
+
+    // Remove
+    function() { gStore.remove(42, 'foobar').catch(function(e) {
+                   ok(true, "Remove rejects when the revision is wrong");
+                   checkError(e); runTest(); }); },
+
+    function() { gStore.remove(42).then(function() {
+                   ok(true, "Remove succeeded without revisionId");
+                   runTest(); }, cbError); },
+
+    function() { gStore.remove(42, gStore.revisionId).then(function() {
+                   ok(true, "Remove succeeded with the correct revisionId");
+                   runTest(); }, cbError); },
+
+    // Clear
+    function() { gStore.clear('foobar').catch(function(e) {
+                   ok(true, "Clear rejects when the revision is wrong");
+                   checkError(e); runTest(); }); },
+
+    function() { gStore.clear().then(function() {
+                   ok(true, "Clear succeeded without revisionId");
+                   runTest(); }, cbError); },
+
+    function() { gStore.clear(gStore.revisionId).then(function() {
+                   ok(true, "Clear succeeded with the correct revisionId");
+                   runTest(); }, cbError); },
+
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  runTest();
+  </script>
+</body>
+</html>

@@ -291,11 +291,11 @@ Attr::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 }
 
 already_AddRefed<nsIURI>
-Attr::GetBaseURI() const
+Attr::GetBaseURI(bool aTryUseXHRDocBaseURI) const
 {
   nsINode *parent = GetContentInternal();
 
-  return parent ? parent->GetBaseURI() : nullptr;
+  return parent ? parent->GetBaseURI(aTryUseXHRDocBaseURI) : nullptr;
 }
 
 void

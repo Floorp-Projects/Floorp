@@ -98,6 +98,7 @@ public:
   bool DataSize(int64_t* aSize);
   void Key(nsACString& aKey) { aKey = mKey; }
   bool IsDoomed();
+  bool IsWriteInProgress();
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
@@ -166,6 +167,7 @@ private:
   bool           mOpeningFile;
   bool           mReady;
   bool           mMemoryOnly;
+  bool           mOpenAsMemoryOnly;
   bool           mDataAccessed;
   bool           mDataIsDirty;
   bool           mWritingMetadata;

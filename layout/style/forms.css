@@ -211,6 +211,7 @@ select {
   /* No text-decoration reaching inside, by default */
   display: inline-block;
   page-break-inside: avoid;
+  overflow-clip-box: padding-box !important; /* bug 992447 */
 }
 
 /* Need the "select[size][multiple]" selector to override the settings on

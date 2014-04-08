@@ -67,7 +67,10 @@ public:
   nsCString const &GetStorageID() const { return mStorageID; }
   nsCString const &GetEnhanceID() const { return mEnhanceID; }
   nsIURI* GetURI() const { return mURI; }
-  bool UsingDisk() const;
+  // Accessible only under the CacheStorageService lock (asserts it)
+  bool IsUsingDiskLocked() const;
+  // Accessible at any time
+  bool IsUsingDisk() const { return mUseDisk; }
   bool SetUsingDisk(bool aUsingDisk);
   bool IsReferenced() const;
   bool IsFileDoomed();
@@ -99,6 +102,11 @@ public:
   static nsresult HashingKey(nsCSubstring const& aStorageID,
                              nsCSubstring const& aEnhanceID,
                              nsIURI* aURI,
+                             nsACString &aResult);
+
+  static nsresult HashingKey(nsCSubstring const& aStorageID,
+                             nsCSubstring const& aEnhanceID,
+                             nsCSubstring const& aURISpec,
                              nsACString &aResult);
 
   // Accessed only on the service management thread
@@ -217,9 +225,18 @@ private:
   void OnHandleClosed(CacheEntryHandle const* aHandle);
 
 private:
+  friend class CacheEntryHandle;
+  // Increment/decrements the number of handles keeping this entry.
+  void AddHandleRef() { ++mHandlesCount; }
+  void ReleaseHandleRef() { --mHandlesCount; }
+  // Current number of handles keeping this entry.
+  uint32_t HandlesCount() const { return mHandlesCount; }
+
+private:
   friend class CacheOutputCloseListener;
   void OnOutputClosed();
 
+private:
   // Schedules a background operation on the management thread.
   // When executed on the management thread directly, the operation(s)
   // is (are) executed immediately.
@@ -236,8 +253,7 @@ private:
   mozilla::Mutex mLock;
 
   // Reflects the number of existing handles for this entry
-  friend class CacheEntryHandle;
-  ::mozilla::ThreadSafeAutoRefCnt mHandlersCount;
+  ::mozilla::ThreadSafeAutoRefCnt mHandlesCount;
 
   nsTArray<Callback> mCallbacks;
   nsCOMPtr<nsICacheEntryDoomCallback> mDoomCallback;

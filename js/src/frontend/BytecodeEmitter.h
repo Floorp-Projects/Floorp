@@ -216,8 +216,6 @@ struct BytecodeEmitter
     unsigned currentLine() const { return current->currentLine; }
     unsigned lastColumn() const { return current->lastColumn; }
 
-    ptrdiff_t countFinalSourceNotes();
-
     bool reportError(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
     bool reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...);
@@ -279,8 +277,11 @@ NewSrcNote3(ExclusiveContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdif
 bool
 AddToSrcNoteDelta(ExclusiveContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t delta);
 
-bool
-FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce, jssrcnote *notes);
+int32_t
+FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce);
+
+void
+CopySrcNotes(BytecodeEmitter *bce, jssrcnote *destination, int32_t nsrcnotes);
 
 } /* namespace frontend */
 } /* namespace js */

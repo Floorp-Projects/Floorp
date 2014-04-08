@@ -922,19 +922,17 @@ function ArrayFilterPar(func, mode) {
 
     var slicesInfo = ComputeSlicesInfo(length);
 
-    // Step 1. Compute which items from each slice of the result
-    // buffer should be preserved. When we're done, we have an array
-    // |survivors| containing a bitset for each chunk, indicating
-    // which members of the chunk survived. We also keep an array
-    // |counts| containing the total number of items that are being
-    // preserved from within one slice.
-    //
-    // FIXME(bug 844890): Use typed arrays here.
+    // Step 1. Compute which items from each slice of the result buffer should
+    // be preserved. When we're done, we have a uint8 array |survivors|
+    // containing 0 or 1 for each source element, indicating which members of
+    // the chunk survived. We also keep an array |counts| containing the total
+    // number of items that are being preserved from within one slice.
     var numSlices = slicesInfo.count;
     var counts = NewDenseArray(numSlices);
     for (var i = 0; i < numSlices; i++)
       UnsafePutElements(counts, i, 0);
-    var survivors = NewDenseArray(computeNum32BitChunks(length));
+
+    var survivors = new Uint8Array(length);
     ForkJoin(findSurvivorsThread, 0, numSlices, ForkJoinMode(mode));
 
     // Step 2. Compress the slices into one contiguous set.
@@ -959,20 +957,8 @@ function ArrayFilterPar(func, mode) {
   return buffer;
 
   /**
-   * Determine the number of 32-bit chunks for use with the survivors bitset.
-   */
-  function computeNum32BitChunks(length) {
-    var chunks = length >>> 5;
-    if (chunks << 5 === length)
-      return chunks;
-    return chunks + 1;
-  }
-
-  /**
-   * As described above, our goal is to determine which items we
-   * will preserve from a given slice. We do this one chunk at a
-   * time. When we finish a chunk, we record our current count and
-   * the next chunk sliceId, lest we should bail.
+   * As described above, our goal is to determine which items we will preserve
+   * from a given slice, storing "to-keep" bits into 32-bit chunks.
    */
   function findSurvivorsThread(workerId, sliceStart, sliceEnd) {
     var sliceShift = slicesInfo.shift;
@@ -981,65 +967,44 @@ function ArrayFilterPar(func, mode) {
       var count = 0;
       var indexStart = SLICE_START_INDEX(sliceShift, sliceId);
       var indexEnd = SLICE_END_INDEX(sliceShift, indexStart, length);
-      var chunkStart = computeNum32BitChunks(indexStart);
-      var chunkEnd = computeNum32BitChunks(indexEnd);
-      for (var chunkPos = chunkStart; chunkPos < chunkEnd; chunkPos++, indexStart += 32) {
-        var chunkBits = 0;
-        for (var bit = 0, indexPos = indexStart; bit < 32 && indexPos < indexEnd; bit++, indexPos++) {
-          var keep = !!func(self[indexPos], indexPos, self);
-          chunkBits |= keep << bit;
-          count += keep;
-        }
-        UnsafePutElements(survivors, chunkPos, chunkBits);
+      for (var indexPos = indexStart; indexPos < indexEnd; indexPos++) {
+        var keep = !!func(self[indexPos], indexPos, self);
+        UnsafePutElements(survivors, indexPos, keep);
+        count += keep;
       }
       UnsafePutElements(counts, sliceId, count);
     }
     return sliceId;
   }
 
+  /**
+   * Copies the survivors from this slice into the correct position. Note
+   * that this is an idempotent operation that does not invoke user
+   * code. Therefore, we don't expect bailouts and make an effort to proceed
+   * chunk by chunk or avoid duplicating work.
+   */
   function copySurvivorsThread(workerId, sliceStart, sliceEnd) {
     var sliceShift = slicesInfo.shift;
     var sliceId;
     while (GET_SLICE(sliceStart, sliceEnd, sliceId)) {
-      // Copies the survivors from this slice into the correct position.
-      // Note that this is an idempotent operation that does not invoke
-      // user code. Therefore, we don't expect bailouts and make an
-      // effort to proceed chunk by chunk or avoid duplicating work.
-
       // Total up the items preserved by previous slices.
       var total = 0;
       for (var i = 0; i < sliceId + 1; i++)
         total += counts[i];
 
-      // Compute the final index we expect to write.
+      // Are we done?
       var count = total - counts[sliceId];
       if (count === total)
         continue;
 
-      // Iterate over the chunks assigned to us. Read the bitset for
-      // each chunk. Copy values where a 1 appears until we have
-      // written all the values that we expect to. We can just iterate
-      // from 0...CHUNK_SIZE without fear of a truncated final chunk
-      // because we are already checking for when count==total.
       var indexStart = SLICE_START_INDEX(sliceShift, sliceId);
       var indexEnd = SLICE_END_INDEX(sliceShift, indexStart, length);
-      var chunkStart = computeNum32BitChunks(indexStart);
-      var chunkEnd = computeNum32BitChunks(indexEnd);
-      for (var chunkPos = chunkStart; chunkPos < chunkEnd; chunkPos++, indexStart += 32) {
-        var chunkBits = survivors[chunkPos];
-        if (!chunkBits)
-          continue;
-
-        for (var i = 0; i < 32; i++) {
-          if (chunkBits & (1 << i)) {
-            UnsafePutElements(buffer, count++, self[indexStart + i]);
-            if (count === total)
-              break;
-          }
+      for (var indexPos = indexStart; indexPos < indexEnd; indexPos++) {
+        if (survivors[indexPos]) {
+          UnsafePutElements(buffer, count++, self[indexPos]);
+          if (count == total)
+            break;
         }
-
-        if (count == total)
-          break;
       }
     }
 

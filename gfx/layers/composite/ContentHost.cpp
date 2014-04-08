@@ -15,7 +15,6 @@
 #include "nsAString.h"
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsString.h"                   // for nsAutoCString
-#include "ipc/AutoOpenSurface.h"        // for AutoOpenSurface
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 
 namespace mozilla {
@@ -622,19 +621,12 @@ ContentHostIncremental::TextureUpdateRequest::Execute(ContentHostIncremental* aH
 
   IntPoint offset = ToIntPoint(-mUpdated.GetBounds().TopLeft());
 
-  AutoOpenSurface surf(OPEN_READ_ONLY, mDescriptor);
-
-  nsRefPtr<gfxImageSurface> thebesSurf = surf.GetAsImage();
-  RefPtr<DataSourceSurface> sourceSurf =
-    gfx::Factory::CreateWrappingDataSourceSurface(thebesSurf->Data(),
-                                                  thebesSurf->Stride(),
-                                                  ToIntSize(thebesSurf->GetSize()),
-                                                  ImageFormatToSurfaceFormat(thebesSurf->Format()));
+  RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(mDescriptor);
 
   if (mTextureId == TextureFront) {
-    aHost->mSource->Update(sourceSurf, &mUpdated, &offset);
+    aHost->mSource->Update(surf, &mUpdated, &offset);
   } else {
-    aHost->mSourceOnWhite->Update(sourceSurf, &mUpdated, &offset);
+    aHost->mSourceOnWhite->Update(surf, &mUpdated, &offset);
   }
 }
 

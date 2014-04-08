@@ -124,7 +124,8 @@ NS_INTERFACE_MAP_BEGIN(CacheFileChunk)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 CacheFileChunk::CacheFileChunk(CacheFile *aFile, uint32_t aIndex)
-  : mIndex(aIndex)
+  : CacheMemoryConsumer(aFile->mOpenAsMemoryOnly ? MEMORY_ONLY : DONT_REPORT)
+  , mIndex(aIndex)
   , mState(INITIAL)
   , mIsDirty(false)
   , mRemovingChunk(false)
@@ -156,8 +157,6 @@ CacheFileChunk::~CacheFileChunk()
     mRWBuf = nullptr;
     mRWBufSize = 0;
   }
-
-  DoMemoryReport(MemorySize());
 }
 
 void

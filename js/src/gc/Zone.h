@@ -317,6 +317,8 @@ struct Zone : public JS::shadow::Zone,
 
     void sweep(js::FreeOp *fop, bool releaseTypes);
 
+    bool hasMarkedCompartments();
+
   private:
     void sweepBreakpoints(js::FreeOp *fop);
 

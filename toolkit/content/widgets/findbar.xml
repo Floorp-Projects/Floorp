@@ -683,6 +683,9 @@
             if (elt instanceof HTMLInputElement && elt.mozIsTextField(false))
               return false;
 
+            if (elt.isContentEditable)
+              return false;
+
             if (elt instanceof HTMLTextAreaElement ||
                 elt instanceof HTMLSelectElement ||
                 elt instanceof HTMLObjectElement ||
