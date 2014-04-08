@@ -134,6 +134,10 @@ class StoreBuffer
         void put(StoreBuffer *owner, const T &t) {
             JS_ASSERT(storage_);
 
+            T *tip = storage_->peek<T>();
+            if (tip && tip->canMergeWith(t))
+                return tip->mergeInplace(t);
+
             T *tp = storage_->new_<T>(t);
             if (!tp)
                 CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer::put.");
